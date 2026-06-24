@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Admin · Roles & Permissions</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center gap-2 px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /><span class="rounded bg-brand-500 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Admin</span></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="27-admin-contracts.html" class="nav-link"><i class="ti ti-file-dollar text-lg"></i>Contracts</a>
+      <a href="28-admin-payments.html" class="nav-link"><i class="ti ti-credit-card text-lg"></i>Payments</a>
+      <a href="26-admin-roles.html" class="nav-link active"><i class="ti ti-shield-lock text-lg"></i>Roles &amp; permissions</a>
+      <a href="20-moderation-queue.html" class="nav-link"><i class="ti ti-inbox text-lg"></i>Moderation<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">12</span></a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">AA</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Aashir Azeem</p><p class="truncate text-xs text-ink-400">Super Admin</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Roles &amp; permissions</h1></div>
+      <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>New role</button>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+
+        <!-- Roles list -->
+        <div class="rounded-2xl bg-white shadow-card">
+          <div class="border-b border-ink-100 px-4 py-3"><p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Roles · 9</p></div>
+          <div class="p-2">
+            <button data-role="super-admin" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Super Admin</span><span class="text-xs text-ink-400">Platform-wide</span></span><span class="text-xs text-ink-400">2</span></button>
+            <button data-role="admin" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl bg-brand-50 px-3 py-2.5 text-left ring-1 ring-brand-200"><span><span class="block text-sm font-medium text-ink-900">Admin</span><span class="text-xs text-ink-400">Platform-wide · configurable</span></span><span class="text-xs text-ink-400">5</span></button>
+            <button data-role="moderator" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Moderator</span><span class="text-xs text-ink-400">Listings only</span></span><span class="text-xs text-ink-400">8</span></button>
+            <button data-role="support" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Support Staff</span><span class="text-xs text-ink-400">Read-only + tickets</span></span><span class="text-xs text-ink-400">6</span></button>
+            <button data-role="host" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Host</span><span class="text-xs text-ink-400">Own properties</span></span><span class="text-xs text-ink-400">1,482</span></button>
+            <button data-role="manager" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Manager</span><span class="text-xs text-ink-400">Single hostel</span></span><span class="text-xs text-ink-400">214</span></button>
+            <button data-role="warden" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Warden</span><span class="text-xs text-ink-400">Single hostel</span></span><span class="text-xs text-ink-400">186</span></button>
+            <button data-role="seeker" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Seeker</span><span class="text-xs text-ink-400">Self / public</span></span><span class="text-xs text-ink-400">38k</span></button>
+            <div class="my-1 border-t border-ink-100"></div>
+            <button data-role="finance" onclick="selRole(this)" class="role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50"><span><span class="block text-sm font-medium text-ink-900">Finance Reviewer</span><span class="text-xs text-ink-400">Custom role</span></span><span class="rounded-full bg-tint-purple px-2 py-0.5 text-[10px] font-medium text-ink-600">Custom</span></button>
+          </div>
+        </div>
+
+        <!-- Permission matrix -->
+        <div class="rounded-2xl bg-white shadow-card">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-4">
+            <div>
+              <div class="flex items-center gap-2"><h2 id="roleName" class="font-display text-base font-semibold text-ink-900">Admin</h2><span id="roleTag" class="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600">System role</span></div>
+              <p id="roleDesc" class="mt-0.5 text-sm text-ink-400">Elevated access to contracts, payments & moderation. 5 users assigned.</p>
+            </div>
+            <button class="rounded-xl border border-ink-200 px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"><i class="ti ti-dots"></i></button>
+          </div>
+
+          <div class="divide-y divide-ink-100 px-5">
+            <div class="py-4">
+              <p class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400"><i class="ti ti-file-dollar text-brand-500"></i>Contracts</p>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">contracts.view</span> · View contracts &amp; payment history</span><span data-flag="contracts.view" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">contracts.edit</span> · Cancel / extend contracts</span><span data-flag="contracts.edit" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+            </div>
+            <div class="py-4">
+              <p class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400"><i class="ti ti-credit-card text-brand-500"></i>Payments</p>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">payments.view</span> · View payment transactions</span><span data-flag="payments.view" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">payments.manage</span> · Mark payments paid (offline)</span><span data-flag="payments.manage" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">payments.refund</span> · Issue refunds</span><span data-flag="payments.refund" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+            </div>
+            <div class="py-4">
+              <p class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400"><i class="ti ti-checkup-list text-brand-500"></i>Listings &amp; moderation</p>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">listings.approve</span> · Approve / request changes</span><span data-flag="listings.approve" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">listings.delete</span> · Remove / reject listings</span><span data-flag="listings.delete" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+            </div>
+            <div class="py-4">
+              <p class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400"><i class="ti ti-users-group text-brand-500"></i>Users &amp; roles</p>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">users.manage</span> · Manage user accounts</span><span data-flag="users.manage" class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span></label>
+              <label class="flex items-center justify-between py-2"><span class="text-sm text-ink-700"><span class="font-mono text-xs text-ink-500">roles.manage</span> · Create / edit roles &amp; permissions</span><span data-flag="roles.manage" class="h-5 w-5 rounded border-2 border-ink-300"></span></label>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 bg-surface px-5 py-3.5">
+            <p class="flex items-center gap-1.5 text-xs text-ink-500"><i class="ti ti-info-circle"></i>Changes apply immediately; affected sessions re-validate on next request.</p>
+            <div class="flex gap-2"><button class="rounded-xl px-4 py-2 text-sm font-medium text-ink-600 hover:bg-ink-100">Cancel</button><button class="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">Save changes</button></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const ALL = ['contracts.view','contracts.edit','payments.view','payments.manage','payments.refund','listings.approve','listings.delete','users.manage','roles.manage'];
+    const ROLES = {
+      'super-admin': { n:'Super Admin', t:'System role', d:'Full, unrestricted access to every module — including role management itself.', c:'2 users assigned', f:'ALL' },
+      'admin': { n:'Admin', t:'System role', d:'Elevated access to contracts, payments & moderation; role management restricted unless explicitly granted.', c:'5 users assigned', f:['contracts.view','contracts.edit','payments.view','payments.manage','payments.refund','listings.approve','listings.delete','users.manage'] },
+      'moderator': { n:'Moderator', t:'System role', d:'Access limited to the Review Queue and Delta Media inspection pipeline.', c:'8 users assigned', f:['listings.approve','listings.delete'] },
+      'support': { n:'Support Staff', t:'System role', d:'Read-only access to contracts and user records to assist with support queries.', c:'6 users assigned', f:['contracts.view','payments.view'] },
+      'host': { n:'Host', t:'System role', d:'Standard property-owner access (Features 2, 4, 5).', c:'1,482 users', f:[] },
+      'manager': { n:'Manager', t:'System role', d:'Operates one assigned hostel on behalf of a host (Feature 8).', c:'214 users', f:[] },
+      'warden': { n:'Warden', t:'System role', d:'Operates one assigned hostel on behalf of a host (Feature 8).', c:'186 users', f:[] },
+      'seeker': { n:'Seeker', t:'System role', d:'Standard authenticated platform user (Feature 1).', c:'38k users', f:[] },
+      'finance': { n:'Finance Reviewer', t:'Custom role', d:'Finance oversight — view contracts & payments only.', c:'1 user', f:['contracts.view','payments.view'] },
+    };
+    const BASE = 'role-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-ink-50';
+    const ACTIVE = 'role-btn flex w-full items-center justify-between rounded-xl bg-brand-50 px-3 py-2.5 text-left ring-1 ring-brand-200';
+    const CHK = 'grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white';
+    const UNCHK = 'h-5 w-5 rounded border-2 border-ink-300';
+    function selRole(el) {
+      document.querySelectorAll('.role-btn').forEach(b => b.className = BASE);
+      el.className = ACTIVE;
+      const r = ROLES[el.dataset.role];
+      document.getElementById('roleName').textContent = r.n;
+      document.getElementById('roleTag').textContent = r.t;
+      document.getElementById('roleTag').className = (r.t === 'Custom role' ? 'rounded-full bg-tint-purple px-2 py-0.5 text-[11px] font-medium text-ink-600' : 'rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600');
+      document.getElementById('roleDesc').textContent = r.d + ' ' + r.c + '.';
+      const on = r.f === 'ALL' ? new Set(ALL) : new Set(r.f);
+      document.querySelectorAll('[data-flag]').forEach(s => {
+        const checked = on.has(s.dataset.flag);
+        s.className = checked ? CHK : UNCHK;
+        s.innerHTML = checked ? '<i class="ti ti-check text-xs"></i>' : '';
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Moderator · All Listings</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center gap-2 px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /><span class="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Mod</span></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="20-moderation-queue.html" class="nav-link"><i class="ti ti-inbox text-lg"></i>Review queue<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">12</span></a>
+      <a href="22-delta-media.html" class="nav-link"><i class="ti ti-photo text-lg"></i>Media queue<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">5</span></a>
+      <a href="23-moderation-listings.html" class="nav-link active"><i class="ti ti-building-community text-lg"></i>All listings</a>
+      <a href="24-moderation-audit.html" class="nav-link"><i class="ti ti-history text-lg"></i>Audit log</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="25-moderation-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white">MS</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Maria Shah</p><p class="truncate text-xs text-ink-400">Moderator</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">All listings</h1></div>
+      <div class="flex items-center gap-2">
+        <div class="hidden items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 sm:flex"><i class="ti ti-search text-ink-400"></i><input placeholder="Search name, city, host…" class="w-52 bg-transparent text-sm outline-none" /></div>
+        <button class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700"><i class="ti ti-arrows-sort text-ink-400"></i>Newest<i class="ti ti-chevron-down text-ink-400"></i></button>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+      <!-- stat strip -->
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Total</p><p class="mt-1 text-2xl font-semibold text-ink-900">1,482</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Published</p><p class="mt-1 text-2xl font-semibold text-ok">1,318</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">In review</p><p class="mt-1 text-2xl font-semibold text-warn">12</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Paused</p><p class="mt-1 text-2xl font-semibold text-ink-500">98</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Rejected / removed</p><p class="mt-1 text-2xl font-semibold text-danger">54</p></div>
+      </div>
+
+      <!-- disposition filter chips (PRD §11.2 state machine) -->
+      <div class="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-1">
+        <button class="shrink-0 rounded-full bg-ink-900 px-3 py-1.5 text-xs font-medium text-white">All · 1,482</button>
+        <button class="shrink-0 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Published · 1,318</button>
+        <button class="shrink-0 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">In review · 12</button>
+        <button class="shrink-0 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Changes requested · 7</button>
+        <button class="shrink-0 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Paused · 98</button>
+        <button class="shrink-0 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Rejected · 41</button>
+        <button class="shrink-0 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Removed · 13</button>
+      </div>
+
+      <div class="mt-4 overflow-x-auto rounded-2xl bg-white shadow-card">
+        <table class="w-full min-w-[860px] text-sm">
+          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400">
+            <tr><th class="px-5 py-3 font-medium">Property</th><th class="px-5 py-3 font-medium">City</th><th class="px-5 py-3 font-medium">Host</th><th class="px-5 py-3 font-medium">Status</th><th class="px-5 py-3 font-medium">Updated</th><th class="px-5 py-3 font-medium">Views</th><th class="px-5 py-3"></th></tr>
+          </thead>
+          <tbody class="divide-y divide-ink-100">
+            <tr class="hover:bg-surface">
+              <td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhal1/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">Al-Madina Boys Hostel</p><p class="text-xs text-ink-400">Boys · 18 photos</p></div></div></td>
+              <td class="px-5 py-3 text-ink-600">Karachi</td><td class="px-5 py-3 text-ink-600">Imran Khan</td>
+              <td class="px-5 py-3"><span class="inline-flex items-center gap-1 rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok"><i class="ti ti-circle-filled text-[8px]"></i>Published</span></td>
+              <td class="px-5 py-3 text-ink-500">2 hrs ago</td><td class="px-5 py-3 text-ink-600">1,204</td>
+              <td class="px-5 py-3"><div class="flex justify-end gap-1"><a href="21-moderation-review.html" class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface" title="Open"><i class="ti ti-eye"></i></a><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface" title="Edit"><i class="ti ti-edit"></i></button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-dots"></i></button></div></td>
+            </tr>
+            <tr class="hover:bg-surface">
+              <td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhal2/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">City Nest PG</p><p class="text-xs text-ink-400">Co-living · 12 photos</p></div></div></td>
+              <td class="px-5 py-3 text-ink-600">Karachi</td><td class="px-5 py-3 text-ink-600">Imran Khan</td>
+              <td class="px-5 py-3"><span class="inline-flex items-center gap-1 rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn"><i class="ti ti-clock text-xs"></i>In review</span></td>
+              <td class="px-5 py-3 text-ink-500">2 days ago</td><td class="px-5 py-3 text-ink-400">—</td>
+              <td class="px-5 py-3"><div class="flex justify-end gap-1"><a href="21-moderation-review.html" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">Review</a><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-dots"></i></button></div></td>
+            </tr>
+            <tr class="hover:bg-surface">
+              <td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhal3/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">Iqra Girls Hostel</p><p class="text-xs text-ink-400">Girls · 9 photos</p></div></div></td>
+              <td class="px-5 py-3 text-ink-600">Lahore</td><td class="px-5 py-3 text-ink-600">Sana Malik</td>
+              <td class="px-5 py-3"><span class="inline-flex items-center gap-1 rounded-full bg-tint-cream px-2 py-0.5 text-xs font-medium text-brand-700"><i class="ti ti-pencil text-xs"></i>Changes requested</span></td>
+              <td class="px-5 py-3 text-ink-500">1 day ago</td><td class="px-5 py-3 text-ink-400">—</td>
+              <td class="px-5 py-3"><div class="flex justify-end gap-1"><a href="21-moderation-review.html" class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-eye"></i></a><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-dots"></i></button></div></td>
+            </tr>
+            <tr class="hover:bg-surface">
+              <td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhal4/80/80" class="h-10 w-10 rounded-lg object-cover grayscale" alt="" /><div><p class="font-medium text-ink-900">Sunrise Lodge</p><p class="text-xs text-ink-400">Boys · 11 photos</p></div></div></td>
+              <td class="px-5 py-3 text-ink-600">Islamabad</td><td class="px-5 py-3 text-ink-600">Hassan Ali</td>
+              <td class="px-5 py-3"><span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">Paused by host</span></td>
+              <td class="px-5 py-3 text-ink-500">3 wks ago</td><td class="px-5 py-3 text-ink-600">872</td>
+              <td class="px-5 py-3"><div class="flex justify-end gap-1"><a href="21-moderation-review.html" class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-eye"></i></a><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-dots"></i></button></div></td>
+            </tr>
+            <tr class="hover:bg-surface">
+              <td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhal5/80/80" class="h-10 w-10 rounded-lg object-cover grayscale" alt="" /><div><p class="font-medium text-ink-900">Metro Inn PG</p><p class="text-xs text-ink-400">Co-living · 6 photos</p></div></div></td>
+              <td class="px-5 py-3 text-ink-600">Rawalpindi</td><td class="px-5 py-3 text-ink-600">Adeel Riaz</td>
+              <td class="px-5 py-3"><span class="inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger"><i class="ti ti-x text-xs"></i>Rejected</span></td>
+              <td class="px-5 py-3 text-ink-500">1 mo ago</td><td class="px-5 py-3 text-ink-400">—</td>
+              <td class="px-5 py-3"><div class="flex justify-end gap-1"><a href="21-moderation-review.html" class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-eye"></i></a><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 hover:bg-surface"><i class="ti ti-dots"></i></button></div></td>
+            </tr>
+            <tr class="bg-danger/5 hover:bg-surface">
+              <td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhal6/80/80" class="h-10 w-10 rounded-lg object-cover opacity-40 grayscale" alt="" /><div><p class="font-medium text-ink-500 line-through">Star Boys Hostel</p><p class="text-xs text-ink-400">Removed by admin · policy violation</p></div></div></td>
+              <td class="px-5 py-3 text-ink-400">Lahore</td><td class="px-5 py-3 text-ink-400">M. Faisal</td>
+              <td class="px-5 py-3"><span class="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">Removed</span></td>
+              <td class="px-5 py-3 text-ink-400">2 mo ago</td><td class="px-5 py-3 text-ink-400">—</td>
+              <td class="px-5 py-3"><div class="flex justify-end"><a href="24-moderation-audit.html" class="rounded-lg border border-ink-200 px-2.5 py-1.5 text-xs font-medium text-ink-600 hover:bg-surface">View log</a></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between text-sm text-ink-400">
+        <span>Showing 6 of 1,482</span>
+        <div class="flex gap-1"><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200"><i class="ti ti-chevron-left"></i></button><button class="grid h-8 w-8 place-items-center rounded-lg bg-ink-900 text-sm font-medium text-white">1</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-sm">2</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-sm">3</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200"><i class="ti ti-chevron-right"></i></button></div>
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

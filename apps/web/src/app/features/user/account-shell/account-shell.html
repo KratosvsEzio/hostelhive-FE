@@ -1,0 +1,17 @@
+<section class="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+  <h1 class="font-display text-2xl font-semibold text-ink-900">Account</h1>
+  <p class="mt-1 text-sm text-ink-400">
+    Manage your profile, saved hostels and preferences.
+  </p>
+
+  <div class="mt-8 grid gap-8 lg:grid-cols-[230px_1fr]">
+    <aside class="h-max rounded-2xl border border-ink-100 bg-white p-2">
+      @for (n of nav; track n.path) {
+        <a [routerLink]="n.path" routerLinkActive="active" class="nav-link">
+          <i class="ti {{ n.icon }}"></i>{{ n.label }}
+        </a>
+      }
+    </aside>
+    <div class="min-w-0"><router-outlet /></div>
+  </div>
+</section>

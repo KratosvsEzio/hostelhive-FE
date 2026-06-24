@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Moderator · Audit Log</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center gap-2 px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /><span class="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Mod</span></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="20-moderation-queue.html" class="nav-link"><i class="ti ti-inbox text-lg"></i>Review queue<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">12</span></a>
+      <a href="22-delta-media.html" class="nav-link"><i class="ti ti-photo text-lg"></i>Media queue<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">5</span></a>
+      <a href="23-moderation-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>All listings</a>
+      <a href="24-moderation-audit.html" class="nav-link active"><i class="ti ti-history text-lg"></i>Audit log</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="25-moderation-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white">MS</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Maria Shah</p><p class="truncate text-xs text-ink-400">Moderator</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Audit log</h1></div>
+      <button class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 hover:bg-surface"><i class="ti ti-download"></i>Export CSV</button>
+    </header>
+
+    <main class="mx-auto max-w-4xl px-5 py-6 sm:px-8">
+      <!-- filters -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm"><i class="ti ti-user text-ink-400"></i><span class="font-medium text-ink-800">All moderators</span><i class="ti ti-chevron-down text-ink-400"></i></div>
+        <div class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm"><i class="ti ti-calendar text-ink-400"></i><span class="font-medium text-ink-800">Last 7 days</span><i class="ti ti-chevron-down text-ink-400"></i></div>
+        <span class="mx-1 h-6 w-px bg-ink-200"></span>
+        <button class="rounded-full bg-ink-900 px-3 py-1.5 text-xs font-medium text-white">All actions</button>
+        <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Approvals</button>
+        <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Rejections</button>
+        <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Edits</button>
+        <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600">Media</button>
+      </div>
+
+      <!-- TODAY -->
+      <p class="mb-3 mt-7 text-xs font-semibold uppercase tracking-wider text-ink-400">Today · 11 June 2026</p>
+      <div class="space-y-3">
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ok/10 text-ok"><i class="ti ti-rosette-discount-check text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Maria Shah</span> approved &amp; published <a href="21-moderation-review.html" class="font-medium text-brand-600 hover:underline">Capital Boys Lodge</a></p>
+            <p class="mt-0.5 text-xs text-ink-400">Host notified by email · listing now public</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">14:32</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-photo-x text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Maria Shah</span> rejected 1 photo on <a href="21-moderation-review.html" class="font-medium text-brand-600 hover:underline">City Nest PG</a></p>
+            <p class="mt-0.5 text-xs text-ink-400">Reason: blurry · photo #3 (bedroom)</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">14:18</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-edit text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Maria Shah</span> edited the description of <a href="21-moderation-review.html" class="font-medium text-brand-600 hover:underline">City Nest PG</a></p>
+            <p class="mt-0.5 rounded-lg bg-surface px-2.5 py-1.5 text-xs text-ink-500"><span class="text-danger line-through">"best hostel in twon"</span> → <span class="text-ok">"Modern co-living space in Gulshan…"</span></p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">14:11</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ok/10 text-ok"><i class="ti ti-photo-check text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Ali Hamza</span> approved 3 pending photos on live listing <a href="22-delta-media.html" class="font-medium text-brand-600 hover:underline">Al-Madina Boys Hostel</a></p>
+            <p class="mt-0.5 text-xs text-ink-400">Delta media pipeline · photos now public</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">11:47</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warn/10 text-warn"><i class="ti ti-flag text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Ali Hamza</span> flagged the map pin on <a href="21-moderation-review.html" class="font-medium text-brand-600 hover:underline">Garden View Hostel</a> for host correction</p>
+            <p class="mt-0.5 text-xs text-ink-400">Pin ~400m from stated street address</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">10:05</span>
+        </div>
+      </div>
+
+      <!-- YESTERDAY -->
+      <p class="mb-3 mt-8 text-xs font-semibold uppercase tracking-wider text-ink-400">Yesterday · 10 June 2026</p>
+      <div class="space-y-3">
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-700"><i class="ti ti-pencil text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Maria Shah</span> requested changes on <a href="21-moderation-review.html" class="font-medium text-brand-600 hover:underline">Iqra Girls Hostel</a></p>
+            <p class="mt-0.5 text-xs text-ink-400">Notes: add facade photo, confirm 1-sharing price · host emailed</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">16:40</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-x text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Maria Shah</span> rejected <a href="23-moderation-listings.html" class="font-medium text-brand-600 hover:underline">Metro Inn PG</a></p>
+            <p class="mt-0.5 text-xs text-ink-400">Reason: duplicate of existing listing · refund policy link sent</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">12:22</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-star text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Ali Hamza</span> set a new primary image on <a href="21-moderation-review.html" class="font-medium text-brand-600 hover:underline">Sunrise Lodge</a></p>
+            <p class="mt-0.5 text-xs text-ink-400">facade.jpg → search thumbnail updated</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">09:51</span>
+        </div>
+        <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-trash text-xl"></i></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-ink-800"><span class="font-medium">Admin (S. Qureshi)</span> removed <span class="font-medium text-ink-900">Star Boys Hostel</span></p>
+            <p class="mt-0.5 text-xs text-ink-400">Policy violation · fake photos reported · host suspended</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-400">08:15</span>
+        </div>
+      </div>
+
+      <div class="mt-8 flex justify-center">
+        <button class="rounded-xl border border-ink-200 bg-white px-5 py-2.5 text-sm font-medium text-ink-700 shadow-card hover:bg-surface">Load older entries</button>
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

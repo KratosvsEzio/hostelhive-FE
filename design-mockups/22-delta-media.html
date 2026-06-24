@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Moderator · Media Queue</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center gap-2 px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /><span class="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Mod</span></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="20-moderation-queue.html" class="nav-link"><i class="ti ti-inbox text-lg"></i>Review queue<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">12</span></a>
+      <a href="22-delta-media.html" class="nav-link active"><i class="ti ti-photo text-lg"></i>Media queue<span class="ml-auto rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">5</span></a>
+      <a href="23-moderation-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>All listings</a>
+      <a href="24-moderation-audit.html" class="nav-link"><i class="ti ti-history text-lg"></i>Audit log</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="25-moderation-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white">MS</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Maria Shah</p><p class="truncate text-xs text-ink-400">Moderator</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Media queue</h1></div>
+      <span class="text-sm text-ink-400">New photos on <span class="font-medium text-ink-700">live</span> listings — pending approval</span>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-5 py-6 sm:px-8">
+      <div class="rounded-2xl border border-tint-cream bg-tint-cream/50 px-4 py-3 text-sm text-ink-600"><i class="ti ti-info-circle text-brand-600"></i> Approved photos appear on the live listing instantly. Rejected photos notify the host with a reason.</div>
+
+      <div class="mt-5 space-y-4">
+        <div class="rounded-2xl bg-white p-4 shadow-card">
+          <div class="mb-3 flex items-center gap-3"><img src="https://picsum.photos/seed/hhd1/60/60" class="h-9 w-9 rounded-lg object-cover" alt="" /><div class="flex-1"><p class="font-medium text-ink-900">Al-Madina Boys Hostel <span class="ml-1 rounded-full bg-ok/10 px-2 py-0.5 text-[11px] font-medium text-ok">Live</span></p><p class="text-xs text-ink-400">Imran Khan uploaded 3 photos · 1 hr ago</p></div></div>
+          <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div class="group relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhdm1/240/180" class="aspect-[4/3] w-full object-cover" alt="" /><span class="absolute left-2 top-2 rounded bg-warn/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">Rooftop</span><div class="absolute inset-x-0 bottom-0 flex gap-1 bg-gradient-to-t from-ink-900/70 to-transparent p-2"><button class="grid h-7 flex-1 place-items-center rounded-lg bg-ok text-white"><i class="ti ti-check text-sm"></i></button><button class="grid h-7 flex-1 place-items-center rounded-lg bg-white/90 text-danger"><i class="ti ti-x text-sm"></i></button></div></div>
+            <div class="group relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhdm2/240/180" class="aspect-[4/3] w-full object-cover" alt="" /><span class="absolute left-2 top-2 rounded bg-warn/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">Bedroom</span><div class="absolute inset-x-0 bottom-0 flex gap-1 bg-gradient-to-t from-ink-900/70 to-transparent p-2"><button class="grid h-7 flex-1 place-items-center rounded-lg bg-ok text-white"><i class="ti ti-check text-sm"></i></button><button class="grid h-7 flex-1 place-items-center rounded-lg bg-white/90 text-danger"><i class="ti ti-x text-sm"></i></button></div></div>
+            <div class="group relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhdm3/240/180" class="aspect-[4/3] w-full object-cover" alt="" /><span class="absolute left-2 top-2 rounded bg-warn/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">Kitchen</span><div class="absolute inset-x-0 bottom-0 flex gap-1 bg-gradient-to-t from-ink-900/70 to-transparent p-2"><button class="grid h-7 flex-1 place-items-center rounded-lg bg-ok text-white"><i class="ti ti-check text-sm"></i></button><button class="grid h-7 flex-1 place-items-center rounded-lg bg-white/90 text-danger"><i class="ti ti-x text-sm"></i></button></div></div>
+          </div>
+          <div class="mt-3 flex justify-end gap-2"><button class="rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-700">Reject all</button><button class="rounded-lg bg-ok px-3 py-1.5 text-xs font-semibold text-white">Approve all 3</button></div>
+        </div>
+
+        <div class="rounded-2xl bg-white p-4 shadow-card">
+          <div class="mb-3 flex items-center gap-3"><img src="https://picsum.photos/seed/hhf2/60/60" class="h-9 w-9 rounded-lg object-cover" alt="" /><div class="flex-1"><p class="font-medium text-ink-900">Gulberg Girls Residence <span class="ml-1 rounded-full bg-ok/10 px-2 py-0.5 text-[11px] font-medium text-ok">Live</span></p><p class="text-xs text-ink-400">Sana Malik uploaded 2 photos · 4 hrs ago</p></div></div>
+          <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div class="group relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhdm4/240/180" class="aspect-[4/3] w-full object-cover" alt="" /><span class="absolute left-2 top-2 rounded bg-warn/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">Common</span><div class="absolute inset-x-0 bottom-0 flex gap-1 bg-gradient-to-t from-ink-900/70 to-transparent p-2"><button class="grid h-7 flex-1 place-items-center rounded-lg bg-ok text-white"><i class="ti ti-check text-sm"></i></button><button class="grid h-7 flex-1 place-items-center rounded-lg bg-white/90 text-danger"><i class="ti ti-x text-sm"></i></button></div></div>
+            <div class="group relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhdm5/240/180" class="aspect-[4/3] w-full object-cover" alt="" /><span class="absolute left-2 top-2 rounded bg-warn/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">Bathroom</span><div class="absolute inset-x-0 bottom-0 flex gap-1 bg-gradient-to-t from-ink-900/70 to-transparent p-2"><button class="grid h-7 flex-1 place-items-center rounded-lg bg-ok text-white"><i class="ti ti-check text-sm"></i></button><button class="grid h-7 flex-1 place-items-center rounded-lg bg-white/90 text-danger"><i class="ti ti-x text-sm"></i></button></div></div>
+          </div>
+          <div class="mt-3 flex justify-end gap-2"><button class="rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-700">Reject all</button><button class="rounded-lg bg-ok px-3 py-1.5 text-xs font-semibold text-white">Approve all 2</button></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

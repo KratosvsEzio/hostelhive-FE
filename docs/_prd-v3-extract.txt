@@ -1,0 +1,2241 @@
+﻿
+HOSTEL
+HIVE
+ 
+
+Product Requirements Document
+Complete Ecosystem — Full Feature Specification
+
+Field
+ | Details
+ | 
+Document Version
+ | v3.0 (Comprehensive Release)
+ | 
+Target Platform
+ | hostelhive.com — Web, Dashboard, PMS & Moderator Modules
+ | 
+Author / Stakeholder
+ | Product Engineering & Strategy Team
+ | 
+Document Date
+ | June 2025
+ | 
+Status
+ | Draft — Internal Review
+ | 
+Classification
+ | Confidential — Internal Use Only
+ | 
+
+Table of Contents
+TOC \h \o "1-3"
+
+1. Executive Summary
+
+HostelHive is a two-sided marketplace platform that connects hostel-seekers with verified accommodation providers (hosts). The platform provides a full end-to-end ecosystem covering property discovery, authenticated lead generation, host onboarding, payment verification, content moderation, tenant management, automated billing, and financial analytics.
+
+This Product Requirements Document (PRD) defines the complete functional, technical, UX/UI, and non-functional requirements for the HostelHive web platform, including all five core feature modules and their supporting subsystems.
+
+1.1 Core Value Propositions
+Stakeholder
+ | Value Delivered
+ | 
+Hostel Seekers
+ | Efficient, filtered discovery of verified hostels matching their budget, gender preference, and room configuration.
+ | 
+Hostel Hosts / Owners
+ | Self-service property listing, automated billing, tenant management, and financial analytics from a single dashboard.
+ | 
+Platform Moderators
+ | Structured review queue with granular editorial and media control over all live and pending listings.
+ | 
+Platform Operator (HostelHive)
+ | Verified lead database, monetization via listing fees, and reliable, abuse-resistant data pipelines.
+ | 
+
+2. Product Scope & Modules
+
+The HostelHive platform is organized into five distinct product features, each serving a specific user group and operational need:
+
+Module #
+ | Module Name
+ | Primary Users
+ | Channel
+ | 
+Feature 1
+ | Hostel Search, Discovery & Lead Generation
+ | Seekers (Guests)
+ | Public Web
+ | 
+Feature 2
+ | Host Onboarding, Property Listing & Payment
+ | Hosts (Property Owners)
+ | Host Dashboard
+ | 
+Feature 3
+ | Moderator Content Review Platform
+ | Internal Moderators
+ | Admin Panel
+ | 
+Feature 4
+ | Property Operations: Room, Renter & Billing
+ | Hosts (Operators)
+ | Host Dashboard
+ | 
+Feature 5
+ | Host Financial Analytics Dashboard
+ | Hosts (Operators)
+ | Host Dashboard
+ | 
+Feature 6
+ | Admin Panel — Roles, Permissions, Contracts & Payments
+ | Super Admins
+ | Admin Panel
+ | 
+Feature 7
+ | Subscription Contracts & Payment Lifecycle
+ | Hosts, Admins
+ | Host Dashboard / Admin Panel
+ | 
+Feature 8
+ | Host Sub-User Management (Managers & Wardens)
+ | Hosts, Managers, Wardens
+ | Host Dashboard
+ | 
+
+3. Assumptions, Constraints & Dependencies
+
+3.1 Assumptions
+Users have access to a modern web browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+).
+Hosts have a valid phone number and business email address for account verification.
+Payment processing is handled via a third-party provider (e.g., Stripe, JazzCash, or EasyPaisa for Pakistan market).
+Google Maps JavaScript SDK and Google Places API access are available under a valid API key.
+WhatsApp Business API access is available for automated tenant billing notifications.
+All monetary values are stored and displayed in PKR (Pakistani Rupee) by default, with multi-currency support as a future roadmap item.
+
+3.2 Technical Constraints
+No more than one in-progress property onboarding per host account at any time (system-enforced).
+Image uploads must not exceed 10 MB per file; supported formats: JPG, PNG, WEBP.
+A maximum of 20 images per property listing is enforced at the API layer.
+Latitude/longitude precision is stored at Decimal(20, 5) for mapping accuracy.
+All background billing cron jobs execute daily at midnight server time (UTC+5 for Pakistan).
+
+3.3 External Dependencies
+Dependency
+ | Purpose
+ | Provider / API
+ | 
+Google Places API
+ | Location autocomplete for search and host address input
+ | Google Cloud
+ | 
+Google Maps JavaScript SDK
+ | Interactive draggable pin map for host property location
+ | Google Cloud
+ | 
+Static Map / Embed API
+ | Read-only map display on public seeker listing detail page
+ | Google Cloud
+ | 
+Payment Gateway
+ | Listing fee transaction processing & webhooks
+ | Stripe / JazzCash
+ | 
+Transactional Email
+ | Email verification, invoice delivery
+ | SendGrid / SES
+ | 
+WhatsApp Business API
+ | Automated tenant billing and invoice delivery
+ | Meta / Twilio
+ | 
+Cloud Storage (CDN)
+ | Image asset hosting for hostel media
+ | AWS S3 / Cloudflare R2
+ | 
+HTML-to-PDF Engine
+ | Invoice document generation
+ | Puppeteer / wkhtmltopdf
+ | 
+
+4. User Roles & Permissions Matrix
+
+Permission / Action
+ | Guest
+ | Seeker
+ | Host
+ | Manager / Warden
+ | Moderator
+ | Super Admin
+ | 
+Browse hostel listings
+ | ✓
+ | ✓
+ | ✓
+ | ✓
+ | ✓
+ | ✓
+ | 
+View hostel contact details
+ | ✗
+ | ✓
+ | ✓
+ | ✓
+ | ✓
+ | ✓
+ | 
+Register / Login
+ | ✓
+ | N/A
+ | N/A
+ | N/A
+ | N/A
+ | N/A
+ | 
+Create property listing
+ | ✗
+ | ✗
+ | ✓
+ | ✗
+ | ✗
+ | ✓
+ | 
+Pin location on map
+ | ✗
+ | ✗
+ | ✓
+ | ✗
+ | ✗
+ | ✓
+ | 
+Upload property images
+ | ✗
+ | ✗
+ | ✓
+ | ✓ (assigned hostel)
+ | ✓
+ | ✓
+ | 
+Manage rooms & tenants
+ | ✗
+ | ✗
+ | ✓ (all own hostels)
+ | ✓ (assigned hostel only)
+ | ✗
+ | ✓
+ | 
+View financial dashboard
+ | ✗
+ | ✗
+ | ✓ (own)
+ | ✓ (assigned hostel only)
+ | ✗
+ | ✓
+ | 
+Create Manager / Warden users
+ | ✗
+ | ✗
+ | ✓
+ | ✗
+ | ✗
+ | ✓
+ | 
+Access review queue
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✓
+ | ✓
+ | 
+Approve / reject listings
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✓
+ | ✓
+ | 
+Delete any listing
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✓
+ | ✓
+ | 
+Manage subscription contracts
+ | ✗
+ | ✗
+ | View own
+ | ✗
+ | ✗
+ | ✓
+ | 
+View / verify contract payments
+ | ✗
+ | ✗
+ | View own
+ | ✗
+ | ✗
+ | ✓
+ | 
+Manage roles & permissions
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✓
+ | 
+Manage user accounts (all)
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✗
+ | ✓
+ | 
+
+Feature 1 Hostel Search, Discovery & Authenticated Lead Generation
+🎯 Objective: Provide seekers with a seamless, filterable discovery mechanism for hostel accommodations, while enforcing an authentication gateway to protect premium host contact data and enrich the platform's verified lead database.
+4.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-1.1
+ | Seeker
+ | Search hostels by location, budget, gender type, and room configuration
+ | I find accommodations matching my exact needs
+ | 
+US-1.2
+ | Seeker
+ | View a photo carousel and amenity breakdown for each listing
+ | I can make an informed decision before contacting management
+ | 
+US-1.3
+ | Seeker
+ | See the hostel's precise location on an interactive map
+ | I can assess commute distance and neighborhood context
+ | 
+US-1.4
+ | Guest (unauth)
+ | Be prompted to register when I try to view a phone number
+ | The platform stays protected from data scrapers
+ | 
+US-1.5
+ | Platform Operator
+ | Gate contact details behind email verification
+ | Only real, verified users generate host leads
+ | 
+
+4.2 Search Engine Architecture & Filters
+Filter Parameter
+ | Engineering Protocol
+ | Operational Behavior
+ | 
+Location Target
+ | Google Places API Autocomplete Wrapper
+ | Accepts broad text input; resolves to City, State, or Area tokens on select.
+ | 
+Gender Classification
+ | Database Enum (0=Male, 1=Female, 2=Mixed)
+ | Radio buttons or multi-select: Male Only / Female Only / Co-living.
+ | 
+Financial Tiering
+ | Min/Max Boundary Range Slider
+ | Dynamic range derived from lowest and highest active room price records.
+ | 
+Room Layout / Sharing
+ | Multi-Select Checkbox Matrix
+ | Values: 1-Sharing, 2-Sharing, 3-Sharing, 4-Sharing, 4+-Sharing.
+ | 
+Property Type
+ | Enum Dropdown
+ | Hostel / PG / Shared Apartment / Student Housing.
+ | 
+Amenities
+ | Multi-Select Tag Filter
+ | Wi-Fi, Parking, AC, Laundry, Kitchen, Security Guard, CCTV, Generator.
+ | 
+Sort By
+ | Server-side query param
+ | Price: Low to High / High to Low, Newest First, Most Reviewed.
+ | 
+
+4.3 Listing Detail Page — Public View
+4.3.1 Components
+Hero image carousel (auto-plays; supports thumbnail strip navigation).
+Property title, star rating (if reviews exist), and verified badge.
+Short description and "About this hostel" expandable section.
+Amenities grid with iconography (Wi-Fi, parking, AC, laundry, kitchen, CCTV, generator, security guard).
+Room configuration cards: each room type showing sharing count, price/month, availability indicator.
+Nearby landmarks section (editable by moderators and hosts).
+Host profile card: name, avatar, member since date, response rate.
+Review and rating module (Average score, star breakdown, user comments — see Feature 6).
+"Show Phone Number" CTA button — triggers Lead Wall if user is unauthenticated.
+
+4.3.2 Interactive Location Map on Listing Detail Page (NEW — MISSING IN V1)
+Every approved listing detail page must display an embedded interactive map showing the exact pinned location of the hostel property. This is a critical trust and usability feature for seekers evaluating commute distance and neighborhood context.
+
+Component
+ | Specification
+ | 
+Map Provider
+ | Google Maps JavaScript SDK (Embed API for static fallback)
+ | 
+Map Type
+ | Interactive — seekers can zoom, pan, and switch between Map and Satellite view
+ | 
+Pin / Marker
+ | Custom branded HostelHive pin marker at the exact lat/lng coordinates stored during host onboarding
+ | 
+Info Window
+ | Clicking the marker opens an info bubble showing: Hostel Name, Thumbnail, Price Range
+ | 
+Nearby Context
+ | Map loads with zoom level 15 (street-level) by default; seekers can zoom out for context
+ | 
+Fallback
+ | If coordinates are null or map fails to load, display a "Location not available" placeholder tile
+ | 
+Mobile Responsive
+ | Map container adapts to full-width on mobile (375px+); minimum height 220px on mobile, 380px on desktop
+ | 
+Privacy / Precision
+ | Exact coordinates are shown (not approximated) since hosts have consented to public location display during onboarding
+ | 
+
+4.4 Lead Wall Mechanism — Detailed Flow
+The Lead Wall is the gated authentication system that protects host contact information from bots and data scrapers while building HostelHive's verified user database.
+
+Unauthenticated visitor clicks the "Show Phone Number" button on a listing detail page.
+The UI renders an opaque overlay modal blocking the contact details from view.
+The modal presents two tabs: Login (returning users) and Register (new users).
+New user completes: Full Name, Email Address, Password (min 8 chars, 1 uppercase, 1 number), Phone Number.
+System creates a database user record with status = PENDING.
+System dispatches a cryptographically signed, 24-hour-expiry email verification link.
+On link click, status transitions to ACTIVE; a session token is minted.
+Browser is deep-linked back to the originating listing with phone number now visible.
+
+Edge Cases:
+If email already exists: display "Account exists — please login" and redirect to Login tab.
+If verification link has expired: display re-send option; re-issue new link on request.
+Social login (Google OAuth) bypasses email verification step; account immediately set to ACTIVE.
+
+Feature 2 Host Onboarding, Property Listing & Payment Verification
+🎯 Objective: Give hosts a structured, self-service workflow to list their properties, pin their exact location on a map, upload and label media assets, and complete listing fee payment — with robust state management to prevent orphaned records.
+5.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-2.1
+ | Host
+ | Create a new hostel listing with full property details
+ | My property appears in search results for seekers
+ | 
+US-2.2
+ | Host
+ | Pin my hostel location on an interactive map
+ | Seekers can see exactly where my property is located
+ | 
+US-2.3
+ | Host
+ | Upload and label multiple property images
+ | My listing has rich visual content to attract seekers
+ | 
+US-2.4
+ | Host
+ | Pay the listing fee and receive confirmation
+ | My listing enters the moderation queue for approval
+ | 
+US-2.5
+ | Host
+ | Resume an incomplete listing submission
+ | I don't lose progress if I navigate away mid-form
+ | 
+
+5.2 Onboarding Guard: Single In-Progress Rule
+Business Logic Constraint: No host account can maintain more than one concurrent in-progress listing entry. If the backend detects an active record with status_id = 'onboarding', any attempt to create a secondary listing must be rejected at the API layer. The client must redirect the host to complete or abandon the existing onboarding flow.
+
+5.3 Property Listing Form — Field Specification
+Field Identifier
+ | DB Data Type
+ | Validation Rules
+ | UI Interaction
+ | 
+name
+ | VARCHAR(255)
+ | Required; min 5 chars, max 255
+ | Text input
+ | 
+description
+ | TEXT
+ | Required; min 50 chars
+ | Rich text editor (bold, lists, links)
+ | 
+property_type
+ | INT (Enum)
+ | Required; values: 0–3
+ | Dropdown: Hostel / PG / Shared Apt / Student Housing
+ | 
+gender_type
+ | INT (Enum)
+ | Required; values: 0–2
+ | Radio: Male Only / Female Only / Co-living
+ | 
+address_1
+ | VARCHAR(255)
+ | Required; min 5 chars
+ | Text input (Street address / building name)
+ | 
+address_2
+ | VARCHAR(255)
+ | Optional
+ | Text input (Flat no / unit)
+ | 
+area
+ | VARCHAR(100)
+ | Required
+ | Text input (auto-populated from map pin reverse geocode)
+ | 
+city
+ | VARCHAR(100)
+ | Required
+ | Text input (auto-populated from map pin)
+ | 
+state
+ | VARCHAR(100)
+ | Required
+ | Text input (auto-populated from map pin)
+ | 
+country
+ | VARCHAR(100)
+ | Required; default Pakistan
+ | Text input (auto-populated from map pin)
+ | 
+latitude
+ | DECIMAL(20,5)
+ | Required; captured from map
+ | Hidden field — set by draggable map pin
+ | 
+longitude
+ | DECIMAL(20,5)
+ | Required; captured from map
+ | Hidden field — set by draggable map pin
+ | 
+primary_phone
+ | VARCHAR(20)
+ | Required; E.164 format
+ | Phone input with country code selector
+ | 
+secondary_phone
+ | VARCHAR(20)
+ | Optional; E.164 format
+ | Phone input with country code selector
+ | 
+min_price
+ | DECIMAL(10,2)
+ | Auto-calculated; read-only
+ | Computed from lowest room price variant
+ | 
+max_price
+ | DECIMAL(10,2)
+ | Auto-calculated; read-only
+ | Computed from highest room price variant
+ | 
+amenities
+ | JSON Array
+ | Optional; multi-select
+ | Checkbox grid with icons
+ | 
+nearby_landmarks
+ | TEXT
+ | Optional; max 500 chars
+ | Textarea (e.g., "Near DHA Phase 6 main gate")
+ | 
+
+5.4 Interactive Location Pinning Map — Host Onboarding (CORE REQUIREMENT)
+During property listing creation, hosts must pin their hostel's exact location on an interactive map. This is a mandatory step before the form can be submitted.
+
+Component
+ | Specification
+ | 
+Map Provider
+ | Google Maps JavaScript SDK
+ | 
+Initial State
+ | Map loads centered on the user's browser-detected geolocation (if permission granted), else defaults to the capital city (Islamabad, Pakistan: 33.6844° N, 73.0479° E)
+ | 
+Default Zoom
+ | Level 13 (district-level overview)
+ | 
+Search Box on Map
+ | Google Places Autocomplete embedded inside the map component — allows host to type an address or landmark and jump the map to that location
+ | 
+Draggable Pin
+ | A single draggable red/brand-colored marker pin. The host can click anywhere on the map to place the pin, or drag an existing pin to reposition it.
+ | 
+Reverse Geocoding
+ | On every pin placement or drag-end event, the system fires a reverse geocode API call (Google Geocoding API). The resolved address components (area, city, state, country) auto-populate the corresponding address form fields.
+ | 
+Coordinates Display
+ | A read-only coordinate readout below the map shows "Lat: XX.XXXXX | Lng: XX.XXXXX" updating live as the pin moves.
+ | 
+Confirmation Step
+ | An "Confirm Location" button locks the pin position. After confirmation, a green success banner appears: "Location pinned successfully."
+ | 
+Edit / Repin
+ | Host can click "Change Location" to re-enter editing mode and reposition the pin.
+ | 
+Mandatory Validation
+ | If the host attempts to proceed to the next step without confirming a pin location, an inline validation error is shown: "Please pin your hostel location on the map before continuing."
+ | 
+Map Height
+ | Minimum 420px height on desktop; 280px on mobile. Full width within the form container.
+ | 
+Satellite View
+ | Toggle button available for Map / Satellite view to help hosts precisely identify their building rooftop.
+ | 
+
+5.5 Media Asset Management Engine
+5.5.1 Upload Rules
+Hosts may upload between 3 and 20 images per property listing.
+Supported formats: JPG, PNG, WEBP. Maximum file size: 10 MB per image.
+Concurrent multi-file upload is supported (batch upload UI with individual progress bars).
+Each uploaded image must be assigned a label from a mandatory platform dropdown menu.
+
+5.5.2 Image Label Options (Strict Taxonomy)
+Label Value
+ | Display Name
+ | Description
+ | 
+facade
+ | Building Facade / Exterior
+ | Exterior front view of the hostel building
+ | 
+bedroom
+ | Bedroom / Room
+ | Interior room photo showing beds and layout
+ | 
+bathroom
+ | Bathroom
+ | Toilet, shower, and washing area
+ | 
+kitchen
+ | Kitchen
+ | Shared or private kitchen space
+ | 
+common_area
+ | Common / Shared Area
+ | TV lounge, study room, or common spaces
+ | 
+dining
+ | Dining Area
+ | Dining table and eating space
+ | 
+rooftop
+ | Rooftop / Outdoor
+ | Terrace, garden, or outdoor area
+ | 
+parking
+ | Parking Area
+ | Bike or car parking space
+ | 
+reception
+ | Reception / Lobby
+ | Entrance and reception desk area
+ | 
+security
+ | Security / Gate
+ | Main gate or security checkpoint
+ | 
+
+5.5.3 Primary Image Requirement
+A boolean flag (is_primary) must be assigned to exactly one image. The primary image is used as the listing's thumbnail in search results and social sharing previews. Form submission will fail with a validation error if no primary image is designated.
+
+5.6 Payment Lifecycle & Status Transitions
+Upon saving the completed listing form, the following state machine is triggered:
+
+Step
+ | Action
+ | Status Change
+ | Disposition Change
+ | 
+1
+ | Host clicks "Submit & Pay"
+ | status = onboarding
+ | disposition = payment-pending
+ | 
+2
+ | Host redirected to payment gateway
+ | — (no change)
+ | — (no change)
+ | 
+3
+ | Payment gateway processes transaction
+ | — (external)
+ | — (external)
+ | 
+4
+ | Webhook received & verified
+ | status = active
+ | disposition = in-review
+ | 
+5
+ | Moderator approves listing
+ | status = active
+ | disposition = approved
+ | 
+6
+ | Listing goes live on platform
+ | status = active
+ | disposition = published
+ | 
+7
+ | Host suspends listing
+ | status = paused
+ | disposition = paused
+ | 
+8
+ | Admin removes listing
+ | status = inactive
+ | disposition = removed
+ | 
+
+Feature 3 Moderator Content Review Platform
+🎯 Objective: Provide internal platform operators with structured tools to review, edit, and approve property submissions and ongoing media uploads — without disrupting the visibility of already-live listings.
+6.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-3.1
+ | Moderator
+ | See a queue of all listings pending first review
+ | I can process new submissions efficiently
+ | 
+US-3.2
+ | Moderator
+ | Edit listing text, labels, and nearby landmarks inline
+ | I can fix quality issues without host intervention
+ | 
+US-3.3
+ | Moderator
+ | Reject individual blurry or inappropriate images
+ | Only high-quality media appears on live listings
+ | 
+US-3.4
+ | Moderator
+ | Upload replacement images directly from the panel
+ | Listings are complete and professional on launch
+ | 
+US-3.5
+ | Moderator
+ | Approve or reject pending media uploads for live listings
+ | Hosts cannot publish unvetted images to live pages
+ | 
+US-3.6
+ | Moderator
+ | Verify the pinned map location is accurate
+ | Seekers receive trustworthy location information
+ | 
+
+6.2 Review Queue Panel
+6.2.1 Queue Display
+Paginated list (20 items per page) of all properties where disposition_id = 'in-review'.
+Each row shows: Thumbnail, Property Name, City, Host Name, Submission Date, Days in Queue counter.
+Sortable columns: Submission Date, Days in Queue.
+Search/filter by city, property type, or host name.
+
+6.2.2 Inline Editing Controls
+Rich-text inline editing for: Property Name, Description, Nearby Landmarks.
+Dropdown re-labeling for property type and gender type.
+Image grid with per-image actions: Approve, Reject, Replace, Set as Primary.
+Map view of pinned location with option to flag incorrect location for host correction.
+Audit log sidebar: shows all edits made by moderators with timestamps.
+
+6.2.3 Final Decision Actions
+Action
+ | New Status
+ | New Disposition
+ | Notification Sent
+ | 
+Approve & Publish
+ | active
+ | published
+ | Email to host: "Your listing is now live!"
+ | 
+Request Changes
+ | active
+ | changes-requested
+ | Email to host with moderator notes
+ | 
+Reject Listing
+ | inactive
+ | rejected
+ | Email to host with rejection reason + refund policy link
+ | 
+
+6.3 Delta Media Inspection Pipeline
+For live (published) listings, hosts can upload new images at any time. These images enter a buffered pipeline to protect the live listing from unvetted content:
+
+Host uploads new image(s) through the Host Dashboard image management panel.
+New images are written to cloud storage with moderation_status = 'pending'. They are NOT visible on the public listing.
+A notification badge appears in the Moderator Panel's secondary media review queue.
+Moderator reviews the pending image. Actions available: Approve (sets moderation_status = 'approved', image becomes public) or Reject (sets moderation_status = 'rejected', host notified).
+Approved images immediately appear on the live listing without any downtime.
+
+Feature 4 Property Operations — Room, Renter & Automated Billing Management
+🎯 Objective: Transition approved hostel listings into operational businesses by giving property owners automated inventory management, recurring tenant rent calculation, pro-rata utility splitting, and multi-channel invoice delivery.
+7.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-4.1
+ | Host
+ | Create rooms with number, floor, and capacity details
+ | I have an accurate digital map of my property inventory
+ | 
+US-4.2
+ | Host
+ | Check-in tenants with their details and move-in date
+ | Each tenant has a tracked record in the system
+ | 
+US-4.3
+ | Host
+ | Have invoices automatically generated on each tenant's due date
+ | I don't miss billing cycles manually
+ | 
+US-4.4
+ | Host
+ | Send invoices to tenants via WhatsApp and email automatically
+ | Tenants receive timely, professional billing reminders
+ | 
+US-4.5
+ | Host
+ | Split utility bills by occupancy days across tenants
+ | Utility costs are fairly distributed
+ | 
+US-4.6
+ | Tenant
+ | Receive a detailed PDF invoice each billing cycle
+ | I have documentation of my rent and utility charges
+ | 
+
+7.2 Inventory Structure: Room Model
+Field
+ | Data Type
+ | Validation
+ | Description
+ | 
+room_id
+ | UUID
+ | Auto-generated
+ | Unique room identifier
+ | 
+property_id
+ | UUID FK
+ | Required
+ | Parent property reference
+ | 
+room_number
+ | VARCHAR(20)
+ | Required; unique per property
+ | e.g., "101", "Ground Floor A"
+ | 
+floor
+ | INT
+ | Required; min 0
+ | Floor level (0 = ground)
+ | 
+max_capacity
+ | INT
+ | Required; min 1, max 20
+ | Maximum number of tenants in this room
+ | 
+current_occupancy
+ | INT
+ | Computed; read-only
+ | Count of active tenants checked into this room
+ | 
+availability_status
+ | ENUM
+ | Auto-managed
+ | available / partially-occupied / full
+ | 
+room_type
+ | INT (Enum)
+ | Required
+ | 1-Sharing / 2-Sharing / 3-Sharing / 4-Sharing / 4+-Sharing
+ | 
+monthly_rent
+ | DECIMAL(10,2)
+ | Required; min 1
+ | Base rent for a single bed in this room per month
+ | 
+
+7.3 Tenant Record Model
+Field
+ | Data Type
+ | Validation
+ | Description
+ | 
+tenant_id
+ | UUID
+ | Auto-generated
+ | Unique tenant identifier
+ | 
+room_id
+ | UUID FK
+ | Required
+ | Room this tenant is assigned to
+ | 
+name
+ | VARCHAR(255)
+ | Required
+ | Tenant full name
+ | 
+contact_phone
+ | VARCHAR(20)
+ | Required; E.164
+ | Used for WhatsApp invoice delivery
+ | 
+contact_email
+ | VARCHAR(255)
+ | Required; valid email
+ | Used for email invoice delivery
+ | 
+cnic_number
+ | VARCHAR(15)
+ | Optional; Pakistan CNIC format
+ | National ID for identity verification
+ | 
+joining_date
+ | DATE
+ | Required
+ | Move-in date; used for pro-rata calculation
+ | 
+base_rent
+ | DECIMAL(10,2)
+ | Required
+ | Agreed monthly rent for this tenant
+ | 
+security_deposit
+ | DECIMAL(10,2)
+ | Optional; default 0
+ | One-time security deposit amount
+ | 
+rent_issue_date
+ | INT (1–28)
+ | Required
+ | Day of month when invoice is auto-generated
+ | 
+rent_due_date
+ | INT (1–28)
+ | Required; > rent_issue_date
+ | Day of month rent is due
+ | 
+status
+ | ENUM
+ | Auto-managed
+ | active / checked-out / suspended
+ | 
+checkout_date
+ | DATE
+ | Optional
+ | Populated on checkout; used for final pro-rata calc
+ | 
+
+7.4 Automated Billing Cron System Architecture
+A background scheduler executes daily at calendar midnight (server time). Execution logic:
+
+System queries all active tenant records where rent_issue_date = today's calendar day number.
+For each matched tenant: calculate total due = base_rent + utility_share (if applicable) — any credits.
+Generate HTML invoice document using property branding template.
+Compile HTML-to-PDF using server-side renderer (Puppeteer or wkhtmltopdf).
+Dispatch PDF invoice to tenant via: (a) WhatsApp Business API message with PDF attachment, (b) Transactional email with PDF attachment.
+Write invoice record to ledger table with status = 'issued'.
+After all tenant invoices are processed: compile daily summary report for the property owner.
+Dispatch summary report to property owner via WhatsApp and email.
+
+7.4.1 Invoice PDF Template — Required Fields
+HostelHive logo + Property Name header
+Invoice Number (auto-generated sequential: INV-YYYY-NNNN)
+Invoice Date and Due Date
+Tenant Name, Room Number, Floor
+Itemized charge breakdown: Base Rent, Utility Share (if any), Previous Balance (if any), Credits
+Total Amount Due (prominently styled)
+Payment instructions / account details
+Footer: HostelHive watermark and property manager contact
+
+7.5 Utility Bill Splitting Logic Engine
+Property managers enter collective variable utility bills per room per billing period. The pro-rata formula applied by default:
+
+Individual Share = (Total Bill Amount ÷ Total Combined Room Occupancy Days) × Tenant Individual Occupancy Days
+
+7.5.1 Utility Types Supported
+Utility Type
+ | Input Frequency
+ | Split Method
+ | 
+Electricity
+ | Monthly (per meter reading)
+ | Pro-rata by occupancy days
+ | 
+Water / Sewerage
+ | Monthly (fixed or metered)
+ | Pro-rata by occupancy days
+ | 
+Gas
+ | Monthly (per bill)
+ | Pro-rata by occupancy days
+ | 
+Internet / Cable
+ | Monthly (fixed fee)
+ | Equal split by current occupants
+ | 
+Generator / Backup Power
+ | Monthly (fuel cost)
+ | Pro-rata by occupancy days
+ | 
+Cleaning / Housekeeping
+ | Monthly (service fee)
+ | Equal split by current occupants
+ | 
+
+Override Capability: The interface allows owners to manually overwrite any calculated split value before finalizing and issuing the utility invoice batch.
+
+Feature 5 Host Operations & Financial Analytics Dashboard
+🎯 Objective: Synthesize operational tracking logs and billing data into actionable visual indicators, giving property owners a real-time command center for occupancy, collections, and outstanding balances across all their properties.
+8.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-5.1
+ | Host
+ | See my current occupancy rate at a glance
+ | I can quickly assess how full my property is
+ | 
+US-5.2
+ | Host
+ | Track this month's total collections vs pending
+ | I have real-time cash flow visibility
+ | 
+US-5.3
+ | Host
+ | Filter analytics by individual property or across all
+ | I can manage a portfolio of hostels from one dashboard
+ | 
+US-5.4
+ | Host
+ | See a monthly revenue trend chart
+ | I can identify seasonal patterns and growth trends
+ | 
+US-5.5
+ | Host
+ | Export financial reports as PDF or CSV
+ | I have documentation for accounting purposes
+ | 
+
+8.2 Dashboard KPI Cards
+Card Name
+ | Data Source
+ | Visual Style
+ | Behavior on Click
+ | 
+Occupancy Rate
+ | active tenants / total capacity across all rooms
+ | Progress ring / donut chart (0–100%); color: green > 70%, amber 40–70%, red < 40%
+ | Deep-link to Room List view
+ | 
+Total Vacant Beds
+ | total capacity − active tenants
+ | Large numeric, subtitle: "beds available"
+ | Deep-link to Room List filtered by available rooms
+ | 
+Collected This Month
+ | SUM of paid invoice amounts in current calendar month
+ | Currency display styled in green; PKR XXX,XXX
+ | Deep-link to Invoice List filtered by paid, current month
+ | 
+Total Pending Balance
+ | SUM of all unpaid invoices (all time)
+ | Currency display styled in amber/red
+ | Deep-link to Invoice List filtered by unpaid
+ | 
+Pending Rent Balance
+ | SUM of unpaid invoices where type = rent
+ | Currency display; styled in red
+ | Deep-link to Invoice List filtered by unpaid rent
+ | 
+Pending Utility Balance
+ | SUM of unpaid invoices where type = utility
+ | Currency display; styled in amber
+ | Deep-link to Invoice List filtered by unpaid utilities
+ | 
+
+8.3 Analytics Charts
+8.3.1 Monthly Revenue Trend
+Chart type: Line chart or Bar chart (user-selectable).
+X-axis: Last 12 months (calendar months).
+Y-axis: Total amount collected (PKR).
+Two data series: Rent Collected vs Utility Collected (color-coded).
+Hover tooltip: shows breakdown for that month.
+
+8.3.2 Occupancy Timeline
+Chart type: Stacked bar chart (per room).
+X-axis: Weeks or months (selectable).
+Y-axis: Occupied beds vs total capacity.
+Allows host to identify vacancy trends.
+
+8.3.3 Tenant Ledger Table
+Paginated table of all tenants with: Name, Room, Rent Amount, Last Invoice Date, Outstanding Balance.
+Sortable by outstanding balance descending (default — shows highest debtors first).
+Click-through to individual tenant invoice history.
+
+8.4 Multi-Property Scope Context Filter
+If a host owns more than one property, a global property selector control is displayed at the top of the dashboard. Options:
+"All Properties" — aggregates all metrics across the entire portfolio.
+Individual property name — isolates all calculations and charts to that single property.
+The selection persists in the URL query parameter (?property=all or ?property={property_id}) for bookmarking and sharing.
+
+8.5 Export & Reporting
+Export Type
+ | Format
+ | Scope
+ | Trigger
+ | 
+Monthly Financial Summary
+ | PDF (branded)
+ | Selected property or all
+ | Manual button click; also auto-sent by cron on 1st of each month
+ | 
+Invoice History Export
+ | CSV / Excel
+ | Date range selectable
+ | Manual button click
+ | 
+Tenant Ledger Export
+ | CSV
+ | All active tenants of selected property
+ | Manual button click
+ | 
+Occupancy Report
+ | PDF
+ | Last 12 months, selected property
+ | Manual button click
+ | 
+
+Feature 6 Admin Panel — Roles, Permissions, Contracts & Payments
+🎯 Objective: Provide the platform's Super Admins with a centralized control center to manage user roles and permissions, oversee subscription contracts and their payment status, and perform all moderation functions — consolidating platform-wide governance into a single panel.
+9.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-6.1
+ | Super Admin
+ | Define roles and assign granular permissions to internal staff
+ | Access control matches each team member's responsibilities
+ | 
+US-6.2
+ | Super Admin
+ | View a list of all subscription contracts across hosts
+ | I can monitor active, pending, and expired subscriptions
+ | 
+US-6.3
+ | Super Admin
+ | See the payment status of every contract in real time
+ | I know which hosts have paid and which have outstanding dues
+ | 
+US-6.4
+ | Super Admin
+ | Manually override a contract's status if needed
+ | I can resolve payment disputes or gateway failures
+ | 
+US-6.5
+ | Super Admin
+ | Perform all moderator actions from the same panel
+ | I have full operational oversight without switching tools
+ | 
+US-6.6
+ | Super Admin
+ | Audit role and permission changes made by other admins
+ | There is accountability for access-control changes
+ | 
+
+9.2 Roles & Permissions Management
+The Admin Panel includes a dedicated Roles & Permissions module that allows Super Admins to define system roles, assign granular permissions to each role, and assign roles to internal staff accounts (Moderators, Admins, Support Staff).
+
+9.2.1 System-Defined Roles
+Role
+ | Scope
+ | Description
+ | 
+Super Admin
+ | Platform-wide
+ | Full unrestricted access to every module, including role management itself.
+ | 
+Admin
+ | Platform-wide (configurable)
+ | Elevated access to contracts, payments, and moderation; role management restricted unless explicitly granted.
+ | 
+Moderator
+ | Platform-wide (listings only)
+ | Access limited to the Review Queue and Delta Media Inspection Pipeline (Feature 3).
+ | 
+Support Staff
+ | Platform-wide (read-only + tickets)
+ | Read-only access to contracts and user records to assist with support queries.
+ | 
+Host
+ | Own properties only
+ | Standard property owner access (Features 2, 4, 5).
+ | 
+Manager
+ | Single assigned hostel
+ | Operates one hostel on behalf of a host — see Feature 8.
+ | 
+Warden
+ | Single assigned hostel
+ | Operates one hostel on behalf of a host — see Feature 8.
+ | 
+Seeker
+ | Self / public listings
+ | Standard authenticated platform user (Feature 1).
+ | 
+
+9.2.2 Permission Model
+Permissions are granular, module-scoped flags (e.g., contracts.view, contracts.edit, payments.view, payments.refund, listings.approve, listings.delete, users.manage, roles.manage).
+Each role is a named collection of permission flags, editable via a checkbox matrix UI in the Admin Panel.
+Super Admins can create custom roles beyond the system-defined defaults (e.g., "Finance Reviewer" with payments.view + contracts.view only).
+Permission changes take effect immediately for all users assigned to that role; affected sessions are required to re-validate on next request.
+A role cannot be deleted while it is assigned to one or more active user accounts; the system displays a blocking validation message listing affected users.
+
+9.2.3 Roles & Permissions Data Model
+Field
+ | Data Type
+ | Description
+ | 
+role_id
+ | UUID
+ | Unique role identifier
+ | 
+role_name
+ | VARCHAR(100)
+ | Display name (e.g., "Moderator", "Finance Reviewer")
+ | 
+is_system_role
+ | BOOLEAN
+ | True for default roles (Super Admin, Admin, Moderator, Host, Manager, Warden, Seeker) — cannot be deleted
+ | 
+permissions
+ | JSON Array
+ | List of permission flag strings assigned to this role
+ | 
+created_by
+ | UUID FK → users
+ | Admin who created the custom role
+ | 
+created_at / updated_at
+ | TIMESTAMP
+ | Audit timestamps
+ | 
+
+9.3 Admin Contract Management Console
+All subscription contracts created in Feature 7 are visible to Super Admins through a centralized Contracts module. This is the admin-side view of the same contract entities described in Feature 7.
+
+9.3.1 Contracts List View
+Paginated, searchable table of all contracts platform-wide.
+Columns: Contract ID, Host Name, Plan Name, Start Date, End Date, Contract Status, Payment Status, Amount.
+Filters: Contract Status (draft / pending-payment / active / expired / cancelled), Payment Status (pending / paid / failed / refunded), Plan Type, Date Range.
+Clicking a row opens the Contract Detail view (see 10.3 in Feature 7).
+
+9.3.2 Admin Actions on Contracts
+Action
+ | Effect
+ | Permission Required
+ | 
+View contract & payment history
+ | Read-only view of full contract lifecycle and linked payment records
+ | contracts.view
+ | 
+Manually mark payment as paid
+ | Bypasses webhook for offline/bank-transfer payments; triggers same activation logic as automated webhook
+ | payments.manage
+ | 
+Cancel contract
+ | Sets contract_status = cancelled; associated host property listings are paused on contract end date
+ | contracts.edit
+ | 
+Extend contract
+ | Adjusts end_date; used for goodwill extensions or plan changes
+ | contracts.edit
+ | 
+Issue refund
+ | Records a refund against a payment; does not auto-reverse contract activation — requires manual contract cancellation if applicable
+ | payments.refund
+ | 
+View audit trail
+ | Shows all status transitions, who triggered them, and timestamps
+ | contracts.view
+ | 
+
+9.4 Admin Payments Console
+A dedicated Payments module lists all payment transactions linked to subscription contracts (Feature 7). This is distinct from tenant rent/utility payments (Feature 4), which remain within each host's own dashboard.
+
+Column
+ | Description
+ | 
+Payment ID
+ | Unique transaction identifier
+ | 
+Contract ID
+ | Linked subscription contract (FK)
+ | 
+Host Name
+ | Subscribing host
+ | 
+Amount
+ | Transaction amount in PKR
+ | 
+Gateway Reference
+ | Transaction ID returned by the payment gateway
+ | 
+Payment Method
+ | Card / Bank Transfer / Mobile Wallet
+ | 
+Payment Status
+ | pending / paid / failed / refunded
+ | 
+Webhook Received At
+ | Timestamp of gateway webhook confirmation (null if manually marked)
+ | 
+Initiated At / Paid At
+ | Transaction lifecycle timestamps
+ | 
+
+Admins can export the payments list as CSV for accounting reconciliation, filtered by date range and payment status.
+
+9.5 Consolidated Moderation Access
+All functionality from Feature 3 (Moderator Content Review Platform) — the Review Queue Panel and the Delta Media Inspection Pipeline — is fully accessible within the Admin Panel under a "Moderation" tab. Super Admins and users with the Moderator role see this tab; the underlying logic, data models, and workflows are identical to those specified in Feature 3, with the Admin Panel acting as an additional access surface alongside the standalone Moderator panel.
+
+Feature 7 Subscription Contracts & Payment Lifecycle
+🎯 Objective: Establish a formal contractual relationship between HostelHive and each subscribing host: when a host purchases a subscription plan, a contract record is created, a payment is generated against it, and the contract automatically activates once the payment gateway webhook confirms successful payment.
+10.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-7.1
+ | Host
+ | Purchase a subscription plan for my hostel listing(s)
+ | I can keep my listings active and published on the platform
+ | 
+US-7.2
+ | Host
+ | See my current contract status and renewal date
+ | I know when action is needed to avoid service interruption
+ | 
+US-7.3
+ | System
+ | Automatically activate a contract once payment is confirmed via webhook
+ | Hosts get instant access without manual admin intervention
+ | 
+US-7.4
+ | Super Admin
+ | View every contract and its payment status
+ | I can manage billing operations and resolve payment issues
+ | 
+US-7.5
+ | Host
+ | Receive a notification before my contract expires
+ | I can renew in time to avoid my listings being paused
+ | 
+
+10.2 Subscription Plans
+HostelHive offers tiered subscription plans that determine how many active property listings a host may publish and which platform features are unlocked.
+
+Plan
+ | Properties Included
+ | Billing Cycle
+ | Key Features
+ | 
+Starter
+ | 1 property
+ | Monthly / Annual
+ | Core listing, basic analytics dashboard
+ | 
+Growth
+ | Up to 3 properties
+ | Monthly / Annual
+ | All Starter features + Manager/Warden sub-users (up to 2 per property)
+ | 
+Portfolio
+ | Up to 10 properties
+ | Monthly / Annual
+ | All Growth features + multi-property analytics aggregation, priority moderation review
+ | 
+Enterprise
+ | Unlimited
+ | Annual (custom)
+ | All Portfolio features + dedicated account manager, custom invoice branding
+ | 
+
+10.3 Contract Lifecycle & State Machine
+When a host purchases or renews a subscription plan, the system creates a contract record and an associated payment record. The contract's status is driven entirely by the payment's status.
+
+Step
+ | Trigger
+ | contract_status
+ | payment_status
+ | 
+1
+ | Host selects a plan and clicks "Subscribe"
+ | draft
+ | — (no payment yet)
+ | 
+2
+ | System creates contract + payment record; host redirected to gateway
+ | pending-payment
+ | pending
+ | 
+3
+ | Payment gateway processes the transaction
+ | pending-payment
+ | pending
+ | 
+4a
+ | Webhook received & HMAC-verified: SUCCESS
+ | active
+ | paid
+ | 
+4b
+ | Webhook received & HMAC-verified: FAILURE
+ | pending-payment
+ | failed
+ | 
+5
+ | Host retries payment after failure
+ | pending-payment
+ | pending (new payment record)
+ | 
+6
+ | contract end_date reached without renewal
+ | expired
+ | — (unchanged)
+ | 
+7
+ | Admin manually cancels contract
+ | cancelled
+ | — (unchanged)
+ | 
+
+10.4 Automated Webhook-Driven Activation Flow
+Host selects a subscription plan and clicks "Subscribe" / "Renew" on the Host Dashboard.
+System creates a contract record with contract_status = 'draft', then immediately a linked payment record with payment_status = 'pending', and updates contract_status = 'pending-payment'.
+Host is redirected to the payment gateway checkout (Stripe / JazzCash / EasyPaisa) with the payment record's amount and reference ID.
+Host completes payment on the gateway's hosted checkout page.
+Gateway sends an asynchronous webhook to HostelHive's server endpoint containing the transaction outcome and a signed payload.
+Server verifies the webhook signature using HMAC validation against the shared gateway secret.
+On verified SUCCESS: payment_status → 'paid', gateway_reference and paid_at fields populated, contract_status → 'active', start_date set to today, end_date calculated based on the plan's billing cycle (e.g., +30 days or +365 days).
+On verified FAILURE: payment_status → 'failed'; contract remains 'pending-payment'; host sees a "Payment failed — retry" prompt on their dashboard.
+On successful activation, the system sends a confirmation email + WhatsApp message to the host with the contract details and an invoice/receipt PDF.
+A background job runs daily to check for contracts where end_date is within 7 days; affected hosts receive a renewal reminder notification.
+A background job runs daily to check for contracts where end_date has passed without renewal; contract_status → 'expired', and all of that host's property listings transition to status = 'paused' (their data is retained but they are removed from public search).
+
+10.5 Contract Data Model
+Field
+ | Data Type
+ | Description
+ | 
+contract_id
+ | UUID
+ | Unique contract identifier
+ | 
+host_id
+ | UUID FK → users
+ | The subscribing host
+ | 
+plan_id
+ | UUID FK → subscription_plans
+ | Selected subscription plan
+ | 
+contract_status
+ | ENUM
+ | draft / pending-payment / active / expired / cancelled
+ | 
+billing_cycle
+ | ENUM
+ | monthly / annual
+ | 
+start_date
+ | DATE
+ | Set when contract becomes active
+ | 
+end_date
+ | DATE
+ | Calculated from start_date + billing_cycle; null while draft/pending
+ | 
+auto_renew
+ | BOOLEAN
+ | If true, system attempts renewal payment automatically before end_date
+ | 
+created_at / updated_at
+ | TIMESTAMP
+ | Audit timestamps
+ | 
+
+10.6 Payment Data Model
+Field
+ | Data Type
+ | Description
+ | 
+payment_id
+ | UUID
+ | Unique payment identifier
+ | 
+contract_id
+ | UUID FK → contracts
+ | Parent contract this payment fulfills
+ | 
+amount
+ | DECIMAL(10,2)
+ | Transaction amount in PKR
+ | 
+payment_status
+ | ENUM
+ | pending / paid / failed / refunded
+ | 
+payment_method
+ | ENUM
+ | card / bank-transfer / mobile-wallet
+ | 
+gateway_reference
+ | VARCHAR(255)
+ | Transaction ID returned by the gateway; null until webhook received
+ | 
+webhook_payload_hash
+ | VARCHAR(255)
+ | HMAC hash of received webhook for audit/replay protection
+ | 
+initiated_at
+ | TIMESTAMP
+ | When the host was redirected to the gateway
+ | 
+paid_at
+ | TIMESTAMP
+ | When the webhook confirmed success; null otherwise
+ | 
+
+10.7 Host-Side Contract View
+Host Dashboard includes a "Subscription & Billing" page showing: current plan, contract status badge, start/end dates, days remaining until renewal.
+"Renew Now" button — available from 14 days before expiry, or any time after expiry.
+Payment history table: list of past payments with status, date, amount, and downloadable receipt PDF.
+If payment_status = 'failed' on the most recent payment, a persistent banner is shown: "Your last payment failed — retry now to keep your listings active."
+If contract_status = 'expired', all of the host's "Manage Listings" actions are disabled except "Renew Subscription"; existing data remains intact and listings simply stop appearing in public search.
+
+Feature 8 Host Sub-User Management — Managers & Wardens
+🎯 Objective: Allow hosts who operate multiple hostels to delegate day-to-day operations of a specific property to trusted staff by creating Manager or Warden sub-accounts, each scoped to exactly one assigned hostel, with the same operational capabilities as the host — limited strictly to that hostel.
+11.1 User Stories
+ID
+ | As a...
+ | I want to...
+ | So that...
+ | 
+US-8.1
+ | Host
+ | Create a sub-user account with Manager or Warden role
+ | I can delegate operations of a specific hostel to staff
+ | 
+US-8.2
+ | Host
+ | Assign a sub-user to exactly one of my hostels
+ | They only have access to that property's data
+ | 
+US-8.3
+ | Manager / Warden
+ | Manage rooms, tenants, and billing for my assigned hostel
+ | I can run daily operations without needing the host's login
+ | 
+US-8.4
+ | Manager / Warden
+ | View the financial dashboard for my assigned hostel only
+ | I can track performance for the property I operate
+ | 
+US-8.5
+ | Host
+ | Reassign or revoke a sub-user's access
+ | I retain control if staff roles or employment change
+ | 
+US-8.6
+ | Manager / Warden
+ | Be blocked from viewing the host's other hostels
+ | Data privacy is maintained across the host's portfolio
+ | 
+
+11.2 Sub-User Creation Flow
+From the Host Dashboard, the host navigates to "Team & Staff" under a specific hostel's management menu.
+Host clicks "Add Manager" or "Add Warden" and is presented with a form: Full Name, Email, Phone Number, Role (Manager / Warden).
+The hostel against which this sub-user is being created is pre-selected and locked to the hostel context the host navigated from (cannot be changed during creation).
+System creates a new user record with role = 'manager' or 'warden', and a corresponding entry in the property_staff_assignments table linking that user to exactly one property_id.
+System sends an account-activation email to the sub-user's email address containing a temporary password / set-password link.
+Sub-user logs in and is routed directly to the operational dashboard for their assigned hostel — they do not see a property selector since they have access to only one property.
+
+11.3 Scope & Permission Rules
+Rule
+ | Description
+ | 
+Single hostel scope
+ | Each Manager or Warden record maps to exactly one property_id via property_staff_assignments. A sub-user cannot be assigned to more than one hostel at a time.
+ | 
+Host-only creation right
+ | Only users with role = 'host' can create Manager or Warden accounts. Managers and Wardens cannot create further sub-users (no nested delegation).
+ | 
+Operational parity
+ | Within their assigned hostel, Managers and Wardens have the same operational capabilities as the host for that property: Room & Tenant management (Feature 4), Financial Analytics Dashboard scoped to that property only (Feature 5), and Media/Image management for that property.
+ | 
+No listing-level access
+ | Managers and Wardens cannot edit the core property listing details (Feature 2 — name, description, location pin, pricing structure) or view/manage the host's subscription contract (Feature 7). These remain host-exclusive.
+ | 
+No cross-property visibility
+ | If the host owns multiple hostels, a Manager/Warden assigned to Hostel A cannot view, search for, or receive data about Hostel B, C, etc. — enforced at the API query layer via property_id scoping on every request.
+ | 
+Manager vs Warden distinction
+ | Both roles share the same permission set in v3.0. The distinct role labels exist for the host's internal organizational clarity (e.g., "Warden" for on-site residential staff, "Manager" for operational/admin staff) and for future-roadmap differentiation of permissions.
+ | 
+Revocation
+ | Host can deactivate a sub-user at any time from "Team & Staff." Deactivation sets the user's status = 'inactive' and immediately invalidates all active sessions for that account.
+ | 
+Reassignment
+ | Host can change which hostel a sub-user is assigned to by updating the property_staff_assignments record. The sub-user immediately loses access to the previous hostel's data and gains access to the newly assigned one.
+ | 
+
+11.4 Permission Matrix — Manager / Warden vs. Host (Per-Hostel Scope)
+Capability (within assigned hostel)
+ | Host
+ | Manager / Warden
+ | 
+Edit listing details (name, description, pricing, map pin)
+ | ✓
+ | ✗
+ | 
+Upload / manage property images
+ | ✓
+ | ✓
+ | 
+Add / edit / remove rooms
+ | ✓
+ | ✓
+ | 
+Check-in / check-out tenants
+ | ✓
+ | ✓
+ | 
+View & adjust billing / utility splits
+ | ✓
+ | ✓
+ | 
+View financial analytics dashboard (this hostel)
+ | ✓
+ | ✓
+ | 
+View financial analytics dashboard (other hostels)
+ | ✓
+ | ✗
+ | 
+Create Manager / Warden sub-users
+ | ✓
+ | ✗
+ | 
+View / manage subscription contract
+ | ✓
+ | ✗
+ | 
+Multi-property scope selector
+ | ✓
+ | ✗ (single hostel only)
+ | 
+
+11.5 Sub-User Data Model
+Field
+ | Data Type
+ | Description
+ | 
+user_id
+ | UUID FK → users
+ | The Manager/Warden's user account record
+ | 
+property_id
+ | UUID FK → properties
+ | The single hostel this sub-user is scoped to
+ | 
+assigned_role
+ | ENUM
+ | manager / warden
+ | 
+assigned_by
+ | UUID FK → users
+ | The host who created/assigned this sub-user
+ | 
+status
+ | ENUM
+ | active / inactive (revoked)
+ | 
+assigned_at / updated_at
+ | TIMESTAMP
+ | Audit timestamps for assignment changes
+ | 
+
+Note: A unique constraint on user_id within property_staff_assignments where status = 'active' enforces the single-hostel-assignment rule at the database layer.
+
+12. Non-Functional Requirements
+
+12.1 Performance Requirements
+Requirement
+ | Target Metric
+ | 
+Public listing search results load time
+ | < 1.5 seconds (P95) under 500 concurrent users
+ | 
+Listing detail page load (including map)
+ | < 2.5 seconds (P95)
+ | 
+Host dashboard initial load
+ | < 2 seconds (P95)
+ | 
+Image upload throughput
+ | Support up to 20 concurrent image uploads per session
+ | 
+Cron job execution window
+ | All daily invoices processed within 30 minutes of midnight trigger
+ | 
+API response time (P99)
+ | < 500ms for all non-search endpoints
+ | 
+
+12.2 Security Requirements
+All data in transit must be encrypted using TLS 1.2 or higher (HTTPS only).
+All passwords must be hashed using bcrypt with a minimum cost factor of 12.
+Session tokens must use JWT with RS256 signing; 24-hour expiry for seekers, 8-hour for moderators.
+Google Maps API keys must be restricted to specific referrer domains; never exposed in client-side code without domain restrictions.
+Payment webhook payloads must be verified using HMAC signature before processing.
+File uploads must be scanned for malware using ClamAV or equivalent before storage.
+OWASP Top 10 vulnerabilities must be addressed in the production deployment.
+Rate limiting: max 60 search requests per minute per IP; max 10 login attempts per hour per IP.
+Admin and moderator panel access must require IP allowlisting in addition to credentials.
+
+12.3 Scalability & Reliability
+The system must support horizontal scaling of API servers behind a load balancer.
+Database replication: read replicas for search-heavy endpoints; write master for billing and state transitions.
+Cloud storage (S3 or equivalent) must be used for all media assets; no local disk storage for user uploads.
+System availability target: 99.5% uptime SLA (excluding scheduled maintenance windows).
+Automated database backups: daily snapshots retained for 30 days; weekly retained for 90 days.
+
+12.4 Accessibility Requirements
+Public-facing pages must comply with WCAG 2.1 Level AA standards.
+All images must include meaningful alt text (moderators responsible for alt text during review).
+Map components must provide a text-based address fallback for screen reader users.
+Color alone must not be used as the sole means of conveying information (e.g., status indicators must include text labels).
+All interactive controls must be keyboard navigable.
+
+12.5 Browser & Device Compatibility
+Platform
+ | Minimum Supported Version
+ | 
+Chrome (Desktop & Android)
+ | v90+
+ | 
+Firefox (Desktop)
+ | v88+
+ | 
+Safari (macOS & iOS)
+ | v14+
+ | 
+Microsoft Edge
+ | v90+
+ | 
+Mobile Viewport
+ | Responsive design supporting 375px minimum width
+ | 
+Tablet
+ | Responsive design supporting 768px breakpoint
+ | 
+
+13. UX/UI Design Requirements
+
+13.1 Design System
+Element
+ | Specification
+ | 
+Primary Brand Color
+ | #1A3C5E (Deep Navy)
+ | 
+Accent Color
+ | #F5A623 (Amber)
+ | 
+Success Color
+ | #27AE60 (Green)
+ | 
+Warning Color
+ | #F39C12 (Orange)
+ | 
+Error Color
+ | #E74C3C (Red)
+ | 
+Primary Font
+ | Inter or Poppins (Google Fonts); fallback: system-ui, sans-serif
+ | 
+Base Font Size
+ | 16px body; 14px labels; 12px captions
+ | 
+Border Radius
+ | 8px for cards; 4px for inputs; 50% for avatar/badges
+ | 
+Shadow (Cards)
+ | 0 2px 8px rgba(0,0,0,0.08)
+ | 
+Grid System
+ | 12-column responsive grid; max content width: 1280px
+ | 
+
+13.2 Key Page Wireframe Descriptions
+13.2.1 Public Search Results Page
+Left panel: Filter sidebar (sticky on desktop; collapsible drawer on mobile).
+Right panel: Grid of listing cards (2 columns on tablet; 3 on desktop; 1 on mobile).
+Each card: Primary image, Property Name, Location, Gender Type badge, Price Range, Sharing type chips, "View Details" CTA.
+Pagination: load-more button (not infinite scroll — for SEO and performance).
+
+13.2.2 Listing Detail Page
+Full-width hero image carousel at top.
+Two-column layout below hero: main content left (description, amenities, rooms), sidebar right (contact card with Lead Wall CTA, host info).
+Map section: full-width embedded map, approximately 380px tall, below the main content section.
+Reviews section: below map.
+Sticky "Contact Host" CTA bar at bottom on mobile.
+
+13.2.3 Host Onboarding Form
+Multi-step wizard (5 steps): (1) Basic Info → (2) Location & Map → (3) Media Upload → (4) Room Configuration → (5) Payment.
+Step 2 (Location & Map) displays the full interactive map pinning component.
+Progress stepper at the top showing current step and completion state.
+Auto-save: form data saved to localStorage every 30 seconds.
+Each step validates before allowing navigation to the next step.
+
+14. Data Architecture & Entity Relationships
+
+14.1 Core Entity Summary
+Entity / Table
+ | Primary Key
+ | Key Foreign Keys
+ | Description
+ | 
+users
+ | user_id (UUID)
+ | —
+ | All registered platform users (seekers, hosts, moderators)
+ | 
+properties
+ | property_id (UUID)
+ | host_id → users
+ | Hostel listing records with coordinates and status
+ | 
+property_images
+ | image_id (UUID)
+ | property_id → properties
+ | Media assets with labels, primary flag, and moderation status
+ | 
+property_amenities
+ | amenity_id (UUID)
+ | property_id → properties
+ | Many-to-many amenity tags for each property
+ | 
+rooms
+ | room_id (UUID)
+ | property_id → properties
+ | Individual room records with capacity and type
+ | 
+tenants
+ | tenant_id (UUID)
+ | room_id → rooms
+ | Tenant check-in records with billing parameters
+ | 
+invoices
+ | invoice_id (UUID)
+ | tenant_id → tenants
+ | Generated billing records (rent and utility)
+ | 
+utility_bills
+ | bill_id (UUID)
+ | property_id → properties, room_id → rooms
+ | Entered utility bill amounts for splitting
+ | 
+payments
+ | payment_id (UUID)
+ | invoice_id → invoices
+ | Payment records linked to invoices
+ | 
+listing_payments
+ | payment_id (UUID)
+ | property_id → properties
+ | Listing fee payments from hosts
+ | 
+reviews
+ | review_id (UUID)
+ | property_id → properties, user_id → users
+ | Seeker reviews and ratings for properties
+ | 
+moderation_logs
+ | log_id (UUID)
+ | property_id → properties, moderator_id → users
+ | Audit trail of all moderator actions
+ | 
+roles
+ | role_id (UUID)
+ | —
+ | System and custom roles with assigned permission sets
+ | 
+subscription_plans
+ | plan_id (UUID)
+ | —
+ | Defines available subscription tiers (Starter, Growth, Portfolio, Enterprise)
+ | 
+contracts
+ | contract_id (UUID)
+ | host_id → users, plan_id → subscription_plans
+ | Subscription contract records and their lifecycle status
+ | 
+contract_payments
+ | payment_id (UUID)
+ | contract_id → contracts
+ | Payment transactions linked to subscription contracts, updated via gateway webhook
+ | 
+property_staff_assignments
+ | assignment_id (UUID)
+ | user_id → users, property_id → properties
+ | Maps Manager/Warden sub-users to exactly one hostel
+ | 
+
+14.2 Property Status & Disposition State Machine
+status_id
+ | disposition_id
+ | Visibility
+ | Host Can Edit?
+ | Moderator Can Edit?
+ | 
+onboarding
+ | payment-pending
+ | Hidden
+ | Yes
+ | No
+ | 
+onboarding
+ | payment-failed
+ | Hidden
+ | Yes (retry payment)
+ | No
+ | 
+active
+ | in-review
+ | Hidden
+ | Limited
+ | Yes
+ | 
+active
+ | changes-requested
+ | Hidden
+ | Yes
+ | Yes
+ | 
+active
+ | approved
+ | Hidden (staging)
+ | No
+ | Yes
+ | 
+active
+ | published
+ | Public
+ | Limited
+ | Yes
+ | 
+paused
+ | paused
+ | Hidden
+ | Yes
+ | Yes
+ | 
+inactive
+ | rejected
+ | Hidden
+ | No
+ | Yes
+ | 
+inactive
+ | removed
+ | Hidden
+ | No
+ | Admin only
+ | 
+
+15. Notification & Communication System
+
+15.1 Notification Event Matrix
+Event
+ | Recipient
+ | Channel(s)
+ | Template Type
+ | 
+New user registration
+ | New user
+ | Email
+ | Transactional — Email Verification
+ | 
+Listing payment confirmed
+ | Host
+ | Email
+ | Transactional — Payment Receipt
+ | 
+Listing under review
+ | Host
+ | Email
+ | Informational — Review Started
+ | 
+Listing approved & live
+ | Host
+ | Email + SMS
+ | Transactional — Listing Published
+ | 
+Listing changes requested
+ | Host
+ | Email
+ | Transactional — With Moderator Notes
+ | 
+Listing rejected
+ | Host
+ | Email
+ | Transactional — With Rejection Reason
+ | 
+Tenant invoice generated
+ | Tenant
+ | Email + WhatsApp
+ | Transactional — Invoice PDF
+ | 
+Tenant invoice overdue
+ | Tenant
+ | Email + WhatsApp
+ | Reminder — Overdue Notice
+ | 
+Daily billing summary
+ | Host
+ | Email + WhatsApp
+ | Transactional — Summary PDF
+ | 
+Monthly financial report
+ | Host
+ | Email
+ | Automated — Monthly PDF Report
+ | 
+New media pending review
+ | Moderator
+ | In-app notification
+ | Badge counter in panel
+ | 
+New seeker lead (phone view)
+ | Host
+ | Email (daily digest)
+ | Informational — Lead Digest
+ | 
+Subscription contract activated
+ | Host
+ | Email + WhatsApp
+ | Transactional — Receipt + Contract Confirmation
+ | 
+Subscription payment failed
+ | Host
+ | Email
+ | Transactional — Retry Prompt
+ | 
+Subscription expiring in 7 days
+ | Host
+ | Email + WhatsApp
+ | Reminder — Renewal Notice
+ | 
+Subscription expired
+ | Host
+ | Email
+ | Transactional — Listings Paused Notice
+ | 
+Manager / Warden account created
+ | Sub-user
+ | Email
+ | Transactional — Account Activation Link
+ | 
+Manager / Warden access revoked
+ | Sub-user
+ | Email
+ | Informational — Access Revoked Notice
+ | 
+
+16. Future Roadmap — Out of Scope for v1.0
+
+The following features are identified as high-value additions for subsequent release cycles and are explicitly out of scope for the v1.0 build:
+
+Feature
+ | Rationale / Description
+ | Priority
+ | 
+Seeker Reviews & Ratings
+ | Allow verified seekers who have contacted/visited a property to leave star ratings and written reviews visible on listing pages.
+ | High
+ | 
+In-App Messaging (Host–Seeker Chat)
+ | Secure chat channel between seekers and hosts; eliminates need to expose direct phone numbers for initial inquiries.
+ | High
+ | 
+Mobile App (iOS & Android)
+ | Native mobile applications for seekers and hosts using React Native or Flutter.
+ | High
+ | 
+Online Rent Payment (In-Platform)
+ | Allow tenants to pay rent directly through the platform; HostelHive takes a transaction fee.
+ | High
+ | 
+Google OAuth / Social Login
+ | Reduce registration friction for seekers; faster lead capture.
+ | Medium
+ | 
+Multi-Currency Support
+ | Support for currencies beyond PKR for international or expat hostel seekers.
+ | Medium
+ | 
+Tenant Mobile Portal
+ | Self-service portal for tenants to view their invoices, payment history, and request maintenance.
+ | Medium
+ | 
+Maintenance Request Tracking
+ | Tenants can submit maintenance requests; host dashboard tracks open vs resolved items.
+ | Medium
+ | 
+Dynamic Pricing Engine
+ | AI-assisted pricing recommendations based on local demand, seasonality, and competitor pricing.
+ | Low
+ | 
+SEO-Optimized City Landing Pages
+ | Auto-generated landing pages for each city with hostel listings (e.g., /hostels/karachi) for organic search traffic.
+ | High
+ | 
+Hostel Comparison Tool
+ | Side-by-side comparison of up to 3 hostel listings for seekers evaluating options.
+ | Low
+ | 
+
+17. Glossary of Terms
+
+Term
+ | Definition
+ | 
+Seeker
+ | A platform user searching for hostel accommodation.
+ | 
+Host
+ | A property owner who lists one or more hostels on HostelHive.
+ | 
+Moderator
+ | An internal HostelHive staff member responsible for reviewing and approving listings.
+ | 
+Lead Wall
+ | The authentication gate that blocks phone number visibility for unauthenticated users.
+ | 
+disposition_id
+ | A secondary state field that tracks the editorial/operational stage of a property listing.
+ | 
+status_id
+ | The primary lifecycle state of a property (onboarding, active, paused, inactive).
+ | 
+moderation_status
+ | The approval state of a single image asset (pending, approved, rejected).
+ | 
+is_primary
+ | A boolean flag on the property_images record designating the listing's main thumbnail image.
+ | 
+Cron Job
+ | An automated background task that runs on a scheduled time-based trigger (daily at midnight).
+ | 
+Pro-Rata
+ | Proportional allocation of a bill based on each tenant's number of occupancy days in the billing period.
+ | 
+Reverse Geocoding
+ | The process of converting latitude/longitude coordinates back into a human-readable address using the Google Geocoding API.
+ | 
+Webhook
+ | A real-time HTTP callback sent by the payment gateway to the HostelHive server to confirm a transaction outcome.
+ | 
+Delta Media Pipeline
+ | The buffered image upload system for live listings that prevents unvetted photos from appearing publicly.
+ | 
+Contract
+ | A subscription agreement between HostelHive and a host, created upon plan purchase and activated automatically once payment is confirmed.
+ | 
+contract_status
+ | The lifecycle state of a subscription contract: draft / pending-payment / active / expired / cancelled.
+ | 
+payment_status
+ | The state of a payment transaction linked to a contract: pending / paid / failed / refunded.
+ | 
+HMAC Verification
+ | A cryptographic signature check used to confirm that a payment webhook payload genuinely originated from the payment gateway and was not tampered with.
+ | 
+Role
+ | A named collection of granular permission flags that can be assigned to a user account (e.g., Super Admin, Moderator, Manager, Warden).
+ | 
+Permission Flag
+ | A single granular access-control unit (e.g., contracts.view, listings.approve) that can be combined into roles.
+ | 
+Manager / Warden
+ | A sub-user account created by a host, scoped to exactly one assigned hostel, with operational parity to the host for that property only.
+ | 
+property_staff_assignments
+ | The database table that enforces the single-hostel-scope rule linking each Manager/Warden user to exactly one property_id.
+ | 
+DXA
+ | Document Exa-Unit — the measurement unit used internally in DOCX for spacing and dimensions (1440 DXA = 1 inch).
+ | 
+
+18. Revision History
+
+Version
+ | Date
+ | Author
+ | Summary of Changes
+ | 
+v1.0
+ | May 2025
+ | Product Engineering Team
+ | Initial PRD — 5 core feature modules documented.
+ | 
+v2.0
+ | June 2025
+ | Product Engineering Team
+ | Comprehensive revision: added map pinning spec (Feature 1 & 2), user roles matrix, non-functional requirements, UX wireframe descriptions, data architecture, notification matrix, future roadmap, glossary, and complete field-level validation specs.
+ | 
+v3.0
+ | June 2025
+ | Product Engineering Team
+ | Added Feature 6 (Admin Panel — Roles, Permissions, Contracts & Payments), Feature 7 (Subscription Contracts & Webhook-Driven Payment Lifecycle), and Feature 8 (Host Sub-User Management for Managers & Wardens, scoped to a single hostel). Updated user roles matrix, data architecture, notification matrix, and glossary accordingly. Renumbered Sections 9–15 to 12–18.
+ | 
+
+— End of Document —
+HostelHive Ecosystem PRD • v3.0 • Confidential
+

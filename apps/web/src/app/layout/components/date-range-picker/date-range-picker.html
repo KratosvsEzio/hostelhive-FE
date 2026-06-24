@@ -1,0 +1,104 @@
+<div class="relative">
+  <!-- Trigger button -->
+  <button
+    type="button"
+    class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 transition hover:bg-surface"
+    [class.border-brand-400]="open()"
+    [attr.aria-expanded]="open()"
+    (click)="open.set(!open())"
+  >
+    <i class="ti ti-calendar-week text-ink-500" aria-hidden="true"></i>
+    {{ triggerLabel() }}
+    <i class="ti ti-chevron-down text-xs text-ink-400" aria-hidden="true"></i>
+  </button>
+
+  @if (open()) {
+    <!-- Click-away backdrop -->
+    <div class="fixed inset-0 z-40" (click)="open.set(false)"></div>
+
+    <!-- Dropdown panel -->
+    <div class="absolute right-0 top-full z-[9999] mt-2 flex overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-pill">
+
+      <!-- Left: scrollable preset list — fixed 160px -->
+      <div
+        class="w-40 shrink-0 overflow-y-auto border-r border-ink-100 py-2"
+        style="max-height: 316px; scrollbar-width: thin"
+      >
+        @for (p of presets; track p.label) {
+          <button
+            type="button"
+            class="w-full px-4 py-2 text-left text-sm transition hover:bg-surface"
+            [class.font-semibold]="value()?.label === p.label"
+            [class.text-brand-600]="value()?.label === p.label"
+            [class.text-ink-700]="value()?.label !== p.label"
+            (click)="selectPreset(p)"
+          >{{ p.label }}</button>
+        }
+      </div>
+
+      <!-- Right: calendar — fixed 300px so grid columns are always 300/7 ≈ 42.8px -->
+      <div class="w-[300px] shrink-0 p-4">
+
+        <!-- Month navigation -->
+        <div class="mb-4 flex items-center justify-between">
+          <button
+            type="button"
+            class="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-surface"
+            (click)="prevMonth()"
+            aria-label="Previous month"
+          ><i class="ti ti-chevron-left"></i></button>
+          <p class="text-sm font-semibold text-ink-800">{{ monthLabel() }}</p>
+          <button
+            type="button"
+            class="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-surface"
+            (click)="nextMonth()"
+            aria-label="Next month"
+          ><i class="ti ti-chevron-right"></i></button>
+        </div>
+
+        <!-- Weekday headers -->
+        <div class="mb-1 grid grid-cols-7 text-center text-[11px] font-medium text-ink-400">
+          @for (d of ['Su','Mo','Tu','We','Th','Fr','Sa']; track d) {
+            <div class="flex h-8 items-center justify-center">{{ d }}</div>
+          }
+        </div>
+
+        <!-- Day grid -->
+        <div class="grid grid-cols-7" (mouseleave)="hovered.set(null)">
+          @for (d of calDays(); track d.date.getTime()) {
+            <div class="relative flex h-10 items-center justify-center">
+              <!-- Range background strip -->
+              <span [class]="stripClass(d)"></span>
+              <!-- Day circle -->
+              <button
+                type="button"
+                class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm transition-colors"
+                [class]="circleClass(d)"
+                (click)="clickDay(d.date)"
+                (mouseenter)="hovered.set(d.date)"
+              >{{ d.date.getDate() }}</button>
+            </div>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-3 flex min-h-[28px] items-center justify-between border-t border-ink-100 pt-2.5 text-xs">
+          @if (draftStart()) {
+            <span class="text-ink-400">Now click an end date</span>
+          } @else if (value()) {
+            <span class="text-ink-500">
+              {{ value()!.start | date: 'dd MMM' }} – {{ value()!.end | date: 'dd MMM yyyy' }}
+            </span>
+            <button
+              type="button"
+              class="ml-2 text-ink-400 transition hover:text-ink-700"
+              (click)="clearRange()"
+            >Clear</button>
+          } @else {
+            <span class="text-ink-400">Select a start date</span>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

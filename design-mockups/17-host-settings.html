@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Host · Settings</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="09-host-overview.html" class="nav-link"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
+      <a href="10-host-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>My listings</a>
+      <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
+      <a href="13-tenants.html" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
+      <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
+      <a href="14-utilities.html" class="nav-link"><i class="ti ti-bolt text-lg"></i>Utilities</a>
+      <a href="15-invoices.html" class="nav-link"><i class="ti ti-file-invoice text-lg"></i>Invoices</a>
+      <a href="16-analytics.html" class="nav-link"><i class="ti ti-chart-bar text-lg"></i>Analytics</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="18-host-subscription.html" class="nav-link"><i class="ti ti-rosette text-lg"></i>Subscription</a>
+      <a href="17-host-settings.html" class="nav-link active"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">IK</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Imran Khan</p><p class="truncate text-xs text-ink-400">Host · 2 properties</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Settings</h1></div>
+      <button class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-card hover:bg-brand-600">Save changes</button>
+    </header>
+
+    <main class="mx-auto max-w-4xl space-y-6 px-5 py-6 sm:px-8">
+
+      <!-- PROFILE -->
+      <section class="rounded-2xl bg-white p-6 shadow-card">
+        <h2 class="font-display text-base font-semibold text-ink-900">Profile</h2>
+        <p class="mt-0.5 text-sm text-ink-400">Shown to seekers on your listings.</p>
+        <div class="mt-5 flex items-center gap-4">
+          <span class="grid h-16 w-16 place-items-center rounded-full bg-brand-500 text-xl font-semibold text-white">IK</span>
+          <div class="flex gap-2">
+            <button class="rounded-xl border border-ink-300 px-3 py-2 text-sm font-medium text-ink-800 hover:bg-surface"><i class="ti ti-upload"></i> Upload photo</button>
+            <button class="rounded-xl px-3 py-2 text-sm font-medium text-ink-500 hover:bg-surface">Remove</button>
+          </div>
+        </div>
+        <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Full name</label><input value="Imran Khan" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Email</label><div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3"><input value="imran@almadina.pk" class="w-full bg-transparent py-2.5 text-sm outline-none" /><span class="flex shrink-0 items-center gap-1 text-xs font-medium text-ok"><i class="ti ti-rosette-discount-check"></i>Verified</span></div></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Primary phone</label><div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3"><span class="text-sm text-ink-400">+92</span><input value="321 1234567" class="w-full bg-transparent py-2.5 text-sm outline-none" /></div></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Secondary phone <span class="text-ink-300">(optional)</span></label><div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3"><span class="text-sm text-ink-400">+92</span><input placeholder="3•• •••••••" class="w-full bg-transparent py-2.5 text-sm outline-none" /></div></div>
+        </div>
+      </section>
+
+      <!-- PAYOUT / BILLING DETAILS -->
+      <section class="rounded-2xl bg-white p-6 shadow-card">
+        <h2 class="font-display text-base font-semibold text-ink-900">Payment instructions</h2>
+        <p class="mt-0.5 text-sm text-ink-400">Printed on every tenant invoice so renters know where to pay you.</p>
+        <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Method</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm">JazzCash<i class="ti ti-chevron-down text-ink-400"></i></div></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Account title</label><input value="Imran Khan" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Account / wallet number</label><input value="0321-1234567" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Extra note on invoice <span class="text-ink-300">(optional)</span></label><input value="Please share the receipt after payment." class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+        </div>
+        <div class="mt-4 flex items-start gap-2 rounded-xl bg-tint-cream/70 px-4 py-3 text-sm text-ink-600"><i class="ti ti-file-invoice mt-0.5 text-brand-600"></i>Preview on invoice: <span class="font-medium text-ink-800">"Payment: JazzCash 0321-1234567 (Imran Khan). Please share the receipt after payment."</span></div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section class="rounded-2xl bg-white p-6 shadow-card">
+        <h2 class="font-display text-base font-semibold text-ink-900">Notifications</h2>
+        <p class="mt-0.5 text-sm text-ink-400">How HostelHive reaches you.</p>
+        <div class="mt-4 divide-y divide-ink-100">
+          <div class="flex items-center justify-between gap-4 py-3.5">
+            <div><p class="text-sm font-medium text-ink-900">Daily billing summary</p><p class="text-xs text-ink-400">Sent after the midnight invoice run finishes</p></div>
+            <div class="flex items-center gap-4 text-xs text-ink-500">
+              <span class="flex items-center gap-1.5"><i class="ti ti-brand-whatsapp text-ok"></i><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+              <span class="flex items-center gap-1.5"><i class="ti ti-mail text-ink-400"></i><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-4 py-3.5">
+            <div><p class="text-sm font-medium text-ink-900">New seeker leads</p><p class="text-xs text-ink-400">Daily email digest of seekers who viewed your number</p></div>
+            <div class="flex items-center gap-4 text-xs text-ink-500">
+              <span class="flex items-center gap-1.5"><i class="ti ti-brand-whatsapp text-ink-300"></i><span class="relative h-6 w-11 rounded-full bg-ink-200"><span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+              <span class="flex items-center gap-1.5"><i class="ti ti-mail text-ink-400"></i><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-4 py-3.5">
+            <div><p class="text-sm font-medium text-ink-900">Overdue invoice alerts</p><p class="text-xs text-ink-400">When a tenant invoice passes its due date</p></div>
+            <div class="flex items-center gap-4 text-xs text-ink-500">
+              <span class="flex items-center gap-1.5"><i class="ti ti-brand-whatsapp text-ok"></i><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+              <span class="flex items-center gap-1.5"><i class="ti ti-mail text-ink-400"></i><span class="relative h-6 w-11 rounded-full bg-ink-200"><span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-4 py-3.5">
+            <div><p class="text-sm font-medium text-ink-900">Listing status updates</p><p class="text-xs text-ink-400">Approved, changes requested, or rejected</p></div>
+            <div class="flex items-center gap-4 text-xs text-ink-500">
+              <span class="flex items-center gap-1.5"><i class="ti ti-brand-whatsapp text-ink-300"></i><span class="relative h-6 w-11 rounded-full bg-ink-200"><span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+              <span class="flex items-center gap-1.5"><i class="ti ti-mail text-ink-400"></i><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></span>
+            </div>
+          </div>
+        </div>
+        <p class="mt-2 text-xs text-ink-400"><i class="ti ti-brand-whatsapp"></i> WhatsApp · <i class="ti ti-mail"></i> Email</p>
+      </section>
+
+      <!-- SECURITY -->
+      <section class="rounded-2xl bg-white p-6 shadow-card">
+        <h2 class="font-display text-base font-semibold text-ink-900">Security</h2>
+        <div class="mt-4 divide-y divide-ink-100">
+          <div class="flex items-center justify-between gap-4 py-3.5">
+            <div><p class="text-sm font-medium text-ink-900">Password</p><p class="text-xs text-ink-400">Last changed 3 months ago</p></div>
+            <button class="rounded-xl border border-ink-300 px-3 py-2 text-sm font-medium text-ink-800 hover:bg-surface">Change password</button>
+          </div>
+          <div class="flex items-center justify-between gap-4 py-3.5">
+            <div><p class="text-sm font-medium text-ink-900">Active sessions</p><p class="text-xs text-ink-400">Chrome · Windows · Karachi (this device) + 1 other</p></div>
+            <button class="rounded-xl border border-ink-300 px-3 py-2 text-sm font-medium text-ink-800 hover:bg-surface">Sign out others</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DANGER ZONE -->
+      <section class="rounded-2xl border border-danger/20 bg-white p-6">
+        <h2 class="font-display text-base font-semibold text-danger">Danger zone</h2>
+        <div class="mt-4 flex items-center justify-between gap-4">
+          <div><p class="text-sm font-medium text-ink-900">Deactivate account</p><p class="text-xs text-ink-400">Pauses all listings and stops invoice automation. Reversible by support.</p></div>
+          <button class="rounded-xl border border-danger/30 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/5">Deactivate</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+import { Route } from '@angular/router';
+import { HOST_ROLES, STAFF_ROLES, authGuard, roleGuard } from '@core/auth';
+import { Home } from '@features/public/home/home';
+import { Forbidden } from '@core/forbidden/forbidden';
+
+export const appRoutes: Route[] = [
+  // â”€â”€â”€ Public seeker (SSR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {
+    path: '',
+    component: Home,
+    title: 'HostelHive — Find verified hostels in Pakistan',
+  },
+  {
+    path: 'search',
+    loadChildren: () =>
+      import('@features/public/search/search.routes').then((m) => m.SEARCH_ROUTES),
+  },
+  {
+    path: 'hostel',
+    loadChildren: () =>
+      import('@features/public/listing/listing.routes').then(
+        (m) => m.LISTING_ROUTES,
+      ),
+  },
+  {
+    path: 'auth',
+    loadChildren: () =>
+      import('@features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
+  {
+    // Email-confirmation landing (target of the "Confirm My Account" link). Verifies the
+    // one-time token, signs the user in, then redirects to the landing page.
+    path: 'confirm_invitation',
+    loadComponent: () =>
+      import('@features/auth/confirm-invitation/confirm-invitation').then(
+        (m) => m.ConfirmInvitation,
+      ),
+    title: 'Confirm your account — HostelHive',
+  },
+  {
+    path: 'account',
+    loadComponent: () =>
+      import('@features/user/account-shell/account-shell').then((m) => m.AccountShell),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'favorites' },
+      {
+        path: 'favorites',
+        loadComponent: () =>
+          import('@features/user/favorites/favorites').then(
+            (m) => m.AccountFavorites,
+          ),
+        title: 'Favorites — HostelHive',
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('@features/user/settings/settings').then((m) => m.AccountSettings),
+        title: 'Account settings — HostelHive',
+      },
+      {
+        path: 'security',
+        loadComponent: () =>
+          import('@features/user/security/security').then((m) => m.AccountSecurity),
+        title: 'Password & security — HostelHive',
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('@features/user/notifications/notifications').then(
+            (m) => m.AccountNotifications,
+          ),
+        title: 'Notifications — HostelHive',
+      },
+      {
+        path: 'help',
+        loadComponent: () =>
+          import('@features/user/help/help').then((m) => m.AccountHelp),
+        title: 'Help Centre — HostelHive',
+      },
+    ],
+  },
+
+  // â”€â”€â”€ Console (client-rendered, role-guarded) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Payment confirmation page — must precede 'host/listings/new' so the router
+  // doesn't match the shorter prefix first.
+  {
+    path: 'host/listings/new/payment',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        '@features/public/onboarding/onboarding-payment/onboarding-payment'
+      ).then((m) => m.OnboardingPayment),
+    title: 'Payment — HostelHive',
+  },
+  // Full-screen onboarding wizard — own chrome, no host sidebar — must precede 'host'.
+  {
+    path: 'host/listings/new',
+    // Become-a-host onboarding: any signed-in user may start it — a seeker becomes a
+    // host by creating their first listing, so gating it behind HOST_ROLES would lock
+    // out the very people it exists for. The backend grants the host role on submit.
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('@features/public/onboarding/onboarding.routes').then(
+        (m) => m.ONBOARDING_ROUTES,
+      ),
+  },
+  {
+    path: 'host',
+    canActivate: [roleGuard(...HOST_ROLES)],
+    loadChildren: () =>
+      import('@features/host/host.routes').then((m) => m.HOST_ROUTES),
+  },
+  {
+    path: 'admin',
+    canActivate: [roleGuard(...STAFF_ROLES)],
+    loadChildren: () =>
+      import('@features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
+  {
+    path: 'moderator',
+    canActivate: [roleGuard(...STAFF_ROLES)],
+    loadChildren: () =>
+      import('@features/moderator/moderator.routes').then((m) => m.MODERATOR_ROUTES),
+  },
+  { path: 'forbidden', component: Forbidden, title: 'Access blocked' },
+
+  { path: '**', redirectTo: '' },
+];

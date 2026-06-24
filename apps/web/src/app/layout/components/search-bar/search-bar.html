@@ -1,0 +1,92 @@
+<div class="relative mx-auto w-full max-w-[850px]">
+  <div class="hhsb-bar" [class.is-open]="!!open()">
+    <div
+      #whereSeg
+      class="hhsb-seg hhsb-where"
+      [class.on]="open() === 'where'"
+      (click)="focusWhere()"
+      (focusin)="open.set('where')"
+      style="flex: 1.5 1 0"
+    >
+      <span class="hhsb-lab">Where</span>
+      <hh-place-search
+        [value]="place()"
+        placeholder="Search city or area"
+        (textChange)="onText($event)"
+        (selected)="onSelected($event)"
+      />
+    </div>
+    <span class="hhsb-dv"></span>
+    <button
+      type="button"
+      class="hhsb-seg"
+      [class.on]="open() === 'budget'"
+      (click)="toggle('budget')"
+      style="flex: 1 1 0"
+    >
+      <span class="hhsb-lab">Budget</span>
+      <span
+        class="hhsb-val"
+        [class.f]="minPrice() !== null || maxPrice() !== null"
+        >{{ budgetLabel() }}</span
+      >
+    </button>
+    <span class="hhsb-dv"></span>
+    <button
+      type="button"
+      class="hhsb-seg"
+      [class.on]="open() === 'sharing'"
+      (click)="toggle('sharing')"
+      style="flex: 1 1 0"
+    >
+      <span class="hhsb-lab">Sharing</span>
+      <span class="hhsb-val" [class.f]="!!sharing()">{{ sharingLabel() }}</span>
+    </button>
+    <button
+      type="button"
+      class="hhsb-go"
+      (click)="search()"
+      aria-label="Search"
+    >
+      <i class="ti ti-search text-lg"></i>Search
+    </button>
+  </div>
+
+  @if (open()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-40 cursor-default"
+      aria-label="Close search"
+      (click)="close()"
+    ></button>
+  }
+
+  @if (open() === 'budget') {
+    <div class="hhsb-pop" style="left: 40%; min-width: 240px">
+      @for (b of budgetOpts; track b.l) {
+        <button
+          type="button"
+          class="hhsb-opt"
+          [class.sel]="minPrice() === b.min && maxPrice() === b.max"
+          (click)="pickBudget(b)"
+        >
+          {{ b.l }}
+        </button>
+      }
+    </div>
+  }
+  @if (open() === 'sharing') {
+    <div class="hhsb-pop" style="right: 92px; min-width: 220px">
+      @for (s of sharingOpts; track s.l) {
+        <button
+          type="button"
+          class="hhsb-opt"
+          [class.sel]="sharing() === s.v"
+          (click)="pickSharing(s.v)"
+        >
+          {{ s.l }}
+        </button>
+      }
+    </div>
+  }
+</div>

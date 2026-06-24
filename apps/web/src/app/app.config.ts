@@ -1,0 +1,94 @@
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideRouter } from '@angular/router';
+import {
+  provideClientHydration,
+  withEventReplay,
+} from '@angular/platform-browser';
+import { ApiError } from '@hostelhive/data-access';
+import { API_ERROR_NOTIFIER } from '@core/tokens';
+import { provideDataAccess } from '@core/provide-data-access';
+import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
+import { authInterceptor } from '@core/interceptors/auth-interceptor';
+import { errorInterceptor } from '@core/interceptors/error-interceptor';
+import { provideGoogleMaps } from '@hostelhive/maps';
+import { googleMapsEnv } from './google-maps.env';
+import { apiEnv } from './api.env';
+import { provideCapacitorNative } from '@app/capacitor/native';
+import { appRoutes } from './app.routes';
+import { NotificationService } from '@core/notification.service';
+
+const STAFF: Role[] = ['super-admin', 'admin', 'support', 'moderator'];
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAnimationsAsync(),
+    provideClientHydration(withEventReplay()),
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(appRoutes),
+    // Base URL = API origin (paths carry their own /api or /public prefix).
+    // Driven from .env → api.env.ts at build time by tools/generate-api-env.mjs.
+    provideDataAccess({ baseUrl: apiEnv.apiUrl }, [
+      authInterceptor,
+      errorInterceptor,
+    ]),
+    provideAuth(),
+    // Surface unexpected API failures (5xx / network) as a non-blocking toast, app-wide. The
+    // data-access error interceptor calls this; the page keeps working regardless of the failure.
+    {
+      provide: API_ERROR_NOTIFIER,
+      useFactory: (notify: NotificationService) => (e: ApiError) =>
+        notify.error(
+          e.status === 0 ? 'Connection problem' : 'Something went wrong',
+          e.status === 0
+            ? 'Check your internet connection and try again.'
+            : 'We could not reach the server. Please try again in a moment.',
+        ),
+      deps: [NotificationService],
+    },
+    // ── Google Maps + Places (seeker map & location search) ──────────────────
+    // Key + Map ID come from the repo-root `.env` (git-ignored), injected at build
+    // time by tools/generate-google-maps-env.mjs → ./google-maps.env.ts.
+    provideGoogleMaps(googleMapsEnv),
+    // ── Native shell (Capacitor) — styles status bar, hides splash, wires the
+    // Android back button. No-op on web/SSR builds. ─────────────────────────
+    provideCapacitorNative(),
+    // Restore a persisted session on load: validate the saved JWT (GET /api/users/current) and
+    // log the user back in if it is still valid. Blocks bootstrap briefly (time-capped) so route
+    // guards on /host and /admin see the restored session after a reload. A `?role=` dev override
+    // (below) takes precedence and skips this.
+    provideAppInitializer(() => {
+      if (typeof window === 'undefined') return; // SSR: nothing persisted to restore
+      if (new URLSearchParams(window.location.search).has('role')) return; // dev seed wins
+      return inject(AuthService).restoreSession();
+    }),
+    // DEV ONLY — seed a console session so guarded /host + /admin routes render
+    // before the Lead Wall login ships. Public seeker pages stay session-less.
+    // Test a role via `?role=super-admin|moderator|manager|host`. Remove once login lands.
+    provideAppInitializer(() => {
+      if (typeof window === 'undefined') return;
+      const role = new URLSearchParams(window.location.search).get(
+        'role',
+      ) as Role | null;
+      if (!role) return;
+      const isStaff = STAFF.includes(role);
+      inject(SessionStore).setSession(
+        {
+          id: 'dev',
+          name: isStaff ? 'Aashir Azeem' : 'Imran Khan',
+          email: isStaff ? 'admin@hostelhive.pk' : 'host@hostelhive.pk',
+          role,
+          allRoles: [role],
+          permissions: [],
+          propertyId: null,
+        },
+        'dev-token',
+      );
+    }),
+  ],
+};

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Host · Overview</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="09-host-overview.html" class="nav-link active"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
+      <a href="10-host-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>My listings</a>
+      <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
+      <a href="13-tenants.html" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
+      <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
+      <a href="14-utilities.html" class="nav-link"><i class="ti ti-bolt text-lg"></i>Utilities</a>
+      <a href="15-invoices.html" class="nav-link"><i class="ti ti-file-invoice text-lg"></i>Invoices</a>
+      <a href="16-analytics.html" class="nav-link"><i class="ti ti-chart-bar text-lg"></i>Analytics</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="18-host-subscription.html" class="nav-link"><i class="ti ti-rosette text-lg"></i>Subscription</a>
+      <a href="17-host-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">IK</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Imran Khan</p><p class="truncate text-xs text-ink-400">Host · 2 properties</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Overview</h1></div>
+      <div class="flex items-center gap-3">
+        <button class="hidden items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 hover:bg-surface sm:flex"><i class="ti ti-building"></i>All properties<i class="ti ti-chevron-down text-ink-400"></i></button>
+        <button class="relative grid h-9 w-9 place-items-center rounded-full hover:bg-surface"><i class="ti ti-bell text-xl text-ink-600"></i><span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-500"></span></button>
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-ink-800 text-sm font-medium text-white">IK</span>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+
+      <!-- greeting + quick actions -->
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="font-display text-2xl font-semibold text-ink-900">Good evening, Imran</h2>
+          <p class="mt-1 text-sm text-ink-400">Thursday, 11 June 2026 · here's how your properties are doing.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="13-tenants.html" class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-surface"><i class="ti ti-user-plus text-brand-500"></i>Check in tenant</a>
+          <a href="14-utilities.html" class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-surface"><i class="ti ti-bolt text-brand-500"></i>Enter bills</a>
+          <a href="11-onboarding-wizard.html" class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Add listing</a>
+        </div>
+      </div>
+
+      <!-- KPI row -->
+      <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <a href="15-invoices.html" class="rounded-2xl bg-white p-4 shadow-card transition hover:shadow-cardhover"><p class="text-xs text-ink-400">Collected · June</p><p class="mt-1 text-2xl font-semibold text-ok">Rs 248k</p><p class="mt-1 text-xs text-ink-400"><i class="ti ti-trend-up text-ok"></i> 12% vs May</p></a>
+        <a href="15-invoices.html" class="rounded-2xl bg-white p-4 shadow-card transition hover:shadow-cardhover"><p class="text-xs text-ink-400">Pending balance</p><p class="mt-1 text-2xl font-semibold text-warn">Rs 41.5k</p><p class="mt-1 text-xs text-ink-400">3 unpaid invoices</p></a>
+        <a href="12-rooms.html" class="rounded-2xl bg-white p-4 shadow-card transition hover:shadow-cardhover">
+          <div class="flex items-center gap-3">
+            <svg viewBox="0 0 36 36" class="h-12 w-12"><circle cx="18" cy="18" r="15.9" fill="none" stroke="#E6E6E6" stroke-width="3" pathLength="100"/><circle cx="18" cy="18" r="15.9" fill="none" stroke="#F36E21" stroke-width="3" stroke-linecap="round" stroke-dasharray="78 100" pathLength="100" transform="rotate(-90 18 18)"/></svg>
+            <div><p class="text-xs text-ink-400">Occupancy</p><p class="text-xl font-semibold text-ink-900">78%</p></div>
+          </div>
+        </a>
+        <a href="12-rooms.html" class="rounded-2xl bg-white p-4 shadow-card transition hover:shadow-cardhover"><p class="text-xs text-ink-400">Vacant beds</p><p class="mt-1 text-2xl font-semibold text-brand-600">5</p><p class="mt-1 text-xs text-ink-400">across 2 properties</p></a>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <!-- needs attention -->
+        <div class="rounded-2xl bg-white shadow-card">
+          <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5"><h3 class="font-display text-base font-semibold text-ink-900">Needs attention</h3><span class="rounded-full bg-brand-500 px-2 py-0.5 text-xs font-semibold text-white">4</span></div>
+          <div class="divide-y divide-ink-100">
+            <a href="15-invoices.html" class="flex items-center gap-4 px-5 py-3.5 transition hover:bg-surface">
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-alarm text-xl"></i></span>
+              <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink-900">Invoice overdue — Bilal Khan</p><p class="text-xs text-ink-400">INV-2026-0143 · Rs 9,500 · due 4 days ago</p></div>
+              <i class="ti ti-chevron-right text-ink-300"></i>
+            </a>
+            <a href="10-host-listings.html" class="flex items-center gap-4 px-5 py-3.5 transition hover:bg-surface">
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warn/10 text-warn"><i class="ti ti-clock text-xl"></i></span>
+              <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink-900">City Nest PG is in review</p><p class="text-xs text-ink-400">Submitted 2 days ago · moderators usually reply within 48h</p></div>
+              <i class="ti ti-chevron-right text-ink-300"></i>
+            </a>
+            <a href="11-onboarding-wizard.html" class="flex items-center gap-4 px-5 py-3.5 transition hover:bg-surface">
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-progress text-xl"></i></span>
+              <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink-900">Draft listing waiting at step 3</p><p class="text-xs text-ink-400">Media upload · saved 5 min ago</p></div>
+              <span class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white">Resume</span>
+            </a>
+            <a href="12-rooms.html" class="flex items-center gap-4 px-5 py-3.5 transition hover:bg-surface">
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-bed text-xl"></i></span>
+              <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink-900">Room 201 is fully vacant</p><p class="text-xs text-ink-400">1-sharing · Rs 22,000 · empty for 9 days</p></div>
+              <i class="ti ti-chevron-right text-ink-300"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- recent activity -->
+        <div class="rounded-2xl bg-white shadow-card">
+          <div class="border-b border-ink-100 px-5 py-3.5"><h3 class="font-display text-base font-semibold text-ink-900">Recent activity</h3></div>
+          <div class="space-y-4 px-5 py-4">
+            <div class="flex gap-3">
+              <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ok/10 text-ok"><i class="ti ti-send text-sm"></i></span>
+              <div><p class="text-sm text-ink-800">Midnight billing run sent <span class="font-medium">12 invoices</span></p><p class="text-xs text-ink-400">WhatsApp + email · 00:09 today</p></div>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-cream text-brand-600"><i class="ti ti-phone text-sm"></i></span>
+              <div><p class="text-sm text-ink-800"><span class="font-medium">3 new seekers</span> viewed your number</p><p class="text-xs text-ink-400">Al-Madina Boys Hostel · yesterday</p></div>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ok/10 text-ok"><i class="ti ti-photo-check text-sm"></i></span>
+              <div><p class="text-sm text-ink-800">3 photos approved on your live listing</p><p class="text-xs text-ink-400">Rooftop, bedroom, kitchen · yesterday</p></div>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-sky text-ink-600"><i class="ti ti-cash text-sm"></i></span>
+              <div><p class="text-sm text-ink-800">Ahmed Raza paid <span class="font-medium">Rs 20,182</span></p><p class="text-xs text-ink-400">Rent + electricity · 2 days ago</p></div>
+            </div>
+          </div>
+          <div class="border-t border-ink-100 px-5 py-3"><a href="16-analytics.html" class="text-sm font-medium text-brand-600 hover:underline">View full analytics →</a></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

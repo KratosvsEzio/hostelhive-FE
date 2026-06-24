@@ -1,0 +1,65 @@
+<div class="flex flex-1 items-center gap-2">
+  <!-- Filters button — sized to match the dropdown pills (h-8, text-[13px], rounded-full). -->
+  <button
+    hh-button variant="outlined" size="sm"
+    type="button"
+    (click)="openModal()"
+    [class]="
+      hasActiveFilters()
+        ? 'border-brand-500 bg-brand-50 text-brand-700'
+        : 'border-ink-300 text-ink-800 hover:border-ink-400'
+    "
+  >
+    <i class="ti ti-adjustments-horizontal text-sm"></i>
+    Filters
+    @if (activeFilterCount() > 0) {
+      <span
+        class="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-ink-900 px-1 text-[10px] font-bold leading-none text-white"
+        >{{ activeFilterCount() }}</span
+      >
+    }
+  </button>
+
+  <span class="mx-1 h-5 w-px shrink-0 bg-ink-200"></span>
+
+  <!-- Gender — mandatory single-select, themed dropdown. -->
+  <hh-dropdown
+    [options]="genderOptions"
+    placeholder="All stays"
+    clearLabel="All stays"
+    [value]="gender() === 'all' ? null : gender()"
+    (valueChange)="onGenderChange($event)"
+  />
+
+  <!-- Property type — optional single-select, themed dropdown. -->
+  <hh-dropdown
+    [options]="propertyTypes"
+    placeholder="Property type"
+    clearLabel="Any type"
+    [value]="propertyType() || null"
+    (valueChange)="onPropertyChange($event)"
+  />
+
+  <!-- Room capacity — exact 1–4, or 4+ (mapped to a >= filter in the API layer). -->
+  <hh-dropdown
+    [options]="capacityOptions"
+    placeholder="Room capacity"
+    clearLabel="Any capacity"
+    [value]="capacity() || null"
+    (valueChange)="onCapacityChange($event)"
+  />
+
+  <!-- Sort — single-select; maps to sort[created_at] / sort[starting_price] in the API layer.
+       Pinned to the far right of the bar (ml-auto); panel opens right-aligned so it never clips. -->
+  <hh-dropdown
+    class="ml-auto shrink-0"
+    align="right"
+    [options]="sortOptions"
+    placeholder="Sort"
+    clearLabel="Recommended"
+    [value]="sort() === 'recommended' ? null : sort()"
+    (valueChange)="onSortChange($event)"
+  />
+</div>
+
+<hh-search-filter-modal [(open)]="modalOpen" (applied)="onApply($event)" />

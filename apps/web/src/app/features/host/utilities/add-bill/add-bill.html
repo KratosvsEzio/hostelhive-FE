@@ -1,0 +1,385 @@
+<app-dashboard-layout
+  backUrl=".."
+  [breadcrumbs]="[{label: 'Utilities', url: '..'}, {label: 'Add utility bill'}]"
+>
+
+  @let s = state();
+  @if (s.loading) {
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <hh-skeleton class="h-96" radius="lg" /><hh-skeleton
+        class="h-96"
+        radius="lg"
+      />
+    </div>
+  } @else if (s.subscriptionError) {
+    <hh-subscription-gate feature="Utility billing" />
+  } @else if (s.error) {
+    <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
+  } @else {
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <!-- LEFT: guided entry -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <h2 class="mb-5 font-display text-base font-semibold text-ink-900">
+          Bill details
+        </h2>
+
+        <!-- 1 · Bill type -->
+        <div class="mb-5">
+          <p
+            class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+          >
+            1 · Bill type
+          </p>
+          <div class="flex flex-wrap gap-2">
+            @for (u of (s.types ?? []); track u.type) {
+              <button
+                hh-button
+                variant="text"
+                size="sm"
+                type="button"
+                (click)="selectType(u.type)"
+                [class]="typeBtnClass(u.type)"
+              >
+                <i class="ti" [class]="u.icon"></i>{{ u.label }}
+              </button>
+            }
+          </div>
+          <p class="mt-2.5 text-xs text-ink-500">
+            Split method
+            <span
+              class="rounded-full bg-tint-cream px-2 py-0.5 text-[11px] font-medium text-brand-700"
+              >{{ splitLabel() }}</span
+            >
+            @if (meta().metered) {
+              · {{ meta().label.toLowerCase() }} is metered, so enter the room's
+              meter reading
+            }
+          </p>
+        </div>
+
+        <!-- 2 · Bill month -->
+        <div class="mb-5">
+          <p
+            class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+          >
+            2 · Bill month
+          </p>
+          <hh-dropdown
+            variant="field"
+            [options]="monthOptions"
+            [value]="selectedMonthValue()"
+            (valueChange)="setMonth($event)"
+          />
+        </div>
+
+        <!-- 3 · Room -->
+        <div class="mb-5">
+          <p
+            class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+          >
+            3 · Room
+          </p>
+          <hh-dropdown
+            variant="field"
+            [options]="roomOptions()"
+            [value]="roomId()"
+            (valueChange)="setRoom($event)"
+          />
+        </div>
+
+        <!-- 4 · Total bill & units -->
+        <div class="mb-5">
+          <p
+            class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+          >
+            4 · Total bill &amp; units
+          </p>
+
+          @if (isElectricity()) {
+            <!-- Meter reading inputs for electricity -->
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="mb-1 block text-xs font-medium text-ink-600"
+                  >Previous reading</label
+                >
+                <div
+                  class="flex items-center gap-1 rounded-xl border px-3 focus-within:border-brand-400"
+                  [class.border-danger]="prevReadingNegError()"
+                  [class.border-ink-200]="!prevReadingNegError()"
+                >
+                  <input
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    class="w-full py-2.5 text-sm outline-none"
+                    placeholder="0"
+                    [value]="prevReadingInput()"
+                    (input)="prevReadingInput.set($any($event.target).value)"
+                  />
+                  <span class="shrink-0 text-xs text-ink-400">{{ meta().unit }}</span>
+                </div>
+                @if (prevReadingNegError()) {
+                  <p class="mt-1 text-xs text-danger">Min value is 0</p>
+                }
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-ink-600"
+                  >Current reading</label
+                >
+                <div
+                  class="flex items-center gap-1 rounded-xl border px-3"
+                  [class.border-danger]="readingError() || currReadingNegError()"
+                  [class.border-ink-200]="!readingError() && !currReadingNegError()"
+                >
+                  <input
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    class="w-full py-2.5 text-sm outline-none"
+                    placeholder="0"
+                    [value]="currReadingInput()"
+                    (input)="currReadingInput.set($any($event.target).value)"
+                  />
+                  <span class="shrink-0 text-xs text-ink-400">{{ meta().unit }}</span>
+                </div>
+                @if (currReadingNegError()) {
+                  <p class="mt-1 text-xs text-danger">Min value is 0</p>
+                } @else if (readingError()) {
+                  <p class="mt-1 text-xs text-danger">Must be ≥ previous reading</p>
+                }
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-ink-600"
+                  >Rate per unit</label
+                >
+                <div
+                  class="flex items-center gap-1 rounded-xl border px-3 focus-within:border-brand-400"
+                  [class.border-danger]="rateNegError()"
+                  [class.border-ink-200]="!rateNegError()"
+                >
+                  <span class="text-xs text-ink-400">Rs</span>
+                  <input
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    class="w-full py-2.5 text-sm outline-none"
+                    placeholder="0"
+                    [value]="rateInput()"
+                    (input)="rateInput.set($any($event.target).value)"
+                  />
+                </div>
+                @if (rateNegError()) {
+                  <p class="mt-1 text-xs text-danger">Min value is 0</p>
+                }
+              </div>
+            </div>
+            <div class="mt-2.5 grid grid-cols-2 gap-3">
+              <div
+                class="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-xs"
+              >
+                <span class="text-ink-500">Consumed units</span>
+                <span class="font-medium text-ink-800"
+                  >{{ units() | number }} {{ meta().unit }}</span
+                >
+              </div>
+              <div
+                class="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-xs"
+              >
+                <span class="text-ink-500">Bill amount</span>
+                <span class="font-medium text-ink-800"
+                  >Rs {{ total() | number: '1.0-0' }}</span
+                >
+              </div>
+            </div>
+          } @else {
+            <label class="mb-1 block text-xs font-medium text-ink-600"
+              >Total bill for room</label
+            >
+            <div
+              class="flex items-center gap-1 rounded-xl border border-ink-200 px-3 focus-within:border-brand-400"
+            >
+              <span class="text-xs text-ink-400">Rs</span>
+              <input
+                type="number"
+                inputmode="numeric"
+                class="w-full py-2.5 text-sm outline-none"
+                [value]="totalInput()"
+                (input)="totalInput.set($any($event.target).value)"
+              />
+            </div>
+          }
+        </div>
+
+        <!-- 5 · Due date -->
+        <div class="mb-5">
+          <p
+            class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+          >
+            5 · Due date
+          </p>
+          <div
+            class="flex items-center gap-1 rounded-xl border px-3 focus-within:border-brand-400"
+            [class.border-danger]="dueDateError()"
+            [class.border-ink-200]="!dueDateError()"
+          >
+            <i class="ti ti-calendar text-ink-400"></i>
+            <input
+              type="date"
+              class="w-full py-2.5 text-sm outline-none"
+              [min]="dueDateMin()"
+              [max]="dueDateMax()"
+              [value]="dueDateInput()"
+              (input)="dueDateInput.set($any($event.target).value)"
+            />
+          </div>
+          @if (dueDateError()) {
+            <p class="mt-1 text-xs text-danger">
+              Due date must be within {{ monthLabel() }}
+            </p>
+          }
+        </div>
+
+        @if (submitError()) {
+          <p class="mb-3 rounded-lg bg-danger-50 px-3 py-2 text-xs text-danger">
+            Failed to save the bill. Please try again.
+          </p>
+        }
+        <div class="flex items-center justify-end gap-3">
+          <button hh-button variant="outlined" type="button" (click)="back()">
+            Cancel
+          </button>
+          <button
+            hh-button
+            color="primary"
+            [disabled]="total() <= 0 || !currentRoom() || readingError() || currReadingNegError() || prevReadingNegError() || rateNegError() || hasDaysError() || dueDateError() || submitting()"
+            (click)="addToBatch()"
+          >
+            @if (submitting()) {
+              <i class="ti ti-loader-2 animate-spin"></i>Saving…
+            } @else {
+              <i class="ti ti-check"></i>Add to batch
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: split preview -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="font-display text-base font-semibold text-ink-900">
+              @if (currentRoom()) {
+                Room {{ currentRoom()?.number }} · {{ meta().label }}
+              } @else {
+                Split preview
+              }
+            </h2>
+            <p class="mt-0.5 text-sm text-ink-500">
+              Rs {{ total() | number }}
+              @if (meta().metered && units() > 0) {
+                · {{ units() | number }} {{ meta().unit }}
+              }
+              · {{ monthLabel() }}
+            </p>
+          </div>
+          <span
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"
+            ><i class="ti text-xl" [class]="meta().icon"></i
+          ></span>
+        </div>
+
+        <p
+          class="mb-3 mt-3 rounded-lg bg-surface px-3 py-2 text-xs text-ink-500"
+        >
+          Share = (Rs {{ total() | number }} ÷
+          <span class="font-medium text-ink-700"
+            >{{ totalDays() }} occupancy-days</span
+          >) × tenant's days in room
+        </p>
+
+        @if (rows().length === 0) {
+          <hh-empty-state
+            icon="ti-user-off"
+            title="No tenants in this room"
+            message="Pick a room with active tenants to split the bill."
+          />
+        } @else {
+          <table class="w-full text-sm">
+            <thead
+              class="text-left text-xs uppercase tracking-wide text-ink-400"
+            >
+              <tr>
+                <th class="py-2 font-medium">Tenant</th>
+                <th class="py-2 font-medium">Days in room</th>
+                <th class="py-2 text-right font-medium">Share</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-ink-100">
+              @for (row of rows(); track row.tenantId) {
+                <tr>
+                  <td class="py-2.5">
+                    <div class="flex items-center gap-2">
+                      <hh-avatar
+                        size="sm"
+                        [tone]="toneFor($index)"
+                        [initials]="row.initials"
+                      />
+                      <span class="text-ink-800">{{ row.name }}</span>
+                    </div>
+                  </td>
+                  <td class="py-1.5">
+                    <input
+                      type="number"
+                      inputmode="numeric"
+                      [min]="0"
+                      [max]="maxDaysInMonth()"
+                      class="w-16 rounded-lg border px-2 py-1.5 text-center text-sm text-ink-600 outline-none focus:border-brand-400"
+                      [class.border-danger]="daysError(row.tenantId)"
+                      [class.border-ink-200]="!daysError(row.tenantId)"
+                      [value]="row.days"
+                      (input)="setDays(row.tenantId, $any($event.target).value)"
+                    />
+                    @if (daysError(row.tenantId)) {
+                      <p class="mt-0.5 text-xs text-danger">Min value is 0</p>
+                    }
+                  </td>
+                  <td class="py-2.5 text-right font-medium text-ink-800">
+                    Rs {{ row.share | number }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div
+            class="mt-3 flex items-center justify-between border-t border-ink-100 pt-3 text-sm"
+          >
+            <span class="text-ink-500">Allocated</span>
+            <span class="font-semibold text-ink-900">
+              Rs {{ allocated() | number }}
+              @if (unallocated() === 0) {
+                <span
+                  class="inline-flex items-center gap-0.5 text-xs font-normal text-ok"
+                  ><i class="ti ti-circle-check"></i>fully allocated</span
+                >
+              } @else if (unallocated() > 0) {
+                <span
+                  class="inline-flex items-center gap-0.5 text-xs font-normal text-warn"
+                  ><i class="ti ti-alert-circle"></i>Rs
+                  {{ unallocated() | number }} unallocated</span
+                >
+              } @else {
+                <span
+                  class="inline-flex items-center gap-0.5 text-xs font-normal text-danger"
+                  ><i class="ti ti-alert-triangle"></i>Rs
+                  {{ -unallocated() | number }} over</span
+                >
+              }
+            </span>
+          </div>
+
+        }
+      </div>
+    </div>
+  }
+</app-dashboard-layout>

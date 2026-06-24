@@ -1,0 +1,200 @@
+<app-dashboard-layout label="Current subscription">
+  <div hhActions>
+    <a hh-button variant="text" size="sm" routerLink="..">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>Back to plans
+    </a>
+  </div>
+
+  <main class="mx-auto max-w-5xl space-y-6 px-5 py-6 sm:px-8">
+
+  @let s = state();
+
+  @if (s.loading) {
+    <hh-skeleton class="h-40 w-full" radius="lg" />
+  } @else if (s.error || !s.data) {
+    <hh-error-state
+      [networkError]="s.networkError"
+      title="Couldn't load your subscription"
+      message="Please check your connection and try again."
+      (retry)="reload()"
+    />
+  } @else {
+    @let contract = s.data.contract;
+    @let currentProduct = s.data.currentProduct;
+
+    @if (notice(); as n) {
+      <hh-toast
+        [tone]="n.tone"
+        [dismissible]="true"
+        (dismissed)="notice.set(null)"
+        >{{ n.text }}</hh-toast
+      >
+    }
+
+    @if (contract) {
+      <!-- Status banners -->
+      @if (contract.status === 'expired') {
+        <hh-toast tone="error">
+          <span>
+            <span class="font-semibold">Your subscription has expired.</span>
+            Your listings are <span class="font-semibold">paused</span> and hidden
+            from search until you renew.
+          </span>
+        </hh-toast>
+      } @else if (contract.status === 'cancelled') {
+        <hh-toast tone="info">
+          Your plan is cancelled. You keep access until the period ends —
+          re-subscribe any time to stay published.
+        </hh-toast>
+      } @else if (contract.status === 'pending-payment') {
+        <hh-toast tone="info">
+          <span>
+            <span class="font-semibold">Payment pending.</span>
+            We're waiting for the gateway to confirm your charge. This page
+            updates automatically.
+          </span>
+        </hh-toast>
+      }
+
+      <!-- Current plan card -->
+      <hh-card variant="elevated" padding="none" class="overflow-hidden">
+        <div class="flex flex-wrap items-start justify-between gap-4 p-5">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="font-display text-xl font-semibold text-ink-900">
+                {{ currentProduct ? currentProduct.name : 'Unknown plan' }}
+              </h2>
+              <hh-status-pill
+                [tone]="statusMeta(contract.status).tone"
+                [dot]="contract.status === 'active'"
+                >{{ statusMeta(contract.status).label }}</hh-status-pill
+              >
+              <hh-badge variant="neutral" [icon]="''">{{
+                contract.cycle === 'annual' ? 'Annual' : 'Monthly'
+              }}</hh-badge>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span class="text-ink-500">
+                Started
+                <span class="font-medium text-ink-800">{{
+                  contract.startedAt
+                    ? (contract.startedAt | date: 'd MMM y')
+                    : '—'
+                }}</span>
+              </span>
+              <span class="text-ink-500">
+                {{ contract.status === 'expired' ? 'Expired' : 'Renews' }}
+                <span class="font-medium text-ink-800">{{
+                  contract.renewsAt
+                    ? (contract.renewsAt | date: 'd MMM y')
+                    : '—'
+                }}</span>
+              </span>
+              <span class="text-ink-500">
+                Amount
+                <span class="font-medium text-ink-800"
+                  >Rs {{ contract.amount | number }} /
+                  {{ contract.cycle === 'annual' ? 'yr' : 'mo' }}</span
+                >
+              </span>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end gap-2">
+            <div class="flex items-center gap-2 text-sm">
+              <span class="text-ink-500">Auto-renew</span>
+              <button
+                type="button"
+                role="switch"
+                [attr.aria-checked]="contract.autoRenew"
+                class="relative h-6 w-11 rounded-full transition"
+                [class]="contract.autoRenew ? 'bg-brand-500' : 'bg-ink-200'"
+                (click)="toggleAutoRenew(contract.autoRenew)"
+              >
+                <span
+                  class="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-card transition-all"
+                  [class]="contract.autoRenew ? 'right-0.5' : 'left-0.5'"
+                ></span>
+              </button>
+            </div>
+            @if (contract.status === 'active') {
+              <div class="flex items-center gap-2">
+                <button
+                  hh-button
+                  variant="outlined"
+                  size="sm"
+                  [disabled]="true"
+                >
+                  Renew now
+                </button>
+                <span class="rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-400">Soon</span>
+              </div>
+              <button
+                hh-button
+                variant="text"
+                size="sm"
+                [disabled]="busy()"
+                (click)="cancel()"
+              >
+                Cancel plan
+              </button>
+            } @else if (
+              contract.status === 'expired' || contract.status === 'cancelled'
+            ) {
+              <button hh-button color="primary" size="sm" [loading]="busy()" (click)="renew()">
+                Re-subscribe
+              </button>
+            } @else if (contract.status === 'pending-payment') {
+              <button
+                hh-button
+                color="success"
+                size="sm"
+                [loading]="busy()"
+                (click)="simulateWebhook()"
+              >
+                <i class="ti ti-webhook" aria-hidden="true"></i>Simulate payment
+                success
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (contract.status === 'active' && daysRemaining(contract) !== null) {
+          <div
+            class="flex items-center gap-2 border-t border-ink-100 bg-tint-mint/50 px-5 py-2.5 text-sm text-ink-600"
+          >
+            <i class="ti ti-clock text-ok" aria-hidden="true"></i>
+            <span
+              ><span class="font-medium text-ink-800"
+                >{{ daysRemaining(contract) }} days</span
+              >
+              remaining · we'll remind you 7 days before renewal.</span
+            >
+          </div>
+        } @else if (contract.status === 'expired') {
+          <div
+            class="flex items-center gap-2 border-t border-danger/20 bg-danger/5 px-5 py-2.5 text-sm text-danger"
+          >
+            <i class="ti ti-player-pause" aria-hidden="true"></i>
+            <span
+              >Publishing is <span class="font-semibold">paused</span>. Renew to
+              relist your properties.</span
+            >
+          </div>
+        }
+      </hh-card>
+    } @else {
+      <hh-empty-state
+        icon="ti-rosette-discount-off"
+        title="No active subscription"
+        message="You don't have an active plan yet. Browse the available plans to get started."
+      />
+      <div class="flex justify-center">
+        <a hh-button color="primary" routerLink="..">
+          <i class="ti ti-rosette" aria-hidden="true"></i>Browse plans
+        </a>
+      </div>
+    }
+  }
+  </main>
+</app-dashboard-layout>

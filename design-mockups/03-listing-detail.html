@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Listing Detail</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .mapfaux { background-color:#EAF0EC; background-image:linear-gradient(#dfe7e1 1px,transparent 1px),linear-gradient(90deg,#dfe7e1 1px,transparent 1px); background-size:38px 38px; }
+</style>
+</head>
+<body class="bg-white text-ink-800">
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-40 border-b border-ink-100 bg-white/95 backdrop-blur">
+    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+      <a href="01-search-results.html" class="flex shrink-0 items-center"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" /></a>
+      <button class="hidden items-center gap-3 rounded-full border border-ink-200 bg-white py-2 pl-5 pr-2 shadow-card transition hover:shadow-cardhover md:flex">
+        <span class="text-sm font-medium text-ink-800">Karachi</span><span class="h-5 w-px bg-ink-200"></span>
+        <span class="text-sm text-ink-400">Any budget</span><span class="h-5 w-px bg-ink-200"></span>
+        <span class="text-sm text-ink-400">Any sharing</span>
+        <span class="ml-1 grid h-8 w-8 place-items-center rounded-full bg-brand-500 text-white"><i class="ti ti-search text-lg"></i></span>
+      </button>
+      <div class="flex items-center gap-2">
+        <a href="10-host-listings.html" class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 lg:block">Become a host</a>
+        <button class="flex items-center gap-2 rounded-full border border-ink-200 py-1.5 pl-3 pr-1.5 shadow-card" aria-label="Account">
+          <i class="ti ti-menu-2 text-lg text-ink-600"></i><span class="grid h-8 w-8 place-items-center rounded-full bg-ink-800 text-sm font-medium text-white">AA</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-5 pb-28 pt-6 sm:px-8">
+    <!-- Breadcrumb + title -->
+    <a href="01-search-results.html" class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600"><i class="ti ti-chevron-left"></i>Back to search</a>
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 class="font-display text-2xl font-semibold text-ink-900 sm:text-3xl">Al-Madina Boys Hostel</h1>
+        <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-500">
+          <span style="background-color:#2B6CB0" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"><i class="ti ti-gender-male text-sm"></i>Boys</span>
+          <span class="inline-flex items-center gap-1 font-medium text-brand-600"><i class="ti ti-rosette-discount-check"></i>Verified</span>
+          <span class="inline-flex items-center gap-1"><i class="ti ti-map-pin text-ink-400"></i>DHA Phase 6, Karachi</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"><i class="ti ti-share-2"></i>Share</button>
+        <button class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"><i class="ti ti-heart"></i>Save</button>
+      </div>
+    </div>
+
+    <!-- Gallery -->
+    <div class="relative mt-5 grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl" style="height:420px">
+      <img src="https://picsum.photos/seed/hhd1/900/700" alt="Hostel exterior" class="col-span-2 row-span-2 h-full w-full object-cover" />
+      <img src="https://picsum.photos/seed/hhd2/500/400" alt="Bedroom" class="h-full w-full object-cover" />
+      <img src="https://picsum.photos/seed/hhd3/500/400" alt="Common area" class="h-full w-full object-cover" />
+      <img src="https://picsum.photos/seed/hhd4/500/400" alt="Kitchen" class="h-full w-full object-cover" />
+      <img src="https://picsum.photos/seed/hhd5/500/400" alt="Rooftop" class="h-full w-full object-cover" />
+      <button class="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-800 shadow-card hover:shadow-cardhover"><i class="ti ti-layout-grid"></i>Show all 18 photos</button>
+    </div>
+
+    <!-- Two columns -->
+    <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
+      <!-- MAIN -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between border-b border-ink-100 pb-6">
+          <div>
+            <h2 class="font-display text-xl font-semibold text-ink-900">Boys hostel hosted by Imran Khan</h2>
+            <p class="mt-1 text-sm text-ink-500">24 beds · 8 rooms · 3 sharing options</p>
+          </div>
+          <span class="grid h-12 w-12 place-items-center rounded-full bg-brand-500 text-base font-semibold text-white">IK</span>
+        </div>
+
+        <!-- About -->
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">About this hostel</h3>
+          <p class="text-[15px] leading-relaxed text-ink-600">A clean, secure and well-managed boys hostel in the heart of DHA Phase 6, walking distance from major universities and the main commercial area. Purpose-built rooms with attached baths, backup power, high-speed Wi-Fi and daily housekeeping. Meals available on request.</p>
+          <button class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-ink-900 underline">Read more<i class="ti ti-chevron-down"></i></button>
+        </section>
+
+        <!-- Amenities -->
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">What this place offers</h3>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-wifi text-xl text-ink-500"></i>High-speed Wi-Fi</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-air-conditioning text-xl text-ink-500"></i>Air conditioning</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-bolt text-xl text-ink-500"></i>Backup generator</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-tools-kitchen-2 text-xl text-ink-500"></i>Shared kitchen</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-wash-machine text-xl text-ink-500"></i>Laundry service</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-device-cctv text-xl text-ink-500"></i>CCTV security</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-shield-check text-xl text-ink-500"></i>Security guard</div>
+            <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-car text-xl text-ink-500"></i>Bike parking</div>
+          </div>
+          <button class="mt-4 rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium text-ink-800 hover:bg-ink-50">Show all 14 amenities</button>
+        </section>
+
+        <!-- Rooms -->
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">Rooms &amp; pricing</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between rounded-2xl border border-ink-150 border-ink-100 p-4 transition hover:shadow-card">
+              <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-bed text-xl"></i></span>
+                <div><p class="font-medium text-ink-900">1-sharing (private)</p><p class="text-sm text-ink-500">Attached bath · AC · 2 beds left</p></div>
+              </div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 22,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
+              <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-mint text-brand-600"><i class="ti ti-bed text-xl"></i></span>
+                <div><p class="font-medium text-ink-900">2-sharing</p><p class="text-sm text-ink-500">Attached bath · AC · 5 beds left</p></div>
+              </div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 14,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
+              <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-sky text-brand-600"><i class="ti ti-bed text-xl"></i></span>
+                <div><p class="font-medium text-ink-900">3-sharing</p><p class="text-sm text-ink-500">Shared bath · Fan + cooler · 1 bed left</p></div>
+              </div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 12,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Nearby -->
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-3 font-display text-lg font-semibold text-ink-900">Nearby landmarks</h3>
+          <div class="grid grid-cols-1 gap-2 text-[15px] text-ink-700 sm:grid-cols-2">
+            <div class="flex items-center gap-2"><i class="ti ti-school text-ink-400"></i>Bahria University — 1.2 km</div>
+            <div class="flex items-center gap-2"><i class="ti ti-building-store text-ink-400"></i>DHA Phase 6 Market — 400 m</div>
+            <div class="flex items-center gap-2"><i class="ti ti-bus text-ink-400"></i>Metro bus stop — 600 m</div>
+            <div class="flex items-center gap-2"><i class="ti ti-heartbeat text-ink-400"></i>Shifa Clinic — 900 m</div>
+          </div>
+        </section>
+
+        <!-- Map -->
+        <section class="py-6">
+          <h3 class="mb-1 font-display text-lg font-semibold text-ink-900">Where you'll be</h3>
+          <p class="mb-3 text-sm text-ink-500">Street 12, DHA Phase 6, Karachi, Sindh</p>
+          <div class="mapfaux relative flex items-center justify-center overflow-hidden rounded-2xl border border-ink-100" style="height:360px">
+            <div class="absolute" style="left:50%;top:46%;transform:translate(-50%,-100%)">
+              <span class="grid h-11 w-11 place-items-center rounded-full bg-brand-500 text-white shadow-pill ring-4 ring-white"><i class="ti ti-building-community text-xl"></i></span>
+              <span class="mx-auto block h-3 w-3 -translate-y-1.5 rotate-45 bg-brand-500"></span>
+            </div>
+            <div class="absolute left-4 top-4 rounded-xl bg-white px-3 py-2 text-xs font-medium text-ink-700 shadow-card"><i class="ti ti-map-pin text-brand-500"></i> Exact location shown after booking inquiry</div>
+            <div class="absolute bottom-3 right-3 rounded-lg bg-white/90 px-2 py-1 text-[11px] text-ink-400">Map · interactive in app</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="lg:col-span-1">
+        <div class="sticky top-24 space-y-4">
+          <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-sm text-ink-400">From</span><span class="text-2xl font-semibold text-ink-900">Rs 12,000</span><span class="text-sm text-ink-400">/ month</span>
+            </div>
+            <p class="mt-1 text-sm text-ink-500">1, 2 &amp; 3-sharing available</p>
+            <div class="my-4 rounded-xl bg-surface p-3 text-center">
+              <p class="text-xs text-ink-400">Management contact</p>
+              <p class="font-mono text-lg font-medium tracking-wider text-ink-300">+92 3•• ••• ••••</p>
+            </div>
+            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600"><i class="ti ti-phone"></i>Show phone number</button>
+            <button class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-ink-300 px-4 py-3 text-sm font-medium text-ink-800 hover:bg-ink-50"><i class="ti ti-message-2"></i>Request a callback</button>
+            <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400"><i class="ti ti-lock"></i>Sign in once to view verified contacts</p>
+          </div>
+
+          <div class="rounded-2xl border border-ink-100 p-5">
+            <div class="flex items-center gap-3">
+              <span class="grid h-12 w-12 place-items-center rounded-full bg-brand-500 text-base font-semibold text-white">IK</span>
+              <div>
+                <p class="font-medium text-ink-900">Imran Khan</p>
+                <p class="text-xs text-ink-500">Host since 2023</p>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center gap-2 text-sm text-brand-600"><i class="ti ti-rosette-discount-check"></i><span class="text-ink-600">Identity verified by HostelHive</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Mobile sticky contact bar -->
+  <div class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-ink-100 bg-white px-5 py-3 shadow-pill lg:hidden">
+    <div><p class="text-xs text-ink-400">From</p><p class="font-semibold text-ink-900">Rs 12,000 <span class="text-xs font-normal text-ink-400">/ mo</span></p></div>
+    <button class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-semibold text-white"><i class="ti ti-phone"></i>Show phone number</button>
+  </div>
+
+</body>
+</html>

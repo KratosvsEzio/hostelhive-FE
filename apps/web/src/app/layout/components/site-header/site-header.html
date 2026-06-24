@@ -1,0 +1,104 @@
+<header
+  class="safe-pt sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur"
+>
+  <div class="px-5 sm:px-8">
+    <!-- Row 1: (console menu) + logo + route actions -->
+    <div class="flex h-16 items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5">
+        @if (isConsole()) {
+          <button
+            hh-button variant="icon" size="sm"
+            type="button"
+            aria-label="Open menu"
+            (click)="drawer.toggle()"
+          >
+            <i class="ti ti-menu-2 text-xl"></i>
+          </button>
+        }
+        <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
+          <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+        </a>
+        @if (area() === 'admin' || area() === 'moderator') {
+          <span
+            class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
+            [class]="area() === 'admin' ? 'bg-brand-500' : 'bg-ink-900'"
+            >{{ area() === 'admin' ? 'Admin' : 'Mod' }}</span
+          >
+        }
+      </div>
+
+      <div class="flex items-center gap-3">
+        @switch (area()) {
+          @case ('seeker') {
+            @if (!isHost()) {
+              <button
+                hh-button variant="text"
+                type="button"
+                (click)="onBecomeHost()"
+              >Become a host</button>
+            } @else if (!isStaff()) {
+              <a
+                [routerLink]="hostLink()"
+                class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
+                >{{ hostCta() }}</a
+              >
+            }
+          }
+          @case ('host') {
+            <a
+              routerLink="/"
+              class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
+              >View site</a
+            >
+            <button
+              type="button"
+              class="relative grid h-9 w-9 place-items-center rounded-full transition hover:bg-surface"
+              aria-label="Notifications"
+            >
+              <i class="ti ti-bell text-xl text-ink-600" aria-hidden="true"></i>
+              <span
+                class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-500"
+              ></span>
+            </button>
+          }
+          @case ('admin') {
+            <a
+              routerLink="/"
+              class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
+              >View site</a
+            >
+          }
+          @case ('moderator') {
+            <a
+              routerLink="/"
+              class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
+              >View site</a
+            >
+          }
+        }
+        <app-account-menu />
+      </div>
+    </div>
+
+    <!-- Row 2: the location search bar — home and search pages only. -->
+    @if (showSearchBar()) {
+      <div class="hidden pb-4 pt-1 md:block">
+        <app-search-bar />
+      </div>
+    }
+  </div>
+</header>
+
+@if (loginPrompt()) {
+  <hh-confirm-modal
+    title="Sign in to become a host"
+    icon="ti-building-community"
+    tone="info"
+    confirmLabel="Log in"
+    cancelLabel="Maybe later"
+    (confirm)="goToLogin()"
+    (cancel)="loginPrompt.set(false)"
+  >
+    You need to be signed in to list your property on HostelHive. It only takes a minute.
+  </hh-confirm-modal>
+}

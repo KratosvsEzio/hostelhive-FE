@@ -1,0 +1,35 @@
+<div
+  class="pointer-events-none fixed inset-x-0 top-0 z-[100] flex flex-col items-center gap-2 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:items-end sm:px-6"
+  aria-live="polite"
+  aria-atomic="false"
+>
+  @for (t of notifications.toasts(); track t.id) {
+    <div
+      role="alert"
+      class="hh-toast pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-pill"
+    >
+      <span
+        class="grid h-8 w-8 shrink-0 place-items-center rounded-full"
+        [class]="iconWrap(t.kind)"
+      >
+        <i class="ti text-lg" [class]="icon(t.kind)"></i>
+      </span>
+      <div class="min-w-0 flex-1 pt-0.5">
+        <p class="text-sm font-semibold text-ink-900">{{ t.title }}</p>
+        @if (t.message) {
+          <p class="mt-0.5 text-sm leading-snug text-ink-500">
+            {{ t.message }}
+          </p>
+        }
+      </div>
+      <button
+        hh-button variant="icon" size="sm"
+        type="button"
+        (click)="notifications.dismiss(t.id)"
+        aria-label="Dismiss notification"
+      >
+        <i class="ti ti-x text-base"></i>
+      </button>
+    </div>
+  }
+</div>

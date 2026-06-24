@@ -1,0 +1,53 @@
+<aside
+  class="fixed bottom-0 left-0 top-16 z-40 flex w-64 flex-col border-r border-ink-100 bg-white lg:flex"
+  [class.hidden]="!drawer.open()"
+>
+  <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+    @for (item of nav(); track $index) {
+      @if (item.divider) {
+        <div class="my-2 border-t border-ink-100"></div>
+      } @else {
+        <a
+          [routerLink]="item.link"
+          routerLinkActive="active"
+          class="nav-link"
+          (click)="drawer.close()"
+        >
+          <i class="ti text-lg" [class]="item.icon"></i>{{ item.label }}
+        </a>
+      }
+    }
+  </nav>
+  <div class="border-t border-ink-100 p-3">
+    <div class="flex items-center gap-3 rounded-xl p-2">
+      <span
+        class="grid h-9 w-9 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white"
+        >{{ initials() }}</span
+      >
+      <div class="min-w-0">
+        <p class="truncate text-sm font-medium text-ink-900">
+          {{ user()?.name }}
+        </p>
+        <p class="truncate text-xs text-ink-400">
+          {{ user()?.email }}
+        </p>
+        <p class="truncate text-xs capitalize text-ink-400">
+          {{ roleLabel() }}
+        </p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+@if (drawer.open()) {
+  <button
+    type="button"
+    class="fixed inset-0 z-30 bg-ink-900/40 lg:hidden"
+    aria-label="Close menu"
+    (click)="drawer.close()"
+  ></button>
+}
+
+<div class="h-[calc(100dvh-4rem)] overflow-hidden lg:pl-64">
+  <router-outlet />
+</div>

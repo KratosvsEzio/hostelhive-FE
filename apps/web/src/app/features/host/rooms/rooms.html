@@ -1,0 +1,579 @@
+<app-dashboard-layout label="Rooms">
+  <div hhActions class="flex items-center gap-2">
+    <button hh-button variant="outlined" size="sm" [disabled]="state().subscriptionError" (click)="openBulkCreate()">
+      <i class="ti ti-table-import" aria-hidden="true"></i>Bulk add
+    </button>
+    <button hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCreate()">
+      <i class="ti ti-plus" aria-hidden="true"></i>Add room
+    </button>
+  </div>
+
+  @let s = state();
+  @if (s.loading) {
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <hh-skeleton class="h-20" radius="lg" />
+      }
+    </div>
+    <hh-skeleton class="mt-5 h-72 w-full" radius="lg" />
+  } @else if (s.subscriptionError) {
+    <hh-subscription-gate feature="Room management" [showProfileLink]="true" />
+  } @else if (s.error) {
+    <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
+  } @else if (!s.data || (s.data.length === 0 && !searchQuery() && statusFilter() === 'all')) {
+    <hh-empty-state
+      icon="ti-bed"
+      title="No rooms yet"
+      message="Add your first room to start tracking occupancy."
+    >
+      <div class="flex gap-2">
+        <button hh-button variant="outlined" size="sm" (click)="openBulkCreate()">
+          <i class="ti ti-table-import" aria-hidden="true"></i>Bulk add
+        </button>
+        <button hh-button color="primary" size="sm" (click)="openCreate()">
+          <i class="ti ti-plus" aria-hidden="true"></i>Add room
+        </button>
+      </div>
+    </hh-empty-state>
+  } @else {
+    <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <hh-card padding="sm"
+        ><p class="text-xs text-ink-400">Total rooms</p>
+        <p class="mt-1 text-2xl font-semibold text-ink-900">
+          {{ totalRooms() }}
+        </p></hh-card
+      >
+      <hh-card padding="sm"
+        ><p class="text-xs text-ink-400">Total beds</p>
+        <p class="mt-1 text-2xl font-semibold text-ink-900">
+          {{ totalBeds() }}
+        </p></hh-card
+      >
+      <hh-card padding="sm"
+        ><p class="text-xs text-ink-400">Occupied</p>
+        <p class="mt-1 text-2xl font-semibold text-ink-900">
+          {{ occupiedBeds() }}
+        </p></hh-card
+      >
+      <hh-card padding="sm"
+        ><p class="text-xs text-ink-400">Vacant beds</p>
+        <p class="mt-1 text-2xl font-semibold text-brand-600">
+          {{ vacantBeds() }}
+        </p></hh-card
+      >
+    </div>
+
+    <hh-filter-chips
+      [tabs]="statusTabs()"
+      [active]="statusFilter()"
+      (activeChange)="setStatusFilter($event)"
+    />
+
+    <div class="mt-4 mb-4">
+      <hh-search
+        class="w-full sm:w-80"
+        [withScope]="false"
+        placeholder="Search by room number..."
+        [term]="searchQuery()"
+        (termChange)="setSearch($event)"
+      />
+    </div>
+
+    <div class="rounded-2xl bg-white shadow-card">
+      <div class="overflow-x-auto">
+      <table class="w-full min-w-[640px] text-sm">
+        <thead
+          class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
+        >
+          <tr>
+            <th class="px-5 py-3 font-medium">Room</th>
+            <th class="px-5 py-3 font-medium">Type</th>
+            <th class="px-5 py-3 font-medium">
+              <button type="button" hh-button variant="text" size="sm" (click)="toggleSort('occupancy')">
+                Occupancy
+                <i class="ti text-[10px]" [class]="sortCol() === 'occupancy' ? (sortDir() === 'asc' ? 'ti-chevron-up' : 'ti-chevron-down') : 'ti-chevrons-up-down'"></i>
+              </button>
+            </th>
+            <th class="px-5 py-3 font-medium">Status</th>
+            <th class="px-5 py-3 font-medium">Rent / bed</th>
+            <th class="px-5 py-3 font-medium">
+              <button type="button" hh-button variant="text" size="sm" (click)="toggleSort('createdAt')">
+                Created at
+                <i class="ti text-[10px]" [class]="sortCol() === 'createdAt' ? (sortDir() === 'asc' ? 'ti-chevron-up' : 'ti-chevron-down') : 'ti-chevrons-up-down'"></i>
+              </button>
+            </th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-100" (click)="closeMenu()" (keydown.escape)="closeMenu()" tabindex="-1">
+          @if (!sorted().length) {
+            <tr>
+              <td colspan="7">
+                <hh-no-results>
+                  <div class="flex gap-2">
+                    <button hh-button variant="outlined" size="sm" (click)="setSearch(''); setStatusFilter('all')">
+                      <i class="ti ti-x" aria-hidden="true"></i>Clear filters
+                    </button>
+                  </div>
+                </hh-no-results>
+              </td>
+            </tr>
+          } @else {
+            @for (r of sorted(); track r.id) {
+            <tr
+              class="cursor-pointer hover:bg-surface"
+              [class.bg-surface]="expandedId() === r.id"
+              role="button"
+              tabindex="0"
+              (click)="toggleRow(r)"
+              (keydown.enter)="toggleRow(r); $event.preventDefault()"
+              (keydown.space)="toggleRow(r); $event.preventDefault()"
+            >
+              <td class="px-5 py-3 font-medium text-ink-900">
+                <div class="flex items-center gap-2">
+                  <i class="ti text-[10px] text-ink-300 transition-transform duration-150"
+                     [class]="expandedId() === r.id ? 'ti-chevron-up' : 'ti-chevron-down'"></i>
+                  {{ r.number }}
+                </div>
+              </td>
+              <td class="px-5 py-3 text-ink-600">{{ r.type }}</td>
+              <td class="px-5 py-3 text-ink-600">
+                {{ r.occupied }} / {{ r.capacity }}
+              </td>
+              <td class="px-5 py-3">
+                <hh-status-pill [tone]="statusTone(r)">{{
+                  statusLabel(r)
+                }}</hh-status-pill>
+              </td>
+              <td class="px-5 py-3 font-medium text-ink-900">
+                Rs {{ r.rentPerBed | number }}
+              </td>
+              <td class="px-5 py-3 text-ink-500 text-xs">
+                {{ r.createdAt | date:'dd MMM yyyy' }}
+              </td>
+              <td class="px-5 py-3 text-right" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="0">
+                <div class="relative inline-block">
+                  <button
+                    type="button"
+                    hh-button variant="icon" size="sm"
+                    [class.bg-ink-100]="menuOpenId() === r.id"
+                    [class.text-ink-700]="menuOpenId() === r.id"
+                    (click)="toggleMenu(r.id, $event)"
+                    aria-label="Row actions"
+                    aria-haspopup="true"
+                    [attr.aria-expanded]="menuOpenId() === r.id"
+                  >
+                    <i class="ti ti-dots-vertical text-sm"></i>
+                  </button>
+
+                  @if (menuOpenId() === r.id) {
+                    <div
+                      class="absolute right-0 top-full z-30 mt-1 w-40 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-lg"
+                      (click)="$event.stopPropagation()"
+                      (keydown)="$event.stopPropagation()"
+                      role="menu"
+                      tabindex="-1"
+                    >
+                      <button
+                        type="button"
+                        hh-button variant="text"
+                        role="menuitem"
+                        class="w-full !justify-start"
+                        (click)="openEdit(r); closeMenu()"
+                        (keydown.enter)="openEdit(r); closeMenu(); $event.preventDefault()"
+                        (keydown.space)="openEdit(r); closeMenu(); $event.preventDefault()"
+                      >
+                        <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
+                        Edit room
+                      </button>
+                      <button
+                        type="button"
+                        hh-button variant="text"
+                        role="menuitem"
+                        class="w-full !justify-start"
+                        (click)="cloneRoom(r); closeMenu()"
+                        (keydown.enter)="cloneRoom(r); closeMenu(); $event.preventDefault()"
+                        (keydown.space)="cloneRoom(r); closeMenu(); $event.preventDefault()"
+                      >
+                        <i class="ti ti-copy text-sm text-ink-400" aria-hidden="true"></i>
+                        Duplicate
+                      </button>
+                      <div class="mx-3 border-t border-ink-100"></div>
+                      <button
+                        type="button"
+                        hh-button variant="text"
+                        role="menuitem"
+                        class="w-full !justify-start"
+                        (click)="deleteRoom(r)"
+                        (keydown.enter)="deleteRoom(r)"
+                        (keydown.space)="deleteRoom(r); $event.preventDefault()"
+                      >
+                        <i class="ti ti-trash text-sm" aria-hidden="true"></i>
+                        Delete room
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+
+            @if (expandedId() === r.id) {
+              <tr class="bg-surface">
+                <td colspan="7" class="px-6 pb-4 pt-2">
+                  @if (detailLoading()) {
+                    <div class="space-y-2">
+                      @for (i of [1, 2]; track i) {
+                        <hh-skeleton class="h-14 w-full" radius="lg" />
+                      }
+                    </div>
+                  } @else if (detailError()) {
+                    <p class="text-xs text-danger">Failed to load room details. Try again.</p>
+                  } @else if (expandedDetail(); as renters) {
+                    @if (renters.length === 0) {
+                      <div class="flex items-center justify-between">
+                        <p class="text-sm text-ink-400">No renters currently assigned to this room.</p>
+                        <a
+                          [routerLink]="['../tenants']"
+                          [queryParams]="{ roomId: r.id }"
+                          class="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-brand-600"
+                          tabindex="0"
+                          role="button"
+                          (keydown.enter)="$event.preventDefault()"
+                          (keydown.space)="$event.preventDefault()"
+                        >
+                          <i class="ti ti-user-plus text-xs" aria-hidden="true"></i>Add tenant
+                        </a>
+                      </div>
+                    } @else {
+                      <div class="space-y-2">
+                        @for (renter of renters; track renter.id) {
+                          <div class="flex items-center gap-4 rounded-xl bg-white px-4 py-3 shadow-sm" tabindex="0">
+                            <div class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-600">
+                              {{ renter.name.slice(0, 2).toUpperCase() }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                              <p class="text-sm font-medium text-ink-900">{{ renter.name }}</p>
+                              <p class="text-xs text-ink-400">{{ renter.phone }}</p>
+                            </div>
+                            <div class="text-right">
+                              <p class="text-[10px] uppercase tracking-wide text-ink-400">Move-in</p>
+                              <p class="text-xs font-medium text-ink-700">{{ renter.moveIn | date:'dd MMM yyyy' }}</p>
+                            </div>
+                            <div class="text-right">
+                              <p class="text-[10px] uppercase tracking-wide text-ink-400">Rent</p>
+                              <p class="text-xs font-medium text-ink-900">Rs {{ renter.rent | number }}</p>
+                            </div>
+                            <hh-status-pill [tone]="renter.status === 'active' ? 'ok' : 'neutral'">
+                              {{ renter.status === 'active' ? 'Active' : 'Checked out' }}
+                            </hh-status-pill>
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          }
+          }
+        </tbody>
+      </table>
+      </div>
+      <div class="flex items-center justify-between border-t border-ink-100 px-5 py-3">
+        <p class="text-xs text-ink-400">
+          @if (state().total > 0) {
+            {{ state().total }} rooms Page {{ page() }} of {{ totalPages() }}
+          } @else {
+            Page {{ page() }}
+          }
+        </p>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            hh-button variant="icon" size="sm"
+            [disabled]="page() === 1"
+            (click)="goToPage(page() - 1)"
+            aria-label="Previous page"
+          >
+            <i class="ti ti-chevron-left text-sm"></i>
+          </button>
+          <span class="min-w-[1.75rem] text-center text-sm font-medium text-ink-700">{{ page() }}</span>
+          <button
+            type="button"
+            hh-button variant="icon" size="sm"
+            [disabled]="!hasNextPage()"
+            (click)="goToPage(page() + 1)"
+            aria-label="Next page"
+          >
+            <i class="ti ti-chevron-right text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</app-dashboard-layout>
+
+@if (bulkForm(); as bf) {
+  <div class="fixed inset-0 z-40 flex justify-end bg-ink-900/30" (click)="closeBulk()" (keydown.escape)="closeBulk()" tabindex="-1">
+    <div class="flex h-full w-full max-w-md flex-col bg-white shadow-pill" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
+      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 class="font-display text-lg font-semibold text-ink-900">Bulk add rooms</h2>
+        <button type="button" hh-button variant="icon" size="sm" (click)="closeBulk()" aria-label="Close">
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Mode tabs pinned above all form fields -->
+      <div class="flex border-b border-ink-100">
+        <button
+          type="button"
+          hh-button variant="text" size="sm"
+          [class]="bf.mode === 'range' ? 'text-brand-600' : 'text-ink-500 hover:text-ink-700'"
+          (click)="setBulkMode('range')"
+        >
+          Sequential
+          @if (bf.mode === 'range') {
+            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-brand-500"></span>
+          }
+        </button>
+        <button
+          type="button"
+          hh-button variant="text" size="sm"
+          [class]="bf.mode === 'custom' ? 'text-brand-600' : 'text-ink-500 hover:text-ink-700'"
+          (click)="setBulkMode('custom')"
+        >
+          Custom list
+          @if (bf.mode === 'custom') {
+            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-brand-500"></span>
+          }
+        </button>
+        <button
+          type="button"
+          hh-button variant="text" size="sm"
+          [class]="bf.mode === 'manual' ? 'text-brand-600' : 'text-ink-500 hover:text-ink-700'"
+          (click)="setBulkMode('manual')"
+        >
+          Manual
+          @if (bf.mode === 'manual') {
+            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-brand-500"></span>
+          }
+        </button>
+      </div>
+
+      <div class="flex-1 space-y-4 overflow-y-auto p-5">
+        @if (bf.mode !== 'manual') {
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="mb-1 block text-xs font-medium text-ink-600">Sharing type</p>
+              @if (roomTypesLoading()) {
+                <div class="flex h-[47px] items-center justify-center rounded-xl border border-ink-200 bg-ink-50">
+                  <i class="ti ti-loader-2 animate-spin text-ink-400" aria-hidden="true"></i>
+                </div>
+              } @else if (roomTypesError()) {
+                <div class="flex h-[47px] items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 px-4 text-xs text-danger">
+                  <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                  <span>Couldn't load types.</span>
+                  <button type="button" hh-button variant="text" size="sm" (click)="retryRoomTypes()">Retry</button>
+                </div>
+              } @else {
+                <hh-dropdown variant="field" placeholder="Select type" [options]="roomTypeOptions()" [value]="bf.roomType" (valueChange)="setBulkRoomType($event)" />
+              }
+            </div>
+            <hh-input label="Capacity (beds)" type="number" [value]="bf.capacity" [disabled]="true" />
+          </div>
+        }
+
+        <div>
+
+          @if (bf.mode === 'range') {
+            <div class="grid grid-cols-3 gap-3">
+              <hh-input label="Prefix" placeholder="1" [value]="bf.prefix" (valueChange)="patchBulk('prefix', $event)" />
+              <hh-input label="Start at" type="number" [value]="bf.start" (valueChange)="patchBulk('start', $event)" />
+              <hh-input label="Count" type="number" [value]="bf.count" (valueChange)="patchBulk('count', $event)" />
+            </div>
+            <p class="mt-1.5 text-xs text-ink-400">Generates: <span class="font-medium text-ink-600">{{ rangeExample() }}</span></p>
+          } @else if (bf.mode === 'manual') {
+            <div class="space-y-2.5">
+              @for (row of bf.rows; track $index) {
+                <div class="rounded-xl border border-ink-100 p-3 space-y-2.5">
+                  <div class="flex items-start gap-2">
+                    <div class="flex-1">
+                      <hh-input label="Room number" placeholder="e.g. 101" [value]="row.number" (valueChange)="patchManualRow($index, 'number', $event)" />
+                    </div>
+                    @if (bf.rows.length > 1) {
+                      <button
+                        type="button"
+                        hh-button variant="icon" size="sm"
+                        class="mt-5"
+                        (click)="removeManualRow($index)"
+                        aria-label="Remove row"
+                      >
+                        <i class="ti ti-x text-sm"></i>
+                      </button>
+                    }
+                  </div>
+                  <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <p class="mb-1 block text-xs font-medium text-ink-600">Sharing type</p>
+                      @if (roomTypesLoading()) {
+                        <div class="flex h-[47px] items-center justify-center rounded-xl border border-ink-200 bg-ink-50">
+                          <i class="ti ti-loader-2 animate-spin text-ink-400" aria-hidden="true"></i>
+                        </div>
+                      } @else if (roomTypesError()) {
+                        <div class="flex h-[47px] items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 px-4 text-xs text-danger">
+                          <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                          <span>Couldn't load.</span>
+                          <button type="button" hh-button variant="text" size="sm" (click)="retryRoomTypes()">Retry</button>
+                        </div>
+                      } @else {
+                        <hh-dropdown variant="field" placeholder="Select type" [options]="roomTypeOptions()" [value]="row.type" (valueChange)="setManualRowType($index, $event)" />
+                      }
+                    </div>
+                    <hh-input label="Capacity (beds)" type="number" [value]="row.capacity" [disabled]="true" />
+                  </div>
+                </div>
+              }
+              <button
+                type="button"
+                hh-button variant="text" size="sm"
+                (click)="addManualRow()"
+              >
+                <i class="ti ti-plus text-sm"></i> Add more
+              </button>
+            </div>
+          } @else {
+            <hh-input label="Room numbers (comma-separated)" placeholder="101, 102, 103A, 104" [value]="bf.custom" (valueChange)="patchBulk('custom', $event)" />
+          }
+        </div>
+
+        @let nums = bulkRoomNumbers();
+        @if (nums.length > 0 && bf.mode !== 'manual') {
+          <div>
+            <p class="mb-2 text-xs font-medium uppercase tracking-wide text-ink-400">
+              Preview
+              <span class="ml-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-600">{{ nums.length }}</span>
+            </p>
+            <div class="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-ink-100 p-3">
+              @for (n of nums; track n) {
+                <div class="flex items-center gap-2.5 text-sm text-ink-700">
+                  <i class="ti ti-door text-ink-400" aria-hidden="true"></i>
+                  <span class="font-medium">{{ n }}</span>
+                  <span class=�text-ink-400�>� {{ bf.roomType || '�' }} � {{ bf.capacity || '�' }} beds</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+        @if (bulkError()) {
+          <p class="mb-3 flex items-center gap-1.5 text-xs font-medium text-danger">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ bulkError() }}
+          </p>
+        }
+        <div class="flex gap-3">
+          <button hh-button variant="outlined" class="flex-1" [disabled]="bulkSaving()" (click)="closeBulk()">Cancel</button>
+          <button hh-button color="primary" class="flex-1" [disabled]="bulkRoomNumbers().length === 0 || (bf.mode !== 'manual' && !bf.roomType) || bulkSaving()" [loading]="bulkSaving()" (click)="bulkCreate()">
+            @if (bulkRoomNumbers().length > 0) {
+              Create {{ bulkRoomNumbers().length }} room{{ bulkRoomNumbers().length === 1 ? '' : 's' }}
+            } @else {
+              Create rooms
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (form(); as f) {
+  <div
+    class="fixed inset-0 z-40 flex justify-end bg-ink-900/30"
+    (click)="close()"
+    (keydown.escape)="close()"
+    tabindex="-1"
+  >
+    <div
+      class="flex h-full w-full max-w-md flex-col bg-white shadow-pill"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+      tabindex="-1"
+    >
+      <div
+        class="flex items-center justify-between border-b border-ink-100 px-5 py-4"
+      >
+        <h2 class="font-display text-lg font-semibold text-ink-900">
+          {{ f.id ? 'Edit room' : 'Add room' }}
+        </h2>
+        <button
+          type="button"
+          hh-button variant="icon" size="sm"
+          (click)="close()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 space-y-4 overflow-y-auto p-5">
+        <div>
+          <p class="mb-1 block text-xs font-medium text-ink-600">Sharing type</p>
+          @if (roomTypesLoading()) {
+            <div class="flex h-[47px] items-center justify-center rounded-xl border border-ink-200 bg-ink-50">
+              <i class="ti ti-loader-2 animate-spin text-ink-400" aria-hidden="true"></i>
+            </div>
+          } @else if (roomTypesError()) {
+            <div class="flex h-[47px] items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 px-4 text-xs text-danger">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span>Couldn't load types.</span>
+              <button type="button" hh-button variant="text" size="sm" (click)="retryRoomTypes()">Retry</button>
+            </div>
+          } @else {
+            <hh-dropdown
+              variant="field"
+              placeholder="Select type"
+              [options]="roomTypeOptions()"
+              [value]="f.type"
+              (valueChange)="setRoomType($event)"
+            />
+          }
+        </div>
+        <hh-input
+          label="Room number"
+          placeholder="e.g. 101"
+          [value]="f.number"
+          (valueChange)="patch('number', $event)"
+        />
+        <hh-input
+          label="Capacity (beds)"
+          type="number"
+          [value]="f.capacity"
+          [disabled]="true"
+        />
+      </div>
+
+      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+        @if (saveError()) {
+          <p class="mb-3 flex items-center gap-1.5 text-xs font-medium text-danger">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ saveError() }}
+          </p>
+        }
+        <div class="flex gap-3">
+          <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="close()">
+            Cancel
+          </button>
+          <button
+            hh-button color="primary"
+            class="flex-1"
+            [disabled]="!f.number.trim() || saving()"
+            [loading]="saving()"
+            (click)="save()"
+          >
+            {{ f.id ? 'Save changes' : 'Add room' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

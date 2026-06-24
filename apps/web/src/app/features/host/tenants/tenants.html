@@ -1,0 +1,660 @@
+<app-dashboard-layout label="Tenants">
+  <div hhActions class="flex items-center gap-2">
+    <button hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCheckIn()">
+      <i class="ti ti-user-plus"></i>Check in tenant
+    </button>
+  </div>
+
+  @if (statuses().length) {
+    <div class="mb-5 grid gap-3" [style.grid-template-columns]="'repeat(' + statuses().length + ', minmax(0, 1fr))'">
+      @for (st of statuses(); track st.slug) {
+        <hh-card padding="sm">
+          <p class="text-xs text-ink-400">{{ st.name }}</p>
+          <p class="mt-1 text-2xl font-semibold text-ink-900">{{ st.count }}</p>
+        </hh-card>
+      }
+    </div>
+  } @else if (state().loading) {
+    <div class="mb-5 grid grid-cols-3 gap-3">
+      @for (i of [1, 2, 3]; track i) {
+        <hh-skeleton class="h-20" radius="lg" />
+      }
+    </div>
+  }
+
+  <hh-filter-chips
+    [tabs]="tabs()"
+    [active]="statusFilter()"
+    (activeChange)="setFilter($event)"
+  />
+
+  <div class="mt-4 mb-4">
+    <hh-search
+      class="w-full sm:w-80"
+      [withScope]="false"
+      placeholder="Search tenant…"
+      [term]="search()"
+      (termChange)="setSearch($event)"
+    />
+  </div>
+
+  @let s = state();
+  @if (s.loading) {
+    <hh-skeleton class="h-80 w-full" radius="lg" />
+  } @else if (s.subscriptionError) {
+    <hh-subscription-gate feature="Tenant management" />
+  } @else if (s.error) {
+    <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
+  } @else if (!s.data || (s.data.length === 0 && !search().trim() && statusFilter() === 'all')) {
+    <hh-empty-state
+      icon="ti-users"
+      title="No tenants yet"
+      message="Check in your first tenant to start tracking rent."
+    >
+      <button hh-button color="primary" size="sm" (click)="openCheckIn()">
+        <i class="ti ti-user-plus"></i>Check in tenant
+      </button>
+    </hh-empty-state>
+  } @else {
+    <div class="rounded-2xl bg-white shadow-card">
+      <div class="overflow-x-auto">
+      <table class="w-full min-w-[980px] text-sm">
+        <thead
+          class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
+        >
+          <tr>
+            <th class="px-5 py-3 font-medium">Tenant</th>
+            <th class="px-5 py-3 font-medium">Room</th>
+            <th class="px-5 py-3 font-medium">Joined</th>
+            <th class="px-5 py-3 font-medium">Leave date</th>
+            <th class="px-5 py-3 font-medium">Rent</th>
+            <th class="px-5 py-3 font-medium">Billing date</th>
+            <th class="px-5 py-3 font-medium">Billing due date</th>
+            <th class="px-5 py-3 font-medium">Status</th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-100">
+          @if (!filtered().length) {
+            <tr>
+              <td colspan="9">
+                <hh-no-results>
+                  <div class="flex gap-2">
+                    <button hh-button variant="outlined" size="sm" (click)="setSearch(''); setFilter('all')">
+                      <i class="ti ti-x" aria-hidden="true"></i>Clear filters
+                    </button>
+                  </div>
+                </hh-no-results>
+              </td>
+            </tr>
+          } @else {
+            @for (t of filtered(); track t.id) {
+            <tr class="cursor-pointer hover:bg-surface" (click)="goToProfile(t)">
+              <td class="px-5 py-3">
+                <div class="flex items-center gap-2">
+                  <hh-avatar
+                    size="sm"
+                    [tone]="toneFor($index)"
+                    [initials]="t.initials"
+                    [src]="t.avatarUrl ?? ''"
+                  />
+                  <div>
+                    <p class="font-medium text-ink-900">{{ t.name }}</p>
+                    <p class="text-xs text-ink-400">{{ t.phone }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-5 py-3 text-ink-600">{{ t.roomNumber }}</td>
+              <td class="px-5 py-3 text-ink-600">
+                {{ t.joined | date: 'dd MMM yyyy' }}
+              </td>
+              <td class="px-5 py-3 text-ink-600">
+                {{ t.leaveDate ? (t.leaveDate | date: 'dd MMM yyyy') : '—' }}
+              </td>
+              <td class="px-5 py-3 font-medium text-ink-900">
+                Rs {{ t.rent | number }}
+              </td>
+              <td class="px-5 py-3 text-ink-600">{{ ordinal(t.billingDate) }}</td>
+              <td class="px-5 py-3 text-ink-600">{{ ordinal(t.billingDueDate) }}</td>
+              <td class="px-5 py-3">
+                @if (t.status === 'active') {
+                  <hh-status-pill tone="ok">Active</hh-status-pill>
+                } @else {
+                  <hh-status-pill tone="neutral">Checked-out</hh-status-pill>
+                }
+              </td>
+              <td class="px-5 py-3 text-right" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  hh-button variant="icon" size="sm"
+                  [class.bg-ink-100]="menuOpenId() === t.id"
+                  [class.text-ink-700]="menuOpenId() === t.id"
+                  (click)="toggleMenu(t.id, $event)"
+                  aria-label="Row actions"
+                  aria-haspopup="true"
+                  [attr.aria-expanded]="menuOpenId() === t.id"
+                >
+                  <i class="ti ti-dots-vertical text-sm"></i>
+                </button>
+              </td>
+            </tr>
+          }
+          }
+        </tbody>
+      </table>
+      </div>
+      <div class="flex items-center justify-between border-t border-ink-100 px-5 py-3">
+        <p class="text-xs text-ink-400">
+          @if (s.total > 0) {
+            {{ s.total }} tenants · Page {{ page() }} of {{ totalPages() }}
+          } @else {
+            Page {{ page() }}
+          }
+        </p>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            hh-button variant="icon" size="sm"
+            [disabled]="page() === 1"
+            (click)="goToPage(page() - 1)"
+            aria-label="Previous page"
+          >
+            <i class="ti ti-chevron-left text-sm"></i>
+          </button>
+          <span class="min-w-[1.75rem] text-center text-sm font-medium text-ink-700">{{ page() }}</span>
+          <button
+            type="button"
+            hh-button variant="icon" size="sm"
+            [disabled]="!hasNextPage()"
+            (click)="goToPage(page() + 1)"
+            aria-label="Next page"
+          >
+            <i class="ti ti-chevron-right text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</app-dashboard-layout>
+
+@if (menuOpenId(); as openId) {
+  @if (menuPos(); as pos) {
+    @let menuTenant = filtered().find(t => t.id === openId);
+    @if (menuTenant) {
+      <div
+        class="fixed z-50 w-40 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-lg"
+        [style.top.px]="pos.top"
+        [style.right.px]="pos.right"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
+        role="menu"
+        tabindex="-1"
+      >
+        <button
+          type="button"
+          hh-button variant="text"
+          role="menuitem"
+          class="w-full !justify-start"
+          (click)="goToProfile(menuTenant); closeMenu()"
+        >
+          <i class="ti ti-user text-sm text-ink-400" aria-hidden="true"></i>
+          View profile
+        </button>
+        <div class="mx-3 border-t border-ink-100"></div>
+        <button
+          type="button"
+          hh-button variant="text"
+          role="menuitem"
+          class="w-full !justify-start"
+          (click)="openEdit(menuTenant); closeMenu()"
+        >
+          <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
+          Edit tenant
+        </button>
+        @if (menuTenant.status === 'active') {
+          <div class="mx-3 border-t border-ink-100"></div>
+          <button
+            type="button"
+            hh-button variant="text"
+            role="menuitem"
+            class="w-full !justify-start"
+            (click)="checkOut(menuTenant); closeMenu()"
+          >
+            <i class="ti ti-logout text-sm" aria-hidden="true"></i>
+            Check out
+          </button>
+        }
+      </div>
+    }
+  }
+}
+
+@if (form(); as f) {
+  <div
+    class="fixed inset-0 z-40 flex justify-end bg-ink-900/30"
+    (click)="close()"
+    (keydown.escape)="close()"
+    tabindex="-1"
+  >
+    <div
+      class="flex h-full w-full max-w-lg flex-col bg-white shadow-pill"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+      tabindex="-1"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 class="font-display text-lg font-semibold text-ink-900">
+          {{ f.id ? 'Edit tenant' : 'Check in tenant' }}
+        </h2>
+        <button
+          type="button"
+          hh-button variant="icon" size="sm"
+          (click)="close()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-5">
+        @if (formLoading()) {
+          <div class="grid place-items-center py-16">
+            <i class="ti ti-loader-2 animate-spin text-2xl text-ink-400" aria-hidden="true"></i>
+          </div>
+        } @else {
+        <div class="space-y-5">
+
+        <!-- Tenant photo -->
+        <div class="flex items-center gap-4">
+          <div class="relative shrink-0">
+            <button
+              type="button"
+              (click)="photoMenuOpen.update(v => !v)"
+              class="relative block cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+              [disabled]="avatarUploading()"
+              aria-label="Change photo"
+              aria-haspopup="true"
+              [attr.aria-expanded]="photoMenuOpen()"
+            >
+              @if (f.imagePreview) {
+                <img
+                  [src]="f.imagePreview"
+                  alt="Tenant photo"
+                  class="h-16 w-16 rounded-full object-cover ring-2 ring-brand-200"
+                />
+              } @else {
+                <div class="grid h-16 w-16 place-items-center rounded-full bg-surface ring-2 ring-ink-100">
+                  <i class="ti ti-user text-2xl text-ink-300" aria-hidden="true"></i>
+                </div>
+              }
+              @if (avatarUploading()) {
+                <div class="absolute inset-0 grid place-items-center rounded-full bg-black/40">
+                  <i class="ti ti-loader-2 animate-spin text-white text-lg" aria-hidden="true"></i>
+                </div>
+              } @else {
+                <span class="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-brand-500 shadow text-white">
+                  <i class="ti ti-camera text-xs" aria-hidden="true"></i>
+                </span>
+              }
+            </button>
+
+            @if (photoMenuOpen()) {
+              <button
+                type="button"
+                class="fixed inset-0 z-10 cursor-default"
+                aria-label="Close menu"
+                (click)="photoMenuOpen.set(false); $event.stopPropagation()"
+              ></button>
+              <div class="absolute left-full top-0 z-20 ml-3 w-44 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-pill">
+                <button
+                  type="button"
+                  hh-button variant="text"
+                  class="w-full !justify-start"
+                  (click)="openCamera()"
+                >
+                  <i class="ti ti-camera shrink-0 text-ink-400" aria-hidden="true"></i>
+                  Take photo
+                </button>
+                <div class="mx-3 border-t border-ink-100"></div>
+                <label class="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-sm text-ink-700 transition hover:bg-ink-50">
+                  <i class="ti ti-photo shrink-0 text-ink-400" aria-hidden="true"></i>
+                  Choose from files
+                  <input type="file" accept="image/*" class="sr-only" (change)="onImageCapture($event)" />
+                </label>
+              </div>
+            }
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-ink-900">
+              @if (avatarUploading()) { Uploading… } @else { {{ f.imageName || 'Add photo' }} }
+            </p>
+            @if (avatarUploadError()) {
+              <p class="text-xs text-danger">{{ avatarUploadError() }}</p>
+            } @else {
+              <p class="text-xs text-ink-400">Take a photo or choose from files</p>
+            }
+          </div>
+        </div>
+
+        <!-- Personal info -->
+        <div class="flex items-center gap-3">
+          <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Personal info</p>
+          <div class="flex-1 border-t border-ink-100"></div>
+        </div>
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <!-- cspell:ignore Tariq -->
+            <hh-input
+              label="Full name *"
+              placeholder="e.g. Hamza Tariq"
+              [value]="f.fullName"
+              [error]="fieldError('fullName')"
+              (valueChange)="patch('fullName', $event)"
+              (focusout)="markDirty('fullName')"
+            />
+            <hh-input
+              label="Email *"
+              placeholder="name@email.com"
+              [value]="f.email"
+              [error]="fieldError('email')"
+              (valueChange)="patch('email', $event)"
+              (focusout)="markDirty('email')"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <hh-input
+              label="Phone *"
+              placeholder="0312 5556677"
+              [value]="f.phone"
+              [error]="fieldError('phone')"
+              (valueChange)="patch('phone', $event)"
+              (focusout)="markDirty('phone')"
+            />
+            <hh-input
+              label="Emergency contact *"
+              placeholder="0321 1234567"
+              [value]="f.emergencyContact"
+              [error]="fieldError('emergencyContact')"
+              (valueChange)="patch('emergencyContact', $event)"
+              (focusout)="markDirty('emergencyContact')"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <hh-input
+              label="CNIC number *"
+              placeholder="42101-1234567-1"
+              [value]="f.cnicNumber"
+              [error]="fieldError('cnicNumber')"
+              (valueChange)="patch('cnicNumber', $event)"
+              (focusout)="markDirty('cnicNumber')"
+            />
+            <hh-input
+              label="Address *"
+              placeholder="123 Main St, Karachi"
+              [value]="f.address"
+              [error]="fieldError('address')"
+              (valueChange)="patch('address', $event)"
+              (focusout)="markDirty('address')"
+            />
+          </div>
+        </div>
+
+        <!-- Room & dates -->
+        <div class="flex items-center gap-3">
+          <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Room &amp; dates</p>
+          <div class="flex-1 border-t border-ink-100"></div>
+        </div>
+        <div class="space-y-3">
+          <!-- Room dropdown — full width -->
+          <div>
+            <p class="mb-1 block text-xs font-medium text-ink-600">Room</p>
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <hh-dropdown
+                  variant="field"
+                  placeholder="Select a room"
+                  [options]="roomDropdownOptions()"
+                  [value]="f.roomId || null"
+                  [searchable]="true"
+                  searchPlaceholder="Search rooms…"
+                  [loading]="roomLoading()"
+                  [hasMore]="roomHasMore()"
+                  emptyLabel="No rooms found."
+                  (valueChange)="onRoomValueChange($event)"
+                  (searchChange)="onRoomSearch($event)"
+                  (loadMore)="onLoadMoreRooms()"
+                  (opened)="onRoomOpened()"
+                />
+              </div>
+              @if (f.roomId) {
+                <button
+                  type="button"
+                  hh-button variant="icon" size="sm"
+                  aria-label="Remove room"
+                  (click)="clearRoom()"
+                >
+                  <i class="ti ti-x text-base" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
+          </div>
+          <!-- Joining & leave dates — two columns -->
+          <div class="grid grid-cols-2 gap-3">
+            <hh-input
+              label="Joining date *"
+              type="date"
+              [value]="f.joiningDate"
+              [error]="fieldError('joiningDate')"
+              (valueChange)="patch('joiningDate', $event)"
+              (focusout)="markDirty('joiningDate')"
+            />
+            <hh-input
+              label="Leave date"
+              type="date"
+              [value]="f.leaveDate"
+              (valueChange)="patch('leaveDate', $event)"
+            />
+          </div>
+        </div>
+
+        <!-- Financial -->
+        <div class="flex items-center gap-3">
+          <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Financial</p>
+          <div class="flex-1 border-t border-ink-100"></div>
+        </div>
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <hh-input
+              label="Monthly rent *"
+              type="number"
+              placeholder="5000"
+              [value]="f.rent"
+              [error]="fieldError('rent')"
+              (valueChange)="patch('rent', $event)"
+              (focusout)="markDirty('rent')"
+            />
+            <hh-input
+              label="Advance deposit *"
+              type="number"
+              placeholder="3333"
+              [value]="f.advanceDeposit"
+              [error]="fieldError('advanceDeposit')"
+              (valueChange)="patch('advanceDeposit', $event)"
+              (focusout)="markDirty('advanceDeposit')"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <hh-input
+              label="Mess charges"
+              type="number"
+              placeholder="3000"
+              [value]="f.messCharges"
+              (valueChange)="patch('messCharges', $event)"
+            />
+            <hh-input
+              label="Transport charges"
+              type="number"
+              placeholder="500"
+              [value]="f.transportationCharges"
+              (valueChange)="patch('transportationCharges', $event)"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <hh-input
+              label="Billing date *"
+              type="number"
+              placeholder="1"
+              [value]="f.billingDate"
+              [error]="fieldError('billingDate')"
+              (valueChange)="patch('billingDate', $event)"
+              (focusout)="markDirty('billingDate')"
+            />
+            <hh-input
+              label="Billing due date *"
+              type="number"
+              placeholder="5"
+              [value]="f.billingDueDate"
+              [error]="fieldError('billingDueDate')"
+              (valueChange)="patch('billingDueDate', $event)"
+              (focusout)="markDirty('billingDueDate')"
+            />
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="flex items-center gap-3">
+          <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Documents</p>
+          <div class="flex-1 border-t border-ink-100"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- CNIC front -->
+          <div>
+            <p class="mb-1 text-xs font-medium text-ink-600">CNIC front</p>
+            <label
+              class="group block cursor-pointer overflow-hidden rounded-xl border border-dashed border-ink-200 hover:border-brand-300"
+              [class.pointer-events-none]="cnicFrontUploading()"
+            >
+              @if (cnicFrontUploading()) {
+                <div class="flex flex-col items-center gap-2 py-5 text-ink-400">
+                  <i class="ti ti-loader-2 animate-spin text-xl" aria-hidden="true"></i>
+                  <span class="text-xs">Uploading…</span>
+                </div>
+              } @else if (f.cnicFrontPreview) {
+                <img [src]="f.cnicFrontPreview" alt="CNIC front" class="h-24 w-full object-cover" />
+                <div class="flex items-center gap-1.5 border-t border-ink-100 px-3 py-2 text-xs">
+                  @if (cnicFrontUploadError()) {
+                    <i class="ti ti-alert-circle text-danger shrink-0"></i>
+                    <span class="truncate text-danger">Failed — tap to retry</span>
+                  } @else {
+                    <i class="ti ti-check text-ok shrink-0"></i>
+                    <span class="truncate text-ink-600">{{ f.cnicFrontName }}</span>
+                  }
+                  <span class="ml-auto shrink-0 text-ink-400">Change</span>
+                </div>
+              } @else {
+                <div class="flex flex-col items-center gap-2 py-5 text-ink-400 group-hover:text-ink-600">
+                  <i class="ti ti-id text-2xl" aria-hidden="true"></i>
+                  <span class="text-xs">{{ f.cnicFrontName || 'Upload front' }}</span>
+                </div>
+              }
+              <input type="file" accept="image/*" class="sr-only" [disabled]="cnicFrontUploading()" (change)="patchFile('cnicFront', $event)" />
+            </label>
+          </div>
+          <!-- CNIC back -->
+          <div>
+            <p class="mb-1 text-xs font-medium text-ink-600">CNIC back</p>
+            <label
+              class="group block cursor-pointer overflow-hidden rounded-xl border border-dashed border-ink-200 hover:border-brand-300"
+              [class.pointer-events-none]="cnicBackUploading()"
+            >
+              @if (cnicBackUploading()) {
+                <div class="flex flex-col items-center gap-2 py-5 text-ink-400">
+                  <i class="ti ti-loader-2 animate-spin text-xl" aria-hidden="true"></i>
+                  <span class="text-xs">Uploading…</span>
+                </div>
+              } @else if (f.cnicBackPreview) {
+                <img [src]="f.cnicBackPreview" alt="CNIC back" class="h-24 w-full object-cover" />
+                <div class="flex items-center gap-1.5 border-t border-ink-100 px-3 py-2 text-xs">
+                  @if (cnicBackUploadError()) {
+                    <i class="ti ti-alert-circle text-danger shrink-0"></i>
+                    <span class="truncate text-danger">Failed — tap to retry</span>
+                  } @else {
+                    <i class="ti ti-check text-ok shrink-0"></i>
+                    <span class="truncate text-ink-600">{{ f.cnicBackName }}</span>
+                  }
+                  <span class="ml-auto shrink-0 text-ink-400">Change</span>
+                </div>
+              } @else {
+                <div class="flex flex-col items-center gap-2 py-5 text-ink-400 group-hover:text-ink-600">
+                  <i class="ti ti-id text-2xl" aria-hidden="true"></i>
+                  <span class="text-xs">{{ f.cnicBackName || 'Upload back' }}</span>
+                </div>
+              }
+              <input type="file" accept="image/*" class="sr-only" [disabled]="cnicBackUploading()" (change)="patchFile('cnicBack', $event)" />
+            </label>
+          </div>
+        </div>
+        </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+        <div class="flex gap-3">
+          <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="close()">Cancel</button>
+          <button hh-button color="primary" class="flex-1" [disabled]="avatarUploading() || cnicFrontUploading() || cnicBackUploading()" [loading]="saving()" (click)="save()">
+            {{ f.id ? 'Save changes' : 'Check in' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Camera capture overlay — sits above the form drawer (z-50) -->
+@if (cameraOpen()) {
+  <div class="fixed inset-0 z-50 flex flex-col bg-black">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-4 py-3">
+      <button
+        type="button"
+        hh-button variant="icon" size="sm"
+        (click)="stopCamera()"
+        aria-label="Cancel"
+      >
+        <i class="ti ti-x text-xl" aria-hidden="true"></i>
+      </button>
+      <p class="text-sm font-medium text-white">Take a photo</p>
+      <div class="w-9"></div>
+    </div>
+
+    <!-- Live viewfinder -->
+    <div class="flex flex-1 items-center justify-center overflow-hidden">
+      <video
+        #cameraVideo
+        autoplay
+        playsinline
+        muted
+        class="h-full w-full object-cover"
+        style="transform: scaleX(-1)"
+      ></video>
+    </div>
+
+    <!-- Capture button -->
+    <div class="flex items-center justify-center pb-10 pt-6">
+      <button
+        type="button"
+        (click)="capturePhoto()"
+        class="h-18 w-18 flex items-center justify-center rounded-full border-4 border-white bg-white/20 transition hover:bg-white/30 active:scale-95"
+        aria-label="Capture photo"
+      >
+        <span class="h-14 w-14 rounded-full bg-white"></span>
+      </button>
+    </div>
+  </div>
+}

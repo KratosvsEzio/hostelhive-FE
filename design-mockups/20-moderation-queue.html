@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Moderator · Review Queue</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center gap-2 px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /><span class="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Mod</span></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="20-moderation-queue.html" class="nav-link active"><i class="ti ti-inbox text-lg"></i>Review queue<span class="ml-auto rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">12</span></a>
+      <a href="22-delta-media.html" class="nav-link"><i class="ti ti-photo text-lg"></i>Media queue<span class="ml-auto rounded-full bg-ink-200 px-1.5 text-xs font-semibold text-ink-700">5</span></a>
+      <a href="23-moderation-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>All listings</a>
+      <a href="24-moderation-audit.html" class="nav-link"><i class="ti ti-history text-lg"></i>Audit log</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="25-moderation-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white">MS</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Maria Shah</p><p class="truncate text-xs text-ink-400">Moderator</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Review queue</h1></div>
+      <div class="hidden items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 sm:flex"><i class="ti ti-search text-ink-400"></i><input placeholder="Search city, host…" class="w-48 bg-transparent text-sm outline-none" /></div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+      <div class="mb-4 flex gap-2">
+        <button class="rounded-full bg-ink-900 px-3 py-1.5 text-xs font-medium text-white">New submissions · 12</button>
+        <button class="rounded-full border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600">Changes resubmitted · 3</button>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl bg-white shadow-card">
+        <table class="w-full min-w-[820px] text-sm">
+          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400">
+            <tr><th class="px-5 py-3 font-medium">Property</th><th class="px-5 py-3 font-medium">City</th><th class="px-5 py-3 font-medium">Host</th><th class="px-5 py-3 font-medium">Submitted</th><th class="px-5 py-3 font-medium">In queue</th><th class="px-5 py-3"></th></tr>
+          </thead>
+          <tbody class="divide-y divide-ink-100">
+            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhq1/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">City Nest PG</p><p class="text-xs text-ink-400">Co-living · 12 photos</p></div></div></td><td class="px-5 py-3 text-ink-600">Karachi</td><td class="px-5 py-3 text-ink-600">Imran Khan</td><td class="px-5 py-3 text-ink-600">09 Jun</td><td class="px-5 py-3"><span class="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">2 days</span></td><td class="px-5 py-3 text-right"><a href="21-moderation-review.html" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">Review</a></td></tr>
+            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhq2/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">Iqra Girls Hostel</p><p class="text-xs text-ink-400">Girls · 9 photos</p></div></div></td><td class="px-5 py-3 text-ink-600">Lahore</td><td class="px-5 py-3 text-ink-600">Sana Malik</td><td class="px-5 py-3 text-ink-600">10 Jun</td><td class="px-5 py-3"><span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">1 day</span></td><td class="px-5 py-3 text-right"><a href="21-moderation-review.html" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">Review</a></td></tr>
+            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhq3/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">Capital Boys Lodge</p><p class="text-xs text-ink-400">Boys · 15 photos</p></div></div></td><td class="px-5 py-3 text-ink-600">Islamabad</td><td class="px-5 py-3 text-ink-600">Ali Raza</td><td class="px-5 py-3 text-ink-600">11 Jun</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">3 hrs</span></td><td class="px-5 py-3 text-right"><a href="21-moderation-review.html" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">Review</a></td></tr>
+            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-3"><img src="https://picsum.photos/seed/hhq4/80/80" class="h-10 w-10 rounded-lg object-cover" alt="" /><div><p class="font-medium text-ink-900">Garden View Hostel</p><p class="text-xs text-ink-400">Boys · 7 photos</p></div></div></td><td class="px-5 py-3 text-ink-600">Rawalpindi</td><td class="px-5 py-3 text-ink-600">Hassan Ali</td><td class="px-5 py-3 text-ink-600">11 Jun</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">1 hr</span></td><td class="px-5 py-3 text-right"><a href="21-moderation-review.html" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">Review</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-4 flex items-center justify-between text-sm text-ink-400"><span>Showing 4 of 12</span><div class="flex gap-1"><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200"><i class="ti ti-chevron-left"></i></button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200"><i class="ti ti-chevron-right"></i></button></div></div>
+    </main>
+  </div>
+
+</body>
+</html>

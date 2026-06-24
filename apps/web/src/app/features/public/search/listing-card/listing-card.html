@@ -1,0 +1,132 @@
+<article class="group relative">
+  <div
+    class="relative aspect-square overflow-hidden rounded-2xl bg-ink-100 transition"
+    [class.ring-2]="active()"
+    [class.ring-brand-500]="active()"
+    [class.ring-offset-2]="active()"
+  >
+    <!-- Sliding track: smooth horizontal transition. Only the first 3 slides load
+         up front; each next one is fetched just-in-time, one step ahead (Airbnb-style). -->
+    <div
+      class="flex h-full w-full transition-transform duration-300 ease-out"
+      [style.transform]="'translateX(-' + img() * 100 + '%)'"
+    >
+      @for (src of images(); track $index) {
+        <div
+          class="h-full w-full shrink-0 overflow-hidden"
+          [class.shimmer]="!isImgReady($index)"
+        >
+          @if (isLoaded($index)) {
+            <img
+              [src]="src"
+              alt=""
+              loading="lazy"
+              (load)="onImgReady($index)"
+              (error)="onImgReady($index)"
+              class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+            />
+          }
+        </div>
+      }
+    </div>
+    <div
+      class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/30 to-transparent"
+    ></div>
+
+    <hh-badge
+      [variant]="listing().gender"
+      class="absolute left-3 top-3 shadow-sm"
+      >{{ genderLabel() }}</hh-badge
+    >
+
+    <button
+      hh-button variant="icon"
+      type="button"
+      (click)="toggleSaved($event)"
+      [attr.aria-label]="saved() ? 'Remove from saved' : 'Save to favourites'"
+    >
+      <i
+        class="ti text-2xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+        [class]="saved() ? 'ti-heart-filled text-brand-500' : 'ti-heart'"
+      ></i>
+    </button>
+
+    @if (images().length > 1) {
+      @if (img() > 0) {
+        <button
+          hh-button variant="icon" size="sm"
+          type="button"
+          (click)="step(-1, $event)"
+          aria-label="Previous photo"
+        >
+          <i class="ti ti-chevron-left text-sm"></i>
+        </button>
+      }
+      @if (img() < images().length - 1) {
+        <button
+          hh-button variant="icon" size="sm"
+          type="button"
+          (click)="step(1, $event)"
+          aria-label="Next photo"
+        >
+          <i class="ti ti-chevron-right text-sm"></i>
+        </button>
+      }
+      <div class="absolute inset-x-0 bottom-2.5 flex justify-center gap-[5px]">
+        @for (d of visibleDots(); track d.idx) {
+          <span
+            class="rounded-full transition-all duration-200"
+            [class]="
+              d.idx === img()
+                ? 'h-[6px] w-[6px] bg-white'
+                : d.scale === 'sm'
+                  ? 'h-1 w-1 bg-white/40'
+                  : 'h-[5px] w-[5px] bg-white/60'
+            "
+          ></span>
+        }
+      </div>
+    }
+
+    @if (listing().verified) {
+      <span
+        class="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-medium text-ink-700 shadow-sm"
+      >
+        <i class="ti ti-rosette-discount-check-filled text-brand-500"></i>
+        Verified
+      </span>
+    }
+  </div>
+
+  <div class="pt-2.5">
+    <div class="flex items-start justify-between gap-2">
+      <h3 class="truncate font-semibold text-ink-900">{{ listing().name }}</h3>
+      @if (listing().rating) {
+        <span
+          class="flex shrink-0 items-center gap-0.5 text-sm font-medium text-ink-800"
+        >
+          <i class="ti ti-star-filled text-[13px] text-brand-500"></i
+          >{{ listing().rating }}
+          <span class="font-normal text-ink-400"
+            >({{ listing().reviews }})</span
+          >
+        </span>
+      }
+    </div>
+    <p class="truncate text-sm text-ink-500">
+      {{ listing().area }} · {{ listing().city }}
+    </p>
+    <p class="truncate text-sm text-ink-400">{{ sharingSummary() }}</p>
+    <p class="mt-1.5 text-ink-900">
+      <span class="font-semibold">Rs {{ listing().priceFrom | number }}</span>
+      <span class="text-sm text-ink-500"> / month</span>
+    </p>
+  </div>
+
+  <!-- Stretched link: covers the whole card, sits below the z-10 controls. -->
+  <a
+    [routerLink]="['/hostel', listing().slug]"
+    [attr.aria-label]="listing().name"
+    class="absolute inset-0 z-[1] rounded-2xl"
+  ></a>
+</article>

@@ -1,0 +1,197 @@
+<div class="hh-modal-root">
+  @if (open()) {
+    <!-- backdrop -->
+    <div class="fixed inset-0 z-[60] bg-black/40" (click)="close()"></div>
+
+    <!-- modal -->
+    <div
+      class="fixed inset-x-0 bottom-0 top-auto z-[61] flex max-h-[90dvh] flex-col rounded-t-2xl bg-white shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
+    >
+      <!-- header -->
+      <div
+        class="flex items-center justify-between border-b border-ink-100 px-6 py-4"
+      >
+        <span class="text-base font-semibold text-ink-900">Filters</span>
+        <button
+          hh-button variant="icon" size="sm"
+          type="button"
+          (click)="close()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- body (scrollable) -->
+      <div class="flex-1 overflow-y-auto px-6 py-5">
+        <!-- Recommended amenities -->
+        <section>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">
+            Recommended for you
+          </h3>
+          <div class="grid grid-cols-4 gap-3">
+            @for (a of topAmenities; track a.key) {
+              <button
+                hh-button variant="outlined" size="sm"
+                type="button"
+                [class]="
+                  draftAmenities().includes(a.key)
+                    ? 'border-ink-900 bg-ink-50'
+                    : 'border-ink-200 hover:border-ink-400'
+                "
+                (click)="toggleAmenity(a.key)"
+              >
+                <i
+                  class="ti text-2xl text-ink-600"
+                  [class]="'ti-' + a.icon"
+                ></i>
+                <span
+                  class="text-[11px] font-medium leading-tight text-ink-700"
+                  >{{ a.label }}</span
+                >
+              </button>
+            }
+          </div>
+        </section>
+
+        <hr class="my-5 border-ink-100" />
+
+        <!-- Type of stay -->
+        <section>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">
+            Type of stay
+          </h3>
+          <div class="flex gap-2">
+            @for (g of genders; track g.value) {
+              <button
+                hh-button variant="outlined" size="sm"
+                type="button"
+                [class]="
+                  draftGender() === g.value
+                    ? 'border-ink-900 bg-ink-900 text-white'
+                    : 'border-ink-200 text-ink-700 hover:border-ink-400'
+                "
+                (click)="draftGender.set(g.value)"
+              >
+                {{ g.label }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <hr class="my-5 border-ink-100" />
+
+        <!-- Property type -->
+        <section>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">
+            Property type
+          </h3>
+          <hh-dropdown
+            variant="field"
+            [options]="propertyTypes"
+            placeholder="Any property type"
+            clearLabel="Any property type"
+            [value]="draftPropertyType() || null"
+            (valueChange)="setDraftProperty($event)"
+          />
+        </section>
+
+        <hr class="my-5 border-ink-100" />
+
+        <!-- Room capacity (people per room) — same param/values as the inline dropdown. -->
+        <section>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">
+            Room capacity
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <button
+              hh-button variant="outlined" size="sm"
+              type="button"
+              [class]="
+                !draftCapacity()
+                  ? 'border-ink-900 bg-ink-900 text-white'
+                  : 'border-ink-200 text-ink-700 hover:border-ink-400'
+              "
+              (click)="draftCapacity.set('')"
+            >
+              Any
+            </button>
+            @for (c of capacities; track c.value) {
+              <button
+                hh-button variant="outlined" size="sm"
+                type="button"
+                [class]="
+                  draftCapacity() === c.value
+                    ? 'border-ink-900 bg-ink-900 text-white'
+                    : 'border-ink-200 text-ink-700 hover:border-ink-400'
+                "
+                (click)="draftCapacity.set(c.value)"
+              >
+                {{ c.label }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <hr class="my-5 border-ink-100" />
+
+        <!-- Price range -->
+        <section>
+          <h3 class="mb-1 text-base font-semibold text-ink-900">Price range</h3>
+          <p class="mb-3 text-sm text-ink-500">Monthly rate</p>
+          <hh-range-slider
+            [min]="0"
+            [max]="60000"
+            [step]="1000"
+            prefix="Rs "
+            [(low)]="draftMinPrice"
+            [(high)]="draftMaxPrice"
+          />
+        </section>
+
+        <hr class="my-5 border-ink-100" />
+
+        <!-- Sort -->
+        <section>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">Sort by</h3>
+          <div class="flex flex-wrap gap-2">
+            @for (s of sortOptions; track s.value) {
+              <button
+                hh-button variant="outlined" size="sm"
+                type="button"
+                [class]="
+                  draftSort() === s.value
+                    ? 'border-ink-900 bg-ink-900 text-white'
+                    : 'border-ink-200 text-ink-700 hover:border-ink-400'
+                "
+                (click)="draftSort.set(s.value)"
+              >
+                {{ s.label }}
+              </button>
+            }
+          </div>
+        </section>
+      </div>
+
+      <!-- footer -->
+      <div
+        class="flex items-center justify-between border-t border-ink-100 px-6 py-4"
+      >
+        <button
+          hh-button variant="text" size="sm"
+          type="button"
+          (click)="clearAll()"
+        >
+          Clear all
+        </button>
+        <button
+          hh-button color="primary"
+          type="button"
+          (click)="apply()"
+        >
+          Show results
+        </button>
+      </div>
+    </div>
+  }
+</div>

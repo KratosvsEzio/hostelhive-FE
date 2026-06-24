@@ -1,0 +1,176 @@
+{
+  "name": "web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/web/src",
+  "tags": ["scope:web", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "dependsOn": ["sync-maps-env", "sync-api-env"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/web",
+        "browser": "apps/web/src/main.ts",
+        "tsConfig": "apps/web/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/web/public"
+          }
+        ],
+        "styles": [
+          "apps/web/src/styles.css",
+          "lib/src/styles/lib/global.css",
+          "node_modules/ngx-material-intl-tel-input/lib/assets/css/flags.css"
+        ],
+        "server": "apps/web/src/main.server.ts",
+        "ssr": {
+          "entry": "apps/web/src/server.ts"
+        },
+        "outputMode": "server"
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1.5mb",
+              "maximumError": "3mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "build-mobile": {
+      "executor": "@angular/build:application",
+      "dependsOn": ["sync-maps-env", "sync-api-env"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/web-mobile",
+        "browser": "apps/web/src/main.ts",
+        "tsConfig": "apps/web/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/web/public"
+          }
+        ],
+        "styles": [
+          "apps/web/src/styles.css",
+          "lib/src/styles/lib/global.css",
+          "node_modules/ngx-material-intl-tel-input/lib/assets/css/flags.css"
+        ],
+        "outputHashing": "all",
+        "optimization": true,
+        "budgets": [
+          {
+            "type": "initial",
+            "maximumWarning": "1.5mb",
+            "maximumError": "3mb"
+          },
+          {
+            "type": "anyComponentStyle",
+            "maximumWarning": "4kb",
+            "maximumError": "8kb"
+          }
+        ]
+      },
+      "configurations": {
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "outputHashing": "none"
+        }
+      }
+    },
+    "cap-sync": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build-mobile"],
+      "options": {
+        "command": "cap sync"
+      }
+    },
+    "cap-open-android": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["cap-sync"],
+      "options": {
+        "command": "cap open android"
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "dependsOn": ["sync-maps-env", "sync-api-env"],
+      "configurations": {
+        "production": {
+          "buildTarget": "web:build:production"
+        },
+        "development": {
+          "buildTarget": "web:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "dev": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": ["nx serve web", "node tools/generate-api-env.mjs --watch"],
+        "parallel": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "sync-maps-env": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/generate-google-maps-env.mjs"
+      }
+    },
+    "sync-api-env": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/generate-api-env.mjs"
+      }
+    },
+    "watch-api-env": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/generate-api-env.mjs --watch"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "web:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/web/browser",
+        "spa": true
+      }
+    }
+  }
+}

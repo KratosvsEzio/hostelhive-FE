@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Design Gallery</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .thumb { position:relative; width:300px; height:188px; overflow:hidden; }
+  .thumb iframe { width:1280px; height:800px; transform:scale(0.2344); transform-origin:top left; border:0; pointer-events:none; }
+  .gallery { display:grid; grid-template-columns:repeat(auto-fill,300px); gap:20px; justify-content:center; }
+  @media (min-width:768px){ .gallery{justify-content:flex-start;} }
+</style>
+</head>
+<body class="bg-surface text-ink-800">
+
+  <header class="border-b border-ink-100 bg-white">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-7 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-3"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-8 w-auto" /><span class="rounded-full bg-ink-100 px-2.5 py-1 text-xs font-medium text-ink-600">Design gallery · 25 screens</span></div>
+      <div class="flex items-center gap-2">
+        <span class="h-7 w-7 rounded-lg bg-brand-500" title="#F36E21"></span>
+        <span class="h-7 w-7 rounded-lg bg-ink-800" title="#1F1F1F"></span>
+        <span class="h-7 w-7 rounded-lg bg-ink-300" title="#A3A3A3"></span>
+        <span class="h-7 w-7 rounded-lg border border-ink-100 bg-surface" title="#F5F5F5"></span>
+        <span class="h-7 w-7 rounded-lg bg-tint-cream" title="#FDF8EE"></span>
+        <span class="h-7 w-7 rounded-lg bg-tint-mint" title="#ECF8F7"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-6 py-8">
+    <p class="mb-8 max-w-2xl text-sm text-ink-500">Complete HostelHive screen set — built in the brand pulled from Figma (orange <span class="font-mono text-xs">#F36E21</span> + ink on white, real logo, Tabler icons, Airbnb-style layout). Click any screen to open it full-size.</p>
+
+    <!-- FOUNDATIONS -->
+    <h2 class="mb-1 font-display text-lg font-semibold text-ink-900">Foundations</h2>
+    <p class="mb-4 text-sm text-ink-400">The component library every screen is built from.</p>
+    <div class="gallery mb-12">
+      <a href="30-design-system.html" class="group block overflow-hidden rounded-2xl border-2 border-brand-300 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="30-design-system.html" scrolling="no" title="Design system"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Design system & component library</p><p class="text-xs text-ink-400">Tokens · type · buttons · chips · cards · states</p></div></a>
+    </div>
+
+    <!-- SEEKER -->
+    <h2 class="mb-1 font-display text-lg font-semibold text-ink-900">Seeker · public web</h2>
+    <p class="mb-4 text-sm text-ink-400">Discovery, listing detail and the authenticated Lead Wall.</p>
+    <div class="gallery mb-12">
+      <a href="00-home.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="00-home.html" scrolling="no" title="Home"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Home / city landing</p><p class="text-xs text-ink-400">Hero search · featured · cities</p></div></a>
+      <a href="01-search-results.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="01-search-results.html" scrolling="no" title="Search"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Search results (list)</p><p class="text-xs text-ink-400">Filters · cards · 5 states</p></div></a>
+      <a href="02-search-map.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="02-search-map.html" scrolling="no" title="Map"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Search results (map)</p><p class="text-xs text-ink-400">Split list + price pins</p></div></a>
+      <a href="03-listing-detail.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="03-listing-detail.html" scrolling="no" title="Detail"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Listing detail</p><p class="text-xs text-ink-400">Gallery · rooms · map · contact</p></div></a>
+      <a href="04-lead-wall.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="04-lead-wall.html" scrolling="no" title="Lead Wall"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Lead Wall / auth</p><p class="text-xs text-ink-400">Register → verify → reveal</p></div></a>
+    </div>
+
+    <!-- HOST -->
+    <h2 class="mb-1 font-display text-lg font-semibold text-ink-900">Host · console</h2>
+    <p class="mb-4 text-sm text-ink-400">Onboarding, operations and billing.</p>
+    <div class="gallery mb-12">
+      <a href="09-host-overview.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="09-host-overview.html" scrolling="no" title="Host overview"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Overview</p><p class="text-xs text-ink-400">KPIs · needs attention · activity</p></div></a>
+      <a href="10-host-listings.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="10-host-listings.html" scrolling="no" title="Listings"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">My listings</p><p class="text-xs text-ink-400">Status chips · resume draft</p></div></a>
+      <a href="11-onboarding-wizard.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="11-onboarding-wizard.html" scrolling="no" title="Onboarding"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Onboarding wizard</p><p class="text-xs text-ink-400">5-step · map pin step</p></div></a>
+      <a href="12-rooms.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="12-rooms.html" scrolling="no" title="Rooms"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Rooms</p><p class="text-xs text-ink-400">Capacity · occupancy · rent</p></div></a>
+      <a href="13-tenants.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="13-tenants.html" scrolling="no" title="Tenants"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Tenants</p><p class="text-xs text-ink-400">Ledger · check-in drawer</p></div></a>
+      <a href="14-utilities.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="14-utilities.html" scrolling="no" title="Utilities"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Utilities split</p><p class="text-xs text-ink-400">Pro-rata · manual override</p></div></a>
+      <a href="15-invoices.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="15-invoices.html" scrolling="no" title="Invoices"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Invoices + PDF</p><p class="text-xs text-ink-400">Ledger · branded invoice</p></div></a>
+      <a href="16-analytics.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="16-analytics.html" scrolling="no" title="Analytics"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Analytics dashboard</p><p class="text-xs text-ink-400">KPIs · revenue · ledger</p></div></a>
+      <a href="17-host-settings.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="17-host-settings.html" scrolling="no" title="Host settings"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Settings</p><p class="text-xs text-ink-400">Profile · payouts · notifications</p></div></a>
+      <a href="18-host-subscription.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="18-host-subscription.html" scrolling="no" title="Subscription"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Subscription & billing <span class="ml-1 rounded bg-brand-50 px-1.5 text-[10px] font-medium text-brand-700">v3</span></p><p class="text-xs text-ink-400">Plans · renewal · receipts</p></div></a>
+      <a href="19-host-team.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="19-host-team.html" scrolling="no" title="Team"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Team & staff <span class="ml-1 rounded bg-brand-50 px-1.5 text-[10px] font-medium text-brand-700">v3</span></p><p class="text-xs text-ink-400">Managers & wardens · per-hostel</p></div></a>
+    </div>
+
+    <!-- MODERATOR -->
+    <h2 class="mb-1 font-display text-lg font-semibold text-ink-900">Moderator · console</h2>
+    <p class="mb-4 text-sm text-ink-400">Review queue, listing review and the delta-media pipeline.</p>
+    <div class="gallery mb-12">
+      <a href="20-moderation-queue.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="20-moderation-queue.html" scrolling="no" title="Queue"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Review queue</p><p class="text-xs text-ink-400">Days-in-queue · review CTA</p></div></a>
+      <a href="21-moderation-review.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="21-moderation-review.html" scrolling="no" title="Review"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Listing review</p><p class="text-xs text-ink-400">Inline edit · photo actions</p></div></a>
+      <a href="22-delta-media.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="22-delta-media.html" scrolling="no" title="Media"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Delta media queue</p><p class="text-xs text-ink-400">Live-listing photo approvals</p></div></a>
+      <a href="23-moderation-listings.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="23-moderation-listings.html" scrolling="no" title="All listings"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">All listings</p><p class="text-xs text-ink-400">Disposition filters · actions</p></div></a>
+      <a href="24-moderation-audit.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="24-moderation-audit.html" scrolling="no" title="Audit log"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Audit log</p><p class="text-xs text-ink-400">Day-grouped action timeline</p></div></a>
+      <a href="25-moderation-settings.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="25-moderation-settings.html" scrolling="no" title="Moderator settings"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Settings</p><p class="text-xs text-ink-400">Security · IP allowlist · prefs</p></div></a>
+    </div>
+
+    <!-- ADMIN -->
+    <h2 class="mb-1 font-display text-lg font-semibold text-ink-900">Admin · Super Admin <span class="ml-1 rounded bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700">v3 · new</span></h2>
+    <p class="mb-4 text-sm text-ink-400">Platform governance: roles & permissions, subscription contracts & payments.</p>
+    <div class="gallery mb-12">
+      <a href="26-admin-roles.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="26-admin-roles.html" scrolling="no" title="Roles"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Roles & permissions</p><p class="text-xs text-ink-400">System + custom · permission matrix</p></div></a>
+      <a href="27-admin-contracts.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="27-admin-contracts.html" scrolling="no" title="Contracts"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Contracts</p><p class="text-xs text-ink-400">Lifecycle · mark-paid · refund</p></div></a>
+      <a href="28-admin-payments.html" class="group block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition hover:shadow-cardhover"><div class="thumb border-b border-ink-100"><iframe src="28-admin-payments.html" scrolling="no" title="Payments"></iframe></div><div class="px-4 py-3"><p class="font-medium text-ink-900">Payments</p><p class="text-xs text-ink-400">Webhook status · CSV export</p></div></a>
+    </div>
+
+    <p class="border-t border-ink-100 pt-6 text-center text-xs text-ink-400">HostelHive · 25 screens · shared theme in <span class="font-mono">assets/hh-theme.js</span></p>
+  </main>
+
+</body>
+</html>

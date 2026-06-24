@@ -1,0 +1,6 @@
+<app-dashboard-layout [title]="heading()">
+  <div hhActions class="flex items-center gap-2">
+    <ng-content select="[actions]" />
+  </div>
+  <ng-content />
+</app-dashboard-layout>

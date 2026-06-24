@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Host Onboarding</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .mapfaux { background-color:#EAF0EC; background-image:linear-gradient(#dfe7e1 1px,transparent 1px),linear-gradient(90deg,#dfe7e1 1px,transparent 1px); background-size:36px 36px; }
+</style>
+</head>
+<body class="bg-surface text-ink-800">
+
+  <!-- TOPBAR -->
+  <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-ink-100 bg-white px-5 sm:px-8">
+    <img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
+    <div class="flex items-center gap-3"><span class="hidden text-sm text-ink-400 sm:block"><i class="ti ti-device-floppy text-ok"></i> Draft saved</span><a href="10-host-listings.html" class="rounded-xl border border-ink-200 px-3 py-2 text-sm font-medium text-ink-700 hover:bg-surface">Save &amp; exit</a></div>
+  </header>
+
+  <!-- STEPPER -->
+  <div class="border-b border-ink-100 bg-white">
+    <div class="mx-auto flex max-w-4xl items-center gap-2 overflow-x-auto px-5 py-4 sm:px-8">
+      <div class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ok"><span class="grid h-7 w-7 place-items-center rounded-full bg-ok text-white"><i class="ti ti-check text-sm"></i></span>Basic info</div>
+      <span class="h-px w-8 bg-ink-200"></span>
+      <div class="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-brand-600"><span class="grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white">2</span>Location</div>
+      <span class="h-px w-8 bg-ink-200"></span>
+      <div class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ink-400"><span class="grid h-7 w-7 place-items-center rounded-full border border-ink-300">3</span>Media</div>
+      <span class="h-px w-8 bg-ink-200"></span>
+      <div class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ink-400"><span class="grid h-7 w-7 place-items-center rounded-full border border-ink-300">4</span>Rooms</div>
+      <span class="h-px w-8 bg-ink-200"></span>
+      <div class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ink-400"><span class="grid h-7 w-7 place-items-center rounded-full border border-ink-300">5</span>Payment</div>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-4xl px-5 py-8 sm:px-8">
+    <h1 class="font-display text-2xl font-semibold text-ink-900">Pin your hostel location</h1>
+    <p class="mt-1 text-sm text-ink-500">Drag the pin to your building. We'll auto-fill the address from the map.</p>
+
+    <!-- map + search -->
+    <div class="mt-5 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card">
+      <div class="flex items-center gap-2 border-b border-ink-100 p-3">
+        <div class="flex flex-1 items-center gap-2 rounded-xl bg-surface px-3 py-2"><i class="ti ti-search text-ink-400"></i><input placeholder="Search an address or landmark…" class="w-full bg-transparent text-sm outline-none" /></div>
+        <button class="rounded-xl border border-ink-200 px-3 py-2 text-sm font-medium text-ink-700"><i class="ti ti-current-location text-brand-500"></i></button>
+      </div>
+      <div class="mapfaux relative h-[360px]">
+        <div class="absolute" style="left:50%;top:50%;transform:translate(-50%,-100%)">
+          <span class="grid h-11 w-11 place-items-center rounded-full bg-brand-500 text-white shadow-pill ring-4 ring-white"><i class="ti ti-map-pin text-xl"></i></span>
+          <span class="mx-auto block h-3 w-3 -translate-y-1.5 rotate-45 bg-brand-500"></span>
+        </div>
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg bg-ink-900/85 px-3 py-1.5 text-xs font-medium text-white">Lat: 24.80710 · Lng: 67.07320</div>
+        <div class="absolute right-3 top-3 flex flex-col overflow-hidden rounded-lg border border-ink-200 bg-white text-ink-700"><button class="border-b border-ink-100 px-2.5 py-1.5 text-xs font-medium">Map</button><button class="px-2.5 py-1.5 text-xs text-ink-400">Satellite</button></div>
+      </div>
+      <div class="flex items-center justify-between gap-3 border-t border-ink-100 bg-tint-mint/60 p-3">
+        <p class="flex items-center gap-1.5 text-sm font-medium text-ok"><i class="ti ti-circle-check"></i>Location pinned successfully</p>
+        <button class="rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-700">Change location</button>
+      </div>
+    </div>
+
+    <!-- auto-filled address -->
+    <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div><label class="mb-1 block text-xs font-medium text-ink-600">Area</label><input value="DHA Phase 6" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+      <div><label class="mb-1 block text-xs font-medium text-ink-600">City</label><input value="Karachi" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+      <div><label class="mb-1 block text-xs font-medium text-ink-600">Province</label><input value="Sindh" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+      <div><label class="mb-1 block text-xs font-medium text-ink-600">Country</label><input value="Pakistan" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+      <div class="sm:col-span-2"><label class="mb-1 block text-xs font-medium text-ink-600">Street address</label><input value="Street 12, House 4-C, DHA Phase 6" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+    </div>
+
+    <!-- nav -->
+    <div class="mt-8 flex items-center justify-between border-t border-ink-100 pt-5">
+      <button class="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-medium text-ink-700 hover:bg-white"><i class="ti ti-chevron-left"></i>Back</button>
+      <button class="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600">Continue to media<i class="ti ti-chevron-right"></i></button>
+    </div>
+  </main>
+
+</body>
+</html>

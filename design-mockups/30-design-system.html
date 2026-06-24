@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Design System & Component Library</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .swatch { height:56px; border-radius:12px; }
+  .spec { font-family: ui-monospace, monospace; font-size:11px; color:#7A7A7A; }
+  .demo { background:
+    repeating-conic-gradient(#FAFAFA 0% 25%, #FFFFFF 0% 50%) 50% / 24px 24px; }
+  .mapfaux { background-color:#EAF0EC; background-image:linear-gradient(#dfe7e1 1px,transparent 1px),linear-gradient(90deg,#dfe7e1 1px,transparent 1px); background-size:30px 30px; }
+  section[id] { scroll-margin-top: 96px; }
+</style>
+</head>
+<body class="bg-white text-ink-800">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-40 border-b border-ink-100 bg-white/95 backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+      <div class="flex items-center gap-3">
+        <img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
+        <span class="rounded-full bg-ink-100 px-2.5 py-1 text-xs font-medium text-ink-600">Design system v1.0</span>
+      </div>
+      <a href="index.html" class="text-sm font-medium text-brand-600 hover:underline">← Gallery</a>
+    </div>
+    <nav class="no-scrollbar mx-auto flex max-w-6xl gap-1 overflow-x-auto px-6 pb-3 text-sm">
+      <a href="#brand" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Brand</a>
+      <a href="#color" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Color</a>
+      <a href="#type" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Type</a>
+      <a href="#layout" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Space & radius</a>
+      <a href="#icons" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Icons</a>
+      <a href="#buttons" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Buttons</a>
+      <a href="#inputs" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Inputs</a>
+      <a href="#chips" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Chips & badges</a>
+      <a href="#cards" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Cards</a>
+      <a href="#nav" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Navigation</a>
+      <a href="#tables" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Tables</a>
+      <a href="#overlays" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Overlays</a>
+      <a href="#map" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">Map</a>
+      <a href="#states" class="shrink-0 rounded-full px-3 py-1.5 font-medium text-ink-600 hover:bg-ink-50">States</a>
+    </nav>
+  </header>
+
+  <main class="mx-auto max-w-6xl space-y-16 px-6 py-10">
+
+    <!-- ============ BRAND ============ -->
+    <section id="brand">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">01 · Brand</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Logo</h2>
+      <p class="mt-1 max-w-2xl text-sm text-ink-500">The wordmark is the only logo. The bed-bar sits in the first H, the hive motif is the I of HIVE — both in brand orange. Never recolor, stretch, or rebuild it in type.</p>
+      <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl border border-ink-100 p-6"><img src="assets/hostelhive-logo.png" alt="HostelHive logo on white" class="h-7 w-auto" /><p class="spec mt-4">On white · primary use</p></div>
+        <div class="rounded-2xl bg-surface p-6"><img src="assets/hostelhive-logo.png" alt="HostelHive logo on surface" class="h-7 w-auto" /><p class="spec mt-4">On surface #F5F5F5</p></div>
+        <div class="rounded-2xl bg-ink-900 p-6"><img src="assets/hostelhive-logo.png" alt="HostelHive logo on dark" class="h-7 w-auto brightness-0 invert" /><p class="spec mt-4 text-ink-300">On ink-900 · inverted</p></div>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-4 text-xs text-ink-500">
+        <span><i class="ti ti-check text-ok"></i> Min height 20px · clear space = height of the H</span>
+        <span><i class="ti ti-x text-danger"></i> No recoloring, outlines, shadows or rotation</span>
+      </div>
+    </section>
+
+    <!-- ============ COLOR ============ -->
+    <section id="color">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">02 · Color</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Palette</h2>
+      <p class="mt-1 max-w-2xl text-sm text-ink-500">Two ramps carry the product: <span class="font-medium text-ink-800">brand</span> (orange, extracted #F36E21 at 500) for action and emphasis, <span class="font-medium text-ink-800">ink</span> (#1F1F1F at 800) for text and structure. Tints are reserved for soft card fills.</p>
+
+      <h3 class="mt-6 text-sm font-semibold text-ink-700">Brand / orange <span class="spec ml-2">token: brand-50 → brand-900 · core: brand-500 #F36E21</span></h3>
+      <div class="mt-2 grid grid-cols-5 gap-2 sm:grid-cols-10">
+        <div><div class="swatch bg-brand-50"></div><p class="spec mt-1">50</p></div>
+        <div><div class="swatch bg-brand-100"></div><p class="spec mt-1">100</p></div>
+        <div><div class="swatch bg-brand-200"></div><p class="spec mt-1">200</p></div>
+        <div><div class="swatch bg-brand-300"></div><p class="spec mt-1">300</p></div>
+        <div><div class="swatch bg-brand-400"></div><p class="spec mt-1">400</p></div>
+        <div><div class="swatch bg-brand-500 ring-2 ring-offset-2 ring-brand-500"></div><p class="spec mt-1 font-semibold text-brand-600">500 ★</p></div>
+        <div><div class="swatch bg-brand-600"></div><p class="spec mt-1">600</p></div>
+        <div><div class="swatch bg-brand-700"></div><p class="spec mt-1">700</p></div>
+        <div><div class="swatch bg-brand-800"></div><p class="spec mt-1">800</p></div>
+        <div><div class="swatch bg-brand-900"></div><p class="spec mt-1">900</p></div>
+      </div>
+
+      <h3 class="mt-6 text-sm font-semibold text-ink-700">Ink / neutral <span class="spec ml-2">token: ink-50 → ink-900 · text: ink-800 #1F1F1F · muted: ink-300 #A3A3A3</span></h3>
+      <div class="mt-2 grid grid-cols-5 gap-2 sm:grid-cols-10">
+        <div><div class="swatch border border-ink-100 bg-ink-50"></div><p class="spec mt-1">50</p></div>
+        <div><div class="swatch bg-ink-100"></div><p class="spec mt-1">100</p></div>
+        <div><div class="swatch bg-ink-200"></div><p class="spec mt-1">200</p></div>
+        <div><div class="swatch bg-ink-300"></div><p class="spec mt-1">300</p></div>
+        <div><div class="swatch bg-ink-400"></div><p class="spec mt-1">400</p></div>
+        <div><div class="swatch bg-ink-500"></div><p class="spec mt-1">500</p></div>
+        <div><div class="swatch bg-ink-600"></div><p class="spec mt-1">600</p></div>
+        <div><div class="swatch bg-ink-700"></div><p class="spec mt-1">700</p></div>
+        <div><div class="swatch bg-ink-800 ring-2 ring-offset-2 ring-ink-800"></div><p class="spec mt-1 font-semibold">800 ★</p></div>
+        <div><div class="swatch bg-ink-900"></div><p class="spec mt-1">900</p></div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div>
+          <h3 class="text-sm font-semibold text-ink-700">Semantic</h3>
+          <div class="mt-2 grid grid-cols-3 gap-2">
+            <div><div class="swatch bg-ok"></div><p class="spec mt-1">ok #27AE60</p></div>
+            <div><div class="swatch bg-warn"></div><p class="spec mt-1">warn #F39C12</p></div>
+            <div><div class="swatch bg-danger"></div><p class="spec mt-1">danger #E74C3C</p></div>
+          </div>
+          <p class="mt-2 text-xs text-ink-400">Status only — never decorative. Always pair with a text label (WCAG: no color-only meaning).</p>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-ink-700">Surface & tints <span class="spec ml-2">soft fills only</span></h3>
+          <div class="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-7">
+            <div><div class="swatch border border-ink-100 bg-surface"></div><p class="spec mt-1">surface</p></div>
+            <div><div class="swatch bg-tint-mint"></div><p class="spec mt-1">mint</p></div>
+            <div><div class="swatch bg-tint-blue"></div><p class="spec mt-1">blue</p></div>
+            <div><div class="swatch bg-tint-green"></div><p class="spec mt-1">green</p></div>
+            <div><div class="swatch bg-tint-sky"></div><p class="spec mt-1">sky</p></div>
+            <div><div class="swatch bg-tint-purple"></div><p class="spec mt-1">purple</p></div>
+            <div><div class="swatch bg-tint-cream"></div><p class="spec mt-1">cream</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TYPOGRAPHY ============ -->
+    <section id="type">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">03 · Typography</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Type scale</h2>
+      <p class="mt-1 max-w-2xl text-sm text-ink-500"><span class="font-medium text-ink-800">Poppins</span> for display headings, <span class="font-medium text-ink-800">Inter</span> for everything else. Fallback: system-ui, sans-serif.</p>
+      <div class="mt-5 divide-y divide-ink-100 rounded-2xl border border-ink-100">
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="font-display text-3xl font-bold text-ink-900">Display</p><p class="spec">Poppins 30/700 · hero only</p></div>
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="font-display text-2xl font-semibold text-ink-900">Heading 1</p><p class="spec">Poppins 24/600 · page titles</p></div>
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="font-display text-lg font-semibold text-ink-900">Heading 2</p><p class="spec">Poppins 18/600 · section titles</p></div>
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="text-base font-semibold text-ink-800">Heading 3 / card title</p><p class="spec">Inter 16/600</p></div>
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="text-[15px] text-ink-600">Body — readable paragraph text for descriptions and detail pages.</p><p class="spec">Inter 15–16/400 · lh 1.6</p></div>
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="text-sm font-medium text-ink-700">Label / button</p><p class="spec">Inter 14/500–600</p></div>
+        <div class="flex items-baseline justify-between gap-4 p-4"><p class="text-xs text-ink-400">Caption / meta — timestamps, helper text, specs</p><p class="spec">Inter 12/400 · ink-400</p></div>
+      </div>
+      <p class="mt-3 text-xs text-ink-400">Numbers in money contexts use semibold ink-900 with the unit in ink-400: <span class="text-base font-semibold text-ink-900">Rs 12,000</span> <span class="text-sm text-ink-400">/ month</span></p>
+    </section>
+
+    <!-- ============ SPACING / RADIUS / ELEVATION ============ -->
+    <section id="layout">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">04 · Layout tokens</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Spacing, radius & elevation</h2>
+      <div class="mt-5 grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div>
+          <h3 class="mb-2 text-sm font-semibold text-ink-700">Spacing <span class="spec ml-1">4px base</span></h3>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3"><span class="h-4 w-1 rounded bg-brand-300"></span><span class="spec">4 · xs — icon gaps</span></div>
+            <div class="flex items-center gap-3"><span class="h-4 w-2 rounded bg-brand-300"></span><span class="spec">8 · sm — chip gaps</span></div>
+            <div class="flex items-center gap-3"><span class="h-4 w-3 rounded bg-brand-400"></span><span class="spec">12 · md — intra-card</span></div>
+            <div class="flex items-center gap-3"><span class="h-4 w-4 rounded bg-brand-400"></span><span class="spec">16 · lg — card padding</span></div>
+            <div class="flex items-center gap-3"><span class="h-4 w-6 rounded bg-brand-500"></span><span class="spec">24 · xl — section gaps</span></div>
+            <div class="flex items-center gap-3"><span class="h-4 w-10 rounded bg-brand-500"></span><span class="spec">40+ · 2xl — page sections</span></div>
+          </div>
+        </div>
+        <div>
+          <h3 class="mb-2 text-sm font-semibold text-ink-700">Radius</h3>
+          <div class="flex flex-wrap items-end gap-3">
+            <div class="text-center"><div class="h-14 w-14 rounded-lg border-2 border-ink-200"></div><p class="spec mt-1">8 · inputs</p></div>
+            <div class="text-center"><div class="h-14 w-14 rounded-xl border-2 border-ink-200"></div><p class="spec mt-1">12 · buttons</p></div>
+            <div class="text-center"><div class="h-14 w-14 rounded-2xl border-2 border-ink-200"></div><p class="spec mt-1">16 · cards</p></div>
+            <div class="text-center"><div class="h-14 w-14 rounded-3xl border-2 border-ink-200"></div><p class="spec mt-1">22 · hero</p></div>
+            <div class="text-center"><div class="h-14 w-14 rounded-full border-2 border-ink-200"></div><p class="spec mt-1">full · pills</p></div>
+          </div>
+        </div>
+        <div>
+          <h3 class="mb-2 text-sm font-semibold text-ink-700">Elevation</h3>
+          <div class="space-y-3">
+            <div class="rounded-2xl bg-white p-3 shadow-card"><p class="text-sm font-medium text-ink-800">card</p><p class="spec">0 2px 8px rgba(31,31,31,.08)</p></div>
+            <div class="rounded-2xl bg-white p-3 shadow-cardhover"><p class="text-sm font-medium text-ink-800">card-hover</p><p class="spec">0 12px 30px rgba(31,31,31,.14)</p></div>
+            <div class="rounded-2xl bg-white p-3 shadow-pill"><p class="text-sm font-medium text-ink-800">pill / floating</p><p class="spec">0 4px 16px rgba(31,31,31,.16)</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ICONS ============ -->
+    <section id="icons">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">05 · Iconography</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Icons — Tabler, outline</h2>
+      <p class="mt-1 max-w-2xl text-sm text-ink-500">Outline style matches the brand's orange line-icon look. Functional icons in <span class="font-medium">ink-400/500</span>; amenity & feature icons in <span class="font-medium text-brand-600">brand-500</span>. Sizes 16 / 20 / 24.</p>
+      <div class="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-8 lg:grid-cols-12">
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-wifi text-2xl"></i><span class="spec">wifi</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-air-conditioning text-2xl"></i><span class="spec">ac</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-bolt text-2xl"></i><span class="spec">power</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-tools-kitchen-2 text-2xl"></i><span class="spec">kitchen</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-wash-machine text-2xl"></i><span class="spec">laundry</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-device-cctv text-2xl"></i><span class="spec">cctv</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-shield-check text-2xl"></i><span class="spec">guard</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-brand-500"><i class="ti ti-car text-2xl"></i><span class="spec">parking</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-search text-2xl"></i><span class="spec">search</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-map-pin text-2xl"></i><span class="spec">pin</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-bed text-2xl"></i><span class="spec">bed</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-users text-2xl"></i><span class="spec">tenants</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-heart text-2xl"></i><span class="spec">save</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-file-invoice text-2xl"></i><span class="spec">invoice</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-chart-bar text-2xl"></i><span class="spec">analytics</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-rosette-discount-check text-2xl"></i><span class="spec">verified</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-lock text-2xl"></i><span class="spec">gated</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-phone text-2xl"></i><span class="spec">contact</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-gender-male text-2xl"></i><span class="spec">boys</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-gender-female text-2xl"></i><span class="spec">girls</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-inbox text-2xl"></i><span class="spec">queue</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-photo text-2xl"></i><span class="spec">media</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-upload text-2xl"></i><span class="spec">upload</span></div>
+        <div class="flex flex-col items-center gap-1 rounded-xl border border-ink-100 p-3 text-ink-500"><i class="ti ti-map text-2xl"></i><span class="spec">map</span></div>
+      </div>
+    </section>
+
+    <!-- ============ BUTTONS ============ -->
+    <section id="buttons">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">06 · Buttons</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Button</h2>
+      <p class="mt-1 max-w-2xl text-sm text-ink-500">One primary action per view. Radius 12 · padding 16×10 (md) / 12×8 (sm) · Inter 14/600.</p>
+      <div class="demo mt-5 space-y-5 rounded-2xl border border-ink-100 p-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <button class="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600">Primary</button>
+          <button class="rounded-xl border border-ink-300 px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50">Secondary</button>
+          <button class="rounded-xl bg-ink-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black">Dark</button>
+          <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50">Ghost</button>
+          <button class="rounded-xl bg-ok px-4 py-2.5 text-sm font-semibold text-white">Success</button>
+          <button class="rounded-xl border border-danger/30 px-4 py-2.5 text-sm font-medium text-danger hover:bg-danger/5">Destructive</button>
+          <button class="cursor-not-allowed rounded-xl bg-ink-100 px-4 py-2.5 text-sm font-medium text-ink-300">Disabled</button>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button class="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white"><i class="ti ti-phone"></i>With icon</button>
+          <button class="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white opacity-80"><i class="ti ti-loader-2 animate-spin"></i>Loading…</button>
+          <button class="rounded-xl border border-ink-300 px-3 py-2 text-xs font-medium text-ink-800">Small</button>
+          <button class="grid h-10 w-10 place-items-center rounded-full border border-ink-200 text-ink-600 shadow-card" aria-label="Icon button"><i class="ti ti-heart text-lg"></i></button>
+          <button class="rounded-full bg-ink-900 px-5 py-3 text-sm font-medium text-white shadow-pill">Floating pill <i class="ti ti-map"></i></button>
+        </div>
+        <p class="spec">primary: bg-brand-500 → hover brand-600 · secondary: border-ink-300 · focus ring: 2px brand-300 (keyboard)</p>
+      </div>
+    </section>
+
+    <!-- ============ INPUTS ============ -->
+    <section id="inputs">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">07 · Form inputs</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Inputs</h2>
+      <div class="demo mt-5 grid grid-cols-1 gap-5 rounded-2xl border border-ink-100 p-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Default</label><div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3"><i class="ti ti-user text-ink-400"></i><input placeholder="Full name" class="w-full bg-transparent py-2.5 text-sm outline-none" /></div></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Focused</label><div class="flex items-center gap-2 rounded-xl border-2 border-brand-400 px-3 ring-2 ring-brand-100"><i class="ti ti-mail text-brand-500"></i><input value="ahmed@email.com" class="w-full bg-transparent py-2.5 text-sm outline-none" /></div></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Error</label><div class="flex items-center gap-2 rounded-xl border border-danger px-3"><i class="ti ti-lock text-danger"></i><input value="123" class="w-full bg-transparent py-2.5 text-sm outline-none" /></div><p class="mt-1 flex items-center gap-1 text-xs text-danger"><i class="ti ti-alert-circle"></i>Min 8 characters, 1 uppercase &amp; 1 number.</p></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Disabled</label><div class="flex items-center gap-2 rounded-xl border border-ink-100 bg-ink-50 px-3"><i class="ti ti-id text-ink-300"></i><input disabled placeholder="CNIC" class="w-full bg-transparent py-2.5 text-sm outline-none" /></div></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Select</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-800">2-sharing<i class="ti ti-chevron-down text-ink-400"></i></div></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Search (in surface)</label><div class="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5"><i class="ti ti-search text-ink-400"></i><input placeholder="Search an address…" class="w-full bg-transparent text-sm outline-none" /></div></div>
+        <div class="sm:col-span-2 lg:col-span-3"><label class="mb-1 block text-xs font-medium text-ink-600">Search pill (hero)</label>
+          <div class="flex max-w-xl items-center gap-3 rounded-full border border-ink-200 bg-white py-2 pl-5 pr-2 shadow-card">
+            <span class="text-sm font-medium text-ink-800">Karachi</span><span class="h-5 w-px bg-ink-200"></span>
+            <span class="text-sm text-ink-400">Any budget</span><span class="h-5 w-px bg-ink-200"></span>
+            <span class="text-sm text-ink-400">Any sharing</span>
+            <span class="ml-auto grid h-8 w-8 place-items-center rounded-full bg-brand-500 text-white"><i class="ti ti-search text-lg"></i></span>
+          </div>
+        </div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Range (budget)</label><div class="px-1 pt-3"><div class="relative h-1 rounded bg-ink-100"><div class="absolute left-1/4 right-1/4 h-1 rounded bg-brand-500"></div><span class="absolute left-1/4 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand-500 bg-white shadow-card"></span><span class="absolute right-1/4 top-1/2 h-4 w-4 -translate-y-1/2 translate-x-1/2 rounded-full border-2 border-brand-500 bg-white shadow-card"></span></div><div class="mt-2 flex justify-between text-xs text-ink-500"><span>Rs 8,000</span><span>Rs 25,000</span></div></div></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Checkbox & radio</label><div class="flex items-center gap-5 pt-1.5 text-sm text-ink-700"><span class="flex items-center gap-2"><span class="grid h-5 w-5 place-items-center rounded border-2 border-brand-500 bg-brand-500 text-white"><i class="ti ti-check text-xs"></i></span>Wi-Fi</span><span class="flex items-center gap-2"><span class="h-5 w-5 rounded border-2 border-ink-300"></span>AC</span><span class="flex items-center gap-2"><span class="grid h-5 w-5 place-items-center rounded-full border-2 border-brand-500"><span class="h-2.5 w-2.5 rounded-full bg-brand-500"></span></span>Boys</span></div></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Toggle</label><div class="flex items-center gap-4 pt-1.5"><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span><span class="relative h-6 w-11 rounded-full bg-ink-200"><span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></div></div>
+      </div>
+    </section>
+
+    <!-- ============ CHIPS & BADGES ============ -->
+    <section id="chips">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">08 · Chips & badges</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Chips, badges & status</h2>
+      <div class="demo mt-5 space-y-6 rounded-2xl border border-ink-100 p-6">
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Filter chips <span class="spec ml-1">pill · active = bg-brand-500</span></p>
+          <div class="flex flex-wrap gap-2">
+            <button class="flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-medium text-white"><i class="ti ti-layout-grid"></i>All stays</button>
+            <button class="flex items-center gap-2 rounded-full border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700"><i class="ti ti-wifi"></i>Wi-Fi</button>
+            <button class="flex items-center gap-2 rounded-full border border-brand-300 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700"><i class="ti ti-air-conditioning"></i>AC (hover)</button>
+            <button class="flex items-center gap-2 rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium text-ink-800"><i class="ti ti-adjustments-horizontal"></i>Filters<span class="grid h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-xs font-semibold text-white">2</span></button>
+          </div>
+        </div>
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Gender & trust badges <span class="spec ml-1">boys #2B6CB0 · girls #BE3A75 · co-living = brand</span></p>
+          <div class="flex flex-wrap items-center gap-2">
+            <span style="background-color:#2B6CB0" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"><i class="ti ti-gender-male text-sm"></i>Boys</span>
+            <span style="background-color:#BE3A75" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"><i class="ti ti-gender-female text-sm"></i>Girls</span>
+            <span class="inline-flex items-center gap-1 rounded-full bg-brand-500 px-2.5 py-1 text-xs font-medium text-white"><i class="ti ti-users text-sm"></i>Co-living</span>
+            <span class="inline-flex items-center gap-1 text-xs font-medium text-brand-600"><i class="ti ti-rosette-discount-check"></i>Verified</span>
+            <span class="rounded-md bg-ink-50 px-2 py-0.5 text-xs font-medium text-ink-600">2-sharing</span>
+            <span class="rounded-md bg-ink-50 px-2 py-0.5 text-xs font-medium text-ink-600">3-sharing</span>
+          </div>
+        </div>
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Status chips <span class="spec ml-1">tinted bg /10 + semantic text + label always</span></p>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1 rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok"><i class="ti ti-circle-filled text-[8px]"></i>Published</span>
+            <span class="inline-flex items-center gap-1 rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn"><i class="ti ti-clock text-xs"></i>In review</span>
+            <span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">Paused</span>
+            <span class="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">Rejected</span>
+            <span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Paid</span>
+            <span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">Unpaid</span>
+            <span class="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">Overdue</span>
+            <span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Available</span>
+            <span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">Partial</span>
+            <span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-600">Full</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CARDS ============ -->
+    <section id="cards">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">09 · Cards</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Cards</h2>
+      <div class="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Listing card <span class="spec ml-1">image 4:3 · r-16 · hover: img scale 1.06</span></p>
+          <article class="group w-full max-w-xs cursor-pointer">
+            <div class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-ink-50">
+              <img src="https://picsum.photos/seed/hhds1/600/450" alt="" class="card-img h-full w-full object-cover" />
+              <button class="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-ink-700 backdrop-blur" aria-label="Save"><i class="ti ti-heart text-lg"></i></button>
+              <span style="background-color:rgba(43,108,176,.95)" class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"><i class="ti ti-gender-male text-sm"></i>Boys</span>
+            </div>
+            <div class="pt-3">
+              <div class="flex items-start justify-between gap-2"><h3 class="truncate font-semibold text-ink-800">Al-Madina Boys Hostel</h3><span class="mt-0.5 inline-flex shrink-0 items-center gap-1 text-xs font-medium text-brand-600"><i class="ti ti-rosette-discount-check"></i>Verified</span></div>
+              <p class="mt-0.5 text-sm text-ink-400">DHA Phase 6 · Karachi</p>
+              <div class="mt-2 flex gap-1.5"><span class="rounded-md bg-ink-50 px-2 py-0.5 text-xs font-medium text-ink-600">2-sharing</span><span class="rounded-md bg-ink-50 px-2 py-0.5 text-xs font-medium text-ink-600">3-sharing</span></div>
+              <div class="mt-2.5 flex items-center gap-3 text-brand-500"><i class="ti ti-wifi"></i><i class="ti ti-air-conditioning"></i><i class="ti ti-tools-kitchen-2"></i><i class="ti ti-shield-check"></i></div>
+              <p class="mt-3 text-ink-900"><span class="mb-0.5 block text-[11px] font-medium text-ink-400">Starting from</span><span class="text-lg font-semibold">Rs 12,000</span> <span class="text-sm text-ink-400">/ month</span></p>
+            </div>
+          </article>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <p class="mb-2 text-xs font-medium text-ink-500">KPI card <span class="spec ml-1">console · shadow-card</span></p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Collected · June</p><p class="mt-1 text-2xl font-semibold text-ok">Rs 248k</p></div>
+              <div class="rounded-2xl bg-white p-4 shadow-card">
+                <div class="flex items-center gap-3">
+                  <svg viewBox="0 0 36 36" class="h-11 w-11"><circle cx="18" cy="18" r="15.9" fill="none" stroke="#E6E6E6" stroke-width="3" pathLength="100"/><circle cx="18" cy="18" r="15.9" fill="none" stroke="#F36E21" stroke-width="3" stroke-linecap="round" stroke-dasharray="78 100" pathLength="100" transform="rotate(-90 18 18)"/></svg>
+                  <div><p class="text-xs text-ink-400">Occupancy</p><p class="text-xl font-semibold text-ink-900">78%</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="mb-2 text-xs font-medium text-ink-500">Room row <span class="spec ml-1">tint icon plate + meta + price</span></p>
+            <div class="flex items-center justify-between rounded-2xl border border-ink-100 bg-white p-4">
+              <div class="flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-mint text-brand-600"><i class="ti ti-bed text-xl"></i></span><div><p class="font-medium text-ink-900">2-sharing</p><p class="text-sm text-ink-500">Attached bath · 5 beds left</p></div></div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 14,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <p class="mb-2 text-xs font-medium text-ink-500">Host card</p>
+            <div class="rounded-2xl border border-ink-100 bg-white p-5">
+              <div class="flex items-center gap-3"><span class="grid h-12 w-12 place-items-center rounded-full bg-brand-500 text-base font-semibold text-white">IK</span><div><p class="font-medium text-ink-900">Imran Khan</p><p class="text-xs text-ink-500">Host since 2023</p></div></div>
+              <div class="mt-3 flex items-center gap-2 text-sm"><i class="ti ti-rosette-discount-check text-brand-600"></i><span class="text-ink-600">Identity verified by HostelHive</span></div>
+            </div>
+          </div>
+          <div>
+            <p class="mb-2 text-xs font-medium text-ink-500">Draft / resume card <span class="spec ml-1">dashed border</span></p>
+            <div class="flex items-center gap-4 rounded-2xl border border-dashed border-ink-200 bg-white p-4">
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-progress text-xl"></i></span>
+              <div class="flex-1"><p class="font-medium text-ink-900">Resume your draft</p><p class="text-sm text-ink-400">Step 3 of 5 · Media</p></div>
+              <span class="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white">Continue</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NAVIGATION ============ -->
+    <section id="nav">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">10 · Navigation</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Navigation</h2>
+      <div class="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Console sidebar links <span class="spec ml-1">active = brand-50 bg + brand-600 text</span></p>
+          <div class="max-w-xs space-y-1 rounded-2xl border border-ink-100 bg-white p-3">
+            <a href="#" class="nav-link active"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
+            <a href="#" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
+            <a href="#" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
+            <a href="#" class="nav-link"><i class="ti ti-inbox text-lg"></i>Queue<span class="ml-auto rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">12</span></a>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <p class="mb-2 text-xs font-medium text-ink-500">Wizard stepper <span class="spec ml-1">done = ok · current = brand · todo = ink-300</span></p>
+            <div class="flex items-center gap-2 overflow-x-auto rounded-2xl border border-ink-100 bg-white p-4">
+              <div class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ok"><span class="grid h-7 w-7 place-items-center rounded-full bg-ok text-white"><i class="ti ti-check text-sm"></i></span>Basic</div>
+              <span class="h-px w-8 bg-ink-200"></span>
+              <div class="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-brand-600"><span class="grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white">2</span>Location</div>
+              <span class="h-px w-8 bg-ink-200"></span>
+              <div class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ink-400"><span class="grid h-7 w-7 place-items-center rounded-full border border-ink-300">3</span>Media</div>
+            </div>
+          </div>
+          <div>
+            <p class="mb-2 text-xs font-medium text-ink-500">Tabs & pagination</p>
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="grid w-56 grid-cols-2 rounded-xl bg-surface p-1 text-sm font-medium"><button class="rounded-lg bg-white py-2 text-ink-900 shadow-card">Register</button><button class="rounded-lg py-2 text-ink-500">Log in</button></div>
+              <div class="flex items-center gap-1"><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600"><i class="ti ti-chevron-left"></i></button><button class="grid h-8 w-8 place-items-center rounded-lg bg-ink-900 text-sm font-medium text-white">1</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-sm text-ink-600">2</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600"><i class="ti ti-chevron-right"></i></button></div>
+              <button class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white">Show more stays</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TABLES ============ -->
+    <section id="tables">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">11 · Tables</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Data table</h2>
+      <p class="mt-1 text-sm text-ink-500">Console standard: white card, uppercase 11px ink-400 header, 12px row dividers, hover bg-surface.</p>
+      <div class="mt-4 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card">
+        <table class="w-full text-sm">
+          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"><tr><th class="px-5 py-3 font-medium">Tenant</th><th class="px-5 py-3 font-medium">Room</th><th class="px-5 py-3 font-medium">Rent</th><th class="px-5 py-3 font-medium">Status</th><th class="px-5 py-3 text-right font-medium">Outstanding</th></tr></thead>
+          <tbody class="divide-y divide-ink-100">
+            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-sky text-xs font-semibold text-ink-700">AR</span><span class="font-medium text-ink-900">Ahmed Raza</span></div></td><td class="px-5 py-3 text-ink-600">102</td><td class="px-5 py-3 font-medium text-ink-900">Rs 12,000</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Paid</span></td><td class="px-5 py-3 text-right text-ink-400">—</td></tr>
+            <tr class="bg-brand-50/40 hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-cream text-xs font-semibold text-ink-700">BK</span><span class="font-medium text-ink-900">Bilal Khan</span><span class="spec">(selected)</span></div></td><td class="px-5 py-3 text-ink-600">202</td><td class="px-5 py-3 font-medium text-ink-900">Rs 9,500</td><td class="px-5 py-3"><span class="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">Overdue</span></td><td class="px-5 py-3 text-right font-medium text-danger">Rs 9,500</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ OVERLAYS ============ -->
+    <section id="overlays">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">12 · Overlays</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Modal, drawer & toasts</h2>
+      <div class="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Modal <span class="spec ml-1">scrim ink-900/55 + blur · r-22</span></p>
+          <div class="flex min-h-[260px] items-center justify-center rounded-2xl bg-ink-900/55 p-6 backdrop-blur-sm">
+            <div class="w-full max-w-xs rounded-3xl bg-white p-5 shadow-pill">
+              <div class="mb-3 flex items-center justify-between"><img src="assets/hostelhive-logo.png" alt="" class="h-5 w-auto" /><i class="ti ti-x text-ink-400"></i></div>
+              <p class="font-display text-base font-semibold text-ink-900">See verified contacts</p>
+              <p class="mt-1 text-xs text-ink-500">Create a free account to view numbers.</p>
+              <button class="mt-4 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white">Create account</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Slide-over drawer <span class="spec ml-1">right · max-w-md</span></p>
+          <div class="flex min-h-[260px] justify-end overflow-hidden rounded-2xl bg-ink-900/30">
+            <div class="w-4/5 bg-white p-4 shadow-pill">
+              <div class="flex items-center justify-between border-b border-ink-100 pb-3"><p class="font-display text-sm font-semibold text-ink-900">Check in tenant</p><i class="ti ti-x text-ink-400"></i></div>
+              <div class="mt-3 space-y-2"><div class="h-9 rounded-xl border border-ink-200"></div><div class="h-9 rounded-xl border border-ink-200"></div><div class="grid grid-cols-2 gap-2"><div class="h-9 rounded-xl border border-ink-200"></div><div class="h-9 rounded-xl border border-ink-200"></div></div></div>
+              <button class="mt-4 w-full rounded-xl bg-brand-500 py-2 text-sm font-semibold text-white">Check in</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="mb-2 text-xs font-medium text-ink-500">Toasts & banners</p>
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 rounded-xl bg-ink-900 px-4 py-3 text-sm text-white shadow-pill"><i class="ti ti-circle-check text-ok"></i>Listing published successfully<i class="ti ti-x ml-auto text-ink-400"></i></div>
+            <div class="flex items-center gap-2 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-ink-800"><i class="ti ti-alert-triangle text-danger"></i>Payment failed — try again</div>
+            <div class="flex items-center justify-between gap-3 rounded-xl bg-tint-mint/70 px-4 py-3 text-sm"><span class="flex items-center gap-1.5 font-medium text-ok"><i class="ti ti-circle-check"></i>Location pinned successfully</span><button class="rounded-lg border border-ink-200 bg-white px-2.5 py-1 text-xs font-medium text-ink-700">Change</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MAP ============ -->
+    <section id="map">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">13 · Map elements</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Map components</h2>
+      <div class="mapfaux relative mt-5 h-56 overflow-hidden rounded-2xl border border-ink-100">
+        <span class="absolute left-[12%] top-[36%] rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-pill ring-1 ring-ink-100">Rs 18.5k</span>
+        <span class="absolute left-[30%] top-[58%] rounded-full bg-brand-500 px-2.5 py-1 text-xs font-semibold text-white shadow-pill ring-2 ring-white">Rs 12k (active)</span>
+        <div class="absolute left-[55%] top-[42%] -translate-y-full text-center">
+          <span class="grid h-11 w-11 place-items-center rounded-full bg-brand-500 text-white shadow-pill ring-4 ring-white"><i class="ti ti-building-community text-xl"></i></span>
+          <span class="mx-auto block h-3 w-3 -translate-y-1.5 rotate-45 bg-brand-500"></span>
+          <p class="spec -mt-1">property pin</p>
+        </div>
+        <div class="absolute right-[8%] top-[30%] -translate-y-1/2 text-center">
+          <span class="grid h-11 w-11 place-items-center rounded-full bg-brand-500 text-white shadow-pill ring-4 ring-white"><i class="ti ti-map-pin text-xl"></i></span>
+          <p class="spec mt-1">draggable pin</p>
+        </div>
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg bg-ink-900/85 px-3 py-1.5 text-xs font-medium text-white">Lat: 24.80710 · Lng: 67.07320</div>
+        <div class="absolute right-3 top-3 flex flex-col overflow-hidden rounded-lg border border-ink-200 bg-white text-ink-700"><button class="border-b border-ink-100 px-2.5 py-1.5 text-xs font-medium">Map</button><button class="px-2.5 py-1.5 text-xs text-ink-400">Satellite</button></div>
+      </div>
+      <p class="mt-2 text-xs text-ink-400">Heights: 220px mobile · 380px detail · 420px onboarding. Always provide the text address as fallback (a11y §9.4).</p>
+    </section>
+
+    <!-- ============ STATES ============ -->
+    <section id="states">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">14 · Required states</p>
+      <h2 class="mt-1 font-display text-2xl font-semibold text-ink-900">Every screen ships five states</h2>
+      <p class="mt-1 text-sm text-ink-500">Default · Loading · Empty · Error · Permission-gated — definition of done, not polish.</p>
+      <div class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div><p class="mb-2 text-xs font-medium text-ink-400">Loading — skeleton shimmer</p><div class="rounded-2xl border border-ink-100 p-3"><div class="shimmer aspect-[4/3] rounded-xl"></div><div class="shimmer mt-3 h-4 w-3/4 rounded"></div><div class="shimmer mt-2 h-3 w-1/2 rounded"></div></div></div>
+        <div><p class="mb-2 text-xs font-medium text-ink-400">Empty</p><div class="flex h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-surface px-4 text-center"><i class="ti ti-map-search text-3xl text-ink-300"></i><p class="mt-2 text-sm font-medium text-ink-700">No stays match</p><button class="mt-2 rounded-lg border border-ink-300 px-3 py-1.5 text-xs font-medium text-ink-700">Clear filters</button></div></div>
+        <div><p class="mb-2 text-xs font-medium text-ink-400">Error</p><div class="flex h-[180px] flex-col items-center justify-center rounded-2xl border border-danger/20 bg-danger/5 px-4 text-center"><i class="ti ti-alert-triangle text-3xl text-danger"></i><p class="mt-2 text-sm font-medium text-ink-800">Something went wrong</p><button class="mt-2 flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white"><i class="ti ti-refresh"></i>Retry</button></div></div>
+        <div><p class="mb-2 text-xs font-medium text-ink-400">Permission-gated</p><div class="relative h-[180px] overflow-hidden rounded-2xl"><img src="https://picsum.photos/seed/hhdsg/400/300" alt="" class="h-full w-full object-cover" /><div class="absolute inset-0 flex flex-col items-center justify-center bg-ink-900/55 px-4 text-center backdrop-blur-sm"><i class="ti ti-lock text-2xl text-brand-300"></i><button class="mt-2 rounded-lg bg-brand-500 px-4 py-1.5 text-xs font-semibold text-white">Show phone number</button></div></div></div>
+      </div>
+    </section>
+
+    <footer class="border-t border-ink-100 pt-6 text-center text-xs text-ink-400">
+      HostelHive design system v1.0 · tokens live in <span class="font-mono">assets/hh-theme.js</span> (drops into the Angular 22 Tailwind config unchanged) · 20 screens consume this library
+    </footer>
+  </main>
+
+</body>
+</html>

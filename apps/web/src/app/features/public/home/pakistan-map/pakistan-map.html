@@ -1,0 +1,103 @@
+<div
+  class="relative w-full overflow-hidden rounded-3xl border border-ink-100 bg-ink-50"
+>
+  <div class="absolute left-3 top-3 z-10 flex flex-wrap items-center gap-1">
+    @for (b of breadcrumb(); track $index; let i = $index; let last = $last) {
+      <button
+        hh-button variant="outlined" size="sm"
+        type="button"
+        (click)="goTo(i)"
+        [disabled]="last"
+        [class]="
+          last
+            ? 'bg-brand-500 text-white'
+            : 'bg-white text-ink-600 hover:text-brand-600'
+        "
+      >
+        {{ b }}
+      </button>
+      @if (!last) {
+        <i class="ti ti-chevron-right text-sm text-ink-300"></i>
+      }
+    }
+  </div>
+
+  @if (hovered()) {
+    <div
+      class="pointer-events-none absolute right-3 top-3 z-10 rounded-xl bg-ink-900/90 px-3 py-1.5 text-sm font-semibold text-white shadow-pill backdrop-blur"
+    >
+      {{ hovered() }}
+    </div>
+  }
+
+  <div #map class="aspect-[3/2] min-h-[360px] max-h-[620px] w-full"></div>
+
+  @if (!error() && !leaf()) {
+    <div
+      class="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white/90 px-4 py-1.5 text-center text-xs font-medium text-ink-500 shadow-card"
+    >
+      {{ hint() }}
+    </div>
+  }
+
+  @if (leaf(); as area) {
+    <div
+      class="absolute bottom-4 left-1/2 z-20 w-[min(22rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl bg-white p-4 text-left shadow-pill"
+    >
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">
+            Verified stays
+          </p>
+          <p class="mt-0.5 font-display text-lg font-semibold text-ink-900">
+            {{ area }}
+          </p>
+        </div>
+        @if (listingCount() !== null) {
+          <span
+            class="mt-1 shrink-0 rounded-full bg-brand-50 px-2.5 py-0.5 text-sm font-semibold text-brand-600"
+          >
+            {{ listingCount() }}
+          </span>
+        } @else {
+          <i class="ti ti-loader-2 mt-2 shrink-0 animate-spin text-lg text-brand-400"></i>
+        }
+      </div>
+
+      @if (listingCount() === null) {
+        <p class="mt-1 text-sm text-ink-400">Finding stays nearby…</p>
+      } @else if (listingCount() === 0) {
+        <p class="mt-1 text-sm text-ink-400">No stays listed yet — browse the wider area.</p>
+      } @else {
+        <p class="mt-1 text-sm text-ink-500">
+          {{ listingCount() }} hostel{{ listingCount()! > 1 ? 's' : '' }} listed in this area. Click a marker to view.
+        </p>
+      }
+
+      <a
+        [routerLink]="['/search']"
+        [queryParams]="{ city: area, lat: leafCentroid()?.lat, lng: leafCentroid()?.lng }"
+        class="mt-3 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
+      >
+        Browse all stays<i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+  }
+
+  @if (error()) {
+    <div
+      class="absolute inset-0 z-20 grid place-items-center bg-ink-50 px-6 text-center"
+    >
+      <div>
+        <i class="ti ti-map-off text-3xl text-ink-300"></i>
+        <p class="mt-2 text-sm text-ink-500">{{ error() }}</p>
+      </div>
+    </div>
+  } @else if (loading()) {
+    <div
+      class="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-ink-50"
+    >
+      <i class="ti ti-loader-2 animate-spin text-2xl text-brand-500"></i>
+    </div>
+  }
+</div>

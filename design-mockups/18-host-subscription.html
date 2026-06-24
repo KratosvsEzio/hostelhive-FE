@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Host · Subscription & Billing</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="09-host-overview.html" class="nav-link"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
+      <a href="10-host-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>My listings</a>
+      <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
+      <a href="13-tenants.html" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
+      <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
+      <a href="14-utilities.html" class="nav-link"><i class="ti ti-bolt text-lg"></i>Utilities</a>
+      <a href="15-invoices.html" class="nav-link"><i class="ti ti-file-invoice text-lg"></i>Invoices</a>
+      <a href="16-analytics.html" class="nav-link"><i class="ti ti-chart-bar text-lg"></i>Analytics</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="18-host-subscription.html" class="nav-link active"><i class="ti ti-rosette text-lg"></i>Subscription</a>
+      <a href="17-host-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
+    </nav>
+    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">IK</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Imran Khan</p><p class="truncate text-xs text-ink-400">Host · 2 properties</p></div></div></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Subscription &amp; billing</h1></div>
+    </header>
+
+    <main class="mx-auto max-w-5xl space-y-6 px-5 py-6 sm:px-8">
+
+      <!-- Current plan -->
+      <section class="overflow-hidden rounded-2xl bg-white shadow-card">
+        <div class="flex flex-wrap items-start justify-between gap-4 p-5">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="font-display text-xl font-semibold text-ink-900">Growth</h2>
+              <span class="inline-flex items-center gap-1 rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok"><i class="ti ti-circle-filled text-[8px]"></i>Active</span>
+              <span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-600">Annual</span>
+            </div>
+            <p class="mt-1 text-sm text-ink-500">2 of 3 properties used · Manager/Warden sub-users enabled</p>
+            <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span class="text-ink-500">Started <span class="font-medium text-ink-800">12 Jan 2026</span></span>
+              <span class="text-ink-500">Renews <span class="font-medium text-ink-800">12 Jan 2027</span></span>
+              <span class="text-ink-500">Amount <span class="font-medium text-ink-800">Rs 48,000 / yr</span></span>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-2">
+            <div class="flex items-center gap-2 text-sm"><span class="text-ink-500">Auto-renew</span><span class="relative h-6 w-11 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-card"></span></span></div>
+            <button class="rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium text-ink-800 hover:bg-surface">Renew now</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 border-t border-ink-100 bg-tint-mint/50 px-5 py-2.5 text-sm text-ink-600"><i class="ti ti-clock text-ok"></i><span class="font-medium text-ink-800">214 days</span> remaining · we'll remind you 7 days before renewal.</div>
+      </section>
+
+      <!-- Plans -->
+      <section>
+        <h2 class="mb-3 font-display text-base font-semibold text-ink-900">Plans</h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-2xl border border-ink-100 bg-white p-5 shadow-card">
+            <p class="font-medium text-ink-900">Starter</p><p class="mt-1 text-2xl font-semibold text-ink-900">Rs 1,500<span class="text-sm font-normal text-ink-400">/mo</span></p>
+            <p class="mt-1 text-xs text-ink-400">1 property</p>
+            <ul class="mt-3 space-y-1.5 text-sm text-ink-600"><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Core listing</li><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Basic analytics</li></ul>
+            <button class="mt-4 w-full rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium text-ink-700 hover:bg-surface">Downgrade</button>
+          </div>
+          <div class="rounded-2xl border-2 border-brand-400 bg-white p-5 shadow-cardhover">
+            <div class="flex items-center justify-between"><p class="font-medium text-ink-900">Growth</p><span class="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">Current plan</span></div>
+            <p class="mt-1 text-2xl font-semibold text-ink-900">Rs 4,000<span class="text-sm font-normal text-ink-400">/mo</span></p>
+            <p class="mt-1 text-xs text-ink-400">Up to 3 properties</p>
+            <ul class="mt-3 space-y-1.5 text-sm text-ink-600"><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Everything in Starter</li><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Manager / Warden sub-users</li></ul>
+            <button class="mt-4 w-full rounded-xl bg-ink-100 px-4 py-2 text-sm font-medium text-ink-400" disabled>Your plan</button>
+          </div>
+          <div class="rounded-2xl border border-ink-100 bg-white p-5 shadow-card">
+            <p class="font-medium text-ink-900">Portfolio</p><p class="mt-1 text-2xl font-semibold text-ink-900">Rs 12,000<span class="text-sm font-normal text-ink-400">/mo</span></p>
+            <p class="mt-1 text-xs text-ink-400">Up to 10 properties</p>
+            <ul class="mt-3 space-y-1.5 text-sm text-ink-600"><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Everything in Growth</li><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Multi-property analytics</li><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Priority moderation</li></ul>
+            <button class="mt-4 w-full rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">Upgrade</button>
+          </div>
+          <div class="rounded-2xl border border-ink-100 bg-white p-5 shadow-card">
+            <p class="font-medium text-ink-900">Enterprise</p><p class="mt-1 text-2xl font-semibold text-ink-900">Custom</p>
+            <p class="mt-1 text-xs text-ink-400">Unlimited properties</p>
+            <ul class="mt-3 space-y-1.5 text-sm text-ink-600"><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Everything in Portfolio</li><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Dedicated manager</li><li class="flex gap-2"><i class="ti ti-check text-ok"></i>Custom invoice branding</li></ul>
+            <button class="mt-4 w-full rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium text-ink-700 hover:bg-surface">Contact sales</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Payment history -->
+      <section class="overflow-hidden rounded-2xl bg-white shadow-card">
+        <div class="border-b border-ink-100 px-5 py-3.5"><h2 class="font-display text-base font-semibold text-ink-900">Payment history</h2></div>
+        <table class="w-full text-sm">
+          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"><tr><th class="px-5 py-2.5 font-medium">Date</th><th class="px-5 py-2.5 font-medium">Description</th><th class="px-5 py-2.5 font-medium">Method</th><th class="px-5 py-2.5 font-medium">Status</th><th class="px-5 py-2.5 text-right font-medium">Amount</th><th class="px-5 py-2.5 text-right font-medium">Receipt</th></tr></thead>
+          <tbody class="divide-y divide-ink-100">
+            <tr class="hover:bg-surface"><td class="px-5 py-3 text-ink-600">12 Jan 2026</td><td class="px-5 py-3 text-ink-800">Growth · Annual</td><td class="px-5 py-3 text-ink-600">Card ··6411</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Paid</span></td><td class="px-5 py-3 text-right font-medium text-ink-900">Rs 48,000</td><td class="px-5 py-3 text-right"><a href="#" class="inline-flex items-center gap-1 text-brand-600 hover:underline"><i class="ti ti-download"></i>PDF</a></td></tr>
+            <tr class="hover:bg-surface"><td class="px-5 py-3 text-ink-600">12 Jan 2025</td><td class="px-5 py-3 text-ink-800">Starter · Annual</td><td class="px-5 py-3 text-ink-600">Card ··6411</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Paid</span></td><td class="px-5 py-3 text-right font-medium text-ink-900">Rs 18,000</td><td class="px-5 py-3 text-right"><a href="#" class="inline-flex items-center gap-1 text-brand-600 hover:underline"><i class="ti ti-download"></i>PDF</a></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+</body>
+</html>

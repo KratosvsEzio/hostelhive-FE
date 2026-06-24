@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap');
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.shimmer { background: linear-gradient(90deg,#F0F0F0 25%,#E4E4E4 37%,#F0F0F0 63%); background-size: 400% 100%; animation: hh-sh 1.4s ease infinite; }
+@keyframes hh-sh { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+.card-img { transition: transform .55s cubic-bezier(.2,.7,.2,1); }
+.group:hover .card-img { transform: scale(1.06); }
+
+/* Console sidebar nav links */
+.nav-link { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; font-size:14px; font-weight:500; color:#3B3B3B; }
+.nav-link:hover { background:#F4F4F4; }
+.nav-link.active { background:#FEF1E9; color:#D2560F; }
+.nav-link.active i { color:#F36E21; }
+
+/* Icon tooltip — show data-tip text on hover (font reset so it isn't an icon glyph) */
+.tip { position: relative; }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+  font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 500; line-height: 1; white-space: nowrap;
+  color: #fff; background: #1F1F1F; padding: 5px 8px; border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(31,31,31,.18);
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .12s ease; z-index: 60;
+}
+.tip:hover::after { opacity: 1; visibility: visible; }

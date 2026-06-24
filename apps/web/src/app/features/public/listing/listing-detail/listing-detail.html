@@ -1,0 +1,374 @@
+<main class="mx-auto max-w-7xl px-5 pb-28 pt-6 sm:px-8">
+  @let s = state();
+
+  @if (s.loading) {
+    <!-- LOADING -->
+    <hh-skeleton class="h-4 w-32" />
+    <hh-skeleton class="mt-4 h-8 w-2/3" radius="md" />
+    <hh-skeleton class="mt-3 h-4 w-1/2" />
+    <hh-skeleton class="mt-5 w-full" radius="lg" [style.height.px]="420" />
+    <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
+      <div class="space-y-4 lg:col-span-2">
+        @for (i of skeletons; track i) {
+          <hh-skeleton class="h-24 w-full" radius="lg" />
+        }
+      </div>
+      <hh-skeleton class="hidden h-64 w-full lg:block" radius="lg" />
+    </div>
+  } @else if (!s.data) {
+    <!-- NOT FOUND -->
+    <div class="mx-auto mt-16 max-w-md">
+      <hh-empty-state
+        icon="ti-home-off"
+        title="We couldn't find that hostel"
+        message="The listing may have been removed or the link is incorrect."
+      >
+        <a hh-button variant="outlined" size="sm" routerLink="/search"
+          >Back to search</a
+        >
+      </hh-empty-state>
+    </div>
+  } @else {
+    @let l = s.data;
+    <!-- Breadcrumb -->
+    <a
+      routerLink="/search"
+      class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600"
+    >
+      <i class="ti ti-chevron-left" aria-hidden="true"></i>Back to search
+    </a>
+
+    <!-- Title -->
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1
+          class="font-display text-2xl font-semibold text-ink-900 sm:text-3xl"
+        >
+          {{ l.name }}
+        </h1>
+        <div
+          class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-500"
+        >
+          <hh-badge [variant]="l.gender">{{ genderLabel(l.gender) }}</hh-badge>
+          @if (l.verified) {
+            <hh-badge variant="verified">Verified</hh-badge>
+          }
+          <span class="inline-flex items-center gap-1">
+            <i class="ti ti-map-pin text-ink-400" aria-hidden="true"></i
+            >{{ l.area }}, {{ l.city }}
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button hh-button variant="text" size="sm">
+          <i class="ti ti-share-2" aria-hidden="true"></i>Share
+        </button>
+        <button hh-button variant="text" size="sm">
+          <i class="ti ti-heart" aria-hidden="true"></i>Save
+        </button>
+      </div>
+    </div>
+
+    <!-- Gallery: hero + thumbs -->
+    <div
+      class="relative mt-5 grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl"
+      [style.height.px]="420"
+    >
+      <img
+        [src]="l.images[0]"
+        [alt]="l.name"
+        class="card-img col-span-2 row-span-2 h-full w-full object-cover"
+      />
+      @for (img of thumbs(); track img) {
+        <img [src]="img" alt="" class="card-img h-full w-full object-cover" />
+      }
+      <button
+        hh-button
+        variant="outlined"
+        size="sm"
+        class="absolute bottom-4 right-4 bg-white shadow-card"
+      >
+        <i class="ti ti-layout-grid" aria-hidden="true"></i>Show all
+        {{ l.photoCount }} photos
+      </button>
+    </div>
+
+    <!-- Two columns -->
+    <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
+      <!-- MAIN -->
+      <div class="lg:col-span-2">
+        <!-- Host summary -->
+        <div
+          class="flex items-center justify-between border-b border-ink-100 pb-6"
+        >
+          <div>
+            <h2 class="font-display text-xl font-semibold text-ink-900">
+              {{ genderLabel(l.gender) }} hostel hosted by {{ l.host?.name }}
+            </h2>
+            <p class="mt-1 text-sm text-ink-500">{{ roomSummary() }}</p>
+          </div>
+          @if (l.host) {
+            <hh-avatar [initials]="initials(l.host.name)" size="lg" />
+          }
+        </div>
+
+        <!-- About -->
+        @if (l.description) {
+          <section class="border-b border-ink-100 py-6">
+            <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">
+              About this hostel
+            </h3>
+            <div
+              class="hh-rich text-[15px] leading-relaxed text-ink-600"
+              [innerHTML]="l.description"
+            ></div>
+          </section>
+        }
+
+        <!-- Amenities (driven by AMENITIES) -->
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
+            What this place offers
+          </h3>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            @for (am of amenityList(); track am.key) {
+              <div class="flex items-center gap-3 text-[15px] text-ink-700">
+                <i
+                  class="ti text-xl text-ink-500"
+                  [class]="am.icon"
+                  aria-hidden="true"
+                ></i
+                >{{ am.label }}
+              </div>
+            }
+          </div>
+          @if (l.amenityCount > l.amenities.length) {
+            <button hh-button variant="outlined" size="sm" class="mt-4">
+              Show all {{ l.amenityCount }} amenities
+            </button>
+          }
+        </section>
+
+        <!-- Rooms & pricing -->
+        @if (l.rooms?.length) {
+          <section class="border-b border-ink-100 py-6">
+            <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
+              Rooms &amp; pricing
+            </h3>
+            <div class="space-y-3">
+              @for (room of l.rooms; track room.id; let i = $index) {
+                <div
+                  class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card"
+                >
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="grid h-11 w-11 place-items-center rounded-xl text-brand-600"
+                      [class]="roomTint(i)"
+                    >
+                      <i class="ti ti-bed text-xl" aria-hidden="true"></i>
+                    </span>
+                    <div>
+                      <p class="font-medium text-ink-900">{{ room.type }}</p>
+                      <p class="text-sm text-ink-500">
+                        {{
+                          room.attachedBath ? 'Attached bath' : 'Shared bath'
+                        }}
+                        · {{ room.bedsLeft }}
+                        {{ room.bedsLeft === 1 ? 'bed' : 'beds' }} left
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-semibold text-ink-900">
+                      Rs {{ room.price | number }}
+                    </p>
+                    <p class="text-xs text-ink-400">/ month</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Nearby landmarks -->
+        @if (l.nearby.length) {
+          <section class="border-b border-ink-100 py-6">
+            <h3 class="mb-3 font-display text-lg font-semibold text-ink-900">
+              Nearby landmarks
+            </h3>
+            <div
+              class="grid grid-cols-1 gap-2 text-[15px] text-ink-700 sm:grid-cols-2"
+            >
+              @for (n of l.nearby; track n.label) {
+                <div class="flex items-center gap-2">
+                  <i
+                    class="ti text-ink-400"
+                    [class]="n.icon"
+                    aria-hidden="true"
+                  ></i
+                  >{{ n.label }}
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Faux map (CSS grid background) + text address -->
+        <section class="py-6">
+          <h3 class="mb-1 font-display text-lg font-semibold text-ink-900">
+            Where you'll be
+          </h3>
+          <p class="mb-3 text-sm text-ink-500">{{ l.address }}</p>
+          <div
+            class="hh-mapfaux relative flex items-center justify-center overflow-hidden rounded-2xl border border-ink-100"
+            [style.height.px]="360"
+            role="img"
+            [attr.aria-label]="'Approximate location: ' + l.address"
+          >
+            <div
+              class="absolute"
+              style="left: 50%; top: 46%; transform: translate(-50%, -100%)"
+            >
+              <span
+                class="grid h-11 w-11 place-items-center rounded-full bg-brand-500 text-white shadow-pill ring-4 ring-white"
+              >
+                <i
+                  class="ti ti-building-community text-xl"
+                  aria-hidden="true"
+                ></i>
+              </span>
+              <span
+                class="mx-auto block h-3 w-3 -translate-y-1.5 rotate-45 bg-brand-500"
+              ></span>
+            </div>
+            <div
+              class="absolute left-4 top-4 rounded-xl bg-white px-3 py-2 text-xs font-medium text-ink-700 shadow-card"
+            >
+              <i class="ti ti-map-pin text-brand-500" aria-hidden="true"></i>
+              Exact location shown after booking inquiry
+            </div>
+            <div
+              class="absolute bottom-3 right-3 rounded-lg bg-white/90 px-2 py-1 text-[11px] text-ink-400"
+            >
+              Map · interactive in app
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="lg:col-span-1">
+        <div class="sticky top-24 space-y-4">
+          <!-- Pricing + gated phone -->
+          <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-sm text-ink-400">From</span>
+              <span class="text-2xl font-semibold text-ink-900"
+                >Rs {{ l.priceFrom | number }}</span
+              >
+              <span class="text-sm text-ink-400">/ month</span>
+            </div>
+            <p class="mt-1 text-sm text-ink-500">{{ sharingSummary() }}</p>
+
+            <div class="my-4 rounded-xl bg-surface p-3 text-center">
+              <p class="text-xs text-ink-400">Management contact</p>
+              <p
+                class="font-mono text-lg font-medium tracking-wider"
+                [class]="revealed() ? 'text-ink-900' : 'text-ink-300'"
+              >
+                {{ phoneDisplay() }}
+              </p>
+            </div>
+
+            @if (revealed()) {
+              <a
+                hh-button
+                color="primary"
+                class="w-full"
+                [href]="'tel:' + phoneRaw"
+              >
+                <i class="ti ti-phone" aria-hidden="true"></i>Call now
+              </a>
+            } @else {
+              <button
+                hh-button
+                color="primary"
+                class="w-full"
+                (click)="reveal()"
+              >
+                <i class="ti ti-phone" aria-hidden="true"></i>Show phone number
+              </button>
+            }
+            <button hh-button variant="outlined" class="mt-2 w-full">
+              <i class="ti ti-message-2" aria-hidden="true"></i>Request a
+              callback
+            </button>
+            <p
+              class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400"
+            >
+              <i class="ti ti-lock" aria-hidden="true"></i>Sign in once to view
+              verified contacts
+            </p>
+          </div>
+
+          <!-- Host card -->
+          @if (l.host; as host) {
+            <div class="rounded-2xl border border-ink-100 p-5">
+              <div class="flex items-center gap-3">
+                <hh-avatar [initials]="initials(host.name)" size="lg" />
+                <div>
+                  <p class="font-medium text-ink-900">{{ host.name }}</p>
+                  <p class="text-xs text-ink-500">
+                    Host since {{ host.since }}
+                  </p>
+                </div>
+              </div>
+              @if (host.verified) {
+                <div
+                  class="mt-3 flex items-center gap-2 text-sm text-brand-600"
+                >
+                  <i
+                    class="ti ti-rosette-discount-check"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="text-ink-600"
+                    >Identity verified by HostelHive</span
+                  >
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</main>
+
+<!-- Mobile sticky contact bar (gated phone) -->
+@if (state().data; as l) {
+  <div
+    class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-ink-100 bg-white px-5 py-3 shadow-pill lg:hidden"
+  >
+    <div>
+      @if (revealed()) {
+        <p class="text-xs text-ink-400">Management contact</p>
+        <p class="font-mono font-semibold text-ink-900">{{ phoneRaw }}</p>
+      } @else {
+        <p class="text-xs text-ink-400">From</p>
+        <p class="font-semibold text-ink-900">
+          Rs {{ l.priceFrom | number }}
+          <span class="text-xs font-normal text-ink-400">/ mo</span>
+        </p>
+      }
+    </div>
+    @if (revealed()) {
+      <a hh-button color="primary" [href]="'tel:' + phoneRaw">
+        <i class="ti ti-phone" aria-hidden="true"></i>Call now
+      </a>
+    } @else {
+      <button hh-button color="primary" (click)="reveal()">
+        <i class="ti ti-phone" aria-hidden="true"></i>Show phone number
+      </button>
+    }
+  </div>
+}

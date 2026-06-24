@@ -1,0 +1,127 @@
+<div class="relative">
+  <button
+    type="button"
+    (click)="toggle()"
+    class="grid h-10 w-10 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white shadow-card transition hover:shadow-pill"
+    aria-label="Account menu"
+    [attr.aria-expanded]="open()"
+  >
+    @if (user()) {
+      {{ initials() }}
+    } @else {
+      <i class="ti ti-user text-lg"></i>
+    }
+  </button>
+
+  @if (open()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-40 cursor-default"
+      aria-label="Close menu"
+      (click)="open.set(false)"
+    ></button>
+    <div
+      class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-ink-100 bg-white py-2 shadow-pill"
+    >
+      @if (user(); as u) {
+        <div class="flex items-center gap-3 px-4 py-2">
+          <span
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white"
+            >{{ initials() }}</span
+          >
+          <span class="min-w-0">
+            <span class="block truncate text-sm font-semibold text-ink-900">{{
+              u.name
+            }}</span>
+            <span class="block truncate text-xs text-ink-400">{{
+              u.email
+            }}</span>
+          </span>
+        </div>
+        <div class="my-1.5 h-px bg-ink-100"></div>
+        <!-- Console entry (signed-in only): staff → admin/mod console links, otherwise host CTA. -->
+        @if (isStaff()) {
+          @if (isAdmin()) {
+            <a
+              routerLink="/admin/contracts"
+              (click)="open.set(false)"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+            >
+              <i class="ti ti-shield-lock text-lg"></i>Admin dashboard
+            </a>
+          }
+          @if (isModerator()) {
+            <a
+              routerLink="/moderator/queue"
+              (click)="open.set(false)"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+            >
+              <i class="ti ti-layout-kanban text-lg"></i>Moderator dashboard
+            </a>
+          }
+          @if (isHost()) {
+            <a
+              routerLink="/host"
+              (click)="open.set(false)"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+            >
+              <i class="ti ti-building-community text-lg"></i>Host dashboard
+            </a>
+          }
+        } @else {
+          <a
+            [routerLink]="hostLink()"
+            (click)="open.set(false)"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+          >
+            <i class="ti ti-building-community text-lg"></i>{{ hostCta() }}
+          </a>
+        }
+        <div class="my-1.5 h-px bg-ink-100"></div>
+        @for (item of items; track item.label) {
+          <a
+            [routerLink]="item.link"
+            (click)="open.set(false)"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50"
+          >
+            <i class="ti {{ item.icon }} text-lg text-ink-500"></i
+            >{{ item.label }}
+          </a>
+        }
+        <div class="my-1.5 h-px bg-ink-100"></div>
+        <button
+          hh-button variant="text"
+          type="button"
+          (click)="logout()"
+          class="w-full !justify-start"
+        >
+          <i class="ti ti-logout text-lg text-ink-500"></i>Log out
+        </button>
+      } @else {
+        <div class="px-4 py-2">
+          <p class="text-sm font-semibold text-ink-900">
+            Welcome to HostelHive
+          </p>
+          <p class="mt-0.5 text-xs text-ink-400">
+            Log in to save favourites and manage your stay.
+          </p>
+        </div>
+        <div class="my-1.5 h-px bg-ink-100"></div>
+        <a
+          routerLink="/auth"
+          (click)="open.set(false)"
+          class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-ink-50"
+        >
+          <i class="ti ti-login text-lg"></i>Log in
+        </a>
+        <a
+          routerLink="/auth"
+          (click)="open.set(false)"
+          class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50"
+        >
+          <i class="ti ti-user-plus text-lg text-ink-500"></i>Sign up
+        </a>
+      }
+    </div>
+  }
+</div>

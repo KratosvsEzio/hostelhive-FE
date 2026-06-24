@@ -1,0 +1,460 @@
+<hh-admin-shell heading="Contracts">
+  <div actions class="flex items-center gap-2">
+    <button
+      hh-button color="primary"
+      size="sm"
+      [disabled]="!state().data?.items?.length"
+      (click)="exportCsv()"
+    >
+      <i class="ti ti-download"></i>Export CSV
+    </button>
+  </div>
+
+  <!-- Stat cards — one per status aggregate (aggs) from the contracts API. -->
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    @for (a of aggs(); track a.slug) {
+      <hh-card>
+        <p class="text-xs text-ink-400">{{ a.name }}</p>
+        <p class="mt-1 text-2xl font-semibold" [class]="aggTextClass(a.slug)">
+          {{ a.count | number }}
+        </p>
+        <p class="mt-0.5 text-xs text-ink-400">
+          Rs {{ a.total_amount | number }} ·
+          {{ a.ending_this_month | number }} ending this month
+        </p>
+      </hh-card>
+    }
+  </div>
+
+  <!-- Status filter chips -->
+  <hh-filter-chips class="mt-5" [tabs]="tabs()" [active]="filter()" (activeChange)="setFilter($event)" />
+
+  <!-- Hostel search + end-date range, grouped on one row.
+       (date → f[end_date][gte] / f[end_date][lte]) -->
+  <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+    <hh-search
+      class="w-full sm:w-80"
+      [fieldOptions]="searchFieldOptions"
+      [field]="searchField()"
+      (fieldChange)="onSearchField($event)"
+      [term]="searchTerm()"
+      (termChange)="onSearchTerm($event)"
+      [placeholder]="
+        searchField() === 'id'
+          ? 'Search by hostel ID…'
+          : 'Search by hostel name…'
+      "
+      ariaLabel="Search contracts by hostel"
+    />
+    <hh-date-range-picker
+      class="w-full sm:w-56"
+      [from]="endFrom() || null"
+      [to]="endTo() || null"
+      placeholder="Date range"
+      (rangeChange)="onDateRange($event)"
+    />
+  </div>
+
+  @let s = state();
+  @if (s.loading) {
+    <hh-skeleton class="mt-4 h-80" radius="lg" />
+  } @else if (s.error) {
+    <div class="mt-4"><hh-error-state [networkError]="s.networkError" (retry)="retry()" /></div>
+  } @else if (!s.data || s.data.items.length === 0) {
+    <div class="mt-4">
+      <hh-empty-state
+        icon="ti-file-dollar"
+        title="No contracts match this filter"
+      >
+        <button
+          hh-button
+          variant="outlined"
+          size="sm"
+          (click)="setFilter('all'); onSearchTerm(''); clearDateRange()"
+        >
+          Show all
+        </button>
+      </hh-empty-state>
+    </div>
+  } @else {
+    <div class="mt-4 overflow-x-auto rounded-2xl bg-white shadow-card">
+      <table class="w-full min-w-[1140px] text-sm">
+        <thead
+          class="border-b border-ink-100 text-left text-[11px] uppercase tracking-wide text-ink-400"
+        >
+          <tr>
+            <th class="px-5 py-3 font-medium">Contract</th>
+            <th class="px-5 py-3 font-medium">Hostel</th>
+            <th class="px-5 py-3 font-medium">Plan</th>
+            <th class="px-5 py-3 font-medium">Term</th>
+            <th class="px-5 py-3 font-medium">Status</th>
+            <th class="px-5 py-3 font-medium">Payment</th>
+            <th class="px-5 py-3 text-right font-medium">
+              <button
+                hh-button variant="text" size="sm"
+                type="button"
+                (click)="toggleSort('price')"
+              >
+                Amount <i class="ti" [class]="sortIcon('price')"></i>
+              </button>
+            </th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-100">
+          @for (c of s.data.items; track c.id) {
+            <tr [class]="rowClass(c)" (click)="open(c)">
+              <td class="px-5 py-3 font-mono text-xs text-ink-600">
+                {{ c.id }}
+              </td>
+              <td class="px-5 py-3">
+                <p class="font-medium text-ink-900">
+                  {{ c.hostelName || '—' }}
+                </p>
+                @if (c.hostelId != null) {
+                  <p class="text-xs text-ink-400">{{ c.hostelId }}</p>
+                }
+              </td>
+              <td class="px-5 py-3 text-ink-700">{{ c.plan }}</td>
+              <td
+                class="px-5 py-3"
+                [class]="
+                  c.endsSoon
+                    ? 'font-medium text-danger'
+                    : c.term
+                      ? 'text-ink-500'
+                      : 'text-ink-400'
+                "
+              >
+                {{ c.term ?? '— pending —' }}
+              </td>
+              <td class="px-5 py-3">
+                <hh-status-pill
+                  [tone]="statusMeta(c.status).tone"
+                  [dot]="statusMeta(c.status).dot"
+                  >{{ statusMeta(c.status).label }}</hh-status-pill
+                >
+              </td>
+              <td class="px-5 py-3">
+                <hh-status-pill [tone]="paymentMeta(c.payment).tone">{{
+                  paymentMeta(c.payment).label
+                }}</hh-status-pill>
+              </td>
+              <td class="px-5 py-3 text-right font-medium text-ink-900">
+                Rs {{ c.amount | number }}
+              </td>
+              <td
+                class="px-5 py-3 text-right"
+                (click)="$event.stopPropagation()"
+              >
+                <button
+                  hh-button
+                  variant="outlined"
+                  size="sm"
+                  (click)="open(c)"
+                  aria-label="View contract"
+                >
+                  <i class="ti ti-chevron-right"></i>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div
+      class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-400"
+    >
+      <span
+        >Showing {{ s.data.items.length | number }} of
+        {{ s.data.total | number }} contract{{
+          s.data.total === 1 ? '' : 's'
+        }}</span
+      >
+      @if (totalPages() > 1) {
+        <nav class="flex items-center gap-1.5" aria-label="Pagination">
+          <button
+            hh-button variant="icon"
+            type="button"
+            [disabled]="page() <= 1"
+            (click)="goToPage(page() - 1)"
+            aria-label="Previous page"
+          >
+            <i class="ti ti-chevron-left"></i>
+          </button>
+          @for (p of pageNumbers(); track $index) {
+            @if (p === -1) {
+              <span class="px-1">…</span>
+            } @else {
+              <button
+                hh-button variant="text" size="sm"
+                type="button"
+                (click)="goToPage(p)"
+                [class]="
+                  p === page()
+                    ? 'bg-ink-900 text-white'
+                    : 'border border-ink-200 text-ink-600 hover:bg-surface'
+                "
+                [attr.aria-current]="p === page() ? 'page' : null"
+              >
+                {{ p }}
+              </button>
+            }
+          }
+          <button
+            hh-button variant="icon"
+            type="button"
+            [disabled]="page() >= totalPages()"
+            (click)="goToPage(page() + 1)"
+            aria-label="Next page"
+          >
+            <i class="ti ti-chevron-right"></i>
+          </button>
+        </nav>
+      }
+    </div>
+  }
+
+  <!-- Contract detail panel (drawer) -->
+  @let sel = selected();
+  @if (sel) {
+    <div
+      class="fixed inset-x-0 bottom-0 top-16 z-40 flex justify-end bg-ink-900/40"
+      (click)="close()"
+    >
+      <div
+        class="h-full w-full max-w-md overflow-y-auto bg-white shadow-pill"
+        (click)="$event.stopPropagation()"
+      >
+        <div
+          class="flex items-start justify-between border-b border-ink-100 px-5 py-4"
+        >
+          <div>
+            <p class="font-mono text-xs text-ink-500">{{ sel.id }}</p>
+            <h2 class="font-display text-lg font-semibold text-ink-900">
+              {{ sel.host }}
+            </h2>
+            <p class="mt-0.5 text-sm text-ink-400">{{ sel.plan }}</p>
+          </div>
+          <button
+            hh-button
+            variant="text"
+            size="sm"
+            (click)="close()"
+            aria-label="Close"
+          >
+            <i class="ti ti-x"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4 px-5 py-5">
+          <div class="flex items-center gap-2">
+            <hh-status-pill
+              [tone]="statusMeta(sel.status).tone"
+              [dot]="statusMeta(sel.status).dot"
+              >{{ statusMeta(sel.status).label }}</hh-status-pill
+            >
+            <hh-status-pill [tone]="paymentMeta(sel.payment).tone">{{
+              paymentMeta(sel.payment).label
+            }}</hh-status-pill>
+          </div>
+          <dl class="divide-y divide-ink-100 rounded-2xl border border-ink-100">
+            <div class="flex justify-between px-4 py-3 text-sm">
+              <dt class="text-ink-400">Term</dt>
+              <dd class="text-ink-800">{{ sel.term ?? 'Pending' }}</dd>
+            </div>
+            <div class="flex justify-between px-4 py-3 text-sm">
+              <dt class="text-ink-400">Amount</dt>
+              <dd class="font-medium text-ink-900">
+                Rs {{ sel.amount | number }}
+              </dd>
+            </div>
+            <div class="flex justify-between px-4 py-3 text-sm">
+              <dt class="text-ink-400">Payment</dt>
+              <dd class="text-ink-800">{{ paymentMeta(sel.payment).label }}</dd>
+            </div>
+          </dl>
+
+          <!-- Hostel detail (GET /api/hostels/:id) -->
+          <section>
+            <p
+              class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+            >
+              Hostel
+            </p>
+            @let hostelInfo = hostelState();
+            @if (hostelInfo.loading) {
+              <hh-skeleton class="h-36" radius="lg" />
+            } @else if (hostelInfo.data; as h) {
+              <div class="overflow-hidden rounded-2xl border border-ink-100">
+                <!-- Image carousel (banner + image attachments) -->
+                @let imgs = hostelImages();
+                <div class="relative aspect-[16/10] w-full bg-ink-100">
+                  @if (imgs.length) {
+                    <img
+                      [src]="imgs[currentImageIndex()]"
+                      [alt]="h.name"
+                      class="h-full w-full object-cover"
+                    />
+                    @if (imgs.length > 1) {
+                      <button
+                        hh-button variant="icon" size="sm"
+                        type="button"
+                        (click)="slideImg(-1)"
+                        aria-label="Previous photo"
+                        class="absolute left-2 top-1/2 -translate-y-1/2"
+                      >
+                        <i class="ti ti-chevron-left"></i>
+                      </button>
+                      <button
+                        hh-button variant="icon" size="sm"
+                        type="button"
+                        (click)="slideImg(1)"
+                        aria-label="Next photo"
+                        class="absolute right-2 top-1/2 -translate-y-1/2"
+                      >
+                        <i class="ti ti-chevron-right"></i>
+                      </button>
+                      <span
+                        class="absolute right-2 top-2 rounded-full bg-ink-900/60 px-2 py-0.5 text-[11px] font-medium text-white"
+                        >{{ currentImageIndex() + 1 }}/{{ imgs.length }}</span
+                      >
+                      <div
+                        class="absolute inset-x-0 bottom-2 flex justify-center gap-1.5"
+                      >
+                        @for (im of imgs; track $index) {
+                          <button
+                            type="button"
+                            (click)="goImg($index)"
+                            [attr.aria-label]="'Go to photo ' + ($index + 1)"
+                            class="h-1.5 w-1.5 rounded-full transition"
+                            [class]="
+                              $index === currentImageIndex()
+                                ? 'bg-white'
+                                : 'bg-white/50 hover:bg-white/80'
+                            "
+                          ></button>
+                        }
+                      </div>
+                    }
+                  } @else {
+                    <div
+                      class="flex h-full w-full flex-col items-center justify-center gap-1 text-ink-300"
+                    >
+                      <i class="ti ti-photo-off text-2xl"></i>
+                      <span class="text-xs">No photos</span>
+                    </div>
+                  }
+                </div>
+                <!-- Hostel info -->
+                <div class="p-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="truncate font-medium text-ink-900">
+                        {{ h.name }}
+                      </p>
+                      <p class="mt-0.5 text-sm text-ink-500">
+                        {{ hostelTypeLabel(h) }}
+                      </p>
+                    </div>
+                    @if (h.status; as st) {
+                      <hh-status-pill tone="neutral">{{
+                        st.name
+                      }}</hh-status-pill>
+                    }
+                  </div>
+                  <dl class="mt-3 space-y-2 text-sm text-ink-600">
+                    <div class="flex gap-2">
+                      <i class="ti ti-map-pin mt-0.5 shrink-0 text-ink-400"></i
+                      ><span>{{ hostelAddress(h) }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <i class="ti ti-phone mt-0.5 shrink-0 text-ink-400"></i
+                      ><span>{{ h.primary_phone || '—' }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <i class="ti ti-door mt-0.5 shrink-0 text-ink-400"></i
+                      ><span
+                        >{{ h.total_rooms | number }} rooms ·
+                        {{ h.total_floors | number }} floors</span
+                      >
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            } @else if (hostelInfo.error) {
+              <p
+                class="rounded-xl border border-ink-100 px-4 py-3 text-sm text-ink-400"
+              >
+                Couldn't load hostel details.
+              </p>
+            }
+          </section>
+
+          <!-- Host detail (GET /api/users/:id) -->
+          <section>
+            <p
+              class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
+            >
+              Host
+            </p>
+            @let hostInfo = hostState();
+            @if (hostInfo.loading) {
+              <hh-skeleton class="h-24" radius="lg" />
+            } @else if (hostInfo.data; as u) {
+              <div class="rounded-2xl border border-ink-100 p-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-100 text-sm font-semibold text-ink-600"
+                  >
+                    {{ initials(u.name) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="truncate font-medium text-ink-900">
+                      {{ u.name }}
+                    </p>
+                    @if (u.is_active != null) {
+                      <span
+                        class="text-xs font-medium"
+                        [class]="u.is_active ? 'text-ok' : 'text-ink-400'"
+                        >{{ u.is_active ? 'Active' : 'Inactive' }}</span
+                      >
+                    }
+                  </div>
+                </div>
+                <dl class="mt-3 space-y-2 text-sm text-ink-600">
+                  <div class="flex gap-2">
+                    <i class="ti ti-mail mt-0.5 shrink-0 text-ink-400"></i
+                    ><a
+                      class="truncate hover:text-ink-900"
+                      [href]="'mailto:' + u.email"
+                      >{{ u.email }}</a
+                    >
+                  </div>
+                  <div class="flex gap-2">
+                    <i class="ti ti-phone mt-0.5 shrink-0 text-ink-400"></i
+                    ><span>{{ u.phone || '—' }}</span>
+                  </div>
+                  @if (u.created_at) {
+                    <div class="flex gap-2">
+                      <i class="ti ti-calendar mt-0.5 shrink-0 text-ink-400"></i
+                      ><span>Joined {{ joinedLabel(u.created_at) }}</span>
+                    </div>
+                  }
+                </dl>
+              </div>
+            } @else if (hostInfo.error) {
+              <p
+                class="rounded-xl border border-ink-100 px-4 py-3 text-sm text-ink-400"
+              >
+                Couldn't load host details.
+              </p>
+            }
+          </section>
+        </div>
+      </div>
+    </div>
+  }
+</hh-admin-shell>

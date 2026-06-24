@@ -1,0 +1,195 @@
+<div class="relative min-h-[calc(100dvh-4rem)] bg-white text-ink-800">
+  <!-- faux page behind, dimmed + blurred (the shared site header sits above this) -->
+  <div class="pointer-events-none select-none blur-[2px]" aria-hidden="true">
+    <div class="mx-auto max-w-7xl px-8 py-8">
+      <div class="h-72 w-full rounded-3xl bg-ink-100"></div>
+      <div class="mt-6 grid grid-cols-3 gap-8">
+        <div class="col-span-2 space-y-3">
+          <div class="h-6 w-1/2 rounded bg-ink-100"></div>
+          <div class="h-4 w-3/4 rounded bg-ink-50"></div>
+          <div class="h-4 w-2/3 rounded bg-ink-50"></div>
+        </div>
+        <div class="h-44 rounded-2xl bg-ink-100"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- overlay -->
+  <div
+    class="absolute inset-0 flex items-start justify-center overflow-y-auto bg-ink-900/55 px-4 py-10 backdrop-blur-sm"
+  >
+    <div
+      class="w-full max-w-md rounded-3xl bg-white p-6 shadow-pill sm:p-7"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="hh-lead-wall-title"
+    >
+      <div class="mb-4 flex items-center justify-between">
+        <span class="font-display text-lg font-semibold text-brand-500"
+          >HostelHive</span
+        >
+        <a
+          [routerLink]="['/']"
+          class="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition hover:bg-ink-50"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-lg"></i>
+        </a>
+      </div>
+
+      @switch (phase()) {
+        @case ('form') {
+          <h2
+            id="hh-lead-wall-title"
+            class="font-display text-xl font-semibold text-ink-900"
+          >
+            See verified contact details
+          </h2>
+          <p class="mt-1 text-sm text-ink-500">
+            Create a free account to view phone numbers for every listing. It
+            takes 30 seconds.
+          </p>
+
+          <hh-tabs
+            class="mt-5"
+            [tabs]="tabs"
+            [active]="tab()"
+            (activeChange)="onTabChange($event)"
+          />
+
+          <form class="mt-5 space-y-3" (submit)="submit($event)">
+            @if (isRegister()) {
+              <hh-input
+                label="Full name"
+                icon="ti-user"
+                placeholder="Ahmed Raza"
+                [value]="name()"
+                (valueChange)="name.set($event)"
+                [error]="showErrors() ? nameError() : ''"
+              />
+            }
+
+            <hh-input
+              label="Email address"
+              icon="ti-mail"
+              type="email"
+              placeholder="you@email.com"
+              [value]="email()"
+              (valueChange)="email.set($event)"
+              [error]="showErrors() ? emailError() : ''"
+            />
+
+            @if (isRegister()) {
+              <hh-input
+                label="Password"
+                icon="ti-lock"
+                type="password"
+                [value]="password()"
+                (valueChange)="password.set($event)"
+                [error]="showErrors() ? passwordError() : ''"
+              />
+              <p class="flex items-center gap-1 text-xs text-ink-400">
+                <i class="ti ti-info-circle" aria-hidden="true"></i>Min 8
+                characters, 1 uppercase &amp; 1 number.
+              </p>
+              <hh-input
+                label="Confirm password"
+                icon="ti-lock"
+                type="password"
+                [value]="confirmPassword()"
+                (valueChange)="confirmPassword.set($event)"
+                [error]="showErrors() ? confirmPasswordError() : ''"
+              />
+              <hh-phone-input
+                [(phone)]="phone"
+                [error]="showErrors() ? phoneError() : ''"
+              />
+            } @else {
+              <hh-input
+                label="Password"
+                icon="ti-lock"
+                type="password"
+                [value]="password()"
+                (valueChange)="password.set($event)"
+                [error]="showErrors() ? passwordError() : ''"
+              />
+            }
+
+            @if (error()) {
+              <p
+                class="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                role="alert"
+              >
+                {{ error() }}
+              </p>
+            }
+
+            <button hh-button color="primary" type="submit" class="w-full" [loading]="busy()">
+              {{
+                isRegister()
+                  ? 'Create account & view number'
+                  : 'Log in & view number'
+              }}
+            </button>
+
+            @if (isRegister()) {
+              <p class="text-center text-xs text-ink-400">
+                By continuing you agree to the Terms &amp; Privacy Policy.
+              </p>
+            }
+          </form>
+        }
+
+        @case ('verify') {
+          <span
+            class="grid h-12 w-12 place-items-center rounded-full bg-tint-sky text-brand-600"
+          >
+            <i class="ti ti-mail-opened text-2xl" aria-hidden="true"></i>
+          </span>
+          <h2
+            id="hh-lead-wall-title"
+            class="mt-4 font-display text-xl font-semibold text-ink-900"
+          >
+            Check your email
+          </h2>
+          <p class="mt-1 text-sm text-ink-500">
+            We sent a signed 24-hour verification link to
+            <span class="font-medium text-ink-800">{{ email() }}</span
+            >. Clicking it activates your account and reveals the number.
+          </p>
+
+          @if (error()) {
+            <p
+              class="mt-4 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+              role="alert"
+            >
+              {{ error() }}
+            </p>
+          }
+
+          <div class="mt-5 space-y-3">
+            <button
+              hh-button color="primary"
+              type="button"
+              class="w-full"
+              [loading]="busy()"
+              (click)="verify()"
+            >
+              I've verified — continue
+            </button>
+            <button
+              hh-button
+              type="button"
+              variant="text"
+              size="sm"
+              class="w-full"
+              (click)="phase.set('form')"
+            >
+              <i class="ti ti-arrow-left" aria-hidden="true"></i>Back
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

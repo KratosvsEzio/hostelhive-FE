@@ -1,0 +1,11 @@
+<div class="flex min-h-screen flex-col bg-surface text-ink-800">
+  @if (showHeader()) {
+    <app-site-header />
+  }
+  <main class="flex-1"><router-outlet /></main>
+  @if (showFooter()) {
+    <app-site-footer />
+  }
+</div>
+<!-- App-wide toasts (API failures, etc.) — floats above all chrome, every route. -->
+<app-toast-host />

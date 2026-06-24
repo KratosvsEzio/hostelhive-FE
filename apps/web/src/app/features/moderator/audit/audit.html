@@ -1,0 +1,111 @@
+<app-dashboard-layout label="Audit log">
+  <div hhActions>
+    <button
+      hh-button color="primary"
+      size="sm"
+      [disabled]="!state().data?.length"
+      (click)="exportCsv()"
+    >
+      <i class="ti ti-download" aria-hidden="true"></i>Export CSV
+    </button>
+  </div>
+<main class="mx-auto max-w-4xl">
+  <!-- filters -->
+  <div class="flex flex-wrap items-center gap-2">
+    <div
+      class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm"
+    >
+      <i class="ti ti-user text-ink-400" aria-hidden="true"></i
+      ><span class="font-medium text-ink-800">All moderators</span
+      ><i class="ti ti-chevron-down text-ink-400" aria-hidden="true"></i>
+    </div>
+    <div
+      class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm"
+    >
+      <i class="ti ti-calendar text-ink-400" aria-hidden="true"></i
+      ><span class="font-medium text-ink-800">Last 7 days</span
+      ><i class="ti ti-chevron-down text-ink-400" aria-hidden="true"></i>
+    </div>
+    <span class="mx-1 h-6 w-px bg-ink-200"></span>
+    <hh-filter-chips [tabs]="filters" [active]="filter()" (activeChange)="setFilter($event)" />
+  </div>
+
+  @let s = state();
+  @if (s.loading) {
+    <div class="mt-7 space-y-3">
+      @for (i of skeletons; track i) {
+        <hh-skeleton class="h-20" radius="lg" />
+      }
+    </div>
+  } @else if (s.error) {
+    <div class="mt-7"><hh-error-state [networkError]="s.networkError" (retry)="retry()" /></div>
+  } @else if (!s.data || s.data.length === 0) {
+    <div class="mt-7">
+      <hh-empty-state
+        icon="ti-history"
+        title="No matching activity"
+        message="Try a different action filter or date range."
+      />
+    </div>
+  } @else {
+    @for (group of grouped(); track group.day) {
+      <p
+        class="mb-3 mt-7 text-xs font-semibold uppercase tracking-wider text-ink-400"
+      >
+        {{ group.day }}
+      </p>
+      <div class="space-y-3">
+        @for (e of group.entries; track e.id) {
+          <div class="flex gap-4 rounded-2xl bg-white p-4 shadow-card">
+            <span
+              class="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+              [class]="iconTone(e.iconTone)"
+            >
+              <i class="ti text-xl" [class]="e.icon" aria-hidden="true"></i>
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-ink-800">
+                <span class="font-medium">{{ e.actor }}</span> {{ e.action }}
+                @if (e.targetLink) {
+                  <a
+                    [routerLink]="e.targetLink"
+                    class="font-medium text-brand-600 hover:underline"
+                    >{{ e.target }}</a
+                  >
+                } @else {
+                  <span class="font-medium text-ink-900">{{ e.target }}</span>
+                }
+                @if (e.tail) {
+                  {{ e.tail }}
+                }
+              </p>
+              @if (e.diff) {
+                <p
+                  class="mt-0.5 rounded-lg bg-surface px-2.5 py-1.5 text-xs text-ink-500"
+                >
+                  <span class="text-danger line-through">{{
+                    e.diff.before
+                  }}</span>
+                  → <span class="text-ok">{{ e.diff.after }}</span>
+                </p>
+              } @else if (e.detail) {
+                <p class="mt-0.5 text-xs text-ink-400">{{ e.detail }}</p>
+              }
+            </div>
+            <span class="shrink-0 text-xs text-ink-400">{{ e.time }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="mt-8 flex justify-center">
+      <button
+        hh-button variant="text"
+        type="button"
+      >
+        Load older entries
+      </button>
+    </div>
+  }
+</main>
+</app-dashboard-layout>

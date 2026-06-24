@@ -1,0 +1,118 @@
+<app-dashboard-layout
+  [backUrl]="'/host/' + propertyStore.selected()"
+  [breadcrumbs]="[{label: 'Overview', url: '/host/' + propertyStore.selected()}, {label: 'Tenant movement'}]"
+>
+  <div hhActions class="flex items-center gap-2">
+    <hh-tabs class="w-36" [tabs]="rangeTabs" [(active)]="range" />
+  </div>
+
+  <main class="mx-auto max-w-6xl">
+    @let s = state();
+
+    @if (s.loading) {
+      <hh-card><hh-skeleton class="h-4 w-40" /><hh-skeleton class="mt-4 h-40 w-full" radius="lg" /></hh-card>
+      <hh-card class="mt-6"><hh-skeleton class="h-4 w-32" /><hh-skeleton class="mt-4 h-64 w-full" radius="lg" /></hh-card>
+    } @else if (s.error || !s.data) {
+      <div class="mt-4">
+        <hh-error-state [networkError]="s.networkError" message="We couldn't load tenant movement data." (retry)="retry()" />
+      </div>
+    } @else {
+
+      <!-- Movement chart -->
+      <hh-card [allowOverflow]="true">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-base font-semibold text-ink-900">Move-ins vs move-outs</h2>
+            <p class="text-xs text-ink-400">{{ range() === '6m' ? 'Last 6 months' : 'Last 12 months' }}</p>
+          </div>
+          <div class="flex items-center gap-4 text-xs text-ink-500">
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Moved in</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>Moved out</span>
+          </div>
+        </div>
+        <div class="flex h-48 items-end gap-2 sm:gap-3">
+          @for (b of tenantBars(); track b.month; let first = $first; let last = $last) {
+            <div class="group relative flex h-full flex-1 items-end gap-0.5">
+              <div
+                class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
+                [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+                [style.bottom]="'calc(' + (b.moveInPct > b.moveOutPct ? b.moveInPct : b.moveOutPct) + '% + 20px)'"
+              >
+                <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
+                  <p class="mb-2 text-[11px] font-semibold text-white">{{ b.month }}</p>
+                  <div class="space-y-1.5 text-[11px]">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-emerald-500"></span>Moved in</span>
+                      <span class="font-medium text-white">{{ b.movedIn }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-rose-400"></span>Moved out</span>
+                      <span class="font-medium text-white">{{ b.movedOut }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
+                      <span class="text-ink-400">Net change</span>
+                      <span class="font-medium" [class]="b.movedIn >= b.movedOut ? 'text-emerald-400' : 'text-rose-400'">
+                        {{ b.movedIn >= b.movedOut ? '+' : '' }}{{ b.movedIn - b.movedOut }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
+                  [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
+                ></div>
+              </div>
+              <div class="flex-1 rounded-t bg-emerald-500 transition group-hover:bg-emerald-600" [style.height.%]="b.moveInPct"></div>
+              <div class="flex-1 rounded-t bg-rose-400 transition group-hover:bg-rose-500" [style.height.%]="b.moveOutPct"></div>
+            </div>
+          }
+        </div>
+        <div class="mt-2 flex justify-between text-[11px] text-ink-400">
+          @for (b of tenantBars(); track b.month) { <span>{{ b.month }}</span> }
+        </div>
+      </hh-card>
+
+      <!-- Movement table -->
+      <hh-card class="mt-6" padding="none">
+        <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5">
+          <h2 class="font-display text-base font-semibold text-ink-900">Monthly breakdown</h2>
+          <hh-search
+            class="w-44"
+            [withScope]="false"
+            placeholder="Search month…"
+            [term]="search()"
+            (termChange)="search.set($event)"
+          />
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-left text-xs uppercase tracking-wide text-ink-400">
+              <tr>
+                <th class="px-5 py-2.5 font-medium">Month</th>
+                <th class="px-5 py-2.5 text-right font-medium">Moved in</th>
+                <th class="px-5 py-2.5 text-right font-medium">Moved out</th>
+                <th class="px-5 py-2.5 text-right font-medium">Net change</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-ink-100">
+              @for (b of filteredRows(); track b.month) {
+                <tr class="hover:bg-surface">
+                  <td class="px-5 py-3 font-medium text-ink-800">{{ b.month }}</td>
+                  <td class="px-5 py-3 text-right font-medium text-emerald-600">+{{ b.movedIn }}</td>
+                  <td class="px-5 py-3 text-right font-medium text-rose-500">{{ b.movedOut }}</td>
+                  <td class="px-5 py-3 text-right font-semibold"
+                    [class]="b.movedIn - b.movedOut >= 0 ? 'text-emerald-600' : 'text-rose-500'">
+                    {{ b.movedIn - b.movedOut >= 0 ? '+' : '' }}{{ b.movedIn - b.movedOut }}
+                  </td>
+                </tr>
+              }
+              @if (filteredRows().length === 0) {
+                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">No months match your search.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </hh-card>
+    }
+  </main>
+</app-dashboard-layout>

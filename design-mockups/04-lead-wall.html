@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Lead Wall</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-white text-ink-800">
+
+  <!-- Dimmed listing behind + centered modal -->
+  <div class="relative min-h-screen">
+    <!-- faux page behind -->
+    <div class="pointer-events-none select-none blur-[2px]">
+      <header class="border-b border-ink-100 px-8 py-5"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" /></header>
+      <div class="mx-auto max-w-7xl px-8 py-8">
+        <div class="h-72 w-full rounded-3xl bg-ink-100"></div>
+        <div class="mt-6 grid grid-cols-3 gap-8"><div class="col-span-2 space-y-3"><div class="h-6 w-1/2 rounded bg-ink-100"></div><div class="h-4 w-3/4 rounded bg-ink-50"></div><div class="h-4 w-2/3 rounded bg-ink-50"></div></div><div class="h-44 rounded-2xl bg-ink-100"></div></div>
+      </div>
+    </div>
+
+    <!-- overlay -->
+    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto bg-ink-900/55 px-4 py-10 backdrop-blur-sm">
+      <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-pill sm:p-7">
+        <div class="mb-4 flex items-center justify-between">
+          <img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
+          <button class="grid h-8 w-8 place-items-center rounded-full text-ink-400 hover:bg-ink-50" aria-label="Close"><i class="ti ti-x text-lg"></i></button>
+        </div>
+
+        <h2 class="font-display text-xl font-semibold text-ink-900">See verified contact details</h2>
+        <p class="mt-1 text-sm text-ink-500">Create a free account to view phone numbers for every listing. It takes 30 seconds.</p>
+
+        <!-- tabs -->
+        <div class="mt-5 grid grid-cols-2 rounded-xl bg-surface p-1 text-sm font-medium">
+          <button class="rounded-lg bg-white py-2 text-ink-900 shadow-card">Register</button>
+          <button class="rounded-lg py-2 text-ink-500">Log in</button>
+        </div>
+
+        <!-- form -->
+        <div class="mt-5 space-y-3">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-600">Full name</label>
+            <div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 focus-within:border-brand-400">
+              <i class="ti ti-user text-ink-400"></i><input type="text" value="Ahmed Raza" class="w-full bg-transparent py-2.5 text-sm outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-600">Email address</label>
+            <div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 focus-within:border-brand-400">
+              <i class="ti ti-mail text-ink-400"></i><input type="email" placeholder="you@email.com" class="w-full bg-transparent py-2.5 text-sm outline-none" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-ink-600">Password</label>
+              <div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 focus-within:border-brand-400">
+                <i class="ti ti-lock text-ink-400"></i><input type="password" value="123456" class="w-full bg-transparent py-2.5 text-sm outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-ink-600">Phone</label>
+              <div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 focus-within:border-brand-400">
+                <i class="ti ti-phone text-ink-400"></i><input type="tel" placeholder="03•• •••••••" class="w-full bg-transparent py-2.5 text-sm outline-none" />
+              </div>
+            </div>
+          </div>
+          <p class="flex items-center gap-1 text-xs text-ink-400"><i class="ti ti-info-circle"></i>Min 8 characters, 1 uppercase &amp; 1 number.</p>
+          <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600">Create account &amp; view number</button>
+          <p class="text-center text-xs text-ink-400">By continuing you agree to the Terms &amp; Privacy Policy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow states (annotation strip) -->
+  <div class="mx-auto max-w-5xl px-5 py-12">
+    <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-600">Lead Wall flow — states</p>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-ink-100 p-5">
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-tint-cream text-brand-600"><i class="ti ti-user-plus"></i></span>
+        <p class="mt-3 font-medium text-ink-900">1 · Register</p>
+        <p class="mt-1 text-sm text-ink-500">Name, email, password, phone. Account created with status <span class="font-mono text-xs">PENDING</span>.</p>
+      </div>
+      <div class="rounded-2xl border border-ink-100 p-5">
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-tint-sky text-brand-600"><i class="ti ti-mail-opened"></i></span>
+        <p class="mt-3 font-medium text-ink-900">2 · Verify email</p>
+        <p class="mt-1 text-sm text-ink-500">A signed 24-hour link is sent. Clicking it flips status to <span class="font-mono text-xs">ACTIVE</span> and mints a session.</p>
+      </div>
+      <div class="rounded-2xl border border-brand-200 bg-brand-50 p-5">
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-white"><i class="ti ti-phone-check"></i></span>
+        <p class="mt-3 font-medium text-ink-900">3 · Number revealed</p>
+        <p class="mt-1 text-sm text-ink-600">Deep-linked back to the listing — <span class="font-medium text-ink-900">+92 321 1234567</span> now visible.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

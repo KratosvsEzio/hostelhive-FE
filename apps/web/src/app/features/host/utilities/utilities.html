@@ -1,0 +1,273 @@
+<app-dashboard-layout label="Utilities">
+  <div hhActions class="flex items-center gap-2">
+    <a hh-button color="primary" size="sm" routerLink="add">
+      <i class="ti ti-plus"></i>Add utility bill
+    </a>
+  </div>
+
+  <!-- Stats cards always at top; skeleton on first load, persisted values after -->
+  @if (aggs(); as a) {
+    <div class="mb-5 grid grid-cols-3 gap-3">
+      <hh-card padding="sm">
+        <p class="text-xs text-ink-400">Bill to Pay</p>
+        <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
+        <p class="mt-1 text-2xl font-semibold text-ink-900">Rs {{ a.billToPay | number }}</p>
+      </hh-card>
+      <hh-card padding="sm">
+        <p class="text-xs text-ink-400">Received</p>
+        <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
+        <p class="mt-1 text-2xl font-semibold text-ok">Rs {{ a.received | number }}</p>
+      </hh-card>
+      <hh-card padding="sm">
+        <p class="text-xs text-ink-400">Total Balance</p>
+        <p class="text-[10px] text-ink-300">&nbsp;</p>
+        <p
+          class="mt-1 text-2xl font-semibold"
+          [class.text-danger]="a.balance > 0"
+          [class.text-ink-400]="a.balance === 0"
+        >Rs {{ a.balance | number }}</p>
+      </hh-card>
+    </div>
+  } @else if (state().loading) {
+    <div class="mb-5 grid grid-cols-3 gap-3">
+      @for (i of [1, 2, 3]; track i) {
+        <hh-skeleton class="h-20" radius="lg" />
+      }
+    </div>
+  }
+
+  <hh-filter-chips
+    [tabs]="tabs()"
+    [active]="statusFilter()"
+    (activeChange)="setFilter($event)"
+  />
+
+  <div class="mt-4 mb-4 flex flex-wrap items-center gap-3">
+    <hh-dropdown
+      variant="pill"
+      placeholder="All rooms"
+      [options]="roomDropdownOptions()"
+      [value]="roomFilter()"
+      [searchable]="true"
+      [loading]="roomLoading()"
+      (valueChange)="setRoom($event)"
+      (searchChange)="onRoomSearch($event)"
+    />
+    <hh-dropdown
+      variant="pill"
+      placeholder="All tenants"
+      [options]="tenantDropdownOptions()"
+      [value]="tenantFilter()"
+      [searchable]="true"
+      [loading]="tenantLoading()"
+      (valueChange)="setTenant($event)"
+      (searchChange)="onTenantSearch($event)"
+    />
+    @if (roomFilter() || tenantFilter()) {
+      <button hh-button variant="outlined" size="sm" (click)="clearFilters()">
+        <i class="ti ti-x" aria-hidden="true"></i>Clear
+      </button>
+    }
+  </div>
+
+  @let s = state();
+  @if (s.loading) {
+    <hh-skeleton class="h-80 w-full" radius="lg" />
+  } @else if (s.subscriptionError) {
+    <hh-subscription-gate feature="Utility billing" />
+  } @else if (s.error) {
+    <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
+  } @else if (!s.bills || (s.bills.length === 0 && statusFilter() === 'all' && !roomFilter() && !tenantFilter())) {
+    <hh-empty-state
+      icon="ti-receipt-off"
+      title="No utility bills yet"
+      message="Add a utility bill to start tracking usage and charges."
+    >
+      <a hh-button color="primary" size="sm" routerLink="add">
+        <i class="ti ti-plus"></i>Add utility bill
+      </a>
+    </hh-empty-state>
+  } @else {
+    <div class="rounded-2xl bg-white shadow-card">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[860px] text-sm">
+          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400">
+            <tr>
+              <th class="px-5 py-2.5 font-medium">Room</th>
+              <th class="px-5 py-2.5 font-medium">Utility</th>
+              <th class="px-5 py-2.5 font-medium">Status</th>
+              <th class="px-5 py-2.5 font-medium">Created at</th>
+              <th class="px-5 py-2.5 font-medium">Issued date</th>
+              <th class="px-5 py-2.5 text-right font-medium">Previous units</th>
+              <th class="px-5 py-2.5 text-right font-medium">Current units</th>
+              <th class="px-5 py-2.5 text-right font-medium">Consumed</th>
+              <th class="px-5 py-2.5 text-right font-medium">Rate</th>
+              <th class="px-5 py-2.5 text-right font-medium">Bill to pay</th>
+              <th class="px-5 py-2.5 text-right font-medium">Received</th>
+              <th class="px-5 py-2.5 text-right font-medium">Balance</th>
+              <th class="px-5 py-2.5"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-ink-100">
+            @if (!bills().length) {
+              <tr>
+                <td colspan="13">
+                  <hh-no-results>
+                    <div class="flex gap-2">
+                      <button hh-button variant="outlined" size="sm" (click)="clearFilters()">
+                        <i class="ti ti-x" aria-hidden="true"></i>Clear filters
+                      </button>
+                    </div>
+                  </hh-no-results>
+                </td>
+              </tr>
+            } @else {
+              @for (b of bills(); track b.id) {
+                <!-- Room-level row -->
+                <tr
+                  class="cursor-pointer hover:bg-surface"
+                  (click)="toggleExpand(b.id)"
+                >
+                  <td class="px-5 py-3">
+                    <div class="flex items-center gap-2">
+                      <i
+                        class="ti text-ink-400 transition-transform"
+                        [class.ti-chevron-down]="!isExpanded(b.id)"
+                        [class.ti-chevron-up]="isExpanded(b.id)"
+                      ></i>
+                      <div>
+                        <p class="font-medium text-ink-900">Room {{ b.roomNumber }}</p>
+                        <p class="text-xs text-ink-400">{{ b.splits?.length ?? 0 }} tenant{{ (b.splits?.length ?? 0) !== 1 ? 's' : '' }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3">
+                    <span class="flex items-center gap-2 text-ink-700">
+                      <i class="ti text-brand-500" [class]="metaOf(b.type).icon"></i>
+                      {{ metaOf(b.type).label }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-3">
+                    @if (b.status) {
+                      <hh-status-pill [tone]="statusTone(b.status.slug)">{{ b.status.name }}</hh-status-pill>
+                    } @else {
+                      <span class="text-xs text-ink-400">—</span>
+                    }
+                  </td>
+                  <td class="px-5 py-3 text-ink-500">
+                    {{ b.createdAt ? (b.createdAt | date: 'dd MMM yyyy') : '—' }}
+                  </td>
+                  <td class="px-5 py-3 text-ink-500">
+                    {{ b.issuedDate ? (b.issuedDate | date: 'dd MMM yyyy') : '—' }}
+                  </td>
+                  <td class="px-5 py-3 text-right text-ink-500">
+                    {{ b.startReading !== null ? (b.startReading | number) : '—' }}
+                  </td>
+                  <td class="px-5 py-3 text-right text-ink-500">
+                    {{ b.endReading !== null ? (b.endReading | number) : '—' }}
+                  </td>
+                  <td class="px-5 py-3 text-right">
+                    @if (b.units !== null) {
+                      <span class="font-medium text-ink-700">{{ b.units | number }}</span>
+                    } @else {
+                      <span class="text-xs text-ink-400">fixed</span>
+                    }
+                  </td>
+                  <td class="px-5 py-3 text-right text-ink-500">
+                    {{ b.rate > 0 ? (b.rate | number) : '—' }}
+                  </td>
+                  <td class="px-5 py-3 text-right font-medium text-ink-900">
+                    Rs {{ b.total | number }}
+                  </td>
+                  <td class="px-5 py-3 text-right font-medium text-ok">
+                    {{ b.received > 0 ? ('Rs ' + (b.received | number)) : '—' }}
+                  </td>
+                  <td
+                    class="px-5 py-3 text-right font-medium"
+                    [class.text-danger]="b.total - b.received > 0"
+                    [class.text-ink-400]="b.total - b.received === 0"
+                  >
+                    {{ b.total - b.received > 0 ? ('Rs ' + ((b.total - b.received) | number)) : '—' }}
+                  </td>
+                  <td class="px-5 py-3 text-right" (click)="$event.stopPropagation()">
+                    <button
+                      hh-button
+                      variant="icon"
+                      size="sm"
+                      type="button"
+                      (click)="deleteBill(b.id)"
+                      aria-label="Delete bill"
+                    >
+                      <i class="ti ti-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- Tenant breakdown (expanded) — rows injected directly so columns share parent widths -->
+                @if (isExpanded(b.id) && b.splits?.length) {
+                  <tr class="bg-surface">
+                    <td colspan="8" class="px-5 pb-1 pt-2 pl-14 text-[10px] font-medium uppercase tracking-wide text-ink-400">Tenant</td>
+                    <td class="pb-1 pt-2 pr-5 text-right text-[10px] font-medium uppercase tracking-wide text-ink-400">Days</td>
+                    <td class="pb-1 pt-2 px-5 text-right text-[10px] font-medium uppercase tracking-wide text-ink-400">Share</td>
+                    <td class="pb-1 pt-2 px-5 text-right text-[10px] font-medium uppercase tracking-wide text-ink-400">Received</td>
+                    <td class="pb-1 pt-2 px-5 text-right text-[10px] font-medium uppercase tracking-wide text-ink-400">Balance</td>
+                    <td></td>
+                  </tr>
+                  @for (split of b.splits; track split.id) {
+                    <tr class="bg-surface border-t border-ink-100">
+                      <td colspan="8" class="px-5 py-2.5 pl-14 text-sm text-ink-800">{{ split.name }}</td>
+                      <td class="py-2.5 pr-5 text-right text-sm text-ink-500">{{ split.days }}</td>
+                      <td class="py-2.5 px-5 text-right text-sm font-medium text-ink-900">Rs {{ split.amount | number }}</td>
+                      <td class="py-2.5 px-5 text-right text-sm font-medium text-ok">
+                        {{ split.received > 0 ? ('Rs ' + (split.received | number)) : '—' }}
+                      </td>
+                      <td
+                        class="py-2.5 px-5 text-right text-sm font-medium"
+                        [class.text-danger]="split.amount - split.received > 0"
+                        [class.text-ink-400]="split.amount - split.received === 0"
+                      >
+                        {{ split.amount - split.received > 0 ? ('Rs ' + ((split.amount - split.received) | number)) : '—' }}
+                      </td>
+                      <td></td>
+                    </tr>
+                  }
+                }
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-ink-100 px-5 py-3">
+        <p class="text-xs text-ink-400">
+          @if (s.total > 0) {
+            {{ s.total }} bill{{ s.total !== 1 ? 's' : '' }} · Page {{ page() }}{{ totalPages() ? ' of ' + totalPages() : '' }}
+          } @else {
+            Page {{ page() }}
+          }
+        </p>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            hh-button variant="icon" size="sm"
+            [disabled]="page() === 1"
+            (click)="goToPage(page() - 1)"
+            aria-label="Previous page"
+          >
+            <i class="ti ti-chevron-left text-sm"></i>
+          </button>
+          <span class="min-w-[1.75rem] text-center text-sm font-medium text-ink-700">{{ page() }}</span>
+          <button
+            type="button"
+            hh-button variant="icon" size="sm"
+            [disabled]="!hasNextPage()"
+            (click)="goToPage(page() + 1)"
+            aria-label="Next page"
+          >
+            <i class="ti ti-chevron-right text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</app-dashboard-layout>
