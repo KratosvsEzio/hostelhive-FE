@@ -34,103 +34,18 @@
       message="No submissions are waiting for review."
     />
   } @else {
-    <div class="overflow-x-auto rounded-2xl bg-white shadow-card">
-      <table class="w-full min-w-[820px] text-sm">
-        <thead
-          class="border-b border-ink-100 text-left text-[11px] uppercase tracking-wide text-ink-400"
-        >
-          <tr>
-            <th class="px-5 py-3 font-medium">Property</th>
-            <th class="px-5 py-3 font-medium">City</th>
-            <th class="px-5 py-3 font-medium">Host</th>
-            <th
-              class="cursor-pointer select-none px-5 py-3 font-medium hover:text-ink-700"
-              (click)="toggleSort()"
-            >
-              <span class="inline-flex items-center gap-1">
-                Submitted
-                <i class="ti text-[10px] text-ink-400" [class]="sortIcon()"></i>
-              </span>
-            </th>
-            <th class="px-5 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-ink-100">
-          @for (q of paged(); track q.id) {
-            <tr class="hover:bg-surface">
-              <td class="px-5 py-3">
-                <div class="flex items-center gap-3">
-                  @if (q.thumb) {
-                    <img
-                      [src]="q.thumb"
-                      class="h-10 w-10 rounded-lg object-cover"
-                      alt=""
-                    />
-                  } @else {
-                    <div
-                      class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-ink-100 text-ink-300"
-                      title="No image"
-                    >
-                      <i
-                        class="ti ti-photo-off text-base"
-                        aria-hidden="true"
-                      ></i>
-                    </div>
-                  }
-                  <div>
-                    <p class="font-medium text-ink-900">{{ q.name }}</p>
-                    <p class="text-xs text-ink-400">
-                      {{ q.kindLabel }} · {{ q.photoCount }} photos
-                    </p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-5 py-3 text-ink-600">{{ q.city }}</td>
-              <td class="px-5 py-3 text-ink-600">{{ q.host }}</td>
-              <td class="px-5 py-3">
-                <div class="group relative inline-block">
-                  <hh-status-pill [tone]="queueTone(q.hoursInQueue)">{{
-                    queueLabel(q.hoursInQueue)
-                  }}</hh-status-pill>
-                  <div class="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink-900 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100">
-                    Submitted: {{ q.submittedLabel }}
-                  </div>
-                </div>
-              </td>
-              <td class="px-5 py-3 text-right">
-                <a hh-button color="primary" size="sm" [routerLink]="['../review', q.id]"
-                  >Review</a
-                >
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-4 flex items-center justify-between text-sm text-ink-400">
-      <span>Showing {{ paged().length }} of {{ visible().length }}</span>
-      <div class="flex gap-1">
-        <button
-          hh-button variant="icon" size="sm"
-          type="button"
-          [disabled]="page() <= 1"
-          (click)="page.set(page() - 1)"
-          aria-label="Previous page"
-        >
-          <i class="ti ti-chevron-left" aria-hidden="true"></i>
-        </button>
-        <button
-          hh-button variant="icon" size="sm"
-          type="button"
-          [disabled]="page() >= pageCount()"
-          (click)="page.set(page() + 1)"
-          aria-label="Next page"
-        >
-          <i class="ti ti-chevron-right" aria-hidden="true"></i>
-        </button>
-      </div>
-    </div>
+    <hh-data-table
+      minWidth="820px"
+      [columns]="tableCols"
+      [rows]="visible()"
+      [rowId]="queueRowId"
+      [sort]="queueSortState()"
+      [pagination]="queuePaginationConf()"
+      (sortChange)="onQueueSort($event)"
+      [rowClickable]="true"
+      (rowClick)="onQueueRowClick($event)"
+      (pageChange)="page.set($event)"
+    />
   }
 </main>
 </app-dashboard-layout>

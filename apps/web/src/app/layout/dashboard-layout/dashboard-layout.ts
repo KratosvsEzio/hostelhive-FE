@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { Breadcrumb as HhBreadcrumb } from '@hostelhive/ui';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Breadcrumb as HhBreadcrumb, Button } from '@hostelhive/ui';
+import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 
 export interface Breadcrumb {
   label: string;
@@ -22,10 +23,13 @@ export interface Breadcrumb {
   selector: 'app-dashboard-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HhBreadcrumb],
+  imports: [HhBreadcrumb, Button],
   templateUrl: './dashboard-layout.html',
 })
 export class DashboardLayout {
+  /** Shared sidebar drawer — the subheader burger toggles it (collapse on desktop, overlay on mobile). */
+  protected readonly drawer = inject(ConsoleDrawer);
+
   readonly label = input<string>('');
   readonly backUrl = input<string>('');
   readonly breadcrumbs = input<Breadcrumb[]>([]);

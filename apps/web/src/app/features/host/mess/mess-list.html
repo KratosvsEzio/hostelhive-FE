@@ -1,0 +1,118 @@
+<app-dashboard-layout label="Mess">
+  <div hhActions>
+    <a hh-button color="primary" size="sm" routerLink="create-menu">
+      <i class="ti ti-plus" aria-hidden="true"></i>Create today's menu
+    </a>
+  </div>
+
+  <main class="mx-auto max-w-4xl space-y-4">
+
+    @if (svc.entries().length === 0) {
+      <hh-empty-state
+        icon="ti-tools-kitchen-2"
+        title="No menus yet"
+        message="Record your daily meals and grocery spend to keep track of mess costs."
+      >
+        <a hh-button color="primary" size="sm" routerLink="create-menu">
+          <i class="ti ti-plus" aria-hidden="true"></i>Create today's menu
+        </a>
+      </hh-empty-state>
+    } @else {
+      @for (entry of svc.entries(); track entry.id) {
+        <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+
+          <!-- Entry header row -->
+          <div class="flex items-center gap-4 px-5 py-4">
+            <button
+              type="button"
+              class="flex min-w-0 flex-1 items-center gap-3 text-left"
+              (click)="toggle(entry.id)"
+            >
+              <span
+                class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-purple transition"
+                [class.rotate-180]="expanded() === entry.id"
+              >
+                <i class="ti ti-chevron-down text-base text-brand-600" aria-hidden="true"></i>
+              </span>
+              <div class="min-w-0">
+                <p class="font-display font-semibold text-ink-900">{{ entry.displayDate }}</p>
+                <p class="text-xs text-ink-400">
+                  {{ entry.meals.breakfast.menuName || 'Breakfast' }}
+                  · {{ entry.meals.lunch.menuName || 'Lunch' }}
+                  · {{ entry.meals.dinner.menuName || 'Dinner' }}
+                </p>
+              </div>
+            </button>
+            <span class="shrink-0 font-semibold text-ink-900">Rs {{ entry.totalCost | number }}</span>
+            <button
+              type="button"
+              class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-300 transition hover:bg-danger/10 hover:text-danger"
+              (click)="remove(entry.id)"
+              aria-label="Delete entry"
+            >
+              <i class="ti ti-trash text-sm" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <!-- Expanded meal details -->
+          @if (expanded() === entry.id) {
+            <div class="border-t border-ink-100">
+              @for (mealType of mealOrder; track mealType) {
+                @let meta = mealMeta[mealType];
+                @let meal = entry.meals[mealType];
+                @let mealCost = entry.mealTotals[mealType];
+
+                <div class="border-b border-ink-50 last:border-0">
+                  <!-- Meal sub-header -->
+                  <div class="flex items-center justify-between px-5 py-3">
+                    <div class="flex items-center gap-2.5">
+                      <span class="grid h-8 w-8 place-items-center rounded-lg text-brand-600" [class]="meta.tint">
+                        <i class="ti" [class]="meta.icon" aria-hidden="true"></i>
+                      </span>
+                      <div>
+                        <p class="text-sm font-semibold text-ink-900">{{ meta.label }}</p>
+                        @if (meal.menuName) {
+                          <p class="text-xs text-ink-400">{{ meal.menuName }}</p>
+                        }
+                      </div>
+                    </div>
+                    @if (mealCost > 0) {
+                      <span class="text-sm font-semibold text-ink-700">Rs {{ mealCost | number }}</span>
+                    }
+                  </div>
+
+                  <!-- Grocery items -->
+                  @if (meal.groceries.length) {
+                    <div class="px-5 pb-3">
+                      <div class="overflow-hidden rounded-xl border border-ink-100">
+                        @for (item of meal.groceries; track item.id) {
+                          <div class="flex items-center justify-between border-b border-ink-50 px-4 py-2.5 last:border-0 text-sm">
+                            <span class="font-medium text-ink-800">{{ item.name }}</span>
+                            <div class="flex items-center gap-4">
+                              <span class="text-ink-400">{{ item.quantity | number:'1.0-2' }} {{ item.unit }}</span>
+                              <span class="w-20 text-right font-semibold text-ink-900">Rs {{ item.price | number }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <p class="px-5 pb-3 text-xs text-ink-400">No grocery items recorded.</p>
+                  }
+                </div>
+              }
+
+              <!-- Daily total -->
+              <div class="flex items-center justify-between bg-tint-cream px-5 py-3">
+                <span class="text-sm font-semibold text-ink-700">Daily total</span>
+                <span class="font-display font-semibold text-ink-900">Rs {{ entry.totalCost | number }}</span>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    }
+
+  </main>
+</app-dashboard-layout>

@@ -49,6 +49,15 @@ export class HostLayout {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  private readonly onDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  protected readonly contentPadding = computed(() => this.drawer.open() && this.onDesktop ? '16rem' : '0');
+
+  protected closeOnMobile(): void {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      this.drawer.close();
+    }
+  }
+
   private readonly routeHostelId = toSignal(
     this.route.paramMap.pipe(map((pm) => pm.get('hostelId') ?? '')),
     { initialValue: this.propertyStore.selected() },
@@ -65,7 +74,7 @@ export class HostLayout {
     const pid = this.propertyStore.selected();
     const b = `/host/${pid}`;
     return [
-      { label: 'Overview',       icon: 'ti-layout-dashboard', link: b,              exact: true },
+      { label: 'Overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
       { label: 'Hostel profile', icon: 'ti-building',         link: `${b}/profile` },
       { label: 'Rooms',          icon: 'ti-bed',              link: `${b}/rooms` },
       { label: 'Tenants',        icon: 'ti-users',            link: `${b}/tenants` },
@@ -74,7 +83,6 @@ export class HostLayout {
       { label: 'Invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices` },
       { divider: true },
       { label: 'Subscription',   icon: 'ti-rosette',          link: `${b}/subscription` },
-      { label: 'Settings',       icon: 'ti-settings',         link: `${b}/settings` },
     ];
   });
 

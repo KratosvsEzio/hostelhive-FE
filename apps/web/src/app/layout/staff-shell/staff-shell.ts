@@ -31,7 +31,7 @@ const ADMIN_NAV: NavEntry[] = [
     link: '/admin/roles',
   },
   { divider: true },
-  { label: 'Review queue', icon: 'ti-inbox', link: '/moderator/queue' },
+  { label: 'Review queue', icon: 'ti-inbox', link: '/admin/queue' },
   {
     label: 'All listings',
     icon: 'ti-building-community',
@@ -50,6 +50,15 @@ export class StaffLayout {
   private readonly session = inject(SessionStore);
   private readonly router = inject(Router);
   protected readonly drawer = inject(ConsoleDrawer);
+
+  private readonly onDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  protected readonly contentPadding = computed(() => this.drawer.open() && this.onDesktop ? '16rem' : '0');
+
+  protected closeOnMobile(): void {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      this.drawer.close();
+    }
+  }
   protected readonly user = this.session.user;
 
   private readonly path = toSignal(

@@ -4,6 +4,8 @@ import { AdminRoles } from '@features/admin/admin-roles/admin-roles';
 import { AdminContracts } from '@features/admin/admin-contracts/admin-contracts';
 import { AdminPayments } from '@features/admin/admin-payments/admin-payments';
 import { AdminListings } from '@features/admin/admin-listings/admin-listings';
+import { Queue } from '@features/moderator/queue/queue';
+import { Review } from '@features/moderator/review/review';
 
 export const ADMIN_ROUTES: Route[] = [
   {
@@ -15,6 +17,8 @@ export const ADMIN_ROUTES: Route[] = [
       { path: 'contracts', component: AdminContracts, title: 'Contracts — HostelHive Admin' },
       { path: 'payments', component: AdminPayments, title: 'Payments — HostelHive Admin' },
       { path: 'listings', component: AdminListings, title: 'All listings — HostelHive Admin' },
+      { path: 'queue', component: Queue, title: 'Review queue — HostelHive Admin' },
+      { path: 'review/:id', component: Review, title: 'Listing review — HostelHive Admin' },
     ],
   },
 ];

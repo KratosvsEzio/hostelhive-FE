@@ -8,6 +8,20 @@ import {
 
 let uid = 0;
 
+export type InputSize = 'sm' | 'md' | 'lg';
+
+const SIZE_BOX: Record<InputSize, string> = {
+  sm: 'rounded-lg  px-2.5',
+  md: 'rounded-xl  px-3',
+  lg: 'rounded-xl  px-4',
+};
+
+const SIZE_FIELD: Record<InputSize, string> = {
+  sm: 'py-1.5 text-xs',
+  md: 'py-2.5 text-sm',
+  lg: 'py-3   text-sm',
+};
+
 /**
  * Form field with label, optional leading icon, and error state.
  * Two-way bind the value: `<hh-input label="Email" icon="ti-mail" [(value)]="email" />`
@@ -32,7 +46,7 @@ let uid = 0;
         [disabled]="disabled()"
         [value]="value()"
         (input)="value.set($any($event.target).value)"
-        class="w-full bg-transparent py-2.5 text-sm text-ink-900 outline-none placeholder:text-ink-300"
+        [class]="fieldClasses()"
       />
     </div>
     @if (error()) {
@@ -51,16 +65,21 @@ export class Input {
   readonly placeholder = input('');
   readonly disabled = input(false);
   readonly error = input('');
+  readonly size = input<InputSize>('md');
 
   protected readonly id = `hh-input-${++uid}`;
 
   protected readonly boxClasses = computed(() => {
-    const base = 'flex items-center gap-2 rounded-xl px-3 transition';
+    const base = `flex items-center gap-2 transition ${SIZE_BOX[this.size()]}`;
     if (this.disabled()) return `${base} border border-ink-100 bg-ink-50`;
     if (this.error())
       return `${base} border border-danger focus-within:ring-2 focus-within:ring-danger/20`;
     return `${base} border border-ink-200 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100`;
   });
+
+  protected readonly fieldClasses = computed(
+    () => `w-full bg-transparent text-ink-900 outline-none placeholder:text-ink-300 ${SIZE_FIELD[this.size()]}`,
+  );
 
   protected readonly iconClasses = computed(() => {
     const color = this.disabled()

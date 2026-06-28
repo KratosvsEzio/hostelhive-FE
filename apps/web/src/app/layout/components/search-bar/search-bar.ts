@@ -11,6 +11,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
+import { SearchCapacity } from '@services';
 
 type Seg = 'where' | 'budget' | 'sharing';
 
@@ -25,7 +26,8 @@ const SHARING: { v: string; l: string }[] = [
   { v: '', l: 'Any sharing' },
   { v: '1', l: '1 per room' },
   { v: '2', l: '2 per room' },
-  { v: '3-4', l: '3–4 per room' },
+  { v: '3', l: '3 per room' },
+  { v: '4', l: '4 per room' },
   { v: '5+', l: '5+ per room' },
 ];
 const fmtK = (n: number): string => (n >= 1000 ? `${n / 1000}k` : `${n}`);
@@ -48,6 +50,7 @@ const fmtK = (n: number): string => (n >= 1000 ? `${n / 1000}k` : `${n}`);
 export class SearchBar {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly capacityStore = inject(SearchCapacity);
   private readonly whereEl = viewChild<ElementRef<HTMLElement>>('whereSeg');
 
   protected readonly budgetOpts = BUDGETS;
@@ -93,7 +96,9 @@ export class SearchBar {
       const mx = p.get('maxPrice');
       this.minPrice.set(mn ? +mn : null);
       this.maxPrice.set(mx ? +mx : null);
-      this.sharing.set(p.get('sharing') ?? '');
+      const cap = p.get('capacity') ?? p.get('sharing') ?? '';
+      this.sharing.set(cap);
+      this.capacityStore.active.set(cap);
     });
   }
 
@@ -130,6 +135,7 @@ export class SearchBar {
   }
   protected pickSharing(v: string): void {
     this.sharing.set(v);
+    this.capacityStore.active.set(v);
     this.open.set(null);
   }
 
@@ -145,7 +151,8 @@ export class SearchBar {
         zoom: hasGeo ? this.zoom() : null,
         minPrice: this.minPrice(),
         maxPrice: this.maxPrice(),
-        sharing: this.sharing() || null,
+        capacity: this.sharing() || null,
+        sharing: null,
       },
       queryParamsHandling: 'merge',
     });

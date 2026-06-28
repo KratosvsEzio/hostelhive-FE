@@ -19,6 +19,13 @@ export class UsersApi {
       .get<UserResponse>(`/api/users/${id}`)
       .pipe(map((r) => requireUser(r, id)));
   }
+
+  /** PATCH /api/users/:id → updated user. */
+  update(id: number | string, data: { name?: string; phone?: string }): Observable<User> {
+    return this.api
+      .patch<UserResponse>(`/api/users/${id}`, { user: data })
+      .pipe(map((r) => requireUser(r, id)));
+  }
 }
 
 /** Unwrap `{ user }` (or a bare user object) and fail loudly if it didn't resolve. */

@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { AMENITIES, Gender, PROPERTY_TYPES } from '@hostelhive/data-access';
-import { Dropdown, RangeSlider } from '@hostelhive/ui';
+import { Button, Dropdown, RangeSlider } from '@hostelhive/ui';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
 export interface FilterState {
@@ -43,7 +43,7 @@ const CAPACITIES: { value: string; label: string }[] = [
 @Component({
   selector: 'hh-search-filter-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown, RangeSlider],
+  imports: [Button, Dropdown, RangeSlider],
   host: { class: 'contents' },
   templateUrl: './search-filter-modal.html',
 })

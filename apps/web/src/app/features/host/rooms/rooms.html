@@ -79,239 +79,61 @@
       />
     </div>
 
-    <div class="rounded-2xl bg-white shadow-card">
-      <div class="overflow-x-auto">
-      <table class="w-full min-w-[640px] text-sm">
-        <thead
-          class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
-        >
-          <tr>
-            <th class="px-5 py-3 font-medium">Room</th>
-            <th class="px-5 py-3 font-medium">Type</th>
-            <th class="px-5 py-3 font-medium">
-              <button type="button" hh-button variant="text" size="sm" (click)="toggleSort('occupancy')">
-                Occupancy
-                <i class="ti text-[10px]" [class]="sortCol() === 'occupancy' ? (sortDir() === 'asc' ? 'ti-chevron-up' : 'ti-chevron-down') : 'ti-chevrons-up-down'"></i>
-              </button>
-            </th>
-            <th class="px-5 py-3 font-medium">Status</th>
-            <th class="px-5 py-3 font-medium">Rent / bed</th>
-            <th class="px-5 py-3 font-medium">
-              <button type="button" hh-button variant="text" size="sm" (click)="toggleSort('createdAt')">
-                Created at
-                <i class="ti text-[10px]" [class]="sortCol() === 'createdAt' ? (sortDir() === 'asc' ? 'ti-chevron-up' : 'ti-chevron-down') : 'ti-chevrons-up-down'"></i>
-              </button>
-            </th>
-            <th class="px-5 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-ink-100" (click)="closeMenu()" (keydown.escape)="closeMenu()" tabindex="-1">
-          @if (!sorted().length) {
-            <tr>
-              <td colspan="7">
-                <hh-no-results>
-                  <div class="flex gap-2">
-                    <button hh-button variant="outlined" size="sm" (click)="setSearch(''); setStatusFilter('all')">
-                      <i class="ti ti-x" aria-hidden="true"></i>Clear filters
-                    </button>
-                  </div>
-                </hh-no-results>
-              </td>
-            </tr>
-          } @else {
-            @for (r of sorted(); track r.id) {
-            <tr
-              class="cursor-pointer hover:bg-surface"
-              [class.bg-surface]="expandedId() === r.id"
-              role="button"
-              tabindex="0"
-              (click)="toggleRow(r)"
-              (keydown.enter)="toggleRow(r); $event.preventDefault()"
-              (keydown.space)="toggleRow(r); $event.preventDefault()"
-            >
-              <td class="px-5 py-3 font-medium text-ink-900">
-                <div class="flex items-center gap-2">
-                  <i class="ti text-[10px] text-ink-300 transition-transform duration-150"
-                     [class]="expandedId() === r.id ? 'ti-chevron-up' : 'ti-chevron-down'"></i>
-                  {{ r.number }}
-                </div>
-              </td>
-              <td class="px-5 py-3 text-ink-600">{{ r.type }}</td>
-              <td class="px-5 py-3 text-ink-600">
-                {{ r.occupied }} / {{ r.capacity }}
-              </td>
-              <td class="px-5 py-3">
-                <hh-status-pill [tone]="statusTone(r)">{{
-                  statusLabel(r)
-                }}</hh-status-pill>
-              </td>
-              <td class="px-5 py-3 font-medium text-ink-900">
-                Rs {{ r.rentPerBed | number }}
-              </td>
-              <td class="px-5 py-3 text-ink-500 text-xs">
-                {{ r.createdAt | date:'dd MMM yyyy' }}
-              </td>
-              <td class="px-5 py-3 text-right" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="0">
-                <div class="relative inline-block">
-                  <button
-                    type="button"
-                    hh-button variant="icon" size="sm"
-                    [class.bg-ink-100]="menuOpenId() === r.id"
-                    [class.text-ink-700]="menuOpenId() === r.id"
-                    (click)="toggleMenu(r.id, $event)"
-                    aria-label="Row actions"
-                    aria-haspopup="true"
-                    [attr.aria-expanded]="menuOpenId() === r.id"
-                  >
-                    <i class="ti ti-dots-vertical text-sm"></i>
-                  </button>
-
-                  @if (menuOpenId() === r.id) {
-                    <div
-                      class="absolute right-0 top-full z-30 mt-1 w-40 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-lg"
-                      (click)="$event.stopPropagation()"
-                      (keydown)="$event.stopPropagation()"
-                      role="menu"
-                      tabindex="-1"
-                    >
-                      <button
-                        type="button"
-                        hh-button variant="text"
-                        role="menuitem"
-                        class="w-full !justify-start"
-                        (click)="openEdit(r); closeMenu()"
-                        (keydown.enter)="openEdit(r); closeMenu(); $event.preventDefault()"
-                        (keydown.space)="openEdit(r); closeMenu(); $event.preventDefault()"
-                      >
-                        <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
-                        Edit room
-                      </button>
-                      <button
-                        type="button"
-                        hh-button variant="text"
-                        role="menuitem"
-                        class="w-full !justify-start"
-                        (click)="cloneRoom(r); closeMenu()"
-                        (keydown.enter)="cloneRoom(r); closeMenu(); $event.preventDefault()"
-                        (keydown.space)="cloneRoom(r); closeMenu(); $event.preventDefault()"
-                      >
-                        <i class="ti ti-copy text-sm text-ink-400" aria-hidden="true"></i>
-                        Duplicate
-                      </button>
-                      <div class="mx-3 border-t border-ink-100"></div>
-                      <button
-                        type="button"
-                        hh-button variant="text"
-                        role="menuitem"
-                        class="w-full !justify-start"
-                        (click)="deleteRoom(r)"
-                        (keydown.enter)="deleteRoom(r)"
-                        (keydown.space)="deleteRoom(r); $event.preventDefault()"
-                      >
-                        <i class="ti ti-trash text-sm" aria-hidden="true"></i>
-                        Delete room
-                      </button>
-                    </div>
-                  }
-                </div>
-              </td>
-            </tr>
-
-            @if (expandedId() === r.id) {
-              <tr class="bg-surface">
-                <td colspan="7" class="px-6 pb-4 pt-2">
-                  @if (detailLoading()) {
-                    <div class="space-y-2">
-                      @for (i of [1, 2]; track i) {
-                        <hh-skeleton class="h-14 w-full" radius="lg" />
-                      }
-                    </div>
-                  } @else if (detailError()) {
-                    <p class="text-xs text-danger">Failed to load room details. Try again.</p>
-                  } @else if (expandedDetail(); as renters) {
-                    @if (renters.length === 0) {
-                      <div class="flex items-center justify-between">
-                        <p class="text-sm text-ink-400">No renters currently assigned to this room.</p>
-                        <a
-                          [routerLink]="['../tenants']"
-                          [queryParams]="{ roomId: r.id }"
-                          class="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-brand-600"
-                          tabindex="0"
-                          role="button"
-                          (keydown.enter)="$event.preventDefault()"
-                          (keydown.space)="$event.preventDefault()"
-                        >
-                          <i class="ti ti-user-plus text-xs" aria-hidden="true"></i>Add tenant
-                        </a>
-                      </div>
-                    } @else {
-                      <div class="space-y-2">
-                        @for (renter of renters; track renter.id) {
-                          <div class="flex items-center gap-4 rounded-xl bg-white px-4 py-3 shadow-sm" tabindex="0">
-                            <div class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-600">
-                              {{ renter.name.slice(0, 2).toUpperCase() }}
-                            </div>
-                            <div class="min-w-0 flex-1">
-                              <p class="text-sm font-medium text-ink-900">{{ renter.name }}</p>
-                              <p class="text-xs text-ink-400">{{ renter.phone }}</p>
-                            </div>
-                            <div class="text-right">
-                              <p class="text-[10px] uppercase tracking-wide text-ink-400">Move-in</p>
-                              <p class="text-xs font-medium text-ink-700">{{ renter.moveIn | date:'dd MMM yyyy' }}</p>
-                            </div>
-                            <div class="text-right">
-                              <p class="text-[10px] uppercase tracking-wide text-ink-400">Rent</p>
-                              <p class="text-xs font-medium text-ink-900">Rs {{ renter.rent | number }}</p>
-                            </div>
-                            <hh-status-pill [tone]="renter.status === 'active' ? 'ok' : 'neutral'">
-                              {{ renter.status === 'active' ? 'Active' : 'Checked out' }}
-                            </hh-status-pill>
-                          </div>
-                        }
-                      </div>
-                    }
-                  }
-                </td>
-              </tr>
-            }
-          }
-          }
-        </tbody>
-      </table>
-      </div>
-      <div class="flex items-center justify-between border-t border-ink-100 px-5 py-3">
-        <p class="text-xs text-ink-400">
-          @if (state().total > 0) {
-            {{ state().total }} rooms Page {{ page() }} of {{ totalPages() }}
-          } @else {
-            Page {{ page() }}
-          }
-        </p>
-        <div class="flex items-center gap-1">
-          <button
-            type="button"
-            hh-button variant="icon" size="sm"
-            [disabled]="page() === 1"
-            (click)="goToPage(page() - 1)"
-            aria-label="Previous page"
-          >
-            <i class="ti ti-chevron-left text-sm"></i>
-          </button>
-          <span class="min-w-[1.75rem] text-center text-sm font-medium text-ink-700">{{ page() }}</span>
-          <button
-            type="button"
-            hh-button variant="icon" size="sm"
-            [disabled]="!hasNextPage()"
-            (click)="goToPage(page() + 1)"
-            aria-label="Next page"
-          >
-            <i class="ti ti-chevron-right text-sm"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+    <hh-data-table
+      minWidth="640px"
+      [columns]="tableCols"
+      [rows]="sorted()"
+      [rowId]="roomsRowId"
+      [showActions]="true"
+      [clearable]="true"
+      [sort]="roomsSortState()"
+      [pagination]="roomsPaginationConf()"
+      [rowClickable]="true"
+      (rowClick)="onRoomRowClick($event)"
+      (rowAction)="onRoomAction($event)"
+      (sortChange)="onRoomsSort($event)"
+      (pageChange)="goToPage($event)"
+      (clearFilters)="setSearch(''); setStatusFilter('all')"
+    />
   }
 </app-dashboard-layout>
+
+@if (menuOpenId(); as openId) {
+  @if (menuPos(); as pos) {
+    @let menuRoom = sorted().find(r => r.id === openId);
+    @if (menuRoom) {
+      <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuRoom); closeMenu()">
+          <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
+          Edit room
+        </button>
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="cloneRoom(menuRoom); closeMenu()">
+          <i class="ti ti-copy text-sm text-ink-400" aria-hidden="true"></i>
+          Duplicate
+        </button>
+        <hh-context-menu-divider />
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="deleteRoom(menuRoom)">
+          <i class="ti ti-trash text-sm" aria-hidden="true"></i>
+          Delete room
+        </button>
+      </hh-context-menu>
+    }
+  }
+}
+
+@if (renterDeletePending(); as renter) {
+  <hh-confirm-modal
+    title="Delete tenant?"
+    icon="ti-trash"
+    tone="danger"
+    confirmLabel="Delete"
+    confirmColor="danger"
+    (confirm)="confirmRenterDelete()"
+    (cancel)="cancelRenterDelete()"
+  >
+    This will permanently delete <strong>{{ renter.name }}</strong>. This action cannot be undone.
+  </hh-confirm-modal>
+}
 
 @if (bulkForm(); as bf) {
   <div class="fixed inset-0 z-40 flex justify-end bg-ink-900/30" (click)="closeBulk()" (keydown.escape)="closeBulk()" tabindex="-1">

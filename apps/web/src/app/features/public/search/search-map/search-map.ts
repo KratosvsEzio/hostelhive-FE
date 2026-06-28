@@ -28,7 +28,7 @@ import {
 } from 'rxjs';
 import { Gender, Listing, Paginated } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
-import { ListingsApi } from '@services';
+import { ListingsApi, SearchCapacity } from '@services';
 import { GeolocationService, GoogleMapsLoader } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
@@ -49,6 +49,7 @@ import { ListingCard } from '@features/public/search/listing-card/listing-card';
 export class SearchMap {
   private readonly api = inject(ListingsApi);
   private readonly favorites = inject(FavoritesStore);
+  private readonly capacityStore = inject(SearchCapacity);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly loader = inject(GoogleMapsLoader);
@@ -265,6 +266,15 @@ export class SearchMap {
       const items = this.listings();
       if (this.ready()) this.buildMarkers(items);
     });
+    // Update pin labels and re-render any open popup when the user changes sharing capacity.
+    effect(() => {
+      const cap = this.capacityStore.active();
+      if (!this.ready()) return;
+      for (const [, m] of this.markers) {
+        m.pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(m.listing.priceByCapacity, m.listing.priceFrom) / 1000) + 'k';
+      }
+      untracked(() => { if (this.selected()) this.renderSelection(); });
+    });
     // Toggle the hover highlight without rebuilding markers.
     effect(() => {
       this.active();
@@ -360,7 +370,7 @@ export class SearchMap {
     for (const l of items) {
       const pinEl = document.createElement('div');
       pinEl.className = 'hh-pin';
-      pinEl.textContent = 'Rs ' + Math.round(l.priceFrom / 1000) + 'k';
+      pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom) / 1000) + 'k';
       pinEl.addEventListener('mouseenter', () => this.active.set(l.id));
       pinEl.addEventListener('mouseleave', () => this.active.set(null));
       pinEl.addEventListener('click', () => this.selected.set(l.id));
@@ -519,7 +529,7 @@ export class SearchMap {
       </div>
       <p class="hh-mapcard__sub">${this.esc(l.area)} · ${this.esc(l.city)}</p>
       <p class="hh-mapcard__sub hh-mapcard__tags">${this.esc(tags)}</p>
-      <p class="hh-mapcard__price"><b>Rs ${l.priceFrom.toLocaleString('en-PK')}</b> / month</p>
+      <p class="hh-mapcard__price"><b>Rs ${this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom).toLocaleString('en-PK')}</b> / month</p>
     `;
     card.appendChild(body);
 

@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -12,72 +12,69 @@ import {
   Card,
   CompactNumber,
   ErrorState,
-  Search,
   Skeleton,
-  Tabs,
 } from '@hostelhive/ui';
 import { AnalyticsApi, HostPropertyStore } from '@services';
-import { AnalyticsData } from '@hostelhive/data-access';
+import { RevenuePoint } from '@hostelhive/data-access';
 import { revenueBars } from '@features/host/analytics/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
 
 interface ViewState {
   loading: boolean;
   error: boolean;
   networkError: boolean;
-  data: AnalyticsData | null;
+  data: RevenuePoint[] | null;
 }
+
+const toISO = (d: Date | undefined): string | undefined => {
+  if (!d) return undefined;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 @Component({
   selector: 'app-revenue-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, DecimalPipe, Card, CompactNumber, ErrorState, Search, Skeleton, Tabs],
+  imports: [DashboardLayout, DecimalPipe, Card, CompactNumber, ErrorState, Skeleton, DateRangePicker],
   templateUrl: './revenue-detail.html',
 })
 export class RevenueDetail {
   private readonly api = inject(AnalyticsApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
-  protected readonly range = signal('12m');
-  protected readonly search = signal('');
-
-  protected readonly rangeTabs = [
-    { label: '6M', value: '6m' },
-    { label: '12M', value: '12m' },
-  ];
+  protected readonly dateRange = signal<DateRange | null>(
+    DATE_RANGE_PRESETS.find((p) => p.label === 'Last 12 months')!.fn(),
+  );
 
   private readonly refresh = signal(0);
 
   private readonly query = computed(() => {
     this.refresh();
-    return this.propertyStore.selected();
+    const slug = this.propertyStore.selected();
+    const range = this.dateRange();
+    return { slug, range };
   });
 
   protected readonly state = toSignal(
     toObservable(this.query).pipe(
-      switchMap((id) =>
-        this.api.getAnalytics(id).pipe(
-          map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
-          startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
-          catchError((err) => of<ViewState>({ loading: false, error: true, networkError: isNetworkError(err), data: null })),
-        ),
+      switchMap(({ slug, range }) =>
+        slug
+          ? this.api.monthlyRevenue(slug, toISO(range?.start), toISO(range?.end)).pipe(
+              map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
+              startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
+              catchError((err) => of<ViewState>({ loading: false, error: true, networkError: isNetworkError(err), data: null })),
+            )
+          : of<ViewState>({ loading: false, error: false, networkError: false, data: null }),
       ),
     ),
     { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
   );
 
-  protected readonly bars = computed(() => {
-    const series = this.state().data?.revenue ?? [];
-    const trimmed = this.range() === '6m' ? series.slice(-6) : series;
-    return revenueBars(trimmed);
-  });
-
-  protected readonly filteredRows = computed(() => {
-    const q = this.search().toLowerCase().trim();
-    const rows = this.bars();
-    return q ? rows.filter((b) => b.month.toLowerCase().includes(q)) : rows;
-  });
+  protected readonly bars = computed(() => revenueBars(this.state().data ?? []));
 
   protected retry(): void {
     this.refresh.update((n) => n + 1);

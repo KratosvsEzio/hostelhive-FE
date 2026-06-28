@@ -19,7 +19,7 @@ import {
   StatusPill,
   Tabs,
 } from '@hostelhive/ui';
-import { downloadCsv } from '@hostelhive/util';
+import { downloadCsv } from '@util/csv';
 import { AnalyticsApi, HostPropertyStore } from '@services';
 import { AnalyticsData, Kpi } from '@hostelhive/data-access';
 import { donutDash, occupancyLine, revenueBars, tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';

@@ -12,7 +12,7 @@
 
   @let s = state();
   @if (s.loading) {
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
       <hh-skeleton class="h-80" radius="lg" /><hh-skeleton
         class="h-96"
         radius="lg"
@@ -22,204 +22,237 @@
     <hh-subscription-gate feature="Invoices" />
   } @else if (s.error) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
-  } @else if (!s.data || s.data.length === 0) {
+  } @else if ((!s.data || s.data.length === 0) && !hasActiveFilters() && filter() === 'all') {
     <hh-empty-state
       icon="ti-file-invoice"
       title="No invoices yet"
       message="Invoices appear here once you issue rent or utility bills."
     />
   } @else {
-    <div class="mb-6 grid grid-cols-2 gap-3">
-      <div class="rounded-2xl bg-white p-4 shadow-card">
-        <p class="text-xs text-ink-400">Renter bills</p>
-        <p class="mt-1 text-2xl font-semibold text-ink-900">
-          Rs {{ rentSummary().total | number }}
-        </p>
-        <p class="mt-1 text-xs text-ink-400">
-          {{ rentSummary().count }} invoice{{ rentSummary().count !== 1 ? 's' : '' }}
-          @if (rentSummary().unpaid > 0) {
-            · <span class="text-warn">{{ rentSummary().unpaid }} unpaid</span>
-          }
-        </p>
+    <!-- Filters + scope search -->
+    <div class="mb-4 flex items-center gap-3">
+      <hh-search
+        class="w-72"
+        [fieldOptions]="searchFieldOptions"
+        [field]="searchField()"
+        (fieldChange)="onSearchFieldChange($any($event))"
+        [term]="searchTerm()"
+        (termChange)="onSearchTerm($event)"
+        [placeholder]="searchField() === 'room' ? 'Room number…' : 'Tenant name…'"
+      />
+      <hh-divider orientation="vertical" />
+      <hh-global-filter
+        [groups]="filterGroups()"
+        [value]="currentFilterValues()"
+        (apply)="onFiltersApply($event)"
+      />
+    </div>
+
+    <!-- Summary cards -->
+    <div class="mb-6 grid grid-cols-2 gap-4">
+      <!-- Renter bills card -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-sky">
+              <i class="ti ti-home-2 text-sm text-ink-600"></i>
+            </span>
+            <p class="text-sm font-semibold text-ink-700">Renter bills</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 divide-x divide-ink-100">
+          <div class="pr-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Total</p>
+            <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ rentSummary().total | number }}</p>
+          </div>
+          <div class="px-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Paid</p>
+            <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ rentSummary().paid | number }}</p>
+          </div>
+          <div class="pl-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Balance</p>
+            <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ rentSummary().balance | number }}</p>
+          </div>
+        </div>
       </div>
-      <div class="rounded-2xl bg-white p-4 shadow-card">
-        <p class="text-xs text-ink-400">Utility bills</p>
-        <p class="mt-1 text-2xl font-semibold text-ink-900">
-          Rs {{ utilitySummary().total | number }}
-        </p>
-        <p class="mt-1 text-xs text-ink-400">
-          {{ utilitySummary().count }} invoice{{ utilitySummary().count !== 1 ? 's' : '' }}
-          @if (utilitySummary().unpaid > 0) {
-            · <span class="text-warn">{{ utilitySummary().unpaid }} unpaid</span>
-          }
-        </p>
+
+      <!-- Utility bills card -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-cream">
+              <i class="ti ti-bolt text-sm text-brand-600"></i>
+            </span>
+            <p class="text-sm font-semibold text-ink-700">Utility bills</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 divide-x divide-ink-100">
+          <div class="pr-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Total</p>
+            <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ utilitySummary().total | number }}</p>
+          </div>
+          <div class="px-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Paid</p>
+            <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ utilitySummary().paid | number }}</p>
+          </div>
+          <div class="pl-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Balance</p>
+            <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ utilitySummary().balance | number }}</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
-      <!-- ledger -->
-      <div>
-        <div class="mb-3 flex gap-2">
-          @for (f of filters; track f.value) {
-            <button
-              hh-button variant="text" size="sm"
-              type="button"
-              (click)="filter.set(f.value)"
-              [class]="filterClass(f.value)"
-            >
-              {{ f.label }}
-            </button>
+    @if (filtered().length === 0) {
+      <hh-empty-state
+        icon="ti-filter-off"
+        title="No invoices match"
+        message="Try adjusting your filters."
+      />
+    } @else {
+      <hh-data-table
+        [columns]="tableCols()"
+        [rows]="filtered()"
+        [rowId]="invoiceRowId"
+        [pagination]="paginationConf()"
+        [showActions]="true"
+        [actionActive]="menuActionActive"
+        (pageChange)="page.set($event)"
+        [rowClickable]="true"
+        (rowClick)="selectedId.set($any($event).id)"
+        (rowAction)="openMenu($any($event.row), $event.event)"
+      />
+    }
+
+    @if (menuInv(); as inv) {
+      @if (menuPos(); as pos) {
+        <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)">
+            <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
+            Edit
+          </button>
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)">
+            <i class="ti ti-circle-check text-sm text-ok" aria-hidden="true"></i>
+            Mark as paid
+          </button>
+          <hh-context-menu-divider />
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="deleteInvoice(inv, $event)">
+            <i class="ti ti-trash text-sm" aria-hidden="true"></i>
+            Delete
+          </button>
+        </hh-context-menu>
+      }
+    }
+  }
+
+@if (selected(); as inv) {
+  <button
+    type="button"
+    class="fixed inset-0 z-40 cursor-default bg-black/25"
+    aria-label="Close invoice"
+    (click)="selectedId.set(null)"
+  ></button>
+
+  <div class="fixed top-[65px] bottom-0 right-0 z-50 flex w-[480px] flex-col overflow-hidden bg-white shadow-2xl ring-1 ring-ink-100">
+    <div class="flex shrink-0 items-center justify-between border-b border-ink-100 bg-surface px-5 py-3">
+      <span class="text-xs font-medium text-ink-500">{{ invoiceId(inv) }}.pdf</span>
+      <div class="flex gap-1">
+        <button hh-button variant="icon" size="sm" type="button" aria-label="Print" (click)="printInvoice(inv)">
+          <i class="ti ti-printer"></i>
+        </button>
+        <button hh-button variant="icon" size="sm" type="button" aria-label="Download" (click)="downloadInvoice(inv)">
+          <i class="ti ti-download"></i>
+        </button>
+        <button hh-button variant="icon" size="sm" type="button" aria-label="Close" (click)="selectedId.set(null)">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-7">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-base font-bold text-ink-900">{{ hostelName() }}</p>
+          @if (hostelAddress()) {
+            <p class="mt-0.5 text-xs text-ink-400">{{ hostelAddress() }}</p>
           }
         </div>
-
-        @if (filtered().length === 0) {
-          <hh-empty-state
-            icon="ti-filter-off"
-            title="No invoices match"
-            [message]="'No ' + filter() + ' invoices.'"
-          />
-        } @else {
-          <div class="overflow-hidden rounded-2xl bg-white shadow-card">
-            <table class="w-full text-sm">
-              <thead
-                class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
-              >
-                <tr>
-                  <th class="px-4 py-3 font-medium">Invoice</th>
-                  <th class="px-4 py-3 font-medium">Tenant</th>
-                  <th class="px-4 py-3 font-medium">Type</th>
-                  <th class="px-4 py-3 font-medium">Amount</th>
-                  <th class="px-4 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-ink-100">
-                @for (inv of filtered(); track inv.id) {
-                  <tr
-                    class="cursor-pointer hover:bg-surface"
-                    [class.bg-brand-50]="inv.id === selectedId()"
-                    (click)="selectedId.set(inv.id)"
-                  >
-                    <td class="px-4 py-3 font-medium text-ink-900">
-                      {{ inv.id }}
-                    </td>
-                    <td class="px-4 py-3 text-ink-600">{{ inv.tenantName }}</td>
-                    <td class="px-4 py-3">
-                      @if (inv.kind === 'rent') {
-                        <span
-                          class="rounded bg-tint-sky px-1.5 py-0.5 text-[11px] text-ink-600"
-                          >Rent</span
-                        >
-                      } @else {
-                        <span
-                          class="rounded bg-tint-cream px-1.5 py-0.5 text-[11px] text-brand-700"
-                          >Utility</span
-                        >
-                      }
-                    </td>
-                    <td class="px-4 py-3 font-medium text-ink-900">
-                      Rs {{ inv.amount | number }}
-                    </td>
-                    <td class="px-4 py-3">
-                      <hh-status-pill [tone]="tone(inv.status)">{{
-                        label(inv.status)
-                      }}</hh-status-pill>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
+        <div class="text-right">
+          <p class="text-xs font-semibold uppercase tracking-widest text-ink-400">Invoice</p>
+          <p class="mt-0.5 text-sm font-semibold text-ink-900">{{ invoiceId(inv) }}</p>
+        </div>
       </div>
 
-      <!-- PDF preview -->
-      <div class="lg:sticky lg:top-24">
-        @if (selected(); as inv) {
-          <div
-            class="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-ink-100"
-          >
-            <div
-              class="flex items-center justify-between border-b border-ink-100 bg-surface px-4 py-2.5"
-            >
-              <span class="text-xs font-medium text-ink-500"
-                >{{ inv.id }}.pdf</span
-              >
-              <div class="flex gap-2 text-ink-500">
-                <button
-                  hh-button variant="icon" size="sm"
-                  type="button"
-                  aria-label="Print"
-                >
-                  <i class="ti ti-printer"></i>
-                </button>
-                <button
-                  hh-button variant="icon" size="sm"
-                  type="button"
-                  aria-label="Download"
-                >
-                  <i class="ti ti-download"></i>
-                </button>
-              </div>
-            </div>
-            <div class="space-y-4 p-6 text-sm">
-              <div class="flex items-start justify-between">
-                <span class="font-display text-base font-bold text-brand-500"
-                  >HostelHive</span
-                >
-                <div class="text-right">
-                  <p class="font-semibold text-ink-900">INVOICE</p>
-                  <p class="text-xs text-ink-400">{{ inv.id }}</p>
-                </div>
-              </div>
-              <div class="flex justify-between text-xs">
-                <div>
-                  <p class="text-ink-400">Billed to</p>
-                  <p class="font-medium text-ink-800">{{ inv.tenantName }}</p>
-                  <p class="text-ink-500">
-                    Room {{ inv.roomNumber }} · {{ inv.floor }} floor
-                  </p>
-                </div>
-                <div class="text-right">
-                  <p class="text-ink-400">Issued · Due</p>
-                  <p class="text-ink-800">
-                    {{ inv.issued | date: 'dd MMM' }} ·
-                    {{ inv.due | date: 'dd MMM yyyy' }}
-                  </p>
-                </div>
-              </div>
-              <table class="w-full text-xs">
-                <tbody class="divide-y divide-ink-100">
-                  @for (line of inv.lines; track $index) {
-                    <tr>
-                      <td class="py-2 text-ink-600">{{ line.label }}</td>
-                      <td class="py-2 text-right text-ink-800">
-                        Rs {{ line.amount | number }}
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-              <div
-                class="flex items-center justify-between rounded-xl bg-tint-cream px-4 py-3"
-              >
-                <span class="font-medium text-ink-800">Total due</span>
-                <span class="text-lg font-semibold text-brand-700"
-                  >Rs {{ inv.amount | number }}</span
-                >
-              </div>
-              <p class="text-[11px] leading-relaxed text-ink-400">
-                {{ inv.payNote }}
-              </p>
-            </div>
-          </div>
-        } @else {
-          <hh-empty-state
-            icon="ti-file-text"
-            title="Select an invoice"
-            message="Pick a row from the ledger to preview its PDF."
-          />
-        }
+      <div class="my-5 border-t border-ink-100"></div>
+
+      <div class="flex justify-between gap-4 text-sm">
+        <div>
+          <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Billed to</p>
+          <p class="font-semibold text-ink-900">{{ inv.tenantName }}</p>
+          <p class="text-xs text-ink-500">Room {{ inv.roomNumber }}</p>
+        </div>
+        <div class="text-right">
+          <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Issued</p>
+          <p class="text-xs text-ink-800">{{ formatDate(inv.issued) }}</p>
+          <p class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Due</p>
+          <p class="text-xs text-ink-800">{{ formatDate(inv.due) }}</p>
+        </div>
+      </div>
+
+      <div class="my-5 border-t border-ink-100"></div>
+
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-ink-100">
+            <th class="pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">Description</th>
+            <th class="pb-2 text-right text-[11px] font-semibold uppercase tracking-wide text-ink-400">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of inv.lines; track $index) {
+            <tr class="border-b border-ink-50">
+              <td class="py-3">
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
+                  [class]="inv.kind === 'utility' ? 'bg-tint-cream text-brand-700' : 'bg-tint-sky text-ink-600'"
+                >{{ line.label }}</span>
+              </td>
+              <td class="py-3 text-right font-medium text-ink-800">Rs {{ line.amount | number }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="mt-5 flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
+        <span class="font-semibold text-ink-700">Total due</span>
+        <span class="text-xl font-bold text-brand-700">Rs {{ inv.amount | number }}</span>
+      </div>
+
+      @if (inv.payNote) {
+        <p class="mt-4 text-[11px] leading-relaxed text-ink-400">{{ inv.payNote }}</p>
+      }
+
+      <div class="mt-5 flex items-center justify-between border-t border-ink-100 pt-4">
+        <img src="/hostelhive-logo.png" alt="HostelHive" class="h-4 w-auto" />
+        <a href="mailto:support@hostelhive.com" class="text-[11px] text-ink-400 hover:text-brand-500">support&#64;hostelhive.com</a>
       </div>
     </div>
-  }
+  </div>
+}
+
+@if (deletePending(); as inv) {
+  <hh-confirm-modal
+    title="Delete invoice?"
+    icon="ti-trash"
+    tone="danger"
+    confirmLabel="Delete"
+    confirmColor="danger"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()"
+  >
+    This will permanently delete invoice
+    <strong>{{ invoiceId(inv) }}</strong> for
+    <strong>{{ inv.tenantName }}</strong>. This action cannot be undone.
+  </hh-confirm-modal>
+}
 </app-dashboard-layout>

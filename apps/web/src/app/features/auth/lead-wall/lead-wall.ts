@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { map, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Button, Input, PhoneInput, Tabs, TabItem } from '@hostelhive/ui';
 import {
@@ -17,6 +17,7 @@ import {
   SessionStore,
 } from '@core/auth';
 import { ApiError } from '@hostelhive/data-access';
+import { GoogleAuthService } from '@services';
 
 type AuthTab = 'register' | 'login';
 type Phase = 'form' | 'verify';
@@ -39,6 +40,7 @@ const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 })
 export class LeadWall {
   private readonly auth = inject(AuthService);
+  private readonly googleAuth = inject(GoogleAuthService);
   private readonly session = inject(SessionStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -157,6 +159,18 @@ export class LeadWall {
         error: (err: ApiError) => this.fail(err),
       });
     }
+  }
+
+  /** Google OAuth: open consent popup → exchange access_token → establish session. */
+  protected googleSignIn(): void {
+    this.busy.set(true);
+    this.error.set('');
+    this.googleAuth.getAccessToken().pipe(
+      switchMap((token) => this.auth.googleLogin(token)),
+    ).subscribe({
+      next: () => { this.busy.set(false); this.afterLogin(); },
+      error: (err: ApiError) => this.fail(err),
+    });
   }
 
   /** After verifying their email, signing in succeeds and mints the real session. */

@@ -8,14 +8,14 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AMENITIES, Gender, PROPERTY_TYPES } from '@hostelhive/data-access';
+import { Gender } from '@hostelhive/data-access';
 import { Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
 
 /**
- * Airbnb-style filter sub-header for search results. A "Filters" button opens
- * the full modal; individual amenity chips and a sort dropdown sit inline for
- * quick access. Everything is URL-driven (query-param merge).
+ * Filter sub-header for search results. A "Filters" button opens the full
+ * modal; a Sort dropdown sits inline for quick access. Everything is URL-driven
+ * (query-param merge).
  */
 @Component({
   selector: 'hh-search-filters',
@@ -34,28 +34,6 @@ export class SearchFilters {
 
   protected readonly modalOpen = signal(false);
 
-  protected readonly amenityChips = Object.entries(AMENITIES).map(
-    ([key, v]) => ({
-      key,
-      label: v.label,
-      icon: v.icon,
-    }),
-  );
-  protected readonly propertyTypes = PROPERTY_TYPES;
-  protected readonly genderOptions: DropdownOption[] = [
-    { value: 'boys', label: 'Boys' },
-    { value: 'girls', label: 'Girls' },
-    { value: 'coliving', label: 'Co-living' },
-  ];
-  // Room capacity. '4plus' is a URL-safe token for "4+" (avoids the '+' → space query
-  // pitfall); the API layer maps it to f[room_types.capacity][gte]=4.
-  protected readonly capacityOptions: DropdownOption[] = [
-    { value: '1', label: '1' },
-    { value: '2', label: '2' },
-    { value: '3', label: '3' },
-    { value: '4', label: '4' },
-    { value: '4plus', label: '4+' },
-  ];
   // Sort. 'newest'/'oldest' → sort[created_at] desc/asc; 'price-*' → sort[starting_price] (API layer).
   protected readonly sortOptions: DropdownOption[] = [
     { value: 'newest', label: 'Recent first' },
@@ -89,6 +67,7 @@ export class SearchFilters {
       !!this.capacity() ||
       !!this.minP() ||
       !!this.maxP() ||
+      this.amenities().length > 0 ||
       this.sort() !== 'recommended'
     );
   });
@@ -99,6 +78,7 @@ export class SearchFilters {
     if (this.propertyType()) n++;
     if (this.capacity()) n++;
     if (this.minP() || this.maxP()) n++;
+    if (this.amenities().length) n++;
     if (this.sort() !== 'recommended') n++;
     return n;
   });
@@ -115,28 +95,8 @@ export class SearchFilters {
     });
   }
 
-  protected onGenderChange(v: string | string[] | null): void {
-    this.nav({ gender: typeof v === 'string' && v ? v : null });
-  }
-
-  protected onPropertyChange(v: string | string[] | null): void {
-    this.nav({ propertyType: typeof v === 'string' && v ? v : null });
-  }
-
-  protected onCapacityChange(v: string | string[] | null): void {
-    this.nav({ capacity: typeof v === 'string' && v ? v : null });
-  }
-
   protected onSortChange(v: string | string[] | null): void {
     this.nav({ sort: typeof v === 'string' && v ? v : null });
-  }
-
-  protected toggleAmenity(key: string): void {
-    const set = new Set(this.amenities());
-    if (set.has(key)) set.delete(key);
-    else set.add(key);
-    const joined = Array.from(set).join(',');
-    this.nav({ amenities: joined || null });
   }
 
   protected onApply(state: FilterState): void {

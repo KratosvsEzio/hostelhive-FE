@@ -7,7 +7,7 @@
   }
 
   @if (loadStatus() === 'loading') {
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
       @for (i of skeletons; track i) {
         <hh-skeleton class="aspect-[4/3]" radius="lg" />
       }
@@ -27,8 +27,11 @@
     <div class="mb-4 flex items-center justify-between gap-2">
       <p class="text-sm text-ink-500">
         <span class="font-semibold text-ink-900">{{ pending().length }}</span>
-        {{ pending().length === 1 ? 'item' : 'items' }} pending ·
-        {{ totalCount() }} total
+        {{ pending().length === 1 ? 'item' : 'items' }}
+        @if (!activeStatus() || activeStatus() === 'pending') {
+          pending
+        }
+        · {{ totalCount() }} total
         @if (selected().length > 0) {
           · <span class="font-medium text-brand">{{ selected().length }} selected</span>
         }
@@ -60,7 +63,7 @@
     </div>
 
     <!-- Attachment grid -->
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-5 sm:grid-cols-3">
       @for (a of pending(); track a.id) {
         @let aid = '' + a.id;
         @let isApproving = approving().has(aid);
@@ -68,93 +71,94 @@
         @let isSelected = selectedIds().has(aid);
         @let badge = kindBadge(a);
         <div
-          class="flex flex-col overflow-hidden rounded-xl bg-white ring-1 transition"
-          [class]="hasError ? 'ring-danger/40' : isSelected ? 'ring-brand/40 bg-brand/[0.03]' : 'ring-ink-100 hover:ring-ink-200'"
+          class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 transition"
+          [class]="hasError ? 'ring-danger/50' : isSelected ? 'ring-brand-500/50 shadow-brand-500/10' : 'ring-ink-100 hover:ring-ink-200 hover:shadow-lg'"
         >
-          <!-- Thumbnail (click to open preview) -->
+          <!-- Thumbnail -->
           <div
-            class="relative aspect-[4/3] cursor-zoom-in overflow-hidden border-b border-ink-100"
+            class="relative aspect-[4/3] cursor-zoom-in overflow-hidden"
             (click)="openPreview(a)"
           >
-            <!-- Selection checkbox — top-left (hidden for rejected items) -->
+            <!-- Selection checkbox — top-left -->
             @if (activeStatus() !== 'rejected') {
               <div
-                class="absolute left-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-md border-2 shadow-sm transition"
-                [class]="isSelected ? 'border-brand bg-brand' : 'border-white/70 bg-black/20 hover:bg-black/30'"
+                class="absolute left-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 shadow-md transition-all duration-150 active:scale-95"
+                [class]="isSelected ? 'border-brand-500 bg-brand-500 shadow-brand-500/30 scale-105' : 'border-brand-500/50 bg-brand-500/20 hover:scale-105 hover:bg-brand-500/30 hover:border-brand-500/70'"
                 (click)="$event.stopPropagation(); toggleSelect(aid)"
               >
                 @if (isSelected) {
-                  <i class="ti ti-check text-[11px] text-white" aria-hidden="true"></i>
+                  <i class="ti ti-check text-xs font-bold text-white" aria-hidden="true"></i>
                 }
               </div>
             }
 
-            <!-- Kind + label badges — top-right -->
-            <div class="absolute right-2 top-2 z-10 flex flex-col items-end gap-1">
-              @if (badge) {
+            <!-- Kind badge — top-right -->
+            @if (badge) {
+              <div class="absolute right-2.5 top-2.5 z-10">
                 <span
-                  class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold shadow"
+                  class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm"
                   [class]="badge.cls"
                 >{{ badge.label }}</span>
-              }
-            </div>
+              </div>
+            }
 
             @if (imgErrors().has(aid) || !a.url) {
-              <div class="flex h-full w-full items-center justify-center bg-ink-100">
-                <i class="ti ti-photo text-3xl text-ink-300" aria-hidden="true"></i>
+              <div class="flex h-full w-full flex-col items-center justify-center gap-2 bg-ink-50">
+                <i class="ti ti-photo text-4xl text-ink-300" aria-hidden="true"></i>
+                <span class="text-[11px] text-ink-300">No image</span>
               </div>
             } @else {
               <img
                 [src]="a.url"
                 (error)="onImgError(aid)"
-                class="absolute inset-0 h-full w-full object-cover transition duration-200 hover:scale-105"
-                [class.opacity-40]="isApproving"
+                class="absolute inset-0 h-full w-full object-cover transition duration-300 hover:scale-105"
+                [class.opacity-30]="isApproving"
                 alt=""
               />
             }
 
             @if (isApproving) {
-              <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                <i
-                  class="ti ti-loader-2 animate-spin text-2xl text-white drop-shadow"
-                  aria-label="Approving…"
-                ></i>
+              <div class="absolute inset-0 flex items-center justify-center bg-black/10">
+                <div class="rounded-full bg-white/90 p-2.5 shadow">
+                  <i class="ti ti-loader-2 animate-spin text-xl text-ink-600" aria-label="Approving…"></i>
+                </div>
+              </div>
+            }
+
+            @if (hasError) {
+              <div class="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-danger px-3 py-1.5">
+                <i class="ti ti-alert-circle text-xs text-white"></i>
+                <span class="text-[11px] font-medium text-white">Failed — tap Retry</span>
               </div>
             }
           </div>
 
           <!-- Info -->
-          <div class="flex flex-1 flex-col gap-1 px-3 py-2.5">
-            <p class="truncate text-sm font-medium text-ink-900">{{ entityName(a) }}</p>
-            <p class="truncate text-xs text-ink-400">
-              {{ hostLine(a) }}
-              @if (dateLabel(a.created_at)) {
-                · {{ dateLabel(a.created_at) }}
+          <div class="flex flex-1 flex-col gap-1.5 px-4 py-3">
+            <p class="truncate text-sm font-semibold text-ink-900">{{ entityName(a) }}</p>
+            <p class="truncate text-xs text-ink-500">{{ hostLine(a) }}</p>
+            <div class="mt-0.5 flex flex-wrap items-center gap-1.5">
+              @if (a.key) {
+                <span class="rounded-full bg-tint-sky px-2 py-0.5 text-[10px] font-medium text-ink-700">{{ keyLabel(a.key) }}</span>
               }
-            </p>
-            @if (a.attachment_label?.name) {
-              <div class="mt-0.5 flex items-center gap-1.5">
-                <span class="text-[10px] text-ink-400">Label:</span>
-                <span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">{{ a.attachment_label!.name }}</span>
-              </div>
-            }
-            <div class="mt-0.5 flex items-center gap-1.5">
-              <span class="text-[10px] text-ink-400">Attached Type:</span>
               @if (a.attached_type) {
-                <span class="rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-medium text-ink-500">{{ a.attached_type }}</span>
-              } @else {
-                <span class="text-[10px] text-ink-400">—</span>
+                <span class="rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-medium text-ink-600">{{ a.attached_type }}</span>
               }
+              @if (a.attachment_label?.name) {
+                <span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">{{ a.attachment_label!.name }}</span>
+              }
+              <span class="ml-auto text-[11px] text-ink-400">{{ dateLabel(a.created_at) }}</span>
             </div>
           </div>
 
-          <!-- Actions (hidden for rejected items) -->
+          <!-- Actions -->
           @if (activeStatus() !== 'rejected') {
-            <div class="flex divide-x divide-ink-100 border-t border-ink-100">
+            <div class="flex gap-2 border-t border-ink-100 px-4 py-3">
               @if (hasError) {
                 <button
-                  hh-button variant="text" size="sm"
+                  hh-button color="primary" size="sm"
                   type="button"
+                  class="flex-1"
                   (click)="setOne(a, 'approved')"
                 >
                   <i class="ti ti-refresh text-base" aria-hidden="true"></i>
@@ -162,8 +166,9 @@
                 </button>
               } @else {
                 <button
-                  hh-button variant="text" size="sm"
+                  hh-button color="success" size="sm"
                   type="button"
+                  class="flex-1"
                   [disabled]="isApproving"
                   (click)="setOne(a, 'approved')"
                 >
@@ -172,8 +177,9 @@
                 </button>
               }
               <button
-                hh-button variant="text" size="sm"
+                hh-button variant="outlined" size="sm"
                 type="button"
+                class="flex-1 !text-danger hover:!border-danger/50 hover:!bg-danger/5"
                 [disabled]="isApproving"
                 (click)="setOne(a, 'rejected')"
               >

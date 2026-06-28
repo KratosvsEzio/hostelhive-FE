@@ -1,6 +1,6 @@
 <aside
-  class="fixed bottom-0 left-0 top-16 z-40 flex w-64 flex-col border-r border-ink-100 bg-white lg:flex"
-  [class.hidden]="!drawer.open()"
+  class="fixed bottom-0 left-0 top-16 z-40 flex w-64 flex-col border-r border-ink-100 bg-white transition-transform duration-200 ease-in-out"
+  [style.transform]="drawer.open() ? '' : 'translateX(-100%)'"
 >
   <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
     @for (item of nav(); track $index) {
@@ -12,7 +12,7 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: !!item.exact }"
           class="nav-link"
-          (click)="drawer.close()"
+          (click)="closeOnMobile()"
         >
           <i class="ti text-lg" [class]="item.icon"></i>{{ item.label }}
         </a>
@@ -49,6 +49,9 @@
   ></button>
 }
 
-<div class="h-[calc(100dvh-4rem)] overflow-hidden lg:pl-64">
+<div
+  class="h-[calc(100dvh-4rem)] overflow-hidden transition-[padding-left] duration-200 ease-in-out"
+  [style.paddingLeft]="contentPadding()"
+>
   <router-outlet />
 </div>

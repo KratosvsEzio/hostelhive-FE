@@ -43,6 +43,7 @@ Thumbs.db
 .env.production
 apps/web/src/app/google-maps.env.ts
 apps/web/src/app/api.env.ts
+apps/web/src/app/google-oauth.env.ts
 
 # Android signing secrets (never commit the keystore or its passwords)
 android/keystore.properties

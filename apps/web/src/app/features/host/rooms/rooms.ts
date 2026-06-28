@@ -1,18 +1,22 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
   signal,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
-import { catchError, finalize, map, of, startWith, switchMap } from 'rxjs';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
+import { catchError, filter, finalize, map, of, startWith, switchMap } from 'rxjs';
 import {
   Button,
   Card,
+  ConfirmModal,
+  ContextMenu,
+  ContextMenuDivider,
+  DataTable,
   Dropdown,
   DropdownOption,
   EmptyState,
@@ -20,10 +24,10 @@ import {
   FilterChips,
   FilterChipOption,
   Input,
-  NoResults,
+  PaginationConfig,
   Search,
   Skeleton,
-  StatusPill,
+  SortState,
 } from '@hostelhive/ui';
 import { HostOpsApi, HostPropertyStore, RoomAggs, RoomRenter, RoomStatusOption, RoomTypeOption } from '@services';
 import { HostRoom as Room, RoomStatus } from '@hostelhive/data-access';
@@ -32,6 +36,7 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
+import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
 
 interface ViewState {
   loading: boolean;
@@ -90,35 +95,39 @@ const STATUS_LABEL: Record<RoomStatus, string> = {
   selector: 'hh-rooms',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
-    DecimalPipe,
-    RouterLink,
     DashboardLayout,
     SubscriptionGate,
     Card,
     Button,
+    ConfirmModal,
+    DataTable,
     Dropdown,
     FilterChips,
     Input,
+    ContextMenu,
+    ContextMenuDivider,
     Search,
     Skeleton,
-    StatusPill,
     EmptyState,
     ErrorState,
-    NoResults,
   ],
   templateUrl: './rooms.html',
 })
 export class Rooms {
   private readonly api = inject(HostOpsApi);
   private readonly store = inject(HostPropertyStore);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly refresh = signal(0);
 
   /** Locally-mutated copy so create/edit reflect immediately (no write API yet). */
   private readonly local = signal<Room[] | null>(null);
 
   protected readonly searchQuery = signal('');
-  protected readonly statusFilter = signal('all');
+  protected readonly statusFilter = signal(
+    this.route.snapshot.queryParams['status'] ?? 'all',
+  );
 
   /** Persisted across re-fetches so chips don't disappear while a new page loads. */
   protected readonly statuses = signal<RoomStatusOption[]>([]);
@@ -134,6 +143,7 @@ export class Rooms {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly menuOpenId = signal<string | null>(null);
+  protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
 
   protected readonly bulkForm = signal<BulkForm | null>(null);
   protected readonly bulkSaving = signal(false);
@@ -143,6 +153,11 @@ export class Rooms {
   protected readonly expandedDetail = signal<RoomRenter[] | null>(null);
   protected readonly detailLoading = signal(false);
   protected readonly detailError = signal(false);
+
+  protected readonly renterMenuId = signal<string | null>(null);
+  private readonly deletedRenterIds = signal(new Set<string>());
+  protected readonly renterDeletePending = signal<RoomRenter | null>(null);
+  protected readonly renterDeleting = signal(false);
 
   private readonly roomTypesRefresh = signal(0);
   private readonly rtKey = computed(() => ({
@@ -172,6 +187,14 @@ export class Rooms {
   );
 
   constructor() {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationStart),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
+      this.form.set(null);
+      this.bulkForm.set(null);
+    });
+
     effect(() => {
       const s = this.fetched().statuses;
       if (s?.length) this.statuses.set(s);
@@ -264,6 +287,13 @@ export class Rooms {
     return (this.state().data?.length ?? 0) >= PAGE_SIZE;
   });
 
+  protected readonly filteredDetail = computed<RoomRenter[] | null>(() => {
+    const detail = this.expandedDetail();
+    if (!detail) return detail;
+    const deleted = this.deletedRenterIds();
+    return deleted.size ? detail.filter((r) => !deleted.has(r.id)) : detail;
+  });
+
   protected readonly sorted = computed<Room[]>(() => {
     const data = this.state().data ?? [];
     const col = this.sortCol();
@@ -287,6 +317,11 @@ export class Rooms {
     this.statusFilter.set(v);
     this.page.set(1);
     this.local.set(null);
+    void this.router.navigate([], {
+      queryParams: { status: v === 'all' ? null : v },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected goToPage(n: number): void {
@@ -375,11 +410,96 @@ export class Rooms {
 
   protected toggleMenu(id: string, event: Event): void {
     event.stopPropagation();
-    this.menuOpenId.update((cur) => (cur === id ? null : id));
+    if (this.menuOpenId() === id) {
+      this.menuOpenId.set(null);
+      this.menuPos.set(null);
+    } else {
+      this.menuOpenId.set(id);
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      this.menuPos.set({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
   }
 
   protected closeMenu(): void {
     this.menuOpenId.set(null);
+    this.menuPos.set(null);
+  }
+
+  protected readonly tableCols = ROOMS_TABLE_COLS;
+  protected readonly roomsRowId = (row: unknown) => (row as Room).id;
+
+  protected readonly roomsSortState = computed<SortState | null>(() => {
+    const col = this.sortCol();
+    return col ? { key: col, dir: this.sortDir() } : null;
+  });
+
+  protected readonly roomsPaginationConf = computed<PaginationConfig | null>(() => {
+    const total = this.state().total;
+    const pages = this.totalPages();
+    if (!pages || pages <= 1) return null;
+    return {
+      page: this.page(),
+      total,
+      totalPages: pages,
+      hasNextPage: this.hasNextPage(),
+      itemLabel: 'room',
+    };
+  });
+
+  protected onRoomsSort(s: SortState | null): void {
+    if (!s) { this.sortCol.set(null); }
+    else { this.sortCol.set(s.key as 'createdAt' | 'occupancy'); this.sortDir.set(s.dir); }
+  }
+
+  protected onRoomRowClick(row: unknown): void {
+    const hostelId = this.store.selected();
+    if (!hostelId) return;
+    this.router.navigate(['/host', hostelId, 'rooms', (row as Room).id]);
+  }
+
+  protected onRoomAction(ev: { row: unknown; event: MouseEvent }): void {
+    this.toggleMenu((ev.row as Room).id, ev.event);
+  }
+
+  protected toggleRenterMenu(id: string, event: Event): void {
+    event.stopPropagation();
+    this.renterMenuId.update((cur) => (cur === id ? null : id));
+  }
+
+  protected closeRenterMenu(): void {
+    this.renterMenuId.set(null);
+  }
+
+  protected editRenter(renter: RoomRenter): void {
+    this.closeRenterMenu();
+    const hostelId = this.store.selected();
+    if (!hostelId) return;
+    this.router.navigate(['/host', hostelId, 'tenants', 'edit', renter.id]);
+  }
+
+  protected deleteRenterPrompt(renter: RoomRenter): void {
+    this.closeRenterMenu();
+    this.renterDeletePending.set(renter);
+  }
+
+  protected confirmRenterDelete(): void {
+    const renter = this.renterDeletePending();
+    const hostelId = this.store.selected();
+    if (!renter || !hostelId) return;
+    this.deletedRenterIds.update((s) => { const n = new Set(s); n.add(renter.id); return n; });
+    this.renterDeletePending.set(null);
+    this.renterDeleting.set(true);
+    this.api.deleteRenter(hostelId, renter.id).subscribe({
+      next: () => { this.renterDeleting.set(false); },
+      error: () => {
+        this.deletedRenterIds.update((s) => { const n = new Set(s); n.delete(renter.id); return n; });
+        this.renterDeleting.set(false);
+      },
+    });
+  }
+
+  protected cancelRenterDelete(): void {
+    this.renterDeletePending.set(null);
   }
 
   protected cloneRoom(r: Room): void {

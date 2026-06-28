@@ -34,7 +34,13 @@ interface ApiHostel {
   status?: { id?: number; name?: string; slug?: string } | null;
   attachments?: { url?: string; file_name?: string }[] | null;
   location?: { lat: number; lon: number } | null;
-  // Per-capacity room types — used to price the card by the selected capacity.
+  // Pre-computed per-capacity prices (direct API fields — preferred over room_types).
+  price_capacity_1?: number | null;
+  price_capacity_2?: number | null;
+  price_capacity_3?: number | null;
+  price_capacity_4?: number | null;
+  price_capacity_plus?: number | null;
+  // Per-capacity room types — fallback when price_capacity_* are absent.
   room_types?:
     | {
         id: number | string;
@@ -54,31 +60,38 @@ const GENDER_MAP: Record<string, Gender> = {
 const cap = (s: string): string =>
   s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-/**
- * Display "from" price. When a room-capacity filter is active, use the price of the matching
- * room type (cheapest, and for "4+" the cheapest with capacity ≥ 4) so the card reflects what
- * the seeker filtered for; otherwise the hostel's overall `starting_price`.
- */
-function priceForCapacity(h: ApiHostel, capacity?: string): number {
+/** Build the priceByCapacity map from direct API fields, falling back to room_types array. */
+function buildPriceByCapacity(h: ApiHostel): Record<string, number> {
+  const map: Record<string, number> = {};
   const rooms = h.room_types ?? [];
-  if (capacity && rooms.length) {
-    const matches =
-      capacity === '4plus'
-        ? rooms.filter((r) => (r.capacity ?? 0) >= 4)
-        : rooms.filter((r) => r.capacity === Number(capacity));
-    const prices = matches
-      .map((r) => r.price)
-      .filter((p): p is number => p != null);
-    if (prices.length) return Math.round(Math.min(...prices));
+
+  const resolve = (key: string, direct: number | null | undefined, cap: number | null): void => {
+    if (direct != null) { map[key] = Math.round(direct); return; }
+    if (cap != null) {
+      const match = rooms.find((r) => r.capacity === cap);
+      if (match?.price != null) map[key] = Math.round(match.price);
+    }
+  };
+
+  resolve('1', h.price_capacity_1, 1);
+  resolve('2', h.price_capacity_2, 2);
+  resolve('3', h.price_capacity_3, 3);
+  resolve('4', h.price_capacity_4, 4);
+
+  const plus = h.price_capacity_plus;
+  if (plus != null) {
+    map['5+'] = Math.round(plus);
+    map['4plus'] = Math.round(plus);
+  } else {
+    const match5 = rooms.find((r) => (r.capacity ?? 0) >= 5);
+    if (match5?.price != null) { map['5+'] = Math.round(match5.price); map['4plus'] = map['5+']; }
   }
-  return Math.round(h.starting_price ?? 0);
+
+  return map;
 }
 
-/**
- * Map a backend search_data hostel to the frontend Listing model. `capacity` (when set)
- * switches the displayed price to that room type's price.
- */
-function toListing(h: ApiHostel, capacity?: string): Listing {
+/** Map a backend search_data hostel to the frontend Listing model. */
+function toListing(h: ApiHostel): Listing {
   const lat =
     typeof h.latitude === 'string'
       ? parseFloat(h.latitude)
@@ -93,6 +106,7 @@ function toListing(h: ApiHostel, capacity?: string): Listing {
     .map((a) => a?.url)
     .filter((u): u is string => !!u);
 
+  const priceByCapacity = buildPriceByCapacity(h);
   return {
     id: String(h.id),
     slug: String(h.id), // search_data has no slug — the numeric id doubles as the route key
@@ -103,7 +117,8 @@ function toListing(h: ApiHostel, capacity?: string): Listing {
     verified: h.status?.slug === 'active',
     sharing: [], // not part of the public search payload
     amenities: [], // not part of the public search payload
-    priceFrom: priceForCapacity(h, capacity),
+    priceFrom: Math.round(h.starting_price ?? 0),
+    priceByCapacity: Object.keys(priceByCapacity).length ? priceByCapacity : undefined,
     images: images.length
       ? images
       : [`https://picsum.photos/seed/hh-be-${h.id}/800/800`],
@@ -173,10 +188,10 @@ export class ListingsApi {
       params['f[gender_type]'] = gender === 'coliving' ? 'co-living' : gender;
     if (propertyType) params['f[property_type]'] = propertyType;
 
-    // Room capacity — exact match for 1–4; "4+" becomes a >= bound on the nested
+    // Room capacity — exact match for 1–4; "5+" becomes a >= bound on the nested
     // room_types.capacity field (a hostel matches if it has a room type that size).
     if (capacity) {
-      if (capacity === '4plus') params['f[room_types.capacity][gte]'] = 4;
+      if (capacity === '5+' || capacity === '4plus') params['f[room_types.capacity][gte]'] = 5;
       else params['f[room_types.capacity]'] = +capacity;
     }
 
@@ -224,7 +239,7 @@ export class ListingsApi {
             : (res.hostels ?? []);
           const pg = Array.isArray(res) ? undefined : res.pagination;
           const meta = Array.isArray(res) ? undefined : res.meta;
-          const items: Listing[] = raw.map((h) => toListing(h, capacity));
+          const items: Listing[] = raw.map((h) => toListing(h));
           // Sorting is handled server-side via sort[starting_price]; no client-side re-sort needed.
 
           return {

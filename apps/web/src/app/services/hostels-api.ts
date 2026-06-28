@@ -98,6 +98,13 @@ export class HostelsApi {
       .pipe(map((r) => requireHostel(r, id)));
   }
 
+  /** GET /api/hostels/:id/show_phone — gated contact reveal. Returns the primary phone number. */
+  showPhone(id: number | string): Observable<string> {
+    return this.api
+      .get<{ phone_detail?: { primary_phone?: string | null } }>(`/api/hostels/${id}/show_phone`)
+      .pipe(map((r) => r.phone_detail?.primary_phone ?? ''));
+  }
+
   /** GET /api/hostels/:id/room_types — the hostel's room types. */
   roomTypes(id: number | string): Observable<RoomType[]> {
     return this.api

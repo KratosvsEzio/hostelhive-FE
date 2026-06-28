@@ -44,6 +44,7 @@
     "date-fns": "^4.4.0",
     "express": "^4.21.2",
     "flag-icons": "^7.5.0",
+    "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "ngx-editor": "^19.0.0-beta.1",
     "ngx-material-intl-tel-input": "^21.1.0",

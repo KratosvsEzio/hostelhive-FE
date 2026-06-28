@@ -10,6 +10,7 @@ import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Gender, Listing } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
+import { SearchCapacity } from '@services';
 import { Badge } from '@hostelhive/ui';
 
 /**
@@ -30,11 +31,16 @@ export class ListingCard {
   readonly active = input(false);
 
   private readonly favorites = inject(FavoritesStore);
+  private readonly capacityStore = inject(SearchCapacity);
 
   protected readonly img = signal(0);
   /** Reactive saved state, backed by the localStorage-persisted FavoritesStore. */
   protected readonly saved = computed(() =>
     this.favorites.isFavorite(this.listing().id),
+  );
+  /** Price to display — capacity-adjusted when the user has selected a sharing option. */
+  protected readonly displayPrice = computed(() =>
+    this.capacityStore.priceFor(this.listing().priceByCapacity, this.listing().priceFrom),
   );
   /** Lazy image loading: indices 0..loadedThrough() have their <img> mounted.
    *  Starts at 2 (first 3 images), then advances one slide ahead as the user pages. */

@@ -9,21 +9,23 @@ import {
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap, take } from 'rxjs';
 import {
-  Avatar,
   AvatarTone,
   Button,
+  ContextMenu,
+  ContextMenuDivider,
+  DataTable,
   EmptyState,
   ErrorState,
   Input,
   PhoneInput,
   Skeleton,
-  StatusPill,
 } from '@hostelhive/ui';
-import { HostTeamData, StaffMember, StaffRole } from '@hostelhive/data-access';
+import { ApiError, HostTeamData, StaffMember, StaffRole } from '@hostelhive/data-access';
 import { HostPropertyStore, HostShellApi } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { NotificationService } from '@core/notification.service';
+import { TEAM_TABLE_COLS } from '@app/util/table-configs/team-table-cols';
 
 interface ViewState {
   loading: boolean;
@@ -46,14 +48,15 @@ const ROLE_ICON: Record<StaffRole, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DashboardLayout,
-    Avatar,
     Button,
+    ContextMenu,
+    ContextMenuDivider,
+    DataTable,
     EmptyState,
     ErrorState,
     Input,
     PhoneInput,
     Skeleton,
-    StatusPill,
   ],
   templateUrl: './team.html',
 })
@@ -63,10 +66,17 @@ export class HostTeam {
   private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly refresh = signal(0);
+  private readonly deletedIds = signal(new Set<string>());
 
   protected readonly addOpen = signal(false);
   protected readonly saving = signal(false);
   protected readonly removingId = signal<string | null>(null);
+  protected readonly menuOpenId = signal<string | null>(null);
+  protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
+  protected readonly editMember = signal<StaffMember | null>(null);
+  protected readonly editName = signal('');
+  protected readonly editPhone = signal('');
+  protected readonly editSaving = signal(false);
 
   // Add-staff form state
   protected readonly newName = signal('');
@@ -118,6 +128,65 @@ export class HostTeam {
       '—',
   );
 
+  protected readonly staff = computed(() => {
+    const data = this.state().data;
+    if (!data) return [];
+    const deleted = this.deletedIds();
+    return deleted.size ? data.staff.filter((m) => !deleted.has(m.id)) : data.staff;
+  });
+
+  protected readonly tableCols = TEAM_TABLE_COLS;
+  protected readonly teamRowId = (row: unknown) => (row as StaffMember).id;
+  protected readonly teamActionActive = (row: unknown) =>
+    (row as StaffMember).id === this.menuOpenId();
+
+  protected openMenu(m: StaffMember, event: MouseEvent): void {
+    event.stopPropagation();
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    this.menuOpenId.set(m.id);
+    this.menuPos.set({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+  }
+
+  protected closeMenu(): void {
+    this.menuOpenId.set(null);
+    this.menuPos.set(null);
+  }
+
+  protected openEdit(m: StaffMember): void {
+    this.closeMenu();
+    this.editMember.set(m);
+    this.editName.set(m.name);
+    this.editPhone.set(m.phone ?? '');
+  }
+
+  protected closeEdit(): void {
+    this.editMember.set(null);
+    this.editName.set('');
+    this.editPhone.set('');
+  }
+
+  protected saveEdit(): void {
+    const m = this.editMember();
+    const hostelId = this.store.selected();
+    if (!m || !hostelId || this.editSaving()) return;
+    this.editSaving.set(true);
+    this.api.updateManager(hostelId, m.id, { name: this.editName().trim(), phone: this.editPhone().trim() })
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.editSaving.set(false);
+          this.closeEdit();
+          this.refresh.update((n) => n + 1);
+          this.notifications.success('Staff updated', `${this.editName().trim()} has been updated.`);
+        },
+        error: (err: ApiError) => {
+          this.editSaving.set(false);
+          this.notifications.error('Couldn\'t update staff', err.message);
+        },
+      });
+  }
+
   protected retry(): void {
     this.refresh.update((n) => n + 1);
   }
@@ -157,9 +226,9 @@ export class HostTeam {
           this.refresh.update((n) => n + 1);
           this.notifications.success('Staff added', `${name} has been added as a Manager.`);
         },
-        error: () => {
+        error: (err: ApiError) => {
           this.saving.set(false);
-          this.notifications.error('Couldn\'t add staff', 'Please check the details and try again.');
+          this.notifications.error('Couldn\'t add staff', err.message);
         },
       });
   }
@@ -173,12 +242,12 @@ export class HostTeam {
       .subscribe({
         next: () => {
           this.removingId.set(null);
-          this.refresh.update((n) => n + 1);
+          this.deletedIds.update((s) => { const n = new Set(s); n.add(m.id); return n; });
           this.notifications.success('Staff removed', `${m.name} has been removed.`);
         },
-        error: () => {
+        error: (err: ApiError) => {
           this.removingId.set(null);
-          this.notifications.error('Couldn\'t remove staff', 'Please try again.');
+          this.notifications.error('Couldn\'t remove staff', err.message);
         },
       });
   }

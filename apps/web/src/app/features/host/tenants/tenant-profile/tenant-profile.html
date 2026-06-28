@@ -269,101 +269,43 @@
 
         <!-- RENT HISTORY tab -->
         @case ('rent') {
-          @if (tenantInvoices().length === 0) {
+          @if (rentLoading()) {
+            <hh-skeleton class="h-64 w-full" radius="lg" />
+          } @else if (tenantInvoices().length === 0) {
             <hh-empty-state
               icon="ti-file-invoice"
               title="No rent invoices"
               message="This tenant has no rent invoices on record yet."
             />
           } @else {
-            <div class="overflow-hidden rounded-2xl bg-white shadow-card">
-              <table class="w-full text-sm">
-                <thead
-                  class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
-                >
-                  <tr>
-                    <th class="px-4 py-3 font-medium">Invoice</th>
-                    <th class="px-4 py-3 font-medium">Type</th>
-                    <th class="px-4 py-3 font-medium">Amount</th>
-                    <th class="px-4 py-3 font-medium">Issued</th>
-                    <th class="px-4 py-3 font-medium">Due</th>
-                    <th class="px-4 py-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-100">
-                  @for (inv of tenantInvoices(); track inv.id) {
-                    <tr class="hover:bg-surface">
-                      <td class="px-4 py-3 font-medium text-ink-900">{{ inv.id }}</td>
-                      <td class="px-4 py-3">
-                        @if (inv.kind === 'rent') {
-                          <span class="rounded bg-tint-sky px-1.5 py-0.5 text-[11px] text-ink-600">
-                            Rent
-                          </span>
-                        } @else {
-                          <span class="rounded bg-tint-cream px-1.5 py-0.5 text-[11px] text-brand-700">
-                            Utility
-                          </span>
-                        }
-                      </td>
-                      <td class="px-4 py-3 font-medium text-ink-900">
-                        Rs {{ inv.amount | number }}
-                      </td>
-                      <td class="px-4 py-3 text-ink-600">
-                        {{ inv.issued | date: 'dd MMM yyyy' }}
-                      </td>
-                      <td class="px-4 py-3 text-ink-600">
-                        {{ inv.due | date: 'dd MMM yyyy' }}
-                      </td>
-                      <td class="px-4 py-3">
-                        <hh-status-pill [tone]="invoiceStatusTone(inv.status)">
-                          {{ invoiceStatusLabel(inv.status) }}
-                        </hh-status-pill>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+            <hh-data-table
+              [columns]="rentCols"
+              [rows]="tenantInvoices()"
+              [rowId]="invoiceRowId"
+              [pagination]="rentPagination()"
+              (pageChange)="rentPage.set($event)"
+            />
           }
         }
 
         <!-- UTILITY BILLS tab -->
         @case ('utility') {
-          @if (tenantUtility().length === 0) {
+          @if (utilityLoading()) {
+            <hh-skeleton class="h-64 w-full" radius="lg" />
+          } @else if (tenantUtility().length === 0) {
             <hh-empty-state
               icon="ti-bolt"
               title="No utility bills"
               message="No utility charges have been recorded for this tenant's room."
             />
           } @else {
-            <div class="overflow-hidden rounded-2xl bg-white shadow-card">
-              <table class="w-full text-sm">
-                <thead
-                  class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
-                >
-                  <tr>
-                    <th class="px-4 py-3 font-medium">Type</th>
-                    <th class="px-4 py-3 font-medium">Room</th>
-                    <th class="px-4 py-3 font-medium">Units</th>
-                    <th class="px-4 py-3 font-medium">Total</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-100">
-                  @for (u of tenantUtility(); track u.id) {
-                    <tr class="hover:bg-surface">
-                      <td class="px-4 py-3 font-medium capitalize text-ink-900">{{ u.type }}</td>
-                      <td class="px-4 py-3 text-ink-600">{{ u.roomNumber }}</td>
-                      <td class="px-4 py-3 text-ink-600">
-                        {{ u.units !== null ? u.units : '—' }}
-                      </td>
-                      <td class="px-4 py-3 font-medium text-ink-900">
-                        Rs {{ u.total | number }}
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+            <hh-data-table
+              [columns]="utilityCols"
+              [rows]="tenantUtility()"
+              [rowId]="invoiceRowId"
+              [pagination]="utilityPagination()"
+              (pageChange)="utilityPage.set($event)"
+            />
           }
         }
       }

@@ -1,4 +1,3 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -25,21 +24,23 @@ import {
   switchMap,
   take,
 } from 'rxjs';
-import { NavigationEnd } from '@angular/router';
+import { NavigationEnd, NavigationStart } from '@angular/router';
 import {
-  Avatar,
   Button,
   Card,
+  ContextMenu,
+  ContextMenuDivider,
+  DataTable,
+  DatePicker,
   Dropdown,
   DropdownOption,
   EmptyState,
   ErrorState,
   FilterChips,
   Input,
-  NoResults,
+  PaginationConfig,
   Search,
   Skeleton,
-  StatusPill,
 } from '@hostelhive/ui';
 
 import { HostOpsApi, HostPropertyStore, ImageUploadService, ImageUploadKey } from '@services';
@@ -50,6 +51,7 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
+import { TENANTS_TABLE_COLS } from '@app/util/table-configs/tenants-table-cols';
 
 interface ViewState {
   loading: boolean;
@@ -58,7 +60,7 @@ interface ViewState {
   networkError: boolean;
   data: Tenant[] | null;
   total: number;
-  statuses?: { name: string; slug: string; count: number }[];
+  statuses?: { name: string; slug: string; count: number; dispositionId: number }[];
 }
 
 interface CheckInForm {
@@ -103,22 +105,21 @@ const TONES = ['sky', 'cream', 'mint'] as const;
   selector: 'hh-tenants',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
-    DecimalPipe,
     DashboardLayout,
     SubscriptionGate,
-    Avatar,
     Button,
     Card,
+    DataTable,
+    DatePicker,
     Dropdown,
     FilterChips,
     Input,
+    ContextMenu,
+    ContextMenuDivider,
     Skeleton,
     Search,
-    StatusPill,
     EmptyState,
     ErrorState,
-    NoResults,
   ],
   templateUrl: './tenants.html',
 })
@@ -132,8 +133,10 @@ export class Tenants {
   private readonly local = signal<Tenant[] | null>(null);
 
   protected readonly search = signal('');
-  protected readonly statusFilter = signal('all');
-  protected readonly statuses = signal<{ name: string; slug: string; count: number }[]>([]);
+  protected readonly statusFilter = signal(
+    this.route.snapshot.queryParams['status'] ?? 'all',
+  );
+  protected readonly statuses = signal<{ name: string; slug: string; count: number; dispositionId: number }[]>([]);
   protected readonly tabs = computed(() => [
     { label: 'All', value: 'all' },
     ...this.statuses().map((s) => ({ label: s.name, value: s.slug })),
@@ -142,6 +145,7 @@ export class Tenants {
   protected readonly form = signal<CheckInForm | null>(null);
   protected readonly menuOpenId = signal<string | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
+  private readonly deletedIds = signal(new Set<string>());
   protected readonly photoMenuOpen = signal(false);
   protected readonly cameraOpen = signal(false);
   protected readonly avatarUploading = signal(false);
@@ -230,7 +234,11 @@ export class Tenants {
       : base;
   });
 
-  protected readonly filtered = computed<Tenant[]>(() => this.state().data ?? []);
+  protected readonly filtered = computed<Tenant[]>(() => {
+    const data = this.state().data ?? [];
+    const deleted = this.deletedIds();
+    return deleted.size ? data.filter((t) => !deleted.has(t.id)) : data;
+  });
 
 
   protected readonly isValid = computed(() => {
@@ -285,6 +293,12 @@ export class Tenants {
     fromEvent(window, 'scroll', { capture: true, passive: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.closeMenu());
+
+    // Close panel immediately when navigating away
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationStart),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.closeFormState());
 
     // Drive the form drawer from the URL
     this.router.events.pipe(
@@ -377,6 +391,56 @@ export class Tenants {
 
   protected toneFor(index: number): (typeof TONES)[number] {
     return TONES[index % TONES.length];
+  }
+
+  protected readonly tableCols = TENANTS_TABLE_COLS;
+  protected readonly tenantsRowId = (row: unknown) => (row as Tenant).id;
+
+  protected readonly paginationConf = computed<PaginationConfig | null>(() => {
+    const total = this.state().total;
+    const pages = this.totalPages();
+    if (!pages || pages <= 1) return null;
+    return {
+      page: this.page(),
+      total,
+      totalPages: pages,
+      hasNextPage: this.hasNextPage(),
+      itemLabel: 'tenant',
+    };
+  });
+
+  protected readonly menuActionActive = (row: unknown) =>
+    this.menuOpenId() === (row as Tenant).id;
+
+  private readonly inactiveDispositionId = computed(() =>
+    this.statuses().find((s) => s.slug === 'inactive')?.dispositionId ?? 0,
+  );
+  private readonly activeDispositionId = computed(() =>
+    this.statuses().find((s) => s.slug === 'active')?.dispositionId ?? 0,
+  );
+
+  protected setInactive(t: Tenant): void {
+    this.closeMenu();
+    const hostelId = this.store.selected();
+    const dispositionId = this.inactiveDispositionId();
+    if (!hostelId || !dispositionId) return;
+    this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.refresh.update((n) => n + 1) });
+  }
+
+  protected setActive(t: Tenant): void {
+    this.closeMenu();
+    const hostelId = this.store.selected();
+    const dispositionId = this.activeDispositionId();
+    if (!hostelId || !dispositionId) return;
+    this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.refresh.update((n) => n + 1) });
+  }
+
+  protected onTenantAction(ev: { row: unknown; event: MouseEvent }): void {
+    this.toggleMenu((ev.row as Tenant).id, ev.event);
   }
 
   protected ordinal(day: number | undefined): string {
@@ -803,6 +867,11 @@ export class Tenants {
     this.statusFilter.set(f);
     this.page.set(1);
     this.local.set(null);
+    void this.router.navigate([], {
+      queryParams: { status: f === 'all' ? null : f },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected goToPage(n: number): void {

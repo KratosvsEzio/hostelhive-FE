@@ -1,27 +1,30 @@
 <div class="rounded-2xl border border-ink-100 bg-white p-6">
   <h2 class="text-lg font-semibold text-ink-900">Account settings</h2>
-  <p class="mt-1 text-sm text-ink-400">Update your name, phone number and password.</p>
+  <p class="mt-1 text-sm text-ink-400">Update your name and phone number.</p>
 
   <!-- Avatar -->
   <div class="mt-6 flex items-center gap-4">
-    <div class="shrink-0">
+    <div class="relative shrink-0">
       @if (avatarUrl()) {
         <img [src]="avatarUrl()" alt="Profile photo" class="h-16 w-16 rounded-full object-cover ring-2 ring-ink-100" />
       } @else {
-        <span class="grid h-16 w-16 place-items-center rounded-full bg-ink-800 text-xl font-semibold text-white">AA</span>
+        <span class="grid h-16 w-16 place-items-center rounded-full bg-ink-800 text-xl font-semibold text-white">{{ initials() }}</span>
+      }
+      @if (uploading()) {
+        <span class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+          <i class="ti ti-loader-2 animate-spin text-white text-lg" aria-hidden="true"></i>
+        </span>
       }
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <button hh-button variant="outlined" size="sm" type="button" (click)="openCamera()">
+      <button hh-button variant="outlined" size="sm" type="button" [disabled]="uploading()" (click)="openCamera()">
         <i class="ti ti-camera"></i>Use camera
       </button>
-      <button hh-button variant="outlined" size="sm" type="button" (click)="openFilePicker()">
+      <button hh-button variant="outlined" size="sm" type="button" [disabled]="uploading()" (click)="openFilePicker()">
         <i class="ti ti-photo"></i>Choose photo
       </button>
       @if (avatarUrl()) {
-        <button hh-button variant="text" size="sm" type="button" (click)="removeAvatar()">
-          Remove
-        </button>
+        <button hh-button variant="text" size="sm" type="button" (click)="removeAvatar()">Remove</button>
       }
     </div>
   </div>
@@ -34,39 +37,42 @@
   <div class="mt-6 grid gap-4 sm:grid-cols-2">
     <label class="block">
       <span class="mb-1 block text-sm font-medium text-ink-700">Full name</span>
-      <input class="hh-input" value="Aashir Azeem" />
+      <input
+        class="hh-input"
+        [value]="name()"
+        (input)="name.set($any($event.target).value)"
+        placeholder="Your full name"
+      />
     </label>
     <label class="block">
       <span class="mb-1 block text-sm font-medium text-ink-700">Phone number</span>
-      <input class="hh-input" type="tel" value="+92 300 1234567" />
+      <input
+        class="hh-input"
+        type="tel"
+        [value]="phone()"
+        (input)="phone.set($any($event.target).value)"
+        placeholder="+92 300 0000000"
+      />
     </label>
-  </div>
-
-  <!-- Password -->
-  <div class="mt-6 border-t border-ink-100 pt-5">
-    <h3 class="text-base font-semibold text-ink-900">Change password</h3>
-    <p class="mt-1 text-sm text-ink-400">Use at least 8 characters with a mix of letters and numbers.</p>
-    <div class="mt-4 grid max-w-md gap-4">
-      <label class="block">
-        <span class="mb-1 block text-sm font-medium text-ink-700">Current password</span>
-        <input class="hh-input" type="password" placeholder="Enter current password" />
-      </label>
-      <label class="block">
-        <span class="mb-1 block text-sm font-medium text-ink-700">New password</span>
-        <input class="hh-input" type="password" placeholder="New password" />
-      </label>
-      <label class="block">
-        <span class="mb-1 block text-sm font-medium text-ink-700">Confirm new password</span>
-        <input class="hh-input" type="password" placeholder="Re-enter new password" />
-      </label>
-    </div>
+    <label class="block sm:col-span-2">
+      <span class="mb-1 flex items-center gap-2 text-sm font-medium text-ink-700">
+        Email address
+        <span class="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-normal text-ink-400">Can't be changed</span>
+      </span>
+      <input class="hh-input cursor-not-allowed opacity-60" type="email" [value]="user()?.email ?? ''" disabled />
+    </label>
   </div>
 
   <!-- Save -->
   <div class="mt-6 flex items-center gap-3 border-t border-ink-100 pt-5">
-    <button hh-button color="primary" type="button" (click)="save()">Save changes</button>
+    <button hh-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+      {{ saving() ? 'Saving…' : 'Save changes' }}
+    </button>
     @if (saved()) {
       <span class="text-sm font-medium text-ok">Saved ✓</span>
+    }
+    @if (saveError()) {
+      <span class="text-sm font-medium text-danger">Failed to save. Please try again.</span>
     }
   </div>
 </div>

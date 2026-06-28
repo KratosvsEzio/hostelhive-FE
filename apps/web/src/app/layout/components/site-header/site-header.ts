@@ -12,7 +12,6 @@ import { HOST_ROLES, STAFF_ROLES, SessionStore } from '@core/auth';
 import { ConfirmModal } from '@hostelhive/ui';
 import { SearchBar } from '../search-bar/search-bar';
 import { AccountMenu } from '../account-menu/account-menu';
-import { ConsoleDrawer } from '../console-drawer/console-drawer';
 
 type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 
@@ -35,7 +34,6 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 export class SiteHeader {
   private readonly router = inject(Router);
   private readonly session = inject(SessionStore);
-  protected readonly drawer = inject(ConsoleDrawer);
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -55,18 +53,13 @@ export class SiteHeader {
     const u = (this.url() || '/').split('?')[0];
     if (u.startsWith('/admin')) return 'admin';
     if (u.startsWith('/moderator')) return 'moderator';
-    if (u.startsWith('/host')) return 'host';
+    // Exact `/host` or `/host/...` only — must NOT swallow the public `/hostel/:id` listing
+    // pages (which start with "/host" but belong to the seeker area).
+    if (u === '/host' || u.startsWith('/host/')) return 'host';
     if (u.startsWith('/auth') || u.startsWith('/confirm_invitation'))
       return 'auth';
     return 'seeker';
   });
-  protected readonly isConsole = computed(
-    () =>
-      this.area() === 'host' ||
-      this.area() === 'admin' ||
-      this.area() === 'moderator',
-  );
-
   protected readonly showSearchBar = computed(() => {
     const u = (this.url() || '/').split('?')[0];
     return u === '/' || u.startsWith('/search');

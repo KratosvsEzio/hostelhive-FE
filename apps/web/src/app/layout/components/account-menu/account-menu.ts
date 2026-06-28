@@ -63,8 +63,7 @@ export class AccountMenu {
       icon: 'ti-lock',
       link: '/account/security',
     },
-    { label: 'Notifications', icon: 'ti-bell', link: '/account/notifications' },
-    { label: 'Help Centre', icon: 'ti-help-circle', link: '/account/help' },
+{ label: 'Help Centre', icon: 'ti-help-circle', link: '/account/help' },
   ];
 
   protected readonly initials = computed(() => {

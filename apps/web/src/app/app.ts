@@ -40,7 +40,9 @@ export class App {
   protected readonly showFooter = computed(() => {
     const u = this.path();
     return (
-      !u.startsWith('/host') &&
+      // Exact `/host` or `/host/...` — not the public `/hostel/:id` listing pages.
+      u !== '/host' &&
+      !u.startsWith('/host/') &&
       !u.startsWith('/admin') &&
       !u.startsWith('/moderator') &&
       !u.startsWith('/auth') &&
