@@ -20,7 +20,6 @@
       {{ approving() ? 'Approving…' : 'Approve & publish' }}
     </button>
   </div>
-<main class="mx-auto max-w-6xl">
   @let s = state();
   @if (s.loading) {
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.7fr_1fr]">
@@ -544,5 +543,4 @@
       </ul>
     </hh-confirm-modal>
   }
-</main>
 </app-dashboard-layout>

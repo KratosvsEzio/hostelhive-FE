@@ -93,17 +93,16 @@
 
     <!-- Gallery: hero + thumbs -->
     <div
-      class="relative mt-5 grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl"
-      [style.height.px]="420"
+      class="relative mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-3xl sm:grid-cols-4 sm:grid-rows-2 sm:h-[420px]"
     >
       <img
         [src]="l.images[0]"
         [alt]="l.name"
-        class="card-img col-span-2 row-span-2 h-full w-full cursor-pointer object-cover"
+        class="card-img aspect-video h-auto w-full cursor-pointer object-cover sm:aspect-auto sm:col-span-2 sm:h-full sm:row-span-2"
         (click)="openLightbox(0)"
       />
       @for (img of thumbs(); track img; let i = $index) {
-        <img [src]="img" alt="" class="card-img h-full w-full cursor-pointer object-cover" (click)="openLightbox(i + 1)" />
+        <img [src]="img" alt="" class="card-img hidden h-full w-full cursor-pointer object-cover sm:block" (click)="openLightbox(i + 1)" />
       }
       <button
         hh-button

@@ -6,7 +6,7 @@
     <div class="flex h-16 items-center justify-between gap-4">
       <div class="flex items-center gap-2.5">
         <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
-          <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+          <img src="/hostelhive-logo.png" alt="HostelHive" class="h-5 w-auto sm:h-7" />
         </a>
         @if (area() === 'admin' || area() === 'moderator') {
           <span
@@ -21,11 +21,13 @@
         @switch (area()) {
           @case ('seeker') {
             @if (!isHost()) {
-              <button
-                hh-button variant="text"
-                type="button"
-                (click)="onBecomeHost()"
-              >Become a host</button>
+              <span class="hidden sm:block">
+                <button
+                  hh-button variant="text"
+                  type="button"
+                  (click)="onBecomeHost()"
+                >Become a host</button>
+              </span>
             } @else if (!isStaff()) {
               <a
                 [routerLink]="hostLink()"

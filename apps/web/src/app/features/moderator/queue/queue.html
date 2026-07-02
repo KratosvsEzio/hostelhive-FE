@@ -1,8 +1,7 @@
 <app-dashboard-layout label="Review queue">
-<main class="mx-auto max-w-6xl">
   <div class="mb-4 flex items-center justify-between gap-4">
     <hh-search
-      class="w-72"
+      class="w-full sm:w-72"
       [fieldOptions]="searchFieldOptions"
       [field]="searchField()"
       (fieldChange)="onSearchField($event)"
@@ -47,5 +46,4 @@
       (pageChange)="page.set($event)"
     />
   }
-</main>
 </app-dashboard-layout>

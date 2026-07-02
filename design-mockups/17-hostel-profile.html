@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Host · Hostel profile</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+</head>
+<body class="bg-surface text-ink-800">
+
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-100 bg-white lg:flex">
+    <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
+    <nav class="flex-1 space-y-1 px-3 py-2">
+      <a href="09-host-overview.html" class="nav-link"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
+      <a href="17-hostel-profile.html" class="nav-link active"><i class="ti ti-building text-lg"></i>Hostel profile</a>
+      <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
+      <a href="13-tenants.html" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
+      <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
+      <a href="14-utilities.html" class="nav-link"><i class="ti ti-bolt text-lg"></i>Utilities</a>
+      <a href="15-invoices.html" class="nav-link"><i class="ti ti-file-invoice text-lg"></i>Invoices</a>
+      <div class="my-2 border-t border-ink-100"></div>
+      <a href="18-host-subscription.html" class="nav-link"><i class="ti ti-rosette text-lg"></i>Subscription</a>
+    </nav>
+    <div class="border-t border-ink-100 px-3 py-2"><p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p><button class="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-surface"><i class="ti ti-building-community text-lg text-ink-500"></i><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink-900">Al-Madina Hostel</span><span class="block truncate text-xs text-ink-400">Gulberg, Lahore</span></span><i class="ti ti-selector text-ink-400"></i></button><a href="11-onboarding-wizard.html" class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Create new hostel</a></div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Hostel profile</h1></div>
+      <div class="flex items-center gap-3"><span class="hidden text-sm text-ink-400 sm:inline">Unsaved changes</span><button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">Update hostel</button></div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-5 py-6 sm:px-8">
+      <div class="space-y-5">
+
+        <!-- Listing details -->
+        <div class="rounded-2xl bg-white p-5 shadow-card">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <h2 class="font-display text-base font-semibold text-ink-900">Listing details</h2>
+            <span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-600">Live</span>
+          </div>
+          <label class="mb-1 block text-xs font-medium text-ink-500">Property name</label>
+          <input value="Al-Madina Hostel" class="mb-3 w-full rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-400" />
+          <div class="mb-3 grid grid-cols-2 gap-3">
+            <div><label class="mb-1 block text-xs font-medium text-ink-500">Type</label><button class="flex w-full items-center justify-between rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900"><span>Hostel</span><i class="ti ti-chevron-down text-ink-400"></i></button></div>
+            <div><label class="mb-1 block text-xs font-medium text-ink-500">Accommodation for</label><button class="flex w-full items-center justify-between rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900"><span>Boys</span><i class="ti ti-chevron-down text-ink-400"></i></button></div>
+          </div>
+          <label class="mb-1 block text-xs font-medium text-ink-500">Description</label>
+          <div class="mb-3 rounded-xl border border-ink-200"><div class="flex items-center gap-1 border-b border-ink-100 px-2 py-1.5 text-ink-400"><i class="ti ti-bold px-1"></i><i class="ti ti-italic px-1"></i><i class="ti ti-list px-1"></i><i class="ti ti-link px-1"></i></div><p class="px-3 py-2 text-sm text-ink-600">Comfortable boys hostel in the heart of Gulberg with 24/7 security, high-speed WiFi and daily mess service. Walking distance from Liberty Market.</p></div>
+          <label class="mb-1 block text-xs font-medium text-ink-500">Nearby landmarks</label>
+          <input value="Liberty Market, MM Alam Road, Hafeez Centre" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-400" />
+        </div>
+
+        <!-- Photos -->
+        <div class="rounded-2xl bg-white p-5 shadow-card">
+          <h2 class="mb-3 font-display text-base font-semibold text-ink-900">Photos · 6</h2>
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            <div class="relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhp1/300/220" class="h-24 w-full object-cover" alt="" /><span class="absolute left-1.5 top-1.5 rounded bg-brand-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">Primary</span></div>
+            <div class="relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhp2/300/220" class="h-24 w-full object-cover" alt="" /><span class="absolute bottom-1.5 left-1.5 rounded bg-ink-900/70 px-1.5 py-0.5 text-[10px] font-medium text-white">Room</span></div>
+            <div class="relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhp3/300/220" class="h-24 w-full object-cover" alt="" /><span class="absolute bottom-1.5 left-1.5 rounded bg-ink-900/70 px-1.5 py-0.5 text-[10px] font-medium text-white">Washroom</span></div>
+            <div class="relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhp4/300/220" class="h-24 w-full object-cover" alt="" /><span class="absolute bottom-1.5 left-1.5 rounded bg-ink-900/70 px-1.5 py-0.5 text-[10px] font-medium text-white">Mess</span></div>
+            <div class="relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhp5/300/220" class="h-24 w-full object-cover" alt="" /></div>
+            <div class="relative overflow-hidden rounded-xl"><img src="https://picsum.photos/seed/hhp6/300/220" class="h-24 w-full object-cover" alt="" /></div>
+            <button class="grid h-24 place-items-center rounded-xl border border-dashed border-ink-300 text-ink-400 hover:border-brand-400 hover:text-brand-500"><span class="text-center text-xs"><i class="ti ti-plus block text-lg"></i>Add photo</span></button>
+          </div>
+        </div>
+
+        <!-- Amenities -->
+        <div class="rounded-2xl bg-white p-5 shadow-card">
+          <div class="mb-3 flex items-center justify-between"><h2 class="font-display text-base font-semibold text-ink-900">Amenities</h2><span class="text-xs font-medium text-ink-400">9 selected</span></div>
+          <div class="space-y-4">
+            <div>
+              <div class="mb-1.5 flex items-center gap-2"><i class="ti ti-wifi text-sm text-brand-500"></i><h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">Essentials</h3><span class="text-[11px] font-semibold text-brand-600">4 selected</span></div>
+              <div class="flex flex-wrap gap-1.5">
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>WiFi</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>Filtered water</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>UPS backup</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>Geyser</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600 hover:border-ink-400"><i class="ti ti-plus text-[11px]"></i>AC rooms</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600 hover:border-ink-400"><i class="ti ti-plus text-[11px]"></i>Laundry</button>
+              </div>
+            </div>
+            <div>
+              <div class="mb-1.5 flex items-center gap-2"><i class="ti ti-shield-check text-sm text-brand-500"></i><h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">Safety</h3><span class="text-[11px] font-semibold text-brand-600">3 selected</span></div>
+              <div class="flex flex-wrap gap-1.5">
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>CCTV</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>24/7 guard</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-brand-500 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700"><i class="ti ti-check text-[11px]"></i>Biometric entry</button>
+                <button class="inline-flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600 hover:border-ink-400"><i class="ti ti-plus text-[11px]"></i>Fire extinguisher</button>
+              </div>
+            </div>
+          </div>
+          <button class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline">Show more<i class="ti ti-chevron-down text-base"></i></button>
+        </div>
+
+        <!-- Room types -->
+        <div class="rounded-2xl bg-white p-5 shadow-card">
+          <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Room types</h2>
+          <ul class="space-y-2">
+            <li class="grid grid-cols-[1fr_110px_130px] items-center gap-2"><input value="2-Sharing" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /><input value="2 beds" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /><input value="Rs 14,000" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /></li>
+            <li class="grid grid-cols-[1fr_110px_130px] items-center gap-2"><input value="3-Sharing" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /><input value="3 beds" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /><input value="Rs 12,000" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /></li>
+            <li class="grid grid-cols-[1fr_110px_130px] items-center gap-2"><input value="Private" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /><input value="1 bed" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /><input value="Rs 22,000" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" /></li>
+          </ul>
+          <button class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline"><i class="ti ti-plus text-sm"></i>Add room type</button>
+        </div>
+
+        <!-- Location -->
+        <div class="rounded-2xl bg-white p-5 shadow-card">
+          <h2 class="mb-3 font-display text-base font-semibold text-ink-900">Location</h2>
+          <div class="relative h-52 overflow-hidden rounded-xl bg-tint-mint">
+            <div class="absolute inset-0 opacity-60" style="background-image:radial-gradient(circle at 30% 40%, #d3ecea 0 18%, transparent 19%),radial-gradient(circle at 70% 60%, #e8f3f2 0 22%, transparent 23%),linear-gradient(#eef6f5,#eef6f5)"></div>
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full"><i class="ti ti-map-pin-filled text-3xl text-brand-500"></i></div>
+          </div>
+          <div class="mt-3 rounded-xl border border-ink-100 bg-surface p-3">
+            <div class="flex items-start gap-2.5">
+              <i class="ti ti-map-pin mt-0.5 shrink-0 text-sm text-brand-500"></i>
+              <div class="min-w-0 flex-1 space-y-0.5 text-xs">
+                <p class="font-medium text-ink-800">House 12, Street 5</p>
+                <p class="text-ink-600">Gulberg III</p>
+                <p class="text-ink-600">Lahore, Punjab</p>
+                <p class="mt-1.5 font-mono text-ink-400">31.51740, 74.34410 <span class="mx-1 text-ink-300">·</span> <a href="#" class="font-medium text-brand-600 hover:underline">Open in Google Maps</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom save row -->
+        <div class="flex flex-wrap items-center justify-end gap-3 pb-2">
+          <span class="text-sm text-ink-400">You have unsaved changes</span>
+          <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600">Update hostel</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

@@ -15,121 +15,66 @@
     <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
     <nav class="flex-1 space-y-1 px-3 py-2">
       <a href="09-host-overview.html" class="nav-link"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
-      <a href="10-host-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>My listings</a>
+      <a href="17-hostel-profile.html" class="nav-link"><i class="ti ti-building text-lg"></i>Hostel profile</a>
       <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
       <a href="13-tenants.html" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
       <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
       <a href="14-utilities.html" class="nav-link active"><i class="ti ti-bolt text-lg"></i>Utilities</a>
       <a href="15-invoices.html" class="nav-link"><i class="ti ti-file-invoice text-lg"></i>Invoices</a>
-      <a href="16-analytics.html" class="nav-link"><i class="ti ti-chart-bar text-lg"></i>Analytics</a>
       <div class="my-2 border-t border-ink-100"></div>
       <a href="18-host-subscription.html" class="nav-link"><i class="ti ti-rosette text-lg"></i>Subscription</a>
-      <a href="17-host-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
     </nav>
-    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">IK</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Imran Khan</p><p class="truncate text-xs text-ink-400">Al-Madina Hostel</p></div></div></div>
+    <div class="border-t border-ink-100 px-3 py-2"><p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p><button class="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-surface"><i class="ti ti-building-community text-lg text-ink-500"></i><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink-900">Al-Madina Hostel</span><span class="block truncate text-xs text-ink-400">Gulberg, Lahore</span></span><i class="ti ti-selector text-ink-400"></i></button><a href="11-onboarding-wizard.html" class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Create new hostel</a></div>
   </aside>
 
   <div class="lg:pl-64">
     <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
       <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Utilities</h1></div>
-      <div class="flex items-center gap-2">
-        <button class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700"><i class="ti ti-calendar"></i>June 2026<i class="ti ti-chevron-down text-ink-400"></i></button>
-        <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-send"></i>Issue batch</button>
-      </div>
+      <a href="14-utilities.html" class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Add utility bill</a>
     </header>
 
-    <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-        <!-- LEFT: guided entry -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-5 font-display text-base font-semibold text-ink-900">Add a utility bill</h2>
-
-          <!-- 1 · Bill type -->
-          <div class="mb-5">
-            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">1 · Bill type</p>
-            <div class="flex flex-wrap gap-2">
-              <button class="flex items-center gap-2 rounded-full bg-brand-500 px-3.5 py-2 text-sm font-medium text-white"><i class="ti ti-bolt"></i>Electricity</button>
-              <button class="flex items-center gap-2 rounded-full border border-ink-200 px-3.5 py-2 text-sm font-medium text-ink-700 hover:border-brand-300 hover:bg-brand-50"><i class="ti ti-droplet"></i>Water</button>
-              <button class="flex items-center gap-2 rounded-full border border-ink-200 px-3.5 py-2 text-sm font-medium text-ink-700 hover:border-brand-300 hover:bg-brand-50"><i class="ti ti-flame"></i>Gas</button>
-              <button class="flex items-center gap-2 rounded-full border border-ink-200 px-3.5 py-2 text-sm font-medium text-ink-700 hover:border-brand-300 hover:bg-brand-50"><i class="ti ti-wifi"></i>Internet</button>
-              <button class="flex items-center gap-2 rounded-full border border-ink-200 px-3.5 py-2 text-sm font-medium text-ink-700 hover:border-brand-300 hover:bg-brand-50"><i class="ti ti-engine"></i>Generator</button>
-              <button class="flex items-center gap-2 rounded-full border border-ink-200 px-3.5 py-2 text-sm font-medium text-ink-700 hover:border-brand-300 hover:bg-brand-50"><i class="ti ti-spray"></i>Cleaning</button>
-            </div>
-            <p class="mt-2.5 text-xs text-ink-500">Split method <span class="rounded-full bg-tint-cream px-2 py-0.5 text-[11px] font-medium text-brand-700">Pro-rata by occupancy days</span> · electricity is metered, so enter the room's meter reading</p>
-          </div>
-
-          <!-- 2 · Room -->
-          <div class="mb-5">
-            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">2 · Room</p>
-            <div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm">
-              <span class="flex items-center gap-2 font-medium text-ink-800"><i class="ti ti-bed text-ink-400"></i>Room 101 · 2-sharing</span>
-              <span class="flex items-center gap-2"><span class="rounded-full bg-ink-50 px-2 py-0.5 text-xs text-ink-500">3 tenants</span><i class="ti ti-chevron-down text-ink-400"></i></span>
-            </div>
-          </div>
-
-          <!-- 3 · Bill & meter -->
-          <div class="mb-5">
-            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">3 · Total bill &amp; units</p>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mb-1 block text-xs font-medium text-ink-600">Total bill for room</label>
-                <div class="flex items-center gap-1 rounded-xl border border-ink-200 px-3"><span class="text-xs text-ink-400">Rs</span><input value="24,000" class="w-full py-2.5 text-sm outline-none" /></div>
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-ink-600">Units consumed</label>
-                <div class="flex items-center gap-1 rounded-xl border border-ink-200 px-3"><input value="1,240" class="w-full py-2.5 text-sm outline-none" /><span class="text-xs text-ink-400">kWh</span></div>
-              </div>
-            </div>
-            <div class="mt-2.5 flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-xs"><span class="text-ink-500">Effective rate</span><span class="font-medium text-ink-800">Rs 19.35 / kWh</span></div>
-          </div>
-
-          <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Add to batch</button>
-          <p class="mt-2.5 flex items-start gap-1.5 text-xs text-ink-400"><i class="ti ti-info-circle mt-0.5"></i>Divided across Room 101's tenants by the number of days each occupied the room this period.</p>
-        </div>
-
-        <!-- RIGHT: split preview -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h2 class="font-display text-base font-semibold text-ink-900">Room 101 · Electricity</h2>
-              <p class="mt-0.5 text-sm text-ink-500">Rs 24,000 · 1,240 kWh · June 2026</p>
-            </div>
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-bolt text-xl"></i></span>
-          </div>
-          <p class="mb-3 mt-3 rounded-lg bg-surface px-3 py-2 text-xs text-ink-500">Share = (Rs 24,000 ÷ <span class="font-medium text-ink-700">88 occupancy-days</span>) × tenant's days in room · <span class="text-brand-700">editable</span></p>
-          <table class="w-full text-sm">
-            <thead class="text-left text-xs uppercase tracking-wide text-ink-400"><tr><th class="py-2 font-medium">Tenant</th><th class="py-2 font-medium">Days in room</th><th class="py-2 text-right font-medium">Share</th></tr></thead>
-            <tbody class="divide-y divide-ink-100">
-              <tr><td class="py-2.5"><div class="flex items-center gap-2"><span class="grid h-7 w-7 place-items-center rounded-full bg-tint-sky text-[11px] font-semibold text-ink-700">AR</span><span class="text-ink-800">Ahmed Raza</span></div></td><td class="py-2.5 text-ink-500">30</td><td class="py-2.5 text-right"><div class="ml-auto flex w-24 items-center justify-end rounded-lg border border-ink-200 px-2"><span class="text-xs text-ink-400">Rs</span><input value="8,182" class="w-full py-1 text-right text-sm outline-none" /></div></td></tr>
-              <tr><td class="py-2.5"><div class="flex items-center gap-2"><span class="grid h-7 w-7 place-items-center rounded-full bg-tint-cream text-[11px] font-semibold text-ink-700">BK</span><span class="text-ink-800">Bilal Khan</span></div></td><td class="py-2.5 text-ink-500">28</td><td class="py-2.5 text-right"><div class="ml-auto flex w-24 items-center justify-end rounded-lg border border-ink-200 px-2"><span class="text-xs text-ink-400">Rs</span><input value="7,636" class="w-full py-1 text-right text-sm outline-none" /></div></td></tr>
-              <tr><td class="py-2.5"><div class="flex items-center gap-2"><span class="grid h-7 w-7 place-items-center rounded-full bg-tint-purple text-[11px] font-semibold text-ink-700">SA</span><span class="text-ink-800">Saad Ali</span></div></td><td class="py-2.5 text-ink-500">30</td><td class="py-2.5 text-right"><div class="ml-auto flex w-24 items-center justify-end rounded-lg border border-ink-200 px-2"><span class="text-xs text-ink-400">Rs</span><input value="8,182" class="w-full py-1 text-right text-sm outline-none" /></div></td></tr>
-            </tbody>
-          </table>
-          <div class="mt-3 flex items-center justify-between border-t border-ink-100 pt-3 text-sm"><span class="text-ink-500">Allocated</span><span class="font-semibold text-ink-900">Rs 24,000 <span class="inline-flex items-center gap-0.5 text-xs font-normal text-ok"><i class="ti ti-circle-check"></i>fully allocated</span></span></div>
-          <p class="mt-2 flex items-center gap-1 text-xs text-ink-400"><i class="ti ti-edit"></i>Shares are editable — adjust any value and the split rebalances so the room's bill always reconciles to Rs 24,000.</p>
-        </div>
+    <main class="mx-auto max-w-7xl px-5 py-6 sm:px-8">
+      <!-- Stat cards -->
+      <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Bill to Collect</p><p class="text-[10px] text-ink-300">June 2026</p><p class="mt-1 text-2xl font-semibold text-ink-900">Rs 54,500</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Received</p><p class="text-[10px] text-ink-300">June 2026</p><p class="mt-1 text-2xl font-semibold text-ok">Rs 42,000</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Total Balance</p><p class="text-[10px] text-ink-300">&nbsp;</p><p class="mt-1 text-2xl font-semibold text-danger">Rs 12,500</p></div>
       </div>
 
-      <!-- BOTTOM: batch -->
-      <div class="mt-6 overflow-hidden rounded-2xl bg-white shadow-card">
-        <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5">
-          <h2 class="font-display text-base font-semibold text-ink-900">Bills in this batch · June 2026</h2>
-          <span class="text-sm text-ink-400">4 line items · 2 rooms · 5 tenants</span>
-        </div>
-        <table class="w-full text-sm">
-          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"><tr><th class="px-5 py-2.5 font-medium">Room</th><th class="px-5 py-2.5 font-medium">Utility</th><th class="px-5 py-2.5 font-medium">Units</th><th class="px-5 py-2.5 font-medium">Split</th><th class="px-5 py-2.5 text-right font-medium">Bill</th><th class="px-5 py-2.5"></th></tr></thead>
+      <!-- Global filter bar -->
+      <div class="mb-4 flex flex-wrap items-center gap-2">
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"><i class="ti ti-filter"></i>Filters</button>
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-brand-300 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700">Status: Due<i class="ti ti-x text-xs"></i></button>
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50">Room<i class="ti ti-chevron-down text-xs text-ink-400"></i></button>
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50">Tenant<i class="ti ti-chevron-down text-xs text-ink-400"></i></button>
+      </div>
+
+      <!-- Bills table (expandable rows) -->
+      <div class="overflow-x-auto rounded-2xl bg-white shadow-card">
+        <table class="w-full min-w-[860px] text-sm">
+          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400">
+            <tr><th class="px-4 py-3 font-medium"></th><th class="px-4 py-3 font-medium">Room</th><th class="px-4 py-3 font-medium">Utility</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 text-right font-medium">Consumed</th><th class="px-4 py-3 text-right font-medium">Rate</th><th class="px-4 py-3 text-right font-medium">Bill to collect</th><th class="px-4 py-3 text-right font-medium">Received</th><th class="px-4 py-3 text-right font-medium">Balance</th><th class="px-4 py-3 font-medium"><span class="inline-flex items-center gap-1">Issued date<i class="ti ti-selector"></i></span></th><th class="px-4 py-3"></th></tr>
+          </thead>
           <tbody class="divide-y divide-ink-100">
-            <tr class="bg-brand-50/40"><td class="px-5 py-3 font-medium text-ink-900">Room 101</td><td class="px-5 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-bolt text-brand-500"></i>Electricity</span></td><td class="px-5 py-3 text-ink-500">1,240 kWh</td><td class="px-5 py-3"><span class="rounded-full bg-tint-cream px-2 py-0.5 text-[11px] font-medium text-brand-700">Pro-rata</span></td><td class="px-5 py-3 text-right font-medium text-ink-900">Rs 24,000</td><td class="px-5 py-3 text-right"><span class="text-[11px] font-medium text-brand-600">editing</span></td></tr>
-            <tr class="hover:bg-surface"><td class="px-5 py-3 font-medium text-ink-900">Room 101</td><td class="px-5 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-droplet text-brand-500"></i>Water</span></td><td class="px-5 py-3 text-ink-500">16 units</td><td class="px-5 py-3"><span class="rounded-full bg-tint-cream px-2 py-0.5 text-[11px] font-medium text-brand-700">Pro-rata</span></td><td class="px-5 py-3 text-right font-medium text-ink-900">Rs 6,000</td><td class="px-5 py-3 text-right"><button class="text-ink-300 hover:text-danger"><i class="ti ti-trash"></i></button></td></tr>
-            <tr class="hover:bg-surface"><td class="px-5 py-3 font-medium text-ink-900">Room 102</td><td class="px-5 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-bolt text-brand-500"></i>Electricity</span></td><td class="px-5 py-3 text-ink-500">980 kWh</td><td class="px-5 py-3"><span class="rounded-full bg-tint-cream px-2 py-0.5 text-[11px] font-medium text-brand-700">Pro-rata</span></td><td class="px-5 py-3 text-right font-medium text-ink-900">Rs 16,500</td><td class="px-5 py-3 text-right"><button class="text-ink-300 hover:text-danger"><i class="ti ti-trash"></i></button></td></tr>
-            <tr class="hover:bg-surface"><td class="px-5 py-3 font-medium text-ink-900">Room 102</td><td class="px-5 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-wifi text-brand-500"></i>Internet</span></td><td class="px-5 py-3 text-ink-400">fixed fee</td><td class="px-5 py-3"><span class="rounded-full bg-tint-sky px-2 py-0.5 text-[11px] font-medium text-ink-600">Equal</span></td><td class="px-5 py-3 text-right font-medium text-ink-900">Rs 8,000</td><td class="px-5 py-3 text-right"><button class="text-ink-300 hover:text-danger"><i class="ti ti-trash"></i></button></td></tr>
+            <tr class="hover:bg-surface"><td class="px-4 py-3 text-ink-300"><i class="ti ti-chevron-right"></i></td><td class="px-4 py-3 font-medium text-ink-900">101</td><td class="px-4 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-bolt text-brand-500"></i>Electricity</span></td><td class="px-4 py-3"><span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">Due</span></td><td class="px-4 py-3 text-right text-ink-600">1,240 kWh</td><td class="px-4 py-3 text-right text-ink-600">Rs 19.35</td><td class="px-4 py-3 text-right font-medium text-ink-900">Rs 24,000</td><td class="px-4 py-3 text-right text-ink-600">Rs 16,000</td><td class="px-4 py-3 text-right font-medium text-danger">Rs 8,000</td><td class="px-4 py-3 text-xs text-ink-500">01 Jun 2026</td><td class="px-4 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="hover:bg-surface"><td class="px-4 py-3 text-ink-300"><i class="ti ti-chevron-right"></i></td><td class="px-4 py-3 font-medium text-ink-900">101</td><td class="px-4 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-droplet text-brand-500"></i>Water</span></td><td class="px-4 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Paid</span></td><td class="px-4 py-3 text-right text-ink-600">16 units</td><td class="px-4 py-3 text-right text-ink-600">Rs 375</td><td class="px-4 py-3 text-right font-medium text-ink-900">Rs 6,000</td><td class="px-4 py-3 text-right text-ink-600">Rs 6,000</td><td class="px-4 py-3 text-right text-ink-400">Rs 0</td><td class="px-4 py-3 text-xs text-ink-500">01 Jun 2026</td><td class="px-4 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="hover:bg-surface"><td class="px-4 py-3 text-ink-300"><i class="ti ti-chevron-right"></i></td><td class="px-4 py-3 font-medium text-ink-900">102</td><td class="px-4 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-bolt text-brand-500"></i>Electricity</span></td><td class="px-4 py-3"><span class="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">Overdue</span></td><td class="px-4 py-3 text-right text-ink-600">980 kWh</td><td class="px-4 py-3 text-right text-ink-600">Rs 16.84</td><td class="px-4 py-3 text-right font-medium text-ink-900">Rs 16,500</td><td class="px-4 py-3 text-right text-ink-600">Rs 12,000</td><td class="px-4 py-3 text-right font-medium text-danger">Rs 4,500</td><td class="px-4 py-3 text-xs text-ink-500">01 Jun 2026</td><td class="px-4 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="bg-brand-50/30"><td class="px-4 py-3 text-brand-500"><i class="ti ti-chevron-down"></i></td><td class="px-4 py-3 font-medium text-ink-900">102</td><td class="px-4 py-3"><span class="flex items-center gap-2 text-ink-700"><i class="ti ti-wifi text-brand-500"></i>Internet</span></td><td class="px-4 py-3"><span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">Due</span></td><td class="px-4 py-3 text-right text-ink-400">—</td><td class="px-4 py-3 text-right text-ink-400">fixed</td><td class="px-4 py-3 text-right font-medium text-ink-900">Rs 8,000</td><td class="px-4 py-3 text-right text-ink-600">Rs 8,000</td><td class="px-4 py-3 text-right text-ink-400">Rs 0</td><td class="px-4 py-3 text-xs text-ink-500">01 Jun 2026</td><td class="px-4 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="bg-brand-50/20"><td class="px-4 py-2.5"></td><td colspan="10" class="px-4 py-2.5">
+              <div class="flex flex-wrap items-center gap-6 text-xs text-ink-500">
+                <span class="font-medium uppercase tracking-wide text-ink-400">Per-tenant split</span>
+                <span class="flex items-center gap-1.5"><span class="grid h-5 w-5 place-items-center rounded-full bg-tint-sky text-[9px] font-semibold text-ink-700">AR</span>Ahmed Raza · 30 days · <b class="text-ink-800">Rs 4,000</b></span>
+                <span class="flex items-center gap-1.5"><span class="grid h-5 w-5 place-items-center rounded-full bg-tint-cream text-[9px] font-semibold text-ink-700">BK</span>Bilal Khan · 30 days · <b class="text-ink-800">Rs 4,000</b></span>
+              </div>
+            </td></tr>
           </tbody>
         </table>
-        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 bg-surface px-5 py-3.5">
-          <p class="flex items-center gap-1.5 text-xs text-ink-500"><i class="ti ti-info-circle"></i>On issue, each tenant's share is added to their June invoice and sent via WhatsApp + email.</p>
-          <div class="flex items-center gap-4"><span class="text-sm text-ink-500">Total batch</span><span class="font-display text-lg font-semibold text-ink-900">Rs 54,500</span></div>
-        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mt-4 flex items-center justify-between text-sm text-ink-500">
+        <span>Showing 1–10 of 24 bills</span>
+        <div class="flex items-center gap-2"><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-300"><i class="ti ti-chevron-left"></i></button><button class="grid h-8 w-8 place-items-center rounded-lg bg-ink-900 text-xs font-medium text-white">1</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-xs font-medium text-ink-600">2</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-xs font-medium text-ink-600">3</button><button class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600"><i class="ti ti-chevron-right"></i></button></div>
       </div>
     </main>
   </div>

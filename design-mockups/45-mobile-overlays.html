@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Mobile · Overlays · Filters &amp; Pickers</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .phone { width: 390px; height: 844px; border-radius: 54px; box-shadow: 0 0 0 12px #1F1F1F, 0 0 0 14px #3a3a3a, 0 24px 60px rgba(0,0,0,.28); overflow: hidden; position: relative; background: #F5F5F5; }
+  .island { position:absolute; left:50%; top:12px; transform:translateX(-50%); width:118px; height:34px; border-radius:20px; background:#1F1F1F; z-index:50; }
+  .statusbar { height:54px; display:flex; align-items:flex-end; justify-content:space-between; padding:0 28px 6px; font-size:14px; font-weight:600; color:#1F1F1F; }
+  .homebar { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:130px; height:5px; border-radius:3px; background:#1F1F1F; opacity:.9; z-index:60; }
+  .thumbdot { width:16px; height:16px; border-radius:50%; background:#fff; border:2px solid #F36E21; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+</style>
+</head>
+<body class="bg-surface text-ink-800">
+
+<main class="mx-auto max-w-[1400px] px-8 py-10">
+  <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">Mobile app · Overlays</p>
+  <h1 class="mt-1 font-display text-2xl font-bold text-ink-900">Filters, dropdowns &amp; date pickers on mobile</h1>
+  <p class="mt-1 max-w-3xl text-sm text-ink-500">Every floating surface becomes a bottom sheet on phones: the seeker Filters modal, the console global-filter panel, <span class="font-mono text-xs">hh-dropdown</span> option lists, and the calendar pickers — all with a grab handle, safe-area padding and an <span class="font-mono text-xs">ink-900/45</span> scrim.</p>
+
+  <div class="mt-8 flex flex-wrap items-start gap-10">
+
+    <!-- ═══════ PHONE 1 · SEEKER FILTERS SHEET ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <!-- dimmed search results behind -->
+        <div class="absolute inset-0 blur-[1px]">
+          <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="space-y-4 bg-white p-4 opacity-60"><div class="h-11 rounded-full border border-ink-200"></div><div class="aspect-[4/3] rounded-2xl bg-ink-100"></div><div class="h-4 w-2/3 rounded bg-ink-100"></div><div class="h-3 w-1/2 rounded bg-ink-50"></div><div class="aspect-[4/3] rounded-2xl bg-ink-100"></div></div>
+        </div>
+        <div class="absolute inset-0 z-20 bg-ink-900/45"></div>
+        <!-- bottom sheet -->
+        <div class="absolute inset-x-0 bottom-0 z-30 flex max-h-[88%] flex-col rounded-t-[28px] bg-white">
+          <span class="mx-auto mt-3 block h-1 w-10 shrink-0 rounded-full bg-ink-200"></span>
+          <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 pb-3 pt-3">
+            <span class="text-base font-semibold text-ink-900">Filters</span>
+            <span class="grid h-8 w-8 place-items-center rounded-full text-ink-400"><i class="ti ti-x text-lg"></i></span>
+          </div>
+          <div class="min-h-0 flex-1 overflow-hidden px-5 py-4">
+            <h3 class="mb-2.5 text-sm font-semibold text-ink-900">Recommended for you</h3>
+            <div class="grid grid-cols-4 gap-2">
+              <button class="flex flex-col items-center gap-1 rounded-xl border border-ink-900 bg-ink-50 px-1 py-2.5"><i class="ti ti-wifi text-xl text-ink-600"></i><span class="text-[10px] font-medium text-ink-700">Wi-Fi</span></button>
+              <button class="flex flex-col items-center gap-1 rounded-xl border border-ink-200 px-1 py-2.5"><i class="ti ti-air-conditioning text-xl text-ink-600"></i><span class="text-[10px] font-medium text-ink-700">AC</span></button>
+              <button class="flex flex-col items-center gap-1 rounded-xl border border-ink-200 px-1 py-2.5"><i class="ti ti-bolt text-xl text-ink-600"></i><span class="text-[10px] font-medium text-ink-700">Backup</span></button>
+              <button class="flex flex-col items-center gap-1 rounded-xl border border-ink-900 bg-ink-50 px-1 py-2.5"><i class="ti ti-tools-kitchen-2 text-xl text-ink-600"></i><span class="text-[10px] font-medium text-ink-700">Mess</span></button>
+            </div>
+            <hr class="my-4 border-ink-100" />
+            <h3 class="mb-2.5 text-sm font-semibold text-ink-900">Type of stay</h3>
+            <div class="flex gap-2">
+              <button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700">Any</button>
+              <button class="rounded-xl border border-ink-900 bg-ink-900 px-3 py-2 text-xs font-medium text-white">Boys</button>
+              <button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700">Girls</button>
+              <button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700">Co-living</button>
+            </div>
+            <hr class="my-4 border-ink-100" />
+            <h3 class="mb-2.5 text-sm font-semibold text-ink-900">Property type</h3>
+            <button class="flex w-full items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-900"><span>Hostel</span><i class="ti ti-chevron-down text-ink-400"></i></button>
+            <hr class="my-4 border-ink-100" />
+            <h3 class="mb-2.5 text-sm font-semibold text-ink-900">Room capacity</h3>
+            <div class="flex flex-wrap gap-2">
+              <button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700">Any</button>
+              <button class="rounded-xl border border-ink-900 bg-ink-900 px-3 py-2 text-xs font-medium text-white">2-sharing</button>
+              <button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700">3-sharing</button>
+              <button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700">4+</button>
+            </div>
+            <hr class="my-4 border-ink-100" />
+            <h3 class="mb-0.5 text-sm font-semibold text-ink-900">Price range</h3>
+            <p class="mb-2.5 text-xs text-ink-500">Monthly rate</p>
+            <div class="px-1 pt-2">
+              <div class="relative h-1 rounded bg-ink-100">
+                <div class="absolute h-1 rounded bg-brand-500" style="left:13%;right:58%"></div>
+                <span class="thumbdot absolute -top-1.5" style="left:13%;transform:translateX(-50%)"></span>
+                <span class="thumbdot absolute -top-1.5" style="left:42%;transform:translateX(-50%)"></span>
+              </div>
+              <div class="mt-2 flex justify-between text-xs text-ink-500"><span>Rs 8,000</span><span>Rs 25,000</span></div>
+            </div>
+          </div>
+          <div class="flex shrink-0 items-center justify-between border-t border-ink-100 px-5 pb-9 pt-3">
+            <button class="text-sm font-medium text-ink-600 underline-offset-2">Clear all</button>
+            <button class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white">Show 320+ stays</button>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Seeker · Filters sheet</p>
+      <p class="text-center text-xs text-ink-400">hh-search-filter-modal — bottom sheet on mobile</p>
+    </div>
+
+    <!-- ═══════ PHONE 2 · CONSOLE GLOBAL FILTER SHEET ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <!-- dimmed utilities list behind -->
+        <div class="absolute inset-0 blur-[1px]">
+          <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="space-y-3 p-4 opacity-60"><div class="grid grid-cols-3 gap-2"><div class="h-14 rounded-xl bg-white"></div><div class="h-14 rounded-xl bg-white"></div><div class="h-14 rounded-xl bg-white"></div></div><div class="h-16 rounded-2xl bg-white"></div><div class="h-16 rounded-2xl bg-white"></div><div class="h-16 rounded-2xl bg-white"></div></div>
+        </div>
+        <div class="absolute inset-0 z-20 bg-ink-900/45"></div>
+        <!-- bottom sheet -->
+        <div class="absolute inset-x-0 bottom-0 z-30 flex max-h-[88%] flex-col rounded-t-[28px] bg-white">
+          <span class="mx-auto mt-3 block h-1 w-10 shrink-0 rounded-full bg-ink-200"></span>
+          <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 pb-3 pt-3">
+            <span class="flex items-center gap-2 text-base font-semibold text-ink-900">Filters<span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white">2</span></span>
+            <span class="grid h-8 w-8 place-items-center rounded-full text-ink-400"><i class="ti ti-x text-lg"></i></span>
+          </div>
+          <div class="min-h-0 flex-1 overflow-hidden px-5 py-3">
+            <!-- accordion groups (mobile version of the two-pane panel) -->
+            <div class="divide-y divide-ink-100">
+              <!-- expanded group -->
+              <div class="py-3">
+                <button class="flex w-full items-center gap-2 text-left">
+                  <i class="ti ti-circle-dot text-sm text-brand-500"></i>
+                  <span class="flex-1 text-sm font-semibold text-brand-600">Status</span>
+                  <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white">1</span>
+                  <i class="ti ti-chevron-up text-xs text-ink-300"></i>
+                </button>
+                <div class="mt-3 space-y-2.5 pl-6">
+                  <label class="flex items-center gap-3"><span class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-brand-500 bg-brand-500"><i class="ti ti-check text-[10px] text-white"></i></span><span class="text-sm text-ink-800">Due</span></label>
+                  <label class="flex items-center gap-3"><span class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-ink-300"></span><span class="text-sm text-ink-800">Overdue</span></label>
+                  <label class="flex items-center gap-3"><span class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-ink-300"></span><span class="text-sm text-ink-800">Paid</span></label>
+                </div>
+              </div>
+              <!-- amount group expanded -->
+              <div class="py-3">
+                <button class="flex w-full items-center gap-2 text-left">
+                  <i class="ti ti-coin text-sm text-ink-400"></i>
+                  <span class="flex-1 text-sm font-medium text-ink-700">Amount</span>
+                  <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white">1</span>
+                  <i class="ti ti-chevron-up text-xs text-ink-300"></i>
+                </button>
+                <div class="mt-3 grid grid-cols-2 gap-2.5 pl-6">
+                  <div><label class="mb-1 block text-xs font-medium text-ink-500">Min</label><div class="rounded-xl border border-ink-200 px-3 py-2"><input value="5,000" class="w-full bg-transparent text-sm outline-none" /></div></div>
+                  <div><label class="mb-1 block text-xs font-medium text-ink-500">Max</label><div class="rounded-xl border border-brand-400 px-3 py-2 ring-2 ring-brand-100"><input placeholder="∞" class="w-full bg-transparent text-sm outline-none" /></div></div>
+                </div>
+              </div>
+              <!-- collapsed groups -->
+              <div class="py-3">
+                <button class="flex w-full items-center gap-2 text-left"><i class="ti ti-bed text-sm text-ink-400"></i><span class="flex-1 text-sm font-medium text-ink-700">Room</span><i class="ti ti-chevron-down text-xs text-ink-300"></i></button>
+              </div>
+              <div class="py-3">
+                <button class="flex w-full items-center gap-2 text-left"><i class="ti ti-users text-sm text-ink-400"></i><span class="flex-1 text-sm font-medium text-ink-700">Tenant</span><i class="ti ti-chevron-down text-xs text-ink-300"></i></button>
+              </div>
+              <div class="py-3">
+                <button class="flex w-full items-center gap-2 text-left"><i class="ti ti-calendar text-sm text-ink-400"></i><span class="flex-1 text-sm font-medium text-ink-700">Issued date</span><i class="ti ti-chevron-down text-xs text-ink-300"></i></button>
+              </div>
+              <div class="flex items-center justify-between py-3">
+                <span class="flex items-center gap-2 text-sm font-medium text-ink-700"><i class="ti ti-alert-circle text-sm text-ink-400"></i>Overdue only</span>
+                <span class="relative h-5 w-9 rounded-full bg-brand-500"><span class="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-card"></span></span>
+              </div>
+            </div>
+          </div>
+          <div class="flex shrink-0 items-center justify-between border-t border-ink-100 px-5 pb-9 pt-3">
+            <button class="rounded-lg px-2 py-1.5 text-sm font-medium text-ink-600">Reset</button>
+            <div class="flex gap-2">
+              <button class="rounded-xl border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700">Cancel</button>
+              <button class="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Console · Filter sheet</p>
+      <p class="text-center text-xs text-ink-400">hh-global-filter — sidebar becomes an accordion</p>
+    </div>
+
+    <!-- ═══════ PHONE 3 · DROPDOWN SELECT SHEET ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <!-- check-in form behind with trigger highlighted -->
+        <div class="absolute inset-0">
+          <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="bg-white px-5 pb-3 pt-1"><div class="flex items-center justify-between"><h2 class="font-display text-lg font-semibold text-ink-900">Check in tenant</h2><i class="ti ti-x text-ink-400"></i></div></div>
+          <div class="space-y-3.5 bg-white px-5 pt-3">
+            <div class="opacity-40"><label class="mb-1 block text-xs font-medium text-ink-600">Full name *</label><div class="rounded-xl border border-ink-200 px-3 py-2.5 text-sm">Hamza Tariq</div></div>
+            <div><label class="mb-1 block text-xs font-medium text-ink-600">Assign room</label><button class="flex w-full items-center justify-between rounded-xl border border-brand-400 px-3 py-2.5 text-sm ring-2 ring-brand-100"><span class="text-ink-900">Room 201 · 1-Sharing</span><i class="ti ti-chevron-up text-base text-ink-400"></i></button></div>
+            <div class="opacity-40"><label class="mb-1 block text-xs font-medium text-ink-600">Monthly rent *</label><div class="rounded-xl border border-ink-200 px-3 py-2.5 text-sm">22000</div></div>
+            <div class="opacity-40"><label class="mb-1 block text-xs font-medium text-ink-600">Advance deposit *</label><div class="rounded-xl border border-ink-200 px-3 py-2.5 text-sm">22000</div></div>
+          </div>
+        </div>
+        <div class="absolute inset-0 z-20 bg-ink-900/45"></div>
+        <!-- option sheet -->
+        <div class="absolute inset-x-0 bottom-0 z-30 flex max-h-[70%] flex-col rounded-t-[28px] bg-white">
+          <span class="mx-auto mt-3 block h-1 w-10 shrink-0 rounded-full bg-ink-200"></span>
+          <div class="shrink-0 border-b border-ink-100 px-5 pb-3 pt-3">
+            <p class="text-base font-semibold text-ink-900">Assign room</p>
+            <div class="mt-2.5 flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2"><i class="ti ti-search text-sm text-ink-400"></i><input placeholder="Search rooms…" class="flex-1 bg-transparent text-sm outline-none" /></div>
+          </div>
+          <div class="min-h-0 flex-1 overflow-hidden p-2">
+            <button class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm text-ink-500">Any room</button>
+            <button class="flex w-full items-center justify-between rounded-xl bg-brand-50 px-3.5 py-3 text-left"><span><span class="block text-sm font-semibold text-brand-700">Room 201 · 1-Sharing</span><span class="text-xs text-ink-500">Rs 22,000 / bed · 1 vacant</span></span><i class="ti ti-check text-brand-500"></i></button>
+            <button class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left"><span><span class="block text-sm font-medium text-ink-900">Room 102 · 3-Sharing</span><span class="text-xs text-ink-500">Rs 12,000 / bed · 1 vacant</span></span></button>
+            <button class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left"><span><span class="block text-sm font-medium text-ink-900">Room 202 · 4-Sharing</span><span class="text-xs text-ink-500">Rs 9,500 / bed · 1 vacant</span></span></button>
+            <button class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left opacity-45"><span><span class="block text-sm font-medium text-ink-900">Room 101 · 2-Sharing</span><span class="text-xs text-ink-500">Full</span></span></button>
+          </div>
+          <!-- sort action-sheet variant hint -->
+          <div class="shrink-0 border-t border-ink-100 px-5 pb-9 pt-3">
+            <p class="mb-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Same pattern · Sort</p>
+            <div class="flex gap-1.5 overflow-hidden">
+              <span class="rounded-full bg-ink-900 px-3 py-1.5 text-[11px] font-medium text-white">Recommended</span>
+              <span class="rounded-full border border-ink-200 px-3 py-1.5 text-[11px] font-medium text-ink-600">Newest</span>
+              <span class="rounded-full border border-ink-200 px-3 py-1.5 text-[11px] font-medium text-ink-600">Price ↑</span>
+              <span class="rounded-full border border-ink-200 px-3 py-1.5 text-[11px] font-medium text-ink-600">Price ↓</span>
+            </div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Dropdown · option sheet</p>
+      <p class="text-center text-xs text-ink-400">hh-dropdown — searchable list, selected = brand-50 + check</p>
+    </div>
+
+    <!-- ═══════ PHONE 4 · DATE PICKER SHEET ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <!-- form behind -->
+        <div class="absolute inset-0">
+          <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="bg-white px-5 pb-3 pt-1"><div class="flex items-center justify-between"><h2 class="font-display text-lg font-semibold text-ink-900">Check in tenant</h2><i class="ti ti-x text-ink-400"></i></div></div>
+          <div class="space-y-3.5 bg-white px-5 pt-3">
+            <div class="opacity-40"><label class="mb-1 block text-xs font-medium text-ink-600">Assign room</label><div class="rounded-xl border border-ink-200 px-3 py-2.5 text-sm">Room 201 · 1-Sharing</div></div>
+            <div><label class="mb-1 block text-xs font-medium text-ink-600">Joining date *</label><button class="flex w-full items-center gap-2 rounded-xl border border-brand-400 px-3 py-2.5 text-sm ring-2 ring-brand-100"><i class="ti ti-calendar shrink-0 text-ink-400"></i><span class="flex-1 truncate text-start text-ink-900">11 Jun 2026</span><span class="grid h-5 w-5 shrink-0 place-items-center rounded-full text-ink-400"><i class="ti ti-x text-sm"></i></span></button></div>
+            <div class="opacity-40"><label class="mb-1 block text-xs font-medium text-ink-600">Leave date</label><div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-400"><i class="ti ti-calendar"></i>Pick a date</div></div>
+          </div>
+        </div>
+        <div class="absolute inset-0 z-20 bg-ink-900/45"></div>
+        <!-- calendar sheet -->
+        <div class="absolute inset-x-0 bottom-0 z-30 rounded-t-[28px] bg-white">
+          <span class="mx-auto mt-3 block h-1 w-10 rounded-full bg-ink-200"></span>
+          <div class="flex items-center justify-between border-b border-ink-100 px-5 pb-3 pt-3">
+            <p class="text-base font-semibold text-ink-900">Joining date</p>
+            <span class="grid h-8 w-8 place-items-center rounded-full text-ink-400"><i class="ti ti-x text-lg"></i></span>
+          </div>
+          <div class="px-5 pb-2 pt-3">
+            <!-- range presets (hh-date-range-picker on mobile) -->
+            <div class="no-scrollbar mb-3 flex gap-1.5 overflow-hidden">
+              <span class="shrink-0 rounded-full border border-ink-200 px-3 py-1.5 text-[11px] font-medium text-ink-600">Today</span>
+              <span class="shrink-0 rounded-full bg-brand-50 px-3 py-1.5 text-[11px] font-semibold text-brand-600 ring-1 ring-brand-200">Custom date</span>
+              <span class="shrink-0 rounded-full border border-ink-200 px-3 py-1.5 text-[11px] font-medium text-ink-600">Last 7 days</span>
+              <span class="shrink-0 rounded-full border border-ink-200 px-3 py-1.5 text-[11px] font-medium text-ink-600">Last 30 days</span>
+            </div>
+            <div class="relative mb-1 flex items-center justify-center">
+              <span class="absolute left-0 grid h-8 w-8 place-items-center rounded-full text-ink-600"><i class="ti ti-chevron-left"></i></span>
+              <span class="rounded-lg px-2 py-0.5 text-sm font-semibold text-ink-900">June 2026</span>
+              <span class="absolute right-0 grid h-8 w-8 place-items-center rounded-full text-ink-600"><i class="ti ti-chevron-right"></i></span>
+            </div>
+            <div class="grid grid-cols-7 text-center text-[11px] font-medium text-ink-400"><span class="py-1.5">Mo</span><span class="py-1.5">Tu</span><span class="py-1.5">We</span><span class="py-1.5">Th</span><span class="py-1.5">Fr</span><span class="py-1.5">Sa</span><span class="py-1.5">Su</span></div>
+            <div class="grid grid-cols-7 text-sm">
+              <div class="h-11"></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full text-ink-300">1</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full text-ink-300">2</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">3</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">4</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">5</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">6</span></div>
+              <div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">7</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">8</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">9</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full ring-1 ring-inset ring-ink-300">10</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full bg-ink-900 font-semibold text-white">11</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">12</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">13</span></div>
+              <div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">14</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">15</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">16</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">17</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">18</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">19</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">20</span></div>
+              <div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">21</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">22</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">23</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">24</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">25</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">26</span></div><div class="flex h-11 items-center justify-center"><span class="grid h-10 w-10 place-items-center rounded-full">27</span></div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between border-t border-ink-100 px-5 pb-9 pt-3">
+            <button class="text-sm font-medium text-ink-600">Clear</button>
+            <button class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white">Set date</button>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Date picker sheet</p>
+      <p class="text-center text-xs text-ink-400">hh-date-picker / range presets · selected = ink-900 · today ringed</p>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

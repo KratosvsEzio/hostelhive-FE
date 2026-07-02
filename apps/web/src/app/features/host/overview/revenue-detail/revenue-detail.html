@@ -6,7 +6,6 @@
     <hh-date-range-picker [(value)]="dateRange" />
   </div>
 
-  <main class="mx-auto max-w-6xl">
     @let s = state();
 
     @if (s.loading) {
@@ -19,7 +18,7 @@
     } @else {
       <!-- Revenue chart -->
       <hh-card [allowOverflow]="true">
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 class="font-display text-base font-semibold text-ink-900">Monthly revenue</h2>
             <p class="text-xs text-ink-400">{{ dateRange()?.label }} · PKR</p>
@@ -97,5 +96,4 @@
         </div>
       </hh-card>
     }
-  </main>
 </app-dashboard-layout>

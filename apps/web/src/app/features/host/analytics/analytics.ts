@@ -13,6 +13,7 @@ import {
   Button,
   Card,
   CompactNumber,
+  DonutChart,
   EmptyState,
   ErrorState,
   Skeleton,
@@ -22,7 +23,7 @@ import {
 import { downloadCsv } from '@util/csv';
 import { AnalyticsApi, HostPropertyStore } from '@services';
 import { AnalyticsData, Kpi } from '@hostelhive/data-access';
-import { donutDash, occupancyLine, revenueBars, tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';
+import { occupancyLine, revenueBars, tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -54,6 +55,7 @@ interface ViewState {
     Button,
     Card,
     CompactNumber,
+    DonutChart,
     EmptyState,
     ErrorState,
     Skeleton,
@@ -119,10 +121,6 @@ export class Analytics {
       (a, b) => b.outstanding - a.outstanding,
     ),
   );
-
-  protected donut(pct: number): string {
-    return donutDash(pct);
-  }
 
   protected retry(): void {
     this.refresh.update((n) => n + 1);

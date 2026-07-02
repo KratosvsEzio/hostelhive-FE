@@ -7,7 +7,7 @@
 
   <!-- Stats cards always at top; skeleton on first load, persisted values after -->
   @if (aggs(); as a) {
-    <div class="mb-5 grid grid-cols-3 gap-3">
+    <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <hh-card padding="sm">
         <p class="text-xs text-ink-400">Bill to Collect</p>
         <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
@@ -29,7 +29,7 @@
       </hh-card>
     </div>
   } @else if (state().loading) {
-    <div class="mb-5 grid grid-cols-3 gap-3">
+    <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
       @for (i of [1, 2, 3]; track i) {
         <hh-skeleton class="h-20" radius="lg" />
       }

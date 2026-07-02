@@ -16,8 +16,8 @@
 
   <!-- NAV -->
   <header class="sticky top-0 z-40 border-b border-ink-100 bg-white/95 backdrop-blur">
-    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-      <a href="01-search-results.html" class="flex shrink-0 items-center"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" /></a>
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+      <a href="02-search-map.html" class="flex shrink-0 items-center"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" /></a>
       <button class="hidden items-center gap-3 rounded-full border border-ink-200 bg-white py-2 pl-5 pr-2 shadow-card transition hover:shadow-cardhover md:flex">
         <span class="text-sm font-medium text-ink-800">Karachi</span><span class="h-5 w-px bg-ink-200"></span>
         <span class="text-sm text-ink-400">Any budget</span><span class="h-5 w-px bg-ink-200"></span>
@@ -25,7 +25,7 @@
         <span class="ml-1 grid h-8 w-8 place-items-center rounded-full bg-brand-500 text-white"><i class="ti ti-search text-lg"></i></span>
       </button>
       <div class="flex items-center gap-2">
-        <a href="10-host-listings.html" class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 lg:block">Become a host</a>
+        <a href="11-onboarding-wizard.html" class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 lg:block">Become a host</a>
         <button class="flex items-center gap-2 rounded-full border border-ink-200 py-1.5 pl-3 pr-1.5 shadow-card" aria-label="Account">
           <i class="ti ti-menu-2 text-lg text-ink-600"></i><span class="grid h-8 w-8 place-items-center rounded-full bg-ink-800 text-sm font-medium text-white">AA</span>
         </button>
@@ -35,7 +35,7 @@
 
   <main class="mx-auto max-w-7xl px-5 pb-28 pt-6 sm:px-8">
     <!-- Breadcrumb + title -->
-    <a href="01-search-results.html" class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600"><i class="ti ti-chevron-left"></i>Back to search</a>
+    <a href="02-search-map.html" class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600"><i class="ti ti-chevron-left"></i>Back to search</a>
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h1 class="font-display text-2xl font-semibold text-ink-900 sm:text-3xl">Al-Madina Boys Hostel</h1>
@@ -46,8 +46,8 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"><i class="ti ti-share-2"></i>Share</button>
-        <button class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"><i class="ti ti-heart"></i>Save</button>
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 px-3 py-2 text-sm font-medium text-ink-800 hover:bg-ink-50"><i class="ti ti-share-2"></i>Share</button>
+        <button class="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-heart"></i>Favorite</button>
       </div>
     </div>
 
@@ -80,6 +80,34 @@
           <button class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-ink-900 underline">Read more<i class="ti ti-chevron-down"></i></button>
         </section>
 
+        <!-- Rooms & pricing -->
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">Rooms &amp; pricing</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
+              <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-bed text-xl"></i></span>
+                <div><p class="font-medium text-ink-900">1-Sharing</p><p class="text-sm text-ink-500">Attached bath · 2 beds</p></div>
+              </div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 22,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
+              <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-mint text-brand-600"><i class="ti ti-bed text-xl"></i></span>
+                <div><p class="font-medium text-ink-900">2-Sharing</p><p class="text-sm text-ink-500">Attached bath · 5 beds</p></div>
+              </div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 14,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
+              <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-sky text-brand-600"><i class="ti ti-bed text-xl"></i></span>
+                <div><p class="font-medium text-ink-900">3-Sharing</p><p class="text-sm text-ink-500">Shared bath · 1 bed</p></div>
+              </div>
+              <div class="text-right"><p class="font-semibold text-ink-900">Rs 12,000</p><p class="text-xs text-ink-400">/ month</p></div>
+            </div>
+          </div>
+        </section>
+
         <!-- Amenities -->
         <section class="border-b border-ink-100 py-6">
           <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">What this place offers</h3>
@@ -94,34 +122,6 @@
             <div class="flex items-center gap-3 text-[15px] text-ink-700"><i class="ti ti-car text-xl text-ink-500"></i>Bike parking</div>
           </div>
           <button class="mt-4 rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium text-ink-800 hover:bg-ink-50">Show all 14 amenities</button>
-        </section>
-
-        <!-- Rooms -->
-        <section class="border-b border-ink-100 py-6">
-          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">Rooms &amp; pricing</h3>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between rounded-2xl border border-ink-150 border-ink-100 p-4 transition hover:shadow-card">
-              <div class="flex items-center gap-3">
-                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-bed text-xl"></i></span>
-                <div><p class="font-medium text-ink-900">1-sharing (private)</p><p class="text-sm text-ink-500">Attached bath · AC · 2 beds left</p></div>
-              </div>
-              <div class="text-right"><p class="font-semibold text-ink-900">Rs 22,000</p><p class="text-xs text-ink-400">/ month</p></div>
-            </div>
-            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
-              <div class="flex items-center gap-3">
-                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-mint text-brand-600"><i class="ti ti-bed text-xl"></i></span>
-                <div><p class="font-medium text-ink-900">2-sharing</p><p class="text-sm text-ink-500">Attached bath · AC · 5 beds left</p></div>
-              </div>
-              <div class="text-right"><p class="font-semibold text-ink-900">Rs 14,000</p><p class="text-xs text-ink-400">/ month</p></div>
-            </div>
-            <div class="flex items-center justify-between rounded-2xl border border-ink-100 p-4 transition hover:shadow-card">
-              <div class="flex items-center gap-3">
-                <span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-sky text-brand-600"><i class="ti ti-bed text-xl"></i></span>
-                <div><p class="font-medium text-ink-900">3-sharing</p><p class="text-sm text-ink-500">Shared bath · Fan + cooler · 1 bed left</p></div>
-              </div>
-              <div class="text-right"><p class="font-semibold text-ink-900">Rs 12,000</p><p class="text-xs text-ink-400">/ month</p></div>
-            </div>
-          </div>
         </section>
 
         <!-- Nearby -->
@@ -158,12 +158,10 @@
               <span class="text-sm text-ink-400">From</span><span class="text-2xl font-semibold text-ink-900">Rs 12,000</span><span class="text-sm text-ink-400">/ month</span>
             </div>
             <p class="mt-1 text-sm text-ink-500">1, 2 &amp; 3-sharing available</p>
-            <div class="my-4 rounded-xl bg-surface p-3 text-center">
-              <p class="text-xs text-ink-400">Management contact</p>
-              <p class="font-mono text-lg font-medium tracking-wider text-ink-300">+92 3•• ••• ••••</p>
+            <div class="mt-4 flex flex-col gap-2">
+              <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600"><i class="ti ti-phone"></i>Show phone number</button>
+              <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-[#25D366] px-4 py-3 text-sm font-medium text-[#25D366] hover:bg-[#25D366]/5"><i class="ti ti-brand-whatsapp"></i>WhatsApp</button>
             </div>
-            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600"><i class="ti ti-phone"></i>Show phone number</button>
-            <button class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-ink-300 px-4 py-3 text-sm font-medium text-ink-800 hover:bg-ink-50"><i class="ti ti-message-2"></i>Request a callback</button>
             <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400"><i class="ti ti-lock"></i>Sign in once to view verified contacts</p>
           </div>
 

@@ -1,6 +1,5 @@
 <app-dashboard-layout label="Media queue">
   <span hhActions class="hidden text-sm text-ink-400 sm:block">Photos, banners, logos and avatars pending approval</span>
-<main class="mx-auto max-w-5xl">
   <!-- Status filter chips -->
   @if (statusTabs().length > 1) {
     <hh-filter-chips class="mb-5" [tabs]="statusTabs()" [active]="activeStatus()" (activeChange)="setStatus($event)" />
@@ -213,7 +212,6 @@
       </div>
     }
   }
-</main>
 </app-dashboard-layout>
 
 <!-- Rejection reason modal -->

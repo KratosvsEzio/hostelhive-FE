@@ -9,7 +9,6 @@
       <i class="ti ti-download" aria-hidden="true"></i>Export CSV
     </button>
   </div>
-<main class="mx-auto max-w-6xl">
   @let s = state();
 
   @if (s.loading) {
@@ -54,34 +53,7 @@
         <hh-card padding="sm">
           @if (k.donut != null) {
             <div class="flex items-center gap-3">
-              <svg
-                viewBox="0 0 36 36"
-                class="h-12 w-12"
-                role="img"
-                [attr.aria-label]="k.label + ' ' + k.value"
-              >
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15.9"
-                  fill="none"
-                  stroke="#E6E6E6"
-                  stroke-width="3"
-                  pathLength="100"
-                />
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15.9"
-                  fill="none"
-                  stroke="#F36E21"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  pathLength="100"
-                  transform="rotate(-90 18 18)"
-                  [attr.stroke-dasharray]="donut(k.donut)"
-                />
-              </svg>
+              <hh-donut [pct]="k.donut" [ariaLabel]="k.label + ' ' + k.value" />
               <div>
                 <p class="text-xs text-ink-400">{{ k.label }}</p>
                 <p class="text-xl font-semibold text-ink-900">{{ k.value }}</p>
@@ -118,7 +90,7 @@
 
     <!-- Monthly revenue -->
     <hh-card class="mt-6" [allowOverflow]="true">
-      <div class="mb-4 flex items-center justify-between">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="font-display text-base font-semibold text-ink-900">
             Monthly revenue
@@ -192,7 +164,7 @@
 
     <!-- Tenant movement -->
     <hh-card class="mt-6" [allowOverflow]="true">
-      <div class="mb-4 flex items-center justify-between">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="font-display text-base font-semibold text-ink-900">Tenant movement</h2>
           <p class="text-xs text-ink-400">Move-ins vs move-outs · last 12 months</p>
@@ -330,7 +302,29 @@
             />
           </div>
         } @else {
-          <table class="w-full text-sm">
+          <!-- Mobile card list -->
+          <div class="sm:hidden divide-y divide-ink-100">
+            @for (row of ledger(); track row.id) {
+              <div class="flex items-center gap-3 px-5 py-3">
+                <hh-avatar
+                  size="sm"
+                  [tone]="row.outstanding > 0 ? 'cream' : 'mint'"
+                  [initials]="row.initials"
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm text-ink-700">{{ row.tenant }}</p>
+                  <p class="text-xs text-ink-400">Room {{ row.room }} · {{ row.lastInvoice }}</p>
+                </div>
+                @if (row.outstanding > 0) {
+                  <hh-status-pill class="shrink-0" [tone]="row.outstanding >= 9000 ? 'danger' : 'warn'">Rs {{ row.outstanding | number }}</hh-status-pill>
+                } @else {
+                  <hh-status-pill class="shrink-0" tone="ok" [dot]="true">Settled</hh-status-pill>
+                }
+              </div>
+            }
+          </div>
+          <!-- Desktop table -->
+          <table class="hidden w-full text-sm sm:table">
             <thead
               class="text-left text-xs uppercase tracking-wide text-ink-400"
             >
@@ -378,5 +372,4 @@
       </hh-card>
     </div>
   }
-</main>
 </app-dashboard-layout>

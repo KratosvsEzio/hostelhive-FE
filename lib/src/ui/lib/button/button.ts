@@ -12,7 +12,7 @@ export type ButtonColor = 'default' | 'primary' | 'success' | 'danger' | 'dark';
 export type ButtonSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 
 const BASE =
-  'inline-flex items-center justify-center transition select-none ' +
+  'inline-flex items-center justify-center whitespace-nowrap transition select-none ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ' +
   'disabled:cursor-not-allowed disabled:opacity-60';
 

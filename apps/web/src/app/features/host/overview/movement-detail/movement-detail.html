@@ -6,7 +6,6 @@
     <hh-date-range-picker [(value)]="dateRange" />
   </div>
 
-  <main class="mx-auto max-w-6xl">
     @let s = state();
 
     <div class="mb-6">
@@ -25,7 +24,7 @@
 
       <!-- Movement chart -->
       <hh-card [allowOverflow]="true">
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 class="font-display text-base font-semibold text-ink-900">Move-ins vs move-outs</h2>
             <p class="text-xs text-ink-400">{{ dateRange()?.label ?? 'All time' }}</p>
@@ -112,5 +111,4 @@
         </div>
       </hh-card>
     }
-  </main>
 </app-dashboard-layout>

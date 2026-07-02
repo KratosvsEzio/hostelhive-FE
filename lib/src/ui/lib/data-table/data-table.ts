@@ -138,7 +138,7 @@ export interface PaginationConfig {
               @let activeSort = sort();
               @for (col of columns(); track col.key) {
                 <th
-                  class="px-5 py-2.5 font-medium"
+                  class="whitespace-nowrap px-5 py-2.5 font-medium"
                   [class]="stickyTh(col)"
                   [class.text-right]="col.align === 'right' && !col.sortable"
                   [class.cursor-pointer]="col.sortable"
@@ -209,7 +209,7 @@ export interface PaginationConfig {
                   @for (col of columns(); track col.key; let first = $first) {
                     @let cell = col.cell(row);
                     <td
-                      class="px-5 py-3"
+                      class="whitespace-nowrap px-5 py-3"
                       [class]="stickyTd(col)"
                       [class.text-right]="col.align === 'right'"
                     >
@@ -361,13 +361,13 @@ export interface PaginationConfig {
                     <tr class="bg-surface border-t border-ink-100">
                       <td
                         [attr.colspan]="exp.nameColSpan"
-                        class="px-5 py-2.5 pl-14 text-sm text-ink-800"
+                        class="whitespace-nowrap px-5 py-2.5 pl-14 text-sm text-ink-800"
                       >{{ exp.childName(sub) }}</td>
 
                       @for (sc of exp.columns; track sc.label; let scFirst = $first) {
                         @let scell = sc.cell(sub);
                         <td
-                          class="py-2.5 text-sm"
+                          class="whitespace-nowrap py-2.5 text-sm"
                           [class.pr-5]="scFirst"
                           [class.px-5]="!scFirst"
                           [class.text-right]="sc.align === 'right'"

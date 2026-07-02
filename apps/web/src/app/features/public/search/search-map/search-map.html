@@ -44,7 +44,7 @@
     }
     @if (loading()) {
       <div
-        class="grid grid-cols-2 gap-x-5 gap-y-7 min-[950px]:grid-cols-1 min-[1300px]:grid-cols-2 min-[1800px]:grid-cols-3"
+        class="grid grid-cols-1 gap-x-5 gap-y-7 sm:grid-cols-2 min-[950px]:grid-cols-1 min-[1300px]:grid-cols-2 min-[1800px]:grid-cols-3"
       >
         @for (s of skeletons; track s) {
           <div class="w-full max-w-[320px]">
@@ -78,7 +78,7 @@
       </div>
     } @else if (listings().length) {
       <div
-        class="grid grid-cols-2 gap-x-5 gap-y-7 min-[950px]:grid-cols-1 min-[1300px]:grid-cols-2 min-[1800px]:grid-cols-3"
+        class="grid grid-cols-1 gap-x-5 gap-y-7 sm:grid-cols-2 min-[950px]:grid-cols-1 min-[1300px]:grid-cols-2 min-[1800px]:grid-cols-3"
       >
         @for (l of listings(); track l.id) {
           <div

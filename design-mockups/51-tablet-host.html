@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Tablet · Host · Overview</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .tablet { width: 1180px; height: 834px; border-radius: 38px; box-shadow: 0 0 0 14px #1F1F1F, 0 0 0 16px #3a3a3a, 0 28px 70px rgba(0,0,0,.3); overflow: hidden; position: relative; background: #F5F5F5; }
+  .cam { position:absolute; left:50%; top:10px; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:#0a0a0a; box-shadow: inset 0 0 2px #333; z-index:50; }
+  .statusbar { height:34px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12.5px; font-weight:600; color:#1F1F1F; background:#fff; }
+  .rail-link { display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 0; border-radius:14px; font-size:9px; font-weight:500; color:#A3A3A3; width:64px; }
+  .rail-link.on { background:#FEF1E9; color:#F36E21; }
+</style>
+</head>
+<body class="bg-surface text-ink-800">
+
+<main class="mx-auto max-w-[1320px] px-8 py-10">
+  <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">Tablet app · Host console</p>
+  <h1 class="mt-1 font-display text-2xl font-bold text-ink-900">Overview — sidebar collapses to an icon rail</h1>
+  <p class="mt-1 max-w-2xl text-sm text-ink-500">The 64px labelled icon rail keeps every host destination one tap away; KPI cards run 3-up and the chart pair sits side by side like desktop.</p>
+
+  <div class="mt-8">
+    <div class="tablet">
+      <div class="cam"></div>
+      <div class="statusbar"><span>9:41 · Tue 2 Jul</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i> 82%</span></div>
+
+      <div class="flex h-[calc(834px-34px)]">
+        <!-- icon rail -->
+        <aside class="flex w-[88px] shrink-0 flex-col items-center border-r border-ink-100 bg-white py-4">
+          <img src="assets/hostelhive-logo.png" alt="HostelHive" class="mb-5 h-9 w-9 rounded-xl object-contain" style="object-position:left" />
+          <nav class="flex flex-1 flex-col items-center gap-1">
+            <a class="rail-link on"><i class="ti ti-layout-dashboard text-xl"></i>Overview</a>
+            <a class="rail-link"><i class="ti ti-building text-xl"></i>Profile</a>
+            <a class="rail-link"><i class="ti ti-bed text-xl"></i>Rooms</a>
+            <a class="rail-link"><i class="ti ti-users text-xl"></i>Tenants</a>
+            <a class="rail-link"><i class="ti ti-user-shield text-xl"></i>Team</a>
+            <a class="rail-link"><i class="ti ti-bolt text-xl"></i>Utilities</a>
+            <a class="rail-link"><i class="ti ti-file-invoice text-xl"></i>Invoices</a>
+            <span class="my-1 h-px w-10 bg-ink-100"></span>
+            <a class="rail-link"><i class="ti ti-rosette text-xl"></i>Plan</a>
+          </nav>
+          <button class="mt-2 grid h-11 w-11 place-items-center rounded-2xl bg-tint-cream text-brand-600" title="Property"><i class="ti ti-building-community text-xl"></i></button>
+          <button class="mt-2 grid h-11 w-11 place-items-center rounded-2xl bg-brand-500 text-white" title="Create new hostel"><i class="ti ti-plus text-xl"></i></button>
+        </aside>
+
+        <!-- content -->
+        <div class="min-w-0 flex-1">
+          <header class="flex h-14 items-center justify-between border-b border-ink-100 bg-white px-6">
+            <div class="flex items-center gap-3">
+              <h1 class="font-display text-lg font-semibold text-ink-900">Overview</h1>
+              <span class="flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs font-medium text-ink-600"><i class="ti ti-building-community text-sm text-ink-400"></i>Al-Madina Hostel · Gulberg, Lahore</span>
+            </div>
+            <button class="relative grid h-9 w-9 place-items-center rounded-full text-ink-600"><i class="ti ti-bell text-xl"></i><span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-500"></span></button>
+          </header>
+
+          <div class="h-[calc(834px-34px-56px)] overflow-hidden px-6 py-5">
+            <!-- KPI cards 3-up -->
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card">
+                <div class="flex-1 p-4">
+                  <div class="flex items-center gap-3">
+                    <svg viewBox="0 0 36 36" class="h-11 w-11"><circle cx="18" cy="18" r="15.9" fill="none" stroke="#E6E6E6" stroke-width="3.4" pathLength="100"/><circle cx="18" cy="18" r="15.9" fill="none" stroke="#F36E21" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="78 100" pathLength="100" transform="rotate(-90 18 18)"/></svg>
+                    <div><p class="text-xs text-ink-400">Occupancy</p><p class="text-xl font-semibold text-ink-900">78%</p></div>
+                  </div>
+                  <p class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-ok"><i class="ti ti-trending-up"></i>+4% vs last month</p>
+                </div>
+                <a class="flex items-center gap-1.5 border-t border-brand-100 bg-brand-50/60 px-4 py-2 text-xs font-medium text-brand-600"><span class="flex-1">View occupancy trend</span><i class="ti ti-arrow-right text-[13px]"></i></a>
+              </div>
+              <div class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card">
+                <div class="flex-1 p-4"><p class="text-xs text-ink-400">Collected · June</p><p class="mt-1 text-2xl font-semibold text-ok">Rs 248k</p><p class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-ok"><i class="ti ti-trending-up"></i>+12% vs last month</p></div>
+                <a class="flex items-center gap-1.5 border-t border-ok/20 bg-ok/5 px-4 py-2 text-xs font-medium text-ok"><span class="flex-1">View revenue breakdown</span><i class="ti ti-arrow-right text-[13px]"></i></a>
+              </div>
+              <div class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card">
+                <div class="flex-1 p-4"><p class="text-xs text-ink-400">Pending total</p><p class="mt-1 text-2xl font-semibold text-warn">Rs 41.5k</p><p class="mt-1.5 text-[11px] text-ink-400">3 tenants unpaid</p></div>
+                <a class="flex items-center gap-1.5 border-t border-warn/20 bg-warn/5 px-4 py-2 text-xs font-medium text-warn"><span class="flex-1">View all invoices</span><i class="ti ti-arrow-right text-[13px]"></i></a>
+              </div>
+            </div>
+
+            <!-- charts side by side -->
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <div class="rounded-2xl bg-white p-4 shadow-card">
+                <div class="mb-3 flex items-center justify-between">
+                  <div><h2 class="font-display text-sm font-semibold text-ink-900">Monthly revenue</h2><p class="text-[10px] text-ink-400">Last 12 months · PKR</p></div>
+                  <div class="flex items-center gap-3 text-[10px] text-ink-500"><span class="flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-brand-500"></span>Rent</span><span class="flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-brand-200"></span>Utility</span></div>
+                </div>
+                <div class="flex h-40 items-end gap-1.5">
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:9%"></div><div class="bg-brand-500" style="height:36%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:10%"></div><div class="bg-brand-500" style="height:41%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:8%"></div><div class="bg-brand-500" style="height:38%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:11%"></div><div class="bg-brand-500" style="height:44%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:10%"></div><div class="bg-brand-500" style="height:47%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:12%"></div><div class="bg-brand-500" style="height:50%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:11%"></div><div class="bg-brand-500" style="height:46%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:13%"></div><div class="bg-brand-500" style="height:52%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:12%"></div><div class="bg-brand-500" style="height:55%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:13%"></div><div class="bg-brand-500" style="height:58%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:14%"></div><div class="bg-brand-500" style="height:60%"></div></div>
+                  <div class="flex h-full flex-1 flex-col justify-end"><div class="rounded-t bg-brand-200" style="height:15%"></div><div class="bg-brand-500" style="height:64%"></div></div>
+                </div>
+                <div class="mt-1.5 flex justify-between text-[9px] text-ink-400"><span>Jul</span><span>Sep</span><span>Nov</span><span>Jan</span><span>Mar</span><span>Jun</span></div>
+              </div>
+              <div class="rounded-2xl bg-white p-4 shadow-card">
+                <div class="mb-3 flex items-center justify-between">
+                  <div><h2 class="font-display text-sm font-semibold text-ink-900">Tenant movement</h2><p class="text-[10px] text-ink-400">Move-ins vs move-outs · last 12 months</p></div>
+                  <div class="flex items-center gap-3 text-[10px] text-ink-500"><span class="flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-emerald-500"></span>In</span><span class="flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-rose-400"></span>Out</span></div>
+                </div>
+                <div class="flex h-40 items-end gap-1.5">
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:45%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:20%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:30%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:35%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:55%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:15%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:40%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:25%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:62%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:18%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:35%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:30%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:50%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:22%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:44%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:28%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:58%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:12%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:38%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:26%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:66%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:20%"></div></div>
+                  <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:52%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:16%"></div></div>
+                </div>
+                <div class="mt-1.5 flex justify-between text-[9px] text-ink-400"><span>Jul</span><span>Sep</span><span>Nov</span><span>Jan</span><span>Mar</span><span>Jun</span></div>
+              </div>
+            </div>
+
+            <!-- ledgers side by side -->
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+                <div class="flex items-center justify-between border-b border-ink-100 px-4 py-2.5"><h2 class="font-display text-sm font-semibold text-ink-900">Pending utility bills</h2><span class="rounded-full bg-warn/10 px-2 py-0.5 text-[10px] font-semibold text-warn">2 pending</span></div>
+                <div class="divide-y divide-ink-100">
+                  <div class="flex items-center gap-2.5 px-4 py-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-cream text-[10px] font-semibold text-brand-700">AR</span><div class="min-w-0 flex-1"><p class="truncate text-sm font-medium text-ink-800">Ahmed Raza</p><p class="text-[10px] text-ink-400">Room 102 · 15 Jun</p></div><p class="text-sm font-semibold text-ink-900">Rs 6,182</p></div>
+                  <div class="flex items-center gap-2.5 px-4 py-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-cream text-[10px] font-semibold text-brand-700">HT</span><div class="min-w-0 flex-1"><p class="truncate text-sm font-medium text-ink-800">Hamza Tariq</p><p class="text-[10px] text-ink-400">Room 202 · 15 Jun</p></div><p class="text-sm font-semibold text-ink-900">Rs 6,318</p></div>
+                </div>
+              </div>
+              <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+                <div class="flex items-center justify-between border-b border-ink-100 px-4 py-2.5"><h2 class="font-display text-sm font-semibold text-ink-900">Tenant ledger</h2><span class="text-[10px] text-ink-400">Due · Overdue</span></div>
+                <div class="divide-y divide-ink-100">
+                  <div class="flex items-center gap-2.5 px-4 py-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-cream text-[10px] font-semibold text-brand-700">BK</span><div class="min-w-0 flex-1"><p class="truncate text-sm text-ink-700">Bilal Khan</p><p class="text-[10px] text-ink-400">Room 101 · INV-0143</p></div><span class="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-medium text-danger">Rs 9,500</span></div>
+                  <div class="flex items-center gap-2.5 px-4 py-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-mint text-[10px] font-semibold text-ink-700">AR</span><div class="min-w-0 flex-1"><p class="truncate text-sm text-ink-700">Ahmed Raza</p><p class="text-[10px] text-ink-400">Room 102 · INV-0139</p></div><span class="inline-flex items-center gap-1 rounded-full bg-ok/10 px-2 py-0.5 text-[10px] font-medium text-ok"><span class="h-1.5 w-1.5 rounded-full bg-ok"></span>Settled</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="mt-5 text-sm font-medium text-ink-700">Host · Overview — 11″ tablet · landscape</p>
+    <p class="text-xs text-ink-400">Icon rail nav · 3-up KPIs · paired charts &amp; ledgers.</p>
+  </div>
+</main>
+
+</body>
+</html>
