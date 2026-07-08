@@ -127,6 +127,9 @@ export interface PaginationConfig {
   selector: 'hh-data-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DecimalPipe, RouterLink, Button, HhLink, StatusPill, NoResults],
+  // Block-level host so vertical margins (e.g. a `space-y` parent's top margin) apply — an
+  // inline host silently drops them, which is a subtle layout footgun for consumers.
+  host: { class: 'block' },
   template: `
     <div class="rounded-2xl bg-white shadow-card">
       <div class="overflow-x-auto" #scrollWrap>

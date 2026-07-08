@@ -32,6 +32,8 @@ export interface DropdownOption {
   statusLabel?: string;
   suffixBadge?: string;
   suffixBadgeClass?: string;
+  /** Group label — consecutive options with the same group string are rendered under a shared header. */
+  group?: string;
 }
 
 /**
@@ -175,7 +177,10 @@ export interface DropdownOption {
               } @else if (options().length === 0) {
                 <p class="py-5 text-center text-sm text-ink-400">{{ emptyLabel() }}</p>
               } @else {
-                @for (o of options(); track o.value) {
+                @for (o of options(); track o.value; let i = $index) {
+                  @if (o.group && o.group !== options()[i - 1]?.group) {
+                    <p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-400 first:pt-1">{{ o.group }}</p>
+                  }
                   <button
                     type="button"
                     role="option"

@@ -9,7 +9,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Gender } from '@hostelhive/data-access';
-import { Dropdown, DropdownOption } from '@hostelhive/ui';
+import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
 
 /**
@@ -20,7 +20,7 @@ import { FilterState, SearchFilterModal } from '@features/public/search/search-f
 @Component({
   selector: 'hh-search-filters',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown, SearchFilterModal],
+  imports: [Button, Chip, Dropdown, SearchFilterModal],
   templateUrl: './search-filters.html',
   host: { class: 'contents' },
 })
@@ -82,6 +82,23 @@ export class SearchFilters {
     if (this.sort() !== 'recommended') n++;
     return n;
   });
+
+  readonly popularAmenities = [
+    { slug: 'wifi', label: 'Wi-Fi', icon: 'wifi' },
+    { slug: 'air-conditioning', label: 'AC', icon: 'air-conditioning' },
+    { slug: 'kitchen', label: 'Kitchen', icon: 'tools-kitchen-2' },
+    { slug: 'security-cameras', label: 'Security', icon: 'device-cctv' },
+    { slug: 'parking-on-premises', label: 'Parking', icon: 'car' },
+    { slug: 'attached', label: 'Attached Bath', icon: 'bath' },
+  ];
+
+  protected toggleQuickAmenity(slug: string): void {
+    const current = this.amenities();
+    const updated = current.includes(slug)
+      ? current.filter((s) => s !== slug)
+      : [...current, slug];
+    this.nav({ amenities: updated.join(',') || null });
+  }
 
   protected openModal(): void {
     this.modal()?.seed({

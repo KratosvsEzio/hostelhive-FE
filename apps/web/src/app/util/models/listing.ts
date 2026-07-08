@@ -49,17 +49,19 @@ export interface ListingQuery {
   near?: { lat: number; lng: number; radiusKm?: number }; // proximity search (from a picked place)
   bounds?: { north: number; south: number; east: number; west: number }; // exact map viewport
   amenities?: string[];
+  /** Resolved offer IDs — sent as `f[offers.id][]=` to the public search endpoint. */
+  offerIds?: number[];
   sort?: 'recommended' | 'newest' | 'oldest' | 'price-asc' | 'price-desc';
   page?: number;
   pageSize?: number;
 }
 
-/** Amenity key → display label + Tabler icon. */
-export const AMENITIES: Record<string, { label: string; icon: string }> = {
+/** Amenity key → display label + Tabler icon. `short` is the phone-width variant for tight tiles. */
+export const AMENITIES: Record<string, { label: string; icon: string; short?: string }> = {
   wifi: { label: 'Wi-Fi', icon: 'ti-wifi' },
-  ac: { label: 'Air conditioning', icon: 'ti-air-conditioning' },
+  ac: { label: 'Air conditioning', short: 'AC', icon: 'ti-air-conditioning' },
   kitchen: { label: 'Kitchen', icon: 'ti-tools-kitchen-2' },
-  security: { label: 'Security guard', icon: 'ti-shield-check' },
+  security: { label: 'Security guard', short: 'Security', icon: 'ti-shield-check' },
   parking: { label: 'Parking', icon: 'ti-car' },
   generator: { label: 'Generator', icon: 'ti-bolt' },
   cctv: { label: 'CCTV', icon: 'ti-device-cctv' },

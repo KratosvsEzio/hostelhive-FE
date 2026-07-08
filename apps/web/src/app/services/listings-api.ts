@@ -155,7 +155,7 @@ export class ListingsApi {
     } = query;
 
     // Build Rails-style nested filter params
-    const params: Record<string, string | number> = {};
+    const params: Record<string, string | number | number[]> = {};
 
     // Bounding box — exact viewport bounds take priority, then center+radius, then global
     if (bounds) {
@@ -210,9 +210,10 @@ export class ListingsApi {
     else if (sort === 'price-asc') params['sort[starting_price]'] = 'asc';
     else if (sort === 'price-desc') params['sort[starting_price]'] = 'desc';
 
-    // NOTE: `sharing` and `amenities` are intentionally NOT sent — they aren't part of the
-    // hostel search index (search_data), so the public endpoint can't filter on them; sending
-    // them would term-match a non-existent field and return zero results.
+    // Offer (amenity) filter — repeated f[offers.id][] keys, one per selected offer.
+    if (query.offerIds?.length) {
+      params['f[offers.id][]'] = query.offerIds;
+    }
 
     params['page'] = page;
     params['limit'] = pageSize; // backend reads per_page from `limit` (PublicController#hostels)

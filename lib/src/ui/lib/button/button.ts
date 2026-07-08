@@ -45,7 +45,7 @@ const SIZE_ICON: Record<ButtonSize, string> = {
 };
 
 const FILLED: Record<ButtonColor, string> = {
-  default: 'bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
+  default: 'border border-ink-200 bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
   primary: 'bg-brand-500 font-semibold text-white shadow-card hover:bg-brand-600',
   success: 'bg-ok font-semibold text-white hover:brightness-95',
   danger: 'bg-danger font-semibold text-white hover:brightness-95',

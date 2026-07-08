@@ -4,11 +4,14 @@ import { Route } from '@angular/router';
 import { HostLayout } from '@layout/host-shell/host-shell';
 
 import { Rooms } from './rooms/rooms';
+import { HostMore } from './more/more';
 import { HostTeam } from './team/team';
 import { Tenants } from './tenants/tenants';
 import { MessList } from './mess/mess-list';
 import { Invoices } from './invoices/invoices';
-import { CreateMenu } from './mess/grocery-list';
+import { AddGrocery } from './mess/add-grocery';
+import { MessConfirmations } from './mess/mess-confirmations';
+import { MessNotifications } from './mess/mess-notifications';
 import { Analytics } from './analytics/analytics';
 import { Utilities } from './utilities/utilities';
 import { HostOverview } from './overview/overview';
@@ -40,6 +43,8 @@ export const HOST_ROUTES: Route[] = [
     component: HostLayout,
     children: [
       { path: 'profile', component: HostelProfile, title: 'Hostel profile — HostelHive' },
+      // Mobile-app "More" tab (bottom tab bar) — the destinations that don't fit in the tabs.
+      { path: 'more', component: HostMore, title: 'More — HostelHive' },
       { path: 'team', component: HostTeam, title: 'Team & staff — HostelHive' },
       {
         path: 'rooms',
@@ -71,7 +76,9 @@ export const HOST_ROUTES: Route[] = [
         path: 'mess',
         children: [
           { path: '', pathMatch: 'full', component: MessList, title: 'Mess — HostelHive' },
-          { path: 'create-menu', component: CreateMenu, title: 'Create menu — HostelHive' },
+          { path: 'add', component: AddGrocery, title: 'Add grocery — HostelHive' },
+          { path: 'confirmations', component: MessConfirmations, title: 'Meal confirmations — HostelHive' },
+          { path: 'notifications', component: MessNotifications, title: 'Meal notifications — HostelHive' },
         ],
       },
       {

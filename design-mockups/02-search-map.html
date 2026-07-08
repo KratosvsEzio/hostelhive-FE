@@ -121,16 +121,12 @@
 
       </div>
 
-      <!-- Pagination -->
-      <nav class="mt-8 flex items-center justify-center gap-2" aria-label="Pagination">
-        <button class="grid h-9 w-9 place-items-center rounded-xl border border-ink-200 text-ink-300" disabled><i class="ti ti-chevron-left"></i></button>
-        <button class="grid h-9 w-9 place-items-center rounded-xl bg-ink-900 text-sm font-medium text-white">1</button>
-        <button class="grid h-9 w-9 place-items-center rounded-xl border border-ink-200 text-sm font-medium text-ink-600 hover:bg-ink-50">2</button>
-        <button class="grid h-9 w-9 place-items-center rounded-xl border border-ink-200 text-sm font-medium text-ink-600 hover:bg-ink-50">3</button>
-        <span class="px-1 text-ink-400">…</span>
-        <button class="grid h-9 w-9 place-items-center rounded-xl border border-ink-200 text-sm font-medium text-ink-600 hover:bg-ink-50">12</button>
-        <button class="grid h-9 w-9 place-items-center rounded-xl border border-ink-200 text-ink-600 hover:bg-ink-50"><i class="ti ti-chevron-right"></i></button>
-      </nav>
+      <!-- Infinite scroll: next page loads as the list tail nears the viewport -->
+      <div class="mt-4 flex items-center justify-center gap-2 py-4 text-sm text-ink-400">
+        <i class="ti ti-loader-2 text-lg text-brand-500"></i>
+        Loading more stays…
+      </div>
+      <p class="border-t border-ink-100 pt-5 text-center text-xs text-ink-400">…and once every page is loaded: "You've seen all 320 stays in this area"</p>
     </div>
 
     <!-- MAP (sticky, rounded inset) -->

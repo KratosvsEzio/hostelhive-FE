@@ -196,6 +196,7 @@
         }
 
         <!-- Amenities (driven by AMENITIES) -->
+        @if (amenityList().length) {
         <section class="border-b border-ink-100 py-6">
           <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
             What this place offers
@@ -218,6 +219,7 @@
             </button>
           }
         </section>
+        }
 
         <!-- Nearby landmarks -->
         @if (l.nearby.length) {
@@ -716,6 +718,61 @@
             }
           </div>
         }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Login gate modal — shown when unauthenticated user taps WhatsApp or Show phone -->
+@if (loginGateOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="login-gate-title"
+  >
+    <div
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+      (click)="closeLoginGate()"
+    ></div>
+    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 id="login-gate-title" class="font-display text-base font-semibold text-ink-900">
+          Sign in to contact
+        </h2>
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
+          (click)="closeLoginGate()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-5 py-5">
+        <div class="flex items-start gap-3">
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#25D366]/10">
+            <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="font-semibold text-ink-900">See verified contact details</p>
+            <p class="mt-1 text-sm text-ink-500">
+              Create a free account to view WhatsApp numbers and call the host directly. It only takes 30 seconds.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-col gap-2">
+          <button hh-button color="primary" class="w-full" (click)="goToAuth()">
+            Log in / Register
+          </button>
+          <button hh-button variant="outlined" class="w-full" (click)="closeLoginGate()">
+            Maybe later
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -71,7 +71,7 @@ export class HostelsApi {
   /** GET /api/hostels/:id — the full hostel (HostelSerializer). */
   getById(id: number | string): Observable<HostelDetail> {
     return this.api
-      .get<HostelResponse>(`/api/hostels/${id}`)
+      .get<HostelResponse>(`/public/hostel_detail/${id}`)
       .pipe(map((r) => requireHostel(r, id)));
   }
 

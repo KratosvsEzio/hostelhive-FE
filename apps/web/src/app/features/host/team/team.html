@@ -177,11 +177,25 @@
           Edit
         </button>
         <hh-context-menu-divider />
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="closeMenu(); removeStaff(menuMember)">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptRemoveStaff(menuMember)">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
           Remove
         </button>
       </hh-context-menu>
     }
   }
+}
+
+@if (staffDeletePending(); as member) {
+  <hh-confirm-modal
+    title="Remove staff member?"
+    icon="ti-trash"
+    tone="danger"
+    confirmLabel="Remove"
+    confirmColor="danger"
+    (confirm)="confirmRemoveStaff()"
+    (cancel)="cancelRemoveStaff()"
+  >
+    This will remove <strong>{{ member.name }}</strong> from the team. This action cannot be undone.
+  </hh-confirm-modal>
 }

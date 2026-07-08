@@ -1,0 +1,89 @@
+<div class="flex min-h-[100dvh] flex-col bg-surface">
+  <!-- Minimal branded header -->
+  <header class="safe-pt border-b border-ink-100 bg-white px-5 py-3.5">
+    <img src="/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
+  </header>
+
+  <main class="flex flex-1 items-center justify-center p-5">
+    <div class="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-card">
+      @let p = payload();
+
+      @switch (state()) {
+        @case ('loading') {
+          <div class="flex flex-col items-center gap-3 py-8">
+            <i class="ti ti-loader-2 animate-spin text-3xl text-ink-300" aria-hidden="true"></i>
+            <p class="text-sm text-ink-400">Checking your link…</p>
+          </div>
+        }
+
+        @case ('valid') {
+          @if (p) {
+            <span class="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-brand-600" [class]="mealMeta[p.m].tint">
+              <i class="ti text-3xl" [class]="mealMeta[p.m].icon" aria-hidden="true"></i>
+            </span>
+            <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
+              Reserve your {{ mealMeta[p.m].label }} portion
+            </h1>
+            <p class="mt-1 text-sm text-ink-500">Today's {{ mealMeta[p.m].label.toLowerCase() }} at the hostel mess</p>
+
+            <div class="mt-5 rounded-2xl bg-tint-cream px-4 py-3">
+              <p class="text-xs uppercase tracking-wide text-ink-400">On the menu</p>
+              <p class="mt-0.5 font-display text-lg font-semibold text-ink-900">{{ p.menu || 'Today’s menu' }}</p>
+            </div>
+
+            <button hh-button color="primary" class="mt-6 w-full" (click)="confirm()">
+              <i class="ti ti-check" aria-hidden="true"></i>Confirm my portion
+            </button>
+            <p class="mt-3 text-xs text-ink-400">Reserve before {{ p.exp | date: 'shortTime' }} · tap once to confirm</p>
+          }
+        }
+
+        @case ('confirmed') {
+          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-ok/10 text-ok">
+            <i class="ti ti-check text-4xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">You're confirmed! 🎉</h1>
+          <p class="mt-1 text-sm text-ink-500">
+            Your portion for today's {{ mealLabel().toLowerCase() }} is reserved@if (p) { — {{ p.menu }}}.
+          </p>
+          <p class="mt-5 rounded-xl bg-surface px-4 py-3 text-xs text-ink-500">
+            Please collect your meal at the mess during serving time. You can close this page.
+          </p>
+        }
+
+        @case ('already') {
+          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-tint-sky text-brand-600">
+            <i class="ti ti-checks text-4xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">Already confirmed</h1>
+          <p class="mt-1 text-sm text-ink-500">
+            You've already reserved your {{ mealLabel().toLowerCase() }} portion for today.
+          </p>
+        }
+
+        @case ('expired') {
+          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-warn/10 text-warn">
+            <i class="ti ti-clock-x text-4xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">This link has expired</h1>
+          <p class="mt-1 text-sm text-ink-500">
+            The opt-in window for {{ mealLabel().toLowerCase() }} has closed@if (p) { at {{ p.exp | date: 'shortTime' }}}.
+            Please reach out to the mess manager if you still need a portion.
+          </p>
+        }
+
+        @case ('invalid') {
+          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-danger/10 text-danger">
+            <i class="ti ti-alert-triangle text-4xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">Invalid link</h1>
+          <p class="mt-1 text-sm text-ink-500">
+            This confirmation link is missing or incomplete. Please use the exact link from your latest reminder.
+          </p>
+        }
+      }
+    </div>
+  </main>
+
+  <footer class="safe-pb px-5 py-4 text-center text-xs text-ink-400">© 2026 HostelHive · Mess opt-in</footer>
+</div>

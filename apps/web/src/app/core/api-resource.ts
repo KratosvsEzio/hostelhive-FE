@@ -30,7 +30,7 @@ export class ApiClient {
 
   get<T>(
     path: string,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, string | number | boolean | ReadonlyArray<string | number | boolean>>,
   ): Observable<T> {
     return this.http.get<T>(this.base + path, { params });
   }

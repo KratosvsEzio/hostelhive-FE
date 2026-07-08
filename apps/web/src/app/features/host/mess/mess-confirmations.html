@@ -1,0 +1,59 @@
+<app-dashboard-layout
+  label="Meal confirmations"
+  backUrl=".."
+  [breadcrumbs]="[{ label: 'Mess', url: '..' }, { label: 'Confirmations' }]"
+>
+  <div hhActions>
+    <hh-date-picker variant="pill" placeholder="Pick date" [(value)]="selectedDate" />
+  </div>
+
+  <main class="mx-auto max-w-4xl space-y-5">
+
+    <!-- Summary -->
+    <div class="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-card">
+      <div>
+        <p class="font-display font-semibold text-ink-900">{{ dateLabel() }}</p>
+        <p class="text-xs text-ink-400">Students who reserved a portion, by menu.</p>
+      </div>
+      <div class="text-right">
+        <p class="font-display text-2xl font-semibold text-ink-900">{{ totalConfirmations() | number }}</p>
+        <p class="text-xs text-ink-400">total meal confirmations</p>
+      </div>
+    </div>
+
+    <!-- Meal selector + active meal context -->
+    <div class="rounded-2xl bg-white p-4 shadow-card">
+      <hh-tabs [tabs]="tabs()" [active]="activeMeal()" (activeChange)="onMealChange($event)" />
+      <div class="mt-4 flex items-center gap-3">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-600" [class]="mealMeta[activeMeal()].tint">
+          <i class="ti text-xl" [class]="mealMeta[activeMeal()].icon" aria-hidden="true"></i>
+        </span>
+        <div class="min-w-0">
+          <p class="font-display font-semibold text-ink-900">
+            {{ mealMeta[activeMeal()].label }} · {{ total() | number }} confirmed
+          </p>
+          <p class="truncate text-xs text-ink-400">{{ activeMenu() || 'No menu set' }}</p>
+        </div>
+      </div>
+    </div>
+
+    @if (total()) {
+      <hh-data-table
+        [columns]="cols"
+        [rows]="rows()"
+        [rowId]="rowId"
+        [pagination]="pagination()"
+        (pageChange)="onPage($event)"
+        minWidth="520px"
+      />
+    } @else {
+      <div class="rounded-2xl bg-white px-5 py-12 text-center shadow-card">
+        <p class="text-sm text-ink-400">
+          No confirmations for {{ mealMeta[activeMeal()].label.toLowerCase() }}
+          {{ isToday() ? 'today' : 'on this date' }}.
+        </p>
+      </div>
+    }
+
+  </main>
+</app-dashboard-layout>

@@ -32,6 +32,9 @@ body {
 .safe-pt {
   padding-top: env(safe-area-inset-top);
 }
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
 /* Data tables never wrap a cell onto a second line. Pair with an `overflow-x-auto` wrapper
    (the console tables already have one) so a table wider than its container scrolls

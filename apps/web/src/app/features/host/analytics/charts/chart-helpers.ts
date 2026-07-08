@@ -146,6 +146,28 @@ export function occupancyLine(
   return { width, height, points, area, dots, gridY, gridLabels, step: round(step) };
 }
 
+/* ── Grocery spend (single-series bars) ────────────────────────────────── */
+
+export interface SpendBar {
+  label: string;
+  /** Bar height as a % of the chart area. */
+  pct: number;
+  value: number;
+}
+
+/** Scale a spend series so the tallest bar fills `maxFill`% of the chart area. */
+export function spendBars(
+  series: { label: string; value: number }[],
+  maxFill = 92,
+): SpendBar[] {
+  const peak = Math.max(1, ...series.map((p) => p.value));
+  return series.map((p) => ({
+    label: p.label,
+    pct: (p.value / peak) * maxFill,
+    value: p.value,
+  }));
+}
+
 /* ── Y-axis ticks ──────────────────────────────────────────────────────── */
 
 /**

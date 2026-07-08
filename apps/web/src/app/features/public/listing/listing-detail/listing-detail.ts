@@ -8,13 +8,14 @@ import {
   signal,
 } from '@angular/core';
 import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
 import { AMENITIES, Gender } from '@hostelhive/data-access';
 import { Avatar, Badge, Button, EmptyState, Skeleton } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
+import { SessionStore } from '@core/auth';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 
@@ -77,8 +78,10 @@ const ROOM_TINTS = [
 export class ListingDetail {
   private readonly api = inject(ListingDetailApi);
   private readonly hostelsApi = inject(HostelsApi);
+  private readonly session = inject(SessionStore);
   private readonly favorites = inject(FavoritesStore);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -87,11 +90,17 @@ export class ListingDetail {
   protected readonly phoneLoading = signal(false);
   protected readonly phoneError = signal(false);
   protected readonly modalOpen = signal(false);
+  protected readonly loginGateOpen = signal(false);
   protected readonly copied = signal(false);
   protected readonly shareOpen = signal(false);
   protected readonly shareLinkCopied = signal(false);
   protected readonly descriptionModalOpen = signal(false);
   protected pendingAction: 'modal' | 'whatsapp' | null = null;
+
+  protected readonly currentPath = computed(() => {
+    const slug = this.state().data?.slug;
+    return slug ? `/hostel/${slug}` : '/';
+  });
 
   protected readonly skeletons = [1, 2, 3];
 
@@ -200,16 +209,27 @@ export class ListingDetail {
   }
 
   protected openModal(): void {
+    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
     if (this.revealed()) { this.modalOpen.set(true); return; }
     this.pendingAction = 'modal';
     this.fetchPhone();
   }
 
   protected openWhatsApp(): void {
+    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
     const url = this.whatsAppUrl();
     if (url) { window.open(url, '_blank', 'noopener'); return; }
     this.pendingAction = 'whatsapp';
     this.fetchPhone();
+  }
+
+  protected closeLoginGate(): void {
+    this.loginGateOpen.set(false);
+  }
+
+  protected goToAuth(): void {
+    this.loginGateOpen.set(false);
+    void this.router.navigate(['/auth'], { queryParams: { returnUrl: this.currentPath() } });
   }
 
   protected closeModal(): void {

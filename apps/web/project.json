@@ -8,7 +8,7 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "dependsOn": ["sync-maps-env", "sync-api-env"],
+      "dependsOn": ["sync-maps-env", "sync-api-env", "sync-oauth-env"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/web",
@@ -57,7 +57,7 @@
     },
     "build-mobile": {
       "executor": "@angular/build:application",
-      "dependsOn": ["sync-maps-env", "sync-api-env"],
+      "dependsOn": ["sync-maps-env", "sync-api-env", "sync-oauth-env"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/web-mobile",
@@ -117,7 +117,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
-      "dependsOn": ["sync-maps-env", "sync-api-env"],
+      "dependsOn": ["sync-maps-env", "sync-api-env", "sync-oauth-env"],
       "configurations": {
         "production": {
           "buildTarget": "web:build:production"
@@ -152,6 +152,13 @@
       "cache": false,
       "options": {
         "command": "node tools/generate-api-env.mjs"
+      }
+    },
+    "sync-oauth-env": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/generate-google-oauth-env.mjs"
       }
     },
     "watch-api-env": {

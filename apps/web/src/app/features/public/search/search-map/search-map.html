@@ -1,9 +1,42 @@
 <div class="hh-search-filter-bar border-b border-ink-100 bg-white">
-  <div class="mx-auto flex max-w-7xl items-center px-5 py-3 sm:px-8">
+  <!-- Mobile-only: Google Places search input -->
+  <div class="flex min-[950px]:hidden items-center gap-2.5 border-b border-ink-100 px-4 py-2.5">
+    <i class="ti ti-map-pin-search shrink-0 text-base text-brand-500"></i>
+    <hh-place-search
+      class="min-w-0 flex-1"
+      [value]="placeText()"
+      placeholder="Search city or area…"
+      (textChange)="onPlaceText($event)"
+      (selected)="onPlaceSelected($event)"
+    />
+  </div>
+  <!-- Filter chips row + List|Map toggle -->
+  <div class="mx-auto flex max-w-7xl items-center px-5 pt-1.5 pb-3 sm:px-8">
     <div
-      class="flex min-w-0 flex-1 justify-center items-center gap-2 overflow-x-auto no-scrollbar"
+      class="flex min-w-0 flex-1 justify-center items-center gap-2 overflow-x-auto no-scrollbar pt-1.5"
     >
       <hh-search-filters />
+    </div>
+    <!-- Mobile-only: segmented List | Map toggle -->
+    <div class="ml-3 flex min-[950px]:hidden shrink-0 items-center gap-0.5 rounded-full bg-ink-100 p-0.5">
+      <button
+        type="button"
+        class="rounded-full px-3.5 py-1.5 text-sm font-medium transition"
+        [class.bg-white]="view() !== 'map'"
+        [class.shadow-sm]="view() !== 'map'"
+        [class.text-ink-900]="view() !== 'map'"
+        [class.text-ink-500]="view() === 'map'"
+        (click)="setView('list')"
+      >List</button>
+      <button
+        type="button"
+        class="rounded-full px-3.5 py-1.5 text-sm font-medium transition"
+        [class.bg-white]="view() === 'map'"
+        [class.shadow-sm]="view() === 'map'"
+        [class.text-ink-900]="view() === 'map'"
+        [class.text-ink-500]="view() !== 'map'"
+        (click)="setView('map')"
+      >Map</button>
     </div>
   </div>
 </div>
@@ -91,52 +124,23 @@
         }
       </div>
 
-      <!-- Pagination -->
-      @if (totalPages() > 1) {
-        <nav
-          class="mt-8 flex items-center justify-center gap-2"
-          aria-label="Pagination"
+      <!-- Infinite scroll: the sentinel loads the next page as it nears the viewport. -->
+      @if (hasMore()) {
+        <div #sentinel class="h-px" aria-hidden="true"></div>
+      }
+      @if (loadingMore()) {
+        <div
+          class="mt-4 flex items-center justify-center gap-2 py-4 text-sm text-ink-400"
+          role="status"
+          aria-label="Loading more results"
         >
-          <button
-            hh-button variant="icon" size="sm"
-            type="button"
-            [disabled]="page() <= 1"
-            (click)="goToPage(page() - 1)"
-            aria-label="Previous page"
-          >
-            <i class="ti ti-chevron-left"></i>
-          </button>
-
-          @for (p of pageNumbers(); track p) {
-            @if (p === -1) {
-              <span class="px-1 text-ink-400">…</span>
-            } @else {
-              <button
-                hh-button variant="icon" size="sm"
-                type="button"
-                (click)="goToPage(p)"
-                [class]="
-                  p === page()
-                    ? 'bg-ink-900 text-white'
-                    : 'border border-ink-200 text-ink-600 hover:bg-ink-50'
-                "
-                [attr.aria-current]="p === page() ? 'page' : null"
-              >
-                {{ p }}
-              </button>
-            }
-          }
-
-          <button
-            hh-button variant="icon" size="sm"
-            type="button"
-            [disabled]="page() >= totalPages()"
-            (click)="goToPage(page() + 1)"
-            aria-label="Next page"
-          >
-            <i class="ti ti-chevron-right"></i>
-          </button>
-        </nav>
+          <i class="ti ti-loader-2 animate-spin text-lg text-brand-500"></i>
+          Loading more stays…
+        </div>
+      } @else if (!hasMore() && totalPages() > 1) {
+        <p class="mt-8 border-t border-ink-100 pt-5 text-center text-xs text-ink-400">
+          You've seen all {{ totalResults() }} stays in this area
+        </p>
       }
     } @else if (cooldown() > 0) {
       <div class="rounded-xl border border-ink-100 bg-white p-8 text-center">
@@ -234,16 +238,3 @@
   </div>
 </div>
 
-<!-- Mobile-only: switch between the results list and the full-screen map. -->
-<button
-  hh-button color="primary"
-  type="button"
-  class="fixed bottom-5 left-1/2 -translate-x-1/2 shadow-lg min-[950px]:hidden"
-  (click)="setView(view() === 'map' ? 'list' : 'map')"
->
-  @if (view() === 'map') {
-    <i class="ti ti-layout-list text-base"></i> Show listing
-  } @else {
-    <i class="ti ti-map text-base"></i> Show map
-  }
-</button>

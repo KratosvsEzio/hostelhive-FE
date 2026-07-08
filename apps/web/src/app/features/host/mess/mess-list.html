@@ -1,20 +1,295 @@
 <app-dashboard-layout label="Mess">
-  <div hhActions>
-    <a hh-button color="primary" size="sm" routerLink="create-menu">
-      <i class="ti ti-plus" aria-hidden="true"></i>Create today's menu
+  <div hhActions class="flex items-center gap-2">
+    <a hh-button variant="outlined" size="sm" routerLink="confirmations">
+      <i class="ti ti-users-group" aria-hidden="true"></i>Meal Confirmations
+    </a>
+    <a hh-button variant="outlined" size="sm" routerLink="notifications">
+      <i class="ti ti-bell" aria-hidden="true"></i>Notifications
+    </a>
+    <a hh-button color="primary" size="sm" routerLink="add">
+      <i class="ti ti-plus" aria-hidden="true"></i>Add grocery
     </a>
   </div>
 
-  <main class="mx-auto max-w-4xl space-y-4">
+  <main class="mx-auto space-y-4">
+
+    <!-- KPI cards -->
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+
+      <!-- Today's opt-ins -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-display text-2xl font-bold text-ink-900">{{ totalToday() }}</p>
+            <p class="mt-0.5 text-xs font-medium text-ink-500">Today's confirmations</p>
+          </div>
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-mint">
+            <i class="ti ti-users-group text-lg text-brand-600" aria-hidden="true"></i>
+          </span>
+        </div>
+        <div class="mt-3 flex gap-4">
+          @for (meal of mealOrder; track meal) {
+            <span class="group relative flex items-center gap-1 text-xs text-ink-400">
+              <i class="ti text-sm" [class]="mealMeta[meal].icon" aria-hidden="true"></i>
+              {{ mealCounts()[meal] }}
+              <span class="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 transition group-hover:opacity-100">
+                {{ mealMeta[meal].label }}
+              </span>
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- This month's spend -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-display text-2xl font-bold text-ink-900">
+              Rs {{ svc.thisMonthSpend() | number }}
+            </p>
+            <p class="mt-0.5 text-xs font-medium text-ink-500">Monthly spend</p>
+          </div>
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-purple">
+            <i class="ti ti-receipt text-lg text-brand-600" aria-hidden="true"></i>
+          </span>
+        </div>
+        <p class="mt-3 text-xs text-ink-400">
+          @if (svc.thisMonthSpend() === 0) {
+            No entries this month
+          } @else {
+            {{ svc.entries().length }} entr{{ svc.entries().length === 1 ? 'y' : 'ies' }} this month
+          }
+        </p>
+      </div>
+
+      <!-- Subscribed students -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-display text-2xl font-bold text-ink-900">{{ totalSubscribers() }}</p>
+            <p class="mt-0.5 text-xs font-medium text-ink-500">Enrolled students</p>
+          </div>
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-cream">
+            <i class="ti ti-school text-lg text-brand-600" aria-hidden="true"></i>
+          </span>
+        </div>
+        <p class="mt-3 text-xs text-ink-400">{{ totalSubscribers() }} subscribed last month</p>
+      </div>
+
+      <!-- Cost per student -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            @if (svc.thisMonthSpend() > 0) {
+              <p class="font-display text-2xl font-bold text-ink-900">Rs {{ costPerStudent() | number }}</p>
+            } @else {
+              <p class="font-display text-2xl font-bold text-ink-300">—</p>
+            }
+            <p class="mt-0.5 text-xs font-medium text-ink-500">Cost per student</p>
+          </div>
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-sky">
+            <i class="ti ti-coin text-lg text-brand-600" aria-hidden="true"></i>
+          </span>
+        </div>
+        <p class="mt-3 text-xs text-ink-400">
+          @if (svc.thisMonthSpend() > 0) {
+            Rs {{ svc.thisMonthSpend() | number }} ÷ {{ totalSubscribers() }}
+          } @else {
+            No spend this month
+          }
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+    <!-- Meal confirmations trend — area chart -->
+    <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+      <div class="border-b border-ink-100 px-5 py-4">
+        <div class="flex items-center justify-between gap-3">
+          <p class="font-display font-semibold text-ink-900">Meal confirmations</p>
+          <!-- Colour legend -->
+          <div class="flex items-center gap-3 text-[10px] font-medium text-ink-500">
+            <span class="flex items-center gap-1.5">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-amber-400"></span>Breakfast
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>Lunch
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-violet-500"></span>Dinner
+            </span>
+          </div>
+        </div>
+        <p class="mt-0.5 text-xs text-ink-400">Last 30 days · all meals</p>
+      </div>
+      <div class="p-5">
+        @let ac = confirmAreaChart();
+        <svg
+          viewBox="0 0 600 207"
+          class="w-full overflow-visible"
+          (mouseleave)="hoveredDayIndex.set(null)"
+        >
+          <!-- Gridlines -->
+          @for (tick of ac.ticks; track tick.value) {
+            <line [attr.x1]="38" [attr.x2]="592" [attr.y1]="tick.y" [attr.y2]="tick.y" stroke="#f3f4f6" stroke-width="1" />
+          }
+          <!-- Y-axis labels -->
+          @for (tick of ac.ticks; track tick.value) {
+            <text [attr.x]="34" [attr.y]="tick.y + 4" text-anchor="end" font-size="10" fill="#9ca3af">{{ tick.label }}</text>
+          }
+
+          <!-- Area fills (dinner → lunch → breakfast so breakfast sits on top) -->
+          <path [attr.d]="ac.paths.dinner.area"    fill="#8b5cf6" fill-opacity="0.08" />
+          <path [attr.d]="ac.paths.lunch.area"     fill="#10b981" fill-opacity="0.08" />
+          <path [attr.d]="ac.paths.breakfast.area" fill="#fbbf24" fill-opacity="0.12" />
+
+          <!-- Stroke lines -->
+          <path [attr.d]="ac.paths.dinner.line"    fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path [attr.d]="ac.paths.lunch.line"     fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path [attr.d]="ac.paths.breakfast.line" fill="none" stroke="#fbbf24" stroke-width="2"   stroke-linecap="round" stroke-linejoin="round" />
+
+          <!-- X-axis labels (every 6th day + last) -->
+          @for (day of ac.days; track $index; let i = $index; let last = $last) {
+            @if (i % 6 === 0 || last) {
+              <text [attr.x]="ac.pointsX[i]" y="195" text-anchor="middle" font-size="10" fill="#9ca3af">{{ day.dayLabel }}</text>
+            }
+          }
+
+          <!-- Invisible hover strips — one per day column -->
+          @for (day of ac.days; track $index; let i = $index) {
+            <rect
+              [attr.x]="ac.pointsX[i] - 9"
+              y="15" width="18" height="160"
+              fill="transparent"
+              (mouseenter)="hoveredDayIndex.set(i)"
+            />
+          }
+
+          <!-- Hover overlay: guide + dots + tooltip -->
+          @if (hoveredDay(); as hd) {
+            <!-- Vertical guide line -->
+            <line [attr.x1]="hd.x" [attr.x2]="hd.x" y1="15" y2="175" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3 3" />
+
+            <!-- Data-point dots (white fill with colour ring) -->
+            <circle [attr.cx]="hd.x" [attr.cy]="hd.y.breakfast[hd.idx]" r="3.5" fill="white" stroke="#fbbf24" stroke-width="2" />
+            <circle [attr.cx]="hd.x" [attr.cy]="hd.y.lunch[hd.idx]"     r="3.5" fill="white" stroke="#10b981" stroke-width="2" />
+            <circle [attr.cx]="hd.x" [attr.cy]="hd.y.dinner[hd.idx]"    r="3.5" fill="white" stroke="#8b5cf6" stroke-width="2" />
+
+            <!-- Tooltip (flips left ↔ right; width=96 so threshold = 592-106=486 → use 320 for safety) -->
+            <g [attr.transform]="'translate(' + (hd.x < 320 ? hd.x + 10 : hd.x - 106) + ', 12)'">
+              <rect width="96" height="72" rx="6" fill="#111827" />
+              <text x="8" y="16" font-size="10" font-weight="600" fill="white">{{ hd.day.tooltipLabel }}</text>
+              <circle cx="9"  cy="29" r="3" fill="#fbbf24" />
+              <text x="17" y="33" font-size="9" fill="#9ca3af">Breakfast</text>
+              <text x="88" y="33" text-anchor="end" font-size="9" fill="white">{{ hd.day.breakfast }}</text>
+              <circle cx="9"  cy="45" r="3" fill="#10b981" />
+              <text x="17" y="49" font-size="9" fill="#9ca3af">Lunch</text>
+              <text x="88" y="49" text-anchor="end" font-size="9" fill="white">{{ hd.day.lunch }}</text>
+              <circle cx="9"  cy="61" r="3" fill="#8b5cf6" />
+              <text x="17" y="65" font-size="9" fill="#9ca3af">Dinner</text>
+              <text x="88" y="65" text-anchor="end" font-size="9" fill="white">{{ hd.day.dinner }}</text>
+            </g>
+          }
+        </svg>
+      </div>
+    </div>
+
+    <!-- Grocery spend chart -->
+    <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+      <div class="border-b border-ink-100 px-5 py-4">
+        <div class="flex items-center justify-between gap-3">
+          <p class="font-display font-semibold text-ink-900">Grocery spend</p>
+          <hh-tabs
+            size="xxs"
+            [tabs]="spendChartTabs"
+            [active]="chartMode()"
+            (activeChange)="chartMode.set($any($event))"
+          />
+        </div>
+        <p class="mt-0.5 text-xs text-ink-400">
+          {{ chartMode() === 'month' ? 'Last 12 months' : 'Last 30 days' }} · PKR
+        </p>
+      </div>
+
+      <div class="p-5">
+        <div class="flex">
+          <!-- Y-axis labels -->
+          <div class="relative mr-2 h-40 w-10 shrink-0">
+            @for (tick of spendChart().ticks; track tick.value) {
+              <span
+                class="absolute right-0 -translate-y-1/2 text-right text-[10px] leading-none text-ink-400"
+                [style.bottom]="tick.bottomPct + '%'"
+              >{{ tick.label }}</span>
+            }
+          </div>
+
+          <!-- Bar area -->
+          <div
+            class="relative flex h-40 flex-1 items-end"
+            [class]="chartMode() === 'month' ? 'gap-2 sm:gap-3' : 'gap-px'"
+          >
+            <!-- Gridlines -->
+            @for (tick of spendChart().ticks; track tick.value) {
+              <div
+                class="pointer-events-none absolute inset-x-0 border-t border-ink-100"
+                [style.bottom]="tick.bottomPct + '%'"
+              ></div>
+            }
+
+            <!-- Bars -->
+            @for (b of spendChart().bars; track $index; let first = $first; let last = $last) {
+              <div class="group relative flex h-full flex-1 flex-col justify-end">
+                <!-- Tooltip -->
+                @if (b.value > 0) {
+                  <div
+                    class="pointer-events-none absolute z-10 hidden w-28 group-hover:block"
+                    [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+                    [style.bottom]="'calc(' + b.pct + '% + 14px)'"
+                  >
+                    <div class="rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
+                      <p class="text-[11px] font-semibold text-white">{{ b.label }}</p>
+                      <p class="text-[11px] text-ink-300">Rs {{ b.value | number }}</p>
+                    </div>
+                    <div
+                      class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
+                      [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
+                    ></div>
+                  </div>
+                }
+                <!-- Bar itself -->
+                <div
+                  class="min-h-0 rounded-t-sm bg-brand-400 transition-colors group-hover:bg-brand-500"
+                  [style.height.%]="b.pct"
+                ></div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- X-axis labels -->
+        <div class="mt-2 ml-12 flex justify-between text-[10px] text-ink-400">
+          @for (b of spendChart().bars; track $index; let i = $index) {
+            <span [class.invisible]="chartMode() === 'day' && i % 5 !== 0 && i !== spendChart().bars.length - 1">
+              {{ b.label }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    </div><!-- end charts row -->
 
     @if (svc.entries().length === 0) {
       <hh-empty-state
         icon="ti-tools-kitchen-2"
-        title="No menus yet"
-        message="Record your daily meals and grocery spend to keep track of mess costs."
+        title="No grocery entries yet"
+        message="Log your bulk grocery purchases to keep track of mess spend."
       >
-        <a hh-button color="primary" size="sm" routerLink="create-menu">
-          <i class="ti ti-plus" aria-hidden="true"></i>Create today's menu
+        <a hh-button color="primary" size="sm" routerLink="add">
+          <i class="ti ti-plus" aria-hidden="true"></i>Add grocery
         </a>
       </hh-empty-state>
     } @else {
@@ -37,76 +312,98 @@
               <div class="min-w-0">
                 <p class="font-display font-semibold text-ink-900">{{ entry.displayDate }}</p>
                 <p class="text-xs text-ink-400">
-                  {{ entry.meals.breakfast.menuName || 'Breakfast' }}
-                  · {{ entry.meals.lunch.menuName || 'Lunch' }}
-                  · {{ entry.meals.dinner.menuName || 'Dinner' }}
+                  @if (entry.mode === 'bill') {
+                    Quick entry
+                    @if (entry.images?.length) { · {{ entry.images!.length }} photo{{ entry.images!.length === 1 ? '' : 's' }} }
+                  } @else {
+                    {{ entry.itemCount }} grocery item{{ entry.itemCount === 1 ? '' : 's' }}
+                    @if (entry.images?.length) { · {{ entry.images!.length }} photo{{ entry.images!.length === 1 ? '' : 's' }} }
+                  }
                 </p>
               </div>
             </button>
-            <span class="shrink-0 font-semibold text-ink-900">Rs {{ entry.totalCost | number }}</span>
+            <span class="shrink-0 font-semibold text-ink-900">Rs {{ entry.totalSum | number }}</span>
             <button
               type="button"
               class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-300 transition hover:bg-danger/10 hover:text-danger"
-              (click)="remove(entry.id)"
+              (click)="promptRemove(entry.id)"
               aria-label="Delete entry"
             >
               <i class="ti ti-trash text-sm" aria-hidden="true"></i>
             </button>
           </div>
 
-          <!-- Expanded meal details -->
+          <!-- Expanded breakdown -->
           @if (expanded() === entry.id) {
-            <div class="border-t border-ink-100">
-              @for (mealType of mealOrder; track mealType) {
-                @let meta = mealMeta[mealType];
-                @let meal = entry.meals[mealType];
-                @let mealCost = entry.mealTotals[mealType];
+            <div class="border-t border-ink-100 p-5 pt-4">
 
-                <div class="border-b border-ink-50 last:border-0">
-                  <!-- Meal sub-header -->
-                  <div class="flex items-center justify-between px-5 py-3">
-                    <div class="flex items-center gap-2.5">
-                      <span class="grid h-8 w-8 place-items-center rounded-lg text-brand-600" [class]="meta.tint">
-                        <i class="ti" [class]="meta.icon" aria-hidden="true"></i>
-                      </span>
-                      <div>
-                        <p class="text-sm font-semibold text-ink-900">{{ meta.label }}</p>
-                        @if (meal.menuName) {
-                          <p class="text-xs text-ink-400">{{ meal.menuName }}</p>
-                        }
+              @if (entry.mode === 'bill') {
+                <!-- Quick entry: bill photo(s) + total -->
+                @if (entry.images?.length) {
+                  <div class="flex gap-3 overflow-x-auto pb-1">
+                    @for (img of entry.images!; track img) {
+                      <div class="h-72 w-52 shrink-0 overflow-hidden rounded-2xl border border-ink-100 shadow-sm">
+                        <img [src]="img" alt="Bill photo" class="h-full w-full object-cover" />
                       </div>
-                    </div>
-                    @if (mealCost > 0) {
-                      <span class="text-sm font-semibold text-ink-700">Rs {{ mealCost | number }}</span>
                     }
                   </div>
-
-                  <!-- Grocery items -->
-                  @if (meal.groceries.length) {
-                    <div class="px-5 pb-3">
-                      <div class="overflow-hidden rounded-xl border border-ink-100">
-                        @for (item of meal.groceries; track item.id) {
-                          <div class="flex items-center justify-between border-b border-ink-50 px-4 py-2.5 last:border-0 text-sm">
-                            <span class="font-medium text-ink-800">{{ item.name }}</span>
-                            <div class="flex items-center gap-4">
-                              <span class="text-ink-400">{{ item.quantity | number:'1.0-2' }} {{ item.unit }}</span>
-                              <span class="w-20 text-right font-semibold text-ink-900">Rs {{ item.price | number }}</span>
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  } @else {
-                    <p class="px-5 pb-3 text-xs text-ink-400">No grocery items recorded.</p>
-                  }
+                } @else {
+                  <div class="flex items-center gap-3 rounded-xl border border-dashed border-ink-200 bg-surface/50 px-4 py-6">
+                    <i class="ti ti-photo-off shrink-0 text-xl text-ink-300" aria-hidden="true"></i>
+                    <span class="text-sm text-ink-400">No photo uploaded</span>
+                  </div>
+                }
+                <div class="mt-4 flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Total amount</p>
+                    <p class="font-display mt-0.5 text-2xl font-semibold text-ink-900">Rs {{ entry.totalSum | number }}</p>
+                  </div>
+                  <span class="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
+                    <i class="ti ti-bolt text-lg text-amber-500" aria-hidden="true"></i>
+                  </span>
                 </div>
+              } @else {
+                <!-- Items mode: breakdown table -->
+                <div class="overflow-x-auto">
+                  <div class="min-w-[520px] overflow-hidden rounded-xl border border-ink-100">
+                    <div class="flex items-center gap-3 border-b border-ink-50 bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                      <span class="flex-1 min-w-[120px]">Item</span>
+                      <span class="w-14 shrink-0">Unit</span>
+                      <span class="w-16 shrink-0 text-right">Qty</span>
+                      <span class="w-24 shrink-0 text-right">Unit price</span>
+                      <span class="w-24 shrink-0 text-right">Total price</span>
+                    </div>
+                    @for (item of entry.items; track item.id) {
+                      <div class="flex items-center gap-3 border-b border-ink-50 px-4 py-2.5 text-sm last:border-0">
+                        <span class="flex-1 min-w-[120px] font-medium text-ink-800">{{ item.name }}</span>
+                        <span class="w-14 shrink-0 text-ink-500">{{ item.unit }}</span>
+                        <span class="w-16 shrink-0 text-right text-ink-500">{{ item.quantity | number: '1.0-2' }}</span>
+                        <span class="w-24 shrink-0 text-right text-ink-600">Rs {{ item.unitPrice | number }}</span>
+                        <span class="w-24 shrink-0 text-right font-semibold text-ink-900">Rs {{ item.totalPrice | number }}</span>
+                      </div>
+                    }
+                    <div class="flex items-center justify-between bg-tint-cream px-4 py-2.5">
+                      <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                        Total · {{ entry.itemCount }} item{{ entry.itemCount === 1 ? '' : 's' }}
+                      </span>
+                      <span class="font-display font-semibold text-ink-900">Rs {{ entry.totalSum | number }}</span>
+                    </div>
+                  </div>
+                </div>
+                @if (entry.images?.length) {
+                  <div class="mt-4">
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Attachments</p>
+                    <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                      @for (img of entry.images!; track img) {
+                        <div class="aspect-square overflow-hidden rounded-xl border border-ink-100 bg-surface">
+                          <img [src]="img" alt="Attachment" class="h-full w-full object-cover" />
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
               }
 
-              <!-- Daily total -->
-              <div class="flex items-center justify-between bg-tint-cream px-5 py-3">
-                <span class="text-sm font-semibold text-ink-700">Daily total</span>
-                <span class="font-display font-semibold text-ink-900">Rs {{ entry.totalCost | number }}</span>
-              </div>
             </div>
           }
 
@@ -116,3 +413,17 @@
 
   </main>
 </app-dashboard-layout>
+
+@if (removePending()) {
+  <hh-confirm-modal
+    title="Delete grocery entry?"
+    icon="ti-trash"
+    tone="danger"
+    confirmLabel="Delete"
+    confirmColor="danger"
+    (confirm)="confirmRemove()"
+    (cancel)="cancelRemove()"
+  >
+    This will permanently delete this grocery entry. This action cannot be undone.
+  </hh-confirm-modal>
+}

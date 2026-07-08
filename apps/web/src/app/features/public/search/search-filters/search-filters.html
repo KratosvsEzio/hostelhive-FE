@@ -1,4 +1,4 @@
-<div class="flex flex-1 items-center gap-2">
+<div class="flex flex-1 min-w-0 items-center gap-2">
   <!-- Filters button — sized to match the dropdown pills. Badge is an absolute overlay. -->
   <div class="relative shrink-0">
     <button
@@ -19,6 +19,16 @@
       >
     }
   </div>
+
+  <!-- Popular amenity quick-select pills -->
+  @for (a of popularAmenities; track a.slug) {
+    <button
+      hh-chip
+      type="button"
+      [active]="amenities().includes(a.slug)"
+      (click)="toggleQuickAmenity(a.slug)"
+    ><i class="ti ti-{{ a.icon }} text-[13px]"></i>{{ a.label }}</button>
+  }
 
   <!-- Sort — quick-access inline; maps to sort[created_at] / sort[starting_price] in the API layer.
        Pinned to the far right; panel opens right-aligned so it never clips. -->

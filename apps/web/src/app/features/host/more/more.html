@@ -1,0 +1,124 @@
+<app-dashboard-layout label="More">
+  <main class="mx-auto max-w-lg">
+
+    <!-- Account card -->
+    <div class="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card">
+      <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-500 text-base font-semibold text-white">{{ initials() }}</span>
+      <div class="min-w-0 flex-1">
+        <p class="truncate font-semibold text-ink-900">{{ session.user()?.name }}</p>
+        <p class="truncate text-xs text-ink-400">{{ session.user()?.email }}</p>
+      </div>
+    </div>
+
+    <!-- Property switcher trigger -->
+    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-card"
+      (click)="switcherOpen.set(true)"
+    >
+      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-building-community text-lg" aria-hidden="true"></i></span>
+      <span class="min-w-0 flex-1">
+        <span class="block truncate text-sm font-semibold text-ink-900">{{ propertyStore.activeProperty()?.name ?? 'Select a hostel' }}</span>
+        @if (propertyStore.activeProperty(); as p) {
+          <span class="block truncate text-xs text-ink-400">{{ p.area }}, {{ p.city }}</span>
+        }
+      </span>
+      <i class="ti ti-selector text-ink-400" aria-hidden="true"></i>
+    </button>
+
+    <!-- This hostel -->
+    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">This hostel</p>
+    <div class="divide-y divide-ink-100 overflow-hidden rounded-2xl bg-white shadow-card">
+      <a [routerLink]="base() + '/profile'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-building" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Hostel profile</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <a [routerLink]="base() + '/team'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-user-shield" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Team &amp; staff</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <a [routerLink]="base() + '/utilities'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-mint text-ink-600"><i class="ti ti-bolt" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Utilities</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <a [routerLink]="base() + '/analytics'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-purple text-ink-600"><i class="ti ti-chart-bar" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Analytics</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <!-- Account -->
+    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Account</p>
+    <div class="divide-y divide-ink-100 overflow-hidden rounded-2xl bg-white shadow-card">
+      <a [routerLink]="base() + '/subscription'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-rosette" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Subscription</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <a routerLink="/account/settings" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-settings" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Account settings</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <a routerLink="/account/help" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-help-circle" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Help centre</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-left" (click)="signOut()">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-logout" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-danger">Sign out</span>
+      </button>
+    </div>
+  </main>
+</app-dashboard-layout>
+
+<!-- Property switcher — bottom sheet (design board 42, phone 2) -->
+@if (switcherOpen()) {
+  <button
+    type="button"
+    class="fixed inset-0 z-40 cursor-default bg-ink-900/45"
+    aria-label="Close property switcher"
+    (click)="switcherOpen.set(false)"
+  ></button>
+  <div class="safe-pb fixed inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-white px-5 pb-4 pt-3" role="dialog" aria-label="Switch property">
+    <span class="mx-auto block h-1 w-10 rounded-full bg-ink-200"></span>
+    <p class="mt-4 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
+    <div class="mt-2 max-h-72 space-y-1.5 overflow-y-auto">
+      @for (p of propertyStore.properties(); track p.id) {
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left"
+          [class]="p.id === propertyStore.selected() ? 'bg-brand-50 ring-1 ring-brand-200' : 'hover:bg-surface'"
+          (click)="selectProperty(p)"
+        >
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-ink-600" [class]="p.id === propertyStore.selected() ? 'bg-white text-brand-600 shadow-card' : 'bg-tint-mint'">
+            <i class="ti ti-building-community text-lg" aria-hidden="true"></i>
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-semibold text-ink-900">{{ p.name }}</span>
+            <span class="block truncate text-xs text-ink-500">{{ p.area }}, {{ p.city }}</span>
+          </span>
+          <span class="flex flex-col items-end gap-1">
+            <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="statusClass(p)">{{ statusLabel(p) }}</span>
+            <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="genderClass(p.gender)">{{ genderLabel(p.gender) }}</span>
+          </span>
+        </button>
+      } @empty {
+        <p class="py-6 text-center text-sm text-ink-400">No hostels yet.</p>
+      }
+    </div>
+    <a
+      routerLink="/host/hostels/new"
+      class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
+      (click)="switcherOpen.set(false)"
+    >
+      <i class="ti ti-plus" aria-hidden="true"></i>Create new hostel
+    </a>
+  </div>
+}

@@ -52,7 +52,7 @@
               size="sm"
               type="button"
               class="mt-3 w-full"
-              (click)="remove(l.id)"
+              (click)="promptRemove(l)"
             >
               <i class="ti ti-heart-off text-danger" aria-hidden="true"></i>
               Unfavorite
@@ -84,3 +84,17 @@
     </div>
   }
 </div>
+
+@if (removePending(); as item) {
+  <hh-confirm-modal
+    title="Remove from favorites?"
+    icon="ti-heart-off"
+    tone="danger"
+    confirmLabel="Remove"
+    confirmColor="danger"
+    (confirm)="confirmRemove()"
+    (cancel)="cancelRemove()"
+  >
+    Remove <strong>{{ item.name }}</strong> from your saved hostels?
+  </hh-confirm-modal>
+}

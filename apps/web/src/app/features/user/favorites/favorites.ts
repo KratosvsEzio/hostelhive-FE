@@ -12,7 +12,7 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Gender } from '@hostelhive/data-access';
 import { FavListItem, FavouritesApi } from '@services/favourites-api';
 import { FavoritesStore } from '@util/favorites-store';
-import { Badge, Button, ErrorState, Skeleton } from '@hostelhive/ui';
+import { Badge, Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
 
 interface ViewState {
   loading: boolean;
@@ -23,7 +23,7 @@ interface ViewState {
 @Component({
   selector: 'app-account-favorites',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, Badge, Button, ErrorState, Skeleton],
+  imports: [DecimalPipe, RouterLink, Badge, Button, ConfirmModal, ErrorState, Skeleton],
   templateUrl: './favorites.html',
 })
 export class AccountFavorites {
@@ -46,15 +46,27 @@ export class AccountFavorites {
   );
 
   private readonly _removed = signal(new Set<string>());
+  protected readonly removePending = signal<FavListItem | null>(null);
 
   protected readonly saved = computed(() =>
     this.state().data.filter((l) => !this._removed().has(l.id)),
   );
 
-  protected remove(id: string): void {
-    this._removed.update((s) => new Set([...s, id]));
-    this.favorites.remove(id);
-    this.api.unmarkFavourite(id).subscribe();
+  protected promptRemove(item: FavListItem): void {
+    this.removePending.set(item);
+  }
+
+  protected confirmRemove(): void {
+    const item = this.removePending();
+    if (!item) return;
+    this.removePending.set(null);
+    this._removed.update((s) => new Set([...s, item.id]));
+    this.favorites.remove(item.id);
+    this.api.unmarkFavourite(item.id).subscribe();
+  }
+
+  protected cancelRemove(): void {
+    this.removePending.set(null);
   }
 
   protected retry(): void {

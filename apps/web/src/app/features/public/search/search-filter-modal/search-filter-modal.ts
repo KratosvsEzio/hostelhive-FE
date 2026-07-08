@@ -5,14 +5,18 @@ import {
   DestroyRef,
   ElementRef,
   PLATFORM_ID,
+  computed,
   inject,
   model,
   output,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { isPlatformBrowser } from '@angular/common';
+import { catchError, of } from 'rxjs';
 import { AMENITIES, Gender, PROPERTY_TYPES } from '@hostelhive/data-access';
-import { Button, Dropdown, RangeSlider } from '@hostelhive/ui';
+import { Button, Dropdown, DropdownOption, RangeSlider } from '@hostelhive/ui';
+import { OffersApi } from '@services';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
 export interface FilterState {
@@ -24,6 +28,7 @@ export interface FilterState {
   amenities: string[];
   sort: string;
 }
+
 
 // Room capacity (people per room). Values mirror the inline dropdown so the two stay in
 // sync; the API layer maps them to f[room_types.capacity] (exact) / [gte]=4 for "4+".
@@ -90,20 +95,27 @@ export class SearchFilterModal {
     { label: 'Price: low to high', value: 'price-asc' },
   ];
 
-  /** Top 4 amenities shown as icon cards (Airbnb-style). */
-  protected readonly topAmenities = Object.entries(AMENITIES)
-    .slice(0, 4)
-    .map(([key, v]) => ({
-      key,
-      icon: v.icon.replace('ti-', ''),
-      label: v.label,
-    }));
+  private readonly _offersApi = inject(OffersApi);
+  private readonly _offerCategories = toSignal(
+    this._offersApi.categories().pipe(catchError(() => of([]))),
+  );
 
-  /** All amenities for quick-chip toggles in the outer bar (exported for parent). */
-  static readonly ALL_AMENITIES = Object.entries(AMENITIES).map(([key, v]) => ({
-    key,
-    label: v.label,
-  }));
+  /** Flat list of all amenity options grouped by category for the single multi-select dropdown. */
+  protected readonly amenityOptions = computed((): DropdownOption[] => {
+    const cats = this._offerCategories();
+    if (cats?.length) {
+      return cats.flatMap((cat) =>
+        cat.offers.map((o): DropdownOption => ({ value: o.slug, label: o.name, group: cat.name })),
+      );
+    }
+    return Object.entries(AMENITIES).map(([slug, v]): DropdownOption => ({ value: slug, label: v.label }));
+  });
+
+  protected readonly amenityValue = computed(() => this.draftAmenities());
+
+  protected setAmenities(v: string | string[] | null): void {
+    this.draftAmenities.set(Array.isArray(v) ? v : v ? [v] : []);
+  }
 
   protected readonly propertyTypes = PROPERTY_TYPES;
 
@@ -126,12 +138,6 @@ export class SearchFilterModal {
     this.draftAmenities.set([...state.amenities]);
     this.draftSort.set(state.sort || 'recommended');
     this.open.set(true);
-  }
-
-  protected toggleAmenity(key: string): void {
-    this.draftAmenities.update((a) =>
-      a.includes(key) ? a.filter((x) => x !== key) : [...a, key],
-    );
   }
 
   protected setDraftProperty(v: string | string[] | null): void {

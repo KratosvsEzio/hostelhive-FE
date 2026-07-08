@@ -1,3 +1,4 @@
+@if (!mobile.isMobile()) {
 <aside
   class="fixed bottom-0 left-0 top-16 z-40 flex w-64 flex-col border-r border-ink-100 bg-white transition-transform duration-200 ease-in-out"
   [style.transform]="drawer.open() ? '' : 'translateX(-100%)'"
@@ -48,6 +49,7 @@
     (click)="drawer.close()"
   ></button>
 }
+}
 
 <div
   class="h-[calc(100dvh-4rem)] overflow-hidden transition-[padding-left] duration-200 ease-in-out"
@@ -55,3 +57,8 @@
 >
   <router-outlet />
 </div>
+
+<!-- Mobile app: bottom tab navigation replaces the sidebar. -->
+@if (mobile.isMobile()) {
+  <app-host-tab-bar />
+}

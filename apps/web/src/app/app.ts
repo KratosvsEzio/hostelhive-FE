@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -10,15 +10,18 @@ import { filter, map, startWith } from 'rxjs';
 import { SiteHeader } from '@app/layout/components/site-header/site-header';
 import { SiteFooter } from '@app/layout/components/site-footer/site-footer';
 import { ToastHost } from '@app/layout/components/toast-host/toast-host';
+import { SeekerTabBar } from '@app/layout/components/mobile-tab-bar/seeker-tab-bar';
+import { MobileApp } from '@core/mobile-app';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SiteHeader, SiteFooter, ToastHost],
+  imports: [RouterOutlet, SiteHeader, SiteFooter, ToastHost, SeekerTabBar],
   templateUrl: './app.html',
 })
 export class App {
   private readonly router = inject(Router);
+  private readonly mobile = inject(MobileApp);
 
   private readonly path = toSignal(
     this.router.events.pipe(
@@ -30,14 +33,15 @@ export class App {
   );
 
   // The one shared SiteHeader renders on every route (its action buttons vary by area) — except
-  // the full-screen onboarding wizard, which carries its own step chrome (progress + save/exit).
-  protected readonly showHeader = computed(
-    () => !this.path().startsWith('/host/listings/new'),
-  );
+  // the full-screen onboarding wizard and the public mess opt-in landing, which carry their own
+  // chrome.
+  protected readonly showHeader = computed(() => {
+    const u = this.path();
+    return !u.startsWith('/host/listings/new') && !u.startsWith('/mess/confirm');
+  });
 
-  // Footer is seeker-only: the console areas (/host, /admin, /moderator), the Lead Wall (/auth),
-  // the email-confirm landing and /forbidden don't show it.
-  protected readonly showFooter = computed(() => {
+  // Seeker area = everything outside the consoles, the Lead Wall and the utility landings.
+  private readonly inSeekerArea = computed(() => {
     const u = this.path();
     return (
       // Exact `/host` or `/host/...` — not the public `/hostel/:id` listing pages.
@@ -47,7 +51,19 @@ export class App {
       !u.startsWith('/moderator') &&
       !u.startsWith('/auth') &&
       !u.startsWith('/confirm_invitation') &&
-      !u.startsWith('/forbidden')
+      !u.startsWith('/forbidden') &&
+      // Public mess opt-in landing carries its own chrome (no site header/footer/tabs).
+      !u.startsWith('/mess/confirm')
     );
   });
+
+  // Footer is seeker-only, and the mobile app replaces it with the bottom tab bar.
+  protected readonly showFooter = computed(
+    () => this.inSeekerArea() && !this.mobile.isMobile(),
+  );
+
+  // Bottom tab bar (Explore · Search · Favorites · Account) — mobile app, seeker area only.
+  protected readonly showSeekerTabs = computed(
+    () => this.inSeekerArea() && this.mobile.isMobile(),
+  );
 }

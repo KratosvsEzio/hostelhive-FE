@@ -11,6 +11,7 @@ import { catchError, map, of, startWith, switchMap, take } from 'rxjs';
 import {
   AvatarTone,
   Button,
+  ConfirmModal,
   ContextMenu,
   ContextMenuDivider,
   DataTable,
@@ -49,6 +50,7 @@ const ROLE_ICON: Record<StaffRole, string> = {
   imports: [
     DashboardLayout,
     Button,
+    ConfirmModal,
     ContextMenu,
     ContextMenuDivider,
     DataTable,
@@ -233,9 +235,18 @@ export class HostTeam {
       });
   }
 
-  protected removeStaff(m: StaffMember): void {
+  protected readonly staffDeletePending = signal<StaffMember | null>(null);
+
+  protected promptRemoveStaff(m: StaffMember): void {
+    this.closeMenu();
+    this.staffDeletePending.set(m);
+  }
+
+  protected confirmRemoveStaff(): void {
+    const m = this.staffDeletePending();
     const hostelId = this.store.selected();
-    if (!hostelId || this.removingId()) return;
+    if (!m || !hostelId || this.removingId()) return;
+    this.staffDeletePending.set(null);
     this.removingId.set(m.id);
     this.api.removeManager(hostelId, m.id)
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
@@ -250,6 +261,10 @@ export class HostTeam {
           this.notifications.error('Couldn\'t remove staff', err.message);
         },
       });
+  }
+
+  protected cancelRemoveStaff(): void {
+    this.staffDeletePending.set(null);
   }
 
   protected roleLabel(role: StaffRole): string {

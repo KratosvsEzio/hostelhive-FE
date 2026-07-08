@@ -158,6 +158,7 @@ export class Rooms {
   private readonly deletedRenterIds = signal(new Set<string>());
   protected readonly renterDeletePending = signal<RoomRenter | null>(null);
   protected readonly renterDeleting = signal(false);
+  protected readonly roomDeletePending = signal<Room | null>(null);
 
   private readonly roomTypesRefresh = signal(0);
   private readonly rtKey = computed(() => ({
@@ -512,14 +513,25 @@ export class Rooms {
     });
   }
 
-  protected deleteRoom(r: Room): void {
+  protected promptDeleteRoom(r: Room): void {
     this.closeMenu();
+    this.roomDeletePending.set(r);
+  }
+
+  protected confirmDeleteRoom(): void {
+    const r = this.roomDeletePending();
+    if (!r) return;
+    this.roomDeletePending.set(null);
     this.local.set((this.state().data ?? []).filter((x) => x.id !== r.id));
     const hostelId = this.store.selected();
     if (!hostelId) return;
     this.api.deleteRoom(hostelId, r.id).subscribe({
       error: () => this.refresh.update((n) => n + 1),
     });
+  }
+
+  protected cancelRoomDelete(): void {
+    this.roomDeletePending.set(null);
   }
 
   protected save(): void {

@@ -113,13 +113,27 @@
           Duplicate
         </button>
         <hh-context-menu-divider />
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="deleteRoom(menuRoom)">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptDeleteRoom(menuRoom)">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
           Delete room
         </button>
       </hh-context-menu>
     }
   }
+}
+
+@if (roomDeletePending(); as room) {
+  <hh-confirm-modal
+    title="Delete room?"
+    icon="ti-trash"
+    tone="danger"
+    confirmLabel="Delete"
+    confirmColor="danger"
+    (confirm)="confirmDeleteRoom()"
+    (cancel)="cancelRoomDelete()"
+  >
+    This will permanently delete room <strong>{{ room.number }}</strong>. This action cannot be undone.
+  </hh-confirm-modal>
 }
 
 @if (renterDeletePending(); as renter) {

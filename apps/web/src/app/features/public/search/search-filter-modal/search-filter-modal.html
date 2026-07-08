@@ -24,34 +24,17 @@
 
       <!-- body (scrollable) -->
       <div class="flex-1 overflow-y-auto px-6 py-5">
-        <!-- Recommended amenities -->
+        <!-- Amenities — single grouped multi-select dropdown -->
         <section>
-          <h3 class="mb-3 text-base font-semibold text-ink-900">
-            Recommended for you
-          </h3>
-          <div class="grid grid-cols-4 gap-3">
-            @for (a of topAmenities; track a.key) {
-              <button
-                hh-button variant="outlined" size="sm"
-                type="button"
-                [class]="
-                  draftAmenities().includes(a.key)
-                    ? 'border-ink-900 bg-ink-50'
-                    : 'border-ink-200 hover:border-ink-400'
-                "
-                (click)="toggleAmenity(a.key)"
-              >
-                <i
-                  class="ti text-2xl text-ink-600"
-                  [class]="'ti-' + a.icon"
-                ></i>
-                <span
-                  class="text-[11px] font-medium leading-tight text-ink-700"
-                  >{{ a.label }}</span
-                >
-              </button>
-            }
-          </div>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">Amenities</h3>
+          <hh-dropdown
+            variant="field"
+            [multiple]="true"
+            placeholder="Select amenities"
+            [options]="amenityOptions()"
+            [value]="amenityValue()"
+            (valueChange)="setAmenities($event)"
+          />
         </section>
 
         <hr class="my-5 border-ink-100" />
@@ -61,7 +44,8 @@
           <h3 class="mb-3 text-base font-semibold text-ink-900">
             Type of stay
           </h3>
-          <div class="flex gap-2">
+          <!-- flex-wrap: the four pills exceed a 320px viewport in one row -->
+          <div class="flex flex-wrap gap-2">
             @for (g of genders; track g.value) {
               <button
                 hh-button variant="outlined" size="sm"
