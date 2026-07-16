@@ -89,6 +89,9 @@ interface ApiRenter {
   advance_deposit?: number | null;
   deposit?: number | null;
   mess_charges?: number | null;
+  breakfast_enabled?: boolean | null;
+  lunch_enabled?: boolean | null;
+  dinner_enabled?: boolean | null;
   transportation_charges?: number | null;
   billing_date?: number | null;
   billing_due_date?: number | null;
@@ -213,6 +216,9 @@ function toTenant(r: ApiRenter): Tenant {
     rent: Number(r.rent_amount ?? r.rent ?? 0),
     deposit: Number(r.advance_deposit ?? r.deposit ?? 0),
     messCharges: r.mess_charges != null ? Number(r.mess_charges) : undefined,
+    messBreakfast: r.breakfast_enabled ?? true,
+    messLunch: r.lunch_enabled ?? true,
+    messDinner: r.dinner_enabled ?? true,
     transportationCharges:
       r.transportation_charges != null ? Number(r.transportation_charges) : undefined,
     billingDate: r.billing_date ?? undefined,
@@ -534,6 +540,9 @@ export class HostOpsApi {
       emergency_contact: string;
       room_id?: string | number | null;
       mess_charges?: number | null;
+      breakfast_enabled?: boolean;
+      lunch_enabled?: boolean;
+      dinner_enabled?: boolean;
       transportation_charges?: number | null;
       advance_deposit: number;
       joining_date: string;
@@ -563,6 +572,9 @@ export class HostOpsApi {
       emergency_contact?: string;
       room_id?: string | number | null;
       mess_charges?: number | null;
+      breakfast_enabled?: boolean;
+      lunch_enabled?: boolean;
+      dinner_enabled?: boolean;
       transportation_charges?: number | null;
       advance_deposit?: number;
       joining_date?: string;

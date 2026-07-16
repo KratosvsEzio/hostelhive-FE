@@ -7,9 +7,12 @@ import {
 } from '@angular/core';
 import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { Button } from '@hostelhive/ui';
+import { HostelsApi, MealInfoRaw } from '@services';
 import {
   MEAL_META,
+  MealType,
   MessNotificationsService,
   TokenPayload,
 } from '@features/host/mess/mess-notifications.service';
@@ -31,6 +34,7 @@ type ConfirmState = 'loading' | 'valid' | 'confirmed' | 'already' | 'expired' | 
 export class MessConfirm {
   private readonly route = inject(ActivatedRoute);
   private readonly svc = inject(MessNotificationsService);
+  private readonly api = inject(HostelsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   protected readonly mealMeta = MEAL_META;
@@ -38,17 +42,25 @@ export class MessConfirm {
   protected readonly payload = signal<TokenPayload | null>(null);
 
   constructor() {
-    // Browser-only: the in-memory token store doesn't exist on the server, and resolving here
-    // avoids baking a transient state into the SSR HTML.
-    if (this.isBrowser) {
-      const res = this.svc.resolve(this.route.snapshot.queryParamMap.get('token'));
-      if (res.status === 'invalid') {
-        this.state.set('invalid');
-      } else {
-        this.payload.set(res.payload);
-        this.state.set(res.status === 'expired' ? 'expired' : 'valid');
-      }
-    }
+    if (!this.isBrowser) return;
+    const token = this.route.snapshot.queryParamMap.get('token');
+    if (!token) { this.state.set('invalid'); return; }
+
+    this.api.getMealInfo(token)
+      .pipe(catchError(() => of(null)))
+      .subscribe((info: MealInfoRaw | null) => {
+        if (!info) { this.state.set('invalid'); return; }
+        const payload: TokenPayload = {
+          m: info.meal_type as MealType,
+          menu: '',
+          exp: new Date(info.expired_time).getTime(),
+          n: '',
+          d: info.meal_date,
+        };
+        this.payload.set(payload);
+        if (Date.now() > payload.exp) { this.state.set('expired'); return; }
+        this.state.set('valid');
+      });
   }
 
   protected confirm(): void {

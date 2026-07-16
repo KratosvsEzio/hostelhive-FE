@@ -16,8 +16,8 @@
         <p class="text-xs text-ink-400">Students who reserved a portion, by menu.</p>
       </div>
       <div class="text-right">
-        <p class="font-display text-2xl font-semibold text-ink-900">{{ totalConfirmations() | number }}</p>
-        <p class="text-xs text-ink-400">total meal confirmations</p>
+        <p class="font-display text-2xl font-semibold text-ink-900">{{ total() | number }}</p>
+        <p class="text-xs text-ink-400">confirmed for {{ mealMeta[activeMeal()].label.toLowerCase() }}</p>
       </div>
     </div>
 
@@ -37,7 +37,11 @@
       </div>
     </div>
 
-    @if (total()) {
+    @if (loading()) {
+      <div class="rounded-2xl bg-white px-5 py-12 text-center shadow-card">
+        <p class="text-sm text-ink-400">Loading confirmations…</p>
+      </div>
+    } @else if (total()) {
       <hh-data-table
         [columns]="cols"
         [rows]="rows()"

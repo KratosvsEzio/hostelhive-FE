@@ -5,7 +5,8 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter } from '@angular/router';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
+import { AppRouteReuseStrategy } from './route-reuse-strategy';
 import {
   provideClientHydration,
   withEventReplay,
@@ -32,6 +33,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
+    { provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy },
     // Base URL = API origin (paths carry their own /api or /public prefix).
     // Driven from .env → api.env.ts at build time by tools/generate-api-env.mjs.
     provideDataAccess({ baseUrl: apiEnv.apiUrl }, [

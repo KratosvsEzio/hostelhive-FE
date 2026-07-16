@@ -92,6 +92,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 5,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -107,6 +110,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 7,
     outstanding: 9500,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -122,6 +128,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 1,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -138,6 +147,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 3,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'checked-out',
   },
   // Extra Room 101 occupants so the utilities pro-rata table matches the mockup (AR 30, BK 28, SA 30 over 88 days).
@@ -154,6 +166,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 5,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -169,6 +184,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 7,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
 ];

@@ -41,6 +41,7 @@ import {
   PaginationConfig,
   Search,
   Skeleton,
+  Toggle,
 } from '@hostelhive/ui';
 
 import { HostOpsApi, HostPropertyStore, ImageUploadService, ImageUploadKey } from '@services';
@@ -78,6 +79,9 @@ interface CheckInForm {
   rent: string;
   advanceDeposit: string;
   messCharges: string;
+  messBreakfast: boolean;
+  messLunch: boolean;
+  messDinner: boolean;
   transportationCharges: string;
   billingDate: string;
   billingDueDate: string;
@@ -120,6 +124,7 @@ const TONES = ['sky', 'cream', 'mint'] as const;
     Search,
     EmptyState,
     ErrorState,
+    Toggle,
   ],
   templateUrl: './tenants.html',
 })
@@ -481,7 +486,9 @@ export class Tenants {
       fullName: '', email: '', phone: '', emergencyContact: '',
       cnicNumber: '', address: '', roomId: preselectedRoomId ?? '', roomNumber: '',
       joiningDate: new Date().toISOString().slice(0, 10), leaveDate: '',
-      rent: '', advanceDeposit: '', messCharges: '', transportationCharges: '',
+      rent: '', advanceDeposit: '', messCharges: '',
+      messBreakfast: false, messLunch: false, messDinner: false,
+      transportationCharges: '',
       billingDate: '1', billingDueDate: '5',
       imageName: '', imagePreview: '', avatarUploadId: '',
       cnicFrontName: '', cnicFrontPreview: '', cnicFrontUploadId: '',
@@ -509,7 +516,8 @@ export class Tenants {
       fullName: '', email: '', phone: '', emergencyContact: '',
       cnicNumber: '', address: '', roomId: '', roomNumber: '',
       joiningDate: '', leaveDate: '', rent: '', advanceDeposit: '',
-      messCharges: '', transportationCharges: '', billingDate: '', billingDueDate: '',
+      messCharges: '', messBreakfast: true, messLunch: true, messDinner: true,
+      transportationCharges: '', billingDate: '', billingDueDate: '',
       imageName: '', imagePreview: '', avatarUploadId: '',
       cnicFrontName: '', cnicFrontPreview: '', cnicFrontUploadId: '',
       cnicBackName: '', cnicBackPreview: '', cnicBackUploadId: '',
@@ -555,6 +563,9 @@ export class Tenants {
       rent: String(t.rent),
       advanceDeposit: String(t.deposit),
       messCharges: t.messCharges != null ? String(t.messCharges) : '',
+      messBreakfast: t.messBreakfast,
+      messLunch: t.messLunch,
+      messDinner: t.messDinner,
       transportationCharges:
         t.transportationCharges != null ? String(t.transportationCharges) : '',
       billingDate: t.billingDate != null ? String(t.billingDate) : '',
@@ -654,6 +665,10 @@ export class Tenants {
     this.form.update((f) => (f ? { ...f, [key]: value } : f));
   }
 
+  protected patchBool(key: keyof CheckInForm, value: boolean): void {
+    this.form.update((f) => (f ? { ...f, [key]: value } : f));
+  }
+
   protected patchFile(key: 'image' | 'cnicFront' | 'cnicBack', event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -727,6 +742,9 @@ export class Tenants {
           emergency_contact: f.emergencyContact.trim(),
           room_id: f.roomId || null,
           mess_charges: f.messCharges.trim() ? Number(f.messCharges) : null,
+          breakfast_enabled: f.messBreakfast,
+          lunch_enabled: f.messLunch,
+          dinner_enabled: f.messDinner,
           transportation_charges: f.transportationCharges.trim()
             ? Number(f.transportationCharges)
             : null,
@@ -746,6 +764,7 @@ export class Tenants {
         .subscribe({
           next: () => {
             this.saving.set(false);
+            this.notifications.success('Changes saved', `${f.fullName.trim()} has been updated.`);
             this.local.set(null);
             this.refresh.update((n) => n + 1);
             this.close();
@@ -772,6 +791,9 @@ export class Tenants {
         emergency_contact: f.emergencyContact.trim(),
         room_id: f.roomId || undefined,
         mess_charges: f.messCharges.trim() ? Number(f.messCharges) : undefined,
+        breakfast_enabled: f.messBreakfast,
+        lunch_enabled: f.messLunch,
+        dinner_enabled: f.messDinner,
         transportation_charges: f.transportationCharges.trim()
           ? Number(f.transportationCharges)
           : undefined,
@@ -791,6 +813,7 @@ export class Tenants {
       .subscribe({
         next: () => {
           this.saving.set(false);
+          this.notifications.success('Tenant checked in', `${f.fullName.trim()} has been added.`);
           this.local.set(null);
           this.refresh.update((n) => n + 1);
           this.close();

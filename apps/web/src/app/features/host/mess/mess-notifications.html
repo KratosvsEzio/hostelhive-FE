@@ -9,15 +9,18 @@
       color="primary"
       size="sm"
       type="button"
-      [disabled]="saveState() === 'saving'"
-      (click)="save()"
+      [disabled]="settingsSaveState() === 'saving'"
+      (click)="saveSettings()"
     >
-      @switch (saveState()) {
+      @switch (settingsSaveState()) {
         @case ('saving') {
           <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
         }
         @case ('saved') {
           <i class="ti ti-check" aria-hidden="true"></i>Saved
+        }
+        @case ('error') {
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>Failed
         }
         @default {
           <i class="ti ti-device-floppy" aria-hidden="true"></i>Save settings
@@ -111,29 +114,36 @@
           }
         </div>
       </div>
-    </div>
 
-    <!-- ─── Delivery channels ───────────────────────────────────────────── -->
-    <div class="rounded-2xl bg-white p-5 shadow-card">
-      <p class="font-display font-semibold text-ink-900">Delivery channels</p>
-      <p class="mb-3 text-xs text-ink-400">How reminders reach students signed up for the mess.</p>
-      <div class="flex flex-wrap gap-2">
-        @for (ch of channelOrder; track ch) {
-          <button
-            type="button"
-            (click)="toggleChannel(ch)"
-            class="flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition"
-            [class]="isChannelOn(ch) ? 'border-brand-500 bg-tint-cream text-brand-700' : 'border-ink-200 text-ink-500 hover:border-ink-300'"
-          >
-            <i class="ti text-base" [class]="channelMeta[ch].icon" aria-hidden="true"></i>
-            {{ channelMeta[ch].label }}
-            @if (isChannelOn(ch)) {
-              <i class="ti ti-check text-xs" aria-hidden="true"></i>
+      <!-- Save menu footer -->
+      <div class="flex justify-end border-t border-ink-100 px-5 py-3">
+        <button
+          hh-button
+          color="primary"
+          size="sm"
+          type="button"
+          [disabled]="menuSaveState() === 'saving'"
+          (click)="saveMenu()"
+        >
+          @switch (menuSaveState()) {
+            @case ('saving') {
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
             }
-          </button>
-        }
+            @case ('saved') {
+              <i class="ti ti-check" aria-hidden="true"></i>Saved
+            }
+            @case ('error') {
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>Failed
+            }
+            @default {
+              <i class="ti ti-device-floppy" aria-hidden="true"></i>Save menu
+            }
+          }
+        </button>
       </div>
     </div>
+
+    <!-- Delivery channels hidden until BE support is ready -->
 
     <!-- ─── Per-meal notification settings ─────────────────────────────── -->
     @for (meal of mealOrder; track meal) {
@@ -159,11 +169,6 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            @if (svc.countsByMeal()[meal] > 0) {
-              <span class="rounded-full bg-tint-mint px-2.5 py-0.5 text-xs font-medium text-ink-700">
-                {{ svc.countsByMeal()[meal] }} confirmed
-              </span>
-            }
             <hh-toggle [checked]="cfg.enabled" (checkedChange)="setEnabled(meal, $event)" />
           </div>
         </div>

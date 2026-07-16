@@ -1,10 +1,24 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { format } from 'date-fns';
+import { MealTypeRecord, WeeklyMenuPayload, WeeklyMenuRecord } from '@services';
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner';
 export type NotifChannel = 'whatsapp' | 'sms' | 'email';
 
 export const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner'];
+
+const DAY_INDEX: Readonly<Record<string, number>> = {
+  monday: 0, tuesday: 1, wednesday: 2, thursday: 3,
+  friday: 4, saturday: 5, sunday: 6,
+};
+
+const DAYS_API = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+/** Extract HH:mm from an ISO datetime string using the embedded offset (no JS timezone math). */
+function isoToHHmm(iso: string): string {
+  const match = iso.match(/T(\d{2}):(\d{2})/);
+  return match ? `${match[1]}:${match[2]}` : '07:00';
+}
 
 export const MEAL_META: Record<MealType, { label: string; icon: string; tint: string }> = {
   breakfast: { label: 'Breakfast', icon: 'ti-coffee', tint: 'bg-tint-cream' },
@@ -176,6 +190,8 @@ function seedConfirmations(): MealConfirmation[] {
 @Injectable({ providedIn: 'root' })
 export class MessNotificationsService {
   readonly settings = signal<MessNotifSettings>(DEFAULT_SETTINGS);
+  private readonly weeklyMenuIds = signal<Record<string, string>>({});
+  private readonly mealTypeIds = signal<Record<string, string>>({});
   readonly confirmations = signal<MealConfirmation[]>(seedConfirmations());
   /** Total students enrolled in the mess plan. */
   readonly totalSubscribers = signal(150);
@@ -224,6 +240,74 @@ export class MessNotificationsService {
       const updated = [...s.meals[meal].weeklyMenu];
       updated[dayIndex] = menu;
       return { ...s, meals: { ...s.meals, [meal]: { ...s.meals[meal], weeklyMenu: updated } } };
+    });
+  }
+
+  loadWeeklyMenus(records: WeeklyMenuRecord[]): void {
+    const ids: Record<string, string> = {};
+    for (const r of records) ids[r.day] = r.id;
+    this.weeklyMenuIds.set(ids);
+
+    this.settings.update((s) => {
+      // Start with all days blank so API data (not seed defaults) is the source of truth
+      let meals = { ...s.meals };
+      for (const meal of MEAL_ORDER) {
+        meals = { ...meals, [meal]: { ...meals[meal], weeklyMenu: Array(7).fill('') } };
+      }
+      for (const r of records) {
+        const i = DAY_INDEX[r.day];
+        if (i === undefined) continue;
+        const set = (meal: MealType, text: string) => {
+          const weeklyMenu = [...meals[meal].weeklyMenu];
+          weeklyMenu[i] = text;
+          meals = { ...meals, [meal]: { ...meals[meal], weeklyMenu } };
+        };
+        set('breakfast', r.breakfast_menu_text);
+        set('lunch', r.lunch_menu_text);
+        set('dinner', r.dinner_menu_text);
+      }
+      return { ...s, meals };
+    });
+  }
+
+  buildWeeklyMenuPayload(): WeeklyMenuPayload[] {
+    const ids = this.weeklyMenuIds();
+    const meals = this.settings().meals;
+    return DAYS_API.map((day, i) => ({
+      ...(ids[day] ? { id: ids[day] } : {}),
+      day,
+      breakfast_menu_text: meals.breakfast.weeklyMenu[i] ?? '',
+      lunch_menu_text: meals.lunch.weeklyMenu[i] ?? '',
+      dinner_menu_text: meals.dinner.weeklyMenu[i] ?? '',
+    }));
+  }
+
+  registerMealTypeId(meal: string, id: string): void {
+    this.mealTypeIds.update((ids) => ({ ...ids, [meal]: id }));
+  }
+
+  loadMealTypes(records: MealTypeRecord[]): void {
+    const ids: Record<string, string> = {};
+    for (const r of records) ids[r.meal] = r.id;
+    this.mealTypeIds.set(ids);
+
+    this.settings.update((s) => {
+      let meals = { ...s.meals };
+      for (const r of records) {
+        const meal = r.meal as MealType;
+        if (!MEAL_ORDER.includes(meal)) continue;
+        meals = {
+          ...meals,
+          [meal]: {
+            ...meals[meal],
+            enabled: true,
+            mealTime: isoToHHmm(r.meal_time),
+            notifyBefore: r.notify_before_meal_time,
+            windowMinutes: Math.min(540, r.confirmation_before_meal * 60),
+          },
+        };
+      }
+      return { ...s, meals };
     });
   }
 

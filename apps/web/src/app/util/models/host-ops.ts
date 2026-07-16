@@ -34,6 +34,9 @@ export interface Tenant {
   rent: number; // PKR / month
   deposit: number; // PKR — advance deposit
   messCharges?: number; // PKR / month
+  messBreakfast: boolean;
+  messLunch: boolean;
+  messDinner: boolean;
   transportationCharges?: number; // PKR / month
   billingDate?: number; // day of month invoice is issued
   billingDueDate?: number; // day of month invoice is due

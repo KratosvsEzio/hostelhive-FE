@@ -3,12 +3,15 @@ import {
   Component,
   DestroyRef,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Button, Dropdown, DropdownOption, Input, Toggle } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { HostelsApi, HostPropertyStore, MealTypePayload } from '@services';
 import {
   CHANNEL_META,
   CHANNEL_ORDER,
@@ -86,6 +89,21 @@ export class MessNotifications {
   protected readonly svc = inject(MessNotificationsService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly hostelApi = inject(HostelsApi);
+  private readonly store = inject(HostPropertyStore);
+
+  constructor() {
+    effect(() => {
+      const hostelId = this.store.selected();
+      if (!hostelId) return;
+      this.hostelApi.getWeeklyMenus(hostelId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((menus) => this.svc.loadWeeklyMenus(menus));
+      this.hostelApi.getMealTypes(hostelId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((types) => this.svc.loadMealTypes(types));
+    });
+  }
 
   protected readonly mealOrder = MEAL_ORDER;
   protected readonly mealMeta = MEAL_META;
@@ -176,16 +194,61 @@ export class MessNotifications {
     });
   }
 
-  protected readonly saveState = signal<'idle' | 'saving' | 'saved'>('idle');
-  private saveTimer?: ReturnType<typeof setTimeout>;
+  protected readonly menuSaveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  protected readonly settingsSaveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  private menuSaveTimer?: ReturnType<typeof setTimeout>;
+  private settingsSaveTimer?: ReturnType<typeof setTimeout>;
 
-  protected save(): void {
-    clearTimeout(this.saveTimer);
-    this.saveState.set('saving');
-    this.saveTimer = setTimeout(() => {
-      this.saveState.set('saved');
-      this.saveTimer = setTimeout(() => this.saveState.set('idle'), 2000);
-    }, 800);
-    this.destroyRef.onDestroy(() => clearTimeout(this.saveTimer));
+  protected saveMenu(): void {
+    const hostelId = this.store.selected();
+    if (!hostelId) return;
+    clearTimeout(this.menuSaveTimer);
+    this.menuSaveState.set('saving');
+
+    this.hostelApi.saveWeeklyMenus(hostelId, this.svc.buildWeeklyMenuPayload())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.menuSaveState.set('saved');
+          this.menuSaveTimer = setTimeout(() => this.menuSaveState.set('idle'), 2000);
+        },
+        error: () => {
+          this.menuSaveState.set('error');
+          this.menuSaveTimer = setTimeout(() => this.menuSaveState.set('idle'), 3000);
+        },
+      });
+  }
+
+  protected saveSettings(): void {
+    const hostelId = this.store.selected();
+    if (!hostelId) return;
+    clearTimeout(this.settingsSaveTimer);
+    this.settingsSaveState.set('saving');
+
+    const meals = this.svc.settings().meals;
+    const payloads: MealTypePayload[] = MEAL_ORDER.map((meal) => {
+      const cfg = meals[meal];
+      return {
+        meal,
+        meal_time: `2000-01-01 ${cfg.mealTime}:00.000000000 PKT +05:00`,
+        confirmation_before_meal: Math.round(cfg.windowMinutes / 60),
+        notify_before_meal_time: cfg.notifyBefore,
+      };
+    });
+
+    this.hostelApi.saveMealTypes(hostelId, payloads)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (records) => {
+          this.svc.loadMealTypes(records);
+          this.settingsSaveState.set('saved');
+          this.settingsSaveTimer = setTimeout(() => this.settingsSaveState.set('idle'), 2000);
+        },
+        error: () => {
+          this.settingsSaveState.set('error');
+          this.settingsSaveTimer = setTimeout(() => this.settingsSaveState.set('idle'), 3000);
+        },
+      });
+    this.destroyRef.onDestroy(() => clearTimeout(this.settingsSaveTimer));
   }
 }

@@ -7,7 +7,8 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { format } from 'date-fns';
 import {
   CellDef,
@@ -19,10 +20,10 @@ import {
   Tabs,
 } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { HostelsApi, HostPropertyStore, MealConfirmationRaw } from '@services';
 import {
   MEAL_META,
   MEAL_ORDER,
-  MealConfirmation,
   MealType,
   MessNotificationsService,
 } from './mess-notifications.service';
@@ -33,25 +34,31 @@ const PAGE_SIZE = 25;
 
 const CONFIRMATION_COLS: ColumnDef[] = [
   {
-    key: 'student',
-    label: 'Student',
+    key: 'tenant',
+    label: 'Tenant',
     cell: (r) => {
-      const o = r as MealConfirmation;
-      return { kind: 'composite', primary: o.studentName, secondary: o.rollNo } satisfies CellDef;
+      const o = r as MealConfirmationRaw;
+      return { kind: 'composite', primary: o.renter.name, secondary: o.renter.phone } satisfies CellDef;
     },
   },
   {
-    key: 'room',
-    label: 'Room',
-    cell: (r) => ({ kind: 'text', value: (r as MealConfirmation).room ?? '—', class: 'text-ink-600' } satisfies CellDef),
-  },
-  {
-    key: 'time',
+    key: 'confirmed_at',
     label: 'Confirmed at',
     align: 'right',
-    cell: (r) => ({ kind: 'text', value: format((r as MealConfirmation).confirmedAt, 'h:mm a'), class: 'text-ink-500' } satisfies CellDef),
+    cell: (r) => {
+      const t = (r as MealConfirmationRaw).confirmed_at;
+      return { kind: 'text', value: t ? format(new Date(t), 'h:mm a') : '—', class: 'text-ink-500' } satisfies CellDef;
+    },
   },
 ];
+
+interface LoadState {
+  loading: boolean;
+  items: MealConfirmationRaw[];
+  total: number;
+}
+
+const EMPTY: LoadState = { loading: false, items: [], total: 0 };
 
 @Component({
   selector: 'hh-mess-confirmations',
@@ -62,11 +69,13 @@ const CONFIRMATION_COLS: ColumnDef[] = [
 export class MessConfirmations {
   private readonly router = inject(Router);
   private readonly queryParams = toSignal(inject(ActivatedRoute).queryParamMap);
+  private readonly store = inject(HostPropertyStore);
+  private readonly api = inject(HostelsApi);
 
   protected readonly svc = inject(MessNotificationsService);
   protected readonly mealMeta = MEAL_META;
   protected readonly cols = CONFIRMATION_COLS;
-  protected readonly rowId = (r: unknown): string => (r as MealConfirmation).id;
+  protected readonly rowId = (r: unknown): string => (r as MealConfirmationRaw).id;
 
   protected readonly activeMeal = computed<MealType>(() => {
     const meal = this.queryParams()?.get('meal');
@@ -85,28 +94,32 @@ export class MessConfirmations {
       : format(new Date(this.effectiveDate() + 'T00:00:00'), 'd MMM yyyy'),
   );
 
-  private readonly confirmationsForDate = computed(() => {
-    const d = this.effectiveDate();
-    return this.svc.confirmations().filter((o) => o.date === d);
-  });
+  private readonly fetchKey = computed(() => ({
+    hostelId: this.store.selected(),
+    date: this.effectiveDate(),
+    meal: this.activeMeal(),
+  }));
 
-  private readonly countsByMeal = computed<Record<MealType, number>>(() => {
-    const counts: Record<MealType, number> = { breakfast: 0, lunch: 0, dinner: 0 };
-    for (const o of this.confirmationsForDate()) counts[o.meal]++;
-    return counts;
-  });
+  private readonly loaded = toSignal(
+    toObservable(this.fetchKey).pipe(
+      switchMap(({ hostelId, date, meal }) => {
+        if (!hostelId) return of<LoadState>(EMPTY);
+        return this.api.mealConfirmations(hostelId, { date, mealType: meal }).pipe(
+          map((r) => ({ loading: false, items: r.items, total: r.total }) satisfies LoadState),
+          startWith<LoadState>({ loading: true, items: [], total: 0 }),
+          catchError(() => of<LoadState>(EMPTY)),
+        );
+      }),
+    ),
+    { initialValue: { loading: true, items: [], total: 0 } as LoadState },
+  );
 
-  private readonly confirmationsByMeal = computed<Record<MealType, MealConfirmation[]>>(() => {
-    const groups: Record<MealType, MealConfirmation[]> = { breakfast: [], lunch: [], dinner: [] };
-    for (const o of this.confirmationsForDate()) groups[o.meal].push(o);
-    return groups;
-  });
+  protected readonly loading = computed(() => this.loaded().loading);
+  protected readonly total = computed(() => this.loaded().total);
+  protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / PAGE_SIZE)));
 
   protected readonly tabs = computed<TabItem[]>(() =>
-    MEAL_ORDER.map((m) => ({
-      value: m,
-      label: `${MEAL_META[m].label} (${this.countsByMeal()[m]})`,
-    })),
+    MEAL_ORDER.map((m) => ({ value: m, label: MEAL_META[m].label })),
   );
 
   protected readonly activeMenu = computed(() => {
@@ -114,14 +127,9 @@ export class MessConfirmations {
     return this.svc.settings().meals[this.activeMeal()].weeklyMenu[dayIndex] ?? '';
   });
 
-  private readonly allForMeal = computed(() => this.confirmationsByMeal()[this.activeMeal()]);
-  protected readonly total = computed(() => this.allForMeal().length);
-  protected readonly totalConfirmations = computed(() => this.confirmationsForDate().length);
-  protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / PAGE_SIZE)));
-
   protected readonly rows = computed(() => {
     const start = (this.page() - 1) * PAGE_SIZE;
-    return this.allForMeal().slice(start, start + PAGE_SIZE);
+    return this.loaded().items.slice(start, start + PAGE_SIZE);
   });
 
   protected readonly pagination = computed<PaginationConfig>(() => ({
@@ -129,7 +137,7 @@ export class MessConfirmations {
     total: this.total(),
     totalPages: this.totalPages(),
     hasNextPage: this.page() < this.totalPages(),
-    itemLabel: 'student',
+    itemLabel: 'tenant',
   }));
 
   protected onMealChange(v: string): void {

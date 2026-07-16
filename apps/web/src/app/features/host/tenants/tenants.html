@@ -6,7 +6,7 @@
   </div>
 
   @if (statuses().length) {
-    <div class="mb-5 grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr))">
+    <div class="mb-5 grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))">
       @for (st of statuses(); track st.slug) {
         <hh-card padding="sm">
           <p class="text-xs text-ink-400">{{ st.name }}</p>
@@ -371,22 +371,13 @@
               (focusout)="markDirty('advanceDeposit')"
             />
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <hh-input
-              label="Mess charges"
-              type="number"
-              placeholder="3000"
-              [value]="f.messCharges"
-              (valueChange)="patch('messCharges', $event)"
-            />
-            <hh-input
-              label="Transport charges"
-              type="number"
-              placeholder="500"
-              [value]="f.transportationCharges"
-              (valueChange)="patch('transportationCharges', $event)"
-            />
-          </div>
+          <hh-input
+            label="Transport charges"
+            type="number"
+            placeholder="500"
+            [value]="f.transportationCharges"
+            (valueChange)="patch('transportationCharges', $event)"
+          />
           <div class="grid grid-cols-2 gap-3">
             <hh-input
               label="Billing date *"
@@ -406,6 +397,45 @@
               (valueChange)="patch('billingDueDate', $event)"
               (focusout)="markDirty('billingDueDate')"
             />
+          </div>
+        </div>
+
+        <!-- Mess -->
+        <div class="flex items-center gap-3">
+          <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Mess</p>
+          <div class="flex-1 border-t border-ink-100"></div>
+        </div>
+        <div class="space-y-3">
+          <hh-input
+            label="Mess charges"
+            type="number"
+            placeholder="3000"
+            [value]="f.messCharges"
+            (valueChange)="patch('messCharges', $event)"
+          />
+          <div class="space-y-2">
+            <p class="text-xs font-medium text-ink-600">Meal plan</p>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5">
+              <span class="flex items-center gap-2 text-sm text-ink-700">
+                <i class="ti ti-coffee text-ink-400" aria-hidden="true"></i>
+                Breakfast
+              </span>
+              <hh-toggle [checked]="f.messBreakfast" (checkedChange)="patchBool('messBreakfast', $event)" />
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5">
+              <span class="flex items-center gap-2 text-sm text-ink-700">
+                <i class="ti ti-salad text-ink-400" aria-hidden="true"></i>
+                Lunch
+              </span>
+              <hh-toggle [checked]="f.messLunch" (checkedChange)="patchBool('messLunch', $event)" />
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5">
+              <span class="flex items-center gap-2 text-sm text-ink-700">
+                <i class="ti ti-moon text-ink-400" aria-hidden="true"></i>
+                Dinner
+              </span>
+              <hh-toggle [checked]="f.messDinner" (checkedChange)="patchBool('messDinner', $event)" />
+            </div>
           </div>
         </div>
 
