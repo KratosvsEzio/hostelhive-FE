@@ -23,6 +23,14 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    // Public mess opt-in landing — students reach this from the WhatsApp/SMS/email link.
+    // Token in the query (?token=…); no auth (the token is the credential). Chrome-free.
+    path: 'mess/confirm',
+    loadComponent: () =>
+      import('@features/public/mess-confirm/mess-confirm').then((m) => m.MessConfirm),
+    title: 'Confirm your meal — HostelHive',
+  },
+  {
     path: 'auth',
     loadChildren: () =>
       import('@features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
@@ -63,15 +71,7 @@ export const appRoutes: Route[] = [
           import('@features/user/security/security').then((m) => m.AccountSecurity),
         title: 'Password & security — HostelHive',
       },
-      {
-        path: 'notifications',
-        loadComponent: () =>
-          import('@features/user/notifications/notifications').then(
-            (m) => m.AccountNotifications,
-          ),
-        title: 'Notifications — HostelHive',
-      },
-      {
+{
         path: 'help',
         loadComponent: () =>
           import('@features/user/help/help').then((m) => m.AccountHelp),

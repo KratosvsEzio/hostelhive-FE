@@ -146,6 +146,63 @@ export function occupancyLine(
   return { width, height, points, area, dots, gridY, gridLabels, step: round(step) };
 }
 
+/* ── Grocery spend (single-series bars) ────────────────────────────────── */
+
+export interface SpendBar {
+  label: string;
+  /** Bar height as a % of the chart area. */
+  pct: number;
+  value: number;
+}
+
+/** Scale a spend series so the tallest bar fills `maxFill`% of the chart area. */
+export function spendBars(
+  series: { label: string; value: number }[],
+  maxFill = 92,
+): SpendBar[] {
+  const peak = Math.max(1, ...series.map((p) => p.value));
+  return series.map((p) => ({
+    label: p.label,
+    pct: (p.value / peak) * maxFill,
+    value: p.value,
+  }));
+}
+
+/* ── Y-axis ticks ──────────────────────────────────────────────────────── */
+
+/**
+ * Computes Y-axis tick marks for a percentage-height bar chart.
+ * Both the bars and the ticks must use the same `peak` + `maxFill` parameters so
+ * gridlines align with actual bar tops.
+ *
+ * @param peak     Maximum raw data value (tallest bar = maxFill% of chart height)
+ * @param maxFill  Percentage of chart height that `peak` occupies (e.g. 92 for revenue)
+ * @param integer  When true, restricts steps to whole numbers (for count-based charts)
+ */
+export function yAxisTicks(
+  peak: number,
+  maxFill: number,
+  integer = false,
+): { value: number; bottomPct: number }[] {
+  if (peak <= 0) return [{ value: 0, bottomPct: 0 }];
+  const count = 4;
+  const rawStep = peak / count;
+  const expBase = Math.max(1, Math.pow(10, Math.floor(Math.log10(Math.max(1, rawStep)))));
+  const exp = integer ? expBase : Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const niceMultiples = integer ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
+  const step = niceMultiples.map((m) => m * exp).find((s) => s >= rawStep) ?? rawStep;
+  const ceiling = Math.ceil(peak / step) * step;
+  const ticks: { value: number; bottomPct: number }[] = [];
+  for (let v = 0; v <= ceiling + step * 0.001; v += step) {
+    ticks.push({
+      value: Math.round(v),
+      // Clamp so the ceiling tick (which may exceed peak) sits at maxFill
+      bottomPct: Math.min((v / peak) * maxFill, maxFill),
+    });
+  }
+  return ticks;
+}
+
 /* ── utils ─────────────────────────────────────────────────────────────── */
 
 function clamp(n: number, lo: number, hi: number): number {

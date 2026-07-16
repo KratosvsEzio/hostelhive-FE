@@ -10,8 +10,28 @@
     </button>
   </div>
 
+  <!-- Scoped search + vertical divider + global filter button -->
+  <div class="flex items-center">
+    <hh-search
+      class="flex-1 sm:flex-none sm:w-80"
+      [fieldOptions]="searchFieldOptions"
+      [field]="searchField()"
+      (fieldChange)="onSearchField($event)"
+      [term]="searchTerm()"
+      (termChange)="onSearchTerm($event)"
+      placeholder="Search by hostel…"
+      ariaLabel="Search contracts by hostel"
+    />
+    <span class="mx-3 h-5 w-px shrink-0 bg-ink-200"></span>
+    <hh-global-filter
+      [groups]="filterGroups()"
+      [(value)]="globalFilters"
+      (apply)="applyGlobalFilters($event)"
+    />
+  </div>
+
   <!-- Stat cards — one per status aggregate (aggs) from the contracts API. -->
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+  <div class="mt-5 mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
     @for (a of aggs(); track a.slug) {
       <hh-card>
         <p class="text-xs text-ink-400">{{ a.name }}</p>
@@ -24,35 +44,6 @@
         </p>
       </hh-card>
     }
-  </div>
-
-  <!-- Status filter chips -->
-  <hh-filter-chips class="mt-5" [tabs]="tabs()" [active]="filter()" (activeChange)="setFilter($event)" />
-
-  <!-- Hostel search + end-date range, grouped on one row.
-       (date → f[end_date][gte] / f[end_date][lte]) -->
-  <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-    <hh-search
-      class="w-full sm:w-80"
-      [fieldOptions]="searchFieldOptions"
-      [field]="searchField()"
-      (fieldChange)="onSearchField($event)"
-      [term]="searchTerm()"
-      (termChange)="onSearchTerm($event)"
-      [placeholder]="
-        searchField() === 'id'
-          ? 'Search by hostel ID…'
-          : 'Search by hostel name…'
-      "
-      ariaLabel="Search contracts by hostel"
-    />
-    <hh-date-range-picker
-      class="w-full sm:w-56"
-      [from]="endFrom() || null"
-      [to]="endTo() || null"
-      placeholder="Date range"
-      (rangeChange)="onDateRange($event)"
-    />
   </div>
 
   @let s = state();
@@ -70,151 +61,25 @@
           hh-button
           variant="outlined"
           size="sm"
-          (click)="setFilter('all'); onSearchTerm(''); clearDateRange()"
+          (click)="onSearchTerm(''); clearDateRange()"
         >
           Show all
         </button>
       </hh-empty-state>
     </div>
   } @else {
-    <div class="mt-4 overflow-x-auto rounded-2xl bg-white shadow-card">
-      <table class="w-full min-w-[1140px] text-sm">
-        <thead
-          class="border-b border-ink-100 text-left text-[11px] uppercase tracking-wide text-ink-400"
-        >
-          <tr>
-            <th class="px-5 py-3 font-medium">Contract</th>
-            <th class="px-5 py-3 font-medium">Hostel</th>
-            <th class="px-5 py-3 font-medium">Plan</th>
-            <th class="px-5 py-3 font-medium">Term</th>
-            <th class="px-5 py-3 font-medium">Status</th>
-            <th class="px-5 py-3 font-medium">Payment</th>
-            <th class="px-5 py-3 text-right font-medium">
-              <button
-                hh-button variant="text" size="sm"
-                type="button"
-                (click)="toggleSort('price')"
-              >
-                Amount <i class="ti" [class]="sortIcon('price')"></i>
-              </button>
-            </th>
-            <th class="px-5 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-ink-100">
-          @for (c of s.data.items; track c.id) {
-            <tr [class]="rowClass(c)" (click)="open(c)">
-              <td class="px-5 py-3 font-mono text-xs text-ink-600">
-                {{ c.id }}
-              </td>
-              <td class="px-5 py-3">
-                <p class="font-medium text-ink-900">
-                  {{ c.hostelName || '—' }}
-                </p>
-                @if (c.hostelId != null) {
-                  <p class="text-xs text-ink-400">{{ c.hostelId }}</p>
-                }
-              </td>
-              <td class="px-5 py-3 text-ink-700">{{ c.plan }}</td>
-              <td
-                class="px-5 py-3"
-                [class]="
-                  c.endsSoon
-                    ? 'font-medium text-danger'
-                    : c.term
-                      ? 'text-ink-500'
-                      : 'text-ink-400'
-                "
-              >
-                {{ c.term ?? '— pending —' }}
-              </td>
-              <td class="px-5 py-3">
-                <hh-status-pill
-                  [tone]="statusMeta(c.status).tone"
-                  [dot]="statusMeta(c.status).dot"
-                  >{{ statusMeta(c.status).label }}</hh-status-pill
-                >
-              </td>
-              <td class="px-5 py-3">
-                <hh-status-pill [tone]="paymentMeta(c.payment).tone">{{
-                  paymentMeta(c.payment).label
-                }}</hh-status-pill>
-              </td>
-              <td class="px-5 py-3 text-right font-medium text-ink-900">
-                Rs {{ c.amount | number }}
-              </td>
-              <td
-                class="px-5 py-3 text-right"
-                (click)="$event.stopPropagation()"
-              >
-                <button
-                  hh-button
-                  variant="outlined"
-                  size="sm"
-                  (click)="open(c)"
-                  aria-label="View contract"
-                >
-                  <i class="ti ti-chevron-right"></i>
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    <div
-      class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-400"
-    >
-      <span
-        >Showing {{ s.data.items.length | number }} of
-        {{ s.data.total | number }} contract{{
-          s.data.total === 1 ? '' : 's'
-        }}</span
-      >
-      @if (totalPages() > 1) {
-        <nav class="flex items-center gap-1.5" aria-label="Pagination">
-          <button
-            hh-button variant="icon"
-            type="button"
-            [disabled]="page() <= 1"
-            (click)="goToPage(page() - 1)"
-            aria-label="Previous page"
-          >
-            <i class="ti ti-chevron-left"></i>
-          </button>
-          @for (p of pageNumbers(); track $index) {
-            @if (p === -1) {
-              <span class="px-1">…</span>
-            } @else {
-              <button
-                hh-button variant="text" size="sm"
-                type="button"
-                (click)="goToPage(p)"
-                [class]="
-                  p === page()
-                    ? 'bg-ink-900 text-white'
-                    : 'border border-ink-200 text-ink-600 hover:bg-surface'
-                "
-                [attr.aria-current]="p === page() ? 'page' : null"
-              >
-                {{ p }}
-              </button>
-            }
-          }
-          <button
-            hh-button variant="icon"
-            type="button"
-            [disabled]="page() >= totalPages()"
-            (click)="goToPage(page() + 1)"
-            aria-label="Next page"
-          >
-            <i class="ti ti-chevron-right"></i>
-          </button>
-        </nav>
-      }
-    </div>
+    <hh-data-table
+      minWidth="1140px"
+      [columns]="tableCols"
+      [rows]="s.data.items"
+      [rowId]="contractsRowId"
+      [sort]="tableSortState()"
+      [pagination]="paginationConf()"
+      (sortChange)="onTableSort($event)"
+      [rowClickable]="true"
+      (rowClick)="open($any($event))"
+      (pageChange)="goToPage($event)"
+    />
   }
 
   <!-- Contract detail panel (drawer) -->

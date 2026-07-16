@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, delay, map } from 'rxjs/operators';
 import { ApiClient } from '@core/api-resource';
-import { CURRENT_CONTRACT, PAYMENTS, PLANS } from './subscription.fixtures';
+import { CURRENT_CONTRACT, PLANS } from './subscription.fixtures';
 import {
   BillingCycle,
   SubscriptionContract as Contract,
@@ -39,6 +39,34 @@ interface ApiCurrentSubscriptionResponse {
   contracts?: ApiContract[] | null;
   success?: boolean;
 }
+
+interface ApiPaymentStatus {
+  id?: string;
+  name?: string;
+  slug?: string;
+}
+
+interface ApiPayment {
+  id?: string;
+  amount?: number;
+  payment_method?: string | null;
+  created_at?: string;
+  paid_at?: string | null;
+  status?: ApiPaymentStatus;
+  products?: Array<{ name?: string }> | null;
+}
+
+interface ApiPaymentsResponse {
+  payments?: ApiPayment[];
+  success?: boolean;
+}
+
+const PAYMENT_STATUS_MAP: Record<string, Payment['status']> = {
+  verified: 'paid',
+  pending: 'pending',
+  rejected: 'failed',
+  refunded: 'refunded',
+};
 
 const CONTRACT_STATUS_MAP: Partial<Record<string, ContractStatus>> = {
   active: 'active',
@@ -85,7 +113,6 @@ export class SubscriptionApi {
 
   /** Live contract state — mutated by checkout / webhook / renew / cancel. */
   private contract: Contract = { ...CURRENT_CONTRACT };
-  private payments: Payment[] = [...PAYMENTS];
 
   plans(): Observable<SubscriptionPlan[]> {
     return of(PLANS).pipe(delay(150));
@@ -123,8 +150,22 @@ export class SubscriptionApi {
       );
   }
 
-  paymentHistory(): Observable<Payment[]> {
-    return of(this.payments.map((p) => ({ ...p }))).pipe(delay(150));
+  paymentHistory(hostelId: string): Observable<Payment[]> {
+    return this.apiClient
+      .get<ApiPaymentsResponse>(`/api/host/hostels/${hostelId}/payments`)
+      .pipe(
+        map((res) =>
+          (res.payments ?? []).map((p): Payment => ({
+            id: p.id ?? '',
+            date: p.paid_at ?? p.created_at ?? '',
+            description: p.products?.[0]?.name ?? 'Subscription',
+            method: p.payment_method ?? 'Online',
+            status: PAYMENT_STATUS_MAP[p.status?.slug ?? ''] ?? 'pending',
+            amount: p.amount ?? 0,
+            receiptUrl: null,
+          })),
+        ),
+      );
   }
 
   /**
@@ -156,18 +197,6 @@ export class SubscriptionApi {
       cycle,
       amount,
     };
-    this.payments = [
-      {
-        id: `pay_${Date.now()}`,
-        date: new Date().toISOString().slice(0, 10),
-        description: `${plan.name} · ${cycle === 'annual' ? 'Annual' : 'Monthly'}`,
-        method: 'Pending',
-        status: 'pending',
-        amount,
-        receiptUrl: null,
-      },
-      ...this.payments,
-    ];
     return of({ ...this.contract }).pipe(delay(150));
   }
 
@@ -193,11 +222,6 @@ export class SubscriptionApi {
         .toISOString()
         .slice(0, 10),
     };
-    this.payments = this.payments.map((p, i) =>
-      i === 0 && p.status === 'pending'
-        ? { ...p, status: 'paid', method: 'Card ··6411', receiptUrl: '#' }
-        : p,
-    );
     // ~1.2s to feel like a real async gateway callback.
     return of({ ...this.contract }).pipe(delay(1200));
   }

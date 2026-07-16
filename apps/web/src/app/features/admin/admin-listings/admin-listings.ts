@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { format, parseISO } from 'date-fns';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, map, of, startWith, switchMap } from 'rxjs';
@@ -21,19 +21,23 @@ import { AdminApi } from '@services';
 import {
   Button,
   Card,
+  DataTable,
   DropdownOption,
   EmptyState,
   ErrorState,
-  NestedDropdown,
-  NestedDropdownGroup,
-  NestedDropdownValue,
+  FilterGroup,
+  FilterValues,
+  GlobalFilter,
+  NestedSelectValue,
+  PaginationConfig,
   Search,
   Skeleton,
-  StatusPill,
+  SortState,
 } from '@hostelhive/ui';
 import type { StatusTone } from '@hostelhive/ui';
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
+import { ADMIN_LISTINGS_TABLE_COLS } from '@app/util/table-configs/admin-listings-table-cols';
 
 interface ViewState {
   loading: boolean;
@@ -63,24 +67,27 @@ const DISPOSITION_META: Record<
   selector: 'hh-admin-listings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink,
     DecimalPipe,
     AdminShell,
     Button,
     Card,
+    DataTable,
     EmptyState,
     ErrorState,
-    NestedDropdown,
+    GlobalFilter,
     Search,
     Skeleton,
-    StatusPill,
   ],
   templateUrl: './admin-listings.html',
 })
 export class AdminListings {
   private readonly api = inject(AdminApi);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly filterValue = signal<NestedDropdownValue>(null);
+  protected readonly statusFilter = signal<string | null>(null);
+  protected readonly dispositionFilter = signal<string | null>(null);
+  protected readonly globalFilters = signal<FilterValues>({});
   protected readonly page = signal(1);
   protected readonly searchField = signal<'name' | 'id'>('name');
   protected readonly searchFieldOptions: DropdownOption[] = [
@@ -95,13 +102,22 @@ export class AdminListings {
   protected readonly statuses = signal<AdminListingStatusOption[]>([]);
   protected readonly aggs = signal<AdminListingAgg[]>([]);
 
-  protected readonly nestedGroups = computed<NestedDropdownGroup[]>(() =>
-    this.statuses().map((s) => ({
-      value: s.slug,
-      label: s.name,
-      items: (s.dispositions ?? []).map((d) => ({ value: d.slug, label: d.name })),
-    })),
-  );
+  protected readonly filterGroups = computed<FilterGroup[]>(() => [
+    {
+      key: 'status',
+      label: 'Status',
+      icon: 'ti-tag',
+      fields: [{
+        key: 'status',
+        type: 'nested-select',
+        nestedGroups: this.statuses().map((s) => ({
+          value: s.slug,
+          label: s.name,
+          items: (s.dispositions ?? []).map((d) => ({ value: d.slug, label: d.name })),
+        })),
+      }],
+    },
+  ]);
 
 
   private readonly debouncedTerm = toSignal(
@@ -116,8 +132,8 @@ export class AdminListings {
     () => {
       this.refresh();
       return {
-        statusSlug: this.filterValue()?.group ?? null,
-        dispositionSlug: this.filterValue()?.item ?? null,
+        statusSlug: this.statusFilter(),
+        dispositionSlug: this.dispositionFilter(),
         page: this.page(),
         searchField: this.searchField(),
         term: this.debouncedTerm(),
@@ -191,8 +207,19 @@ export class AdminListings {
     this.page.set(p);
   }
 
-  protected onFilterChange(v: NestedDropdownValue): void {
-    this.filterValue.set(v);
+  protected applyGlobalFilters(v: FilterValues): void {
+    const ns = v['status'] as NestedSelectValue | undefined;
+    this.statusFilter.set(ns?.group ?? null);
+    this.dispositionFilter.set(ns?.item ?? null);
+    this.page.set(1);
+  }
+
+  protected clearFilters(): void {
+    this.statusFilter.set(null);
+    this.dispositionFilter.set(null);
+    this.globalFilters.set({});
+    this.searchField.set('name');
+    this.searchTerm.set('');
     this.page.set(1);
   }
 
@@ -202,9 +229,39 @@ export class AdminListings {
   }
 
   protected onSearchField(field: string | string[] | null): void {
-    if (field !== 'name' && field !== 'id') return;
-    this.searchField.set(field);
+    this.searchField.set(field === 'id' ? 'id' : 'name');
+    this.searchTerm.set('');
     this.page.set(1);
+  }
+
+  protected readonly tableCols = ADMIN_LISTINGS_TABLE_COLS;
+  protected readonly listingsRowId = (row: unknown) => String((row as AdminListing).id);
+
+  protected readonly tableSortState = computed<SortState>(() => ({
+    key: this.sortField(),
+    dir: this.sortDir(),
+  }));
+
+  protected readonly listingsPaginationConf = computed<PaginationConfig | null>(() => {
+    const d = this.state().data;
+    if (!d || this.totalPages() <= 1) return null;
+    return {
+      page: this.page(),
+      total: d.total,
+      totalPages: this.totalPages(),
+      hasNextPage: this.page() < this.totalPages(),
+      itemLabel: 'listing',
+    };
+  });
+
+  protected onTableSort(s: SortState | null): void {
+    if (!s) { this.sortField.set('created_at'); this.sortDir.set('desc'); }
+    else { this.sortField.set(s.key as SortField); this.sortDir.set(s.dir); }
+    this.page.set(1);
+  }
+
+  protected onRowClick(row: unknown): void {
+    this.router.navigate(['../review', (row as AdminListing).id], { relativeTo: this.route });
   }
 
   protected toggleSort(field: SortField): void {

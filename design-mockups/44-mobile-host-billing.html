@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Mobile · Host · Billing</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .phone { width: 390px; height: 844px; border-radius: 54px; box-shadow: 0 0 0 12px #1F1F1F, 0 0 0 14px #3a3a3a, 0 24px 60px rgba(0,0,0,.28); overflow: hidden; position: relative; background: #F5F5F5; }
+  .island { position:absolute; left:50%; top:12px; transform:translateX(-50%); width:118px; height:34px; border-radius:20px; background:#1F1F1F; z-index:50; }
+  .statusbar { height:54px; display:flex; align-items:flex-end; justify-content:space-between; padding:0 28px 6px; font-size:14px; font-weight:600; color:#1F1F1F; }
+  .homebar { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:130px; height:5px; border-radius:3px; background:#1F1F1F; opacity:.9; z-index:50; }
+  .screen { height: calc(844px - 54px); overflow:hidden; display:flex; flex-direction:column; }
+  .tabbar { display:flex; border-top:1px solid #ECECEC; background:#fff; padding:10px 4px 26px; }
+  .tabbar a { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10px; font-weight:500; color:#A3A3A3; }
+  .tabbar a.on { color:#F36E21; }
+</style>
+</head>
+<body class="bg-surface text-ink-800">
+
+<main class="mx-auto max-w-[1400px] px-8 py-10">
+  <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">Mobile app · Host console</p>
+  <h1 class="mt-1 font-display text-2xl font-bold text-ink-900">Billing — Utilities · Invoices · Invoice viewer</h1>
+  <p class="mt-1 max-w-2xl text-sm text-ink-500">Utility bills and invoices condense into cards with expandable splits; tapping an invoice opens the branded PDF as a full-screen sheet with share &amp; download.</p>
+
+  <div class="mt-8 flex flex-wrap items-start gap-10">
+
+    <!-- ═══════ PHONE 1 · UTILITIES ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+        <div class="screen">
+          <div class="flex items-center justify-between border-b border-ink-100 bg-white px-5 pb-3 pt-1">
+            <h2 class="font-display text-lg font-semibold text-ink-900">Utilities</h2>
+            <button class="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-3 py-2 text-xs font-semibold text-white"><i class="ti ti-plus"></i>Add bill</button>
+          </div>
+          <div class="flex-1 overflow-hidden px-4 pt-3">
+            <!-- stat cards -->
+            <div class="grid grid-cols-3 gap-2">
+              <div class="rounded-xl bg-white p-2.5 shadow-card"><p class="text-[9px] text-ink-400">To collect</p><p class="text-sm font-semibold text-ink-900">Rs 54.5k</p></div>
+              <div class="rounded-xl bg-white p-2.5 shadow-card"><p class="text-[9px] text-ink-400">Received</p><p class="text-sm font-semibold text-ok">Rs 42k</p></div>
+              <div class="rounded-xl bg-white p-2.5 shadow-card"><p class="text-[9px] text-ink-400">Balance</p><p class="text-sm font-semibold text-danger">Rs 12.5k</p></div>
+            </div>
+            <!-- filters -->
+            <div class="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto">
+              <button class="inline-flex shrink-0 items-center gap-1 rounded-xl border border-ink-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-ink-700"><i class="ti ti-filter text-xs"></i>Filters</button>
+              <button class="inline-flex shrink-0 items-center gap-1 rounded-xl border border-brand-300 bg-brand-50 px-2.5 py-1.5 text-[11px] font-medium text-brand-700">Status: Due<i class="ti ti-x text-[10px]"></i></button>
+              <button class="inline-flex shrink-0 items-center gap-1 rounded-xl border border-ink-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-ink-700">Room<i class="ti ti-chevron-down text-[10px]"></i></button>
+            </div>
+            <!-- bill cards -->
+            <div class="mt-3 space-y-2">
+              <div class="rounded-2xl bg-white p-3.5 shadow-card">
+                <div class="flex items-center gap-3">
+                  <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-bolt"></i></span>
+                  <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900">Electricity · Room 101</p><p class="text-xs text-ink-400">1,240 kWh · Rs 19.35 / kWh · issued 01 Jun</p></div>
+                  <span class="rounded-full bg-warn/10 px-2 py-0.5 text-[10px] font-medium text-warn">Due</span>
+                </div>
+                <div class="mt-2.5 flex items-center justify-between border-t border-ink-100 pt-2.5 text-xs">
+                  <span class="text-ink-500">Bill <b class="text-ink-900">Rs 24,000</b></span>
+                  <span class="text-ink-500">Received <b class="text-ink-900">Rs 16,000</b></span>
+                  <span class="font-semibold text-danger">Rs 8,000 left</span>
+                </div>
+              </div>
+              <!-- expanded card with splits -->
+              <div class="rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-brand-200">
+                <div class="flex items-center gap-3">
+                  <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-wifi"></i></span>
+                  <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900">Internet · Room 102</p><p class="text-xs text-ink-400">fixed fee · issued 01 Jun</p></div>
+                  <span class="rounded-full bg-warn/10 px-2 py-0.5 text-[10px] font-medium text-warn">Due</span>
+                  <i class="ti ti-chevron-up text-brand-500"></i>
+                </div>
+                <div class="mt-2.5 space-y-1.5 rounded-xl bg-brand-50/40 p-2.5">
+                  <p class="text-[9px] font-semibold uppercase tracking-wide text-ink-400">Per-tenant split</p>
+                  <div class="flex items-center justify-between text-xs"><span class="flex items-center gap-1.5"><span class="grid h-5 w-5 place-items-center rounded-full bg-tint-sky text-[8px] font-semibold text-ink-700">AR</span>Ahmed Raza · 30 days</span><b class="text-ink-900">Rs 4,000</b></div>
+                  <div class="flex items-center justify-between text-xs"><span class="flex items-center gap-1.5"><span class="grid h-5 w-5 place-items-center rounded-full bg-tint-cream text-[8px] font-semibold text-ink-700">BK</span>Bilal Khan · 30 days</span><b class="text-ink-900">Rs 4,000</b></div>
+                </div>
+                <div class="mt-2 flex items-center justify-between border-t border-ink-100 pt-2 text-xs">
+                  <span class="text-ink-500">Bill <b class="text-ink-900">Rs 8,000</b></span>
+                  <span class="text-ink-500">Received <b class="text-ink-900">Rs 8,000</b></span>
+                  <span class="font-medium text-ink-400">Rs 0 left</span>
+                </div>
+              </div>
+              <div class="rounded-2xl bg-white p-3.5 shadow-card">
+                <div class="flex items-center gap-3">
+                  <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-mint text-ink-600"><i class="ti ti-droplet"></i></span>
+                  <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900">Water · Room 101</p><p class="text-xs text-ink-400">16 units · Rs 375 / unit · issued 01 Jun</p></div>
+                  <span class="rounded-full bg-ok/10 px-2 py-0.5 text-[10px] font-medium text-ok">Paid</span>
+                </div>
+              </div>
+              <div class="rounded-2xl bg-white p-3.5 shadow-card">
+                <div class="flex items-center gap-3">
+                  <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-bolt"></i></span>
+                  <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900">Electricity · Room 102</p><p class="text-xs text-ink-400">980 kWh · Rs 16.84 / kWh · issued 01 Jun</p></div>
+                  <span class="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-medium text-danger">Overdue</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <a><i class="ti ti-layout-dashboard text-xl"></i>Overview</a>
+            <a><i class="ti ti-bed text-xl"></i>Rooms</a>
+            <a><i class="ti ti-users text-xl"></i>Tenants</a>
+            <a class="on"><i class="ti ti-file-invoice text-xl"></i>Invoices</a>
+            <a><i class="ti ti-dots text-xl"></i>More</a>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Utilities</p>
+      <p class="text-center text-xs text-ink-400">Bill cards · expandable per-tenant split</p>
+    </div>
+
+    <!-- ═══════ PHONE 2 · INVOICES ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+        <div class="screen">
+          <div class="flex items-center justify-between border-b border-ink-100 bg-white px-5 pb-3 pt-1">
+            <h2 class="font-display text-lg font-semibold text-ink-900">Invoices</h2>
+            <button class="grid h-9 w-9 place-items-center rounded-xl border border-ink-200 text-ink-600"><i class="ti ti-download text-sm"></i></button>
+          </div>
+          <div class="flex-1 overflow-hidden px-4 pt-3">
+            <!-- summary cards -->
+            <div class="space-y-2">
+              <div class="rounded-2xl bg-white p-3.5 shadow-card">
+                <div class="mb-2 flex items-center gap-2"><span class="grid h-7 w-7 place-items-center rounded-lg bg-tint-sky"><i class="ti ti-home-2 text-xs text-ink-600"></i></span><p class="text-xs font-semibold text-ink-700">Renter bills</p></div>
+                <div class="grid grid-cols-3 divide-x divide-ink-100 text-center">
+                  <div><p class="text-[9px] uppercase tracking-wide text-ink-400">Total</p><p class="text-sm font-bold text-ink-900">Rs 248k</p></div>
+                  <div><p class="text-[9px] uppercase tracking-wide text-ink-400">Paid</p><p class="text-sm font-bold text-ok">Rs 219k</p></div>
+                  <div><p class="text-[9px] uppercase tracking-wide text-ink-400">Balance</p><p class="text-sm font-bold text-danger">Rs 29k</p></div>
+                </div>
+              </div>
+              <div class="rounded-2xl bg-white p-3.5 shadow-card">
+                <div class="mb-2 flex items-center gap-2"><span class="grid h-7 w-7 place-items-center rounded-lg bg-tint-cream"><i class="ti ti-bolt text-xs text-brand-600"></i></span><p class="text-xs font-semibold text-ink-700">Utility bills</p></div>
+                <div class="grid grid-cols-3 divide-x divide-ink-100 text-center">
+                  <div><p class="text-[9px] uppercase tracking-wide text-ink-400">Total</p><p class="text-sm font-bold text-ink-900">Rs 54.5k</p></div>
+                  <div><p class="text-[9px] uppercase tracking-wide text-ink-400">Paid</p><p class="text-sm font-bold text-ok">Rs 42k</p></div>
+                  <div><p class="text-[9px] uppercase tracking-wide text-ink-400">Balance</p><p class="text-sm font-bold text-danger">Rs 12.5k</p></div>
+                </div>
+              </div>
+            </div>
+            <!-- search + filter -->
+            <div class="mt-3 flex items-center gap-2">
+              <div class="flex flex-1 items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2"><i class="ti ti-search text-ink-400"></i><input placeholder="Tenant name…" class="w-full bg-transparent text-sm outline-none" /></div>
+              <button class="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-ink-200 bg-white text-ink-600"><i class="ti ti-filter text-sm"></i></button>
+            </div>
+            <!-- invoice cards -->
+            <div class="mt-3 space-y-2">
+              <div class="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-brand-200">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-tint-sky text-xs font-semibold text-ink-700">AR</span>
+                <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold text-ink-900">Ahmed Raza <span class="ml-1 rounded bg-tint-sky px-1.5 py-0.5 text-[9px] font-medium text-ink-600">Rent</span></p><p class="text-xs text-ink-400">INV-2026-0142 · due 07 Jun</p></div>
+                <div class="text-right"><p class="text-sm font-semibold text-ink-900">Rs 12,000</p><span class="rounded-full bg-ok/10 px-1.5 py-0.5 text-[9px] font-medium text-ok">Paid</span></div>
+              </div>
+              <div class="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-tint-cream text-xs font-semibold text-ink-700">BK</span>
+                <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold text-ink-900">Bilal Khan <span class="ml-1 rounded bg-tint-sky px-1.5 py-0.5 text-[9px] font-medium text-ink-600">Rent</span></p><p class="text-xs text-ink-400">INV-2026-0143 · due 07 Jun</p></div>
+                <div class="text-right"><p class="text-sm font-semibold text-ink-900">Rs 9,500</p><span class="rounded-full bg-danger/10 px-1.5 py-0.5 text-[9px] font-medium text-danger">Overdue</span></div>
+              </div>
+              <div class="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-tint-mint text-xs font-semibold text-ink-700">SA</span>
+                <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold text-ink-900">Saad Ali <span class="ml-1 rounded bg-tint-cream px-1.5 py-0.5 text-[9px] font-medium text-brand-700">Utility</span></p><p class="text-xs text-ink-400">INV-2026-0144 · due 10 Jun</p></div>
+                <div class="text-right"><p class="text-sm font-semibold text-ink-900">Rs 8,000</p><span class="rounded-full bg-warn/10 px-1.5 py-0.5 text-[9px] font-medium text-warn">Due</span></div>
+              </div>
+              <div class="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-100 text-xs font-semibold text-ink-500">UH</span>
+                <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold text-ink-900">Usman Haider <span class="ml-1 rounded bg-tint-sky px-1.5 py-0.5 text-[9px] font-medium text-ink-600">Rent</span></p><p class="text-xs text-ink-400">INV-2026-0145 · due 03 Jun</p></div>
+                <div class="text-right"><p class="text-sm font-semibold text-ink-900">Rs 12,000</p><span class="rounded-full bg-ok/10 px-1.5 py-0.5 text-[9px] font-medium text-ok">Paid</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <a><i class="ti ti-layout-dashboard text-xl"></i>Overview</a>
+            <a><i class="ti ti-bed text-xl"></i>Rooms</a>
+            <a><i class="ti ti-users text-xl"></i>Tenants</a>
+            <a class="on"><i class="ti ti-file-invoice text-xl"></i>Invoices</a>
+            <a><i class="ti ti-dots text-xl"></i>More</a>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Invoices</p>
+      <p class="text-center text-xs text-ink-400">Rent + utility summaries · tap to open PDF</p>
+    </div>
+
+    <!-- ═══════ PHONE 3 · INVOICE VIEWER ═══════ -->
+    <div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+        <div class="screen bg-white">
+          <div class="flex items-center justify-between border-b border-ink-100 bg-surface px-5 pb-3 pt-1">
+            <span class="flex items-center gap-2 text-sm font-medium text-ink-700"><i class="ti ti-chevron-left"></i>INV-2026-0142.pdf</span>
+            <div class="flex gap-2 text-ink-500"><i class="ti ti-share-2"></i><i class="ti ti-download"></i></div>
+          </div>
+          <div class="flex-1 space-y-4 overflow-hidden px-6 pt-5 text-sm">
+            <div class="flex items-start justify-between"><img src="assets/hostelhive-logo.png" alt="" class="h-5 w-auto" /><div class="text-right"><p class="font-semibold text-ink-900">INVOICE</p><p class="text-xs text-ink-400">INV-2026-0142</p></div></div>
+            <div class="flex justify-between text-xs"><div><p class="text-ink-400">Billed to</p><p class="font-medium text-ink-800">Ahmed Raza</p><p class="text-ink-500">Room 102 · 1st floor</p></div><div class="text-right"><p class="text-ink-400">Issued · Due</p><p class="text-ink-800">01 Jun · 07 Jun 2026</p></div></div>
+            <table class="w-full text-xs"><tbody class="divide-y divide-ink-100">
+              <tr><td class="py-2.5 text-ink-600">Base rent — June</td><td class="py-2.5 text-right text-ink-800">Rs 12,000</td></tr>
+              <tr><td class="py-2.5 text-ink-600">Electricity share</td><td class="py-2.5 text-right text-ink-800">Rs 8,182</td></tr>
+              <tr><td class="py-2.5 text-ink-600">Previous balance</td><td class="py-2.5 text-right text-ink-800">Rs 0</td></tr>
+            </tbody></table>
+            <div class="flex items-center justify-between rounded-xl bg-tint-cream px-4 py-3"><span class="font-medium text-ink-800">Total due</span><span class="text-lg font-semibold text-brand-700">Rs 20,182</span></div>
+            <div class="rounded-xl border border-ink-100 bg-surface p-3 text-[11px] leading-relaxed text-ink-500">Payment: JazzCash 0321-1234567 (Imran Khan). Please share the receipt after payment. Thank you for staying with Al-Madina Boys Hostel.</div>
+            <div class="flex items-center gap-2 rounded-xl border border-ok/30 bg-ok/5 px-3 py-2.5 text-xs text-ink-700"><i class="ti ti-circle-check text-ok"></i>Paid on 03 Jun 2026 · receipt received</div>
+          </div>
+          <div class="flex gap-3 border-t border-ink-100 bg-white px-5 pb-8 pt-3">
+            <button class="flex flex-1 items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-3 text-sm font-medium text-ink-700"><i class="ti ti-printer"></i>Print</button>
+            <button class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"><i class="ti ti-brand-whatsapp"></i>Send to tenant</button>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <p class="mt-4 text-center text-sm font-medium text-ink-700">Invoice viewer</p>
+      <p class="text-center text-xs text-ink-400">Branded PDF · WhatsApp send · print / download</p>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

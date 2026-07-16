@@ -18,7 +18,7 @@
         <i class="ti ti-device-floppy" aria-hidden="true"></i>Draft saved
       }
     </span>
-    <button hh-button variant="outlined" size="sm">Save &amp; exit</button>
+    <button hh-button variant="outlined" size="sm" class="hidden sm:flex">Save &amp; exit</button>
     <button hh-button color="primary" size="sm" [disabled]="draftSaving()" (click)="saveAndContinue()">
       <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : 'Continue to payment' }}
     </button>

@@ -5,11 +5,11 @@
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Button, EmptyState, ErrorState, FilterChips, Skeleton } from '@hostelhive/ui';
-import { downloadCsv } from '@hostelhive/util';
+import { downloadCsv } from '@util/csv';
 import { ModerationApi } from '@services';
 import { AuditEntry, AuditGroup, PillTone } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
@@ -42,6 +42,8 @@ const ICON_TONES: Record<PillTone, string> = {
 })
 export class Audit {
   private readonly api = inject(ModerationApi);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly skeletons = [1, 2, 3];
   protected readonly filters: { label: string; value: AuditGroup | 'all' }[] = [
@@ -52,9 +54,16 @@ export class Audit {
     { label: 'Media', value: 'media' },
   ];
 
-  protected readonly filter = signal<AuditGroup | 'all'>('all');
+  protected readonly filter = signal<AuditGroup | 'all'>(
+    (this.route.snapshot.queryParams['status'] as AuditGroup | 'all') ?? 'all',
+  );
   protected setFilter(value: string): void {
     this.filter.set(value as AuditGroup | 'all');
+    void this.router.navigate([], {
+      queryParams: { status: value === 'all' ? null : value },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
   private readonly refresh = signal(0);
 

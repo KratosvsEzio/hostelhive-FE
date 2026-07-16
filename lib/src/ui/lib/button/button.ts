@@ -12,7 +12,7 @@ export type ButtonColor = 'default' | 'primary' | 'success' | 'danger' | 'dark';
 export type ButtonSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 
 const BASE =
-  'inline-flex items-center justify-center transition select-none ' +
+  'inline-flex items-center justify-center whitespace-nowrap transition select-none ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ' +
   'disabled:cursor-not-allowed disabled:opacity-60';
 
@@ -45,7 +45,7 @@ const SIZE_ICON: Record<ButtonSize, string> = {
 };
 
 const FILLED: Record<ButtonColor, string> = {
-  default: 'bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
+  default: 'border border-ink-200 bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
   primary: 'bg-brand-500 font-semibold text-white shadow-card hover:bg-brand-600',
   success: 'bg-ok font-semibold text-white hover:brightness-95',
   danger: 'bg-danger font-semibold text-white hover:brightness-95',

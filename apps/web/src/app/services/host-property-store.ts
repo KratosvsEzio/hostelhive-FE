@@ -26,7 +26,9 @@ export class HostPropertyStore {
   readonly properties = signal<PropertyEntry[]>([]);
   readonly selected = signal<string>(this.restore() ?? '');
 
-  readonly activeProperty = computed(
+  // `undefined` until the listings load (or when the host has none) — the `[0]`
+  // fallback lies to the type system otherwise, so annotate the honest type.
+  readonly activeProperty = computed<PropertyEntry | undefined>(
     () => this.properties().find(p => p.id === this.selected()) ?? this.properties()[0],
   );
 

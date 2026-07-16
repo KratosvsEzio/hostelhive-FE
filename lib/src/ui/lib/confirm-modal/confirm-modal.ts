@@ -85,7 +85,7 @@ let _id = 0;
           @if (cancelLabel()) {
             <button
               hh-button
-              variant="text"
+              variant="outlined"
               class="flex-1"
               (click)="cancel.emit()"
             >

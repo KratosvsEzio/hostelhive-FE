@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
@@ -17,19 +17,27 @@ import {
   startWith,
   switchMap,
 } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { format, isValid, parse } from 'date-fns';
 import {
+  Badge,
   Button,
   Card,
+  CellDef,
+  ColumnDef,
+  DataTable,
   EmptyState,
   ErrorState,
   Skeleton,
   StatusPill,
   Toast,
+  Tooltip,
 } from '@hostelhive/ui';
 import type { StatusTone } from '@hostelhive/ui';
 import {
   Product,
   SubscriptionContract as Contract,
+  SubscriptionContractStatus as ContractStatus,
   SubscriptionPayment as Payment,
 } from '@hostelhive/data-access';
 import { HostPropertyStore, ProductsApi, SubscriptionApi } from '@services';
@@ -38,6 +46,7 @@ import { isNetworkError } from '@util/network-error';
 
 interface BillingData {
   contract: Contract | null;
+  currentProduct: Product | undefined;
   products: Product[];
   payments: Payment[];
 }
@@ -54,6 +63,27 @@ const PAYMENT_TONE: Record<Payment['status'], StatusTone> = {
   failed: 'danger',
   refunded: 'neutral',
   pending: 'warn',
+};
+
+const PAYMENT_LABEL: Record<Payment['status'], string> = {
+  paid: 'Paid',
+  failed: 'Failed',
+  refunded: 'Refunded',
+  pending: 'Pending',
+};
+
+function fmtDate(s: string): string {
+  if (!s) return '—';
+  const d = parse(s, 'yyyy-MM-dd', new Date());
+  return isValid(d) ? format(d, 'd MMM y') : '—';
+}
+
+const STATUS_META: Record<ContractStatus, { label: string; tone: StatusTone }> = {
+  draft: { label: 'Draft', tone: 'neutral' },
+  'pending-payment': { label: 'Pending payment', tone: 'warn' },
+  active: { label: 'Active', tone: 'ok' },
+  expired: { label: 'Expired', tone: 'danger' },
+  cancelled: { label: 'Cancelled', tone: 'neutral' },
 };
 
 const PRODUCT_FEATURES: Record<string, string[]> = {
@@ -86,15 +116,17 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
   imports: [
     DatePipe,
     DecimalPipe,
-    RouterLink,
     DashboardLayout,
+    Badge,
     Button,
     Card,
+    DataTable,
     EmptyState,
     ErrorState,
     Skeleton,
     StatusPill,
     Toast,
+    Tooltip,
   ],
   templateUrl: './subscription.html',
 })
@@ -125,9 +157,21 @@ export class Subscription {
             ? this.api.currentSubscription(hostelId)
             : of<Contract | null>(null),
           products: this.productsApi.list(),
-          payments: this.api.paymentHistory(),
+          payments: hostelId ? this.api.paymentHistory(hostelId) : of<Payment[]>([]),
         }).pipe(
-          map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
+          map(({ contract, products, payments }): ViewState => ({
+            loading: false,
+            error: false,
+            networkError: false,
+            data: {
+              contract,
+              currentProduct: contract
+                ? products.find((p) => String(p.id) === contract.planId)
+                : undefined,
+              products,
+              payments,
+            },
+          })),
           startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
           catchError((err) =>
             of<ViewState>({ loading: false, error: true, networkError: isNetworkError(err), data: null }),
@@ -137,12 +181,6 @@ export class Subscription {
     ),
     { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
   );
-
-  /** True once data is loaded and the host has an active contract. */
-  protected readonly hasContract = computed(() => {
-    const s = this.state();
-    return !s.loading && !s.error && !!s.data?.contract;
-  });
 
   // ── Presentation helpers ─────────────────────────────────────────────────
   protected isAddOn(product: Product): boolean {
@@ -160,10 +198,6 @@ export class Subscription {
     return 'Get started';
   }
 
-  protected displayName(product: Product): string {
-    return product.name;
-  }
-
   protected productFeatures(product: Product): string[] {
     return PRODUCT_FEATURES[product.name] ?? (product.description ? [product.description] : []);
   }
@@ -176,12 +210,28 @@ export class Subscription {
     );
   }
 
-  protected paymentTone(status: Payment['status']): StatusTone {
-    return PAYMENT_TONE[status];
+  protected readonly paymentRowId = (r: unknown) => (r as Payment).id;
+  protected readonly paymentCols: ColumnDef[] = [
+    { key: 'date',        label: 'Date',        cell: (r) => ({ kind: 'text',     value: fmtDate((r as Payment).date), class: 'whitespace-nowrap text-ink-600' }) satisfies CellDef },
+    { key: 'description', label: 'Description', cell: (r) => ({ kind: 'text',     value: (r as Payment).description, class: 'text-ink-800' }) satisfies CellDef },
+    { key: 'method',      label: 'Method',      cell: (r) => ({ kind: 'text',     value: (r as Payment).method, class: 'text-ink-600' }) satisfies CellDef },
+    { key: 'status',      label: 'Status',      cell: (r) => ({ kind: 'pill',     text: PAYMENT_LABEL[(r as Payment).status], tone: PAYMENT_TONE[(r as Payment).status] }) satisfies CellDef },
+    { key: 'amount', align: 'right', label: 'Amount',  cell: (r) => ({ kind: 'currency', amount: (r as Payment).amount, class: 'font-medium text-ink-900' }) satisfies CellDef },
+    { key: 'receipt', align: 'right', label: 'Receipt', cell: (r) => {
+      const url = (r as Payment).receiptUrl;
+      if (!url) return { kind: 'text', value: '—', class: 'text-ink-300' } satisfies CellDef;
+      return { kind: 'link', value: 'PDF', href: url, external: true } satisfies CellDef;
+    }},
+  ];
+
+  protected statusMeta(status: ContractStatus) {
+    return STATUS_META[status];
   }
 
-  protected paymentLabel(status: Payment['status']): string {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+  protected daysRemaining(contract: Contract): number | null {
+    if (!contract.renewsAt) return null;
+    const ms = new Date(contract.renewsAt).getTime() - Date.now();
+    return Math.max(0, Math.ceil(ms / 86_400_000));
   }
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -195,8 +245,33 @@ export class Subscription {
     this.refresh.update((n) => n + 1);
   }
 
+  protected renew(): void {
+    this.run(this.api.renew(), {
+      tone: 'info',
+      text: 'Renewal checkout started. Awaiting payment...',
+    });
+  }
+
+  protected simulateWebhook(): void {
+    this.run(this.api.activate(), {
+      tone: 'success',
+      text: 'Payment confirmed — your plan is active.',
+    });
+  }
+
+  protected cancel(): void {
+    this.run(this.api.cancel(), {
+      tone: 'info',
+      text: 'Your plan has been cancelled.',
+    });
+  }
+
+  protected toggleAutoRenew(current: boolean): void {
+    this.run(this.api.setAutoRenew(!current), null);
+  }
+
   private run(
-    action$: ReturnType<SubscriptionApi['checkout']>,
+    action$: Observable<unknown>,
     success: { tone: 'success' | 'error' | 'info'; text: string } | null,
   ): void {
     this.busy.set(true);

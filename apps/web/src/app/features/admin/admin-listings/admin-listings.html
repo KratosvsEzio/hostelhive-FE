@@ -1,7 +1,27 @@
 <hh-admin-shell heading="All listings">
+  <!-- Scoped search + vertical divider + global filter button -->
+  <div class="flex items-center">
+    <hh-search
+      class="flex-1 sm:flex-none sm:w-80"
+      [fieldOptions]="searchFieldOptions"
+      [field]="searchField()"
+      (fieldChange)="onSearchField($event)"
+      [term]="searchTerm()"
+      (termChange)="onSearchTerm($event)"
+      placeholder="Search by hostel…"
+      ariaLabel="Search listings by hostel"
+    />
+    <span class="mx-3 h-5 w-px shrink-0 bg-ink-200"></span>
+    <hh-global-filter
+      [groups]="filterGroups()"
+      [(value)]="globalFilters"
+      (apply)="applyGlobalFilters($event)"
+    />
+  </div>
+
   <!-- Stat cards — one per status aggregate from the API aggs. -->
   @if (aggs().length) {
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div class="mt-5 mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
       @for (a of aggs(); track a.slug) {
         <hh-card>
           <p class="text-xs text-ink-400">{{ a.name }}</p>
@@ -13,27 +33,6 @@
       }
     </div>
   }
-
-  <!-- Search + nested status filter row -->
-  <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-    <hh-search
-      class="w-full sm:w-80"
-      [fieldOptions]="searchFieldOptions"
-      [field]="searchField()"
-      (fieldChange)="onSearchField($event)"
-      [term]="searchTerm()"
-      (termChange)="onSearchTerm($event)"
-      [placeholder]="searchField() === 'id' ? 'Search by hostel ID…' : 'Search by hostel name…'"
-      ariaLabel="Search listings by hostel"
-    />
-    <hh-nested-dropdown
-      [groups]="nestedGroups()"
-      placeholder="All statuses"
-      clearLabel="All statuses"
-      [value]="filterValue()"
-      (valueChange)="onFilterChange($event)"
-    />
-  </div>
 
   @let s = state();
   @if (s.loading) {
@@ -50,152 +49,24 @@
           hh-button
           variant="outlined"
           size="sm"
-          (click)="onFilterChange(null)"
+          (click)="onSearchTerm(''); clearFilters()"
         >
           Show all
         </button>
       </hh-empty-state>
     </div>
   } @else {
-    <div class="mt-4 overflow-x-auto rounded-2xl bg-white shadow-card">
-      <table class="w-full min-w-[900px] text-sm">
-        <thead
-          class="border-b border-ink-100 text-left text-[11px] uppercase tracking-wide text-ink-400"
-        >
-          <tr>
-            <th class="px-5 py-3 font-medium">Property</th>
-            <th class="px-5 py-3 font-medium">Location</th>
-            <th class="px-5 py-3 font-medium">Host</th>
-            <th class="px-5 py-3 font-medium">Status</th>
-            <th class="px-5 py-3 font-medium">
-              <button
-                hh-button variant="text" size="sm"
-                type="button"
-                (click)="toggleSort('created_at')"
-              >
-                Created <i class="ti" [class]="sortIcon('created_at')"></i>
-              </button>
-            </th>
-            <th class="px-5 py-3 font-medium">
-              <button
-                hh-button variant="text" size="sm"
-                type="button"
-                (click)="toggleSort('starting_price')"
-              >
-                From <i class="ti" [class]="sortIcon('starting_price')"></i>
-              </button>
-            </th>
-            <th class="px-5 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-ink-100">
-          @for (l of s.data.items; track l.id) {
-            <tr class="transition hover:bg-surface">
-              <td class="px-5 py-3">
-                <div class="flex items-center gap-3">
-                  @if (l.thumbUrl) {
-                    <img
-                      [src]="l.thumbUrl"
-                      class="h-10 w-10 shrink-0 rounded-lg object-cover"
-                      alt=""
-                    />
-                  } @else {
-                    <div
-                      class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-ink-100 text-ink-400"
-                    >
-                      <i class="ti ti-building text-sm" aria-hidden="true"></i>
-                    </div>
-                  }
-                  <div class="min-w-0">
-                    <p class="truncate font-medium text-ink-900">{{ l.name }}</p>
-                    <p class="text-xs text-ink-400">{{ typeLabel(l) }}</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-5 py-3 text-ink-600">{{ locationLabel(l) }}</td>
-              <td class="px-5 py-3 text-ink-600">{{ l.host }}</td>
-              <td class="px-5 py-3">
-                <hh-status-pill
-                  [tone]="statusMeta(l).tone"
-                  [dot]="statusMeta(l).dot"
-                  >{{ statusMeta(l).label }}</hh-status-pill
-                >
-              </td>
-              <td class="px-5 py-3 text-ink-500">{{ dateLabel(l.createdAt) }}</td>
-              <td class="px-5 py-3 text-ink-600">
-                @if (l.startingPrice != null) {
-                  Rs {{ l.startingPrice | number }}
-                } @else {
-                  —
-                }
-              </td>
-              <td class="px-5 py-3 text-right">
-                <a
-                  hh-button
-                  variant="outlined"
-                  size="sm"
-                  [routerLink]="['../review', l.id]"
-                >
-                  Review
-                </a>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    <div
-      class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-400"
-    >
-      <span
-        >Showing {{ s.data.items.length | number }} of
-        {{ s.data.total | number }} listing{{
-          s.data.total === 1 ? '' : 's'
-        }}</span
-      >
-      @if (totalPages() > 1) {
-        <nav class="flex items-center gap-1.5" aria-label="Pagination">
-          <button
-            hh-button variant="icon"
-            type="button"
-            [disabled]="page() <= 1"
-            (click)="goToPage(page() - 1)"
-            aria-label="Previous page"
-          >
-            <i class="ti ti-chevron-left"></i>
-          </button>
-          @for (p of pageNumbers(); track $index) {
-            @if (p === -1) {
-              <span class="px-1">…</span>
-            } @else {
-              <button
-                hh-button variant="text" size="sm"
-                type="button"
-                (click)="goToPage(p)"
-                [attr.aria-current]="p === page() ? 'page' : null"
-                [class]="
-                  p === page()
-                    ? 'bg-ink-900 text-white'
-                    : 'border border-ink-200 text-ink-600 hover:bg-surface'
-                "
-              >
-                {{ p }}
-              </button>
-            }
-          }
-          <button
-            hh-button variant="icon"
-            type="button"
-            [disabled]="page() >= totalPages()"
-            (click)="goToPage(page() + 1)"
-            aria-label="Next page"
-          >
-            <i class="ti ti-chevron-right"></i>
-          </button>
-        </nav>
-      }
-    </div>
+    <hh-data-table
+      minWidth="900px"
+      [columns]="tableCols"
+      [rows]="s.data.items"
+      [rowId]="listingsRowId"
+      [sort]="tableSortState()"
+      [pagination]="listingsPaginationConf()"
+      (sortChange)="onTableSort($event)"
+      [rowClickable]="true"
+      (rowClick)="onRowClick($event)"
+      (pageChange)="goToPage($event)"
+    />
   }
 </hh-admin-shell>

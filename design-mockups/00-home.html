@@ -8,109 +8,179 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="assets/hh-theme.js"></script>
 <link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .hex { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+</style>
 </head>
 <body class="bg-white text-ink-800">
 
-  <!-- NAV -->
+  <!-- NAV (site-header) -->
   <header class="sticky top-0 z-40 border-b border-ink-100 bg-white/95 backdrop-blur">
-    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-      <a href="00-home.html" class="flex items-center"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" /></a>
-      <nav class="hidden items-center gap-7 text-sm font-medium text-ink-700 md:flex">
-        <a href="01-search-results.html" class="hover:text-brand-600">Explore</a>
-        <a href="#how-it-works" class="hover:text-brand-600">How it works</a>
-        <a href="#for-hosts" class="hover:text-brand-600">For hosts</a>
-      </nav>
-      <div class="flex items-center gap-2">
-        <a href="10-host-listings.html" class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 sm:block">Become a host</a>
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+      <a href="00-home.html" class="flex shrink-0 items-center"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" /></a>
+      <div class="flex items-center gap-3">
+        <a href="11-onboarding-wizard.html" class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 hover:bg-ink-50 sm:block">Become a host</a>
         <button class="flex items-center gap-2 rounded-full border border-ink-200 py-1.5 pl-3 pr-1.5 shadow-card" aria-label="Account"><i class="ti ti-menu-2 text-lg text-ink-600"></i><span class="grid h-8 w-8 place-items-center rounded-full bg-ink-800 text-sm font-medium text-white">AA</span></button>
       </div>
     </div>
   </header>
 
   <!-- HERO -->
-  <section class="relative">
-    <div class="relative h-[440px] overflow-hidden">
-      <img src="https://picsum.photos/seed/hhhero/1600/700" alt="" class="h-full w-full object-cover" />
-      <div class="absolute inset-0 bg-ink-900/45"></div>
-      <div class="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-5 sm:px-8">
-        <h1 class="max-w-2xl font-display text-3xl font-bold leading-tight text-white sm:text-5xl">Find your next hostel, PG or co-living space</h1>
-        <p class="mt-3 max-w-xl text-base text-white/90 sm:text-lg">Verified stays across Pakistan — filtered by budget, gender and room sharing.</p>
-      </div>
-    </div>
-    <!-- Search card -->
-    <div class="relative z-10 mx-auto -mt-10 max-w-5xl px-5 sm:px-8">
-      <div class="flex flex-col gap-1 rounded-3xl border border-ink-100 bg-white p-2 shadow-pill sm:flex-row sm:items-center sm:gap-0">
-        <div class="flex flex-[1.4] items-center gap-3 rounded-full px-4 py-2 transition hover:bg-ink-50">
-          <i class="ti ti-map-pin text-brand-500"></i><div class="min-w-0"><p class="text-[11px] font-medium text-ink-400">Location</p><input value="Karachi" class="w-full bg-transparent text-sm font-medium text-ink-900 outline-none" /></div>
-        </div>
-        <span class="mx-1 hidden h-8 w-px shrink-0 bg-ink-100 sm:block"></span>
-        <div class="flex flex-1 items-center gap-3 rounded-full px-4 py-2 transition hover:bg-ink-50">
-          <i class="ti ti-users text-brand-500"></i><div><p class="text-[11px] font-medium text-ink-400">For</p><p class="text-sm font-medium text-ink-900">Boys</p></div>
-        </div>
-        <span class="mx-1 hidden h-8 w-px shrink-0 bg-ink-100 sm:block"></span>
-        <div class="flex flex-1 items-center gap-3 rounded-full px-4 py-2 transition hover:bg-ink-50">
-          <i class="ti ti-bed text-brand-500"></i><div><p class="text-[11px] font-medium text-ink-400">Sharing</p><p class="text-sm font-medium text-ink-900">Any</p></div>
-        </div>
-        <a href="01-search-results.html" class="ml-1 flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-600"><i class="ti ti-search"></i>Search</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURED -->
-  <section class="mx-auto max-w-7xl px-5 pt-14 sm:px-8">
-    <div class="mb-5 flex items-end justify-between">
-      <div><h2 class="font-display text-2xl font-semibold text-ink-900">Featured stays</h2><p class="mt-1 text-sm text-ink-400">Hand-picked, verified hostels</p></div>
-      <a href="01-search-results.html" class="text-sm font-medium text-brand-600 hover:underline">View all</a>
-    </div>
-    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-      <a href="03-listing-detail.html" class="group">
-        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-ink-50"><img src="https://picsum.photos/seed/hhf1/600/450" class="card-img h-full w-full object-cover" alt="" /><span style="background-color:rgba(43,108,176,.95)" class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium text-white">Boys</span></div>
-        <div class="pt-3"><div class="flex justify-between"><h3 class="font-semibold text-ink-800">Al-Madina Boys Hostel</h3><span class="text-xs font-medium text-brand-600">Verified</span></div><p class="text-sm text-ink-400">DHA Phase 6 · Karachi</p><p class="mt-2 text-ink-900"><span class="mb-0.5 block text-[11px] font-medium text-ink-400">Starting from</span><span class="text-lg font-semibold">Rs 12,000</span><span class="text-sm text-ink-400"> / mo</span></p></div>
-      </a>
-      <a href="03-listing-detail.html" class="group">
-        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-ink-50"><img src="https://picsum.photos/seed/hhf2/600/450" class="card-img h-full w-full object-cover" alt="" /><span style="background-color:rgba(190,58,117,.95)" class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium text-white">Girls</span></div>
-        <div class="pt-3"><div class="flex justify-between"><h3 class="font-semibold text-ink-800">Gulberg Girls Residence</h3><span class="text-xs font-medium text-brand-600">Verified</span></div><p class="text-sm text-ink-400">Gulberg III · Lahore</p><p class="mt-2 text-ink-900"><span class="mb-0.5 block text-[11px] font-medium text-ink-400">Starting from</span><span class="text-lg font-semibold">Rs 18,500</span><span class="text-sm text-ink-400"> / mo</span></p></div>
-      </a>
-      <a href="03-listing-detail.html" class="group">
-        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-ink-50"><img src="https://picsum.photos/seed/hhf3/600/450" class="card-img h-full w-full object-cover" alt="" /><span class="absolute left-3 top-3 rounded-full bg-brand-500/95 px-2.5 py-1 text-xs font-medium text-white">Co-living</span></div>
-        <div class="pt-3"><div class="flex justify-between"><h3 class="font-semibold text-ink-800">The Loft Co-living</h3><span class="text-xs font-medium text-brand-600">Verified</span></div><p class="text-sm text-ink-400">F-7 · Islamabad</p><p class="mt-2 text-ink-900"><span class="mb-0.5 block text-[11px] font-medium text-ink-400">Starting from</span><span class="text-lg font-semibold">Rs 22,000</span><span class="text-sm text-ink-400"> / mo</span></p></div>
-      </a>
-      <a href="03-listing-detail.html" class="group">
-        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-ink-50"><img src="https://picsum.photos/seed/hhf4/600/450" class="card-img h-full w-full object-cover" alt="" /><span style="background-color:rgba(43,108,176,.95)" class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium text-white">Boys</span></div>
-        <div class="pt-3"><div class="flex justify-between"><h3 class="font-semibold text-ink-800">Scholars Inn</h3><span class="text-xs font-medium text-brand-600">Verified</span></div><p class="text-sm text-ink-400">Johar Town · Lahore</p><p class="mt-2 text-ink-900"><span class="mb-0.5 block text-[11px] font-medium text-ink-400">Starting from</span><span class="text-lg font-semibold">Rs 9,500</span><span class="text-sm text-ink-400"> / mo</span></p></div>
-      </a>
-    </div>
-  </section>
-
-  <!-- CITIES -->
-  <section class="mx-auto max-w-7xl px-5 pt-14 sm:px-8">
-    <h2 class="mb-5 font-display text-2xl font-semibold text-ink-900">Explore by city</h2>
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      <a href="01-search-results.html" class="group relative overflow-hidden rounded-2xl"><img src="https://picsum.photos/seed/hhcity1/500/360" class="card-img h-40 w-full object-cover" alt="" /><div class="absolute inset-0 bg-ink-900/35"></div><div class="absolute bottom-3 left-4 text-white"><p class="font-semibold">Karachi</p><p class="text-xs text-white/80">1,240 stays</p></div></a>
-      <a href="01-search-results.html" class="group relative overflow-hidden rounded-2xl"><img src="https://picsum.photos/seed/hhcity2/500/360" class="card-img h-40 w-full object-cover" alt="" /><div class="absolute inset-0 bg-ink-900/35"></div><div class="absolute bottom-3 left-4 text-white"><p class="font-semibold">Lahore</p><p class="text-xs text-white/80">980 stays</p></div></a>
-      <a href="01-search-results.html" class="group relative overflow-hidden rounded-2xl"><img src="https://picsum.photos/seed/hhcity3/500/360" class="card-img h-40 w-full object-cover" alt="" /><div class="absolute inset-0 bg-ink-900/35"></div><div class="absolute bottom-3 left-4 text-white"><p class="font-semibold">Islamabad</p><p class="text-xs text-white/80">610 stays</p></div></a>
-      <a href="01-search-results.html" class="group relative overflow-hidden rounded-2xl"><img src="https://picsum.photos/seed/hhcity4/500/360" class="card-img h-40 w-full object-cover" alt="" /><div class="absolute inset-0 bg-ink-900/35"></div><div class="absolute bottom-3 left-4 text-white"><p class="font-semibold">Rawalpindi</p><p class="text-xs text-white/80">430 stays</p></div></a>
-    </div>
-  </section>
-
-  <!-- HOST CTA -->
-  <section id="for-hosts" class="mx-auto max-w-7xl px-5 py-14 sm:px-8">
-    <div class="flex flex-col items-center justify-between gap-6 overflow-hidden rounded-3xl bg-ink-900 p-8 sm:flex-row sm:p-12">
+  <section class="relative overflow-hidden bg-white">
+    <div class="pointer-events-none absolute -right-32 -top-40 h-[460px] w-[460px] rounded-full bg-brand-50 blur-3xl"></div>
+    <div class="pointer-events-none absolute -left-24 top-40 h-72 w-72 rounded-full bg-tint-cream blur-3xl"></div>
+    <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-12 pt-12 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6 lg:pb-24 lg:pt-20">
       <div class="max-w-xl">
-        <h2 class="font-display text-2xl font-semibold text-white sm:text-3xl">List your hostel and fill every bed</h2>
-        <p class="mt-2 text-white/70">Reach thousands of verified seekers, manage rooms, tenants and automated billing — all from one dashboard.</p>
+        <span class="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 py-1.5 pl-1.5 pr-4 text-sm font-medium text-brand-700"><span class="grid h-6 w-6 place-items-center rounded-full bg-brand-500"><svg viewBox="0 0 64 64" class="h-3.5 w-3.5"><path d="M32 6 56 20v24L32 58 8 44V20Z" fill="#fff"/></svg></span>Pakistan's verified hostel network</span>
+        <h1 class="mt-5 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-ink-900 sm:text-6xl sm:leading-[1.05]">Find your place<br />in the <span class="text-brand-500">hive</span>.</h1>
+        <p class="mt-5 max-w-lg text-lg leading-relaxed text-ink-500">Verified hostels, PGs and co-living across Pakistan — filtered by location, budget, gender and room sharing. No brokers, no surprises.</p>
+        <!-- pill search -->
+        <div class="mt-7 flex items-center gap-2 rounded-full border border-ink-100 bg-white py-2 pl-5 pr-2 shadow-pill">
+          <i class="ti ti-map-pin text-xl text-brand-500"></i>
+          <span class="min-w-0 flex-1"><span class="block text-[11px] font-medium text-ink-400">Where to?</span><input placeholder="Search city or area" class="w-full bg-transparent text-sm font-medium text-ink-900 outline-none" /></span>
+          <a href="02-search-map.html" class="grid h-11 w-14 place-items-center rounded-full bg-brand-500 text-white transition hover:bg-brand-600"><i class="ti ti-search text-lg"></i></a>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span class="text-ink-400">Popular:</span>
+          <a href="02-search-map.html" class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700">Karachi</a>
+          <a href="02-search-map.html" class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700">Lahore</a>
+          <a href="02-search-map.html" class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700">Islamabad</a>
+          <a href="02-search-map.html" class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700">Rawalpindi</a>
+        </div>
+        <div class="mt-9 grid max-w-md grid-cols-3 gap-4">
+          <div><p class="font-display text-2xl font-bold text-ink-900">10,000+</p><p class="text-xs text-ink-400">verified beds</p></div>
+          <div><p class="font-display text-2xl font-bold text-ink-900">25</p><p class="text-xs text-ink-400">cities</p></div>
+          <div><p class="font-display text-2xl font-bold text-ink-900">4.8/5</p><p class="text-xs text-ink-400">seeker rating</p></div>
+        </div>
       </div>
-      <a href="10-host-listings.html" class="shrink-0 rounded-xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-brand-600">Start hosting</a>
+      <!-- honeycomb photo mesh -->
+      <div class="relative hidden h-[420px] lg:block">
+        <div class="absolute left-1/2 top-1/2 h-[332px] w-[480px] -translate-x-1/2 -translate-y-1/2">
+          <div class="hex absolute left-0 top-[83px] aspect-[1.155] w-[192px] overflow-hidden bg-ink-100"><img src="https://picsum.photos/seed/hhloft/400/340" class="h-full w-full object-cover" alt="" /></div>
+          <div class="hex absolute left-[144px] top-0 aspect-[1.155] w-[192px] overflow-hidden bg-ink-100"><img src="https://picsum.photos/seed/hhdorm/400/340" class="h-full w-full object-cover" alt="" /></div>
+          <div class="hex absolute left-[144px] top-[166px] aspect-[1.155] w-[192px] overflow-hidden bg-ink-100"><img src="https://picsum.photos/seed/hhliving/400/340" class="h-full w-full object-cover" alt="" /></div>
+          <div class="hex absolute left-[288px] top-[83px] aspect-[1.155] w-[192px] overflow-hidden bg-ink-100"><img src="https://picsum.photos/seed/hhcoliving/400/340" class="h-full w-full object-cover" alt="" /></div>
+          <div class="absolute -right-3 top-[50px] flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-pill"><span class="grid h-8 w-8 place-items-center rounded-full bg-ok/10 text-ok"><i class="ti ti-rosette-discount-check text-lg"></i></span><div><p class="text-xs font-semibold text-ink-900">100% verified</p><p class="text-[11px] text-ink-400">every listing</p></div></div>
+          <div class="absolute -left-5 bottom-[42px] flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-pill"><span class="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-600"><i class="ti ti-star-filled text-lg"></i></span><div><p class="text-xs font-semibold text-ink-900">4.8 / 5</p><p class="text-[11px] text-ink-400">12k+ reviews</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED STAYS -->
+  <section class="mx-auto max-w-7xl px-5 pt-16 sm:px-8 lg:pt-24">
+    <div class="mb-7 flex items-end justify-between">
+      <div><p class="text-sm font-semibold uppercase tracking-wide text-brand-600">Hand-picked</p><h2 class="mt-1 font-display text-3xl font-bold text-ink-900">Featured stays</h2></div>
+      <a href="02-search-map.html" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">View all<i class="ti ti-arrow-right"></i></a>
+    </div>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <a href="03-listing-detail.html" class="group rounded-3xl border border-ink-100 bg-white p-2.5 shadow-card transition hover:-translate-y-1 hover:shadow-cardhover">
+        <div class="relative aspect-[4/3] overflow-hidden rounded-[18px] bg-ink-50"><img src="https://picsum.photos/seed/hhf1/600/450" class="card-img h-full w-full object-cover" alt="" /><span style="background-color:rgba(43,108,176,.95)" class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow-sm">Boys</span><span class="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink-400 backdrop-blur"><i class="ti ti-heart text-lg"></i></span></div>
+        <div class="px-2 pb-2 pt-3.5"><div class="flex items-center justify-between gap-2"><h3 class="truncate font-semibold text-ink-900">Al-Madina Boys Hostel</h3><span class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-700"><i class="ti ti-star-filled text-sm text-brand-500"></i>4.8</span></div><p class="mt-0.5 flex items-center gap-1 text-sm text-ink-400"><i class="ti ti-map-pin text-sm"></i>DHA Phase 6 · Karachi</p><div class="mt-3 flex items-center justify-between"><p class="leading-none"><span class="text-lg font-bold text-ink-900">Rs 12,000</span><span class="text-sm text-ink-400">/mo</span></p><span class="inline-flex items-center gap-1 text-xs font-medium text-brand-600"><i class="ti ti-rosette-discount-check text-sm"></i>Verified</span></div></div>
+      </a>
+      <a href="03-listing-detail.html" class="group rounded-3xl border border-ink-100 bg-white p-2.5 shadow-card transition hover:-translate-y-1 hover:shadow-cardhover">
+        <div class="relative aspect-[4/3] overflow-hidden rounded-[18px] bg-ink-50"><img src="https://picsum.photos/seed/hhf2/600/450" class="card-img h-full w-full object-cover" alt="" /><span style="background-color:rgba(190,58,117,.95)" class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow-sm">Girls</span><span class="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink-400 backdrop-blur"><i class="ti ti-heart text-lg"></i></span></div>
+        <div class="px-2 pb-2 pt-3.5"><div class="flex items-center justify-between gap-2"><h3 class="truncate font-semibold text-ink-900">Gulberg Girls Residence</h3><span class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-700"><i class="ti ti-star-filled text-sm text-brand-500"></i>4.9</span></div><p class="mt-0.5 flex items-center gap-1 text-sm text-ink-400"><i class="ti ti-map-pin text-sm"></i>Gulberg III · Lahore</p><div class="mt-3 flex items-center justify-between"><p class="leading-none"><span class="text-lg font-bold text-ink-900">Rs 18,500</span><span class="text-sm text-ink-400">/mo</span></p><span class="inline-flex items-center gap-1 text-xs font-medium text-brand-600"><i class="ti ti-rosette-discount-check text-sm"></i>Verified</span></div></div>
+      </a>
+      <a href="03-listing-detail.html" class="group rounded-3xl border border-ink-100 bg-white p-2.5 shadow-card transition hover:-translate-y-1 hover:shadow-cardhover">
+        <div class="relative aspect-[4/3] overflow-hidden rounded-[18px] bg-ink-50"><img src="https://picsum.photos/seed/hhf3/600/450" class="card-img h-full w-full object-cover" alt="" /><span class="absolute left-3 top-3 rounded-full bg-brand-500/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">Co-living</span><span class="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink-400 backdrop-blur"><i class="ti ti-heart text-lg"></i></span></div>
+        <div class="px-2 pb-2 pt-3.5"><div class="flex items-center justify-between gap-2"><h3 class="truncate font-semibold text-ink-900">The Loft Co-living</h3><span class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-700"><i class="ti ti-star-filled text-sm text-brand-500"></i>4.7</span></div><p class="mt-0.5 flex items-center gap-1 text-sm text-ink-400"><i class="ti ti-map-pin text-sm"></i>F-7 · Islamabad</p><div class="mt-3 flex items-center justify-between"><p class="leading-none"><span class="text-lg font-bold text-ink-900">Rs 22,000</span><span class="text-sm text-ink-400">/mo</span></p><span class="inline-flex items-center gap-1 text-xs font-medium text-brand-600"><i class="ti ti-rosette-discount-check text-sm"></i>Verified</span></div></div>
+      </a>
+      <a href="03-listing-detail.html" class="group rounded-3xl border border-ink-100 bg-white p-2.5 shadow-card transition hover:-translate-y-1 hover:shadow-cardhover">
+        <div class="relative aspect-[4/3] overflow-hidden rounded-[18px] bg-ink-50"><img src="https://picsum.photos/seed/hhf4/600/450" class="card-img h-full w-full object-cover" alt="" /><span style="background-color:rgba(43,108,176,.95)" class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow-sm">Boys</span><span class="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink-400 backdrop-blur"><i class="ti ti-heart text-lg"></i></span></div>
+        <div class="px-2 pb-2 pt-3.5"><div class="flex items-center justify-between gap-2"><h3 class="truncate font-semibold text-ink-900">Scholars Inn</h3><span class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-700"><i class="ti ti-star-filled text-sm text-brand-500"></i>4.6</span></div><p class="mt-0.5 flex items-center gap-1 text-sm text-ink-400"><i class="ti ti-map-pin text-sm"></i>Johar Town · Lahore</p><div class="mt-3 flex items-center justify-between"><p class="leading-none"><span class="text-lg font-bold text-ink-900">Rs 9,500</span><span class="text-sm text-ink-400">/mo</span></p><span class="inline-flex items-center gap-1 text-xs font-medium text-brand-600"><i class="ti ti-rosette-discount-check text-sm"></i>Verified</span></div></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- EXPLORE BY CITY — dark honeycomb marquee -->
+  <section class="relative mt-16 overflow-hidden bg-ink-900 py-16 sm:py-20 lg:mt-24">
+    <div class="relative mx-auto max-w-7xl px-5 sm:px-8">
+      <div class="text-center">
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-400">25 cities</p>
+        <h2 class="mt-1 font-display text-3xl font-bold text-white sm:text-4xl">Explore the hive, city by city</h2>
+        <p class="mx-auto mt-3 max-w-md text-white/60">Thousands of verified beds in every major city across Pakistan.</p>
+      </div>
+      <div class="relative mt-10 flex h-[250px] items-center overflow-hidden sm:mt-12 sm:h-[310px]">
+        <div class="flex">
+          <a href="02-search-map.html" class="relative aspect-[1.155] w-[210px]"><div class="hex h-full w-full overflow-hidden bg-ink-700"><img src="https://picsum.photos/seed/hhkarachi/420/360" class="h-full w-full object-cover opacity-90" alt="" /></div><div class="hex pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/15 to-transparent"></div><div class="pointer-events-none absolute inset-x-0 bottom-[20%] text-center text-white"><p class="font-display text-lg font-semibold">Karachi</p><p class="text-[11px] text-white/75">1,240 stays</p></div></a>
+          <a href="02-search-map.html" class="relative -ml-[53px] aspect-[1.155] w-[210px]"><div class="hex h-full w-full overflow-hidden bg-ink-700"><img src="https://picsum.photos/seed/hhlahore/420/360" class="h-full w-full object-cover opacity-90" alt="" /></div><div class="hex pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/15 to-transparent"></div><div class="pointer-events-none absolute inset-x-0 bottom-[20%] text-center text-white"><p class="font-display text-lg font-semibold">Lahore</p><p class="text-[11px] text-white/75">980 stays</p></div></a>
+          <a href="02-search-map.html" class="relative -ml-[53px] aspect-[1.155] w-[210px]"><div class="hex h-full w-full overflow-hidden bg-ink-700"><img src="https://picsum.photos/seed/hhislamabad/420/360" class="h-full w-full object-cover opacity-90" alt="" /></div><div class="hex pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/15 to-transparent"></div><div class="pointer-events-none absolute inset-x-0 bottom-[20%] text-center text-white"><p class="font-display text-lg font-semibold">Islamabad</p><p class="text-[11px] text-white/75">610 stays</p></div></a>
+          <a href="02-search-map.html" class="relative -ml-[53px] aspect-[1.155] w-[210px]"><div class="hex h-full w-full overflow-hidden bg-ink-700"><img src="https://picsum.photos/seed/hhpindi/420/360" class="h-full w-full object-cover opacity-90" alt="" /></div><div class="hex pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/15 to-transparent"></div><div class="pointer-events-none absolute inset-x-0 bottom-[20%] text-center text-white"><p class="font-display text-lg font-semibold">Rawalpindi</p><p class="text-[11px] text-white/75">430 stays</p></div></a>
+          <a href="02-search-map.html" class="relative -ml-[53px] aspect-[1.155] w-[210px]"><div class="hex h-full w-full overflow-hidden bg-ink-700"><img src="https://picsum.photos/seed/hhpesh/420/360" class="h-full w-full object-cover opacity-90" alt="" /></div><div class="hex pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/15 to-transparent"></div><div class="pointer-events-none absolute inset-x-0 bottom-[20%] text-center text-white"><p class="font-display text-lg font-semibold">Peshawar</p><p class="text-[11px] text-white/75">280 stays</p></div></a>
+          <a href="02-search-map.html" class="relative -ml-[53px] aspect-[1.155] w-[210px]"><div class="hex h-full w-full overflow-hidden bg-ink-700"><img src="https://picsum.photos/seed/hhmultan/420/360" class="h-full w-full object-cover opacity-90" alt="" /></div><div class="hex pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/15 to-transparent"></div><div class="pointer-events-none absolute inset-x-0 bottom-[20%] text-center text-white"><p class="font-display text-lg font-semibold">Multan</p><p class="text-[11px] text-white/75">190 stays</p></div></a>
+        </div>
+        <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-ink-900 to-transparent sm:w-24"></div>
+        <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-ink-900 to-transparent sm:w-24"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPLORE PAKISTAN (interactive map) -->
+  <section class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
+    <div class="mb-8 text-center">
+      <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">Find by location</p>
+      <h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">Explore Pakistan, region by region</h2>
+      <p class="mx-auto mt-3 max-w-xl text-ink-500">Drill from province to district to tehsil — hover to highlight an area, click to zoom in, and jump straight to verified stays there.</p>
+    </div>
+    <div class="grid aspect-[3/2] w-full place-items-center rounded-3xl border border-ink-100 bg-tint-mint"><div class="text-center"><i class="ti ti-map-2 text-5xl text-brand-400"></i><p class="mt-2 text-sm font-medium text-ink-500">Interactive Pakistan map — province → district → tehsil</p></div></div>
+  </section>
+
+  <!-- WHY HOSTELHIVE -->
+  <section class="mx-auto max-w-7xl px-5 pb-16 sm:px-8 lg:pb-24">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">Why HostelHive</p>
+      <h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">A safer way to find your stay</h2>
+    </div>
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-3xl border border-ink-100 bg-white p-7 transition hover:-translate-y-1 hover:shadow-card"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-brand-50"><i class="ti ti-rosette-discount-check text-2xl text-brand-600"></i></span><h3 class="mt-5 font-display text-lg font-semibold text-ink-900">Every listing verified</h3><p class="mt-2 text-sm leading-relaxed text-ink-500">Each hostel is checked and approved before it goes live — what you see is real.</p></div>
+      <div class="rounded-3xl border border-ink-100 bg-white p-7 transition hover:-translate-y-1 hover:shadow-card"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-brand-50"><i class="ti ti-filter text-2xl text-brand-600"></i></span><h3 class="mt-5 font-display text-lg font-semibold text-ink-900">Filter that fits you</h3><p class="mt-2 text-sm leading-relaxed text-ink-500">Narrow by budget, gender, room sharing and amenities to find your exact match.</p></div>
+      <div class="rounded-3xl border border-ink-100 bg-white p-7 transition hover:-translate-y-1 hover:shadow-card"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-brand-50"><i class="ti ti-phone-check text-2xl text-brand-600"></i></span><h3 class="mt-5 font-display text-lg font-semibold text-ink-900">Direct verified contacts</h3><p class="mt-2 text-sm leading-relaxed text-ink-500">Unlock real phone numbers and reach hosts directly — no middlemen, no markup.</p></div>
+      <div class="rounded-3xl border border-ink-100 bg-white p-7 transition hover:-translate-y-1 hover:shadow-card"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-brand-50"><i class="ti ti-shield-check text-2xl text-brand-600"></i></span><h3 class="mt-5 font-display text-lg font-semibold text-ink-900">Safe &amp; transparent</h3><p class="mt-2 text-sm leading-relaxed text-ink-500">Clear pricing, honest photos and reviews from people who actually stayed.</p></div>
     </div>
   </section>
 
   <!-- HOW IT WORKS -->
-  <section id="how-it-works" class="mx-auto max-w-7xl px-5 pb-16 sm:px-8">
-    <h2 class="mb-6 font-display text-2xl font-semibold text-ink-900">How it works</h2>
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-      <div class="rounded-2xl border border-ink-100 p-6"><span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-search text-xl"></i></span><p class="mt-3 font-medium text-ink-900">1 · Search &amp; filter</p><p class="mt-1 text-sm text-ink-500">Narrow by city, budget, gender and sharing to find your match.</p></div>
-      <div class="rounded-2xl border border-ink-100 p-6"><span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-mint text-brand-600"><i class="ti ti-rosette-discount-check text-xl"></i></span><p class="mt-3 font-medium text-ink-900">2 · View verified contacts</p><p class="mt-1 text-sm text-ink-500">Sign in once to unlock direct phone numbers for every listing.</p></div>
-      <div class="rounded-2xl border border-ink-100 p-6"><span class="grid h-11 w-11 place-items-center rounded-xl bg-tint-sky text-brand-600"><i class="ti ti-home-check text-xl"></i></span><p class="mt-3 font-medium text-ink-900">3 · Move in</p><p class="mt-1 text-sm text-ink-500">Contact the host, visit and secure your bed with confidence.</p></div>
+  <section id="how-it-works" class="bg-tint-cream py-16 sm:py-20">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8">
+      <div class="mx-auto max-w-2xl text-center"><p class="text-sm font-semibold uppercase tracking-wide text-brand-600">Three steps</p><h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">How it works</h2></div>
+      <div class="mt-12 grid gap-8 sm:grid-cols-3">
+        <div class="text-center"><span class="mx-auto grid h-20 w-20 place-items-center"><span class="hex grid h-full w-full place-items-center bg-brand-500"><i class="ti ti-search text-3xl text-white"></i></span></span><p class="mt-5 text-xs font-semibold uppercase tracking-wide text-brand-600">Step 1</p><h3 class="mt-1 font-display text-xl font-semibold text-ink-900">Search &amp; filter</h3><p class="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-500">Pick your city, budget, gender and sharing to surface the right stays.</p></div>
+        <div class="text-center"><span class="mx-auto grid h-20 w-20 place-items-center"><span class="hex grid h-full w-full place-items-center bg-brand-500"><i class="ti ti-rosette-discount-check text-3xl text-white"></i></span></span><p class="mt-5 text-xs font-semibold uppercase tracking-wide text-brand-600">Step 2</p><h3 class="mt-1 font-display text-xl font-semibold text-ink-900">Unlock contacts</h3><p class="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-500">Sign in once to reveal verified phone numbers for every listing.</p></div>
+        <div class="text-center"><span class="mx-auto grid h-20 w-20 place-items-center"><span class="hex grid h-full w-full place-items-center bg-brand-500"><i class="ti ti-home-check text-3xl text-white"></i></span></span><p class="mt-5 text-xs font-semibold uppercase tracking-wide text-brand-600">Step 3</p><h3 class="mt-1 font-display text-xl font-semibold text-ink-900">Move in</h3><p class="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-500">Visit, confirm and secure your bed with total confidence.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
+    <div class="mb-10 text-center"><p class="text-sm font-semibold uppercase tracking-wide text-brand-600">Loved by movers</p><h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">Trusted by students &amp; pros</h2></div>
+    <div class="grid gap-6 lg:grid-cols-3">
+      <figure class="flex h-full flex-col rounded-3xl border border-ink-100 bg-white p-7 shadow-card"><div class="flex gap-0.5 text-brand-500"><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i></div><blockquote class="mt-4 flex-1 text-[15px] leading-relaxed text-ink-700">"Found a verified girls hostel in Gulberg in a single evening. The photos actually matched — that never happens."</blockquote><figcaption class="mt-5 flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-full bg-brand-100 font-display font-semibold text-brand-700">AK</span><div><p class="text-sm font-semibold text-ink-900">Ayesha K.</p><p class="text-xs text-ink-400">Student · Lahore</p></div></figcaption></figure>
+      <figure class="flex h-full flex-col rounded-3xl border border-ink-100 bg-white p-7 shadow-card"><div class="flex gap-0.5 text-brand-500"><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i></div><blockquote class="mt-4 flex-1 text-[15px] leading-relaxed text-ink-700">"As a host, HostelHive filled my empty beds in two weeks. Managing tenants and billing from one place is a relief."</blockquote><figcaption class="mt-5 flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-full bg-brand-100 font-display font-semibold text-brand-700">BR</span><div><p class="text-sm font-semibold text-ink-900">Bilal R.</p><p class="text-xs text-ink-400">Host · Karachi</p></div></figcaption></figure>
+      <figure class="flex h-full flex-col rounded-3xl border border-ink-100 bg-white p-7 shadow-card"><div class="flex gap-0.5 text-brand-500"><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i><i class="ti ti-star-filled text-sm"></i></div><blockquote class="mt-4 flex-1 text-[15px] leading-relaxed text-ink-700">"Moved cities for a new job and had a co-living room sorted before my flight landed. Direct contact, zero brokers."</blockquote><figcaption class="mt-5 flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-full bg-brand-100 font-display font-semibold text-brand-700">HS</span><div><p class="text-sm font-semibold text-ink-900">Hamza S.</p><p class="text-xs text-ink-400">Engineer · Islamabad</p></div></figcaption></figure>
+    </div>
+  </section>
+
+  <!-- FOR HOSTS CTA -->
+  <section id="for-hosts" class="mx-auto max-w-7xl px-5 pb-20 sm:px-8">
+    <div class="relative overflow-hidden rounded-[28px] bg-ink-900 px-8 py-12 sm:px-14 sm:py-16">
+      <div class="relative flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div class="max-w-xl">
+          <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80">For hosts</span>
+          <h2 class="mt-4 font-display text-3xl font-bold leading-tight text-white sm:text-4xl">List your hostel and fill every bed</h2>
+          <p class="mt-3 max-w-lg text-white/70">Reach thousands of verified seekers, manage rooms, tenants and automated billing — all from one dashboard.</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a href="11-onboarding-wizard.html" class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-brand-600">Become a host<i class="ti ti-arrow-right"></i></a>
+            <a href="02-search-map.html" class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10">Browse stays</a>
+          </div>
+        </div>
+        <div class="grid w-full max-w-xs grid-cols-1 gap-3 lg:w-auto">
+          <div class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/20 text-brand-400"><i class="ti ti-users text-lg"></i></span><p class="text-sm font-medium text-white/90">Thousands of verified seekers</p></div>
+          <div class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/20 text-brand-400"><i class="ti ti-device-mobile text-lg"></i></span><p class="text-sm font-medium text-white/90">Rooms, tenants &amp; billing in one app</p></div>
+          <div class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/20 text-brand-400"><i class="ti ti-chart-line text-lg"></i></span><p class="text-sm font-medium text-white/90">Insights that fill beds faster</p></div>
+        </div>
+      </div>
     </div>
   </section>
 

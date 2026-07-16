@@ -1,5 +1,5 @@
 // HostelHive UI — design-system component library.
-// Spec: design-mockups/30-design-system.html. Tokens: @hostelhive/styles.
+// Spec: design-mockups/30-design-system.html.
 
 export * from './lib/button/button';
 export * from './lib/badge/badge';
@@ -22,12 +22,19 @@ export * from './lib/range-slider/range-slider';
 export * from './lib/dropdown/dropdown';
 export * from './lib/scoped-search/scoped-search';
 export * from './lib/date-range-picker/date-range-picker';
+export * from './lib/date-picker/date-picker';
 export * from './lib/rich-text/rich-text';
 export * from './lib/confirm-modal/confirm-modal';
 export * from './lib/nested-dropdown/nested-dropdown';
 export * from './lib/phone-input/phone-input';
 export * from './lib/filter-chips/filter-chips';
+export * from './lib/context-menu/context-menu';
 export * from './lib/photo-grid/photo-grid';
 export * from './lib/compact-number/compact-number';
 export * from './lib/breadcrumb/breadcrumb';
 export * from './lib/states/no-results';
+export * from './lib/data-table/data-table';
+export * from './lib/global-filter/global-filter';
+export * from './lib/divider/divider';
+export * from './lib/link/link';
+export * from './lib/donut/donut';

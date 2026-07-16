@@ -22,6 +22,8 @@
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
     "src/**/test-setup.ts",
-    "src/**/*.stories.ts"
+    "src/**/*.stories.ts",
+    "**/*.stories.ts",
+    "**/*.stories.js"
   ]
 }

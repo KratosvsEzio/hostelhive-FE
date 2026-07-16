@@ -11,6 +11,8 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } fr
 import { map } from 'rxjs';
 import { HostPropertyStore } from '@services';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
+import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
+import { MobileApp } from '@core/mobile-app';
 import { Button, Dropdown, DropdownOption, StatusTone } from '@hostelhive/ui';
 import { ListingStatus, PropertyGender } from '@hostelhive/data-access';
 
@@ -36,18 +38,33 @@ const PILL_LABEL: Record<ListingStatus, string> = {
   paused: 'Paused',
 };
 
-/** Host console chrome — fixed sidebar on desktop, slide-in drawer on mobile. */
+/**
+ * Host console chrome — fixed sidebar on desktop, slide-in drawer on mobile web.
+ * On the mobile app the sidebar disappears entirely: the bottom tab bar
+ * (Overview · Rooms · Tenants · Invoices · More) is the navigation.
+ */
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, Dropdown, Button],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar],
   templateUrl: './host-shell.html',
 })
 export class HostLayout {
   protected readonly drawer = inject(ConsoleDrawer);
   protected readonly propertyStore = inject(HostPropertyStore);
+  protected readonly mobile = inject(MobileApp);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+
+  private readonly onDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  protected readonly contentPadding = computed(() =>
+    !this.mobile.isMobile() && this.drawer.open() && this.onDesktop ? '16rem' : '0');
+
+  protected closeOnMobile(): void {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      this.drawer.close();
+    }
+  }
 
   private readonly routeHostelId = toSignal(
     this.route.paramMap.pipe(map((pm) => pm.get('hostelId') ?? '')),
@@ -65,16 +82,16 @@ export class HostLayout {
     const pid = this.propertyStore.selected();
     const b = `/host/${pid}`;
     return [
-      { label: 'Overview',       icon: 'ti-layout-dashboard', link: b,              exact: true },
+      { label: 'Overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
       { label: 'Hostel profile', icon: 'ti-building',         link: `${b}/profile` },
       { label: 'Rooms',          icon: 'ti-bed',              link: `${b}/rooms` },
       { label: 'Tenants',        icon: 'ti-users',            link: `${b}/tenants` },
       { label: 'Team & staff',   icon: 'ti-user-shield',      link: `${b}/team` },
       { label: 'Utilities',      icon: 'ti-bolt',             link: `${b}/utilities` },
+      { label: 'Mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess` },
       { label: 'Invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices` },
       { divider: true },
       { label: 'Subscription',   icon: 'ti-rosette',          link: `${b}/subscription` },
-      { label: 'Settings',       icon: 'ti-settings',         link: `${b}/settings` },
     ];
   });
 

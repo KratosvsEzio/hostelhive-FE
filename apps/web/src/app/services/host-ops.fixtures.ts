@@ -92,6 +92,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 5,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -107,6 +110,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 7,
     outstanding: 9500,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -122,6 +128,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 1,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -138,6 +147,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 3,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'checked-out',
   },
   // Extra Room 101 occupants so the utilities pro-rata table matches the mockup (AR 30, BK 28, SA 30 over 88 days).
@@ -154,6 +166,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 5,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
   {
@@ -169,6 +184,9 @@ export const TENANTS: Tenant[] = [
     billingDate: 1,
     billingDueDate: 7,
     outstanding: 0,
+    messBreakfast: true,
+    messLunch: true,
+    messDinner: true,
     status: 'active',
   },
 ];
@@ -318,6 +336,8 @@ export const UTILITY_BATCH: UtilityBill[] = [
 export const INVOICES: Invoice[] = [
   {
     id: 'INV-2026-0142',
+    renterId: 'renter-1',
+    roomId: 'room-102',
     tenantName: 'Ahmed Raza',
     roomNumber: '102',
     floor: '1st',
@@ -336,12 +356,14 @@ export const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-2026-0143',
+    renterId: 'renter-2',
+    roomId: 'room-202',
     tenantName: 'Bilal Khan',
     roomNumber: '202',
     floor: '1st',
     kind: 'rent',
     amount: 9500,
-    status: 'overdue',
+    status: 'over-due',
     issued: '2026-06-01',
     due: '2026-06-07',
     lines: [
@@ -353,12 +375,14 @@ export const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-2026-0144',
+    renterId: 'renter-3',
+    roomId: 'room-101',
     tenantName: 'Saad Ali',
     roomNumber: '101',
     floor: 'Ground',
     kind: 'utility',
     amount: 8000,
-    status: 'unpaid',
+    status: 'due',
     issued: '2026-06-01',
     due: '2026-06-07',
     lines: [{ label: 'Electricity share', amount: 8000 }],
@@ -367,6 +391,8 @@ export const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-2026-0145',
+    renterId: 'renter-4',
+    roomId: 'room-301',
     tenantName: 'Usman Haider',
     roomNumber: '301',
     floor: '2nd',

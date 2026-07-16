@@ -15,40 +15,55 @@
     <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
     <nav class="flex-1 space-y-1 px-3 py-2">
       <a href="09-host-overview.html" class="nav-link"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
-      <a href="10-host-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>My listings</a>
+      <a href="17-hostel-profile.html" class="nav-link"><i class="ti ti-building text-lg"></i>Hostel profile</a>
       <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
       <a href="13-tenants.html" class="nav-link active"><i class="ti ti-users text-lg"></i>Tenants</a>
       <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
       <a href="14-utilities.html" class="nav-link"><i class="ti ti-bolt text-lg"></i>Utilities</a>
       <a href="15-invoices.html" class="nav-link"><i class="ti ti-file-invoice text-lg"></i>Invoices</a>
-      <a href="16-analytics.html" class="nav-link"><i class="ti ti-chart-bar text-lg"></i>Analytics</a>
       <div class="my-2 border-t border-ink-100"></div>
       <a href="18-host-subscription.html" class="nav-link"><i class="ti ti-rosette text-lg"></i>Subscription</a>
-      <a href="17-host-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
     </nav>
-    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">IK</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Imran Khan</p><p class="truncate text-xs text-ink-400">Al-Madina Hostel</p></div></div></div>
+    <div class="border-t border-ink-100 px-3 py-2"><p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p><button class="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-surface"><i class="ti ti-building-community text-lg text-ink-500"></i><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink-900">Al-Madina Hostel</span><span class="block truncate text-xs text-ink-400">Gulberg, Lahore</span></span><i class="ti ti-selector text-ink-400"></i></button><a href="11-onboarding-wizard.html" class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Create new hostel</a></div>
   </aside>
 
   <div class="lg:pl-64">
     <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
       <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Tenants</h1></div>
-      <div class="flex items-center gap-2">
-        <div class="hidden items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 sm:flex"><i class="ti ti-search text-ink-400"></i><input placeholder="Search tenant…" class="w-40 bg-transparent text-sm outline-none" /></div>
-        <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-user-plus"></i>Check in tenant</button>
-      </div>
+      <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-user-plus"></i>Check in tenant</button>
     </header>
 
-    <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+    <main class="mx-auto max-w-7xl px-5 py-6 sm:px-8">
+      <!-- Status count cards -->
+      <div class="mb-5 grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Active</p><p class="mt-1 text-2xl font-semibold text-ink-900">19</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">On notice</p><p class="mt-1 text-2xl font-semibold text-ink-900">2</p></div>
+        <div class="rounded-2xl bg-white p-4 shadow-card"><p class="text-xs text-ink-400">Inactive</p><p class="mt-1 text-2xl font-semibold text-ink-900">4</p></div>
+      </div>
+
+      <!-- Status filter chips -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="rounded-full bg-ink-900 px-3.5 py-1.5 text-xs font-medium text-white">All</button>
+        <button class="rounded-full border border-ink-200 px-3.5 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50">Active</button>
+        <button class="rounded-full border border-ink-200 px-3.5 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50">On notice</button>
+        <button class="rounded-full border border-ink-200 px-3.5 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50">Inactive</button>
+      </div>
+
+      <!-- Search -->
+      <div class="mb-4 mt-4">
+        <div class="flex w-full items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 sm:w-80"><i class="ti ti-search text-ink-400"></i><input placeholder="Search tenant…" class="w-full bg-transparent text-sm outline-none" /></div>
+      </div>
+
       <div class="overflow-x-auto rounded-2xl bg-white shadow-card">
-        <table class="w-full min-w-[760px] text-sm">
+        <table class="w-full min-w-[980px] text-sm">
           <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400">
-            <tr><th class="px-5 py-3 font-medium">Tenant</th><th class="px-5 py-3 font-medium">Room</th><th class="px-5 py-3 font-medium">Joined</th><th class="px-5 py-3 font-medium">Rent</th><th class="px-5 py-3 font-medium">Due day</th><th class="px-5 py-3 font-medium">Outstanding</th><th class="px-5 py-3 font-medium">Status</th></tr>
+            <tr><th class="px-5 py-3 font-medium">Tenant</th><th class="px-5 py-3 font-medium">Room</th><th class="px-5 py-3 font-medium">Joined</th><th class="px-5 py-3 font-medium">Leave date</th><th class="px-5 py-3 font-medium">Rent</th><th class="px-5 py-3 font-medium">Billing date</th><th class="px-5 py-3 font-medium">Billing due date</th><th class="px-5 py-3 font-medium">Status</th><th class="px-5 py-3"></th></tr>
           </thead>
           <tbody class="divide-y divide-ink-100">
-            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-sky text-xs font-semibold text-ink-700">AR</span><div><p class="font-medium text-ink-900">Ahmed Raza</p><p class="text-xs text-ink-400">0321 1234567</p></div></div></td><td class="px-5 py-3 text-ink-600">102</td><td class="px-5 py-3 text-ink-600">12 Jan 2026</td><td class="px-5 py-3 font-medium text-ink-900">Rs 12,000</td><td class="px-5 py-3 text-ink-600">5th</td><td class="px-5 py-3 text-ink-400">—</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td></tr>
-            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-cream text-xs font-semibold text-ink-700">BK</span><div><p class="font-medium text-ink-900">Bilal Khan</p><p class="text-xs text-ink-400">0300 9876543</p></div></div></td><td class="px-5 py-3 text-ink-600">202</td><td class="px-5 py-3 text-ink-600">01 Feb 2026</td><td class="px-5 py-3 font-medium text-ink-900">Rs 9,500</td><td class="px-5 py-3 text-ink-600">7th</td><td class="px-5 py-3 font-medium text-danger">Rs 9,500</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td></tr>
-            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-mint text-xs font-semibold text-ink-700">SA</span><div><p class="font-medium text-ink-900">Saad Ali</p><p class="text-xs text-ink-400">0333 4567890</p></div></div></td><td class="px-5 py-3 text-ink-600">101</td><td class="px-5 py-3 text-ink-600">20 Dec 2025</td><td class="px-5 py-3 font-medium text-ink-900">Rs 14,000</td><td class="px-5 py-3 text-ink-600">1st</td><td class="px-5 py-3 text-ink-400">—</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td></tr>
-            <tr class="hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-ink-100 text-xs font-semibold text-ink-500">UH</span><div><p class="font-medium text-ink-900">Usman Haider</p><p class="text-xs text-ink-400">0345 1122334</p></div></div></td><td class="px-5 py-3 text-ink-600">301</td><td class="px-5 py-3 text-ink-600">10 Nov 2025</td><td class="px-5 py-3 font-medium text-ink-900">Rs 12,000</td><td class="px-5 py-3 text-ink-600">3rd</td><td class="px-5 py-3 text-ink-400">—</td><td class="px-5 py-3"><span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">Checked-out</span></td></tr>
+            <tr class="cursor-pointer hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-sky text-xs font-semibold text-ink-700">AR</span><div><p class="font-medium text-ink-900">Ahmed Raza</p><p class="text-xs text-ink-400">0321 1234567</p></div></div></td><td class="px-5 py-3 text-ink-600">102</td><td class="px-5 py-3 text-ink-600">12 Jan 2026</td><td class="px-5 py-3 text-ink-400">—</td><td class="px-5 py-3 font-medium text-ink-900">Rs 12,000</td><td class="px-5 py-3 text-ink-600">1st</td><td class="px-5 py-3 text-ink-600">7th</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td><td class="px-5 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="cursor-pointer hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-cream text-xs font-semibold text-ink-700">BK</span><div><p class="font-medium text-ink-900">Bilal Khan</p><p class="text-xs text-ink-400">0300 9876543</p></div></div></td><td class="px-5 py-3 text-ink-600">202</td><td class="px-5 py-3 text-ink-600">01 Feb 2026</td><td class="px-5 py-3 text-ink-400">—</td><td class="px-5 py-3 font-medium text-ink-900">Rs 9,500</td><td class="px-5 py-3 text-ink-600">1st</td><td class="px-5 py-3 text-ink-600">7th</td><td class="px-5 py-3"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td><td class="px-5 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="cursor-pointer hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-mint text-xs font-semibold text-ink-700">SA</span><div><p class="font-medium text-ink-900">Saad Ali</p><p class="text-xs text-ink-400">0333 4567890</p></div></div></td><td class="px-5 py-3 text-ink-600">101</td><td class="px-5 py-3 text-ink-600">20 Dec 2025</td><td class="px-5 py-3 text-ink-600">31 Jul 2026</td><td class="px-5 py-3 font-medium text-ink-900">Rs 14,000</td><td class="px-5 py-3 text-ink-600">1st</td><td class="px-5 py-3 text-ink-600">5th</td><td class="px-5 py-3"><span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">On notice</span></td><td class="px-5 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+            <tr class="cursor-pointer hover:bg-surface"><td class="px-5 py-3"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-ink-100 text-xs font-semibold text-ink-500">UH</span><div><p class="font-medium text-ink-900">Usman Haider</p><p class="text-xs text-ink-400">0345 1122334</p></div></div></td><td class="px-5 py-3 text-ink-600">301</td><td class="px-5 py-3 text-ink-600">10 Nov 2025</td><td class="px-5 py-3 text-ink-600">30 Apr 2026</td><td class="px-5 py-3 font-medium text-ink-900">Rs 12,000</td><td class="px-5 py-3 text-ink-600">1st</td><td class="px-5 py-3 text-ink-600">3rd</td><td class="px-5 py-3"><span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">Inactive</span></td><td class="px-5 py-3 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
           </tbody>
         </table>
       </div>
@@ -63,22 +78,29 @@
         <button class="grid h-8 w-8 place-items-center rounded-full text-ink-400 hover:bg-surface"><i class="ti ti-x text-lg"></i></button>
       </div>
       <div class="space-y-4 p-5">
-        <div><label class="mb-1 block text-xs font-medium text-ink-600">Full name</label><input value="Hamza Tariq" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+        <div class="flex items-center gap-3"><span class="grid h-14 w-14 place-items-center rounded-full bg-tint-cream text-base font-semibold text-brand-700">HT</span><button class="rounded-xl border border-ink-200 px-3 py-2 text-xs font-medium text-ink-700 hover:bg-surface">Change photo</button></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Full name *</label><input value="Hamza Tariq" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Phone</label><input value="0312 5556677" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">CNIC (optional)</label><input placeholder="42101-…" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Email *</label><input placeholder="name@email.com" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Phone *</label><input value="0312 5556677" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Assign room</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm"><span>Room 201 · 1-share</span><i class="ti ti-chevron-down text-ink-400"></i></div></div>
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Move-in date</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm"><span>11 Jun 2026</span><i class="ti ti-calendar text-ink-400"></i></div></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Emergency contact *</label><input placeholder="0321 1234567" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">CNIC number *</label><input placeholder="42101-1234567-1" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+        </div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Address *</label><input placeholder="123 Main St, Karachi" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+        <div><label class="mb-1 block text-xs font-medium text-ink-600">Assign room</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm"><span>Room 201 · 1-Sharing</span><i class="ti ti-chevron-down text-ink-400"></i></div></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Joining date *</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm"><span>11 Jun 2026</span><i class="ti ti-calendar text-ink-400"></i></div></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Leave date</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2.5 text-sm"><span class="text-ink-400">Optional</span><i class="ti ti-calendar text-ink-400"></i></div></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Monthly rent</label><input value="22000" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Security deposit</label><input value="22000" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Monthly rent *</label><input value="22000" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Advance deposit *</label><input value="22000" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Rent issue day</label><input value="1" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
-          <div><label class="mb-1 block text-xs font-medium text-ink-600">Rent due day</label><input value="7" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Mess charges</label><input value="3000" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
+          <div><label class="mb-1 block text-xs font-medium text-ink-600">Transport charges</label><input value="500" class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400" /></div>
         </div>
       </div>
       <div class="sticky bottom-0 flex gap-3 border-t border-ink-100 bg-white px-5 py-4">

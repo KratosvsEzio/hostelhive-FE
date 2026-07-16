@@ -27,7 +27,8 @@ export interface TabItem {
     }
   `,
   host: {
-    class: 'grid rounded-xl bg-surface p-1 text-sm font-medium',
+    class: 'grid rounded-xl bg-surface p-1 font-medium',
+    '[class]': 'hostTextClass()',
     '[style.grid-template-columns]': 'cols()',
     role: 'tablist',
   },
@@ -35,13 +36,20 @@ export interface TabItem {
 export class Tabs {
   readonly tabs = input<TabItem[]>([]);
   readonly active = model('');
+  readonly size = input<'xxs' | 'xs' | 'sm'>('sm');
 
   protected readonly cols = computed(
     () => `repeat(${this.tabs().length || 1}, minmax(0, 1fr))`,
   );
 
+  protected readonly hostTextClass = computed(() => {
+    const s = this.size();
+    return s === 'xxs' ? 'text-[10px]' : s === 'xs' ? 'text-xs' : 'text-sm';
+  });
+
   protected btnClass(value: string): string {
-    const base = 'rounded-lg py-2 transition';
+    const pad = this.size() === 'xxs' ? 'px-2 py-0.5' : 'px-3 py-1.5';
+    const base = `rounded-lg ${pad} transition`;
     return value === this.active()
       ? `${base} bg-white text-ink-900 shadow-card`
       : `${base} text-ink-500 hover:text-ink-800`;

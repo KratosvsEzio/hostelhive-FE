@@ -1,5 +1,6 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Listing } from '@hostelhive/data-access';
+import { FavouritesApi } from '@services/favourites-api';
 
 const STORAGE_KEY = 'hh:favorites';
 
@@ -13,6 +14,7 @@ const STORAGE_KEY = 'hh:favorites';
  */
 @Injectable({ providedIn: 'root' })
 export class FavoritesStore {
+  private readonly favouritesApi = inject(FavouritesApi);
   private readonly _items = signal<Listing[]>(this.load());
 
   /** Saved listings, most-recently-saved first. */
@@ -43,8 +45,13 @@ export class FavoritesStore {
   /** Add if missing, remove if present. Returns the resulting saved state. */
   toggle(listing: Listing): boolean {
     const has = this.idSet().has(listing.id);
-    if (has) this.remove(listing.id);
-    else this._items.update((list) => [listing, ...list]);
+    if (has) {
+      this.remove(listing.id);
+      this.favouritesApi.unmarkFavourite(listing.id).subscribe();
+    } else {
+      this._items.update((list) => [listing, ...list]);
+      this.favouritesApi.markFavourite(listing.id).subscribe();
+    }
     return !has;
   }
 

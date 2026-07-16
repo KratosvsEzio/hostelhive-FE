@@ -2,7 +2,6 @@
 import { Observable, of } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
 import {
-  INVOICES,
   OCCUPANCY_DAYS,
   UTILITY_BATCH,
   UTILITY_META,
@@ -10,6 +9,9 @@ import {
 } from './host-ops.fixtures';
 import {
   Invoice,
+  InvoiceKind,
+  InvoiceLine,
+  InvoiceStatus,
   HostRoom as Room,
   Tenant,
   TenantBillSplit,
@@ -87,6 +89,9 @@ interface ApiRenter {
   advance_deposit?: number | null;
   deposit?: number | null;
   mess_charges?: number | null;
+  breakfast_enabled?: boolean | null;
+  lunch_enabled?: boolean | null;
+  dinner_enabled?: boolean | null;
   transportation_charges?: number | null;
   billing_date?: number | null;
   billing_due_date?: number | null;
@@ -108,7 +113,7 @@ interface ApiRentersResponse {
   data?: ApiRenter[];
   total_count?: number;
   pagination?: ApiPagination;
-  possible_statuses?: { id: number; name: string; slug: string; count?: number }[];
+  possible_statuses?: { id: number; name: string; slug: string; count?: number; dispositions?: { id: number; name: string; slug: string }[] }[];
   aggs?: { name: string; slug: string; count: number }[];
 }
 
@@ -117,14 +122,20 @@ interface ApiCreateRenterResponse {
 }
 
 interface ApiRoomDetailResponse {
-  room?: { renters?: ApiRenter[]; room_renters?: ApiRenter[] };
+  room?: ApiRoom & { renters?: ApiRenter[]; room_renters?: ApiRenter[] };
   renters?: ApiRenter[];
   room_renters?: ApiRenter[];
+}
+
+export interface RoomShowData {
+  room: Room;
+  renters: RoomRenter[];
 }
 
 export interface RoomRenter {
   id: string;
   name: string;
+  initials: string;
   phone: string;
   email: string;
   moveIn: string;
@@ -186,8 +197,8 @@ function toTenant(r: ApiRenter): Tenant {
   const rawSlug = typeof r.status === 'object' && r.status !== null
     ? r.status.slug
     : r.status;
-  const status: TenantStatus =
-    rawSlug === 'active' || rawSlug === 'checked-out' ? rawSlug : 'active';
+  const knownStatuses: TenantStatus[] = ['active', 'inactive', 'on-notice', 'checked-out'];
+  const status: TenantStatus = knownStatuses.includes(rawSlug as TenantStatus) ? (rawSlug as TenantStatus) : 'active';
   return {
     id: String(r.id ?? ''),
     name: rawName || '—',
@@ -197,7 +208,7 @@ function toTenant(r: ApiRenter): Tenant {
     cnic: r.cnic_number ?? r.cnic ?? undefined,
     address: r.address ?? undefined,
     initials,
-    roomId: String(r.room_id ?? r.room?.id ?? ''),
+    roomId: String(r.room?.id ?? r.room_id ?? ''),
     roomNumber: r.room_number ?? r.room?.room_number ?? '—',
     joined: toDate(r.move_in_date ?? r.joining_date ?? r.check_in_date),
     checkedOut: toDate(r.move_out_date ?? r.check_out_date) || undefined,
@@ -205,6 +216,9 @@ function toTenant(r: ApiRenter): Tenant {
     rent: Number(r.rent_amount ?? r.rent ?? 0),
     deposit: Number(r.advance_deposit ?? r.deposit ?? 0),
     messCharges: r.mess_charges != null ? Number(r.mess_charges) : undefined,
+    messBreakfast: r.breakfast_enabled ?? true,
+    messLunch: r.lunch_enabled ?? true,
+    messDinner: r.dinner_enabled ?? true,
     transportationCharges:
       r.transportation_charges != null ? Number(r.transportation_charges) : undefined,
     billingDate: r.billing_date ?? undefined,
@@ -297,6 +311,87 @@ function toUtilityBill(b: ApiUtilityBillItem): UtilityBill {
   };
 }
 
+interface ApiRenterBillTop {
+  id?: number | string;
+  renter_id?: number | string;
+  renter?: {
+    id?: number | string;
+    full_name?: string | null;
+    name?: string | null;
+    room?: { id?: number | string; room_number?: string | null; floor?: string | null } | null;
+  } | null;
+  full_name?: string | null;
+  room_id?: number | string | null;
+  room?: { id?: number | string; room_number?: string | null; floor?: string | null } | null;
+  room_number?: string | null;
+  amount?: number | string | null;
+  received_amount?: number | string | null;
+  issue_date?: string | null;
+  issued_date?: string | null;
+  due_date?: string | null;
+  paid_at?: string | null;
+  status?: { id?: number; name?: string; slug?: string } | null;
+  bill_type?: string | null;
+  notes?: string | null;
+  pay_note?: string | null;
+  line_items?: { label?: string; amount?: number | string | null }[] | null;
+  break_down?: Record<string, number> | null;
+}
+
+interface ApiRenterBillsAggs {
+  utility?: { total?: number; paid?: number; balance?: number };
+  rent?: { total?: number; paid?: number; balance?: number };
+  this_month?: { to_collect?: number; paid?: number };
+  statuses?: { name: string; slug: string; count: number; total_amount?: number; color?: unknown }[];
+}
+
+interface ApiRenterBillsResponse {
+  renter_bills?: ApiRenterBillTop[];
+  data?: ApiRenterBillTop[];
+  possible_statuses?: { id: number; name: string; slug: string }[];
+  aggs?: ApiRenterBillsAggs;
+  pagination?: ApiPagination;
+  success?: boolean;
+}
+
+function formatBreakdownKey(key: string): string {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function toInvoice(rb: ApiRenterBillTop): Invoice {
+  const id = String(rb.id ?? '');
+  const renterName = rb.renter?.full_name ?? rb.renter?.name ?? rb.full_name ?? '—';
+  const room = rb.renter?.room ?? rb.room ?? null;
+  const roomNumber = room?.room_number ?? rb.room_number ?? '—';
+  const floor = room?.floor ?? '—';
+  const amount = Number(rb.amount ?? 0);
+  const rawStatus = rb.status?.slug ?? 'due';
+  const status: InvoiceStatus =
+    rawStatus === 'paid' ? 'paid' : rawStatus === 'over-due' ? 'over-due' : 'due';
+  const kind: InvoiceKind = rb.bill_type === 'utility' ? 'utility' : 'rent';
+  const lines: InvoiceLine[] = rb.line_items?.length
+    ? rb.line_items.map((l) => ({ label: l.label ?? '—', amount: Number(l.amount ?? 0) }))
+    : rb.break_down
+      ? Object.entries(rb.break_down).map(([key, amt]) => ({ label: formatBreakdownKey(key), amount: amt }))
+      : [{ label: kind === 'rent' ? 'Monthly rent' : 'Utility charge', amount }];
+  return {
+    id,
+    renterId: String(rb.renter_id ?? rb.renter?.id ?? ''),
+    roomId: String(rb.room_id ?? rb.renter?.room?.id ?? rb.room?.id ?? ''),
+    tenantName: renterName,
+    roomNumber,
+    floor,
+    kind,
+    amount,
+    status,
+    issued: toDate(rb.issue_date ?? rb.issued_date),
+    due: toDate(rb.due_date),
+    paidAt: rb.paid_at ? toDate(rb.paid_at) : undefined,
+    lines,
+    payNote: rb.notes ?? rb.pay_note ?? 'Pay on or before the due date.',
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class HostOpsApi {
   private readonly api = inject(ApiClient);
@@ -342,20 +437,36 @@ export class HostOpsApi {
   }
 
   roomDetail(hostelId: string, roomId: string): Observable<RoomRenter[]> {
+    return this.roomShow(hostelId, roomId).pipe(map((d) => d.renters));
+  }
+
+  roomShow(hostelId: string, roomId: string): Observable<RoomShowData> {
     return this.api
       .get<ApiRoomDetailResponse>(`/api/host/hostels/${hostelId}/rooms/${roomId}`)
       .pipe(
-        map((res) =>
-          (res.room?.renters ?? res.room?.room_renters ?? res.renters ?? res.room_renters ?? []).map((r) => ({
-            id: String(r.id ?? ''),
-            name: r.full_name ?? r.name ?? '—',
-            phone: r.phone ?? r.phone_number ?? '—',
-            email: r.email ?? '',
-            moveIn: toDate(r.joining_date ?? r.move_in_date ?? r.check_in_date),
-            rent: Number(r.rent_amount ?? r.rent ?? 0),
-            status: typeof r.status === 'string' ? r.status : (r.status?.slug ?? 'active'),
-          })),
-        ),
+        map((res) => {
+          const renters = (res.room?.renters ?? res.room?.room_renters ?? res.renters ?? res.room_renters ?? []).map((r) => {
+            const rawName = r.full_name ?? r.name ?? '';
+            const initials = rawName.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+            return {
+              id: String(r.id ?? ''),
+              name: rawName || '—',
+              initials,
+              phone: r.phone ?? r.phone_number ?? '—',
+              email: r.email ?? '',
+              moveIn: toDate(r.joining_date ?? r.move_in_date ?? r.check_in_date),
+              rent: Number(r.rent_amount ?? r.rent ?? 0),
+              status: typeof r.status === 'string' ? r.status : (r.status?.slug ?? 'active'),
+            };
+          });
+          const room = res.room ? toRoom(res.room) : ({
+            id: roomId, number: '—', floor: '—', type: '—',
+            capacity: 0, occupied: renters.length, rentPerBed: 0,
+            attachedBath: false, createdAt: '',
+          } as Room);
+          room.occupied = renters.filter((r) => r.status === 'active').length;
+          return { room, renters };
+        }),
       );
   }
 
@@ -370,20 +481,19 @@ export class HostOpsApi {
 
   roomFormOptions(hostelId: string): Observable<RoomTypeOption[]> {
     return this.api
-      .get<unknown>(`/api/host/hostels/${hostelId}/rooms/new`)
+      .get<{ hostel?: { room_types?: ApiRoomType[] }; room_types?: ApiRoomType[] }>(
+        `/api/host/hostels/${hostelId}`,
+      )
       .pipe(
         map((res) => {
-          const list: ApiRoomType[] = Array.isArray(res)
-            ? res
-            : Array.isArray((res as Record<string, unknown>)?.['room_types'])
-              ? ((res as Record<string, unknown>)['room_types'] as ApiRoomType[])
-              : Array.isArray((res as Record<string, unknown>)?.['sharing_types'])
-                ? ((res as Record<string, unknown>)['sharing_types'] as ApiRoomType[])
-                : [];
+          const list: ApiRoomType[] =
+            res.hostel?.room_types ??
+            res.room_types ??
+            [];
           return list.map((rt) => ({
-            id: rt.id ?? '',
+            id: String(rt.id ?? ''),
             name: rt.name ?? '—',
-            capacity: rt.capacity ?? 0,
+            capacity: Number(rt.capacity ?? 0),
             price: Number(rt.price ?? 0),
           }));
         }),
@@ -395,15 +505,23 @@ export class HostOpsApi {
     page = 1,
     limit = PAGE_SIZE,
     filters: Record<string, string> = {},
-  ): Observable<{ renters: Tenant[]; total: number; statuses: { name: string; slug: string; count: number }[] }> {
+  ): Observable<{ renters: Tenant[]; total: number; statuses: { name: string; slug: string; count: number; dispositionId: number }[] }> {
     return this.api
       .get<ApiRentersResponse>(`/api/host/hostels/${hostelId}/renters`, { page, limit, ...filters })
       .pipe(
-        map((res) => ({
-          renters: (res.renters ?? res.data ?? []).map(toTenant),
-          total: res.pagination?.total_count ?? res.total_count ?? 0,
-          statuses: (res.aggs ?? []).map(({ name, slug, count }) => ({ name, slug, count })),
-        })),
+        map((res) => {
+          const aggsBySlug = Object.fromEntries((res.aggs ?? []).map((a) => [a.slug, a.count]));
+          return {
+            renters: (res.renters ?? res.data ?? []).map(toTenant),
+            total: res.pagination?.total_count ?? res.total_count ?? 0,
+            statuses: res.possible_statuses?.map((s) => ({
+              name: s.name, slug: s.slug,
+              count: aggsBySlug[s.slug] ?? s.count ?? 0,
+              dispositionId: s.dispositions?.[0]?.id ?? 0,
+            })) ?? res.aggs?.map((s) => ({ name: s.name, slug: s.slug, count: s.count, dispositionId: 0 }))
+              ?? [],
+          };
+        }),
       );
   }
 
@@ -422,6 +540,9 @@ export class HostOpsApi {
       emergency_contact: string;
       room_id?: string | number | null;
       mess_charges?: number | null;
+      breakfast_enabled?: boolean;
+      lunch_enabled?: boolean;
+      dinner_enabled?: boolean;
       transportation_charges?: number | null;
       advance_deposit: number;
       joining_date: string;
@@ -451,6 +572,9 @@ export class HostOpsApi {
       emergency_contact?: string;
       room_id?: string | number | null;
       mess_charges?: number | null;
+      breakfast_enabled?: boolean;
+      lunch_enabled?: boolean;
+      dinner_enabled?: boolean;
       transportation_charges?: number | null;
       advance_deposit?: number;
       joining_date?: string;
@@ -463,6 +587,7 @@ export class HostOpsApi {
       avatar_id?: string;
       cnic_front_id?: string;
       cnic_back_id?: string;
+      disposition_id?: number;
     },
   ): Observable<Tenant> {
     return this.api
@@ -473,8 +598,47 @@ export class HostOpsApi {
       .pipe(map((res) => toTenant(res.renter ?? {})));
   }
 
-  invoices(): Observable<Invoice[]> {
-    return of(INVOICES.map((i) => ({ ...i }))).pipe(delay(150));
+  patchRenter(
+    hostelId: string,
+    renterId: string,
+    body: { disposition_id?: number },
+  ): Observable<Tenant> {
+    return this.api
+      .patch<ApiCreateRenterResponse>(
+        `/api/host/hostels/${hostelId}/renters/${renterId}`,
+        { renter: body },
+      )
+      .pipe(map((res) => toTenant(res.renter ?? {})));
+  }
+
+  invoices(hostelId: string, page = 1, limit = PAGE_SIZE, filters: Record<string, string> = {}): Observable<{
+    bills: Invoice[];
+    total: number;
+    totalPages: number;
+    statuses: { name: string; slug: string; count: number; totalAmount: number }[];
+    aggs: { utilityTotal: number; utilityPaid: number; utilityBalance: number; rentTotal: number; rentPaid: number; rentBalance: number };
+  }> {
+    const params: Record<string, string | number | boolean> = { page, limit, ...filters };
+    return this.api
+      .get<ApiRenterBillsResponse>(`/api/host/hostels/${hostelId}/renter_bills`, params)
+      .pipe(
+        map((res) => ({
+          bills: (res.renter_bills ?? res.data ?? []).map(toInvoice),
+          total: res.pagination?.total_count ?? 0,
+          totalPages: res.pagination?.total_pages ?? 1,
+          statuses: res.aggs?.statuses?.map((s) => ({ name: s.name, slug: s.slug, count: s.count, totalAmount: s.total_amount ?? 0 }))
+            ?? res.possible_statuses?.map((s) => ({ name: s.name, slug: s.slug, count: 0, totalAmount: 0 }))
+            ?? [],
+          aggs: {
+            utilityTotal: res.aggs?.utility?.total ?? 0,
+            utilityPaid: res.aggs?.utility?.paid ?? 0,
+            utilityBalance: res.aggs?.utility?.balance ?? 0,
+            rentTotal: res.aggs?.rent?.total ?? 0,
+            rentPaid: res.aggs?.rent?.paid ?? 0,
+            rentBalance: res.aggs?.rent?.balance ?? 0,
+          },
+        })),
+      );
   }
 
   utilityBills(
@@ -504,8 +668,38 @@ export class HostOpsApi {
       })));
   }
 
+  deleteInvoice(hostelId: string, billId: string): Observable<unknown> {
+    return this.api.delete(`/api/host/hostels/${hostelId}/renter_bills/${billId}`);
+  }
+
+  deleteRenter(hostelId: string, renterId: string): Observable<unknown> {
+    return this.api.delete(`/api/host/hostels/${hostelId}/renters/${renterId}`);
+  }
+
   deleteUtilityBill(hostelId: string, billId: string): Observable<unknown> {
     return this.api.delete(`/api/host/hostels/${hostelId}/utility_bills/${billId}`);
+  }
+
+  getUtilityBill(hostelId: string, billId: string): Observable<UtilityBill> {
+    return this.api
+      .get<Record<string, unknown>>(
+        `/api/host/hostels/${hostelId}/utility_bills/${billId}`,
+      )
+      .pipe(
+        map((res) => {
+          // API may wrap in utility_bill or renter_bill
+          const item = (res['utility_bill'] ?? res['renter_bill'] ?? res) as ApiUtilityBillItem;
+          return toUtilityBill(item);
+        }),
+      );
+  }
+
+  updateUtilityBill(hostelId: string, billId: string, renterBills: { id: string; amount: number }[]): Observable<unknown> {
+    return this.api.put(`/api/host/hostel/${hostelId}/utility_bills/${billId}`, {
+      utility_bill: {
+        renter_bills_attributes: renterBills.map((r) => ({ id: Number(r.id), amount: r.amount })),
+      },
+    });
   }
 
   /** The current billing batch (utility line items). */
@@ -535,7 +729,7 @@ export class HostOpsApi {
     body: {
       utility_type: string;
       total_amount: number;
-      room_id: number;
+      room_id?: string;
       issued_date: string;
       due_date: string;
       notes?: string;
@@ -545,7 +739,7 @@ export class HostOpsApi {
       cost_per_unit?: number;
       renter_bills_attributes: {
         renter_id: string | number;
-        room_id: number;
+        room_id?: string;
         amount: number;
         bill_days: number;
         due_date: string;

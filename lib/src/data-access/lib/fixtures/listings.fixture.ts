@@ -1,4 +1,4 @@
-import { Listing } from '../models/listing';
+import { Listing } from '@hostelhive/data-access';
 
 /** Stub listings (Q-API pending). Replaced by real API responses when the SDK lands. */
 export const LISTINGS: Listing[] = [

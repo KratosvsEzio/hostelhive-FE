@@ -18,7 +18,6 @@ import {
   HostelEnumOption,
   HostelInput,
   OfferCategory,
-  RoomTypeInput,
 } from '@hostelhive/data-access';
 import {
   HostelsApi,
@@ -27,20 +26,18 @@ import {
   MAX_UPLOAD_BYTES,
   OffersApi,
 } from '@services';
-import { DecimalPipe } from '@angular/common';
 import {
   Button,
-  Card,
   Dropdown,
   DropdownOption,
   ErrorState,
-  Input,
   PhotoGrid,
   PhotoGridPhoto,
   RichText,
   Skeleton,
   StatusPill,
 } from '@hostelhive/ui';
+import { RoomTypeRow } from '../../moderator/review/room-type-row';
 import { LocationPicker, PickedLocation } from '@hostelhive/maps';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
@@ -89,15 +86,7 @@ interface EditRoomType {
   price: number;
 }
 
-/** Serialisable room-type shape used inside the dirty-check snapshot. */
-interface RoomTypeSnap {
-  id?: number;
-  name: string;
-  capacity: number;
-  price: number;
-}
-
-/** Snapshot used for the dirty check (core fields + location + selected offers + rooms). */
+/** Snapshot used for the dirty check (core fields + location + selected offers). */
 interface EditableHostel {
   name: string;
   description: string;
@@ -112,8 +101,6 @@ interface EditableHostel {
   state: string;
   area: string;
   address1: string;
-  totalRooms: number;
-  roomTypes: RoomTypeSnap[];
 }
 
 /**
@@ -128,14 +115,12 @@ interface EditableHostel {
   imports: [
     DashboardLayout,
     Button,
-    Card,
-    DecimalPipe,
     Dropdown,
     ErrorState,
-    Input,
     LocationPicker,
     PhotoGrid,
     RichText,
+    RoomTypeRow,
     Skeleton,
     StatusPill,
   ],
@@ -236,15 +221,12 @@ export class HostelProfile {
   protected readonly showAll = signal(false);
 
   // ── room types ──
-  protected readonly ROOM_TYPE_NAMES = ['Single room', 'Double sharing', 'Triple sharing', 'Quad sharing', 'Dormitory'];
-  protected readonly roomTypeOptions: DropdownOption[] = this.ROOM_TYPE_NAMES.map((t) => ({ value: t, label: t }));
-  protected readonly newRoomTypeName = signal(this.ROOM_TYPE_NAMES[0]);
-  protected readonly newRoomCapacity = signal(1);
-  protected readonly newRoomPrice = signal(0);
-  protected readonly totalRooms = signal(0);
   protected readonly roomTypes = signal<EditRoomType[]>([]);
-  /** Ids of existing room types the user deleted this session — sent as _destroy in the payload. */
-  private readonly deletedRoomTypeIds = signal<number[]>([]);
+  private readonly origRoomTypes = signal<EditRoomType[]>([]);
+  protected readonly addRtOpen = signal(false);
+  protected readonly newRtName = signal('');
+  protected readonly newRtCapacity = signal(1);
+  protected readonly newRtPrice = signal(0);
 
   // ── photos ──
   private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
@@ -314,17 +296,15 @@ export class HostelProfile {
       this.savedSnapshot.set(null);
       this.saved.set(false);
       this.saveError.set(false);
-      this.totalRooms.set(d.total_rooms ?? 0);
-      this.roomTypes.set(
-        (d.room_types ?? []).map((r) => ({
-          _key: String(r.id),
-          id: r.id,
-          name: r.name,
-          capacity: r.capacity,
-          price: r.price,
-        })),
-      );
-      this.deletedRoomTypeIds.set([]);
+      const rts = (d.room_types ?? []).map((r) => ({
+        _key: String(r.id),
+        id: r.id,
+        name: r.name,
+        capacity: r.capacity,
+        price: r.price,
+      }));
+      this.roomTypes.set(rts);
+      this.origRoomTypes.set(rts.map((r) => ({ ...r })));
       this.seedAmenities(d);
     });
   }
@@ -388,35 +368,6 @@ export class HostelProfile {
   }
   protected categoryIcon(name: string): string {
     return CATEGORY_ICONS[name.trim().toLowerCase()] ?? 'ti-tag';
-  }
-
-  // ── room types ──
-  protected setNewRoomType(v: string | string[] | null): void {
-    if (typeof v === 'string' && v) this.newRoomTypeName.set(v);
-  }
-  protected addRoomType(): void {
-    this.roomTypes.update((list) => [
-      ...list,
-      {
-        _key: `new-${Date.now()}`,
-        name: this.newRoomTypeName(),
-        capacity: Math.max(1, this.newRoomCapacity()),
-        price: Math.max(0, this.newRoomPrice()),
-      },
-    ]);
-    this.newRoomCapacity.set(1);
-    this.newRoomPrice.set(0);
-  }
-  protected removeRoomType(rt: EditRoomType): void {
-    if (rt.id !== undefined) {
-      this.deletedRoomTypeIds.update((ids) => [...ids, rt.id!]);
-    }
-    this.roomTypes.update((list) => list.filter((r) => r._key !== rt._key));
-  }
-  protected updateRoomType(key: string, patch: Partial<EditRoomType>): void {
-    this.roomTypes.update((list) =>
-      list.map((r) => (r._key === key ? { ...r, ...patch } : r)),
-    );
   }
 
   // ── photos ──
@@ -547,13 +498,6 @@ export class HostelProfile {
       state: d.state ?? '',
       area: d.area ?? '',
       address1: d.address_1 ?? '',
-      totalRooms: d.total_rooms ?? 0,
-      roomTypes: (d.room_types ?? []).map((r) => ({
-        id: r.id,
-        name: r.name,
-        capacity: r.capacity,
-        price: r.price,
-      })),
     };
   });
   private readonly currentSnapshot = computed<EditableHostel>(() => ({
@@ -570,20 +514,17 @@ export class HostelProfile {
     state: this.locState(),
     area: this.locArea(),
     address1: this.locAddress1(),
-    totalRooms: this.totalRooms(),
-    roomTypes: this.roomTypes().map((r) => ({
-      id: r.id,
-      name: r.name,
-      capacity: r.capacity,
-      price: r.price,
-    })),
   }));
   protected readonly dirty = computed(() => {
     if (this.pendingAttachmentIds().length > 0) return true;
-    if (this.deletedRoomTypeIds().length > 0) return true;
     const base = this.savedSnapshot() ?? this.loadedSnapshot();
     if (!base) return false;
-    return JSON.stringify(base) !== JSON.stringify(this.currentSnapshot());
+    if (JSON.stringify(base) !== JSON.stringify(this.currentSnapshot())) return true;
+    const orig = this.origRoomTypes();
+    const curr = this.roomTypes();
+    if (orig.length !== curr.length) return true;
+    const key = (r: EditRoomType) => ({ id: r.id, name: r.name, capacity: r.capacity, price: r.price });
+    return JSON.stringify(curr.map(key)) !== JSON.stringify(orig.map(key));
   });
 
   protected save(): void {
@@ -591,27 +532,12 @@ export class HostelProfile {
     if (!id || !this.dirty() || this.saving() || this.uploading()) return;
     const snap = this.currentSnapshot();
     const attachmentIds = this.pendingAttachmentIds();
-    const deletedIds = this.deletedRoomTypeIds();
     const primary = this.photos().find((p) => p.primary);
     const bannerId = primary ? (this.newPhotoMap().get(primary.id) ?? primary.id) : undefined;
     this.saving.set(true);
     this.saveError.set(false);
     this.saved.set(false);
-    const roomTypesAttributes: RoomTypeInput[] = [
-      ...snap.roomTypes.map((r) => ({
-        ...(r.id !== undefined ? { id: r.id } : {}),
-        name: r.name,
-        capacity: r.capacity,
-        price: r.price,
-      })),
-      ...deletedIds.map((id) => ({
-        id,
-        name: '',
-        capacity: 0,
-        price: 0,
-        _destroy: true as const,
-      })),
-    ];
+    const currentRts = this.roomTypes();
     const payload: HostelInput = {
       name: snap.name,
       description: snap.description,
@@ -619,8 +545,13 @@ export class HostelProfile {
       gender_type: snap.genderType as HostelInput['gender_type'],
       nearby_landmarks: snap.landmarks,
       offer_ids: snap.offerIds,
-      total_rooms: snap.totalRooms,
-      ...(roomTypesAttributes.length > 0 ? { room_types_attributes: roomTypesAttributes } : {}),
+      total_rooms: currentRts.length || 1,
+      room_types_attributes: currentRts.map((rt) => ({
+        ...(rt.id != null ? { id: rt.id } : {}),
+        name: rt.name,
+        capacity: rt.capacity,
+        price: rt.price,
+      })),
       ...(snap.lat !== null ? { latitude: snap.lat } : {}),
       ...(snap.lng !== null ? { longitude: snap.lng } : {}),
       ...(snap.country ? { country: snap.country } : {}),
@@ -635,18 +566,57 @@ export class HostelProfile {
       .update(id, payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (hostel) => {
           this.savedSnapshot.set(snap);
           this.pendingAttachmentIds.set([]);
-          this.deletedRoomTypeIds.set([]);
           this.saving.set(false);
           this.saved.set(true);
+          // Sync room types from server so new types get their IDs
+          const serverRts = (hostel.room_types ?? []).map((r) => ({
+            _key: String(r.id),
+            id: r.id,
+            name: r.name,
+            capacity: r.capacity,
+            price: r.price,
+          }));
+          this.roomTypes.set(serverRts);
+          this.origRoomTypes.set(serverRts.map((r) => ({ ...r })));
         },
         error: () => {
           this.saving.set(false);
           this.saveError.set(true);
         },
       });
+  }
+
+  // ── room type inline edit / add ──
+  protected updateRt(key: string, field: 'name' | 'capacity' | 'price', value: string | number): void {
+    this.roomTypes.update((list) =>
+      list.map((rt) => (rt._key === key ? { ...rt, [field]: value } : rt)),
+    );
+  }
+
+  protected openAddRt(): void {
+    this.addRtOpen.set(true);
+    this.newRtName.set('');
+    this.newRtCapacity.set(1);
+    this.newRtPrice.set(0);
+  }
+
+  protected closeAddRt(): void {
+    this.addRtOpen.set(false);
+  }
+
+  protected confirmAddRt(): void {
+    const name = this.newRtName().trim();
+    const cap = this.newRtCapacity();
+    const price = this.newRtPrice();
+    if (!name || cap < 1) return;
+    this.roomTypes.update((list) => [
+      ...list,
+      { _key: `new-${Date.now()}`, name, capacity: cap, price },
+    ]);
+    this.closeAddRt();
   }
 
   protected retry(): void {

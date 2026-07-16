@@ -1,7 +1,7 @@
 import { Directive, ElementRef, inject, input, OnDestroy } from '@angular/core';
 
 /**
- * Hover tooltip driven by the `.tip` CSS in libs/styles/global.css.
+ * Hover tooltip driven by the `.tip` CSS in apps/web/src/global.css.
  * `<i class="ti ti-wifi" hhTip="Wi-Fi"></i>`
  */
 @Directive({

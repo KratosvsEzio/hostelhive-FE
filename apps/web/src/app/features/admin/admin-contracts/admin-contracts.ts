@@ -15,23 +15,28 @@ import {
   toSignal,
 } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, map, of, startWith, switchMap } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { HostelDetail, User } from '@hostelhive/data-access';
 import { HostelsApi, UsersApi } from '@services';
 import {
   Button,
   Card,
-  DateRange,
-  DateRangePicker,
+  DataTable,
+  DateRangeValue,
   DropdownOption,
   EmptyState,
   ErrorState,
-  FilterChips,
+  FilterGroup,
+  FilterValues,
+  GlobalFilter,
+  PaginationConfig,
   Search,
   Skeleton,
+  SortState,
   StatusPill,
 } from '@hostelhive/ui';
 import type { StatusTone } from '@hostelhive/ui';
-import { downloadCsv } from '@hostelhive/util';
+import { downloadCsv } from '@util/csv';
 import { AdminApi } from '@services';
 import {
   DetailState,
@@ -49,6 +54,7 @@ import {
 } from '@hostelhive/data-access';
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
+import { ADMIN_CONTRACTS_TABLE_COLS } from '@app/util/table-configs/admin-contracts-table-cols';
 
 interface ViewState {
   loading: boolean;
@@ -92,9 +98,9 @@ const PAYMENT_META: Record<PaymentState, { tone: StatusTone; label: string }> =
     AdminShell,
     Card,
     Button,
-    FilterChips,
+    DataTable,
     Search,
-    DateRangePicker,
+    GlobalFilter,
     StatusPill,
     EmptyState,
     ErrorState,
@@ -107,8 +113,11 @@ export class AdminContracts {
   private readonly hostels = inject(HostelsApi);
   private readonly users = inject(UsersApi);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly filter = signal<ContractFilter>('all');
+  protected readonly filter = signal<ContractFilter>(
+    (this.route.snapshot.queryParams['status'] as ContractFilter) ?? 'all',
+  );
   protected readonly page = signal(1);
   protected readonly selected = signal<Contract | null>(null);
   protected readonly imgIndex = signal(0); // active slide in the drawer's hostel image carousel
@@ -118,13 +127,12 @@ export class AdminContracts {
   protected readonly sortField = signal<SortField | null>(null);
   protected readonly sortDir = signal<'asc' | 'desc'>('desc');
 
-  // Hostel search: pick a field (name → s[hostel.name] full-text, id → f[hostel_id] exact) and
-  // type a term. The term is debounced so typing doesn't fire a request per keystroke.
-  protected readonly searchField = signal<'name' | 'id'>('name');
+  // Hostel search: field type (name / id) controlled via the scoped-search dropdown; term debounced.
   protected readonly searchFieldOptions: DropdownOption[] = [
     { value: 'name', label: 'Hostel name' },
     { value: 'id', label: 'Hostel ID' },
   ];
+  protected readonly searchField = signal<'name' | 'id'>('name');
   protected readonly searchTerm = signal('');
   private readonly debouncedTerm = toSignal(
     toObservable(this.searchTerm).pipe(
@@ -138,16 +146,44 @@ export class AdminContracts {
   protected readonly endFrom = signal('');
   protected readonly endTo = signal('');
 
-  /** Status tabs + stat-card aggregates come from the contracts response (`possible_statuses` /
-   *  `aggs`); persisted across reloads (below) so they don't flicker while the list re-fetches. */
+  /** Global filter panel groups — reactive so Status options populate once the API loads. */
+  protected readonly filterGroups = computed<FilterGroup[]>(() => [
+    {
+      key: 'status',
+      label: 'Status',
+      icon: 'ti-tag',
+      fields: [
+        {
+          key: 'status',
+          type: 'radio',
+          options: [
+            { value: 'all', label: 'All statuses' },
+            ...this.statuses().map((s) => ({ value: s.slug, label: s.name })),
+          ],
+          allValue: 'all',
+        },
+      ],
+    },
+    {
+      key: 'endDate',
+      label: 'Date range',
+      icon: 'ti-calendar',
+      fields: [
+        {
+          key: 'endDate',
+          type: 'date-range',
+          label: 'Contract end date',
+        },
+      ],
+    },
+  ]);
+  protected readonly globalFilters = signal<FilterValues>({
+    status: (this.route.snapshot.queryParams['status'] as string) ?? 'all',
+  });
+
+  /** Status options + stat-card aggregates from the contracts API, persisted across reloads. */
   protected readonly statuses = signal<ContractStatusOption[]>([]);
   protected readonly aggs = signal<ContractAgg[]>([]);
-  protected readonly tabs = computed<
-    { label: string; value: ContractFilter }[]
-  >(() => [
-    { label: 'All', value: 'all' },
-    ...this.statuses().map((s) => ({ label: s.name, value: s.slug })),
-  ]);
 
   private readonly query = computed(() => {
     this.refresh();
@@ -279,11 +315,31 @@ export class AdminContracts {
     this.imgIndex.set(i);
   }
 
-  protected setFilter(f: ContractFilter): void {
-    if (f === this.filter()) return;
-    this.filter.set(f);
-    this.page.set(1); // a new filter starts from page 1
+  protected readonly tableCols = ADMIN_CONTRACTS_TABLE_COLS;
+  protected readonly contractsRowId = (row: unknown) => (row as Contract).id;
+
+  protected readonly tableSortState = computed<SortState | null>(() =>
+    this.sortField() ? { key: 'amount', dir: this.sortDir() } : null,
+  );
+
+  protected readonly paginationConf = computed<PaginationConfig | null>(() => {
+    const d = this.state().data;
+    if (!d || this.totalPages() <= 1) return null;
+    return {
+      page: this.page(),
+      total: d.total,
+      totalPages: this.totalPages(),
+      hasNextPage: this.page() < this.totalPages(),
+      itemLabel: 'contract',
+    };
+  });
+
+  protected onTableSort(s: SortState | null): void {
+    if (!s) { this.sortField.set(null); }
+    else { this.sortField.set('price'); this.sortDir.set(s.dir); }
+    this.page.set(1);
   }
+
   protected goToPage(p: number): void {
     if (p < 1 || p > this.totalPages() || p === this.page()) return;
     this.page.set(p);
@@ -305,21 +361,26 @@ export class AdminContracts {
   }
   protected onSearchTerm(term: string): void {
     this.searchTerm.set(term);
-    this.page.set(1); // a new search starts from page 1
-  }
-  protected onSearchField(field: string | string[] | null): void {
-    if (field !== 'name' && field !== 'id') return; // ignore clear / unexpected values
-    this.searchField.set(field);
     this.page.set(1);
   }
-  protected onDateRange(r: DateRange): void {
-    this.endFrom.set(r.from ?? '');
-    this.endTo.set(r.to ?? '');
-    this.page.set(1); // a new range starts from page 1
+  protected onSearchField(v: string | string[] | null): void {
+    this.searchField.set(v === 'id' ? 'id' : 'name');
+    this.searchTerm.set('');
+    this.page.set(1);
+  }
+  protected applyGlobalFilters(v: FilterValues): void {
+    this.filter.set(((v['status'] as string | undefined) ?? 'all') as ContractFilter);
+    const dr = v['endDate'] as DateRangeValue | undefined;
+    this.endFrom.set(dr?.from ?? '');
+    this.endTo.set(dr?.to ?? '');
+    this.page.set(1);
   }
   protected clearDateRange(): void {
+    this.filter.set('all');
     this.endFrom.set('');
     this.endTo.set('');
+    this.searchField.set('name');
+    this.globalFilters.set({ status: 'all' });
     this.page.set(1);
   }
 

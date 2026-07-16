@@ -17,3 +17,5 @@ export * from './moderation-api';
 export * from './subscription-api';
 export * from './products-api';
 export * from './image-upload.service';
+export * from './google-auth.service';
+export * from './search-capacity';

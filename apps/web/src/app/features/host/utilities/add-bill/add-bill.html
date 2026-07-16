@@ -1,10 +1,10 @@
 <app-dashboard-layout
   backUrl=".."
-  [breadcrumbs]="[{label: 'Utilities', url: '..'}, {label: 'Add utility bill'}]"
+  [breadcrumbs]="[{label: 'Utilities', url: '..'}, {label: isEdit() ? 'Edit utility bill' : 'Add utility bill'}]"
 >
 
   @let s = state();
-  @if (s.loading) {
+  @if (s.loading || editLoading()) {
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <hh-skeleton class="h-96" radius="lg" /><hh-skeleton
         class="h-96"
@@ -13,7 +13,7 @@
     </div>
   } @else if (s.subscriptionError) {
     <hh-subscription-gate feature="Utility billing" />
-  } @else if (s.error) {
+  } @else if (s.error || editError()) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
   } @else {
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -37,6 +37,7 @@
                 variant="text"
                 size="sm"
                 type="button"
+                [disabled]="isEdit()"
                 (click)="selectType(u.type)"
                 [class]="typeBtnClass(u.type)"
               >
@@ -83,6 +84,7 @@
             variant="field"
             [options]="roomOptions()"
             [value]="roomId()"
+            [loading]="isEdit() && editLoading()"
             (valueChange)="setRoom($event)"
           />
         </div>
@@ -97,7 +99,7 @@
 
           @if (isElectricity()) {
             <!-- Meter reading inputs for electricity -->
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
                 <label class="mb-1 block text-xs font-medium text-ink-600"
                   >Previous reading</label
@@ -217,21 +219,13 @@
           >
             5 · Due date
           </p>
-          <div
-            class="flex items-center gap-1 rounded-xl border px-3 focus-within:border-brand-400"
-            [class.border-danger]="dueDateError()"
-            [class.border-ink-200]="!dueDateError()"
-          >
-            <i class="ti ti-calendar text-ink-400"></i>
-            <input
-              type="date"
-              class="w-full py-2.5 text-sm outline-none"
-              [min]="dueDateMin()"
-              [max]="dueDateMax()"
-              [value]="dueDateInput()"
-              (input)="dueDateInput.set($any($event.target).value)"
-            />
-          </div>
+          <hh-date-picker
+            placeholder="Pick a due date"
+            [value]="dueDateInput()"
+            [min]="dueDateMin()"
+            [max]="dueDateMax()"
+            (valueChange)="dueDateInput.set($event)"
+          />
           @if (dueDateError()) {
             <p class="mt-1 text-xs text-danger">
               Due date must be within {{ monthLabel() }}
@@ -257,7 +251,7 @@
             @if (submitting()) {
               <i class="ti ti-loader-2 animate-spin"></i>Saving…
             } @else {
-              <i class="ti ti-check"></i>Add to batch
+              <i class="ti ti-check"></i>{{ isEdit() ? 'Save changes' : 'Add to batch' }}
             }
           </button>
         </div>

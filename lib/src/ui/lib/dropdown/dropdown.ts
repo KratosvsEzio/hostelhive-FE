@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   computed,
   effect,
   inject,
@@ -12,6 +13,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { StatusPill } from '../status-pill/status-pill';
 import type { StatusTone } from '../status-pill/status-pill';
 
@@ -28,6 +32,8 @@ export interface DropdownOption {
   statusLabel?: string;
   suffixBadge?: string;
   suffixBadgeClass?: string;
+  /** Group label — consecutive options with the same group string are rendered under a shared header. */
+  group?: string;
 }
 
 /**
@@ -119,7 +125,7 @@ export interface DropdownOption {
         <div #portal class="contents">
           <button
             type="button"
-            class="fixed inset-0 z-[70] cursor-default"
+            class="fixed inset-0 z-[70] cursor-default bg-ink-900/20"
             aria-label="Close"
             (click)="close()"
           ></button>
@@ -171,7 +177,10 @@ export interface DropdownOption {
               } @else if (options().length === 0) {
                 <p class="py-5 text-center text-sm text-ink-400">{{ emptyLabel() }}</p>
               } @else {
-                @for (o of options(); track o.value) {
+                @for (o of options(); track o.value; let i = $index) {
+                  @if (o.group && o.group !== options()[i - 1]?.group) {
+                    <p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-400 first:pt-1">{{ o.group }}</p>
+                  }
                   <button
                     type="button"
                     role="option"
@@ -309,36 +318,51 @@ export class Dropdown {
         document.body.appendChild(el);
       }
     });
+    inject(Router).events
+      .pipe(filter((e) => e instanceof NavigationStart), takeUntilDestroyed())
+      .subscribe(() => this.close());
   }
 
   private readonly reposition = (): void => {
     const btn = this.host.nativeElement.querySelector(
       'button[aria-haspopup]',
     ) as HTMLElement | null;
-    if (!btn) return;
+    if (!btn || typeof window === 'undefined') return;
     const r = btn.getBoundingClientRect();
 
     if (this.openRight()) {
-      const winH = typeof window !== 'undefined' ? window.innerHeight : 768;
       this.pos.set({
         top: undefined,
-        bottom: winH - r.bottom,
+        bottom: window.innerHeight - r.bottom,
         left: r.right + 8,
         width: r.width,
       });
       return;
     }
 
-    const left =
-      this.variant() === 'pill' && this.align() === 'right'
-        ? r.right - 208
-        : r.left;
-    this.pos.set({
-      top: r.bottom + 6,
-      bottom: undefined,
-      left: Math.max(8, left),
-      width: r.width,
-    });
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const GAP = 8;
+    const PANEL_H = 288; // max-h-72
+
+    // Horizontal: measure rendered panel width, then clamp to viewport
+    const panelEl = this.portal()?.nativeElement?.querySelector<HTMLElement>('[role="listbox"]');
+    const panelW = panelEl ? panelEl.offsetWidth
+      : (this.variant() === 'field' ? r.width : 208);
+    let left = this.variant() === 'pill' && this.align() === 'right'
+      ? r.right - panelW
+      : r.left;
+    if (left + panelW > vw - GAP) left = r.right - panelW;
+    left = Math.max(GAP, Math.min(left, vw - panelW - GAP));
+
+    // Vertical: open below by default, flip above when space is tighter below than above
+    const spaceBelow = vh - r.bottom - GAP;
+    const spaceAbove = r.top - GAP;
+    if (spaceBelow < PANEL_H && spaceAbove > spaceBelow) {
+      this.pos.set({ top: undefined, bottom: vh - r.top + GAP, left, width: r.width });
+    } else {
+      this.pos.set({ top: r.bottom + GAP, bottom: undefined, left, width: r.width });
+    }
   };
 
   private attachListeners(): void {
@@ -353,6 +377,8 @@ export class Dropdown {
     window.removeEventListener('resize', this.reposition);
   }
 
+  private readonly opts = computed(() => this.options() ?? []);
+
   private readonly selected = computed<string[]>(() => {
     const v = this.value();
     if (Array.isArray(v)) return v;
@@ -364,22 +390,20 @@ export class Dropdown {
   protected readonly selectedOption = computed<DropdownOption | null>(() => {
     const sel = this.selected();
     if (!sel.length || this.multiple()) return null;
-    return this.options().find((o) => o.value === sel[0]) ?? null;
+    return this.opts().find((o) => o.value === sel[0]) ?? null;
   });
 
   protected readonly triggerLabel = computed(() => {
     const sel = this.selected();
     if (this.multiple() || !sel.length) return this.placeholder();
-    return (
-      this.options().find((o) => o.value === sel[0])?.label ?? this.placeholder()
-    );
+    return this.opts().find((o) => o.value === sel[0])?.label ?? this.placeholder();
   });
 
   protected readonly triggerLoading = computed(() => {
     if (!this.loading()) return false;
     const v = this.value();
     if (!v || Array.isArray(v)) return false;
-    return !this.options().find((o) => o.value === v);
+    return !this.opts().find((o) => o.value === v);
   });
 
   protected readonly triggerClass = computed(() => {
@@ -389,7 +413,7 @@ export class Dropdown {
 
     if (this.variant() === 'field') {
       const size = this.compact()
-        ? 'rounded-lg px-2.5 py-1 text-[11px]'
+        ? 'h-8 rounded-lg px-2.5 text-[11px]'
         : 'rounded-xl px-4 py-3 text-sm';
       return `${base} w-full justify-between whitespace-nowrap border-ink-200 bg-white ${size} text-ink-800 hover:border-ink-400 focus-visible:border-ink-400`;
     }
@@ -406,7 +430,7 @@ export class Dropdown {
       this.tone() === 'auto' && this.active()
         ? 'border-brand-500 bg-brand-50 text-brand-700'
         : 'border-ink-300 text-ink-800 hover:border-ink-400';
-    return `${base} h-8 whitespace-nowrap rounded-full pl-3 pr-2.5 text-[13px] ${tone}`;
+    return `${base} h-8 whitespace-nowrap rounded-full bg-white pl-3 pr-2.5 text-[13px] ${tone}`;
   });
 
   protected readonly labelClass = computed(() => {
@@ -452,6 +476,16 @@ export class Dropdown {
   protected close(): void {
     this.open.set(false);
     this.detachListeners();
+  }
+
+  @HostListener('document:click', ['$event'])
+  protected onDocumentClick(event: MouseEvent): void {
+    if (!this.open()) return;
+    const target = event.target as Node;
+    if (this.host.nativeElement.contains(target)) return;
+    const portalEl = this.portal()?.nativeElement;
+    if (portalEl?.contains(target)) return;
+    this.close();
   }
 
   protected clear(): void {

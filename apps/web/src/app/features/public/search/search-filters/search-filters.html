@@ -1,56 +1,37 @@
-<div class="flex flex-1 items-center gap-2">
-  <!-- Filters button — sized to match the dropdown pills (h-8, text-[13px], rounded-full). -->
-  <button
-    hh-button variant="outlined" size="sm"
-    type="button"
-    (click)="openModal()"
-    [class]="
-      hasActiveFilters()
-        ? 'border-brand-500 bg-brand-50 text-brand-700'
-        : 'border-ink-300 text-ink-800 hover:border-ink-400'
-    "
-  >
-    <i class="ti ti-adjustments-horizontal text-sm"></i>
-    Filters
+<div class="flex flex-1 min-w-0 items-center gap-2">
+  <!-- Filters button — sized to match the dropdown pills. Badge is an absolute overlay. -->
+  <div class="relative shrink-0">
+    <button
+      hh-button variant="outlined" size="sm"
+      type="button"
+      (click)="openModal()"
+      [class.border-brand-500]="hasActiveFilters()"
+      [class.bg-brand-50]="hasActiveFilters()"
+      [class.text-brand-700]="hasActiveFilters()"
+    >
+      <i class="ti ti-adjustments-horizontal text-sm"></i>
+      Filters
+    </button>
     @if (activeFilterCount() > 0) {
       <span
-        class="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-ink-900 px-1 text-[10px] font-bold leading-none text-white"
+        class="pointer-events-none absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white"
         >{{ activeFilterCount() }}</span
       >
     }
-  </button>
+  </div>
 
-  <span class="mx-1 h-5 w-px shrink-0 bg-ink-200"></span>
+  <!-- Popular amenity quick-select pills -->
+  @for (a of popularAmenities; track a.slug) {
+    <button
+      hh-chip
+      type="button"
+      [active]="amenities().includes(a.slug)"
+      (click)="toggleQuickAmenity(a.slug)"
+    ><i class="ti ti-{{ a.icon }} text-[13px]"></i>{{ a.label }}</button>
+  }
 
-  <!-- Gender — mandatory single-select, themed dropdown. -->
-  <hh-dropdown
-    [options]="genderOptions"
-    placeholder="All stays"
-    clearLabel="All stays"
-    [value]="gender() === 'all' ? null : gender()"
-    (valueChange)="onGenderChange($event)"
-  />
-
-  <!-- Property type — optional single-select, themed dropdown. -->
-  <hh-dropdown
-    [options]="propertyTypes"
-    placeholder="Property type"
-    clearLabel="Any type"
-    [value]="propertyType() || null"
-    (valueChange)="onPropertyChange($event)"
-  />
-
-  <!-- Room capacity — exact 1–4, or 4+ (mapped to a >= filter in the API layer). -->
-  <hh-dropdown
-    [options]="capacityOptions"
-    placeholder="Room capacity"
-    clearLabel="Any capacity"
-    [value]="capacity() || null"
-    (valueChange)="onCapacityChange($event)"
-  />
-
-  <!-- Sort — single-select; maps to sort[created_at] / sort[starting_price] in the API layer.
-       Pinned to the far right of the bar (ml-auto); panel opens right-aligned so it never clips. -->
+  <!-- Sort — quick-access inline; maps to sort[created_at] / sort[starting_price] in the API layer.
+       Pinned to the far right; panel opens right-aligned so it never clips. -->
   <hh-dropdown
     class="ml-auto shrink-0"
     align="right"

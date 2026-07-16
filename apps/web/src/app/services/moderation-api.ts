@@ -59,12 +59,29 @@ export class ModerationApi {
    * Returns the full list; the page filters by reason tab (new / resubmitted) client-side.
    * `sortDir` maps to `sort[q_at]=asc|desc`; omit for the API default order.
    */
-  queue(sortDir?: 'asc' | 'desc' | null): Observable<QueueItem[]> {
-    const params: Record<string, string> = {};
+  queue(
+    page = 1,
+    limit = 10,
+    sortDir?: 'asc' | 'desc' | null,
+    searchField?: 'name' | 'host' | 'city',
+    searchTerm?: string,
+  ): Observable<{ items: QueueItem[]; total: number; totalPages: number }> {
+    const params: Record<string, string | number> = { page, limit };
     if (sortDir) params['sort[q_at]'] = sortDir;
+    if (searchTerm?.trim()) {
+      const apiField = searchField === 'host' ? 'host.name' : searchField === 'city' ? 'city' : 'name';
+      params[`s[${apiField}]`] = searchTerm.trim();
+    }
     return this.api
       .get<ModeratorHostelsResponse>('/api/moderator/hostels', params)
-      .pipe(map((res) => extractHostels(res).map(toQueueItem)));
+      .pipe(map((res) => {
+        const items = extractHostels(res).map(toQueueItem);
+        return {
+          items,
+          total: res.pagination?.total_count ?? items.length,
+          totalPages: res.pagination?.total_pages ?? 1,
+        };
+      }));
   }
 
   /**
@@ -251,6 +268,7 @@ interface ApiModeratorHostel {
 interface ModeratorHostelsResponse {
   success?: boolean;
   hostels?: ApiModeratorHostel[];
+  pagination?: { total_count?: number; total_pages?: number; current_page?: number };
 }
 
 function extractHostels(

@@ -2,10 +2,14 @@
   @if (showHeader()) {
     <app-site-header />
   }
-  <main class="flex-1"><router-outlet /></main>
+  <!-- pb clears the fixed bottom tab bar on the mobile app -->
+  <main class="flex-1" [class.pb-20]="showSeekerTabs()"><router-outlet /></main>
   @if (showFooter()) {
     <app-site-footer />
   }
 </div>
+@if (showSeekerTabs()) {
+  <app-seeker-tab-bar />
+}
 <!-- App-wide toasts (API failures, etc.) — floats above all chrome, every route. -->
 <app-toast-host />

@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -10,72 +10,68 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import {
   Card,
   ErrorState,
-  Search,
   Skeleton,
-  Tabs,
 } from '@hostelhive/ui';
 import { AnalyticsApi, HostPropertyStore } from '@services';
-import { AnalyticsData } from '@hostelhive/data-access';
+import { TenantMovement } from '@hostelhive/data-access';
 import { tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
 
 interface ViewState {
   loading: boolean;
   error: boolean;
   networkError: boolean;
-  data: AnalyticsData | null;
+  data: TenantMovement[];
 }
+
+const toISO = (d: Date | undefined): string | undefined => {
+  if (!d) return undefined;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 @Component({
   selector: 'app-movement-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Card, ErrorState, Search, Skeleton, Tabs],
+  imports: [DashboardLayout, Card, ErrorState, Skeleton, DateRangePicker],
   templateUrl: './movement-detail.html',
 })
 export class MovementDetail {
   private readonly api = inject(AnalyticsApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
-  protected readonly range = signal('12m');
-  protected readonly search = signal('');
-
-  protected readonly rangeTabs = [
-    { label: '6M', value: '6m' },
-    { label: '12M', value: '12m' },
-  ];
-
+  protected readonly dateRange = signal<DateRange | null>(
+    DATE_RANGE_PRESETS.find((p) => p.label === 'Last 12 months')!.fn(),
+  );
   private readonly refresh = signal(0);
 
   private readonly query = computed(() => {
     this.refresh();
-    return this.propertyStore.selected();
+    const slug = this.propertyStore.selected();
+    const range = this.dateRange();
+    return { slug, range };
   });
 
   protected readonly state = toSignal(
     toObservable(this.query).pipe(
-      switchMap((id) =>
-        this.api.getAnalytics(id).pipe(
-          map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
-          startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
-          catchError((err) => of<ViewState>({ loading: false, error: true, networkError: isNetworkError(err), data: null })),
-        ),
+      switchMap(({ slug, range }) =>
+        slug
+          ? this.api.tenantMovement(slug, toISO(range?.start), toISO(range?.end)).pipe(
+              map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
+              startWith<ViewState>({ loading: true, error: false, networkError: false, data: [] }),
+              catchError((err) => of<ViewState>({ loading: false, error: true, networkError: isNetworkError(err), data: [] })),
+            )
+          : of<ViewState>({ loading: false, error: false, networkError: false, data: [] }),
       ),
     ),
-    { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
+    { initialValue: { loading: true, error: false, networkError: false, data: [] } as ViewState },
   );
 
-  protected readonly tenantBars = computed(() => {
-    const series = this.state().data?.tenantMovement ?? [];
-    const trimmed = this.range() === '6m' ? series.slice(-6) : series;
-    return tenantMovementBars(trimmed);
-  });
-
-  protected readonly filteredRows = computed(() => {
-    const q = this.search().toLowerCase().trim();
-    const rows = this.tenantBars();
-    return q ? rows.filter((b) => b.month.toLowerCase().includes(q)) : rows;
-  });
+  protected readonly tenantBars = computed(() => tenantMovementBars(this.state().data));
 
   protected retry(): void {
     this.refresh.update((n) => n + 1);

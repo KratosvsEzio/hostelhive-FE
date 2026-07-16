@@ -2,23 +2,39 @@
   <header
     class="relative z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8"
   >
-    <div class="flex min-w-0 items-center">
-      @if (breadcrumbs().length || backUrl()) {
-        <hh-breadcrumb [backUrl]="backUrl()" [crumbs]="breadcrumbs()" />
-      } @else if (label()) {
-        <h1 class="font-display text-lg font-semibold text-ink-900">{{ label() }}</h1>
-      } @else {
-        <ng-content select="[hhTitle]" />
+    <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+      @if (!hideMenu) {
+        <button
+          hh-button variant="icon" size="sm"
+          type="button"
+          class="shrink-0"
+          aria-label="Toggle menu"
+          (click)="drawer.toggle()"
+        >
+          <i class="ti ti-menu-2 text-xl"></i>
+        </button>
       }
+      <div class="flex min-w-0 items-center">
+        @if (breadcrumbs().length || backUrl()) {
+          <hh-breadcrumb [backUrl]="backUrl()" [crumbs]="breadcrumbs()" />
+        } @else if (label()) {
+          <h1 class="font-display text-lg font-semibold text-ink-900">{{ label() }}</h1>
+        } @else {
+          <ng-content select="[hhTitle]" />
+        }
+      </div>
     </div>
     <ng-content select="[hhActions]" />
   </header>
   <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-    <div class="mx-auto max-w-7xl px-5 py-6 sm:px-8">
+    <!-- Extra bottom padding on the mobile app clears the fixed tab bar. -->
+    <div class="mx-auto max-w-7xl px-5 py-6 sm:px-8" [class.pb-24]="mobile.isMobile()">
       <ng-content />
     </div>
   </div>
-  <footer class="shrink-0 border-t border-ink-100 bg-white px-5 py-3 sm:px-8">
-    <p class="text-center text-xs text-ink-400">© 2026 HostelHive. All rights reserved.</p>
-  </footer>
+  @if (!mobile.isMobile()) {
+    <footer class="shrink-0 border-t border-ink-100 bg-white px-5 py-3 sm:px-8">
+      <p class="text-center text-xs text-ink-400">© 2026 HostelHive. All rights reserved.</p>
+    </footer>
+  }
 </div>

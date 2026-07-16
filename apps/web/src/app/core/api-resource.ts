@@ -30,7 +30,7 @@ export class ApiClient {
 
   get<T>(
     path: string,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, string | number | boolean | ReadonlyArray<string | number | boolean>>,
   ): Observable<T> {
     return this.http.get<T>(this.base + path, { params });
   }
@@ -43,7 +43,7 @@ export class ApiClient {
   patch<T>(path: string, body: unknown): Observable<T> {
     return this.http.patch<T>(this.base + path, body);
   }
-  delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(this.base + path);
+  delete<T>(path: string, body?: unknown): Observable<T> {
+    return this.http.delete<T>(this.base + path, body !== undefined ? { body } : undefined);
   }
 }

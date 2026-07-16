@@ -16,7 +16,7 @@ import {
   toSignal,
 } from '@angular/core/rxjs-interop';
 import { catchError, last, map, of, startWith, switchMap, tap } from 'rxjs';
-import { HostelInput, OfferCategory, RoomTypeInput } from '@hostelhive/data-access';
+import { HostelInput, OfferCategory } from '@hostelhive/data-access';
 import {
   DocumentsApi,
   HostelsApi,
@@ -37,6 +37,7 @@ import {
 } from '@hostelhive/ui';
 import { LocationPicker, PickedLocation } from '@hostelhive/maps';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { RoomTypeRow } from './room-type-row';
 import { ModerationApi, ModFormOptions } from '@services';
 import {
   PhotoDecision,
@@ -89,14 +90,7 @@ interface EditRoomType {
   price: number;
 }
 
-interface RoomTypeSnap {
-  id?: number;
-  name: string;
-  capacity: number;
-  price: number;
-}
-
-/** The moderator-editable hostel state (core fields + location + selected amenity ids + rooms). The page-level
+/** The moderator-editable hostel state (core fields + location + selected amenity ids). The page-level
  *  Update action PUTs a payload mirroring these; the dirty check compares the current state vs this snapshot. */
 interface EditableHostel {
   name: string;
@@ -114,8 +108,6 @@ interface EditableHostel {
   state: string;
   area: string;
   address1: string;
-  totalRooms: number;
-  roomTypes: RoomTypeSnap[];
 }
 
 @Component({
@@ -133,6 +125,7 @@ interface EditableHostel {
     RichText,
     Skeleton,
     StatusPill,
+    RoomTypeRow,
   ],
   templateUrl: './review.html',
 })
@@ -283,10 +276,21 @@ export class Review {
   /** Whether the full catalogue is shown (else just the first category). */
   protected readonly showAll = signal(false);
 
-  // ── room types + floors ──
-  protected readonly totalRooms = signal(0);
+  // ── room types ──
   protected readonly roomTypes = signal<EditRoomType[]>([]);
-  private readonly deletedRoomTypeIds = signal<number[]>([]);
+
+  protected addRoomType(): void {
+    this.roomTypes.update((list) => [
+      ...list,
+      { _key: `new-${Date.now()}`, name: '', capacity: 1, price: 0 },
+    ]);
+  }
+
+  protected patchRoomField(key: string, field: 'name' | 'capacity' | 'price', value: string | number): void {
+    this.roomTypes.update((list) =>
+      list.map((rt) => (rt._key !== key ? rt : { ...rt, [field]: value })),
+    );
+  }
 
   // ── page-level save (core fields + amenities → PUT /api/hostels/:id) ──
   /** Last in-session save — overlays the loaded baseline so the dirty check + Update button reset after saving. */
@@ -318,13 +322,6 @@ export class Review {
       state: d.state,
       area: d.area,
       address1: d.address1,
-      totalRooms: d.total_rooms ?? 0,
-      roomTypes: (d.room_types ?? []).map((r) => ({
-        id: r.id,
-        name: r.name,
-        capacity: r.capacity,
-        price: r.price,
-      })),
     };
   });
   /** The current editable state (mirrors loadedSnapshot's shape). */
@@ -342,18 +339,10 @@ export class Review {
     state: this.locState(),
     area: this.locArea(),
     address1: this.locAddress1(),
-    totalRooms: this.totalRooms(),
-    roomTypes: this.roomTypes().map((r) => ({
-      id: r.id,
-      name: r.name,
-      capacity: r.capacity,
-      price: r.price,
-    })),
   }));
   /** True once anything — a field, amenity selection, location, pending upload, or room-type change — differs from the baseline; gates Update. */
   protected readonly dirty = computed(() => {
     if (this.pendingAttachmentIds().length > 0) return true;
-    if (this.deletedRoomTypeIds().length > 0) return true;
     const base = this.savedSnapshot() ?? this.loadedSnapshot();
     if (!base) return false;
     const cur = this.currentSnapshot();
@@ -370,9 +359,7 @@ export class Review {
       cur.city !== base.city ||
       cur.state !== base.state ||
       cur.area !== base.area ||
-      cur.address1 !== base.address1 ||
-      cur.totalRooms !== base.totalRooms ||
-      JSON.stringify(cur.roomTypes) !== JSON.stringify(base.roomTypes)
+      cur.address1 !== base.address1
     );
   });
 
@@ -427,7 +414,6 @@ export class Review {
       this.pendingAttachmentIds.set([]);
       this.newPhotoMap.set(new Map());
       this.saveAttempted.set(false);
-      this.totalRooms.set(d.total_rooms ?? 0);
       this.roomTypes.set(
         (d.room_types ?? []).map((r) => ({
           _key: String(r.id),
@@ -437,7 +423,6 @@ export class Review {
           price: r.price,
         })),
       );
-      this.deletedRoomTypeIds.set([]);
       this.seedAmenities(d);
       // Seed editable location from the loaded hostel.
       const lat = d.lat !== null && d.lat !== undefined ? Number(d.lat) : null;
@@ -785,24 +770,6 @@ export class Review {
   }
 
   // ── room types + floors ──
-  protected addRoomType(): void {
-    this.roomTypes.update((list) => [
-      ...list,
-      { _key: `new-${Date.now()}`, name: '', capacity: 1, price: 0 },
-    ]);
-  }
-  protected removeRoomType(rt: EditRoomType): void {
-    if (rt.id !== undefined) {
-      this.deletedRoomTypeIds.update((ids) => [...ids, rt.id!]);
-    }
-    this.roomTypes.update((list) => list.filter((r) => r._key !== rt._key));
-  }
-  protected updateRoomType(key: string, patch: Partial<EditRoomType>): void {
-    this.roomTypes.update((list) =>
-      list.map((r) => (r._key === key ? { ...r, ...patch } : r)),
-    );
-  }
-
   protected catSelectedCount(cat: OfferCategory): number {
     return cat.offers.reduce(
       (n, o) => n + (this.selectedOfferIds().has(o.id) ? 1 : 0),
@@ -829,25 +796,9 @@ export class Review {
       return;
     const snap = this.currentSnapshot();
     const attachmentIds = this.pendingAttachmentIds();
-    const deletedIds = this.deletedRoomTypeIds();
     this.saving.set(true);
     this.saveError.set(false);
     this.saved.set(false);
-    const roomTypesAttributes: RoomTypeInput[] = [
-      ...snap.roomTypes.map((r) => ({
-        ...(r.id !== undefined ? { id: r.id } : {}),
-        name: r.name,
-        capacity: r.capacity,
-        price: r.price,
-      })),
-      ...deletedIds.map((id) => ({
-        id,
-        name: '',
-        capacity: 0,
-        price: 0,
-        _destroy: true as const,
-      })),
-    ];
     const payload: HostelInput = {
       name: snap.name,
       description: snap.description,
@@ -855,8 +806,13 @@ export class Review {
       gender_type: snap.genderType as HostelInput['gender_type'],
       nearby_landmarks: snap.landmarks,
       offer_ids: snap.offerIds,
-      total_rooms: snap.totalRooms,
-      ...(roomTypesAttributes.length > 0 ? { room_types_attributes: roomTypesAttributes } : {}),
+      total_rooms: this.roomTypes().length || 1,
+      room_types_attributes: this.roomTypes().map((rt) => ({
+        ...(rt.id != null ? { id: rt.id } : {}),
+        name: rt.name,
+        capacity: rt.capacity,
+        price: rt.price,
+      })),
       ...(snap.lat !== null ? { latitude: snap.lat } : {}),
       ...(snap.lng !== null ? { longitude: snap.lng } : {}),
       ...(snap.country ? { country: snap.country } : {}),
@@ -873,7 +829,6 @@ export class Review {
         next: () => {
           this.savedSnapshot.set(snap);
           this.pendingAttachmentIds.set([]);
-          this.deletedRoomTypeIds.set([]);
           this.saving.set(false);
           this.saved.set(true);
           this.logAudit('Updated hostel information');

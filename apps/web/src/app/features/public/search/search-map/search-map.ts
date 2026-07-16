@@ -28,8 +28,8 @@ import {
 } from 'rxjs';
 import { Gender, Listing, Paginated } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
-import { ListingsApi } from '@services';
-import { GeolocationService, GoogleMapsLoader } from '@hostelhive/maps';
+import { ListingsApi, OffersApi, SearchCapacity } from '@services';
+import { GeolocationService, GoogleMapsLoader, PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 
@@ -43,12 +43,23 @@ import { ListingCard } from '@features/public/search/listing-card/listing-card';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SearchFilters, ListingCard],
+  imports: [SearchFilters, ListingCard, PlaceSearchField],
   templateUrl: './search-map.html',
 })
 export class SearchMap {
   private readonly api = inject(ListingsApi);
   private readonly favorites = inject(FavoritesStore);
+  private readonly capacityStore = inject(SearchCapacity);
+
+  /** Slug → offer ID map, populated once the offer-categories API resolves. */
+  private readonly _offerCategories = toSignal(
+    inject(OffersApi).categories().pipe(catchError(() => of([]))),
+  );
+  private readonly _slugToId = computed(() =>
+    new Map(
+      (this._offerCategories() ?? []).flatMap((c) => c.offers).map((o) => [o.slug, +o.id]),
+    ),
+  );
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly loader = inject(GoogleMapsLoader);
@@ -91,6 +102,11 @@ export class SearchMap {
     return place ? ' near ' + place : ' in this area';
   });
 
+  /** Current place label shown in the mobile search input, kept in sync with the URL. */
+  protected readonly placeText = computed(
+    () => this.params()?.get('place') ?? this.params()?.get('city') ?? '',
+  );
+
   /** Map viewport bounds — updated on every idle event (zoom/pan). */
   private readonly mapBounds = signal<{
     north: number;
@@ -107,6 +123,10 @@ export class SearchMap {
     const c = this.center();
     const amenities = this.amenities();
     const mb = this.mapBounds();
+    const slugToId = this._slugToId();
+    const offerIds = amenities
+      .map((slug) => slugToId.get(slug))
+      .filter((id): id is number => id != null);
     return {
       gender: this.gender(),
       propertyType: p?.get('propertyType') || undefined,
@@ -117,6 +137,7 @@ export class SearchMap {
       minPrice: min ? +min : undefined,
       maxPrice: max ? +max : undefined,
       amenities: amenities.length ? amenities : undefined,
+      offerIds: offerIds.length ? offerIds : undefined,
       sort:
         (this.sort() as
           | 'recommended'
@@ -130,6 +151,15 @@ export class SearchMap {
 
   /** True while a search request is in flight — drives the skeleton cards. */
   protected readonly loading = signal(true);
+  /** True while an append fetch (page > 1) is in flight — drives the bottom spinner row. */
+  protected readonly loadingMore = signal(false);
+  /** Results accumulated across pages — the infinite-scroll list. */
+  private readonly accumulated = signal<Listing[]>([]);
+  /** Guards against double page-increments while an append is queued/in flight. */
+  private pendingMore = false;
+  /** Query identity (minus page) of the in-flight request / last applied result. */
+  private inFlightKey = '';
+  private lastQueryKey = '';
   /** Set when a search fails for a non-transient reason (5xx / network) — drives the inline
    *  error panel + "Try again", as distinct from an empty result set (0 hostels found). */
   protected readonly loadError = signal(false);
@@ -151,14 +181,19 @@ export class SearchMap {
       // While rate-limited, ignore query changes (map pans, filter edits) so we don't keep
       // hammering the throttled endpoint — only the post-cooldown retry re-fires the call.
       filter(() => this.cooldown() === 0),
-      tap(() => {
-        this.loading.set(true);
+      tap((q) => {
+        // Page 1 = fresh search (skeletons); page > 1 = append (keep the list, show the spinner row).
+        if (q.page && q.page > 1) this.loadingMore.set(true);
+        else this.loading.set(true);
         this.loadError.set(false); // a fresh attempt clears any prior error
       }),
-      switchMap((q) =>
-        this.api.list(q).pipe(
+      switchMap((q) => {
+        this.inFlightKey = JSON.stringify({ ...q, page: 0 });
+        return this.api.list(q).pipe(
           catchError((err: unknown) => {
             this.loading.set(false);
+            this.loadingMore.set(false);
+            this.pendingMore = false;
             // The error interceptor normalises failures to ApiError ({ status, code, message }).
             const status = (err as { status?: number } | null)?.status;
             if (status === 429) {
@@ -175,11 +210,14 @@ export class SearchMap {
               pageSize: 20,
             } as Paginated<Listing>);
           }),
-        ),
-      ),
-      tap(() => {
+        );
+      }),
+      tap((res) => {
         this.loading.set(false);
+        this.loadingMore.set(false);
+        this.pendingMore = false;
         this.cooldown.set(0); // a successful response clears any lingering throttle state
+        this.applyResult(res);
       }),
       startWith({
         items: [],
@@ -198,7 +236,8 @@ export class SearchMap {
     },
   );
 
-  protected readonly listings = computed(() => this.result().items);
+  /** The infinite list: pages accumulate here (page 1 replaces, page n appends). */
+  protected readonly listings = computed(() => this.accumulated());
   protected readonly totalResults = computed(() => this.result().total);
   /** Airbnb-style heading, e.g. "54 stays near Karachi" / "391 stays in this area". */
   protected readonly resultsLabel = computed(() => {
@@ -211,20 +250,41 @@ export class SearchMap {
     return Math.max(1, r.totalPages ?? Math.ceil(r.total / r.pageSize));
   });
 
-  /** Build a condensed page number array with ellipses (e.g. [1, 2, 3, -1, 10]). */
-  protected readonly pageNumbers = computed(() => {
-    const total: number = this.totalPages();
-    const current: number = this.page();
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    const pages: number[] = [1];
-    const lo: number = Math.max(2, current - 1);
-    const hi: number = Math.min(total - 1, current + 1);
-    if (lo > 2) pages.push(-1);
-    for (let i = lo; i <= hi; i++) pages.push(i);
-    if (hi < total - 1) pages.push(-1);
-    pages.push(total);
-    return pages;
-  });
+  /** More pages exist beyond what the infinite list has loaded. */
+  protected readonly hasMore = computed(
+    () => this.listings().length > 0 && this.page() < this.totalPages(),
+  );
+
+  /** Sentinel div at the tail of the results — intersecting it loads the next page. */
+  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
+  private observer?: IntersectionObserver;
+
+  /**
+   * Replace or append the accumulated list. Page 1 (or any change to the
+   * non-page query — filters, place, map bounds) restarts the list; later
+   * pages append, deduped by id in case the backend shifts between fetches.
+   */
+  private applyResult(res: Paginated<Listing>): void {
+    if ((res.page ?? 1) <= 1 || this.inFlightKey !== this.lastQueryKey) {
+      this.accumulated.set(res.items);
+    } else {
+      const seen = new Set(this.accumulated().map((l) => l.id));
+      this.accumulated.update((list) => [
+        ...list,
+        ...res.items.filter((l) => !seen.has(l.id)),
+      ]);
+    }
+    this.lastQueryKey = this.inFlightKey;
+  }
+
+  /** Advance the infinite list by one page (no-op while a fetch is queued/in flight). */
+  protected loadMore(): void {
+    if (this.pendingMore || this.loading() || this.loadingMore()) return;
+    if (this.cooldown() > 0 || this.loadError()) return;
+    if (this.page() >= this.totalPages()) return;
+    this.pendingMore = true;
+    this.page.update((p) => p + 1);
+  }
 
   protected readonly active = signal<string | null>(null);
   /** Listing whose Airbnb-style popup card is open on the map (null = none). */
@@ -265,6 +325,15 @@ export class SearchMap {
       const items = this.listings();
       if (this.ready()) this.buildMarkers(items);
     });
+    // Update pin labels and re-render any open popup when the user changes sharing capacity.
+    effect(() => {
+      const cap = this.capacityStore.active();
+      if (!this.ready()) return;
+      for (const [, m] of this.markers) {
+        m.pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(m.listing.priceByCapacity, m.listing.priceFrom) / 1000) + 'k';
+      }
+      untracked(() => { if (this.selected()) this.renderSelection(); });
+    });
     // Toggle the hover highlight without rebuilding markers.
     effect(() => {
       this.active();
@@ -288,6 +357,27 @@ export class SearchMap {
       }
       if (c) untracked(() => this.recenterTo(c));
     });
+    // Any filter / place / sort change restarts the infinite list from page 1.
+    effect(() => {
+      this.params();
+      untracked(() => this.page.set(1));
+    });
+    // Infinite scroll: watch the tail sentinel (it mounts/unmounts with @if) and
+    // fetch the next page as it approaches the viewport.
+    effect(() => {
+      const el = this.sentinel()?.nativeElement;
+      this.observer?.disconnect();
+      if (!el || !this.isBrowser || typeof IntersectionObserver === 'undefined') return;
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) this.loadMore();
+        },
+        // Start loading ~two card-heights early so the scroll never hits a wall.
+        { rootMargin: '600px 0px' },
+      );
+      this.observer.observe(el);
+    });
+    this.destroyRef.onDestroy(() => this.observer?.disconnect());
     this.destroyRef.onDestroy(() => this.clearMarkers());
     this.destroyRef.onDestroy(() => clearInterval(this.cooldownTimer));
   }
@@ -360,7 +450,7 @@ export class SearchMap {
     for (const l of items) {
       const pinEl = document.createElement('div');
       pinEl.className = 'hh-pin';
-      pinEl.textContent = 'Rs ' + Math.round(l.priceFrom / 1000) + 'k';
+      pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom) / 1000) + 'k';
       pinEl.addEventListener('mouseenter', () => this.active.set(l.id));
       pinEl.addEventListener('mouseleave', () => this.active.set(null));
       pinEl.addEventListener('click', () => this.selected.set(l.id));
@@ -373,7 +463,10 @@ export class SearchMap {
       bounds.extend({ lat: l.lat, lng: l.lng });
     }
     const key = items.map((l) => l.id).join(',');
-    if (key !== this.lastKey && !this.userInteracted) {
+    // Appended pages must not refit the camera — a mid-scroll pan/zoom would shift the
+    // viewport bounds and restart the infinite list from page 1.
+    const isAppend = untracked(() => this.page()) > 1;
+    if (!isAppend && key !== this.lastKey && !this.userInteracted) {
       this.lastKey = key;
       const pz = this.placeZoom();
       const pc = this.center();
@@ -519,7 +612,7 @@ export class SearchMap {
       </div>
       <p class="hh-mapcard__sub">${this.esc(l.area)} · ${this.esc(l.city)}</p>
       <p class="hh-mapcard__sub hh-mapcard__tags">${this.esc(tags)}</p>
-      <p class="hh-mapcard__price"><b>Rs ${l.priceFrom.toLocaleString('en-PK')}</b> / month</p>
+      <p class="hh-mapcard__price"><b>Rs ${this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom).toLocaleString('en-PK')}</b> / month</p>
     `;
     card.appendChild(body);
 
@@ -570,7 +663,25 @@ export class SearchMap {
     });
   }
 
-  /** Mobile list â‡„ full-screen map toggle (desktop always shows both panes). */
+  /** Typed text in the mobile place input — no navigation until a suggestion is picked. */
+  protected onPlaceText(_text: string): void {}
+
+  /** A Place was picked from the autocomplete dropdown → recenter the map and refetch. */
+  protected onPlaceSelected(r: PlaceResult): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        place: r.label,
+        city: null,
+        lat: r.lat,
+        lng: r.lng,
+        zoom: r.zoom ?? null,
+      },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  /** Mobile list ⇄ full-screen map toggle (desktop always shows both panes). */
   protected setView(v: 'list' | 'map'): void {
     this.view.set(v);
     // The map may have initialised while its container was display:none (0Ã—0) —
@@ -630,11 +741,6 @@ export class SearchMap {
     }
   }
 
-  protected goToPage(p: number): void {
-    if (p < 1 || p > this.totalPages()) return;
-    this.page.set(p);
-  }
-
   /**
    * Enter a rate-limit cooldown after a 429: keep the last results visible and count down
    * 60s before auto-retrying. New queries are suppressed meanwhile (see the `filter` in the
@@ -664,12 +770,23 @@ export class SearchMap {
     if (!b) return;
     const ne = b.getNorthEast();
     const sw = b.getSouthWest();
-    this.mapBounds.set({
+    const next = {
       north: ne.lat(),
       south: sw.lat(),
       east: ne.lng(),
       west: sw.lng(),
-    });
+    };
+    // Idle fires after every camera settle, including no-op ones. Only a real viewport
+    // change should refetch and restart the infinite list.
+    const prev = this.mapBounds();
+    const unchanged =
+      prev &&
+      Math.abs(prev.north - next.north) < 1e-6 &&
+      Math.abs(prev.south - next.south) < 1e-6 &&
+      Math.abs(prev.east - next.east) < 1e-6 &&
+      Math.abs(prev.west - next.west) < 1e-6;
+    if (unchanged) return;
+    this.mapBounds.set(next);
     // Reset to page 1 when the viewport changes.
     this.page.set(1);
   }

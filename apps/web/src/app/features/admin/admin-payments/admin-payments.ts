@@ -10,23 +10,28 @@ import { format, parseISO } from 'date-fns';
 import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, map, of, startWith, switchMap } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { HostelDetail, User } from '@hostelhive/data-access';
 import { HostelsApi, UsersApi } from '@services';
 import {
   Button,
   Card,
-  DateRange,
-  DateRangePicker,
+  DataTable,
+  DateRangeValue,
   DropdownOption,
   EmptyState,
   ErrorState,
-  FilterChips,
+  FilterGroup,
+  FilterValues,
+  GlobalFilter,
+  PaginationConfig,
   Search,
   Skeleton,
+  SortState,
   StatusPill,
 } from '@hostelhive/ui';
 import type { StatusTone } from '@hostelhive/ui';
-import { downloadCsv } from '@hostelhive/util';
+import { downloadCsv } from '@util/csv';
 import { AdminApi } from '@services';
 import {
   Payment,
@@ -42,6 +47,7 @@ import {
 } from '@features/admin/data/drawer-detail';
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
+import { ADMIN_PAYMENTS_TABLE_COLS } from '@app/util/table-configs/admin-payments-table-cols';
 
 interface ViewState {
   loading: boolean;
@@ -77,9 +83,9 @@ const STATUS_META: Record<string, { tone: StatusTone; dot: boolean }> = {
     AdminShell,
     Card,
     Button,
-    FilterChips,
+    DataTable,
     Search,
-    DateRangePicker,
+    GlobalFilter,
     StatusPill,
     EmptyState,
     ErrorState,
@@ -91,8 +97,11 @@ export class AdminPayments {
   private readonly api = inject(AdminApi);
   private readonly hostels = inject(HostelsApi);
   private readonly users = inject(UsersApi);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly filter = signal<PaymentFilter>('all');
+  protected readonly filter = signal<PaymentFilter>(
+    (this.route.snapshot.queryParams['status'] as PaymentFilter) ?? 'all',
+  );
   protected readonly page = signal(1);
   protected readonly selected = signal<Payment | null>(null);
   protected readonly imgIndex = signal(0); // active slide in the drawer's hostel image carousel
@@ -126,12 +135,33 @@ export class AdminPayments {
    *  flicker while the list re-fetches. */
   protected readonly statuses = signal<PaymentStatusOption[]>([]);
   protected readonly aggs = signal<PaymentAgg[]>([]);
-  protected readonly tabs = computed<{ label: string; value: PaymentFilter }[]>(
-    () => [
-      { label: 'All', value: 'all' },
-      ...this.statuses().map((s) => ({ label: s.name, value: s.slug })),
-    ],
-  );
+  protected readonly filterGroups = computed<FilterGroup[]>(() => [
+    {
+      key: 'status',
+      label: 'Status',
+      icon: 'ti-tag',
+      fields: [
+        {
+          key: 'status',
+          type: 'radio',
+          options: [
+            { value: 'all', label: 'All statuses' },
+            ...this.statuses().map((s) => ({ value: s.slug, label: s.name })),
+          ],
+          allValue: 'all',
+        },
+      ],
+    },
+    {
+      key: 'createdDate',
+      label: 'Date range',
+      icon: 'ti-calendar',
+      fields: [{ key: 'createdDate', type: 'date-range', label: 'Payment created date' }],
+    },
+  ]);
+  protected readonly globalFilters = signal<FilterValues>({
+    status: (this.route.snapshot.queryParams['status'] as string) ?? 'all',
+  });
 
   private readonly query = computed(() => {
     this.refresh();
@@ -257,28 +287,54 @@ export class AdminPayments {
     () => (this.state().data?.items.length ?? 0) > 0,
   );
 
-  protected setFilter(f: PaymentFilter): void {
-    if (f === this.filter()) return;
-    this.filter.set(f);
-    this.page.set(1); // a new filter starts from page 1
-  }
-  protected onSearchTerm(term: string): void {
-    this.searchTerm.set(term);
-    this.page.set(1); // a new search starts from page 1
-  }
-  protected onSearchField(field: string | string[] | null): void {
-    if (field !== 'name' && field !== 'id') return; // ignore clear / unexpected values
-    this.searchField.set(field);
+  protected readonly tableCols = ADMIN_PAYMENTS_TABLE_COLS;
+  protected readonly paymentsRowId = (row: unknown) => (row as Payment).id;
+
+  protected readonly tableSortState = computed<SortState>(() => ({
+    key: this.sortField(),
+    dir: this.sortDir(),
+  }));
+
+  protected readonly paginationConf = computed<PaginationConfig | null>(() => {
+    const d = this.state().data;
+    if (!d || this.totalPages() <= 1) return null;
+    return {
+      page: this.page(),
+      total: d.total,
+      totalPages: this.totalPages(),
+      hasNextPage: this.page() < this.totalPages(),
+      itemLabel: 'payment',
+    };
+  });
+
+  protected onTableSort(s: SortState | null): void {
+    if (!s) { this.sortField.set('created_at'); this.sortDir.set('desc'); }
+    else { this.sortField.set(s.key as SortField); this.sortDir.set(s.dir); }
     this.page.set(1);
   }
-  protected onDateRange(r: DateRange): void {
-    this.createdFrom.set(r.from ?? '');
-    this.createdTo.set(r.to ?? '');
-    this.page.set(1); // a new range starts from page 1
+
+  protected onSearchTerm(term: string): void {
+    this.searchTerm.set(term);
+    this.page.set(1);
+  }
+  protected onSearchField(field: string | string[] | null): void {
+    this.searchField.set(field === 'id' ? 'id' : 'name');
+    this.searchTerm.set('');
+    this.page.set(1);
+  }
+  protected applyGlobalFilters(v: FilterValues): void {
+    this.filter.set(((v['status'] as string | undefined) ?? 'all') as PaymentFilter);
+    const dr = v['createdDate'] as DateRangeValue | undefined;
+    this.createdFrom.set(dr?.from ?? '');
+    this.createdTo.set(dr?.to ?? '');
+    this.page.set(1);
   }
   protected clearDateRange(): void {
+    this.filter.set('all');
     this.createdFrom.set('');
     this.createdTo.set('');
+    this.searchField.set('name');
+    this.globalFilters.set({ status: 'all' });
     this.page.set(1);
   }
   protected goToPage(p: number): void {

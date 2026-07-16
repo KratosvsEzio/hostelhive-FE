@@ -1,19 +1,40 @@
 <main class="mx-auto max-w-7xl px-5 pb-28 pt-6 sm:px-8">
   @let s = state();
 
-  @if (s.loading) {
-    <!-- LOADING -->
-    <hh-skeleton class="h-4 w-32" />
-    <hh-skeleton class="mt-4 h-8 w-2/3" radius="md" />
-    <hh-skeleton class="mt-3 h-4 w-1/2" />
-    <hh-skeleton class="mt-5 w-full" radius="lg" [style.height.px]="420" />
-    <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
-      <div class="space-y-4 lg:col-span-2">
-        @for (i of skeletons; track i) {
-          <hh-skeleton class="h-24 w-full" radius="lg" />
-        }
+  @if (!s || s.loading) {
+    <!-- LOADING SKELETON -->
+    <hh-skeleton class="h-4 w-28" />
+    <div class="mt-4 flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <hh-skeleton class="h-8 w-64" radius="md" />
+        <div class="mt-3 flex items-center gap-3">
+          <hh-skeleton class="h-5 w-14" radius="full" />
+          <hh-skeleton class="h-5 w-18" radius="full" />
+          <hh-skeleton class="h-4 w-44" />
+        </div>
       </div>
-      <hh-skeleton class="hidden h-64 w-full lg:block" radius="lg" />
+      <div class="flex items-center gap-2">
+        <hh-skeleton class="h-9 w-24" radius="full" />
+        <hh-skeleton class="h-9 w-28" radius="full" />
+      </div>
+    </div>
+    <hh-skeleton class="mt-5 w-full rounded-3xl" [style.height.px]="420" />
+    <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between border-b border-ink-100 pb-6">
+          <div class="space-y-2">
+            <hh-skeleton class="h-6 w-60" radius="md" />
+            <hh-skeleton class="h-4 w-40" />
+          </div>
+          <hh-skeleton class="h-12 w-12 shrink-0" radius="full" />
+        </div>
+        <div class="mt-6 space-y-6">
+          @for (i of skeletons; track i) {
+            <hh-skeleton class="h-28 w-full" radius="lg" />
+          }
+        </div>
+      </div>
+      <hh-skeleton class="mt-8 hidden h-72 w-full rounded-3xl lg:block" />
     </div>
   } @else if (!s.data) {
     <!-- NOT FOUND -->
@@ -60,33 +81,35 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button hh-button variant="text" size="sm">
+        <button hh-button variant="outlined" size="sm" (click)="openShare()">
           <i class="ti ti-share-2" aria-hidden="true"></i>Share
         </button>
-        <button hh-button variant="text" size="sm">
-          <i class="ti ti-heart" aria-hidden="true"></i>Save
+        <button hh-button [color]="saved() ? 'default' : 'primary'" size="sm" (click)="toggleSaved()">
+          <i class="ti" [class.ti-heart-off]="saved()" [class.ti-heart]="!saved()" aria-hidden="true"></i>
+          {{ saved() ? 'Unfavorite' : 'Favorite' }}
         </button>
       </div>
     </div>
 
     <!-- Gallery: hero + thumbs -->
     <div
-      class="relative mt-5 grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl"
-      [style.height.px]="420"
+      class="relative mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-3xl sm:grid-cols-4 sm:grid-rows-2 sm:h-[420px]"
     >
       <img
         [src]="l.images[0]"
         [alt]="l.name"
-        class="card-img col-span-2 row-span-2 h-full w-full object-cover"
+        class="card-img aspect-video h-auto w-full cursor-pointer object-cover sm:aspect-auto sm:col-span-2 sm:h-full sm:row-span-2"
+        (click)="openLightbox(0)"
       />
-      @for (img of thumbs(); track img) {
-        <img [src]="img" alt="" class="card-img h-full w-full object-cover" />
+      @for (img of thumbs(); track img; let i = $index) {
+        <img [src]="img" alt="" class="card-img hidden h-full w-full cursor-pointer object-cover sm:block" (click)="openLightbox(i + 1)" />
       }
       <button
         hh-button
         variant="outlined"
         size="sm"
         class="absolute bottom-4 right-4 bg-white shadow-card"
+        (click)="openLightbox(0)"
       >
         <i class="ti ti-layout-grid" aria-hidden="true"></i>Show all
         {{ l.photoCount }} photos
@@ -118,36 +141,21 @@
             <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">
               About this hostel
             </h3>
-            <div
-              class="hh-rich text-[15px] leading-relaxed text-ink-600"
-              [innerHTML]="l.description"
-            ></div>
+            <div class="max-h-[168px] overflow-hidden">
+              <div
+                class="hh-rich text-[15px] leading-relaxed text-ink-600"
+                [innerHTML]="l.description"
+              ></div>
+            </div>
+            <button
+              type="button"
+              class="mt-3 text-sm font-semibold text-ink-900 underline hover:text-ink-600"
+              (click)="descriptionModalOpen.set(true)"
+            >
+              Show more
+            </button>
           </section>
         }
-
-        <!-- Amenities (driven by AMENITIES) -->
-        <section class="border-b border-ink-100 py-6">
-          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
-            What this place offers
-          </h3>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            @for (am of amenityList(); track am.key) {
-              <div class="flex items-center gap-3 text-[15px] text-ink-700">
-                <i
-                  class="ti text-xl text-ink-500"
-                  [class]="am.icon"
-                  aria-hidden="true"
-                ></i
-                >{{ am.label }}
-              </div>
-            }
-          </div>
-          @if (l.amenityCount > l.amenities.length) {
-            <button hh-button variant="outlined" size="sm" class="mt-4">
-              Show all {{ l.amenityCount }} amenities
-            </button>
-          }
-        </section>
 
         <!-- Rooms & pricing -->
         @if (l.rooms?.length) {
@@ -170,11 +178,8 @@
                     <div>
                       <p class="font-medium text-ink-900">{{ room.type }}</p>
                       <p class="text-sm text-ink-500">
-                        {{
-                          room.attachedBath ? 'Attached bath' : 'Shared bath'
-                        }}
-                        · {{ room.bedsLeft }}
-                        {{ room.bedsLeft === 1 ? 'bed' : 'beds' }} left
+                        {{ room.attachedBath ? 'Attached bath' : 'Shared bath' }}
+                        · {{ room.bedsLeft }} {{ room.bedsLeft === 1 ? 'bed' : 'beds' }}
                       </p>
                     </div>
                   </div>
@@ -188,6 +193,32 @@
               }
             </div>
           </section>
+        }
+
+        <!-- Amenities (driven by AMENITIES) -->
+        @if (amenityList().length) {
+        <section class="border-b border-ink-100 py-6">
+          <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
+            What this place offers
+          </h3>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            @for (am of amenityList(); track am.key) {
+              <div class="flex items-center gap-3 text-[15px] text-ink-700">
+                <i
+                  class="ti text-xl text-ink-500"
+                  [class]="am.icon"
+                  aria-hidden="true"
+                ></i
+                >{{ am.label }}
+              </div>
+            }
+          </div>
+          @if (l.amenityCount > l.amenities.length) {
+            <button hh-button variant="outlined" size="sm" class="mt-4">
+              Show all {{ l.amenityCount }} amenities
+            </button>
+          }
+        </section>
         }
 
         <!-- Nearby landmarks -->
@@ -219,40 +250,13 @@
             Where you'll be
           </h3>
           <p class="mb-3 text-sm text-ink-500">{{ l.address }}</p>
-          <div
-            class="hh-mapfaux relative flex items-center justify-center overflow-hidden rounded-2xl border border-ink-100"
-            [style.height.px]="360"
-            role="img"
-            [attr.aria-label]="'Approximate location: ' + l.address"
-          >
-            <div
-              class="absolute"
-              style="left: 50%; top: 46%; transform: translate(-50%, -100%)"
-            >
-              <span
-                class="grid h-11 w-11 place-items-center rounded-full bg-brand-500 text-white shadow-pill ring-4 ring-white"
-              >
-                <i
-                  class="ti ti-building-community text-xl"
-                  aria-hidden="true"
-                ></i>
-              </span>
-              <span
-                class="mx-auto block h-3 w-3 -translate-y-1.5 rotate-45 bg-brand-500"
-              ></span>
-            </div>
-            <div
-              class="absolute left-4 top-4 rounded-xl bg-white px-3 py-2 text-xs font-medium text-ink-700 shadow-card"
-            >
-              <i class="ti ti-map-pin text-brand-500" aria-hidden="true"></i>
-              Exact location shown after booking inquiry
-            </div>
-            <div
-              class="absolute bottom-3 right-3 rounded-lg bg-white/90 px-2 py-1 text-[11px] text-ink-400"
-            >
-              Map · interactive in app
-            </div>
-          </div>
+          <hh-static-map
+            class="h-[360px] overflow-hidden rounded-2xl border border-ink-100"
+            [lat]="l.lat"
+            [lng]="l.lng"
+            [label]="l.name"
+            [zoom]="15"
+          />
         </section>
       </div>
 
@@ -270,44 +274,39 @@
             </div>
             <p class="mt-1 text-sm text-ink-500">{{ sharingSummary() }}</p>
 
-            <div class="my-4 rounded-xl bg-surface p-3 text-center">
-              <p class="text-xs text-ink-400">Management contact</p>
-              <p
-                class="font-mono text-lg font-medium tracking-wider"
-                [class]="revealed() ? 'text-ink-900' : 'text-ink-300'"
-              >
-                {{ phoneDisplay() }}
-              </p>
-            </div>
-
-            @if (revealed()) {
-              <a
-                hh-button
-                color="primary"
-                class="w-full"
-                [href]="'tel:' + phoneRaw"
-              >
-                <i class="ti ti-phone" aria-hidden="true"></i>Call now
-              </a>
-            } @else {
+            <div class="mt-4 flex flex-col gap-2">
               <button
                 hh-button
                 color="primary"
                 class="w-full"
-                (click)="reveal()"
+                [disabled]="phoneLoading() && pendingAction === 'modal'"
+                (click)="openModal()"
               >
-                <i class="ti ti-phone" aria-hidden="true"></i>Show phone number
+                @if (phoneLoading() && pendingAction === 'modal') {
+                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Loading…
+                } @else {
+                  <i class="ti ti-phone" aria-hidden="true"></i>Show phone number
+                }
               </button>
+              <button
+                hh-button
+                variant="outlined"
+                class="w-full border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5"
+                [disabled]="phoneLoading() && pendingAction === 'whatsapp'"
+                (click)="openWhatsApp()"
+              >
+                @if (phoneLoading() && pendingAction === 'whatsapp') {
+                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Loading…
+                } @else {
+                  <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp
+                }
+              </button>
+            </div>
+            @if (phoneError()) {
+              <p class="mt-2 text-center text-xs text-danger">Couldn't load number — try again.</p>
             }
-            <button hh-button variant="outlined" class="mt-2 w-full">
-              <i class="ti ti-message-2" aria-hidden="true"></i>Request a
-              callback
-            </button>
-            <p
-              class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400"
-            >
-              <i class="ti ti-lock" aria-hidden="true"></i>Sign in once to view
-              verified contacts
+            <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400">
+              <i class="ti ti-lock" aria-hidden="true"></i>Sign in once to view verified contacts
             </p>
           </div>
 
@@ -344,31 +343,437 @@
   }
 </main>
 
-<!-- Mobile sticky contact bar (gated phone) -->
+<!-- Mobile sticky contact bar -->
 @if (state().data; as l) {
   <div
     class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-ink-100 bg-white px-5 py-3 shadow-pill lg:hidden"
   >
     <div>
-      @if (revealed()) {
-        <p class="text-xs text-ink-400">Management contact</p>
-        <p class="font-mono font-semibold text-ink-900">{{ phoneRaw }}</p>
-      } @else {
-        <p class="text-xs text-ink-400">From</p>
-        <p class="font-semibold text-ink-900">
-          Rs {{ l.priceFrom | number }}
-          <span class="text-xs font-normal text-ink-400">/ mo</span>
-        </p>
+      <p class="text-xs text-ink-400">From</p>
+      <p class="font-semibold text-ink-900">
+        Rs {{ l.priceFrom | number }}
+        <span class="text-xs font-normal text-ink-400">/ mo</span>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        hh-button
+        variant="outlined"
+        size="sm"
+        class="border-[#25D366] text-[#25D366]"
+        [disabled]="phoneLoading() && pendingAction === 'whatsapp'"
+        (click)="openWhatsApp()"
+      >
+        <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp
+      </button>
+      <button
+        hh-button
+        color="primary"
+        size="sm"
+        [disabled]="phoneLoading() && pendingAction === 'modal'"
+        (click)="openModal()"
+      >
+        @if (phoneLoading() && pendingAction === 'modal') {
+          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
+        } @else {
+          <i class="ti ti-phone" aria-hidden="true"></i>
+        }
+        Show number
+      </button>
+    </div>
+  </div>
+}
+
+<!-- Photo lightbox -->
+@if (lightboxIndex() !== null) {
+  <div
+    class="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Photo gallery"
+  >
+    <!-- Header: counter + close -->
+    <div class="flex shrink-0 items-center justify-between px-4 py-3">
+      <span class="text-sm font-medium text-white/60">
+        {{ (lightboxIndex() ?? 0) + 1 }} / {{ lightboxImages().length }}
+      </span>
+      <button
+        type="button"
+        class="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+        (click)="closeLightbox()"
+        aria-label="Close gallery"
+      >
+        <i class="ti ti-x text-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Image area (click backdrop to close) -->
+    <div
+      class="relative flex flex-1 items-center justify-center overflow-hidden"
+      (click)="closeLightbox()"
+    >
+      <!-- Prev -->
+      @if ((lightboxIndex() ?? 0) > 0) {
+        <button
+          type="button"
+          class="absolute left-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          (click)="prevImage(); $event.stopPropagation()"
+          aria-label="Previous photo"
+        >
+          <i class="ti ti-chevron-left text-xl" aria-hidden="true"></i>
+        </button>
+      }
+
+      <img
+        [src]="lightboxImages()[lightboxIndex() ?? 0]"
+        alt="Gallery photo"
+        class="max-h-full max-w-full rounded-xl object-contain p-6 shadow-2xl"
+        (click)="$event.stopPropagation()"
+      />
+
+      <!-- Next -->
+      @if ((lightboxIndex() ?? 0) < lightboxImages().length - 1) {
+        <button
+          type="button"
+          class="absolute right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          (click)="nextImage(); $event.stopPropagation()"
+          aria-label="Next photo"
+        >
+          <i class="ti ti-chevron-right text-xl" aria-hidden="true"></i>
+        </button>
       }
     </div>
-    @if (revealed()) {
-      <a hh-button color="primary" [href]="'tel:' + phoneRaw">
-        <i class="ti ti-phone" aria-hidden="true"></i>Call now
-      </a>
-    } @else {
-      <button hh-button color="primary" (click)="reveal()">
-        <i class="ti ti-phone" aria-hidden="true"></i>Show phone number
-      </button>
-    }
+
+    <!-- Thumbnail strip (scrollable when many images) -->
+    <div class="shrink-0 overflow-x-auto px-4 pb-4 pt-2">
+      <div class="mx-auto flex gap-2">
+        @for (img of lightboxImages(); track img; let i = $index) {
+          <button
+            type="button"
+            class="h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition"
+            [class]="i === (lightboxIndex() ?? -1) ? 'border-white' : 'border-transparent opacity-50 hover:opacity-80'"
+            (click)="openLightbox(i)"
+            [attr.aria-label]="'Go to photo ' + (i + 1)"
+          >
+            <img [src]="img" alt="" class="h-full w-full object-cover" />
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Share modal -->
+@if (shareOpen() && state().data; as l) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Share this listing"
+  >
+    <div
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+      (click)="closeShare()"
+    ></div>
+
+    <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-ink-100 px-6 py-4">
+        <h2 class="font-display text-lg font-semibold text-ink-900">Share this listing</h2>
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-full text-ink-400 hover:bg-surface hover:text-ink-700"
+          (click)="closeShare()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Hostel preview -->
+        <div class="mb-6 flex items-center gap-4 rounded-xl border border-ink-100 p-3">
+          @if (l.images[0]) {
+            <img
+              [src]="l.images[0]"
+              [alt]="l.name"
+              class="h-16 w-16 shrink-0 rounded-xl object-cover"
+            />
+          }
+          <div class="min-w-0">
+            <p class="truncate font-semibold text-ink-900">{{ l.name }}</p>
+            <p class="mt-0.5 truncate text-sm text-ink-500">{{ l.area }}, {{ l.city }}</p>
+            <p class="mt-0.5 text-xs text-ink-400">Rs {{ l.priceFrom | number }} / mo</p>
+          </div>
+        </div>
+
+        <!-- Share options grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Copy link -->
+          <button
+            type="button"
+            class="flex items-center gap-3 rounded-xl border border-ink-100 px-4 py-3.5 text-sm font-medium text-ink-800 transition hover:border-ink-200 hover:bg-surface"
+            (click)="copyShareLink()"
+          >
+            @if (shareLinkCopied()) {
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ok/10">
+                <i class="ti ti-check text-lg text-ok" aria-hidden="true"></i>
+              </span>
+              <span class="text-ok">Link copied!</span>
+            } @else {
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
+                <i class="ti ti-link text-lg text-ink-600" aria-hidden="true"></i>
+              </span>
+              Copy link
+            }
+          </button>
+
+          <!-- WhatsApp -->
+          <button
+            type="button"
+            class="flex items-center gap-3 rounded-xl border border-ink-100 px-4 py-3.5 text-sm font-medium text-ink-800 transition hover:border-ink-200 hover:bg-surface"
+            (click)="shareVia('whatsapp')"
+          >
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
+              <i class="ti ti-brand-whatsapp text-lg text-[#25D366]" aria-hidden="true"></i>
+            </span>
+            WhatsApp
+          </button>
+
+          <!-- Facebook -->
+          <button
+            type="button"
+            class="flex items-center gap-3 rounded-xl border border-ink-100 px-4 py-3.5 text-sm font-medium text-ink-800 transition hover:border-ink-200 hover:bg-surface"
+            (click)="shareVia('facebook')"
+          >
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
+              <i class="ti ti-brand-facebook text-lg text-[#1877F2]" aria-hidden="true"></i>
+            </span>
+            Facebook
+          </button>
+
+          <!-- X / Twitter -->
+          <button
+            type="button"
+            class="flex items-center gap-3 rounded-xl border border-ink-100 px-4 py-3.5 text-sm font-medium text-ink-800 transition hover:border-ink-200 hover:bg-surface"
+            (click)="shareVia('twitter')"
+          >
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
+              <i class="ti ti-brand-x text-lg text-ink-900" aria-hidden="true"></i>
+            </span>
+            X (Twitter)
+          </button>
+
+          <!-- Email -->
+          <button
+            type="button"
+            class="flex items-center gap-3 rounded-xl border border-ink-100 px-4 py-3.5 text-sm font-medium text-ink-800 transition hover:border-ink-200 hover:bg-surface"
+            (click)="shareVia('email')"
+          >
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
+              <i class="ti ti-mail text-lg text-ink-600" aria-hidden="true"></i>
+            </span>
+            Email
+          </button>
+
+          <!-- More options (Web Share API) -->
+          <button
+            type="button"
+            class="flex items-center gap-3 rounded-xl border border-ink-100 px-4 py-3.5 text-sm font-medium text-ink-800 transition hover:border-ink-200 hover:bg-surface"
+            (click)="shareVia('native')"
+          >
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
+              <i class="ti ti-dots-circle-horizontal text-lg text-ink-600" aria-hidden="true"></i>
+            </span>
+            More options
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Description modal -->
+@if (descriptionModalOpen() && state().data; as l) {
+  <div
+    class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+    role="dialog"
+    aria-modal="true"
+    aria-label="About this hostel"
+  >
+    <div
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+      (click)="descriptionModalOpen.set(false)"
+    ></div>
+    <div class="relative mx-auto mt-16 w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div class="flex items-center justify-between border-b border-ink-100 px-6 py-4">
+        <h2 class="font-display text-lg font-semibold text-ink-900">About this hostel</h2>
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
+          (click)="descriptionModalOpen.set(false)"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="max-h-[70vh] overflow-y-auto px-6 py-5">
+        <div
+          class="hh-rich text-[15px] leading-relaxed text-ink-700"
+          [innerHTML]="l.description"
+        ></div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Contact modal -->
+@if (modalOpen() && state().data; as l) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Contact hostel"
+  >
+    <div
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+      (click)="closeModal()"
+    ></div>
+    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 class="font-display text-base font-semibold text-ink-900">Contact hostel</h2>
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
+          (click)="closeModal()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4">
+        <!-- Hostel + host info -->
+        <p class="font-semibold text-ink-900">{{ l.name }}</p>
+        @if (l.host) {
+          <p class="mt-0.5 text-sm text-ink-500">{{ l.host.name }}</p>
+        }
+
+        @if (phoneLoading()) {
+          <!-- Loading -->
+          <div class="mt-4 flex items-center justify-center gap-2 py-4 text-sm text-ink-400">
+            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Fetching contact…
+          </div>
+        } @else if (phoneError()) {
+          <!-- Error -->
+          <p class="mt-4 text-center text-sm text-danger">Couldn't load the phone number. Please try again.</p>
+          <button hh-button variant="outlined" class="mt-3 w-full" (click)="openModal()">
+            Retry
+          </button>
+        } @else if (revealed()) {
+          <!-- Phone row -->
+          <div class="mt-4 flex items-center justify-between rounded-xl border border-ink-100 px-4 py-3">
+            <div>
+              <p class="text-xs text-ink-400">Mobile</p>
+              <a
+                [href]="'tel:' + phoneValue()"
+                class="font-mono text-base font-semibold text-brand-600 hover:underline"
+              >{{ phoneValue() }}</a>
+            </div>
+            <button
+              type="button"
+              class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-ink-500 transition hover:bg-surface"
+              (click)="copyPhone()"
+            >
+              @if (copied()) {
+                <i class="ti ti-check text-ok" aria-hidden="true"></i>Copied
+              } @else {
+                <i class="ti ti-copy" aria-hidden="true"></i>Copy
+              }
+            </button>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="mt-3 flex flex-col gap-2">
+            <a
+              hh-button
+              color="primary"
+              class="w-full"
+              [href]="'tel:' + phoneValue()"
+            >
+              <i class="ti ti-phone" aria-hidden="true"></i>Call now
+            </a>
+            @if (whatsAppUrl(); as waUrl) {
+              <a
+                hh-button
+                variant="outlined"
+                class="w-full border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5"
+                [href]="waUrl"
+                target="_blank"
+                rel="noopener"
+              >
+                <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp
+              </a>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Login gate modal — shown when unauthenticated user taps WhatsApp or Show phone -->
+@if (loginGateOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="login-gate-title"
+  >
+    <div
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+      (click)="closeLoginGate()"
+    ></div>
+    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 id="login-gate-title" class="font-display text-base font-semibold text-ink-900">
+          Sign in to contact
+        </h2>
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
+          (click)="closeLoginGate()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-5 py-5">
+        <div class="flex items-start gap-3">
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#25D366]/10">
+            <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="font-semibold text-ink-900">See verified contact details</p>
+            <p class="mt-1 text-sm text-ink-500">
+              Create a free account to view WhatsApp numbers and call the host directly. It only takes 30 seconds.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-col gap-2">
+          <button hh-button color="primary" class="w-full" (click)="goToAuth()">
+            Log in / Register
+          </button>
+          <button hh-button variant="outlined" class="w-full" (click)="closeLoginGate()">
+            Maybe later
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 }

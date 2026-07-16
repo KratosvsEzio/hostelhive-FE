@@ -8,21 +8,21 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { catchError, forkJoin, map, of, startWith, switchMap, timer } from 'rxjs';
 import {
   Avatar,
   Card,
   CompactNumber,
+  DonutChart,
   EmptyState,
   ErrorState,
   Skeleton,
   StatusPill,
 } from '@hostelhive/ui';
 import { AnalyticsApi, HostOpsApi, HostPropertyStore } from '@services';
-import { AnalyticsData, Invoice, Kpi } from '@hostelhive/data-access';
-import { donutDash, revenueBars, tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';
+import { AnalyticsData, Invoice, Kpi, LedgerRow, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
+import { revenueBars, tenantMovementBars, yAxisTicks } from '@features/host/analytics/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
@@ -41,13 +41,13 @@ interface ViewState {
   imports: [
     DashboardLayout,
     RouterLink,
-    DateRangePicker,
     SubscriptionGate,
     DatePipe,
     DecimalPipe,
     Avatar,
     Card,
     CompactNumber,
+    DonutChart,
     EmptyState,
     ErrorState,
     Skeleton,
@@ -60,40 +60,80 @@ export class HostOverview {
   private readonly opsApi = inject(HostOpsApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
-  protected readonly pendingUtility = toSignal(
-    this.opsApi.invoices().pipe(
-      map((invoices) =>
-        invoices
-          .filter((i) => i.kind === 'utility' && i.status !== 'paid')
-          .sort((a, b) => (a.status === 'overdue' ? -1 : 1) - (b.status === 'overdue' ? -1 : 1)),
+  protected readonly billTab = signal<'due' | 'over-due'>('due');
+  protected readonly ledgerTab = signal<'due' | 'over-due'>('due');
+
+  private readonly billTabQuery = computed(() => ({
+    hostelId: this.propertyStore.selected(),
+    tab: this.billTab(),
+  }));
+
+  private readonly ledgerQuery = computed(() => ({
+    hostelId: this.propertyStore.selected(),
+    tab: this.ledgerTab(),
+  }));
+
+  private readonly pendingUtilityResp = toSignal(
+    toObservable(this.billTabQuery).pipe(
+      switchMap(({ hostelId, tab }) =>
+        hostelId
+          ? forkJoin([
+              this.opsApi.invoices(hostelId, 1, 10, {
+                'f[status.slug]': tab,
+                'f[bill_type]': 'utility',
+                'sort[due_date]': 'desc',
+              }).pipe(
+                catchError(() => of({ bills: [] as Invoice[], total: 0, totalPages: 0, statuses: [], aggs: { utilityTotal: 0, utilityPaid: 0, utilityBalance: 0, rentTotal: 0, rentPaid: 0, rentBalance: 0 } })),
+              ),
+              timer(600),
+            ]).pipe(
+              map(([res]) => ({ loading: false, bills: res.bills, count: res.total, total: res.statuses.find((s) => s.slug === tab)?.totalAmount ?? 0 })),
+              startWith({ loading: true, bills: [] as Invoice[], count: 0, total: 0 }),
+            )
+          : of({ loading: false, bills: [] as Invoice[], count: 0, total: 0 }),
       ),
-      catchError(() => of<Invoice[]>([])),
     ),
-    { initialValue: [] as Invoice[] },
+    { initialValue: { loading: true, bills: [] as Invoice[], count: 0, total: 0 } },
   );
 
-  protected readonly pendingUtilityTotal = computed(() =>
-    this.pendingUtility().reduce((sum, i) => sum + i.amount, 0),
+  protected readonly billsLoading = computed(() => this.pendingUtilityResp().loading);
+  protected readonly pendingUtilityCount = computed(() => this.pendingUtilityResp().count);
+
+  private readonly ledgerResp = toSignal(
+    toObservable(this.ledgerQuery).pipe(
+      switchMap(({ hostelId, tab }) =>
+        hostelId
+          ? forkJoin([
+              this.opsApi.invoices(hostelId, 1, 50, {
+                'f[status.slug]': tab,
+                'f[bill_type]': 'rent',
+                'sort[due_date]': 'desc',
+              }).pipe(
+                catchError(() => of({ bills: [] as Invoice[], total: 0, totalPages: 0 })),
+              ),
+              timer(600),
+            ]).pipe(
+              map(([res]) => ({ loading: false, bills: res.bills })),
+              startWith({ loading: true, bills: [] as Invoice[] }),
+            )
+          : of({ loading: false, bills: [] as Invoice[] }),
+      ),
+    ),
+    { initialValue: { loading: true, bills: [] as Invoice[] } },
   );
 
-  private readonly allInvoices = toSignal(
-    this.opsApi.invoices().pipe(catchError(() => of<Invoice[]>([]))),
-    { initialValue: [] as Invoice[] },
-  );
+  protected readonly ledgerLoading = computed(() => this.ledgerResp().loading);
 
-  protected readonly unpaidRentTenants = computed(() =>
-    new Set(
-      this.allInvoices()
-        .filter((i) => i.kind === 'rent' && i.status !== 'paid')
-        .map((i) => i.tenantName),
-    ).size,
-  );
+  protected readonly pendingUtility = computed(() => this.pendingUtilityResp().bills);
+
+  protected readonly pendingUtilityTotal = computed(() => this.pendingUtilityResp().total);
+
+  protected readonly unpaidRentTenants = computed(() => 0);
 
   protected readonly unpaidUtilityTenants = computed(() =>
     new Set(this.pendingUtility().map((i) => i.tenantName)).size,
   );
 
-  protected readonly dateRange = signal<DateRange | null>(null);
   private readonly refresh = signal(0);
 
   protected readonly kpiSkeletons = [1, 2, 3, 4, 5, 6];
@@ -120,27 +160,95 @@ export class HostOverview {
     { initialValue: { loading: true, error: false, subscriptionError: false, networkError: false, data: null } as ViewState },
   );
 
+  private readonly monthlyRevenueResp = toSignal(
+    toObservable(this.propertyStore.selected).pipe(
+      switchMap((slug) =>
+        slug
+          ? this.api.monthlyRevenue(slug).pipe(
+              map((data) => ({ loading: false, data })),
+              startWith({ loading: true, data: [] as RevenuePoint[] }),
+              catchError(() => of({ loading: false, data: [] as RevenuePoint[] })),
+            )
+          : of({ loading: false, data: [] as RevenuePoint[] }),
+      ),
+    ),
+    { initialValue: { loading: true, data: [] as RevenuePoint[] } },
+  );
+
+  private readonly tenantMovementResp = toSignal(
+    toObservable(this.propertyStore.selected).pipe(
+      switchMap((slug) =>
+        slug
+          ? this.api.tenantMovement(slug).pipe(
+              map((data) => ({ loading: false, data })),
+              startWith({ loading: true, data: [] as TenantMovement[] }),
+              catchError(() => of({ loading: false, data: [] as TenantMovement[] })),
+            )
+          : of({ loading: false, data: [] as TenantMovement[] }),
+      ),
+    ),
+    { initialValue: { loading: true, data: [] as TenantMovement[] } },
+  );
+
   protected readonly bars = computed(() =>
-    revenueBars(this.state().data?.revenue ?? []),
+    revenueBars(this.monthlyRevenueResp().data),
   );
 
   protected readonly tenantBars = computed(() =>
-    tenantMovementBars(this.state().data?.tenantMovement ?? []),
+    tenantMovementBars(this.tenantMovementResp().data),
   );
 
-  protected readonly ledger = computed(() =>
-    [...(this.state().data?.ledger ?? [])].sort(
-      (a, b) => b.outstanding - a.outstanding,
-    ),
-  );
+  protected readonly revenueYAxis = computed(() => {
+    const bars = this.bars();
+    if (!bars.length) return [];
+    const peak = Math.max(1, ...bars.map((b) => b.total));
+    return yAxisTicks(peak, 92).map((t) => ({ ...t, label: this.fmtY(t.value) }));
+  });
+
+  protected readonly movementYAxis = computed(() => {
+    const bars = this.tenantBars();
+    if (!bars.length) return [];
+    const peak = Math.max(1, ...bars.flatMap((b) => [b.movedIn, b.movedOut]));
+    return yAxisTicks(peak, 85, true).map((t) => ({ ...t, label: String(t.value) }));
+  });
+
+  private fmtY(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + 'M';
+    if (n >= 1_000)     return (n / 1_000).toFixed(n % 1_000 ? 1 : 0) + 'k';
+    return String(n);
+  }
+
+  protected readonly ledger = computed<LedgerRow[]>(() => {
+    const byRenter = new Map<string, LedgerRow>();
+    for (const inv of this.ledgerResp().bills) {
+      const existing = byRenter.get(inv.renterId);
+      if (existing) {
+        existing.outstanding += inv.amount;
+      } else {
+        byRenter.set(inv.renterId, {
+          id: inv.renterId,
+          tenant: inv.tenantName,
+          initials: this.initials(inv.tenantName),
+          room: inv.roomNumber,
+          lastInvoice: this.fmtDate(inv.due),
+          outstanding: inv.amount,
+        });
+      }
+    }
+    return [...byRenter.values()].sort((a, b) => b.outstanding - a.outstanding);
+  });
+
+  private fmtDate(iso: string): string {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${d ?? ''} ${MONTHS[Number(m) - 1] ?? ''} ${y ?? ''}`.trim();
+  }
 
   protected initials(name: string): string {
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   }
 
-  protected donut(pct: number): string {
-    return donutDash(pct);
-  }
 
   protected retry(): void {
     this.refresh.update((n) => n + 1);
@@ -164,14 +272,22 @@ export class HostOverview {
     const pid = this.propertyStore.selected();
     const b = `/host/${pid}`;
     const map: Record<string, string> = {
-      occupancy: `${b}/occupancy`,
-      vacant: `${b}/listings`,
-      collected: `${b}/revenue`,
+      occupancy: `${b}/overview/occupancy`,
+      vacant: `${b}/rooms`,
+      collected: `${b}/overview/revenue`,
       'pending-total': `${b}/invoices`,
       'pending-rent': `${b}/invoices`,
       'pending-utility': `${b}/invoices`,
     };
     return map[key] ?? null;
+  }
+
+  protected kpiQueryParams(key: string): Record<string, string> | null {
+    if (key === 'vacant') return { status: 'available' };
+    if (key === 'pending-rent') return { kind: 'rent', status: 'due' };
+    if (key === 'pending-utility') return { kind: 'utility', status: 'due' };
+    if (key === 'pending-total') return { status: 'due' };
+    return null;
   }
 
   protected kpiLinkLabel(key: string): string {

@@ -1,34 +1,28 @@
 ﻿<app-dashboard-layout label="Overview">
-  <div hhActions class="flex items-center gap-2">
-    <hh-date-range-picker [(value)]="dateRange" />
-  </div>
-  <main class="mx-auto max-w-6xl">
   @let s = state();
 
   @if (s.loading) {
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       @for (i of kpiSkeletons; track i) {
-        <hh-card padding="sm"
-          ><hh-skeleton class="h-3 w-2/3" /><hh-skeleton class="mt-3 h-6 w-1/2"
-        /></hh-card>
+        <hh-card padding="sm">
+          <hh-skeleton class="h-3 w-2/3" />
+          <hh-skeleton class="mt-3 h-6 w-1/2" />
+        </hh-card>
       }
     </div>
-    <hh-card class="mt-6"
-      ><hh-skeleton class="h-4 w-40" /><hh-skeleton
-        class="mt-4 h-48 w-full"
-        radius="lg"
-    /></hh-card>
+    <hh-card class="mt-6">
+      <hh-skeleton class="h-4 w-40" />
+      <hh-skeleton class="mt-4 h-48 w-full" radius="lg" />
+    </hh-card>
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <hh-card
-        ><hh-skeleton class="h-4 w-40" /><hh-skeleton
-          class="mt-4 h-40 w-full"
-          radius="lg"
-      /></hh-card>
-      <hh-card
-        ><hh-skeleton class="h-4 w-40" /><hh-skeleton
-          class="mt-4 h-40 w-full"
-          radius="lg"
-      /></hh-card>
+      <hh-card>
+        <hh-skeleton class="h-4 w-40" />
+        <hh-skeleton class="mt-4 h-40 w-full" radius="lg" />
+      </hh-card>
+      <hh-card>
+        <hh-skeleton class="h-4 w-40" />
+        <hh-skeleton class="mt-4 h-40 w-full" radius="lg" />
+      </hh-card>
     </div>
   } @else if (s.subscriptionError) {
     <hh-subscription-gate feature="Dashboard overview" />
@@ -49,42 +43,23 @@
           <div class="flex-1 p-4">
             @if (k.donut != null) {
               <div class="flex items-center gap-3">
-                <svg
-                  viewBox="0 0 36 36"
-                  class="h-12 w-12"
-                  role="img"
-                  [attr.aria-label]="k.label + ' ' + k.value"
-                >
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9"
-                    fill="none"
-                    stroke="#E6E6E6"
-                    stroke-width="3"
-                    pathLength="100"
-                  />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9"
-                    fill="none"
-                    stroke="#F36E21"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    pathLength="100"
-                    transform="rotate(-90 18 18)"
-                    [attr.stroke-dasharray]="donut(k.donut)"
-                  />
-                </svg>
+                <hh-donut
+                  [pct]="k.donut"
+                  [ariaLabel]="k.label + ' ' + k.value"
+                />
                 <div>
                   <p class="text-xs text-ink-400">{{ k.label }}</p>
-                  <p class="text-xl font-semibold text-ink-900">{{ k.value }}</p>
+                  <p class="text-xl font-semibold text-ink-900">
+                    {{ k.value }}
+                  </p>
                 </div>
               </div>
             } @else {
               <p class="text-xs text-ink-400">{{ k.label }}</p>
-              <p class="mt-1 text-2xl font-semibold" [class]="valueClass(k.tone)">
+              <p
+                class="mt-1 text-2xl font-semibold"
+                [class]="valueClass(k.tone)"
+              >
                 @if (k.rawValue != null) {
                   {{ k.prefix }}{{ k.rawValue | compactNum }}
                 } @else {
@@ -99,7 +74,9 @@
               >
                 <i
                   class="ti"
-                  [class]="k.deltaPct >= 0 ? 'ti-trending-up' : 'ti-trending-down'"
+                  [class]="
+                    k.deltaPct >= 0 ? 'ti-trending-up' : 'ti-trending-down'
+                  "
                   aria-hidden="true"
                 ></i>
                 {{ k.deltaPct >= 0 ? '+' : '' }}{{ k.deltaPct }}% vs last month
@@ -107,11 +84,17 @@
             }
             @if (k.key === 'pending-rent') {
               <p class="mt-1.5 text-[11px] text-ink-400">
-                {{ unpaidRentTenants() }} tenant{{ unpaidRentTenants() !== 1 ? 's' : '' }} unpaid
+                {{ unpaidRentTenants() }} tenant{{
+                  unpaidRentTenants() !== 1 ? 's' : ''
+                }}
+                unpaid
               </p>
             } @else if (k.key === 'pending-utility') {
               <p class="mt-1.5 text-[11px] text-ink-400">
-                {{ unpaidUtilityTenants() }} tenant{{ unpaidUtilityTenants() !== 1 ? 's' : '' }} unpaid
+                {{ unpaidUtilityTenants() }} tenant{{
+                  unpaidUtilityTenants() !== 1 ? 's' : ''
+                }}
+                unpaid
               </p>
             }
           </div>
@@ -119,11 +102,17 @@
           @if (kpiLink(k.key); as link) {
             <a
               [routerLink]="link"
+              [queryParams]="kpiQueryParams(k.key)"
               class="flex items-center gap-1.5 overflow-hidden border-t px-4 py-2.5 text-xs font-medium transition-colors"
               [class]="kpiFooterClass(k.tone)"
             >
-              <span class="min-w-0 flex-1 truncate">{{ kpiLinkLabel(k.key) }}</span>
-              <i class="ti ti-arrow-right shrink-0 text-[13px]" aria-hidden="true"></i>
+              <span class="min-w-0 flex-1 truncate">{{
+                kpiLinkLabel(k.key)
+              }}</span>
+              <i
+                class="ti ti-arrow-right shrink-0 text-[13px]"
+                aria-hidden="true"
+              ></i>
             </a>
           }
         </hh-card>
@@ -132,163 +121,276 @@
 
     <!-- Monthly revenue + Tenant movement -->
     <div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
-    <hh-card [allowOverflow]="true">
-      <div class="mb-4 flex items-center justify-between">
-        <div>
-          <h2 class="font-display text-base font-semibold text-ink-900">
-            Monthly revenue
-          </h2>
-          <p class="text-xs text-ink-400">Last 12 months Â· PKR</p>
-        </div>
-        <div class="flex items-center gap-4 text-xs text-ink-500">
-          <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span>Rent</span
-          >
-          <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-sm bg-brand-200"></span
-            >Utility</span
-          >
-        </div>
-      </div>
-      <div class="flex h-48 items-end gap-2 sm:gap-3">
-        @for (b of bars(); track b.month; let first = $first; let last = $last) {
-          <div class="group relative flex h-full flex-1 flex-col justify-end gap-0.5">
-            <!-- Tooltip â€” sits 20px above the top of the stacked bar, not the column track -->
-            <div
-              class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
-              [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
-              [style.bottom]="'calc(' + (b.rentPct + b.utilityPct) + '% + 20px)'"
+      <hh-card [allowOverflow]="true">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-display text-base font-semibold text-ink-900">
+              Monthly revenue
+            </h2>
+            <p class="text-xs text-ink-400">Last 12 months · PKR</p>
+          </div>
+          <div class="flex items-center gap-4 text-xs text-ink-500">
+            <span class="flex items-center gap-1.5"
+              ><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span
+              >Rent</span
             >
-              <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
-                <p class="mb-2 text-[11px] font-semibold text-white">{{ b.month }}</p>
-                <div class="space-y-1.5 text-[11px]">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-brand-500"></span>Rent
-                    </span>
-                    <span class="font-medium text-white">Rs {{ b.rent | compactNum }}</span>
-                  </div>
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-brand-200"></span>Utility
-                    </span>
-                    <span class="font-medium text-white">Rs {{ b.utility | compactNum }}</span>
-                  </div>
-                  @if (b.tenants != null) {
-                    <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
-                      <span class="text-ink-400">Tenants</span>
-                      <span class="font-medium text-white">{{ b.tenants }}</span>
+            <span class="flex items-center gap-1.5"
+              ><span class="h-2.5 w-2.5 rounded-sm bg-brand-200"></span
+              >Utility</span
+            >
+          </div>
+        </div>
+        <div class="flex gap-0">
+          <!-- Y-axis labels -->
+          <div class="relative mr-2 h-48 w-8 shrink-0">
+            @for (tick of revenueYAxis(); track tick.value) {
+              <span
+                class="absolute right-0 -translate-y-1/2 text-right text-[10px] leading-none text-ink-400"
+                [style.bottom]="tick.bottomPct + '%'"
+                >{{ tick.label }}</span
+              >
+            }
+          </div>
+          <!-- Bars + overlaid gridlines -->
+          <div class="relative flex flex-1 h-48 items-end gap-2 sm:gap-3">
+            @for (tick of revenueYAxis(); track tick.value) {
+              <div
+                class="pointer-events-none absolute inset-x-0 border-t border-ink-100"
+                [style.bottom]="tick.bottomPct + '%'"
+              ></div>
+            }
+            @for (
+              b of bars();
+              track b.month;
+              let first = $first;
+              let last = $last
+            ) {
+              <div
+                class="group relative flex h-full flex-1 flex-col justify-end gap-0.5"
+              >
+                <!-- Tooltip â€" sits 20px above the top of the stacked bar, not the column track -->
+                <div
+                  class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
+                  [class]="
+                    first
+                      ? 'left-0'
+                      : last
+                        ? 'right-0'
+                        : 'left-1/2 -translate-x-1/2'
+                  "
+                  [style.bottom]="
+                    'calc(' + (b.rentPct + b.utilityPct) + '% + 20px)'
+                  "
+                >
+                  <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
+                    <p class="mb-2 text-[11px] font-semibold text-white">
+                      {{ b.month }}
+                    </p>
+                    <div class="space-y-1.5 text-[11px]">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-1.5 text-ink-400">
+                          <span class="h-2 w-2 rounded-sm bg-brand-500"></span
+                          >Rent
+                        </span>
+                        <span class="font-medium text-white"
+                          >Rs {{ b.rent | compactNum }}</span
+                        >
+                      </div>
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-1.5 text-ink-400">
+                          <span class="h-2 w-2 rounded-sm bg-brand-200"></span
+                          >Utility
+                        </span>
+                        <span class="font-medium text-white"
+                          >Rs {{ b.utility | compactNum }}</span
+                        >
+                      </div>
+                      @if (b.tenants != null) {
+                        <div
+                          class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5"
+                        >
+                          <span class="text-ink-400">Tenants</span>
+                          <span class="font-medium text-white">{{
+                            b.tenants
+                          }}</span>
+                        </div>
+                      }
                     </div>
-                  }
+                  </div>
+                  <div
+                    class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
+                    [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
+                  ></div>
                 </div>
+                <div
+                  class="rounded-t bg-brand-200 transition group-hover:bg-brand-300"
+                  [style.height.%]="b.utilityPct"
+                ></div>
+                <div
+                  class="rounded-b bg-brand-500 transition group-hover:bg-brand-600"
+                  [style.height.%]="b.rentPct"
+                ></div>
               </div>
-              <div
-                class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
-                [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
-              ></div>
-            </div>
-            <div
-              class="rounded-t bg-brand-200 transition group-hover:bg-brand-300"
-              [style.height.%]="b.utilityPct"
-            ></div>
-            <div
-              class="rounded-b bg-brand-500 transition group-hover:bg-brand-600"
-              [style.height.%]="b.rentPct"
-            ></div>
+            }
           </div>
-        }
-      </div>
-      <div class="mt-2 flex justify-between text-[11px] text-ink-400">
-        @for (b of bars(); track b.month) {
-          <span>{{ b.month }}</span>
-        }
-      </div>
-      <div class="mt-4 flex justify-end border-t border-ink-100 pt-3">
-        <a [routerLink]="'/host/' + propertyStore.selected() + '/revenue'" class="text-xs font-medium text-brand-600 hover:text-brand-700">View full revenue breakdown →</a>
-      </div>
-    </hh-card>
+          <!-- /bars+gridlines -->
+        </div>
+        <!-- /y-axis+bars flex -->
+        <div class="mt-2 ml-10 flex justify-between text-[11px] text-ink-400">
+          @for (b of bars(); track b.month) {
+            <span>{{ b.month }}</span>
+          }
+        </div>
+        <div class="mt-4 flex justify-end border-t border-ink-100 pt-3">
+          <a
+            [routerLink]="
+              '/host/' + propertyStore.selected() + '/overview/revenue'
+            "
+            class="text-xs font-medium text-brand-600 hover:text-brand-700"
+            >View full revenue breakdown →</a
+          >
+        </div>
+      </hh-card>
 
-    <!-- Tenant movement -->
-    <hh-card [allowOverflow]="true">
-      <div class="mb-4 flex items-center justify-between">
-        <div>
-          <h2 class="font-display text-base font-semibold text-ink-900">Tenant movement</h2>
-          <p class="text-xs text-ink-400">Move-ins vs move-outs Â· last 12 months</p>
-        </div>
-        <div class="flex items-center gap-4 text-xs text-ink-500">
-          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Moved in</span>
-          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>Moved out</span>
-        </div>
-      </div>
-      <div class="flex h-48 items-end gap-2 sm:gap-3">
-        @for (b of tenantBars(); track b.month; let first = $first; let last = $last) {
-          <div class="group relative flex h-full flex-1 items-end gap-0.5">
-            <!-- Tooltip â€” sits 20px above the top of the taller bar -->
-            <div
-              class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
-              [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
-              [style.bottom]="'calc(' + (b.moveInPct > b.moveOutPct ? b.moveInPct : b.moveOutPct) + '% + 20px)'"
-            >
-              <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
-                <p class="mb-2 text-[11px] font-semibold text-white">{{ b.month }}</p>
-                <div class="space-y-1.5 text-[11px]">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-emerald-500"></span>Moved in
-                    </span>
-                    <span class="font-medium text-white">{{ b.movedIn }}</span>
-                  </div>
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-rose-400"></span>Moved out
-                    </span>
-                    <span class="font-medium text-white">{{ b.movedOut }}</span>
-                  </div>
-                  <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
-                    <span class="text-ink-400">Net change</span>
-                    <span class="font-medium" [class]="b.movedIn >= b.movedOut ? 'text-emerald-400' : 'text-rose-400'">
-                      {{ b.movedIn >= b.movedOut ? '+' : '' }}{{ b.movedIn - b.movedOut }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div
-                class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
-                [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
-              ></div>
-            </div>
-            <div class="flex-1 rounded-t bg-emerald-500 transition group-hover:bg-emerald-600" [style.height.%]="b.moveInPct"></div>
-            <div class="flex-1 rounded-t bg-rose-400 transition group-hover:bg-rose-500" [style.height.%]="b.moveOutPct"></div>
+      <!-- Tenant movement -->
+      <hh-card [allowOverflow]="true">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-display text-base font-semibold text-ink-900">Tenant movement</h2>
+            <p class="text-xs text-ink-400">Move-ins vs move-outs · last 12 months</p>
           </div>
-        }
-      </div>
-      <div class="mt-2 flex justify-between text-[11px] text-ink-400">
-        @for (b of tenantBars(); track b.month) {
-          <span>{{ b.month }}</span>
-        }
-      </div>
-      <div class="mt-4 flex justify-end border-t border-ink-100 pt-3">
-        <a [routerLink]="'/host/' + propertyStore.selected() + '/movement'" class="text-xs font-medium text-brand-600 hover:text-brand-700">View full movement breakdown →</a>
-      </div>
-    </hh-card>
+          <div class="flex items-center gap-4 text-xs text-ink-500">
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Moved in</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>Moved out</span>
+          </div>
+        </div>
+        <div class="flex gap-0">
+          <!-- Y-axis labels -->
+          <div class="relative mr-2 h-48 w-8 shrink-0">
+            @for (tick of movementYAxis(); track tick.value) {
+              <span
+                class="absolute right-0 -translate-y-1/2 text-right text-[10px] leading-none text-ink-400"
+                [style.bottom]="tick.bottomPct + '%'"
+              >{{ tick.label }}</span>
+            }
+          </div>
+          <!-- Bars + overlaid gridlines -->
+          <div class="relative flex h-48 flex-1 items-end gap-2 sm:gap-3">
+            @for (tick of movementYAxis(); track tick.value) {
+              <div
+                class="pointer-events-none absolute inset-x-0 border-t border-ink-100"
+                [style.bottom]="tick.bottomPct + '%'"
+              ></div>
+            }
+            @for (b of tenantBars(); track b.month; let first = $first; let last = $last) {
+              <div class="group relative flex h-full flex-1 items-end gap-0.5">
+                <div
+                  class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
+                  [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+                  [style.bottom]="'calc(' + (b.moveInPct > b.moveOutPct ? b.moveInPct : b.moveOutPct) + '% + 20px)'"
+                >
+                  <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
+                    <p class="mb-2 text-[11px] font-semibold text-white">{{ b.month }}</p>
+                    <div class="space-y-1.5 text-[11px]">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-emerald-500"></span>Moved in</span>
+                        <span class="font-medium text-white">{{ b.movedIn }}</span>
+                      </div>
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-rose-400"></span>Moved out</span>
+                        <span class="font-medium text-white">{{ b.movedOut }}</span>
+                      </div>
+                      <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
+                        <span class="text-ink-400">Net change</span>
+                        <span class="font-medium" [class]="b.movedIn >= b.movedOut ? 'text-emerald-400' : 'text-rose-400'">{{ b.movedIn >= b.movedOut ? '+' : '' }}{{ b.movedIn - b.movedOut }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900" [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"></div>
+                </div>
+                <div class="flex-1 rounded-t bg-emerald-500 transition group-hover:bg-emerald-600" [style.height.%]="b.moveInPct"></div>
+                <div class="flex-1 rounded-t bg-rose-400 transition group-hover:bg-rose-500" [style.height.%]="b.moveOutPct"></div>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="mt-2 ml-10 flex justify-between text-[11px] text-ink-400">
+          @for (b of tenantBars(); track b.month) {
+            <span>{{ b.month }}</span>
+          }
+        </div>
+        <div class="mt-4 flex justify-end border-t border-ink-100 pt-3">
+          <a [routerLink]="'/host/' + propertyStore.selected() + '/overview/movement'" class="text-xs font-medium text-brand-600 hover:text-brand-700">View full movement breakdown →</a>
+        </div>
+      </hh-card>
     </div>
 
     <!-- Pending utility bills + Tenant ledger -->
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
       <hh-card padding="none" class="flex flex-col">
-        <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5">
+        <div
+          class="flex items-center justify-between border-b border-ink-100 px-5 py-3"
+        >
           <div>
-            <h2 class="font-display text-base font-semibold text-ink-900">Pending utility bills</h2>
-            <p class="text-xs text-ink-400">Unpaid &amp; overdue utility invoices</p>
+            <h2 class="font-display text-base font-semibold text-ink-900">
+              Pending utility bills
+            </h2>
+            <p class="text-xs text-ink-400">
+              Utility invoices awaiting collection
+            </p>
           </div>
-          @if (pendingUtility().length) {
-            <span class="rounded-full bg-warn/10 px-2.5 py-0.5 text-xs font-semibold text-warn">
-              {{ pendingUtility().length }} pending
-            </span>
-          }
+          <div class="flex items-center gap-2">
+            @if (pendingUtilityCount()) {
+              <span
+                class="rounded-full bg-warn/10 px-2.5 py-0.5 text-xs font-semibold text-warn"
+              >
+                {{ pendingUtilityCount() }} pending
+              </span>
+            }
+            <div class="flex gap-0.5 rounded-lg bg-ink-100 p-0.5">
+              <button
+                (click)="billTab.set('due')"
+                class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+                [class]="
+                  billTab() === 'due'
+                    ? 'bg-white shadow-sm text-ink-900'
+                    : 'text-ink-500 hover:text-ink-700'
+                "
+              >
+                Due
+              </button>
+              <button
+                (click)="billTab.set('over-due')"
+                class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+                [class]="
+                  billTab() === 'over-due'
+                    ? 'bg-white shadow-sm text-ink-900'
+                    : 'text-ink-500 hover:text-ink-700'
+                "
+              >
+                Overdue
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="flex-1">
-          @if (pendingUtility().length === 0) {
+        <div class="flex-1 overflow-y-auto" style="max-height: 280px">
+          @if (billsLoading()) {
+            <div class="divide-y divide-ink-100">
+              @for (i of [1, 2, 3]; track i) {
+                <div class="flex items-center gap-3 px-5 py-3">
+                  <hh-skeleton class="h-8 w-8 shrink-0 rounded-full" />
+                  <div class="min-w-0 flex-1 space-y-1.5">
+                    <hh-skeleton class="h-3 w-28" />
+                    <hh-skeleton class="h-2.5 w-20" />
+                  </div>
+                  <div class="shrink-0 space-y-1.5 text-right">
+                    <hh-skeleton class="h-3 w-16" />
+                    <hh-skeleton class="h-4 w-10 rounded-full" />
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (pendingUtility().length === 0) {
             <div class="p-5">
               <hh-empty-state
                 icon="ti-bolt-off"
@@ -297,50 +399,111 @@
               />
             </div>
           } @else {
-            <div class="divide-y divide-ink-100 overflow-y-auto" style="max-height: 280px">
+            <div class="divide-y divide-ink-100">
               @for (inv of pendingUtility(); track inv.id) {
                 <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface">
                   <hh-avatar
                     size="sm"
-                    [tone]="inv.status === 'overdue' ? 'brand' : 'cream'"
+                    [tone]="inv.status === 'over-due' ? 'brand' : 'cream'"
                     [initials]="initials(inv.tenantName)"
                   />
                   <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-ink-800">{{ inv.tenantName }}</p>
+                    <p class="truncate text-sm font-medium text-ink-800">
+                      {{ inv.tenantName }}
+                    </p>
                     <p class="text-xs text-ink-400">
-                      Room {{ inv.roomNumber }} Â· {{ inv.due | date: 'dd MMM yyyy' }}
+                      Room {{ inv.roomNumber }} ·
+                      {{ inv.due | date: 'dd MMM yyyy' }}
                     </p>
                   </div>
                   <div class="shrink-0 text-right">
-                    <p class="text-sm font-semibold text-ink-900">Rs {{ inv.amount | number }}</p>
-                    @if (inv.status === 'overdue') {
+                    <p class="text-sm font-semibold text-ink-900">
+                      Rs {{ inv.amount | number }}
+                    </p>
+                    @if (inv.status === 'over-due') {
                       <hh-status-pill tone="danger">Overdue</hh-status-pill>
                     } @else {
-                      <hh-status-pill tone="warn">Unpaid</hh-status-pill>
+                      <hh-status-pill tone="warn">Due</hh-status-pill>
                     }
                   </div>
                 </div>
               }
             </div>
-            <div class="flex items-center justify-between border-t border-ink-100 bg-surface px-5 py-3">
-              <span class="text-xs text-ink-500">Total outstanding</span>
-              <span class="font-display text-base font-semibold text-ink-900">Rs {{ pendingUtilityTotal() | number }}</span>
-            </div>
           }
         </div>
+        @if (!billsLoading() && pendingUtility().length > 0) {
+          <div
+            class="flex items-center justify-between border-t border-ink-100 bg-surface px-5 py-3"
+          >
+            <span class="text-xs text-ink-500">Total outstanding</span>
+            <span class="font-display text-base font-semibold text-ink-900"
+              >Rs {{ pendingUtilityTotal() | number }}</span
+            >
+          </div>
+        }
         <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
-          <a [routerLink]="'/host/' + propertyStore.selected() + '/invoices'" class="text-xs font-medium text-brand-600 hover:text-brand-700">View all bills →</a>
+          <a
+            [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
+            [queryParams]="{ kind: 'utility', status: billTab() }"
+            class="text-xs font-medium text-brand-600 hover:text-brand-700"
+            >View all bills →</a
+          >
         </div>
       </hh-card>
 
       <!-- Tenant ledger -->
       <hh-card padding="none" class="flex flex-col">
-        <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3">
-          <h2 class="font-display text-base font-semibold text-ink-900">Tenant ledger</h2>
-          <span class="text-xs text-ink-400">Sorted by outstanding</span>
+        <div
+          class="flex items-center justify-between border-b border-ink-100 px-5 py-3"
+        >
+          <div>
+            <h2 class="font-display text-base font-semibold text-ink-900">
+              Tenant ledger
+            </h2>
+            <p class="text-xs text-ink-400">
+              Rent & outstanding balances per tenant
+            </p>
+          </div>
+          <div class="flex gap-0.5 rounded-lg bg-ink-100 p-0.5">
+            <button
+              (click)="ledgerTab.set('due')"
+              class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+              [class]="
+                ledgerTab() === 'due'
+                  ? 'bg-white shadow-sm text-ink-900'
+                  : 'text-ink-500 hover:text-ink-700'
+              "
+            >
+              Due
+            </button>
+            <button
+              (click)="ledgerTab.set('over-due')"
+              class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+              [class]="
+                ledgerTab() === 'over-due'
+                  ? 'bg-white shadow-sm text-ink-900'
+                  : 'text-ink-500 hover:text-ink-700'
+              "
+            >
+              Overdue
+            </button>
+          </div>
         </div>
         <div class="flex-1">
-          @if (ledger().length === 0) {
+          @if (ledgerLoading()) {
+            <div class="divide-y divide-ink-100">
+              @for (i of [1, 2, 3]; track i) {
+                <div class="flex items-center gap-3 px-5 py-3">
+                  <hh-skeleton class="h-8 w-8 shrink-0 rounded-full" />
+                  <div class="min-w-0 flex-1 space-y-1.5">
+                    <hh-skeleton class="h-3 w-28" />
+                    <hh-skeleton class="h-2.5 w-20" />
+                  </div>
+                  <hh-skeleton class="h-5 w-20 shrink-0 rounded-full" />
+                </div>
+              }
+            </div>
+          } @else if (ledger().length === 0) {
             <div class="p-5">
               <hh-empty-state
                 icon="ti-receipt"
@@ -358,16 +521,23 @@
                     [initials]="row.initials"
                   />
                   <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm text-ink-700">{{ row.tenant }}</p>
-                    <p class="text-xs text-ink-400">Room {{ row.room }} Â· {{ row.lastInvoice }}</p>
+                    <p class="truncate text-sm text-ink-700">
+                      {{ row.tenant }}
+                    </p>
+                    <p class="text-xs text-ink-400">
+                      Room {{ row.room }} · {{ row.lastInvoice }}
+                    </p>
                   </div>
                   @if (row.outstanding > 0) {
                     <hh-status-pill
                       class="shrink-0"
                       [tone]="row.outstanding >= 9000 ? 'danger' : 'warn'"
-                    >Rs {{ row.outstanding | number }}</hh-status-pill>
+                      >Rs {{ row.outstanding | number }}</hh-status-pill
+                    >
                   } @else {
-                    <hh-status-pill class="shrink-0" tone="ok" [dot]="true">Settled</hh-status-pill>
+                    <hh-status-pill class="shrink-0" tone="ok" [dot]="true"
+                      >Settled</hh-status-pill
+                    >
                   }
                 </div>
               }
@@ -375,10 +545,14 @@
           }
         </div>
         <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
-          <a [routerLink]="'/host/' + propertyStore.selected() + '/invoices'" class="text-xs font-medium text-brand-600 hover:text-brand-700">View all invoices →</a>
+          <a
+            [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
+            [queryParams]="{ kind: 'rent', status: ledgerTab() }"
+            class="text-xs font-medium text-brand-600 hover:text-brand-700"
+            >View all invoices →</a
+          >
         </div>
       </hh-card>
     </div>
   }
-</main>
 </app-dashboard-layout>

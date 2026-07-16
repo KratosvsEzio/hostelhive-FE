@@ -3,10 +3,9 @@
   [breadcrumbs]="[{label: 'Overview', url: '/host/' + propertyStore.selected()}, {label: 'Revenue detail'}]"
 >
   <div hhActions class="flex items-center gap-2">
-    <hh-tabs class="w-36" [tabs]="rangeTabs" [(active)]="range" />
+    <hh-date-range-picker [(value)]="dateRange" />
   </div>
 
-  <main class="mx-auto max-w-6xl">
     @let s = state();
 
     @if (s.loading) {
@@ -19,10 +18,10 @@
     } @else {
       <!-- Revenue chart -->
       <hh-card [allowOverflow]="true">
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 class="font-display text-base font-semibold text-ink-900">Monthly revenue</h2>
-            <p class="text-xs text-ink-400">{{ range() === '6m' ? 'Last 6 months' : 'Last 12 months' }} · PKR</p>
+            <p class="text-xs text-ink-400">{{ dateRange()?.label }} · PKR</p>
           </div>
           <div class="flex items-center gap-4 text-xs text-ink-500">
             <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span>Rent</span>
@@ -67,15 +66,8 @@
 
       <!-- Revenue breakdown table -->
       <hh-card class="mt-6" padding="none">
-        <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5">
+        <div class="border-b border-ink-100 px-5 py-3.5">
           <h2 class="font-display text-base font-semibold text-ink-900">Breakdown</h2>
-          <hh-search
-            class="w-44"
-            [withScope]="false"
-            placeholder="Search month…"
-            [term]="search()"
-            (termChange)="search.set($event)"
-          />
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -88,7 +80,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
-              @for (b of filteredRows(); track b.month) {
+              @for (b of bars(); track b.month) {
                 <tr class="hover:bg-surface">
                   <td class="px-5 py-3 font-medium text-ink-800">{{ b.month }}</td>
                   <td class="px-5 py-3 text-right text-ink-600">Rs {{ b.rent | number }}</td>
@@ -96,13 +88,12 @@
                   <td class="px-5 py-3 text-right font-semibold text-ink-900">Rs {{ (b.rent + b.utility) | number }}</td>
                 </tr>
               }
-              @if (filteredRows().length === 0) {
-                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">No months match your search.</td></tr>
+              @if (bars().length === 0) {
+                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">No data available for this period.</td></tr>
               }
             </tbody>
           </table>
         </div>
       </hh-card>
     }
-  </main>
 </app-dashboard-layout>

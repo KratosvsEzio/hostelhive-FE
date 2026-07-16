@@ -7,6 +7,7 @@
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { format, parseISO } from 'date-fns';
 import { Button, EmptyState, ErrorState, FilterChipOption, FilterChips, Skeleton } from '@hostelhive/ui';
@@ -27,6 +28,8 @@ type RejectProgressItem = { attachment: ModeratorAttachment; status: 'pending' |
 export class Media {
   private readonly api = inject(ModerationApi);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly skeletons = [1, 2, 3, 4];
 
@@ -40,7 +43,9 @@ export class Media {
   protected readonly totalCount = signal(0);
   protected readonly hasMore = computed(() => this._nextPage() !== null);
   protected readonly possibleStatuses = signal<AttachmentStatusOption[]>([]);
-  protected readonly activeStatus = signal('');
+  protected readonly activeStatus = signal(
+    this.route.snapshot.queryParams['status'] ?? '',
+  );
   protected readonly statusTabs = computed<FilterChipOption[]>(() => [
     { label: 'All', value: '' },
     ...this.possibleStatuses().map((s) => ({ label: s.name, value: s.slug })),
@@ -156,6 +161,11 @@ export class Media {
     this.rejectProgressQueue.set([]);
     this.selectedIds.set(new Set());
     this.imgErrors.set(new Set());
+    void this.router.navigate([], {
+      queryParams: { status: slug || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
     this.fetchPage(1, false);
   }
 
@@ -312,20 +322,38 @@ export class Media {
   // ── display helpers ───────────────────────────────────────────────────────────
   protected kindBadge(a: ModeratorAttachment): { label: string; cls: string } | null {
     switch (a.key) {
-      case 'attachments': return { label: 'Photo', cls: 'bg-gray-500/90 text-white' };
-      case 'banner':      return { label: 'Banner', cls: 'bg-purple-500/90 text-white' };
-      case 'logo':        return { label: 'Logo', cls: 'bg-amber-500/90 text-white' };
-      case 'avatar':      return { label: 'Avatar', cls: 'bg-sky-500/90 text-white' };
-      default:            return null;
+      case 'attachments': return { label: 'Photo',      cls: 'bg-gray-500/90 text-white' };
+      case 'banner':      return { label: 'Banner',     cls: 'bg-purple-500/90 text-white' };
+      case 'logo':        return { label: 'Logo',       cls: 'bg-amber-500/90 text-white' };
+      case 'avatar':      return { label: 'Avatar',     cls: 'bg-sky-500/90 text-white' };
+      case 'cnic_front':  return { label: 'CNIC Front', cls: 'bg-emerald-600/90 text-white' };
+      case 'cnic_back':   return { label: 'CNIC Back',  cls: 'bg-teal-600/90 text-white' };
+      default:            return a.key
+        ? { label: a.key.replace(/_/g, ' '), cls: 'bg-ink-600/80 text-white' }
+        : null;
     }
   }
 
   protected entityName(a: ModeratorAttachment): string {
-    return a.hostel?.name ?? a.user?.name ?? '—';
+    return a.hostel?.name ?? a.user?.name ?? this.keyLabel(a.key);
+  }
+
+  protected keyLabel(key?: string | null): string {
+    switch (key) {
+      case 'cnic_front':  return 'CNIC — Front side';
+      case 'cnic_back':   return 'CNIC — Back side';
+      case 'avatar':      return 'Profile photo';
+      case 'banner':      return 'Banner image';
+      case 'logo':        return 'Logo';
+      case 'attachments': return 'Room photo';
+      default:            return key ? key.replace(/_/g, ' ') : '—';
+    }
   }
 
   protected hostLine(a: ModeratorAttachment): string {
-    return a.hostel?.host?.name ?? '—';
+    if (a.hostel?.host?.name) return a.hostel.host.name;
+    if (a.attached_type) return `Uploaded by ${a.attached_type}`;
+    return '';
   }
 
   protected dateLabel(iso?: string | null): string {

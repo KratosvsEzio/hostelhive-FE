@@ -15,10 +15,19 @@ import {
       type="button"
       class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
       [disabled]="page() <= 1"
+      (click)="go(1)"
+      aria-label="First page"
+    >
+      <i class="ti ti-chevron-left-pipe" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
+      class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
+      [disabled]="page() <= 1"
       (click)="go(page() - 1)"
       aria-label="Previous page"
     >
-      <i class="ti ti-chevron-left" aria-hidden="true"></i>
+      <i class="ti ti-chevrons-left" aria-hidden="true"></i>
     </button>
     @for (p of pages(); track p) {
       <button
@@ -37,7 +46,16 @@ import {
       (click)="go(page() + 1)"
       aria-label="Next page"
     >
-      <i class="ti ti-chevron-right" aria-hidden="true"></i>
+      <i class="ti ti-chevrons-right" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
+      class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
+      [disabled]="page() >= pageCount()"
+      (click)="go(pageCount())"
+      aria-label="Last page"
+    >
+      <i class="ti ti-chevron-right-pipe" aria-hidden="true"></i>
     </button>
   `,
   host: { class: 'flex items-center gap-1', role: 'navigation' },

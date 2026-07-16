@@ -11,6 +11,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router } from '@angular/router';
+import { filter } from 'rxjs';
 
 export interface NestedDropdownGroup {
   value: string;
@@ -57,7 +60,7 @@ export type NestedDropdownValue = { group: string; item?: string } | null;
           <!-- Backdrop -->
           <button
             type="button"
-            class="fixed inset-0 z-[70] cursor-default"
+            class="fixed inset-0 z-[70] cursor-default bg-ink-900/20"
             aria-label="Close"
             (click)="close()"
           ></button>
@@ -65,7 +68,8 @@ export type NestedDropdownValue = { group: string; item?: string } | null;
           <div
             role="listbox"
             class="fixed z-[71] max-h-80 w-56 overflow-auto rounded-2xl border border-ink-100 bg-white p-1.5 shadow-pill"
-            [style.top.px]="pos()?.top"
+            [style.top.px]="pos()?.top ?? null"
+            [style.bottom.px]="pos()?.bottom ?? null"
             [style.left.px]="pos()?.left"
           >
             <!-- Clear / "All" row -->
@@ -144,7 +148,7 @@ export class NestedDropdown {
   private readonly portal = viewChild<ElementRef<HTMLElement>>('portal');
 
   protected readonly open = signal(false);
-  protected readonly pos = signal<{ top: number; left: number } | null>(null);
+  protected readonly pos = signal<{ top?: number; bottom?: number; left: number } | null>(null);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.detachListeners());
@@ -154,6 +158,9 @@ export class NestedDropdown {
         document.body.appendChild(el);
       }
     });
+    inject(Router).events
+      .pipe(filter((e) => e instanceof NavigationStart), takeUntilDestroyed())
+      .subscribe(() => this.close());
   }
 
   protected readonly active = computed(() => !!this.value());
@@ -225,9 +232,27 @@ export class NestedDropdown {
     const btn = this.host.nativeElement.querySelector(
       'button[aria-haspopup]',
     ) as HTMLElement | null;
-    if (!btn) return;
+    if (!btn || typeof window === 'undefined') return;
     const r = btn.getBoundingClientRect();
-    this.pos.set({ top: r.bottom + 6, left: Math.max(8, r.left) });
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const GAP = 8;
+    const PANEL_W = 224; // w-56
+    const PANEL_H = 320; // max-h-80
+
+    // Horizontal: clamp so the panel doesn't overflow either viewport edge
+    let left = r.left;
+    if (left + PANEL_W > vw - GAP) left = r.right - PANEL_W;
+    left = Math.max(GAP, Math.min(left, vw - PANEL_W - GAP));
+
+    // Vertical: open below by default, flip above when space is tighter below than above
+    const spaceBelow = vh - r.bottom - GAP;
+    const spaceAbove = r.top - GAP;
+    if (spaceBelow < PANEL_H && spaceAbove > spaceBelow) {
+      this.pos.set({ top: undefined, bottom: vh - r.top + GAP, left });
+    } else {
+      this.pos.set({ top: r.bottom + GAP, bottom: undefined, left });
+    }
   };
 
   private attachListeners(): void {

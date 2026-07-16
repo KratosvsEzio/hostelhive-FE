@@ -142,7 +142,7 @@
                     <div class="flex flex-wrap gap-1.5">
                       @for (o of cat.offers; track o.id) {
                         <button
-                          hh-button variant="text" size="sm"
+                          hh-button variant="outlined" size="sm"
                           type="button"
                           (click)="toggleOffer(o.id)"
                           [attr.aria-pressed]="isOfferSelected(o.id)"
@@ -164,6 +164,7 @@
               <button
                 hh-button variant="text" size="sm"
                 type="button"
+                class="mt-2"
                 (click)="toggleShowAll()"
               >
                 {{ showAll() ? 'Show less' : 'Show more' }}
@@ -177,73 +178,50 @@
         <div class="rounded-2xl bg-white p-5 shadow-card">
           <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Room types</h2>
 
-          <hh-card variant="bordered">
-            <p class="text-sm font-semibold text-ink-900">Add a room type</p>
-            <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
-              <div class="sm:col-span-5">
-                <label class="mb-1 block text-xs font-medium text-ink-600">Room type</label>
-                <hh-dropdown
-                  variant="field"
-                  [options]="roomTypeOptions"
-                  [value]="newRoomTypeName()"
-                  (valueChange)="setNewRoomType($event)"
-                />
-              </div>
-              <hh-input
-                class="sm:col-span-3"
-                label="Capacity"
-                type="number"
-                [value]="newRoomCapacity() + ''"
-                (valueChange)="newRoomCapacity.set(+$event || 1)"
+          @if (roomTypes().length) {
+            <ul class="space-y-2">
+              @for (rt of roomTypes(); track rt._key) {
+                <li>
+                  <hh-room-type-row
+                    [name]="rt.name"
+                    [capacity]="rt.capacity"
+                    [price]="rt.price"
+                    (nameChange)="updateRt(rt._key, 'name', $event)"
+                    (capacityChange)="updateRt(rt._key, 'capacity', $event)"
+                    (priceChange)="updateRt(rt._key, 'price', $event)"
+                  />
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="grid place-items-center rounded-xl border border-dashed border-ink-200 px-6 py-8 text-center">
+              <i class="ti ti-bed-off text-2xl text-ink-300" aria-hidden="true"></i>
+              <p class="mt-2 text-sm text-ink-500">No rooms added yet.</p>
+            </div>
+          }
+
+          @if (!addRtOpen()) {
+            <button hh-button variant="text" size="sm" type="button" class="mt-3" (click)="openAddRt()">
+              <i class="ti ti-plus text-sm" aria-hidden="true"></i>Add room type
+            </button>
+          }
+
+          @if (addRtOpen()) {
+            <div class="mt-3 rounded-xl border border-ink-200 bg-surface p-3">
+              <hh-room-type-row
+                [name]="newRtName()"
+                [capacity]="newRtCapacity()"
+                [price]="newRtPrice()"
+                (nameChange)="newRtName.set($event)"
+                (capacityChange)="newRtCapacity.set($event)"
+                (priceChange)="newRtPrice.set($event)"
               />
-              <hh-input
-                class="sm:col-span-3"
-                label="Price / month"
-                icon="ti-coin"
-                type="number"
-                [value]="newRoomPrice() + ''"
-                (valueChange)="newRoomPrice.set(+$event || 0)"
-              />
-              <div class="sm:col-span-1">
-                <button hh-button color="primary" class="w-full" (click)="addRoomType()" aria-label="Add room">
-                  <i class="ti ti-plus" aria-hidden="true"></i>
-                </button>
+              <div class="mt-2 flex justify-end gap-2">
+                <button hh-button variant="text" size="sm" (click)="closeAddRt()">Cancel</button>
+                <button hh-button color="primary" size="sm" (click)="confirmAddRt()">Add room type</button>
               </div>
             </div>
-          </hh-card>
-
-          <div class="mt-4">
-            @if (roomTypes().length) {
-              <ul class="space-y-2">
-                @for (rt of roomTypes(); track rt._key) {
-                  <li class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 bg-surface px-4 py-3">
-                    <div class="flex items-center gap-3">
-                      <span class="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-500">
-                        <i class="ti ti-bed text-sm" aria-hidden="true"></i>
-                      </span>
-                      <div>
-                        <p class="text-sm font-semibold text-ink-900">{{ rt.name }}</p>
-                        <p class="text-xs text-ink-500">Sleeps {{ rt.capacity }} · Rs {{ rt.price | number }} / month</p>
-                      </div>
-                    </div>
-                    <button
-                      hh-button variant="icon" size="sm"
-                      type="button"
-                      aria-label="Remove room type"
-                      (click)="removeRoomType(rt)"
-                    >
-                      <i class="ti ti-trash" aria-hidden="true"></i>
-                    </button>
-                  </li>
-                }
-              </ul>
-            } @else {
-              <div class="grid place-items-center rounded-xl border border-dashed border-ink-200 px-6 py-8 text-center">
-                <i class="ti ti-bed-off text-2xl text-ink-300" aria-hidden="true"></i>
-                <p class="mt-2 text-sm text-ink-500">No rooms added yet.</p>
-              </div>
-            }
-          </div>
+          }
         </div>
 
         <!-- LOCATION -->

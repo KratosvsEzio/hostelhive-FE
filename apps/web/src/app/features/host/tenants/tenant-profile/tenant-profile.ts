@@ -2,19 +2,21 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, combineLatest, filter, map, of, startWith, switchMap, take } from 'rxjs';
 import {
   Avatar,
   Button,
+  DataTable,
   EmptyState,
   ErrorState,
+  PaginationConfig,
   Skeleton,
-  StatusPill,
 } from '@hostelhive/ui';
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { Tenant, Invoice, UtilityBill } from '@hostelhive/data-access';
+import { Tenant, Invoice } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { tenantRentCols, tenantUtilityCols } from '@app/util/table-configs/invoice-table-cols';
 
 type Tab = 'info' | 'rent' | 'utility';
 
@@ -23,6 +25,13 @@ interface ProfileState {
   error: boolean;
   networkError: boolean;
   tenant: Tenant | null;
+}
+
+interface BillState {
+  loading: boolean;
+  bills: Invoice[];
+  total: number;
+  totalPages: number;
 }
 
 @Component({
@@ -34,10 +43,10 @@ interface ProfileState {
     DashboardLayout,
     Avatar,
     Button,
+    DataTable,
     EmptyState,
     ErrorState,
     Skeleton,
-    StatusPill,
   ],
   templateUrl: './tenant-profile.html',
 })
@@ -49,6 +58,12 @@ export class TenantProfile {
 
   protected readonly activeTab = signal<Tab>('info');
   protected readonly cnicPreview = signal<string | null>(null);
+  protected readonly rentPage = signal(1);
+  protected readonly utilityPage = signal(1);
+
+  protected readonly invoiceRowId = (row: unknown) => (row as Invoice).id;
+  protected readonly rentCols = tenantRentCols();
+  protected readonly utilityCols = tenantUtilityCols();
 
   private readonly tenant$ = toObservable(this.store.selected).pipe(
     switchMap((hostelId) =>
@@ -70,24 +85,84 @@ export class TenantProfile {
     initialValue: { loading: true, error: false, networkError: false, tenant: null } as ProfileState,
   });
 
-  private readonly invoices$ = this.api.invoices();
-  protected readonly allInvoices = toSignal(this.invoices$, { initialValue: [] as Invoice[] });
-
-  private readonly utilityBatch$ = this.api.utilityBatch();
-  protected readonly allUtility = toSignal(this.utilityBatch$, { initialValue: [] as UtilityBill[] });
-
-  protected readonly tenantInvoices = computed(() => {
-    const tenant = this.state().tenant;
-    if (!tenant) return [];
-    return this.allInvoices().filter(
-      (inv) => inv.tenantName.toLowerCase() === tenant.name.toLowerCase(),
-    );
+  private readonly rentHistory$ = combineLatest([
+    toObservable(this.activeTab),
+    toObservable(this.rentPage),
+  ]).pipe(
+    filter(([tab]) => tab === 'rent'),
+    switchMap(([, page]) =>
+      this.route.paramMap.pipe(
+        take(1),
+        map((p) => ({
+          hostelId: this.store.selected(),
+          tenantId: p.get('tenantId') ?? '',
+          roomId: this.state().tenant?.roomId ?? '',
+          page,
+        })),
+      ),
+    ),
+    switchMap(({ hostelId, tenantId, roomId, page }) => {
+      if (!hostelId || !tenantId) return of({ loading: false, bills: [] as Invoice[], total: 0, totalPages: 1 });
+      return this.api.invoices(hostelId, page, 10, {
+        'f[bill_type]': 'rent',
+        'f[room.id]': roomId,
+        'f[renter.id]': tenantId,
+      }).pipe(
+        map((res) => ({ loading: false, bills: res.bills, total: res.total, totalPages: res.totalPages })),
+        startWith({ loading: true, bills: [] as Invoice[], total: 0, totalPages: 1 }),
+        catchError(() => of({ loading: false, bills: [] as Invoice[], total: 0, totalPages: 1 })),
+      );
+    }),
+  );
+  protected readonly rentState = toSignal(this.rentHistory$, {
+    initialValue: { loading: true, bills: [] as Invoice[], total: 0, totalPages: 1 } as BillState,
+  });
+  protected readonly tenantInvoices = computed(() => this.rentState().bills);
+  protected readonly rentLoading = computed(() => this.rentState().loading);
+  protected readonly rentPagination = computed<PaginationConfig | null>(() => {
+    const s = this.rentState();
+    if (s.totalPages <= 1) return null;
+    return { page: this.rentPage(), total: s.total, totalPages: s.totalPages, hasNextPage: this.rentPage() < s.totalPages, itemLabel: 'invoice' };
   });
 
-  protected readonly tenantUtility = computed(() => {
-    const tenant = this.state().tenant;
-    if (!tenant) return [];
-    return this.allUtility().filter((u) => u.roomId === tenant.roomId);
+  private readonly utilityHistory$ = combineLatest([
+    toObservable(this.activeTab),
+    toObservable(this.utilityPage),
+  ]).pipe(
+    filter(([tab]) => tab === 'utility'),
+    switchMap(([, page]) =>
+      this.route.paramMap.pipe(
+        take(1),
+        map((p) => ({
+          hostelId: this.store.selected(),
+          tenantId: p.get('tenantId') ?? '',
+          roomId: this.state().tenant?.roomId ?? '',
+          page,
+        })),
+      ),
+    ),
+    switchMap(({ hostelId, tenantId, roomId, page }) => {
+      if (!hostelId || !tenantId) return of({ loading: false, bills: [] as Invoice[], total: 0, totalPages: 1 });
+      return this.api.invoices(hostelId, page, 10, {
+        'f[bill_type]': 'utility',
+        'f[room.id]': roomId,
+        'f[renter.id]': tenantId,
+      }).pipe(
+        map((res) => ({ loading: false, bills: res.bills, total: res.total, totalPages: res.totalPages })),
+        startWith({ loading: true, bills: [] as Invoice[], total: 0, totalPages: 1 }),
+        catchError(() => of({ loading: false, bills: [] as Invoice[], total: 0, totalPages: 1 })),
+      );
+    }),
+  );
+  protected readonly utilityState = toSignal(this.utilityHistory$, {
+    initialValue: { loading: true, bills: [] as Invoice[], total: 0, totalPages: 1 } as BillState,
+  });
+  protected readonly tenantUtility = computed(() => this.utilityState().bills);
+  protected readonly utilityLoading = computed(() => this.utilityState().loading);
+  protected readonly utilityPagination = computed<PaginationConfig | null>(() => {
+    const s = this.utilityState();
+    if (s.totalPages <= 1) return null;
+    return { page: this.utilityPage(), total: s.total, totalPages: s.totalPages, hasNextPage: this.utilityPage() < s.totalPages, itemLabel: 'invoice' };
   });
 
   protected readonly backUrl = computed(() => `/host/${this.store.selected()}/tenants`);
@@ -106,18 +181,6 @@ export class TenantProfile {
     const hostelId = this.store.selected();
     if (!tenant || !hostelId) return;
     this.router.navigate(['/host', hostelId, 'tenants', 'edit', tenant.id]);
-  }
-
-  protected invoiceStatusTone(status: string): 'ok' | 'warn' | 'danger' | 'neutral' {
-    if (status === 'paid') return 'ok';
-    if (status === 'overdue') return 'danger';
-    return 'warn';
-  }
-
-  protected invoiceStatusLabel(status: string): string {
-    if (status === 'paid') return 'Paid';
-    if (status === 'overdue') return 'Overdue';
-    return 'Unpaid';
   }
 
   protected ordinal(n: number): string {

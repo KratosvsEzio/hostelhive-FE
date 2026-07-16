@@ -61,6 +61,11 @@ export class AuthApi {
     return this.api.delete<MessageResponse>('/api/user/sign_out');
   }
 
+  /** PATCH /api/users/change_password → updates the authenticated user's password. */
+  changePassword(body: { current_password: string; new_password: string }): Observable<unknown> {
+    return this.api.patch<unknown>('/api/users/change_password', body);
+  }
+
   /** GET /api/users/current → the authenticated user (with roles). */
   currentUser(): Observable<CurrentUser> {
     return this.api

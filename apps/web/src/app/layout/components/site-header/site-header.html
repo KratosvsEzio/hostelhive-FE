@@ -5,18 +5,8 @@
     <!-- Row 1: (console menu) + logo + route actions -->
     <div class="flex h-16 items-center justify-between gap-4">
       <div class="flex items-center gap-2.5">
-        @if (isConsole()) {
-          <button
-            hh-button variant="icon" size="sm"
-            type="button"
-            aria-label="Open menu"
-            (click)="drawer.toggle()"
-          >
-            <i class="ti ti-menu-2 text-xl"></i>
-          </button>
-        }
         <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
-          <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+          <img src="/hostelhive-logo.png" alt="HostelHive" class="h-5 w-auto sm:h-7" />
         </a>
         @if (area() === 'admin' || area() === 'moderator') {
           <span
@@ -31,11 +21,13 @@
         @switch (area()) {
           @case ('seeker') {
             @if (!isHost()) {
-              <button
-                hh-button variant="text"
-                type="button"
-                (click)="onBecomeHost()"
-              >Become a host</button>
+              <span class="hidden sm:block">
+                <button
+                  hh-button variant="text"
+                  type="button"
+                  (click)="onBecomeHost()"
+                >Become a host</button>
+              </span>
             } @else if (!isStaff()) {
               <a
                 [routerLink]="hostLink()"
@@ -50,16 +42,6 @@
               class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
               >View site</a
             >
-            <button
-              type="button"
-              class="relative grid h-9 w-9 place-items-center rounded-full transition hover:bg-surface"
-              aria-label="Notifications"
-            >
-              <i class="ti ti-bell text-xl text-ink-600" aria-hidden="true"></i>
-              <span
-                class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-500"
-              ></span>
-            </button>
           }
           @case ('admin') {
             <a

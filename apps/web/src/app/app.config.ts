@@ -5,7 +5,8 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter } from '@angular/router';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
+import { AppRouteReuseStrategy } from './route-reuse-strategy';
 import {
   provideClientHydration,
   withEventReplay,
@@ -18,6 +19,7 @@ import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import { provideGoogleMaps } from '@hostelhive/maps';
 import { googleMapsEnv } from './google-maps.env';
+import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
 import { provideCapacitorNative } from '@app/capacitor/native';
 import { appRoutes } from './app.routes';
@@ -31,6 +33,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
+    { provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy },
     // Base URL = API origin (paths carry their own /api or /public prefix).
     // Driven from .env → api.env.ts at build time by tools/generate-api-env.mjs.
     provideDataAccess({ baseUrl: apiEnv.apiUrl }, [
@@ -51,6 +54,15 @@ export const appConfig: ApplicationConfig = {
         ),
       deps: [NotificationService],
     },
+    // ── Google Auth (Capacitor plugin: native on Android/iOS, GIS popup on web) ─
+    // initialize() is a web-only step that loads the GIS library; it's a no-op
+    // on Android/iOS where the plugin bootstraps natively via the Capacitor lifecycle.
+    provideAppInitializer(async () => {
+      if (typeof window === 'undefined') return; // SSR guard
+      if (!googleOAuthEnv.clientId) return; // skip if key not configured
+      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+      await GoogleAuth.initialize({ clientId: googleOAuthEnv.clientId, scopes: ['email', 'profile'] });
+    }),
     // ── Google Maps + Places (seeker map & location search) ──────────────────
     // Key + Map ID come from the repo-root `.env` (git-ignored), injected at build
     // time by tools/generate-google-maps-env.mjs → ./google-maps.env.ts.

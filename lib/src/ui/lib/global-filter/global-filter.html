@@ -1,0 +1,364 @@
+<!-- Trigger button -->
+<button
+  #triggerBtn
+  type="button"
+  (click)="toggle()"
+  class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-dashed border-ink-200 bg-white px-3 text-xs font-medium text-ink-700 transition hover:bg-surface"
+>
+  <i class="ti ti-plus text-xs"></i>
+  Filters
+  @if (totalActive() > 0) {
+    <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white">
+      {{ totalActive() }}
+    </span>
+  }
+</button>
+
+<!-- Portal (teleported to <body>) -->
+<div #portal class="contents">
+  @if (open()) {
+    <!-- Click-outside backdrop -->
+    <div class="fixed inset-0 z-[70] bg-ink-900/20" (click)="closePanel()"></div>
+
+    <!-- Floating panel -->
+    <div
+      data-filter-panel
+      class="fixed z-[71] flex w-[480px] max-w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-xl"
+      [style.top.px]="pos()?.top"
+      [style.left.px]="pos()?.left"
+    >
+      <!-- Body: left nav + right content -->
+      <div class="flex min-h-0" style="max-height: 300px;">
+
+        <!-- Left sidebar -->
+        <nav class="flex w-44 shrink-0 flex-col overflow-y-auto border-r border-ink-100 bg-white py-1.5">
+          @for (group of groups(); track group.key) {
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition"
+              [class]="!group.inlineSidebar && activeGroupKey() === group.key
+                ? 'bg-brand-50 font-semibold text-brand-600'
+                : 'text-ink-700 hover:bg-ink-100/50'"
+              (click)="selectGroup(group)"
+            >
+              @if (group.icon) {
+                <i
+                  class="ti shrink-0 text-sm"
+                  [class]="group.icon + ((!group.inlineSidebar && activeGroupKey() === group.key) ? ' text-brand-500' : ' text-ink-400')"
+                ></i>
+              }
+              <span class="flex-1 truncate">{{ group.label }}</span>
+
+              @if (group.inlineSidebar) {
+                <hh-toggle
+                  [checked]="getSwitch(group.key)"
+                  (checkedChange)="setSwitch(group.key, $event)"
+                  (click)="$event.stopPropagation()"
+                />
+              } @else if (draftCounts()[group.key] > 0) {
+                <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white">
+                  {{ draftCounts()[group.key] }}
+                </span>
+              } @else {
+                <i class="ti ti-chevron-right shrink-0 text-xs text-ink-300"></i>
+              }
+            </button>
+          }
+        </nav>
+
+        <!-- Right content -->
+        <div class="flex-1 overflow-y-auto p-5">
+          @if (activeGroup(); as group) {
+            @for (field of (group.fields ?? []); track field.key; let last = $last) {
+
+              @if (field.label) {
+                <p class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+                  {{ field.label }}
+                </p>
+              }
+              @if (field.description) {
+                <p class="mb-3 text-xs leading-relaxed text-ink-400">{{ field.description }}</p>
+              }
+
+              <!-- ── checkbox ─────────────────────────────────────────── -->
+              @if (field.type === 'checkbox') {
+                <div class="space-y-2.5">
+                  @for (opt of (field.options ?? []); track opt.value) {
+                    <label class="flex cursor-pointer items-center gap-3" (click)="toggleCheckbox(field.key, opt.value)">
+                      <div
+                        class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition"
+                        [class]="isChecked(field.key, opt.value)
+                          ? 'border-brand-500 bg-brand-500'
+                          : 'border-ink-300 hover:border-brand-400'"
+                      >
+                        @if (isChecked(field.key, opt.value)) {
+                          <i class="ti ti-check text-[10px] text-white"></i>
+                        }
+                      </div>
+                      <span class="text-sm text-ink-800">{{ opt.label }}</span>
+                    </label>
+                  }
+                </div>
+              }
+
+              <!-- ── radio ───────────────────────────────────────────── -->
+              @else if (field.type === 'radio') {
+                <div class="space-y-2.5">
+                  @for (opt of (field.options ?? []); track opt.value) {
+                    <label class="flex cursor-pointer items-center gap-3" (click)="setRadio(field.key, opt.value)">
+                      <div
+                        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition"
+                        [class]="isRadio(field.key, opt.value)
+                          ? 'border-brand-500 bg-brand-500'
+                          : 'border-ink-300 hover:border-brand-400'"
+                      >
+                        @if (isRadio(field.key, opt.value)) {
+                          <span class="h-2 w-2 rounded-full bg-white"></span>
+                        }
+                      </div>
+                      <span class="text-sm text-ink-800">{{ opt.label }}</span>
+                    </label>
+                  }
+                </div>
+              }
+
+              <!-- ── switch ─────────────────────────────────────────── -->
+              @else if (field.type === 'switch') {
+                <div class="flex items-center justify-between gap-4">
+                  @if (!field.label && field.description) {
+                    <p class="text-sm text-ink-700">{{ field.description }}</p>
+                  }
+                  <hh-toggle
+                    [checked]="getSwitch(field.key)"
+                    (checkedChange)="setSwitch(field.key, $event)"
+                  />
+                </div>
+              }
+
+              <!-- ── date-range ──────────────────────────────────────── -->
+              @else if (field.type === 'date-range') {
+                <hh-date-range-picker
+                  [from]="getDateFrom(field.key) || null"
+                  [to]="getDateTo(field.key) || null"
+                  [min]="field.minDate || null"
+                  [max]="field.maxDate || null"
+                  (rangeChange)="onDateRangeChange(field.key, $event)"
+                />
+              }
+
+              <!-- ── number-range ────────────────────────────────────── -->
+              @else if (field.type === 'number-range') {
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="mb-1.5 block text-xs font-medium text-ink-500">
+                      {{ field.fromLabel ?? 'Min' }}
+                    </label>
+                    <div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2.5 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+                      <input
+                        type="number"
+                        inputmode="numeric"
+                        class="w-full bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-400"
+                        [placeholder]="field.placeholder ?? '0'"
+                        [value]="getNumMin(field.key)"
+                        (input)="setNumMin(field.key, $any($event.target).value)"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="mb-1.5 block text-xs font-medium text-ink-500">
+                      {{ field.toLabel ?? 'Max' }}
+                    </label>
+                    <div class="flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2.5 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+                      <input
+                        type="number"
+                        inputmode="numeric"
+                        class="w-full bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-400"
+                        [placeholder]="field.placeholder ?? '∞'"
+                        [value]="getNumMax(field.key)"
+                        (input)="setNumMax(field.key, $any($event.target).value)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- ── search-checkbox ────────────────────────────────── -->
+              @else if (field.type === 'search-checkbox') {
+                <div class="mb-3 flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+                  @if (isLoadingOptions(field.key)) {
+                    <i class="ti ti-loader-2 animate-spin text-sm text-brand-400"></i>
+                  } @else {
+                    <i class="ti ti-search text-sm text-ink-400"></i>
+                  }
+                  <input
+                    type="text"
+                    class="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-400"
+                    [placeholder]="field.placeholder ?? 'Search…'"
+                    [value]="getSearch(field.key)"
+                    (input)="onSearch(field, $any($event.target).value)"
+                  />
+                  @if (getSearch(field.key)) {
+                    <button type="button" class="text-ink-400 hover:text-ink-600" (click)="onSearch(field, '')">
+                      <i class="ti ti-x text-xs"></i>
+                    </button>
+                  }
+                </div>
+                @if (hasApiError(field.key)) {
+                  <p class="py-3 text-center text-xs text-danger-500">
+                    <i class="ti ti-alert-circle mr-1"></i>Failed to load options. Try again.
+                  </p>
+                } @else {
+                  <div class="space-y-2.5">
+                    @for (opt of fieldOptions(field); track opt.value) {
+                      <label class="flex cursor-pointer items-center gap-3" (click)="toggleCheckbox(field.key, opt.value)">
+                        <div
+                          class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition"
+                          [class]="isChecked(field.key, opt.value)
+                            ? 'border-brand-500 bg-brand-500'
+                            : 'border-ink-300 hover:border-brand-400'"
+                        >
+                          @if (isChecked(field.key, opt.value)) {
+                            <i class="ti ti-check text-[10px] text-white"></i>
+                          }
+                        </div>
+                        <span class="text-sm text-ink-800">{{ opt.label }}</span>
+                      </label>
+                    }
+                    @if (!isLoadingOptions(field.key) && fieldOptions(field).length === 0) {
+                      <p class="py-3 text-center text-sm text-ink-400">
+                        @if (getSearch(field.key)) { No results for "{{ getSearch(field.key) }}" } @else { No options available. }
+                      </p>
+                    }
+                  </div>
+                }
+              }
+
+              <!-- ── select ─────────────────────────────────────────── -->
+              @else if (field.type === 'select') {
+                <div class="mb-3 flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+                  @if (isLoadingOptions(field.key)) {
+                    <i class="ti ti-loader-2 animate-spin text-sm text-brand-400"></i>
+                  } @else {
+                    <i class="ti ti-search text-sm text-ink-400"></i>
+                  }
+                  <input
+                    type="text"
+                    class="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-400"
+                    [placeholder]="field.placeholder ?? 'Search…'"
+                    [value]="getSearch(field.key)"
+                    (input)="onSearch(field, $any($event.target).value)"
+                  />
+                  @if (getSearch(field.key)) {
+                    <button type="button" class="text-ink-400 hover:text-ink-600" (click)="onSearch(field, '')">
+                      <i class="ti ti-x text-xs"></i>
+                    </button>
+                  }
+                </div>
+                @if (hasApiError(field.key)) {
+                  <p class="py-3 text-center text-xs text-danger-500">
+                    <i class="ti ti-alert-circle mr-1"></i>Failed to load options. Try again.
+                  </p>
+                } @else {
+                  <div class="space-y-1">
+                    @for (opt of fieldOptions(field); track opt.value) {
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition"
+                        [class]="getSelect(field.key) === opt.value
+                          ? 'bg-brand-50 font-medium text-brand-700 ring-1 ring-brand-200'
+                          : 'text-ink-800 hover:bg-ink-50'"
+                        (click)="setSelect(field.key, opt.value)"
+                      >
+                        <span class="flex-1">{{ opt.label }}</span>
+                        @if (getSelect(field.key) === opt.value) {
+                          <i class="ti ti-check shrink-0 text-brand-500"></i>
+                        }
+                      </button>
+                    }
+                    @if (!isLoadingOptions(field.key) && fieldOptions(field).length === 0) {
+                      <p class="py-3 text-center text-sm text-ink-400">
+                        @if (getSearch(field.key)) { No results for "{{ getSearch(field.key) }}" } @else { No options available. }
+                      </p>
+                    }
+                  </div>
+                }
+              }
+
+              <!-- ── nested-select ──────────────────────────────────── -->
+              @else if (field.type === 'nested-select') {
+                <div class="space-y-0.5">
+                  @for (group of (field.nestedGroups ?? []); track group.value) {
+                    <!-- Group header row -->
+                    <button
+                      type="button"
+                      class="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition hover:bg-ink-50"
+                      (click)="setNestedGroup(field.key, group.value)"
+                    >
+                      <div
+                        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition"
+                        [class]="isNestedGroupActive(field.key, group.value)
+                          ? 'border-brand-500 bg-brand-500'
+                          : isNestedGroupOrChildActive(field.key, group.value)
+                            ? 'border-brand-300 bg-brand-50'
+                            : 'border-ink-300 hover:border-brand-400'"
+                      >
+                        @if (isNestedGroupActive(field.key, group.value)) {
+                          <span class="h-2 w-2 rounded-full bg-white"></span>
+                        }
+                      </div>
+                      <span class="font-medium text-ink-900">{{ group.label }}</span>
+                    </button>
+                    <!-- Child item rows -->
+                    @for (item of group.items; track item.value) {
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-3 rounded-xl py-2 pl-9 pr-2 text-left text-sm transition hover:bg-ink-50"
+                        (click)="setNestedItem(field.key, group.value, item.value)"
+                      >
+                        <div
+                          class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition"
+                          [class]="isNestedItemActive(field.key, group.value, item.value)
+                            ? 'border-brand-500 bg-brand-500'
+                            : 'border-ink-300 hover:border-brand-400'"
+                        >
+                          @if (isNestedItemActive(field.key, group.value, item.value)) {
+                            <span class="h-2 w-2 rounded-full bg-white"></span>
+                          }
+                        </div>
+                        <span class="text-ink-700">{{ item.label }}</span>
+                      </button>
+                    }
+                  }
+                </div>
+              }
+
+              @if (!last) {
+                <div class="my-4 border-t border-ink-100"></div>
+              }
+            }
+          } @else {
+            <p class="mt-6 text-center text-sm text-ink-400">Select a filter category on the left.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex shrink-0 items-center justify-between border-t border-ink-100 px-4 py-3">
+        <button
+          hh-button variant="text" size="sm" type="button"
+          (click)="resetFilters()"
+        >
+          Reset
+        </button>
+        <div class="flex gap-2">
+          <button hh-button variant="outlined" size="sm" type="button" (click)="closePanel()">
+            Cancel
+          </button>
+          <button hh-button color="primary" size="sm" type="button" (click)="applyFilters()">
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -11,11 +11,23 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router } from '@angular/router';
+import { filter } from 'rxjs';
 
 /** Emitted selection — ISO `YYYY-MM-DD` strings (local), or `null` when unset. */
 export interface DateRange {
   from: string | null;
   to: string | null;
+  /** Present only when `showTime` is enabled. `HH:MM` format. */
+  fromTime?: string;
+  toTime?: string;
+}
+
+export interface DateRangePreset {
+  label: string;
+  from: string;
+  to: string;
 }
 
 interface DayCell {
@@ -61,6 +73,32 @@ const MONTHS_ABBR = [
 ];
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const pad = (n: number) => String(n).padStart(2, '0');
+function d2iso(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function buildPresets(): DateRangePreset[] {
+  const t = new Date();
+  const y = t.getFullYear(), m = t.getMonth(), day = t.getDate();
+  const todayIso = d2iso(t);
+  const dow = t.getDay();
+  const diffMon = dow === 0 ? -6 : 1 - dow;
+  const weekStart = new Date(y, m, day + diffMon);
+  const lastWeekStart = new Date(y, m, day + diffMon - 7);
+  const lastWeekEnd = new Date(y, m, day + diffMon - 1);
+  const monthEnd = new Date(y, m + 1, 0);
+  return [
+    { label: 'Today',         from: todayIso,                                  to: todayIso },
+    { label: 'Yesterday',     from: d2iso(new Date(y, m, day - 1)),            to: d2iso(new Date(y, m, day - 1)) },
+    { label: 'This week',     from: d2iso(weekStart),                          to: todayIso },
+    { label: 'Last week',     from: d2iso(lastWeekStart),                      to: d2iso(lastWeekEnd) },
+    { label: 'This month',    from: d2iso(new Date(y, m, 1)),                  to: d2iso(monthEnd) },
+    { label: 'Last month',    from: d2iso(new Date(y, m - 1, 1)),              to: d2iso(new Date(y, m, 0)) },
+    { label: 'Last 3 months', from: d2iso(new Date(y, m - 2, 1)),             to: d2iso(monthEnd) },
+    { label: 'Last 6 months', from: d2iso(new Date(y, m - 5, 1)),             to: d2iso(monthEnd) },
+    { label: 'This year',     from: d2iso(new Date(y, 0, 1)),                  to: d2iso(new Date(y, 11, 31)) },
+    { label: 'Last year',     from: d2iso(new Date(y - 1, 0, 1)),             to: d2iso(new Date(y - 1, 11, 31)) },
+  ];
+}
 /** Parse a `YYYY-MM-DD` string to local-midnight ms, or null. */
 function parseMs(iso?: string | null): number | null {
   if (!iso) return null;
@@ -100,7 +138,7 @@ function shortLabel(iso: string | null): string {
         (click)="toggle()"
         aria-haspopup="dialog"
         [attr.aria-expanded]="open()"
-        class="inline-flex h-9 w-full items-center gap-2 rounded-full border bg-white px-3.5 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-100"
+        class="inline-flex h-8 w-full items-center gap-2 rounded-full border bg-white px-3.5 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-100"
         [class]="
           open() ? 'border-brand-400' : 'border-ink-300 hover:border-ink-400'
         "
@@ -125,84 +163,122 @@ function shortLabel(iso: string | null): string {
         }
       </button>
 
-      @if (open()) {
-        <div #portal class="contents">
+      <div #portal class="contents">
+        @if (open()) {
           <button
             type="button"
-            class="fixed inset-0 z-[70] cursor-default"
+            class="fixed inset-0 z-[80] cursor-default bg-ink-900/20"
             aria-label="Close calendar"
             (click)="close()"
           ></button>
           <div
             role="dialog"
             aria-label="Choose date range"
-            class="fixed z-[71] max-w-[calc(100vw-1rem)] rounded-3xl border border-ink-100 bg-white p-5 shadow-pill"
+            class="fixed z-[81] max-w-[calc(100vw-1rem)] rounded-3xl border border-ink-100 bg-white p-5 shadow-pill"
             [style.top.px]="pos()?.top"
             [style.left.px]="pos()?.left"
           >
-            <!-- Month grids with prev/next nav -->
-            <div class="flex flex-col gap-6 sm:flex-row">
-              @for (m of monthViews(); track m.key; let i = $index) {
-                <div class="w-[17.5rem] max-w-full">
-                  <div class="relative mb-2 flex items-center justify-center">
-                    @if (i === 0) {
-                      <button
-                        type="button"
-                        (click)="prevMonth()"
-                        aria-label="Previous month"
-                        class="absolute left-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
-                      >
-                        <i class="ti ti-chevron-left"></i>
-                      </button>
-                    }
-                    <span class="text-sm font-semibold text-ink-900">{{
-                      m.label
-                    }}</span>
-                    @if (i === monthViews().length - 1) {
-                      <button
-                        type="button"
-                        (click)="nextMonth()"
-                        aria-label="Next month"
-                        class="absolute right-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
-                      >
-                        <i class="ti ti-chevron-right"></i>
-                      </button>
-                    }
-                  </div>
-                  <div
-                    class="grid grid-cols-7 text-center text-[11px] font-medium text-ink-400"
-                  >
-                    @for (w of weekdays; track $index) {
-                      <span class="py-1.5">{{ w }}</span>
-                    }
-                  </div>
-                  <div class="grid grid-cols-7" (mouseleave)="hover.set(null)">
-                    @for (cell of m.cells; track $index) {
-                      @if (cell) {
-                        <div [class]="bandClass(cell)">
-                          <button
-                            type="button"
-                            [disabled]="cell.disabled"
-                            (click)="pick(cell)"
-                            (mouseenter)="onHover(cell)"
-                            [attr.aria-label]="cell.iso"
-                            [class]="dayClass(cell)"
-                          >
-                            {{ cell.day }}
-                          </button>
-                        </div>
-                      } @else {
-                        <div class="h-10"></div>
-                      }
-                    }
-                  </div>
+            <div class="flex gap-5">
+              @if (presets().length) {
+                <div class="flex max-h-[300px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-ink-100 pr-5 pt-1">
+                  @for (p of presets(); track p.label) {
+                    <button
+                      type="button"
+                      (click)="applyPreset(p)"
+                      class="whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm text-ink-600 transition hover:bg-ink-50"
+                    >{{ p.label }}</button>
+                  }
                 </div>
               }
+              <div>
+                <!-- Month grids with prev/next nav -->
+                <div class="flex flex-col gap-6 sm:flex-row">
+                  @for (m of monthViews(); track m.key; let i = $index) {
+                    <div class="w-[17.5rem] max-w-full">
+                      <div class="relative mb-2 flex items-center justify-center">
+                        @if (i === 0) {
+                          <button
+                            type="button"
+                            (click)="prevMonth()"
+                            aria-label="Previous month"
+                            class="absolute left-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                          >
+                            <i class="ti ti-chevron-left"></i>
+                          </button>
+                        }
+                        <span class="text-sm font-semibold text-ink-900">{{
+                          m.label
+                        }}</span>
+                        @if (i === monthViews().length - 1) {
+                          <button
+                            type="button"
+                            (click)="nextMonth()"
+                            aria-label="Next month"
+                            class="absolute right-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                          >
+                            <i class="ti ti-chevron-right"></i>
+                          </button>
+                        }
+                      </div>
+                      <div
+                        class="grid grid-cols-7 text-center text-[11px] font-medium text-ink-400"
+                      >
+                        @for (w of weekdays; track $index) {
+                          <span class="py-1.5">{{ w }}</span>
+                        }
+                      </div>
+                      <div class="grid grid-cols-7" (mouseleave)="hover.set(null)">
+                        @for (cell of m.cells; track $index) {
+                          @if (cell) {
+                            <div [class]="bandClass(cell)">
+                              <button
+                                type="button"
+                                [disabled]="cell.disabled"
+                                (click)="pick(cell)"
+                                (mouseenter)="onHover(cell)"
+                                [attr.aria-label]="cell.iso"
+                                [class]="dayClass(cell)"
+                              >
+                                {{ cell.day }}
+                              </button>
+                            </div>
+                          } @else {
+                            <div class="h-10"></div>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
-
             <div
-              class="mt-3 flex items-center justify-end border-t border-ink-100 pt-3"
+              class="mt-3 flex items-center justify-between border-t border-ink-100 pt-3"
             >
+              @if (showTime()) {
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-medium text-ink-400">From</span>
+                    <input
+                      type="time"
+                      [value]="fromTime()"
+                      (change)="fromTime.set($any($event.target).value)"
+                      class="rounded-lg border border-ink-200 px-2 py-1 text-sm text-ink-800 focus:border-brand-400 focus:outline-none"
+                    />
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-medium text-ink-400">To</span>
+                    <input
+                      type="time"
+                      [value]="toTime()"
+                      (change)="toTime.set($any($event.target).value)"
+                      class="rounded-lg border border-ink-200 px-2 py-1 text-sm text-ink-800 focus:border-brand-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              } @else {
+                <span></span>
+              }
               <button
                 type="button"
                 (click)="clearAndEmit()"
@@ -212,8 +288,8 @@ function shortLabel(iso: string | null): string {
               </button>
             </div>
           </div>
-        </div>
-      }
+        }
+      </div>
     </div>
   `,
 })
@@ -224,6 +300,8 @@ export class DateRangePicker {
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
   readonly months = input(2);
+  readonly presets = input<DateRangePreset[]>(buildPresets());
+  readonly showTime = input(false);
   readonly rangeChange = output<DateRange>();
 
   protected readonly weekdays = WEEKDAYS;
@@ -240,6 +318,8 @@ export class DateRangePicker {
   protected readonly selTo = signal<string | null>(null);
   /** Hovered day during the second-click preview. */
   protected readonly hover = signal<string | null>(null);
+  protected readonly fromTime = signal('00:00');
+  protected readonly toTime = signal('23:59');
 
   private readonly minMs = computed(() => parseMs(this.min()));
   private readonly maxMs = computed(() => parseMs(this.max()));
@@ -252,7 +332,10 @@ export class DateRangePicker {
   });
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.detachListeners());
+    inject(DestroyRef).onDestroy(() => {
+      this.detachListeners();
+      this.portal()?.nativeElement.remove();
+    });
     // Keep the live selection in sync with the inputs (external set / clear).
     effect(() => {
       this.selFrom.set(this.from() ?? null);
@@ -269,6 +352,9 @@ export class DateRangePicker {
         document.body.appendChild(el);
       }
     });
+    inject(Router).events
+      .pipe(filter((e) => e instanceof NavigationStart), takeUntilDestroyed())
+      .subscribe(() => this.close());
   }
 
   protected readonly hasRange = computed(
@@ -310,6 +396,8 @@ export class DateRangePicker {
     this.reposition();
     this.open.set(true);
     this.attachListeners();
+    // Fine-tune position using actual rendered dimensions after the browser paints
+    requestAnimationFrame(() => this.reposition());
   }
 
   protected close(): void {
@@ -356,7 +444,20 @@ export class DateRangePicker {
     }
     this.selTo.set(cell.iso);
     this.hover.set(null);
-    this.rangeChange.emit({ from: this.selFrom(), to: this.selTo() });
+    this.rangeChange.emit({
+      from: this.selFrom(), to: this.selTo(),
+      ...(this.showTime() ? { fromTime: this.fromTime(), toTime: this.toTime() } : {}),
+    });
+    this.close();
+  }
+
+  protected applyPreset(p: DateRangePreset): void {
+    this.selFrom.set(p.from);
+    this.selTo.set(p.to);
+    this.rangeChange.emit({
+      from: p.from, to: p.to,
+      ...(this.showTime() ? { fromTime: this.fromTime(), toTime: this.toTime() } : {}),
+    });
     this.close();
   }
 
@@ -368,6 +469,8 @@ export class DateRangePicker {
     this.selFrom.set(null);
     this.selTo.set(null);
     this.hover.set(null);
+    this.fromTime.set('00:00');
+    this.toTime.set('23:59');
     this.rangeChange.emit({ from: null, to: null });
     this.close();
   }
@@ -414,11 +517,24 @@ export class DateRangePicker {
     ) as HTMLElement | null;
     if (!btn || typeof window === 'undefined') return;
     const r = btn.getBoundingClientRect();
-    const panelW = Math.min(640, window.innerWidth - 16);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const dialog = this.portal()?.nativeElement?.querySelector<HTMLElement>('[role="dialog"]');
+    const panelW = dialog ? dialog.offsetWidth : Math.min(800, vw - 16);
+    const panelH = dialog ? dialog.offsetHeight : 460;
+
+    // Horizontal: left-align with trigger, right-align if it would overflow viewport
     let left = r.left;
-    if (left + panelW > window.innerWidth - 8)
-      left = window.innerWidth - 8 - panelW;
-    this.pos.set({ top: r.bottom + 8, left: Math.max(8, left) });
+    if (left + panelW > vw - 8) left = r.right - panelW;
+    left = Math.max(8, Math.min(left, vw - panelW - 8));
+
+    // Vertical: prefer below trigger, flip above when there isn't enough space
+    let top = r.bottom + 8;
+    if (top + panelH > vh - 8) top = r.top - panelH - 8;
+    top = Math.max(8, top);
+
+    this.pos.set({ top, left });
   };
   private attachListeners(): void {
     if (typeof window === 'undefined') return;
@@ -463,3 +579,5 @@ function buildMonth(
   }
   return { key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells };
 }
+
+

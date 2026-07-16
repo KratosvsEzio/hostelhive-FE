@@ -15,6 +15,8 @@ export interface ListingDetail extends Listing {
   amenityCount: number;
   /** Walking-distance points of interest. */
   nearby: { icon: string; label: string }[];
+  /** Offer items with human-readable name (from the API); drives "What this place offers". */
+  offers?: { slug: string; name: string }[];
 }
 
 /** Single stub listing keyed off the canonical Al-Madina fixture (id '1'). */
@@ -36,6 +38,16 @@ export const LISTING_DETAIL: ListingDetail = {
     'cctv',
     'security',
     'parking',
+  ],
+  offers: [
+    { slug: 'wifi', name: 'Wi-Fi' },
+    { slug: 'ac', name: 'Air Conditioning' },
+    { slug: 'generator', name: 'Generator' },
+    { slug: 'kitchen', name: 'Kitchen' },
+    { slug: 'laundry', name: 'Laundry' },
+    { slug: 'cctv', name: 'CCTV' },
+    { slug: 'security', name: 'Security Guard' },
+    { slug: 'parking', name: 'Parking' },
   ],
   priceFrom: 12000,
   images: [

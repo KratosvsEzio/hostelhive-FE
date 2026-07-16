@@ -15,7 +15,7 @@
     <div class="flex h-16 items-center px-6"><img src="assets/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" /></div>
     <nav class="flex-1 space-y-1 px-3 py-2">
       <a href="09-host-overview.html" class="nav-link"><i class="ti ti-layout-dashboard text-lg"></i>Overview</a>
-      <a href="10-host-listings.html" class="nav-link"><i class="ti ti-building-community text-lg"></i>My listings</a>
+      <a href="17-hostel-profile.html" class="nav-link"><i class="ti ti-building text-lg"></i>Hostel profile</a>
       <a href="12-rooms.html" class="nav-link"><i class="ti ti-bed text-lg"></i>Rooms</a>
       <a href="13-tenants.html" class="nav-link"><i class="ti ti-users text-lg"></i>Tenants</a>
       <a href="19-host-team.html" class="nav-link"><i class="ti ti-user-shield text-lg"></i>Team &amp; staff</a>
@@ -24,18 +24,14 @@
       <a href="16-analytics.html" class="nav-link active"><i class="ti ti-chart-bar text-lg"></i>Analytics</a>
       <div class="my-2 border-t border-ink-100"></div>
       <a href="18-host-subscription.html" class="nav-link"><i class="ti ti-rosette text-lg"></i>Subscription</a>
-      <a href="17-host-settings.html" class="nav-link"><i class="ti ti-settings text-lg"></i>Settings</a>
     </nav>
-    <div class="border-t border-ink-100 p-3"><div class="flex items-center gap-3 rounded-xl p-2"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white">IK</span><div class="min-w-0"><p class="truncate text-sm font-medium text-ink-900">Imran Khan</p><p class="truncate text-xs text-ink-400">Host · 2 properties</p></div></div></div>
+    <div class="border-t border-ink-100 px-3 py-2"><p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p><button class="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-surface"><i class="ti ti-building-community text-lg text-ink-500"></i><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink-900">Al-Madina Hostel</span><span class="block truncate text-xs text-ink-400">Gulberg, Lahore</span></span><i class="ti ti-selector text-ink-400"></i></button><a href="11-onboarding-wizard.html" class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-plus"></i>Create new hostel</a></div>
   </aside>
 
   <div class="lg:pl-64">
     <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8">
       <div class="flex items-center gap-3"><i class="ti ti-menu-2 text-xl text-ink-600 lg:hidden"></i><h1 class="font-display text-lg font-semibold text-ink-900">Analytics</h1></div>
-      <div class="flex items-center gap-2">
-        <button class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700"><i class="ti ti-building"></i>All properties<i class="ti ti-chevron-down text-ink-400"></i></button>
-        <button class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 hover:bg-surface"><i class="ti ti-download"></i>Export</button>
-      </div>
+      <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"><i class="ti ti-download"></i>Export CSV</button>
     </header>
 
     <main class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
@@ -77,17 +73,55 @@
         <div class="mt-2 flex justify-between text-[11px] text-ink-400"><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span></div>
       </div>
 
-      <!-- Ledger -->
-      <div class="mt-6 rounded-2xl bg-white shadow-card">
-        <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3"><h2 class="font-display text-base font-semibold text-ink-900">Tenant ledger</h2><span class="text-xs text-ink-400">Sorted by outstanding</span></div>
-        <table class="w-full text-sm">
-          <thead class="text-left text-xs uppercase tracking-wide text-ink-400"><tr><th class="px-5 py-2 font-medium">Tenant</th><th class="px-5 py-2 font-medium">Room</th><th class="px-5 py-2 font-medium">Last invoice</th><th class="px-5 py-2 text-right font-medium">Outstanding</th></tr></thead>
-          <tbody class="divide-y divide-ink-100">
-            <tr><td class="px-5 py-2.5 text-ink-700">Bilal Khan</td><td class="px-5 py-2.5 text-ink-500">202</td><td class="px-5 py-2.5 text-ink-500">01 Jun 2026</td><td class="px-5 py-2.5 text-right font-medium text-danger">Rs 9,500</td></tr>
-            <tr><td class="px-5 py-2.5 text-ink-700">Saad Ali</td><td class="px-5 py-2.5 text-ink-500">101</td><td class="px-5 py-2.5 text-ink-500">01 Jun 2026</td><td class="px-5 py-2.5 text-right font-medium text-warn">Rs 8,000</td></tr>
-            <tr><td class="px-5 py-2.5 text-ink-700">Ahmed Raza</td><td class="px-5 py-2.5 text-ink-500">102</td><td class="px-5 py-2.5 text-ink-500">01 Jun 2026</td><td class="px-5 py-2.5 text-right text-ink-400">Rs 0</td></tr>
-          </tbody>
-        </table>
+      <!-- Tenant movement -->
+      <div class="mt-6 rounded-2xl bg-white p-5 shadow-card">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div><h2 class="font-display text-base font-semibold text-ink-900">Tenant movement</h2><p class="text-xs text-ink-400">Move-ins vs move-outs · last 12 months</p></div>
+          <div class="flex items-center gap-4 text-xs text-ink-500"><span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Moved in</span><span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>Moved out</span></div>
+        </div>
+        <div class="flex h-48 items-end gap-2 sm:gap-3">
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:45%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:20%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:30%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:35%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:55%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:15%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:40%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:25%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:62%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:18%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:35%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:30%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:50%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:22%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:44%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:28%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:58%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:12%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:38%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:26%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:66%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:20%"></div></div>
+          <div class="flex h-full flex-1 items-end gap-0.5"><div class="flex-1 rounded-t bg-emerald-500" style="height:52%"></div><div class="flex-1 rounded-t bg-rose-400" style="height:16%"></div></div>
+        </div>
+        <div class="mt-2 flex justify-between text-[11px] text-ink-400"><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span></div>
+      </div>
+
+      <!-- Occupancy timeline + ledger -->
+      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="rounded-2xl bg-white p-5 shadow-card">
+          <div class="mb-4 flex items-center justify-between">
+            <div><h2 class="font-display text-base font-semibold text-ink-900">Occupancy</h2><p class="text-xs text-ink-400">Beds filled · last 12 months</p></div>
+            <div class="grid w-40 grid-cols-2 rounded-xl bg-surface p-1 text-xs font-medium"><button class="rounded-lg py-1.5 text-ink-500">6M</button><button class="rounded-lg bg-white py-1.5 text-ink-900 shadow-card">12M</button></div>
+          </div>
+          <svg viewBox="0 0 400 160" class="h-40 w-full">
+            <polyline fill="none" stroke="#F36E21" stroke-width="2.5" stroke-linecap="round" points="0,110 36,102 72,96 108,88 144,92 180,80 216,72 252,76 288,60 324,52 360,46 400,38" />
+            <polygon fill="#F36E21" opacity="0.08" points="0,110 36,102 72,96 108,88 144,92 180,80 216,72 252,76 288,60 324,52 360,46 400,38 400,160 0,160" />
+            <circle cx="400" cy="38" r="4" fill="#F36E21" stroke="#fff" stroke-width="2" />
+          </svg>
+          <div class="mt-2 flex justify-between text-[11px] text-ink-400"><span>Jul</span><span>Sep</span><span>Nov</span><span>Jan</span><span>Mar</span><span>May</span></div>
+        </div>
+
+        <div class="rounded-2xl bg-white shadow-card">
+          <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3"><h2 class="font-display text-base font-semibold text-ink-900">Tenant ledger</h2><span class="text-xs text-ink-400">Sorted by outstanding</span></div>
+          <table class="w-full text-sm">
+            <thead class="text-left text-xs uppercase tracking-wide text-ink-400"><tr><th class="px-5 py-2 font-medium">Tenant</th><th class="px-5 py-2 font-medium">Room</th><th class="px-5 py-2 font-medium">Last invoice</th><th class="px-5 py-2 text-right font-medium">Outstanding</th></tr></thead>
+            <tbody class="divide-y divide-ink-100">
+              <tr><td class="px-5 py-2.5 text-ink-700">Bilal Khan</td><td class="px-5 py-2.5 text-ink-500">202</td><td class="px-5 py-2.5 text-ink-500">01 Jun 2026</td><td class="px-5 py-2.5 text-right font-medium text-danger">Rs 9,500</td></tr>
+              <tr><td class="px-5 py-2.5 text-ink-700">Saad Ali</td><td class="px-5 py-2.5 text-ink-500">101</td><td class="px-5 py-2.5 text-ink-500">01 Jun 2026</td><td class="px-5 py-2.5 text-right font-medium text-warn">Rs 8,000</td></tr>
+              <tr><td class="px-5 py-2.5 text-ink-700">Ahmed Raza</td><td class="px-5 py-2.5 text-ink-500">102</td><td class="px-5 py-2.5 text-ink-500">01 Jun 2026</td><td class="px-5 py-2.5 text-right text-ink-400">Rs 0</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>

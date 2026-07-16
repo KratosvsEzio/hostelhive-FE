@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HostelHive — Tablet · Host · Tenants</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/hh-theme.js"></script>
+<link rel="stylesheet" href="assets/hh.css" />
+<style>
+  .tablet { width: 1180px; height: 834px; border-radius: 38px; box-shadow: 0 0 0 14px #1F1F1F, 0 0 0 16px #3a3a3a, 0 28px 70px rgba(0,0,0,.3); overflow: hidden; position: relative; background: #F5F5F5; }
+  .cam { position:absolute; left:50%; top:10px; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:#0a0a0a; box-shadow: inset 0 0 2px #333; z-index:50; }
+  .statusbar { height:34px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12.5px; font-weight:600; color:#1F1F1F; background:#fff; }
+  .rail-link { display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 0; border-radius:14px; font-size:9px; font-weight:500; color:#A3A3A3; width:64px; }
+  .rail-link.on { background:#FEF1E9; color:#F36E21; }
+</style>
+</head>
+<body class="bg-surface text-ink-800">
+
+<main class="mx-auto max-w-[1320px] px-8 py-10">
+  <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">Tablet app · Host console</p>
+  <h1 class="mt-1 font-display text-2xl font-bold text-ink-900">Tenants — full table + slide-over check-in</h1>
+  <p class="mt-1 max-w-2xl text-sm text-ink-500">Tablet keeps the desktop data table (condensed columns) and the check-in form arrives as a right slide-over panel instead of a full-screen sheet.</p>
+
+  <div class="mt-8">
+    <div class="tablet">
+      <div class="cam"></div>
+      <div class="statusbar"><span>9:41 · Tue 2 Jul</span><span class="flex items-center gap-1.5 text-ink-900"><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i> 82%</span></div>
+
+      <div class="flex h-[calc(834px-34px)]">
+        <!-- icon rail -->
+        <aside class="flex w-[88px] shrink-0 flex-col items-center border-r border-ink-100 bg-white py-4">
+          <img src="assets/hostelhive-logo.png" alt="HostelHive" class="mb-5 h-9 w-9 rounded-xl object-contain" style="object-position:left" />
+          <nav class="flex flex-1 flex-col items-center gap-1">
+            <a class="rail-link"><i class="ti ti-layout-dashboard text-xl"></i>Overview</a>
+            <a class="rail-link"><i class="ti ti-building text-xl"></i>Profile</a>
+            <a class="rail-link"><i class="ti ti-bed text-xl"></i>Rooms</a>
+            <a class="rail-link on"><i class="ti ti-users text-xl"></i>Tenants</a>
+            <a class="rail-link"><i class="ti ti-user-shield text-xl"></i>Team</a>
+            <a class="rail-link"><i class="ti ti-bolt text-xl"></i>Utilities</a>
+            <a class="rail-link"><i class="ti ti-file-invoice text-xl"></i>Invoices</a>
+            <span class="my-1 h-px w-10 bg-ink-100"></span>
+            <a class="rail-link"><i class="ti ti-rosette text-xl"></i>Plan</a>
+          </nav>
+          <button class="mt-2 grid h-11 w-11 place-items-center rounded-2xl bg-tint-cream text-brand-600" title="Property"><i class="ti ti-building-community text-xl"></i></button>
+          <button class="mt-2 grid h-11 w-11 place-items-center rounded-2xl bg-brand-500 text-white" title="Create new hostel"><i class="ti ti-plus text-xl"></i></button>
+        </aside>
+
+        <!-- content (dimmed under the panel) -->
+        <div class="relative min-w-0 flex-1">
+          <header class="flex h-14 items-center justify-between border-b border-ink-100 bg-white px-6">
+            <h1 class="font-display text-lg font-semibold text-ink-900">Tenants</h1>
+            <button class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"><i class="ti ti-user-plus"></i>Check in tenant</button>
+          </header>
+
+          <div class="h-[calc(834px-34px-56px)] overflow-hidden px-6 py-4">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="rounded-2xl bg-white p-3 shadow-card"><p class="text-xs text-ink-400">Active</p><p class="mt-0.5 text-xl font-semibold text-ink-900">19</p></div>
+              <div class="rounded-2xl bg-white p-3 shadow-card"><p class="text-xs text-ink-400">On notice</p><p class="mt-0.5 text-xl font-semibold text-ink-900">2</p></div>
+              <div class="rounded-2xl bg-white p-3 shadow-card"><p class="text-xs text-ink-400">Inactive</p><p class="mt-0.5 text-xl font-semibold text-ink-900">4</p></div>
+            </div>
+            <div class="mt-3 flex items-center justify-between gap-3">
+              <div class="flex gap-1.5">
+                <button class="rounded-full bg-ink-900 px-3 py-1.5 text-[11px] font-medium text-white">All</button>
+                <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-[11px] font-medium text-ink-600">Active</button>
+                <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-[11px] font-medium text-ink-600">On notice</button>
+                <button class="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-[11px] font-medium text-ink-600">Inactive</button>
+              </div>
+              <div class="flex w-64 items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-1.5"><i class="ti ti-search text-ink-400"></i><input placeholder="Search tenant…" class="w-full bg-transparent text-sm outline-none" /></div>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-2xl bg-white shadow-card">
+              <table class="w-full text-sm">
+                <thead class="border-b border-ink-100 text-left text-[11px] uppercase tracking-wide text-ink-400">
+                  <tr><th class="px-4 py-2.5 font-medium">Tenant</th><th class="px-4 py-2.5 font-medium">Room</th><th class="px-4 py-2.5 font-medium">Joined</th><th class="px-4 py-2.5 font-medium">Rent</th><th class="px-4 py-2.5 font-medium">Due</th><th class="px-4 py-2.5 font-medium">Status</th><th class="px-4 py-2.5"></th></tr>
+                </thead>
+                <tbody class="divide-y divide-ink-100">
+                  <tr><td class="px-4 py-2.5"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-sky text-[10px] font-semibold text-ink-700">AR</span><span class="font-medium text-ink-900">Ahmed Raza</span></div></td><td class="px-4 py-2.5 text-ink-600">102</td><td class="px-4 py-2.5 text-ink-600">12 Jan 2026</td><td class="px-4 py-2.5 font-medium text-ink-900">Rs 12,000</td><td class="px-4 py-2.5 text-ink-600">7th</td><td class="px-4 py-2.5"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td><td class="px-4 py-2.5 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+                  <tr><td class="px-4 py-2.5"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-cream text-[10px] font-semibold text-ink-700">BK</span><span class="font-medium text-ink-900">Bilal Khan</span></div></td><td class="px-4 py-2.5 text-ink-600">202</td><td class="px-4 py-2.5 text-ink-600">01 Feb 2026</td><td class="px-4 py-2.5 font-medium text-ink-900">Rs 9,500</td><td class="px-4 py-2.5 text-ink-600">7th</td><td class="px-4 py-2.5"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td><td class="px-4 py-2.5 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+                  <tr><td class="px-4 py-2.5"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-mint text-[10px] font-semibold text-ink-700">SA</span><span class="font-medium text-ink-900">Saad Ali</span></div></td><td class="px-4 py-2.5 text-ink-600">101</td><td class="px-4 py-2.5 text-ink-600">20 Dec 2025</td><td class="px-4 py-2.5 font-medium text-ink-900">Rs 14,000</td><td class="px-4 py-2.5 text-ink-600">5th</td><td class="px-4 py-2.5"><span class="rounded-full bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">On notice</span></td><td class="px-4 py-2.5 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+                  <tr><td class="px-4 py-2.5"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-ink-100 text-[10px] font-semibold text-ink-500">UH</span><span class="font-medium text-ink-700">Usman Haider</span></div></td><td class="px-4 py-2.5 text-ink-600">301</td><td class="px-4 py-2.5 text-ink-600">10 Nov 2025</td><td class="px-4 py-2.5 font-medium text-ink-900">Rs 12,000</td><td class="px-4 py-2.5 text-ink-600">3rd</td><td class="px-4 py-2.5"><span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">Inactive</span></td><td class="px-4 py-2.5 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+                  <tr><td class="px-4 py-2.5"><div class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-full bg-tint-purple text-[10px] font-semibold text-ink-700">CN</span><span class="font-medium text-ink-900">Charlotte N.</span></div></td><td class="px-4 py-2.5 text-ink-600">203</td><td class="px-4 py-2.5 text-ink-600">03 Mar 2026</td><td class="px-4 py-2.5 font-medium text-ink-900">Rs 14,000</td><td class="px-4 py-2.5 text-ink-600">7th</td><td class="px-4 py-2.5"><span class="rounded-full bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">Active</span></td><td class="px-4 py-2.5 text-right"><i class="ti ti-dots text-ink-400"></i></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- scrim + slide-over check-in -->
+          <div class="absolute inset-0 z-20 bg-ink-900/35"></div>
+          <div class="absolute bottom-0 right-0 top-0 z-30 flex w-[420px] flex-col bg-white shadow-2xl ring-1 ring-ink-100">
+            <div class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5">
+              <h2 class="font-display text-base font-semibold text-ink-900">Check in tenant</h2>
+              <span class="grid h-8 w-8 place-items-center rounded-full text-ink-400"><i class="ti ti-x"></i></span>
+            </div>
+            <div class="min-h-0 flex-1 space-y-3 overflow-hidden px-5 pt-4">
+              <div class="flex items-center gap-3"><span class="grid h-12 w-12 place-items-center rounded-full bg-tint-cream text-sm font-semibold text-brand-700">HT</span><button class="rounded-xl border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-700">Change photo</button></div>
+              <div><label class="mb-1 block text-xs font-medium text-ink-600">Full name *</label><input value="Hamza Tariq" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none focus:border-brand-400" /></div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Email *</label><input placeholder="name@email.com" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Phone *</label><input value="0312 5556677" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Emergency contact *</label><input placeholder="0321 1234567" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">CNIC number *</label><input placeholder="42101-1234567-1" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+              </div>
+              <div><label class="mb-1 block text-xs font-medium text-ink-600">Assign room</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2 text-sm"><span>Room 201 · 1-Sharing</span><i class="ti ti-chevron-down text-ink-400"></i></div></div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Joining date *</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2 text-sm"><span>11 Jun 2026</span><i class="ti ti-calendar text-ink-400"></i></div></div>
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Leave date</label><div class="flex items-center justify-between rounded-xl border border-ink-200 px-3 py-2 text-sm"><span class="text-ink-400">Optional</span><i class="ti ti-calendar text-ink-400"></i></div></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Monthly rent *</label><input value="22000" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Advance deposit *</label><input value="22000" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Mess charges</label><input value="3000" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+                <div><label class="mb-1 block text-xs font-medium text-ink-600">Transport charges</label><input value="500" class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm outline-none" /></div>
+              </div>
+            </div>
+            <div class="flex gap-3 border-t border-ink-100 bg-white px-5 py-3.5">
+              <button class="flex-1 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-medium text-ink-700">Cancel</button>
+              <button class="flex-1 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white">Check in</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="mt-5 text-sm font-medium text-ink-700">Tenants — 11″ tablet · landscape · check-in open</p>
+    <p class="text-xs text-ink-400">Desktop table condenses; drawers stay as right slide-overs.</p>
+  </div>
+</main>
+
+</body>
+</html>

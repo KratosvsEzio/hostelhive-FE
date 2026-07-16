@@ -8,10 +8,11 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
+import { EMPTY, catchError, combineLatest, filter, map, of, startWith, switchMap, take } from 'rxjs';
 import {
   Avatar,
   Button,
+  DatePicker,
   Dropdown,
   DropdownOption,
   EmptyState,
@@ -22,6 +23,7 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import {
   HostRoom as Room,
   Tenant,
+  UtilityBill,
   UtilityType,
   UtilityTypeMeta,
 } from '@hostelhive/data-access';
@@ -52,6 +54,7 @@ const TONES = ['sky', 'cream', 'mint', 'brand'] as const;
     SubscriptionGate,
     Avatar,
     Button,
+    DatePicker,
     Dropdown,
     Skeleton,
     EmptyState,
@@ -77,13 +80,19 @@ export class AddBill {
   private readonly overrides = signal<Record<string, number>>({});
   private readonly daysOverrides = signal<Record<string, number>>({});
   private readonly daysErrors = signal<Record<string, boolean>>({});
-  protected readonly dueDateInput = signal((() => {
+  protected readonly dueDateInput = signal<string | null>((() => {
     const d = new Date();
     d.setDate(d.getDate() + 5);
     return d.toISOString().slice(0, 10);
   })());
   protected readonly submitting = signal(false);
   protected readonly submitError = signal(false);
+
+  protected readonly billId = signal<string | null>(null);
+  protected readonly isEdit = computed(() => !!this.billId());
+  private readonly splitIds = signal<string[]>([]);
+  protected readonly editLoading = signal(false);
+  protected readonly editError = signal(false);
 
   protected readonly monthOptions: DropdownOption[] = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(new Date().getFullYear(), new Date().getMonth() - i, 1);
@@ -344,17 +353,73 @@ export class AddBill {
     }
   }
 
+  constructor() {
+    const bid = this.route.snapshot.paramMap.get('billId');
+    if (bid) {
+      this.billId.set(bid);
+      toObservable(this.store.selected).pipe(
+        filter((id): id is string => !!id),
+        take(1),
+        switchMap((hostelId) => {
+          this.editLoading.set(true);
+          return this.api.getUtilityBill(hostelId, bid).pipe(
+            catchError(() => {
+              this.editLoading.set(false);
+              this.editError.set(true);
+              return EMPTY;
+            }),
+          );
+        }),
+      ).subscribe((bill) => {
+        this.seedEditForm(bill);
+        this.editLoading.set(false);
+      });
+    }
+  }
+
+  private seedEditForm(bill: UtilityBill): void {
+    this.type.set(bill.type);
+    this.roomId.set(String(bill.roomId));
+    this.totalInput.set(String(bill.total));
+    if (bill.startReading !== null) this.prevReadingInput.set(String(bill.startReading));
+    if (bill.endReading !== null) this.currReadingInput.set(String(bill.endReading));
+    if (bill.rate > 0) this.rateInput.set(String(bill.rate));
+    if (bill.units !== null) this.unitsInput.set(String(bill.units));
+    if (bill.dueDate) this.dueDateInput.set(bill.dueDate.slice(0, 10));
+    if (bill.issuedDate) {
+      const [yearStr, monthStr] = bill.issuedDate.slice(0, 7).split('-');
+      this.selectedMonthValue.set(`${yearStr}-${Number(monthStr) - 1}`);
+    }
+    // Store renter_bill IDs in order for the update payload
+    this.splitIds.set((bill.splits ?? []).map((s) => s.id));
+  }
+
   protected addToBatch(): void {
     const room = this.currentRoom();
     const hostelId = this.store.selected();
     if (!room || !hostelId || this.total() <= 0) return;
 
+    this.submitting.set(true);
+    this.submitError.set(false);
+
+    if (this.isEdit()) {
+      const ids = this.splitIds();
+      const renterBills = ids
+        .map((id, i) => ({ id, amount: this.rows()[i]?.share ?? 0 }))
+        .filter((r): r is { id: string; amount: number } => !!r.id);
+      this.api.updateUtilityBill(hostelId, this.billId()!, renterBills).subscribe({
+        next: () => { this.back(); },
+        error: () => { this.submitting.set(false); this.submitError.set(true); },
+      });
+      return;
+    }
+
     const isElec = this.isElectricity();
-    const metered = this.meta().metered;
     const { year, month } = this.selectedMonth();
     const issuedDate = new Date(year, month, 1).toISOString();
-    const dueDate = this.dueDateInput()
-      ? new Date(this.dueDateInput()).toISOString()
+    const dueDateInput = this.dueDateInput();
+    const dueDate = dueDateInput != null
+      ? new Date(dueDateInput).toISOString()
       : new Date(year, month + 1, 0).toISOString();
     const rate = isElec ? (Number(this.rateInput()) || 0) : 0;
 
@@ -364,14 +429,14 @@ export class AddBill {
       consumed_units: isElec ? this.units() : undefined,
       previous_units: isElec ? (Number(this.prevReadingInput()) || undefined) : undefined,
       current_units: isElec ? (Number(this.currReadingInput()) || undefined) : undefined,
-      room_id: Number(this.roomId()),
+      room_id: this.roomId() || undefined,
       issued_date: issuedDate,
       due_date: dueDate,
       cost_per_unit: rate || undefined,
       notes: '',
       renter_bills_attributes: this.rows().map((row) => ({
         renter_id: row.tenantId,
-        room_id: Number(this.roomId()),
+        room_id: this.roomId() || undefined,
         amount: row.share,
         bill_days: this.effectiveDays(row.tenantId),
         due_date: dueDate,
@@ -380,20 +445,17 @@ export class AddBill {
       })),
     };
 
-    this.submitting.set(true);
-    this.submitError.set(false);
     this.api.createUtilityBill(hostelId, body).subscribe({
-      next: () => {
-        this.back();
-      },
-      error: () => {
-        this.submitting.set(false);
-        this.submitError.set(true);
-      },
+      next: () => { this.back(); },
+      error: () => { this.submitting.set(false); this.submitError.set(true); },
     });
   }
 
   protected back(): void {
+    if (this.isEdit()) {
+      const hostelId = this.store.selected();
+      if (hostelId) { this.router.navigate(['/host', hostelId, 'utilities']); return; }
+    }
     this.router.navigate(['..'], { relativeTo: this.route });
   }
 

@@ -6,7 +6,7 @@
   </div>
 
   @if (statuses().length) {
-    <div class="mb-5 grid gap-3" [style.grid-template-columns]="'repeat(' + statuses().length + ', minmax(0, 1fr))'">
+    <div class="mb-5 grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))">
       @for (st of statuses(); track st.slug) {
         <hh-card padding="sm">
           <p class="text-xs text-ink-400">{{ st.name }}</p>
@@ -15,7 +15,7 @@
       }
     </div>
   } @else if (state().loading) {
-    <div class="mb-5 grid grid-cols-3 gap-3">
+    <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
       @for (i of [1, 2, 3]; track i) {
         <hh-skeleton class="h-20" radius="lg" />
       }
@@ -56,124 +56,21 @@
       </button>
     </hh-empty-state>
   } @else {
-    <div class="rounded-2xl bg-white shadow-card">
-      <div class="overflow-x-auto">
-      <table class="w-full min-w-[980px] text-sm">
-        <thead
-          class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400"
-        >
-          <tr>
-            <th class="px-5 py-3 font-medium">Tenant</th>
-            <th class="px-5 py-3 font-medium">Room</th>
-            <th class="px-5 py-3 font-medium">Joined</th>
-            <th class="px-5 py-3 font-medium">Leave date</th>
-            <th class="px-5 py-3 font-medium">Rent</th>
-            <th class="px-5 py-3 font-medium">Billing date</th>
-            <th class="px-5 py-3 font-medium">Billing due date</th>
-            <th class="px-5 py-3 font-medium">Status</th>
-            <th class="px-5 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-ink-100">
-          @if (!filtered().length) {
-            <tr>
-              <td colspan="9">
-                <hh-no-results>
-                  <div class="flex gap-2">
-                    <button hh-button variant="outlined" size="sm" (click)="setSearch(''); setFilter('all')">
-                      <i class="ti ti-x" aria-hidden="true"></i>Clear filters
-                    </button>
-                  </div>
-                </hh-no-results>
-              </td>
-            </tr>
-          } @else {
-            @for (t of filtered(); track t.id) {
-            <tr class="cursor-pointer hover:bg-surface" (click)="goToProfile(t)">
-              <td class="px-5 py-3">
-                <div class="flex items-center gap-2">
-                  <hh-avatar
-                    size="sm"
-                    [tone]="toneFor($index)"
-                    [initials]="t.initials"
-                    [src]="t.avatarUrl ?? ''"
-                  />
-                  <div>
-                    <p class="font-medium text-ink-900">{{ t.name }}</p>
-                    <p class="text-xs text-ink-400">{{ t.phone }}</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-5 py-3 text-ink-600">{{ t.roomNumber }}</td>
-              <td class="px-5 py-3 text-ink-600">
-                {{ t.joined | date: 'dd MMM yyyy' }}
-              </td>
-              <td class="px-5 py-3 text-ink-600">
-                {{ t.leaveDate ? (t.leaveDate | date: 'dd MMM yyyy') : '—' }}
-              </td>
-              <td class="px-5 py-3 font-medium text-ink-900">
-                Rs {{ t.rent | number }}
-              </td>
-              <td class="px-5 py-3 text-ink-600">{{ ordinal(t.billingDate) }}</td>
-              <td class="px-5 py-3 text-ink-600">{{ ordinal(t.billingDueDate) }}</td>
-              <td class="px-5 py-3">
-                @if (t.status === 'active') {
-                  <hh-status-pill tone="ok">Active</hh-status-pill>
-                } @else {
-                  <hh-status-pill tone="neutral">Checked-out</hh-status-pill>
-                }
-              </td>
-              <td class="px-5 py-3 text-right" (click)="$event.stopPropagation()">
-                <button
-                  type="button"
-                  hh-button variant="icon" size="sm"
-                  [class.bg-ink-100]="menuOpenId() === t.id"
-                  [class.text-ink-700]="menuOpenId() === t.id"
-                  (click)="toggleMenu(t.id, $event)"
-                  aria-label="Row actions"
-                  aria-haspopup="true"
-                  [attr.aria-expanded]="menuOpenId() === t.id"
-                >
-                  <i class="ti ti-dots-vertical text-sm"></i>
-                </button>
-              </td>
-            </tr>
-          }
-          }
-        </tbody>
-      </table>
-      </div>
-      <div class="flex items-center justify-between border-t border-ink-100 px-5 py-3">
-        <p class="text-xs text-ink-400">
-          @if (s.total > 0) {
-            {{ s.total }} tenants · Page {{ page() }} of {{ totalPages() }}
-          } @else {
-            Page {{ page() }}
-          }
-        </p>
-        <div class="flex items-center gap-1">
-          <button
-            type="button"
-            hh-button variant="icon" size="sm"
-            [disabled]="page() === 1"
-            (click)="goToPage(page() - 1)"
-            aria-label="Previous page"
-          >
-            <i class="ti ti-chevron-left text-sm"></i>
-          </button>
-          <span class="min-w-[1.75rem] text-center text-sm font-medium text-ink-700">{{ page() }}</span>
-          <button
-            type="button"
-            hh-button variant="icon" size="sm"
-            [disabled]="!hasNextPage()"
-            (click)="goToPage(page() + 1)"
-            aria-label="Next page"
-          >
-            <i class="ti ti-chevron-right text-sm"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+    <hh-data-table
+      minWidth="980px"
+      [columns]="tableCols"
+      [rows]="filtered()"
+      [rowId]="tenantsRowId"
+      [showActions]="true"
+      [clearable]="true"
+      [pagination]="paginationConf()"
+      [actionActive]="menuActionActive"
+      [rowClickable]="true"
+      (rowClick)="goToProfile($any($event))"
+      (rowAction)="onTenantAction($event)"
+      (pageChange)="goToPage($event)"
+      (clearFilters)="setSearch(''); setFilter('all')"
+    />
   }
 </app-dashboard-layout>
 
@@ -181,53 +78,42 @@
   @if (menuPos(); as pos) {
     @let menuTenant = filtered().find(t => t.id === openId);
     @if (menuTenant) {
-      <div
-        class="fixed z-50 w-40 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-lg"
-        [style.top.px]="pos.top"
-        [style.right.px]="pos.right"
-        (click)="$event.stopPropagation()"
-        (keydown)="$event.stopPropagation()"
-        role="menu"
-        tabindex="-1"
-      >
-        <button
-          type="button"
-          hh-button variant="text"
-          role="menuitem"
-          class="w-full !justify-start"
-          (click)="goToProfile(menuTenant); closeMenu()"
-        >
+      <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="goToProfile(menuTenant); closeMenu()">
           <i class="ti ti-user text-sm text-ink-400" aria-hidden="true"></i>
           View profile
         </button>
-        <div class="mx-3 border-t border-ink-100"></div>
-        <button
-          type="button"
-          hh-button variant="text"
-          role="menuitem"
-          class="w-full !justify-start"
-          (click)="openEdit(menuTenant); closeMenu()"
-        >
+        <hh-context-menu-divider />
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuTenant); closeMenu()">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           Edit tenant
         </button>
         @if (menuTenant.status === 'active') {
-          <div class="mx-3 border-t border-ink-100"></div>
-          <button
-            type="button"
-            hh-button variant="text"
-            role="menuitem"
-            class="w-full !justify-start"
-            (click)="checkOut(menuTenant); closeMenu()"
-          >
+          <hh-context-menu-divider />
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="checkOut(menuTenant); closeMenu()">
             <i class="ti ti-logout text-sm" aria-hidden="true"></i>
             Check out
           </button>
         }
-      </div>
+        @if (menuTenant.status === 'active' || menuTenant.status === 'on-notice') {
+          <hh-context-menu-divider />
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-warn" (click)="setInactive(menuTenant)">
+            <i class="ti ti-user-minus text-sm text-warn" aria-hidden="true"></i>
+            Inactivate
+          </button>
+        }
+        @if (menuTenant.status === 'inactive') {
+          <hh-context-menu-divider />
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-ok" (click)="setActive(menuTenant)">
+            <i class="ti ti-user-check text-sm text-ok" aria-hidden="true"></i>
+            Activate
+          </button>
+        }
+      </hh-context-menu>
     }
   }
 }
+
 
 @if (form(); as f) {
   <div
@@ -445,19 +331,16 @@
           </div>
           <!-- Joining & leave dates — two columns -->
           <div class="grid grid-cols-2 gap-3">
-            <hh-input
+            <hh-date-picker
               label="Joining date *"
-              type="date"
               [value]="f.joiningDate"
               [error]="fieldError('joiningDate')"
-              (valueChange)="patch('joiningDate', $event)"
-              (focusout)="markDirty('joiningDate')"
+              (valueChange)="patch('joiningDate', $event ?? ''); markDirty('joiningDate')"
             />
-            <hh-input
+            <hh-date-picker
               label="Leave date"
-              type="date"
               [value]="f.leaveDate"
-              (valueChange)="patch('leaveDate', $event)"
+              (valueChange)="patch('leaveDate', $event ?? '')"
             />
           </div>
         </div>
@@ -488,22 +371,13 @@
               (focusout)="markDirty('advanceDeposit')"
             />
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <hh-input
-              label="Mess charges"
-              type="number"
-              placeholder="3000"
-              [value]="f.messCharges"
-              (valueChange)="patch('messCharges', $event)"
-            />
-            <hh-input
-              label="Transport charges"
-              type="number"
-              placeholder="500"
-              [value]="f.transportationCharges"
-              (valueChange)="patch('transportationCharges', $event)"
-            />
-          </div>
+          <hh-input
+            label="Transport charges"
+            type="number"
+            placeholder="500"
+            [value]="f.transportationCharges"
+            (valueChange)="patch('transportationCharges', $event)"
+          />
           <div class="grid grid-cols-2 gap-3">
             <hh-input
               label="Billing date *"
@@ -523,6 +397,45 @@
               (valueChange)="patch('billingDueDate', $event)"
               (focusout)="markDirty('billingDueDate')"
             />
+          </div>
+        </div>
+
+        <!-- Mess -->
+        <div class="flex items-center gap-3">
+          <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Mess</p>
+          <div class="flex-1 border-t border-ink-100"></div>
+        </div>
+        <div class="space-y-3">
+          <hh-input
+            label="Mess charges"
+            type="number"
+            placeholder="3000"
+            [value]="f.messCharges"
+            (valueChange)="patch('messCharges', $event)"
+          />
+          <div class="space-y-2">
+            <p class="text-xs font-medium text-ink-600">Meal plan</p>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5">
+              <span class="flex items-center gap-2 text-sm text-ink-700">
+                <i class="ti ti-coffee text-ink-400" aria-hidden="true"></i>
+                Breakfast
+              </span>
+              <hh-toggle [checked]="f.messBreakfast" (checkedChange)="patchBool('messBreakfast', $event)" />
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5">
+              <span class="flex items-center gap-2 text-sm text-ink-700">
+                <i class="ti ti-salad text-ink-400" aria-hidden="true"></i>
+                Lunch
+              </span>
+              <hh-toggle [checked]="f.messLunch" (checkedChange)="patchBool('messLunch', $event)" />
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5">
+              <span class="flex items-center gap-2 text-sm text-ink-700">
+                <i class="ti ti-moon text-ink-400" aria-hidden="true"></i>
+                Dinner
+              </span>
+              <hh-toggle [checked]="f.messDinner" (checkedChange)="patchBool('messDinner', $event)" />
+            </div>
           </div>
         </div>
 

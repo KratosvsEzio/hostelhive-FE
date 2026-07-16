@@ -19,6 +19,53 @@ import {
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 
+export interface WeeklyMenuPayload {
+  id?: string;
+  day: string;
+  breakfast_menu_text: string;
+  lunch_menu_text: string;
+  dinner_menu_text: string;
+}
+
+export interface WeeklyMenuRecord extends WeeklyMenuPayload {
+  id: string;
+}
+
+export interface MealTypeRecord {
+  id: string;
+  meal: string;
+  /** ISO datetime — only the time component is meaningful; e.g. "2000-01-01T07:30:00.000+05:00". */
+  meal_time: string;
+  /** Hours before meal time the confirmation window closes. */
+  confirmation_before_meal: number;
+  /** Hours before meal time the notification fires. */
+  notify_before_meal_time: number;
+}
+
+export interface MealTypePayload {
+  meal: string;
+  /** Format: "2000-01-01 HH:MM:00.000000000 PKT +05:00" */
+  meal_time: string;
+  confirmation_before_meal: number;
+  notify_before_meal_time: number;
+}
+
+export interface MealInfoRaw {
+  meal_type: string;      // 'breakfast' | 'lunch' | 'dinner'
+  meal_date: string;      // 'yyyy-MM-dd'
+  expired_time: string;   // ISO datetime — confirmation window close
+}
+
+export interface MealConfirmationRaw {
+  id: string;
+  renter_id: string;
+  meal_type: string;       // 'breakfast' | 'lunch' | 'dinner'
+  meal_date: string;       // 'yyyy-MM-dd'
+  is_confirmed: boolean;
+  confirmed_at: string | null;
+  renter: { id: string; name: string; phone: string; email?: string | null };
+}
+
 /**
  * Authenticated hostel management — the `/api/hostels` endpoints
  * (app/controllers/api/hostels_controller.rb). Requires a JWT (attached by
@@ -71,7 +118,7 @@ export class HostelsApi {
   /** GET /api/hostels/:id — the full hostel (HostelSerializer). */
   getById(id: number | string): Observable<HostelDetail> {
     return this.api
-      .get<HostelResponse>(`/api/hostels/${id}`)
+      .get<HostelResponse>(`/public/hostel_detail/${id}`)
       .pipe(map((r) => requireHostel(r, id)));
   }
 
@@ -98,6 +145,13 @@ export class HostelsApi {
       .pipe(map((r) => requireHostel(r, id)));
   }
 
+  /** GET /api/hostels/:id/show_phone — gated contact reveal. Returns the primary phone number. */
+  showPhone(id: number | string): Observable<string> {
+    return this.api
+      .get<{ phone_detail?: { primary_phone?: string | null } }>(`/api/hostels/${id}/show_phone`)
+      .pipe(map((r) => r.phone_detail?.primary_phone ?? ''));
+  }
+
   /** GET /api/hostels/:id/room_types — the hostel's room types. */
   roomTypes(id: number | string): Observable<RoomType[]> {
     return this.api
@@ -114,6 +168,62 @@ export class HostelsApi {
         `/api/hostels/${id}/current_subscription`,
       )
       .pipe(map((r) => normalizeSubscription(r.subscription)));
+  }
+
+  /** POST /api/host/hostels/:id/meal_types — bulk upsert notification settings for all meals. */
+  saveMealTypes(hostelId: string, payloads: MealTypePayload[]): Observable<MealTypeRecord[]> {
+    return this.api
+      .post<{ meal_types: MealTypeRecord[] }>(`/api/host/hostels/${hostelId}/meal_types`, { meal_types: payloads })
+      .pipe(map((r) => r.meal_types ?? []));
+  }
+
+  /** GET /api/host/hostels/:id/meal_types — fetch saved notification settings per meal. */
+  getMealTypes(hostelId: string): Observable<MealTypeRecord[]> {
+    return this.api
+      .get<{ meal_types: MealTypeRecord[] }>(`/api/host/hostels/${hostelId}/meal_types`)
+      .pipe(map((r) => r.meal_types ?? []));
+  }
+
+  /** GET /api/host/hostels/:id/weekly_menus — fetch the saved weekly menu. */
+  getWeeklyMenus(hostelId: string): Observable<WeeklyMenuRecord[]> {
+    return this.api
+      .get<{ weekly_menus: WeeklyMenuRecord[] }>(`/api/host/hostels/${hostelId}/weekly_menus`)
+      .pipe(map((r) => r.weekly_menus ?? []));
+  }
+
+  /** PUT /api/host/hostels/:id/weekly_menus — upsert the full week's menu (id present = update, absent = create). */
+  saveWeeklyMenus(hostelId: string, menus: WeeklyMenuPayload[]): Observable<void> {
+    return this.api.put<void>(`/api/host/hostels/${hostelId}/weekly_menus`, {
+      weekly_menus: menus,
+    });
+  }
+
+  /** GET /public/meal_confirmations/meal_info/:token — resolve a tenant opt-in token (no auth required). */
+  getMealInfo(token: string): Observable<MealInfoRaw> {
+    return this.api
+      .get<{ meal_info: MealInfoRaw; success: boolean }>(`/public/meal_confirmations/meal_info/${token}`)
+      .pipe(map((r) => r.meal_info));
+  }
+
+  /** GET /api/host/hostels/:id/meal_confirmations — tenant meal opt-ins, filterable by date and meal type. */
+  mealConfirmations(
+    hostelId: string,
+    filters: { mealType?: string; date?: string } = {},
+  ): Observable<{ items: MealConfirmationRaw[]; total: number }> {
+    const params: Record<string, string> = { 'f[is_confirmed]': 'true' };
+    if (filters.mealType) params['f[meal_type]'] = filters.mealType;
+    if (filters.date) params['f[meal_date]'] = filters.date;
+    return this.api
+      .get<{ meal_confirmations: MealConfirmationRaw[]; pagination?: { total_count: number } }>(
+        `/api/host/hostels/${hostelId}/meal_confirmations`,
+        params,
+      )
+      .pipe(
+        map((r) => ({
+          items: r.meal_confirmations ?? [],
+          total: r.pagination?.total_count ?? r.meal_confirmations?.length ?? 0,
+        })),
+      );
   }
 }
 

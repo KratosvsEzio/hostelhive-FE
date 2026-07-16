@@ -1,0 +1,266 @@
+<app-dashboard-layout
+  label="Meal notifications"
+  backUrl=".."
+  [breadcrumbs]="[{ label: 'Mess', url: '..' }, { label: 'Notifications' }]"
+>
+  <div hhActions>
+    <button
+      hh-button
+      color="primary"
+      size="sm"
+      type="button"
+      [disabled]="settingsSaveState() === 'saving'"
+      (click)="saveSettings()"
+    >
+      @switch (settingsSaveState()) {
+        @case ('saving') {
+          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+        }
+        @case ('saved') {
+          <i class="ti ti-check" aria-hidden="true"></i>Saved
+        }
+        @case ('error') {
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>Failed
+        }
+        @default {
+          <i class="ti ti-device-floppy" aria-hidden="true"></i>Save settings
+        }
+      }
+    </button>
+  </div>
+
+  <main class="mx-auto max-w-3xl space-y-5">
+
+    <!-- Info banner -->
+    <div class="flex items-start gap-3 rounded-2xl border border-brand-100 bg-tint-cream px-5 py-4">
+      <i class="ti ti-info-circle mt-0.5 text-lg text-brand-600" aria-hidden="true"></i>
+      <p class="text-sm text-ink-600">
+        Plan the week's menu so students know what's on offer before they confirm.
+        Configure <span class="font-medium text-ink-800">notification timing</span> below to control
+        when and how the daily reminder goes out.
+      </p>
+    </div>
+
+    <!-- ─── Weekly Menu Planner ─────────────────────────────────────────── -->
+    <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+
+      <!-- Card header -->
+      <div class="border-b border-ink-100 px-5 py-4">
+        <p class="font-display font-semibold text-ink-900">Weekly menu</p>
+        <p class="mt-0.5 text-xs text-ink-400">
+          Select a day and fill in the meals — students see today's in their opt-in message.
+        </p>
+      </div>
+
+      <!-- Day selector strip -->
+      <div class="flex overflow-x-auto no-scrollbar border-b border-ink-100">
+        @for (day of days; track $index; let i = $index) {
+          <button
+            type="button"
+            (click)="selectedDay.set(i)"
+            [attr.aria-label]="day.full + (todayIndex === i ? ' (today)' : '')"
+            class="relative flex min-w-[calc(100%/7)] flex-1 flex-col items-center gap-1.5 px-2 py-3 text-xs transition focus-visible:outline-none"
+            [class]="selectedDay() === i
+              ? 'border-b-2 border-brand-500 font-semibold text-brand-600 -mb-px'
+              : 'border-b-2 border-transparent font-medium text-ink-500 hover:bg-surface hover:text-ink-700 -mb-px'"
+          >
+            <span class="flex items-center gap-1">
+              {{ day.short }}
+              @if (todayIndex === i) {
+                <span class="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true"></span>
+              }
+            </span>
+            <span class="flex gap-0.5" aria-hidden="true">
+              @for (meal of mealOrder; track meal) {
+                <span
+                  class="h-1 w-3 rounded-sm transition-colors"
+                  [class]="getWeeklyMenu(i, meal) ? 'bg-brand-300' : 'bg-ink-100'"
+                ></span>
+              }
+            </span>
+          </button>
+        }
+      </div>
+
+      <!-- Meal inputs for the selected day -->
+      <div class="p-5">
+        @if (todayIndex === selectedDay()) {
+          <p class="mb-4 flex items-center gap-1.5 text-xs font-medium text-brand-600">
+            <i class="ti ti-calendar-event" aria-hidden="true"></i>
+            Today — this menu appears in today's student notifications
+          </p>
+        } @else {
+          <p class="mb-4 text-xs font-medium text-ink-500">{{ days[selectedDay()].full }}</p>
+        }
+
+        <div class="space-y-3">
+          @for (meal of mealOrder; track meal) {
+            <div class="flex items-center gap-3">
+              <span
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-600"
+                [class]="mealMeta[meal].tint"
+              >
+                <i class="ti text-xl" [class]="mealMeta[meal].icon" aria-hidden="true"></i>
+              </span>
+              <div class="flex-1">
+                <hh-input
+                  [label]="mealMeta[meal].label"
+                  [placeholder]="mealPlaceholders[meal]"
+                  [value]="getWeeklyMenu(selectedDay(), meal)"
+                  (valueChange)="setWeeklyMenu(selectedDay(), meal, $event)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Save menu footer -->
+      <div class="flex justify-end border-t border-ink-100 px-5 py-3">
+        <button
+          hh-button
+          color="primary"
+          size="sm"
+          type="button"
+          [disabled]="menuSaveState() === 'saving'"
+          (click)="saveMenu()"
+        >
+          @switch (menuSaveState()) {
+            @case ('saving') {
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+            }
+            @case ('saved') {
+              <i class="ti ti-check" aria-hidden="true"></i>Saved
+            }
+            @case ('error') {
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>Failed
+            }
+            @default {
+              <i class="ti ti-device-floppy" aria-hidden="true"></i>Save menu
+            }
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Delivery channels hidden until BE support is ready -->
+
+    <!-- ─── Per-meal notification settings ─────────────────────────────── -->
+    @for (meal of mealOrder; track meal) {
+      @let cfg = svc.settings().meals[meal];
+      @let meta = mealMeta[meal];
+
+      <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-4">
+          <div class="flex items-center gap-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-600" [class]="meta.tint">
+              <i class="ti text-xl" [class]="meta.icon" aria-hidden="true"></i>
+            </span>
+            <div>
+              <p class="font-display font-semibold text-ink-900">{{ meta.label }}</p>
+              <p class="text-xs text-ink-400">
+                @if (cfg.enabled) {
+                  Sends {{ sendTimeLabel(meal) }} · closes {{ deadlines()[meal] }}
+                } @else {
+                  Notifications off
+                }
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <hh-toggle [checked]="cfg.enabled" (checkedChange)="setEnabled(meal, $event)" />
+          </div>
+        </div>
+
+        @if (cfg.enabled) {
+          <div class="grid gap-4 p-5 sm:grid-cols-2">
+
+            <!-- Meal time -->
+            <div>
+              <label class="mb-1 block text-xs font-medium text-ink-600">Meal time</label>
+              <input
+                type="time"
+                class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-800 outline-none focus:border-brand-400"
+                [value]="cfg.mealTime"
+                (input)="setMealTime(meal, $any($event.target).value)"
+              />
+            </div>
+
+            <!-- Notify before meal -->
+            <div>
+              <label class="mb-1 block text-xs font-medium text-ink-600">Notify before meal</label>
+              <hh-dropdown
+                variant="field"
+                [options]="notifyBeforeOptions"
+                [value]="cfg.notifyBefore.toString()"
+                (valueChange)="setNotifyBefore(meal, $event)"
+              />
+              @if (leadTimeInvalid(meal)) {
+                <p class="mt-1.5 flex items-center gap-1 text-xs text-danger">
+                  <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                  Must notify at least 4 hours before the meal time.
+                </p>
+              }
+            </div>
+
+            <!-- Confirmation window -->
+            <div class="sm:col-span-2">
+              <label class="mb-1 block text-xs font-medium text-ink-600">Confirmation window</label>
+              <hh-dropdown
+                variant="field"
+                [options]="windowOptionsFor(meal)"
+                [value]="cfg.windowMinutes.toString()"
+                (valueChange)="setWindow(meal, $event)"
+              />
+              <p class="mt-1 text-xs text-ink-400">
+                Max {{ cfg.notifyBefore }} hour{{ cfg.notifyBefore === 1 ? '' : 's' }} — window cannot extend past meal time.
+              </p>
+            </div>
+
+            <!-- Derived timing summary -->
+            <div class="sm:col-span-2 overflow-hidden rounded-xl bg-surface">
+              <div class="flex items-center justify-between px-4 py-2.5">
+                <span class="flex items-center gap-2 text-xs text-ink-500">
+                  <i class="ti ti-send text-ink-400" aria-hidden="true"></i>
+                  Notification fires at
+                </span>
+                <span class="text-xs font-semibold text-ink-800">{{ sendTimeLabel(meal) }}</span>
+              </div>
+              <div class="flex items-center justify-between border-t border-ink-100 px-4 py-2.5">
+                <span class="flex items-center gap-2 text-xs text-ink-500">
+                  <i class="ti ti-clock text-ink-400" aria-hidden="true"></i>
+                  Confirmations close at
+                </span>
+                <span class="text-xs font-semibold text-ink-800">{{ deadlines()[meal] }}</span>
+              </div>
+            </div>
+
+            <!-- Message preview -->
+            <div class="sm:col-span-2">
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Student message preview</p>
+              <div class="max-w-sm rounded-2xl rounded-tl-sm bg-tint-mint p-3.5 text-sm text-ink-800 shadow-sm">
+                <p class="font-semibold">🍽️ HostelHive Mess · {{ meta.label }}</p>
+                <p class="mt-1">
+                  {{ nightBefore(meal) ? "Tomorrow's" : "Today's" }} {{ meta.label.toLowerCase() }}:
+                  <span class="font-medium">{{ todayMenu(meal) || '—' }}</span>
+                </p>
+                <p class="mt-1 text-ink-600">
+                  Tap to reserve your portion before {{ deadlines()[meal] }}{{ nightBefore(meal) ? ' tomorrow' : '' }}.
+                </p>
+                <div class="mt-2.5 rounded-lg bg-white px-3 py-2 text-center font-semibold text-brand-600">
+                  Confirm my {{ meta.label }} →
+                </div>
+              </div>
+              <button hh-button variant="text" size="sm" class="mt-2" (click)="openTest(meal)">
+                <i class="ti ti-external-link" aria-hidden="true"></i>Preview student link
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+
+</main>
+</app-dashboard-layout>

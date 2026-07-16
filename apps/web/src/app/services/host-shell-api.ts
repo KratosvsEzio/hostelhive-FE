@@ -81,6 +81,15 @@ export class HostShellApi {
   removeManager(hostelId: string, managerId: string): Observable<unknown> {
     return this.api.put(`/api/hostels/${hostelId}/remove_manager`, { manager_id: managerId });
   }
+
+  /** Update a manager's name and phone. */
+  updateManager(
+    hostelId: string,
+    managerId: string,
+    user: { name?: string; phone?: string },
+  ): Observable<unknown> {
+    return this.api.patch(`/api/hostels/${hostelId}/managers/${managerId}`, { user });
+  }
 }
 
 // ── managers ───────────────────────────────────────────────────────────────────
