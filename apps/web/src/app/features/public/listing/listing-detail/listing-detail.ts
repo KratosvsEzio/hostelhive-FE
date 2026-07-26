@@ -110,6 +110,9 @@ export class ListingDetail {
   });
 
   protected toggleSaved(): void {
+    // Saving hits the authenticated favourites API — firing it signed-out returns 401.
+    // Gate on the session and surface the same sign-in modal the phone/WhatsApp actions use.
+    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
     const listing = this.state().data;
     if (listing) this.favorites.toggle(listing);
   }

@@ -38,13 +38,13 @@ Confirm during each ticket's `/implement` run.
 |---|---|---|---|
 | [B1](#b1) | Fix the pill of gender on card | `FE` | OPEN |
 | [B2](#b2) | Click on login, it takes to sign up page | `FE` | **RESOLVED** |
-| [B3](#b3) | Favorite button issue — 401 when signed out | `FE` | OPEN |
+| [B3](#b3) | Favorite button issue — 401 when signed out | `FE` | **RESOLVED** |
 | [B4](#b4) | Save and exit button doesn't work; logo should link home | `FE` | **RESOLVED** |
 | [B5](#b5) | Avatar dropdown should close on outside click | `FE` | **RESOLVED** |
 | [B6](#b6) | New-hostel photo upload — 10-image cap not enforced, images not uploading | `FE` | **RESOLVED** |
 | [B7](#b7) | Room type selectable once only; `$` → PKR with commas | `FE` | **RESOLVED** |
 | [B8](#b8) | Show the exact error (toast/alert) | `FE` | **RESOLVED** |
-| [B9](#b9) | Tenant status should update without reload; "Inactive" ≠ "Checkout" | `FE` | OPEN |
+| [B9](#b9) | Tenant status should update without reload; "Inactive" ≠ "Checkout" | `FE` | **RESOLVED** |
 | [B10](#b10) | Emptying leave date in renters form doesn't send nil | `NEEDS-INFO` | **RESOLVED** |
 | [B11](#b11) | Search not working — wrong query param | `FE` | **RESOLVED** |
 
@@ -130,7 +130,7 @@ tab active, "Welcome back", no Register-only fields.
 ### Favorite Button Issue
 - **Card:** https://trello.com/c/WoKbiLTn
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
 
 **Description (from card):**
@@ -142,6 +142,20 @@ tab active, "Welcome back", no Register-only fields.
 
 **Notes:** Guard the favourite action on auth state and open the sign-in modal
 instead of firing the request. Has clear repro steps.
+
+**Resolution.** `toggleSaved()` in the listing-detail page had no auth guard, so a
+signed-out click fell straight through to `FavoritesStore.toggle()`, which hits the
+authenticated favourites API → 401. The two sibling actions on the same page
+(`openModal()` / `openWhatsApp()`) already gated on `session.isAuthenticated()` and
+opened the same `loginGateOpen` sign-in modal. Added the identical three-line guard
+to `toggleSaved()`: when unauthenticated it opens the sign-in gate and returns early,
+so the favourites request never fires.
+
+Verified live in the browser: while signed out, clicking **Favorite** opens the
+"Sign in to contact" gate modal with **no** favourites network request (no 401);
+while authenticated the toggle proceeds normally with no gate.
+
+Files: `apps/web/src/app/features/public/listing/listing-detail/listing-detail.ts`
 
 ---
 
@@ -333,7 +347,7 @@ API's actual message through it rather than a generic string.
 ### The active or inactive should reflect without reloading. also checkout is not a status
 - **Card:** https://trello.com/c/K1kasrV7
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
 
 **Description (from card):**
@@ -344,6 +358,33 @@ API's actual message through it rather than a generic string.
 
 **Notes:** Optimistic/local update on 200 + drop the client-side `Inactive → Checkout`
 relabel; render the API's status verbatim.
+
+**Resolution.** Two intertwined defects:
+
+1. **Mislabel.** The status column collapsed everything non-`active` to
+   "Checked-out"/neutral, so an `inactive` tenant read as "Checked-out" — a status the
+   backend doesn't even have. Replaced the branch with verbatim `STATUS_LABEL` /
+   `STATUS_TONE` maps keyed on the API's `TenantStatus` (`active`→"Active"/ok,
+   `inactive`→"Inactive"/neutral, `on-notice`→"On notice"/warn,
+   `checked-out`→"Checked-out"/neutral); unknown slugs fall through to the raw value
+   + neutral tone. Covered by 3 new unit tests.
+
+2. **Phantom action + no live update.** A "Check out" menu action set a client-only
+   `checked-out` status locally and never called the API; the real Inactivate/Activate
+   actions triggered a full refetch. Removed the phantom "Check out" action entirely
+   (per product decision), and rewired `setInactive`/`setActive` to write the new
+   status through the list's existing `local` overlay on the API's 200 response — the
+   pill flips instantly, no reload.
+
+Verified live: all statuses render verbatim ("Active" pill shown), and the row action
+menu now offers only View profile / Edit tenant / Inactivate — no "Check out".
+(The optimistic-flip-on-200 path is unit-covered; it couldn't be exercised end-to-end
+in the browser because the host session's token expired mid-test — the PATCH 401'd, so
+no tenant data was mutated.)
+
+Files: `apps/web/src/app/util/table-configs/tenants-table-cols.ts`,
+`apps/web/src/app/util/table-configs/tenants-table-cols.spec.ts` (new),
+`apps/web/src/app/features/host/tenants/tenants.{ts,html}`
 
 ---
 

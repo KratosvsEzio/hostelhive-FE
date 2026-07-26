@@ -35,7 +35,7 @@ import {
 } from '@hostelhive/ui';
 
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { Tenant } from '@hostelhive/data-access';
+import { Tenant, TenantStatus } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -229,7 +229,7 @@ export class Tenants {
     if (!hostelId || !dispositionId) return;
     this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.refresh.update((n) => n + 1) });
+      .subscribe({ next: () => this.applyStatus(t.id, 'inactive') });
   }
 
   protected setActive(t: Tenant): void {
@@ -239,7 +239,17 @@ export class Tenants {
     if (!hostelId || !dispositionId) return;
     this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.refresh.update((n) => n + 1) });
+      .subscribe({ next: () => this.applyStatus(t.id, 'active') });
+  }
+
+  /**
+   * Reflect a status change in the table the moment the API confirms it (200), without a
+   * full refetch/reload (B9). Writes through the same `local` overlay the list already
+   * uses, so the pill flips instantly and stays consistent until the next real fetch.
+   */
+  private applyStatus(id: string, status: TenantStatus): void {
+    const current = this.state().data ?? [];
+    this.local.set(current.map((x) => (x.id === id ? { ...x, status } : x)));
   }
 
   protected onTenantAction(ev: { row: unknown; event: MouseEvent }): void {
@@ -312,18 +322,6 @@ export class Tenants {
   protected closeMenu(): void {
     this.menuOpenId.set(null);
     this.menuPos.set(null);
-  }
-
-  protected checkOut(t: Tenant): void {
-    this.closeMenu();
-    const current = this.state().data ?? [];
-    this.local.set(
-      current.map((x) =>
-        x.id === t.id
-          ? { ...x, status: 'checked-out', checkedOut: new Date().toISOString().slice(0, 10) }
-          : x,
-      ),
-    );
   }
 
   protected goToProfile(t: Tenant): void {
