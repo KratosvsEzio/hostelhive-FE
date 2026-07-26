@@ -15,21 +15,25 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
 import { AttachmentLabel, HostelInput, OfferCategory } from '@hostelhive/data-access';
-import { HostelsApi, OffersApi } from '@services';
+import { HostelsApi, ImageUploadService, OffersApi } from '@services';
 import {
+  ACCEPT_ATTR,
   Button,
   Card,
   ConfirmModal,
   Dropdown,
   DropdownOption,
   Input,
+  MAX_PHOTOS,
   PhoneInput,
   PhotoGrid,
   PhotoGridPhoto,
   RichText,
+  imageFormatLabel,
 } from '@hostelhive/ui';
 import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/maps';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 
 type GenderType = 'boys' | 'girls' | 'co-living';
 
@@ -38,7 +42,10 @@ interface MediaItem {
   label: string;
   primary: boolean;
   url?: string;
-  file?: File;
+  /** Short format name, shown when the browser can't decode the local preview. */
+  format?: string;
+  /** Set once the file has landed on S3 — this is what links the photo to the hostel. */
+  attachmentId?: string;
 }
 
 interface RoomEntry {
@@ -46,10 +53,6 @@ interface RoomEntry {
   type: string;
   capacity: number;
   price: number;
-}
-
-function isValidImage(f: File): boolean {
-  return (f.type === 'image/png' || f.type === 'image/jpeg') && f.size <= 10 * 1024 * 1024;
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -90,6 +93,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 export class NewHostel {
   private readonly hostels = inject(HostelsApi);
   private readonly offersApi = inject(OffersApi);
+  private readonly imageUpload = inject(ImageUploadService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -107,6 +111,7 @@ export class NewHostel {
     { value: 'co-living', label: 'Co-living' },
   ];
   protected readonly cityTypes = ['(cities)'];
+  protected readonly acceptAttr = ACCEPT_ATTR;
 
   private readonly hostFormOptions = toSignal(
     this.hostels.formOptions().pipe(
@@ -152,11 +157,21 @@ export class NewHostel {
   private readonly replaceTarget = signal<MediaItem | null>(null);
   protected readonly uploadError = signal<string | null>(null);
   protected readonly photoLabelMap = signal<Map<string, string | null>>(new Map());
+  /** Card id → upload progress 0–100 while its file is still in flight. */
+  private readonly uploadingPhotos = signal<Map<string, number>>(new Map());
+  protected readonly uploading = computed(() => this.uploadingPhotos().size > 0);
+  protected readonly atPhotoLimit = computed(() => this.media().length >= MAX_PHOTOS);
 
   protected readonly photoGridItems = computed<PhotoGridPhoto[]>(() =>
     this.media()
       .filter((m) => !!m.url)
-      .map((m) => ({ id: String(m.id), url: m.url!, primary: m.primary })),
+      .map((m) => ({
+        id: String(m.id),
+        url: m.url!,
+        primary: m.primary,
+        format: m.format,
+        uploadProgress: this.uploadingPhotos().get(String(m.id)),
+      })),
   );
 
   // ── room types ──
@@ -251,32 +266,86 @@ export class NewHostel {
     const target = this.replaceTarget();
     this.replaceTarget.set(null);
     if (!files.length) return;
-    this.uploadError.set(null);
+    const { accepted, error } = target
+      ? screenReplacementPhoto(files[0])
+      : screenPickedPhotos(files, this.media().length);
+    this.uploadError.set(error);
+    for (const file of accepted) this.uploadOneFile(file, target);
+  }
+
+  private setPhotoProgress(id: string, percent: number): void {
+    this.uploadingPhotos.update((m) => new Map(m).set(id, percent));
+  }
+  private clearPhotoProgress(id: string): void {
+    this.uploadingPhotos.update((m) => {
+      const n = new Map(m);
+      n.delete(id);
+      return n;
+    });
+  }
+
+  private uploadOneFile(file: File, target: MediaItem | null): void {
+    const previewUrl = URL.createObjectURL(file);
+    const format = imageFormatLabel(file);
+    const cardId = target ? target.id : ++this.mediaId;
     if (target) {
-      const file = files[0];
-      if (!isValidImage(file)) {
-        this.uploadError.set('Only PNG/JPG images under 10 MB are allowed.');
-        return;
-      }
-      if (target.url?.startsWith('blob:')) URL.revokeObjectURL(target.url);
+      // The old preview stays alive until the replacement lands, so a failure can roll back to it.
       this.media.update((items) =>
         items.map((m) =>
-          m.id === target.id ? { ...m, url: URL.createObjectURL(file), file, label: file.name } : m,
+          m.id === target.id
+            ? { ...m, url: previewUrl, format, label: file.name, attachmentId: undefined }
+            : m,
         ),
       );
     } else {
-      const valid = files.filter(isValidImage);
-      if (!valid.length) return;
       this.media.update((items) => {
-        const next = [...items];
-        for (const file of valid) {
-          next.push({ id: ++this.mediaId, label: file.name, primary: false, url: URL.createObjectURL(file), file });
-        }
+        const next = [
+          ...items,
+          { id: cardId, label: file.name, primary: false, url: previewUrl, format },
+        ];
         if (!next.some((m) => m.primary)) next[0] = { ...next[0], primary: true };
         return next;
       });
     }
+    const trackingId = String(cardId);
+    this.setPhotoProgress(trackingId, 0);
+    this.imageUpload
+      .upload('attachments', file, (percent) => this.setPhotoProgress(trackingId, percent))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ id: attachmentId }) => {
+          this.clearPhotoProgress(trackingId);
+          this.media.update((items) =>
+            items.map((m) => (m.id === cardId ? { ...m, attachmentId } : m)),
+          );
+          if (target?.url?.startsWith('blob:')) URL.revokeObjectURL(target.url);
+        },
+        error: () => {
+          this.clearPhotoProgress(trackingId);
+          this.uploadError.set('Upload failed — please try again.');
+          URL.revokeObjectURL(previewUrl);
+          if (target) this.restoreCard(target);
+          else this.dropCard(cardId);
+        },
+      });
   }
+
+  /** Puts a card back the way it was before a replacement upload failed. */
+  private restoreCard(previous: MediaItem): void {
+    this.media.update((items) =>
+      items.map((m) => (m.id === previous.id ? { ...previous } : m)),
+    );
+  }
+
+  /** Removes only the failed card, leaving sibling uploads and their previews alone. */
+  private dropCard(cardId: number): void {
+    this.media.update((items) => {
+      const next = items.filter((m) => m.id !== cardId);
+      if (next.length && !next.some((m) => m.primary)) next[0] = { ...next[0], primary: true };
+      return next;
+    });
+  }
+
   protected setPrimary(item: MediaItem): void {
     this.media.update((items) => items.map((m) => ({ ...m, primary: m.id === item.id })));
   }
@@ -358,9 +427,13 @@ export class NewHostel {
       this.showValidationModal.set(true);
       return;
     }
-    if (this.saving()) return;
+    if (this.saving() || this.uploading()) return;
     this.saving.set(true);
     this.apiErrors.set([]);
+    const attachmentIds = this.media()
+      .map((m) => m.attachmentId)
+      .filter((id): id is string => !!id);
+    const bannerId = this.media().find((m) => m.primary)?.attachmentId;
     const payload: HostelInput = {
       name: this.name().trim(),
       description: this.description() || undefined,
@@ -382,6 +455,9 @@ export class NewHostel {
         capacity: r.capacity,
         price: r.price,
       })),
+      ...(attachmentIds.length ? { attachment_ids: attachmentIds } : {}),
+      // Attachment ids can be UUID strings while the field is typed as a number.
+      ...(bannerId ? { banner_id: bannerId as unknown as number } : {}),
     };
     this.hostels
       .create(payload)

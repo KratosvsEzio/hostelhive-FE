@@ -16,9 +16,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AttachmentLabel, HostelInput, OfferCategory } from '@hostelhive/data-access';
-import { HostelsApi, OffersApi } from '@services';
+import { HostelsApi, ImageUploadService, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import {
+  ACCEPT_ATTR,
   BadgeVariant,
   Button,
   Card,
@@ -26,16 +27,19 @@ import {
   Dropdown,
   DropdownOption,
   Input,
+  MAX_PHOTOS,
   PhoneInput,
   PhotoGrid,
   PhotoGridPhoto,
   RichText,
+  imageFormatLabel,
 } from '@hostelhive/ui';
 import {
   LocationPicker,
   PickedLocation,
   PlaceSearchField,
 } from '@hostelhive/maps';
+import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 
 type GenderType = 'boys' | 'girls' | 'co-living';
 
@@ -44,8 +48,20 @@ interface MediaItem {
   label: string;
   primary: boolean;
   tint?: string; // placeholder colour for legacy seed tiles; real photos use `url` instead
-  url?: string; // object URL for the selected image preview (session-only — not uploaded yet)
-  file?: File; // the picked File, kept for a future upload to the backend
+  url?: string; // blob: preview while the session lasts, then the CDN url once uploaded
+  /** Short format name, shown when the browser can't decode the local preview. */
+  format?: string;
+  /** Set once the file has landed on S3 — this is what links the photo to the hostel. */
+  attachmentId?: string;
+}
+
+/** The subset of a MediaItem that survives a reload — never a File, a data URL or a blob: URL. */
+interface PersistedMediaItem {
+  id: number;
+  url: string;
+  attachmentId: string;
+  primary: boolean;
+  label: string;
 }
 
 interface Room {
@@ -69,7 +85,9 @@ interface OnboardingDraft {
   country: string;
   street: string;
   landmarks: string;
-  media: MediaItem[];
+  media: PersistedMediaItem[];
+  /** Attachment ids already linked server-side — never resent, since the API appends. */
+  linkedAttachmentIds: string[];
   amenities: string[];
   rooms: Room[];
   newRoomType: string;
@@ -82,8 +100,18 @@ interface OnboardingDraft {
 
 const DRAFT_KEY = 'hh:onboarding:draft';
 
-function isValidImage(f: File): boolean {
-  return (f.type === 'image/png' || f.type === 'image/jpeg') && f.size <= 10 * 1024 * 1024;
+/** A saved photo is only worth restoring when it has a live url and the id that links it. */
+function isRestorableMedia(m: Partial<PersistedMediaItem>): m is PersistedMediaItem {
+  return (
+    typeof m?.id === 'number' &&
+    typeof m.url === 'string' &&
+    !!m.url &&
+    !m.url.startsWith('blob:') &&
+    typeof m.attachmentId === 'string' &&
+    !!m.attachmentId &&
+    typeof m.primary === 'boolean' &&
+    typeof m.label === 'string'
+  );
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -150,6 +178,7 @@ export class OnboardingWizard {
   ];
   /** Google Places autocomplete restricted to cities, for the Basic-info City field. */
   protected readonly cityTypes = ['(cities)'];
+  protected readonly acceptAttr = ACCEPT_ATTR;
 
   // --- Wizard position ---
   protected readonly step = signal(0);
@@ -177,6 +206,13 @@ export class OnboardingWizard {
   protected readonly uploadError = signal<string | null>(null);
   /** Per-photo label selection: photo id (string) → label id as string (for dropdown binding). */
   protected readonly photoLabelMap = signal<Map<string, string | null>>(new Map());
+  /** Card id → upload progress 0–100 while its file is still in flight. */
+  private readonly uploadingPhotos = signal<Map<string, number>>(new Map());
+  protected readonly uploading = computed(() => this.uploadingPhotos().size > 0);
+  protected readonly atPhotoLimit = computed(() => this.media().length >= MAX_PHOTOS);
+  /** Attachment ids the backend has already linked — the API appends, so they must not be resent. */
+  private readonly linkedAttachmentIds = signal<Set<string>>(new Set());
+  private readonly imageUpload = inject(ImageUploadService);
 
   private readonly hostFormOptions = toSignal(
     inject(HostelsApi).formOptions().pipe(
@@ -195,7 +231,13 @@ export class OnboardingWizard {
   protected readonly photoGridItems = computed<PhotoGridPhoto[]>(() =>
     this.media()
       .filter((m) => !!m.url)
-      .map((m) => ({ id: String(m.id), url: m.url!, primary: m.primary })),
+      .map((m) => ({
+        id: String(m.id),
+        url: m.url!,
+        primary: m.primary,
+        format: m.format,
+        uploadProgress: this.uploadingPhotos().get(String(m.id)),
+      })),
   );
 
   protected findMedia(id: string): MediaItem | undefined {
@@ -351,7 +393,8 @@ export class OnboardingWizard {
         country: this.country(),
         street: this.street(),
         landmarks: this.landmarks(),
-        media: this.media(),
+        media: this.persistableMedia(),
+        linkedAttachmentIds: [...this.linkedAttachmentIds()],
         amenities: this.selectedAmenities(),
         rooms: this.rooms(),
         newRoomType: this.newRoomType(),
@@ -408,41 +451,107 @@ export class OnboardingWizard {
     const target = this.replaceTarget();
     this.replaceTarget.set(null);
     if (!files.length) return;
-    this.uploadError.set(null);
+    const { accepted, error } = target
+      ? screenReplacementPhoto(files[0])
+      : screenPickedPhotos(files, this.media().length);
+    this.uploadError.set(error);
+    for (const file of accepted) this.uploadOneFile(file, target);
+  }
 
+  private setPhotoProgress(id: string, percent: number): void {
+    this.uploadingPhotos.update((m) => new Map(m).set(id, percent));
+  }
+
+  private clearPhotoProgress(id: string): void {
+    this.uploadingPhotos.update((m) => {
+      const n = new Map(m);
+      n.delete(id);
+      return n;
+    });
+  }
+
+  private uploadOneFile(file: File, target: MediaItem | null): void {
+    const previewUrl = URL.createObjectURL(file);
+    const format = imageFormatLabel(file);
+    const cardId = target ? target.id : ++this.mediaId;
     if (target) {
-      const file = files[0];
-      if (!isValidImage(file)) {
-        this.uploadError.set('Only PNG/JPG images under 10 MB are allowed.');
-        return;
-      }
-      if (target.url?.startsWith('blob:')) URL.revokeObjectURL(target.url);
-      const newUrl = URL.createObjectURL(file);
+      // The old preview stays alive until the replacement lands, so a failure can roll back to it.
       this.media.update((items) =>
         items.map((m) =>
-          m.id === target.id ? { ...m, url: newUrl, file, label: file.name } : m,
+          m.id === target.id
+            ? { ...m, url: previewUrl, format, label: file.name, attachmentId: undefined }
+            : m,
         ),
       );
     } else {
-      this.addFiles(files);
+      this.media.update((items) => {
+        const next = [
+          ...items,
+          { id: cardId, label: file.name, primary: false, url: previewUrl, format },
+        ];
+        if (!next.some((m) => m.primary)) next[0] = { ...next[0], primary: true };
+        return next;
+      });
     }
+    const trackingId = String(cardId);
+    this.setPhotoProgress(trackingId, 0);
+    this.imageUpload
+      .upload('attachments', file, (percent) => this.setPhotoProgress(trackingId, percent))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ id: attachmentId, url }) => {
+          this.clearPhotoProgress(trackingId);
+          // Swap the blob preview for the CDN url so the card survives a reload.
+          this.media.update((items) =>
+            items.map((m) =>
+              m.id === cardId ? { ...m, attachmentId, url: url || m.url } : m,
+            ),
+          );
+          if (url) URL.revokeObjectURL(previewUrl);
+          if (target?.url?.startsWith('blob:')) URL.revokeObjectURL(target.url);
+        },
+        error: () => {
+          this.clearPhotoProgress(trackingId);
+          this.uploadError.set('Upload failed — please try again.');
+          URL.revokeObjectURL(previewUrl);
+          if (target) this.restoreCard(target);
+          else this.dropCard(cardId);
+        },
+      });
   }
 
-  private addFiles(files: File[]): void {
-    const valid = files.filter(isValidImage);
-    if (!valid.length) return;
+  /** Puts a card back the way it was before a replacement upload failed. */
+  private restoreCard(previous: MediaItem): void {
+    this.media.update((items) =>
+      items.map((m) => (m.id === previous.id ? { ...previous } : m)),
+    );
+  }
+
+  /**
+   * The draft-safe projection of the current media list. Built field by field so a
+   * `File` or a session-only `blob:` preview can never leak into localStorage.
+   */
+  private persistableMedia(): PersistedMediaItem[] {
+    const out: PersistedMediaItem[] = [];
+    for (const m of this.media()) {
+      if (!m.url || m.url.startsWith('blob:') || !m.attachmentId) continue;
+      out.push({
+        id: m.id,
+        url: m.url,
+        attachmentId: m.attachmentId,
+        primary: m.primary,
+        label: m.label,
+      });
+    }
+    return out.slice(0, MAX_PHOTOS);
+  }
+
+  /** Removes only the failed card, leaving sibling uploads and their previews alone. */
+  private dropCard(cardId: number): void {
     this.media.update((items) => {
-      const next = [...items];
-      for (const file of valid) {
-        next.push({
-          id: ++this.mediaId,
-          label: file.name,
-          primary: false,
-          url: URL.createObjectURL(file),
-          file,
-        });
-      }
-      if (!next.some((m) => m.primary)) next[0] = { ...next[0], primary: true };
+      const next = items.filter((m) => m.id !== cardId);
+      if (next.length && !next.some((m) => m.primary))
+        next[0] = { ...next[0], primary: true };
       return next;
     });
   }
@@ -496,12 +605,13 @@ export class OnboardingWizard {
       this.showValidationModal.set(true);
       return;
     }
-    if (this.draftSaving()) return;
+    if (this.draftSaving() || this.uploading()) return;
     this.draftSaving.set(true);
     this.draftSaved.set(false);
     this.draftError.set(false);
     this.apiErrors.set([]);
     const id = this.draftId();
+    const flushedIds = this.unlinkedAttachmentIds();
     const input = this.buildSubmitInput();
     (id ? this.hostelsApi.update(id, input) : this.hostelsApi.create(input))
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -509,6 +619,7 @@ export class OnboardingWizard {
         next: (hostel) => {
           const isNew = hostel.id != null && !this.draftId();
           if (isNew) this.draftId.set(hostel.id);
+          this.markAttachmentsLinked(flushedIds);
           this.draftSaving.set(false);
           this.draftSaved.set(true);
           // After creating a hostel (not updating), the backend grants the host role.
@@ -583,7 +694,26 @@ export class OnboardingWizard {
     return this.selectedAmenities().includes(id);
   }
 
+  /** Uploaded attachment ids the backend has not linked yet — `attachment_ids` appends. */
+  private unlinkedAttachmentIds(): string[] {
+    const linked = this.linkedAttachmentIds();
+    return this.media()
+      .map((m) => m.attachmentId)
+      .filter((attachmentId): attachmentId is string => !!attachmentId && !linked.has(attachmentId));
+  }
+
+  private markAttachmentsLinked(ids: string[]): void {
+    if (!ids.length) return;
+    this.linkedAttachmentIds.update((s) => {
+      const next = new Set(s);
+      for (const id of ids) next.add(id);
+      return next;
+    });
+  }
+
   private buildDraftInput(): HostelInput {
+    const attachmentIds = this.unlinkedAttachmentIds();
+    const bannerId = this.media().find((m) => m.primary)?.attachmentId;
     return {
       name: this.name() || undefined,
       description: this.description() || undefined,
@@ -601,6 +731,9 @@ export class OnboardingWizard {
       primary_phone: this.phone() || undefined,
       total_rooms: this.rooms().length || 1,
       total_floors: 1,
+      ...(attachmentIds.length ? { attachment_ids: attachmentIds } : {}),
+      // Attachment ids can be UUID strings while the field is typed as a number.
+      ...(bannerId ? { banner_id: bannerId as unknown as number } : {}),
     };
   }
 
@@ -646,13 +779,27 @@ export class OnboardingWizard {
       if (typeof d.street === 'string') this.street.set(d.street);
       if (typeof d.landmarks === 'string') this.landmarks.set(d.landmarks);
       if (Array.isArray(d.media)) {
-        // Restore only real, persisted photos: drop the legacy placeholder seeds (no url) and
-        // the dead blob: previews (object URLs don't survive a reload). No host-uploaded URLs
-        // exist yet, so this also clears any default cards left in an older saved draft.
+        // Keep only photos that actually reached S3: a CDN url plus the attachment id that links
+        // them. Legacy placeholder seeds (no url) and dead blob: previews are dropped.
+        const saved = d.media as Partial<PersistedMediaItem>[];
         this.media.set(
-          d.media.filter((m) => !!m.url && !m.url.startsWith('blob:')),
+          saved
+            .filter(isRestorableMedia)
+            .slice(0, MAX_PHOTOS)
+            .map((m) => ({
+              id: m.id,
+              url: m.url,
+              attachmentId: m.attachmentId,
+              primary: m.primary,
+              label: m.label,
+            })),
         );
-        this.mediaId = d.media.reduce((max, m) => Math.max(max, m.id ?? 0), 0);
+        this.mediaId = saved.reduce((max, m) => Math.max(max, m?.id ?? 0), 0);
+      }
+      if (Array.isArray(d.linkedAttachmentIds)) {
+        this.linkedAttachmentIds.set(
+          new Set(d.linkedAttachmentIds.filter((v): v is string => typeof v === 'string')),
+        );
       }
       if (Array.isArray(d.rooms)) {
         // Drafts saved before one-row-per-type was enforced can hold duplicates; keep the first of each.
