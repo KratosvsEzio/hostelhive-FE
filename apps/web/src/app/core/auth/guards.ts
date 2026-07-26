@@ -18,7 +18,9 @@ export const authGuard: CanActivateFn = (_route, state: RouterStateSnapshot) => 
   const router = inject(Router);
   return session.isAuthenticated()
     ? true
-    : router.createUrlTree(['/auth'], { queryParams: { returnUrl: state.url } });
+    : router.createUrlTree(['/auth'], {
+        queryParams: { mode: 'login', returnUrl: state.url },
+      });
 };
 
 /** Requires one of the given roles. */
@@ -29,7 +31,7 @@ export function roleGuard(...roles: Role[]): CanActivateFn {
     const router = inject(Router);
     if (!session.isAuthenticated())
       return router.createUrlTree(['/auth'], {
-        queryParams: { returnUrl: state.url },
+        queryParams: { mode: 'login', returnUrl: state.url },
       });
     return session.hasRole(...roles)
       ? true
@@ -45,7 +47,7 @@ export function permissionGuard(flag: Permission): CanActivateFn {
     const router = inject(Router);
     if (!session.isAuthenticated())
       return router.createUrlTree(['/auth'], {
-        queryParams: { returnUrl: state.url },
+        queryParams: { mode: 'login', returnUrl: state.url },
       });
     return session.hasPermission(flag)
       ? true

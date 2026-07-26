@@ -41,11 +41,14 @@
             id="hh-lead-wall-title"
             class="font-display text-xl font-semibold text-ink-900"
           >
-            See verified contact details
+            {{ isRegister() ? 'See verified contact details' : 'Welcome back' }}
           </h2>
           <p class="mt-1 text-sm text-ink-500">
-            Create a free account to view phone numbers for every listing. It
-            takes 30 seconds.
+            {{
+              isRegister()
+                ? 'Create a free account to view phone numbers for every listing. It takes 30 seconds.'
+                : 'Log in to view verified phone numbers and manage your saved hostels.'
+            }}
           </p>
 
           <hh-tabs

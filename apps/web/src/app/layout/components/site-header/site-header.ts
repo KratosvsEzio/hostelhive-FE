@@ -103,6 +103,9 @@ export class SiteHeader {
 
   protected goToLogin(): void {
     this.loginPrompt.set(false);
-    void this.router.navigate(['/auth']);
+    // The prompt is only raised from the become-a-host CTA, so carry that intent through.
+    void this.router.navigate(['/auth'], {
+      queryParams: { mode: 'login', returnUrl: '/host/listings/new' },
+    });
   }
 }

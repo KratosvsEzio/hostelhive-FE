@@ -32,7 +32,14 @@
         </h1>
         <p class="mt-1 text-sm text-ink-500">{{ message() }}</p>
         <div class="mt-5 space-y-3">
-          <a hh-button color="primary" [routerLink]="['/auth']" class="w-full">Go to log in</a>
+          <a
+            hh-button
+            color="primary"
+            [routerLink]="['/auth']"
+            [queryParams]="{ mode: 'login' }"
+            class="w-full"
+            >Go to log in</a
+          >
           <a
             hh-button
             variant="text"
