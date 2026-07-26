@@ -215,7 +215,7 @@ export function toUpdateRenterPayload(f: CheckInForm): UpdateRenterPayload {
       : null,
     advance_deposit: Number(f.advanceDeposit),
     joining_date: f.joiningDate,
-    leave_date: f.leaveDate || undefined,
+    leave_date: f.leaveDate || null,
     rent: f.rent.trim(),
     address: f.address.trim(),
     billing_due_date: Number(f.billingDueDate),

@@ -121,7 +121,7 @@ export class Tenants {
         if (!hostelId)
           return of<ViewState>({ loading: false, error: false, subscriptionError: false, networkError: false, data: null, total: 0 });
         const filters: Record<string, string> = {};
-        if (search.trim()) filters['q'] = search.trim();
+        if (search.trim()) filters['s[full_name]'] = search.trim();
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
         return this.api.renters(hostelId, page, PAGE_SIZE, filters).pipe(
           map((res): ViewState => ({

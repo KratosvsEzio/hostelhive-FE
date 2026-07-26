@@ -188,6 +188,10 @@ describe('toUpdateRenterPayload', () => {
     expect(p.transportation_charges).toBeNull();
   });
 
+  it('sends an explicit null for a cleared leave date so the unset persists', () => {
+    expect(toUpdateRenterPayload(validForm({ leaveDate: '' })).leave_date).toBeNull();
+  });
+
   it('forwards the populated optionals', () => {
     const p = toUpdateRenterPayload(
       validForm({ roomId: 'r-9', messCharges: '3000', transportationCharges: '500' }),
