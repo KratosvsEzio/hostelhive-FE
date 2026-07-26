@@ -341,3 +341,12 @@
     />
   </div>
 }
+
+@if (editOpen()) {
+  <hh-tenant-form-drawer
+    mode="edit"
+    [tenantId]="state().tenant!.id"
+    (saved)="onDrawerSaved()"
+    (closed)="onDrawerClosed()"
+  />
+}
