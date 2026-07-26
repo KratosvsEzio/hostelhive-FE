@@ -23,6 +23,7 @@
         "styles": [
           "apps/web/src/styles.css",
           "apps/web/src/global.css",
+          "node_modules/leaflet/dist/leaflet.css",
           "node_modules/ngx-material-intl-tel-input/lib/assets/css/flags.css"
         ],
         "server": "apps/web/src/main.server.ts",
@@ -72,6 +73,7 @@
         "styles": [
           "apps/web/src/styles.css",
           "apps/web/src/global.css",
+          "node_modules/leaflet/dist/leaflet.css",
           "node_modules/ngx-material-intl-tel-input/lib/assets/css/flags.css"
         ],
         "outputHashing": "all",

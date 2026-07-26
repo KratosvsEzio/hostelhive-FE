@@ -11,6 +11,42 @@
 @import '@fontsource/poppins/800.css';
 @import '@tabler/icons-webfont/dist/tabler-icons.min.css';
 
+/* Filled icon glyphs. Tabler ships these in a second font whose stylesheet re-declares
+   `.ti` with `font-family: tabler-icons-filled !important` — importing it would turn
+   every icon in the app filled. So the font is declared here and mapped onto just the
+   `-filled` class names we use. Without this those classes match no rule at all and
+   render nothing, silently: `ti-heart-filled` (saved favourites) and `ti-star-filled`
+   (ratings) were both blank. Add a line here when a new filled icon is needed —
+   codepoints come from tabler-icons-filled.min.css. */
+@font-face {
+  font-family: 'tabler-icons-filled';
+  font-style: normal;
+  font-weight: 400;
+  src:
+    url('@tabler/icons-webfont/dist/fonts/tabler-icons-filled.woff2')
+      format('woff2'),
+    url('@tabler/icons-webfont/dist/fonts/tabler-icons-filled.ttf')
+      format('truetype');
+}
+.ti-star-filled,
+.ti-heart-filled,
+.ti-circle-filled,
+.ti-rosette-discount-check-filled {
+  font-family: 'tabler-icons-filled' !important;
+}
+.ti-star-filled::before {
+  content: '\f6a6';
+}
+.ti-heart-filled::before {
+  content: '\f67c';
+}
+.ti-circle-filled::before {
+  content: '\f671';
+}
+.ti-rosette-discount-check-filled::before {
+  content: '\f746';
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -116,6 +152,24 @@ table td {
 .tip:hover::after {
   opacity: 1;
   visibility: visible;
+}
+
+/* Leaflet marker shell. Leaflet drives position with a transform on this element and
+   would otherwise paint its default white box behind our content, so the box is cleared
+   here and the content is offset by the inner anchor instead. */
+.hh-marker {
+  background: transparent;
+  border: 0;
+  width: auto !important;
+  height: auto !important;
+}
+/* Sits the content bottom-centred over the point — the anchoring Google's
+   AdvancedMarkerElement applied by default. */
+.hh-marker__anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -100%);
 }
 
 /* Map price-pin markers (search map). Global — markers render outside Angular view encapsulation. */
@@ -476,9 +530,19 @@ hh-search-map {
   fill: #d2560f;
 }
 
-/* ── Map popup card (Airbnb-style) — AdvancedMarkerElement content, so global. ──
-   Anchored by its bottom-centre to the pin; a small downward nub points at it. */
+/* ── Map popup card (Airbnb-style) — Leaflet marker content, so global. ──
+   The selected marker renders this stack: the card sits directly above the listing's own
+   price pill, which stays put exactly where it sits unselected (the anchor bottom-centres
+   the stack on the point, and the pill is the stack's last child). The card's nub points
+   down into the gap at the pill. */
+.hh-mapcard__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
 .hh-mapcard {
+  position: relative; /* anchors the ::after nub to the card, not the marker shell */
   width: 300px;
   background: #fff;
   border-radius: 16px;
@@ -486,17 +550,18 @@ hh-search-map {
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
   font-family: 'Inter', system-ui, sans-serif;
   color: #1f1f1f;
-  transform: translateY(-12px);
   animation: hh-mapcard-in 0.16s ease;
 }
+/* Opacity only — deliberately no transform. Markers are rebuilt whenever the search
+   re-runs, which recreates this node and restarts the animation, so anything animating
+   `transform` leaves the card parked near its start frame and eats into the gap above
+   the pill. Keeping position purely in flex layout makes it correct at every frame. */
 @keyframes hh-mapcard-in {
   from {
     opacity: 0;
-    transform: translateY(-4px);
   }
   to {
     opacity: 1;
-    transform: translateY(-12px);
   }
 }
 .hh-mapcard::after {
@@ -517,7 +582,11 @@ hh-search-map {
   border-radius: 16px 16px 0 0;
   overflow: hidden;
 }
-.hh-mapcard__media img {
+/* Leaflet ships `.leaflet-container .leaflet-marker-pane img { width: auto }`, which both
+   out-specifies a plain `.hh-mapcard__media img` and lands later in the bundle — the photo
+   then falls back to its intrinsic ratio at height:100% and leaves the card's grey backdrop
+   showing beside it. Three classes beat it on specificity, so no !important needed. */
+.leaflet-container .hh-mapcard .hh-mapcard__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -551,24 +620,36 @@ hh-search-map {
 .hh-mapcard__heart i {
   font-size: 18px;
 }
+/* Mirrors hh-badge with [bordered]="false" (see Badge's PILL map) so the pill reads the
+   same here as on a listing card: white fill with the colour carried by the text, not a
+   solid block. Values match the Tailwind utilities that component emits — px-2.5/py-1,
+   text-xs, font-medium, rounded-lg — since this markup is built outside Angular and
+   cannot use the component itself. Keep in step if Badge's PILL map changes. */
 .hh-mapcard__badge {
   position: absolute;
   left: 10px;
   top: 10px;
-  padding: 3px 9px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.hh-mapcard__badge i {
+  font-size: 14px;
 }
 .hh-mapcard__badge--boys {
-  background: #2b6cb0;
+  color: #2b6cb0;
 }
 .hh-mapcard__badge--girls {
-  background: #be3a75;
+  color: #be3a75;
 }
 .hh-mapcard__badge--coliving {
-  background: #f36e21;
+  color: #d2560f;
 }
 .hh-mapcard__verified {
   position: absolute;

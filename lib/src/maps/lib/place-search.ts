@@ -14,6 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { GoogleMapsLoader } from './google-maps';
+import { PlaceSuggestion, PlaceSuggestionCache } from './place-cache';
 
 export interface PlaceResult {
   label: string;
@@ -31,12 +32,17 @@ export interface PlaceResult {
   formatted?: string;
 }
 
-interface Suggestion {
-  id: string;
-  main: string;
-  secondary: string;
-  prediction: google.maps.places.PlacePrediction;
-}
+/** Local alias — the shape lives with the cache that stores it. */
+type Suggestion = PlaceSuggestion;
+
+/**
+ * Autocomplete is billed per request (the first 12 of a session), so one- and two-letter
+ * prefixes are pure cost — they match half of Pakistan and nobody picks from them.
+ * The shortest place names we care about ("Dir", "Swat") are three characters.
+ */
+const MIN_QUERY_LENGTH = 3;
+/** Long enough to swallow a normal typing burst, short enough to still feel instant. */
+const DEBOUNCE_MS = 300;
 
 /**
  * On-brand location search built on Google's Places **Data API**
@@ -102,6 +108,7 @@ interface Suggestion {
 })
 export class PlaceSearchField {
   private readonly loader = inject(GoogleMapsLoader);
+  private readonly cache = inject(PlaceSuggestionCache);
   private readonly destroyRef = inject(DestroyRef);
   private readonly inputEl =
     viewChild.required<ElementRef<HTMLInputElement>>('input');
@@ -155,11 +162,20 @@ export class PlaceSearchField {
     const text = this.inputEl().nativeElement.value;
     this.textChange.emit(text);
     clearTimeout(this.timer);
-    if (!text.trim()) {
+    const q = text.trim();
+    if (q.length < MIN_QUERY_LENGTH) {
       this.suggestions.set([]);
       return;
     }
-    this.timer = setTimeout(() => void this.fetch(text), 220);
+    // Shared app-wide, so a query already answered for any other field — the header bar,
+    // a previous visit to this route — costs nothing here.
+    const cached = this.cache.get(q, this.includedPrimaryTypes());
+    if (cached) {
+      this.suggestions.set(cached);
+      this.activeIndex.set(-1);
+      return;
+    }
+    this.timer = setTimeout(() => void this.fetch(q), DEBOUNCE_MS);
   }
 
   private async fetch(text: string): Promise<void> {
@@ -188,6 +204,7 @@ export class PlaceSearchField {
           prediction: p,
         });
       }
+      this.cache.set(text, types, list);
       this.suggestions.set(list);
       this.activeIndex.set(-1);
     } catch {

@@ -3,6 +3,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -10,7 +11,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import type * as L from 'leaflet';
 import { GoogleMapsLoader } from './google-maps';
+import { brandPinIcon, LeafletLoader, whenSized } from './leaflet';
 import { GeolocationService } from './geolocation';
 import { PlaceResult, PlaceSearchField } from './place-search';
 
@@ -26,13 +29,17 @@ export interface PickedLocation {
   formatted: string;
 }
 
-const BRAND = '#F36E21';
-
 /**
- * Real Google Map location picker: a Places search box (reusing `hh-place-search`),
- * a draggable brand pin, click-to-move, "use my location", and reverse-geocoding that
- * resolves the pinned point into area/city/province/country/street. Emits `picked` on
- * every change. Degrades to a notice when no Maps API key is configured.
+ * Location picker: a Places search box (reusing `hh-place-search`), a draggable brand
+ * pin, click-to-move, "use my location", and reverse-geocoding that resolves the pinned
+ * point into area/city/province/country/street. Emits `picked` on every change.
+ *
+ * The map itself is Leaflet — free to render, so a host can pan and zoom while placing a
+ * pin without it costing anything. Only the address lookup still reaches for Google, and
+ * only on an actual pin change: loading the Maps JS API is not billed (just
+ * `new google.maps.Map()`, which this no longer creates), so the better Pakistani address
+ * data is kept at no per-render cost. It falls back to Nominatim when Google is
+ * unavailable, so the picker keeps working with no key at all.
  */
 @Component({
   selector: 'hh-location-picker',
@@ -72,22 +79,7 @@ const BRAND = '#F36E21';
         </button>
       </div>
 
-      @if (!loader.configured) {
-        <div
-          class="grid h-[360px] place-items-center bg-surface px-6 text-center"
-        >
-          <div class="text-ink-400">
-            <i
-              class="ti ti-map-off text-3xl text-ink-300"
-              aria-hidden="true"
-            ></i>
-            <p class="mt-2 text-sm">
-              Map unavailable — add a Google Maps API key to <code>.env</code>.
-            </p>
-          </div>
-        </div>
-      } @else {
-        <div class="relative">
+      <div class="relative">
           <div #mapEl class="h-[360px] w-full bg-[#eaf0ec]"></div>
 
           <!-- Map / Satellite -->
@@ -108,10 +100,10 @@ const BRAND = '#F36E21';
             </button>
             <button
               type="button"
-              (click)="setMapType('hybrid')"
+              (click)="setMapType('satellite')"
               class="px-2.5 py-1.5 text-xs font-medium transition"
               [class]="
-                mapType() === 'hybrid'
+                mapType() === 'satellite'
                   ? 'text-brand-600'
                   : 'text-ink-500 hover:text-ink-700'
               "
@@ -144,13 +136,15 @@ const BRAND = '#F36E21';
               : 'Search, click the map, or drag the pin to set your location.'
           }}
         </div>
-      }
     </div>
   `,
 })
 export class LocationPicker {
-  protected readonly loader = inject(GoogleMapsLoader);
+  /** Kept only for reverse geocoding — no map is ever created from it. */
+  private readonly googleLoader = inject(GoogleMapsLoader);
+  private readonly loader = inject(LeafletLoader);
   private readonly geo = inject(GeolocationService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly mapEl = viewChild<ElementRef<HTMLElement>>('mapEl');
 
   /** Initial pin position (e.g. restored from a draft). Defaults to Pakistan's centre. */
@@ -163,76 +157,90 @@ export class LocationPicker {
   protected readonly lng = signal(0);
   protected readonly pinned = signal(false);
   protected readonly locating = signal(false);
-  protected readonly mapType = signal<'roadmap' | 'hybrid'>('roadmap');
+  protected readonly mapType = signal<'roadmap' | 'satellite'>('roadmap');
 
-  private map?: google.maps.Map;
-  private marker?: google.maps.marker.AdvancedMarkerElement;
+  private map?: L.Map;
+  private leaflet?: typeof L;
+  private marker?: L.Marker;
+  private tiles?: L.TileLayer;
   private geocoder?: google.maps.Geocoder;
 
   constructor() {
     afterNextRender(() => void this.init());
+    // Unlike the pooled search map, each picker owns its map outright — nothing reuses it
+    // afterwards. Leaflet binds document/window listeners and keeps its layers and in-flight
+    // tile requests alive until `remove()`, so dropping the component is not enough.
+    this.destroyRef.onDestroy(() => {
+      this.map?.remove();
+      this.map = undefined;
+    });
   }
 
   private async init(): Promise<void> {
     const el = this.mapEl()?.nativeElement;
-    if (!el || !this.loader.configured) return;
+    if (!el) return;
+    let leaflet: typeof L;
     try {
-      await this.loader.load();
+      leaflet = await this.loader.load();
     } catch {
       return;
     }
+    this.leaflet = leaflet;
+    await whenSized(el);
 
     const lat0 = this.initialLat() ?? 30.3753;
     const lng0 = this.initialLng() ?? 69.3451;
     this.lat.set(lat0);
     this.lng.set(lng0);
 
-    this.geocoder = new google.maps.Geocoder();
-    this.map = new google.maps.Map(el, {
-      center: { lat: lat0, lng: lng0 },
+    this.map = leaflet.map(el, {
+      center: [lat0, lng0],
       zoom: this.initialZoom(),
-      mapId: this.loader.mapId,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
       zoomControl: true,
-      clickableIcons: false,
-      gestureHandling: 'greedy',
     });
+    this.tiles = this.loader.tileLayer(leaflet, 'roadmap').addTo(this.map);
 
-    const pin = new google.maps.marker.PinElement({
-      background: BRAND,
-      borderColor: '#ffffff',
-      glyphColor: '#ffffff',
-      scale: 1.2,
-    });
-    this.marker = new google.maps.marker.AdvancedMarkerElement({
-      map: this.map,
-      position: { lat: lat0, lng: lng0 },
-      gmpDraggable: true,
-      content: pin.element,
-    });
+    this.marker = leaflet
+      .marker([lat0, lng0], {
+        icon: brandPinIcon(leaflet, 1.2),
+        draggable: true,
+        autoPan: true, // dragging to the edge scrolls the map rather than stopping
+      })
+      .addTo(this.map);
 
-    this.marker.addListener('drag', () => {
-      const c = this.toCoords(this.marker?.position);
-      if (c) {
-        this.lat.set(c.lat);
-        this.lng.set(c.lng);
-      }
+    // Live readout while dragging; the address lookup waits for the drop, so a single
+    // drag costs one geocode rather than one per frame.
+    this.marker.on('drag', () => {
+      const p = this.marker?.getLatLng();
+      if (!p) return;
+      this.lat.set(p.lat);
+      this.lng.set(p.lng);
     });
-    this.marker.addListener('dragend', () => {
-      const c = this.toCoords(this.marker?.position);
-      if (c) this.commit(c.lat, c.lng);
+    this.marker.on('dragend', () => {
+      const p = this.marker?.getLatLng();
+      if (p) this.commit(p.lat, p.lng);
     });
-    this.map.addListener('click', (e: google.maps.MapMouseEvent) => {
-      if (e.latLng) this.placeAt(e.latLng.lat(), e.latLng.lng());
-    });
+    this.map.on('click', (e: L.LeafletMouseEvent) =>
+      this.placeAt(e.latlng.lat, e.latlng.lng),
+    );
+
+    // Geocoding only — never `new google.maps.Map()`, so no Dynamic Maps load is billed.
+    // Best-effort: the reverse-geocode path falls back to Nominatim when this is absent.
+    if (this.googleLoader.configured) {
+      this.googleLoader
+        .load()
+        .then(() => {
+          this.geocoder = new google.maps.Geocoder();
+        })
+        .catch(() => {
+          /* stay on the Nominatim path */
+        });
+    }
   }
 
   protected onPlace(p: PlaceResult): void {
-    if (this.marker) this.marker.position = { lat: p.lat, lng: p.lng };
-    this.map?.setZoom(Math.max(p.zoom ?? 16, 15));
-    this.map?.panTo({ lat: p.lat, lng: p.lng });
+    this.marker?.setLatLng([p.lat, p.lng]);
+    this.map?.setView([p.lat, p.lng], Math.max(p.zoom ?? 16, 15));
     this.lat.set(p.lat);
     this.lng.set(p.lng);
     this.pinned.set(true);
@@ -258,8 +266,9 @@ export class LocationPicker {
     this.locating.set(true);
     try {
       const c = await this.geo.getCurrent();
-      this.map?.setZoom(16);
-      this.placeAt(c.lat, c.lng);
+      this.marker?.setLatLng([c.lat, c.lng]);
+      this.map?.setView([c.lat, c.lng], 16);
+      this.commit(c.lat, c.lng);
     } catch {
       /* denied / unavailable — leave the pin where it is */
     } finally {
@@ -267,15 +276,23 @@ export class LocationPicker {
     }
   }
 
-  protected setMapType(type: 'roadmap' | 'hybrid'): void {
+  /** Swaps the basemap tiles in place, so the pin and camera stay exactly as they are. */
+  protected setMapType(type: 'roadmap' | 'satellite'): void {
+    if (this.mapType() === type) return;
     this.mapType.set(type);
-    this.map?.setMapTypeId(type);
+    if (!this.map || !this.leaflet) return;
+    this.tiles?.remove();
+    this.tiles = this.loader.tileLayer(this.leaflet, type).addTo(this.map);
+    // Satellite imagery stops at a shallower zoom than the road basemap; staying past it
+    // would show empty tiles.
+    const max = this.loader.maxZoom(type);
+    if (this.map.getZoom() > max) this.map.setZoom(max);
   }
 
   /** Move the pin (search / click / my-location), recentre, then resolve the address. */
   private placeAt(lat: number, lng: number): void {
-    if (this.marker) this.marker.position = { lat, lng };
-    this.map?.panTo({ lat, lng });
+    this.marker?.setLatLng([lat, lng]);
+    this.map?.panTo([lat, lng]);
     this.commit(lat, lng);
   }
 
@@ -324,19 +341,6 @@ export class LocationPicker {
     }
   }
 
-  /** AdvancedMarkerElement.position may be a LatLng (methods) or a literal (numbers). */
-  private toCoords(
-    pos: google.maps.marker.AdvancedMarkerElement['position'],
-  ): { lat: number; lng: number } | null {
-    if (!pos) return null;
-    const p = pos as {
-      lat: number | (() => number);
-      lng: number | (() => number);
-    };
-    const lat = typeof p.lat === 'function' ? p.lat() : p.lat;
-    const lng = typeof p.lng === 'function' ? p.lng() : p.lng;
-    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
-  }
 }
 
 /** Map Google geocoder address components → our flat address shape. */

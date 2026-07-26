@@ -1,4 +1,4 @@
-/// <reference types="google.maps" />
+import type * as L from 'leaflet';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -29,13 +29,49 @@ import {
 import { Gender, Listing, Paginated } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
-import { GeolocationService, GoogleMapsLoader, PlaceResult, PlaceSearchField } from '@hostelhive/maps';
+import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 
+/** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
+interface Bounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+/** URL keys carrying the viewport. Named after the corners (Airbnb uses the same shape) so a
+ *  shared link is self-describing; `zoom` is deliberately NOT one of them — it already means
+ *  "the zoom implied by the searched place type" and is consumed by fitTo() with `center`. */
+/** Same glyph per gender that hh-badge picks by default, so the map card's pill matches a
+ *  listing card's. Duplicated rather than imported because this markup is built as raw DOM
+ *  for a Leaflet marker and never goes through the Badge component. */
+const GENDER_ICON: Record<Gender, string> = {
+  boys: 'ti-gender-male',
+  girls: 'ti-gender-female',
+  coliving: 'ti-users',
+};
+
+const NE_LAT = 'ne_lat';
+const NE_LNG = 'ne_lng';
+const SW_LAT = 'sw_lat';
+const SW_LNG = 'sw_lng';
+
+/** Cleared together whenever a new place search invalidates the old viewport. */
+const BOUNDS_KEYS_NULLED = {
+  [NE_LAT]: null,
+  [NE_LNG]: null,
+  [SW_LAT]: null,
+  [SW_LNG]: null,
+} as const;
+
+/** ~0.1 m — matches captureMapBounds()'s 1e-6 no-op threshold, and keeps the URL readable. */
+const roundCoord = (n: number): number => +n.toFixed(6);
+
 /**
  * Unified search experience — an Airbnb-style split: a column of listing cards on the
- * left and a live Google map on the right (desktop shows both; mobile toggles between
+ * left and a live Leaflet map on the right (desktop shows both; mobile toggles between
  * them). Clicking a price pin opens a rich popup card (photo carousel, gender badge,
  * rating, tags, price) anchored to the marker, mirroring Airbnb's map. SSR-safe: all
  * map work runs in afterNextRender.
@@ -62,7 +98,7 @@ export class SearchMap {
   );
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly loader = inject(GoogleMapsLoader);
+  private readonly sharedMap = inject(SharedMap);
   private readonly geo = inject(GeolocationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef).nativeElement as HTMLElement;
@@ -107,13 +143,26 @@ export class SearchMap {
     () => this.params()?.get('place') ?? this.params()?.get('city') ?? '',
   );
 
-  /** Map viewport bounds — updated on every idle event (zoom/pan). */
-  private readonly mapBounds = signal<{
-    north: number;
-    south: number;
-    east: number;
-    west: number;
-  } | null>(null);
+  /**
+   * Viewport carried in the URL, if any. Read at construction to seed `mapBounds` and to
+   * point the initial camera, so a refresh or a pasted link reproduces the same map area
+   * — NOT a live dependency of `query()`, which tracks the real map via `mapBounds`.
+   * Keeping it seed-only is what lets `recenterTo()` drop the viewport by nulling
+   * `mapBounds`; a standing fallback here would resurrect the stale box.
+   */
+  private readonly urlBounds = computed<Bounds | null>(() => {
+    const p = this.params();
+    const raw = [p?.get(NE_LAT), p?.get(NE_LNG), p?.get(SW_LAT), p?.get(SW_LNG)];
+    if (raw.some((v) => !v)) return null;
+    const [north, east, south, west] = raw.map(Number);
+    if (![north, east, south, west].every(Number.isFinite)) return null;
+    // A degenerate or inverted box would silently match nothing server-side.
+    if (north <= south || east <= west) return null;
+    return { north, south, east, west };
+  });
+
+  /** Map viewport bounds — updated on every idle event (zoom/pan), seeded from the URL. */
+  private readonly mapBounds = signal<Bounds | null>(this.urlBounds());
   protected readonly page = signal(1);
 
   private readonly query = computed(() => {
@@ -147,7 +196,11 @@ export class SearchMap {
           | 'price-desc') || undefined,
       page: this.page(),
     };
-  });
+  },
+  // `query()` reads the whole ParamMap, so ANY query-param edit recomputes it and — with a
+  // fresh object literal each time — would re-fire the search. Mirroring the viewport into
+  // the URL does exactly that, so compare by value: a structurally identical query is a no-op.
+  { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) });
 
   /** True while a search request is in flight — drives the skeleton cards. */
   protected readonly loading = signal(true);
@@ -291,15 +344,15 @@ export class SearchMap {
   protected readonly selected = signal<string | null>(null);
   protected readonly view = signal<'list' | 'map'>('list');
   protected readonly locating = signal(false);
-  protected readonly needsKey = signal(false);
   protected readonly mapError = signal(false);
   private readonly ready = signal(false);
 
-  private map?: google.maps.Map;
+  private map?: L.Map;
+  private leaflet?: typeof L;
   private readonly markers = new Map<
     string,
     {
-      marker: google.maps.marker.AdvancedMarkerElement;
+      marker: L.Marker;
       pinEl: HTMLElement;
       listing: Listing;
     }
@@ -309,16 +362,27 @@ export class SearchMap {
   private userInteracted = false;
   /** True while we move the camera in code — keeps scripted zooms out of `userInteracted`. */
   private programmaticMove = false;
+  /** Guards `setup()` so the map is built at most once, however it gets revealed. */
+  private mapInitStarted = false;
+  /** Mirrors the `min-[950px]` split-pane breakpoint used in the template. */
+  private readonly desktopSplitMq = '(min-width: 950px)';
 
   constructor() {
     afterNextRender(() => {
       this.measureStickyOffsets();
-      const onResize = () => this.measureStickyOffsets();
+      const onResize = () => {
+        this.measureStickyOffsets();
+        // Widening past the breakpoint reveals the map pane — build it on first reveal.
+        if (this.isDesktopSplit()) void this.ensureMap();
+      };
       window.addEventListener('resize', onResize);
       this.destroyRef.onDestroy(() =>
         window.removeEventListener('resize', onResize),
       );
-      void this.setup();
+      // Below the breakpoint the pane is display:none until the user taps "Map".
+      // Leaflet measures its container at construction, so building it while hidden
+      // (0×0) yields a map that paints nothing — defer to the tap instead.
+      if (this.isDesktopSplit()) void this.ensureMap();
     });
     // Rebuild markers when the result set changes (after the map is ready).
     effect(() => {
@@ -334,15 +398,20 @@ export class SearchMap {
       }
       untracked(() => { if (this.selected()) this.renderSelection(); });
     });
-    // Toggle the hover highlight without rebuilding markers.
+    // Toggle the hover highlight without rebuilding markers. Depends on active() only;
+    // applyActive() runs untracked so its own active()/selected() reads don't leak in.
     effect(() => {
       this.active();
-      if (this.ready()) this.applyActive();
+      if (this.ready()) untracked(() => this.applyActive());
     });
-    // Open / close the popup card without rebuilding markers.
+    // Open / close the popup card without rebuilding markers. MUST depend on selected()
+    // ONLY — renderSelection() calls applyActive(), which reads active(); left tracked,
+    // that made this effect re-run on every pill hover, rebuilding the card's DOM node and
+    // restarting its entry animation (the visible jitter). untracked() severs that leak so
+    // the card is rebuilt on genuine selection changes, not on hover.
     effect(() => {
       this.selected();
-      if (this.ready()) this.renderSelection();
+      if (this.ready()) untracked(() => this.renderSelection());
     });
     // Recenter the map when a *new* place is searched (lat/lng change via the search bar
     // or "Near me"). setup() already centers on the location present at load, so skip that
@@ -380,6 +449,9 @@ export class SearchMap {
     this.destroyRef.onDestroy(() => this.observer?.disconnect());
     this.destroyRef.onDestroy(() => this.clearMarkers());
     this.destroyRef.onDestroy(() => clearInterval(this.cooldownTimer));
+    // Hand the map back before this component's DOM goes away, so the instance survives
+    // for the next visit instead of being destroyed with its container.
+    this.destroyRef.onDestroy(() => this.sharedMap.release());
   }
 
   /**
@@ -398,69 +470,116 @@ export class SearchMap {
     this.host.style.setProperty('--hh-map-top', `${headerH + filterH}px`);
   }
 
+  /** True when the viewport shows the desktop list+map split (map pane always visible). */
+  private isDesktopSplit(): boolean {
+    return window.matchMedia(this.desktopSplitMq).matches;
+  }
+
+  /**
+   * Builds the map on first reveal and never again. The pane is `display:none` on mobile
+   * until the user taps "Map", and Leaflet sizes itself from its container at
+   * construction — so building it early would produce a permanently blank map.
+   */
+  private async ensureMap(): Promise<void> {
+    if (this.mapInitStarted) return;
+    this.mapInitStarted = true;
+    await this.setup();
+  }
+
   private async setup(): Promise<void> {
-    if (!this.loader.configured) {
-      this.needsKey.set(true);
-      return;
-    }
+    const c = this.center();
+    const restored = this.urlBounds();
     try {
-      await this.loader.load();
+      // Borrowed, not built: returning here from a listing reuses the instance from the
+      // previous visit, so the map and its visible tiles are already warm.
+      const { map, leaflet } = await this.sharedMap.acquire(
+        this.mapEl().nativeElement,
+        {
+          center: c ? [c.lat, c.lng] : [30.3753, 69.3451],
+          zoom: this.placeZoom() ?? (c ? 15 : 6),
+        },
+      );
+      this.map = map;
+      this.leaflet = leaflet;
+      if (restored) {
+        // A viewport came in on the URL, so it — not the pins — decides the camera.
+        // `userInteracted` marks it as chosen rather than derived, which stops the first
+        // marker rebuild from fitting the camera to the results and undoing the restore.
+        this.userInteracted = true;
+        this.programmaticMove = true;
+        map.fitBounds(
+          leaflet.latLngBounds(
+            [restored.south, restored.west],
+            [restored.north, restored.east],
+          ),
+        );
+      }
     } catch {
       this.mapError.set(true);
       return;
     }
-    const c = this.center();
-    this.map = new google.maps.Map(this.mapEl().nativeElement, {
-      center: c ?? { lat: 30.3753, lng: 69.3451 },
-      zoom: this.placeZoom() ?? (c ? 15 : 6),
-      mapId: this.loader.mapId,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      zoomControl: true,
-      clickableIcons: false,
-      gestureHandling: 'greedy',
-      // NOTE: the base-map appearance (muted colours, hidden POIs) is controlled by the Cloud
-      // style bound to `mapId` — Google IGNORES the JS `styles` option whenever a Map ID is set.
-      // To restyle: Google Cloud Console → Map Styles, edit the style, link it to a real Map ID,
-      // publish, and set GOOGLE_MAPS_MAP_ID in the repo-root .env (a demo Map ID can't be styled).
-    });
-    this.map.addListener('idle', () => {
+    // Registered through the service so they are torn down on release — a reused map
+    // would otherwise accumulate a duplicate set of handlers per navigation.
+    // `moveend` is Leaflet's equivalent of Google's `idle`: it fires once the camera
+    // settles, after both pans and zooms.
+    this.sharedMap.listen('moveend', () => {
       this.programmaticMove = false; // the scripted move (if any) has settled
       this.captureMapBounds();
     });
-    this.map.addListener('dragstart', () => {
+    this.sharedMap.listen('dragstart', () => {
       this.userInteracted = true;
     });
-    this.map.addListener('zoom_changed', () => {
+    this.sharedMap.listen('zoomend', () => {
       // Flag as user-interacted only for real gestures: skip the initial setup zoom
       // (not ready yet) and our own recenter zoom (programmaticMove).
       if (this.ready() && !this.programmaticMove) this.userInteracted = true;
     });
     // Click empty map → dismiss the open popup card (Airbnb behaviour).
-    this.map.addListener('click', () => this.selected.set(null));
+    this.sharedMap.listen('click', () => this.selected.set(null));
     this.ready.set(true);
   }
 
+  /**
+   * Wraps marker content in an anchor element. Leaflet drives a marker's position with a
+   * `transform` on the icon root, so the root itself cannot carry one — the inner wrapper
+   * is what shifts the content to sit bottom-centred over the point, matching the
+   * anchoring Google's AdvancedMarkerElement gave us for free.
+   */
+  private markerIcon(content: HTMLElement): L.DivIcon {
+    const anchor = document.createElement('div');
+    anchor.className = 'hh-marker__anchor';
+    anchor.appendChild(content);
+    return this.leaflet!.divIcon({
+      html: anchor,
+      className: 'hh-marker', // replaces Leaflet's default white box
+      iconSize: undefined, // let the pill/card size itself
+    });
+  }
+
   private buildMarkers(items: Listing[]): void {
-    if (!this.map) return;
+    const map = this.map;
+    const leaflet = this.leaflet;
+    if (!map || !leaflet) return;
     this.clearMarkers();
     if (!items.length) return;
-    const bounds = new google.maps.LatLngBounds();
+    const points: L.LatLngExpression[] = [];
     for (const l of items) {
       const pinEl = document.createElement('div');
       pinEl.className = 'hh-pin';
       pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom) / 1000) + 'k';
       pinEl.addEventListener('mouseenter', () => this.active.set(l.id));
       pinEl.addEventListener('mouseleave', () => this.active.set(null));
-      pinEl.addEventListener('click', () => this.selected.set(l.id));
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map: this.map,
-        position: { lat: l.lat, lng: l.lng },
-        content: pinEl,
+      pinEl.addEventListener('click', (e) => {
+        // Without this the click also reaches the map, whose handler closes the popup
+        // we are about to open.
+        e.stopPropagation();
+        this.selected.set(l.id);
       });
+      const marker = leaflet
+        .marker([l.lat, l.lng], { icon: this.markerIcon(pinEl) })
+        .addTo(map);
       this.markers.set(l.id, { marker, pinEl, listing: l });
-      bounds.extend({ lat: l.lat, lng: l.lng });
+      points.push([l.lat, l.lng]);
     }
     const key = items.map((l) => l.id).join(',');
     // Appended pages must not refit the camera — a mid-scroll pan/zoom would shift the
@@ -468,17 +587,7 @@ export class SearchMap {
     const isAppend = untracked(() => this.page()) > 1;
     if (!isAppend && key !== this.lastKey && !this.userInteracted) {
       this.lastKey = key;
-      const pz = this.placeZoom();
-      const pc = this.center();
-      if (pz != null && pc) {
-        this.map.setCenter(pc);
-        this.map.setZoom(pz);
-      } else if (items.length === 1) {
-        this.map.setCenter(bounds.getCenter());
-        this.map.setZoom(16);
-      } else {
-        this.map.fitBounds(bounds, 64);
-      }
+      this.fitTo(points);
     } else {
       this.lastKey = key;
     }
@@ -486,16 +595,44 @@ export class SearchMap {
     untracked(() => this.renderSelection());
   }
 
+  /**
+   * Points the camera at a set of pins: an explicit place zoom wins, a lone result gets a
+   * fixed close zoom, and anything else fits the bounding box. Scripted either way, so
+   * `programmaticMove` keeps the resulting zoom out of `userInteracted`.
+   */
+  private fitTo(points: L.LatLngExpression[]): void {
+    const map = this.map;
+    const leaflet = this.leaflet;
+    if (!map || !leaflet || !points.length) return;
+    const pz = this.placeZoom();
+    const pc = this.center();
+    this.programmaticMove = true;
+    if (pz != null && pc) {
+      map.setView([pc.lat, pc.lng], pz);
+    } else if (points.length === 1) {
+      map.setView(points[0], 16);
+    } else {
+      map.fitBounds(leaflet.latLngBounds(points), { padding: [64, 64] });
+    }
+  }
+
   /** Swap the selected marker's content for the popup card; every other marker shows its pin. */
   private renderSelection(): void {
     const id = this.selected();
     for (const [lid, m] of this.markers) {
       if (lid === id) {
-        m.marker.content = this.buildCard(m.listing);
-        m.marker.zIndex = 1000;
-      } else if (m.marker.content !== m.pinEl) {
-        m.marker.content = m.pinEl;
-        m.marker.zIndex = null;
+        // Stack the card above this listing's own pill rather than replacing it, so the
+        // pill stays visible under the card and the nub has something to point at.
+        const stack = document.createElement('div');
+        stack.className = 'hh-mapcard__stack';
+        stack.append(this.buildCard(m.listing), m.pinEl);
+        m.marker.setIcon(this.markerIcon(stack));
+        m.marker.setZIndexOffset(1000);
+      } else if (m.marker.getElement()?.firstElementChild?.firstElementChild !== m.pinEl) {
+        // Only rebuild the icon when this marker is not already showing its pin —
+        // setIcon() replaces the DOM node, which would drop the pin's listeners.
+        m.marker.setIcon(this.markerIcon(m.pinEl));
+        m.marker.setZIndexOffset(0);
       }
     }
     this.applyActive();
@@ -510,11 +647,14 @@ export class SearchMap {
 
     const card = document.createElement('div');
     card.className = 'hh-mapcard';
-    // Whole-card click navigates to the listing (controls below stop propagation).
-    card.addEventListener(
-      'click',
-      () => void this.router.navigate(['/hostel', l.slug]),
-    );
+    // Whole-card click opens the listing in a new tab so the map stays put
+    // (controls below stop propagation).
+    card.addEventListener('click', () => {
+      const url = this.router.serializeUrl(
+        this.router.createUrlTree(['/hostel', l.slug]),
+      );
+      window.open(url, '_blank', 'noopener');
+    });
 
     const media = document.createElement('div');
     media.className = 'hh-mapcard__media';
@@ -525,9 +665,17 @@ export class SearchMap {
     img.loading = 'lazy';
     media.appendChild(img);
 
+    // Icon + label, matching hh-badge's default glyph per variant so the pill is identical
+    // to the one on a listing card. textContent on a child, never innerHTML on the label,
+    // so a hostel name can't inject markup here.
     const badge = document.createElement('span');
     badge.className = 'hh-mapcard__badge hh-mapcard__badge--' + l.gender;
-    badge.textContent = this.genderLabel(l.gender);
+    const badgeIcon = document.createElement('i');
+    badgeIcon.className = 'ti ' + GENDER_ICON[l.gender];
+    badgeIcon.setAttribute('aria-hidden', 'true');
+    const badgeText = document.createElement('span');
+    badgeText.textContent = this.genderLabel(l.gender);
+    badge.append(badgeIcon, badgeText);
     media.appendChild(badge);
 
     const heart = document.createElement('button');
@@ -625,15 +773,15 @@ export class SearchMap {
     for (const [id, { pinEl, marker }] of this.markers) {
       const isActive = id === activeId;
       pinEl.classList.toggle('hh-pin--active', isActive);
-      // Bring the hovered marker to the very front (Google stacks AdvancedMarkers by
-      // their zIndex, not the content's CSS z-index); keep the selected popup marker
-      // elevated; everything else returns to the default stacking.
-      marker.zIndex = isActive ? 99999 : id === selectedId ? 1000 : null;
+      // Bring the hovered marker to the very front. Leaflet stacks markers by a z-index
+      // derived from latitude plus this offset, so the content's own CSS z-index cannot
+      // lift one marker above another — the offset has to do it.
+      marker.setZIndexOffset(isActive ? 99999 : id === selectedId ? 1000 : 0);
     }
   }
 
   private clearMarkers(): void {
-    for (const { marker } of this.markers.values()) marker.map = null;
+    for (const { marker } of this.markers.values()) marker.remove();
     this.markers.clear();
   }
 
@@ -684,28 +832,26 @@ export class SearchMap {
   /** Mobile list ⇄ full-screen map toggle (desktop always shows both panes). */
   protected setView(v: 'list' | 'map'): void {
     this.view.set(v);
-    // The map may have initialised while its container was display:none (0Ã—0) —
-    // nudge it to re-fit to the markers once it becomes visible.
-    if (v === 'map') setTimeout(() => this.fitToMarkers(), 60);
+    if (v !== 'map') return;
+    // On mobile this tap is what builds the map. Re-measure and re-fit afterwards — on a
+    // later tap the map already exists but was laid out while its container was
+    // display:none (0×0), so Leaflet's cached size is stale until invalidateSize().
+    void this.ensureMap().then(() =>
+      setTimeout(() => {
+        this.map?.invalidateSize();
+        this.fitToMarkers();
+      }, 60),
+    );
   }
 
   private fitToMarkers(): void {
-    if (!this.map || !this.markers.size) return;
-    const bounds = new google.maps.LatLngBounds();
+    if (!this.markers.size) return;
+    const points: L.LatLngExpression[] = [];
     for (const { marker } of this.markers.values()) {
-      if (marker.position) bounds.extend(marker.position);
+      const p = marker.getLatLng();
+      points.push([p.lat, p.lng]);
     }
-    const pz = this.placeZoom();
-    const pc = this.center();
-    if (pz != null && pc) {
-      this.map.setCenter(pc);
-      this.map.setZoom(pz);
-    } else if (this.markers.size === 1) {
-      this.map.setCenter(bounds.getCenter());
-      this.map.setZoom(16);
-    } else {
-      this.map.fitBounds(bounds, 64);
-    }
+    this.fitTo(points);
   }
 
   /**
@@ -717,10 +863,19 @@ export class SearchMap {
     if (!this.map) return;
     this.userInteracted = false; // a new search overrides any earlier manual pan/zoom
     this.lastKey = ''; // let the next rebuild refit to the new area's pins
-    this.programmaticMove = true; // cleared on the next idle; keeps this zoom out of userInteracted
+    this.programmaticMove = true; // cleared on the next moveend; keeps this zoom out of userInteracted
     this.mapBounds.set(null);
-    this.map.setCenter(c);
-    this.map.setZoom(15);
+    // Drop the old viewport from the URL as well, or a refresh would restore the area the
+    // user just navigated away from. The next moveend writes the new one.
+    if (this.isBrowser) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { ...BOUNDS_KEYS_NULLED },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+    this.map.setView([c.lat, c.lng], 15);
   }
 
   /** "Near me" — native geolocation (Capacitor) or the browser API → recenter + proximity search. */
@@ -768,15 +923,13 @@ export class SearchMap {
   private captureMapBounds(): void {
     const b = this.map?.getBounds();
     if (!b) return;
-    const ne = b.getNorthEast();
-    const sw = b.getSouthWest();
     const next = {
-      north: ne.lat(),
-      south: sw.lat(),
-      east: ne.lng(),
-      west: sw.lng(),
+      north: b.getNorth(),
+      south: b.getSouth(),
+      east: b.getEast(),
+      west: b.getWest(),
     };
-    // Idle fires after every camera settle, including no-op ones. Only a real viewport
+    // moveend fires after every camera settle, including no-op ones. Only a real viewport
     // change should refetch and restart the infinite list.
     const prev = this.mapBounds();
     const unchanged =
@@ -789,5 +942,27 @@ export class SearchMap {
     this.mapBounds.set(next);
     // Reset to page 1 when the viewport changes.
     this.page.set(1);
+    this.syncBoundsToUrl(next);
+  }
+
+  /**
+   * Mirror the viewport into the URL so a refresh or a shared link lands on the same area.
+   * `replaceUrl` because a pan is a refinement of the current search, not a new destination —
+   * one history entry per pan would make Back unusable. The write re-emits the ParamMap, which
+   * `query()`'s value comparator absorbs (see there); the round-trip does not refetch.
+   */
+  private syncBoundsToUrl(b: Bounds): void {
+    if (!this.isBrowser) return; // no address bar to sync during SSR
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        [NE_LAT]: roundCoord(b.north),
+        [NE_LNG]: roundCoord(b.east),
+        [SW_LAT]: roundCoord(b.south),
+        [SW_LNG]: roundCoord(b.west),
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 }
