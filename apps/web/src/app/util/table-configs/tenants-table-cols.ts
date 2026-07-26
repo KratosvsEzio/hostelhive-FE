@@ -1,12 +1,10 @@
 import { format, parseISO } from 'date-fns';
 import { CellDef, ColumnDef } from '@hostelhive/ui';
 import { Tenant } from '@hostelhive/data-access';
+import { ordinal } from '@util/ordinal';
 
-function ordinal(day: number | undefined): string {
-  if (!day) return '—';
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = day % 100;
-  return day + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+function fmtBillingDay(day: number | undefined): string {
+  return day ? ordinal(day) : '—';
 }
 
 function fmtDate(iso: string | undefined): string {
@@ -43,11 +41,11 @@ const TENANTS_TABLE_CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
   },
   billingDate: {
     label: 'Billing date',
-    cell: (r) => ({ kind: 'text', value: ordinal((r as Tenant).billingDate), class: 'text-ink-600' } satisfies CellDef),
+    cell: (r) => ({ kind: 'text', value: fmtBillingDay((r as Tenant).billingDate), class: 'text-ink-600' } satisfies CellDef),
   },
   billingDueDate: {
     label: 'Billing due date',
-    cell: (r) => ({ kind: 'text', value: ordinal((r as Tenant).billingDueDate), class: 'text-ink-600' } satisfies CellDef),
+    cell: (r) => ({ kind: 'text', value: fmtBillingDay((r as Tenant).billingDueDate), class: 'text-ink-600' } satisfies CellDef),
   },
   status: {
     label: 'Status',
