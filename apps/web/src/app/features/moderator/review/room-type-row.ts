@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { Dropdown, DropdownOption } from '@hostelhive/ui';
+import { displayLabelFor } from '@util/room-types';
 
 const OPTIONS: DropdownOption[] = [
   'Single room', 'Double sharing', 'Triple sharing', 'Quad sharing', 'Dormitory',
-].map((t) => ({ value: t, label: t }));
+].map((t) => ({ value: t, label: displayLabelFor(t) }));
 
 const FIXED_CAPACITY: Record<string, number | null> = {
   'Single room': 1,

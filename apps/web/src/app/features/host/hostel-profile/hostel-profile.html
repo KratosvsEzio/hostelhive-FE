@@ -9,6 +9,19 @@
     } @else if (dirty()) {
       <span class="hidden text-sm text-ink-400 sm:inline">Unsaved changes</span>
     }
+    @if (previewUrl(); as url) {
+      <a
+        hh-button
+        variant="outlined"
+        size="sm"
+        [href]="url"
+        target="_blank"
+        rel="noopener"
+        class="border-ink-200 text-ink-600 hover:border-ink-400"
+      >
+        <i class="ti ti-external-link text-sm" aria-hidden="true"></i>Preview
+      </a>
+    }
     <button
       hh-button
       color="primary"

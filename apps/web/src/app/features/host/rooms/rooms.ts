@@ -37,6 +37,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
+import { displayLabelFor } from '@util/room-types';
 import { PAGE_SIZE } from '@util/pagination';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
 
@@ -187,7 +188,7 @@ export class Rooms {
   protected readonly roomTypesError = computed(() => this.roomTypesState().error);
 
   protected readonly roomTypeOptions = computed<DropdownOption[]>(() =>
-    this.roomTypesState().data.map((rt) => ({ value: rt.name, label: rt.name })),
+    this.roomTypesState().data.map((rt) => ({ value: rt.name, label: displayLabelFor(rt.name) })),
   );
 
   constructor() {

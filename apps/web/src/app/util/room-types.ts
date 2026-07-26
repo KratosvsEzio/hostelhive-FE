@@ -16,6 +16,21 @@ export const ROOM_TYPES = [
 
 export type RoomTypeName = (typeof ROOM_TYPES)[number];
 
+/**
+ * Seeker-facing labels. The canonical value (what we send/store/group by) stays
+ * `'Single room'`; only the text shown to a human changes. Keep the value out of
+ * this map — changing a value here would fragment the capacity/grouping keys the
+ * whole app depends on (see the file docstring). Names not in the map render as-is.
+ */
+const DISPLAY_LABELS: Record<string, string> = {
+  'Single room': 'Single occupancy',
+};
+
+/** The human-readable label for a room-type value; the value itself if unmapped. */
+export function displayLabelFor(name: string): string {
+  return DISPLAY_LABELS[name] ?? name;
+}
+
 /** Capacity a Dormitory starts at — the floor of the "5+" search bucket, still editable. */
 export const DORMITORY_DEFAULT_CAPACITY = 5;
 

@@ -1,6 +1,7 @@
 import {
   clampCapacity,
   defaultCapacityFor,
+  displayLabelFor,
   DORMITORY_DEFAULT_CAPACITY,
   fixedCapacityFor,
 } from './room-types';
@@ -28,6 +29,19 @@ describe('defaultCapacityFor', () => {
   it('falls back to the dormitory default for a variable type', () => {
     expect(defaultCapacityFor('Dormitory')).toBe(DORMITORY_DEFAULT_CAPACITY);
     expect(defaultCapacityFor('')).toBe(DORMITORY_DEFAULT_CAPACITY);
+  });
+});
+
+describe('displayLabelFor', () => {
+  it('renames "Single room" to "Single occupancy" for display only', () => {
+    expect(displayLabelFor('Single room')).toBe('Single occupancy');
+  });
+
+  it('passes every other value through unchanged (canonical value preserved)', () => {
+    expect(displayLabelFor('Double sharing')).toBe('Double sharing');
+    expect(displayLabelFor('Dormitory')).toBe('Dormitory');
+    expect(displayLabelFor('Some custom type')).toBe('Some custom type');
+    expect(displayLabelFor('')).toBe('');
   });
 });
 

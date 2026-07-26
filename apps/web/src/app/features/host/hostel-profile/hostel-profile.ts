@@ -145,6 +145,16 @@ export class HostelProfile {
     { initialValue: this.store.selected() },
   );
 
+  /**
+   * Public listing URL (what a seeker sees) — the "Preview" target. The public detail
+   * route is `/hostel/:slug`, and the seeker `slug` is the hostel id (see
+   * `toListingDetail` in listing-detail-api). Opened in a new tab so the editor stays put.
+   */
+  protected readonly previewUrl = computed(() => {
+    const id = this.hostelId();
+    return id ? `/hostel/${id}` : null;
+  });
+
   private readonly refresh = signal(0);
 
   // Keep the sidebar property picker in sync whenever the URL id changes.

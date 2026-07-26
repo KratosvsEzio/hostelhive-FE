@@ -52,13 +52,13 @@ Confirm during each ticket's `/implement` run.
 
 | ID | Title | Triage | Status |
 |---|---|---|---|
-| [T1](#t1) | Host-side preview of own hostel as students see it | `NEEDS-INFO` | OPEN |
+| [T1](#t1) | Host-side preview of own hostel as students see it | `FE` | **RESOLVED** |
 | [T2](#t2) | Billing option during tenant onboarding/admission | `NEEDS-INFO` | OPEN |
 | [T3](#t3) | Map price pill — hover for detail, click to hostel page | `FE` | OPEN |
 | [T4](#t4) | Header layout — search widget on top, filters justify-between | `FE` | OPEN |
 | [T5](#t5) | Show-password eye icon missing | `FE` | **RESOLVED** |
 | [T6](#t6) | Picture extension whitelist inconsistent pre/post creation | `FE` | **RESOLVED** |
-| [T7](#t7) | Rename "Single room" in the breakdown dropdown | `NEEDS-INFO` | OPEN |
+| [T7](#t7) | Rename "Single room" in the breakdown dropdown | `FE` | **RESOLVED** |
 | [T8](#t8) | Button to copy location / open in Google Maps | `FE` | OPEN |
 | [T9](#t9) | Room capacity should be pre-selected | `FE` | **RESOLVED** |
 | T10 | Edit button should open edit drawer in place | `FE` | **RESOLVED** |
@@ -404,9 +404,17 @@ namespace.
 ## T1
 ### Host-side preview of own hostel as students see it
 - **Card:** https://trello.com/c/HR85Bgwv
-- **Triage:** `NEEDS-INFO`
-- **Status:** OPEN
+- **Triage:** `FE`
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** none
+
+**Resolution.** Added a **Preview** action to the host hostel-profile header
+(`hostel-profile.{ts,html}`) that opens the hostel's live public listing detail —
+what students see — in a new tab. The public detail route is `/hostel/:slug` and the
+seeker `slug` is the hostel id (`toListingDetail` in `listing-detail-api.ts` sets
+`slug: String(d.id)`), so the link is simply `/hostel/${hostelId()}`, read-only, reusing
+the existing public route with no backend or maps-file changes. The decided scope was the
+in-app preview (open the public view in a new tab), not a separately-shared link.
 
 **Description (from card):** *(empty — title carries the whole ask)*
 
@@ -414,9 +422,8 @@ namespace.
 > hostel owners to view the preview of their hostels, how it will look like to the
 > students/end users.
 
-**Notes:** Overlaps the **"Preview Link for hostel"** card in the Feature list —
-clarify whether this is the same work before starting. Scope question: in-app
-preview route vs. shareable public link.
+**Notes:** Overlaps the **"Preview Link for hostel"** card in the Feature list — the
+same in-app preview satisfies both.
 
 ---
 
@@ -565,16 +572,26 @@ Pairs with **B6** (same screen).
 ## T7
 ### Single room Text should be changed
 - **Card:** https://trello.com/c/U5sE0xV7
-- **Triage:** `NEEDS-INFO`
-- **Status:** OPEN
+- **Triage:** `FE`
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+
+**Resolution.** Renamed the **display** of "Single room" → **"Single occupancy"** via a
+label layer in `util/room-types.ts` (`displayLabelFor(name)`), keeping the canonical
+backend value `'Single room'` intact — the value is free text on the backend and is used
+as the capacity-lookup + grouping key, so renaming the value would fragment data. Applied
+the label at every surface that shows a room-type to a human: the room-type dropdowns and
+added-rooms lists in `new-hostel` and `onboarding-wizard`, the shared
+`moderator/review/room-type-row` (used by moderator review and host hostel-profile), and
+the host `rooms` filter. Covered by `room-types.spec.ts`. Public seeker surfaces
+(`listing-card`/`listing-detail`) are a follow-up gated on the in-flight maps/search
+changeset.
 
 **Description (from card):**
 > We need to come up with a better name for the single room in this brodown
 > ["breakdown"] option.
 
-**Notes:** Copy change with no target copy specified — needs the replacement wording
-decided before it can be implemented.
+**Notes:** Decided replacement wording: "Single occupancy" (display only).
 
 ---
 

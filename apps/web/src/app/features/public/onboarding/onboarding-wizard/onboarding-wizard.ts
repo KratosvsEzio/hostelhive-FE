@@ -43,6 +43,7 @@ import {
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 import {
   clampCapacity,
+  displayLabelFor,
   DORMITORY_DEFAULT_CAPACITY,
   fixedCapacityFor,
   ROOM_TYPES,
@@ -288,11 +289,17 @@ export class OnboardingWizard {
     const used = new Set(this.rooms().map((r) => r.type));
     return this.roomTypes.map((t) => ({
       value: t,
-      label: t,
+      label: displayLabelFor(t),
       disabled: used.has(t),
       disabledTooltip: used.has(t) ? 'Already added' : undefined,
     }));
   });
+
+  /** Seeker-facing label for a stored room-type value (used by the added-rooms list). */
+  protected roomTypeLabel(name: string): string {
+    return displayLabelFor(name);
+  }
+
   protected readonly allRoomTypesUsed = computed(() =>
     this.roomTypeOptions().every((o) => o.disabled),
   );
