@@ -37,6 +37,14 @@ interface WizardInternals {
   deviceDraftPresent: Signal<boolean>;
   exitLabel: Signal<string>;
   isFormValid: Signal<boolean>;
+  newRoomType: WritableSignal<string>;
+  newRoomCapacity: WritableSignal<number>;
+  newRoomPrice: WritableSignal<number>;
+  capacityFixed: Signal<boolean>;
+  roomFormError: Signal<string | null>;
+  rooms: WritableSignal<{ id: number; type: string; capacity: number; price: number }[]>;
+  setNewRoomCapacity(raw: string): void;
+  addRoom(): void;
   saveAndExit(): void;
   onLogoClick(event: MouseEvent): void;
   confirmLeave(): void;
@@ -264,6 +272,99 @@ describe('OnboardingWizard', () => {
 
       expect(vm.showLeaveModal()).toBe(false);
       expect(navigate).toHaveBeenCalledWith(['/']);
+    });
+  });
+
+  describe('room capacity', () => {
+    it('presets and locks the capacity for a fixed room type', () => {
+      const { vm } = render();
+
+      vm.newRoomType.set('Quad sharing');
+
+      expect(vm.newRoomCapacity()).toBe(4);
+      expect(vm.capacityFixed()).toBe(true);
+    });
+
+    it('defaults a dormitory to 5 without inheriting the previous type', () => {
+      const { vm } = render();
+      vm.newRoomType.set('Quad sharing');
+
+      vm.newRoomType.set('Dormitory');
+
+      expect(vm.newRoomCapacity()).toBe(5);
+      expect(vm.capacityFixed()).toBe(false);
+    });
+
+    it('keeps a manual dormitory capacity until the type changes', () => {
+      const { vm } = render();
+      vm.newRoomType.set('Dormitory');
+
+      vm.setNewRoomCapacity('7');
+      expect(vm.newRoomCapacity()).toBe(7);
+
+      vm.newRoomType.set('Single room');
+      expect(vm.newRoomCapacity()).toBe(1);
+    });
+
+    it('clamps and floors a committed capacity into 1..9', () => {
+      const { vm } = render();
+      vm.newRoomType.set('Dormitory');
+
+      vm.setNewRoomCapacity('12');
+      expect(vm.newRoomCapacity()).toBe(9);
+
+      vm.setNewRoomCapacity('4.7');
+      expect(vm.newRoomCapacity()).toBe(4);
+    });
+
+    it('keeps the last good value for empty or non-numeric input', () => {
+      const { vm } = render();
+      vm.newRoomType.set('Dormitory');
+      vm.setNewRoomCapacity('6');
+
+      vm.setNewRoomCapacity('');
+      vm.setNewRoomCapacity('abc');
+
+      expect(vm.newRoomCapacity()).toBe(6);
+    });
+
+    it('adds a room whose capacity matches its fixed type', () => {
+      const { vm } = render();
+      vm.rooms.set([]);
+      vm.newRoomType.set('Triple sharing');
+      vm.newRoomPrice.set(14000);
+
+      vm.addRoom();
+
+      const added = vm.rooms().find((r) => r.type === 'Triple sharing');
+      expect(added?.capacity).toBe(3);
+    });
+
+    it('blocks a zero price with an inline message before adding', () => {
+      const { vm } = render();
+      vm.rooms.set([]);
+      vm.newRoomType.set('Single room');
+      vm.newRoomPrice.set(0);
+
+      vm.addRoom();
+
+      expect(vm.rooms()).toHaveLength(0);
+      expect(vm.roomFormError()).toBeTruthy();
+    });
+  });
+
+  describe('draft restore', () => {
+    it('does not resurrect a persisted capacity for a fixed-capacity type', () => {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ newRoomType: 'Quad sharing', newRoomCapacity: 1, rooms: [] }),
+      );
+
+      const { vm } = render();
+
+      expect(vm.newRoomType()).toBe('Quad sharing');
+      expect(vm.capacityFixed()).toBe(true);
+      expect(vm.newRoomCapacity()).toBe(4);
     });
   });
 

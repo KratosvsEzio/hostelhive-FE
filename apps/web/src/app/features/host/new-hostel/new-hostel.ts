@@ -6,6 +6,7 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -34,6 +35,12 @@ import {
 import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/maps';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
+import {
+  clampCapacity,
+  DORMITORY_DEFAULT_CAPACITY,
+  fixedCapacityFor,
+  ROOM_TYPES,
+} from '@util/room-types';
 
 type GenderType = 'boys' | 'girls' | 'co-living';
 
@@ -98,13 +105,7 @@ export class NewHostel {
   private readonly destroyRef = inject(DestroyRef);
 
   // ── dropdown options ──
-  protected readonly roomTypes = [
-    'Single room',
-    'Double sharing',
-    'Triple sharing',
-    'Quad sharing',
-    'Dormitory',
-  ];
+  protected readonly roomTypes: readonly string[] = ROOM_TYPES;
   protected readonly genderOptions: DropdownOption[] = [
     { value: 'boys', label: 'Boys' },
     { value: 'girls', label: 'Girls' },
@@ -178,8 +179,20 @@ export class NewHostel {
   private roomId = 0;
   protected readonly rooms = signal<RoomEntry[]>([]);
   protected readonly newRoomType = signal(this.roomTypes[0]);
-  protected readonly newRoomCapacity = signal(1);
+  protected readonly newRoomCapacity = linkedSignal<string, number>({
+    source: () => this.newRoomType(),
+    computation: (type, prev) => {
+      const fixed = fixedCapacityFor(type);
+      if (fixed !== null) return fixed;
+      // A manual value only survives when the previous type was also variable.
+      return prev && fixedCapacityFor(prev.source) === null
+        ? prev.value
+        : DORMITORY_DEFAULT_CAPACITY;
+    },
+  });
+  protected readonly capacityFixed = computed(() => fixedCapacityFor(this.newRoomType()) !== null);
   protected readonly newRoomPrice = signal(0);
+  protected readonly roomFormError = signal<string | null>(null);
 
   // Types already added stay in the list but greyed out, so the picker never shifts under the host.
   protected readonly roomTypeOptions = computed<DropdownOption[]>(() => {
@@ -359,16 +372,32 @@ export class NewHostel {
   }
 
   // ── rooms ──
+  protected setNewRoomCapacity(raw: string): void {
+    const n = Math.floor(parseFloat(raw));
+    // Empty or non-numeric mid-edit keeps the last good value instead of snapping to 1.
+    if (!Number.isFinite(n)) return;
+    this.newRoomCapacity.set(clampCapacity(n));
+  }
+  protected setNewRoomPrice(raw: string): void {
+    const n = Number(raw);
+    this.newRoomPrice.set(Number.isFinite(n) && n > 0 ? n : 0);
+    if (this.newRoomPrice() > 0) this.roomFormError.set(null);
+  }
   protected addRoom(): void {
     const type = this.newRoomType();
     if (!type || this.rooms().some((r) => r.type === type)) return;
+    if (this.newRoomPrice() <= 0) {
+      this.roomFormError.set('Enter a monthly price greater than 0');
+      return;
+    }
+    this.roomFormError.set(null);
     this.rooms.update((list) => [
       ...list,
       {
         id: ++this.roomId,
         type,
-        capacity: Math.max(1, this.newRoomCapacity()),
-        price: Math.max(0, this.newRoomPrice()),
+        capacity: clampCapacity(this.newRoomCapacity()),
+        price: this.newRoomPrice(),
       },
     ]);
     this.newRoomType.set(this.firstAvailableRoomType());
