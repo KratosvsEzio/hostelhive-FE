@@ -151,7 +151,8 @@
               <label class="mb-1 block text-xs font-medium text-ink-600">Room type</label>
               <hh-dropdown
                 variant="field"
-                [options]="roomTypeOptions"
+                placeholder="All types added"
+                [options]="roomTypeOptions()"
                 [value]="newRoomType()"
                 (valueChange)="setRoomType($event)"
               />
@@ -165,14 +166,19 @@
             />
             <hh-input
               class="sm:col-span-3"
-              label="Price / month"
-              icon="ti-coin"
+              label="Price / month (PKR)"
               type="number"
               [value]="newRoomPrice() + ''"
               (valueChange)="newRoomPrice.set(+$event || 0)"
             />
             <div class="sm:col-span-1">
-              <button hh-button color="primary" class="w-full" (click)="addRoom()" aria-label="Add room">
+              <button
+                hh-button color="primary"
+                class="w-full"
+                [disabled]="allRoomTypesUsed() || !newRoomType()"
+                (click)="addRoom()"
+                aria-label="Add room"
+              >
                 <i class="ti ti-plus" aria-hidden="true"></i>
               </button>
             </div>

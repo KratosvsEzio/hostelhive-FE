@@ -143,9 +143,6 @@ export class OnboardingWizard {
     'Quad sharing',
     'Dormitory',
   ];
-  protected readonly roomTypeOptions: DropdownOption[] = this.roomTypes.map(
-    (t) => ({ value: t, label: t }),
-  );
   protected readonly genderOptions: DropdownOption[] = [
     { value: 'boys', label: 'Boys' },
     { value: 'girls', label: 'Girls' },
@@ -229,6 +226,20 @@ export class OnboardingWizard {
   protected readonly newRoomType = signal(this.roomTypes[0]);
   protected readonly newRoomCapacity = signal(1);
   protected readonly newRoomPrice = signal(12000);
+
+  // Types already added stay in the list but greyed out, so the picker never shifts under the host.
+  protected readonly roomTypeOptions = computed<DropdownOption[]>(() => {
+    const used = new Set(this.rooms().map((r) => r.type));
+    return this.roomTypes.map((t) => ({
+      value: t,
+      label: t,
+      disabled: used.has(t),
+      disabledTooltip: used.has(t) ? 'Already added' : undefined,
+    }));
+  });
+  protected readonly allRoomTypesUsed = computed(() =>
+    this.roomTypeOptions().every((o) => o.disabled),
+  );
 
   // --- API draft persistence ---
   private readonly hostelsApi = inject(HostelsApi);
@@ -454,19 +465,28 @@ export class OnboardingWizard {
 
   // --- Step 4: rooms ---
   protected addRoom(): void {
+    const type = this.newRoomType();
+    if (!type || this.rooms().some((r) => r.type === type)) return;
     this.rooms.update((list) => [
       ...list,
       {
         id: ++this.roomId,
-        type: this.newRoomType(),
+        type,
         capacity: Math.max(1, this.newRoomCapacity()),
         price: Math.max(0, this.newRoomPrice()),
       },
     ]);
+    this.newRoomType.set(this.firstAvailableRoomType());
   }
 
   protected removeRoom(id: number): void {
     this.rooms.update((list) => list.filter((r) => r.id !== id));
+    if (!this.newRoomType()) this.newRoomType.set(this.firstAvailableRoomType());
+  }
+
+  private firstAvailableRoomType(): string {
+    const used = new Set(this.rooms().map((r) => r.type));
+    return this.roomTypes.find((t) => !used.has(t)) ?? '';
   }
 
   // --- Step 5: save form then navigate to payment page ---
@@ -534,7 +554,9 @@ export class OnboardingWizard {
   }
 
   protected setRoomType(v: string | string[] | null): void {
-    if (typeof v === 'string' && v) this.newRoomType.set(v);
+    if (typeof v !== 'string' || !v) return;
+    if (this.rooms().some((r) => r.type === v)) return;
+    this.newRoomType.set(v);
   }
 
   // --- Step 5: amenities ---
@@ -633,7 +655,15 @@ export class OnboardingWizard {
         this.mediaId = d.media.reduce((max, m) => Math.max(max, m.id ?? 0), 0);
       }
       if (Array.isArray(d.rooms)) {
-        this.rooms.set(d.rooms);
+        // Drafts saved before one-row-per-type was enforced can hold duplicates; keep the first of each.
+        const seen = new Set<string>();
+        const rooms: Room[] = [];
+        for (const r of d.rooms) {
+          if (seen.has(r.type)) continue;
+          seen.add(r.type);
+          rooms.push(r);
+        }
+        this.rooms.set(rooms);
         this.roomId = d.rooms.reduce((max, r) => Math.max(max, r.id ?? 0), 0);
       }
       if (Array.isArray(d.amenities)) {
@@ -643,6 +673,13 @@ export class OnboardingWizard {
       }
       if (typeof d.newRoomType === 'string')
         this.newRoomType.set(d.newRoomType);
+      // A stale draft can resume pointed at an unknown or already-added type.
+      const restoredType = this.newRoomType();
+      if (
+        !this.roomTypes.includes(restoredType) ||
+        this.rooms().some((r) => r.type === restoredType)
+      )
+        this.newRoomType.set(this.firstAvailableRoomType());
       if (typeof d.newRoomCapacity === 'number')
         this.newRoomCapacity.set(d.newRoomCapacity);
       if (typeof d.newRoomPrice === 'number')
