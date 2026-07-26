@@ -39,7 +39,7 @@ Confirm during each ticket's `/implement` run.
 | [B1](#b1) | Fix the pill of gender on card | `FE` | OPEN |
 | [B2](#b2) | Click on login, it takes to sign up page | `FE` | **RESOLVED** |
 | [B3](#b3) | Favorite button issue — 401 when signed out | `FE` | OPEN |
-| [B4](#b4) | Save and exit button doesn't work; logo should link home | `FE` | OPEN |
+| [B4](#b4) | Save and exit button doesn't work; logo should link home | `FE` | **RESOLVED** |
 | [B5](#b5) | Avatar dropdown should close on outside click | `FE` | **RESOLVED** |
 | [B6](#b6) | New-hostel photo upload — 10-image cap not enforced, images not uploading | `FE` | **RESOLVED** |
 | [B7](#b7) | Room type selectable once only; `$` → PKR with commas | `FE` | **RESOLVED** |
@@ -61,7 +61,7 @@ Confirm during each ticket's `/implement` run.
 | [T7](#t7) | Rename "Single room" in the breakdown dropdown | `NEEDS-INFO` | OPEN |
 | [T8](#t8) | Button to copy location / open in Google Maps | `FE` | OPEN |
 | [T9](#t9) | Room capacity should be pre-selected | `FE` | OPEN |
-| T10 | Edit button should open edit drawer in place | `FE` | OPEN |
+| T10 | Edit button should open edit drawer in place | `FE` | **RESOLVED** |
 | T11 | Billing date dropdowns 1–31 with ordinal label | `FE` | **RESOLVED** |
 
 ---
@@ -648,8 +648,22 @@ These block or shape the tickets above:
 
 Found while working other tickets; none are on the Trello board yet.
 
+**Resolved:** F10 (layout only — 3 of 7 sites; see F23), F16, F17, F18.
+
 | # | Finding | Source |
 |---|---|---|
+| F23 | Four remaining `hh-button`-without-`Button` sites, all blocked by another author's uncommitted work: `features/public/home/home.html`, `home/pakistan-map/pakistan-map.html`, `search/listing-card/listing-card.html`, `search/search-map/search-map.html`. A lint/test guard for this pattern is worth adding once they land — it would fail today. | F10 |
+| F24 | **`draftId` is never cleared from `hh:onboarding:draft`.** A host who completes a listing and returns to `/host/listings/new` silently `PUT`s over their existing hostel. B4 **widened** this: previously only "Continue to payment" could trigger it, now an exit-shaped action can too. Needs a draft-lifecycle decision (clear on publish? scope the key by hostel?), not a patch. | B4 |
+| F25 | The onboarding wizard's entire step machinery is dead — `step`, `stepLabels`, `lastStep`, `heading`, `subheading`, `nextLabel`, `next()`, `back()`, `goToStep()`, `publishOnApproval`, `published`, `genderLabel()`, `genderBadgeVariant()` have zero template references. **The class docstring is also stale** — it still describes "a 5-step wizard driven by `hh-stepper`". Note `step` is round-tripped through localStorage, so deleting it needs a draft-shape thought. | B4 |
+| F26 | `features/user/favorites.ts` fires `listFavourites()` at construction with no `isBrowser` guard, and `security.ts` reads no session at all. The F17 guard + `RenderMode.Client` make these unreachable, not correct — any future decision to server-render `/account` re-opens the error-state flash. | F16/F17 |
+| F27 | `seeker-tab-bar.ts` hardcodes `/account/favorites` and `/account/settings` with no session awareness, so guests now funnel to the Lead Wall. That is the intended conversion path, but making the tabs session-reactive is a design decision worth taking deliberately. | F17 |
+| F28 | **Deployment prerequisite created by F16.** Passing `allowedHosts` to the constructor flips `isAllowedHostConfigured`, so an *unrecognised* host is now a hard **400**, not a CSR fallback. A missing `NG_ALLOWED_HOSTS` refuses to boot (by design); a **wrong** one is an outage. Behind a proxy it must list the **public** hostname, not `localhost`. See `docs/DEPLOY.md`. | F16 |
+| F29 | `toneFor` / `TONES` in `tenants.ts` are dead — no template reference. Free to delete. | T10 |
+| F30 | `hostelId` is read untracked (`this.store.selected()` inside an rxjs `map`) in both invoice streams on the tenant profile — the same latent staleness class as the `roomId` bug fixed in T10, just not reachable today because switching hostels navigates away. | T10 |
+| F31 | `nx format:write` is unusable even when scoped: it always also rewrites `nx.json` and `tsconfig.base.json`, and reformats unrelated call sites in any file it touches. And `nx format:check` only inspects files changed vs base, so its "clean" result is misleading — the repo is broadly not prettier-conformant. Supersedes F5 with the mechanism. | batch 3 |
+| F32 | Three pre-existing `web:test` failures remain untriaged: `session-store.spec.ts > tracks role + permissions for a host session`, `admin.routes.spec.ts > exposes roles, contracts and payments`, `moderator.routes.spec.ts > exposes the six moderator screens`. Plus 5 pre-existing `web:lint` errors and 2 in `lib:lint`. | ongoing |
+| F33 | Pre-existing dialog a11y in the tenant form drawer (now on two pages, not one): Escape is bound on a backdrop with `tabindex="-1"`, and the panel calls `$event.stopPropagation()` on keydown so Escape can never reach it. `role="dialog" aria-modal="true"` with no focus trap. T10 added focus-in and focus-restore only. | T10 |
+| F34 | `<app-host-tab-bar>` is `fixed bottom-0 z-40` rendered after the router-outlet, so on mobile it paints over the tenant drawer's sticky footer, partly covering Cancel/Save. T10 means this now affects the tenant **profile** page too. | T10 |
 | F1 | `date-picker` clear affordance is a `<span role="button">` at 20px — fails WCAG 2.2 SC 2.5.8 (24px min) and binds only `keydown.enter`, so Space does nothing. Real a11y bug. `lib/src/ui/lib/date-picker/date-picker.ts:121-132` | T5 |
 | F2 | Lead Wall + Host team password fields set no `autocomplete` at all, so password managers won't offer to save on registration. `hh-input` now has the passthrough; the call sites just need it. | T5 |
 | F3 | `settings.html` still uses raw `.hh-input`, so the two Account tabs now differ visually. Blocked: its email field has a rich label with a "Can't be changed" badge that `hh-input`'s string `label` can't express — needs a label projection slot on the atom. | T5 |
