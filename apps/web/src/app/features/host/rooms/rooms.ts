@@ -30,7 +30,9 @@ import {
   SortState,
 } from '@hostelhive/ui';
 import { HostOpsApi, HostPropertyStore, RoomAggs, RoomRenter, RoomStatusOption, RoomTypeOption } from '@services';
-import { HostRoom as Room, RoomStatus } from '@hostelhive/data-access';
+import { ApiError, HostRoom as Room, RoomStatus } from '@hostelhive/data-access';
+import { NotificationService } from '@core/notification.service';
+import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -119,6 +121,7 @@ export class Rooms {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notifications = inject(NotificationService);
   private readonly refresh = signal(0);
 
   /** Locally-mutated copy so create/edit reflect immediately (no write API yet). */
@@ -490,11 +493,13 @@ export class Rooms {
     this.deletedRenterIds.update((s) => { const n = new Set(s); n.add(renter.id); return n; });
     this.renterDeletePending.set(null);
     this.renterDeleting.set(true);
+    // The backend exposes no DELETE for renters, so this always 404s; the revert + toast make the failure visible.
     this.api.deleteRenter(hostelId, renter.id).subscribe({
       next: () => { this.renterDeleting.set(false); },
-      error: () => {
+      error: (err: ApiError) => {
         this.deletedRenterIds.update((s) => { const n = new Set(s); n.delete(renter.id); return n; });
         this.renterDeleting.set(false);
+        this.notifyDeleteFailure(err);
       },
     });
   }
@@ -526,12 +531,21 @@ export class Rooms {
     const hostelId = this.store.selected();
     if (!hostelId) return;
     this.api.deleteRoom(hostelId, r.id).subscribe({
-      error: () => this.refresh.update((n) => n + 1),
+      error: (err: ApiError) => {
+        this.refresh.update((n) => n + 1);
+        this.notifyDeleteFailure(err);
+      },
     });
   }
 
   protected cancelRoomDelete(): void {
     this.roomDeletePending.set(null);
+  }
+
+  /** Surfaces a delete failure as a pinned toast so the reverted item isn't a silent no-op. */
+  private notifyDeleteFailure(err: ApiError): void {
+    const { title, message } = toToastCopy(err);
+    this.notifications.show({ kind: 'error', title, message }, 0);
   }
 
   protected save(): void {

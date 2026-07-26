@@ -17,7 +17,9 @@
       <div class="min-w-0 flex-1 pt-0.5">
         <p class="text-sm font-semibold text-ink-900">{{ t.title }}</p>
         @if (t.message) {
-          <p class="mt-0.5 text-sm leading-snug text-ink-500">
+          <p
+            class="mt-0.5 line-clamp-4 whitespace-pre-line text-sm leading-snug text-ink-500"
+          >
             {{ t.message }}
           </p>
         }

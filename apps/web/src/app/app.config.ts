@@ -13,6 +13,7 @@ import {
 } from '@angular/platform-browser';
 import { ApiError } from '@hostelhive/data-access';
 import { API_ERROR_NOTIFIER } from '@core/tokens';
+import { toToastCopy } from '@core/errors/api-error-message';
 import { provideDataAccess } from '@core/provide-data-access';
 import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
@@ -41,17 +42,16 @@ export const appConfig: ApplicationConfig = {
       errorInterceptor,
     ]),
     provideAuth(),
-    // Surface unexpected API failures (5xx / network) as a non-blocking toast, app-wide. The
-    // data-access error interceptor calls this; the page keeps working regardless of the failure.
+    // Surface failed API calls as a non-blocking toast, app-wide. The data-access error
+    // interceptor calls this; the page keeps working regardless of the failure. 4xx carry a
+    // server-supplied message worth reading, so they are pinned; transient 5xx/network auto-dismiss.
     {
       provide: API_ERROR_NOTIFIER,
-      useFactory: (notify: NotificationService) => (e: ApiError) =>
-        notify.error(
-          e.status === 0 ? 'Connection problem' : 'Something went wrong',
-          e.status === 0
-            ? 'Check your internet connection and try again.'
-            : 'We could not reach the server. Please try again in a moment.',
-        ),
+      useFactory: (notify: NotificationService) => (e: ApiError) => {
+        const { title, message } = toToastCopy(e);
+        const pinned = e.status >= 400 && e.status < 500;
+        notify.show({ kind: 'error', title, message }, pinned ? 0 : 6000);
+      },
       deps: [NotificationService],
     },
     // ── Google Auth (Capacitor plugin: native on Android/iOS, GIS popup on web) ─

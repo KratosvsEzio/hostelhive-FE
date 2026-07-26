@@ -31,8 +31,10 @@ import {
 } from '@hostelhive/ui';
 import { downloadCsv } from '@util/csv';
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { Invoice, InvoiceStatus } from '@hostelhive/data-access';
+import { ApiError, Invoice, InvoiceStatus } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
+import { NotificationService } from '@core/notification.service';
+import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -92,6 +94,7 @@ export class Invoices {
   private readonly api = inject(HostOpsApi);
   private readonly apiBaseUrl = inject(API_CONFIG).baseUrl;
   private readonly store = inject(HostPropertyStore);
+  private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -682,9 +685,11 @@ export class Invoices {
     this.deleting.set(true);
     this.api.deleteInvoice(hostelId, inv.id).subscribe({
       next: () => { this.deleting.set(false); },
-      error: () => {
+      error: (err: ApiError) => {
         this.deletedIds.update((s) => { const n = new Set(s); n.delete(inv.id); return n; });
         this.deleting.set(false);
+        const { title, message } = toToastCopy(err);
+        this.notifications.show({ kind: 'error', title, message }, 0);
       },
     });
   }
