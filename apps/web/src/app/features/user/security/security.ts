@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Button } from '@hostelhive/ui';
+import { Button, Input } from '@hostelhive/ui';
 import { AuthApi } from '@services';
 import { NotificationService } from '@core/notification.service';
 import { finalize } from 'rxjs';
@@ -7,7 +7,7 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-account-security',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button],
+  imports: [Button, Input],
   templateUrl: './security.html',
 })
 export class AccountSecurity {
