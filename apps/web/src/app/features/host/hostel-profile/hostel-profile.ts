@@ -239,10 +239,24 @@ export class HostelProfile {
   // ── room types ──
   protected readonly roomTypes = signal<EditRoomType[]>([]);
   private readonly origRoomTypes = signal<EditRoomType[]>([]);
+  private readonly removedRts = signal<EditRoomType[]>([]);
   protected readonly addRtOpen = signal(false);
   protected readonly newRtName = signal('');
   protected readonly newRtCapacity = signal(1);
   protected readonly newRtPrice = signal(0);
+  protected readonly usedRtNames = computed(() => this.roomTypes().map((rt) => rt.name));
+  protected readonly newRtError = computed(() => {
+    if (!this.addRtOpen()) return '';
+    const name = this.newRtName().trim();
+    if (!name) return 'Select a room type.';
+    if (name === 'Dormitory') {
+      const cap = this.newRtCapacity();
+      if (cap < 5) return 'Dormitory capacity must be at least 5.';
+      if (cap > 200) return 'Dormitory capacity cannot exceed 200.';
+    }
+    if (this.newRtPrice() <= 0) return 'Enter a price greater than 0.';
+    return '';
+  });
 
   // ── photos ──
   private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
@@ -553,12 +567,17 @@ export class HostelProfile {
       nearby_landmarks: snap.landmarks,
       offer_ids: snap.offerIds,
       total_rooms: currentRts.length || 1,
-      room_types_attributes: currentRts.map((rt) => ({
-        ...(rt.id != null ? { id: rt.id } : {}),
-        name: rt.name,
-        capacity: rt.capacity,
-        price: rt.price,
-      })),
+      room_types_attributes: [
+        ...currentRts.map((rt) => ({
+          ...(rt.id != null ? { id: rt.id } : {}),
+          name: rt.name,
+          capacity: rt.capacity,
+          price: rt.price,
+        })),
+        ...this.removedRts()
+          .filter((rt) => rt.id != null)
+          .map((rt) => ({ id: rt.id!, name: rt.name, capacity: rt.capacity, price: rt.price, _destroy: true as const })),
+      ],
       ...(snap.lat !== null ? { latitude: snap.lat } : {}),
       ...(snap.lng !== null ? { longitude: snap.lng } : {}),
       ...(snap.country ? { country: snap.country } : {}),
@@ -588,6 +607,7 @@ export class HostelProfile {
           }));
           this.roomTypes.set(serverRts);
           this.origRoomTypes.set(serverRts.map((r) => ({ ...r })));
+          this.removedRts.set([]);
         },
         error: () => {
           this.saving.set(false);
@@ -624,6 +644,13 @@ export class HostelProfile {
       { _key: `new-${Date.now()}`, name, capacity: cap, price },
     ]);
     this.closeAddRt();
+  }
+
+  protected removeRt(key: string): void {
+    const rt = this.roomTypes().find((r) => r._key === key);
+    if (!rt) return;
+    if (rt.id != null) this.removedRts.update((list) => [...list, rt]);
+    this.roomTypes.update((list) => list.filter((r) => r._key !== key));
   }
 
   protected retry(): void {

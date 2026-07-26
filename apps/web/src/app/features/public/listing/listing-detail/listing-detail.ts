@@ -111,8 +111,11 @@ export class ListingDetail {
 
   protected toggleSaved(): void {
     // Saving hits the authenticated favourites API — firing it signed-out returns 401.
-    // Gate on the session and surface the same sign-in modal the phone/WhatsApp actions use.
-    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
+    // Send unauthenticated users straight to the login page (returning here after) (B3).
+    if (!this.session.isAuthenticated()) {
+      void this.router.navigate(['/auth'], { queryParams: { returnUrl: this.currentPath() } });
+      return;
+    }
     const listing = this.state().data;
     if (listing) this.favorites.toggle(listing);
   }
@@ -123,9 +126,9 @@ export class ListingDetail {
   protected readonly lightboxIndex = signal<number | null>(null);
   protected readonly lightboxImages = computed(() => this.state().data?.images ?? []);
 
-  /** Gallery thumbnails — every image after the hero. */
+  /** Gallery thumbnails — up to 4 images after the hero to fill the 2×2 grid. */
   protected readonly thumbs = computed(
-    () => this.state().data?.images.slice(1) ?? [],
+    () => this.state().data?.images.slice(1, 5) ?? [],
   );
 
   /** Offer rows with resolved icon and human-readable label. */

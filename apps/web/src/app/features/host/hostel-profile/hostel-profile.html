@@ -195,15 +195,25 @@
           @if (roomTypes().length) {
             <ul class="space-y-2">
               @for (rt of roomTypes(); track rt._key) {
-                <li>
+                <li class="flex items-center gap-2">
                   <hh-room-type-row
+                    class="min-w-0 flex-1"
                     [name]="rt.name"
                     [capacity]="rt.capacity"
                     [price]="rt.price"
+                    [excludeNames]="usedRtNames().filter(n => n !== rt.name)"
                     (nameChange)="updateRt(rt._key, 'name', $event)"
                     (capacityChange)="updateRt(rt._key, 'capacity', $event)"
                     (priceChange)="updateRt(rt._key, 'price', $event)"
                   />
+                  <button
+                    type="button"
+                    class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-400 transition hover:bg-danger-50 hover:text-danger-500"
+                    aria-label="Remove room type"
+                    (click)="removeRt(rt._key)"
+                  >
+                    <i class="ti ti-trash text-sm" aria-hidden="true"></i>
+                  </button>
                 </li>
               }
             </ul>
@@ -226,13 +236,19 @@
                 [name]="newRtName()"
                 [capacity]="newRtCapacity()"
                 [price]="newRtPrice()"
+                [excludeNames]="usedRtNames()"
                 (nameChange)="newRtName.set($event)"
                 (capacityChange)="newRtCapacity.set($event)"
                 (priceChange)="newRtPrice.set($event)"
               />
+              @if (newRtError(); as err) {
+                <p class="mt-2 flex items-center gap-1.5 text-xs font-medium text-danger">
+                  <i class="ti ti-alert-circle text-sm" aria-hidden="true"></i>{{ err }}
+                </p>
+              }
               <div class="mt-2 flex justify-end gap-2">
                 <button hh-button variant="text" size="sm" (click)="closeAddRt()">Cancel</button>
-                <button hh-button color="primary" size="sm" (click)="confirmAddRt()">Add room type</button>
+                <button hh-button color="primary" size="sm" [disabled]="!!newRtError()" (click)="confirmAddRt()">Add room type</button>
               </div>
             </div>
           }
