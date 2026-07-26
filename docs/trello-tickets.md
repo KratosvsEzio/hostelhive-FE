@@ -43,10 +43,10 @@ Confirm during each ticket's `/implement` run.
 | [B5](#b5) | Avatar dropdown should close on outside click | `FE` | **RESOLVED** |
 | [B6](#b6) | New-hostel photo upload — 10-image cap not enforced, images not uploading | `FE` | **RESOLVED** |
 | [B7](#b7) | Room type selectable once only; `$` → PKR with commas | `FE` | **RESOLVED** |
-| [B8](#b8) | Show the exact error (toast/alert) | `FE` | OPEN |
+| [B8](#b8) | Show the exact error (toast/alert) | `FE` | **RESOLVED** |
 | [B9](#b9) | Tenant status should update without reload; "Inactive" ≠ "Checkout" | `FE` | OPEN |
-| [B10](#b10) | Emptying leave date in renters form doesn't send nil | `NEEDS-INFO` | OPEN |
-| [B11](#b11) | Search not working — wrong query param | `FE` | OPEN |
+| [B10](#b10) | Emptying leave date in renters form doesn't send nil | `NEEDS-INFO` | **RESOLVED** |
+| [B11](#b11) | Search not working — wrong query param | `FE` | **RESOLVED** |
 
 ### To Do (11)
 
@@ -60,7 +60,7 @@ Confirm during each ticket's `/implement` run.
 | [T6](#t6) | Picture extension whitelist inconsistent pre/post creation | `FE` | **RESOLVED** |
 | [T7](#t7) | Rename "Single room" in the breakdown dropdown | `NEEDS-INFO` | OPEN |
 | [T8](#t8) | Button to copy location / open in Google Maps | `FE` | OPEN |
-| [T9](#t9) | Room capacity should be pre-selected | `FE` | OPEN |
+| [T9](#t9) | Room capacity should be pre-selected | `FE` | **RESOLVED** |
 | T10 | Edit button should open edit drawer in place | `FE` | **RESOLVED** |
 | T11 | Billing date dropdowns 1–31 with ordinal label | `FE` | **RESOLVED** |
 
@@ -283,8 +283,42 @@ icons remaining.
 ### Show the exact error
 - **Card:** https://trello.com/c/ncdMoTvS
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+
+**Resolution.** New DI-free `core/errors/api-error-message.ts` extracts the server's
+own message from every Rails envelope shape (`errors: string[]`, `errors: string`,
+`errors: Record<string,string[]>`, singular `error`) and maps it to safe toast copy.
+The synthetic `HttpErrorResponse.message` (which embeds the internal API origin +
+full URL) is **never** surfaced — `serverMessages` is populated only from the
+envelope, verified by a spec asserting no `"Http failure response"`/`192.168` string
+appears for statuses `[0,400,401,403,404,422,500,503]`.
+
+The error interceptor now notifies on **all 4xx except 401** (routed to the
+unauthorized handler) plus 5xx/network, gated by a new `SUPPRESS_ERROR_TOAST`
+`HttpContextToken` so the auth screens' inline errors don't double-toast. 4xx toasts
+are **pinned** (`ttlMs:0`); 5xx/network keep the 6s ttl. The notification service
+**coalesces** an identical un-dismissed toast (refreshing its timer) and **caps** the
+stack at 4 (drops oldest) — so a fanned-out dashboard against a down API can't stack
+duplicates. Destructive room/invoice deletes now fire the same pinned failure toast
+on their error branch, reusing `toToastCopy` so the copy is byte-identical and
+coalesces to one.
+
+This makes the two confirmed backend gaps (delete-renter 404, favourites 404) **loud
+instead of silent** — the correct FE treatment for a bug it can surface but not fix.
+
+Files: `core/errors/api-error-message.{ts,spec.ts}`,
+`core/interceptors/error-interceptor.{ts,spec.ts}`,
+`core/notification.service.{ts,spec.ts,ssr.spec.ts}`, `core/tokens.ts`,
+`core/api-resource.ts`, `app.config.ts`, `services/auth-api.ts`,
+`util/models/api-error.ts`, `layout/components/toast-host/toast-host.html`,
+`features/host/rooms/rooms.ts`, `features/host/invoices/invoices.ts`.
+
+Verified: typecheck clean; +45 new passing unit specs (no-leak table, interceptor
+routing incl. 401-not-toasted, coalescing/cap/ttl, SSR no-op); build succeeds; app
+boots clean. Closes **RISKS R1, R8, R9, R16**. A "session expired" 401 toast is a
+deliberate follow-up (a cold-load with an expired cookie is a 401 and would toast on
+every load).
 
 **Description (from card):**
 > We need to show the error in some form of alert template, of some kind of toaster
@@ -317,8 +351,20 @@ relabel; render the API's status verbatim.
 ### When try to empty the leave date in renters form it didnt get nil
 - **Card:** https://trello.com/c/GcR1CM8f
 - **Triage:** `NEEDS-INFO`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** none
+
+**Resolution.** `toUpdateRenterPayload` now sends `leave_date: f.leaveDate || null`
+(was `|| undefined`), so clearing the field posts an explicit `null` that Rails
+persists as nil instead of the key being dropped and the old date surviving. The
+function's own docstring already promised "clearable fields send an explicit null" —
+`room_id`/`mess_charges`/`transportation_charges` already did; `leave_date` was the
+one that didn't. `updateRenter`'s body type widened to `leave_date?: string | null`.
+The **create** payload keeps `|| undefined` (nothing to clear on create). Regression
+spec added: a cleared leave date serialises to `null`.
+
+Files: `features/host/tenants/tenant-form-drawer/tenant-form.model.{ts,spec.ts}`,
+`services/host-ops-api.ts` (committed earlier as `2eb96e9`).
 
 **Description (from card):** *(empty)*
 
@@ -332,8 +378,16 @@ payload confirmed before implementing.
 ### Search isnt working. Wrong params
 - **Card:** https://trello.com/c/f7AMHDsK
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+
+**Resolution.** The tenant search sent `filters['q']`, a param Rails never permits
+(renter search is `params.permit(s: {}, f: {}, or: {}, sort: {})`), so every query was
+silently discarded server-side. Changed to `filters['s[full_name]']` — `full_name` is
+an indexed Elasticsearch field, confirmed against the backend clone. Verified the
+`s[...]` search namespace is distinct from this repo's `f[...]` filter convention.
+
+Files: `features/host/tenants/tenants.ts` (committed earlier as `2eb96e9`).
 
 **Description (from card):**
 > The search query param in the payload should be `s[full_name]`
@@ -545,8 +599,29 @@ wanted.
 ### room capacity should be pre selected
 - **Card:** https://trello.com/c/83Uh3xyq
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+
+**Resolution.** Capacity is now **derived from the room type** rather than free-typed.
+New shared `util/room-types.ts` defines `fixedCapacityFor(type)` — Single 1, Double 2,
+Triple 3, Quad 4, Dormitory `null` (manual) — plus `clampCapacity` (floor, then clamp
+to the backend-validated 1–9). On both creation surfaces the capacity field is a
+`linkedSignal` keyed on the selected type: a fixed type auto-fills and **disables** the
+input (with a hint); Dormitory re-enables it with a default of **5** (editable). This
+closes the divergence where a listing could be stored "Quad · Sleeps 1" and mis-indexed
+under the wrong public bed-count search facet. `addRoom` also now rejects `price <= 0`
+inline. The onboarding draft-restore path applies a persisted capacity only when the
+effective type is Dormitory, so a fixed type can't be re-corrupted from an old draft.
+
+Dormitory's default is a concrete integer **5** (the card's "5+" is the search-facet
+bucket, not a valid capacity — the column is a validated integer 1–9).
+
+Files: `util/room-types.{ts,spec.ts}`,
+`features/host/new-hostel/new-hostel.{ts,html}`,
+`features/public/onboarding/onboarding-wizard/{ts,html,spec.ts}`.
+
+Verified: typecheck clean; +14 new passing unit specs (capacity derivation, clamp,
+linkedSignal keying, draft-restore guard); build succeeds. Closes **RISKS R7**.
 
 **Description (from card):** *(empty — screenshot only)*
 
