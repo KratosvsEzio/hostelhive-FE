@@ -36,7 +36,7 @@ Confirm during each ticket's `/implement` run.
 
 | ID | Title | Triage | Status |
 |---|---|---|---|
-| [B1](#b1) | Fix the pill of gender on card | `FE` | OPEN |
+| [B1](#b1) | Fix the pill of gender on card | `FE` | **RESOLVED** |
 | [B2](#b2) | Click on login, it takes to sign up page | `FE` | **RESOLVED** |
 | [B3](#b3) | Favorite button issue — 401 when signed out | `FE` | **RESOLVED** |
 | [B4](#b4) | Save and exit button doesn't work; logo should link home | `FE` | **RESOLVED** |
@@ -72,7 +72,7 @@ Confirm during each ticket's `/implement` run.
 ### Fix the pill of gender on card
 - **Card:** https://trello.com/c/B3gT9OTh
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — in the in-flight maps/search changeset (not this branch's commit)
 - **Attachments:** 1 screenshot
 
 **Description (from card):** *(empty — screenshot only)*
@@ -80,6 +80,15 @@ Confirm during each ticket's `/implement` run.
 **Notes:** Screenshot-driven; open the card attachment to see the intended pill
 treatment before changing anything. Gender pill is a shared `ui` Badge variant, so
 check for other consumers before editing.
+
+**Resolution.** Reworked the shared `Badge` pill treatment: the gender variants went
+from a filled pill (`bg-boys/girls text-white`) to an outlined one — colored border,
+white fill, colored text, `rounded-lg` — matching the outlined-button shape and
+staying legible over a photo. Added a `bordered` input to drop the outline (white fill
+only) where the pill sits on an image. Being a shared `ui` Badge, this updates every
+consumer at once.
+
+Files: `lib/src/ui/lib/badge/badge.ts` (+ card consumers)
 
 ---
 
