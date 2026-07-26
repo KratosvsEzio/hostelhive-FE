@@ -66,3 +66,4 @@ vitest.config.*.timestamp*
 .nx/self-healing
 
 storybook-static
+debug-storybook.log
