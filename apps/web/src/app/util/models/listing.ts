@@ -24,8 +24,10 @@ export interface Listing {
   city: string;
   gender: Gender;
   verified: boolean;
+  propertyType?: string; // display label from the BE enum ('Building', 'Apartment', 'Room', 'House')
   sharing: string[]; // ['2-sharing', '3-sharing']
   amenities: string[]; // amenity keys — see AMENITIES
+  offerNames?: string[]; // amenity display names from the hostel's offers, for the card pills
   priceFrom: number; // PKR / month — always starting_price; use priceByCapacity for capacity-aware display
   priceByCapacity?: Record<string, number>; // capacity key ('1'|'2'|'3'|'4'|'5+') → price
   images: string[];

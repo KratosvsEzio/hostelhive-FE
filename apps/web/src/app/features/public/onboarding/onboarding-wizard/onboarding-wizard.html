@@ -219,9 +219,6 @@
                 [disabled]="capacityFixed()"
                 (valueChange)="setNewRoomCapacity($event)"
               />
-              <p class="mt-1 text-xs text-ink-400">
-                {{ capacityFixed() ? 'Set by room type' : 'Beds per room' }}
-              </p>
             </div>
             <hh-input
               class="sm:col-span-3"

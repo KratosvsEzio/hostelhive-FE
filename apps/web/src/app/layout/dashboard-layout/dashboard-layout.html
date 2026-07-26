@@ -3,7 +3,7 @@
     class="relative z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8"
   >
     <div class="flex min-w-0 items-center gap-2 sm:gap-3">
-      @if (!hideMenu) {
+      @if (!hideMenu && !noMenu()) {
         <button
           hh-button variant="icon" size="sm"
           type="button"
@@ -24,7 +24,9 @@
         }
       </div>
     </div>
-    <ng-content select="[hhActions]" />
+    <div class="flex shrink-0 items-center gap-3">
+      <ng-content select="[hhActions]" />
+    </div>
   </header>
   <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
     <!-- Extra bottom padding on the mobile app clears the fixed tab bar. -->

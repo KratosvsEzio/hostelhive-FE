@@ -12,11 +12,13 @@ export type BadgeVariant =
   | 'verified'
   | 'neutral';
 
+/** Outlined-button styling (see Button's OUTLINED shape) — border + matching text, white fill
+ *  so the pill stays legible when it sits over a photo. Non-interactive: no hover/focus states. */
 const PILL: Record<Exclude<BadgeVariant, 'verified'>, string> = {
-  boys: 'bg-boys text-white',
-  girls: 'bg-girls text-white',
-  coliving: 'bg-brand-500 text-white',
-  neutral: 'bg-ink-50 text-ink-600',
+  boys: 'border-boys bg-white text-boys',
+  girls: 'border-girls bg-white text-girls',
+  coliving: 'border-brand-400 bg-white text-brand-600',
+  neutral: 'border-ink-300 bg-white text-ink-700',
 };
 
 const DEFAULT_ICON: Record<BadgeVariant, string> = {
@@ -43,6 +45,8 @@ export class Badge {
   readonly variant = input<BadgeVariant>('neutral');
   /** Override the default Tabler icon for the variant; set to '' to hide. */
   readonly icon = input<string | null>(null);
+  /** Drop the outline and keep just the white fill — used where the pill sits on a photo. */
+  readonly bordered = input(true);
 
   protected readonly iconClass = computed(() => {
     const override = this.icon();
@@ -54,6 +58,7 @@ export class Badge {
     if (v === 'verified') {
       return 'inline-flex items-center gap-1 text-xs font-medium text-brand-600';
     }
-    return `inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${PILL[v]}`;
+    const outline = this.bordered() ? 'border ' : '';
+    return `inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium ${outline}${PILL[v]}`;
   });
 }

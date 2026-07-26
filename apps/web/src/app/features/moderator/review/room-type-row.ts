@@ -62,9 +62,7 @@ export class RoomTypeRow {
 
   protected onCapacityChange(e: Event): void {
     const n = Math.floor(parseFloat((e.target as HTMLInputElement).value));
-    const min = this.isDormitory() ? DORMITORY_MIN : 1;
-    const max = this.isDormitory() ? DORMITORY_MAX : 9;
-    if (Number.isFinite(n)) this.capacityChange.emit(Math.max(min, Math.min(max, n)));
+    if (Number.isFinite(n) && n >= 1) this.capacityChange.emit(n);
   }
 
   protected onPriceChange(e: Event): void {

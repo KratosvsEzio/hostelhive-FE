@@ -34,6 +34,9 @@ interface ApiHostel {
   status?: { id?: number; name?: string; slug?: string } | null;
   attachments?: { url?: string; file_name?: string }[] | null;
   location?: { lat: number; lon: number } | null;
+  // Amenities the hostel offers. Present on the public search payload but often empty;
+  // the card simply renders no amenity pills in that case.
+  offers?: { id?: number | string; name?: string; slug?: string }[] | null;
   // Pre-computed per-capacity prices (direct API fields — preferred over room_types).
   price_capacity_1?: number | null;
   price_capacity_2?: number | null;
@@ -115,8 +118,14 @@ function toListing(h: ApiHostel): Listing {
     city: h.city ?? '',
     gender: GENDER_MAP[h.gender_type ?? ''] ?? 'coliving',
     verified: h.status?.slug === 'active',
+    propertyType: h.property_type ? cap(h.property_type) : undefined,
     sharing: [], // not part of the public search payload
-    amenities: [], // not part of the public search payload
+    amenities: (h.offers ?? [])
+      .map((o) => o?.slug)
+      .filter((s): s is string => !!s),
+    offerNames: (h.offers ?? [])
+      .map((o) => o?.name)
+      .filter((n): n is string => !!n),
     priceFrom: Math.round(h.starting_price ?? 0),
     priceByCapacity: Object.keys(priceByCapacity).length ? priceByCapacity : undefined,
     images: images.length

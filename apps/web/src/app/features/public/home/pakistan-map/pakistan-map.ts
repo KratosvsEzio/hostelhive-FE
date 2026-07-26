@@ -1,4 +1,3 @@
-/// <reference types="google.maps" />
 import {
   ChangeDetectionStrategy,
   Component,
@@ -13,7 +12,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { GoogleMapsLoader } from '@hostelhive/maps';
+import type * as L from 'leaflet';
+import { LeafletLoader } from '@hostelhive/maps';
 import { geoBounds, geoCentroid, geoContains } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { Feature, FeatureCollection } from 'geojson';
@@ -24,9 +24,19 @@ const KEYS = ['adm1', 'adm2', 'adm3'] as const;
 // Map zoom applied when a province / district / tehsil is selected.
 const ZOOMS = [7, 9, 11] as const;
 
+function priceLabel(price: number): string {
+  return price > 0 ? `${Math.round(price / 1000)}k` : '·';
+}
+
+/** Width of the price pill — shared by the SVG and the Leaflet icon so the marker's
+ *  declared size matches what it actually draws (a mismatch offsets the anchor). */
+function pillWidth(price: number): number {
+  return Math.max(44, priceLabel(price).length * 9 + 20);
+}
+
 function priceMarkerSvg(price: number): string {
-  const label = price > 0 ? `${Math.round(price / 1000)}k` : '·';
-  const w = Math.max(44, label.length * 9 + 20);
+  const label = priceLabel(price);
+  const w = pillWidth(price);
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="28">` +
     `<rect rx="14" ry="14" width="${w}" height="28" fill="#F36E21" stroke="#fff" stroke-width="2"/>` +
@@ -36,10 +46,10 @@ function priceMarkerSvg(price: number): string {
 }
 
 /**
- * "Explore Pakistan" drill-down rendered on a real Google base map.
- *  Boundaries (geoBoundaries, CC-BY — bundled as TopoJSON in /geo) are loaded into the
- *  Google Maps Data layer, which gives hover-highlight + click for free. Drilling
- *  province → district → tehsil swaps the Data layer + fitBounds-zooms; the deepest level
+ * "Explore Pakistan" drill-down rendered on a real base map.
+ *  Boundaries (geoBoundaries, CC-BY — bundled as TopoJSON in /geo) are rendered as a
+ *  Leaflet GeoJSON layer, which gives per-feature hover-highlight + click for free.
+ *  Drilling province → district → tehsil swaps the layer and re-zooms; the deepest level
  *  fetches live hostel markers and offers a "Browse stays" CTA. SSR-safe.
  */
 @Component({
@@ -49,7 +59,7 @@ function priceMarkerSvg(price: number): string {
   templateUrl: './pakistan-map.html',
 })
 export class PakistanMap {
-  private readonly loader = inject(GoogleMapsLoader);
+  private readonly loader = inject(LeafletLoader);
   private readonly router = inject(Router);
   private readonly listingsApi = inject(ListingsApi);
   private readonly destroyRef = inject(DestroyRef);
@@ -78,69 +88,51 @@ export class PakistanMap {
     );
   });
 
-  private map!: google.maps.Map;
+  private map!: L.Map;
+  private leaflet!: typeof L;
   private readonly cache: Record<string, FeatureCollection> = {};
   private current: Feature[] = [];
   private stack: Feature[] = [];
   private depth = 0;
-  private gMarkers: google.maps.Marker[] = [];
+  /** The boundary layer for the level currently on screen; replaced on every drill. */
+  private boundaries?: L.GeoJSON;
+  private gMarkers: L.Marker[] = [];
   private markerSub?: Subscription;
 
   constructor() {
+    // The host template wraps this component in `@defer (on viewport)`, so it is not
+    // instantiated until the section actually scrolls into view.
     afterNextRender(() => void this.init());
+    // `map!` may still be unset if the component is torn down before init() resolves, hence
+    // the optional call. Leaflet holds document/window listeners and tile requests until
+    // `remove()`, so this releases them when the user navigates away from the landing page.
+    this.destroyRef.onDestroy(() => this.map?.remove());
   }
 
   private async init(): Promise<void> {
-    if (!this.loader.configured) {
-      this.error.set('Add a Google Maps API key (.env) to enable the map.');
-      this.loading.set(false);
-      return;
-    }
     try {
-      await this.loader.load();
-      this.map = new google.maps.Map(this.mapRef().nativeElement, {
-        center: { lat: 30.4, lng: 69.3 },
+      this.leaflet = await this.loader.load();
+      this.map = this.leaflet.map(this.mapRef().nativeElement, {
+        center: [30.4, 69.3],
         zoom: 5,
-        disableDefaultUI: true,
         zoomControl: true,
-        gestureHandling: 'cooperative',
-        backgroundColor: '#eef2f6',
+        scrollWheelZoom: false, // don't hijack the page scroll on the landing page
       });
-      this.setupData();
+      this.loader.tileLayer(this.leaflet, 'roadmap').addTo(this.map);
       this.renderLevel((await this.load('adm1')).features, 0);
     } catch {
-      this.error.set('Could not load Google Maps — check the API key.');
+      this.error.set('Could not load the map — check your connection.');
     } finally {
       this.loading.set(false);
     }
   }
 
-  private setupData(): void {
-    const d = this.map.data;
-    d.setStyle({
-      fillColor: '#F36E21',
-      fillOpacity: 0.32,
-      strokeColor: '#ffffff',
-      strokeWeight: 1.5,
-    });
-    d.addListener('mouseover', (e: google.maps.Data.MouseEvent) => {
-      d.overrideStyle(e.feature, {
-        fillColor: '#D2560F',
-        fillOpacity: 0.55,
-        strokeWeight: 2.5,
-      });
-      this.hovered.set((e.feature.getProperty('shapeName') as string) ?? null);
-    });
-    d.addListener('mouseout', () => {
-      d.revertStyle();
-      this.hovered.set(null);
-    });
-    d.addListener(
-      'click',
-      (e: google.maps.Data.MouseEvent) =>
-        void this.drill(e.feature.getProperty('shapeName') as string),
-    );
-  }
+  private static readonly BOUNDARY_STYLE: L.PathOptions = {
+    fillColor: '#F36E21',
+    fillOpacity: 0.32,
+    color: '#ffffff',
+    weight: 1.5,
+  };
 
   private async load(key: string): Promise<FeatureCollection> {
     if (this.cache[key]) return this.cache[key];
@@ -153,14 +145,39 @@ export class PakistanMap {
   private renderLevel(features: Feature[], depth: number): void {
     this.depth = depth;
     this.current = features;
-    this.map.data.forEach((f) => this.map.data.remove(f));
     this.hovered.set(null);
-    this.map.data.addGeoJson({ type: 'FeatureCollection', features } as FeatureCollection);
+    this.boundaries?.remove();
+    this.boundaries = this.leaflet
+      .geoJSON({ type: 'FeatureCollection', features } as FeatureCollection, {
+        style: () => PakistanMap.BOUNDARY_STYLE,
+        onEachFeature: (f, layer) => {
+          const name = (f.properties?.['shapeName'] as string) ?? null;
+          layer.on({
+            mouseover: (e) => {
+              (e.target as L.Path).setStyle({
+                fillColor: '#D2560F',
+                fillOpacity: 0.55,
+                weight: 2.5,
+              });
+              (e.target as L.Path).bringToFront();
+              this.hovered.set(name);
+            },
+            // resetStyle restores the layer's declared style, so hover changes never
+            // have to be undone by hand.
+            mouseout: (e) => {
+              this.boundaries?.resetStyle(e.target as L.Path);
+              this.hovered.set(null);
+            },
+            click: () => void this.drill(name),
+          });
+        },
+      })
+      .addTo(this.map);
   }
 
   private clearMarkers(): void {
     this.markerSub?.unsubscribe();
-    this.gMarkers.forEach((m) => m.setMap(null));
+    this.gMarkers.forEach((m) => m.remove());
     this.gMarkers = [];
   }
 
@@ -176,14 +193,22 @@ export class PakistanMap {
         this.listingCount.set(items.length);
         for (const h of items) {
           if (!h.lat || !h.lng) continue;
-          const svgUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(priceMarkerSvg(h.priceFrom))}`;
-          const marker = new google.maps.Marker({
-            position: { lat: h.lat, lng: h.lng },
-            map: this.map,
-            title: h.name,
-            icon: { url: svgUrl, anchor: new google.maps.Point(22, 14) },
-          });
-          marker.addListener('click', () => this.router.navigate(['/hostel', h.slug]));
+          const svg = priceMarkerSvg(h.priceFrom);
+          const w = pillWidth(h.priceFrom);
+          const marker = this.leaflet
+            .marker([h.lat, h.lng], {
+              title: h.name,
+              // The SVG is inlined rather than passed as a data: URL — no encoding round
+              // trip, and it inherits the page's rendering.
+              icon: this.leaflet.divIcon({
+                className: '',
+                html: svg,
+                iconSize: [w, 28],
+                iconAnchor: [w / 2, 14],
+              }),
+            })
+            .addTo(this.map);
+          marker.on('click', () => this.router.navigate(['/hostel', h.slug]));
           this.gMarkers.push(marker);
         }
       });
@@ -237,8 +262,7 @@ export class PakistanMap {
     this.breadcrumb.update((b) => b.slice(0, index + 1));
     this.stack = this.stack.slice(0, index);
     if (index === 0) {
-      this.map.setCenter({ lat: 30.4, lng: 69.3 });
-      this.map.setZoom(5);
+      this.map.setView([30.4, 69.3], 5);
       this.renderLevel((await this.load('adm1')).features, 0);
       return;
     }
@@ -254,8 +278,7 @@ export class PakistanMap {
   private zoomToFeature(f: Feature, zoom: number): void {
     const [lng, lat] = geoCentroid(f as Parameters<typeof geoCentroid>[0]);
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      this.map.setCenter({ lat, lng });
-      this.map.setZoom(zoom);
+      this.map.setView([lat, lng], zoom);
     }
   }
 }

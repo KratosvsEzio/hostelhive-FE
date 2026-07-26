@@ -45,4 +45,5 @@ export class DashboardLayout {
   readonly label = input<string>('');
   readonly backUrl = input<string>('');
   readonly breadcrumbs = input<Breadcrumb[]>([]);
+  readonly noMenu = input(false);
 }

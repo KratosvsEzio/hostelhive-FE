@@ -9,10 +9,11 @@ import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
-import { Gender } from '@hostelhive/data-access';
+import { Listing } from '@hostelhive/data-access';
 import { FavListItem, FavouritesApi } from '@services/favourites-api';
 import { FavoritesStore } from '@util/favorites-store';
-import { Badge, Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
+import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
+import { ListingCard } from '@features/public/search/listing-card/listing-card';
 
 interface ViewState {
   loading: boolean;
@@ -20,10 +21,37 @@ interface ViewState {
   data: FavListItem[];
 }
 
+/**
+ * Widens a favourites row into the `Listing` the shared card renders.
+ *
+ * `GET /api/favourites` returns a narrower row than `/public/hostels` — no property type,
+ * amenities, rating or coordinates — so the fields the card treats as optional are simply
+ * left unset and it degrades to hiding those pills. `lat`/`lng`/`verified` are required by
+ * the model but unread by the card; they are filler here, not real data. Widen the
+ * endpoint and those pills light up with no change to this page.
+ */
+function toListing(f: FavListItem): Listing {
+  return {
+    id: f.id,
+    slug: f.id, // favourites carry no slug — the id doubles as the route key, as in listings-api
+    name: f.name,
+    area: f.area,
+    city: f.city,
+    gender: f.gender,
+    verified: false,
+    sharing: [],
+    amenities: [],
+    priceFrom: f.priceFrom,
+    images: f.image ? [f.image] : [],
+    lat: 0,
+    lng: 0,
+  };
+}
+
 @Component({
   selector: 'app-account-favorites',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, Badge, Button, ConfirmModal, ErrorState, Skeleton],
+  imports: [RouterLink, Button, ConfirmModal, ErrorState, Skeleton, ListingCard],
   templateUrl: './favorites.html',
 })
 export class AccountFavorites {
@@ -48,8 +76,12 @@ export class AccountFavorites {
   private readonly _removed = signal(new Set<string>());
   protected readonly removePending = signal<FavListItem | null>(null);
 
+  /** Rows still on screen, each paired with the card-ready shape so the template does no
+   *  mapping work per change detection. */
   protected readonly saved = computed(() =>
-    this.state().data.filter((l) => !this._removed().has(l.id)),
+    this.state()
+      .data.filter((l) => !this._removed().has(l.id))
+      .map((item) => ({ item, listing: toListing(item) })),
   );
 
   protected promptRemove(item: FavListItem): void {
@@ -71,9 +103,5 @@ export class AccountFavorites {
 
   protected retry(): void {
     this.refresh.update((n) => n + 1);
-  }
-
-  protected label(g: Gender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
   }
 }

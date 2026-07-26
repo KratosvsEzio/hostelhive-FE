@@ -1,4 +1,4 @@
-<app-dashboard-layout label="New hostel">
+<app-dashboard-layout label="New hostel" [noMenu]="true">
   <ng-container hhActions>
     <a hh-button variant="text" size="sm" routerLink="/host">Cancel</a>
     <button
@@ -174,9 +174,6 @@
                 [disabled]="capacityFixed()"
                 (valueChange)="setNewRoomCapacity($event)"
               />
-              <p class="mt-1 text-xs text-ink-400">
-                {{ capacityFixed() ? 'Set by room type' : 'Beds per room' }}
-              </p>
             </div>
             <hh-input
               class="sm:col-span-3"
