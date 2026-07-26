@@ -37,11 +37,11 @@ Confirm during each ticket's `/implement` run.
 | ID | Title | Triage | Status |
 |---|---|---|---|
 | [B1](#b1) | Fix the pill of gender on card | `FE` | OPEN |
-| [B2](#b2) | Click on login, it takes to sign up page | `FE` | OPEN |
+| [B2](#b2) | Click on login, it takes to sign up page | `FE` | **RESOLVED** |
 | [B3](#b3) | Favorite button issue — 401 when signed out | `FE` | OPEN |
 | [B4](#b4) | Save and exit button doesn't work; logo should link home | `FE` | OPEN |
 | [B5](#b5) | Avatar dropdown should close on outside click | `FE` | **RESOLVED** |
-| [B6](#b6) | New-hostel photo upload — 10-image cap not enforced, images not uploading | `FE+BE` | OPEN |
+| [B6](#b6) | New-hostel photo upload — 10-image cap not enforced, images not uploading | `FE` | **RESOLVED** |
 | [B7](#b7) | Room type selectable once only; `$` → PKR with commas | `FE` | **RESOLVED** |
 | [B8](#b8) | Show the exact error (toast/alert) | `FE` | OPEN |
 | [B9](#b9) | Tenant status should update without reload; "Inactive" ≠ "Checkout" | `FE` | OPEN |
@@ -57,7 +57,7 @@ Confirm during each ticket's `/implement` run.
 | [T3](#t3) | Map price pill — hover for detail, click to hostel page | `FE` | OPEN |
 | [T4](#t4) | Header layout — search widget on top, filters justify-between | `FE` | OPEN |
 | [T5](#t5) | Show-password eye icon missing | `FE` | **RESOLVED** |
-| [T6](#t6) | Picture extension whitelist inconsistent pre/post creation | `FE` | OPEN |
+| [T6](#t6) | Picture extension whitelist inconsistent pre/post creation | `FE` | **RESOLVED** |
 | [T7](#t7) | Rename "Single room" in the breakdown dropdown | `NEEDS-INFO` | OPEN |
 | [T8](#t8) | Button to copy location / open in Google Maps | `FE` | OPEN |
 | [T9](#t9) | Room capacity should be pre-selected | `FE` | OPEN |
@@ -87,12 +87,42 @@ check for other consumers before editing.
 ### Click on login, It takes to sign up page
 - **Card:** https://trello.com/c/1SvUyj3H
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
 
 **Description (from card):** *(empty — screenshot only)*
 
-**Notes:** Routing/wiring bug — the login affordance resolves to the sign-up route.
+**The fix direction is the opposite of what the card implies.** `lead-wall.ts:63`
+hardcoded `signal<AuthTab>('register')` and read nothing from the route. But
+**Register is the deliberate default** — register-only heading copy, a
+"Create account & view number" CTA, Register listed first, and the
+highest-traffic caller is the phone-reveal gate on listing detail. Flipping the
+default would have regressed that conversion gate.
+
+**Resolution.** The tab is seeded from a `?mode` query param, and the three login
+entry points now ask for it: the account menu, confirm-invitation, and the
+become-a-host modal. Guard redirects ask for it too — reaching a guarded route
+means the visitor believes they already have an account, and the guard already
+attaches `returnUrl`, so the intent is *resume*, not *convert*.
+
+Seeded via `linkedSignal`, **not** a route snapshot: `AppRouteReuseStrategy`
+reuses `LeadWall` across a query-param-only navigation, so a snapshot read would
+never move the tab for a guest already sitting on `/auth` who opens the account
+menu. It also keeps the server-rendered tab correct (`/auth` is
+`RenderMode.Server`).
+
+**Also fixed, second bug in the same line:** `site-header.ts` dropped its
+`returnUrl`, so logging in from "Sign in to become a host" landed on `/` instead
+of `/host/listings/new`.
+
+Files: `features/auth/lead-wall/lead-wall.{ts,html}`, new `lead-wall.spec.ts`
+(12 tests), `features/auth/confirm-invitation/confirm-invitation.html`,
+`features/auth/auth.routes.ts`, `layout/components/account-menu/account-menu.html`,
+`layout/components/site-header/site-header.ts`, `core/auth/guards.ts`
+
+Verified in **real SSR output** (built and ran the server, read the raw response
+body) across all eight URL variants, and confirmed live in the browser: Log in
+tab active, "Welcome back", no Register-only fields.
 
 ---
 
@@ -165,9 +195,39 @@ trigger. SSR prerender confirmed working.
 ## B6
 ### while creating new hostel restriction of uploading 10 photos not working. also here the images are not uploading.
 - **Card:** https://trello.com/c/x1jEywMl
-- **Triage:** `FE+BE`
-- **Status:** OPEN
+- **Triage:** `FE` (no backend change needed after all)
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+- **Implemented together with [T6](#t6)** — same screen, same root cause.
+
+**B6 and T6 are the same bug.** Both creation surfaces did:
+```ts
+const valid = files.filter(isValidImage);
+if (!valid.length) return;     // no error, no card, nothing
+```
+Picking an `.avif`/`.heic`/`.webp` produced *no visible effect at all*. That one
+silent `return` is both "images are not uploading" and "extensions restricted".
+
+**Pre-creation upload turned out to be possible** — I'd flagged it as the likely
+blocker. The presign flow (`GET /api/documents/presigned_url` → direct S3 `PUT`)
+creates a **free-floating** Attachment and returns its id, and
+`attachment_ids`/`banner_id` are on `HostelInput` (not update-only). So photos
+upload during the form and link in the same `POST /api/hostels`. **No backend
+change, no new endpoint.** The reverse is *not* viable: `hostels-api.ts` documents
+that `create()`'s response may not carry an `id`, so upload-after-create would
+have nothing to attach to.
+
+**Resolution.** Both creation surfaces now upload through the same pipeline the
+profile page uses, with an optimistic card, a progress overlay, and **per-file**
+rollback. Batch-atomic 10-photo cap (reject the whole batch, never silently
+truncate), add tile greys at the limit, and every rejection path sets a visible
+message. Submit is gated while uploads are in flight.
+
+Wizard-specific: the draft now persists only `{id, url, attachmentId, primary,
+label}` — no `File`, no base64, no `blob:` — and sends each attachment id at most
+once across repeated saves, since the API appends. Photos now survive a reload,
+which they never did before (`File` serialised to `{}` and blob URLs were dropped
+on restore).
 
 **Description (from card):**
 > While creating new hostel, we need to add a validation of 10 images max upload,
@@ -396,8 +456,40 @@ form, and that Password/Confirm reveal independently.
 ### Picture extension Issue
 - **Card:** https://trello.com/c/FO8ukWIL
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+- **Implemented together with [B6](#b6)** — same screen, same root cause.
+
+**Whitelist decided:** jpg/jpeg, png, **webp**, avif, heic, heif. **`gif` excluded.**
+The card contradicted itself (prose said gif, its mime map omitted it); `webp` was
+in neither half but is common enough that omitting it would have generated a
+follow-up. Now defined once in `photo-grid.ts` and shared by all three surfaces.
+
+**The picker-greying mechanism.** `ACCEPT_ATTR` lists **extension tokens
+alongside** the MIME types. Windows Chrome frequently has no OS MIME registration
+for `.heic`/`.avif`, so a MIME-only `accept` greys them out — which is precisely
+what T6 reported. Runtime validation is still mandatory (drag-drop and "All Files"
+bypass `accept`) and accepts a file when its MIME is allowed **or** its MIME is
+empty/generic and its extension is allowed — browsers commonly report
+`file.type === ''` for HEIC/HEIF/AVIF.
+
+**Scope widened with approval.** T6's actual complaint was the *inconsistency*:
+creation was narrow, `hostel-profile` was `accept="image/*"` (wide). Narrowing only
+creation would have made it *more* restrictive than profile — the opposite of the
+ask. So `hostel-profile` was brought onto the same shared policy.
+
+**HEIC previews.** Chrome/Firefox/Edge cannot decode HEIC/HEIF in `<img>`, so
+accepting them would show broken-image icons to most users. An `(error)` handler
+swaps in a "HEIC · preview unavailable" tile. Verified empirically in real
+Chromium 148 — the `error` event fires for both a labelled HEIC and the
+empty-MIME case. The presign `content_type` now uses an extension-derived MIME so
+unlabelled HEIC files no longer land in S3 untyped.
+
+Files: `lib/src/ui/lib/photo-grid/photo-grid.ts` + new `photo-grid.spec.ts` (17
+tests), new `util/photo-picker.ts` + `photo-picker.spec.ts` (10 tests),
+`services/image-upload.service.ts`, `features/host/new-hostel/{ts,html}`,
+`features/public/onboarding/onboarding-wizard/{ts,html}`,
+`features/host/hostel-profile/{ts,html}`
 
 **Description (from card):**
 > Fresh user.
@@ -572,4 +664,11 @@ Found while working other tickets; none are on the Trello board yet.
 | F12 | Capacity is not derived from room type on the create surfaces, which is **why the B7 screenshot reads "Quad sharing · Sleeps 1"**. `moderator/review/room-type-row.ts` already has the Quad→4 mapping these two lack. | B7 |
 | F13 | `+$event \|\| N` coercion bugs: `newRoomCapacity.set(+$event \|\| 1)` silently turns a typed `0` into `1`; `newRoomPrice.set(+$event \|\| 0)` lets a Rs 0 row through that the backend rejects (`price > 0`), surfacing as a late API error rather than inline validation. | B7 |
 | F14 | `<label>` over `hh-dropdown` trips `@angular-eslint/template/label-has-associated-control` (existing offenders in `mess-notifications.html`). Properly fixable only by adding an `id`/`labelledby` input to `dropdown.ts`. Same ticket could add `label`/`error` inputs for parity with `hh-input` — but note that needs `host: { class: 'block' }`, which would blockify all 24 pill-variant call sites. | T11 |
+| F16 | **SSR is silently disabled in a plain deployment.** `@angular/ssr`'s SSRF guard rejects *every* hostname when `allowedHosts` is empty, falling back to CSR with an empty `<app-root>` and no error. So in a bare `node dist/apps/web/server/server.mjs` run, **every `RenderMode.Server` route degrades to client-side rendering** — `/auth`, `/search`, listing pages. Fixed locally by setting `NG_ALLOWED_HOSTS`; needs to be configured in the deployment. Highest-impact finding of the batch. | B2 |
+| F17 | `/account/*` has **no `canActivate`** (`app.routes.ts:48-81`). The seeker tab bar's Favorites and Account settings links are reachable while signed out and never redirect to `/auth`. | B2 |
+| F18 | The Lead Wall close button is a hardcoded `[routerLink]="['/']"` (`lead-wall.html:30`) and ignores `returnUrl`, so dismissing the wall always dumps you on the home page even when you arrived from a listing. | B2 |
+| F19 | `features/moderator/review/review.ts` holds a **third copy** of the photo-upload pipeline and is now the only surface not on the shared image policy — it still accepts gif and any image type. The obvious next consolidation; would delete the most code. | B6/T6 |
+| F20 | Pre-existing bug in `hostel-profile.ts`: a failed photo **replacement** revokes the old blob URL before the new upload resolves, leaving the card pointing at a revoked `src`. The two creation surfaces avoid this; the fix should be backported. | B6/T6 |
+| F21 | Photo **labels** are collected in all three surfaces and sent in none. `label_id` is only accepted at presign time, but the label dropdown only appears *after* upload completes — structurally unfixable without reordering the flow. | B6/T6 |
+| F22 | `apps/web/project.json` declares a **literal** style path `node_modules/ngx-material-intl-tel-input/lib/assets/css/flags.css` (plus sibling `../img/flags.png` assets) which cannot resolve via Node's upward walk. Every worktree-based agent had to hand-create a junction to build. Referencing it via a package specifier would fix worktree builds permanently. Supersedes the build half of F15. | trio + batch 2 |
 | F15 | **Worktree friction:** fresh git worktrees don't carry the gitignored `apps/web/src/app/{api,google-maps,google-oauth}.env.ts`, so `web:typecheck` fails until a build regenerates them. Worse, `apps/web/project.json` declares a **literal** style path `node_modules/ngx-material-intl-tel-input/.../flags.css` that can't resolve by walking up to the parent repo's `node_modules`, so `nx build web` fails in any worktree until a junction is made. Both bit all three parallel agents. Fix: commit `*.env.example.ts` and/or make `typecheck` depend on the env-generation targets. | trio |
