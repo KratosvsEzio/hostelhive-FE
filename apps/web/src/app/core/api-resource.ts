@@ -1,5 +1,6 @@
 import {
   HttpClient,
+  HttpContext,
   HttpResourceRef,
   httpResource,
 } from '@angular/common/http';
@@ -34,8 +35,8 @@ export class ApiClient {
   ): Observable<T> {
     return this.http.get<T>(this.base + path, { params });
   }
-  post<T>(path: string, body: unknown): Observable<T> {
-    return this.http.post<T>(this.base + path, body);
+  post<T>(path: string, body: unknown, context?: HttpContext): Observable<T> {
+    return this.http.post<T>(this.base + path, body, context ? { context } : undefined);
   }
   put<T>(path: string, body: unknown): Observable<T> {
     return this.http.put<T>(this.base + path, body);

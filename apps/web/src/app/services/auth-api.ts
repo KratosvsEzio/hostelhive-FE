@@ -1,3 +1,4 @@
+import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
@@ -11,6 +12,12 @@ import {
   TokenResponse,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
+
+/** Auth forms render their failures inline, so their requests opt out of the global error toast. */
+function inlineErrors(): HttpContext {
+  return new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
+}
 
 /**
  * Auth endpoints (Core ▸ User) + the current-user lookup. **Pure HTTP** — no
@@ -30,19 +37,19 @@ export class AuthApi {
   /** POST /api/user/sign_in → JWT. */
   signIn(body: SignInRequest): Observable<string> {
     return this.api
-      .post<TokenResponse>('/api/user/sign_in', body)
+      .post<TokenResponse>('/api/user/sign_in', body, inlineErrors())
       .pipe(map(requireToken));
   }
 
   /** POST /api/user/sign_up → created user + confirmation message (no token). */
   signUp(body: SignUpRequest): Observable<SignUpResponse> {
-    return this.api.post<SignUpResponse>('/api/user/sign_up', body);
+    return this.api.post<SignUpResponse>('/api/user/sign_up', body, inlineErrors());
   }
 
   /** POST /api/user/google_login → JWT (exchanges a Google OAuth access token). */
   googleLogin(body: GoogleLoginRequest): Observable<string> {
     return this.api
-      .post<TokenResponse>('/api/user/google_login', body)
+      .post<TokenResponse>('/api/user/google_login', body, inlineErrors())
       .pipe(map(requireToken));
   }
 
@@ -52,7 +59,7 @@ export class AuthApi {
    */
   confirmInvitation(token: string): Observable<string> {
     return this.api
-      .post<TokenResponse>('/api/user/confirm_invitation', { token })
+      .post<TokenResponse>('/api/user/confirm_invitation', { token }, inlineErrors())
       .pipe(map(requireToken));
   }
 
