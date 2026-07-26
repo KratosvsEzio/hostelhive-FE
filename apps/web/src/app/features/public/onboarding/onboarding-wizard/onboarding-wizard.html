@@ -211,19 +211,24 @@
                 (valueChange)="setRoomType($event)"
               />
             </div>
-            <hh-input
-              class="sm:col-span-3"
-              label="Capacity"
-              type="number"
-              [value]="newRoomCapacity() + ''"
-              (valueChange)="newRoomCapacity.set(+$event || 1)"
-            />
+            <div class="sm:col-span-3">
+              <hh-input
+                label="Capacity"
+                type="number"
+                [value]="newRoomCapacity() + ''"
+                [disabled]="capacityFixed()"
+                (valueChange)="setNewRoomCapacity($event)"
+              />
+              <p class="mt-1 text-xs text-ink-400">
+                {{ capacityFixed() ? 'Set by room type' : 'Beds per room' }}
+              </p>
+            </div>
             <hh-input
               class="sm:col-span-3"
               label="Price / month (PKR)"
               type="number"
               [value]="newRoomPrice() + ''"
-              (valueChange)="newRoomPrice.set(+$event || 0)"
+              (valueChange)="setNewRoomPrice($event)"
             />
             <div class="sm:col-span-1">
               <button
@@ -237,6 +242,11 @@
               </button>
             </div>
           </div>
+          @if (roomFormError()) {
+            <p class="mt-2 flex items-center gap-1 text-xs text-danger">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ roomFormError() }}
+            </p>
+          }
         </hh-card>
 
         <div class="mt-4">
