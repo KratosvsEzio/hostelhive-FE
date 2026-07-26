@@ -9,7 +9,7 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { HOST_ROLES, STAFF_ROLES, SessionStore } from '@core/auth';
-import { ConfirmModal } from '@hostelhive/ui';
+import { Button, ConfirmModal } from '@hostelhive/ui';
 import { SearchBar } from '../search-bar/search-bar';
 import { AccountMenu } from '../account-menu/account-menu';
 
@@ -27,7 +27,7 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 @Component({
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SearchBar, AccountMenu, ConfirmModal],
+  imports: [RouterLink, SearchBar, AccountMenu, ConfirmModal, Button],
   host: { class: 'contents' },
   templateUrl: './site-header.html',
 })
