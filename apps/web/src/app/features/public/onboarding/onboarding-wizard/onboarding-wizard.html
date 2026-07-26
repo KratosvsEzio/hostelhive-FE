@@ -2,23 +2,37 @@
 <header
   class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-ink-100 bg-white px-5 sm:px-8"
 >
-  <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+  <a routerLink="/" class="flex shrink-0 items-center" (click)="onLogoClick($event)">
+    <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+  </a>
   <div class="flex items-center gap-3">
-    <span
-      class="hidden items-center gap-1 text-sm sm:flex"
-      [class]="draftSaving() ? 'text-ink-400' : draftError() ? 'text-danger' : draftSaved() ? 'text-ok' : 'text-ink-400'"
+    @if (showDraftStatus()) {
+      <span
+        class="hidden items-center gap-1 text-sm sm:flex"
+        [class]="draftSaving() ? 'text-ink-400' : draftError() ? 'text-danger' : draftSaved() ? 'text-ok' : 'text-ink-400'"
+      >
+        @if (draftSaving()) {
+          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+        } @else if (draftError()) {
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>Save failed
+        } @else if (draftSaved()) {
+          <i class="ti ti-circle-check" aria-hidden="true"></i>Draft saved
+        } @else {
+          <i class="ti ti-device-floppy" aria-hidden="true"></i>Saved on this device
+        }
+      </span>
+    }
+    <button
+      hh-button
+      type="button"
+      variant="outlined"
+      size="sm"
+      class="hidden sm:flex"
+      [disabled]="draftSaving() || uploading()"
+      (click)="saveAndExit()"
     >
-      @if (draftSaving()) {
-        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
-      } @else if (draftError()) {
-        <i class="ti ti-alert-circle" aria-hidden="true"></i>Save failed
-      } @else if (draftSaved()) {
-        <i class="ti ti-circle-check" aria-hidden="true"></i>Draft saved
-      } @else {
-        <i class="ti ti-device-floppy" aria-hidden="true"></i>Draft saved
-      }
-    </span>
-    <button hh-button variant="outlined" size="sm" class="hidden sm:flex">Save &amp; exit</button>
+      {{ exitLabel() }}
+    </button>
     <button
       hh-button
       color="primary"
@@ -523,5 +537,20 @@
         </li>
       }
     </ul>
+  </hh-confirm-modal>
+}
+
+@if (showLeaveModal()) {
+  <hh-confirm-modal
+    title="Leave while a photo is uploading?"
+    icon="ti-alert-triangle"
+    tone="warn"
+    confirmLabel="Leave anyway"
+    cancelLabel="Keep uploading"
+    (confirm)="confirmLeave()"
+    (cancel)="showLeaveModal.set(false)"
+  >
+    Your photo is still uploading and will be lost. Everything else is saved on this
+    device.
   </hh-confirm-modal>
 }

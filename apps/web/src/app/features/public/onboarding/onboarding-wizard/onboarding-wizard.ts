@@ -13,7 +13,7 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AttachmentLabel, HostelInput, OfferCategory } from '@hostelhive/data-access';
 import { HostelsApi, ImageUploadService, OffersApi } from '@services';
@@ -150,6 +150,7 @@ const CATEGORY_ICONS: Record<string, string> = {
     PhotoGrid,
     PlaceSearchField,
     RichText,
+    RouterLink,
   ],
   templateUrl: './onboarding-wizard.html',
   styleUrl: './onboarding-wizard.scss',
@@ -292,6 +293,14 @@ export class OnboardingWizard {
   protected readonly draftSaved = signal(false);
   protected readonly draftError = signal(false);
 
+  protected readonly exitLabel = computed(() =>
+    this.draftSaving()
+      ? 'Saving…'
+      : this.uploading()
+        ? 'Uploading photos…'
+        : 'Save & exit',
+  );
+
   // --- Step 5: amenities (dynamic catalogue from GET /api/offer_categories) ---
   private readonly offersApi = inject(OffersApi);
   private readonly destroyRef = inject(DestroyRef);
@@ -312,6 +321,12 @@ export class OnboardingWizard {
   protected readonly locationPinned = signal(false);
   protected readonly showValidation = signal(false);
   protected readonly showValidationModal = signal(false);
+  protected readonly showLeaveModal = signal(false);
+
+  /** The rich-text description with its markup stripped, for emptiness checks. */
+  private readonly descriptionText = computed(() =>
+    this.description().replace(/<[^>]*>/g, '').trim(),
+  );
 
   protected readonly fieldErrors = computed<Partial<Record<string, string>>>(() => {
     const e: Record<string, string> = {};
@@ -321,8 +336,7 @@ export class OnboardingWizard {
     if (!emailVal) e['email'] = 'Contact email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) e['email'] = 'Enter a valid email address';
     if (!this.phone().trim()) e['phone'] = 'Primary phone is required';
-    const descText = this.description().replace(/<[^>]*>/g, '').trim();
-    if (!descText) e['description'] = 'Description is required';
+    if (!this.descriptionText()) e['description'] = 'Description is required';
     if (!this.media().length) e['photos'] = 'At least one photo is required';
     if (!this.rooms().length) e['rooms'] = 'At least one room type is required';
     if (!this.locationPinned()) e['location'] = 'Pin your hostel location on the map';
@@ -332,6 +346,28 @@ export class OnboardingWizard {
   protected readonly isFormValid = computed(() => Object.keys(this.fieldErrors()).length === 0);
 
   protected objectEntries = Object.entries as (o: Partial<Record<string, string>>) => [string, string][];
+
+  // --- Topbar save status ---
+  /** Whether the host has entered anything worth restoring — the seeded defaults don't count. */
+  protected readonly deviceDraftPresent = computed(
+    () =>
+      !!this.name().trim() ||
+      !!this.descriptionText() ||
+      !!this.email().trim() ||
+      !!this.phone().trim() ||
+      !!this.landmarks().trim() ||
+      this.media().length > 0 ||
+      this.selectedAmenities().length > 0 ||
+      this.locationPinned(),
+  );
+
+  protected readonly showDraftStatus = computed(
+    () =>
+      this.draftSaving() ||
+      this.draftError() ||
+      this.draftSaved() ||
+      this.deviceDraftPresent(),
+  );
 
   // --- Step 6: review ---
   protected readonly publishOnApproval = signal(true);
@@ -379,40 +415,48 @@ export class OnboardingWizard {
 
     // Best-effort localStorage draft on any state change (SSR-guarded).
     effect(() => {
-      const draft: OnboardingDraft = {
-        draftId: this.draftId(),
-        step: this.step(),
-        name: this.name(),
-        city: this.city(),
-        gender: this.gender(),
-        description: this.description(),
-        lat: this.lat(),
-        lng: this.lng(),
-        area: this.area(),
-        province: this.province(),
-        country: this.country(),
-        street: this.street(),
-        landmarks: this.landmarks(),
-        media: this.persistableMedia(),
-        linkedAttachmentIds: [...this.linkedAttachmentIds()],
-        amenities: this.selectedAmenities(),
-        rooms: this.rooms(),
-        newRoomType: this.newRoomType(),
-        newRoomCapacity: this.newRoomCapacity(),
-        newRoomPrice: this.newRoomPrice(),
-        publishOnApproval: this.publishOnApproval(),
-        email: this.email(),
-        phone: this.phone(),
-      };
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        } catch {
-          /* best-effort: ignore quota / privacy-mode failures */
-        }
-      }
+      this.persistDraft();
     });
 
+  }
+
+  /**
+   * Mirrors the whole form to localStorage. Driven by an effect, but also callable
+   * directly: effects are scheduled, so a write that must land before the component
+   * is destroyed cannot be left to the next flush.
+   */
+  private persistDraft(): void {
+    if (typeof localStorage === 'undefined') return;
+    const draft: OnboardingDraft = {
+      draftId: this.draftId(),
+      step: this.step(),
+      name: this.name(),
+      city: this.city(),
+      gender: this.gender(),
+      description: this.description(),
+      lat: this.lat(),
+      lng: this.lng(),
+      area: this.area(),
+      province: this.province(),
+      country: this.country(),
+      street: this.street(),
+      landmarks: this.landmarks(),
+      media: this.persistableMedia(),
+      linkedAttachmentIds: [...this.linkedAttachmentIds()],
+      amenities: this.selectedAmenities(),
+      rooms: this.rooms(),
+      newRoomType: this.newRoomType(),
+      newRoomCapacity: this.newRoomCapacity(),
+      newRoomPrice: this.newRoomPrice(),
+      publishOnApproval: this.publishOnApproval(),
+      email: this.email(),
+      phone: this.phone(),
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      /* best-effort: ignore quota / privacy-mode failures */
+    }
   }
 
   // --- Navigation ---
@@ -639,6 +683,71 @@ export class OnboardingWizard {
           this.apiErrors.set(err?.error?.errors ?? []);
         },
       });
+  }
+
+  /**
+   * Saves whatever exists and leaves for the home page. Never blocks on validation:
+   * an incomplete form has no server record to update, so the localStorage draft is
+   * authoritative and `restoreDraft()` brings the host straight back.
+   */
+  protected saveAndExit(): void {
+    if (this.draftSaving() || this.uploading()) return;
+    this.persistDraft();
+    const id = this.draftId();
+    if (!id && !this.isFormValid()) {
+      this.goHome();
+      return;
+    }
+    this.draftSaving.set(true);
+    this.draftSaved.set(false);
+    this.draftError.set(false);
+    this.apiErrors.set([]);
+    // Snapshotted before dispatch: `attachment_ids` appends, so a resend duplicates photos.
+    const flushedIds = this.unlinkedAttachmentIds();
+    const request = id
+      ? this.hostelsApi.update(id, this.buildDraftInput())
+      : this.hostelsApi.create(this.buildSubmitInput());
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (hostel) => {
+        if (!id && hostel.id != null) this.draftId.set(hostel.id);
+        this.markAttachmentsLinked(flushedIds);
+        this.draftSaving.set(false);
+        this.draftSaved.set(true);
+        this.persistDraft();
+        // A first create grants the host role, so the session must catch up before leaving.
+        if (!id) {
+          this.authService
+            .refreshSession()
+            .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.goHome());
+        } else {
+          this.goHome();
+        }
+      },
+      // Staying put loses nothing — the device draft is intact and the logo is the way out.
+      error: (err: HttpErrorResponse) => {
+        this.draftSaving.set(false);
+        this.draftError.set(true);
+        this.apiErrors.set(err?.error?.errors ?? []);
+      },
+    });
+  }
+
+  /** Uploads abort on teardown, so an in-flight photo needs an explicit confirmation first. */
+  protected onLogoClick(event: MouseEvent): void {
+    if (!this.uploading()) return;
+    event.preventDefault();
+    this.showLeaveModal.set(true);
+  }
+
+  protected confirmLeave(): void {
+    this.showLeaveModal.set(false);
+    this.persistDraft();
+    this.goHome();
+  }
+
+  private goHome(): void {
+    this.router.navigate(['/']);
   }
 
   private buildSubmitInput(): HostelInput {
