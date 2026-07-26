@@ -154,15 +154,18 @@ instead of firing the request. Has clear repro steps.
 
 **Resolution.** `toggleSaved()` in the listing-detail page had no auth guard, so a
 signed-out click fell straight through to `FavoritesStore.toggle()`, which hits the
-authenticated favourites API → 401. The two sibling actions on the same page
-(`openModal()` / `openWhatsApp()`) already gated on `session.isAuthenticated()` and
-opened the same `loginGateOpen` sign-in modal. Added the identical three-line guard
-to `toggleSaved()`: when unauthenticated it opens the sign-in gate and returns early,
-so the favourites request never fires.
+authenticated favourites API → 401. Added a `session.isAuthenticated()` guard: when
+unauthenticated, `toggleSaved()` navigates straight to `/auth?mode=login` (with a
+`returnUrl` back to the listing) and returns early, so the favourites request never
+fires. Sends the user directly to the login screen — and lands them on the **Log in**
+tab (`mode=login`), since favouriting implies they likely already have an account —
+rather than an interstitial gate (per product decision); the contact actions keep
+their own `loginGateOpen` gate.
 
-Verified live in the browser: while signed out, clicking **Favorite** opens the
-"Sign in to contact" gate modal with **no** favourites network request (no 401);
-while authenticated the toggle proceeds normally with no gate.
+Verified live in the browser: while signed out, clicking **Favorite** navigates to
+`/auth?mode=login&returnUrl=%2Fhostel%2F<slug>`, which opens on the **Log in** tab
+("Welcome back", email + password only) with **no** favourites network request (no
+401); while authenticated the toggle proceeds normally.
 
 Files: `apps/web/src/app/features/public/listing/listing-detail/listing-detail.ts`
 

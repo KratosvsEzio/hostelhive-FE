@@ -111,9 +111,12 @@ export class ListingDetail {
 
   protected toggleSaved(): void {
     // Saving hits the authenticated favourites API — firing it signed-out returns 401.
-    // Send unauthenticated users straight to the login page (returning here after) (B3).
+    // Send unauthenticated users straight to the Log in tab (?mode=login), returning
+    // here after — favouriting implies they likely already have an account (B3).
     if (!this.session.isAuthenticated()) {
-      void this.router.navigate(['/auth'], { queryParams: { returnUrl: this.currentPath() } });
+      void this.router.navigate(['/auth'], {
+        queryParams: { mode: 'login', returnUrl: this.currentPath() },
+      });
       return;
     }
     const listing = this.state().data;
