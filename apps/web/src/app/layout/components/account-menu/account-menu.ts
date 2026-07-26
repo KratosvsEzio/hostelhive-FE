@@ -16,6 +16,7 @@ import {
   STAFF_ROLES,
   SessionStore,
 } from '@core/auth';
+import { Button } from '@hostelhive/ui';
 
 /** Account avatar + dropdown menu (seeker chrome). Reads the live session: shows the
  *  signed-in user + account links, or a Log in / Sign up prompt for guests.
@@ -26,7 +27,7 @@ import {
 @Component({
   selector: 'app-account-menu',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, Button],
   templateUrl: './account-menu.html',
   host: {
     '(document:click)': 'onDocumentClick($event)',

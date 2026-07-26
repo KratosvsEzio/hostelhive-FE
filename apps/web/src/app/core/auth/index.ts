@@ -5,5 +5,6 @@ export * from './roles';
 export * from './session-store';
 export * from './auth.service';
 export * from './guards';
+export * from './guarded-url';
 export * from './has-permission.directive';
 export * from './provide-auth';

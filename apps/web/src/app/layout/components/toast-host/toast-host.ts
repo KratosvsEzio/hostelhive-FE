@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NotificationService, ToastKind } from '@core/notification.service';
+import { Button } from '@hostelhive/ui';
 
 /**
  * Renders the {@link NotificationService} toast stack — a fixed, top-anchored column that
@@ -11,6 +12,7 @@ import { NotificationService, ToastKind } from '@core/notification.service';
   selector: 'app-toast-host',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
+  imports: [Button],
   templateUrl: './toast-host.html',
   styleUrl: './toast-host.scss',
 })

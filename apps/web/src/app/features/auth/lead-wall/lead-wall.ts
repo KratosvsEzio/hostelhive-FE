@@ -16,6 +16,8 @@ import {
   AuthService,
   HOST_ROLES,
   SessionStore,
+  isGuardedUrl,
+  safeInternalUrl,
 } from '@core/auth';
 import { ApiError } from '@hostelhive/data-access';
 import { GoogleAuthService } from '@services';
@@ -112,6 +114,19 @@ export class LeadWall {
     this.route.queryParamMap.pipe(map((p) => p.get('returnUrl') || '/')),
     { initialValue: '/' },
   );
+
+  /**
+   * Where the × dismisses to: back where the user came from, but never into a guard.
+   *
+   * Most openers set a public `returnUrl` (the listing behind the phone-reveal gate), but
+   * the guards themselves also send guarded URLs here. Returning a guest to one of those
+   * would bounce them straight back to this screen, making the × inescapable — so a
+   * guarded destination falls back to home.
+   */
+  protected readonly closeTarget = computed(() => {
+    const ret = safeInternalUrl(this.returnUrl());
+    return ret && ret !== '/' && !isGuardedUrl(this.router.config, ret) ? ret : '/';
+  });
 
   protected readonly nameError = computed(() =>
     !this.isRegister()
@@ -243,9 +258,11 @@ export class LeadWall {
    * when redirecting here) always wins — this preserves the exact route the user was
    * on, including `/moderator/queue` for a moderator who refreshed the page.
    * Falls back to the role's default console home, or `/` for seekers.
+   *
+   * A `returnUrl` that points off-origin is discarded rather than followed.
    */
   private destination(): string {
-    const ret = this.returnUrl();
+    const ret = safeInternalUrl(this.returnUrl());
     if (ret && ret !== '/') return ret;
     return this.consoleHome() ?? '/';
   }
