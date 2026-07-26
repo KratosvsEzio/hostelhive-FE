@@ -40,9 +40,9 @@ Confirm during each ticket's `/implement` run.
 | [B2](#b2) | Click on login, it takes to sign up page | `FE` | OPEN |
 | [B3](#b3) | Favorite button issue — 401 when signed out | `FE` | OPEN |
 | [B4](#b4) | Save and exit button doesn't work; logo should link home | `FE` | OPEN |
-| [B5](#b5) | Avatar dropdown should close on outside click | `FE` | OPEN |
+| [B5](#b5) | Avatar dropdown should close on outside click | `FE` | **RESOLVED** |
 | [B6](#b6) | New-hostel photo upload — 10-image cap not enforced, images not uploading | `FE+BE` | OPEN |
-| [B7](#b7) | Room type selectable once only; `$` → PKR with commas | `FE` | OPEN |
+| [B7](#b7) | Room type selectable once only; `$` → PKR with commas | `FE` | **RESOLVED** |
 | [B8](#b8) | Show the exact error (toast/alert) | `FE` | OPEN |
 | [B9](#b9) | Tenant status should update without reload; "Inactive" ≠ "Checkout" | `FE` | OPEN |
 | [B10](#b10) | Emptying leave date in renters form doesn't send nil | `NEEDS-INFO` | OPEN |
@@ -62,7 +62,7 @@ Confirm during each ticket's `/implement` run.
 | [T8](#t8) | Button to copy location / open in Google Maps | `FE` | OPEN |
 | [T9](#t9) | Room capacity should be pre-selected | `FE` | OPEN |
 | T10 | Edit button should open edit drawer in place | `FE` | OPEN |
-| T11 | Billing date dropdowns 1–31 with ordinal label | `FE` | OPEN |
+| T11 | Billing date dropdowns 1–31 with ordinal label | `FE` | **RESOLVED** |
 
 ---
 
@@ -133,11 +133,32 @@ route home. Likely the onboarding/hostel-creation wizard.
 ### should be closed by clicking outside
 - **Card:** https://trello.com/c/FAuXO3DE
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
 
 **Description (from card):**
 > We need backdrop for the Avatar dropdown panel.
+
+**The card's premise was wrong.** A backdrop already existed since the initial
+commit, but the header's `backdrop-blur` makes it a containing block for
+`position: fixed` descendants (same CSS rule as `transform`/`filter`), so
+`fixed inset-0` collapsed to a 148px strip over the header. Measured live:
+backdrop 148px tall vs a 947px viewport, header 149px, `backdrop-filter: blur(8px)`.
+
+This also caused a **second, unreported bug**: clicks inside the header closed the
+menu *and were swallowed*, so the logo never navigated.
+
+**Resolution.** Deleted the trapped backdrop; replaced it with a guarded
+`document:click` listener plus Escape — immune to containing blocks, and the click
+passes through to its target. Also closes on `NavigationStart`, adds
+`aria-haspopup="menu"`, and removes the backdrop `<button>` that was an invisible
+tab stop announced as "Close menu".
+
+Files: `apps/web/src/app/layout/components/account-menu/account-menu.{ts,html}`
+
+Verified live: outside click closes; second trigger click closes and *stays*
+closed (no reopen flicker); third reopens; Escape closes and returns focus to the
+trigger. SSR prerender confirmed working.
 
 ---
 
@@ -163,8 +184,31 @@ page — mirror that upload path rather than writing a new one. Related to **T6*
 ### Room type should be selected once only, Also remove the dollar sign and put commas and PKR
 - **Card:** https://trello.com/c/7S08biNU
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+
+**Resolution.** Room types already added are offered **greyed out with an
+"Already added" tooltip** rather than removed — removing an option would blank the
+dropdown trigger, since `hh-dropdown` falls back to the placeholder when the
+selected value has no matching option. Availability is **derived** from the rooms
+list, not tracked in a separate signal, so deleting a row re-enables its type with
+no extra bookkeeping (that's where this class of bug normally regresses). After a
+successful add, the selection auto-advances to the next available type.
+
+Currency: removed the ambiguous `ti-coin` glyph; label is now `Price / month (PKR)`.
+No shared atom was touched. The "commas" half of the card was **already satisfied** —
+the list rows render `Rs 12,003` via `DecimalPipe`.
+
+Applied to **both** surfaces — the card said "creating new hostel", but the public
+onboarding wizard carried the identical bug and is the higher-traffic path. The
+wizard also dedupes restored localStorage drafts.
+
+Files: `features/host/new-hostel/new-hostel.{ts,html}`,
+`features/public/onboarding/onboarding-wizard/onboarding-wizard.{ts,html}`
+
+Verified live: used types greyed with "Already added", repeated `+` cannot
+duplicate, delete restores availability, `Price / month (PKR)` rendering, zero coin
+icons remaining.
 
 **Description (from card):**
 > We should noy allow the user to select same room type multiple times for the same
@@ -441,8 +485,35 @@ context here.
 ### Should add 1st of every month, 26th of every month
 - **Card:** https://trello.com/c/6zsqIb4X
 - **Triage:** `FE`
-- **Status:** OPEN
+- **Status:** **RESOLVED** — branch `feat/t5-show-password-toggle` (not yet merged)
 - **Attachments:** 1 screenshot
+
+**This was more serious than the card described.** The Rails billing cron matches
+`billing_date` against `Date.today.day` **exactly** (`hostel_renter_billing_Job.rb:9`)
+with no last-day fallback and no DB range constraint. The field was an unbounded
+number input, so a host could enter `0`, `45` or a year — and that tenant would
+then **never be invoiced, silently**. The edit path made it self-perpetuating: a
+stored `45` rendered as `45` and round-tripped straight back to the API.
+
+**Resolution.** Both fields are now 31-option dropdowns labelled "1st of month"…
+"31st of month", which makes out-of-range input unrepresentable. Critically — and
+*not* in the card — out-of-range stored values now normalize to empty on load
+rather than clamping, so editing an affected tenant surfaces a required-field error
+instead of silently re-sending the bad value. Clamping was rejected: it would
+fabricate a billing date the host never agreed to on a field that controls when
+money is collected.
+
+Also consolidated three duplicate `ordinal` helpers into `@util/ordinal`.
+
+Files: new `util/ordinal.ts`, `util/billing-day.ts`, `util/billing-day.spec.ts`
+(6 tests); modified `features/host/tenants/tenants.{html,ts}`,
+`tenant-profile/tenant-profile.ts`, `util/table-configs/tenants-table-cols.ts`
+
+Verified live: 31 options, teens rule correct (11th/12th/13th, not 11st/12nd/13rd),
+create defaults 1st/5th preserved, hint copy rendering.
+
+**Known limitation, accepted:** days 29–31 are offered but the backend still skips
+them in short months. See F8 below.
 
 **Description (from card):**
 > For the "Billing date" and "Billing due date" fields should be a dropdown with
@@ -494,3 +565,11 @@ Found while working other tickets; none are on the Trello board yet.
 | F5 | Repo is ~684 files away from prettier-conformant, with no `format` nx target and no CI gate. The half-state guarantees churn on every touched file. Either adopt and bulk-format in one commit, or drop the config. | T5 |
 | F6 | `lib:typecheck` runs against `tsconfig.lib.json`, which **excludes** `*.spec.ts` — so no spec file in `lib` is ever type-checked by that target. | T5 |
 | F7 | Storybook does not run: `SB_FRAMEWORK_ANGULAR_0001`, needs `npx storybook automigrate`. Story files typecheck but can't render. | pre-existing |
+| F8 | **Backend:** billing cron matches `billing_date` against `Date.today.day` exactly, so days 29–31 silently skip short months (day 31 misses 5 months/year). `renter_billing_job.rb` also builds `Time.zone.local(y, m, billing_due_date)`, which raises for a nonexistent day. Needs last-day clamping in both jobs, plus a range constraint on the column. **Tenants already stored with an out-of-range day remain un-invoiced until a host reopens and re-saves them — an audit/backfill is likely needed.** | T11 |
+| F9 | `search-bar.html:58` has the **identical trapped-backdrop bug** as B5 (Budget/Sharing popovers), same `backdrop-blur` cause. Root fix is removing `backdrop-blur` from `site-header.html:2`, but that's a design change needing sign-off. | B5 |
+| F10 | Log out renders unstyled: `account-menu.html` uses `<button hh-button variant="text">` but `account-menu.ts` has `imports: [RouterLink]` — `Button` is missing, so the attributes are dead. One-line fix. | B5 |
+| F11 | `hostel-profile` and `moderator/review/room-type-row` can still create duplicate room types — same missing guard as B7, on the edit flow. The B7 rule is enforceable on create and bypassable on edit. | B7 |
+| F12 | Capacity is not derived from room type on the create surfaces, which is **why the B7 screenshot reads "Quad sharing · Sleeps 1"**. `moderator/review/room-type-row.ts` already has the Quad→4 mapping these two lack. | B7 |
+| F13 | `+$event \|\| N` coercion bugs: `newRoomCapacity.set(+$event \|\| 1)` silently turns a typed `0` into `1`; `newRoomPrice.set(+$event \|\| 0)` lets a Rs 0 row through that the backend rejects (`price > 0`), surfacing as a late API error rather than inline validation. | B7 |
+| F14 | `<label>` over `hh-dropdown` trips `@angular-eslint/template/label-has-associated-control` (existing offenders in `mess-notifications.html`). Properly fixable only by adding an `id`/`labelledby` input to `dropdown.ts`. Same ticket could add `label`/`error` inputs for parity with `hh-input` — but note that needs `host: { class: 'block' }`, which would blockify all 24 pill-variant call sites. | T11 |
+| F15 | **Worktree friction:** fresh git worktrees don't carry the gitignored `apps/web/src/app/{api,google-maps,google-oauth}.env.ts`, so `web:typecheck` fails until a build regenerates them. Worse, `apps/web/project.json` declares a **literal** style path `node_modules/ngx-material-intl-tel-input/.../flags.css` that can't resolve by walking up to the parent repo's `node_modules`, so `nx build web` fails in any worktree until a junction is made. Both bit all three parallel agents. Fix: commit `*.env.example.ts` and/or make `typecheck` depend on the env-generation targets. | trio |
