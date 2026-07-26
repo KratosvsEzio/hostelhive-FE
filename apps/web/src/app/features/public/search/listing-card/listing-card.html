@@ -136,13 +136,12 @@
       </span>
     </div>
     <p class="mt-0.5 truncate text-sm text-ink-500">{{ locationLine() }}</p>
-    @if (roomTypeLabel()) {
-      <p class="truncate text-sm text-ink-400">{{ roomTypeLabel() }}</p>
-    }
-
     <p class="mt-2 text-ink-900">
       <span class="font-semibold">Rs {{ displayPrice() | number }}</span>
       <span class="text-sm text-ink-500">/mo</span>
+      @if (roomTypeLabel()) {
+        <span class="text-sm text-ink-500"> · {{ roomTypeLabel() }}</span>
+      }
     </p>
 
     @if (amenityPills().length) {

@@ -114,10 +114,14 @@ export class ListingCard {
   protected readonly roomTypeLabel = computed(() => {
     const byCapacity = this.listing().priceByCapacity ?? {};
     const selected = this.capacityStore.active();
-    if (selected && byCapacity[selected] != null) return `${selected} Sharing`;
-    const shown = this.displayPrice();
-    const match = Object.keys(byCapacity).find((c) => byCapacity[c] === shown);
-    return match ? `${match} Sharing` : '';
+    const capacity = selected && byCapacity[selected] != null
+      ? selected
+      : Object.keys(byCapacity).find((c) => byCapacity[c] === this.displayPrice());
+    if (!capacity) return '';
+    const n = parseInt(capacity, 10);
+    if (n === 1) return 'Private';
+    if (n >= 5) return 'Dormitory';
+    return `Sharing of ${n}`;
   });
 
   /** Amenity pills. Capped so a hostel with many offers can't push the card taller than
