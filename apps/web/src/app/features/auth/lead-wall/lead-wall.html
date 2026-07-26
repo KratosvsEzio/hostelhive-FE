@@ -27,7 +27,8 @@
       <div class="mb-4 flex items-center justify-between">
         <img src="/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
         <a
-          [routerLink]="['/']"
+          [routerLink]="closeTarget()"
+          [replaceUrl]="true"
           class="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition hover:bg-ink-50"
           aria-label="Close"
         >

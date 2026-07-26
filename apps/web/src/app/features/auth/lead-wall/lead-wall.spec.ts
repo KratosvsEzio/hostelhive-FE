@@ -1,6 +1,14 @@
 import { WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Params, convertToParamMap, provideRouter } from '@angular/router';
+import { By } from '@angular/platform-browser';
+import {
+  ActivatedRoute,
+  Params,
+  Route,
+  RouterLink,
+  convertToParamMap,
+  provideRouter,
+} from '@angular/router';
 import { BehaviorSubject, map } from 'rxjs';
 import { provideDataAccess } from '@core/provide-data-access';
 import { LeadWall } from './lead-wall';
@@ -55,12 +63,30 @@ function heading(fixture: ComponentFixture<LeadWall>): string {
   );
 }
 
-function render(initial: Params) {
+/** The `href` the × dismisses to, as resolved by `RouterLink`. */
+function closeHref(fixture: ComponentFixture<LeadWall>): string | null {
+  return fixture.nativeElement
+    .querySelector('a[aria-label="Close"]')
+    ?.getAttribute('href');
+}
+
+/**
+ * A stand-in for the real top-level config, since `closeTarget` reads `router.config` to
+ * tell guarded routes from public ones. Importing `appRoutes` would eagerly pull in `Home`
+ * and the maps library, so the shape is reproduced here instead.
+ */
+const ROUTES: Route[] = [
+  { path: 'hostel/:slug', children: [] },
+  { path: 'account', canActivate: [() => true], children: [] },
+  { path: 'host/listings/new', canActivate: [() => true], children: [] },
+];
+
+function render(initial: Params, routes: Route[] = []) {
   const route = stubRoute(initial);
   TestBed.configureTestingModule({
     imports: [LeadWall],
     providers: [
-      provideRouter([]),
+      provideRouter(routes),
       provideDataAccess({ baseUrl: 'https://api.test' }),
       route.provider,
     ],
@@ -142,6 +168,53 @@ describe('LeadWall', () => {
 
     expect(internals(fixture).tab()).toBe('login');
     expect(activeTabLabel(fixture)).toBe('Log in');
+  });
+
+  describe('close button', () => {
+    it('returns the visitor to the public page they came from', () => {
+      const { fixture } = render({ returnUrl: '/hostel/lums-boys-hostel' }, ROUTES);
+      expect(closeHref(fixture)).toBe('/hostel/lums-boys-hostel');
+    });
+
+    it('falls back to home when no returnUrl is given', () => {
+      const { fixture } = render({}, ROUTES);
+      expect(closeHref(fixture)).toBe('/');
+    });
+
+    it.each(['/account', '/account/favorites', '/host/listings/new'])(
+      'falls back to home rather than bouncing off the guard on %j',
+      (returnUrl) => {
+        const { fixture } = render({ returnUrl }, ROUTES);
+        expect(closeHref(fixture)).toBe('/');
+      },
+    );
+
+    it.each(['//evil.com', '/\\evil.com', 'https://evil.com'])(
+      'refuses the off-origin returnUrl %j',
+      (returnUrl) => {
+        const { fixture } = render({ returnUrl }, ROUTES);
+        expect(closeHref(fixture)).toBe('/');
+      },
+    );
+
+    it('tracks a returnUrl that changes on a reused instance', () => {
+      const { fixture, queryParams$ } = render(
+        { returnUrl: '/hostel/first-hostel' },
+        ROUTES,
+      );
+      expect(closeHref(fixture)).toBe('/hostel/first-hostel');
+
+      queryParams$.next({ returnUrl: '/account/favorites' });
+      fixture.detectChanges();
+
+      expect(closeHref(fixture)).toBe('/');
+    });
+
+    it('replaces history so browser-back does not reopen the wall', () => {
+      const { fixture } = render({ returnUrl: '/hostel/lums-boys-hostel' }, ROUTES);
+      const link = fixture.debugElement.query(By.css('a[aria-label="Close"]'));
+      expect(link.injector.get(RouterLink).replaceUrl).toBe(true);
+    });
   });
 
   it('swaps the register conversion copy for log-in copy', () => {
