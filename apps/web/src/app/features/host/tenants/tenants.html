@@ -379,25 +379,40 @@
             (valueChange)="patch('transportationCharges', $event)"
           />
           <div class="grid grid-cols-2 gap-3">
-            <hh-input
-              label="Billing date *"
-              type="number"
-              placeholder="1"
-              [value]="f.billingDate"
-              [error]="fieldError('billingDate')"
-              (valueChange)="patch('billingDate', $event)"
-              (focusout)="markDirty('billingDate')"
-            />
-            <hh-input
-              label="Billing due date *"
-              type="number"
-              placeholder="5"
-              [value]="f.billingDueDate"
-              [error]="fieldError('billingDueDate')"
-              (valueChange)="patch('billingDueDate', $event)"
-              (focusout)="markDirty('billingDueDate')"
-            />
+            <div>
+              <p class="mb-1 block text-xs font-medium text-ink-600">Billing date *</p>
+              <hh-dropdown
+                variant="field"
+                [options]="billingDayOptions"
+                [value]="f.billingDate || null"
+                placeholder="Select day"
+                (valueChange)="setBillingDay('billingDate', $event)"
+              />
+              @if (fieldError('billingDate')) {
+                <p class="mt-1 flex items-center gap-1 text-xs text-danger">
+                  <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                  {{ fieldError('billingDate') }}
+                </p>
+              }
+            </div>
+            <div>
+              <p class="mb-1 block text-xs font-medium text-ink-600">Billing due date *</p>
+              <hh-dropdown
+                variant="field"
+                [options]="billingDayOptions"
+                [value]="f.billingDueDate || null"
+                placeholder="Select day"
+                (valueChange)="setBillingDay('billingDueDate', $event)"
+              />
+              @if (fieldError('billingDueDate')) {
+                <p class="mt-1 flex items-center gap-1 text-xs text-danger">
+                  <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                  {{ fieldError('billingDueDate') }}
+                </p>
+              }
+            </div>
           </div>
+          <p class="text-xs text-ink-400">Months shorter than the selected day may bill differently.</p>
         </div>
 
         <!-- Mess -->

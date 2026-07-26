@@ -16,6 +16,7 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant, Invoice } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { ordinal } from '@util/ordinal';
 import { tenantRentCols, tenantUtilityCols } from '@app/util/table-configs/invoice-table-cols';
 
 type Tab = 'info' | 'rent' | 'utility';
@@ -183,9 +184,5 @@ export class TenantProfile {
     this.router.navigate(['/host', hostelId, 'tenants', 'edit', tenant.id]);
   }
 
-  protected ordinal(n: number): string {
-    const s = ['th', 'st', 'nd', 'rd'];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
-  }
+  protected readonly ordinal = ordinal;
 }

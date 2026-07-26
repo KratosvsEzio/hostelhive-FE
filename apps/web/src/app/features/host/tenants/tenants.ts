@@ -52,6 +52,7 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
+import { BILLING_DAY_OPTIONS, normalizeBillingDay } from '@util/billing-day';
 import { TENANTS_TABLE_COLS } from '@app/util/table-configs/tenants-table-cols';
 
 interface ViewState {
@@ -392,6 +393,19 @@ export class Tenants {
     this.form.update(f => f ? { ...f, roomId: '', roomNumber: '' } : f);
   }
 
+  // ── Billing day dropdowns ─────────────────────────────────────────────────
+
+  protected readonly billingDayOptions = BILLING_DAY_OPTIONS;
+
+  protected setBillingDay(
+    key: 'billingDate' | 'billingDueDate',
+    value: string | string[] | null,
+  ): void {
+    if (typeof value !== 'string') return;
+    this.patch(key, value);
+    this.markDirty(key);
+  }
+
   // ── Tenant list methods ───────────────────────────────────────────────────
 
   protected toneFor(index: number): (typeof TONES)[number] {
@@ -446,13 +460,6 @@ export class Tenants {
 
   protected onTenantAction(ev: { row: unknown; event: MouseEvent }): void {
     this.toggleMenu((ev.row as Tenant).id, ev.event);
-  }
-
-  protected ordinal(day: number | undefined): string {
-    if (!day) return '—';
-    const s = ['th', 'st', 'nd', 'rd'];
-    const v = day % 100;
-    return day + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
   }
 
   // ── Route-driven form drawer ──────────────────────────────────────────────
@@ -568,8 +575,8 @@ export class Tenants {
       messDinner: t.messDinner,
       transportationCharges:
         t.transportationCharges != null ? String(t.transportationCharges) : '',
-      billingDate: t.billingDate != null ? String(t.billingDate) : '',
-      billingDueDate: t.billingDueDate != null ? String(t.billingDueDate) : '',
+      billingDate: normalizeBillingDay(t.billingDate),
+      billingDueDate: normalizeBillingDay(t.billingDueDate),
       imageName: t.avatarUrl || t.avatarId ? 'Photo on file' : '',
       imagePreview: t.avatarUrl ?? '',
       avatarUploadId: t.avatarId ?? '',
