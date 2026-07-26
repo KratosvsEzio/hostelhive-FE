@@ -23,24 +23,27 @@ import {
   HostelsApi,
   HostPropertyStore,
   ImageUploadService,
-  MAX_UPLOAD_BYTES,
   OffersApi,
 } from '@services';
 import {
+  ACCEPT_ATTR,
   Button,
   Dropdown,
   DropdownOption,
   ErrorState,
+  MAX_PHOTOS,
   PhotoGrid,
   PhotoGridPhoto,
   RichText,
   Skeleton,
   StatusPill,
+  imageFormatLabel,
 } from '@hostelhive/ui';
 import { RoomTypeRow } from '../../moderator/review/room-type-row';
 import { LocationPicker, PickedLocation } from '@hostelhive/maps';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 
 /** "BUILDING" → "Building". */
 function toLabel(name: string): string {
@@ -75,6 +78,8 @@ interface EditPhoto {
   id: string;
   url: string;
   primary: boolean;
+  /** Short format name, shown when the browser can't decode the local preview. */
+  format?: string;
 }
 
 /** A room type in the editable list (client-side _key for @for tracking). */
@@ -154,6 +159,7 @@ export class HostelProfile {
     name: 'hh-hp-name',
     landmarks: 'hh-hp-landmarks',
   };
+  protected readonly acceptAttr = ACCEPT_ATTR;
 
   protected readonly state = toSignal(
     toObservable(computed(() => ({ id: this.hostelId(), r: this.refresh() }))).pipe(
@@ -246,18 +252,18 @@ export class HostelProfile {
       id: p.id,
       url: p.url,
       primary: p.primary,
+      format: p.format,
       uploadProgress: this.uploadingPhotos().get(p.id),
       rejected: false,
     })),
   );
+  protected readonly atPhotoLimit = computed(() => this.photos().length >= MAX_PHOTOS);
 
   // ── save state ──
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly saveError = signal(false);
   private readonly savedSnapshot = signal<EditableHostel | null>(null);
-
-  private static readonly MAX_PHOTOS = 10;
 
   constructor() {
     // Seed the editable copy whenever the hostel detail (re)loads.
@@ -420,33 +426,24 @@ export class HostelProfile {
     const target = this.replaceTarget();
     this.replaceTarget.set(null);
     if (!files.length) return;
-    this.uploadError.set(null);
-    if (!target) {
-      const active = this.photos().length;
-      if (active + files.length > HostelProfile.MAX_PHOTOS) {
-        this.uploadError.set('A hostel can have at most 10 photos — remove one before adding more.');
-        return;
-      }
-    }
-    const toUpload = target ? files.slice(0, 1) : files;
-    for (const file of toUpload) this.uploadOneFile(file, target);
+    const { accepted, error } = target
+      ? screenReplacementPhoto(files[0])
+      : screenPickedPhotos(files, this.photos().length);
+    this.uploadError.set(error);
+    for (const file of accepted) this.uploadOneFile(file, target);
   }
 
   private uploadOneFile(file: File, target: EditPhoto | null): void {
-    if (!file.type.startsWith('image/')) {
-      this.uploadError.set('Only image files are allowed.');
-      return;
-    }
-    if (file.size > MAX_UPLOAD_BYTES) {
-      this.uploadError.set('Image must be smaller than 10 MB.');
-      return;
-    }
+    const format = imageFormatLabel(file);
     const previewUrl = URL.createObjectURL(file);
     const trackingId = target
       ? target.id
       : `uploading-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     if (!target) {
-      this.photos.update((list) => [...list, { id: trackingId, url: previewUrl, primary: false }]);
+      this.photos.update((list) => [
+        ...list,
+        { id: trackingId, url: previewUrl, primary: false, format },
+      ]);
     }
     this.setPhotoProgress(trackingId, 0);
     this.imageUpload
@@ -458,7 +455,7 @@ export class HostelProfile {
           this.pendingAttachmentIds.update((ids) => [...ids, attachmentId]);
           if (target) {
             this.photos.update((list) =>
-              list.map((p) => (p.id === target.id ? { ...p, url: previewUrl } : p)),
+              list.map((p) => (p.id === target.id ? { ...p, url: previewUrl, format } : p)),
             );
             this.newPhotoMap.update((m) => new Map(m).set(target.id, attachmentId));
           } else {

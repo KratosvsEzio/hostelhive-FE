@@ -1,9 +1,17 @@
 <app-dashboard-layout label="New hostel">
   <ng-container hhActions>
     <a hh-button variant="text" size="sm" routerLink="/host">Cancel</a>
-    <button hh-button color="primary" size="sm" [disabled]="saving()" (click)="create()">
+    <button
+      hh-button
+      color="primary"
+      size="sm"
+      [disabled]="saving() || uploading()"
+      (click)="create()"
+    >
       @if (saving()) {
         <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
+      } @else if (uploading()) {
+        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
       } @else {
         Create hostel
       }
@@ -119,7 +127,7 @@
         <input
           #fileInput
           type="file"
-          accept="image/png,image/jpeg"
+          [attr.accept]="acceptAttr"
           multiple
           class="hidden"
           (change)="onFileSelected($event)"
@@ -128,6 +136,7 @@
           [photos]="photoGridItems()"
           [labelOptions]="labelOptions()"
           [labelMap]="photoLabelMap()"
+          [atLimit]="atPhotoLimit()"
           [uploadError]="uploadError() ?? ''"
           (addPhoto)="addPhoto()"
           (replacePhoto)="replaceMedia(findMedia($event)!)"
@@ -362,9 +371,17 @@
 
           <div class="mt-4 h-px bg-ink-100"></div>
 
-          <button hh-button color="primary" class="mt-4 w-full" [disabled]="saving()" (click)="create()">
+          <button
+            hh-button
+            color="primary"
+            class="mt-4 w-full"
+            [disabled]="saving() || uploading()"
+            (click)="create()"
+          >
             @if (saving()) {
               <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
+            } @else if (uploading()) {
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
             } @else {
               <i class="ti ti-plus" aria-hidden="true"></i>Create hostel
             }

@@ -99,7 +99,7 @@
           <input
             #fileInput
             type="file"
-            accept="image/*"
+            [attr.accept]="acceptAttr"
             multiple
             class="hidden"
             (change)="onFileSelected($event)"
@@ -108,6 +108,7 @@
             [photos]="photoGridItems()"
             [labelOptions]="labelOptions()"
             [labelMap]="photoLabelMap()"
+            [atLimit]="atPhotoLimit()"
             [uploadError]="uploadError() ?? ''"
             (addPhoto)="addPhoto()"
             (replacePhoto)="replace(findPhoto($event)!)"

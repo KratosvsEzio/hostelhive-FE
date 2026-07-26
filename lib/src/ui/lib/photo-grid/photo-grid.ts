@@ -1,5 +1,106 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { Dropdown, DropdownOption } from '../dropdown/dropdown';
+
+/** MIME types accepted by every hostel photo picker. */
+export const ACCEPTED_IMAGE_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'image/avif',
+  'image/heic',
+  'image/heif',
+  'image/webp',
+] as const;
+
+/** Dot-prefixed lower-case extensions matching `ACCEPTED_IMAGE_MIMES`. */
+export const ACCEPTED_IMAGE_EXTENSIONS = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.avif',
+  '.heic',
+  '.heif',
+  '.webp',
+] as const;
+
+/** Extensions ride alongside the MIME types because Windows often has no OS registration for HEIC/AVIF. */
+export const ACCEPT_ATTR = [
+  ...ACCEPTED_IMAGE_MIMES,
+  ...ACCEPTED_IMAGE_EXTENSIONS,
+].join(',');
+
+/** Maximum number of photos a single hostel may hold. */
+export const MAX_PHOTOS = 10;
+
+/** Shown when a batch would push a hostel past `MAX_PHOTOS`. */
+export const PHOTO_LIMIT_MESSAGE =
+  'A hostel can have at most 10 photos — remove one before adding more.';
+
+/** Shown when a picked file is not one of the accepted image formats. */
+export const IMAGE_TYPE_MESSAGE =
+  'JPG, PNG, WebP, AVIF or HEIC images only.';
+
+/** Outcome of validating a picked file against the accepted image formats. */
+export type ImageFileVerdict = 'ok' | 'type' | 'size';
+
+const GENERIC_MIMES = new Set(['', 'application/octet-stream']);
+
+const EXTENSION_MIMES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.avif': 'image/avif',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
+  '.webp': 'image/webp',
+};
+
+/** Lower-case dot-prefixed extension of `name`, or `''` when it has none. */
+export function fileExtension(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot < 0 ? '' : name.slice(dot).toLowerCase();
+}
+
+/**
+ * Classifies a picked file against the accepted image formats and `maxBytes`.
+ * Accepts a file whose MIME is allowed, or whose MIME is empty/generic while its
+ * extension is allowed — browsers routinely report no MIME for HEIC/HEIF/AVIF.
+ */
+export function classifyImageFile(file: File, maxBytes: number): ImageFileVerdict {
+  const mime = file.type.toLowerCase();
+  const extension = fileExtension(file.name);
+  const mimeAllowed = (ACCEPTED_IMAGE_MIMES as readonly string[]).includes(mime);
+  const extensionAllowed = (
+    ACCEPTED_IMAGE_EXTENSIONS as readonly string[]
+  ).includes(extension);
+  if (!mimeAllowed && !(GENERIC_MIMES.has(mime) && extensionAllowed))
+    return 'type';
+  if (file.size > maxBytes) return 'size';
+  return 'ok';
+}
+
+/**
+ * The MIME type to advertise when uploading `file`. Falls back to the extension
+ * so an unlabelled HEIC/AVIF still presigns and lands on S3 correctly typed.
+ */
+export function imageMimeType(file: File): string {
+  const mime = file.type.toLowerCase();
+  if (mime && !GENERIC_MIMES.has(mime)) return mime;
+  return EXTENSION_MIMES[fileExtension(file.name)] ?? 'application/octet-stream';
+}
+
+/** Short upper-case format name for a file, e.g. "HEIC". */
+export function imageFormatLabel(file: File): string {
+  const extension = fileExtension(file.name);
+  if (extension) return extension.slice(1).toUpperCase();
+  const subtype = file.type.split('/')[1] ?? '';
+  return subtype ? subtype.toUpperCase() : 'Image';
+}
 
 /** A single item in the photo grid. Map your domain photo type to this before passing in. */
 export interface PhotoGridPhoto {
@@ -11,6 +112,8 @@ export interface PhotoGridPhoto {
   /** Dims the card and shows a "Rejected" overlay with an Undo button. */
   rejected?: boolean;
   rejectReason?: string;
+  /** Short format name (e.g. "HEIC") shown when the browser can't decode the preview. */
+  format?: string;
 }
 
 /**
@@ -44,11 +147,26 @@ export interface PhotoGridPhoto {
         @if (p.rejected) {
           <!-- Rejected overlay -->
           <div class="relative overflow-hidden rounded-xl ring-2 ring-danger">
-            <img
-              [src]="p.url"
-              class="aspect-[4/3] w-full object-cover opacity-50"
-              alt=""
-            />
+            @if (isUndecodable(p.url)) {
+              <div
+                class="flex aspect-[4/3] w-full flex-col items-center justify-center gap-1 bg-ink-50 opacity-50"
+              >
+                <i
+                  class="ti ti-photo-off text-xl text-ink-400"
+                  aria-hidden="true"
+                ></i>
+                <span class="text-[10px] font-medium text-ink-400">
+                  {{ p.format || 'Image' }} · preview unavailable
+                </span>
+              </div>
+            } @else {
+              <img
+                [src]="p.url"
+                class="aspect-[4/3] w-full object-cover opacity-50"
+                alt=""
+                (error)="onPreviewError(p.url)"
+              />
+            }
             <div
               class="absolute inset-0 flex flex-col items-center justify-center"
             >
@@ -72,12 +190,28 @@ export interface PhotoGridPhoto {
         } @else {
           <div class="group overflow-hidden rounded-xl ring-1 ring-ink-100">
             <div class="relative">
-              <img
-                [src]="p.url"
-                class="aspect-[4/3] w-full object-cover"
-                [class.opacity-40]="p.uploadProgress !== undefined"
-                alt=""
-              />
+              @if (isUndecodable(p.url)) {
+                <div
+                  class="flex aspect-[4/3] w-full flex-col items-center justify-center gap-1 bg-ink-50"
+                  [class.opacity-40]="p.uploadProgress !== undefined"
+                >
+                  <i
+                    class="ti ti-photo-off text-xl text-ink-400"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="text-[10px] font-medium text-ink-400">
+                    {{ p.format || 'Image' }} · preview unavailable
+                  </span>
+                </div>
+              } @else {
+                <img
+                  [src]="p.url"
+                  class="aspect-[4/3] w-full object-cover"
+                  [class.opacity-40]="p.uploadProgress !== undefined"
+                  alt=""
+                  (error)="onPreviewError(p.url)"
+                />
+              }
 
               @if (p.uploadProgress !== undefined) {
                 <!-- Upload progress overlay -->
@@ -160,8 +294,10 @@ export interface PhotoGridPhoto {
       <!-- Add / replace tile -->
       <button
         type="button"
+        [disabled]="atLimit()"
+        [title]="atLimit() ? atLimitTitle() : ''"
         (click)="addPhoto.emit()"
-        class="flex aspect-[4/3] flex-col items-center justify-center rounded-xl border border-dashed border-ink-300 text-ink-400 transition hover:border-brand-300 hover:text-brand-500"
+        class="flex aspect-[4/3] flex-col items-center justify-center rounded-xl border border-dashed border-ink-300 text-ink-400 transition enabled:hover:border-brand-300 enabled:hover:text-brand-500 disabled:cursor-not-allowed disabled:border-ink-200 disabled:bg-ink-50 disabled:text-ink-300"
       >
         <i class="ti ti-upload text-xl" aria-hidden="true"></i>
         <span class="mt-1 text-xs font-medium">Replace / add</span>
@@ -177,6 +313,10 @@ export class PhotoGrid {
   readonly labelMap = input<Map<string, string | null>>(new Map());
   /** Inline error shown above the grid (e.g. upload failure). */
   readonly uploadError = input('');
+  /** Greys out the "Replace / add" tile once the photo limit is reached. */
+  readonly atLimit = input(false);
+  /** Tooltip explaining why the add tile is greyed out. */
+  readonly atLimitTitle = input(PHOTO_LIMIT_MESSAGE);
 
   /** User clicked the "Replace / add" tile. */
   readonly addPhoto = output<void>();
@@ -190,6 +330,17 @@ export class PhotoGrid {
   readonly undoReject = output<string>();
   /** User changed the label dropdown on a photo card. */
   readonly labelChange = output<{ id: string; value: string | null }>();
+
+  /** URLs the browser failed to decode — keyed by URL so a replaced card re-tries. */
+  private readonly undecodableUrls = signal<ReadonlySet<string>>(new Set());
+
+  protected isUndecodable(url: string): boolean {
+    return this.undecodableUrls().has(url);
+  }
+
+  protected onPreviewError(url: string): void {
+    this.undecodableUrls.update((s) => new Set(s).add(url));
+  }
 
   protected onLabelChange(id: string, v: string | string[] | null): void {
     this.labelChange.emit({ id, value: typeof v === 'string' ? v : null });

@@ -19,8 +19,14 @@
       }
     </span>
     <button hh-button variant="outlined" size="sm" class="hidden sm:flex">Save &amp; exit</button>
-    <button hh-button color="primary" size="sm" [disabled]="draftSaving()" (click)="saveAndContinue()">
-      <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : 'Continue to payment' }}
+    <button
+      hh-button
+      color="primary"
+      size="sm"
+      [disabled]="draftSaving() || uploading()"
+      (click)="saveAndContinue()"
+    >
+      <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : uploading() ? 'Uploading photos…' : 'Continue to payment' }}
     </button>
   </div>
 </header>
@@ -142,7 +148,7 @@
         <input
           #fileInput
           type="file"
-          accept="image/png,image/jpeg"
+          [attr.accept]="acceptAttr"
           multiple
           class="hidden"
           (change)="onFileSelected($event)"
@@ -152,6 +158,7 @@
           [photos]="photoGridItems()"
           [labelOptions]="labelOptions()"
           [labelMap]="photoLabelMap()"
+          [atLimit]="atPhotoLimit()"
           [uploadError]="uploadError() ?? ''"
           (addPhoto)="addPhoto()"
           (replacePhoto)="replaceMedia(findMedia($event)!)"
@@ -466,9 +473,17 @@
 
           <div class="mt-4 h-px bg-ink-100"></div>
 
-          <button hh-button color="primary" class="mt-4 w-full" [disabled]="draftSaving()" (click)="saveAndContinue()">
+          <button
+            hh-button
+            color="primary"
+            class="mt-4 w-full"
+            [disabled]="draftSaving() || uploading()"
+            (click)="saveAndContinue()"
+          >
             @if (draftSaving()) {
               <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+            } @else if (uploading()) {
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
             } @else {
               <i class="ti ti-arrow-right" aria-hidden="true"></i>Continue to payment
             }
