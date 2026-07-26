@@ -101,10 +101,6 @@ export class NewHostel {
     'Quad sharing',
     'Dormitory',
   ];
-  protected readonly roomTypeOptions: DropdownOption[] = this.roomTypes.map((t) => ({
-    value: t,
-    label: t,
-  }));
   protected readonly genderOptions: DropdownOption[] = [
     { value: 'boys', label: 'Boys' },
     { value: 'girls', label: 'Girls' },
@@ -169,6 +165,20 @@ export class NewHostel {
   protected readonly newRoomType = signal(this.roomTypes[0]);
   protected readonly newRoomCapacity = signal(1);
   protected readonly newRoomPrice = signal(0);
+
+  // Types already added stay in the list but greyed out, so the picker never shifts under the host.
+  protected readonly roomTypeOptions = computed<DropdownOption[]>(() => {
+    const used = new Set(this.rooms().map((r) => r.type));
+    return this.roomTypes.map((t) => ({
+      value: t,
+      label: t,
+      disabled: used.has(t),
+      disabledTooltip: used.has(t) ? 'Already added' : undefined,
+    }));
+  });
+  protected readonly allRoomTypesUsed = computed(() =>
+    this.roomTypeOptions().every((o) => o.disabled),
+  );
 
   // ── amenities ──
   protected readonly offerCategories = signal<OfferCategory[]>([]);
@@ -281,21 +291,31 @@ export class NewHostel {
 
   // ── rooms ──
   protected addRoom(): void {
+    const type = this.newRoomType();
+    if (!type || this.rooms().some((r) => r.type === type)) return;
     this.rooms.update((list) => [
       ...list,
       {
         id: ++this.roomId,
-        type: this.newRoomType(),
+        type,
         capacity: Math.max(1, this.newRoomCapacity()),
         price: Math.max(0, this.newRoomPrice()),
       },
     ]);
+    this.newRoomType.set(this.firstAvailableRoomType());
   }
   protected removeRoom(id: number): void {
     this.rooms.update((list) => list.filter((r) => r.id !== id));
+    if (!this.newRoomType()) this.newRoomType.set(this.firstAvailableRoomType());
   }
   protected setRoomType(v: string | string[] | null): void {
-    if (typeof v === 'string' && v) this.newRoomType.set(v);
+    if (typeof v !== 'string' || !v) return;
+    if (this.rooms().some((r) => r.type === v)) return;
+    this.newRoomType.set(v);
+  }
+  private firstAvailableRoomType(): string {
+    const used = new Set(this.rooms().map((r) => r.type));
+    return this.roomTypes.find((t) => !used.has(t)) ?? '';
   }
   protected setGenderType(v: string | string[] | null): void {
     if (v === 'boys' || v === 'girls' || v === 'co-living') this.gender.set(v);
