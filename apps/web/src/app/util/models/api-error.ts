@@ -1,14 +1,22 @@
 /**
- * Normalised API error envelope produced by the error interceptor.
- * The exact wire shape is confirmed under Q-API (§0); this is the FE-facing contract.
+ * Normalised API error produced by the error interceptor — the FE-facing contract.
+ * This backend sends neither a machine `code` nor a structured `details` map: `code` is
+ * derived from the HTTP status, and the only human-readable text lives in `serverMessages`,
+ * populated solely when the response body parsed as the Rails error envelope.
  */
 export interface ApiError {
   /** HTTP status (0 for network/timeout failures). */
   status: number;
-  /** Stable machine code, e.g. `validation_failed`, `unauthorized`. */
+  /** Machine code derived from the status (e.g. `network_error`, `unknown_error`). */
   code: string;
-  /** Human-readable message safe to surface. */
+  /**
+   * Diagnostic message. May be Angular's synthetic `HttpErrorResponse.message`, which leaks
+   * the internal API origin and path — never surface it to a user; use `serverMessages` instead.
+   */
   message: string;
-  /** Optional per-field validation messages. */
-  details?: Record<string, string[]>;
+  /**
+   * Human-readable messages extracted from the Rails error envelope. Present (and non-empty)
+   * only for envelope responses; empty/absent for non-envelope bodies (routing 404s, 5xx pages).
+   */
+  serverMessages?: readonly string[];
 }

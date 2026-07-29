@@ -1,10 +1,14 @@
-<article class="group relative">
-  <div
-    class="relative aspect-square overflow-hidden rounded-2xl bg-ink-100 transition"
-    [class.ring-2]="active()"
-    [class.ring-brand-500]="active()"
-    [class.ring-offset-2]="active()"
-  >
+<!-- The ring marks "your map pin is hovered"; it is cancelled while the pointer is on the
+     card itself, where it's just noise. Must be `hover:`, not `group-hover:` — the group
+     class is on this same element, and group-hover only reaches descendants, so the
+     cancel never fired and the ring showed on card hover too. -->
+<article
+  class="group relative overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition hover:shadow-md hover:ring-0 hover:ring-offset-0"
+  [class.ring-2]="active()"
+  [class.ring-brand-500]="active()"
+  [class.ring-offset-2]="active()"
+>
+  <div class="relative aspect-[4/3] overflow-hidden bg-ink-100">
     <!-- Sliding track: smooth horizontal transition. Only the first 3 slides load
          up front; each next one is fetched just-in-time, one step ahead (Airbnb-style). -->
     <div
@@ -33,43 +37,65 @@
       class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/30 to-transparent"
     ></div>
 
-    <hh-badge
-      [variant]="listing().gender"
-      class="absolute left-3 top-3 shadow-sm"
-      >{{ genderLabel() }}</hh-badge
-    >
+    <!-- Gender + property type. The property type is whatever the BE enum says, so it is
+         rendered only when present rather than defaulted to a guess. -->
+    <div class="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+      <hh-badge
+        [variant]="listing().gender"
+        [bordered]="false"
+        class="shadow-sm"
+      >
+        {{ genderLabel() }}
+      </hh-badge>
+      @if (propertyType()) {
+        <hh-badge variant="neutral" [bordered]="false" class="shadow-sm">
+          {{ propertyType() }}
+        </hh-badge>
+      }
+    </div>
 
-    <button
-      hh-button variant="icon"
-      type="button"
-      (click)="toggleSaved($event)"
-      [attr.aria-label]="saved() ? 'Remove from saved' : 'Save to favourites'"
-    >
-      <i
-        class="ti text-2xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
-        [class]="saved() ? 'ti-heart-filled text-brand-500' : 'ti-heart'"
-      ></i>
-    </button>
+    <!-- Favourite toggle. Sits above the stretched link (z-10) so the click toggles the
+         favourite instead of opening the listing; toggleSaved() stops it bubbling on.
+         Styled inline rather than via hh-button: overlay controls on a photo need
+         transparent chrome, which the shared Button variants don't model. -->
+    @if (savable()) {
+      <button
+        type="button"
+        class="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+        (click)="toggleSaved($event)"
+        [attr.aria-label]="saved() ? 'Remove from saved' : 'Save to favourites'"
+      >
+        <i
+          class="ti text-2xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+          [class]="saved() ? 'ti-heart-filled text-brand-500' : 'ti-heart text-white'"
+        ></i>
+      </button>
+    }
 
     @if (images().length > 1) {
+      <!-- Photo arrows (Airbnb-style): white discs centred on the photo edges that fade in
+           on card hover. z-10 puts them above the stretched link so the click reaches the
+           button; step() then stops it bubbling on to the card navigation. Touch devices
+           have no hover, so they stay visible there. Each arrow is dropped at the end of
+           its travel rather than disabled, matching the carousel's dot count. -->
       @if (img() > 0) {
         <button
-          hh-button variant="icon" size="sm"
           type="button"
           (click)="step(-1, $event)"
           aria-label="Previous photo"
+          class="absolute left-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
-          <i class="ti ti-chevron-left text-sm"></i>
+          <i class="ti ti-chevron-left text-sm" aria-hidden="true"></i>
         </button>
       }
       @if (img() < images().length - 1) {
         <button
-          hh-button variant="icon" size="sm"
           type="button"
           (click)="step(1, $event)"
           aria-label="Next photo"
+          class="absolute right-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
-          <i class="ti ti-chevron-right text-sm"></i>
+          <i class="ti ti-chevron-right text-sm" aria-hidden="true"></i>
         </button>
       }
       <div class="absolute inset-x-0 bottom-2.5 flex justify-center gap-[5px]">
@@ -88,45 +114,61 @@
       </div>
     }
 
-    @if (listing().verified) {
+  </div>
+
+  <div class="p-4">
+    <!-- Title carries the rating on its right, Airbnb-style: "★ 5.0 (5)". The name
+         truncates so a long one can never push the rating off the row. -->
+    <div class="flex items-baseline justify-between gap-2">
+      <h3 class="truncate font-semibold text-ink-900">{{ listing().name }}</h3>
       <span
-        class="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-medium text-ink-700 shadow-sm"
+        class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-900"
+        [attr.aria-label]="
+          'Rated ' + (rating() | number: '1.1-1') + ' out of 5 from ' +
+          reviewCount() + (reviewCount() === 1 ? ' review' : ' reviews')
+        "
       >
-        <i class="ti ti-rosette-discount-check-filled text-brand-500"></i>
-        Verified
+        <i class="ti ti-star-filled text-[13px]" aria-hidden="true"></i>
+        <span aria-hidden="true">
+          {{ rating() | number: '1.1-1' }}
+          <span class="font-normal text-ink-400">({{ reviewCount() | number }})</span>
+        </span>
       </span>
+    </div>
+    <p class="mt-0.5 truncate text-sm text-ink-500">{{ locationLine() }}</p>
+    <p class="mt-2 text-ink-900">
+      <span class="font-semibold">Rs {{ displayPrice() | number }}</span>
+      <span class="text-sm text-ink-500">/mo</span>
+      @if (roomTypeLabel()) {
+        <span class="text-sm text-ink-500"> · {{ roomTypeLabel() }}</span>
+      }
+    </p>
+
+    @if (amenityPills().length) {
+      <div class="mt-3 flex items-center gap-1.5">
+        @for (a of amenityPills(); track a) {
+          <span
+            class="min-w-0 truncate rounded-lg bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-600"
+            >{{ a }}</span
+          >
+        }
+        @if (extraAmenities()) {
+          <span
+            class="shrink-0 whitespace-nowrap rounded-lg bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-500"
+            >+{{ extraAmenities() }}</span
+          >
+        }
+      </div>
     }
   </div>
 
-  <div class="pt-2.5">
-    <div class="flex items-start justify-between gap-2">
-      <h3 class="truncate font-semibold text-ink-900">{{ listing().name }}</h3>
-      @if (listing().rating) {
-        <span
-          class="flex shrink-0 items-center gap-0.5 text-sm font-medium text-ink-800"
-        >
-          <i class="ti ti-star-filled text-[13px] text-brand-500"></i
-          >{{ listing().rating }}
-          <span class="font-normal text-ink-400"
-            >({{ listing().reviews }})</span
-          >
-        </span>
-      }
-    </div>
-    <p class="truncate text-sm text-ink-500">
-      {{ listing().area }} · {{ listing().city }}
-    </p>
-    <p class="truncate text-sm text-ink-400">{{ sharingSummary() }}</p>
-    <p class="mt-1.5 text-ink-900">
-      <span class="font-semibold">Rs {{ displayPrice() | number }}</span>
-      <span class="text-sm text-ink-500"> / month</span>
-    </p>
-  </div>
-
-  <!-- Stretched link: covers the whole card, sits below the z-10 controls. -->
+  <!-- Stretched link: covers the whole card, sits below the z-10 controls.
+       Opens in a new tab so the student keeps their search results. -->
   <a
     [routerLink]="['/hostel', listing().slug]"
-    [attr.aria-label]="listing().name"
+    target="_blank"
+    rel="noopener"
+    [attr.aria-label]="listing().name + ' (opens in a new tab)'"
     class="absolute inset-0 z-[1] rounded-2xl"
   ></a>
 </article>

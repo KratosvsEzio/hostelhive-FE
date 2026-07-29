@@ -27,7 +27,8 @@
       <div class="mb-4 flex items-center justify-between">
         <img src="/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
         <a
-          [routerLink]="['/']"
+          [routerLink]="closeTarget()"
+          [replaceUrl]="true"
           class="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition hover:bg-ink-50"
           aria-label="Close"
         >
@@ -41,11 +42,14 @@
             id="hh-lead-wall-title"
             class="font-display text-xl font-semibold text-ink-900"
           >
-            See verified contact details
+            {{ isRegister() ? 'See verified contact details' : 'Welcome back' }}
           </h2>
           <p class="mt-1 text-sm text-ink-500">
-            Create a free account to view phone numbers for every listing. It
-            takes 30 seconds.
+            {{
+              isRegister()
+                ? 'Create a free account to view phone numbers for every listing. It takes 30 seconds.'
+                : 'Log in to view verified phone numbers and manage your saved hostels.'
+            }}
           </p>
 
           <hh-tabs

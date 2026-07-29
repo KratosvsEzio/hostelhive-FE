@@ -7,7 +7,7 @@
       variant="field"
       [compact]="true"
       placeholder="Select type"
-      [options]="options"
+      [options]="options()"
       [value]="name()"
       (valueChange)="onNameChange($any($event))"
     />
@@ -16,11 +16,12 @@
     Capacity
     <input
       type="number"
-      min="1"
+      [min]="minCapacity()"
+      [max]="isDormitory() ? 200 : 9"
       step="1"
       pattern="\d+"
       [disabled]="capacityFixed()"
-      class="h-8 w-14 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
+      class="h-8 w-16 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
       [value]="capacity()"
       (change)="onCapacityChange($event)"
       (keydown)="$event.key === '.' || $event.key === '-' || $event.key === 'e' ? $event.preventDefault() : null"

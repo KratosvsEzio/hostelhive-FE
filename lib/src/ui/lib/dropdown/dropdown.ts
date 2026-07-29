@@ -234,18 +234,22 @@ export interface DropdownOption {
                         }
                       </span>
                     } @else {
-                      <!-- Simple single-line option -->
-                      <span class="flex-1">{{ o.label }}</span>
+                      <!-- Simple single-line option. min-w-0 + truncate so a long label (or
+                           the disabled reason beside it) can never force the row wider than
+                           the panel, which previously spawned a stray horizontal scrollbar. -->
+                      <span class="min-w-0 flex-1 truncate">{{ o.label }}</span>
                     }
 
                     @if (o.badge) {
                       <span class="shrink-0 rounded-full bg-ink-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-400">{{ o.badge }}</span>
                     }
                     @if (o.disabledTooltip) {
-                      <span class="group relative shrink-0" (click)="$event.stopPropagation()">
-                        <i class="ti ti-info-circle cursor-help text-xs text-ink-300" aria-hidden="true"></i>
-                        <span class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink-900 px-2.5 py-1.5 text-[11px] leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">{{ o.disabledTooltip }}</span>
-                      </span>
+                      <!-- Reason this option can't be picked. Rendered inline, not as a hover
+                           tooltip: a floating tooltip can't escape the list's overflow-y-auto
+                           (it must clip to scroll) so it was always cut off, and a disabled
+                           <button> swallows pointer events on its children, so the hover often
+                           never fired anyway. Inline text is un-clippable and touch-friendly. -->
+                      <span class="ml-auto shrink-0 self-center whitespace-nowrap text-[11px] text-ink-400">{{ o.disabledTooltip }}</span>
                     }
                   </button>
                 }

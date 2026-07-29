@@ -47,6 +47,8 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'account',
+    // Guarding the parent covers every child and runs before the shell chunk is fetched.
+    canActivate: [authGuard],
     loadComponent: () =>
       import('@features/user/account-shell/account-shell').then((m) => m.AccountShell),
     children: [

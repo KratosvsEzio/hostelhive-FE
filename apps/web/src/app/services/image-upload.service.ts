@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, switchMap, map } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
+import { imageMimeType } from '@hostelhive/ui';
 import { PresignedUrlResponse } from './documents-api';
 
 export type ImageUploadKey =
@@ -31,14 +32,15 @@ export class ImageUploadService {
     file: File,
     onProgress?: (percent: number) => void,
   ): Observable<ImageUploadResult> {
+    const contentType = imageMimeType(file);
     return this.api
       .get<PresignedUrlResponse>('/api/documents/presigned_url', {
         key,
-        content_type: file.type,
+        content_type: contentType,
       })
       .pipe(
         switchMap((res) =>
-          this.uploadToS3(res.url, file, onProgress).pipe(
+          this.uploadToS3(res.url, file, contentType, onProgress).pipe(
             map(() => ({ id: res.id, url: res.object_url })),
           ),
         ),
@@ -48,6 +50,7 @@ export class ImageUploadService {
   private uploadToS3(
     presignedUrl: string,
     file: File,
+    contentType: string,
     onProgress?: (percent: number) => void,
   ): Observable<void> {
     return new Observable<void>((observer) => {
@@ -78,7 +81,7 @@ export class ImageUploadService {
       );
 
       xhr.open('PUT', presignedUrl);
-      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.setRequestHeader('Content-Type', contentType);
       xhr.send(file);
 
       return () => xhr.abort();

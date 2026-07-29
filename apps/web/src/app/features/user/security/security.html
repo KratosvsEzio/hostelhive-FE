@@ -6,46 +6,30 @@
     </p>
 
     <div class="mt-5 grid max-w-md gap-4">
-      <label class="block">
-        <span class="mb-1 block text-sm font-medium text-ink-700">Current password</span>
-        <input
-          class="hh-input"
-          type="password"
-          placeholder="Enter current password"
-          autocomplete="current-password"
-          [value]="currentPassword()"
-          (input)="currentPassword.set($any($event.target).value)"
-        />
-      </label>
+      <hh-input
+        label="Current password"
+        type="password"
+        placeholder="Enter current password"
+        autocomplete="current-password"
+        [(value)]="currentPassword"
+      />
 
-      <label class="block">
-        <span class="mb-1 block text-sm font-medium text-ink-700">New password</span>
-        <input
-          class="hh-input"
-          type="password"
-          placeholder="New password"
-          autocomplete="new-password"
-          [value]="newPassword()"
-          (input)="newPassword.set($any($event.target).value)"
-        />
-      </label>
+      <hh-input
+        label="New password"
+        type="password"
+        placeholder="New password"
+        autocomplete="new-password"
+        [(value)]="newPassword"
+      />
 
-      <div>
-        <label class="block">
-          <span class="mb-1 block text-sm font-medium text-ink-700">Confirm new password</span>
-          <input
-            class="hh-input"
-            type="password"
-            placeholder="Re-enter new password"
-            autocomplete="new-password"
-            [value]="confirmPassword()"
-            (input)="confirmPassword.set($any($event.target).value)"
-          />
-        </label>
-        @if (mismatch()) {
-          <p class="mt-1.5 text-xs text-danger">Passwords do not match.</p>
-        }
-      </div>
+      <hh-input
+        label="Confirm new password"
+        type="password"
+        placeholder="Re-enter new password"
+        autocomplete="new-password"
+        [error]="mismatch() ? 'Passwords do not match.' : ''"
+        [(value)]="confirmPassword"
+      />
     </div>
 
     <div class="mt-5 flex items-center gap-3 border-t border-ink-100 pt-5">

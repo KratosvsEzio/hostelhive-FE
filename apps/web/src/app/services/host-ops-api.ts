@@ -578,7 +578,7 @@ export class HostOpsApi {
       transportation_charges?: number | null;
       advance_deposit?: number;
       joining_date?: string;
-      leave_date?: string;
+      leave_date?: string | null;
       rent?: string;
       address?: string;
       billing_due_date?: number;

@@ -13,11 +13,15 @@ import { FavoritesStore } from '@util/favorites-store';
 import { SearchCapacity } from '@services';
 import { Badge } from '@hostelhive/ui';
 
+/** Amenity pills shown before collapsing the rest into a "+N". */
+const MAX_AMENITY_PILLS = 2;
+
 /**
- * Airbnb-style listing card (HostelHive theme): rounded photo with a peek-through
- * image carousel, gender badge, save heart, rating, and price. Uses the
- * "stretched link" pattern so the whole card navigates while the heart/arrows stay
- * independently clickable (valid HTML — no interactive controls nested in the <a>).
+ * Listing card (HostelHive theme): a contained white card with an image carousel on
+ * top — gender + property-type pills and a rating badge over the photo — then title,
+ * location, price, review count, and amenity pills. Uses the "stretched link" pattern
+ * so the whole card navigates while the heart/arrows stay independently clickable
+ * (valid HTML — no interactive controls nested in the <a>).
  */
 @Component({
   selector: 'hh-listing-card',
@@ -29,6 +33,12 @@ export class ListingCard {
   readonly listing = input.required<Listing>();
   /** Highlights the card (e.g. when its map pin is hovered). */
   readonly active = input(false);
+  /**
+   * Shows the overlay heart. Turn it off where the page owns its own remove control —
+   * the favorites list confirms before unsaving, which the heart's instant toggle would
+   * bypass.
+   */
+  readonly savable = input(true);
 
   private readonly favorites = inject(FavoritesStore);
   private readonly capacityStore = inject(SearchCapacity);
@@ -79,10 +89,49 @@ export class ListingCard {
   protected readonly genderLabel = computed(() =>
     this.label(this.listing().gender),
   );
-  protected readonly sharingSummary = computed(() => {
-    const s = this.listing().sharing;
-    return s.length ? s.join(' · ') : 'Shared rooms';
+  /** Property type pill ('Building', 'Apartment', …) — hidden when the BE sends none. */
+  protected readonly propertyType = computed(() => this.listing().propertyType ?? '');
+
+  /** Reviews have no API yet, so both of these read 0 rather than disappearing —
+   *  a card with no rating still shows the same shape as one with. */
+  protected readonly rating = computed(() => this.listing().rating ?? 0);
+  protected readonly reviewCount = computed(() => this.listing().reviews ?? 0);
+
+  /** "area, city" — the parts we have, blanks dropped so there's never a stray comma. */
+  protected readonly locationLine = computed(() => {
+    const l = this.listing();
+    return [l.area, l.city].filter(Boolean).join(', ');
   });
+
+  /** Names the room type the displayed price belongs to — "2 Sharing" — so the price on
+   *  the card is never unattributed. Deliberately mirrors SearchCapacity.priceFor(), which
+   *  displayPrice() runs through: the selected capacity wins only when this listing
+   *  actually prices it, otherwise the price falls back to priceFrom and the label has to
+   *  follow it there rather than keep advertising the filter. That fallback is resolved by
+   *  matching the shown price back to a capacity, so a listing whose cheapest tier is the
+   *  4-bed still reads "4 Sharing" with no filter applied. Empty when the listing has no
+   *  per-capacity pricing, which hides the line instead of printing a placeholder. */
+  protected readonly roomTypeLabel = computed(() => {
+    const byCapacity = this.listing().priceByCapacity ?? {};
+    const selected = this.capacityStore.active();
+    const capacity = selected && byCapacity[selected] != null
+      ? selected
+      : Object.keys(byCapacity).find((c) => byCapacity[c] === this.displayPrice());
+    if (!capacity) return '';
+    const n = parseInt(capacity, 10);
+    if (n === 1) return 'Private';
+    if (n >= 5) return 'Dormitory';
+    return `Sharing of ${n}`;
+  });
+
+  /** Amenity pills. Capped so a hostel with many offers can't push the card taller than
+   *  its neighbours in the grid; the overflow becomes a "+N" pill. */
+  protected readonly amenityPills = computed(() =>
+    (this.listing().offerNames ?? []).slice(0, MAX_AMENITY_PILLS),
+  );
+  protected readonly extraAmenities = computed(() =>
+    Math.max(0, (this.listing().offerNames ?? []).length - MAX_AMENITY_PILLS),
+  );
 
   protected isLoaded(i: number): boolean {
     return i <= this.loadedThrough();
@@ -110,6 +159,7 @@ export class ListingCard {
     e.stopPropagation();
     this.favorites.toggle(this.listing());
   }
+
 
   private label(g: Gender): string {
     return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';

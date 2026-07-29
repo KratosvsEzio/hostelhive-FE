@@ -2,25 +2,45 @@
 <header
   class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-ink-100 bg-white px-5 sm:px-8"
 >
-  <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+  <a routerLink="/" class="flex shrink-0 items-center" (click)="onLogoClick($event)">
+    <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+  </a>
   <div class="flex items-center gap-3">
-    <span
-      class="hidden items-center gap-1 text-sm sm:flex"
-      [class]="draftSaving() ? 'text-ink-400' : draftError() ? 'text-danger' : draftSaved() ? 'text-ok' : 'text-ink-400'"
+    @if (showDraftStatus()) {
+      <span
+        class="hidden items-center gap-1 text-sm sm:flex"
+        [class]="draftSaving() ? 'text-ink-400' : draftError() ? 'text-danger' : draftSaved() ? 'text-ok' : 'text-ink-400'"
+      >
+        @if (draftSaving()) {
+          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+        } @else if (draftError()) {
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>Save failed
+        } @else if (draftSaved()) {
+          <i class="ti ti-circle-check" aria-hidden="true"></i>Draft saved
+        } @else {
+          <i class="ti ti-device-floppy" aria-hidden="true"></i>Saved on this device
+        }
+      </span>
+    }
+    <button
+      hh-button
+      type="button"
+      variant="outlined"
+      size="sm"
+      class="hidden sm:flex"
+      [disabled]="draftSaving() || uploading()"
+      (click)="saveAndExit()"
     >
-      @if (draftSaving()) {
-        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
-      } @else if (draftError()) {
-        <i class="ti ti-alert-circle" aria-hidden="true"></i>Save failed
-      } @else if (draftSaved()) {
-        <i class="ti ti-circle-check" aria-hidden="true"></i>Draft saved
-      } @else {
-        <i class="ti ti-device-floppy" aria-hidden="true"></i>Draft saved
-      }
-    </span>
-    <button hh-button variant="outlined" size="sm" class="hidden sm:flex">Save &amp; exit</button>
-    <button hh-button color="primary" size="sm" [disabled]="draftSaving()" (click)="saveAndContinue()">
-      <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : 'Continue to payment' }}
+      {{ exitLabel() }}
+    </button>
+    <button
+      hh-button
+      color="primary"
+      size="sm"
+      [disabled]="draftSaving() || uploading()"
+      (click)="saveAndContinue()"
+    >
+      <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : uploading() ? 'Uploading photos…' : 'Continue to payment' }}
     </button>
   </div>
 </header>
@@ -142,7 +162,7 @@
         <input
           #fileInput
           type="file"
-          accept="image/png,image/jpeg"
+          [attr.accept]="acceptAttr"
           multiple
           class="hidden"
           (change)="onFileSelected($event)"
@@ -152,6 +172,7 @@
           [photos]="photoGridItems()"
           [labelOptions]="labelOptions()"
           [labelMap]="photoLabelMap()"
+          [atLimit]="atPhotoLimit()"
           [uploadError]="uploadError() ?? ''"
           (addPhoto)="addPhoto()"
           (replacePhoto)="replaceMedia(findMedia($event)!)"
@@ -184,30 +205,33 @@
               </label>
               <hh-dropdown
                 variant="field"
-                [options]="roomTypeOptions"
+                placeholder="All types added"
+                [options]="roomTypeOptions()"
                 [value]="newRoomType()"
                 (valueChange)="setRoomType($event)"
               />
             </div>
+            <div class="sm:col-span-3">
+              <hh-input
+                label="Capacity"
+                type="number"
+                [value]="newRoomCapacity() + ''"
+                [disabled]="capacityFixed()"
+                (valueChange)="setNewRoomCapacity($event)"
+              />
+            </div>
             <hh-input
               class="sm:col-span-3"
-              label="Capacity"
-              type="number"
-              [value]="newRoomCapacity() + ''"
-              (valueChange)="newRoomCapacity.set(+$event || 1)"
-            />
-            <hh-input
-              class="sm:col-span-3"
-              label="Price / month"
-              icon="ti-coin"
+              label="Price / month (PKR)"
               type="number"
               [value]="newRoomPrice() + ''"
-              (valueChange)="newRoomPrice.set(+$event || 0)"
+              (valueChange)="setNewRoomPrice($event)"
             />
             <div class="sm:col-span-1">
               <button
                 hh-button color="primary"
                 class="w-full"
+                [disabled]="allRoomTypesUsed() || !newRoomType()"
                 (click)="addRoom()"
                 aria-label="Add room"
               >
@@ -215,6 +239,11 @@
               </button>
             </div>
           </div>
+          @if (roomFormError()) {
+            <p class="mt-2 flex items-center gap-1 text-xs text-danger">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ roomFormError() }}
+            </p>
+          }
         </hh-card>
 
         <div class="mt-4">
@@ -232,7 +261,7 @@
                     </span>
                     <div>
                       <p class="text-sm font-semibold text-ink-900">
-                        {{ r.type }}
+                        {{ roomTypeLabel(r.type) }}
                       </p>
                       <p class="text-xs text-ink-500">
                         Sleeps {{ r.capacity }} · Rs {{ r.price | number }} /
@@ -465,9 +494,17 @@
 
           <div class="mt-4 h-px bg-ink-100"></div>
 
-          <button hh-button color="primary" class="mt-4 w-full" [disabled]="draftSaving()" (click)="saveAndContinue()">
+          <button
+            hh-button
+            color="primary"
+            class="mt-4 w-full"
+            [disabled]="draftSaving() || uploading()"
+            (click)="saveAndContinue()"
+          >
             @if (draftSaving()) {
               <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+            } @else if (uploading()) {
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
             } @else {
               <i class="ti ti-arrow-right" aria-hidden="true"></i>Continue to payment
             }
@@ -507,5 +544,20 @@
         </li>
       }
     </ul>
+  </hh-confirm-modal>
+}
+
+@if (showLeaveModal()) {
+  <hh-confirm-modal
+    title="Leave while a photo is uploading?"
+    icon="ti-alert-triangle"
+    tone="warn"
+    confirmLabel="Leave anyway"
+    cancelLabel="Keep uploading"
+    (confirm)="confirmLeave()"
+    (cancel)="showLeaveModal.set(false)"
+  >
+    Your photo is still uploading and will be lost. Everything else is saved on this
+    device.
   </hh-confirm-modal>
 }

@@ -1,12 +1,30 @@
 import { format, parseISO } from 'date-fns';
 import { CellDef, ColumnDef } from '@hostelhive/ui';
-import { Tenant } from '@hostelhive/data-access';
+import { Tenant, TenantStatus } from '@hostelhive/data-access';
+import { ordinal } from '@util/ordinal';
 
-function ordinal(day: number | undefined): string {
-  if (!day) return '—';
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = day % 100;
-  return day + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+/**
+ * The status pill renders the tenant's status **as the API defines it** — no client
+ * relabelling. Previously anything non-`active` collapsed to "Checked-out", so an
+ * `inactive` tenant read as "Checked-out" even though the backend has no such status
+ * (see B9). Unknown slugs fall through to the raw value / neutral tone.
+ */
+const STATUS_LABEL: Record<TenantStatus, string> = {
+  active: 'Active',
+  inactive: 'Inactive',
+  'on-notice': 'On notice',
+  'checked-out': 'Checked-out',
+};
+
+const STATUS_TONE: Record<TenantStatus, 'ok' | 'warn' | 'danger' | 'neutral'> = {
+  active: 'ok',
+  inactive: 'neutral',
+  'on-notice': 'warn',
+  'checked-out': 'neutral',
+};
+
+function fmtBillingDay(day: number | undefined): string {
+  return day ? ordinal(day) : '—';
 }
 
 function fmtDate(iso: string | undefined): string {
@@ -43,19 +61,21 @@ const TENANTS_TABLE_CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
   },
   billingDate: {
     label: 'Billing date',
-    cell: (r) => ({ kind: 'text', value: ordinal((r as Tenant).billingDate), class: 'text-ink-600' } satisfies CellDef),
+    cell: (r) => ({ kind: 'text', value: fmtBillingDay((r as Tenant).billingDate), class: 'text-ink-600' } satisfies CellDef),
   },
   billingDueDate: {
     label: 'Billing due date',
-    cell: (r) => ({ kind: 'text', value: ordinal((r as Tenant).billingDueDate), class: 'text-ink-600' } satisfies CellDef),
+    cell: (r) => ({ kind: 'text', value: fmtBillingDay((r as Tenant).billingDueDate), class: 'text-ink-600' } satisfies CellDef),
   },
   status: {
     label: 'Status',
     cell: (r) => {
       const t = r as Tenant;
-      return t.status === 'active'
-        ? { kind: 'pill', text: 'Active', tone: 'ok' } satisfies CellDef
-        : { kind: 'pill', text: 'Checked-out', tone: 'neutral' } satisfies CellDef;
+      return {
+        kind: 'pill',
+        text: STATUS_LABEL[t.status] ?? t.status,
+        tone: STATUS_TONE[t.status] ?? 'neutral',
+      } satisfies CellDef;
     },
   },
 };

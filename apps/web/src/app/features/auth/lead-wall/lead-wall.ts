@@ -4,6 +4,7 @@ import {
   computed,
   effect,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -15,12 +16,26 @@ import {
   AuthService,
   HOST_ROLES,
   SessionStore,
+  isGuardedUrl,
+  safeInternalUrl,
 } from '@core/auth';
 import { ApiError } from '@hostelhive/data-access';
 import { GoogleAuthService } from '@services';
 
 type AuthTab = 'register' | 'login';
 type Phase = 'form' | 'verify';
+
+/**
+ * Maps the `?mode` query param onto the tab to open.
+ *
+ * Register is the default: the highest-traffic entry point is the phone-reveal gate,
+ * which converts visitors who do not have an account yet. Only an exact `login` opts
+ * out — anything else (wrong case, unknown value, empty) falls back to Register so
+ * `hh-tabs` is never handed a value that matches no tab.
+ */
+function tabForMode(mode: string | null): AuthTab {
+  return mode === 'login' ? 'login' : 'register';
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -60,7 +75,27 @@ export class LeadWall {
     });
   }
 
-  protected readonly tab = signal<AuthTab>('register');
+  /**
+   * Seeded from `?mode`, which the login entry points set so they land on Log in.
+   *
+   * The snapshot is the `initialValue` so the tab is resolved synchronously at
+   * construction and ships in the SSR payload rather than flipping after hydration.
+   */
+  private readonly modeParam = toSignal(
+    this.route.queryParamMap.pipe(map((p) => p.get('mode'))),
+    { initialValue: this.route.snapshot.queryParamMap.get('mode') },
+  );
+
+  /**
+   * A `linkedSignal` rather than a plain signal because the route reuse strategy reuses
+   * this component across `/auth` → `/auth?mode=login`, so the constructor does not
+   * re-run. Switching tabs by hand still overrides it until `mode` itself changes.
+   */
+  protected readonly tab = linkedSignal<string | null, AuthTab>({
+    source: this.modeParam,
+    computation: (mode) => tabForMode(mode),
+  });
+
   protected readonly phase = signal<Phase>('form');
   protected readonly busy = signal(false);
   protected readonly showErrors = signal(false);
@@ -79,6 +114,19 @@ export class LeadWall {
     this.route.queryParamMap.pipe(map((p) => p.get('returnUrl') || '/')),
     { initialValue: '/' },
   );
+
+  /**
+   * Where the × dismisses to: back where the user came from, but never into a guard.
+   *
+   * Most openers set a public `returnUrl` (the listing behind the phone-reveal gate), but
+   * the guards themselves also send guarded URLs here. Returning a guest to one of those
+   * would bounce them straight back to this screen, making the × inescapable — so a
+   * guarded destination falls back to home.
+   */
+  protected readonly closeTarget = computed(() => {
+    const ret = safeInternalUrl(this.returnUrl());
+    return ret && ret !== '/' && !isGuardedUrl(this.router.config, ret) ? ret : '/';
+  });
 
   protected readonly nameError = computed(() =>
     !this.isRegister()
@@ -210,9 +258,11 @@ export class LeadWall {
    * when redirecting here) always wins — this preserves the exact route the user was
    * on, including `/moderator/queue` for a moderator who refreshed the page.
    * Falls back to the role's default console home, or `/` for seekers.
+   *
+   * A `returnUrl` that points off-origin is discarded rather than followed.
    */
   private destination(): string {
-    const ret = this.returnUrl();
+    const ret = safeInternalUrl(this.returnUrl());
     if (ret && ret !== '/') return ret;
     return this.consoleHome() ?? '/';
   }

@@ -2,18 +2,31 @@
   <div hhActions class="flex items-center gap-3">
     @if (saveError()) {
       <span class="text-sm font-medium text-danger">Couldn't update — try again.</span>
-    } @else if (saved() && !dirty()) {
+    } @else if (saved() && !form().dirty()) {
       <span class="flex items-center gap-1 text-sm font-medium text-ok">
         <i class="ti ti-check" aria-hidden="true"></i>Saved
       </span>
-    } @else if (dirty()) {
+    } @else if (form().dirty()) {
       <span class="hidden text-sm text-ink-400 sm:inline">Unsaved changes</span>
+    }
+    @if (previewUrl(); as url) {
+      <a
+        hh-button
+        variant="outlined"
+        size="sm"
+        [href]="url"
+        target="_blank"
+        rel="noopener"
+        class="border-ink-200 text-ink-600 hover:border-ink-400"
+      >
+        <i class="ti ti-external-link text-sm" aria-hidden="true"></i>Preview
+      </a>
     }
     <button
       hh-button
       color="primary"
       size="sm"
-      [disabled]="!dirty() || saving() || uploading()"
+      [disabled]="!form().dirty() || saving() || form().uploading()"
       (click)="save()"
     >
       {{ saving() ? 'Saving…' : 'Update hostel' }}
@@ -29,256 +42,27 @@
       </div>
     } @else if (s.error) {
       <hh-error-state [networkError]="s.networkError" message="We couldn't load your hostel." (retry)="retry()" />
-    } @else if (s.data; as d) {
-      <div class="space-y-5">
-        <!-- LISTING DETAILS -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <h2 class="font-display text-base font-semibold text-ink-900">Listing details</h2>
-            @if (d.status?.name) {
-              <hh-status-pill tone="neutral">{{ d.status?.name }}</hh-status-pill>
-            }
-          </div>
+    } @else if (s.data) {
+      <hh-hostel-form
+        mode="edit"
+        [initialData]="s.data"
+        [saving]="saving()"
+      />
 
-          <label class="mb-1 block text-xs font-medium text-ink-500" [for]="ids.name">
-            Property name
-          </label>
-          <input
-            [id]="ids.name"
-            [value]="name()"
-            (input)="name.set(asValue($event))"
-            class="mb-3 w-full rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-          />
-
-          <div class="mb-3 grid grid-cols-2 gap-3">
-            <div>
-              <label class="mb-1 block text-xs font-medium text-ink-500">Type</label>
-              <hh-dropdown
-                variant="field"
-                placeholder="Select type"
-                [options]="typeOptions()"
-                [value]="propertyType()"
-                (valueChange)="setType($event)"
-              />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-ink-500">Accommodation for</label>
-              <hh-dropdown
-                variant="field"
-                placeholder="Select gender"
-                [options]="genderOptions()"
-                [value]="genderType()"
-                (valueChange)="setGender($event)"
-              />
-            </div>
-          </div>
-
-          <label class="mb-1 block text-xs font-medium text-ink-500">Description</label>
-          <hh-rich-text
-            [value]="description()"
-            (valueChange)="description.set($event)"
-            [minHeight]="100"
-          />
-
-          <label class="mb-1 mt-3 block text-xs font-medium text-ink-500" [for]="ids.landmarks">
-            Nearby landmarks
-          </label>
-          <input
-            [id]="ids.landmarks"
-            [value]="landmarks()"
-            (input)="landmarks.set(asValue($event))"
-            class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-          />
-        </div>
-
-        <!-- PHOTOS -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-3 font-display text-base font-semibold text-ink-900">
-            Photos · {{ photos().length }}
-          </h2>
-          <input
-            #fileInput
-            type="file"
-            accept="image/*"
-            multiple
-            class="hidden"
-            (change)="onFileSelected($event)"
-          />
-          <hh-photo-grid
-            [photos]="photoGridItems()"
-            [labelOptions]="labelOptions()"
-            [labelMap]="photoLabelMap()"
-            [uploadError]="uploadError() ?? ''"
-            (addPhoto)="addPhoto()"
-            (replacePhoto)="replace(findPhoto($event)!)"
-            (setPrimary)="setPrimary(findPhoto($event)!)"
-            (removePhoto)="removePhoto(findPhoto($event)!)"
-            (labelChange)="setPhotoLabel(findPhoto($event.id)!, $event.value)"
-          />
-        </div>
-
-        <!-- AMENITIES -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <div class="mb-3 flex items-center justify-between">
-            <h2 class="font-display text-base font-semibold text-ink-900">Amenities</h2>
-            <span class="text-xs font-medium text-ink-400">{{ selectedOfferIds().size }} selected</span>
-          </div>
-          @if (catalog().length === 0) {
-            <p class="text-sm text-ink-400">Amenity catalogue unavailable.</p>
-          } @else {
-            <div class="space-y-4">
-              @for (cat of catalog(); track cat.id; let i = $index) {
-                @if (i === 0 || showAll()) {
-                  <div>
-                    <div class="mb-1.5 flex items-center gap-2">
-                      <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
-                      <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
-                      @if (catSelectedCount(cat); as c) {
-                        <span class="text-[11px] font-semibold text-brand-600">{{ c }} selected</span>
-                      } @else {
-                        <span class="text-[11px] font-medium text-ink-400">{{ cat.offers.length }}</span>
-                      }
-                    </div>
-                    <div class="flex flex-wrap gap-1.5">
-                      @for (o of cat.offers; track o.id) {
-                        <button
-                          hh-button variant="outlined" size="sm"
-                          type="button"
-                          (click)="toggleOffer(o.id)"
-                          [attr.aria-pressed]="isOfferSelected(o.id)"
-                          [class]="
-                            isOfferSelected(o.id)
-                              ? 'border-brand-500 bg-brand-50 text-brand-700'
-                              : 'border-ink-200 text-ink-600 hover:border-ink-400'
-                          "
-                        >
-                          <i class="ti text-[11px]" [class]="isOfferSelected(o.id) ? 'ti-check' : 'ti-plus'" aria-hidden="true"></i>{{ o.name }}
-                        </button>
-                      }
-                    </div>
-                  </div>
-                }
-              }
-            </div>
-            @if (catalog().length > 1) {
-              <button
-                hh-button variant="text" size="sm"
-                type="button"
-                class="mt-2"
-                (click)="toggleShowAll()"
-              >
-                {{ showAll() ? 'Show less' : 'Show more' }}
-                <i class="ti text-base" [class]="showAll() ? 'ti-chevron-up' : 'ti-chevron-down'" aria-hidden="true"></i>
-              </button>
-            }
-          }
-        </div>
-
-        <!-- ROOM TYPES -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Room types</h2>
-
-          @if (roomTypes().length) {
-            <ul class="space-y-2">
-              @for (rt of roomTypes(); track rt._key) {
-                <li>
-                  <hh-room-type-row
-                    [name]="rt.name"
-                    [capacity]="rt.capacity"
-                    [price]="rt.price"
-                    (nameChange)="updateRt(rt._key, 'name', $event)"
-                    (capacityChange)="updateRt(rt._key, 'capacity', $event)"
-                    (priceChange)="updateRt(rt._key, 'price', $event)"
-                  />
-                </li>
-              }
-            </ul>
-          } @else {
-            <div class="grid place-items-center rounded-xl border border-dashed border-ink-200 px-6 py-8 text-center">
-              <i class="ti ti-bed-off text-2xl text-ink-300" aria-hidden="true"></i>
-              <p class="mt-2 text-sm text-ink-500">No rooms added yet.</p>
-            </div>
-          }
-
-          @if (!addRtOpen()) {
-            <button hh-button variant="text" size="sm" type="button" class="mt-3" (click)="openAddRt()">
-              <i class="ti ti-plus text-sm" aria-hidden="true"></i>Add room type
-            </button>
-          }
-
-          @if (addRtOpen()) {
-            <div class="mt-3 rounded-xl border border-ink-200 bg-surface p-3">
-              <hh-room-type-row
-                [name]="newRtName()"
-                [capacity]="newRtCapacity()"
-                [price]="newRtPrice()"
-                (nameChange)="newRtName.set($event)"
-                (capacityChange)="newRtCapacity.set($event)"
-                (priceChange)="newRtPrice.set($event)"
-              />
-              <div class="mt-2 flex justify-end gap-2">
-                <button hh-button variant="text" size="sm" (click)="closeAddRt()">Cancel</button>
-                <button hh-button color="primary" size="sm" (click)="confirmAddRt()">Add room type</button>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- LOCATION -->
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-3 font-display text-base font-semibold text-ink-900">Location</h2>
-          <hh-location-picker
-            [initialLat]="d.latitude !== null && d.latitude !== undefined ? +d.latitude : undefined"
-            [initialLng]="d.longitude !== null && d.longitude !== undefined ? +d.longitude : undefined"
-            [initialZoom]="15"
-            (picked)="onLocationPicked($event)"
-          />
-          @if (locLat() && locLng()) {
-            <div class="mt-3 rounded-xl border border-ink-100 bg-surface p-3">
-              <div class="flex items-start gap-2.5">
-                <i class="ti ti-map-pin mt-0.5 shrink-0 text-sm text-brand-500" aria-hidden="true"></i>
-                <div class="min-w-0 flex-1 space-y-0.5 text-xs">
-                  @if (locAddress1()) {
-                    <p class="font-medium text-ink-800">{{ locAddress1() }}</p>
-                  }
-                  @if (locArea()) {
-                    <p class="text-ink-600">{{ locArea() }}</p>
-                  }
-                  @if (locCityLine()) {
-                    <p class="text-ink-600">{{ locCityLine() }}</p>
-                  }
-                  <p class="mt-1.5 font-mono text-ink-400">
-                    {{ locLat()?.toFixed(5) }}, {{ locLng()?.toFixed(5) }}
-                    <span class="mx-1 text-ink-300">·</span>
-                    <a
-                      [href]="mapsLink(locLat(), locLng())"
-                      target="_blank"
-                      rel="noopener"
-                      class="font-medium text-brand-600 hover:underline"
-                      >Open in Google Maps</a
-                    >
-                  </p>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- bottom save row (mirrors the header action) -->
-        <div class="flex flex-wrap items-center justify-end gap-3 pb-2">
-          @if (saveError()) {
-            <span class="text-sm font-medium text-danger">Couldn't update — try again.</span>
-          }
-          @if (saved() && !dirty()) {
-            <span class="flex items-center gap-1 text-sm font-medium text-ok"><i class="ti ti-check" aria-hidden="true"></i>Changes saved.</span>
-          }
-          @if (dirty()) {
-            <span class="text-sm text-ink-400">You have unsaved changes</span>
-          }
-          <button hh-button color="primary" [disabled]="!dirty() || saving() || uploading()" (click)="save()">
-            {{ saving() ? 'Saving…' : 'Update hostel' }}
-          </button>
-        </div>
+      <!-- bottom save row -->
+      <div class="mt-5 flex flex-wrap items-center justify-end gap-3 pb-2">
+        @if (saveError()) {
+          <span class="text-sm font-medium text-danger">Couldn't update — try again.</span>
+        }
+        @if (saved() && !form().dirty()) {
+          <span class="flex items-center gap-1 text-sm font-medium text-ok"><i class="ti ti-check" aria-hidden="true"></i>Changes saved.</span>
+        }
+        @if (form().dirty()) {
+          <span class="text-sm text-ink-400">You have unsaved changes</span>
+        }
+        <button hh-button color="primary" [disabled]="!form().dirty() || saving() || form().uploading()" (click)="save()">
+          {{ saving() ? 'Saving…' : 'Update hostel' }}
+        </button>
       </div>
     }
   </main>

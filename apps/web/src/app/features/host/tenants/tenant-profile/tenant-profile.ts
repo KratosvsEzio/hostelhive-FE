@@ -16,7 +16,9 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant, Invoice } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { ordinal } from '@util/ordinal';
 import { tenantRentCols, tenantUtilityCols } from '@app/util/table-configs/invoice-table-cols';
+import { TenantFormDrawer } from '../tenant-form-drawer/tenant-form-drawer';
 
 type Tab = 'info' | 'rent' | 'utility';
 
@@ -47,6 +49,7 @@ interface BillState {
     EmptyState,
     ErrorState,
     Skeleton,
+    TenantFormDrawer,
   ],
   templateUrl: './tenant-profile.html',
 })
@@ -60,17 +63,29 @@ export class TenantProfile {
   protected readonly cnicPreview = signal<string | null>(null);
   protected readonly rentPage = signal(1);
   protected readonly utilityPage = signal(1);
+  private readonly refresh = signal(0);
 
   protected readonly invoiceRowId = (row: unknown) => (row as Invoice).id;
   protected readonly rentCols = tenantRentCols();
   protected readonly utilityCols = tenantUtilityCols();
 
-  private readonly tenant$ = toObservable(this.store.selected).pipe(
-    switchMap((hostelId) =>
-      this.route.paramMap.pipe(
-        map((p) => ({ hostelId, tenantId: p.get('tenantId') ?? '' })),
-      ),
-    ),
+  private readonly tenantId = toSignal(
+    this.route.paramMap.pipe(map((p) => p.get('tenantId') ?? '')),
+    { initialValue: this.route.snapshot.paramMap.get('tenantId') ?? '' },
+  );
+
+  private readonly editParam = toSignal(
+    this.route.queryParamMap.pipe(map((q) => q.get('edit'))),
+    { initialValue: this.route.snapshot.queryParamMap.get('edit') },
+  );
+
+  private readonly fetchKey = computed(() => ({
+    hostelId: this.store.selected(),
+    tenantId: this.tenantId(),
+    refresh: this.refresh(),
+  }));
+
+  private readonly tenant$ = toObservable(this.fetchKey).pipe(
     switchMap(({ hostelId, tenantId }) =>
       hostelId && tenantId
         ? this.api.getRenter(hostelId, tenantId).pipe(
@@ -81,22 +96,29 @@ export class TenantProfile {
     ),
   );
 
+  // Deliberately no `startWith` — a refresh keeps the current tenant on screen and swaps
+  // the fresh one in, so saving an edit never flashes the skeleton.
   protected readonly state = toSignal(this.tenant$, {
     initialValue: { loading: true, error: false, networkError: false, tenant: null } as ProfileState,
   });
 
+  /** Room the invoice tabs filter on. Tracked, so a saved room change re-runs both queries. */
+  private readonly currentRoomId = computed(() => this.state().tenant?.roomId ?? '');
+
   private readonly rentHistory$ = combineLatest([
     toObservable(this.activeTab),
     toObservable(this.rentPage),
+    toObservable(this.currentRoomId),
+    toObservable(this.refresh),
   ]).pipe(
     filter(([tab]) => tab === 'rent'),
-    switchMap(([, page]) =>
+    switchMap(([, page, roomId]) =>
       this.route.paramMap.pipe(
         take(1),
         map((p) => ({
           hostelId: this.store.selected(),
           tenantId: p.get('tenantId') ?? '',
-          roomId: this.state().tenant?.roomId ?? '',
+          roomId,
           page,
         })),
       ),
@@ -128,15 +150,17 @@ export class TenantProfile {
   private readonly utilityHistory$ = combineLatest([
     toObservable(this.activeTab),
     toObservable(this.utilityPage),
+    toObservable(this.currentRoomId),
+    toObservable(this.refresh),
   ]).pipe(
     filter(([tab]) => tab === 'utility'),
-    switchMap(([, page]) =>
+    switchMap(([, page, roomId]) =>
       this.route.paramMap.pipe(
         take(1),
         map((p) => ({
           hostelId: this.store.selected(),
           tenantId: p.get('tenantId') ?? '',
-          roomId: this.state().tenant?.roomId ?? '',
+          roomId,
           page,
         })),
       ),
@@ -176,16 +200,38 @@ export class TenantProfile {
     this.router.navigate(['/host', this.store.selected(), 'tenants']);
   }
 
+  /** Opens the edit drawer over this page. Never rendered on an errored or absent tenant. */
+  protected readonly editOpen = computed(
+    () => this.editParam() === '1' && !!this.state().tenant,
+  );
+
   protected openEdit(): void {
-    const tenant = this.state().tenant;
-    const hostelId = this.store.selected();
-    if (!tenant || !hostelId) return;
-    this.router.navigate(['/host', hostelId, 'tenants', 'edit', tenant.id]);
+    if (!this.state().tenant) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { edit: 1 },
+      queryParamsHandling: 'merge',
+    });
   }
 
-  protected ordinal(n: number): string {
-    const s = ['th', 'st', 'nd', 'rd'];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+  protected onDrawerSaved(): void {
+    // Re-read through `getRenter`; the write response is not the show serializer.
+    this.refresh.update((n) => n + 1);
+    this.closeEdit();
   }
+
+  protected onDrawerClosed(): void {
+    this.closeEdit();
+  }
+
+  private closeEdit(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { edit: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  protected readonly ordinal = ordinal;
 }

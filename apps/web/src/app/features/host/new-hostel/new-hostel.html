@@ -1,9 +1,17 @@
-<app-dashboard-layout label="New hostel">
+<app-dashboard-layout label="New hostel" [noMenu]="true">
   <ng-container hhActions>
     <a hh-button variant="text" size="sm" routerLink="/host">Cancel</a>
-    <button hh-button color="primary" size="sm" [disabled]="saving()" (click)="create()">
+    <button
+      hh-button
+      color="primary"
+      size="sm"
+      [disabled]="saving() || form().uploading()"
+      (click)="create()"
+    >
       @if (saving()) {
         <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
+      } @else if (form().uploading()) {
+        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
       } @else {
         Create hostel
       }
@@ -24,297 +32,12 @@
   }
 
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.7fr_1fr]">
-    <!-- LEFT: form cards -->
-    <div class="space-y-5">
-
-      <!-- 1. LISTING DETAILS -->
-      <div class="rounded-2xl bg-white p-5 shadow-card">
-        <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Listing details</h2>
-        <hh-input
-          class="mb-4 block"
-          label="Hostel name"
-          icon="ti-building"
-          placeholder="e.g. Sunrise Boys Hostel"
-          [(value)]="name"
-          [error]="showValidation() ? (fieldErrors()['name'] ?? '') : ''"
-        />
-        <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label class="mb-1 block text-xs font-medium text-ink-600">City</label>
-            <div
-              class="flex items-center gap-2 rounded-xl border px-3 transition focus-within:ring-2 focus-within:ring-brand-100"
-              [class]="showValidation() && fieldErrors()['city'] ? 'border-danger focus-within:border-danger' : 'border-ink-200 focus-within:border-brand-400'"
-            >
-              <i class="ti ti-map-pin text-ink-400" aria-hidden="true"></i>
-              <hh-place-search
-                class="block flex-1 py-2.5"
-                [value]="city()"
-                [includedPrimaryTypes]="cityTypes"
-                labelMode="main"
-                placeholder="Search your city"
-                (textChange)="city.set($event)"
-              />
-            </div>
-            @if (showValidation() && fieldErrors()['city']) {
-              <p class="mt-1 flex items-center gap-1 text-xs text-danger">
-                <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['city'] }}
-              </p>
-            }
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-ink-600">Gender</label>
-            <hh-dropdown
-              variant="field"
-              [options]="genderOptions"
-              [value]="gender()"
-              (valueChange)="setGenderType($event)"
-            />
-          </div>
-        </div>
-        <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <hh-input
-            label="Contact email"
-            icon="ti-mail"
-            type="email"
-            placeholder="e.g. info@myhostel.pk"
-            [(value)]="email"
-            [error]="showValidation() ? (fieldErrors()['email'] ?? '') : ''"
-          />
-          <hh-phone-input
-            label="Primary phone"
-            [(phone)]="phone"
-            [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium text-ink-600">Description</label>
-          <div
-            class="rounded-xl transition"
-            [class]="showValidation() && fieldErrors()['description'] ? 'ring-2 ring-danger' : ''"
-          >
-            <hh-rich-text
-              [value]="description()"
-              (valueChange)="description.set($event)"
-              placeholder="Tell students what makes your hostel a great place to live…"
-            />
-          </div>
-          @if (showValidation() && fieldErrors()['description']) {
-            <p class="mt-1 flex items-center gap-1 text-xs text-danger">
-              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['description'] }}
-            </p>
-          }
-        </div>
-      </div>
-
-      <!-- 2. PHOTOS -->
-      <div
-        class="rounded-2xl bg-white p-5 shadow-card transition"
-      >
-        <h2 class="mb-4 font-display text-base font-semibold text-ink-900">
-          Photos
-          @if (media().length) {
-            <span class="text-ink-400"> · {{ media().length }}</span>
-          }
-        </h2>
-        <input
-          #fileInput
-          type="file"
-          accept="image/png,image/jpeg"
-          multiple
-          class="hidden"
-          (change)="onFileSelected($event)"
-        />
-        <hh-photo-grid
-          [photos]="photoGridItems()"
-          [labelOptions]="labelOptions()"
-          [labelMap]="photoLabelMap()"
-          [uploadError]="uploadError() ?? ''"
-          (addPhoto)="addPhoto()"
-          (replacePhoto)="replaceMedia(findMedia($event)!)"
-          (setPrimary)="setPrimary(findMedia($event)!)"
-          (removePhoto)="removeMedia(findMedia($event)!)"
-          (labelChange)="setPhotoLabel($event.id, $event.value)"
-        />
-      </div>
-
-      <!-- 3. ROOMS -->
-      <div
-        class="rounded-2xl bg-white p-5 shadow-card transition"
-        [class]="showValidation() && fieldErrors()['rooms'] ? 'ring-2 ring-danger' : ''"
-      >
-        <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Room types</h2>
-
-        <hh-card variant="bordered">
-          <p class="text-sm font-semibold text-ink-900">Add a room type</p>
-          <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
-            <div class="sm:col-span-5">
-              <label class="mb-1 block text-xs font-medium text-ink-600">Room type</label>
-              <hh-dropdown
-                variant="field"
-                [options]="roomTypeOptions"
-                [value]="newRoomType()"
-                (valueChange)="setRoomType($event)"
-              />
-            </div>
-            <hh-input
-              class="sm:col-span-3"
-              label="Capacity"
-              type="number"
-              [value]="newRoomCapacity() + ''"
-              (valueChange)="newRoomCapacity.set(+$event || 1)"
-            />
-            <hh-input
-              class="sm:col-span-3"
-              label="Price / month"
-              icon="ti-coin"
-              type="number"
-              [value]="newRoomPrice() + ''"
-              (valueChange)="newRoomPrice.set(+$event || 0)"
-            />
-            <div class="sm:col-span-1">
-              <button hh-button color="primary" class="w-full" (click)="addRoom()" aria-label="Add room">
-                <i class="ti ti-plus" aria-hidden="true"></i>
-              </button>
-            </div>
-          </div>
-        </hh-card>
-
-        <div class="mt-4">
-          @if (rooms().length) {
-            <ul class="space-y-2">
-              @for (r of rooms(); track r.id) {
-                <li class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 bg-surface px-4 py-3">
-                  <div class="flex items-center gap-3">
-                    <span class="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-500">
-                      <i class="ti ti-bed text-sm" aria-hidden="true"></i>
-                    </span>
-                    <div>
-                      <p class="text-sm font-semibold text-ink-900">{{ r.type }}</p>
-                      <p class="text-xs text-ink-500">Sleeps {{ r.capacity }} · Rs {{ r.price | number }} / month</p>
-                    </div>
-                  </div>
-                  <button
-                    hh-button variant="icon" size="sm"
-                    type="button"
-                    aria-label="Remove room"
-                    (click)="removeRoom(r.id)"
-                  >
-                    <i class="ti ti-trash" aria-hidden="true"></i>
-                  </button>
-                </li>
-              }
-            </ul>
-          } @else {
-            <div
-              class="grid place-items-center rounded-xl border border-dashed px-6 py-8 text-center transition"
-              [class]="showValidation() && fieldErrors()['rooms'] ? 'border-danger bg-danger/5' : 'border-ink-200'"
-            >
-              <i class="ti ti-bed-off text-2xl" [class]="showValidation() && fieldErrors()['rooms'] ? 'text-danger/40' : 'text-ink-300'" aria-hidden="true"></i>
-              <p class="mt-2 text-sm" [class]="showValidation() && fieldErrors()['rooms'] ? 'text-danger' : 'text-ink-500'">
-                {{ showValidation() && fieldErrors()['rooms'] ? fieldErrors()['rooms'] : 'No rooms added yet.' }}
-              </p>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- 4. AMENITIES -->
-      <div class="rounded-2xl bg-white p-5 shadow-card">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-display text-base font-semibold text-ink-900">Amenities</h2>
-          @if (selectedAmenities().length) {
-            <span class="text-xs font-medium text-ink-400">{{ selectedAmenities().length }} selected</span>
-          }
-        </div>
-        @if (amenitiesLoading()) {
-          <div class="space-y-5">
-            @for (s of [1, 2, 3]; track s) {
-              <div>
-                <div class="h-4 w-32 rounded shimmer"></div>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  @for (c of [1, 2, 3, 4, 5]; track c) {
-                    <div class="h-8 w-24 rounded-full shimmer"></div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        } @else if (amenitiesError()) {
-          <div class="rounded-2xl border border-danger/30 bg-danger/5 p-8 text-center">
-            <i class="ti ti-cloud-off text-3xl text-danger" aria-hidden="true"></i>
-            <p class="mt-3 text-sm font-semibold text-ink-900">Couldn't load amenities</p>
-            <p class="mt-1 text-sm text-ink-500">Check your connection and try again.</p>
-            <button hh-button variant="outlined" size="sm" class="mt-4" (click)="loadAmenities()">
-              <i class="ti ti-refresh" aria-hidden="true"></i>Retry
-            </button>
-          </div>
-        } @else if (offerCategories().length) {
-          <div class="space-y-5">
-            @for (cat of offerCategories(); track cat.id) {
-              <section>
-                <div class="mb-1.5 flex items-center gap-2">
-                  <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
-                  <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
-                </div>
-                <div class="flex flex-wrap gap-1.5">
-                  @for (o of cat.offers; track o.id) {
-                    <button
-                      hh-button variant="text" size="sm"
-                      type="button"
-                      (click)="toggleAmenity(o.id)"
-                      [attr.aria-pressed]="isAmenitySelected(o.id)"
-                      [class]="isAmenitySelected(o.id) ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-ink-200 text-ink-700 hover:border-ink-400'"
-                    >
-                      <i class="ti text-[11px]" [class]="isAmenitySelected(o.id) ? 'ti-check' : 'ti-plus'" aria-hidden="true"></i>
-                      {{ o.name }}
-                    </button>
-                  }
-                </div>
-              </section>
-            }
-          </div>
-        } @else {
-          <p class="rounded-xl border border-ink-100 bg-surface p-6 text-center text-sm text-ink-500">
-            No amenities available right now.
-          </p>
-        }
-      </div>
-
-      <!-- 5. LOCATION -->
-      <div
-        class="rounded-2xl bg-white p-5 shadow-card transition"
-        [class]="showValidation() && fieldErrors()['location'] ? 'ring-2 ring-danger' : ''"
-      >
-        <h2 class="mb-4 font-display text-base font-semibold text-ink-900">
-          Location
-          @if (showValidation() && fieldErrors()['location']) {
-            <span class="ml-2 text-xs font-normal text-danger">
-              <i class="ti ti-alert-circle" aria-hidden="true"></i> {{ fieldErrors()['location'] }}
-            </span>
-          }
-        </h2>
-        <hh-location-picker
-          class="block"
-          [initialLat]="lat()"
-          [initialLng]="lng()"
-          (picked)="onPicked($event)"
-        />
-        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <hh-input label="Area" [(value)]="area" />
-          <hh-input label="City" [(value)]="city" />
-          <hh-input label="Province" [(value)]="province" />
-          <hh-input label="Country" [(value)]="country" />
-          <hh-input class="sm:col-span-2" label="Street address" [(value)]="street" />
-          <hh-input
-            class="sm:col-span-2"
-            label="Nearby landmarks"
-            placeholder="e.g. Near Dolmen Mall, opposite McDonald's"
-            [(value)]="landmarks"
-          />
-        </div>
-      </div>
-
-    </div>
+    <!-- LEFT: form -->
+    <hh-hostel-form
+      mode="create"
+      [saving]="saving()"
+      [showValidation]="showValidation()"
+    />
 
     <!-- RIGHT: progress sidebar -->
     <div>
@@ -324,41 +47,49 @@
           <dl class="space-y-2.5 text-xs">
             <div class="flex items-center justify-between">
               <dt class="text-ink-500">Hostel name</dt>
-              <dd class="font-medium" [class]="name() ? 'text-ok' : 'text-ink-300'">
-                {{ name() ? 'Done' : 'Missing' }}
+              <dd class="font-medium" [class]="form().name() ? 'text-ok' : 'text-ink-300'">
+                {{ form().name() ? 'Done' : 'Missing' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
               <dt class="text-ink-500">Photos</dt>
-              <dd class="font-medium" [class]="media().length ? 'text-ok' : 'text-ink-300'">
-                {{ media().length ? media().length + ' added' : 'None yet' }}
+              <dd class="font-medium" [class]="form().photoCount() ? 'text-ok' : 'text-ink-300'">
+                {{ form().photoCount() ? form().photoCount() + ' added' : 'None yet' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
               <dt class="text-ink-500">Rooms</dt>
-              <dd class="font-medium" [class]="rooms().length ? 'text-ok' : 'text-ink-300'">
-                {{ rooms().length ? rooms().length + ' configured' : 'None yet' }}
+              <dd class="font-medium" [class]="form().roomCount() ? 'text-ok' : 'text-ink-300'">
+                {{ form().roomCount() ? form().roomCount() + ' configured' : 'None yet' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
               <dt class="text-ink-500">Amenities</dt>
-              <dd class="font-medium" [class]="selectedAmenities().length ? 'text-ok' : 'text-ink-300'">
-                {{ selectedAmenities().length ? selectedAmenities().length + ' selected' : 'None yet' }}
+              <dd class="font-medium" [class]="form().amenityCount() ? 'text-ok' : 'text-ink-300'">
+                {{ form().amenityCount() ? form().amenityCount() + ' selected' : 'None yet' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
               <dt class="text-ink-500">Location</dt>
-              <dd class="font-medium" [class]="locationPinned() ? 'text-ok' : 'text-ink-300'">
-                {{ locationPinned() ? 'Pinned' : 'Not set' }}
+              <dd class="font-medium" [class]="form().locationPinned() ? 'text-ok' : 'text-ink-300'">
+                {{ form().locationPinned() ? 'Pinned' : 'Not set' }}
               </dd>
             </div>
           </dl>
 
           <div class="mt-4 h-px bg-ink-100"></div>
 
-          <button hh-button color="primary" class="mt-4 w-full" [disabled]="saving()" (click)="create()">
+          <button
+            hh-button
+            color="primary"
+            class="mt-4 w-full"
+            [disabled]="saving() || form().uploading()"
+            (click)="create()"
+          >
             @if (saving()) {
               <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
+            } @else if (form().uploading()) {
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
             } @else {
               <i class="ti ti-plus" aria-hidden="true"></i>Create hostel
             }
@@ -387,7 +118,7 @@
   >
     <p class="mb-2">Please complete these fields before continuing:</p>
     <ul class="space-y-1">
-      @for (entry of objectEntries(fieldErrors()); track entry[0]) {
+      @for (entry of objectEntries(form().fieldErrors()); track entry[0]) {
         <li class="flex items-center gap-2 text-ink-700">
           <i class="ti ti-circle-x text-danger" aria-hidden="true"></i>{{ entry[1] }}
         </li>
