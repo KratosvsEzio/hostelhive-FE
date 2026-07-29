@@ -1,9 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
+  effect,
+  inject,
   input,
   model,
+  signal,
+  untracked,
 } from '@angular/core';
 import { Dropdown, DropdownOption } from '../dropdown/dropdown';
 
@@ -55,17 +60,18 @@ const BASE =
     ></i>
     <input
       type="text"
-      [value]="term()"
-      (input)="term.set($any($event.target).value)"
+      [value]="draft()"
+      (input)="onInput($any($event.target).value)"
+      (keydown.enter)="flush()"
       [placeholder]="placeholder()"
       [attr.aria-label]="ariaLabel()"
       class="min-w-0 flex-1 bg-transparent text-ink-900 outline-none placeholder:text-ink-400"
       [class]="sz().text"
     />
-    @if (term()) {
+    @if (draft()) {
       <button
         type="button"
-        (click)="term.set('')"
+        (click)="clear()"
         aria-label="Clear search"
         class="shrink-0 rounded-md p-1 text-ink-400 transition hover:bg-ink-50 hover:text-ink-700"
       >
@@ -81,13 +87,43 @@ export class Search {
   readonly fieldOptions = input<DropdownOption[]>([]);
   /** Selected scope value (two-way). */
   readonly field = model<string | null>(null);
-  /** Search text (two-way). */
+  /**
+   * Search text (two-way). Emits `debounceMs` after the user stops typing — NOT on every
+   * keystroke — so consumers can bind a query straight to `(termChange)` without wiring their
+   * own debounce. Clearing (the X or an empty field) and pressing Enter emit immediately.
+   */
   readonly term = model('');
   readonly placeholder = input('Search…');
   readonly ariaLabel = input('Search');
   readonly size = input<SearchSize>('sm');
   /** Dropdown tone — `neutral` keeps the scope segment calm even when a value is set. */
   readonly tone = input<'auto' | 'neutral'>('neutral');
+  /** Delay before a keystroke is committed to `term`. Set `0` for an instant local filter. */
+  readonly debounceMs = input(600);
+
+  /**
+   * Immediate mirror of the input text. Drives the visible value and the clear button so
+   * typing feels instant, while `term` (and thus `termChange`) only follows after the
+   * debounce. Seeded from `term` and re-synced by the effect below on any external change.
+   */
+  protected readonly draft = signal(this.term());
+  private debounceTimer?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    // Re-sync the visible draft whenever `term` is set from outside (parent reset, URL
+    // restore, programmatic clear) and cancel any pending debounce, so a stale in-flight
+    // keystroke can't resurrect the old text after the external change lands.
+    effect(() => {
+      const t = this.term();
+      untracked(() => {
+        if (t !== this.draft()) {
+          clearTimeout(this.debounceTimer);
+          this.draft.set(t);
+        }
+      });
+    });
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.debounceTimer));
+  }
 
   protected readonly sz = computed(() => SIZES[this.size()]);
 
@@ -95,6 +131,36 @@ export class Search {
     const s = this.sz();
     return `${BASE} ${s.h} ${s.pr}`;
   });
+
+  protected onInput(value: string): void {
+    this.draft.set(value);
+    clearTimeout(this.debounceTimer);
+    if (this.debounceMs() <= 0) {
+      this.commit(value);
+      return;
+    }
+    this.debounceTimer = setTimeout(() => {
+      // A later external change may have re-synced the draft; only commit if this keystroke
+      // is still the current text, to avoid overwriting it.
+      if (this.draft() === value) this.commit(value);
+    }, this.debounceMs());
+  }
+
+  /** Enter bypasses the debounce — the user has signalled they're done typing. */
+  protected flush(): void {
+    clearTimeout(this.debounceTimer);
+    this.commit(this.draft());
+  }
+
+  protected clear(): void {
+    clearTimeout(this.debounceTimer);
+    this.draft.set('');
+    this.commit('');
+  }
+
+  private commit(value: string): void {
+    if (this.term() !== value) this.term.set(value);
+  }
 
   protected onFieldChange(v: string | string[] | null): void {
     this.field.set(typeof v === 'string' ? v : null);
