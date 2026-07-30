@@ -246,9 +246,23 @@
 
         <!-- Faux map (CSS grid background) + text address -->
         <section class="py-6">
-          <h3 class="mb-1 font-display text-lg font-semibold text-ink-900">
-            Where you'll be
-          </h3>
+          <div class="mb-1 flex items-center justify-between">
+            <h3 class="font-display text-lg font-semibold text-ink-900">
+              Where you'll be
+            </h3>
+            @if (l.lat && l.lng) {
+              <a
+                hh-button
+                color="primary"
+                size="sm"
+                [href]="'https://www.google.com/maps/dir/?api=1&destination=' + l.lat + ',' + l.lng"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="ti ti-map-pin text-sm" aria-hidden="true"></i>Get Directions
+              </a>
+            }
+          </div>
           <p class="mb-3 text-sm text-ink-500">{{ l.address }}</p>
           <hh-static-map
             class="h-[360px] overflow-hidden rounded-2xl border border-ink-100"

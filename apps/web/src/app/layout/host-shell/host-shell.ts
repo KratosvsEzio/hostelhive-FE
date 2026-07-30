@@ -60,6 +60,13 @@ export class HostLayout {
   protected readonly contentPadding = computed(() =>
     !this.mobile.isMobile() && this.drawer.open() && this.onDesktop ? '16rem' : '0');
 
+  constructor() {
+    // The shell is re-created on every entry into /host (incl. the redirect right after a host
+    // logs in), so refetch the hostel list here — it's never served stale from a prior session.
+    // Browser-only: the host area is auth-gated and renders a skeleton on the server (no token).
+    if (typeof window !== 'undefined') this.propertyStore.load();
+  }
+
   protected closeOnMobile(): void {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       this.drawer.close();

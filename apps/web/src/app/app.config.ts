@@ -18,8 +18,6 @@ import { provideDataAccess } from '@core/provide-data-access';
 import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
-import { provideGoogleMaps } from '@hostelhive/maps';
-import { googleMapsEnv } from './google-maps.env';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
 import { provideCapacitorNative } from '@app/capacitor/native';
@@ -63,10 +61,8 @@ export const appConfig: ApplicationConfig = {
       const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
       await GoogleAuth.initialize({ clientId: googleOAuthEnv.clientId, scopes: ['email', 'profile'] });
     }),
-    // ── Google Maps + Places (seeker map & location search) ──────────────────
-    // Key + Map ID come from the repo-root `.env` (git-ignored), injected at build
-    // time by tools/generate-google-maps-env.mjs → ./google-maps.env.ts.
-    provideGoogleMaps(googleMapsEnv),
+    // Maps + location search are fully OpenStreetMap now (Leaflet + Nominatim), so
+    // there is no Google Maps provider to wire — see lib/src/maps.
     // ── Native shell (Capacitor) — styles status bar, hides splash, wires the
     // Android back button. No-op on web/SSR builds. ─────────────────────────
     provideCapacitorNative(),

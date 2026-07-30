@@ -63,7 +63,7 @@ export interface MealConfirmationRaw {
   meal_date: string;       // 'yyyy-MM-dd'
   is_confirmed: boolean;
   confirmed_at: string | null;
-  renter: { id: string; name: string; phone: string; email?: string | null };
+  renter: { id: string; name: string; phone: string; email?: string | null; room_number?: string | null };
 }
 
 /**

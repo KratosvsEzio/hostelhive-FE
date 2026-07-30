@@ -2,8 +2,12 @@
   class="safe-pt sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur"
 >
   <div class="px-5 sm:px-8">
-    <!-- Row 1: (console menu) + logo + route actions -->
-    <div class="flex h-16 items-center justify-between gap-4">
+    <!-- Row 1: logo + inline location search (home/search only) + route actions -->
+    <div
+      class="flex items-center justify-between gap-4"
+      [class.h-16]="!showSearchBar()"
+      [class.py-2.5]="showSearchBar()"
+    >
       <div class="flex items-center gap-2.5">
         <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
           <img src="/hostelhive-logo.png" alt="HostelHive" class="h-5 w-auto sm:h-7" />
@@ -16,6 +20,12 @@
           >
         }
       </div>
+
+      @if (showSearchBar()) {
+        <div class="hidden min-w-0 flex-1 justify-center px-4 md:flex">
+          <app-search-bar />
+        </div>
+      }
 
       <div class="flex items-center gap-3">
         @switch (area()) {
@@ -61,13 +71,6 @@
         <app-account-menu />
       </div>
     </div>
-
-    <!-- Row 2: the location search bar — home and search pages only. -->
-    @if (showSearchBar()) {
-      <div class="hidden pb-4 pt-1 md:block">
-        <app-search-bar />
-      </div>
-    }
   </div>
 </header>
 

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Button, Dropdown, DropdownOption, Input, Toggle } from '@hostelhive/ui';
+import { Button, Dropdown, DropdownOption, Input, TimePicker, Toggle } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { HostelsApi, HostPropertyStore, MealTypePayload } from '@services';
 import {
@@ -82,7 +82,7 @@ const MEAL_PLACEHOLDERS: Record<MealType, string> = {
 @Component({
   selector: 'hh-mess-notifications',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Button, Dropdown, Input, Toggle],
+  imports: [DashboardLayout, Button, Dropdown, Input, TimePicker, Toggle],
   templateUrl: './mess-notifications.html',
 })
 export class MessNotifications {
@@ -158,7 +158,7 @@ export class MessNotifications {
     this.svc.updateMeal(meal, { enabled });
   }
 
-  protected setMealTime(meal: MealType, mealTime: string): void {
+  protected setMealTime(meal: MealType, mealTime: string | null): void {
     if (mealTime) this.svc.updateMeal(meal, { mealTime });
   }
 

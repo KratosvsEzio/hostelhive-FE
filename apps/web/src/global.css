@@ -63,6 +63,32 @@ body {
   scrollbar-width: none;
 }
 
+/* Slim, lightly-tinted scrollbar for in-panel scroll areas (date/time picker columns): 6px
+   track, ink-200 thumb → ink-300 on hover, no arrow buttons. Covers Firefox + WebKit. */
+.hh-scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #cfcfcf transparent;
+}
+.hh-scroll-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.hh-scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hh-scroll-thin::-webkit-scrollbar-thumb {
+  background-color: #cfcfcf;
+  border-radius: 9999px;
+}
+.hh-scroll-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #a3a3a3;
+}
+.hh-scroll-thin::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
 /* Respect device safe areas (notch / status bar / home indicator) when the app
    runs edge-to-edge in the Capacitor WebView. A no-op in the browser (insets = 0). */
 .safe-pt {

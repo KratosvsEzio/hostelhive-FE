@@ -1,12 +1,16 @@
-/// <reference types="google.maps" />
 import { Injectable } from '@angular/core';
+import type { PlaceResult } from './place-search';
 
-/** One autocomplete prediction, in the shape the search dropdown renders. */
+/** One search suggestion, in the shape the dropdown renders. */
 export interface PlaceSuggestion {
   id: string;
   main: string;
   secondary: string;
-  prediction: google.maps.places.PlacePrediction;
+  /**
+   * The fully-resolved place — Nominatim's search already returns coordinates and address,
+   * so the suggestion carries everything `select()` needs and there is no follow-up lookup.
+   */
+  result: PlaceResult;
 }
 
 /**

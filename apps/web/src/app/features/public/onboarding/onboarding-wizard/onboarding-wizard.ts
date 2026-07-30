@@ -13,10 +13,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { AttachmentLabel, HostelInput, OfferCategory } from '@hostelhive/data-access';
+import { ApiError, AttachmentLabel, HostelInput, OfferCategory } from '@hostelhive/data-access';
 import { HostelsApi, ImageUploadService, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import {
@@ -715,10 +714,11 @@ export class OnboardingWizard {
             this.router.navigate(['/host/listings/new/payment']);
           }
         },
-        error: (err: HttpErrorResponse) => {
+        // Interceptor-normalised: the Rails errors[] envelope is on serverMessages.
+        error: (err: ApiError) => {
           this.draftSaving.set(false);
           this.draftError.set(true);
-          this.apiErrors.set(err?.error?.errors ?? []);
+          this.apiErrors.set(err?.serverMessages ? [...err.serverMessages] : []);
         },
       });
   }
@@ -763,10 +763,11 @@ export class OnboardingWizard {
         }
       },
       // Staying put loses nothing — the device draft is intact and the logo is the way out.
-      error: (err: HttpErrorResponse) => {
+      // Interceptor-normalised: the Rails errors[] envelope is on serverMessages.
+      error: (err: ApiError) => {
         this.draftSaving.set(false);
         this.draftError.set(true);
-        this.apiErrors.set(err?.error?.errors ?? []);
+        this.apiErrors.set(err?.serverMessages ? [...err.serverMessages] : []);
       },
     });
   }
