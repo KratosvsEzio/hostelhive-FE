@@ -42,6 +42,14 @@ const CONFIRMATION_COLS: ColumnDef[] = [
     },
   },
   {
+    key: 'room',
+    label: 'Room',
+    cell: (r) => {
+      const room = (r as MealConfirmationRaw).renter.room_number;
+      return { kind: 'text', value: room ?? '—', class: 'text-ink-500' } satisfies CellDef;
+    },
+  },
+  {
     key: 'confirmed_at',
     label: 'Confirmed at',
     align: 'right',
@@ -94,11 +102,15 @@ export class MessConfirmations {
       : format(new Date(this.effectiveDate() + 'T00:00:00'), 'd MMM yyyy'),
   );
 
-  private readonly fetchKey = computed(() => ({
-    hostelId: this.store.selected(),
-    date: this.effectiveDate(),
-    meal: this.activeMeal(),
-  }));
+  private readonly fetchKey = computed(() => {
+    const hostelId = this.store.selected();
+    const ready = this.store.properties().length > 0;
+    return {
+      hostelId: ready ? hostelId : '',
+      date: this.effectiveDate(),
+      meal: this.activeMeal(),
+    };
+  });
 
   private readonly loaded = toSignal(
     toObservable(this.fetchKey).pipe(

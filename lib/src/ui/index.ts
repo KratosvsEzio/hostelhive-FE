@@ -23,6 +23,7 @@ export * from './lib/dropdown/dropdown';
 export * from './lib/scoped-search/scoped-search';
 export * from './lib/date-range-picker/date-range-picker';
 export * from './lib/date-picker/date-picker';
+export * from './lib/time-picker/time-picker';
 export * from './lib/rich-text/rich-text';
 export * from './lib/confirm-modal/confirm-modal';
 export * from './lib/nested-dropdown/nested-dropdown';

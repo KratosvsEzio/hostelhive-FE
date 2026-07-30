@@ -1,4 +1,3 @@
-/// <reference types="google.maps" />
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -12,8 +11,8 @@ import {
   viewChild,
 } from '@angular/core';
 import type * as L from 'leaflet';
-import { GoogleMapsLoader } from './google-maps';
 import { brandPinIcon, LeafletLoader, whenSized } from './leaflet';
+import { nominatimReverse } from './nominatim';
 import { GeolocationService } from './geolocation';
 import { PlaceResult, PlaceSearchField } from './place-search';
 
@@ -30,16 +29,13 @@ export interface PickedLocation {
 }
 
 /**
- * Location picker: a Places search box (reusing `hh-place-search`), a draggable brand
- * pin, click-to-move, "use my location", and reverse-geocoding that resolves the pinned
- * point into area/city/province/country/street. Emits `picked` on every change.
+ * Location picker: a search box (reusing `hh-place-search`), a draggable brand pin,
+ * click-to-move, "use my location", and reverse-geocoding that resolves the pinned point
+ * into area/city/province/country/street. Emits `picked` on every change.
  *
- * The map itself is Leaflet — free to render, so a host can pan and zoom while placing a
- * pin without it costing anything. Only the address lookup still reaches for Google, and
- * only on an actual pin change: loading the Maps JS API is not billed (just
- * `new google.maps.Map()`, which this no longer creates), so the better Pakistani address
- * data is kept at no per-render cost. It falls back to Nominatim when Google is
- * unavailable, so the picker keeps working with no key at all.
+ * Fully OpenStreetMap: the map is Leaflet and the address lookup is Nominatim, so the
+ * whole picker is keyless and free — no Google anywhere. Only the pin's coordinates are
+ * authoritative; the resolved address is a convenience the host can fine-tune.
  */
 @Component({
   selector: 'hh-location-picker',
@@ -51,7 +47,7 @@ export interface PickedLocation {
       class="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card"
     >
       <!-- search + my-location -->
-      <div class="flex items-center gap-2 border-b border-ink-100 p-3">
+      <div class="relative z-10 flex items-center gap-2 border-b border-ink-100 p-3">
         <div
           class="flex flex-1 items-center gap-2 rounded-xl bg-surface px-3 py-2 transition focus-within:ring-2 focus-within:ring-brand-100"
         >
@@ -79,7 +75,7 @@ export interface PickedLocation {
         </button>
       </div>
 
-      <div class="relative">
+      <div class="relative z-0">
           <div #mapEl class="h-[360px] w-full bg-[#eaf0ec]"></div>
 
           <!-- Map / Satellite -->
@@ -140,8 +136,6 @@ export interface PickedLocation {
   `,
 })
 export class LocationPicker {
-  /** Kept only for reverse geocoding — no map is ever created from it. */
-  private readonly googleLoader = inject(GoogleMapsLoader);
   private readonly loader = inject(LeafletLoader);
   private readonly geo = inject(GeolocationService);
   private readonly destroyRef = inject(DestroyRef);
@@ -163,7 +157,8 @@ export class LocationPicker {
   private leaflet?: typeof L;
   private marker?: L.Marker;
   private tiles?: L.TileLayer;
-  private geocoder?: google.maps.Geocoder;
+  /** Aborts an earlier reverse-geocode when the pin moves again before it resolves. */
+  private geocodeCtrl?: AbortController;
 
   constructor() {
     afterNextRender(() => void this.init());
@@ -171,6 +166,7 @@ export class LocationPicker {
     // afterwards. Leaflet binds document/window listeners and keeps its layers and in-flight
     // tile requests alive until `remove()`, so dropping the component is not enough.
     this.destroyRef.onDestroy(() => {
+      this.geocodeCtrl?.abort();
       this.map?.remove();
       this.map = undefined;
     });
@@ -223,19 +219,6 @@ export class LocationPicker {
     this.map.on('click', (e: L.LeafletMouseEvent) =>
       this.placeAt(e.latlng.lat, e.latlng.lng),
     );
-
-    // Geocoding only — never `new google.maps.Map()`, so no Dynamic Maps load is billed.
-    // Best-effort: the reverse-geocode path falls back to Nominatim when this is absent.
-    if (this.googleLoader.configured) {
-      this.googleLoader
-        .load()
-        .then(() => {
-          this.geocoder = new google.maps.Geocoder();
-        })
-        .catch(() => {
-          /* stay on the Nominatim path */
-        });
-    }
   }
 
   protected onPlace(p: PlaceResult): void {
@@ -305,95 +288,27 @@ export class LocationPicker {
   }
 
   private async reverseGeocode(lat: number, lng: number): Promise<void> {
-    const base = {
-      lat,
-      lng,
-      area: '',
-      city: '',
-      province: '',
-      country: '',
-      street: '',
-      formatted: '',
-    };
-
-    // Try Google Geocoder first (requires billing on the Cloud project).
-    if (this.geocoder) {
-      try {
-        const { results } = await this.geocoder.geocode({
-          location: { lat, lng },
-        });
-        const r = results?.[0];
-        if (r) {
-          this.picked.emit({ lat, lng, ...parseAddress(r) });
-          return;
-        }
-      } catch {
-        // Billing not enabled or quota exceeded — fall through to Nominatim.
-      }
-    }
-
-    // Nominatim (OpenStreetMap) fallback — free, no API key or billing needed.
+    // Supersede any in-flight lookup — the pin has moved, so its answer is now stale.
+    this.geocodeCtrl?.abort();
+    const ctrl = new AbortController();
+    this.geocodeCtrl = ctrl;
     try {
-      const addr = await nominatimReverseGeocode(lat, lng);
+      const addr = await nominatimReverse(lat, lng, ctrl.signal);
       this.picked.emit({ lat, lng, ...addr });
-    } catch {
-      this.picked.emit(base);
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') return; // superseded — a newer pin will emit
+      // Network/lookup failure: still emit the coordinates (the authoritative part) with
+      // blank address fields, so the pin is recorded even when the address can't resolve.
+      this.picked.emit({
+        lat,
+        lng,
+        area: '',
+        city: '',
+        province: '',
+        country: '',
+        street: '',
+        formatted: '',
+      });
     }
   }
-
-}
-
-/** Map Google geocoder address components → our flat address shape. */
-function parseAddress(
-  r: google.maps.GeocoderResult,
-): Omit<PickedLocation, 'lat' | 'lng'> {
-  const get = (type: string): string =>
-    r.address_components.find((c) => c.types.includes(type))?.long_name ?? '';
-  const street = [get('street_number'), get('route')].filter(Boolean).join(' ');
-  return {
-    street,
-    area:
-      get('sublocality_level_1') ||
-      get('sublocality') ||
-      get('neighborhood') ||
-      get('administrative_area_level_3'),
-    city:
-      get('locality') ||
-      get('postal_town') ||
-      get('administrative_area_level_2'),
-    province: get('administrative_area_level_1'),
-    country: get('country'),
-    formatted: r.formatted_address ?? '',
-  };
-}
-
-/** Nominatim (OpenStreetMap) reverse geocoding — used as a fallback when the
- *  Google Geocoding API is unavailable (billing not enabled, quota exceeded, etc.).
- *  Free with no API key; throttled to one request per second by OSM policy. */
-async function nominatimReverseGeocode(
-  lat: number,
-  lng: number,
-): Promise<Omit<PickedLocation, 'lat' | 'lng'>> {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
-  const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-  if (!res.ok) throw new Error(`Nominatim ${res.status}`);
-  const data = (await res.json()) as {
-    display_name?: string;
-    address?: Record<string, string>;
-  };
-  const a = data.address ?? {};
-  const street = [a['house_number'], a['road']].filter(Boolean).join(' ');
-  return {
-    street,
-    area:
-      a['suburb'] ||
-      a['neighbourhood'] ||
-      a['quarter'] ||
-      a['city_district'] ||
-      '',
-    city: a['city'] || a['town'] || a['village'] || a['county'] || '',
-    province: a['state'] || a['region'] || '',
-    country: a['country'] || '',
-    formatted: data.display_name || '',
-  };
 }

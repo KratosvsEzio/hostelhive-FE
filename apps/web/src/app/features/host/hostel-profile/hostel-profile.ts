@@ -38,7 +38,7 @@ export class HostelProfile {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly form = viewChild.required(HostelForm);
+  protected readonly form = viewChild(HostelForm);
 
   protected readonly hostelId = toSignal(
     this.route.parent!.paramMap.pipe(map((pm) => pm.get('hostelId') ?? '')),
@@ -80,7 +80,7 @@ export class HostelProfile {
   protected save(): void {
     const id = this.hostelId();
     const f = this.form();
-    if (!id || !f.dirty() || this.saving() || f.uploading()) return;
+    if (!id || !f || !f.dirty() || this.saving() || f.uploading()) return;
     this.saving.set(true);
     this.saveError.set(false);
     this.saved.set(false);

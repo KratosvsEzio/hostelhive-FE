@@ -179,11 +179,9 @@
             <!-- Meal time -->
             <div>
               <label class="mb-1 block text-xs font-medium text-ink-600">Meal time</label>
-              <input
-                type="time"
-                class="w-full rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-800 outline-none focus:border-brand-400"
+              <hh-time-picker
                 [value]="cfg.mealTime"
-                (input)="setMealTime(meal, $any($event.target).value)"
+                (valueChange)="setMealTime(meal, $event)"
               />
             </div>
 

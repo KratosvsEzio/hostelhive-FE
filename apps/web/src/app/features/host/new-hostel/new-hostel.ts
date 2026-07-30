@@ -7,8 +7,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ApiError } from '@hostelhive/data-access';
 import { HostelsApi } from '@services';
 import { Button, ConfirmModal } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
@@ -54,9 +54,15 @@ export class NewHostel {
         next: (hostel) => {
           this.router.navigate(['/host', hostel.id, 'profile']);
         },
-        error: (err: HttpErrorResponse) => {
+        // The error interceptor normalises failures to ApiError, so the Rails `errors[]`
+        // envelope is on `serverMessages` — NOT `err.error.errors`, which is undefined here.
+        error: (err: ApiError) => {
           this.saving.set(false);
-          this.apiErrors.set(err?.error?.errors ?? ["Couldn't create hostel — please try again."]);
+          this.apiErrors.set(
+            err?.serverMessages?.length
+              ? [...err.serverMessages]
+              : ["Couldn't create hostel — please try again."],
+          );
         },
       });
   }

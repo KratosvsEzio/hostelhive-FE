@@ -256,7 +256,7 @@ function buildMonth(
               <div class="mb-3 text-center text-sm font-semibold text-ink-900">
                 Select year
               </div>
-              <div class="h-52 overflow-y-auto">
+              <div class="hh-scroll-thin h-52 overflow-y-auto">
                 @for (y of yearList; track y) {
                   <button
                     type="button"

@@ -11,11 +11,14 @@
     />
   </div>
   <!-- Filter chips row + List|Map toggle -->
-  <div class="mx-auto flex max-w-7xl items-center px-5 pt-1.5 pb-3 sm:px-8">
+  <!-- Full-width with the results column's own padding (px-5 → sm:px-8 → px-12) so the
+       Filters button lines up flush-left with the results heading and cards, and Sort sits
+       at the far right — not indented inside a narrower max-w-7xl band. -->
+  <div class="flex items-center px-5 pt-1.5 pb-3 sm:px-8 min-[1500px]:px-12">
     <div
-      class="flex min-w-0 flex-1 justify-center items-center gap-2 overflow-x-auto no-scrollbar pt-1.5"
+      class="flex min-w-0 flex-1 items-center overflow-x-auto no-scrollbar pt-1.5"
     >
-      <hh-search-filters />
+      <hh-search-filters class="flex min-w-0 flex-1" />
     </div>
     <!-- Mobile-only: segmented List | Map toggle -->
     <div class="ml-3 flex min-[950px]:hidden shrink-0 items-center gap-0.5 rounded-full bg-ink-100 p-0.5">

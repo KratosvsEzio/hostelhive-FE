@@ -24,11 +24,14 @@ export interface LeafletMapsConfig {
 }
 
 /**
- * CARTO Voyager — free, no API key, and visually closest to the Google basemap
- * this replaces. It has a fair-use policy rather than a hard quota, so it is the
- * right default to launch on and the wrong one to stay on: at sustained
- * production traffic, move to MapTiler or self-hosted Protomaps tiles by
- * overriding this config. Nothing else in the app has to change.
+ * CARTO Voyager — free, no API key, and a clean, muted basemap with English/Latin labels.
+ * It deliberately renders fewer POI labels than the standard OSM style (a cleaner look at
+ * the cost of shop density); place search runs through Photon (see `photon.ts`), so the
+ * map itself just needs to read clearly.
+ *
+ * Fair-use rather than a hard quota — right to launch on, wrong to stay on at sustained
+ * production traffic: move to MapTiler or self-hosted Protomaps tiles by overriding this
+ * config (see `provideLeafletMaps`); nothing else in the app changes.
  */
 const DEFAULT_CONFIG: LeafletMapsConfig = {
   roadmap: {

@@ -1,6 +1,4 @@
-/// <reference types="google.maps" />
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -13,17 +11,22 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { GoogleMapsLoader } from './google-maps';
 import { PlaceSuggestion, PlaceSuggestionCache } from './place-cache';
+import {
+  PhotonFeature,
+  parsePhotonAddress,
+  photonSearch,
+  zoomForPhotonExtent,
+} from './photon';
 
 export interface PlaceResult {
   label: string;
   lat: number;
   lng: number;
-  /** Suggested map zoom derived from the place's Google types (province, city, area …). */
+  /** Suggested map zoom, derived from the place's extent (province → area → street). */
   zoom?: number;
-  // Parsed address parts from the picked place's components (present when resolvable). These
-  // let a consumer fill an address form without a separate Geocoding API call.
+  // Address parts, resolved from the same search response (no separate lookup). Let a
+  // consumer fill an address form straight from a picked place.
   area?: string;
   city?: string;
   province?: string;
@@ -35,21 +38,20 @@ export interface PlaceResult {
 /** Local alias — the shape lives with the cache that stores it. */
 type Suggestion = PlaceSuggestion;
 
-/**
- * Autocomplete is billed per request (the first 12 of a session), so one- and two-letter
- * prefixes are pure cost — they match half of Pakistan and nobody picks from them.
- * The shortest place names we care about ("Dir", "Swat") are three characters.
- */
+/** Short prefixes match half of Pakistan and nobody picks from them; three characters is
+ *  the shortest real place name we care about ("Dir", "Swat"). */
 const MIN_QUERY_LENGTH = 3;
-/** Long enough to swallow a normal typing burst, short enough to still feel instant. */
+/** Debounce a typing burst. Kept modest since Photon is quick and the request goes from
+ *  each user's own browser (their own IP), so one user never nears the fair-use rate. */
 const DEBOUNCE_MS = 300;
 
 /**
- * On-brand location search built on Google's Places **Data API**
- * (`AutocompleteSuggestion`) — our own input + dropdown, instead of the pre-styled
- * `PlaceAutocompleteElement` widget, so it matches the app exactly. Emits `textChange`
- * (typed text, used as a city when nothing is picked) and `selected` (a picked place
- * with coordinates). Degrades to a plain text box when no API key is configured.
+ * On-brand location search built on OpenStreetMap's **Photon** geocoder (Komoot) — our own
+ * input and dropdown, keyless and free (see `photon.ts`). Photon is built for
+ * search-as-you-type: faster than Nominatim, more candidates, and English labels. Emits
+ * `textChange` (typed text, used as a city when nothing is picked) and `selected` (a picked
+ * place with coordinates and address parts). Shows a "Searching…" state while a query is in
+ * flight so it never looks dead, and works with no configuration — there is no key to miss.
  */
 @Component({
   selector: 'hh-place-search',
@@ -72,42 +74,56 @@ const DEBOUNCE_MS = 300;
       <div
         class="absolute left-0 top-full z-50 mt-3 w-[min(26rem,82vw)] overflow-hidden rounded-2xl border border-ink-100 bg-white py-1.5 text-left shadow-pill"
       >
-        @for (s of suggestions(); track s.id; let i = $index) {
-          <button
-            type="button"
-            (mousedown)="select(s)"
-            (mouseenter)="activeIndex.set(i)"
-            class="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition"
-            [class.bg-brand-50]="i === activeIndex()"
-          >
-            <span
-              class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-50 text-ink-500"
+        @if (suggestions().length) {
+          @for (s of suggestions(); track s.id; let i = $index) {
+            <button
+              type="button"
+              (mousedown)="select(s)"
+              (mouseenter)="activeIndex.set(i)"
+              class="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition"
+              [class.bg-brand-50]="i === activeIndex()"
             >
-              <i class="ti ti-map-pin text-base"></i>
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-sm font-medium text-ink-900">{{
-                s.main
-              }}</span>
-              @if (s.secondary) {
-                <span class="block truncate text-xs text-ink-400">{{
-                  s.secondary
+              <span
+                class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-50 text-ink-500"
+              >
+                <i class="ti ti-map-pin text-base"></i>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-medium text-ink-900">{{
+                  s.main
                 }}</span>
-              }
-            </span>
-          </button>
+                @if (s.secondary) {
+                  <span class="block truncate text-xs text-ink-400">{{
+                    s.secondary
+                  }}</span>
+                }
+              </span>
+            </button>
+          }
+        } @else if (loading()) {
+          <div
+            class="flex items-center gap-3 px-3.5 py-3 text-sm text-ink-400"
+            role="status"
+          >
+            <i
+              class="ti ti-loader-2 animate-spin text-base text-brand-500"
+              aria-hidden="true"
+            ></i>
+            Searching…
+          </div>
+        } @else if (noMatches()) {
+          <div class="px-3.5 py-3 text-sm text-ink-400">No matching places</div>
         }
         <div
           class="flex items-center justify-end gap-1 px-3.5 pb-0.5 pt-2 text-[10px] font-medium text-ink-300"
         >
-          Powered by Google
+          Powered by OpenStreetMap
         </div>
       </div>
     }
   `,
 })
 export class PlaceSearchField {
-  private readonly loader = inject(GoogleMapsLoader);
   private readonly cache = inject(PlaceSuggestionCache);
   private readonly destroyRef = inject(DestroyRef);
   private readonly inputEl =
@@ -115,7 +131,9 @@ export class PlaceSearchField {
 
   readonly value = input('');
   readonly placeholder = input('Search city or area');
-  /** Restrict autocomplete to specific Google place types, e.g. `['(cities)']` for city-only. */
+  /** Non-empty restricts results to populated places (cities/towns/villages) — the address
+   *  form's city field passes `['(cities)']`. The exact strings are legacy; only presence
+   *  matters now. */
   readonly includedPrimaryTypes = input<string[]>([]);
   /** `'main'` keeps just the place's primary name (e.g. "Lahore"); `'full'` appends the region. */
   readonly labelMode = input<'full' | 'main'>('full');
@@ -125,13 +143,19 @@ export class PlaceSearchField {
   protected readonly suggestions = signal<Suggestion[]>([]);
   protected readonly activeIndex = signal(-1);
   protected readonly focused = signal(false);
+  /** A request is in flight — drives the "Searching…" row. */
+  protected readonly loading = signal(false);
+  /** A completed search returned nothing — drives the "No matching places" row. */
+  protected readonly noMatches = signal(false);
   protected readonly showList = computed(
-    () => this.focused() && this.suggestions().length > 0,
+    () =>
+      this.focused() &&
+      (this.suggestions().length > 0 || this.loading() || this.noMatches()),
   );
 
-  private token?: google.maps.places.AutocompleteSessionToken;
   private timer?: ReturnType<typeof setTimeout>;
-  private ready = false;
+  /** The in-flight request, aborted when a newer keystroke supersedes it. */
+  private inflight?: AbortController;
 
   constructor() {
     // Keep the input reflecting the bound value — the initial value AND later changes
@@ -142,20 +166,10 @@ export class PlaceSearchField {
       const el = this.inputEl().nativeElement;
       if (el.value !== v) el.value = v;
     });
-    afterNextRender(() => void this.ensureLoaded());
-    this.destroyRef.onDestroy(() => clearTimeout(this.timer));
-  }
-
-  private async ensureLoaded(): Promise<boolean> {
-    if (this.ready) return true;
-    if (!this.loader.configured) return false;
-    try {
-      await this.loader.load();
-      this.ready = true;
-      return true;
-    } catch {
-      return false;
-    }
+    this.destroyRef.onDestroy(() => {
+      clearTimeout(this.timer);
+      this.inflight?.abort();
+    });
   }
 
   protected onInput(): void {
@@ -165,77 +179,66 @@ export class PlaceSearchField {
     const q = text.trim();
     if (q.length < MIN_QUERY_LENGTH) {
       this.suggestions.set([]);
+      this.loading.set(false);
+      this.noMatches.set(false);
       return;
     }
     // Shared app-wide, so a query already answered for any other field — the header bar,
-    // a previous visit to this route — costs nothing here.
+    // a previous visit to this route — resolves instantly with no request.
     const cached = this.cache.get(q, this.includedPrimaryTypes());
     if (cached) {
       this.suggestions.set(cached);
       this.activeIndex.set(-1);
+      this.loading.set(false);
+      this.noMatches.set(cached.length === 0);
       return;
     }
+    // Show the searching state right away — through the debounce and the network wait — so
+    // the box never looks dead. Prior results (if any) stay visible until they're replaced.
+    this.loading.set(true);
+    this.noMatches.set(false);
     this.timer = setTimeout(() => void this.fetch(q), DEBOUNCE_MS);
   }
 
   private async fetch(text: string): Promise<void> {
-    if (!(await this.ensureLoaded())) return;
-    this.token ??= new google.maps.places.AutocompleteSessionToken();
+    // One request at a time: abort the previous so results never land out of order and we
+    // stay within Photon's fair-use rate.
+    this.inflight?.abort();
+    const ctrl = new AbortController();
+    this.inflight = ctrl;
+    const types = this.includedPrimaryTypes();
     try {
-      const types = this.includedPrimaryTypes();
-      const { suggestions } =
-        await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
-          {
-            input: text,
-            includedRegionCodes: ['pk'],
-            // `['(cities)']` limits results to cities; omitted entirely when unset (all place types).
-            ...(types.length ? { includedPrimaryTypes: types } : {}),
-            sessionToken: this.token,
-          },
-        );
-      const list: Suggestion[] = [];
-      for (const s of suggestions) {
-        const p = s.placePrediction;
-        if (!p) continue;
-        list.push({
-          id: p.placeId,
-          main: p.mainText?.text ?? p.text.text,
-          secondary: p.secondaryText?.text ?? '',
-          prediction: p,
-        });
-      }
+      const features = await photonSearch(text, {
+        signal: ctrl.signal,
+        placesOnly: types.length > 0,
+      });
+      const list = features.map((f) => toSuggestion(f, this.labelMode()));
       this.cache.set(text, types, list);
       this.suggestions.set(list);
       this.activeIndex.set(-1);
-    } catch {
+      this.noMatches.set(list.length === 0);
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') return; // superseded — keep the newer one's state
       this.suggestions.set([]);
+      this.noMatches.set(true);
+    } finally {
+      // Only the latest request owns the spinner; an aborted one leaves it to its successor.
+      if (this.inflight === ctrl) this.loading.set(false);
     }
   }
 
-  protected async select(s: Suggestion): Promise<void> {
+  protected select(s: Suggestion): void {
     const label =
       s.secondary && this.labelMode() === 'full'
         ? `${s.main}, ${s.secondary}`
         : s.main;
     this.inputEl().nativeElement.value = label;
     this.suggestions.set([]);
+    this.noMatches.set(false);
     this.focused.set(false);
     this.textChange.emit(label);
-    const place = s.prediction.toPlace();
-    await place.fetchFields({
-      fields: ['location', 'types', 'addressComponents', 'formattedAddress'],
-    });
-    this.token = undefined; // session ends at selection
-    const loc = place.location;
-    if (loc) {
-      this.selected.emit({
-        label,
-        lat: loc.lat(),
-        lng: loc.lng(),
-        zoom: zoomForPlaceTypes(place.types),
-        ...parsePlaceAddress(place),
-      });
-    }
+    // The search result already carries coordinates + address — no follow-up call needed.
+    this.selected.emit({ ...s.result, label });
   }
 
   protected onKeydown(e: KeyboardEvent): void {
@@ -251,10 +254,11 @@ export class PlaceSearchField {
       const i = this.activeIndex();
       if (i >= 0) {
         e.preventDefault();
-        void this.select(this.suggestions()[i]);
+        this.select(this.suggestions()[i]);
       }
     } else if (e.key === 'Escape') {
       this.suggestions.set([]);
+      this.noMatches.set(false);
     }
   }
 
@@ -264,45 +268,28 @@ export class PlaceSearchField {
   }
 }
 
-/** Map a picked Place's address components → flat address parts (new Places API shape). */
-function parsePlaceAddress(
-  place: google.maps.places.Place,
-): Partial<PlaceResult> {
-  const comps = place.addressComponents ?? [];
-  const get = (type: string): string =>
-    comps.find((c) => c.types.includes(type))?.longText ?? '';
-  const street = [get('street_number'), get('route')].filter(Boolean).join(' ');
+/** Map a Photon feature → the dropdown suggestion, with its fully-resolved result. */
+function toSuggestion(f: PhotonFeature, _labelMode: 'full' | 'main'): Suggestion {
+  const p = f.properties ?? {};
+  const coords = f.geometry?.coordinates ?? [0, 0];
+  const main = p.name || 'Unknown place';
+  const addr = parsePhotonAddress(p);
+  // Secondary = the context under the name (area, city, province, country), name removed.
+  const secondary = [addr.area, addr.city, addr.province, addr.country]
+    .filter(Boolean)
+    .filter((v) => v !== main)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join(', ');
   return {
-    street,
-    area:
-      get('sublocality_level_1') ||
-      get('sublocality') ||
-      get('neighborhood') ||
-      get('administrative_area_level_3'),
-    city:
-      get('locality') ||
-      get('postal_town') ||
-      get('administrative_area_level_2'),
-    province: get('administrative_area_level_1'),
-    country: get('country'),
-    formatted: place.formattedAddress ?? '',
+    id: `${p.osm_type ?? ''}${p.osm_id ?? ''}` || `${main}:${coords[0]},${coords[1]}`,
+    main,
+    secondary,
+    result: {
+      label: main,
+      lat: coords[1],
+      lng: coords[0],
+      zoom: zoomForPhotonExtent(p.extent),
+      ...addr,
+    },
   };
-}
-
-/** Maps a Google place's `types` to a sensible map zoom (per the Maps zoom-level chart):
- *  country 6 · province 8 · division/district 7 · city 9 · town/sub-district 13 · street/POI 15. */
-function zoomForPlaceTypes(
-  types: string[] | null | undefined,
-): number | undefined {
-  if (!types?.length) return undefined;
-  if (types.includes('country')) return 6;
-  if (types.includes('administrative_area_level_1')) return 8;
-  if (types.includes('administrative_area_level_2')) return 7;
-  if (types.includes('locality') || types.includes('postal_town')) return 9;
-  if (
-    types.some((t) => t.startsWith('sublocality')) ||
-    types.includes('neighborhood')
-  )
-    return 13;
-  return 15;
 }

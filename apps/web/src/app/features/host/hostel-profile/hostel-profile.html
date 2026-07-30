@@ -2,11 +2,11 @@
   <div hhActions class="flex items-center gap-3">
     @if (saveError()) {
       <span class="text-sm font-medium text-danger">Couldn't update — try again.</span>
-    } @else if (saved() && !form().dirty()) {
+    } @else if (saved() && !form()?.dirty()) {
       <span class="flex items-center gap-1 text-sm font-medium text-ok">
         <i class="ti ti-check" aria-hidden="true"></i>Saved
       </span>
-    } @else if (form().dirty()) {
+    } @else if (form()?.dirty()) {
       <span class="hidden text-sm text-ink-400 sm:inline">Unsaved changes</span>
     }
     @if (previewUrl(); as url) {
@@ -26,7 +26,7 @@
       hh-button
       color="primary"
       size="sm"
-      [disabled]="!form().dirty() || saving() || form().uploading()"
+      [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()"
       (click)="save()"
     >
       {{ saving() ? 'Saving…' : 'Update hostel' }}
@@ -54,13 +54,13 @@
         @if (saveError()) {
           <span class="text-sm font-medium text-danger">Couldn't update — try again.</span>
         }
-        @if (saved() && !form().dirty()) {
+        @if (saved() && !form()?.dirty()) {
           <span class="flex items-center gap-1 text-sm font-medium text-ok"><i class="ti ti-check" aria-hidden="true"></i>Changes saved.</span>
         }
-        @if (form().dirty()) {
+        @if (form()?.dirty()) {
           <span class="text-sm text-ink-400">You have unsaved changes</span>
         }
-        <button hh-button color="primary" [disabled]="!form().dirty() || saving() || form().uploading()" (click)="save()">
+        <button hh-button color="primary" [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()" (click)="save()">
           {{ saving() ? 'Saving…' : 'Update hostel' }}
         </button>
       </div>
