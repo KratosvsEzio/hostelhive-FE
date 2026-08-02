@@ -1,44 +1,50 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   inject,
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, filter, firstValueFrom, map, of, switchMap, take } from 'rxjs';
 import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive/ui';
 import { format } from 'date-fns';
-import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { MessService } from './mess.service';
-
-interface DraftItem {
-  id: string;
-  name: string;
-  unit: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-}
+import { Breadcrumb, DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import {
+  DocumentsApi,
+  ExpenseDetail,
+  ExpenseFormOptions,
+  ExpenseInput,
+  ExpenseItemInput,
+  HostelsApi,
+  HostPropertyStore,
+} from '@services';
 
 interface DraftImage {
   id: string;
+  /** Preview source — a data URL for new picks, or the remote S3 URL for existing receipts. */
   dataUrl: string;
   name: string;
+  /** The raw file — absent for receipts already attached to the expense (edit mode). */
+  file?: File;
+  /** True while the presigned upload to S3 is in flight. */
+  uploading: boolean;
+  /** 0–100 upload progress. */
+  progress: number;
+  /** The document id returned by the presigned-url call — collected into `receipt_ids`. */
+  receiptId?: string;
+  /** True if the presigned/upload step failed. */
+  error?: boolean;
+  /** True if the remote preview image failed to load (unprocessed / gone). */
+  broken?: boolean;
 }
 
-const UNIT_OPTIONS: DropdownOption[] = [
-  { value: 'kg', label: 'kg' },
-  { value: 'g', label: 'g' },
-  { value: 'L', label: 'L' },
-  { value: 'mL', label: 'mL' },
-  { value: 'pcs', label: 'pcs' },
-  { value: 'dozen', label: 'dozen' },
-  { value: 'pack', label: 'pack' },
-  { value: 'bag', label: 'bag' },
-  { value: 'box', label: 'box' },
-  { value: 'bundle', label: 'bundle' },
-];
+/** Default expense type for a mess-dashboard grocery entry. Every create/update example
+ *  from the backend uses "groceries"; flip this if it should be "mess" instead. */
+const DEFAULT_EXPENSE_TYPE = 'groceries';
 
 const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
 
@@ -49,165 +55,276 @@ const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
   templateUrl: './add-grocery.html',
 })
 export class AddGrocery {
-  private readonly svc = inject(MessService);
+  private readonly hostelsApi = inject(HostelsApi);
+  private readonly documentsApi = inject(DocumentsApi);
+  private readonly propertyStore = inject(HostPropertyStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly unitOptions = UNIT_OPTIONS;
   protected readonly todayIso = todayIso();
 
-  protected readonly mode = signal<'items' | 'bill'>(
-    this.route.snapshot.queryParamMap.get('mode') === 'items' ? 'items' : 'bill',
+  /** Present when the form is opened as `/expenses/:expenseId/edit` → edit mode. */
+  private readonly editId = this.route.snapshot.paramMap.get('expenseId');
+  protected readonly isEdit = !!this.editId;
+  /** In edit mode, true until the existing expense is fetched and the form pre-filled. */
+  protected readonly loadingExpense = signal(this.isEdit);
+  /** The fetched expense (edit mode) — its line items are echoed back on save. */
+  private readonly loaded = signal<ExpenseDetail | null>(null);
+
+  /** Breadcrumb trail — the parent section depends on where the form was opened from
+   *  (the Expenses list or the Mess "Add grocery" shortcut), since both share this form. */
+  protected readonly breadcrumbs: Breadcrumb[] = this.isEdit
+    ? [{ label: 'Expenses', url: '../..' }, { label: 'Edit expense' }]
+    : [
+        {
+          label: this.route.snapshot.parent?.routeConfig?.path === 'mess' ? 'Mess' : 'Expenses',
+          url: '..',
+        },
+        { label: 'Add expense' },
+      ];
+
+  // ── Expense-type options from GET /expenses/new ─────────────────────────────
+  private readonly formOptionsKey = computed(() =>
+    this.propertyStore.properties().length > 0 ? this.propertyStore.selected() : '',
   );
+  private readonly formOptions = toSignal(
+    toObservable(this.formOptionsKey).pipe(
+      switchMap((hostelId) => {
+        const empty: ExpenseFormOptions = { expenseTypes: [], itemUnits: [] };
+        if (!hostelId) return of(empty);
+        return this.hostelsApi.expenseFormOptions(hostelId).pipe(catchError(() => of(empty)));
+      }),
+    ),
+    { initialValue: { expenseTypes: [], itemUnits: [] } as ExpenseFormOptions },
+  );
+
+  /** 'mess' is excluded — it's the umbrella category, not a thing a host logs directly. */
+  protected readonly expenseTypeOptions = computed<DropdownOption[]>(() =>
+    this.formOptions()
+      .expenseTypes.filter((t) => t.slug !== 'mess')
+      .map((t) => ({ value: t.slug, label: t.name })),
+  );
+
+  protected readonly expenseType = signal(DEFAULT_EXPENSE_TYPE);
   protected readonly date = signal<string | null>(this.todayIso);
-  protected readonly items = signal<DraftItem[]>([]);
+  protected readonly notes = signal('');
   protected readonly images = signal<DraftImage[]>([]);
 
-  // ── inline add-item form ─────────────────────────────────────────────
-  protected readonly addName = signal('');
-  protected readonly addUnit = signal('kg');
-  protected readonly addQty = signal('');
-  protected readonly addPrice = signal('');
-  protected readonly addTouched = signal(false);
+  // ── save state ───────────────────────────────────────────────────────────
+  protected readonly saving = signal(false);
+  protected readonly saveError = signal<string | null>(null);
 
-  // ── bill mode ────────────────────────────────────────────────────────
+  // ── amount ────────────────────────────────────────────────────────────────
   protected readonly billTotal = signal('');
-  protected readonly billTotalTouched = signal(false);
+  /** Set on the first save attempt — gates the required-field error messages. */
+  protected readonly submitted = signal(false);
 
   protected readonly billTotalValue = computed(() => {
     const v = parseFloat(this.billTotal());
     return v > 0 ? v : 0;
   });
 
-  protected readonly billTotalError = computed(() =>
-    this.billTotalTouched() && !(parseFloat(this.billTotal()) > 0)
-      ? 'Enter the total amount from the bill'
-      : '',
+  // ── required-field validation (expense type · date · amount) ────────────────
+  protected readonly expenseTypeError = computed(() =>
+    this.submitted() && !this.expenseType() ? 'Select an expense type' : '',
+  );
+  protected readonly dateError = computed(() =>
+    this.submitted() && !this.date() ? 'Pick an expense date' : '',
+  );
+  protected readonly amountError = computed(() =>
+    this.submitted() && !(this.billTotalValue() > 0) ? 'Enter the total amount' : '',
   );
 
-  protected readonly addTotal = computed(() => {
-    const qty = parseFloat(this.addQty());
-    const price = parseFloat(this.addPrice());
-    return qty > 0 && price >= 0 ? qty * price : 0;
-  });
-
-  protected readonly itemCount = computed(() => this.items().length);
-  protected readonly totalSum = computed(() =>
-    this.items().reduce((s, it) => s + it.totalPrice, 0),
+  /** True while a selected receipt image is still uploading — blocks save until done. */
+  protected readonly uploadingReceipt = computed(() =>
+    this.images().some((img) => img.uploading),
   );
 
-  protected readonly totalForDisplay = computed(() =>
-    this.mode() === 'items' ? this.totalSum() : this.billTotalValue(),
+  protected readonly canSave = computed(
+    () =>
+      !!this.expenseType() &&
+      !!this.date() &&
+      this.billTotalValue() > 0 &&
+      !this.uploadingReceipt(),
   );
 
-  protected readonly canSave = computed(() => {
-    if (!this.date()) return false;
-    if (this.mode() === 'bill') return this.billTotalValue() > 0;
-    return this.items().length > 0;
-  });
-
-  protected readonly addNameError = computed(() =>
-    this.addTouched() && !this.addName().trim() ? 'Required' : '',
-  );
-  protected readonly addQtyError = computed(() =>
-    this.addTouched() && !(parseFloat(this.addQty()) > 0) ? 'Required' : '',
-  );
-  protected readonly addPriceError = computed(() =>
-    this.addTouched() && !(parseFloat(this.addPrice()) >= 0) ? 'Required' : '',
-  );
-
-  protected setMode(m: 'items' | 'bill'): void {
-    this.mode.set(m);
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { mode: m },
-      replaceUrl: true,
-    });
+  constructor() {
+    const editId = this.editId;
+    if (!editId) return;
+    // Edit mode: once the hostel is known, fetch the expense and pre-fill the form.
+    toObservable(this.formOptionsKey)
+      .pipe(
+        filter((hostelId): hostelId is string => !!hostelId),
+        take(1),
+        switchMap((hostelId) =>
+          this.hostelsApi.getExpense(hostelId, editId).pipe(catchError(() => of(null))),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((exp) => {
+        if (exp) {
+          this.loaded.set(exp);
+          this.expenseType.set(exp.expenseType || DEFAULT_EXPENSE_TYPE);
+          this.date.set(exp.date ? exp.date.slice(0, 10) : this.todayIso);
+          this.billTotal.set(exp.amount ? String(exp.amount) : '');
+          this.notes.set(exp.notes ?? '');
+          // Seed the grid with the already-attached receipts (removable, and combinable with
+          // new picks). They carry their receiptId so they survive the round-trip on save.
+          this.images.set(
+            exp.receipts.map((r, i) => ({
+              id: `existing-${i}`,
+              dataUrl: r.url,
+              name: 'Receipt',
+              uploading: false,
+              progress: 100,
+              receiptId: r.id,
+              broken: !r.url,
+            })),
+          );
+        }
+        this.loadingExpense.set(false);
+      });
   }
 
-  protected onUnitChange(v: string | string[] | null): void {
-    if (typeof v === 'string') this.addUnit.set(v);
+  protected onExpenseTypeChange(v: string | string[] | null): void {
+    if (typeof v === 'string') this.expenseType.set(v);
   }
 
-  protected addItem(): void {
-    this.addTouched.set(true);
-    const name = this.addName().trim();
-    const qty = parseFloat(this.addQty());
-    const price = parseFloat(this.addPrice());
-    if (!name || !(qty > 0) || !(price >= 0)) return;
-
-    this.items.update((list) => [
-      ...list,
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        name,
-        unit: this.addUnit(),
-        quantity: qty,
-        unitPrice: price,
-        totalPrice: qty * price,
-      },
-    ]);
-
-    this.addName.set('');
-    this.addQty.set('');
-    this.addPrice.set('');
-    this.addTouched.set(false);
+  protected onNotesInput(e: Event): void {
+    this.notes.set((e.target as HTMLTextAreaElement).value);
   }
 
-  protected removeItem(id: string): void {
-    this.items.update((list) => list.filter((it) => it.id !== id));
+  /** Reject a negative amount (typed or spun below zero) by clearing it. */
+  protected onAmountChange(v: string): void {
+    const n = parseFloat(v);
+    this.billTotal.set(Number.isFinite(n) && n < 0 ? '' : v);
   }
 
   protected onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     Array.from(input.files).forEach((file) => {
+      const id = `${Date.now()}-${Math.random()}`;
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
         this.images.update((list) => [
           ...list,
-          { id: `${Date.now()}-${Math.random()}`, dataUrl, name: file.name },
+          { id, dataUrl, name: file.name, file, uploading: true, progress: 0 },
         ]);
+        // Upload the receipt to S3 as soon as it's picked (presigned-url + PUT), so the
+        // receipt_id is ready by save time and the user sees upload progress.
+        this.uploadReceipt(id, file);
       };
       reader.readAsDataURL(file);
     });
     input.value = '';
   }
 
+  /** Runs the two-step upload for one draft image and tracks its progress/result on the signal. */
+  private uploadReceipt(id: string, file: File): void {
+    this.documentsApi
+      .presignedUrl(file.type, null, 'receipts')
+      .pipe(
+        switchMap((presigned) =>
+          this.documentsApi
+            .uploadToS3(presigned.url, file)
+            .pipe(map((p) => ({ percent: p.percent, receiptId: presigned.id }))),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ percent, receiptId }) =>
+          this.patchImage(id, { progress: percent, receiptId, uploading: percent < 100 }),
+        error: () => this.patchImage(id, { uploading: false, error: true }),
+      });
+  }
+
+  private patchImage(id: string, patch: Partial<DraftImage>): void {
+    this.images.update((list) =>
+      list.map((img) => (img.id === id ? { ...img, ...patch } : img)),
+    );
+  }
+
   protected removeImage(id: string): void {
     this.images.update((list) => list.filter((img) => img.id !== id));
   }
 
-  protected save(): void {
-    const iso = this.date();
-    if (!iso) return;
-    if (this.mode() === 'bill') {
-      this.billTotalTouched.set(true);
-      if (!(this.billTotalValue() > 0)) return;
-    }
-    if (!this.canSave()) return;
-
-    const [y, mo, d] = iso.split('-').map(Number);
-    const date = new Date(y, mo - 1, d);
-    const imgs = this.images().map((img) => img.dataUrl);
-
-    if (this.mode() === 'items') {
-      this.svc.addEntry({
-        date,
-        items: this.items().map(({ name, unit, quantity, unitPrice }) => ({
-          name, unit, quantity, unitPrice,
-        })),
-        images: imgs.length ? imgs : undefined,
-      });
-    } else {
-      this.svc.addEntry({
-        date,
-        items: [],
-        totalOverride: this.billTotalValue(),
-        images: imgs.length ? imgs : undefined,
-      });
-    }
-    void this.router.navigate(['..'], { relativeTo: this.route });
+  /** A remote receipt preview (existing attachment) failed to load — show a placeholder. */
+  protected onImageError(id: string): void {
+    this.patchImage(id, { broken: true });
   }
+
+  protected async save(): Promise<void> {
+    this.submitted.set(true);
+    const pickedDay = this.date();
+    if (!pickedDay || !this.canSave() || this.saving()) return;
+
+    const hostelId = this.propertyStore.selected();
+    if (!hostelId) {
+      this.saveError.set('No hostel selected.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.saveError.set(null);
+    try {
+      // Receipts are uploaded on selection (see uploadReceipt); collect every attached id.
+      // On edit this includes the pre-loaded existing receipts (minus any the user removed).
+      const receiptIds = this.images()
+        .map((img) => img.receiptId)
+        .filter((id): id is string => !!id);
+
+      const existing = this.loaded();
+      // Keep the original timestamp when the date is unchanged; else anchor the new day at noon.
+      const expenseDate =
+        this.editId && existing && existing.date.slice(0, 10) === pickedDay
+          ? existing.date
+          : railsTimestamp(pickedDay);
+
+      const expense: ExpenseInput = {
+        expense_type: this.expenseType(),
+        amount: String(this.billTotalValue()),
+        expense_date: expenseDate,
+        notes: this.notes().trim(),
+        // Always send on edit (so removing a receipt clears it); on create only when present.
+        ...(this.editId || receiptIds.length ? { receipt_ids: receiptIds } : {}),
+      };
+
+      if (this.editId) {
+        // Echo existing line items back so the update doesn't drop them (PUT uses `expense_items`).
+        const items = existing?.items ?? [];
+        if (items.length) {
+          expense.expense_items = items.map<ExpenseItemInput>((it) => ({
+            id: it.id,
+            name: it.name,
+            unit: it.unit,
+            quantity: String(it.quantity),
+            unit_price: String(it.unitPrice),
+            total_price: String(it.totalPrice),
+          }));
+        }
+        await firstValueFrom(this.hostelsApi.updateExpense(hostelId, this.editId, expense));
+      } else {
+        await firstValueFrom(this.hostelsApi.createExpense(hostelId, expense));
+      }
+      void this.router.navigate(['..'], { relativeTo: this.route });
+    } catch {
+      this.saveError.set(
+        this.editId
+          ? 'Could not update the expense. Please try again.'
+          : 'Could not save the entry. Please try again.',
+      );
+    } finally {
+      this.saving.set(false);
+    }
+  }
+}
+
+/** Format a picked `yyyy-MM-dd` as the Rails timestamp the expenses API expects
+ *  (e.g. "2026-07-30 12:00:00.000 +0500"), anchored at local noon to dodge DST edges. */
+function railsTimestamp(iso: string): string {
+  const [y, mo, d] = iso.split('-').map(Number);
+  return format(new Date(y, mo - 1, d, 12, 0, 0), 'yyyy-MM-dd HH:mm:ss.SSS xx');
 }

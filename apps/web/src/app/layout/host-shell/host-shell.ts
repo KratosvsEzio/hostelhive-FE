@@ -96,6 +96,7 @@ export class HostLayout {
       { label: 'Team & staff',   icon: 'ti-user-shield',      link: `${b}/team` },
       { label: 'Utilities',      icon: 'ti-bolt',             link: `${b}/utilities` },
       { label: 'Mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess` },
+      { label: 'Expenses',       icon: 'ti-report-money',     link: `${b}/expenses` },
       { label: 'Invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices` },
       { divider: true },
       { label: 'Subscription',   icon: 'ti-rosette',          link: `${b}/subscription` },

@@ -24,14 +24,17 @@ export class DocumentsApi {
 
   /**
    * Step 1 — obtain an S3 presigned PUT URL.
-   * `GET /api/documents/presigned_url?key=attachments&content_type=<mime>`
+   * `GET /api/documents/presigned_url?key=<key>&content_type=<mime>`
+   * `key` groups uploads server-side — 'attachments' (default) for listing photos,
+   * 'receipts' for grocery-expense receipts.
    */
   presignedUrl(
     contentType: string,
     labelId?: number | null,
+    key = 'attachments',
   ): Observable<PresignedUrlResponse> {
     return this.api.get<PresignedUrlResponse>('/api/documents/presigned_url', {
-      key: 'attachments',
+      key,
       content_type: contentType,
       ...(labelId != null ? { label_id: labelId } : {}),
     });

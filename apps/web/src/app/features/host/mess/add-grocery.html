@@ -1,253 +1,164 @@
-<app-dashboard-layout
-  label="Add grocery"
-  backUrl=".."
-  [breadcrumbs]="[{ label: 'Mess', url: '..' }, { label: 'Add grocery' }]"
->
+<app-dashboard-layout [label]="isEdit ? 'Edit expense' : 'Add expense'" backUrl=".." [breadcrumbs]="breadcrumbs">
   <main class="mx-auto max-w-4xl space-y-5">
 
-    <!-- Entry mode toggle -->
-    <div class="rounded-2xl bg-white p-5 shadow-card">
-      <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Entry mode</p>
-      <div class="flex gap-1 rounded-xl border border-ink-100 bg-surface p-1">
-        <button
-          type="button"
-          class="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition"
-          [class.bg-white]="mode() === 'bill'"
-          [class.shadow-sm]="mode() === 'bill'"
-          [class.text-ink-900]="mode() === 'bill'"
-          [class.text-ink-400]="mode() !== 'bill'"
-          (click)="setMode('bill')"
-        >
-          <i class="ti ti-bolt" aria-hidden="true"></i>
-          Quick entry
-        </button>
-        <button
-          type="button"
-          class="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition"
-          [class.bg-white]="mode() === 'items'"
-          [class.shadow-sm]="mode() === 'items'"
-          [class.text-ink-900]="mode() === 'items'"
-          [class.text-ink-400]="mode() !== 'items'"
-          (click)="setMode('items')"
-        >
-          <i class="ti ti-list-details" aria-hidden="true"></i>
-          Breakdown
-        </button>
+    @if (loadingExpense()) {
+      <div class="space-y-5">
+        <div class="h-28 w-full rounded-2xl shimmer"></div>
+        <div class="h-72 w-full rounded-2xl shimmer"></div>
+        <div class="h-20 w-full rounded-2xl shimmer"></div>
       </div>
-      @if (mode() === 'bill') {
-        <p class="mt-3 text-xs text-ink-400">
-          Upload the bill and enter the total — no itemized breakdown needed.
-        </p>
-      }
-    </div>
-
-    <!-- Purchase date -->
-    <div class="rounded-2xl bg-white p-5 shadow-card">
-      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-        Purchase date
-      </label>
-      <div class="max-w-xs">
-        <hh-date-picker [(value)]="date" placeholder="Pick a date" />
-      </div>
-    </div>
-
-    @if (mode() === 'items') {
-
-      <!-- Grocery items -->
-      <div class="rounded-2xl bg-white p-5 shadow-card">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-display text-base font-semibold text-ink-900">Grocery items</h2>
-          <span class="text-xs text-ink-400">{{ itemCount() }} item{{ itemCount() === 1 ? '' : 's' }}</span>
-        </div>
-
-        @if (items().length) {
-          <div class="overflow-x-auto">
-            <div class="min-w-[560px] overflow-hidden rounded-xl border border-ink-100">
-              <div class="flex items-center gap-3 border-b border-ink-50 bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-                <span class="flex-1 min-w-[120px]">Item</span>
-                <span class="w-14 shrink-0">Unit</span>
-                <span class="w-16 shrink-0 text-right">Qty</span>
-                <span class="w-24 shrink-0 text-right">Unit price</span>
-                <span class="w-24 shrink-0 text-right">Total</span>
-                <span class="w-8 shrink-0"></span>
-              </div>
-              @for (item of items(); track item.id) {
-                <div class="flex items-center gap-3 border-b border-ink-50 px-4 py-3 text-sm last:border-0">
-                  <span class="flex-1 min-w-[120px] font-medium text-ink-900">{{ item.name }}</span>
-                  <span class="w-14 shrink-0 text-ink-500">{{ item.unit }}</span>
-                  <span class="w-16 shrink-0 text-right text-ink-500">{{ item.quantity | number: '1.0-2' }}</span>
-                  <span class="w-24 shrink-0 text-right text-ink-600">Rs {{ item.unitPrice | number }}</span>
-                  <span class="w-24 shrink-0 text-right font-semibold text-ink-900">Rs {{ item.totalPrice | number }}</span>
-                  <div class="w-8 shrink-0 flex justify-end">
-                    <button
-                      type="button"
-                      class="grid h-6 w-6 place-items-center rounded-md text-ink-300 transition hover:bg-danger/10 hover:text-danger"
-                      (click)="removeItem(item.id)"
-                      aria-label="Remove item"
-                    >
-                      <i class="ti ti-x text-xs" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              }
-              <div class="flex items-center justify-between bg-surface px-4 py-2.5">
-                <span class="text-xs font-semibold uppercase tracking-wide text-ink-400">Total</span>
-                <span class="text-sm font-semibold text-ink-900">Rs {{ totalSum() | number }}</span>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Add-item row -->
-        <div class="mt-4 rounded-xl border border-dashed border-ink-200 bg-surface/50 p-4">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Add grocery item</p>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
-            <div class="sm:col-span-4">
-              <hh-input label="Item name" placeholder="e.g. Flour, Tomatoes…" [(value)]="addName" [error]="addNameError()" />
-            </div>
-            <div class="flex flex-col gap-1 sm:col-span-2">
-              <p class="text-xs font-medium text-ink-600">Unit</p>
-              <hh-dropdown variant="field" [options]="unitOptions" [value]="addUnit()" (valueChange)="onUnitChange($event)" />
-            </div>
-            <div class="sm:col-span-2">
-              <hh-input label="Quantity" type="number" placeholder="0" [(value)]="addQty" [error]="addQtyError()" />
-            </div>
-            <div class="sm:col-span-2">
-              <hh-input label="Unit price (Rs)" type="number" placeholder="0" [(value)]="addPrice" [error]="addPriceError()" />
-            </div>
-            <div class="flex flex-col gap-1 sm:col-span-2">
-              <p class="text-xs font-medium text-ink-600">Total price</p>
-              <div class="flex h-[42px] items-center rounded-xl border border-ink-100 bg-ink-50/60 px-3 text-sm font-semibold text-ink-900">
-                Rs {{ addTotal() | number }}
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 flex justify-end">
-            <button hh-button color="primary" size="sm" (click)="addItem()">
-              <i class="ti ti-plus" aria-hidden="true"></i>Add item
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Attachments (optional receipts / photos) -->
-      <div class="rounded-2xl bg-white p-5 shadow-card">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-display text-base font-semibold text-ink-900">Attachments</h2>
-          <span class="text-xs text-ink-400">Optional · receipts, photos</span>
-        </div>
-
-        <!-- hidden file input -->
-        <input id="grocery-images" type="file" accept="image/*" multiple class="sr-only" (change)="onFilesSelected($event)" />
-
-        @if (!images().length) {
-          <label for="grocery-images" class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 py-10 text-center transition hover:border-brand-400 hover:bg-brand-50/30">
-            <span class="grid h-12 w-12 place-items-center rounded-xl bg-surface">
-              <i class="ti ti-camera-plus text-2xl text-ink-400" aria-hidden="true"></i>
-            </span>
-            <span>
-              <span class="block text-sm font-medium text-ink-700">Click to upload photos</span>
-              <span class="mt-0.5 block text-xs text-ink-400">JPG, PNG, HEIC — multiple files OK</span>
-            </span>
-          </label>
-        } @else {
-          <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
-            @for (img of images(); track img.id) {
-              <div class="group relative aspect-square overflow-hidden rounded-xl border border-ink-100 bg-surface">
-                <img [src]="img.dataUrl" [alt]="img.name" class="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-md bg-white/90 text-ink-500 shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
-                  (click)="removeImage(img.id)"
-                  [attr.aria-label]="'Remove ' + img.name"
-                >
-                  <i class="ti ti-x text-xs" aria-hidden="true"></i>
-                </button>
-              </div>
-            }
-            <label for="grocery-images" class="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 text-ink-400 transition hover:border-brand-400 hover:bg-brand-50/30 hover:text-brand-500" aria-label="Add more photos">
-              <i class="ti ti-plus text-2xl" aria-hidden="true"></i>
-            </label>
-          </div>
-          <p class="mt-2 text-xs text-ink-400">{{ images().length }} photo{{ images().length === 1 ? '' : 's' }} attached</p>
-        }
-      </div>
-
     } @else {
 
-      <!-- Bill photo mode -->
-      <div class="rounded-2xl bg-white p-5 shadow-card">
-        <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Bill photos</h2>
-
-        <!-- hidden file input -->
-        <input id="grocery-images" type="file" accept="image/*" multiple class="sr-only" (change)="onFilesSelected($event)" />
-
-        @if (!images().length) {
-          <label for="grocery-images" class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 py-10 text-center transition hover:border-brand-400 hover:bg-brand-50/30">
-            <span class="grid h-12 w-12 place-items-center rounded-xl bg-surface">
-              <i class="ti ti-camera-plus text-2xl text-ink-400" aria-hidden="true"></i>
-            </span>
-            <span>
-              <span class="block text-sm font-medium text-ink-700">Tap to upload bill photo</span>
-              <span class="mt-0.5 block text-xs text-ink-400">JPG, PNG, HEIC — multiple pages OK</span>
-            </span>
+    <!-- Expense type + expense date -->
+    <div class="rounded-2xl bg-white p-5 shadow-card">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Expense type <span class="text-danger">*</span>
           </label>
-        } @else {
-          <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
-            @for (img of images(); track img.id) {
-              <div class="group relative aspect-square overflow-hidden rounded-xl border border-ink-100 bg-surface">
-                <img [src]="img.dataUrl" [alt]="img.name" class="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-md bg-white/90 text-ink-500 shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
-                  (click)="removeImage(img.id)"
-                  [attr.aria-label]="'Remove ' + img.name"
-                >
-                  <i class="ti ti-x text-xs" aria-hidden="true"></i>
-                </button>
-              </div>
-            }
-            <label for="grocery-images" class="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 text-ink-400 transition hover:border-brand-400 hover:bg-brand-50/30 hover:text-brand-500" aria-label="Add more photos">
-              <i class="ti ti-plus text-2xl" aria-hidden="true"></i>
-            </label>
-          </div>
-          <p class="mt-2 text-xs text-ink-400">{{ images().length }} photo{{ images().length === 1 ? '' : 's' }} attached</p>
-        }
-
-        <!-- Total amount input -->
-        <div class="mt-5 border-t border-ink-100 pt-5">
-          <div class="max-w-xs">
-            <hh-input
-              label="Total amount (Rs)"
-              type="number"
-              placeholder="0"
-              [(value)]="billTotal"
-              [error]="billTotalError()"
-            />
-          </div>
-          <p class="mt-2 text-xs text-ink-400">Enter the grand total shown on the bill.</p>
+          <hh-dropdown
+            variant="field"
+            [options]="expenseTypeOptions()"
+            [value]="expenseType()"
+            (valueChange)="onExpenseTypeChange($event)"
+          />
+          @if (expenseTypeError()) {
+            <p class="mt-1 text-xs font-medium text-danger">{{ expenseTypeError() }}</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Expense date <span class="text-danger">*</span>
+          </label>
+          <hh-date-picker [(value)]="date" [max]="todayIso" placeholder="Pick a date" />
+          @if (dateError()) {
+            <p class="mt-1 text-xs font-medium text-danger">{{ dateError() }}</p>
+          }
         </div>
       </div>
+    </div>
 
-    }
+    <!-- Receipt + total -->
+    <div class="rounded-2xl bg-white p-5 shadow-card">
+      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Receipt</h2>
+
+      <!-- hidden file input — receipts upload to S3 on select; multiple allowed -->
+      <input id="grocery-images" type="file" accept="image/*" multiple class="sr-only" (change)="onFilesSelected($event)" />
+
+      @if (images().length) {
+        <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          @for (img of images(); track img.id) {
+            <div class="group relative aspect-square overflow-hidden rounded-xl border border-ink-100 bg-surface">
+              @if (img.broken) {
+                <div class="grid h-full w-full place-items-center text-ink-300">
+                  <i class="ti ti-file-text text-2xl" aria-hidden="true"></i>
+                </div>
+              } @else {
+                <img [src]="img.dataUrl" [alt]="img.name" class="h-full w-full object-cover" (error)="onImageError(img.id)" />
+              }
+              @if (img.uploading) {
+                <div class="absolute inset-0 grid place-items-center bg-ink-900/45 text-white">
+                  <span class="text-xs font-semibold">{{ img.progress }}%</span>
+                </div>
+              } @else if (img.error) {
+                <div class="absolute inset-0 grid place-items-center bg-danger/55 text-white" title="Upload failed — remove and try again">
+                  <i class="ti ti-alert-triangle text-lg" aria-hidden="true"></i>
+                </div>
+              } @else if (img.receiptId) {
+                <span class="absolute bottom-1.5 left-1.5 grid h-5 w-5 place-items-center rounded-full bg-ok text-white shadow-sm" aria-label="Uploaded">
+                  <i class="ti ti-check text-xs" aria-hidden="true"></i>
+                </span>
+              }
+              <button
+                type="button"
+                class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-md bg-white/90 text-ink-500 shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
+                (click)="removeImage(img.id)"
+                [attr.aria-label]="'Remove ' + img.name"
+              >
+                <i class="ti ti-x text-xs" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+          <label for="grocery-images" class="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 text-ink-400 transition hover:border-brand-400 hover:bg-brand-50/30 hover:text-brand-500" aria-label="Add more photos">
+            <i class="ti ti-plus text-2xl" aria-hidden="true"></i>
+          </label>
+        </div>
+        <p class="mt-2 text-xs" [class]="uploadingReceipt() ? 'text-brand-600' : 'text-ink-400'">
+          @if (uploadingReceipt()) {
+            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> Uploading receipt…
+          } @else {
+            {{ images().length }} photo{{ images().length === 1 ? '' : 's' }} attached
+          }
+        </p>
+      } @else {
+        <label for="grocery-images" class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 py-10 text-center transition hover:border-brand-400 hover:bg-brand-50/30">
+          <span class="grid h-12 w-12 place-items-center rounded-xl bg-surface">
+            <i class="ti ti-camera-plus text-2xl text-ink-400" aria-hidden="true"></i>
+          </span>
+          <span>
+            <span class="block text-sm font-medium text-ink-700">Upload receipt photos</span>
+            <span class="mt-0.5 block text-xs text-ink-400">JPG, PNG, HEIC — optional</span>
+          </span>
+        </label>
+      }
+
+      <!-- Total amount input -->
+      <div class="mt-5 border-t border-ink-100 pt-5">
+        <div class="max-w-xs">
+          <hh-input
+            label="Total amount (Rs) *"
+            type="number"
+            placeholder="0"
+            [value]="billTotal()"
+            (valueChange)="onAmountChange($event)"
+            [error]="amountError()"
+          />
+        </div>
+        <p class="mt-2 text-xs text-ink-400">Enter the total amount for this expense.</p>
+      </div>
+
+      <!-- Notes -->
+      <div class="mt-5 border-t border-ink-100 pt-5">
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+          Notes <span class="font-normal normal-case text-ink-300">(optional)</span>
+        </label>
+        <textarea
+          class="hh-input min-h-[88px] resize-y"
+          rows="3"
+          placeholder="Any extra detail about this expense…"
+          [value]="notes()"
+          (input)="onNotesInput($event)"
+        ></textarea>
+      </div>
+    </div>
 
     <!-- Total + save -->
     <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white px-6 py-4 shadow-card">
       <div>
-        @if (mode() === 'items') {
-          <p class="text-sm text-ink-400">Total sum · {{ itemCount() }} item{{ itemCount() === 1 ? '' : 's' }}</p>
-        } @else {
-          <p class="text-sm text-ink-400">Total amount · Quick entry</p>
+        <p class="text-sm text-ink-400">Total amount</p>
+        <p class="font-display text-xl font-semibold text-ink-900">Rs {{ billTotalValue() | number }}</p>
+        @if (saveError()) {
+          <p class="mt-1 text-xs font-medium text-danger">{{ saveError() }}</p>
         }
-        <p class="font-display text-xl font-semibold text-ink-900">Rs {{ totalForDisplay() | number }}</p>
       </div>
       <div class="flex items-center gap-3">
         <a hh-button variant="outlined" routerLink="..">Cancel</a>
-        <button hh-button color="primary" [disabled]="!canSave()" (click)="save()">
-          <i class="ti ti-device-floppy" aria-hidden="true"></i>Save grocery entry
+        <button
+          hh-button
+          color="primary"
+          [disabled]="!canSave() || saving()"
+          [loading]="saving()"
+          (click)="save()"
+        >
+          @if (!saving()) {
+            <i class="ti ti-device-floppy" aria-hidden="true"></i>
+          }
+          {{ saving() ? (isEdit ? 'Updating…' : 'Saving…') : (isEdit ? 'Update expense' : 'Save expense') }}
         </button>
       </div>
     </div>
+
+    }
 
   </main>
 </app-dashboard-layout>
