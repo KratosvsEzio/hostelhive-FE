@@ -10,6 +10,8 @@ import { Tenants } from './tenants/tenants';
 import { MessList } from './mess/mess-list';
 import { Invoices } from './invoices/invoices';
 import { AddGrocery } from './mess/add-grocery';
+import { ExpensesList } from './expenses/expenses-list';
+import { ExpenseDetailPage } from './expenses/expense-detail';
 import { MessConfirmations } from './mess/mess-confirmations';
 import { MessNotifications } from './mess/mess-notifications';
 import { Analytics } from './analytics/analytics';
@@ -71,6 +73,15 @@ export const HOST_ROUTES: Route[] = [
         ],
       },
       { path: 'invoices', component: Invoices, title: 'Invoices — HostelHive' },
+      {
+        path: 'expenses',
+        children: [
+          { path: '', pathMatch: 'full', component: ExpensesList, title: 'Expenses — HostelHive' },
+          { path: 'new', component: AddGrocery, title: 'New expense — HostelHive' },
+          { path: ':expenseId', component: ExpenseDetailPage, title: 'Expense — HostelHive' },
+          { path: ':expenseId/edit', component: AddGrocery, title: 'Edit expense — HostelHive' },
+        ],
+      },
       { path: 'analytics', component: Analytics, title: 'Analytics — HostelHive' },
       {
         path: 'mess',

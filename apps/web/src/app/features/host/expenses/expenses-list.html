@@ -1,0 +1,124 @@
+<app-dashboard-layout label="Expenses">
+  <div hhActions>
+    <a hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
+      <i class="ti ti-plus" aria-hidden="true"></i>New expense
+    </a>
+  </div>
+
+  <!-- Charts — total monthly spend + spend-by-type over the last 12 months -->
+  @if (!loading() && !error() && allItems().length) {
+    <hh-expense-charts class="mb-5 block" [items]="allItems()" [typeOptions]="typeOptions()" />
+  }
+
+  <!-- Filters — expense type and date range as separate controls -->
+  <div class="mb-4 flex flex-wrap items-center gap-3">
+    <hh-dropdown
+      placeholder="Expense type"
+      [options]="typeOptions()"
+      [value]="typeFilter()"
+      (valueChange)="onTypeFilter($event)"
+    />
+    <div class="w-full sm:w-60">
+      <hh-date-range-picker
+        [from]="fromDate()"
+        [to]="toDate()"
+        [max]="todayIso"
+        placeholder="All dates"
+        (rangeChange)="onDateRange($event)"
+      />
+    </div>
+    @if (hasFilters()) {
+      <button hh-button variant="text" size="sm" type="button" (click)="clearFilters()">
+        <i class="ti ti-x" aria-hidden="true"></i>Clear
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <hh-skeleton class="h-80 w-full" radius="lg" />
+  } @else if (error()) {
+    <hh-error-state [networkError]="false" (retry)="retry()" />
+  } @else if (items().length) {
+    <hh-data-table
+      minWidth="720px"
+      [columns]="tableCols()"
+      [rows]="items()"
+      [rowId]="rowId"
+      [showActions]="true"
+      [actionActive]="menuActionActive"
+      [rowClickable]="true"
+      (rowClick)="goToDetail($any($event))"
+      (rowAction)="onRowAction($event)"
+    />
+  } @else {
+    <hh-empty-state
+      icon="ti-report-money"
+      [title]="hasFilters() ? 'No expenses match these filters' : 'No expenses yet'"
+      [message]="hasFilters()
+        ? 'Try a different type or date range.'
+        : 'Log salaries, utilities, groceries and more to track where your money goes.'"
+    >
+      @if (hasFilters()) {
+        <button hh-button variant="outlined" size="sm" type="button" (click)="clearFilters()">
+          Clear filters
+        </button>
+      } @else {
+        <a hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
+          <i class="ti ti-plus" aria-hidden="true"></i>New expense
+        </a>
+      }
+    </hh-empty-state>
+  }
+
+  @if (deletePending(); as e) {
+    <hh-confirm-modal
+      title="Delete expense?"
+      icon="ti-trash"
+      tone="danger"
+      confirmLabel="Delete"
+      confirmColor="danger"
+      (confirm)="confirmDelete()"
+      (cancel)="cancelDelete()"
+    >
+      This will permanently delete this
+      <strong>{{ typeLabel(e.expenseType) }}</strong> expense of
+      <strong>Rs {{ e.amount | number }}</strong> from {{ displayDate(e.date) }}. This can't be undone.
+    </hh-confirm-modal>
+  }
+</app-dashboard-layout>
+
+@if (menuOpenId(); as openId) {
+  @if (menuPos(); as pos) {
+    @let menuExpense = items().find((e) => e.id === openId);
+    @if (menuExpense) {
+      <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+        <button
+          type="button" hh-button variant="text" role="menuitem"
+          class="w-full !justify-start"
+          (click)="goToDetail(menuExpense)"
+        >
+          <i class="ti ti-eye text-sm text-ink-400" aria-hidden="true"></i>
+          View details
+        </button>
+        <hh-context-menu-divider />
+        <button
+          type="button" hh-button variant="text" role="menuitem"
+          class="w-full !justify-start"
+          (click)="goToEdit(menuExpense)"
+        >
+          <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
+          Edit
+        </button>
+        <hh-context-menu-divider />
+        <button
+          type="button" hh-button variant="text" role="menuitem"
+          class="w-full !justify-start !text-danger"
+          (click)="askDelete(menuExpense)"
+        >
+          <i class="ti ti-trash text-sm" aria-hidden="true"></i>
+          Delete
+        </button>
+      </hh-context-menu>
+    }
+  }
+}

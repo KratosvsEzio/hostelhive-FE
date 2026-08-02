@@ -14,6 +14,8 @@ export interface HostRoom {
   rentPerBed: number;
   attachedBath: boolean;
   createdAt: string; // ISO datetime
+  /** Occupant names from the rooms list payload (`renters[].name`); absent on fixture rooms. */
+  occupants?: string[];
 }
 
 export type TenantStatus = 'active' | 'inactive' | 'on-notice' | 'checked-out';

@@ -7,16 +7,15 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
-import { catchError, filter, finalize, map, of, startWith, switchMap } from 'rxjs';
+import { catchError, filter, finalize, map, of, startWith, switchMap, timer } from 'rxjs';
 import {
   Button,
-  Card,
   ConfirmModal,
   ContextMenu,
   ContextMenuDivider,
-  DataTable,
   Dropdown,
   DropdownOption,
   EmptyState,
@@ -38,8 +37,10 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
-import { PAGE_SIZE } from '@util/pagination';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
+
+/** The grid renders every room at once, so fetch a large single page instead of paginating. */
+const ROOMS_LIMIT = 1000;
 
 interface ViewState {
   loading: boolean;
@@ -55,6 +56,7 @@ interface ViewState {
 interface RoomForm {
   id: string | null;
   number: string;
+  floor: string;
   type: string;
   capacity: string;
 }
@@ -93,17 +95,72 @@ const STATUS_LABEL: Record<RoomStatus, string> = {
   full: 'Full',
 };
 
+// ── Occupancy grid ─────────────────────────────────────────────────────────────
+/** A room's card state in the grid. `maintenance` has no backing data yet (rooms carry no
+ *  maintenance flag) — kept in the union so the legend/colour map stay complete. */
+/** Occupancy state of a room — drives the card's dot colour and background tint. */
+type RoomCardStatus = 'available' | 'partial' | 'full';
+
+interface RoomCard {
+  room: Room;
+  status: RoomCardStatus;
+  /** "{floor} - {number}" (or just the number when no floor is set). */
+  code: string;
+  /** Primary occupant name (or "Available" / "N occupied" when no names are known). */
+  label: string;
+  /** Count of additional occupants beyond the first — rendered as a "+N" chip. */
+  extra: number;
+  bg: string;
+}
+
+interface FloorGroup {
+  key: string;
+  label: string;
+  order: number;
+  cards: RoomCard[];
+  available: number;
+  partial: number;
+  full: number;
+}
+
+/**
+ * Light background + a slightly darker same-hue border per occupancy state —
+ * green (free) / blue (partial) / red (full). The card's static class carries `border`
+ * (width) only; the colour comes from here so it always matches the fill.
+ */
+const CARD_BG: Record<RoomCardStatus, string> = {
+  available: 'bg-ok/10 border-ok/30',
+  partial: 'bg-blue-500/10 border-blue-500/30',
+  full: 'bg-danger/10 border-danger/30',
+};
+
+/** Title-case a free-text label ("ground floor" → "Ground Floor"). */
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Human label for a floor value: a bare number becomes "Floor N"; a name is title-cased. */
+function floorLabel(floor: string): string {
+  return /^\d+$/.test(floor) ? `Floor ${floor}` : titleCase(floor);
+}
+
+/** Sort order for a floor group: numeric floors ascending, "Ground" first, other names after. */
+function floorOrder(floor: string): number {
+  if (/^\d+$/.test(floor)) return Number(floor);
+  if (/ground/i.test(floor)) return -1;
+  return 1000;
+}
+
 
 @Component({
   selector: 'hh-rooms',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DecimalPipe,
     DashboardLayout,
     SubscriptionGate,
-    Card,
     Button,
     ConfirmModal,
-    DataTable,
     Dropdown,
     FilterChips,
     Input,
@@ -237,7 +294,7 @@ export class Rooms {
         const filters: Record<string, string> = {};
         if (search.trim()) filters['f[room_number]'] = search.trim();
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
-        return this.api.rooms(hostelId, page, PAGE_SIZE, filters).pipe(
+        return this.api.rooms(hostelId, page, ROOMS_LIMIT, filters).pipe(
           map((res): ViewState => ({ loading: false, error: false, subscriptionError: false, networkError: false, data: res.rooms, total: res.total, aggs: res.aggs, statuses: res.statuses })),
           startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0, aggs: null, statuses: [] }),
           catchError((err) => {
@@ -281,15 +338,62 @@ export class Rooms {
     () => this.state().aggs?.vacantCapacity ?? (this.totalBeds() - this.occupiedBeds()),
   );
 
+  // ── Occupancy grid ──────────────────────────────────────────────────────────
+  /**
+   * Rooms grouped by their `floor` value, each a card with status + occupant label.
+   * Rooms with no floor set fall into an "Unassigned" group shown last. Occupant names come
+   * from the rooms payload (`room.occupants`); status is derived from bed counts.
+   */
+  protected readonly floorGroups = computed<FloorGroup[]>(() => {
+    const groups = new Map<string, FloorGroup>();
+    for (const room of this.sorted()) {
+      const raw = room.floor && room.floor !== '—' ? room.floor.trim() : '';
+      const key = raw || '__none__';
+      let g = groups.get(key);
+      if (!g) {
+        g = {
+          key,
+          label: raw ? floorLabel(raw) : 'Unassigned',
+          order: raw ? floorOrder(raw) : Number.POSITIVE_INFINITY,
+          cards: [], available: 0, partial: 0, full: 0,
+        };
+        groups.set(key, g);
+      }
+      let status: RoomCardStatus;
+      if (room.occupied <= 0) { status = 'available'; g.available++; }
+      else if (room.occupied >= room.capacity) { status = 'full'; g.full++; }
+      else { status = 'partial'; g.partial++; }
+      const names = room.occupants ?? [];
+      const label =
+        status === 'available' ? 'Available'
+          : names.length === 0 ? `${room.occupied} occupied`
+            : names[0];
+      const extra = names.length > 1 ? names.length - 1 : 0;
+      const code = raw ? `${titleCase(raw)} - ${room.number}` : room.number;
+      g.cards.push({ room, status, code, label, extra, bg: CARD_BG[status] });
+    }
+    return [...groups.values()].sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+  });
+
+  protected readonly availableRooms = computed(() => this.floorGroups().reduce((n, g) => n + g.available, 0));
+  protected readonly partialRooms = computed(() => this.floorGroups().reduce((n, g) => n + g.partial, 0));
+  protected readonly fullRooms = computed(() => this.floorGroups().reduce((n, g) => n + g.full, 0));
+  protected readonly pctOccupied = computed(() => {
+    const total = this.totalBeds();
+    return total > 0 ? Math.round((this.occupiedBeds() / total) * 100) : 0;
+  });
+  /** Friendly room-type label (Single/Double/…) for the card subtitle. */
+  protected readonly typeLabel = displayLabelFor;
+
   protected readonly totalPages = computed(() => {
     const total = this.state().total;
-    return total > 0 ? Math.ceil(total / PAGE_SIZE) : null;
+    return total > 0 ? Math.ceil(total / ROOMS_LIMIT) : null;
   });
 
   protected readonly hasNextPage = computed(() => {
     const pages = this.totalPages();
     if (pages !== null) return this.page() < pages;
-    return (this.state().data?.length ?? 0) >= PAGE_SIZE;
+    return (this.state().data?.length ?? 0) >= ROOMS_LIMIT;
   });
 
   protected readonly filteredDetail = computed<RoomRenter[] | null>(() => {
@@ -383,6 +487,7 @@ export class Rooms {
     this.form.set({
       id: null,
       number: '',
+      floor: '',
       type: first?.name ?? '',
       capacity: first ? String(first.capacity) : '',
     });
@@ -391,6 +496,7 @@ export class Rooms {
     this.form.set({
       id: r.id,
       number: r.number,
+      floor: r.floor && r.floor !== '—' ? r.floor : '',
       type: r.type,
       capacity: String(r.capacity),
     });
@@ -514,6 +620,7 @@ export class Rooms {
     this.form.set({
       id: null,
       number: `${r.number} (copy)`,
+      floor: r.floor && r.floor !== '—' ? r.floor : '',
       type: r.type,
       capacity: String(r.capacity),
     });
@@ -551,7 +658,7 @@ export class Rooms {
 
   protected save(): void {
     const f = this.form();
-    if (!f || !f.number.trim()) return;
+    if (!f || !f.number.trim() || !f.floor.trim()) return;
 
     if (f.id) {
       // Edit: call API
@@ -564,14 +671,25 @@ export class Rooms {
         .updateRoom(hostelId, f.id, {
           ...(rtId != null && { room_type_id: rtId }),
           capacity: Math.max(0, Number(f.capacity) || 0),
+          floor: f.floor.trim() || null,
         })
-        .pipe(finalize(() => this.saving.set(false)))
         .subscribe({
           next: () => {
-            this.close();
-            this.refresh.update((n) => n + 1);
+            // The updated room propagates to the list read model asynchronously, so wait 1s
+            // before closing the drawer and refetching — otherwise the fresh fetch can still
+            // return the stale row. The button stays in its loading state during the wait.
+            timer(1000)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe(() => {
+                this.saving.set(false);
+                this.close();
+                this.refresh.update((n) => n + 1);
+              });
           },
-          error: () => this.saveError.set('Failed to update room. Please try again.'),
+          error: () => {
+            this.saving.set(false);
+            this.saveError.set('Failed to update room. Please try again.');
+          },
         });
       return;
     }
@@ -587,6 +705,7 @@ export class Rooms {
         room_number: f.number.trim(),
         room_type_id: rtId,
         capacity: Math.max(0, Number(f.capacity) || 0),
+        floor: f.floor.trim() || null,
       })
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({

@@ -4,7 +4,7 @@
   <div class="px-5 sm:px-8">
     <!-- Row 1: logo + inline location search (home/search only) + route actions -->
     <div
-      class="flex items-center justify-between gap-4"
+      class="flex flex-wrap items-center justify-between gap-x-4 xl:flex-nowrap"
       [class.h-16]="!showSearchBar()"
       [class.py-2.5]="showSearchBar()"
     >
@@ -22,12 +22,12 @@
       </div>
 
       @if (showSearchBar()) {
-        <div class="hidden min-w-0 flex-1 justify-center px-4 md:flex">
+        <div class="hidden min-w-0 justify-center md:flex md:order-last md:basis-full md:pb-1 xl:order-none xl:basis-auto xl:flex-1 xl:px-4 xl:pb-0">
           <app-search-bar />
         </div>
       }
 
-      <div class="flex items-center gap-3">
+      <div class="flex shrink-0 items-center gap-3">
         @switch (area()) {
           @case ('seeker') {
             @if (!isHost()) {
