@@ -81,6 +81,8 @@ export class TenantFormDrawer {
   protected readonly form = signal<CheckInForm | null>(null);
   protected readonly saving = signal(false);
   protected readonly formLoading = signal(false);
+  protected readonly transportEnabled = signal(false);
+  protected readonly messEnabled = signal(false);
   protected readonly photoMenuOpen = signal(false);
   protected readonly cameraOpen = signal(false);
   protected readonly avatarUploading = signal(false);
@@ -204,6 +206,8 @@ export class TenantFormDrawer {
 
   private startCheckIn(preselectedRoomId?: string): void {
     this.resetFormChrome();
+    this.transportEnabled.set(false);
+    this.messEnabled.set(false);
     this.roomLoad$.next({ query: '', page: 1, append: false });
     this.form.set(emptyCheckInForm(preselectedRoomId));
   }
@@ -218,7 +222,12 @@ export class TenantFormDrawer {
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (tenant) => {
-          this.form.set(checkInFormFromTenant(tenant));
+          const f = checkInFormFromTenant(tenant);
+          this.form.set(f);
+          this.transportEnabled.set(!!f.transportationCharges && f.transportationCharges !== '0');
+          this.messEnabled.set(
+            (!!f.messCharges && f.messCharges !== '0') || f.messBreakfast || f.messLunch || f.messDinner,
+          );
           this.formLoading.set(false);
           this.roomLoad$.next({ query: '', page: 1, append: false });
         },
@@ -322,6 +331,21 @@ export class TenantFormDrawer {
 
   protected patchBool(key: keyof CheckInForm, value: boolean): void {
     this.form.update((f) => (f ? { ...f, [key]: value } : f));
+  }
+
+  protected onTransportToggle(enabled: boolean): void {
+    this.transportEnabled.set(enabled);
+    if (!enabled) this.patch('transportationCharges', '');
+  }
+
+  protected onMessToggle(enabled: boolean): void {
+    this.messEnabled.set(enabled);
+    if (!enabled) {
+      this.patch('messCharges', '');
+      this.patchBool('messBreakfast', false);
+      this.patchBool('messLunch', false);
+      this.patchBool('messDinner', false);
+    }
   }
 
   protected patchFile(key: 'image' | 'cnicFront' | 'cnicBack', event: Event): void {
@@ -449,6 +473,14 @@ export class TenantFormDrawer {
     if (!f) return;
     if (!isCheckInFormValid(f)) {
       this.submitAttempted.set(true);
+      // Bring the first missing field into view + focus it — otherwise a blank required
+      // field above/below the fold makes "Check in" look like it does nothing.
+      setTimeout(() => {
+        const err = this.panelEl()?.nativeElement.querySelector<HTMLElement>('.text-danger');
+        if (!err) return;
+        err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        err.closest('div')?.querySelector<HTMLElement>('input, textarea')?.focus();
+      });
       return;
     }
     const hostelId = this.store.selected();
