@@ -343,6 +343,10 @@ export class SearchMap {
   /** Listing whose Airbnb-style popup card is open on the map (null = none). */
   protected readonly selected = signal<string | null>(null);
   protected readonly view = signal<'list' | 'map'>('list');
+  /** Extra px to raise the mobile floating List/Map pill so it rests above the footer. */
+  protected readonly footerLift = signal(0);
+  /** Bottom offset (px) for the floating toggle: its resting 24px plus any footer lift. */
+  protected readonly toggleBottom = computed(() => 24 + this.footerLift());
   protected readonly locating = signal(false);
   protected readonly mapError = signal(false);
   private readonly ready = signal(false);
@@ -379,6 +383,37 @@ export class SearchMap {
       this.destroyRef.onDestroy(() =>
         window.removeEventListener('resize', onResize),
       );
+
+      // Lift the mobile floating List/Map pill so it rests above the site footer
+      // instead of overlapping it once the footer scrolls into view (Airbnb-style).
+      // The footer lives in the app shell, so measure it from the document rather
+      // than a viewChild. rAF-throttled to keep the scroll handler cheap.
+      const footer = document.querySelector('app-site-footer');
+      const updateFooterLift = (): void => {
+        if (!footer) return;
+        const lift = Math.max(
+          0,
+          Math.round(window.innerHeight - 12 - footer.getBoundingClientRect().top),
+        );
+        if (lift !== this.footerLift()) this.footerLift.set(lift);
+      };
+      let liftRaf = 0;
+      const scheduleFooterLift = (): void => {
+        if (liftRaf) return;
+        liftRaf = requestAnimationFrame(() => {
+          liftRaf = 0;
+          updateFooterLift();
+        });
+      };
+      updateFooterLift();
+      window.addEventListener('scroll', scheduleFooterLift, { passive: true });
+      window.addEventListener('resize', scheduleFooterLift);
+      this.destroyRef.onDestroy(() => {
+        window.removeEventListener('scroll', scheduleFooterLift);
+        window.removeEventListener('resize', scheduleFooterLift);
+        if (liftRaf) cancelAnimationFrame(liftRaf);
+      });
+
       // Below the breakpoint the pane is display:none until the user taps "Map".
       // Leaflet measures its container at construction, so building it while hidden
       // (0×0) yields a map that paints nothing — defer to the tap instead.

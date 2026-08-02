@@ -1,12 +1,20 @@
 <app-dashboard-layout label="Invoices">
   <div hhActions class="flex items-center gap-2">
     <button
-      hh-button color="primary"
+      hh-button variant="outlined"
       size="sm"
       [disabled]="!filtered().length || state().subscriptionError"
       (click)="exportCsv()"
     >
       <i class="ti ti-download"></i>Export CSV
+    </button>
+    <button
+      hh-button color="primary"
+      size="sm"
+      [disabled]="state().subscriptionError"
+      (click)="openAdd()"
+    >
+      <i class="ti ti-plus"></i>Add invoice
     </button>
   </div>
 
@@ -131,10 +139,12 @@
             <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
             Edit
           </button>
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)">
-            <i class="ti ti-circle-check text-sm text-ok" aria-hidden="true"></i>
-            Mark as paid
-          </button>
+          @if (inv.status !== 'paid') {
+            <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)">
+              <i class="ti ti-circle-check text-sm text-ok" aria-hidden="true"></i>
+              Mark as paid
+            </button>
+          }
           <hh-context-menu-divider />
           <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="deleteInvoice(inv, $event)">
             <i class="ti ti-trash text-sm" aria-hidden="true"></i>
@@ -254,5 +264,12 @@
     <strong>{{ invoiceId(inv) }}</strong> for
     <strong>{{ inv.tenantName }}</strong>. This action cannot be undone.
   </hh-confirm-modal>
+}
+
+@if (addOpen()) {
+  <hh-invoice-form-drawer
+    (saved)="onInvoiceCreated()"
+    (closed)="closeAdd()"
+  />
 }
 </app-dashboard-layout>

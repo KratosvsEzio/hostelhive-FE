@@ -38,6 +38,12 @@
           <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.type }}</p>
         </div>
         <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Floor</p>
+          <p class="mt-1 text-sm font-semibold text-ink-900">
+            @if (room.floor && room.floor !== '—') { {{ room.floor | titlecase }} } @else { — }
+          </p>
+        </div>
+        <div>
           <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Capacity</p>
           <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.capacity }} bed{{ room.capacity !== 1 ? 's' : '' }}</p>
         </div>

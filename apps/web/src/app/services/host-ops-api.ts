@@ -41,6 +41,10 @@ interface ApiRoom {
   room_type?: ApiRoomType | null;
   room_type_id?: number | null;
   created_at?: string | null;
+  floor?: string | number | null;
+  status?: { slug?: string | null } | null;
+  disposition?: { slug?: string | null } | null;
+  renters?: { id?: string | number; name?: string | null }[] | null;
 }
 
 interface ApiAggs {
@@ -167,13 +171,14 @@ function toRoom(r: ApiRoom): Room {
   return {
     id: String(r.id ?? ''),
     number: r.room_number ?? '—',
-    floor: '—',
+    floor: r.floor != null ? String(r.floor) : '—',
     type: r.room_type?.name ?? '—',
     capacity: r.capacity ?? 0,
     occupied: r.current_occupancy ?? r.occupied_count ?? r.renters_count ?? 0,
     rentPerBed: Number(r.room_type?.price ?? 0),
     attachedBath: false,
     createdAt: r.created_at ?? '',
+    occupants: (r.renters ?? []).map((x) => x.name ?? '').filter(Boolean),
   };
 }
 
@@ -419,7 +424,7 @@ export class HostOpsApi {
 
   createRoom(
     hostelId: string,
-    room: { room_number: string; room_type_id: string; capacity: number },
+    room: { room_number: string; room_type_id: string; capacity: number; floor?: string | null },
   ): Observable<unknown> {
     return this.api.post(`/api/host/hostels/${hostelId}/rooms`, { room });
   }
@@ -427,7 +432,7 @@ export class HostOpsApi {
   updateRoom(
     hostelId: string,
     roomId: string,
-    room: { room_type_id?: string; capacity?: number; renter_ids?: number[] },
+    room: { room_type_id?: string; capacity?: number; renter_ids?: number[]; floor?: string | null },
   ): Observable<unknown> {
     return this.api.put(`/api/host/hostels/${hostelId}/rooms/${roomId}`, { room });
   }
@@ -668,8 +673,36 @@ export class HostOpsApi {
       })));
   }
 
+  /**
+   * POST /api/host/hostels/:id/renter_bills — issue a rent bill for a tenant.
+   * `break_down` itemises the total into rent / mess / transport; `amount` is their sum.
+   */
+  createInvoice(
+    hostelId: string,
+    body: {
+      renter_id: string | number;
+      room_id?: string | number;
+      amount: number;
+      issued_date: string;
+      due_date: string;
+      break_down: { rent?: number; mess_charges?: number; transportation_charges?: number };
+      notes?: string;
+    },
+  ): Observable<unknown> {
+    return this.api.post(`/api/host/hostels/${hostelId}/renter_bills`, { renter_bill: body });
+  }
+
   deleteInvoice(hostelId: string, billId: string): Observable<unknown> {
     return this.api.delete(`/api/host/hostels/${hostelId}/renter_bills/${billId}`);
+  }
+
+  /**
+   * PUT /api/host/hostels/:id/renter_bills/:billId/mark_as_paid — settle a renter bill.
+   * (The route nests under the plural `hostels` collection on the current backend, same as
+   * every other renter_bills call here — despite older Swagger showing a singular `hostel`.)
+   */
+  markInvoicePaid(hostelId: string, billId: string): Observable<unknown> {
+    return this.api.put(`/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`, {});
   }
 
   deleteRenter(hostelId: string, renterId: string): Observable<unknown> {

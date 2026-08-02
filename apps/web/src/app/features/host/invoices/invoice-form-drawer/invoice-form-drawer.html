@@ -1,0 +1,152 @@
+@if (form(); as f) {
+  <div
+    class="fixed inset-0 z-40 flex justify-end bg-ink-900/30"
+    (click)="requestClose()"
+    (keydown.escape)="requestClose()"
+    tabindex="-1"
+  >
+    <div
+      #panel
+      class="flex h-full w-full max-w-lg flex-col bg-white shadow-pill"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+      tabindex="-1"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 class="font-display text-lg font-semibold text-ink-900">Add invoice</h2>
+        <button
+          type="button"
+          hh-button variant="icon" size="sm"
+          (click)="requestClose()"
+          aria-label="Close"
+        >
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-5">
+        <div class="space-y-5">
+
+          <!-- Tenant -->
+          <div class="flex items-center gap-3">
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Tenant</p>
+            <div class="flex-1 border-t border-ink-100"></div>
+          </div>
+          <div>
+            <p class="mb-1 block text-xs font-medium text-ink-600">Tenant *</p>
+            <hh-dropdown
+              variant="field"
+              placeholder="Select a tenant"
+              [options]="tenantDropdownOptions()"
+              [value]="f.renterId || null"
+              [searchable]="true"
+              searchPlaceholder="Search tenants…"
+              [loading]="tenantLoading()"
+              [hasMore]="tenantHasMore()"
+              emptyLabel="No tenants found."
+              (valueChange)="onTenantValueChange($event)"
+              (searchChange)="onTenantSearch($event)"
+              (loadMore)="onLoadMoreTenants()"
+              (opened)="onTenantOpened()"
+            />
+            @if (fieldError('renterId')) {
+              <p class="mt-1 flex items-center gap-1 text-xs text-danger">
+                <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                {{ fieldError('renterId') }}
+              </p>
+            }
+            @if (f.roomId && f.roomNumber && f.roomNumber !== '—') {
+              <p class="mt-1 text-xs text-ink-400">Room {{ f.roomNumber }}</p>
+            }
+          </div>
+
+          <!-- Dates -->
+          <div class="flex items-center gap-3">
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Dates</p>
+            <div class="flex-1 border-t border-ink-100"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <hh-date-picker
+              label="Issue date *"
+              [value]="f.issuedDate"
+              [error]="fieldError('issuedDate')"
+              (valueChange)="patch('issuedDate', $event ?? '')"
+            />
+            <hh-date-picker
+              label="Due date *"
+              [value]="f.dueDate"
+              [error]="fieldError('dueDate')"
+              (valueChange)="patch('dueDate', $event ?? '')"
+            />
+          </div>
+
+          <!-- Charges -->
+          <div class="flex items-center gap-3">
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Charges</p>
+            <div class="flex-1 border-t border-ink-100"></div>
+          </div>
+          <div class="space-y-3">
+            <hh-input
+              label="Rent"
+              type="number"
+              placeholder="5000"
+              [value]="f.rent"
+              (valueChange)="patch('rent', $event)"
+            />
+            <div class="grid grid-cols-2 gap-3">
+              <hh-input
+                label="Mess charges"
+                type="number"
+                placeholder="3000"
+                [value]="f.messCharges"
+                (valueChange)="patch('messCharges', $event)"
+              />
+              <hh-input
+                label="Transport charges"
+                type="number"
+                placeholder="500"
+                [value]="f.transportationCharges"
+                (valueChange)="patch('transportationCharges', $event)"
+              />
+            </div>
+            @if (totalError) {
+              <p class="flex items-center gap-1 text-xs text-danger">
+                <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                {{ totalError }}
+              </p>
+            }
+            <p class="text-xs text-ink-400">Charges are prefilled from the tenant's record — adjust as needed.</p>
+          </div>
+
+          <!-- Note -->
+          <hh-input
+            label="Note"
+            placeholder="e.g. Pay on or before the due date."
+            [value]="f.notes"
+            (valueChange)="patch('notes', $event)"
+          />
+
+          <!-- Total -->
+          <div class="flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
+            <span class="font-semibold text-ink-700">Total due</span>
+            <span class="text-xl font-bold text-brand-700">Rs {{ total() | number }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+        <div class="flex gap-3">
+          <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="requestClose()">Cancel</button>
+          <button hh-button color="primary" class="flex-1" [loading]="saving()" (click)="save()">
+            Create invoice
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
