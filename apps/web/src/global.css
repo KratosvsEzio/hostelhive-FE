@@ -302,8 +302,32 @@ hh-search-map {
 }
 .hh-rich-wrap .NgxEditor__Content {
   min-height: var(--editor-min-h, 120px);
+  /* Cap growth and scroll the overflow — long descriptions no longer push the page. */
+  max-height: var(--editor-max-h, 320px);
+  overflow-y: auto;
   line-height: 1.6;
   padding: 8px 14px;
+  /* Slim, lightly-tinted scrollbar (matches .hh-scroll-thin), no arrow buttons. */
+  scrollbar-width: thin;
+  scrollbar-color: #cfcfcf transparent;
+}
+.hh-rich-wrap .NgxEditor__Content::-webkit-scrollbar {
+  width: 6px;
+}
+.hh-rich-wrap .NgxEditor__Content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hh-rich-wrap .NgxEditor__Content::-webkit-scrollbar-thumb {
+  background-color: #cfcfcf;
+  border-radius: 9999px;
+}
+.hh-rich-wrap .NgxEditor__Content::-webkit-scrollbar-thumb:hover {
+  background-color: #a3a3a3;
+}
+.hh-rich-wrap .NgxEditor__Content::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }
 .hh-rich-wrap:focus-within .NgxEditor__MenuBar,
 .hh-rich-wrap:focus-within .NgxEditor {
@@ -607,6 +631,12 @@ hh-search-map {
   background: #ededed;
   border-radius: 16px 16px 0 0;
   overflow: hidden;
+}
+/* Contain Leaflet's internal z-indexes (panes 200–700, controls up to 1000) inside the map
+   container so the map never paints over app chrome — modals (z-50), dropdowns, the sticky
+   header. `isolation` opens a stacking context without changing the map's own paint order. */
+.leaflet-container {
+  isolation: isolate;
 }
 /* Leaflet ships `.leaflet-container .leaflet-marker-pane img { width: auto }`, which both
    out-specifies a plain `.hh-mapcard__media img` and lands later in the bundle — the photo

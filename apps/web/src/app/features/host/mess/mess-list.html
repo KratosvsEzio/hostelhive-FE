@@ -261,70 +261,12 @@
       </div>
 
       <div class="flex flex-1 flex-col justify-end p-5">
-        <div class="flex flex-col" style="aspect-ratio: 600/207">
-          <div class="flex flex-1">
-            <!-- Y-axis labels -->
-            <div class="relative mr-2 w-10 shrink-0">
-              @for (tick of spendChart().ticks; track tick.value) {
-                <span
-                  class="absolute right-0 -translate-y-1/2 text-right text-[10px] leading-none text-ink-400"
-                  [style.bottom]="tick.bottomPct + '%'"
-                >{{ tick.label }}</span>
-              }
-            </div>
-
-            <!-- Bar area -->
-            <div
-              class="relative flex flex-1 items-end"
-              [class]="chartMode() === 'month' ? 'gap-2 sm:gap-3' : 'gap-px'"
-            >
-              <!-- Gridlines -->
-              @for (tick of spendChart().ticks; track tick.value) {
-                <div
-                  class="pointer-events-none absolute inset-x-0 border-t border-ink-100"
-                  [style.bottom]="tick.bottomPct + '%'"
-                ></div>
-              }
-
-              <!-- Bars -->
-              @for (b of spendChart().bars; track $index; let first = $first; let last = $last) {
-                <div class="group relative flex h-full flex-1 flex-col justify-end">
-                  <!-- Tooltip -->
-                  @if (b.value > 0) {
-                    <div
-                      class="pointer-events-none absolute z-10 hidden w-28 group-hover:block"
-                      [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
-                      [style.bottom]="'calc(' + b.pct + '% + 14px)'"
-                    >
-                      <div class="rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
-                        <p class="text-[11px] font-semibold text-white">{{ b.label }}</p>
-                        <p class="text-[11px] text-ink-300">Rs {{ b.value | number }}</p>
-                      </div>
-                      <div
-                        class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
-                        [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
-                      ></div>
-                    </div>
-                  }
-                  <!-- Bar itself -->
-                  <div
-                    class="min-h-0 rounded-t-sm bg-brand-400 transition-colors group-hover:bg-brand-500"
-                    [style.height.%]="b.pct"
-                  ></div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- X-axis labels -->
-          <div class="mt-1 ml-12 flex justify-between text-[10px] text-ink-400">
-            @for (b of spendChart().bars; track $index; let i = $index) {
-              <span [class.invisible]="chartMode() === 'day' && i % 5 !== 0 && i !== spendChart().bars.length - 1">
-                {{ b.label }}
-              </span>
-            }
-          </div>
-        </div>
+        <hh-bar-chart
+          [bars]="spendBars()"
+          [yTicks]="spendYTicks()"
+          [barGap]="spendBarGap()"
+          [xLabelStep]="spendXLabelStep()"
+        />
       </div>
     </div>
 

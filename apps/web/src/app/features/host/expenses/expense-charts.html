@@ -1,42 +1,19 @@
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
   <!-- Monthly totals (bar) -->
   <hh-card [allowOverflow]="true">
-    <div class="mb-4">
-      <h2 class="font-display text-base font-semibold text-ink-900">Monthly expenses</h2>
-      <p class="text-xs text-ink-400">Last 12 months · Rs {{ barTotal() | number }}</p>
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h2 class="font-display text-base font-semibold text-ink-900">Monthly expenses</h2>
+        <p class="text-xs text-ink-400">Last 12 months · Rs {{ barTotal() | number }}</p>
+      </div>
     </div>
 
-    <div class="flex h-40 items-end gap-1.5">
-      @for (b of bars(); track $index; let first = $first; let last = $last) {
-        <div class="group relative flex h-full flex-1 flex-col justify-end">
-          <!-- Tooltip -->
-          <div
-            class="pointer-events-none absolute z-10 hidden w-32 group-hover:block"
-            [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
-            [style.bottom]="'calc(' + b.pct + '% + 14px)'"
-          >
-            <div class="rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
-              <p class="text-[11px] font-semibold text-white">{{ b.label }}</p>
-              <p class="text-[11px] font-medium text-brand-200">Rs {{ b.value | number }}</p>
-            </div>
-          </div>
-          <div
-            class="rounded-t bg-brand-500 transition group-hover:bg-brand-600"
-            [style.height.%]="b.pct"
-          ></div>
-        </div>
-      }
-    </div>
-    <div class="mt-2 flex justify-between text-[10px] text-ink-400">
-      @for (m of monthLabels; track $index) {
-        <span>{{ m }}</span>
-      }
-    </div>
+    <hh-bar-chart [bars]="bars()" [yTicks]="yTicksDesc()" />
   </hh-card>
 
-  <!-- By type (line + area) -->
+  <!-- By type (multi-series line) -->
   <hh-card [allowOverflow]="true">
-    <div class="mb-4 flex items-center justify-between gap-3">
+    <div class="mb-4 flex items-start justify-between gap-3">
       <div>
         <h2 class="font-display text-base font-semibold text-ink-900">Expenses by type</h2>
         <p class="text-xs text-ink-400">Last 12 months · Rs {{ lineTotal() | number }}</p>
@@ -49,37 +26,104 @@
       />
     </div>
 
-    @let l = line();
-    <svg
-      [attr.viewBox]="'0 0 ' + l.width + ' ' + l.height"
-      class="h-40 w-full"
-      preserveAspectRatio="none"
-      role="img"
-      aria-label="Expenses by type over the last 12 months"
-    >
-      @for (gy of l.gridY; track gy) {
-        <line
-          [attr.x1]="0" [attr.x2]="l.width" [attr.y1]="gy" [attr.y2]="gy"
-          stroke="#E6E6E6" stroke-width="1" vector-effect="non-scaling-stroke"
-        />
-      }
-      <path [attr.d]="l.area" fill="#F36E21" fill-opacity="0.12" />
-      <polyline
-        [attr.points]="l.points"
-        fill="none" stroke="#F36E21" stroke-width="2.5"
-        stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"
-      />
-      @for (d of l.dots; track $index) {
-        <circle
-          [attr.cx]="d.x" [attr.cy]="d.y" r="2.5"
-          fill="#fff" stroke="#F36E21" stroke-width="2" vector-effect="non-scaling-stroke"
-        />
-      }
-    </svg>
-    <div class="mt-2 flex justify-between text-[10px] text-ink-400">
-      @for (m of monthLabels; track $index) {
-        <span>{{ m }}</span>
-      }
+    <div class="flex gap-2">
+      <!-- shared y-axis (identical to the bar card) -->
+      <div class="flex h-40 shrink-0 flex-col justify-between py-2 text-right text-[10px] leading-none text-ink-400">
+        @for (t of yTicksDesc(); track $index) {
+          <span>{{ t.label }}</span>
+        }
+      </div>
+
+      <div class="min-w-0 flex-1">
+        @let c = chart();
+        @let hs = hoverState();
+        <div class="relative">
+          <svg
+            [attr.viewBox]="'0 0 ' + c.width + ' ' + c.height"
+            class="h-40 w-full"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Expenses by type over the last 12 months"
+            (mouseleave)="hoveredDotIndex.set(null)"
+          >
+            <!-- Gridlines -->
+            @for (gy of c.gridY; track gy) {
+              <line
+                [attr.x1]="0" [attr.x2]="c.width" [attr.y1]="gy" [attr.y2]="gy"
+                stroke="#E6E6E6" stroke-width="1" vector-effect="non-scaling-stroke"
+              />
+            }
+
+            <!-- Vertical crosshair on hover -->
+            @if (hs) {
+              <line
+                [attr.x1]="c.xPositions[hs.idx]" [attr.x2]="c.xPositions[hs.idx]"
+                [attr.y1]="0" [attr.y2]="c.height"
+                stroke="#A3A3A3" stroke-opacity="0.4" stroke-width="1"
+                stroke-dasharray="4 3" vector-effect="non-scaling-stroke"
+              />
+            }
+
+            <!-- Area fill (single series only) -->
+            @if (c.series.length === 1) {
+              <path [attr.d]="c.series[0].area" [attr.fill]="c.series[0].color" fill-opacity="0.12" />
+            }
+
+            <!-- Lines + dots per series -->
+            @for (s of c.series; track s.key) {
+              <polyline
+                [attr.points]="s.points"
+                fill="none" [attr.stroke]="s.color" stroke-width="2"
+                stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"
+              />
+              @if (hs) {
+                <circle
+                  [attr.cx]="s.dots[hs.idx].x" [attr.cy]="s.dots[hs.idx].y" r="4"
+                  fill="#fff" [attr.stroke]="s.color" stroke-width="2"
+                  vector-effect="non-scaling-stroke"
+                />
+              }
+            }
+
+            <!-- Invisible hit zones -->
+            @for (x of c.xPositions; track $index) {
+              <rect
+                [attr.x]="x - (c.width / c.xPositions.length / 2)"
+                [attr.y]="0"
+                [attr.width]="c.width / c.xPositions.length"
+                [attr.height]="c.height"
+                fill="transparent"
+                (mouseenter)="hoveredDotIndex.set($index)"
+              />
+            }
+          </svg>
+
+          <!-- Tooltip -->
+          @if (hs && hs.items.length) {
+            <div
+              class="pointer-events-none absolute z-10 -translate-x-1/2"
+              [style.left]="hs.xPct + '%'"
+              [style.bottom]="hs.bottomPct + '%'"
+            >
+              <div class="whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
+                <p class="mb-1 text-[11px] font-semibold text-white">{{ hs.monthLabel }}</p>
+                @for (item of hs.items; track item.label) {
+                  <div class="flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 shrink-0 rounded-full" [style.background]="item.color"></span>
+                    <span class="text-[11px] text-ink-300">{{ item.label }}</span>
+                    <span class="ml-auto pl-4 text-[11px] font-medium text-white">Rs {{ item.value | number }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        <div class="mt-2 flex justify-between text-[10px] text-ink-400">
+          @for (m of c.monthLabels; track $index) {
+            <span>{{ m }}</span>
+          }
+        </div>
+      </div>
     </div>
   </hh-card>
 </div>

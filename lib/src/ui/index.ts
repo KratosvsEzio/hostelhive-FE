@@ -39,3 +39,4 @@ export * from './lib/global-filter/global-filter';
 export * from './lib/divider/divider';
 export * from './lib/link/link';
 export * from './lib/donut/donut';
+export * from './lib/bar-chart/bar-chart';

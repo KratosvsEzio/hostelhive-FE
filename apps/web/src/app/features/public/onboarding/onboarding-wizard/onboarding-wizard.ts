@@ -15,7 +15,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { ApiError, AttachmentLabel, HostelInput, OfferCategory } from '@hostelhive/data-access';
+import { ApiError, AttachmentLabel, HostelInput, iconForSlug, OfferCategory } from '@hostelhive/data-access';
 import { HostelsApi, ImageUploadService, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import {
@@ -887,6 +887,10 @@ export class OnboardingWizard {
 
   protected categoryIcon(name: string): string {
     return CATEGORY_ICONS[name.trim().toLowerCase()] ?? 'ti-tag';
+  }
+
+  protected offerIcon(slug: string): string {
+    return iconForSlug(slug);
   }
 
   protected toggleAmenity(id: string): void {

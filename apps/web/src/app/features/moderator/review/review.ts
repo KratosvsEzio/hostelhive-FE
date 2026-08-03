@@ -16,7 +16,7 @@ import {
   toSignal,
 } from '@angular/core/rxjs-interop';
 import { catchError, last, map, of, startWith, switchMap, tap } from 'rxjs';
-import { HostelInput, OfferCategory } from '@hostelhive/data-access';
+import { HostelInput, iconForSlug, OfferCategory } from '@hostelhive/data-access';
 import {
   DocumentsApi,
   HostelsApi,
@@ -57,8 +57,6 @@ function toLabel(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
-/** Amenity-category name → Tabler icon (the catalogue has no icon field). Matched lowercase;
- *  unmapped categories fall back to a neutral tag. */
 const CATEGORY_ICONS: Record<string, string> = {
   'heating and cooling': 'ti-temperature',
   'bedroom and laundry': 'ti-bed',
@@ -776,9 +774,11 @@ export class Review {
       0,
     );
   }
-  /** Tabler icon for an amenity category (by name); a neutral tag when unmapped. */
   protected categoryIcon(name: string): string {
     return CATEGORY_ICONS[name.trim().toLowerCase()] ?? 'ti-tag';
+  }
+  protected offerIcon(slug: string): string {
+    return iconForSlug(slug);
   }
 
   /** Persist all edits — core fields + amenities + rooms — to the hostel in one request

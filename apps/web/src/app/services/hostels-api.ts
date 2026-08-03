@@ -206,6 +206,8 @@ export interface ExpenseListItem {
   notes: string;
   receiptUrl: string | null;
   itemCount: number;
+  /** ISO datetime the expense record was created (`created_at`). */
+  createdAt: string;
 }
 
 /** A line item on an expense's detail view. */
@@ -238,6 +240,18 @@ export interface ExpenseDetail {
   updatedAt: string;
 }
 
+/** One point in the monthly-expense trend: `month` is 'YYYY-MM', `value` the total spend. */
+export interface ExpenseMonthlyPoint {
+  month: string;
+  value: number;
+}
+
+/** Server-side per-type monthly breakdown from `expense_type_monthly_summary`. */
+export interface ExpenseTypeMonthlySummary {
+  months: string[];
+  series: { expenseType: string; data: { month: string; amount: number }[] }[];
+}
+
 interface RawExpenseDetail {
   id?: string | number;
   expense_type?: string;
@@ -264,6 +278,7 @@ interface RawExpense {
   expense_type?: string;
   amount?: number | string;
   expense_date?: string;
+  created_at?: string;
   notes?: string | null;
   receipt?: { url?: string } | null;
   receipts?: { url?: string }[] | null;
@@ -506,6 +521,45 @@ export class HostelsApi {
   }
 
   /**
+   * GET /api/host/hostels/:id/expenses/expense_monthly_summary — total spend per month for the
+   * trailing ~12 months. Verified shape: `{ aggs: [{ month: 'YYYY-MM', amount }], success }`.
+   */
+  expenseMonthlySummary(hostelId: string): Observable<ExpenseMonthlyPoint[]> {
+    return this.api
+      .get<{ aggs?: { month?: string; amount?: number | string }[] }>(
+        `/api/host/hostels/${hostelId}/expenses/expense_monthly_summary`,
+      )
+      .pipe(
+        map((r) =>
+          (r.aggs ?? []).map((a) => ({ month: a.month ?? '', value: Number(a.amount) || 0 })),
+        ),
+      );
+  }
+
+  /**
+   * GET /api/host/hostels/:id/expenses/expense_type_monthly_summary — per-type monthly breakdown
+   * for the trailing ~13 months. Shape: `{ aggs: { months, series: [{ expense_type, data }] } }`.
+   */
+  expenseTypeMonthlySummary(hostelId: string): Observable<ExpenseTypeMonthlySummary> {
+    return this.api
+      .get<{
+        aggs?: {
+          months?: string[];
+          series?: { expense_type?: string; data?: { month?: string; amount?: number | string }[] }[];
+        };
+      }>(`/api/host/hostels/${hostelId}/expenses/expense_type_monthly_summary`)
+      .pipe(
+        map((r) => ({
+          months: r.aggs?.months ?? [],
+          series: (r.aggs?.series ?? []).map((s) => ({
+            expenseType: s.expense_type ?? '',
+            data: (s.data ?? []).map((d) => ({ month: d.month ?? '', amount: Number(d.amount) || 0 })),
+          })),
+        })),
+      );
+  }
+
+  /**
    * GET /api/host/hostels/:id/expenses — all of the hostel's expenses. Verified shape:
    * `{ expenses: [{ id, expense_type, amount, expense_date, … }], pagination }`.
    * Type + date-range filtering is applied client-side — the endpoint's `f[...]` params
@@ -527,6 +581,7 @@ export class HostelsApi {
               notes: e.notes ?? '',
               receiptUrl: e.receipt?.url ?? e.receipts?.[0]?.url ?? e.receipt_url ?? null,
               itemCount: (e.expense_items ?? []).length,
+              createdAt: e.created_at ?? '',
             })),
             total: r.pagination?.total_count ?? rows.length,
           };

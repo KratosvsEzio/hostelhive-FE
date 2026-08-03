@@ -47,6 +47,8 @@
       [showActions]="true"
       [actionActive]="menuActionActive"
       [rowClickable]="true"
+      [sort]="sortState()"
+      (sortChange)="onSort($event)"
       (rowClick)="goToDetail($any($event))"
       (rowAction)="onRowAction($event)"
     />

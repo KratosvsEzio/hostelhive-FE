@@ -158,50 +158,41 @@
       <p class="text-sm text-ink-400">Amenity catalogue unavailable.</p>
     } @else {
       <div class="space-y-4">
-        @for (cat of catalog(); track cat.id; let i = $index) {
-          @if (i === 0 || showAll()) {
-            <div>
-              <div class="mb-1.5 flex items-center gap-2">
-                <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
-                @if (catSelectedCount(cat); as c) {
-                  <span class="text-[11px] font-semibold text-brand-600">{{ c }} selected</span>
-                } @else {
-                  <span class="text-[11px] font-medium text-ink-400">{{ cat.offers.length }}</span>
-                }
-              </div>
-              <div class="flex flex-wrap gap-1.5">
-                @for (o of cat.offers; track o.id) {
-                  <button
-                    hh-button variant="outlined" size="sm"
-                    type="button"
-                    (click)="toggleOffer(o.id)"
-                    [attr.aria-pressed]="isOfferSelected(o.id)"
-                    [class]="
-                      isOfferSelected(o.id)
-                        ? 'border-brand-500 bg-brand-50 text-brand-700'
-                        : 'border-ink-200 text-ink-600 hover:border-ink-400'
-                    "
-                  >
-                    <i class="ti text-[11px]" [class]="isOfferSelected(o.id) ? 'ti-check' : 'ti-plus'" aria-hidden="true"></i>{{ o.name }}
-                  </button>
-                }
-              </div>
+        @for (cat of catalog(); track cat.id) {
+          <div>
+            <div class="mb-2 flex items-center gap-2">
+              <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
+              @if (catSelectedCount(cat); as c) {
+                <span class="text-[11px] font-semibold text-brand-600">{{ c }} selected</span>
+              }
             </div>
-          }
+            <div class="flex flex-wrap gap-2">
+              @for (o of cat.offers; track o.id) {
+                <button
+                  type="button"
+                  class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition"
+                  [class]="
+                    isOfferSelected(o.id)
+                      ? 'border-brand-200 bg-brand-50 text-brand-800'
+                      : 'border-ink-200 bg-white text-ink-700 hover:border-ink-300'
+                  "
+                  (click)="toggleOffer(o.id)"
+                  [attr.aria-pressed]="isOfferSelected(o.id)"
+                >
+                  <i class="ti shrink-0 text-base" [class]="offerIcon(o.slug)" aria-hidden="true"></i>
+                  <span class="text-left">{{ o.name }}</span>
+                  <i
+                    class="ti shrink-0 text-lg"
+                    [class]="isOfferSelected(o.id) ? 'ti-circle-check-filled text-brand-600' : 'ti-circle text-ink-300'"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              }
+            </div>
+          </div>
         }
       </div>
-      @if (catalog().length > 1) {
-        <button
-          hh-button variant="text" size="sm"
-          type="button"
-          class="mt-2"
-          (click)="toggleShowAll()"
-        >
-          {{ showAll() ? 'Show less' : 'Show more' }}
-          <i class="ti text-base" [class]="showAll() ? 'ti-chevron-up' : 'ti-chevron-down'" aria-hidden="true"></i>
-        </button>
-      }
     }
   </div>
 

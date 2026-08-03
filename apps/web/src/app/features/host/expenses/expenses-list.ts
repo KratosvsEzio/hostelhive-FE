@@ -24,6 +24,7 @@ import {
   EmptyState,
   ErrorState,
   Skeleton,
+  SortState,
 } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NotificationService } from '@core/notification.service';
@@ -159,13 +160,20 @@ export class ExpensesList {
   protected readonly menuOpenId = signal<string | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
 
-  /** Type + date-range filter (and optimistic deletes), applied client-side. */
+  /** Table sort — Amount, Date and Created-at are sortable; defaults to newest-created first. */
+  protected readonly sortState = signal<SortState | null>({ key: 'createdAt', dir: 'desc' });
+  protected onSort(s: SortState | null): void {
+    this.sortState.set(s);
+  }
+
+  /** Type + date-range filter (and optimistic deletes), then the active sort — all client-side. */
   protected readonly items = computed(() => {
     const type = this.typeFilter();
     const from = this.fromDate();
     const to = this.toDate();
     const deleted = this.deletedIds();
-    return this.allItems().filter((e) => {
+    const sort = this.sortState();
+    const filtered = this.allItems().filter((e) => {
       if (deleted.has(e.id)) return false;
       if (type && e.expenseType !== type) return false;
       const day = (e.date || '').slice(0, 10); // 'yyyy-MM-dd' prefix of the ISO date
@@ -173,6 +181,19 @@ export class ExpensesList {
       if (to && day > to) return false;
       return true;
     });
+    if (!sort) return filtered;
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    // Dates parse to Date so the response's mixed UTC/offset ISO strings compare chronologically
+    // (lexicographic would misorder `+05:00` vs `Z`); amount compares numerically.
+    const compare = (a: ExpenseListItem, b: ExpenseListItem): number => {
+      switch (sort.key) {
+        case 'amount': return a.amount - b.amount;
+        case 'date': return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case 'createdAt': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        default: return 0;
+      }
+    };
+    return [...filtered].sort((a, b) => dir * compare(a, b));
   });
 
   constructor() {

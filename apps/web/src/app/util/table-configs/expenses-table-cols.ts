@@ -7,6 +7,11 @@ function fmtDate(iso: string): string {
   return Number.isNaN(d.getTime()) ? iso || '—' : format(d, 'd MMM yyyy');
 }
 
+function fmtDateTime(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso || '—' : format(d, 'd MMM yyyy, h:mm a');
+}
+
 /** "staff_salaries" → "Staff salaries" — fallback when a slug isn't in the options map. */
 function titleCase(slug: string): string {
   return slug ? slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, ' ') : '';
@@ -30,9 +35,11 @@ export function expensesTableCols(typeLabels: Record<string, string>): ColumnDef
       } satisfies CellDef),
     },
     {
-      key: 'date',
-      label: 'Date',
-      cell: (r) => ({ kind: 'text', value: fmtDate((r as ExpenseListItem).date), class: 'text-ink-600' } satisfies CellDef),
+      key: 'amount',
+      label: 'Amount',
+      align: 'right',
+      sortable: true,
+      cell: (r) => ({ kind: 'currency', amount: (r as ExpenseListItem).amount } satisfies CellDef),
     },
     {
       key: 'receipt',
@@ -43,10 +50,16 @@ export function expensesTableCols(typeLabels: Record<string, string>): ColumnDef
           : ({ kind: 'text', value: '—', class: 'text-ink-400' } satisfies CellDef),
     },
     {
-      key: 'amount',
-      label: 'Amount',
-      align: 'right',
-      cell: (r) => ({ kind: 'currency', amount: (r as ExpenseListItem).amount } satisfies CellDef),
+      key: 'date',
+      label: 'Date',
+      sortable: true,
+      cell: (r) => ({ kind: 'text', value: fmtDate((r as ExpenseListItem).date), class: 'text-ink-600' } satisfies CellDef),
+    },
+    {
+      key: 'createdAt',
+      label: 'Created at',
+      sortable: true,
+      cell: (r) => ({ kind: 'text', value: fmtDateTime((r as ExpenseListItem).createdAt), class: 'text-xs text-ink-500' } satisfies CellDef),
     },
   ];
 }

@@ -10,7 +10,7 @@ import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { format } from 'date-fns';
-import { Button, ConfirmModal, EmptyState, TabItem, Tabs } from '@hostelhive/ui';
+import { BarChart, BarChartBar, BarChartTick, Button, ConfirmModal, EmptyState, TabItem, Tabs } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DailyMealConfirmation, GroceryExpenseStat, HostelsApi, HostPropertyStore, MessOverviewCards } from '@services';
 import { MessService } from './mess.service';
@@ -143,7 +143,7 @@ function buildSpendChart(
 @Component({
   selector: 'hh-mess-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, Button, ConfirmModal, EmptyState, Tabs],
+  imports: [DecimalPipe, RouterLink, DashboardLayout, BarChart, Button, ConfirmModal, EmptyState, Tabs],
   templateUrl: './mess-list.html',
 })
 export class MessList {
@@ -277,7 +277,7 @@ export class MessList {
     { initialValue: [] as GroceryExpenseStat[] },
   );
 
-  protected readonly spendChart = computed(() => {
+  private readonly spendChart = computed(() => {
     const data = this.spendStats();
     const mode = this.chartMode();
     const points: SpendPoint[] = data.map((d) => ({
@@ -289,6 +289,20 @@ export class MessList {
     }));
     return buildSpendChart(points);
   });
+
+  protected readonly spendBars = computed<BarChartBar[]>(() => this.spendChart().bars);
+
+  protected readonly spendYTicks = computed<BarChartTick[]>(() =>
+    [...this.spendChart().ticks].reverse().map((t) => ({ label: t.label })),
+  );
+
+  protected readonly spendBarGap = computed(() =>
+    this.chartMode() === 'month' ? 'gap-2 sm:gap-3' : 'gap-px',
+  );
+
+  protected readonly spendXLabelStep = computed(() =>
+    this.chartMode() === 'day' ? 5 : 1,
+  );
 
   protected readonly removePending = signal<string | null>(null);
 
