@@ -160,7 +160,7 @@
               ></div>
             }
             @for (
-              b of bars();
+              b of revenueBarsScaled();
               track b.month;
               let first = $first;
               let last = $last
@@ -282,7 +282,7 @@
                 [style.bottom]="tick.bottomPct + '%'"
               ></div>
             }
-            @for (b of tenantBars(); track b.month; let first = $first; let last = $last) {
+            @for (b of movementBarsScaled(); track b.month; let first = $first; let last = $last) {
               <div class="group relative flex h-full flex-1 items-end gap-0.5">
                 <div
                   class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"

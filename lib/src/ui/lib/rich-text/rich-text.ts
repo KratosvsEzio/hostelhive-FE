@@ -112,7 +112,11 @@ const EMOJIS = [
   },
   template: `
     @if (isBrowser) {
-      <div class="hh-rich-wrap" [style.--editor-min-h.px]="minHeight()">
+      <div
+        class="hh-rich-wrap"
+        [style.--editor-min-h.px]="minHeight()"
+        [style.--editor-max-h.px]="maxHeight()"
+      >
         <ngx-editor-menu [editor]="editor" [toolbar]="toolbar" />
         <ngx-editor
           [editor]="editor"
@@ -162,6 +166,8 @@ export class RichText {
   readonly placeholder = input('');
   /** Minimum editor height in px. */
   readonly minHeight = input(120);
+  /** Maximum editor height in px before the content area scrolls. */
+  readonly maxHeight = input(320);
   /** Emits the HTML string on every edit. */
   readonly valueChange = output<string>();
 

@@ -1,5 +1,7 @@
 import { inject } from '@angular/core';
-import { Route } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { CanActivateFn, Route, Router, UrlTree } from '@angular/router';
+import { filter, map, take } from 'rxjs';
 
 import { HostLayout } from '@layout/host-shell/host-shell';
 
@@ -30,15 +32,35 @@ import { HostPropertyStore } from '@services';
 
 import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
+/**
+ * `/host` root: wait for the hostel list to load, then land on the selected hostel's dashboard —
+ * or the create-hostel page only when the host genuinely has none. Reading the store synchronously
+ * (as a plain redirectTo did) sent hosts with hostels to create-new before `load()` had resolved.
+ */
+const hostRootRedirect: CanActivateFn = () => {
+  const store = inject(HostPropertyStore);
+  const router = inject(Router);
+
+  const target = (): UrlTree => {
+    const props = store.properties();
+    if (!props.length) return router.parseUrl('/host/hostels/new');
+    const sel = store.selected();
+    const id = sel && props.some((p) => p.id === sel) ? sel : props[0].id;
+    return router.parseUrl(`/host/${id}`);
+  };
+
+  if (store.loaded()) return target();
+  store.load();
+  return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(target));
+};
+
 export const HOST_ROUTES: Route[] = [
   { path: 'hostels/new', component: NewHostel, title: 'New hostel — HostelHive' },
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: () => {
-      const id = inject(HostPropertyStore).selected();
-      return id ? `/host/${id}` : '/host/hostels/new';
-    },
+    canActivate: [hostRootRedirect],
+    children: [],
   },
   {
     path: ':hostelId',

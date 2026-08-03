@@ -16,6 +16,7 @@ import {
   HostelDetail,
   HostelEnumOption,
   HostelInput,
+  iconForSlug,
   OfferCategory,
 } from '@hostelhive/data-access';
 import {
@@ -415,6 +416,9 @@ export class HostelForm {
   }
   protected categoryIcon(name: string): string {
     return CATEGORY_ICONS[name.trim().toLowerCase()] ?? 'ti-tag';
+  }
+  protected offerIcon(slug: string): string {
+    return iconForSlug(slug);
   }
 
   // ── room types ──

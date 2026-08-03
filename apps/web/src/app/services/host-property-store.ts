@@ -35,6 +35,9 @@ export class HostPropertyStore {
 
   readonly properties = signal<PropertyEntry[]>([]);
   readonly selected = signal<string>(this.restore() ?? '');
+  /** True once a `load()` has resolved (success or failure) — lets the `/host` root redirect
+   *  wait for the real hostel list instead of guessing from an empty selection. */
+  readonly loaded = signal(false);
 
   // `undefined` until the listings load (or when the host has none) — the `[0]`
   // fallback lies to the type system otherwise, so annotate the honest type.
@@ -65,20 +68,29 @@ export class HostPropertyStore {
    */
   load(): void {
     this.loadSub?.unsubscribe();
-    this.loadSub = this.api.listings().subscribe((data) => {
-      const entries: PropertyEntry[] = data.listings.map((l) => ({
-        id: l.id,
-        name: l.name,
-        status: l.status,
-        area: l.area,
-        city: l.city,
-        gender: l.gender,
-      }));
-      this.properties.set(entries);
-      const saved = this.selected();
-      if (!saved || !entries.some((p) => p.id === saved)) {
-        this.selected.set(entries[0]?.id ?? '');
-      }
+    this.loadSub = this.api.listings().subscribe({
+      next: (data) => {
+        const entries: PropertyEntry[] = data.listings.map((l) => ({
+          id: l.id,
+          name: l.name,
+          status: l.status,
+          area: l.area,
+          city: l.city,
+          gender: l.gender,
+        }));
+        this.properties.set(entries);
+        const saved = this.selected();
+        if (!saved || !entries.some((p) => p.id === saved)) {
+          // Persist the auto-picked hostel so a reload (or the first post-login /host click)
+          // resolves it instantly, without waiting for another load.
+          const next = entries[0]?.id ?? '';
+          if (next) this.setProperty(next);
+          else this.selected.set('');
+        }
+        this.loaded.set(true);
+      },
+      // Still mark loaded on failure so the root redirect resolves instead of hanging.
+      error: () => this.loaded.set(true),
     });
   }
 
@@ -88,6 +100,7 @@ export class HostPropertyStore {
     this.loadSub = undefined;
     this.properties.set([]);
     this.selected.set('');
+    this.loaded.set(false);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {

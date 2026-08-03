@@ -344,38 +344,30 @@
           <div class="space-y-5">
             @for (cat of offerCategories(); track cat.id) {
               <section>
-                <div class="mb-1.5 flex items-center gap-2">
-                  <i
-                    class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500"
-                    aria-hidden="true"
-                  ></i>
-                  <h3
-                    class="text-xs font-semibold uppercase tracking-wide text-ink-500"
-                  >
-                    {{ cat.name }}
-                  </h3>
+                <div class="mb-2 flex items-center gap-2">
+                  <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
+                  <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
                 </div>
-                <div class="flex flex-wrap gap-1.5">
+                <div class="flex flex-wrap gap-2">
                   @for (o of cat.offers; track o.id) {
                     <button
-                      hh-button variant="outlined" size="sm"
                       type="button"
-                      (click)="toggleAmenity(o.id)"
-                      [attr.aria-pressed]="isAmenitySelected(o.id)"
+                      class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition"
                       [class]="
                         isAmenitySelected(o.id)
-                          ? 'border-brand-500 bg-brand-50 text-brand-700'
-                          : 'border-ink-200 text-ink-700 hover:border-ink-400'
+                          ? 'border-brand-200 bg-brand-50 text-brand-800'
+                          : 'border-ink-200 bg-white text-ink-700 hover:border-ink-300'
                       "
+                      (click)="toggleAmenity(o.id)"
+                      [attr.aria-pressed]="isAmenitySelected(o.id)"
                     >
+                      <i class="ti shrink-0 text-base" [class]="offerIcon(o.slug)" aria-hidden="true"></i>
+                      <span class="text-left">{{ o.name }}</span>
                       <i
-                        class="ti text-[11px]"
-                        [class]="
-                          isAmenitySelected(o.id) ? 'ti-check' : 'ti-plus'
-                        "
+                        class="ti shrink-0 text-lg"
+                        [class]="isAmenitySelected(o.id) ? 'ti-circle-check-filled text-brand-600' : 'ti-circle text-ink-300'"
                         aria-hidden="true"
                       ></i>
-                      {{ o.name }}
                     </button>
                   }
                 </div>
