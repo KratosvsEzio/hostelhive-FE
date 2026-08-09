@@ -3,22 +3,32 @@ import {
   Component,
   computed,
   inject,
+  PLATFORM_ID,
   signal,
 } from '@angular/core';
+import { isPlatformBrowser, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of, startWith } from 'rxjs';
 import { HOST_ROLES, SessionStore } from '@core/auth';
+import { Listing } from '@hostelhive/data-access';
+import { Skeleton } from '@hostelhive/ui';
+import { ListingsApi } from '@services';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { PakistanMap } from './pakistan-map/pakistan-map';
+import { ListingCard } from '../search/listing-card/listing-card';
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, PlaceSearchField, PakistanMap],
+  imports: [RouterLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
   templateUrl: './home.html',
 })
 export class Home {
   private readonly router = inject(Router);
   private readonly session = inject(SessionStore);
+  private readonly listingsApi = inject(ListingsApi);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   // Existing hosts (host/manager/warden) go straight to their dashboard; everyone
   // else starts the become-a-host onboarding wizard.
@@ -65,48 +75,19 @@ export class Home {
     { n: '4.8/5', l: 'seeker rating' },
   ];
 
-  protected readonly featured = [
-    {
-      slug: 'al-madina-boys-hostel',
-      name: 'Al-Madina Boys Hostel',
-      area: 'DHA Phase 6 · Karachi',
-      gender: 'Boys',
-      tag: 'rgba(43,108,176,.95)',
-      price: '12,000',
-      rating: '4.9',
-      img: 'https://picsum.photos/seed/hhf1/600/450',
-    },
-    {
-      slug: 'gulberg-girls-residence',
-      name: 'Gulberg Girls Residence',
-      area: 'Gulberg III · Lahore',
-      gender: 'Girls',
-      tag: 'rgba(190,58,117,.95)',
-      price: '18,500',
-      rating: '4.8',
-      img: 'https://picsum.photos/seed/hhf2/600/450',
-    },
-    {
-      slug: 'the-loft-co-living',
-      name: 'The Loft Co-living',
-      area: 'F-7 · Islamabad',
-      gender: 'Co-living',
-      tag: 'rgba(243,110,33,.95)',
-      price: '22,000',
-      rating: '4.9',
-      img: 'https://picsum.photos/seed/hhf3/600/450',
-    },
-    {
-      slug: 'scholars-inn',
-      name: 'Scholars Inn',
-      area: 'Johar Town · Lahore',
-      gender: 'Boys',
-      tag: 'rgba(43,108,176,.95)',
-      price: '9,500',
-      rating: '4.7',
-      img: 'https://picsum.photos/seed/hhf4/600/450',
-    },
-  ];
+  private readonly featuredState = toSignal(
+    this.isBrowser
+      ? this.listingsApi.featured().pipe(
+          map((items) => ({ loading: false, items: items.slice(0, 4) })),
+          startWith({ loading: true, items: [] as Listing[] }),
+          catchError(() => of({ loading: false, items: [] as Listing[] })),
+        )
+      : of({ loading: true, items: [] as Listing[] }),
+    { initialValue: { loading: true, items: [] as Listing[] } },
+  );
+
+  protected readonly featuredLoading = computed(() => this.featuredState().loading);
+  protected readonly featured = computed(() => this.featuredState().items);
 
   protected readonly cities = [
     {

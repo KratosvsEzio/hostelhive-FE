@@ -54,8 +54,9 @@ export class SharedMap {
         center: options.center,
         zoom: options.zoom,
         maxZoom: this.loader.maxZoom(),
-        zoomControl: true,
+        zoomControl: false,
       });
+      leaflet.control.zoom({ position: 'bottomright' }).addTo(this.map);
       this.loader.tileLayer(leaflet).addTo(this.map);
     } else {
       // Re-mounted into a different element, whose box Leaflet has never measured; its

@@ -68,6 +68,9 @@
             >
           }
         }
+        @if (isAuthenticated()) {
+          <app-notification-bell />
+        }
         <app-account-menu />
       </div>
     </div>

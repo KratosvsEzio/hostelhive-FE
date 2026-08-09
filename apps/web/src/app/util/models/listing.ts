@@ -38,6 +38,7 @@ export interface Listing {
   description?: string;
   rating?: number; // average review score, e.g. 4.8 (stub data until reviews API lands)
   reviews?: number; // number of reviews (stub data)
+  isFeatured?: boolean;
 }
 
 export interface ListingQuery {

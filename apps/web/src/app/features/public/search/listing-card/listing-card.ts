@@ -92,8 +92,7 @@ export class ListingCard {
   /** Property type pill ('Building', 'Apartment', …) — hidden when the BE sends none. */
   protected readonly propertyType = computed(() => this.listing().propertyType ?? '');
 
-  /** Reviews have no API yet, so both of these read 0 rather than disappearing —
-   *  a card with no rating still shows the same shape as one with. */
+  protected readonly featured = computed(() => !!this.listing().isFeatured);
   protected readonly rating = computed(() => this.listing().rating ?? 0);
   protected readonly reviewCount = computed(() => this.listing().reviews ?? 0);
 

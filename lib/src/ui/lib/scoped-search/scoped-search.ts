@@ -68,7 +68,9 @@ const BASE =
       class="min-w-0 flex-1 bg-transparent text-ink-900 outline-none placeholder:text-ink-400"
       [class]="sz().text"
     />
-    @if (draft()) {
+    @if (loading()) {
+      <i class="ti ti-loader-2 animate-spin shrink-0 p-1 text-sm text-ink-400" aria-hidden="true"></i>
+    } @else if (draft()) {
       <button
         type="button"
         (click)="clear()"
@@ -100,6 +102,8 @@ export class Search {
   readonly tone = input<'auto' | 'neutral'>('neutral');
   /** Delay before a keystroke is committed to `term`. Set `0` for an instant local filter. */
   readonly debounceMs = input(600);
+  /** Show a spinner in place of the clear icon while the parent is fetching results. */
+  readonly loading = input(false);
 
   /**
    * Immediate mirror of the input text. Drives the visible value and the clear button so

@@ -137,6 +137,14 @@
                 (valueChange)="password.set($event)"
                 [error]="showErrors() ? passwordError() : ''"
               />
+              <div class="flex justify-end">
+                <a
+                  routerLink="/auth/forgot-password"
+                  class="text-sm font-medium text-brand-600 transition hover:text-brand-700"
+                >
+                  Forgot password?
+                </a>
+              </div>
             }
 
             @if (error()) {

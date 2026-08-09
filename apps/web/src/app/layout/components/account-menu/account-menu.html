@@ -69,6 +69,14 @@
           }
         } @else {
           <a
+            routerLink="/notifications"
+            (click)="close()"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+          >
+            <i class="ti ti-bell text-lg" aria-hidden="true"></i
+            >Notifications
+          </a>
+          <a
             [routerLink]="hostLink()"
             (click)="close()"
             class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"

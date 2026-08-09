@@ -17,6 +17,7 @@ export const serverRoutes: ServerRoute[] = [
 
   // The seeker account area is authenticated and per-user with zero SEO value: server
   // rendering it bakes the token-less 401 state into the HTML for signed-in users too.
+  { path: 'notifications', renderMode: RenderMode.Client },
   { path: 'account', renderMode: RenderMode.Client },
   { path: 'account/**', renderMode: RenderMode.Client },
 

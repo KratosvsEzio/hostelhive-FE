@@ -16,6 +16,8 @@ import { ApiClient } from '@core/api-resource';
  */
 interface ApiHostel {
   id: number;
+  name?: string | null;
+  title?: string | null;
   description?: string | null;
   address_1?: string | null;
   address_2?: string | null;
@@ -52,6 +54,7 @@ interface ApiHostel {
         price?: number;
       }[]
     | null;
+  is_featured?: boolean | null;
 }
 
 // gender_type arrives as the backend enum's string key ('co-living' has a hyphen).
@@ -105,6 +108,7 @@ function toListing(h: ApiHostel): Listing {
       : (h.longitude ?? h.location?.lon ?? 0);
   const area = h.area || h.city || '';
   const type = h.property_type ? cap(h.property_type) : 'Stay';
+  const derivedName = h.name || h.title || (area ? `${type} in ${area}` : type);
   const images = (h.attachments ?? [])
     .map((a) => a?.url)
     .filter((u): u is string => !!u);
@@ -113,7 +117,7 @@ function toListing(h: ApiHostel): Listing {
   return {
     id: String(h.id),
     slug: String(h.id), // search_data has no slug — the numeric id doubles as the route key
-    name: area ? `${type} in ${area}` : type, // search_data carries no name — derive it (Airbnb-style)
+    name: derivedName,
     area: h.area ?? '',
     city: h.city ?? '',
     gender: GENDER_MAP[h.gender_type ?? ''] ?? 'coliving',
@@ -137,6 +141,7 @@ function toListing(h: ApiHostel): Listing {
       ? { id: String(h.host.id), name: h.host.name, since: 0, verified: false }
       : undefined,
     description: h.description ?? undefined,
+    isFeatured: !!h.is_featured,
   };
 }
 
@@ -261,6 +266,20 @@ export class ListingsApi {
             pageSize,
             totalPages: pg?.total_pages,
           };
+        }),
+      );
+  }
+
+  featured(limit = 20): Observable<Listing[]> {
+    return this.api
+      .get<ApiHostel[] | { hostels: ApiHostel[] }>('/public/hostels', {
+        page: 1,
+        limit,
+      })
+      .pipe(
+        map((res) => {
+          const raw = Array.isArray(res) ? res : (res.hostels ?? []);
+          return raw.map((h) => toListing(h));
         }),
       );
   }

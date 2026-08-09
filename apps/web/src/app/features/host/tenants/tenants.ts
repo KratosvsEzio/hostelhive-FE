@@ -18,6 +18,7 @@ import {
   startWith,
   switchMap,
   take,
+  tap,
 } from 'rxjs';
 import { NavigationEnd, NavigationStart } from '@angular/router';
 import {
@@ -106,6 +107,7 @@ export class Tenants {
   protected readonly menuOpenId = signal<string | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
   private readonly deletedIds = signal(new Set<string>());
+  protected readonly fetching = signal(false);
 
   private readonly fetchKey = computed(() => ({
     hostelId: this.store.selected(),
@@ -118,19 +120,23 @@ export class Tenants {
   private readonly fetched = toSignal(
     toObservable(this.fetchKey).pipe(
       switchMap(({ hostelId, page, search, statusFilter }) => {
-        if (!hostelId)
+        if (!hostelId) {
+          this.fetching.set(false);
           return of<ViewState>({ loading: false, error: false, subscriptionError: false, networkError: false, data: null, total: 0 });
+        }
+        this.fetching.set(true);
         const filters: Record<string, string> = {};
         if (search.trim()) filters['s[full_name]'] = search.trim();
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
         return this.api.renters(hostelId, page, PAGE_SIZE, filters).pipe(
+          tap(() => this.fetching.set(false)),
           map((res): ViewState => ({
             loading: false, error: false, subscriptionError: false, networkError: false,
             data: res.renters, total: res.total,
             statuses: res.statuses,
           })),
-          startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0 }),
           catchError((err) => {
+            this.fetching.set(false);
             const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({ loading: false, error: !sub, subscriptionError: sub, networkError: net, data: null, total: 0 });

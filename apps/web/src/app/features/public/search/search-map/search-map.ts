@@ -429,7 +429,8 @@ export class SearchMap {
       const cap = this.capacityStore.active();
       if (!this.ready()) return;
       for (const [, m] of this.markers) {
-        m.pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(m.listing.priceByCapacity, m.listing.priceFrom) / 1000) + 'k';
+        const span = m.pinEl.querySelector('span');
+        if (span) span.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(m.listing.priceByCapacity, m.listing.priceFrom) / 1000) + 'k';
       }
       untracked(() => { if (this.selected()) this.renderSelection(); });
     });
@@ -600,8 +601,16 @@ export class SearchMap {
     const points: L.LatLngExpression[] = [];
     for (const l of items) {
       const pinEl = document.createElement('div');
-      pinEl.className = 'hh-pin';
-      pinEl.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom) / 1000) + 'k';
+      pinEl.className = l.isFeatured ? 'hh-pin hh-pin--featured' : 'hh-pin';
+      if (l.isFeatured) {
+        const crown = document.createElement('i');
+        crown.className = 'ti ti-crown-filled hh-pin__crown';
+        crown.setAttribute('aria-hidden', 'true');
+        pinEl.appendChild(crown);
+      }
+      const priceSpan = document.createElement('span');
+      priceSpan.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom) / 1000) + 'k';
+      pinEl.appendChild(priceSpan);
       pinEl.addEventListener('mouseenter', () => this.active.set(l.id));
       pinEl.addEventListener('mouseleave', () => this.active.set(null));
       pinEl.addEventListener('click', (e) => {

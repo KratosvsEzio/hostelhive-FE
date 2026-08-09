@@ -12,6 +12,7 @@ import { HOST_ROLES, STAFF_ROLES, SessionStore } from '@core/auth';
 import { Button, ConfirmModal } from '@hostelhive/ui';
 import { SearchBar } from '../search-bar/search-bar';
 import { AccountMenu } from '../account-menu/account-menu';
+import { NotificationBell } from '../notification-bell/notification-bell';
 
 type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 
@@ -27,7 +28,7 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 @Component({
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SearchBar, AccountMenu, ConfirmModal, Button],
+  imports: [RouterLink, SearchBar, AccountMenu, NotificationBell, ConfirmModal, Button],
   host: { class: 'contents' },
   templateUrl: './site-header.html',
 })
@@ -90,6 +91,10 @@ export class SiteHeader {
     const r = this.session.role();
     return r === 'super-admin' || r === 'admin' || r === 'support';
   });
+
+  protected readonly isAuthenticated = computed(() =>
+    this.session.isAuthenticated(),
+  );
 
   protected readonly loginPrompt = signal(false);
 

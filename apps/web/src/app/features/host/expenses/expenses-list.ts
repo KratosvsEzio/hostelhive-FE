@@ -112,8 +112,7 @@ export class ExpensesList {
   protected readonly typeOptions = computed<DropdownOption[]>(() => [
     { value: '', label: 'All types' },
     ...this.formOptions()
-      .expenseTypes.filter((t) => t.slug !== 'mess')
-      .map((t) => ({ value: t.slug, label: t.name })),
+      .expenseTypes.map((t) => ({ value: t.slug, label: t.name })),
   ]);
 
   private readonly typeLabels = computed(() => {

@@ -1,0 +1,98 @@
+<section class="mx-auto max-w-4xl px-5 py-8 sm:px-8">
+  <div class="mb-8">
+    <h1 class="font-display text-2xl font-semibold text-ink-900">Notifications</h1>
+    <p class="mt-1 text-sm text-ink-400">
+      Your hostel invites, meal confirmations and pending receipts.
+    </p>
+  </div>
+
+  @if (!loading() && !error() && allItems().length) {
+    <div class="mb-6 flex flex-wrap gap-2">
+      @for (tab of tabs; track tab.key) {
+        <button
+          type="button"
+          (click)="setTab(tab.key)"
+          class="rounded-full px-4 py-2 text-sm font-medium transition"
+          [class]="activeTab() === tab.key
+            ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200'
+            : 'text-ink-500 hover:bg-ink-50'"
+        >
+          {{ tab.label }}
+          <span
+            class="ml-1.5 inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold"
+            [class]="activeTab() === tab.key
+              ? 'bg-brand-100 text-brand-700'
+              : 'bg-ink-100 text-ink-500'"
+          >{{ tabCount(tab.key) }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="space-y-3">
+      @for (i of [1, 2, 3]; track i) {
+        <hh-skeleton class="h-28 w-full" radius="lg" />
+      }
+    </div>
+  } @else if (error()) {
+    <hh-error-state [networkError]="false" (retry)="retry()" />
+  } @else if (items().length) {
+    <div class="space-y-3">
+      @for (invite of items(); track invite.id) {
+        <div class="rounded-2xl border border-ink-100 bg-white p-5 transition hover:shadow-card" [attr.data-notification-id]="invite.id">
+          <div class="flex items-start gap-4">
+            <div
+              class="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+              [class]="typeBg(invite.inviteType)"
+            >
+              <i class="ti {{ typeIcon(invite.inviteType) }} text-lg"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-[11px] font-semibold uppercase tracking-wide"
+                  [class]="typeTextColor(invite.inviteType)"
+                >{{ typeLabel(invite.inviteType) }}</span>
+                @if (invite.status !== 'pending') {
+                  <span
+                    class="rounded-full px-2 py-0.5 text-[11px] font-medium ring-1"
+                    [class]="statusClass(invite.status)"
+                  >{{ statusLabel(invite.status) }}</span>
+                }
+              </div>
+              <p class="mt-1 text-sm font-medium text-ink-900">{{ invite.message }}</p>
+              <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-400">
+                <span class="flex items-center gap-1">
+                  <i class="ti ti-clock text-[13px]" aria-hidden="true"></i>{{ formatDateTime(invite.createdAt) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          @if (invite.status === 'pending' && isInteractive(invite.inviteType)) {
+            <div class="mt-4 flex items-center justify-end gap-2">
+              <button
+                hh-button variant="outlined" size="sm" type="button"
+                [disabled]="actionLoading() === invite.id"
+                (click)="reject(invite)"
+              >Decline</button>
+              <button
+                hh-button color="primary" size="sm" type="button"
+                [disabled]="actionLoading() === invite.id"
+                (click)="accept(invite)"
+              >Accept</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <hh-empty-state
+      icon="ti-bell"
+      [title]="emptyTitle()"
+      [message]="emptyMessage()"
+    />
+  }
+</section>

@@ -46,6 +46,7 @@
         (fieldChange)="onSearchFieldChange($any($event))"
         [term]="searchTerm()"
         (termChange)="onSearchTerm($event)"
+        [loading]="fetching()"
         [placeholder]="searchField() === 'room' ? 'Room number…' : 'Tenant name…'"
       />
       <hh-divider orientation="vertical" />
