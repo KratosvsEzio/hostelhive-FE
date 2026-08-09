@@ -31,6 +31,7 @@
 .ti-star-filled,
 .ti-heart-filled,
 .ti-circle-filled,
+.ti-crown-filled,
 .ti-rosette-discount-check-filled {
   font-family: 'tabler-icons-filled' !important;
 }
@@ -42,6 +43,9 @@
 }
 .ti-circle-filled::before {
   content: '\f671';
+}
+.ti-crown-filled::before {
+  content: '\101c4';
 }
 .ti-rosette-discount-check-filled::before {
   content: '\f746';
@@ -127,6 +131,76 @@ table td {
   transform: scale(1.06);
 }
 
+/* ── Featured / premium card ──────────────────────────────────────────── */
+.featured-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background: linear-gradient(165deg, #fffefb 0%, #fdf8ec 100%);
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow:
+    0 4px 20px rgba(212, 175, 55, 0.1),
+    0 2px 6px rgba(0, 0, 0, 0.03);
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 0.45s ease;
+}
+.featured-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow:
+    0 25px 60px rgba(212, 175, 55, 0.14),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+}
+.featured-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #3d2e00;
+  background: linear-gradient(135deg, #ffe27a 0%, #d4af37 100%);
+  overflow: hidden;
+}
+.featured-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: hh-badge-shimmer 4s ease-in-out infinite;
+}
+@keyframes hh-badge-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.featured-pill {
+  background: #F3E5AB;
+  color: #7a5c1f;
+  border: 1px solid #D4AF37;
+}
+
 /* Console sidebar nav links */
 .nav-link {
   display: flex;
@@ -202,11 +276,12 @@ table td {
 .hh-pin {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   justify-content: center;
   white-space: nowrap;
   background: #fff;
-  color: #222;
-  border: 1px solid #ddd;
+  color: #1a1a1a;
+  border: 1.5px solid #e8e0d4;
   border-radius: 28px;
   padding: 6px 12px;
   font:
@@ -214,29 +289,53 @@ table td {
     system-ui,
     sans-serif;
   box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 6px 16px rgba(0, 0, 0, 0.12);
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition:
     transform 0.12s ease,
     box-shadow 0.12s ease,
-    background 0.12s ease;
+    background 0.12s ease,
+    border-color 0.12s ease;
   min-height: 28px;
+}
+.hh-pin__crown {
+  color: #d97706;
+  font-size: 13px;
+  line-height: 1;
+}
+.hh-pin--featured {
+  background: linear-gradient(135deg, #fdf6e3 0%, #f5e6b8 100%);
+  border-color: #D4AF37;
+  color: #5c4813;
+}
+.hh-pin--featured .hh-pin__crown {
+  color: #b8860b;
+}
+.hh-pin--featured:hover {
+  border-color: #b8860b;
+  box-shadow:
+    0 4px 8px rgba(212, 175, 55, 0.15),
+    0 8px 24px rgba(212, 175, 55, 0.2);
 }
 .hh-pin:hover {
   z-index: 1000;
+  border-color: #d4c4a8;
   box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.12),
-    0 8px 24px rgba(0, 0, 0, 0.18);
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.16);
 }
 .hh-pin--active {
-  background: #222;
+  background: #1a1a1a;
   color: #fff;
-  border-color: #222;
+  border-color: #1a1a1a;
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.16),
     0 8px 24px rgba(0, 0, 0, 0.24);
   z-index: 1000;
+}
+.hh-pin--active .hh-pin__crown {
+  color: #fbbf24;
 }
 
 /* Search split view — keep the header chrome fixed while results scroll. The filter bar
@@ -529,7 +628,8 @@ hh-search-map {
   .hh-float-slow,
   .hh-rise,
   .hh-rise-2,
-  .hh-rise-3 {
+  .hh-rise-3,
+  .featured-badge::after {
     animation: none;
   }
 }

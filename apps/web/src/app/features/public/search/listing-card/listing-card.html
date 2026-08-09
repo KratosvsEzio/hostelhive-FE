@@ -4,6 +4,7 @@
      cancel never fired and the ring showed on card hover too. -->
 <article
   class="group relative overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition hover:shadow-md hover:ring-0 hover:ring-offset-0"
+  [class.featured-card]="featured()"
   [class.ring-2]="active()"
   [class.ring-brand-500]="active()"
   [class.ring-offset-2]="active()"
@@ -40,6 +41,12 @@
     <!-- Gender + property type. The property type is whatever the BE enum says, so it is
          rendered only when present rather than defaulted to a guess. -->
     <div class="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+      @if (featured()) {
+        <span class="featured-badge !static">
+          <i class="ti ti-crown-filled relative z-[1] text-xs" aria-hidden="true"></i>
+          <span class="relative z-[1]">Featured</span>
+        </span>
+      }
       <hh-badge
         [variant]="listing().gender"
         [bordered]="false"
@@ -61,7 +68,7 @@
     @if (savable()) {
       <button
         type="button"
-        class="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+        class="absolute bottom-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-lg transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
         (click)="toggleSaved($event)"
         [attr.aria-label]="saved() ? 'Remove from saved' : 'Save to favourites'"
       >
@@ -120,7 +127,10 @@
     <!-- Title carries the rating on its right, Airbnb-style: "★ 5.0 (5)". The name
          truncates so a long one can never push the rating off the row. -->
     <div class="flex items-baseline justify-between gap-2">
-      <h3 class="truncate font-semibold text-ink-900">{{ listing().name }}</h3>
+      <h3
+        class="truncate font-semibold text-ink-900"
+        [class.font-display]="featured()"
+      >{{ listing().name }}</h3>
       <span
         class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-900"
         [attr.aria-label]="
@@ -128,7 +138,11 @@
           reviewCount() + (reviewCount() === 1 ? ' review' : ' reviews')
         "
       >
-        <i class="ti ti-star-filled text-[13px]" aria-hidden="true"></i>
+        <i
+          class="ti ti-star-filled text-[13px]"
+          [class.text-[#d4af37]]="featured()"
+          aria-hidden="true"
+        ></i>
         <span aria-hidden="true">
           {{ rating() | number: '1.1-1' }}
           <span class="font-normal text-ink-400">({{ reviewCount() | number }})</span>
@@ -148,13 +162,15 @@
       <div class="mt-3 flex items-center gap-1.5">
         @for (a of amenityPills(); track a) {
           <span
-            class="min-w-0 truncate rounded-lg bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-600"
+            class="min-w-0 truncate rounded-lg px-2.5 py-1 text-xs font-medium"
+            [class]="featured() ? 'featured-pill' : 'bg-ink-50 text-ink-600'"
             >{{ a }}</span
           >
         }
         @if (extraAmenities()) {
           <span
-            class="shrink-0 whitespace-nowrap rounded-lg bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-500"
+            class="shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium"
+            [class]="featured() ? 'featured-pill' : 'bg-ink-50 text-ink-500'"
             >+{{ extraAmenities() }}</span
           >
         }

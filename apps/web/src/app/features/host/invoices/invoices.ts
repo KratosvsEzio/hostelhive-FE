@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
-import { catchError, debounceTime, filter, map, of, startWith, switchMap, timer } from 'rxjs';
+import { catchError, debounceTime, filter, map, of, switchMap, tap, timer } from 'rxjs';
 import {
   Button,
   ConfirmModal,
@@ -116,6 +116,7 @@ export class Invoices {
     return [p.area, p.city].filter(Boolean).join(', ');
   });
   private readonly refresh = signal(0);
+  protected readonly fetching = signal(false);
 
   protected readonly PAGE_SIZE = 10;
   protected readonly Math = Math;
@@ -156,14 +157,14 @@ export class Invoices {
     tenant: this.tenantFilter(),
     dateFrom: this.dateFrom(),
     dateTo: this.dateTo(),
-    searchField: this.searchField(),
     searchTerm: this.debouncedTerm(),
   }));
 
   protected readonly state = toSignal(
     toObservable(this.fetchKey).pipe(
-      switchMap(({ hostelId, page, status, kind, room, tenant, dateFrom, dateTo, searchField, searchTerm }) => {
-        if (!hostelId) return of(EMPTY_STATE);
+      switchMap(({ hostelId, page, status, kind, room, tenant, dateFrom, dateTo, searchTerm }) => {
+        if (!hostelId) { this.fetching.set(false); return of(EMPTY_STATE); }
+        this.fetching.set(true);
         const filters: Record<string, string> = {};
         if (status !== 'all') filters['f[status.slug]'] = status;
         if (kind !== 'all') filters['f[bill_type]'] = kind;
@@ -172,10 +173,11 @@ export class Invoices {
         if (dateFrom) filters['f[issue_date][gte]'] = dateFrom;
         if (dateTo) filters['f[issue_date][lte]'] = dateTo;
         if (searchTerm) {
-          if (searchField === 'room') filters['s[room.room_number]'] = searchTerm;
+          if (this.searchField() === 'room') filters['s[room.room_number]'] = searchTerm;
           else filters['s[renter.full_name]'] = searchTerm;
         }
         return this.api.invoices(hostelId, page, this.PAGE_SIZE, filters).pipe(
+          tap(() => this.fetching.set(false)),
           map((res): ViewState => ({
             loading: false,
             error: false,
@@ -187,8 +189,8 @@ export class Invoices {
             statuses: res.statuses,
             aggs: res.aggs,
           })),
-          startWith<ViewState>(LOADING),
           catchError((err) => {
+            this.fetching.set(false);
             const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({ loading: false, error: !sub, subscriptionError: sub, networkError: net, data: null, total: 0, totalPages: 1, statuses: [], aggs: null });
@@ -299,7 +301,6 @@ export class Invoices {
   protected onSearchFieldChange(v: string | null): void {
     if (v === 'room' || v === 'tenant') {
       this.searchField.set(v);
-      this.searchTerm.set('');
       this.page.set(1);
     }
   }

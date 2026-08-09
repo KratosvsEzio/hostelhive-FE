@@ -46,6 +46,14 @@ export const appRoutes: Route[] = [
     title: 'Confirm your account — HostelHive',
   },
   {
+    path: 'reset_password',
+    loadComponent: () =>
+      import('@features/auth/reset-password/reset-password').then(
+        (m) => m.ResetPassword,
+      ),
+    title: 'Reset password — HostelHive',
+  },
+  {
     path: 'account',
     // Guarding the parent covers every child and runs before the shell chunk is fetched.
     canActivate: [authGuard],
@@ -80,6 +88,17 @@ export const appRoutes: Route[] = [
         title: 'Help Centre — HostelHive',
       },
     ],
+  },
+
+  // â”€â”€â”€ Notifications (client-rendered, auth-guarded) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('@features/notifications/notifications').then(
+        (m) => m.NotificationsPage,
+      ),
+    title: 'Notifications — HostelHive',
   },
 
   // â”€â”€â”€ Console (client-rendered, role-guarded) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

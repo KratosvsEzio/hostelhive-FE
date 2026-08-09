@@ -20,6 +20,18 @@
     }
   </div>
 
+  <!-- Gender quick-select pills -->
+  @for (g of genderPills; track g.value) {
+    <button
+      hh-chip
+      type="button"
+      [active]="gender() === g.value"
+      (click)="toggleGender(g.value)"
+    ><i class="ti ti-{{ g.icon }} text-[13px]"></i>{{ g.label }}</button>
+  }
+
+  <span class="h-5 w-px shrink-0 bg-ink-200"></span>
+
   <!-- Popular amenity quick-select pills -->
   @for (a of popularAmenities; track a.slug) {
     <button

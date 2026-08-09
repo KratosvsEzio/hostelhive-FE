@@ -300,6 +300,7 @@ export class Dropdown {
 
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly portal = viewChild<ElementRef<HTMLElement>>('portal');
+  private portalEl: HTMLElement | null = null;
 
   protected readonly open = signal(false);
   protected readonly searchQuery = signal('');
@@ -313,13 +314,15 @@ export class Dropdown {
   } | null>(null);
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.detachListeners());
-    // Move the rendered panel out to <body> so `fixed` coords are viewport-relative
-    // regardless of overflow/transform ancestors.
+    inject(DestroyRef).onDestroy(() => {
+      this.detachListeners();
+      this.portalEl?.remove();
+    });
     effect(() => {
       const el = this.portal()?.nativeElement;
       if (el && typeof document !== 'undefined' && el.parentNode !== document.body) {
         document.body.appendChild(el);
+        this.portalEl = el;
       }
     });
     inject(Router).events

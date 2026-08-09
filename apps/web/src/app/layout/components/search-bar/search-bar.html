@@ -27,7 +27,7 @@
       <span class="hhsb-lab">Budget</span>
       <span
         class="hhsb-val"
-        [class.f]="minPrice() !== null || maxPrice() !== null"
+        [class.f]="budgetActive()"
         >{{ budgetLabel() }}</span
       >
     </button>
@@ -52,27 +52,29 @@
     </button>
   </div>
 
-  @if (open()) {
-    <button
-      type="button"
-      class="fixed inset-0 z-40 cursor-default"
-      aria-label="Close search"
-      (click)="close()"
-    ></button>
-  }
-
   @if (open() === 'budget') {
-    <div class="hhsb-pop" style="left: 40%; min-width: 240px">
-      @for (b of budgetOpts; track b.l) {
-        <button
-          type="button"
-          class="hhsb-opt"
-          [class.sel]="minPrice() === b.min && maxPrice() === b.max"
-          (click)="pickBudget(b)"
-        >
-          {{ b.l }}
-        </button>
-      }
+    <div class="hhsb-pop" style="left: 50%; transform: translateX(-50%); min-width: 280px">
+      <div class="px-4 pt-4 pb-3">
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-sm font-semibold text-ink-900">Budget range</span>
+          @if (budgetActive()) {
+            <button
+              type="button"
+              class="text-xs font-medium text-brand-500 hover:text-brand-600"
+              (click)="resetBudget()"
+            >Reset</button>
+          }
+        </div>
+        <hh-range-slider
+          [min]="BUDGET_MIN"
+          [max]="BUDGET_MAX"
+          [step]="BUDGET_STEP"
+          prefix="Rs "
+          [openEnded]="true"
+          [(low)]="budgetLow"
+          [(high)]="budgetHigh"
+        />
+      </div>
     </div>
   }
   @if (open() === 'sharing') {

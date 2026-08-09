@@ -35,6 +35,7 @@
       placeholder="Search tenant…"
       [term]="search()"
       (termChange)="setSearch($event)"
+      [loading]="fetching()"
     />
   </div>
 

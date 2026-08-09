@@ -80,3 +80,14 @@ export interface ApiRole {
   name: string;
   slug: string;
 }
+
+/** POST /api/user/forgot_password — request a password-reset token by email. */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/** PATCH /api/user/reset_password — set a new password using the emailed token. */
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}

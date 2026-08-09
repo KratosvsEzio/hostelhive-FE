@@ -4,8 +4,10 @@ import { Observable, map } from 'rxjs';
 import {
   CurrentUser,
   CurrentUserResponse,
+  ForgotPasswordRequest,
   GoogleLoginRequest,
   MessageResponse,
+  ResetPasswordRequest,
   SignInRequest,
   SignUpRequest,
   SignUpResponse,
@@ -61,6 +63,16 @@ export class AuthApi {
     return this.api
       .post<TokenResponse>('/api/user/confirm_invitation', { token }, inlineErrors())
       .pipe(map(requireToken));
+  }
+
+  /** POST /api/user/forgot_password → sends a reset token to the given email. */
+  forgotPassword(body: ForgotPasswordRequest): Observable<MessageResponse> {
+    return this.api.post<MessageResponse>('/api/user/forgot_password', body, inlineErrors());
+  }
+
+  /** PATCH /api/user/reset_password → sets a new password using the emailed token. */
+  resetPassword(body: ResetPasswordRequest): Observable<MessageResponse> {
+    return this.api.patch<MessageResponse>('/api/user/reset_password', body);
   }
 
   /** DELETE /api/user/sign_out → revokes the JWT server-side. */

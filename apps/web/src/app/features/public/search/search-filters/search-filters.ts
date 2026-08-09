@@ -83,6 +83,12 @@ export class SearchFilters {
     return n;
   });
 
+  readonly genderPills: { label: string; value: Gender; icon: string }[] = [
+    { label: 'Boys', value: 'boys', icon: 'gender-male' },
+    { label: 'Girls', value: 'girls', icon: 'gender-female' },
+    { label: 'Co-living', value: 'coliving', icon: 'users' },
+  ];
+
   readonly popularAmenities = [
     { slug: 'wifi', label: 'Wi-Fi', icon: 'wifi' },
     { slug: 'air-conditioning', label: 'AC', icon: 'air-conditioning' },
@@ -91,6 +97,10 @@ export class SearchFilters {
     { slug: 'parking-on-premises', label: 'Parking', icon: 'car' },
     { slug: 'attached', label: 'Attached Bath', icon: 'bath' },
   ];
+
+  protected toggleGender(value: Gender): void {
+    this.nav({ gender: this.gender() === value ? null : value });
+  }
 
   protected toggleQuickAmenity(slug: string): void {
     const current = this.amenities();

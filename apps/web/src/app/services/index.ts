@@ -19,3 +19,4 @@ export * from './products-api';
 export * from './image-upload.service';
 export * from './google-auth.service';
 export * from './search-capacity';
+export * from './student-api';

@@ -28,21 +28,11 @@ function priceLabel(price: number): string {
   return price > 0 ? `${Math.round(price / 1000)}k` : '·';
 }
 
-/** Width of the price pill — shared by the SVG and the Leaflet icon so the marker's
- *  declared size matches what it actually draws (a mismatch offsets the anchor). */
-function pillWidth(price: number): number {
-  return Math.max(44, priceLabel(price).length * 9 + 20);
-}
-
-function priceMarkerSvg(price: number): string {
+function priceMarkerHtml(price: number, featured?: boolean): string {
   const label = priceLabel(price);
-  const w = pillWidth(price);
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="28">` +
-    `<rect rx="14" ry="14" width="${w}" height="28" fill="#F36E21" stroke="#fff" stroke-width="2"/>` +
-    `<text x="${w / 2}" y="19" text-anchor="middle" fill="white" ` +
-    `font-family="sans-serif" font-size="12" font-weight="700">${label}</text></svg>`
-  );
+  const crown = featured ? '<i class="ti ti-crown-filled hh-pin__crown" aria-hidden="true"></i>' : '';
+  const cls = featured ? 'hh-pin hh-pin--featured' : 'hh-pin';
+  return `<div class="hh-marker__anchor"><div class="${cls}">${crown}<span>${label}</span></div></div>`;
 }
 
 /**
@@ -193,18 +183,13 @@ export class PakistanMap {
         this.listingCount.set(items.length);
         for (const h of items) {
           if (!h.lat || !h.lng) continue;
-          const svg = priceMarkerSvg(h.priceFrom);
-          const w = pillWidth(h.priceFrom);
           const marker = this.leaflet
             .marker([h.lat, h.lng], {
               title: h.name,
-              // The SVG is inlined rather than passed as a data: URL — no encoding round
-              // trip, and it inherits the page's rendering.
               icon: this.leaflet.divIcon({
-                className: '',
-                html: svg,
-                iconSize: [w, 28],
-                iconAnchor: [w / 2, 14],
+                className: 'hh-marker',
+                html: priceMarkerHtml(h.priceFrom, h.isFeatured),
+                iconSize: undefined,
               }),
             })
             .addTo(this.map);

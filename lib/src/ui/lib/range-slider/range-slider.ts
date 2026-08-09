@@ -45,7 +45,7 @@ import { DecimalPipe } from '@angular/common';
     </div>
     <div class="mt-2 flex justify-between text-xs text-ink-500">
       <span>{{ prefix() }}{{ low() | number }}</span>
-      <span>{{ prefix() }}{{ high() | number }}</span>
+      <span>{{ prefix() }}{{ high() | number }}{{ openEnded() && high() >= max() ? '+' : '' }}</span>
     </div>
   `,
   styles: [
@@ -101,6 +101,7 @@ export class RangeSlider {
   readonly max = input(100);
   readonly step = input(1);
   readonly prefix = input('');
+  readonly openEnded = input(false);
   readonly low = model(0);
   readonly high = model(100);
 

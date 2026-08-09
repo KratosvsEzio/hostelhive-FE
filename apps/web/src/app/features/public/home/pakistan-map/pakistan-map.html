@@ -1,13 +1,14 @@
 <div
   class="relative w-full overflow-hidden rounded-3xl border border-ink-100 bg-ink-50"
 >
-  <div class="absolute left-3 top-3 z-10 flex flex-wrap items-center gap-1">
+  <div class="absolute left-12 top-3 z-10 flex flex-wrap items-center gap-1">
     @for (b of breadcrumb(); track $index; let i = $index; let last = $last) {
       <button
         hh-button variant="outlined" size="sm"
         type="button"
         (click)="goTo(i)"
         [disabled]="last"
+        class="py-0.25 px-1"
         [class]="
           last
             ? 'bg-brand-500 text-white'
