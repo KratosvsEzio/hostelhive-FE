@@ -34,10 +34,6 @@
         </div>
       }
     </div>
-    <div
-      class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/30 to-transparent"
-    ></div>
-
     <!-- Gender + property type. The property type is whatever the BE enum says, so it is
          rendered only when present rather than defaulted to a guess. -->
     <div class="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
@@ -68,12 +64,12 @@
     @if (savable()) {
       <button
         type="button"
-        class="absolute bottom-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-lg transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+        class="absolute bottom-3 right-3 z-10 grid place-items-center rounded-full border border-white/30 bg-black/30 p-2 backdrop-blur-sm transition hover:scale-110 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
         (click)="toggleSaved($event)"
         [attr.aria-label]="saved() ? 'Remove from saved' : 'Save to favourites'"
       >
         <i
-          class="ti text-2xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+          class="ti text-xl"
           [class]="saved() ? 'ti-heart-filled text-brand-500' : 'ti-heart text-white'"
         ></i>
       </button>
@@ -131,21 +127,26 @@
         class="truncate font-semibold text-ink-900"
         [class.font-display]="featured()"
       >{{ listing().name }}</h3>
-      <span
-        class="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-900"
-        [attr.aria-label]="
-          'Rated ' + (rating() | number: '1.1-1') + ' out of 5 from ' +
-          reviewCount() + (reviewCount() === 1 ? ' review' : ' reviews')
-        "
-      >
-        <i
-          class="ti ti-star-filled text-[13px]"
-          [class.text-[#d4af37]]="featured()"
-          aria-hidden="true"
-        ></i>
-        <span aria-hidden="true">
-          {{ rating() | number: '1.1-1' }}
-          <span class="font-normal text-ink-400">({{ reviewCount() | number }})</span>
+      <span class="flex shrink-0 items-center gap-1.5">
+        @if (isNew()) {
+          <span class="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-600">New</span>
+        }
+        <span
+          class="flex items-center gap-1 text-sm font-medium text-ink-900"
+          [attr.aria-label]="
+            'Rated ' + (rating() | number: '1.1-1') + ' out of 5 from ' +
+            reviewCount() + (reviewCount() === 1 ? ' review' : ' reviews')
+          "
+        >
+          <i
+            class="ti ti-star-filled text-[13px]"
+            [class.text-[#d4af37]]="featured()"
+            aria-hidden="true"
+          ></i>
+          <span aria-hidden="true">
+            {{ rating() | number: '1.1-1' }}
+            <span class="font-normal text-ink-400">({{ reviewCount() | number }})</span>
+          </span>
         </span>
       </span>
     </div>

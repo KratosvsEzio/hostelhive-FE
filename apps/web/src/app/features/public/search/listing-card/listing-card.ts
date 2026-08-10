@@ -95,6 +95,21 @@ export class ListingCard {
   protected readonly featured = computed(() => !!this.listing().isFeatured);
   protected readonly rating = computed(() => this.listing().rating ?? 0);
   protected readonly reviewCount = computed(() => this.listing().reviews ?? 0);
+  /**
+   * "New" badge — shown alongside the score when the listing has no reviews yet AND was
+   * created within the last 3 months. The 0.0 (0) score always shows regardless; only this
+   * badge is gated, so an old unreviewed listing isn't flagged as new forever.
+   */
+  protected readonly isNew = computed(() => {
+    if (this.reviewCount() > 0) return false;
+    const created = this.listing().createdAt;
+    if (!created) return false;
+    const createdAt = new Date(created);
+    if (Number.isNaN(createdAt.getTime())) return false;
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    return createdAt >= threeMonthsAgo;
+  });
 
   /** "area, city" — the parts we have, blanks dropped so there's never a stray comma. */
   protected readonly locationLine = computed(() => {

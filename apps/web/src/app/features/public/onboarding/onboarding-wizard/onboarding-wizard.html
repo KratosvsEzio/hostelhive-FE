@@ -24,23 +24,12 @@
     }
     <button
       hh-button
-      type="button"
-      variant="outlined"
-      size="sm"
-      class="hidden sm:flex"
-      [disabled]="draftSaving() || uploading()"
-      (click)="saveAndExit()"
-    >
-      {{ exitLabel() }}
-    </button>
-    <button
-      hh-button
       color="primary"
       size="sm"
-      [disabled]="draftSaving() || uploading()"
+      [disabled]="draftSaving() || uploading() || !isFormValid()"
       (click)="saveAndContinue()"
     >
-      <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : uploading() ? 'Uploading photos…' : 'Continue to payment' }}
+      <i class="ti ti-arrow-right" aria-hidden="true"></i>{{ draftSaving() ? 'Saving…' : uploading() ? 'Uploading photos…' : 'Create hostel' }}
     </button>
   </div>
 </header>
@@ -490,7 +479,7 @@
             hh-button
             color="primary"
             class="mt-4 w-full"
-            [disabled]="draftSaving() || uploading()"
+            [disabled]="draftSaving() || uploading() || !isFormValid()"
             (click)="saveAndContinue()"
           >
             @if (draftSaving()) {
@@ -498,7 +487,7 @@
             } @else if (uploading()) {
               <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
             } @else {
-              <i class="ti ti-arrow-right" aria-hidden="true"></i>Continue to payment
+              <i class="ti ti-arrow-right" aria-hidden="true"></i>Create hostel
             }
           </button>
           @if (draftError() && !apiErrors().length) {

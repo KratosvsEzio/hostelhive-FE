@@ -10,9 +10,20 @@ import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { format } from 'date-fns';
-import { BarChart, BarChartBar, BarChartTick, Button, ConfirmModal, EmptyState, TabItem, Tabs } from '@hostelhive/ui';
+import { BarChart, BarChartBar, BarChartTick, Button, ConfirmModal, EmptyState, Skeleton, TabItem, Tabs } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { DailyMealConfirmation, GroceryExpenseStat, HostelsApi, HostPropertyStore, MessOverviewCards } from '@services';
+import { NotificationService } from '@core/notification.service';
+import { toToastCopy } from '@core/errors/api-error-message';
+import { ApiError } from '@hostelhive/data-access';
+import {
+  DailyMealConfirmation,
+  ExpenseDetail,
+  ExpenseListItem,
+  GroceryExpenseStat,
+  HostelsApi,
+  HostPropertyStore,
+  MessOverviewCards,
+} from '@services';
 import { MessService } from './mess.service';
 import { MEAL_META, MEAL_ORDER, MealType } from './mess-notifications.service';
 
@@ -143,7 +154,7 @@ function buildSpendChart(
 @Component({
   selector: 'hh-mess-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, BarChart, Button, ConfirmModal, EmptyState, Tabs],
+  imports: [DecimalPipe, RouterLink, DashboardLayout, BarChart, Button, ConfirmModal, EmptyState, Skeleton, Tabs],
   templateUrl: './mess-list.html',
 })
 export class MessList {
@@ -304,22 +315,97 @@ export class MessList {
     this.chartMode() === 'day' ? 5 : 1,
   );
 
-  protected readonly removePending = signal<string | null>(null);
+  // ── Expense entries (real API, filtered to "mess" type) ─────────────────
+  private readonly notifications = inject(NotificationService);
+  private readonly refresh = signal(0);
 
-  protected toggle(id: string): void {
-    this.expanded.update((v) => (v === id ? null : id));
+  private readonly expenseFetchKey = computed(() => ({
+    hostelId: this.overviewKey(),
+    r: this.refresh(),
+  }));
+
+  private readonly expenseState = toSignal(
+    toObservable(this.expenseFetchKey).pipe(
+      switchMap(({ hostelId }) => {
+        if (!hostelId) return of({ loading: true, error: false, items: [] as ExpenseListItem[] });
+        return this.hostelsApi.listExpenses(hostelId, { 'f[expense_type]': 'mess', page_size: '20' }).pipe(
+          map((r) => ({
+            loading: false,
+            error: false,
+            items: r.items,
+          })),
+          startWith({ loading: true, error: false, items: [] as ExpenseListItem[] }),
+          catchError(() => of({ loading: false, error: true, items: [] as ExpenseListItem[] })),
+        );
+      }),
+    ),
+    { initialValue: { loading: true, error: false, items: [] as ExpenseListItem[] } },
+  );
+
+  protected readonly entriesLoading = computed(() => this.expenseState().loading);
+  protected readonly entries = computed(() => this.expenseState().items);
+
+  /** Cache of fetched expense details, keyed by expense id. */
+  protected readonly detailCache = signal<Record<string, ExpenseDetail>>({});
+  protected readonly detailLoading = signal<string | null>(null);
+
+  protected readonly removePending = signal<ExpenseListItem | null>(null);
+  private readonly deletedIds = signal<ReadonlySet<string>>(new Set());
+
+  protected readonly visibleEntries = computed(() => {
+    const deleted = this.deletedIds();
+    return this.entries().filter((e) => !deleted.has(e.id));
+  });
+
+  protected displayDate(iso: string): string {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : format(d, 'EEEE, MMM d yyyy');
   }
 
-  protected promptRemove(id: string): void {
-    this.removePending.set(id);
+  protected toggle(id: string): void {
+    if (this.expanded() === id) {
+      this.expanded.set(null);
+      return;
+    }
+    this.expanded.set(id);
+    if (!this.detailCache()[id]) {
+      const hostelId = this.propertyStore.selected();
+      if (!hostelId) return;
+      this.detailLoading.set(id);
+      this.hostelsApi.getExpense(hostelId, id).subscribe({
+        next: (detail) => {
+          this.detailCache.update((c) => ({ ...c, [id]: detail }));
+          this.detailLoading.set(null);
+        },
+        error: () => this.detailLoading.set(null),
+      });
+    }
+  }
+
+  protected promptRemove(entry: ExpenseListItem): void {
+    this.removePending.set(entry);
   }
 
   protected confirmRemove(): void {
-    const id = this.removePending();
-    if (!id) return;
+    const entry = this.removePending();
+    const hostelId = this.propertyStore.selected();
+    if (!entry || !hostelId) return;
+
+    this.deletedIds.update((s) => new Set(s).add(entry.id));
     this.removePending.set(null);
-    if (this.expanded() === id) this.expanded.set(null);
-    this.svc.removeEntry(id);
+    if (this.expanded() === entry.id) this.expanded.set(null);
+
+    this.hostelsApi.deleteExpense(hostelId, entry.id).subscribe({
+      error: (err: ApiError) => {
+        this.deletedIds.update((s) => {
+          const n = new Set(s);
+          n.delete(entry.id);
+          return n;
+        });
+        const { title, message } = toToastCopy(err);
+        this.notifications.show({ kind: 'error', title, message }, 0);
+      },
+    });
   }
 
   protected cancelRemove(): void {

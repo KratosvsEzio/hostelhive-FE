@@ -338,7 +338,7 @@
             @if (dirty()) {
               <span class="text-sm text-ink-400">You have unsaved changes</span>
             }
-            <button hh-button color="primary" [disabled]="saving() || uploading()" (click)="save()">
+            <button hh-button color="primary" [disabled]="saving() || uploading() || !!validationErrors().length" (click)="save()">
               {{ saving() ? 'Saving…' : 'Update hostel' }}
             </button>
           </div>

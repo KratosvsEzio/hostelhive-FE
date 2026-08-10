@@ -81,7 +81,7 @@ export const HOST_ROUTES: Route[] = [
         path: 'tenants',
         children: [
           { path: '', pathMatch: 'full', component: Tenants, title: 'Tenants — HostelHive' },
-          { path: 'create', component: Tenants, title: 'Check in tenant — HostelHive' },
+          { path: 'create', component: Tenants, title: 'Register Tenant — HostelHive' },
           { path: 'edit/:tenantId', component: Tenants, title: 'Edit tenant — HostelHive' },
           { path: 'profile/:tenantId', component: TenantProfile, title: 'Tenant Profile — HostelHive' },
         ],

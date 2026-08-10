@@ -37,7 +37,7 @@
         hh-button
         color="primary"
         type="button"
-        [disabled]="saving() || mismatch()"
+        [disabled]="saving() || mismatch() || !currentPassword().length || newPassword().length < 8 || !confirmPassword().length"
         (click)="save()"
       >
         @if (saving()) {

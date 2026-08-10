@@ -156,7 +156,7 @@
               </p>
             }
 
-            <button hh-button color="primary" type="submit" class="w-full" [loading]="busy()">
+            <button hh-button color="primary" type="submit" class="w-full" [disabled]="!isValid()" [loading]="busy()">
               {{
                 isRegister()
                   ? 'Create account & view number'

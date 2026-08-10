@@ -29,11 +29,14 @@ export class AuthService {
   private readonly session = inject(SessionStore);
   private readonly router = inject(Router);
 
-  /** Email/password sign-in → JWT → fetch the user → hydrate the session. */
-  signIn(email: string, password: string): Observable<SessionUser> {
+  /** Email/password sign-in → JWT → navigate immediately; session hydrates in background. */
+  signIn(email: string, password: string): Observable<void> {
     return this.api
       .signIn({ email, password })
-      .pipe(switchMap((token) => this.establishSession(token)));
+      .pipe(
+        tap((token) => this.hydrateInBackground(token)),
+        map(() => void 0),
+      );
   }
 
   /**
@@ -51,11 +54,14 @@ export class AuthService {
     return this.api.signUp({ user: input });
   }
 
-  /** Google OAuth: exchange the client-side access token for a session. */
-  googleLogin(accessToken: string): Observable<SessionUser> {
+  /** Google OAuth: exchange the client-side access token → navigate immediately. */
+  googleLogin(accessToken: string): Observable<void> {
     return this.api
       .googleLogin({ access_token: accessToken })
-      .pipe(switchMap((token) => this.establishSession(token)));
+      .pipe(
+        tap((token) => this.hydrateInBackground(token)),
+        map(() => void 0),
+      );
   }
 
   /**
@@ -141,6 +147,23 @@ export class AuthService {
       validate,
       new Promise<void>((resolve) => setTimeout(resolve, 8_000)),
     ]);
+  }
+
+  /**
+   * Sets the token immediately and fetches the user profile in the background.
+   * The caller's observable completes as soon as the sign-in POST returns 200 —
+   * the modal closes instantly while the session hydrates.
+   */
+  private hydrateInBackground(token: string): void {
+    this.session.setAccessToken(token);
+    this.api.currentUser().pipe(
+      map(toSessionUser),
+      tap((user) => this.session.setSession(user, token)),
+      catchError(() => {
+        this.session.clear();
+        return of(null);
+      }),
+    ).subscribe();
   }
 
   /**

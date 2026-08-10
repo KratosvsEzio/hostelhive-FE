@@ -112,7 +112,9 @@ export interface DropdownOption {
             >
           }
           <i
-            class="ti ti-chevron-down text-ink-400 transition-transform"
+            class="ti ti-chevron-down transition-transform"
+            [class.text-brand-700]="chevronBrand()"
+            [class.text-ink-400]="!chevronBrand()"
             [class.text-base]="variant() === 'field' && !compact()"
             [class.text-sm]="variant() !== 'field' || compact()"
             [class.rotate-180]="open()"
@@ -439,6 +441,19 @@ export class Dropdown {
         : 'border-ink-300 text-ink-800 hover:border-ink-400';
     return `${base} h-8 whitespace-nowrap rounded-full bg-white pl-3 pr-2.5 text-[13px] ${tone}`;
   });
+
+  /**
+   * The chevron matches the trigger's brand tint only in the one state where the trigger
+   * itself turns brand: an active (value-selected) auto-toned pill. Field, borderless,
+   * seamless and inactive triggers keep the subtle ink-400 chevron.
+   */
+  protected readonly chevronBrand = computed(
+    () =>
+      this.variant() === 'pill' &&
+      !this.seamless() &&
+      this.tone() === 'auto' &&
+      this.active(),
+  );
 
   protected readonly labelClass = computed(() => {
     if (this.variant() === 'field' && !this.count()) return 'truncate text-ink-400';

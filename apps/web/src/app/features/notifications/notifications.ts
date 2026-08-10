@@ -13,9 +13,11 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { format } from 'date-fns';
 import { Button, EmptyState, ErrorState, Skeleton } from '@hostelhive/ui';
 import { NotificationService } from '@core/notification.service';
+import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
-import { StudentApi, UserInvite, isInteractiveType } from '@services';
+import { Router } from '@angular/router';
+import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
 
 type TabKey = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -34,6 +36,8 @@ interface ListState {
 export class NotificationsPage {
   private readonly studentApi = inject(StudentApi);
   private readonly notifications = inject(NotificationService);
+  private readonly refetchDelay = inject(RefetchDelay);
+  private readonly router = inject(Router);
   private readonly el = inject(ElementRef<HTMLElement>);
 
   private readonly refresh = signal(0);
@@ -139,12 +143,26 @@ export class NotificationsPage {
     return isInteractiveType(type);
   }
 
+  protected isReviewRequest(type: string): boolean {
+    return isReviewRequestType(type);
+  }
+
+  /** Opens the hostel's page with the review modal, carrying this notification's id
+   *  (?review=<id>) so the submitted review posts against the notification. */
+  protected goToReview(invite: UserInvite): void {
+    if (!invite.associatedId) return;
+    void this.router.navigate(['/hostel', invite.associatedId], {
+      queryParams: { review: invite.id },
+    });
+  }
+
   protected accept(invite: UserInvite): void {
     this.actionLoading.set(invite.id);
     this.studentApi.acceptInvite(invite.id).subscribe({
       next: () => {
         this.actionLoading.set(null);
         this.notifications.show({ kind: 'success', title: 'Invite accepted' });
+        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {
@@ -161,6 +179,7 @@ export class NotificationsPage {
       next: () => {
         this.actionLoading.set(null);
         this.notifications.show({ kind: 'success', title: 'Invite declined' });
+        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {

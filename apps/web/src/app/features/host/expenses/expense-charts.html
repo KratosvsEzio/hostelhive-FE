@@ -8,7 +8,14 @@
       </div>
     </div>
 
-    <hh-bar-chart [bars]="bars()" [yTicks]="yTicksDesc()" />
+    @if (summaryError()) {
+      <div class="flex h-40 flex-col items-center justify-center gap-2 text-ink-400">
+        <i class="ti ti-chart-bar-off text-2xl"></i>
+        <p class="text-xs">Chart data is currently unavailable</p>
+      </div>
+    } @else {
+      <hh-bar-chart [bars]="bars()" [yTicks]="yTicksDesc()" />
+    }
   </hh-card>
 
   <!-- By type (multi-series line) -->
@@ -26,104 +33,111 @@
       />
     </div>
 
-    <div class="flex gap-2">
-      <!-- shared y-axis (identical to the bar card) -->
-      <div class="flex h-40 shrink-0 flex-col justify-between py-2 text-right text-[10px] leading-none text-ink-400">
-        @for (t of yTicksDesc(); track $index) {
-          <span>{{ t.label }}</span>
-        }
+    @if (typeSummaryError()) {
+      <div class="flex h-40 flex-col items-center justify-center gap-2 text-ink-400">
+        <i class="ti ti-chart-line text-2xl"></i>
+        <p class="text-xs">Chart data is currently unavailable</p>
       </div>
+    } @else {
+      <div class="flex gap-2">
+        <!-- shared y-axis (identical to the bar card) -->
+        <div class="flex h-40 shrink-0 flex-col justify-between py-2 text-right text-[10px] leading-none text-ink-400">
+          @for (t of yTicksDesc(); track $index) {
+            <span>{{ t.label }}</span>
+          }
+        </div>
 
-      <div class="min-w-0 flex-1">
-        @let c = chart();
-        @let hs = hoverState();
-        <div class="relative">
-          <svg
-            [attr.viewBox]="'0 0 ' + c.width + ' ' + c.height"
-            class="h-40 w-full"
-            preserveAspectRatio="none"
-            role="img"
-            aria-label="Expenses by type over the last 12 months"
-            (mouseleave)="hoveredDotIndex.set(null)"
-          >
-            <!-- Gridlines -->
-            @for (gy of c.gridY; track gy) {
-              <line
-                [attr.x1]="0" [attr.x2]="c.width" [attr.y1]="gy" [attr.y2]="gy"
-                stroke="#E6E6E6" stroke-width="1" vector-effect="non-scaling-stroke"
-              />
-            }
-
-            <!-- Vertical crosshair on hover -->
-            @if (hs) {
-              <line
-                [attr.x1]="c.xPositions[hs.idx]" [attr.x2]="c.xPositions[hs.idx]"
-                [attr.y1]="0" [attr.y2]="c.height"
-                stroke="#A3A3A3" stroke-opacity="0.4" stroke-width="1"
-                stroke-dasharray="4 3" vector-effect="non-scaling-stroke"
-              />
-            }
-
-            <!-- Area fill (single series only) -->
-            @if (c.series.length === 1) {
-              <path [attr.d]="c.series[0].area" [attr.fill]="c.series[0].color" fill-opacity="0.12" />
-            }
-
-            <!-- Lines + dots per series -->
-            @for (s of c.series; track s.key) {
-              <polyline
-                [attr.points]="s.points"
-                fill="none" [attr.stroke]="s.color" stroke-width="2"
-                stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"
-              />
-              @if (hs) {
-                <circle
-                  [attr.cx]="s.dots[hs.idx].x" [attr.cy]="s.dots[hs.idx].y" r="4"
-                  fill="#fff" [attr.stroke]="s.color" stroke-width="2"
-                  vector-effect="non-scaling-stroke"
+        <div class="min-w-0 flex-1">
+          @let c = chart();
+          @let hs = hoverState();
+          <div class="relative">
+            <svg
+              [attr.viewBox]="'0 0 ' + c.width + ' ' + c.height"
+              class="h-40 w-full"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Expenses by type over the last 12 months"
+              (mouseleave)="hoveredDotIndex.set(null)"
+            >
+              <!-- Gridlines -->
+              @for (gy of c.gridY; track gy) {
+                <line
+                  [attr.x1]="0" [attr.x2]="c.width" [attr.y1]="gy" [attr.y2]="gy"
+                  stroke="#E6E6E6" stroke-width="1" vector-effect="non-scaling-stroke"
                 />
               }
-            }
 
-            <!-- Invisible hit zones -->
-            @for (x of c.xPositions; track $index) {
-              <rect
-                [attr.x]="x - (c.width / c.xPositions.length / 2)"
-                [attr.y]="0"
-                [attr.width]="c.width / c.xPositions.length"
-                [attr.height]="c.height"
-                fill="transparent"
-                (mouseenter)="hoveredDotIndex.set($index)"
-              />
-            }
-          </svg>
+              <!-- Vertical crosshair on hover -->
+              @if (hs) {
+                <line
+                  [attr.x1]="c.xPositions[hs.idx]" [attr.x2]="c.xPositions[hs.idx]"
+                  [attr.y1]="0" [attr.y2]="c.height"
+                  stroke="#A3A3A3" stroke-opacity="0.4" stroke-width="1"
+                  stroke-dasharray="4 3" vector-effect="non-scaling-stroke"
+                />
+              }
 
-          <!-- Tooltip -->
-          @if (hs && hs.items.length) {
-            <div
-              class="pointer-events-none absolute z-10 -translate-x-1/2"
-              [style.left]="hs.xPct + '%'"
-              [style.bottom]="hs.bottomPct + '%'"
-            >
-              <div class="whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
-                <p class="mb-1 text-[11px] font-semibold text-white">{{ hs.monthLabel }}</p>
-                @for (item of hs.items; track item.label) {
-                  <div class="flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 shrink-0 rounded-full" [style.background]="item.color"></span>
-                    <span class="text-[11px] text-ink-300">{{ item.label }}</span>
-                    <span class="ml-auto pl-4 text-[11px] font-medium text-white">Rs {{ item.value | number }}</span>
-                  </div>
+              <!-- Area fill (single series only) -->
+              @if (c.series.length === 1) {
+                <path [attr.d]="c.series[0].area" [attr.fill]="c.series[0].color" fill-opacity="0.12" />
+              }
+
+              <!-- Lines + dots per series -->
+              @for (s of c.series; track s.key) {
+                <polyline
+                  [attr.points]="s.points"
+                  fill="none" [attr.stroke]="s.color" stroke-width="2"
+                  stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"
+                />
+                @if (hs) {
+                  <circle
+                    [attr.cx]="s.dots[hs.idx].x" [attr.cy]="s.dots[hs.idx].y" r="4"
+                    fill="#fff" [attr.stroke]="s.color" stroke-width="2"
+                    vector-effect="non-scaling-stroke"
+                  />
                 }
+              }
+
+              <!-- Invisible hit zones -->
+              @for (x of c.xPositions; track $index) {
+                <rect
+                  [attr.x]="x - (c.width / c.xPositions.length / 2)"
+                  [attr.y]="0"
+                  [attr.width]="c.width / c.xPositions.length"
+                  [attr.height]="c.height"
+                  fill="transparent"
+                  (mouseenter)="hoveredDotIndex.set($index)"
+                />
+              }
+            </svg>
+
+            <!-- Tooltip -->
+            @if (hs && hs.items.length) {
+              <div
+                class="pointer-events-none absolute z-10 -translate-x-1/2"
+                [style.left]="hs.xPct + '%'"
+                [style.bottom]="hs.bottomPct + '%'"
+              >
+                <div class="whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
+                  <p class="mb-1 text-[11px] font-semibold text-white">{{ hs.monthLabel }}</p>
+                  @for (item of hs.items; track item.label) {
+                    <div class="flex items-center gap-2">
+                      <span class="inline-block h-2 w-2 shrink-0 rounded-full" [style.background]="item.color"></span>
+                      <span class="text-[11px] text-ink-300">{{ item.label }}</span>
+                      <span class="ml-auto pl-4 text-[11px] font-medium text-white">Rs {{ item.value | number }}</span>
+                    </div>
+                  }
+                </div>
               </div>
-            </div>
-          }
-        </div>
-        <div class="mt-2 flex justify-between text-[10px] text-ink-400">
-          @for (m of c.monthLabels; track $index) {
-            <span>{{ m }}</span>
-          }
+            }
+          </div>
+          <div class="mt-2 flex justify-between text-[10px] text-ink-400">
+            @for (m of c.monthLabels; track $index) {
+              <span>{{ m }}</span>
+            }
+          </div>
         </div>
       </div>
-    </div>
+    }
   </hh-card>
 </div>

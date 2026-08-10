@@ -84,6 +84,12 @@
                 (click)="accept(invite)"
               >Accept</button>
             </div>
+          } @else if (isReviewRequest(invite.inviteType) && invite.associatedId) {
+            <div class="mt-4 flex items-center justify-end">
+              <button hh-button color="primary" size="sm" type="button" (click)="goToReview(invite)">
+                <i class="ti ti-star" aria-hidden="true"></i>Review
+              </button>
+            </div>
           }
         </div>
       }

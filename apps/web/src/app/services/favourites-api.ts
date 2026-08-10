@@ -1,48 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
-import { Gender } from '@hostelhive/data-access';
+import { Listing } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { ApiHostel, toListing } from './listings-api';
 
 interface FavouritesListResponse {
-  hostels: {
-    id: string;
-    name: string;
-    area: string;
-    city: string;
-    gender_type: string;
-    starting_price: number;
-    attachments: { url: string; is_primary: boolean; status: string }[];
-  }[];
+  hostels: ApiHostel[];
   success?: boolean;
-}
-
-export interface FavListItem {
-  id: string;
-  name: string;
-  area: string;
-  city: string;
-  gender: Gender;
-  priceFrom: number;
-  image: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class FavouritesApi {
   private readonly api = inject(ApiClient);
 
-  listFavourites(): Observable<FavListItem[]> {
+  /**
+   * Maps each favourited hostel through the same `toListing` the search list uses, so the
+   * favourites cards render identically — rating, "New" badge, property type, amenity pills
+   * all light up from whatever fields the endpoint returns (and degrade to nothing if absent).
+   */
+  listFavourites(): Observable<Listing[]> {
     return this.api.get<FavouritesListResponse>('/api/favourites').pipe(
-      map((res) =>
-        (res.hostels ?? []).map((h) => ({
-          id: h.id,
-          name: h.name,
-          area: h.area,
-          city: h.city,
-          gender: h.gender_type as Gender,
-          priceFrom: h.starting_price,
-          image: h.attachments?.[0]?.url ?? null,
-        })),
-      ),
+      map((res) => (res.hostels ?? []).map(toListing)),
     );
   }
 

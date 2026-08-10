@@ -34,8 +34,17 @@
 
       <!-- Body -->
       @if (loading()) {
-        <div class="flex items-center justify-center py-10 text-sm text-ink-400">
-          <i class="ti ti-loader-2 mr-2 animate-spin"></i> Loading&hellip;
+        <div class="divide-y divide-ink-50 px-4">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="flex items-start gap-3 py-4">
+              <hh-skeleton class="h-8 w-8 shrink-0" radius="lg" />
+              <div class="flex-1 space-y-2">
+                <hh-skeleton class="h-3 w-20" radius="full" />
+                <hh-skeleton class="h-4 w-full" radius="full" />
+                <hh-skeleton class="h-3 w-16" radius="full" />
+              </div>
+            </div>
+          }
         </div>
       } @else if (recentItems().length) {
         <div class="max-h-80 divide-y divide-ink-50 overflow-y-auto">
@@ -84,6 +93,12 @@
                     [disabled]="actionLoading() === invite.id"
                     (click)="accept(invite, $event)"
                   >Accept</button>
+                </div>
+              } @else if (isReviewRequest(invite.inviteType) && invite.associatedId) {
+                <div class="mt-3 flex items-center justify-end">
+                  <button hh-button color="primary" size="sm" type="button" (click)="goToReview(invite, $event)">
+                    <i class="ti ti-star" aria-hidden="true"></i>Review
+                  </button>
                 </div>
               }
             </div>

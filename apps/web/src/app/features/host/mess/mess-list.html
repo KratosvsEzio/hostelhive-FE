@@ -272,7 +272,22 @@
 
     </div><!-- end charts row -->
 
-    @if (svc.entries().length === 0) {
+    @if (entriesLoading()) {
+      <div class="space-y-4">
+        @for (_ of [1, 2, 3]; track $index) {
+          <div class="rounded-2xl bg-white p-5 shadow-card">
+            <div class="flex items-center gap-4">
+              <hh-skeleton class="h-9 w-9 rounded-xl" />
+              <div class="flex-1 space-y-2">
+                <hh-skeleton class="h-4 w-40 rounded" />
+                <hh-skeleton class="h-3 w-24 rounded" />
+              </div>
+              <hh-skeleton class="h-5 w-20 rounded" />
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (visibleEntries().length === 0) {
       <hh-empty-state
         icon="ti-tools-kitchen-2"
         title="No grocery entries yet"
@@ -283,7 +298,7 @@
         </a>
       </hh-empty-state>
     } @else {
-      @for (entry of svc.entries(); track entry.id) {
+      @for (entry of visibleEntries(); track entry.id) {
         <div class="overflow-hidden rounded-2xl bg-white shadow-card">
 
           <!-- Entry header row -->
@@ -300,23 +315,18 @@
                 <i class="ti ti-chevron-down text-base text-brand-600" aria-hidden="true"></i>
               </span>
               <div class="min-w-0">
-                <p class="font-display font-semibold text-ink-900">{{ entry.displayDate }}</p>
+                <p class="font-display font-semibold text-ink-900">{{ displayDate(entry.date) }}</p>
                 <p class="text-xs text-ink-400">
-                  @if (entry.mode === 'bill') {
-                    Quick entry
-                    @if (entry.images?.length) { · {{ entry.images!.length }} photo{{ entry.images!.length === 1 ? '' : 's' }} }
-                  } @else {
-                    {{ entry.itemCount }} grocery item{{ entry.itemCount === 1 ? '' : 's' }}
-                    @if (entry.images?.length) { · {{ entry.images!.length }} photo{{ entry.images!.length === 1 ? '' : 's' }} }
-                  }
+                  {{ entry.itemCount }} grocery item{{ entry.itemCount === 1 ? '' : 's' }}
+                  @if (entry.notes) { · {{ entry.notes }} }
                 </p>
               </div>
             </button>
-            <span class="shrink-0 font-semibold text-ink-900">Rs {{ entry.totalSum | number }}</span>
+            <span class="shrink-0 font-semibold text-ink-900">Rs {{ entry.amount | number }}</span>
             <button
               type="button"
               class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-300 transition hover:bg-danger/10 hover:text-danger"
-              (click)="promptRemove(entry.id)"
+              (click)="promptRemove(entry)"
               aria-label="Delete entry"
             >
               <i class="ti ti-trash text-sm" aria-hidden="true"></i>
@@ -326,74 +336,67 @@
           <!-- Expanded breakdown -->
           @if (expanded() === entry.id) {
             <div class="border-t border-ink-100 p-5 pt-4">
-
-              @if (entry.mode === 'bill') {
-                <!-- Quick entry: bill photo(s) + total -->
-                @if (entry.images?.length) {
-                  <div class="flex gap-3 overflow-x-auto pb-1">
-                    @for (img of entry.images!; track img) {
-                      <div class="h-72 w-52 shrink-0 overflow-hidden rounded-2xl border border-ink-100 shadow-sm">
-                        <img [src]="img" alt="Bill photo" class="h-full w-full object-cover" />
+              @if (detailLoading() === entry.id) {
+                <div class="space-y-3">
+                  @for (_ of [1, 2, 3]; track $index) {
+                    <hh-skeleton class="h-8 w-full rounded" />
+                  }
+                </div>
+              } @else if (detailCache()[entry.id]; as detail) {
+                @if (detail.items.length) {
+                  <div class="overflow-x-auto">
+                    <div class="min-w-[520px] overflow-hidden rounded-xl border border-ink-100">
+                      <div class="flex items-center gap-3 border-b border-ink-50 bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                        <span class="flex-1 min-w-[120px]">Item</span>
+                        <span class="w-14 shrink-0">Unit</span>
+                        <span class="w-16 shrink-0 text-right">Qty</span>
+                        <span class="w-24 shrink-0 text-right">Unit price</span>
+                        <span class="w-24 shrink-0 text-right">Total price</span>
                       </div>
-                    }
+                      @for (item of detail.items; track item.id) {
+                        <div class="flex items-center gap-3 border-b border-ink-50 px-4 py-2.5 text-sm last:border-0">
+                          <span class="flex-1 min-w-[120px] font-medium text-ink-800">{{ item.name }}</span>
+                          <span class="w-14 shrink-0 text-ink-500">{{ item.unit }}</span>
+                          <span class="w-16 shrink-0 text-right text-ink-500">{{ item.quantity | number: '1.0-2' }}</span>
+                          <span class="w-24 shrink-0 text-right text-ink-600">Rs {{ item.unitPrice | number }}</span>
+                          <span class="w-24 shrink-0 text-right font-semibold text-ink-900">Rs {{ item.totalPrice | number }}</span>
+                        </div>
+                      }
+                      <div class="flex items-center justify-between bg-tint-cream px-4 py-2.5">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                          Total · {{ detail.items.length }} item{{ detail.items.length === 1 ? '' : 's' }}
+                        </span>
+                        <span class="font-display font-semibold text-ink-900">Rs {{ entry.amount | number }}</span>
+                      </div>
+                    </div>
                   </div>
                 } @else {
-                  <div class="flex items-center gap-3 rounded-xl border border-dashed border-ink-200 bg-surface/50 px-4 py-6">
-                    <i class="ti ti-photo-off shrink-0 text-xl text-ink-300" aria-hidden="true"></i>
-                    <span class="text-sm text-ink-400">No photo uploaded</span>
+                  <div class="flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Total amount</p>
+                      <p class="font-display mt-0.5 text-2xl font-semibold text-ink-900">Rs {{ entry.amount | number }}</p>
+                    </div>
+                    <span class="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
+                      <i class="ti ti-bolt text-lg text-amber-500" aria-hidden="true"></i>
+                    </span>
                   </div>
                 }
-                <div class="mt-4 flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Total amount</p>
-                    <p class="font-display mt-0.5 text-2xl font-semibold text-ink-900">Rs {{ entry.totalSum | number }}</p>
-                  </div>
-                  <span class="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
-                    <i class="ti ti-bolt text-lg text-amber-500" aria-hidden="true"></i>
-                  </span>
-                </div>
-              } @else {
-                <!-- Items mode: breakdown table -->
-                <div class="overflow-x-auto">
-                  <div class="min-w-[520px] overflow-hidden rounded-xl border border-ink-100">
-                    <div class="flex items-center gap-3 border-b border-ink-50 bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-                      <span class="flex-1 min-w-[120px]">Item</span>
-                      <span class="w-14 shrink-0">Unit</span>
-                      <span class="w-16 shrink-0 text-right">Qty</span>
-                      <span class="w-24 shrink-0 text-right">Unit price</span>
-                      <span class="w-24 shrink-0 text-right">Total price</span>
-                    </div>
-                    @for (item of entry.items; track item.id) {
-                      <div class="flex items-center gap-3 border-b border-ink-50 px-4 py-2.5 text-sm last:border-0">
-                        <span class="flex-1 min-w-[120px] font-medium text-ink-800">{{ item.name }}</span>
-                        <span class="w-14 shrink-0 text-ink-500">{{ item.unit }}</span>
-                        <span class="w-16 shrink-0 text-right text-ink-500">{{ item.quantity | number: '1.0-2' }}</span>
-                        <span class="w-24 shrink-0 text-right text-ink-600">Rs {{ item.unitPrice | number }}</span>
-                        <span class="w-24 shrink-0 text-right font-semibold text-ink-900">Rs {{ item.totalPrice | number }}</span>
-                      </div>
-                    }
-                    <div class="flex items-center justify-between bg-tint-cream px-4 py-2.5">
-                      <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                        Total · {{ entry.itemCount }} item{{ entry.itemCount === 1 ? '' : 's' }}
-                      </span>
-                      <span class="font-display font-semibold text-ink-900">Rs {{ entry.totalSum | number }}</span>
-                    </div>
-                  </div>
-                </div>
-                @if (entry.images?.length) {
+                @if (detail.receipts.length) {
                   <div class="mt-4">
                     <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Attachments</p>
                     <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                      @for (img of entry.images!; track img) {
+                      @for (r of detail.receipts; track r.id) {
                         <div class="aspect-square overflow-hidden rounded-xl border border-ink-100 bg-surface">
-                          <img [src]="img" alt="Attachment" class="h-full w-full object-cover" />
+                          <img [src]="r.url" alt="Receipt" class="h-full w-full object-cover" />
                         </div>
                       }
                     </div>
                   </div>
                 }
+                @if (detail.notes) {
+                  <p class="mt-3 text-sm text-ink-500">{{ detail.notes }}</p>
+                }
               }
-
             </div>
           }
 

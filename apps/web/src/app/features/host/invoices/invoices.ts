@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
-import { catchError, debounceTime, filter, map, of, switchMap, tap, timer } from 'rxjs';
+import { catchError, debounceTime, filter, map, of, switchMap, tap } from 'rxjs';
 import {
   Button,
   ConfirmModal,
@@ -34,6 +34,7 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { ApiError, Invoice, InvoiceStatus } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
 import { NotificationService } from '@core/notification.service';
+import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -41,6 +42,7 @@ import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-groups';
 import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/table-configs/invoice-table-cols';
+import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
 
 interface InvoiceAggs {
@@ -97,6 +99,7 @@ export class Invoices {
   private readonly apiBaseUrl = inject(API_CONFIG).baseUrl;
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
+  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -170,8 +173,8 @@ export class Invoices {
         if (kind !== 'all') filters['f[bill_type]'] = kind;
         if (room) filters['f[room.id]'] = room;
         if (tenant) filters['f[renter.id]'] = tenant;
-        if (dateFrom) filters['f[issue_date][gte]'] = dateFrom;
-        if (dateTo) filters['f[issue_date][lte]'] = dateTo;
+        if (dateFrom) filters['f[issue_date][gte]'] = dayRangeStart(dateFrom);
+        if (dateTo) filters['f[issue_date][lte]'] = dayRangeEnd(dateTo);
         if (searchTerm) {
           if (this.searchField() === 'room') filters['s[room.room_number]'] = searchTerm;
           else filters['s[renter.full_name]'] = searchTerm;
@@ -717,12 +720,8 @@ export class Invoices {
     this.api.markInvoicePaid(hostelId, inv.id).subscribe({
       next: () => {
         this.notifications.success('Invoice marked paid', `${buildInvoiceId(inv)} is now settled.`);
-        // Wait 1.5s before re-fetching: the bill's paid status propagates to the list's read
-        // model asynchronously, so refetching immediately can return the stale "due" row.
-        // The timer is torn down with the component so a late navigation can't refetch.
-        timer(1500)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe(() => this.refresh.update((n) => n + 1));
+        this.refetchDelay.track('/renter_bills');
+        this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {
         const { title, message } = toToastCopy(err);
@@ -741,11 +740,8 @@ export class Invoices {
 
   protected onInvoiceCreated(): void {
     this.addOpen.set(false);
-    // The new bill lands in the list's read model asynchronously, so give the backend a
-    // beat before refetching — mirrors the mark-as-paid refresh below.
-    timer(1500)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.refresh.update((n) => n + 1));
+    this.refetchDelay.track('/renter_bills');
+    this.refresh.update((n) => n + 1);
   }
 
   protected exportCsv(): void {

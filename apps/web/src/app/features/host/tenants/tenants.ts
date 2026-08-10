@@ -37,6 +37,7 @@ import {
 
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant, TenantStatus } from '@hostelhive/data-access';
+import { RefetchDelay } from '@core/refetch-delay';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -87,6 +88,7 @@ const TONES = ['sky', 'cream', 'mint'] as const;
 export class Tenants {
   private readonly api = inject(HostOpsApi);
   private readonly store = inject(HostPropertyStore);
+  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -279,6 +281,7 @@ export class Tenants {
 
   protected onDrawerSaved(): void {
     this.local.set(null);
+    this.refetchDelay.track('/renters');
     this.refresh.update((n) => n + 1);
     this.goToList();
   }

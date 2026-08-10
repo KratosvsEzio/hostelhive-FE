@@ -6,9 +6,7 @@
   </div>
 
   <!-- Charts — total monthly spend + spend-by-type over the last 12 months -->
-  @if (!loading() && !error() && allItems().length) {
-    <hh-expense-charts class="mb-5 block" [items]="allItems()" [typeOptions]="typeOptions()" />
-  }
+  <hh-expense-charts class="mb-5 block" [items]="allItems()" [typeOptions]="typeOptions()" />
 
   <!-- Filters — expense type and date range as separate controls -->
   <div class="mb-4 flex flex-wrap items-center gap-3">
@@ -28,7 +26,7 @@
       />
     </div>
     @if (hasFilters()) {
-      <button hh-button variant="text" size="sm" type="button" (click)="clearFilters()">
+      <button hh-button variant="outlined" size="sm" type="button" (click)="clearFilters()">
         <i class="ti ti-x" aria-hidden="true"></i>Clear
       </button>
     }

@@ -165,30 +165,34 @@ export class HostOverview {
       switchMap((slug) =>
         slug
           ? this.api.monthlyRevenue(slug).pipe(
-              map((data) => ({ loading: false, data })),
-              startWith({ loading: true, data: [] as RevenuePoint[] }),
-              catchError(() => of({ loading: false, data: [] as RevenuePoint[] })),
+              map((data) => ({ loading: false, error: false, data })),
+              startWith({ loading: true, error: false, data: [] as RevenuePoint[] }),
+              catchError(() => of({ loading: false, error: true, data: [] as RevenuePoint[] })),
             )
-          : of({ loading: false, data: [] as RevenuePoint[] }),
+          : of({ loading: false, error: false, data: [] as RevenuePoint[] }),
       ),
     ),
-    { initialValue: { loading: true, data: [] as RevenuePoint[] } },
+    { initialValue: { loading: true, error: false, data: [] as RevenuePoint[] } },
   );
+
+  protected readonly revenueError = computed(() => this.monthlyRevenueResp().error);
 
   private readonly tenantMovementResp = toSignal(
     toObservable(this.propertyStore.selected).pipe(
       switchMap((slug) =>
         slug
           ? this.api.tenantMovement(slug).pipe(
-              map((data) => ({ loading: false, data })),
-              startWith({ loading: true, data: [] as TenantMovement[] }),
-              catchError(() => of({ loading: false, data: [] as TenantMovement[] })),
+              map((data) => ({ loading: false, error: false, data })),
+              startWith({ loading: true, error: false, data: [] as TenantMovement[] }),
+              catchError(() => of({ loading: false, error: true, data: [] as TenantMovement[] })),
             )
-          : of({ loading: false, data: [] as TenantMovement[] }),
+          : of({ loading: false, error: false, data: [] as TenantMovement[] }),
       ),
     ),
-    { initialValue: { loading: true, data: [] as TenantMovement[] } },
+    { initialValue: { loading: true, error: false, data: [] as TenantMovement[] } },
   );
+
+  protected readonly movementError = computed(() => this.tenantMovementResp().error);
 
   protected readonly bars = computed(() =>
     revenueBars(this.monthlyRevenueResp().data),
