@@ -5,12 +5,11 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Listing } from '@hostelhive/data-access';
-import { FavListItem, FavouritesApi } from '@services/favourites-api';
+import { FavouritesApi } from '@services/favourites-api';
 import { FavoritesStore } from '@util/favorites-store';
 import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
@@ -18,34 +17,7 @@ import { ListingCard } from '@features/public/search/listing-card/listing-card';
 interface ViewState {
   loading: boolean;
   error: boolean;
-  data: FavListItem[];
-}
-
-/**
- * Widens a favourites row into the `Listing` the shared card renders.
- *
- * `GET /api/favourites` returns a narrower row than `/public/hostels` — no property type,
- * amenities, rating or coordinates — so the fields the card treats as optional are simply
- * left unset and it degrades to hiding those pills. `lat`/`lng`/`verified` are required by
- * the model but unread by the card; they are filler here, not real data. Widen the
- * endpoint and those pills light up with no change to this page.
- */
-function toListing(f: FavListItem): Listing {
-  return {
-    id: f.id,
-    slug: f.id, // favourites carry no slug — the id doubles as the route key, as in listings-api
-    name: f.name,
-    area: f.area,
-    city: f.city,
-    gender: f.gender,
-    verified: false,
-    sharing: [],
-    amenities: [],
-    priceFrom: f.priceFrom,
-    images: f.image ? [f.image] : [],
-    lat: 0,
-    lng: 0,
-  };
+  data: Listing[];
 }
 
 @Component({
@@ -74,17 +46,17 @@ export class AccountFavorites {
   );
 
   private readonly _removed = signal(new Set<string>());
-  protected readonly removePending = signal<FavListItem | null>(null);
+  protected readonly removePending = signal<Listing | null>(null);
 
-  /** Rows still on screen, each paired with the card-ready shape so the template does no
-   *  mapping work per change detection. */
+  /** Rows still on screen. `item` and `listing` are the same Listing — the pairing is kept
+   *  so the template (card + Unfavorite button) needs no change. */
   protected readonly saved = computed(() =>
     this.state()
       .data.filter((l) => !this._removed().has(l.id))
-      .map((item) => ({ item, listing: toListing(item) })),
+      .map((listing) => ({ item: listing, listing })),
   );
 
-  protected promptRemove(item: FavListItem): void {
+  protected promptRemove(item: Listing): void {
     this.removePending.set(item);
   }
 

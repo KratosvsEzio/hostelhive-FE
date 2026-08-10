@@ -61,6 +61,7 @@ export class InvoiceFormDrawer {
   protected readonly form = signal<InvoiceForm>(emptyInvoiceForm());
   protected readonly saving = signal(false);
   protected readonly submitAttempted = signal(false);
+  protected readonly formValid = computed(() => isInvoiceFormValid(this.form()));
 
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panel');
 

@@ -1,7 +1,7 @@
 <app-dashboard-layout label="Tenants">
   <div hhActions class="flex items-center gap-2">
     <button hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCheckIn()">
-      <i class="ti ti-user-plus"></i>Check in tenant
+      <i class="ti ti-user-plus"></i>Register Tenant
     </button>
   </div>
 
@@ -53,7 +53,7 @@
       message="Check in your first tenant to start tracking rent."
     >
       <button hh-button color="primary" size="sm" (click)="openCheckIn()">
-        <i class="ti ti-user-plus"></i>Check in tenant
+        <i class="ti ti-user-plus"></i>Register Tenant
       </button>
     </hh-empty-state>
   } @else {

@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { DatePipe, DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
@@ -15,6 +15,7 @@ import { AMENITIES, Gender } from '@hostelhive/data-access';
 import { Avatar, Badge, Button, EmptyState, Skeleton } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
+import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
@@ -64,6 +65,7 @@ const ROOM_TINTS = [
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     DecimalPipe,
     RouterLink,
     Avatar,
@@ -78,6 +80,7 @@ const ROOM_TINTS = [
 export class ListingDetail {
   private readonly api = inject(ListingDetailApi);
   private readonly hostelsApi = inject(HostelsApi);
+  private readonly studentApi = inject(StudentApi);
   private readonly session = inject(SessionStore);
   private readonly favorites = inject(FavoritesStore);
   private readonly route = inject(ActivatedRoute);
@@ -95,6 +98,48 @@ export class ListingDetail {
   protected readonly shareOpen = signal(false);
   protected readonly shareLinkCopied = signal(false);
   protected readonly descriptionModalOpen = signal(false);
+  protected readonly reviewsOpen = signal(false);
+  protected readonly reviewScore = signal(0);
+  protected readonly reviewComment = signal('');
+  protected readonly reviewHover = signal<number | null>(null);
+  protected readonly reviewSubmitting = signal(false);
+  protected readonly reviewSubmitError = signal('');
+  protected readonly reviewSubmitSuccess = signal(false);
+  protected readonly reviews = signal<Review[]>([]);
+  protected readonly reviewsLoading = signal(false);
+  protected readonly reviewsError = signal(false);
+  /**
+   * The review-request notification this review is submitted against. Reviews POST to
+   * `/api/notifications/:id/add_review`, so a review can only be left when the user arrived
+   * from a review-request notification (deep-linked as `?review=<notificationId>`); the rating
+   * form is hidden otherwise and the modal just shows existing reviews.
+   */
+  protected readonly reviewNotificationId = signal('');
+
+  protected readonly isLoggedIn = computed(() => this.session.isAuthenticated());
+  protected readonly canReview = computed(() => !!this.reviewNotificationId());
+  protected readonly displayScore = computed(() => this.reviewHover() ?? this.reviewScore());
+  protected readonly canSubmitReview = computed(() => this.reviewScore() > 0 && this.reviewComment().trim().length > 0);
+  protected readonly stars = [1, 2, 3, 4, 5];
+
+  /** Indexes of review comments expanded ("Show more"). Keyed by position because the API
+   *  returns the hostel id on every review, so review.id is not unique. */
+  protected readonly expandedReviews = signal<ReadonlySet<number>>(new Set());
+
+  /** Airbnb-style header: average score + per-star distribution, derived from the real reviews. */
+  protected readonly reviewStats = computed(() => {
+    const list = this.reviews();
+    const total = list.length;
+    const buckets = [5, 4, 3, 2, 1].map((star) => {
+      const count = list.filter((r) => Math.round(r.score) === star).length;
+      return { star, count, pct: total ? Math.round((count / total) * 100) : 0 };
+    });
+    const avg = total
+      ? list.reduce((sum, r) => sum + r.score, 0) / total
+      : (this.state().data?.rating ?? 0);
+    return { total, buckets, avg };
+  });
+
   protected pendingAction: 'modal' | 'whatsapp' | null = null;
 
   protected readonly currentPath = computed(() => {
@@ -284,6 +329,85 @@ export class ListingDetail {
       });
   }
 
+  protected openReviews(): void {
+    this.reviewsOpen.set(true);
+    // Reviews are fetched on listing load; only (re)fetch if that hasn't produced any yet.
+    if (!this.reviews().length) this.fetchReviews();
+  }
+
+  protected closeReviews(): void {
+    this.reviewsOpen.set(false);
+    this.reviewScore.set(0);
+    this.reviewComment.set('');
+    this.reviewHover.set(null);
+    this.reviewSubmitError.set('');
+    this.reviewSubmitSuccess.set(false);
+    this.reviewNotificationId.set('');
+    this.expandedReviews.set(new Set());
+  }
+
+  protected isReviewExpanded(index: number): boolean {
+    return this.expandedReviews().has(index);
+  }
+
+  protected toggleReviewExpanded(index: number): void {
+    this.expandedReviews.update((s) => {
+      const next = new Set(s);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
+  /** Long comments get a "Show more" toggle; short ones render in full with no control. */
+  protected isLongComment(text: string): boolean {
+    return (text?.length ?? 0) > 200;
+  }
+
+  protected submitReview(): void {
+    // Reviews are submitted against the review-request notification, not the hostel.
+    const notificationId = this.reviewNotificationId();
+    if (!notificationId || !this.canSubmitReview() || this.reviewSubmitting()) return;
+    this.reviewSubmitting.set(true);
+    this.reviewSubmitError.set('');
+    this.studentApi
+      .addReview(notificationId, this.reviewScore(), this.reviewComment().trim())
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.reviewSubmitting.set(false);
+          this.reviewSubmitSuccess.set(true);
+          this.reviewScore.set(0);
+          this.reviewComment.set('');
+          this.fetchReviews();
+        },
+        error: () => {
+          this.reviewSubmitting.set(false);
+          this.reviewSubmitError.set('Failed to submit review. Please try again.');
+        },
+      });
+  }
+
+  protected fetchReviews(): void {
+    const hostelId = this.state().data?.id;
+    if (!hostelId) return;
+    this.reviewsLoading.set(true);
+    this.reviewsError.set(false);
+    this.studentApi
+      .getReviews(hostelId)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (r) => {
+          this.reviews.set(r);
+          this.reviewsLoading.set(false);
+        },
+        error: () => {
+          this.reviewsLoading.set(false);
+          this.reviewsError.set(true);
+        },
+      });
+  }
+
   protected openLightbox(index: number): void {
     this.lightboxIndex.set(index);
     this.doc.body.style.overflow = 'hidden';
@@ -311,6 +435,12 @@ export class ListingDetail {
     // client hydrates. Skip the fetch on the server: SSR renders the skeleton (matching the
     // initial `loading: true` state for clean hydration) and the browser does the real fetch.
     if (this.isBrowser) {
+      // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
+      // opens the review modal once the listing has loaded, carrying the notification id the
+      // review is submitted against.
+      const reviewParam = this.route.snapshot.queryParamMap.get('review');
+      let openReviewOnLoad = !!reviewParam;
+
       this.route.paramMap.pipe(
         map((p) => p.get('slug') ?? ''),
         distinctUntilChanged(),
@@ -322,7 +452,23 @@ export class ListingDetail {
           );
         }),
         takeUntilDestroyed(this.destroyRef),
-      ).subscribe((s) => this._state.set(s));
+      ).subscribe((s) => {
+        this._state.set(s);
+        // Load reviews up front so the in-page reviews section renders them without a click.
+        if (s.data) this.fetchReviews();
+        if (s.data && openReviewOnLoad) {
+          openReviewOnLoad = false;
+          this.reviewNotificationId.set(reviewParam ?? '');
+          this.openReviews();
+          // Drop the param so a refresh (or the back button) doesn't reopen the modal.
+          void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { review: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
+      });
     }
 
     fromEvent<KeyboardEvent>(this.doc, 'keydown').pipe(
@@ -330,6 +476,7 @@ export class ListingDetail {
     ).subscribe((e) => {
       if (e.key === 'Escape') {
         if (this.lightboxIndex() !== null) this.closeLightbox();
+        else if (this.reviewsOpen()) this.closeReviews();
         else if (this.modalOpen()) this.closeModal();
         else if (this.descriptionModalOpen()) this.descriptionModalOpen.set(false);
       } else if (this.lightboxIndex() !== null) {

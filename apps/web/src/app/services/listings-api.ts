@@ -14,8 +14,8 @@ import { ApiClient } from '@core/api-resource';
  * the AR HostelSerializer: there is no `name`, `hostel_offers`, or `banner` — only the
  * fields below (`room_types` was added to the payload later). Enums are string keys.
  */
-interface ApiHostel {
-  id: number;
+export interface ApiHostel {
+  id: number | string;
   name?: string | null;
   title?: string | null;
   description?: string | null;
@@ -55,6 +55,9 @@ interface ApiHostel {
       }[]
     | null;
   is_featured?: boolean | null;
+  created_at?: string | null;
+  // Aggregated reviews (present once the hostel has any) — average score + total count.
+  review?: { score?: number | null; count?: number | null } | null;
 }
 
 // gender_type arrives as the backend enum's string key ('co-living' has a hyphen).
@@ -96,8 +99,9 @@ function buildPriceByCapacity(h: ApiHostel): Record<string, number> {
   return map;
 }
 
-/** Map a backend search_data hostel to the frontend Listing model. */
-function toListing(h: ApiHostel): Listing {
+/** Map a backend search_data hostel to the frontend Listing model. Exported so the
+ *  favourites list renders through the exact same mapping and the two never drift. */
+export function toListing(h: ApiHostel): Listing {
   const lat =
     typeof h.latitude === 'string'
       ? parseFloat(h.latitude)
@@ -142,6 +146,9 @@ function toListing(h: ApiHostel): Listing {
       : undefined,
     description: h.description ?? undefined,
     isFeatured: !!h.is_featured,
+    rating: h.review?.score != null ? h.review.score : undefined,
+    reviews: h.review?.count != null ? h.review.count : undefined,
+    createdAt: h.created_at ?? undefined,
   };
 }
 

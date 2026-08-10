@@ -24,6 +24,7 @@ import {
   PermissionGroup,
   RoleDef,
 } from '@hostelhive/data-access';
+import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { PERMISSION_GROUPS } from './admin.fixtures';
 
 /**
@@ -125,10 +126,9 @@ export class AdminApi {
     // Hostel search: full-text `s[hostel.name]` for the name, exact `f[hostel_id]` for the id.
     if (search?.hostelName) params['s[hostel.name]'] = search.hostelName;
     if (search?.hostelId) params['f[hostel_id]'] = search.hostelId;
-    // End-date range (inclusive). Upper bound spans the whole "to" day so it isn't excluded.
-    if (dateRange?.endFrom) params['f[end_date][gte]'] = dateRange.endFrom;
-    if (dateRange?.endTo)
-      params['f[end_date][lte]'] = `${dateRange.endTo}T23:59:59.999Z`;
+    // End-date range (inclusive). Bounds span the whole day (00:00:00 → 23:59:59).
+    if (dateRange?.endFrom) params['f[end_date][gte]'] = dayRangeStart(dateRange.endFrom);
+    if (dateRange?.endTo) params['f[end_date][lte]'] = dayRangeEnd(dateRange.endTo);
     return this.api
       .get<AdminContractsResponse>('/api/admin/contracts', params)
       .pipe(
@@ -225,11 +225,11 @@ export class AdminApi {
     // Hostel search: full-text `s[hostel.name]` for the name, exact `f[hostel_id]` for the id.
     if (search?.hostelName) params['s[hostel.name]'] = search.hostelName;
     if (search?.hostelId) params['f[hostel_id]'] = search.hostelId;
-    // Created-date range (inclusive). Upper bound spans the whole "to" day so it isn't excluded.
+    // Created-date range (inclusive). Bounds span the whole day (00:00:00 → 23:59:59).
     if (dateRange?.createdFrom)
-      params['f[created_at][gte]'] = dateRange.createdFrom;
+      params['f[created_at][gte]'] = dayRangeStart(dateRange.createdFrom);
     if (dateRange?.createdTo)
-      params['f[created_at][lte]'] = `${dateRange.createdTo}T23:59:59.999Z`;
+      params['f[created_at][lte]'] = dayRangeEnd(dateRange.createdTo);
     return this.api
       .get<AdminPaymentsResponse>('/api/admin/payments', params)
       .pipe(

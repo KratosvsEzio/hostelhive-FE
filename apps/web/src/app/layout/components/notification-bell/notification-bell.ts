@@ -10,14 +10,15 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router, RouterLink } from '@angular/router';
-import { catchError, filter, map, of, startWith, switchMap } from 'rxjs';
+import { catchError, filter, map, of, startWith, switchMap, tap } from 'rxjs';
 import { formatDistanceToNow } from 'date-fns';
-import { Button } from '@hostelhive/ui';
+import { Button, Skeleton } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
+import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
-import { StudentApi, UserInvite, isInteractiveType } from '@services';
+import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
 
 interface ListState {
   loading: boolean;
@@ -28,7 +29,7 @@ interface ListState {
 @Component({
   selector: 'app-notification-bell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button],
+  imports: [RouterLink, Button, Skeleton],
   host: {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'onEscape()',
@@ -41,9 +42,11 @@ export class NotificationBell {
   private readonly toasts = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly el = inject(ElementRef<HTMLElement>);
+  private readonly refetchDelay = inject(RefetchDelay);
 
   protected readonly open = signal(false);
   protected readonly actionLoading = signal<string | null>(null);
+  private readonly dismissing = signal(false);
 
   private readonly refresh = signal(0);
   private readonly locallyMarkedIds = signal(new Set<string>());
@@ -84,11 +87,12 @@ export class NotificationBell {
           catchError(() => of<ListState>({ loading: false, items: [], unread: 0 })),
         );
       }),
+      tap((s) => { if (!s.loading) this.dismissing.set(false); }),
     ),
     { initialValue: { loading: false, items: [], unread: 0 } as ListState },
   );
 
-  protected readonly loading = computed(() => this.state().loading);
+  protected readonly loading = computed(() => this.state().loading || this.dismissing());
   protected readonly allItems = computed(() => this.state().items);
   protected readonly unreadCount = computed(() => this.state().unread);
   protected readonly recentItems = computed(() => this.allItems().slice(0, 5));
@@ -116,10 +120,34 @@ export class NotificationBell {
     return isInteractiveType(type);
   }
 
+  protected isReviewRequest(type: string): boolean {
+    return isReviewRequestType(type);
+  }
+
+  /** Closes the dropdown and opens the hostel's page with the review modal, carrying this
+   *  notification's id (?review=<id>) so the submitted review posts against the notification. */
+  protected goToReview(invite: UserInvite, event: Event): void {
+    event.stopPropagation();
+    if (!invite.associatedId) return;
+    this.close();
+    void this.router.navigate(['/hostel', invite.associatedId], {
+      queryParams: { review: invite.id },
+    });
+  }
+
   protected dismiss(invite: UserInvite, event: Event): void {
     event.stopPropagation();
-    this.studentApi.markAsRead(invite.id).subscribe({
-      next: () => this.refresh.update((n) => n + 1),
+    this.dismissing.set(true);
+    this.studentApi.deleteNotification(invite.id).subscribe({
+      next: () => {
+        this.refetchDelay.track('/api/notifications');
+        this.refresh.update((n) => n + 1);
+      },
+      error: (err: ApiError) => {
+        this.dismissing.set(false);
+        const { title, message } = toToastCopy(err);
+        this.toasts.show({ kind: 'error', title, message }, 0);
+      },
     });
   }
 
@@ -130,6 +158,7 @@ export class NotificationBell {
       next: () => {
         this.actionLoading.set(null);
         this.toasts.show({ kind: 'success', title: 'Invite accepted' });
+        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {
@@ -147,6 +176,7 @@ export class NotificationBell {
       next: () => {
         this.actionLoading.set(null);
         this.toasts.show({ kind: 'success', title: 'Invite declined' });
+        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {

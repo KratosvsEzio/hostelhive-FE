@@ -33,7 +33,7 @@
 
           <!-- Tenant -->
           <div class="flex items-center gap-3">
-            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Tenant</p>
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Tenant</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div>
@@ -66,7 +66,7 @@
 
           <!-- Dates -->
           <div class="flex items-center gap-3">
-            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Dates</p>
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Dates</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -86,7 +86,7 @@
 
           <!-- Charges -->
           <div class="flex items-center gap-3">
-            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-400">Charges</p>
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Charges</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div class="space-y-3">
@@ -142,7 +142,7 @@
       <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
         <div class="flex gap-3">
           <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="requestClose()">Cancel</button>
-          <button hh-button color="primary" class="flex-1" [loading]="saving()" (click)="save()">
+          <button hh-button color="primary" class="flex-1" [disabled]="!formValid()" [loading]="saving()" (click)="save()">
             Create invoice
           </button>
         </div>

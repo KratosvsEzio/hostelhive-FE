@@ -36,8 +36,9 @@ export interface Listing {
   rooms?: Room[];
   host?: HostSummary;
   description?: string;
-  rating?: number; // average review score, e.g. 4.8 (stub data until reviews API lands)
-  reviews?: number; // number of reviews (stub data)
+  rating?: number; // average review score, e.g. 4.8 — from the API's review.score; absent until reviewed
+  reviews?: number; // number of reviews — from the API's review.count; absent until reviewed
+  createdAt?: string; // ISO — the API's created_at; drives the "New" badge (recently listed)
   isFeatured?: boolean;
 }
 

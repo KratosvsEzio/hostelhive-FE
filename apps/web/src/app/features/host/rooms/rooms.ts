@@ -10,7 +10,7 @@ import {
 import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
-import { catchError, filter, finalize, map, of, startWith, switchMap, timer } from 'rxjs';
+import { catchError, filter, finalize, map, of, startWith, switchMap } from 'rxjs';
 import {
   Button,
   ConfirmModal,
@@ -31,6 +31,7 @@ import {
 import { HostOpsApi, HostPropertyStore, RoomAggs, RoomRenter, RoomStatusOption, RoomTypeOption } from '@services';
 import { ApiError, HostRoom as Room, RoomStatus } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
+import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -180,6 +181,7 @@ export class Rooms {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notifications = inject(NotificationService);
+  private readonly refetchDelay = inject(RefetchDelay);
   private readonly refresh = signal(0);
 
   /** Locally-mutated copy so create/edit reflect immediately (no write API yet). */
@@ -675,16 +677,10 @@ export class Rooms {
         })
         .subscribe({
           next: () => {
-            // The updated room propagates to the list read model asynchronously, so wait 1s
-            // before closing the drawer and refetching — otherwise the fresh fetch can still
-            // return the stale row. The button stays in its loading state during the wait.
-            timer(1000)
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe(() => {
-                this.saving.set(false);
-                this.close();
-                this.refresh.update((n) => n + 1);
-              });
+            this.saving.set(false);
+            this.close();
+            this.refetchDelay.track('/rooms');
+            this.refresh.update((n) => n + 1);
           },
           error: () => {
             this.saving.set(false);
@@ -711,6 +707,7 @@ export class Rooms {
       .subscribe({
         next: () => {
           this.close();
+          this.refetchDelay.track('/rooms');
           this.refresh.update((n) => n + 1);
         },
         error: () => this.saveError.set('Failed to create room. Please try again.'),
@@ -823,7 +820,7 @@ export class Rooms {
       .bulkCreateRooms(hostelId, rooms)
       .pipe(finalize(() => this.bulkSaving.set(false)))
       .subscribe({
-        next: () => { this.closeBulk(); this.refresh.update((n) => n + 1); },
+        next: () => { this.closeBulk(); this.refetchDelay.track('/rooms'); this.refresh.update((n) => n + 1); },
         error: () => this.bulkError.set('Failed to create rooms. Please try again.'),
       });
   }

@@ -31,6 +31,7 @@ import { NotificationService } from '@core/notification.service';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import { expensesTableCols } from '@app/util/table-configs/expenses-table-cols';
+import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { ExpenseCharts } from './expense-charts';
 import {
   ExpenseFormOptions,
@@ -128,13 +129,25 @@ export class ExpensesList {
   protected readonly menuActionActive = (row: unknown) =>
     this.menuOpenId() === (row as ExpenseListItem).id;
 
-  // ── list — fetched once per land (keyed on hostel + a retry counter) ────────
-  private readonly fetchKey = computed(() => ({ hostelId: this.hostelId(), refresh: this.refresh() }));
+  // ── list — re-fetched when hostel, type filter, date range, or retry counter changes ──
+  private readonly fetchKey = computed(() => ({
+    hostelId: this.hostelId(),
+    type: this.typeFilter(),
+    from: this.fromDate(),
+    to: this.toDate(),
+    refresh: this.refresh(),
+  }));
   private readonly state = toSignal(
     toObservable(this.fetchKey).pipe(
-      switchMap(({ hostelId }) => {
+      switchMap(({ hostelId, type, from, to }) => {
         if (!hostelId) return of<ListState>({ loading: true, error: false, items: [] });
-        return this.hostelsApi.listExpenses(hostelId).pipe(
+        const params: Record<string, string> = {};
+        if (type) params['f[expense_type]'] = type;
+        // Date range is filtered server-side, with the day spanned start-to-end (00:00:00 → 23:59:59)
+        // so same-day rows aren't excluded and older rows past the page-size cap are still reachable.
+        if (from) params['f[expense_date][gte]'] = dayRangeStart(from);
+        if (to) params['f[expense_date][lte]'] = dayRangeEnd(to);
+        return this.hostelsApi.listExpenses(hostelId, params).pipe(
           map((r): ListState => ({ loading: false, error: false, items: r.items })),
           startWith<ListState>({ loading: true, error: false, items: [] }),
           catchError(() => of<ListState>({ loading: false, error: true, items: [] })),
@@ -146,7 +159,8 @@ export class ExpensesList {
 
   protected readonly loading = computed(() => this.state().loading);
   protected readonly error = computed(() => this.state().error);
-  /** All fetched expenses (unfiltered) — feeds the last-12-months charts. */
+  /** All fetched expenses for the active type + date range — feeds the charts (which follow
+   *  the selected range) and, minus optimistic deletes, the table. */
   protected readonly allItems = computed(() => this.state().items);
 
   // ── delete ──────────────────────────────────────────────────────────────
@@ -165,21 +179,14 @@ export class ExpensesList {
     this.sortState.set(s);
   }
 
-  /** Type + date-range filter (and optimistic deletes), then the active sort — all client-side. */
+  /** Optimistic deletes, then the active sort — client-side. Type and date-range filtering
+   *  are server-side (`f[expense_type]`, `f[expense_date][gte|lte]`). */
   protected readonly items = computed(() => {
-    const type = this.typeFilter();
-    const from = this.fromDate();
-    const to = this.toDate();
     const deleted = this.deletedIds();
     const sort = this.sortState();
-    const filtered = this.allItems().filter((e) => {
-      if (deleted.has(e.id)) return false;
-      if (type && e.expenseType !== type) return false;
-      const day = (e.date || '').slice(0, 10); // 'yyyy-MM-dd' prefix of the ISO date
-      if (from && day < from) return false;
-      if (to && day > to) return false;
-      return true;
-    });
+    const filtered = deleted.size
+      ? this.allItems().filter((e) => !deleted.has(e.id))
+      : this.allItems();
     if (!sort) return filtered;
     const dir = sort.dir === 'asc' ? 1 : -1;
     // Dates parse to Date so the response's mixed UTC/offset ISO strings compare chronologically

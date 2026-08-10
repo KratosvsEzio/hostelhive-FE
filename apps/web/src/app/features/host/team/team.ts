@@ -26,6 +26,7 @@ import { HostPropertyStore, HostShellApi } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { NotificationService } from '@core/notification.service';
+import { RefetchDelay } from '@core/refetch-delay';
 import { TEAM_TABLE_COLS } from '@app/util/table-configs/team-table-cols';
 
 interface ViewState {
@@ -66,6 +67,7 @@ export class HostTeam {
   private readonly api = inject(HostShellApi);
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
+  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly refresh = signal(0);
   private readonly deletedIds = signal(new Set<string>());
@@ -179,6 +181,7 @@ export class HostTeam {
         next: () => {
           this.editSaving.set(false);
           this.closeEdit();
+          this.refetchDelay.track('/manager');
           this.refresh.update((n) => n + 1);
           this.notifications.success('Staff updated', `${this.editName().trim()} has been updated.`);
         },
@@ -225,6 +228,7 @@ export class HostTeam {
         next: () => {
           this.saving.set(false);
           this.closeAddPanel();
+          this.refetchDelay.track('/manager');
           this.refresh.update((n) => n + 1);
           this.notifications.success('Staff added', `${name} has been added as a Manager.`);
         },

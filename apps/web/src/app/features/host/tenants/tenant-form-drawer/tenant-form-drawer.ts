@@ -91,6 +91,21 @@ export class TenantFormDrawer {
   protected readonly cnicBackUploading = signal(false);
   protected readonly cnicFrontUploadError = signal<string | null>(null);
   protected readonly cnicBackUploadError = signal<string | null>(null);
+  protected readonly leaveConfirmOpen = signal(false);
+  protected readonly leaveConfirmInput = signal('');
+  protected readonly leaveConfirmEnabled = computed(() =>
+    this.leaveConfirmInput().trim() === 'I Confirm',
+  );
+  protected readonly leaveInfo = computed(() => {
+    const f = this.form();
+    if (!f?.leaveDate) return null;
+    const leave = new Date(f.leaveDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    leave.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((leave.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return { date: f.leaveDate, days: diff };
+  });
 
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panel');
   private readonly cameraVideoEl = viewChild<ElementRef<HTMLVideoElement>>('cameraVideo');
@@ -124,6 +139,10 @@ export class TenantFormDrawer {
 
   protected readonly dirtyFields = signal<Set<keyof CheckInForm>>(new Set());
   protected readonly submitAttempted = signal(false);
+  protected readonly formValid = computed(() => {
+    const f = this.form();
+    return f ? isCheckInFormValid(f) : false;
+  });
 
   protected readonly billingDayOptions = BILLING_DAY_OPTIONS;
 
@@ -473,8 +492,6 @@ export class TenantFormDrawer {
     if (!f) return;
     if (!isCheckInFormValid(f)) {
       this.submitAttempted.set(true);
-      // Bring the first missing field into view + focus it — otherwise a blank required
-      // field above/below the fold makes "Check in" look like it does nothing.
       setTimeout(() => {
         const err = this.panelEl()?.nativeElement.querySelector<HTMLElement>('.text-danger');
         if (!err) return;
@@ -483,6 +500,27 @@ export class TenantFormDrawer {
       });
       return;
     }
+    if (!f.id && f.leaveDate) {
+      this.leaveConfirmInput.set('');
+      this.leaveConfirmOpen.set(true);
+      return;
+    }
+    this.submitForm();
+  }
+
+  protected confirmAndSave(): void {
+    this.leaveConfirmOpen.set(false);
+    this.submitForm();
+  }
+
+  protected closeLeaveConfirm(): void {
+    this.leaveConfirmOpen.set(false);
+    this.leaveConfirmInput.set('');
+  }
+
+  private submitForm(): void {
+    const f = this.form();
+    if (!f) return;
     const hostelId = this.store.selected();
     if (!hostelId) return;
 
@@ -497,7 +535,7 @@ export class TenantFormDrawer {
       next: (tenant) => {
         this.saving.set(false);
         if (editing) this.notifications.success('Changes saved', `${name} has been updated.`);
-        else this.notifications.success('Tenant checked in', `${name} has been added.`);
+        else this.notifications.success('Tenant registered', `${name} has been added.`);
         this.saved.emit(tenant);
       },
       error: (err) => {
@@ -510,8 +548,8 @@ export class TenantFormDrawer {
           );
         } else {
           this.notifications.error(
-            'Couldn\'t check in tenant',
-            msg ?? 'Failed to check in. Please try again.',
+            'Couldn\'t register tenant',
+            msg ?? 'Registration failed. Please try again.',
           );
         }
       },

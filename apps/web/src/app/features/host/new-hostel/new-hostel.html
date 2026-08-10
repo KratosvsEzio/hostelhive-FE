@@ -5,7 +5,7 @@
       hh-button
       color="primary"
       size="sm"
-      [disabled]="saving() || form().uploading()"
+      [disabled]="saving() || form().uploading() || !form().isValid()"
       (click)="create()"
     >
       @if (saving()) {
@@ -83,7 +83,7 @@
             hh-button
             color="primary"
             class="mt-4 w-full"
-            [disabled]="saving() || form().uploading()"
+            [disabled]="saving() || form().uploading() || !form().isValid()"
             (click)="create()"
           >
             @if (saving()) {

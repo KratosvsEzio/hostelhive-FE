@@ -43,6 +43,7 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
+import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { API_CONFIG } from '@core/api-config';
 import { utilityFilterGroups } from '@app/util/filter-configs/utility-filter-groups';
 import { format, parseISO } from 'date-fns';
@@ -134,8 +135,8 @@ export class Utilities {
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
         if (roomFilter) filters['f[room_id]'] = roomFilter;
         if (tenantFilter) filters['f[renter_id]'] = tenantFilter;
-        if (dateFrom) filters['f[issue_date][gte]'] = dateFrom;
-        if (dateTo) filters['f[issue_date][lte]'] = dateTo;
+        if (dateFrom) filters['f[issue_date][gte]'] = dayRangeStart(dateFrom);
+        if (dateTo) filters['f[issue_date][lte]'] = dayRangeEnd(dateTo);
         if (sort) filters[`sort[${sort.key}]`] = sort.dir;
         return this.api.utilityBills(hostelId, page, PAGE_SIZE, filters).pipe(
           map((res): ViewState => ({

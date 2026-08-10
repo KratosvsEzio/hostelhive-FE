@@ -65,7 +65,7 @@
 
   <!-- Save -->
   <div class="mt-6 flex items-center gap-3 border-t border-ink-100 pt-5">
-    <button hh-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+    <button hh-button color="primary" type="button" [disabled]="saving() || !name().trim()" (click)="save()">
       {{ saving() ? 'Saving…' : 'Save changes' }}
     </button>
     @if (saved()) {

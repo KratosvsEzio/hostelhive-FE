@@ -422,7 +422,7 @@ export class OnboardingWizard {
         'Continue to media',
         'Continue to rooms',
         'Continue to amenities',
-        'Continue to payment',
+        'Create hostel',
       ][this.step()],
   );
 

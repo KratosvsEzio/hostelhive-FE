@@ -18,6 +18,7 @@ import { provideDataAccess } from '@core/provide-data-access';
 import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
+import { refetchDelayInterceptor } from '@core/refetch-delay';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
 import { provideCapacitorNative } from '@app/capacitor/native';
@@ -38,6 +39,7 @@ export const appConfig: ApplicationConfig = {
     provideDataAccess({ baseUrl: apiEnv.apiUrl }, [
       authInterceptor,
       errorInterceptor,
+      refetchDelayInterceptor,
     ]),
     provideAuth(),
     // Surface failed API calls as a non-blocking toast, app-wide. The data-access error

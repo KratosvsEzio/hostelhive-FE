@@ -566,9 +566,12 @@ export class HostelsApi {
    * don't cover these fields (they return no rows), so we pull everything (page_size) and
    * filter in the component.
    */
-  listExpenses(hostelId: string): Observable<{ items: ExpenseListItem[]; total: number }> {
+  listExpenses(
+    hostelId: string,
+    params?: Record<string, string>,
+  ): Observable<{ items: ExpenseListItem[]; total: number }> {
     return this.api
-      .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { page_size: '200' })
+      .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { page_size: '200', ...params })
       .pipe(
         map((r) => {
           const rows = r.expenses ?? r.data ?? [];

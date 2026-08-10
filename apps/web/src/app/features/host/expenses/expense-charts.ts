@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { BarChart, BarChartBar, BarChartTick, Card, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { ExpenseListItem, ExpenseMonthlyPoint, ExpenseTypeMonthlySummary, HostelsApi, HostPropertyStore } from '@services';
 
@@ -161,36 +161,44 @@ export class ExpenseCharts {
     this.propertyStore.properties().length > 0 ? this.propertyStore.selected() : '',
   );
 
-  private readonly summary = toSignal(
+  private readonly summaryState = toSignal(
     toObservable(this.hostelId).pipe(
       switchMap((id) =>
         id
-          ? this.hostelsApi.expenseMonthlySummary(id).pipe(catchError(() => of<ExpenseMonthlyPoint[]>([])))
-          : of<ExpenseMonthlyPoint[]>([]),
+          ? this.hostelsApi.expenseMonthlySummary(id).pipe(
+              map((data) => ({ data, error: false })),
+              catchError(() => of({ data: [] as ExpenseMonthlyPoint[], error: true })),
+            )
+          : of({ data: [] as ExpenseMonthlyPoint[], error: false }),
       ),
     ),
-    { initialValue: [] as ExpenseMonthlyPoint[] },
+    { initialValue: { data: [] as ExpenseMonthlyPoint[], error: false } },
   );
+
+  protected readonly summaryError = computed(() => this.summaryState().error);
 
   protected readonly chartType = signal('');
 
   // ── multi-series line chart source ──
-  private readonly typeSummary = toSignal(
+  private readonly typeSummaryState = toSignal(
     toObservable(this.hostelId).pipe(
       switchMap((id) =>
         id
           ? this.hostelsApi.expenseTypeMonthlySummary(id).pipe(
-              catchError(() => of<ExpenseTypeMonthlySummary>({ months: [], series: [] })),
+              map((data) => ({ data, error: false })),
+              catchError(() => of({ data: { months: [], series: [] } as ExpenseTypeMonthlySummary, error: true })),
             )
-          : of<ExpenseTypeMonthlySummary>({ months: [], series: [] }),
+          : of({ data: { months: [], series: [] } as ExpenseTypeMonthlySummary, error: false }),
       ),
     ),
-    { initialValue: { months: [], series: [] } as ExpenseTypeMonthlySummary },
+    { initialValue: { data: { months: [], series: [] } as ExpenseTypeMonthlySummary, error: false } },
   );
+
+  protected readonly typeSummaryError = computed(() => this.typeSummaryState().error);
 
   /** All-types monthly totals from the by-type endpoint — the shared scale's other input. */
   private readonly lineAllTotals = computed(() => {
-    const ts = this.typeSummary();
+    const ts = this.typeSummaryState().data;
     return ts.months.map((m) =>
       ts.series.reduce((sum, s) => sum + (s.data.find((d) => d.month === m)?.amount ?? 0), 0),
     );
@@ -198,7 +206,7 @@ export class ExpenseCharts {
 
   // ── shared y-axis — drives BOTH charts (same ceiling, ticks, spacing) ──
   protected readonly yAxis = computed(() => {
-    const barPeak = Math.max(0, ...this.summary().map((p) => p.value));
+    const barPeak = Math.max(0, ...this.summaryState().data.map((p) => p.value));
     const linePeak = Math.max(0, ...this.lineAllTotals());
     return niceScale(Math.max(barPeak, linePeak, 1), 4);
   });
@@ -209,18 +217,18 @@ export class ExpenseCharts {
   // ── bar chart ──
   protected readonly bars = computed<BarChartBar[]>(() => {
     const ceiling = this.yAxis().ceiling;
-    return this.summary().map((p) => ({
+    return this.summaryState().data.map((p) => ({
       label: monthLabel(p.month),
       value: p.value,
       pct: (p.value / ceiling) * 100,
     }));
   });
 
-  protected readonly barTotal = computed(() => this.summary().reduce((s, p) => s + p.value, 0));
+  protected readonly barTotal = computed(() => this.summaryState().data.reduce((s, p) => s + p.value, 0));
 
   // ── multi-series line chart ──
   protected readonly chart = computed<MultiLineChart>(() => {
-    const ts = this.typeSummary();
+    const ts = this.typeSummaryState().data;
     const { ceiling, ticks } = this.yAxis();
     const type = this.chartType();
     if (type) {
