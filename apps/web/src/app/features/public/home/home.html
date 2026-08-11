@@ -1,11 +1,13 @@
 <!-- ════ HERO ════ -->
-<section class="relative overflow-hidden bg-white">
-  <div
-    class="pointer-events-none absolute -right-32 -top-40 h-[460px] w-[460px] rounded-full bg-brand-50 blur-3xl"
-  ></div>
-  <div
-    class="pointer-events-none absolute -left-24 top-40 h-72 w-72 rounded-full bg-tint-cream blur-3xl"
-  ></div>
+<section class="relative bg-white">
+  <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div
+      class="absolute -right-32 -top-40 h-[460px] w-[460px] rounded-full bg-brand-50 blur-3xl"
+    ></div>
+    <div
+      class="absolute -left-24 top-40 h-72 w-72 rounded-full bg-tint-cream blur-3xl"
+    ></div>
+  </div>
 
   <div
     class="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-12 pt-12 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6 lg:pb-24 lg:pt-20"
@@ -36,7 +38,7 @@
 
       <!-- search -->
       <div
-        class="hh-rise-3 mt-7 flex items-center gap-2 rounded-full border border-ink-100 bg-white py-2 pl-5 pr-2 shadow-pill"
+        class="hh-rise-3 relative z-20 mt-7 flex items-center gap-2 rounded-full border border-ink-100 bg-white py-2 pl-5 pr-2 shadow-pill"
       >
         <i class="ti ti-map-pin text-xl text-brand-500"></i>
         <span class="min-w-0 flex-1">
