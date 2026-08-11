@@ -87,17 +87,24 @@ export class HostOverview {
               ),
               timer(600),
             ]).pipe(
-              map(([res]) => ({ loading: false, bills: res.bills, count: res.total, total: res.statuses.find((s) => s.slug === tab)?.totalAmount ?? 0 })),
-              startWith({ loading: true, bills: [] as Invoice[], count: 0, total: 0 }),
+              map(([res]) => ({
+                loading: false, bills: res.bills, count: res.total,
+                total: res.statuses.find((s) => s.slug === tab)?.totalAmount ?? 0,
+                dueCount: res.statuses.find((s) => s.slug === 'due')?.count ?? 0,
+                overdueCount: res.statuses.find((s) => s.slug === 'over-due')?.count ?? 0,
+              })),
+              startWith({ loading: true, bills: [] as Invoice[], count: 0, total: 0, dueCount: 0, overdueCount: 0 }),
             )
-          : of({ loading: false, bills: [] as Invoice[], count: 0, total: 0 }),
+          : of({ loading: false, bills: [] as Invoice[], count: 0, total: 0, dueCount: 0, overdueCount: 0 }),
       ),
     ),
-    { initialValue: { loading: true, bills: [] as Invoice[], count: 0, total: 0 } },
+    { initialValue: { loading: true, bills: [] as Invoice[], count: 0, total: 0, dueCount: 0, overdueCount: 0 } },
   );
 
   protected readonly billsLoading = computed(() => this.pendingUtilityResp().loading);
   protected readonly pendingUtilityCount = computed(() => this.pendingUtilityResp().count);
+  protected readonly billDueCount = computed(() => this.pendingUtilityResp().dueCount);
+  protected readonly billOverdueCount = computed(() => this.pendingUtilityResp().overdueCount);
 
   private readonly ledgerResp = toSignal(
     toObservable(this.ledgerQuery).pipe(
@@ -109,20 +116,26 @@ export class HostOverview {
                 'f[bill_type]': 'rental',
                 'sort[due_date]': 'desc',
               }).pipe(
-                catchError(() => of({ bills: [] as Invoice[], total: 0, totalPages: 0 })),
+                catchError(() => of({ bills: [] as Invoice[], total: 0, totalPages: 0, statuses: [] as { name: string; slug: string; count: number; totalAmount: number }[] })),
               ),
               timer(600),
             ]).pipe(
-              map(([res]) => ({ loading: false, bills: res.bills })),
-              startWith({ loading: true, bills: [] as Invoice[] }),
+              map(([res]) => ({
+                loading: false, bills: res.bills,
+                dueCount: res.statuses.find((s) => s.slug === 'due')?.count ?? 0,
+                overdueCount: res.statuses.find((s) => s.slug === 'over-due')?.count ?? 0,
+              })),
+              startWith({ loading: true, bills: [] as Invoice[], dueCount: 0, overdueCount: 0 }),
             )
-          : of({ loading: false, bills: [] as Invoice[] }),
+          : of({ loading: false, bills: [] as Invoice[], dueCount: 0, overdueCount: 0 }),
       ),
     ),
-    { initialValue: { loading: true, bills: [] as Invoice[] } },
+    { initialValue: { loading: true, bills: [] as Invoice[], dueCount: 0, overdueCount: 0 } },
   );
 
   protected readonly ledgerLoading = computed(() => this.ledgerResp().loading);
+  protected readonly ledgerDueCount = computed(() => this.ledgerResp().dueCount);
+  protected readonly ledgerOverdueCount = computed(() => this.ledgerResp().overdueCount);
 
   protected readonly pendingUtility = computed(() => this.pendingUtilityResp().bills);
 
@@ -265,25 +278,16 @@ export class HostOverview {
     return String(n);
   }
 
-  protected readonly ledger = computed<LedgerRow[]>(() => {
-    const byRenter = new Map<string, LedgerRow>();
-    for (const inv of this.ledgerResp().bills) {
-      const existing = byRenter.get(inv.renterId);
-      if (existing) {
-        existing.outstanding += inv.amount;
-      } else {
-        byRenter.set(inv.renterId, {
-          id: inv.renterId,
-          tenant: inv.tenantName,
-          initials: this.initials(inv.tenantName),
-          room: inv.roomNumber,
-          lastInvoice: this.fmtDate(inv.due),
-          outstanding: inv.amount,
-        });
-      }
-    }
-    return [...byRenter.values()].sort((a, b) => b.outstanding - a.outstanding);
-  });
+  protected readonly ledger = computed<LedgerRow[]>(() =>
+    this.ledgerResp().bills.map((inv) => ({
+      id: inv.id,
+      tenant: inv.tenantName,
+      initials: this.initials(inv.tenantName),
+      room: inv.roomNumber,
+      lastInvoice: this.fmtDate(inv.due),
+      outstanding: inv.amount,
+    })),
+  );
 
   private fmtDate(iso: string): string {
     if (!iso) return '';
@@ -331,7 +335,7 @@ export class HostOverview {
 
   protected kpiQueryParams(key: string): Record<string, string> | null {
     if (key === 'vacant') return { status: 'available' };
-    if (key === 'pending-rent') return { kind: 'rent', status: 'due' };
+    if (key === 'pending-rent') return { kind: 'rental', status: 'due' };
     if (key === 'pending-utility') return { kind: 'utility', status: 'due' };
     if (key === 'pending-total') return { status: 'due' };
     return null;

@@ -373,12 +373,12 @@ function toInvoice(rb: ApiRenterBillTop): Invoice {
   const rawStatus = rb.status?.slug ?? 'due';
   const status: InvoiceStatus =
     rawStatus === 'paid' ? 'paid' : rawStatus === 'over-due' ? 'over-due' : 'due';
-  const kind: InvoiceKind = rb.bill_type === 'utility' ? 'utility' : 'rent';
+  const kind: InvoiceKind = rb.bill_type === 'utility' ? 'utility' : 'rental';
   const lines: InvoiceLine[] = rb.line_items?.length
     ? rb.line_items.map((l) => ({ label: l.label ?? '—', amount: Number(l.amount ?? 0) }))
     : rb.break_down
       ? Object.entries(rb.break_down).map(([key, amt]) => ({ label: formatBreakdownKey(key), amount: amt }))
-      : [{ label: kind === 'rent' ? 'Monthly rent' : 'Utility charge', amount }];
+      : [{ label: kind === 'rental' ? 'Monthly rent' : 'Utility charge', amount }];
   return {
     id,
     renterId: String(rb.renter_id ?? rb.renter?.id ?? ''),

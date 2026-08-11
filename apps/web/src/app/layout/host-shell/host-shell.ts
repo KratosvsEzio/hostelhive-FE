@@ -133,7 +133,7 @@ export class HostLayout {
             void this.router.navigate(['/host', hostelId, 'subscription']);
           }
         }, 300);
-      }, Math.max(0, 3000 - elapsed));
+      }, Math.max(0, 2000 - elapsed));
     });
   }
 

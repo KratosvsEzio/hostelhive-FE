@@ -101,7 +101,7 @@ export interface UtilityBill {
 }
 
 export type InvoiceStatus = 'paid' | 'due' | 'over-due';
-export type InvoiceKind = 'rent' | 'utility';
+export type InvoiceKind = 'rental' | 'utility';
 
 export interface InvoiceLine {
   label: string;
