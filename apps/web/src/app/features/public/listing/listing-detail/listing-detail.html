@@ -148,6 +148,55 @@
           }
         </div>
 
+        <!-- Reviews (in-page section) -->
+        @if (reviews().length) {
+          @let rstats = reviewStats();
+          <section class="border-b border-ink-100 py-6">
+            <div class="mb-4 flex items-center gap-2">
+              <i class="ti ti-star-filled text-lg text-amber-400" aria-hidden="true"></i>
+              <h3 class="font-display text-lg font-semibold text-ink-900">
+                {{ rstats.avg | number: '1.1-1' }} · {{ rstats.total }} {{ rstats.total === 1 ? 'review' : 'reviews' }}
+              </h3>
+            </div>
+
+            <div class="grid gap-x-8 gap-y-6 sm:grid-cols-2">
+              @for (review of reviews().slice(0, 2); track $index) {
+                <div>
+                  <div class="flex items-center gap-3">
+                    <hh-avatar [initials]="initials(review.userName)" size="sm" />
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-semibold text-ink-900">{{ review.userName }}</p>
+                      <div class="flex items-center gap-1.5 text-xs text-ink-400">
+                        <span class="flex items-center gap-0.5">
+                          @for (s of stars; track s) {
+                            @if (review.score >= s) {
+                              <i class="ti ti-star-filled text-[11px] text-amber-400" aria-hidden="true"></i>
+                            } @else {
+                              <i class="ti ti-star text-[11px] text-ink-200" aria-hidden="true"></i>
+                            }
+                          }
+                        </span>
+                        @if (review.createdAt) {
+                          <span aria-hidden="true">·</span>
+                          <span>{{ review.createdAt | date: 'MMMM y' }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Preview clamps to 5 lines; the full text lives in the "Show all" modal. -->
+                  <p class="mt-2 line-clamp-5 text-sm leading-relaxed text-ink-700">{{ review.comments }}</p>
+                </div>
+              }
+            </div>
+
+            @if (reviews().length > 2) {
+              <button hh-button variant="outlined" size="sm" class="mt-6" (click)="openReviews()">
+                Show all {{ reviews().length }} reviews
+              </button>
+            }
+          </section>
+        }
+
         <!-- About -->
         @if (l.description) {
           <section class="border-b border-ink-100 py-6">
@@ -232,66 +281,6 @@
             </button>
           }
         </section>
-        }
-
-        <!-- Reviews (in-page section) -->
-        @if (reviews().length) {
-          @let rstats = reviewStats();
-          <section class="border-b border-ink-100 py-6">
-            <div class="mb-4 flex items-center gap-2">
-              <i class="ti ti-star-filled text-lg text-amber-400" aria-hidden="true"></i>
-              <h3 class="font-display text-lg font-semibold text-ink-900">
-                {{ rstats.avg | number: '1.1-1' }} · {{ rstats.total }} {{ rstats.total === 1 ? 'review' : 'reviews' }}
-              </h3>
-            </div>
-
-            <div class="grid gap-x-8 gap-y-6 sm:grid-cols-2">
-              @for (review of reviews().slice(0, 4); track $index; let idx = $index) {
-                <div>
-                  <div class="flex items-center gap-3">
-                    <hh-avatar [initials]="initials(review.userName)" size="sm" />
-                    <div class="min-w-0">
-                      <p class="truncate text-sm font-semibold text-ink-900">{{ review.userName }}</p>
-                      <div class="flex items-center gap-1.5 text-xs text-ink-400">
-                        <span class="flex items-center gap-0.5">
-                          @for (s of stars; track s) {
-                            @if (review.score >= s) {
-                              <i class="ti ti-star-filled text-[11px] text-amber-400" aria-hidden="true"></i>
-                            } @else {
-                              <i class="ti ti-star text-[11px] text-ink-200" aria-hidden="true"></i>
-                            }
-                          }
-                        </span>
-                        @if (review.createdAt) {
-                          <span aria-hidden="true">·</span>
-                          <span>{{ review.createdAt | date: 'MMMM y' }}</span>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                  <p
-                    class="mt-2 text-sm leading-relaxed text-ink-700"
-                    [class.line-clamp-4]="isLongComment(review.comments) && !isReviewExpanded(idx)"
-                  >{{ review.comments }}</p>
-                  @if (isLongComment(review.comments)) {
-                    <button
-                      type="button"
-                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-600"
-                      (click)="toggleReviewExpanded(idx)"
-                    >
-                      {{ isReviewExpanded(idx) ? 'Show less' : 'Show more' }}
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-
-            @if (reviews().length > 4) {
-              <button hh-button variant="outlined" size="sm" class="mt-6" (click)="openReviews()">
-                Show all {{ reviews().length }} reviews
-              </button>
-            }
-          </section>
         }
 
         <!-- Nearby landmarks -->
@@ -451,7 +440,12 @@
         [disabled]="phoneLoading() && pendingAction === 'whatsapp'"
         (click)="openWhatsApp()"
       >
-        <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp
+        @if (phoneLoading() && pendingAction === 'whatsapp') {
+          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
+        } @else {
+          <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
+        }
+        WhatsApp
       </button>
       <button
         hh-button
@@ -843,7 +837,7 @@
           <!-- ── Write-a-review flow (only reachable from a review-request notification) ── -->
           @if (isLoggedIn()) {
             <div class="rounded-xl border border-ink-100 p-4">
-              <h3 class="mb-3 text-sm font-semibold text-ink-900">Rate this hostel</h3>
+              <h3 class="mb-3 text-sm font-semibold text-ink-900">Rate {{ l.name }}</h3>
 
               <!-- Star selector -->
               <div class="flex items-center gap-1" (mouseleave)="reviewHover.set(null)">
@@ -933,7 +927,7 @@
             <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
               <i class="ti ti-mood-sad text-2xl" aria-hidden="true"></i>
               <p class="text-sm">Couldn't load reviews</p>
-              <button hh-button variant="outlined" size="sm" (click)="fetchReviews()">Retry</button>
+              <button hh-button variant="outlined" size="sm" [loading]="reviewsLoading()" (click)="fetchReviews()">Retry</button>
             </div>
           } @else if (!reviews().length) {
             <div class="flex flex-col items-center gap-2 py-6 text-ink-400">

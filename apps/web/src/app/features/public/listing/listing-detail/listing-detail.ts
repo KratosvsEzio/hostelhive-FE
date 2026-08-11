@@ -380,6 +380,7 @@ export class ListingDetail {
           this.reviewScore.set(0);
           this.reviewComment.set('');
           this.fetchReviews();
+          setTimeout(() => this.closeReviews(), 1200);
         },
         error: () => {
           this.reviewSubmitting.set(false);
