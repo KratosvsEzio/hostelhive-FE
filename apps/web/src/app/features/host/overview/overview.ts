@@ -106,7 +106,7 @@ export class HostOverview {
           ? forkJoin([
               this.opsApi.invoices(hostelId, 1, 50, {
                 'f[status.slug]': tab,
-                'f[bill_type]': 'rent',
+                'f[bill_type]': 'rental',
                 'sort[due_date]': 'desc',
               }).pipe(
                 catchError(() => of({ bills: [] as Invoice[], total: 0, totalPages: 0 })),

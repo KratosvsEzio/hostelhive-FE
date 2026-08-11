@@ -61,58 +61,23 @@
                 <h3 class="font-display text-xl font-semibold text-ink-900">
                   {{ currentProduct ? currentProduct.name : 'Unknown plan' }}
                 </h3>
+                <span class="font-semibold text-brand-600">{{ contract.cycle === 'annual' ? 'Annual' : 'Monthly' }}</span>
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
                 <hh-status-pill
                   [tone]="statusMeta(contract.status).tone"
                   [dot]="contract.status === 'active'"
                 >{{ statusMeta(contract.status).label }}</hh-status-pill>
-                <hh-badge variant="neutral" [icon]="''">
-                  {{ contract.cycle === 'annual' ? 'Annual' : 'Monthly' }}
-                </hh-badge>
-              </div>
-              <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                <span class="text-ink-500">
-                  Started
-                  <span class="font-medium text-ink-800">{{ contract.startedAt ? (contract.startedAt | date: 'd MMM y') : '—' }}</span>
-                </span>
+                <span class="text-ink-300">·</span>
                 <span class="text-ink-500">
                   {{ contract.status === 'expired' ? 'Expired' : 'Renews' }}
                   <span class="font-medium text-ink-800">{{ contract.renewsAt ? (contract.renewsAt | date: 'd MMM y') : '—' }}</span>
-                </span>
-                <span class="text-ink-500">
-                  Amount
-                  <span class="font-medium text-ink-800">Rs {{ contract.amount | number }} / {{ contract.cycle === 'annual' ? 'yr' : 'mo' }}</span>
                 </span>
               </div>
             </div>
 
             <div class="flex flex-col items-end gap-2">
-              <div class="flex items-center gap-2 text-sm">
-                <span class="text-ink-500">Auto-renew</span>
-                <span hhTip="Coming soon" class="cursor-not-allowed">
-                  <button
-                    type="button"
-                    role="switch"
-                    [attr.aria-checked]="contract.autoRenew"
-                    class="relative h-6 w-11 rounded-full opacity-40 transition pointer-events-none"
-                    [class]="contract.autoRenew ? 'bg-brand-500' : 'bg-ink-200'"
-                    disabled
-                  >
-                    <span
-                      class="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-card transition-all"
-                      [class]="contract.autoRenew ? 'right-0.5' : 'left-0.5'"
-                    ></span>
-                  </button>
-                </span>
-              </div>
-              @if (contract.status === 'active') {
-                <div class="flex items-center gap-2">
-                  <button hh-button variant="outlined" size="sm" [disabled]="true">Renew now</button>
-                  <span class="rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-400">Soon</span>
-                </div>
-                <button hh-button variant="text" size="sm" [disabled]="busy()" (click)="cancel()">
-                  Cancel plan
-                </button>
-              } @else if (contract.status === 'expired' || contract.status === 'cancelled') {
+              @if (contract.status === 'expired' || contract.status === 'cancelled') {
                 <button hh-button color="primary" size="sm" [loading]="busy()" (click)="renew()">
                   Re-subscribe
                 </button>
@@ -136,6 +101,43 @@
             </div>
           }
         </hh-card>
+
+        <!-- Featured Boosted status -->
+        @if (s.data.featured; as feat) {
+          <hh-card variant="elevated" padding="none" class="mt-4 overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-4 p-5">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="font-display text-lg font-semibold text-ink-900">Featured Boosted</h3>
+                  <span class="font-semibold text-brand-600">Add-on</span>
+                </div>
+                <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                  <hh-status-pill
+                    [tone]="feat.active ? 'ok' : 'danger'"
+                    [dot]="feat.active"
+                  >{{ feat.active ? 'Active' : 'Expired' }}</hh-status-pill>
+                  <span class="text-ink-300">·</span>
+                  <span class="text-ink-500">
+                    {{ feat.active ? 'Expires' : 'Expired' }}
+                    <span class="font-medium text-ink-800">{{ feat.expiresAt | date: 'd MMM y' }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            @if (feat.active) {
+              <div class="flex items-center gap-2 border-t border-ink-100 bg-tint-mint/50 px-5 py-2.5 text-sm text-ink-600">
+                <i class="ti ti-clock text-ok" aria-hidden="true"></i>
+                <span><span class="font-medium text-ink-800">{{ featuredDaysRemaining(feat) }} days</span> remaining · your listing is boosted in search results.</span>
+              </div>
+            } @else {
+              <div class="flex items-center gap-2 border-t border-danger/20 bg-danger/5 px-5 py-2.5 text-sm text-danger">
+                <i class="ti ti-sparkles" aria-hidden="true"></i>
+                <span>Boost has <span class="font-semibold">expired</span>. Purchase again to stay at the top of search.</span>
+              </div>
+            }
+          </hh-card>
+        }
       } @else {
         <hh-card variant="elevated" padding="none" class="overflow-hidden">
           <div class="p-5">
@@ -165,6 +167,7 @@
           [columns]="paymentCols"
           [rows]="s.data.payments"
           [rowId]="paymentRowId"
+          [expandable]="paymentExpand"
         />
       }
     </section>
@@ -203,10 +206,22 @@
                   }
                 </div>
                 <h3 class="mt-3 font-display text-xl font-bold text-ink-900">{{ product.name }}</h3>
-                <div class="mt-3 flex items-baseline gap-1">
-                  <span class="text-3xl font-bold text-ink-900">Rs {{ +product.price | number }}</span>
-                  <span class="text-sm text-ink-400">/ {{ periodLabel(product) }}</span>
-                </div>
+                @if (hasDiscount(product)) {
+                  <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-3xl font-bold text-ink-900">Rs {{ +(product.discounted_price ?? 0) | number }}</span>
+                    <span class="text-sm text-ink-400">/ {{ periodLabel(product) }}</span>
+                    <span class="text-sm font-medium text-ink-400 line-through">Rs {{ +product.price | number }}</span>
+                  </div>
+                  <p class="mt-2 inline-flex items-center gap-1 rounded-full bg-ok/10 px-2 py-0.5 text-[11px] font-semibold text-ok">
+                    <i class="ti ti-tag text-xs" aria-hidden="true"></i>Discounted for {{ discountRemaining() }} more subscription{{ discountRemaining() === 1 ? '' : 's' }}
+                  </p>
+                  <p class="mt-1 text-xs text-ink-400">Then Rs {{ +product.price | number }} / {{ periodLabel(product) }}</p>
+                } @else {
+                  <div class="mt-3 flex items-baseline gap-1">
+                    <span class="text-3xl font-bold text-ink-900">Rs {{ +product.price | number }}</span>
+                    <span class="text-sm text-ink-400">/ {{ periodLabel(product) }}</span>
+                  </div>
+                }
               </div>
 
               <!-- Feature list -->
@@ -267,8 +282,12 @@
               <!-- CTA -->
               <div class="px-6 pb-6">
                 @if (curr) {
-                  <button hh-button color="primary" class="w-full" [disabled]="true">
-                    <i class="ti ti-check" aria-hidden="true"></i>Your current plan
+                  <div class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-3 py-2 text-xs font-semibold text-white shadow-card">
+                    {{ ctaLabel(product) }}
+                  </div>
+                } @else if (product.name === 'Lead Radar') {
+                  <button hh-button color="primary" variant="outlined" class="w-full opacity-60 cursor-not-allowed" [disabled]="true">
+                    <i class="ti ti-radar" aria-hidden="true"></i>Coming Soon
                   </button>
                 } @else {
                   <button

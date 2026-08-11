@@ -126,7 +126,7 @@ export class TenantProfile {
     switchMap(({ hostelId, tenantId, roomId, page }) => {
       if (!hostelId || !tenantId) return of({ loading: false, bills: [] as Invoice[], total: 0, totalPages: 1 });
       return this.api.invoices(hostelId, page, 10, {
-        'f[bill_type]': 'rent',
+        'f[bill_type]': 'rental',
         'f[room.id]': roomId,
         'f[renter.id]': tenantId,
       }).pipe(

@@ -58,6 +58,11 @@
   <router-outlet />
 </div>
 
+<!-- Subscription gate loading screen -->
+@if (gateState() !== 'none') {
+  <hh-subscription-loading [leaving]="gateState() === 'leaving'" />
+}
+
 <!-- Mobile app: bottom tab navigation replaces the sidebar. -->
 @if (mobile.isMobile()) {
   <app-host-tab-bar />

@@ -42,12 +42,20 @@ export interface SubscriptionPlan {
   custom?: boolean;
 }
 
+export interface PaymentProduct {
+  id: string;
+  name: string;
+  price: number;
+}
+
 /** A row in the payment-history table. */
 export interface SubscriptionPayment {
   id: string;
   /** ISO date the payment was charged. */
   date: string;
   description: string;
+  /** Individual products within this payment. */
+  products: PaymentProduct[];
   /** Masked payment method, e.g. "Card ··6411". */
   method: string;
   status: 'paid' | 'failed' | 'refunded' | 'pending';

@@ -15,6 +15,7 @@ export * from './host-shell-api';
 export * from './listing-detail-api';
 export * from './moderation-api';
 export * from './subscription-api';
+export * from './subscription-store';
 export * from './products-api';
 export * from './image-upload.service';
 export * from './google-auth.service';
