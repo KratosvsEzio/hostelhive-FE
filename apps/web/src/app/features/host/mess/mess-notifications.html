@@ -234,26 +234,6 @@
               </div>
             </div>
 
-            <!-- Message preview -->
-            <div class="sm:col-span-2">
-              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Student message preview</p>
-              <div class="max-w-sm rounded-2xl rounded-tl-sm bg-tint-mint p-3.5 text-sm text-ink-800 shadow-sm">
-                <p class="font-semibold">🍽️ HostelHive Mess · {{ meta.label }}</p>
-                <p class="mt-1">
-                  {{ nightBefore(meal) ? "Tomorrow's" : "Today's" }} {{ meta.label.toLowerCase() }}:
-                  <span class="font-medium">{{ todayMenu(meal) || '—' }}</span>
-                </p>
-                <p class="mt-1 text-ink-600">
-                  Tap to reserve your portion before {{ deadlines()[meal] }}{{ nightBefore(meal) ? ' tomorrow' : '' }}.
-                </p>
-                <div class="mt-2.5 rounded-lg bg-white px-3 py-2 text-center font-semibold text-brand-600">
-                  Confirm my {{ meta.label }} →
-                </div>
-              </div>
-              <button hh-button variant="text" size="sm" class="mt-2" (click)="openTest(meal)">
-                <i class="ti ti-external-link" aria-hidden="true"></i>Preview student link
-              </button>
-            </div>
           </div>
         }
       </div>

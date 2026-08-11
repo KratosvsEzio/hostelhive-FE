@@ -103,6 +103,13 @@
             Activate
           </button>
         }
+        @if (!menuTenant.userAcceptance) {
+          <hh-context-menu-divider />
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-brand-600" (click)="reinvite(menuTenant)">
+            <i class="ti ti-send text-sm text-brand-600" aria-hidden="true"></i>
+            Reinvite
+          </button>
+        }
       </hh-context-menu>
     }
   }

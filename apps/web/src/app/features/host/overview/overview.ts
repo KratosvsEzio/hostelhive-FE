@@ -17,7 +17,6 @@ import {
   EmptyState,
   ErrorState,
   Skeleton,
-  StatusPill,
 } from '@hostelhive/ui';
 import { AnalyticsApi, HostOpsApi, HostPropertyStore } from '@services';
 import { AnalyticsData, Invoice, Kpi, LedgerRow, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
@@ -51,7 +50,6 @@ interface ViewState {
     EmptyState,
     ErrorState,
     Skeleton,
-    StatusPill,
   ],
   templateUrl: './overview.html',
 })

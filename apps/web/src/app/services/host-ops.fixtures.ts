@@ -96,6 +96,8 @@ export const TENANTS: Tenant[] = [
     messLunch: true,
     messDinner: true,
     status: 'active',
+    statusLabel: 'Active',
+    userAcceptance: true,
   },
   {
     id: 't2',
@@ -114,6 +116,8 @@ export const TENANTS: Tenant[] = [
     messLunch: true,
     messDinner: true,
     status: 'active',
+    statusLabel: 'Active',
+    userAcceptance: true,
   },
   {
     id: 't3',
@@ -132,6 +136,8 @@ export const TENANTS: Tenant[] = [
     messLunch: true,
     messDinner: true,
     status: 'active',
+    statusLabel: 'Active',
+    userAcceptance: true,
   },
   {
     id: 't4',
@@ -151,6 +157,8 @@ export const TENANTS: Tenant[] = [
     messLunch: true,
     messDinner: true,
     status: 'checked-out',
+    statusLabel: 'Checked Out',
+    userAcceptance: true,
   },
   // Extra Room 101 occupants so the utilities pro-rata table matches the mockup (AR 30, BK 28, SA 30 over 88 days).
   {
@@ -170,6 +178,8 @@ export const TENANTS: Tenant[] = [
     messLunch: true,
     messDinner: true,
     status: 'active',
+    statusLabel: 'Active',
+    userAcceptance: true,
   },
   {
     id: 't6',
@@ -188,6 +198,8 @@ export const TENANTS: Tenant[] = [
     messLunch: true,
     messDinner: true,
     status: 'active',
+    statusLabel: 'Active',
+    userAcceptance: true,
   },
 ];
 
