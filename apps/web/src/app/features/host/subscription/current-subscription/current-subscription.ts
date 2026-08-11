@@ -33,7 +33,7 @@ import {
   SubscriptionContract as Contract,
   SubscriptionContractStatus as ContractStatus,
 } from '@hostelhive/data-access';
-import { HostPropertyStore, ProductsApi, SubscriptionApi } from '@services';
+import { HostPropertyStore, ProductsApi, SubscriptionApi, SubscriptionStore } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 
@@ -75,6 +75,7 @@ export class CurrentSubscription {
   private readonly api = inject(SubscriptionApi);
   private readonly productsApi = inject(ProductsApi);
   private readonly store = inject(HostPropertyStore);
+  private readonly subStore = inject(SubscriptionStore);
 
   private readonly refresh = signal(0);
   protected readonly busy = signal(false);
@@ -90,19 +91,19 @@ export class CurrentSubscription {
     }).pipe(
       switchMap(({ hostelId }) =>
         combineLatest({
-          contract: hostelId
+          sub: hostelId
             ? this.api.currentSubscription(hostelId)
-            : of<Contract | null>(null),
+            : of({ contract: null as Contract | null, featuredUntil: null as string | null }),
           products: this.productsApi.list(),
         }).pipe(
-          map(({ contract, products }): ViewState => ({
+          map(({ sub, products }): ViewState => ({
             loading: false,
             error: false,
             networkError: false,
             data: {
-              contract,
-              currentProduct: contract
-                ? products.find((p) => String(p.id) === contract.planId)
+              contract: sub.contract,
+              currentProduct: sub.contract
+                ? products.find((p) => String(p.id) === sub.contract!.planId)
                 : undefined,
             },
           })),
@@ -151,10 +152,6 @@ export class CurrentSubscription {
     });
   }
 
-  protected toggleAutoRenew(current: boolean): void {
-    this.run(this.api.setAutoRenew(!current), null);
-  }
-
   private run(
     action$: Observable<unknown>,
     success: { tone: 'success' | 'error' | 'info'; text: string } | null,
@@ -164,6 +161,7 @@ export class CurrentSubscription {
     action$.pipe(finalize(() => this.busy.set(false))).subscribe({
       next: () => {
         if (success) this.notice.set(success);
+        this.subStore.clear();
         this.reload();
       },
       error: (err: Error) =>

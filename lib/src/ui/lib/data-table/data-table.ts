@@ -106,6 +106,8 @@ export interface ExpandConfig {
   childRows: (row: unknown) => unknown[];
   childId: (sub: unknown) => string;
   childName: (sub: unknown) => string;
+  /** Header label for the child-name column. Defaults to 'Tenant'. */
+  nameLabel?: string;
   /** How many parent columns the child-name cell spans (colspan). */
   nameColSpan: number;
   columns: SubColumnDef[];
@@ -206,7 +208,7 @@ export interface PaginationConfig {
                 <!-- Main row -->
                 <tr
                   class="group hover:bg-surface"
-                  [class.cursor-pointer]="exp || hasRowClick()"
+                  [class.cursor-pointer]="(exp && subRows.length > 0) || hasRowClick()"
                   (click)="onRowClick(row, rid, subRows.length > 0)"
                 >
                   @for (col of columns(); track col.key; let first = $first) {
@@ -222,11 +224,15 @@ export interface PaginationConfig {
                       @if (first && exp) {
                         <!-- Expandable first cell: chevron + composite content -->
                         <div class="flex items-center gap-2">
-                          <i
-                            class="ti text-ink-400 transition-transform"
-                            [class.ti-chevron-down]="!expanded"
-                            [class.ti-chevron-up]="expanded"
-                          ></i>
+                          @if (subRows.length > 0) {
+                            <i
+                              class="ti text-ink-400 transition-transform"
+                              [class.ti-chevron-down]="!expanded"
+                              [class.ti-chevron-up]="expanded"
+                            ></i>
+                          } @else {
+                            <span class="inline-block w-4"></span>
+                          }
                           <div>
                             @if (cell.kind === 'composite') {
                               <p class="font-medium text-ink-900">{{ $any(cell).primary }}</p>
@@ -341,7 +347,7 @@ export interface PaginationConfig {
                     <td
                       [attr.colspan]="exp.nameColSpan"
                       class="px-5 pb-1 pt-2 pl-14 text-[10px] font-medium uppercase tracking-wide text-ink-400"
-                    >Tenant</td>
+                    >{{ exp.nameLabel ?? 'Tenant' }}</td>
                     @for (sc of exp.columns; track sc.label; let scFirst = $first) {
                       <td
                         class="pb-1 pt-2 text-[10px] font-medium uppercase tracking-wide text-ink-400"

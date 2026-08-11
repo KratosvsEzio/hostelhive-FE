@@ -37,7 +37,7 @@ export function expensesTableCols(typeLabels: Record<string, string>): ColumnDef
     {
       key: 'amount',
       label: 'Amount',
-      align: 'right',
+      align: 'left',
       sortable: true,
       cell: (r) => ({ kind: 'currency', amount: (r as ExpenseListItem).amount } satisfies CellDef),
     },

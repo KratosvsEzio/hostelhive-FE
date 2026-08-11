@@ -39,7 +39,7 @@ export function invoiceFilterGroups(
           allValue: 'all',
           options: [
             { value: 'all', label: 'All' },
-            { value: 'rent', label: 'Rent' },
+            { value: 'rental', label: 'Rental' },
             { value: 'utility', label: 'Utility' },
           ],
         },

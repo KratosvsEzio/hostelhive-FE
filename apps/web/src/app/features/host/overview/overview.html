@@ -352,13 +352,6 @@
             </p>
           </div>
           <div class="flex items-center gap-2">
-            @if (pendingUtilityCount()) {
-              <span
-                class="rounded-full bg-warn/10 px-2.5 py-0.5 text-xs font-semibold text-warn"
-              >
-                {{ pendingUtilityCount() }} pending
-              </span>
-            }
             <div class="flex gap-0.5 rounded-lg bg-ink-100 p-0.5">
               <button
                 (click)="billTab.set('due')"
@@ -369,7 +362,7 @@
                     : 'text-ink-500 hover:text-ink-700'
                 "
               >
-                Due
+                Due ({{ billDueCount() }})
               </button>
               <button
                 (click)="billTab.set('over-due')"
@@ -380,7 +373,7 @@
                     : 'text-ink-500 hover:text-ink-700'
                 "
               >
-                Overdue
+                Overdue ({{ billOverdueCount() }})
               </button>
             </div>
           </div>
@@ -412,7 +405,7 @@
             </div>
           } @else {
             <div class="divide-y divide-ink-100">
-              @for (inv of pendingUtility(); track inv.id) {
+              @for (inv of pendingUtility().slice(0, 4); track inv.id) {
                 <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface">
                   <hh-avatar
                     size="sm"
@@ -428,31 +421,12 @@
                       {{ inv.due | date: 'dd MMM yyyy' }}
                     </p>
                   </div>
-                  <div class="shrink-0 text-right">
-                    <p class="text-sm font-semibold text-ink-900">
-                      Rs {{ inv.amount | number }}
-                    </p>
-                    @if (inv.status === 'over-due') {
-                      <hh-status-pill tone="danger">Overdue</hh-status-pill>
-                    } @else {
-                      <hh-status-pill tone="warn">Due</hh-status-pill>
-                    }
-                  </div>
+                  <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ inv.amount | number }}</span>
                 </div>
               }
             </div>
           }
         </div>
-        @if (!billsLoading() && pendingUtility().length > 0) {
-          <div
-            class="flex items-center justify-between border-t border-ink-100 bg-surface px-5 py-3"
-          >
-            <span class="text-xs text-ink-500">Total outstanding</span>
-            <span class="font-display text-base font-semibold text-ink-900"
-              >Rs {{ pendingUtilityTotal() | number }}</span
-            >
-          </div>
-        }
         <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
           <a
             [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
@@ -486,7 +460,7 @@
                   : 'text-ink-500 hover:text-ink-700'
               "
             >
-              Due
+              Due ({{ ledgerDueCount() }})
             </button>
             <button
               (click)="ledgerTab.set('over-due')"
@@ -497,7 +471,7 @@
                   : 'text-ink-500 hover:text-ink-700'
               "
             >
-              Overdue
+              Overdue ({{ ledgerOverdueCount() }})
             </button>
           </div>
         </div>
@@ -525,7 +499,7 @@
             </div>
           } @else {
             <div class="divide-y divide-ink-100">
-              @for (row of ledger(); track row.id) {
+              @for (row of ledger().slice(0, 4); track row.id) {
                 <div class="flex items-center gap-3 px-5 py-3">
                   <hh-avatar
                     size="sm"
@@ -541,15 +515,9 @@
                     </p>
                   </div>
                   @if (row.outstanding > 0) {
-                    <hh-status-pill
-                      class="shrink-0"
-                      [tone]="row.outstanding >= 9000 ? 'danger' : 'warn'"
-                      >Rs {{ row.outstanding | number }}</hh-status-pill
-                    >
+                    <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ row.outstanding | number }}</span>
                   } @else {
-                    <hh-status-pill class="shrink-0" tone="ok" [dot]="true"
-                      >Settled</hh-status-pill
-                    >
+                    <span class="shrink-0 text-sm font-semibold text-ok">Settled</span>
                   }
                 </div>
               }
@@ -559,9 +527,9 @@
         <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
           <a
             [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
-            [queryParams]="{ kind: 'rent', status: ledgerTab() }"
+            [queryParams]="{ kind: 'rental', status: ledgerTab() }"
             class="text-xs font-medium text-brand-600 hover:text-brand-700"
-            >View all invoices →</a
+            >View all rentals →</a
           >
         </div>
       </hh-card>

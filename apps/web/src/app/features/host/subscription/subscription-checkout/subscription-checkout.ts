@@ -8,17 +8,23 @@ import {
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, finalize, map, of, switchMap } from 'rxjs';
+import { catchError, combineLatest, finalize, map, of, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
 import { Product } from '@hostelhive/data-access';
 import { HostPropertyStore, ProductsApi, SubscriptionApi } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import {
+  countPaidListingPurchases,
+  effectivePrice,
+  hasListingDiscount,
+} from '@util/product-pricing';
 
 interface PageState {
   loading: boolean;
   error: boolean;
   product: Product | null;
   allProducts: Product[];
+  paidListingCount: number;
 }
 
 const PRODUCT_FEATURES: Record<string, string[]> = {
@@ -71,13 +77,19 @@ export class SubscriptionCheckout {
     this.route.paramMap.pipe(
       map((pm) => +(pm.get('productId') ?? 0)),
       switchMap((productId) =>
-        this.productsApi.list().pipe(
+        combineLatest({
+          products: this.productsApi.list(),
+          payments: this.store.selected()
+            ? this.subApi.paymentHistory(this.store.selected())
+            : of([]),
+        }).pipe(
           map(
-            (products): PageState => ({
+            ({ products, payments }): PageState => ({
               loading: false,
               error: false,
               product: products.find((p) => p.id === productId) ?? null,
               allProducts: products,
+              paidListingCount: countPaidListingPurchases(payments),
             }),
           ),
           catchError(() =>
@@ -86,6 +98,7 @@ export class SubscriptionCheckout {
               error: true,
               product: null,
               allProducts: [],
+              paidListingCount: 0,
             }),
           ),
         ),
@@ -97,6 +110,7 @@ export class SubscriptionCheckout {
         error: false,
         product: null,
         allProducts: [],
+        paidListingCount: 0,
       } as PageState,
     },
   );
@@ -106,9 +120,13 @@ export class SubscriptionCheckout {
     return this.state().allProducts.filter((p) => ids.has(p.id));
   });
 
-  protected readonly totalPrice = computed(() =>
-    this.selectedProductList().reduce((sum, p) => sum + +p.price, 0),
-  );
+  protected readonly totalPrice = computed(() => {
+    const count = this.state().paidListingCount;
+    return this.selectedProductList().reduce(
+      (sum, p) => sum + effectivePrice(p, count),
+      0,
+    );
+  });
 
   protected readonly backLink = computed(
     () => `/host/${this.store.selected()}/subscription`,
@@ -126,6 +144,14 @@ export class SubscriptionCheckout {
       ids.add(productId);
     }
     this.selectedIds.set(ids);
+  }
+
+  protected hasDiscount(product: Product): boolean {
+    return hasListingDiscount(product, this.state().paidListingCount);
+  }
+
+  protected displayPrice(product: Product): number {
+    return effectivePrice(product, this.state().paidListingCount);
   }
 
   protected periodLabel(product: Product): string {

@@ -124,7 +124,7 @@ export class Invoices {
   protected readonly PAGE_SIZE = 10;
   protected readonly Math = Math;
   protected readonly filter = signal<Filter>(this.initialFilter());
-  protected readonly kindFilter = signal<'all' | 'rent' | 'utility'>(this.initialKindFilter());
+  protected readonly kindFilter = signal<'all' | 'rental' | 'utility'>(this.initialKindFilter());
   protected readonly roomFilter = signal('');
   protected readonly tenantFilter = signal('');
   protected readonly dateFrom = signal('');
@@ -248,7 +248,7 @@ export class Invoices {
   protected readonly rentSummary = computed(() => {
     const s = this.state();
     const all = s.data ?? [];
-    const rent = all.filter((i) => i.kind === 'rent');
+    const rent = all.filter((i) => i.kind === 'rental');
     return {
       total: s.aggs?.rentTotal ?? rent.reduce((sum, i) => sum + i.amount, 0),
       paid: s.aggs?.rentPaid ?? 0,
@@ -321,9 +321,9 @@ export class Invoices {
     return valid.includes(raw as Filter) ? (raw as Filter) : 'all';
   }
 
-  private initialKindFilter(): 'all' | 'rent' | 'utility' {
+  private initialKindFilter(): 'all' | 'rental' | 'utility' {
     const raw = this.route.snapshot.queryParamMap.get('kind');
-    return raw === 'rent' || raw === 'utility' ? raw : 'all';
+    return raw === 'rental' || raw === 'utility' ? raw : 'all';
   }
 
   protected setFilter(value: Filter): void {
@@ -339,7 +339,7 @@ export class Invoices {
 
   protected onFiltersApply(values: FilterValues): void {
     const status = ((values['status'] as string) || 'all') as Filter;
-    const kind = ((values['kind'] as string) || 'all') as 'all' | 'rent' | 'utility';
+    const kind = ((values['kind'] as string) || 'all') as 'all' | 'rental' | 'utility';
     const room = (values['room'] as string) || '';
     const tenant = (values['tenant'] as string) || '';
     const date = values['date'] as DateRangeValue | undefined;

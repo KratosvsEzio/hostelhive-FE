@@ -44,14 +44,16 @@
 
         <div class="mt-5 space-y-3">
           @for (product of s.allProducts; track product.id) {
+            @let isLeadRadar = product.name === 'Lead Radar';
             <label
-              class="flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition"
-              [class]="isSelected(product.id) ? 'border-brand-400 bg-brand-50/40' : 'border-ink-100 hover:border-ink-200'"
+              class="flex items-start gap-4 rounded-xl border-2 p-4 transition"
+              [class]="isLeadRadar ? 'cursor-not-allowed border-ink-100 opacity-60' : isSelected(product.id) ? 'cursor-pointer border-brand-400 bg-brand-50/40' : 'cursor-pointer border-ink-100 hover:border-ink-200'"
             >
               <input
                 type="checkbox"
                 class="sr-only"
                 [checked]="isSelected(product.id)"
+                [disabled]="isLeadRadar"
                 (change)="toggleProduct(product.id)"
               />
               <div
@@ -69,10 +71,18 @@
                     [class]="product.product_type === 'add_on' ? 'bg-warn/10 text-warn' : 'bg-brand-50 text-brand-600'"
                   >{{ product.product_type === 'add_on' ? 'Add-on' : 'Subscription' }}</span>
                   <span class="font-display text-sm font-semibold text-ink-900">{{ product.name }}</span>
+                  @if (isLeadRadar) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                      <i class="ti ti-clock-hour-3 text-xs" aria-hidden="true"></i>Coming Soon
+                    </span>
+                  }
                 </div>
-                <div class="mt-1.5 flex items-baseline gap-1">
-                  <span class="text-lg font-bold text-ink-900">Rs {{ +product.price | number }}</span>
+                <div class="mt-1.5 flex items-baseline gap-1.5">
+                  <span class="text-lg font-bold text-ink-900">Rs {{ displayPrice(product) | number }}</span>
                   <span class="text-xs text-ink-400">/ {{ periodLabel(product) }}</span>
+                  @if (hasDiscount(product)) {
+                    <span class="text-sm font-medium text-ink-400 line-through">Rs {{ +product.price | number }}</span>
+                  }
                 </div>
                 <ul class="mt-2.5 space-y-1.5">
                   @for (feat of features(product).slice(0, 3); track feat) {
@@ -112,7 +122,12 @@
               @for (p of selectedProductList(); track p.id) {
                 <div class="flex items-center justify-between">
                   <dt class="text-ink-500">{{ p.name }}</dt>
-                  <dd class="text-ink-900">Rs {{ +p.price | number }}</dd>
+                  <dd class="flex items-center gap-1.5">
+                    <span class="text-ink-900">Rs {{ displayPrice(p) | number }}</span>
+                    @if (hasDiscount(p)) {
+                      <span class="text-xs text-ink-400 line-through">Rs {{ +p.price | number }}</span>
+                    }
+                  </dd>
                 </div>
               }
               <div class="my-2 h-px bg-ink-100"></div>

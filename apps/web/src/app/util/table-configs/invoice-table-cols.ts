@@ -55,8 +55,8 @@ function invoiceTableConfig(hostelId: string): Record<string, Omit<ColumnDef, 'k
     label: 'Type',
     cell: (r) => {
       const inv = r as Invoice;
-      return inv.kind === 'rent'
-        ? ({ kind: 'badge', text: 'Rent',    class: 'rounded bg-tint-sky   px-1.5 py-0.5 text-[11px] text-ink-600'   }) satisfies CellDef
+      return inv.kind === 'rental'
+        ? ({ kind: 'badge', text: 'Rental',  class: 'rounded bg-tint-sky   px-1.5 py-0.5 text-[11px] text-ink-600'   }) satisfies CellDef
         : ({ kind: 'badge', text: 'Utility', class: 'rounded bg-tint-cream px-1.5 py-0.5 text-[11px] text-brand-700' }) satisfies CellDef;
     },
   },

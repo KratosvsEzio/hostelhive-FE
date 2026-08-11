@@ -53,7 +53,7 @@ interface ApiPayment {
   created_at?: string;
   paid_at?: string | null;
   status?: ApiPaymentStatus;
-  products?: Array<{ name?: string }> | null;
+  products?: Array<{ id?: string; name?: string; price?: number; product_type?: string }> | null;
 }
 
 interface ApiPaymentsResponse {
@@ -122,29 +122,42 @@ export class SubscriptionApi {
    * Fetches the live subscription from GET /api/hostels/:hostelId/current_subscription.
    * Returns null when the hostel has no active plan (404 or empty response).
    */
-  currentSubscription(hostelId: string): Observable<Contract | null> {
+  currentSubscription(hostelId: string): Observable<{ contract: Contract | null; featuredUntil: string | null }> {
     return this.apiClient
       .get<ApiCurrentSubscriptionResponse>(`/api/hostels/${hostelId}/current_subscription`)
       .pipe(
         map((res) => {
           const contracts = res.contracts ?? [];
           const c = contracts.find((x) => x.status?.slug === 'active') ?? contracts[0];
-          if (!c?.id) return null;
+          const featuredUntil = res.subscription?.featured_until ?? null;
+
+          if (!c?.id) return { contract: null, featuredUntil };
           const product = c.payment?.products?.[0];
+
+          const activeUntil = res.subscription?.active_until ?? null;
+          let status: ContractStatus =
+            (CONTRACT_STATUS_MAP[c.status?.slug ?? ''] ?? 'draft') as ContractStatus;
+          if (activeUntil && new Date(activeUntil).getTime() < Date.now()) {
+            status = 'expired';
+          }
+
           return {
-            id: String(c.id),
-            planId: product?.id != null ? String(product.id) : '',
-            status: (CONTRACT_STATUS_MAP[c.status?.slug ?? ''] ?? 'draft') as ContractStatus,
-            cycle: inferCycle(c.start_date, c.end_date),
-            amount: Number(c.price ?? c.payment?.amount ?? 0),
-            startedAt: c.start_date ?? null,
-            renewsAt: c.end_date ?? null,
-            autoRenew: false,
-            propertiesUsed: 0,
-          } satisfies Contract;
+            contract: {
+              id: String(c.id),
+              planId: product?.id != null ? String(product.id) : '',
+              status,
+              cycle: inferCycle(c.start_date, c.end_date),
+              amount: Number(c.price ?? c.payment?.amount ?? 0),
+              startedAt: c.start_date ?? null,
+              renewsAt: activeUntil ?? c.end_date ?? null,
+              autoRenew: false,
+              propertiesUsed: 0,
+            } satisfies Contract,
+            featuredUntil,
+          };
         }),
         catchError((err: HttpErrorResponse) => {
-          if (err.status === 404) return of(null);
+          if (err.status === 404) return of({ contract: null, featuredUntil: null });
           return throwError(() => err);
         }),
       );
@@ -155,15 +168,23 @@ export class SubscriptionApi {
       .get<ApiPaymentsResponse>(`/api/host/hostels/${hostelId}/payments`)
       .pipe(
         map((res) =>
-          (res.payments ?? []).map((p): Payment => ({
-            id: p.id ?? '',
-            date: p.paid_at ?? p.created_at ?? '',
-            description: p.products?.[0]?.name ?? 'Subscription',
-            method: p.payment_method ?? 'Online',
-            status: PAYMENT_STATUS_MAP[p.status?.slug ?? ''] ?? 'pending',
-            amount: p.amount ?? 0,
-            receiptUrl: null,
-          })),
+          (res.payments ?? []).map((p): Payment => {
+            const products = (p.products ?? []).map((pr, i) => ({
+              id: pr.id ?? String(i),
+              name: pr.name ?? 'Product',
+              price: pr.price ?? 0,
+            }));
+            return {
+              id: p.id ?? '',
+              date: p.paid_at ?? p.created_at ?? '',
+              description: products[0]?.name ?? 'Subscription',
+              products,
+              method: p.payment_method ?? 'Online',
+              status: PAYMENT_STATUS_MAP[p.status?.slug ?? ''] ?? 'pending',
+              amount: p.amount ?? 0,
+              receiptUrl: null,
+            };
+          }),
         ),
       );
   }
@@ -239,11 +260,6 @@ export class SubscriptionApi {
       );
     }
     this.contract = { ...this.contract, status: 'cancelled', autoRenew: false };
-    return of({ ...this.contract }).pipe(delay(150));
-  }
-
-  setAutoRenew(on: boolean): Observable<Contract> {
-    this.contract = { ...this.contract, autoRenew: on };
     return of({ ...this.contract }).pipe(delay(150));
   }
 

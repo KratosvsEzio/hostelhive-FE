@@ -20,7 +20,6 @@ import {
 import type { Observable } from 'rxjs';
 import { format, isValid, parse } from 'date-fns';
 import {
-  Badge,
   Button,
   Card,
   CellDef,
@@ -28,25 +27,38 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  ExpandConfig,
   Skeleton,
   StatusPill,
   Toast,
-  Tooltip,
 } from '@hostelhive/ui';
 import type { StatusTone } from '@hostelhive/ui';
 import {
+  PaymentProduct,
   Product,
   SubscriptionContract as Contract,
   SubscriptionContractStatus as ContractStatus,
   SubscriptionPayment as Payment,
 } from '@hostelhive/data-access';
-import { HostPropertyStore, ProductsApi, SubscriptionApi } from '@services';
+import { HostPropertyStore, ProductsApi, SubscriptionApi, SubscriptionStore } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import {
+  countPaidListingPurchases,
+  DISCOUNT_PURCHASE_LIMIT,
+  effectivePrice,
+  hasListingDiscount,
+} from '@util/product-pricing';
+
+interface FeaturedStatus {
+  active: boolean;
+  expiresAt: string;
+}
 
 interface BillingData {
   contract: Contract | null;
   currentProduct: Product | undefined;
+  featured: FeaturedStatus | null;
   products: Product[];
   payments: Payment[];
 }
@@ -74,7 +86,8 @@ const PAYMENT_LABEL: Record<Payment['status'], string> = {
 
 function fmtDate(s: string): string {
   if (!s) return '—';
-  const d = parse(s, 'yyyy-MM-dd', new Date());
+  let d = new Date(s);
+  if (!isValid(d)) d = parse(s, 'yyyy-MM-dd', new Date());
   return isValid(d) ? format(d, 'd MMM y') : '—';
 }
 
@@ -117,7 +130,6 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
     DatePipe,
     DecimalPipe,
     DashboardLayout,
-    Badge,
     Button,
     Card,
     DataTable,
@@ -126,7 +138,6 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
     Skeleton,
     StatusPill,
     Toast,
-    Tooltip,
   ],
   templateUrl: './subscription.html',
 })
@@ -134,6 +145,7 @@ export class Subscription {
   private readonly api = inject(SubscriptionApi);
   private readonly productsApi = inject(ProductsApi);
   private readonly store = inject(HostPropertyStore);
+  private readonly subStore = inject(SubscriptionStore);
   private readonly router = inject(Router);
 
   protected readonly skeletons = [1, 2, 3, 4];
@@ -153,25 +165,36 @@ export class Subscription {
     }).pipe(
       switchMap(({ hostelId }) =>
         combineLatest({
-          contract: hostelId
+          sub: hostelId
             ? this.api.currentSubscription(hostelId)
-            : of<Contract | null>(null),
+            : of({ contract: null as Contract | null, featuredUntil: null as string | null }),
           products: this.productsApi.list(),
           payments: hostelId ? this.api.paymentHistory(hostelId) : of<Payment[]>([]),
         }).pipe(
-          map(({ contract, products, payments }): ViewState => ({
-            loading: false,
-            error: false,
-            networkError: false,
-            data: {
-              contract,
-              currentProduct: contract
-                ? products.find((p) => String(p.id) === contract.planId)
-                : undefined,
-              products,
-              payments,
-            },
-          })),
+          map(({ sub, products, payments }): ViewState => {
+            const { contract, featuredUntil } = sub;
+            let featured: FeaturedStatus | null = null;
+            if (featuredUntil) {
+              featured = {
+                active: new Date(featuredUntil).getTime() > Date.now(),
+                expiresAt: featuredUntil,
+              };
+            }
+            return {
+              loading: false,
+              error: false,
+              networkError: false,
+              data: {
+                contract,
+                currentProduct: contract
+                  ? products.find((p) => String(p.id) === contract.planId)
+                  : undefined,
+                featured,
+                products,
+                payments,
+              },
+            };
+          }),
           startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
           catchError((err) =>
             of<ViewState>({ loading: false, error: true, networkError: isNetworkError(err), data: null }),
@@ -182,7 +205,23 @@ export class Subscription {
     { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
   );
 
+  protected readonly paidListingCount = computed(() =>
+    countPaidListingPurchases(this.state()?.data?.payments ?? []),
+  );
+
+  protected readonly discountRemaining = computed(() =>
+    Math.max(0, DISCOUNT_PURCHASE_LIMIT - this.paidListingCount()),
+  );
+
   // ── Presentation helpers ─────────────────────────────────────────────────
+  protected hasDiscount(product: Product): boolean {
+    return hasListingDiscount(product, this.paidListingCount());
+  }
+
+  protected displayPrice(product: Product): number {
+    return effectivePrice(product, this.paidListingCount());
+  }
+
   protected isAddOn(product: Product): boolean {
     return product.product_type === 'add_on';
   }
@@ -212,17 +251,26 @@ export class Subscription {
 
   protected readonly paymentRowId = (r: unknown) => (r as Payment).id;
   protected readonly paymentCols: ColumnDef[] = [
-    { key: 'date',        label: 'Date',        cell: (r) => ({ kind: 'text',     value: fmtDate((r as Payment).date), class: 'whitespace-nowrap text-ink-600' }) satisfies CellDef },
-    { key: 'description', label: 'Description', cell: (r) => ({ kind: 'text',     value: (r as Payment).description, class: 'text-ink-800' }) satisfies CellDef },
-    { key: 'method',      label: 'Method',      cell: (r) => ({ kind: 'text',     value: (r as Payment).method, class: 'text-ink-600' }) satisfies CellDef },
-    { key: 'status',      label: 'Status',      cell: (r) => ({ kind: 'pill',     text: PAYMENT_LABEL[(r as Payment).status], tone: PAYMENT_TONE[(r as Payment).status] }) satisfies CellDef },
+    { key: 'date',        label: 'Date',        cell: (r) => ({ kind: 'text', value: fmtDate((r as Payment).date), class: 'whitespace-nowrap text-ink-600' }) satisfies CellDef },
+    { key: 'description', label: 'Description', cell: (r) => ({ kind: 'composite', primary: (r as Payment).description, secondary: (r as Payment).products.length > 1 ? `${(r as Payment).products.length} products` : undefined }) satisfies CellDef },
+    { key: 'method',      label: 'Method',      cell: (r) => ({ kind: 'text', value: (r as Payment).method, class: 'text-ink-600' }) satisfies CellDef },
+    { key: 'status',      label: 'Status',      cell: (r) => ({ kind: 'pill', text: PAYMENT_LABEL[(r as Payment).status], tone: PAYMENT_TONE[(r as Payment).status] }) satisfies CellDef },
     { key: 'amount', align: 'right', label: 'Amount',  cell: (r) => ({ kind: 'currency', amount: (r as Payment).amount, class: 'font-medium text-ink-900' }) satisfies CellDef },
-    { key: 'receipt', align: 'right', label: 'Receipt', cell: (r) => {
-      const url = (r as Payment).receiptUrl;
-      if (!url) return { kind: 'text', value: '—', class: 'text-ink-300' } satisfies CellDef;
-      return { kind: 'link', value: 'PDF', href: url, external: true } satisfies CellDef;
-    }},
   ];
+
+  protected readonly paymentExpand: ExpandConfig = {
+    childRows: (r) => (r as Payment).products.length > 1 ? (r as Payment).products : [],
+    childId: (s) => (s as PaymentProduct).id,
+    childName: (s) => (s as PaymentProduct).name,
+    nameLabel: 'Product',
+    nameColSpan: 4,
+    columns: [
+      {
+        label: 'Price', align: 'right',
+        cell: (s) => ({ kind: 'currency', amount: (s as PaymentProduct).price, class: 'font-medium text-ink-900' }) satisfies CellDef,
+      },
+    ],
+  };
 
   protected statusMeta(status: ContractStatus) {
     return STATUS_META[status];
@@ -231,6 +279,11 @@ export class Subscription {
   protected daysRemaining(contract: Contract): number | null {
     if (!contract.renewsAt) return null;
     const ms = new Date(contract.renewsAt).getTime() - Date.now();
+    return Math.max(0, Math.ceil(ms / 86_400_000));
+  }
+
+  protected featuredDaysRemaining(feat: FeaturedStatus): number {
+    const ms = new Date(feat.expiresAt).getTime() - Date.now();
     return Math.max(0, Math.ceil(ms / 86_400_000));
   }
 
@@ -266,10 +319,6 @@ export class Subscription {
     });
   }
 
-  protected toggleAutoRenew(current: boolean): void {
-    this.run(this.api.setAutoRenew(!current), null);
-  }
-
   private run(
     action$: Observable<unknown>,
     success: { tone: 'success' | 'error' | 'info'; text: string } | null,
@@ -279,6 +328,7 @@ export class Subscription {
     action$.pipe(finalize(() => this.busy.set(false))).subscribe({
       next: () => {
         if (success) this.notice.set(success);
+        this.subStore.clear();
         this.reload();
       },
       error: (err: Error) =>
