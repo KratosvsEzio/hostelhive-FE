@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-site-footer',
+  selector: 'app-service-policy',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  templateUrl: './site-footer.html',
+  templateUrl: './service-policy.html',
 })
-export class SiteFooter {}
+export class ServicePolicy {}

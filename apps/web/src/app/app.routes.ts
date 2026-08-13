@@ -31,6 +31,24 @@ export const appRoutes: Route[] = [
     title: 'Confirm your meal — HostelHive',
   },
   {
+    path: 'privacy-policy',
+    loadComponent: () =>
+      import('@features/public/legal/privacy-policy').then((m) => m.PrivacyPolicy),
+    title: 'Privacy Policy — HostelHive',
+  },
+  {
+    path: 'terms-of-service',
+    loadComponent: () =>
+      import('@features/public/legal/terms-of-service').then((m) => m.TermsOfService),
+    title: 'Terms of Service — HostelHive',
+  },
+  {
+    path: 'service-policy',
+    loadComponent: () =>
+      import('@features/public/legal/service-policy').then((m) => m.ServicePolicy),
+    title: 'Service Policy — HostelHive',
+  },
+  {
     path: 'auth',
     loadChildren: () =>
       import('@features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
