@@ -250,11 +250,15 @@ export class Tenants {
       .subscribe({ next: () => this.applyStatus(t.id, 'active') });
   }
 
-  /**
-   * Reflect a status change in the table the moment the API confirms it (200), without a
-   * full refetch/reload (B9). Writes through the same `local` overlay the list already
-   * uses, so the pill flips instantly and stays consistent until the next real fetch.
-   */
+  protected reinvite(t: Tenant): void {
+    this.closeMenu();
+    const hostelId = this.store.selected();
+    if (!hostelId) return;
+    this.api.inviteTenant(hostelId, t.id)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
   private applyStatus(id: string, status: TenantStatus): void {
     const current = this.state().data ?? [];
     this.local.set(current.map((x) => (x.id === id ? { ...x, status } : x)));

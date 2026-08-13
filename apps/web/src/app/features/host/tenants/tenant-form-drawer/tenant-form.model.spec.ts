@@ -39,6 +39,7 @@ function tenant(overrides: Partial<Tenant> = {}): Tenant {
     messDinner: true,
     outstanding: 0,
     status: 'active',
+    statusLabel: 'Active',
     ...overrides,
   };
 }

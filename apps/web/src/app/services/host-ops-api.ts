@@ -104,6 +104,7 @@ interface ApiRenter {
   outstanding?: number | null;
   // status is a string on some endpoints, an object on others
   status?: string | { id?: string; name?: string; slug?: string } | null;
+  user_acceptance?: boolean | null;
   avatar_id?: string | null;
   avatar?: { id?: string | null; url?: string | null; status?: string | null } | null;
   cnic_front_id?: string | null;
@@ -198,12 +199,12 @@ function toTenant(r: ApiRenter): Tenant {
       .slice(0, 2)
       .join('')
       .toUpperCase() || '?';
-  // status can be a plain string or an object { slug }
-  const rawSlug = typeof r.status === 'object' && r.status !== null
-    ? r.status.slug
-    : r.status;
+  // status can be a plain string or an object { slug, name }
+  const statusObj = typeof r.status === 'object' && r.status !== null ? r.status : null;
+  const rawSlug = statusObj ? statusObj.slug : r.status;
   const knownStatuses: TenantStatus[] = ['active', 'inactive', 'on-notice', 'checked-out'];
   const status: TenantStatus = knownStatuses.includes(rawSlug as TenantStatus) ? (rawSlug as TenantStatus) : 'active';
+  const statusLabel: string = statusObj?.name ?? (status === 'active' ? 'Active' : status === 'on-notice' ? 'On Notice' : status === 'checked-out' ? 'Checked Out' : 'Inactive');
   return {
     id: String(r.id ?? ''),
     name: rawName || '—',
@@ -230,6 +231,8 @@ function toTenant(r: ApiRenter): Tenant {
     billingDueDate: r.billing_due_date ?? undefined,
     outstanding: Number(r.outstanding_amount ?? r.outstanding_balance ?? r.outstanding ?? 0),
     status,
+    statusLabel,
+    userAcceptance: r.user_acceptance ?? true,
     avatarUrl: r.avatar?.url ?? undefined,
     avatarId: r.avatar_id ?? r.avatar?.id?.toString() ?? undefined,
     cnicFrontUrl: r.cnic_front?.url ?? undefined,
@@ -614,6 +617,10 @@ export class HostOpsApi {
         { renter: body },
       )
       .pipe(map((res) => toTenant(res.renter ?? {})));
+  }
+
+  inviteTenant(hostelId: string, renterId: string): Observable<unknown> {
+    return this.api.post(`/api/host/hostels/${hostelId}/renters/${renterId}/invite_tenant`, {});
   }
 
   invoices(hostelId: string, page = 1, limit = PAGE_SIZE, filters: Record<string, string> = {}): Observable<{

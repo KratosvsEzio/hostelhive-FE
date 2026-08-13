@@ -45,6 +45,8 @@ export interface Tenant {
   leaveDate?: string; // ISO date — planned departure
   outstanding: number; // PKR owed right now
   status: TenantStatus;
+  statusLabel: string;
+  userAcceptance: boolean;
   avatarUrl?: string;
   avatarId?: string;
   cnicFrontUrl?: string;
