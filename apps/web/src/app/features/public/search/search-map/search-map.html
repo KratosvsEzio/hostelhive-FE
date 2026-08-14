@@ -25,7 +25,9 @@
 
 <!-- Mobile-only: fixed List | Map toggle at bottom center -->
 <div
-  class="safe-mb fixed left-1/2 z-40 -translate-x-1/2 min-[950px]:hidden"
+  class="fixed left-1/2 z-40 -translate-x-1/2 min-[950px]:hidden"
+  [class.safe-mb]="!mobile.isMobile()"
+  [class.hh-above-tabbar]="mobile.isMobile()"
   [style.bottom.px]="toggleBottom()"
 >
   <div class="flex items-center gap-0.5 rounded-full bg-brand-500 p-0.5 shadow-lg">

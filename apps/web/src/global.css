@@ -105,12 +105,28 @@ body {
    *replaces* padding-bottom, so applying it to a `py-3` bar would drop that bar's
    bottom padding to 0 on any device without an inset. These add the inset on top of
    the element's own spacing instead. Loaded after Tailwind's utilities layer (see the
-   `styles` order in apps/web/project.json), so they win the equal-specificity tie. */
+   `styles` order in apps/web/project.json), so they win the equal-specificity tie —
+   which is exactly why pairing `.safe-pb` with a `pb-*` utility silently eats the
+   `pb-*`. Read `.safe-pb-N` as "Tailwind's `pb-N`, plus the device inset". */
 .safe-pb-3 {
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
 }
+.safe-pb-4 {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
 .safe-mb {
   margin-bottom: env(safe-area-inset-bottom);
+}
+
+/* Height of the fixed bottom tab bar (54px of content + the device's bottom inset,
+   which the bar adds itself via `safe-pb`). Anything else pinned to the bottom edge
+   while the tab bar is showing has to clear it: the bar is `z-40`, so a same-z
+   element resting at `bottom: 24px` renders *behind* it rather than above it. */
+:root {
+  --hh-tabbar-h: 3.375rem;
+}
+.hh-above-tabbar {
+  margin-bottom: calc(var(--hh-tabbar-h) + env(safe-area-inset-bottom));
 }
 
 /* The site header is an `h-16` row PLUS the device's top safe-area inset, because it

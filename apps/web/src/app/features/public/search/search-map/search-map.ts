@@ -28,6 +28,7 @@ import {
 } from 'rxjs';
 import { Gender, Listing, Paginated } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
+import { MobileApp } from '@core/mobile-app';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
@@ -103,6 +104,13 @@ export class SearchMap {
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef).nativeElement as HTMLElement;
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  /**
+   * The mobile app renders the seeker bottom tab bar over this route, and it sits at
+   * the same `z-40` as the floating List/Map pill — so without lifting, the pill is
+   * drawn behind it. Search is inside the seeker area, so `isMobile` matches the
+   * app-level `showSeekerTabs` condition here.
+   */
+  protected readonly mobile = inject(MobileApp);
   private readonly mapEl = viewChild.required<ElementRef<HTMLElement>>('mapEl');
 
   private readonly params = toSignal(this.route.queryParamMap, {
