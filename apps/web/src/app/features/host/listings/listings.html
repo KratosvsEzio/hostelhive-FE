@@ -57,7 +57,7 @@
       </hh-card>
     </div>
 
-    <div class="mb-4 mt-7 flex items-center justify-between">
+    <div class="mb-4 mt-7 flex flex-wrap items-center justify-between gap-3">
       <h2 class="font-display text-lg font-semibold text-ink-900">
         Properties
       </h2>
@@ -94,8 +94,8 @@
                   />
                 }
               </div>
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
                   <h3 class="font-semibold text-ink-900">{{ l.name }}</h3>
                   <hh-status-pill [tone]="statusTone(l.status)">
                     <i
@@ -120,7 +120,7 @@
                   }
                 </div>
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex shrink-0 items-center gap-2">
                 <button hh-button variant="outlined" size="sm">
                   {{ l.status === 'published' ? 'Manage' : 'View' }}
                 </button>
@@ -180,7 +180,7 @@
             >
               <i class="ti ti-progress text-xl" aria-hidden="true"></i>
             </span>
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <p class="font-medium text-ink-900">Resume your draft listing</p>
               <p class="text-sm text-ink-400">
                 Step {{ draft.step }} of {{ draft.totalSteps }} ·
@@ -188,7 +188,7 @@
               </p>
             </div>
             <span
-              class="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
+              class="shrink-0 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
               >Continue</span
             >
           </button>

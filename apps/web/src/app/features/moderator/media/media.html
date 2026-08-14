@@ -6,7 +6,7 @@
   }
 
   @if (loadStatus() === 'loading') {
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       @for (i of skeletons; track i) {
         <hh-skeleton class="aspect-[4/3]" radius="lg" />
       }
@@ -23,7 +23,9 @@
     </div>
   } @else {
     <!-- Controls row -->
-    <div class="mb-4 flex items-center justify-between gap-2">
+    <div
+      class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
+    >
       <p class="text-sm text-ink-500">
         <span class="font-semibold text-ink-900">{{ pending().length }}</span>
         {{ pending().length === 1 ? 'item' : 'items' }}
@@ -62,7 +64,7 @@
     </div>
 
     <!-- Attachment grid -->
-    <div class="grid grid-cols-2 gap-5 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
       @for (a of pending(); track a.id) {
         @let aid = '' + a.id;
         @let isApproving = approving().has(aid);

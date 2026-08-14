@@ -49,7 +49,7 @@ export class Tabs {
 
   protected btnClass(value: string): string {
     const pad = this.size() === 'xxs' ? 'px-2 py-0.5' : 'px-3 py-1.5';
-    const base = `rounded-lg ${pad} transition`;
+    const base = `min-w-0 truncate rounded-lg ${pad} transition`;
     return value === this.active()
       ? `${base} bg-white text-ink-900 shadow-card`
       : `${base} text-ink-500 hover:text-ink-800`;

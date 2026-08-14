@@ -69,7 +69,7 @@
             <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Dates</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <hh-date-picker
               label="Issue date *"
               [value]="f.issuedDate"
@@ -97,7 +97,7 @@
               [value]="f.rent"
               (valueChange)="patch('rent', $event)"
             />
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <hh-input
                 label="Mess charges"
                 type="number"

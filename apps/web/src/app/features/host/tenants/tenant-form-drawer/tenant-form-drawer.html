@@ -161,7 +161,7 @@
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
             <div class="space-y-3">
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <!-- cspell:ignore Tariq -->
                 <hh-input
                   label="Full name *"
@@ -180,7 +180,7 @@
                   (focusout)="markDirty('email')"
                 />
               </div>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
                   label="Phone *"
                   placeholder="0312 5556677"
@@ -198,7 +198,7 @@
                   (focusout)="markDirty('emergencyContact')"
                 />
               </div>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
                   label="CNIC number *"
                   placeholder="42101-1234567-1"
@@ -264,7 +264,7 @@
                 </div>
               </div>
               <!-- Joining & leave dates — two columns -->
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-date-picker
                   label="Joining date *"
                   [value]="f.joiningDate"
@@ -291,7 +291,7 @@
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
             <div class="space-y-3">
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
                   label="Monthly rent *"
                   type="number"
@@ -312,7 +312,7 @@
                 />
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <p class="mb-1 block text-xs font-medium text-ink-600">
                     Billing date *
@@ -456,7 +456,7 @@
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <!-- CNIC front -->
               <div>
                 <p class="mb-1 text-xs font-medium text-ink-600">CNIC front</p>
@@ -623,7 +623,7 @@
       role="dialog"
       aria-modal="true"
     >
-      <div class="px-6 pt-6 pb-4">
+      <div class="px-4 pt-5 pb-4 sm:px-6 sm:pt-6">
         <div class="mb-4 flex items-center gap-3">
           <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50">
             <i class="ti ti-alert-triangle text-xl text-amber-500" aria-hidden="true"></i>
@@ -670,7 +670,7 @@
         </div>
       </div>
 
-      <div class="flex gap-3 border-t border-ink-100 px-6 py-4">
+      <div class="flex gap-3 border-t border-ink-100 px-4 py-4 sm:px-6">
         <button
           hh-button
           variant="outlined"

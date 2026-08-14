@@ -11,9 +11,13 @@
       @if (saving()) {
         <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
       } @else if (form().uploading()) {
-        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
+        <!-- "Uploading photos…" alongside Cancel overruns a 375px header. -->
+        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i
+        ><span class="sm:hidden">Uploading…</span
+        ><span class="hidden sm:inline">Uploading photos…</span>
       } @else {
-        Create hostel
+        <span class="sm:hidden">Create</span>
+        <span class="hidden sm:inline">Create hostel</span>
       }
     </button>
   </ng-container>

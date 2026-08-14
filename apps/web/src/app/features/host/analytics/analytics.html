@@ -155,9 +155,9 @@
           </div>
         }
       </div>
-      <div class="mt-2 flex justify-between text-[11px] text-ink-400">
+      <div class="mt-2 flex justify-between overflow-x-auto text-[11px] text-ink-400">
         @for (b of bars(); track b.month) {
-          <span>{{ b.month }}</span>
+          <span class="shrink-0">{{ b.month }}</span>
         }
       </div>
     </hh-card>
@@ -216,9 +216,9 @@
           </div>
         }
       </div>
-      <div class="mt-2 flex justify-between text-[11px] text-ink-400">
+      <div class="mt-2 flex justify-between overflow-x-auto text-[11px] text-ink-400">
         @for (b of tenantBars(); track b.month) {
-          <span>{{ b.month }}</span>
+          <span class="shrink-0">{{ b.month }}</span>
         }
       </div>
     </hh-card>
@@ -226,7 +226,7 @@
     <!-- Occupancy timeline + ledger -->
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
       <hh-card>
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 class="font-display text-base font-semibold text-ink-900">
               Occupancy
@@ -276,9 +276,9 @@
             />
           }
         </svg>
-        <div class="mt-2 flex justify-between text-[11px] text-ink-400">
+        <div class="mt-2 flex justify-between overflow-x-auto text-[11px] text-ink-400">
           @for (d of occupancy().dots; track d.month) {
-            <span>{{ d.month }}</span>
+            <span class="shrink-0">{{ d.month }}</span>
           }
         </div>
       </hh-card>
@@ -286,7 +286,7 @@
       <!-- Tenant ledger -->
       <hh-card padding="none">
         <div
-          class="flex items-center justify-between border-b border-ink-100 px-5 py-3"
+          class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
         >
           <h2 class="font-display text-base font-semibold text-ink-900">
             Tenant ledger

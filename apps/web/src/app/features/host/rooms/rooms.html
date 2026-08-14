@@ -49,7 +49,7 @@
           <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-blue-600"></span>Partial · {{ partialRooms() }}</span>
           <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-danger"></span>Full · {{ fullRooms() }}</span>
         </div>
-        <div class="flex items-center gap-5">
+        <div class="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:gap-5">
           <div class="text-right"><p class="font-display text-lg font-bold text-ok">{{ vacantBeds() }}</p><p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Beds free</p></div>
           <div class="text-right"><p class="font-display text-lg font-bold text-ink-900">{{ occupiedBeds() }}</p><p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Beds filled</p></div>
           <div class="text-right"><p class="font-display text-lg font-bold text-ink-900">{{ totalBeds() }}</p><p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Total beds</p></div>
@@ -257,7 +257,7 @@
 
       <div class="flex-1 space-y-4 overflow-y-auto p-5">
         @if (bf.mode !== 'manual') {
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <p class="mb-1 block text-xs font-medium text-ink-600">Sharing type</p>
               @if (roomTypesLoading()) {
@@ -307,7 +307,7 @@
                       </button>
                     }
                   </div>
-                  <div class="grid grid-cols-2 gap-2.5">
+                  <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     <div>
                       <p class="mb-1 block text-xs font-medium text-ink-600">Sharing type</p>
                       @if (roomTypesLoading()) {
@@ -353,7 +353,7 @@
                 <div class="flex items-center gap-2.5 text-sm text-ink-700">
                   <i class="ti ti-door text-ink-400" aria-hidden="true"></i>
                   <span class="font-medium">{{ n }}</span>
-                  <span class=�text-ink-400�>� {{ bf.roomType || '�' }} � {{ bf.capacity || '�' }} beds</span>
+                  <span class="text-ink-400">· {{ bf.roomType || '—' }} · {{ bf.capacity || '—' }} beds</span>
                 </div>
               }
             </div>

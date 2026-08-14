@@ -44,12 +44,12 @@
   } @else {
     <div class="overflow-hidden rounded-2xl bg-white shadow-card">
       <div
-        class="flex items-center justify-between border-b border-ink-100 px-5 py-3.5"
+        class="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-3.5"
       >
-        <h2 class="font-display text-base font-semibold text-ink-900">
+        <h2 class="truncate font-display text-base font-semibold text-ink-900">
           Staff · {{ propertyName() }}
         </h2>
-        <span class="text-sm text-ink-400"
+        <span class="shrink-0 text-sm text-ink-400"
           >{{ staff().length }} members</span
         >
       </div>
@@ -137,11 +137,11 @@
             [error]="passwordError()"
           />
         </div>
-        <div class="mt-3 flex items-center justify-between gap-3">
+        <div class="mt-3 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p class="flex items-center gap-1.5 text-xs text-ink-400">
             <i class="ti ti-lock" aria-hidden="true"></i>Scoped to this hostel only.
           </p>
-          <div class="flex items-center gap-2">
+          <div class="flex shrink-0 items-center gap-2">
             <button
               hh-button
               variant="text"
