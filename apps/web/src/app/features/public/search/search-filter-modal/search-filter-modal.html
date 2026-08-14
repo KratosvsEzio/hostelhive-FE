@@ -124,10 +124,11 @@
           <h3 class="mb-1 text-base font-semibold text-ink-900">Price range</h3>
           <p class="mb-3 text-sm text-ink-500">Monthly rate</p>
           <hh-range-slider
-            [min]="0"
-            [max]="60000"
-            [step]="1000"
+            [min]="BUDGET_MIN"
+            [max]="BUDGET_MAX"
+            [step]="BUDGET_STEP"
             prefix="Rs "
+            [openEnded]="true"
             [(low)]="draftMinPrice"
             [(high)]="draftMaxPrice"
           />
