@@ -153,11 +153,11 @@
       <div class="overflow-hidden rounded-2xl bg-white shadow-card">
         <!-- Header -->
         <div class="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-4">
-          <div class="flex items-center gap-3">
+          <div class="flex min-w-0 items-center gap-3">
             <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-600" [class]="meta.tint">
               <i class="ti text-xl" [class]="meta.icon" aria-hidden="true"></i>
             </span>
-            <div>
+            <div class="min-w-0">
               <p class="font-display font-semibold text-ink-900">{{ meta.label }}</p>
               <p class="text-xs text-ink-400">
                 @if (cfg.enabled) {
@@ -168,7 +168,7 @@
               </p>
             </div>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex shrink-0 items-center gap-3">
             <hh-toggle [checked]="cfg.enabled" (checkedChange)="setEnabled(meal, $event)" />
           </div>
         </div>

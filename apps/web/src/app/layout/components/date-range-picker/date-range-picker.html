@@ -17,17 +17,17 @@
     <div class="fixed inset-0 z-40" (click)="open.set(false)"></div>
 
     <!-- Dropdown panel -->
-    <div class="absolute right-0 top-full z-[9999] mt-2 flex overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-pill">
+    <div class="absolute right-0 top-full z-[9999] mt-2 flex max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-pill sm:flex-row">
 
-      <!-- Left: scrollable preset list — fixed 160px -->
+      <!-- Left: scrollable preset list — a horizontal strip on mobile, fixed 160px rail from sm up -->
       <div
-        class="w-40 shrink-0 overflow-y-auto border-r border-ink-100 py-2"
+        class="flex w-full shrink-0 overflow-x-auto border-b border-ink-100 py-2 sm:block sm:w-40 sm:overflow-x-visible sm:overflow-y-auto sm:border-b-0 sm:border-r"
         style="max-height: 316px; scrollbar-width: thin"
       >
         @for (p of presets; track p.label) {
           <button
             type="button"
-            class="w-full px-4 py-2 text-left text-sm transition hover:bg-surface"
+            class="shrink-0 whitespace-nowrap px-4 py-2 text-left text-sm transition hover:bg-surface sm:w-full"
             [class.font-semibold]="value()?.label === p.label"
             [class.text-brand-600]="value()?.label === p.label"
             [class.text-ink-700]="value()?.label !== p.label"

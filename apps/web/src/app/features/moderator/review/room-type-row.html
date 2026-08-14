@@ -1,41 +1,47 @@
-<div class="flex items-center gap-3 rounded-xl border border-ink-100 bg-surface px-4 py-3">
-  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-500">
-    <i class="ti ti-bed text-sm" aria-hidden="true"></i>
-  </span>
-  <div class="min-w-0 flex-1">
-    <hh-dropdown
-      variant="field"
-      [compact]="true"
-      placeholder="Select type"
-      [options]="options()"
-      [value]="name()"
-      (valueChange)="onNameChange($any($event))"
-    />
+<div
+  class="flex flex-col gap-3 rounded-xl border border-ink-100 bg-surface px-4 py-3 sm:flex-row sm:items-center"
+>
+  <div class="flex min-w-0 flex-1 items-center gap-3">
+    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-500">
+      <i class="ti ti-bed text-sm" aria-hidden="true"></i>
+    </span>
+    <div class="min-w-0 flex-1">
+      <hh-dropdown
+        variant="field"
+        [compact]="true"
+        placeholder="Select type"
+        [options]="options()"
+        [value]="name()"
+        (valueChange)="onNameChange($any($event))"
+      />
+    </div>
   </div>
-  <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
-    Capacity
-    <input
-      type="number"
-      [min]="minCapacity()"
-      [max]="isDormitory() ? 200 : 9"
-      step="1"
-      pattern="\d+"
-      [disabled]="capacityFixed()"
-      class="h-8 w-16 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
-      [value]="capacity()"
-      (change)="onCapacityChange($event)"
-      (keydown)="$event.key === '.' || $event.key === '-' || $event.key === 'e' ? $event.preventDefault() : null"
-    />
-  </label>
-  <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
-    PKR
-    <input
-      type="number"
-      min="0"
-      class="h-8 w-28 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-      [value]="price()"
-      (change)="onPriceChange($event)"
-    />
-    <span>/ mo</span>
-  </label>
+  <div class="flex flex-wrap items-center gap-3">
+    <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
+      Capacity
+      <input
+        type="number"
+        [min]="minCapacity()"
+        [max]="isDormitory() ? 200 : 9"
+        step="1"
+        pattern="\d+"
+        [disabled]="capacityFixed()"
+        class="h-10 w-16 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-8"
+        [value]="capacity()"
+        (change)="onCapacityChange($event)"
+        (keydown)="$event.key === '.' || $event.key === '-' || $event.key === 'e' ? $event.preventDefault() : null"
+      />
+    </label>
+    <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
+      PKR
+      <input
+        type="number"
+        min="0"
+        class="h-10 w-28 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 sm:h-8"
+        [value]="price()"
+        (change)="onPriceChange($event)"
+      />
+      <span>/ mo</span>
+    </label>
+  </div>
 </div>

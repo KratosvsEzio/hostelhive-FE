@@ -71,7 +71,7 @@ export class Queue {
   }));
 
   // Re-fetch whenever refresh counter, sort direction, page, or search changes.
-  // Skip entirely during SSR � no auth token is available server-side, so the
+  // Skip entirely during SSR — no auth token is available server-side, so the
   // request would fail and bake an error state into the SSR HTML.
   protected readonly state = toSignal(
     toObservable(this.query).pipe(

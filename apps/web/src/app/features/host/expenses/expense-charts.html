@@ -20,7 +20,7 @@
 
   <!-- By type (multi-series line) -->
   <hh-card [allowOverflow]="true">
-    <div class="mb-4 flex items-start justify-between gap-3">
+    <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div>
         <h2 class="font-display text-base font-semibold text-ink-900">Expenses by type</h2>
         <p class="text-xs text-ink-400">Last 12 months · Rs {{ lineTotal() | number }}</p>
@@ -118,7 +118,7 @@
                 [style.left]="hs.xPct + '%'"
                 [style.bottom]="hs.bottomPct + '%'"
               >
-                <div class="whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
+                <div class="max-w-[200px] whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
                   <p class="mb-1 text-[11px] font-semibold text-white">{{ hs.monthLabel }}</p>
                   @for (item of hs.items; track item.label) {
                     <div class="flex items-center gap-2">

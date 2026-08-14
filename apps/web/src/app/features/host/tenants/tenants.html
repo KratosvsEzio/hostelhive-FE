@@ -6,7 +6,7 @@
   </div>
 
   @if (statuses().length) {
-    <div class="mb-5 grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))">
+    <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       @for (st of statuses(); track st.slug) {
         <hh-card padding="sm">
           <p class="text-xs text-ink-400">{{ st.name }}</p>

@@ -42,7 +42,7 @@
       >
         <i class="ti ti-map-pin text-xl text-brand-500"></i>
         <span class="min-w-0 flex-1">
-          <span class="block text-[11px] font-medium text-ink-400"
+          <span class="block text-xs font-medium text-ink-400 sm:text-[11px]"
             >Where to?</span
           >
           <hh-place-search
@@ -186,7 +186,7 @@
   ></div>
 
   <div class="relative mx-auto max-w-7xl p-5 sm:px-8">
-    <div class="mb-10 flex items-end justify-between">
+    <div class="mb-10 flex flex-wrap items-end justify-between gap-4">
       <div class="min-w-0">
         <p
           class="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-widest text-amber-400"
@@ -319,7 +319,7 @@
               <p class="font-display text-base font-semibold sm:text-lg">
                 {{ c.name }}
               </p>
-              <p class="text-[11px] text-white/75">{{ c.stays }} stays</p>
+              <p class="text-xs text-white/75 sm:text-[11px]">{{ c.stays }} stays</p>
             </div>
           </a>
         }
@@ -347,7 +347,7 @@
   <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
     @for (feat of features; track feat.title) {
       <div
-        class="rounded-3xl border border-ink-100 bg-white p-7 transition duration-300 hover:-translate-y-1 hover:shadow-card"
+        class="rounded-3xl border border-ink-100 bg-white p-5 transition duration-300 hover:-translate-y-1 hover:shadow-card sm:p-7"
       >
         <span class="relative grid h-14 w-14 place-items-center">
           <svg
@@ -421,7 +421,7 @@
 <!-- ════ FOR HOSTS CTA ════ -->
 <section id="for-hosts" class="mx-auto max-w-7xl px-5 pb-20 pt-16 sm:px-8 lg:pt-24">
   <div
-    class="relative overflow-hidden rounded-[28px] bg-ink-900 px-8 py-12 sm:px-14 sm:py-16"
+    class="relative overflow-hidden rounded-[28px] bg-ink-900 px-6 py-10 sm:px-14 sm:py-16"
   >
     <svg
       class="pointer-events-none absolute -right-10 -top-16 h-72 w-72 text-brand-500/15"
@@ -500,7 +500,7 @@
   <div class="grid gap-6 lg:grid-cols-3">
     @for (t of testimonials; track t.name) {
       <figure
-        class="flex h-full flex-col rounded-3xl border border-ink-100 bg-white p-7 shadow-card"
+        class="flex h-full flex-col rounded-3xl border border-ink-100 bg-white p-5 shadow-card sm:p-7"
       >
         <div class="flex gap-0.5 text-brand-500">
           @for (star of [1, 2, 3, 4, 5]; track star) {

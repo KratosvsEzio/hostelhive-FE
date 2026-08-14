@@ -101,6 +101,36 @@ body {
 .safe-pb {
   padding-bottom: env(safe-area-inset-bottom);
 }
+/* For fixed bottom bars that already carry their own vertical padding. `.safe-pb`
+   *replaces* padding-bottom, so applying it to a `py-3` bar would drop that bar's
+   bottom padding to 0 on any device without an inset. These add the inset on top of
+   the element's own spacing instead. Loaded after Tailwind's utilities layer (see the
+   `styles` order in apps/web/project.json), so they win the equal-specificity tie. */
+.safe-pb-3 {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+.safe-mb {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+/* The site header is an `h-16` row PLUS the device's top safe-area inset, because it
+   carries `safe-pt` above. Anything that positions itself against the header — the
+   console sidebars, the console content height, the admin detail drawers — has to
+   account for the inset too. Hardcoding `4rem` works in a desktop browser (inset = 0)
+   but on a notched device it slides the sidebar up under the notch and makes the
+   content area taller than the space actually left below the header, pushing the
+   bottom of every console page off-screen.
+   These are plain CSS rather than Tailwind arbitrary values so the nested
+   `calc(… - var(…))` is not exposed to Tailwind's math-operator normalizer. */
+:root {
+  --hh-header-h: calc(4rem + env(safe-area-inset-top));
+}
+.hh-below-header {
+  top: var(--hh-header-h);
+}
+.hh-viewport-below-header {
+  height: calc(100dvh - var(--hh-header-h));
+}
 
 /* Data tables never wrap a cell onto a second line. Pair with an `overflow-x-auto` wrapper
    (the console tables already have one) so a table wider than its container scrolls
@@ -108,6 +138,18 @@ body {
 table th,
 table td {
   white-space: nowrap;
+}
+
+/* Mobile shell guard — the page itself must never scroll sideways in the Capacitor
+   WebView, where a horizontal page scroll reads as a broken app rather than a scroll
+   affordance. Regions that are legitimately wider than the viewport (data tables,
+   12-month chart strips) opt back in with their own `overflow-x-auto` container.
+   `clip` rather than `hidden`: `hidden` would make these a scroll container and break
+   every `position: sticky` descendant (sticky table headers, the console subheader). */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .shimmer {

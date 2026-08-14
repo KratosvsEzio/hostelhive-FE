@@ -58,7 +58,7 @@ import {
       <i class="ti ti-chevron-right-pipe" aria-hidden="true"></i>
     </button>
   `,
-  host: { class: 'flex items-center gap-1', role: 'navigation' },
+  host: { class: 'flex flex-wrap items-center gap-1', role: 'navigation' },
 })
 export class Pagination {
   readonly pageCount = input(1);

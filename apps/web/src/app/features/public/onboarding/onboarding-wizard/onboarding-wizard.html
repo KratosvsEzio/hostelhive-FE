@@ -242,13 +242,13 @@
                 <li
                   class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 bg-surface px-4 py-3"
                 >
-                  <div class="flex items-center gap-3">
+                  <div class="flex min-w-0 items-center gap-3">
                     <span
-                      class="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-500"
+                      class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-500"
                     >
                       <i class="ti ti-bed text-sm" aria-hidden="true"></i>
                     </span>
-                    <div>
+                    <div class="min-w-0">
                       <p class="text-sm font-semibold text-ink-900">
                         {{ roomTypeLabel(r.type) }}
                       </p>
@@ -271,7 +271,7 @@
             </ul>
           } @else {
             <div
-              class="grid place-items-center rounded-xl border border-dashed px-6 py-8 text-center transition"
+              class="grid place-items-center rounded-xl border border-dashed px-4 py-8 text-center transition sm:px-6"
               [class]="showValidation() && fieldErrors()['rooms'] ? 'border-danger bg-danger/5' : 'border-ink-200'"
             >
               <i class="ti ti-bed-off text-2xl" [class]="showValidation() && fieldErrors()['rooms'] ? 'text-danger/40' : 'text-ink-300'" aria-hidden="true"></i>
@@ -310,7 +310,7 @@
           </div>
         } @else if (amenitiesError()) {
           <div
-            class="rounded-2xl border border-danger/30 bg-danger/5 p-8 text-center"
+            class="rounded-2xl border border-danger/30 bg-danger/5 p-6 text-center sm:p-8"
           >
             <i class="ti ti-cloud-off text-3xl text-danger" aria-hidden="true"></i>
             <p class="mt-3 text-sm font-semibold text-ink-900">

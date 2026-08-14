@@ -104,7 +104,7 @@
             <span class="block truncate text-sm font-semibold text-ink-900">{{ p.name }}</span>
             <span class="block truncate text-xs text-ink-500">{{ p.area }}, {{ p.city }}</span>
           </span>
-          <span class="flex flex-col items-end gap-1">
+          <span class="flex shrink-0 flex-col items-end gap-1">
             <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="statusClass(p)">{{ statusLabel(p) }}</span>
             <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="genderClass(p.gender)">{{ genderLabel(p.gender) }}</span>
           </span>

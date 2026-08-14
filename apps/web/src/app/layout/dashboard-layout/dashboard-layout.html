@@ -18,7 +18,7 @@
         @if (breadcrumbs().length || backUrl()) {
           <hh-breadcrumb [backUrl]="backUrl()" [crumbs]="breadcrumbs()" />
         } @else if (label()) {
-          <h1 class="font-display text-lg font-semibold text-ink-900">{{ label() }}</h1>
+          <h1 class="truncate font-display text-lg font-semibold text-ink-900">{{ label() }}</h1>
         } @else {
           <ng-content select="[hhTitle]" />
         }

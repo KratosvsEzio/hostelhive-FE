@@ -20,7 +20,7 @@
     <!-- Profile header -->
     <div class="rounded-2xl bg-white shadow-card">
       <!-- Banner with avatar + name inside the gradient -->
-      <div class="rounded-t-2xl bg-gradient-to-r from-brand-400 to-brand-600 px-6 py-5">
+      <div class="rounded-t-2xl bg-gradient-to-r from-brand-400 to-brand-600 px-4 py-4 sm:px-6 sm:py-5">
         <div class="flex items-center gap-4">
           <hh-avatar
             size="4xl"
@@ -48,7 +48,7 @@
       </div>
 
       <!-- Key stats row -->
-      <div class="flex flex-wrap gap-x-8 gap-y-3 border-b border-ink-100 px-6 py-4">
+      <div class="flex flex-wrap gap-x-4 gap-y-3 border-b border-ink-100 px-4 py-4 sm:gap-x-8 sm:px-6">
         <div>
           <p class="text-xs text-ink-400">Room</p>
           <p class="font-semibold text-ink-900">{{ t.roomNumber }}</p>
@@ -74,7 +74,7 @@
       </div>
 
       <!-- Pill tabs -->
-      <div class="flex gap-1 px-4 py-2">
+      <div class="flex gap-1 overflow-x-auto px-4 py-2">
         @for (tab of ([
           { id: 'info', label: 'Info', icon: 'ti-info-circle' },
           { id: 'rent', label: 'Rent History', icon: 'ti-file-invoice' },
@@ -83,6 +83,7 @@
           <button
             type="button"
             hh-button variant="text" size="sm"
+            class="shrink-0"
             [class.bg-brand-500]="activeTab() === tab.id"
             [class.text-white]="activeTab() === tab.id"
             [class.font-medium]="activeTab() === tab.id"
@@ -222,12 +223,12 @@
               </h2>
               <div class="flex flex-wrap gap-4">
                 @if (t.cnicFrontUrl) {
-                  <div>
+                  <div class="w-full sm:w-auto">
                     <p class="mb-2 text-xs text-ink-400">Front</p>
                     <button
                       type="button"
                       [attr.aria-label]="'View CNIC front'"
-                      class="h-32 w-52 cursor-zoom-in rounded-lg object-cover shadow-sm ring-1 ring-ink-100 transition hover:opacity-90 overflow-hidden"
+                      class="h-32 w-full sm:w-52 cursor-zoom-in rounded-lg object-cover shadow-sm ring-1 ring-ink-100 transition hover:opacity-90 overflow-hidden"
                       (click)="cnicPreview.set(t.cnicFrontUrl!)"
                       (keydown.enter)="cnicPreview.set(t.cnicFrontUrl!)"
                       (keydown.space)="$event.preventDefault(); cnicPreview.set(t.cnicFrontUrl!)"
@@ -241,12 +242,12 @@
                   </div>
                 }
                 @if (t.cnicBackUrl) {
-                  <div>
+                  <div class="w-full sm:w-auto">
                     <p class="mb-2 text-xs text-ink-400">Back</p>
                     <button
                       type="button"
                       [attr.aria-label]="'View CNIC back'"
-                      class="h-32 w-52 cursor-zoom-in rounded-lg object-cover shadow-sm ring-1 ring-ink-100 transition hover:opacity-90 overflow-hidden"
+                      class="h-32 w-full sm:w-52 cursor-zoom-in rounded-lg object-cover shadow-sm ring-1 ring-ink-100 transition hover:opacity-90 overflow-hidden"
                       (click)="cnicPreview.set(t.cnicBackUrl!)"
                       (keydown.enter)="cnicPreview.set(t.cnicBackUrl!)"
                       (keydown.space)="$event.preventDefault(); cnicPreview.set(t.cnicBackUrl!)"

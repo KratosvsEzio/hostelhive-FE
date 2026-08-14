@@ -38,7 +38,7 @@
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
 
       <!-- Left: Product selection -->
-      <div class="rounded-2xl bg-white p-6 shadow-card">
+      <div class="rounded-2xl bg-white p-4 shadow-card sm:p-6">
         <h2 class="font-display text-base font-semibold text-ink-900">Select products</h2>
         <p class="mt-1 text-sm text-ink-500">Choose what you'd like to include in this order.</p>
 
@@ -46,7 +46,7 @@
           @for (product of s.allProducts; track product.id) {
             @let isLeadRadar = product.name === 'Lead Radar';
             <label
-              class="flex items-start gap-4 rounded-xl border-2 p-4 transition"
+              class="flex items-start gap-3 rounded-xl border-2 p-3 transition sm:gap-4 sm:p-4"
               [class]="isLeadRadar ? 'cursor-not-allowed border-ink-100 opacity-60' : isSelected(product.id) ? 'cursor-pointer border-brand-400 bg-brand-50/40' : 'cursor-pointer border-ink-100 hover:border-ink-200'"
             >
               <input
@@ -120,9 +120,9 @@
           } @else {
             <dl class="space-y-2 text-sm">
               @for (p of selectedProductList(); track p.id) {
-                <div class="flex items-center justify-between">
-                  <dt class="text-ink-500">{{ p.name }}</dt>
-                  <dd class="flex items-center gap-1.5">
+                <div class="flex items-center justify-between gap-3">
+                  <dt class="min-w-0 text-ink-500">{{ p.name }}</dt>
+                  <dd class="flex shrink-0 items-center gap-1.5">
                     <span class="text-ink-900">Rs {{ displayPrice(p) | number }}</span>
                     @if (hasDiscount(p)) {
                       <span class="text-xs text-ink-400 line-through">Rs {{ +p.price | number }}</span>

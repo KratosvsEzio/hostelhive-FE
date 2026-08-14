@@ -10,12 +10,12 @@
   <main class="mx-auto max-w-4xl space-y-5">
 
     <!-- Summary -->
-    <div class="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-card">
+    <div class="flex flex-col gap-3 rounded-2xl bg-white px-5 py-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p class="font-display font-semibold text-ink-900">{{ dateLabel() }}</p>
         <p class="text-xs text-ink-400">Students who reserved a portion, by menu.</p>
       </div>
-      <div class="text-right">
+      <div class="sm:text-right">
         <p class="font-display text-2xl font-semibold text-ink-900">{{ total() | number }}</p>
         <p class="text-xs text-ink-400">confirmed for {{ mealMeta[activeMeal()].label.toLowerCase() }}</p>
       </div>
