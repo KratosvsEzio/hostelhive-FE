@@ -5,7 +5,10 @@
   <!-- pb clears the fixed bottom tab bar on the mobile app -->
   <main class="flex-1" [class.pb-20]="showSeekerTabs()"><router-outlet /></main>
   @if (showFooter()) {
-    <app-site-footer />
+    <!-- `hidden md:block` mirrors showFooter()'s width half in CSS. The server can't
+         know the viewport, so it always renders the footer; without this the ~650px
+         footer paints on a phone and is then torn out once hydration flips isMobile. -->
+    <app-site-footer class="hidden md:block" />
   }
 </div>
 @if (showSeekerTabs()) {

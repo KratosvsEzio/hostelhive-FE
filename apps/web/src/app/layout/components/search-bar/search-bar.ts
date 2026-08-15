@@ -14,12 +14,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
 import { SearchCapacity } from '@services';
+import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
 
 type Seg = 'where' | 'budget' | 'sharing';
 
-const BUDGET_MIN = 0;
-const BUDGET_MAX = 50000;
-const BUDGET_STEP = 1000;
 const SHARING: { v: string; l: string }[] = [
   { v: '', l: 'Any sharing' },
   { v: '1', l: '1 per room' },

@@ -124,10 +124,11 @@
           <h3 class="mb-1 text-base font-semibold text-ink-900">Price range</h3>
           <p class="mb-3 text-sm text-ink-500">Monthly rate</p>
           <hh-range-slider
-            [min]="0"
-            [max]="60000"
-            [step]="1000"
+            [min]="BUDGET_MIN"
+            [max]="BUDGET_MAX"
+            [step]="BUDGET_STEP"
             prefix="Rs "
+            [openEnded]="true"
             [(low)]="draftMinPrice"
             [(high)]="draftMaxPrice"
           />
@@ -157,9 +158,11 @@
         </section>
       </div>
 
-      <!-- footer -->
+      <!-- footer — below sm this sheet is anchored to the bottom edge, so the
+           device's gesture bar / nav buttons overlap these actions unless the
+           bottom inset is added on top of the footer's own py-4. -->
       <div
-        class="flex items-center justify-between gap-3 border-t border-ink-100 px-5 py-4 sm:px-6"
+        class="safe-pb-4 flex items-center justify-between gap-3 border-t border-ink-100 px-5 py-4 sm:px-6"
       >
         <button
           hh-button variant="text" size="sm"

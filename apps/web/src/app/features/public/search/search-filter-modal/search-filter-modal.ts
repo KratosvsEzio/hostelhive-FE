@@ -17,6 +17,7 @@ import { catchError, of } from 'rxjs';
 import { AMENITIES, Gender, PROPERTY_TYPES } from '@hostelhive/data-access';
 import { Button, Dropdown, DropdownOption, RangeSlider } from '@hostelhive/ui';
 import { OffersApi } from '@services';
+import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
 export interface FilterState {
@@ -119,11 +120,16 @@ export class SearchFilterModal {
 
   protected readonly propertyTypes = PROPERTY_TYPES;
 
+  // Same scale as the search bar's Budget popover — both edit minPrice/maxPrice.
+  protected readonly BUDGET_MIN = BUDGET_MIN;
+  protected readonly BUDGET_MAX = BUDGET_MAX;
+  protected readonly BUDGET_STEP = BUDGET_STEP;
+
   // Draft state (mutated inside the modal; committed on "Show results").
   protected readonly draftGender = signal<Gender | 'all'>('all');
   protected readonly draftPropertyType = signal('');
-  protected readonly draftMinPrice = signal(0);
-  protected readonly draftMaxPrice = signal(60000);
+  protected readonly draftMinPrice = signal(BUDGET_MIN);
+  protected readonly draftMaxPrice = signal(BUDGET_MAX);
   protected readonly draftCapacity = signal('');
   protected readonly draftAmenities = signal<string[]>([]);
   protected readonly draftSort = signal('recommended');
@@ -132,8 +138,8 @@ export class SearchFilterModal {
   seed(state: FilterState): void {
     this.draftGender.set(state.gender);
     this.draftPropertyType.set(state.propertyType);
-    this.draftMinPrice.set(state.minPrice ?? 0);
-    this.draftMaxPrice.set(state.maxPrice ?? 60000);
+    this.draftMinPrice.set(state.minPrice ?? BUDGET_MIN);
+    this.draftMaxPrice.set(state.maxPrice ?? BUDGET_MAX);
     this.draftCapacity.set(state.capacity);
     this.draftAmenities.set([...state.amenities]);
     this.draftSort.set(state.sort || 'recommended');
@@ -147,8 +153,8 @@ export class SearchFilterModal {
   protected clearAll(): void {
     this.draftGender.set('all');
     this.draftPropertyType.set('');
-    this.draftMinPrice.set(0);
-    this.draftMaxPrice.set(60000);
+    this.draftMinPrice.set(BUDGET_MIN);
+    this.draftMaxPrice.set(BUDGET_MAX);
     this.draftCapacity.set('');
     this.draftAmenities.set([]);
     this.draftSort.set('recommended');
@@ -160,8 +166,8 @@ export class SearchFilterModal {
     this.applied.emit({
       gender: this.draftGender(),
       propertyType: this.draftPropertyType(),
-      minPrice: min > 0 ? min : null,
-      maxPrice: max < 60000 ? max : null,
+      minPrice: min > BUDGET_MIN ? min : null,
+      maxPrice: max < BUDGET_MAX ? max : null,
       capacity: this.draftCapacity(),
       amenities: this.draftAmenities(),
       sort: this.draftSort(),

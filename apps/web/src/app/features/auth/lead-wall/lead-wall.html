@@ -156,6 +156,61 @@
               </p>
             }
 
+            @if (isRegister()) {
+              <!-- Consent sits above the submit button because ticking it is what
+                   enables the button — the old copy sat below and was passive text. -->
+              <div>
+                <label class="flex cursor-pointer items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    class="sr-only"
+                    [checked]="acceptedTerms()"
+                    (change)="acceptedTerms.set(!acceptedTerms())"
+                  />
+                  <span
+                    class="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border-2 transition"
+                    [class]="
+                      acceptedTerms()
+                        ? 'border-brand-500 bg-brand-500'
+                        : showErrors() && termsError()
+                          ? 'border-danger bg-white'
+                          : 'border-ink-300 bg-white'
+                    "
+                    aria-hidden="true"
+                  >
+                    @if (acceptedTerms()) {
+                      <i class="ti ti-check text-[10px] text-white"></i>
+                    }
+                  </span>
+                  <span class="text-xs leading-relaxed text-ink-500">
+                    I agree to the
+                    <!-- stopPropagation so tapping a link opens it instead of
+                         toggling the surrounding label. -->
+                    <a
+                      routerLink="/terms-of-service"
+                      target="_blank"
+                      class="font-medium text-brand-600 underline hover:text-brand-700"
+                      (click)="$event.stopPropagation()"
+                      >Terms of Service</a
+                    >
+                    and
+                    <a
+                      routerLink="/privacy-policy"
+                      target="_blank"
+                      class="font-medium text-brand-600 underline hover:text-brand-700"
+                      (click)="$event.stopPropagation()"
+                      >Privacy Policy</a
+                    >.
+                  </span>
+                </label>
+                @if (showErrors() && termsError()) {
+                  <p class="mt-1.5 text-xs font-medium text-danger" role="alert">
+                    {{ termsError() }}
+                  </p>
+                }
+              </div>
+            }
+
             <button hh-button color="primary" type="submit" class="w-full" [disabled]="!isValid()" [loading]="busy()">
               {{
                 isRegister()
@@ -163,12 +218,6 @@
                   : 'Log in & view number'
               }}
             </button>
-
-            @if (isRegister()) {
-              <p class="text-center text-xs text-ink-400">
-                By continuing you agree to the Terms &amp; Privacy Policy.
-              </p>
-            }
           </form>
         }
 
