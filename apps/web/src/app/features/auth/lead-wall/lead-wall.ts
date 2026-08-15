@@ -106,6 +106,8 @@ export class LeadWall {
   protected readonly password = signal('');
   protected readonly confirmPassword = signal('');
   protected readonly phone = signal('');
+  /** Register-only: explicit consent, required before the account can be created. */
+  protected readonly acceptedTerms = signal(false);
 
   protected readonly isRegister = computed(() => this.tab() === 'register');
 
@@ -155,19 +157,30 @@ export class LeadWall {
     return this.phone().trim().length > 0 ? '' : 'Enter a valid phone number.';
   });
 
+  protected readonly termsError = computed(() => {
+    if (!this.isRegister()) return '';
+    return this.acceptedTerms()
+      ? ''
+      : 'Please accept the Terms of Service and Privacy Policy.';
+  });
+
   protected readonly isValid = computed(
     () =>
       !this.nameError() &&
       !this.emailError() &&
       !this.passwordError() &&
       !this.confirmPasswordError() &&
-      !this.phoneError(),
+      !this.phoneError() &&
+      !this.termsError(),
   );
 
   protected onTabChange(value: string): void {
     this.tab.set(value as AuthTab);
     this.showErrors.set(false);
     this.confirmPassword.set('');
+    // Consent is register-only and must be re-given deliberately, so never carry a
+    // tick across a tab switch.
+    this.acceptedTerms.set(false);
   }
 
   /** Register → POST /api/user/sign_up; Login → POST /api/user/sign_in (real API). */
