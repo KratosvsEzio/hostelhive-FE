@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TEMPORARY (testing) — debug variant only.
+
+  The dev backend is a cleartext LAN address (http://<host>:3000, entered at runtime via
+  the dev-setup gate). Android blocks cleartext traffic by default from targetSdk 28
+  onwards, and this app targets 35, so without this every API call fails before it leaves
+  the device.
+
+  This overlay is merged into the debug variant only — `assembleRelease` never sees it, so
+  release builds keep the secure default. Delete it alongside the dev-setup gate.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>
