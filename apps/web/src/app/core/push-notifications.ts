@@ -116,6 +116,29 @@ export class PushNotificationsService {
       this.permission.set(status.receive === 'granted' ? 'granted' : 'denied');
       if (status.receive !== 'granted') return;
 
+      // Android 8+ puts every notification on a channel, and the channel — not the
+      // payload — decides whether it appears as a heads-up popover, makes a sound, and
+      // shows on the lock screen. With no channel of our own, FCM falls back to one of
+      // default importance, which lands silently in the tray and never pops up.
+      //
+      // The id must match `default_notification_channel_id` in AndroidManifest.xml.
+      // Importance and sound are fixed at creation: Android ignores changes to an
+      // existing channel, so altering these later needs a new id (or a reinstall).
+      if (Capacitor.getPlatform() === 'android') {
+        try {
+          await Push.createChannel({
+            id: 'hh_default',
+            name: 'General',
+            description: 'Rent reminders, invites and mess confirmations',
+            importance: 5, // MAX — required for a heads-up popover
+            visibility: 1, // public — content visible on the lock screen
+            vibration: true,
+          });
+        } catch {
+          // Channel creation is best-effort; never block registration on it.
+        }
+      }
+
       if (!this.registrationId()) this.registrationId.set(crypto.randomUUID());
       await Push.register();
       this.registered = true;

@@ -90,7 +90,15 @@ export class SessionStore {
     if (typeof localStorage === 'undefined') return null;
     try {
       const raw = localStorage.getItem(USER_KEY);
-      return raw ? (JSON.parse(raw) as SessionUser) : null;
+      if (!raw) return null;
+      const user = JSON.parse(raw) as SessionUser;
+      // `allRoles` was added after this cache shipped, so a returning user can still be
+      // holding a blob without it. The parse above is an unchecked cast, so backfill from
+      // the primary role rather than handing a malformed user to hasRole().
+      if (!Array.isArray(user.allRoles)) {
+        user.allRoles = user.role ? [user.role] : [];
+      }
+      return user;
     } catch {
       return null;
     }
@@ -116,7 +124,14 @@ export class SessionStore {
   hasRole(...roles: Role[]): boolean {
     const user = this._user();
     if (!user) return false;
-    return user.allRoles.some((r) => roles.includes(r));
+    // Mirrors the `allRoles` computed's fallback. Every guard and nav check routes through
+    // here, so a session that reached the store without the field must not throw.
+    const held = Array.isArray(user.allRoles)
+      ? user.allRoles
+      : user.role
+        ? [user.role]
+        : [];
+    return held.some((r) => roles.includes(r));
   }
 }
 

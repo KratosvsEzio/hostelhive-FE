@@ -70,6 +70,15 @@ const BOUNDS_KEYS_NULLED = {
 /** ~0.1 m — matches captureMapBounds()'s 1e-6 no-op threshold, and keeps the URL readable. */
 const roundCoord = (n: number): number => +n.toFixed(6);
 
+/**
+ * Whether a viewport encloses real area. Leaflet hands back a zero-area box (NE === SW)
+ * whenever its container has not been laid out yet — routine on mobile, where the map sits
+ * behind the results sheet — and a zero-area or inverted `geo_bounding_box` matches nothing
+ * server-side, so the search comes back empty. Guards both the URL we read and the viewport
+ * we capture; letting a degenerate box through either way produces "0 hostels in this area".
+ */
+const hasArea = (b: Bounds): boolean => b.north > b.south && b.east > b.west;
+
 /** Resting positions of the mobile results sheet, from just-peeking to covering the map. */
 type SheetSnap = 'peek' | 'half' | 'full';
 
@@ -167,9 +176,9 @@ export class SearchMap {
     if (raw.some((v) => !v)) return null;
     const [north, east, south, west] = raw.map(Number);
     if (![north, east, south, west].every(Number.isFinite)) return null;
-    // A degenerate or inverted box would silently match nothing server-side.
-    if (north <= south || east <= west) return null;
-    return { north, south, east, west };
+    const box = { north, south, east, west };
+    if (!hasArea(box)) return null;
+    return box;
   });
 
   /** Map viewport bounds — updated on every idle event (zoom/pan), seeded from the URL. */
@@ -539,6 +548,9 @@ export class SearchMap {
       this.narrow.set(!this.isDesktopSplit());
       const onResize = () => {
         this.measureStickyOffsets();
+        // Re-measured, not just measured once: rotating the device changes the safe-area
+        // inset and therefore the bar's height, and every snap offset is derived from it.
+        this.measureTabBar();
         this.viewportH.set(window.innerHeight);
         this.narrow.set(!this.isDesktopSplit());
         // The map pane is laid out at every width now, so keep it sized to its container.
@@ -732,6 +744,10 @@ export class SearchMap {
       this.programmaticMove = false; // the scripted move (if any) has settled
       this.captureMapBounds();
     });
+    // `invalidateSize()` fires this once the container finally has a size. Without it, a
+    // first moveend on an unsized container would be skipped as degenerate and nothing
+    // would ever re-capture, leaving the search stuck on the unbounded fallback.
+    this.sharedMap.listen('resize', () => this.captureMapBounds());
     this.sharedMap.listen('dragstart', () => {
       this.userInteracted = true;
     });
@@ -1142,6 +1158,11 @@ export class SearchMap {
       east: b.getEast(),
       west: b.getWest(),
     };
+    // Ignore a viewport with no area rather than querying (and worse, persisting) it. The
+    // first moveend often lands before the container has been sized, and writing that box
+    // to the URL would make the empty result survive a refresh or a shared link. The
+    // `resize` handler re-captures once layout settles.
+    if (!hasArea(next)) return;
     // moveend fires after every camera settle, including no-op ones. Only a real viewport
     // change should refetch and restart the infinite list.
     const prev = this.mapBounds();

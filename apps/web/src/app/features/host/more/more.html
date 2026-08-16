@@ -75,6 +75,17 @@
         <span class="flex-1 text-sm font-medium text-ink-800">FAQs</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
+      <!-- The desktop header's "View site" link is `hidden sm:block`, so without this there
+           is no way off the console on a phone. Carries a subtitle because "Exit dashboard"
+           sitting next to "Sign out" would otherwise read as another way to log out. -->
+      <a routerLink="/" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-door-exit" aria-hidden="true"></i></span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-sm font-medium text-ink-800">Exit dashboard</span>
+          <span class="block text-xs text-ink-400">Browse the public site — you stay signed in</span>
+        </span>
+        <i class="ti ti-chevron-right shrink-0 text-ink-300" aria-hidden="true"></i>
+      </a>
       <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-left" (click)="signOut()">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-logout" aria-hidden="true"></i></span>
         <span class="flex-1 text-sm font-medium text-danger">Sign out</span>
@@ -94,7 +105,7 @@
   <!-- safe-pb-4 not safe-pb: `.safe-pb` overrides `pb-4` (global.css loads after the
        Tailwind utilities), which left this sheet with no bottom padding at all on a
        device without an inset. -->
-  <div class="safe-pb-4 fixed inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-white px-5 pb-4 pt-3" role="dialog" aria-label="Switch property">
+  <div class="safe-pb-4 fixed inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-white px-5 pt-3" role="dialog" aria-label="Switch property">
     <span class="mx-auto block h-1 w-10 rounded-full bg-ink-200"></span>
     <p class="mt-4 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
     <div class="mt-2 max-h-72 space-y-1.5 overflow-y-auto">

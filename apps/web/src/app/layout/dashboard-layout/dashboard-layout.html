@@ -29,8 +29,11 @@
     </div>
   </header>
   <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-    <!-- Extra bottom padding on the mobile app clears the fixed tab bar. -->
-    <div class="mx-auto max-w-7xl px-5 py-6 sm:px-8" [class.pb-24]="mobile.isMobile()">
+    <!-- Clears the fixed tab bar on the mobile app. Derived from --hh-tabbar-h + the
+         device inset rather than a fixed pb-24: 96px cleared the 54px bar comfortably at
+         zero inset, but the bar grows with the inset and a 48px gesture area put it at
+         102px — overlapping the last row. See .hh-pb-tabbar in global.css. -->
+    <div class="mx-auto max-w-7xl px-5 py-6 sm:px-8" [class.hh-pb-tabbar]="mobile.isMobile()">
       <ng-content />
     </div>
   </div>

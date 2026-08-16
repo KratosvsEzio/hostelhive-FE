@@ -396,8 +396,29 @@ function toInvoice(rb: ApiRenterBillTop): Invoice {
     due: toDate(rb.due_date),
     paidAt: rb.paid_at ? toDate(rb.paid_at) : undefined,
     lines,
+    // Structured, for the edit form to seed from — `lines` has already been formatted
+    // into labels by this point and cannot be reversed reliably.
+    breakdown: rb.break_down ?? undefined,
     payNote: rb.notes ?? rb.pay_note ?? 'Pay on or before the due date.',
   };
+}
+
+/**
+ * The `renter_bill` body. Create (POST) and update (PUT) take an identical payload —
+ * only the verb and whether the URL carries a bill id differ — so both share this.
+ */
+export interface InvoiceBody {
+  renter_id: string | number;
+  room_id?: string | number;
+  amount: number;
+  issued_date: string;
+  due_date: string;
+  break_down: {
+    rent?: number;
+    mess_charges?: number;
+    transportation_charges?: number;
+  };
+  notes?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -683,20 +704,28 @@ export class HostOpsApi {
   /**
    * POST /api/host/hostels/:id/renter_bills — issue a rent bill for a tenant.
    * `break_down` itemises the total into rent / mess / transport; `amount` is their sum.
+   * The same body serves {@link updateInvoice}.
    */
   createInvoice(
     hostelId: string,
-    body: {
-      renter_id: string | number;
-      room_id?: string | number;
-      amount: number;
-      issued_date: string;
-      due_date: string;
-      break_down: { rent?: number; mess_charges?: number; transportation_charges?: number };
-      notes?: string;
-    },
+    body: InvoiceBody,
   ): Observable<unknown> {
     return this.api.post(`/api/host/hostels/${hostelId}/renter_bills`, { renter_bill: body });
+  }
+
+  /**
+   * PUT /api/host/hostels/:id/renter_bills/:billId — amend an existing bill.
+   * Takes the same `renter_bill` body as {@link createInvoice}, so the drawer builds one
+   * payload for both and only the verb and URL differ.
+   */
+  updateInvoice(
+    hostelId: string,
+    billId: string,
+    body: InvoiceBody,
+  ): Observable<unknown> {
+    return this.api.put(`/api/host/hostels/${hostelId}/renter_bills/${billId}`, {
+      renter_bill: body,
+    });
   }
 
   deleteInvoice(hostelId: string, billId: string): Observable<unknown> {

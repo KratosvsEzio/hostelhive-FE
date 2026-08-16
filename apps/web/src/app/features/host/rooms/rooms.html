@@ -359,7 +359,9 @@
         }
       </div>
 
-      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+      <!-- safe-pb-4, not py-4 alone: the drawer runs to the screen edge, so without the
+           device inset these buttons sit under the home indicator. -->
+      <div class="safe-pb-4 sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
         @if (bulkError()) {
           <p class="mb-3 flex items-center gap-1.5 text-xs font-medium text-danger">
             <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ bulkError() }}
@@ -452,7 +454,9 @@
         />
       </div>
 
-      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+      <!-- safe-pb-4, not py-4 alone: the drawer runs to the screen edge, so without the
+           device inset these buttons sit under the home indicator. -->
+      <div class="safe-pb-4 sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
         @if (saveError()) {
           <p class="mb-3 flex items-center gap-1.5 text-xs font-medium text-danger">
             <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ saveError() }}

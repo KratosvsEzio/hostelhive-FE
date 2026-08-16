@@ -71,6 +71,46 @@ type Filter = 'all' | InvoiceStatus;
 const EMPTY_STATE: ViewState = { loading: false, error: false, subscriptionError: false, networkError: false, data: [], total: 0, totalPages: 1, statuses: [], aggs: null };
 const LOADING: ViewState = { loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0, totalPages: 1, statuses: [], aggs: null };
 
+/**
+ * Pixels rendered per printed millimetre when rasterising the logo for the PDF. 12 px/mm
+ * is ~305 dpi, so the mark stays sharp in print rather than showing the soft edges a
+ * 1:1 raster would give.
+ */
+const RASTER_SCALE = 12;
+
+/**
+ * Paints an SVG onto a canvas and returns PNG bytes, because jsPDF cannot embed SVG.
+ *
+ * The width is derived from the asset's own aspect ratio rather than assumed, so swapping
+ * in a differently proportioned logo does not stretch it. Same-origin with a base64 image
+ * inside, so the canvas is never tainted and `toDataURL` stays allowed.
+ */
+async function rasterise(
+  url: string,
+  heightMm: number,
+  pxPerMm: number,
+): Promise<{ dataUrl: string; widthMm: number }> {
+  const img = new Image();
+  img.decoding = 'sync';
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Could not load ${url}`));
+    img.src = url;
+  });
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  if (!w || !h) throw new Error(`${url} reported no intrinsic size`);
+
+  const widthMm = (w / h) * heightMm;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(widthMm * pxPerMm));
+  canvas.height = Math.max(1, Math.round(heightMm * pxPerMm));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context is unavailable.');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return { dataUrl: canvas.toDataURL('image/png'), widthMm };
+}
+
 
 @Component({
   selector: 'hh-invoices',
@@ -110,6 +150,20 @@ export class Invoices {
   protected readonly deletePending = signal<Invoice | null>(null);
   protected readonly deleting = signal(false);
   protected readonly addOpen = signal(false);
+  /** Bill id from the `edit/:billId` route segment, or null when not editing. */
+  private readonly editingId = signal<string | null>(null);
+  /**
+   * The invoice the drawer should amend. Resolved from the loaded rows, so it stays
+   * null until they arrive — the drawer only opens once there is something to seed it
+   * with, rather than flashing an empty form.
+   */
+  protected readonly editingInvoice = computed(() => {
+    const id = this.editingId();
+    if (!id) return null;
+    // Unfiltered: resolving against `filtered()` would make the drawer refuse to open
+    // whenever the active status filter happened to hide the row being edited.
+    return (this.state().data ?? []).find((i) => i.id === id) ?? null;
+  });
   private readonly deletedIds = signal(new Set<string>());
 
   protected readonly hostelName = computed(() => this.store.activeProperty()?.name ?? '');
@@ -304,7 +358,16 @@ export class Invoices {
       filter(e => e instanceof NavigationEnd),
       startWith(null),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => this.addOpen.set(this.route.snapshot.url[0]?.path === 'create'));
+    ).subscribe(() => {
+      const segments = this.route.snapshot.url;
+      this.addOpen.set(segments[0]?.path === 'create');
+      // 'edit/:billId' — the id is resolved against the loaded list rather than
+      // refetched, so a deep link that arrives before the list does simply shows
+      // nothing until the rows land, at which point the drawer opens.
+      this.editingId.set(
+        segments[0]?.path === 'edit' ? (segments[1]?.path ?? null) : null,
+      );
+    });
   }
 
   // ── scope search ───────────────────────────────────────────────────────────
@@ -534,20 +597,12 @@ export class Invoices {
     doc.line(ml, footerY - 4, pw - mr, footerY - 4);
 
     try {
-      const resp = await fetch('/hostelhive-logo.png');
-      const blob = await resp.blob();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise<void>((res) => { img.onload = () => res(); });
+      // jsPDF has no SVG support — addImage only takes raster formats — so the brand SVG
+      // is painted onto a canvas and handed over as PNG bytes. Nothing else in the app
+      // references a .png logo; this is a PDF-format constraint, not a second asset.
       const logoH = 5;
-      const logoW = (img.naturalWidth / img.naturalHeight) * logoH;
-      doc.addImage(dataUrl, 'PNG', ml, footerY - 2, logoW, logoH);
+      const logo = await rasterise('/hostelhive-logo.png', logoH, RASTER_SCALE);
+      doc.addImage(logo.dataUrl, 'PNG', ml, footerY - 2, logo.widthMm, logoH);
     } catch {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
@@ -716,7 +771,24 @@ export class Invoices {
   protected editInvoice(inv: Invoice, event: MouseEvent): void {
     event.stopPropagation();
     this.closeMenu();
-    console.log('edit', inv.id);
+    const base = this.invoicesBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'edit', inv.id], {
+      queryParamsHandling: 'preserve',
+    });
+  }
+
+  /** Shared by save and cancel — both return to the list, closing the drawer. */
+  protected closeEdit(): void {
+    const base = this.invoicesBase();
+    if (!base) return;
+    void this.router.navigate(base, { queryParamsHandling: 'preserve' });
+  }
+
+  protected onInvoiceUpdated(): void {
+    this.closeEdit();
+    this.refetchDelay.track('/renter_bills');
+    this.refresh.update((n) => n + 1);
   }
 
   protected markPaid(inv: Invoice, event: MouseEvent): void {

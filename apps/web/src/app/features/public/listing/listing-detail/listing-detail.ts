@@ -17,6 +17,7 @@ import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
+import { MobileApp } from '@core/mobile-app';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 
@@ -85,6 +86,8 @@ export class ListingDetail {
   private readonly favorites = inject(FavoritesStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  /** Drives the contact bar's lift over the seeker tab bar — see listing-detail.html. */
+  protected readonly mobile = inject(MobileApp);
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));

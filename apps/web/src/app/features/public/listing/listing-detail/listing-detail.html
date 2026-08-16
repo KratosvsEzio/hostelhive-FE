@@ -421,8 +421,20 @@
 
 <!-- Mobile sticky contact bar -->
 @if (state().data; as l) {
+  <!-- Lifted above the seeker tab bar when that bar exists. Both are `fixed bottom-0
+       z-40`, and the tab bar is later in the DOM, so at equal z it wins the paint order
+       and hides this one outright.
+
+       The two conditions differ, which is why this is a binding rather than a static
+       class: the contact bar shows below 1024px (`lg:hidden`) but the tab bar only
+       renders on a phone (≤767px). On a 768–1023px tablet there is no bar to clear, so
+       the element stays on the screen edge and keeps its own inset. When the bar IS
+       there, the bar already owns the inset — keeping `safe-pb-3` too would count it
+       twice and leave a white strip. -->
   <div
-    class="safe-pb-3 fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-ink-100 bg-white px-5 py-3 shadow-pill lg:hidden"
+    class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-ink-100 bg-white px-5 py-3 shadow-pill lg:hidden"
+    [class.hh-above-tabbar]="mobile.isMobile()"
+    [class.safe-pb-3]="!mobile.isMobile()"
   >
     <div class="min-w-0">
       <p class="text-xs text-ink-400">From</p>

@@ -129,6 +129,18 @@ body {
   margin-bottom: calc(var(--hh-tabbar-h) + env(safe-area-inset-bottom));
 }
 
+/* Scroll clearance for the tab bar: the bar's own row, the device inset it adds on top
+   via `safe-pb`, and breathing room so the last card never sits flush against it.
+
+   This replaces a hard-coded `pb-20` on <main>. 80px cleared the 54px row with 26px to
+   spare on a 0-inset device, but the bar grows with the inset while that padding did
+   not — so an iPhone home indicator (34px) made the bar 88px and swallowed the last 8px
+   of content. Deriving it from the same variable the bar uses keeps the two in step on
+   every device. */
+.hh-pb-tabbar {
+  padding-bottom: calc(var(--hh-tabbar-h) + env(safe-area-inset-bottom) + 1.5rem);
+}
+
 /* The site header is an `h-16` row PLUS the device's top safe-area inset, because it
    carries `safe-pt` above. Anything that positions itself against the header — the
    console sidebars, the console content height, the admin detail drawers — has to

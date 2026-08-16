@@ -47,25 +47,40 @@
             }
           }
           @case ('host') {
+            <!-- Icon-only below sm: the console areas have no other way off a phone, and
+                 the full label alongside the logo, bell and avatar overflows a 375px bar. -->
             <a
               routerLink="/"
-              class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
-              >View site</a
+              class="rounded-full px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:px-4"
+              aria-label="View site"
             >
+              <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
+              <span class="hidden sm:inline">View site</span>
+            </a>
           }
           @case ('admin') {
+            <!-- Icon-only below sm: the console areas have no other way off a phone, and
+                 the full label alongside the logo, bell and avatar overflows a 375px bar. -->
             <a
               routerLink="/"
-              class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
-              >View site</a
+              class="rounded-full px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:px-4"
+              aria-label="View site"
             >
+              <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
+              <span class="hidden sm:inline">View site</span>
+            </a>
           }
           @case ('moderator') {
+            <!-- Icon-only below sm: the console areas have no other way off a phone, and
+                 the full label alongside the logo, bell and avatar overflows a 375px bar. -->
             <a
               routerLink="/"
-              class="hidden rounded-full px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:block"
-              >View site</a
+              class="rounded-full px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:px-4"
+              aria-label="View site"
             >
+              <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
+              <span class="hidden sm:inline">View site</span>
+            </a>
           }
         }
         @if (isAuthenticated()) {

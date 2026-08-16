@@ -1,0 +1,90 @@
+<div
+  class="relative"
+  [class.inline-block]="shape() === 'circle'"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  <!-- Tile — click opens the method menu; the whole tile is also a drop target. -->
+  <button
+    type="button"
+    (click)="toggleMenu($event)"
+    class="group relative block overflow-hidden border-2 border-dashed transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+    [class]="shape() === 'circle' ? 'h-24 w-24 rounded-full' : 'aspect-[4/3] w-full rounded-xl'"
+    [class.border-brand-400]="dragOver()"
+    [class.bg-brand-50]="dragOver()"
+    [class.border-ink-200]="!dragOver()"
+    [class.hover:border-brand-300]="!dragOver()"
+    [attr.aria-label]="preview() ? 'Change photo' : label()"
+  >
+    @if (preview()) {
+      <img [src]="preview()" alt="" class="h-full w-full object-cover" />
+    } @else {
+      <div class="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-ink-400 group-hover:text-ink-600">
+        <i class="ti ti-camera-plus text-2xl" aria-hidden="true"></i>
+        <span class="text-[11px] font-medium">{{ label() }}</span>
+        @if (shape() !== 'circle') {
+          <span class="text-[10px] text-ink-300">Drag &amp; drop, upload, or take a photo</span>
+        }
+      </div>
+    }
+
+    @if (uploading()) {
+      <div class="absolute inset-0 grid place-items-center bg-black/40">
+        <i class="ti ti-loader-2 animate-spin text-xl text-white" aria-hidden="true"></i>
+      </div>
+    } @else if (preview()) {
+      <span class="absolute bottom-1 right-1 grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white shadow">
+        <i class="ti ti-camera text-xs" aria-hidden="true"></i>
+      </span>
+    }
+  </button>
+
+  <!-- Method menu -->
+  @if (menuOpen()) {
+    <div class="absolute left-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-pill">
+      <button type="button" hh-button variant="text" class="w-full !justify-start" (click)="takePhoto()">
+        <i class="ti ti-camera shrink-0 text-ink-400" aria-hidden="true"></i>Take a photo
+      </button>
+      <div class="mx-3 border-t border-ink-100"></div>
+      <label class="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-sm text-ink-700 transition hover:bg-ink-50">
+        <i class="ti ti-photo shrink-0 text-ink-400" aria-hidden="true"></i>Choose from files
+        <input type="file" [accept]="accept()" class="sr-only" (change)="onFileInput($event)" />
+      </label>
+    </div>
+  }
+
+  @if (displayError()) {
+    <p class="mt-1.5 flex items-center gap-1 text-xs text-danger">
+      <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ displayError() }}
+    </p>
+  }
+</div>
+
+<!-- Web camera overlay (desktop / mobile web — native uses the Capacitor camera instead). -->
+@if (cameraOpen()) {
+  <div class="fixed inset-0 z-[120] flex flex-col bg-black">
+    <div class="flex items-center justify-between px-4 py-3">
+      <button type="button" hh-button variant="icon" size="sm" (click)="stopCamera()" aria-label="Cancel">
+        <i class="ti ti-x text-xl text-white" aria-hidden="true"></i>
+      </button>
+      <p class="text-sm font-medium text-white">Take a photo</p>
+      <div class="w-9"></div>
+    </div>
+
+    <div class="flex flex-1 items-center justify-center overflow-hidden">
+      <video #video autoplay playsinline muted class="h-full w-full object-contain"></video>
+    </div>
+
+    <div class="flex items-center justify-center pb-10 pt-6">
+      <button
+        type="button"
+        (click)="captureWebPhoto()"
+        class="flex h-18 w-18 items-center justify-center rounded-full border-4 border-white bg-white/20 transition hover:bg-white/30 active:scale-95"
+        aria-label="Capture photo"
+      >
+        <span class="h-14 w-14 rounded-full bg-white"></span>
+      </button>
+    </div>
+  </div>
+}

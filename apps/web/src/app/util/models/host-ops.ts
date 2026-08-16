@@ -124,5 +124,14 @@ export interface Invoice {
   due: string; // ISO date
   paidAt?: string; // ISO date — present only when status === 'paid'
   lines: InvoiceLine[];
+  /**
+   * The raw `break_down` as the API stores it, kept alongside `lines`.
+   *
+   * `lines` is display-shaped — the keys have already been turned into labels ("Mess
+   * charges"), so reversing them to seed the edit form would mean parsing English back
+   * into field names. This preserves the structured values instead. Absent on bills
+   * the API returned as pre-built `line_items` rather than a breakdown.
+   */
+  breakdown?: Record<string, number>;
   payNote: string;
 }

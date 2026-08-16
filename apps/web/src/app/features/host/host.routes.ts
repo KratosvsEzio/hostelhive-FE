@@ -138,6 +138,9 @@ export const HOST_ROUTES: Route[] = [
         children: [
           { path: '', pathMatch: 'full', component: Invoices, title: 'Invoices — HostelHive' },
           { path: 'create', component: Invoices, title: 'New invoice — HostelHive' },
+          // Same component as the list: the drawer is URL-driven so the hardware back
+          // button closes it and lands on the list, matching 'create'.
+          { path: 'edit/:billId', component: Invoices, title: 'Edit invoice — HostelHive' },
         ],
       },
       {

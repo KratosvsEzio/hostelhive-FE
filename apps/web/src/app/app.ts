@@ -57,6 +57,12 @@ export class App {
       !u.startsWith('/moderator') &&
       !u.startsWith('/auth') &&
       !u.startsWith('/confirm_invitation') &&
+      // Registered top-level (app.routes.ts), a sibling of /auth rather than a child, so
+      // it was falling into the seeker area — putting the bottom tab bar and the
+      // marketing footer on a password-reset screen. Its card is an `absolute inset-0`
+      // scroller, so the tab bar overlapped the submit button and no amount of padding
+      // on <main> could reach inside to fix it.
+      !u.startsWith('/reset_password') &&
       !u.startsWith('/forbidden') &&
       // Public mess opt-in landing carries its own chrome (no site header/footer/tabs).
       !u.startsWith('/mess/confirm')
@@ -71,5 +77,20 @@ export class App {
   // Bottom tab bar (Explore · Search · Favorites · Account) — mobile app, seeker area only.
   protected readonly showSeekerTabs = computed(
     () => this.inSeekerArea() && this.mobile.isMobile(),
+  );
+
+  /**
+   * Routes that size themselves to the viewport and already account for the tab bar.
+   * Search measures the bar into its sheet height (see SearchMap.measureTabBar), so its
+   * document is exactly one screen tall — adding <main>'s clearance on top would only
+   * hang a strip of empty scroll beneath a full-height map.
+   */
+  private readonly ownsBottomSpacing = computed(() =>
+    this.path().startsWith('/search'),
+  );
+
+  /** Scroll clearance for the tab bar, minus the routes that handle it themselves. */
+  protected readonly showTabBarClearance = computed(
+    () => this.showSeekerTabs() && !this.ownsBottomSpacing(),
   );
 }

@@ -1,26 +1,22 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   OnInit,
-  ViewChild,
   inject,
   signal,
 } from '@angular/core';
 import { Button } from '@hostelhive/ui';
+import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { SessionStore } from '@core/auth';
 import { ImageUploadService, UsersApi } from '@services';
 
 @Component({
   selector: 'app-account-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button],
+  imports: [Button, PhotoPicker],
   templateUrl: './settings.html',
 })
 export class AccountSettings implements OnInit {
-  @ViewChild('cameraInput') private cameraInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('fileInput') private fileInput!: ElementRef<HTMLInputElement>;
-
   private readonly session = inject(SessionStore);
   private readonly usersApi = inject(UsersApi);
   private readonly imageUpload = inject(ImageUploadService);
@@ -44,18 +40,8 @@ export class AccountSettings implements OnInit {
     });
   }
 
-  protected initials(): string {
-    const n = this.user()?.name?.trim() ?? '';
-    return n.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
-  }
-
-  protected openCamera(): void { this.cameraInput.nativeElement.click(); }
-  protected openFilePicker(): void { this.fileInput.nativeElement.click(); }
-
-  protected onFileSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    (event.target as HTMLInputElement).value = '';
+  /** Drag-drop / file / camera all funnel here via the shared picker. */
+  protected onPickedAvatar(file: File): void {
     this.uploading.set(true);
     this.imageUpload.upload('avatar', file).subscribe({
       next: (result) => { this.avatarUrl.set(result.url); this.uploading.set(false); },
