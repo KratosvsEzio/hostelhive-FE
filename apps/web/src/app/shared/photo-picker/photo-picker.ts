@@ -18,7 +18,7 @@ import {
   IMAGE_TYPE_MESSAGE,
   classifyImageFile,
 } from '@hostelhive/ui';
-import { NativeCamera } from './native-camera';
+import { CameraPermissionDeniedError, NativeCamera } from './native-camera';
 
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -113,8 +113,12 @@ export class PhotoPicker {
       try {
         const file = await this.nativeCamera.capture();
         if (file) this.emit(file);
-      } catch {
-        this.localError.set('Couldn\'t open the camera.');
+      } catch (e) {
+        this.localError.set(
+          e instanceof CameraPermissionDeniedError
+            ? 'Camera access is off. Enable the camera for this app in Settings.'
+            : 'Couldn\'t open the camera.',
+        );
       }
       return;
     }

@@ -48,4 +48,9 @@
     <!-- Geolocation ("Near me" on the search map) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Camera — "Take a photo" in the image picker (@capacitor/camera). Declaring the
+         permission means the app requests it at runtime before the first capture. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Camera is optional hardware so the app still installs on camera-less devices. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>
