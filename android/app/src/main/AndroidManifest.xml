@@ -27,6 +27,18 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
+
+        <!--
+          Channel FCM puts an incoming notification on when the payload does not name
+          one itself. Without this, Android drops it on a fallback channel of default
+          importance: it lands silently in the tray with no heads-up popover and no
+          prominence on the lock screen. The channel itself is created at runtime with
+          MAX importance (see core/push-notifications.ts) — this only decides which
+          channel is used, not how it behaves.
+        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="hh_default" />
     </application>
 
     <!-- Permissions -->
