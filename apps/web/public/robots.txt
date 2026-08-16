@@ -1,0 +1,34 @@
+# HostelHive — https://hostelhive.pk
+#
+# Everything public is crawlable. The blocks below are areas that are either
+# authenticated, per-user, or carry a credential in the URL — indexing them wastes
+# crawl budget on pages that render as a login wall to a crawler, and in the tokened
+# cases would publish the token itself.
+
+User-agent: *
+
+# Authenticated consoles — render client-side only, so a crawler sees an empty shell.
+Disallow: /host
+Disallow: /admin
+Disallow: /moderator
+Disallow: /forbidden
+
+# Per-user areas — nothing here is the same for two visitors.
+Disallow: /account
+Disallow: /notifications
+
+# Auth screens. Thin, duplicated, and /auth carries returnUrl variants that would
+# otherwise generate an unbounded set of near-identical URLs.
+Disallow: /auth
+
+# The token in the query string *is* the credential for these links.
+Disallow: /mess/confirm
+
+# Search is indexable, but only its clean form. Filter permutations are near-duplicates
+# of one another and each one competes for the same terms; the canonical tag points them
+# back at /search, and this keeps them out of the crawl in the first place.
+Disallow: /search?
+
+Allow: /
+
+Sitemap: https://hostelhive.pk/sitemap.xml

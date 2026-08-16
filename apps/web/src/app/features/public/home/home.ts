@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { isPlatformBrowser, DecimalPipe } from '@angular/common';
+import { SITE_ORIGIN, Seo } from '@core/seo';
 import { Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
@@ -29,6 +30,47 @@ export class Home {
   private readonly session = inject(SessionStore);
   private readonly listingsApi = inject(ListingsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly seo = inject(Seo);
+
+  constructor() {
+    // This route is prerendered, so these land in the static HTML.
+    this.seo.apply({
+      title: 'HostelHive — Find verified hostels, PGs & co-living in Pakistan',
+      description:
+        'Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing — no brokers, no surprises.',
+      path: '/',
+    });
+
+    // Organization is what a search engine reads to build the brand panel and to
+    // associate the name with this domain.
+    this.seo.setJsonLd('organization', {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'HostelHive',
+      url: SITE_ORIGIN,
+      logo: `${SITE_ORIGIN}/hostelhive-logo.png`,
+      description:
+        'Verified hostel, PG and co-living marketplace for students and professionals in Pakistan.',
+      areaServed: { '@type': 'Country', name: 'Pakistan' },
+    });
+
+    // WebSite + SearchAction is the markup behind a sitelinks search box — it lets
+    // results for the brand carry a search field that queries this site directly.
+    this.seo.setJsonLd('website', {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'HostelHive',
+      url: SITE_ORIGIN,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_ORIGIN}/search?place={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    });
+  }
 
   // Existing hosts (host/manager/warden) go straight to their dashboard; everyone
   // else starts the become-a-host onboarding wizard.
