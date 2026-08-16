@@ -42,10 +42,12 @@ export function provideCapacitorNative() {
 
       await SplashScreen.hide();
 
-      // After the splash is gone, so the Android 13+ notification permission prompt
-      // lands on the app rather than on the splash screen. Registration is async and
-      // the token may arrive well after this resolves — the interceptor reads it from
-      // the service whenever it is ready, so nothing here needs to await it.
+      // Silent: registers only if notification permission was already granted, so a
+      // returning user with a restored session still has a token without being
+      // ambushed by a dialog at cold start. The prompting call happens after a
+      // successful sign-in instead (AuthService), which is when notifications first
+      // mean something — and on Android 13+ the system only offers that dialog once,
+      // so spending it here would be hard to undo.
       void push.init();
 
       App.addListener('backButton', ({ canGoBack }) => {

@@ -35,6 +35,18 @@ const config: CapacitorConfig = {
     // context web APIs (geolocation, crypto.subtle, service workers) available.
     androidScheme: 'https',
   },
+  android: {
+    /**
+     * TEMPORARY (testing). Because the origin above is https, a call to a cleartext LAN
+     * backend is mixed content and the WebView drops it — the OS-level cleartext
+     * permission in the debug manifest is necessary but not sufficient on its own.
+     *
+     * Opt in per machine via `ANDROID_ALLOW_MIXED_CONTENT=true` in `.env`, which is
+     * git-ignored. CI and release builds have no such file, so this stays false there and
+     * the secure default holds. Drop it once the backend is reachable over https.
+     */
+    allowMixedContent: env['ANDROID_ALLOW_MIXED_CONTENT'] === 'true',
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
