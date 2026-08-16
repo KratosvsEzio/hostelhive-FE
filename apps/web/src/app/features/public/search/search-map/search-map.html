@@ -127,7 +127,7 @@
     [class.duration-300]="!dragging()"
     [class.ease-out]="!dragging()"
     [style.top]="narrow() ? 'var(--hh-header-top, 0px)' : null"
-    [style.height]="narrow() ? 'calc(100dvh - var(--hh-header-top, 0px))' : null"
+    [style.height]="sheetHeightCss()"
     [style.transform]="sheetTransform()"
   >
     <!-- Mobile grab handle + result count. Doubles as the drag surface and, on a tap that
