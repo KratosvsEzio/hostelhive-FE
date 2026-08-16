@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white transition-opacity duration-300"
       [class.opacity-0]="leaving()"
     >
-      <img src="/brand-logo-black.svg" alt="HostelHive" class="h-7" />
+      <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7" />
 
       <div class="mt-8 h-0.5 w-40 overflow-hidden rounded-full bg-ink-100">
         <div class="progress-bar h-full w-2/5 rounded-full bg-brand-500"></div>

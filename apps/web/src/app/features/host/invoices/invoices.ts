@@ -578,7 +578,7 @@ export class Invoices {
       // is painted onto a canvas and handed over as PNG bytes. Nothing else in the app
       // references a .png logo; this is a PDF-format constraint, not a second asset.
       const logoH = 5;
-      const logo = await rasterise('/brand-logo-black.svg', logoH, RASTER_SCALE);
+      const logo = await rasterise('/hostelhive-logo.png', logoH, RASTER_SCALE);
       doc.addImage(logo.dataUrl, 'PNG', ml, footerY - 2, logo.widthMm, logoH);
     } catch {
       doc.setFont('helvetica', 'bold');
@@ -686,7 +686,7 @@ export class Invoices {
   </div>
   ${inv.payNote ? `<p class="pay-note">${inv.payNote}</p>` : ''}
   <div class="footer">
-    <img src="${origin}/brand-logo-black.svg" alt="HostelHive" />
+    <img src="${origin}/hostelhive-logo.png" alt="HostelHive" />
     <a href="mailto:support@hostelhive.com">support@hostelhive.com</a>
   </div>
 </body>
