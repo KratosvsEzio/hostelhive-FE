@@ -282,4 +282,15 @@
     (closed)="closeAdd()"
   />
 }
+
+<!-- Editing waits on `editingInvoice()` rather than the route id alone: the drawer
+     seeds itself from the invoice, so opening before the list has loaded would show an
+     empty form and then fill it in underneath the user. -->
+@if (editingInvoice(); as inv) {
+  <hh-invoice-form-drawer
+    [invoice]="inv"
+    (saved)="onInvoiceUpdated()"
+    (closed)="closeEdit()"
+  />
+}
 </app-dashboard-layout>

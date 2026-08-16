@@ -1,4 +1,4 @@
-import type { Tenant } from '@hostelhive/data-access';
+import type { Invoice, Tenant } from '@hostelhive/data-access';
 import type { HostOpsApi } from '@services/host-ops-api';
 
 /** Every field the add-invoice drawer binds to, held as form-shaped strings. */
@@ -85,6 +85,35 @@ export function isInvoiceFormValid(f: InvoiceForm): boolean {
     !!f.dueDate.trim() &&
     invoiceTotal(f) > 0
   );
+}
+
+/**
+ * Seeds the form from an existing invoice, for editing.
+ *
+ * Reads `breakdown` rather than `lines`: by the time an invoice reaches the UI its
+ * lines carry display labels ("Mess charges"), and turning those back into field names
+ * would mean parsing English. A bill the API returned as pre-built `line_items` has no
+ * breakdown at all — its whole amount lands on rent so the total still reconciles, and
+ * the host can re-split it by hand.
+ */
+export function fromInvoice(inv: Invoice): InvoiceForm {
+  const b = inv.breakdown;
+  const rent = b?.['rent'];
+  const mess = b?.['mess_charges'];
+  const transport = b?.['transportation_charges'];
+  const hasBreakdown = rent != null || mess != null || transport != null;
+  return {
+    renterId: inv.renterId,
+    renterName: inv.tenantName,
+    roomId: inv.roomId,
+    roomNumber: inv.roomNumber,
+    issuedDate: inv.issued,
+    dueDate: inv.due,
+    rent: String(hasBreakdown ? (rent ?? 0) : inv.amount),
+    messCharges: mess != null ? String(mess) : '',
+    transportationCharges: transport != null ? String(transport) : '',
+    notes: inv.payNote ?? '',
+  };
 }
 
 /** Maps the form onto the create request body, dropping breakdown lines that are zero. */

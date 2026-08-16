@@ -16,7 +16,7 @@
     >
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
-        <h2 class="font-display text-lg font-semibold text-ink-900">Add invoice</h2>
+        <h2 class="font-display text-lg font-semibold text-ink-900">{{ isEdit() ? 'Edit invoice' : 'Add invoice' }}</h2>
         <button
           type="button"
           hh-button variant="icon" size="sm"
@@ -145,7 +145,7 @@
         <div class="flex gap-3">
           <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="requestClose()">Cancel</button>
           <button hh-button color="primary" class="flex-1" [disabled]="!formValid()" [loading]="saving()" (click)="save()">
-            Create invoice
+            {{ isEdit() ? 'Save changes' : 'Create invoice' }}
           </button>
         </div>
       </div>

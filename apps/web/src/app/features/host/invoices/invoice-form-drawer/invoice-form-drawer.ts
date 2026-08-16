@@ -6,7 +6,9 @@ import {
   PLATFORM_ID,
   afterRenderEffect,
   computed,
+  effect,
   inject,
+  input,
   output,
   signal,
   viewChild,
@@ -18,13 +20,14 @@ import { EMPTY, Subject, catchError, debounceTime, filter, map, switchMap, take 
 import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive/ui';
 
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { ApiError, Tenant } from '@hostelhive/data-access';
+import { ApiError, Invoice, Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
 import { PAGE_SIZE } from '@util/pagination';
 import {
   InvoiceForm,
   TenantOption,
   emptyInvoiceForm,
+  fromInvoice,
   invoiceTotal,
   isInvoiceFormValid,
   prefillFromTenant,
@@ -47,7 +50,16 @@ import {
   templateUrl: './invoice-form-drawer.html',
 })
 export class InvoiceFormDrawer {
-  /** Emits when a bill is created so the host page can refresh its list. */
+  /**
+   * The bill being amended, or null to issue a new one. Set once when the drawer opens;
+   * the page recreates the component per request rather than reusing it.
+   */
+  readonly invoice = input<Invoice | null>(null);
+
+  /** True when amending an existing bill — drives the copy and the verb used on save. */
+  protected readonly isEdit = computed(() => this.invoice() !== null);
+
+  /** Emits when a bill is created or amended so the host page can refresh its list. */
   readonly saved = output<void>();
 
   /** Emits when the drawer wants to go away — cancelled or dismissed. */
@@ -92,6 +104,13 @@ export class InvoiceFormDrawer {
     const trigger = isPlatformBrowser(inject(PLATFORM_ID))
       ? (document.activeElement as HTMLElement | null)
       : null;
+
+    // Seed the form from the bill being edited. An effect rather than a field
+    // initialiser because `input()` is not readable while fields are initialising.
+    effect(() => {
+      const inv = this.invoice();
+      if (inv) this.form.set(fromInvoice(inv));
+    });
 
     // Tenant search — waits for hostelId before calling the API.
     this.tenantLoad$
@@ -198,20 +217,35 @@ export class InvoiceFormDrawer {
     const hostelId = this.store.selected();
     if (!hostelId) return;
 
+    // Create and update take an identical `renter_bill` body — only the verb and
+    // whether the URL carries a bill id differ.
+    const payload = toCreateInvoicePayload(f);
+    const existing = this.invoice();
+    const request$ = existing
+      ? this.api.updateInvoice(hostelId, existing.id, payload)
+      : this.api.createInvoice(hostelId, payload);
+
     this.saving.set(true);
-    this.api
-      .createInvoice(hostelId, toCreateInvoicePayload(f))
+    request$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.notifications.success('Invoice created', `A new bill for ${f.renterName} has been issued.`);
+          this.notifications.success(
+            existing ? 'Invoice updated' : 'Invoice created',
+            existing
+              ? `The bill for ${f.renterName} has been amended.`
+              : `A new bill for ${f.renterName} has been issued.`,
+          );
           this.saved.emit();
         },
         error: (err) => {
           this.saving.set(false);
           const msg = (err as ApiError).message;
-          this.notifications.error('Couldn\'t create invoice', msg ?? 'Failed to create the invoice. Please try again.');
+          this.notifications.error(
+            existing ? "Couldn't update invoice" : "Couldn't create invoice",
+            msg ?? 'Please try again.',
+          );
         },
       });
   }

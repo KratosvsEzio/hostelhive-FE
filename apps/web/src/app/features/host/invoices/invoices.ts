@@ -150,6 +150,20 @@ export class Invoices {
   protected readonly deletePending = signal<Invoice | null>(null);
   protected readonly deleting = signal(false);
   protected readonly addOpen = signal(false);
+  /** Bill id from the `edit/:billId` route segment, or null when not editing. */
+  private readonly editingId = signal<string | null>(null);
+  /**
+   * The invoice the drawer should amend. Resolved from the loaded rows, so it stays
+   * null until they arrive — the drawer only opens once there is something to seed it
+   * with, rather than flashing an empty form.
+   */
+  protected readonly editingInvoice = computed(() => {
+    const id = this.editingId();
+    if (!id) return null;
+    // Unfiltered: resolving against `filtered()` would make the drawer refuse to open
+    // whenever the active status filter happened to hide the row being edited.
+    return (this.state().data ?? []).find((i) => i.id === id) ?? null;
+  });
   private readonly deletedIds = signal(new Set<string>());
 
   protected readonly hostelName = computed(() => this.store.activeProperty()?.name ?? '');
@@ -344,7 +358,16 @@ export class Invoices {
       filter(e => e instanceof NavigationEnd),
       startWith(null),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => this.addOpen.set(this.route.snapshot.url[0]?.path === 'create'));
+    ).subscribe(() => {
+      const segments = this.route.snapshot.url;
+      this.addOpen.set(segments[0]?.path === 'create');
+      // 'edit/:billId' — the id is resolved against the loaded list rather than
+      // refetched, so a deep link that arrives before the list does simply shows
+      // nothing until the rows land, at which point the drawer opens.
+      this.editingId.set(
+        segments[0]?.path === 'edit' ? (segments[1]?.path ?? null) : null,
+      );
+    });
   }
 
   // ── scope search ───────────────────────────────────────────────────────────
@@ -748,7 +771,24 @@ export class Invoices {
   protected editInvoice(inv: Invoice, event: MouseEvent): void {
     event.stopPropagation();
     this.closeMenu();
-    console.log('edit', inv.id);
+    const base = this.invoicesBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'edit', inv.id], {
+      queryParamsHandling: 'preserve',
+    });
+  }
+
+  /** Shared by save and cancel — both return to the list, closing the drawer. */
+  protected closeEdit(): void {
+    const base = this.invoicesBase();
+    if (!base) return;
+    void this.router.navigate(base, { queryParamsHandling: 'preserve' });
+  }
+
+  protected onInvoiceUpdated(): void {
+    this.closeEdit();
+    this.refetchDelay.track('/renter_bills');
+    this.refresh.update((n) => n + 1);
   }
 
   protected markPaid(inv: Invoice, event: MouseEvent): void {
