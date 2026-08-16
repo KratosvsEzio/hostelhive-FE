@@ -129,12 +129,9 @@ export const appRoutes: Route[] = [
           import('@features/user/security/security').then((m) => m.AccountSecurity),
         title: 'Password & security — HostelHive',
       },
-{
-        path: 'help',
-        loadComponent: () =>
-          import('@features/user/help/help').then((m) => m.AccountHelp),
-        title: 'Help Centre — HostelHive',
-      },
+      // Retired in favour of the public /faqs page. Kept as a redirect so old links
+      // and bookmarks land somewhere useful instead of 404ing.
+      { path: 'help', redirectTo: '/faqs', pathMatch: 'full' },
     ],
   },
 

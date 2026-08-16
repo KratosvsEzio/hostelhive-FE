@@ -45,9 +45,14 @@
         <span class="flex-1 text-sm font-medium text-ink-800">Utilities</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
-      <a [routerLink]="base() + '/analytics'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-purple text-ink-600"><i class="ti ti-chart-bar" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Analytics</span>
+      <a [routerLink]="base() + '/mess'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-purple text-ink-600"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Mess</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
+      <a [routerLink]="base() + '/expenses'" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-report-money" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">Expenses</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
     </div>
@@ -65,9 +70,9 @@
         <span class="flex-1 text-sm font-medium text-ink-800">Account settings</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
-      <a routerLink="/account/help" class="flex w-full items-center gap-3 px-4 py-3.5">
+      <a routerLink="/faqs" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-help-circle" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Help centre</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">FAQs</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-left" (click)="signOut()">
