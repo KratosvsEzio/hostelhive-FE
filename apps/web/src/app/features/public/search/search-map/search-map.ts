@@ -385,12 +385,35 @@ export class SearchMap {
    * the filter bar too, so the list gets the whole screen — only the header stays put, to
    * keep a way out of the page.
    */
+  /**
+   * Space the fixed bottom tab bar occupies, measured rather than assumed so the
+   * device's safe-area inset is included. 0 when the bar is not rendered (web, or
+   * anything wider than the phone breakpoint).
+   *
+   * The sheet has to stop short of it: at 'peek' the sheet is translated down until
+   * only PEEK_H of it remains on screen, and without this that strip lands *behind*
+   * the tab bar — the grab handle and result count end up unreachable.
+   */
+  private readonly tabBarH = signal(0);
+
+  private measureTabBar(): void {
+    const nav = document.querySelector('app-seeker-tab-bar nav');
+    this.tabBarH.set(nav ? Math.round(nav.getBoundingClientRect().height) : 0);
+  }
+
+  /** Height the sheet is laid out at — viewport minus the header above and the tab bar below. */
+  protected readonly sheetHeightCss = computed(() =>
+    this.narrow()
+      ? `calc(100dvh - var(--hh-header-top, 0px) - ${this.tabBarH()}px)`
+      : null,
+  );
+
   private sheetHeight(): number {
     const top =
       parseFloat(
         getComputedStyle(this.host).getPropertyValue('--hh-header-top'),
       ) || 0;
-    return Math.max(0, this.viewportH() - top);
+    return Math.max(0, this.viewportH() - top - this.tabBarH());
   }
 
   /** translateY (px) that parks the sheet at a given snap — 0 covers the map. */
@@ -511,6 +534,7 @@ export class SearchMap {
   constructor() {
     afterNextRender(() => {
       this.measureStickyOffsets();
+      this.measureTabBar();
       this.viewportH.set(window.innerHeight);
       this.narrow.set(!this.isDesktopSplit());
       const onResize = () => {
