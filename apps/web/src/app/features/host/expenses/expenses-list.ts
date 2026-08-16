@@ -149,7 +149,9 @@ export class ExpensesList {
       switchMap(({ hostelId, type, from, to, sort }) => {
         if (!hostelId) return of<ListState>({ loading: true, error: false, items: [] });
         const params: Record<string, string> = {};
-        if (type) params['f[expense_type]'] = type;
+        // `s[…]` not `f[…]`: the backend moved expense_type onto the search-style
+        // param. The date filters below are unaffected and stay on `f[…]`.
+        if (type) params['s[expense_type]'] = type;
         if (from) params['f[expense_date][gte]'] = dayRangeStart(from);
         if (to) params['f[expense_date][lte]'] = dayRangeEnd(to);
         if (sort) {
