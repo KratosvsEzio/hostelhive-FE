@@ -111,10 +111,15 @@ export class AuthService {
 
   /**
    * Validate the persisted session on app start. If a JWT was persisted from a previous visit,
-   * verify it against `GET /api/users/current` and log the user back in when it's valid. If the
-   * token is invalid OR the call fails for any reason (401 / network / 5xx / timeout), the session
-   * is dropped — which deletes the `hh_auth_token` cookie — and the user is sent to the landing
-   * page. A cached user is restored first for an instant optimistic render; this background check
+   * verify it against `GET /api/users/current` and log the user back in when it's valid.
+   *
+   * Only a **401** ends the session. Any other failure — offline, DNS, 5xx, CORS, a
+   * mixed-content block — tells us nothing about whether the token is still good, so the
+   * session is kept and the cached user stands. Clearing on those was what signed mobile
+   * users out: the back button calls `App.exitApp()`, so every reopen is a cold start, and
+   * one unreachable request was enough to delete a perfectly valid 30-day token.
+   *
+   * A cached user is restored first for an instant optimistic render; this background check
    * then confirms or revokes it. Never throws (safe to await in an app initializer) and is
    * time-capped so a slow or unreachable API can't hang bootstrap.
    */
@@ -136,10 +141,12 @@ export class AuthService {
     // Instead, keep the HTTP request alive and use Promise.race to cap the wait.
     const validate = firstValueFrom(this.api.currentUser())
       .then((u) => this.session.setSession(toSessionUser(u), token))
-      .catch(() => {
-        // Token invalid (401) or the API failed (network / 5xx) → treat the user as
-        // signed out: drop the session (which also deletes the `hh_auth_token` cookie) and send
-        // them to the landing page. No optimism — a token we can't verify must not keep a session.
+      .catch((err: unknown) => {
+        // Unverified is not the same as invalid. Keep the session on anything that is not an
+        // outright rejection, so a returning user stays signed in until they say otherwise.
+        if (!isUnauthorized(err)) return;
+        // The server rejected the token → drop the session (which also deletes the
+        // `hh_auth_token` cookie) and send them to the landing page.
         this.session.clear();
         void this.router.navigateByUrl('/');
       });
@@ -184,8 +191,11 @@ export class AuthService {
     this.api.currentUser().pipe(
       map(toSessionUser),
       tap((user) => this.session.setSession(user, token)),
-      catchError(() => {
-        this.session.clear();
+      catchError((err: unknown) => {
+        // Same rule as restoreSession: the token was just minted by a successful sign-in, so
+        // a network blip here says nothing about it. Only an outright rejection ends the
+        // session — otherwise the user is dropped to signed-out on the page they just landed on.
+        if (isUnauthorized(err)) this.session.clear();
         return of(null);
       }),
     ).subscribe();
@@ -208,6 +218,21 @@ export class AuthService {
       }),
     );
   }
+}
+
+/**
+ * True only when the server actually rejected the credentials.
+ *
+ * Reads `.status` structurally so it holds for both the normalised `ApiError` the error
+ * interceptor produces and a raw `HttpErrorResponse` if one ever reaches here. A network
+ * failure surfaces as status 0, which is deliberately NOT a rejection.
+ */
+function isUnauthorized(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { status?: unknown }).status === 401
+  );
 }
 
 /** Maps the API's current-user payload onto the FE `SessionUser`. */

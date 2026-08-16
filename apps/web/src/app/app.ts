@@ -57,6 +57,12 @@ export class App {
       !u.startsWith('/moderator') &&
       !u.startsWith('/auth') &&
       !u.startsWith('/confirm_invitation') &&
+      // Registered top-level (app.routes.ts), a sibling of /auth rather than a child, so
+      // it was falling into the seeker area — putting the bottom tab bar and the
+      // marketing footer on a password-reset screen. Its card is an `absolute inset-0`
+      // scroller, so the tab bar overlapped the submit button and no amount of padding
+      // on <main> could reach inside to fix it.
+      !u.startsWith('/reset_password') &&
       !u.startsWith('/forbidden') &&
       // Public mess opt-in landing carries its own chrome (no site header/footer/tabs).
       !u.startsWith('/mess/confirm')

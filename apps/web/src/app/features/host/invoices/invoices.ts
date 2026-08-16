@@ -71,6 +71,46 @@ type Filter = 'all' | InvoiceStatus;
 const EMPTY_STATE: ViewState = { loading: false, error: false, subscriptionError: false, networkError: false, data: [], total: 0, totalPages: 1, statuses: [], aggs: null };
 const LOADING: ViewState = { loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0, totalPages: 1, statuses: [], aggs: null };
 
+/**
+ * Pixels rendered per printed millimetre when rasterising the logo for the PDF. 12 px/mm
+ * is ~305 dpi, so the mark stays sharp in print rather than showing the soft edges a
+ * 1:1 raster would give.
+ */
+const RASTER_SCALE = 12;
+
+/**
+ * Paints an SVG onto a canvas and returns PNG bytes, because jsPDF cannot embed SVG.
+ *
+ * The width is derived from the asset's own aspect ratio rather than assumed, so swapping
+ * in a differently proportioned logo does not stretch it. Same-origin with a base64 image
+ * inside, so the canvas is never tainted and `toDataURL` stays allowed.
+ */
+async function rasterise(
+  url: string,
+  heightMm: number,
+  pxPerMm: number,
+): Promise<{ dataUrl: string; widthMm: number }> {
+  const img = new Image();
+  img.decoding = 'sync';
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Could not load ${url}`));
+    img.src = url;
+  });
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  if (!w || !h) throw new Error(`${url} reported no intrinsic size`);
+
+  const widthMm = (w / h) * heightMm;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(widthMm * pxPerMm));
+  canvas.height = Math.max(1, Math.round(heightMm * pxPerMm));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context is unavailable.');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return { dataUrl: canvas.toDataURL('image/png'), widthMm };
+}
+
 
 @Component({
   selector: 'hh-invoices',
@@ -534,20 +574,12 @@ export class Invoices {
     doc.line(ml, footerY - 4, pw - mr, footerY - 4);
 
     try {
-      const resp = await fetch('/hostelhive-logo.png');
-      const blob = await resp.blob();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise<void>((res) => { img.onload = () => res(); });
+      // jsPDF has no SVG support — addImage only takes raster formats — so the brand SVG
+      // is painted onto a canvas and handed over as PNG bytes. Nothing else in the app
+      // references a .png logo; this is a PDF-format constraint, not a second asset.
       const logoH = 5;
-      const logoW = (img.naturalWidth / img.naturalHeight) * logoH;
-      doc.addImage(dataUrl, 'PNG', ml, footerY - 2, logoW, logoH);
+      const logo = await rasterise('/brand-logo-black.svg', logoH, RASTER_SCALE);
+      doc.addImage(logo.dataUrl, 'PNG', ml, footerY - 2, logo.widthMm, logoH);
     } catch {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
@@ -654,7 +686,7 @@ export class Invoices {
   </div>
   ${inv.payNote ? `<p class="pay-note">${inv.payNote}</p>` : ''}
   <div class="footer">
-    <img src="${origin}/hostelhive-logo.png" alt="HostelHive" />
+    <img src="${origin}/brand-logo-black.svg" alt="HostelHive" />
     <a href="mailto:support@hostelhive.com">support@hostelhive.com</a>
   </div>
 </body>

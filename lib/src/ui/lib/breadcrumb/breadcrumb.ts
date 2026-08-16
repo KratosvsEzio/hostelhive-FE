@@ -20,19 +20,30 @@ export interface BreadcrumbItem {
         ><i class="ti ti-arrow-left text-sm"></i></a>
       }
       @if (crumbs().length) {
+        <!--
+          Below sm only the current page is shown. The ancestor trail is hidden rather
+          than allowed to truncate: the header's action slot is shrink-0, so on a phone
+          a wide control (the date-range picker on the overview detail pages) squeezes
+          the trail until the page's own name is cut mid-word — the crumb that actually
+          tells the user where they are is the one that loses.
+
+          The trail is the redundant half anyway: where a backUrl is set it points at
+          the same place as the parent crumb. The last crumb stays because four pages
+          using this have no <h1> of their own, so it is their only title.
+        -->
         <nav class="flex min-w-0 items-center gap-1 text-sm" aria-label="Breadcrumb">
           @for (crumb of crumbs(); track crumb.label; let last = $last) {
             @if (!last && crumb.url) {
-              <a [routerLink]="crumb.url" class="shrink-0 text-ink-400 transition hover:text-ink-700">
+              <a [routerLink]="crumb.url" class="hidden shrink-0 text-ink-400 transition hover:text-ink-700 sm:inline">
                 {{ crumb.label }}
               </a>
             } @else if (!last) {
-              <span class="shrink-0 text-ink-400">{{ crumb.label }}</span>
+              <span class="hidden shrink-0 text-ink-400 sm:inline">{{ crumb.label }}</span>
             } @else {
               <span class="min-w-0 truncate font-semibold text-ink-900">{{ crumb.label }}</span>
             }
             @if (!last) {
-              <i class="ti ti-chevron-right shrink-0 text-[10px] text-ink-300"></i>
+              <i class="ti ti-chevron-right hidden shrink-0 text-[10px] text-ink-300 sm:inline-block"></i>
             }
           }
         </nav>

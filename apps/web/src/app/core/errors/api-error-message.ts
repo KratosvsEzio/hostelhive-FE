@@ -85,6 +85,19 @@ function titleFor(status: number, method?: string): string {
   return TITLE_SAVE_FAILED;
 }
 
+/**
+ * The server's own wording for a failure, or null when it supplied none.
+ *
+ * Used to fill `ApiError.message`, so any surface that renders `err.message` inline —
+ * the auth forms, the subscription notices, the staff and password screens — shows
+ * what the API actually said instead of Angular's "Http failure response for
+ * &lt;url&gt;: 401 Unauthorized", which is a URL and a status code shown to an end user.
+ */
+export function serverMessageText(body: unknown): string | null {
+  const messages = extractServerMessages(body);
+  return messages.length ? joinMessages(messages) : null;
+}
+
 /** Joins multiple server messages as sentences so distinct errors stay legible, not run together. */
 function joinMessages(messages: readonly string[]): string {
   return messages

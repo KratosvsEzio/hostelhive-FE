@@ -2,36 +2,22 @@
   <h2 class="text-lg font-semibold text-ink-900">Account settings</h2>
   <p class="mt-1 text-sm text-ink-400">Update your name and phone number.</p>
 
-  <!-- Avatar -->
+  <!-- Avatar — drag-drop, choose file, or take a photo (shared picker). -->
   <div class="mt-6 flex flex-wrap items-center gap-4">
-    <div class="relative shrink-0">
-      @if (avatarUrl()) {
-        <img [src]="avatarUrl()" alt="Profile photo" class="h-16 w-16 rounded-full object-cover ring-2 ring-ink-100" />
-      } @else {
-        <span class="grid h-16 w-16 place-items-center rounded-full bg-ink-800 text-xl font-semibold text-white">{{ initials() }}</span>
-      }
-      @if (uploading()) {
-        <span class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-          <i class="ti ti-loader-2 animate-spin text-white text-lg" aria-hidden="true"></i>
-        </span>
-      }
-    </div>
-    <div class="flex flex-wrap items-center gap-2">
-      <button hh-button variant="outlined" size="sm" type="button" [disabled]="uploading()" (click)="openCamera()">
-        <i class="ti ti-camera"></i>Use camera
-      </button>
-      <button hh-button variant="outlined" size="sm" type="button" [disabled]="uploading()" (click)="openFilePicker()">
-        <i class="ti ti-photo"></i>Choose photo
-      </button>
-      @if (avatarUrl()) {
-        <button hh-button variant="text" size="sm" type="button" (click)="removeAvatar()">Remove</button>
+    <hh-photo-picker
+      shape="circle"
+      label="Add photo"
+      [preview]="avatarUrl()"
+      [uploading]="uploading()"
+      (picked)="onPickedAvatar($event)"
+    />
+    <div class="text-sm text-ink-400">
+      <p>Drag &amp; drop an image, choose a file, or take a photo.</p>
+      @if (avatarUrl() && !uploading()) {
+        <button hh-button variant="text" size="sm" type="button" class="mt-1 !px-0" (click)="removeAvatar()">Remove photo</button>
       }
     </div>
   </div>
-
-  <!-- Hidden file inputs -->
-  <input #cameraInput type="file" accept="image/*" capture="user" class="sr-only" (change)="onFileSelected($event)" />
-  <input #fileInput type="file" accept="image/*" class="sr-only" (change)="onFileSelected($event)" />
 
   <!-- Profile fields -->
   <div class="mt-6 grid gap-4 sm:grid-cols-2">
