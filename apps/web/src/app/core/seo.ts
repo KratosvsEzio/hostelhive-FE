@@ -8,7 +8,7 @@ import { Meta, Title } from '@angular/platform-browser';
  * `http://localhost:4200/…` in dev and, worse, bake a preview host into any page
  * rendered from a staging deploy. Change this if the domain changes.
  */
-export const SITE_ORIGIN = 'https://hostelhive.pk';
+export const SITE_ORIGIN = 'https://hostelhive.com';
 
 /** Fallbacks used when a page supplies nothing of its own. */
 const DEFAULT_TITLE = 'HostelHive — Find verified hostels in Pakistan';

@@ -21,7 +21,7 @@
       content="Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing — no brokers, no surprises."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <link rel="canonical" href="https://hostelhive.pk/" />
+    <link rel="canonical" href="https://hostelhive.com/" />
 
     <meta property="og:site_name" content="HostelHive" />
     <meta property="og:type" content="website" />
@@ -30,8 +30,8 @@
       property="og:description"
       content="Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing."
     />
-    <meta property="og:url" content="https://hostelhive.pk/" />
-    <meta property="og:image" content="https://hostelhive.pk/hostelhive-logo.png" />
+    <meta property="og:url" content="https://hostelhive.com/" />
+    <meta property="og:image" content="https://hostelhive.com/hostelhive-logo.png" />
     <meta property="og:locale" content="en_PK" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -40,12 +40,14 @@
       name="twitter:description"
       content="Search verified hostels, PGs and co-living across Pakistan."
     />
-    <meta name="twitter:image" content="https://hostelhive.pk/hostelhive-logo.png" />
+    <meta name="twitter:image" content="https://hostelhive.com/hostelhive-logo.png" />
 
-    <!-- The API is a separate origin; warming the connection saves a DNS + TLS
-         round trip on the first data request, which on a listing page is the
-         critical path to Largest Contentful Paint. -->
-    <link rel="preconnect" href="https://api.hostelhive.pk" crossorigin />
+    <!-- TODO: add `<link rel="preconnect" href="https://<api-host>" crossorigin>` once the
+         production API hostname is known. It saves a DNS + TLS round trip on the first
+         data request, which is on the critical path to Largest Contentful Paint — but
+         only if the host is right. Pointing it at a host the app never contacts spends a
+         connection for nothing, so it is left out rather than guessed. -->
+
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />

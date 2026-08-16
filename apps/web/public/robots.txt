@@ -1,4 +1,4 @@
-# HostelHive — https://hostelhive.pk
+# HostelHive — https://hostelhive.com
 #
 # Everything public is crawlable. The blocks below are areas that are either
 # authenticated, per-user, or carry a credential in the URL — indexing them wastes
@@ -31,4 +31,4 @@ Disallow: /search?
 
 Allow: /
 
-Sitemap: https://hostelhive.pk/sitemap.xml
+Sitemap: https://hostelhive.com/sitemap.xml
