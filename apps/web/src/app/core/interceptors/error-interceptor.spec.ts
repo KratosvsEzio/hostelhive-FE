@@ -66,6 +66,35 @@ describe('errorInterceptor', () => {
       { status: 401, statusText: 'Unauthorized' },
     );
 
+  it('puts the server text on `message`, not Angular\'s HTTP failure string', () => {
+    // Several screens render `err.message` inline (the auth forms, subscription
+    // notices, staff and password screens). Angular's default is
+    // "Http failure response for <url>: 401 Unauthorized" — a URL and a status code —
+    // which was reaching users verbatim while the body carried usable copy.
+    const err = fire(unauthorized);
+    expect(err.message).toBe('Invalid email or password');
+    expect(err.message).not.toContain('Http failure response');
+  });
+
+  it('joins multiple server messages onto `message`', () => {
+    const err = fire((req) =>
+      req.flush(
+        { success: false, errors: ["Email can't be blank", 'Password is too short'] },
+        { status: 422, statusText: 'Unprocessable Entity' },
+      ),
+    );
+    expect(err.message).toBe("Email can't be blank\nPassword is too short");
+  });
+
+  it('falls back to Angular\'s message when the body carries no server text', () => {
+    // Network failures have an empty body — without a fallback the surface would show
+    // an empty string rather than anything describable.
+    const err = fire((req) =>
+      req.flush(null, { status: 500, statusText: 'Server Error' }),
+    );
+    expect(err.message).toContain('Http failure response');
+  });
+
   it('notifies with server text for a 422 envelope', () => {
     const err = fire((req) =>
       req.flush(
