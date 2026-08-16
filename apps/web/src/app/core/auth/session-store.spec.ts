@@ -6,6 +6,7 @@ const host: SessionUser = {
   name: 'Imran',
   email: 'i@h.pk',
   role: 'host',
+  allRoles: ['host'],
   permissions: ['team.manage'],
 };
 

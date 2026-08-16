@@ -1,9 +1,8 @@
 import { Signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Router, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
-import { HostelInput } from '@hostelhive/data-access';
+import { ApiError, HostelInput } from '@hostelhive/data-access';
 import { HostelsApi, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import { provideDataAccess } from '@core/provide-data-access';
@@ -178,13 +177,19 @@ describe('OnboardingWizard', () => {
 
     it('stays on the page and surfaces the errors when the save is rejected', () => {
       const { vm, hostels, navigate } = render();
+      // The component reads `serverMessages`, which the error interceptor adds when it
+      // normalises a raw HttpErrorResponse into an ApiError. The API is mocked here, so
+      // the interceptor never runs — throw what it would have produced for a 422 carrying
+      // a Rails `errors[]` envelope, not the raw response.
       hostels.update.mockReturnValue(
         throwError(
-          () =>
-            new HttpErrorResponse({
-              status: 422,
-              error: { errors: ['City is invalid'] },
-            }),
+          (): ApiError => ({
+            status: 422,
+            code: 'unknown_error',
+            message: 'City is invalid',
+            serverMessages: ['City is invalid'],
+            method: 'PATCH',
+          }),
         ),
       );
       vm.draftId.set(7);
