@@ -548,6 +548,9 @@ export class SearchMap {
       this.narrow.set(!this.isDesktopSplit());
       const onResize = () => {
         this.measureStickyOffsets();
+        // Re-measured, not just measured once: rotating the device changes the safe-area
+        // inset and therefore the bar's height, and every snap offset is derived from it.
+        this.measureTabBar();
         this.viewportH.set(window.innerHeight);
         this.narrow.set(!this.isDesktopSplit());
         // The map pane is laid out at every width now, so keep it sized to its container.

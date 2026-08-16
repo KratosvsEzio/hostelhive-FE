@@ -10,7 +10,7 @@
     <!-- Clears the fixed bottom tab bar. Derived from --hh-tabbar-h + the device inset
          rather than a fixed pb-*, so it stays correct when the bar grows on a
          gesture-nav device (see .hh-pb-tabbar in global.css). -->
-    <main class="flex-1" [class.hh-pb-tabbar]="showSeekerTabs()"><router-outlet /></main>
+    <main class="flex-1" [class.hh-pb-tabbar]="showTabBarClearance()"><router-outlet /></main>
     @if (showFooter()) {
       <!-- `hidden md:block` mirrors showFooter()'s width half in CSS. The server can't
            know the viewport, so it always renders the footer; without this the ~650px

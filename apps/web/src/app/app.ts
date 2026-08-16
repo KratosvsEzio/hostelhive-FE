@@ -78,4 +78,19 @@ export class App {
   protected readonly showSeekerTabs = computed(
     () => this.inSeekerArea() && this.mobile.isMobile(),
   );
+
+  /**
+   * Routes that size themselves to the viewport and already account for the tab bar.
+   * Search measures the bar into its sheet height (see SearchMap.measureTabBar), so its
+   * document is exactly one screen tall — adding <main>'s clearance on top would only
+   * hang a strip of empty scroll beneath a full-height map.
+   */
+  private readonly ownsBottomSpacing = computed(() =>
+    this.path().startsWith('/search'),
+  );
+
+  /** Scroll clearance for the tab bar, minus the routes that handle it themselves. */
+  protected readonly showTabBarClearance = computed(
+    () => this.showSeekerTabs() && !this.ownsBottomSpacing(),
+  );
 }

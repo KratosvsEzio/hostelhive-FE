@@ -139,7 +139,9 @@
       </div>
 
       <!-- Footer -->
-      <div class="sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
+      <!-- safe-pb-4, not py-4 alone: the drawer runs to the screen edge, so without the
+           device inset these buttons sit under the home indicator. -->
+      <div class="safe-pb-4 sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
         <div class="flex gap-3">
           <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="requestClose()">Cancel</button>
           <button hh-button color="primary" class="flex-1" [disabled]="!formValid()" [loading]="saving()" (click)="save()">
