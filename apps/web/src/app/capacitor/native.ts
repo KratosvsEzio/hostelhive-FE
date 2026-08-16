@@ -1,6 +1,7 @@
 import { inject, provideAppInitializer } from '@angular/core';
 import { Location } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
+import { PushNotificationsService } from '@core/push-notifications';
 
 /**
  * Native-only bootstrap. A no-op on the web/SSR builds (Capacitor APIs only
@@ -19,6 +20,7 @@ export function provideCapacitorNative() {
 
     // Captured in injection context, used inside the async block below.
     const location = inject(Location);
+    const push = inject(PushNotificationsService);
 
     void (async () => {
       const [{ StatusBar, Style }, { SplashScreen }, { App }] =
@@ -39,6 +41,12 @@ export function provideCapacitorNative() {
       }
 
       await SplashScreen.hide();
+
+      // After the splash is gone, so the Android 13+ notification permission prompt
+      // lands on the app rather than on the splash screen. Registration is async and
+      // the token may arrive well after this resolves — the interceptor reads it from
+      // the service whenever it is ready, so nothing here needs to await it.
+      void push.init();
 
       App.addListener('backButton', ({ canGoBack }) => {
         if (canGoBack) {

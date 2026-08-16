@@ -176,18 +176,19 @@
       </div>
       <div class="flex flex-1 flex-col justify-end p-5">
         @let ac = confirmAreaChart();
+        @let g = geom();
         <svg
-          viewBox="0 0 600 200"
+          [attr.viewBox]="chartViewBox()"
           class="w-full overflow-visible"
           (mouseleave)="hoveredDayIndex.set(null)"
         >
           <!-- Gridlines -->
           @for (tick of ac.ticks; track tick.value) {
-            <line [attr.x1]="38" [attr.x2]="592" [attr.y1]="tick.y" [attr.y2]="tick.y" stroke="#f3f4f6" stroke-width="1" />
+            <line [attr.x1]="g.cl" [attr.x2]="g.cr" [attr.y1]="tick.y" [attr.y2]="tick.y" stroke="#f3f4f6" stroke-width="1" />
           }
           <!-- Y-axis labels -->
           @for (tick of ac.ticks; track tick.value) {
-            <text [attr.x]="34" [attr.y]="tick.y + 4" text-anchor="end" font-size="10" fill="#9ca3af">{{ tick.label }}</text>
+            <text [attr.x]="g.cl - 4" [attr.y]="tick.y + 4" text-anchor="end" [attr.font-size]="g.font" fill="#9ca3af">{{ tick.label }}</text>
           }
 
           <!-- Area fills (dinner → lunch → breakfast so breakfast sits on top) -->
@@ -200,46 +201,51 @@
           <path [attr.d]="ac.paths.lunch.line"     fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           <path [attr.d]="ac.paths.breakfast.line" fill="none" stroke="#fbbf24" stroke-width="2"   stroke-linecap="round" stroke-linejoin="round" />
 
-          <!-- X-axis labels (every 6th day + last) -->
-          @for (day of ac.days; track $index; let i = $index; let last = $last) {
-            @if (i % 6 === 0 || last) {
-              <text [attr.x]="ac.pointsX[i]" y="195" text-anchor="middle" font-size="10" fill="#9ca3af">{{ day.dayLabel }}</text>
+          <!-- X-axis labels — spacing (and last-label collision) resolved in labelFlags(). -->
+          @for (day of ac.days; track $index; let i = $index) {
+            @if (ac.showLabel[i]) {
+              <text [attr.x]="ac.pointsX[i]" [attr.y]="g.labelY" text-anchor="middle" [attr.font-size]="g.font" fill="#9ca3af">{{ day.dayLabel }}</text>
             }
           }
 
-          <!-- Invisible hover strips — one per day column -->
+          <!-- Invisible hit strips — one per day column. `click` as well as `mouseenter`
+               so the tooltip is reachable by tap, where there is no hover. -->
           @for (day of ac.days; track $index; let i = $index) {
             <rect
-              [attr.x]="ac.pointsX[i] - 9"
-              y="15" width="18" height="160"
+              [attr.x]="ac.pointsX[i] - g.hitHalf"
+              [attr.y]="g.ct"
+              [attr.width]="g.hitHalf * 2"
+              [attr.height]="g.cb - g.ct"
               fill="transparent"
               (mouseenter)="hoveredDayIndex.set(i)"
+              (click)="hoveredDayIndex.set(i)"
             />
           }
 
           <!-- Hover overlay: guide + dots + tooltip -->
           @if (hoveredDay(); as hd) {
             <!-- Vertical guide line -->
-            <line [attr.x1]="hd.x" [attr.x2]="hd.x" y1="15" y2="175" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3 3" />
+            <line [attr.x1]="hd.x" [attr.x2]="hd.x" [attr.y1]="g.ct" [attr.y2]="g.cb" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3 3" />
 
             <!-- Data-point dots (white fill with colour ring) -->
             <circle [attr.cx]="hd.x" [attr.cy]="hd.y.breakfast[hd.idx]" r="3.5" fill="white" stroke="#fbbf24" stroke-width="2" />
             <circle [attr.cx]="hd.x" [attr.cy]="hd.y.lunch[hd.idx]"     r="3.5" fill="white" stroke="#10b981" stroke-width="2" />
             <circle [attr.cx]="hd.x" [attr.cy]="hd.y.dinner[hd.idx]"    r="3.5" fill="white" stroke="#8b5cf6" stroke-width="2" />
 
-            <!-- Tooltip (flips left ↔ right; width=96 so threshold = 592-106=486 → use 320 for safety) -->
-            <g [attr.transform]="'translate(' + (hd.x < 320 ? hd.x + 10 : hd.x - 106) + ', 12)'">
-              <rect width="96" height="72" rx="6" fill="#111827" />
-              <text x="8" y="16" font-size="10" font-weight="600" fill="white">{{ hd.day.tooltipLabel }}</text>
-              <circle cx="9"  cy="29" r="3" fill="#fbbf24" />
-              <text x="17" y="33" font-size="9" fill="#9ca3af">Breakfast</text>
-              <text x="88" y="33" text-anchor="end" font-size="9" fill="white">{{ hd.day.breakfast }}</text>
-              <circle cx="9"  cy="45" r="3" fill="#10b981" />
-              <text x="17" y="49" font-size="9" fill="#9ca3af">Lunch</text>
-              <text x="88" y="49" text-anchor="end" font-size="9" fill="white">{{ hd.day.lunch }}</text>
-              <circle cx="9"  cy="61" r="3" fill="#8b5cf6" />
-              <text x="17" y="65" font-size="9" fill="#9ca3af">Dinner</text>
-              <text x="88" y="65" text-anchor="end" font-size="9" fill="white">{{ hd.day.dinner }}</text>
+            <!-- Tooltip — flips to the left of the cursor once it would overflow the plot. -->
+            @let tipX = hd.x + 10 + g.tipW > g.cr ? hd.x - 10 - g.tipW : hd.x + 10;
+            <g [attr.transform]="'translate(' + tipX + ', ' + g.ct + ')'">
+              <rect [attr.width]="g.tipW" [attr.height]="g.tipH" rx="6" fill="#111827" />
+              <text x="8" [attr.y]="g.font + 6" [attr.font-size]="g.font" font-weight="600" fill="white">{{ hd.day.tooltipLabel }}</text>
+              <circle cx="9"  [attr.cy]="g.font + 19" r="3" fill="#fbbf24" />
+              <text x="17" [attr.y]="g.font + 23" [attr.font-size]="g.font - 1" fill="#9ca3af">Breakfast</text>
+              <text [attr.x]="g.tipW - 8" [attr.y]="g.font + 23" text-anchor="end" [attr.font-size]="g.font - 1" fill="white">{{ hd.day.breakfast }}</text>
+              <circle cx="9"  [attr.cy]="g.font + 35" r="3" fill="#10b981" />
+              <text x="17" [attr.y]="g.font + 39" [attr.font-size]="g.font - 1" fill="#9ca3af">Lunch</text>
+              <text [attr.x]="g.tipW - 8" [attr.y]="g.font + 39" text-anchor="end" [attr.font-size]="g.font - 1" fill="white">{{ hd.day.lunch }}</text>
+              <circle cx="9"  [attr.cy]="g.font + 51" r="3" fill="#8b5cf6" />
+              <text x="17" [attr.y]="g.font + 55" [attr.font-size]="g.font - 1" fill="#9ca3af">Dinner</text>
+              <text [attr.x]="g.tipW - 8" [attr.y]="g.font + 55" text-anchor="end" [attr.font-size]="g.font - 1" fill="white">{{ hd.day.dinner }}</text>
             </g>
           }
         </svg>
@@ -269,6 +275,7 @@
           [yTicks]="spendYTicks()"
           [barGap]="spendBarGap()"
           [xLabelStep]="spendXLabelStep()"
+          [height]="spendHeight()"
         />
       </div>
     </div>

@@ -13,6 +13,5 @@ export class AccountShell {
     { path: 'favorites', label: 'Favorites', icon: 'ti-heart' },
     { path: 'settings', label: 'Account settings', icon: 'ti-settings' },
     { path: 'security', label: 'Password & security', icon: 'ti-lock' },
-{ path: 'help', label: 'Help Centre', icon: 'ti-help-circle' },
   ];
 }

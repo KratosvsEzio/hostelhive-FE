@@ -31,6 +31,14 @@ export class Faqs {
           a: 'Once you find a hostel you like, click on the listing to view full details. You can then contact the host directly or submit a booking request through the platform.',
         },
         {
+          q: 'How do I contact a hostel?',
+          a: 'Open any listing and create a free account to reveal the host’s verified phone number, then call or WhatsApp them directly.',
+        },
+        {
+          q: 'How do I save a hostel?',
+          a: 'Tap the heart on any listing. Saved hostels appear under Favorites in your account.',
+        },
+        {
           q: 'Is there a fee for students to use HostelHive?',
           a: 'No. Searching, browsing, and contacting hosts is completely free for students.',
         },

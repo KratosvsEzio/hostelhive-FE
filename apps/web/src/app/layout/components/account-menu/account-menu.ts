@@ -89,7 +89,7 @@ export class AccountMenu {
       icon: 'ti-lock',
       link: '/account/security',
     },
-{ label: 'Help Centre', icon: 'ti-help-circle', link: '/account/help' },
+    { label: 'FAQs', icon: 'ti-help-circle', link: '/faqs' },
   ];
 
   protected readonly initials = computed(() => {
