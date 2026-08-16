@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CanActivateFn, Route, Router, UrlTree } from '@angular/router';
-import { filter, map, take } from 'rxjs';
+import { Observable, filter, map, of, switchMap, take } from 'rxjs';
 
 import { HostLayout } from '@layout/host-shell/host-shell';
 
@@ -28,7 +28,7 @@ import { RevenueDetail } from './overview/revenue-detail/revenue-detail';
 import { MovementDetail } from './overview/movement-detail/movement-detail';
 import { OccupancyDetail } from './overview/occupancy-detail/occupancy-detail';
 
-import { HostPropertyStore } from '@services';
+import { HostPropertyStore, SubscriptionStore } from '@services';
 
 import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
@@ -54,8 +54,41 @@ const hostRootRedirect: CanActivateFn = () => {
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(target));
 };
 
+/**
+ * `hostels/new` sits outside the host shell, so the shell's subscription gate never runs for it —
+ * without this an expired host could keep working simply by creating another hostel. A host with no
+ * hostels at all always passes: there is no subscription to check, and blocking them would leave
+ * them nowhere to go.
+ */
+const createHostelGate: CanActivateFn = () => {
+  const store = inject(HostPropertyStore);
+  const subs = inject(SubscriptionStore);
+  const router = inject(Router);
+
+  const check = (): Observable<boolean | UrlTree> => {
+    const props = store.properties();
+    if (!props.length) return of(true);
+    const sel = store.selected();
+    const id = sel && props.some((p) => p.id === sel) ? sel : props[0].id;
+    // A failed load leaves `isActive()` false, so a flaky network sends the host to the
+    // subscription page — the same fallback the shell gate takes.
+    const decide = (): boolean | UrlTree =>
+      subs.isActive() ? true : router.parseUrl(`/host/${id}/subscription`);
+    return subs.isLoadedFor(id) ? of(decide()) : subs.load(id).pipe(map(decide));
+  };
+
+  if (store.loaded()) return check();
+  store.load();
+  return toObservable(store.loaded).pipe(filter(Boolean), take(1), switchMap(check));
+};
+
 export const HOST_ROUTES: Route[] = [
-  { path: 'hostels/new', component: NewHostel, title: 'New hostel — HostelHive' },
+  {
+    path: 'hostels/new',
+    component: NewHostel,
+    title: 'New hostel — HostelHive',
+    canActivate: [createHostelGate],
+  },
   {
     path: '',
     pathMatch: 'full',
@@ -74,6 +107,12 @@ export const HOST_ROUTES: Route[] = [
         path: 'rooms',
         children: [
           { path: '', pathMatch: 'full', component: Rooms, title: 'Rooms — HostelHive' },
+          // Drawer routes reuse `Rooms` so the hardware/browser back button closes the
+          // drawer instead of leaving the page. They must precede `:roomId`, which would
+          // otherwise swallow these literal segments.
+          { path: 'create', component: Rooms, title: 'Add room — HostelHive' },
+          { path: 'bulk', component: Rooms, title: 'Bulk add rooms — HostelHive' },
+          { path: 'edit/:roomId', component: Rooms, title: 'Edit room — HostelHive' },
           { path: ':roomId', component: RoomDetail, title: 'Room details — HostelHive' },
         ],
       },
@@ -94,7 +133,13 @@ export const HOST_ROUTES: Route[] = [
           { path: 'edit/:billId', component: AddBill, title: 'Edit utility bill — HostelHive' },
         ],
       },
-      { path: 'invoices', component: Invoices, title: 'Invoices — HostelHive' },
+      {
+        path: 'invoices',
+        children: [
+          { path: '', pathMatch: 'full', component: Invoices, title: 'Invoices — HostelHive' },
+          { path: 'create', component: Invoices, title: 'New invoice — HostelHive' },
+        ],
+      },
       {
         path: 'expenses',
         children: [

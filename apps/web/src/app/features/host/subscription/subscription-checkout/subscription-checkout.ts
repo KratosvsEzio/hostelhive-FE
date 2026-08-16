@@ -11,7 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, combineLatest, finalize, map, of, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
 import { Product } from '@hostelhive/data-access';
-import { HostPropertyStore, ProductsApi, SubscriptionApi } from '@services';
+import { HostPropertyStore, ProductsApi, SubscriptionApi, SubscriptionStore } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import {
   countPaidListingPurchases,
@@ -63,6 +63,7 @@ export class SubscriptionCheckout {
   private readonly productsApi = inject(ProductsApi);
   private readonly subApi = inject(SubscriptionApi);
   private readonly store = inject(HostPropertyStore);
+  private readonly subStore = inject(SubscriptionStore);
 
   protected readonly paying = signal(false);
   protected readonly paid = signal(false);
@@ -178,6 +179,10 @@ export class SubscriptionCheckout {
       .subscribe({
         next: () => {
           this.paid.set(true);
+          // The order just changed the subscription, so the cached contract is stale. Without this
+          // the shell's gate keeps reading the pre-purchase (expired) contract and bounces the host
+          // back to the subscription page from every other page until a full reload.
+          this.subStore.clear();
           setTimeout(() => {
             void this.router.navigate([
               '/host',

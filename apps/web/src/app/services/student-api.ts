@@ -47,7 +47,12 @@ export function isReviewRequestType(type: string): boolean {
 export interface UserInvite {
   id: string;
   inviteType: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  /**
+   * `none` is the read-only case: a receipt, rent reminder or "your hostel is now live"
+   * message has no accept/decline decision attached, so it is not awaiting anything.
+   * Only an interactive invite can sit at `pending`.
+   */
+  status: 'pending' | 'accepted' | 'rejected' | 'none';
   isRead: boolean;
   message: string;
   expiredAt: string;
@@ -152,13 +157,18 @@ function mapReview(raw: RawReview): Review {
 }
 
 function mapInvite(raw: RawNotification): UserInvite {
-  let status: UserInvite['status'] = 'pending';
+  const inviteType = raw.invitation_acceptance_type ?? '';
+  let status: UserInvite['status'];
   if (raw.is_accepted) status = 'accepted';
   else if (raw.is_rejected) status = 'rejected';
+  // Anything not accepted or rejected used to fall through to 'pending', which swept up
+  // every read-only message and made the Pending tab count actions that do not exist —
+  // the API's own `aggs.pending` reports 0 for exactly this data.
+  else status = isInteractiveType(inviteType) ? 'pending' : 'none';
 
   return {
     id: raw.id,
-    inviteType: raw.invitation_acceptance_type ?? '',
+    inviteType,
     status,
     isRead: raw.is_read ?? false,
     message: raw.message ?? '',

@@ -54,6 +54,14 @@ interface ApiPayment {
   paid_at?: string | null;
   status?: ApiPaymentStatus;
   products?: Array<{ id?: string; name?: string; price?: number; product_type?: string }> | null;
+  /**
+   * What each product actually cost on the day of the charge, as a decimal string. This is
+   * the figure to bill against: `products[].price` is the live catalogue price, so a
+   * product later repriced (or bought on a launch discount) reads back wrong — in the
+   * sample payload the catalogue sums to 15,000 against a 10,000 charge. Absent on
+   * payments taken before the API started returning it.
+   */
+  break_down?: Array<{ name?: string | null; price?: string | number | null }> | null;
 }
 
 interface ApiPaymentsResponse {
@@ -169,11 +177,26 @@ export class SubscriptionApi {
       .pipe(
         map((res) =>
           (res.payments ?? []).map((p): Payment => {
-            const products = (p.products ?? []).map((pr, i) => ({
-              id: pr.id ?? String(i),
-              name: pr.name ?? 'Product',
-              price: pr.price ?? 0,
-            }));
+            // Name is the only join key the payload offers between the two arrays.
+            const charged = new Map(
+              (p.break_down ?? []).map((b) => [b.name ?? '', Number(b.price ?? 0)]),
+            );
+            const products = (p.products ?? []).map((pr, i) => {
+              const name = pr.name ?? 'Product';
+              const paid = charged.get(name);
+              charged.delete(name);
+              return {
+                id: pr.id ?? String(i),
+                name,
+                // Fall back to the catalogue price only for payments with no breakdown.
+                price: paid ?? pr.price ?? 0,
+              };
+            });
+            // A breakdown line with no matching product still hit the card, so surface it
+            // rather than letting the rows silently under-report the total.
+            for (const [name, price] of charged) {
+              products.push({ id: `bd-${name}`, name: name || 'Product', price });
+            }
             return {
               id: p.id ?? '',
               date: p.paid_at ?? p.created_at ?? '',

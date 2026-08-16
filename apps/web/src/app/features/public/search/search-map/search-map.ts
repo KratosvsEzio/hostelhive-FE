@@ -70,6 +70,9 @@ const BOUNDS_KEYS_NULLED = {
 /** ~0.1 m — matches captureMapBounds()'s 1e-6 no-op threshold, and keeps the URL readable. */
 const roundCoord = (n: number): number => +n.toFixed(6);
 
+/** Resting positions of the mobile results sheet, from just-peeking to covering the map. */
+type SheetSnap = 'peek' | 'half' | 'full';
+
 /**
  * Unified search experience — an Airbnb-style split: a column of listing cards on the
  * left and a live Leaflet map on the right (desktop shows both; mobile toggles between
@@ -350,7 +353,133 @@ export class SearchMap {
   protected readonly active = signal<string | null>(null);
   /** Listing whose Airbnb-style popup card is open on the map (null = none). */
   protected readonly selected = signal<string | null>(null);
-  protected readonly view = signal<'list' | 'map'>('list');
+
+  // ── Mobile bottom sheet ────────────────────────────────────────────────────
+  /**
+   * Below the split breakpoint the results are an Airbnb-style bottom sheet dragged over
+   * a full-screen map, instead of a pane the List/Map toggle swaps in. Reactive (not a
+   * one-off matchMedia read) so the template re-renders when the viewport crosses 950px.
+   */
+  protected readonly narrow = signal(false);
+  /** Where the sheet is parked: a peeking header, half height, or covering the map. */
+  protected readonly snap = signal<SheetSnap>('peek');
+  /** Live translateY while a drag is in flight; null when the sheet is resting on a snap. */
+  private readonly dragOffset = signal<number | null>(null);
+  protected readonly dragging = computed(() => this.dragOffset() !== null);
+  /** Viewport height, tracked so the snap offsets survive rotation and browser-chrome shifts. */
+  private readonly viewportH = signal(0);
+  /** Height of the peeking header (drag handle + result count) left visible at 'peek'. */
+  private readonly PEEK_H = 108;
+
+  private dragStartY = 0;
+  private dragStartOffset = 0;
+
+  /** Listing backing the mobile bottom card (desktop anchors its card to the pin instead). */
+  protected readonly selectedListing = computed(() => {
+    const id = this.selected();
+    return id ? (this.listings().find((l) => l.id === id) ?? null) : null;
+  });
+
+  /**
+   * Sheet height: everything below the site header. Dragged fully open the sheet covers
+   * the filter bar too, so the list gets the whole screen — only the header stays put, to
+   * keep a way out of the page.
+   */
+  private sheetHeight(): number {
+    const top =
+      parseFloat(
+        getComputedStyle(this.host).getPropertyValue('--hh-header-top'),
+      ) || 0;
+    return Math.max(0, this.viewportH() - top);
+  }
+
+  /** translateY (px) that parks the sheet at a given snap — 0 covers the map. */
+  private snapOffset(s: SheetSnap): number {
+    const h = this.sheetHeight();
+    if (s === 'full') return 0;
+    if (s === 'half') return Math.round(h * 0.46);
+    return Math.max(0, h - this.PEEK_H);
+  }
+
+  protected readonly sheetTransform = computed(() => {
+    if (!this.narrow()) return '';
+    const y = this.dragOffset() ?? this.snapOffset(this.snap());
+    return `translate3d(0, ${y}px, 0)`;
+  });
+
+  protected onSheetPointerDown(e: PointerEvent): void {
+    if (!this.narrow()) return;
+    this.dragStartY = e.clientY;
+    this.dragStartOffset = this.snapOffset(this.snap());
+    this.dragOffset.set(this.dragStartOffset);
+    // Capture keeps the move/up events coming to the handle even once the finger slides
+    // off it. It throws for a pointer id the element never saw, which must not abort the
+    // drag we have already started.
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* drag still works without capture */
+    }
+  }
+
+  protected onSheetPointerMove(e: PointerEvent): void {
+    if (this.dragOffset() === null) return;
+    const max = Math.max(0, this.sheetHeight() - this.PEEK_H);
+    const next = this.dragStartOffset + (e.clientY - this.dragStartY);
+    this.dragOffset.set(Math.min(Math.max(0, next), max));
+  }
+
+  protected onSheetPointerUp(): void {
+    const y = this.dragOffset();
+    if (y === null) return;
+    this.dragOffset.set(null);
+    // A press that never really moved is a tap on the header, not a drag — toggle instead
+    // of snapping, so the sheet still opens for anyone who taps rather than swipes.
+    if (Math.abs(y - this.dragStartOffset) < 6) {
+      this.snap.update((s) => (s === 'peek' ? 'full' : 'peek'));
+      return;
+    }
+    // Settle on whichever snap the sheet was released nearest to.
+    let best: SheetSnap = this.snap();
+    let bestDist = Infinity;
+    for (const s of ['full', 'half', 'peek'] as const) {
+      const d = Math.abs(this.snapOffset(s) - y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = s;
+      }
+    }
+    this.snap.set(best);
+  }
+
+  /** Whole-card tap on the mobile bottom card — same tab, so Back returns to the map. */
+  protected openListing(l: Listing): void {
+    void this.router.navigate(['/hostel', l.slug]);
+  }
+
+  protected closeCard(e: Event): void {
+    e.stopPropagation();
+    this.selected.set(null);
+  }
+
+  protected isSaved(l: Listing): boolean {
+    return this.favorites.isFavorite(l.id);
+  }
+
+  protected toggleSaved(l: Listing, e: Event): void {
+    e.stopPropagation();
+    this.favorites.toggle(l);
+  }
+
+  protected cardImage(l: Listing): string {
+    return l.images[0] ?? 'https://picsum.photos/seed/hh-fallback/800/800';
+  }
+
+  protected cardPrice(l: Listing): string {
+    return this.capacityStore
+      .priceFor(l.priceByCapacity, l.priceFrom)
+      .toLocaleString('en-PK');
+  }
   /** Extra px to raise the mobile floating List/Map pill so it rests above the footer. */
   protected readonly footerLift = signal(0);
   /** Bottom offset (px) for the floating toggle: its resting 24px plus any footer lift. */
@@ -382,10 +511,14 @@ export class SearchMap {
   constructor() {
     afterNextRender(() => {
       this.measureStickyOffsets();
+      this.viewportH.set(window.innerHeight);
+      this.narrow.set(!this.isDesktopSplit());
       const onResize = () => {
         this.measureStickyOffsets();
-        // Widening past the breakpoint reveals the map pane — build it on first reveal.
-        if (this.isDesktopSplit()) void this.ensureMap();
+        this.viewportH.set(window.innerHeight);
+        this.narrow.set(!this.isDesktopSplit());
+        // The map pane is laid out at every width now, so keep it sized to its container.
+        void this.ensureMap().then(() => this.map?.invalidateSize());
       };
       window.addEventListener('resize', onResize);
       this.destroyRef.onDestroy(() =>
@@ -422,10 +555,9 @@ export class SearchMap {
         if (liftRaf) cancelAnimationFrame(liftRaf);
       });
 
-      // Below the breakpoint the pane is display:none until the user taps "Map".
-      // Leaflet measures its container at construction, so building it while hidden
-      // (0×0) yields a map that paints nothing — defer to the tap instead.
-      if (this.isDesktopSplit()) void this.ensureMap();
+      // The map pane is laid out at every width — on mobile the results sheet floats over
+      // it rather than replacing it — so it can be built straight away.
+      void this.ensureMap();
     });
     // Rebuild markers when the result set changes (after the map is ready).
     effect(() => {
@@ -454,8 +586,14 @@ export class SearchMap {
     // restarting its entry animation (the visible jitter). untracked() severs that leak so
     // the card is rebuilt on genuine selection changes, not on hover.
     effect(() => {
-      this.selected();
+      const id = this.selected();
+      // Crossing the split breakpoint swaps the card between anchored-to-pin and
+      // docked-to-bottom, so the markers must be re-rendered for the new mode too.
+      this.narrow();
       if (this.ready()) untracked(() => this.renderSelection());
+      // The mobile card docks where the sheet's peeking header sits — drop the sheet out
+      // of the way so the two never stack.
+      if (id && untracked(() => this.narrow())) this.snap.set('peek');
     });
     // Recenter the map when a *new* place is searched (lat/lng change via the search bar
     // or "Near me"). setup() already centers on the location present at load, so skip that
@@ -671,7 +809,22 @@ export class SearchMap {
   /** Swap the selected marker's content for the popup card; every other marker shows its pin. */
   private renderSelection(): void {
     const id = this.selected();
+    // On mobile the selected listing surfaces as a card docked to the bottom of the screen
+    // (rendered in the template), so the marker only needs its selected pin styling — an
+    // anchored card that wide would spill off a phone viewport.
+    if (this.narrow()) {
+      for (const [lid, m] of this.markers) {
+        if (m.marker.getElement()?.firstElementChild?.firstElementChild !== m.pinEl) {
+          m.marker.setIcon(this.markerIcon(m.pinEl));
+        }
+        m.pinEl.classList.toggle('hh-pin--selected', lid === id);
+        m.marker.setZIndexOffset(lid === id ? 1000 : 0);
+      }
+      this.applyActive();
+      return;
+    }
     for (const [lid, m] of this.markers) {
+      m.pinEl.classList.remove('hh-pin--selected');
       if (lid === id) {
         // Stack the card above this listing's own pill rather than replacing it, so the
         // pill stays visible under the card and the nub has something to point at.
@@ -881,29 +1034,13 @@ export class SearchMap {
     });
   }
 
-  /** Mobile list ⇄ full-screen map toggle (desktop always shows both panes). */
-  protected setView(v: 'list' | 'map'): void {
-    this.view.set(v);
-    if (v !== 'map') return;
-    // On mobile this tap is what builds the map. Re-measure and re-fit afterwards — on a
-    // later tap the map already exists but was laid out while its container was
-    // display:none (0×0), so Leaflet's cached size is stale until invalidateSize().
+  /** Drops the results sheet back to its peek so the map fills the screen again. */
+  protected showMap(): void {
+    this.snap.set('peek');
+    this.selected.set(null);
     void this.ensureMap().then(() =>
-      setTimeout(() => {
-        this.map?.invalidateSize();
-        this.fitToMarkers();
-      }, 60),
+      setTimeout(() => this.map?.invalidateSize(), 60),
     );
-  }
-
-  private fitToMarkers(): void {
-    if (!this.markers.size) return;
-    const points: L.LatLngExpression[] = [];
-    for (const { marker } of this.markers.values()) {
-      const p = marker.getLatLng();
-      points.push([p.lat, p.lng]);
-    }
-    this.fitTo(points);
   }
 
   /**

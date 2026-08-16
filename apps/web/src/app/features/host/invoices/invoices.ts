@@ -9,8 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
-import { catchError, debounceTime, filter, map, of, switchMap, tap } from 'rxjs';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { catchError, debounceTime, filter, map, of, startWith, switchMap, tap } from 'rxjs';
 import {
   Button,
   ConfirmModal,
@@ -297,6 +297,14 @@ export class Invoices {
       filter(e => e instanceof NavigationStart),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => this.selectedId.set(null));
+
+    // Drive the add-invoice drawer from the URL so the hardware/browser back button
+    // closes it and lands back on the list.
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd),
+      startWith(null),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.addOpen.set(this.route.snapshot.url[0]?.path === 'create'));
   }
 
   // ── scope search ───────────────────────────────────────────────────────────
@@ -734,12 +742,25 @@ export class Invoices {
 
   // ── Add invoice ─────────────────────────────────────────────────────────────
 
-  protected openAdd(): void { this.addOpen.set(true); }
+  private invoicesBase(): unknown[] | null {
+    const hostelId = this.store.selected();
+    return hostelId ? ['/host', hostelId, 'invoices'] : null;
+  }
 
-  protected closeAdd(): void { this.addOpen.set(false); }
+  protected openAdd(): void {
+    const base = this.invoicesBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'create'], { queryParamsHandling: 'preserve' });
+  }
+
+  protected closeAdd(): void {
+    const base = this.invoicesBase();
+    if (!base) return;
+    void this.router.navigate(base, { queryParamsHandling: 'preserve' });
+  }
 
   protected onInvoiceCreated(): void {
-    this.addOpen.set(false);
+    this.closeAdd();
     this.refetchDelay.track('/renter_bills');
     this.refresh.update((n) => n + 1);
   }

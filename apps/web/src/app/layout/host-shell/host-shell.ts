@@ -15,6 +15,7 @@ import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { SubscriptionLoading } from '../components/subscription-loading/subscription-loading';
 import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
+import { NotificationService } from '@core/notification.service';
 import { Button, Dropdown, DropdownOption, StatusTone } from '@hostelhive/ui';
 import { ListingStatus, PropertyGender } from '@hostelhive/data-access';
 
@@ -55,6 +56,7 @@ export class HostLayout {
   protected readonly drawer = inject(ConsoleDrawer);
   protected readonly propertyStore = inject(HostPropertyStore);
   private readonly subStore = inject(SubscriptionStore);
+  private readonly notifications = inject(NotificationService);
   protected readonly mobile = inject(MobileApp);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -73,7 +75,10 @@ export class HostLayout {
         takeUntilDestroyed(),
       ).subscribe(() => {
         if (this.gateState() !== 'none') return;
-        const hostelId = this.propertyStore.selected();
+        // The route is the source of truth, matching the gate effect below. Reading the persisted
+        // selection here instead let the two disagree — the gate would check one hostel's
+        // subscription and redirect using it while the URL pointed at another.
+        const hostelId = this.routeHostelId();
         if (!hostelId || this.isExemptRoute()) return;
         this.enforceGate(hostelId);
       });
@@ -110,6 +115,19 @@ export class HostLayout {
     return page === 'subscription' || page === 'profile';
   }
 
+  /**
+   * Bounce the host to the subscription page. The page being left has usually already fired its
+   * own requests, which the API rejects with "You need to subscribe" — so error toasts stay muted
+   * across the redirect: the subscription page states the problem far better than a toast can.
+   */
+  private bounceToSubscription(hostelId: string): void {
+    const unmute = this.notifications.muteErrors();
+    void this.router
+      .navigate(['/host', hostelId, 'subscription'])
+      .catch(() => undefined)
+      .finally(unmute);
+  }
+
   private runSubscriptionGate(hostelId: string): void {
     if (this.isExemptRoute()) {
       this.gateState.set('none');
@@ -117,11 +135,18 @@ export class HostLayout {
     }
     if (this.subStore.isLoadedFor(hostelId)) {
       if (!this.subStore.isActive()) {
-        void this.router.navigate(['/host', hostelId, 'subscription']);
+        this.bounceToSubscription(hostelId);
       }
       return;
     }
     this.gateState.set('loading');
+    // Mute for the whole undecided window, not just the redirect. The routed page mounts behind
+    // the overlay and fires its requests immediately — seconds before the verdict — so a mute
+    // taken only at redirect time would arrive after the rejection toast is already pinned up.
+    // No grace: on a passing verdict the mute must lift at once, or a genuine error on the page
+    // the host is allowed to see would be swallowed too. A bounce adds its own graced hold below,
+    // and the count never reaches zero in between, so the trailing cover is kept where it matters.
+    const unmute = this.notifications.muteErrors(0);
     const start = Date.now();
     this.subStore.load(hostelId).pipe(take(1)).subscribe(() => {
       const elapsed = Date.now() - start;
@@ -130,8 +155,9 @@ export class HostLayout {
         setTimeout(() => {
           this.gateState.set('none');
           if (!this.subStore.isActive() && !this.isExemptRoute()) {
-            void this.router.navigate(['/host', hostelId, 'subscription']);
+            this.bounceToSubscription(hostelId);
           }
+          unmute();
         }, 300);
       }, Math.max(0, 2000 - elapsed));
     });
@@ -140,14 +166,16 @@ export class HostLayout {
   private enforceGate(hostelId: string): void {
     if (this.subStore.isLoadedFor(hostelId)) {
       if (!this.subStore.isActive()) {
-        void this.router.navigate(['/host', hostelId, 'subscription']);
+        this.bounceToSubscription(hostelId);
       }
       return;
     }
+    const unmute = this.notifications.muteErrors(0);
     this.subStore.load(hostelId).pipe(take(1)).subscribe(() => {
       if (!this.subStore.isActive() && !this.isExemptRoute()) {
-        void this.router.navigate(['/host', hostelId, 'subscription']);
+        this.bounceToSubscription(hostelId);
       }
+      unmute();
     });
   }
 

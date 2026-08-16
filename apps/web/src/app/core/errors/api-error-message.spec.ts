@@ -69,6 +69,35 @@ describe('toToastCopy', () => {
     expect(copy.message).toContain('Room must exist');
   });
 
+  it('titles a failed read as a load failure, not a save failure', () => {
+    const copy = toToastCopy(
+      error({
+        status: 400,
+        method: 'GET',
+        serverMessages: ['You need to subscribe to avail the services'],
+      }),
+    );
+    expect(copy.title).toBe("Couldn't load");
+    expect(copy.message).toBe('You need to subscribe to avail the services');
+  });
+
+  it('keeps the save title for a failed write', () => {
+    const copy = toToastCopy(
+      error({ status: 400, method: 'POST', serverMessages: ['Room must exist'] }),
+    );
+    expect(copy.title).toBe("Couldn't save changes");
+  });
+
+  it('falls back to the save title when no method is known', () => {
+    expect(toToastCopy(error({ status: 400, serverMessages: ['x'] })).title).toBe(
+      "Couldn't save changes",
+    );
+  });
+
+  it('still prefers the status-specific title over the method title', () => {
+    expect(toToastCopy(error({ status: 403, method: 'GET' })).title).toBe('Not allowed');
+  });
+
   it('echoes a 403 message under the not-allowed title', () => {
     const copy = toToastCopy(
       error({ status: 403, serverMessages: ['You are not authorized to perform this action.'] }),

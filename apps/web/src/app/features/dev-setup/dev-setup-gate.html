@@ -1,0 +1,45 @@
+@if (open()) {
+  <div class="fixed inset-0 z-[200] flex items-center justify-center bg-ink-900/70 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="mb-1 flex items-center gap-2">
+        <i class="ti ti-server-cog text-xl text-brand-500" aria-hidden="true"></i>
+        <h1 class="font-display text-lg font-semibold text-ink-900">
+          {{ hasStored ? 'Confirm backend URL' : 'Set backend URL' }}
+        </h1>
+        <span class="ml-auto rounded-full bg-warn/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-warn">Testing</span>
+      </div>
+      <p class="mb-4 text-sm text-ink-500">
+        @if (hasStored) {
+          Continue with this backend, or enter a different one. Every API call will use it.
+          This step is for testing and will be removed before launch.
+        } @else {
+          Enter the base URL of the backend to point this app at. Every API call will use it.
+          This step is for testing and will be removed before launch.
+        }
+      </p>
+
+      <hh-input
+        label="API base URL"
+        placeholder="http://192.168.0.102:3000"
+        [value]="url()"
+        [error]="error()"
+        (valueChange)="onUrl($event)"
+        (keyup.enter)="save()"
+      />
+
+      <button hh-button color="primary" class="mt-4 w-full" type="button" (click)="save()">
+        {{ hasStored ? 'Continue' : 'Save & continue' }}
+      </button>
+
+      @if (hasStored) {
+        <button hh-button variant="outlined" class="mt-2 w-full" type="button" (click)="reset()">
+          Clear saved URL
+        </button>
+      }
+
+      <p class="mt-3 text-[11px] text-ink-400">
+        No trailing slash needed. Stored in this browser only.
+      </p>
+    </div>
+  </div>
+}

@@ -183,9 +183,9 @@
        Opens in a new tab so the student keeps their search results. -->
   <a
     [routerLink]="['/hostel', listing().slug]"
-    target="_blank"
-    rel="noopener"
-    [attr.aria-label]="listing().name + ' (opens in a new tab)'"
+    [target]="newTab ? '_blank' : '_self'"
+    [rel]="newTab ? 'noopener' : null"
+    [attr.aria-label]="listing().name + (newTab ? ' (opens in a new tab)' : '')"
     class="absolute inset-0 z-[1] rounded-2xl"
   ></a>
 </article>

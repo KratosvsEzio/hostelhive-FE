@@ -6,10 +6,11 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { catchError, filter, finalize, map, of, startWith, switchMap } from 'rxjs';
 import {
   Button,
@@ -84,6 +85,16 @@ interface RoomTypesState {
   error: boolean;
   data: RoomTypeOption[];
 }
+
+/**
+ * What the URL is asking a drawer to show, or `null` when both stay closed. The drawers are
+ * route-driven so the Android hardware back button (and the browser's) closes them and lands
+ * back on the room list, rather than navigating off the page entirely.
+ */
+type DrawerRequest =
+  | { mode: 'create'; cloneFrom?: string }
+  | { mode: 'edit'; roomId: string }
+  | { mode: 'bulk' };
 
 const STATUS_TONE: Record<RoomStatus, 'ok' | 'warn' | 'neutral'> = {
   available: 'ok',
@@ -202,6 +213,8 @@ export class Rooms {
   protected readonly sortCol = signal<'createdAt' | 'occupancy' | null>(null);
   protected readonly sortDir = signal<'asc' | 'desc'>('asc');
 
+  private readonly drawerRequest = signal<DrawerRequest | null>(null);
+
   protected readonly form = signal<RoomForm | null>(null);
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
@@ -251,17 +264,26 @@ export class Rooms {
   );
 
   constructor() {
+    // Drive both drawers from the URL.
     this.router.events.pipe(
-      filter(e => e instanceof NavigationStart),
+      filter(e => e instanceof NavigationEnd),
+      startWith(null),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
-      this.form.set(null);
-      this.bulkForm.set(null);
-    });
+    ).subscribe(() => this.syncFromRoute());
 
     effect(() => {
       const s = this.fetched().statuses;
       if (s?.length) this.statuses.set(s);
+    }, { allowSignalWrites: true });
+
+    // Seed (or tear down) the drawer state for whatever the URL asks for. Rooms and room
+    // types are read reactively so a deep link / refresh re-seeds once their data arrives.
+    effect(() => {
+      const req = this.drawerRequest();
+      const rooms = this.state().data;
+      const types = this.roomTypesState().data;
+
+      untracked(() => this.seedDrawer(req, rooms, types));
     }, { allowSignalWrites: true });
 
     effect(() => {
@@ -269,16 +291,139 @@ export class Rooms {
       if (state.loading || state.error || !state.data.length) return;
       const first = state.data[0];
 
-      const f = this.form();
-      if (f && !f.id && !f.type) {
-        this.form.set({ ...f, type: first.name, capacity: String(first.capacity) });
+      untracked(() => {
+        const f = this.form();
+        if (f && !f.id && !f.type) {
+          this.form.set({ ...f, type: first.name, capacity: String(first.capacity) });
+        }
+
+        const bf = this.bulkForm();
+        if (bf && !bf.roomType) {
+          this.bulkForm.set({ ...bf, roomType: first.name, capacity: String(first.capacity) });
+        }
+      });
+    }, { allowSignalWrites: true });
+  }
+
+  private syncFromRoute(): void {
+    const snapshot = this.route.snapshot;
+    const seg = snapshot.url[0]?.path;
+
+    if (seg === 'create') {
+      this.drawerRequest.set({
+        mode: 'create',
+        cloneFrom: snapshot.queryParamMap.get('cloneFrom') ?? undefined,
+      });
+      return;
+    }
+    if (seg === 'bulk') {
+      this.drawerRequest.set({ mode: 'bulk' });
+      return;
+    }
+    if (seg === 'edit') {
+      const roomId = snapshot.paramMap.get('roomId');
+      if (roomId) {
+        this.drawerRequest.set({ mode: 'edit', roomId });
+        return;
+      }
+    }
+    this.drawerRequest.set(null);
+  }
+
+  /**
+   * Reconciles drawer state with the URL. Never re-seeds a drawer that is already showing the
+   * requested thing, so typing in a field survives unrelated signal churn.
+   */
+  private seedDrawer(
+    req: DrawerRequest | null,
+    rooms: Room[] | null,
+    types: RoomTypeOption[],
+  ): void {
+    if (!req) {
+      this.form.set(null);
+      this.bulkForm.set(null);
+      this.saveError.set(null);
+      this.bulkError.set(null);
+      return;
+    }
+
+    const first = types[0];
+
+    if (req.mode === 'bulk') {
+      this.form.set(null);
+      if (this.bulkForm()) return;
+      this.bulkError.set(null);
+      this.bulkForm.set({
+        mode: 'range',
+        prefix: '',
+        start: '101',
+        count: '10',
+        custom: '',
+        rows: [{ number: '', type: first?.name ?? '', capacity: first ? String(first.capacity) : '' }],
+        roomType: first?.name ?? '',
+        capacity: first ? String(first.capacity) : '',
+      });
+      return;
+    }
+
+    this.bulkForm.set(null);
+
+    if (req.mode === 'create') {
+      // Switching edit → create reuses the component, so drop a stale edit form first.
+      if (this.form()?.id) this.form.set(null);
+      if (this.form()) return;
+
+      if (req.cloneFrom) {
+        const src = rooms?.find((r) => r.id === req.cloneFrom);
+        if (!src) return; // rooms not loaded yet — this effect re-runs when they are
+        this.saveError.set(null);
+        this.form.set({
+          id: null,
+          number: `${src.number} (copy)`,
+          floor: src.floor && src.floor !== '—' ? src.floor : '',
+          type: src.type,
+          capacity: String(src.capacity),
+        });
+        return;
       }
 
-      const bf = this.bulkForm();
-      if (bf && !bf.roomType) {
-        this.bulkForm.set({ ...bf, roomType: first.name, capacity: String(first.capacity) });
-      }
-    }, { allowSignalWrites: true });
+      this.saveError.set(null);
+      this.form.set({
+        id: null,
+        number: '',
+        floor: '',
+        type: first?.name ?? '',
+        capacity: first ? String(first.capacity) : '',
+      });
+      return;
+    }
+
+    if (this.form()?.id === req.roomId) return;
+    const room = rooms?.find((r) => r.id === req.roomId);
+    if (!room) return; // rooms not loaded yet — this effect re-runs when they are
+    this.saveError.set(null);
+    this.form.set({
+      id: room.id,
+      number: room.number,
+      floor: room.floor && room.floor !== '—' ? room.floor : '',
+      type: room.type,
+      capacity: String(room.capacity),
+    });
+  }
+
+  /** `['/host', <hostelId>, 'rooms']`, or `null` when no hostel is selected yet. */
+  private roomsBase(): unknown[] | null {
+    const hostelId = this.store.selected();
+    return hostelId ? ['/host', hostelId, 'rooms'] : null;
+  }
+
+  private goToList(): void {
+    const base = this.roomsBase();
+    if (!base) return;
+    void this.router.navigate(base, {
+      queryParams: { cloneFrom: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   private readonly fetchKey = computed(() => ({
@@ -485,26 +630,17 @@ export class Rooms {
   }
 
   protected openCreate(): void {
-    const first = this.roomTypesState().data[0];
-    this.form.set({
-      id: null,
-      number: '',
-      floor: '',
-      type: first?.name ?? '',
-      capacity: first ? String(first.capacity) : '',
-    });
+    const base = this.roomsBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'create'], { queryParamsHandling: 'preserve' });
   }
   protected openEdit(r: Room): void {
-    this.form.set({
-      id: r.id,
-      number: r.number,
-      floor: r.floor && r.floor !== '—' ? r.floor : '',
-      type: r.type,
-      capacity: String(r.capacity),
-    });
+    const base = this.roomsBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'edit', r.id], { queryParamsHandling: 'preserve' });
   }
   protected close(): void {
-    this.form.set(null);
+    this.goToList();
   }
   protected patch(key: keyof RoomForm, value: string): void {
     this.form.update((f) => (f ? { ...f, [key]: value } : f));
@@ -619,12 +755,11 @@ export class Rooms {
 
   protected cloneRoom(r: Room): void {
     this.closeMenu();
-    this.form.set({
-      id: null,
-      number: `${r.number} (copy)`,
-      floor: r.floor && r.floor !== '—' ? r.floor : '',
-      type: r.type,
-      capacity: String(r.capacity),
+    const base = this.roomsBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'create'], {
+      queryParams: { cloneFrom: r.id },
+      queryParamsHandling: 'merge',
     });
   }
 
@@ -715,13 +850,13 @@ export class Rooms {
   }
 
   protected openBulkCreate(): void {
-    const first = this.roomTypesState().data[0];
-    this.bulkForm.set({ mode: 'range', prefix: '', start: '101', count: '10', custom: '', rows: [{ number: '', type: first?.name ?? '', capacity: first ? String(first.capacity) : '' }], roomType: first?.name ?? '', capacity: first ? String(first.capacity) : '' });
-    this.bulkError.set(null);
+    const base = this.roomsBase();
+    if (!base) return;
+    void this.router.navigate([...base, 'bulk'], { queryParamsHandling: 'preserve' });
   }
 
   protected closeBulk(): void {
-    this.bulkForm.set(null);
+    this.goToList();
   }
 
   protected patchBulk(key: Exclude<keyof BulkForm, 'rows' | 'mode'>, value: string): void {

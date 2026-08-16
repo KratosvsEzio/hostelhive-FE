@@ -19,4 +19,10 @@ export interface ApiError {
    * only for envelope responses; empty/absent for non-envelope bodies (routing 404s, 5xx pages).
    */
   serverMessages?: readonly string[];
+  /**
+   * HTTP verb of the request that failed, uppercased. Lets the toast title distinguish a failed
+   * read from a failed write — without it every non-403/404 4xx reads as "Couldn't save changes",
+   * which is wrong for a GET.
+   */
+  method?: string;
 }

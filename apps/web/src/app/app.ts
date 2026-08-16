@@ -12,16 +12,22 @@ import { SiteFooter } from '@app/layout/components/site-footer/site-footer';
 import { ToastHost } from '@app/layout/components/toast-host/toast-host';
 import { SeekerTabBar } from '@app/layout/components/mobile-tab-bar/seeker-tab-bar';
 import { MobileApp } from '@core/mobile-app';
+// TEMPORARY (testing): startup gate to pick the BE base URL. Remove before go-live.
+import { DevSetupGate } from '@app/features/dev-setup/dev-setup-gate';
+import { devSetupPending } from '@core/dev-api-base-url';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SiteHeader, SiteFooter, ToastHost, SeekerTabBar],
+  imports: [RouterOutlet, SiteHeader, SiteFooter, ToastHost, SeekerTabBar, DevSetupGate],
   templateUrl: './app.html',
 })
 export class App {
   private readonly router = inject(Router);
   private readonly mobile = inject(MobileApp);
+
+  /** TEMPORARY (testing): true while the base-URL gate is still waiting for an answer. */
+  protected readonly pending = devSetupPending;
 
   private readonly path = toSignal(
     this.router.events.pipe(

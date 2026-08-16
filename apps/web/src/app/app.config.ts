@@ -21,6 +21,7 @@ import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import { refetchDelayInterceptor } from '@core/refetch-delay';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
+import { readDevApiBaseUrl } from '@core/dev-api-base-url';
 import { provideCapacitorNative } from '@app/capacitor/native';
 import { appRoutes } from './app.routes';
 import { NotificationService } from '@core/notification.service';
@@ -36,7 +37,9 @@ export const appConfig: ApplicationConfig = {
     { provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy },
     // Base URL = API origin (paths carry their own /api or /public prefix).
     // Driven from .env → api.env.ts at build time by tools/generate-api-env.mjs.
-    provideDataAccess({ baseUrl: apiEnv.apiUrl }, [
+    // TEMPORARY (testing): a tester-entered base URL from the dev-setup gate wins when set,
+    // so the whole app targets their backend. Remove this override before go-live.
+    provideDataAccess({ baseUrl: readDevApiBaseUrl() ?? apiEnv.apiUrl }, [
       authInterceptor,
       errorInterceptor,
       refetchDelayInterceptor,
@@ -48,6 +51,9 @@ export const appConfig: ApplicationConfig = {
     {
       provide: API_ERROR_NOTIFIER,
       useFactory: (notify: NotificationService) => (e: ApiError) => {
+        // A muted window means the app is already handling this failure visibly (the subscription
+        // gate redirecting, say), so the toast would only add noise.
+        if (notify.errorsMuted) return;
         const { title, message } = toToastCopy(e);
         const pinned = e.status >= 400 && e.status < 500;
         notify.show({ kind: 'error', title, message }, pinned ? 0 : 6000);
