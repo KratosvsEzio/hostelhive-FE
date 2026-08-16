@@ -63,7 +63,13 @@
           <button
             type="button"
             class="mt-5 flex w-full items-center justify-center gap-3 rounded-xl border border-ink-200 bg-white px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 disabled:opacity-50"
-            [disabled]="busy()"
+            [disabled]="busy() || googleBlocked()"
+            [attr.title]="
+              googleBlocked()
+                ? 'Accept the Terms of Service and Privacy Policy to continue with Google.'
+                : null
+            "
+            [attr.aria-disabled]="googleBlocked() ? 'true' : null"
             (click)="googleSignIn()"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">

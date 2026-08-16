@@ -20,6 +20,8 @@ import { pushTokenInterceptor } from '@core/interceptors/push-token-interceptor'
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import { refetchDelayInterceptor } from '@core/refetch-delay';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuthService } from '@services';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
 import { readDevApiBaseUrl } from '@core/dev-api-base-url';
@@ -62,14 +64,27 @@ export const appConfig: ApplicationConfig = {
       },
       deps: [NotificationService],
     },
-    // ── Google Auth (Capacitor plugin: native on Android/iOS, GIS popup on web) ─
-    // initialize() is a web-only step that loads the GIS library; it's a no-op
-    // on Android/iOS where the plugin bootstraps natively via the Capacitor lifecycle.
+    // ── Google Auth ────────────────────────────────────────────────────────────
+    // Two libraries, split by platform (see GoogleAuthService for why).
+    //
+    // Native keeps the Capacitor plugin. Web must NOT call its initialize(), because that
+    // is what pulls in the legacy gapi/platform.js library Google has turned down; web
+    // preloads Google Identity Services instead. The preload matters for more than speed:
+    // the token popup has to open inside the user's click, so the script cannot be fetched
+    // at click time or the popup gets blocked on first use.
     provideAppInitializer(async () => {
       if (typeof window === 'undefined') return; // SSR guard
       if (!googleOAuthEnv.clientId) return; // skip if key not configured
-      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-      await GoogleAuth.initialize({ clientId: googleOAuthEnv.clientId, scopes: ['email', 'profile'] });
+      const google = inject(GoogleAuthService);
+      if (Capacitor.isNativePlatform()) {
+        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+        await GoogleAuth.initialize({
+          clientId: googleOAuthEnv.clientId,
+          scopes: ['email', 'profile'],
+        });
+        return;
+      }
+      await google.preload();
     }),
     // Maps + location search are fully OpenStreetMap now (Leaflet + Nominatim), so
     // there is no Google Maps provider to wire — see lib/src/maps.

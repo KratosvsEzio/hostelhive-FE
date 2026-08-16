@@ -164,6 +164,17 @@ export class LeadWall {
       : 'Please accept the Terms of Service and Privacy Policy.';
   });
 
+  /**
+   * Google is a registration path, not just a sign-in one — `google_login` creates the
+   * account on first use — so on the Register tab it has to sit behind the same consent
+   * gate as the email/password submit, or an account gets created without the user ever
+   * accepting the terms.
+   *
+   * `termsError()` is already register-only, so this stays false on the Sign in tab and
+   * existing users are never asked to tick a box just to come back.
+   */
+  protected readonly googleBlocked = computed(() => !!this.termsError());
+
   protected readonly isValid = computed(
     () =>
       !this.nameError() &&
@@ -224,6 +235,13 @@ export class LeadWall {
 
   /** Google OAuth: open consent popup → exchange access_token → establish session. */
   protected googleSignIn(): void {
+    // The button is disabled in this state, so this only catches a programmatic call —
+    // but a disabled attribute is not a consent record. Revealing the errors also points
+    // the user at the checkbox, which sits below this button in the layout.
+    if (this.googleBlocked()) {
+      this.showErrors.set(true);
+      return;
+    }
     this.busy.set(true);
     this.error.set('');
     this.googleAuth.getAccessToken().pipe(
