@@ -9,9 +9,13 @@ const MAX_BODY_LENGTH = 200;
  */
 const TITLE_NOT_ALLOWED = 'Not allowed';
 const TITLE_NOT_FOUND = "Couldn't load";
+const TITLE_LOAD_FAILED = "Couldn't load";
 const TITLE_SAVE_FAILED = "Couldn't save changes";
 const TITLE_SERVER = 'Something went wrong';
 const TITLE_NETWORK = 'Connection problem';
+
+/** Verbs that only read — a failure on one of these never lost the user any changes. */
+const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** Generic bodies for failures with no safe server-supplied text. */
 const BODY_SERVER = 'We could not reach the server. Please try again in a moment.';
@@ -63,14 +67,21 @@ export function toToastCopy(e: ApiError): { title: string; message: string } {
   if (e.status === 0) return { title: TITLE_NETWORK, message: BODY_NETWORK };
   if (e.status >= 500) return { title: TITLE_SERVER, message: BODY_SERVER };
 
+  const title = titleFor(e.status, e.method);
   const body = joinMessages(e.serverMessages ?? []);
-  if (!body) return { title: titleForStatus(e.status), message: BODY_GENERIC };
-  return { title: titleForStatus(e.status), message: truncate(body) };
+  if (!body) return { title, message: BODY_GENERIC };
+  return { title, message: truncate(body) };
 }
 
-function titleForStatus(status: number): string {
+/**
+ * A read that fails hasn't lost the user any work, so titling it "Couldn't save changes" is both
+ * wrong and alarming — GET/HEAD/OPTIONS get the load title instead. The method is optional on
+ * {@link ApiError}, so callers that don't supply it keep the previous save-titled behaviour.
+ */
+function titleFor(status: number, method?: string): string {
   if (status === 403) return TITLE_NOT_ALLOWED;
   if (status === 404) return TITLE_NOT_FOUND;
+  if (method && READ_METHODS.has(method.toUpperCase())) return TITLE_LOAD_FAILED;
   return TITLE_SAVE_FAILED;
 }
 

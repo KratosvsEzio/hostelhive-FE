@@ -21,7 +21,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const suppressToast = req.context.get(SUPPRESS_ERROR_TOAST);
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
-      const apiError = normalize(err);
+      const apiError = normalize(err, req.method);
       if (apiError.status === 401) {
         onUnauthorized?.();
       } else if (!suppressToast && shouldNotify(apiError.status)) {
@@ -37,12 +37,13 @@ function shouldNotify(status: number): boolean {
   return status >= 500 || status === 0 || (status >= 400 && status !== 401);
 }
 
-function normalize(err: HttpErrorResponse): ApiError {
+function normalize(err: HttpErrorResponse, method: string): ApiError {
   const serverMessages = extractServerMessages(err.error);
   return {
     status: err.status,
     code: err.status === 0 ? 'network_error' : 'unknown_error',
     message: err.message,
     serverMessages: serverMessages.length ? serverMessages : undefined,
+    method: method.toUpperCase(),
   };
 }

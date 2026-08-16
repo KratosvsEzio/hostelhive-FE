@@ -23,32 +23,87 @@
   </div>
 </div>
 
-<!-- Mobile-only: fixed List | Map toggle at bottom center -->
-<div
-  class="fixed left-1/2 z-40 -translate-x-1/2 min-[950px]:hidden"
-  [class.safe-mb]="!mobile.isMobile()"
-  [class.hh-above-tabbar]="mobile.isMobile()"
-  [style.bottom.px]="toggleBottom()"
->
-  <div class="flex items-center gap-0.5 rounded-full bg-brand-500 p-0.5 shadow-lg">
-    <button
-      type="button"
-      class="rounded-full px-4 py-2 text-sm font-medium transition"
-      [class.bg-white]="view() !== 'map'"
-      [class.text-ink-900]="view() !== 'map'"
-      [class.text-white/70]="view() === 'map'"
-      (click)="setView('list')"
-    >List</button>
-    <button
-      type="button"
-      class="rounded-full px-4 py-2 text-sm font-medium transition"
-      [class.bg-white]="view() === 'map'"
-      [class.text-ink-900]="view() === 'map'"
-      [class.text-white/70]="view() !== 'map'"
-      (click)="setView('map')"
-    >Map</button>
+<!-- Mobile-only: floating "Map" pill, shown only while the results sheet covers the map so
+     there is always a one-tap way back to it (Airbnb does the same). At 'peek' the map is
+     already the whole screen, so the pill would be noise. -->
+@if (narrow() && snap() !== 'peek' && !selectedListing()) {
+  <button
+    type="button"
+    class="fixed left-1/2 z-40 -translate-x-1/2 rounded-full bg-ink-900 px-5 py-3 text-sm font-semibold text-white shadow-lg"
+    [class.safe-mb]="!mobile.isMobile()"
+    [class.hh-above-tabbar]="mobile.isMobile()"
+    [style.bottom.px]="toggleBottom()"
+    (click)="showMap()"
+  >
+    Map<i class="ti ti-map-2 ml-1.5 text-xs" aria-hidden="true"></i>
+  </button>
+}
+
+<!-- Mobile-only: the selected pin's listing, docked to the bottom of the screen. Tapping it
+     opens the hostel in the same tab so Back returns to the map with the pin still chosen. -->
+@if (narrow() && selectedListing(); as sel) {
+  <div
+    class="fixed inset-x-0 z-40 px-3"
+    [class.safe-mb]="!mobile.isMobile()"
+    [class.hh-above-tabbar]="mobile.isMobile()"
+    [style.bottom.px]="toggleBottom()"
+  >
+    <div
+      (click)="openListing(sel)"
+      class="hh-mapcard-dock relative cursor-pointer overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.28)]"
+    >
+      <div class="relative aspect-[16/10] bg-ink-100">
+        <img
+          [src]="cardImage(sel)"
+          alt=""
+          class="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <button
+          type="button"
+          aria-label="Close"
+          (click)="closeCard($event)"
+          class="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm"
+        >
+          <i class="ti ti-x text-sm text-ink-700" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          [attr.aria-label]="isSaved(sel) ? 'Remove from favourites' : 'Save to favourites'"
+          (click)="toggleSaved(sel, $event)"
+          class="absolute right-12 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm"
+        >
+          <i
+            class="ti text-sm"
+            [class]="isSaved(sel) ? 'ti-heart-filled text-danger' : 'ti-heart text-ink-700'"
+            aria-hidden="true"
+          ></i>
+        </button>
+      </div>
+      <div class="p-3">
+        <div class="flex items-start justify-between gap-3">
+          <p class="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
+            {{ sel.name }}
+          </p>
+          @if (sel.rating) {
+            <span class="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-700">
+              <i class="ti ti-star-filled text-[11px] text-brand-500" aria-hidden="true"></i>
+              {{ sel.rating }}
+              <span class="text-ink-400">({{ sel.reviews ?? 0 }})</span>
+            </span>
+          }
+        </div>
+        <p class="mt-0.5 truncate text-xs text-ink-500">
+          {{ sel.area }} · {{ sel.city }}
+        </p>
+        <p class="mt-1.5 text-sm text-ink-900">
+          <b>Rs {{ cardPrice(sel) }}</b>
+          <span class="text-xs text-ink-500"> / month</span>
+        </p>
+      </div>
+    </div>
   </div>
-</div>
+}
 
 <!-- Airbnb-style split: both tracks are fractional, so the results panel and the map
      grow together with the viewport. The panel takes the smaller share while only one
@@ -60,10 +115,46 @@
 <div
   class="grid grid-cols-1 min-[950px]:grid-cols-[minmax(0,44fr)_minmax(0,56fr)] min-[1150px]:grid-cols-[minmax(0,56fr)_minmax(0,44fr)] min-[2280px]:grid-cols-[1276px_minmax(0,1fr)]"
 >
+  <!-- Desktop: the left column of the split. Mobile: a bottom sheet dragged over the
+       full-screen map, parked at one of three snaps (see `snap`/`sheetTransform`). -->
   <div
-    class="overflow-y-auto px-5 py-5 sm:px-8 min-[950px]:block min-[1500px]:px-12"
-    [class.hidden]="view() === 'map'"
+    class="overflow-y-auto px-5 py-5 sm:px-8 min-[1500px]:px-12
+           max-[949px]:fixed max-[949px]:inset-x-0 max-[949px]:z-30 max-[949px]:flex
+           max-[949px]:flex-col max-[949px]:overflow-hidden max-[949px]:rounded-t-2xl
+           max-[949px]:bg-white max-[949px]:p-0
+           max-[949px]:shadow-[0_-6px_28px_rgba(0,0,0,0.16)]"
+    [class.transition-transform]="!dragging()"
+    [class.duration-300]="!dragging()"
+    [class.ease-out]="!dragging()"
+    [style.top]="narrow() ? 'var(--hh-header-top, 0px)' : null"
+    [style.height]="narrow() ? 'calc(100dvh - var(--hh-header-top, 0px))' : null"
+    [style.transform]="sheetTransform()"
   >
+    <!-- Mobile grab handle + result count. Doubles as the drag surface and, on a tap that
+         never moved, the open/close toggle. -->
+    <div
+      class="shrink-0 touch-none select-none px-5 pb-3 pt-2.5 min-[950px]:hidden"
+      (pointerdown)="onSheetPointerDown($event)"
+      (pointermove)="onSheetPointerMove($event)"
+      (pointerup)="onSheetPointerUp()"
+      (pointercancel)="onSheetPointerUp()"
+    >
+      <div class="mx-auto h-1 w-9 rounded-full bg-ink-200"></div>
+      @if (!loading() && !loadError()) {
+        <p class="mt-2.5 text-center text-sm font-semibold text-ink-900">
+          {{ resultsLabel() }}
+        </p>
+      } @else {
+        <div class="mx-auto mt-2.5 h-4 w-40 rounded shimmer"></div>
+      }
+    </div>
+
+    <!-- Scroll body. On desktop this is a plain block inside the page-scrolled column; on
+         mobile it is the sheet's own scroller. -->
+    <div
+      class="max-[949px]:min-h-0 max-[949px]:flex-1 max-[949px]:overflow-y-auto
+             max-[949px]:overscroll-contain max-[949px]:px-5 max-[949px]:pb-28"
+    >
     @if (cooldown() > 0 && listings().length) {
       <div
         class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/5 px-4 py-3"
@@ -82,10 +173,11 @@
         </button>
       </div>
     }
+    <!-- Hidden on mobile — the sheet's drag header already carries the count. -->
     @if (loading()) {
-      <div class="mb-4 h-5 w-44 rounded shimmer"></div>
+      <div class="mb-4 h-5 w-44 rounded shimmer max-[949px]:hidden"></div>
     } @else if (!loadError()) {
-      <h2 class="mb-4 text-base font-semibold text-ink-900">
+      <h2 class="mb-4 text-base font-semibold text-ink-900 max-[949px]:hidden">
         {{ resultsLabel() }}
       </h2>
     }
@@ -183,9 +275,12 @@
         No stays in this area — try moving the map or clearing the filters.
       </p>
     }
+    </div>
   </div>
 
-  <div class="relative min-[950px]:block" [class.hidden]="view() !== 'map'">
+  <!-- Always rendered: on mobile the results sheet floats over the map rather than
+       replacing it, so the map is the permanent backdrop at every width. -->
+  <div class="relative">
     <div
       class="sticky top-0 h-[100dvh] min-[950px]:h-screen min-[950px]:pb-4 min-[950px]:pr-4 min-[950px]:pt-4"
       style="

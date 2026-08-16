@@ -4,8 +4,10 @@ import {
   computed,
   inject,
   input,
+  PLATFORM_ID,
   signal,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Gender, Listing } from '@hostelhive/data-access';
@@ -40,8 +42,13 @@ export class ListingCard {
    */
   readonly savable = input(true);
 
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly favorites = inject(FavoritesStore);
   private readonly capacityStore = inject(SearchCapacity);
+
+  protected readonly newTab = isPlatformBrowser(this.platformId)
+    ? window.matchMedia('(min-width: 950px)').matches
+    : true;
 
   protected readonly img = signal(0);
   /** Reactive saved state, backed by the localStorage-persisted FavoritesStore. */

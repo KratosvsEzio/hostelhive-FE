@@ -49,6 +49,36 @@ export const appRoutes: Route[] = [
     title: 'Service Policy — HostelHive',
   },
   {
+    path: 'about',
+    loadComponent: () =>
+      import('@features/public/about/about').then((m) => m.About),
+    title: 'About Us — HostelHive',
+  },
+  {
+    path: 'faqs',
+    loadComponent: () =>
+      import('@features/public/faqs/faqs').then((m) => m.Faqs),
+    title: 'FAQs — HostelHive',
+  },
+  {
+    path: 'blog',
+    loadComponent: () =>
+      import('@features/public/blog/blog').then((m) => m.Blog),
+    title: 'Blog — HostelHive',
+  },
+  {
+    path: 'careers',
+    loadComponent: () =>
+      import('@features/public/careers/careers').then((m) => m.Careers),
+    title: 'Careers — HostelHive',
+  },
+  {
+    path: 'contact',
+    loadComponent: () =>
+      import('@features/public/contact/contact').then((m) => m.Contact),
+    title: 'Contact Us — HostelHive',
+  },
+  {
     path: 'auth',
     loadChildren: () =>
       import('@features/auth/auth.routes').then((m) => m.AUTH_ROUTES),

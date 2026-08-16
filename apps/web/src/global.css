@@ -395,6 +395,23 @@ body {
 .hh-pin--active .hh-pin__crown {
   color: #fbbf24;
 }
+/* Mobile: the pin whose card is docked at the bottom of the screen. Desktop marks the
+   selection by stacking the popup card over the pin instead, so this only ever applies
+   below the split breakpoint. Slightly larger than --active so it reads as "chosen"
+   rather than "hovered". */
+.hh-pin--selected {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+  transform: scale(1.06);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.2),
+    0 10px 28px rgba(0, 0, 0, 0.28);
+  z-index: 1000;
+}
+.hh-pin--selected .hh-pin__crown {
+  color: #fbbf24;
+}
 
 /* Search split view — keep the header chrome fixed while results scroll. The filter bar
    pins directly below the sticky site header (offset via --hh-header-top, measured by
@@ -770,6 +787,21 @@ hh-search-map {
   }
   to {
     opacity: 1;
+  }
+}
+/* Mobile: the selected listing docked to the bottom edge. Slides up rather than fading so
+   it reads as arriving from off-screen, the way a sheet does. */
+.hh-mapcard-dock {
+  animation: hh-mapcard-dock-in 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes hh-mapcard-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 .hh-mapcard::after {

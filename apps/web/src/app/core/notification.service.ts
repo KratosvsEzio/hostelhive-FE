@@ -22,8 +22,37 @@ const MAX_TOASTS = 4;
 export class NotificationService {
   private seq = 0;
   private readonly timers = new Map<number, ReturnType<typeof setTimeout>>();
+  private muteDepth = 0;
   /** Currently visible toasts, oldest first. */
   readonly toasts = signal<readonly Toast[]>([]);
+
+  /** True while a {@link muteErrors} hold is active — read by the API error notifier. */
+  get errorsMuted(): boolean {
+    return this.muteDepth > 0;
+  }
+
+  /**
+   * Suppress API error toasts until the returned release is called. The subscription gate holds a
+   * mute while it bounces a host off a page they can't use: the page being left has already fired
+   * requests the API rejects with "You need to subscribe", and that toast only repeats what the
+   * subscription page they land on states far more clearly.
+   *
+   * `graceMs` keeps the mute alive briefly past the release so replies still in flight when the
+   * navigation settled are covered too. Nested holds are counted, so overlapping bounces are safe.
+   */
+  muteErrors(graceMs = 1500): () => void {
+    this.muteDepth++;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      if (graceMs <= 0) {
+        this.muteDepth--;
+        return;
+      }
+      setTimeout(() => this.muteDepth--, graceMs);
+    };
+  }
 
   /**
    * Show a toast; auto-dismisses after `ttlMs` (0 keeps it until dismissed). Returns its id.
