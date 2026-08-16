@@ -75,6 +75,17 @@
         <span class="flex-1 text-sm font-medium text-ink-800">FAQs</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
+      <!-- The desktop header's "View site" link is `hidden sm:block`, so without this there
+           is no way off the console on a phone. Carries a subtitle because "Exit dashboard"
+           sitting next to "Sign out" would otherwise read as another way to log out. -->
+      <a routerLink="/" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-door-exit" aria-hidden="true"></i></span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-sm font-medium text-ink-800">Exit dashboard</span>
+          <span class="block text-xs text-ink-400">Browse the public site — you stay signed in</span>
+        </span>
+        <i class="ti ti-chevron-right shrink-0 text-ink-300" aria-hidden="true"></i>
+      </a>
       <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-left" (click)="signOut()">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-logout" aria-hidden="true"></i></span>
         <span class="flex-1 text-sm font-medium text-danger">Sign out</span>
