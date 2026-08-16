@@ -16,6 +16,7 @@ import { API_ERROR_NOTIFIER } from '@core/tokens';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { provideDataAccess } from '@core/provide-data-access';
 import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
+import { pushTokenInterceptor } from '@core/interceptors/push-token-interceptor';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import { refetchDelayInterceptor } from '@core/refetch-delay';
@@ -41,6 +42,7 @@ export const appConfig: ApplicationConfig = {
     // so the whole app targets their backend. Remove this override before go-live.
     provideDataAccess({ baseUrl: readDevApiBaseUrl() ?? apiEnv.apiUrl }, [
       authInterceptor,
+      pushTokenInterceptor,
       errorInterceptor,
       refetchDelayInterceptor,
     ]),
