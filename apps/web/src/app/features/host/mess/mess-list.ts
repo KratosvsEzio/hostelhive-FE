@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { BarChart, BarChartBar, BarChartTick, Button, ConfirmModal, EmptyState, Skeleton, TabItem, Tabs } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NotificationService } from '@core/notification.service';
+import { MobileApp } from '@core/mobile-app';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import {
@@ -55,13 +56,71 @@ interface AreaChart {
   ticks: { value: number; y: number; label: string }[];
   pointsX: number[];
   pointsY: Record<MealType, number[]>;
+  /** Per-day flag for "draw this day's x-axis label" — see {@link labelFlags}. */
+  showLabel: boolean[];
 }
 
-// SVG coordinate constants — viewBox 600 × 207
-// Aspect ratio 600/207 ≈ 2.9 → at ~550px card content gives ~190px chart height
-const CL = 38, CR = 592, CT = 15, CB = 175;
-const CW = CR - CL; // 554
-const CH = CB - CT; // 160
+/**
+ * Which days get an x-axis label: every `step`th, plus the final day so the range always
+ * reads end-to-end. The last stepped label is dropped when the final one would land on top
+ * of it — otherwise a series whose length isn't a multiple of `step` renders the two
+ * overprinted (e.g. "14 Aug" over "16 Aug" on a 31-day series at step 7).
+ */
+function labelFlags(n: number, step: number): boolean[] {
+  const flags = new Array<boolean>(n).fill(false);
+  if (n === 0) return flags;
+
+  const stepped: number[] = [];
+  for (let i = 0; i < n; i += step) stepped.push(i);
+
+  const last = n - 1;
+  if (stepped.length && last - stepped[stepped.length - 1] < step * 0.6) stepped.pop();
+  if (last > 0) stepped.push(last);
+
+  for (const i of stepped) flags[i] = true;
+  return flags;
+}
+
+/**
+ * SVG geometry for the confirmations area chart. The viewBox is scaled to the card's
+ * width, so its *width* sets the effective font size: a 600-unit box squeezed into a
+ * ~295px phone card renders every 10px label at ~5px. Phones therefore get their own
+ * narrower, taller profile rather than the desktop one shrunk down.
+ */
+interface ChartGeom {
+  /** viewBox dimensions. */
+  vw: number;
+  vh: number;
+  /** Plot area insets: left, right, top, bottom. */
+  cl: number;
+  cr: number;
+  ct: number;
+  cb: number;
+  font: number;
+  /** Baseline for the x-axis day labels. */
+  labelY: number;
+  /** Tooltip box, and the x beyond which it flips to the left of the cursor. */
+  tipW: number;
+  tipH: number;
+  /** Half-width of a day's invisible hover/tap strip. */
+  hitHalf: number;
+  /** Label every Nth day on the x-axis. */
+  labelStep: number;
+}
+
+// Aspect 3.0 → at ~550px of card content this gives ~183px of chart height.
+const GEOM_WIDE: ChartGeom = {
+  vw: 600, vh: 200, cl: 38, cr: 592, ct: 15, cb: 175,
+  font: 10, labelY: 195, tipW: 96, tipH: 72, hitHalf: 9, labelStep: 6,
+};
+
+// Aspect 1.31 → at ~295px of card content this gives ~225px of chart height, and the
+// narrower box scales 12-unit text up to ~10px instead of the wide profile's ~5px.
+const GEOM_PHONE: ChartGeom = {
+  vw: 340, vh: 260, cl: 30, cr: 334, ct: 14, cb: 222,
+  font: 12, labelY: 248, tipW: 112, tipH: 82, hitHalf: 5, labelStep: 7,
+};
+
 const AREA_FILL = 1.0;
 
 function niceAxis(peak: number): { step: number; ceiling: number } {
@@ -81,7 +140,10 @@ function smoothLine(xs: number[], ys: number[]): string {
 }
 
 /** Build the trend chart straight from the backend's daily series (one point per day). */
-function buildAreaChart(series: DailyMealConfirmation[]): AreaChart {
+function buildAreaChart(series: DailyMealConfirmation[], g: ChartGeom): AreaChart {
+  const CL = g.cl, CB = g.cb;
+  const CW = g.cr - g.cl;
+  const CH = g.cb - g.ct;
   const days: DayData[] = series.map((d) => {
     // Parse as local midnight so the day label never shifts across the date line.
     const label = format(new Date(d.date + 'T00:00:00'), 'd MMM');
@@ -121,6 +183,7 @@ function buildAreaChart(series: DailyMealConfirmation[]): AreaChart {
       dinner:    makePath(pointsY.dinner),
     },
     ticks, pointsX, pointsY,
+    showLabel: labelFlags(n, g.labelStep),
   };
 }
 
@@ -161,6 +224,7 @@ export class MessList {
   protected readonly svc = inject(MessService);
   private readonly hostelsApi = inject(HostelsApi);
   private readonly propertyStore = inject(HostPropertyStore);
+  private readonly mobile = inject(MobileApp);
 
   protected readonly mealOrder = MEAL_ORDER;
   protected readonly mealMeta = MEAL_META;
@@ -171,8 +235,17 @@ export class MessList {
   // ── Area chart ─────────────────────────────────────────────────────────────
   protected readonly hoveredDayIndex = signal<number | null>(null);
 
+  /** Phones get the taller, narrower chart profile; everything else the wide one. */
+  protected readonly geom = computed(() =>
+    this.mobile.isMobile() ? GEOM_PHONE : GEOM_WIDE,
+  );
+  protected readonly chartViewBox = computed(() => {
+    const g = this.geom();
+    return `0 0 ${g.vw} ${g.vh}`;
+  });
+
   protected readonly confirmAreaChart = computed(() =>
-    buildAreaChart(this.dailyConfirmations()),
+    buildAreaChart(this.dailyConfirmations(), this.geom()),
   );
 
   /** Resolved hovered-day data — null when nothing is hovered. */
@@ -311,9 +384,21 @@ export class MessList {
     this.chartMode() === 'month' ? 'gap-2 sm:gap-3' : 'gap-px',
   );
 
-  protected readonly spendXLabelStep = computed(() =>
-    this.chartMode() === 'day' ? 5 : 1,
+  /** Taller on phones, matching the confirmations chart — a 10rem plot under a full-width
+   *  card reads as a sliver once the axis and labels take their share. */
+  protected readonly spendHeight = computed(() =>
+    this.mobile.isMobile() ? '14rem' : '10rem',
   );
+
+  /**
+   * Day mode always thins the 30 labels out. Month mode fits all 12 on a wide card, but on
+   * a phone ~267px of plot gives each label ~22px — less than "Sep" needs — so show every
+   * other month there.
+   */
+  protected readonly spendXLabelStep = computed(() => {
+    if (this.chartMode() === 'day') return 5;
+    return this.mobile.isMobile() ? 2 : 1;
+  });
 
   // ── Expense entries (real API, filtered to "mess" type) ─────────────────
   private readonly notifications = inject(NotificationService);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { CompactNumber } from '../compact-number/compact-number';
 
@@ -39,14 +39,19 @@ export interface BarChartTick {
 
           <!-- Bars -->
           <div class="absolute inset-x-0 top-2 bottom-2 flex items-end" [class]="barGap()">
-            @for (b of bars(); track $index; let first = $first; let last = $last) {
-              <div class="group relative flex h-full flex-1 flex-col justify-end">
-                <!-- Hover tooltip -->
+            @for (b of bars(); track $index; let i = $index; let first = $first; let last = $last) {
+              <div
+                class="group relative flex h-full flex-1 flex-col justify-end"
+                (click)="toggle(i)"
+              >
+                <!-- Value tooltip. Hover-driven on pointer devices; the selected index is
+                     the tap path, since touch has no hover and the pill hides on phones. -->
                 @if (b.value > 0) {
                   <div
                     class="pointer-events-none absolute z-10 hidden w-32 group-hover:block"
                     [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
                     [style.bottom]="'calc(' + b.pct + '% + 14px)'"
+                    [style.display]="selected() === i ? 'block' : null"
                   >
                     <div class="rounded-xl bg-ink-900 px-3 py-2 shadow-lg">
                       <p class="text-[11px] font-semibold text-white">{{ b.label }}</p>
@@ -54,15 +59,17 @@ export interface BarChartTick {
                     </div>
                   </div>
                 }
-                <!-- Pill label -->
+                <!-- Pill label — hidden on phones, where bars are far too narrow to hold it
+                     (12 months across ~267px leaves ~15px per bar). Tap the bar instead. -->
                 @if (b.value > 0) {
-                  <span class="mb-1 inline-flex self-center rounded-full bg-brand-50 px-1.5 py-0.5 text-[8px] font-bold leading-none text-brand-600">
+                  <span class="mb-1 hidden self-center rounded-full bg-brand-50 px-1.5 py-0.5 text-[8px] font-bold leading-none text-brand-600 sm:inline-flex">
                     {{ b.value | compactNum }}
                   </span>
                 }
                 <!-- Bar -->
                 <div
                   class="rounded-t bg-brand-500 transition group-hover:bg-brand-600"
+                  [class.bg-brand-600]="selected() === i"
                   [style.height.%]="b.pct"
                   [style.min-height.px]="b.value > 0 ? 3 : 0"
                 ></div>
@@ -89,4 +96,11 @@ export class BarChart {
   readonly height = input('10rem');
   readonly barGap = input('gap-1.5');
   readonly xLabelStep = input(1);
+
+  /** Tapped bar index — the touch equivalent of hovering. Tapping it again clears it. */
+  protected readonly selected = signal<number | null>(null);
+
+  protected toggle(i: number): void {
+    this.selected.update((current) => (current === i ? null : i));
+  }
 }
