@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button, Skeleton } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
+import { PushNotificationsService } from '@core/push-notifications';
 import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
@@ -43,6 +44,7 @@ export class NotificationBell {
   private readonly router = inject(Router);
   private readonly el = inject(ElementRef<HTMLElement>);
   private readonly refetchDelay = inject(RefetchDelay);
+  private readonly push = inject(PushNotificationsService);
 
   protected readonly open = signal(false);
   protected readonly actionLoading = signal<string | null>(null);
@@ -75,6 +77,9 @@ export class NotificationBell {
   private readonly fetchKey = computed(() => ({
     auth: this.session.isAuthenticated(),
     r: this.refresh(),
+    // A push landing while the app is open raises no tray notification on Android, so
+    // the bell is the only cue the user gets — refetch so the badge reflects it.
+    push: this.push.received(),
   }));
 
   private readonly state = toSignal(

@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -41,6 +42,14 @@ export class PushNotificationsService {
   readonly permission = signal<PermissionState>('unsupported');
   /** Last error reported by the platform's registration attempt, for diagnostics. */
   readonly registrationError = signal<string | null>(null);
+  /**
+   * Increments whenever a push lands while the app is in the foreground. Anything
+   * showing unread state (the notification bell) can react to it — Android raises no
+   * tray notification in that case, so without a cue the user sees nothing at all.
+   */
+  readonly received = signal(0);
+
+  private readonly router = inject(Router);
 
   private registered = false;
   private listenersBound = false;
@@ -82,6 +91,19 @@ export class PushNotificationsService {
         this.registrationError.set(String(err?.error ?? 'registration failed'));
         this.token.set(null);
       });
+
+      // Tapping a notification in the system tray opens the app here.
+      await Push.addListener('pushNotificationActionPerformed', () => {
+        this.openNotifications();
+      });
+
+      // Arrives while the app is already open. Android does not raise a tray
+      // notification in that case, so the only cue the user gets is the bell — bump
+      // its unread count rather than navigating, which would yank them off whatever
+      // they were doing.
+      await Push.addListener('pushNotificationReceived', () => {
+        this.received.update((n) => n + 1);
+      });
     }
 
     try {
@@ -101,6 +123,30 @@ export class PushNotificationsService {
       this.registrationError.set(String(e));
       this.permission.set('denied');
     }
+  }
+
+  /**
+   * Send the user to the notifications list after they tap a notification.
+   *
+   * `/notifications` is auth-guarded, so a tap while signed out would bounce to the
+   * auth wall — `returnUrl` brings them back afterwards instead of stranding them on
+   * the landing page.
+   *
+   * A tap can also cold-start the app, in which case this may run before the router
+   * has finished its first navigation and the call would be swallowed. Deferring to a
+   * microtask lets bootstrap settle first; `navigateByUrl` is idempotent here, so the
+   * worst case is landing on the page the user was already heading to.
+   *
+   * Per-notification routing (invoice vs. invite vs. mess) needs a `data` block on the
+   * payload that the backend does not send yet. Until then every tap lands on the
+   * list, which is at least always correct.
+   */
+  private openNotifications(): void {
+    queueMicrotask(() => {
+      void this.router.navigateByUrl('/notifications').catch(() => {
+        void this.router.navigateByUrl('/auth?returnUrl=/notifications');
+      });
+    });
   }
 
   /**
