@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CurrentUser, SignUpResponse } from '@hostelhive/data-access';
 import { AuthApi } from '@services';
+import { PushNotificationsService } from '@core/push-notifications';
 import {
   Observable,
   catchError,
@@ -27,6 +28,7 @@ import { SessionStore, SessionUser } from './session-store';
 export class AuthService {
   private readonly api = inject(AuthApi);
   private readonly session = inject(SessionStore);
+  private readonly push = inject(PushNotificationsService);
   private readonly router = inject(Router);
 
   /** Email/password sign-in → JWT → navigate immediately; session hydrates in background. */
@@ -94,7 +96,15 @@ export class AuthService {
   signOut(): Observable<void> {
     return this.api.signOut().pipe(
       catchError(() => of(null)), // best-effort revoke — we clear locally regardless
-      tap(() => this.session.clear()),
+      tap(() => {
+        this.session.clear();
+        // Kill this device's push registration and mint a fresh one for whoever signs
+        // in next: `rotate()` deletes the token at Firebase, so nothing addressed to
+        // the departing user can reach this device, and generates a new registration
+        // id so the next session is stored under its own key. Fire-and-forget —
+        // sign-out must not wait on Firebase.
+        void this.push.rotate();
+      }),
       map(() => void 0),
     );
   }
@@ -150,12 +160,27 @@ export class AuthService {
   }
 
   /**
+   * Ask for notification permission now that the user is signed in.
+   *
+   * Deliberately here rather than at app start: on Android 13+ the system shows the
+   * POST_NOTIFICATIONS dialog only once, so asking at cold start spends that single
+   * chance before the user has seen anything worth being notified about. A no-op if
+   * permission was already granted or the app is not running natively.
+   *
+   * Fire-and-forget — sign-in must never wait on a permission dialog.
+   */
+  private promptForPush(): void {
+    void this.push.init({ prompt: true });
+  }
+
+  /**
    * Sets the token immediately and fetches the user profile in the background.
    * The caller's observable completes as soon as the sign-in POST returns 200 —
    * the modal closes instantly while the session hydrates.
    */
   private hydrateInBackground(token: string): void {
     this.session.setAccessToken(token);
+    this.promptForPush();
     this.api.currentUser().pipe(
       map(toSessionUser),
       tap((user) => this.session.setSession(user, token)),
@@ -173,6 +198,7 @@ export class AuthService {
    */
   private establishSession(token: string): Observable<SessionUser> {
     this.session.setAccessToken(token);
+    this.promptForPush();
     return this.api.currentUser().pipe(
       map(toSessionUser),
       tap((user) => this.session.setSession(user, token)),
