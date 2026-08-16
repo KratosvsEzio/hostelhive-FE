@@ -13,6 +13,7 @@ import {
   tap,
   throwError,
 } from 'rxjs';
+import { isJwtExpired } from './jwt';
 import { ROLES, Role } from './roles';
 import { SessionStore, SessionUser } from './session-store';
 
@@ -126,6 +127,17 @@ export class AuthService {
   restoreSession(): Promise<void> {
     const token = this.session.readPersistedToken();
     if (!token) return Promise.resolve();
+
+    // The token carries its own deadline, so a dead one can be retired without asking the
+    // server — the request would only come back 401. This is the single case where the app
+    // may end a session on its own; `isJwtExpired` returns false for anything it cannot read
+    // with certainty (opaque token, no `exp`, device clock ahead of `iat`) so an unreadable
+    // token still goes to the server rather than being thrown away.
+    if (isJwtExpired(token)) {
+      this.session.clear();
+      return Promise.resolve();
+    }
+
     const cachedUser = this.session.readPersistedUser();
 
     // Seat the persisted token into the session BEFORE the validation request fires. The auth

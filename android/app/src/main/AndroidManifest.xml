@@ -38,7 +38,8 @@
         -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="hh_default" />
+            android:value="hh_default"
+        />
     </application>
 
     <!-- Permissions -->
