@@ -15,6 +15,25 @@ export const appRoutes: Route[] = [
     loadChildren: () =>
       import('@features/public/search/search.routes').then((m) => m.SEARCH_ROUTES),
   },
+  // ─── SEO landing pages ────────────────────────────────────────────────────
+  // `/hostels/lahore`, `/hostels/lahore/girls`. These render the search experience with
+  // the place's filters pre-applied, but express them in the path: `?city=Lahore` is
+  // crawled as a variant of /search, whereas these are pages that can rank for
+  // "hostels in Lahore" on their own. Server-rendered — the content has to be in the
+  // HTML for a crawler that never runs JavaScript.
+  //
+  // The set of places is curated (see landing/places.ts) rather than open-ended, to keep
+  // this from becoming thousands of near-empty faceted URLs.
+  {
+    path: 'hostels/:place',
+    loadComponent: () =>
+      import('@features/public/landing/place-landing').then((m) => m.PlaceLanding),
+  },
+  {
+    path: 'hostels/:place/:gender',
+    loadComponent: () =>
+      import('@features/public/landing/place-landing').then((m) => m.PlaceLanding),
+  },
   {
     path: 'hostel',
     loadChildren: () =>

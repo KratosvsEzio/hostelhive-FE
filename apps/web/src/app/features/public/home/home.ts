@@ -134,6 +134,7 @@ export class Home {
   protected readonly cities = [
     {
       name: 'Karachi',
+      slug: 'karachi',
       stays: '1,240',
       img: '/cities/karachi.jpg',
       lat: 24.8607,
@@ -141,6 +142,7 @@ export class Home {
     },
     {
       name: 'Lahore',
+      slug: 'lahore',
       stays: '980',
       img: '/cities/lahore.jpg',
       lat: 31.5204,
@@ -148,6 +150,7 @@ export class Home {
     },
     {
       name: 'Islamabad',
+      slug: 'islamabad',
       stays: '610',
       img: '/cities/islamabad.jpg',
       lat: 33.6844,
@@ -155,6 +158,7 @@ export class Home {
     },
     {
       name: 'Rawalpindi',
+      slug: 'rawalpindi',
       stays: '430',
       img: '/cities/rawalpindi.jpg',
       lat: 33.5651,
@@ -162,6 +166,7 @@ export class Home {
     },
     {
       name: 'Faisalabad',
+      slug: 'faisalabad',
       stays: '320',
       img: '/cities/faisalabad.jpg',
       lat: 31.4504,
@@ -169,6 +174,7 @@ export class Home {
     },
     {
       name: 'Peshawar',
+      slug: 'peshawar',
       stays: '210',
       img: '/cities/peshawar.jpg',
       lat: 34.0151,
@@ -176,6 +182,7 @@ export class Home {
     },
     {
       name: 'Multan',
+      slug: 'multan',
       stays: '180',
       img: '/cities/multan.jpg',
       lat: 30.1575,
@@ -183,6 +190,7 @@ export class Home {
     },
     {
       name: 'Quetta',
+      slug: 'quetta',
       stays: '95',
       img: '/cities/quetta.jpg',
       lat: 30.1798,
@@ -190,6 +198,7 @@ export class Home {
     },
     {
       name: 'Hyderabad',
+      slug: 'hyderabad',
       stays: '140',
       img: '/cities/hyderabad.jpg',
       lat: 25.396,
@@ -197,6 +206,7 @@ export class Home {
     },
     {
       name: 'Sialkot',
+      slug: 'sialkot',
       stays: '110',
       img: '/cities/sialkot.jpg',
       lat: 32.4945,

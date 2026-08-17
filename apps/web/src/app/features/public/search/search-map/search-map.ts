@@ -8,13 +8,14 @@ import {
   effect,
   ElementRef,
   inject,
+  input,
   signal,
   untracked,
   PLATFORM_ID,
   viewChild,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
@@ -125,8 +126,42 @@ export class SearchMap {
   protected readonly mobile = inject(MobileApp);
   private readonly mapEl = viewChild.required<ElementRef<HTMLElement>>('mapEl');
 
-  private readonly params = toSignal(this.route.queryParamMap, {
+  /**
+   * Filter defaults supplied by a host component rather than the URL — set by the
+   * `/hostels/:place` landing pages, which express their filters in the path instead of
+   * a query string.
+   *
+   * Query params win over these, so a visitor who lands on `/hostels/lahore` and then
+   * changes the budget or gender gets what they picked; the seed only fills what the URL
+   * does not say.
+   */
+  readonly seed = input<Record<string, string> | null>(null);
+
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
     initialValue: null,
+  });
+
+  /**
+   * `queryParams` with `seed` beneath it. Everything downstream reads filters through
+   * `params()?.get(…)`, so merging here means the landing pages need no changes anywhere
+   * else in this component.
+   */
+  private readonly params = computed<ParamMap | null>(() => {
+    const q = this.queryParams();
+    const seed = this.seed();
+    if (!seed) return q;
+    return {
+      get: (key: string) => q?.get(key) ?? seed[key] ?? null,
+      has: (key: string) => !!q?.has(key) || key in seed,
+      getAll: (key: string) => {
+        const fromQuery = q?.getAll(key) ?? [];
+        if (fromQuery.length) return fromQuery;
+        return seed[key] ? [seed[key]] : [];
+      },
+      get keys() {
+        return [...new Set([...(q?.keys ?? []), ...Object.keys(seed)])];
+      },
+    } as ParamMap;
   });
   protected readonly gender = computed<Gender | 'all'>(
     () => (this.params()?.get('gender') as Gender | 'all') ?? 'all',
