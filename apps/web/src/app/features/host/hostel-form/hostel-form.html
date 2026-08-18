@@ -1,12 +1,13 @@
 <div class="space-y-5">
   <!-- LISTING DETAILS -->
-  <div class="rounded-2xl bg-white p-5 shadow-card">
-    <div class="mb-3 flex items-center justify-between gap-3">
-      <h2 class="font-display text-base font-semibold text-ink-900">Listing details</h2>
-      @if (mode() === 'edit' && initialData()?.status?.name) {
-        <hh-status-pill tone="neutral">{{ initialData()!.status!.name }}</hh-status-pill>
-      }
-    </div>
+  <hh-collapsible-card
+    heading="Listing details"
+    [open]="sectionOpen('details')"
+    (openChange)="setSectionOpen('details', $event)"
+  >
+    @if (mode() === 'edit' && initialData()?.status?.name) {
+      <hh-status-pill aside tone="neutral">{{ initialData()!.status!.name }}</hh-status-pill>
+    }
 
     <label class="mb-1 block text-xs font-medium text-ink-500" [for]="ids.name">
       Property name
@@ -71,6 +72,10 @@
           (valueChange)="setGender($event)"
         />
       </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-ink-500">Currency</label>
+        <hh-currency-select [value]="currency()" (valueChange)="setCurrency($event)" />
+      </div>
     </div>
 
     @if (mode() === 'create') {
@@ -108,24 +113,17 @@
         <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['description'] }}
       </p>
     }
-
-    <label class="mb-1 mt-3 block text-xs font-medium text-ink-500" [for]="ids.landmarks">
-      Nearby landmarks
-    </label>
-    <input
-      [id]="ids.landmarks"
-      [value]="landmarks()"
-      (input)="landmarks.set(asValue($event))"
-      placeholder="e.g. Near Dolmen Mall, opposite McDonald's"
-      class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-    />
-  </div>
+  </hh-collapsible-card>
 
   <!-- PHOTOS -->
-  <div class="rounded-2xl bg-white p-5 shadow-card">
-    <h2 class="mb-3 font-display text-base font-semibold text-ink-900">
-      Photos @if (photos().length) { <span class="text-ink-400">· {{ photos().length }}</span> }
-    </h2>
+  <hh-collapsible-card
+    heading="Photos"
+    [open]="sectionOpen('photos')"
+    (openChange)="setSectionOpen('photos', $event)"
+  >
+    @if (photos().length) {
+      <span aside class="text-ink-400">· {{ photos().length }}</span>
+    }
     <input
       #fileInput
       type="file"
@@ -146,14 +144,15 @@
       (removePhoto)="removePhoto(findPhoto($event)!)"
       (labelChange)="setPhotoLabel(findPhoto($event.id)!, $event.value)"
     />
-  </div>
+  </hh-collapsible-card>
 
   <!-- AMENITIES -->
-  <div class="rounded-2xl bg-white p-5 shadow-card">
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="font-display text-base font-semibold text-ink-900">Amenities</h2>
-      <span class="text-xs font-medium text-ink-400">{{ selectedOfferIds().size }} selected</span>
-    </div>
+  <hh-collapsible-card
+    heading="Amenities"
+    [open]="sectionOpen('amenities')"
+    (openChange)="setSectionOpen('amenities', $event)"
+  >
+    <span aside class="text-xs font-medium text-ink-400">{{ selectedOfferIds().size }} selected</span>
     @if (catalog().length === 0) {
       <p class="text-sm text-ink-400">Amenity catalogue unavailable.</p>
     } @else {
@@ -194,14 +193,16 @@
         }
       </div>
     }
-  </div>
+  </hh-collapsible-card>
 
   <!-- ROOM TYPES -->
-  <div
-    class="rounded-2xl bg-white p-5 shadow-card transition"
-    [class]="showValidation() && fieldErrors()['rooms'] ? 'ring-2 ring-danger' : ''"
+  <hh-collapsible-card
+    heading="Room types"
+    [open]="sectionOpen('roomTypes')"
+    (openChange)="setSectionOpen('roomTypes', $event)"
+    [class.ring-2]="showValidation() && fieldErrors()['rooms']"
+    [class.ring-danger]="showValidation() && fieldErrors()['rooms']"
   >
-    <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Room types</h2>
 
     @if (roomTypes().length) {
       <ul class="space-y-2">
@@ -268,21 +269,21 @@
         </div>
       </div>
     }
-  </div>
+  </hh-collapsible-card>
 
   <!-- LOCATION -->
-  <div
-    class="rounded-2xl bg-white p-5 shadow-card transition"
-    [class]="showValidation() && fieldErrors()['location'] ? 'ring-2 ring-danger' : ''"
+  <hh-collapsible-card
+    heading="Location"
+    [open]="sectionOpen('location')"
+    (openChange)="setSectionOpen('location', $event)"
+    [class.ring-2]="showValidation() && fieldErrors()['location']"
+    [class.ring-danger]="showValidation() && fieldErrors()['location']"
   >
-    <h2 class="mb-4 font-display text-base font-semibold text-ink-900">
-      Location
-      @if (showValidation() && fieldErrors()['location']) {
-        <span class="ml-2 text-xs font-normal text-danger">
-          <i class="ti ti-alert-circle" aria-hidden="true"></i> {{ fieldErrors()['location'] }}
-        </span>
-      }
-    </h2>
+    @if (showValidation() && fieldErrors()['location']) {
+      <span aside class="text-xs font-normal text-danger">
+        <i class="ti ti-alert-circle" aria-hidden="true"></i> {{ fieldErrors()['location'] }}
+      </span>
+    }
     <hh-location-picker
       class="block"
       [initialLat]="lat() ?? undefined"
@@ -296,6 +297,12 @@
       <hh-input label="Province" [(value)]="province" />
       <hh-input label="Country" [(value)]="country" />
       <hh-input class="sm:col-span-2" label="Street address" [(value)]="street" />
+      <hh-input
+        class="sm:col-span-2"
+        label="Nearby landmarks"
+        placeholder="e.g. Near Dolmen Mall, opposite McDonald's"
+        [(value)]="landmarks"
+      />
     </div>
-  </div>
+  </hh-collapsible-card>
 </div>
