@@ -159,8 +159,10 @@
               </h3>
             </div>
 
-            <div class="grid gap-x-8 gap-y-6 sm:grid-cols-2">
-              @for (review of reviews().slice(0, 2); track $index) {
+            <!-- Six-up preview in two columns, each comment clamped with its own Show more
+                 (Airbnb's pattern); the modal behind "Show all" carries the rest. -->
+            <div class="grid gap-x-16 gap-y-8 sm:grid-cols-2">
+              @for (review of reviews().slice(0, previewReviewCount); track $index; let idx = $index) {
                 <div>
                   <div class="flex items-center gap-3">
                     <hh-avatar [initials]="initials(review.userName)" size="sm" />
@@ -183,14 +185,25 @@
                       </div>
                     </div>
                   </div>
-                  <!-- Preview clamps to 5 lines; the full text lives in the "Show all" modal. -->
-                  <p class="mt-2 line-clamp-5 text-sm leading-relaxed text-ink-700">{{ review.comments }}</p>
+                  <p
+                    class="mt-2 text-sm leading-relaxed text-ink-700"
+                    [class.line-clamp-4]="isLongComment(review.comments) && !isPreviewExpanded(idx)"
+                  >{{ review.comments }}</p>
+                  @if (isLongComment(review.comments)) {
+                    <button
+                      type="button"
+                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-600"
+                      (click)="togglePreviewExpanded(idx)"
+                    >
+                      {{ isPreviewExpanded(idx) ? 'Show less' : 'Show more' }}
+                    </button>
+                  }
                 </div>
               }
             </div>
 
-            @if (reviews().length > 2) {
-              <button hh-button variant="outlined" size="sm" class="mt-6" (click)="openReviews()">
+            @if (reviews().length > previewReviewCount) {
+              <button hh-button variant="outlined" size="sm" class="mt-8" (click)="openReviews()">
                 Show all {{ reviews().length }} reviews
               </button>
             }

@@ -129,6 +129,16 @@ export class ListingDetail {
    *  returns the hostel id on every review, so review.id is not unique. */
   protected readonly expandedReviews = signal<ReadonlySet<number>>(new Set());
 
+  /** How many reviews the in-page section shows before deferring to the modal. */
+  protected readonly previewReviewCount = 6;
+
+  /**
+   * Expansion state for the in-page preview. Deliberately separate from
+   * {@link expandedReviews}: closeReviews() clears the modal's set, which would otherwise
+   * collapse whatever the user had opened on the page behind it.
+   */
+  protected readonly expandedPreview = signal<ReadonlySet<number>>(new Set());
+
   /** Airbnb-style header: average score + per-star distribution, derived from the real reviews. */
   protected readonly reviewStats = computed(() => {
     const list = this.reviews();
@@ -351,6 +361,19 @@ export class ListingDetail {
 
   protected isReviewExpanded(index: number): boolean {
     return this.expandedReviews().has(index);
+  }
+
+  protected isPreviewExpanded(index: number): boolean {
+    return this.expandedPreview().has(index);
+  }
+
+  protected togglePreviewExpanded(index: number): void {
+    this.expandedPreview.update((s) => {
+      const next = new Set(s);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
   }
 
   protected toggleReviewExpanded(index: number): void {
