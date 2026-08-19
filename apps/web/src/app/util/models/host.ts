@@ -125,6 +125,12 @@ export interface Staff {
    * record to cross-reference.
    */
   isManager?: boolean;
+  /**
+   * The login account this staff is already attached to, when the API reports one. Its
+   * presence means the credentials exist already, so granting manager access is just a
+   * matter of flipping the flag — no email or password to collect.
+   */
+  userId?: string;
   /** Login address, present only for a manager. */
   email?: string;
 

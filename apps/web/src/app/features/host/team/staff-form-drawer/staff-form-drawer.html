@@ -99,6 +99,51 @@
       (valueChange)="patch('address', $event)"
     />
 
+    <!-- Manager access -->
+    <div class="flex items-center gap-3 pt-1">
+      <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
+        Manager access
+      </p>
+      <div class="flex-1 border-t border-ink-100"></div>
+      <hh-toggle [checked]="f.isManager" (checkedChange)="onManagerToggle($event)" />
+    </div>
+    @if (f.isManager) {
+      @if (f.hasUserAccount) {
+        <div class="flex items-start gap-2 rounded-xl bg-tint-sky px-3 py-2.5 text-xs text-ink-600">
+          <i class="ti ti-info-circle mt-0.5 shrink-0 text-ink-500" aria-hidden="true"></i>
+          <p>
+            This person already has an account, so there is nothing to set up — leaving the
+            toggle on gives them manager access to this hostel when you save.
+          </p>
+        </div>
+      } @else {
+        <p class="-mt-1 text-xs text-ink-400">
+          Creates a login so {{ f.name.trim() || 'this staff member' }} can manage this hostel.
+        </p>
+      }
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <hh-input
+          [label]="f.hasUserAccount ? 'Email' : 'Email *'"
+          type="email"
+          autocomplete="off"
+          placeholder="name@email.com"
+          [disabled]="f.hasUserAccount"
+          [value]="f.managerEmail"
+          [error]="managerEmailError()"
+          (valueChange)="patch('managerEmail', $event)"
+        />
+        <hh-input
+          [label]="f.hasUserAccount ? 'Password' : 'Password *'"
+          type="password"
+          autocomplete="new-password"
+          [placeholder]="f.hasUserAccount ? 'Managed by their account' : (f.wasManager ? 'Leave blank to keep current' : 'Set a password')"
+          [disabled]="f.hasUserAccount"
+          [value]="f.managerPassword"
+          [error]="managerPasswordError()"
+          (valueChange)="patch('managerPassword', $event)"
+        />
+      </div>
+    }
     <!-- Employment -->
     <div class="flex items-center gap-3 pt-1">
       <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
@@ -175,41 +220,6 @@
         </div>
       }
     </div>
-
-
-    <!-- Manager access -->
-    <div class="flex items-center gap-3 pt-1">
-      <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
-        Manager access
-      </p>
-      <div class="flex-1 border-t border-ink-100"></div>
-      <hh-toggle [checked]="f.isManager" (checkedChange)="onManagerToggle($event)" />
-    </div>
-    @if (f.isManager) {
-      <p class="-mt-1 text-xs text-ink-400">
-        Creates a login so {{ f.name.trim() || 'this staff member' }} can manage this hostel.
-      </p>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <hh-input
-          label="Email *"
-          type="email"
-          autocomplete="off"
-          placeholder="name@email.com"
-          [value]="f.managerEmail"
-          [error]="managerEmailError()"
-          (valueChange)="patch('managerEmail', $event)"
-        />
-        <hh-input
-          label="Password *"
-          type="password"
-          autocomplete="new-password"
-          [placeholder]="f.wasManager ? 'Leave blank to keep current' : 'Set a password'"
-          [value]="f.managerPassword"
-          [error]="managerPasswordError()"
-          (valueChange)="patch('managerPassword', $event)"
-        />
-      </div>
-    }
     <p class="flex items-center gap-1.5 text-xs text-ink-400">
       <i class="ti ti-lock" aria-hidden="true"></i>Scoped to this hostel only.
     </p>

@@ -38,6 +38,8 @@ interface ApiStaff {
   avatar?: { id?: string | number | null; url?: string | null } | null;
   created_at?: string | null;
   updated_at?: string | null;
+  /** The login account this staff is already attached to, when one exists. */
+  user?: { id?: string | number | null } | null;
   /** Present once the staff member has been granted a manager login. */
   is_manager?: boolean | null;
   email?: string | null;
@@ -120,6 +122,7 @@ function toStaff(s: ApiStaff): Staff {
     statusLabel: statusObj?.name ?? '—',
     createdAt: s.created_at ?? undefined,
     isManager: !!s.is_manager,
+    userId: s.user?.id != null ? String(s.user.id) : undefined,
     email: s.email ?? undefined,
     address: s.address ?? undefined,
     updatedAt: s.updated_at ?? undefined,

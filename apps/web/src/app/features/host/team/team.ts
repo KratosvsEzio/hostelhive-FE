@@ -76,13 +76,15 @@ export class HostTeam {
   private readonly session = inject(SessionStore);
 
   /**
-   * Whether any row action is available at all. Without this the kebab still opens on a row
-   * the user can only read, showing an empty popup — worse than offering no menu.
+   * Whether this session has any row action at all. Without it the kebab still opens on a
+   * row the user can only read, showing an empty popup — worse than offering no menu.
+   * Removing a manager is its own hostel-level permission, so it counts here too.
    */
   protected readonly canActOnStaff = computed(
     () =>
       this.session.hasPermission('host:Staff:update') ||
-      this.session.hasPermission('host:Staff:destroy'),
+      this.session.hasPermission('host:Staff:destroy') ||
+      this.session.hasPermission('host:Hostel:remove_manager'),
   );
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);

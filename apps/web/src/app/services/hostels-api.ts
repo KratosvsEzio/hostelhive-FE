@@ -563,7 +563,7 @@ export class HostelsApi {
    * GET /api/host/hostels/:id/expenses — all of the hostel's expenses. Verified shape:
    * `{ expenses: [{ id, expense_type, amount, expense_date, … }], pagination }`.
    * Type + date-range filtering is applied client-side — the endpoint's `f[...]` params
-   * don't cover these fields (they return no rows), so we pull everything (page_size) and
+   * don't cover these fields (they return no rows), so we pull a large single page (`limit`) and
    * filter in the component.
    */
   listExpenses(
@@ -571,7 +571,7 @@ export class HostelsApi {
     params?: Record<string, string>,
   ): Observable<{ items: ExpenseListItem[]; total: number }> {
     return this.api
-      .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { page_size: '200', ...params })
+      .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { limit: '200', ...params })
       .pipe(
         map((r) => {
           const rows = r.expenses ?? r.data ?? [];
