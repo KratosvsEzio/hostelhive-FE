@@ -81,7 +81,7 @@
           [columns]="tableCols"
           [rows]="staffRecords()"
           [rowId]="staffRowId"
-          [showActions]="true"
+          [showActions]="canActOnStaff()"
           [pagination]="paginationConf()"
           [actionActive]="staffActionActive"
           (rowAction)="openMenu($any($event.row), $event.event)"
@@ -113,7 +113,7 @@
           Edit
         </button>
         @if (menuMember.isManager) {
-          <button *hhHasPermission="'host:Hostel:remove_manager'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptRemoveManager(menuMember)">
+          <button *hhHasPermission="['host:Hostel:remove_manager', 'host:Staff:destroy']" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptRemoveManager(menuMember)">
             <i class="ti ti-shield-off text-sm text-ink-400" aria-hidden="true"></i>
             Remove manager role
           </button>
