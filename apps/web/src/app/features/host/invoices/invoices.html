@@ -139,18 +139,18 @@
     @if (menuInv(); as inv) {
       @if (menuPos(); as pos) {
         <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)">
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:update'">
             <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
             Edit
           </button>
           @if (inv.status !== 'paid') {
-            <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)">
+            <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)" *hhHasPermission="'host:RenterBill:mark_as_paid'">
               <i class="ti ti-circle-check text-sm text-ok" aria-hidden="true"></i>
               Mark as paid
             </button>
           }
           <hh-context-menu-divider />
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="deleteInvoice(inv, $event)">
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="deleteInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:destroy'">
             <i class="ti ti-trash text-sm" aria-hidden="true"></i>
             Delete
           </button>

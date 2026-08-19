@@ -1,10 +1,10 @@
 <app-dashboard-layout label="Rooms">
   <div hhActions class="flex shrink-0 items-center gap-2">
     <!-- Icon-only below sm so the pair fits a 320px header without wrapping; labels appear from sm: up. -->
-    <button hh-button variant="outlined" size="sm" [disabled]="state().subscriptionError" (click)="openBulkCreate()" aria-label="Bulk add rooms">
+    <button *hhHasPermission="'host:Room:create'" hh-button variant="outlined" size="sm" [disabled]="state().subscriptionError" (click)="openBulkCreate()" aria-label="Bulk add rooms">
       <i class="ti ti-table-import" aria-hidden="true"></i><span class="hidden sm:inline">Bulk add</span>
     </button>
-    <button hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCreate()" aria-label="Add room">
+    <button *hhHasPermission="'host:Room:create'" hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCreate()" aria-label="Add room">
       <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">Add room</span>
     </button>
   </div>
@@ -160,16 +160,16 @@
     @let menuRoom = sorted().find(r => r.id === openId);
     @if (menuRoom) {
       <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuRoom); closeMenu()">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuRoom); closeMenu()" *hhHasPermission="'host:Room:update'">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           Edit room
         </button>
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="cloneRoom(menuRoom); closeMenu()">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="cloneRoom(menuRoom); closeMenu()" *hhHasPermission="'host:Room:create'">
           <i class="ti ti-copy text-sm text-ink-400" aria-hidden="true"></i>
           Duplicate
         </button>
         <hh-context-menu-divider />
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptDeleteRoom(menuRoom)">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptDeleteRoom(menuRoom)" *hhHasPermission="'host:Room:destroy'">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
           Delete room
         </button>

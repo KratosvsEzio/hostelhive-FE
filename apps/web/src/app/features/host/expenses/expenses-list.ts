@@ -39,6 +39,7 @@ import {
   HostelsApi,
   HostPropertyStore,
 } from '@services';
+import { HasPermission } from '@core/auth';
 
 interface ListState {
   loading: boolean;
@@ -55,6 +56,7 @@ interface ListState {
   selector: 'hh-expenses-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    HasPermission,
     DecimalPipe,
     RouterLink,
     DashboardLayout,

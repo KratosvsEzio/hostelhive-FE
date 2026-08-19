@@ -44,6 +44,7 @@ import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-gro
 import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/table-configs/invoice-table-cols';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
+import { HasPermission } from '@core/auth';
 
 interface InvoiceAggs {
   utilityTotal: number;
@@ -116,6 +117,7 @@ async function rasterise(
   selector: 'hh-invoices',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    HasPermission,
     DecimalPipe,
     DashboardLayout,
     SubscriptionGate,

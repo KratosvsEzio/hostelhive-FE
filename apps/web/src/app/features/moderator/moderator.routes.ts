@@ -1,4 +1,5 @@
 ﻿import { Route } from '@angular/router';
+import { permissionGuard } from '@core/auth';
 import { StaffLayout } from '@layout/staff-shell/staff-shell';
 import { Queue } from '@features/moderator/queue/queue';
 import { Review } from '@features/moderator/review/review';
@@ -11,9 +12,9 @@ export const MODERATOR_ROUTES: Route[] = [
     component: StaffLayout,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'queue' },
-      { path: 'queue', component: Queue, title: 'Review queue — HostelHive' },
+      { path: 'queue', component: Queue, title: 'Review queue — HostelHive', canActivate: [permissionGuard('moderator:Hostel:index')] },
       { path: 'review/:id', component: Review, title: 'Listing review — HostelHive' },
-      { path: 'media', component: Media, title: 'Media queue — HostelHive' },
+      { path: 'media', component: Media, title: 'Media queue — HostelHive', canActivate: [permissionGuard('moderator:Attachment:index')] },
       { path: 'audit', component: Audit, title: 'Audit log — HostelHive' },
     ],
   },

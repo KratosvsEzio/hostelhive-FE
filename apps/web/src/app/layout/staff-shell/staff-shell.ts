@@ -7,7 +7,7 @@
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
-import { SessionStore } from '@core/auth';
+import { Permission, SessionStore } from '@core/auth';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 
 interface NavEntry {
@@ -15,27 +15,31 @@ interface NavEntry {
   icon?: string;
   link?: string;
   divider?: boolean;
+  /** Hidden unless the session holds this flag. */
+  permission?: Permission;
 }
 
 const MOD_NAV: NavEntry[] = [
-  { label: 'Review queue', icon: 'ti-inbox', link: '/moderator/queue' },
-  { label: 'Media queue', icon: 'ti-photo', link: '/moderator/media' },
+  { label: 'Review queue', icon: 'ti-inbox', link: '/moderator/queue', permission: 'moderator:Hostel:index' },
+  { label: 'Media queue', icon: 'ti-photo', link: '/moderator/media', permission: 'moderator:Attachment:index' },
 ];
 
 const ADMIN_NAV: NavEntry[] = [
-  { label: 'Contracts', icon: 'ti-file-dollar', link: '/admin/contracts' },
-  { label: 'Payments', icon: 'ti-credit-card', link: '/admin/payments' },
+  { label: 'Contracts', icon: 'ti-file-dollar', link: '/admin/contracts', permission: 'admin:Contract:index' },
+  { label: 'Payments', icon: 'ti-credit-card', link: '/admin/payments', permission: 'admin:Payment:index' },
   {
     label: 'Roles & permissions',
     icon: 'ti-shield-lock',
     link: '/admin/roles',
+    permission: 'admin:Role:index',
   },
   { divider: true },
-  { label: 'Review queue', icon: 'ti-inbox', link: '/admin/queue' },
+  { label: 'Review queue', icon: 'ti-inbox', link: '/admin/queue', permission: 'moderator:Hostel:index' },
   {
     label: 'All listings',
     icon: 'ti-building-community',
     link: '/admin/listings',
+    permission: 'admin:Hostel:index',
   },
 ];
 
@@ -74,9 +78,17 @@ export class StaffLayout {
     },
   );
 
-  protected readonly nav = computed(() =>
-    this.path().startsWith('/moderator') ? MOD_NAV : ADMIN_NAV,
-  );
+  protected readonly nav = computed(() => {
+    const entries = this.path().startsWith('/moderator') ? MOD_NAV : ADMIN_NAV;
+    // Same rule as the host shell: a destination is listed only when the session holds the
+    // action it needs, so the two consoles never advertise a page that 403s on arrival.
+    const visible = entries.filter(
+      (e) => !e.permission || this.session.hasPermission(e.permission),
+    );
+    return visible.filter(
+      (e, i) => !e.divider || visible.slice(i + 1).some((n) => !n.divider),
+    );
+  });
   protected readonly roleLabel = computed(() =>
     (this.session.role() ?? '').replace('-', ' '),
   );

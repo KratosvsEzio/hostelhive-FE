@@ -40,6 +40,7 @@ import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
+import { HasPermission } from '@core/auth';
 
 /** The grid renders every room at once, so fetch a large single page instead of paginating. */
 const ROOMS_LIMIT = 1000;
@@ -168,6 +169,7 @@ function floorOrder(floor: string): number {
   selector: 'hh-rooms',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    HasPermission,
     DecimalPipe,
     DashboardLayout,
     SubscriptionGate,

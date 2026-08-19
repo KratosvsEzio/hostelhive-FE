@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService, PROPERTY_SCOPED_ROLES, SessionStore } from '@core/auth';
+import { AuthService, SessionStore } from '@core/auth';
 import { HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
@@ -42,9 +42,9 @@ const STATUS_CLASS: Record<ListingStatus, string> = {
 export class HostMore {
   protected readonly session = inject(SessionStore);
   protected readonly propertyStore = inject(HostPropertyStore);
-  /** Only a host owns hostels — managers and wardens are scoped to one they do not own. */
+  /** Permission-driven, not role-driven: the API decides who may create a hostel. */
   protected readonly canCreateHostel = computed(
-    () => !this.session.hasRole(...PROPERTY_SCOPED_ROLES),
+    () => this.session.hasPermission('core:Hostel:create'),
   );
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
