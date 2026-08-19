@@ -151,28 +151,13 @@
                 }
               </div>
               <div>
-                <label class="mb-1 block text-xs font-medium text-ink-600"
-                  >Rate per unit</label
-                >
-                <div
-                  class="flex items-center gap-1 rounded-xl border px-3 focus-within:border-brand-400"
-                  [class.border-danger]="rateNegError()"
-                  [class.border-ink-200]="!rateNegError()"
-                >
-                  <span class="text-xs text-ink-400">Rs</span>
-                  <input
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    class="w-full py-2.5 text-sm outline-none"
-                    placeholder="0"
-                    [value]="rateInput()"
-                    (input)="rateInput.set($any($event.target).value)"
-                  />
-                </div>
-                @if (rateNegError()) {
-                  <p class="mt-1 text-xs text-danger">Min value is 0</p>
-                }
+                <hh-money-input
+                  label="Rate per unit"
+                  placeholder="0"
+                  [value]="+rateInput() || 0"
+                  (valueChange)="rateInput.set($event ? $any($event).toString() : '')"
+                  [error]="rateNegError() ? 'Min value is 0' : ''"
+                />
               </div>
             </div>
             <div class="mt-2.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -194,21 +179,11 @@
               </div>
             </div>
           } @else {
-            <label class="mb-1 block text-xs font-medium text-ink-600"
-              >Total bill for room</label
-            >
-            <div
-              class="flex items-center gap-1 rounded-xl border border-ink-200 px-3 focus-within:border-brand-400"
-            >
-              <span class="text-xs text-ink-400">Rs</span>
-              <input
-                type="number"
-                inputmode="numeric"
-                class="w-full py-2.5 text-sm outline-none"
-                [value]="totalInput()"
-                (input)="totalInput.set($any($event.target).value)"
-              />
-            </div>
+            <hh-money-input
+              label="Total bill for room"
+              [value]="+totalInput() || 0"
+              (valueChange)="totalInput.set($event ? $any($event).toString() : '')"
+            />
           }
         </div>
 

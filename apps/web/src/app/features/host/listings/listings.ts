@@ -25,6 +25,7 @@ import {
 import { HostShellApi } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { accommodationLabel } from '@util/accommodation-type';
 
 interface MenuItem {
   action: string;
@@ -137,8 +138,8 @@ export class HostListings {
     return STATUS_ICON[status];
   }
 
-  protected genderLabel(g: HostListing['gender']): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
+  protected accommodationLabelFor(g: HostListing['accommodationType']): string {
+    return accommodationLabel(g);
   }
 
   protected menuItems(status: ListingStatus): MenuItem[] {

@@ -43,7 +43,7 @@ import {
       (click)="close.emit()"
     ></button>
     <div
-      class="fixed z-50 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-lg"
+      class="fixed z-50 overflow-hidden rounded-xl border border-ink-100 bg-white p-1.5 shadow-lg"
       [style.top.px]="adjustedTop()"
       [style.right.px]="adjustedRight()"
       [style.width.px]="width()"
@@ -101,6 +101,8 @@ export class ContextMenu {
 @Component({
   selector: 'hh-context-menu-divider',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<div class="mx-3 border-t border-ink-100"></div>`,
+  // mx-1.5 + the panel’s p-1.5 keeps the rule inset 12px from the panel edge, the same as
+  // before the panel gained padding.
+  template: `<div class="mx-1.5 border-t border-ink-100"></div>`,
 })
 export class ContextMenuDivider {}

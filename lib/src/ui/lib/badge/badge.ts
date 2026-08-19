@@ -9,6 +9,7 @@ export type BadgeVariant =
   | 'boys'
   | 'girls'
   | 'coliving'
+  | 'backpacker'
   | 'verified'
   | 'neutral';
 
@@ -18,6 +19,7 @@ const PILL: Record<Exclude<BadgeVariant, 'verified'>, string> = {
   boys: 'border-boys bg-white text-boys',
   girls: 'border-girls bg-white text-girls',
   coliving: 'border-brand-400 bg-white text-brand-600',
+  backpacker: 'border-backpacker bg-white text-backpacker',
   neutral: 'border-ink-300 bg-white text-ink-700',
 };
 
@@ -25,11 +27,12 @@ const DEFAULT_ICON: Record<BadgeVariant, string> = {
   boys: 'ti-gender-male',
   girls: 'ti-gender-female',
   coliving: 'ti-users',
+  backpacker: 'ti-backpack',
   verified: 'ti-rosette-discount-check',
   neutral: '',
 };
 
-/** Gender / trust / category badge. `<hh-badge variant="boys">Boys</hh-badge>` */
+/** AccommodationType / trust / category badge. `<hh-badge variant="boys">Boys</hh-badge>` */
 @Component({
   selector: 'hh-badge',
   changeDetection: ChangeDetectionStrategy.OnPush,

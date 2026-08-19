@@ -6,10 +6,11 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService, SessionStore } from '@core/auth';
+import { AuthService, PROPERTY_SCOPED_ROLES, SessionStore } from '@core/auth';
 import { HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { ListingStatus, PropertyGender } from '@hostelhive/data-access';
+import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
+import { accommodationLabel } from '@util/accommodation-type';
 
 const STATUS_LABEL: Record<ListingStatus, string> = {
   published: 'Live',
@@ -41,6 +42,10 @@ const STATUS_CLASS: Record<ListingStatus, string> = {
 export class HostMore {
   protected readonly session = inject(SessionStore);
   protected readonly propertyStore = inject(HostPropertyStore);
+  /** Only a host owns hostels — managers and wardens are scoped to one they do not own. */
+  protected readonly canCreateHostel = computed(
+    () => !this.session.hasRole(...PROPERTY_SCOPED_ROLES),
+  );
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -70,11 +75,11 @@ export class HostMore {
     return STATUS_CLASS[p.status] ?? 'bg-ink-100 text-ink-500';
   }
 
-  protected genderLabel(g: PropertyGender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'girls' ? 'Girls' : 'Boys';
+  protected genderLabel(g: PropertyAccommodationType): string {
+    return accommodationLabel(g);
   }
 
-  protected genderClass(g: PropertyGender): string {
+  protected genderClass(g: PropertyAccommodationType): string {
     if (g === 'boys') return 'bg-boys/10 text-boys';
     if (g === 'girls') return 'bg-girls/10 text-girls';
     return 'bg-tint-purple text-ink-600';

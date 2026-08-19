@@ -48,7 +48,7 @@ describe('errorInterceptor', () => {
   function fire(
     flush: (req: ReturnType<HttpTestingController['expectOne']>) => void,
     context?: HttpContext,
-    url: string = `${BASE}/api/x`,
+    url = `${BASE}/api/x`,
   ): ApiError {
     let caught: ApiError | undefined;
     http

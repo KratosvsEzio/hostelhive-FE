@@ -7,12 +7,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
-import { AMENITIES, Gender } from '@hostelhive/data-access';
-import { Avatar, Badge, Button, EmptyState, Skeleton } from '@hostelhive/ui';
+import { AMENITIES, AccommodationType } from '@hostelhive/data-access';
+import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
@@ -20,6 +20,10 @@ import { SessionStore } from '@core/auth';
 import { MobileApp } from '@core/mobile-app';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
+import { accommodationLabel } from '@util/accommodation-type';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { ApiDate } from '@util/api-date';
 
 interface ViewState {
   loading: boolean;
@@ -66,7 +70,7 @@ const ROOM_TINTS = [
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     RouterLink,
     Avatar,
@@ -75,6 +79,9 @@ const ROOM_TINTS = [
     EmptyState,
     Skeleton,
     StaticMap,
+    TooltipFixed,
+    CurrencySymbolPipe,
+    CurrencyNamePipe,
   ],
   templateUrl: './listing-detail.html',
 })
@@ -128,6 +135,16 @@ export class ListingDetail {
   /** Indexes of review comments expanded ("Show more"). Keyed by position because the API
    *  returns the hostel id on every review, so review.id is not unique. */
   protected readonly expandedReviews = signal<ReadonlySet<number>>(new Set());
+
+  /** How many reviews the in-page section shows before deferring to the modal. */
+  protected readonly previewReviewCount = 6;
+
+  /**
+   * Expansion state for the in-page preview. Deliberately separate from
+   * {@link expandedReviews}: closeReviews() clears the modal's set, which would otherwise
+   * collapse whatever the user had opened on the page behind it.
+   */
+  protected readonly expandedPreview = signal<ReadonlySet<number>>(new Set());
 
   /** Airbnb-style header: average score + per-star distribution, derived from the real reviews. */
   protected readonly reviewStats = computed(() => {
@@ -353,6 +370,19 @@ export class ListingDetail {
     return this.expandedReviews().has(index);
   }
 
+  protected isPreviewExpanded(index: number): boolean {
+    return this.expandedPreview().has(index);
+  }
+
+  protected togglePreviewExpanded(index: number): void {
+    this.expandedPreview.update((s) => {
+      const next = new Set(s);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
   protected toggleReviewExpanded(index: number): void {
     this.expandedReviews.update((s) => {
       const next = new Set(s);
@@ -494,8 +524,8 @@ export class ListingDetail {
     return ROOM_TINTS[index % ROOM_TINTS.length];
   }
 
-  protected genderLabel(g: Gender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
+  protected genderLabel(g: AccommodationType): string {
+    return accommodationLabel(g);
   }
 
   protected initials(name: string): string {

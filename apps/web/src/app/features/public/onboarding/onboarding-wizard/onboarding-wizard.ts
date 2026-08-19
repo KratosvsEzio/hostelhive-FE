@@ -188,7 +188,7 @@ export class OnboardingWizard {
   // --- Step 1: basic info ---
   protected readonly name = signal('');
   protected readonly city = signal('Karachi');
-  protected readonly gender = signal<GenderType>('boys');
+  protected readonly accommodationType = signal<GenderType>('boys');
   protected readonly description = signal('');
 
   // --- Step 2: location ---
@@ -451,7 +451,7 @@ export class OnboardingWizard {
       step: this.step(),
       name: this.name(),
       city: this.city(),
-      gender: this.gender(),
+      gender: this.accommodationType(),
       description: this.description(),
       lat: this.lat(),
       lng: this.lng(),
@@ -809,7 +809,7 @@ export class OnboardingWizard {
   }
 
   protected setGenderType(v: string | string[] | null): void {
-    if (v === 'boys' || v === 'girls' || v === 'co-living') this.gender.set(v);
+    if (v === 'boys' || v === 'girls' || v === 'co-living') this.accommodationType.set(v);
   }
 
   protected setRoomType(v: string | string[] | null): void {
@@ -866,7 +866,7 @@ export class OnboardingWizard {
       name: this.name() || undefined,
       description: this.description() || undefined,
       nearby_landmarks: this.landmarks() || undefined,
-      gender_type: this.gender(),
+      gender_type: this.accommodationType(),
       city: this.city() || undefined,
       area: this.area() || undefined,
       state: this.province() || undefined,
@@ -920,7 +920,7 @@ export class OnboardingWizard {
         d.gender === 'girls' ||
         d.gender === 'co-living'
       )
-        this.gender.set(d.gender);
+        this.accommodationType.set(d.gender);
       if (typeof d.description === 'string')
         this.description.set(d.description);
       if (typeof d.lat === 'number') this.lat.set(d.lat);

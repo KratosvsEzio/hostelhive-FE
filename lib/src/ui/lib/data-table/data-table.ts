@@ -58,6 +58,26 @@ export interface CellComposite {
   kind: 'composite';
   primary: string;
   secondary?: string;
+  /**
+   * Tabler class (e.g. `ti-alert-triangle`) marking what the secondary line *is*, for
+   * cells where the two lines are the same kind of value and would otherwise be
+   * indistinguishable — two phone numbers, say.
+   */
+  secondaryIcon?: string;
+  /**
+   * Colour utility for the icon, e.g. `text-warn`. Left to the caller because the
+   * meaning is the caller’s: the table has no way to know whether a marker is a
+   * caution, an error, or neutral. Defaults to the secondary text colour.
+   */
+  secondaryIconClass?: string;
+  /** Screen-reader text for that icon. The icon alone conveys nothing without it. */
+  secondaryLabel?: string;
+  /**
+   * Small pill beside the primary line — for something the row *is* ("Manager") rather than
+   * a value it holds. `class` overrides the default brand tint. Optional: without it the cell
+   * renders exactly as before.
+   */
+  badge?: { text: string; class?: string };
 }
 
 export interface CellLink {
@@ -235,9 +255,25 @@ export interface PaginationConfig {
                           }
                           <div>
                             @if (cell.kind === 'composite') {
-                              <p class="font-medium text-ink-900">{{ $any(cell).primary }}</p>
+                              <p class="flex items-center gap-1.5 font-medium text-ink-900">
+                                <span class="min-w-0 truncate">{{ $any(cell).primary }}</span>
+                                @if ($any(cell).badge; as badge) {
+                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
+                                }
+                              </p>
                               @if ($any(cell).secondary) {
-                                <p class="text-xs text-ink-400">{{ $any(cell).secondary }}</p>
+                                <p
+                                  class="text-xs text-ink-400"
+                                  [class.flex]="$any(cell).secondaryIcon"
+                                  [class.items-center]="$any(cell).secondaryIcon"
+                                  [class.gap-1]="$any(cell).secondaryIcon"
+                                >
+                                  @if ($any(cell).secondaryIcon) {
+                                    <i class="ti {{ $any(cell).secondaryIcon }} {{ $any(cell).secondaryIconClass }} shrink-0 text-[11px]" aria-hidden="true"></i>
+                                    <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
+                                  }
+                                  {{ $any(cell).secondary }}
+                                </p>
                               }
                             } @else {
                               <span>{{ $any(cell).value ?? $any(cell).primary ?? $any(cell).text }}</span>
@@ -283,9 +319,25 @@ export interface PaginationConfig {
 
                           @case ('composite') {
                             <div>
-                              <p class="font-medium text-ink-900">{{ $any(cell).primary }}</p>
+                              <p class="flex items-center gap-1.5 font-medium text-ink-900">
+                                <span class="min-w-0 truncate">{{ $any(cell).primary }}</span>
+                                @if ($any(cell).badge; as badge) {
+                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
+                                }
+                              </p>
                               @if ($any(cell).secondary) {
-                                <p class="text-xs text-ink-400">{{ $any(cell).secondary }}</p>
+                                <p
+                                  class="text-xs text-ink-400"
+                                  [class.flex]="$any(cell).secondaryIcon"
+                                  [class.items-center]="$any(cell).secondaryIcon"
+                                  [class.gap-1]="$any(cell).secondaryIcon"
+                                >
+                                  @if ($any(cell).secondaryIcon) {
+                                    <i class="ti {{ $any(cell).secondaryIcon }} {{ $any(cell).secondaryIconClass }} shrink-0 text-[11px]" aria-hidden="true"></i>
+                                    <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
+                                  }
+                                  {{ $any(cell).secondary }}
+                                </p>
                               }
                             </div>
                           }

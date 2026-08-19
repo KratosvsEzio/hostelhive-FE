@@ -46,13 +46,21 @@ describe('displayLabelFor', () => {
 });
 
 describe('clampCapacity', () => {
-  it('holds the bounds and floors fractions', () => {
+  it('raises anything below one, and floors fractions', () => {
     expect(clampCapacity(0)).toBe(1);
-    expect(clampCapacity(10)).toBe(9);
+    expect(clampCapacity(-3)).toBe(1);
     expect(clampCapacity(4.7)).toBe(4);
   });
 
-  it('keeps an in-range integer untouched', () => {
+  it('leaves a whole number of beds untouched', () => {
     expect(clampCapacity(5)).toBe(5);
+  });
+
+  // A dormitory is whatever the host says it is — a backpacker dorm of 12–20 beds is
+  // routine, and the old ceiling of 9 silently truncated it.
+  it('does not cap a large dormitory', () => {
+    expect(clampCapacity(10)).toBe(10);
+    expect(clampCapacity(20)).toBe(20);
+    expect(clampCapacity(250)).toBe(250);
   });
 });

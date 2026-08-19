@@ -311,15 +311,27 @@ describe('OnboardingWizard', () => {
       expect(vm.newRoomCapacity()).toBe(1);
     });
 
-    it('clamps and floors a committed capacity into 1..9', () => {
+    it('floors a committed capacity and never drops below one', () => {
+      const { vm } = render();
+      vm.newRoomType.set('Dormitory');
+
+      vm.setNewRoomCapacity('4.7');
+      expect(vm.newRoomCapacity()).toBe(4);
+
+      vm.setNewRoomCapacity('0');
+      expect(vm.newRoomCapacity()).toBe(1);
+    });
+
+    // A backpacker dorm is routinely 12–20 beds; the old ceiling of 9 truncated it.
+    it('accepts a dormitory larger than nine beds', () => {
       const { vm } = render();
       vm.newRoomType.set('Dormitory');
 
       vm.setNewRoomCapacity('12');
-      expect(vm.newRoomCapacity()).toBe(9);
+      expect(vm.newRoomCapacity()).toBe(12);
 
-      vm.setNewRoomCapacity('4.7');
-      expect(vm.newRoomCapacity()).toBe(4);
+      vm.setNewRoomCapacity('30');
+      expect(vm.newRoomCapacity()).toBe(30);
     });
 
     it('keeps the last good value for empty or non-numeric input', () => {

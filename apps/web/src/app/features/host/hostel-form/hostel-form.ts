@@ -27,6 +27,7 @@ import {
 import {
   ACCEPT_ATTR,
   Button,
+  CollapsibleCard,
   Dropdown,
   DropdownOption,
   Input,
@@ -41,6 +42,8 @@ import {
 import { RoomTypeRow } from '../../moderator/review/room-type-row';
 import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/maps';
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
+import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
+import { CurrencySelect } from '@app/shared/currency/currency-select';
 
 function toLabel(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -82,6 +85,7 @@ interface EditableHostel {
   landmarks: string;
   propertyType: string;
   genderType: string;
+  currency: string;
   offerIds: string[];
   email: string;
   phone: string;
@@ -94,11 +98,28 @@ interface EditableHostel {
   address1: string;
 }
 
+/** The collapsible sections of the profile, in the order they appear. */
+type FormSection = 'details' | 'photos' | 'amenities' | 'roomTypes' | 'location';
+
+/**
+ * Which validation keys live in which section. Used to force a section open when it holds
+ * an error being shown — otherwise "fix the errors below" can point at a collapsed field
+ * the host cannot see.
+ */
+const SECTION_ERROR_KEYS: Record<FormSection, readonly string[]> = {
+  details: ['name', 'city', 'email', 'phone', 'description'],
+  photos: [],
+  amenities: [],
+  roomTypes: ['rooms'],
+  location: ['location'],
+};
+
 @Component({
   selector: 'hh-hostel-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Button,
+    CollapsibleCard,
     Dropdown,
     Input,
     PhoneInput,
@@ -108,6 +129,7 @@ interface EditableHostel {
     RichText,
     RoomTypeRow,
     StatusPill,
+    CurrencySelect,
   ],
   templateUrl: './hostel-form.html',
 })
@@ -125,7 +147,7 @@ export class HostelForm {
 
   protected readonly acceptAttr = ACCEPT_ATTR;
   protected readonly cityTypes = ['(cities)'];
-  protected readonly ids = { name: 'hh-form-name', landmarks: 'hh-form-landmarks' };
+  protected readonly ids = { name: 'hh-form-name' };
 
   // ── form options (type / gender / labels) ──
   private readonly formOptions = toSignal(
@@ -166,6 +188,7 @@ export class HostelForm {
   protected readonly landmarks = signal('');
   protected readonly propertyType = signal('');
   protected readonly genderType = signal('');
+  protected readonly currency = signal(DEFAULT_CURRENCY_CODE);
   protected readonly email = signal('');
   protected readonly phone = signal('');
 
@@ -250,6 +273,7 @@ export class HostelForm {
       landmarks: d.nearby_landmarks ?? '',
       propertyType: d.property_type ?? '',
       genderType: d.gender_type ?? '',
+      currency: d.currency ?? DEFAULT_CURRENCY_CODE,
       offerIds: [...offerIds].sort(),
       email: '',
       phone: d.primary_phone ?? '',
@@ -269,6 +293,7 @@ export class HostelForm {
     landmarks: this.landmarks(),
     propertyType: this.propertyType(),
     genderType: this.genderType(),
+    currency: this.currency(),
     offerIds: [...this.selectedOfferIds()].sort(),
     email: this.email(),
     phone: this.phone(),
@@ -312,6 +337,36 @@ export class HostelForm {
   });
   readonly isValid = computed(() => Object.keys(this.fieldErrors()).length === 0);
 
+  /** Sections the host has collapsed. Empty by default, so everything starts expanded. */
+  private readonly collapsedSections = signal<ReadonlySet<FormSection>>(
+    new Set<FormSection>(),
+  );
+
+  /**
+   * A section is open unless the host collapsed it — except while it holds a validation
+   * error being shown, which forces it open. A hidden error is an error the host cannot
+   * act on, and the save button would just keep refusing with nothing visible to fix.
+   */
+  protected sectionOpen(section: FormSection): boolean {
+    if (this.sectionHasError(section)) return true;
+    return !this.collapsedSections().has(section);
+  }
+
+  protected setSectionOpen(section: FormSection, open: boolean): void {
+    this.collapsedSections.update((current) => {
+      const next = new Set(current);
+      if (open) next.delete(section);
+      else next.add(section);
+      return next;
+    });
+  }
+
+  private sectionHasError(section: FormSection): boolean {
+    if (!this.showValidation()) return false;
+    const errors = this.fieldErrors();
+    return SECTION_ERROR_KEYS[section].some((key) => !!errors[key]);
+  }
+
   constructor() {
     effect(() => {
       const d = this.initialData();
@@ -321,6 +376,7 @@ export class HostelForm {
       this.landmarks.set(d.nearby_landmarks ?? '');
       this.propertyType.set(d.property_type ?? '');
       this.genderType.set(d.gender_type ?? '');
+      this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
       this.email.set('');
       this.phone.set(d.primary_phone ?? '');
       const lat = d.latitude != null ? Number(d.latitude) : null;
@@ -372,6 +428,9 @@ export class HostelForm {
   }
   protected setGender(v: string | string[] | null): void {
     this.genderType.set(typeof v === 'string' ? v : '');
+  }
+  protected setCurrency(v: string | string[] | null): void {
+    if (typeof v === 'string' && v) this.currency.set(v);
   }
 
   // ── location ──
@@ -568,6 +627,7 @@ export class HostelForm {
       description: snap.description,
       property_type: snap.propertyType as HostelInput['property_type'],
       gender_type: snap.genderType as HostelInput['gender_type'],
+      currency: snap.currency,
       nearby_landmarks: snap.landmarks || undefined,
       offer_ids: snap.offerIds,
       total_rooms: currentRts.length || 1,

@@ -39,7 +39,7 @@ export class OnboardingPayment {
   protected readonly draftId = signal<number | null>(null);
   protected readonly hostelName = signal('');
   protected readonly city = signal('');
-  protected readonly gender = signal<GenderType>('boys');
+  protected readonly accommodationType = signal<GenderType>('boys');
   protected readonly roomCount = signal(0);
   protected readonly selectedProductIds = signal<number[]>([]);
 
@@ -75,7 +75,7 @@ export class OnboardingPayment {
       if (typeof d['name'] === 'string') this.hostelName.set(d['name']);
       if (typeof d['city'] === 'string') this.city.set(d['city']);
       if (d['gender'] === 'boys' || d['gender'] === 'girls' || d['gender'] === 'co-living')
-        this.gender.set(d['gender']);
+        this.accommodationType.set(d['gender']);
       if (Array.isArray(d['rooms'])) this.roomCount.set((d['rooms'] as unknown[]).length);
       if (Array.isArray(d['selectedProductIds']))
         this.selectedProductIds.set(
@@ -143,12 +143,12 @@ export class OnboardingPayment {
   }
 
   protected genderLabel(): string {
-    const g = this.gender();
+    const g = this.accommodationType();
     return g === 'co-living' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
   }
 
   protected genderBadgeVariant(): BadgeVariant {
-    const g = this.gender();
+    const g = this.accommodationType();
     return g === 'co-living' ? 'coliving' : g;
   }
 }

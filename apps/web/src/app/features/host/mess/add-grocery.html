@@ -105,12 +105,11 @@
       <!-- Total amount input -->
       <div class="mt-5 border-t border-ink-100 pt-5">
         <div class="max-w-xs">
-          <hh-input
-            label="Total amount (Rs) *"
-            type="number"
+          <hh-money-input
+            label="Total amount *"
             placeholder="0"
-            [value]="billTotal()"
-            (valueChange)="onAmountChange($event)"
+            [value]="+billTotal() || 0"
+            (valueChange)="onAmountChange($event ? $any($event).toString() : '')"
             [error]="amountError()"
           />
         </div>

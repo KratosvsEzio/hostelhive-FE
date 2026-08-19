@@ -27,11 +27,13 @@ import {
   UtilityType,
   UtilityTypeMeta,
 } from '@hostelhive/data-access';
+import { MoneyInput } from '@app/shared/money-input/money-input';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { splitByDays, SplitRow } from '../split';
+import { localToday } from '@util/api-date';
 
 interface ViewState {
   loading: boolean;
@@ -59,6 +61,7 @@ const TONES = ['sky', 'cream', 'mint', 'brand'] as const;
     Skeleton,
     EmptyState,
     ErrorState,
+    MoneyInput,
   ],
   templateUrl: './add-bill.html',
 })
@@ -83,7 +86,7 @@ export class AddBill {
   protected readonly dueDateInput = signal<string | null>((() => {
     const d = new Date();
     d.setDate(d.getDate() + 5);
-    return d.toISOString().slice(0, 10);
+    return localToday(d);
   })());
   protected readonly submitting = signal(false);
   protected readonly submitError = signal(false);
@@ -416,11 +419,12 @@ export class AddBill {
 
     const isElec = this.isElectricity();
     const { year, month } = this.selectedMonth();
-    const issuedDate = new Date(year, month, 1).toISOString();
+    // Date-only, matching what the invoice form sends for these same fields. A full
+    // toISOString() would convert the local day to UTC and land the bill a day early for
+    // anyone east of UTC — 1 Sep in +05:00 serialises as 2026-08-31T19:00Z.
+    const issuedDate = localToday(new Date(year, month, 1));
     const dueDateInput = this.dueDateInput();
-    const dueDate = dueDateInput != null
-      ? new Date(dueDateInput).toISOString()
-      : new Date(year, month + 1, 0).toISOString();
+    const dueDate = dueDateInput ?? localToday(new Date(year, month + 1, 0));
     const rate = isElec ? (Number(this.rateInput()) || 0) : 0;
 
     const body = {

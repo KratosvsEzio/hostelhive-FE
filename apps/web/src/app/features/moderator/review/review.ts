@@ -373,7 +373,7 @@ export class Review {
     const errs: string[] = [];
     if (!this.name().trim()) errs.push('Property name is required.');
     if (!this.propertyType()) errs.push('Type is required.');
-    if (!this.genderType()) errs.push('Gender is required.');
+    if (!this.genderType()) errs.push('AccommodationType is required.');
     if (!Review.hasContent(this.description()))
       errs.push('Description is required.');
     if (this.photos().filter((p) => p.decision !== 'rejected').length === 0)

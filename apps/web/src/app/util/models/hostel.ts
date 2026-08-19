@@ -11,7 +11,7 @@
 //
 // Enums: the Rails enum getters return the *slug strings*, so both shapes carry
 // `gender_type: 'co-living'|'boys'|'girls'` and `property_type` as a slug — NOT the integer.
-// (The seeker-facing `Gender` in ./listing uses 'coliving'; the API slug is hyphenated.)
+// (The seeker-facing `AccommodationType` in ./listing uses 'coliving'; the API slug is hyphenated.)
 
 /** Hostel gender enum slugs (Rails: { "co-living": 0, boys: 1, girls: 2 }). */
 export type HostelGenderType = 'co-living' | 'boys' | 'girls';
@@ -154,6 +154,8 @@ export interface HostelDetail {
   longitude: number | string | null;
   min_price: number;
   max_price: number;
+  /** ISO-4217 code the hostel's prices are quoted in (e.g. 'PKR', 'USD'). */
+  currency?: string | null;
   primary_phone: string;
   secondary_phone?: string | null;
   nearby_landmarks?: string | null;
@@ -316,6 +318,8 @@ export interface HostelInput {
   longitude?: number | string;
   min_price?: number;
   max_price?: number;
+  /** ISO-4217 currency code the hostel's prices are quoted in. */
+  currency?: string;
   primary_phone?: string;
   secondary_phone?: string;
   nearby_landmarks?: string;

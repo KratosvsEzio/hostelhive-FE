@@ -5,7 +5,7 @@ import { HostShellApi } from './host-shell-api';
 // which imports AuthApi from `@services` — routing this through it would form a @services↔@core/auth
 // import cycle. `session-store.ts` itself imports nothing from @services, so the direct path is safe.
 import { SessionStore } from '@app/core/auth/session-store';
-import { ListingStatus, PropertyGender } from '@hostelhive/data-access';
+import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 
 export interface PropertyEntry {
   id: string;
@@ -13,7 +13,7 @@ export interface PropertyEntry {
   status: ListingStatus;
   area: string;
   city: string;
-  gender: PropertyGender;
+  accommodationType: PropertyAccommodationType;
 }
 
 const STORAGE_KEY = 'hh_property';
@@ -67,6 +67,10 @@ export class HostPropertyStore {
    * fresh; cancels any in-flight fetch first so overlapping entries can't race to a stale result.
    */
   load(): void {
+    // Back to "not loaded" for the duration of the fetch: the route guards wait on this
+    // signal, and leaving it true lets them resolve against the previous list before the new
+    // response lands.
+    this.loaded.set(false);
     this.loadSub?.unsubscribe();
     this.loadSub = this.api.listings().subscribe({
       next: (data) => {
@@ -76,7 +80,7 @@ export class HostPropertyStore {
           status: l.status,
           area: l.area,
           city: l.city,
-          gender: l.gender,
+          accommodationType: l.accommodationType,
         }));
         this.properties.set(entries);
         const saved = this.selected();

@@ -189,6 +189,22 @@ function toDate(raw: string | null | undefined): string {
   return raw.slice(0, 10);
 }
 
+/**
+ * Wall-clock time-of-day out of an API timestamp, or '' when it carries none.
+ *
+ * String-sliced rather than parsed through `new Date(raw)` on purpose: the API round-trips
+ * the same naive wall-clock it was handed, so constructing a Date would apply a timezone
+ * shift the value never had and move 18:30 to a different hour. Same reasoning as `toDate`.
+ */
+function toTimeOfDay(raw: string | null | undefined): string {
+  if (!raw || raw[10] !== 'T') return '';
+  const hhmm = raw.slice(11, 16);
+  if (hhmm.length !== 5 || hhmm[2] !== ':') return '';
+  const h = Number(hhmm.slice(0, 2));
+  const m = Number(hhmm.slice(3, 5));
+  return h >= 0 && h <= 23 && m >= 0 && m <= 59 ? hhmm : '';
+}
+
 function toTenant(r: ApiRenter): Tenant {
   const rawName = r.full_name ?? r.name ?? '';
   const initials =
@@ -217,8 +233,10 @@ function toTenant(r: ApiRenter): Tenant {
     roomId: String(r.room?.id ?? r.room_id ?? ''),
     roomNumber: r.room_number ?? r.room?.room_number ?? '—',
     joined: toDate(r.move_in_date ?? r.joining_date ?? r.check_in_date),
+    joinedTime: toTimeOfDay(r.move_in_date ?? r.joining_date ?? r.check_in_date) || undefined,
     checkedOut: toDate(r.move_out_date ?? r.check_out_date) || undefined,
     leaveDate: toDate(r.leave_date) || undefined,
+    leaveTime: toTimeOfDay(r.leave_date) || undefined,
     rent: Number(r.rent_amount ?? r.rent ?? 0),
     deposit: Number(r.advance_deposit ?? r.deposit ?? 0),
     messCharges: r.mess_charges != null ? Number(r.mess_charges) : undefined,
@@ -578,8 +596,9 @@ export class HostOpsApi {
       leave_date?: string;
       rent: string;
       address: string;
-      billing_due_date: number;
-      billing_date: number;
+      // Absent for a nightly (backpacker) stay, which has no day-of-month cycle.
+      billing_due_date?: number;
+      billing_date?: number;
       cnic_number?: string;
       avatar_id?: string;
       cnic_front_id?: string;

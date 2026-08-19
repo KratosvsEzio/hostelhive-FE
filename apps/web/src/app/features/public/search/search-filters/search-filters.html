@@ -20,12 +20,12 @@
     }
   </div>
 
-  <!-- Gender quick-select pills -->
+  <!-- AccommodationType quick-select pills -->
   @for (g of genderPills; track g.value) {
     <button
       hh-chip
       type="button"
-      [active]="gender() === g.value"
+      [active]="accommodationType() === g.value"
       (click)="toggleGender(g.value)"
     ><i class="ti ti-{{ g.icon }} text-[13px]"></i>{{ g.label }}</button>
   }

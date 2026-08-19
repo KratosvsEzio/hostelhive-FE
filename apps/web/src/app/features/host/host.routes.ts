@@ -29,6 +29,8 @@ import { MovementDetail } from './overview/movement-detail/movement-detail';
 import { OccupancyDetail } from './overview/occupancy-detail/occupancy-detail';
 
 import { HostPropertyStore, SubscriptionStore } from '@services';
+import { PROPERTY_SCOPED_ROLES, SessionStore } from '@core/auth';
+import { NotificationService } from '@core/notification.service';
 
 import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
@@ -39,17 +41,33 @@ import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
  */
 const hostRootRedirect: CanActivateFn = () => {
   const store = inject(HostPropertyStore);
+  const session = inject(SessionStore);
   const router = inject(Router);
+  const notifications = inject(NotificationService);
 
   const target = (): UrlTree => {
     const props = store.properties();
-    if (!props.length) return router.parseUrl('/host/hostels/new');
+    if (!props.length) {
+      // A manager or warden does not own hostels — they are attached to one by its owner. Say
+      // so plainly rather than dropping them into a creation form they cannot submit.
+      if (session.hasRole(...PROPERTY_SCOPED_ROLES)) {
+        notifications.info(
+          'No hostel assigned',
+          'You are not part of any hostel yet. Ask the owner to add you to theirs.',
+        );
+        return router.parseUrl('/');
+      }
+      return router.parseUrl('/host/hostels/new');
+    }
     const sel = store.selected();
     const id = sel && props.some((p) => p.id === sel) ? sel : props[0].id;
     return router.parseUrl(`/host/${id}`);
   };
 
-  if (store.loaded()) return target();
+  // An empty cached list is not a reason to skip the fetch. `loaded` is sticky and the error
+  // path sets it too, so a single failed or empty response would otherwise pin the user to
+  // create-hostel for the rest of the session without ever calling the API again.
+  if (store.loaded() && store.properties().length) return target();
   store.load();
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(target));
 };
@@ -63,9 +81,13 @@ const hostRootRedirect: CanActivateFn = () => {
 const createHostelGate: CanActivateFn = () => {
   const store = inject(HostPropertyStore);
   const subs = inject(SubscriptionStore);
+  const session = inject(SessionStore);
   const router = inject(Router);
 
   const check = (): Observable<boolean | UrlTree> => {
+    // Managers and wardens do not own hostels and cannot create one. Routed via `/host` so
+    // the "no hostel assigned" message lives in exactly one place.
+    if (session.hasRole(...PROPERTY_SCOPED_ROLES)) return of(router.parseUrl('/host'));
     const props = store.properties();
     if (!props.length) return of(true);
     const sel = store.selected();
@@ -77,7 +99,7 @@ const createHostelGate: CanActivateFn = () => {
     return subs.isLoadedFor(id) ? of(decide()) : subs.load(id).pipe(map(decide));
   };
 
-  if (store.loaded()) return check();
+  if (store.loaded() && store.properties().length) return check();
   store.load();
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), switchMap(check));
 };
@@ -102,7 +124,13 @@ export const HOST_ROUTES: Route[] = [
       { path: 'profile', component: HostelProfile, title: 'Hostel profile — HostelHive' },
       // Mobile-app "More" tab (bottom tab bar) — the destinations that don't fit in the tabs.
       { path: 'more', component: HostMore, title: 'More — HostelHive' },
-      { path: 'team', component: HostTeam, title: 'Team & staff — HostelHive' },
+      {
+        path: 'team',
+        children: [
+          { path: '', pathMatch: 'full', component: HostTeam, title: 'Team & staff — HostelHive' },
+          { path: 'edit/:staffId', component: HostTeam, title: 'Edit staff — HostelHive' },
+        ],
+      },
       {
         path: 'rooms',
         children: [

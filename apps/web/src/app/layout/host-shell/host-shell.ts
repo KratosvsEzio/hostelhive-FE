@@ -15,9 +15,11 @@ import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { SubscriptionLoading } from '../components/subscription-loading/subscription-loading';
 import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
+import { PROPERTY_SCOPED_ROLES, SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
 import { Button, Dropdown, DropdownOption, StatusTone } from '@hostelhive/ui';
-import { ListingStatus, PropertyGender } from '@hostelhive/data-access';
+import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
+import { accommodationLabel } from '@util/accommodation-type';
 
 interface NavEntry {
   label?: string;
@@ -54,6 +56,11 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 })
 export class HostLayout {
   protected readonly drawer = inject(ConsoleDrawer);
+  private readonly session = inject(SessionStore);
+  /** Only a host owns hostels — managers and wardens are scoped to one they do not own. */
+  protected readonly canCreateHostel = computed(
+    () => !this.session.hasRole(...PROPERTY_SCOPED_ROLES),
+  );
   protected readonly propertyStore = inject(HostPropertyStore);
   private readonly subStore = inject(SubscriptionStore);
   private readonly notifications = inject(NotificationService);
@@ -204,8 +211,8 @@ export class HostLayout {
       subtitle: `${p.area}, ${p.city}`,
       statusTone: PILL_TONE[p.status],
       statusLabel: PILL_LABEL[p.status],
-      suffixBadge: this.genderLabel(p.gender),
-      suffixBadgeClass: this.genderPillClass(p.gender),
+      suffixBadge: this.genderLabel(p.accommodationType),
+      suffixBadgeClass: this.genderPillClass(p.accommodationType),
     }))
   );
 
@@ -221,11 +228,11 @@ export class HostLayout {
     void this.router.navigate(['/host', value, ...(page ? page.split('/') : [])]);
   }
 
-  private genderLabel(gender: PropertyGender): string {
-    return gender === 'coliving' ? 'Co-living' : gender === 'girls' ? 'Girls' : 'Boys';
+  private genderLabel(gender: PropertyAccommodationType): string {
+    return accommodationLabel(gender);
   }
 
-  private genderPillClass(gender: PropertyGender): string {
+  private genderPillClass(gender: PropertyAccommodationType): string {
     if (gender === 'boys')  return 'bg-boys/10 text-boys';
     if (gender === 'girls') return 'bg-girls/10 text-girls';
     return 'bg-tint-purple text-ink-600';

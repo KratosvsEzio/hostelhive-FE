@@ -14,6 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { TimePicker } from '../time-picker/time-picker';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -26,6 +27,13 @@ const MONTHS_ABBR = [
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const pad = (n: number) => String(n).padStart(2, '0');
+
+/** Local today as YYYY-MM-DD. Built from local parts, not toISOString(), which is UTC
+ *  and lands on the previous day for any positive-offset zone before 05:00. */
+function todayIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 interface DayCell {
   day: number;
@@ -40,9 +48,32 @@ interface MonthView {
   cells: (DayCell | null)[];
 }
 
+/** Date part only — a `YYYY-MM-DDTHH:mm` value parses as its day, never NaN. */
+function datePart(iso?: string | null): string {
+  return iso ? iso.slice(0, 10) : '';
+}
+
+/**
+ * `14:30` -> `2:30 PM`. Mirrors hh-time-picker’s own label formatting so the closed
+ * trigger reads the same way as the panel the user picked it in.
+ */
+function timeLabel(hhmm: string): string {
+  const [hs, ms] = hhmm.split(':');
+  const h24 = Number(hs);
+  const minute = Number(ms);
+  if (!Number.isFinite(h24) || !Number.isFinite(minute)) return '';
+  const h12 = ((h24 + 11) % 12) + 1;
+  return `${h12}:${pad(minute)} ${h24 < 12 ? 'AM' : 'PM'}`;
+}
+
+/** `HH:mm` out of a datetime value, or '' when it carries none. */
+function timePart(iso?: string | null): string {
+  return iso && iso[10] === 'T' ? iso.slice(11, 16) : '';
+}
+
 function parseMs(iso?: string | null): number | null {
   if (!iso) return null;
-  const [y, m, d] = iso.split('-').map(Number);
+  const [y, m, d] = datePart(iso).split('-').map(Number);
   if (!y || !m || !d) return null;
   return new Date(y, m - 1, d).getTime();
 }
@@ -97,6 +128,7 @@ function buildMonth(
 @Component({
   selector: 'hh-date-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TimePicker],
   host: { class: 'block' },
   template: `
     <div class="relative block">
@@ -267,8 +299,19 @@ function buildMonth(
               </div>
             }
 
-            <!-- Footer -->
-            <div class="mt-3 flex items-center justify-end border-t border-ink-100 pt-3">
+            <!-- Footer. With [withTime] the time row sits here rather than in a second
+                 field, so the whole value is chosen in one panel. -->
+            <div class="mt-3 flex items-center gap-3 border-t border-ink-100 pt-3"
+                 [class.justify-between]="withTime()"
+                 [class.justify-end]="!withTime()">
+              @if (withTime()) {
+                <hh-time-picker
+                  class="min-w-0 flex-1"
+                  [value]="timeValue()"
+                  [minuteStep]="minuteStep()"
+                  (valueChange)="pickTime($event)"
+                />
+              }
               <button
                 type="button"
                 (click)="clearAndClose()"
@@ -292,6 +335,16 @@ export class DatePicker {
   readonly disabled = input(false);
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
+  /**
+   * Adds a time row to the panel and widens the emitted value to
+   * `YYYY-MM-DDTHH:mm`. Opt-in: every existing consumer is date-only, and two of them
+   * bound the calendar with [min]/[max], so widening the default would change what
+   * those bounds compare against.
+   */
+  readonly withTime = input(false);
+  /** Time used when a day is picked before any time has been chosen. */
+  readonly defaultTime = input('12:00');
+  readonly minuteStep = input(15);
 
   protected readonly weekdays = WEEKDAYS;
   protected readonly monthsAbbr = MONTHS_ABBR;
@@ -329,7 +382,17 @@ export class DatePicker {
       .subscribe(() => this.close());
   }
 
-  protected readonly displayLabel = computed(() => shortLabel(this.value()));
+  /** Trigger text. With a time, both halves show — "Aug 19, 4:30 PM". */
+  protected readonly displayLabel = computed(() => {
+    const base = shortLabel(this.value());
+    const t = this.timeValue();
+    if (!this.withTime() || !base || !t) return base;
+    const time = timeLabel(t);
+    return time ? `${base}, ${time}` : base;
+  });
+
+  /** Time half of the value, surfaced to the panel's time picker. */
+  protected readonly timeValue = computed(() => timePart(this.value()));
 
   protected readonly monthView = computed<MonthView>(() => {
     const now = new Date();
@@ -434,8 +497,20 @@ export class DatePicker {
 
   protected pick(cell: DayCell): void {
     if (cell.disabled) return;
-    this.value.set(cell.iso);
-    this.close();
+    if (!this.withTime()) {
+      this.value.set(cell.iso);
+      this.close();
+      return;
+    }
+    // Keep the panel open: with a time row the user still has a second choice to make,
+    // and closing here would force them to reopen it for every adjustment.
+    this.value.set(`${cell.iso}T${this.timeValue() || this.defaultTime()}`);
+  }
+
+  /** Time row changed. Falls back to today so a time-first pick still yields a value. */
+  protected pickTime(time: string | null): void {
+    const day = datePart(this.value()) || todayIso();
+    this.value.set(time ? `${day}T${time}` : day);
   }
 
   protected clear(event?: Event): void {

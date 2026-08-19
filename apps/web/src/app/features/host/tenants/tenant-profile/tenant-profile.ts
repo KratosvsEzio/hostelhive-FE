@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,6 +19,7 @@ import { isNetworkError } from '@util/network-error';
 import { ordinal } from '@util/ordinal';
 import { tenantRentCols, tenantUtilityCols } from '@app/util/table-configs/invoice-table-cols';
 import { TenantFormDrawer } from '../tenant-form-drawer/tenant-form-drawer';
+import { ApiDate } from '@util/api-date';
 
 type Tab = 'info' | 'rent' | 'utility';
 
@@ -40,7 +41,7 @@ interface BillState {
   selector: 'hh-tenant-profile',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     DashboardLayout,
     Avatar,

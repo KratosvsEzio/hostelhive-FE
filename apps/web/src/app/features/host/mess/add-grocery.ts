@@ -10,7 +10,8 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, filter, firstValueFrom, map, of, switchMap, take } from 'rxjs';
-import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive/ui';
+import { Button, DatePicker, Dropdown, DropdownOption } from '@hostelhive/ui';
+import { MoneyInput } from '@app/shared/money-input/money-input';
 import { format } from 'date-fns';
 import { Breadcrumb, DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import {
@@ -51,7 +52,7 @@ const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
 @Component({
   selector: 'hh-add-grocery',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, Button, Dropdown, Input, DatePicker],
+  imports: [DecimalPipe, RouterLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput],
   templateUrl: './add-grocery.html',
 })
 export class AddGrocery {
