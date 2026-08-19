@@ -3,10 +3,11 @@ import { Observable, map, catchError, of } from 'rxjs';
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
 import { ListingDetail } from './listing-detail.fixture';
-import type { Gender, Room } from '@hostelhive/data-access';
+import type { AccommodationType, Room } from '@hostelhive/data-access';
 
-const GENDER_MAP: Record<string, Gender> = {
+const GENDER_MAP: Record<string, AccommodationType> = {
   'co-living': 'coliving',
+  backpacker: 'backpacker',
   boys: 'boys',
   girls: 'girls',
 };
@@ -62,9 +63,10 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     id: String(d.id),
     slug: String(d.id),
     name: d.name,
+    currency: d.currency ?? undefined,
     area: d.area ?? '',
     city: d.city ?? '',
-    gender: GENDER_MAP[d.gender_type] ?? 'coliving',
+    accommodationType: GENDER_MAP[d.gender_type] ?? 'coliving',
     verified: d.status?.slug === 'active',
     sharing,
     amenities,

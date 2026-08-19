@@ -26,6 +26,7 @@ import {
   Toggle,
 } from '@hostelhive/ui';
 
+import { MoneyInput } from '@app/shared/money-input/money-input';
 import { HostOpsApi, HostPropertyStore, ImageUploadKey, ImageUploadService } from '@services';
 import { ApiError, Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
@@ -35,8 +36,10 @@ import {
   CheckInForm,
   RoomOption,
   checkInFormFromTenant,
+  leaveBeforeJoin,
   emptyCheckInForm,
   isCheckInFormValid,
+  RenterFormContext,
   pendingEditForm,
   toCreateRenterPayload,
   toUpdateRenterPayload,
@@ -52,7 +55,7 @@ import {
 @Component({
   selector: 'hh-tenant-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DatePicker, Dropdown, Input, Toggle],
+  imports: [Button, DatePicker, Dropdown, Input, Toggle, MoneyInput],
   host: { class: 'contents' },
   templateUrl: './tenant-form-drawer.html',
 })
@@ -77,6 +80,19 @@ export class TenantFormDrawer {
   private readonly imageUpload = inject(ImageUploadService);
   private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * True when this hostel bills per night. A backpacker hostel has no day-of-month
+   * billing cycle, so the billing date and due date are neither collected nor sent, and
+   * a stay reads as a check-in / check-out rather than a joining / leave date.
+   */
+  protected readonly nightly = computed(
+    () => this.store.activeProperty()?.accommodationType === 'backpacker',
+  );
+
+  private formContext(): RenterFormContext {
+    return { nightly: this.nightly() };
+  }
 
   protected readonly form = signal<CheckInForm | null>(null);
   protected readonly saving = signal(false);
@@ -141,7 +157,7 @@ export class TenantFormDrawer {
   protected readonly submitAttempted = signal(false);
   protected readonly formValid = computed(() => {
     const f = this.form();
-    return f ? isCheckInFormValid(f) : false;
+    return f ? isCheckInFormValid(f, this.formContext()) : false;
   });
 
   protected readonly billingDayOptions = BILLING_DAY_OPTIONS;
@@ -295,6 +311,9 @@ export class TenantFormDrawer {
     const f = this.form();
     if (!f) return '';
     if (!this.dirtyFields().has(key) && !this.submitAttempted()) return '';
+    if (key === 'leaveDate' && leaveBeforeJoin(f)) {
+      return 'Check-out must be after check-in';
+    }
     return (f[key] as string).trim() ? '' : 'This field is required';
   }
 
@@ -490,7 +509,7 @@ export class TenantFormDrawer {
   protected save(): void {
     const f = this.form();
     if (!f) return;
-    if (!isCheckInFormValid(f)) {
+    if (!isCheckInFormValid(f, this.formContext())) {
       this.submitAttempted.set(true);
       setTimeout(() => {
         const err = this.panelEl()?.nativeElement.querySelector<HTMLElement>('.text-danger');
@@ -527,8 +546,8 @@ export class TenantFormDrawer {
     const name = f.fullName.trim();
     const editing = f.id;
     const request$ = editing
-      ? this.api.updateRenter(hostelId, editing, toUpdateRenterPayload(f))
-      : this.api.createRenter(hostelId, toCreateRenterPayload(f));
+      ? this.api.updateRenter(hostelId, editing, toUpdateRenterPayload(f, this.formContext()))
+      : this.api.createRenter(hostelId, toCreateRenterPayload(f, this.formContext()));
 
     this.saving.set(true);
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

@@ -71,7 +71,7 @@ export interface ReviewDetail {
   kindLabel: string; // property type — 'Building', 'Apartment' …
   genderLabel: string; // gender — 'Co-living', 'Boys', 'Girls'
   propertyType: string; // raw property_type slug, for the editable Type dropdown
-  genderType: string; // raw gender_type slug, for the editable Gender dropdown
+  genderType: string; // raw gender_type slug, for the editable AccommodationType dropdown
   description: string;
   landmarks: string;
   photos: ReviewPhoto[];

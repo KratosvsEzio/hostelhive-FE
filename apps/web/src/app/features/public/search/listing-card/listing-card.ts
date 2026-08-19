@@ -10,10 +10,14 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Gender, Listing } from '@hostelhive/data-access';
+import { AccommodationType, Listing } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
 import { SearchCapacity } from '@services';
-import { Badge } from '@hostelhive/ui';
+import { Badge, TooltipFixed } from '@hostelhive/ui';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { periodForAccommodation, periodSuffix } from '@util/pricing-period';
+import { accommodationLabel } from '@util/accommodation-type';
 
 /** Amenity pills shown before collapsing the rest into a "+N". */
 const MAX_AMENITY_PILLS = 2;
@@ -28,7 +32,7 @@ const MAX_AMENITY_PILLS = 2;
 @Component({
   selector: 'hh-listing-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe, Badge],
+  imports: [RouterLink, DecimalPipe, Badge, TooltipFixed, CurrencySymbolPipe, CurrencyNamePipe],
   templateUrl: './listing-card.html',
 })
 export class ListingCard {
@@ -57,8 +61,15 @@ export class ListingCard {
   );
   /** Price to display — capacity-adjusted when the user has selected a sharing option. */
   protected readonly displayPrice = computed(() =>
-    this.capacityStore.priceFor(this.listing().priceByCapacity, this.listing().priceFrom),
+    this.capacityStore.priceFor(
+      this.listing().priceByCapacity,
+      this.listing().priceFrom,
+      periodForAccommodation(this.listing().accommodationType),
+    ),
   );
+  /** Suffix for the amount above. Never hardcoded in the template, so a nightly rate
+   *  cannot render under a monthly label. */
+  protected readonly priceSuffix = computed(() => periodSuffix(this.displayPrice().period));
   /** Lazy image loading: indices 0..loadedThrough() have their <img> mounted.
    *  Starts at 2 (first 3 images), then advances one slide ahead as the user pages. */
   private readonly loadedThrough = signal(2);
@@ -94,7 +105,7 @@ export class ListingCard {
   });
 
   protected readonly genderLabel = computed(() =>
-    this.label(this.listing().gender),
+    this.label(this.listing().accommodationType),
   );
   /** Property type pill ('Building', 'Apartment', …) — hidden when the BE sends none. */
   protected readonly propertyType = computed(() => this.listing().propertyType ?? '');
@@ -137,7 +148,7 @@ export class ListingCard {
     const selected = this.capacityStore.active();
     const capacity = selected && byCapacity[selected] != null
       ? selected
-      : Object.keys(byCapacity).find((c) => byCapacity[c] === this.displayPrice());
+      : Object.keys(byCapacity).find((c) => byCapacity[c] === this.displayPrice().amount);
     if (!capacity) return '';
     const n = parseInt(capacity, 10);
     if (n === 1) return 'Private';
@@ -182,7 +193,7 @@ export class ListingCard {
   }
 
 
-  private label(g: Gender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
+  private label(g: AccommodationType): string {
+    return accommodationLabel(g);
   }
 }

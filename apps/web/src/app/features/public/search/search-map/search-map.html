@@ -97,8 +97,7 @@
           {{ sel.area }} · {{ sel.city }}
         </p>
         <p class="mt-1.5 text-sm text-ink-900">
-          <b>Rs {{ cardPrice(sel) }}</b>
-          <span class="text-xs text-ink-500"> / month</span>
+          <b class="cursor-help" [hhTooltip]="sel.currency | currencyName">{{ cardPrice(sel) }}</b>
         </p>
       </div>
     </div>

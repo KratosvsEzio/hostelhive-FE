@@ -107,7 +107,7 @@
                   </hh-status-pill>
                 </div>
                 <p class="mt-0.5 text-sm text-ink-400">
-                  {{ l.area }}, {{ l.city }} · {{ genderLabel(l.gender) }}
+                  {{ l.area }}, {{ l.city }} · {{ accommodationLabelFor(l.accommodationType) }}
                 </p>
                 <div class="mt-2 flex flex-wrap gap-4 text-sm text-ink-600">
                   @if (l.status === 'published' || l.status === 'paused') {

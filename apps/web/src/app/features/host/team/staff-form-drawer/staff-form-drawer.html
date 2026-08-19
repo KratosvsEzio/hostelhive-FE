@@ -1,0 +1,232 @@
+@let f = form();
+
+<hh-drawer
+  [heading]="isEdit() ? 'Edit staff' : 'Add staff'"
+  (closed)="closed.emit()"
+>
+  <div class="space-y-4">
+    <!-- Photo leads the form, matching the tenant drawer. -->
+    <div class="flex items-center gap-4">
+      <label
+        class="relative block shrink-0 cursor-pointer rounded-full focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-300"
+        [class.pointer-events-none]="uploading() === 'avatar'"
+        aria-label="Add photo"
+      >
+        <input
+          type="file"
+          accept="image/*"
+          class="sr-only"
+          (change)="onFile('avatar', $event)"
+        />
+        @if (f.avatarUrl) {
+          <img
+            [src]="f.avatarUrl"
+            alt="Staff photo"
+            class="h-16 w-16 rounded-full object-cover ring-2 ring-brand-200"
+          />
+        } @else {
+          <div
+            class="grid h-16 w-16 place-items-center rounded-full bg-surface ring-2 ring-ink-100"
+          >
+            <i class="ti ti-user text-2xl text-ink-300" aria-hidden="true"></i>
+          </div>
+        }
+        @if (uploading() === 'avatar') {
+          <div
+            class="absolute inset-0 grid place-items-center rounded-full bg-black/40"
+          >
+            <i
+              class="ti ti-loader-2 animate-spin text-lg text-white"
+              aria-hidden="true"
+            ></i>
+          </div>
+        } @else {
+          <span
+            class="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-brand-500 text-white shadow"
+          >
+            <i class="ti ti-camera text-xs" aria-hidden="true"></i>
+          </span>
+        }
+      </label>
+
+      <div>
+        <p class="text-sm font-medium text-ink-900">
+          @if (uploading() === 'avatar') {
+            Uploading…
+          } @else {
+            {{ f.avatarUrl ? 'Photo added' : 'Add photo' }}
+          }
+        </p>
+        <p class="text-xs text-ink-400">Choose an image from your files</p>
+      </div>
+    </div>
+
+    <!-- Identity -->
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <hh-input
+        label="Full name *"
+        placeholder="e.g. Ali Khan"
+        [value]="f.name"
+        [error]="fieldError('name')"
+        (valueChange)="patch('name', $event)"
+      />
+      <hh-input
+        label="Job title *"
+        placeholder="e.g. Warden, Cook, Night guard"
+        [value]="f.title"
+        [error]="fieldError('title')"
+        (valueChange)="patch('title', $event)"
+      />
+    </div>
+
+    <hh-phone-input
+      [phone]="f.phone"
+      (phoneChange)="patch('phone', $event)"
+      [error]="fieldError('phone')"
+    />
+
+    <hh-input
+      label="CNIC number"
+      placeholder="3520212345671"
+      [value]="f.cnicNumber"
+      (valueChange)="patch('cnicNumber', $event)"
+    />
+
+    <hh-input
+      label="Address"
+      placeholder="Block A, Lahore"
+      [value]="f.address"
+      (valueChange)="patch('address', $event)"
+    />
+
+    <!-- Employment -->
+    <div class="flex items-center gap-3 pt-1">
+      <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
+        Employment
+      </p>
+      <div class="flex-1 border-t border-ink-100"></div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <hh-date-picker
+        label="Joining date *"
+        [value]="f.joiningDate"
+        [error]="fieldError('joiningDate')"
+        (valueChange)="patch('joiningDate', $event ?? '')"
+      />
+      <hh-date-picker
+        label="Leaving date"
+        [value]="f.leavingDate"
+        [error]="leavingError()"
+        (valueChange)="patch('leavingDate', $event ?? '')"
+      />
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <hh-money-input
+        label="Salary *"
+        placeholder="25000"
+        [value]="+f.salary || 0"
+        [error]="fieldError('salary')"
+        (valueChange)="patch('salary', $event ? $any($event).toString() : '')"
+      />
+      <hh-date-picker
+        label="Salary issue date"
+        [value]="f.salaryIssueDate"
+        (valueChange)="patch('salaryIssueDate', $event ?? '')"
+      />
+    </div>
+
+    <!-- Documents -->
+    <div class="flex items-center gap-3 pt-1">
+      <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
+        Documents
+      </p>
+      <div class="flex-1 border-t border-ink-100"></div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      @for (slot of [
+        { key: 'cnicFront', label: 'CNIC front', url: f.cnicFrontUrl },
+        { key: 'cnicBack', label: 'CNIC back', url: f.cnicBackUrl }
+      ]; track slot.key) {
+        <div>
+          <p class="mb-1 block text-xs font-medium text-ink-600">{{ slot.label }}</p>
+          <label
+            class="flex h-24 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-ink-200 bg-ink-50/50 transition hover:border-brand-400"
+          >
+            <input
+              type="file"
+              accept="image/*"
+              class="sr-only"
+              (change)="onFile($any(slot.key), $event)"
+            />
+            @if (uploading() === slot.key) {
+              <i class="ti ti-loader-2 animate-spin text-lg text-brand-500" aria-hidden="true"></i>
+            } @else if (slot.url) {
+              <img [src]="slot.url" alt="" class="h-full w-full object-cover" />
+            } @else {
+              <span class="flex flex-col items-center gap-1 text-ink-400">
+                <i class="ti ti-camera-plus text-lg" aria-hidden="true"></i>
+                <span class="text-[11px]">Upload</span>
+              </span>
+            }
+          </label>
+        </div>
+      }
+    </div>
+
+
+    <!-- Manager access -->
+    <div class="flex items-center gap-3 pt-1">
+      <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
+        Manager access
+      </p>
+      <div class="flex-1 border-t border-ink-100"></div>
+      <hh-toggle [checked]="f.isManager" (checkedChange)="onManagerToggle($event)" />
+    </div>
+    @if (f.isManager) {
+      <p class="-mt-1 text-xs text-ink-400">
+        Creates a login so {{ f.name.trim() || 'this staff member' }} can manage this hostel.
+      </p>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <hh-input
+          label="Email *"
+          type="email"
+          autocomplete="off"
+          placeholder="name@email.com"
+          [value]="f.managerEmail"
+          [error]="managerEmailError()"
+          (valueChange)="patch('managerEmail', $event)"
+        />
+        <hh-input
+          label="Password *"
+          type="password"
+          autocomplete="new-password"
+          [placeholder]="f.wasManager ? 'Leave blank to keep current' : 'Set a password'"
+          [value]="f.managerPassword"
+          [error]="managerPasswordError()"
+          (valueChange)="patch('managerPassword', $event)"
+        />
+      </div>
+    }
+    <p class="flex items-center gap-1.5 text-xs text-ink-400">
+      <i class="ti ti-lock" aria-hidden="true"></i>Scoped to this hostel only.
+    </p>
+  </div>
+
+  <ng-container footer>
+    <button hh-button variant="text" size="sm" [disabled]="saving()" (click)="closed.emit()">
+      Cancel
+    </button>
+    <button
+      hh-button
+      color="primary"
+      [loading]="saving()"
+      [disabled]="!canSave()"
+      (click)="save()"
+    >
+      {{ isEdit() ? 'Save changes' : 'Add staff' }}
+    </button>
+  </ng-container>
+</hh-drawer>

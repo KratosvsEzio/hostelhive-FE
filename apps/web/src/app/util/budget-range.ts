@@ -12,4 +12,10 @@
  */
 export const BUDGET_MIN = 0;
 export const BUDGET_MAX = 50000;
-export const BUDGET_STEP = 1000;
+/**
+ * Rs 1. Was 1,000, which made the scale unusable for nightly pricing: the slider clamps
+ * its two thumbs a full step apart, so the narrowest band a user could express was
+ * Rs 1,000 wide and the smallest non-zero stop was 1,000 — while backpacker beds run
+ * roughly Rs 400–3,000 and need to be told apart from each other.
+ */
+export const BUDGET_STEP = 1;

@@ -190,7 +190,7 @@
                   (focusout)="markDirty('phone')"
                 />
                 <hh-input
-                  label="Emergency contact *"
+                  label="Emergency contact"
                   placeholder="0321 1234567"
                   [value]="f.emergencyContact"
                   [error]="fieldError('emergencyContact')"
@@ -263,10 +263,13 @@
                   }
                 </div>
               </div>
-              <!-- Joining & leave dates — two columns -->
+              <!-- One datetime control per date: [withTime] adds a time row inside the
+                   calendar panel and widens the value to `YYYY-MM-DDTHH:mm`. Opt-in, so
+                   the six date-only consumers of this component are untouched. -->
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-date-picker
-                  label="Joining date *"
+                  [withTime]="true"
+                  [label]="nightly() ? 'Check-in *' : 'Joining date *'"
                   [value]="f.joiningDate"
                   [error]="fieldError('joiningDate')"
                   (valueChange)="
@@ -274,9 +277,13 @@
                   "
                 />
                 <hh-date-picker
-                  label="Leave date"
+                  [withTime]="true"
+                  [label]="nightly() ? 'Check-out' : 'Leave date'"
                   [value]="f.leaveDate"
-                  (valueChange)="patch('leaveDate', $event ?? '')"
+                  [error]="fieldError('leaveDate')"
+                  (valueChange)="
+                    patch('leaveDate', $event ?? ''); markDirty('leaveDate')
+                  "
                 />
               </div>
             </div>
@@ -292,26 +299,26 @@
             </div>
             <div class="space-y-3">
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <hh-input
-                  label="Monthly rent *"
-                  type="number"
+                <hh-money-input
+                  label="Rent *"
                   placeholder="5000"
-                  [value]="f.rent"
+                  [value]="+f.rent || 0"
                   [error]="fieldError('rent')"
-                  (valueChange)="patch('rent', $event)"
-                  (focusout)="markDirty('rent')"
+                  (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
+                  (blur)="markDirty('rent')"
                 />
-                <hh-input
+                <hh-money-input
                   label="Security deposit *"
-                  type="number"
                   placeholder="3333"
-                  [value]="f.advanceDeposit"
+                  [value]="+f.advanceDeposit || 0"
                   [error]="fieldError('advanceDeposit')"
-                  (valueChange)="patch('advanceDeposit', $event)"
-                  (focusout)="markDirty('advanceDeposit')"
+                  (valueChange)="patch('advanceDeposit', $event ? $any($event).toString() : '')"
+                  (blur)="markDirty('advanceDeposit')"
                 />
               </div>
 
+              <!-- Monthly hostels only: a nightly stay has no day-of-month cycle. -->
+              @if (!nightly()) {
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <p class="mb-1 block text-xs font-medium text-ink-600">
@@ -353,6 +360,7 @@
               <p class="text-xs text-ink-400">
                 Months shorter than the selected day may bill differently.
               </p>
+              }
             </div>
 
             <!-- Transport -->

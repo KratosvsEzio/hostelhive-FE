@@ -26,7 +26,7 @@ export const LISTING_DETAIL: ListingDetail = {
   name: 'Al-Madina Boys Hostel',
   area: 'DHA Phase 6',
   city: 'Karachi',
-  gender: 'boys',
+  accommodationType: 'boys',
   verified: true,
   sharing: ['1-sharing', '2-sharing', '3-sharing'],
   amenities: [

@@ -108,7 +108,7 @@
               >
                 <!-- Top: room number (left) · always-visible actions menu (right) -->
                 <div class="flex items-center justify-between gap-2">
-                  <span class="text-xs font-bold tracking-wide text-ink-600">{{ c.code }}</span>
+                  <span class="text-sm font-bold text-ink-900">{{ c.code }}</span>
                   <button
                     type="button"
                     class="-mr-1.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg text-ink-400 transition hover:bg-black/5 hover:text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
@@ -121,9 +121,9 @@
 
                 <!-- Occupant name + extra chip -->
                 <div class="mt-1 flex items-center gap-1.5">
-                  <span class="min-w-0 truncate font-display text-sm font-semibold text-ink-900">{{ c.label }}</span>
+                  <span class="min-w-0 truncate text-xs font-medium text-ink-700">{{ c.label }}</span>
                   @if (c.extra) {
-                    <span class="shrink-0 rounded-full bg-ink-100 px-1.5 py-px text-[10px] font-semibold text-ink-600">+{{ c.extra }}</span>
+                    <span class="shrink-0 rounded-full bg-brand-500 px-1.5 py-px text-[10px] font-bold text-white">+{{ c.extra }}</span>
                   }
                 </div>
 

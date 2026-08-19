@@ -9,7 +9,7 @@ import {
   HostTeamData,
   ListingStats,
   ListingStatus,
-  PropertyGender,
+  PropertyAccommodationType,
   StaffMember,
 } from '@hostelhive/data-access';
 
@@ -79,7 +79,7 @@ export class HostShellApi {
 
   /** Remove a manager from the hostel. */
   removeManager(hostelId: string, managerId: string): Observable<unknown> {
-    return this.api.put(`/api/hostels/${hostelId}/remove_manager`, { manager_id: managerId });
+    return this.api.put(`/api/host/hostels/${hostelId}/remove_manager`, { manager_id: managerId });
   }
 
   /** Update a manager's name and phone. */
@@ -147,7 +147,7 @@ function toHostListing(h: ApiHostHostel): HostListing {
     name: h.name ?? '—',
     area: h.area ?? '',
     city: h.city ?? '',
-    gender: mapGender(h.gender_type),
+    accommodationType: mapGender(h.gender_type),
     status,
     image: resolveThumb(h.attachments),
     rooms: h.total_rooms ?? undefined,
@@ -167,9 +167,10 @@ function mapStatus(statusSlug?: string | null, dispositionSlug?: string | null):
   return 'onboarding';
 }
 
-function mapGender(slug?: string | null): PropertyGender {
-  if (slug === 'co-living') return 'coliving';
-  if (slug === 'girls')     return 'girls';
+function mapGender(slug?: string | null): PropertyAccommodationType {
+  if (slug === 'co-living')  return 'coliving';
+  if (slug === 'girls')      return 'girls';
+  if (slug === 'backpacker') return 'backpacker';
   return 'boys';
 }
 

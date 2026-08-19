@@ -37,7 +37,27 @@ const TENANTS_TABLE_CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
     label: 'Tenant',
     cell: (r) => {
       const t = r as Tenant;
-      return { kind: 'composite', primary: t.name, secondary: t.phone } satisfies CellDef;
+      // Email rather than phone as the secondary — phone moved to its own Contact
+      // column, where it can sit above the emergency number it belongs with.
+      return { kind: 'composite', primary: t.name, secondary: t.email || '—' } satisfies CellDef;
+    },
+  },
+  contact: {
+    label: 'Contact',
+    cell: (r) => {
+      const t = r as Tenant;
+      // Emergency contact is optional at registration, so it is frequently absent —
+      // an em dash keeps the row height stable rather than collapsing the second line.
+      return {
+        kind: 'composite',
+        primary: t.phone || '—',
+        secondary: t.emergencyContact || '—',
+        // Both lines are phone numbers, so without a marker the second one reads as a
+        // second personal number rather than the emergency contact.
+        secondaryIcon: 'ti-alert-triangle',
+        secondaryIconClass: 'text-warn',
+        secondaryLabel: 'Emergency contact',
+      } satisfies CellDef;
     },
   },
   room: {

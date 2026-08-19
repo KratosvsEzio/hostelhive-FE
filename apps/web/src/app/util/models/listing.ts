@@ -1,4 +1,16 @@
-export type Gender = 'boys' | 'girls' | 'coliving';
+/**
+ * A hostel's accommodation type — exactly one per hostel.
+ *
+ * The backend calls this `gender_type`, which is a misnomer it is stuck with: `backpacker`
+ * is not a gender. The name is corrected on this side of the API boundary and translated
+ * in the mapping layer. It is also what decides the billing period — backpacker hostels
+ * bill per night, the rest per month (see `periodForAccommodation`).
+ */
+export type AccommodationType =
+  | 'boys'
+  | 'girls'
+  | 'coliving'
+  | 'backpacker';
 
 export interface Room {
   id: string;
@@ -22,14 +34,15 @@ export interface Listing {
   name: string;
   area: string;
   city: string;
-  gender: Gender;
+  accommodationType: AccommodationType;
   verified: boolean;
   propertyType?: string; // display label from the BE enum ('Building', 'Apartment', 'Room', 'House')
   sharing: string[]; // ['2-sharing', '3-sharing']
   amenities: string[]; // amenity keys — see AMENITIES
   offerNames?: string[]; // amenity display names from the hostel's offers, for the card pills
-  priceFrom: number; // PKR / month — always starting_price; use priceByCapacity for capacity-aware display
+  priceFrom: number; // starting_price / month; use priceByCapacity for capacity-aware display
   priceByCapacity?: Record<string, number>; // capacity key ('1'|'2'|'3'|'4'|'5+') → price
+  currency?: string; // ISO-4217 code the prices are quoted in (e.g. 'PKR', 'USD')
   images: string[];
   lat: number;
   lng: number;
@@ -44,7 +57,7 @@ export interface Listing {
 
 export interface ListingQuery {
   city?: string;
-  gender?: Gender | 'all';
+  accommodationType?: AccommodationType | 'all';
   minPrice?: number;
   maxPrice?: number;
   sharing?: string; // e.g. '2-sharing'

@@ -32,6 +32,9 @@ export interface Tenant {
   roomId: string;
   roomNumber: string;
   joined: string; // ISO date — move-in
+  /** Wall-clock HH:mm of check-in, when the API carried one. `joined` stays date-only so
+   *  every existing display consumer is unaffected. */
+  joinedTime?: string;
   checkedOut?: string; // ISO date — move-out (when status checked-out)
   rent: number; // PKR / month
   deposit: number; // PKR — advance deposit
@@ -43,6 +46,8 @@ export interface Tenant {
   billingDate?: number; // day of month invoice is issued
   billingDueDate?: number; // day of month invoice is due
   leaveDate?: string; // ISO date — planned departure
+  /** Wall-clock HH:mm of check-out, when the API carried one. */
+  leaveTime?: string;
   outstanding: number; // PKR owed right now
   status: TenantStatus;
   statusLabel: string;

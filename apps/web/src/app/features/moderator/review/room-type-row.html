@@ -22,7 +22,6 @@
       <input
         type="number"
         [min]="minCapacity()"
-        [max]="isDormitory() ? 200 : 9"
         step="1"
         pattern="\d+"
         [disabled]="capacityFixed()"
@@ -33,13 +32,12 @@
       />
     </label>
     <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
-      PKR
-      <input
-        type="number"
-        min="0"
-        class="h-10 w-28 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 sm:h-8"
+      <hh-money-input
+        size="sm"
+        [currency]="currency()"
         [value]="price()"
-        (change)="onPriceChange($event)"
+        (valueChange)="onPriceChange($event)"
+        fieldClass="w-28"
       />
       <span>/ mo</span>
     </label>

@@ -17,9 +17,14 @@
       [style.transform]="'translateX(-' + img() * 100 + '%)'"
     >
       @for (src of images(); track $index) {
+        <!-- Only a slide whose <img> is mounted and still downloading shimmers. Slides
+             past `loadedThrough` have no <img> at all, so shimmering them ran an infinite
+             animation on five off-screen elements per card that were not loading anything.
+             They now rest on the container’s static bg-ink-100, which leaves the Featured
+             badge as the only animation on the card. -->
         <div
           class="h-full w-full shrink-0 overflow-hidden"
-          [class.shimmer]="!isImgReady($index)"
+          [class.shimmer]="isLoaded($index) && !isImgReady($index)"
         >
           @if (isLoaded($index)) {
             <img
@@ -34,17 +39,17 @@
         </div>
       }
     </div>
-    <!-- Gender + property type. The property type is whatever the BE enum says, so it is
+    <!-- AccommodationType + property type. The property type is whatever the BE enum says, so it is
          rendered only when present rather than defaulted to a guess. -->
     <div class="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
       @if (featured()) {
-        <span class="featured-badge !static">
+        <span class="featured-badge">
           <i class="ti ti-crown-filled relative z-[1] text-xs" aria-hidden="true"></i>
           <span class="relative z-[1]">Featured</span>
         </span>
       }
       <hh-badge
-        [variant]="listing().gender"
+        [variant]="listing().accommodationType"
         [bordered]="false"
         class="shadow-sm"
       >
@@ -152,8 +157,8 @@
     </div>
     <p class="mt-0.5 truncate text-sm text-ink-500">{{ locationLine() }}</p>
     <p class="mt-2 text-ink-900">
-      <span class="font-semibold">Rs {{ displayPrice() | number }}</span>
-      <span class="text-sm text-ink-500">/mo</span>
+      <span class="font-semibold"><span class="relative z-[2] cursor-help" [hhTooltip]="listing().currency | currencyName">{{ listing().currency | currencySym }}</span> {{ displayPrice().amount | number }}</span>
+      <span class="text-sm text-ink-500">{{ priceSuffix() }}</span>
       @if (roomTypeLabel()) {
         <span class="text-sm text-ink-500"> · {{ roomTypeLabel() }}</span>
       }

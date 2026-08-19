@@ -26,13 +26,23 @@ import {
   switchMap,
   tap,
 } from 'rxjs';
-import { Gender, Listing, Paginated } from '@hostelhive/data-access';
+import { AccommodationType, Listing, Paginated } from '@hostelhive/data-access';
+import { TooltipFixed } from '@hostelhive/ui';
 import { FavoritesStore } from '@util/favorites-store';
+import {
+  formatAmount,
+  periodForAccommodation,
+  formatPriceCompact,
+  periodLabel,
+} from '@util/pricing-period';
+import { currencyName } from '@util/currencies';
+import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { MobileApp } from '@core/mobile-app';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
+import { accommodationLabel } from '@util/accommodation-type';
 
 /** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
 interface Bounds {
@@ -48,10 +58,11 @@ interface Bounds {
 /** Same glyph per gender that hh-badge picks by default, so the map card's pill matches a
  *  listing card's. Duplicated rather than imported because this markup is built as raw DOM
  *  for a Leaflet marker and never goes through the Badge component. */
-const GENDER_ICON: Record<Gender, string> = {
+const GENDER_ICON: Record<AccommodationType, string> = {
   boys: 'ti-gender-male',
   girls: 'ti-gender-female',
   coliving: 'ti-users',
+  backpacker: 'ti-backpack',
 };
 
 const NE_LAT = 'ne_lat';
@@ -92,7 +103,7 @@ type SheetSnap = 'peek' | 'half' | 'full';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SearchFilters, ListingCard, PlaceSearchField],
+  imports: [SearchFilters, ListingCard, PlaceSearchField, TooltipFixed, CurrencyNamePipe],
   templateUrl: './search-map.html',
 })
 export class SearchMap {
@@ -128,8 +139,8 @@ export class SearchMap {
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: null,
   });
-  protected readonly gender = computed<Gender | 'all'>(
-    () => (this.params()?.get('gender') as Gender | 'all') ?? 'all',
+  protected readonly accommodationType = computed<AccommodationType | 'all'>(
+    () => (this.params()?.get('gender') as AccommodationType | 'all') ?? 'all',
   );
   protected readonly sort = computed(
     () => this.params()?.get('sort') ?? 'recommended',
@@ -197,7 +208,7 @@ export class SearchMap {
       .map((slug) => slugToId.get(slug))
       .filter((id): id is number => id != null);
     return {
-      gender: this.gender(),
+      accommodationType: this.accommodationType(),
       propertyType: p?.get('propertyType') || undefined,
       capacity: p?.get('capacity') || undefined,
       city: c || mb ? undefined : p?.get('city') || undefined,
@@ -508,9 +519,12 @@ export class SearchMap {
   }
 
   protected cardPrice(l: Listing): string {
-    return this.capacityStore
-      .priceFor(l.priceByCapacity, l.priceFrom)
-      .toLocaleString('en-PK');
+    const { amount, period } = this.capacityStore.priceFor(
+      l.priceByCapacity,
+      l.priceFrom,
+      periodForAccommodation(l.accommodationType),
+    );
+    return `${formatAmount(amount, l.currency)} ${periodLabel(period)}`;
   }
   /** Extra px to raise the mobile floating List/Map pill so it rests above the footer. */
   protected readonly footerLift = signal(0);
@@ -606,7 +620,15 @@ export class SearchMap {
       if (!this.ready()) return;
       for (const [, m] of this.markers) {
         const span = m.pinEl.querySelector('span');
-        if (span) span.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(m.listing.priceByCapacity, m.listing.priceFrom) / 1000) + 'k';
+        if (span)
+          span.textContent = formatPriceCompact(
+            this.capacityStore.priceFor(
+              m.listing.priceByCapacity,
+              m.listing.priceFrom,
+              periodForAccommodation(m.listing.accommodationType),
+            ),
+            m.listing.currency,
+          );
       }
       untracked(() => { if (this.selected()) this.renderSelection(); });
     });
@@ -795,7 +817,14 @@ export class SearchMap {
         pinEl.appendChild(crown);
       }
       const priceSpan = document.createElement('span');
-      priceSpan.textContent = 'Rs ' + Math.round(this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom) / 1000) + 'k';
+      priceSpan.textContent = formatPriceCompact(
+        this.capacityStore.priceFor(
+          l.priceByCapacity,
+          l.priceFrom,
+          periodForAccommodation(l.accommodationType),
+        ),
+        l.currency,
+      );
       pinEl.appendChild(priceSpan);
       pinEl.addEventListener('mouseenter', () => this.active.set(l.id));
       pinEl.addEventListener('mouseleave', () => this.active.set(null));
@@ -914,12 +943,12 @@ export class SearchMap {
     // to the one on a listing card. textContent on a child, never innerHTML on the label,
     // so a hostel name can't inject markup here.
     const badge = document.createElement('span');
-    badge.className = 'hh-mapcard__badge hh-mapcard__badge--' + l.gender;
+    badge.className = 'hh-mapcard__badge hh-mapcard__badge--' + l.accommodationType;
     const badgeIcon = document.createElement('i');
-    badgeIcon.className = 'ti ' + GENDER_ICON[l.gender];
+    badgeIcon.className = 'ti ' + GENDER_ICON[l.accommodationType];
     badgeIcon.setAttribute('aria-hidden', 'true');
     const badgeText = document.createElement('span');
-    badgeText.textContent = this.genderLabel(l.gender);
+    badgeText.textContent = this.genderLabel(l.accommodationType);
     badge.append(badgeIcon, badgeText);
     media.appendChild(badge);
 
@@ -998,6 +1027,11 @@ export class SearchMap {
       ? `<span class="hh-mapcard__rating"><i class="ti ti-star-filled"></i>${l.rating}<span>(${l.reviews ?? 0})</span></span>`
       : '';
     const tags = l.sharing.length ? l.sharing.join(' · ') : 'Shared rooms';
+    const price = this.capacityStore.priceFor(
+      l.priceByCapacity,
+      l.priceFrom,
+      periodForAccommodation(l.accommodationType),
+    );
     body.innerHTML = `
       <div class="hh-mapcard__row">
         <span class="hh-mapcard__name">${this.esc(l.name)}</span>
@@ -1005,7 +1039,7 @@ export class SearchMap {
       </div>
       <p class="hh-mapcard__sub">${this.esc(l.area)} · ${this.esc(l.city)}</p>
       <p class="hh-mapcard__sub hh-mapcard__tags">${this.esc(tags)}</p>
-      <p class="hh-mapcard__price"><b>Rs ${this.capacityStore.priceFor(l.priceByCapacity, l.priceFrom).toLocaleString('en-PK')}</b> / month</p>
+      <p class="hh-mapcard__price"><b title="${this.esc(currencyName(l.currency))}">${this.esc(formatAmount(price.amount, l.currency))}</b> ${this.esc(periodLabel(price.period))}</p>
     `;
     card.appendChild(body);
 
@@ -1030,8 +1064,8 @@ export class SearchMap {
     this.markers.clear();
   }
 
-  private genderLabel(g: Gender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
+  private genderLabel(g: AccommodationType): string {
+    return accommodationLabel(g);
   }
 
   private esc(s: string): string {

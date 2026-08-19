@@ -14,14 +14,14 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { isPlatformBrowser } from '@angular/common';
 import { catchError, of } from 'rxjs';
-import { AMENITIES, Gender, PROPERTY_TYPES } from '@hostelhive/data-access';
+import { AMENITIES, AccommodationType, PROPERTY_TYPES } from '@hostelhive/data-access';
 import { Button, Dropdown, DropdownOption, RangeSlider } from '@hostelhive/ui';
 import { OffersApi } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
 export interface FilterState {
-  gender: Gender | 'all';
+  accommodationType: AccommodationType | 'all';
   propertyType: string;
   minPrice: number | null;
   maxPrice: number | null;
@@ -32,13 +32,18 @@ export interface FilterState {
 
 
 // Room capacity (people per room). Values mirror the inline dropdown so the two stay in
-// sync; the API layer maps them to f[room_types.capacity] (exact) / [gte]=4 for "4+".
+// sync; the API layer maps them to f[room_types.capacity] (exact) for 1–4, and
+// [gte]=5 for "5+".
+//
+// This list used to read { value: '4plus', label: '4+' } while the API mapped 4plus to
+// gte 5 — so choosing "4+" here excluded every 4-bed room, and disagreed with the
+// inline dropdown, which has always said "5+".
 const CAPACITIES: { value: string; label: string }[] = [
   { value: '1', label: '1' },
   { value: '2', label: '2' },
   { value: '3', label: '3' },
   { value: '4', label: '4' },
-  { value: '4plus', label: '4+' },
+  { value: '5+', label: '5+' },
 ];
 
 /**
@@ -81,11 +86,12 @@ export class SearchFilterModal {
     });
   }
 
-  protected readonly genders: { label: string; value: Gender | 'all' }[] = [
+  protected readonly genders: { label: string; value: AccommodationType | 'all' }[] = [
     { label: 'Any type', value: 'all' },
     { label: 'Boys', value: 'boys' },
     { label: 'Girls', value: 'girls' },
     { label: 'Co-living', value: 'coliving' },
+    { label: 'Backpacker', value: 'backpacker' },
   ];
   protected readonly capacities = CAPACITIES;
   protected readonly sortOptions = [
@@ -126,7 +132,7 @@ export class SearchFilterModal {
   protected readonly BUDGET_STEP = BUDGET_STEP;
 
   // Draft state (mutated inside the modal; committed on "Show results").
-  protected readonly draftGender = signal<Gender | 'all'>('all');
+  protected readonly draftGender = signal<AccommodationType | 'all'>('all');
   protected readonly draftPropertyType = signal('');
   protected readonly draftMinPrice = signal(BUDGET_MIN);
   protected readonly draftMaxPrice = signal(BUDGET_MAX);
@@ -136,7 +142,7 @@ export class SearchFilterModal {
 
   /** Seed the draft from the current URL-driven values before opening. */
   seed(state: FilterState): void {
-    this.draftGender.set(state.gender);
+    this.draftGender.set(state.accommodationType);
     this.draftPropertyType.set(state.propertyType);
     this.draftMinPrice.set(state.minPrice ?? BUDGET_MIN);
     this.draftMaxPrice.set(state.maxPrice ?? BUDGET_MAX);
@@ -164,7 +170,7 @@ export class SearchFilterModal {
     const min = this.draftMinPrice();
     const max = this.draftMaxPrice();
     this.applied.emit({
-      gender: this.draftGender(),
+      accommodationType: this.draftGender(),
       propertyType: this.draftPropertyType(),
       minPrice: min > BUDGET_MIN ? min : null,
       maxPrice: max < BUDGET_MAX ? max : null,
