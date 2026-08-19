@@ -4,7 +4,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -36,6 +36,7 @@ import {
 import { HostPropertyStore, ProductsApi, SubscriptionApi, SubscriptionStore } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { ApiDate } from '@util/api-date';
 
 interface ViewState {
   loading: boolean;
@@ -56,7 +57,7 @@ const STATUS_META: Record<ContractStatus, { label: string; tone: StatusTone }> =
   selector: 'hh-current-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     RouterLink,
     DashboardLayout,

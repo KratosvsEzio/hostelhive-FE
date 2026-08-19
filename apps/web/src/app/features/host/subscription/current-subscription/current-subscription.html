@@ -78,7 +78,7 @@
                 Started
                 <span class="font-medium text-ink-800">{{
                   contract.startedAt
-                    ? (contract.startedAt | date: 'd MMM y')
+                    ? (contract.startedAt | apiDate: 'd MMM y')
                     : '—'
                 }}</span>
               </span>
@@ -86,7 +86,7 @@
                 {{ contract.status === 'expired' ? 'Expired' : 'Renews' }}
                 <span class="font-medium text-ink-800">{{
                   contract.renewsAt
-                    ? (contract.renewsAt | date: 'd MMM y')
+                    ? (contract.renewsAt | apiDate: 'd MMM y')
                     : '—'
                 }}</span>
               </span>

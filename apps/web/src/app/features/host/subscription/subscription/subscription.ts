@@ -5,7 +5,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -49,6 +49,7 @@ import {
   effectivePrice,
   hasListingDiscount,
 } from '@util/product-pricing';
+import { ApiDate } from '@util/api-date';
 
 interface FeaturedStatus {
   active: boolean;
@@ -127,7 +128,7 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
   selector: 'hh-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     DashboardLayout,
     Button,

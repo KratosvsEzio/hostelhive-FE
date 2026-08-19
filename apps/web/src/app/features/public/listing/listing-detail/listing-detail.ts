@@ -7,12 +7,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
-import { AMENITIES, Gender } from '@hostelhive/data-access';
-import { Avatar, Badge, Button, EmptyState, Skeleton } from '@hostelhive/ui';
+import { AMENITIES, AccommodationType } from '@hostelhive/data-access';
+import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
@@ -20,6 +20,10 @@ import { SessionStore } from '@core/auth';
 import { MobileApp } from '@core/mobile-app';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
+import { accommodationLabel } from '@util/accommodation-type';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { ApiDate } from '@util/api-date';
 
 interface ViewState {
   loading: boolean;
@@ -66,7 +70,7 @@ const ROOM_TINTS = [
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     RouterLink,
     Avatar,
@@ -75,6 +79,9 @@ const ROOM_TINTS = [
     EmptyState,
     Skeleton,
     StaticMap,
+    TooltipFixed,
+    CurrencySymbolPipe,
+    CurrencyNamePipe,
   ],
   templateUrl: './listing-detail.html',
 })
@@ -517,8 +524,8 @@ export class ListingDetail {
     return ROOM_TINTS[index % ROOM_TINTS.length];
   }
 
-  protected genderLabel(g: Gender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
+  protected genderLabel(g: AccommodationType): string {
+    return accommodationLabel(g);
   }
 
   protected initials(name: string): string {

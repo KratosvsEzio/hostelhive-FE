@@ -5,7 +5,7 @@
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, forkJoin, map, of, startWith, switchMap, timer } from 'rxjs';
@@ -25,6 +25,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
+import { ApiDate } from '@util/api-date';
 
 interface ViewState {
   loading: boolean;
@@ -41,7 +42,7 @@ interface ViewState {
     DashboardLayout,
     RouterLink,
     SubscriptionGate,
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     Avatar,
     Card,
