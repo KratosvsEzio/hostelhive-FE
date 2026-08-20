@@ -27,7 +27,6 @@ export * from './lib/date-picker/date-picker';
 export * from './lib/time-picker/time-picker';
 export * from './lib/rich-text/rich-text';
 export * from './lib/confirm-modal/confirm-modal';
-export * from './lib/nested-dropdown/nested-dropdown';
 export * from './lib/phone-input/phone-input';
 export * from './lib/filter-chips/filter-chips';
 export * from './lib/context-menu/context-menu';

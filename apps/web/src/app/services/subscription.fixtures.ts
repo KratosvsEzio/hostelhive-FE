@@ -70,26 +70,3 @@ export const CURRENT_CONTRACT: Contract = {
   autoRenew: true,
   propertiesUsed: 2,
 };
-
-export const PAYMENTS: Payment[] = [
-  {
-    id: 'pay_2026',
-    date: '2026-01-12',
-    description: 'Growth · Annual',
-    products: [{ id: '1', name: 'Growth · Annual', price: 48000 }],
-    method: 'Card ··6411',
-    status: 'paid',
-    amount: 48000,
-    receiptUrl: '#',
-  },
-  {
-    id: 'pay_2025',
-    date: '2025-01-12',
-    description: 'Starter · Annual',
-    products: [{ id: '2', name: 'Starter · Annual', price: 18000 }],
-    method: 'Card ··6411',
-    status: 'paid',
-    amount: 18000,
-    receiptUrl: '#',
-  },
-];

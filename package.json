@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "config:maps": "node tools/generate-google-maps-env.mjs",
     "icons:generate": "node tools/generate-icons.mjs && capacitor-assets generate --android",
     "build": "nx build web",
     "start": "nx run web:dev",

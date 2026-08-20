@@ -1,5 +1,4 @@
 export * from './lib/maps/maps';
-export * from './lib/google-maps';
 export * from './lib/leaflet';
 export * from './lib/nominatim';
 export * from './lib/photon';
