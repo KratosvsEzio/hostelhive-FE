@@ -20,6 +20,7 @@
             variant="field"
             [options]="expenseTypeOptions()"
             [value]="expenseType()"
+            [disabled]="!!lockedExpenseType"
             (valueChange)="onExpenseTypeChange($event)"
           />
           @if (expenseTypeError()) {

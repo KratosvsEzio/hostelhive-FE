@@ -192,7 +192,15 @@ export const HOST_ROUTES: Route[] = [
         canActivate: [permissionGuard('host:WeeklyMenu:index')],
         children: [
           { path: '', pathMatch: 'full', component: MessList, title: 'Mess — HostelHive' },
-          { path: 'add', component: AddGrocery, title: 'Add grocery — HostelHive' },
+          {
+            // Reached from the mess page, where the type is a given — the form locks its
+            // expense-type picker to this rather than offering a choice that would file the
+            // entry away from the mess.
+            path: 'add',
+            component: AddGrocery,
+            title: 'Add grocery — HostelHive',
+            data: { lockedExpenseType: 'groceries' },
+          },
           { path: 'confirmations', component: MessConfirmations, title: 'Meal confirmations — HostelHive' },
           { path: 'notifications', component: MessNotifications, title: 'Meal notifications — HostelHive' },
         ],

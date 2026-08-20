@@ -107,7 +107,14 @@ export class AddGrocery {
       .map((t) => ({ value: t.slug, label: t.name })),
   );
 
-  protected readonly expenseType = signal(DEFAULT_EXPENSE_TYPE);
+  /**
+   * Set by the route when the form is opened somewhere the type is already decided (the
+   * mess page). Empty from the expenses page, where picking the type is the point.
+   */
+  protected readonly lockedExpenseType: string =
+    this.route.snapshot.data['lockedExpenseType'] ?? '';
+
+  protected readonly expenseType = signal(this.lockedExpenseType || DEFAULT_EXPENSE_TYPE);
   protected readonly date = signal<string | null>(this.todayIso);
   protected readonly notes = signal('');
   protected readonly images = signal<DraftImage[]>([]);

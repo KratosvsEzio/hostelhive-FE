@@ -89,6 +89,26 @@ export interface CellLink {
   external?: boolean;
 }
 
+/**
+ * A small image that opens full size — a receipt, a document scan, an avatar.
+ *
+ * The image is the whole affordance; an adjacent preview icon read as clutter at this size.
+ * Falls back to `emptyText` when there is no image, so a column of mostly-empty
+ * attachments still lines up instead of collapsing. Clicking opens `href` in a new tab and
+ * deliberately does not trigger the row click, since the two go to different places.
+ */
+export interface CellThumb {
+  kind: 'thumb';
+  /** Image URL. Absent renders `emptyText` instead. */
+  src?: string;
+  /** Where the preview opens; defaults to `src`. */
+  href?: string;
+  /** Alt text, and the accessible name of the link. */
+  alt?: string;
+  /** Shown in place of the image when `src` is absent. Defaults to an em dash. */
+  emptyText?: string;
+}
+
 export type CellDef =
   | CellText
   | CellCurrency
@@ -96,6 +116,7 @@ export type CellDef =
   | CellBadge
   | CellIconText
   | CellComposite
+  | CellThumb
   | CellLink;
 
 // ---------------------------------------------------------------------------
@@ -340,6 +361,28 @@ export interface PaginationConfig {
                                 </p>
                               }
                             </div>
+                          }
+
+                          @case ('thumb') {
+                            @if ($any(cell).src) {
+                              <a
+                                [href]="$any(cell).href || $any(cell).src"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="group/thumb inline-block"
+                                [attr.aria-label]="$any(cell).alt || 'Open preview'"
+                                (click)="$event.stopPropagation()"
+                              >
+                                <img
+                                  [src]="$any(cell).src"
+                                  [alt]="$any(cell).alt || ''"
+                                  loading="lazy"
+                                  class="h-9 w-9 shrink-0 rounded-lg border border-ink-100 bg-surface object-cover transition group-hover/thumb:border-brand-300 group-hover/thumb:brightness-95"
+                                />
+                              </a>
+                            } @else {
+                              <span class="text-ink-400">{{ $any(cell).emptyText ?? '—' }}</span>
+                            }
                           }
 
                           @case ('link') {
