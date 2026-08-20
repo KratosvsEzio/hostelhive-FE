@@ -18,6 +18,7 @@ import {
   RoomType,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { ApiPagination, toPageInfo } from '@util/pagination';
 
 export interface WeeklyMenuPayload {
   id?: string;
@@ -289,7 +290,7 @@ interface RawExpense {
 interface ExpenseListResponse {
   expenses?: RawExpense[];
   data?: RawExpense[];
-  pagination?: { total_count?: number };
+  pagination?: ApiPagination;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -569,7 +570,7 @@ export class HostelsApi {
   listExpenses(
     hostelId: string,
     params?: Record<string, string>,
-  ): Observable<{ items: ExpenseListItem[]; total: number }> {
+  ): Observable<{ items: ExpenseListItem[]; total: number; totalPages: number }> {
     return this.api
       .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { limit: '200', ...params })
       .pipe(
@@ -587,6 +588,10 @@ export class HostelsApi {
               createdAt: e.created_at ?? '',
             })),
             total: r.pagination?.total_count ?? rows.length,
+            // Callers that page (the mess grocery table) need the page count. Derived from
+            // the requested limit when the API omits it, so a missing field degrades to a
+            // single page rather than to zero.
+            totalPages: r.pagination?.total_pages ?? 1,
           };
         }),
       );

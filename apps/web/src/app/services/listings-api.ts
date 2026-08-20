@@ -7,6 +7,7 @@ import {
   Paginated,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { ApiPagination, toPageInfo } from '@util/pagination';
 
 /**
  * Raw hostel from GET /public/hostels. The endpoint runs Searchkick with `load: false`,
@@ -252,11 +253,7 @@ export class ListingsApi {
         | {
             hostels: ApiHostel[];
             // Rails/Searchkick envelope: { current_page, total_pages, total_count, … }.
-            pagination?: {
-              total_count?: number;
-              current_page?: number;
-              total_pages?: number;
-            };
+            pagination?: ApiPagination;
             // Legacy/alternate envelope kept as a fallback.
             meta?: { total?: number; page?: number };
           }
@@ -271,14 +268,17 @@ export class ListingsApi {
           const items: Listing[] = raw.map((h) => toListing(h));
           // Sorting is handled server-side via sort[starting_price]; no client-side re-sort needed.
 
+          const info = toPageInfo(pg, page, items.length);
+
           return {
             items,
-            // True total across all pages — the API's `pagination.total_count`, with the
-            // legacy `meta.total` and then the page length as fallbacks.
-            total: pg?.total_count ?? meta?.total ?? items.length,
-            page: pg?.current_page ?? meta?.page ?? page,
+            // `meta` is a legacy envelope some responses still carry; it only wins when the
+            // modern `pagination` block is absent, which toPageInfo reports as a row-count
+            // fallback rather than a real total.
+            total: pg ? info.total : (meta?.total ?? items.length),
+            page: pg ? info.page : (meta?.page ?? page),
             pageSize,
-            totalPages: pg?.total_pages,
+            totalPages: info.totalPages,
           };
         }),
       );

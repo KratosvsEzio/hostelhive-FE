@@ -2,13 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { Staff } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
-import { PAGE_SIZE } from '@util/pagination';
+import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
 
-interface ApiPagination {
-  current_page?: number;
-  total_count?: number;
-  total_pages?: number;
-}
 
 interface ApiStaffStatus {
   id?: string | number;
@@ -152,17 +147,17 @@ export class StaffApi {
   ): Observable<StaffPage> {
     return this.api
       .get<ApiStaffsResponse>(`/api/host/hostels/${hostelId}/staffs`, {
-        page,
-        limit,
+        ...pageParams(page, limit),
         ...filters,
       })
       .pipe(
         map((res) => {
           const rows = res.staffs ?? res.data ?? [];
+          const info = toPageInfo(res.pagination, page, rows.length);
           return {
             items: rows.map(toStaff),
-            total: res.pagination?.total_count ?? rows.length,
-            totalPages: res.pagination?.total_pages ?? 1,
+            total: info.total,
+            totalPages: info.totalPages,
             aggs: res.aggs ?? [],
           } satisfies StaffPage;
         }),

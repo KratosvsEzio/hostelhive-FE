@@ -15,6 +15,7 @@ import { ApiClient } from '@core/api-resource';
 import { HostelsApi } from './hostels-api';
 import { OffersApi } from './offers-api';
 import { UsersApi } from './users-api';
+import { ApiPagination, toPageInfo } from '@util/pagination';
 import {
   AUDIT,
   DELTA_GROUPS,
@@ -203,12 +204,7 @@ export class ModerationApi {
 interface ModeratorAttachmentsResponse {
   success?: boolean;
   attachments?: ModeratorAttachment[];
-  pagination?: {
-    current_page?: number | null;
-    next_page?: number | null;
-    total_count?: number | null;
-    total_pages?: number | null;
-  } | null;
+  pagination?: ApiPagination | null;
   possible_statuses?: { slug: string; name: string }[] | null;
 }
 
@@ -268,7 +264,7 @@ interface ApiModeratorHostel {
 interface ModeratorHostelsResponse {
   success?: boolean;
   hostels?: ApiModeratorHostel[];
-  pagination?: { total_count?: number; total_pages?: number; current_page?: number };
+  pagination?: ApiPagination;
 }
 
 function extractHostels(

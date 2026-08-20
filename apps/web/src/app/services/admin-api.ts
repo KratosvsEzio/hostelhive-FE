@@ -1,3 +1,4 @@
+import { ApiPagination, toPageInfo } from '@util/pagination';
 import { format, getYear, parseISO } from 'date-fns';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
@@ -132,15 +133,19 @@ export class AdminApi {
     return this.api
       .get<AdminContractsResponse>('/api/admin/contracts', params)
       .pipe(
-        map((res) => ({
-          items: (res.contracts ?? []).map((c) => toContract(c)),
-          total: res.pagination?.total_count ?? res.contracts?.length ?? 0,
-          page: res.pagination?.current_page ?? page,
-          pageSize: CONTRACTS_PAGE_SIZE,
-          totalPages: res.pagination?.total_pages,
-          aggs: res.aggs ?? [],
-          statuses: res.possible_statuses ?? [],
-        })),
+        map((res) => {
+          const rows = res.contracts ?? [];
+          const info = toPageInfo(res.pagination, page, rows.length);
+          return {
+            items: rows.map((c) => toContract(c)),
+            total: info.total,
+            page: info.page,
+            pageSize: CONTRACTS_PAGE_SIZE,
+            totalPages: info.totalPages,
+            aggs: res.aggs ?? [],
+            statuses: res.possible_statuses ?? [],
+          };
+        }),
       );
   }
 
@@ -187,15 +192,19 @@ export class AdminApi {
     return this.api
       .get<AdminHostelsResponse>('/api/admin/hostels', params)
       .pipe(
-        map((res) => ({
-          items: (res.hostels ?? []).map(toAdminListing),
-          total: res.pagination?.total_count ?? res.hostels?.length ?? 0,
-          page: res.pagination?.current_page ?? page,
-          pageSize: LISTINGS_PAGE_SIZE,
-          totalPages: res.pagination?.total_pages,
-          aggs: res.aggs ?? [],
-          statuses: res.possible_statuses ?? [],
-        })),
+        map((res) => {
+          const rows = res.hostels ?? [];
+          const info = toPageInfo(res.pagination, page, rows.length);
+          return {
+            items: rows.map(toAdminListing),
+            total: info.total,
+            page: info.page,
+            pageSize: LISTINGS_PAGE_SIZE,
+            totalPages: info.totalPages,
+            aggs: res.aggs ?? [],
+            statuses: res.possible_statuses ?? [],
+          };
+        }),
       );
   }
 
@@ -233,15 +242,19 @@ export class AdminApi {
     return this.api
       .get<AdminPaymentsResponse>('/api/admin/payments', params)
       .pipe(
-        map((res) => ({
-          items: (res.payments ?? []).map(toPayment),
-          total: res.pagination?.total_count ?? res.payments?.length ?? 0,
-          page: res.pagination?.current_page ?? page,
-          pageSize: PAYMENTS_PAGE_SIZE,
-          totalPages: res.pagination?.total_pages,
-          aggs: res.aggs ?? [],
-          statuses: res.possible_statuses ?? [],
-        })),
+        map((res) => {
+          const rows = res.payments ?? [];
+          const info = toPageInfo(res.pagination, page, rows.length);
+          return {
+            items: rows.map(toPayment),
+            total: info.total,
+            page: info.page,
+            pageSize: PAYMENTS_PAGE_SIZE,
+            totalPages: info.totalPages,
+            aggs: res.aggs ?? [],
+            statuses: res.possible_statuses ?? [],
+          };
+        }),
       );
   }
 }
@@ -281,13 +294,7 @@ interface AdminPaymentsResponse {
   payments?: ApiPayment[];
   aggs?: PaymentAgg[];
   possible_statuses?: PaymentStatusOption[];
-  pagination?: {
-    current_page?: number;
-    next_page?: number | null;
-    prev_page?: number | null;
-    total_pages?: number;
-    total_count?: number;
-  };
+  pagination?: ApiPagination;
 }
 
 const PAYMENT_STATES: readonly PaymentState[] = [
@@ -535,13 +542,7 @@ interface AdminContractsResponse {
   contracts?: ApiContractListItem[];
   aggs?: ContractAgg[];
   possible_statuses?: ContractStatusOption[];
-  pagination?: {
-    current_page?: number;
-    next_page?: number | null;
-    prev_page?: number | null;
-    total_pages?: number;
-    total_count?: number;
-  };
+  pagination?: ApiPagination;
 }
 interface AdminContractResponse {
   success?: boolean;
@@ -688,13 +689,7 @@ interface AdminHostelsResponse {
   hostels?: ApiAdminHostel[];
   aggs?: AdminListingAgg[];
   possible_statuses?: AdminListingStatusOption[];
-  pagination?: {
-    current_page?: number;
-    next_page?: number | null;
-    prev_page?: number | null;
-    total_pages?: number;
-    total_count?: number;
-  };
+  pagination?: ApiPagination;
 }
 
 const LISTINGS_PAGE_SIZE = 15;
