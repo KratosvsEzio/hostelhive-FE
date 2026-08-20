@@ -14,8 +14,6 @@ export const ROOM_TYPES = [
   'Dormitory',
 ] as const;
 
-export type RoomTypeName = (typeof ROOM_TYPES)[number];
-
 /**
  * Seeker-facing labels. The canonical value (what we send/store/group by) stays
  * `'Single room'`; only the text shown to a human changes. Keep the value out of

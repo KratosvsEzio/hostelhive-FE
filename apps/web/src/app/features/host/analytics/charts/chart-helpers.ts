@@ -9,12 +9,6 @@ import { OccupancyPoint, RevenuePoint, TenantMovement } from '@hostelhive/data-a
 
 /* ── Donut (occupancy KPI) ─────────────────────────────────────────────── */
 
-/** Circle uses `pathLength="100"`, so the arc dash is just the percentage. */
-export function donutDash(pct: number): string {
-  const v = clamp(pct, 0, 100);
-  return `${v} ${100 - v}`;
-}
-
 /* ── Revenue (stacked bars) ────────────────────────────────────────────── */
 
 export interface RevenueBar {
@@ -169,39 +163,6 @@ export function spendBars(
 }
 
 /* ── Y-axis ticks ──────────────────────────────────────────────────────── */
-
-/**
- * Computes Y-axis tick marks for a percentage-height bar chart.
- * Both the bars and the ticks must use the same `peak` + `maxFill` parameters so
- * gridlines align with actual bar tops.
- *
- * @param peak     Maximum raw data value (tallest bar = maxFill% of chart height)
- * @param maxFill  Percentage of chart height that `peak` occupies (e.g. 92 for revenue)
- * @param integer  When true, restricts steps to whole numbers (for count-based charts)
- */
-export function yAxisTicks(
-  peak: number,
-  maxFill: number,
-  integer = false,
-): { value: number; bottomPct: number }[] {
-  if (peak <= 0) return [{ value: 0, bottomPct: 0 }];
-  const count = 4;
-  const rawStep = peak / count;
-  const expBase = Math.max(1, Math.pow(10, Math.floor(Math.log10(Math.max(1, rawStep)))));
-  const exp = integer ? expBase : Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const niceMultiples = integer ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
-  const step = niceMultiples.map((m) => m * exp).find((s) => s >= rawStep) ?? rawStep;
-  const ceiling = Math.ceil(peak / step) * step;
-  const ticks: { value: number; bottomPct: number }[] = [];
-  for (let v = 0; v <= ceiling + step * 0.001; v += step) {
-    ticks.push({
-      value: Math.round(v),
-      // Clamp so the ceiling tick (which may exceed peak) sits at maxFill
-      bottomPct: Math.min((v / peak) * maxFill, maxFill),
-    });
-  }
-  return ticks;
-}
 
 /* ── utils ─────────────────────────────────────────────────────────────── */
 

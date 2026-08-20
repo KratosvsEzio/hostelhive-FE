@@ -131,12 +131,3 @@ export function zoomForLatSpan(span: number): number {
   if (span > 0.015) return 14;
   return 15; // street / point of interest
 }
-
-/** Zoom from a Nominatim bounding box `[south, north, west, east]` (strings). */
-export function zoomForBoundingBox(bbox?: string[]): number | undefined {
-  if (!bbox || bbox.length < 2) return undefined;
-  const south = parseFloat(bbox[0]);
-  const north = parseFloat(bbox[1]);
-  if (!Number.isFinite(south) || !Number.isFinite(north)) return undefined;
-  return zoomForLatSpan(Math.abs(north - south));
-}
