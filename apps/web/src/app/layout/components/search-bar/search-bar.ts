@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { searchRouteFor } from '@util/location-slug';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
@@ -151,7 +152,9 @@ export class SearchBar {
   protected search(): void {
     const hasGeo = this.lat() !== null && this.lng() !== null;
     this.open.set(null);
-    this.router.navigate(['/search'], {
+    // The place becomes a URL segment (/search/karachi) purely for readability. Coordinates
+    // still travel in the query, so this changes nothing about how the map is driven.
+    this.router.navigate(searchRouteFor(this.place()), {
       queryParams: {
         place: this.place() || null,
         city: hasGeo ? null : this.place() || null,

@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { searchRouteFor } from '@util/location-slug';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
 import { HOST_ROLES, SessionStore } from '@core/auth';
@@ -57,9 +58,12 @@ export class Home {
     this.search();
   }
 
+  /** `/search/karachi` for the popular-city links; the coordinates still ride in the query. */
+  protected readonly searchRoute = (city: string) => searchRouteFor(city);
+
   protected search(): void {
     const hasGeo = this.lat() !== null && this.lng() !== null;
-    this.router.navigate(['/search'], {
+    this.router.navigate(searchRouteFor(this.place()), {
       queryParams: {
         place: this.place() || null,
         city: hasGeo ? null : this.place() || null,

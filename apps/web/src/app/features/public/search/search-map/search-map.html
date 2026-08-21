@@ -173,13 +173,23 @@
       </div>
     }
     <!-- Hidden on mobile — the sheet's drag header already carries the count. -->
-    @if (loading()) {
-      <div class="mb-4 h-5 w-44 rounded shimmer max-[949px]:hidden"></div>
-    } @else if (!loadError()) {
-      <h2 class="mb-4 text-base font-semibold text-ink-900 max-[949px]:hidden">
-        {{ resultsLabel() }}
-      </h2>
-    }
+    <!-- The heading sits OUTSIDE the loading/error branches: it names what was searched
+         for, which is true whether or not the results came back. Inside them, a failed
+         request left the column with no context at all. -->
+    <div class="mb-4 max-[949px]:hidden">
+      <!-- Falls back to Pakistan, which is what an unscoped search actually covers — a
+           blank heading would read as a bug. -->
+      <h1 class="font-display text-xl font-semibold text-ink-900">
+        {{ locationName() }}
+      </h1>
+      @if (loading()) {
+        <div class="mt-1.5 h-4 w-44 rounded shimmer"></div>
+      } @else if (!loadError()) {
+        <!-- Kept as "within map area": results follow the viewport, so once the user pans
+             away from the searched place, "in Karachi" would be a lie. -->
+        <p class="mt-0.5 text-sm text-ink-500">{{ resultsLabel() }}</p>
+      }
+    </div>
     @if (loading()) {
       <div
         class="grid max-w-[1180px] grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 min-[950px]:grid-cols-1 min-[1150px]:grid-cols-2 min-[1800px]:grid-cols-3"

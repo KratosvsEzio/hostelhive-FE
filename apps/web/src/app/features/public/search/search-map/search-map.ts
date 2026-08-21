@@ -21,6 +21,7 @@ import {
   debounceTime,
   EMPTY,
   filter,
+  map,
   of,
   startWith,
   switchMap,
@@ -38,6 +39,7 @@ import {
 import { currencyName } from '@util/currencies';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { MobileApp } from '@core/mobile-app';
+import { DEFAULT_LOCATION, fromLocationSlug } from '@util/location-slug';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
@@ -139,6 +141,26 @@ export class SearchMap {
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: null,
   });
+
+  /** The `:location` slug, when the URL carries one. */
+  private readonly locationSlug = toSignal(
+    this.route.paramMap.pipe(map((p) => p.get('location') ?? '')),
+    { initialValue: this.route.snapshot.paramMap.get('location') ?? '' },
+  );
+
+  /**
+   * What the results are scoped to, for the page heading.
+   *
+   * The `place` query param is the real name and wins whenever it is present; the slug is
+   * only unslugified when it is not — a pasted `/search/gulberg-lahore` carries no place.
+   * Neither means the search is country-wide, which reads as Pakistan rather than as blank.
+   */
+  protected readonly locationName = computed(() => {
+    const place = this.params()?.get('place') || this.params()?.get('city');
+    if (place) return place;
+    const slug = this.locationSlug();
+    return slug ? fromLocationSlug(slug) : DEFAULT_LOCATION;
+  });
   protected readonly accommodationType = computed<AccommodationType | 'all'>(
     () => (this.params()?.get('gender') as AccommodationType | 'all') ?? 'all',
   );
@@ -171,7 +193,10 @@ export class SearchMap {
 
   /** Current place label shown in the mobile search input, kept in sync with the URL. */
   protected readonly placeText = computed(
-    () => this.params()?.get('place') ?? this.params()?.get('city') ?? '',
+    () =>
+      this.params()?.get('place') ??
+      this.params()?.get('city') ??
+      (this.locationSlug() ? fromLocationSlug(this.locationSlug()) : ''),
   );
 
   /**
