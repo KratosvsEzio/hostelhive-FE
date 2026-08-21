@@ -7,6 +7,11 @@ import {
 import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE_ORIGIN } from './app/core/seo';
+import {
+  renderSitemap,
+  sitemapPaths,
+} from './app/features/public/landing/sitemap-urls';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -48,16 +53,24 @@ const angularApp = new AngularNodeAppEngine({ allowedHosts });
 console.log(`[SSR] allowedHosts: ${allowedHosts.join(', ')}`);
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
+ * `/sitemap.xml` — served here rather than committed as a static file so it cannot drift
+ * from the routes it describes: the URLs are derived from the same `PLACES` list the
+ * landing pages are built from, so adding a place adds its sitemap entry.
  *
- * Example:
- * ```ts
- * app.get('/api/**', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Declared before `express.static` so it wins outright, rather than depending on there
+ * being no file of that name in the build output.
+ *
+ * No `lastmod`, `changefreq` or `priority`. Google ignores the latter two outright, and a
+ * `lastmod` set to the build time would claim every page changed on every deploy — a
+ * signal treated as untrustworthy and discounted, which is worse than omitting it.
  */
+app.get('/sitemap.xml', (_req, res) => {
+  res
+    .type('application/xml')
+    // An hour: the URL set only changes when a place is added, which is a deploy.
+    .set('Cache-Control', 'public, max-age=3600')
+    .send(renderSitemap(SITE_ORIGIN, sitemapPaths()));
+});
 
 /**
  * Serve static files from /browser
