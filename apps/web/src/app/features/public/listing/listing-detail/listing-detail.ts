@@ -18,6 +18,7 @@ import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { MobileApp } from '@core/mobile-app';
+import { AnalyticsService } from '@core/analytics/analytics.service';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 import { accommodationLabel } from '@util/accommodation-type';
@@ -98,6 +99,7 @@ export class ListingDetail {
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly analytics = inject(AnalyticsService);
 
   protected readonly phoneValue = signal<string | null>(null);
   protected readonly phoneLoading = signal(false);
@@ -283,14 +285,22 @@ export class ListingDetail {
   }
 
   protected openModal(): void {
-    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
+    if (!this.session.isAuthenticated()) {
+      this.loginGateOpen.set(true);
+      this.analytics.track('lead_wall_shown', { intent: 'contact' });
+      return;
+    }
     if (this.revealed()) { this.modalOpen.set(true); return; }
     this.pendingAction = 'modal';
     this.fetchPhone();
   }
 
   protected openWhatsApp(): void {
-    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
+    if (!this.session.isAuthenticated()) {
+      this.loginGateOpen.set(true);
+      this.analytics.track('lead_wall_shown', { intent: 'whatsapp' });
+      return;
+    }
     const url = this.whatsAppUrl();
     if (url) { window.open(url, '_blank', 'noopener'); return; }
     this.pendingAction = 'whatsapp';
@@ -331,6 +341,13 @@ export class ListingDetail {
           this.phoneLoading.set(false);
           if (phone) {
             this.phoneValue.set(phone);
+            const listing = this.state().data;
+            if (listing) {
+              this.analytics.track('lead_submitted', {
+                listing_id: listing.id,
+                city: listing.city,
+              });
+            }
             if (this.pendingAction === 'modal') this.modalOpen.set(true);
             if (this.pendingAction === 'whatsapp') {
               const url = this.whatsAppUrl();
@@ -488,6 +505,13 @@ export class ListingDetail {
         takeUntilDestroyed(this.destroyRef),
       ).subscribe((s) => {
         this._state.set(s);
+        if (s.data) {
+          this.analytics.track('listing_viewed', {
+            listing_id: s.data.id,
+            city: s.data.city,
+            accommodation_type: s.data.accommodationType,
+          });
+        }
         // Load reviews up front so the in-page reviews section renders them without a click.
         if (s.data) this.fetchReviews();
         if (s.data && openReviewOnLoad) {
