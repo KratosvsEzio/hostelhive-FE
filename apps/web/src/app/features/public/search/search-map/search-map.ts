@@ -40,6 +40,7 @@ import { currencyName } from '@util/currencies';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { MobileApp } from '@core/mobile-app';
 import { DEFAULT_LOCATION, fromLocationSlug } from '@util/location-slug';
+import { AnalyticsService } from '@core/analytics/analytics.service';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
@@ -136,6 +137,7 @@ export class SearchMap {
    * app-level `showSeekerTabs` condition here.
    */
   protected readonly mobile = inject(MobileApp);
+  private readonly analytics = inject(AnalyticsService);
   private readonly mapEl = viewChild.required<ElementRef<HTMLElement>>('mapEl');
 
   private readonly params = toSignal(this.route.queryParamMap, {
@@ -327,6 +329,10 @@ export class SearchMap {
         this.pendingMore = false;
         this.cooldown.set(0); // a successful response clears any lingering throttle state
         this.applyResult(res);
+        // Page 1 only — an infinite-scroll append is the same search, not a new one.
+        // Not on the error path either: catchError returns an empty page, and reporting
+        // that as a zero-result search would poison the one metric worth having here.
+        if ((res.page ?? 1) <= 1 && !this.loadError()) this.trackSearch(res.total);
       }),
       startWith({
         items: [],
@@ -373,6 +379,23 @@ export class SearchMap {
    * non-page query — filters, place, map bounds) restarts the list; later
    * pages append, deduped by id in case the backend shifts between fetches.
    */
+  /**
+   * One `search_performed` per fresh search. The filters travel as parameters so the
+   * report can answer which combinations return nothing — a zero-result search is the most
+   * actionable row in the whole funnel.
+   */
+  private trackSearch(total: number): void {
+    const q = this.query();
+    this.analytics.track('search_performed', {
+      query: q.city?.toLowerCase(),
+      accommodation_type: q.accommodationType === 'all' ? undefined : q.accommodationType,
+      property_type: q.propertyType,
+      budget_min: q.minPrice,
+      budget_max: q.maxPrice,
+      result_count: total,
+    });
+  }
+
   private applyResult(res: Paginated<Listing>): void {
     if ((res.page ?? 1) <= 1 || this.inFlightKey !== this.lastQueryKey) {
       this.accumulated.set(res.items);

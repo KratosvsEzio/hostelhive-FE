@@ -28,6 +28,8 @@ import { readDevApiBaseUrl } from '@core/dev-api-base-url';
 import { provideCapacitorNative } from '@app/capacitor/native';
 import { appRoutes } from './app.routes';
 import { NotificationService } from '@core/notification.service';
+import { AnalyticsService } from '@core/analytics/analytics.service';
+import { restoreAnalyticsConsent } from '@core/analytics/analytics-consent';
 
 const STAFF: Role[] = ['super-admin', 'admin', 'support', 'moderator'];
 
@@ -99,6 +101,14 @@ export const appConfig: ApplicationConfig = {
       if (typeof window === 'undefined') return; // SSR: nothing persisted to restore
       if (new URLSearchParams(window.location.search).has('role')) return; // dev seed wins
       return inject(AuthService).restoreSession();
+    }),
+    // GA4 (public marketplace only). Reads the stored consent choice and, if it was
+    // "granted", loads gtag. A visitor who has not answered — or who declined — gets no
+    // script, no cookie and no request: the banner is a gate, not a notice.
+    provideAppInitializer(() => {
+      if (typeof window === 'undefined') return; // SSR
+      restoreAnalyticsConsent();
+      inject(AnalyticsService).start();
     }),
     // DEV ONLY — seed a console session so guarded /host + /admin routes render
     // before the Lead Wall login ships. Public seeker pages stay session-less.

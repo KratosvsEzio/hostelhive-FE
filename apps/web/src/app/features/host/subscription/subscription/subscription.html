@@ -165,10 +165,18 @@
       } @else {
         <hh-data-table
           [columns]="paymentCols"
-          [rows]="s.data.payments"
+          [rows]="pagedPayments()"
           [rowId]="paymentRowId"
           [expandable]="paymentExpand"
         />
+        @if (paymentPageCount() > 1) {
+          <div class="mt-4 flex justify-end">
+            <hh-pagination
+              [pageCount]="paymentPageCount()"
+              [(page)]="paymentPage"
+            />
+          </div>
+        }
       }
     </section>
 
