@@ -413,7 +413,7 @@ export class MessList {
     toObservable(this.expenseFetchKey).pipe(
       switchMap(({ hostelId }) => {
         if (!hostelId) return of({ loading: true, error: false, items: [] as ExpenseListItem[] });
-        return this.hostelsApi.listExpenses(hostelId, { 's[expense_type]': 'groceries', page_size: '20' }).pipe(
+        return this.hostelsApi.listExpenses(hostelId, { 's[expense_type]': 'groceries', limit: '20' }).pipe(
           map((r) => ({
             loading: false,
             error: false,

@@ -15,6 +15,7 @@ import {
 } from 'rxjs';
 import { isJwtExpired } from './jwt';
 import { ROLES, Role } from './roles';
+import { flattenPermissions } from './permissions';
 import { SessionStore, SessionUser } from './session-store';
 
 /**
@@ -258,7 +259,7 @@ function toSessionUser(u: CurrentUser): SessionUser {
     email: u.email,
     role: primaryRole(slugs, u.is_admin),
     allRoles: ROLES.filter((r) => slugs.has(r)),
-    permissions: [], // CurrentUserSerializer exposes roles, not granular flags (BE follow-up)
+    permissions: flattenPermissions(u.permissions),
     propertyId: null, // not exposed by /users/current yet
   };
 }

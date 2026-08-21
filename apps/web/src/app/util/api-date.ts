@@ -21,11 +21,6 @@ export function offsetOf(value: string): string | null {
   return m && value.length > 10 ? `${m[1]}${m[2]}${m[3]}` : null;
 }
 
-/** `YYYY-MM-DD` in the offset the value carries — never shifted into the viewer's zone. */
-export function apiDateOnly(value: string | null | undefined): string {
-  return value ? value.slice(0, 10) : '';
-}
-
 /** Today as `YYYY-MM-DD` from local parts. `toISOString()` would give the UTC day, which
  *  is yesterday for any viewer west of UTC. */
 export function localToday(date: Date = new Date()): string {

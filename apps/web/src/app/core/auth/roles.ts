@@ -35,25 +35,8 @@ export const HOST_ROLES: readonly Role[] = [
   'warden',
 ] as const;
 
-/** Roles scoped to exactly one `property_id` (server-enforced; FE guards mirror). */
-export const PROPERTY_SCOPED_ROLES: readonly Role[] = [
-  'manager',
-  'warden',
-] as const;
-
 /**
  * Granular permission flag, e.g. `contracts.view`, `payments.refund`, `roles.manage`.
  * The authoritative list + role→flag mapping is confirmed under Q-API/F6 (§0).
  */
 export type Permission = string;
-
-/** Known flags referenced by the FE today (extend as the contract lands). */
-export const PERMISSIONS = {
-  contractsView: 'contracts.view',
-  contractsManage: 'contracts.manage',
-  paymentsView: 'payments.view',
-  paymentsRefund: 'payments.refund',
-  rolesManage: 'roles.manage',
-  listingsModerate: 'listings.moderate',
-  teamManage: 'team.manage',
-} as const satisfies Record<string, Permission>;

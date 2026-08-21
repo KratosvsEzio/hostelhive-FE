@@ -47,6 +47,7 @@ import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { API_CONFIG } from '@core/api-config';
 import { utilityFilterGroups } from '@app/util/filter-configs/utility-filter-groups';
 import { format, parseISO } from 'date-fns';
+import { HasPermission } from '@core/auth';
 
 function fmtDate(s?: string): string {
   if (!s) return '—';
@@ -68,6 +69,7 @@ interface ViewState {
   selector: 'hh-utilities',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    HasPermission,
     RouterLink,
     DashboardLayout,
     DecimalPipe,

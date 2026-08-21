@@ -21,7 +21,7 @@ import {
   UtilityTypeMeta,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
-import { PAGE_SIZE } from '@util/pagination';
+import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
 
 interface ApiRoomType {
   id?: string;
@@ -54,10 +54,6 @@ interface ApiAggs {
   vacant_capacity?: number;
 }
 
-interface ApiPagination {
-  total_count?: number;
-  total_pages?: number;
-}
 
 interface ApiRoomsResponse {
   rooms?: ApiRoom[];
@@ -450,7 +446,7 @@ export class HostOpsApi {
     filters: Record<string, string> = {},
   ): Observable<{ rooms: Room[]; total: number; aggs: RoomAggs; statuses: RoomStatusOption[] }> {
     return this.api
-      .get<ApiRoomsResponse>(`/api/host/hostels/${hostelId}/rooms`, { page, limit, ...filters })
+      .get<ApiRoomsResponse>(`/api/host/hostels/${hostelId}/rooms`, { ...pageParams(page, limit), ...filters })
       .pipe(map((res) => ({
         rooms: (res.rooms ?? res.data ?? []).map(toRoom),
         total: res.pagination?.total_count ?? res.total_count ?? 0,
@@ -554,7 +550,7 @@ export class HostOpsApi {
     filters: Record<string, string> = {},
   ): Observable<{ renters: Tenant[]; total: number; statuses: { name: string; slug: string; count: number; dispositionId: number }[] }> {
     return this.api
-      .get<ApiRentersResponse>(`/api/host/hostels/${hostelId}/renters`, { page, limit, ...filters })
+      .get<ApiRentersResponse>(`/api/host/hostels/${hostelId}/renters`, { ...pageParams(page, limit), ...filters })
       .pipe(
         map((res) => {
           const aggsBySlug = Object.fromEntries((res.aggs ?? []).map((a) => [a.slug, a.count]));
@@ -670,7 +666,7 @@ export class HostOpsApi {
     statuses: { name: string; slug: string; count: number; totalAmount: number }[];
     aggs: { utilityTotal: number; utilityPaid: number; utilityBalance: number; rentTotal: number; rentPaid: number; rentBalance: number };
   }> {
-    const params: Record<string, string | number | boolean> = { page, limit, ...filters };
+    const params: Record<string, string | number | boolean> = { ...pageParams(page, limit), ...filters };
     return this.api
       .get<ApiRenterBillsResponse>(`/api/host/hostels/${hostelId}/renter_bills`, params)
       .pipe(
@@ -706,7 +702,7 @@ export class HostOpsApi {
     aggs: { billToPay: number; received: number; balance: number };
   }> {
     return this.api
-      .get<ApiUtilityBillsResponse>(`/api/host/hostels/${hostelId}/utility_bills`, { page, limit, ...filters })
+      .get<ApiUtilityBillsResponse>(`/api/host/hostels/${hostelId}/utility_bills`, { ...pageParams(page, limit), ...filters })
       .pipe(map((res) => ({
         bills: (res.utility_bills ?? res.data ?? []).map(toUtilityBill),
         total: res.pagination?.total_count ?? 0,

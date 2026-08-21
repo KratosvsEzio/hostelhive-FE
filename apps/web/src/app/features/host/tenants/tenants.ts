@@ -45,6 +45,7 @@ import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
 import { TENANTS_TABLE_COLS } from '@app/util/table-configs/tenants-table-cols';
 import { TenantFormDrawer } from './tenant-form-drawer/tenant-form-drawer';
+import { HasPermission } from '@core/auth';
 
 interface ViewState {
   loading: boolean;
@@ -69,6 +70,7 @@ const TONES = ['sky', 'cream', 'mint'] as const;
   selector: 'hh-tenants',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    HasPermission,
     DashboardLayout,
     SubscriptionGate,
     Button,

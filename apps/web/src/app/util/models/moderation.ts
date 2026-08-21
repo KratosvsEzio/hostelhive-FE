@@ -232,8 +232,6 @@ export interface AuditEntry {
   time: string; // '14:32'
 }
 
-export type SortPref = 'oldest' | 'newest' | 'city';
-
 /** A row in the IP allowlist (screen 25). */
 export interface IpRule {
   cidr: string; // '182.176.x.x'

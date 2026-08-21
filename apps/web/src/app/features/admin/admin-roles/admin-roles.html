@@ -30,7 +30,8 @@
           <div class="min-h-0 flex-1 overflow-y-auto p-2">
             @for (r of roles(); track r.id) {
               <button
-                hh-button variant="text"
+                hh-button
+                variant="text"
                 type="button"
                 (click)="select(r.id)"
                 class="w-full !justify-start"
@@ -38,9 +39,9 @@
               >
                 <span class="min-w-0">
                   <span class="flex items-center gap-1.5">
-                    <span class="truncate text-sm font-medium text-ink-900">{{
-                      r.name
-                    }}</span>
+                    <span class="truncate text-sm font-medium text-ink-900">
+                      {{ r.name }}
+                    </span>
                     @if (r.dataRestricted) {
                       <i
                         class="ti ti-lock shrink-0 text-xs text-ink-400"
@@ -49,15 +50,16 @@
                       ></i>
                     }
                   </span>
-                  <span class="block truncate text-xs text-ink-400">{{
-                    roleMeta(r)
-                  }}</span>
+                  <span class="block truncate text-xs text-ink-400">
+                    {{ roleMeta(r) }}
+                  </span>
                 </span>
                 @if (r.kind === 'custom') {
                   <span
                     class="rounded-full bg-tint-purple px-2 py-0.5 text-[10px] font-medium text-ink-600"
-                    >Custom</span
                   >
+                    Custom
+                  </span>
                 }
               </button>
             }
@@ -78,15 +80,16 @@
                   <h2 class="font-display text-base font-semibold text-ink-900">
                     {{ role.name }}
                   </h2>
-                  <span [class]="tagClass(role)">{{
-                    role.kind === 'custom' ? 'Custom role' : 'System role'
-                  }}</span>
+                  <span [class]="tagClass(role)">
+                    {{ role.kind === 'custom' ? 'Custom role' : 'System role' }}
+                  </span>
                   @if (role.dataRestricted) {
                     <span
                       class="inline-flex items-center gap-1 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
-                      ><i class="ti ti-lock text-[11px]" aria-hidden="true"></i
-                      >Data-restricted</span
                     >
+                      <i class="ti ti-lock text-[11px]" aria-hidden="true"></i>
+                      Data-restricted
+                    </span>
                   }
                 </div>
                 @if (role.description || role.assigned) {
@@ -95,14 +98,6 @@
                   </p>
                 }
               </div>
-              <button
-                hh-button
-                variant="outlined"
-                size="sm"
-                aria-label="Role options"
-              >
-                <i class="ti ti-dots"></i>
-              </button>
             </div>
 
             <div
@@ -112,12 +107,12 @@
                 class="ti ti-info-circle mt-0.5 shrink-0 text-brand-500"
                 aria-hidden="true"
               ></i>
-              <span
-                >Permissions load live — the catalog from the permissions API,
+              <span>
+                Permissions load live — the catalog from the permissions API,
                 and each role's current assignments from its role detail (ticked
                 below). Adjust the ticks and Save to replace the role's
-                permissions via the API.</span
-              >
+                permissions via the API.
+              </span>
             </div>
 
             <div class="min-h-0 flex-1 overflow-y-auto">
@@ -149,8 +144,16 @@
                         >{{ g.label }}
                       </p>
                       @for (f of g.flags; track f.flag) {
-                        <label
-                          class="flex cursor-pointer items-center justify-between py-2"
+                        <!-- The row itself is the checkbox, rather than a label wrapping
+                             one: the visible permission name becomes the control's
+                             accessible name, and the whole row stays clickable. -->
+                        <button
+                          type="button"
+                          role="checkbox"
+                          [attr.aria-checked]="isOn(f.flag)"
+                          [disabled]="locked()"
+                          (click)="toggleFlag(f.flag)"
+                          class="flex w-full cursor-pointer items-center justify-between py-2 text-left disabled:cursor-default disabled:opacity-60"
                           [class.pl-5]="!f.parent"
                         >
                           <span
@@ -162,23 +165,12 @@
                             "
                             >{{ f.label }}</span
                           >
-                          <button
-                            type="button"
-                            role="checkbox"
-                            [attr.aria-checked]="isOn(f.flag)"
-                            [attr.aria-label]="f.flag"
-                            [disabled]="locked()"
-                            (click)="toggleFlag(f.flag)"
-                            [class]="cellClass(f.flag)"
-                          >
+                          <span aria-hidden="true" [class]="cellClass(f.flag)">
                             @if (isOn(f.flag)) {
-                              <i
-                                class="ti ti-check text-xs"
-                                aria-hidden="true"
-                              ></i>
+                              <i class="ti ti-check text-xs"></i>
                             }
-                          </button>
-                        </label>
+                          </span>
+                        </button>
                       }
                     </div>
                   }
@@ -215,7 +207,8 @@
                   Cancel
                 </button>
                 <button
-                  hh-button color="primary"
+                  hh-button
+                  color="primary"
                   size="sm"
                   [disabled]="locked() || !dirty() || saving()"
                   (click)="save()"
@@ -231,11 +224,21 @@
 
     <!-- Create-custom-role panel -->
     @if (creating()) {
+      <!-- Backdrop: click or Escape dismisses, matching hh-drawer. tabindex makes the
+           container focusable so the key handler is reachable. -->
       <div
         class="fixed inset-0 z-40 flex items-end justify-center bg-ink-900/40 p-4 sm:items-center"
         (click)="cancelCreate()"
+        (keydown.escape)="cancelCreate()"
+        tabindex="-1"
       >
-        <hh-card class="w-full max-w-md" (click)="$event.stopPropagation()">
+        <hh-card
+          class="w-full max-w-md"
+          (click)="$event.stopPropagation()"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create custom role"
+        >
           <h3 class="font-display text-base font-semibold text-ink-900">
             Create custom role
           </h3>
@@ -251,16 +254,12 @@
             />
           </div>
           <div class="mt-5 flex justify-end gap-2">
-            <button
-              hh-button
-              variant="text"
-              size="sm"
-              (click)="cancelCreate()"
-            >
+            <button hh-button variant="text" size="sm" (click)="cancelCreate()">
               Cancel
             </button>
             <button
-              hh-button color="primary"
+              hh-button
+              color="primary"
               size="sm"
               [disabled]="!draftName().trim()"
               (click)="confirmCreate()"

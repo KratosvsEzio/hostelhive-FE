@@ -28,6 +28,7 @@ import { StaffFormDrawer } from './staff-form-drawer/staff-form-drawer';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NotificationService } from '@core/notification.service';
 import { RefetchDelay } from '@core/refetch-delay';
+import { HasPermission, SessionStore } from '@core/auth';
 import { STAFF_TABLE_COLS } from '@app/util/table-configs/staff-table-cols';
 import { PAGE_SIZE } from '@util/pagination';
 
@@ -62,6 +63,7 @@ const EMPTY_STAFF = {
     DataTable,
     EmptyState,
     FilterChips,
+    HasPermission,
     StaffFormDrawer,
     ErrorState,
     Skeleton,
@@ -71,6 +73,19 @@ const EMPTY_STAFF = {
 export class HostTeam {
   private readonly staffApi = inject(StaffApi);
   private readonly shellApi = inject(HostShellApi);
+  private readonly session = inject(SessionStore);
+
+  /**
+   * Whether this session has any row action at all. Without it the kebab still opens on a
+   * row the user can only read, showing an empty popup — worse than offering no menu.
+   * Removing a manager is its own hostel-level permission, so it counts here too.
+   */
+  protected readonly canActOnStaff = computed(
+    () =>
+      this.session.hasPermission('host:Staff:update') ||
+      this.session.hasPermission('host:Staff:destroy') ||
+      this.session.hasPermission('host:Hostel:remove_manager'),
+  );
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
   private readonly refetchDelay = inject(RefetchDelay);

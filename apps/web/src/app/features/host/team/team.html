@@ -1,6 +1,6 @@
 <app-dashboard-layout label="Team &amp; staff">
   <div hhActions class="flex items-center gap-2">
-    <button hh-button color="primary" size="sm" (click)="openStaffForm()">
+    <button *hhHasPermission="'host:Staff:create'" hh-button color="primary" size="sm" (click)="openStaffForm()">
       <i class="ti ti-plus" aria-hidden="true"></i>Add staff
     </button>
   </div>
@@ -69,7 +69,7 @@
               title="No staff yet"
               message="Add a warden, cook or guard to keep their salary and documents on file."
             >
-              <button hh-button color="primary" size="sm" (click)="openStaffForm()">
+              <button *hhHasPermission="'host:Staff:create'" hh-button color="primary" size="sm" (click)="openStaffForm()">
                 <i class="ti ti-user-plus" aria-hidden="true"></i>Add staff
               </button>
             </hh-empty-state>
@@ -81,7 +81,7 @@
           [columns]="tableCols"
           [rows]="staffRecords()"
           [rowId]="staffRowId"
-          [showActions]="true"
+          [showActions]="canActOnStaff()"
           [pagination]="paginationConf()"
           [actionActive]="staffActionActive"
           (rowAction)="openMenu($any($event.row), $event.event)"
@@ -108,18 +108,18 @@
       <!-- Wider than the 160px default: "Remove manager role" needs ~145px of content width and
            would otherwise overrun the panel, eating its right padding. -->
       <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="190" (close)="closeMenu()">
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openStaffForm(menuMember); closeMenu()">
+        <button *hhHasPermission="'host:Staff:update'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openStaffForm(menuMember); closeMenu()">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           Edit
         </button>
         @if (menuMember.isManager) {
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptRemoveManager(menuMember)">
+          <button *hhHasPermission="'host:Hostel:remove_manager'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptRemoveManager(menuMember)">
             <i class="ti ti-shield-off text-sm text-ink-400" aria-hidden="true"></i>
             Remove manager role
           </button>
         }
         <hh-context-menu-divider />
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptRemoveStaff(menuMember)">
+        <button *hhHasPermission="'host:Staff:destroy'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptRemoveStaff(menuMember)">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
           Remove
         </button>

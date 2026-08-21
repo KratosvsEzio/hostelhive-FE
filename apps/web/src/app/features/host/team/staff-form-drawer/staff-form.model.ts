@@ -31,6 +31,12 @@ export interface StaffForm {
   managerPassword: string;
   /** True when the record already had a manager login — the password is then optional. */
   wasManager: boolean;
+  /**
+   * The staff already has a login account (the API returned `user.id`). Manager access then
+   * needs nothing but the flag — there are no credentials to collect, so the email and
+   * password fields are shown disabled with a note rather than asked for again.
+   */
+  hasUserAccount: boolean;
 
   // Uploads. `*UploadId` is what gets sent; `*Url` is only for showing what is already
   // stored. The API returns CNIC images as bare URLs with no id, so an existing image can
@@ -81,6 +87,7 @@ export function emptyStaffForm(): StaffForm {
     managerEmail: '',
     managerPassword: '',
     wasManager: false,
+    hasUserAccount: false,
     avatarUploadId: '',
     avatarUrl: '',
     cnicFrontUploadId: '',
@@ -111,6 +118,7 @@ export function staffFormFrom(s: Staff): StaffForm {
     managerEmail: s.email ?? '',
     managerPassword: '',
     wasManager: !!s.isManager,
+    hasUserAccount: !!s.userId,
     avatarUploadId: s.avatarId ?? '',
     avatarUrl: s.avatarUrl ?? '',
     cnicFrontUploadId: '',
@@ -125,19 +133,22 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Email problem while manager access is on; empty when it is off or the value is good. */
 export function managerEmailError(f: StaffForm): string {
-  if (!f.isManager) return '';
+  // Nothing to validate when the account already exists — the field is disabled and the
+  // address shown is whatever the API returned.
+  if (!f.isManager || f.hasUserAccount) return '';
   const value = f.managerEmail.trim();
   if (!value) return 'Required.';
   return EMAIL_RE.test(value) ? '' : 'Enter a valid email address.';
 }
 
 /**
- * Password problem while manager access is on. Presence is only demanded when the login is
- * being created: an existing manager keeps their current password unless a new one is typed,
- * and the API never returns it for us to prefill. Never trimmed — spaces are legal in one.
+ * Password problem while manager access is on. Presence is only demanded when a login is
+ * actually being created: an existing manager keeps their current password unless a new one
+ * is typed, an existing user account has one already, and the API never returns it for us to
+ * prefill. Never trimmed — spaces are legal in a password.
  */
 export function managerPasswordError(f: StaffForm): string {
-  if (!f.isManager || f.wasManager) return '';
+  if (!f.isManager || f.wasManager || f.hasUserAccount) return '';
   return f.managerPassword ? '' : 'Required.';
 }
 
@@ -145,12 +156,15 @@ export function managerPasswordError(f: StaffForm): string {
  * Manager credentials for the staff payload, or nothing at all.
  *
  * Omitted entirely while the toggle is off, rather than sent as `is_manager: false`: a host
- * editing an ordinary field should never revoke someone's access as a side effect. The
- * password is likewise only sent when one was typed, so saving an existing manager's record
- * leaves their current password alone.
+ * editing an ordinary field should never revoke someone's access as a side effect.
+ *
+ * When the staff already has a login account, only the flag is sent — the credentials exist
+ * server-side and the form never collected them. Otherwise the password rides along only when
+ * one was typed, so saving an existing manager's record leaves their current password alone.
  */
 function managerFields(f: StaffForm): Pick<StaffWrite, 'email' | 'password' | 'is_manager'> {
   if (!f.isManager) return {};
+  if (f.hasUserAccount) return { is_manager: true };
   return {
     is_manager: true,
     email: f.managerEmail.trim(),

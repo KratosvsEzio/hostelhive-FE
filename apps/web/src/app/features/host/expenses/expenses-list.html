@@ -1,6 +1,6 @@
 <app-dashboard-layout label="Expenses">
   <div hhActions>
-    <a hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
+    <a *hhHasPermission="'host:Expense:create'" hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
       <i class="ti ti-plus" aria-hidden="true"></i>New expense
     </a>
   </div>
@@ -63,7 +63,7 @@
           Clear filters
         </button>
       } @else {
-        <a hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
+        <a *hhHasPermission="'host:Expense:create'" hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
           <i class="ti ti-plus" aria-hidden="true"></i>New expense
         </a>
       }
@@ -105,6 +105,7 @@
           type="button" hh-button variant="text" role="menuitem"
           class="w-full !justify-start"
           (click)="goToEdit(menuExpense)"
+          *hhHasPermission="'host:Expense:update'"
         >
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           Edit
@@ -114,6 +115,7 @@
           type="button" hh-button variant="text" role="menuitem"
           class="w-full !justify-start !text-danger"
           (click)="askDelete(menuExpense)"
+          *hhHasPermission="'host:Expense:destroy'"
         >
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
           Delete

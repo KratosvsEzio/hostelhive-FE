@@ -2,6 +2,7 @@
 // App core module; the Lead Wall screen lives in features/auth.
 
 export * from './roles';
+export * from './permissions';
 export * from './session-store';
 export * from './auth.service';
 export * from './guards';

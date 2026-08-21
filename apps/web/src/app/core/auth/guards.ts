@@ -1,6 +1,5 @@
 import { inject } from '@angular/core';
 import {
-  ActivatedRouteSnapshot,
   CanActivateFn,
   Router,
   RouterStateSnapshot,
@@ -54,20 +53,3 @@ export function permissionGuard(flag: Permission): CanActivateFn {
       : router.createUrlTree(['/forbidden']);
   };
 }
-
-/**
- * Manager/Warden are scoped to a single property. If the route carries a
- * `:propertyId`, it must match their scope. (Authoritative enforcement is
- * server-side; this guard only mirrors it — F8.)
- */
-export const propertyScopeGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot,
-) => {
-  const session = inject(SessionStore);
-  const router = inject(Router);
-  if (!session.hasRole('manager', 'warden')) return true;
-  const routeProp = route.paramMap.get('propertyId');
-  return routeProp === null || routeProp === session.propertyId()
-    ? true
-    : router.createUrlTree(['/forbidden']);
-};
