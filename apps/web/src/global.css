@@ -225,9 +225,7 @@ body {
     0 8px 24px rgba(0, 0, 0, 0.05);
 }
 .featured-badge {
-  position: absolute;
-  left: 12px;
-  top: 12px;
+  position: relative;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -242,26 +240,36 @@ body {
   background: linear-gradient(135deg, #ffe27a 0%, #d4af37 100%);
   overflow: hidden;
 }
+/* Glint that sweeps across the pill and then rests for the remainder of the cycle.
+   A narrow skewed band that TRANSLATES, rather than a full-size layer sliding its
+   background-position: the band is clipped by the badge’s own overflow:hidden, so it
+   reads as light catching an edge instead of a wash over the whole pill.
+   `pointer-events: none` keeps anything beneath it clickable. */
 .featured-badge::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
   background: linear-gradient(
-    90deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.35) 50%,
-    transparent 80%
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
   );
-  background-size: 200% 100%;
-  animation: hh-badge-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  animation: hh-badge-shimmer 3s ease-in-out infinite;
 }
+/* 60% and 100% share a position, so the glint sweeps in the first ~1.8s and the pill
+   sits still for the rest — a constant sweep reads as a loading state, not an accent. */
 @keyframes hh-badge-shimmer {
   0% {
-    background-position: -200% center;
+    transform: translateX(-150%) skewX(-20deg);
   }
+  60%,
   100% {
-    background-position: 200% center;
+    transform: translateX(400%) skewX(-20deg);
   }
 }
 

@@ -5,8 +5,14 @@
 /** Lifecycle of a host's property listing. */
 export type ListingStatus = 'onboarding' | 'in-review' | 'published' | 'paused';
 
-/** Gender policy of a property (matches the public-search vocabulary). */
-export type PropertyGender = 'boys' | 'girls' | 'coliving';
+import { AccommodationType } from './listing';
+
+/**
+ * Re-exported rather than redeclared. This was a separate union of the same three values
+ * that never gained `backpacker`, so a host viewing their own backpacker property had it
+ * typed as something it is not.
+ */
+export type PropertyAccommodationType = AccommodationType;
 
 /** A single property owned by the signed-in host. */
 export interface HostListing {
@@ -14,7 +20,7 @@ export interface HostListing {
   name: string;
   area: string;
   city: string;
-  gender: PropertyGender;
+  accommodationType: PropertyAccommodationType;
   status: ListingStatus;
   image: string;
   /** Total rooms (published/paused properties only). */
@@ -79,3 +85,66 @@ export interface HostTeamData {
   property: TeamProperty;
   staff: StaffMember[];
 }
+
+/**
+ * A staff record scoped to one hostel — `GET /api/host/hostels/:id/staffs`.
+ *
+ * Distinct from `StaffMember` above, which models a *manager account* created through
+ * `add_manager` and can log in. A `Staff` is an employment record: salary, CNIC, joining
+ * date. It carries no email, no password and no account, so the two are not interchangeable
+ * and neither replaces the other.
+ */
+export interface Staff {
+  id: string;
+  name: string;
+  /** Free text as the host typed it — "Warden", "Cook", "Night guard". Not an enum. */
+  title: string;
+  phone: string;
+  hostelId: string;
+  hostelName: string;
+  cnic: string;
+  /** `YYYY-MM-DD`. The API sends a full ISO timestamp; the form wants date-only. */
+  joiningDate: string;
+  leavingDate?: string;
+  salaryIssueDate?: string;
+  /** The API sends a decimal string ("25000.0"); normalised to a number here. */
+  salary: number;
+
+  /**
+   * Server-driven status. Deliberately NOT a union like `TenantStatus`: the set is
+   * published at runtime by `GET /staffs/new`, so hard-coding members here would make the
+   * frontend wrong the moment the backend adds one.
+   */
+  status: string;
+  statusLabel: string;
+  createdAt?: string;
+
+  /**
+   * This staff member also holds a manager login for the hostel. Set from `is_manager` on
+   * the staff payload, which carries the credentials too — there is no separate manager
+   * record to cross-reference.
+   */
+  isManager?: boolean;
+  /**
+   * The login account this staff is already attached to, when the API reports one. Its
+   * presence means the credentials exist already, so granting manager access is just a
+   * matter of flipping the flag — no email or password to collect.
+   */
+  userId?: string;
+  /** Login address, present only for a manager. */
+  email?: string;
+
+  // ── detail only (`GET /staffs/:id`) ──────────────────────────────────────────
+  address?: string;
+  updatedAt?: string;
+  avatarUrl?: string;
+  avatarId?: string;
+  /**
+   * Read-only. The API returns CNIC images as bare URLs with no attachment id, while it
+   * writes them as `cnic_front_id` / `cnic_back_id` — so an existing image can be shown
+   * but not re-sent. Safe only because PATCH is partial.
+   */
+  cnicFrontUrl?: string;
+  cnicBackUrl?: string;
+}
+

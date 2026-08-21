@@ -21,7 +21,7 @@ import {
   UtilityTypeMeta,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
-import { PAGE_SIZE } from '@util/pagination';
+import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
 
 interface ApiRoomType {
   id?: string;
@@ -54,10 +54,6 @@ interface ApiAggs {
   vacant_capacity?: number;
 }
 
-interface ApiPagination {
-  total_count?: number;
-  total_pages?: number;
-}
 
 interface ApiRoomsResponse {
   rooms?: ApiRoom[];
@@ -189,6 +185,22 @@ function toDate(raw: string | null | undefined): string {
   return raw.slice(0, 10);
 }
 
+/**
+ * Wall-clock time-of-day out of an API timestamp, or '' when it carries none.
+ *
+ * String-sliced rather than parsed through `new Date(raw)` on purpose: the API round-trips
+ * the same naive wall-clock it was handed, so constructing a Date would apply a timezone
+ * shift the value never had and move 18:30 to a different hour. Same reasoning as `toDate`.
+ */
+function toTimeOfDay(raw: string | null | undefined): string {
+  if (!raw || raw[10] !== 'T') return '';
+  const hhmm = raw.slice(11, 16);
+  if (hhmm.length !== 5 || hhmm[2] !== ':') return '';
+  const h = Number(hhmm.slice(0, 2));
+  const m = Number(hhmm.slice(3, 5));
+  return h >= 0 && h <= 23 && m >= 0 && m <= 59 ? hhmm : '';
+}
+
 function toTenant(r: ApiRenter): Tenant {
   const rawName = r.full_name ?? r.name ?? '';
   const initials =
@@ -217,8 +229,10 @@ function toTenant(r: ApiRenter): Tenant {
     roomId: String(r.room?.id ?? r.room_id ?? ''),
     roomNumber: r.room_number ?? r.room?.room_number ?? '—',
     joined: toDate(r.move_in_date ?? r.joining_date ?? r.check_in_date),
+    joinedTime: toTimeOfDay(r.move_in_date ?? r.joining_date ?? r.check_in_date) || undefined,
     checkedOut: toDate(r.move_out_date ?? r.check_out_date) || undefined,
     leaveDate: toDate(r.leave_date) || undefined,
+    leaveTime: toTimeOfDay(r.leave_date) || undefined,
     rent: Number(r.rent_amount ?? r.rent ?? 0),
     deposit: Number(r.advance_deposit ?? r.deposit ?? 0),
     messCharges: r.mess_charges != null ? Number(r.mess_charges) : undefined,
@@ -432,7 +446,7 @@ export class HostOpsApi {
     filters: Record<string, string> = {},
   ): Observable<{ rooms: Room[]; total: number; aggs: RoomAggs; statuses: RoomStatusOption[] }> {
     return this.api
-      .get<ApiRoomsResponse>(`/api/host/hostels/${hostelId}/rooms`, { page, limit, ...filters })
+      .get<ApiRoomsResponse>(`/api/host/hostels/${hostelId}/rooms`, { ...pageParams(page, limit), ...filters })
       .pipe(map((res) => ({
         rooms: (res.rooms ?? res.data ?? []).map(toRoom),
         total: res.pagination?.total_count ?? res.total_count ?? 0,
@@ -536,7 +550,7 @@ export class HostOpsApi {
     filters: Record<string, string> = {},
   ): Observable<{ renters: Tenant[]; total: number; statuses: { name: string; slug: string; count: number; dispositionId: number }[] }> {
     return this.api
-      .get<ApiRentersResponse>(`/api/host/hostels/${hostelId}/renters`, { page, limit, ...filters })
+      .get<ApiRentersResponse>(`/api/host/hostels/${hostelId}/renters`, { ...pageParams(page, limit), ...filters })
       .pipe(
         map((res) => {
           const aggsBySlug = Object.fromEntries((res.aggs ?? []).map((a) => [a.slug, a.count]));
@@ -578,8 +592,9 @@ export class HostOpsApi {
       leave_date?: string;
       rent: string;
       address: string;
-      billing_due_date: number;
-      billing_date: number;
+      // Absent for a nightly (backpacker) stay, which has no day-of-month cycle.
+      billing_due_date?: number;
+      billing_date?: number;
       cnic_number?: string;
       avatar_id?: string;
       cnic_front_id?: string;
@@ -651,7 +666,7 @@ export class HostOpsApi {
     statuses: { name: string; slug: string; count: number; totalAmount: number }[];
     aggs: { utilityTotal: number; utilityPaid: number; utilityBalance: number; rentTotal: number; rentPaid: number; rentBalance: number };
   }> {
-    const params: Record<string, string | number | boolean> = { page, limit, ...filters };
+    const params: Record<string, string | number | boolean> = { ...pageParams(page, limit), ...filters };
     return this.api
       .get<ApiRenterBillsResponse>(`/api/host/hostels/${hostelId}/renter_bills`, params)
       .pipe(
@@ -687,7 +702,7 @@ export class HostOpsApi {
     aggs: { billToPay: number; received: number; balance: number };
   }> {
     return this.api
-      .get<ApiUtilityBillsResponse>(`/api/host/hostels/${hostelId}/utility_bills`, { page, limit, ...filters })
+      .get<ApiUtilityBillsResponse>(`/api/host/hostels/${hostelId}/utility_bills`, { ...pageParams(page, limit), ...filters })
       .pipe(map((res) => ({
         bills: (res.utility_bills ?? res.data ?? []).map(toUtilityBill),
         total: res.pagination?.total_count ?? 0,

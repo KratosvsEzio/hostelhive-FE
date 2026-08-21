@@ -40,6 +40,7 @@ import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
+import { HasPermission } from '@core/auth';
 
 /** The grid renders every room at once, so fetch a large single page instead of paginating. */
 const ROOMS_LIMIT = 1000;
@@ -118,9 +119,9 @@ interface RoomCard {
   status: RoomCardStatus;
   /** "{floor} - {number}" (or just the number when no floor is set). */
   code: string;
-  /** Primary occupant name (or "Available" / "N occupied" when no names are known). */
+  /** First two occupant names, comma-joined (or "Available" / "N occupied" when no names are known). */
   label: string;
-  /** Count of additional occupants beyond the first — rendered as a "+N" chip. */
+  /** Count of additional occupants beyond the first two — rendered as a "+N" chip. */
   extra: number;
   bg: string;
 }
@@ -168,6 +169,7 @@ function floorOrder(floor: string): number {
   selector: 'hh-rooms',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    HasPermission,
     DecimalPipe,
     DashboardLayout,
     SubscriptionGate,
@@ -514,8 +516,8 @@ export class Rooms {
       const label =
         status === 'available' ? 'Available'
           : names.length === 0 ? `${room.occupied} occupied`
-            : names[0];
-      const extra = names.length > 1 ? names.length - 1 : 0;
+            : names.slice(0, 2).map(titleCase).join(', ');
+      const extra = names.length > 2 ? names.length - 2 : 0;
       const code = raw ? `${titleCase(raw)} - ${room.number}` : room.number;
       g.cards.push({ room, status, code, label, extra, bg: CARD_BG[status] });
     }

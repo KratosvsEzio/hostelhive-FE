@@ -45,11 +45,29 @@ function tenant(overrides: Partial<Tenant> = {}): Tenant {
 }
 
 describe('emptyCheckInForm', () => {
-  it('defaults the joining date to today and the billing cycle to the 1st and 5th', () => {
+  it('defaults the joining datetime to local now and the billing cycle to the 1st and 5th', () => {
     const f = emptyCheckInForm();
-    expect(f.joiningDate).toBe(new Date().toISOString().slice(0, 10));
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const localToday = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    // Local parts, not toISOString(): the latter is UTC and returns the previous day
+    // for the first five hours of every day in PKT.
+    expect(f.joiningDate.slice(0, 10)).toBe(localToday);
     expect(f.billingDate).toBe('1');
     expect(f.billingDueDate).toBe('5');
+  });
+
+  it('carries a time, rounded to a step the picker actually offers', () => {
+    const f = emptyCheckInForm();
+    expect(f.joiningDate.length).toBe(16);
+    expect(f.joiningDate[10]).toBe('T');
+    expect(f.joiningDate[13]).toBe(':');
+    expect([0, 15, 30, 45]).toContain(Number(f.joiningDate.slice(14, 16)));
+  });
+
+  it('leaves the check-out blank — it is optional and has no sensible default', () => {
+    expect(emptyCheckInForm().leaveDate).toBe('');
   });
 
   it('carries no tenant id, so it maps to a create', () => {
@@ -118,7 +136,6 @@ describe('isCheckInFormValid', () => {
       'fullName',
       'email',
       'phone',
-      'emergencyContact',
       'cnicNumber',
       'address',
       'joiningDate',
@@ -134,12 +151,38 @@ describe('isCheckInFormValid', () => {
     }
   });
 
+  it('registers without an emergency contact', () => {
+    expect(isCheckInFormValid(validForm({ emergencyContact: '' }))).toBe(true);
+  });
+
   it('keeps the room and the optional charges out of the required set', () => {
     expect(
       isCheckInFormValid(
         validForm({ roomId: '', leaveDate: '', messCharges: '', transportationCharges: '' }),
       ),
     ).toBe(true);
+  });
+});
+
+describe('leaveBeforeJoin / ordering', () => {
+  it('accepts a check-out after the check-in', () => {
+    expect(isCheckInFormValid(validForm({ joiningDate: '2026-06-22', leaveDate: '2026-06-23' }))).toBe(true);
+  });
+
+  it('rejects a check-out on an earlier date', () => {
+    expect(isCheckInFormValid(validForm({ joiningDate: '2026-06-22', leaveDate: '2026-06-21' }))).toBe(false);
+  });
+
+  it('rejects a same-day check-out earlier in the day — only reachable once times exist', () => {
+    expect(isCheckInFormValid(validForm({ joiningDate: '2026-06-22T18:00', leaveDate: '2026-06-22T10:00' }))).toBe(false);
+  });
+
+  it('accepts a same-day check-out later in the day', () => {
+    expect(isCheckInFormValid(validForm({ joiningDate: '2026-06-22T10:00', leaveDate: '2026-06-22T18:00' }))).toBe(true);
+  });
+
+  it('stays silent while the leave date is blank, which is optional', () => {
+    expect(isCheckInFormValid(validForm({ joiningDate: '2026-06-22', leaveDate: '' }))).toBe(true);
   });
 });
 
@@ -170,6 +213,18 @@ describe('toCreateRenterPayload', () => {
     expect(p.mess_charges).toBe(3000);
     expect(p.transportation_charges).toBe(500);
     expect(p.leave_date).toBe('2026-12-31');
+  });
+
+  it('sends a bare date untouched, so a date-only value is unchanged by this feature', () => {
+    const p = toCreateRenterPayload(validForm({ joiningDate: '2026-06-22', leaveDate: '2026-12-31' }));
+    expect(p.joining_date).toBe('2026-06-22');
+    expect(p.leave_date).toBe('2026-12-31');
+  });
+
+  it('completes a datetime value with seconds for the wire', () => {
+    const p = toCreateRenterPayload(validForm({ joiningDate: '2026-06-22T18:30', leaveDate: '2026-12-31T09:00' }));
+    expect(p.joining_date).toBe('2026-06-22T18:30:00');
+    expect(p.leave_date).toBe('2026-12-31T09:00:00');
   });
 
   it('sends the meal plan flags verbatim', () => {
@@ -214,5 +269,39 @@ describe('toUpdateRenterPayload', () => {
     expect(p.full_name).toBe('Hamza Tariq');
     expect(p.room_id).toBe('r-9');
     expect(p.joining_date).toBe('2026-01-15');
+  });
+});
+
+// A backpacker hostel bills per night, so there is no day-of-month billing cycle.
+describe('nightly (backpacker) stays', () => {
+  const nightly = { nightly: true };
+
+  it('does not require the billing cycle', () => {
+    const f = validForm({ billingDate: '', billingDueDate: '' });
+    expect(isCheckInFormValid(f)).toBe(false);
+    expect(isCheckInFormValid(f, nightly)).toBe(true);
+  });
+
+  it('still requires everything else', () => {
+    expect(isCheckInFormValid(validForm({ fullName: '  ' }), nightly)).toBe(false);
+  });
+
+  // Omitted, not zeroed — sending 0 or null would be stored as a real billing day.
+  it('omits both billing keys from the create payload', () => {
+    const p = toCreateRenterPayload(validForm(), nightly);
+    expect('billing_date' in p).toBe(false);
+    expect('billing_due_date' in p).toBe(false);
+  });
+
+  it('omits both billing keys from the update payload', () => {
+    const p = toUpdateRenterPayload(validForm(), nightly);
+    expect('billing_date' in p).toBe(false);
+    expect('billing_due_date' in p).toBe(false);
+  });
+
+  it('still sends them for a monthly hostel', () => {
+    const p = toCreateRenterPayload(validForm({ billingDate: '3', billingDueDate: '7' }));
+    expect(p.billing_date).toBe(3);
+    expect(p.billing_due_date).toBe(7);
   });
 });

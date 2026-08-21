@@ -71,7 +71,7 @@ export interface ReviewDetail {
   kindLabel: string; // property type — 'Building', 'Apartment' …
   genderLabel: string; // gender — 'Co-living', 'Boys', 'Girls'
   propertyType: string; // raw property_type slug, for the editable Type dropdown
-  genderType: string; // raw gender_type slug, for the editable Gender dropdown
+  genderType: string; // raw gender_type slug, for the editable AccommodationType dropdown
   description: string;
   landmarks: string;
   photos: ReviewPhoto[];
@@ -231,8 +231,6 @@ export interface AuditEntry {
   day: string; // 'Today · 11 June 2026'
   time: string; // '14:32'
 }
-
-export type SortPref = 'oldest' | 'newest' | 'city';
 
 /** A row in the IP allowlist (screen 25). */
 export interface IpRule {

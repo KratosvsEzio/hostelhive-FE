@@ -418,7 +418,7 @@
                     </p>
                     <p class="text-xs text-ink-400">
                       Room {{ inv.roomNumber }} ·
-                      {{ inv.due | date: 'dd MMM yyyy' }}
+                      {{ inv.due | apiDate: 'dd MMM yyyy' }}
                     </p>
                   </div>
                   <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ inv.amount | number }}</span>

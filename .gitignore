@@ -41,7 +41,6 @@ Thumbs.db
 # Local secrets + the config they generate (Google Maps key, etc.)
 .env
 .env.production
-apps/web/src/app/google-maps.env.ts
 apps/web/src/app/api.env.ts
 apps/web/src/app/google-oauth.env.ts
 
@@ -67,3 +66,4 @@ vitest.config.*.timestamp*
 
 storybook-static
 debug-storybook.log
+apps/web/src/app/analytics.env.ts

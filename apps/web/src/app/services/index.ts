@@ -21,3 +21,4 @@ export * from './image-upload.service';
 export * from './google-auth.service';
 export * from './search-capacity';
 export * from './student-api';
+export * from './staff-api';

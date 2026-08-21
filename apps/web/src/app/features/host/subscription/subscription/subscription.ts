@@ -5,7 +5,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -25,6 +25,7 @@ import {
   CellDef,
   ColumnDef,
   DataTable,
+  Pagination,
   EmptyState,
   ErrorState,
   ExpandConfig,
@@ -49,6 +50,8 @@ import {
   effectivePrice,
   hasListingDiscount,
 } from '@util/product-pricing';
+import { ApiDate } from '@util/api-date';
+import { PAGE_SIZE } from '@util/pagination';
 
 interface FeaturedStatus {
   active: boolean;
@@ -127,12 +130,13 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
   selector: 'hh-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     DashboardLayout,
     Button,
     Card,
     DataTable,
+    Pagination,
     EmptyState,
     ErrorState,
     Skeleton,
@@ -204,6 +208,26 @@ export class Subscription {
     ),
     { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
   );
+
+  // Paged client-side rather than through the API: `paidListingCount` below counts paid
+  // listing purchases across the WHOLE history to work out the remaining discount, so
+  // fetching one page at a time would silently under-count it. A host has few
+  // subscription payments, so holding them all is cheap.
+  protected readonly paymentPage = signal(1);
+
+  private readonly allPayments = computed(() => this.state()?.data?.payments ?? []);
+
+  protected readonly paymentPageCount = computed(() =>
+    Math.max(1, Math.ceil(this.allPayments().length / PAGE_SIZE)),
+  );
+
+  protected readonly pagedPayments = computed(() => {
+    // Clamped so switching to a hostel with fewer payments cannot leave the table blank
+    // on an out-of-range page.
+    const page = Math.min(this.paymentPage(), this.paymentPageCount());
+    const start = (page - 1) * PAGE_SIZE;
+    return this.allPayments().slice(start, start + PAGE_SIZE);
+  });
 
   protected readonly paidListingCount = computed(() =>
     countPaidListingPurchases(this.state()?.data?.payments ?? []),

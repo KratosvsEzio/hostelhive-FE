@@ -71,17 +71,17 @@
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <hh-date-picker
-              label="Issue date *"
+              label="Issue date"
               [value]="f.issuedDate"
-              [error]="fieldError('issuedDate')"
               (valueChange)="patch('issuedDate', $event ?? '')"
             />
-            <hh-date-picker
-              label="Due date *"
-              [value]="f.dueDate"
-              [error]="fieldError('dueDate')"
-              (valueChange)="patch('dueDate', $event ?? '')"
-            />
+            @if (!nightly()) {
+              <hh-date-picker
+                label="Due date"
+                [value]="f.dueDate"
+                (valueChange)="patch('dueDate', $event ?? '')"
+              />
+            }
           </div>
 
           <!-- Charges -->
@@ -90,27 +90,24 @@
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div class="space-y-3">
-            <hh-input
+            <hh-money-input
               label="Rent"
-              type="number"
               placeholder="5000"
-              [value]="f.rent"
-              (valueChange)="patch('rent', $event)"
+              [value]="+f.rent || 0"
+              (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
             />
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <hh-input
+              <hh-money-input
                 label="Mess charges"
-                type="number"
                 placeholder="3000"
-                [value]="f.messCharges"
-                (valueChange)="patch('messCharges', $event)"
+                [value]="+f.messCharges || 0"
+                (valueChange)="patch('messCharges', $event ? $any($event).toString() : '')"
               />
-              <hh-input
+              <hh-money-input
                 label="Transport charges"
-                type="number"
                 placeholder="500"
-                [value]="f.transportationCharges"
-                (valueChange)="patch('transportationCharges', $event)"
+                [value]="+f.transportationCharges || 0"
+                (valueChange)="patch('transportationCharges', $event ? $any($event).toString() : '')"
               />
             </div>
             @if (totalError) {

@@ -125,19 +125,21 @@
           </span>
           <span class="flex shrink-0 flex-col items-end gap-1">
             <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="statusClass(p)">{{ statusLabel(p) }}</span>
-            <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="genderClass(p.gender)">{{ genderLabel(p.gender) }}</span>
+            <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" [class]="genderClass(p.accommodationType)">{{ genderLabel(p.accommodationType) }}</span>
           </span>
         </button>
       } @empty {
         <p class="py-6 text-center text-sm text-ink-400">No hostels yet.</p>
       }
     </div>
-    <a
-      routerLink="/host/hostels/new"
-      class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
-      (click)="switcherOpen.set(false)"
-    >
-      <i class="ti ti-plus" aria-hidden="true"></i>Create new hostel
-    </a>
+    @if (canCreateHostel()) {
+      <a
+        routerLink="/host/hostels/new"
+        class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
+        (click)="switcherOpen.set(false)"
+      >
+        <i class="ti ti-plus" aria-hidden="true"></i>Create new hostel
+      </a>
+    }
   </div>
 }

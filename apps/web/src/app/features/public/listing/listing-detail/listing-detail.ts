@@ -7,20 +7,25 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
-import { AMENITIES, Gender } from '@hostelhive/data-access';
-import { Avatar, Badge, Button, EmptyState, Skeleton } from '@hostelhive/ui';
+import { AMENITIES, AccommodationType } from '@hostelhive/data-access';
+import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
+import { AnalyticsService } from '@core/analytics/analytics.service';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
+import { accommodationLabel } from '@util/accommodation-type';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { ApiDate } from '@util/api-date';
 
 interface ViewState {
   loading: boolean;
@@ -67,7 +72,7 @@ const ROOM_TINTS = [
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
+    ApiDate,
     DecimalPipe,
     RouterLink,
     Avatar,
@@ -76,6 +81,9 @@ const ROOM_TINTS = [
     EmptyState,
     Skeleton,
     StaticMap,
+    TooltipFixed,
+    CurrencySymbolPipe,
+    CurrencyNamePipe,
   ],
   templateUrl: './listing-detail.html',
 })
@@ -93,6 +101,7 @@ export class ListingDetail {
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
+  private readonly analytics = inject(AnalyticsService);
 
   protected readonly phoneValue = signal<string | null>(null);
   protected readonly phoneLoading = signal(false);
@@ -130,6 +139,16 @@ export class ListingDetail {
   /** Indexes of review comments expanded ("Show more"). Keyed by position because the API
    *  returns the hostel id on every review, so review.id is not unique. */
   protected readonly expandedReviews = signal<ReadonlySet<number>>(new Set());
+
+  /** How many reviews the in-page section shows before deferring to the modal. */
+  protected readonly previewReviewCount = 6;
+
+  /**
+   * Expansion state for the in-page preview. Deliberately separate from
+   * {@link expandedReviews}: closeReviews() clears the modal's set, which would otherwise
+   * collapse whatever the user had opened on the page behind it.
+   */
+  protected readonly expandedPreview = signal<ReadonlySet<number>>(new Set());
 
   /** Airbnb-style header: average score + per-star distribution, derived from the real reviews. */
   protected readonly reviewStats = computed(() => {
@@ -268,14 +287,22 @@ export class ListingDetail {
   }
 
   protected openModal(): void {
-    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
+    if (!this.session.isAuthenticated()) {
+      this.loginGateOpen.set(true);
+      this.analytics.track('lead_wall_shown', { intent: 'contact' });
+      return;
+    }
     if (this.revealed()) { this.modalOpen.set(true); return; }
     this.pendingAction = 'modal';
     this.fetchPhone();
   }
 
   protected openWhatsApp(): void {
-    if (!this.session.isAuthenticated()) { this.loginGateOpen.set(true); return; }
+    if (!this.session.isAuthenticated()) {
+      this.loginGateOpen.set(true);
+      this.analytics.track('lead_wall_shown', { intent: 'whatsapp' });
+      return;
+    }
     const url = this.whatsAppUrl();
     if (url) { window.open(url, '_blank', 'noopener'); return; }
     this.pendingAction = 'whatsapp';
@@ -316,6 +343,13 @@ export class ListingDetail {
           this.phoneLoading.set(false);
           if (phone) {
             this.phoneValue.set(phone);
+            const listing = this.state().data;
+            if (listing) {
+              this.analytics.track('lead_submitted', {
+                listing_id: listing.id,
+                city: listing.city,
+              });
+            }
             if (this.pendingAction === 'modal') this.modalOpen.set(true);
             if (this.pendingAction === 'whatsapp') {
               const url = this.whatsAppUrl();
@@ -353,6 +387,19 @@ export class ListingDetail {
 
   protected isReviewExpanded(index: number): boolean {
     return this.expandedReviews().has(index);
+  }
+
+  protected isPreviewExpanded(index: number): boolean {
+    return this.expandedPreview().has(index);
+  }
+
+  protected togglePreviewExpanded(index: number): void {
+    this.expandedPreview.update((s) => {
+      const next = new Set(s);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
   }
 
   protected toggleReviewExpanded(index: number): void {
@@ -469,6 +516,13 @@ export class ListingDetail {
       this.applySeo(s);
       // Everything below touches the DOM or the address bar — browser only.
       if (!this.isBrowser) return;
+      if (s.data) {
+        this.analytics.track('listing_viewed', {
+          listing_id: s.data.id,
+          city: s.data.city,
+          accommodation_type: s.data.accommodationType,
+        });
+      }
       // Load reviews up front so the in-page reviews section renders them without a click.
       if (s.data) this.fetchReviews();
       if (s.data && openReviewOnLoad) {
@@ -528,7 +582,7 @@ export class ListingDetail {
     }
 
     const location = [l.area, l.city].filter(Boolean).join(', ');
-    const genderLabel = this.genderLabel(l.gender);
+    const genderLabel = this.genderLabel(l.accommodationType);
     const price = l.priceFrom ? `from Rs ${l.priceFrom.toLocaleString('en-PK')}/month` : '';
 
     // Front-load the terms people actually search: name, then gender + location, then
@@ -595,8 +649,8 @@ export class ListingDetail {
     return ROOM_TINTS[index % ROOM_TINTS.length];
   }
 
-  protected genderLabel(g: Gender): string {
-    return g === 'coliving' ? 'Co-living' : g === 'boys' ? 'Boys' : 'Girls';
+  protected genderLabel(g: AccommodationType): string {
+    return accommodationLabel(g);
   }
 
   protected initials(name: string): string {

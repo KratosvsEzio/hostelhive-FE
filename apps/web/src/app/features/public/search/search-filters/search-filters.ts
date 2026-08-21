@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Gender } from '@hostelhive/data-access';
+import { AccommodationType } from '@hostelhive/data-access';
 import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
 
@@ -42,8 +42,8 @@ export class SearchFilters {
     { value: 'price-asc', label: 'Price: low to high' },
   ];
 
-  protected readonly gender = computed<Gender | 'all'>(
-    () => (this.params()?.get('gender') as Gender | 'all') ?? 'all',
+  protected readonly accommodationType = computed<AccommodationType | 'all'>(
+    () => (this.params()?.get('gender') as AccommodationType | 'all') ?? 'all',
   );
   protected readonly propertyType = computed(
     () => this.params()?.get('propertyType') ?? '',
@@ -62,7 +62,7 @@ export class SearchFilters {
 
   protected readonly hasActiveFilters = computed(() => {
     return (
-      this.gender() !== 'all' ||
+      this.accommodationType() !== 'all' ||
       !!this.propertyType() ||
       !!this.capacity() ||
       !!this.minP() ||
@@ -74,7 +74,7 @@ export class SearchFilters {
 
   protected readonly activeFilterCount = computed(() => {
     let n = 0;
-    if (this.gender() !== 'all') n++;
+    if (this.accommodationType() !== 'all') n++;
     if (this.propertyType()) n++;
     if (this.capacity()) n++;
     if (this.minP() || this.maxP()) n++;
@@ -83,10 +83,11 @@ export class SearchFilters {
     return n;
   });
 
-  readonly genderPills: { label: string; value: Gender; icon: string }[] = [
+  readonly genderPills: { label: string; value: AccommodationType; icon: string }[] = [
     { label: 'Boys', value: 'boys', icon: 'gender-male' },
     { label: 'Girls', value: 'girls', icon: 'gender-female' },
     { label: 'Co-living', value: 'coliving', icon: 'users' },
+    { label: 'Backpacker', value: 'backpacker', icon: 'backpack' },
   ];
 
   readonly popularAmenities = [
@@ -98,8 +99,8 @@ export class SearchFilters {
     { slug: 'attached', label: 'Attached Bath', icon: 'bath' },
   ];
 
-  protected toggleGender(value: Gender): void {
-    this.nav({ gender: this.gender() === value ? null : value });
+  protected toggleGender(value: AccommodationType): void {
+    this.nav({ gender: this.accommodationType() === value ? null : value });
   }
 
   protected toggleQuickAmenity(slug: string): void {
@@ -112,7 +113,7 @@ export class SearchFilters {
 
   protected openModal(): void {
     this.modal()?.seed({
-      gender: this.gender(),
+      accommodationType: this.accommodationType(),
       propertyType: this.propertyType(),
       minPrice: this.minP() ? +this.minP() : null,
       maxPrice: this.maxP() ? +this.maxP() : null,
@@ -129,7 +130,7 @@ export class SearchFilters {
   protected onApply(state: FilterState): void {
     const joined = state.amenities.join(',');
     this.nav({
-      gender: state.gender === 'all' ? null : state.gender,
+      gender: state.accommodationType === 'all' ? null : state.accommodationType,
       propertyType: state.propertyType || null,
       minPrice: state.minPrice,
       maxPrice: state.maxPrice,

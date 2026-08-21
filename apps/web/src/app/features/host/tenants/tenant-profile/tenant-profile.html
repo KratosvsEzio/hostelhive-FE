@@ -166,14 +166,14 @@
                 <div class="flex justify-between">
                   <dt class="text-sm text-ink-400">Joining date</dt>
                   <dd class="text-sm font-medium text-ink-800">
-                    {{ t.joined | date: 'dd MMM yyyy' }}
+                    {{ t.joined | apiDate: 'dd MMM yyyy' }}
                   </dd>
                 </div>
                 @if (t.leaveDate) {
                   <div class="flex justify-between">
                     <dt class="text-sm text-ink-400">Leave date</dt>
                     <dd class="text-sm font-medium text-ink-800">
-                      {{ t.leaveDate | date: 'dd MMM yyyy' }}
+                      {{ t.leaveDate | apiDate: 'dd MMM yyyy' }}
                     </dd>
                   </div>
                 }
@@ -181,7 +181,7 @@
                   <div class="flex justify-between">
                     <dt class="text-sm text-ink-400">Checked out</dt>
                     <dd class="text-sm font-medium text-ink-800">
-                      {{ t.checkedOut | date: 'dd MMM yyyy' }}
+                      {{ t.checkedOut | apiDate: 'dd MMM yyyy' }}
                     </dd>
                   </div>
                 }

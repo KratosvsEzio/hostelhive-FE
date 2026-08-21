@@ -29,6 +29,8 @@ import { MovementDetail } from './overview/movement-detail/movement-detail';
 import { OccupancyDetail } from './overview/occupancy-detail/occupancy-detail';
 
 import { HostPropertyStore, SubscriptionStore } from '@services';
+import { SessionStore, permissionGuard } from '@core/auth';
+import { NotificationService } from '@core/notification.service';
 
 import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
@@ -39,17 +41,33 @@ import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
  */
 const hostRootRedirect: CanActivateFn = () => {
   const store = inject(HostPropertyStore);
+  const session = inject(SessionStore);
   const router = inject(Router);
+  const notifications = inject(NotificationService);
 
   const target = (): UrlTree => {
     const props = store.properties();
-    if (!props.length) return router.parseUrl('/host/hostels/new');
+    if (!props.length) {
+      // Only a user who may create a hostel is sent to the creation form. Permissions decide,
+      // not the role: the API is the authority on what this account can actually do.
+      if (!session.hasPermission('core:Hostel:create')) {
+        notifications.info(
+          'No hostel assigned',
+          'You are not part of any hostel yet. Ask the owner to add you to theirs.',
+        );
+        return router.parseUrl('/');
+      }
+      return router.parseUrl('/host/hostels/new');
+    }
     const sel = store.selected();
     const id = sel && props.some((p) => p.id === sel) ? sel : props[0].id;
     return router.parseUrl(`/host/${id}`);
   };
 
-  if (store.loaded()) return target();
+  // An empty cached list is not a reason to skip the fetch. `loaded` is sticky and the error
+  // path sets it too, so a single failed or empty response would otherwise pin the user to
+  // create-hostel for the rest of the session without ever calling the API again.
+  if (store.loaded() && store.properties().length) return target();
   store.load();
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(target));
 };
@@ -63,9 +81,13 @@ const hostRootRedirect: CanActivateFn = () => {
 const createHostelGate: CanActivateFn = () => {
   const store = inject(HostPropertyStore);
   const subs = inject(SubscriptionStore);
+  const session = inject(SessionStore);
   const router = inject(Router);
 
   const check = (): Observable<boolean | UrlTree> => {
+    // Without the create permission there is nothing to do here. Routed via `/host` so
+    // the "no hostel assigned" message lives in exactly one place.
+    if (!session.hasPermission('core:Hostel:create')) return of(router.parseUrl('/host'));
     const props = store.properties();
     if (!props.length) return of(true);
     const sel = store.selected();
@@ -77,7 +99,7 @@ const createHostelGate: CanActivateFn = () => {
     return subs.isLoadedFor(id) ? of(decide()) : subs.load(id).pipe(map(decide));
   };
 
-  if (store.loaded()) return check();
+  if (store.loaded() && store.properties().length) return check();
   store.load();
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), switchMap(check));
 };
@@ -99,12 +121,20 @@ export const HOST_ROUTES: Route[] = [
     path: ':hostelId',
     component: HostLayout,
     children: [
-      { path: 'profile', component: HostelProfile, title: 'Hostel profile — HostelHive' },
+      { path: 'profile', component: HostelProfile, title: 'Hostel profile — HostelHive', canActivate: [permissionGuard('host:Hostel:show')] },
       // Mobile-app "More" tab (bottom tab bar) — the destinations that don't fit in the tabs.
       { path: 'more', component: HostMore, title: 'More — HostelHive' },
-      { path: 'team', component: HostTeam, title: 'Team & staff — HostelHive' },
+      {
+        path: 'team',
+        canActivate: [permissionGuard('host:Staff:index')],
+        children: [
+          { path: '', pathMatch: 'full', component: HostTeam, title: 'Team & staff — HostelHive' },
+          { path: 'edit/:staffId', component: HostTeam, title: 'Edit staff — HostelHive' },
+        ],
+      },
       {
         path: 'rooms',
+        canActivate: [permissionGuard('host:Room:index')],
         children: [
           { path: '', pathMatch: 'full', component: Rooms, title: 'Rooms — HostelHive' },
           // Drawer routes reuse `Rooms` so the hardware/browser back button closes the
@@ -118,6 +148,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'tenants',
+        canActivate: [permissionGuard('host:Renter:index')],
         children: [
           { path: '', pathMatch: 'full', component: Tenants, title: 'Tenants — HostelHive' },
           { path: 'create', component: Tenants, title: 'Register Tenant — HostelHive' },
@@ -127,6 +158,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'utilities',
+        canActivate: [permissionGuard('host:UtilityBill:index')],
         children: [
           { path: '', pathMatch: 'full', component: Utilities, title: 'Utilities — HostelHive' },
           { path: 'add', component: AddBill, title: 'Add utility bill — HostelHive' },
@@ -135,6 +167,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'invoices',
+        canActivate: [permissionGuard('host:RenterBill:index')],
         children: [
           { path: '', pathMatch: 'full', component: Invoices, title: 'Invoices — HostelHive' },
           { path: 'create', component: Invoices, title: 'New invoice — HostelHive' },
@@ -145,6 +178,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'expenses',
+        canActivate: [permissionGuard('host:Expense:index')],
         children: [
           { path: '', pathMatch: 'full', component: ExpensesList, title: 'Expenses — HostelHive' },
           { path: 'new', component: AddGrocery, title: 'New expense — HostelHive' },
@@ -155,9 +189,18 @@ export const HOST_ROUTES: Route[] = [
       { path: 'analytics', component: Analytics, title: 'Analytics — HostelHive' },
       {
         path: 'mess',
+        canActivate: [permissionGuard('host:WeeklyMenu:index')],
         children: [
           { path: '', pathMatch: 'full', component: MessList, title: 'Mess — HostelHive' },
-          { path: 'add', component: AddGrocery, title: 'Add grocery — HostelHive' },
+          {
+            // Reached from the mess page, where the type is a given — the form locks its
+            // expense-type picker to this rather than offering a choice that would file the
+            // entry away from the mess.
+            path: 'add',
+            component: AddGrocery,
+            title: 'Add grocery — HostelHive',
+            data: { lockedExpenseType: 'groceries' },
+          },
           { path: 'confirmations', component: MessConfirmations, title: 'Meal confirmations — HostelHive' },
           { path: 'notifications', component: MessNotifications, title: 'Meal notifications — HostelHive' },
         ],

@@ -1,4 +1,4 @@
-import { Gender } from '@hostelhive/data-access';
+import { AccommodationType } from '@hostelhive/data-access';
 
 /**
  * A place that has its own landing page.
@@ -27,8 +27,11 @@ export interface Place {
   blurb: string;
 }
 
-/** Gender segments that may follow a place: `/hostels/lahore/girls`. */
-export const GENDER_SEGMENTS: Record<string, { gender: Gender; label: string; adjective: string }> = {
+/** Accommodation-type segments that may follow a place: `/hostels/lahore/girls`. */
+export const GENDER_SEGMENTS: Record<
+  string,
+  { gender: AccommodationType; label: string; adjective: string }
+> = {
   girls: { gender: 'girls', label: 'Girls hostels', adjective: 'girls' },
   boys: { gender: 'boys', label: 'Boys hostels', adjective: 'boys' },
   'co-living': { gender: 'coliving', label: 'Co-living spaces', adjective: 'co-living' },

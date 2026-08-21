@@ -71,7 +71,7 @@
                 <span class="text-ink-300">·</span>
                 <span class="text-ink-500">
                   {{ contract.status === 'expired' ? 'Expired' : 'Renews' }}
-                  <span class="font-medium text-ink-800">{{ contract.renewsAt ? (contract.renewsAt | date: 'd MMM y') : '—' }}</span>
+                  <span class="font-medium text-ink-800">{{ contract.renewsAt ? (contract.renewsAt | apiDate: 'd MMM y') : '—' }}</span>
                 </span>
               </div>
             </div>
@@ -119,7 +119,7 @@
                   <span class="text-ink-300">·</span>
                   <span class="text-ink-500">
                     {{ feat.active ? 'Expires' : 'Expired' }}
-                    <span class="font-medium text-ink-800">{{ feat.expiresAt | date: 'd MMM y' }}</span>
+                    <span class="font-medium text-ink-800">{{ feat.expiresAt | apiDate: 'd MMM y' }}</span>
                   </span>
                 </div>
               </div>
@@ -165,10 +165,18 @@
       } @else {
         <hh-data-table
           [columns]="paymentCols"
-          [rows]="s.data.payments"
+          [rows]="pagedPayments()"
           [rowId]="paymentRowId"
           [expandable]="paymentExpand"
         />
+        @if (paymentPageCount() > 1) {
+          <div class="mt-4 flex justify-end">
+            <hh-pagination
+              [pageCount]="paymentPageCount()"
+              [(page)]="paymentPage"
+            />
+          </div>
+        }
       }
     </section>
 

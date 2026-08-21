@@ -70,7 +70,7 @@
         <div
           class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-500"
         >
-          <hh-badge [variant]="l.gender">{{ genderLabel(l.gender) }}</hh-badge>
+          <hh-badge [variant]="l.accommodationType">{{ genderLabel(l.accommodationType) }}</hh-badge>
           @if (l.verified) {
             <hh-badge variant="verified">Verified</hh-badge>
           }
@@ -139,7 +139,7 @@
         >
           <div class="min-w-0">
             <h2 class="font-display text-xl font-semibold text-ink-900">
-              {{ genderLabel(l.gender) }} hostel hosted by {{ l.host?.name }}
+              {{ genderLabel(l.accommodationType) }} hostel hosted by {{ l.host?.name }}
             </h2>
             <p class="mt-1 text-sm text-ink-500">{{ roomSummary() }}</p>
           </div>
@@ -159,8 +159,10 @@
               </h3>
             </div>
 
-            <div class="grid gap-x-8 gap-y-6 sm:grid-cols-2">
-              @for (review of reviews().slice(0, 2); track $index) {
+            <!-- Six-up preview in two columns, each comment clamped with its own Show more
+                 (Airbnb's pattern); the modal behind "Show all" carries the rest. -->
+            <div class="grid gap-x-16 gap-y-8 sm:grid-cols-2">
+              @for (review of reviews().slice(0, previewReviewCount); track $index; let idx = $index) {
                 <div>
                   <div class="flex items-center gap-3">
                     <hh-avatar [initials]="initials(review.userName)" size="sm" />
@@ -178,19 +180,30 @@
                         </span>
                         @if (review.createdAt) {
                           <span aria-hidden="true">·</span>
-                          <span>{{ review.createdAt | date: 'MMMM y' }}</span>
+                          <span>{{ review.createdAt | apiDate: 'MMMM y' }}</span>
                         }
                       </div>
                     </div>
                   </div>
-                  <!-- Preview clamps to 5 lines; the full text lives in the "Show all" modal. -->
-                  <p class="mt-2 line-clamp-5 text-sm leading-relaxed text-ink-700">{{ review.comments }}</p>
+                  <p
+                    class="mt-2 text-sm leading-relaxed text-ink-700"
+                    [class.line-clamp-4]="isLongComment(review.comments) && !isPreviewExpanded(idx)"
+                  >{{ review.comments }}</p>
+                  @if (isLongComment(review.comments)) {
+                    <button
+                      type="button"
+                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-600"
+                      (click)="togglePreviewExpanded(idx)"
+                    >
+                      {{ isPreviewExpanded(idx) ? 'Show less' : 'Show more' }}
+                    </button>
+                  }
                 </div>
               }
             </div>
 
-            @if (reviews().length > 2) {
-              <button hh-button variant="outlined" size="sm" class="mt-6" (click)="openReviews()">
+            @if (reviews().length > previewReviewCount) {
+              <button hh-button variant="outlined" size="sm" class="mt-8" (click)="openReviews()">
                 Show all {{ reviews().length }} reviews
               </button>
             }
@@ -247,7 +260,7 @@
                   </div>
                   <div class="shrink-0 text-right">
                     <p class="font-semibold text-ink-900">
-                      Rs {{ room.price | number }}
+                      <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ room.price | number }}
                     </p>
                     <p class="text-xs text-ink-400">/ month</p>
                   </div>
@@ -344,7 +357,7 @@
             <div class="flex items-baseline gap-1.5">
               <span class="text-sm text-ink-400">From</span>
               <span class="text-2xl font-semibold text-ink-900"
-                >Rs {{ l.priceFrom | number }}</span
+                ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}</span
               >
               <span class="text-sm text-ink-400">/ month</span>
             </div>
@@ -439,7 +452,7 @@
     <div class="min-w-0">
       <p class="text-xs text-ink-400">From</p>
       <p class="truncate font-semibold text-ink-900">
-        Rs {{ l.priceFrom | number }}
+        <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}
         <span class="text-xs font-normal text-ink-400">/ mo</span>
       </p>
     </div>
@@ -596,7 +609,7 @@
           <div class="min-w-0">
             <p class="truncate font-semibold text-ink-900">{{ l.name }}</p>
             <p class="mt-0.5 truncate text-sm text-ink-500">{{ l.area }}, {{ l.city }}</p>
-            <p class="mt-0.5 text-xs text-ink-400">Rs {{ l.priceFrom | number }} / mo</p>
+            <p class="mt-0.5 text-xs text-ink-400"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }} / mo</p>
           </div>
         </div>
 
@@ -996,7 +1009,7 @@
                         </span>
                         @if (review.createdAt) {
                           <span aria-hidden="true">·</span>
-                          <span>{{ review.createdAt | date: 'MMMM y' }}</span>
+                          <span>{{ review.createdAt | apiDate: 'MMMM y' }}</span>
                         }
                       </div>
                     </div>

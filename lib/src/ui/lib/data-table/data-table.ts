@@ -58,6 +58,26 @@ export interface CellComposite {
   kind: 'composite';
   primary: string;
   secondary?: string;
+  /**
+   * Tabler class (e.g. `ti-alert-triangle`) marking what the secondary line *is*, for
+   * cells where the two lines are the same kind of value and would otherwise be
+   * indistinguishable — two phone numbers, say.
+   */
+  secondaryIcon?: string;
+  /**
+   * Colour utility for the icon, e.g. `text-warn`. Left to the caller because the
+   * meaning is the caller’s: the table has no way to know whether a marker is a
+   * caution, an error, or neutral. Defaults to the secondary text colour.
+   */
+  secondaryIconClass?: string;
+  /** Screen-reader text for that icon. The icon alone conveys nothing without it. */
+  secondaryLabel?: string;
+  /**
+   * Small pill beside the primary line — for something the row *is* ("Manager") rather than
+   * a value it holds. `class` overrides the default brand tint. Optional: without it the cell
+   * renders exactly as before.
+   */
+  badge?: { text: string; class?: string };
 }
 
 export interface CellLink {
@@ -69,6 +89,26 @@ export interface CellLink {
   external?: boolean;
 }
 
+/**
+ * A small image that opens full size — a receipt, a document scan, an avatar.
+ *
+ * The image is the whole affordance; an adjacent preview icon read as clutter at this size.
+ * Falls back to `emptyText` when there is no image, so a column of mostly-empty
+ * attachments still lines up instead of collapsing. Clicking opens `href` in a new tab and
+ * deliberately does not trigger the row click, since the two go to different places.
+ */
+export interface CellThumb {
+  kind: 'thumb';
+  /** Image URL. Absent renders `emptyText` instead. */
+  src?: string;
+  /** Where the preview opens; defaults to `src`. */
+  href?: string;
+  /** Alt text, and the accessible name of the link. */
+  alt?: string;
+  /** Shown in place of the image when `src` is absent. Defaults to an em dash. */
+  emptyText?: string;
+}
+
 export type CellDef =
   | CellText
   | CellCurrency
@@ -76,6 +116,7 @@ export type CellDef =
   | CellBadge
   | CellIconText
   | CellComposite
+  | CellThumb
   | CellLink;
 
 // ---------------------------------------------------------------------------
@@ -235,9 +276,25 @@ export interface PaginationConfig {
                           }
                           <div>
                             @if (cell.kind === 'composite') {
-                              <p class="font-medium text-ink-900">{{ $any(cell).primary }}</p>
+                              <p class="flex items-center gap-1.5 font-medium text-ink-900">
+                                <span class="min-w-0 truncate">{{ $any(cell).primary }}</span>
+                                @if ($any(cell).badge; as badge) {
+                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
+                                }
+                              </p>
                               @if ($any(cell).secondary) {
-                                <p class="text-xs text-ink-400">{{ $any(cell).secondary }}</p>
+                                <p
+                                  class="text-xs text-ink-400"
+                                  [class.flex]="$any(cell).secondaryIcon"
+                                  [class.items-center]="$any(cell).secondaryIcon"
+                                  [class.gap-1]="$any(cell).secondaryIcon"
+                                >
+                                  @if ($any(cell).secondaryIcon) {
+                                    <i class="ti {{ $any(cell).secondaryIcon }} {{ $any(cell).secondaryIconClass }} shrink-0 text-[11px]" aria-hidden="true"></i>
+                                    <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
+                                  }
+                                  {{ $any(cell).secondary }}
+                                </p>
                               }
                             } @else {
                               <span>{{ $any(cell).value ?? $any(cell).primary ?? $any(cell).text }}</span>
@@ -283,11 +340,49 @@ export interface PaginationConfig {
 
                           @case ('composite') {
                             <div>
-                              <p class="font-medium text-ink-900">{{ $any(cell).primary }}</p>
+                              <p class="flex items-center gap-1.5 font-medium text-ink-900">
+                                <span class="min-w-0 truncate">{{ $any(cell).primary }}</span>
+                                @if ($any(cell).badge; as badge) {
+                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
+                                }
+                              </p>
                               @if ($any(cell).secondary) {
-                                <p class="text-xs text-ink-400">{{ $any(cell).secondary }}</p>
+                                <p
+                                  class="text-xs text-ink-400"
+                                  [class.flex]="$any(cell).secondaryIcon"
+                                  [class.items-center]="$any(cell).secondaryIcon"
+                                  [class.gap-1]="$any(cell).secondaryIcon"
+                                >
+                                  @if ($any(cell).secondaryIcon) {
+                                    <i class="ti {{ $any(cell).secondaryIcon }} {{ $any(cell).secondaryIconClass }} shrink-0 text-[11px]" aria-hidden="true"></i>
+                                    <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
+                                  }
+                                  {{ $any(cell).secondary }}
+                                </p>
                               }
                             </div>
+                          }
+
+                          @case ('thumb') {
+                            @if ($any(cell).src) {
+                              <a
+                                [href]="$any(cell).href || $any(cell).src"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="group/thumb inline-block"
+                                [attr.aria-label]="$any(cell).alt || 'Open preview'"
+                                (click)="$event.stopPropagation()"
+                              >
+                                <img
+                                  [src]="$any(cell).src"
+                                  [alt]="$any(cell).alt || ''"
+                                  loading="lazy"
+                                  class="h-9 w-9 shrink-0 rounded-lg border border-ink-100 bg-surface object-cover transition group-hover/thumb:border-brand-300 group-hover/thumb:brightness-95"
+                                />
+                              </a>
+                            } @else {
+                              <span class="text-ink-400">{{ $any(cell).emptyText ?? '—' }}</span>
+                            }
                           }
 
                           @case ('link') {

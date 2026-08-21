@@ -60,6 +60,8 @@ export interface SignedUpUser {
  * their roles. This is how the FE resolves who is signed in + their role, since
  * the JWT payload itself carries no role/permission data.
  */
+import type { ApiPermissions } from '@core/auth/permissions';
+
 export interface CurrentUserResponse {
   success: boolean;
   user: CurrentUser;
@@ -73,6 +75,8 @@ export interface CurrentUser {
   is_active: boolean;
   is_admin: boolean;
   roles: ApiRole[];
+  /** Granted actions, grouped by API namespace then subject. See @core/auth/permissions. */
+  permissions?: ApiPermissions | null;
 }
 
 export interface ApiRole {

@@ -79,6 +79,7 @@ export interface DropdownOption {
       <button
         type="button"
         (click)="toggle()"
+        [disabled]="disabled()"
         aria-haspopup="listbox"
         [attr.aria-expanded]="open()"
         [class]="triggerClass()"
@@ -286,6 +287,12 @@ export class Dropdown {
   readonly triggerIcon = input('');
   /** Open the panel to the RIGHT of the trigger instead of below — use for sidebar / nav pickers. */
   readonly openRight = input(false);
+  /**
+   * Locks the trigger. The selected value still renders — this is for a choice that is
+   * already made and not the user's to change (e.g. the expense type when the form was
+   * opened from the mess page), not for hiding it.
+   */
+  readonly disabled = input(false);
 
   // Async / searchable mode
   readonly searchable = input(false);
@@ -417,8 +424,11 @@ export class Dropdown {
 
   protected readonly triggerClass = computed(() => {
     const base =
-      'inline-flex cursor-pointer select-none items-center gap-2 border font-medium text-left ' +
-      'transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300';
+      'inline-flex select-none items-center gap-2 border font-medium text-left ' +
+      'transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ' +
+      (this.disabled()
+        ? 'cursor-not-allowed bg-ink-50 text-ink-500 opacity-70'
+        : 'cursor-pointer');
 
     if (this.variant() === 'field') {
       const size = this.compact()
@@ -481,6 +491,7 @@ export class Dropdown {
   }
 
   protected toggle(): void {
+    if (this.disabled()) return;
     if (this.open()) {
       this.close();
       return;

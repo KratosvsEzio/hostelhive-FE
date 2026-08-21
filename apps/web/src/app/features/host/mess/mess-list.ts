@@ -2,15 +2,33 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
+  effect,
+  ElementRef,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { format } from 'date-fns';
-import { BarChart, BarChartBar, BarChartTick, Button, ConfirmModal, EmptyState, Skeleton, TabItem, Tabs } from '@hostelhive/ui';
+import {
+  BarChart,
+  BarChartBar,
+  BarChartTick,
+  Button,
+  ConfirmModal,
+  ContextMenu,
+  ContextMenuDivider,
+  DataTable,
+  EmptyState,
+  PaginationConfig,
+  Skeleton,
+  TabItem,
+  Tabs,
+} from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NotificationService } from '@core/notification.service';
 import { MobileApp } from '@core/mobile-app';
@@ -18,7 +36,6 @@ import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import {
   DailyMealConfirmation,
-  ExpenseDetail,
   ExpenseListItem,
   GroceryExpenseStat,
   HostelsApi,
@@ -27,6 +44,8 @@ import {
 } from '@services';
 import { MessService } from './mess.service';
 import { MEAL_META, MEAL_ORDER, MealType } from './mess-notifications.service';
+import { GROCERY_TABLE_COLS } from '@app/util/table-configs/grocery-table-cols';
+import { PAGE_SIZE } from '@util/pagination';
 
 /** View state for the KPI cards fetched from `mess_overview_cards`. */
 interface OverviewState {
@@ -81,17 +100,29 @@ function labelFlags(n: number, step: number): boolean[] {
   return flags;
 }
 
+/** Blank grocery page — shared by the initial value, the loading frame and the error frame. */
+const EMPTY_EXPENSES = {
+  loading: true,
+  error: false,
+  items: [] as ExpenseListItem[],
+  total: 0,
+  totalPages: 1,
+};
+
+
 /**
- * SVG geometry for the confirmations area chart. The viewBox is scaled to the card's
- * width, so its *width* sets the effective font size: a 600-unit box squeezed into a
- * ~295px phone card renders every 10px label at ~5px. Phones therefore get their own
- * narrower, taller profile rather than the desktop one shrunk down.
+ * SVG geometry for the confirmations area chart, in CSS pixels.
+ *
+ * The viewBox is derived from the element's *measured* width so it always renders 1:1.
+ * A fixed viewBox is only correct at one container width: a 600-unit box in the desktop
+ * two-column grid renders ~382px wide, scaling every 10px label down to 6.4px, which is
+ * why this chart read as tiny next to the grocery chart (plain HTML, so its 10px text is
+ * always 10px). Deriving the box means font sizes here mean the same thing they do there.
  */
 interface ChartGeom {
-  /** viewBox dimensions. */
   vw: number;
   vh: number;
-  /** Plot area insets: left, right, top, bottom. */
+  /** Plot insets: left, right, top, bottom. */
   cl: number;
   cr: number;
   ct: number;
@@ -99,28 +130,34 @@ interface ChartGeom {
   font: number;
   /** Baseline for the x-axis day labels. */
   labelY: number;
-  /** Tooltip box, and the x beyond which it flips to the left of the cursor. */
   tipW: number;
   tipH: number;
   /** Half-width of a day's invisible hover/tap strip. */
   hitHalf: number;
-  /** Label every Nth day on the x-axis. */
-  labelStep: number;
 }
 
-// Aspect 3.0 → at ~550px of card content this gives ~183px of chart height.
-const GEOM_WIDE: ChartGeom = {
-  vw: 600, vh: 200, cl: 38, cr: 592, ct: 15, cb: 175,
-  font: 10, labelY: 195, tipW: 96, tipH: 72, hitHalf: 9, labelStep: 6,
-};
+/** Plot height in px, matching the grocery chart's 10rem so the two cards sit level. */
+const PLOT_H = 160;
 
-// Aspect 1.31 → at ~295px of card content this gives ~225px of chart height, and the
-// narrower box scales 12-unit text up to ~10px instead of the wide profile's ~5px.
-const GEOM_PHONE: ChartGeom = {
-  vw: 340, vh: 260, cl: 30, cr: 334, ct: 14, cb: 222,
-  font: 12, labelY: 248, tipW: 112, tipH: 82, hitHalf: 5, labelStep: 7,
-};
-
+function geomFor(width: number, phone: boolean): ChartGeom {
+  const vw = Math.max(240, Math.round(width));
+  const font = phone ? 11 : 10;
+  const ct = 14;
+  const cb = ct + (phone ? PLOT_H + 40 : PLOT_H);
+  return {
+    vw,
+    vh: cb + 24,
+    cl: 30,
+    cr: vw - 6,
+    ct,
+    cb,
+    font,
+    labelY: cb + 16,
+    tipW: 112,
+    tipH: 78,
+    hitHalf: Math.max(4, Math.round((vw - 36) / 60)),
+  };
+}
 const AREA_FILL = 1.0;
 
 function niceAxis(peak: number): { step: number; ceiling: number } {
@@ -183,7 +220,8 @@ function buildAreaChart(series: DailyMealConfirmation[], g: ChartGeom): AreaChar
       dinner:    makePath(pointsY.dinner),
     },
     ticks, pointsX, pointsY,
-    showLabel: labelFlags(n, g.labelStep),
+    // ~64px per label: enough for "17 Jul" at 10px without crowding.
+    showLabel: labelFlags(n, Math.max(1, Math.ceil(n / Math.max(1, Math.floor(CW / 64))))),
   };
 }
 
@@ -217,7 +255,20 @@ function buildSpendChart(
 @Component({
   selector: 'hh-mess-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, BarChart, Button, ConfirmModal, EmptyState, Skeleton, Tabs],
+  imports: [
+    DecimalPipe,
+    RouterLink,
+    DashboardLayout,
+    BarChart,
+    Button,
+    ConfirmModal,
+    ContextMenu,
+    ContextMenuDivider,
+    DataTable,
+    EmptyState,
+    Skeleton,
+    Tabs,
+  ],
   templateUrl: './mess-list.html',
 })
 export class MessList {
@@ -229,15 +280,35 @@ export class MessList {
   protected readonly mealOrder = MEAL_ORDER;
   protected readonly mealMeta = MEAL_META;
 
-  protected readonly expanded = signal<string | null>(null);
   protected readonly chartMode = signal<'month' | 'day'>('month');
 
   // ── Area chart ─────────────────────────────────────────────────────────────
   protected readonly hoveredDayIndex = signal<number | null>(null);
 
-  /** Phones get the taller, narrower chart profile; everything else the wide one. */
+  /** Measured width of the chart box, kept live by a ResizeObserver. */
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly chartW = signal(600);
+  private readonly chartBox = viewChild<ElementRef<HTMLElement>>('chartBox');
+
+  /**
+   * Keep the viewBox matched to the element's real width so the chart renders 1:1 and its
+   * font sizes mean CSS pixels. An effect, not afterNextRender: the chart sits behind an
+   * @if that only resolves once the data lands, so a one-shot hook runs while the element
+   * does not exist yet. viewChild is a signal, so this re-runs the moment it appears.
+   */
+  private readonly _measureChart = effect((onCleanup) => {
+    const el = this.chartBox()?.nativeElement;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width;
+      if (w > 0) this.chartW.set(w);
+    });
+    ro.observe(el);
+    onCleanup(() => ro.disconnect());
+  });
+
   protected readonly geom = computed(() =>
-    this.mobile.isMobile() ? GEOM_PHONE : GEOM_WIDE,
+    geomFor(this.chartW(), this.mobile.isMobile()),
   );
   protected readonly chartViewBox = computed(() => {
     const g = this.geom();
@@ -404,35 +475,46 @@ export class MessList {
   private readonly notifications = inject(NotificationService);
   private readonly refresh = signal(0);
 
+  private readonly router = inject(Router);
+
+  /** 1-based page of the grocery table. */
+  private readonly groceryPage = signal(1);
+
   private readonly expenseFetchKey = computed(() => ({
     hostelId: this.overviewKey(),
+    page: this.groceryPage(),
     r: this.refresh(),
   }));
 
   private readonly expenseState = toSignal(
     toObservable(this.expenseFetchKey).pipe(
-      switchMap(({ hostelId }) => {
-        if (!hostelId) return of({ loading: true, error: false, items: [] as ExpenseListItem[] });
-        return this.hostelsApi.listExpenses(hostelId, { 's[expense_type]': 'groceries', page_size: '20' }).pipe(
-          map((r) => ({
-            loading: false,
-            error: false,
-            items: r.items,
-          })),
-          startWith({ loading: true, error: false, items: [] as ExpenseListItem[] }),
-          catchError(() => of({ loading: false, error: true, items: [] as ExpenseListItem[] })),
-        );
+      switchMap(({ hostelId, page }) => {
+        if (!hostelId) return of(EMPTY_EXPENSES);
+        return this.hostelsApi
+          .listExpenses(hostelId, {
+            's[expense_type]': 'groceries',
+            page: String(page),
+            limit: String(PAGE_SIZE),
+          })
+          .pipe(
+            map((r) => ({
+              loading: false,
+              error: false,
+              items: r.items,
+              total: r.total,
+              totalPages: r.totalPages,
+            })),
+            startWith(EMPTY_EXPENSES),
+            catchError(() => of({ ...EMPTY_EXPENSES, loading: false, error: true })),
+          );
       }),
     ),
-    { initialValue: { loading: true, error: false, items: [] as ExpenseListItem[] } },
+    { initialValue: EMPTY_EXPENSES },
   );
 
   protected readonly entriesLoading = computed(() => this.expenseState().loading);
   protected readonly entries = computed(() => this.expenseState().items);
-
-  /** Cache of fetched expense details, keyed by expense id. */
-  protected readonly detailCache = signal<Record<string, ExpenseDetail>>({});
-  protected readonly detailLoading = signal<string | null>(null);
+  protected readonly entriesTotal = computed(() => this.expenseState().total);
 
   protected readonly removePending = signal<ExpenseListItem | null>(null);
   private readonly deletedIds = signal<ReadonlySet<string>>(new Set());
@@ -447,27 +529,62 @@ export class MessList {
     return Number.isNaN(d.getTime()) ? iso : format(d, 'EEEE, MMM d yyyy');
   }
 
-  protected toggle(id: string): void {
-    if (this.expanded() === id) {
-      this.expanded.set(null);
+  // ── Grocery table ─────────────────────────────────────────────────────────
+
+  protected readonly tableCols = GROCERY_TABLE_COLS;
+  protected readonly rowId = (row: unknown) => (row as ExpenseListItem).id;
+  protected readonly menuActionActive = (row: unknown) =>
+    this.menuOpenId() === (row as ExpenseListItem).id;
+
+  protected readonly menuOpenId = signal<string | null>(null);
+  protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
+
+  protected readonly paginationConf = computed<PaginationConfig | null>(() => {
+    const totalPages = this.expenseState().totalPages;
+    if (totalPages <= 1) return null;
+    const page = this.groceryPage();
+    return {
+      page,
+      total: this.expenseState().total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      itemLabel: 'grocery entry',
+    };
+  });
+
+  protected goToPage(page: number): void {
+    this.closeMenu();
+    this.groceryPage.set(page);
+  }
+
+  /**
+   * Line items, receipts and notes all live on the expense detail page already, so the row
+   * opens that rather than re-implementing the breakdown inline.
+   */
+  protected goToDetail(row: ExpenseListItem): void {
+    this.closeMenu();
+    void this.router.navigate([`/host/${this.propertyStore.selected()}/expenses`, row.id]);
+  }
+
+  protected onRowAction(ev: { row: unknown; event: MouseEvent }): void {
+    const id = (ev.row as ExpenseListItem).id;
+    ev.event.stopPropagation();
+    if (this.menuOpenId() === id) {
+      this.closeMenu();
       return;
     }
-    this.expanded.set(id);
-    if (!this.detailCache()[id]) {
-      const hostelId = this.propertyStore.selected();
-      if (!hostelId) return;
-      this.detailLoading.set(id);
-      this.hostelsApi.getExpense(hostelId, id).subscribe({
-        next: (detail) => {
-          this.detailCache.update((c) => ({ ...c, [id]: detail }));
-          this.detailLoading.set(null);
-        },
-        error: () => this.detailLoading.set(null),
-      });
-    }
+    const rect = (ev.event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.menuOpenId.set(id);
+    this.menuPos.set({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+  }
+
+  protected closeMenu(): void {
+    this.menuOpenId.set(null);
+    this.menuPos.set(null);
   }
 
   protected promptRemove(entry: ExpenseListItem): void {
+    this.closeMenu();
     this.removePending.set(entry);
   }
 
@@ -478,7 +595,6 @@ export class MessList {
 
     this.deletedIds.update((s) => new Set(s).add(entry.id));
     this.removePending.set(null);
-    if (this.expanded() === entry.id) this.expanded.set(null);
 
     this.hostelsApi.deleteExpense(hostelId, entry.id).subscribe({
       error: (err: ApiError) => {

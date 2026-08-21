@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Permission, Role } from './roles';
+import { permissionGranted } from './permissions';
 
 /**
  * Persisted session, restored + re-validated on next load (AuthService.restoreSession):
@@ -114,11 +115,27 @@ export class SessionStore {
     }
   }
 
-  /** Super Admin implicitly holds every flag; everyone else checks their list. */
+  /**
+   * Whether the session may perform `flag` (`host:Room:create`).
+   *
+   * Three deliberate escapes:
+   *  - Super Admin implicitly holds everything.
+   *  - A granted `manage` on the subject covers every action on it, so a payload that hands
+   *    out the umbrella instead of enumerating actions still works.
+   *  - **A session carrying no permissions at all is not gated.** The flags only arrived with
+   *    `/api/users/current`, so an older cached session — or any deployment where the field is
+   *    absent — would otherwise have every button and route in the app hidden at once. The
+   *    server is the authority regardless; this check is UX, and failing open on *missing
+   *    data* is far safer than locking everyone out. Once a payload carries any flag, the
+   *    absent ones really are denied.
+   */
   hasPermission(flag: Permission): boolean {
     const user = this._user();
     if (!user) return false;
-    return user.role === 'super-admin' || user.permissions.includes(flag);
+    if (user.role === 'super-admin') return true;
+    const granted = user.permissions ?? [];
+    if (!granted.length) return true;
+    return permissionGranted(new Set(granted), flag);
   }
 
   hasRole(...roles: Role[]): boolean {

@@ -18,6 +18,7 @@ import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { EMPTY, Subject, catchError, debounceTime, filter, map, switchMap, take } from 'rxjs';
 import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive/ui';
+import { MoneyInput } from '@app/shared/money-input/money-input';
 
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { ApiError, Invoice, Tenant } from '@hostelhive/data-access';
@@ -45,7 +46,7 @@ import {
 @Component({
   selector: 'hh-invoice-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DatePicker, Dropdown, Input, DecimalPipe],
+  imports: [Button, DatePicker, Dropdown, Input, DecimalPipe, MoneyInput],
   host: { class: 'contents' },
   templateUrl: './invoice-form-drawer.html',
 })
@@ -74,6 +75,10 @@ export class InvoiceFormDrawer {
   protected readonly saving = signal(false);
   protected readonly submitAttempted = signal(false);
   protected readonly formValid = computed(() => isInvoiceFormValid(this.form()));
+  /** Backpacker hostels bill per night, so the invoice carries no due-date cycle. */
+  protected readonly nightly = computed(
+    () => this.store.activeProperty()?.accommodationType === 'backpacker',
+  );
 
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panel');
 
@@ -190,7 +195,7 @@ export class InvoiceFormDrawer {
     this.form.update((f) => ({ ...f, [key]: value }));
   }
 
-  protected fieldError(key: 'renterId' | 'issuedDate' | 'dueDate'): string {
+  protected fieldError(key: 'renterId'): string {
     if (!this.submitAttempted()) return '';
     const f = this.form();
     return f[key].trim() ? '' : 'This field is required';

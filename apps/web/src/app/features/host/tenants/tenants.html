@@ -1,6 +1,6 @@
 <app-dashboard-layout label="Tenants">
   <div hhActions class="flex items-center gap-2">
-    <button hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCheckIn()">
+    <button *hhHasPermission="'host:Renter:create'" hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCheckIn()">
       <i class="ti ti-user-plus"></i>Register Tenant
     </button>
   </div>
@@ -85,27 +85,27 @@
           View profile
         </button>
         <hh-context-menu-divider />
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuTenant); closeMenu()">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuTenant); closeMenu()" *hhHasPermission="'host:Renter:update'">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           Edit tenant
         </button>
         @if (menuTenant.status === 'active' || menuTenant.status === 'on-notice') {
           <hh-context-menu-divider />
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-warn" (click)="setInactive(menuTenant)">
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-warn" (click)="setInactive(menuTenant)" *hhHasPermission="'host:Renter:update'">
             <i class="ti ti-user-minus text-sm text-warn" aria-hidden="true"></i>
             Inactivate
           </button>
         }
         @if (menuTenant.status === 'inactive') {
           <hh-context-menu-divider />
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-ok" (click)="setActive(menuTenant)">
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-ok" (click)="setActive(menuTenant)" *hhHasPermission="'host:Renter:update'">
             <i class="ti ti-user-check text-sm text-ok" aria-hidden="true"></i>
             Activate
           </button>
         }
         @if (!menuTenant.userAcceptance) {
           <hh-context-menu-divider />
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-brand-600" (click)="reinvite(menuTenant)">
+          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-brand-600" (click)="reinvite(menuTenant)" *hhHasPermission="'host:Renter:invite_tenant'">
             <i class="ti ti-send text-sm text-brand-600" aria-hidden="true"></i>
             Reinvite
           </button>

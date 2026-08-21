@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
+import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,6 +15,7 @@ import { HostOpsApi, HostPropertyStore, RoomRenter, RoomShowData } from '@servic
 import { HostRoom as Room } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { ApiDate } from '@util/api-date';
 
 type RoomStatus = 'available' | 'partial' | 'full';
 
@@ -31,7 +32,7 @@ const LOADING: DetailState = { loading: true, error: false, networkError: false,
 @Component({
   selector: 'hh-room-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill],
+  imports: [ApiDate, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill],
   templateUrl: './room-detail.html',
 })
 export class RoomDetail {

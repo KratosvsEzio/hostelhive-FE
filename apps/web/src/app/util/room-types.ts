@@ -14,8 +14,6 @@ export const ROOM_TYPES = [
   'Dormitory',
 ] as const;
 
-export type RoomTypeName = (typeof ROOM_TYPES)[number];
-
 /**
  * Seeker-facing labels. The canonical value (what we send/store/group by) stays
  * `'Single room'`; only the text shown to a human changes. Keep the value out of
@@ -37,8 +35,15 @@ export const DORMITORY_DEFAULT_CAPACITY = 5;
 /** Smallest capacity the backend accepts (`greater_than: 0`). */
 export const MIN_ROOM_CAPACITY = 1;
 
-/** Largest capacity the backend accepts (`less_than: 10`). */
-export const MAX_ROOM_CAPACITY = 9;
+/**
+ * There is deliberately no maximum.
+ *
+ * A Dormitory holds however many beds the host says it does — a backpacker dorm is
+ * routinely 12–20 and there is no sensible ceiling to invent. The fixed types
+ * (Single/Double/Triple/Quad) still take their size from the name, so this only ever
+ * applies to Dormitory.
+ */
+
 
 const FIXED_CAPACITY: Record<string, number> = {
   'Single room': 1,
@@ -60,9 +65,9 @@ export function defaultCapacityFor(type: string): number {
   return fixedCapacityFor(type) ?? DORMITORY_DEFAULT_CAPACITY;
 }
 
-/** Coerces any number into the backend-valid integer range 1–9. */
+/** Coerces any number into a whole number of beds, at least one. No upper bound. */
 export function clampCapacity(n: number): number {
   const floored = Math.floor(n);
   if (!Number.isFinite(floored)) return MIN_ROOM_CAPACITY;
-  return Math.min(MAX_ROOM_CAPACITY, Math.max(MIN_ROOM_CAPACITY, floored));
+  return Math.max(MIN_ROOM_CAPACITY, floored);
 }

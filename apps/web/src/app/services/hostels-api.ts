@@ -18,6 +18,7 @@ import {
   RoomType,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { ApiPagination, toPageInfo } from '@util/pagination';
 
 export interface WeeklyMenuPayload {
   id?: string;
@@ -289,7 +290,7 @@ interface RawExpense {
 interface ExpenseListResponse {
   expenses?: RawExpense[];
   data?: RawExpense[];
-  pagination?: { total_count?: number };
+  pagination?: ApiPagination;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -563,15 +564,15 @@ export class HostelsApi {
    * GET /api/host/hostels/:id/expenses — all of the hostel's expenses. Verified shape:
    * `{ expenses: [{ id, expense_type, amount, expense_date, … }], pagination }`.
    * Type + date-range filtering is applied client-side — the endpoint's `f[...]` params
-   * don't cover these fields (they return no rows), so we pull everything (page_size) and
+   * don't cover these fields (they return no rows), so we pull a large single page (`limit`) and
    * filter in the component.
    */
   listExpenses(
     hostelId: string,
     params?: Record<string, string>,
-  ): Observable<{ items: ExpenseListItem[]; total: number }> {
+  ): Observable<{ items: ExpenseListItem[]; total: number; totalPages: number }> {
     return this.api
-      .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { page_size: '200', ...params })
+      .get<ExpenseListResponse>(`/api/host/hostels/${hostelId}/expenses`, { limit: '200', ...params })
       .pipe(
         map((r) => {
           const rows = r.expenses ?? r.data ?? [];
@@ -587,6 +588,10 @@ export class HostelsApi {
               createdAt: e.created_at ?? '',
             })),
             total: r.pagination?.total_count ?? rows.length,
+            // Callers that page (the mess grocery table) need the page count. Derived from
+            // the requested limit when the API omits it, so a missing field degrades to a
+            // single page rather than to zero.
+            totalPages: r.pagination?.total_pages ?? 1,
           };
         }),
       );

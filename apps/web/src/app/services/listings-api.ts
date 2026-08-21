@@ -3,10 +3,11 @@ import { Observable, map } from 'rxjs';
 import {
   Listing,
   ListingQuery,
-  Gender,
+  AccommodationType,
   Paginated,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { ApiPagination, toPageInfo } from '@util/pagination';
 
 /**
  * Raw hostel from GET /public/hostels. The endpoint runs Searchkick with `load: false`,
@@ -29,6 +30,8 @@ export interface ApiHostel {
   property_type?: string | null; // 'apartment' | 'room' | 'building' | 'house'
   total_rooms?: number | null;
   starting_price?: number | null; // the "from" price (min_price/max_price are deprecated/removed)
+  currency?: string | null; // ISO-4217 code the prices are quoted in
+
   latitude?: number | string | null;
   longitude?: number | string | null;
   nearby_landmarks?: string | null;
@@ -61,8 +64,9 @@ export interface ApiHostel {
 }
 
 // gender_type arrives as the backend enum's string key ('co-living' has a hyphen).
-const GENDER_MAP: Record<string, Gender> = {
+const GENDER_MAP: Record<string, AccommodationType> = {
   'co-living': 'coliving',
+  backpacker: 'backpacker',
   boys: 'boys',
   girls: 'girls',
 };
@@ -124,7 +128,7 @@ export function toListing(h: ApiHostel): Listing {
     name: derivedName,
     area: h.area ?? '',
     city: h.city ?? '',
-    gender: GENDER_MAP[h.gender_type ?? ''] ?? 'coliving',
+    accommodationType: GENDER_MAP[h.gender_type ?? ''] ?? 'coliving',
     verified: h.status?.slug === 'active',
     propertyType: h.property_type ? cap(h.property_type) : undefined,
     sharing: [], // not part of the public search payload
@@ -135,6 +139,7 @@ export function toListing(h: ApiHostel): Listing {
       .map((o) => o?.name)
       .filter((n): n is string => !!n),
     priceFrom: Math.round(h.starting_price ?? 0),
+    currency: h.currency ?? undefined,
     priceByCapacity: Object.keys(priceByCapacity).length ? priceByCapacity : undefined,
     images: images.length
       ? images
@@ -163,7 +168,7 @@ export class ListingsApi {
   list(query: ListingQuery = {}): Observable<Paginated<Listing>> {
     const {
       city,
-      gender = 'all',
+      accommodationType = 'all',
       propertyType,
       capacity,
       minPrice,
@@ -205,12 +210,15 @@ export class ListingsApi {
 
     // Enum filters. parse_key (search_helper) auto-appends `.keyword` to any field ending in
     // "type", so these are exact term matches — including the hyphenated "co-living".
-    if (gender !== 'all')
-      params['f[gender_type]'] = gender === 'coliving' ? 'co-living' : gender;
+    if (accommodationType !== 'all')
+      params['f[gender_type]'] =
+        accommodationType === 'coliving' ? 'co-living' : accommodationType;
     if (propertyType) params['f[property_type]'] = propertyType;
 
     // Room capacity — exact match for 1–4; "5+" becomes a >= bound on the nested
     // room_types.capacity field (a hostel matches if it has a room type that size).
+    // '4plus' is a retired alias kept only so already-shared URLs keep working; nothing
+    // emits it any more.
     if (capacity) {
       if (capacity === '5+' || capacity === '4plus') params['f[room_types.capacity][gte]'] = 5;
       else params['f[room_types.capacity]'] = +capacity;
@@ -245,11 +253,7 @@ export class ListingsApi {
         | {
             hostels: ApiHostel[];
             // Rails/Searchkick envelope: { current_page, total_pages, total_count, … }.
-            pagination?: {
-              total_count?: number;
-              current_page?: number;
-              total_pages?: number;
-            };
+            pagination?: ApiPagination;
             // Legacy/alternate envelope kept as a fallback.
             meta?: { total?: number; page?: number };
           }
@@ -264,14 +268,17 @@ export class ListingsApi {
           const items: Listing[] = raw.map((h) => toListing(h));
           // Sorting is handled server-side via sort[starting_price]; no client-side re-sort needed.
 
+          const info = toPageInfo(pg, page, items.length);
+
           return {
             items,
-            // True total across all pages — the API's `pagination.total_count`, with the
-            // legacy `meta.total` and then the page length as fallbacks.
-            total: pg?.total_count ?? meta?.total ?? items.length,
-            page: pg?.current_page ?? meta?.page ?? page,
+            // `meta` is a legacy envelope some responses still carry; it only wins when the
+            // modern `pagination` block is absent, which toPageInfo reports as a row-count
+            // fallback rather than a real total.
+            total: pg ? info.total : (meta?.total ?? items.length),
+            page: pg ? info.page : (meta?.page ?? page),
             pageSize,
-            totalPages: pg?.total_pages,
+            totalPages: info.totalPages,
           };
         }),
       );

@@ -34,10 +34,12 @@
       [loading]="propertiesLoading()"
       (valueChange)="onPropertySelect($event)"
     />
-    <a hh-button color="primary" routerLink="/host/hostels/new" class="mt-1 w-full">
-      <i class="ti ti-plus"></i>
-      Create new hostel
-    </a>
+    @if (canCreateHostel()) {
+      <a hh-button color="primary" routerLink="/host/hostels/new" class="mt-1 w-full">
+        <i class="ti ti-plus"></i>
+        Create new hostel
+      </a>
+    }
   </div>
 </aside>
 

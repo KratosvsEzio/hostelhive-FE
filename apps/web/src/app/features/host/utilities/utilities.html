@@ -1,6 +1,6 @@
 <app-dashboard-layout label="Utilities">
   <div hhActions class="flex items-center gap-2">
-    <a hh-button color="primary" size="sm" routerLink="add">
+    <a *hhHasPermission="'host:UtilityBill:create'" hh-button color="primary" size="sm" routerLink="add">
       <i class="ti ti-plus"></i>Add utility bill
     </a>
   </div>
@@ -57,7 +57,7 @@
       title="No utility bills yet"
       message="Add a utility bill to start tracking usage and charges."
     >
-      <a hh-button color="primary" size="sm" routerLink="add">
+      <a *hhHasPermission="'host:UtilityBill:create'" hh-button color="primary" size="sm" routerLink="add">
         <i class="ti ti-plus"></i>Add utility bill
       </a>
     </hh-empty-state>
@@ -86,12 +86,12 @@
     @let menuBill = bills().find(b => b.id === id);
     @if (menuBill) {
       <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="176" (close)="closeMenu()">
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editBill(menuBill, $event)">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editBill(menuBill, $event)" *hhHasPermission="'host:UtilityBill:update'">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           Edit
         </button>
         <hh-context-menu-divider />
-        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptDelete(menuBill, $event)">
+        <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptDelete(menuBill, $event)" *hhHasPermission="'host:UtilityBill:destroy'">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
           Delete
         </button>
