@@ -15,11 +15,20 @@ import { MobileApp } from '@core/mobile-app';
 // TEMPORARY (testing): startup gate to pick the BE base URL. Remove before go-live.
 import { DevSetupGate } from '@app/features/dev-setup/dev-setup-gate';
 import { devSetupPending } from '@core/dev-api-base-url';
+import { ConsentBanner } from '@core/analytics/consent-banner';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SiteHeader, SiteFooter, ToastHost, SeekerTabBar, DevSetupGate],
+  imports: [
+    RouterOutlet,
+    SiteHeader,
+    SiteFooter,
+    ToastHost,
+    SeekerTabBar,
+    DevSetupGate,
+    ConsentBanner,
+  ],
   templateUrl: './app.html',
 })
 export class App {
@@ -68,6 +77,15 @@ export class App {
       !u.startsWith('/mess/confirm')
     );
   });
+
+  /**
+   * The analytics consent banner, seeker area only — the consoles send nothing, so asking
+   * there would be asking for a permission we do not use. Held back until the base-URL gate
+   * clears so two overlays never stack.
+   */
+  protected readonly showConsentBanner = computed(
+    () => this.inSeekerArea() && !this.pending(),
+  );
 
   // Footer is seeker-only, and the mobile app replaces it with the bottom tab bar.
   protected readonly showFooter = computed(

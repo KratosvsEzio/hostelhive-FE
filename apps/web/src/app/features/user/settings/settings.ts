@@ -2,24 +2,47 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
-import { Button } from '@hostelhive/ui';
+import { RouterLink } from '@angular/router';
+import { Button, Toggle } from '@hostelhive/ui';
 import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { SessionStore } from '@core/auth';
 import { ImageUploadService, UsersApi } from '@services';
+import { AnalyticsService } from '@core/analytics/analytics.service';
+import {
+  analyticsConsent,
+  setAnalyticsConsent,
+} from '@core/analytics/analytics-consent';
+import { analyticsEnv } from '@app/analytics.env';
 
 @Component({
   selector: 'app-account-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, PhotoPicker],
+  imports: [Button, PhotoPicker, RouterLink, Toggle],
   templateUrl: './settings.html',
 })
 export class AccountSettings implements OnInit {
   private readonly session = inject(SessionStore);
   private readonly usersApi = inject(UsersApi);
   private readonly imageUpload = inject(ImageUploadService);
+  private readonly analytics = inject(AnalyticsService);
+
+  /**
+   * Withdrawing consent has to be as easy as giving it (GDPR Art. 7(3)), and "clear your
+   * localStorage" is not that. Hidden entirely when no measurement id is configured —
+   * offering a switch that governs nothing would imply tracking that is not happening.
+   */
+  protected readonly analyticsConfigured = !!analyticsEnv.measurementId;
+  protected readonly analyticsAllowed = computed(() => analyticsConsent() === 'granted');
+
+  protected onAnalyticsToggle(allow: boolean): void {
+    setAnalyticsConsent(allow ? 'granted' : 'denied');
+    if (allow) this.analytics.start();
+    else this.analytics.stop();
+  }
 
   protected readonly user = this.session.user;
   protected readonly name = signal('');

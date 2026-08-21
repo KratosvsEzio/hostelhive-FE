@@ -24,5 +24,8 @@
 }
 <!-- App-wide toasts (API failures, etc.) — floats above all chrome, every route. -->
 <app-toast-host />
+@if (showConsentBanner()) {
+  <hh-consent-banner />
+}
 <!-- TEMPORARY (testing): startup gate to set the BE base URL. Remove before go-live. -->
 <hh-dev-setup-gate />
