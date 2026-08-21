@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, delay, map } from 'rxjs/operators';
 import { ApiClient } from '@core/api-resource';
+import { pageParams } from '@util/pagination';
 import { CURRENT_CONTRACT, PLANS } from './subscription.fixtures';
 import {
   BillingCycle,
@@ -68,6 +69,9 @@ interface ApiPaymentsResponse {
   payments?: ApiPayment[];
   success?: boolean;
 }
+
+/** Rows fetched per payments request. */
+const PAYMENT_HISTORY_LIMIT = 10;
 
 const PAYMENT_STATUS_MAP: Record<string, Payment['status']> = {
   verified: 'paid',
@@ -171,9 +175,29 @@ export class SubscriptionApi {
       );
   }
 
+  /**
+   * Payment history, first page only.
+   *
+   * The request now carries explicit `page` + `limit`; it previously sent nothing at all
+   * and silently took whatever default the backend applied.
+   *
+   * Two known limits of fetching a single page of PAYMENT_HISTORY_LIMIT rows:
+   *  - The subscription table pages client-side over this array, so with the limit equal
+   *    to the table page size there is only ever one page to show.
+   *  - `countPaidListingPurchases` counts paid listing purchases across the payments it
+   *    is given, to decide how many discounted subscriptions remain. Purchases beyond
+   *    this page are invisible to it, so a host with a long history can keep being
+   *    offered a discount they have already used up.
+   *
+   * Both need the same fix: page this endpoint server-side and get the discount count
+   * from the backend rather than deriving it here.
+   */
   paymentHistory(hostelId: string): Observable<Payment[]> {
     return this.apiClient
-      .get<ApiPaymentsResponse>(`/api/host/hostels/${hostelId}/payments`)
+      .get<ApiPaymentsResponse>(
+        `/api/host/hostels/${hostelId}/payments`,
+        pageParams(1, PAYMENT_HISTORY_LIMIT),
+      )
       .pipe(
         map((res) =>
           (res.payments ?? []).map((p): Payment => {
