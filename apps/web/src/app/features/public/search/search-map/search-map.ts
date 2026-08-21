@@ -8,13 +8,14 @@ import {
   effect,
   ElementRef,
   inject,
+  input,
   signal,
   untracked,
   PLATFORM_ID,
   viewChild,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
@@ -39,7 +40,9 @@ import {
 import { currencyName } from '@util/currencies';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { MobileApp } from '@core/mobile-app';
-import { DEFAULT_LOCATION, fromLocationSlug } from '@util/location-slug';
+import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
+import { Seo } from '@core/seo';
+import { PLACES } from '@features/public/landing/places';
 import { AnalyticsService } from '@core/analytics/analytics.service';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
@@ -138,10 +141,45 @@ export class SearchMap {
    */
   protected readonly mobile = inject(MobileApp);
   private readonly analytics = inject(AnalyticsService);
+  private readonly seo = inject(Seo);
   private readonly mapEl = viewChild.required<ElementRef<HTMLElement>>('mapEl');
 
-  private readonly params = toSignal(this.route.queryParamMap, {
+  /**
+   * Filter defaults supplied by a host component rather than the URL — set by the
+   * `/hostels/:place` landing pages, which express their filters in the path instead of
+   * a query string.
+   *
+   * Query params win over these, so a visitor who lands on `/hostels/lahore` and then
+   * changes the budget or gender gets what they picked; the seed only fills what the URL
+   * does not say.
+   */
+  readonly seed = input<Record<string, string> | null>(null);
+
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
     initialValue: null,
+  });
+
+  /**
+   * `queryParams` with `seed` beneath it. Everything downstream reads filters through
+   * `params()?.get(…)`, so merging here means the landing pages need no changes anywhere
+   * else in this component.
+   */
+  private readonly params = computed<ParamMap | null>(() => {
+    const q = this.queryParams();
+    const seed = this.seed();
+    if (!seed) return q;
+    return {
+      get: (key: string) => q?.get(key) ?? seed[key] ?? null,
+      has: (key: string) => !!q?.has(key) || key in seed,
+      getAll: (key: string) => {
+        const fromQuery = q?.getAll(key) ?? [];
+        if (fromQuery.length) return fromQuery;
+        return seed[key] ? [seed[key]] : [];
+      },
+      get keys() {
+        return [...new Set([...(q?.keys ?? []), ...Object.keys(seed)])];
+      },
+    } as ParamMap;
   });
 
   /** The `:location` slug, when the URL carries one. */
@@ -162,6 +200,36 @@ export class SearchMap {
     if (place) return place;
     const slug = this.locationSlug();
     return slug ? fromLocationSlug(slug) : DEFAULT_LOCATION;
+  });
+
+  /**
+   * The curated landing page covering this search, when one exists.
+   *
+   * `/search/lahore` and `/hostels/lahore` answer the same question, and two indexable
+   * URLs for one intent compete with each other and split whatever authority either
+   * earns. The landing page is the one built to rank — server-rendered, with copy of its
+   * own — so search points at it rather than the other way round.
+   */
+  private readonly canonicalPlace = computed(() => {
+    const slug =
+      this.locationSlug() ||
+      toLocationSlug(this.params()?.get('place') || this.params()?.get('city') || '');
+    return slug ? (PLACES.find((p) => p.slug === slug) ?? null) : null;
+  });
+
+  /**
+   * True once the visitor has narrowed beyond the place itself.
+   *
+   * A filtered search is a facet, not a page: budget × sharing × amenity × sort
+   * multiplies into thousands of URLs serving near-identical content, which is the
+   * classic way to spend a crawl budget on nothing. Those get `noindex` rather than a
+   * canonical — pointing them all at one landing page would claim they are that page.
+   */
+  private readonly hasFilters = computed(() => {
+    const p = this.params();
+    return ['gender', 'propertyType', 'capacity', 'minPrice', 'maxPrice', 'amenities'].some(
+      (k) => !!p?.get(k),
+    );
   });
   protected readonly accommodationType = computed<AccommodationType | 'all'>(
     () => (this.params()?.get('gender') as AccommodationType | 'all') ?? 'all',
@@ -603,6 +671,34 @@ export class SearchMap {
   private readonly desktopSplitMq = '(min-width: 950px)';
 
   constructor() {
+    // Runs during SSR too — a crawler that executes no JavaScript only ever sees the
+    // server-rendered head, so a canonical added after hydration is a canonical nobody
+    // authoritative reads.
+    effect(() => {
+      const place = this.canonicalPlace();
+      const filtered = this.hasFilters();
+      const name = this.locationName();
+
+      // Filtered searches are facets, not pages: noindex, and no canonical, since
+      // claiming they are the landing page would be a lie about their content.
+      if (filtered || !place) {
+        this.seo.apply({
+          title: `Hostels in ${name} — search | HostelHive`,
+          description: `Search verified hostels, PGs and co-living in ${name}. Filter by budget, room sharing and amenities.`,
+          noindex: true,
+        });
+        return;
+      }
+
+      // An unfiltered search for a place we have a landing page for: let it stay
+      // indexable but hand its signal to the page built to rank.
+      this.seo.apply({
+        title: `Hostels in ${place.name} — search | HostelHive`,
+        description: `Search verified hostels, PGs and co-living in ${place.name}. Compare prices, room sharing and amenities.`,
+        path: `/hostels/${place.slug}`,
+      });
+    });
+
     afterNextRender(() => {
       this.measureStickyOffsets();
       this.measureTabBar();

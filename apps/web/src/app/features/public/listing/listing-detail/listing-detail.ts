@@ -17,6 +17,7 @@ import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
+import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { AnalyticsService } from '@core/analytics/analytics.service';
 import { FavoritesStore } from '@util/favorites-store';
@@ -99,6 +100,7 @@ export class ListingDetail {
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly seo = inject(Seo);
   private readonly analytics = inject(AnalyticsService);
 
   protected readonly phoneValue = signal<string | null>(null);
@@ -481,53 +483,61 @@ export class ListingDetail {
   }
 
   constructor() {
-    // SSR can't authenticate the `/api/hostels/:id` call (no token on the server), so it would
-    // resolve to "not found" and bake that into the HTML — flashing on every refresh before the
-    // client hydrates. Skip the fetch on the server: SSR renders the skeleton (matching the
-    // initial `loading: true` state for clean hydration) and the browser does the real fetch.
-    if (this.isBrowser) {
-      // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
-      // opens the review modal once the listing has loaded, carrying the notification id the
-      // review is submitted against.
-      const reviewParam = this.route.snapshot.queryParamMap.get('review');
-      let openReviewOnLoad = !!reviewParam;
+    // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
+    // opens the review modal once the listing has loaded, carrying the notification id the
+    // review is submitted against. Browser-only — there is no modal to open during SSR.
+    const reviewParam = this.isBrowser
+      ? this.route.snapshot.queryParamMap.get('review')
+      : null;
+    let openReviewOnLoad = !!reviewParam;
 
-      this.route.paramMap.pipe(
-        map((p) => p.get('slug') ?? ''),
-        distinctUntilChanged(),
-        switchMap((slug) => {
-          this._state.set({ loading: true, error: false, data: null });
-          return this.api.getBySlug(slug).pipe(
-            map((data): ViewState => ({ loading: false, error: false, data: data ?? null })),
-            catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      ).subscribe((s) => {
-        this._state.set(s);
-        if (s.data) {
-          this.analytics.track('listing_viewed', {
-            listing_id: s.data.id,
-            city: s.data.city,
-            accommodation_type: s.data.accommodationType,
-          });
-        }
-        // Load reviews up front so the in-page reviews section renders them without a click.
-        if (s.data) this.fetchReviews();
-        if (s.data && openReviewOnLoad) {
-          openReviewOnLoad = false;
-          this.reviewNotificationId.set(reviewParam ?? '');
-          this.openReviews();
-          // Drop the param so a refresh (or the back button) doesn't reopen the modal.
-          void this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { review: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
-      });
-    }
+    // Runs on the server too, deliberately. This is the app's most valuable page for
+    // search, and a crawler that does not execute JavaScript only ever sees the
+    // server-rendered HTML — skipping the fetch here served every listing as an empty
+    // skeleton with no name, price or description to index.
+    //
+    // It is safe because `getBySlug` hits `GET /public/hostel_detail/:id`, which needs
+    // no token. (An older comment here claimed it called `/api/hostels/:id` and could
+    // not authenticate on the server; that is not the endpoint it uses. The search
+    // page already fetches `/public/hostels` during SSR on the same basis.)
+    this.route.paramMap.pipe(
+      map((p) => p.get('slug') ?? ''),
+      distinctUntilChanged(),
+      switchMap((slug) => {
+        this._state.set({ loading: true, error: false, data: null });
+        return this.api.getBySlug(slug).pipe(
+          map((data): ViewState => ({ loading: false, error: false, data: data ?? null })),
+          catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((s) => {
+      this._state.set(s);
+      this.applySeo(s);
+      // Everything below touches the DOM or the address bar — browser only.
+      if (!this.isBrowser) return;
+      if (s.data) {
+        this.analytics.track('listing_viewed', {
+          listing_id: s.data.id,
+          city: s.data.city,
+          accommodation_type: s.data.accommodationType,
+        });
+      }
+      // Load reviews up front so the in-page reviews section renders them without a click.
+      if (s.data) this.fetchReviews();
+      if (s.data && openReviewOnLoad) {
+        openReviewOnLoad = false;
+        this.reviewNotificationId.set(reviewParam ?? '');
+        this.openReviews();
+        // Drop the param so a refresh (or the back button) doesn't reopen the modal.
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { review: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
+    });
 
     fromEvent<KeyboardEvent>(this.doc, 'keydown').pipe(
       takeUntilDestroyed(this.destroyRef),
@@ -542,6 +552,97 @@ export class ListingDetail {
         else if (e.key === 'ArrowRight') this.nextImage();
       }
     });
+  }
+
+  /**
+   * Head metadata + structured data for the loaded listing.
+   *
+   * Runs on the server as well as the browser: without it every listing shared the
+   * app's single default title and description, so thousands of pages looked identical
+   * to a crawler and competed with one another for the same terms.
+   *
+   * The JSON-LD is `LodgingBusiness` — the closest schema.org type for a hostel that
+   * takes an address, geo coordinates, a price range and an aggregate rating. Optional
+   * blocks are omitted rather than emitted empty: an `aggregateRating` with zero
+   * reviews, or an address with blank fields, is treated as invalid markup and can cost
+   * the rich result entirely.
+   */
+  private applySeo(s: ViewState): void {
+    this.seo.clearJsonLd('listing');
+    const l = s.data;
+
+    if (!l) {
+      // Missing or failed: never let a not-found page into the index.
+      this.seo.apply({
+        title: 'Listing not found — HostelHive',
+        description: 'This hostel listing is unavailable or the link is incorrect.',
+        noindex: true,
+      });
+      return;
+    }
+
+    const location = [l.area, l.city].filter(Boolean).join(', ');
+    const genderLabel = this.genderLabel(l.accommodationType);
+    const price = l.priceFrom ? `from Rs ${l.priceFrom.toLocaleString('en-PK')}/month` : '';
+
+    // Front-load the terms people actually search: name, then gender + location, then
+    // price. Descriptions are truncated around 160 characters in results, so the
+    // listing's own copy goes last where a cut costs least.
+    const description = [
+      `${genderLabel} hostel in ${location}${price ? `, ${price}` : ''}.`,
+      l.verified ? 'Verified listing on HostelHive.' : '',
+      l.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() ?? '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 300);
+
+    this.seo.apply({
+      title: `${l.name} — ${genderLabel} hostel in ${location} | HostelHive`,
+      description,
+      path: `/hostel/${l.slug ?? ''}`,
+      image: l.images?.[0],
+    });
+
+    const jsonLd: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'LodgingBusiness',
+      name: l.name,
+      url: `${SITE_ORIGIN}/hostel/${l.slug ?? ''}`,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: l.city,
+        addressRegion: l.area,
+        addressCountry: 'PK',
+      },
+    };
+    if (l.description) jsonLd['description'] = description;
+    if (l.images?.length) jsonLd['image'] = l.images.slice(0, 6);
+    if (l.priceFrom) {
+      jsonLd['priceRange'] = `From PKR ${l.priceFrom}`;
+    }
+    if (l.lat && l.lng) {
+      jsonLd['geo'] = { '@type': 'GeoCoordinates', latitude: l.lat, longitude: l.lng };
+    }
+    // Only with at least one real review — Google rejects a rating with no count.
+    if (l.rating && l.reviews) {
+      jsonLd['aggregateRating'] = {
+        '@type': 'AggregateRating',
+        ratingValue: l.rating,
+        reviewCount: l.reviews,
+        bestRating: 5,
+        worstRating: 1,
+      };
+    }
+    if (l.amenities?.length) {
+      jsonLd['amenityFeature'] = l.amenities.map((a) => ({
+        '@type': 'LocationFeatureSpecification',
+        name: a,
+        value: true,
+      }));
+    }
+
+    this.seo.setJsonLd('listing', jsonLd);
   }
 
   protected roomTint(index: number): string {

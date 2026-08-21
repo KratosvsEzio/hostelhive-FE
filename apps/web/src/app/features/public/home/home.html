@@ -65,8 +65,7 @@
         <span class="text-ink-400">Popular:</span>
         @for (c of cities.slice(0, 4); track c.name) {
           <a
-            [routerLink]="searchRoute(c.name)"
-            [queryParams]="{ place: c.name, lat: c.lat, lng: c.lng }"
+            [routerLink]="'/hostels/' + c.slug"
             class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
             >{{ c.name }}</a
           >
@@ -299,8 +298,7 @@
       <div class="comb-strip flex">
         @for (c of marqueeCities; track $index) {
           <a
-            [routerLink]="searchRoute(c.name)"
-            [queryParams]="{ place: c.name, lat: c.lat, lng: c.lng }"
+            [routerLink]="'/hostels/' + c.slug"
             class="group relative aspect-[1.155] w-[170px] -ml-[42px] sm:w-[210px] sm:-ml-[53px]"
           >
             <div class="hex h-full w-full overflow-hidden bg-ink-700">
