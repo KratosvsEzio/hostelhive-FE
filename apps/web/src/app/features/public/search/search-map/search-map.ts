@@ -49,6 +49,7 @@ import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@h
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabel } from '@util/accommodation-type';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
 interface Bounds {
@@ -109,7 +110,7 @@ type SheetSnap = 'peek' | 'half' | 'full';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SearchFilters, ListingCard, PlaceSearchField, TooltipFixed, CurrencyNamePipe],
+  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, TooltipFixed, CurrencyNamePipe],
   templateUrl: './search-map.html',
 })
 export class SearchMap {

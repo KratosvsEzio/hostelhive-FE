@@ -27,6 +27,7 @@ import { accommodationLabel } from '@util/accommodation-type';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { ApiDate } from '@util/api-date';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -72,7 +73,7 @@ const ROOM_TINTS = [
 @Component({
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [TranslocoPipe, 
     ApiDate,
     DecimalPipe,
     RouterLink,

@@ -7,37 +7,37 @@
         <!-- The raster logo is dark, so brightness-0 + invert renders it white on the dark footer. -->
         <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto brightness-0 invert" />
         <p class="mt-3 max-w-xs text-sm text-ink-400 leading-relaxed">
-          Discover and book verified student hostels across Pakistan with confidence.
+          {{ 'footer.discoverAndBookVerifiedStudent' | transloco }}
         </p>
       </div>
 
       <!-- Company -->
       <div>
-        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Company</h3>
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ 'footer.company' | transloco }}</h3>
         <ul class="space-y-2 text-sm text-ink-300">
-          <li><a routerLink="/about" class="hover:text-white hover:underline transition-colors">About us</a></li>
-          <li><a routerLink="/careers" class="hover:text-white hover:underline transition-colors">Careers</a></li>
-          <li><a routerLink="/blog" class="hover:text-white hover:underline transition-colors">Blog</a></li>
+          <li><a routerLink="/about" class="hover:text-white hover:underline transition-colors">{{ 'footer.aboutUs' | transloco }}</a></li>
+          <li><a routerLink="/careers" class="hover:text-white hover:underline transition-colors">{{ 'footer.careers' | transloco }}</a></li>
+          <li><a routerLink="/blog" class="hover:text-white hover:underline transition-colors">{{ 'footer.blog' | transloco }}</a></li>
         </ul>
       </div>
 
       <!-- Support -->
       <div>
-        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Support</h3>
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ 'footer.support' | transloco }}</h3>
         <ul class="space-y-2 text-sm text-ink-300">
-          <li><a routerLink="/faqs" class="hover:text-white hover:underline transition-colors">FAQs</a></li>
-          <li><a routerLink="/contact" class="hover:text-white hover:underline transition-colors">Contact us</a></li>
-          <li><a routerLink="/host/listings/new" class="hover:text-white hover:underline transition-colors">List your hostel</a></li>
+          <li><a routerLink="/faqs" class="hover:text-white hover:underline transition-colors">{{ 'footer.faqs' | transloco }}</a></li>
+          <li><a routerLink="/contact" class="hover:text-white hover:underline transition-colors">{{ 'footer.contactUs' | transloco }}</a></li>
+          <li><a routerLink="/host/listings/new" class="hover:text-white hover:underline transition-colors">{{ 'footer.listYourHostel' | transloco }}</a></li>
         </ul>
       </div>
 
       <!-- Legal -->
       <div>
-        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Legal</h3>
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ 'footer.legal' | transloco }}</h3>
         <ul class="space-y-2 text-sm text-ink-300">
-          <li><a routerLink="/privacy-policy" class="hover:text-white hover:underline transition-colors">Privacy policy</a></li>
-          <li><a routerLink="/terms-of-service" class="hover:text-white hover:underline transition-colors">Terms of service</a></li>
-          <li><a routerLink="/service-policy" class="hover:text-white hover:underline transition-colors">Service policy</a></li>
+          <li><a routerLink="/privacy-policy" class="hover:text-white hover:underline transition-colors">{{ 'footer.privacyPolicy' | transloco }}</a></li>
+          <li><a routerLink="/terms-of-service" class="hover:text-white hover:underline transition-colors">{{ 'footer.termsOfService' | transloco }}</a></li>
+          <li><a routerLink="/service-policy" class="hover:text-white hover:underline transition-colors">{{ 'footer.servicePolicy' | transloco }}</a></li>
         </ul>
       </div>
     </div>
@@ -45,19 +45,19 @@
     <!-- Bottom bar: copyright + social -->
     <div class="mt-10 flex flex-col items-start justify-between gap-4 border-t border-ink-700 pt-6 sm:flex-row sm:items-center">
       <p class="text-xs text-ink-400">
-        &copy; 2026 HostelHive. All rights reserved.
+        {{ 'footer.copy2026HostelhiveAllRights' | transloco }}
       </p>
       <div class="flex items-center gap-4">
-        <a href="#" aria-label="Instagram" class="text-ink-400 transition-colors hover:text-white">
+        <a href="#" [aria-label]="'footer.instagram' | transloco" class="text-ink-400 transition-colors hover:text-white">
           <i class="ti ti-brand-instagram text-lg"></i>
         </a>
-        <a href="#" aria-label="Facebook" class="text-ink-400 transition-colors hover:text-white">
+        <a href="#" [aria-label]="'footer.facebook' | transloco" class="text-ink-400 transition-colors hover:text-white">
           <i class="ti ti-brand-facebook text-lg"></i>
         </a>
-        <a href="#" aria-label="X / Twitter" class="text-ink-400 transition-colors hover:text-white">
+        <a href="#" [aria-label]="'footer.xTwitter' | transloco" class="text-ink-400 transition-colors hover:text-white">
           <i class="ti ti-brand-x text-lg"></i>
         </a>
-        <a href="#" aria-label="LinkedIn" class="text-ink-400 transition-colors hover:text-white">
+        <a href="#" [aria-label]="'footer.linkedin' | transloco" class="text-ink-400 transition-colors hover:text-white">
           <i class="ti ti-brand-linkedin text-lg"></i>
         </a>
       </div>

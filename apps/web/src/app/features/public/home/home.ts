@@ -19,11 +19,12 @@ import { ListingsApi } from '@services';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { PakistanMap } from './pakistan-map/pakistan-map';
 import { ListingCard } from '../search/listing-card/listing-card';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
+  imports: [TranslocoPipe, RouterLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
   templateUrl: './home.html',
 })
 export class Home {

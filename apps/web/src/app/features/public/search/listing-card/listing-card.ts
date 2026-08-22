@@ -18,6 +18,7 @@ import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { periodForAccommodation, periodSuffix } from '@util/pricing-period';
 import { accommodationLabel } from '@util/accommodation-type';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Amenity pills shown before collapsing the rest into a "+N". */
 const MAX_AMENITY_PILLS = 2;
@@ -32,7 +33,7 @@ const MAX_AMENITY_PILLS = 2;
 @Component({
   selector: 'hh-listing-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe, Badge, TooltipFixed, CurrencySymbolPipe, CurrencyNamePipe],
+  imports: [TranslocoPipe, RouterLink, DecimalPipe, Badge, TooltipFixed, CurrencySymbolPipe, CurrencyNamePipe],
   templateUrl: './listing-card.html',
 })
 export class ListingCard {

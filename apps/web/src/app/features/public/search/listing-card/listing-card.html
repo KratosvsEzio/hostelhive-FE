@@ -17,8 +17,7 @@
       [style.transform]="'translateX(-' + img() * 100 + '%)'"
     >
       @for (src of images(); track $index) {
-        <!-- Only a slide whose <img> is mounted and still downloading shimmers. Slides
-             past `loadedThrough` have no <img> at all, so shimmering them ran an infinite
+        <!-- Only a slide whose <img> {{ 'card.isMountedAndStillDownloading' | transloco }} <img> at all, so shimmering them ran an infinite
              animation on five off-screen elements per card that were not loading anything.
              They now rest on the container’s static bg-ink-100, which leaves the Featured
              badge as the only animation on the card. -->
@@ -45,7 +44,7 @@
       @if (featured()) {
         <span class="featured-badge">
           <i class="ti ti-crown-filled relative z-[1] text-xs" aria-hidden="true"></i>
-          <span class="relative z-[1]">Featured</span>
+          <span class="relative z-[1]">{{ 'card.featured' | transloco }}</span>
         </span>
       }
       <hh-badge
@@ -90,7 +89,7 @@
         <button
           type="button"
           (click)="step(-1, $event)"
-          aria-label="Previous photo"
+          [aria-label]="'card.previousPhoto' | transloco"
           class="absolute start-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <i class="ti ti-chevron-left text-sm" aria-hidden="true"></i>
@@ -100,7 +99,7 @@
         <button
           type="button"
           (click)="step(1, $event)"
-          aria-label="Next photo"
+          [aria-label]="'card.nextPhoto' | transloco"
           class="absolute end-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <i class="ti ti-chevron-right text-sm" aria-hidden="true"></i>
@@ -134,7 +133,7 @@
       >{{ listing().name }}</h3>
       <span class="flex shrink-0 items-center gap-1.5">
         @if (isNew()) {
-          <span class="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-600">New</span>
+          <span class="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-600">{{ 'card.new' | transloco }}</span>
         }
         <span
           class="flex items-center gap-1 text-sm font-medium text-ink-900"

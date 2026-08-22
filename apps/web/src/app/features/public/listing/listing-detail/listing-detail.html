@@ -41,11 +41,11 @@
     <div class="mx-auto mt-16 max-w-md">
       <hh-empty-state
         icon="ti-home-off"
-        title="We couldn't find that hostel"
+        [title]="'listing.weCouldnTFindThat' | transloco"
         message="The listing may have been removed or the link is incorrect."
       >
         <a hh-button variant="outlined" size="sm" routerLink="/search"
-          >Back to search</a
+          >{{ 'listing.backToSearch' | transloco }}</a
         >
       </hh-empty-state>
     </div>
@@ -56,7 +56,7 @@
       routerLink="/search"
       class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600"
     >
-      <i class="ti ti-chevron-left" aria-hidden="true"></i>Back to search
+      <i class="ti ti-chevron-left" aria-hidden="true"></i>{{ 'listing.backToSearch' | transloco }}
     </a>
 
     <!-- Title -->
@@ -72,7 +72,7 @@
         >
           <hh-badge [variant]="l.accommodationType">{{ genderLabel(l.accommodationType) }}</hh-badge>
           @if (l.verified) {
-            <hh-badge variant="verified">Verified</hh-badge>
+            <hh-badge variant="verified">{{ 'listing.verified' | transloco }}</hh-badge>
           }
           @if (l.rating) {
             <button
@@ -95,7 +95,7 @@
       </div>
       <div class="flex items-center gap-2">
         <button hh-button variant="outlined" size="sm" (click)="openShare()">
-          <i class="ti ti-share-2" aria-hidden="true"></i>Share
+          <i class="ti ti-share-2" aria-hidden="true"></i>{{ 'listing.share' | transloco }}
         </button>
         <button hh-button [color]="saved() ? 'default' : 'primary'" size="sm" (click)="toggleSaved()">
           <i class="ti" [class.ti-heart-off]="saved()" [class.ti-heart]="!saved()" aria-hidden="true"></i>
@@ -214,7 +214,7 @@
         @if (l.description) {
           <section class="border-b border-ink-100 py-6">
             <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">
-              About this hostel
+              {{ 'listing.aboutThisHostel' | transloco }}
             </h3>
             <div class="max-h-[168px] overflow-hidden">
               <div
@@ -227,7 +227,7 @@
               class="mt-3 text-sm font-semibold text-ink-900 underline hover:text-ink-600"
               (click)="descriptionModalOpen.set(true)"
             >
-              Show more
+              {{ 'listing.showMore' | transloco }}
             </button>
           </section>
         }
@@ -236,7 +236,7 @@
         @if (l.rooms?.length) {
           <section class="border-b border-ink-100 py-6">
             <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
-              Rooms &amp; pricing
+              {{ 'listing.roomsAmpPricing' | transloco }}
             </h3>
             <div class="space-y-3">
               @for (room of l.rooms; track room.id; let i = $index) {
@@ -262,7 +262,7 @@
                     <p class="font-semibold text-ink-900">
                       <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ room.price | number }}
                     </p>
-                    <p class="text-xs text-ink-400">/ month</p>
+                    <p class="text-xs text-ink-400">{{ 'listing.month' | transloco }}</p>
                   </div>
                 </div>
               }
@@ -274,7 +274,7 @@
         @if (amenityList().length) {
         <section class="border-b border-ink-100 py-6">
           <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
-            What this place offers
+            {{ 'listing.whatThisPlaceOffers' | transloco }}
           </h3>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             @for (am of amenityList(); track am.key) {
@@ -300,7 +300,7 @@
         @if (l.nearby.length) {
           <section class="border-b border-ink-100 py-6">
             <h3 class="mb-3 font-display text-lg font-semibold text-ink-900">
-              Nearby landmarks
+              {{ 'listing.nearbyLandmarks' | transloco }}
             </h3>
             <div
               class="grid grid-cols-1 gap-2 text-[15px] text-ink-700 sm:grid-cols-2"
@@ -323,7 +323,7 @@
         <section class="py-6">
           <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
             <h3 class="font-display text-lg font-semibold text-ink-900">
-              Where you'll be
+              {{ 'listing.whereYouLlBe' | transloco }}
             </h3>
             @if (l.lat && l.lng) {
               <a
@@ -334,7 +334,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <i class="ti ti-map-pin text-sm" aria-hidden="true"></i>Get Directions
+                <i class="ti ti-map-pin text-sm" aria-hidden="true"></i>{{ 'listing.getDirections' | transloco }}
               </a>
             }
           </div>
@@ -355,11 +355,11 @@
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
             <div class="flex items-baseline gap-1.5">
-              <span class="text-sm text-ink-400">From</span>
+              <span class="text-sm text-ink-400">{{ 'listing.from' | transloco }}</span>
               <span class="text-2xl font-semibold text-ink-900"
                 ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}</span
               >
-              <span class="text-sm text-ink-400">/ month</span>
+              <span class="text-sm text-ink-400">{{ 'listing.month' | transloco }}</span>
             </div>
             <p class="mt-1 text-sm text-ink-500">{{ sharingSummary() }}</p>
 
@@ -392,10 +392,10 @@
               </button>
             </div>
             @if (phoneError()) {
-              <p class="mt-2 text-center text-xs text-danger">Couldn't load number — try again.</p>
+              <p class="mt-2 text-center text-xs text-danger">{{ 'listing.couldnTLoadNumberTry' | transloco }}</p>
             }
             <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400">
-              <i class="ti ti-lock" aria-hidden="true"></i>Sign in once to view verified contacts
+              <i class="ti ti-lock" aria-hidden="true"></i>{{ 'listing.signInOnceToView' | transloco }}
             </p>
           </div>
 
@@ -420,7 +420,7 @@
                     aria-hidden="true"
                   ></i>
                   <span class="text-ink-600"
-                    >Identity verified by HostelHive</span
+                    >{{ 'listing.identityVerifiedByHostelhive' | transloco }}</span
                   >
                 </div>
               }
@@ -450,7 +450,7 @@
     [class.safe-pb-3]="!mobile.isMobile()"
   >
     <div class="min-w-0">
-      <p class="text-xs text-ink-400">From</p>
+      <p class="text-xs text-ink-400">{{ 'listing.from' | transloco }}</p>
       <p class="truncate font-semibold text-ink-900">
         <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}
         <span class="text-xs font-normal text-ink-400">/ mo</span>
@@ -470,7 +470,7 @@
         } @else {
           <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
         }
-        <span class="hidden sm:inline">WhatsApp</span>
+        <span class="hidden sm:inline">{{ 'listing.whatsapp' | transloco }}</span>
       </button>
       <button
         hh-button
@@ -496,7 +496,7 @@
     class="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm"
     role="dialog"
     aria-modal="true"
-    aria-label="Photo gallery"
+    [aria-label]="'listing.photoGallery' | transloco"
   >
     <!-- Header: counter + close -->
     <div class="flex shrink-0 items-center justify-between px-4 py-3">
@@ -507,7 +507,7 @@
         type="button"
         class="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
         (click)="closeLightbox()"
-        aria-label="Close gallery"
+        [aria-label]="'listing.closeGallery' | transloco"
       >
         <i class="ti ti-x text-lg" aria-hidden="true"></i>
       </button>
@@ -524,7 +524,7 @@
           type="button"
           class="absolute start-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           (click)="prevImage(); $event.stopPropagation()"
-          aria-label="Previous photo"
+          [aria-label]="'listing.previousPhoto' | transloco"
         >
           <i class="ti ti-chevron-left text-xl" aria-hidden="true"></i>
         </button>
@@ -532,7 +532,7 @@
 
       <img
         [src]="lightboxImages()[lightboxIndex() ?? 0]"
-        alt="Gallery photo"
+        [alt]="'listing.galleryPhoto' | transloco"
         class="max-h-full max-w-full rounded-xl object-contain p-3 shadow-2xl sm:p-6"
         (click)="$event.stopPropagation()"
       />
@@ -543,7 +543,7 @@
           type="button"
           class="absolute end-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           (click)="nextImage(); $event.stopPropagation()"
-          aria-label="Next photo"
+          [aria-label]="'listing.nextPhoto' | transloco"
         >
           <i class="ti ti-chevron-right text-xl" aria-hidden="true"></i>
         </button>
@@ -575,7 +575,7 @@
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
     role="dialog"
     aria-modal="true"
-    aria-label="Share this listing"
+    [aria-label]="'listing.shareThisListing' | transloco"
   >
     <div
       class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
@@ -585,12 +585,12 @@
     <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
-        <h2 class="font-display text-lg font-semibold text-ink-900">Share this listing</h2>
+        <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'listing.shareThisListing' | transloco }}</h2>
         <button
           type="button"
           class="grid h-8 w-8 place-items-center rounded-full text-ink-400 hover:bg-surface hover:text-ink-700"
           (click)="closeShare()"
-          aria-label="Close"
+          [aria-label]="'listing.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -625,7 +625,7 @@
               <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ok/10">
                 <i class="ti ti-check text-lg text-ok" aria-hidden="true"></i>
               </span>
-              <span class="text-ok">Link copied!</span>
+              <span class="text-ok">{{ 'listing.linkCopied' | transloco }}</span>
             } @else {
               <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
                 <i class="ti ti-link text-lg text-ink-600" aria-hidden="true"></i>
@@ -643,7 +643,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-brand-whatsapp text-lg text-[#25D366]" aria-hidden="true"></i>
             </span>
-            WhatsApp
+            {{ 'listing.whatsapp' | transloco }}
           </button>
 
           <!-- Facebook -->
@@ -655,7 +655,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-brand-facebook text-lg text-[#1877F2]" aria-hidden="true"></i>
             </span>
-            Facebook
+            {{ 'listing.facebook' | transloco }}
           </button>
 
           <!-- X / Twitter -->
@@ -667,7 +667,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-brand-x text-lg text-ink-900" aria-hidden="true"></i>
             </span>
-            X (Twitter)
+            {{ 'listing.xTwitter' | transloco }}
           </button>
 
           <!-- Email -->
@@ -679,7 +679,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-mail text-lg text-ink-600" aria-hidden="true"></i>
             </span>
-            Email
+            {{ 'listing.email' | transloco }}
           </button>
 
           <!-- More options (Web Share API) -->
@@ -691,7 +691,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-dots-circle-horizontal text-lg text-ink-600" aria-hidden="true"></i>
             </span>
-            More options
+            {{ 'listing.moreOptions' | transloco }}
           </button>
         </div>
       </div>
@@ -705,7 +705,7 @@
     class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
     role="dialog"
     aria-modal="true"
-    aria-label="About this hostel"
+    [aria-label]="'listing.aboutThisHostel' | transloco"
   >
     <div
       class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
@@ -713,12 +713,12 @@
     ></div>
     <div class="relative mx-auto mt-8 w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl sm:mt-16">
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
-        <h2 class="font-display text-lg font-semibold text-ink-900">About this hostel</h2>
+        <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'listing.aboutThisHostel' | transloco }}</h2>
         <button
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="descriptionModalOpen.set(false)"
-          aria-label="Close"
+          [aria-label]="'listing.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -739,7 +739,7 @@
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
     role="dialog"
     aria-modal="true"
-    aria-label="Contact hostel"
+    [aria-label]="'listing.contactHostel' | transloco"
   >
     <div
       class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
@@ -748,12 +748,12 @@
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
-        <h2 class="font-display text-base font-semibold text-ink-900">Contact hostel</h2>
+        <h2 class="font-display text-base font-semibold text-ink-900">{{ 'listing.contactHostel' | transloco }}</h2>
         <button
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="closeModal()"
-          aria-label="Close"
+          [aria-label]="'listing.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -769,19 +769,19 @@
         @if (phoneLoading()) {
           <!-- Loading -->
           <div class="mt-4 flex items-center justify-center gap-2 py-4 text-sm text-ink-400">
-            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Fetching contact…
+            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'listing.fetchingContact' | transloco }}
           </div>
         } @else if (phoneError()) {
           <!-- Error -->
-          <p class="mt-4 text-center text-sm text-danger">Couldn't load the phone number. Please try again.</p>
+          <p class="mt-4 text-center text-sm text-danger">{{ 'listing.couldnTLoadThePhone' | transloco }}</p>
           <button hh-button variant="outlined" class="mt-3 w-full" (click)="openModal()">
-            Retry
+            {{ 'listing.retry' | transloco }}
           </button>
         } @else if (revealed()) {
           <!-- Phone row -->
           <div class="mt-4 flex items-center justify-between rounded-xl border border-ink-100 px-4 py-3">
             <div>
-              <p class="text-xs text-ink-400">Mobile</p>
+              <p class="text-xs text-ink-400">{{ 'listing.mobile' | transloco }}</p>
               <a
                 [href]="'tel:' + phoneValue()"
                 class="font-mono text-base font-semibold text-brand-600 hover:underline"
@@ -808,7 +808,7 @@
               class="w-full"
               [href]="'tel:' + phoneValue()"
             >
-              <i class="ti ti-phone" aria-hidden="true"></i>Call now
+              <i class="ti ti-phone" aria-hidden="true"></i>{{ 'listing.callNow' | transloco }}
             </a>
             @if (whatsAppUrl(); as waUrl) {
               <a
@@ -819,7 +819,7 @@
                 target="_blank"
                 rel="noopener"
               >
-                <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp
+                <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>{{ 'listing.whatsapp' | transloco }}
               </a>
             }
           </div>
@@ -835,7 +835,7 @@
     class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
     role="dialog"
     aria-modal="true"
-    aria-label="Hostel reviews"
+    [aria-label]="'listing.hostelReviews' | transloco"
   >
     <div
       class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
@@ -851,7 +851,7 @@
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="closeReviews()"
-          aria-label="Close"
+          [aria-label]="'listing.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -891,7 +891,7 @@
                 #commentInput
                 class="mt-3 w-full resize-none rounded-xl border border-ink-200 px-4 py-3 text-sm text-ink-800 placeholder:text-ink-300 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                 rows="3"
-                placeholder="Write your review (required)..."
+                [placeholder]="'listing.writeYourReviewRequired' | transloco"
                 [value]="reviewComment()"
                 (input)="reviewComment.set(commentInput.value)"
               ></textarea>
@@ -902,7 +902,7 @@
               }
               @if (reviewSubmitSuccess()) {
                 <div class="mt-2 flex items-center gap-1.5 text-xs text-ok">
-                  <i class="ti ti-check" aria-hidden="true"></i>Review submitted successfully!
+                  <i class="ti ti-check" aria-hidden="true"></i>{{ 'listing.reviewSubmittedSuccessfully' | transloco }}
                 </div>
               }
 
@@ -927,8 +927,8 @@
             <div class="flex items-center gap-3 rounded-xl border border-ink-100 p-4">
               <i class="ti ti-login text-xl text-ink-400" aria-hidden="true"></i>
               <p class="text-sm text-ink-500">
-                <button type="button" class="font-semibold text-brand-600 hover:underline" (click)="goToAuth()">Sign in</button>
-                to leave a review
+                <button type="button" class="font-semibold text-brand-600 hover:underline" (click)="goToAuth()">{{ 'listing.signIn' | transloco }}</button>
+                {{ 'listing.toLeaveAReview' | transloco }}
               </p>
             </div>
           }
@@ -951,14 +951,14 @@
           } @else if (reviewsError()) {
             <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
               <i class="ti ti-mood-sad text-2xl" aria-hidden="true"></i>
-              <p class="text-sm">Couldn't load reviews</p>
-              <button hh-button variant="outlined" size="sm" [loading]="reviewsLoading()" (click)="fetchReviews()">Retry</button>
+              <p class="text-sm">{{ 'listing.couldnTLoadReviews' | transloco }}</p>
+              <button hh-button variant="outlined" size="sm" [loading]="reviewsLoading()" (click)="fetchReviews()">{{ 'listing.retry' | transloco }}</button>
             </div>
           } @else if (!reviews().length) {
             <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
               <i class="ti ti-message-dots text-2xl" aria-hidden="true"></i>
-              <p class="text-sm">No reviews yet</p>
-              <p class="text-xs">Be the first to review this hostel!</p>
+              <p class="text-sm">{{ 'listing.noReviewsYet' | transloco }}</p>
+              <p class="text-xs">{{ 'listing.beTheFirstToReview' | transloco }}</p>
             </div>
           } @else {
             @let stats = reviewStats();
@@ -1053,13 +1053,13 @@
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
         <h2 id="login-gate-title" class="font-display text-base font-semibold text-ink-900">
-          Sign in to contact
+          {{ 'listing.signInToContact' | transloco }}
         </h2>
         <button
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="closeLoginGate()"
-          aria-label="Close"
+          [aria-label]="'listing.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -1072,19 +1072,19 @@
             <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
           </div>
           <div>
-            <p class="font-semibold text-ink-900">See verified contact details</p>
+            <p class="font-semibold text-ink-900">{{ 'listing.seeVerifiedContactDetails' | transloco }}</p>
             <p class="mt-1 text-sm text-ink-500">
-              Create a free account to view WhatsApp numbers and call the host directly. It only takes 30 seconds.
+              {{ 'listing.createAFreeAccountTo' | transloco }}
             </p>
           </div>
         </div>
 
         <div class="mt-5 flex flex-col gap-2">
           <button hh-button color="primary" class="w-full" (click)="goToAuth()">
-            Log in / Register
+            {{ 'listing.logInRegister' | transloco }}
           </button>
           <button hh-button variant="outlined" class="w-full" (click)="closeLoginGate()">
-            Maybe later
+            {{ 'listing.maybeLater' | transloco }}
           </button>
         </div>
       </div>

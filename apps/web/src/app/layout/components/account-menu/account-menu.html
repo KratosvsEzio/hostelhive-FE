@@ -4,7 +4,7 @@
     type="button"
     (click)="toggle()"
     class="grid h-10 w-10 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600 hover:shadow-pill"
-    aria-label="Account menu"
+    [aria-label]="'account.accountMenu' | transloco"
     aria-haspopup="menu"
     [attr.aria-expanded]="open()"
   >
@@ -44,7 +44,7 @@
               class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
             >
               <i class="ti ti-shield-lock text-lg" aria-hidden="true"></i
-              >Admin dashboard
+              >{{ 'account.adminDashboard' | transloco }}
             </a>
           }
           @if (isModerator()) {
@@ -54,7 +54,7 @@
               class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
             >
               <i class="ti ti-layout-kanban text-lg" aria-hidden="true"></i
-              >Moderator dashboard
+              >{{ 'account.moderatorDashboard' | transloco }}
             </a>
           }
           @if (isHost()) {
@@ -64,7 +64,7 @@
               class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
             >
               <i class="ti ti-building-community text-lg" aria-hidden="true"></i
-              >Host dashboard
+              >{{ 'account.hostDashboard' | transloco }}
             </a>
           }
         } @else {
@@ -74,7 +74,7 @@
             class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
           >
             <i class="ti ti-bell text-lg" aria-hidden="true"></i
-            >Notifications
+            >{{ 'account.notifications' | transloco }}
           </a>
           <a
             [routerLink]="hostLink()"
@@ -107,15 +107,15 @@
           class="w-full !justify-start"
         >
           <i class="ti ti-logout text-lg text-ink-500" aria-hidden="true"></i
-          >Log out
+          >{{ 'account.logOut' | transloco }}
         </button>
       } @else {
         <div class="px-4 py-2">
           <p class="text-sm font-semibold text-ink-900">
-            Welcome to HostelHive
+            {{ 'account.welcomeToHostelhive' | transloco }}
           </p>
           <p class="mt-0.5 text-xs text-ink-400">
-            Log in to save favourites and manage your stay.
+            {{ 'account.logInToSaveFavourites' | transloco }}
           </p>
         </div>
         <div class="my-1.5 h-px bg-ink-100"></div>
@@ -125,7 +125,7 @@
           (click)="close()"
           class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-ink-50"
         >
-          <i class="ti ti-login text-lg" aria-hidden="true"></i>Log in
+          <i class="ti ti-login text-lg" aria-hidden="true"></i>{{ 'account.logIn' | transloco }}
         </a>
         <a
           routerLink="/auth"
@@ -134,7 +134,7 @@
           class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50"
         >
           <i class="ti ti-user-plus text-lg text-ink-500" aria-hidden="true"></i
-          >Sign up
+          >{{ 'account.signUp' | transloco }}
         </a>
       }
     </div>

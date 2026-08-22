@@ -20,6 +20,7 @@ import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ListState {
   loading: boolean;
@@ -30,7 +31,7 @@ interface ListState {
 @Component({
   selector: 'app-notification-bell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Skeleton],
+  imports: [TranslocoPipe, RouterLink, Button, Skeleton],
   host: {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'onEscape()',

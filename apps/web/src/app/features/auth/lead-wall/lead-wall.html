@@ -30,7 +30,8 @@
           [routerLink]="closeTarget()"
           [replaceUrl]="true"
           class="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition hover:bg-ink-50"
-          aria-label="Close"
+          [aria-label]="'leadWall.close' | transloco"
+          data-testid="lead-wall-close"
         >
           <i class="ti ti-x text-lg"></i>
         </a>
@@ -78,7 +79,7 @@
               <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/>
               <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/>
             </svg>
-            Continue with Google
+            {{ 'leadWall.continueWithGoogle' | transloco }}
           </button>
 
           <div class="relative my-4 flex items-center">
@@ -92,7 +93,7 @@
               <hh-input
                 label="Full name"
                 icon="ti-user"
-                placeholder="Ahmed Raza"
+                [placeholder]="'leadWall.ahmedRaza' | transloco"
                 [value]="name()"
                 (valueChange)="name.set($event)"
                 [error]="showErrors() ? nameError() : ''"
@@ -103,7 +104,7 @@
               label="Email address"
               icon="ti-mail"
               type="email"
-              placeholder="you@email.com"
+              [placeholder]="'leadWall.youEmailCom' | transloco"
               [value]="email()"
               (valueChange)="email.set($event)"
               [error]="showErrors() ? emailError() : ''"
@@ -119,8 +120,7 @@
                 [error]="showErrors() ? passwordError() : ''"
               />
               <p class="flex items-center gap-1 text-xs text-ink-400">
-                <i class="ti ti-info-circle" aria-hidden="true"></i>Min 8
-                characters, 1 uppercase &amp; 1 number.
+                <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'leadWall.min8Characters1Uppercase' | transloco }}
               </p>
               <hh-input
                 label="Confirm password"
@@ -148,7 +148,7 @@
                   routerLink="/auth/forgot-password"
                   class="text-sm font-medium text-brand-600 transition hover:text-brand-700"
                 >
-                  Forgot password?
+                  {{ 'leadWall.forgotPassword' | transloco }}
                 </a>
               </div>
             }
@@ -189,7 +189,7 @@
                     }
                   </span>
                   <span class="text-xs leading-relaxed text-ink-500">
-                    I agree to the
+                    {{ 'leadWall.iAgreeToThe' | transloco }}
                     <!-- stopPropagation so tapping a link opens it instead of
                          toggling the surrounding label. -->
                     <a
@@ -197,15 +197,15 @@
                       target="_blank"
                       class="font-medium text-brand-600 underline hover:text-brand-700"
                       (click)="$event.stopPropagation()"
-                      >Terms of Service</a
+                      >{{ 'leadWall.termsOfService' | transloco }}</a
                     >
-                    and
+                    {{ 'leadWall.and' | transloco }}
                     <a
                       routerLink="/privacy-policy"
                       target="_blank"
                       class="font-medium text-brand-600 underline hover:text-brand-700"
                       (click)="$event.stopPropagation()"
-                      >Privacy Policy</a
+                      >{{ 'leadWall.privacyPolicy' | transloco }}</a
                     >.
                   </span>
                 </label>
@@ -237,12 +237,12 @@
             id="hh-lead-wall-title"
             class="mt-4 font-display text-xl font-semibold text-ink-900"
           >
-            Check your email
+            {{ 'leadWall.checkYourEmail' | transloco }}
           </h2>
           <p class="mt-1 text-sm text-ink-500">
-            We sent a signed 24-hour verification link to
+            {{ 'leadWall.weSentASigned24' | transloco }}
             <span class="font-medium text-ink-800">{{ email() }}</span
-            >. Clicking it activates your account and reveals the number.
+            >{{ 'leadWall.clickingItActivatesYourAccount' | transloco }}
           </p>
 
           @if (error()) {
@@ -262,7 +262,7 @@
               [loading]="busy()"
               (click)="verify()"
             >
-              I've verified — continue
+              {{ 'leadWall.iVeVerifiedContinue' | transloco }}
             </button>
             <button
               hh-button
@@ -272,7 +272,7 @@
               class="w-full"
               (click)="phase.set('form')"
             >
-              <i class="ti ti-arrow-left" aria-hidden="true"></i>Back
+              <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'leadWall.back' | transloco }}
             </button>
           </div>
         }

@@ -21,6 +21,7 @@ import {
 } from '@core/auth';
 import { ApiError } from '@hostelhive/data-access';
 import { GoogleAuthService } from '@services';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type AuthTab = 'register' | 'login';
 type Phase = 'form' | 'verify';
@@ -50,7 +51,7 @@ const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 @Component({
   selector: 'hh-lead-wall',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, Button, Input, PhoneInput, Tabs],
+  imports: [TranslocoPipe, RouterLink, FormsModule, Button, Input, PhoneInput, Tabs],
   templateUrl: './lead-wall.html',
 })
 export class LeadWall {
