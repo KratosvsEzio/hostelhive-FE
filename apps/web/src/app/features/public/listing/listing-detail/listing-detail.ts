@@ -597,7 +597,7 @@ export class ListingDetail {
     // price. Descriptions are truncated around 160 characters in results, so the
     // listing's own copy goes last where a cut costs least.
     const description = [
-      `${genderLabel} hostel in ${location}${price ? `, ${price}` : ''}.`,
+      `${l.name} — ${genderLabel} hostel in ${location}${price ? `, ${price}` : ''}.`,
       l.verified ? 'Verified listing on HostelHive.' : '',
       l.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() ?? '',
     ]
@@ -605,11 +605,11 @@ export class ListingDetail {
       .join(' ')
       .slice(0, 300);
 
-    // The shared card, which is where this site actually spreads. Leads with what the
-    // place is rather than its name, and carries the two facts that decide a click here:
+    // The shared card, which is where this site actually spreads. Leads with the name so
+    // a card is attributable at a glance, then the two facts that decide a click here:
     // price, and whether meals are included.
     const socialTitle = [
-      `${genderLabel} hostel in ${location}`,
+      `${l.name} — ${genderLabel} hostel in ${location}`,
       l.priceFrom ? `Rs ${l.priceFrom.toLocaleString('en-PK')}/${per === 'night' ? 'night' : 'mo'}` : '',
       this.hasMess(l) ? 'Mess included' : '',
       l.verified ? 'Verified' : '',
