@@ -30,7 +30,7 @@
           <div class="relative hidden h-52 w-10 shrink-0 sm:block" aria-hidden="true">
             @for (gy of line.gridY; track gy; let i = $index) {
               <span
-                class="absolute right-0 -translate-y-1/2 text-right text-[11px] text-ink-400"
+                class="absolute end-0 -translate-y-1/2 text-end text-[11px] text-ink-400"
                 [style.top]="(gy / line.height * 100) + '%'"
               >{{ line.gridLabels[i] }}%</span>
             }
@@ -128,7 +128,7 @@
                   </div>
                 </div>
                 <div
-                  [class]="'h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900 ' + (hoveredIdx() === 0 ? 'ml-3' : hoveredIdx() === line.dots.length - 1 ? 'mr-3 ml-auto' : 'mx-auto')"
+                  [class]="'h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900 ' + (hoveredIdx() === 0 ? 'ms-3' : hoveredIdx() === line.dots.length - 1 ? 'me-3 ms-auto' : 'mx-auto')"
                 ></div>
               </div>
             }
@@ -159,28 +159,28 @@
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="text-left text-xs uppercase tracking-wide text-ink-400">
+            <thead class="text-start text-xs uppercase tracking-wide text-ink-400">
               <tr>
                 <th class="px-5 py-2.5 font-medium">Month</th>
-                <th class="px-5 py-2.5 text-right font-medium">Occupancy</th>
-                <th class="px-5 py-2.5 text-right font-medium">Occupied</th>
-                <th class="px-5 py-2.5 text-right font-medium">Vacant</th>
-                <th class="px-5 py-2.5 text-right font-medium">Total beds</th>
+                <th class="px-5 py-2.5 text-end font-medium">Occupancy</th>
+                <th class="px-5 py-2.5 text-end font-medium">Occupied</th>
+                <th class="px-5 py-2.5 text-end font-medium">Vacant</th>
+                <th class="px-5 py-2.5 text-end font-medium">Total beds</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
               @for (row of rows(); track row.monthLabel) {
                 <tr class="hover:bg-surface">
                   <td class="px-5 py-3 font-medium text-ink-800">{{ row.monthLabel }}</td>
-                  <td class="px-5 py-3 text-right">
+                  <td class="px-5 py-3 text-end">
                     <span
                       class="font-semibold"
                       [class]="row.occupancyPct >= 80 ? 'text-ok' : row.occupancyPct >= 50 ? 'text-warn' : 'text-danger'"
                     >{{ row.occupancyPct }}%</span>
                   </td>
-                  <td class="px-5 py-3 text-right font-medium text-ink-800">{{ row.occupiedBeds }}</td>
-                  <td class="px-5 py-3 text-right font-medium text-ink-500">{{ row.vacantBeds }}</td>
-                  <td class="px-5 py-3 text-right font-medium text-ink-400">{{ row.totalBeds }}</td>
+                  <td class="px-5 py-3 text-end font-medium text-ink-800">{{ row.occupiedBeds }}</td>
+                  <td class="px-5 py-3 text-end font-medium text-ink-500">{{ row.vacantBeds }}</td>
+                  <td class="px-5 py-3 text-end font-medium text-ink-400">{{ row.totalBeds }}</td>
                 </tr>
               }
               @if (rows().length === 0) {

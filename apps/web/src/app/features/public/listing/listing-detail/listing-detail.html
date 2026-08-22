@@ -121,7 +121,7 @@
         hh-button
         variant="outlined"
         size="sm"
-        class="absolute bottom-4 right-4 bg-white shadow-card"
+        class="absolute bottom-4 end-4 bg-white shadow-card"
         (click)="openLightbox(0)"
       >
         <i class="ti ti-layout-grid" aria-hidden="true"></i>Show all
@@ -258,7 +258,7 @@
                       </p>
                     </div>
                   </div>
-                  <div class="shrink-0 text-right">
+                  <div class="shrink-0 text-end">
                     <p class="font-semibold text-ink-900">
                       <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ room.price | number }}
                     </p>
@@ -522,7 +522,7 @@
       @if ((lightboxIndex() ?? 0) > 0) {
         <button
           type="button"
-          class="absolute left-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          class="absolute start-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           (click)="prevImage(); $event.stopPropagation()"
           aria-label="Previous photo"
         >
@@ -541,7 +541,7 @@
       @if ((lightboxIndex() ?? 0) < lightboxImages().length - 1) {
         <button
           type="button"
-          class="absolute right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          class="absolute end-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           (click)="nextImage(); $event.stopPropagation()"
           aria-label="Next photo"
         >
@@ -882,7 +882,7 @@
                   </button>
                 }
                 @if (reviewScore() > 0) {
-                  <span class="ml-2 text-sm font-medium text-ink-600">{{ reviewScore() }}</span>
+                  <span class="ms-2 text-sm font-medium text-ink-600">{{ reviewScore() }}</span>
                 }
               </div>
 
@@ -978,7 +978,7 @@
                     <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-100">
                       <div class="h-full rounded-full bg-amber-400" [style.width.%]="b.pct"></div>
                     </div>
-                    <span class="w-5 text-right text-xs text-ink-400">{{ b.count }}</span>
+                    <span class="w-5 text-end text-xs text-ink-400">{{ b.count }}</span>
                   </div>
                 }
               </div>

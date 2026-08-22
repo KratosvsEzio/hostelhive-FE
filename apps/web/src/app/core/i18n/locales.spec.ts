@@ -29,7 +29,7 @@ describe('locale registry', () => {
     }
   });
 
-  it('marks Urdu and Arabic right-to-left, and the rest left-to-right', () => {
+  it('marks Urdu and Arabic end-to-left, and the rest start-to-right', () => {
     expect(dirFor('ur')).toBe('rtl');
     expect(dirFor('ar')).toBe('rtl');
     for (const l of LOCALES.filter((x) => !['ur', 'ar'].includes(x.code))) {

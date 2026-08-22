@@ -41,7 +41,7 @@
     </div>
     <!-- AccommodationType + property type. The property type is whatever the BE enum says, so it is
          rendered only when present rather than defaulted to a guess. -->
-    <div class="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+    <div class="absolute start-3 top-3 flex flex-wrap items-center gap-1.5">
       @if (featured()) {
         <span class="featured-badge">
           <i class="ti ti-crown-filled relative z-[1] text-xs" aria-hidden="true"></i>
@@ -69,7 +69,7 @@
     @if (savable()) {
       <button
         type="button"
-        class="absolute bottom-3 right-3 z-10 grid place-items-center rounded-full border border-white/30 bg-black/30 p-2 backdrop-blur-sm transition hover:scale-110 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+        class="absolute bottom-3 end-3 z-10 grid place-items-center rounded-full border border-white/30 bg-black/30 p-2 backdrop-blur-sm transition hover:scale-110 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
         (click)="toggleSaved($event)"
         [attr.aria-label]="saved() ? 'Remove from saved' : 'Save to favourites'"
       >
@@ -91,7 +91,7 @@
           type="button"
           (click)="step(-1, $event)"
           aria-label="Previous photo"
-          class="absolute left-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+          class="absolute start-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <i class="ti ti-chevron-left text-sm" aria-hidden="true"></i>
         </button>
@@ -101,7 +101,7 @@
           type="button"
           (click)="step(1, $event)"
           aria-label="Next photo"
-          class="absolute right-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+          class="absolute end-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <i class="ti ti-chevron-right text-sm" aria-hidden="true"></i>
         </button>

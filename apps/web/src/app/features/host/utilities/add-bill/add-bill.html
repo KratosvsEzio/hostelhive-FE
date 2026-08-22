@@ -276,12 +276,12 @@
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead
-                class="text-left text-xs uppercase tracking-wide text-ink-400"
+                class="text-start text-xs uppercase tracking-wide text-ink-400"
               >
                 <tr>
                   <th class="py-2 font-medium">Tenant</th>
                   <th class="py-2 font-medium">Days in room</th>
-                  <th class="py-2 text-right font-medium">Share</th>
+                  <th class="py-2 text-end font-medium">Share</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-ink-100">
@@ -313,7 +313,7 @@
                         <p class="mt-0.5 text-xs text-danger">Min value is 0</p>
                       }
                     </td>
-                    <td class="py-2.5 text-right font-medium text-ink-800">
+                    <td class="py-2.5 text-end font-medium text-ink-800">
                       Rs {{ row.share | number }}
                     </td>
                   </tr>

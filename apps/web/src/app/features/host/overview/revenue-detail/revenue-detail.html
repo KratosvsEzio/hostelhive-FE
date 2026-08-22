@@ -33,7 +33,7 @@
             <div class="group relative flex h-full flex-1 flex-col justify-end gap-0.5">
               <div
                 class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
-                [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+                [class]="first ? 'start-0' : last ? 'end-0' : 'left-1/2 -translate-x-1/2'"
                 [style.bottom]="'calc(' + (b.rentPct + b.utilityPct) + '% + 20px)'"
               >
                 <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
@@ -51,7 +51,7 @@
                 </div>
                 <div
                   class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
-                  [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
+                  [class]="first ? 'ms-3' : last ? 'me-3 ms-auto' : 'mx-auto'"
                 ></div>
               </div>
               <div class="rounded-t bg-brand-200 transition group-hover:bg-brand-300" [style.height.%]="b.utilityPct"></div>
@@ -71,21 +71,21 @@
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="text-left text-xs uppercase tracking-wide text-ink-400">
+            <thead class="text-start text-xs uppercase tracking-wide text-ink-400">
               <tr>
                 <th class="px-5 py-2.5 font-medium">Month</th>
-                <th class="px-5 py-2.5 text-right font-medium">Rent</th>
-                <th class="px-5 py-2.5 text-right font-medium">Utility</th>
-                <th class="px-5 py-2.5 text-right font-medium">Total</th>
+                <th class="px-5 py-2.5 text-end font-medium">Rent</th>
+                <th class="px-5 py-2.5 text-end font-medium">Utility</th>
+                <th class="px-5 py-2.5 text-end font-medium">Total</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
               @for (b of bars(); track b.month) {
                 <tr class="hover:bg-surface">
                   <td class="px-5 py-3 font-medium text-ink-800">{{ b.month }}</td>
-                  <td class="px-5 py-3 text-right text-ink-600">Rs {{ b.rent | number }}</td>
-                  <td class="px-5 py-3 text-right text-ink-600">Rs {{ b.utility | number }}</td>
-                  <td class="px-5 py-3 text-right font-semibold text-ink-900">Rs {{ (b.rent + b.utility) | number }}</td>
+                  <td class="px-5 py-3 text-end text-ink-600">Rs {{ b.rent | number }}</td>
+                  <td class="px-5 py-3 text-end text-ink-600">Rs {{ b.utility | number }}</td>
+                  <td class="px-5 py-3 text-end font-semibold text-ink-900">Rs {{ (b.rent + b.utility) | number }}</td>
                 </tr>
               }
               @if (bars().length === 0) {

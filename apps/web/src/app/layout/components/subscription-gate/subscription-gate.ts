@@ -37,7 +37,7 @@ const BENEFITS = [
       </p>
 
       <!-- Benefits -->
-      <ul class="mt-7 space-y-2.5 text-left">
+      <ul class="mt-7 space-y-2.5 text-start">
         @for (item of benefits; track item) {
           <li class="flex items-center gap-3 text-sm text-ink-700">
             <i class="ti ti-circle-check shrink-0 text-base text-ok" aria-hidden="true"></i>

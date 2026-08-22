@@ -41,7 +41,7 @@
     } @else {
       <div class="flex gap-2">
         <!-- shared y-axis (identical to the bar card) -->
-        <div class="flex h-40 shrink-0 flex-col justify-between py-2 text-right text-[10px] leading-none text-ink-400">
+        <div class="flex h-40 shrink-0 flex-col justify-between py-2 text-end text-[10px] leading-none text-ink-400">
           @for (t of yTicksDesc(); track $index) {
             <span>{{ t.label }}</span>
           }
@@ -124,7 +124,7 @@
                     <div class="flex items-center gap-2">
                       <span class="inline-block h-2 w-2 shrink-0 rounded-full" [style.background]="item.color"></span>
                       <span class="text-[11px] text-ink-300">{{ item.label }}</span>
-                      <span class="ml-auto pl-4 text-[11px] font-medium text-white">Rs {{ item.value | number }}</span>
+                      <span class="ms-auto ps-4 text-[11px] font-medium text-white">Rs {{ item.value | number }}</span>
                     </div>
                   }
                 </div>

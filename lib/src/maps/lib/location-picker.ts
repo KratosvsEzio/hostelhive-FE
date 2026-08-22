@@ -80,7 +80,7 @@ export interface PickedLocation {
 
           <!-- Map / Satellite -->
           <div
-            class="absolute right-3 top-3 flex flex-col overflow-hidden rounded-lg border border-ink-200 bg-white shadow-sm"
+            class="absolute end-3 top-3 flex flex-col overflow-hidden rounded-lg border border-ink-200 bg-white shadow-sm"
           >
             <button
               type="button"

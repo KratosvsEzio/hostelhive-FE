@@ -6,7 +6,7 @@
  * scanning a picker looks for 日本語, not "Japanese", and a list written entirely in
  * English is a list they cannot use to escape English.
  *
- * `dir` is not decoration. Urdu and Arabic are right-to-left, which changes layout rather
+ * `dir` is not decoration. Urdu and Arabic are end-to-left, which changes layout rather
  * than only text: see `docs` on the logical-property sweep. A language must not be listed
  * here until its direction actually renders correctly.
  */

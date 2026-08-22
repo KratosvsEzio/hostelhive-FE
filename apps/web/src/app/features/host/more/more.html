@@ -14,7 +14,7 @@
     <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
     <button
       type="button"
-      class="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-card"
+      class="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-card"
       (click)="switcherOpen.set(true)"
     >
       <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-building-community text-lg" aria-hidden="true"></i></span>
@@ -86,7 +86,7 @@
         </span>
         <i class="ti ti-chevron-right shrink-0 text-ink-300" aria-hidden="true"></i>
       </a>
-      <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-left" (click)="signOut()">
+      <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-start" (click)="signOut()">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-logout" aria-hidden="true"></i></span>
         <span class="flex-1 text-sm font-medium text-danger">Sign out</span>
       </button>
@@ -112,7 +112,7 @@
       @for (p of propertyStore.properties(); track p.id) {
         <button
           type="button"
-          class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left"
+          class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-start"
           [class]="p.id === propertyStore.selected() ? 'bg-brand-50 ring-1 ring-brand-200' : 'hover:bg-surface'"
           (click)="selectProperty(p)"
         >

@@ -35,7 +35,7 @@
     [style.bottom.px]="toggleBottom()"
     (click)="showMap()"
   >
-    Map<i class="ti ti-map-2 ml-1.5 text-xs" aria-hidden="true"></i>
+    Map<i class="ti ti-map-2 ms-1.5 text-xs" aria-hidden="true"></i>
   </button>
 }
 
@@ -63,7 +63,7 @@
           type="button"
           aria-label="Close"
           (click)="closeCard($event)"
-          class="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm"
+          class="absolute end-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm"
         >
           <i class="ti ti-x text-sm text-ink-700" aria-hidden="true"></i>
         </button>
@@ -71,7 +71,7 @@
           type="button"
           [attr.aria-label]="isSaved(sel) ? 'Remove from favourites' : 'Save to favourites'"
           (click)="toggleSaved(sel, $event)"
-          class="absolute right-12 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm"
+          class="absolute end-12 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm"
         >
           <i
             class="ti text-sm"
@@ -295,7 +295,7 @@
        replacing it, so the map is the permanent backdrop at every width. -->
   <div class="relative">
     <div
-      class="sticky top-0 h-[100dvh] min-[950px]:h-screen min-[950px]:pb-4 min-[950px]:pr-4 min-[950px]:pt-4"
+      class="sticky top-0 h-[100dvh] min-[950px]:h-screen min-[950px]:pb-4 min-[950px]:pe-4 min-[950px]:pt-4"
       style="
         top: var(--hh-map-top, 0px);
         height: calc(100dvh - var(--hh-map-top, 0px));

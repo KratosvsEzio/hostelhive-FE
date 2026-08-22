@@ -15,9 +15,9 @@ const KEY = 'hh.locale';
  *
  * Switching a language is three separate updates that must not drift apart: the strings
  * Transloco serves, the `lang` attribute assistive technology and search engines read,
- * and the `dir` attribute that decides whether the page lays out left-to-right. Doing
+ * and the `dir` attribute that decides whether the page lays out start-to-right. Doing
  * them in one place is what stops a page ending up in Arabic with an English `lang`, or
- * in Urdu still laid out left-to-right.
+ * in Urdu still laid out start-to-right.
  */
 @Injectable({ providedIn: 'root' })
 export class LocaleStore {

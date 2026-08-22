@@ -35,7 +35,7 @@
           @for (group of groups(); track group.key) {
             <button
               type="button"
-              class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition"
+              class="flex w-full items-center gap-2 px-3 py-2.5 text-start text-sm transition"
               [class]="!group.inlineSidebar && activeGroupKey() === group.key
                 ? 'bg-brand-50 font-semibold text-brand-600'
                 : 'text-ink-700 hover:bg-ink-100/50'"
@@ -205,7 +205,7 @@
                 </div>
                 @if (hasApiError(field.key)) {
                   <p class="py-3 text-center text-xs text-danger-500">
-                    <i class="ti ti-alert-circle mr-1"></i>Failed to load options. Try again.
+                    <i class="ti ti-alert-circle me-1"></i>Failed to load options. Try again.
                   </p>
                 } @else {
                   <div class="space-y-2.5">
@@ -256,14 +256,14 @@
                 </div>
                 @if (hasApiError(field.key)) {
                   <p class="py-3 text-center text-xs text-danger-500">
-                    <i class="ti ti-alert-circle mr-1"></i>Failed to load options. Try again.
+                    <i class="ti ti-alert-circle me-1"></i>Failed to load options. Try again.
                   </p>
                 } @else {
                   <div class="space-y-1">
                     @for (opt of fieldOptions(field); track opt.value) {
                       <button
                         type="button"
-                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition"
+                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-start text-sm transition"
                         [class]="getSelect(field.key) === opt.value
                           ? 'bg-brand-50 font-medium text-brand-700 ring-1 ring-brand-200'
                           : 'text-ink-800 hover:bg-ink-50'"
@@ -291,7 +291,7 @@
                     <!-- Group header row -->
                     <button
                       type="button"
-                      class="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition hover:bg-ink-50"
+                      class="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start text-sm transition hover:bg-ink-50"
                       (click)="setNestedGroup(field.key, group.value)"
                     >
                       <div
@@ -312,7 +312,7 @@
                     @for (item of group.items; track item.value) {
                       <button
                         type="button"
-                        class="flex w-full items-center gap-3 rounded-xl py-2 pl-9 pr-2 text-left text-sm transition hover:bg-ink-50"
+                        class="flex w-full items-center gap-3 rounded-xl py-2 ps-9 pe-2 text-start text-sm transition hover:bg-ink-50"
                         (click)="setNestedItem(field.key, group.value, item.value)"
                       >
                         <div

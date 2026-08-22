@@ -73,7 +73,7 @@
           </div>
         </div>
         <div class="grid grid-cols-1 divide-y divide-ink-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          <div class="py-3 sm:py-0 sm:pr-4">
+          <div class="py-3 sm:py-0 sm:pe-4">
             <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Total</p>
             <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ rentSummary().total | number }}</p>
           </div>
@@ -81,7 +81,7 @@
             <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Paid</p>
             <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ rentSummary().paid | number }}</p>
           </div>
-          <div class="py-3 sm:py-0 sm:pl-4">
+          <div class="py-3 sm:py-0 sm:ps-4">
             <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Balance</p>
             <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ rentSummary().balance | number }}</p>
           </div>
@@ -99,7 +99,7 @@
           </div>
         </div>
         <div class="grid grid-cols-1 divide-y divide-ink-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          <div class="py-3 sm:py-0 sm:pr-4">
+          <div class="py-3 sm:py-0 sm:pe-4">
             <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Total</p>
             <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ utilitySummary().total | number }}</p>
           </div>
@@ -107,7 +107,7 @@
             <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Paid</p>
             <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ utilitySummary().paid | number }}</p>
           </div>
-          <div class="py-3 sm:py-0 sm:pl-4">
+          <div class="py-3 sm:py-0 sm:ps-4">
             <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Balance</p>
             <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ utilitySummary().balance | number }}</p>
           </div>
@@ -169,7 +169,7 @@
 
   <!-- hh-below-header, not top-[65px]: the header is `4rem + env(safe-area-inset-top)`,
        so a hardcoded 65px starts the drawer underneath it by the inset on a notched device. -->
-  <div class="hh-below-header fixed bottom-0 right-0 z-50 flex w-full sm:w-[480px] flex-col overflow-hidden bg-white shadow-2xl ring-1 ring-ink-100">
+  <div class="hh-below-header fixed bottom-0 end-0 z-50 flex w-full sm:w-[480px] flex-col overflow-hidden bg-white shadow-2xl ring-1 ring-ink-100">
     <div class="flex shrink-0 items-center justify-between border-b border-ink-100 bg-surface px-5 py-3">
       <span class="text-xs font-medium text-ink-500">{{ invoiceId(inv) }}.pdf</span>
       <div class="flex gap-1">
@@ -195,7 +195,7 @@
             <p class="mt-0.5 text-xs text-ink-400">{{ hostelAddress() }}</p>
           }
         </div>
-        <div class="text-right">
+        <div class="text-end">
           <p class="text-xs font-semibold uppercase tracking-widest text-ink-400">Invoice</p>
           <p class="mt-0.5 text-sm font-semibold text-ink-900">{{ invoiceId(inv) }}</p>
         </div>
@@ -209,7 +209,7 @@
           <p class="font-semibold text-ink-900">{{ inv.tenantName }}</p>
           <p class="text-xs text-ink-500">Room {{ inv.roomNumber }}</p>
         </div>
-        <div class="text-right">
+        <div class="text-end">
           <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Issued</p>
           <p class="text-xs text-ink-800">{{ formatDate(inv.issued) }}</p>
           <p class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Due</p>
@@ -223,8 +223,8 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-ink-100">
-              <th class="pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">Description</th>
-              <th class="pb-2 text-right text-[11px] font-semibold uppercase tracking-wide text-ink-400">Amount</th>
+              <th class="pb-2 text-start text-[11px] font-semibold uppercase tracking-wide text-ink-400">Description</th>
+              <th class="pb-2 text-end text-[11px] font-semibold uppercase tracking-wide text-ink-400">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -236,7 +236,7 @@
                     [class]="inv.kind === 'utility' ? 'bg-tint-cream text-brand-700' : 'bg-tint-sky text-ink-600'"
                   >{{ line.label }}</span>
                 </td>
-                <td class="py-3 text-right font-medium text-ink-800">Rs {{ line.amount | number }}</td>
+                <td class="py-3 text-end font-medium text-ink-800">Rs {{ line.amount | number }}</td>
               </tr>
             }
           </tbody>
