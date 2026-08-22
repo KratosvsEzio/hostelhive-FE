@@ -81,14 +81,14 @@
         <hh-dropdown
           variant="field"
           placeholder="How you charge"
-          [options]="billingOptions"
+          [options]="billingOptions()"
           [value]="billingFrequency()"
           (valueChange)="setBillingFrequency($event)"
         />
         <!-- One cycle for the whole property: every room is priced the same way, and only
              nightly hostels can be booked online. -->
         <p class="mt-1 text-xs text-ink-500">
-          @if (billingFrequency() === 'day') {
+          @if (billingFrequency() === 'night') {
             Every room is priced per night. Guests can book online.
           } @else {
             Every room is priced per month. Seekers enquire rather than book.

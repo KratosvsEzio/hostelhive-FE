@@ -218,6 +218,7 @@ export class HostelForm {
         of({
           genderTypes: [] as HostelEnumOption[],
           propertyTypes: [] as HostelEnumOption[],
+          billingFrequencyTypes: [] as HostelEnumOption[],
           attachmentLabels: [] as { id: number | string; name: string }[],
         }),
       ),
@@ -226,6 +227,7 @@ export class HostelForm {
       initialValue: {
         genderTypes: [] as HostelEnumOption[],
         propertyTypes: [] as HostelEnumOption[],
+        billingFrequencyTypes: [] as HostelEnumOption[],
         attachmentLabels: [] as { id: number | string; name: string }[],
       },
     },
@@ -285,10 +287,23 @@ export class HostelForm {
    * Backend slugs are `month` and `day`; the product says "nightly" and translates here.
    */
   protected readonly billingFrequency = signal<string>('month');
-  protected readonly billingOptions = [
-    { value: 'month', label: 'Per month' },
-    { value: 'day', label: 'Per night' },
-  ];
+  /**
+   * From `GET /api/hostels/new`, like every other enum on this form.
+   *
+   * The hardcoded pair is only a fallback for a failed options call — it keeps the control
+   * usable rather than rendering an empty dropdown a host cannot get past, and the slugs match
+   * what the endpoint returns.
+   */
+  protected readonly billingOptions = computed<DropdownOption[]>(() => {
+    const fromApi = this.formOptions().billingFrequencyTypes;
+    if (fromApi.length) {
+      return fromApi.map((b) => ({ value: b.slug, label: `Per ${b.name.toLowerCase()}` }));
+    }
+    return [
+      { value: 'month', label: 'Per month' },
+      { value: 'night', label: 'Per night' },
+    ];
+  });
   protected readonly newRtDiscount = signal<number | null>(null);
   protected readonly newRtDiscountEnabled = signal(false);
   protected readonly newRtDescription = signal('');

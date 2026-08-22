@@ -314,10 +314,11 @@ export class HostelsApi {
       );
   }
 
-  /** GET /api/hostels/new — gender, property & attachment-label enum options for build/edit forms. */
+  /** GET /api/hostels/new — gender, property, billing-frequency & attachment-label options. */
   formOptions(): Observable<{
     genderTypes: HostelEnumOption[];
     propertyTypes: HostelEnumOption[];
+    billingFrequencyTypes: HostelEnumOption[];
     attachmentLabels: AttachmentLabel[];
   }> {
     return this.api
@@ -326,6 +327,7 @@ export class HostelsApi {
         map((r) => ({
           genderTypes: r.gender_types ?? [],
           propertyTypes: r.property_types ?? [],
+          billingFrequencyTypes: r.billing_frequency_types ?? [],
           attachmentLabels: r.attachment_labels ?? [],
         })),
       );

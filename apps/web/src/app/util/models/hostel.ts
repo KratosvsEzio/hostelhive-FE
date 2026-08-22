@@ -325,7 +325,7 @@ export interface HostelInput {
   gender_type?: HostelGenderType | number;
   property_type?: HostelPropertyType | number;
   /**
-   * `month` | `day` — how this hostel prices everything.
+   * `month` | `night` — how this hostel prices everything.
    *
    * A hostel field, not a per-room one. Pricing one room monthly and another nightly would be
    * incoherent to a seeker comparing them, and holding the rule here makes a mixed hostel
@@ -399,6 +399,8 @@ export interface HostelFormOptionsResponse {
   success: boolean;
   gender_types: HostelEnumOption[];
   property_types: HostelEnumOption[];
+  /** `month` | `night` — how a hostel prices everything. */
+  billing_frequency_types?: HostelEnumOption[];
   attachment_labels?: AttachmentLabel[];
   errors?: string[];
 }
