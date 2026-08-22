@@ -49,7 +49,10 @@ import {
   discountError,
   isValidDiscount,
 } from '@util/occupancy-type';
-import { MIN_ROOM_CAPACITY } from '@util/room-types';
+import { MAX_ROOM_IMAGES, MIN_ROOM_CAPACITY, RoomImage } from '@util/room-types';
+
+/** Stands in for the not-yet-added row, which has no `_key` until it is committed. */
+const NEW_RT_KEY = '__new__';
 
 function toLabel(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -91,10 +94,12 @@ function toEditRoomType(r: {
   price: number;
 }): EditRoomType {
   const raw = r as typeof r & {
+    description?: string | null;
     occupancy_type?: string;
     discounted_price?: number | null;
     is_discountable?: boolean;
     is_bookable?: boolean;
+    attachments?: { id: string; url?: string; object_url?: string }[] | null;
   };
   return {
     _key: String(r.id),
@@ -106,6 +111,13 @@ function toEditRoomType(r: {
     discountedPrice: raw.discounted_price ?? null,
     discountEnabled: raw.is_discountable ?? false,
     bookable: raw.is_bookable ?? false,
+    description: raw.description ?? '',
+    images: (raw.attachments ?? [])
+      .map((a) => ({ id: String(a.id), url: a.url ?? a.object_url ?? '' }))
+      .filter((a) => !!a.url)
+      // Trimmed on read as well as on write: a row that already holds four photos, however
+      // it got that way, should not render a fourth tile the form cannot save.
+      .slice(0, MAX_ROOM_IMAGES),
   };
 }
 
@@ -121,6 +133,9 @@ export interface EditRoomType {
   discountedPrice: number | null;
   /** Whether that discount is live. Off keeps the figure without applying it. */
   discountEnabled: boolean;
+  description: string;
+  /** Up to MAX_ROOM_IMAGES. Their ids become `attachment_ids` on save. */
+  images: RoomImage[];
   /** The host's online-booking toggle. Off unless they opt in. */
   bookable: boolean;
 }
@@ -278,6 +293,12 @@ export class HostelForm {
   ];
   protected readonly newRtDiscount = signal<number | null>(null);
   protected readonly newRtDiscountEnabled = signal(false);
+  protected readonly newRtDescription = signal('');
+  protected readonly newRtImages = signal<RoomImage[]>([]);
+
+  /** Room type key currently uploading a photo, so only its tile spins. */
+  protected readonly uploadingRtImage = signal<string | null>(null);
+  protected readonly rtImageError = signal('');
   protected readonly newRtBookable = signal(false);
   protected readonly usedRtNames = computed(() => this.roomTypes().map((rt) => rt.name));
   protected readonly newRtError = computed(() => {
@@ -550,6 +571,7 @@ export class HostelForm {
       | 'occupancyType'
       | 'discountedPrice'
       | 'discountEnabled'
+      | 'description'
       | 'bookable',
     value: string | number | boolean | null,
   ): void {
@@ -575,6 +597,9 @@ export class HostelForm {
     this.newRtOccupancy.set(DEFAULT_OCCUPANCY_TYPE);
     this.newRtDiscount.set(null);
     this.newRtDiscountEnabled.set(false);
+    this.newRtDescription.set('');
+    this.newRtImages.set([]);
+    this.rtImageError.set('');
     this.newRtBookable.set(false);
   }
   protected closeAddRt(): void {
@@ -595,11 +620,61 @@ export class HostelForm {
         occupancyType: this.newRtOccupancy(),
         discountedPrice: this.newRtDiscount(),
         discountEnabled: this.newRtDiscountEnabled(),
+        description: this.newRtDescription(),
+        images: this.newRtImages(),
         bookable: this.newRtBookable(),
       },
     ]);
     this.closeAddRt();
   }
+  /**
+   * Uploads a picked photo and attaches its id to the room type.
+   *
+   * `key` is `null` for the not-yet-added row, which has no key of its own yet. The cap is
+   * re-checked here as well as in the row: the picker is hidden at three, but a slow upload
+   * could otherwise let a fourth in behind it.
+   */
+  protected onRtImagePicked(key: string | null, file: File): void {
+    const current = key
+      ? (this.roomTypes().find((r) => r._key === key)?.images ?? [])
+      : this.newRtImages();
+    if (current.length >= MAX_ROOM_IMAGES) return;
+
+    this.rtImageError.set('');
+    this.uploadingRtImage.set(key ?? NEW_RT_KEY);
+    this.imageUpload.upload('attachments', file).subscribe({
+      next: (res) => {
+        const image: RoomImage = { id: res.id, url: res.url };
+        if (key) {
+          this.roomTypes.update((list) =>
+            list.map((r) =>
+              r._key === key ? { ...r, images: [...r.images, image] } : r,
+            ),
+          );
+        } else {
+          this.newRtImages.update((list) => [...list, image]);
+        }
+        this.uploadingRtImage.set(null);
+      },
+      error: () => {
+        this.rtImageError.set('That photo could not be uploaded. Please try again.');
+        this.uploadingRtImage.set(null);
+      },
+    });
+  }
+
+  protected onRtImageRemoved(key: string | null, id: string): void {
+    if (key) {
+      this.roomTypes.update((list) =>
+        list.map((r) =>
+          r._key === key ? { ...r, images: r.images.filter((i) => i.id !== id) } : r,
+        ),
+      );
+    } else {
+      this.newRtImages.update((list) => list.filter((i) => i.id !== id));
+    }
+  }
+
   protected removeRt(key: string): void {
     const rt = this.roomTypes().find((r) => r._key === key);
     if (!rt) return;
@@ -738,8 +813,10 @@ export class HostelForm {
           billing_frequency: this.billingFrequency(),
           // Both travel, always. The price is kept even while the switch is off, which is
           // what lets a host end a promotion and restart it later without retyping it.
+          description: rt.description || undefined,
           discounted_price: rt.discountedPrice,
           is_discountable: rt.discountEnabled,
+          attachment_ids: rt.images.map((i) => i.id),
           is_bookable: rt.bookable,
         })),
         ...this.removedRts()

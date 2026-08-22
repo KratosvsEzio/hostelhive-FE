@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { Dropdown, Toggle } from '@hostelhive/ui';
-import { MIN_ROOM_CAPACITY } from '@util/room-types';
+import { MAX_ROOM_IMAGES, MIN_ROOM_CAPACITY, RoomImage } from '@util/room-types';
 import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
 import {
   DEFAULT_OCCUPANCY_TYPE,
@@ -10,6 +10,7 @@ import {
   unitNoun,
 } from '@util/occupancy-type';
 import { MoneyInput } from '@app/shared/money-input/money-input';
+import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 
 /**
  * One room type, as the host fills it in.
@@ -28,7 +29,7 @@ import { MoneyInput } from '@app/shared/money-input/money-input';
 @Component({
   selector: 'hh-room-type-row',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown, Toggle, MoneyInput],
+  imports: [Dropdown, Toggle, MoneyInput, PhotoPicker],
   templateUrl: './room-type-row.html',
 })
 export class RoomTypeRow {
@@ -45,6 +46,11 @@ export class RoomTypeRow {
    * this is a switch rather than simply clearing the field.
    */
   readonly discountEnabled = input(false);
+  readonly description = input('');
+  readonly images = input<readonly RoomImage[]>([]);
+  /** True while the parent is uploading a picked file. */
+  readonly uploadingImage = input(false);
+  readonly imageError = input('');
   readonly bookable = input(false);
   /** ISO-4217 code shown as the price prefix. */
   readonly currency = input(DEFAULT_CURRENCY_CODE);
@@ -60,9 +66,22 @@ export class RoomTypeRow {
   readonly occupancyTypeChange = output<string>();
   readonly discountedPriceChange = output<number | null>();
   readonly discountEnabledChange = output<boolean>();
+  readonly descriptionChange = output<string>();
+  /** The parent uploads; this only picks, mirroring how the rest of the app splits it. */
+  readonly imagePicked = output<File>();
+  readonly imageRemoved = output<string>();
   readonly bookableChange = output<boolean>();
 
   protected readonly occupancyOptions = OCCUPANCY_OPTIONS;
+  protected readonly maxImages = MAX_ROOM_IMAGES;
+
+  /**
+   * The picker disappears at the cap rather than rejecting a fourth file.
+   *
+   * A control that is not there cannot be misused, and an error shown after somebody has
+   * already chosen a photo has wasted the part of the interaction that costs them effort.
+   */
+  protected readonly canAddImage = computed(() => this.images().length < MAX_ROOM_IMAGES);
 
   protected minCapacity(): number {
     return MIN_ROOM_CAPACITY;
