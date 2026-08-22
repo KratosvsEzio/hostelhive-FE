@@ -236,5 +236,21 @@
     "termsOfService": "Terms of service",
     "servicePolicy": "Service policy",
     "copy2026HostelhiveAllRights": "© 2026 HostelHive. All rights reserved."
+  },
+  "searchBar": {
+    "search": "Search",
+    "budgetRange": "Budget range",
+    "reset": "Reset",
+    "addBudget": "Add budget",
+    "addSharing": "Add sharing",
+    "anySharing": "Any sharing",
+    "perRoom1": "1 per room",
+    "perRoom2": "2 per room",
+    "perRoom3": "3 per room",
+    "perRoom4": "4 per room",
+    "perRoom5Plus": "5+ per room",
+    "underAmount": "Under Rs {{amount}}",
+    "fromAmount": "Rs {{amount}}+",
+    "betweenAmounts": "Rs {{low}}–{{high}}"
   }
 }

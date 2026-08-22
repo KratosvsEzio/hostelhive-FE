@@ -17,11 +17,12 @@ import {
   setAnalyticsConsent,
 } from '@core/analytics/analytics-consent';
 import { analyticsEnv } from '@app/analytics.env';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 @Component({
   selector: 'app-account-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, PhotoPicker, RouterLink, Toggle],
+  imports: [Button, PhotoPicker, RouterLink, LocaleLink, Toggle],
   templateUrl: './settings.html',
 })
 export class AccountSettings implements OnInit {

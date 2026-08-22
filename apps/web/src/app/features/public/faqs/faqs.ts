@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 @Component({
   selector: 'app-faqs',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, LocaleLink],
   templateUrl: './faqs.html',
 })
 export class Faqs {

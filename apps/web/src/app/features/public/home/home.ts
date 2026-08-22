@@ -10,6 +10,7 @@ import { isPlatformBrowser, DecimalPipe } from '@angular/common';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { Router, RouterLink } from '@angular/router';
 import { searchRouteFor } from '@util/location-slug';
+import { LocaleLink } from '@core/i18n/locale-link';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
 import { HOST_ROLES, SessionStore } from '@core/auth';
@@ -24,7 +25,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
+  imports: [TranslocoPipe, RouterLink, LocaleLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
   templateUrl: './home.html',
 })
 export class Home {

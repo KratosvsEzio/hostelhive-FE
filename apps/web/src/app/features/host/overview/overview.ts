@@ -26,6 +26,7 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface ViewState {
   loading: boolean;
@@ -40,7 +41,7 @@ interface ViewState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DashboardLayout,
-    RouterLink,
+    RouterLink, LocaleLink,
     SubscriptionGate,
     ApiDate,
     DecimalPipe,

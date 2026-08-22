@@ -5,6 +5,7 @@ import { map } from 'rxjs';
 import { Button, Input } from '@hostelhive/ui';
 import { AuthApi } from '@services';
 import { ApiError } from '@hostelhive/data-access';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 type Phase = 'form' | 'done';
 
@@ -13,7 +14,7 @@ const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 @Component({
   selector: 'hh-reset-password',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Input],
+  imports: [RouterLink, LocaleLink, Button, Input],
   templateUrl: './reset-password.html',
 })
 export class ResetPassword {

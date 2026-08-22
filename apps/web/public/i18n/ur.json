@@ -236,5 +236,21 @@
     "termsOfService": "شرائطِ استعمال",
     "servicePolicy": "سروس پالیسی",
     "copy2026HostelhiveAllRights": "© ۲۰۲۶ HostelHive۔ جملہ حقوق محفوظ ہیں۔"
+  },
+  "searchBar": {
+    "search": "تلاش کریں",
+    "budgetRange": "بجٹ کی حد",
+    "reset": "ری سیٹ",
+    "addBudget": "بجٹ شامل کریں",
+    "addSharing": "شیئرنگ شامل کریں",
+    "anySharing": "کوئی بھی شیئرنگ",
+    "perRoom1": "1 فی کمرہ",
+    "perRoom2": "2 فی کمرہ",
+    "perRoom3": "3 فی کمرہ",
+    "perRoom4": "4 فی کمرہ",
+    "perRoom5Plus": "5+ فی کمرہ",
+    "underAmount": "Rs {{amount}} سے کم",
+    "fromAmount": "Rs {{amount}}+",
+    "betweenAmounts": "Rs {{low}}–{{high}}"
   }
 }

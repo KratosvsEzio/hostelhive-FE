@@ -46,6 +46,7 @@ import { MessService } from './mess.service';
 import { MEAL_META, MEAL_ORDER, MealType } from './mess-notifications.service';
 import { GROCERY_TABLE_COLS } from '@app/util/table-configs/grocery-table-cols';
 import { PAGE_SIZE } from '@util/pagination';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 /** View state for the KPI cards fetched from `mess_overview_cards`. */
 interface OverviewState {
@@ -257,7 +258,7 @@ function buildSpendChart(
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DecimalPipe,
-    RouterLink,
+    RouterLink, LocaleLink,
     DashboardLayout,
     BarChart,
     Button,

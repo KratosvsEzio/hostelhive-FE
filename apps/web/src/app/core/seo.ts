@@ -1,4 +1,6 @@
 import { DOCUMENT } from '@angular/common';
+import { LocaleStore } from './i18n/locale-store';
+import { localeAlternates, withLocale } from './i18n/locales';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 
@@ -29,7 +31,13 @@ export interface SeoConfig {
    */
   socialTitle?: string;
   description?: string;
-  /** Path only, e.g. `/hostel/al-madina`. Query strings are dropped from the canonical. */
+  /**
+   * Path only, e.g. `/hostel/al-madina`. Query strings are dropped from the canonical.
+   *
+   * Write it without a language prefix — the active one is added when the canonical is
+   * built, so each language canonicalises to itself rather than all of them pointing at
+   * English, which would ask Google to drop every translated page from the index.
+   */
   path?: string;
   image?: string;
   /** `noindex` for anything private or thin — auth screens, the consoles, tokened links. */
@@ -55,13 +63,17 @@ export class Seo {
   private readonly meta = inject(Meta);
   private readonly titleService = inject(Title);
   private readonly doc = inject(DOCUMENT);
+  private readonly locale = inject(LocaleStore);
 
   /** Applies the full head for a page: title, description, canonical, Open Graph, Twitter. */
   apply(config: SeoConfig): void {
     const title = config.title || DEFAULT_TITLE;
     const description = config.description?.trim() || DEFAULT_DESCRIPTION;
     const image = config.image || DEFAULT_IMAGE;
-    const url = config.path ? `${SITE_ORIGIN}${config.path}` : SITE_ORIGIN;
+    // The language-free path is what the alternates are built from; the active language
+    // is what this page canonicalises to.
+    const basePath = config.path ?? '/';
+    const url = `${SITE_ORIGIN}${withLocale(this.locale.active(), basePath)}`;
 
     this.titleService.setTitle(title);
     this.meta.updateTag({ name: 'description', content: description });
@@ -79,6 +91,7 @@ export class Seo {
     }
 
     this.setCanonical(url);
+    this.setAlternates(basePath, !!config.noindex);
 
     const social = config.socialTitle?.trim() || title;
     this.meta.updateTag({ property: 'og:title', content: social });
@@ -92,6 +105,41 @@ export class Seo {
     this.meta.updateTag({ name: 'twitter:title', content: social });
     this.meta.updateTag({ name: 'twitter:description', content: description });
     this.meta.updateTag({ name: 'twitter:image', content: image });
+  }
+
+  /**
+   * Declares the same page in every language it genuinely exists in.
+   *
+   * Without these, `/ur/hostels/lahore` and `/en/hostels/lahore` are two pages about the
+   * same hostels competing for the same rankings. With them they are one page in two
+   * languages, and Google serves whichever matches the searcher.
+   *
+   * Three rules make a set valid, and all three are easy to get wrong:
+   * - **reciprocal** — every version links to every other, so each page emits the whole
+   *   set rather than pointing only at its siblings
+   * - **self-referencing** — the set includes the page emitting it
+   * - **absolute** — relative hrefs are ignored outright
+   *
+   * `x-default` names what to serve a reader whose language is not in the set, which is
+   * most of the world; it points at English.
+   *
+   * A `noindex` page emits none. Alternates advertise a page for indexing, which directly
+   * contradicts asking for it to be left out.
+   */
+  private setAlternates(basePath: string, noindex: boolean): void {
+    this.doc.head
+      .querySelectorAll('link[rel="alternate"][data-seo="hreflang"]')
+      .forEach((el) => el.remove());
+    if (noindex) return;
+
+    for (const { hreflang, path } of localeAlternates(basePath)) {
+      const link = this.doc.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', hreflang);
+      link.setAttribute('href', `${SITE_ORIGIN}${path}`);
+      link.setAttribute('data-seo', 'hreflang');
+      this.doc.head.appendChild(link);
+    }
   }
 
   /**

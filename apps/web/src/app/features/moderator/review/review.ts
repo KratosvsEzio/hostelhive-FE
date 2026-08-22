@@ -45,6 +45,7 @@ import {
   ReviewPhoto,
 } from '@hostelhive/data-access';
 import { isNetworkError } from '@util/network-error';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 const EMPTY_FORM_OPTIONS: ModFormOptions = {
   genderTypes: [],
@@ -113,7 +114,7 @@ interface EditableHostel {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DashboardLayout,
-    RouterLink,
+    RouterLink, LocaleLink,
     Button,
     ConfirmModal,
     Dropdown,

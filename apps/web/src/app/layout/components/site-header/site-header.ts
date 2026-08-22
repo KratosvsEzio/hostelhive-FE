@@ -14,7 +14,9 @@ import { SearchBar } from '../search-bar/search-bar';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NotificationBell } from '../notification-bell/notification-bell';
 import { LanguageSwitcher } from '@core/i18n/language-switcher';
+import { routePath } from '@core/i18n/locales';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 
@@ -31,7 +33,7 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslocoPipe, 
-    RouterLink,
+    RouterLink, LocaleLink,
     SearchBar,
     AccountMenu,
     NotificationBell,
@@ -46,22 +48,22 @@ export class SiteHeader {
   private readonly router = inject(Router);
   private readonly session = inject(SessionStore);
 
-  private readonly url = toSignal(
+  private readonly path = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url),
+      map(() => routePath(this.router.url)),
     ),
     {
       initialValue:
         typeof window !== 'undefined'
-          ? window.location.pathname + window.location.search
-          : this.router.url,
+          ? routePath(window.location.pathname)
+          : routePath(this.router.url),
     },
   );
 
   /** Which area the active route belongs to — drives the action buttons. */
   protected readonly area = computed<Area>(() => {
-    const u = (this.url() || '/').split('?')[0];
+    const u = this.path() || '/';
     if (u.startsWith('/admin')) return 'admin';
     if (u.startsWith('/moderator')) return 'moderator';
     // Exact `/host` or `/host/...` only — must NOT swallow the public `/hostel/:id` listing
@@ -72,7 +74,7 @@ export class SiteHeader {
     return 'seeker';
   });
   protected readonly showSearchBar = computed(() => {
-    const u = (this.url() || '/').split('?')[0];
+    const u = this.path() || '/';
     return u === '/' || u.startsWith('/search');
   });
 

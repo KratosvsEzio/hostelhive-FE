@@ -1,5 +1,5 @@
 import { CanMatchFn, Route, UrlSegment } from '@angular/router';
-import { PREFIXED_LOCALE_CODES } from './locales';
+import { LOCALE_CODES } from './locales';
 
 /**
  * Matches only when the first URL segment is a language we actually serve.
@@ -9,8 +9,8 @@ import { PREFIXED_LOCALE_CODES } from './locales';
  * closed deliberately: an unknown code should fall through to the normal tree and 404 or
  * render in English, not produce a page that half-exists in a language nobody translated.
  *
- * `en` is absent from the list on purpose. It is served unprefixed, so `/en/…` is not a
- * valid URL here — it would be a second address for a page that already has one.
+ * `en` is in the list like any other language: English is served at `/en/…`, not at the
+ * bare path, so that every page has one shape and none is a special case.
  */
 export const localePrefixMatcher: CanMatchFn = (_route: Route, segments: UrlSegment[]) =>
-  PREFIXED_LOCALE_CODES.includes(segments[0]?.path ?? '');
+  LOCALE_CODES.includes(segments[0]?.path ?? '');

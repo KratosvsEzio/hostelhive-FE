@@ -18,6 +18,7 @@ import {
 } from '@core/auth';
 import { Button } from '@hostelhive/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 /** Account avatar + dropdown menu (seeker chrome). Reads the live session: shows the
  *  signed-in user + account links, or a Log in / Sign up prompt for guests.
@@ -28,7 +29,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 @Component({
   selector: 'app-account-menu',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, Button],
+  imports: [TranslocoPipe, RouterLink, LocaleLink, Button],
   templateUrl: './account-menu.html',
   host: {
     '(document:click)': 'onDocumentClick($event)',

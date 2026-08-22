@@ -13,11 +13,12 @@ import { HostelsApi } from '@services';
 import { Button, ConfirmModal } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { HostelForm } from '../hostel-form/hostel-form';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 @Component({
   selector: 'hh-new-hostel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, RouterLink, Button, ConfirmModal, HostelForm],
+  imports: [DashboardLayout, RouterLink, LocaleLink, Button, ConfirmModal, HostelForm],
   templateUrl: './new-hostel.html',
 })
 export class NewHostel {

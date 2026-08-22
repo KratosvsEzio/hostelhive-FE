@@ -40,6 +40,7 @@ import {
   HostPropertyStore,
 } from '@services';
 import { HasPermission } from '@core/auth';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface ListState {
   loading: boolean;
@@ -58,7 +59,7 @@ interface ListState {
   imports: [
     HasPermission,
     DecimalPipe,
-    RouterLink,
+    RouterLink, LocaleLink,
     DashboardLayout,
     Button,
     Dropdown,

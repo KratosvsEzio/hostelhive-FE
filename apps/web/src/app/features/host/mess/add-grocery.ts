@@ -23,6 +23,7 @@ import {
   HostelsApi,
   HostPropertyStore,
 } from '@services';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface DraftImage {
   id: string;
@@ -52,7 +53,7 @@ const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
 @Component({
   selector: 'hh-add-grocery',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput],
+  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput],
   templateUrl: './add-grocery.html',
 })
 export class AddGrocery {

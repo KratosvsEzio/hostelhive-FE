@@ -15,6 +15,7 @@ import { MobileApp } from '@core/mobile-app';
 // TEMPORARY (testing): startup gate to pick the BE base URL. Remove before go-live.
 import { DevSetupGate } from '@app/features/dev-setup/dev-setup-gate';
 import { devSetupPending } from '@core/dev-api-base-url';
+import { routePath } from '@core/i18n/locales';
 import { ConsentBanner } from '@core/analytics/consent-banner';
 
 @Component({
@@ -41,10 +42,10 @@ export class App {
   private readonly path = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url.split('?')[0]),
-      startWith(this.router.url.split('?')[0]),
+      map(() => routePath(this.router.url)),
+      startWith(routePath(this.router.url)),
     ),
-    { initialValue: this.router.url.split('?')[0] },
+    { initialValue: routePath(this.router.url) },
   );
 
   // The one shared SiteHeader renders on every route (its action buttons vary by area) — except

@@ -13,6 +13,7 @@ import { FavouritesApi } from '@services/favourites-api';
 import { FavoritesStore } from '@util/favorites-store';
 import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface ViewState {
   loading: boolean;
@@ -23,7 +24,7 @@ interface ViewState {
 @Component({
   selector: 'app-account-favorites',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, ConfirmModal, ErrorState, Skeleton, ListingCard],
+  imports: [RouterLink, LocaleLink, Button, ConfirmModal, ErrorState, Skeleton, ListingCard],
   templateUrl: './favorites.html',
 })
 export class AccountFavorites {

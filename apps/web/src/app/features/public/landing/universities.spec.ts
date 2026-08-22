@@ -90,7 +90,7 @@ describe('sitemap', () => {
   it('lists every campus page', () => {
     const paths = sitemapPaths();
     for (const u of UNIVERSITIES) {
-      expect(paths).toContain(`/hostels/${u.placeSlug}/${u.slug}`);
+      expect(paths).toContain(`/en/hostels/${u.placeSlug}/${u.slug}`);
     }
   });
 });

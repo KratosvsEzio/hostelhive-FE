@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Breadcrumb as HhBreadcrumb, Button } from '@hostelhive/ui';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { MobileApp } from '@core/mobile-app';
+import { routePath } from '@core/i18n/locales';
 
 export interface Breadcrumb {
   label: string;
@@ -40,7 +41,7 @@ export class DashboardLayout {
 
   // Snapshot is enough: a dashboard-layout instance lives inside one routed page.
   protected readonly hideMenu =
-    inject(Router).url.startsWith('/host/') && this.mobile.isMobile();
+    routePath(inject(Router).url).startsWith('/host/') && this.mobile.isMobile();
 
   readonly label = input<string>('');
   readonly backUrl = input<string>('');

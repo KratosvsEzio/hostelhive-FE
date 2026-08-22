@@ -18,6 +18,7 @@ import {
   HostelsApi,
   HostPropertyStore,
 } from '@services';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface DetailState {
   loading: boolean;
@@ -33,7 +34,7 @@ interface DetailState {
 @Component({
   selector: 'hh-expense-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, Button],
+  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button],
   templateUrl: './expense-detail.html',
 })
 export class ExpenseDetailPage {

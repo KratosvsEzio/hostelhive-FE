@@ -1,9 +1,11 @@
 import {
   DEFAULT_LOCALE,
   LOCALES,
-  PREFIXED_LOCALE_CODES,
+  LOCALE_CODES,
+  hasLocalePrefix,
   dirFor,
   isLocaleCode,
+  routePath,
   splitLocale,
   withLocale,
 } from './locales';
@@ -14,10 +16,24 @@ describe('locale registry', () => {
     expect(LOCALES[0].code).toBe('en');
   });
 
-  // `/en/hostels/lahore` alongside `/hostels/lahore` would be two URLs for one page,
-  // splitting its ranking — the exact duplicate-URL failure the canonical work fixed.
-  it('never prefixes the default locale', () => {
-    expect(PREFIXED_LOCALE_CODES).not.toContain('en');
+  // English is prefixed like everything else. The duplicate-URL risk it used to carry —
+  // /en/x and /x as two addresses for one page — is handled by the bare tree redirecting
+  // rather than rendering, so only one of the two ever answers.
+  it('treats the default locale as a prefix like any other', () => {
+    expect(LOCALE_CODES).toContain('en');
+    expect(hasLocalePrefix('/en/hostels/lahore')).toBe(true);
+  });
+
+  it('reports no prefix for a path that names no language', () => {
+    expect(hasLocalePrefix('/hostels/lahore')).toBe(false);
+    expect(hasLocalePrefix('/')).toBe(false);
+    // "hostels" is not a language, however much it looks like a first segment.
+    expect(hasLocalePrefix('/hostels')).toBe(false);
+  });
+
+  it('sees through a query string to the prefix', () => {
+    expect(hasLocalePrefix('/de/search/lahore?place=Lahore')).toBe(true);
+    expect(hasLocalePrefix('/search/lahore?place=Lahore')).toBe(false);
   });
 
   it('gives every locale a unique code and an endonym', () => {
@@ -83,15 +99,60 @@ describe('withLocale', () => {
     expect(withLocale('ur', '/')).toBe('/ur');
   });
 
-  it('leaves the default locale unprefixed', () => {
-    expect(withLocale('en', '/hostels/lahore')).toBe('/hostels/lahore');
-    expect(withLocale('en', '/')).toBe('/');
+  it('prefixes the default locale too', () => {
+    expect(withLocale('en', '/hostels/lahore')).toBe('/en/hostels/lahore');
+    expect(withLocale('en', '/')).toBe('/en');
   });
 
   it('round-trips with splitLocale for every locale', () => {
     for (const l of LOCALES) {
       const url = withLocale(l.code, '/hostels/lahore');
       expect(splitLocale(url)).toEqual({ locale: l.code, path: '/hostels/lahore' });
+    }
+  });
+});
+
+describe('routePath', () => {
+  // The regression this exists for: after switching language the header hid its search bar
+  // and every area check fell through to "seeker", because `/de` matches neither '/' nor
+  // any '/host'-style prefix.
+  it('reduces a prefixed home page to the root path', () => {
+    expect(routePath('/de')).toBe('/');
+    expect(routePath('/ur')).toBe('/');
+    expect(routePath('/')).toBe('/');
+  });
+
+  it('strips the prefix from a nested route', () => {
+    expect(routePath('/de/search/lahore')).toBe('/search/lahore');
+    expect(routePath('/ur/hostels/lahore/punjab-university')).toBe(
+      '/hostels/lahore/punjab-university',
+    );
+  });
+
+  it('leaves an unprefixed route alone', () => {
+    expect(routePath('/search/lahore')).toBe('/search/lahore');
+    expect(routePath('/host/listings/new')).toBe('/host/listings/new');
+  });
+
+  it('drops the query and fragment, which no area check should see', () => {
+    expect(routePath('/de/search/lahore?place=Lahore&lat=31.5')).toBe('/search/lahore');
+    expect(routePath('/search?sort=newest#results')).toBe('/search');
+  });
+
+  // "hostels" is not a language, and a route segment that merely looks like one must not be
+  // eaten — that would turn every listing page into the home page.
+  it('does not mistake a route segment for a language code', () => {
+    expect(routePath('/hostels/lahore')).toBe('/hostels/lahore');
+    expect(routePath('/host')).toBe('/host');
+    expect(routePath('/admin')).toBe('/admin');
+  });
+
+  // Every prefix the router actually mounts has to round-trip, or some locale silently
+  // loses its chrome the way German did.
+  it('round-trips every mounted locale prefix', () => {
+    for (const code of LOCALE_CODES) {
+      expect(routePath(withLocale(code, '/search/lahore'))).toBe('/search/lahore');
+      expect(routePath(withLocale(code, '/'))).toBe('/');
     }
   });
 });

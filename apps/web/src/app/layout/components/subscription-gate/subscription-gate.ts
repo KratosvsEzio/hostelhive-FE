@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { RouterLink } from '@angular/router';
 import { Button } from '@hostelhive/ui';
 import { HostPropertyStore } from '@services';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 const BENEFITS = [
   'Room & occupancy management',
@@ -18,7 +19,7 @@ const BENEFITS = [
 @Component({
   selector: 'hh-subscription-gate',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button],
+  imports: [RouterLink, LocaleLink, Button],
   template: `
     <div class="flex flex-col items-center px-6 py-16 text-center">
 

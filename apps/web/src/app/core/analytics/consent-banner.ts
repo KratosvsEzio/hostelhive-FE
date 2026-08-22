@@ -12,6 +12,7 @@ import { Button } from '@hostelhive/ui';
 import { analyticsEnv } from '@app/analytics.env';
 import { AnalyticsService } from './analytics.service';
 import { analyticsConsent, setAnalyticsConsent } from './analytics-consent';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 /**
  * The analytics consent gate.
@@ -27,7 +28,7 @@ import { analyticsConsent, setAnalyticsConsent } from './analytics-consent';
 @Component({
   selector: 'hh-consent-banner',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink],
+  imports: [Button, RouterLink, LocaleLink],
   host: { ngSkipHydration: 'true' },
   template: `
     @if (open()) {
