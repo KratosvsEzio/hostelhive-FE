@@ -230,8 +230,20 @@ export class HostLayout {
     }))
   );
 
-  protected readonly propertiesLoading = computed(
-    () => this.propertyStore.properties().length === 0 && !!this.propertyStore.selected(),
+  /**
+   * Spinner state for the property switcher.
+   *
+   * Driven by the store's `loaded` flag, which flips true whether the fetch succeeded or
+   * failed. It previously inferred loading from "no properties but a selected id" — which
+   * is precisely the state a FAILED fetch leaves behind, because the selected id is
+   * restored from localStorage while the list stays empty. The switcher then span forever
+   * on any backend error, with no way for the user to tell a slow request from a dead one.
+   */
+  protected readonly propertiesLoading = computed(() => !this.propertyStore.loaded());
+
+  /** Empty because the fetch failed, rather than because this host has no hostels yet. */
+  protected readonly propertiesUnavailable = computed(
+    () => this.propertyStore.loaded() && this.propertyStore.properties().length === 0,
   );
 
   protected onPropertySelect(value: string | string[] | null): void {

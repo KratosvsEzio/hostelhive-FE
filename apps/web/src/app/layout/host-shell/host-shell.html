@@ -26,7 +26,7 @@
     <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
     <hh-dropdown
       variant="borderless"
-      placeholder="Loading…"
+      [placeholder]="propertiesLoading() ? 'Loading…' : (propertiesUnavailable() ? 'Unavailable' : 'Select a property')"
       triggerIcon="ti-building-community"
       [openRight]="true"
       [options]="propertyDropdownOptions()"
