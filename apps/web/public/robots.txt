@@ -28,10 +28,11 @@ Disallow: /auth
 # The token in the query string *is* the credential for these links.
 Disallow: /mess/confirm
 
-# Search is indexable, but only its clean form. Filter permutations are near-duplicates
-# of one another and each one competes for the same terms; the canonical tag points them
-# back at /search, and this keeps them out of the crawl in the first place.
-Disallow: /search?
+# Search is deliberately NOT blocked. Every search URL now carries its own directive —
+# an unfiltered one canonicalises to its /hostels/:place landing page, a filtered one is
+# noindex — and a crawler has to fetch the page to read either. Blocking them here would
+# hide the very instructions that keep filter permutations out of the index, leaving
+# Google to guess from inbound links instead.
 
 Allow: /
 
