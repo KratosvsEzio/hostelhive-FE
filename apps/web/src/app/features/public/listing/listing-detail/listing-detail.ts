@@ -20,6 +20,7 @@ import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { AnalyticsService } from '@core/analytics/analytics.service';
+import { periodForAccommodation } from '@util/pricing-period';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 import { accommodationLabel } from '@util/accommodation-type';
@@ -583,7 +584,12 @@ export class ListingDetail {
 
     const location = [l.area, l.city].filter(Boolean).join(', ');
     const genderLabel = this.genderLabel(l.accommodationType);
-    const price = l.priceFrom ? `from Rs ${l.priceFrom.toLocaleString('en-PK')}/month` : '';
+    // Backpacker beds are priced per night, everything else per month. The old copy said
+    // "/month" for both, which misprices a backpacker hostel in every search result.
+    const per = periodForAccommodation(l.accommodationType) === 'nightly' ? 'night' : 'month';
+    const price = l.priceFrom
+      ? `from Rs ${l.priceFrom.toLocaleString('en-PK')}/${per}`
+      : '';
 
     // Front-load the terms people actually search: name, then gender + location, then
     // price. Descriptions are truncated around 160 characters in results, so the
@@ -597,8 +603,21 @@ export class ListingDetail {
       .join(' ')
       .slice(0, 300);
 
+    // The shared card, which is where this site actually spreads. Leads with what the
+    // place is rather than its name, and carries the two facts that decide a click here:
+    // price, and whether meals are included.
+    const socialTitle = [
+      `${genderLabel} hostel in ${location}`,
+      l.priceFrom ? `Rs ${l.priceFrom.toLocaleString('en-PK')}/${per === 'night' ? 'night' : 'mo'}` : '',
+      this.hasMess(l) ? 'Mess included' : '',
+      l.verified ? 'Verified' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+
     this.seo.apply({
       title: `${l.name} — ${genderLabel} hostel in ${location} | HostelHive`,
+      socialTitle,
       description,
       path: `/hostel/${l.slug ?? ''}`,
       image: l.images?.[0],
@@ -647,6 +666,18 @@ export class ListingDetail {
 
   protected roomTint(index: number): string {
     return ROOM_TINTS[index % ROOM_TINTS.length];
+  }
+
+  /**
+   * Whether the hostel feeds its residents.
+   *
+   * Not a field: mess is one of the host's free-text offers, so this matches the same
+   * words `offerIcon` does. It is the single most asked question about a Pakistani
+   * hostel, which is why it earns a place in the shared card and the structured data.
+   */
+  private hasMess(l: { offerNames?: string[]; amenities?: string[] }): boolean {
+    const words = [...(l.offerNames ?? []), ...(l.amenities ?? [])].join(' ').toLowerCase();
+    return /\bmess\b|meal|food|dining/.test(words);
   }
 
   protected genderLabel(g: AccommodationType): string {

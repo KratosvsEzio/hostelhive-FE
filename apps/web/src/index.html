@@ -34,6 +34,20 @@
     <meta property="og:image" content="https://hostelhive.com/hostelhive-logo.png" />
     <meta property="og:locale" content="en_PK" />
 
+    <!--
+      App deep links. Site-wide constants, so they live here rather than being rewritten
+      per page. A shared HostelHive link opens the app for anyone who has it installed,
+      and offers the install to anyone who does not.
+
+      Android only for now: `ios/` has never been generated and there is no App Store id
+      to point at, so the iOS equivalents would advertise an app that does not exist.
+      Add `twitter:app:id:iphone` and `al:ios:app_store_id` when it ships.
+    -->
+    <meta name="twitter:app:name:googleplay" content="HostelHive" />
+    <meta name="twitter:app:id:googleplay" content="com.hostelhive.app" />
+    <meta property="al:android:package" content="com.hostelhive.app" />
+    <meta property="al:android:app_name" content="HostelHive" />
+
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="HostelHive — Find verified hostels in Pakistan" />
     <meta

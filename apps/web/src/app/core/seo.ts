@@ -18,6 +18,16 @@ const DEFAULT_IMAGE = `${SITE_ORIGIN}/hostelhive-logo.png`;
 
 export interface SeoConfig {
   title: string;
+  /**
+   * Overrides `title` for Open Graph and Twitter only.
+   *
+   * The two want different things. `<title>` leads with the hostel's name, because that
+   * is what a branded or returning search looks for. A shared card has no such context —
+   * nobody in a WhatsApp group recognises "Al-Madina Hostel" — so it leads with what the
+   * place *is*: type, area, price. Airbnb does the same, dropping the property name from
+   * `og:title` entirely.
+   */
+  socialTitle?: string;
   description?: string;
   /** Path only, e.g. `/hostel/al-madina`. Query strings are dropped from the canonical. */
   path?: string;
@@ -70,7 +80,8 @@ export class Seo {
 
     this.setCanonical(url);
 
-    this.meta.updateTag({ property: 'og:title', content: title });
+    const social = config.socialTitle?.trim() || title;
+    this.meta.updateTag({ property: 'og:title', content: social });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:url', content: url });
     this.meta.updateTag({ property: 'og:image', content: image });
@@ -78,7 +89,7 @@ export class Seo {
     this.meta.updateTag({ property: 'og:site_name', content: 'HostelHive' });
 
     this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
-    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:title', content: social });
     this.meta.updateTag({ name: 'twitter:description', content: description });
     this.meta.updateTag({ name: 'twitter:image', content: image });
   }
