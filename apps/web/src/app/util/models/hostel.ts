@@ -298,16 +298,6 @@ export interface RoomTypeInput {
    * what makes the same `price` mean per-room on one row and per-bed on the next.
    */
   occupancy_type?: string;
-  /**
-   * `month` | `day`. Backend slugs — the frontend says "nightly" and translates at this
-   * boundary (see `util/pricing-period`).
-   *
-   * The backend permits this per room type, but the product rule is one cycle per hostel: a
-   * host cannot price one room monthly and another nightly. The form writes the hostel's
-   * single choice onto every row rather than exposing it per room, so a mixed hostel is never
-   * submitted even though the schema would accept one.
-   */
-  billing_frequency?: string;
   /** Optional. When set, this is the price charged. Must be strictly below `price`. */
   discounted_price?: number | null;
   /** Whether the discount is live. Derived from `discounted_price` rather than set by hand. */
@@ -334,6 +324,16 @@ export interface HostelInput {
   description?: string;
   gender_type?: HostelGenderType | number;
   property_type?: HostelPropertyType | number;
+  /**
+   * `month` | `day` — how this hostel prices everything.
+   *
+   * A hostel field, not a per-room one. Pricing one room monthly and another nightly would be
+   * incoherent to a seeker comparing them, and holding the rule here makes a mixed hostel
+   * unrepresentable rather than merely rejected on save.
+   *
+   * The frontend says "nightly" and translates at this boundary — see `util/pricing-period`.
+   */
+  billing_frequency?: string;
   total_rooms?: number;
   total_floors?: number;
   address_1?: string;

@@ -146,6 +146,7 @@ interface EditableHostel {
   landmarks: string;
   propertyType: string;
   genderType: string;
+  billingFrequency: string;
   currency: string;
   offerIds: string[];
   email: string;
@@ -278,11 +279,8 @@ export class HostelForm {
   protected readonly newRtOccupancy = signal<string>(DEFAULT_OCCUPANCY_TYPE);
 
   /**
-   * How this hostel prices everything — one value for the whole property.
-   *
-   * The backend permits a frequency per room type, but a hostel that priced one room monthly
-   * and another nightly would be incoherent to a seeker comparing them. Asked once here and
-   * written onto every row at save.
+   * How this hostel prices everything — one value for the whole property, and a hostel field
+   * on the backend rather than something copied onto every room at save.
    *
    * Backend slugs are `month` and `day`; the product says "nightly" and translates here.
    */
@@ -360,6 +358,8 @@ export class HostelForm {
       landmarks: d.nearby_landmarks ?? '',
       propertyType: d.property_type ?? '',
       genderType: d.gender_type ?? '',
+      billingFrequency:
+        (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
       currency: d.currency ?? DEFAULT_CURRENCY_CODE,
       offerIds: [...offerIds].sort(),
       email: '',
@@ -380,6 +380,7 @@ export class HostelForm {
     landmarks: this.landmarks(),
     propertyType: this.propertyType(),
     genderType: this.genderType(),
+    billingFrequency: this.billingFrequency(),
     currency: this.currency(),
     offerIds: [...this.selectedOfferIds()].sort(),
     email: this.email(),
@@ -463,6 +464,9 @@ export class HostelForm {
       this.landmarks.set(d.nearby_landmarks ?? '');
       this.propertyType.set(d.property_type ?? '');
       this.genderType.set(d.gender_type ?? '');
+      this.billingFrequency.set(
+        (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
+      );
       this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
       this.email.set('');
       this.phone.set(d.primary_phone ?? '');
@@ -509,6 +513,15 @@ export class HostelForm {
   }
   protected setGender(v: string | string[] | null): void {
     this.genderType.set(typeof v === 'string' ? v : '');
+  }
+  /**
+   * Ignores a cleared value rather than falling back to empty.
+   *
+   * Every room's price is a bare number whose meaning comes from this field, so a hostel with
+   * no cycle at all prices nothing — unlike gender, which can legitimately be unset.
+   */
+  protected setBillingFrequency(v: string | string[] | null): void {
+    if (typeof v === 'string' && v) this.billingFrequency.set(v);
   }
   protected setCurrency(v: string | string[] | null): void {
     if (typeof v === 'string' && v) this.currency.set(v);
@@ -796,6 +809,7 @@ export class HostelForm {
       description: snap.description,
       property_type: snap.propertyType as HostelInput['property_type'],
       gender_type: snap.genderType as HostelInput['gender_type'],
+      billing_frequency: snap.billingFrequency,
       currency: snap.currency,
       nearby_landmarks: snap.landmarks || undefined,
       offer_ids: snap.offerIds,
@@ -807,10 +821,6 @@ export class HostelForm {
           capacity: rt.capacity,
           price: rt.price,
           occupancy_type: rt.occupancyType,
-          // The backend permits a frequency per room type; the product rule is one cycle per
-          // hostel. Writing the hostel's single choice onto every row means a mixed hostel is
-          // never submitted, even though the schema would accept one.
-          billing_frequency: this.billingFrequency(),
           // Both travel, always. The price is kept even while the switch is off, which is
           // what lets a host end a promotion and restart it later without retyping it.
           description: rt.description || undefined,
