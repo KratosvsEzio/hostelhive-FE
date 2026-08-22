@@ -96,8 +96,45 @@ export function formatCurrencyLabel(c: Currency): string {
   return showSymbol ? `${c.name} - ${c.code} (${c.symbol})` : `${c.name} - ${c.code}`;
 }
 
+/**
+ * Currencies a host may CHOOSE, narrowed to PKR and USD for launch.
+ *
+ * Deliberately a filter over CURRENCIES rather than a cut to that list: CURRENCIES also
+ * backs `currencySymbol()` and `currencyName()`, which render prices that ALREADY exist.
+ * Removing entries there would downgrade a listing priced in, say, THB from '฿ 50' to
+ * 'THB 50' and its tooltip from 'Thai Baht' to 'THB' — the app must still display what it
+ * no longer offers.
+ *
+ * Uncomment a code to put it back in the picker.
+ */
+const LAUNCH_CURRENCY_CODES: readonly string[] = [
+  'PKR',
+  'USD',
+  // 'EUR', 'GBP', 'AED', 'SAR',
+  // 'INR', 'BDT', 'LKR', 'NPR',
+  // 'AFN', 'CNY', 'JPY', 'KRW',
+  // 'HKD', 'SGD', 'MYR', 'IDR',
+  // 'THB', 'VND', 'PHP', 'TWD',
+  // 'AUD', 'NZD', 'CAD', 'CHF',
+  // 'SEK', 'NOK', 'DKK', 'PLN',
+  // 'CZK', 'HUF', 'RON', 'BGN',
+  // 'RUB', 'UAH', 'TRY', 'ILS',
+  // 'EGP', 'ZAR', 'NGN', 'KES',
+  // 'GHS', 'MAD', 'DZD', 'TND',
+  // 'QAR', 'KWD', 'BHD', 'OMR',
+  // 'JOD', 'LBP', 'IQD', 'IRR',
+  // 'BRL', 'MXN', 'ARS', 'CLP',
+  // 'COP', 'PEN', 'UYU', 'BOB',
+  // 'ISK', 'HRK', 'RSD', 'MMK',
+  // 'KHR', 'LAK', 'MNT', 'KZT',
+  // 'UZS', 'GEL', 'AZN', 'ETB',
+  // 'TZS', 'UGX',
+];
+
 /** Dropdown options for the currency picker, keyed by ISO code. */
-export const CURRENCY_OPTIONS: DropdownOption[] = CURRENCIES.map((c) => ({
+export const CURRENCY_OPTIONS: DropdownOption[] = CURRENCIES.filter((c) =>
+  LAUNCH_CURRENCY_CODES.includes(c.code),
+).map((c) => ({
   value: c.code,
   label: formatCurrencyLabel(c),
 }));
