@@ -281,12 +281,41 @@ export interface HostelOfferInput {
   _destroy?: boolean;
 }
 /** A nested room_types_attributes row. */
+/**
+ * A nested `room_types_attributes` row, matching the backend's permitted params.
+ *
+ * The five named tiers are gone: `name` is now free text the host writes ("Deluxe 6 Bed
+ * Private Ensuite"), and the axis a seeker shops on is `occupancy_type`.
+ */
 export interface RoomTypeInput {
   id?: number;
   name: string;
   description?: string;
   capacity: number;
   price: number;
+  /**
+   * `private` | `shared`. Private rooms sell whole rooms; shared rooms sell beds — which is
+   * what makes the same `price` mean per-room on one row and per-bed on the next.
+   */
+  occupancy_type?: string;
+  /**
+   * `month` | `day`. Backend slugs — the frontend says "nightly" and translates at this
+   * boundary (see `util/pricing-period`).
+   *
+   * The backend permits this per room type, but the product rule is one cycle per hostel: a
+   * host cannot price one room monthly and another nightly. The form writes the hostel's
+   * single choice onto every row rather than exposing it per room, so a mixed hostel is never
+   * submitted even though the schema would accept one.
+   */
+  billing_frequency?: string;
+  /** Optional. When set, this is the price charged. Must be strictly below `price`. */
+  discounted_price?: number | null;
+  /** Whether the discount is live. Derived from `discounted_price` rather than set by hand. */
+  is_discountable?: boolean;
+  /** The host's online-booking toggle. A room that is not bookable never reaches the picker. */
+  is_bookable?: boolean;
+  /** Room photos. Capped at 3 by the form. */
+  attachment_ids?: (number | string)[];
   _destroy?: boolean;
 }
 /** A nested rooms_attributes row. */

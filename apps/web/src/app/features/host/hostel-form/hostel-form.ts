@@ -44,6 +44,12 @@ import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/ma
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
+import {
+  DEFAULT_OCCUPANCY_TYPE,
+  discountError,
+  isValidDiscount,
+} from '@util/occupancy-type';
+import { MIN_ROOM_CAPACITY } from '@util/room-types';
 
 function toLabel(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -71,12 +77,52 @@ interface EditPhoto {
   format?: string;
 }
 
+/**
+ * A room type from the API, as the form edits it.
+ *
+ * The new fields fall back rather than assuming: a response that predates them yields a
+ * shared room with no discount and booking switched off, which is the safe reading of every
+ * absent value — a room never becomes bookable because a field was missing.
+ */
+function toEditRoomType(r: {
+  id: number;
+  name: string;
+  capacity: number;
+  price: number;
+}): EditRoomType {
+  const raw = r as typeof r & {
+    occupancy_type?: string;
+    discounted_price?: number | null;
+    is_discountable?: boolean;
+    is_bookable?: boolean;
+  };
+  return {
+    _key: String(r.id),
+    id: r.id,
+    name: r.name,
+    capacity: r.capacity,
+    price: r.price,
+    occupancyType: raw.occupancy_type ?? DEFAULT_OCCUPANCY_TYPE,
+    discountedPrice: raw.discounted_price ?? null,
+    discountEnabled: raw.is_discountable ?? false,
+    bookable: raw.is_bookable ?? false,
+  };
+}
+
 export interface EditRoomType {
   _key: string;
   id?: number;
   name: string;
   capacity: number;
   price: number;
+  /** `private` | `shared` — how the room is sold, and what its price is per. */
+  occupancyType: string;
+  /** Optional. When set and enabled, it is the price charged. Must be strictly below `price`. */
+  discountedPrice: number | null;
+  /** Whether that discount is live. Off keeps the figure without applying it. */
+  discountEnabled: boolean;
+  /** The host's online-booking toggle. Off unless they opt in. */
+  bookable: boolean;
 }
 
 interface EditableHostel {
@@ -214,17 +260,37 @@ export class HostelForm {
   protected readonly newRtName = signal('');
   protected readonly newRtCapacity = signal(1);
   protected readonly newRtPrice = signal(0);
+  protected readonly newRtOccupancy = signal<string>(DEFAULT_OCCUPANCY_TYPE);
+
+  /**
+   * How this hostel prices everything — one value for the whole property.
+   *
+   * The backend permits a frequency per room type, but a hostel that priced one room monthly
+   * and another nightly would be incoherent to a seeker comparing them. Asked once here and
+   * written onto every row at save.
+   *
+   * Backend slugs are `month` and `day`; the product says "nightly" and translates here.
+   */
+  protected readonly billingFrequency = signal<string>('month');
+  protected readonly billingOptions = [
+    { value: 'month', label: 'Per month' },
+    { value: 'day', label: 'Per night' },
+  ];
+  protected readonly newRtDiscount = signal<number | null>(null);
+  protected readonly newRtDiscountEnabled = signal(false);
+  protected readonly newRtBookable = signal(false);
   protected readonly usedRtNames = computed(() => this.roomTypes().map((rt) => rt.name));
   protected readonly newRtError = computed(() => {
     if (!this.addRtOpen()) return '';
     const name = this.newRtName().trim();
-    if (!name) return 'Select a room type.';
-    if (name === 'Dormitory') {
-      const cap = this.newRtCapacity();
-      if (cap < 5) return 'Dormitory capacity must be at least 5.';
-      if (cap > 200) return 'Dormitory capacity cannot exceed 200.';
-    }
+    if (!name) return 'Give this room a name.';
+    if (this.newRtCapacity() < MIN_ROOM_CAPACITY) return 'Capacity must be at least 1.';
     if (this.newRtPrice() <= 0) return 'Enter a price greater than 0.';
+    // Checked here as well as in the row: this is the only path that creates a room type,
+    // and an invalid pair reaching the payload is worse than an early message.
+    if (!isValidDiscount(this.newRtPrice(), this.newRtDiscount())) {
+      return discountError(this.newRtPrice(), this.newRtDiscount(), this.currency());
+    }
     return '';
   });
 
@@ -405,13 +471,7 @@ export class HostelForm {
       this.pendingAttachmentIds.set([]);
       this.newPhotoMap.set(new Map());
       this.savedSnapshot.set(null);
-      const rts = (d.room_types ?? []).map((r) => ({
-        _key: String(r.id),
-        id: r.id,
-        name: r.name,
-        capacity: r.capacity,
-        price: r.price,
-      }));
+      const rts = (d.room_types ?? []).map(toEditRoomType);
       this.roomTypes.set(rts);
       this.origRoomTypes.set(rts.map((r) => ({ ...r })));
       this.removedRts.set([]);
@@ -481,16 +541,41 @@ export class HostelForm {
   }
 
   // ── room types ──
-  protected updateRt(key: string, field: 'name' | 'capacity' | 'price', value: string | number): void {
+  protected updateRt(
+    key: string,
+    field:
+      | 'name'
+      | 'capacity'
+      | 'price'
+      | 'occupancyType'
+      | 'discountedPrice'
+      | 'discountEnabled'
+      | 'bookable',
+    value: string | number | boolean | null,
+  ): void {
     this.roomTypes.update((list) =>
       list.map((rt) => (rt._key === key ? { ...rt, [field]: value } : rt)),
     );
   }
+
+  /**
+   * Rooms whose discount is not a discount, named so the section can refuse to save.
+   *
+   * The row shows its own inline message; this is what stops an invalid pair reaching the
+   * payload from a row the host has scrolled past.
+   */
+  protected readonly rtDiscountErrors = computed(() =>
+    this.roomTypes().filter((rt) => !isValidDiscount(rt.price, rt.discountedPrice)),
+  );
   protected openAddRt(): void {
     this.addRtOpen.set(true);
     this.newRtName.set('');
     this.newRtCapacity.set(1);
     this.newRtPrice.set(0);
+    this.newRtOccupancy.set(DEFAULT_OCCUPANCY_TYPE);
+    this.newRtDiscount.set(null);
+    this.newRtDiscountEnabled.set(false);
+    this.newRtBookable.set(false);
   }
   protected closeAddRt(): void {
     this.addRtOpen.set(false);
@@ -502,7 +587,16 @@ export class HostelForm {
     if (!name || cap < 1) return;
     this.roomTypes.update((list) => [
       ...list,
-      { _key: `new-${Date.now()}`, name, capacity: cap, price },
+      {
+        _key: `new-${Date.now()}`,
+        name,
+        capacity: cap,
+        price,
+        occupancyType: this.newRtOccupancy(),
+        discountedPrice: this.newRtDiscount(),
+        discountEnabled: this.newRtDiscountEnabled(),
+        bookable: this.newRtBookable(),
+      },
     ]);
     this.closeAddRt();
   }
@@ -637,6 +731,16 @@ export class HostelForm {
           name: rt.name,
           capacity: rt.capacity,
           price: rt.price,
+          occupancy_type: rt.occupancyType,
+          // The backend permits a frequency per room type; the product rule is one cycle per
+          // hostel. Writing the hostel's single choice onto every row means a mixed hostel is
+          // never submitted, even though the schema would accept one.
+          billing_frequency: this.billingFrequency(),
+          // Both travel, always. The price is kept even while the switch is off, which is
+          // what lets a host end a promotion and restart it later without retyping it.
+          discounted_price: rt.discountedPrice,
+          is_discountable: rt.discountEnabled,
+          is_bookable: rt.bookable,
         })),
         ...this.removedRts()
           .filter((rt) => rt.id != null)
@@ -661,13 +765,7 @@ export class HostelForm {
     this.savedSnapshot.set(this.currentSnapshot());
     this.pendingAttachmentIds.set([]);
     this.newPhotoMap.set(new Map());
-    const serverRts = (hostel.room_types ?? []).map((r) => ({
-      _key: String(r.id),
-      id: r.id,
-      name: r.name,
-      capacity: r.capacity,
-      price: r.price,
-    }));
+    const serverRts = (hostel.room_types ?? []).map(toEditRoomType);
     this.roomTypes.set(serverRts);
     this.origRoomTypes.set(serverRts.map((r) => ({ ...r })));
     this.removedRts.set([]);
