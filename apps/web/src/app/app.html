@@ -1,27 +1,22 @@
-<!-- TEMPORARY (testing): the shell waits on the base-URL gate. Route components snapshot
-     API_CONFIG.baseUrl when they are constructed, so booting them behind the dialog would
-     fire a whole page of requests at the previously stored backend. Unwrap this @if when
-     the gate is removed. -->
-@if (!pending()) {
-  <div class="flex min-h-screen flex-col bg-surface text-ink-800">
-    @if (showHeader()) {
-      <app-site-header />
-    }
-    <!-- Clears the fixed bottom tab bar. Derived from --hh-tabbar-h + the device inset
-         rather than a fixed pb-*, so it stays correct when the bar grows on a
-         gesture-nav device (see .hh-pb-tabbar in global.css). -->
-    <main class="flex-1" [class.hh-pb-tabbar]="showTabBarClearance()"><router-outlet /></main>
-    @if (showFooter()) {
-      <!-- `hidden md:block` mirrors showFooter()'s width half in CSS. The server can't
-           know the viewport, so it always renders the footer; without this the ~650px
-           footer paints on a phone and is then torn out once hydration flips isMobile. -->
-      <app-site-footer class="hidden md:block" />
-    }
-  </div>
-  @if (showSeekerTabs()) {
-    <app-seeker-tab-bar />
+<div class="flex min-h-screen flex-col bg-surface text-ink-800">
+  @if (showHeader()) {
+    <app-site-header />
   }
+  <!-- Clears the fixed bottom tab bar. Derived from --hh-tabbar-h + the device inset
+       rather than a fixed pb-*, so it stays correct when the bar grows on a
+       gesture-nav device (see .hh-pb-tabbar in global.css). -->
+  <main class="flex-1" [class.hh-pb-tabbar]="showTabBarClearance()"><router-outlet /></main>
+  @if (showFooter()) {
+    <!-- `hidden md:block` mirrors showFooter()'s width half in CSS. The server can't
+         know the viewport, so it always renders the footer; without this the ~650px
+         footer paints on a phone and is then torn out once hydration flips isMobile. -->
+    <app-site-footer class="hidden md:block" />
+  }
+</div>
+@if (showSeekerTabs()) {
+  <app-seeker-tab-bar />
 }
+
 <!-- App-wide toasts (API failures, etc.) — floats above all chrome, every route. -->
 <app-toast-host />
 @if (showConsentBanner()) {

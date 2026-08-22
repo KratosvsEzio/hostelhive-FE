@@ -675,6 +675,11 @@ export class SearchMap {
     // server-rendered head, so a canonical added after hydration is a canonical nobody
     // authoritative reads.
     effect(() => {
+      // Embedded in a landing page, which owns the head: it has already set a title,
+      // description and canonical describing itself. Writing ours over the top made
+      // /hostels/lahore claim to be a search page.
+      if (this.seed()) return;
+
       const place = this.canonicalPlace();
       const filtered = this.hasFilters();
       const name = this.locationName();
