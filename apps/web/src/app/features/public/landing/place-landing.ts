@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { Faq, faqJsonLd, placeFaqs } from './place-faqs';
 import { findUniversity, universitiesIn } from './universities';
@@ -191,7 +190,7 @@ export class PlaceLanding {
                 {
                   '@type': 'ListItem',
                   position: 3,
-                  name: u ? `Near ${u.shortName}` : g!.label,
+                  name: u ? `Near ${u.shortName}` : (g?.label ?? ''),
                   item: `${SITE_ORIGIN}${path}`,
                 },
               ]

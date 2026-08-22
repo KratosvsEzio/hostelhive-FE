@@ -40,9 +40,10 @@ describe('university registry', () => {
   // means by "near". A campus sitting exactly on its city's coordinates is a copy-paste.
   it('uses campus coordinates rather than the city centre', () => {
     for (const u of UNIVERSITIES) {
-      const place = PLACES.find((p) => p.slug === u.placeSlug)!;
-      expect(u.lat).not.toBe(place.lat);
-      expect(u.lng).not.toBe(place.lng);
+      const place = PLACES.find((p) => p.slug === u.placeSlug);
+      expect(place).toBeDefined();
+      expect(u.lat).not.toBe(place?.lat);
+      expect(u.lng).not.toBe(place?.lng);
       // Pakistan's bounding box, roughly — catches a transposed lat/lng.
       expect(u.lat).toBeGreaterThan(23);
       expect(u.lat).toBeLessThan(37);
