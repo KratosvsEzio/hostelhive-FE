@@ -5,6 +5,7 @@ import { Observable, filter, map, of, switchMap, take } from 'rxjs';
 
 import { HostLayout } from '@layout/host-shell/host-shell';
 
+import { HostBookings } from './bookings/bookings';
 import { Rooms } from './rooms/rooms';
 import { HostMore } from './more/more';
 import { HostTeam } from './team/team';
@@ -131,6 +132,11 @@ export const HOST_ROUTES: Route[] = [
           { path: '', pathMatch: 'full', component: HostTeam, title: 'Team & staff — HostelHive' },
           { path: 'edit/:staffId', component: HostTeam, title: 'Edit staff — HostelHive' },
         ],
+      },
+      {
+        path: 'bookings',
+        component: HostBookings,
+        title: 'Bookings — HostelHive',
       },
       {
         path: 'rooms',

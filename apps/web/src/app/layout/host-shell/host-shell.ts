@@ -199,6 +199,7 @@ export class HostLayout {
       { label: 'Overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
       { label: 'Hostel profile', icon: 'ti-building',         link: `${b}/profile`,      permission: 'host:Hostel:show' },
       { label: 'Rooms',          icon: 'ti-bed',              link: `${b}/rooms`,        permission: 'host:Room:index' },
+      { label: 'Bookings',       icon: 'ti-calendar',         link: `${b}/bookings`,     permission: 'host:Room:index' },
       { label: 'Tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
       { label: 'Team & staff',   icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
       { label: 'Utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
@@ -229,8 +230,20 @@ export class HostLayout {
     }))
   );
 
-  protected readonly propertiesLoading = computed(
-    () => this.propertyStore.properties().length === 0 && !!this.propertyStore.selected(),
+  /**
+   * Spinner state for the property switcher.
+   *
+   * Driven by the store's `loaded` flag, which flips true whether the fetch succeeded or
+   * failed. It previously inferred loading from "no properties but a selected id" — which
+   * is precisely the state a FAILED fetch leaves behind, because the selected id is
+   * restored from localStorage while the list stays empty. The switcher then span forever
+   * on any backend error, with no way for the user to tell a slow request from a dead one.
+   */
+  protected readonly propertiesLoading = computed(() => !this.propertyStore.loaded());
+
+  /** Empty because the fetch failed, rather than because this host has no hostels yet. */
+  protected readonly propertiesUnavailable = computed(
+    () => this.propertyStore.loaded() && this.propertyStore.properties().length === 0,
   );
 
   protected onPropertySelect(value: string | string[] | null): void {

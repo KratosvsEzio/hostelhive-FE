@@ -281,12 +281,31 @@ export interface HostelOfferInput {
   _destroy?: boolean;
 }
 /** A nested room_types_attributes row. */
+/**
+ * A nested `room_types_attributes` row, matching the backend's permitted params.
+ *
+ * The five named tiers are gone: `name` is now free text the host writes ("Deluxe 6 Bed
+ * Private Ensuite"), and the axis a seeker shops on is `occupancy_type`.
+ */
 export interface RoomTypeInput {
   id?: number;
   name: string;
   description?: string;
   capacity: number;
   price: number;
+  /**
+   * `private` | `shared`. Private rooms sell whole rooms; shared rooms sell beds — which is
+   * what makes the same `price` mean per-room on one row and per-bed on the next.
+   */
+  occupancy_type?: string;
+  /** Optional. When set, this is the price charged. Must be strictly below `price`. */
+  discounted_price?: number | null;
+  /** Whether the discount is live. Derived from `discounted_price` rather than set by hand. */
+  is_discountable?: boolean;
+  /** The host's online-booking toggle. A room that is not bookable never reaches the picker. */
+  is_bookable?: boolean;
+  /** Room photos. Capped at 3 by the form. */
+  attachment_ids?: (number | string)[];
   _destroy?: boolean;
 }
 /** A nested rooms_attributes row. */
@@ -305,6 +324,16 @@ export interface HostelInput {
   description?: string;
   gender_type?: HostelGenderType | number;
   property_type?: HostelPropertyType | number;
+  /**
+   * `month` | `night` — how this hostel prices everything.
+   *
+   * A hostel field, not a per-room one. Pricing one room monthly and another nightly would be
+   * incoherent to a seeker comparing them, and holding the rule here makes a mixed hostel
+   * unrepresentable rather than merely rejected on save.
+   *
+   * The frontend says "nightly" and translates at this boundary — see `util/pricing-period`.
+   */
+  billing_frequency?: string;
   total_rooms?: number;
   total_floors?: number;
   address_1?: string;
@@ -370,6 +399,8 @@ export interface HostelFormOptionsResponse {
   success: boolean;
   gender_types: HostelEnumOption[];
   property_types: HostelEnumOption[];
+  /** `month` | `night` — how a hostel prices everything. */
+  billing_frequency_types?: HostelEnumOption[];
   attachment_labels?: AttachmentLabel[];
   errors?: string[];
 }

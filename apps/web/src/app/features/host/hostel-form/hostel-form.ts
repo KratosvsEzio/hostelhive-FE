@@ -44,6 +44,15 @@ import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/ma
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
+import {
+  DEFAULT_OCCUPANCY_TYPE,
+  discountError,
+  isValidDiscount,
+} from '@util/occupancy-type';
+import { MAX_ROOM_IMAGES, MIN_ROOM_CAPACITY, RoomImage } from '@util/room-types';
+
+/** Stands in for the not-yet-added row, which has no `_key` until it is committed. */
+const NEW_RT_KEY = '__new__';
 
 function toLabel(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -71,12 +80,64 @@ interface EditPhoto {
   format?: string;
 }
 
+/**
+ * A room type from the API, as the form edits it.
+ *
+ * The new fields fall back rather than assuming: a response that predates them yields a
+ * shared room with no discount and booking switched off, which is the safe reading of every
+ * absent value — a room never becomes bookable because a field was missing.
+ */
+function toEditRoomType(r: {
+  id: number;
+  name: string;
+  capacity: number;
+  price: number;
+}): EditRoomType {
+  const raw = r as typeof r & {
+    description?: string | null;
+    occupancy_type?: string;
+    discounted_price?: number | null;
+    is_discountable?: boolean;
+    is_bookable?: boolean;
+    attachments?: { id: string; url?: string; object_url?: string }[] | null;
+  };
+  return {
+    _key: String(r.id),
+    id: r.id,
+    name: r.name,
+    capacity: r.capacity,
+    price: r.price,
+    occupancyType: raw.occupancy_type ?? DEFAULT_OCCUPANCY_TYPE,
+    discountedPrice: raw.discounted_price ?? null,
+    discountEnabled: raw.is_discountable ?? false,
+    bookable: raw.is_bookable ?? false,
+    description: raw.description ?? '',
+    images: (raw.attachments ?? [])
+      .map((a) => ({ id: String(a.id), url: a.url ?? a.object_url ?? '' }))
+      .filter((a) => !!a.url)
+      // Trimmed on read as well as on write: a row that already holds four photos, however
+      // it got that way, should not render a fourth tile the form cannot save.
+      .slice(0, MAX_ROOM_IMAGES),
+  };
+}
+
 export interface EditRoomType {
   _key: string;
   id?: number;
   name: string;
   capacity: number;
   price: number;
+  /** `private` | `shared` — how the room is sold, and what its price is per. */
+  occupancyType: string;
+  /** Optional. When set and enabled, it is the price charged. Must be strictly below `price`. */
+  discountedPrice: number | null;
+  /** Whether that discount is live. Off keeps the figure without applying it. */
+  discountEnabled: boolean;
+  description: string;
+  /** Up to MAX_ROOM_IMAGES. Their ids become `attachment_ids` on save. */
+  images: RoomImage[];
+  /** The host's online-booking toggle. Off unless they opt in. */
+  bookable: boolean;
 }
 
 interface EditableHostel {
@@ -85,6 +146,7 @@ interface EditableHostel {
   landmarks: string;
   propertyType: string;
   genderType: string;
+  billingFrequency: string;
   currency: string;
   offerIds: string[];
   email: string;
@@ -156,6 +218,7 @@ export class HostelForm {
         of({
           genderTypes: [] as HostelEnumOption[],
           propertyTypes: [] as HostelEnumOption[],
+          billingFrequencyTypes: [] as HostelEnumOption[],
           attachmentLabels: [] as { id: number | string; name: string }[],
         }),
       ),
@@ -164,6 +227,7 @@ export class HostelForm {
       initialValue: {
         genderTypes: [] as HostelEnumOption[],
         propertyTypes: [] as HostelEnumOption[],
+        billingFrequencyTypes: [] as HostelEnumOption[],
         attachmentLabels: [] as { id: number | string; name: string }[],
       },
     },
@@ -214,17 +278,53 @@ export class HostelForm {
   protected readonly newRtName = signal('');
   protected readonly newRtCapacity = signal(1);
   protected readonly newRtPrice = signal(0);
+  protected readonly newRtOccupancy = signal<string>(DEFAULT_OCCUPANCY_TYPE);
+
+  /**
+   * How this hostel prices everything — one value for the whole property, and a hostel field
+   * on the backend rather than something copied onto every room at save.
+   *
+   * Backend slugs are `month` and `day`; the product says "nightly" and translates here.
+   */
+  protected readonly billingFrequency = signal<string>('month');
+  /**
+   * From `GET /api/hostels/new`, like every other enum on this form.
+   *
+   * The hardcoded pair is only a fallback for a failed options call — it keeps the control
+   * usable rather than rendering an empty dropdown a host cannot get past, and the slugs match
+   * what the endpoint returns.
+   */
+  protected readonly billingOptions = computed<DropdownOption[]>(() => {
+    const fromApi = this.formOptions().billingFrequencyTypes;
+    if (fromApi.length) {
+      return fromApi.map((b) => ({ value: b.slug, label: `Per ${b.name.toLowerCase()}` }));
+    }
+    return [
+      { value: 'month', label: 'Per month' },
+      { value: 'night', label: 'Per night' },
+    ];
+  });
+  protected readonly newRtDiscount = signal<number | null>(null);
+  protected readonly newRtDiscountEnabled = signal(false);
+  protected readonly newRtDescription = signal('');
+  protected readonly newRtImages = signal<RoomImage[]>([]);
+
+  /** Room type key currently uploading a photo, so only its tile spins. */
+  protected readonly uploadingRtImage = signal<string | null>(null);
+  protected readonly rtImageError = signal('');
+  protected readonly newRtBookable = signal(false);
   protected readonly usedRtNames = computed(() => this.roomTypes().map((rt) => rt.name));
   protected readonly newRtError = computed(() => {
     if (!this.addRtOpen()) return '';
     const name = this.newRtName().trim();
-    if (!name) return 'Select a room type.';
-    if (name === 'Dormitory') {
-      const cap = this.newRtCapacity();
-      if (cap < 5) return 'Dormitory capacity must be at least 5.';
-      if (cap > 200) return 'Dormitory capacity cannot exceed 200.';
-    }
+    if (!name) return 'Give this room a name.';
+    if (this.newRtCapacity() < MIN_ROOM_CAPACITY) return 'Capacity must be at least 1.';
     if (this.newRtPrice() <= 0) return 'Enter a price greater than 0.';
+    // Checked here as well as in the row: this is the only path that creates a room type,
+    // and an invalid pair reaching the payload is worse than an early message.
+    if (!isValidDiscount(this.newRtPrice(), this.newRtDiscount())) {
+      return discountError(this.newRtPrice(), this.newRtDiscount(), this.currency());
+    }
     return '';
   });
 
@@ -273,6 +373,8 @@ export class HostelForm {
       landmarks: d.nearby_landmarks ?? '',
       propertyType: d.property_type ?? '',
       genderType: d.gender_type ?? '',
+      billingFrequency:
+        (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
       currency: d.currency ?? DEFAULT_CURRENCY_CODE,
       offerIds: [...offerIds].sort(),
       email: '',
@@ -293,6 +395,7 @@ export class HostelForm {
     landmarks: this.landmarks(),
     propertyType: this.propertyType(),
     genderType: this.genderType(),
+    billingFrequency: this.billingFrequency(),
     currency: this.currency(),
     offerIds: [...this.selectedOfferIds()].sort(),
     email: this.email(),
@@ -376,6 +479,9 @@ export class HostelForm {
       this.landmarks.set(d.nearby_landmarks ?? '');
       this.propertyType.set(d.property_type ?? '');
       this.genderType.set(d.gender_type ?? '');
+      this.billingFrequency.set(
+        (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
+      );
       this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
       this.email.set('');
       this.phone.set(d.primary_phone ?? '');
@@ -405,13 +511,7 @@ export class HostelForm {
       this.pendingAttachmentIds.set([]);
       this.newPhotoMap.set(new Map());
       this.savedSnapshot.set(null);
-      const rts = (d.room_types ?? []).map((r) => ({
-        _key: String(r.id),
-        id: r.id,
-        name: r.name,
-        capacity: r.capacity,
-        price: r.price,
-      }));
+      const rts = (d.room_types ?? []).map(toEditRoomType);
       this.roomTypes.set(rts);
       this.origRoomTypes.set(rts.map((r) => ({ ...r })));
       this.removedRts.set([]);
@@ -428,6 +528,15 @@ export class HostelForm {
   }
   protected setGender(v: string | string[] | null): void {
     this.genderType.set(typeof v === 'string' ? v : '');
+  }
+  /**
+   * Ignores a cleared value rather than falling back to empty.
+   *
+   * Every room's price is a bare number whose meaning comes from this field, so a hostel with
+   * no cycle at all prices nothing — unlike gender, which can legitimately be unset.
+   */
+  protected setBillingFrequency(v: string | string[] | null): void {
+    if (typeof v === 'string' && v) this.billingFrequency.set(v);
   }
   protected setCurrency(v: string | string[] | null): void {
     if (typeof v === 'string' && v) this.currency.set(v);
@@ -481,16 +590,45 @@ export class HostelForm {
   }
 
   // ── room types ──
-  protected updateRt(key: string, field: 'name' | 'capacity' | 'price', value: string | number): void {
+  protected updateRt(
+    key: string,
+    field:
+      | 'name'
+      | 'capacity'
+      | 'price'
+      | 'occupancyType'
+      | 'discountedPrice'
+      | 'discountEnabled'
+      | 'description'
+      | 'bookable',
+    value: string | number | boolean | null,
+  ): void {
     this.roomTypes.update((list) =>
       list.map((rt) => (rt._key === key ? { ...rt, [field]: value } : rt)),
     );
   }
+
+  /**
+   * Rooms whose discount is not a discount, named so the section can refuse to save.
+   *
+   * The row shows its own inline message; this is what stops an invalid pair reaching the
+   * payload from a row the host has scrolled past.
+   */
+  protected readonly rtDiscountErrors = computed(() =>
+    this.roomTypes().filter((rt) => !isValidDiscount(rt.price, rt.discountedPrice)),
+  );
   protected openAddRt(): void {
     this.addRtOpen.set(true);
     this.newRtName.set('');
     this.newRtCapacity.set(1);
     this.newRtPrice.set(0);
+    this.newRtOccupancy.set(DEFAULT_OCCUPANCY_TYPE);
+    this.newRtDiscount.set(null);
+    this.newRtDiscountEnabled.set(false);
+    this.newRtDescription.set('');
+    this.newRtImages.set([]);
+    this.rtImageError.set('');
+    this.newRtBookable.set(false);
   }
   protected closeAddRt(): void {
     this.addRtOpen.set(false);
@@ -502,10 +640,69 @@ export class HostelForm {
     if (!name || cap < 1) return;
     this.roomTypes.update((list) => [
       ...list,
-      { _key: `new-${Date.now()}`, name, capacity: cap, price },
+      {
+        _key: `new-${Date.now()}`,
+        name,
+        capacity: cap,
+        price,
+        occupancyType: this.newRtOccupancy(),
+        discountedPrice: this.newRtDiscount(),
+        discountEnabled: this.newRtDiscountEnabled(),
+        description: this.newRtDescription(),
+        images: this.newRtImages(),
+        bookable: this.newRtBookable(),
+      },
     ]);
     this.closeAddRt();
   }
+  /**
+   * Uploads a picked photo and attaches its id to the room type.
+   *
+   * `key` is `null` for the not-yet-added row, which has no key of its own yet. The cap is
+   * re-checked here as well as in the row: the picker is hidden at three, but a slow upload
+   * could otherwise let a fourth in behind it.
+   */
+  protected onRtImagePicked(key: string | null, file: File): void {
+    const current = key
+      ? (this.roomTypes().find((r) => r._key === key)?.images ?? [])
+      : this.newRtImages();
+    if (current.length >= MAX_ROOM_IMAGES) return;
+
+    this.rtImageError.set('');
+    this.uploadingRtImage.set(key ?? NEW_RT_KEY);
+    this.imageUpload.upload('attachments', file).subscribe({
+      next: (res) => {
+        const image: RoomImage = { id: res.id, url: res.url };
+        if (key) {
+          this.roomTypes.update((list) =>
+            list.map((r) =>
+              r._key === key ? { ...r, images: [...r.images, image] } : r,
+            ),
+          );
+        } else {
+          this.newRtImages.update((list) => [...list, image]);
+        }
+        this.uploadingRtImage.set(null);
+      },
+      error: () => {
+        this.rtImageError.set('That photo could not be uploaded. Please try again.');
+        this.uploadingRtImage.set(null);
+      },
+    });
+  }
+
+  protected onRtImageRemoved(key: string | null, id: string): void {
+    if (key) {
+      this.roomTypes.update((list) =>
+        list.map((r) =>
+          r._key === key ? { ...r, images: r.images.filter((i) => i.id !== id) } : r,
+        ),
+      );
+    } else {
+      this.newRtImages.update((list) => list.filter((i) => i.id !== id));
+    }
+  }
+
   protected removeRt(key: string): void {
     const rt = this.roomTypes().find((r) => r._key === key);
     if (!rt) return;
@@ -627,6 +824,7 @@ export class HostelForm {
       description: snap.description,
       property_type: snap.propertyType as HostelInput['property_type'],
       gender_type: snap.genderType as HostelInput['gender_type'],
+      billing_frequency: snap.billingFrequency,
       currency: snap.currency,
       nearby_landmarks: snap.landmarks || undefined,
       offer_ids: snap.offerIds,
@@ -637,6 +835,14 @@ export class HostelForm {
           name: rt.name,
           capacity: rt.capacity,
           price: rt.price,
+          occupancy_type: rt.occupancyType,
+          // Both travel, always. The price is kept even while the switch is off, which is
+          // what lets a host end a promotion and restart it later without retyping it.
+          description: rt.description || undefined,
+          discounted_price: rt.discountedPrice,
+          is_discountable: rt.discountEnabled,
+          attachment_ids: rt.images.map((i) => i.id),
+          is_bookable: rt.bookable,
         })),
         ...this.removedRts()
           .filter((rt) => rt.id != null)
@@ -661,13 +867,7 @@ export class HostelForm {
     this.savedSnapshot.set(this.currentSnapshot());
     this.pendingAttachmentIds.set([]);
     this.newPhotoMap.set(new Map());
-    const serverRts = (hostel.room_types ?? []).map((r) => ({
-      _key: String(r.id),
-      id: r.id,
-      name: r.name,
-      capacity: r.capacity,
-      price: r.price,
-    }));
+    const serverRts = (hostel.room_types ?? []).map(toEditRoomType);
     this.roomTypes.set(serverRts);
     this.origRoomTypes.set(serverRts.map((r) => ({ ...r })));
     this.removedRts.set([]);

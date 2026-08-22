@@ -15,7 +15,6 @@
     "wherePlaceholder": "شہر یا علاقہ تلاش کریں",
     "budget": "بجٹ",
     "addBudget": "بجٹ شامل کریں",
-    "sharing": "شیئرنگ",
     "addSharing": "شیئرنگ شامل کریں",
     "search": "تلاش کریں",
     "filters": "فلٹرز",
@@ -23,7 +22,8 @@
     "resultsInArea": "اس علاقے میں {{count}} ہاسٹل",
     "noResults": "ان فلٹرز سے کوئی ہاسٹل نہیں ملا",
     "couldNotLoad": "فہرست لوڈ نہیں ہو سکی",
-    "tryAgain": "دوبارہ کوشش کریں"
+    "tryAgain": "دوبارہ کوشش کریں",
+    "accommodation": "رہائش"
   },
   "accommodation": {
     "boys": "لڑکے",
@@ -170,13 +170,13 @@
     "amenities": "سہولیات",
     "typeOfStay": "رہائش کی قسم",
     "propertyType": "عمارت کی قسم",
-    "roomCapacity": "کمرے کی گنجائش",
     "any": "کوئی بھی",
     "priceRange": "قیمت کی حد",
     "monthlyRate": "ماہانہ کرایہ",
     "sortBy": "ترتیب دیں",
     "clearAll": "سب ہٹا دیں",
-    "showResults": "نتائج دیکھیں"
+    "showResults": "نتائج دیکھیں",
+    "roomType": "کمرے کی قسم"
   },
   "searchUi": {
     "searchCityOrArea": "شہر یا علاقہ تلاش کریں…",
@@ -242,15 +242,14 @@
     "budgetRange": "بجٹ کی حد",
     "reset": "ری سیٹ",
     "addBudget": "بجٹ شامل کریں",
-    "addSharing": "شیئرنگ شامل کریں",
-    "anySharing": "کوئی بھی شیئرنگ",
-    "perRoom1": "1 فی کمرہ",
-    "perRoom2": "2 فی کمرہ",
-    "perRoom3": "3 فی کمرہ",
-    "perRoom4": "4 فی کمرہ",
-    "perRoom5Plus": "5+ فی کمرہ",
     "underAmount": "Rs {{amount}} سے کم",
     "fromAmount": "Rs {{amount}}+",
-    "betweenAmounts": "Rs {{low}}–{{high}}"
+    "betweenAmounts": "Rs {{low}}–{{high}}",
+    "anyAccommodation": "کوئی بھی رہائش",
+    "addAccommodation": "رہائش منتخب کریں",
+    "boys": "لڑکے",
+    "girls": "لڑکیاں",
+    "coliving": "مخلوط رہائش",
+    "backpacker": "بیک پیکر"
   }
 }

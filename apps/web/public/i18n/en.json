@@ -15,7 +15,6 @@
     "wherePlaceholder": "Search city or area",
     "budget": "Budget",
     "addBudget": "Add budget",
-    "sharing": "Sharing",
     "addSharing": "Add sharing",
     "search": "Search",
     "filters": "Filters",
@@ -23,7 +22,8 @@
     "resultsInArea": "{{count}} hostels within map area",
     "noResults": "No hostels match these filters",
     "couldNotLoad": "We couldn't load listings",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "accommodation": "Accommodation"
   },
   "accommodation": {
     "boys": "Boys",
@@ -170,13 +170,13 @@
     "amenities": "Amenities",
     "typeOfStay": "Type of stay",
     "propertyType": "Property type",
-    "roomCapacity": "Room capacity",
     "any": "Any",
     "priceRange": "Price range",
     "monthlyRate": "Monthly rate",
     "sortBy": "Sort by",
     "clearAll": "Clear all",
-    "showResults": "Show results"
+    "showResults": "Show results",
+    "roomType": "Room type"
   },
   "searchUi": {
     "searchCityOrArea": "Search city or area…",
@@ -242,15 +242,14 @@
     "budgetRange": "Budget range",
     "reset": "Reset",
     "addBudget": "Add budget",
-    "addSharing": "Add sharing",
-    "anySharing": "Any sharing",
-    "perRoom1": "1 per room",
-    "perRoom2": "2 per room",
-    "perRoom3": "3 per room",
-    "perRoom4": "4 per room",
-    "perRoom5Plus": "5+ per room",
     "underAmount": "Under Rs {{amount}}",
     "fromAmount": "Rs {{amount}}+",
-    "betweenAmounts": "Rs {{low}}–{{high}}"
+    "betweenAmounts": "Rs {{low}}–{{high}}",
+    "anyAccommodation": "Any accommodation",
+    "addAccommodation": "Add accommodation",
+    "boys": "Boys",
+    "girls": "Girls",
+    "coliving": "Co-living",
+    "backpacker": "Backpacker"
   }
 }

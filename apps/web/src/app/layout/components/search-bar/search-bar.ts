@@ -20,16 +20,18 @@ import { SearchCapacity } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-type Seg = 'where' | 'budget' | 'sharing';
+type Seg = 'where' | 'budget' | 'accommodation';
 
 // Keys rather than copy: these are data, so the template translates them at render.
-const SHARING: { v: string; l: string }[] = [
-  { v: '', l: 'searchBar.anySharing' },
-  { v: '1', l: 'searchBar.perRoom1' },
-  { v: '2', l: 'searchBar.perRoom2' },
-  { v: '3', l: 'searchBar.perRoom3' },
-  { v: '4', l: 'searchBar.perRoom4' },
-  { v: '5+', l: 'searchBar.perRoom5Plus' },
+// Replaces the sharing sizes. Capacity was never the question a seeker could answer from
+// the search bar — the choice is what kind of place it is, and how many share a room is a
+// detail read afterwards on the listing itself.
+const ACCOMMODATIONS: { v: string; l: string }[] = [
+  { v: '', l: 'searchBar.anyAccommodation' },
+  { v: 'boys', l: 'searchBar.boys' },
+  { v: 'girls', l: 'searchBar.girls' },
+  { v: 'coliving', l: 'searchBar.coliving' },
+  { v: 'backpacker', l: 'searchBar.backpacker' },
 ];
 const fmtK = (n: number): string => (n >= 1000 ? `${n / 1000}k` : `${n}`);
 
@@ -58,7 +60,7 @@ export class SearchBar {
   private readonly el = inject(ElementRef);
   private readonly whereEl = viewChild<ElementRef<HTMLElement>>('whereSeg');
 
-  protected readonly sharingOpts = SHARING;
+  protected readonly accommodationOpts = ACCOMMODATIONS;
   protected readonly BUDGET_MIN = BUDGET_MIN;
   protected readonly BUDGET_MAX = BUDGET_MAX;
   protected readonly BUDGET_STEP = BUDGET_STEP;
@@ -70,7 +72,7 @@ export class SearchBar {
   private readonly zoom = signal<number | null>(null);
   protected readonly budgetLow = signal(BUDGET_MIN);
   protected readonly budgetHigh = signal(BUDGET_MAX);
-  protected readonly sharing = signal('');
+  protected readonly accommodation = signal('');
 
   protected readonly budgetActive = computed(
     () => this.budgetLow() > BUDGET_MIN || this.budgetHigh() < BUDGET_MAX,
@@ -100,9 +102,9 @@ export class SearchBar {
       };
     },
   );
-  protected readonly sharingLabel = computed(() => {
-    const s = this.sharing();
-    return (s && SHARING.find((o) => o.v === s)?.l) || 'searchBar.addSharing';
+  protected readonly accommodationLabel = computed(() => {
+    const s = this.accommodation();
+    return (s && ACCOMMODATIONS.find((o) => o.v === s)?.l) || 'searchBar.addAccommodation';
   });
 
   /**
@@ -114,10 +116,14 @@ export class SearchBar {
    * special handling: the router has already accounted for the language prefix.
    */
   private routedLocationSlug(): string {
-    let r: ActivatedRoute | null = this.router.routerState.root;
+    let r: ActivatedRoute | null = this.router.routerState?.root ?? null;
     let slug = '';
     while (r) {
-      slug = r.snapshot.paramMap.get('location') ?? slug;
+      // Read through the snapshot rather than from it. On the server this runs during the
+      // first `queryParamMap` emission, before the router has finished building the tree —
+      // a route exists but has no snapshot yet, and reaching into one threw on every SSR
+      // render of every page carrying the search bar.
+      slug = r.snapshot?.paramMap?.get('location') ?? slug;
       r = r.firstChild;
     }
     return slug;
@@ -139,9 +145,7 @@ export class SearchBar {
       const mx = p.get('maxPrice');
       this.budgetLow.set(mn ? +mn : BUDGET_MIN);
       this.budgetHigh.set(mx ? +mx : BUDGET_MAX);
-      const cap = p.get('capacity') ?? p.get('sharing') ?? '';
-      this.sharing.set(cap);
-      this.capacityStore.active.set(cap);
+      this.accommodation.set(p.get('gender') ?? '');
     });
     // Query params are resolved before the outlet activates, so on a first load the
     // subscription above runs while the route tree is still a stub and the `:location`
@@ -211,9 +215,8 @@ export class SearchBar {
     this.budgetLow.set(BUDGET_MIN);
     this.budgetHigh.set(BUDGET_MAX);
   }
-  protected pickSharing(v: string): void {
-    this.sharing.set(v);
-    this.capacityStore.active.set(v);
+  protected pickAccommodation(v: string): void {
+    this.accommodation.set(v);
     this.open.set(null);
   }
 
@@ -231,7 +234,10 @@ export class SearchBar {
         zoom: hasGeo ? this.zoom() : null,
         minPrice: this.budgetLow() > BUDGET_MIN ? this.budgetLow() : null,
         maxPrice: this.budgetHigh() < BUDGET_MAX ? this.budgetHigh() : null,
-        capacity: this.sharing() || null,
+        gender: this.accommodation() || null,
+        // Retired params, cleared so an old shared URL does not keep filtering by a control
+        // that no longer exists on screen.
+        capacity: null,
         sharing: null,
       },
       queryParamsHandling: 'merge',

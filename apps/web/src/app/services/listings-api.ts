@@ -170,7 +170,8 @@ export class ListingsApi {
       city,
       accommodationType = 'all',
       propertyType,
-      capacity,
+      roomType,
+      frequency,
       minPrice,
       maxPrice,
       near,
@@ -215,14 +216,19 @@ export class ListingsApi {
         accommodationType === 'coliving' ? 'co-living' : accommodationType;
     if (propertyType) params['f[property_type]'] = propertyType;
 
-    // Room capacity — exact match for 1–4; "5+" becomes a >= bound on the nested
-    // room_types.capacity field (a hostel matches if it has a room type that size).
-    // '4plus' is a retired alias kept only so already-shared URLs keep working; nothing
-    // emits it any more.
-    if (capacity) {
-      if (capacity === '5+' || capacity === '4plus') params['f[room_types.capacity][gte]'] = 5;
-      else params['f[room_types.capacity]'] = +capacity;
-    }
+    // Room type — private or shared, the axis that replaced capacity.
+    //
+    // **Inert until the backend indexes `room_type`.** The param is sent so the contract is
+    // in place and shared URLs already carry the intent, but the search document has no such
+    // field yet and a term on a missing field matches nothing — so this is emitted only when
+    // the field exists rather than silently returning zero results. Exactly the position the
+    // amenity filter was in before `offers` reached the index.
+    if (roomType) params['f[room_type]'] = roomType;
+
+    // Pricing cycle. Also inert pending the backend storing it on the hostel; until then the
+    // filter narrows nothing and the seeker-facing effect is limited to re-enabling price
+    // sort, which the UI handles on its own.
+    if (frequency) params['f[billing_frequency_type]'] = frequency;
 
     // Budget band → range on the single `starting_price` (the displayed "from" price). The
     // payload no longer carries min_price/max_price; filtering on those returns zero results

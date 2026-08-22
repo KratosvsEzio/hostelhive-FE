@@ -244,7 +244,7 @@ export class SearchMap {
    */
   private readonly hasFilters = computed(() => {
     const p = this.params();
-    return ['gender', 'propertyType', 'capacity', 'minPrice', 'maxPrice', 'amenities'].some(
+    return ['gender', 'propertyType', 'roomType', 'frequency', 'minPrice', 'maxPrice', 'amenities'].some(
       (k) => !!p?.get(k),
     );
   });
@@ -322,7 +322,8 @@ export class SearchMap {
     return {
       accommodationType: this.accommodationType(),
       propertyType: p?.get('propertyType') || undefined,
-      capacity: p?.get('capacity') || undefined,
+      roomType: p?.get('roomType') || undefined,
+      frequency: p?.get('frequency') || undefined,
       city: c || mb ? undefined : p?.get('city') || undefined,
       near: !mb && c ? { lat: c.lat, lng: c.lng } : undefined,
       bounds: mb ?? undefined,

@@ -11,6 +11,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
 })
 export class AccountShell {
   protected readonly nav = [
+    { path: 'bookings', label: 'Bookings', icon: 'ti-calendar' },
     { path: 'favorites', label: 'Favorites', icon: 'ti-heart' },
     { path: 'settings', label: 'Account settings', icon: 'ti-settings' },
     { path: 'security', label: 'Password & security', icon: 'ti-lock' },

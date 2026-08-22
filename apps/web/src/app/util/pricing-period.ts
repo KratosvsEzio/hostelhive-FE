@@ -8,9 +8,9 @@ import { currencySymbol } from './currencies';
  * and its unit have to travel together — otherwise a nightly rate renders as a monthly one
  * and nothing in the type system objects.
  *
- * Backend slugs are `month` and `day` (from `billing_frequency_type` on `GET /api/hostels/new`).
- * The frontend says `nightly` rather than `daily` because that is the word the product uses
- * and the word on screen; translate at the API boundary, not in the UI layer.
+ * Backend slugs are `month` and `night` (from `billing_frequency_types` on
+ * `GET /api/hostels/new`). The frontend says `nightly` where the backend says `night`, so the
+ * two differ only in adjective form — translate at the API boundary, not in the UI layer.
  */
 export const PRICING_PERIODS = ['monthly', 'nightly'] as const;
 
@@ -36,7 +36,7 @@ export const DEFAULT_PRICING_PERIOD: PricingPeriod = 'monthly';
  * never nightly — so this is derived rather than stored, and derived in exactly one place
  * so that a future rule change has a single site to edit.
  *
- * The backend also exposes `billing_frequency_type` (`month` / `day`). Prefer that value
+ * The backend also exposes `billing_frequency` on the hostel (`month` / `night`). Prefer it
  * if a payload ever carries it; this is the rule to fall back on.
  */
 export function periodForAccommodation(gender: string): PricingPeriod {

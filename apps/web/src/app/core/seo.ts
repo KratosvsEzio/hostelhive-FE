@@ -23,11 +23,11 @@ export interface SeoConfig {
   /**
    * Overrides `title` for Open Graph and Twitter only.
    *
-   * The two want different things. `<title>` leads with the hostel's name, because that
-   * is what a branded or returning search looks for. A shared card has no such context —
-   * nobody in a WhatsApp group recognises "Al-Madina Hostel" — so it leads with what the
-   * place *is*: type, area, price. Airbnb does the same, dropping the property name from
-   * `og:title` entirely.
+   * Both carry the property name — a card that cannot be attributed to a place is worth
+   * little when WhatsApp is the main sharing channel. They still differ in shape: `<title>`
+   * can afford the trailing "| HostelHive" brand suffix, while a shared card is truncated
+   * around 60–90 characters, so this drops the brand and keeps only the facts that decide a
+   * tap — price, and whether meals are included.
    */
   socialTitle?: string;
   description?: string;
