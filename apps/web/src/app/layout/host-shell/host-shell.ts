@@ -199,6 +199,7 @@ export class HostLayout {
       { label: 'Overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
       { label: 'Hostel profile', icon: 'ti-building',         link: `${b}/profile`,      permission: 'host:Hostel:show' },
       { label: 'Rooms',          icon: 'ti-bed',              link: `${b}/rooms`,        permission: 'host:Room:index' },
+      { label: 'Bookings',       icon: 'ti-calendar',         link: `${b}/bookings`,     permission: 'host:Room:index' },
       { label: 'Tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
       { label: 'Team & staff',   icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
       { label: 'Utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },

@@ -82,34 +82,34 @@
 
         <hr class="my-5 border-ink-100" />
 
-        <!-- Room capacity (people per room) — same param/values as the inline dropdown. -->
+        <!-- Room type — the same two values as the inline dropdown. -->
         <section>
           <h3 class="mb-3 text-base font-semibold text-ink-900">
-            {{ 'filters.roomCapacity' | transloco }}
+            {{ 'filters.roomType' | transloco }}
           </h3>
           <div class="flex flex-wrap gap-2">
             <button
               hh-button variant="outlined" size="sm"
               type="button"
               [class]="
-                !draftCapacity()
+                !draftRoomType()
                   ? 'border-ink-900 bg-ink-900 text-white'
                   : 'border-ink-200 text-ink-700 hover:border-ink-400'
               "
-              (click)="draftCapacity.set('')"
+              (click)="draftRoomType.set('')"
             >
               {{ 'filters.any' | transloco }}
             </button>
-            @for (c of capacities; track c.value) {
+            @for (c of roomTypes; track c.value) {
               <button
                 hh-button variant="outlined" size="sm"
                 type="button"
                 [class]="
-                  draftCapacity() === c.value
+                  draftRoomType() === c.value
                     ? 'border-ink-900 bg-ink-900 text-white'
                     : 'border-ink-200 text-ink-700 hover:border-ink-400'
                 "
-                (click)="draftCapacity.set(c.value)"
+                (click)="draftRoomType.set(c.value)"
               >
                 {{ c.label }}
               </button>

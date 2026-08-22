@@ -129,7 +129,13 @@ const LOCALISED_ROUTES: Route[] = [
     loadComponent: () =>
       import('@features/user/account-shell/account-shell').then((m) => m.AccountShell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'favorites' },
+      { path: '', pathMatch: 'full', redirectTo: 'bookings' },
+      {
+        path: 'bookings',
+        loadComponent: () =>
+          import('@features/user/bookings/bookings').then((m) => m.AccountBookings),
+        title: 'Your bookings — HostelHive',
+      },
       {
         path: 'favorites',
         loadComponent: () =>

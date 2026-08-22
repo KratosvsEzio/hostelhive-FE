@@ -148,6 +148,16 @@
           }
         </div>
 
+        <!-- Choose your room. Nightly hostels only — a monthly hostel is a tenancy and keeps
+             the enquiry path below instead. -->
+        @if (bookingEnabled()) {
+          <hh-room-picker
+            [offers]="roomOffers()"
+            [period]="bookingPeriod()"
+            [currency]="l.currency"
+          />
+        }
+
         <!-- Reviews (in-page section) -->
         @if (reviews().length) {
           @let rstats = reviewStats();
@@ -352,6 +362,12 @@
       <!-- SIDEBAR -->
       <aside class="lg:col-span-1">
         <div class="sticky top-24 space-y-4">
+          <!-- The booking rail sits above the contact card rather than replacing it: the
+               gated phone is still how a seeker asks a question before committing. It does
+               not repeat the "From" price, which the card below already carries. -->
+          @if (bookingEnabled()) {
+            <hh-booking-rail [period]="bookingPeriod()" [currency]="l.currency" (book)="startBooking()" />
+          }
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
             <div class="flex items-baseline gap-1.5">

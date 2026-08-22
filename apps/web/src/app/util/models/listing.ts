@@ -62,7 +62,10 @@ export interface ListingQuery {
   maxPrice?: number;
   sharing?: string; // e.g. '2-sharing'
   propertyType?: string; // slug, e.g. 'apartment' — see PROPERTY_TYPES
-  capacity?: string; // room capacity: '1'|'2'|'3'|'4' (exact) or '5+' (5 or more → gte)
+  /** 'private' | 'shared'. Inert server-side until the backend indexes `room_type`. */
+  roomType?: string;
+  /** 'month' | 'night'. Narrows the list to one pricing cycle so price sort has a unit. */
+  frequency?: string;
   near?: { lat: number; lng: number; radiusKm?: number }; // proximity search (from a picked place)
   bounds?: { north: number; south: number; east: number; west: number }; // exact map viewport
   amenities?: string[];

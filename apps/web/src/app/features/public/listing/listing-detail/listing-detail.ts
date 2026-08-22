@@ -21,6 +21,11 @@ import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { AnalyticsService } from '@core/analytics/analytics.service';
 import { periodForAccommodation } from '@util/pricing-period';
+import { BookingBasket } from '../booking/booking-basket';
+import { BookingRail } from '../booking/booking-rail';
+import { RoomPicker } from '../booking/room-picker';
+import { ROOM_OFFERS } from '../booking/room-offers.fixture';
+import { canBookOnline } from '../booking/room-offer';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 import { accommodationLabel } from '@util/accommodation-type';
@@ -87,7 +92,12 @@ const ROOM_TINTS = [
     TooltipFixed,
     CurrencySymbolPipe,
     CurrencyNamePipe,
+    RoomPicker,
+    BookingRail,
   ],
+  // Scoped to this page: a basket belongs to one hostel, and leaving disposes it — which is
+  // also what should release the hold once holds exist.
+  providers: [BookingBasket],
   templateUrl: './listing-detail.html',
 })
 export class ListingDetail {
@@ -173,6 +183,43 @@ export class ListingDetail {
     const slug = this.state().data?.slug;
     return slug ? `/hostel/${slug}` : '/';
   });
+
+  /** The hostel's pricing cycle — one value for the whole property. */
+  protected readonly bookingPeriod = computed(() => {
+    const l = this.state().data;
+    return l ? periodForAccommodation(l.accommodationType) : 'monthly';
+  });
+
+  /**
+   * Whether this hostel offers online booking at all.
+   *
+   * Nightly only. A monthly hostel is a tenancy rather than a checkout, so it keeps the
+   * enquiry path — the picker and the rail simply do not render.
+   */
+  protected readonly bookingEnabled = computed(() => canBookOnline(this.bookingPeriod()));
+
+  /**
+   * Bookable rooms. **Stub pending Q-API** — the backend has no room-type split, no
+   * discounted price, no per-room images and no availability endpoint yet.
+   */
+  protected readonly roomOffers = computed(() => (this.bookingEnabled() ? ROOM_OFFERS : []));
+
+  /**
+   * Book now. Browsing and building a basket are open to anyone; completing a booking is not.
+   *
+   * Anonymous seekers go to the auth page and come back to this listing, basket and all —
+   * which is why the basket lives in the page rather than in a query string.
+   */
+  protected startBooking(): void {
+    if (!this.session.isAuthenticated()) {
+      void this.router.navigate(['/auth'], {
+        queryParams: { returnUrl: this.currentPath() },
+      });
+      return;
+    }
+    // TODO: place the hold, then payment. Both need backend endpoints that do not exist yet
+    // (see the Rooms & Booking PRD, sections 04 and 06).
+  }
 
   protected readonly skeletons = [1, 2, 3];
 

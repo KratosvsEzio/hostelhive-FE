@@ -26,25 +26,18 @@ export interface FilterState {
   propertyType: string;
   minPrice: number | null;
   maxPrice: number | null;
-  capacity: string;
+  roomType: string;
   amenities: string[];
   sort: string;
 }
 
 
-// Room capacity (people per room). Values mirror the inline dropdown so the two stay in
-// sync; the API layer maps them to f[room_types.capacity] (exact) for 1–4, and
-// [gte]=5 for "5+".
-//
-// This list used to read { value: '4plus', label: '4+' } while the API mapped 4plus to
-// gte 5 — so choosing "4+" here excluded every 4-bed room, and disagreed with the
-// inline dropdown, which has always said "5+".
-const CAPACITIES: { value: string; label: string }[] = [
-  { value: '1', label: '1' },
-  { value: '2', label: '2' },
-  { value: '3', label: '3' },
-  { value: '4', label: '4' },
-  { value: '5+', label: '5+' },
+// Replaces the 1–5+ capacity buttons. Capacity was never the axis anybody shopped on: the
+// choice is a room to yourself or a bed among others, and the headcount is a detail read
+// after that. Kept as buttons rather than a dropdown so the modal reads the same as before.
+const ROOM_TYPES: { value: string; label: string }[] = [
+  { value: 'private', label: 'Private room' },
+  { value: 'shared', label: 'Shared room' },
 ];
 
 /**
@@ -94,7 +87,7 @@ export class SearchFilterModal {
     { label: 'Co-living', value: 'coliving' },
     { label: 'Backpacker', value: 'backpacker' },
   ];
-  protected readonly capacities = CAPACITIES;
+  protected readonly roomTypes = ROOM_TYPES;
   protected readonly sortOptions = [
     { label: 'Recommended', value: 'recommended' },
     { label: 'Recent first', value: 'newest' },
@@ -137,7 +130,7 @@ export class SearchFilterModal {
   protected readonly draftPropertyType = signal('');
   protected readonly draftMinPrice = signal(BUDGET_MIN);
   protected readonly draftMaxPrice = signal(BUDGET_MAX);
-  protected readonly draftCapacity = signal('');
+  protected readonly draftRoomType = signal('');
   protected readonly draftAmenities = signal<string[]>([]);
   protected readonly draftSort = signal('recommended');
 
@@ -147,7 +140,7 @@ export class SearchFilterModal {
     this.draftPropertyType.set(state.propertyType);
     this.draftMinPrice.set(state.minPrice ?? BUDGET_MIN);
     this.draftMaxPrice.set(state.maxPrice ?? BUDGET_MAX);
-    this.draftCapacity.set(state.capacity);
+    this.draftRoomType.set(state.roomType);
     this.draftAmenities.set([...state.amenities]);
     this.draftSort.set(state.sort || 'recommended');
     this.open.set(true);
@@ -162,7 +155,7 @@ export class SearchFilterModal {
     this.draftPropertyType.set('');
     this.draftMinPrice.set(BUDGET_MIN);
     this.draftMaxPrice.set(BUDGET_MAX);
-    this.draftCapacity.set('');
+    this.draftRoomType.set('');
     this.draftAmenities.set([]);
     this.draftSort.set('recommended');
   }
@@ -175,7 +168,7 @@ export class SearchFilterModal {
       propertyType: this.draftPropertyType(),
       minPrice: min > BUDGET_MIN ? min : null,
       maxPrice: max < BUDGET_MAX ? max : null,
-      capacity: this.draftCapacity(),
+      roomType: this.draftRoomType(),
       amenities: this.draftAmenities(),
       sort: this.draftSort(),
     });

@@ -35,11 +35,42 @@ export class SearchFilters {
   protected readonly modalOpen = signal(false);
 
   // Sort. 'newest'/'oldest' → sort[created_at] desc/asc; 'price-*' → sort[starting_price] (API layer).
-  protected readonly sortOptions: DropdownOption[] = [
+  private readonly allSortOptions: DropdownOption[] = [
     { value: 'newest', label: 'Recent first' },
     { value: 'oldest', label: 'Oldest first' },
     { value: 'price-desc', label: 'Price: high to low' },
     { value: 'price-asc', label: 'Price: low to high' },
+  ];
+
+  /**
+   * Price sort is withdrawn while the list mixes pricing cycles.
+   *
+   * `starting_price` is one unit-less number, so a nightly bed at PKR 1,200 sorts above a
+   * monthly room at PKR 15,000 as though it were cheaper — page one fills with backpacker
+   * dorms a student cannot rent by the month. Choosing Month or Night gives the list a single
+   * unit and brings both price sorts back. The other three are unit-agnostic and always stay.
+   */
+  protected readonly sortOptions = computed(() =>
+    this.frequency() === 'all'
+      ? this.allSortOptions.filter((o) => !String(o.value).startsWith('price-'))
+      : this.allSortOptions,
+  );
+
+  /**
+   * Replaces the 1–5+ sharing filter.
+   *
+   * Capacity is not the axis anybody shops on — the choice is a room to yourself or a bed in a
+   * room with others, and how many others is a detail read after that.
+   */
+  protected readonly roomTypeOptions: DropdownOption[] = [
+    { value: 'private', label: 'Private room' },
+    { value: 'shared', label: 'Shared room' },
+  ];
+
+  /** All is the default: nothing is hidden from a seeker who has not chosen yet. */
+  protected readonly frequencyOptions: DropdownOption[] = [
+    { value: 'month', label: 'Per month' },
+    { value: 'night', label: 'Per night' },
   ];
 
   protected readonly accommodationType = computed<AccommodationType | 'all'>(
@@ -48,9 +79,15 @@ export class SearchFilters {
   protected readonly propertyType = computed(
     () => this.params()?.get('propertyType') ?? '',
   );
-  protected readonly capacity = computed(
-    () => this.params()?.get('capacity') ?? '',
-  );
+  /**
+   * Private or shared. **Inert server-side until the backend indexes `room_type`** — the
+   * param travels and the UI reflects it, but results do not narrow yet. Same position the
+   * amenity filter was in before `offers` reached the search document.
+   */
+  protected readonly roomType = computed(() => this.params()?.get('roomType') ?? '');
+
+  /** `month` | `night` | `''` for All. Also gates the price controls — see `sortOptions`. */
+  protected readonly frequency = computed(() => this.params()?.get('frequency') ?? 'all');
   protected readonly sort = computed(
     () => this.params()?.get('sort') ?? 'recommended',
   );
@@ -64,7 +101,8 @@ export class SearchFilters {
     return (
       this.accommodationType() !== 'all' ||
       !!this.propertyType() ||
-      !!this.capacity() ||
+      !!this.roomType() ||
+      this.frequency() !== 'all' ||
       !!this.minP() ||
       !!this.maxP() ||
       this.amenities().length > 0 ||
@@ -76,19 +114,13 @@ export class SearchFilters {
     let n = 0;
     if (this.accommodationType() !== 'all') n++;
     if (this.propertyType()) n++;
-    if (this.capacity()) n++;
+    if (this.roomType()) n++;
+    if (this.frequency() !== 'all') n++;
     if (this.minP() || this.maxP()) n++;
     if (this.amenities().length) n++;
     if (this.sort() !== 'recommended') n++;
     return n;
   });
-
-  readonly genderPills: { label: string; value: AccommodationType; icon: string }[] = [
-    { label: 'Boys', value: 'boys', icon: 'gender-male' },
-    { label: 'Girls', value: 'girls', icon: 'gender-female' },
-    { label: 'Co-living', value: 'coliving', icon: 'users' },
-    { label: 'Backpacker', value: 'backpacker', icon: 'backpack' },
-  ];
 
   readonly popularAmenities = [
     { slug: 'wifi', label: 'Wi-Fi', icon: 'wifi' },
@@ -99,8 +131,28 @@ export class SearchFilters {
     { slug: 'attached', label: 'Attached Bath', icon: 'bath' },
   ];
 
-  protected toggleGender(value: AccommodationType): void {
-    this.nav({ gender: this.accommodationType() === value ? null : value });
+  private asValue(v: string | string[] | null): string | null {
+    return typeof v === 'string' && v ? v : null;
+  }
+
+  protected onRoomTypeChange(v: string | string[] | null): void {
+    this.nav({ roomType: this.asValue(v) });
+  }
+
+  /**
+   * Changing the cycle can invalidate the sort that is showing.
+   *
+   * Moving back to All while sorted by price would leave a price sort active over mixed units
+   * with no control left to change it — the option is gone from the dropdown. Dropping to the
+   * default here keeps the URL and the visible controls in agreement.
+   */
+  protected onFrequencyChange(v: string | string[] | null): void {
+    const next = this.asValue(v);
+    const priceSorted = this.sort().startsWith('price-');
+    this.nav({
+      frequency: next,
+      ...(next === null && priceSorted ? { sort: null } : {}),
+    });
   }
 
   protected toggleQuickAmenity(slug: string): void {
@@ -117,7 +169,7 @@ export class SearchFilters {
       propertyType: this.propertyType(),
       minPrice: this.minP() ? +this.minP() : null,
       maxPrice: this.maxP() ? +this.maxP() : null,
-      capacity: this.capacity(),
+      roomType: this.roomType(),
       amenities: this.amenities(),
       sort: this.sort(),
     });
@@ -134,7 +186,7 @@ export class SearchFilters {
       propertyType: state.propertyType || null,
       minPrice: state.minPrice,
       maxPrice: state.maxPrice,
-      capacity: state.capacity || null,
+      roomType: state.roomType || null,
       amenities: joined || null,
       sort: state.sort === 'recommended' ? null : state.sort,
     });

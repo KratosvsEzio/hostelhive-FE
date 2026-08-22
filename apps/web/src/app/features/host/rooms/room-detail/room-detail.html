@@ -116,6 +116,13 @@
       }
     </div>
 
+    <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
+    @if (hostelId() && roomId()) {
+      <div class="mt-6">
+        <hh-room-calendar [hostelId]="hostelId()!" [roomId]="roomId()" />
+      </div>
+    }
+
   }
 
 </app-dashboard-layout>

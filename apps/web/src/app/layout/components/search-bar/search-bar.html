@@ -35,12 +35,12 @@
     <button
       type="button"
       class="hhsb-seg"
-      [class.on]="open() === 'sharing'"
-      (click)="toggle('sharing')"
+      [class.on]="open() === 'accommodation'"
+      (click)="toggle('accommodation')"
       style="flex: 1 1 0"
     >
-      <span class="hhsb-lab">{{ 'search.sharing' | transloco }}</span>
-      <span class="hhsb-val" [class.f]="!!sharing()">{{ sharingLabel() | transloco }}</span>
+      <span class="hhsb-lab">{{ 'search.accommodation' | transloco }}</span>
+      <span class="hhsb-val" [class.f]="!!accommodation()">{{ accommodationLabel() | transloco }}</span>
     </button>
     <button
       type="button"
@@ -77,14 +77,14 @@
       </div>
     </div>
   }
-  @if (open() === 'sharing') {
+  @if (open() === 'accommodation') {
     <div class="hhsb-pop" style="right: 92px; min-width: 220px">
-      @for (s of sharingOpts; track s.l) {
+      @for (s of accommodationOpts; track s.l) {
         <button
           type="button"
           class="hhsb-opt"
-          [class.sel]="sharing() === s.v"
-          (click)="pickSharing(s.v)"
+          [class.sel]="accommodation() === s.v"
+          (click)="pickAccommodation(s.v)"
         >
           {{ s.l | transloco }}
         </button>
