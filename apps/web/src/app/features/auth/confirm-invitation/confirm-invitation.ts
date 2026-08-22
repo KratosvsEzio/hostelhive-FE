@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Button } from '@hostelhive/ui';
 import { AuthService } from '@core/auth';
 import { ApiError } from '@hostelhive/data-access';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 type Phase = 'verifying' | 'error';
 
@@ -25,7 +26,7 @@ type Phase = 'verifying' | 'error';
 @Component({
   selector: 'hh-confirm-invitation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button],
+  imports: [RouterLink, LocaleLink, Button],
   templateUrl: './confirm-invitation.html',
 })
 export class ConfirmInvitation {

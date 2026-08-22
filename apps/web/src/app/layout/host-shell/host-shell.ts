@@ -20,6 +20,7 @@ import { NotificationService } from '@core/notification.service';
 import { Button, Dropdown, DropdownOption, StatusTone } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface NavEntry {
   label?: string;
@@ -53,7 +54,7 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading],
   templateUrl: './host-shell.html',
 })
 export class HostLayout {

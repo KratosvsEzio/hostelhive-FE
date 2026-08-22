@@ -21,6 +21,7 @@ import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface ListState {
   loading: boolean;
@@ -31,7 +32,7 @@ interface ListState {
 @Component({
   selector: 'app-notification-bell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, Button, Skeleton],
+  imports: [TranslocoPipe, RouterLink, LocaleLink, Button, Skeleton],
   host: {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'onEscape()',

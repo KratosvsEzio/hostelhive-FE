@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HostPropertyStore } from '@services';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 /**
  * Bottom tab bar for the host console on the mobile app (design boards 42–44):
@@ -16,7 +17,7 @@ import { HostPropertyStore } from '@services';
 @Component({
   selector: 'app-host-tab-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, LocaleLink, RouterLinkActive],
   styles: `
     :host { display: block; }
     .tab {

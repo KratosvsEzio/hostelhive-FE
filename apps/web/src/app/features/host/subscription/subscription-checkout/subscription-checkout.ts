@@ -18,6 +18,7 @@ import {
   effectivePrice,
   hasListingDiscount,
 } from '@util/product-pricing';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface PageState {
   loading: boolean;
@@ -54,7 +55,7 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
 @Component({
   selector: 'hh-subscription-checkout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, DashboardLayout, Button, Skeleton],
+  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, Skeleton],
   templateUrl: './subscription-checkout.html',
 })
 export class SubscriptionCheckout {

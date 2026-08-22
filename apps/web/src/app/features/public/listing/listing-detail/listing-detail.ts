@@ -28,6 +28,7 @@ import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { ApiDate } from '@util/api-date';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface ViewState {
   loading: boolean;
@@ -76,7 +77,7 @@ const ROOM_TINTS = [
   imports: [TranslocoPipe, 
     ApiDate,
     DecimalPipe,
-    RouterLink,
+    RouterLink, LocaleLink,
     Avatar,
     Badge,
     Button,

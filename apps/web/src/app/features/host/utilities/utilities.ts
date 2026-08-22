@@ -48,6 +48,7 @@ import { API_CONFIG } from '@core/api-config';
 import { utilityFilterGroups } from '@app/util/filter-configs/utility-filter-groups';
 import { format, parseISO } from 'date-fns';
 import { HasPermission } from '@core/auth';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 function fmtDate(s?: string): string {
   if (!s) return '—';
@@ -70,7 +71,7 @@ interface ViewState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     HasPermission,
-    RouterLink,
+    RouterLink, LocaleLink,
     DashboardLayout,
     DecimalPipe,
     SubscriptionGate,

@@ -8,7 +8,9 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { Permission, SessionStore } from '@core/auth';
+import { routePath } from '@core/i18n/locales';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface NavEntry {
   label?: string;
@@ -47,7 +49,7 @@ const ADMIN_NAV: NavEntry[] = [
 @Component({
   selector: 'app-staff-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet],
   templateUrl: './staff-shell.html',
 })
 export class StaffLayout {
@@ -68,13 +70,13 @@ export class StaffLayout {
   private readonly path = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url.split('?')[0]),
+      map(() => routePath(this.router.url)),
     ),
     {
       initialValue:
         typeof window !== 'undefined'
-          ? window.location.pathname
-          : this.router.url.split('?')[0],
+          ? routePath(window.location.pathname)
+          : routePath(this.router.url),
     },
   );
 

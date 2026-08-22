@@ -13,6 +13,7 @@ import { Faq, faqJsonLd, placeFaqs } from './place-faqs';
 import { findUniversity, universitiesIn } from './universities';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 /**
  * SEO landing page for a place, optionally narrowed by gender:
@@ -30,7 +31,7 @@ import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
 @Component({
   selector: 'hh-place-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SearchMap, RouterLink],
+  imports: [SearchMap, RouterLink, LocaleLink],
   templateUrl: './place-landing.html',
 })
 export class PlaceLanding {

@@ -47,6 +47,7 @@ import {
   fixedCapacityFor,
   ROOM_TYPES,
 } from '@util/room-types';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 type GenderType = 'boys' | 'girls' | 'co-living';
 
@@ -157,7 +158,7 @@ const CATEGORY_ICONS: Record<string, string> = {
     PhotoGrid,
     PlaceSearchField,
     RichText,
-    RouterLink,
+    RouterLink, LocaleLink,
   ],
   templateUrl: './onboarding-wizard.html',
   styleUrl: './onboarding-wizard.scss',

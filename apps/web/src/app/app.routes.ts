@@ -3,6 +3,7 @@ import { HOST_ROLES, STAFF_ROLES, authGuard, roleGuard } from '@core/auth';
 import { Home } from '@features/public/home/home';
 import { Forbidden } from '@core/forbidden/forbidden';
 import { localePrefixMatcher } from '@core/i18n/locale-prefix-matcher';
+import { keepLocale } from '@core/i18n/keep-locale';
 
 const LOCALISED_ROUTES: Route[] = [
   // â”€â”€â”€ Public seeker (SSR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -225,8 +226,12 @@ const LOCALISED_ROUTES: Route[] = [
  * `/hostels/lahore` and read "hostels" as a language code. Order matters too — the
  * prefixed mount is declared first so a real locale segment wins before the bare tree
  * gets a chance to treat it as a page.
+ *
+ * The bare tree is wrapped in a pathless parent purely to hang {@link keepLocale} off it —
+ * a navigation that lands here while a language is active gets sent to its prefixed twin,
+ * which is what stops `router.navigate('/search/lahore')` dropping out of German.
  */
 export const appRoutes: Route[] = [
   { path: ':locale', canMatch: [localePrefixMatcher], children: LOCALISED_ROUTES },
-  ...LOCALISED_ROUTES,
+  { path: '', canActivateChild: [keepLocale], children: LOCALISED_ROUTES },
 ];

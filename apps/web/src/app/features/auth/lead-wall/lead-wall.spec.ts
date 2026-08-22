@@ -174,22 +174,24 @@ describe('LeadWall', () => {
     expect(activeTabLabel(fixture)).toBe('Log in');
   });
 
+  // Every href carries the active language, English included — see `LocaleLink`. These
+  // cases are about which *destination* is safe; the prefix rides along on all of them.
   describe('close button', () => {
     it('returns the visitor to the public page they came from', () => {
       const { fixture } = render({ returnUrl: '/hostel/lums-boys-hostel' }, ROUTES);
-      expect(closeHref(fixture)).toBe('/hostel/lums-boys-hostel');
+      expect(closeHref(fixture)).toBe('/en/hostel/lums-boys-hostel');
     });
 
     it('falls back to home when no returnUrl is given', () => {
       const { fixture } = render({}, ROUTES);
-      expect(closeHref(fixture)).toBe('/');
+      expect(closeHref(fixture)).toBe('/en');
     });
 
     it.each(['/account', '/account/favorites', '/host/listings/new'])(
       'falls back to home rather than bouncing off the guard on %j',
       (returnUrl) => {
         const { fixture } = render({ returnUrl }, ROUTES);
-        expect(closeHref(fixture)).toBe('/');
+        expect(closeHref(fixture)).toBe('/en');
       },
     );
 
@@ -197,7 +199,7 @@ describe('LeadWall', () => {
       'refuses the off-origin returnUrl %j',
       (returnUrl) => {
         const { fixture } = render({ returnUrl }, ROUTES);
-        expect(closeHref(fixture)).toBe('/');
+        expect(closeHref(fixture)).toBe('/en');
       },
     );
 
@@ -206,12 +208,12 @@ describe('LeadWall', () => {
         { returnUrl: '/hostel/first-hostel' },
         ROUTES,
       );
-      expect(closeHref(fixture)).toBe('/hostel/first-hostel');
+      expect(closeHref(fixture)).toBe('/en/hostel/first-hostel');
 
       queryParams$.next({ returnUrl: '/account/favorites' });
       fixture.detectChanges();
 
-      expect(closeHref(fixture)).toBe('/');
+      expect(closeHref(fixture)).toBe('/en');
     });
 
     it('replaces history so browser-back does not reopen the wall', () => {

@@ -6,6 +6,7 @@ import { ApiError, HostelInput } from '@hostelhive/data-access';
 import { HostelsApi, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import { provideDataAccess } from '@core/provide-data-access';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { OnboardingWizard } from './onboarding-wizard';
 
 const DRAFT_KEY = 'hh:onboarding:draft';
@@ -80,6 +81,9 @@ function render() {
     imports: [OnboardingWizard],
     providers: [
       provideRouter([]),
+      // The wizard's logo is an <a routerLink>, so LocaleLink — and with it Transloco —
+      // is now part of rendering it.
+      provideI18nTesting(),
       provideDataAccess({ baseUrl: 'https://api.test' }),
       { provide: HostelsApi, useValue: hostels.api },
       { provide: OffersApi, useValue: { categories: () => of([]) } },
@@ -240,8 +244,9 @@ describe('OnboardingWizard', () => {
   describe('logo', () => {
     it('is a link to home', () => {
       const { fixture } = render();
+      // `/en`, not `/` — every href carries its language now (see `LocaleLink`).
       const logo = fixture.nativeElement.querySelector(
-        'header a[href="/"]',
+        'header a[href="/en"]',
       ) as HTMLAnchorElement | null;
       expect(logo).not.toBeNull();
       expect(logo?.querySelector('img')?.getAttribute('alt')).toBe('HostelHive');

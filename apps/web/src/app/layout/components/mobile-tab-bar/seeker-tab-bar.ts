@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 /**
  * Bottom tab bar for the seeker area of the mobile app (design boards 40–41):
@@ -11,7 +12,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 @Component({
   selector: 'app-seeker-tab-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, RouterLinkActive],
+  imports: [TranslocoPipe, RouterLink, LocaleLink, RouterLinkActive],
   styles: `
     :host { display: block; }
     .tab {

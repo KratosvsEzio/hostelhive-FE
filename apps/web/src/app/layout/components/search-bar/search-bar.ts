@@ -9,8 +9,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { searchRouteFor } from '@util/location-slug';
+import { ActivatedRoute, NavigationEnd, ParamMap, Router } from '@angular/router';
+import { filter } from 'rxjs';
+import { fromLocationSlug, searchRouteFor } from '@util/location-slug';
+import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
@@ -20,15 +22,19 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 type Seg = 'where' | 'budget' | 'sharing';
 
+// Keys rather than copy: these are data, so the template translates them at render.
 const SHARING: { v: string; l: string }[] = [
-  { v: '', l: 'Any sharing' },
-  { v: '1', l: '1 per room' },
-  { v: '2', l: '2 per room' },
-  { v: '3', l: '3 per room' },
-  { v: '4', l: '4 per room' },
-  { v: '5+', l: '5+ per room' },
+  { v: '', l: 'searchBar.anySharing' },
+  { v: '1', l: 'searchBar.perRoom1' },
+  { v: '2', l: 'searchBar.perRoom2' },
+  { v: '3', l: 'searchBar.perRoom3' },
+  { v: '4', l: 'searchBar.perRoom4' },
+  { v: '5+', l: 'searchBar.perRoom5Plus' },
 ];
 const fmtK = (n: number): string => (n >= 1000 ? `${n / 1000}k` : `${n}`);
+
+/** A translation key with whatever it interpolates, for the template to resolve. */
+type Label = { key: string; params?: Record<string, string> };
 
 /**
  * Airbnb-style segmented search bar (≈850px). Three segments — Where · Budget · Sharing —
@@ -70,27 +76,59 @@ export class SearchBar {
     () => this.budgetLow() > BUDGET_MIN || this.budgetHigh() < BUDGET_MAX,
   );
 
-  protected readonly budgetLabel = computed(() => {
-    const lo = this.budgetLow();
-    const hi = this.budgetHigh();
-    if (lo <= BUDGET_MIN && hi >= BUDGET_MAX) return 'Add budget';
-    if (lo <= BUDGET_MIN) return `Under Rs ${fmtK(hi)}`;
-    if (hi >= BUDGET_MAX) return `Rs ${fmtK(lo)}+`;
-    return `Rs ${fmtK(lo)}–${fmtK(hi)}`;
-  });
+  /**
+   * The label as a key plus its interpolation params, for the template to resolve.
+   *
+   * Not resolved here: `translate()` hands back the key itself while the language file is
+   * still loading, and a computed would cache that — the header read "searchBar.addBudget"
+   * until a reload. The pipe re-renders when the file arrives.
+   */
+  protected readonly budgetLabel = computed(
+    (): Label => {
+      const lo = this.budgetLow();
+      const hi = this.budgetHigh();
+      if (lo <= BUDGET_MIN && hi >= BUDGET_MAX) return { key: 'searchBar.addBudget' };
+      if (lo <= BUDGET_MIN) {
+        return { key: 'searchBar.underAmount', params: { amount: fmtK(hi) } };
+      }
+      if (hi >= BUDGET_MAX) {
+        return { key: 'searchBar.fromAmount', params: { amount: fmtK(lo) } };
+      }
+      return {
+        key: 'searchBar.betweenAmounts',
+        params: { low: fmtK(lo), high: fmtK(hi) },
+      };
+    },
+  );
   protected readonly sharingLabel = computed(() => {
     const s = this.sharing();
-    return s
-      ? (SHARING.find((o) => o.v === s)?.l ?? 'Add sharing')
-      : 'Add sharing';
+    return (s && SHARING.find((o) => o.v === s)?.l) || 'searchBar.addSharing';
   });
+
+  /**
+   * The `:location` slug of whatever is currently routed, or `''`.
+   *
+   * The bar sits in the layout, above the outlet, so its own `ActivatedRoute` is the root
+   * and never carries the search route's params — hence the walk down. Going through the
+   * route tree rather than parsing `router.url` also means `/ur/search/lahore` needs no
+   * special handling: the router has already accounted for the language prefix.
+   */
+  private routedLocationSlug(): string {
+    let r: ActivatedRoute | null = this.router.routerState.root;
+    let slug = '';
+    while (r) {
+      slug = r.snapshot.paramMap.get('location') ?? slug;
+      r = r.firstChild;
+    }
+    return slug;
+  }
 
   constructor() {
     // Reflect the active search (query params) into the bar reactively — so after a
     // search it keeps showing the searched place instead of going blank. Typing doesn't
     // navigate, so in-progress edits are preserved (this only fires on real navigation).
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((p) => {
-      this.place.set(p.get('place') ?? p.get('city') ?? '');
+      this.syncPlace(p);
       const la = p.get('lat');
       const ln = p.get('lng');
       this.lat.set(la ? +la : null);
@@ -105,6 +143,35 @@ export class SearchBar {
       this.sharing.set(cap);
       this.capacityStore.active.set(cap);
     });
+    // Query params are resolved before the outlet activates, so on a first load the
+    // subscription above runs while the route tree is still a stub and the `:location`
+    // slug is not readable yet. NavigationEnd is the point at which the tree is final —
+    // re-deriving there is what makes a *pasted* /search/lahore fill the bar, rather than
+    // only a search the visitor performed in this tab.
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.syncPlace(this.route.snapshot.queryParamMap));
+  }
+
+  /**
+   * The place name the URL implies: its own `place`/`city` param when it has one, and the
+   * routed slug when it does not.
+   *
+   * A pasted `/search/lahore` carries no `place`, so without the slug the bar goes blank on
+   * exactly the page whose whole subject is that place. Curated names come from the same
+   * table the map centres on, so the bar, the heading and the results agree.
+   */
+  private syncPlace(p: ParamMap): void {
+    const slug = this.routedLocationSlug();
+    this.place.set(
+      p.get('place') ??
+        p.get('city') ??
+        resolveSearchSlug(slug)?.name ??
+        (slug ? fromLocationSlug(slug) : ''),
+    );
   }
 
   protected toggle(seg: Seg): void {

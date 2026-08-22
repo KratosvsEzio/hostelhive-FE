@@ -14,6 +14,7 @@ import { ModerationApi } from '@services';
 import { AuditEntry, AuditGroup, PillTone } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 interface ViewState {
   loading: boolean;
@@ -37,7 +38,7 @@ const ICON_TONES: Record<PillTone, string> = {
 @Component({
   selector: 'hh-audit',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, RouterLink, Button, FilterChips, EmptyState, ErrorState, Skeleton],
+  imports: [DashboardLayout, RouterLink, LocaleLink, Button, FilterChips, EmptyState, ErrorState, Skeleton],
   templateUrl: './audit.html',
 })
 export class Audit {

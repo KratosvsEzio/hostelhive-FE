@@ -11,6 +11,7 @@ import { HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
+import { LocaleLink } from '@core/i18n/locale-link';
 
 const STATUS_LABEL: Record<ListingStatus, string> = {
   published: 'Live',
@@ -36,7 +37,7 @@ const STATUS_CLASS: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-more',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DashboardLayout],
+  imports: [RouterLink, LocaleLink, DashboardLayout],
   templateUrl: './more.html',
 })
 export class HostMore {

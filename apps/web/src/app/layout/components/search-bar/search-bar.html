@@ -28,7 +28,7 @@
       <span
         class="hhsb-val"
         [class.f]="budgetActive()"
-        >{{ budgetLabel() }}</span
+        >{{ budgetLabel().key | transloco: budgetLabel().params }}</span
       >
     </button>
     <span class="hhsb-dv"></span>
@@ -40,7 +40,7 @@
       style="flex: 1 1 0"
     >
       <span class="hhsb-lab">{{ 'search.sharing' | transloco }}</span>
-      <span class="hhsb-val" [class.f]="!!sharing()">{{ sharingLabel() }}</span>
+      <span class="hhsb-val" [class.f]="!!sharing()">{{ sharingLabel() | transloco }}</span>
     </button>
     <button
       type="button"
@@ -48,7 +48,7 @@
       (click)="search()"
       aria-label="Search"
     >
-      <i class="ti ti-search text-lg"></i>Search
+      <i class="ti ti-search text-lg"></i>{{ 'searchBar.search' | transloco }}
     </button>
   </div>
 
@@ -56,13 +56,13 @@
     <div class="hhsb-pop" style="left: 50%; transform: translateX(-50%); min-width: 280px">
       <div class="px-4 pt-4 pb-3">
         <div class="mb-2 flex items-center justify-between">
-          <span class="text-sm font-semibold text-ink-900">Budget range</span>
+          <span class="text-sm font-semibold text-ink-900">{{ 'searchBar.budgetRange' | transloco }}</span>
           @if (budgetActive()) {
             <button
               type="button"
               class="text-xs font-medium text-brand-500 hover:text-brand-600"
               (click)="resetBudget()"
-            >Reset</button>
+            >{{ 'searchBar.reset' | transloco }}</button>
           }
         </div>
         <hh-range-slider
@@ -86,7 +86,7 @@
           [class.sel]="sharing() === s.v"
           (click)="pickSharing(s.v)"
         >
-          {{ s.l }}
+          {{ s.l | transloco }}
         </button>
       }
     </div>
