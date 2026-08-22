@@ -1,4 +1,5 @@
 import { GENDER_SEGMENTS, PLACES } from './places';
+import { UNIVERSITIES } from './universities';
 
 /**
  * Every URL that belongs in `sitemap.xml`.
@@ -39,7 +40,10 @@ export function sitemapPaths(): string[] {
     `/hostels/${p.slug}`,
     ...Object.keys(GENDER_SEGMENTS).map((g) => `/hostels/${p.slug}/${g}`),
   ]);
-  return [...STATIC_PATHS, ...landing];
+  // Campus pages. Listed explicitly rather than derived from the city, because a
+  // university only has a page when one was written for it.
+  const campuses = UNIVERSITIES.map((u) => `/hostels/${u.placeSlug}/${u.slug}`);
+  return [...STATIC_PATHS, ...landing, ...campuses];
 }
 
 /** Renders the paths as a sitemap document. */
