@@ -17,7 +17,7 @@
       [style.transform]="'translateX(-' + img() * 100 + '%)'"
     >
       @for (src of images(); track $index) {
-        <!-- Only a slide whose <img> {{ 'card.isMountedAndStillDownloading' | transloco }} <img> at all, so shimmering them ran an infinite
+        <!-- Only a slide whose <img> is mounted and still downloading shimmers. Slides past `loadedThrough` have no <img> at all, so shimmering them ran an infinite
              animation on five off-screen elements per card that were not loading anything.
              They now rest on the container’s static bg-ink-100, which leaves the Featured
              badge as the only animation on the card. -->

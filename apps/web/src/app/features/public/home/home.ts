@@ -114,9 +114,11 @@ export class Home {
   }
 
   protected readonly stats = [
-    { n: '10,000+', l: 'verified beds' },
-    { n: '25', l: 'cities' },
-    { n: '4.8/5', l: 'seeker rating' },
+    // Keys, not copy: these are data rather than template text, so the extractor never
+    // saw them and the template translates them at render.
+    { n: '10,000+', l: 'home.statVerifiedBeds' },
+    { n: '25', l: 'home.statCities' },
+    { n: '4.8/5', l: 'home.statSeekerRating' },
   ];
 
   private readonly featuredState = toSignal(

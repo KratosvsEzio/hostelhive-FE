@@ -5,7 +5,10 @@
     "switchToHosting": "Switch to hosting",
     "signIn": "Sign in",
     "account": "Account",
-    "language": "Language"
+    "language": "Language",
+    "becomeAHost": "Become a host",
+    "explore": "Explore",
+    "favorites": "Favorites"
   },
   "search": {
     "where": "Where",
@@ -148,12 +151,14 @@
     "lovedByMovers": "Loved by movers",
     "trustedByStudentsAmpPros": "Trusted by students & pros",
     "heroTitleLead": "Find your place",
-    "heroTitleTail": "in the"
+    "heroTitleTail": "in the",
+    "statVerifiedBeds": "verified beds",
+    "statCities": "cities",
+    "statSeekerRating": "seeker rating"
   },
   "card": {
     "previousPhoto": "Previous photo",
     "nextPhoto": "Next photo",
-    "isMountedAndStillDownloading": "is mounted and still downloading shimmers. Slides past `loadedThrough` have no",
     "featured": "Featured",
     "new": "New"
   },

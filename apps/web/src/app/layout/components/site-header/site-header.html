@@ -36,7 +36,7 @@
                   hh-button variant="text" size="md"
                   type="button"
                   (click)="onBecomeHost()"
-                >Become a host</button>
+                >{{ 'nav.becomeAHost' | transloco }}</button>
               </span>
             } @else if (!isStaff()) {
               <a
