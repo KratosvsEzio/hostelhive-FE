@@ -43,6 +43,7 @@ import { MobileApp } from '@core/mobile-app';
 import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
 import { Seo } from '@core/seo';
 import { PLACES } from '@features/public/landing/places';
+import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { AnalyticsService } from '@core/analytics/analytics.service';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
@@ -190,6 +191,19 @@ export class SearchMap {
   );
 
   /**
+   * The curated city or campus a bare `/search/<slug>` names — see {@link resolveSearchSlug}.
+   *
+   * Explicit coordinates win outright, so this never overrides a real search or a landing
+   * page's seed. It only fills the vacuum a pasted link leaves, and feeds `center()` and
+   * `placeZoom()` so the query, the camera and the heading all agree on one place.
+   */
+  private readonly slugPlace = computed(() => {
+    const p = this.params();
+    if (p?.get('lat') && p?.get('lng')) return null;
+    return resolveSearchSlug(this.locationSlug());
+  });
+
+  /**
    * What the results are scoped to, for the page heading.
    *
    * The `place` query param is the real name and wins whenever it is present; the slug is
@@ -199,6 +213,8 @@ export class SearchMap {
   protected readonly locationName = computed(() => {
     const place = this.params()?.get('place') || this.params()?.get('city');
     if (place) return place;
+    const known = this.slugPlace();
+    if (known) return known.name;
     const slug = this.locationSlug();
     return slug ? fromLocationSlug(slug) : DEFAULT_LOCATION;
   });
@@ -246,7 +262,9 @@ export class SearchMap {
       const p = this.params();
       const lat = p?.get('lat');
       const lng = p?.get('lng');
-      return lat && lng ? { lat: +lat, lng: +lng } : null;
+      if (lat && lng) return { lat: +lat, lng: +lng };
+      const s = this.slugPlace();
+      return s ? { lat: s.lat, lng: s.lng } : null;
     },
     // Only emit when the coordinates actually change, so the recenter effect ignores
     // unrelated query-param edits (budget, sharing, sort, page…).
@@ -255,11 +273,8 @@ export class SearchMap {
   /** Map zoom carried by the searched place's type (province 8 · city 10 · area 15…). */
   private readonly placeZoom = computed(() => {
     const z = this.params()?.get('zoom');
-    return z ? +z : null;
-  });
-  protected readonly placeLabel = computed(() => {
-    const place = this.params()?.get('place') || this.params()?.get('city');
-    return place ? ' near ' + place : ' in this area';
+    if (z) return +z;
+    return this.slugPlace()?.zoom ?? null;
   });
 
   /** Current place label shown in the mobile search input, kept in sync with the URL. */
@@ -267,6 +282,7 @@ export class SearchMap {
     () =>
       this.params()?.get('place') ??
       this.params()?.get('city') ??
+      this.slugPlace()?.name ??
       (this.locationSlug() ? fromLocationSlug(this.locationSlug()) : ''),
   );
 
