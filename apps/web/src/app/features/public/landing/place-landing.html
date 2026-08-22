@@ -62,4 +62,22 @@
       }
     </div>
   </section>
+
+  <!-- The answers marked up as FAQPage must also be visible here: marking up content a
+       visitor cannot see is a Google policy violation, not a shortcut. -->
+  @if (faqs().length) {
+    <section class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <h2 class="font-display text-xl font-semibold text-ink-900">
+        Common questions
+      </h2>
+      <dl class="mt-5 divide-y divide-ink-100 border-t border-ink-100">
+        @for (f of faqs(); track f.q) {
+          <div class="py-4">
+            <dt class="font-medium text-ink-900">{{ f.q }}</dt>
+            <dd class="mt-1.5 text-sm leading-relaxed text-ink-600">{{ f.a }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+  }
 }

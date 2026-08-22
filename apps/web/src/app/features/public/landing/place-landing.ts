@@ -4,11 +4,13 @@ import {
   computed,
   effect,
   inject,
+  signal,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { SITE_ORIGIN, Seo } from '@core/seo';
+import { Faq, faqJsonLd, placeFaqs } from './place-faqs';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
 
@@ -34,6 +36,9 @@ import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
 export class PlaceLanding {
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(Seo);
+
+  /** Rendered in the page as well as marked up — see the note in place-faqs.ts. */
+  protected readonly faqs = signal<Faq[]>([]);
 
   private readonly params = toSignal(this.route.paramMap, { initialValue: null });
 
@@ -99,6 +104,8 @@ export class PlaceLanding {
           noindex: true,
         });
         this.seo.clearJsonLd('place-breadcrumb');
+        this.seo.clearJsonLd('place-faq');
+        this.faqs.set([]);
         return;
       }
 
@@ -106,6 +113,9 @@ export class PlaceLanding {
         ? `/hostels/${p.slug}/${this.params()?.get('gender')}`
         : `/hostels/${p.slug}`;
       const what = g ? `${g.adjective} hostels` : 'hostels, PGs and co-living';
+      // Rendered on the page as well as in the markup — Google requires the answer text
+      // to be visible, and marking up content a visitor cannot see is a violation.
+      this.faqs.set(placeFaqs(p.name, what));
 
       this.seo.apply({
         title: `${this.heading()} — verified ${what} | HostelHive`,
@@ -131,6 +141,10 @@ export class PlaceLanding {
             : []),
         ],
       });
+
+      // The rich result no international travel site competes for, because none of them
+      // models a mess, a warden or a deposit quoted in months of rent.
+      this.seo.setJsonLd('place-faq', faqJsonLd(this.faqs()));
     });
   }
 }

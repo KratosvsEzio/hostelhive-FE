@@ -638,7 +638,20 @@ export class ListingDetail {
     if (l.description) jsonLd['description'] = description;
     if (l.images?.length) jsonLd['image'] = l.images.slice(0, 6);
     if (l.priceFrom) {
+      // `priceRange` is a display string search engines cannot compare. A real
+      // `priceSpecification` can be: it carries the currency and — the part that matters
+      // here — the unit. A Pakistani hostel is let by the month (UN/CEFACT `MON`), which
+      // no international travel site models, and a backpacker bed by the night (`DAY`).
       jsonLd['priceRange'] = `From PKR ${l.priceFrom}`;
+      jsonLd['priceSpecification'] = {
+        '@type': 'UnitPriceSpecification',
+        price: l.priceFrom,
+        priceCurrency: l.currency || 'PKR',
+        unitCode: periodForAccommodation(l.accommodationType) === 'nightly' ? 'DAY' : 'MON',
+        ...(periodForAccommodation(l.accommodationType) === 'nightly'
+          ? { unitText: 'per bed per night' }
+          : { unitText: 'per bed per month' }),
+      };
     }
     if (l.lat && l.lng) {
       jsonLd['geo'] = { '@type': 'GeoCoordinates', latitude: l.lat, longitude: l.lng };
@@ -653,13 +666,31 @@ export class ListingDetail {
         worstRating: 1,
       };
     }
-    if (l.amenities?.length) {
-      jsonLd['amenityFeature'] = l.amenities.map((a) => ({
+    // Amenities, plus the two facts that decide a Pakistani hostel search and that no
+    // general travel site models: whether meals are provided, and who the hostel accepts.
+    // Both are stated explicitly rather than left implicit in free text, so they are
+    // machine-readable rather than something a crawler has to infer from prose.
+    const features: Record<string, unknown>[] = (l.amenities ?? []).map((a) => ({
+      '@type': 'LocationFeatureSpecification',
+      name: AMENITIES[a]?.label ?? a,
+      value: true,
+    }));
+
+    features.push({
+      '@type': 'LocationFeatureSpecification',
+      name: 'Mess (meals included)',
+      value: this.hasMess(l),
+    });
+
+    if (l.accommodationType !== 'coliving') {
+      features.push({
         '@type': 'LocationFeatureSpecification',
-        name: a,
-        value: true,
-      }));
+        name: 'Gender',
+        value: this.genderLabel(l.accommodationType),
+      });
     }
+
+    jsonLd['amenityFeature'] = features;
 
     this.seo.setJsonLd('listing', jsonLd);
   }
