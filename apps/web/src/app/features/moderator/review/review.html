@@ -135,7 +135,7 @@
               saveAttempted() &&
               photos().filter((p) => p.decision !== 'rejected').length === 0
             ) {
-              <span class="ml-2 text-xs font-normal text-danger">
+              <span class="ms-2 text-xs font-normal text-danger">
                 At least one photo is required.
               </span>
             }
@@ -199,7 +199,7 @@
                         [attr.aria-pressed]="isOfferSelected(o.id)"
                       >
                         <i class="ti shrink-0 text-base" [class]="offerIcon(o.slug)" aria-hidden="true"></i>
-                        <span class="text-left">{{ o.name }}</span>
+                        <span class="text-start">{{ o.name }}</span>
                         <i
                           class="ti shrink-0 text-lg"
                           [class]="isOfferSelected(o.id) ? 'ti-circle-check-filled text-brand-600' : 'ti-circle text-ink-300'"

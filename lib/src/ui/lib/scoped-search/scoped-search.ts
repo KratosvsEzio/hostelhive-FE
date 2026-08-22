@@ -15,10 +15,10 @@ import { Dropdown, DropdownOption } from '../dropdown/dropdown';
 export type SearchSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZES: Record<SearchSize, { h: string; pr: string; icon: string; text: string }> = {
-  sm: { h: 'h-8',  pr: 'pr-1',   icon: 'mx-1.5 text-sm',     text: 'text-xs'     },
-  md: { h: 'h-9',  pr: 'pr-1.5', icon: 'mx-2   text-[15px]', text: 'text-[13px]' },
-  lg: { h: 'h-10', pr: 'pr-2',   icon: 'mx-2.5 text-base',   text: 'text-sm'     },
-  xl: { h: 'h-11', pr: 'pr-2.5', icon: 'mx-3   text-lg',     text: 'text-base'   },
+  sm: { h: 'h-8',  pr: 'pe-1',   icon: 'mx-1.5 text-sm',     text: 'text-xs'     },
+  md: { h: 'h-9',  pr: 'pe-1.5', icon: 'mx-2   text-[15px]', text: 'text-[13px]' },
+  lg: { h: 'h-10', pr: 'pe-2',   icon: 'mx-2.5 text-base',   text: 'text-sm'     },
+  xl: { h: 'h-11', pr: 'pe-2.5', icon: 'mx-3   text-lg',     text: 'text-base'   },
 };
 
 const BASE =

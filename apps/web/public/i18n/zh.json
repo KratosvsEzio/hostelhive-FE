@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "搜索",
+    "listYourHostel": "发布您的宿舍",
+    "switchToHosting": "切换到房东",
+    "signIn": "登录",
+    "account": "账户",
+    "language": "语言"
+  },
+  "search": {
+    "where": "地点",
+    "wherePlaceholder": "搜索城市或区域",
+    "budget": "预算",
+    "addBudget": "添加预算",
+    "sharing": "合住",
+    "addSharing": "添加合住",
+    "search": "搜索",
+    "filters": "筛选",
+    "sort": "排序",
+    "resultsInArea": "此区域内 {{count}} 家宿舍",
+    "noResults": "没有符合条件的宿舍",
+    "couldNotLoad": "无法加载列表",
+    "tryAgain": "重试"
+  },
+  "accommodation": {
+    "boys": "男生",
+    "girls": "女生",
+    "coliving": "共居",
+    "backpacker": "背包客"
+  },
+  "listing": {
+    "verified": "已验证",
+    "perMonth": "/月",
+    "perNight": "/晚",
+    "messIncluded": "含餐食",
+    "contact": "联系",
+    "showNumber": "显示号码",
+    "directions": "路线",
+    "amenities": "设施",
+    "reviews": "评价",
+    "description": "描述",
+    "translatedFrom": "译自{{language}}",
+    "showOriginal": "查看原文",
+    "showTranslation": "查看译文"
+  },
+  "common": {
+    "loading": "加载中…",
+    "close": "关闭",
+    "cancel": "取消",
+    "save": "保存",
+    "retry": "重试"
+  }
+}

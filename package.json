@@ -39,6 +39,7 @@
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/poppins": "^5.2.7",
+    "@jsverse/transloco": "^8.4.0",
     "@tabler/icons-webfont": "^3.44.0",
     "d3-geo": "^3.1.1",
     "d3-selection": "^3.0.0",

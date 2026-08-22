@@ -10,11 +10,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { searchRouteFor } from '@util/location-slug';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
 import { SearchCapacity } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type Seg = 'where' | 'budget' | 'sharing';
 
@@ -39,7 +41,7 @@ const fmtK = (n: number): string => (n >= 1000 ? `${n / 1000}k` : `${n}`);
   selector: 'app-search-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [PlaceSearchField, RangeSlider],
+  imports: [TranslocoPipe, PlaceSearchField, RangeSlider],
   styleUrl: './search-bar.scss',
   templateUrl: './search-bar.html',
 })
@@ -151,7 +153,9 @@ export class SearchBar {
   protected search(): void {
     const hasGeo = this.lat() !== null && this.lng() !== null;
     this.open.set(null);
-    this.router.navigate(['/search'], {
+    // The place becomes a URL segment (/search/karachi) purely for readability. Coordinates
+    // still travel in the query, so this changes nothing about how the map is driven.
+    this.router.navigate(searchRouteFor(this.place()), {
       queryParams: {
         place: this.place() || null,
         city: hasGeo ? null : this.place() || null,

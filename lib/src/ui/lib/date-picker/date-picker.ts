@@ -157,7 +157,7 @@ function buildMonth(
             aria-label="Clear date"
             (click)="clear($event)"
             (keydown.enter)="clear($event)"
-            class="ml-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
+            class="ms-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
           >
             <i class="ti ti-x text-sm"></i>
           </span>
@@ -195,7 +195,7 @@ function buildMonth(
                   type="button"
                   (click)="prevMonth()"
                   aria-label="Previous month"
-                  class="absolute left-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                  class="absolute start-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-left"></i>
                 </button>
@@ -211,7 +211,7 @@ function buildMonth(
                   type="button"
                   (click)="nextMonth()"
                   aria-label="Next month"
-                  class="absolute right-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                  class="absolute end-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-right"></i>
                 </button>
@@ -250,7 +250,7 @@ function buildMonth(
                   type="button"
                   (click)="prevYear()"
                   aria-label="Previous year"
-                  class="absolute left-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                  class="absolute start-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-left"></i>
                 </button>
@@ -266,7 +266,7 @@ function buildMonth(
                   type="button"
                   (click)="nextYear()"
                   aria-label="Next year"
-                  class="absolute right-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                  class="absolute end-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-right"></i>
                 </button>
@@ -445,7 +445,7 @@ export class DatePicker {
   }
 
   protected yearBtnClass(year: number): string {
-    const base = 'w-full rounded-xl px-3 py-2 text-sm text-left transition';
+    const base = 'w-full rounded-xl px-3 py-2 text-sm text-start transition';
     const selMs = parseMs(this.value());
     if (selMs != null && new Date(selMs).getFullYear() === year) {
       return `${base} bg-ink-900 font-semibold text-white`;

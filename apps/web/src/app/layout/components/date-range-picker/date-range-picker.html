@@ -17,7 +17,7 @@
     <div class="fixed inset-0 z-40" (click)="open.set(false)"></div>
 
     <!-- Dropdown panel -->
-    <div class="absolute right-0 top-full z-[9999] mt-2 flex max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-pill sm:flex-row">
+    <div class="absolute end-0 top-full z-[9999] mt-2 flex max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-pill sm:flex-row">
 
       <!-- Left: scrollable preset list — a horizontal strip on mobile, fixed 160px rail from sm up -->
       <div
@@ -27,7 +27,7 @@
         @for (p of presets; track p.label) {
           <button
             type="button"
-            class="shrink-0 whitespace-nowrap px-4 py-2 text-left text-sm transition hover:bg-surface sm:w-full"
+            class="shrink-0 whitespace-nowrap px-4 py-2 text-start text-sm transition hover:bg-surface sm:w-full"
             [class.font-semibold]="value()?.label === p.label"
             [class.text-brand-600]="value()?.label === p.label"
             [class.text-ink-700]="value()?.label !== p.label"
@@ -91,7 +91,7 @@
             </span>
             <button
               type="button"
-              class="ml-2 text-ink-400 transition hover:text-ink-700"
+              class="ms-2 text-ink-400 transition hover:text-ink-700"
               (click)="clearRange()"
             >Clear</button>
           } @else {

@@ -164,7 +164,7 @@ export interface DropdownOption {
                   role="option"
                   [attr.aria-selected]="count() === 0"
                   (click)="clear()"
-                  class="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition"
+                  class="flex w-full items-center rounded-lg px-3 py-2 text-start text-sm transition"
                   [class]="count() === 0 ? 'bg-brand-50 font-medium text-brand-700 hover:bg-brand-100' : 'text-ink-700 hover:bg-ink-50'"
                 >
                   {{ clearLabel() }}
@@ -190,7 +190,7 @@ export interface DropdownOption {
                     [attr.aria-selected]="isSelected(o.value)"
                     (click)="select(o.value)"
                     [disabled]="o.disabled"
-                    class="flex w-full gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition"
+                    class="flex w-full gap-2.5 rounded-lg px-3 py-2 text-start text-sm transition"
                     [class]="optionClass(o)"
                   >
                     @if (multiple()) {
@@ -252,7 +252,7 @@ export interface DropdownOption {
                            (it must clip to scroll) so it was always cut off, and a disabled
                            <button> swallows pointer events on its children, so the hover often
                            never fired anyway. Inline text is un-clippable and touch-friendly. -->
-                      <span class="ml-auto shrink-0 self-center whitespace-nowrap text-[11px] text-ink-400">{{ o.disabledTooltip }}</span>
+                      <span class="ms-auto shrink-0 self-center whitespace-nowrap text-[11px] text-ink-400">{{ o.disabledTooltip }}</span>
                     }
                   </button>
                 }
@@ -424,7 +424,7 @@ export class Dropdown {
 
   protected readonly triggerClass = computed(() => {
     const base =
-      'inline-flex select-none items-center gap-2 border font-medium text-left ' +
+      'inline-flex select-none items-center gap-2 border font-medium text-start ' +
       'transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ' +
       (this.disabled()
         ? 'cursor-not-allowed bg-ink-50 text-ink-500 opacity-70'
@@ -442,14 +442,14 @@ export class Dropdown {
     }
 
     if (this.seamless()) {
-      return `${base} h-8 whitespace-nowrap rounded-full !border-0 bg-transparent pl-3.5 pr-2 text-[13px] text-ink-800 hover:text-ink-900`;
+      return `${base} h-8 whitespace-nowrap rounded-full !border-0 bg-transparent ps-3.5 pe-2 text-[13px] text-ink-800 hover:text-ink-900`;
     }
 
     const tone =
       this.tone() === 'auto' && this.active()
         ? 'border-brand-500 bg-brand-50 text-brand-700'
         : 'border-ink-300 text-ink-800 hover:border-ink-400';
-    return `${base} h-8 whitespace-nowrap rounded-full bg-white pl-3 pr-2.5 text-[13px] ${tone}`;
+    return `${base} h-8 whitespace-nowrap rounded-full bg-white ps-3 pe-2.5 text-[13px] ${tone}`;
   });
 
   /**

@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "検索",
+    "listYourHostel": "宿を掲載する",
+    "switchToHosting": "ホストに切り替え",
+    "signIn": "ログイン",
+    "account": "アカウント",
+    "language": "言語"
+  },
+  "search": {
+    "where": "エリア",
+    "wherePlaceholder": "都市やエリアを検索",
+    "budget": "予算",
+    "addBudget": "予算を追加",
+    "sharing": "相部屋",
+    "addSharing": "相部屋を追加",
+    "search": "検索",
+    "filters": "絞り込み",
+    "sort": "並び替え",
+    "resultsInArea": "この範囲に{{count}}件",
+    "noResults": "条件に合う宿がありません",
+    "couldNotLoad": "一覧を読み込めませんでした",
+    "tryAgain": "再試行"
+  },
+  "accommodation": {
+    "boys": "男性専用",
+    "girls": "女性専用",
+    "coliving": "コリビング",
+    "backpacker": "バックパッカー"
+  },
+  "listing": {
+    "verified": "認証済み",
+    "perMonth": "/月",
+    "perNight": "/泊",
+    "messIncluded": "食事付き",
+    "contact": "問い合わせ",
+    "showNumber": "番号を表示",
+    "directions": "経路",
+    "amenities": "設備",
+    "reviews": "レビュー",
+    "description": "説明",
+    "translatedFrom": "{{language}}から翻訳",
+    "showOriginal": "原文を表示",
+    "showTranslation": "翻訳を表示"
+  },
+  "common": {
+    "loading": "読み込み中…",
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "retry": "再試行"
+  }
+}

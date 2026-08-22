@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "खोजें",
+    "listYourHostel": "अपना हॉस्टल जोड़ें",
+    "switchToHosting": "होस्टिंग पर जाएँ",
+    "signIn": "साइन इन",
+    "account": "खाता",
+    "language": "भाषा"
+  },
+  "search": {
+    "where": "कहाँ",
+    "wherePlaceholder": "शहर या इलाका खोजें",
+    "budget": "बजट",
+    "addBudget": "बजट जोड़ें",
+    "sharing": "शेयरिंग",
+    "addSharing": "शेयरिंग जोड़ें",
+    "search": "खोजें",
+    "filters": "फ़िल्टर",
+    "sort": "क्रम",
+    "resultsInArea": "इस क्षेत्र में {{count}} हॉस्टल",
+    "noResults": "इन फ़िल्टरों से कोई हॉस्टल नहीं मिला",
+    "couldNotLoad": "सूची लोड नहीं हो सकी",
+    "tryAgain": "फिर कोशिश करें"
+  },
+  "accommodation": {
+    "boys": "लड़के",
+    "girls": "लड़कियाँ",
+    "coliving": "सह-निवास",
+    "backpacker": "बैकपैकर"
+  },
+  "listing": {
+    "verified": "सत्यापित",
+    "perMonth": "/माह",
+    "perNight": "/रात",
+    "messIncluded": "मेस शामिल",
+    "contact": "संपर्क",
+    "showNumber": "नंबर देखें",
+    "directions": "रास्ता",
+    "amenities": "सुविधाएँ",
+    "reviews": "समीक्षाएँ",
+    "description": "विवरण",
+    "translatedFrom": "{{language}} से अनूदित",
+    "showOriginal": "मूल देखें",
+    "showTranslation": "अनुवाद देखें"
+  },
+  "common": {
+    "loading": "लोड हो रहा है…",
+    "close": "बंद करें",
+    "cancel": "रद्द",
+    "save": "सहेजें",
+    "retry": "पुनः"
+  }
+}

@@ -233,7 +233,7 @@ export interface PhotoGridPhoto {
               } @else {
                 @if (p.primary) {
                   <span
-                    class="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-semibold text-white"
+                    class="absolute start-2 top-2 flex items-center gap-1 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-semibold text-white"
                   >
                     <i
                       class="ti ti-star text-[10px]"

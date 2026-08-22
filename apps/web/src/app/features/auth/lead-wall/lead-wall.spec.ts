@@ -12,6 +12,7 @@ import {
 import { BehaviorSubject, map } from 'rxjs';
 import { provideDataAccess } from '@core/provide-data-access';
 import { LeadWall } from './lead-wall';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 
 /** The component's members are `protected`; the spec asserts on them through this shape. */
 interface LeadWallInternals {
@@ -66,7 +67,9 @@ function heading(fixture: ComponentFixture<LeadWall>): string {
 /** The `href` the × dismisses to, as resolved by `RouterLink`. */
 function closeHref(fixture: ComponentFixture<LeadWall>): string | null {
   return fixture.nativeElement
-    .querySelector('a[aria-label="Close"]')
+    // Targeted by a stable hook, not by its label: the label is a translation key now,
+    // and a behavioural test should not break because someone rewords a button.
+    .querySelector('a[data-testid="lead-wall-close"]')
     ?.getAttribute('href');
 }
 
@@ -88,6 +91,7 @@ function render(initial: Params, routes: Route[] = []) {
     providers: [
       provideRouter(routes),
       provideDataAccess({ baseUrl: 'https://api.test' }),
+      provideI18nTesting(),
       route.provider,
     ],
   });
@@ -212,7 +216,7 @@ describe('LeadWall', () => {
 
     it('replaces history so browser-back does not reopen the wall', () => {
       const { fixture } = render({ returnUrl: '/hostel/lums-boys-hostel' }, ROUTES);
-      const link = fixture.debugElement.query(By.css('a[aria-label="Close"]'));
+      const link = fixture.debugElement.query(By.css('a[data-testid="lead-wall-close"]'));
       expect(link.injector.get(RouterLink).replaceUrl).toBe(true);
     });
   });

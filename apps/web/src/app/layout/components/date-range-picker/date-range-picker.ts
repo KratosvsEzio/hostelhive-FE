@@ -140,10 +140,10 @@ export class DateRangePicker {
     if (!d.inRange) return 'hidden';
     if (d.isStart && d.isEnd) return 'hidden';
     const base = 'absolute inset-y-1 bg-brand-50';
-    if (d.isStart) return `${base} left-1/2 right-0`;
-    if (d.isEnd) return `${base} left-0 right-1/2`;
-    const round = `${d.isRowStart ? 'rounded-l-full' : ''} ${d.isRowEnd ? 'rounded-r-full' : ''}`.trim();
-    return `${base} left-0 right-0 ${round}`;
+    if (d.isStart) return `${base} start-1/2 end-0`;
+    if (d.isEnd) return `${base} start-0 end-1/2`;
+    const round = `${d.isRowStart ? 'rounded-s-full' : ''} ${d.isRowEnd ? 'rounded-e-full' : ''}`.trim();
+    return `${base} start-0 end-0 ${round}`;
   }
 
   protected circleClass(d: CalDay): string {

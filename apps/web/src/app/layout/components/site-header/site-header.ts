@@ -13,6 +13,8 @@ import { Button, ConfirmModal } from '@hostelhive/ui';
 import { SearchBar } from '../search-bar/search-bar';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NotificationBell } from '../notification-bell/notification-bell';
+import { LanguageSwitcher } from '@core/i18n/language-switcher';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 
@@ -28,7 +30,15 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 @Component({
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SearchBar, AccountMenu, NotificationBell, ConfirmModal, Button],
+  imports: [TranslocoPipe, 
+    RouterLink,
+    SearchBar,
+    AccountMenu,
+    NotificationBell,
+    ConfirmModal,
+    Button,
+    LanguageSwitcher,
+  ],
   host: { class: 'contents' },
   templateUrl: './site-header.html',
 })

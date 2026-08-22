@@ -41,7 +41,7 @@ export class Toggle {
   protected readonly knobClasses = computed(
     () =>
       `absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-card transition-all ${
-        this.checked() ? 'right-0.5' : 'left-0.5'
+        this.checked() ? 'end-0.5' : 'start-0.5'
       }`,
   );
 }

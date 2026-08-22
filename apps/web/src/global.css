@@ -1069,3 +1069,36 @@ hh-search-map {
 .tel-mat-select-panel .mat-mdc-option:hover:not(.mdc-list-item--disabled) {
   background-color: #F4F4F4;
 }
+
+/* ─── Right-to-left ──────────────────────────────────────────────────────────
+   Layout mirrors through logical properties (ms-/me-/ps-/pe-/start-/end-), which
+   Tailwind resolves against `dir`. Two things it cannot resolve on its own:
+
+   1. Directional icons. A chevron pointing "forward" points right in English and left
+      in Urdu, but the glyph is a fixed shape — so it is flipped here rather than
+      swapped per template, which would mean a conditional at every call site.
+      Deliberately narrow: only arrows and chevrons, never an icon whose meaning is its
+      shape (a play button, a logo, a checkmark).
+
+   2. Anything positioned with a physical transform. Centring pairs like
+      `left-1/2 -translate-x-1/2` are left physical on purpose: they centre correctly in
+      both directions, and making the inset logical while the transform stays physical is
+      what actually breaks them. */
+[dir='rtl'] .ti-chevron-right,
+[dir='rtl'] .ti-chevron-left,
+[dir='rtl'] .ti-arrow-right,
+[dir='rtl'] .ti-arrow-left,
+[dir='rtl'] .ti-arrow-narrow-right,
+[dir='rtl'] .ti-arrow-narrow-left,
+[dir='rtl'] .ti-caret-right,
+[dir='rtl'] .ti-caret-left {
+  transform: scaleX(-1);
+}
+
+/* Numbers, prices, phone numbers and dates stay left-to-right inside RTL text.
+   `12,000` must not render as `000,12`, and a phone number reversed is a wrong number. */
+[dir='rtl'] .hh-ltr {
+  direction: ltr;
+  unicode-bidi: embed;
+  text-align: start;
+}

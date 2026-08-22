@@ -156,7 +156,7 @@ function shortLabel(iso: string | null): string {
             aria-label="Clear dates"
             (click)="clear($event)"
             (keydown.enter)="clear($event)"
-            class="ml-0.5 grid h-5 w-5 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
+            class="ms-0.5 grid h-5 w-5 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
           >
             <i class="ti ti-x text-sm"></i>
           </span>
@@ -180,12 +180,12 @@ function shortLabel(iso: string | null): string {
           >
             <div class="flex gap-5">
               @if (presets().length) {
-                <div class="flex max-h-[300px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-ink-100 pr-5 pt-1">
+                <div class="flex max-h-[300px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-ink-100 pe-5 pt-1">
                   @for (p of presets(); track p.label) {
                     <button
                       type="button"
                       (click)="applyPreset(p)"
-                      class="whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm text-ink-600 transition hover:bg-ink-50"
+                      class="whitespace-nowrap rounded-lg px-3 py-2 text-start text-sm text-ink-600 transition hover:bg-ink-50"
                     >{{ p.label }}</button>
                   }
                 </div>
@@ -201,7 +201,7 @@ function shortLabel(iso: string | null): string {
                             type="button"
                             (click)="prevMonth()"
                             aria-label="Previous month"
-                            class="absolute left-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                            class="absolute start-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                           >
                             <i class="ti ti-chevron-left"></i>
                           </button>
@@ -214,7 +214,7 @@ function shortLabel(iso: string | null): string {
                             type="button"
                             (click)="nextMonth()"
                             aria-label="Next month"
-                            class="absolute right-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
+                            class="absolute end-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                           >
                             <i class="ti ti-chevron-right"></i>
                           </button>
@@ -487,8 +487,8 @@ export class DateRangePicker {
     const hi = Math.max(s, e);
     if (cell.ms < lo || cell.ms > hi) return base;
     let c = `${base} bg-ink-100`;
-    if (cell.ms === lo) c += ' rounded-l-full';
-    if (cell.ms === hi) c += ' rounded-r-full';
+    if (cell.ms === lo) c += ' rounded-s-full';
+    if (cell.ms === hi) c += ' rounded-e-full';
     return c;
   }
 
@@ -524,7 +524,7 @@ export class DateRangePicker {
     const panelW = dialog ? dialog.offsetWidth : Math.min(800, vw - 16);
     const panelH = dialog ? dialog.offsetHeight : 460;
 
-    // Horizontal: left-align with trigger, right-align if it would overflow viewport
+    // Horizontal: start-align with trigger, end-align if it would overflow viewport
     let left = r.left;
     if (left + panelW > vw - 8) left = r.right - panelW;
     left = Math.max(8, Math.min(left, vw - panelW - 8));

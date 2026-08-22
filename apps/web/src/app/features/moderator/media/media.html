@@ -83,7 +83,7 @@
             <!-- Selection checkbox — top-left -->
             @if (activeStatus() !== 'rejected') {
               <div
-                class="absolute left-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 shadow-md transition-all duration-150 active:scale-95"
+                class="absolute start-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 shadow-md transition-all duration-150 active:scale-95"
                 [class]="isSelected ? 'border-brand-500 bg-brand-500 shadow-brand-500/30 scale-105' : 'border-brand-500/50 bg-brand-500/20 hover:scale-105 hover:bg-brand-500/30 hover:border-brand-500/70'"
                 (click)="$event.stopPropagation(); toggleSelect(aid)"
               >
@@ -95,7 +95,7 @@
 
             <!-- Kind badge — top-right -->
             @if (badge) {
-              <div class="absolute right-2.5 top-2.5 z-10">
+              <div class="absolute end-2.5 top-2.5 z-10">
                 <span
                   class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm"
                   [class]="badge.cls"
@@ -148,7 +148,7 @@
               @if (a.attachment_label?.name) {
                 <span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">{{ a.attachment_label!.name }}</span>
               }
-              <span class="ml-auto text-[11px] text-ink-400">{{ dateLabel(a.created_at) }}</span>
+              <span class="ms-auto text-[11px] text-ink-400">{{ dateLabel(a.created_at) }}</span>
             </div>
           </div>
 
@@ -241,7 +241,7 @@
           <!-- Dark gradient overlay -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20"></div>
           <!-- "Rejecting" pill — top right -->
-          <div class="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-danger px-2.5 py-1 text-xs font-semibold text-white shadow-md">
+          <div class="absolute end-3 top-3 flex items-center gap-1.5 rounded-full bg-danger px-2.5 py-1 text-xs font-semibold text-white shadow-md">
             <span class="relative flex h-1.5 w-1.5">
               <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70"></span>
               <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-white"></span>

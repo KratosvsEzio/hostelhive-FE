@@ -179,7 +179,7 @@ export interface PaginationConfig {
         <table class="w-full text-sm" [style.min-width]="minWidth()">
 
           <!-- Header -->
-          <thead class="border-b border-ink-100 text-left text-xs uppercase tracking-wide text-ink-400">
+          <thead class="border-b border-ink-100 text-start text-xs uppercase tracking-wide text-ink-400">
             <tr>
               @let activeSort = sort();
               @for (col of columns(); track col.key) {
@@ -192,7 +192,7 @@ export interface PaginationConfig {
                   (click)="headerClick(col)"
                 >
                   @if (col.sticky && !atScrollEnd()) {
-                    <div class="pointer-events-none absolute inset-y-0 right-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
+                    <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                   }
                   @if (col.sortable) {
                     <span class="inline-flex items-center gap-1" [class.justify-end]="col.align === 'right'">
@@ -212,9 +212,9 @@ export interface PaginationConfig {
                 </th>
               }
               @if (showActions()) {
-                <th class="relative sticky right-0 bg-white px-5 py-2.5">
+                <th class="relative sticky end-0 bg-white px-5 py-2.5">
                   @if (!atScrollEnd()) {
-                    <div class="pointer-events-none absolute inset-y-0 right-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
+                    <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                   }
                 </th>
               }
@@ -260,7 +260,7 @@ export interface PaginationConfig {
                       [class.text-right]="col.align === 'right'"
                     >
                       @if (col.sticky && !atScrollEnd()) {
-                        <div class="pointer-events-none absolute inset-y-0 right-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
+                        <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                       }
                       @if (first && exp) {
                         <!-- Expandable first cell: chevron + composite content -->
@@ -412,11 +412,11 @@ export interface PaginationConfig {
 
                   @if (showActions()) {
                     <td
-                      class="relative sticky right-0 bg-white px-5 py-3 text-right group-hover:bg-surface"
+                      class="relative sticky end-0 bg-white px-5 py-3 text-end group-hover:bg-surface"
                       (click)="$event.stopPropagation()"
                     >
                       @if (!atScrollEnd()) {
-                        <div class="pointer-events-none absolute inset-y-0 right-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
+                        <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                       }
                       <button
                         hh-button
@@ -441,7 +441,7 @@ export interface PaginationConfig {
                   <tr class="bg-surface">
                     <td
                       [attr.colspan]="exp.nameColSpan"
-                      class="px-5 pb-1 pt-2 pl-14 text-[10px] font-medium uppercase tracking-wide text-ink-400"
+                      class="px-5 pb-1 pt-2 ps-14 text-[10px] font-medium uppercase tracking-wide text-ink-400"
                     >{{ exp.nameLabel ?? 'Tenant' }}</td>
                     @for (sc of exp.columns; track sc.label; let scFirst = $first) {
                       <td
@@ -452,9 +452,9 @@ export interface PaginationConfig {
                       >{{ sc.label }}</td>
                     }
                     @if (showActions()) {
-                      <td class="relative sticky right-0 bg-surface">
+                      <td class="relative sticky end-0 bg-surface">
                         @if (!atScrollEnd()) {
-                          <div class="pointer-events-none absolute inset-y-0 right-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
+                          <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                         }
                       </td>
                     }
@@ -465,7 +465,7 @@ export interface PaginationConfig {
                     <tr class="bg-surface border-t border-ink-100">
                       <td
                         [attr.colspan]="exp.nameColSpan"
-                        class="whitespace-nowrap px-5 py-2.5 pl-14 text-sm text-ink-800"
+                        class="whitespace-nowrap px-5 py-2.5 ps-14 text-sm text-ink-800"
                       >{{ exp.childName(sub) }}</td>
 
                       @for (sc of exp.columns; track sc.label; let scFirst = $first) {
@@ -507,9 +507,9 @@ export interface PaginationConfig {
                       }
 
                       @if (showActions()) {
-                        <td class="relative sticky right-0 bg-surface">
+                        <td class="relative sticky end-0 bg-surface">
                           @if (!atScrollEnd()) {
-                            <div class="pointer-events-none absolute inset-y-0 right-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
+                            <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                           }
                         </td>
                       }
@@ -620,11 +620,11 @@ export class DataTable implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void { this.scrollCleanup?.(); }
 
   protected stickyTh(col: ColumnDef): string {
-    return col.sticky ? 'relative sticky right-0 bg-white' : '';
+    return col.sticky ? 'relative sticky end-0 bg-white' : '';
   }
 
   protected stickyTd(col: ColumnDef): string {
-    return col.sticky ? 'relative sticky right-0 bg-white group-hover:bg-surface' : '';
+    return col.sticky ? 'relative sticky end-0 bg-white group-hover:bg-surface' : '';
   }
 
   protected headerClick(col: ColumnDef): void {

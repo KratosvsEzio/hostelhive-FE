@@ -8,10 +8,10 @@
       (focusin)="open.set('where')"
       style="flex: 1.5 1 0"
     >
-      <span class="hhsb-lab">Where</span>
+      <span class="hhsb-lab">{{ 'search.where' | transloco }}</span>
       <hh-place-search
         [value]="place()"
-        placeholder="Search city or area"
+        [placeholder]="'search.wherePlaceholder' | transloco"
         (textChange)="onText($event)"
         (selected)="onSelected($event)"
       />
@@ -24,7 +24,7 @@
       (click)="toggle('budget')"
       style="flex: 1 1 0"
     >
-      <span class="hhsb-lab">Budget</span>
+      <span class="hhsb-lab">{{ 'search.budget' | transloco }}</span>
       <span
         class="hhsb-val"
         [class.f]="budgetActive()"
@@ -39,7 +39,7 @@
       (click)="toggle('sharing')"
       style="flex: 1 1 0"
     >
-      <span class="hhsb-lab">Sharing</span>
+      <span class="hhsb-lab">{{ 'search.sharing' | transloco }}</span>
       <span class="hhsb-val" [class.f]="!!sharing()">{{ sharingLabel() }}</span>
     </button>
     <button

@@ -17,14 +17,17 @@ import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
+import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { AnalyticsService } from '@core/analytics/analytics.service';
+import { periodForAccommodation } from '@util/pricing-period';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 import { accommodationLabel } from '@util/accommodation-type';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { ApiDate } from '@util/api-date';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -70,7 +73,7 @@ const ROOM_TINTS = [
 @Component({
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [TranslocoPipe, 
     ApiDate,
     DecimalPipe,
     RouterLink,
@@ -99,6 +102,7 @@ export class ListingDetail {
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly seo = inject(Seo);
   private readonly analytics = inject(AnalyticsService);
 
   protected readonly phoneValue = signal<string | null>(null);
@@ -481,53 +485,61 @@ export class ListingDetail {
   }
 
   constructor() {
-    // SSR can't authenticate the `/api/hostels/:id` call (no token on the server), so it would
-    // resolve to "not found" and bake that into the HTML — flashing on every refresh before the
-    // client hydrates. Skip the fetch on the server: SSR renders the skeleton (matching the
-    // initial `loading: true` state for clean hydration) and the browser does the real fetch.
-    if (this.isBrowser) {
-      // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
-      // opens the review modal once the listing has loaded, carrying the notification id the
-      // review is submitted against.
-      const reviewParam = this.route.snapshot.queryParamMap.get('review');
-      let openReviewOnLoad = !!reviewParam;
+    // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
+    // opens the review modal once the listing has loaded, carrying the notification id the
+    // review is submitted against. Browser-only — there is no modal to open during SSR.
+    const reviewParam = this.isBrowser
+      ? this.route.snapshot.queryParamMap.get('review')
+      : null;
+    let openReviewOnLoad = !!reviewParam;
 
-      this.route.paramMap.pipe(
-        map((p) => p.get('slug') ?? ''),
-        distinctUntilChanged(),
-        switchMap((slug) => {
-          this._state.set({ loading: true, error: false, data: null });
-          return this.api.getBySlug(slug).pipe(
-            map((data): ViewState => ({ loading: false, error: false, data: data ?? null })),
-            catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      ).subscribe((s) => {
-        this._state.set(s);
-        if (s.data) {
-          this.analytics.track('listing_viewed', {
-            listing_id: s.data.id,
-            city: s.data.city,
-            accommodation_type: s.data.accommodationType,
-          });
-        }
-        // Load reviews up front so the in-page reviews section renders them without a click.
-        if (s.data) this.fetchReviews();
-        if (s.data && openReviewOnLoad) {
-          openReviewOnLoad = false;
-          this.reviewNotificationId.set(reviewParam ?? '');
-          this.openReviews();
-          // Drop the param so a refresh (or the back button) doesn't reopen the modal.
-          void this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { review: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
-      });
-    }
+    // Runs on the server too, deliberately. This is the app's most valuable page for
+    // search, and a crawler that does not execute JavaScript only ever sees the
+    // server-rendered HTML — skipping the fetch here served every listing as an empty
+    // skeleton with no name, price or description to index.
+    //
+    // It is safe because `getBySlug` hits `GET /public/hostel_detail/:id`, which needs
+    // no token. (An older comment here claimed it called `/api/hostels/:id` and could
+    // not authenticate on the server; that is not the endpoint it uses. The search
+    // page already fetches `/public/hostels` during SSR on the same basis.)
+    this.route.paramMap.pipe(
+      map((p) => p.get('slug') ?? ''),
+      distinctUntilChanged(),
+      switchMap((slug) => {
+        this._state.set({ loading: true, error: false, data: null });
+        return this.api.getBySlug(slug).pipe(
+          map((data): ViewState => ({ loading: false, error: false, data: data ?? null })),
+          catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((s) => {
+      this._state.set(s);
+      this.applySeo(s);
+      // Everything below touches the DOM or the address bar — browser only.
+      if (!this.isBrowser) return;
+      if (s.data) {
+        this.analytics.track('listing_viewed', {
+          listing_id: s.data.id,
+          city: s.data.city,
+          accommodation_type: s.data.accommodationType,
+        });
+      }
+      // Load reviews up front so the in-page reviews section renders them without a click.
+      if (s.data) this.fetchReviews();
+      if (s.data && openReviewOnLoad) {
+        openReviewOnLoad = false;
+        this.reviewNotificationId.set(reviewParam ?? '');
+        this.openReviews();
+        // Drop the param so a refresh (or the back button) doesn't reopen the modal.
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { review: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
+    });
 
     fromEvent<KeyboardEvent>(this.doc, 'keydown').pipe(
       takeUntilDestroyed(this.destroyRef),
@@ -544,8 +556,160 @@ export class ListingDetail {
     });
   }
 
+  /**
+   * Head metadata + structured data for the loaded listing.
+   *
+   * Runs on the server as well as the browser: without it every listing shared the
+   * app's single default title and description, so thousands of pages looked identical
+   * to a crawler and competed with one another for the same terms.
+   *
+   * The JSON-LD is `LodgingBusiness` — the closest schema.org type for a hostel that
+   * takes an address, geo coordinates, a price range and an aggregate rating. Optional
+   * blocks are omitted rather than emitted empty: an `aggregateRating` with zero
+   * reviews, or an address with blank fields, is treated as invalid markup and can cost
+   * the rich result entirely.
+   */
+  private applySeo(s: ViewState): void {
+    this.seo.clearJsonLd('listing');
+    const l = s.data;
+
+    if (!l) {
+      // Missing or failed: never let a not-found page into the index.
+      this.seo.apply({
+        title: 'Listing not found — HostelHive',
+        description: 'This hostel listing is unavailable or the link is incorrect.',
+        noindex: true,
+      });
+      return;
+    }
+
+    const location = [l.area, l.city].filter(Boolean).join(', ');
+    const genderLabel = this.genderLabel(l.accommodationType);
+    // Backpacker beds are priced per night, everything else per month. The old copy said
+    // "/month" for both, which misprices a backpacker hostel in every search result.
+    const per = periodForAccommodation(l.accommodationType) === 'nightly' ? 'night' : 'month';
+    const price = l.priceFrom
+      ? `from Rs ${l.priceFrom.toLocaleString('en-PK')}/${per}`
+      : '';
+
+    // Front-load the terms people actually search: name, then gender + location, then
+    // price. Descriptions are truncated around 160 characters in results, so the
+    // listing's own copy goes last where a cut costs least.
+    const description = [
+      `${genderLabel} hostel in ${location}${price ? `, ${price}` : ''}.`,
+      l.verified ? 'Verified listing on HostelHive.' : '',
+      l.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() ?? '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 300);
+
+    // The shared card, which is where this site actually spreads. Leads with what the
+    // place is rather than its name, and carries the two facts that decide a click here:
+    // price, and whether meals are included.
+    const socialTitle = [
+      `${genderLabel} hostel in ${location}`,
+      l.priceFrom ? `Rs ${l.priceFrom.toLocaleString('en-PK')}/${per === 'night' ? 'night' : 'mo'}` : '',
+      this.hasMess(l) ? 'Mess included' : '',
+      l.verified ? 'Verified' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+
+    this.seo.apply({
+      title: `${l.name} — ${genderLabel} hostel in ${location} | HostelHive`,
+      socialTitle,
+      description,
+      path: `/hostel/${l.slug ?? ''}`,
+      image: l.images?.[0],
+    });
+
+    const jsonLd: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'LodgingBusiness',
+      name: l.name,
+      url: `${SITE_ORIGIN}/hostel/${l.slug ?? ''}`,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: l.city,
+        addressRegion: l.area,
+        addressCountry: 'PK',
+      },
+    };
+    if (l.description) jsonLd['description'] = description;
+    if (l.images?.length) jsonLd['image'] = l.images.slice(0, 6);
+    if (l.priceFrom) {
+      // `priceRange` is a display string search engines cannot compare. A real
+      // `priceSpecification` can be: it carries the currency and — the part that matters
+      // here — the unit. A Pakistani hostel is let by the month (UN/CEFACT `MON`), which
+      // no international travel site models, and a backpacker bed by the night (`DAY`).
+      jsonLd['priceRange'] = `From PKR ${l.priceFrom}`;
+      jsonLd['priceSpecification'] = {
+        '@type': 'UnitPriceSpecification',
+        price: l.priceFrom,
+        priceCurrency: l.currency || 'PKR',
+        unitCode: periodForAccommodation(l.accommodationType) === 'nightly' ? 'DAY' : 'MON',
+        ...(periodForAccommodation(l.accommodationType) === 'nightly'
+          ? { unitText: 'per bed per night' }
+          : { unitText: 'per bed per month' }),
+      };
+    }
+    if (l.lat && l.lng) {
+      jsonLd['geo'] = { '@type': 'GeoCoordinates', latitude: l.lat, longitude: l.lng };
+    }
+    // Only with at least one real review — Google rejects a rating with no count.
+    if (l.rating && l.reviews) {
+      jsonLd['aggregateRating'] = {
+        '@type': 'AggregateRating',
+        ratingValue: l.rating,
+        reviewCount: l.reviews,
+        bestRating: 5,
+        worstRating: 1,
+      };
+    }
+    // Amenities, plus the two facts that decide a Pakistani hostel search and that no
+    // general travel site models: whether meals are provided, and who the hostel accepts.
+    // Both are stated explicitly rather than left implicit in free text, so they are
+    // machine-readable rather than something a crawler has to infer from prose.
+    const features: Record<string, unknown>[] = (l.amenities ?? []).map((a) => ({
+      '@type': 'LocationFeatureSpecification',
+      name: AMENITIES[a]?.label ?? a,
+      value: true,
+    }));
+
+    features.push({
+      '@type': 'LocationFeatureSpecification',
+      name: 'Mess (meals included)',
+      value: this.hasMess(l),
+    });
+
+    if (l.accommodationType !== 'coliving') {
+      features.push({
+        '@type': 'LocationFeatureSpecification',
+        name: 'Gender',
+        value: this.genderLabel(l.accommodationType),
+      });
+    }
+
+    jsonLd['amenityFeature'] = features;
+
+    this.seo.setJsonLd('listing', jsonLd);
+  }
+
   protected roomTint(index: number): string {
     return ROOM_TINTS[index % ROOM_TINTS.length];
+  }
+
+  /**
+   * Whether the hostel feeds its residents.
+   *
+   * Not a field: mess is one of the host's free-text offers, so this matches the same
+   * words `offerIcon` does. It is the single most asked question about a Pakistani
+   * hostel, which is why it earns a place in the shared card and the structured data.
+   */
+  private hasMess(l: { offerNames?: string[]; amenities?: string[] }): boolean {
+    const words = [...(l.offerNames ?? []), ...(l.amenities ?? [])].join(' ').toLowerCase();
+    return /\bmess\b|meal|food|dining/.test(words);
   }
 
   protected genderLabel(g: AccommodationType): string {

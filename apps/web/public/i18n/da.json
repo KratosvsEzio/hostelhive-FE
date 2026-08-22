@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Søg",
+    "listYourHostel": "Opret dit hostel",
+    "switchToHosting": "Skift til vært",
+    "signIn": "Log ind",
+    "account": "Konto",
+    "language": "Sprog"
+  },
+  "search": {
+    "where": "Hvor",
+    "wherePlaceholder": "Søg by eller område",
+    "budget": "Budget",
+    "addBudget": "Tilføj budget",
+    "sharing": "Deling",
+    "addSharing": "Tilføj deling",
+    "search": "Søg",
+    "filters": "Filtre",
+    "sort": "Sortér",
+    "resultsInArea": "{{count}} hosteller i dette område",
+    "noResults": "Ingen hosteller matcher",
+    "couldNotLoad": "Kunne ikke indlæse annoncer",
+    "tryAgain": "Prøv igen"
+  },
+  "accommodation": {
+    "boys": "Drenge",
+    "girls": "Piger",
+    "coliving": "Coliving",
+    "backpacker": "Backpacker"
+  },
+  "listing": {
+    "verified": "Verificeret",
+    "perMonth": "/måned",
+    "perNight": "/nat",
+    "messIncluded": "Måltider inkluderet",
+    "contact": "Kontakt",
+    "showNumber": "Vis nummer",
+    "directions": "Rutevejledning",
+    "amenities": "Faciliteter",
+    "reviews": "Anmeldelser",
+    "description": "Beskrivelse",
+    "translatedFrom": "Oversat fra {{language}}",
+    "showOriginal": "Vis original",
+    "showTranslation": "Vis oversættelse"
+  },
+  "common": {
+    "loading": "Indlæser…",
+    "close": "Luk",
+    "cancel": "Annullér",
+    "save": "Gem",
+    "retry": "Prøv igen"
+  }
+}

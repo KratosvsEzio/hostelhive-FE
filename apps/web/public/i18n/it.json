@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Cerca",
+    "listYourHostel": "Pubblica il tuo ostello",
+    "switchToHosting": "Passa a host",
+    "signIn": "Accedi",
+    "account": "Account",
+    "language": "Lingua"
+  },
+  "search": {
+    "where": "Dove",
+    "wherePlaceholder": "Cerca città o zona",
+    "budget": "Budget",
+    "addBudget": "Aggiungi budget",
+    "sharing": "Condivisione",
+    "addSharing": "Aggiungi condivisione",
+    "search": "Cerca",
+    "filters": "Filtri",
+    "sort": "Ordina",
+    "resultsInArea": "{{count}} ostelli in questa zona",
+    "noResults": "Nessun ostello corrisponde",
+    "couldNotLoad": "Impossibile caricare gli annunci",
+    "tryAgain": "Riprova"
+  },
+  "accommodation": {
+    "boys": "Ragazzi",
+    "girls": "Ragazze",
+    "coliving": "Coliving",
+    "backpacker": "Backpacker"
+  },
+  "listing": {
+    "verified": "Verificato",
+    "perMonth": "/mese",
+    "perNight": "/notte",
+    "messIncluded": "Pasti inclusi",
+    "contact": "Contatta",
+    "showNumber": "Mostra numero",
+    "directions": "Indicazioni",
+    "amenities": "Servizi",
+    "reviews": "Recensioni",
+    "description": "Descrizione",
+    "translatedFrom": "Tradotto dal {{language}}",
+    "showOriginal": "Mostra l'originale",
+    "showTranslation": "Mostra traduzione"
+  },
+  "common": {
+    "loading": "Caricamento…",
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "retry": "Riprova"
+  }
+}

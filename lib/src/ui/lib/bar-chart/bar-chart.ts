@@ -20,7 +20,7 @@ export interface BarChartTick {
     <div class="flex gap-2">
       <!-- Y-axis -->
       <div
-        class="flex shrink-0 flex-col justify-between py-2 text-right text-[10px] leading-none text-ink-400"
+        class="flex shrink-0 flex-col justify-between py-2 text-end text-[10px] leading-none text-ink-400"
         [style.height]="height()"
       >
         @for (t of yTicks(); track $index) {
@@ -49,7 +49,7 @@ export interface BarChartTick {
                 @if (b.value > 0) {
                   <div
                     class="pointer-events-none absolute z-10 hidden w-32 group-hover:block"
-                    [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+                    [class]="first ? 'start-0' : last ? 'end-0' : 'left-1/2 -translate-x-1/2'"
                     [style.bottom]="'calc(' + b.pct + '% + 14px)'"
                     [style.display]="selected() === i ? 'block' : null"
                   >

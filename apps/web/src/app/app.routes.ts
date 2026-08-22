@@ -2,8 +2,9 @@ import { Route } from '@angular/router';
 import { HOST_ROLES, STAFF_ROLES, authGuard, roleGuard } from '@core/auth';
 import { Home } from '@features/public/home/home';
 import { Forbidden } from '@core/forbidden/forbidden';
+import { localePrefixMatcher } from '@core/i18n/locale-prefix-matcher';
 
-export const appRoutes: Route[] = [
+const LOCALISED_ROUTES: Route[] = [
   // â”€â”€â”€ Public seeker (SSR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     path: '',
@@ -14,6 +15,25 @@ export const appRoutes: Route[] = [
     path: 'search',
     loadChildren: () =>
       import('@features/public/search/search.routes').then((m) => m.SEARCH_ROUTES),
+  },
+  // ─── SEO landing pages ────────────────────────────────────────────────────
+  // `/hostels/lahore`, `/hostels/lahore/girls`. These render the search experience with
+  // the place's filters pre-applied, but express them in the path: `?city=Lahore` is
+  // crawled as a variant of /search, whereas these are pages that can rank for
+  // "hostels in Lahore" on their own. Server-rendered — the content has to be in the
+  // HTML for a crawler that never runs JavaScript.
+  //
+  // The set of places is curated (see landing/places.ts) rather than open-ended, to keep
+  // this from becoming thousands of near-empty faceted URLs.
+  {
+    path: 'hostels/:place',
+    loadComponent: () =>
+      import('@features/public/landing/place-landing').then((m) => m.PlaceLanding),
+  },
+  {
+    path: 'hostels/:place/:gender',
+    loadComponent: () =>
+      import('@features/public/landing/place-landing').then((m) => m.PlaceLanding),
   },
   {
     path: 'hostel',
@@ -191,4 +211,22 @@ export const appRoutes: Route[] = [
   { path: 'forbidden', component: Forbidden, title: 'Access blocked' },
 
   { path: '**', redirectTo: '' },
+];
+
+/**
+ * The same tree twice: once behind a language prefix, once bare.
+ *
+ * `/ur/hostels/lahore` and `/hostels/lahore` are the same page in two languages, and each
+ * has to be its own indexable URL — a language that only lives in localStorage is a
+ * language search engines never see. Angular has no optional path segment, so the array
+ * is mounted under `:locale` as well as at the root.
+ *
+ * `localePrefixMatcher` is what makes that safe: without it, `:locale` would swallow
+ * `/hostels/lahore` and read "hostels" as a language code. Order matters too — the
+ * prefixed mount is declared first so a real locale segment wins before the bare tree
+ * gets a chance to treat it as a page.
+ */
+export const appRoutes: Route[] = [
+  { path: ':locale', canMatch: [localePrefixMatcher], children: LOCALISED_ROUTES },
+  ...LOCALISED_ROUTES,
 ];

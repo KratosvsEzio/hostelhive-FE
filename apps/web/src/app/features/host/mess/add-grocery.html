@@ -66,13 +66,13 @@
                   <i class="ti ti-alert-triangle text-lg" aria-hidden="true"></i>
                 </div>
               } @else if (img.receiptId) {
-                <span class="absolute bottom-1.5 left-1.5 grid h-5 w-5 place-items-center rounded-full bg-ok text-white shadow-sm" aria-label="Uploaded">
+                <span class="absolute bottom-1.5 start-1.5 grid h-5 w-5 place-items-center rounded-full bg-ok text-white shadow-sm" aria-label="Uploaded">
                   <i class="ti ti-check text-xs" aria-hidden="true"></i>
                 </span>
               }
               <button
                 type="button"
-                class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-md bg-white/90 text-ink-500 shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
+                class="absolute end-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-md bg-white/90 text-ink-500 shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
                 (click)="removeImage(img.id)"
                 [attr.aria-label]="'Remove ' + img.name"
               >

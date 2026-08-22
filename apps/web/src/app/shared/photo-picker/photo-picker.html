@@ -34,7 +34,7 @@
         <i class="ti ti-loader-2 animate-spin text-xl text-white" aria-hidden="true"></i>
       </div>
     } @else if (preview()) {
-      <span class="absolute bottom-1 right-1 grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white shadow">
+      <span class="absolute bottom-1 end-1 grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white shadow">
         <i class="ti ti-camera text-xs" aria-hidden="true"></i>
       </span>
     }
@@ -42,7 +42,7 @@
 
   <!-- Method menu -->
   @if (menuOpen()) {
-    <div class="absolute left-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-pill">
+    <div class="absolute start-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-pill">
       <button type="button" hh-button variant="text" class="w-full !justify-start" (click)="takePhoto()">
         <i class="ti ti-camera shrink-0 text-ink-400" aria-hidden="true"></i>Take a photo
       </button>

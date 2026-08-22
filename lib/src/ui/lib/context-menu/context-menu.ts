@@ -86,7 +86,7 @@ export class ContextMenu {
       if (r.top + dy < GAP) dy = GAP - r.top;
 
       // Horizontal: push right if the panel clips the left viewport edge
-      // (panel is right-anchored, so left edge = vw - right - width)
+      // (panel is end-anchored, so left edge = vw - right - width)
       let dx = 0;
       const panelLeft = vw - this.right() - r.width;
       if (panelLeft < GAP) dx = panelLeft - GAP; // negative → decreases right → shifts panel right

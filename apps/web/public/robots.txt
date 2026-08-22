@@ -1,0 +1,39 @@
+# HostelHive — https://hostelhive.com
+#
+# Everything public is crawlable. The blocks below are areas that are either
+# authenticated, per-user, or carry a credential in the URL — indexing them wastes
+# crawl budget on pages that render as a login wall to a crawler, and in the tokened
+# cases would publish the token itself.
+
+User-agent: *
+
+# Authenticated consoles — render client-side only, so a crawler sees an empty shell.
+# NOT bare "/host": robots.txt matches on prefix, so that one line also blocks
+# /hostel/:id and /hostels/:place — every listing page and every SEO landing page
+# this site has. "$" anchors the console root; the slash covers everything under it.
+Disallow: /host$
+Disallow: /host/
+Disallow: /admin
+Disallow: /moderator
+Disallow: /forbidden
+
+# Per-user areas — nothing here is the same for two visitors.
+Disallow: /account
+Disallow: /notifications
+
+# Auth screens. Thin, duplicated, and /auth carries returnUrl variants that would
+# otherwise generate an unbounded set of near-identical URLs.
+Disallow: /auth
+
+# The token in the query string *is* the credential for these links.
+Disallow: /mess/confirm
+
+# Search is deliberately NOT blocked. Every search URL now carries its own directive —
+# an unfiltered one canonicalises to its /hostels/:place landing page, a filtered one is
+# noindex — and a crawler has to fetch the page to read either. Blocking them here would
+# hide the very instructions that keep filter permutations out of the index, leaving
+# Google to guess from inbound links instead.
+
+Allow: /
+
+Sitemap: https://hostelhive.com/sitemap.xml

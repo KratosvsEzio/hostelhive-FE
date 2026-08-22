@@ -343,7 +343,7 @@ export class AdminRoles {
   /* ---- presentation helpers ---- */
   protected roleBtnClass(id: RoleId): string {
     const base =
-      'role-btn mb-0.5 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition';
+      'role-btn mb-0.5 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-start transition';
     return id === this.selectedRoleId()
       ? `${base} bg-brand-50 ring-1 ring-brand-200`
       : `${base} hover:bg-ink-50`;

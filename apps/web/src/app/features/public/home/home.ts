@@ -7,7 +7,9 @@ import {
   signal,
 } from '@angular/core';
 import { isPlatformBrowser, DecimalPipe } from '@angular/common';
+import { SITE_ORIGIN, Seo } from '@core/seo';
 import { Router, RouterLink } from '@angular/router';
+import { searchRouteFor } from '@util/location-slug';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
 import { HOST_ROLES, SessionStore } from '@core/auth';
@@ -17,11 +19,12 @@ import { ListingsApi } from '@services';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { PakistanMap } from './pakistan-map/pakistan-map';
 import { ListingCard } from '../search/listing-card/listing-card';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
+  imports: [TranslocoPipe, RouterLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
   templateUrl: './home.html',
 })
 export class Home {
@@ -29,6 +32,47 @@ export class Home {
   private readonly session = inject(SessionStore);
   private readonly listingsApi = inject(ListingsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly seo = inject(Seo);
+
+  constructor() {
+    // This route is prerendered, so these land in the static HTML.
+    this.seo.apply({
+      title: 'HostelHive — Find verified hostels, PGs & co-living in Pakistan',
+      description:
+        'Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing — no brokers, no surprises.',
+      path: '/',
+    });
+
+    // Organization is what a search engine reads to build the brand panel and to
+    // associate the name with this domain.
+    this.seo.setJsonLd('organization', {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'HostelHive',
+      url: SITE_ORIGIN,
+      logo: `${SITE_ORIGIN}/hostelhive-logo.png`,
+      description:
+        'Verified hostel, PG and co-living marketplace for students and professionals in Pakistan.',
+      areaServed: { '@type': 'Country', name: 'Pakistan' },
+    });
+
+    // WebSite + SearchAction is the markup behind a sitelinks search box — it lets
+    // results for the brand carry a search field that queries this site directly.
+    this.seo.setJsonLd('website', {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'HostelHive',
+      url: SITE_ORIGIN,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_ORIGIN}/search?place={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    });
+  }
 
   // Existing hosts (host/manager/warden) go straight to their dashboard; everyone
   // else starts the become-a-host onboarding wizard.
@@ -59,7 +103,7 @@ export class Home {
 
   protected search(): void {
     const hasGeo = this.lat() !== null && this.lng() !== null;
-    this.router.navigate(['/search'], {
+    this.router.navigate(searchRouteFor(this.place()), {
       queryParams: {
         place: this.place() || null,
         city: hasGeo ? null : this.place() || null,
@@ -70,9 +114,11 @@ export class Home {
   }
 
   protected readonly stats = [
-    { n: '10,000+', l: 'verified beds' },
-    { n: '25', l: 'cities' },
-    { n: '4.8/5', l: 'seeker rating' },
+    // Keys, not copy: these are data rather than template text, so the extractor never
+    // saw them and the template translates them at render.
+    { n: '10,000+', l: 'home.statVerifiedBeds' },
+    { n: '25', l: 'home.statCities' },
+    { n: '4.8/5', l: 'home.statSeekerRating' },
   ];
 
   private readonly featuredState = toSignal(
@@ -92,6 +138,7 @@ export class Home {
   protected readonly cities = [
     {
       name: 'Karachi',
+      slug: 'karachi',
       stays: '1,240',
       img: '/cities/karachi.jpg',
       lat: 24.8607,
@@ -99,6 +146,7 @@ export class Home {
     },
     {
       name: 'Lahore',
+      slug: 'lahore',
       stays: '980',
       img: '/cities/lahore.jpg',
       lat: 31.5204,
@@ -106,6 +154,7 @@ export class Home {
     },
     {
       name: 'Islamabad',
+      slug: 'islamabad',
       stays: '610',
       img: '/cities/islamabad.jpg',
       lat: 33.6844,
@@ -113,6 +162,7 @@ export class Home {
     },
     {
       name: 'Rawalpindi',
+      slug: 'rawalpindi',
       stays: '430',
       img: '/cities/rawalpindi.jpg',
       lat: 33.5651,
@@ -120,6 +170,7 @@ export class Home {
     },
     {
       name: 'Faisalabad',
+      slug: 'faisalabad',
       stays: '320',
       img: '/cities/faisalabad.jpg',
       lat: 31.4504,
@@ -127,6 +178,7 @@ export class Home {
     },
     {
       name: 'Peshawar',
+      slug: 'peshawar',
       stays: '210',
       img: '/cities/peshawar.jpg',
       lat: 34.0151,
@@ -134,6 +186,7 @@ export class Home {
     },
     {
       name: 'Multan',
+      slug: 'multan',
       stays: '180',
       img: '/cities/multan.jpg',
       lat: 30.1575,
@@ -141,6 +194,7 @@ export class Home {
     },
     {
       name: 'Quetta',
+      slug: 'quetta',
       stays: '95',
       img: '/cities/quetta.jpg',
       lat: 30.1798,
@@ -148,6 +202,7 @@ export class Home {
     },
     {
       name: 'Hyderabad',
+      slug: 'hyderabad',
       stays: '140',
       img: '/cities/hyderabad.jpg',
       lat: 25.396,
@@ -155,6 +210,7 @@ export class Home {
     },
     {
       name: 'Sialkot',
+      slug: 'sialkot',
       stays: '110',
       img: '/cities/sialkot.jpg',
       lat: 32.4945,

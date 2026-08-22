@@ -1,0 +1,98 @@
+@if (place(); as p) {
+  <!-- The copy above the search is what makes each of these its own page rather than one
+       template repeated ten times. A single H1 carrying the exact phrase people search
+       for, then a sentence true only of this place. -->
+  <section class="mx-auto max-w-7xl px-5 pt-6 sm:px-8">
+    <nav class="mb-2 flex items-center gap-1.5 text-sm text-ink-400" aria-label="Breadcrumb">
+      <a routerLink="/" class="transition hover:text-brand-600">Home</a>
+      <i class="ti ti-chevron-right text-[10px]" aria-hidden="true"></i>
+      @if (genderSegment(); as g) {
+        <a [routerLink]="'/hostels/' + p.slug" class="transition hover:text-brand-600"
+          >Hostels in {{ p.name }}</a
+        >
+        <i class="ti ti-chevron-right text-[10px]" aria-hidden="true"></i>
+        <span class="font-medium text-ink-700">{{ g.label }}</span>
+      } @else {
+        <span class="font-medium text-ink-700">Hostels in {{ p.name }}</span>
+      }
+    </nav>
+
+    <h1 class="font-display text-2xl font-bold text-ink-900 sm:text-3xl">
+      {{ heading() }}
+    </h1>
+    <p class="mt-2 max-w-3xl text-sm leading-relaxed text-ink-500">{{ university()?.blurb ?? p.blurb }}</p>
+  </section>
+}
+
+<!-- The real search, with this page's filters pre-applied. Anything the visitor changes
+     goes to the query string and overrides the seed, so filtering behaves as it does on
+     /search — the path only supplies the starting point. -->
+<hh-search-map [seed]="seed()" />
+
+@if (place(); as p) {
+  <!-- Onward links. Landing pages that dead-end are crawled once and forgotten; these
+       give every page a route to its siblings and keep the set discoverable from any
+       entry point. -->
+  <section class="mx-auto max-w-7xl px-5 pb-12 pt-8 sm:px-8">
+    <!-- Links to the campus pages. Without these they are orphans: nothing links to them,
+         so nothing crawls them, and a student on the city page never finds the page
+         written for their university. -->
+    @if (universityLinks().length) {
+      <h2 class="font-display text-base font-semibold text-ink-900">Near a university</h2>
+      <div class="mb-6 mt-3 flex flex-wrap gap-2">
+        @for (u of universityLinks(); track u.path) {
+          <a
+            [routerLink]="u.path"
+            class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-600"
+            >{{ u.label }}</a
+          >
+        }
+      </div>
+    }
+    @if (genderLinks().length) {
+      <h2 class="font-display text-base font-semibold text-ink-900">
+        More in {{ p.name }}
+      </h2>
+      <div class="mt-3 flex flex-wrap gap-2">
+        @for (link of genderLinks(); track link.path) {
+          <a
+            [routerLink]="link.path"
+            class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-600"
+            >{{ link.label }}</a
+          >
+        }
+      </div>
+    }
+
+    <h2 class="mt-8 font-display text-base font-semibold text-ink-900">
+      Hostels in other cities
+    </h2>
+    <div class="mt-3 flex flex-wrap gap-2">
+      @for (other of otherPlaces(); track other.slug) {
+        <a
+          [routerLink]="'/hostels/' + other.slug"
+          class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-600"
+          >Hostels in {{ other.name }}</a
+        >
+      }
+    </div>
+  </section>
+
+  <!-- The answers marked up as FAQPage must also be visible here: marking up content a
+       visitor cannot see is a Google policy violation, not a shortcut. -->
+  @if (faqs().length) {
+    <section class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <h2 class="font-display text-xl font-semibold text-ink-900">
+        Common questions
+      </h2>
+      <dl class="mt-5 divide-y divide-ink-100 border-t border-ink-100">
+        @for (f of faqs(); track f.q) {
+          <div class="py-4">
+            <dt class="font-medium text-ink-900">{{ f.q }}</dt>
+            <dd class="mt-1.5 text-sm leading-relaxed text-ink-600">{{ f.a }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+  }
+}

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Bottom tab bar for the seeker area of the mobile app (design boards 40–41):
@@ -10,7 +11,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 @Component({
   selector: 'app-seeker-tab-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [TranslocoPipe, RouterLink, RouterLinkActive],
   styles: `
     :host { display: block; }
     .tab {
@@ -39,16 +40,16 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           [routerLinkActiveOptions]="{ exact: true }"
           class="tab"
         >
-          <i class="ti ti-home text-xl" aria-hidden="true"></i>Explore
+          <i class="ti ti-home text-xl" aria-hidden="true"></i>{{ 'nav.explore' | transloco }}
         </a>
         <a routerLink="/search" routerLinkActive="on" class="tab">
-          <i class="ti ti-search text-xl" aria-hidden="true"></i>Search
+          <i class="ti ti-search text-xl" aria-hidden="true"></i>{{ 'nav.search' | transloco }}
         </a>
         <a routerLink="/account/favorites" routerLinkActive="on" class="tab">
-          <i class="ti ti-heart text-xl" aria-hidden="true"></i>Favorites
+          <i class="ti ti-heart text-xl" aria-hidden="true"></i>{{ 'nav.favorites' | transloco }}
         </a>
         <a routerLink="/account/settings" routerLinkActive="on" class="tab">
-          <i class="ti ti-user text-xl" aria-hidden="true"></i>Account
+          <i class="ti ti-user text-xl" aria-hidden="true"></i>{{ 'nav.account' | transloco }}
         </a>
       </div>
     </nav>

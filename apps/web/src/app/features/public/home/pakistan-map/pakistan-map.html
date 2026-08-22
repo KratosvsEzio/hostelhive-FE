@@ -1,7 +1,7 @@
 <div
   class="relative w-full overflow-hidden rounded-3xl border border-ink-100 bg-ink-50"
 >
-  <div class="absolute left-12 top-3 z-10 flex flex-wrap items-center gap-1">
+  <div class="absolute start-12 top-3 z-10 flex flex-wrap items-center gap-1">
     @for (b of breadcrumb(); track $index; let i = $index; let last = $last) {
       <button
         hh-button variant="outlined" size="sm"
@@ -25,7 +25,7 @@
 
   @if (hovered()) {
     <div
-      class="pointer-events-none absolute right-3 top-3 z-10 rounded-xl bg-ink-900/90 px-3 py-1.5 text-sm font-semibold text-white shadow-pill backdrop-blur"
+      class="pointer-events-none absolute end-3 top-3 z-10 rounded-xl bg-ink-900/90 px-3 py-1.5 text-sm font-semibold text-white shadow-pill backdrop-blur"
     >
       {{ hovered() }}
     </div>
@@ -43,7 +43,7 @@
 
   @if (leaf(); as area) {
     <div
-      class="absolute bottom-4 left-1/2 z-20 w-[min(22rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl bg-white p-4 text-left shadow-pill"
+      class="absolute bottom-4 left-1/2 z-20 w-[min(22rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl bg-white p-4 text-start shadow-pill"
     >
       <div class="flex items-start justify-between gap-2">
         <div>

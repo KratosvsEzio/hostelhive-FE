@@ -72,7 +72,7 @@ const DEBOUNCE_MS = 300;
     />
     @if (showList()) {
       <div
-        class="absolute left-0 top-full z-[100] mt-3 w-[min(26rem,82vw)] overflow-hidden rounded-2xl border border-ink-100 bg-white py-1.5 text-left shadow-pill"
+        class="absolute start-0 top-full z-[100] mt-3 w-[min(26rem,82vw)] overflow-hidden rounded-2xl border border-ink-100 bg-white py-1.5 text-start shadow-pill"
       >
         @if (suggestions().length) {
           @for (s of suggestions(); track s.id; let i = $index) {
@@ -80,7 +80,7 @@ const DEBOUNCE_MS = 300;
               type="button"
               (mousedown)="select(s)"
               (mouseenter)="activeIndex.set(i)"
-              class="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition"
+              class="flex w-full items-center gap-3 px-3.5 py-2.5 text-start transition"
               [class.bg-brand-50]="i === activeIndex()"
             >
               <span

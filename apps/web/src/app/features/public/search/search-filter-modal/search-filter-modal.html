@@ -11,12 +11,12 @@
       <div
         class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6"
       >
-        <span class="text-base font-semibold text-ink-900">Filters</span>
+        <span class="text-base font-semibold text-ink-900">{{ 'filters.filters' | transloco }}</span>
         <button
           hh-button variant="icon" size="sm"
           type="button"
           (click)="close()"
-          aria-label="Close"
+          [aria-label]="'filters.close' | transloco"
         >
           <i class="ti ti-x text-lg"></i>
         </button>
@@ -26,11 +26,11 @@
       <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
         <!-- Amenities — single grouped multi-select dropdown -->
         <section>
-          <h3 class="mb-3 text-base font-semibold text-ink-900">Amenities</h3>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">{{ 'filters.amenities' | transloco }}</h3>
           <hh-dropdown
             variant="field"
             [multiple]="true"
-            placeholder="Select amenities"
+            [placeholder]="'filters.selectAmenities' | transloco"
             [options]="amenityOptions()"
             [value]="amenityValue()"
             (valueChange)="setAmenities($event)"
@@ -42,7 +42,7 @@
         <!-- Type of stay -->
         <section>
           <h3 class="mb-3 text-base font-semibold text-ink-900">
-            Type of stay
+            {{ 'filters.typeOfStay' | transloco }}
           </h3>
           <!-- flex-wrap: the four pills exceed a 320px viewport in one row -->
           <div class="flex flex-wrap gap-2">
@@ -68,12 +68,12 @@
         <!-- Property type -->
         <section>
           <h3 class="mb-3 text-base font-semibold text-ink-900">
-            Property type
+            {{ 'filters.propertyType' | transloco }}
           </h3>
           <hh-dropdown
             variant="field"
             [options]="propertyTypes"
-            placeholder="Any property type"
+            [placeholder]="'filters.anyPropertyType' | transloco"
             clearLabel="Any property type"
             [value]="draftPropertyType() || null"
             (valueChange)="setDraftProperty($event)"
@@ -85,7 +85,7 @@
         <!-- Room capacity (people per room) — same param/values as the inline dropdown. -->
         <section>
           <h3 class="mb-3 text-base font-semibold text-ink-900">
-            Room capacity
+            {{ 'filters.roomCapacity' | transloco }}
           </h3>
           <div class="flex flex-wrap gap-2">
             <button
@@ -98,7 +98,7 @@
               "
               (click)="draftCapacity.set('')"
             >
-              Any
+              {{ 'filters.any' | transloco }}
             </button>
             @for (c of capacities; track c.value) {
               <button
@@ -121,8 +121,8 @@
 
         <!-- Price range -->
         <section>
-          <h3 class="mb-1 text-base font-semibold text-ink-900">Price range</h3>
-          <p class="mb-3 text-sm text-ink-500">Monthly rate</p>
+          <h3 class="mb-1 text-base font-semibold text-ink-900">{{ 'filters.priceRange' | transloco }}</h3>
+          <p class="mb-3 text-sm text-ink-500">{{ 'filters.monthlyRate' | transloco }}</p>
           <hh-range-slider
             [min]="BUDGET_MIN"
             [max]="BUDGET_MAX"
@@ -138,7 +138,7 @@
 
         <!-- Sort -->
         <section>
-          <h3 class="mb-3 text-base font-semibold text-ink-900">Sort by</h3>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">{{ 'filters.sortBy' | transloco }}</h3>
           <div class="flex flex-wrap gap-2">
             @for (s of sortOptions; track s.value) {
               <button
@@ -169,14 +169,14 @@
           type="button"
           (click)="clearAll()"
         >
-          Clear all
+          {{ 'filters.clearAll' | transloco }}
         </button>
         <button
           hh-button color="primary"
           type="button"
           (click)="apply()"
         >
-          Show results
+          {{ 'filters.showResults' | transloco }}
         </button>
       </div>
     </div>

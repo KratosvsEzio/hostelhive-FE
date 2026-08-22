@@ -18,6 +18,7 @@ import { AMENITIES, AccommodationType, PROPERTY_TYPES } from '@hostelhive/data-a
 import { Button, Dropdown, DropdownOption, RangeSlider } from '@hostelhive/ui';
 import { OffersApi } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
 export interface FilterState {
@@ -54,7 +55,7 @@ const CAPACITIES: { value: string; label: string }[] = [
 @Component({
   selector: 'hh-search-filter-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Dropdown, RangeSlider],
+  imports: [TranslocoPipe, Button, Dropdown, RangeSlider],
   host: { class: 'contents' },
   templateUrl: './search-filter-modal.html',
 })

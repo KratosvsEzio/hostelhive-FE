@@ -113,7 +113,7 @@
             <!-- Tooltip — sits 20px above the top of the stacked bar, not the column track -->
             <div
               class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
-              [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+              [class]="first ? 'start-0' : last ? 'end-0' : 'left-1/2 -translate-x-1/2'"
               [style.bottom]="'calc(' + (b.rentPct + b.utilityPct) + '% + 20px)'"
             >
               <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
@@ -141,7 +141,7 @@
               </div>
               <div
                 class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
-                [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
+                [class]="first ? 'ms-3' : last ? 'me-3 ms-auto' : 'mx-auto'"
               ></div>
             </div>
             <div
@@ -180,7 +180,7 @@
             <!-- Tooltip — sits 20px above the top of the taller bar -->
             <div
               class="pointer-events-none absolute z-10 hidden w-36 group-hover:block"
-              [class]="first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'"
+              [class]="first ? 'start-0' : last ? 'end-0' : 'left-1/2 -translate-x-1/2'"
               [style.bottom]="'calc(' + (b.moveInPct > b.moveOutPct ? b.moveInPct : b.moveOutPct) + '% + 20px)'"
             >
               <div class="rounded-xl bg-ink-900 px-3 py-2.5 shadow-lg">
@@ -208,7 +208,7 @@
               </div>
               <div
                 class="h-0 w-0 border-x-4 border-t-4 border-x-transparent border-t-ink-900"
-                [class]="first ? 'ml-3' : last ? 'mr-3 ml-auto' : 'mx-auto'"
+                [class]="first ? 'ms-3' : last ? 'me-3 ms-auto' : 'mx-auto'"
               ></div>
             </div>
             <div class="flex-1 rounded-t bg-emerald-500 transition group-hover:bg-emerald-600" [style.height.%]="b.moveInPct"></div>
@@ -326,13 +326,13 @@
           <!-- Desktop table -->
           <table class="hidden w-full text-sm sm:table">
             <thead
-              class="text-left text-xs uppercase tracking-wide text-ink-400"
+              class="text-start text-xs uppercase tracking-wide text-ink-400"
             >
               <tr>
                 <th class="px-5 py-2 font-medium">Tenant</th>
                 <th class="px-5 py-2 font-medium">Room</th>
                 <th class="px-5 py-2 font-medium">Last invoice</th>
-                <th class="px-5 py-2 text-right font-medium">Outstanding</th>
+                <th class="px-5 py-2 text-end font-medium">Outstanding</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
@@ -352,7 +352,7 @@
                   <td class="px-5 py-2.5 text-ink-500">
                     {{ row.lastInvoice }}
                   </td>
-                  <td class="px-5 py-2.5 text-right">
+                  <td class="px-5 py-2.5 text-end">
                     @if (row.outstanding > 0) {
                       <hh-status-pill
                         [tone]="row.outstanding >= 9000 ? 'danger' : 'warn'"

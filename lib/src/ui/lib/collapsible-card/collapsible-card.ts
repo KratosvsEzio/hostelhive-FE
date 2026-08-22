@@ -32,7 +32,7 @@ import {
   template: `
     <button
       type="button"
-      class="flex w-full items-center justify-between gap-3 text-left"
+      class="flex w-full items-center justify-between gap-3 text-start"
       [attr.aria-expanded]="open()"
       (click)="open.set(!open())"
     >
