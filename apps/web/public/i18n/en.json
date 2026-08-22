@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Search",
+    "listYourHostel": "List your hostel",
+    "switchToHosting": "Switch to hosting",
+    "signIn": "Sign in",
+    "account": "Account",
+    "language": "Language"
+  },
+  "search": {
+    "where": "Where",
+    "wherePlaceholder": "Search city or area",
+    "budget": "Budget",
+    "addBudget": "Add budget",
+    "sharing": "Sharing",
+    "addSharing": "Add sharing",
+    "search": "Search",
+    "filters": "Filters",
+    "sort": "Sort",
+    "resultsInArea": "{{count}} hostels within map area",
+    "noResults": "No hostels match these filters",
+    "couldNotLoad": "We couldn't load listings",
+    "tryAgain": "Try again"
+  },
+  "accommodation": {
+    "boys": "Boys",
+    "girls": "Girls",
+    "coliving": "Co-living",
+    "backpacker": "Backpacker"
+  },
+  "listing": {
+    "verified": "Verified",
+    "perMonth": "/month",
+    "perNight": "/night",
+    "messIncluded": "Mess included",
+    "contact": "Contact",
+    "showNumber": "Show number",
+    "directions": "Directions",
+    "amenities": "Amenities",
+    "reviews": "Reviews",
+    "description": "Description",
+    "translatedFrom": "Translated from {{language}}",
+    "showOriginal": "Show original",
+    "showTranslation": "Show translation"
+  },
+  "common": {
+    "loading": "Loading…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "retry": "Retry"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Suchen",
+    "listYourHostel": "Hostel eintragen",
+    "switchToHosting": "Zur Gastgeberansicht",
+    "signIn": "Anmelden",
+    "account": "Konto",
+    "language": "Sprache"
+  },
+  "search": {
+    "where": "Wo",
+    "wherePlaceholder": "Stadt oder Gegend suchen",
+    "budget": "Budget",
+    "addBudget": "Budget hinzufügen",
+    "sharing": "Belegung",
+    "addSharing": "Belegung hinzufügen",
+    "search": "Suchen",
+    "filters": "Filter",
+    "sort": "Sortieren",
+    "resultsInArea": "{{count}} Hostels in diesem Bereich",
+    "noResults": "Keine Hostels für diese Filter",
+    "couldNotLoad": "Anzeigen konnten nicht geladen werden",
+    "tryAgain": "Erneut versuchen"
+  },
+  "accommodation": {
+    "boys": "Jungen",
+    "girls": "Mädchen",
+    "coliving": "Co-Living",
+    "backpacker": "Backpacker"
+  },
+  "listing": {
+    "verified": "Verifiziert",
+    "perMonth": "/Monat",
+    "perNight": "/Nacht",
+    "messIncluded": "Verpflegung inklusive",
+    "contact": "Kontakt",
+    "showNumber": "Nummer anzeigen",
+    "directions": "Route",
+    "amenities": "Ausstattung",
+    "reviews": "Bewertungen",
+    "description": "Beschreibung",
+    "translatedFrom": "Übersetzt aus {{language}}",
+    "showOriginal": "Original anzeigen",
+    "showTranslation": "Übersetzung anzeigen"
+  },
+  "common": {
+    "loading": "Wird geladen…",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "retry": "Wiederholen"
+  }
+}

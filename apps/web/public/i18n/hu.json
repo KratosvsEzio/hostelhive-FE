@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Keresés",
+    "listYourHostel": "Hirdesse meg szállását",
+    "switchToHosting": "Váltás házigazdára",
+    "signIn": "Bejelentkezés",
+    "account": "Fiók",
+    "language": "Nyelv"
+  },
+  "search": {
+    "where": "Hol",
+    "wherePlaceholder": "Város vagy környék keresése",
+    "budget": "Költségkeret",
+    "addBudget": "Költségkeret megadása",
+    "sharing": "Megosztás",
+    "addSharing": "Megosztás megadása",
+    "search": "Keresés",
+    "filters": "Szűrők",
+    "sort": "Rendezés",
+    "resultsInArea": "{{count}} szállás ezen a területen",
+    "noResults": "Nincs találat ezekre a szűrőkre",
+    "couldNotLoad": "Nem sikerült betölteni a hirdetéseket",
+    "tryAgain": "Újra"
+  },
+  "accommodation": {
+    "boys": "Fiúk",
+    "girls": "Lányok",
+    "coliving": "Coliving",
+    "backpacker": "Hátizsákos"
+  },
+  "listing": {
+    "verified": "Ellenőrzött",
+    "perMonth": "/hó",
+    "perNight": "/éj",
+    "messIncluded": "Étkezéssel",
+    "contact": "Kapcsolat",
+    "showNumber": "Szám megjelenítése",
+    "directions": "Útvonal",
+    "amenities": "Szolgáltatások",
+    "reviews": "Értékelések",
+    "description": "Leírás",
+    "translatedFrom": "{{language}} nyelvről fordítva",
+    "showOriginal": "Eredeti megtekintése",
+    "showTranslation": "Fordítás megtekintése"
+  },
+  "common": {
+    "loading": "Betöltés…",
+    "close": "Bezárás",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "retry": "Újra"
+  }
+}

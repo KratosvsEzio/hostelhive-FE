@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "تلاش",
+    "listYourHostel": "اپنا ہاسٹل درج کریں",
+    "switchToHosting": "میزبانی پر جائیں",
+    "signIn": "سائن اِن",
+    "account": "اکاؤنٹ",
+    "language": "زبان"
+  },
+  "search": {
+    "where": "کہاں",
+    "wherePlaceholder": "شہر یا علاقہ تلاش کریں",
+    "budget": "بجٹ",
+    "addBudget": "بجٹ شامل کریں",
+    "sharing": "شیئرنگ",
+    "addSharing": "شیئرنگ شامل کریں",
+    "search": "تلاش کریں",
+    "filters": "فلٹرز",
+    "sort": "ترتیب",
+    "resultsInArea": "اس علاقے میں {{count}} ہاسٹل",
+    "noResults": "ان فلٹرز سے کوئی ہاسٹل نہیں ملا",
+    "couldNotLoad": "فہرست لوڈ نہیں ہو سکی",
+    "tryAgain": "دوبارہ کوشش کریں"
+  },
+  "accommodation": {
+    "boys": "لڑکے",
+    "girls": "لڑکیاں",
+    "coliving": "مخلوط رہائش",
+    "backpacker": "بیک پیکر"
+  },
+  "listing": {
+    "verified": "تصدیق شدہ",
+    "perMonth": "/ماہ",
+    "perNight": "/رات",
+    "messIncluded": "میس شامل ہے",
+    "contact": "رابطہ",
+    "showNumber": "نمبر دیکھیں",
+    "directions": "راستہ",
+    "amenities": "سہولیات",
+    "reviews": "تبصرے",
+    "description": "تفصیل",
+    "translatedFrom": "{{language}} سے ترجمہ شدہ",
+    "showOriginal": "اصل دیکھیں",
+    "showTranslation": "ترجمہ دیکھیں"
+  },
+  "common": {
+    "loading": "لوڈ ہو رہا ہے…",
+    "close": "بند کریں",
+    "cancel": "منسوخ",
+    "save": "محفوظ کریں",
+    "retry": "دوبارہ"
+  }
+}

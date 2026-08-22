@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Sök",
+    "listYourHostel": "Lägg upp ditt hostel",
+    "switchToHosting": "Byt till värd",
+    "signIn": "Logga in",
+    "account": "Konto",
+    "language": "Språk"
+  },
+  "search": {
+    "where": "Var",
+    "wherePlaceholder": "Sök stad eller område",
+    "budget": "Budget",
+    "addBudget": "Lägg till budget",
+    "sharing": "Delning",
+    "addSharing": "Lägg till delning",
+    "search": "Sök",
+    "filters": "Filter",
+    "sort": "Sortera",
+    "resultsInArea": "{{count}} hostel i detta område",
+    "noResults": "Inga hostel matchar",
+    "couldNotLoad": "Kunde inte ladda annonser",
+    "tryAgain": "Försök igen"
+  },
+  "accommodation": {
+    "boys": "Killar",
+    "girls": "Tjejer",
+    "coliving": "Coliving",
+    "backpacker": "Backpacker"
+  },
+  "listing": {
+    "verified": "Verifierad",
+    "perMonth": "/månad",
+    "perNight": "/natt",
+    "messIncluded": "Måltider ingår",
+    "contact": "Kontakt",
+    "showNumber": "Visa nummer",
+    "directions": "Vägbeskrivning",
+    "amenities": "Bekvämligheter",
+    "reviews": "Omdömen",
+    "description": "Beskrivning",
+    "translatedFrom": "Översatt från {{language}}",
+    "showOriginal": "Visa original",
+    "showTranslation": "Visa översättning"
+  },
+  "common": {
+    "loading": "Laddar…",
+    "close": "Stäng",
+    "cancel": "Avbryt",
+    "save": "Spara",
+    "retry": "Försök igen"
+  }
+}

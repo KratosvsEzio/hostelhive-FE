@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Rechercher",
+    "listYourHostel": "Publier votre auberge",
+    "switchToHosting": "Passer en mode hôte",
+    "signIn": "Se connecter",
+    "account": "Compte",
+    "language": "Langue"
+  },
+  "search": {
+    "where": "Où",
+    "wherePlaceholder": "Rechercher une ville ou un quartier",
+    "budget": "Budget",
+    "addBudget": "Ajouter un budget",
+    "sharing": "Partage",
+    "addSharing": "Ajouter un partage",
+    "search": "Rechercher",
+    "filters": "Filtres",
+    "sort": "Trier",
+    "resultsInArea": "{{count}} auberges dans cette zone",
+    "noResults": "Aucune auberge ne correspond",
+    "couldNotLoad": "Impossible de charger les annonces",
+    "tryAgain": "Réessayer"
+  },
+  "accommodation": {
+    "boys": "Garçons",
+    "girls": "Filles",
+    "coliving": "Coliving",
+    "backpacker": "Routards"
+  },
+  "listing": {
+    "verified": "Vérifié",
+    "perMonth": "/mois",
+    "perNight": "/nuit",
+    "messIncluded": "Repas inclus",
+    "contact": "Contacter",
+    "showNumber": "Afficher le numéro",
+    "directions": "Itinéraire",
+    "amenities": "Équipements",
+    "reviews": "Avis",
+    "description": "Description",
+    "translatedFrom": "Traduit de {{language}}",
+    "showOriginal": "Voir l'original",
+    "showTranslation": "Voir la traduction"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "retry": "Réessayer"
+  }
+}

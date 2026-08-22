@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "بحث",
+    "listYourHostel": "أضف نزلك",
+    "switchToHosting": "التبديل إلى الاستضافة",
+    "signIn": "تسجيل الدخول",
+    "account": "الحساب",
+    "language": "اللغة"
+  },
+  "search": {
+    "where": "أين",
+    "wherePlaceholder": "ابحث عن مدينة أو منطقة",
+    "budget": "الميزانية",
+    "addBudget": "أضف ميزانية",
+    "sharing": "المشاركة",
+    "addSharing": "أضف المشاركة",
+    "search": "ابحث",
+    "filters": "عوامل التصفية",
+    "sort": "ترتيب",
+    "resultsInArea": "{{count}} نزل ضمن المنطقة",
+    "noResults": "لا توجد نزل مطابقة",
+    "couldNotLoad": "تعذر تحميل القائمة",
+    "tryAgain": "حاول مرة أخرى"
+  },
+  "accommodation": {
+    "boys": "شباب",
+    "girls": "فتيات",
+    "coliving": "سكن مشترك",
+    "backpacker": "الرحّالة"
+  },
+  "listing": {
+    "verified": "موثّق",
+    "perMonth": "/شهر",
+    "perNight": "/ليلة",
+    "messIncluded": "الوجبات مشمولة",
+    "contact": "اتصال",
+    "showNumber": "إظهار الرقم",
+    "directions": "الاتجاهات",
+    "amenities": "المرافق",
+    "reviews": "التقييمات",
+    "description": "الوصف",
+    "translatedFrom": "مترجم من {{language}}",
+    "showOriginal": "عرض الأصل",
+    "showTranslation": "عرض الترجمة"
+  },
+  "common": {
+    "loading": "جارٍ التحميل…",
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "retry": "إعادة"
+  }
+}

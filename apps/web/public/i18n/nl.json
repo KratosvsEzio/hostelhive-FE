@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Zoeken",
+    "listYourHostel": "Plaats je hostel",
+    "switchToHosting": "Naar verhuurder",
+    "signIn": "Inloggen",
+    "account": "Account",
+    "language": "Taal"
+  },
+  "search": {
+    "where": "Waar",
+    "wherePlaceholder": "Zoek een stad of wijk",
+    "budget": "Budget",
+    "addBudget": "Budget toevoegen",
+    "sharing": "Delen",
+    "addSharing": "Delen toevoegen",
+    "search": "Zoeken",
+    "filters": "Filters",
+    "sort": "Sorteren",
+    "resultsInArea": "{{count}} hostels in dit gebied",
+    "noResults": "Geen hostels gevonden",
+    "couldNotLoad": "Kon aanbiedingen niet laden",
+    "tryAgain": "Opnieuw"
+  },
+  "accommodation": {
+    "boys": "Jongens",
+    "girls": "Meisjes",
+    "coliving": "Coliving",
+    "backpacker": "Backpackers"
+  },
+  "listing": {
+    "verified": "Geverifieerd",
+    "perMonth": "/maand",
+    "perNight": "/nacht",
+    "messIncluded": "Maaltijden inbegrepen",
+    "contact": "Contact",
+    "showNumber": "Toon nummer",
+    "directions": "Route",
+    "amenities": "Voorzieningen",
+    "reviews": "Beoordelingen",
+    "description": "Beschrijving",
+    "translatedFrom": "Vertaald uit het {{language}}",
+    "showOriginal": "Toon origineel",
+    "showTranslation": "Toon vertaling"
+  },
+  "common": {
+    "loading": "Laden…",
+    "close": "Sluiten",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "retry": "Opnieuw"
+  }
+}

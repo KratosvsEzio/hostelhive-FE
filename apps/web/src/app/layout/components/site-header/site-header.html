@@ -55,7 +55,7 @@
               aria-label="View site"
             >
               <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
-              <span class="hidden sm:inline">View site</span>
+              <span class="hidden sm:inline">{{ 'nav.switchToHosting' | transloco }}</span>
             </a>
           }
           @case ('admin') {
@@ -67,7 +67,7 @@
               aria-label="View site"
             >
               <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
-              <span class="hidden sm:inline">View site</span>
+              <span class="hidden sm:inline">{{ 'nav.switchToHosting' | transloco }}</span>
             </a>
           }
           @case ('moderator') {
@@ -79,10 +79,13 @@
               aria-label="View site"
             >
               <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
-              <span class="hidden sm:inline">View site</span>
+              <span class="hidden sm:inline">{{ 'nav.switchToHosting' | transloco }}</span>
             </a>
           }
         }
+        <!-- Sits before the account menu: a visitor who cannot read the page needs this
+             before anything else in the header. -->
+        <hh-language-switcher class="hidden sm:block" />
         @if (isAuthenticated()) {
           <app-notification-bell />
         }

@@ -28,6 +28,8 @@ import { readDevApiBaseUrl } from '@core/dev-api-base-url';
 import { provideCapacitorNative } from '@app/capacitor/native';
 import { appRoutes } from './app.routes';
 import { NotificationService } from '@core/notification.service';
+import { provideI18n } from '@core/i18n/provide-i18n';
+import { LocaleSync } from '@core/i18n/locale-sync';
 import { AnalyticsService } from '@core/analytics/analytics.service';
 import { restoreAnalyticsConsent } from '@core/analytics/analytics-consent';
 
@@ -51,6 +53,13 @@ export const appConfig: ApplicationConfig = {
       refetchDelayInterceptor,
     ]),
     provideAuth(),
+    // Runtime i18n. Transloco rather than @angular/localize, which is compile-time and
+    // cannot switch language without a reload — see provide-i18n.ts.
+    provideI18n(),
+    // Binds the active language to the URL, and sends a returning visitor to their
+    // remembered one. Runs on the server too, so the server-rendered HTML already carries
+    // the right lang and dir.
+    provideAppInitializer(() => inject(LocaleSync).start()),
     // Surface failed API calls as a non-blocking toast, app-wide. The data-access error
     // interceptor calls this; the page keeps working regardless of the failure. 4xx carry a
     // server-supplied message worth reading, so they are pinned; transient 5xx/network auto-dismiss.

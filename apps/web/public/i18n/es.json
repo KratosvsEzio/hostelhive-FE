@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "search": "Buscar",
+    "listYourHostel": "Publica tu hostal",
+    "switchToHosting": "Cambiar a anfitrión",
+    "signIn": "Iniciar sesión",
+    "account": "Cuenta",
+    "language": "Idioma"
+  },
+  "search": {
+    "where": "Dónde",
+    "wherePlaceholder": "Busca una ciudad o zona",
+    "budget": "Presupuesto",
+    "addBudget": "Añadir presupuesto",
+    "sharing": "Compartido",
+    "addSharing": "Añadir compartido",
+    "search": "Buscar",
+    "filters": "Filtros",
+    "sort": "Ordenar",
+    "resultsInArea": "{{count}} hostales en esta zona",
+    "noResults": "Ningún hostal coincide",
+    "couldNotLoad": "No se pudieron cargar los anuncios",
+    "tryAgain": "Reintentar"
+  },
+  "accommodation": {
+    "boys": "Chicos",
+    "girls": "Chicas",
+    "coliving": "Coliving",
+    "backpacker": "Mochileros"
+  },
+  "listing": {
+    "verified": "Verificado",
+    "perMonth": "/mes",
+    "perNight": "/noche",
+    "messIncluded": "Comidas incluidas",
+    "contact": "Contactar",
+    "showNumber": "Ver número",
+    "directions": "Cómo llegar",
+    "amenities": "Servicios",
+    "reviews": "Opiniones",
+    "description": "Descripción",
+    "translatedFrom": "Traducido del {{language}}",
+    "showOriginal": "Ver original",
+    "showTranslation": "Ver traducción"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "retry": "Reintentar"
+  }
+}
