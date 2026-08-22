@@ -18,14 +18,33 @@ import { fileURLToPath } from 'node:url';
  */
 @Injectable()
 export class FsTranslationLoader implements TranslocoLoader {
-  /** `dist/apps/web/server/` → the sibling `browser/` folder the assets are copied into. */
-  private readonly assets = join(
-    dirname(fileURLToPath(import.meta.url)),
-    '../browser/i18n',
-  );
+  /**
+   * Where the JSON might be, most specific first.
+   *
+   * A built server bundle sits in `dist/apps/web/server/`, so the assets are the sibling
+   * `browser/i18n`. Under `ng serve` there is no such sibling: this module resolves inside
+   * `.angular/vite-root/`, a path that never exists on disk because Vite serves `public/`
+   * from memory. That made every dev SSR render throw ENOENT and fall back to English —
+   * silently defeating the whole point of this loader precisely where translations are
+   * being worked on.
+   */
+  private readonly roots = [
+    join(dirname(fileURLToPath(import.meta.url)), '../browser/i18n'),
+    join(process.cwd(), 'apps/web/public/i18n'),
+  ];
 
   async getTranslation(lang: string): Promise<Translation> {
-    const raw = await readFile(join(this.assets, `${lang}.json`), 'utf8');
-    return JSON.parse(raw) as Translation;
+    for (const root of this.roots) {
+      try {
+        return JSON.parse(await readFile(join(root, `${lang}.json`), 'utf8')) as Translation;
+      } catch (err) {
+        // Only a missing file is worth trying the next root for. A malformed JSON file is a
+        // real error and must surface here rather than be reported as "not found".
+        if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') throw err;
+      }
+    }
+    throw new Error(
+      `Missing translation file "${lang}.json". Looked in: ${this.roots.join(', ')}`,
+    );
   }
 }
