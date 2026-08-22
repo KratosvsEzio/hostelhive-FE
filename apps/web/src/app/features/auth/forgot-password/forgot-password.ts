@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Button, Input } from '@hostelhive/ui';
+import { Button, Input, Container } from '@hostelhive/ui';
 import { AuthApi } from '@services';
 import { ApiError } from '@hostelhive/data-access';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -12,7 +12,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 @Component({
   selector: 'hh-forgot-password',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, Button, Input],
+  imports: [Container, RouterLink, LocaleLink, Button, Input],
   templateUrl: './forgot-password.html',
 })
 export class ForgotPassword {

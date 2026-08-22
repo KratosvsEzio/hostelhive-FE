@@ -12,7 +12,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
 import { AMENITIES, AccommodationType } from '@hostelhive/data-access';
-import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed } from '@hostelhive/ui';
+import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
@@ -79,7 +79,7 @@ const ROOM_TINTS = [
 @Component({
   selector: 'hh-listing-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, 
+  imports: [Container, TranslocoPipe, 
     ApiDate,
     DecimalPipe,
     RouterLink, LocaleLink,

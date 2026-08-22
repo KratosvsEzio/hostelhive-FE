@@ -41,3 +41,4 @@ export * from './lib/drawer/drawer';
 export * from './lib/link/link';
 export * from './lib/donut/donut';
 export * from './lib/bar-chart/bar-chart';
+export * from './lib/container/container';

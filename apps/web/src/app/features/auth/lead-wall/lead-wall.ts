@@ -11,7 +11,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { Button, Input, PhoneInput, Tabs, TabItem } from '@hostelhive/ui';
+import { Button, Input, PhoneInput, Tabs, TabItem, Container } from '@hostelhive/ui';
 import {
   AuthService,
   HOST_ROLES,
@@ -52,7 +52,7 @@ const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 @Component({
   selector: 'hh-lead-wall',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, LocaleLink, FormsModule, Button, Input, PhoneInput, Tabs],
+  imports: [Container, TranslocoPipe, RouterLink, LocaleLink, FormsModule, Button, Input, PhoneInput, Tabs],
   templateUrl: './lead-wall.html',
 })
 export class LeadWall {

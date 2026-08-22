@@ -14,6 +14,7 @@ import { findUniversity, universitiesIn } from './universities';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Container } from '@hostelhive/ui';
 
 /**
  * SEO landing page for a place, optionally narrowed by gender:
@@ -31,7 +32,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
 @Component({
   selector: 'hh-place-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SearchMap, RouterLink, LocaleLink],
+  imports: [Container, SearchMap, RouterLink, LocaleLink],
   templateUrl: './place-landing.html',
 })
 export class PlaceLanding {

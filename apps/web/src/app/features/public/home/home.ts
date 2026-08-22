@@ -15,7 +15,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
 import { HOST_ROLES, SessionStore } from '@core/auth';
 import { Listing } from '@hostelhive/data-access';
-import { Skeleton } from '@hostelhive/ui';
+import { Skeleton, Container } from '@hostelhive/ui';
 import { ListingsApi } from '@services';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { PakistanMap } from './pakistan-map/pakistan-map';
@@ -25,7 +25,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, LocaleLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
+  imports: [Container, TranslocoPipe, RouterLink, LocaleLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
   templateUrl: './home.html',
 })
 export class Home {
