@@ -116,10 +116,14 @@ export class SearchBar {
    * special handling: the router has already accounted for the language prefix.
    */
   private routedLocationSlug(): string {
-    let r: ActivatedRoute | null = this.router.routerState.root;
+    let r: ActivatedRoute | null = this.router.routerState?.root ?? null;
     let slug = '';
     while (r) {
-      slug = r.snapshot.paramMap.get('location') ?? slug;
+      // Read through the snapshot rather than from it. On the server this runs during the
+      // first `queryParamMap` emission, before the router has finished building the tree —
+      // a route exists but has no snapshot yet, and reaching into one threw on every SSR
+      // render of every page carrying the search bar.
+      slug = r.snapshot?.paramMap?.get('location') ?? slug;
       r = r.firstChild;
     }
     return slug;
