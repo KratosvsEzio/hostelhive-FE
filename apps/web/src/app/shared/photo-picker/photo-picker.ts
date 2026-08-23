@@ -19,6 +19,7 @@ import {
   classifyImageFile,
 } from '@hostelhive/ui';
 import { CameraPermissionDeniedError, NativeCamera } from './native-camera';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -35,7 +36,7 @@ const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 @Component({
   selector: 'hh-photo-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button],
+  imports: [Button, TranslocoPipe],
   host: { '(document:click)': 'onDocClick($event)' },
   templateUrl: './photo-picker.html',
 })
@@ -43,7 +44,7 @@ export class PhotoPicker {
   /** Current image to show (URL, object URL, or data URL). Empty → the empty placeholder. */
   readonly preview = input<string | null>(null);
   /** Placeholder caption when empty, e.g. "Add photo" / "Upload front". */
-  readonly label = input('Add photo');
+  readonly label = input<string | undefined>(undefined);
   /** `circle` for avatars, `rect` for documents/receipts/covers. */
   readonly shape = input<'circle' | 'rect'>('rect');
   /** Shows a spinner over the tile while the parent uploads. */
@@ -61,6 +62,17 @@ export class PhotoPicker {
   private readonly nativeCamera = inject(NativeCamera);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  /**
+   * One class string for both menu rows, because they cannot be the same element.
+   *
+   * "Choose from files" has to be a <label> wrapping a hidden file input — that is what opens
+   * the file dialog without a click handler. "Take a photo" is a button. They used to be an
+   * hh-button and a hand-rolled label, which meant two paddings, two gaps and two font sizes —
+   * and since the icons inherit their size from the text, two icon sizes as well.
+   */
+  protected readonly menuItemClass =
+    'flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-start text-sm text-ink-700 transition hover:bg-ink-50';
 
   protected readonly dragOver = signal(false);
   protected readonly menuOpen = signal(false);

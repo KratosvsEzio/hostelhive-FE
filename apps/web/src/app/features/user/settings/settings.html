@@ -1,20 +1,20 @@
 <div class="rounded-2xl border border-ink-100 bg-white p-4 sm:p-6">
-  <h2 class="text-lg font-semibold text-ink-900">Account settings</h2>
-  <p class="mt-1 text-sm text-ink-400">Update your name and phone number.</p>
+  <h2 class="text-lg font-semibold text-ink-900">{{ 'common.accountSettings' | transloco }}</h2>
+  <p class="mt-1 text-sm text-ink-400">{{ 'userSettings.updateYourNameAndPhone' | transloco }}</p>
 
   <!-- Avatar — drag-drop, choose file, or take a photo (shared picker). -->
   <div class="mt-6 flex flex-wrap items-center gap-4">
     <hh-photo-picker
       shape="circle"
-      label="Add photo"
+      [label]="'common.addPhoto' | transloco"
       [preview]="avatarUrl()"
       [uploading]="uploading()"
       (picked)="onPickedAvatar($event)"
     />
     <div class="text-sm text-ink-400">
-      <p>Drag &amp; drop an image, choose a file, or take a photo.</p>
+      <p>{{ 'userSettings.dragAmpDropAnImage' | transloco }}</p>
       @if (avatarUrl() && !uploading()) {
-        <button hh-button variant="text" size="sm" type="button" class="mt-1 !px-0" (click)="removeAvatar()">Remove photo</button>
+        <button hh-button variant="text" size="sm" type="button" class="mt-1 !px-0" (click)="removeAvatar()">{{ 'userSettings.removePhoto' | transloco }}</button>
       }
     </div>
   </div>
@@ -22,16 +22,16 @@
   <!-- Profile fields -->
   <div class="mt-6 grid gap-4 sm:grid-cols-2">
     <label class="block">
-      <span class="mb-1 block text-sm font-medium text-ink-700">Full name</span>
+      <span class="mb-1 block text-sm font-medium text-ink-700">{{ 'userSettings.fullName' | transloco }}</span>
       <input
         class="hh-input"
         [value]="name()"
         (input)="name.set($any($event.target).value)"
-        placeholder="Your full name"
+        [placeholder]="'userSettings.yourFullName' | transloco"
       />
     </label>
     <label class="block">
-      <span class="mb-1 block text-sm font-medium text-ink-700">Phone number</span>
+      <span class="mb-1 block text-sm font-medium text-ink-700">{{ 'userSettings.phoneNumber' | transloco }}</span>
       <input
         class="hh-input"
         type="tel"
@@ -42,8 +42,8 @@
     </label>
     <label class="block sm:col-span-2">
       <span class="mb-1 flex items-center gap-2 text-sm font-medium text-ink-700">
-        Email address
-        <span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-normal text-ink-400 sm:text-[11px]">Can't be changed</span>
+        {{ 'common.emailAddress' | transloco }}
+        <span class="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-normal text-ink-400 sm:text-[11px]">{{ 'userSettings.canTBeChanged' | transloco }}</span>
       </span>
       <input class="hh-input cursor-not-allowed opacity-60" type="email" [value]="user()?.email ?? ''" disabled />
     </label>
@@ -55,11 +55,40 @@
       {{ saving() ? 'Saving…' : 'Save changes' }}
     </button>
     @if (saved()) {
-      <span class="text-sm font-medium text-ok">Saved ✓</span>
+      <span class="text-sm font-medium text-ok">{{ 'userSettings.saved' | transloco }}</span>
     }
     @if (saveError()) {
-      <span class="text-sm font-medium text-danger">Failed to save. Please try again.</span>
+      <span class="text-sm font-medium text-danger">{{ 'userSettings.failedToSavePleaseTry' | transloco }}</span>
     }
+  </div>
+</div>
+
+<!-- Language & currency. Its own card because neither is an account field on the server:
+     both are this browser's preferences, and both take effect the moment they are picked
+     rather than waiting on the Save button above. -->
+<div class="mt-5 rounded-2xl border border-ink-100 bg-white p-4 sm:p-6">
+  <h2 class="text-lg font-semibold text-ink-900">{{ 'userSettings.languageAmpCurrency' | transloco }}</h2>
+  <p class="mt-1 text-sm text-ink-400">{{ 'userSettings.appliesEverywhereYouUseHostelhive' | transloco }}</p>
+
+  <div class="mt-5 grid gap-4 border-t border-ink-100 pt-5 sm:grid-cols-2">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-ink-700">{{ 'common.language' | transloco }}</span>
+      <hh-dropdown
+        variant="field"
+        [options]="localeOptions"
+        [value]="activeLocale()"
+        (valueChange)="onLocalePick($event)"
+      />
+      <span class="mt-1 block text-xs text-ink-400">{{ 'userSettings.changesThePageAddressToo' | transloco }}</span>
+    </div>
+
+    <div>
+      <span class="mb-1 block text-sm font-medium text-ink-700">{{ 'userSettings.preferredCurrency' | transloco }}</span>
+      <hh-currency-select [value]="currency()" (valueChange)="onCurrencyPick($event)" />
+      <span class="mt-1 block text-xs text-ink-400">
+        {{ 'userSettings.usedWhenYouPriceSomething' | transloco }}
+      </span>
+    </div>
   </div>
 </div>
 
@@ -67,17 +96,15 @@
      public pages, and the choice belongs to the visitor rather than the profile. -->
 @if (analyticsConfigured) {
   <div class="mt-5 rounded-2xl border border-ink-100 bg-white p-4 sm:p-6">
-    <h2 class="text-lg font-semibold text-ink-900">Privacy</h2>
-    <p class="mt-1 text-sm text-ink-400">Control what we measure while you browse.</p>
+    <h2 class="text-lg font-semibold text-ink-900">{{ 'userSettings.privacy' | transloco }}</h2>
+    <p class="mt-1 text-sm text-ink-400">{{ 'userSettings.controlWhatWeMeasureWhile' | transloco }}</p>
 
     <div class="mt-5 flex items-start justify-between gap-4 border-t border-ink-100 pt-5">
       <div class="min-w-0">
-        <p class="text-sm font-medium text-ink-800">Allow analytics</p>
+        <p class="text-sm font-medium text-ink-800">{{ 'userSettings.allowAnalytics' | transloco }}</p>
         <p class="mt-1 text-sm text-ink-400">
-          Counts page views on the public pages so we can see which hostels and cities
-          people look for. No personal details are sent, and turning this off does not
-          affect anything else. See our
-          <a routerLink="/privacy-policy" class="font-medium text-brand-600 underline">Privacy Policy</a>.
+          {{ 'userSettings.countsPageViewsOnThe' | transloco }}
+          <a routerLink="/privacy-policy" class="font-medium text-brand-600 underline">{{ 'common.privacyPolicy' | transloco }}</a>.
         </p>
       </div>
       <hh-toggle

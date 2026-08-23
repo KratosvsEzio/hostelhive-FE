@@ -5,36 +5,58 @@
   (dragleave)="onDragLeave($event)"
   (drop)="onDrop($event)"
 >
-  <!-- Tile — click opens the method menu; the whole tile is also a drop target. -->
+  <!-- Tile — click opens the method menu; the whole tile is also a drop target.
+
+       Only the rect tile clips. On the circle the arc cut through the camera badge sitting in
+       the bottom-right corner, so the clip moves onto the image itself and the badge is free to
+       bleed past the edge. Rect keeps clipping: those tiles sit in a flex row and a badge
+       hanging outside would collide with the neighbouring photo. -->
   <button
     type="button"
     (click)="toggleMenu($event)"
-    class="group relative block overflow-hidden border-2 border-dashed transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
-    [class]="shape() === 'circle' ? 'h-24 w-24 rounded-full' : 'aspect-[4/3] w-full rounded-xl'"
+    class="group relative block border-2 border-dashed transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+    [class]="
+      shape() === 'circle'
+        ? 'h-24 w-24 rounded-full'
+        : 'aspect-[4/3] w-full overflow-hidden rounded-xl'
+    "
     [class.border-brand-400]="dragOver()"
     [class.bg-brand-50]="dragOver()"
     [class.border-ink-200]="!dragOver()"
     [class.hover:border-brand-300]="!dragOver()"
-    [attr.aria-label]="preview() ? 'Change photo' : label()"
+    [attr.aria-label]="preview() ? ('a11y.changePhoto' | transloco) : (label() ?? ('common.addPhoto' | transloco))"
   >
     @if (preview()) {
-      <img [src]="preview()" alt="" class="h-full w-full object-cover" />
+      <img
+        [src]="preview()"
+        alt=""
+        class="h-full w-full object-cover"
+        [class.rounded-full]="shape() === 'circle'"
+      />
     } @else {
       <div class="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-ink-400 group-hover:text-ink-600">
         <i class="ti ti-camera-plus text-2xl" aria-hidden="true"></i>
-        <span class="text-[11px] font-medium">{{ label() }}</span>
+        <span class="text-[11px] font-medium">{{ label() ?? ('common.addPhoto' | transloco) }}</span>
         @if (shape() !== 'circle') {
-          <span class="text-[10px] text-ink-300">Drag &amp; drop, upload, or take a photo</span>
+          <span class="text-[10px] text-ink-300">{{ 'sharedPhotoPicker.dragAmpDropUploadOr' | transloco }}</span>
         }
       </div>
     }
 
     @if (uploading()) {
-      <div class="absolute inset-0 grid place-items-center bg-black/40">
+      <div
+        class="absolute inset-0 grid place-items-center bg-black/40"
+        [class.rounded-full]="shape() === 'circle'"
+      >
         <i class="ti ti-loader-2 animate-spin text-xl text-white" aria-hidden="true"></i>
       </div>
     } @else if (preview()) {
-      <span class="absolute bottom-1 end-1 grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white shadow">
+      <!-- On the circle the badge centres on the arc at 45°, so it reads as pinned to the rim
+           rather than floating off the corner; the white ring keeps it legible over any photo. -->
+      <span
+        class="absolute grid h-7 w-7 place-items-center rounded-full bg-brand-500 text-white shadow"
+        [class]="shape() === 'circle' ? 'bottom-0 end-0 ring-2 ring-white' : 'bottom-1 end-1'"
+      >
         <i class="ti ti-camera text-xs" aria-hidden="true"></i>
       </span>
     }
@@ -43,20 +65,21 @@
   <!-- Method menu -->
   @if (menuOpen()) {
     <div class="absolute start-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-xl border border-ink-100 bg-white shadow-pill">
-      <button type="button" hh-button variant="text" class="w-full !justify-start" (click)="takePhoto()">
-        <i class="ti ti-camera shrink-0 text-ink-400" aria-hidden="true"></i>Take a photo
+      <button type="button" [class]="menuItemClass" (click)="takePhoto()">
+        <i class="ti ti-camera shrink-0 text-base text-ink-400" aria-hidden="true"></i>{{ 'common.takeAPhoto' | transloco }}
       </button>
       <div class="mx-3 border-t border-ink-100"></div>
-      <label class="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-sm text-ink-700 transition hover:bg-ink-50">
-        <i class="ti ti-photo shrink-0 text-ink-400" aria-hidden="true"></i>Choose from files
+      <label [class]="menuItemClass">
+        <i class="ti ti-photo shrink-0 text-base text-ink-400" aria-hidden="true"></i>{{ 'common.chooseFromFiles' | transloco }}
         <input type="file" [accept]="accept()" class="sr-only" (change)="onFileInput($event)" />
       </label>
     </div>
   }
 
   @if (displayError()) {
-    <p class="mt-1.5 flex items-center gap-1 text-xs text-danger">
-      <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ displayError() }}
+    <p class="mt-1.5 flex items-start gap-1 break-words text-xs text-danger">
+      <i class="ti ti-alert-circle mt-px shrink-0" aria-hidden="true"></i>
+      <span class="min-w-0">{{ displayError() }}</span>
     </p>
   }
 </div>
@@ -65,10 +88,10 @@
 @if (cameraOpen()) {
   <div class="fixed inset-0 z-[120] flex flex-col bg-black">
     <div class="flex items-center justify-between px-4 py-3">
-      <button type="button" hh-button variant="icon" size="sm" (click)="stopCamera()" aria-label="Cancel">
+      <button type="button" hh-button variant="icon" size="sm" (click)="stopCamera()" [attr.aria-label]="'a11y.cancel' | transloco">
         <i class="ti ti-x text-xl text-white" aria-hidden="true"></i>
       </button>
-      <p class="text-sm font-medium text-white">Take a photo</p>
+      <p class="text-sm font-medium text-white">{{ 'common.takeAPhoto' | transloco }}</p>
       <div class="w-9"></div>
     </div>
 
@@ -81,7 +104,7 @@
         type="button"
         (click)="captureWebPhoto()"
         class="flex h-18 w-18 items-center justify-center rounded-full border-4 border-white bg-white/20 transition hover:bg-white/30 active:scale-95"
-        aria-label="Capture photo"
+        [attr.aria-label]="'a11y.capturePhoto' | transloco"
       >
         <span class="h-14 w-14 rounded-full bg-white"></span>
       </button>
