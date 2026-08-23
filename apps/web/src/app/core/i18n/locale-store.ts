@@ -1,5 +1,7 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { merge } from 'rxjs';
 import { Router } from '@angular/router';
 import { PreferenceSource } from '@core/preferences/currency-preference';
 import { TranslocoService } from '@jsverse/transloco';
@@ -53,6 +55,34 @@ export class LocaleStore {
 
   /** `'rtl'` for Urdu and Arabic. Templates read this for direction-aware bits. */
   readonly dir = signal<'ltr' | 'rtl'>('ltr');
+
+  /** Bumped by anything Transloco does — a language change, a file arriving. */
+  private readonly translocoActivity = toSignal(
+    merge(this.transloco.langChanges$, this.transloco.events$),
+    { initialValue: null },
+  );
+
+  /**
+   * Whether the active language's strings are actually in memory.
+   *
+   * The `| transloco` pipe does not need this — it subscribes, so it renders blank and
+   * fills itself in. Code that reads a string once and hands it somewhere else does need
+   * it: `translate()` answers from whatever is loaded *now*, and Transloco loads a
+   * language on first use, so the first read of a page's life can land before the file
+   * does and quietly return the key.
+   *
+   * The page `<title>` is exactly that kind of read, and it is the one place where being
+   * wrong is permanent: a crawler takes what was in the served HTML.
+   *
+   * Answered by looking rather than by remembering an event, because a language served
+   * from Transloco's cache raises no load event at all — the second visit to a language
+   * would look forever unready.
+   */
+  readonly ready = computed(() => {
+    this.translocoActivity(); // re-ask whenever Transloco stirs
+    const loaded = this.transloco.getTranslation(this._active());
+    return !!loaded && Object.keys(loaded).length > 0;
+  });
 
   /**
    * The visitor's remembered choice, or null.

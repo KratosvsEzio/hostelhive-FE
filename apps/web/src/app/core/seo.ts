@@ -3,6 +3,7 @@ import { LocaleStore } from './i18n/locale-store';
 import { localeAlternates, withLocale } from './i18n/locales';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { TranslocoService } from '@jsverse/transloco';
 
 /**
  * Canonical origin for this deployment. Canonical and og:url must be absolute and must
@@ -12,10 +13,6 @@ import { Meta, Title } from '@angular/platform-browser';
  */
 export const SITE_ORIGIN = 'https://hostelhive.com';
 
-/** Fallbacks used when a page supplies nothing of its own. */
-const DEFAULT_TITLE = 'HostelHive — Find verified hostels in Pakistan';
-const DEFAULT_DESCRIPTION =
-  'Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing — no brokers, no surprises.';
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/hostelhive-logo.png`;
 
 export interface SeoConfig {
@@ -64,11 +61,16 @@ export class Seo {
   private readonly titleService = inject(Title);
   private readonly doc = inject(DOCUMENT);
   private readonly locale = inject(LocaleStore);
+  private readonly i18n = inject(TranslocoService);
 
   /** Applies the full head for a page: title, description, canonical, Open Graph, Twitter. */
   apply(config: SeoConfig): void {
-    const title = config.title || DEFAULT_TITLE;
-    const description = config.description?.trim() || DEFAULT_DESCRIPTION;
+    // Fallbacks for a page that supplies nothing of its own. Translated like everything
+    // else here: a French visitor landing on a page with no copy of its own should still
+    // get a French title, not the English one by default.
+    const title = config.title || this.i18n.translate<string>('seo.defaultTitle');
+    const description =
+      config.description?.trim() || this.i18n.translate<string>('seo.defaultDescription');
     const image = config.image || DEFAULT_IMAGE;
     // The language-free path is what the alternates are built from; the active language
     // is what this page canonicalises to.

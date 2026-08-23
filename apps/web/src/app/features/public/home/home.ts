@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   PLATFORM_ID,
   signal,
@@ -20,7 +21,8 @@ import { ListingsApi } from '@services';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { PakistanMap } from './pakistan-map/pakistan-map';
 import { ListingCard } from '../search/listing-card/listing-card';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 @Component({
   selector: 'app-home',
@@ -34,14 +36,22 @@ export class Home {
   private readonly listingsApi = inject(ListingsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
+  private readonly i18n = inject(TranslocoService);
+  private readonly locale = inject(LocaleStore);
 
   constructor() {
     // This route is prerendered, so these land in the static HTML.
-    this.seo.apply({
-      title: 'HostelHive — Find verified hostels, PGs & co-living in Pakistan',
-      description:
-        'Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing — no brokers, no surprises.',
-      path: '/',
+    //
+    // An effect rather than a plain call: the copy is translated now, and `translate`
+    // answers from whatever Transloco has loaded at the moment it is asked. Reading
+    // `ready()` both waits for the strings and re-runs this when the language changes.
+    effect(() => {
+      if (!this.locale.ready()) return;
+      this.seo.apply({
+        title: this.i18n.translate('seo.homeTitle'),
+        description: this.i18n.translate('seo.defaultDescription'),
+        path: '/',
+      });
     });
 
     // Organization is what a search engine reads to build the brand panel and to

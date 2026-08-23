@@ -30,11 +30,21 @@ export interface Place {
 /** Accommodation-type segments that may follow a place: `/hostels/lahore/girls`. */
 export const GENDER_SEGMENTS: Record<
   string,
-  { gender: AccommodationType; label: string; adjective: string }
+  {
+    gender: AccommodationType;
+    /** Translation key for the standalone noun phrase — a breadcrumb, a link, an h1. */
+    label: string;
+    /** Translation key for the bare word that goes inside a longer phrase. */
+    adjective: string;
+  }
 > = {
-  girls: { gender: 'girls', label: 'Girls hostels', adjective: 'girls' },
-  boys: { gender: 'boys', label: 'Boys hostels', adjective: 'boys' },
-  'co-living': { gender: 'coliving', label: 'Co-living spaces', adjective: 'co-living' },
+  girls: { gender: 'girls', label: 'seo.segmentGirls', adjective: 'seo.genderGirls' },
+  boys: { gender: 'boys', label: 'seo.segmentBoys', adjective: 'seo.genderBoys' },
+  'co-living': {
+    gender: 'coliving',
+    label: 'seo.segmentColiving',
+    adjective: 'seo.genderColiving',
+  },
 };
 
 /**

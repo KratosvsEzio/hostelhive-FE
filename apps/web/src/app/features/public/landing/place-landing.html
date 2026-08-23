@@ -11,7 +11,7 @@
           >{{ 'publicLanding.hostelsIn' | transloco: { place: p.name } }}</a
         >
         <i class="ti ti-chevron-right text-[10px]" aria-hidden="true"></i>
-        <span class="font-medium text-ink-700">{{ g.label }}</span>
+        <span class="font-medium text-ink-700">{{ segmentLabel(g) }}</span>
       } @else {
         <span class="font-medium text-ink-700">{{ 'publicLanding.hostelsIn' | transloco: { place: p.name } }}</span>
       }

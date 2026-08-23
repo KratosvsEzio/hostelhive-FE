@@ -55,7 +55,7 @@ import { SearchFilters } from '@features/public/search/search-filters/search-fil
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabel } from '@util/accommodation-type';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 /** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
 interface Bounds {
@@ -145,6 +145,7 @@ export class SearchMap {
   private readonly router = inject(Router);
   private readonly countryBounds = inject(CountryBounds);
   private readonly locale = inject(LocaleStore);
+  private readonly i18n = inject(TranslocoService);
   private readonly sharedMap = inject(SharedMap);
   private readonly geo = inject(GeolocationService);
   private readonly destroyRef = inject(DestroyRef);
@@ -785,6 +786,7 @@ export class SearchMap {
       // /hostels/lahore claim to be a search page.
       if (this.seed()) return;
 
+      if (!this.locale.ready()) return; // a title is read once; wait for the strings
       const place = this.canonicalPlace();
       const filtered = this.hasFilters();
       const name = this.locationName();
@@ -793,9 +795,8 @@ export class SearchMap {
       // reporting whichever country the map opened on before the visitor left it.
       if (this.unbounded()) {
         this.seo.apply({
-          title: 'Hostels worldwide — search | HostelHive',
-          description:
-            'Search verified hostels, PGs and co-living worldwide. Filter by budget, room sharing and amenities.',
+          title: this.i18n.translate<string>('seo.worldwideTitle'),
+          description: this.i18n.translate<string>('seo.worldwideDescription'),
           noindex: true,
         });
         return;
@@ -805,8 +806,10 @@ export class SearchMap {
       // claiming they are the landing page would be a lie about their content.
       if (filtered || !place) {
         this.seo.apply({
-          title: `Hostels in ${name} — search | HostelHive`,
-          description: `Search verified hostels, PGs and co-living in ${name}. Filter by budget, room sharing and amenities.`,
+          title: this.i18n.translate<string>('seo.searchTitle', { place: name }),
+          description: this.i18n.translate<string>('seo.searchDescription', {
+            place: name,
+          }),
           noindex: true,
         });
         return;
@@ -815,8 +818,10 @@ export class SearchMap {
       // An unfiltered search for a place we have a landing page for: let it stay
       // indexable but hand its signal to the page built to rank.
       this.seo.apply({
-        title: `Hostels in ${place.name} — search | HostelHive`,
-        description: `Search verified hostels, PGs and co-living in ${place.name}. Compare prices, room sharing and amenities.`,
+        title: this.i18n.translate<string>('seo.searchTitle', { place: place.name }),
+        description: this.i18n.translate<string>('seo.searchPlaceDescription', {
+          place: place.name,
+        }),
         path: `/hostels/${place.slug}`,
       });
     });

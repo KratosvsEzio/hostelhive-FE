@@ -21,6 +21,23 @@ export const ACCOMMODATION_LABELS: Record<AccommodationType, string> = {
   backpacker: 'Backpacker',
 };
 
+/**
+ * The same four types as translation keys.
+ *
+ * Kept beside {@link ACCOMMODATION_LABELS} rather than inline at the call sites so the two
+ * cannot drift: a type added above without a key here fails the build, which is the whole
+ * reason that table is a Record and not a ternary chain.
+ *
+ * The key names are the app's existing `common.*` ones, which is why `coliving` maps to
+ * `coLiving` — the type follows the backend spelling, the key follows the file.
+ */
+export const ACCOMMODATION_LABEL_KEYS: Record<AccommodationType, string> = {
+  boys: 'common.boys',
+  girls: 'common.girls',
+  coliving: 'common.coLiving',
+  backpacker: 'common.backpacker',
+};
+
 /** The label for an accommodation type; falls back to the raw value if unrecognised. */
 export function accommodationLabel(type: string): string {
   return ACCOMMODATION_LABELS[type as AccommodationType] ?? type;

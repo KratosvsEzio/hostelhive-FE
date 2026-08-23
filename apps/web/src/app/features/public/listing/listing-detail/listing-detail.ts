@@ -4,6 +4,7 @@ import {
   DestroyRef,
   PLATFORM_ID,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -28,12 +29,16 @@ import { ROOM_OFFERS } from '../booking/room-offers.fixture';
 import { canBookOnline } from '../booking/room-offer';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
-import { accommodationLabel } from '@util/accommodation-type';
+import {
+  ACCOMMODATION_LABEL_KEYS,
+  accommodationLabel,
+} from '@util/accommodation-type';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { ApiDate } from '@util/api-date';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 interface ViewState {
   loading: boolean;
@@ -114,6 +119,8 @@ export class ListingDetail {
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
+  private readonly i18n = inject(TranslocoService);
+  private readonly locale = inject(LocaleStore);
   private readonly analytics = inject(AnalyticsService);
 
   protected readonly phoneValue = signal<string | null>(null);
@@ -533,6 +540,21 @@ export class ListingDetail {
   }
 
   constructor() {
+    /**
+     * The page head, rebuilt whenever the listing or the language moves.
+     *
+     * Driven by the state signal rather than by the subscription that fills it, because
+     * the copy is translated now: `applySeo` reads its strings once and hands them to the
+     * document, so it has to run again when a different language makes them different
+     * strings. Waiting on `ready()` keeps it from writing a title out of an empty
+     * dictionary on the way there.
+     */
+    effect(() => {
+      const state = this._state();
+      if (!this.locale.ready()) return;
+      this.applySeo(state);
+    });
+
     // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
     // opens the review modal once the listing has loaded, carrying the notification id the
     // review is submitted against. Browser-only — there is no modal to open during SSR.
@@ -563,7 +585,6 @@ export class ListingDetail {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe((s) => {
       this._state.set(s);
-      this.applySeo(s);
       // Everything below touches the DOM or the address bar — browser only.
       if (!this.isBrowser) return;
       if (s.data) {
@@ -624,8 +645,8 @@ export class ListingDetail {
     if (!l) {
       // Missing or failed: never let a not-found page into the index.
       this.seo.apply({
-        title: 'Listing not found — HostelHive',
-        description: 'This hostel listing is unavailable or the link is incorrect.',
+        title: this.i18n.translate<string>('seo.listingNotFoundTitle'),
+        description: this.i18n.translate<string>('seo.listingNotFoundDescription'),
         noindex: true,
       });
       return;
@@ -635,17 +656,28 @@ export class ListingDetail {
     const genderLabel = this.genderLabel(l.accommodationType);
     // Backpacker beds are priced per night, everything else per month. The old copy said
     // "/month" for both, which misprices a backpacker hostel in every search result.
-    const per = periodForAccommodation(l.accommodationType) === 'nightly' ? 'night' : 'month';
-    const price = l.priceFrom
-      ? `from Rs ${l.priceFrom.toLocaleString('en-PK')}/${per}`
+    const nightly = periodForAccommodation(l.accommodationType) === 'nightly';
+    // Grouped by the language being read rather than always en-PK: this string is a
+    // sentence in the page's own language, and 12,000 reads as twelve in half of Europe.
+    const amount = l.priceFrom
+      ? `Rs ${l.priceFrom.toLocaleString(this.locale.active())}`
+      : '';
+    const price = amount
+      ? this.i18n.translate<string>(
+          nightly ? 'seo.priceFromNight' : 'seo.priceFromMonth',
+          { price: amount },
+        )
       : '';
 
     // Front-load the terms people actually search: name, then gender + location, then
     // price. Descriptions are truncated around 160 characters in results, so the
     // listing's own copy goes last where a cut costs least.
     const description = [
-      `${l.name} — ${genderLabel} hostel in ${location}${price ? `, ${price}` : ''}.`,
-      l.verified ? 'Verified listing on HostelHive.' : '',
+      this.i18n.translate<string>(
+        price ? 'seo.listingLeadWithPrice' : 'seo.listingLead',
+        { name: l.name, gender: genderLabel, location, price },
+      ),
+      l.verified ? this.i18n.translate<string>('seo.listingVerifiedNote') : '',
       l.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() ?? '',
     ]
       .filter(Boolean)
@@ -656,16 +688,29 @@ export class ListingDetail {
     // a card is attributable at a glance, then the two facts that decide a click here:
     // price, and whether meals are included.
     const socialTitle = [
-      `${l.name} — ${genderLabel} hostel in ${location}`,
-      l.priceFrom ? `Rs ${l.priceFrom.toLocaleString('en-PK')}/${per === 'night' ? 'night' : 'mo'}` : '',
-      this.hasMess(l) ? 'Mess included' : '',
-      l.verified ? 'Verified' : '',
+      this.i18n.translate<string>('seo.listingLead', {
+        name: l.name,
+        gender: genderLabel,
+        location,
+      }).replace(/[.\u3002]$/, ''),
+      amount
+        ? this.i18n.translate<string>(
+            nightly ? 'seo.socialPriceNight' : 'seo.socialPriceMonth',
+            { price: amount },
+          )
+        : '',
+      this.hasMess(l) ? this.i18n.translate<string>('listing.messIncluded') : '',
+      l.verified ? this.i18n.translate<string>('listing.verified') : '',
     ]
       .filter(Boolean)
       .join(' · ');
 
     this.seo.apply({
-      title: `${l.name} — ${genderLabel} hostel in ${location} | HostelHive`,
+      title: this.i18n.translate<string>('seo.listingTitle', {
+        name: l.name,
+        gender: genderLabel,
+        location,
+      }),
       socialTitle,
       description,
       path: `/hostel/${l.slug ?? ''}`,
@@ -760,8 +805,16 @@ export class ListingDetail {
     return /\bmess\b|meal|food|dining/.test(words);
   }
 
+  /**
+   * The accommodation type as a word, in the language being read.
+   *
+   * Goes through `common.*` rather than `ACCOMMODATION_LABELS`, whose table is English
+   * only. Falls back to that table for a type with no key, which is the same answer the
+   * whole app gave before and beats rendering the key at a visitor.
+   */
   protected genderLabel(g: AccommodationType): string {
-    return accommodationLabel(g);
+    const key = ACCOMMODATION_LABEL_KEYS[g];
+    return key ? this.i18n.translate<string>(key) : accommodationLabel(g);
   }
 
   protected initials(name: string): string {
