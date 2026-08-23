@@ -1,6 +1,6 @@
 import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import {
   CurrentUser,
   CurrentUserResponse,
@@ -15,6 +15,7 @@ import {
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
+import { GeoPreference } from '@core/geo/geo-preference';
 
 /** Auth forms render their failures inline, so their requests opt out of the global error toast. */
 function inlineErrors(): HttpContext {
@@ -35,6 +36,7 @@ function inlineErrors(): HttpContext {
 @Injectable({ providedIn: 'root' })
 export class AuthApi {
   private readonly api = inject(ApiClient);
+  private readonly geo = inject(GeoPreference);
 
   /** POST /api/user/sign_in → JWT. */
   signIn(body: SignInRequest): Observable<string> {
@@ -85,11 +87,23 @@ export class AuthApi {
     return this.api.patch<unknown>('/api/users/change_password', body);
   }
 
-  /** GET /api/users/current → the authenticated user (with roles). */
+  /**
+   * GET /api/users/current → the authenticated user (with roles).
+   *
+   * Every success also re-resolves the visitor's country and re-applies their language and
+   * currency. This is the one call every authenticated entry point funnels through — session
+   * restore, sign-in, Google login, role refresh — so hooking it here covers all of them
+   * without each having to remember.
+   *
+   * Fire-and-forget on purpose. The country lookup talks to third-party hosts that may be
+   * slow or blocked outright, and none of that may delay or fail an auth response: the user
+   * is resolved from this call either way.
+   */
   currentUser(): Observable<CurrentUser> {
-    return this.api
-      .get<CurrentUserResponse>('/api/users/current')
-      .pipe(map((r) => r.user));
+    return this.api.get<CurrentUserResponse>('/api/users/current').pipe(
+      map((r) => r.user),
+      tap(() => void this.geo.refresh()),
+    );
   }
 }
 
