@@ -277,6 +277,7 @@
     "allTime": "Sepanjang waktu",
     "saveChanges": "Simpan perubahan",
     "nNights": "{{count}} malam",
+    "nNightsOne": "{{count}} malam",
     "nGuests": "{{count}} tamu",
     "guest": "Tamu",
     "forDateRange": "untuk {{from}} – {{to}}.",
@@ -773,6 +774,8 @@
     "nPhotosAttached": "{{count}} foto dilampirkan"
   },
   "hostRooms": {
+    "calendarTab": "Kalender",
+    "detailsTab": "Detail",
     "available": "Tersedia",
     "partlyBooked": "Sebagian dipesan",
     "booked": "Dipesan",

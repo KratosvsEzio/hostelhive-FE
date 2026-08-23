@@ -335,6 +335,7 @@
     "allTime": "All time",
     "saveChanges": "Save changes",
     "nNights": "{{count}} nights",
+    "nNightsOne": "{{count}} night",
     "nGuests": "{{count}} guests",
     "guest": "Guest",
     "forDateRange": "for {{from}} – {{to}}.",
@@ -641,6 +642,8 @@
     "pctBedsFilled": "Percentage of beds filled"
   },
   "hostRooms": {
+    "calendarTab": "Calendar",
+    "detailsTab": "Details",
     "available": "Available",
     "partlyBooked": "Partly booked",
     "booked": "Booked",

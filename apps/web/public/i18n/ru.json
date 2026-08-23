@@ -277,6 +277,7 @@
     "allTime": "За всё время",
     "saveChanges": "Сохранить изменения",
     "nNights": "{{count}} ночей",
+    "nNightsOne": "{{count}} ночь",
     "nGuests": "{{count}} гостей",
     "guest": "Гость",
     "forDateRange": "на {{from}} – {{to}}.",
@@ -773,6 +774,8 @@
     "nPhotosAttached": "Прикреплено фото: {{count}}"
   },
   "hostRooms": {
+    "calendarTab": "Календарь",
+    "detailsTab": "Подробности",
     "available": "Свободна",
     "partlyBooked": "Частично занята",
     "booked": "Занята",

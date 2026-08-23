@@ -277,6 +277,7 @@
     "allTime": "كل الأوقات",
     "saveChanges": "حفظ التغييرات",
     "nNights": "{{count}} ليالٍ",
+    "nNightsOne": "{{count}} ليلة",
     "nGuests": "{{count}} ضيوف",
     "guest": "ضيف",
     "forDateRange": "من {{from}} إلى {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} صور مرفقة"
   },
   "hostRooms": {
+    "calendarTab": "التقويم",
+    "detailsTab": "التفاصيل",
     "available": "متاح",
     "partlyBooked": "محجوز جزئياً",
     "booked": "محجوز",

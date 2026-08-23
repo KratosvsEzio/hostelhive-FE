@@ -277,6 +277,7 @@
     "allTime": "Hela tiden",
     "saveChanges": "Spara ändringar",
     "nNights": "{{count}} nätter",
+    "nNightsOne": "{{count}} natt",
     "nGuests": "{{count}} gäster",
     "guest": "Gäst",
     "forDateRange": "för {{from}} – {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} foton bifogade"
   },
   "hostRooms": {
+    "calendarTab": "Kalender",
+    "detailsTab": "Detaljer",
     "available": "Ledigt",
     "partlyBooked": "Delvis bokat",
     "booked": "Bokat",

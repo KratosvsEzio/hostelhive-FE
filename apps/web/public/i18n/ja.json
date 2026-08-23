@@ -277,6 +277,7 @@
     "allTime": "全期間",
     "saveChanges": "変更を保存",
     "nNights": "{{count}} 泊",
+    "nNightsOne": "{{count}} 泊",
     "nGuests": "{{count}} 名",
     "guest": "ゲスト",
     "forDateRange": "{{from}}〜{{to}} の分。",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "写真 {{count}} 枚を添付"
   },
   "hostRooms": {
+    "calendarTab": "カレンダー",
+    "detailsTab": "詳細",
     "available": "空室",
     "partlyBooked": "一部予約済み",
     "booked": "予約済み",

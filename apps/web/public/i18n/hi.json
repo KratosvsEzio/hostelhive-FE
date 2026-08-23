@@ -277,6 +277,7 @@
     "allTime": "सभी समय",
     "saveChanges": "परिवर्तन सहेजें",
     "nNights": "{{count}} रातें",
+    "nNightsOne": "{{count}} रात",
     "nGuests": "{{count}} अतिथि",
     "guest": "अतिथि",
     "forDateRange": "{{from}} – {{to}} के लिए।",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} फ़ोटो संलग्न"
   },
   "hostRooms": {
+    "calendarTab": "कैलेंडर",
+    "detailsTab": "विवरण",
     "available": "उपलब्ध",
     "partlyBooked": "आंशिक रूप से बुक",
     "booked": "बुक",

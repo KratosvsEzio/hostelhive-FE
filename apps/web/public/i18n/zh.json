@@ -277,6 +277,7 @@
     "allTime": "全部时间",
     "saveChanges": "保存更改",
     "nNights": "{{count}} 晚",
+    "nNightsOne": "{{count}} 晚",
     "nGuests": "{{count}} 位客人",
     "guest": "客人",
     "forDateRange": "{{from}} – {{to}} 期间。",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "已附加 {{count}} 张照片"
   },
   "hostRooms": {
+    "calendarTab": "日历",
+    "detailsTab": "详情",
     "available": "可用",
     "partlyBooked": "部分预订",
     "booked": "已预订",

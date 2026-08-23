@@ -277,6 +277,7 @@
     "allTime": "Toàn thời gian",
     "saveChanges": "Lưu thay đổi",
     "nNights": "{{count}} đêm",
+    "nNightsOne": "{{count}} đêm",
     "nGuests": "{{count}} khách",
     "guest": "Khách",
     "forDateRange": "cho {{from}} – {{to}}.",
@@ -773,6 +774,8 @@
     "nPhotosAttached": "Đã đính kèm {{count}} ảnh"
   },
   "hostRooms": {
+    "calendarTab": "Lịch",
+    "detailsTab": "Chi tiết",
     "available": "Còn trống",
     "partlyBooked": "Đặt một phần",
     "booked": "Đã đặt",

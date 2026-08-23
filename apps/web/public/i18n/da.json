@@ -277,6 +277,7 @@
     "allTime": "Hele perioden",
     "saveChanges": "Gem ændringer",
     "nNights": "{{count}} nætter",
+    "nNightsOne": "{{count}} nat",
     "nGuests": "{{count}} gæster",
     "guest": "Gæst",
     "forDateRange": "for {{from}} – {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} fotos vedhæftet"
   },
   "hostRooms": {
+    "calendarTab": "Kalender",
+    "detailsTab": "Detaljer",
     "available": "Ledig",
     "partlyBooked": "Delvist booket",
     "booked": "Booket",

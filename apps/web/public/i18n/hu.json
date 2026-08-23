@@ -277,6 +277,7 @@
     "allTime": "Teljes időszak",
     "saveChanges": "Módosítások mentése",
     "nNights": "{{count}} éjszaka",
+    "nNightsOne": "{{count}} éjszaka",
     "nGuests": "{{count}} vendég",
     "guest": "Vendég",
     "forDateRange": "{{from}} – {{to}} időszakra.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} fotó csatolva"
   },
   "hostRooms": {
+    "calendarTab": "Naptár",
+    "detailsTab": "Részletek",
     "available": "Elérhető",
     "partlyBooked": "Részben foglalt",
     "booked": "Foglalt",

@@ -277,6 +277,7 @@
     "allTime": "تمام وقت",
     "saveChanges": "تبدیلیاں محفوظ کریں",
     "nNights": "{{count}} راتیں",
+    "nNightsOne": "{{count}} رات",
     "nGuests": "{{count}} مہمان",
     "guest": "مہمان",
     "forDateRange": "برائے {{from}} – {{to}}۔",
@@ -773,6 +774,8 @@
     "nPhotosAttached": "{{count}} تصاویر منسلک"
   },
   "hostRooms": {
+    "calendarTab": "کیلنڈر",
+    "detailsTab": "تفصیلات",
     "available": "دستیاب",
     "partlyBooked": "جزوی طور پر بک",
     "booked": "بک شدہ",

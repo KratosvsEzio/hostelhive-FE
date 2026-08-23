@@ -277,6 +277,7 @@
     "allTime": "Sempre",
     "saveChanges": "Salva modifiche",
     "nNights": "{{count}} notti",
+    "nNightsOne": "{{count}} notte",
     "nGuests": "{{count}} ospiti",
     "guest": "Ospite",
     "forDateRange": "dal {{from}} al {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} foto allegate"
   },
   "hostRooms": {
+    "calendarTab": "Calendario",
+    "detailsTab": "Dettagli",
     "available": "Disponibile",
     "partlyBooked": "Parzialmente prenotata",
     "booked": "Prenotata",
