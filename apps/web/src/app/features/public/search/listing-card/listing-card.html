@@ -89,7 +89,7 @@
         <button
           type="button"
           (click)="step(-1, $event)"
-          [aria-label]="'card.previousPhoto' | transloco"
+          [aria-label]="'common.previousPhoto' | transloco"
           class="absolute start-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <i class="ti ti-chevron-left text-sm" aria-hidden="true"></i>
@@ -99,7 +99,7 @@
         <button
           type="button"
           (click)="step(1, $event)"
-          [aria-label]="'card.nextPhoto' | transloco"
+          [aria-label]="'common.nextPhoto' | transloco"
           class="absolute end-3 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <i class="ti ti-chevron-right text-sm" aria-hidden="true"></i>
@@ -155,11 +155,31 @@
       </span>
     </div>
     <p class="mt-0.5 truncate text-sm text-ink-500">{{ locationLine() }}</p>
-    <p class="mt-2 text-ink-900">
-      <span class="font-semibold"><span class="relative z-[2] cursor-help" [hhTooltip]="listing().currency | currencyName">{{ listing().currency | currencySym }}</span> {{ displayPrice().amount | number }}</span>
+    <!-- List price struck through first, then what is actually charged. Reading order
+         matters: the bold figure has to be the one the seeker pays, or the card reads as
+         cheaper than it is at a glance. -->
+    <p class="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-ink-900">
+      @if (discounted()) {
+        <span class="text-sm text-ink-400 line-through"
+          >{{ listing().currency | currencySym }} {{ displayPrice().amount | number }}</span
+        >
+      }
+      <span class="font-semibold"
+        ><span
+          class="relative z-[2] cursor-help"
+          [hhTooltip]="listing().currency | currencyName"
+          >{{ listing().currency | currencySym }}</span
+        >
+        {{ payable() | number }}</span
+      >
       <span class="text-sm text-ink-500">{{ priceSuffix() }}</span>
+      @if (discountPercent(); as pct) {
+        <span class="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700"
+          >−{{ pct }}%</span
+        >
+      }
       @if (roomTypeLabel()) {
-        <span class="text-sm text-ink-500"> · {{ roomTypeLabel() }}</span>
+        <span class="text-sm text-ink-500">· {{ roomTypeLabel() }}</span>
       }
     </p>
 

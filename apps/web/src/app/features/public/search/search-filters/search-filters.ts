@@ -11,6 +11,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AccommodationType } from '@hostelhive/data-access';
 import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
+import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Filter sub-header for search results. A "Filters" button opens the full
@@ -20,7 +22,7 @@ import { FilterState, SearchFilterModal } from '@features/public/search/search-f
 @Component({
   selector: 'hh-search-filters',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Chip, Dropdown, SearchFilterModal],
+  imports: [Button, Chip, Dropdown, SearchFilterModal, TranslocoPipe],
   templateUrl: './search-filters.html',
   host: { class: 'contents' },
 })
@@ -47,11 +49,17 @@ export class SearchFilters {
    *
    * `starting_price` is one unit-less number, so a nightly bed at PKR 1,200 sorts above a
    * monthly room at PKR 15,000 as though it were cheaper — page one fills with backpacker
-   * dorms a student cannot rent by the month. Choosing Month or Night gives the list a single
-   * unit and brings both price sorts back. The other three are unit-agnostic and always stay.
+   * dorms a student cannot rent by the month. The other three sorts are unit-agnostic and
+   * always stay.
+   *
+   * The unit now comes from the accommodation type rather than a filter of its own: only
+   * backpacker hostels are nightly (see `periodForAccommodation`), so naming any one type
+   * pins the list to a single cycle, and "All" is the only mix. That was the whole job of
+   * the Frequency dropdown that used to sit here, which asked the seeker to state something
+   * their accommodation choice had already decided.
    */
   protected readonly sortOptions = computed(() =>
-    this.frequency() === 'all'
+    this.accommodationType() === 'all'
       ? this.allSortOptions.filter((o) => !String(o.value).startsWith('price-'))
       : this.allSortOptions,
   );
@@ -63,14 +71,8 @@ export class SearchFilters {
    * room with others, and how many others is a detail read after that.
    */
   protected readonly roomTypeOptions: DropdownOption[] = [
-    { value: 'private', label: 'Private room' },
     { value: 'shared', label: 'Shared room' },
-  ];
-
-  /** All is the default: nothing is hidden from a seeker who has not chosen yet. */
-  protected readonly frequencyOptions: DropdownOption[] = [
-    { value: 'month', label: 'Per month' },
-    { value: 'night', label: 'Per night' },
+    { value: 'private', label: 'Private room' },
   ];
 
   protected readonly accommodationType = computed<AccommodationType | 'all'>(
@@ -84,10 +86,17 @@ export class SearchFilters {
    * param travels and the UI reflects it, but results do not narrow yet. Same position the
    * amenity filter was in before `offers` reached the search document.
    */
-  protected readonly roomType = computed(() => this.params()?.get('roomType') ?? '');
+  /**
+   * Always one of the two -- there is no "Any" any more.
+   *
+   * Shared is the floor rather than a chosen filter, so it does not count towards the
+   * "filters applied" badge below: a seeker who has touched nothing should not be told they
+   * have a filter on.
+   */
+  protected readonly roomType = computed(
+    () => this.params()?.get('roomType') || DEFAULT_OCCUPANCY_TYPE,
+  );
 
-  /** `month` | `night` | `''` for All. Also gates the price controls — see `sortOptions`. */
-  protected readonly frequency = computed(() => this.params()?.get('frequency') ?? 'all');
   protected readonly sort = computed(
     () => this.params()?.get('sort') ?? 'recommended',
   );
@@ -101,8 +110,7 @@ export class SearchFilters {
     return (
       this.accommodationType() !== 'all' ||
       !!this.propertyType() ||
-      !!this.roomType() ||
-      this.frequency() !== 'all' ||
+      this.roomType() !== DEFAULT_OCCUPANCY_TYPE ||
       !!this.minP() ||
       !!this.maxP() ||
       this.amenities().length > 0 ||
@@ -114,8 +122,7 @@ export class SearchFilters {
     let n = 0;
     if (this.accommodationType() !== 'all') n++;
     if (this.propertyType()) n++;
-    if (this.roomType()) n++;
-    if (this.frequency() !== 'all') n++;
+    if (this.roomType() !== DEFAULT_OCCUPANCY_TYPE) n++;
     if (this.minP() || this.maxP()) n++;
     if (this.amenities().length) n++;
     if (this.sort() !== 'recommended') n++;
@@ -135,24 +142,10 @@ export class SearchFilters {
     return typeof v === 'string' && v ? v : null;
   }
 
+  /** Never clears to nothing: the dropdown offers no empty option, so null means "unchanged". */
   protected onRoomTypeChange(v: string | string[] | null): void {
-    this.nav({ roomType: this.asValue(v) });
-  }
-
-  /**
-   * Changing the cycle can invalidate the sort that is showing.
-   *
-   * Moving back to All while sorted by price would leave a price sort active over mixed units
-   * with no control left to change it — the option is gone from the dropdown. Dropping to the
-   * default here keeps the URL and the visible controls in agreement.
-   */
-  protected onFrequencyChange(v: string | string[] | null): void {
     const next = this.asValue(v);
-    const priceSorted = this.sort().startsWith('price-');
-    this.nav({
-      frequency: next,
-      ...(next === null && priceSorted ? { sort: null } : {}),
-    });
+    if (next) this.nav({ roomType: next });
   }
 
   protected toggleQuickAmenity(slug: string): void {

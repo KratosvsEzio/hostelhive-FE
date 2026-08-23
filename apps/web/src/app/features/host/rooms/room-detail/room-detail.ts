@@ -17,6 +17,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
 import { RoomCalendar } from '../room-calendar/room-calendar';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type RoomStatus = 'available' | 'partial' | 'full';
 
@@ -33,7 +34,7 @@ const LOADING: DetailState = { loading: true, error: false, networkError: false,
 @Component({
   selector: 'hh-room-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ApiDate, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill, RoomCalendar],
+  imports: [ApiDate, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill, RoomCalendar, TranslocoPipe],
   templateUrl: './room-detail.html',
 })
 export class RoomDetail {

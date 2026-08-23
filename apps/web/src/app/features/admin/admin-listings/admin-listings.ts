@@ -38,6 +38,7 @@ import type { StatusTone } from '@hostelhive/ui';
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
 import { ADMIN_LISTINGS_TABLE_COLS } from '@app/util/table-configs/admin-listings-table-cols';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -77,6 +78,7 @@ const DISPOSITION_META: Record<
     GlobalFilter,
     Search,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './admin-listings.html',
 })
@@ -262,21 +264,6 @@ export class AdminListings {
 
   protected onRowClick(row: unknown): void {
     this.router.navigate(['../review', (row as AdminListing).id], { relativeTo: this.route });
-  }
-
-  protected toggleSort(field: SortField): void {
-    if (this.sortField() === field) {
-      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortField.set(field);
-      this.sortDir.set('desc');
-    }
-    this.page.set(1);
-  }
-
-  protected sortIcon(field: SortField): string {
-    if (this.sortField() !== field) return 'ti-arrows-sort text-ink-300';
-    return this.sortDir() === 'asc' ? 'ti-arrow-up' : 'ti-arrow-down';
   }
 
   protected aggTextClass(slug: string): string {

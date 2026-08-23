@@ -14,6 +14,7 @@ import { FavoritesStore } from '@util/favorites-store';
 import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -24,7 +25,7 @@ interface ViewState {
 @Component({
   selector: 'app-account-favorites',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, Button, ConfirmModal, ErrorState, Skeleton, ListingCard],
+  imports: [RouterLink, LocaleLink, Button, ConfirmModal, ErrorState, Skeleton, ListingCard, TranslocoPipe],
   templateUrl: './favorites.html',
 })
 export class AccountFavorites {

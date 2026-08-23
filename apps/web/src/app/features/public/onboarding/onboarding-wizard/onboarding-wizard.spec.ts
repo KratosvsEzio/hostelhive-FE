@@ -407,7 +407,7 @@ describe('OnboardingWizard', () => {
 
       expect(vm.showDraftStatus()).toBe(true);
       expect(fixture.nativeElement.querySelector('header')?.textContent).toContain(
-        'Saved on this device',
+        'publicOnboarding.savedOnThisDevice',
       );
     });
   });

@@ -74,7 +74,7 @@
             class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
           >
             <i class="ti ti-bell text-lg" aria-hidden="true"></i
-            >{{ 'account.notifications' | transloco }}
+            >{{ 'common.notifications' | transloco }}
           </a>
           <a
             [routerLink]="hostLink()"
@@ -82,7 +82,7 @@
             class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
           >
             <i class="ti ti-building-community text-lg" aria-hidden="true"></i
-            >{{ hostCta() }}
+            >{{ hostCtaKey() | transloco }}
           </a>
         }
         <div class="my-1.5 h-px bg-ink-100"></div>
@@ -125,7 +125,7 @@
           (click)="close()"
           class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-ink-50"
         >
-          <i class="ti ti-login text-lg" aria-hidden="true"></i>{{ 'account.logIn' | transloco }}
+          <i class="ti ti-login text-lg" aria-hidden="true"></i>{{ 'common.logIn' | transloco }}
         </a>
         <a
           routerLink="/auth"
@@ -135,6 +135,22 @@
         >
           <i class="ti ti-user-plus text-lg text-ink-500" aria-hidden="true"></i
           >{{ 'account.signUp' | transloco }}
+        </a>
+        <div class="my-1.5 h-px bg-ink-100"></div>
+        <!-- Guests need this too. It used to live in the header, where it was the only
+             become-a-host entry point a signed-out visitor had; moving the CTA into this
+             menu without adding it here would have removed the path to listing a property
+             for exactly the people most likely to be looking for it.
+             `returnUrl` carries the intent through the sign-in, so they land on the listing
+             form rather than back on the home page wondering what happened. -->
+        <a
+          routerLink="/auth"
+          [queryParams]="{ mode: 'login', returnUrl: '/host/listings/new' }"
+          (click)="close()"
+          class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50"
+        >
+          <i class="ti ti-building-community text-lg text-ink-500" aria-hidden="true"></i
+          >{{ 'nav.becomeAHost' | transloco }}
         </a>
       }
     </div>

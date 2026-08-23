@@ -11,6 +11,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { BarChart, BarChartBar, BarChartTick, Card, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { ExpenseListItem, ExpenseMonthlyPoint, ExpenseTypeMonthlySummary, HostelsApi, HostPropertyStore } from '@services';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -147,7 +148,7 @@ function buildMultiLine(
 @Component({
   selector: 'hh-expense-charts',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, BarChart, Card, Dropdown],
+  imports: [DecimalPipe, BarChart, Card, Dropdown, TranslocoPipe],
   templateUrl: './expense-charts.html',
 })
 export class ExpenseCharts {

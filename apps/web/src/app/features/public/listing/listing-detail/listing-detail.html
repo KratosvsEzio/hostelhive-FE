@@ -95,7 +95,7 @@
       </div>
       <div class="flex items-center gap-2">
         <button hh-button variant="outlined" size="sm" (click)="openShare()">
-          <i class="ti ti-share-2" aria-hidden="true"></i>{{ 'listing.share' | transloco }}
+          <i class="ti ti-share-2" aria-hidden="true"></i>{{ 'common.share' | transloco }}
         </button>
         <button hh-button [color]="saved() ? 'default' : 'primary'" size="sm" (click)="toggleSaved()">
           <i class="ti" [class.ti-heart-off]="saved()" [class.ti-heart]="!saved()" aria-hidden="true"></i>
@@ -124,8 +124,7 @@
         class="absolute bottom-4 end-4 bg-white shadow-card"
         (click)="openLightbox(0)"
       >
-        <i class="ti ti-layout-grid" aria-hidden="true"></i>Show all
-        {{ l.photoCount }} photos
+        <i class="ti ti-layout-grid" aria-hidden="true"></i>{{ 'publicListing.showAllNPhotos' | transloco: { count: l.photoCount } }}
       </button>
     </div>
 
@@ -139,7 +138,7 @@
         >
           <div class="min-w-0">
             <h2 class="font-display text-xl font-semibold text-ink-900">
-              {{ genderLabel(l.accommodationType) }} hostel hosted by {{ l.host?.name }}
+              {{ 'publicListing.genderHostelHostedBy' | transloco: { gender: genderLabel(l.accommodationType), host: l.host?.name } }}
             </h2>
             <p class="mt-1 text-sm text-ink-500">{{ roomSummary() }}</p>
           </div>
@@ -310,7 +309,7 @@
         @if (l.nearby.length) {
           <section class="border-b border-ink-100 py-6">
             <h3 class="mb-3 font-display text-lg font-semibold text-ink-900">
-              {{ 'listing.nearbyLandmarks' | transloco }}
+              {{ 'common.nearbyLandmarks' | transloco }}
             </h3>
             <div
               class="grid grid-cols-1 gap-2 text-[15px] text-ink-700 sm:grid-cols-2"
@@ -371,7 +370,7 @@
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
             <div class="flex items-baseline gap-1.5">
-              <span class="text-sm text-ink-400">{{ 'listing.from' | transloco }}</span>
+              <span class="text-sm text-ink-400">{{ 'common.from' | transloco }}</span>
               <span class="text-2xl font-semibold text-ink-900"
                 ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}</span
               >
@@ -466,7 +465,7 @@
     [class.safe-pb-3]="!mobile.isMobile()"
   >
     <div class="min-w-0">
-      <p class="text-xs text-ink-400">{{ 'listing.from' | transloco }}</p>
+      <p class="text-xs text-ink-400">{{ 'common.from' | transloco }}</p>
       <p class="truncate font-semibold text-ink-900">
         <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}
         <span class="text-xs font-normal text-ink-400">/ mo</span>
@@ -486,7 +485,7 @@
         } @else {
           <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
         }
-        <span class="hidden sm:inline">{{ 'listing.whatsapp' | transloco }}</span>
+        <span class="hidden sm:inline">{{ 'common.whatsapp' | transloco }}</span>
       </button>
       <button
         hh-button
@@ -540,7 +539,7 @@
           type="button"
           class="absolute start-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           (click)="prevImage(); $event.stopPropagation()"
-          [aria-label]="'listing.previousPhoto' | transloco"
+          [aria-label]="'common.previousPhoto' | transloco"
         >
           <i class="ti ti-chevron-left text-xl" aria-hidden="true"></i>
         </button>
@@ -559,7 +558,7 @@
           type="button"
           class="absolute end-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           (click)="nextImage(); $event.stopPropagation()"
-          [aria-label]="'listing.nextPhoto' | transloco"
+          [aria-label]="'common.nextPhoto' | transloco"
         >
           <i class="ti ti-chevron-right text-xl" aria-hidden="true"></i>
         </button>
@@ -606,7 +605,7 @@
           type="button"
           class="grid h-8 w-8 place-items-center rounded-full text-ink-400 hover:bg-surface hover:text-ink-700"
           (click)="closeShare()"
-          [aria-label]="'listing.close' | transloco"
+          [aria-label]="'common.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -659,7 +658,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-brand-whatsapp text-lg text-[#25D366]" aria-hidden="true"></i>
             </span>
-            {{ 'listing.whatsapp' | transloco }}
+            {{ 'common.whatsapp' | transloco }}
           </button>
 
           <!-- Facebook -->
@@ -671,7 +670,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-brand-facebook text-lg text-[#1877F2]" aria-hidden="true"></i>
             </span>
-            {{ 'listing.facebook' | transloco }}
+            {{ 'common.facebook' | transloco }}
           </button>
 
           <!-- X / Twitter -->
@@ -695,7 +694,7 @@
             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface">
               <i class="ti ti-mail text-lg text-ink-600" aria-hidden="true"></i>
             </span>
-            {{ 'listing.email' | transloco }}
+            {{ 'common.email' | transloco }}
           </button>
 
           <!-- More options (Web Share API) -->
@@ -734,7 +733,7 @@
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="descriptionModalOpen.set(false)"
-          [aria-label]="'listing.close' | transloco"
+          [aria-label]="'common.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -769,7 +768,7 @@
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="closeModal()"
-          [aria-label]="'listing.close' | transloco"
+          [aria-label]="'common.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -791,7 +790,7 @@
           <!-- Error -->
           <p class="mt-4 text-center text-sm text-danger">{{ 'listing.couldnTLoadThePhone' | transloco }}</p>
           <button hh-button variant="outlined" class="mt-3 w-full" (click)="openModal()">
-            {{ 'listing.retry' | transloco }}
+            {{ 'common.retry' | transloco }}
           </button>
         } @else if (revealed()) {
           <!-- Phone row -->
@@ -835,7 +834,7 @@
                 target="_blank"
                 rel="noopener"
               >
-                <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>{{ 'listing.whatsapp' | transloco }}
+                <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>{{ 'common.whatsapp' | transloco }}
               </a>
             }
           </div>
@@ -867,7 +866,7 @@
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="closeReviews()"
-          [aria-label]="'listing.close' | transloco"
+          [aria-label]="'common.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
@@ -943,7 +942,7 @@
             <div class="flex items-center gap-3 rounded-xl border border-ink-100 p-4">
               <i class="ti ti-login text-xl text-ink-400" aria-hidden="true"></i>
               <p class="text-sm text-ink-500">
-                <button type="button" class="font-semibold text-brand-600 hover:underline" (click)="goToAuth()">{{ 'listing.signIn' | transloco }}</button>
+                <button type="button" class="font-semibold text-brand-600 hover:underline" (click)="goToAuth()">{{ 'common.signIn' | transloco }}</button>
                 {{ 'listing.toLeaveAReview' | transloco }}
               </p>
             </div>
@@ -968,7 +967,7 @@
             <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
               <i class="ti ti-mood-sad text-2xl" aria-hidden="true"></i>
               <p class="text-sm">{{ 'listing.couldnTLoadReviews' | transloco }}</p>
-              <button hh-button variant="outlined" size="sm" [loading]="reviewsLoading()" (click)="fetchReviews()">{{ 'listing.retry' | transloco }}</button>
+              <button hh-button variant="outlined" size="sm" [loading]="reviewsLoading()" (click)="fetchReviews()">{{ 'common.retry' | transloco }}</button>
             </div>
           } @else if (!reviews().length) {
             <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
@@ -1075,7 +1074,7 @@
           type="button"
           class="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
           (click)="closeLoginGate()"
-          [aria-label]="'listing.close' | transloco"
+          [aria-label]="'common.close' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>

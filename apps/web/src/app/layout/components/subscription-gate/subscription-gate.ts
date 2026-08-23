@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { RouterLink } from '@angular/router';
 import { Button } from '@hostelhive/ui';
 import { HostPropertyStore } from '@services';
@@ -19,7 +20,7 @@ const BENEFITS = [
 @Component({
   selector: 'hh-subscription-gate',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, Button],
+  imports: [RouterLink, LocaleLink, Button, TranslocoPipe],
   template: `
     <div class="flex flex-col items-center px-6 py-16 text-center">
 
@@ -30,7 +31,7 @@ const BENEFITS = [
 
       <!-- Headline -->
       <h2 class="font-display text-2xl font-bold text-ink-900">
-        Unlock {{ feature() }}
+        {{ 'subscriptionGate.unlockFeature' | transloco: { feature: feature() ?? ('subscriptionGate.thisFeature' | transloco) } }}
       </h2>
       <p class="mx-auto mt-2 max-w-sm text-sm text-ink-500">
         This feature is available on paid plans. Subscribe to get full access
@@ -68,7 +69,7 @@ const BENEFITS = [
 export class SubscriptionGate {
   private readonly store = inject(HostPropertyStore);
 
-  readonly feature = input('This feature');
+  readonly feature = input<string | undefined>(undefined);
   readonly showProfileLink = input(false);
 
   protected readonly benefits = BENEFITS;

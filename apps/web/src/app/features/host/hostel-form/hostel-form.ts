@@ -43,6 +43,8 @@ import { RoomTypeRow } from '../../moderator/review/room-type-row';
 import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/maps';
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
+import { CurrencyPreference } from '@core/preferences/currency-preference';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
 import {
   DEFAULT_OCCUPANCY_TYPE,
@@ -140,6 +142,23 @@ export interface EditRoomType {
   bookable: boolean;
 }
 
+/**
+ * Everything about a room type that counts as an edit.
+ *
+ * Named as a type so the fingerprint below cannot drift: it is an `Omit`, so adding a field
+ * to {@link EditRoomType} breaks the build there until the field is either compared or
+ * deliberately excluded. The previous hand-written list compared four fields and had been
+ * left behind by six, which is why changing a discount, a description, or how a room is sold
+ * left the Save button greyed out with no way to find out why.
+ *
+ * `_key` is excluded because it identifies a row in the UI rather than describing it, and
+ * `images` because a presigned url can differ between loads — the ids are what actually
+ * change when a photo is added or removed.
+ */
+type RoomTypeFingerprint = Omit<EditRoomType, '_key' | 'images'> & {
+  imageIds: string[];
+};
+
 interface EditableHostel {
   name: string;
   description: string;
@@ -192,6 +211,7 @@ const SECTION_ERROR_KEYS: Record<FormSection, readonly string[]> = {
     RoomTypeRow,
     StatusPill,
     CurrencySelect,
+    TranslocoPipe,
   ],
   templateUrl: './hostel-form.html',
 })
@@ -252,7 +272,12 @@ export class HostelForm {
   protected readonly landmarks = signal('');
   protected readonly propertyType = signal('');
   protected readonly genderType = signal('');
-  protected readonly currency = signal(DEFAULT_CURRENCY_CODE);
+  /**
+   * Seeded from the host's preferred currency, which is only ever a starting point: an
+   * existing hostel overwrites it with whatever it was saved in (see the load below), so
+   * opening someone else's listing never quietly reprices it.
+   */
+  protected readonly currency = signal(inject(CurrencyPreference).code());
   protected readonly email = signal('');
   protected readonly phone = signal('');
 
@@ -418,7 +443,18 @@ export class HostelForm {
     const orig = this.origRoomTypes();
     const curr = this.roomTypes();
     if (orig.length !== curr.length) return true;
-    const key = (r: EditRoomType) => ({ id: r.id, name: r.name, capacity: r.capacity, price: r.price });
+    const key = (r: EditRoomType): RoomTypeFingerprint => ({
+      id: r.id,
+      name: r.name,
+      capacity: r.capacity,
+      price: r.price,
+      occupancyType: r.occupancyType,
+      discountedPrice: r.discountedPrice,
+      discountEnabled: r.discountEnabled,
+      description: r.description,
+      bookable: r.bookable,
+      imageIds: r.images.map((i) => i.id),
+    });
     return JSON.stringify(curr.map(key)) !== JSON.stringify(orig.map(key));
   });
 

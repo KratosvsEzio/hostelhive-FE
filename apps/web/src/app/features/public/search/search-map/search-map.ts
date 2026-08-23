@@ -39,6 +39,8 @@ import {
 } from '@util/pricing-period';
 import { currencyName } from '@util/currencies';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { CurrencySelect } from '@app/shared/currency/currency-select';
+import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { MobileApp } from '@core/mobile-app';
 import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
 import { Seo } from '@core/seo';
@@ -50,6 +52,7 @@ import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@h
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabel } from '@util/accommodation-type';
+import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
@@ -111,11 +114,19 @@ type SheetSnap = 'peek' | 'half' | 'full';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, TooltipFixed, CurrencyNamePipe],
+  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, TooltipFixed, CurrencyNamePipe, CurrencySelect],
   templateUrl: './search-map.html',
 })
 export class SearchMap {
   private readonly api = inject(ListingsApi);
+  private readonly currency = inject(CurrencyPreference);
+
+  /** Drives the map overlay picker; the budget filter is ranged in this currency. */
+  protected readonly currencyCode = this.currency.code;
+
+  protected onCurrencyPick(code: string | string[] | null): void {
+    if (typeof code === 'string' && code) this.currency.set(code);
+  }
   private readonly favorites = inject(FavoritesStore);
   private readonly capacityStore = inject(SearchCapacity);
 
@@ -244,7 +255,7 @@ export class SearchMap {
    */
   private readonly hasFilters = computed(() => {
     const p = this.params();
-    return ['gender', 'propertyType', 'roomType', 'frequency', 'minPrice', 'maxPrice', 'amenities'].some(
+    return ['gender', 'propertyType', 'roomType', 'minPrice', 'maxPrice', 'amenities'].some(
       (k) => !!p?.get(k),
     );
   });
@@ -322,8 +333,8 @@ export class SearchMap {
     return {
       accommodationType: this.accommodationType(),
       propertyType: p?.get('propertyType') || undefined,
-      roomType: p?.get('roomType') || undefined,
-      frequency: p?.get('frequency') || undefined,
+      // No "Any" -- an absent param means the default, not "all room types".
+      roomType: p?.get('roomType') || DEFAULT_OCCUPANCY_TYPE,
       city: c || mb ? undefined : p?.get('city') || undefined,
       near: !mb && c ? { lat: c.lat, lng: c.lng } : undefined,
       bounds: mb ?? undefined,
@@ -369,22 +380,35 @@ export class SearchMap {
   private cooldownTimer?: ReturnType<typeof setInterval>;
   private readonly result = toSignal(
     toObservable(
-      computed(() => {
-        this.retryTick(); // dependency: bumping this re-fires the search after a cooldown
-        return this.query();
-      }),
+      // The two cache-busters have to be *in* the emitted object, not merely read here.
+      //
+      // `query()` is itself a computed: reading it from a computed whose own dependency
+      // changed hands back its cached reference, so an outer computed that only touched
+      // `retryTick()` and returned `query()` produced a value `toObservable` considered
+      // unchanged — and never emitted. Returning a fresh literal makes every dependency
+      // change a distinct emission.
+      //
+      // `retryTick` re-fires the search once a rate-limit cooldown elapses. `currencyCode`
+      // matters because the budget filter ranges over a per-currency price field, so
+      // switching currency changes which hostels match; without it the picker would relabel
+      // prices and leave a stale result set underneath.
+      computed(() => ({
+        q: this.query(),
+        tick: this.retryTick(),
+        currency: this.currencyCode(),
+      })),
     ).pipe(
       debounceTime(600),
       // While rate-limited, ignore query changes (map pans, filter edits) so we don't keep
       // hammering the throttled endpoint — only the post-cooldown retry re-fires the call.
       filter(() => this.cooldown() === 0),
-      tap((q) => {
+      tap(({ q }) => {
         // Page 1 = fresh search (skeletons); page > 1 = append (keep the list, show the spinner row).
         if (q.page && q.page > 1) this.loadingMore.set(true);
         else this.loading.set(true);
         this.loadError.set(false); // a fresh attempt clears any prior error
       }),
-      switchMap((q) => {
+      switchMap(({ q }) => {
         this.inFlightKey = JSON.stringify({ ...q, page: 0 });
         return this.api.list(q).pipe(
           catchError((err: unknown) => {
@@ -655,7 +679,7 @@ export class SearchMap {
   protected cardPrice(l: Listing): string {
     const { amount, period } = this.capacityStore.priceFor(
       l.priceByCapacity,
-      l.priceFrom,
+      l.discountedPriceFrom ?? l.priceFrom,
       periodForAccommodation(l.accommodationType),
     );
     return `${formatAmount(amount, l.currency)} ${periodLabel(period)}`;
@@ -791,7 +815,7 @@ export class SearchMap {
           span.textContent = formatPriceCompact(
             this.capacityStore.priceFor(
               m.listing.priceByCapacity,
-              m.listing.priceFrom,
+              m.listing.discountedPriceFrom ?? m.listing.priceFrom,
               periodForAccommodation(m.listing.accommodationType),
             ),
             m.listing.currency,
@@ -987,7 +1011,7 @@ export class SearchMap {
       priceSpan.textContent = formatPriceCompact(
         this.capacityStore.priceFor(
           l.priceByCapacity,
-          l.priceFrom,
+          l.discountedPriceFrom ?? l.priceFrom,
           periodForAccommodation(l.accommodationType),
         ),
         l.currency,
@@ -1196,7 +1220,7 @@ export class SearchMap {
     const tags = l.sharing.length ? l.sharing.join(' · ') : 'Shared rooms';
     const price = this.capacityStore.priceFor(
       l.priceByCapacity,
-      l.priceFrom,
+      l.discountedPriceFrom ?? l.priceFrom,
       periodForAccommodation(l.accommodationType),
     );
     body.innerHTML = `

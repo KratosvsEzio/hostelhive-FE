@@ -16,6 +16,7 @@ import {
   ApiBooking,
   ApiCancellationQuote,
 } from '@features/public/listing/booking/booking-api.contract';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -43,6 +44,7 @@ interface ViewState {
     EmptyState,
     ErrorState,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './bookings.html',
 })

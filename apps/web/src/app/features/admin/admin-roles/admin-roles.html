@@ -1,6 +1,6 @@
-<hh-admin-shell heading="Roles & permissions">
+<hh-admin-shell [heading]="'adminAdminRoles.rolesPermissions' | transloco">
   <button actions hh-button color="primary" size="sm" (click)="startCreate()">
-    <i class="ti ti-plus"></i>New role
+    <i class="ti ti-plus"></i>{{ 'adminAdminRoles.newRole' | transloco }}
   </button>
 
   @let s = state();
@@ -24,7 +24,7 @@
             <p
               class="text-xs font-semibold uppercase tracking-wide text-ink-400"
             >
-              Roles · {{ roles().length }}
+              {{ 'admin.rolesCount' | transloco: { count: roles().length } }}
             </p>
           </div>
           <div class="min-h-0 flex-1 overflow-y-auto p-2">
@@ -45,8 +45,8 @@
                     @if (r.dataRestricted) {
                       <i
                         class="ti ti-lock shrink-0 text-xs text-ink-400"
-                        title="Data-restricted role"
-                        aria-label="Data-restricted role"
+                        [title]="'adminAdminRoles.dataRestrictedRole' | transloco"
+                        [attr.aria-label]="'a11y.dataRestrictedRole' | transloco"
                       ></i>
                     }
                   </span>
@@ -58,7 +58,7 @@
                   <span
                     class="rounded-full bg-tint-purple px-2 py-0.5 text-[10px] font-medium text-ink-600"
                   >
-                    Custom
+                    {{ 'adminAdminRoles.custom' | transloco }}
                   </span>
                 }
               </button>
@@ -88,7 +88,7 @@
                       class="inline-flex items-center gap-1 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
                     >
                       <i class="ti ti-lock text-[11px]" aria-hidden="true"></i>
-                      Data-restricted
+                      {{ 'adminAdminRoles.dataRestricted' | transloco }}
                     </span>
                   }
                 </div>
@@ -108,10 +108,7 @@
                 aria-hidden="true"
               ></i>
               <span>
-                Permissions load live — the catalog from the permissions API,
-                and each role's current assignments from its role detail (ticked
-                below). Adjust the ticks and Save to replace the role's
-                permissions via the API.
+                {{ 'adminAdminRoles.permissionsLoadLiveTheCatalog' | transloco }}
               </span>
             </div>
 
@@ -121,7 +118,7 @@
                 <div
                   class="space-y-5 px-5 py-4"
                   aria-busy="true"
-                  aria-label="Loading permissions"
+                  [attr.aria-label]="'a11y.loadingPermissions' | transloco"
                 >
                   @for (i of skeletonRows; track i) {
                     <div>
@@ -194,7 +191,7 @@
               <div class="flex items-center gap-2">
                 @if (saveError()) {
                   <span class="text-xs font-medium text-warn"
-                    >Couldn't save — try again.</span
+                    >{{ 'adminAdminRoles.couldnTSaveTryAgain' | transloco }}</span
                   >
                 }
                 <button
@@ -204,7 +201,7 @@
                   [disabled]="!dirty() || saving()"
                   (click)="reset()"
                 >
-                  Cancel
+                  {{ 'common.cancel' | transloco }}
                 </button>
                 <button
                   hh-button
@@ -237,25 +234,25 @@
           (click)="$event.stopPropagation()"
           role="dialog"
           aria-modal="true"
-          aria-label="Create custom role"
+          [attr.aria-label]="'a11y.createCustomRole' | transloco"
         >
           <h3 class="font-display text-base font-semibold text-ink-900">
-            Create custom role
+            {{ 'adminAdminRoles.createCustomRole' | transloco }}
           </h3>
           <p class="mt-0.5 text-sm text-ink-400">
-            Start from zero permissions, then tick the flags this role needs.
+            {{ 'adminAdminRoles.startFromZeroPermissionsThen' | transloco }}
           </p>
           <div class="mt-4">
             <hh-input
-              label="Role name"
+              [label]="'adminAdminRoles.roleName' | transloco"
               icon="ti-shield-plus"
-              placeholder="e.g. Finance Reviewer"
+              [placeholder]="'adminAdminRoles.eGFinanceReviewer' | transloco"
               [(value)]="draftName"
             />
           </div>
           <div class="mt-5 flex justify-end gap-2">
             <button hh-button variant="text" size="sm" (click)="cancelCreate()">
-              Cancel
+              {{ 'common.cancel' | transloco }}
             </button>
             <button
               hh-button
@@ -264,7 +261,7 @@
               [disabled]="!draftName().trim()"
               (click)="confirmCreate()"
             >
-              Create role
+              {{ 'adminAdminRoles.createRole' | transloco }}
             </button>
           </div>
         </hh-card>

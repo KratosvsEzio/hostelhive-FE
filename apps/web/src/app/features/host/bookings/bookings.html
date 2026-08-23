@@ -1,5 +1,5 @@
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <h1 class="font-display text-2xl font-semibold text-ink-900">Bookings</h1>
+  <h1 class="font-display text-2xl font-semibold text-ink-900">{{ 'common.bookings' | transloco }}</h1>
 </div>
 
 <!-- Counts on the tabs so a host can see there is something in Past without going there. -->
@@ -36,14 +36,14 @@
 } @else if (s.error) {
   <hh-error-state
     class="mt-5 block"
-    title="We couldn't load your bookings"
+    [title]="'common.weCouldnTLoad2' | transloco"
     message="Something went wrong reaching the server."
   />
 } @else if (!rows().length) {
   <hh-empty-state
     class="mt-5 block"
     icon="ti-calendar"
-    title="Nothing here yet"
+    [title]="'hostBookings.nothingHereYet' | transloco"
     [message]="
       tab() === 'upcoming'
         ? 'Bookings for your rooms will appear here, soonest arrival first.'
@@ -57,12 +57,12 @@
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <p class="font-semibold text-ink-900">
-              {{ b.guest?.name || 'Guest' }}
+              {{ b.guest?.name || ('common.guest' | transloco) }}
               <span class="font-normal text-ink-500">· {{ summary(b) }}</span>
             </p>
             <p class="mt-0.5 text-sm text-ink-600">
               {{ b.check_in | date: 'd MMM' }} – {{ b.check_out | date: 'd MMM yyyy' }} ·
-              {{ b.guests }} guest{{ b.guests === 1 ? '' : 's' }}
+              {{ 'common.nGuests' | transloco: { count: b.guests } }}
             </p>
             @if (b.guest?.phone || b.guest?.email) {
               <p class="mt-0.5 text-sm text-ink-500">
@@ -96,24 +96,24 @@
               PKR {{ b.total | number: '1.2-2' }}
             </p>
             <p class="text-xs text-ink-500 tabular-nums">
-              PKR {{ b.deposit | number: '1.2-2' }} deposit
+              {{ 'hostBookings.pkrDeposit' | transloco: { amount: b.deposit | number: '1.2-2' } }}
             </p>
           </div>
         </div>
 
         @if (b.cancellation; as c) {
           <p class="mt-3 rounded-lg bg-ink-50 px-3 py-2 text-sm text-ink-600 tabular-nums">
-            Cancelled by {{ c.cancelled_by }} on {{ c.cancelled_at | date: 'd MMM yyyy' }}
+            {{ 'hostBookings.cancelledByOn' | transloco: { by: c.cancelled_by, date: c.cancelled_at | date: 'd MMM yyyy' } }}
             @if (c.host_penalty) {
-              · PKR {{ c.host_penalty | number: '1.2-2' }} penalty charged to you
+              · {{ 'hostBookings.pkrPenaltyChargedToYou' | transloco: { amount: c.host_penalty | number: '1.2-2' } }}
             } @else if (c.host_share) {
-              · PKR {{ c.host_share | number: '1.2-2' }} to you
+              · {{ 'hostBookings.pkrToYou' | transloco: { amount: c.host_share | number: '1.2-2' } }}
             }
           </p>
         } @else if (b.status === 'confirmed') {
           <div class="mt-3 flex justify-end">
             <button hh-button variant="outlined" size="sm" (click)="askToCancel(b)">
-              Cancel booking
+              {{ 'common.cancelBooking' | transloco }}
             </button>
           </div>
         }
@@ -124,7 +124,7 @@
 
 @if (cancelOpen()) {
   <hh-confirm-modal
-    title="Cancel this booking?"
+    [title]="'common.cancelThisBooking' | transloco"
     icon="ti-calendar-x"
     tone="danger"
     [confirmLabel]="
@@ -138,7 +138,7 @@
     (cancel)="closeCancel()"
   >
     @if (quoteLoading()) {
-      <p>Working out the penalty…</p>
+      <p>{{ 'hostBookings.workingOutThePenalty' | transloco }}</p>
     } @else if (cancelError()) {
       <p class="text-danger">{{ cancelError() }}</p>
     } @else if (quote(); as q) {
@@ -146,21 +146,19 @@
       <!-- Figures, not policy language. A host should not have to do arithmetic to find out
            what a button costs them. -->
       <p>
-        You're cancelling on <strong>{{ b?.guest?.name || 'this guest' }}</strong> for
-        {{ b?.check_in | date: 'd MMM' }} – {{ b?.check_out | date: 'd MMM yyyy' }}.
+        {{ 'hostBookings.youReCancellingOn' | transloco }} <strong>{{ b?.guest?.name || ('hostBookings.thisGuest' | transloco) }}</strong>
+        {{ 'common.forDateRange' | transloco: { from: b?.check_in | date: 'd MMM', to: b?.check_out | date: 'd MMM yyyy' } }}
       </p>
       <ul class="mt-2 space-y-1 text-sm">
         <li>
-          They are refunded
-          <strong class="tabular-nums">PKR {{ q.refund_amount | number: '1.2-2' }}</strong> in full,
-          within 5 working days.
+          {{ 'hostBookings.theyAreRefunded' | transloco }}
+          <strong class="tabular-nums">PKR {{ q.refund_amount | number: '1.2-2' }}</strong> {{ 'hostBookings.inFullWithin5Working' | transloco }}
         </li>
         <li>
-          You will be charged
-          <strong class="tabular-nums">PKR {{ q.penalty_amount | number: '1.2-2' }}</strong>,
-          deducted from your next monthly settlement.
+          {{ 'hostBookings.youWillBeCharged' | transloco }}
+          <strong class="tabular-nums">PKR {{ q.penalty_amount | number: '1.2-2' }}</strong>{{ 'hostBookings.deductedFromYourNextMonthly' | transloco }}
         </li>
-        <li>The beds return to sale immediately.</li>
+        <li>{{ 'hostBookings.theBedsReturnToSale' | transloco }}</li>
       </ul>
     }
   </hh-confirm-modal>

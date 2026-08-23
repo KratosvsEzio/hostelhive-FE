@@ -21,6 +21,7 @@ import {
   MessNotificationsService,
   NotifChannel,
 } from './mess-notifications.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 function to12h(hhmm: string): string {
   const [h, m] = hhmm.split(':').map(Number);
@@ -82,7 +83,7 @@ const MEAL_PLACEHOLDERS: Record<MealType, string> = {
 @Component({
   selector: 'hh-mess-notifications',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Button, Dropdown, Input, TimePicker, Toggle],
+  imports: [DashboardLayout, Button, Dropdown, Input, TimePicker, Toggle, TranslocoPipe],
   templateUrl: './mess-notifications.html',
 })
 export class MessNotifications {

@@ -23,7 +23,11 @@ export const ROOM_OFFERS: readonly RoomOffer[] = [
     capacity: 6,
     actualPrice: 48_183.82,
     discountedPrice: 36_137.86,
-    images: [],
+    images: [
+      'https://picsum.photos/seed/hh-room-deluxe6-a/640/480',
+      'https://picsum.photos/seed/hh-room-deluxe6-b/640/480',
+      'https://picsum.photos/seed/hh-room-deluxe6-c/640/480',
+    ],
     bookable: true,
     available: 3,
   },
@@ -36,6 +40,8 @@ export const ROOM_OFFERS: readonly RoomOffer[] = [
     kind: 'private',
     capacity: 2,
     actualPrice: 18_400,
+    // Deliberately photo-less: hosts do skip the room photos, and the placeholder that
+    // holds the column open is easy to break and impossible to notice if nothing uses it.
     images: [],
     bookable: true,
     available: 2,
@@ -50,7 +56,11 @@ export const ROOM_OFFERS: readonly RoomOffer[] = [
     capacity: 12,
     actualPrice: 3_770.58,
     discountedPrice: 2_827.94,
-    images: [],
+    images: [
+      'https://picsum.photos/seed/hh-room-dorm12-a/640/480',
+      'https://picsum.photos/seed/hh-room-dorm12-b/640/480',
+      'https://picsum.photos/seed/hh-room-dorm12-c/640/480',
+    ],
     bookable: true,
     available: 7,
   },
@@ -64,7 +74,11 @@ export const ROOM_OFFERS: readonly RoomOffer[] = [
     capacity: 8,
     actualPrice: 4_630.24,
     discountedPrice: 3_472.68,
-    images: [],
+    // Two rather than three, so the dot count is visibly driven by the room.
+    images: [
+      'https://picsum.photos/seed/hh-room-dorm8-a/640/480',
+      'https://picsum.photos/seed/hh-room-dorm8-b/640/480',
+    ],
     bookable: true,
     available: 2,
   },

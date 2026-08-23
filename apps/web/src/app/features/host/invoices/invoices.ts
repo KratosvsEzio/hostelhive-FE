@@ -45,6 +45,7 @@ import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/t
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
 import { HasPermission } from '@core/auth';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface InvoiceAggs {
   utilityTotal: number;
@@ -133,6 +134,7 @@ async function rasterise(
     Search,
     Skeleton,
     InvoiceFormDrawer,
+    TranslocoPipe,
   ],
   templateUrl: './invoices.html',
 })

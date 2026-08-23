@@ -17,6 +17,7 @@ import { isJwtExpired } from './jwt';
 import { ROLES, Role } from './roles';
 import { flattenPermissions } from './permissions';
 import { SessionStore, SessionUser } from './session-store';
+import { StartupGate } from '@core/startup-gate';
 
 /**
  * Orchestrates authentication: calls the API (`AuthApi`), then hydrates the
@@ -29,6 +30,7 @@ import { SessionStore, SessionUser } from './session-store';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(AuthApi);
+  private readonly gate = inject(StartupGate);
   private readonly session = inject(SessionStore);
   private readonly push = inject(PushNotificationsService);
   private readonly router = inject(Router);
@@ -152,7 +154,12 @@ export class AuthService {
     // Never pass through pipe(timeout()) here — RxJS timeout() cancels the HTTP
     // request via subscription teardown, which shows as (canceled) in DevTools.
     // Instead, keep the HTTP request alive and use Promise.race to cap the wait.
+    // Held across the validation so the app is not readable while it is still being decided
+    // who the visitor is. Released whichever way it resolves — including the optimistic path
+    // below, where nothing else awaits this promise.
+    const release = this.gate.hold();
     const validate = firstValueFrom(this.api.currentUser())
+      .finally(release)
       .then((u) => this.session.setSession(toSessionUser(u), token))
       .catch((err: unknown) => {
         // Unverified is not the same as invalid. Keep the session on anything that is not an

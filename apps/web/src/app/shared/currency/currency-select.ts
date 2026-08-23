@@ -1,6 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, model, signal } from '@angular/core';
-import { Dropdown } from '@hostelhive/ui';
-import { CURRENCY_OPTIONS } from '@util/currencies';
+import { ChangeDetectionStrategy, Component, computed, input, model, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { Dropdown, DropdownOption } from '@hostelhive/ui';
+import { CURRENCIES, CURRENCY_OPTIONS } from '@util/currencies';
+
+/**
+ * Code-first labels, for a trigger too narrow to show "Pakistani Rupee - PKR (Rs)" whole.
+ *
+ * The name stays in the label so searching "dollar" still narrows the list — only the order
+ * changes, so what survives truncation is the part that identifies the currency rather than
+ * the part that describes it.
+ */
+const COMPACT_OPTIONS: DropdownOption[] = CURRENCIES.map((c) => ({
+  value: c.code,
+  label: `${c.code} (${c.symbol}) · ${c.name}`,
+}));
 
 /**
  * Shareable currency picker — a searchable dropdown of ISO-4217 currencies labelled
@@ -17,11 +30,12 @@ import { CURRENCY_OPTIONS } from '@util/currencies';
 @Component({
   selector: 'hh-currency-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown],
+  imports: [Dropdown, TranslocoPipe],
   template: `
     <hh-dropdown
       variant="field"
-      placeholder="Select currency"
+      [size]="compact() ? 'sm' : 'md'"
+      [placeholder]="'common.selectCurrency' | transloco"
       [options]="filteredOptions()"
       [value]="value()"
       [searchable]="true"
@@ -36,15 +50,24 @@ export class CurrencySelect {
   /** Selected ISO-4217 code (two-way bindable via `[(value)]`). */
   readonly value = model<string | null>(null);
 
+  /**
+   * Shorter control with code-first labels, for tight spots like the search map overlay.
+   * The option set is unchanged — only the label order and the field height.
+   */
+  readonly compact = input(false);
+
   protected readonly query = signal('');
 
-  private readonly options = CURRENCY_OPTIONS;
+  private readonly options = computed(() =>
+    this.compact() ? COMPACT_OPTIONS : CURRENCY_OPTIONS,
+  );
 
   /** Case-insensitive match on the label, which contains both the name and the ISO code. */
   protected readonly filteredOptions = computed(() => {
+    const all = this.options();
     const q = this.query().trim().toLowerCase();
-    if (!q) return this.options;
-    return this.options.filter((o) => o.label.toLowerCase().includes(q));
+    if (!q) return all;
+    return all.filter((o) => o.label.toLowerCase().includes(q));
   });
 
   protected onChange(v: string | string[] | null): void {

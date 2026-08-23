@@ -19,6 +19,7 @@ import {
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * One room type, as the host fills it in.
@@ -36,7 +37,7 @@ import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 @Component({
   selector: 'hh-room-type-row',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown, Toggle, MoneyInput, PhotoPicker, DecimalPipe, CurrencySymbolPipe],
+  imports: [Dropdown, Toggle, MoneyInput, PhotoPicker, DecimalPipe, CurrencySymbolPipe, TranslocoPipe],
   templateUrl: './room-type-row.html',
 })
 export class RoomTypeRow {
@@ -142,6 +143,22 @@ export class RoomTypeRow {
   });
 
   protected readonly canAddImage = computed(() => this.images().length < MAX_ROOM_IMAGES);
+
+  /**
+   * Always three slots: the photos so far, then the picker, then whatever is still free.
+   *
+   * Rendering only what exists left one small tile against empty space and said nothing about
+   * how many more were allowed. Three slots show the cap rather than stating it, and every
+   * tile is the same size at every viewport — which a wrapping row of fixed-width boxes
+   * cannot promise.
+   */
+  protected readonly slots = computed(() => {
+    const images = this.images();
+    return Array.from({ length: MAX_ROOM_IMAGES }, (_, i) => ({
+      image: images[i] ?? null,
+      picker: i === images.length,
+    }));
+  });
 
   protected onName(value: string): void {
     this.nameChange.emit(value);

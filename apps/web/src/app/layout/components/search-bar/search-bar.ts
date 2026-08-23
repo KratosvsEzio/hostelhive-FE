@@ -18,6 +18,8 @@ import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
 import { SearchCapacity } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
+import { currencySymbol } from '@util/currencies';
+import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 type Seg = 'where' | 'budget' | 'accommodation';
@@ -33,7 +35,19 @@ const ACCOMMODATIONS: { v: string; l: string }[] = [
   { v: 'coliving', l: 'searchBar.coliving' },
   { v: 'backpacker', l: 'searchBar.backpacker' },
 ];
-const fmtK = (n: number): string => (n >= 1000 ? `${n / 1000}k` : `${n}`);
+/**
+ * Compact budget figure for the collapsed chip: `14.76k`, `900`, `20k`.
+ *
+ * Capped at two decimals because the raw division printed whatever the number happened to
+ * carry — a 14,762 bound rendered as "14.762k", and a converted or odd-stepped bound can run
+ * to far more digits than that in a chip only a few characters wide.
+ *
+ * Unary `+` after `toFixed` drops trailing zeros, so a round 20,000 stays "20k" rather than
+ * becoming "20.00k" — two decimals is the ceiling, not a fixed width.
+ */
+const round2 = (n: number): number => +n.toFixed(2);
+const fmtK = (n: number): string =>
+  n >= 1000 ? `${round2(n / 1000)}k` : `${round2(n)}`;
 
 /** A translation key with whatever it interpolates, for the template to resolve. */
 type Label = { key: string; params?: Record<string, string> };
@@ -63,6 +77,15 @@ export class SearchBar {
   protected readonly accommodationOpts = ACCOMMODATIONS;
   protected readonly BUDGET_MIN = BUDGET_MIN;
   protected readonly BUDGET_MAX = BUDGET_MAX;
+
+  /**
+   * The symbol the budget is quoted in -- the seeker's preferred currency, because that is
+   * the currency the filter is actually sent in. A slider that said "Rs" while the request
+   * asked for dollars would be inviting someone to type a number meaning one thing and have
+   * it read as another.
+   */
+  private readonly currency = inject(CurrencyPreference);
+  protected readonly budgetSymbol = computed(() => currencySymbol(this.currency.code()));
   protected readonly BUDGET_STEP = BUDGET_STEP;
 
   protected readonly open = signal<Seg | null>(null);
@@ -72,6 +95,13 @@ export class SearchBar {
   private readonly zoom = signal<number | null>(null);
   protected readonly budgetLow = signal(BUDGET_MIN);
   protected readonly budgetHigh = signal(BUDGET_MAX);
+  /**
+   * The active sort, read but never set here — see the price-sort clause in {@link search}.
+   *
+   * The bar has no sort control of its own; it needs this only because the accommodation
+   * type it *does* own is what decides whether a price sort means anything.
+   */
+  private readonly activeSort = signal('');
   protected readonly accommodation = signal('');
 
   protected readonly budgetActive = computed(
@@ -91,14 +121,20 @@ export class SearchBar {
       const hi = this.budgetHigh();
       if (lo <= BUDGET_MIN && hi >= BUDGET_MAX) return { key: 'searchBar.addBudget' };
       if (lo <= BUDGET_MIN) {
-        return { key: 'searchBar.underAmount', params: { amount: fmtK(hi) } };
+        return {
+          key: 'searchBar.underAmount',
+          params: { symbol: this.budgetSymbol(), amount: fmtK(hi) },
+        };
       }
       if (hi >= BUDGET_MAX) {
-        return { key: 'searchBar.fromAmount', params: { amount: fmtK(lo) } };
+        return {
+          key: 'searchBar.fromAmount',
+          params: { symbol: this.budgetSymbol(), amount: fmtK(lo) },
+        };
       }
       return {
         key: 'searchBar.betweenAmounts',
-        params: { low: fmtK(lo), high: fmtK(hi) },
+        params: { symbol: this.budgetSymbol(), low: fmtK(lo), high: fmtK(hi) },
       };
     },
   );
@@ -146,6 +182,7 @@ export class SearchBar {
       this.budgetLow.set(mn ? +mn : BUDGET_MIN);
       this.budgetHigh.set(mx ? +mx : BUDGET_MAX);
       this.accommodation.set(p.get('gender') ?? '');
+      this.activeSort.set(p.get('sort') ?? '');
     });
     // Query params are resolved before the outlet activates, so on a first load the
     // subscription above runs while the route tree is still a stub and the `:location`
@@ -239,6 +276,16 @@ export class SearchBar {
         // that no longer exists on screen.
         capacity: null,
         sharing: null,
+        frequency: null,
+        // A price sort only means something over a single pricing cycle, and naming an
+        // accommodation type is what pins one — only backpacker hostels are nightly.
+        // Returning to All would otherwise leave `sort=price-asc` running over mixed units
+        // while the Sort dropdown no longer offers it, so the URL and the visible control
+        // would disagree about what the list is doing. The Frequency filter used to carry
+        // this guard; the accommodation type inherits it along with the job.
+        ...(!this.accommodation() && this.activeSort().startsWith('price-')
+          ? { sort: null }
+          : {}),
       },
       queryParamsHandling: 'merge',
     });

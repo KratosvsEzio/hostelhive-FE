@@ -11,12 +11,12 @@
       <div
         class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6"
       >
-        <span class="text-base font-semibold text-ink-900">{{ 'filters.filters' | transloco }}</span>
+        <span class="text-base font-semibold text-ink-900">{{ 'common.filters' | transloco }}</span>
         <button
           hh-button variant="icon" size="sm"
           type="button"
           (click)="close()"
-          [aria-label]="'filters.close' | transloco"
+          [aria-label]="'common.close' | transloco"
         >
           <i class="ti ti-x text-lg"></i>
         </button>
@@ -26,7 +26,7 @@
       <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
         <!-- Amenities — single grouped multi-select dropdown -->
         <section>
-          <h3 class="mb-3 text-base font-semibold text-ink-900">{{ 'filters.amenities' | transloco }}</h3>
+          <h3 class="mb-3 text-base font-semibold text-ink-900">{{ 'common.amenities' | transloco }}</h3>
           <hh-dropdown
             variant="field"
             [multiple]="true"
@@ -48,11 +48,12 @@
           <div class="flex flex-wrap gap-2">
             @for (g of genders; track g.value) {
               <button
-                hh-button variant="outlined" size="sm"
+                hh-button size="sm" color="dark"
                 type="button"
+                [variant]="draftGender() === g.value ? 'filled' : 'outlined'"
                 [class]="
                   draftGender() === g.value
-                    ? 'border-ink-900 bg-ink-900 text-white'
+                    ? 'border border-ink-900'
                     : 'border-ink-200 text-ink-700 hover:border-ink-400'
                 "
                 (click)="draftGender.set(g.value)"
@@ -85,28 +86,17 @@
         <!-- Room type — the same two values as the inline dropdown. -->
         <section>
           <h3 class="mb-3 text-base font-semibold text-ink-900">
-            {{ 'filters.roomType' | transloco }}
+            {{ 'common.roomType' | transloco }}
           </h3>
           <div class="flex flex-wrap gap-2">
-            <button
-              hh-button variant="outlined" size="sm"
-              type="button"
-              [class]="
-                !draftRoomType()
-                  ? 'border-ink-900 bg-ink-900 text-white'
-                  : 'border-ink-200 text-ink-700 hover:border-ink-400'
-              "
-              (click)="draftRoomType.set('')"
-            >
-              {{ 'filters.any' | transloco }}
-            </button>
             @for (c of roomTypes; track c.value) {
               <button
-                hh-button variant="outlined" size="sm"
+                hh-button size="sm" color="dark"
                 type="button"
+                [variant]="draftRoomType() === c.value ? 'filled' : 'outlined'"
                 [class]="
                   draftRoomType() === c.value
-                    ? 'border-ink-900 bg-ink-900 text-white'
+                    ? 'border border-ink-900'
                     : 'border-ink-200 text-ink-700 hover:border-ink-400'
                 "
                 (click)="draftRoomType.set(c.value)"
@@ -127,7 +117,7 @@
             [min]="BUDGET_MIN"
             [max]="BUDGET_MAX"
             [step]="BUDGET_STEP"
-            prefix="Rs "
+            [prefix]="budgetSymbol() + ' '"
             [openEnded]="true"
             [(low)]="draftMinPrice"
             [(high)]="draftMaxPrice"
@@ -142,11 +132,12 @@
           <div class="flex flex-wrap gap-2">
             @for (s of sortOptions; track s.value) {
               <button
-                hh-button variant="outlined" size="sm"
+                hh-button size="sm" color="dark"
                 type="button"
+                [variant]="draftSort() === s.value ? 'filled' : 'outlined'"
                 [class]="
                   draftSort() === s.value
-                    ? 'border-ink-900 bg-ink-900 text-white'
+                    ? 'border border-ink-900'
                     : 'border-ink-200 text-ink-700 hover:border-ink-400'
                 "
                 (click)="draftSort.set(s.value)"

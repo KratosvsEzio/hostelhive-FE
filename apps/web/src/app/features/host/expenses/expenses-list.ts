@@ -41,6 +41,7 @@ import {
 } from '@services';
 import { HasPermission } from '@core/auth';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ListState {
   loading: boolean;
@@ -72,6 +73,7 @@ interface ListState {
     Skeleton,
     ConfirmModal,
     ExpenseCharts,
+    TranslocoPipe,
   ],
   templateUrl: './expenses-list.html',
 })

@@ -15,6 +15,7 @@ import {
   ApiBooking,
   ApiCalendarDay,
 } from '@features/public/listing/booking/booking-api.contract';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** A cell in the month grid. `null` pads the week before the 1st. */
 interface Cell {
@@ -37,7 +38,7 @@ type CellState = 'free' | 'partial' | 'full';
 @Component({
   selector: 'hh-room-calendar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Skeleton],
+  imports: [DatePipe, DecimalPipe, Skeleton, TranslocoPipe],
   templateUrl: './room-calendar.html',
 })
 export class RoomCalendar {

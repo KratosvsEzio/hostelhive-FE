@@ -40,7 +40,15 @@ export interface Listing {
   sharing: string[]; // ['2-sharing', '3-sharing']
   amenities: string[]; // amenity keys — see AMENITIES
   offerNames?: string[]; // amenity display names from the hostel's offers, for the card pills
-  priceFrom: number; // starting_price / month; use priceByCapacity for capacity-aware display
+  priceFrom: number; // the "from" price, quoted in `currency`
+  /**
+   * What is actually charged, when the hostel is discounting. Absent means no discount —
+   * the index sends 0 for that case, and a 0 here would render as a free bed.
+   *
+   * Always strictly below {@link priceFrom}, so the card can strike one through and show
+   * the other without checking which is larger.
+   */
+  discountedPriceFrom?: number;
   priceByCapacity?: Record<string, number>; // capacity key ('1'|'2'|'3'|'4'|'5+') → price
   currency?: string; // ISO-4217 code the prices are quoted in (e.g. 'PKR', 'USD')
   images: string[];
@@ -64,8 +72,6 @@ export interface ListingQuery {
   propertyType?: string; // slug, e.g. 'apartment' — see PROPERTY_TYPES
   /** 'private' | 'shared'. Inert server-side until the backend indexes `room_type`. */
   roomType?: string;
-  /** 'month' | 'night'. Narrows the list to one pricing cycle so price sort has a unit. */
-  frequency?: string;
   near?: { lat: number; lng: number; radiusKm?: number }; // proximity search (from a picked place)
   bounds?: { north: number; south: number; east: number; west: number }; // exact map viewport
   amenities?: string[];

@@ -28,6 +28,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -61,6 +62,7 @@ interface ViewState {
     Skeleton,
     StatusPill,
     Tabs,
+    TranslocoPipe,
   ],
   templateUrl: './analytics.html',
 })

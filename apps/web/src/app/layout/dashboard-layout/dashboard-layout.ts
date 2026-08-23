@@ -4,6 +4,7 @@ import { Breadcrumb as HhBreadcrumb, Button, Container } from '@hostelhive/ui';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { MobileApp } from '@core/mobile-app';
 import { routePath } from '@core/i18n/locales';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export interface Breadcrumb {
   label: string;
@@ -31,7 +32,7 @@ export interface Breadcrumb {
   selector: 'app-dashboard-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, HhBreadcrumb, Button],
+  imports: [Container, HhBreadcrumb, Button, TranslocoPipe],
   templateUrl: './dashboard-layout.html',
 })
 export class DashboardLayout {

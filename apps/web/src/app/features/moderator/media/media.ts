@@ -14,6 +14,7 @@ import { Button, EmptyState, ErrorState, FilterChipOption, FilterChips, Skeleton
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { ModerationApi } from '@services';
 import { AttachmentStatusOption, ModeratorAttachment } from '@hostelhive/data-access';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type LoadStatus = 'loading' | 'ready' | 'loading-more' | 'error';
 type ApproveModalItem = { attachment: ModeratorAttachment; status: 'pending' | 'success' | 'error' };
@@ -22,7 +23,7 @@ type RejectProgressItem = { attachment: ModeratorAttachment; status: 'pending' |
 @Component({
   selector: 'hh-media',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Button, EmptyState, ErrorState, FilterChips, Skeleton, FormsModule],
+  imports: [DashboardLayout, Button, EmptyState, ErrorState, FilterChips, Skeleton, FormsModule, TranslocoPipe],
   templateUrl: './media.html',
 })
 export class Media {

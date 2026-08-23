@@ -14,6 +14,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
 import { localToday } from '@util/api-date';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -28,7 +29,7 @@ const toISO = (d: Date | undefined): string | undefined =>
 @Component({
   selector: 'app-occupancy-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, DateRangePicker, Card, ErrorState, Skeleton],
+  imports: [DashboardLayout, DateRangePicker, Card, ErrorState, Skeleton, TranslocoPipe],
   templateUrl: './occupancy-detail.html',
 })
 export class OccupancyDetail {

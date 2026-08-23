@@ -55,6 +55,7 @@ import {
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
 import { ADMIN_CONTRACTS_TABLE_COLS } from '@app/util/table-configs/admin-contracts-table-cols';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -105,6 +106,7 @@ const PAYMENT_META: Record<PaymentState, { tone: StatusTone; label: string }> =
     EmptyState,
     ErrorState,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './admin-contracts.html',
 })
@@ -344,22 +346,7 @@ export class AdminContracts {
     if (p < 1 || p > this.totalPages() || p === this.page()) return;
     this.page.set(p);
   }
-  /** Toggle direction when re-clicking the active column, else sort that column (highest first). */
-  protected toggleSort(field: SortField): void {
-    if (this.sortField() === field) {
-      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortField.set(field);
-      this.sortDir.set('desc');
-    }
-    this.page.set(1); // a new sort starts from page 1
-  }
-  /** Tabler icon for a column header — direction arrow when active, neutral arrows otherwise. */
-  protected sortIcon(field: SortField): string {
-    if (this.sortField() !== field) return 'ti-arrows-sort text-ink-300';
-    return this.sortDir() === 'asc' ? 'ti-arrow-up' : 'ti-arrow-down';
-  }
-  protected onSearchTerm(term: string): void {
+  /** Toggle direction when re-clicking the active column, else sort that column (highest first). */  protected onSearchTerm(term: string): void {
     this.searchTerm.set(term);
     this.page.set(1);
   }

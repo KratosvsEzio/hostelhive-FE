@@ -10,7 +10,7 @@
       [class.text-brand-700]="hasActiveFilters()"
     >
       <i class="ti ti-adjustments-horizontal text-sm"></i>
-      Filters
+      {{ 'common.filters' | transloco }}
     </button>
     @if (activeFilterCount() > 0) {
       <span
@@ -26,19 +26,9 @@
   <hh-dropdown
     class="shrink-0"
     [options]="roomTypeOptions"
-    placeholder="Room type"
-    clearLabel="Any room type"
-    [value]="roomType() || null"
+    [placeholder]="'common.roomType' | transloco"
+    [value]="roomType()"
     (valueChange)="onRoomTypeChange($event)"
-  />
-
-  <hh-dropdown
-    class="shrink-0"
-    [options]="frequencyOptions"
-    placeholder="Frequency"
-    clearLabel="All"
-    [value]="frequency() === 'all' ? null : frequency()"
-    (valueChange)="onFrequencyChange($event)"
   />
 
   <span class="h-5 w-px shrink-0 bg-ink-200"></span>
@@ -59,7 +49,7 @@
     class="ms-auto shrink-0"
     align="right"
     [options]="sortOptions()"
-    placeholder="Sort"
+    [placeholder]="'common.sort' | transloco"
     clearLabel="Recommended"
     [value]="sort() === 'recommended' ? null : sort()"
     (valueChange)="onSortChange($event)"

@@ -11,7 +11,7 @@
       <span class="hhsb-lab">{{ 'search.where' | transloco }}</span>
       <hh-place-search
         [value]="place()"
-        [placeholder]="'search.wherePlaceholder' | transloco"
+        [placeholder]="'common.searchCityOrArea' | transloco"
         (textChange)="onText($event)"
         (selected)="onSelected($event)"
       />
@@ -46,9 +46,9 @@
       type="button"
       class="hhsb-go"
       (click)="search()"
-      aria-label="Search"
+      [attr.aria-label]="'a11y.search' | transloco"
     >
-      <i class="ti ti-search text-lg"></i>{{ 'searchBar.search' | transloco }}
+      <i class="ti ti-search text-lg"></i>{{ 'common.search' | transloco }}
     </button>
   </div>
 
@@ -69,7 +69,7 @@
           [min]="BUDGET_MIN"
           [max]="BUDGET_MAX"
           [step]="BUDGET_STEP"
-          prefix="Rs "
+          [prefix]="budgetSymbol() + ' '"
           [openEnded]="true"
           [(low)]="budgetLow"
           [(high)]="budgetHigh"

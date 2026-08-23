@@ -3,13 +3,11 @@
   Component,
   computed,
   inject,
-  signal,
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
-import { HOST_ROLES, STAFF_ROLES, SessionStore } from '@core/auth';
-import { Button, ConfirmModal } from '@hostelhive/ui';
+import { SessionStore } from '@core/auth';
 import { SearchBar } from '../search-bar/search-bar';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NotificationBell } from '../notification-bell/notification-bell';
@@ -37,8 +35,6 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
     SearchBar,
     AccountMenu,
     NotificationBell,
-    ConfirmModal,
-    Button,
     LanguageSwitcher,
   ],
   host: { class: 'contents' },
@@ -78,19 +74,6 @@ export class SiteHeader {
     return u === '/' || u.startsWith('/search');
   });
 
-  // Seeker actions mirror the previous SiteNav: staff → Admin dashboard, existing hosts →
-  // their dashboard, everyone else → become-a-host onboarding.
-  protected readonly isStaff = computed(() =>
-    this.session.hasRole(...STAFF_ROLES),
-  );
-  protected readonly isHost = computed(() => this.session.hasRole(...HOST_ROLES));
-  protected readonly hostLink = computed(() =>
-    this.isHost() ? '/host' : '/host/listings/new',
-  );
-  protected readonly hostCta = computed(() =>
-    this.isHost() ? 'Switch to hosting' : 'Become a host',
-  );
-
   /** The logo links to the active area's home (so it never bounces you out of the console). */
   protected readonly homeLink = computed(() => {
     const a = this.area();
@@ -108,21 +91,4 @@ export class SiteHeader {
     this.session.isAuthenticated(),
   );
 
-  protected readonly loginPrompt = signal(false);
-
-  protected onBecomeHost(): void {
-    if (this.session.isAuthenticated()) {
-      void this.router.navigate(['/host/listings/new']);
-    } else {
-      this.loginPrompt.set(true);
-    }
-  }
-
-  protected goToLogin(): void {
-    this.loginPrompt.set(false);
-    // The prompt is only raised from the become-a-host CTA, so carry that intent through.
-    void this.router.navigate(['/auth'], {
-      queryParams: { mode: 'login', returnUrl: '/host/listings/new' },
-    });
-  }
 }

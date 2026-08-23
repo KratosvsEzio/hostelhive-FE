@@ -28,7 +28,7 @@
         hh-button variant="icon" size="sm"
         type="button"
         (click)="notifications.dismiss(t.id)"
-        aria-label="Dismiss notification"
+        [attr.aria-label]="'a11y.dismissNotification' | transloco"
       >
         <i class="ti ti-x text-base"></i>
       </button>

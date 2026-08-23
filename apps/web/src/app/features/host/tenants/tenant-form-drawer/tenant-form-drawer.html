@@ -27,7 +27,7 @@
           variant="icon"
           size="sm"
           (click)="requestClose()"
-          aria-label="Close"
+          [attr.aria-label]="'a11y.close' | transloco"
         >
           <i class="ti ti-x text-lg"></i>
         </button>
@@ -52,14 +52,14 @@
                   (click)="photoMenuOpen.update((v) => !v)"
                   class="relative block cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
                   [disabled]="avatarUploading()"
-                  aria-label="Change photo"
+                  [attr.aria-label]="'a11y.changePhoto' | transloco"
                   aria-haspopup="true"
                   [attr.aria-expanded]="photoMenuOpen()"
                 >
                   @if (f.imagePreview) {
                     <img
                       [src]="f.imagePreview"
-                      alt="Tenant photo"
+                      [alt]="'hostTenants.tenantPhoto' | transloco"
                       class="h-16 w-16 rounded-full object-cover ring-2 ring-brand-200"
                     />
                   } @else {
@@ -94,7 +94,7 @@
                   <button
                     type="button"
                     class="fixed inset-0 z-10 cursor-default"
-                    aria-label="Close menu"
+                    [attr.aria-label]="'a11y.closeMenu' | transloco"
                     (click)="photoMenuOpen.set(false); $event.stopPropagation()"
                   ></button>
                   <div
@@ -111,7 +111,7 @@
                         class="ti ti-camera shrink-0 text-ink-400"
                         aria-hidden="true"
                       ></i>
-                      Take photo
+                      {{ 'hostTenants.takePhoto' | transloco }}
                     </button>
                     <div class="mx-3 border-t border-ink-100"></div>
                     <label
@@ -121,7 +121,7 @@
                         class="ti ti-photo shrink-0 text-ink-400"
                         aria-hidden="true"
                       ></i>
-                      Choose from files
+                      {{ 'common.chooseFromFiles' | transloco }}
                       <input
                         type="file"
                         accept="image/*"
@@ -136,16 +136,16 @@
               <div>
                 <p class="text-sm font-medium text-ink-900">
                   @if (avatarUploading()) {
-                    Uploading…
+                    {{ 'common.uploading' | transloco }}
                   } @else {
-                    {{ f.imageName || 'Add photo' }}
+                    {{ f.imageName || ('common.addPhoto' | transloco) }}
                   }
                 </p>
                 @if (avatarUploadError()) {
                   <p class="text-xs text-danger">{{ avatarUploadError() }}</p>
                 } @else {
                   <p class="text-xs text-ink-400">
-                    Take a photo or choose from files
+                    {{ 'hostTenants.takeAPhotoOrChoose' | transloco }}
                   </p>
                 }
               </div>
@@ -156,7 +156,7 @@
               <p
                 class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400"
               >
-                Personal info
+                {{ 'hostTenants.personalInfo' | transloco }}
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
@@ -164,16 +164,16 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <!-- cspell:ignore Tariq -->
                 <hh-input
-                  label="Full name *"
-                  placeholder="e.g. Hamza Tariq"
+                  [label]="'common.fullName' | transloco"
+                  [placeholder]="'hostTenants.eGHamzaTariq' | transloco"
                   [value]="f.fullName"
                   [error]="fieldError('fullName')"
                   (valueChange)="patch('fullName', $event)"
                   (focusout)="markDirty('fullName')"
                 />
                 <hh-input
-                  label="Email *"
-                  placeholder="name@email.com"
+                  [label]="'hostTenants.email' | transloco"
+                  [placeholder]="'common.nameEmailCom' | transloco"
                   [value]="f.email"
                   [error]="fieldError('email')"
                   (valueChange)="patch('email', $event)"
@@ -182,7 +182,7 @@
               </div>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
-                  label="Phone *"
+                  [label]="'hostTenants.phone' | transloco"
                   placeholder="0312 5556677"
                   [value]="f.phone"
                   [error]="fieldError('phone')"
@@ -190,7 +190,7 @@
                   (focusout)="markDirty('phone')"
                 />
                 <hh-input
-                  label="Emergency contact"
+                  [label]="'hostTenants.emergencyContact' | transloco"
                   placeholder="0321 1234567"
                   [value]="f.emergencyContact"
                   [error]="fieldError('emergencyContact')"
@@ -200,7 +200,7 @@
               </div>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
-                  label="CNIC number *"
+                  [label]="'hostTenants.cnicNumber' | transloco"
                   placeholder="42101-1234567-1"
                   [value]="f.cnicNumber"
                   [error]="fieldError('cnicNumber')"
@@ -208,8 +208,8 @@
                   (focusout)="markDirty('cnicNumber')"
                 />
                 <hh-input
-                  label="Address *"
-                  placeholder="123 Main St, Karachi"
+                  [label]="'hostTenants.address' | transloco"
+                  [placeholder]="'hostTenants.n123MainStKarachi' | transloco"
                   [value]="f.address"
                   [error]="fieldError('address')"
                   (valueChange)="patch('address', $event)"
@@ -223,26 +223,26 @@
               <p
                 class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400"
               >
-                Room &amp; dates
+                {{ 'hostTenants.roomAmpDates' | transloco }}
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
             <div class="space-y-3">
               <!-- Room dropdown — full width -->
               <div>
-                <p class="mb-1 block text-xs font-medium text-ink-600">Room</p>
+                <p class="mb-1 block text-xs font-medium text-ink-600">{{ 'common.room' | transloco }}</p>
                 <div class="flex items-center gap-2">
                   <div class="flex-1">
                     <hh-dropdown
                       variant="field"
-                      placeholder="Select a room"
+                      [placeholder]="'hostTenants.selectARoom' | transloco"
                       [options]="roomDropdownOptions()"
                       [value]="f.roomId || null"
                       [searchable]="true"
-                      searchPlaceholder="Search rooms…"
+                      [searchPlaceholder]="'hostTenants.searchRooms' | transloco"
                       [loading]="roomLoading()"
                       [hasMore]="roomHasMore()"
-                      emptyLabel="No rooms found."
+                      [emptyLabel]="'hostTenants.noRoomsFound' | transloco"
                       (valueChange)="onRoomValueChange($event)"
                       (searchChange)="onRoomSearch($event)"
                       (loadMore)="onLoadMoreRooms()"
@@ -255,7 +255,7 @@
                       hh-button
                       variant="icon"
                       size="sm"
-                      aria-label="Remove room"
+                      [attr.aria-label]="'a11y.removeRoom' | transloco"
                       (click)="clearRoom()"
                     >
                       <i class="ti ti-x text-base" aria-hidden="true"></i>
@@ -293,14 +293,14 @@
               <p
                 class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400"
               >
-                Financial
+                {{ 'hostTenants.financial' | transloco }}
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
             <div class="space-y-3">
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-money-input
-                  label="Rent *"
+                  [label]="'hostTenants.rent' | transloco"
                   placeholder="5000"
                   [value]="+f.rent || 0"
                   [error]="fieldError('rent')"
@@ -308,7 +308,7 @@
                   (blur)="markDirty('rent')"
                 />
                 <hh-money-input
-                  label="Security deposit *"
+                  [label]="'hostTenants.securityDeposit' | transloco"
                   placeholder="3333"
                   [value]="+f.advanceDeposit || 0"
                   [error]="fieldError('advanceDeposit')"
@@ -322,13 +322,13 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <p class="mb-1 block text-xs font-medium text-ink-600">
-                    Billing date *
+                    {{ 'hostTenants.billingDate' | transloco }}
                   </p>
                   <hh-dropdown
                     variant="field"
                     [options]="billingDayOptions"
                     [value]="f.billingDate || null"
-                    placeholder="Select day"
+                    [placeholder]="'hostTenants.selectDay' | transloco"
                     (valueChange)="setBillingDay('billingDate', $event)"
                   />
                   @if (fieldError('billingDate')) {
@@ -340,13 +340,13 @@
                 </div>
                 <div>
                   <p class="mb-1 block text-xs font-medium text-ink-600">
-                    Billing due date *
+                    {{ 'hostTenants.billingDueDate' | transloco }}
                   </p>
                   <hh-dropdown
                     variant="field"
                     [options]="billingDayOptions"
                     [value]="f.billingDueDate || null"
-                    placeholder="Select day"
+                    [placeholder]="'hostTenants.selectDay' | transloco"
                     (valueChange)="setBillingDay('billingDueDate', $event)"
                   />
                   @if (fieldError('billingDueDate')) {
@@ -358,7 +358,7 @@
                 </div>
               </div>
               <p class="text-xs text-ink-400">
-                Months shorter than the selected day may bill differently.
+                {{ 'hostTenants.monthsShorterThanTheSelected' | transloco }}
               </p>
               }
             </div>
@@ -368,7 +368,7 @@
               <p
                 class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400"
               >
-                Transport Section
+                {{ 'hostTenants.transportSection' | transloco }}
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
               <hh-toggle
@@ -378,7 +378,7 @@
             </div>
             @if (transportEnabled()) {
               <hh-input
-                label="Transport charges"
+                [label]="'common.transportCharges' | transloco"
                 type="number"
                 placeholder="500"
                 [value]="f.transportationCharges"
@@ -390,7 +390,7 @@
               <p
                 class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400"
               >
-                Mess Section
+                {{ 'hostTenants.messSection' | transloco }}
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
               <hh-toggle
@@ -401,14 +401,14 @@
             @if (messEnabled()) {
               <div class="space-y-3">
                 <hh-input
-                  label="Mess charges"
+                  [label]="'common.messCharges' | transloco"
                   type="number"
                   placeholder="3000"
                   [value]="f.messCharges"
                   (valueChange)="patch('messCharges', $event)"
                 />
                 <div class="space-y-2">
-                  <p class="text-xs font-medium text-ink-600">Meal plan</p>
+                  <p class="text-xs font-medium text-ink-600">{{ 'hostTenants.mealPlan' | transloco }}</p>
                   <div
                     class="flex items-center justify-between gap-3 rounded-xl border border-ink-100 px-3 py-2.5"
                   >
@@ -417,7 +417,7 @@
                         class="ti ti-coffee text-ink-400"
                         aria-hidden="true"
                       ></i>
-                      Breakfast
+                      {{ 'common.breakfast' | transloco }}
                     </span>
                     <hh-toggle
                       [checked]="f.messBreakfast"
@@ -432,7 +432,7 @@
                         class="ti ti-salad text-ink-400"
                         aria-hidden="true"
                       ></i>
-                      Lunch
+                      {{ 'common.lunch' | transloco }}
                     </span>
                     <hh-toggle
                       [checked]="f.messLunch"
@@ -444,7 +444,7 @@
                   >
                     <span class="flex items-center gap-2 text-sm text-ink-700">
                       <i class="ti ti-moon text-ink-400" aria-hidden="true"></i>
-                      Dinner
+                      {{ 'common.dinner' | transloco }}
                     </span>
                     <hh-toggle
                       [checked]="f.messDinner"
@@ -460,14 +460,14 @@
               <p
                 class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400"
               >
-                Documents
+                {{ 'common.documents' | transloco }}
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
             </div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <!-- CNIC front -->
               <div>
-                <p class="mb-1 text-xs font-medium text-ink-600">CNIC front</p>
+                <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostTenants.cnicFront' | transloco }}</p>
                 <label
                   class="group block cursor-pointer overflow-hidden rounded-xl border border-dashed border-ink-200 hover:border-brand-300"
                   [class.pointer-events-none]="cnicFrontUploading()"
@@ -480,12 +480,12 @@
                         class="ti ti-loader-2 animate-spin text-xl"
                         aria-hidden="true"
                       ></i>
-                      <span class="text-xs">Uploading…</span>
+                      <span class="text-xs">{{ 'common.uploading' | transloco }}</span>
                     </div>
                   } @else if (f.cnicFrontPreview) {
                     <img
                       [src]="f.cnicFrontPreview"
-                      alt="CNIC front"
+                      [alt]="'hostTenants.cnicFront' | transloco"
                       class="h-24 w-full object-cover"
                     />
                     <div
@@ -494,7 +494,7 @@
                       @if (cnicFrontUploadError()) {
                         <i class="ti ti-alert-circle text-danger shrink-0"></i>
                         <span class="truncate text-danger"
-                          >Failed — tap to retry</span
+                          >{{ 'hostTenants.failedTapToRetry' | transloco }}</span
                         >
                       } @else {
                         <i class="ti ti-check text-ok shrink-0"></i>
@@ -502,7 +502,7 @@
                           f.cnicFrontName
                         }}</span>
                       }
-                      <span class="ms-auto shrink-0 text-ink-400">Change</span>
+                      <span class="ms-auto shrink-0 text-ink-400">{{ 'hostTenants.change' | transloco }}</span>
                     </div>
                   } @else {
                     <div
@@ -525,7 +525,7 @@
               </div>
               <!-- CNIC back -->
               <div>
-                <p class="mb-1 text-xs font-medium text-ink-600">CNIC back</p>
+                <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostTenants.cnicBack' | transloco }}</p>
                 <label
                   class="group block cursor-pointer overflow-hidden rounded-xl border border-dashed border-ink-200 hover:border-brand-300"
                   [class.pointer-events-none]="cnicBackUploading()"
@@ -538,12 +538,12 @@
                         class="ti ti-loader-2 animate-spin text-xl"
                         aria-hidden="true"
                       ></i>
-                      <span class="text-xs">Uploading…</span>
+                      <span class="text-xs">{{ 'common.uploading' | transloco }}</span>
                     </div>
                   } @else if (f.cnicBackPreview) {
                     <img
                       [src]="f.cnicBackPreview"
-                      alt="CNIC back"
+                      [alt]="'hostTenants.cnicBack' | transloco"
                       class="h-24 w-full object-cover"
                     />
                     <div
@@ -552,7 +552,7 @@
                       @if (cnicBackUploadError()) {
                         <i class="ti ti-alert-circle text-danger shrink-0"></i>
                         <span class="truncate text-danger"
-                          >Failed — tap to retry</span
+                          >{{ 'hostTenants.failedTapToRetry' | transloco }}</span
                         >
                       } @else {
                         <i class="ti ti-check text-ok shrink-0"></i>
@@ -560,7 +560,7 @@
                           f.cnicBackName
                         }}</span>
                       }
-                      <span class="ms-auto shrink-0 text-ink-400">Change</span>
+                      <span class="ms-auto shrink-0 text-ink-400">{{ 'hostTenants.change' | transloco }}</span>
                     </div>
                   } @else {
                     <div
@@ -598,7 +598,7 @@
             [disabled]="saving()"
             (click)="requestClose()"
           >
-            Cancel
+            {{ 'common.cancel' | transloco }}
           </button>
           <button
             hh-button
@@ -638,13 +638,12 @@
           <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50">
             <i class="ti ti-alert-triangle text-xl text-amber-500" aria-hidden="true"></i>
           </div>
-          <h3 class="font-display text-lg font-semibold text-ink-900">Confirm leave date</h3>
+          <h3 class="font-display text-lg font-semibold text-ink-900">{{ 'hostTenants.confirmLeaveDate' | transloco }}</h3>
         </div>
 
         @if (leaveInfo(); as info) {
           <p class="text-sm text-ink-600">
-            You are registering this tenant with a <strong class="text-ink-900">leave date of
-            {{ info.date }}</strong>.
+            {{ 'hostTenants.youAreRegisteringThisTenant' | transloco }} <strong class="text-ink-900">{{ 'hostTenants.leaveDateOf' | transloco: { date: info.date } }}</strong>.
           </p>
           <div class="mt-3 rounded-xl border border-ink-100 bg-surface px-4 py-3">
             <div class="flex items-center gap-3">
@@ -653,11 +652,11 @@
                 <p class="text-sm font-medium text-ink-900">{{ info.date }}</p>
                 <p class="text-xs text-ink-400">
                   @if (info.days > 0) {
-                    {{ info.days }} {{ info.days === 1 ? 'day' : 'days' }} from today
+                    {{ 'hostTenants.nDaysFromToday' | transloco: { count: info.days } }}
                   } @else if (info.days === 0) {
-                    Today
+                    {{ 'common.today' | transloco }}
                   } @else {
-                    {{ -info.days }} {{ info.days === -1 ? 'day' : 'days' }} ago
+                    {{ 'hostTenants.nDaysAgo' | transloco: { count: -info.days } }}
                   }
                 </p>
               </div>
@@ -667,12 +666,12 @@
 
         <div class="mt-4">
           <label class="block text-xs font-medium text-ink-600 mb-1.5">
-            Type <span class="font-semibold text-ink-900">"I Confirm"</span> to proceed
+            {{ 'common.type' | transloco }} <span class="font-semibold text-ink-900">{{ 'hostTenants.iConfirm2' | transloco }}</span> {{ 'hostTenants.toProceed' | transloco }}
           </label>
           <input
             type="text"
             class="w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-300 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            placeholder="I Confirm"
+            [placeholder]="'hostTenants.iConfirm' | transloco"
             [value]="leaveConfirmInput()"
             (input)="leaveConfirmInput.set($any($event.target).value)"
             autocomplete="off"
@@ -687,7 +686,7 @@
           class="flex-1"
           (click)="closeLeaveConfirm()"
         >
-          Go back
+          {{ 'hostTenants.goBack' | transloco }}
         </button>
         <button
           hh-button
@@ -696,7 +695,7 @@
           [disabled]="!leaveConfirmEnabled()"
           (click)="confirmAndSave()"
         >
-          Confirm
+          {{ 'hostTenants.confirm' | transloco }}
         </button>
       </div>
     </div>
@@ -714,11 +713,11 @@
         variant="icon"
         size="sm"
         (click)="stopCamera()"
-        aria-label="Cancel"
+        [attr.aria-label]="'a11y.cancel' | transloco"
       >
         <i class="ti ti-x text-xl" aria-hidden="true"></i>
       </button>
-      <p class="text-sm font-medium text-white">Take a photo</p>
+      <p class="text-sm font-medium text-white">{{ 'common.takeAPhoto' | transloco }}</p>
       <div class="w-9"></div>
     </div>
 
@@ -740,7 +739,7 @@
         type="button"
         (click)="capturePhoto()"
         class="h-18 w-18 flex items-center justify-center rounded-full border-4 border-white bg-white/20 transition hover:bg-white/30 active:scale-95"
-        aria-label="Capture photo"
+        [attr.aria-label]="'a11y.capturePhoto' | transloco"
       >
         <span class="h-14 w-14 rounded-full bg-white"></span>
       </button>

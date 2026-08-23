@@ -27,6 +27,7 @@ import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -52,6 +53,7 @@ interface ViewState {
     EmptyState,
     ErrorState,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './overview.html',
 })

@@ -26,6 +26,7 @@ import {
   toCreateStaffPayload,
   toUpdateStaffPayload,
 } from './staff-form.model';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** The three attachments, so the upload handler stays one method instead of three. */
 type ImageSlot = 'avatar' | 'cnicFront' | 'cnicBack';
@@ -46,7 +47,7 @@ const UPLOAD_KEY: Record<ImageSlot, ImageUploadKey> = {
 @Component({
   selector: 'hh-staff-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DatePicker, Drawer, Input, MoneyInput, PhoneInput, Toggle],
+  imports: [Button, DatePicker, Drawer, Input, MoneyInput, PhoneInput, Toggle, TranslocoPipe],
   templateUrl: './staff-form-drawer.html',
 })
 export class StaffFormDrawer {

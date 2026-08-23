@@ -20,12 +20,12 @@
       <hh-card [allowOverflow]="true">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 class="font-display text-base font-semibold text-ink-900">Monthly revenue</h2>
+            <h2 class="font-display text-base font-semibold text-ink-900">{{ 'common.monthlyRevenue' | transloco }}</h2>
             <p class="text-xs text-ink-400">{{ dateRange()?.label }} · PKR</p>
           </div>
           <div class="flex items-center gap-4 text-xs text-ink-500">
-            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span>Rent</span>
-            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-brand-200"></span>Utility</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span>{{ 'common.rent' | transloco }}</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-brand-200"></span>{{ 'common.utility' | transloco }}</span>
           </div>
         </div>
         <div class="flex h-48 items-end gap-2 sm:gap-3">
@@ -40,11 +40,11 @@
                   <p class="mb-2 text-[11px] font-semibold text-white">{{ b.month }}</p>
                   <div class="space-y-1.5 text-[11px]">
                     <div class="flex items-center justify-between gap-2">
-                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-brand-500"></span>Rent</span>
+                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-brand-500"></span>{{ 'common.rent' | transloco }}</span>
                       <span class="font-medium text-white">Rs {{ b.rent | compactNum }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-2">
-                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-brand-200"></span>Utility</span>
+                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-brand-200"></span>{{ 'common.utility' | transloco }}</span>
                       <span class="font-medium text-white">Rs {{ b.utility | compactNum }}</span>
                     </div>
                   </div>
@@ -67,16 +67,16 @@
       <!-- Revenue breakdown table -->
       <hh-card class="mt-6" padding="none">
         <div class="border-b border-ink-100 px-5 py-3.5">
-          <h2 class="font-display text-base font-semibold text-ink-900">Breakdown</h2>
+          <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostOverview.breakdown' | transloco }}</h2>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="text-start text-xs uppercase tracking-wide text-ink-400">
               <tr>
-                <th class="px-5 py-2.5 font-medium">Month</th>
-                <th class="px-5 py-2.5 text-end font-medium">Rent</th>
-                <th class="px-5 py-2.5 text-end font-medium">Utility</th>
-                <th class="px-5 py-2.5 text-end font-medium">Total</th>
+                <th class="px-5 py-2.5 font-medium">{{ 'hostOverview.month' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.rent' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.utility' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.total' | transloco }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
@@ -89,7 +89,7 @@
                 </tr>
               }
               @if (bars().length === 0) {
-                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">No data available for this period.</td></tr>
+                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">{{ 'hostOverview.noDataAvailableForThis' | transloco }}</td></tr>
               }
             </tbody>
           </table>

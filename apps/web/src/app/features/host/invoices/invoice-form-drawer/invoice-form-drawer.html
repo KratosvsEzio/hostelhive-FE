@@ -21,7 +21,7 @@
           type="button"
           hh-button variant="icon" size="sm"
           (click)="requestClose()"
-          aria-label="Close"
+          [attr.aria-label]="'a11y.close' | transloco"
         >
           <i class="ti ti-x text-lg"></i>
         </button>
@@ -33,21 +33,21 @@
 
           <!-- Tenant -->
           <div class="flex items-center gap-3">
-            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Tenant</p>
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">{{ 'common.tenant' | transloco }}</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div>
-            <p class="mb-1 block text-xs font-medium text-ink-600">Tenant *</p>
+            <p class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostInvoices.tenant2' | transloco }}</p>
             <hh-dropdown
               variant="field"
-              placeholder="Select a tenant"
+              [placeholder]="'hostInvoices.selectATenant' | transloco"
               [options]="tenantDropdownOptions()"
               [value]="f.renterId || null"
               [searchable]="true"
-              searchPlaceholder="Search tenants…"
+              [searchPlaceholder]="'hostInvoices.searchTenants' | transloco"
               [loading]="tenantLoading()"
               [hasMore]="tenantHasMore()"
-              emptyLabel="No tenants found."
+              [emptyLabel]="'hostInvoices.noTenantsFound' | transloco"
               (valueChange)="onTenantValueChange($event)"
               (searchChange)="onTenantSearch($event)"
               (loadMore)="onLoadMoreTenants()"
@@ -60,24 +60,24 @@
               </p>
             }
             @if (f.roomId && f.roomNumber && f.roomNumber !== '—') {
-              <p class="mt-1 text-xs text-ink-400">Room {{ f.roomNumber }}</p>
+              <p class="mt-1 text-xs text-ink-400">{{ 'common.roomNumber' | transloco: { number: f.roomNumber } }}</p>
             }
           </div>
 
           <!-- Dates -->
           <div class="flex items-center gap-3">
-            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Dates</p>
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">{{ 'hostInvoices.dates' | transloco }}</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <hh-date-picker
-              label="Issue date"
+              [label]="'hostInvoices.issueDate' | transloco"
               [value]="f.issuedDate"
               (valueChange)="patch('issuedDate', $event ?? '')"
             />
             @if (!nightly()) {
               <hh-date-picker
-                label="Due date"
+                [label]="'hostInvoices.dueDate' | transloco"
                 [value]="f.dueDate"
                 (valueChange)="patch('dueDate', $event ?? '')"
               />
@@ -86,25 +86,25 @@
 
           <!-- Charges -->
           <div class="flex items-center gap-3">
-            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">Charges</p>
+            <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">{{ 'hostInvoices.charges' | transloco }}</p>
             <div class="flex-1 border-t border-ink-100"></div>
           </div>
           <div class="space-y-3">
             <hh-money-input
-              label="Rent"
+              [label]="'common.rent' | transloco"
               placeholder="5000"
               [value]="+f.rent || 0"
               (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
             />
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <hh-money-input
-                label="Mess charges"
+                [label]="'common.messCharges' | transloco"
                 placeholder="3000"
                 [value]="+f.messCharges || 0"
                 (valueChange)="patch('messCharges', $event ? $any($event).toString() : '')"
               />
               <hh-money-input
-                label="Transport charges"
+                [label]="'common.transportCharges' | transloco"
                 placeholder="500"
                 [value]="+f.transportationCharges || 0"
                 (valueChange)="patch('transportationCharges', $event ? $any($event).toString() : '')"
@@ -116,20 +116,20 @@
                 {{ totalError }}
               </p>
             }
-            <p class="text-xs text-ink-400">Charges are prefilled from the tenant's record — adjust as needed.</p>
+            <p class="text-xs text-ink-400">{{ 'hostInvoices.chargesArePrefilledFromThe' | transloco }}</p>
           </div>
 
           <!-- Note -->
           <hh-input
-            label="Note"
-            placeholder="e.g. Pay on or before the due date."
+            [label]="'hostInvoices.note' | transloco"
+            [placeholder]="'hostInvoices.eGPayOnOr' | transloco"
             [value]="f.notes"
             (valueChange)="patch('notes', $event)"
           />
 
           <!-- Total -->
           <div class="flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
-            <span class="font-semibold text-ink-700">Total due</span>
+            <span class="font-semibold text-ink-700">{{ 'hostInvoices.totalDue' | transloco }}</span>
             <span class="text-xl font-bold text-brand-700">Rs {{ total() | number }}</span>
           </div>
         </div>
@@ -140,7 +140,7 @@
            device inset these buttons sit under the home indicator. -->
       <div class="safe-pb-4 sticky bottom-0 border-t border-ink-100 bg-white px-5 py-4">
         <div class="flex gap-3">
-          <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="requestClose()">Cancel</button>
+          <button hh-button variant="outlined" class="flex-1" [disabled]="saving()" (click)="requestClose()">{{ 'common.cancel' | transloco }}</button>
           <button hh-button color="primary" class="flex-1" [disabled]="!formValid()" [loading]="saving()" (click)="save()">
             {{ isEdit() ? 'Save changes' : 'Create invoice' }}
           </button>

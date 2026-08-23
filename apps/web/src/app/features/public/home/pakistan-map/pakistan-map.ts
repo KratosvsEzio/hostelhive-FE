@@ -19,6 +19,7 @@ import { feature } from 'topojson-client';
 import type { Feature, FeatureCollection } from 'geojson';
 import { ListingsApi } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 // Boundary levels by drill depth: 0 = provinces, 1 = districts, 2 = tehsils.
 const KEYS = ['adm1', 'adm2', 'adm3'] as const;
@@ -46,7 +47,7 @@ function priceMarkerHtml(price: number, featured?: boolean): string {
 @Component({
   selector: 'app-pakistan-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink],
+  imports: [RouterLink, LocaleLink, TranslocoPipe],
   templateUrl: './pakistan-map.html',
 })
 export class PakistanMap {

@@ -8,6 +8,104 @@ import {
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 import { ApiPagination, toPageInfo } from '@util/pagination';
+import { CurrencyPreference } from '@core/preferences/currency-preference';
+import {
+  DEFAULT_OCCUPANCY_TYPE,
+  OccupancyType,
+  isOccupancyType,
+} from '@util/occupancy-type';
+
+/**
+ * The indexed "from" price each occupancy type is filtered against.
+ *
+ * A hostel carries both figures, and they are not interchangeable — a dorm bed at 12,000 and
+ * a private room at 45,000 live on the same listing. Ranging a private-room search over the
+ * shared price returns hostels whose *dorms* fall in the band while their private rooms cost
+ * three times the seeker's ceiling, which is a worse answer than no results.
+ *
+ * A `Record<OccupancyType, …>` rather than a ternary so that adding a third occupancy type is
+ * a compile error here instead of a silent fall back to the shared price.
+ */
+const OCCUPANCY_PRICE_FIELD: Record<OccupancyType, string> = {
+  private: 'private_occupancy_price_from',
+  shared: 'shared_occupancy_price_from',
+};
+
+/**
+ * The cheapest room of one occupancy type, priced in every currency the index knows.
+ *
+ * `price` / `discounted_price` are in the hostel's own currency; the two hashes are the same
+ * two figures converted, keyed by ISO-4217. Reading the hash rather than `price` is what lets
+ * one result list quote every hostel in the seeker's currency instead of showing a Thai
+ * hostel in PKR beside a Pakistani one in USD.
+ *
+ * **`discounted_price` is 0 when there is no discount, not free.** Every hostel in the
+ * current payload has 0 across all 160-odd currencies, so treating 0 as a real price would
+ * put "Rs 0" on every card in the app.
+ */
+export interface OccupancyPriceFrom {
+  price?: number | null;
+  discounted_price?: number | null;
+  currency_price_hash?: Record<string, number> | null;
+  currency_discounted_price_hash?: Record<string, number> | null;
+}
+
+/** A resolved pair of figures in one currency, with the code they are quoted in. */
+interface ResolvedPrice {
+  amount: number;
+  /** Only set when a real discount exists — always strictly below {@link amount}. */
+  discounted?: number;
+  currency: string;
+  /** Multiplier from the hostel's own currency into {@link currency}, or 1 when unconverted. */
+  rate: number;
+}
+
+/**
+ * The "from" price for a hostel, in the seeker's currency where the index can supply it.
+ *
+ * Falls back through three levels, because each one is missing in real payloads today:
+ * the requested occupancy (private is `null` on every current record), then the other
+ * occupancy, then the hostel's own currency when the hash has no entry for the chosen one.
+ * A seeker filtering for private rooms still sees a price rather than a blank card — the
+ * figure they see is simply the cheapest room the hostel actually indexes.
+ *
+ * `starting_price` is the last resort: the field was dropped from the search document when
+ * these objects arrived, so it is only still read for any endpoint that has not caught up.
+ */
+function resolvePrice(
+  h: ApiHostel,
+  roomType: string | undefined,
+  displayCurrency: string | undefined,
+): ResolvedPrice {
+  const own = h.currency ?? '';
+  const wanted = isOccupancyType(roomType) ? roomType : DEFAULT_OCCUPANCY_TYPE;
+  const other: OccupancyType = wanted === 'private' ? 'shared' : 'private';
+  const block =
+    (h[OCCUPANCY_PRICE_FIELD[wanted] as keyof ApiHostel] as OccupancyPriceFrom | null) ??
+    (h[OCCUPANCY_PRICE_FIELD[other] as keyof ApiHostel] as OccupancyPriceFrom | null) ??
+    null;
+
+  if (!block) {
+    return { amount: Math.round(h.starting_price ?? 0), currency: own, rate: 1 };
+  }
+
+  const base = block.price ?? 0;
+  // An empty code, or one the index has no rate for, keeps the hostel's own currency rather
+  // than silently relabelling its figures as something they are not.
+  const code = displayCurrency && block.currency_price_hash?.[displayCurrency] != null
+    ? displayCurrency
+    : own;
+  const amount = block.currency_price_hash?.[code] ?? base;
+  const discounted = block.currency_discounted_price_hash?.[code] ?? 0;
+
+  return {
+    amount: Math.round(amount),
+    // 0 means "no discount"; anything at or above the list price is not one either.
+    discounted: discounted > 0 && discounted < amount ? Math.round(discounted) : undefined,
+    currency: code,
+    rate: base > 0 && amount > 0 ? amount / base : 1,
+  };
+}
 
 /**
  * Raw hostel from GET /public/hostels. The endpoint runs Searchkick with `load: false`,
@@ -29,8 +127,15 @@ export interface ApiHostel {
   gender_type?: string | null; // 'co-living' | 'boys' | 'girls'
   property_type?: string | null; // 'apartment' | 'room' | 'building' | 'house'
   total_rooms?: number | null;
-  starting_price?: number | null; // the "from" price (min_price/max_price are deprecated/removed)
-  currency?: string | null; // ISO-4217 code the prices are quoted in
+  /**
+   * Legacy flat "from" price. **Dropped from the search document** when the per-occupancy
+   * objects below arrived — kept only as the last fallback in {@link resolvePrice}.
+   */
+  starting_price?: number | null;
+  /** ISO-4217 the hostel's own figures are quoted in; the hashes carry every other. */
+  currency?: string | null;
+  shared_occupancy_price_from?: OccupancyPriceFrom | null;
+  private_occupancy_price_from?: OccupancyPriceFrom | null;
 
   latitude?: number | string | null;
   longitude?: number | string | null;
@@ -105,7 +210,10 @@ function buildPriceByCapacity(h: ApiHostel): Record<string, number> {
 
 /** Map a backend search_data hostel to the frontend Listing model. Exported so the
  *  favourites list renders through the exact same mapping and the two never drift. */
-export function toListing(h: ApiHostel): Listing {
+export function toListing(
+  h: ApiHostel,
+  opts: { currency?: string; roomType?: string } = {},
+): Listing {
   const lat =
     typeof h.latitude === 'string'
       ? parseFloat(h.latitude)
@@ -121,7 +229,17 @@ export function toListing(h: ApiHostel): Listing {
     .map((a) => a?.url)
     .filter((u): u is string => !!u);
 
-  const priceByCapacity = buildPriceByCapacity(h);
+  const price = resolvePrice(h, opts.roomType, opts.currency);
+  // Room-type prices come off the document in the hostel's own currency, so they are scaled
+  // by the same rate the "from" price was converted at. Without this every price on a Listing
+  // would claim `currency` while only one of them actually honoured it.
+  const rawByCapacity = buildPriceByCapacity(h);
+  const priceByCapacity =
+    price.rate === 1
+      ? rawByCapacity
+      : Object.fromEntries(
+          Object.entries(rawByCapacity).map(([k, v]) => [k, Math.round(v * price.rate)]),
+        );
   return {
     id: String(h.id),
     slug: String(h.id), // search_data has no slug — the numeric id doubles as the route key
@@ -138,8 +256,9 @@ export function toListing(h: ApiHostel): Listing {
     offerNames: (h.offers ?? [])
       .map((o) => o?.name)
       .filter((n): n is string => !!n),
-    priceFrom: Math.round(h.starting_price ?? 0),
-    currency: h.currency ?? undefined,
+    priceFrom: price.amount,
+    discountedPriceFrom: price.discounted,
+    currency: price.currency || undefined,
     priceByCapacity: Object.keys(priceByCapacity).length ? priceByCapacity : undefined,
     images: images.length
       ? images
@@ -164,6 +283,7 @@ export function toListing(h: ApiHostel): Listing {
 @Injectable({ providedIn: 'root' })
 export class ListingsApi {
   private readonly api = inject(ApiClient);
+  private readonly currency = inject(CurrencyPreference);
 
   list(query: ListingQuery = {}): Observable<Paginated<Listing>> {
     const {
@@ -171,7 +291,6 @@ export class ListingsApi {
       accommodationType = 'all',
       propertyType,
       roomType,
-      frequency,
       minPrice,
       maxPrice,
       near,
@@ -218,23 +337,34 @@ export class ListingsApi {
 
     // Room type — private or shared, the axis that replaced capacity.
     //
-    // **Inert until the backend indexes `room_type`.** The param is sent so the contract is
-    // in place and shared URLs already carry the intent, but the search document has no such
-    // field yet and a term on a missing field matches nothing — so this is emitted only when
-    // the field exists rather than silently returning zero results. Exactly the position the
-    // amenity filter was in before `offers` reached the index.
-    if (roomType) params['f[room_type]'] = roomType;
+    // Occupancy is a property of a room type, not of the hostel, so the key has to name the
+    // association path the way `f[offers.id][]` does. It was previously sent as a flat
+    // `f[room_type]`, which named a field the search document does not have — and a term on a
+    // missing field matches nothing, so the filter silently narrowed to zero.
+    //
+    // The path ends in "type", so parse_key appends `.keyword` and this stays an exact term
+    // match on the stored 'shared' / 'private' string.
+    if (roomType) params['f[room_types.occupancy_type]'] = roomType;
 
-    // Pricing cycle. Also inert pending the backend storing it on the hostel; until then the
-    // filter narrows nothing and the seeker-facing effect is limited to re-enabling price
-    // sort, which the UI handles on its own.
-    if (frequency) params['f[billing_frequency_type]'] = frequency;
-
-    // Budget band → range on the single `starting_price` (the displayed "from" price). The
-    // payload no longer carries min_price/max_price; filtering on those returns zero results
-    // (verified live) — f[starting_price][gte|lte] is the supported budget filter.
-    if (minPrice != null) params['f[starting_price][gte]'] = minPrice;
-    if (maxPrice != null) params['f[starting_price][lte]'] = maxPrice;
+    // Budget band → a range on the "from" price for the occupancy the seeker is shopping for.
+    //
+    // The field follows the Room type filter (see OCCUPANCY_PRICE_FIELD); an absent or
+    // unrecognised value falls back to shared, which is what the filter itself defaults to,
+    // so the query and the visible control never disagree about which price is being ranged.
+    //
+    // The index stores that price as a per-currency hash rather than one number, so the key
+    // has to name a currency: `…currency_price_hash.PKR`. Which currency comes from the
+    // seeker's own preference, so the figures they type are read in the currency they
+    // actually think in instead of being compared against whatever each listing happens to
+    // be priced in. Replaces `f[starting_price][gte|lte]`, which was a single unit-less
+    // number and silently compared rupees against dollars.
+    const priceField =
+      OCCUPANCY_PRICE_FIELD[
+        isOccupancyType(roomType) ? roomType : DEFAULT_OCCUPANCY_TYPE
+      ];
+    const budget = `f[${priceField}.currency_price_hash.${this.currency.code()}]`;
+    if (minPrice != null) params[`${budget}[gte]`] = minPrice;
+    if (maxPrice != null) params[`${budget}[lte]`] = maxPrice;
 
     // Sort: the backend reads a `sort[field]=order` hash; a bare `sort=` is dropped by the
     // strong-params permit. 'newest'/'oldest' order by listing date (sort[created_at]); the price
@@ -271,7 +401,9 @@ export class ListingsApi {
             : (res.hostels ?? []);
           const pg = Array.isArray(res) ? undefined : res.pagination;
           const meta = Array.isArray(res) ? undefined : res.meta;
-          const items: Listing[] = raw.map((h) => toListing(h));
+          const items: Listing[] = raw.map((h) =>
+            toListing(h, { currency: this.currency.code(), roomType }),
+          );
           // Sorting is handled server-side via sort[starting_price]; no client-side re-sort needed.
 
           const info = toPageInfo(pg, page, items.length);
@@ -299,7 +431,7 @@ export class ListingsApi {
       .pipe(
         map((res) => {
           const raw = Array.isArray(res) ? res : (res.hostels ?? []);
-          return raw.map((h) => toListing(h));
+          return raw.map((h) => toListing(h, { currency: this.currency.code() }));
         }),
       );
   }
@@ -316,7 +448,7 @@ export class ListingsApi {
             ? res
             : (res.hostels ?? []);
           const match = raw.find((h) => String(h.id) === slug);
-          return match ? toListing(match) : undefined;
+          return match ? toListing(match, { currency: this.currency.code() }) : undefined;
         }),
       );
   }

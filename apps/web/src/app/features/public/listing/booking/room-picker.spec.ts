@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { By } from '@angular/platform-browser';
 import { BookingBasket } from './booking-basket';
 import { RoomPicker } from './room-picker';
@@ -56,7 +57,10 @@ describe('RoomPicker', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RoomPicker],
-      providers: [BookingBasket],
+      // The template resolves its copy through transloco, so the component cannot be created
+      // without a translation backend — without this the whole spec fails on NG0201 rather
+      // than on anything it is actually asserting.
+      providers: [BookingBasket, provideI18nTesting()],
     }).compileComponents();
   });
 
@@ -134,6 +138,60 @@ describe('RoomPicker', () => {
     fixture.detectChanges();
 
     expect(basket.quantityOf('p1')).toBe(2);
+  });
+
+  // Each row carousels on its own. One shared index would page every room in the list at
+  // once, which is the bug this keyed map exists to prevent.
+  it('pages each room’s photos independently', () => {
+    const a: RoomOffer = { ...DORM, id: 'a', images: ['1.jpg', '2.jpg', '3.jpg'] };
+    const b: RoomOffer = { ...CHEAPER_DORM, id: 'b', images: ['4.jpg', '5.jpg'] };
+    render([a, b]);
+    const picker = fixture.componentInstance as unknown as {
+      stepPhoto(o: RoomOffer, by: number, e: Event): void;
+      photoIndex(o: RoomOffer): number;
+    };
+
+    picker.stepPhoto(a, 1, new Event('click'));
+    fixture.detectChanges();
+
+    expect(picker.photoIndex(a)).toBe(1);
+    expect(picker.photoIndex(b)).toBe(0);
+  });
+
+  it('will not page past either end', () => {
+    const a: RoomOffer = { ...DORM, id: 'a', images: ['1.jpg', '2.jpg'] };
+    render([a]);
+    const picker = fixture.componentInstance as unknown as {
+      stepPhoto(o: RoomOffer, by: number, e: Event): void;
+      photoIndex(o: RoomOffer): number;
+    };
+
+    picker.stepPhoto(a, -1, new Event('click'));
+    expect(picker.photoIndex(a)).toBe(0);
+
+    picker.stepPhoto(a, 1, new Event('click'));
+    picker.stepPhoto(a, 1, new Event('click'));
+    expect(picker.photoIndex(a)).toBe(1);
+  });
+
+  // The cap is a product rule, and the payload is host-supplied.
+  it('shows at most three photos however many the room carries', () => {
+    const a: RoomOffer = {
+      ...DORM,
+      id: 'a',
+      images: ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg'],
+    };
+    render([a]);
+    const picker = fixture.componentInstance as unknown as {
+      photosOf(o: RoomOffer): readonly string[];
+    };
+
+    expect(picker.photosOf(a).length).toBe(3);
+  });
+
+  it('holds the photo column open for a room with no photos', () => {
+    render([{ ...DORM, images: [] }]);
+    expect(fixture.debugElement.query(By.css('.ti-photo'))).toBeTruthy();
   });
 
   it('removes the line when stepped down to zero', () => {

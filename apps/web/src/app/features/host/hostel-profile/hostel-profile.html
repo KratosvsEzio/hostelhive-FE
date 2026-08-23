@@ -1,18 +1,18 @@
-<app-dashboard-layout label="Hostel profile">
+<app-dashboard-layout [label]="'common.hostelProfile' | transloco">
   <div hhActions class="flex shrink-0 items-center gap-2 sm:gap-3">
     @if (saveError()) {
       <!-- Short form on mobile: the full sentence plus two buttons overruns a 375px header. -->
       <span class="text-sm font-medium text-danger"
-        ><span class="sm:hidden">Failed</span
-        ><span class="hidden sm:inline">Couldn't update — try again.</span></span
+        ><span class="sm:hidden">{{ 'hostHostelProfile.failed' | transloco }}</span
+        ><span class="hidden sm:inline">{{ 'common.couldnTUpdateTry' | transloco }}</span></span
       >
     } @else if (saved() && !form()?.dirty()) {
       <span class="flex items-center gap-1 text-sm font-medium text-ok">
         <i class="ti ti-check" aria-hidden="true"></i
-        ><span class="hidden sm:inline">Saved</span>
+        ><span class="hidden sm:inline">{{ 'hostHostelProfile.saved' | transloco }}</span>
       </span>
     } @else if (form()?.dirty()) {
-      <span class="hidden text-sm text-ink-400 sm:inline">Unsaved changes</span>
+      <span class="hidden text-sm text-ink-400 sm:inline">{{ 'hostHostelProfile.unsavedChanges' | transloco }}</span>
     }
     @if (previewUrl(); as url) {
       <a
@@ -22,26 +22,26 @@
         [href]="url"
         target="_blank"
         rel="noopener"
-        aria-label="Preview"
+        [attr.aria-label]="'a11y.preview' | transloco"
         class="border-ink-200 text-ink-600 hover:border-ink-400"
       >
         <i class="ti ti-external-link text-sm" aria-hidden="true"></i
-        ><span class="hidden sm:inline">Preview</span>
+        ><span class="hidden sm:inline">{{ 'common.preview' | transloco }}</span>
       </a>
     }
     <button
       hh-button
       color="primary"
       size="sm"
-      aria-label="Update hostel"
+      [attr.aria-label]="'a11y.updateHostel' | transloco"
       [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()"
       (click)="save()"
     >
       @if (saving()) {
-        Saving…
+        {{ 'common.saving' | transloco }}
       } @else {
-        <span class="sm:hidden">Update</span>
-        <span class="hidden sm:inline">Update hostel</span>
+        <span class="sm:hidden">{{ 'hostHostelProfile.update' | transloco }}</span>
+        <span class="hidden sm:inline">{{ 'hostHostelProfile.updateHostel' | transloco }}</span>
       }
     </button>
   </div>
@@ -65,13 +65,13 @@
       <!-- bottom save row -->
       <div class="mt-5 flex flex-wrap items-center justify-end gap-3 pb-2">
         @if (saveError()) {
-          <span class="text-sm font-medium text-danger">Couldn't update — try again.</span>
+          <span class="text-sm font-medium text-danger">{{ 'common.couldnTUpdateTry' | transloco }}</span>
         }
         @if (saved() && !form()?.dirty()) {
-          <span class="flex items-center gap-1 text-sm font-medium text-ok"><i class="ti ti-check" aria-hidden="true"></i>Changes saved.</span>
+          <span class="flex items-center gap-1 text-sm font-medium text-ok"><i class="ti ti-check" aria-hidden="true"></i>{{ 'common.changesSaved' | transloco }}</span>
         }
         @if (form()?.dirty()) {
-          <span class="text-sm text-ink-400">You have unsaved changes</span>
+          <span class="text-sm text-ink-400">{{ 'common.youHaveUnsavedChanges' | transloco }}</span>
         }
         <button hh-button color="primary" [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()" (click)="save()">
           {{ saving() ? 'Saving…' : 'Update hostel' }}

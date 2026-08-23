@@ -1,4 +1,4 @@
-<app-dashboard-layout label="More">
+<app-dashboard-layout [label]="'common.more' | transloco">
   <main class="mx-auto max-w-lg">
 
     <!-- Account card -->
@@ -11,7 +11,7 @@
     </div>
 
     <!-- Property switcher trigger -->
-    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
+    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostMore.property' | transloco }}</p>
     <button
       type="button"
       class="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-card"
@@ -28,51 +28,51 @@
     </button>
 
     <!-- This hostel -->
-    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">This hostel</p>
+    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostMore.thisHostel' | transloco }}</p>
     <div class="divide-y divide-ink-100 overflow-hidden rounded-2xl bg-white shadow-card">
       <a [routerLink]="base() + '/profile'" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-building" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Hostel profile</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.hostelProfile' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <a [routerLink]="base() + '/team'" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-user-shield" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Team &amp; staff</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.teamAmpStaff' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <a [routerLink]="base() + '/utilities'" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-mint text-ink-600"><i class="ti ti-bolt" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Utilities</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.utilities' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <a [routerLink]="base() + '/mess'" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-purple text-ink-600"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Mess</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.mess' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <a [routerLink]="base() + '/expenses'" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-report-money" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Expenses</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.expenses' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
     </div>
 
     <!-- Account -->
-    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Account</p>
+    <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'common.account' | transloco }}</p>
     <div class="divide-y divide-ink-100 overflow-hidden rounded-2xl bg-white shadow-card">
       <a [routerLink]="base() + '/subscription'" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-rosette" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Subscription</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.subscription' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <a routerLink="/account/settings" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-settings" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">Account settings</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.accountSettings' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <a routerLink="/faqs" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-help-circle" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">FAQs</span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.faqs' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
       <!-- The desktop header's "View site" link is `hidden sm:block`, so without this there
@@ -81,14 +81,14 @@
       <a routerLink="/" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-door-exit" aria-hidden="true"></i></span>
         <span class="min-w-0 flex-1">
-          <span class="block text-sm font-medium text-ink-800">Exit dashboard</span>
-          <span class="block text-xs text-ink-400">Browse the public site — you stay signed in</span>
+          <span class="block text-sm font-medium text-ink-800">{{ 'hostMore.exitDashboard' | transloco }}</span>
+          <span class="block text-xs text-ink-400">{{ 'hostMore.browseThePublicSiteYou' | transloco }}</span>
         </span>
         <i class="ti ti-chevron-right shrink-0 text-ink-300" aria-hidden="true"></i>
       </a>
       <button type="button" class="flex w-full items-center gap-3 px-4 py-3.5 text-start" (click)="signOut()">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-danger/10 text-danger"><i class="ti ti-logout" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-danger">Sign out</span>
+        <span class="flex-1 text-sm font-medium text-danger">{{ 'hostMore.signOut' | transloco }}</span>
       </button>
     </div>
   </main>
@@ -99,15 +99,15 @@
   <button
     type="button"
     class="fixed inset-0 z-40 cursor-default bg-ink-900/45"
-    aria-label="Close property switcher"
+    [attr.aria-label]="'a11y.closePropertySwitcher' | transloco"
     (click)="switcherOpen.set(false)"
   ></button>
   <!-- safe-pb-4 not safe-pb: `.safe-pb` overrides `pb-4` (global.css loads after the
        Tailwind utilities), which left this sheet with no bottom padding at all on a
        device without an inset. -->
-  <div class="safe-pb-4 fixed inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-white px-5 pt-3" role="dialog" aria-label="Switch property">
+  <div class="safe-pb-4 fixed inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-white px-5 pt-3" role="dialog" [attr.aria-label]="'a11y.switchProperty' | transloco">
     <span class="mx-auto block h-1 w-10 rounded-full bg-ink-200"></span>
-    <p class="mt-4 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
+    <p class="mt-4 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostMore.property' | transloco }}</p>
     <div class="mt-2 max-h-72 space-y-1.5 overflow-y-auto">
       @for (p of propertyStore.properties(); track p.id) {
         <button
@@ -129,7 +129,7 @@
           </span>
         </button>
       } @empty {
-        <p class="py-6 text-center text-sm text-ink-400">No hostels yet.</p>
+        <p class="py-6 text-center text-sm text-ink-400">{{ 'hostMore.noHostelsYet' | transloco }}</p>
       }
     </div>
     @if (canCreateHostel()) {
@@ -138,7 +138,7 @@
         class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
         (click)="switcherOpen.set(false)"
       >
-        <i class="ti ti-plus" aria-hidden="true"></i>Create new hostel
+        <i class="ti ti-plus" aria-hidden="true"></i>{{ 'hostMore.createNewHostel' | transloco }}
       </a>
     }
   </div>

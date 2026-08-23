@@ -5,6 +5,7 @@ import {
   inject,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { HostPropertyStore } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
 
@@ -17,7 +18,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
 @Component({
   selector: 'app-host-tab-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, TranslocoPipe],
   styles: `
     :host { display: block; }
     .tab {
@@ -37,23 +38,23 @@ import { LocaleLink } from '@core/i18n/locale-link';
   template: `
     <nav
       class="safe-pb fixed inset-x-0 bottom-0 z-40 border-t border-ink-100 bg-white"
-      aria-label="Host console"
+      [attr.aria-label]="'a11y.hostConsole' | transloco"
     >
       <div class="flex px-1 pt-1.5">
         <a [routerLink]="base() + '/overview'" routerLinkActive="on" class="tab">
-          <i class="ti ti-layout-dashboard text-xl" aria-hidden="true"></i>Overview
+          <i class="ti ti-layout-dashboard text-xl" aria-hidden="true"></i>{{ 'common.overview' | transloco }}
         </a>
         <a [routerLink]="base() + '/rooms'" routerLinkActive="on" class="tab">
-          <i class="ti ti-bed text-xl" aria-hidden="true"></i>Rooms
+          <i class="ti ti-bed text-xl" aria-hidden="true"></i>{{ 'common.rooms' | transloco }}
         </a>
         <a [routerLink]="base() + '/tenants'" routerLinkActive="on" class="tab">
-          <i class="ti ti-users text-xl" aria-hidden="true"></i>Tenants
+          <i class="ti ti-users text-xl" aria-hidden="true"></i>{{ 'common.tenants' | transloco }}
         </a>
         <a [routerLink]="base() + '/invoices'" routerLinkActive="on" class="tab">
-          <i class="ti ti-file-invoice text-xl" aria-hidden="true"></i>Invoices
+          <i class="ti ti-file-invoice text-xl" aria-hidden="true"></i>{{ 'common.invoices' | transloco }}
         </a>
         <a [routerLink]="base() + '/more'" routerLinkActive="on" class="tab">
-          <i class="ti ti-dots text-xl" aria-hidden="true"></i>More
+          <i class="ti ti-dots text-xl" aria-hidden="true"></i>{{ 'common.more' | transloco }}
         </a>
       </div>
     </nav>

@@ -16,6 +16,7 @@ import {
   ApiBookingStatus,
   ApiHostCancellationQuote,
 } from '@features/public/listing/booking/booking-api.contract';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -38,7 +39,7 @@ type Tab = 'upcoming' | 'past' | 'cancelled';
 @Component({
   selector: 'hh-host-bookings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Button, ConfirmModal, EmptyState, ErrorState, Skeleton],
+  imports: [DatePipe, DecimalPipe, Button, ConfirmModal, EmptyState, ErrorState, Skeleton, TranslocoPipe],
   templateUrl: './bookings.html',
 })
 export class HostBookings {

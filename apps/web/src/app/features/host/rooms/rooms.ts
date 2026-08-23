@@ -41,6 +41,7 @@ import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
 import { HasPermission } from '@core/auth';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** The grid renders every room at once, so fetch a large single page instead of paginating. */
 const ROOMS_LIMIT = 1000;
@@ -184,6 +185,7 @@ function floorOrder(floor: string): number {
     Skeleton,
     EmptyState,
     ErrorState,
+    TranslocoPipe,
   ],
   templateUrl: './rooms.html',
 })

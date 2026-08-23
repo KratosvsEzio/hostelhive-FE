@@ -4,6 +4,7 @@ import { Button, Input, Container } from '@hostelhive/ui';
 import { AuthApi } from '@services';
 import { ApiError } from '@hostelhive/data-access';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type Phase = 'email' | 'sent';
 
@@ -12,7 +13,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 @Component({
   selector: 'hh-forgot-password',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, RouterLink, LocaleLink, Button, Input],
+  imports: [Container, RouterLink, LocaleLink, Button, Input, TranslocoPipe],
   templateUrl: './forgot-password.html',
 })
 export class ForgotPassword {

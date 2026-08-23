@@ -1,10 +1,10 @@
 <div class="mx-auto max-w-3xl px-5 py-12 sm:px-8">
   <a routerLink="/" class="mb-8 inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-brand-600 transition-colors">
-    <i class="ti ti-arrow-left text-xs"></i>Back to home
+    <i class="ti ti-arrow-left text-xs"></i>{{ 'common.backToHome' | transloco }}
   </a>
 
-  <h1 class="font-display text-3xl font-bold text-ink-900 sm:text-4xl">Frequently Asked Questions</h1>
-  <p class="mt-2 text-sm text-ink-400">Everything you need to know about using HostelHive</p>
+  <h1 class="font-display text-3xl font-bold text-ink-900 sm:text-4xl">{{ 'publicFaqs.frequentlyAskedQuestions' | transloco }}</h1>
+  <p class="mt-2 text-sm text-ink-400">{{ 'publicFaqs.everythingYouNeedToKnow' | transloco }}</p>
 
   <div class="mt-10 space-y-10">
     @for (section of sections; track section.title; let sIdx = $index) {
@@ -37,9 +37,9 @@
   </div>
 
   <div class="mt-12 rounded-2xl border border-ink-100 bg-white p-6 text-center shadow-card">
-    <p class="text-sm text-ink-600">Still have questions?</p>
+    <p class="text-sm text-ink-600">{{ 'publicFaqs.stillHaveQuestions' | transloco }}</p>
     <a routerLink="/contact" class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors">
-      Contact us <i class="ti ti-arrow-right text-xs"></i>
+      {{ 'common.contactUs' | transloco }} <i class="ti ti-arrow-right text-xs"></i>
     </a>
   </div>
 </div>

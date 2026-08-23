@@ -1,5 +1,5 @@
 <app-dashboard-layout
-  label="Meal notifications"
+  [label]="'hostMess.mealNotifications' | transloco"
   backUrl=".."
   [breadcrumbs]="[{ label: 'Mess', url: '..' }, { label: 'Notifications' }]"
 >
@@ -14,16 +14,16 @@
     >
       @switch (settingsSaveState()) {
         @case ('saving') {
-          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+          <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.saving' | transloco }}
         }
         @case ('saved') {
-          <i class="ti ti-check" aria-hidden="true"></i>Saved
+          <i class="ti ti-check" aria-hidden="true"></i>{{ 'common.saved' | transloco }}
         }
         @case ('error') {
-          <i class="ti ti-alert-circle" aria-hidden="true"></i>Failed
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'common.failed' | transloco }}
         }
         @default {
-          <i class="ti ti-device-floppy" aria-hidden="true"></i>Save settings
+          <i class="ti ti-device-floppy" aria-hidden="true"></i>{{ 'hostMess.saveSettings' | transloco }}
         }
       }
     </button>
@@ -35,9 +35,7 @@
     <div class="flex items-start gap-3 rounded-2xl border border-brand-100 bg-tint-cream px-5 py-4">
       <i class="ti ti-info-circle mt-0.5 text-lg text-brand-600" aria-hidden="true"></i>
       <p class="text-sm text-ink-600">
-        Plan the week's menu so students know what's on offer before they confirm.
-        Configure <span class="font-medium text-ink-800">notification timing</span> below to control
-        when and how the daily reminder goes out.
+        {{ 'hostMess.planTheWeekSMenu' | transloco }} <span class="font-medium text-ink-800">{{ 'hostMess.notificationTiming' | transloco }}</span> {{ 'hostMess.belowToControlWhenAnd' | transloco }}
       </p>
     </div>
 
@@ -46,9 +44,9 @@
 
       <!-- Card header -->
       <div class="border-b border-ink-100 px-5 py-4">
-        <p class="font-display font-semibold text-ink-900">Weekly menu</p>
+        <p class="font-display font-semibold text-ink-900">{{ 'hostMess.weeklyMenu' | transloco }}</p>
         <p class="mt-0.5 text-xs text-ink-400">
-          Select a day and fill in the meals — students see today's in their opt-in message.
+          {{ 'hostMess.selectADayAndFill' | transloco }}
         </p>
       </div>
 
@@ -87,7 +85,7 @@
         @if (todayIndex === selectedDay()) {
           <p class="mb-4 flex items-center gap-1.5 text-xs font-medium text-brand-600">
             <i class="ti ti-calendar-event" aria-hidden="true"></i>
-            Today — this menu appears in today's student notifications
+            {{ 'hostMess.todayThisMenuAppearsIn' | transloco }}
           </p>
         } @else {
           <p class="mb-4 text-xs font-medium text-ink-500">{{ days[selectedDay()].full }}</p>
@@ -127,16 +125,16 @@
         >
           @switch (menuSaveState()) {
             @case ('saving') {
-              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Saving…
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.saving' | transloco }}
             }
             @case ('saved') {
-              <i class="ti ti-check" aria-hidden="true"></i>Saved
+              <i class="ti ti-check" aria-hidden="true"></i>{{ 'common.saved' | transloco }}
             }
             @case ('error') {
-              <i class="ti ti-alert-circle" aria-hidden="true"></i>Failed
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'common.failed' | transloco }}
             }
             @default {
-              <i class="ti ti-device-floppy" aria-hidden="true"></i>Save menu
+              <i class="ti ti-device-floppy" aria-hidden="true"></i>{{ 'hostMess.saveMenu' | transloco }}
             }
           }
         </button>
@@ -161,9 +159,9 @@
               <p class="font-display font-semibold text-ink-900">{{ meta.label }}</p>
               <p class="text-xs text-ink-400">
                 @if (cfg.enabled) {
-                  Sends {{ sendTimeLabel(meal) }} · closes {{ deadlines()[meal] }}
+                  {{ 'hostMess.sendsClosesAt' | transloco: { send: sendTimeLabel(meal), close: deadlines()[meal] } }}
                 } @else {
-                  Notifications off
+                  {{ 'hostMess.notificationsOff' | transloco }}
                 }
               </p>
             </div>
@@ -178,7 +176,7 @@
 
             <!-- Meal time -->
             <div>
-              <label class="mb-1 block text-xs font-medium text-ink-600">Meal time</label>
+              <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostMess.mealTime' | transloco }}</label>
               <hh-time-picker
                 [value]="cfg.mealTime"
                 (valueChange)="setMealTime(meal, $event)"
@@ -187,7 +185,7 @@
 
             <!-- Notify before meal -->
             <div>
-              <label class="mb-1 block text-xs font-medium text-ink-600">Notify before meal</label>
+              <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostMess.notifyBeforeMeal' | transloco }}</label>
               <hh-dropdown
                 variant="field"
                 [options]="notifyBeforeOptions"
@@ -197,14 +195,14 @@
               @if (leadTimeInvalid(meal)) {
                 <p class="mt-1.5 flex items-center gap-1 text-xs text-danger">
                   <i class="ti ti-alert-circle" aria-hidden="true"></i>
-                  Must notify at least 4 hours before the meal time.
+                  {{ 'hostMess.mustNotifyAtLeast4' | transloco }}
                 </p>
               }
             </div>
 
             <!-- Confirmation window -->
             <div class="sm:col-span-2">
-              <label class="mb-1 block text-xs font-medium text-ink-600">Confirmation window</label>
+              <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostMess.confirmationWindow' | transloco }}</label>
               <hh-dropdown
                 variant="field"
                 [options]="windowOptionsFor(meal)"
@@ -212,7 +210,7 @@
                 (valueChange)="setWindow(meal, $event)"
               />
               <p class="mt-1 text-xs text-ink-400">
-                Max {{ cfg.notifyBefore }} hour{{ cfg.notifyBefore === 1 ? '' : 's' }} — window cannot extend past meal time.
+                {{ 'hostMess.maxNHoursWindow' | transloco: { count: cfg.notifyBefore } }}
               </p>
             </div>
 
@@ -221,14 +219,14 @@
               <div class="flex items-center justify-between px-4 py-2.5">
                 <span class="flex items-center gap-2 text-xs text-ink-500">
                   <i class="ti ti-send text-ink-400" aria-hidden="true"></i>
-                  Notification fires at
+                  {{ 'hostMess.notificationFiresAt' | transloco }}
                 </span>
                 <span class="text-xs font-semibold text-ink-800">{{ sendTimeLabel(meal) }}</span>
               </div>
               <div class="flex items-center justify-between border-t border-ink-100 px-4 py-2.5">
                 <span class="flex items-center gap-2 text-xs text-ink-500">
                   <i class="ti ti-clock text-ink-400" aria-hidden="true"></i>
-                  Confirmations close at
+                  {{ 'hostMess.confirmationsCloseAt' | transloco }}
                 </span>
                 <span class="text-xs font-semibold text-ink-800">{{ deadlines()[meal] }}</span>
               </div>

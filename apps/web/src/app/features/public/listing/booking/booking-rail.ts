@@ -5,6 +5,7 @@ import { SessionStore } from '@core/auth';
 import { PricingPeriod, periodLabel } from '@util/pricing-period';
 import { BookingBasket } from './booking-basket';
 import { BasketLine, lineTotal, lineTotalUndiscounted, unitFor } from './room-offer';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * The sticky panel beside the room list: what you have chosen, what it costs, and the button.
@@ -17,7 +18,7 @@ import { BasketLine, lineTotal, lineTotalUndiscounted, unitFor } from './room-of
 @Component({
   selector: 'hh-booking-rail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DecimalPipe, DatePipe],
+  imports: [Button, DecimalPipe, DatePipe, TranslocoPipe],
   templateUrl: './booking-rail.html',
 })
 export class BookingRail {

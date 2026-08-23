@@ -16,6 +16,9 @@ import { PricingPeriod } from '@util/pricing-period';
 
 export type RoomKind = 'private' | 'shared';
 
+/** How many photos a room may show. A product rule, so the UI enforces it rather than hopes. */
+export const MAX_ROOM_PHOTOS = 3;
+
 /** What one unit of a room is. Private rooms sell rooms; shared rooms sell beds. */
 export type RoomUnit = 'room' | 'bed';
 

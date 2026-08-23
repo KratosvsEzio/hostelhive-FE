@@ -24,6 +24,7 @@ import {
   HostPropertyStore,
 } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface DraftImage {
   id: string;
@@ -53,7 +54,7 @@ const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
 @Component({
   selector: 'hh-add-grocery',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput],
+  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput, TranslocoPipe],
   templateUrl: './add-grocery.html',
 })
 export class AddGrocery {

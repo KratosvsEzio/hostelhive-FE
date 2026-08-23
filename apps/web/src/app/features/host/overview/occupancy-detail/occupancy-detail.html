@@ -21,8 +21,8 @@
       <!-- Occupancy line chart -->
       <hh-card style="overflow: visible">
         <div class="mb-4">
-          <h2 class="font-display text-base font-semibold text-ink-900">Occupancy trend</h2>
-          <p class="text-xs text-ink-400">Percentage of beds filled · {{ dateRange()?.label }}</p>
+          <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostOverview.occupancyTrend' | transloco }}</h2>
+          <p class="text-xs text-ink-400">{{ 'hostOverview.pctBedsFilled' | transloco }} · {{ dateRange()?.label }}</p>
         </div>
 
         <div class="flex items-stretch gap-2">
@@ -41,7 +41,7 @@
             class="h-full w-full"
             preserveAspectRatio="none"
             role="img"
-            aria-label="Occupancy trend chart"
+            [attr.aria-label]="'a11y.occupancyTrendChart' | transloco"
           >
             <!-- Gridlines -->
             @for (gy of line.gridY; track gy) {
@@ -110,19 +110,19 @@
                   <p class="mb-2 text-[11px] font-semibold text-white">{{ row.monthLabel }}</p>
                   <div class="space-y-1.5 text-[11px]">
                     <div class="flex items-center justify-between gap-2">
-                      <span class="text-ink-400">Occupancy</span>
+                      <span class="text-ink-400">{{ 'common.occupancy' | transloco }}</span>
                       <span class="font-semibold text-white">{{ row.occupancyPct }}%</span>
                     </div>
                     <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
-                      <span class="text-ink-400">Occupied</span>
+                      <span class="text-ink-400">{{ 'common.occupied' | transloco }}</span>
                       <span class="font-medium text-white">{{ row.occupiedBeds }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-2">
-                      <span class="text-ink-400">Vacant</span>
+                      <span class="text-ink-400">{{ 'hostOverview.vacant' | transloco }}</span>
                       <span class="font-medium text-white">{{ row.vacantBeds }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-2">
-                      <span class="text-ink-400">Total beds</span>
+                      <span class="text-ink-400">{{ 'common.totalBeds' | transloco }}</span>
                       <span class="font-medium text-white">{{ row.totalBeds }}</span>
                     </div>
                   </div>
@@ -155,17 +155,17 @@
       <!-- Monthly breakdown table -->
       <hh-card class="mt-6" padding="none">
         <div class="border-b border-ink-100 px-5 py-3.5">
-          <h2 class="font-display text-base font-semibold text-ink-900">Monthly breakdown</h2>
+          <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostOverview.monthlyBreakdown' | transloco }}</h2>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="text-start text-xs uppercase tracking-wide text-ink-400">
               <tr>
-                <th class="px-5 py-2.5 font-medium">Month</th>
-                <th class="px-5 py-2.5 text-end font-medium">Occupancy</th>
-                <th class="px-5 py-2.5 text-end font-medium">Occupied</th>
-                <th class="px-5 py-2.5 text-end font-medium">Vacant</th>
-                <th class="px-5 py-2.5 text-end font-medium">Total beds</th>
+                <th class="px-5 py-2.5 font-medium">{{ 'hostOverview.month' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.occupancy' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.occupied' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'hostOverview.vacant' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.totalBeds' | transloco }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
@@ -185,7 +185,7 @@
               }
               @if (rows().length === 0) {
                 <tr>
-                  <td colspan="5" class="px-5 py-8 text-center text-sm text-ink-400">No data for the selected period.</td>
+                  <td colspan="5" class="px-5 py-8 text-center text-sm text-ink-400">{{ 'hostOverview.noDataForTheSelected' | transloco }}</td>
                 </tr>
               }
             </tbody>

@@ -1,6 +1,6 @@
-<app-dashboard-layout label="New hostel" [noMenu]="true">
+<app-dashboard-layout [label]="'hostNewHostel.newHostel' | transloco" [noMenu]="true">
   <ng-container hhActions>
-    <a hh-button variant="text" size="sm" routerLink="/host">Cancel</a>
+    <a hh-button variant="text" size="sm" routerLink="/host">{{ 'common.cancel' | transloco }}</a>
     <button
       hh-button
       color="primary"
@@ -9,15 +9,15 @@
       (click)="create()"
     >
       @if (saving()) {
-        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
+        <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.creating' | transloco }}
       } @else if (form().uploading()) {
         <!-- "Uploading photos…" alongside Cancel overruns a 375px header. -->
         <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i
-        ><span class="sm:hidden">Uploading…</span
-        ><span class="hidden sm:inline">Uploading photos…</span>
+        ><span class="sm:hidden">{{ 'common.uploading' | transloco }}</span
+        ><span class="hidden sm:inline">{{ 'hostNewHostel.uploadingPhotos' | transloco }}</span>
       } @else {
-        <span class="sm:hidden">Create</span>
-        <span class="hidden sm:inline">Create hostel</span>
+        <span class="sm:hidden">{{ 'hostNewHostel.create' | transloco }}</span>
+        <span class="hidden sm:inline">{{ 'hostNewHostel.createHostel' | transloco }}</span>
       }
     </button>
   </ng-container>
@@ -25,7 +25,7 @@
   @if (apiErrors().length) {
     <div class="mb-5 rounded-2xl border border-danger/30 bg-danger/5 px-5 py-4">
       <p class="flex items-center gap-2 font-medium text-danger">
-        <i class="ti ti-alert-circle text-base" aria-hidden="true"></i>Couldn't create hostel — please fix the following:
+        <i class="ti ti-alert-circle text-base" aria-hidden="true"></i>{{ 'hostNewHostel.couldnTCreateHostelPlease' | transloco }}
       </p>
       <ul class="mt-2 space-y-1 ps-6">
         @for (e of apiErrors(); track e) {
@@ -47,34 +47,34 @@
     <div>
       <div class="sticky top-20 space-y-5">
         <div class="rounded-2xl bg-white p-5 shadow-card">
-          <p class="mb-3 text-sm font-semibold text-ink-900">Listing progress</p>
+          <p class="mb-3 text-sm font-semibold text-ink-900">{{ 'common.listingProgress' | transloco }}</p>
           <dl class="space-y-2.5 text-xs">
             <div class="flex items-center justify-between">
-              <dt class="text-ink-500">Hostel name</dt>
+              <dt class="text-ink-500">{{ 'common.hostelName' | transloco }}</dt>
               <dd class="font-medium" [class]="form().name() ? 'text-ok' : 'text-ink-300'">
                 {{ form().name() ? 'Done' : 'Missing' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
-              <dt class="text-ink-500">Photos</dt>
+              <dt class="text-ink-500">{{ 'common.photos' | transloco }}</dt>
               <dd class="font-medium" [class]="form().photoCount() ? 'text-ok' : 'text-ink-300'">
                 {{ form().photoCount() ? form().photoCount() + ' added' : 'None yet' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
-              <dt class="text-ink-500">Rooms</dt>
+              <dt class="text-ink-500">{{ 'common.rooms' | transloco }}</dt>
               <dd class="font-medium" [class]="form().roomCount() ? 'text-ok' : 'text-ink-300'">
                 {{ form().roomCount() ? form().roomCount() + ' configured' : 'None yet' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
-              <dt class="text-ink-500">Amenities</dt>
+              <dt class="text-ink-500">{{ 'common.amenities' | transloco }}</dt>
               <dd class="font-medium" [class]="form().amenityCount() ? 'text-ok' : 'text-ink-300'">
                 {{ form().amenityCount() ? form().amenityCount() + ' selected' : 'None yet' }}
               </dd>
             </div>
             <div class="flex items-center justify-between">
-              <dt class="text-ink-500">Location</dt>
+              <dt class="text-ink-500">{{ 'common.location' | transloco }}</dt>
               <dd class="font-medium" [class]="form().locationPinned() ? 'text-ok' : 'text-ink-300'">
                 {{ form().locationPinned() ? 'Pinned' : 'Not set' }}
               </dd>
@@ -91,17 +91,17 @@
             (click)="create()"
           >
             @if (saving()) {
-              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Creating…
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.creating' | transloco }}
             } @else if (form().uploading()) {
-              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Uploading photos…
+              <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.uploadingPhotos' | transloco }}
             } @else {
-              <i class="ti ti-plus" aria-hidden="true"></i>Create hostel
+              <i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.createHostel' | transloco }}
             }
           </button>
 
           @if (apiErrors().length) {
             <p class="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-danger">
-              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ apiErrors().length }} error{{ apiErrors().length > 1 ? 's' : '' }} above ↑
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'common.nErrorsAbove' | transloco: { count: apiErrors().length } }}
             </p>
           }
         </div>
@@ -112,7 +112,7 @@
 
 @if (showValidationModal()) {
   <hh-confirm-modal
-    title="Some required fields are missing"
+    [title]="'common.someRequiredFieldsAre' | transloco"
     icon="ti-alert-triangle"
     tone="warn"
     confirmLabel="Go back and fix"
@@ -120,7 +120,7 @@
     (confirm)="showValidationModal.set(false)"
     (cancel)="showValidationModal.set(false)"
   >
-    <p class="mb-2">Please complete these fields before continuing:</p>
+    <p class="mb-2">{{ 'common.pleaseCompleteTheseFields' | transloco }}</p>
     <ul class="space-y-1">
       @for (entry of objectEntries(form().fieldErrors()); track entry[0]) {
         <li class="flex items-center gap-2 text-ink-700">

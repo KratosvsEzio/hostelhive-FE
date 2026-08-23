@@ -18,6 +18,7 @@ import { tenantMovementBars } from '@features/host/analytics/charts/chart-helper
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -37,7 +38,7 @@ const toISO = (d: Date | undefined): string | undefined => {
 @Component({
   selector: 'app-movement-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Card, ErrorState, Skeleton, DateRangePicker],
+  imports: [DashboardLayout, Card, ErrorState, Skeleton, DateRangePicker, TranslocoPipe],
   templateUrl: './movement-detail.html',
 })
 export class MovementDetail {

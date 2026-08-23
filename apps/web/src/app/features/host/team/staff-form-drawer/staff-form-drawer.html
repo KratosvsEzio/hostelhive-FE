@@ -10,7 +10,7 @@
       <label
         class="relative block shrink-0 cursor-pointer rounded-full focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-300"
         [class.pointer-events-none]="uploading() === 'avatar'"
-        aria-label="Add photo"
+        [attr.aria-label]="'a11y.addPhoto' | transloco"
       >
         <input
           type="file"
@@ -21,7 +21,7 @@
         @if (f.avatarUrl) {
           <img
             [src]="f.avatarUrl"
-            alt="Staff photo"
+            [alt]="'hostTeam.staffPhoto' | transloco"
             class="h-16 w-16 rounded-full object-cover ring-2 ring-brand-200"
           />
         } @else {
@@ -52,27 +52,29 @@
       <div>
         <p class="text-sm font-medium text-ink-900">
           @if (uploading() === 'avatar') {
-            Uploading…
+            {{ 'common.uploading' | transloco }}
+          } @else if (f.avatarUrl) {
+            {{ 'common.photoAdded' | transloco }}
           } @else {
-            {{ f.avatarUrl ? 'Photo added' : 'Add photo' }}
+            {{ 'common.addPhoto' | transloco }}
           }
         </p>
-        <p class="text-xs text-ink-400">Choose an image from your files</p>
+        <p class="text-xs text-ink-400">{{ 'hostTeam.chooseAnImageFromYour' | transloco }}</p>
       </div>
     </div>
 
     <!-- Identity -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <hh-input
-        label="Full name *"
-        placeholder="e.g. Ali Khan"
+        [label]="'common.fullName' | transloco"
+        [placeholder]="'hostTeam.eGAliKhan' | transloco"
         [value]="f.name"
         [error]="fieldError('name')"
         (valueChange)="patch('name', $event)"
       />
       <hh-input
-        label="Job title *"
-        placeholder="e.g. Warden, Cook, Night guard"
+        [label]="'hostTeam.jobTitle' | transloco"
+        [placeholder]="'hostTeam.eGWardenCookNight' | transloco"
         [value]="f.title"
         [error]="fieldError('title')"
         (valueChange)="patch('title', $event)"
@@ -86,15 +88,15 @@
     />
 
     <hh-input
-      label="CNIC number"
+      [label]="'hostTeam.cnicNumber' | transloco"
       placeholder="3520212345671"
       [value]="f.cnicNumber"
       (valueChange)="patch('cnicNumber', $event)"
     />
 
     <hh-input
-      label="Address"
-      placeholder="Block A, Lahore"
+      [label]="'common.address' | transloco"
+      [placeholder]="'hostTeam.blockALahore' | transloco"
       [value]="f.address"
       (valueChange)="patch('address', $event)"
     />
@@ -102,7 +104,7 @@
     <!-- Manager access -->
     <div class="flex items-center gap-3 pt-1">
       <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
-        Manager access
+        {{ 'hostTeam.managerAccess' | transloco }}
       </p>
       <div class="flex-1 border-t border-ink-100"></div>
       <hh-toggle [checked]="f.isManager" (checkedChange)="onManagerToggle($event)" />
@@ -112,13 +114,12 @@
         <div class="flex items-start gap-2 rounded-xl bg-tint-sky px-3 py-2.5 text-xs text-ink-600">
           <i class="ti ti-info-circle mt-0.5 shrink-0 text-ink-500" aria-hidden="true"></i>
           <p>
-            This person already has an account, so there is nothing to set up — leaving the
-            toggle on gives them manager access to this hostel when you save.
+            {{ 'hostTeam.thisPersonAlreadyHasAn' | transloco }}
           </p>
         </div>
       } @else {
         <p class="-mt-1 text-xs text-ink-400">
-          Creates a login so {{ f.name.trim() || 'this staff member' }} can manage this hostel.
+          {{ 'hostTeam.createsLoginFor' | transloco: { name: f.name.trim() || ('hostTeam.thisStaffMember' | transloco) } }}
         </p>
       }
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -126,7 +127,7 @@
           [label]="f.hasUserAccount ? 'Email' : 'Email *'"
           type="email"
           autocomplete="off"
-          placeholder="name@email.com"
+          [placeholder]="'common.nameEmailCom' | transloco"
           [disabled]="f.hasUserAccount"
           [value]="f.managerEmail"
           [error]="managerEmailError()"
@@ -147,20 +148,20 @@
     <!-- Employment -->
     <div class="flex items-center gap-3 pt-1">
       <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
-        Employment
+        {{ 'hostTeam.employment' | transloco }}
       </p>
       <div class="flex-1 border-t border-ink-100"></div>
     </div>
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <hh-date-picker
-        label="Joining date *"
+        [label]="'hostTeam.joiningDate' | transloco"
         [value]="f.joiningDate"
         [error]="fieldError('joiningDate')"
         (valueChange)="patch('joiningDate', $event ?? '')"
       />
       <hh-date-picker
-        label="Leaving date"
+        [label]="'hostTeam.leavingDate' | transloco"
         [value]="f.leavingDate"
         [error]="leavingError()"
         (valueChange)="patch('leavingDate', $event ?? '')"
@@ -169,14 +170,14 @@
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <hh-money-input
-        label="Salary *"
+        [label]="'hostTeam.salary' | transloco"
         placeholder="25000"
         [value]="+f.salary || 0"
         [error]="fieldError('salary')"
         (valueChange)="patch('salary', $event ? $any($event).toString() : '')"
       />
       <hh-date-picker
-        label="Salary issue date"
+        [label]="'hostTeam.salaryIssueDate' | transloco"
         [value]="f.salaryIssueDate"
         (valueChange)="patch('salaryIssueDate', $event ?? '')"
       />
@@ -185,7 +186,7 @@
     <!-- Documents -->
     <div class="flex items-center gap-3 pt-1">
       <p class="shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-400">
-        Documents
+        {{ 'common.documents' | transloco }}
       </p>
       <div class="flex-1 border-t border-ink-100"></div>
     </div>
@@ -213,7 +214,7 @@
             } @else {
               <span class="flex flex-col items-center gap-1 text-ink-400">
                 <i class="ti ti-camera-plus text-lg" aria-hidden="true"></i>
-                <span class="text-[11px]">Upload</span>
+                <span class="text-[11px]">{{ 'hostTeam.upload' | transloco }}</span>
               </span>
             }
           </label>
@@ -221,13 +222,13 @@
       }
     </div>
     <p class="flex items-center gap-1.5 text-xs text-ink-400">
-      <i class="ti ti-lock" aria-hidden="true"></i>Scoped to this hostel only.
+      <i class="ti ti-lock" aria-hidden="true"></i>{{ 'hostTeam.scopedToThisHostelOnly' | transloco }}
     </p>
   </div>
 
   <ng-container footer>
     <button hh-button variant="text" size="sm" [disabled]="saving()" (click)="closed.emit()">
-      Cancel
+      {{ 'common.cancel' | transloco }}
     </button>
     <button
       hh-button

@@ -3,7 +3,15 @@ import { DecimalPipe } from '@angular/common';
 import { Button } from '@hostelhive/ui';
 import { PricingPeriod, periodLabel } from '@util/pricing-period';
 import { BookingBasket } from './booking-basket';
-import { RoomKind, RoomOffer, discountPercent, effectivePrice, unitFor } from './room-offer';
+import {
+  MAX_ROOM_PHOTOS,
+  RoomKind,
+  RoomOffer,
+  discountPercent,
+  effectivePrice,
+  unitFor,
+} from './room-offer';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface RoomGroup {
   kind: RoomKind;
@@ -30,7 +38,7 @@ interface RoomGroup {
 @Component({
   selector: 'hh-room-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DecimalPipe],
+  imports: [Button, DecimalPipe, TranslocoPipe],
   templateUrl: './room-picker.html',
 })
 export class RoomPicker {
@@ -43,6 +51,15 @@ export class RoomPicker {
 
   /** Rows whose description is expanded. Collapsed is the default; two lines is the clamp. */
   private readonly expanded = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * Which photo each room is showing.
+   *
+   * Keyed by room rather than held as one index: the rows carousel independently, and a
+   * shared index would page every room in the list at once. Rooms absent from the map are
+   * on their first photo, so nothing has to be seeded when the offers arrive.
+   */
+  private readonly photo = signal<ReadonlyMap<string, number>>(new Map());
 
   /**
    * A room the host has not opened to online booking never appears.
@@ -116,6 +133,31 @@ export class RoomPicker {
   /** The stepper's ceiling is availability, so an unhonourable basket cannot be built. */
   protected atMax(offer: RoomOffer): boolean {
     return this.qty(offer) >= offer.available;
+  }
+
+  /**
+   * The room's photos, capped at the three the contract allows.
+   *
+   * Capped here rather than trusted: the field is host-supplied and the cap is a product
+   * rule, so a payload carrying eight would otherwise render eight dots under a card sized
+   * for three.
+   */
+  protected photosOf(offer: RoomOffer): readonly string[] {
+    return offer.images.slice(0, MAX_ROOM_PHOTOS);
+  }
+
+  protected photoIndex(offer: RoomOffer): number {
+    return this.photo().get(offer.id) ?? 0;
+  }
+
+  protected stepPhoto(offer: RoomOffer, by: number, event: Event): void {
+    // The arrows sit inside a row that is not a link today but sits on a page full of them,
+    // and paging a photo must never be what navigates.
+    event.preventDefault();
+    event.stopPropagation();
+    const last = this.photosOf(offer).length - 1;
+    const next = Math.max(0, Math.min(last, this.photoIndex(offer) + by));
+    this.photo.update((m) => new Map(m).set(offer.id, next));
   }
 
   protected isExpanded(id: string): boolean {

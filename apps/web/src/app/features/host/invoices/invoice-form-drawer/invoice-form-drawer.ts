@@ -34,6 +34,7 @@ import {
   prefillFromTenant,
   toCreateInvoicePayload,
 } from './invoice-form.model';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Side drawer that issues a new rent invoice for a tenant.
@@ -46,7 +47,7 @@ import {
 @Component({
   selector: 'hh-invoice-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DatePicker, Dropdown, Input, DecimalPipe, MoneyInput],
+  imports: [Button, DatePicker, Dropdown, Input, DecimalPipe, MoneyInput, TranslocoPipe],
   host: { class: 'contents' },
   templateUrl: './invoice-form-drawer.html',
 })

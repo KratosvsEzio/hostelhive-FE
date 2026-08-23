@@ -46,6 +46,7 @@ import { PAGE_SIZE } from '@util/pagination';
 import { TENANTS_TABLE_COLS } from '@app/util/table-configs/tenants-table-cols';
 import { TenantFormDrawer } from './tenant-form-drawer/tenant-form-drawer';
 import { HasPermission } from '@core/auth';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -84,6 +85,7 @@ const TONES = ['sky', 'cream', 'mint'] as const;
     EmptyState,
     ErrorState,
     TenantFormDrawer,
+    TranslocoPipe,
   ],
   templateUrl: './tenants.html',
 })

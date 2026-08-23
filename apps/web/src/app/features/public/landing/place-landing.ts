@@ -15,6 +15,7 @@ import { SearchMap } from '@features/public/search/search-map/search-map';
 import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { Container } from '@hostelhive/ui';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * SEO landing page for a place, optionally narrowed by gender:
@@ -32,7 +33,7 @@ import { Container } from '@hostelhive/ui';
 @Component({
   selector: 'hh-place-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, SearchMap, RouterLink, LocaleLink],
+  imports: [Container, SearchMap, RouterLink, LocaleLink, TranslocoPipe],
   templateUrl: './place-landing.html',
 })
 export class PlaceLanding {

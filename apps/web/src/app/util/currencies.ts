@@ -96,45 +96,8 @@ export function formatCurrencyLabel(c: Currency): string {
   return showSymbol ? `${c.name} - ${c.code} (${c.symbol})` : `${c.name} - ${c.code}`;
 }
 
-/**
- * Currencies a host may CHOOSE, narrowed to PKR and USD for launch.
- *
- * Deliberately a filter over CURRENCIES rather than a cut to that list: CURRENCIES also
- * backs `currencySymbol()` and `currencyName()`, which render prices that ALREADY exist.
- * Removing entries there would downgrade a listing priced in, say, THB from '฿ 50' to
- * 'THB 50' and its tooltip from 'Thai Baht' to 'THB' — the app must still display what it
- * no longer offers.
- *
- * Uncomment a code to put it back in the picker.
- */
-const LAUNCH_CURRENCY_CODES: readonly string[] = [
-  'PKR',
-  'USD',
-  // 'EUR', 'GBP', 'AED', 'SAR',
-  // 'INR', 'BDT', 'LKR', 'NPR',
-  // 'AFN', 'CNY', 'JPY', 'KRW',
-  // 'HKD', 'SGD', 'MYR', 'IDR',
-  // 'THB', 'VND', 'PHP', 'TWD',
-  // 'AUD', 'NZD', 'CAD', 'CHF',
-  // 'SEK', 'NOK', 'DKK', 'PLN',
-  // 'CZK', 'HUF', 'RON', 'BGN',
-  // 'RUB', 'UAH', 'TRY', 'ILS',
-  // 'EGP', 'ZAR', 'NGN', 'KES',
-  // 'GHS', 'MAD', 'DZD', 'TND',
-  // 'QAR', 'KWD', 'BHD', 'OMR',
-  // 'JOD', 'LBP', 'IQD', 'IRR',
-  // 'BRL', 'MXN', 'ARS', 'CLP',
-  // 'COP', 'PEN', 'UYU', 'BOB',
-  // 'ISK', 'HRK', 'RSD', 'MMK',
-  // 'KHR', 'LAK', 'MNT', 'KZT',
-  // 'UZS', 'GEL', 'AZN', 'ETB',
-  // 'TZS', 'UGX',
-];
-
 /** Dropdown options for the currency picker, keyed by ISO code. */
-export const CURRENCY_OPTIONS: DropdownOption[] = CURRENCIES.filter((c) =>
-  LAUNCH_CURRENCY_CODES.includes(c.code),
-).map((c) => ({
+export const CURRENCY_OPTIONS: DropdownOption[] = CURRENCIES.map((c) => ({
   value: c.code,
   label: formatCurrencyLabel(c),
 }));
@@ -143,6 +106,17 @@ const BY_CODE = new Map(CURRENCIES.map((c) => [c.code, c]));
 
 /** Default currency for hostels with none set (the app's primary market). */
 export const DEFAULT_CURRENCY_CODE = 'PKR';
+
+/**
+ * Whether `code` is a currency this app knows.
+ *
+ * For validating anything that arrives from outside the app — a stored preference, a query
+ * param — before it is trusted as a choice. Display helpers deliberately do NOT gate on
+ * this: they must still render a price the API returns in a code we have never heard of.
+ */
+export function isCurrencyCode(code: string | null | undefined): boolean {
+  return !!code && BY_CODE.has(code);
+}
 
 /**
  * The symbol to prefix prices with for `code`:

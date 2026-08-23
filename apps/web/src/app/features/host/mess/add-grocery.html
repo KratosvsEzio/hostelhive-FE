@@ -14,7 +14,7 @@
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
           <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Expense type <span class="text-danger">*</span>
+            {{ 'common.expenseType' | transloco }} <span class="text-danger">*</span>
           </label>
           <hh-dropdown
             variant="field"
@@ -29,9 +29,9 @@
         </div>
         <div>
           <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Expense date <span class="text-danger">*</span>
+            {{ 'hostMess.expenseDate' | transloco }} <span class="text-danger">*</span>
           </label>
-          <hh-date-picker [(value)]="date" [max]="todayIso" placeholder="Pick a date" />
+          <hh-date-picker [(value)]="date" [max]="todayIso" [placeholder]="'hostMess.pickADate' | transloco" />
           @if (dateError()) {
             <p class="mt-1 text-xs font-medium text-danger">{{ dateError() }}</p>
           }
@@ -41,7 +41,7 @@
 
     <!-- Receipt + total -->
     <div class="rounded-2xl bg-white p-5 shadow-card">
-      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Receipt</h2>
+      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">{{ 'common.receipt' | transloco }}</h2>
 
       <!-- hidden file input — receipts upload to S3 on select; multiple allowed -->
       <input id="grocery-images" type="file" accept="image/*" multiple class="sr-only" (change)="onFilesSelected($event)" />
@@ -62,11 +62,11 @@
                   <span class="text-xs font-semibold">{{ img.progress }}%</span>
                 </div>
               } @else if (img.error) {
-                <div class="absolute inset-0 grid place-items-center bg-danger/55 text-white" title="Upload failed — remove and try again">
+                <div class="absolute inset-0 grid place-items-center bg-danger/55 text-white" [title]="'hostMess.uploadFailedRemoveAndTry' | transloco">
                   <i class="ti ti-alert-triangle text-lg" aria-hidden="true"></i>
                 </div>
               } @else if (img.receiptId) {
-                <span class="absolute bottom-1.5 start-1.5 grid h-5 w-5 place-items-center rounded-full bg-ok text-white shadow-sm" aria-label="Uploaded">
+                <span class="absolute bottom-1.5 start-1.5 grid h-5 w-5 place-items-center rounded-full bg-ok text-white shadow-sm" [attr.aria-label]="'a11y.uploaded' | transloco">
                   <i class="ti ti-check text-xs" aria-hidden="true"></i>
                 </span>
               }
@@ -80,15 +80,15 @@
               </button>
             </div>
           }
-          <label for="grocery-images" class="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 text-ink-400 transition hover:border-brand-400 hover:bg-brand-50/30 hover:text-brand-500" aria-label="Add more photos">
+          <label for="grocery-images" class="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 bg-surface/50 text-ink-400 transition hover:border-brand-400 hover:bg-brand-50/30 hover:text-brand-500" [attr.aria-label]="'a11y.addMorePhotos' | transloco">
             <i class="ti ti-plus text-2xl" aria-hidden="true"></i>
           </label>
         </div>
         <p class="mt-2 text-xs" [class]="uploadingReceipt() ? 'text-brand-600' : 'text-ink-400'">
           @if (uploadingReceipt()) {
-            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> Uploading receipt…
+            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'hostMess.uploadingReceipt' | transloco }}
           } @else {
-            {{ images().length }} photo{{ images().length === 1 ? '' : 's' }} attached
+            {{ 'hostMess.nPhotosAttached' | transloco: { count: images().length } }}
           }
         </p>
       } @else {
@@ -97,8 +97,8 @@
             <i class="ti ti-camera-plus text-2xl text-ink-400" aria-hidden="true"></i>
           </span>
           <span>
-            <span class="block text-sm font-medium text-ink-700">Upload receipt photos</span>
-            <span class="mt-0.5 block text-xs text-ink-400">JPG, PNG, HEIC — optional</span>
+            <span class="block text-sm font-medium text-ink-700">{{ 'hostMess.uploadReceiptPhotos' | transloco }}</span>
+            <span class="mt-0.5 block text-xs text-ink-400">{{ 'hostMess.jpgPngHeicOptional' | transloco }}</span>
           </span>
         </label>
       }
@@ -107,25 +107,25 @@
       <div class="mt-5 border-t border-ink-100 pt-5">
         <div class="max-w-xs">
           <hh-money-input
-            label="Total amount *"
+            [label]="'hostMess.totalAmount' | transloco"
             placeholder="0"
             [value]="+billTotal() || 0"
             (valueChange)="onAmountChange($event ? $any($event).toString() : '')"
             [error]="amountError()"
           />
         </div>
-        <p class="mt-2 text-xs text-ink-400">Enter the total amount for this expense.</p>
+        <p class="mt-2 text-xs text-ink-400">{{ 'hostMess.enterTheTotalAmountFor' | transloco }}</p>
       </div>
 
       <!-- Notes -->
       <div class="mt-5 border-t border-ink-100 pt-5">
         <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Notes <span class="font-normal normal-case text-ink-300">(optional)</span>
+          {{ 'common.notes' | transloco }} <span class="font-normal normal-case text-ink-300">{{ 'hostMess.optional' | transloco }}</span>
         </label>
         <textarea
           class="hh-input min-h-[88px] resize-y"
           rows="3"
-          placeholder="Any extra detail about this expense…"
+          [placeholder]="'hostMess.anyExtraDetailAboutThis' | transloco"
           [value]="notes()"
           (input)="onNotesInput($event)"
         ></textarea>
@@ -135,14 +135,14 @@
     <!-- Total + save -->
     <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white px-6 py-4 shadow-card">
       <div>
-        <p class="text-sm text-ink-400">Total amount</p>
+        <p class="text-sm text-ink-400">{{ 'hostMess.totalAmount2' | transloco }}</p>
         <p class="font-display text-xl font-semibold text-ink-900">Rs {{ billTotalValue() | number }}</p>
         @if (saveError()) {
           <p class="mt-1 text-xs font-medium text-danger">{{ saveError() }}</p>
         }
       </div>
       <div class="flex items-center gap-3">
-        <a hh-button variant="outlined" routerLink="..">Cancel</a>
+        <a hh-button variant="outlined" routerLink="..">{{ 'common.cancel' | transloco }}</a>
         <button
           hh-button
           color="primary"

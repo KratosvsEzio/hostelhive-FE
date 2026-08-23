@@ -1,4 +1,4 @@
-<app-dashboard-layout label="Analytics">
+<app-dashboard-layout [label]="'hostAnalytics.analytics' | transloco">
   <div hhActions class="flex items-center gap-2">
     <button
       hh-button color="primary"
@@ -6,7 +6,7 @@
       [disabled]="!state().data?.revenue?.length || state().subscriptionError"
       (click)="exportCsv()"
     >
-      <i class="ti ti-download" aria-hidden="true"></i>Export CSV
+      <i class="ti ti-download" aria-hidden="true"></i>{{ 'common.exportCsv' | transloco }}
     </button>
   </div>
   @let s = state();
@@ -81,7 +81,7 @@
                 "
                 aria-hidden="true"
               ></i>
-              {{ k.deltaPct >= 0 ? '+' : '' }}{{ k.deltaPct }}% vs last month
+              {{ 'hostOverview.pctVsLastMonth' | transloco: { pct: (k.deltaPct >= 0 ? '+' : '') + k.deltaPct } }}
             </p>
           }
         </hh-card>
@@ -93,17 +93,17 @@
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="font-display text-base font-semibold text-ink-900">
-            Monthly revenue
+            {{ 'common.monthlyRevenue' | transloco }}
           </h2>
-          <p class="text-xs text-ink-400">Last 12 months · PKR</p>
+          <p class="text-xs text-ink-400">{{ 'common.last12MonthsPkr' | transloco }}</p>
         </div>
         <div class="flex items-center gap-4 text-xs text-ink-500">
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span>Rent</span
+            ><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span>{{ 'common.rent' | transloco }}</span
           >
           <span class="flex items-center gap-1.5"
             ><span class="h-2.5 w-2.5 rounded-sm bg-brand-200"></span
-            >Utility</span
+            >{{ 'common.utility' | transloco }}</span
           >
         </div>
       </div>
@@ -121,19 +121,19 @@
                 <div class="space-y-1.5 text-[11px]">
                   <div class="flex items-center justify-between gap-2">
                     <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-brand-500"></span>Rent
+                      <span class="h-2 w-2 rounded-sm bg-brand-500"></span>{{ 'common.rent' | transloco }}
                     </span>
                     <span class="font-medium text-white">Rs {{ b.rent | compactNum }}</span>
                   </div>
                   <div class="flex items-center justify-between gap-2">
                     <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-brand-200"></span>Utility
+                      <span class="h-2 w-2 rounded-sm bg-brand-200"></span>{{ 'common.utility' | transloco }}
                     </span>
                     <span class="font-medium text-white">Rs {{ b.utility | compactNum }}</span>
                   </div>
                   @if (b.tenants != null) {
                     <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
-                      <span class="text-ink-400">Tenants</span>
+                      <span class="text-ink-400">{{ 'common.tenants' | transloco }}</span>
                       <span class="font-medium text-white">{{ b.tenants }}</span>
                     </div>
                   }
@@ -166,12 +166,12 @@
     <hh-card class="mt-6" [allowOverflow]="true">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 class="font-display text-base font-semibold text-ink-900">Tenant movement</h2>
-          <p class="text-xs text-ink-400">Move-ins vs move-outs · last 12 months</p>
+          <h2 class="font-display text-base font-semibold text-ink-900">{{ 'common.tenantMovement' | transloco }}</h2>
+          <p class="text-xs text-ink-400">{{ 'common.moveInsVsMove' | transloco }}</p>
         </div>
         <div class="flex items-center gap-4 text-xs text-ink-500">
-          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Moved in</span>
-          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>Moved out</span>
+          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>{{ 'common.movedIn' | transloco }}</span>
+          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>{{ 'common.movedOut' | transloco }}</span>
         </div>
       </div>
       <div class="flex h-40 items-end gap-2 sm:gap-3">
@@ -188,18 +188,18 @@
                 <div class="space-y-1.5 text-[11px]">
                   <div class="flex items-center justify-between gap-2">
                     <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-emerald-500"></span>Moved in
+                      <span class="h-2 w-2 rounded-sm bg-emerald-500"></span>{{ 'common.movedIn' | transloco }}
                     </span>
                     <span class="font-medium text-white">{{ b.movedIn }}</span>
                   </div>
                   <div class="flex items-center justify-between gap-2">
                     <span class="flex items-center gap-1.5 text-ink-400">
-                      <span class="h-2 w-2 rounded-sm bg-rose-400"></span>Moved out
+                      <span class="h-2 w-2 rounded-sm bg-rose-400"></span>{{ 'common.movedOut' | transloco }}
                     </span>
                     <span class="font-medium text-white">{{ b.movedOut }}</span>
                   </div>
                   <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
-                    <span class="text-ink-400">Net change</span>
+                    <span class="text-ink-400">{{ 'common.netChange' | transloco }}</span>
                     <span class="font-medium" [class]="b.movedIn >= b.movedOut ? 'text-emerald-400' : 'text-rose-400'">
                       {{ b.movedIn >= b.movedOut ? '+' : '' }}{{ b.movedIn - b.movedOut }}
                     </span>
@@ -229,9 +229,9 @@
         <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 class="font-display text-base font-semibold text-ink-900">
-              Occupancy
+              {{ 'common.occupancy' | transloco }}
             </h2>
-            <p class="text-xs text-ink-400">Beds filled · last 12 months</p>
+            <p class="text-xs text-ink-400">{{ 'hostAnalytics.bedsFilledLast12Months' | transloco }}</p>
           </div>
           <hh-tabs class="w-40" [tabs]="rangeTabs" [(active)]="range" />
         </div>
@@ -241,7 +241,7 @@
           class="h-40 w-full"
           preserveAspectRatio="none"
           role="img"
-          aria-label="Occupancy over the last 12 months"
+          [attr.aria-label]="'a11y.occupancyOverTheLast' | transloco"
         >
           @for (gy of line.gridY; track gy) {
             <line
@@ -289,15 +289,15 @@
           class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
         >
           <h2 class="font-display text-base font-semibold text-ink-900">
-            Tenant ledger
+            {{ 'common.tenantLedger' | transloco }}
           </h2>
-          <span class="text-xs text-ink-400">Sorted by outstanding</span>
+          <span class="text-xs text-ink-400">{{ 'hostAnalytics.sortedByOutstanding' | transloco }}</span>
         </div>
         @if (ledger().length === 0) {
           <div class="p-5">
             <hh-empty-state
               icon="ti-receipt"
-              title="No ledger activity"
+              [title]="'common.noLedgerActivity' | transloco"
               message="No invoices for this property yet."
             />
           </div>
@@ -313,12 +313,12 @@
                 />
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm text-ink-700">{{ row.tenant }}</p>
-                  <p class="text-xs text-ink-400">Room {{ row.room }} · {{ row.lastInvoice }}</p>
+                  <p class="text-xs text-ink-400">{{ 'common.roomNumber' | transloco: { number: row.room } }} · {{ row.lastInvoice }}</p>
                 </div>
                 @if (row.outstanding > 0) {
                   <hh-status-pill class="shrink-0" [tone]="row.outstanding >= 9000 ? 'danger' : 'warn'">Rs {{ row.outstanding | number }}</hh-status-pill>
                 } @else {
-                  <hh-status-pill class="shrink-0" tone="ok" [dot]="true">Settled</hh-status-pill>
+                  <hh-status-pill class="shrink-0" tone="ok" [dot]="true">{{ 'common.settled' | transloco }}</hh-status-pill>
                 }
               </div>
             }
@@ -329,10 +329,10 @@
               class="text-start text-xs uppercase tracking-wide text-ink-400"
             >
               <tr>
-                <th class="px-5 py-2 font-medium">Tenant</th>
-                <th class="px-5 py-2 font-medium">Room</th>
-                <th class="px-5 py-2 font-medium">Last invoice</th>
-                <th class="px-5 py-2 text-end font-medium">Outstanding</th>
+                <th class="px-5 py-2 font-medium">{{ 'common.tenant' | transloco }}</th>
+                <th class="px-5 py-2 font-medium">{{ 'common.room' | transloco }}</th>
+                <th class="px-5 py-2 font-medium">{{ 'hostAnalytics.lastInvoice' | transloco }}</th>
+                <th class="px-5 py-2 text-end font-medium">{{ 'common.outstanding' | transloco }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
@@ -360,7 +360,7 @@
                       >
                     } @else {
                       <hh-status-pill tone="ok" [dot]="true"
-                        >Settled</hh-status-pill
+                        >{{ 'common.settled' | transloco }}</hh-status-pill
                       >
                     }
                   </td>

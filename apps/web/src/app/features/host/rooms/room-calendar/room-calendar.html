@@ -1,11 +1,11 @@
 <section class="rounded-2xl border border-ink-100 p-4">
   <div class="flex items-center justify-between gap-3">
-    <h2 class="font-display text-lg font-semibold text-ink-900">Bookings</h2>
+    <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'common.bookings' | transloco }}</h2>
     <div class="flex items-center gap-1">
       <button
         type="button"
         class="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-        aria-label="Previous month"
+        [attr.aria-label]="'a11y.previousMonth' | transloco"
         (click)="step(-1)"
       >
         <span class="ti ti-chevron-left" aria-hidden="true"></span>
@@ -16,7 +16,7 @@
       <button
         type="button"
         class="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-        aria-label="Next month"
+        [attr.aria-label]="'a11y.nextMonth' | transloco"
         (click)="step(1)"
       >
         <span class="ti ti-chevron-right" aria-hidden="true"></span>
@@ -27,13 +27,13 @@
   <!-- Three states, because two cannot describe a dorm. -->
   <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-500">
     <span class="flex items-center gap-1.5">
-      <span class="h-3 w-4 rounded border border-emerald-600 bg-tint-mint"></span> Available
+      <span class="h-3 w-4 rounded border border-emerald-600 bg-tint-mint"></span> {{ 'hostRooms.available' | transloco }}
     </span>
     <span class="flex items-center gap-1.5">
-      <span class="h-3 w-4 rounded border border-amber-600 bg-tint-cream"></span> Partly booked
+      <span class="h-3 w-4 rounded border border-amber-600 bg-tint-cream"></span> {{ 'hostRooms.partlyBooked' | transloco }}
     </span>
     <span class="flex items-center gap-1.5">
-      <span class="h-3 w-4 rounded border border-brand-500 bg-brand-100"></span> Booked
+      <span class="h-3 w-4 rounded border border-brand-500 bg-brand-100"></span> {{ 'hostRooms.booked' | transloco }}
     </span>
   </div>
 
@@ -41,7 +41,7 @@
     <hh-skeleton class="mt-4 block h-64 w-full rounded-xl" />
   } @else if (error()) {
     <p class="mt-4 rounded-xl bg-ink-50 px-4 py-6 text-center text-sm text-ink-500">
-      We couldn't load this room's calendar.
+      {{ 'hostRooms.weCouldnTLoadThis' | transloco }}
     </p>
   } @else {
     <div class="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-medium text-ink-400">
@@ -88,7 +88,7 @@
               <span class="flex flex-col leading-tight">
                 <span class="font-medium text-ink-900">{{ day.date | date: 'd' }}</span>
                 @if (st === 'partial') {
-                  <span class="text-[10px] text-amber-800 tabular-nums">{{ left(day) }} left</span>
+                  <span class="text-[10px] text-amber-800 tabular-nums">{{ 'common.nLeft' | transloco: { count: left(day) } }}</span>
                 }
               </span>
             </button>
@@ -101,7 +101,7 @@
                 role="tooltip"
               >
                 <p class="text-xs font-medium text-ink-500">
-                  {{ day.date | date: 'd MMMM' }} · {{ day.booked }} of {{ day.capacity }} booked
+                  {{ day.date | date: 'd MMMM' }} · {{ 'hostRooms.nOfMBooked' | transloco: { booked: day.booked, capacity: day.capacity } }}
                 </p>
                 <!-- A dorm routinely has several bookings on one date, so this is a list. -->
                 <ul class="mt-2 space-y-2">

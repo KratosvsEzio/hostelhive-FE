@@ -20,6 +20,7 @@ import { ordinal } from '@util/ordinal';
 import { tenantRentCols, tenantUtilityCols } from '@app/util/table-configs/invoice-table-cols';
 import { TenantFormDrawer } from '../tenant-form-drawer/tenant-form-drawer';
 import { ApiDate } from '@util/api-date';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type Tab = 'info' | 'rent' | 'utility';
 
@@ -51,6 +52,7 @@ interface BillState {
     ErrorState,
     Skeleton,
     TenantFormDrawer,
+    TranslocoPipe,
   ],
   templateUrl: './tenant-profile.html',
 })

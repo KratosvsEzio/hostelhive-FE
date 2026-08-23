@@ -52,6 +52,7 @@ import {
 } from '@util/product-pricing';
 import { ApiDate } from '@util/api-date';
 import { PAGE_SIZE } from '@util/pagination';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface FeaturedStatus {
   active: boolean;
@@ -142,6 +143,7 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
     Skeleton,
     StatusPill,
     Toast,
+    TranslocoPipe,
   ],
   templateUrl: './subscription.html',
 })

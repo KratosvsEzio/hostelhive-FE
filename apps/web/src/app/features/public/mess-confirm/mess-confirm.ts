@@ -16,6 +16,7 @@ import {
   MessNotificationsService,
   TokenPayload,
 } from '@features/host/mess/mess-notifications.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type ConfirmState = 'loading' | 'valid' | 'confirmed' | 'already' | 'expired' | 'invalid';
 
@@ -28,7 +29,7 @@ type ConfirmState = 'loading' | 'valid' | 'confirmed' | 'already' | 'expired' | 
 @Component({
   selector: 'hh-mess-confirm',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button],
+  imports: [DatePipe, Button, TranslocoPipe],
   templateUrl: './mess-confirm.html',
 })
 export class MessConfirm {

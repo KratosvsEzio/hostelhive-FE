@@ -27,6 +27,7 @@ import {
   MealType,
   MessNotificationsService,
 } from './mess-notifications.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 const todayIso = () => format(new Date(), 'yyyy-MM-dd');
 
@@ -71,7 +72,7 @@ const EMPTY: LoadState = { loading: false, items: [], total: 0 };
 @Component({
   selector: 'hh-mess-confirmations',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, DatePicker, Tabs, DataTable, DashboardLayout],
+  imports: [DecimalPipe, DatePicker, Tabs, DataTable, DashboardLayout, TranslocoPipe],
   templateUrl: './mess-confirmations.html',
 })
 export class MessConfirmations {

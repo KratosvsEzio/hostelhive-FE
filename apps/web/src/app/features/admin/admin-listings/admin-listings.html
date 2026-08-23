@@ -1,4 +1,4 @@
-<hh-admin-shell heading="All listings">
+<hh-admin-shell [heading]="'adminAdminListings.allListings' | transloco">
   <!-- Scoped search + vertical divider + global filter button -->
   <div class="flex items-center">
     <hh-search
@@ -8,7 +8,7 @@
       (fieldChange)="onSearchField($event)"
       [term]="searchTerm()"
       (termChange)="onSearchTerm($event)"
-      placeholder="Search by hostel…"
+      [placeholder]="'common.searchByHostel' | transloco"
       ariaLabel="Search listings by hostel"
     />
     <span class="mx-3 h-5 w-px shrink-0 bg-ink-200"></span>
@@ -43,7 +43,7 @@
     <div class="mt-4">
       <hh-empty-state
         icon="ti-building-community"
-        title="No listings found"
+        [title]="'adminAdminListings.noListingsFound' | transloco"
       >
         <button
           hh-button
@@ -51,7 +51,7 @@
           size="sm"
           (click)="onSearchTerm(''); clearFilters()"
         >
-          Show all
+          {{ 'common.showAll' | transloco }}
         </button>
       </hh-empty-state>
     </div>
@@ -62,6 +62,7 @@
       [rows]="s.data.items"
       [rowId]="listingsRowId"
       [sort]="tableSortState()"
+      [canClearSort]="false"
       [pagination]="listingsPaginationConf()"
       (sortChange)="onTableSort($event)"
       [rowClickable]="true"

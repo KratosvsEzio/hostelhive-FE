@@ -47,6 +47,7 @@ import { MEAL_META, MEAL_ORDER, MealType } from './mess-notifications.service';
 import { GROCERY_TABLE_COLS } from '@app/util/table-configs/grocery-table-cols';
 import { PAGE_SIZE } from '@util/pagination';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** View state for the KPI cards fetched from `mess_overview_cards`. */
 interface OverviewState {
@@ -269,6 +270,7 @@ function buildSpendChart(
     EmptyState,
     Skeleton,
     Tabs,
+    TranslocoPipe,
   ],
   templateUrl: './mess-list.html',
 })
