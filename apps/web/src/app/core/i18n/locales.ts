@@ -162,14 +162,26 @@ export function dirFor(code: string): 'ltr' | 'rtl' {
  * Used both to read the current locale and to build the `hreflang` alternates, so the two
  * cannot disagree about what a URL means.
  */
-export function splitLocale(url: string): { locale: string; path: string } {
+export function splitLocale(url: string): {
+  locale: string;
+  path: string;
+  /**
+   * Whether the language came from the URL or from the default.
+   *
+   * `locale` alone cannot say: an unprefixed URL and an explicit `/en/` both answer
+   * English. The difference matters wherever a guess might otherwise overrule the
+   * visitor — a link written in one language has to open in it, and only this tells
+   * you that the link said so.
+   */
+  prefixed: boolean;
+} {
   const [pathname] = url.split(/[?#]/);
   const segments = pathname.split('/').filter(Boolean);
   const first = segments[0];
   if (first && LOCALE_CODES.includes(first)) {
-    return { locale: first, path: '/' + segments.slice(1).join('/') };
+    return { locale: first, path: '/' + segments.slice(1).join('/'), prefixed: true };
   }
-  return { locale: DEFAULT_LOCALE, path: pathname || '/' };
+  return { locale: DEFAULT_LOCALE, path: pathname || '/', prefixed: false };
 }
 
 /**

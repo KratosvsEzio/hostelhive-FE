@@ -65,6 +65,12 @@ const TOTAL_BUDGET_MS = 5000;
  * not on any later one, and not when they travel. The two halves are independent, so picking
  * a language leaves the currency still following the country.
  *
+ * A URL that names a language counts as an answer too, and the language half stands down
+ * for it exactly as it does for a stored choice. Otherwise a German link shared into a
+ * group opens in Dutch for whoever happens to tap it from the Netherlands, which makes the
+ * link mean something different for each person who receives it. The currency is not
+ * affected — a URL says nothing about what someone wants to pay in.
+ *
  * Location is a guess about a person, and a guess that overrules them is just a bug with a
  * good excuse. It re-asserted itself on every startup until a visitor's own choice could be
  * told apart from a guess — which is what `hh.locale.chosen` and `hh.currency.chosen` record;
@@ -138,7 +144,10 @@ export class GeoPreference {
     if (!this.currency.userChoice()) {
       this.currency.set(currencyForCountry(country), 'auto');
     }
-    if (this.locale.userChoice()) return;
+    // Two ways to have already answered the language question, and both outrank a guess
+    // about where the visitor is. The URL is the stronger of the two: a choice made by
+    // whoever wrote the link, which the person who tapped it is entitled to see honoured.
+    if (this.locale.userChoice() || this.locale.urlNamedLanguage()) return;
 
     await this.whenRouted();
     this.applyLocale(country);

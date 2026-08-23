@@ -53,6 +53,26 @@ export class LocaleStore {
   private readonly _active = signal(DEFAULT_LOCALE);
   readonly active = this._active.asReadonly();
 
+  private readonly _urlNamedLanguage = signal(false);
+
+  /**
+   * Whether the URL the visitor arrived on named a language itself.
+   *
+   * Recorded because it stops being answerable almost immediately: an unprefixed URL is
+   * given a prefix by `keepLocale` before the first navigation finishes, so by the time
+   * anything asks, every URL looks like it named a language.
+   *
+   * What it protects is the promise this whole class is built on — that the URL is the
+   * source of truth. A link written in German, shared into a group, opens in German for
+   * everyone who taps it, wherever they happen to be sitting.
+   */
+  readonly urlNamedLanguage = this._urlNamedLanguage.asReadonly();
+
+  /** Called once, by {@link LocaleSync}, with what the entry URL said. */
+  noteUrlNamedLanguage(named: boolean): void {
+    this._urlNamedLanguage.set(named);
+  }
+
   /** `'rtl'` for Urdu and Arabic. Templates read this for direction-aware bits. */
   readonly dir = signal<'ltr' | 'rtl'>('ltr');
 

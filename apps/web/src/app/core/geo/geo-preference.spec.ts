@@ -27,6 +27,8 @@ class LocaleStoreStub {
   stored: string | null = null;
   /** The language the visitor picked themselves — the thing geo stands down for. */
   chosen: string | null = null;
+  /** Whether the URL arrived on named a language — the other thing geo stands down for. */
+  fromUrl = false;
   switchedTo: string | null = null;
 
   storedPreference(): string | null {
@@ -34,6 +36,9 @@ class LocaleStoreStub {
   }
   userChoice(): string | null {
     return this.chosen;
+  }
+  urlNamedLanguage(): boolean {
+    return this.fromUrl;
   }
   switchTo(code: string): void {
     this.switchedTo = code;
@@ -168,6 +173,36 @@ describe('GeoPreference', () => {
     const { geo } = setUp();
     locale.chosen = 'en';
     await geo.apply();
+
+    expect(locale.switchedTo).toBeNull();
+  });
+
+  // A link is a decision made by whoever wrote it. Overruling it means the same URL shows
+  // a different language to each person it is shared with, which is not what a link is for.
+  it('leaves a language the URL named alone', async () => {
+    const { geo } = setUp();
+    locale.fromUrl = true;
+    await geo.apply();
+
+    expect(locale.switchedTo).toBeNull();
+  });
+
+  // The URL says nothing about money, so that half carries on guessing.
+  it('still sets the currency when the URL named a language', async () => {
+    const { geo, currency } = setUp();
+    locale.fromUrl = true;
+    await geo.apply();
+
+    expect(currency.code()).toBe('EUR');
+    expect(locale.switchedTo).toBeNull();
+  });
+
+  // Travelling does not undo it either: the link still means what it said.
+  it('does not override a URL-named language on a later refresh', async () => {
+    const { geo } = setUp();
+    locale.fromUrl = true;
+    await geo.apply();
+    await geo.refresh();
 
     expect(locale.switchedTo).toBeNull();
   });
