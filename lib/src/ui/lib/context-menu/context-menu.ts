@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Fixed-position context menu panel with a backdrop dismiss layer.
@@ -34,12 +35,13 @@ import {
  */
 @Component({
   selector: 'hh-context-menu',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
       type="button"
       class="fixed inset-0 z-40 cursor-default"
-      aria-label="Close menu"
+      [attr.aria-label]="'a11y.closeMenu' | transloco"
       (click)="close.emit()"
     ></button>
     <div

@@ -11,7 +11,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
 import { filter } from 'rxjs';
 
@@ -129,6 +130,7 @@ function shortLabel(iso: string | null): string {
  */
 @Component({
   selector: 'hh-date-range-picker',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -153,7 +155,7 @@ function shortLabel(iso: string | null): string {
           <span
             role="button"
             tabindex="0"
-            aria-label="Clear dates"
+            [attr.aria-label]="'a11y.clearDates' | transloco"
             (click)="clear($event)"
             (keydown.enter)="clear($event)"
             class="ms-0.5 grid h-5 w-5 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
@@ -168,12 +170,12 @@ function shortLabel(iso: string | null): string {
           <button
             type="button"
             class="fixed inset-0 z-[80] cursor-default bg-ink-900/20"
-            aria-label="Close calendar"
+            [attr.aria-label]="'a11y.closeCalendar' | transloco"
             (click)="close()"
           ></button>
           <div
             role="dialog"
-            aria-label="Choose date range"
+            [attr.aria-label]="'a11y.chooseDateRange' | transloco"
             class="fixed z-[81] max-w-[calc(100vw-1rem)] rounded-3xl border border-ink-100 bg-white p-5 shadow-pill"
             [style.top.px]="pos()?.top"
             [style.left.px]="pos()?.left"
@@ -200,7 +202,7 @@ function shortLabel(iso: string | null): string {
                           <button
                             type="button"
                             (click)="prevMonth()"
-                            aria-label="Previous month"
+                            [attr.aria-label]="'a11y.previousMonth' | transloco"
                             class="absolute start-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                           >
                             <i class="ti ti-chevron-left"></i>
@@ -213,7 +215,7 @@ function shortLabel(iso: string | null): string {
                           <button
                             type="button"
                             (click)="nextMonth()"
-                            aria-label="Next month"
+                            [attr.aria-label]="'a11y.nextMonth' | transloco"
                             class="absolute end-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                           >
                             <i class="ti ti-chevron-right"></i>
@@ -294,9 +296,19 @@ function shortLabel(iso: string | null): string {
   `,
 })
 export class DateRangePicker {
+  private readonly i18n = inject(TranslocoService);
+  /** Re-runs dependent computeds when the active language changes. */
+  private readonly lang = toSignal(this.i18n.langChanges$, {
+    initialValue: this.i18n.getActiveLang(),
+  });
+  protected t(key: string): string {
+    this.lang();
+    return this.i18n.translate(key);
+  }
+
   readonly from = input<string | null>(null);
   readonly to = input<string | null>(null);
-  readonly placeholder = input('Add dates');
+  readonly placeholder = input<string | undefined>(undefined);
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
   readonly months = input(2);
@@ -362,7 +374,7 @@ export class DateRangePicker {
   );
   protected readonly triggerLabel = computed(() => {
     const f = this.selFrom();
-    if (!f) return this.placeholder();
+    if (!f) return this.placeholder() ?? this.t('common.addDates');
     const t = this.selTo();
     return t ? `${shortLabel(f)} – ${shortLabel(t)}` : `${shortLabel(f)} – …`;
   });

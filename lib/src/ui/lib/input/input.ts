@@ -6,6 +6,7 @@ import {
   linkedSignal,
   model,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 let uid = 0;
 
@@ -38,6 +39,7 @@ const SIZE_TOGGLE: Record<InputSize, string> = {
  */
 @Component({
   selector: 'hh-input',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Edge ships its own reveal control, which would sit next to ours.
   styles: [
@@ -73,7 +75,7 @@ const SIZE_TOGGLE: Record<InputSize, string> = {
       @if (showToggle()) {
         <button
           type="button"
-          aria-label="Show password"
+          [attr.aria-label]="'a11y.showPassword' | transloco"
           [attr.aria-pressed]="revealed()"
           [attr.aria-controls]="id"
           (click)="revealed.set(!revealed())"

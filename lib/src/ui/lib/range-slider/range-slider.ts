@@ -5,6 +5,7 @@ import {
   input,
   model,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { DecimalPipe } from '@angular/common';
 
 /**
@@ -14,7 +15,7 @@ import { DecimalPipe } from '@angular/common';
 @Component({
   selector: 'hh-range-slider',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, TranslocoPipe],
   template: `
     <div class="relative h-1 rounded bg-ink-100">
       <div
@@ -30,7 +31,7 @@ import { DecimalPipe } from '@angular/common';
         [step]="step()"
         [value]="low()"
         (input)="setLow($any($event.target).valueAsNumber)"
-        aria-label="Minimum"
+        [attr.aria-label]="'a11y.minimum' | transloco"
       />
       <input
         class="hh-range"
@@ -40,7 +41,7 @@ import { DecimalPipe } from '@angular/common';
         [step]="step()"
         [value]="high()"
         (input)="setHigh($any($event.target).valueAsNumber)"
-        aria-label="Maximum"
+        [attr.aria-label]="'a11y.maximum' | transloco"
       />
     </div>
     <div class="mt-2 flex justify-between text-xs text-ink-500">

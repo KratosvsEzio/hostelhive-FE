@@ -11,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { PlaceSuggestion, PlaceSuggestionCache } from './place-cache';
 import {
   PhotonFeature,
@@ -55,19 +56,20 @@ const DEBOUNCE_MS = 300;
  */
 @Component({
   selector: 'hh-place-search',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block' },
   template: `
     <input
       #input
       type="text"
-      [placeholder]="placeholder()"
+      [placeholder]="placeholder() ?? ('maps.searchCityOrArea' | transloco)"
       (input)="onInput()"
       (keydown)="onKeydown($event)"
       (focus)="focused.set(true)"
       (blur)="onBlur()"
       autocomplete="off"
-      aria-label="Search location"
+      [attr.aria-label]="'a11y.searchLocation' | transloco"
       class="w-full bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
     />
     @if (showList()) {
@@ -130,7 +132,7 @@ export class PlaceSearchField {
     viewChild.required<ElementRef<HTMLInputElement>>('input');
 
   readonly value = input('');
-  readonly placeholder = input('Search city or area');
+  readonly placeholder = input<string | undefined>(undefined);
   /** Non-empty restricts results to populated places (cities/towns/villages) — the address
    *  form's city field passes `['(cities)']`. The exact strings are legacy; only presence
    *  matters now. */

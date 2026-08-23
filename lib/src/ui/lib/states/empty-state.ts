@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Empty state. Project an optional action (e.g. a button) as content.
@@ -6,10 +7,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'hh-empty-state',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <i class="ti text-3xl text-ink-300" [class]="icon()" aria-hidden="true"></i>
-    <p class="mt-2 text-sm font-medium text-ink-700">{{ title() }}</p>
+    <p class="mt-2 text-sm font-medium text-ink-700">{{ title() ?? ('states.nothingHereYet' | transloco) }}</p>
     @if (message()) {
       <p class="mt-1 text-xs text-ink-400">{{ message() }}</p>
     }
@@ -22,6 +24,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 })
 export class EmptyState {
   readonly icon = input('ti-map-search');
-  readonly title = input('Nothing here yet');
+  readonly title = input<string | undefined>(undefined);
   readonly message = input('');
 }

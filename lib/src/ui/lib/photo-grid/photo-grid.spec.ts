@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { provideTranslocoTesting } from '../../../testing/provide-transloco-testing';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import {
@@ -109,6 +110,10 @@ class GridHost {
 }
 
 describe('PhotoGrid', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideTranslocoTesting()] });
+  });
+
   function render() {
     const fixture = TestBed.createComponent(GridHost);
     fixture.detectChanges();

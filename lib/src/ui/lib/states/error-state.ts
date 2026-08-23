@@ -4,19 +4,21 @@ import {
   input,
   output,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Error state with a Retry action. `<hh-error-state (retry)="reload()" />` */
 @Component({
   selector: 'hh-error-state',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (networkError()) {
       <i class="ti ti-wifi-off text-3xl text-ink-400" aria-hidden="true"></i>
-      <p class="mt-2 text-sm font-medium text-ink-800">{{ title() || "Can't connect to server" }}</p>
-      <p class="mt-1 text-xs text-ink-500">{{ message() || 'Check your internet connection and try again.' }}</p>
+      <p class="mt-2 text-sm font-medium text-ink-800">{{ title() || ('states.cantConnect' | transloco) }}</p>
+      <p class="mt-1 text-xs text-ink-500">{{ message() || ('states.checkConnection' | transloco) }}</p>
     } @else {
       <i class="ti ti-alert-triangle text-3xl text-danger" aria-hidden="true"></i>
-      <p class="mt-2 text-sm font-medium text-ink-800">{{ title() || 'Something went wrong' }}</p>
+      <p class="mt-2 text-sm font-medium text-ink-800">{{ title() || ('states.somethingWentWrong' | transloco) }}</p>
       @if (message()) {
         <p class="mt-1 text-xs text-ink-500">{{ message() }}</p>
       }
@@ -27,7 +29,7 @@ import {
         class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
         (click)="retry.emit()"
       >
-        <i class="ti ti-refresh" aria-hidden="true"></i>{{ retryLabel() }}
+        <i class="ti ti-refresh" aria-hidden="true"></i>{{ retryLabel() ?? ('common.retry' | transloco) }}
       </button>
     }
   `,
@@ -41,7 +43,7 @@ export class ErrorState {
   readonly title = input('');
   readonly message = input('');
   readonly showRetry = input(true);
-  readonly retryLabel = input('Retry');
+  readonly retryLabel = input<string | undefined>(undefined);
   readonly networkError = input(false);
   readonly retry = output<void>();
 }

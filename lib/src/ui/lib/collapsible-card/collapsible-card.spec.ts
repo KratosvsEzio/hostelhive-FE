@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { provideTranslocoTesting } from '../../../testing/provide-transloco-testing';
 import { TestBed } from '@angular/core/testing';
 import { CollapsibleCard } from './collapsible-card';
 
@@ -16,7 +17,7 @@ class Host {
 }
 
 async function render() {
-  await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
+  await TestBed.configureTestingModule({ imports: [Host], providers: [provideTranslocoTesting()] }).compileComponents();
   const fixture = TestBed.createComponent(Host);
   fixture.detectChanges();
   const el = fixture.nativeElement as HTMLElement;

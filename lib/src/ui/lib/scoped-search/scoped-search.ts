@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Dropdown, DropdownOption } from '../dropdown/dropdown';
 
 export type SearchSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -39,7 +40,7 @@ const BASE =
 @Component({
   selector: 'hh-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown],
+  imports: [Dropdown, TranslocoPipe],
   host: { '[class]': 'hostClass()' },
   template: `
     @if (withScope() && fieldOptions().length) {
@@ -63,7 +64,7 @@ const BASE =
       [value]="draft()"
       (input)="onInput($any($event.target).value)"
       (keydown.enter)="flush()"
-      [placeholder]="placeholder()"
+      [placeholder]="placeholder() ?? ('common.searchEllipsis' | transloco)"
       [attr.aria-label]="ariaLabel()"
       class="min-w-0 flex-1 bg-transparent text-ink-900 outline-none placeholder:text-ink-400"
       [class]="sz().text"
@@ -74,7 +75,7 @@ const BASE =
       <button
         type="button"
         (click)="clear()"
-        aria-label="Clear search"
+        [attr.aria-label]="'a11y.clearSearch' | transloco"
         class="shrink-0 rounded-md p-1 text-ink-400 transition hover:bg-ink-50 hover:text-ink-700"
       >
         <i class="ti ti-x text-sm" aria-hidden="true"></i>
@@ -95,8 +96,8 @@ export class Search {
    * own debounce. Clearing (the X or an empty field) and pressing Enter emit immediately.
    */
   readonly term = model('');
-  readonly placeholder = input('Search…');
-  readonly ariaLabel = input('Search');
+  readonly placeholder = input<string | undefined>(undefined);
+  readonly ariaLabel = input<string | undefined>(undefined);
   readonly size = input<SearchSize>('sm');
   /** Dropdown tone — `neutral` keeps the scope segment calm even when a value is set. */
   readonly tone = input<'auto' | 'neutral'>('neutral');

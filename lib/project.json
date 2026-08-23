@@ -8,6 +8,13 @@
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/lib"],
+      "options": {
+        "configFile": "lib/vite.config.mts"
+      }
     }
   }
 }

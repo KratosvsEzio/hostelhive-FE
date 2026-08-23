@@ -4,6 +4,7 @@ import {
   input,
   output,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Button, ButtonColor } from '../button/button';
 
 export type ConfirmModalTone = 'danger' | 'warn' | 'ok' | 'info';
@@ -49,7 +50,7 @@ let _id = 0;
 @Component({
   selector: 'hh-confirm-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button],
+  imports: [Button, TranslocoPipe],
   template: `
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -89,7 +90,7 @@ let _id = 0;
               class="flex-1"
               (click)="cancel.emit()"
             >
-              {{ cancelLabel() }}
+              {{ cancelLabel() ?? ('common.cancel' | transloco) }}
             </button>
           }
           <button
@@ -98,7 +99,7 @@ let _id = 0;
             [class]="cancelLabel() ? 'flex-1' : 'w-full'"
             (click)="confirm.emit()"
           >
-            {{ confirmLabel() }}
+            {{ confirmLabel() ?? ('common.confirm' | transloco) }}
           </button>
         </div>
       </div>
@@ -110,9 +111,9 @@ export class ConfirmModal {
   /** Tabler icon class, e.g. `'ti-trash'`. Omit to skip the icon circle. */
   readonly icon = input('');
   readonly tone = input<ConfirmModalTone>('danger');
-  readonly confirmLabel = input('Confirm');
+  readonly confirmLabel = input<string | undefined>(undefined);
   /** Set to empty string to hide the cancel button (single-action info dialogs). */
-  readonly cancelLabel = input('Cancel');
+  readonly cancelLabel = input<string | undefined>(undefined);
   readonly confirmColor = input<ButtonColor>('primary');
 
   readonly confirm = output<void>();
