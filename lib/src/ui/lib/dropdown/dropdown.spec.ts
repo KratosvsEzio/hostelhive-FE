@@ -172,8 +172,12 @@ describe('Dropdown panel placement', () => {
     const height = 32;
     btn.getBoundingClientRect = () =>
       ({ top: triggerTop, bottom: triggerTop + height, left: 40, right: 200, width: 160, height, x: 40, y: triggerTop, toJSON: () => ({}) }) as DOMRect;
-    const originalH = window.innerHeight;
-    Object.defineProperty(window, 'innerHeight', { value: viewportH, configurable: true });
+    // Stubs `documentElement.clientHeight`, which is what the component measures —
+    // `innerWidth`/`innerHeight` count the scrollbars, and a panel clamped to those can
+    // overflow into one and drive a resize loop.
+    const root = document.documentElement;
+    const originalH = Object.getOwnPropertyDescriptor(root, 'clientHeight');
+    Object.defineProperty(root, 'clientHeight', { value: viewportH, configurable: true });
     btn.click();
     fixture.detectChanges();
     const panel = document.querySelector<HTMLElement>('[role="listbox"]')!;
@@ -182,7 +186,8 @@ describe('Dropdown panel placement', () => {
       bottom: panel.style.bottom,
       maxHeight: parseFloat(panel.style.maxHeight),
     };
-    Object.defineProperty(window, 'innerHeight', { value: originalH, configurable: true });
+    if (originalH) Object.defineProperty(root, 'clientHeight', originalH);
+    else delete (root as unknown as Record<string, unknown>)['clientHeight'];
     return box;
   }
 

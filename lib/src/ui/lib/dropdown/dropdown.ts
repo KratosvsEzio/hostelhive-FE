@@ -340,6 +340,19 @@ export class Dropdown {
   /** Single-select only: label for a top row that clears the selection (e.g. "All stays"). */
   readonly clearLabel = input('');
   readonly variant = input<'pill' | 'field' | 'borderless'>('pill');
+  /**
+   * Which surface the trigger sits on.
+   *
+   * Not the same thing as `color="dark"` on the button, which means a dark-*coloured*
+   * control: on a dark background that renders dark text on dark, or a fill the same shade
+   * as what is behind it. This says where the control is, and the light styles invert to
+   * suit — currently for the pill, which is the variant that appears outside a form.
+   *
+   * The panel deliberately stays light either way: it is an overlay in front of the page,
+   * not part of the surface the trigger is on, and a dark list of options over a dark
+   * footer loses the edge that says where the list begins.
+   */
+  readonly surface = input<'light' | 'dark'>('light');
   readonly align = input<'left' | 'right'>('left');
   /** `'neutral'` keeps the pill grey even when a value is selected; `'auto'` (default) brand-tints when active. */
   readonly tone = input<'auto' | 'neutral'>('auto');
@@ -475,8 +488,16 @@ export class Dropdown {
     if (!btn || typeof window === 'undefined') return;
     const r = btn.getBoundingClientRect();
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    // The layout viewport, not the window.
+    //
+    // `innerWidth` counts the vertical scrollbar, so clamping to it lets the panel sit
+    // partly underneath one — which is horizontal overflow, which raises a *horizontal*
+    // scrollbar, which fires `resize`, which repositions, which removes the overflow, which
+    // fires `resize` again. Opening a dropdown near the bottom of a long page span that
+    // loop at one frame apiece and the tab stops responding, with nothing logged.
+    // `clientWidth` excludes both scrollbars, so a panel clamped to it cannot cause one.
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
 
     if (this.openRight()) {
       this.setPos({
@@ -585,11 +606,21 @@ export class Dropdown {
       return `${base} h-8 whitespace-nowrap rounded-full !border-0 bg-transparent ps-3.5 pe-2 text-[13px] text-ink-800 hover:text-ink-900`;
     }
 
+    const pill = `${base} h-8 whitespace-nowrap rounded-full ps-3 pe-2.5 text-[13px]`;
+
+    if (this.surface() === 'dark') {
+      // One calm treatment rather than the light surface's active/inactive pair. A control
+      // parked on a dark chrome — the footer's language and currency — always has a value,
+      // so a brand tint for "something is selected" would just be its permanent colour, and
+      // a near-white `brand-50` fill on `ink-900` shouts louder than anything around it.
+      return `${pill} border-ink-600 bg-transparent text-ink-200 hover:border-ink-400 hover:text-white`;
+    }
+
     const tone =
       this.tone() === 'auto' && this.active()
         ? 'border-brand-500 bg-brand-50 text-brand-700'
         : 'border-ink-300 text-ink-800 hover:border-ink-400';
-    return `${base} h-8 whitespace-nowrap rounded-full bg-white ps-3 pe-2.5 text-[13px] ${tone}`;
+    return `${pill} bg-white ${tone}`;
   });
 
   /**
@@ -600,6 +631,8 @@ export class Dropdown {
   protected readonly chevronBrand = computed(
     () =>
       this.variant() === 'pill' &&
+      // The dark pill has no brand state for the chevron to echo.
+      this.surface() === 'light' &&
       !this.seamless() &&
       this.tone() === 'auto' &&
       this.active(),
