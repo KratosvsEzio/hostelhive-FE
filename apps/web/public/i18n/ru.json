@@ -1407,5 +1407,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} непрочитанных"
+  },
+  "currency": {
+    "searchNameOrCode": "Поиск по названию или коду…",
+    "noCurrencyMatches": "Валюта не найдена."
   }
 }

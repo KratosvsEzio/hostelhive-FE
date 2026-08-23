@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} अपठित"
+  },
+  "currency": {
+    "searchNameOrCode": "नाम या कोड खोजें…",
+    "noCurrencyMatches": "कोई मुद्रा नहीं मिली।"
   }
 }

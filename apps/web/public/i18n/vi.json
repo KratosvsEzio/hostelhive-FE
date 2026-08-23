@@ -1407,5 +1407,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} chưa đọc"
+  },
+  "currency": {
+    "searchNameOrCode": "Tìm theo tên hoặc mã…",
+    "noCurrencyMatches": "Không tìm thấy tiền tệ."
   }
 }

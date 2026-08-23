@@ -362,6 +362,10 @@
   "coreForbidden": {
     "accessBlocked": "Access blocked"
   },
+  "currency": {
+    "searchNameOrCode": "Search name or code…",
+    "noCurrencyMatches": "No currency matches."
+  },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Your hostel invites, meal confirmations and pending receipts."
   },

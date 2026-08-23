@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} olästa"
+  },
+  "currency": {
+    "searchNameOrCode": "Sök på namn eller kod…",
+    "noCurrencyMatches": "Ingen valuta hittades."
   }
 }

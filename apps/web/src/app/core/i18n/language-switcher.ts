@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -41,7 +42,7 @@ import { LOCALES, flagSrc, localeFor } from './locales';
         variant="filled"
         size="sm"
         type="button"
-        class="!rounded-full"
+        [class]="triggerClass()"
         (click)="open.set(!open())"
         [attr.aria-expanded]="open()"
         aria-haspopup="listbox"
@@ -67,7 +68,7 @@ import { LOCALES, flagSrc, localeFor } from './locales';
         ></button>
         <ul
           role="listbox"
-          class="absolute end-0 z-[80] mt-2 max-h-80 w-64 overflow-y-auto rounded-xl border border-ink-100 bg-white py-1 shadow-pill"
+          [class]="panelClass()"
         >
           @for (l of locales; track l.code) {
             <li>
@@ -115,10 +116,60 @@ import { LOCALES, flagSrc, localeFor } from './locales';
 export class LanguageSwitcher {
   private readonly store = inject(LocaleStore);
 
+  /**
+   * Which side of the trigger the list opens on.
+   *
+   * Stated by the caller rather than measured, because the two placements this control has
+   * are not close calls: in the header there is a page below it, and in the footer there is
+   * nothing below it at all. A list that opened downward from the footer would render past
+   * the end of the document, where it cannot be scrolled to.
+   */
+  readonly placement = input<'below' | 'above'>('below');
+
+  /**
+   * Which edge of the trigger the list lines up with.
+   *
+   * Follows the trigger's own position on the page, and gets it wrong in exactly one
+   * direction: aligned to the far edge, a 16rem list hangs off the side of the window. The
+   * header sits at the end of its row so `'end'` keeps it on screen; the footer sits at the
+   * start of its row, where the same value ran the list off the opposite edge.
+   */
+  readonly align = input<'start' | 'end'>('end');
+
+  /**
+   * Which surface the trigger sits on.
+   *
+   * The button's own `color="dark"` means a dark-*coloured* control, which on a dark
+   * background is dark text on dark. This says where the control is instead, so the dark
+   * variant borrows the footer's own vocabulary — `ink-700` rules, `ink-300` links, white
+   * on hover — rather than dropping a white pill onto it.
+   */
+  readonly surface = input<'light' | 'dark'>('light');
+
   protected readonly locales = LOCALES;
   protected readonly flagSrc = flagSrc;
   protected readonly open = signal(false);
   protected readonly current = computed(() => localeFor(this.store.active()));
+
+  /**
+   * `!` because these override `hh-button`'s own filled styles rather than sitting beside
+   * them — the same reason `!rounded-full` is here, which the pill shape needs in both tones.
+   */
+  protected readonly triggerClass = computed(() =>
+    this.surface() === 'dark'
+      ? '!rounded-full !border !border-ink-600 !bg-transparent !text-ink-200 ' +
+        'hover:!border-ink-400 hover:!text-white'
+      : '!rounded-full',
+  );
+
+  protected readonly panelClass = computed(() => {
+    const base =
+      'absolute z-[80] max-h-80 w-64 overflow-y-auto rounded-xl ' +
+      'border border-ink-100 bg-white py-1 shadow-pill';
+    const side = this.align() === 'start' ? 'start-0' : 'end-0';
+    const vertical = this.placement() === 'above' ? 'bottom-full mb-2' : 'mt-2';
+    return `${base} ${side} ${vertical}`;
+  });
 
   protected choose(code: string): void {
     this.open.set(false);

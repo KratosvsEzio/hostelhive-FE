@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} 条未读"
+  },
+  "currency": {
+    "searchNameOrCode": "搜索名称或代码…",
+    "noCurrencyMatches": "未找到匹配的货币。"
   }
 }

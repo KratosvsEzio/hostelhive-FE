@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} sin leer"
+  },
+  "currency": {
+    "searchNameOrCode": "Buscar por nombre o código…",
+    "noCurrencyMatches": "No se encontró ninguna moneda."
   }
 }

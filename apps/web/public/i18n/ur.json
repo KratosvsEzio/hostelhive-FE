@@ -1407,5 +1407,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} غیر پڑھے"
+  },
+  "currency": {
+    "searchNameOrCode": "نام یا کوڈ تلاش کریں…",
+    "noCurrencyMatches": "کوئی کرنسی نہیں ملی۔"
   }
 }

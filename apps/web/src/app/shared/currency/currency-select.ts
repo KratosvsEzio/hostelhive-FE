@@ -33,14 +33,15 @@ const COMPACT_OPTIONS: DropdownOption[] = CURRENCIES.map((c) => ({
   imports: [Dropdown, TranslocoPipe],
   template: `
     <hh-dropdown
-      variant="field"
+      [variant]="variant()"
+      [surface]="surface()"
       [size]="compact() ? 'sm' : 'md'"
       [placeholder]="'common.selectCurrency' | transloco"
       [options]="filteredOptions()"
       [value]="value()"
       [searchable]="true"
-      searchPlaceholder="Search name or code…"
-      emptyLabel="No currency matches."
+      [searchPlaceholder]="'currency.searchNameOrCode' | transloco"
+      [emptyLabel]="'currency.noCurrencyMatches' | transloco"
       (valueChange)="onChange($event)"
       (searchChange)="query.set($event)"
     />
@@ -55,6 +56,16 @@ export class CurrencySelect {
    * The option set is unchanged — only the label order and the field height.
    */
   readonly compact = input(false);
+
+  /**
+   * Passed straight to the dropdown. `'field'` is the full-width form control this was
+   * built for; `'pill'` is the inline chip the footer and filter bars want, where the
+   * control sits in a row of its own rather than in a stack of labelled fields.
+   */
+  readonly variant = input<'field' | 'pill'>('field');
+
+  /** Which surface the trigger sits on — see the dropdown's own `surface`. */
+  readonly surface = input<'light' | 'dark'>('light');
 
   protected readonly query = signal('');
 

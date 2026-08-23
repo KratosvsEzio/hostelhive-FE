@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "未読 {{count}} 件"
+  },
+  "currency": {
+    "searchNameOrCode": "名称またはコードで検索…",
+    "noCurrencyMatches": "該当する通貨がありません。"
   }
 }

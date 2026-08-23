@@ -42,8 +42,37 @@
       </div>
     </div>
 
+    <!--
+      Language + currency, repeated from the header.
+
+      The footer is where people look for these — it is the one part of a page that is the
+      same everywhere, so it is where a visitor who has scrolled past the header goes rather
+      than scrolling back up to hunt for a control they saw once. Both write the same
+      preference the header does, and both count as the visitor choosing for themselves, so
+      picking here stops the location guess overriding them on the next load.
+    -->
+    <div class="mt-10 flex flex-wrap items-center gap-3 border-t border-ink-700 pt-6">
+      <hh-language-switcher placement="above" align="start" surface="dark" />
+      <!--
+        The width is load-bearing, not decoration. A pill trigger is `inline-block` and
+        `whitespace-nowrap`, so it sizes to its whole label — and the compact label here is
+        "PKR (Rs) · Pakistani Rupee". Unbounded, it overflowed this row and widened the
+        document, which raised a horizontal scrollbar, which narrowed the viewport, which
+        let the row fit again, which dropped the scrollbar: a reflow loop that froze the tab
+        with no error and no failed request to point at.
+      -->
+      <hh-currency-select
+        class="w-56 max-w-full"
+        variant="pill"
+        surface="dark"
+        [compact]="true"
+        [value]="currency()"
+        (valueChange)="onCurrencyPick($event)"
+      />
+    </div>
+
     <!-- Bottom bar: copyright + social -->
-    <div class="mt-10 flex flex-col items-start justify-between gap-4 border-t border-ink-700 pt-6 sm:flex-row sm:items-center">
+    <div class="mt-6 flex flex-col items-start justify-between gap-4 border-t border-ink-700 pt-6 sm:flex-row sm:items-center">
       <p class="text-xs text-ink-400">
         {{ 'common.2026HostelhiveAllRights' | transloco }}
       </p>

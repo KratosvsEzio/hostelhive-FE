@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} olvasatlan"
+  },
+  "currency": {
+    "searchNameOrCode": "Keresés név vagy kód alapján…",
+    "noCurrencyMatches": "Nincs találat a pénznemre."
   }
 }

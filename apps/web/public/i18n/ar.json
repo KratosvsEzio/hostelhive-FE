@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} غير مقروءة"
+  },
+  "currency": {
+    "searchNameOrCode": "ابحث بالاسم أو الرمز…",
+    "noCurrencyMatches": "لا توجد عملة مطابقة."
   }
 }

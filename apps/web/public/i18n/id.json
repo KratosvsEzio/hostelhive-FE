@@ -1407,5 +1407,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} belum dibaca"
+  },
+  "currency": {
+    "searchNameOrCode": "Cari nama atau kode…",
+    "noCurrencyMatches": "Tidak ada mata uang yang cocok."
   }
 }

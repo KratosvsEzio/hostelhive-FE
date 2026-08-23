@@ -1402,5 +1402,9 @@
   },
   "notifications": {
     "nUnread": "{{count}} ongelezen"
+  },
+  "currency": {
+    "searchNameOrCode": "Zoek op naam of code…",
+    "noCurrencyMatches": "Geen valuta gevonden."
   }
 }
