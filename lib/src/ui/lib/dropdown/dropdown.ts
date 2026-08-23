@@ -431,7 +431,44 @@ export class Dropdown {
       .subscribe(() => this.close());
   }
 
+  /**
+   * Writes a position only when it actually differs.
+   *
+   * `pos` holds an object literal, so every `set` is a change as far as signals are
+   * concerned, and every change re-renders the panel. That matters because `reposition`
+   * runs from a capture-phase `scroll` listener, which the panel's *own* internal scrolling
+   * also triggers: re-rendering it there fed straight back into another scroll event, and
+   * the two chased each other until the tab locked up with no error and no network traffic.
+   * Comparing first breaks the cycle at its source; the coalescing below is the second belt.
+   */
+  private setPos(next: NonNullable<ReturnType<typeof this.pos>>): void {
+    const cur = this.pos();
+    if (
+      cur &&
+      cur.top === next.top &&
+      cur.bottom === next.bottom &&
+      cur.left === next.left &&
+      cur.width === next.width &&
+      cur.maxHeight === next.maxHeight
+    ) {
+      return;
+    }
+    this.pos.set(next);
+  }
+
+  /** Set while a measure is already queued, so a burst of scroll events costs one frame. */
+  private repositionQueued = false;
+
   private readonly reposition = (): void => {
+    if (typeof window === 'undefined' || this.repositionQueued) return;
+    this.repositionQueued = true;
+    requestAnimationFrame(() => {
+      this.repositionQueued = false;
+      if (this.open()) this.measure();
+    });
+  };
+
+  private measure(): void {
     const btn = this.host.nativeElement.querySelector(
       'button[aria-haspopup]',
     ) as HTMLElement | null;
@@ -442,7 +479,7 @@ export class Dropdown {
     const vh = window.innerHeight;
 
     if (this.openRight()) {
-      this.pos.set({
+      this.setPos({
         top: undefined,
         bottom: vh - r.bottom,
         left: r.right + GAP,
@@ -474,11 +511,11 @@ export class Dropdown {
     const maxHeight = Math.min(PANEL_MAX_H, Math.max(openUp ? spaceAbove : spaceBelow, PANEL_MIN_H));
 
     if (openUp) {
-      this.pos.set({ top: undefined, bottom: vh - r.top + GAP, left, width: r.width, maxHeight });
+      this.setPos({ top: undefined, bottom: vh - r.top + GAP, left, width: r.width, maxHeight });
     } else {
-      this.pos.set({ top: r.bottom + GAP, bottom: undefined, left, width: r.width, maxHeight });
+      this.setPos({ top: r.bottom + GAP, bottom: undefined, left, width: r.width, maxHeight });
     }
-  };
+  }
 
   private attachListeners(): void {
     if (typeof window === 'undefined') return;
@@ -603,13 +640,15 @@ export class Dropdown {
       this.searchQuery.set('');
       this.searchChange.emit('');
     }
-    this.reposition();
+    // Placed synchronously, unlike the scroll/resize path: the panel has to be positioned
+    // before its first paint or it flashes at the wrong spot on the way to the right one.
+    this.measure();
     this.open.set(true);
     this.attachListeners();
-    // The first reposition runs before the panel exists, so the width measurement above falls
+    // The first measure runs before the panel exists, so the width measurement above falls
     // back to an estimate and the horizontal clamp works off that. Measure again now that it
     // is in the DOM, or a panel wider than its trigger stays overflowing the viewport edge.
-    afterNextRender(() => this.reposition(), { injector: this.injector });
+    afterNextRender(() => this.measure(), { injector: this.injector });
     this.opened.emit();
   }
 
