@@ -12,7 +12,7 @@ import { AccommodationType } from '@hostelhive/data-access';
 import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 /**
  * Filter sub-header for search results. A "Filters" button opens the full
@@ -37,12 +37,26 @@ export class SearchFilters {
   protected readonly modalOpen = signal(false);
 
   // Sort. 'newest'/'oldest' → sort[created_at] desc/asc; 'price-*' → sort[starting_price] (API layer).
-  private readonly allSortOptions: DropdownOption[] = [
-    { value: 'newest', label: 'Recent first' },
-    { value: 'oldest', label: 'Oldest first' },
-    { value: 'price-desc', label: 'Price: high to low' },
-    { value: 'price-asc', label: 'Price: low to high' },
-  ];
+  /**
+   * Option labels live in TypeScript, so they cannot use the pipe. Reading the active
+   * language here makes the arrays below recompute on a language change — without it they
+   * would keep whatever language was active when this component was constructed.
+   */
+  private readonly i18n = inject(TranslocoService);
+  private readonly lang = toSignal(this.i18n.langChanges$, {
+    initialValue: this.i18n.getActiveLang(),
+  });
+  private t(key: string): string {
+    this.lang();
+    return this.i18n.translate(key);
+  }
+
+  private readonly allSortOptions = computed<DropdownOption[]>(() => [
+    { value: 'newest', label: this.t('search.recentFirst') },
+    { value: 'oldest', label: this.t('search.oldestFirst') },
+    { value: 'price-desc', label: this.t('search.priceHighToLow') },
+    { value: 'price-asc', label: this.t('search.priceLowToHigh') },
+  ]);
 
   /**
    * Price sort is withdrawn while the list mixes pricing cycles.
@@ -60,8 +74,8 @@ export class SearchFilters {
    */
   protected readonly sortOptions = computed(() =>
     this.accommodationType() === 'all'
-      ? this.allSortOptions.filter((o) => !String(o.value).startsWith('price-'))
-      : this.allSortOptions,
+      ? this.allSortOptions().filter((o) => !String(o.value).startsWith('price-'))
+      : this.allSortOptions(),
   );
 
   /**
@@ -70,10 +84,10 @@ export class SearchFilters {
    * Capacity is not the axis anybody shops on — the choice is a room to yourself or a bed in a
    * room with others, and how many others is a detail read after that.
    */
-  protected readonly roomTypeOptions: DropdownOption[] = [
-    { value: 'shared', label: 'Shared room' },
-    { value: 'private', label: 'Private room' },
-  ];
+  protected readonly roomTypeOptions = computed<DropdownOption[]>(() => [
+    { value: 'shared', label: this.t('search.sharedRoom') },
+    { value: 'private', label: this.t('search.privateRoom') },
+  ]);
 
   protected readonly accommodationType = computed<AccommodationType | 'all'>(
     () => (this.params()?.get('gender') as AccommodationType | 'all') ?? 'all',

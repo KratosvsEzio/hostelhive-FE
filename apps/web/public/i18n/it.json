@@ -23,7 +23,14 @@
     "noResults": "Nessun ostello corrisponde",
     "couldNotLoad": "Impossibile caricare gli annunci",
     "tryAgain": "Riprova",
-    "accommodation": "Alloggio"
+    "accommodation": "Alloggio",
+    "recommended": "Consigliati",
+    "recentFirst": "Più recenti prima",
+    "oldestFirst": "Meno recenti prima",
+    "priceHighToLow": "Prezzo: dal più alto",
+    "priceLowToHigh": "Prezzo: dal più basso",
+    "sharedRoom": "Camera condivisa",
+    "privateRoom": "Camera privata"
   },
   "accommodation": {
     "boys": "Ragazzi",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "La mappa non si è caricata",
     "checkYourConnectionAndTry": "Controlla la connessione e riprova — annunci, filtri e resto della pagina funzionano ancora.",
     "seenAllNStays": "Hai visto tutti i {{count}} soggiorni in questa zona",
-    "retryInNSeconds": "Riproveremo automaticamente tra {{seconds}} s."
+    "retryInNSeconds": "Riproveremo automaticamente tra {{seconds}} s.",
+    "nearMe": "Vicino a me",
+    "locating": "Localizzazione…"
   },
   "account": {
     "accountMenu": "Menu account",

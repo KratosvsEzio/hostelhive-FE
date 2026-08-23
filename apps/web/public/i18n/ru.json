@@ -23,7 +23,14 @@
     "noResults": "Нет хостелов по этим фильтрам",
     "couldNotLoad": "Не удалось загрузить объявления",
     "tryAgain": "Повторить",
-    "accommodation": "Тип жилья"
+    "accommodation": "Тип жилья",
+    "recommended": "Рекомендуемые",
+    "recentFirst": "Сначала новые",
+    "oldestFirst": "Сначала старые",
+    "priceHighToLow": "Цена: по убыванию",
+    "priceLowToHigh": "Цена: по возрастанию",
+    "sharedRoom": "Общая комната",
+    "privateRoom": "Отдельная комната"
   },
   "accommodation": {
     "boys": "Мужской",
@@ -393,7 +400,9 @@
     "theMapCouldnTLoad": "Карта не загрузилась",
     "checkYourConnectionAndTry": "Проверьте соединение и попробуйте снова — объявления, фильтры и остальная часть страницы работают.",
     "seenAllNStays": "Вы просмотрели все {{count}} вариантов в этом районе",
-    "retryInNSeconds": "Мы повторим автоматически через {{seconds}} с."
+    "retryInNSeconds": "Мы повторим автоматически через {{seconds}} с.",
+    "nearMe": "Рядом со мной",
+    "locating": "Определение местоположения…"
   },
   "account": {
     "accountMenu": "Меню аккаунта",

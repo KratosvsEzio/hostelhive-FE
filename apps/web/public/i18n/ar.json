@@ -23,7 +23,14 @@
     "noResults": "لا توجد نزل مطابقة",
     "couldNotLoad": "تعذر تحميل القائمة",
     "tryAgain": "حاول مرة أخرى",
-    "accommodation": "نوع السكن"
+    "accommodation": "نوع السكن",
+    "recommended": "موصى به",
+    "recentFirst": "الأحدث أولاً",
+    "oldestFirst": "الأقدم أولاً",
+    "priceHighToLow": "السعر: من الأعلى للأدنى",
+    "priceLowToHigh": "السعر: من الأدنى للأعلى",
+    "sharedRoom": "غرفة مشتركة",
+    "privateRoom": "غرفة خاصة"
   },
   "accommodation": {
     "boys": "شباب",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "تعذّر تحميل الخريطة",
     "checkYourConnectionAndTry": "تحقق من اتصالك وحاول مرة أخرى — الإعلانات وعوامل التصفية وبقية الصفحة تعمل كالمعتاد.",
     "seenAllNStays": "لقد اطّلعت على جميع أماكن الإقامة الـ{{count}} في هذه المنطقة",
-    "retryInNSeconds": "سنعيد المحاولة تلقائياً خلال {{seconds}} ثانية."
+    "retryInNSeconds": "سنعيد المحاولة تلقائياً خلال {{seconds}} ثانية.",
+    "nearMe": "بالقرب مني",
+    "locating": "جارٍ تحديد الموقع…"
   },
   "account": {
     "accountMenu": "قائمة الحساب",

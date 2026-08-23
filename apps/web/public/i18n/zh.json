@@ -23,7 +23,14 @@
     "noResults": "没有符合条件的宿舍",
     "couldNotLoad": "无法加载列表",
     "tryAgain": "重试",
-    "accommodation": "住宿类型"
+    "accommodation": "住宿类型",
+    "recommended": "推荐",
+    "recentFirst": "最新优先",
+    "oldestFirst": "最早优先",
+    "priceHighToLow": "价格从高到低",
+    "priceLowToHigh": "价格从低到高",
+    "sharedRoom": "合住房间",
+    "privateRoom": "独立房间"
   },
   "accommodation": {
     "boys": "男生",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "地图加载失败",
     "checkYourConnectionAndTry": "请检查网络后重试——房源、筛选条件和页面其余部分仍可正常使用。",
     "seenAllNStays": "你已看完该区域的全部 {{count}} 处住宿",
-    "retryInNSeconds": "将在 {{seconds}} 秒后自动重试。"
+    "retryInNSeconds": "将在 {{seconds}} 秒后自动重试。",
+    "nearMe": "附近",
+    "locating": "正在定位…"
   },
   "account": {
     "accountMenu": "账户菜单",

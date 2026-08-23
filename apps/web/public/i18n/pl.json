@@ -23,7 +23,14 @@
     "noResults": "Żaden hostel nie pasuje do tych filtrów",
     "couldNotLoad": "Nie udało się wczytać ogłoszeń",
     "tryAgain": "Spróbuj ponownie",
-    "accommodation": "Rodzaj zakwaterowania"
+    "accommodation": "Rodzaj zakwaterowania",
+    "recommended": "Polecane",
+    "recentFirst": "Najnowsze najpierw",
+    "oldestFirst": "Najstarsze najpierw",
+    "priceHighToLow": "Cena: od najwyższej",
+    "priceLowToHigh": "Cena: od najniższej",
+    "sharedRoom": "Pokój wieloosobowy",
+    "privateRoom": "Pokój prywatny"
   },
   "accommodation": {
     "boys": "Męski",
@@ -393,7 +400,9 @@
     "theMapCouldnTLoad": "Nie udało się wczytać mapy",
     "checkYourConnectionAndTry": "Sprawdź połączenie i spróbuj ponownie — ogłoszenia, filtry i reszta strony nadal działają.",
     "seenAllNStays": "Zobaczyłeś wszystkie {{count}} pobytów w tym obszarze",
-    "retryInNSeconds": "Spróbujemy ponownie automatycznie za {{seconds}} s."
+    "retryInNSeconds": "Spróbujemy ponownie automatycznie za {{seconds}} s.",
+    "nearMe": "W pobliżu",
+    "locating": "Ustalanie lokalizacji…"
   },
   "account": {
     "accountMenu": "Menu konta",

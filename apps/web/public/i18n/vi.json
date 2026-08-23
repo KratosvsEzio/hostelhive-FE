@@ -23,7 +23,14 @@
     "noResults": "Không có hostel nào khớp với bộ lọc này",
     "couldNotLoad": "Không thể tải danh sách",
     "tryAgain": "Thử lại",
-    "accommodation": "Loại chỗ ở"
+    "accommodation": "Loại chỗ ở",
+    "recommended": "Được đề xuất",
+    "recentFirst": "Mới nhất trước",
+    "oldestFirst": "Cũ nhất trước",
+    "priceHighToLow": "Giá: cao đến thấp",
+    "priceLowToHigh": "Giá: thấp đến cao",
+    "sharedRoom": "Phòng chung",
+    "privateRoom": "Phòng riêng"
   },
   "accommodation": {
     "boys": "Nam",
@@ -393,7 +400,9 @@
     "theMapCouldnTLoad": "Không tải được bản đồ",
     "checkYourConnectionAndTry": "Kiểm tra kết nối và thử lại — danh sách, bộ lọc và phần còn lại của trang vẫn hoạt động.",
     "seenAllNStays": "Bạn đã xem hết {{count}} chỗ ở trong khu vực này",
-    "retryInNSeconds": "Chúng tôi sẽ tự động thử lại sau {{seconds}} giây."
+    "retryInNSeconds": "Chúng tôi sẽ tự động thử lại sau {{seconds}} giây.",
+    "nearMe": "Gần tôi",
+    "locating": "Đang định vị…"
   },
   "account": {
     "accountMenu": "Menu tài khoản",

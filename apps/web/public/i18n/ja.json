@@ -23,7 +23,14 @@
     "noResults": "条件に合う宿がありません",
     "couldNotLoad": "一覧を読み込めませんでした",
     "tryAgain": "再試行",
-    "accommodation": "宿泊タイプ"
+    "accommodation": "宿泊タイプ",
+    "recommended": "おすすめ",
+    "recentFirst": "新しい順",
+    "oldestFirst": "古い順",
+    "priceHighToLow": "価格の高い順",
+    "priceLowToHigh": "価格の安い順",
+    "sharedRoom": "相部屋",
+    "privateRoom": "個室"
   },
   "accommodation": {
     "boys": "男性専用",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "地図を読み込めませんでした",
     "checkYourConnectionAndTry": "接続を確認してもう一度お試しください — 物件、絞り込み、その他のページ機能はそのままご利用いただけます。",
     "seenAllNStays": "このエリアの {{count}} 件をすべて表示しました",
-    "retryInNSeconds": "{{seconds}} 秒後に自動で再試行します。"
+    "retryInNSeconds": "{{seconds}} 秒後に自動で再試行します。",
+    "nearMe": "現在地周辺",
+    "locating": "現在地を取得中…"
   },
   "account": {
     "accountMenu": "アカウントメニュー",

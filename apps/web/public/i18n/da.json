@@ -23,7 +23,14 @@
     "noResults": "Ingen hosteller matcher",
     "couldNotLoad": "Kunne ikke indlæse annoncer",
     "tryAgain": "Prøv igen",
-    "accommodation": "Indkvartering"
+    "accommodation": "Indkvartering",
+    "recommended": "Anbefalet",
+    "recentFirst": "Nyeste først",
+    "oldestFirst": "Ældste først",
+    "priceHighToLow": "Pris: høj til lav",
+    "priceLowToHigh": "Pris: lav til høj",
+    "sharedRoom": "Delt værelse",
+    "privateRoom": "Privat værelse"
   },
   "accommodation": {
     "boys": "Drenge",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "Kortet kunne ikke indlæses",
     "checkYourConnectionAndTry": "Tjek din forbindelse, og prøv igen — annoncer, filtre og resten af siden virker stadig.",
     "seenAllNStays": "Du har set alle {{count}} ophold i dette område",
-    "retryInNSeconds": "Vi prøver automatisk igen om {{seconds}} s."
+    "retryInNSeconds": "Vi prøver automatisk igen om {{seconds}} s.",
+    "nearMe": "Nær mig",
+    "locating": "Finder placering…"
   },
   "account": {
     "accountMenu": "Kontomenu",

@@ -23,7 +23,14 @@
     "noResults": "Nincs találat ezekre a szűrőkre",
     "couldNotLoad": "Nem sikerült betölteni a hirdetéseket",
     "tryAgain": "Újra",
-    "accommodation": "Szálláshely"
+    "accommodation": "Szálláshely",
+    "recommended": "Ajánlott",
+    "recentFirst": "Legújabb elöl",
+    "oldestFirst": "Legrégebbi elöl",
+    "priceHighToLow": "Ár: csökkenő",
+    "priceLowToHigh": "Ár: növekvő",
+    "sharedRoom": "Osztott szoba",
+    "privateRoom": "Privát szoba"
   },
   "accommodation": {
     "boys": "Fiúk",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "A térkép nem töltődött be",
     "checkYourConnectionAndTry": "Ellenőrizze a kapcsolatot, és próbálja újra — a hirdetések, a szűrők és az oldal többi része továbbra is működik.",
     "seenAllNStays": "Megnézted mind a(z) {{count}} szállást ebben a körzetben",
-    "retryInNSeconds": "{{seconds}} másodperc múlva automatikusan újrapróbáljuk."
+    "retryInNSeconds": "{{seconds}} másodperc múlva automatikusan újrapróbáljuk.",
+    "nearMe": "A közelemben",
+    "locating": "Helymeghatározás…"
   },
   "account": {
     "accountMenu": "Fiók menü",

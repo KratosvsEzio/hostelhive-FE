@@ -1203,7 +1203,14 @@
     "addSharing": "Add sharing",
     "resultsInArea": "{{count}} hostels within map area",
     "noResults": "No hostels match these filters",
-    "accommodation": "Accommodation"
+    "accommodation": "Accommodation",
+    "recommended": "Recommended",
+    "recentFirst": "Recent first",
+    "oldestFirst": "Oldest first",
+    "priceHighToLow": "Price: high to low",
+    "priceLowToHigh": "Price: low to high",
+    "sharedRoom": "Shared room",
+    "privateRoom": "Private room"
   },
   "searchBar": {
     "budgetRange": "Budget range",
@@ -1227,7 +1234,9 @@
     "theMapCouldnTLoad": "The map couldn't load",
     "checkYourConnectionAndTry": "Check your connection and try again — the listings, filters, and the rest of the page still work.",
     "seenAllNStays": "You've seen all {{count}} stays in this area",
-    "retryInNSeconds": "We'll retry automatically in {{seconds}}s."
+    "retryInNSeconds": "We'll retry automatically in {{seconds}}s.",
+    "nearMe": "Near me",
+    "locating": "Locating…"
   },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Drag & drop, upload, or take a photo"

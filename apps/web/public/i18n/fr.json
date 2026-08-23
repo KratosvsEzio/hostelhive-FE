@@ -23,7 +23,14 @@
     "noResults": "Aucune auberge ne correspond",
     "couldNotLoad": "Impossible de charger les annonces",
     "tryAgain": "Réessayer",
-    "accommodation": "Hébergement"
+    "accommodation": "Hébergement",
+    "recommended": "Recommandés",
+    "recentFirst": "Plus récents d’abord",
+    "oldestFirst": "Plus anciens d’abord",
+    "priceHighToLow": "Prix : décroissant",
+    "priceLowToHigh": "Prix : croissant",
+    "sharedRoom": "Chambre partagée",
+    "privateRoom": "Chambre privée"
   },
   "accommodation": {
     "boys": "Garçons",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "La carte n’a pas pu se charger",
     "checkYourConnectionAndTry": "Vérifiez votre connexion et réessayez — les annonces, les filtres et le reste de la page fonctionnent toujours.",
     "seenAllNStays": "Vous avez vu les {{count}} séjours de cette zone",
-    "retryInNSeconds": "Nouvelle tentative automatique dans {{seconds}} s."
+    "retryInNSeconds": "Nouvelle tentative automatique dans {{seconds}} s.",
+    "nearMe": "Près de moi",
+    "locating": "Localisation…"
   },
   "account": {
     "accountMenu": "Menu du compte",

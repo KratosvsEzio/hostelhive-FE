@@ -352,7 +352,7 @@
                 locating() ? 'ti-loader-2 animate-spin' : 'ti-current-location'
               "
             ></i>
-            {{ locating() ? 'Locating…' : 'Near me' }}
+            {{ locating() ? ('searchUi.locating' | transloco) : ('searchUi.nearMe' | transloco) }}
           </button>
         }
       </div>

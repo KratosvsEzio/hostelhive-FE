@@ -23,7 +23,14 @@
     "noResults": "इन फ़िल्टरों से कोई हॉस्टल नहीं मिला",
     "couldNotLoad": "सूची लोड नहीं हो सकी",
     "tryAgain": "फिर कोशिश करें",
-    "accommodation": "आवास"
+    "accommodation": "आवास",
+    "recommended": "अनुशंसित",
+    "recentFirst": "नए पहले",
+    "oldestFirst": "पुराने पहले",
+    "priceHighToLow": "कीमत: अधिक से कम",
+    "priceLowToHigh": "कीमत: कम से अधिक",
+    "sharedRoom": "साझा कमरा",
+    "privateRoom": "निजी कमरा"
   },
   "accommodation": {
     "boys": "लड़के",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "नक्शा लोड नहीं हो सका",
     "checkYourConnectionAndTry": "अपना कनेक्शन जाँचें और दोबारा कोशिश करें — लिस्टिंग, फ़िल्टर और बाकी पेज ठीक चल रहे हैं।",
     "seenAllNStays": "आपने इस क्षेत्र के सभी {{count}} ठहराव देख लिए हैं",
-    "retryInNSeconds": "हम {{seconds}} सेकंड में स्वतः पुनः प्रयास करेंगे।"
+    "retryInNSeconds": "हम {{seconds}} सेकंड में स्वतः पुनः प्रयास करेंगे।",
+    "nearMe": "मेरे पास",
+    "locating": "स्थान पता किया जा रहा है…"
   },
   "account": {
     "accountMenu": "अकाउंट मेन्यू",

@@ -23,7 +23,14 @@
     "noResults": "ان فلٹرز سے کوئی ہاسٹل نہیں ملا",
     "couldNotLoad": "فہرست لوڈ نہیں ہو سکی",
     "tryAgain": "دوبارہ کوشش کریں",
-    "accommodation": "رہائش"
+    "accommodation": "رہائش",
+    "recommended": "تجویز کردہ",
+    "recentFirst": "نئے پہلے",
+    "oldestFirst": "پرانے پہلے",
+    "priceHighToLow": "قیمت: زیادہ سے کم",
+    "priceLowToHigh": "قیمت: کم سے زیادہ",
+    "sharedRoom": "مشترکہ کمرہ",
+    "privateRoom": "نجی کمرہ"
   },
   "accommodation": {
     "boys": "لڑکے",
@@ -393,7 +400,9 @@
     "theMapCouldnTLoad": "نقشہ لوڈ نہیں ہو سکا",
     "checkYourConnectionAndTry": "اپنا انٹرنیٹ دیکھ کر دوبارہ کوشش کریں — فہرست، فلٹرز اور باقی صفحہ کام کر رہے ہیں۔",
     "seenAllNStays": "آپ اس علاقے کی تمام {{count}} قیام گاہیں دیکھ چکے ہیں",
-    "retryInNSeconds": "ہم {{seconds}} سیکنڈ میں خودکار طور پر دوبارہ کوشش کریں گے۔"
+    "retryInNSeconds": "ہم {{seconds}} سیکنڈ میں خودکار طور پر دوبارہ کوشش کریں گے۔",
+    "nearMe": "میرے قریب",
+    "locating": "مقام معلوم کیا جا رہا ہے…"
   },
   "account": {
     "accountMenu": "اکاؤنٹ مینو",

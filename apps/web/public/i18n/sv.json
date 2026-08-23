@@ -23,7 +23,14 @@
     "noResults": "Inga hostel matchar",
     "couldNotLoad": "Kunde inte ladda annonser",
     "tryAgain": "Försök igen",
-    "accommodation": "Boende"
+    "accommodation": "Boende",
+    "recommended": "Rekommenderas",
+    "recentFirst": "Nyast först",
+    "oldestFirst": "Äldst först",
+    "priceHighToLow": "Pris: hög till låg",
+    "priceLowToHigh": "Pris: låg till hög",
+    "sharedRoom": "Delat rum",
+    "privateRoom": "Privat rum"
   },
   "accommodation": {
     "boys": "Killar",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "Kartan kunde inte laddas",
     "checkYourConnectionAndTry": "Kontrollera din anslutning och försök igen — annonser, filter och resten av sidan fungerar fortfarande.",
     "seenAllNStays": "Du har sett alla {{count}} boenden i detta område",
-    "retryInNSeconds": "Vi försöker igen automatiskt om {{seconds}} s."
+    "retryInNSeconds": "Vi försöker igen automatiskt om {{seconds}} s.",
+    "nearMe": "Nära mig",
+    "locating": "Hittar plats…"
   },
   "account": {
     "accountMenu": "Kontomeny",

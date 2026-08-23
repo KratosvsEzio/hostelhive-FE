@@ -23,7 +23,14 @@
     "noResults": "Keine Hostels für diese Filter",
     "couldNotLoad": "Anzeigen konnten nicht geladen werden",
     "tryAgain": "Erneut versuchen",
-    "accommodation": "Unterkunft"
+    "accommodation": "Unterkunft",
+    "recommended": "Empfohlen",
+    "recentFirst": "Neueste zuerst",
+    "oldestFirst": "Älteste zuerst",
+    "priceHighToLow": "Preis: hoch nach niedrig",
+    "priceLowToHigh": "Preis: niedrig nach hoch",
+    "sharedRoom": "Mehrbettzimmer",
+    "privateRoom": "Privatzimmer"
   },
   "accommodation": {
     "boys": "Jungen",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "Die Karte konnte nicht geladen werden",
     "checkYourConnectionAndTry": "Prüfe deine Verbindung und versuche es erneut — Inserate, Filter und der Rest der Seite funktionieren weiterhin.",
     "seenAllNStays": "Sie haben alle {{count}} Unterkünfte in diesem Gebiet gesehen",
-    "retryInNSeconds": "Wir versuchen es in {{seconds}} s automatisch erneut."
+    "retryInNSeconds": "Wir versuchen es in {{seconds}} s automatisch erneut.",
+    "nearMe": "In meiner Nähe",
+    "locating": "Standort wird ermittelt…"
   },
   "account": {
     "accountMenu": "Kontomenü",

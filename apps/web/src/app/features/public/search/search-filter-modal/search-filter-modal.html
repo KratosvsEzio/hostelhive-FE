@@ -75,7 +75,7 @@
             variant="field"
             [options]="propertyTypes"
             [placeholder]="'filters.anyPropertyType' | transloco"
-            clearLabel="Any property type"
+            [clearLabel]="'filters.anyPropertyType' | transloco"
             [value]="draftPropertyType() || null"
             (valueChange)="setDraftProperty($event)"
           />

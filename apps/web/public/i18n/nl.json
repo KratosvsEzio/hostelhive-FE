@@ -23,7 +23,14 @@
     "noResults": "Geen hostels gevonden",
     "couldNotLoad": "Kon aanbiedingen niet laden",
     "tryAgain": "Opnieuw",
-    "accommodation": "Accommodatie"
+    "accommodation": "Accommodatie",
+    "recommended": "Aanbevolen",
+    "recentFirst": "Nieuwste eerst",
+    "oldestFirst": "Oudste eerst",
+    "priceHighToLow": "Prijs: hoog naar laag",
+    "priceLowToHigh": "Prijs: laag naar hoog",
+    "sharedRoom": "Gedeelde kamer",
+    "privateRoom": "Privékamer"
   },
   "accommodation": {
     "boys": "Jongens",
@@ -392,7 +399,9 @@
     "theMapCouldnTLoad": "De kaart kon niet worden geladen",
     "checkYourConnectionAndTry": "Controleer je verbinding en probeer opnieuw — advertenties, filters en de rest van de pagina werken gewoon.",
     "seenAllNStays": "Je hebt alle {{count}} verblijven in dit gebied gezien",
-    "retryInNSeconds": "We proberen het over {{seconds}} s automatisch opnieuw."
+    "retryInNSeconds": "We proberen het over {{seconds}} s automatisch opnieuw.",
+    "nearMe": "Bij mij in de buurt",
+    "locating": "Locatie bepalen…"
   },
   "account": {
     "accountMenu": "Accountmenu",

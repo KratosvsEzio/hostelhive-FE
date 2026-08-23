@@ -25,7 +25,7 @@
        controls for one filter. -->
   <hh-dropdown
     class="shrink-0"
-    [options]="roomTypeOptions"
+    [options]="roomTypeOptions()"
     [placeholder]="'common.roomType' | transloco"
     [value]="roomType()"
     (valueChange)="onRoomTypeChange($event)"
@@ -50,7 +50,7 @@
     align="right"
     [options]="sortOptions()"
     [placeholder]="'common.sort' | transloco"
-    clearLabel="Recommended"
+    [clearLabel]="'search.recommended' | transloco"
     [value]="sort() === 'recommended' ? null : sort()"
     (valueChange)="onSortChange($event)"
   />

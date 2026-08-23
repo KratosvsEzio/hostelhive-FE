@@ -23,7 +23,14 @@
     "noResults": "Tidak ada hostel yang cocok dengan filter ini",
     "couldNotLoad": "Kami tidak dapat memuat daftar",
     "tryAgain": "Coba lagi",
-    "accommodation": "Jenis akomodasi"
+    "accommodation": "Jenis akomodasi",
+    "recommended": "Direkomendasikan",
+    "recentFirst": "Terbaru dulu",
+    "oldestFirst": "Terlama dulu",
+    "priceHighToLow": "Harga: tinggi ke rendah",
+    "priceLowToHigh": "Harga: rendah ke tinggi",
+    "sharedRoom": "Kamar bersama",
+    "privateRoom": "Kamar pribadi"
   },
   "accommodation": {
     "boys": "Putra",
@@ -393,7 +400,9 @@
     "theMapCouldnTLoad": "Peta gagal dimuat",
     "checkYourConnectionAndTry": "Periksa koneksi Anda lalu coba lagi — daftar, filter, dan bagian lain halaman tetap berfungsi.",
     "seenAllNStays": "Anda telah melihat semua {{count}} penginapan di area ini",
-    "retryInNSeconds": "Kami akan mencoba lagi otomatis dalam {{seconds}} d."
+    "retryInNSeconds": "Kami akan mencoba lagi otomatis dalam {{seconds}} d.",
+    "nearMe": "Dekat saya",
+    "locating": "Menentukan lokasi…"
   },
   "account": {
     "accountMenu": "Menu akun",
