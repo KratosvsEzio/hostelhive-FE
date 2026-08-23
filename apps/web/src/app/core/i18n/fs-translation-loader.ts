@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PendingTasks, inject } from '@angular/core';
 import { Translation, TranslocoLoader } from '@jsverse/transloco';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -33,7 +33,26 @@ export class FsTranslationLoader implements TranslocoLoader {
     join(process.cwd(), 'apps/web/public/i18n'),
   ];
 
-  async getTranslation(lang: string): Promise<Translation> {
+  /**
+   * SSR serializes the page once Angular reports no work outstanding. It learns about
+   * outstanding work from `PendingTasks` — which `HttpClient` reports into, and a bare
+   * `readFile` promise does not. Without this wrapper the server rendered every
+   * translated binding as an empty string, and `provideClientHydration` then reused that
+   * empty DOM rather than re-rendering it, so a cold load showed blank labels until
+   * something (a language switch) forced a re-render.
+   */
+  private readonly pending = inject(PendingTasks);
+
+  getTranslation(lang: string): Promise<Translation> {
+    const read = this.read(lang);
+    // `run` returns void, so hand it a copy to await and give the caller the real promise.
+    // The copy swallows the rejection so a missing file surfaces once — to Transloco —
+    // rather than also as an unhandled rejection that would take the server down.
+    this.pending.run(() => read.catch(() => undefined));
+    return read;
+  }
+
+  private async read(lang: string): Promise<Translation> {
     for (const root of this.roots) {
       try {
         return JSON.parse(await readFile(join(root, `${lang}.json`), 'utf8')) as Translation;

@@ -1,7 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import { DEFAULT_LOCALE, dirFor, isLocaleCode, localeFor } from './locales';
+import {
+  DEFAULT_LOCALE,
+  dirFor,
+  isLocaleCode,
+  localeFor,
+  splitLocale,
+  withLocale,
+} from './locales';
 
 /**
  * Remembered choice. A *preference*, not the source of truth — the URL is that, because
@@ -23,6 +31,7 @@ const KEY = 'hh.locale';
 export class LocaleStore {
   private readonly transloco = inject(TranslocoService);
   private readonly doc = inject(DOCUMENT);
+  private readonly router = inject(Router);
 
   private readonly _active = signal(DEFAULT_LOCALE);
   readonly active = this._active.asReadonly();
@@ -61,6 +70,27 @@ export class LocaleStore {
     if (remember && typeof localStorage !== 'undefined') {
       localStorage.setItem(KEY, locale.code);
     }
+  }
+
+  /**
+   * Switches language and takes the URL with it.
+   *
+   * The URL is what makes a language real — it is what gets shared, bookmarked and
+   * indexed — so a control that only swapped the strings would leave the address bar
+   * lying about the page. Lives here rather than in any one switcher because more than
+   * one control offers this choice, and they must not drift.
+   */
+  switchTo(code: string): void {
+    if (code === this._active()) return;
+
+    // Remember before navigating: `LocaleSync` reads the URL on the resulting
+    // NavigationEnd, and the stored value is what survives to the next visit.
+    this.apply(code, true);
+
+    const url = this.router.url;
+    const { path } = splitLocale(url);
+    const query = url.includes('?') ? url.slice(url.indexOf('?')) : '';
+    void this.router.navigateByUrl(withLocale(code, path) + query);
   }
 
   /** For a "reset to site default" control, and for tests. */

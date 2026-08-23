@@ -5,10 +5,10 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '@hostelhive/ui';
 import { LocaleStore } from './locale-store';
-import { LOCALES, localeFor, splitLocale, withLocale } from './locales';
+import { LOCALES, flagSrc, localeFor } from './locales';
 
 /**
  * Language picker.
@@ -25,7 +25,7 @@ import { LOCALES, localeFor, splitLocale, withLocale } from './locales';
 @Component({
   selector: 'hh-language-switcher',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button],
+  imports: [Button, TranslocoPipe],
   template: `
     <div class="relative">
       <button
@@ -38,7 +38,14 @@ import { LOCALES, localeFor, splitLocale, withLocale } from './locales';
         aria-haspopup="listbox"
         [attr.aria-label]="'Language: ' + current().englishName"
       >
-        <i class="ti ti-world text-base" aria-hidden="true"></i>
+        <img
+          [src]="flagSrc(current())"
+          alt=""
+          aria-hidden="true"
+          width="20"
+          height="15"
+          class="h-[15px] w-5 shrink-0 rounded-[2px] object-cover"
+        />
         <span>{{ current().name }}</span>
       </button>
 
@@ -46,12 +53,12 @@ import { LOCALES, localeFor, splitLocale, withLocale } from './locales';
         <button
           type="button"
           class="fixed inset-0 z-[70] cursor-default"
-          aria-label="Close"
+          [attr.aria-label]="'a11y.close' | transloco"
           (click)="open.set(false)"
         ></button>
         <ul
           role="listbox"
-          class="absolute end-0 z-[80] mt-2 max-h-80 w-56 overflow-y-auto rounded-xl border border-ink-100 bg-white py-1 shadow-pill"
+          class="absolute end-0 z-[80] mt-2 max-h-80 w-64 overflow-y-auto rounded-xl border border-ink-100 bg-white py-1 shadow-pill"
         >
           @for (l of locales; track l.code) {
             <li>
@@ -60,14 +67,34 @@ import { LOCALES, localeFor, splitLocale, withLocale } from './locales';
                 role="option"
                 [attr.aria-selected]="l.code === current().code"
                 [attr.lang]="l.code"
-                [attr.dir]="l.dir"
                 class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm transition hover:bg-surface"
                 [class.text-brand-600]="l.code === current().code"
                 [class.font-medium]="l.code === current().code"
                 (click)="choose(l.code)"
               >
-                <span>{{ l.name }}</span>
-                <span class="text-xs text-ink-400" dir="ltr">{{ l.englishName }}</span>
+                <span class="flex min-w-0 items-center gap-2.5">
+                  <!-- Decoration beside the name, never the label: a flag names a country,
+                       and the row is identified by its endonym and English name. -->
+                  <img
+                    [src]="flagSrc(l)"
+                    alt=""
+                    aria-hidden="true"
+                    width="20"
+                    height="15"
+                    loading="lazy"
+                    class="h-[15px] w-5 shrink-0 rounded-[2px] object-cover"
+                  />
+                  <!-- Direction belongs on the text, not on the row. The row deliberately
+                       inherits the page's direction so all eighteen options share one
+                       layout: on an English page every flag is on the left and every
+                       English name on the right, and on an Urdu page the whole list
+                       mirrors together. Setting it per row instead flipped Urdu and Arabic
+                       out of line with the sixteen around them, which is a picker somebody
+                       has to read twice. Kept here because it decides where the ellipsis
+                       lands if a name is ever long enough to clip. -->
+                  <span class="truncate" [attr.dir]="l.dir">{{ l.name }}</span>
+                </span>
+                <span class="shrink-0 text-xs text-ink-400" dir="ltr">{{ l.englishName }}</span>
               </button>
             </li>
           }
@@ -78,23 +105,14 @@ import { LOCALES, localeFor, splitLocale, withLocale } from './locales';
 })
 export class LanguageSwitcher {
   private readonly store = inject(LocaleStore);
-  private readonly router = inject(Router);
 
   protected readonly locales = LOCALES;
+  protected readonly flagSrc = flagSrc;
   protected readonly open = signal(false);
   protected readonly current = computed(() => localeFor(this.store.active()));
 
   protected choose(code: string): void {
     this.open.set(false);
-    if (code === this.store.active()) return;
-
-    // Remember before navigating: `LocaleSync` reads the URL on the resulting
-    // NavigationEnd, and the stored value is what survives to the next visit.
-    this.store.apply(code, true);
-
-    const url = this.router.url;
-    const { path } = splitLocale(url);
-    const query = url.includes('?') ? url.slice(url.indexOf('?')) : '';
-    void this.router.navigateByUrl(withLocale(code, path) + query);
+    this.store.switchTo(code);
   }
 }
