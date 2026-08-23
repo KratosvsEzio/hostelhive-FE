@@ -28,11 +28,20 @@ import { LOCALES, flagSrc, localeFor } from './locales';
   imports: [Button, TranslocoPipe],
   template: `
     <div class="relative">
+      <!--
+        Reads as a control rather than a caption. It sat as bare text beside the solid
+        avatar, which made the one thing a visitor who cannot read the page needs to find
+        the least button-like item in the header.
+
+        A filled button in the default colour already is this pill — border, background and a hover
+        that darkens rather than fighting it — so nothing here overrides the component.
+      -->
       <button
         hh-button
-        variant="text"
+        variant="filled"
         size="sm"
         type="button"
+        class="!rounded-full"
         (click)="open.set(!open())"
         [attr.aria-expanded]="open()"
         aria-haspopup="listbox"
