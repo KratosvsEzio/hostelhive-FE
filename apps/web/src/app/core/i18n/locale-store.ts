@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { PreferenceSource } from '@core/preferences/currency-preference';
 import { TranslocoService } from '@jsverse/transloco';
 import {
   DEFAULT_LOCALE,
@@ -17,6 +18,20 @@ import {
  * returning visitor who arrives at an unprefixed path.
  */
 const KEY = 'hh.locale';
+
+/**
+ * The language the visitor picked for themselves, or absent if they never have.
+ *
+ * Separate from {@link KEY} for the same reason the currency's is: the location guess writes
+ * the same key, so the value alone cannot distinguish a guess from a decision — and without
+ * that distinction the guess wins every reload.
+ *
+ * Holds the code rather than a flag, so the record says both that a choice was made and what
+ * it was. Retire a language and the stored code stops validating, which reads as no choice
+ * and returns the visitor to the guess instead of pinning them to a language this app no
+ * longer serves.
+ */
+const CHOSEN_KEY = 'hh.locale.chosen';
 
 /**
  * The active language, and everything that has to change with it.
@@ -80,7 +95,13 @@ export class LocaleStore {
    * lying about the page. Lives here rather than in any one switcher because more than
    * one control offers this choice, and they must not drift.
    */
-  switchTo(code: string): void {
+  switchTo(code: string, source: PreferenceSource = 'user'): void {
+    // Recorded before the early return below. Picking the language you are already reading
+    // is still a decision, and the one it most needs to survive: someone in Germany who
+    // wants English gets `en` while already on `en`, and if that went unrecorded the
+    // location guess would move them off it on the very next load.
+    if (source === 'user') this.remember(code);
+
     if (code === this._active()) return;
 
     // Remember before navigating: `LocaleSync` reads the URL on the resulting
@@ -93,10 +114,37 @@ export class LocaleStore {
     void this.router.navigateByUrl(withLocale(code, path) + query);
   }
 
-  /** For a "reset to site default" control, and for tests. */
+  /**
+   * The language the visitor picked themselves, or null if they never have.
+   *
+   * Validated on the way out, like {@link storedPreference}: a code this app no longer
+   * serves is not a choice it can honour, so it reads as none.
+   */
+  userChoice(): string | null {
+    if (typeof localStorage === 'undefined') return null; // SSR
+    const v = localStorage.getItem(CHOSEN_KEY);
+    return isLocaleCode(v) ? v : null;
+  }
+
+  /** Stores the code under both keys — the applied value, and the decision behind it. */
+  private remember(code: string): void {
+    if (typeof localStorage === 'undefined') return;
+    const locale = localeFor(isLocaleCode(code) ? code : DEFAULT_LOCALE);
+    localStorage.setItem(KEY, locale.code);
+    localStorage.setItem(CHOSEN_KEY, locale.code);
+  }
+
+  /**
+   * For a "reset to site default" control, and for tests.
+   *
+   * Drops the decision alongside the value, so a visitor who resets is handed back to the
+   * location guess rather than being pinned to the default with nothing able to move them.
+   */
   forget(): void {
-    if (typeof localStorage !== 'undefined') localStorage.removeItem(KEY);
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(CHOSEN_KEY);
   }
 }
 
-export { KEY as LOCALE_STORAGE_KEY, dirFor };
+export { KEY as LOCALE_STORAGE_KEY, CHOSEN_KEY as LOCALE_CHOSEN_STORAGE_KEY, dirFor };

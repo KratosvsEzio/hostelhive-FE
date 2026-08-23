@@ -57,18 +57,21 @@ const SOURCES: readonly { url: string; read: (body: string) => string | null }[]
 const TOTAL_BUDGET_MS = 5000;
 
 /**
- * Opens the app in the language and currency of wherever the visitor is.
+ * Opens the app in the language and currency of wherever the visitor is — until they say
+ * otherwise.
  *
- * The country is authoritative and re-asserted on every startup: whatever
- * {@link KEY} holds decides the language and the currency, overwriting whatever was there
- * before. A visitor who moves — or flips a VPN — is followed on the next load.
+ * The country decides both **only while neither has been chosen**. Once the visitor picks a
+ * language or a currency for themselves, that half stops being guessed at: not on this load,
+ * not on any later one, and not when they travel. The two halves are independent, so picking
+ * a language leaves the currency still following the country.
  *
- * The cost of that is real and worth stating plainly: a deliberate choice does not survive a
- * reload. Someone sitting in Germany who wants the site in English is returned to German
- * every time, and a shared `/de/…` link opened from the Netherlands re-navigates to `/nl/…`
- * before it is read. This is the behaviour that was asked for; the alternative is to record
- * which country the current values were derived from and stand down once the visitor picks
- * for themselves, which is a one-key change to {@link apply} if the tradeoff bites.
+ * Location is a guess about a person, and a guess that overrules them is just a bug with a
+ * good excuse. It re-asserted itself on every startup until a visitor's own choice could be
+ * told apart from a guess — which is what `hh.locale.chosen` and `hh.currency.chosen` record;
+ * the value keys alone cannot, because this class writes those too.
+ *
+ * A visitor who has chosen nothing is still followed as they move: the country is re-read on
+ * every startup and after every `GET /api/users/current`.
  *
  * Deliberately uses `fetch` rather than `HttpClient`: the app's interceptors attach the
  * session bearer token, and this is a third-party host that must never receive it. Going
@@ -88,8 +91,9 @@ export class GeoPreference {
   private readonly gate = inject(StartupGate);
 
   /**
-   * Re-applies both settings from the country. Safe to call unconditionally, and cheap on a
-   * return visit: the country is read from storage rather than looked up again.
+   * Applies whichever of the two the visitor has not chosen for themselves. Safe to call
+   * unconditionally, and cheap on a return visit: the country is read from storage rather
+   * than looked up again.
    *
    * A country that cannot be resolved changes nothing — a failed guess has to be
    * indistinguishable from never having guessed, or a blocked lookup would reset everyone to
@@ -108,6 +112,9 @@ export class GeoPreference {
    * VPN — is followed without waiting for the cache to be cleared by hand. The stored country
    * becomes a starting value for the next cold load rather than a decision that outlives the
    * visitor's actual location.
+   *
+   * Still only fills what the visitor has not chosen: travelling does not overrule them
+   * either, which is the whole point of recording the choice.
    */
   async refresh(): Promise<void> {
     if (typeof window === 'undefined') return; // SSR: no visitor IP to read here
@@ -124,7 +131,15 @@ export class GeoPreference {
    */
   private async settle(country: string | null): Promise<void> {
     if (!country) return;
-    this.currency.set(currencyForCountry(country));
+
+    // Each half stands down on its own. Someone may well pick English and leave the
+    // currency alone; treating the two as one switch would strand the currency on whatever
+    // the app defaults to the moment they touch the language.
+    if (!this.currency.userChoice()) {
+      this.currency.set(currencyForCountry(country), 'auto');
+    }
+    if (this.locale.userChoice()) return;
+
     await this.whenRouted();
     this.applyLocale(country);
   }
@@ -149,7 +164,7 @@ export class GeoPreference {
   private applyLocale(country: string): void {
     const code = localeForCountry(country);
     if (code === this.locale.active()) return;
-    this.locale.switchTo(code);
+    this.locale.switchTo(code, 'auto');
   }
 
   private cached(): string | null {

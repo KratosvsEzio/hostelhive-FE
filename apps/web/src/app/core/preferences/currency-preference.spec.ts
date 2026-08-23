@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { CURRENCY_STORAGE_KEY, CurrencyPreference } from './currency-preference';
+import {
+  CURRENCY_CHOSEN_STORAGE_KEY,
+  CURRENCY_STORAGE_KEY,
+  CurrencyPreference,
+} from './currency-preference';
 
 /**
  * The store reads localStorage in its constructor, so every case sets the stored value
@@ -60,5 +64,41 @@ describe('CurrencyPreference', () => {
       s.set(code);
       expect(s.code()).toBe(code);
     }
+  });
+
+  // The location guess writes the same value key, so the value alone cannot say whether a
+  // visitor decided or was guessed at. Only the flag separates them.
+  it('records a pick as the visitor’s own decision', () => {
+    const s = store();
+    s.set('EUR');
+    expect(s.userChoice()).toBe('EUR');
+  });
+
+  it('does not record an automatic set as a decision', () => {
+    const s = store();
+    s.set('EUR', 'auto');
+    expect(s.code()).toBe('EUR');
+    expect(s.userChoice()).toBeNull();
+  });
+
+  it('reports no decision when only a value was stored', () => {
+    expect(store('USD').userChoice()).toBeNull();
+  });
+
+  // Retiring a currency must not strand whoever had chosen it: an unrecognised code reads
+  // as no choice and hands the visitor back to the location guess.
+  it('treats a currency it no longer lists as no choice', () => {
+    localStorage.setItem(CURRENCY_CHOSEN_STORAGE_KEY, 'XYZ');
+
+    expect(store().userChoice()).toBeNull();
+  });
+
+  // A visitor who resets wants the app guessing again, not to be pinned to the default.
+  it('drops the decision when forgotten', () => {
+    const s = store();
+    s.set('JPY');
+    s.forget();
+    expect(s.userChoice()).toBeNull();
+    expect(localStorage.getItem(CURRENCY_CHOSEN_STORAGE_KEY)).toBeNull();
   });
 });

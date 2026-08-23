@@ -9,6 +9,26 @@ import { DEFAULT_CURRENCY_CODE, isCurrencyCode } from '@util/currencies';
 const KEY = 'hh.currency';
 
 /**
+ * The code the visitor picked for themselves, or absent if they never have.
+ *
+ * Separate from {@link KEY} because the value alone cannot say where it came from: the
+ * location guess writes the same key, so without this a guess and a decision are the same
+ * record and the guess wins every reload. {@link KEY} is still written either way — it is
+ * what a returning visitor starts on before the lookup answers.
+ *
+ * Holds the code rather than a flag so the record is self-contained. A flag would only
+ * assert *that* a choice was made and leave {@link KEY} to say what it was — two facts that
+ * can drift apart, and one of them meaningless on its own. It also makes the choice
+ * validatable: retire a currency and the stored code stops being one this app knows, which
+ * reads as no choice and hands the visitor back to the guess, rather than pinning them to
+ * something the picker can no longer show.
+ */
+const CHOSEN_KEY = 'hh.currency.chosen';
+
+/** Who is setting the preference: the visitor, or something guessing on their behalf. */
+export type PreferenceSource = 'user' | 'auto';
+
+/**
  * The visitor's preferred currency.
  *
  * Governs what a **new** priced thing starts out as — today that is a hostel the host is
@@ -46,18 +66,44 @@ export class CurrencyPreference {
     return isCurrencyCode(v) ? v : null;
   }
 
-  /** Sets and remembers the preference. Ignores a code the app does not know. */
-  set(code: string): void {
+  /**
+   * Sets and remembers the preference. Ignores a code the app does not know.
+   *
+   * `source` defaults to `'user'` so every control that offers this choice records a
+   * decision without having to say so; only the location guess passes `'auto'`.
+   */
+  set(code: string, source: PreferenceSource = 'user'): void {
     if (!isCurrencyCode(code)) return;
     this._code.set(code);
-    if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, code);
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(KEY, code);
+    if (source === 'user') localStorage.setItem(CHOSEN_KEY, code);
   }
 
-  /** Back to the app default, forgetting the stored choice. */
+  /**
+   * The currency the visitor picked themselves, or null if they never have.
+   *
+   * Validated on the way out, like {@link storedPreference}: a code this app no longer
+   * lists is not a choice it can honour, so it reads as none.
+   */
+  userChoice(): string | null {
+    if (typeof localStorage === 'undefined') return null; // SSR
+    const v = localStorage.getItem(CHOSEN_KEY);
+    return isCurrencyCode(v) ? v : null;
+  }
+
+  /**
+   * Back to the app default, forgetting the stored choice.
+   *
+   * Drops the decision too, so a visitor who resets is handed back to the location guess
+   * rather than being left on the default with nothing allowed to move them off it.
+   */
   forget(): void {
     this._code.set(DEFAULT_CURRENCY_CODE);
-    if (typeof localStorage !== 'undefined') localStorage.removeItem(KEY);
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(CHOSEN_KEY);
   }
 }
 
-export { KEY as CURRENCY_STORAGE_KEY };
+export { KEY as CURRENCY_STORAGE_KEY, CHOSEN_KEY as CURRENCY_CHOSEN_STORAGE_KEY };

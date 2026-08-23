@@ -25,10 +25,15 @@ class RouterStub {
 class LocaleStoreStub {
   readonly active = signal('en');
   stored: string | null = null;
+  /** The language the visitor picked themselves — the thing geo stands down for. */
+  chosen: string | null = null;
   switchedTo: string | null = null;
 
   storedPreference(): string | null {
     return this.stored;
+  }
+  userChoice(): string | null {
+    return this.chosen;
   }
   switchTo(code: string): void {
     this.switchedTo = code;
@@ -130,8 +135,9 @@ describe('GeoPreference', () => {
     expect(currency.code()).toBe('EUR');
   });
 
-  // The whole point of country-wins: whatever is stored is re-derived, not preserved.
-  it('overrides a stored currency', async () => {
+  // A stored value is not a decision. This class writes those keys itself, so what is in
+  // them on a return visit is usually its own last guess — re-deriving it is the point.
+  it('overrides a stored currency the visitor never chose', async () => {
     localStorage.setItem(CURRENCY_STORAGE_KEY, 'JPY');
     const { geo, currency } = setUp();
     await geo.apply();
@@ -140,7 +146,7 @@ describe('GeoPreference', () => {
     expect(locale.switchedTo).toBe('de');
   });
 
-  it('overrides a stored language', async () => {
+  it('overrides a stored language the visitor never chose', async () => {
     localStorage.setItem(LOCALE_STORAGE_KEY, 'ur');
     const { geo, currency } = setUp();
     locale.stored = 'ur';
@@ -148,6 +154,52 @@ describe('GeoPreference', () => {
 
     expect(locale.switchedTo).toBe('de');
     expect(currency.code()).toBe('EUR');
+  });
+
+  it('leaves a currency the visitor chose alone', async () => {
+    const { geo, currency } = setUp();
+    currency.set('JPY'); // as the picker does — records the decision
+    await geo.apply();
+
+    expect(currency.code()).toBe('JPY');
+  });
+
+  it('leaves a language the visitor chose alone', async () => {
+    const { geo } = setUp();
+    locale.chosen = 'en';
+    await geo.apply();
+
+    expect(locale.switchedTo).toBeNull();
+  });
+
+  // The two are independent: picking one must not strand the other on the app default.
+  it('still sets the language when only the currency was chosen', async () => {
+    const { geo, currency } = setUp();
+    currency.set('JPY');
+    await geo.apply();
+
+    expect(locale.switchedTo).toBe('de');
+    expect(currency.code()).toBe('JPY');
+  });
+
+  it('still sets the currency when only the language was chosen', async () => {
+    const { geo, currency } = setUp();
+    locale.chosen = 'en';
+    await geo.apply();
+
+    expect(currency.code()).toBe('EUR');
+    expect(locale.switchedTo).toBeNull();
+  });
+
+  // Travelling does not overrule a decision either — that is what recording it is for.
+  it('does not override a chosen language on a later refresh', async () => {
+    const { geo } = setUp();
+    locale.chosen = 'en';
+    await geo.apply();
+    stubCountry('FR');
+    await geo.refresh();
+
+    expect(locale.switchedTo).toBeNull();
   });
 
   it('still resolves the country even when both are already set', async () => {
