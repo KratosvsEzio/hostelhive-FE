@@ -167,6 +167,18 @@ export class GeoPreference {
     this.locale.switchTo(code, 'auto');
   }
 
+  /**
+   * The country last resolved for this visitor, or null before the first lookup lands.
+   *
+   * Public because the country is worth more than the two preferences derived from it —
+   * the search page opens on it. This class owns the key, so reading it anywhere else
+   * would be a second copy of the same fact waiting to disagree with this one.
+   */
+  country(): string | null {
+    if (typeof window === 'undefined') return null; // SSR: nothing stored to read
+    return this.cached();
+  }
+
   private cached(): string | null {
     try {
       return localStorage.getItem(KEY) || null;

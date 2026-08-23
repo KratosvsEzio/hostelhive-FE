@@ -29,7 +29,7 @@ import {
   tap,
 } from 'rxjs';
 import { AccommodationType, Listing, Paginated } from '@hostelhive/data-access';
-import { TooltipFixed } from '@hostelhive/ui';
+import { Button, TooltipFixed } from '@hostelhive/ui';
 import { FavoritesStore } from '@util/favorites-store';
 import {
   formatAmount,
@@ -41,6 +41,8 @@ import { currencyName } from '@util/currencies';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
+import { CountryBounds } from '@core/geo/country-bounds';
+import { LocaleStore } from '@core/i18n/locale-store';
 import { MobileApp } from '@core/mobile-app';
 import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
 import { Seo } from '@core/seo';
@@ -114,7 +116,7 @@ type SheetSnap = 'peek' | 'half' | 'full';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, TooltipFixed, CurrencyNamePipe, CurrencySelect],
+  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, Button, TooltipFixed, CurrencyNamePipe, CurrencySelect],
   templateUrl: './search-map.html',
 })
 export class SearchMap {
@@ -141,6 +143,8 @@ export class SearchMap {
   );
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly countryBounds = inject(CountryBounds);
+  private readonly locale = inject(LocaleStore);
   private readonly sharedMap = inject(SharedMap);
   private readonly geo = inject(GeolocationService);
   private readonly destroyRef = inject(DestroyRef);
@@ -227,7 +231,10 @@ export class SearchMap {
     const known = this.slugPlace();
     if (known) return known.name;
     const slug = this.locationSlug();
-    return slug ? fromLocationSlug(slug) : DEFAULT_LOCATION;
+    if (slug) return fromLocationSlug(slug);
+    // Whatever the map was framed on. A heading reading "Pakistan" over a map of the
+    // Netherlands describes neither the view nor the results.
+    return this.homeCountryName() ?? DEFAULT_LOCATION;
   });
 
   /**
@@ -317,6 +324,48 @@ export class SearchMap {
 
   /** Map viewport bounds — updated on every idle event (zoom/pan), seeded from the URL. */
   private readonly mapBounds = signal<Bounds | null>(this.urlBounds());
+
+  /**
+   * Search the whole world rather than what is on screen — "Search everywhere", offered
+   * when an area comes back empty.
+   *
+   * A flag rather than just clearing {@link mapBounds}, because the camera then flies to
+   * wherever the results are and every settle re-captures the viewport. Without this the
+   * search would snap straight back to a box, and the visitor's answer to “there is
+   * nothing here” would last about a second.
+   *
+   * Cleared by the next real pan or zoom: moving the map is how you say you care about
+   * a place again.
+   */
+  protected readonly unbounded = signal(false);
+
+  /**
+   * The country the opening view was framed on, once that has been decided.
+   *
+   * Set rather than derived because it is the answer to an async question — the table is
+   * fetched — and because it records that the framing actually happened. A visitor whose
+   * country is unknown, or one the table does not carry, leaves this null and the page
+   * reads exactly as it did before.
+   */
+  private readonly homeCountry = signal<string | null>(null);
+
+  /**
+   * The country's name in the language being read — "Netherlands", "Pays-Bas", "ہالینڈ".
+   *
+   * `Intl.DisplayNames` already knows every region in every locale the app ships, so this
+   * needs no table of its own and stays right when a language is added. An unknown code
+   * returns itself, which would put "ZZ" in a heading, so that case is dropped.
+   */
+  protected readonly homeCountryName = computed(() => {
+    const code = this.homeCountry();
+    if (!code) return null;
+    try {
+      const name = new Intl.DisplayNames([this.locale.active()], { type: 'region' }).of(code);
+      return name && name !== code ? name : null;
+    } catch {
+      return null; // locale the runtime cannot build a formatter for
+    }
+  });
   protected readonly page = signal(1);
 
   private readonly query = computed(() => {
@@ -325,7 +374,7 @@ export class SearchMap {
     const max = p?.get('maxPrice');
     const c = this.center();
     const amenities = this.amenities();
-    const mb = this.mapBounds();
+    const mb = this.unbounded() ? null : this.mapBounds();
     const slugToId = this._slugToId();
     const offerIds = amenities
       .map((slug) => slugToId.get(slug))
@@ -464,11 +513,25 @@ export class SearchMap {
   /** The infinite list: pages accumulate here (page 1 replaces, page n appends). */
   protected readonly listings = computed(() => this.accumulated());
   protected readonly totalResults = computed(() => this.result().total);
-  /** Airbnb-style heading, e.g. "54 stays near Karachi" / "391 stays in this area". */
-  protected readonly resultsLabel = computed(() => {
-    const n = this.totalResults();
-    return `${n.toLocaleString('en-US')} hostel${n === 1 ? '' : 's'} within map area`;
-  });
+  /**
+   * The result count, grouped the way the active language groups numbers — 12,345 in
+   * English, 12.345 in Dutch and German, 12 345 in French and Russian. Only the number:
+   * the sentence around it is `search.resultsInArea`, rendered through the pipe so it
+   * follows a language switch without this component having to watch for one.
+   */
+  protected readonly resultsCount = computed(() =>
+    this.totalResults().toLocaleString(this.locale.active()),
+  );
+
+  /**
+   * Which of the two count sentences to render. Split by hand because the app has no
+   * plural-rule plugin, so a one/other pair is as far as this can go — right for the
+   * Germanic and Romance languages, and no worse than a single form for the rest, whose
+   * noun does not inflect after a numeral anyway.
+   */
+  protected readonly resultsKey = computed(() =>
+    this.totalResults() === 1 ? 'search.resultsInAreaOne' : 'search.resultsInArea',
+  );
   protected readonly totalPages = computed(() => {
     const r = this.result();
     // Prefer the API's own page count; fall back to deriving it from total / pageSize.
@@ -726,6 +789,18 @@ export class SearchMap {
       const filtered = this.hasFilters();
       const name = this.locationName();
 
+      // Searching everywhere: no place to name, and `locationName` would still be
+      // reporting whichever country the map opened on before the visitor left it.
+      if (this.unbounded()) {
+        this.seo.apply({
+          title: 'Hostels worldwide — search | HostelHive',
+          description:
+            'Search verified hostels, PGs and co-living worldwide. Filter by budget, room sharing and amenities.',
+          noindex: true,
+        });
+        return;
+      }
+
       // Filtered searches are facets, not pages: noindex, and no canonical, since
       // claiming they are the landing page would be a lie about their content.
       if (filtered || !place) {
@@ -920,6 +995,20 @@ export class SearchMap {
   private async setup(): Promise<void> {
     const c = this.center();
     const restored = this.urlBounds();
+    // Only when the URL names nowhere. A pasted viewport, a searched place or a landing
+    // page's seed is somewhere the visitor asked for, and where they are is a guess — the
+    // same order the language and currency follow.
+    const home = c || restored ? null : await this.countryBounds.forVisitor();
+    if (home) {
+      // Scope the search too, not just the camera. `mapBounds` seeds itself from the URL
+      // synchronously at construction, which this answer is far too late for, and the
+      // `moveend` that `fitBounds` raises is not yet listened for at this point. Setting it
+      // here is what makes the first request ask about this country rather than the world;
+      // the capture that follows the camera settling agrees with it, and the pipeline's
+      // debounce collapses the pair into one call.
+      this.mapBounds.set(home.box);
+      this.homeCountry.set(home.code);
+    }
     try {
       // Borrowed, not built: returning here from a listing reuses the instance from the
       // previous visit, so the map and its visible tiles are already warm.
@@ -932,16 +1021,22 @@ export class SearchMap {
       );
       this.map = map;
       this.leaflet = leaflet;
-      if (restored) {
+      const framed = restored ?? home?.box ?? null;
+      if (framed) {
         // A viewport came in on the URL, so it — not the pins — decides the camera.
         // `userInteracted` marks it as chosen rather than derived, which stops the first
         // marker rebuild from fitting the camera to the results and undoing the restore.
+        //
+        // The visitor's country counts as chosen for the same reason, even though nobody
+        // typed it: left derived, the first results would refit the camera onto whichever
+        // city happens to hold them, and the country map that was the point of framing it
+        // would be gone before it was seen.
         this.userInteracted = true;
         this.programmaticMove = true;
         map.fitBounds(
           leaflet.latLngBounds(
-            [restored.south, restored.west],
-            [restored.north, restored.east],
+            [framed.south, framed.west],
+            [framed.north, framed.east],
           ),
         );
       }
@@ -963,11 +1058,15 @@ export class SearchMap {
     this.sharedMap.listen('resize', () => this.captureMapBounds());
     this.sharedMap.listen('dragstart', () => {
       this.userInteracted = true;
+      this.leftHomeCountry();
     });
     this.sharedMap.listen('zoomend', () => {
       // Flag as user-interacted only for real gestures: skip the initial setup zoom
       // (not ready yet) and our own recenter zoom (programmaticMove).
-      if (this.ready() && !this.programmaticMove) this.userInteracted = true;
+      if (this.ready() && !this.programmaticMove) {
+        this.userInteracted = true;
+        this.leftHomeCountry();
+      }
     });
     // Click empty map → dismiss the open popup card (Airbnb behaviour).
     this.sharedMap.listen('click', () => this.selected.set(null));
@@ -1306,6 +1405,54 @@ export class SearchMap {
     void this.ensureMap().then(() =>
       setTimeout(() => this.map?.invalidateSize(), 60),
     );
+  }
+
+  /**
+   * The visitor has taken the map somewhere of their own choosing.
+   *
+   * Retires both things that were only true of the opening view: the worldwide search,
+   * and the claim that what is on screen is their country. The heading falls back to what
+   * it said before any of this existed — a pan to Lahore under a heading reading
+   * "Netherlands" describes nothing the visitor can see.
+   */
+  private leftHomeCountry(): void {
+    this.unbounded.set(false);
+    this.homeCountry.set(null);
+  }
+
+  /**
+   * Whether "Search everywhere" is worth offering: only when something is currently
+   * narrowing the search, and only in the browser, where there is a map to widen.
+   */
+  protected readonly canSearchEverywhere = computed(
+    () => !this.unbounded() && (this.mapBounds() != null || this.center() != null),
+  );
+
+  /**
+   * Drop every geographic constraint and show what exists anywhere.
+   *
+   * The way out of an empty result for a visitor whose own country has no listings yet —
+   * which, with the map opening on that country, is most of the world. "Try moving the
+   * map" is useless advice when there is nothing to move it to.
+   *
+   * Clearing `userInteracted` and `lastKey` lets the next marker rebuild fit the camera
+   * to the results, so the map follows the answer instead of staying over an empty sea.
+   */
+  protected searchEverywhere(): void {
+    this.unbounded.set(true);
+    this.page.set(1);
+    this.mapBounds.set(null);
+    this.userInteracted = false;
+    this.lastKey = '';
+    if (!this.isBrowser) return;
+    // Drop the place as well as the box: a picked city narrows the search through
+    // `near`, which would survive clearing the viewport and quietly keep it local.
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ...BOUNDS_KEYS_NULLED, lat: null, lng: null, place: null, city: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /**

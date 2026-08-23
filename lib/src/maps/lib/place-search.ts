@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { PlaceSearchBias } from './place-bias';
 import { PlaceSuggestion, PlaceSuggestionCache } from './place-cache';
 import {
   PhotonFeature,
@@ -39,8 +40,8 @@ export interface PlaceResult {
 /** Local alias — the shape lives with the cache that stores it. */
 type Suggestion = PlaceSuggestion;
 
-/** Short prefixes match half of Pakistan and nobody picks from them; three characters is
- *  the shortest real place name we care about ("Dir", "Swat"). */
+/** Short prefixes match half the world and nobody picks from them; three characters is
+ *  the shortest real place name we care about ("Dir", "Ulm", "Hue"). */
 const MIN_QUERY_LENGTH = 3;
 /** Debounce a typing burst. Kept modest since Photon is quick and the request goes from
  *  each user's own browser (their own IP), so one user never nears the fair-use rate. */
@@ -127,6 +128,7 @@ const DEBOUNCE_MS = 300;
 })
 export class PlaceSearchField {
   private readonly cache = inject(PlaceSuggestionCache);
+  private readonly bias = inject(PlaceSearchBias);
   private readonly destroyRef = inject(DestroyRef);
   private readonly inputEl =
     viewChild.required<ElementRef<HTMLInputElement>>('input');
@@ -213,6 +215,8 @@ export class PlaceSearchField {
       const features = await photonSearch(text, {
         signal: ctrl.signal,
         placesOnly: types.length > 0,
+        // Ranking only, so a visitor in Rotterdam still finds Lahore by typing it.
+        bias: this.bias.at(),
       });
       const list = features.map((f) => toSuggestion(f, this.labelMode()));
       this.cache.set(text, types, list);
