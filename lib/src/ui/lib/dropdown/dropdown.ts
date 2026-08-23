@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
@@ -7,22 +8,50 @@ import {
   computed,
   effect,
   inject,
+  Injector,
   input,
   model,
   output,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { StatusPill } from '../status-pill/status-pill';
 import type { StatusTone } from '../status-pill/status-pill';
 
+/** Distance between the trigger and the panel, and the panel's minimum inset from the viewport. */
+const GAP = 6;
+
+/** Matches the panel's `max-h-72`. The panel never wants to be taller than this. */
+const PANEL_MAX_H = 288;
+
+/**
+ * Floor for the clamped height.
+ *
+ * In a viewport too short for even this, a panel sized to the literal space left would be a
+ * sliver nobody can use. Better to keep it usable and let it overhang slightly — the list
+ * scrolls, so every option is still reachable either way.
+ */
+const PANEL_MIN_H = 120;
+
 export interface DropdownOption {
   value: string;
   label: string;
   icon?: string;
+  /**
+   * An image to sit where {@link icon} would — a flag, an avatar, a brand mark.
+   *
+   * Separate from `icon` rather than overloading it: that one is a Tabler class name
+   * rendered into `<i class="ti …">`, so handing it a URL silently produces an empty
+   * glyph. Both may be set; the image follows the icon.
+   *
+   * Decorative by construction — `alt=""` and `aria-hidden` — so the option is still
+   * announced by its `label` alone. Anything the reader actually needs belongs there.
+   */
+  iconUrl?: string;
   disabled?: boolean;
   badge?: string;
   disabledTooltip?: string;
@@ -35,6 +64,14 @@ export interface DropdownOption {
   /** Group label — consecutive options with the same group string are rendered under a shared header. */
   group?: string;
 }
+
+/**
+ * Field heights, named to match `InputSize` so one scale covers the library.
+ *
+ * `md` is the 42px form control — the box `hh-input` and `hh-money-input` render at, so a
+ * dropdown lines up with the fields beside it. `sm` is the 32px inline variant.
+ */
+export type DropdownSize = 'sm' | 'md';
 
 /**
  * Themed single/multi-select dropdown — the brand-styled replacement for native
@@ -67,7 +104,7 @@ export interface DropdownOption {
 @Component({
   selector: 'hh-dropdown',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StatusPill],
+  imports: [StatusPill, TranslocoPipe],
   template: `
     <div
       [class]="
@@ -96,6 +133,23 @@ export interface DropdownOption {
               aria-hidden="true"
             ></i>
           }
+          <!-- The selected option's own mark, echoed into the trigger. Without this a language
+               picker showed its flag in the open panel and then collapsed to bare text once
+               chosen, which reads as the flag having been lost. selectedOption() is already
+               null for multi-select, where one option's mark would misrepresent the rest. -->
+          @if (selectedOption(); as sel) {
+            @if (sel.icon) {
+              <i class="ti shrink-0 text-[15px] text-ink-400" [class]="sel.icon" aria-hidden="true"></i>
+            }
+            @if (sel.iconUrl) {
+              <img
+                [src]="sel.iconUrl"
+                alt=""
+                aria-hidden="true"
+                class="h-[15px] w-5 shrink-0 rounded-[2px] object-cover"
+              />
+            }
+          }
           <span class="min-w-0 flex-1" [class.text-ink-400]="!count()">
             <span [class]="labelClass()">{{ triggerLabel() }}</span>
             @if (selectedOption()?.statusLabel && variant() !== 'pill') {
@@ -116,8 +170,8 @@ export interface DropdownOption {
             class="ti ti-chevron-down transition-transform"
             [class.text-brand-700]="chevronBrand()"
             [class.text-ink-400]="!chevronBrand()"
-            [class.text-base]="variant() === 'field' && !compact()"
-            [class.text-sm]="variant() !== 'field' || compact()"
+            [class.text-base]="variant() === 'field' && !isSm()"
+            [class.text-sm]="variant() !== 'field' || isSm()"
             [class.rotate-180]="open()"
           ></i>
         </span>
@@ -129,7 +183,7 @@ export interface DropdownOption {
           <button
             type="button"
             class="fixed inset-0 z-[70] cursor-default bg-ink-900/20"
-            aria-label="Close"
+            [attr.aria-label]="'a11y.close' | transloco"
             (click)="close()"
           ></button>
           <div
@@ -138,6 +192,7 @@ export interface DropdownOption {
             [style.top.px]="pos()?.top ?? null"
             [style.bottom.px]="pos()?.bottom ?? null"
             [style.left.px]="pos()?.left"
+            [style.max-height.px]="pos()?.maxHeight ?? null"
             [style.min-width.px]="variant() === 'field' ? pos()?.width : null"
           >
             @if (searchable()) {
@@ -146,7 +201,7 @@ export interface DropdownOption {
                   <i class="ti ti-search shrink-0 text-sm text-ink-400" aria-hidden="true"></i>
                   <input
                     type="text"
-                    [placeholder]="searchPlaceholder()"
+                    [placeholder]="searchPlaceholder() ?? ('common.searchEllipsis' | transloco)"
                     class="flex-1 bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-400"
                     [value]="searchQuery()"
                     (input)="onSearch($event)"
@@ -178,7 +233,7 @@ export interface DropdownOption {
                   }
                 </div>
               } @else if (options().length === 0) {
-                <p class="py-5 text-center text-sm text-ink-400">{{ emptyLabel() }}</p>
+                <p class="py-5 text-center text-sm text-ink-400">{{ emptyLabel() ?? ('common.noOptionsFound' | transloco) }}</p>
               } @else {
                 @for (o of options(); track o.value; let i = $index) {
                   @if (o.group && o.group !== options()[i - 1]?.group) {
@@ -209,6 +264,15 @@ export interface DropdownOption {
                     }
                     @if (o.icon) {
                       <i class="ti mt-0.5 shrink-0 text-base text-ink-400" [class]="o.icon"></i>
+                    }
+                    @if (o.iconUrl) {
+                      <img
+                        [src]="o.iconUrl"
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        class="mt-0.5 h-[15px] w-5 shrink-0 rounded-[2px] object-cover"
+                      />
                     }
 
                     @if (o.subtitle || o.statusLabel || o.suffixBadge) {
@@ -272,17 +336,43 @@ export interface DropdownOption {
 export class Dropdown {
   readonly options = input<DropdownOption[]>([]);
   readonly multiple = input(false);
-  readonly placeholder = input('Select');
+  readonly placeholder = input<string | undefined>(undefined);
   /** Single-select only: label for a top row that clears the selection (e.g. "All stays"). */
   readonly clearLabel = input('');
   readonly variant = input<'pill' | 'field' | 'borderless'>('pill');
+  /**
+   * Which surface the trigger sits on.
+   *
+   * Not the same thing as `color="dark"` on the button, which means a dark-*coloured*
+   * control: on a dark background that renders dark text on dark, or a fill the same shade
+   * as what is behind it. This says where the control is, and the light styles invert to
+   * suit — currently for the pill, which is the variant that appears outside a form.
+   *
+   * The panel deliberately stays light either way: it is an overlay in front of the page,
+   * not part of the surface the trigger is on, and a dark list of options over a dark
+   * footer loses the edge that says where the list begins.
+   */
+  readonly surface = input<'light' | 'dark'>('light');
   readonly align = input<'left' | 'right'>('left');
   /** `'neutral'` keeps the pill grey even when a value is selected; `'auto'` (default) brand-tints when active. */
   readonly tone = input<'auto' | 'neutral'>('auto');
   /** Borderless, transparent trigger — for sitting inside a shared bordered container (grouped search). */
   readonly seamless = input(false);
   /** Tighter padding + smaller font for field dropdowns embedded inside cards or table cells. */
-  readonly compact = input(false);
+  /**
+   * Field height, on the same scale as every other control in the library.
+   *
+   * `md` is the 42px form field — the box `hh-input` and `hh-money-input` render at, so a
+   * dropdown lines up with its neighbours. `sm` is the 32px inline variant.
+   *
+   * This replaced a `compact` boolean, which was the only sizing API in the library that was
+   * not a `size`. It read as "a bit tighter" rather than naming a variant, which is part of
+   * why nobody noticed its default was rendering four pixels taller than everything beside it.
+   */
+  readonly size = input<DropdownSize>('md');
+
+  /** The 32px inline variant. Named once here so the templates read as one idea. */
+  protected readonly isSm = computed(() => this.size() === 'sm');
   /** Icon class (e.g. `'ti-building-community'`) shown at the start of the trigger button. */
   readonly triggerIcon = input('');
   /** Open the panel to the RIGHT of the trigger instead of below — use for sidebar / nav pickers. */
@@ -296,10 +386,10 @@ export class Dropdown {
 
   // Async / searchable mode
   readonly searchable = input(false);
-  readonly searchPlaceholder = input('Search…');
+  readonly searchPlaceholder = input<string | undefined>(undefined);
   readonly loading = input(false);
   readonly hasMore = input(false);
-  readonly emptyLabel = input('No options found.');
+  readonly emptyLabel = input<string | undefined>(undefined);
 
   readonly value = model<string | string[] | null>(null);
 
@@ -307,12 +397,25 @@ export class Dropdown {
   readonly loadMore = output<void>();
   readonly opened = output<void>();
 
+
+  private readonly i18n = inject(TranslocoService);
+  /** Re-runs dependent computeds when the active language changes. */
+  private readonly lang = toSignal(this.i18n.langChanges$, {
+    initialValue: this.i18n.getActiveLang(),
+  });
+  protected t(key: string): string {
+    this.lang();
+    return this.i18n.translate(key);
+  }
+
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly portal = viewChild<ElementRef<HTMLElement>>('portal');
   private portalEl: HTMLElement | null = null;
 
   protected readonly open = signal(false);
   protected readonly searchQuery = signal('');
+  private readonly injector = inject(Injector);
+
   protected readonly loadingRows = [1, 2, 3];
 
   protected readonly pos = signal<{
@@ -320,6 +423,8 @@ export class Dropdown {
     bottom?: number;
     left: number;
     width: number;
+    /** Clamped to the space on the chosen side, so the panel can never run off-screen. */
+    maxHeight?: number;
   } | null>(null);
 
   constructor() {
@@ -339,27 +444,71 @@ export class Dropdown {
       .subscribe(() => this.close());
   }
 
+  /**
+   * Writes a position only when it actually differs.
+   *
+   * `pos` holds an object literal, so every `set` is a change as far as signals are
+   * concerned, and every change re-renders the panel. That matters because `reposition`
+   * runs from a capture-phase `scroll` listener, which the panel's *own* internal scrolling
+   * also triggers: re-rendering it there fed straight back into another scroll event, and
+   * the two chased each other until the tab locked up with no error and no network traffic.
+   * Comparing first breaks the cycle at its source; the coalescing below is the second belt.
+   */
+  private setPos(next: NonNullable<ReturnType<typeof this.pos>>): void {
+    const cur = this.pos();
+    if (
+      cur &&
+      cur.top === next.top &&
+      cur.bottom === next.bottom &&
+      cur.left === next.left &&
+      cur.width === next.width &&
+      cur.maxHeight === next.maxHeight
+    ) {
+      return;
+    }
+    this.pos.set(next);
+  }
+
+  /** Set while a measure is already queued, so a burst of scroll events costs one frame. */
+  private repositionQueued = false;
+
   private readonly reposition = (): void => {
+    if (typeof window === 'undefined' || this.repositionQueued) return;
+    this.repositionQueued = true;
+    requestAnimationFrame(() => {
+      this.repositionQueued = false;
+      if (this.open()) this.measure();
+    });
+  };
+
+  private measure(): void {
     const btn = this.host.nativeElement.querySelector(
       'button[aria-haspopup]',
     ) as HTMLElement | null;
     if (!btn || typeof window === 'undefined') return;
     const r = btn.getBoundingClientRect();
 
+    // The layout viewport, not the window.
+    //
+    // `innerWidth` counts the vertical scrollbar, so clamping to it lets the panel sit
+    // partly underneath one — which is horizontal overflow, which raises a *horizontal*
+    // scrollbar, which fires `resize`, which repositions, which removes the overflow, which
+    // fires `resize` again. Opening a dropdown near the bottom of a long page span that
+    // loop at one frame apiece and the tab stops responding, with nothing logged.
+    // `clientWidth` excludes both scrollbars, so a panel clamped to it cannot cause one.
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
+
     if (this.openRight()) {
-      this.pos.set({
+      this.setPos({
         top: undefined,
-        bottom: window.innerHeight - r.bottom,
-        left: r.right + 8,
+        bottom: vh - r.bottom,
+        left: r.right + GAP,
         width: r.width,
+        maxHeight: Math.min(PANEL_MAX_H, vh - GAP * 2),
       });
       return;
     }
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const GAP = 8;
-    const PANEL_H = 288; // max-h-72
 
     // Horizontal: measure rendered panel width, then clamp to viewport
     const panelEl = this.portal()?.nativeElement?.querySelector<HTMLElement>('[role="listbox"]');
@@ -371,15 +520,23 @@ export class Dropdown {
     if (left + panelW > vw - GAP) left = r.right - panelW;
     left = Math.max(GAP, Math.min(left, vw - panelW - GAP));
 
-    // Vertical: open below by default, flip above when space is tighter below than above
-    const spaceBelow = vh - r.bottom - GAP;
-    const spaceAbove = r.top - GAP;
-    if (spaceBelow < PANEL_H && spaceAbove > spaceBelow) {
-      this.pos.set({ top: undefined, bottom: vh - r.top + GAP, left, width: r.width });
+    // Vertical: open below by default, flip above when space is tighter below than above.
+    //
+    // Whichever side wins, the panel is then capped to that side's space. Picking a side was
+    // never enough on its own: with, say, 200px below and 180px above, below wins and the
+    // panel still rendered its full height — so the last ~90px hung past the viewport edge,
+    // unreachable, because the panel scrolls internally rather than the page scrolling to it.
+    const spaceBelow = vh - r.bottom - GAP * 2;
+    const spaceAbove = r.top - GAP * 2;
+    const openUp = spaceBelow < PANEL_MAX_H && spaceAbove > spaceBelow;
+    const maxHeight = Math.min(PANEL_MAX_H, Math.max(openUp ? spaceAbove : spaceBelow, PANEL_MIN_H));
+
+    if (openUp) {
+      this.setPos({ top: undefined, bottom: vh - r.top + GAP, left, width: r.width, maxHeight });
     } else {
-      this.pos.set({ top: r.bottom + GAP, bottom: undefined, left, width: r.width });
+      this.setPos({ top: r.bottom + GAP, bottom: undefined, left, width: r.width, maxHeight });
     }
-  };
+  }
 
   private attachListeners(): void {
     if (typeof window === 'undefined') return;
@@ -410,9 +567,10 @@ export class Dropdown {
   });
 
   protected readonly triggerLabel = computed(() => {
+    const fallback = () => this.placeholder() ?? this.t('common.select');
     const sel = this.selected();
-    if (this.multiple() || !sel.length) return this.placeholder();
-    return this.opts().find((o) => o.value === sel[0])?.label ?? this.placeholder();
+    if (this.multiple() || !sel.length) return fallback();
+    return this.opts().find((o) => o.value === sel[0])?.label ?? fallback();
   });
 
   protected readonly triggerLoading = computed(() => {
@@ -431,9 +589,12 @@ export class Dropdown {
         : 'cursor-pointer');
 
     if (this.variant() === 'field') {
-      const size = this.compact()
+      // `py-2.5 px-3` is the 42px form control — the same box `hh-input` and `hh-money-input`
+      // render at their default `md`. This used to be `py-3 px-4`, which is precisely the
+      // input's `lg`: 46px, four taller than every field it sits beside, in nine forms.
+      const size = this.isSm()
         ? 'h-8 rounded-lg px-2.5 text-[11px]'
-        : 'rounded-xl px-4 py-3 text-sm';
+        : 'rounded-xl px-3 py-2.5 text-sm';
       return `${base} w-full justify-between whitespace-nowrap border-ink-200 bg-white ${size} text-ink-800 hover:border-ink-400 focus-visible:border-ink-400`;
     }
 
@@ -445,11 +606,21 @@ export class Dropdown {
       return `${base} h-8 whitespace-nowrap rounded-full !border-0 bg-transparent ps-3.5 pe-2 text-[13px] text-ink-800 hover:text-ink-900`;
     }
 
+    const pill = `${base} h-8 whitespace-nowrap rounded-full ps-3 pe-2.5 text-[13px]`;
+
+    if (this.surface() === 'dark') {
+      // One calm treatment rather than the light surface's active/inactive pair. A control
+      // parked on a dark chrome — the footer's language and currency — always has a value,
+      // so a brand tint for "something is selected" would just be its permanent colour, and
+      // a near-white `brand-50` fill on `ink-900` shouts louder than anything around it.
+      return `${pill} border-ink-600 bg-transparent text-ink-200 hover:border-ink-400 hover:text-white`;
+    }
+
     const tone =
       this.tone() === 'auto' && this.active()
         ? 'border-brand-500 bg-brand-50 text-brand-700'
         : 'border-ink-300 text-ink-800 hover:border-ink-400';
-    return `${base} h-8 whitespace-nowrap rounded-full bg-white ps-3 pe-2.5 text-[13px] ${tone}`;
+    return `${pill} bg-white ${tone}`;
   });
 
   /**
@@ -460,6 +631,8 @@ export class Dropdown {
   protected readonly chevronBrand = computed(
     () =>
       this.variant() === 'pill' &&
+      // The dark pill has no brand state for the chevron to echo.
+      this.surface() === 'light' &&
       !this.seamless() &&
       this.tone() === 'auto' &&
       this.active(),
@@ -500,9 +673,15 @@ export class Dropdown {
       this.searchQuery.set('');
       this.searchChange.emit('');
     }
-    this.reposition();
+    // Placed synchronously, unlike the scroll/resize path: the panel has to be positioned
+    // before its first paint or it flashes at the wrong spot on the way to the right one.
+    this.measure();
     this.open.set(true);
     this.attachListeners();
+    // The first measure runs before the panel exists, so the width measurement above falls
+    // back to an estimate and the horizontal clamp works off that. Measure again now that it
+    // is in the DOM, or a panel wider than its trigger stays overflowing the viewport edge.
+    afterNextRender(() => this.measure(), { injector: this.injector });
     this.opened.emit();
   }
 

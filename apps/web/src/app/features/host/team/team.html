@@ -1,7 +1,7 @@
-<app-dashboard-layout label="Team &amp; staff">
+<app-dashboard-layout [label]="'common.teamAmpStaff' | transloco">
   <div hhActions class="flex items-center gap-2">
     <button *hhHasPermission="'host:Staff:create'" hh-button color="primary" size="sm" (click)="openStaffForm()">
-      <i class="ti ti-plus" aria-hidden="true"></i>Add staff
+      <i class="ti ti-plus" aria-hidden="true"></i>{{ 'hostTeam.addStaff' | transloco }}
     </button>
   </div>
 
@@ -10,10 +10,8 @@
     <div class="flex items-start gap-2 rounded-2xl bg-tint-sky px-4 py-3 text-sm text-ink-600">
       <i class="ti ti-info-circle mt-0.5 text-ink-500" aria-hidden="true"></i>
       <p>
-        Staff are <span class="font-medium text-ink-800">employment records</span> for
-        <span class="font-medium text-ink-800">this hostel only</span> — job title, salary,
-        CNIC and dates. Adding one does not create a sign-in, so a staff member can't log
-        in or see anything in the app.
+        {{ 'hostTeam.staffAre' | transloco }} <span class="font-medium text-ink-800">{{ 'hostTeam.employmentRecords' | transloco }}</span> {{ 'common.for' | transloco }}
+        <span class="font-medium text-ink-800">{{ 'hostTeam.thisHostelOnly' | transloco }}</span> {{ 'hostTeam.jobTitleSalaryCnicAnd' | transloco }}
       </p>
     </div>
 
@@ -56,21 +54,21 @@
           @if (staffStatus()) {
             <hh-empty-state
               icon="ti-filter-off"
-              title="No staff with this status"
+              [title]="'hostTeam.noStaffWithThisStatus' | transloco"
               message="Pick a different status to see the rest of your team."
             >
               <button hh-button variant="text" size="sm" (click)="setStaffStatus('')">
-                Show all staff
+                {{ 'hostTeam.showAllStaff' | transloco }}
               </button>
             </hh-empty-state>
           } @else {
             <hh-empty-state
               icon="ti-id-badge-2"
-              title="No staff yet"
+              [title]="'hostTeam.noStaffYet' | transloco"
               message="Add a warden, cook or guard to keep their salary and documents on file."
             >
               <button *hhHasPermission="'host:Staff:create'" hh-button color="primary" size="sm" (click)="openStaffForm()">
-                <i class="ti ti-user-plus" aria-hidden="true"></i>Add staff
+                <i class="ti ti-user-plus" aria-hidden="true"></i>{{ 'hostTeam.addStaff' | transloco }}
               </button>
             </hh-empty-state>
           }
@@ -110,18 +108,18 @@
       <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="190" (close)="closeMenu()">
         <button *hhHasPermission="'host:Staff:update'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openStaffForm(menuMember); closeMenu()">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
-          Edit
+          {{ 'common.edit' | transloco }}
         </button>
         @if (menuMember.isManager) {
           <button *hhHasPermission="'host:Hostel:remove_manager'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="promptRemoveManager(menuMember)">
             <i class="ti ti-shield-off text-sm text-ink-400" aria-hidden="true"></i>
-            Remove manager role
+            {{ 'hostTeam.removeManagerRole' | transloco }}
           </button>
         }
         <hh-context-menu-divider />
         <button *hhHasPermission="'host:Staff:destroy'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptRemoveStaff(menuMember)">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
-          Remove
+          {{ 'common.remove' | transloco }}
         </button>
       </hh-context-menu>
     }
@@ -130,7 +128,7 @@
 
 @if (staffDeletePending(); as member) {
   <hh-confirm-modal
-    title="Remove staff member?"
+    [title]="'hostTeam.removeStaffMember' | transloco"
     icon="ti-trash"
     tone="danger"
     confirmLabel="Remove"
@@ -138,13 +136,13 @@
     (confirm)="confirmRemoveStaff()"
     (cancel)="cancelRemoveStaff()"
   >
-    This will remove <strong>{{ member.name }}</strong> from the team. This action cannot be undone.
+    {{ 'hostTeam.thisWillRemove' | transloco }} <strong>{{ member.name }}</strong> {{ 'hostTeam.fromTheTeamThisAction' | transloco }}
   </hh-confirm-modal>
 }
 
 @if (managerRemovePending(); as member) {
   <hh-confirm-modal
-    title="Remove manager access?"
+    [title]="'hostTeam.removeManagerAccess' | transloco"
     icon="ti-shield-off"
     tone="warn"
     confirmLabel="Remove access"
@@ -152,6 +150,6 @@
     (confirm)="confirmRemoveManager()"
     (cancel)="cancelRemoveManager()"
   >
-    <strong>{{ member.name }}</strong> keeps their staff record but can no longer sign in or manage this hostel.
+    <strong>{{ member.name }}</strong> {{ 'hostTeam.keepsTheirStaffRecordBut' | transloco }}
   </hh-confirm-modal>
 }

@@ -273,6 +273,23 @@ body {
   }
 }
 
+/* Skewed "persuasive" tag — the parallelogram HostelWorld uses for "Best bed price" and
+   "-25%". The box is skewed and the content counter-skewed, so the text stays upright
+   while the edges slant. A clip-path would slant the edges too, but it clips the text with
+   them: at this size the first and last glyphs lose their corners.
+
+   Colour is left to the caller (a Tailwind bg- and text- pair) — the shape is what is shared, and
+   the green "good news" and pink "discount" variants have nothing else in common. */
+.hh-tag-skew {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  transform: skewX(-10deg);
+}
+.hh-tag-skew > * {
+  transform: skewX(10deg);
+}
+
 .featured-pill {
   background: #F3E5AB;
   color: #7a5c1f;

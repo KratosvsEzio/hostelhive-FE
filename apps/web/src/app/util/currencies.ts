@@ -108,6 +108,17 @@ const BY_CODE = new Map(CURRENCIES.map((c) => [c.code, c]));
 export const DEFAULT_CURRENCY_CODE = 'PKR';
 
 /**
+ * Whether `code` is a currency this app knows.
+ *
+ * For validating anything that arrives from outside the app — a stored preference, a query
+ * param — before it is trusted as a choice. Display helpers deliberately do NOT gate on
+ * this: they must still render a price the API returns in a code we have never heard of.
+ */
+export function isCurrencyCode(code: string | null | undefined): boolean {
+  return !!code && BY_CODE.has(code);
+}
+
+/**
  * The symbol to prefix prices with for `code`:
  *  - a known currency → its glyph (or the code itself when it has no distinct glyph),
  *  - an unknown but present code → the code as-is (so nothing is silently dropped),

@@ -14,11 +14,12 @@ import { Button, ConfirmModal } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { HostelForm } from '../hostel-form/hostel-form';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'hh-new-hostel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, RouterLink, LocaleLink, Button, ConfirmModal, HostelForm],
+  imports: [DashboardLayout, RouterLink, LocaleLink, Button, ConfirmModal, HostelForm, TranslocoPipe],
   templateUrl: './new-hostel.html',
 })
 export class NewHostel {

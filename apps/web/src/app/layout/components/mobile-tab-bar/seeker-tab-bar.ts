@@ -32,7 +32,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
   template: `
     <nav
       class="safe-pb fixed inset-x-0 bottom-0 z-40 border-t border-ink-100 bg-white"
-      aria-label="Main"
+      [attr.aria-label]="'a11y.mainNavigation' | transloco"
     >
       <div class="flex px-2 pt-1.5">
         <a
@@ -44,13 +44,13 @@ import { LocaleLink } from '@core/i18n/locale-link';
           <i class="ti ti-home text-xl" aria-hidden="true"></i>{{ 'nav.explore' | transloco }}
         </a>
         <a routerLink="/search" routerLinkActive="on" class="tab">
-          <i class="ti ti-search text-xl" aria-hidden="true"></i>{{ 'nav.search' | transloco }}
+          <i class="ti ti-search text-xl" aria-hidden="true"></i>{{ 'common.search' | transloco }}
         </a>
         <a routerLink="/account/favorites" routerLinkActive="on" class="tab">
-          <i class="ti ti-heart text-xl" aria-hidden="true"></i>{{ 'nav.favorites' | transloco }}
+          <i class="ti ti-heart text-xl" aria-hidden="true"></i>{{ 'common.favorites' | transloco }}
         </a>
         <a routerLink="/account/settings" routerLinkActive="on" class="tab">
-          <i class="ti ti-user text-xl" aria-hidden="true"></i>{{ 'nav.account' | transloco }}
+          <i class="ti ti-user text-xl" aria-hidden="true"></i>{{ 'common.account' | transloco }}
         </a>
       </div>
     </nav>

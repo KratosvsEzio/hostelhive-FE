@@ -1,4 +1,4 @@
-<app-dashboard-layout label="Subscription">
+<app-dashboard-layout [label]="'common.subscription' | transloco">
   <main class="mx-auto max-w-5xl space-y-6">
   @let s = state();
   @if (s.loading) {
@@ -12,7 +12,7 @@
   } @else if (s.error || !s.data) {
     <hh-error-state
       [networkError]="s.networkError"
-      title="Couldn't load your subscription"
+      [title]="'hostSubscription.couldnTLoadYourSubscription' | transloco"
       message="Please check your connection and try again."
       (retry)="reload()"
     />
@@ -28,7 +28,7 @@
     <!-- 1. Current subscription -->
     <section>
       <div class="mb-4">
-        <h2 class="font-display text-base font-semibold text-ink-900">Current subscription</h2>
+        <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostSubscription.currentSubscription' | transloco }}</h2>
       </div>
 
       @if (contract) {
@@ -36,19 +36,19 @@
         @if (contract.status === 'expired') {
           <hh-toast tone="error" class="mb-4">
             <span>
-              <span class="font-semibold">Your subscription has expired.</span>
-              Your listings are <span class="font-semibold">paused</span> and hidden from search until you renew.
+              <span class="font-semibold">{{ 'hostSubscription.yourSubscriptionHasExpired' | transloco }}</span>
+              {{ 'hostSubscription.yourListingsAre' | transloco }} <span class="font-semibold">{{ 'hostSubscription.paused' | transloco }}</span> {{ 'hostSubscription.andHiddenFromSearchUntil' | transloco }}
             </span>
           </hh-toast>
         } @else if (contract.status === 'cancelled') {
           <hh-toast tone="info" class="mb-4">
-            Your plan is cancelled. You keep access until the period ends — re-subscribe any time to stay published.
+            {{ 'hostSubscription.yourPlanIsCancelledYou' | transloco }}
           </hh-toast>
         } @else if (contract.status === 'pending-payment') {
           <hh-toast tone="info" class="mb-4">
             <span>
-              <span class="font-semibold">Payment pending.</span>
-              We're waiting for the gateway to confirm your charge. This page updates automatically.
+              <span class="font-semibold">{{ 'hostSubscription.paymentPending' | transloco }}</span>
+              {{ 'hostSubscription.weReWaitingForThe' | transloco }}
             </span>
           </hh-toast>
         }
@@ -79,11 +79,11 @@
             <div class="flex flex-col items-end gap-2">
               @if (contract.status === 'expired' || contract.status === 'cancelled') {
                 <button hh-button color="primary" size="sm" [loading]="busy()" (click)="renew()">
-                  Re-subscribe
+                  {{ 'hostSubscription.reSubscribe' | transloco }}
                 </button>
               } @else if (contract.status === 'pending-payment') {
                 <button hh-button color="success" size="sm" [loading]="busy()" (click)="simulateWebhook()">
-                  <i class="ti ti-webhook" aria-hidden="true"></i>Simulate payment success
+                  <i class="ti ti-webhook" aria-hidden="true"></i>{{ 'hostSubscription.simulatePaymentSuccess' | transloco }}
                 </button>
               }
             </div>
@@ -92,12 +92,12 @@
           @if (contract.status === 'active' && daysRemaining(contract) !== null) {
             <div class="flex items-center gap-2 border-t border-ink-100 bg-tint-mint/50 px-5 py-2.5 text-sm text-ink-600">
               <i class="ti ti-clock text-ok" aria-hidden="true"></i>
-              <span><span class="font-medium text-ink-800">{{ daysRemaining(contract) }} days</span> remaining · we'll remind you 7 days before renewal.</span>
+              <span><span class="font-medium text-ink-800">{{ 'common.nDays' | transloco: { count: daysRemaining(contract) } }}</span> {{ 'hostSubscription.remainingWeLlRemindYou' | transloco }}</span>
             </div>
           } @else if (contract.status === 'expired') {
             <div class="flex items-center gap-2 border-t border-danger/20 bg-danger/5 px-5 py-2.5 text-sm text-danger">
               <i class="ti ti-player-pause" aria-hidden="true"></i>
-              <span>Publishing is <span class="font-semibold">paused</span>. Renew to relist your properties.</span>
+              <span>{{ 'hostSubscription.publishingIs' | transloco }} <span class="font-semibold">{{ 'hostSubscription.paused' | transloco }}</span>{{ 'hostSubscription.renewToRelistYourProperties' | transloco }}</span>
             </div>
           }
         </hh-card>
@@ -108,8 +108,8 @@
             <div class="flex flex-wrap items-center justify-between gap-4 p-5">
               <div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="font-display text-lg font-semibold text-ink-900">Featured Boosted</h3>
-                  <span class="font-semibold text-brand-600">Add-on</span>
+                  <h3 class="font-display text-lg font-semibold text-ink-900">{{ 'hostSubscription.featuredBoosted' | transloco }}</h3>
+                  <span class="font-semibold text-brand-600">{{ 'hostSubscription.addOn' | transloco }}</span>
                 </div>
                 <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
                   <hh-status-pill
@@ -128,12 +128,12 @@
             @if (feat.active) {
               <div class="flex items-center gap-2 border-t border-ink-100 bg-tint-mint/50 px-5 py-2.5 text-sm text-ink-600">
                 <i class="ti ti-clock text-ok" aria-hidden="true"></i>
-                <span><span class="font-medium text-ink-800">{{ featuredDaysRemaining(feat) }} days</span> remaining · your listing is boosted in search results.</span>
+                <span><span class="font-medium text-ink-800">{{ 'common.nDays' | transloco: { count: featuredDaysRemaining(feat) } }}</span> {{ 'hostSubscription.remainingYourListingIsBoosted' | transloco }}</span>
               </div>
             } @else {
               <div class="flex items-center gap-2 border-t border-danger/20 bg-danger/5 px-5 py-2.5 text-sm text-danger">
                 <i class="ti ti-sparkles" aria-hidden="true"></i>
-                <span>Boost has <span class="font-semibold">expired</span>. Purchase again to stay at the top of search.</span>
+                <span>{{ 'hostSubscription.boostHas' | transloco }} <span class="font-semibold">{{ 'hostSubscription.expired' | transloco }}</span>{{ 'hostSubscription.purchaseAgainToStayAt' | transloco }}</span>
               </div>
             }
           </hh-card>
@@ -143,7 +143,7 @@
           <div class="p-5">
             <hh-empty-state
               icon="ti-rosette-discount-off"
-              title="No active subscription"
+              [title]="'hostSubscription.noActiveSubscription' | transloco"
               message="You don't have an active plan yet. Browse the plans below to get started."
             />
           </div>
@@ -154,12 +154,12 @@
     <!-- 2. Payment history -->
     <section>
       <div class="mb-4">
-        <h2 class="font-display text-base font-semibold text-ink-900">Payment history</h2>
+        <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostSubscription.paymentHistory' | transloco }}</h2>
       </div>
       @if (s.data.payments.length === 0) {
         <hh-empty-state
           icon="ti-receipt"
-          title="No payments yet"
+          [title]="'hostSubscription.noPaymentsYet' | transloco"
           message="Invoices appear here after your first charge."
         />
       } @else {
@@ -183,14 +183,14 @@
     <!-- 3. Plans & Add-ons -->
     <section>
       <div class="mb-5">
-        <h2 class="font-display text-base font-semibold text-ink-900">Plans & Add-ons</h2>
-        <p class="mt-1 text-sm text-ink-500">Start with a subscription, then stack add-ons to grow faster.</p>
+        <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostSubscription.plansAddOns' | transloco }}</h2>
+        <p class="mt-1 text-sm text-ink-500">{{ 'hostSubscription.startWithASubscriptionThen' | transloco }}</p>
       </div>
 
       @if (s.data.products.length === 0) {
         <hh-empty-state
           icon="ti-package"
-          title="No plans available"
+          [title]="'hostSubscription.noPlansAvailable' | transloco"
           message="Check back soon — plans will appear here."
         />
       } @else {
@@ -210,7 +210,7 @@
                     [class]="addon ? 'bg-warn/10 text-warn' : (curr ? 'bg-brand-100 text-brand-700' : 'bg-brand-50 text-brand-600')"
                   >{{ addon ? 'Add-on' : 'Subscription' }}</span>
                   @if (curr) {
-                    <span class="rounded-full bg-brand-500 px-2.5 py-0.5 text-[11px] font-semibold text-white">Active</span>
+                    <span class="rounded-full bg-brand-500 px-2.5 py-0.5 text-[11px] font-semibold text-white">{{ 'hostSubscription.active' | transloco }}</span>
                   }
                 </div>
                 <h3 class="mt-3 font-display text-xl font-bold text-ink-900">{{ product.name }}</h3>
@@ -221,9 +221,9 @@
                     <span class="text-sm font-medium text-ink-400 line-through">Rs {{ +product.price | number }}</span>
                   </div>
                   <p class="mt-2 inline-flex items-center gap-1 rounded-full bg-ok/10 px-2 py-0.5 text-[11px] font-semibold text-ok">
-                    <i class="ti ti-tag text-xs" aria-hidden="true"></i>Discounted for {{ discountRemaining() }} more subscription{{ discountRemaining() === 1 ? '' : 's' }}
+                    <i class="ti ti-tag text-xs" aria-hidden="true"></i>{{ 'hostSubscription.discountedForNMore' | transloco: { count: discountRemaining() } }}
                   </p>
-                  <p class="mt-1 text-xs text-ink-400">Then Rs {{ +product.price | number }} / {{ periodLabel(product) }}</p>
+                  <p class="mt-1 text-xs text-ink-400">{{ 'hostSubscription.thenRsPerPeriod' | transloco: { price: +product.price | number, period: periodLabel(product) } }}</p>
                 } @else {
                   <div class="mt-3 flex items-baseline gap-1">
                     <span class="text-3xl font-bold text-ink-900">Rs {{ +product.price | number }}</span>
@@ -250,11 +250,11 @@
                       type="button"
                       class="block w-full cursor-zoom-in"
                       (click)="previewOpen.set(true)"
-                      aria-label="Preview dashboard screenshot"
+                      [attr.aria-label]="'a11y.previewDashboardScreenshot' | transloco"
                     >
                       <img
                         src="/screenshots/overview.png"
-                        alt="Dashboard preview"
+                        [alt]="'hostSubscription.dashboardPreview' | transloco"
                         class="w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                         style="height: 148px"
                       />
@@ -263,13 +263,13 @@
                     <div class="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/30 to-transparent"></div>
                     <div class="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                       <span class="rounded-full bg-ink-900/70 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
-                        <i class="ti ti-zoom-in me-1" aria-hidden="true"></i>View full screenshot
+                        <i class="ti ti-zoom-in me-1" aria-hidden="true"></i>{{ 'hostSubscription.viewFullScreenshot' | transloco }}
                       </span>
                     </div>
                   </div>
                   <div class="flex items-center gap-2 border-t border-ink-100 bg-surface px-3 py-2">
                     <i class="ti ti-sparkles text-sm text-brand-400" aria-hidden="true"></i>
-                    <span class="text-xs font-medium text-ink-500">Full dashboard included — analytics, rooms, tenants & more</span>
+                    <span class="text-xs font-medium text-ink-500">{{ 'hostSubscription.fullDashboardIncludedAnalyticsRooms' | transloco }}</span>
                   </div>
                 </div>
               }
@@ -279,10 +279,10 @@
                 <div class="mx-4 mb-4 overflow-hidden rounded-xl border border-warn/20 bg-warn/5 px-4 py-3 sm:mx-5 sm:mb-5">
                   <div class="flex items-center gap-2">
                     <i class="ti ti-radar text-lg text-warn" aria-hidden="true"></i>
-                    <span class="text-xs font-semibold text-warn">Live radar active</span>
+                    <span class="text-xs font-semibold text-warn">{{ 'hostSubscription.liveRadarActive' | transloco }}</span>
                   </div>
                   <p class="mt-1 text-xs text-ink-500">
-                    When a tenant searches for a hostel within 5 km of your location, you get their contact details instantly.
+                    {{ 'hostSubscription.whenATenantSearchesFor' | transloco }}
                   </p>
                 </div>
               }
@@ -295,7 +295,7 @@
                   </div>
                 } @else if (product.name === 'Lead Radar') {
                   <button hh-button color="primary" variant="outlined" class="w-full opacity-60 cursor-not-allowed" [disabled]="true">
-                    <i class="ti ti-radar" aria-hidden="true"></i>Coming Soon
+                    <i class="ti ti-radar" aria-hidden="true"></i>{{ 'hostSubscription.comingSoon' | transloco }}
                   </button>
                 } @else {
                   <button
@@ -324,7 +324,7 @@
     (keydown.escape)="previewOpen.set(false)"
     role="dialog"
     aria-modal="true"
-    aria-label="Dashboard preview"
+    [attr.aria-label]="'a11y.dashboardPreview' | transloco"
     tabindex="0"
   >
     <div class="absolute inset-0 bg-ink-900/80 backdrop-blur-sm"></div>
@@ -335,19 +335,19 @@
       tabindex="0"
     >
       <div class="flex items-center justify-between bg-ink-900 px-4 py-3">
-        <span class="text-sm font-medium text-white">Dashboard preview</span>
+        <span class="text-sm font-medium text-white">{{ 'hostSubscription.dashboardPreview' | transloco }}</span>
         <button
           hh-button variant="icon" size="sm"
           type="button"
           (click)="previewOpen.set(false)"
           (keydown.enter)="previewOpen.set(false)"
           (keydown.space)="previewOpen.set(false)"
-          aria-label="Close preview"
+          [attr.aria-label]="'a11y.closePreview' | transloco"
         >
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
       </div>
-      <img src="/screenshots/overview.png" alt="Full dashboard preview" class="w-full" />
+      <img src="/screenshots/overview.png" [alt]="'hostSubscription.fullDashboardPreview' | transloco" class="w-full" />
     </div>
   </div>
 }

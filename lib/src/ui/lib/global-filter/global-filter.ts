@@ -19,6 +19,7 @@ import { filter } from 'rxjs';
 import { Button } from '../button/button';
 import { Toggle } from '../toggle/toggle';
 import { DateRange, DateRangePicker } from '../date-range-picker/date-range-picker';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 // ── public types ──────────────────────────────────────────────────────────────
 
@@ -113,7 +114,7 @@ export type FilterValues = Record<string, FilterFieldValue>;
 @Component({
   selector: 'hh-global-filter',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Toggle, DateRangePicker],
+  imports: [Button, Toggle, DateRangePicker, TranslocoPipe],
   templateUrl: './global-filter.html',
 })
 export class GlobalFilter {

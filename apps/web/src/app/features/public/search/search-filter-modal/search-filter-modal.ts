@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  effect,
   PLATFORM_ID,
   computed,
   inject,
@@ -18,6 +19,9 @@ import { AMENITIES, AccommodationType, PROPERTY_TYPES } from '@hostelhive/data-a
 import { Button, Dropdown, DropdownOption, RangeSlider } from '@hostelhive/ui';
 import { OffersApi } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
+import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
+import { currencySymbol } from '@util/currencies';
+import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
@@ -26,25 +30,26 @@ export interface FilterState {
   propertyType: string;
   minPrice: number | null;
   maxPrice: number | null;
-  capacity: string;
+  roomType: string;
   amenities: string[];
   sort: string;
 }
 
 
-// Room capacity (people per room). Values mirror the inline dropdown so the two stay in
-// sync; the API layer maps them to f[room_types.capacity] (exact) for 1–4, and
-// [gte]=5 for "5+".
-//
-// This list used to read { value: '4plus', label: '4+' } while the API mapped 4plus to
-// gte 5 — so choosing "4+" here excluded every 4-bed room, and disagreed with the
-// inline dropdown, which has always said "5+".
-const CAPACITIES: { value: string; label: string }[] = [
-  { value: '1', label: '1' },
-  { value: '2', label: '2' },
-  { value: '3', label: '3' },
-  { value: '4', label: '4' },
-  { value: '5+', label: '5+' },
+// Replaces the 1–5+ capacity buttons. Capacity was never the axis anybody shopped on: the
+// choice is a room to yourself or a bed among others, and the headcount is a detail read
+// after that. Kept as buttons rather than a dropdown so the modal reads the same as before.
+/**
+ * Shared first, and there is no "Any".
+ *
+ * A bed in a shared room is what most seekers here are actually looking for, and the two
+ * options answer genuinely different questions -- one is priced per bed, the other per room.
+ * An "Any" that mixed them produced a list sorted by numbers that did not mean the same
+ * thing, so the filter now always names one.
+ */
+const ROOM_TYPES: { value: string; label: string }[] = [
+  { value: 'shared', label: 'Shared room' },
+  { value: 'private', label: 'Private room' },
 ];
 
 /**
@@ -72,12 +77,34 @@ export class SearchFilterModal {
     if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
     let root: HTMLElement | null = null;
     let anchor: Comment | null = null;
-    afterNextRender(() => {
-      root = host.querySelector('.hh-modal-root');
-      if (!root?.parentNode) return;
-      anchor = document.createComment('hh-modal');
-      root.parentNode.insertBefore(anchor, root);
+
+    /**
+     * Idempotent, and re-queries a root that is no longer attached.
+     *
+     * A one-shot move assumes `.hh-modal-root` is created exactly once and never replaced.
+     * When that assumption breaks the overlay is left inside the filter bar, where its
+     * z-index is resolved against a stacking context that sits below the header — so the
+     * modal opens *behind* the header no matter how high its own z-index goes.
+     */
+    const teleport = (): void => {
+      if (!root?.isConnected) {
+        root = host.querySelector('.hh-modal-root');
+        anchor = null;
+      }
+      if (!root || root.parentNode === document.body) return;
+      if (!anchor) {
+        anchor = document.createComment('hh-modal');
+        root.parentNode?.insertBefore(anchor, root);
+      }
       document.body.appendChild(root);
+    };
+
+    afterNextRender(teleport);
+
+    // Re-asserted on every open rather than only at startup: cheap, and it means a root that
+    // was swapped out underneath us still ends up in the right place before it is seen.
+    effect(() => {
+      if (this.open()) teleport();
     });
     inject(DestroyRef).onDestroy(() => {
       if (root && anchor?.parentNode) {
@@ -94,7 +121,7 @@ export class SearchFilterModal {
     { label: 'Co-living', value: 'coliving' },
     { label: 'Backpacker', value: 'backpacker' },
   ];
-  protected readonly capacities = CAPACITIES;
+  protected readonly roomTypes = ROOM_TYPES;
   protected readonly sortOptions = [
     { label: 'Recommended', value: 'recommended' },
     { label: 'Recent first', value: 'newest' },
@@ -130,6 +157,10 @@ export class SearchFilterModal {
   // Same scale as the search bar's Budget popover — both edit minPrice/maxPrice.
   protected readonly BUDGET_MIN = BUDGET_MIN;
   protected readonly BUDGET_MAX = BUDGET_MAX;
+
+  /** Quoted in the currency the filter is actually sent in -- see `SearchBar`. */
+  private readonly currency = inject(CurrencyPreference);
+  protected readonly budgetSymbol = computed(() => currencySymbol(this.currency.code()));
   protected readonly BUDGET_STEP = BUDGET_STEP;
 
   // Draft state (mutated inside the modal; committed on "Show results").
@@ -137,7 +168,7 @@ export class SearchFilterModal {
   protected readonly draftPropertyType = signal('');
   protected readonly draftMinPrice = signal(BUDGET_MIN);
   protected readonly draftMaxPrice = signal(BUDGET_MAX);
-  protected readonly draftCapacity = signal('');
+  protected readonly draftRoomType = signal<string>(DEFAULT_OCCUPANCY_TYPE);
   protected readonly draftAmenities = signal<string[]>([]);
   protected readonly draftSort = signal('recommended');
 
@@ -147,7 +178,7 @@ export class SearchFilterModal {
     this.draftPropertyType.set(state.propertyType);
     this.draftMinPrice.set(state.minPrice ?? BUDGET_MIN);
     this.draftMaxPrice.set(state.maxPrice ?? BUDGET_MAX);
-    this.draftCapacity.set(state.capacity);
+    this.draftRoomType.set(state.roomType || DEFAULT_OCCUPANCY_TYPE);
     this.draftAmenities.set([...state.amenities]);
     this.draftSort.set(state.sort || 'recommended');
     this.open.set(true);
@@ -162,7 +193,7 @@ export class SearchFilterModal {
     this.draftPropertyType.set('');
     this.draftMinPrice.set(BUDGET_MIN);
     this.draftMaxPrice.set(BUDGET_MAX);
-    this.draftCapacity.set('');
+    this.draftRoomType.set(DEFAULT_OCCUPANCY_TYPE);
     this.draftAmenities.set([]);
     this.draftSort.set('recommended');
   }
@@ -175,7 +206,7 @@ export class SearchFilterModal {
       propertyType: this.draftPropertyType(),
       minPrice: min > BUDGET_MIN ? min : null,
       maxPrice: max < BUDGET_MAX ? max : null,
-      capacity: this.draftCapacity(),
+      roomType: this.draftRoomType(),
       amenities: this.draftAmenities(),
       sort: this.draftSort(),
     });

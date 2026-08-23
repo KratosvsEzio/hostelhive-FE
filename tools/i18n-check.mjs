@@ -26,7 +26,33 @@ function flatten(obj, prefix = '') {
   );
 }
 
-const defined = new Set(flatten(JSON.parse(readFileSync(EN, 'utf8'))));
+const en = JSON.parse(readFileSync(EN, 'utf8'));
+const defined = new Set(flatten(en));
+
+/**
+ * Top-level groups, which is what makes the third pass below safe to run.
+ *
+ * A bare `'hostNav.overview'` in a TypeScript array is indistinguishable from any other
+ * dotted string until you know `hostNav` names a group.
+ */
+const groups = new Set(Object.keys(en));
+
+/** Dotted strings that are plainly something else, whatever their first segment says. */
+const NOT_A_KEY = /\.(json|ts|js|mjs|html|css|scss|svg|png|jpe?g|webp|ico|map)$/i;
+
+/**
+ * Whether the match sits on a comment line.
+ *
+ * Judged per line rather than by parsing: `//` also appears inside every URL, and a
+ * comment stripper naive enough to be worth writing here would cut `'https://…'` in half
+ * and invent matches rather than remove them. Every comment style in this codebase — `//`,
+ * a JSDoc `*` continuation, and HTML's `<!--` — opens its line, which is all this needs.
+ */
+function isComment(source, index) {
+  const start = source.lastIndexOf('\n', index) + 1;
+  return /^\s*(\/\/|\*|\/\*|<!--)/.test(source.slice(start, index));
+}
+
 const used = new Map(); // key -> first file that asks for it
 
 for (const f of ROOTS.flatMap((r) => walk(r))) {
@@ -37,6 +63,28 @@ for (const f of ROOTS.flatMap((r) => walk(r))) {
   }
   for (const m of s.matchAll(/translate\(\s*'([a-zA-Z][\w.]*)'/g)) {
     if (!used.has(m[1])) used.set(m[1], f);
+  }
+
+  // Keys held as data and piped somewhere else entirely.
+  //
+  // The two passes above only see a key at the moment it meets the pipe, which misses the
+  // shape this app uses for anything list-driven: the host nav and the mobile tab bars keep
+  // `{ label: 'hostNav.overview' }` in an array and the template renders
+  // `{{ item.label | transloco }}`. Consolidating duplicate keys moved two of those out from
+  // under their call sites and both shipped rendering a raw key at users, invisible to this
+  // check, because the literal and the pipe are in different files.
+  //
+  // Narrow enough not to guess: the first segment has to name a group that exists, so an
+  // unrelated dotted string is only a candidate if someone happens to name a group after it.
+  for (const m of s.matchAll(/'([a-z][A-Za-z0-9]*\.[A-Za-z0-9_.]+)'/g)) {
+    const key = m[1];
+    if (used.has(key) || NOT_A_KEY.test(key)) continue;
+    if (!groups.has(key.slice(0, key.indexOf('.')))) continue;
+    // Prose, not code. The other two passes match syntax that only appears in real usage;
+    // this one matches a bare string, and documentation quotes keys as examples — which is
+    // how a comment explaining the test loader got reported as a missing key.
+    if (isComment(s, m.index)) continue;
+    used.set(key, f);
   }
 }
 

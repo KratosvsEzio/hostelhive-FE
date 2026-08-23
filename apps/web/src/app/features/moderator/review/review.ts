@@ -9,7 +9,7 @@
   signal,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   takeUntilDestroyed,
   toObservable,
@@ -46,6 +46,9 @@ import {
 } from '@hostelhive/data-access';
 import { isNetworkError } from '@util/network-error';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { LocaleStore } from '@core/i18n/locale-store';
+import { localiseCommands } from '@core/i18n/locale-commands';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 const EMPTY_FORM_OPTIONS: ModFormOptions = {
   genderTypes: [],
@@ -125,6 +128,7 @@ interface EditableHostel {
     Skeleton,
     StatusPill,
     RoomTypeRow,
+    TranslocoPipe,
   ],
   templateUrl: './review.html',
 })
@@ -134,6 +138,8 @@ export class Review {
   private readonly docs = inject(DocumentsApi);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly locale = inject(LocaleStore);
 
   /** Route param — `review/:id`. Read from ActivatedRoute (apps don't enable component input binding). */
   protected readonly id = toSignal(
@@ -692,6 +698,12 @@ export class Review {
           this.approving.set(false);
           this.decision.set('approve');
           this.logAudit('Approved & published');
+          // Back to the queue: a moderator works through a list, and the listing they just
+          // approved is no longer in it. Leaving them on a published page means their next
+          // action is always the back button.
+          void this.router.navigate(
+            localiseCommands(['/moderator/queue'], this.locale.active()) as unknown[],
+          );
         },
         error: () => {
           this.approving.set(false);

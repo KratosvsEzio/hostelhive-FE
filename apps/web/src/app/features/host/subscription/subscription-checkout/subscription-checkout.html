@@ -1,7 +1,7 @@
-<app-dashboard-layout label="Checkout">
+<app-dashboard-layout [label]="'hostSubscription.checkout' | transloco">
   <div hhActions>
     <a hh-button variant="text" size="sm" [routerLink]="backLink()">
-      <i class="ti ti-arrow-left" aria-hidden="true"></i>Back to plans
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'hostSubscription.backToPlans' | transloco }}
     </a>
   </div>
 
@@ -16,10 +16,10 @@
   } @else if (s.error || !s.product) {
     <div class="flex flex-col items-center py-16 text-center">
       <i class="ti ti-alert-circle text-4xl text-danger" aria-hidden="true"></i>
-      <p class="mt-3 font-display text-lg font-semibold text-ink-900">Plan not found</p>
-      <p class="mt-1 text-sm text-ink-500">This plan may no longer be available.</p>
+      <p class="mt-3 font-display text-lg font-semibold text-ink-900">{{ 'hostSubscription.planNotFound' | transloco }}</p>
+      <p class="mt-1 text-sm text-ink-500">{{ 'hostSubscription.thisPlanMayNoLonger' | transloco }}</p>
       <a hh-button variant="outlined" class="mt-6" [routerLink]="backLink()">
-        <i class="ti ti-arrow-left" aria-hidden="true"></i>Browse plans
+        <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'hostSubscription.browsePlans' | transloco }}
       </a>
     </div>
   } @else {
@@ -29,8 +29,8 @@
       <div class="flex items-center gap-3 rounded-2xl border border-ok/30 bg-ok/5 px-5 py-4">
         <i class="ti ti-rosette-discount-check text-2xl text-ok" aria-hidden="true"></i>
         <div>
-          <p class="font-semibold text-ok">Subscription started — redirecting…</p>
-          <p class="mt-0.5 text-sm text-ink-500">You'll be taken to your subscription details shortly.</p>
+          <p class="font-semibold text-ok">{{ 'hostSubscription.subscriptionStartedRedirecting' | transloco }}</p>
+          <p class="mt-0.5 text-sm text-ink-500">{{ 'hostSubscription.youLlBeTakenTo' | transloco }}</p>
         </div>
       </div>
     }
@@ -39,8 +39,8 @@
 
       <!-- Left: Product selection -->
       <div class="rounded-2xl bg-white p-4 shadow-card sm:p-6">
-        <h2 class="font-display text-base font-semibold text-ink-900">Select products</h2>
-        <p class="mt-1 text-sm text-ink-500">Choose what you'd like to include in this order.</p>
+        <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostSubscription.selectProducts' | transloco }}</h2>
+        <p class="mt-1 text-sm text-ink-500">{{ 'hostSubscription.chooseWhatYouDLike' | transloco }}</p>
 
         <div class="mt-5 space-y-3">
           @for (product of s.allProducts; track product.id) {
@@ -73,7 +73,7 @@
                   <span class="font-display text-sm font-semibold text-ink-900">{{ product.name }}</span>
                   @if (isLeadRadar) {
                     <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-                      <i class="ti ti-clock-hour-3 text-xs" aria-hidden="true"></i>Coming Soon
+                      <i class="ti ti-clock-hour-3 text-xs" aria-hidden="true"></i>{{ 'hostSubscription.comingSoon' | transloco }}
                     </span>
                   }
                 </div>
@@ -101,11 +101,11 @@
         <div class="mt-6 space-y-2 text-sm text-ink-500">
           <div class="flex items-center gap-2">
             <i class="ti ti-shield-lock shrink-0 text-base text-brand-400" aria-hidden="true"></i>
-            Secure checkout · cancel anytime
+            {{ 'hostSubscription.secureCheckoutCancelAnytime' | transloco }}
           </div>
           <div class="flex items-center gap-2">
             <i class="ti ti-clock shrink-0 text-base text-brand-400" aria-hidden="true"></i>
-            Features unlock immediately after payment
+            {{ 'hostSubscription.featuresUnlockImmediatelyAfterPayment' | transloco }}
           </div>
         </div>
       </div>
@@ -113,10 +113,10 @@
       <!-- Right: Order summary -->
       <div class="flex flex-col gap-4">
         <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h3 class="mb-4 font-display text-base font-semibold text-ink-900">Order summary</h3>
+          <h3 class="mb-4 font-display text-base font-semibold text-ink-900">{{ 'common.orderSummary' | transloco }}</h3>
 
           @if (selectedProductList().length === 0) {
-            <p class="text-sm text-ink-400">No products selected.</p>
+            <p class="text-sm text-ink-400">{{ 'hostSubscription.noProductsSelected' | transloco }}</p>
           } @else {
             <dl class="space-y-2 text-sm">
               @for (p of selectedProductList(); track p.id) {
@@ -132,7 +132,7 @@
               }
               <div class="my-2 h-px bg-ink-100"></div>
               <div class="flex items-center justify-between text-base font-semibold">
-                <dt class="text-ink-900">Total</dt>
+                <dt class="text-ink-900">{{ 'common.total' | transloco }}</dt>
                 <dd class="text-ink-900">Rs {{ totalPrice() | number }}</dd>
               </div>
             </dl>
@@ -146,22 +146,22 @@
             (click)="pay()"
           >
             @if (paid()) {
-              <i class="ti ti-circle-check" aria-hidden="true"></i>Payment started
+              <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'hostSubscription.paymentStarted' | transloco }}
             } @else if (totalPrice() > 0) {
-              <i class="ti ti-credit-card" aria-hidden="true"></i>Pay Rs {{ totalPrice() | number }}
+              <i class="ti ti-credit-card" aria-hidden="true"></i>{{ 'hostSubscription.payRs' | transloco: { amount: totalPrice() | number } }}
             } @else {
-              Select a product
+              {{ 'hostSubscription.selectAProduct' | transloco }}
             }
           </button>
 
           @if (payError()) {
             <p class="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-danger">
-              <i class="ti ti-alert-circle" aria-hidden="true"></i>Payment failed — please try again.
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'common.paymentFailedPleaseTry' | transloco }}
             </p>
           }
 
           <p class="mt-4 text-center text-xs text-ink-400">
-            By continuing you agree to our terms of service.
+            {{ 'hostSubscription.byContinuingYouAgreeTo' | transloco }}
           </p>
         </div>
       </div>

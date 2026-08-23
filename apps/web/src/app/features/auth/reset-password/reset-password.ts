@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { Button, Input } from '@hostelhive/ui';
+import { Button, Input, Container } from '@hostelhive/ui';
 import { AuthApi } from '@services';
 import { ApiError } from '@hostelhive/data-access';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type Phase = 'form' | 'done';
 
@@ -14,7 +15,7 @@ const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 @Component({
   selector: 'hh-reset-password',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, Button, Input],
+  imports: [Container, RouterLink, LocaleLink, Button, Input, TranslocoPipe],
   templateUrl: './reset-password.html',
 })
 export class ResetPassword {

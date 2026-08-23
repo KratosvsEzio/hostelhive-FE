@@ -5,6 +5,8 @@
   "scripts": {
     "icons:generate": "node tools/generate-icons.mjs && capacitor-assets generate --android",
     "build": "nx build web",
+    "i18n:check": "node tools/i18n-check.mjs",
+    "i18n:coverage": "node tools/i18n-coverage.mjs",
     "start": "nx run web:dev",
     "build:mobile": "nx run web:build-mobile",
     "mobile:sync": "nx run web:cap-sync",

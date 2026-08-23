@@ -6,7 +6,7 @@
   class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-dashed border-ink-200 bg-white px-3 text-xs font-medium text-ink-700 transition hover:bg-surface"
 >
   <i class="ti ti-plus text-xs"></i>
-  Filters
+  {{ 'filters.filters' | transloco }}
   @if (totalActive() > 0) {
     <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white">
       {{ totalActive() }}
@@ -205,7 +205,7 @@
                 </div>
                 @if (hasApiError(field.key)) {
                   <p class="py-3 text-center text-xs text-danger-500">
-                    <i class="ti ti-alert-circle me-1"></i>Failed to load options. Try again.
+                    <i class="ti ti-alert-circle me-1"></i>{{ 'filters.loadFailed' | transloco }}
                   </p>
                 } @else {
                   <div class="space-y-2.5">
@@ -226,7 +226,7 @@
                     }
                     @if (!isLoadingOptions(field.key) && fieldOptions(field).length === 0) {
                       <p class="py-3 text-center text-sm text-ink-400">
-                        @if (getSearch(field.key)) { No results for "{{ getSearch(field.key) }}" } @else { No options available. }
+                        @if (getSearch(field.key)) { {{ 'filters.noResultsFor' | transloco: { query: getSearch(field.key) } }} } @else { {{ 'filters.noOptions' | transloco }} }
                       </p>
                     }
                   </div>
@@ -256,7 +256,7 @@
                 </div>
                 @if (hasApiError(field.key)) {
                   <p class="py-3 text-center text-xs text-danger-500">
-                    <i class="ti ti-alert-circle me-1"></i>Failed to load options. Try again.
+                    <i class="ti ti-alert-circle me-1"></i>{{ 'filters.loadFailed' | transloco }}
                   </p>
                 } @else {
                   <div class="space-y-1">
@@ -277,7 +277,7 @@
                     }
                     @if (!isLoadingOptions(field.key) && fieldOptions(field).length === 0) {
                       <p class="py-3 text-center text-sm text-ink-400">
-                        @if (getSearch(field.key)) { No results for "{{ getSearch(field.key) }}" } @else { No options available. }
+                        @if (getSearch(field.key)) { {{ 'filters.noResultsFor' | transloco: { query: getSearch(field.key) } }} } @else { {{ 'filters.noOptions' | transloco }} }
                       </p>
                     }
                   </div>
@@ -337,7 +337,7 @@
               }
             }
           } @else {
-            <p class="mt-6 text-center text-sm text-ink-400">Select a filter category on the left.</p>
+            <p class="mt-6 text-center text-sm text-ink-400">{{ 'filters.pickCategory' | transloco }}</p>
           }
         </div>
       </div>
@@ -348,14 +348,14 @@
           hh-button variant="text" size="sm" type="button"
           (click)="resetFilters()"
         >
-          Reset
+          {{ 'filters.reset' | transloco }}
         </button>
         <div class="flex gap-2">
           <button hh-button variant="outlined" size="sm" type="button" (click)="closePanel()">
-            Cancel
+            {{ 'filters.cancel' | transloco }}
           </button>
           <button hh-button color="primary" size="sm" type="button" (click)="applyFilters()">
-            Apply
+            {{ 'filters.apply' | transloco }}
           </button>
         </div>
       </div>

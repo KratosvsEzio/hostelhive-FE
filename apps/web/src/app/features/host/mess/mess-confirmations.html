@@ -1,10 +1,10 @@
 <app-dashboard-layout
-  label="Meal confirmations"
+  [label]="'hostMess.mealConfirmations' | transloco"
   backUrl=".."
   [breadcrumbs]="[{ label: 'Mess', url: '..' }, { label: 'Confirmations' }]"
 >
   <div hhActions>
-    <hh-date-picker variant="pill" placeholder="Pick date" [(value)]="selectedDate" />
+    <hh-date-picker variant="pill" [placeholder]="'hostMess.pickDate' | transloco" [(value)]="selectedDate" />
   </div>
 
   <main class="mx-auto max-w-4xl space-y-5">
@@ -13,11 +13,11 @@
     <div class="flex flex-col gap-3 rounded-2xl bg-white px-5 py-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p class="font-display font-semibold text-ink-900">{{ dateLabel() }}</p>
-        <p class="text-xs text-ink-400">Students who reserved a portion, by menu.</p>
+        <p class="text-xs text-ink-400">{{ 'hostMess.studentsWhoReservedAPortion' | transloco }}</p>
       </div>
       <div class="sm:text-end">
         <p class="font-display text-2xl font-semibold text-ink-900">{{ total() | number }}</p>
-        <p class="text-xs text-ink-400">confirmed for {{ mealMeta[activeMeal()].label.toLowerCase() }}</p>
+        <p class="text-xs text-ink-400">{{ 'hostMess.confirmedForMeal' | transloco: { meal: mealMeta[activeMeal()].label.toLowerCase() } }}</p>
       </div>
     </div>
 
@@ -30,7 +30,7 @@
         </span>
         <div class="min-w-0">
           <p class="font-display font-semibold text-ink-900">
-            {{ mealMeta[activeMeal()].label }} · {{ total() | number }} confirmed
+            {{ 'hostMess.mealNConfirmed' | transloco: { meal: mealMeta[activeMeal()].label, count: total() | number } }}
           </p>
           <p class="truncate text-xs text-ink-400">{{ activeMenu() || 'No menu set' }}</p>
         </div>
@@ -39,7 +39,7 @@
 
     @if (loading()) {
       <div class="rounded-2xl bg-white px-5 py-12 text-center shadow-card">
-        <p class="text-sm text-ink-400">Loading confirmations…</p>
+        <p class="text-sm text-ink-400">{{ 'hostMess.loadingConfirmations' | transloco }}</p>
       </div>
     } @else if (total()) {
       <hh-data-table
@@ -53,8 +53,11 @@
     } @else {
       <div class="rounded-2xl bg-white px-5 py-12 text-center shadow-card">
         <p class="text-sm text-ink-400">
-          No confirmations for {{ mealMeta[activeMeal()].label.toLowerCase() }}
-          {{ isToday() ? 'today' : 'on this date' }}.
+          @if (isToday()) {
+            {{ 'hostMess.noConfirmationsToday' | transloco: { meal: mealMeta[activeMeal()].label.toLowerCase() } }}
+          } @else {
+            {{ 'hostMess.noConfirmationsOnDate' | transloco: { meal: mealMeta[activeMeal()].label.toLowerCase() } }}
+          }
         </p>
       </div>
     }

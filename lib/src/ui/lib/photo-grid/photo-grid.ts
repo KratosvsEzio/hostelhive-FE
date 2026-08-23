@@ -5,6 +5,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Dropdown, DropdownOption } from '../dropdown/dropdown';
 
 /** MIME types accepted by every hostel photo picker. */
@@ -132,7 +133,7 @@ export interface PhotoGridPhoto {
 @Component({
   selector: 'hh-photo-grid',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown],
+  imports: [Dropdown, TranslocoPipe],
   template: `
     @if (uploadError()) {
       <p
@@ -248,7 +249,7 @@ export interface PhotoGridPhoto {
                     <button
                       type="button"
                       class="grid h-7 w-7 place-items-center rounded-lg bg-white/90 text-ink-700 hover:bg-white"
-                      title="Replace"
+                      [title]="'common.replace' | transloco"
                       (click)="replacePhoto.emit(p.id)"
                     >
                       <i class="ti ti-replace text-sm" aria-hidden="true"></i>
@@ -257,7 +258,7 @@ export interface PhotoGridPhoto {
                     <button
                       type="button"
                       class="grid h-7 w-7 place-items-center rounded-lg bg-white/90 text-ink-700 hover:bg-white"
-                      title="Set primary"
+                      [title]="'common.setPrimary' | transloco"
                       (click)="setPrimary.emit(p.id)"
                     >
                       <i class="ti ti-star text-sm" aria-hidden="true"></i>
@@ -265,7 +266,7 @@ export interface PhotoGridPhoto {
                     <button
                       type="button"
                       class="grid h-7 w-7 place-items-center rounded-lg bg-white/90 text-danger hover:bg-white"
-                      title="Remove"
+                      [title]="'common.remove' | transloco"
                       (click)="removePhoto.emit(p.id)"
                     >
                       <i class="ti ti-x text-sm" aria-hidden="true"></i>
@@ -279,8 +280,8 @@ export interface PhotoGridPhoto {
               <div class="border-t border-ink-100 bg-white px-1.5 py-1">
                 <hh-dropdown
                   variant="field"
-                  [compact]="true"
-                  placeholder="Select label"
+                  size="sm"
+                  [placeholder]="'common.selectLabel' | transloco"
                   [options]="labelOptions()"
                   [value]="labelMap().get(p.id) ?? null"
                   (valueChange)="onLabelChange(p.id, $event)"

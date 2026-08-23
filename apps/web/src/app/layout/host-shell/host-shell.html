@@ -15,7 +15,7 @@
           class="nav-link"
           (click)="closeOnMobile()"
         >
-          <i class="ti text-lg" [class]="item.icon"></i>{{ item.label }}
+          <i class="ti text-lg" [class]="item.icon"></i>{{ item.label || "" | transloco }}
         </a>
       }
     }
@@ -23,10 +23,10 @@
 
   <!-- Property picker -->
   <div class="border-t border-ink-100 px-3 py-2">
-    <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">Property</p>
+    <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostNav.property' | transloco }}</p>
     <hh-dropdown
       variant="borderless"
-      placeholder="Loading…"
+      [placeholder]="propertiesLoading() ? ('common.loading' | transloco) : (propertiesUnavailable() ? ('common.unavailable' | transloco) : ('hostNav.selectAProperty' | transloco))"
       triggerIcon="ti-building-community"
       [openRight]="true"
       [options]="propertyDropdownOptions()"
@@ -37,7 +37,7 @@
     @if (canCreateHostel()) {
       <a hh-button color="primary" routerLink="/host/hostels/new" class="mt-1 w-full">
         <i class="ti ti-plus"></i>
-        Create new hostel
+        {{ 'hostNav.createNewHostel' | transloco }}
       </a>
     }
   </div>
@@ -47,7 +47,7 @@
   <button
     type="button"
     class="fixed inset-0 z-30 bg-ink-900/40 lg:hidden"
-    aria-label="Close menu"
+    [attr.aria-label]="'a11y.closeMenu' | transloco"
     (click)="drawer.close()"
   ></button>
 }

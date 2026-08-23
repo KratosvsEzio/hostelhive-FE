@@ -2,7 +2,7 @@
 
   <div hhActions class="flex items-center gap-2">
     <button hh-button variant="outlined" size="sm" type="button" (click)="goBack()">
-      <i class="ti ti-arrow-left"></i>Rooms
+      <i class="ti ti-arrow-left"></i>{{ 'common.rooms' | transloco }}
     </button>
   </div>
 
@@ -25,7 +25,7 @@
             {{ room.number }}
           </div>
           <div>
-            <p class="text-xl font-bold text-ink-900">Room {{ room.number }}</p>
+            <p class="text-xl font-bold text-ink-900">{{ 'common.roomNumber' | transloco: { number: room.number } }}</p>
             <p class="mt-0.5 text-sm text-ink-500">{{ room.type }}</p>
           </div>
         </div>
@@ -34,25 +34,25 @@
 
       <div class="mt-6 grid grid-cols-2 gap-y-5 border-t border-ink-100 pt-5 sm:grid-cols-4">
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Type</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.type' | transloco }}</p>
           <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.type }}</p>
         </div>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Floor</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.floor' | transloco }}</p>
           <p class="mt-1 text-sm font-semibold text-ink-900">
             @if (room.floor && room.floor !== '—') { {{ room.floor | titlecase }} } @else { — }
           </p>
         </div>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Capacity</p>
-          <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.capacity }} bed{{ room.capacity !== 1 ? 's' : '' }}</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.capacity' | transloco }}</p>
+          <p class="mt-1 text-sm font-semibold text-ink-900">{{ 'common.nBeds' | transloco: { count: room.capacity } }}</p>
         </div>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Occupied</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.occupied' | transloco }}</p>
           <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.occupied }} / {{ room.capacity }}</p>
         </div>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Rent per bed</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.rentPerBed' | transloco }}</p>
           <p class="mt-1 text-sm font-semibold text-ink-900">
             @if (room.rentPerBed) { Rs {{ room.rentPerBed | number }} } @else { — }
           </p>
@@ -63,16 +63,16 @@
     <!-- Tenants card -->
     <div class="rounded-2xl bg-white shadow-card">
       <div class="border-b border-ink-100 px-5 py-4">
-        <p class="font-semibold text-ink-900">Current tenants</p>
+        <p class="font-semibold text-ink-900">{{ 'hostRooms.currentTenants' | transloco }}</p>
         <p class="mt-0.5 text-xs text-ink-400">
-          {{ s.renters.length }} of {{ room.capacity }} bed{{ room.capacity !== 1 ? 's' : '' }} occupied
+          {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: s.renters.length, total: room.capacity } }}
         </p>
       </div>
 
       @if (s.renters.length === 0) {
         <hh-empty-state
           icon="ti-users"
-          title="No tenants"
+          [title]="'hostRooms.noTenants' | transloco"
           message="This room currently has no active tenants."
         />
       } @else {
@@ -87,12 +87,12 @@
               </div>
 
               <div class="hidden text-end sm:block">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Joining date</p>
+                <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.joiningDate' | transloco }}</p>
                 <p class="mt-0.5 text-sm text-ink-700">{{ renter.moveIn | apiDate:'mediumDate' }}</p>
               </div>
 
               <div class="hidden text-end sm:block">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Rent</p>
+                <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.rent' | transloco }}</p>
                 <p class="mt-0.5 text-sm font-semibold text-ink-900">Rs {{ renter.rent | number }}</p>
               </div>
 
@@ -108,13 +108,20 @@
                 class="w-full sm:w-auto"
                 (click)="goToTenant(renter.id)"
               >
-                View profile<i class="ti ti-arrow-right"></i>
+                {{ 'common.viewProfile' | transloco }}<i class="ti ti-arrow-right"></i>
               </button>
             </li>
           }
         </ul>
       }
     </div>
+
+    <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
+    @if (hostelId() && roomId()) {
+      <div class="mt-6">
+        <hh-room-calendar [hostelId]="hostelId()!" [roomId]="roomId()" />
+      </div>
+    }
 
   }
 

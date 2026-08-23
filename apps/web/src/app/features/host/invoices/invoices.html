@@ -1,23 +1,23 @@
-<app-dashboard-layout label="Invoices">
+<app-dashboard-layout [label]="'common.invoices' | transloco">
   <!-- Icon-only below sm so the pair fits a 375px header without pushing the title out. -->
   <div hhActions class="flex shrink-0 items-center gap-2">
     <button
       hh-button variant="outlined"
       size="sm"
-      aria-label="Export CSV"
+      [attr.aria-label]="'a11y.exportCsv' | transloco"
       [disabled]="!filtered().length || state().subscriptionError"
       (click)="exportCsv()"
     >
-      <i class="ti ti-download" aria-hidden="true"></i><span class="hidden sm:inline">Export CSV</span>
+      <i class="ti ti-download" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'common.exportCsv' | transloco }}</span>
     </button>
     <button
       hh-button color="primary"
       size="sm"
-      aria-label="Add invoice"
+      [attr.aria-label]="'a11y.addInvoice' | transloco"
       [disabled]="state().subscriptionError"
       (click)="openAdd()"
     >
-      <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">Add invoice</span>
+      <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostInvoices.addInvoice' | transloco }}</span>
     </button>
   </div>
 
@@ -36,7 +36,7 @@
   } @else if ((!s.data || s.data.length === 0) && !hasActiveFilters() && filter() === 'all') {
     <hh-empty-state
       icon="ti-file-invoice"
-      title="No invoices yet"
+      [title]="'hostInvoices.noInvoicesYet' | transloco"
       message="Invoices appear here once you issue rent or utility bills."
     />
   } @else {
@@ -69,20 +69,20 @@
             <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-sky">
               <i class="ti ti-home-2 text-sm text-ink-600"></i>
             </span>
-            <p class="text-sm font-semibold text-ink-700">Renter bills</p>
+            <p class="text-sm font-semibold text-ink-700">{{ 'hostInvoices.renterBills' | transloco }}</p>
           </div>
         </div>
         <div class="grid grid-cols-1 divide-y divide-ink-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <div class="py-3 sm:py-0 sm:pe-4">
-            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Total</p>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.total' | transloco }}</p>
             <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ rentSummary().total | number }}</p>
           </div>
           <div class="py-3 sm:py-0 sm:px-4">
-            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Paid</p>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.paid' | transloco }}</p>
             <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ rentSummary().paid | number }}</p>
           </div>
           <div class="py-3 sm:py-0 sm:ps-4">
-            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Balance</p>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'hostInvoices.balance' | transloco }}</p>
             <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ rentSummary().balance | number }}</p>
           </div>
         </div>
@@ -95,20 +95,20 @@
             <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-cream">
               <i class="ti ti-bolt text-sm text-brand-600"></i>
             </span>
-            <p class="text-sm font-semibold text-ink-700">Utility bills</p>
+            <p class="text-sm font-semibold text-ink-700">{{ 'hostInvoices.utilityBills' | transloco }}</p>
           </div>
         </div>
         <div class="grid grid-cols-1 divide-y divide-ink-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <div class="py-3 sm:py-0 sm:pe-4">
-            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Total</p>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.total' | transloco }}</p>
             <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ utilitySummary().total | number }}</p>
           </div>
           <div class="py-3 sm:py-0 sm:px-4">
-            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Paid</p>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.paid' | transloco }}</p>
             <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ utilitySummary().paid | number }}</p>
           </div>
           <div class="py-3 sm:py-0 sm:ps-4">
-            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">Balance</p>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'hostInvoices.balance' | transloco }}</p>
             <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ utilitySummary().balance | number }}</p>
           </div>
         </div>
@@ -118,7 +118,7 @@
     @if (filtered().length === 0) {
       <hh-empty-state
         icon="ti-filter-off"
-        title="No invoices match"
+        [title]="'hostInvoices.noInvoicesMatch' | transloco"
         message="Try adjusting your filters."
       />
     } @else {
@@ -141,18 +141,18 @@
         <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
           <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:update'">
             <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
-            Edit
+            {{ 'common.edit' | transloco }}
           </button>
           @if (inv.status !== 'paid') {
             <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)" *hhHasPermission="'host:RenterBill:mark_as_paid'">
               <i class="ti ti-circle-check text-sm text-ok" aria-hidden="true"></i>
-              Mark as paid
+              {{ 'hostInvoices.markAsPaid' | transloco }}
             </button>
           }
           <hh-context-menu-divider />
           <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="deleteInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:destroy'">
             <i class="ti ti-trash text-sm" aria-hidden="true"></i>
-            Delete
+            {{ 'common.delete' | transloco }}
           </button>
         </hh-context-menu>
       }
@@ -163,7 +163,7 @@
   <button
     type="button"
     class="fixed inset-0 z-40 cursor-default bg-black/25"
-    aria-label="Close invoice"
+    [attr.aria-label]="'a11y.closeInvoice' | transloco"
     (click)="selectedId.set(null)"
   ></button>
 
@@ -173,13 +173,13 @@
     <div class="flex shrink-0 items-center justify-between border-b border-ink-100 bg-surface px-5 py-3">
       <span class="text-xs font-medium text-ink-500">{{ invoiceId(inv) }}.pdf</span>
       <div class="flex gap-1">
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Print" (click)="printInvoice(inv)">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.print' | transloco" (click)="printInvoice(inv)">
           <i class="ti ti-printer"></i>
         </button>
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Download" (click)="downloadInvoice(inv)">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.download' | transloco" (click)="downloadInvoice(inv)">
           <i class="ti ti-download"></i>
         </button>
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Close" (click)="selectedId.set(null)">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.close' | transloco" (click)="selectedId.set(null)">
           <i class="ti ti-x"></i>
         </button>
       </div>
@@ -196,7 +196,7 @@
           }
         </div>
         <div class="text-end">
-          <p class="text-xs font-semibold uppercase tracking-widest text-ink-400">Invoice</p>
+          <p class="text-xs font-semibold uppercase tracking-widest text-ink-400">{{ 'hostInvoices.invoice' | transloco }}</p>
           <p class="mt-0.5 text-sm font-semibold text-ink-900">{{ invoiceId(inv) }}</p>
         </div>
       </div>
@@ -205,14 +205,14 @@
 
       <div class="flex justify-between gap-4 text-sm">
         <div>
-          <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Billed to</p>
+          <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostInvoices.billedTo' | transloco }}</p>
           <p class="font-semibold text-ink-900">{{ inv.tenantName }}</p>
-          <p class="text-xs text-ink-500">Room {{ inv.roomNumber }}</p>
+          <p class="text-xs text-ink-500">{{ 'common.roomNumber' | transloco: { number: inv.roomNumber } }}</p>
         </div>
         <div class="text-end">
-          <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Issued</p>
+          <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostInvoices.issued' | transloco }}</p>
           <p class="text-xs text-ink-800">{{ formatDate(inv.issued) }}</p>
-          <p class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Due</p>
+          <p class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostInvoices.due' | transloco }}</p>
           <p class="text-xs text-ink-800">{{ formatDate(inv.due) }}</p>
         </div>
       </div>
@@ -223,8 +223,8 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-ink-100">
-              <th class="pb-2 text-start text-[11px] font-semibold uppercase tracking-wide text-ink-400">Description</th>
-              <th class="pb-2 text-end text-[11px] font-semibold uppercase tracking-wide text-ink-400">Amount</th>
+              <th class="pb-2 text-start text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.description' | transloco }}</th>
+              <th class="pb-2 text-end text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.amount' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
@@ -244,7 +244,7 @@
       </div>
 
       <div class="mt-5 flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
-        <span class="font-semibold text-ink-700">Total due</span>
+        <span class="font-semibold text-ink-700">{{ 'hostInvoices.totalDue' | transloco }}</span>
         <span class="text-xl font-bold text-brand-700">Rs {{ inv.amount | number }}</span>
       </div>
 
@@ -254,7 +254,7 @@
 
       <div class="mt-5 flex items-center justify-between border-t border-ink-100 pt-4">
         <img src="/hostelhive-logo.png" alt="HostelHive" class="h-4 w-auto" />
-        <a href="mailto:support@hostelhive.com" class="text-[11px] text-ink-400 hover:text-brand-500">support&#64;hostelhive.com</a>
+        <a href="mailto:support@hostelhive.com" class="text-[11px] text-ink-400 hover:text-brand-500">{{ 'common.supportEmail' | transloco }}</a>
       </div>
     </div>
   </div>
@@ -262,7 +262,7 @@
 
 @if (deletePending(); as inv) {
   <hh-confirm-modal
-    title="Delete invoice?"
+    [title]="'hostInvoices.deleteInvoice' | transloco"
     icon="ti-trash"
     tone="danger"
     confirmLabel="Delete"
@@ -270,9 +270,9 @@
     (confirm)="confirmDelete()"
     (cancel)="cancelDelete()"
   >
-    This will permanently delete invoice
-    <strong>{{ invoiceId(inv) }}</strong> for
-    <strong>{{ inv.tenantName }}</strong>. This action cannot be undone.
+    {{ 'hostInvoices.thisWillPermanentlyDeleteInvoice' | transloco }}
+    <strong>{{ invoiceId(inv) }}</strong> {{ 'common.for' | transloco }}
+    <strong>{{ inv.tenantName }}</strong>{{ 'common.thisActionCannotBe' | transloco }}
   </hh-confirm-modal>
 }
 

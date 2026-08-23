@@ -17,6 +17,8 @@ import { DevSetupGate } from '@app/features/dev-setup/dev-setup-gate';
 import { devSetupPending } from '@core/dev-api-base-url';
 import { routePath } from '@core/i18n/locales';
 import { ConsentBanner } from '@core/analytics/consent-banner';
+import { StartupGate } from '@core/startup-gate';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-root',
@@ -29,12 +31,16 @@ import { ConsentBanner } from '@core/analytics/consent-banner';
     SeekerTabBar,
     DevSetupGate,
     ConsentBanner,
+    TranslocoPipe,
   ],
   templateUrl: './app.html',
 })
 export class App {
   private readonly router = inject(Router);
   private readonly mobile = inject(MobileApp);
+
+  /** True while startup is still resolving the session and the country. */
+  protected readonly startingUp = inject(StartupGate).busy;
 
   /** TEMPORARY (testing): true while the base-URL gate is still waiting for an answer. */
   protected readonly pending = devSetupPending;

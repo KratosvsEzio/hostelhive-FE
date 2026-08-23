@@ -44,6 +44,7 @@ import {
   toCreateRenterPayload,
   toUpdateRenterPayload,
 } from './tenant-form.model';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Side drawer that checks a tenant in or edits an existing one.
@@ -55,7 +56,7 @@ import {
 @Component({
   selector: 'hh-tenant-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DatePicker, Dropdown, Input, Toggle, MoneyInput],
+  imports: [Button, DatePicker, Dropdown, Input, Toggle, MoneyInput, TranslocoPipe],
   host: { class: 'contents' },
   templateUrl: './tenant-form-drawer.html',
 })

@@ -48,6 +48,7 @@ import {
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
 import { ADMIN_PAYMENTS_TABLE_COLS } from '@app/util/table-configs/admin-payments-table-cols';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -90,6 +91,7 @@ const STATUS_META: Record<string, { tone: StatusTone; dot: boolean }> = {
     EmptyState,
     ErrorState,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './admin-payments.html',
 })
@@ -341,22 +343,7 @@ export class AdminPayments {
     if (p < 1 || p > this.totalPages() || p === this.page()) return;
     this.page.set(p);
   }
-  /** Toggle direction when re-clicking the active column, else switch column (newest/highest first). */
-  protected toggleSort(field: SortField): void {
-    if (this.sortField() === field) {
-      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortField.set(field);
-      this.sortDir.set('desc');
-    }
-    this.page.set(1); // a new sort starts from page 1
-  }
-  /** Tabler icon for a column header — direction arrow when active, neutral arrows otherwise. */
-  protected sortIcon(field: SortField): string {
-    if (this.sortField() !== field) return 'ti-arrows-sort text-ink-300';
-    return this.sortDir() === 'asc' ? 'ti-arrow-up' : 'ti-arrow-down';
-  }
-  protected slideImg(dir: number): void {
+  /** Toggle direction when re-clicking the active column, else switch column (newest/highest first). */  protected slideImg(dir: number): void {
     const n = this.hostelImages().length;
     if (n <= 1) return;
     this.imgIndex.set((((this.currentImageIndex() + dir) % n) + n) % n);

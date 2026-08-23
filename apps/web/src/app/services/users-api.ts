@@ -20,10 +20,23 @@ export class UsersApi {
       .pipe(map((r) => requireUser(r, id)));
   }
 
-  /** PATCH /api/users/:id → updated user. */
-  update(id: number | string, data: { name?: string; phone?: string }): Observable<User> {
+  /**
+   * PATCH /api/users/:id → updated user.
+   *
+   * `avatarId` carries the uploaded document's id and is sent as `avatar_id`, matching how
+   * staff-api and host-ops-api attach theirs. `null` clears the avatar, so the key is omitted
+   * only when the caller leaves it `undefined` — otherwise a name-only save would wipe the
+   * photo.
+   */
+  update(
+    id: number | string,
+    data: { name?: string; phone?: string; avatarId?: string | null },
+  ): Observable<User> {
+    const { avatarId, ...rest } = data;
+    const user: Record<string, unknown> = { ...rest };
+    if (avatarId !== undefined) user['avatar_id'] = avatarId;
     return this.api
-      .patch<UserResponse>(`/api/users/${id}`, { user: data })
+      .patch<UserResponse>(`/api/users/${id}`, { user })
       .pipe(map((r) => requireUser(r, id)));
   }
 }

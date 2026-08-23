@@ -7,7 +7,7 @@
         @case ('loading') {
           <div class="flex flex-col items-center gap-3 py-8">
             <i class="ti ti-loader-2 animate-spin text-3xl text-ink-300" aria-hidden="true"></i>
-            <p class="text-sm text-ink-400">Checking your link…</p>
+            <p class="text-sm text-ink-400">{{ 'featuresPublic.checkingYourLink' | transloco }}</p>
           </div>
         }
 
@@ -17,19 +17,19 @@
               <i class="ti text-3xl" [class]="mealMeta[p.m].icon" aria-hidden="true"></i>
             </span>
             <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
-              Reserve your {{ mealMeta[p.m].label }} portion
+              {{ 'featuresPublic.reserveYourMealPortion' | transloco: { meal: mealMeta[p.m].label } }}
             </h1>
-            <p class="mt-1 text-sm text-ink-500">Today's {{ mealMeta[p.m].label.toLowerCase() }} at the hostel mess</p>
+            <p class="mt-1 text-sm text-ink-500">{{ 'featuresPublic.todaysMealAtMess' | transloco: { meal: mealMeta[p.m].label.toLowerCase() } }}</p>
 
             <div class="mt-5 rounded-2xl bg-tint-cream px-4 py-3">
-              <p class="text-xs uppercase tracking-wide text-ink-400">On the menu</p>
+              <p class="text-xs uppercase tracking-wide text-ink-400">{{ 'featuresPublic.onTheMenu' | transloco }}</p>
               <p class="mt-0.5 font-display text-lg font-semibold text-ink-900">{{ p.menu || 'Today’s menu' }}</p>
             </div>
 
             <button hh-button color="primary" class="mt-6 w-full" (click)="confirm()">
-              <i class="ti ti-check" aria-hidden="true"></i>Confirm my portion
+              <i class="ti ti-check" aria-hidden="true"></i>{{ 'featuresPublic.confirmMyPortion' | transloco }}
             </button>
-            <p class="mt-3 text-xs text-ink-400">Reserve before {{ p.exp | date: 'shortTime' }} · tap once to confirm</p>
+            <p class="mt-3 text-xs text-ink-400">{{ 'featuresPublic.reserveBeforeTapOnce' | transloco: { time: p.exp | date: 'shortTime' } }}</p>
           }
         }
 
@@ -37,12 +37,16 @@
           <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-ok/10 text-ok">
             <i class="ti ti-check text-4xl" aria-hidden="true"></i>
           </span>
-          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">You're confirmed! 🎉</h1>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">{{ 'featuresPublic.youReConfirmed' | transloco }}</h1>
           <p class="mt-1 text-sm text-ink-500">
-            Your portion for today's {{ mealLabel().toLowerCase() }} is reserved@if (p) { — {{ p.menu }}}.
+            @if (p) {
+              {{ 'featuresPublic.portionReservedWithMenu' | transloco: { meal: mealLabel().toLowerCase(), menu: p.menu } }}
+            } @else {
+              {{ 'featuresPublic.portionReserved' | transloco: { meal: mealLabel().toLowerCase() } }}
+            }
           </p>
           <p class="mt-5 rounded-xl bg-surface px-4 py-3 text-xs text-ink-500">
-            Please collect your meal at the mess during serving time. You can close this page.
+            {{ 'featuresPublic.pleaseCollectYourMealAt' | transloco }}
           </p>
         }
 
@@ -50,9 +54,9 @@
           <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-tint-sky text-brand-600">
             <i class="ti ti-checks text-4xl" aria-hidden="true"></i>
           </span>
-          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">Already confirmed</h1>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">{{ 'featuresPublic.alreadyConfirmed' | transloco }}</h1>
           <p class="mt-1 text-sm text-ink-500">
-            You've already reserved your {{ mealLabel().toLowerCase() }} portion for today.
+            {{ 'featuresPublic.alreadyReservedMealToday' | transloco: { meal: mealLabel().toLowerCase() } }}
           </p>
         }
 
@@ -60,10 +64,14 @@
           <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-warn/10 text-warn">
             <i class="ti ti-clock-x text-4xl" aria-hidden="true"></i>
           </span>
-          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">This link has expired</h1>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">{{ 'featuresPublic.thisLinkHasExpired' | transloco }}</h1>
           <p class="mt-1 text-sm text-ink-500">
-            The opt-in window for {{ mealLabel().toLowerCase() }} has closed@if (p) { at {{ p.exp | date: 'shortTime' }}}.
-            Please reach out to the mess manager if you still need a portion.
+            @if (p) {
+              {{ 'featuresPublic.optInWindowClosedAt' | transloco: { meal: mealLabel().toLowerCase(), time: p.exp | date: 'shortTime' } }}
+            } @else {
+              {{ 'featuresPublic.optInWindowClosed' | transloco: { meal: mealLabel().toLowerCase() } }}
+            }
+            {{ 'featuresPublic.reachOutToMessManager' | transloco }}
           </p>
         }
 
@@ -71,14 +79,14 @@
           <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-danger/10 text-danger">
             <i class="ti ti-alert-triangle text-4xl" aria-hidden="true"></i>
           </span>
-          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">Invalid link</h1>
+          <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">{{ 'featuresPublic.invalidLink' | transloco }}</h1>
           <p class="mt-1 text-sm text-ink-500">
-            This confirmation link is missing or incomplete. Please use the exact link from your latest reminder.
+            {{ 'featuresPublic.thisConfirmationLinkIsMissing' | transloco }}
           </p>
         }
       }
     </div>
   </main>
 
-  <footer class="safe-pb-4 px-5 py-4 text-center text-xs text-ink-400">© 2026 HostelHive · Mess opt-in</footer>
+  <footer class="safe-pb-4 px-5 py-4 text-center text-xs text-ink-400">{{ 'featuresPublic.n2026HostelhiveMessOptIn' | transloco }}</footer>
 </div>

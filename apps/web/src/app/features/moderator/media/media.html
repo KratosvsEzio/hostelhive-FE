@@ -1,5 +1,5 @@
-<app-dashboard-layout label="Media queue">
-  <span hhActions class="hidden text-sm text-ink-400 sm:block">Photos, banners, logos and avatars pending approval</span>
+<app-dashboard-layout [label]="'moderatorMedia.mediaQueue' | transloco">
+  <span hhActions class="hidden text-sm text-ink-400 sm:block">{{ 'moderatorMedia.photosBannersLogosAndAvatars' | transloco }}</span>
   <!-- Status filter chips -->
   @if (statusTabs().length > 1) {
     <hh-filter-chips class="mb-5" [tabs]="statusTabs()" [active]="activeStatus()" (activeChange)="setStatus($event)" />
@@ -17,7 +17,7 @@
     <div class="mt-5">
       <hh-empty-state
         icon="ti-photo-check"
-        title="All clear"
+        [title]="'moderatorMedia.allClear' | transloco"
         message="New uploads will appear here for approval."
       />
     </div>
@@ -27,23 +27,22 @@
       class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
     >
       <p class="text-sm text-ink-500">
-        <span class="font-semibold text-ink-900">{{ pending().length }}</span>
-        {{ pending().length === 1 ? 'item' : 'items' }}
         @if (!activeStatus() || activeStatus() === 'pending') {
-          pending
+          {{ 'moderatorMedia.nItemsPendingOfTotal' | transloco: { count: pending().length, total: totalCount() } }}
+        } @else {
+          {{ 'moderatorMedia.nItemsOfTotal' | transloco: { count: pending().length, total: totalCount() } }}
         }
-        · {{ totalCount() }} total
         @if (selected().length > 0) {
-          · <span class="font-medium text-brand">{{ selected().length }} selected</span>
+          · <span class="font-medium text-brand">{{ 'common.nSelected' | transloco: { count: selected().length } }}</span>
         }
       </p>
       @if (activeStatus() !== 'rejected') {
         <div class="flex gap-2">
           <button hh-button variant="outlined" size="sm" (click)="rejectAll()">
             @if (selected().length > 0) {
-              Reject {{ selected().length }}
+              {{ 'moderatorMedia.rejectN' | transloco: { count: selected().length } }}
             } @else {
-              Reject all
+              {{ 'moderatorMedia.rejectAll' | transloco }}
             }
           </button>
           <button
@@ -54,9 +53,9 @@
             (click)="approveSelected()"
           >
             @if (selected().length > 0) {
-              Approve all {{ selected().length }}
+              {{ 'moderatorMedia.approveN' | transloco: { count: selected().length } }}
             } @else {
-              Approve all
+              {{ 'moderatorMedia.approveAll' | transloco }}
             }
           </button>
         </div>
@@ -106,7 +105,7 @@
             @if (imgErrors().has(aid) || !a.url) {
               <div class="flex h-full w-full flex-col items-center justify-center gap-2 bg-ink-50">
                 <i class="ti ti-photo text-4xl text-ink-300" aria-hidden="true"></i>
-                <span class="text-[11px] text-ink-300">No image</span>
+                <span class="text-[11px] text-ink-300">{{ 'moderatorMedia.noImage' | transloco }}</span>
               </div>
             } @else {
               <img
@@ -121,7 +120,7 @@
             @if (isApproving) {
               <div class="absolute inset-0 flex items-center justify-center bg-black/10">
                 <div class="rounded-full bg-white/90 p-2.5 shadow">
-                  <i class="ti ti-loader-2 animate-spin text-xl text-ink-600" aria-label="Approving…"></i>
+                  <i class="ti ti-loader-2 animate-spin text-xl text-ink-600" [attr.aria-label]="'a11y.approving' | transloco"></i>
                 </div>
               </div>
             }
@@ -129,7 +128,7 @@
             @if (hasError) {
               <div class="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-danger px-3 py-1.5">
                 <i class="ti ti-alert-circle text-xs text-white"></i>
-                <span class="text-[11px] font-medium text-white">Failed — tap Retry</span>
+                <span class="text-[11px] font-medium text-white">{{ 'moderatorMedia.failedTapRetry' | transloco }}</span>
               </div>
             }
           </div>
@@ -163,7 +162,7 @@
                   (click)="setOne(a, 'approved')"
                 >
                   <i class="ti ti-refresh text-base" aria-hidden="true"></i>
-                  Retry
+                  {{ 'common.retry' | transloco }}
                 </button>
               } @else {
                 <button
@@ -174,7 +173,7 @@
                   (click)="setOne(a, 'approved')"
                 >
                   <i class="ti ti-check text-base" aria-hidden="true"></i>
-                  Approve
+                  {{ 'moderatorMedia.approve' | transloco }}
                 </button>
               }
               <button
@@ -185,7 +184,7 @@
                 (click)="setOne(a, 'rejected')"
               >
                 <i class="ti ti-x text-base" aria-hidden="true"></i>
-                Reject
+                {{ 'moderatorMedia.reject' | transloco }}
               </button>
             </div>
           }
@@ -199,16 +198,16 @@
         @if (loadStatus() === 'loading-more') {
           <div class="flex items-center gap-2 text-sm text-ink-400">
             <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
-            Loading more…
+            {{ 'moderatorMedia.loadingMore' | transloco }}
           </div>
         } @else if (loadMoreError()) {
           <div class="flex items-center gap-3">
-            <span class="text-sm text-danger">Failed to load more.</span>
-            <button hh-button variant="outlined" size="sm" (click)="loadMore()">Retry</button>
+            <span class="text-sm text-danger">{{ 'moderatorMedia.failedToLoadMore' | transloco }}</span>
+            <button hh-button variant="outlined" size="sm" (click)="loadMore()">{{ 'common.retry' | transloco }}</button>
           </div>
         } @else {
           <button hh-button variant="outlined" size="sm" (click)="loadMore()">
-            Load more
+            {{ 'moderatorMedia.loadMore' | transloco }}
           </button>
         }
       </div>
@@ -246,12 +245,12 @@
               <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70"></span>
               <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-white"></span>
             </span>
-            Rejecting
+            {{ 'moderatorMedia.rejecting' | transloco }}
           </div>
           <!-- Listing name at bottom of photo -->
           @if (entityName(rejectQueue()[0]); as name) {
             <div class="absolute inset-x-0 bottom-0 px-4 pb-3">
-              <p class="truncate text-xs font-medium text-white/60">Rejecting photo from</p>
+              <p class="truncate text-xs font-medium text-white/60">{{ 'moderatorMedia.rejectingPhotoFrom' | transloco }}</p>
               <p class="truncate text-sm font-semibold text-white">{{ name }}</p>
             </div>
           }
@@ -273,7 +272,7 @@
             </div>
           </div>
           <p class="mt-3 rounded-full bg-danger/15 px-3 py-1 text-sm font-semibold text-danger">
-            {{ rejectQueue().length }} photos will be rejected
+            {{ 'moderatorMedia.nPhotosWillBeRejected' | transloco: { count: rejectQueue().length } }}
           </p>
         </div>
       }
@@ -285,31 +284,31 @@
           class="mb-0.5 font-display text-base font-semibold text-ink-900"
         >
           @if (rejectQueue().length === 1) {
-            Reject this photo?
+            {{ 'moderatorMedia.rejectThisPhoto' | transloco }}
           } @else {
-            Reject {{ rejectQueue().length }} photos?
+            {{ 'moderatorMedia.rejectNPhotos' | transloco: { count: rejectQueue().length } }}
           }
         </h2>
         <p class="mb-4 text-sm text-ink-500">
-          The host will be notified with your reason.
+          {{ 'moderatorMedia.theHostWillBeNotified' | transloco }}
         </p>
 
         <label class="mb-1 block text-xs font-medium text-ink-600" for="reject-note">
-          Rejection reason <span class="text-danger">*</span>
+          {{ 'moderatorMedia.rejectionReason' | transloco }} <span class="text-danger">*</span>
         </label>
         <textarea
           id="reject-note"
           [(ngModel)]="rejectNote"
           [ngModelOptions]="{ standalone: true }"
           rows="3"
-          placeholder="e.g. Blurry image, wrong room type, watermark visible…"
+          [placeholder]="'moderatorMedia.eGBlurryImageWrong' | transloco"
           class="w-full resize-none rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none transition placeholder:text-ink-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
         ></textarea>
 
         @if (rejectApiError()) {
           <p class="mt-2 flex items-center gap-1.5 text-xs font-medium text-danger">
             <i class="ti ti-alert-circle" aria-hidden="true"></i>
-            Something went wrong — please try again.
+            {{ 'moderatorMedia.somethingWentWrongPleaseTry' | transloco }}
           </p>
         }
 
@@ -320,7 +319,7 @@
             class="flex-1"
             (click)="cancelReject()"
           >
-            Cancel
+            {{ 'common.cancel' | transloco }}
           </button>
           <button
             hh-button
@@ -329,7 +328,7 @@
             [disabled]="!rejectNote().trim()"
             (click)="confirmReject()"
           >
-            Reject
+            {{ 'moderatorMedia.reject' | transloco }}
           </button>
         </div>
       </div>
@@ -360,11 +359,11 @@
             class="font-display text-base font-semibold text-ink-900"
           >
             @if (!prog.allDone) {
-              Rejecting {{ prog.total }} {{ prog.total === 1 ? 'photo' : 'photos' }}…
+              {{ 'moderatorMedia.rejectingNPhotos' | transloco: { count: prog.total } }}
             } @else if (prog.errors === 0) {
-              All rejected!
+              {{ 'moderatorMedia.allRejected' | transloco }}
             } @else {
-              Done — {{ prog.errors }} failed
+              {{ 'moderatorMedia.doneNFailed' | transloco: { count: prog.errors } }}
             }
           </h2>
           <span class="text-sm font-medium text-ink-500">{{ prog.done }}/{{ prog.total }}</span>
@@ -378,7 +377,7 @@
         </div>
         @if (prog.errors > 0 && prog.allDone) {
           <p class="mt-2 text-xs text-amber-600">
-            {{ prog.errors }} photo{{ prog.errors === 1 ? '' : 's' }} failed — you can retry from the queue.
+            {{ 'moderatorMedia.nPhotosFailedRetry' | transloco: { count: prog.errors } }}
           </p>
         }
       </div>
@@ -401,14 +400,14 @@
             </p>
             <div class="flex-shrink-0">
               @if (item.status === 'pending') {
-                <i class="ti ti-loader-2 animate-spin text-base text-ink-300" aria-label="Rejecting"></i>
+                <i class="ti ti-loader-2 animate-spin text-base text-ink-300" [attr.aria-label]="'a11y.rejecting' | transloco"></i>
               } @else if (item.status === 'success') {
                 <div class="flex h-6 w-6 items-center justify-center rounded-full bg-danger/10">
-                  <i class="ti ti-x text-xs text-danger" aria-label="Rejected"></i>
+                  <i class="ti ti-x text-xs text-danger" [attr.aria-label]="'a11y.rejected' | transloco"></i>
                 </div>
               } @else {
                 <div class="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100">
-                  <i class="ti ti-alert-triangle text-xs text-amber-600" aria-label="Failed"></i>
+                  <i class="ti ti-alert-triangle text-xs text-amber-600" [attr.aria-label]="'a11y.failed' | transloco"></i>
                 </div>
               }
             </div>
@@ -427,11 +426,11 @@
         >
           @if (!prog.allDone) {
             <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
-            Rejecting…
+            {{ 'moderatorMedia.rejecting' | transloco }}
           } @else if (prog.errors === 0) {
-            Done
+            {{ 'common.done' | transloco }}
           } @else {
-            Close
+            {{ 'common.close' | transloco }}
           }
         </button>
       </div>
@@ -462,11 +461,11 @@
             class="font-display text-base font-semibold text-ink-900"
           >
             @if (!prog.allDone) {
-              Approving {{ prog.total }} photos…
+              {{ 'moderatorMedia.approvingNPhotos' | transloco: { count: prog.total } }}
             } @else if (prog.errors === 0) {
-              All approved!
+              {{ 'moderatorMedia.allApproved' | transloco }}
             } @else {
-              Done — {{ prog.errors }} failed
+              {{ 'moderatorMedia.doneNFailed' | transloco: { count: prog.errors } }}
             }
           </h2>
           <span class="text-sm font-medium text-ink-500">{{ prog.done }}/{{ prog.total }}</span>
@@ -480,7 +479,7 @@
         </div>
         @if (prog.errors > 0 && prog.allDone) {
           <p class="mt-2 text-xs text-amber-600">
-            {{ prog.errors }} photo{{ prog.errors === 1 ? '' : 's' }} failed — you can retry from the queue.
+            {{ 'moderatorMedia.nPhotosFailedRetry' | transloco: { count: prog.errors } }}
           </p>
         }
       </div>
@@ -503,14 +502,14 @@
             </p>
             <div class="flex-shrink-0">
               @if (item.status === 'pending') {
-                <i class="ti ti-loader-2 animate-spin text-base text-ink-300" aria-label="Approving"></i>
+                <i class="ti ti-loader-2 animate-spin text-base text-ink-300" [attr.aria-label]="'a11y.approving2' | transloco"></i>
               } @else if (item.status === 'success') {
                 <div class="flex h-6 w-6 items-center justify-center rounded-full bg-ok/15">
-                  <i class="ti ti-check text-xs text-ok" aria-label="Approved"></i>
+                  <i class="ti ti-check text-xs text-ok" [attr.aria-label]="'a11y.approved' | transloco"></i>
                 </div>
               } @else {
                 <div class="flex h-6 w-6 items-center justify-center rounded-full bg-danger/10">
-                  <i class="ti ti-x text-xs text-danger" aria-label="Failed"></i>
+                  <i class="ti ti-x text-xs text-danger" [attr.aria-label]="'a11y.failed' | transloco"></i>
                 </div>
               }
             </div>
@@ -529,11 +528,11 @@
         >
           @if (!prog.allDone) {
             <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
-            Approving…
+            {{ 'moderatorMedia.approving' | transloco }}
           } @else if (prog.errors === 0) {
-            Done
+            {{ 'common.done' | transloco }}
           } @else {
-            Close
+            {{ 'common.close' | transloco }}
           }
         </button>
       </div>
@@ -558,7 +557,7 @@
         hh-button variant="icon"
         type="button"
         (click)="closePreview()"
-        aria-label="Close preview"
+        [attr.aria-label]="'a11y.closePreview' | transloco"
       >
         <i class="ti ti-x" aria-hidden="true"></i>
       </button>

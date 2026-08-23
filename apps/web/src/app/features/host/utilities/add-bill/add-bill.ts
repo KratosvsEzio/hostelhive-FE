@@ -34,6 +34,7 @@ import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { splitByDays, SplitRow } from '../split';
 import { localToday } from '@util/api-date';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -62,6 +63,7 @@ const TONES = ['sky', 'cream', 'mint', 'brand'] as const;
     EmptyState,
     ErrorState,
     MoneyInput,
+    TranslocoPipe,
   ],
   templateUrl: './add-bill.html',
 })

@@ -14,6 +14,9 @@ import { findUniversity, universitiesIn } from './universities';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Container } from '@hostelhive/ui';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 /**
  * SEO landing page for a place, optionally narrowed by gender:
@@ -31,12 +34,14 @@ import { LocaleLink } from '@core/i18n/locale-link';
 @Component({
   selector: 'hh-place-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SearchMap, RouterLink, LocaleLink],
+  imports: [Container, SearchMap, RouterLink, LocaleLink, TranslocoPipe],
   templateUrl: './place-landing.html',
 })
 export class PlaceLanding {
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(Seo);
+  private readonly i18n = inject(TranslocoService);
+  private readonly locale = inject(LocaleStore);
 
   /** Rendered in the page as well as marked up — see the note in place-faqs.ts. */
   protected readonly faqs = signal<Faq[]>([]);
@@ -79,15 +84,40 @@ export class PlaceLanding {
   });
 
   protected readonly heading = computed(() => {
+    // Both, and both matter. `ready` flips once when the strings arrive, which is what
+    // stops this caching a raw key from the render before they did; `active` changes on
+    // every switch after that, when `ready` is already true and would not move again.
+    this.locale.ready();
+    this.locale.active();
     const p = this.place();
-    if (!p) return 'Hostels';
+    if (!p) return this.i18n.translate<string>('seo.headingHostels');
     const u = this.university();
     // "near", not "in": proximity to the campus is the whole point of the page, and it is
     // how the search is phrased.
-    if (u) return `Hostels near ${u.shortName}`;
+    if (u) {
+      return this.i18n.translate<string>('seo.headingNearCampus', {
+        campus: u.shortName,
+      });
+    }
     const g = this.genderSegment();
-    return g ? `${g.label} in ${p.name}` : `Hostels in ${p.name}`;
+    return g
+      ? this.i18n.translate<string>('seo.headingSegmentInPlace', {
+          segment: this.segmentLabel(g),
+          place: p.name,
+        })
+      : this.i18n.translate<string>('seo.headingInPlace', { place: p.name });
   });
+
+  /**
+   * A gender segment as its own noun phrase, in the language being read.
+   *
+   * `GENDER_SEGMENTS` holds translation keys rather than words, so every place that
+   * shows a segment — breadcrumb, h1, internal link, structured data — goes through
+   * here and they cannot end up in different languages on the same page.
+   */
+  protected segmentLabel(g: { label: string }): string {
+    return this.i18n.translate<string>(g.label);
+  }
 
   /**
    * Filters handed to the search component. Coordinates rather than a city string: search
@@ -115,12 +145,23 @@ export class PlaceLanding {
 
   /** Sibling pages, for internal linking — the other genders for this place. */
   protected readonly genderLinks = computed(() => {
+    // Both, and both matter. `ready` flips once when the strings arrive, which is what
+    // stops this caching a raw key from the render before they did; `active` changes on
+    // every switch after that, when `ready` is already true and would not move again.
+    this.locale.ready();
+    this.locale.active();
     const p = this.place();
     if (!p) return [];
     const current = this.params()?.get('gender') ?? null;
     return Object.entries(GENDER_SEGMENTS)
       .filter(([slug]) => slug !== current)
-      .map(([slug, g]) => ({ path: `/hostels/${p.slug}/${slug}`, label: `${g.label} in ${p.name}` }));
+      .map(([slug, g]) => ({
+        path: `/hostels/${p.slug}/${slug}`,
+        label: this.i18n.translate<string>('seo.headingSegmentInPlace', {
+          segment: this.segmentLabel(g),
+          place: p.name,
+        }),
+      }));
   });
 
   /** Other cities, so every landing page links onward to its siblings rather than dead-ending. */
@@ -131,14 +172,17 @@ export class PlaceLanding {
 
   constructor() {
     effect(() => {
+      // The head is read once and kept, so it has to be built from strings that have
+      // actually arrived rather than from whatever `translate` can answer this instant.
+      if (!this.locale.ready()) return;
       const p = this.place();
       const g = this.genderSegment();
 
       if (!p || (this.segment() && !g && !this.university())) {
         // An unknown slug is not a real page — never let it into the index.
         this.seo.apply({
-          title: 'Place not found — HostelHive',
-          description: 'We do not have a hostel guide for that place yet.',
+          title: this.i18n.translate<string>('seo.placeNotFoundTitle'),
+          description: this.i18n.translate<string>('seo.placeNotFoundDescription'),
           noindex: true,
         });
         this.seo.clearJsonLd('place-breadcrumb');
@@ -151,7 +195,14 @@ export class PlaceLanding {
       const path = this.segment()
         ? `/hostels/${p.slug}/${this.segment()}`
         : `/hostels/${p.slug}`;
-      const what = g ? `${g.adjective} hostels` : 'hostels, PGs and co-living';
+      // Both halves are translated: the phrase and the gender word inside it. Built by
+      // key rather than by concatenation because word order differs — Japanese puts the
+      // gender in front of the noun with no space, French puts it after.
+      const what = g
+        ? this.i18n.translate<string>('seo.whatGendered', {
+            gender: this.i18n.translate<string>(g.adjective),
+          })
+        : this.i18n.translate<string>('seo.whatAll');
       // Rendered on the page as well as in the markup — Google requires the answer text
       // to be visible, and marking up content a visitor cannot see is a violation.
       this.faqs.set(placeFaqs(u ? `${u.shortName}, ${p.name}` : p.name, what));
@@ -162,13 +213,28 @@ export class PlaceLanding {
       this.seo.apply(
         u
           ? {
-              title: `Hostels near ${u.shortName}, ${p.name} — verified student hostels | HostelHive`,
-              description: `Verified hostels and PGs near ${u.name} in ${p.name}. Compare rent, room sharing, mess and distance from campus, and contact hosts directly — no brokers, no commission.`,
+              // The title names the campus the short way people search for it; the
+              // description spells it out, which is why both take a `campus` param and
+              // are handed different halves of the same university.
+              title: this.i18n.translate<string>('seo.campusTitle', {
+                campus: u.shortName,
+                place: p.name,
+              }),
+              description: this.i18n.translate<string>('seo.campusDescription', {
+                campus: u.name,
+                place: p.name,
+              }),
               path,
             }
           : {
-              title: `${this.heading()} — verified ${what} | HostelHive`,
-              description: `Find verified ${what} in ${p.name}. Compare prices, room sharing and amenities, and contact hosts directly — no brokers, no commission.`,
+              title: this.i18n.translate<string>('seo.placeTitle', {
+                heading: this.heading(),
+                what,
+              }),
+              description: this.i18n.translate<string>('seo.placeDescription', {
+                what,
+                place: p.name,
+              }),
               path,
             },
       );
@@ -191,7 +257,13 @@ export class PlaceLanding {
                 {
                   '@type': 'ListItem',
                   position: 3,
-                  name: u ? `Near ${u.shortName}` : (g?.label ?? ''),
+                  name: u
+                    ? this.i18n.translate<string>('seo.headingNearCampus', {
+                        campus: u.shortName,
+                      })
+                    : g
+                      ? this.segmentLabel(g)
+                      : '',
                   item: `${SITE_ORIGIN}${path}`,
                 },
               ]

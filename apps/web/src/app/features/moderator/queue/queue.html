@@ -1,4 +1,4 @@
-<app-dashboard-layout label="Review queue">
+<app-dashboard-layout [label]="'moderatorQueue.reviewQueue' | transloco">
   <div class="mb-4 flex items-center justify-between gap-4">
     <hh-search
       class="w-full sm:w-72"
@@ -29,7 +29,7 @@
   } @else if (visible().length === 0) {
     <hh-empty-state
       icon="ti-inbox-off"
-      title="Queue is clear"
+      [title]="'moderatorQueue.queueIsClear' | transloco"
       message="No submissions are waiting for review."
     />
   } @else {

@@ -14,10 +14,14 @@ import { zoomForLatSpan } from './nominatim';
 const BASE = 'https://photon.komoot.io';
 
 /**
- * Pakistan bounding box, `minLon,minLat,maxLon,maxLat`. Photon has no country-code filter
- * like Nominatim's `countrycodes=pk`, so results are constrained to this box instead.
+ * How hard to pull results toward {@link PhotonSearchOptions.bias}.
+ *
+ * Photon scales this 0–20, the same numbers as a map zoom: low values barely tilt the
+ * ranking, high values all but exclude anything far away. 12 is roughly city-sized —
+ * enough that someone in Amsterdam typing "central" gets Amsterdam Centraal first, and
+ * not so much that typing "Lahore" fails to find Lahore.
  */
-const PK_BBOX = '60.87,23.63,77.84,37.09';
+const BIAS_SCALE = 12;
 
 /** One Photon result (GeoJSON feature). Note `coordinates` are [lon, lat]. */
 export interface PhotonFeature {
@@ -43,6 +47,18 @@ export interface PhotonFeature {
   };
 }
 
+/** Options for {@link photonSearch}. */
+export interface PhotonSearchOptions {
+  signal?: AbortSignal;
+  placesOnly?: boolean;
+  /**
+   * Where the person searching is, so nearby places rank first. Ranking only — it is
+   * not a filter, and somewhere on the far side of the world is still reachable by
+   * name.
+   */
+  bias?: { lat: number; lng: number } | null;
+}
+
 /**
  * Forward geocode for the typeahead: free text → matching places, best first. A single
  * call already carries coordinates, address parts and (for areas) a bounding box.
@@ -50,17 +66,27 @@ export interface PhotonFeature {
  * `placesOnly` restricts to settlements — cities, towns, villages, suburbs — via
  * `osm_tag=place`, dropping streets, houses and POIs. It maps the old Google `['(cities)']`
  * filter onto the address form's city field.
+ *
+ * Searches the whole world. It used to be pinned to a Pakistan bounding box, which
+ * stopped making sense once the map opens on whichever country the visitor is in: the
+ * box either contradicts what they are looking at, or — pinned to their own country
+ * instead — hides the listings, which are somewhere else entirely. `bias` gets the
+ * useful half of that (near things first) without the half that hides results.
  */
 export async function photonSearch(
   query: string,
-  opts: { signal?: AbortSignal; placesOnly?: boolean } = {},
+  opts: PhotonSearchOptions = {},
 ): Promise<PhotonFeature[]> {
   const params = new URLSearchParams({
     q: query,
     limit: '8',
     lang: 'en',
-    bbox: PK_BBOX,
   });
+  if (opts.bias) {
+    params.set('lat', String(opts.bias.lat));
+    params.set('lon', String(opts.bias.lng));
+    params.set('location_bias_scale', String(BIAS_SCALE));
+  }
   if (opts.placesOnly) params.append('osm_tag', 'place');
   const res = await fetch(`${BASE}/api/?${params.toString()}`, {
     signal: opts.signal,

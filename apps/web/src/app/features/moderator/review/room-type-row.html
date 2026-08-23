@@ -1,45 +1,250 @@
 <div
-  class="flex flex-col gap-3 rounded-xl border border-ink-100 bg-surface px-4 py-3 sm:flex-row sm:items-center"
+  class="overflow-hidden rounded-xl border bg-white transition"
+  [class.border-ink-100]="!expanded()"
+  [class.border-ink-200]="expanded()"
 >
-  <div class="flex min-w-0 flex-1 items-center gap-3">
+  <!-- Header. Collapsed this is the whole row: what a host scans for when they have six of
+       these on one page — the name, how it sells, the size, the price. -->
+  <div class="flex items-center gap-3 px-4 py-3">
     <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-500">
       <i class="ti ti-bed text-sm" aria-hidden="true"></i>
     </span>
+
     <div class="min-w-0 flex-1">
-      <hh-dropdown
-        variant="field"
-        [compact]="true"
-        placeholder="Select type"
-        [options]="options()"
-        [value]="name()"
-        (valueChange)="onNameChange($any($event))"
-      />
+      @if (expanded()) {
+        <p class="text-sm font-semibold text-ink-900">{{ name() || 'New room type' }}</p>
+      } @else {
+        <p class="truncate text-sm font-semibold text-ink-900">{{ name() }}</p>
+        <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
+          <span>{{ isPrivate() ? 'Private' : 'Shared' }}</span>
+          <span aria-hidden="true">·</span>
+          <span>{{ unitSummary() }}</span>
+          <span aria-hidden="true">·</span>
+          <span class="tabular-nums">
+            {{ currency() | currencySym }}{{ effectivePrice() | number: '1.0-0' }}/{{ unit() }}
+          </span>
+          @if (discountPercent(); as pct) {
+            <span class="rounded bg-rose-100 px-1.5 py-0.5 font-semibold text-rose-700"
+              >−{{ pct }}%</span
+            >
+          }
+          @if (bookable()) {
+            <span class="rounded bg-tint-mint px-1.5 py-0.5 font-semibold text-emerald-800"
+              >{{ 'moderatorReview.bookable' | transloco }}</span
+            >
+          }
+        </p>
+      }
     </div>
+
+    @if (!alwaysOpen()) {
+      <button
+        type="button"
+        class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-500 transition hover:bg-ink-50 hover:text-ink-800"
+        [attr.aria-label]="(expanded() ? 'Collapse ' : 'Edit ') + (name() || 'room type')"
+        [attr.aria-expanded]="expanded()"
+        (click)="toggleExpanded()"
+      >
+        <i class="ti text-base" [class.ti-chevron-up]="expanded()" [class.ti-chevron-down]="!expanded()" aria-hidden="true"></i>
+      </button>
+    }
+    @if (!alwaysOpen()) {
+      <button
+        type="button"
+        class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-400 transition hover:bg-danger/10 hover:text-danger"
+        [attr.aria-label]="'Remove ' + (name() || 'this room type')"
+        (click)="removed.emit()"
+      >
+        <i class="ti ti-trash text-base" aria-hidden="true"></i>
+      </button>
+    }
   </div>
-  <div class="flex flex-wrap items-center gap-3">
-    <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
-      Capacity
-      <input
-        type="number"
-        [min]="minCapacity()"
-        step="1"
-        pattern="\d+"
-        [disabled]="capacityFixed()"
-        class="h-10 w-16 rounded-lg border border-ink-200 bg-white px-2 text-xs text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-8"
-        [value]="capacity()"
-        (change)="onCapacityChange($event)"
-        (keydown)="$event.key === '.' || $event.key === '-' || $event.key === 'e' ? $event.preventDefault() : null"
-      />
-    </label>
-    <label class="flex shrink-0 items-center gap-1.5 text-xs text-ink-500">
-      <hh-money-input
-        size="sm"
-        [currency]="currency()"
-        [value]="price()"
-        (valueChange)="onPriceChange($event)"
-        fieldClass="w-28"
-      />
-      <span>/ mo</span>
-    </label>
-  </div>
+
+  @if (expanded()) {
+    <!-- Tinted so the editor reads as a surface the fields sit ON, rather than more cards
+         stacked inside a card. Grouped into labelled sections: the previous flat stack gave
+         eight controls of identical weight and no way to scan for the one you wanted. -->
+    <div class="space-y-5 border-t border-ink-100 bg-surface/50 px-4 py-4">
+      <div class="grid gap-3 sm:grid-cols-[1fr_12rem]">
+        <label class="block">
+          <span class="mb-1 block text-xs font-medium text-ink-500">{{ 'moderatorReview.roomName' | transloco }}</span>
+          <input
+            type="text"
+            [placeholder]="'moderatorReview.eGDeluxe6Bed' | transloco"
+            class="h-[42px] w-full rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-900 outline-none transition focus:border-ink-400"
+            [value]="name()"
+            (input)="onName($any($event.target).value)"
+          />
+        </label>
+
+        <div>
+          <span class="mb-1 block text-xs font-medium text-ink-500">{{ 'moderatorReview.soldAs' | transloco }}</span>
+          <hh-dropdown
+            variant="field"
+            [placeholder]="'common.roomType' | transloco"
+            [options]="occupancyOptions"
+            [value]="occupancyType()"
+            (valueChange)="onOccupancy($event)"
+          />
+        </div>
+      </div>
+
+      <section class="space-y-3">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-400">{{ 'moderatorReview.pricing' | transloco }}</p>
+
+        <!-- Capacity and price share a row and end at the same baseline. The discount used to
+             be a third column here; its toggle, input and helper line made it twice the height
+             of its neighbours and left the row visibly ragged. -->
+        <div class="grid gap-3 sm:grid-cols-[7rem_1fr]">
+          <label class="block">
+            <!-- Named for the job it is doing: people on a private room, sellable units on a dorm. -->
+            <span class="mb-1 block text-xs font-medium text-ink-500">{{ capacityLabel() }}</span>
+            <input
+              type="number"
+              [min]="minCapacity()"
+              step="1"
+              class="h-[42px] w-full rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-900 outline-none transition focus:border-ink-400"
+              [value]="capacity()"
+              (change)="onCapacity($any($event.target).value)"
+              (keydown)="$event.key === '.' || $event.key === '-' || $event.key === 'e' ? $event.preventDefault() : null"
+            />
+          </label>
+
+          <hh-money-input
+            [label]="priceLabel()"
+            [currency]="currency()"
+            [value]="price()"
+            (valueChange)="priceChange.emit($event)"
+          />
+        </div>
+
+        @if (showBookingFields()) {
+          <!-- A discount is optional, so it gets its own bordered block with the switch in its
+               header: the shape says "extra", where a bare third column said "required". -->
+          <div class="rounded-lg border border-ink-200 bg-white px-3 py-2.5">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-ink-900">{{ 'moderatorReview.discountedPrice' | transloco }}</p>
+                @if (!discountEnabled()) {
+                  <p class="text-xs text-ink-400">{{ 'moderatorReview.unitSellsAtFullPrice' | transloco: { unit: unit() } }}</p>
+                }
+              </div>
+              <hh-toggle
+                class="shrink-0"
+                [checked]="discountEnabled()"
+                (checkedChange)="discountEnabledChange.emit($event)"
+              />
+            </div>
+
+            <!-- Rendered only when on. It was previously always present but disabled, so every
+                 room showed a greyed-out box plus a line of text explaining it did nothing. -->
+            @if (discountEnabled()) {
+              <div class="mt-2.5">
+                <hh-money-input
+                  [currency]="currency()"
+                  [value]="discountedPrice() ?? 0"
+                  [error]="discountProblem()"
+                  [placeholder]="'moderatorReview.noDiscount' | transloco"
+                  (valueChange)="onDiscount($event)"
+                />
+                @if (discountPercent(); as pct) {
+                  <p class="mt-1.5 flex items-center gap-1 text-xs text-emerald-700">
+                    <i class="ti ti-tag text-[13px]" aria-hidden="true"></i>
+                    {{ 'moderatorReview.seekersSeeDiscount' | transloco: { pct: pct, price: (currency() | currencySym) + (price() | number: '1.0-0') } }}
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      @if (showBookingFields()) {
+        <section class="space-y-3">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-400">{{ 'moderatorReview.details' | transloco }}</p>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-ink-500">
+              {{ 'common.description' | transloco }} <span class="font-normal text-ink-400">{{ 'moderatorReview.optional' | transloco }}</span>
+            </span>
+            <textarea
+              rows="3"
+              [placeholder]="'moderatorReview.bunksLockersEnsuiteTheView' | transloco"
+              class="w-full resize-y rounded-xl border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 outline-none transition focus:border-ink-400"
+              [value]="description()"
+              (input)="descriptionChange.emit($any($event.target).value)"
+            ></textarea>
+          </label>
+
+          <div>
+            <p class="mb-1.5 text-xs font-medium text-ink-500">
+              {{ 'common.photos' | transloco }} <span class="font-normal text-ink-400">· up to {{ maxImages }}</span>
+            </p>
+            <div class="grid grid-cols-3 gap-2.5">
+              @for (slot of slots(); track $index) {
+                @if (slot.image; as img) {
+                  <div class="group relative aspect-[4/3] overflow-hidden rounded-xl border border-ink-200">
+                    <img [src]="img.url" alt="" class="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      class="absolute end-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
+                      [attr.aria-label]="'a11y.removePhoto' | transloco"
+                      (click)="imageRemoved.emit(img.id)"
+                    >
+                      <i class="ti ti-x text-xs" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                } @else if (slot.picker) {
+                  <hh-photo-picker
+                    class="block"
+                    [label]="'common.addPhoto' | transloco"
+                    shape="rect"
+                    [uploading]="uploadingImage()"
+                    (picked)="imagePicked.emit($event)"
+                  />
+                } @else {
+                  <!-- A slot still to fill. Inert — the picker is the only way in, so two live
+                       drop targets would just be two answers to the same question. -->
+                  <div
+                    class="grid aspect-[4/3] place-items-center rounded-xl border-2 border-dashed border-ink-100 text-ink-200"
+                    aria-hidden="true"
+                  >
+                    <i class="ti ti-photo text-xl"></i>
+                  </div>
+                }
+              }
+            </div>
+
+            @if (imageError()) {
+              <p class="mt-2 flex items-start gap-1.5 text-xs text-danger">
+                <i class="ti ti-alert-circle mt-px shrink-0" aria-hidden="true"></i>
+                <span class="min-w-0">{{ imageError() }}</span>
+              </p>
+            }
+          </div>
+        </section>
+
+        <!-- Same bordered shape as the discount block, so the two switches in this form read as
+             the same kind of control rather than one card and one grey slab. -->
+        <div class="flex items-center justify-between gap-3 rounded-lg border border-ink-200 bg-white px-3 py-2.5">
+          <div class="flex min-w-0 items-center gap-2.5">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-mint text-emerald-700">
+              <i class="ti ti-calendar-check text-sm" aria-hidden="true"></i>
+            </span>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-ink-900">{{ 'moderatorReview.availableToBookOnline' | transloco }}</p>
+              <p class="text-xs text-ink-500">
+                {{ 'moderatorReview.seekersCanReserveUnit' | transloco: { unit: unit() } }}
+              </p>
+            </div>
+          </div>
+          <hh-toggle
+            class="shrink-0"
+            [checked]="bookable()"
+            (checkedChange)="bookableChange.emit($event)"
+          />
+        </div>
+      }
+    </div>
+  }
 </div>

@@ -3,6 +3,7 @@ export * from './lib/leaflet';
 export * from './lib/nominatim';
 export * from './lib/photon';
 export * from './lib/shared-map';
+export * from './lib/place-bias';
 export * from './lib/place-cache';
 export * from './lib/place-search';
 export * from './lib/location-picker';

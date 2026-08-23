@@ -7,6 +7,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Right-hand slide-over panel — the app's standard shell for a form that should not take
@@ -32,6 +33,7 @@ import {
  */
 @Component({
   selector: 'hh-drawer',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
@@ -58,7 +60,7 @@ import {
             type="button"
             class="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition hover:bg-ink-50 hover:text-ink-700"
             (click)="closed.emit()"
-            aria-label="Close"
+            [attr.aria-label]="'a11y.close' | transloco"
           >
             <i class="ti ti-x text-lg" aria-hidden="true"></i>
           </button>

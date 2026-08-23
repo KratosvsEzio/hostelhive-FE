@@ -18,6 +18,7 @@ import { Button, ErrorState, Skeleton } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { HostelForm } from '../hostel-form/hostel-form';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -29,7 +30,7 @@ interface ViewState {
 @Component({
   selector: 'hh-hostel-profile',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Button, ErrorState, Skeleton, HostelForm],
+  imports: [DashboardLayout, Button, ErrorState, Skeleton, HostelForm, TranslocoPipe],
   templateUrl: './hostel-profile.html',
 })
 export class HostelProfile {

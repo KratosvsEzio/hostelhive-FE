@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, model, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export interface DateRange {
   start: Date;
@@ -41,7 +42,7 @@ export const DATE_RANGE_PRESETS: Array<{ label: string; fn: () => DateRange }> =
   selector: 'hh-date-range-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [DatePipe, TranslocoPipe],
   templateUrl: './date-range-picker.html',
 })
 export class DateRangePicker {

@@ -18,6 +18,7 @@ import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import { Router } from '@angular/router';
 import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type TabKey = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -30,7 +31,7 @@ interface ListState {
 @Component({
   selector: 'hh-notifications-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, EmptyState, ErrorState, Skeleton],
+  imports: [Button, EmptyState, ErrorState, Skeleton, TranslocoPipe],
   templateUrl: './notifications.html',
 })
 export class NotificationsPage {

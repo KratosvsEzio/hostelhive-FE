@@ -1,4 +1,4 @@
-<app-dashboard-layout label="Audit log">
+<app-dashboard-layout [label]="'moderatorAudit.auditLog' | transloco">
   <div hhActions>
     <button
       hh-button color="primary"
@@ -6,7 +6,7 @@
       [disabled]="!state().data?.length"
       (click)="exportCsv()"
     >
-      <i class="ti ti-download" aria-hidden="true"></i>Export CSV
+      <i class="ti ti-download" aria-hidden="true"></i>{{ 'common.exportCsv' | transloco }}
     </button>
   </div>
   <!-- filters -->
@@ -15,14 +15,14 @@
       class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm"
     >
       <i class="ti ti-user text-ink-400" aria-hidden="true"></i
-      ><span class="font-medium text-ink-800">All moderators</span
+      ><span class="font-medium text-ink-800">{{ 'moderatorAudit.allModerators' | transloco }}</span
       ><i class="ti ti-chevron-down text-ink-400" aria-hidden="true"></i>
     </div>
     <div
       class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm"
     >
       <i class="ti ti-calendar text-ink-400" aria-hidden="true"></i
-      ><span class="font-medium text-ink-800">Last 7 days</span
+      ><span class="font-medium text-ink-800">{{ 'moderatorAudit.last7Days' | transloco }}</span
       ><i class="ti ti-chevron-down text-ink-400" aria-hidden="true"></i>
     </div>
     <span class="mx-1 h-6 w-px bg-ink-200"></span>
@@ -42,7 +42,7 @@
     <div class="mt-7">
       <hh-empty-state
         icon="ti-history"
-        title="No matching activity"
+        [title]="'moderatorAudit.noMatchingActivity' | transloco"
         message="Try a different action filter or date range."
       />
     </div>
@@ -102,7 +102,7 @@
         hh-button variant="text"
         type="button"
       >
-        Load older entries
+        {{ 'moderatorAudit.loadOlderEntries' | transloco }}
       </button>
     </div>
   }

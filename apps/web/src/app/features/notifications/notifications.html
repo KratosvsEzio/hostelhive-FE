@@ -1,8 +1,8 @@
 <section class="mx-auto max-w-4xl px-5 py-8 sm:px-8">
   <div class="mb-8">
-    <h1 class="font-display text-2xl font-semibold text-ink-900">Notifications</h1>
+    <h1 class="font-display text-2xl font-semibold text-ink-900">{{ 'common.notifications' | transloco }}</h1>
     <p class="mt-1 text-sm text-ink-400">
-      Your hostel invites, meal confirmations and pending receipts.
+      {{ 'featuresNotifications.yourHostelInvitesMealConfirmations' | transloco }}
     </p>
   </div>
 
@@ -77,17 +77,17 @@
                 hh-button variant="outlined" size="sm" type="button"
                 [disabled]="actionLoading() === invite.id"
                 (click)="reject(invite)"
-              >Decline</button>
+              >{{ 'common.decline' | transloco }}</button>
               <button
                 hh-button color="primary" size="sm" type="button"
                 [disabled]="actionLoading() === invite.id"
                 (click)="accept(invite)"
-              >Accept</button>
+              >{{ 'common.accept' | transloco }}</button>
             </div>
           } @else if (isReviewRequest(invite.inviteType) && invite.associatedId) {
             <div class="mt-4 flex items-center justify-end">
               <button hh-button color="primary" size="sm" type="button" (click)="goToReview(invite)">
-                <i class="ti ti-star" aria-hidden="true"></i>Review
+                <i class="ti ti-star" aria-hidden="true"></i>{{ 'common.review' | transloco }}
               </button>
             </div>
           }

@@ -1,7 +1,7 @@
-<app-dashboard-layout label="Utilities">
+<app-dashboard-layout [label]="'common.utilities' | transloco">
   <div hhActions class="flex items-center gap-2">
     <a *hhHasPermission="'host:UtilityBill:create'" hh-button color="primary" size="sm" routerLink="add">
-      <i class="ti ti-plus"></i>Add utility bill
+      <i class="ti ti-plus"></i>{{ 'hostUtilities.addUtilityBill' | transloco }}
     </a>
   </div>
 
@@ -9,18 +9,18 @@
   @if (aggs(); as a) {
     <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <hh-card padding="sm">
-        <p class="text-xs text-ink-400">Bill to Collect</p>
+        <p class="text-xs text-ink-400">{{ 'hostUtilities.billToCollect' | transloco }}</p>
         <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
         <p class="mt-1 text-2xl font-semibold text-ink-900">Rs {{ a.billToPay | number }}</p>
       </hh-card>
       <hh-card padding="sm">
-        <p class="text-xs text-ink-400">Received</p>
+        <p class="text-xs text-ink-400">{{ 'hostUtilities.received' | transloco }}</p>
         <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
         <p class="mt-1 text-2xl font-semibold text-ok">Rs {{ a.received | number }}</p>
       </hh-card>
       <hh-card padding="sm">
-        <p class="text-xs text-ink-400">Total Balance</p>
-        <p class="text-[10px] text-ink-300">&nbsp;</p>
+        <p class="text-xs text-ink-400">{{ 'hostUtilities.totalBalance' | transloco }}</p>
+        <p class="text-[10px] text-ink-300">{{ 'hostUtilities.nbsp' | transloco }}</p>
         <p
           class="mt-1 text-2xl font-semibold"
           [class.text-danger]="a.balance > 0"
@@ -54,11 +54,11 @@
   } @else if (!s.bills || (s.bills.length === 0 && statusFilter() === 'all' && !roomFilter() && !tenantFilter())) {
     <hh-empty-state
       icon="ti-receipt-off"
-      title="No utility bills yet"
+      [title]="'hostUtilities.noUtilityBillsYet' | transloco"
       message="Add a utility bill to start tracking usage and charges."
     >
       <a *hhHasPermission="'host:UtilityBill:create'" hh-button color="primary" size="sm" routerLink="add">
-        <i class="ti ti-plus"></i>Add utility bill
+        <i class="ti ti-plus"></i>{{ 'hostUtilities.addUtilityBill' | transloco }}
       </a>
     </hh-empty-state>
   } @else {
@@ -88,12 +88,12 @@
       <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="176" (close)="closeMenu()">
         <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editBill(menuBill, $event)" *hhHasPermission="'host:UtilityBill:update'">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
-          Edit
+          {{ 'common.edit' | transloco }}
         </button>
         <hh-context-menu-divider />
         <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start !text-danger" (click)="promptDelete(menuBill, $event)" *hhHasPermission="'host:UtilityBill:destroy'">
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
-          Delete
+          {{ 'common.delete' | transloco }}
         </button>
       </hh-context-menu>
     }
@@ -102,7 +102,7 @@
 
 @if (deletePending(); as b) {
   <hh-confirm-modal
-    title="Delete utility bill?"
+    [title]="'hostUtilities.deleteUtilityBill' | transloco"
     icon="ti-trash"
     tone="danger"
     confirmLabel="Delete"
@@ -110,7 +110,7 @@
     (confirm)="confirmDelete()"
     (cancel)="cancelDelete()"
   >
-    This will permanently delete the <strong>{{ b.type }}</strong> bill for
-    <strong>Room {{ b.roomNumber }}</strong>. This action cannot be undone.
+    {{ 'hostUtilities.thisWillPermanentlyDeleteThe' | transloco }} <strong>{{ b.type }}</strong> {{ 'hostUtilities.billFor' | transloco }}
+    <strong>{{ 'common.roomNumber' | transloco: { number: b.roomNumber } }}</strong>{{ 'common.thisActionCannotBe' | transloco }}
   </hh-confirm-modal>
 }

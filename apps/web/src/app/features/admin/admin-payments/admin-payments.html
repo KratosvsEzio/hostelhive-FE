@@ -1,7 +1,7 @@
-<hh-admin-shell heading="Payments">
+<hh-admin-shell [heading]="'adminAdminPayments.payments' | transloco">
   <div actions class="flex items-center gap-2">
     <button hh-button color="primary" size="sm" [disabled]="!canExport()" (click)="exportCsv()">
-      <i class="ti ti-download"></i>Export CSV
+      <i class="ti ti-download"></i>{{ 'common.exportCsv' | transloco }}
     </button>
   </div>
 
@@ -14,7 +14,7 @@
       (fieldChange)="onSearchField($event)"
       [term]="searchTerm()"
       (termChange)="onSearchTerm($event)"
-      placeholder="Search by hostel…"
+      [placeholder]="'common.searchByHostel' | transloco"
       ariaLabel="Search payments by hostel"
     />
     <span class="mx-3 h-5 w-px shrink-0 bg-ink-200"></span>
@@ -34,7 +34,7 @@
           {{ a.count | number }}
         </p>
         <p class="mt-0.5 text-xs text-ink-400">
-          Rs {{ a.total_amount | number }} total
+          {{ 'admin.rsTotal' | transloco: { amount: a.total_amount | number } }}
         </p>
       </hh-card>
     }
@@ -49,7 +49,7 @@
     <div class="mt-4">
       <hh-empty-state
         icon="ti-credit-card"
-        title="No payments match this filter"
+        [title]="'adminAdminPayments.noPaymentsMatchThisFilter' | transloco"
       >
         <button
           hh-button
@@ -57,7 +57,7 @@
           size="sm"
           (click)="onSearchTerm(''); clearDateRange()"
         >
-          Show all
+          {{ 'common.showAll' | transloco }}
         </button>
       </hh-empty-state>
     </div>
@@ -68,6 +68,7 @@
       [rows]="s.data.items"
       [rowId]="paymentsRowId"
       [sort]="tableSortState()"
+      [canClearSort]="false"
       [pagination]="paginationConf()"
       (sortChange)="onTableSort($event)"
       [rowClickable]="true"
@@ -77,8 +78,7 @@
 
     <p class="mt-3 flex items-center gap-1.5 text-xs text-ink-400">
       <i class="ti ti-info-circle" aria-hidden="true"></i>
-      Subscription payments only — distinct from tenant rent/utility payments,
-      which stay in each host's dashboard.
+      {{ 'adminAdminPayments.subscriptionPaymentsOnlyDistinctFrom' | transloco }}
     </p>
   }
 
@@ -108,7 +108,7 @@
             variant="text"
             size="sm"
             (click)="close()"
-            aria-label="Close"
+            [attr.aria-label]="'a11y.close' | transloco"
           >
             <i class="ti ti-x"></i>
           </button>
@@ -123,17 +123,17 @@
 
           <dl class="divide-y divide-ink-100 rounded-2xl border border-ink-100">
             <div class="flex justify-between px-4 py-3 text-sm">
-              <dt class="text-ink-400">Amount</dt>
+              <dt class="text-ink-400">{{ 'common.amount' | transloco }}</dt>
               <dd class="font-medium text-ink-900">
                 Rs {{ sel.amount | number }}
               </dd>
             </div>
             <div class="flex justify-between px-4 py-3 text-sm">
-              <dt class="text-ink-400">Method</dt>
+              <dt class="text-ink-400">{{ 'adminAdminPayments.method' | transloco }}</dt>
               <dd class="text-ink-800">{{ methodLabel(sel.method) }}</dd>
             </div>
             <div class="flex justify-between gap-3 px-4 py-3 text-sm">
-              <dt class="text-ink-400">Transaction ID</dt>
+              <dt class="text-ink-400">{{ 'adminAdminPayments.transactionId' | transloco }}</dt>
               <dd
                 class="truncate font-mono text-xs"
                 [class]="sel.transactionId ? 'text-ink-700' : 'text-ink-300'"
@@ -142,18 +142,18 @@
               </dd>
             </div>
             <div class="flex justify-between px-4 py-3 text-sm">
-              <dt class="text-ink-400">Created</dt>
+              <dt class="text-ink-400">{{ 'adminAdminPayments.created' | transloco }}</dt>
               <dd class="text-ink-800">{{ dateLabel(sel.createdAt) }}</dd>
             </div>
             <div class="flex justify-between px-4 py-3 text-sm">
-              <dt class="text-ink-400">Paid</dt>
+              <dt class="text-ink-400">{{ 'common.paid' | transloco }}</dt>
               <dd [class]="sel.paidAt ? 'text-ink-800' : 'text-ink-400'">
                 {{ dateLabel(sel.paidAt) }}
               </dd>
             </div>
             @if (sel.term) {
               <div class="flex justify-between px-4 py-3 text-sm">
-                <dt class="text-ink-400">Contract</dt>
+                <dt class="text-ink-400">{{ 'adminAdminPayments.contract' | transloco }}</dt>
                 <dd class="text-ink-800">{{ sel.term }}</dd>
               </div>
             }
@@ -164,7 +164,7 @@
             <p
               class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
             >
-              Product
+              {{ 'adminAdminPayments.product' | transloco }}
             </p>
             <div class="rounded-2xl border border-ink-100 p-4">
               <div class="flex items-center justify-between gap-3">
@@ -178,8 +178,7 @@
               </div>
               @if (sel.productDuration) {
                 <p class="mt-2 flex items-center gap-2 text-sm text-ink-600">
-                  <i class="ti ti-clock shrink-0 text-ink-400"></i>Billed every
-                  {{ sel.productDuration | number }} days
+                  <i class="ti ti-clock shrink-0 text-ink-400"></i>{{ 'admin.billedEveryNDays' | transloco: { count: sel.productDuration | number } }}
                 </p>
               }
             </div>
@@ -190,7 +189,7 @@
             <p
               class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
             >
-              Hostel
+              {{ 'common.hostel' | transloco }}
             </p>
             @let hostelInfo = hostelState();
             @if (hostelInfo.loading) {
@@ -211,7 +210,7 @@
                         hh-button variant="icon" size="sm"
                         type="button"
                         (click)="slideImg(-1)"
-                        aria-label="Previous photo"
+                        [attr.aria-label]="'a11y.previousPhoto' | transloco"
                         class="absolute start-2 top-1/2 -translate-y-1/2"
                       >
                         <i class="ti ti-chevron-left"></i>
@@ -220,7 +219,7 @@
                         hh-button variant="icon" size="sm"
                         type="button"
                         (click)="slideImg(1)"
-                        aria-label="Next photo"
+                        [attr.aria-label]="'a11y.nextPhoto' | transloco"
                         class="absolute end-2 top-1/2 -translate-y-1/2"
                       >
                         <i class="ti ti-chevron-right"></i>
@@ -252,7 +251,7 @@
                       class="flex h-full w-full flex-col items-center justify-center gap-1 text-ink-300"
                     >
                       <i class="ti ti-photo-off text-2xl"></i>
-                      <span class="text-xs">No photos</span>
+                      <span class="text-xs">{{ 'common.noPhotos' | transloco }}</span>
                     </div>
                   }
                 </div>
@@ -285,8 +284,7 @@
                     <div class="flex gap-2">
                       <i class="ti ti-door mt-0.5 shrink-0 text-ink-400"></i
                       ><span
-                        >{{ h.total_rooms | number }} rooms ·
-                        {{ h.total_floors | number }} floors</span
+                        >{{ 'admin.nRoomsNFloors' | transloco: { rooms: h.total_rooms | number, floors: h.total_floors | number } }}</span
                       >
                     </div>
                   </dl>
@@ -296,7 +294,7 @@
               <p
                 class="rounded-xl border border-ink-100 px-4 py-3 text-sm text-ink-400"
               >
-                Couldn't load hostel details.
+                {{ 'common.couldnTLoadHostel' | transloco }}
               </p>
             }
           </section>
@@ -306,7 +304,7 @@
             <p
               class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400"
             >
-              Host
+              {{ 'common.host' | transloco }}
             </p>
             @let hostInfo = hostState();
             @if (hostInfo.loading) {
@@ -348,7 +346,7 @@
                   @if (u.created_at) {
                     <div class="flex gap-2">
                       <i class="ti ti-calendar mt-0.5 shrink-0 text-ink-400"></i
-                      ><span>Joined {{ joinedLabel(u.created_at) }}</span>
+                      ><span>{{ 'admin.joinedOn' | transloco: { date: joinedLabel(u.created_at) } }}</span>
                     </div>
                   }
                 </dl>
@@ -357,7 +355,7 @@
               <p
                 class="rounded-xl border border-ink-100 px-4 py-3 text-sm text-ink-400"
               >
-                Couldn't load host details.
+                {{ 'common.couldnTLoadHost' | transloco }}
               </p>
             }
           </section>

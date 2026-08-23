@@ -11,6 +11,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AccommodationType } from '@hostelhive/data-access';
 import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
+import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 /**
  * Filter sub-header for search results. A "Filters" button opens the full
@@ -20,7 +22,7 @@ import { FilterState, SearchFilterModal } from '@features/public/search/search-f
 @Component({
   selector: 'hh-search-filters',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Chip, Dropdown, SearchFilterModal],
+  imports: [Button, Chip, Dropdown, SearchFilterModal, TranslocoPipe],
   templateUrl: './search-filters.html',
   host: { class: 'contents' },
 })
@@ -35,12 +37,57 @@ export class SearchFilters {
   protected readonly modalOpen = signal(false);
 
   // Sort. 'newest'/'oldest' → sort[created_at] desc/asc; 'price-*' → sort[starting_price] (API layer).
-  protected readonly sortOptions: DropdownOption[] = [
-    { value: 'newest', label: 'Recent first' },
-    { value: 'oldest', label: 'Oldest first' },
-    { value: 'price-desc', label: 'Price: high to low' },
-    { value: 'price-asc', label: 'Price: low to high' },
-  ];
+  /**
+   * Option labels live in TypeScript, so they cannot use the pipe. Reading the active
+   * language here makes the arrays below recompute on a language change — without it they
+   * would keep whatever language was active when this component was constructed.
+   */
+  private readonly i18n = inject(TranslocoService);
+  private readonly lang = toSignal(this.i18n.langChanges$, {
+    initialValue: this.i18n.getActiveLang(),
+  });
+  private t(key: string): string {
+    this.lang();
+    return this.i18n.translate(key);
+  }
+
+  private readonly allSortOptions = computed<DropdownOption[]>(() => [
+    { value: 'newest', label: this.t('search.recentFirst') },
+    { value: 'oldest', label: this.t('search.oldestFirst') },
+    { value: 'price-desc', label: this.t('search.priceHighToLow') },
+    { value: 'price-asc', label: this.t('search.priceLowToHigh') },
+  ]);
+
+  /**
+   * Price sort is withdrawn while the list mixes pricing cycles.
+   *
+   * `starting_price` is one unit-less number, so a nightly bed at PKR 1,200 sorts above a
+   * monthly room at PKR 15,000 as though it were cheaper — page one fills with backpacker
+   * dorms a student cannot rent by the month. The other three sorts are unit-agnostic and
+   * always stay.
+   *
+   * The unit now comes from the accommodation type rather than a filter of its own: only
+   * backpacker hostels are nightly (see `periodForAccommodation`), so naming any one type
+   * pins the list to a single cycle, and "All" is the only mix. That was the whole job of
+   * the Frequency dropdown that used to sit here, which asked the seeker to state something
+   * their accommodation choice had already decided.
+   */
+  protected readonly sortOptions = computed(() =>
+    this.accommodationType() === 'all'
+      ? this.allSortOptions().filter((o) => !String(o.value).startsWith('price-'))
+      : this.allSortOptions(),
+  );
+
+  /**
+   * Replaces the 1–5+ sharing filter.
+   *
+   * Capacity is not the axis anybody shops on — the choice is a room to yourself or a bed in a
+   * room with others, and how many others is a detail read after that.
+   */
+  protected readonly roomTypeOptions = computed<DropdownOption[]>(() => [
+    { value: 'shared', label: this.t('search.sharedRoom') },
+    { value: 'private', label: this.t('search.privateRoom') },
+  ]);
 
   protected readonly accommodationType = computed<AccommodationType | 'all'>(
     () => (this.params()?.get('gender') as AccommodationType | 'all') ?? 'all',
@@ -48,9 +95,22 @@ export class SearchFilters {
   protected readonly propertyType = computed(
     () => this.params()?.get('propertyType') ?? '',
   );
-  protected readonly capacity = computed(
-    () => this.params()?.get('capacity') ?? '',
+  /**
+   * Private or shared. **Inert server-side until the backend indexes `room_type`** — the
+   * param travels and the UI reflects it, but results do not narrow yet. Same position the
+   * amenity filter was in before `offers` reached the search document.
+   */
+  /**
+   * Always one of the two -- there is no "Any" any more.
+   *
+   * Shared is the floor rather than a chosen filter, so it does not count towards the
+   * "filters applied" badge below: a seeker who has touched nothing should not be told they
+   * have a filter on.
+   */
+  protected readonly roomType = computed(
+    () => this.params()?.get('roomType') || DEFAULT_OCCUPANCY_TYPE,
   );
+
   protected readonly sort = computed(
     () => this.params()?.get('sort') ?? 'recommended',
   );
@@ -64,7 +124,7 @@ export class SearchFilters {
     return (
       this.accommodationType() !== 'all' ||
       !!this.propertyType() ||
-      !!this.capacity() ||
+      this.roomType() !== DEFAULT_OCCUPANCY_TYPE ||
       !!this.minP() ||
       !!this.maxP() ||
       this.amenities().length > 0 ||
@@ -76,19 +136,12 @@ export class SearchFilters {
     let n = 0;
     if (this.accommodationType() !== 'all') n++;
     if (this.propertyType()) n++;
-    if (this.capacity()) n++;
+    if (this.roomType() !== DEFAULT_OCCUPANCY_TYPE) n++;
     if (this.minP() || this.maxP()) n++;
     if (this.amenities().length) n++;
     if (this.sort() !== 'recommended') n++;
     return n;
   });
-
-  readonly genderPills: { label: string; value: AccommodationType; icon: string }[] = [
-    { label: 'Boys', value: 'boys', icon: 'gender-male' },
-    { label: 'Girls', value: 'girls', icon: 'gender-female' },
-    { label: 'Co-living', value: 'coliving', icon: 'users' },
-    { label: 'Backpacker', value: 'backpacker', icon: 'backpack' },
-  ];
 
   readonly popularAmenities = [
     { slug: 'wifi', label: 'Wi-Fi', icon: 'wifi' },
@@ -99,8 +152,14 @@ export class SearchFilters {
     { slug: 'attached', label: 'Attached Bath', icon: 'bath' },
   ];
 
-  protected toggleGender(value: AccommodationType): void {
-    this.nav({ gender: this.accommodationType() === value ? null : value });
+  private asValue(v: string | string[] | null): string | null {
+    return typeof v === 'string' && v ? v : null;
+  }
+
+  /** Never clears to nothing: the dropdown offers no empty option, so null means "unchanged". */
+  protected onRoomTypeChange(v: string | string[] | null): void {
+    const next = this.asValue(v);
+    if (next) this.nav({ roomType: next });
   }
 
   protected toggleQuickAmenity(slug: string): void {
@@ -117,7 +176,7 @@ export class SearchFilters {
       propertyType: this.propertyType(),
       minPrice: this.minP() ? +this.minP() : null,
       maxPrice: this.maxP() ? +this.maxP() : null,
-      capacity: this.capacity(),
+      roomType: this.roomType(),
       amenities: this.amenities(),
       sort: this.sort(),
     });
@@ -134,7 +193,7 @@ export class SearchFilters {
       propertyType: state.propertyType || null,
       minPrice: state.minPrice,
       maxPrice: state.maxPrice,
-      capacity: state.capacity || null,
+      roomType: state.roomType || null,
       amenities: joined || null,
       sort: state.sort === 'recommended' ? null : state.sort,
     });

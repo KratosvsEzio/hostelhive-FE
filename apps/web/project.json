@@ -8,7 +8,7 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env"],
+      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env", "i18n-check"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/web",
@@ -38,7 +38,7 @@
             {
               "type": "initial",
               "maximumWarning": "1.5mb",
-              "maximumError": "3mb"
+              "maximumError": "3.5mb"
             },
             {
               "type": "anyComponentStyle",
@@ -58,7 +58,7 @@
     },
     "build-mobile": {
       "executor": "@angular/build:application",
-      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env"],
+      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env", "i18n-check"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/web-mobile",
@@ -82,7 +82,7 @@
           {
             "type": "initial",
             "maximumWarning": "1.5mb",
-            "maximumError": "3mb"
+            "maximumError": "3.5mb"
           },
           {
             "type": "anyComponentStyle",
@@ -155,6 +155,13 @@
       "cache": false,
       "options": {
         "command": "node tools/generate-google-oauth-env.mjs"
+      }
+    },
+    "i18n-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/i18n-check.mjs"
       }
     },
     "sync-analytics-env": {

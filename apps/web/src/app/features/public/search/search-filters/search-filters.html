@@ -10,7 +10,7 @@
       [class.text-brand-700]="hasActiveFilters()"
     >
       <i class="ti ti-adjustments-horizontal text-sm"></i>
-      Filters
+      {{ 'common.filters' | transloco }}
     </button>
     @if (activeFilterCount() > 0) {
       <span
@@ -20,15 +20,16 @@
     }
   </div>
 
-  <!-- AccommodationType quick-select pills -->
-  @for (g of genderPills; track g.value) {
-    <button
-      hh-chip
-      type="button"
-      [active]="accommodationType() === g.value"
-      (click)="toggleGender(g.value)"
-    ><i class="ti ti-{{ g.icon }} text-[13px]"></i>{{ g.label }}</button>
-  }
+  <!-- Accommodation type is not here: it took over the header bar's Sharing segment, which is
+       where a seeker sets it alongside place and budget. Repeating it in this row would be two
+       controls for one filter. -->
+  <hh-dropdown
+    class="shrink-0"
+    [options]="roomTypeOptions()"
+    [placeholder]="'common.roomType' | transloco"
+    [value]="roomType()"
+    (valueChange)="onRoomTypeChange($event)"
+  />
 
   <span class="h-5 w-px shrink-0 bg-ink-200"></span>
 
@@ -47,9 +48,9 @@
   <hh-dropdown
     class="ms-auto shrink-0"
     align="right"
-    [options]="sortOptions"
-    placeholder="Sort"
-    clearLabel="Recommended"
+    [options]="sortOptions()"
+    [placeholder]="'common.sort' | transloco"
+    [clearLabel]="'search.recommended' | transloco"
     [value]="sort() === 'recommended' ? null : sort()"
     (valueChange)="onSortChange($event)"
   />

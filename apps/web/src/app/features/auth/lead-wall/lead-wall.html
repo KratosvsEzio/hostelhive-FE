@@ -1,7 +1,7 @@
 <div class="relative min-h-[calc(100dvh-var(--hh-header-h))] bg-white text-ink-800">
   <!-- faux page behind, dimmed + blurred (the shared site header sits above this) -->
   <div class="pointer-events-none select-none blur-[2px]" aria-hidden="true">
-    <div class="mx-auto max-w-7xl px-8 py-8">
+    <div hhContainer class="py-8">
       <div class="h-72 w-full rounded-3xl bg-ink-100"></div>
       <div class="mt-6 grid grid-cols-3 gap-8">
         <div class="col-span-2 space-y-3">
@@ -30,7 +30,7 @@
           [routerLink]="closeTarget()"
           [replaceUrl]="true"
           class="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition hover:bg-ink-50"
-          [aria-label]="'leadWall.close' | transloco"
+          [aria-label]="'common.close' | transloco"
           data-testid="lead-wall-close"
         >
           <i class="ti ti-x text-lg"></i>
@@ -104,7 +104,7 @@
               label="Email address"
               icon="ti-mail"
               type="email"
-              [placeholder]="'leadWall.youEmailCom' | transloco"
+              [placeholder]="'common.youEmailCom' | transloco"
               [value]="email()"
               (valueChange)="email.set($event)"
               [error]="showErrors() ? emailError() : ''"
@@ -205,7 +205,7 @@
                       target="_blank"
                       class="font-medium text-brand-600 underline hover:text-brand-700"
                       (click)="$event.stopPropagation()"
-                      >{{ 'leadWall.privacyPolicy' | transloco }}</a
+                      >{{ 'common.privacyPolicy' | transloco }}</a
                     >.
                   </span>
                 </label>
@@ -237,7 +237,7 @@
             id="hh-lead-wall-title"
             class="mt-4 font-display text-xl font-semibold text-ink-900"
           >
-            {{ 'leadWall.checkYourEmail' | transloco }}
+            {{ 'common.checkYourEmail' | transloco }}
           </h2>
           <p class="mt-1 text-sm text-ink-500">
             {{ 'leadWall.weSentASigned24' | transloco }}
@@ -272,7 +272,7 @@
               class="w-full"
               (click)="phase.set('form')"
             >
-              <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'leadWall.back' | transloco }}
+              <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'common.back' | transloco }}
             </button>
           </div>
         }

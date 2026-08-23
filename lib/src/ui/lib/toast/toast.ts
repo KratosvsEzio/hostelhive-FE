@@ -5,6 +5,7 @@ import {
   input,
   output,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export type ToastTone = 'dark' | 'success' | 'error' | 'info';
 
@@ -25,6 +26,7 @@ const ICONS: Record<ToastTone, string> = {
 /** Toast / inline banner. `<hh-toast tone="success" dismissible>Saved</hh-toast>` */
 @Component({
   selector: 'hh-toast',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <i class="ti shrink-0" [class]="iconClass()" aria-hidden="true"></i>
@@ -34,7 +36,7 @@ const ICONS: Record<ToastTone, string> = {
         type="button"
         class="shrink-0 opacity-60 transition hover:opacity-100"
         (click)="dismissed.emit()"
-        aria-label="Dismiss"
+        [attr.aria-label]="'a11y.dismiss' | transloco"
       >
         <i class="ti ti-x"></i>
       </button>

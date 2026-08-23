@@ -72,6 +72,34 @@ export class ListingCard {
   /** Suffix for the amount above. Never hardcoded in the template, so a nightly rate
    *  cannot render under a monthly label. */
   protected readonly priceSuffix = computed(() => periodSuffix(this.displayPrice().period));
+
+  /**
+   * The discounted figure, but only while it is the one `displayPrice()` is quoting.
+   *
+   * Both come off the "from" room. Selecting a capacity moves `displayPrice()` onto a
+   * different room's price, and pairing that with a discount taken from another would strike
+   * through a number the seeker was never offered.
+   */
+  protected readonly discounted = computed(() => {
+    const l = this.listing();
+    return this.displayPrice().amount === l.priceFrom ? l.discountedPriceFrom : undefined;
+  });
+
+  /** What the seeker actually pays — the discount when there is one, otherwise the list price. */
+  protected readonly payable = computed(
+    () => this.discounted() ?? this.displayPrice().amount,
+  );
+
+  /**
+   * `25` for a quarter off. Derived rather than read: a stored percentage is a third number
+   * that can disagree with the two it describes. Rounded, because "−24.9%" reads as a bug.
+   */
+  protected readonly discountPercent = computed(() => {
+    const off = this.discounted();
+    const full = this.displayPrice().amount;
+    if (off == null || full <= 0) return null;
+    return Math.round((1 - off / full) * 100);
+  });
   /** Lazy image loading: indices 0..loadedThrough() have their <img> mounted.
    *  Starts at 2 (first 3 images), then advances one slide ahead as the user pages. */
   private readonly loadedThrough = signal(2);

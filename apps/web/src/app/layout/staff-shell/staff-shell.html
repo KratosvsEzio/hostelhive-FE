@@ -43,7 +43,7 @@
   <button
     type="button"
     class="fixed inset-0 z-30 bg-ink-900/40 lg:hidden"
-    aria-label="Close menu"
+    [attr.aria-label]="'a11y.closeMenu' | transloco"
     (click)="drawer.close()"
   ></button>
 }

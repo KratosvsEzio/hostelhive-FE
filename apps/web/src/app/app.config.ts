@@ -5,7 +5,8 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter, RouteReuseStrategy } from '@angular/router';
+import { NavigationEnd, provideRouter, Router, RouteReuseStrategy } from '@angular/router';
+import { filter, take } from 'rxjs';
 import { AppRouteReuseStrategy } from './route-reuse-strategy';
 import {
   provideClientHydration,
@@ -30,6 +31,9 @@ import { appRoutes } from './app.routes';
 import { NotificationService } from '@core/notification.service';
 import { provideI18n } from '@core/i18n/provide-i18n';
 import { LocaleSync } from '@core/i18n/locale-sync';
+import { GeoPreference } from '@core/geo/geo-preference';
+import { CountryBounds, centreOf } from '@core/geo/country-bounds';
+import { PlaceSearchBias } from '@hostelhive/maps';
 import { AnalyticsService } from '@core/analytics/analytics.service';
 import { restoreAnalyticsConsent } from '@core/analytics/analytics-consent';
 
@@ -60,6 +64,38 @@ export const appConfig: ApplicationConfig = {
     // remembered one. Runs on the server too, so the server-rendered HTML already carries
     // the right lang and dir.
     provideAppInitializer(() => inject(LocaleSync).start()),
+    // Open in the visitor's own language and currency, taken from the country their IP
+    // resolves to. The country is authoritative and re-asserted on every start, so moving —
+    // or flipping a VPN — is followed on the next load.
+    //
+    // Deliberately NOT awaited: this must not hold up the first paint for a guess, and the
+    // country is cached, so it costs one request per visitor rather than one per load.
+    //
+    // Held until the router has committed the first URL. Switching language navigates, and
+    // `switchTo` rewrites the locale segment of `router.url` — which is still "/" until the
+    // initial navigation lands, so running any earlier turns a deep link into the bare
+    // locale root: /de/search arrives, /nl is what the visitor gets.
+    provideAppInitializer(() => {
+      if (typeof window === 'undefined') return; // SSR: the request IP is not readable here
+      const geo = inject(GeoPreference);
+      const bounds = inject(CountryBounds);
+      const placeBias = inject(PlaceSearchBias);
+      inject(Router)
+        .events.pipe(
+          filter((e) => e instanceof NavigationEnd),
+          take(1),
+        )
+        .subscribe(() => {
+          // Rank the "Where to?" typeahead around the visitor once their country is
+          // known. Chained rather than run alongside because the country is what the
+          // lookup produces; until it lands there is nothing to bias towards, and an
+          // unbiased typeahead is the normal starting state rather than a failure.
+          void geo
+            .apply()
+            .then(() => bounds.forVisitor())
+            .then((home) => placeBias.set(home ? centreOf(home.box) : null));
+        });
+    }),
     // Surface failed API calls as a non-blocking toast, app-wide. The data-access error
     // interceptor calls this; the page keeps working regardless of the failure. 4xx carry a
     // server-supplied message worth reading, so they are pinned; transient 5xx/network auto-dismiss.

@@ -21,8 +21,10 @@ import { Button, Dropdown, DropdownOption, StatusTone } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface NavEntry {
+  /** A translation key, not display text — resolved by the pipe so it follows a language change. */
   label?: string;
   icon?: string;
   link?: string;
@@ -54,7 +56,7 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TranslocoPipe],
   templateUrl: './host-shell.html',
 })
 export class HostLayout {
@@ -196,17 +198,18 @@ export class HostLayout {
     // their permissions actually reach. Overview is ungated: it is a dashboard over whatever
     // the user can already see, not a resource of its own.
     const entries: NavEntry[] = [
-      { label: 'Overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
-      { label: 'Hostel profile', icon: 'ti-building',         link: `${b}/profile`,      permission: 'host:Hostel:show' },
-      { label: 'Rooms',          icon: 'ti-bed',              link: `${b}/rooms`,        permission: 'host:Room:index' },
-      { label: 'Tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
-      { label: 'Team & staff',   icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
-      { label: 'Utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
-      { label: 'Mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess`,         permission: 'host:WeeklyMenu:index' },
-      { label: 'Expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
-      { label: 'Invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
+      { label: 'common.overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
+      { label: 'common.hostelProfile', icon: 'ti-building',         link: `${b}/profile`,      permission: 'host:Hostel:show' },
+      { label: 'common.rooms',          icon: 'ti-bed',              link: `${b}/rooms`,        permission: 'host:Room:index' },
+      { label: 'common.bookings',       icon: 'ti-calendar',         link: `${b}/bookings`,     permission: 'host:Room:index' },
+      { label: 'common.tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
+      { label: 'hostNav.teamStaff',   icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
+      { label: 'common.utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
+      { label: 'common.mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess`,         permission: 'host:WeeklyMenu:index' },
+      { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
+      { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
       { divider: true },
-      { label: 'Subscription',   icon: 'ti-rosette',          link: `${b}/subscription`, permission: 'core:Hostel:subscription' },
+      { label: 'common.subscription',   icon: 'ti-rosette',          link: `${b}/subscription`, permission: 'core:Hostel:subscription' },
     ];
     const visible = entries.filter(
       (e) => !e.permission || this.session.hasPermission(e.permission),
@@ -229,8 +232,20 @@ export class HostLayout {
     }))
   );
 
-  protected readonly propertiesLoading = computed(
-    () => this.propertyStore.properties().length === 0 && !!this.propertyStore.selected(),
+  /**
+   * Spinner state for the property switcher.
+   *
+   * Driven by the store's `loaded` flag, which flips true whether the fetch succeeded or
+   * failed. It previously inferred loading from "no properties but a selected id" — which
+   * is precisely the state a FAILED fetch leaves behind, because the selected id is
+   * restored from localStorage while the list stays empty. The switcher then span forever
+   * on any backend error, with no way for the user to tell a slow request from a dead one.
+   */
+  protected readonly propertiesLoading = computed(() => !this.propertyStore.loaded());
+
+  /** Empty because the fetch failed, rather than because this host has no hostels yet. */
+  protected readonly propertiesUnavailable = computed(
+    () => this.propertyStore.loaded() && this.propertyStore.properties().length === 0,
   );
 
   protected onPropertySelect(value: string | string[] | null): void {

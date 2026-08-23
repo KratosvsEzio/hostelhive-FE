@@ -11,7 +11,7 @@
  *
  * All requests use the raw `fetch` API on purpose: the app's HttpClient carries an auth
  * interceptor, and we must never attach the user's Bearer token to a third-party host.
- * Restricted to Pakistan (`countrycodes=pk`) and English labels to match the product.
+ * Unrestricted by country — pass `countryCodes` to narrow it. English labels throughout.
  */
 
 const BASE = 'https://nominatim.openstreetmap.org';
@@ -50,16 +50,16 @@ export interface NominatimAddressParts {
  */
 export async function nominatimSearch(
   query: string,
-  opts: { signal?: AbortSignal; citiesOnly?: boolean } = {},
+  opts: { signal?: AbortSignal; citiesOnly?: boolean; countryCodes?: string[] } = {},
 ): Promise<NominatimPlace[]> {
   const params = new URLSearchParams({
     q: query,
     format: 'jsonv2',
     addressdetails: '1',
-    countrycodes: 'pk',
     'accept-language': 'en',
     limit: '8',
   });
+  if (opts.countryCodes?.length) params.set('countrycodes', opts.countryCodes.join(','));
   if (opts.citiesOnly) params.set('featureType', 'settlement');
   const res = await fetch(`${BASE}/search?${params.toString()}`, {
     signal: opts.signal,

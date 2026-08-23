@@ -5,6 +5,7 @@ import {
   computed,
   inject,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
@@ -28,7 +29,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
 @Component({
   selector: 'hh-consent-banner',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink, LocaleLink],
+  imports: [Button, RouterLink, LocaleLink, TranslocoPipe],
   host: { ngSkipHydration: 'true' },
   template: `
     @if (open()) {
@@ -36,7 +37,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
         class="fixed inset-x-0 bottom-0 z-[80] p-3 sm:p-4"
         role="dialog"
         aria-live="polite"
-        aria-label="Analytics consent"
+        [attr.aria-label]="'a11y.analyticsConsent' | transloco"
       >
         <div
           class="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-pill sm:flex-row sm:items-center sm:gap-4 sm:p-5"

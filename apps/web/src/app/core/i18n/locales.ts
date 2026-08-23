@@ -18,6 +18,21 @@ export interface Locale {
   englishName: string;
   dir: 'ltr' | 'rtl';
   /**
+   * ISO 3166-1 alpha-2 country whose flag stands for this language in the picker.
+   *
+   * A flag is a country, not a language, and the two genuinely do not line up — Arabic is
+   * written in twenty-odd countries, Spanish is spoken by far more people outside Spain
+   * than in it. The flag is here because it is the fastest thing to recognise while
+   * scanning a list of eighteen scripts, several of which a given reader cannot read at
+   * all; it is decoration beside the endonym, never the label itself. Every option still
+   * carries its own name and its English name, and those are what the screen reader
+   * announces — the image is `aria-hidden`.
+   *
+   * Where a language has no single obvious country, this picks the one most readers
+   * associate with it rather than pretending to be neutral.
+   */
+  flag: string;
+  /**
    * Whether the strings are actually translated, as opposed to falling back to English.
    *
    * Only this set gets `hreflang` alternates and sitemap entries. A locale whose pages are
@@ -44,21 +59,40 @@ export interface Locale {
 export const DEFAULT_LOCALE = 'en';
 
 export const LOCALES: readonly Locale[] = [
-  { code: 'en', name: 'English', englishName: 'English', dir: 'ltr', translated: true },
-  { code: 'ur', name: 'اردو', englishName: 'Urdu', dir: 'rtl', translated: true },
-  { code: 'ar', name: 'العربية', englishName: 'Arabic', dir: 'rtl', translated: true },
-  { code: 'hi', name: 'हिन्दी', englishName: 'Hindi', dir: 'ltr', translated: true },
-  { code: 'zh', name: '中文', englishName: 'Chinese', dir: 'ltr', translated: true },
-  { code: 'ja', name: '日本語', englishName: 'Japanese', dir: 'ltr', translated: true },
-  { code: 'fr', name: 'Français', englishName: 'French', dir: 'ltr', translated: true },
-  { code: 'de', name: 'Deutsch', englishName: 'German', dir: 'ltr', translated: true },
-  { code: 'es', name: 'Español', englishName: 'Spanish', dir: 'ltr', translated: true },
-  { code: 'it', name: 'Italiano', englishName: 'Italian', dir: 'ltr', translated: true },
-  { code: 'nl', name: 'Nederlands', englishName: 'Dutch', dir: 'ltr', translated: true },
-  { code: 'sv', name: 'Svenska', englishName: 'Swedish', dir: 'ltr', translated: true },
-  { code: 'da', name: 'Dansk', englishName: 'Danish', dir: 'ltr', translated: true },
-  { code: 'hu', name: 'Magyar', englishName: 'Hungarian', dir: 'ltr', translated: true },
+  { code: 'en', name: 'English', englishName: 'English', dir: 'ltr', flag: 'gb', translated: true },
+  { code: 'ur', name: 'اردو', englishName: 'Urdu', dir: 'rtl', flag: 'pk', translated: true },
+  { code: 'ar', name: 'العربية', englishName: 'Arabic', dir: 'rtl', flag: 'sa', translated: true },
+  { code: 'hi', name: 'हिन्दी', englishName: 'Hindi', dir: 'ltr', flag: 'in', translated: true },
+  { code: 'zh', name: '中文', englishName: 'Chinese', dir: 'ltr', flag: 'cn', translated: true },
+  { code: 'ja', name: '日本語', englishName: 'Japanese', dir: 'ltr', flag: 'jp', translated: true },
+  { code: 'fr', name: 'Français', englishName: 'French', dir: 'ltr', flag: 'fr', translated: true },
+  { code: 'de', name: 'Deutsch', englishName: 'German', dir: 'ltr', flag: 'de', translated: true },
+  { code: 'es', name: 'Español', englishName: 'Spanish', dir: 'ltr', flag: 'es', translated: true },
+  { code: 'it', name: 'Italiano', englishName: 'Italian', dir: 'ltr', flag: 'it', translated: true },
+  { code: 'nl', name: 'Nederlands', englishName: 'Dutch', dir: 'ltr', flag: 'nl', translated: true },
+  { code: 'sv', name: 'Svenska', englishName: 'Swedish', dir: 'ltr', flag: 'se', translated: true },
+  { code: 'da', name: 'Dansk', englishName: 'Danish', dir: 'ltr', flag: 'dk', translated: true },
+  { code: 'hu', name: 'Magyar', englishName: 'Hungarian', dir: 'ltr', flag: 'hu', translated: true },
+  { code: 'ru', name: 'Русский', englishName: 'Russian', dir: 'ltr', flag: 'ru', translated: true },
+  { code: 'id', name: 'Bahasa Indonesia', englishName: 'Indonesian', dir: 'ltr', flag: 'id', translated: true },
+  { code: 'vi', name: 'Tiếng Việt', englishName: 'Vietnamese', dir: 'ltr', flag: 'vn', translated: true },
+  { code: 'pl', name: 'Polski', englishName: 'Polish', dir: 'ltr', flag: 'pl', translated: true },
 ] as const;
+
+/**
+ * Where the flag SVGs live, as `/flags/<code>.svg`.
+ *
+ * Copied from the `flag-icons` package into `public/flags` rather than pulled from its
+ * stylesheet: that ships 271 flags and 2.4 MB to serve the eighteen here, and its CSS
+ * needs the whole directory on disk to resolve its `background-image` URLs. These are
+ * plain `<img>` sources, so they cost one small request each and only when a picker opens.
+ *
+ * Emoji flags would have been free, but Windows has no flag glyphs at all — every option
+ * would read as a bare country code on the platform most likely to be used to check this.
+ */
+export function flagSrc(locale: Locale): string {
+  return `/flags/${locale.flag}.svg`;
+}
 
 export const LOCALE_CODES: readonly string[] = LOCALES.map((l) => l.code);
 
@@ -128,14 +162,26 @@ export function dirFor(code: string): 'ltr' | 'rtl' {
  * Used both to read the current locale and to build the `hreflang` alternates, so the two
  * cannot disagree about what a URL means.
  */
-export function splitLocale(url: string): { locale: string; path: string } {
+export function splitLocale(url: string): {
+  locale: string;
+  path: string;
+  /**
+   * Whether the language came from the URL or from the default.
+   *
+   * `locale` alone cannot say: an unprefixed URL and an explicit `/en/` both answer
+   * English. The difference matters wherever a guess might otherwise overrule the
+   * visitor — a link written in one language has to open in it, and only this tells
+   * you that the link said so.
+   */
+  prefixed: boolean;
+} {
   const [pathname] = url.split(/[?#]/);
   const segments = pathname.split('/').filter(Boolean);
   const first = segments[0];
   if (first && LOCALE_CODES.includes(first)) {
-    return { locale: first, path: '/' + segments.slice(1).join('/') };
+    return { locale: first, path: '/' + segments.slice(1).join('/'), prefixed: true };
   }
-  return { locale: DEFAULT_LOCALE, path: pathname || '/' };
+  return { locale: DEFAULT_LOCALE, path: pathname || '/', prefixed: false };
 }
 
 /**

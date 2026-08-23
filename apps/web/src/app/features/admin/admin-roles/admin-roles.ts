@@ -25,6 +25,7 @@ import {
 } from '@hostelhive/data-access';
 import { AdminShell } from '@features/admin/admin-shell/admin-shell';
 import { isNetworkError } from '@util/network-error';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface RolesData {
   roles: RoleDef[];
@@ -46,7 +47,7 @@ interface ViewState {
 @Component({
   selector: 'hh-admin-roles',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AdminShell, Card, Button, Input, ErrorState, Skeleton],
+  imports: [AdminShell, Card, Button, Input, ErrorState, Skeleton, TranslocoPipe],
   templateUrl: './admin-roles.html',
 })
 export class AdminRoles {

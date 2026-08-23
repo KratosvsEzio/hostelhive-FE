@@ -11,6 +11,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { PlaceSearchBias } from './place-bias';
 import { PlaceSuggestion, PlaceSuggestionCache } from './place-cache';
 import {
   PhotonFeature,
@@ -38,8 +40,8 @@ export interface PlaceResult {
 /** Local alias — the shape lives with the cache that stores it. */
 type Suggestion = PlaceSuggestion;
 
-/** Short prefixes match half of Pakistan and nobody picks from them; three characters is
- *  the shortest real place name we care about ("Dir", "Swat"). */
+/** Short prefixes match half the world and nobody picks from them; three characters is
+ *  the shortest real place name we care about ("Dir", "Ulm", "Hue"). */
 const MIN_QUERY_LENGTH = 3;
 /** Debounce a typing burst. Kept modest since Photon is quick and the request goes from
  *  each user's own browser (their own IP), so one user never nears the fair-use rate. */
@@ -55,19 +57,20 @@ const DEBOUNCE_MS = 300;
  */
 @Component({
   selector: 'hh-place-search',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block' },
   template: `
     <input
       #input
       type="text"
-      [placeholder]="placeholder()"
+      [placeholder]="placeholder() ?? ('maps.searchCityOrArea' | transloco)"
       (input)="onInput()"
       (keydown)="onKeydown($event)"
       (focus)="focused.set(true)"
       (blur)="onBlur()"
       autocomplete="off"
-      aria-label="Search location"
+      [attr.aria-label]="'a11y.searchLocation' | transloco"
       class="w-full bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
     />
     @if (showList()) {
@@ -125,12 +128,13 @@ const DEBOUNCE_MS = 300;
 })
 export class PlaceSearchField {
   private readonly cache = inject(PlaceSuggestionCache);
+  private readonly bias = inject(PlaceSearchBias);
   private readonly destroyRef = inject(DestroyRef);
   private readonly inputEl =
     viewChild.required<ElementRef<HTMLInputElement>>('input');
 
   readonly value = input('');
-  readonly placeholder = input('Search city or area');
+  readonly placeholder = input<string | undefined>(undefined);
   /** Non-empty restricts results to populated places (cities/towns/villages) — the address
    *  form's city field passes `['(cities)']`. The exact strings are legacy; only presence
    *  matters now. */
@@ -211,6 +215,8 @@ export class PlaceSearchField {
       const features = await photonSearch(text, {
         signal: ctrl.signal,
         placesOnly: types.length > 0,
+        // Ranking only, so a visitor in Rotterdam still finds Lahore by typing it.
+        bias: this.bias.at(),
       });
       const list = features.map((f) => toSuggestion(f, this.labelMode()));
       this.cache.set(text, types, list);

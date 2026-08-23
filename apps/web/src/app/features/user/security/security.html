@@ -1,31 +1,31 @@
 <div class="space-y-6">
   <div class="rounded-2xl border border-ink-100 bg-white p-4 sm:p-6">
-    <h2 class="text-lg font-semibold text-ink-900">Change password</h2>
+    <h2 class="text-lg font-semibold text-ink-900">{{ 'userSecurity.changePassword' | transloco }}</h2>
     <p class="mt-1 text-sm text-ink-400">
-      Use at least 8 characters with a mix of letters and numbers.
+      {{ 'userSecurity.useAtLeast8Characters' | transloco }}
     </p>
 
     <div class="mt-5 grid max-w-md gap-4">
       <hh-input
-        label="Current password"
+        [label]="'userSecurity.currentPassword' | transloco"
         type="password"
-        placeholder="Enter current password"
+        [placeholder]="'userSecurity.enterCurrentPassword' | transloco"
         autocomplete="current-password"
         [(value)]="currentPassword"
       />
 
       <hh-input
-        label="New password"
+        [label]="'common.newPassword' | transloco"
         type="password"
-        placeholder="New password"
+        [placeholder]="'common.newPassword' | transloco"
         autocomplete="new-password"
         [(value)]="newPassword"
       />
 
       <hh-input
-        label="Confirm new password"
+        [label]="'common.confirmNewPassword' | transloco"
         type="password"
-        placeholder="Re-enter new password"
+        [placeholder]="'userSecurity.reEnterNewPassword' | transloco"
         autocomplete="new-password"
         [error]="mismatch() ? 'Passwords do not match.' : ''"
         [(value)]="confirmPassword"
@@ -44,7 +44,7 @@
         @if (saving()) {
           <i class="ti ti-loader-2 animate-spin text-sm"></i>
         }
-        Update password
+        {{ 'userSecurity.updatePassword' | transloco }}
       </button>
     </div>
   </div>

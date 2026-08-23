@@ -48,6 +48,7 @@ import {
   ROOM_TYPES,
 } from '@util/room-types';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type GenderType = 'boys' | 'girls' | 'co-living';
 
@@ -159,6 +160,7 @@ const CATEGORY_ICONS: Record<string, string> = {
     PlaceSearchField,
     RichText,
     RouterLink, LocaleLink,
+    TranslocoPipe,
   ],
   templateUrl: './onboarding-wizard.html',
   styleUrl: './onboarding-wizard.scss',

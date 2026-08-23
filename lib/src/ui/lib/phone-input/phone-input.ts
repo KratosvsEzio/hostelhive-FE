@@ -8,6 +8,7 @@ import {
   input,
   model,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, ControlContainer, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NgxMaterialIntlTelInputComponent, CountryISO } from 'ngx-material-intl-tel-input';
@@ -42,7 +43,7 @@ const PREFERRED: CountryISO[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [ReactiveFormsModule, NgxMaterialIntlTelInputComponent],
+  imports: [ReactiveFormsModule, NgxMaterialIntlTelInputComponent, TranslocoPipe],
   providers: [{ provide: ControlContainer, useClass: NullControlContainer }],
   styles: [`
     /* ── Outer pill container ──────────────────────────────────────── */
@@ -151,8 +152,8 @@ const PREFERRED: CountryISO[] = [
     }
   `],
   template: `
-    @if (label()) {
-      <label class="mb-1 block text-xs font-medium text-ink-600">{{ label() }}</label>
+    @if (label() !== '') {
+      <label class="mb-1 block text-xs font-medium text-ink-600">{{ label() ?? ('common.phone' | transloco) }}</label>
     }
     <ngx-material-intl-tel-input
       [class.hh-phone--error]="!!error()"
@@ -178,7 +179,7 @@ const PREFERRED: CountryISO[] = [
 export class PhoneInput {
   readonly phone = model('');
   readonly error = input('');
-  readonly label = input('Phone');
+  readonly label = input<string | undefined>(undefined);
 
   protected readonly ctrl      = new FormControl('');
   protected readonly E164      = PhoneNumberFormat.E164;

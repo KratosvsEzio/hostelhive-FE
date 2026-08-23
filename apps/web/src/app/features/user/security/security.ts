@@ -3,11 +3,12 @@ import { Button, Input } from '@hostelhive/ui';
 import { AuthApi } from '@services';
 import { NotificationService } from '@core/notification.service';
 import { finalize } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-account-security',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Input],
+  imports: [Button, Input, TranslocoPipe],
   templateUrl: './security.html',
 })
 export class AccountSecurity {

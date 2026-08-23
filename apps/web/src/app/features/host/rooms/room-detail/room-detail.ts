@@ -16,6 +16,8 @@ import { HostRoom as Room } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
+import { RoomCalendar } from '../room-calendar/room-calendar';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type RoomStatus = 'available' | 'partial' | 'full';
 
@@ -32,7 +34,7 @@ const LOADING: DetailState = { loading: true, error: false, networkError: false,
 @Component({
   selector: 'hh-room-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ApiDate, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill],
+  imports: [ApiDate, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill, RoomCalendar, TranslocoPipe],
   templateUrl: './room-detail.html',
 })
 export class RoomDetail {
@@ -40,6 +42,13 @@ export class RoomDetail {
   private readonly store  = inject(HostPropertyStore);
   private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  /** Both ids the booking calendar needs, read from the same sources the page already uses. */
+  protected readonly hostelId = this.store.selected;
+  protected readonly roomId = toSignal(
+    this.route.paramMap.pipe(map((p) => p.get('roomId') ?? '')),
+    { initialValue: '' },
+  );
 
   protected readonly state = toSignal(
     toObservable(this.store.selected).pipe(

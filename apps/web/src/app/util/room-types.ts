@@ -71,3 +71,20 @@ export function clampCapacity(n: number): number {
   if (!Number.isFinite(floored)) return MIN_ROOM_CAPACITY;
   return Math.max(MIN_ROOM_CAPACITY, floored);
 }
+
+/**
+ * Photos allowed on one room type.
+ *
+ * Enforced by hiding the picker at the cap rather than rejecting a fourth file: a control
+ * that is not there cannot be misused, and an error that only appears after somebody has
+ * chosen a photo has already wasted their time. The hostel-level gallery is separate and
+ * larger — see `MAX_PHOTOS`.
+ */
+export const MAX_ROOM_IMAGES = 3;
+
+/** An uploaded room photo: the attachment id the payload carries, and the URL to show. */
+export interface RoomImage {
+  /** From `ImageUploadService.upload()` — goes into `attachment_ids`. */
+  id: string;
+  url: string;
+}

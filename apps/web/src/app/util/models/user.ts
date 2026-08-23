@@ -23,6 +23,12 @@ export interface User {
   created_at?: string | null;
   updated_at?: string | null;
   roles?: UserRoleRef[];
+  /**
+   * Profile photo. Asymmetric like the rest of the API's attachments: reads come back as this
+   * object, writes send `avatar_id` (the uploaded document's id) — same shape staff-api and
+   * host-ops-api already use for their avatars.
+   */
+  avatar?: { id?: string | number | null; url?: string | null } | null;
 }
 
 /** GET /api/users/:id → `{ success, user }` (some builds return the bare user object). */

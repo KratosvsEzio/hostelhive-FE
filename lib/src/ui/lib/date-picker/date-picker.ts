@@ -11,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
 import { filter } from 'rxjs';
@@ -128,7 +129,7 @@ function buildMonth(
 @Component({
   selector: 'hh-date-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TimePicker],
+  imports: [TimePicker, TranslocoPipe],
   host: { class: 'block' },
   template: `
     <div class="relative block">
@@ -149,12 +150,12 @@ function buildMonth(
         <span
           class="flex-1 truncate text-start"
           [class]="value() ? 'text-ink-900' : 'text-ink-400'"
-        >{{ value() ? displayLabel() : placeholder() }}</span>
+        >{{ value() ? displayLabel() : (placeholder() ?? ('common.pickADate' | transloco)) }}</span>
         @if (value()) {
           <span
             role="button"
             tabindex="0"
-            aria-label="Clear date"
+            [attr.aria-label]="'a11y.clearDate' | transloco"
             (click)="clear($event)"
             (keydown.enter)="clear($event)"
             class="ms-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
@@ -176,14 +177,14 @@ function buildMonth(
           <button
             type="button"
             class="fixed inset-0 z-[70] cursor-default bg-ink-900/20"
-            aria-label="Close calendar"
+            [attr.aria-label]="'a11y.closeCalendar' | transloco"
             (click)="close()"
           ></button>
 
           <!-- Panel -->
           <div
             role="dialog"
-            aria-label="Choose date"
+            [attr.aria-label]="'a11y.chooseDate' | transloco"
             class="fixed z-[71] w-[17.5rem] rounded-3xl border border-ink-100 bg-white p-5 shadow-pill"
             [style.top.px]="pos()?.top"
             [style.left.px]="pos()?.left"
@@ -194,7 +195,7 @@ function buildMonth(
                 <button
                   type="button"
                   (click)="prevMonth()"
-                  aria-label="Previous month"
+                  [attr.aria-label]="'a11y.previousMonth' | transloco"
                   class="absolute start-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-left"></i>
@@ -203,14 +204,14 @@ function buildMonth(
                   type="button"
                   (click)="mode.set('month')"
                   class="rounded-lg px-2 py-0.5 text-sm font-semibold text-ink-900 transition hover:bg-ink-50"
-                  title="Pick month"
+                  [title]="'common.pickMonth' | transloco"
                 >
                   {{ monthView().label }}
                 </button>
                 <button
                   type="button"
                   (click)="nextMonth()"
-                  aria-label="Next month"
+                  [attr.aria-label]="'a11y.nextMonth' | transloco"
                   class="absolute end-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-right"></i>
@@ -249,7 +250,7 @@ function buildMonth(
                 <button
                   type="button"
                   (click)="prevYear()"
-                  aria-label="Previous year"
+                  [attr.aria-label]="'a11y.previousYear' | transloco"
                   class="absolute start-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-left"></i>
@@ -258,14 +259,14 @@ function buildMonth(
                   type="button"
                   (click)="mode.set('year')"
                   class="rounded-lg px-2 py-0.5 text-sm font-semibold text-ink-900 transition hover:bg-ink-50"
-                  title="Pick year"
+                  [title]="'common.pickYear' | transloco"
                 >
                   {{ viewYear() }}
                 </button>
                 <button
                   type="button"
                   (click)="nextYear()"
-                  aria-label="Next year"
+                  [attr.aria-label]="'a11y.nextYear' | transloco"
                   class="absolute end-0 grid h-8 w-8 place-items-center rounded-full text-ink-600 transition hover:bg-ink-50"
                 >
                   <i class="ti ti-chevron-right"></i>
@@ -328,7 +329,7 @@ function buildMonth(
 })
 export class DatePicker {
   readonly value = model<string | null>(null);
-  readonly placeholder = input('Pick a date');
+  readonly placeholder = input<string | undefined>(undefined);
   readonly label = input('');
   readonly error = input('');
   readonly variant = input<'pill' | 'field'>('field');

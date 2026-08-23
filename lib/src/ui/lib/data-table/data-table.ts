@@ -1,4 +1,5 @@
 import { DecimalPipe } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -169,7 +170,7 @@ export interface PaginationConfig {
 @Component({
   selector: 'hh-data-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, Button, HhLink, StatusPill, NoResults],
+  imports: [DecimalPipe, RouterLink, Button, HhLink, StatusPill, NoResults, TranslocoPipe],
   // Block-level host so vertical margins (e.g. a `space-y` parent's top margin) apply — an
   // inline host silently drops them, which is a subtle layout footgun for consumers.
   host: { class: 'block' },
@@ -183,10 +184,20 @@ export interface PaginationConfig {
             <tr>
               @let activeSort = sort();
               @for (col of columns(); track col.key) {
+                <!--
+                  Alignment is set on the th itself, not inherited from thead.
+
+                  A browser's own stylesheet gives th text-align:center, and a UA rule on the
+                  element beats a value inherited from its parent — so the text-start on thead
+                  never reached here, and every header sat centred over left-aligned cells. A
+                  sortable header shows it worst: its label is an inline-flex span, which the
+                  centring then floats into the middle of the column.
+                -->
                 <th
                   class="whitespace-nowrap px-5 py-2.5 font-medium"
                   [class]="stickyTh(col)"
-                  [class.text-right]="col.align === 'right' && !col.sortable"
+                  [class.text-start]="col.align !== 'right'"
+                  [class.text-right]="col.align === 'right'"
                   [class.cursor-pointer]="col.sortable"
                   [class.select-none]="col.sortable"
                   (click)="headerClick(col)"
@@ -423,7 +434,7 @@ export interface PaginationConfig {
                         variant="icon"
                         size="sm"
                         type="button"
-                        aria-label="Row actions"
+                        [attr.aria-label]="'a11y.rowActions' | transloco"
                         [class.bg-ink-100]="actionActive()(row)"
                         [class.text-ink-700]="actionActive()(row)"
                         (click)="rowAction.emit({ row, event: $event })"
@@ -542,14 +553,14 @@ export interface PaginationConfig {
               hh-button variant="icon" size="sm"
               [disabled]="pag.page === 1"
               (click)="pageChange.emit(1)"
-              aria-label="First page"
+              [attr.aria-label]="'a11y.firstPage' | transloco"
             ><i class="ti ti-chevron-left-pipe text-sm"></i></button>
             <button
               type="button"
               hh-button variant="icon" size="sm"
               [disabled]="pag.page === 1"
               (click)="pageChange.emit(pag.page - 1)"
-              aria-label="Previous page"
+              [attr.aria-label]="'a11y.previousPage' | transloco"
             ><i class="ti ti-chevrons-left text-sm"></i></button>
             <span class="min-w-[1.75rem] text-center text-sm font-medium text-ink-700">
               {{ pag.page }}
@@ -559,14 +570,14 @@ export interface PaginationConfig {
               hh-button variant="icon" size="sm"
               [disabled]="!pag.hasNextPage"
               (click)="pageChange.emit(pag.page + 1)"
-              aria-label="Next page"
+              [attr.aria-label]="'a11y.nextPage' | transloco"
             ><i class="ti ti-chevrons-right text-sm"></i></button>
             <button
               type="button"
               hh-button variant="icon" size="sm"
               [disabled]="!pag.hasNextPage"
               (click)="pageChange.emit(pag.totalPages ?? pag.page)"
-              aria-label="Last page"
+              [attr.aria-label]="'a11y.lastPage' | transloco"
             ><i class="ti ti-chevron-right-pipe text-sm"></i></button>
           </div>
         </div>
@@ -589,6 +600,15 @@ export class DataTable implements AfterViewInit, OnDestroy {
   readonly clearable    = input(false);
   readonly actionActive = input<(row: unknown) => boolean>(() => false);
   readonly sort         = input<SortState | null>(null);
+  /**
+   * Whether a third click on the sorted column clears the sort.
+   *
+   * Only true if the consumer can actually render "unsorted". A table whose default sort is
+   * itself a reachable state — newest-first, say — maps the cleared `null` straight back onto
+   * that default, so the third click is a no-op and the default column reads as a dead button.
+   * Those tables pass false and get a plain asc / desc toggle.
+   */
+  readonly canClearSort = input(true);
   readonly rowClickable = input(false);
 
   readonly pageChange   = output<number>();
@@ -634,8 +654,10 @@ export class DataTable implements AfterViewInit, OnDestroy {
       this.sortChange.emit({ key: col.key, dir: 'asc' });
     } else if (current.dir === 'asc') {
       this.sortChange.emit({ key: col.key, dir: 'desc' });
-    } else {
+    } else if (this.canClearSort()) {
       this.sortChange.emit(null);
+    } else {
+      this.sortChange.emit({ key: col.key, dir: 'asc' });
     }
   }
 

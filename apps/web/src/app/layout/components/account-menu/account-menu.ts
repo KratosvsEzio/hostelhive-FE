@@ -75,8 +75,15 @@ export class AccountMenu {
   protected readonly hostLink = computed(() =>
     this.isHost() ? '/host' : '/host/listings/new',
   );
-  protected readonly hostCta = computed(() =>
-    this.isHost() ? 'Host dashboard' : 'Become a host',
+  /**
+   * The translation *key*, piped through transloco in the template.
+   *
+   * Same defect the header's copy of this had: it returned English directly, so the one
+   * menu row that changes with your role stayed English in all seventeen other languages
+   * while every row around it translated. Both keys already existed.
+   */
+  protected readonly hostCtaKey = computed(() =>
+    this.isHost() ? 'account.hostDashboard' : 'nav.becomeAHost',
   );
 
   protected readonly items = [

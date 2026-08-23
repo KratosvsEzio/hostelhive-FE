@@ -10,6 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type * as L from 'leaflet';
 import { brandPinIcon, LeafletLoader, whenSized } from './leaflet';
 import { nominatimReverse } from './nominatim';
@@ -41,7 +42,7 @@ export interface PickedLocation {
   selector: 'hh-location-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
-  imports: [PlaceSearchField],
+  imports: [PlaceSearchField, TranslocoPipe],
   template: `
     <div
       class="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card"
@@ -54,7 +55,7 @@ export interface PickedLocation {
           <i class="ti ti-search text-ink-400" aria-hidden="true"></i>
           <hh-place-search
             class="block flex-1"
-            placeholder="Search an address or landmark…"
+            [placeholder]="'maps.searchAddressPlaceholder' | transloco"
             (selected)="onPlace($event)"
           />
         </div>
@@ -63,7 +64,7 @@ export interface PickedLocation {
           (click)="useMyLocation()"
           [disabled]="locating()"
           class="grid h-[38px] w-[42px] place-items-center rounded-xl border border-ink-200 text-brand-500 transition hover:bg-surface disabled:opacity-60"
-          aria-label="Use my current location"
+          [attr.aria-label]="'a11y.useMyCurrentLocation' | transloco"
         >
           <i
             class="ti"

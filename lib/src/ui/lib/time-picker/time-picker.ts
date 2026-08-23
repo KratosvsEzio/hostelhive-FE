@@ -11,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
 import { filter } from 'rxjs';
@@ -54,6 +55,7 @@ function label(value: string | null): string {
  */
 @Component({
   selector: 'hh-time-picker',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -74,7 +76,7 @@ function label(value: string | null): string {
         <span
           class="flex-1 truncate text-start"
           [class]="value() ? 'text-ink-900' : 'text-ink-400'"
-        >{{ value() ? displayLabel() : placeholder() }}</span>
+        >{{ value() ? displayLabel() : (placeholder() ?? ('common.pickATime' | transloco)) }}</span>
         <i class="ti ti-clock shrink-0 text-ink-400" aria-hidden="true"></i>
       </button>
 
@@ -90,14 +92,14 @@ function label(value: string | null): string {
           <button
             type="button"
             class="fixed inset-0 z-[70] cursor-default bg-ink-900/20"
-            aria-label="Close time picker"
+            [attr.aria-label]="'a11y.closeTimePicker' | transloco"
             (click)="close()"
           ></button>
 
           <!-- Panel -->
           <div
             role="dialog"
-            aria-label="Choose time"
+            [attr.aria-label]="'a11y.chooseTime' | transloco"
             class="fixed z-[71] w-64 rounded-3xl border border-ink-100 bg-white p-4 shadow-pill"
             [style.top.px]="pos()?.top"
             [style.left.px]="pos()?.left"
@@ -161,7 +163,7 @@ function label(value: string | null): string {
 export class TimePicker {
   /** Two-way 24-hour `HH:mm` string. */
   readonly value = model<string | null>(null);
-  readonly placeholder = input('Pick a time');
+  readonly placeholder = input<string | undefined>(undefined);
   readonly label = input('');
   readonly error = input('');
   readonly variant = input<'pill' | 'field'>('field');

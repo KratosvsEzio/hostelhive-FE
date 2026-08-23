@@ -3,6 +3,7 @@ import { LocaleStore } from './i18n/locale-store';
 import { localeAlternates, withLocale } from './i18n/locales';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { TranslocoService } from '@jsverse/transloco';
 
 /**
  * Canonical origin for this deployment. Canonical and og:url must be absolute and must
@@ -12,10 +13,6 @@ import { Meta, Title } from '@angular/platform-browser';
  */
 export const SITE_ORIGIN = 'https://hostelhive.com';
 
-/** Fallbacks used when a page supplies nothing of its own. */
-const DEFAULT_TITLE = 'HostelHive — Find verified hostels in Pakistan';
-const DEFAULT_DESCRIPTION =
-  'Search verified hostels, PGs and co-living across Pakistan. Filter by city, budget, gender and room sharing — no brokers, no surprises.';
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/hostelhive-logo.png`;
 
 export interface SeoConfig {
@@ -23,11 +20,11 @@ export interface SeoConfig {
   /**
    * Overrides `title` for Open Graph and Twitter only.
    *
-   * The two want different things. `<title>` leads with the hostel's name, because that
-   * is what a branded or returning search looks for. A shared card has no such context —
-   * nobody in a WhatsApp group recognises "Al-Madina Hostel" — so it leads with what the
-   * place *is*: type, area, price. Airbnb does the same, dropping the property name from
-   * `og:title` entirely.
+   * Both carry the property name — a card that cannot be attributed to a place is worth
+   * little when WhatsApp is the main sharing channel. They still differ in shape: `<title>`
+   * can afford the trailing "| HostelHive" brand suffix, while a shared card is truncated
+   * around 60–90 characters, so this drops the brand and keeps only the facts that decide a
+   * tap — price, and whether meals are included.
    */
   socialTitle?: string;
   description?: string;
@@ -64,11 +61,16 @@ export class Seo {
   private readonly titleService = inject(Title);
   private readonly doc = inject(DOCUMENT);
   private readonly locale = inject(LocaleStore);
+  private readonly i18n = inject(TranslocoService);
 
   /** Applies the full head for a page: title, description, canonical, Open Graph, Twitter. */
   apply(config: SeoConfig): void {
-    const title = config.title || DEFAULT_TITLE;
-    const description = config.description?.trim() || DEFAULT_DESCRIPTION;
+    // Fallbacks for a page that supplies nothing of its own. Translated like everything
+    // else here: a French visitor landing on a page with no copy of its own should still
+    // get a French title, not the English one by default.
+    const title = config.title || this.i18n.translate<string>('seo.defaultTitle');
+    const description =
+      config.description?.trim() || this.i18n.translate<string>('seo.defaultDescription');
     const image = config.image || DEFAULT_IMAGE;
     // The language-free path is what the alternates are built from; the active language
     // is what this page canonicalises to.

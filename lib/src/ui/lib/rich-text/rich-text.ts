@@ -10,6 +10,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { isPlatformBrowser } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -104,7 +105,7 @@ const EMOJIS = [
 @Component({
   selector: 'hh-rich-text',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, NgxEditorModule],
+  imports: [ReactiveFormsModule, NgxEditorModule, TranslocoPipe],
   host: {
     ngSkipHydration: 'true',
     class: 'block',
@@ -128,14 +129,14 @@ const EMOJIS = [
           type="button"
           class="hh-emoji-btn"
           (click)="toggleEmoji()"
-          aria-label="Insert emoji"
+          [attr.aria-label]="'a11y.insertEmoji' | transloco"
           aria-haspopup="true"
           [attr.aria-expanded]="emojiOpen()"
         >
           <span aria-hidden="true">😀</span>
         </button>
         @if (emojiOpen()) {
-          <div class="hh-emoji-pop" role="menu" aria-label="Emoji">
+          <div class="hh-emoji-pop" role="menu" [attr.aria-label]="'a11y.emoji' | transloco">
             @for (e of emojis; track e) {
               <button
                 type="button"

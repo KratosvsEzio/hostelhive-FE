@@ -15,10 +15,10 @@
           ></i>
         </span>
         <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
-          Confirming your account…
+          {{ 'authConfirmInvitation.confirmingYourAccount' | transloco }}
         </h1>
         <p class="mt-1 text-sm text-ink-500">
-          Hang tight while we verify your email and sign you in.
+          {{ 'authConfirmInvitation.hangTightWhileWeVerify' | transloco }}
         </p>
       }
       @case ('error') {
@@ -28,7 +28,7 @@
           <i class="ti ti-alert-triangle text-2xl" aria-hidden="true"></i>
         </span>
         <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
-          Confirmation failed
+          {{ 'authConfirmInvitation.confirmationFailed' | transloco }}
         </h1>
         <p class="mt-1 text-sm text-ink-500">{{ message() }}</p>
         <div class="mt-5 space-y-3">
@@ -38,7 +38,7 @@
             [routerLink]="['/auth']"
             [queryParams]="{ mode: 'login' }"
             class="w-full"
-            >Go to log in</a
+            >{{ 'authConfirmInvitation.goToLogIn' | transloco }}</a
           >
           <a
             hh-button
@@ -46,7 +46,7 @@
             size="sm"
             [routerLink]="['/']"
             class="w-full"
-            >Back to home</a
+            >{{ 'common.backToHome' | transloco }}</a
           >
         </div>
       }

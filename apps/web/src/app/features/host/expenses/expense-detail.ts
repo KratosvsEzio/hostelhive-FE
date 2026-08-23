@@ -19,6 +19,7 @@ import {
   HostPropertyStore,
 } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface DetailState {
   loading: boolean;
@@ -34,7 +35,7 @@ interface DetailState {
 @Component({
   selector: 'hh-expense-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button],
+  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, TranslocoPipe],
   templateUrl: './expense-detail.html',
 })
 export class ExpenseDetailPage {

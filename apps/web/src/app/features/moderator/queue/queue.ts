@@ -26,6 +26,7 @@ import { QueueItem } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { QUEUE_TABLE_COLS } from '@app/util/table-configs/queue-table-cols';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -39,7 +40,7 @@ const PAGE_SIZE = 10;
 @Component({
   selector: 'hh-queue',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, DataTable, EmptyState, ErrorState, Search, Skeleton],
+  imports: [DashboardLayout, DataTable, EmptyState, ErrorState, Search, Skeleton, TranslocoPipe],
   templateUrl: './queue.html',
 })
 export class Queue {
@@ -150,20 +151,6 @@ export class Queue {
 
   protected onQueueRowClick(row: unknown): void {
     this.router.navigate(['../review', (row as QueueItem).id], { relativeTo: this.route });
-  }
-
-  protected toggleSort(): void {
-    const next =
-      this.sortDir() === null ? 'asc' : this.sortDir() === 'asc' ? 'desc' : null;
-    this.sortDir.set(next);
-    this.page.set(1);
-  }
-
-  protected sortIcon(): string {
-    const d = this.sortDir();
-    if (d === 'asc') return 'ti-arrow-up';
-    if (d === 'desc') return 'ti-arrow-down';
-    return 'ti-arrows-sort';
   }
 
   protected retry(): void {

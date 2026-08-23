@@ -8,7 +8,7 @@
           hh-button variant="icon" size="sm"
           type="button"
           class="shrink-0"
-          aria-label="Toggle menu"
+          [attr.aria-label]="'a11y.toggleMenu' | transloco"
           (click)="drawer.toggle()"
         >
           <i class="ti ti-menu-2 text-xl"></i>
@@ -33,13 +33,13 @@
          device inset rather than a fixed pb-24: 96px cleared the 54px bar comfortably at
          zero inset, but the bar grows with the inset and a 48px gesture area put it at
          102px — overlapping the last row. See .hh-pb-tabbar in global.css. -->
-    <div class="mx-auto max-w-7xl px-5 py-6 sm:px-8" [class.hh-pb-tabbar]="mobile.isMobile()">
+    <div hhContainer class="py-6" [class.hh-pb-tabbar]="mobile.isMobile()">
       <ng-content />
     </div>
   </div>
   @if (!mobile.isMobile()) {
     <footer class="shrink-0 border-t border-ink-100 bg-white px-5 py-3 sm:px-8">
-      <p class="text-center text-xs text-ink-400">© 2026 HostelHive. All rights reserved.</p>
+      <p class="text-center text-xs text-ink-400">{{ 'common.2026HostelhiveAllRights' | transloco }}</p>
     </footer>
   }
 </div>

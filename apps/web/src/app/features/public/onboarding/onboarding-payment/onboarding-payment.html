@@ -9,14 +9,14 @@
       [routerLink]="['/host', draftId(), 'profile']"
       class="flex items-center gap-1.5 text-sm font-medium text-brand-600 transition hover:text-brand-700"
     >
-      Visit profile<i class="ti ti-arrow-right" aria-hidden="true"></i>
+      {{ 'publicOnboarding.visitProfile' | transloco }}<i class="ti ti-arrow-right" aria-hidden="true"></i>
     </a>
   } @else {
     <a
       routerLink="/host/listings/new"
       class="flex items-center gap-1.5 text-sm font-medium text-ink-600 transition hover:text-brand-600"
     >
-      <i class="ti ti-arrow-left" aria-hidden="true"></i>Back to form
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'publicOnboarding.backToForm' | transloco }}
     </a>
   }
 </header>
@@ -28,23 +28,23 @@
     >
       <i class="ti ti-rosette-discount-check shrink-0 text-xl text-ok" aria-hidden="true"></i>
       <div class="min-w-0">
-        <p class="font-semibold text-ok">Payment successful — listing submitted for review!</p>
-        <p class="mt-0.5 text-sm text-ink-500">We'll get back to you within 24 hours.</p>
+        <p class="font-semibold text-ok">{{ 'publicOnboarding.paymentSuccessfulListingSubmittedFor' | transloco }}</p>
+        <p class="mt-0.5 text-sm text-ink-500">{{ 'publicOnboarding.weLlGetBackTo' | transloco }}</p>
       </div>
     </div>
   }
 
-  <h1 class="mb-6 font-display text-xl font-semibold text-ink-900">Review &amp; pay</h1>
+  <h1 class="mb-6 font-display text-xl font-semibold text-ink-900">{{ 'publicOnboarding.reviewAmpPay' | transloco }}</h1>
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
 
     <!-- Left: hostel summary -->
     <div class="rounded-2xl bg-white p-5 shadow-card">
-      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Your listing</h2>
+      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">{{ 'publicOnboarding.yourListing' | transloco }}</h2>
 
       <div class="rounded-xl border border-ink-100 bg-surface p-4">
         <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-semibold uppercase tracking-wide text-ink-400 sm:text-[10px]">Hostel</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-ink-400 sm:text-[10px]">{{ 'common.hostel' | transloco }}</p>
           @if (draftId()) {
             <span class="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 font-mono text-xs text-ink-500 sm:text-[10px]">#{{ draftId() }}</span>
           }
@@ -61,7 +61,7 @@
         @if (roomCount()) {
           <p class="mt-2 text-xs text-ink-400">
             <i class="ti ti-bed text-[11px]" aria-hidden="true"></i>
-            {{ roomCount() }} room {{ roomCount() === 1 ? 'type' : 'types' }} configured
+            {{ 'publicOnboarding.nRoomTypesConfigured' | transloco: { count: roomCount() } }}
           </p>
         }
       </div>
@@ -69,22 +69,22 @@
       <div class="mt-4 space-y-2.5 text-sm text-ink-600">
         <div class="flex items-start gap-2.5">
           <i class="ti ti-clock mt-0.5 shrink-0 text-base text-brand-400" aria-hidden="true"></i>
-          <span>We review new listings within <strong class="text-ink-800">24 hours</strong>.</span>
+          <span>{{ 'publicOnboarding.weReviewNewListingsWithin' | transloco }} <strong class="text-ink-800">{{ 'publicOnboarding.n24Hours' | transloco }}</strong>.</span>
         </div>
         <div class="flex items-start gap-2.5">
           <i class="ti ti-eye mt-0.5 shrink-0 text-base text-brand-400" aria-hidden="true"></i>
-          <span>Your listing goes live automatically once approved.</span>
+          <span>{{ 'publicOnboarding.yourListingGoesLiveAutomatically' | transloco }}</span>
         </div>
         <div class="flex items-start gap-2.5">
           <i class="ti ti-shield-check mt-0.5 shrink-0 text-base text-brand-400" aria-hidden="true"></i>
-          <span>Secure checkout · cancel anytime.</span>
+          <span>{{ 'publicOnboarding.secureCheckoutCancelAnytime' | transloco }}</span>
         </div>
       </div>
     </div>
 
     <!-- Right: order summary -->
     <div class="rounded-2xl bg-white p-5 shadow-card">
-      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">Order summary</h2>
+      <h2 class="mb-4 font-display text-base font-semibold text-ink-900">{{ 'common.orderSummary' | transloco }}</h2>
 
       @if (productsLoading()) {
         <div class="space-y-2">
@@ -96,7 +96,7 @@
       } @else if (productsError()) {
         <div class="rounded-xl border border-danger/30 bg-danger/5 p-4 text-center">
           <i class="ti ti-cloud-off text-2xl text-danger" aria-hidden="true"></i>
-          <p class="mt-2 text-sm font-medium text-ink-900">Couldn't load pricing</p>
+          <p class="mt-2 text-sm font-medium text-ink-900">{{ 'publicOnboarding.couldnTLoadPricing' | transloco }}</p>
           <button
             hh-button
             variant="outlined"
@@ -104,7 +104,7 @@
             class="mt-3"
             (click)="loadProducts()"
           >
-            <i class="ti ti-refresh" aria-hidden="true"></i>Retry
+            <i class="ti ti-refresh" aria-hidden="true"></i>{{ 'common.retry' | transloco }}
           </button>
         </div>
       } @else {
@@ -135,7 +135,7 @@
                   <p class="text-xs text-ink-400">{{ p.description }}</p>
                 }
                 @if (p.duration) {
-                  <p class="text-xs text-ink-400">{{ p.duration }} days</p>
+                  <p class="text-xs text-ink-400">{{ 'common.nDays' | transloco: { count: p.duration } }}</p>
                 }
               </div>
               <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ +p.price | number }}</span>
@@ -143,7 +143,7 @@
           }
           @if (!allProducts().length) {
             <p class="rounded-xl border border-ink-100 bg-surface px-3 py-4 text-center text-sm text-ink-400">
-              No plans available right now.
+              {{ 'publicOnboarding.noPlansAvailableRightNow' | transloco }}
             </p>
           }
         </div>
@@ -159,7 +159,7 @@
             }
             <div class="my-2 h-px bg-ink-100"></div>
             <div class="flex items-center justify-between text-base font-semibold">
-              <dt class="text-ink-900">Total</dt>
+              <dt class="text-ink-900">{{ 'common.total' | transloco }}</dt>
               <dd class="text-ink-900">Rs {{ total() | number }}</dd>
             </div>
           </dl>
@@ -172,19 +172,19 @@
           (click)="pay()"
         >
           @if (paying()) {
-            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Processing…
+            <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.processing' | transloco }}
           } @else if (paid()) {
-            <i class="ti ti-circle-check" aria-hidden="true"></i>Payment complete
+            <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'publicOnboarding.paymentComplete' | transloco }}
           } @else if (selectedProducts().length) {
-            <i class="ti ti-credit-card" aria-hidden="true"></i>Pay Rs {{ total() | number }}
+            <i class="ti ti-credit-card" aria-hidden="true"></i>{{ 'hostSubscription.payRs' | transloco: { amount: total() | number } }}
           } @else {
-            <i class="ti ti-credit-card" aria-hidden="true"></i>Select a plan to continue
+            <i class="ti ti-credit-card" aria-hidden="true"></i>{{ 'publicOnboarding.selectAPlanToContinue' | transloco }}
           }
         </button>
 
         @if (payError()) {
           <p class="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-danger">
-            <i class="ti ti-alert-circle" aria-hidden="true"></i>Payment failed — please try again.
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'common.paymentFailedPleaseTry' | transloco }}
           </p>
         }
       }

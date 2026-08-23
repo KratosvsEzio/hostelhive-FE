@@ -5,10 +5,12 @@ import {
   input,
   model,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Numbered pagination. `<hh-pagination [pageCount]="5" [(page)]="page" />` */
 @Component({
   selector: 'hh-pagination',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
@@ -16,7 +18,7 @@ import {
       class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
       [disabled]="page() <= 1"
       (click)="go(1)"
-      aria-label="First page"
+      [attr.aria-label]="'a11y.firstPage' | transloco"
     >
       <i class="ti ti-chevron-left-pipe" aria-hidden="true"></i>
     </button>
@@ -25,7 +27,7 @@ import {
       class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
       [disabled]="page() <= 1"
       (click)="go(page() - 1)"
-      aria-label="Previous page"
+      [attr.aria-label]="'a11y.previousPage' | transloco"
     >
       <i class="ti ti-chevrons-left" aria-hidden="true"></i>
     </button>
@@ -44,7 +46,7 @@ import {
       class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
       [disabled]="page() >= pageCount()"
       (click)="go(page() + 1)"
-      aria-label="Next page"
+      [attr.aria-label]="'a11y.nextPage' | transloco"
     >
       <i class="ti ti-chevrons-right" aria-hidden="true"></i>
     </button>
@@ -53,7 +55,7 @@ import {
       class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
       [disabled]="page() >= pageCount()"
       (click)="go(pageCount())"
-      aria-label="Last page"
+      [attr.aria-label]="'a11y.lastPage' | transloco"
     >
       <i class="ti ti-chevron-right-pipe" aria-hidden="true"></i>
     </button>

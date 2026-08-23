@@ -64,6 +64,7 @@ describe('splitLocale', () => {
     expect(splitLocale('/ur/hostels/lahore')).toEqual({
       locale: 'ur',
       path: '/hostels/lahore',
+      prefixed: true,
     });
   });
 
@@ -71,8 +72,9 @@ describe('splitLocale', () => {
     expect(splitLocale('/hostels/lahore')).toEqual({
       locale: 'en',
       path: '/hostels/lahore',
+      prefixed: false,
     });
-    expect(splitLocale('/')).toEqual({ locale: 'en', path: '/' });
+    expect(splitLocale('/')).toEqual({ locale: 'en', path: '/', prefixed: false });
   });
 
   // `/hi/...` is Hindi, but `/hostels/...` merely starts with the same letters. Matching
@@ -83,13 +85,22 @@ describe('splitLocale', () => {
     expect(splitLocale('/hidden').locale).toBe('en');
   });
 
+  // `locale` answers English either way, so this is the only thing that can tell a link
+  // written in English apart from a link that named no language at all.
+  it('reports whether the language came from the URL or the default', () => {
+    expect(splitLocale('/en/search').prefixed).toBe(true);
+    expect(splitLocale('/search').prefixed).toBe(false);
+    expect(splitLocale('/de/search').prefixed).toBe(true);
+    expect(splitLocale('/hidden').prefixed).toBe(false);
+  });
+
   it('ignores the query string and hash', () => {
     expect(splitLocale('/ur/search/karachi?lat=1&lng=2').path).toBe('/search/karachi');
     expect(splitLocale('/search#top').path).toBe('/search');
   });
 
   it('bare locale root resolves to that locale at /', () => {
-    expect(splitLocale('/ur')).toEqual({ locale: 'ur', path: '/' });
+    expect(splitLocale('/ur')).toEqual({ locale: 'ur', path: '/', prefixed: true });
   });
 });
 
@@ -107,7 +118,11 @@ describe('withLocale', () => {
   it('round-trips with splitLocale for every locale', () => {
     for (const l of LOCALES) {
       const url = withLocale(l.code, '/hostels/lahore');
-      expect(splitLocale(url)).toEqual({ locale: l.code, path: '/hostels/lahore' });
+      expect(splitLocale(url)).toEqual({
+        locale: l.code,
+        path: '/hostels/lahore',
+        prefixed: true,
+      });
     }
   });
 });

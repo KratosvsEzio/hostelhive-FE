@@ -1,7 +1,7 @@
-<app-dashboard-layout label="Expenses">
+<app-dashboard-layout [label]="'common.expenses' | transloco">
   <div hhActions>
     <a *hhHasPermission="'host:Expense:create'" hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
-      <i class="ti ti-plus" aria-hidden="true"></i>New expense
+      <i class="ti ti-plus" aria-hidden="true"></i>{{ 'hostExpenses.newExpense' | transloco }}
     </a>
   </div>
 
@@ -11,7 +11,7 @@
   <!-- Filters — expense type and date range as separate controls -->
   <div class="mb-4 flex flex-wrap items-center gap-3">
     <hh-dropdown
-      placeholder="Expense type"
+      [placeholder]="'common.expenseType' | transloco"
       [options]="typeOptions()"
       [value]="typeFilter()"
       (valueChange)="onTypeFilter($event)"
@@ -21,13 +21,13 @@
         [from]="fromDate()"
         [to]="toDate()"
         [max]="todayIso"
-        placeholder="All dates"
+        [placeholder]="'hostExpenses.allDates' | transloco"
         (rangeChange)="onDateRange($event)"
       />
     </div>
     @if (hasFilters()) {
       <button hh-button variant="outlined" size="sm" type="button" (click)="clearFilters()">
-        <i class="ti ti-x" aria-hidden="true"></i>Clear
+        <i class="ti ti-x" aria-hidden="true"></i>{{ 'common.clear' | transloco }}
       </button>
     }
   </div>
@@ -60,11 +60,11 @@
     >
       @if (hasFilters()) {
         <button hh-button variant="outlined" size="sm" type="button" (click)="clearFilters()">
-          Clear filters
+          {{ 'hostExpenses.clearFilters' | transloco }}
         </button>
       } @else {
         <a *hhHasPermission="'host:Expense:create'" hh-button color="primary" size="sm" [routerLink]="base() + '/new'">
-          <i class="ti ti-plus" aria-hidden="true"></i>New expense
+          <i class="ti ti-plus" aria-hidden="true"></i>{{ 'hostExpenses.newExpense' | transloco }}
         </a>
       }
     </hh-empty-state>
@@ -72,7 +72,7 @@
 
   @if (deletePending(); as e) {
     <hh-confirm-modal
-      title="Delete expense?"
+      [title]="'hostExpenses.deleteExpense' | transloco"
       icon="ti-trash"
       tone="danger"
       confirmLabel="Delete"
@@ -80,9 +80,9 @@
       (confirm)="confirmDelete()"
       (cancel)="cancelDelete()"
     >
-      This will permanently delete this
-      <strong>{{ typeLabel(e.expenseType) }}</strong> expense of
-      <strong>Rs {{ e.amount | number }}</strong> from {{ displayDate(e.date) }}. This can't be undone.
+      {{ 'hostExpenses.thisWillPermanentlyDeleteThis' | transloco }}
+      <strong>{{ typeLabel(e.expenseType) }}</strong> {{ 'hostExpenses.expenseOf' | transloco }}
+      <strong>Rs {{ e.amount | number }}</strong> {{ 'hostExpenses.fromDateCannotUndo' | transloco: { date: displayDate(e.date) } }}
     </hh-confirm-modal>
   }
 </app-dashboard-layout>
@@ -98,7 +98,7 @@
           (click)="goToDetail(menuExpense)"
         >
           <i class="ti ti-eye text-sm text-ink-400" aria-hidden="true"></i>
-          View details
+          {{ 'common.viewDetails' | transloco }}
         </button>
         <hh-context-menu-divider />
         <button
@@ -108,7 +108,7 @@
           *hhHasPermission="'host:Expense:update'"
         >
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
-          Edit
+          {{ 'common.edit' | transloco }}
         </button>
         <hh-context-menu-divider />
         <button
@@ -118,7 +118,7 @@
           *hhHasPermission="'host:Expense:destroy'"
         >
           <i class="ti ti-trash text-sm" aria-hidden="true"></i>
-          Delete
+          {{ 'common.delete' | transloco }}
         </button>
       </hh-context-menu>
     }

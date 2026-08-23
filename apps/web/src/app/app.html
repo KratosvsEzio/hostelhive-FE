@@ -24,3 +24,21 @@
 }
 <!-- TEMPORARY (testing): startup gate to set the BE base URL. Remove before go-live. -->
 <hh-dev-setup-gate />
+
+<!-- Startup veil. Up while the session and the country are still being resolved: the country
+     decides the language, and switching language navigates — so without this the page becomes
+     readable and is then moved to /de/… underneath whoever started reading it. Self-releases
+     on a cap inside StartupGate, so a hung third-party lookup cannot strand anyone here. -->
+@if (startingUp()) {
+  <div
+    class="fixed inset-0 z-[200] grid place-items-center bg-surface"
+    role="status"
+    aria-live="polite"
+  >
+    <div class="flex flex-col items-center gap-4">
+      <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+      <i class="ti ti-loader-2 animate-spin text-2xl text-brand-500" aria-hidden="true"></i>
+      <span class="sr-only">{{ 'common.loading' | transloco }}</span>
+    </div>
+  </div>
+}

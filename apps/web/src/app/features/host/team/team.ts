@@ -31,6 +31,7 @@ import { RefetchDelay } from '@core/refetch-delay';
 import { HasPermission, SessionStore } from '@core/auth';
 import { STAFF_TABLE_COLS } from '@app/util/table-configs/staff-table-cols';
 import { PAGE_SIZE } from '@util/pagination';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Refetch key for the staff list, matching the tenants convention. */
 // Matched against the request URL with `includes`, so it has to be a fragment that actually
@@ -67,6 +68,7 @@ const EMPTY_STAFF = {
     StaffFormDrawer,
     ErrorState,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './team.html',
 })

@@ -4,7 +4,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { LocaleStore } from './locale-store';
-import { splitLocale } from './locales';
+import { DEFAULT_LOCALE, splitLocale } from './locales';
 
 /**
  * Keeps the active language in step with the URL.
@@ -34,7 +34,12 @@ export class LocaleSync {
     // language for every deep link. Applying it here is what puts the right `lang` and
     // `dir` into the server-rendered HTML, which is what a crawler and a slow connection
     // actually see.
-    this.store.apply(splitLocale(this.location.pathname).locale);
+    const entry = splitLocale(this.location.pathname);
+    // Before the first navigation, so this is the URL as this document was served. A
+    // moment later `keepLocale` will have given an unprefixed one a prefix and the
+    // question becomes unanswerable from here.
+    this.store.noteUrlNamedLanguage(entry.prefixed && !this.wasSentHere(entry.locale));
+    this.store.apply(entry.locale);
 
     this.router.events
       .pipe(
@@ -42,5 +47,34 @@ export class LocaleSync {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((e) => this.store.apply(splitLocale(e.urlAfterRedirects).locale));
+  }
+
+  /**
+   * Whether this URL is somewhere the app sent the visitor rather than somewhere they
+   * asked for.
+   *
+   * A URL with no language is redirected to one that has it — server-side, so the address
+   * bar already reads `/en/…` by the time any of this runs, and a prefix on its own can no
+   * longer tell "they asked for English" from "they asked for nothing".
+   *
+   * Only the default locale is ever redirected *to*, so every other language is decided by
+   * the prefix alone and this question never arises for them — which matters, because a
+   * shared link is almost never in the default language, and that case must not depend on
+   * anything as environment-specific as a redirect count. For the default it does, and it
+   * errs the way the old behaviour did: an English link opened from behind some other
+   * redirect (an http→https hop, say) is read as unasked-for and follows the country, as
+   * every link did before this existed.
+   */
+  private wasSentHere(locale: string): boolean {
+    if (locale !== DEFAULT_LOCALE) return false;
+    // Guarded on the method, not just the object: this runs from an app initializer, so
+    // anything thrown here takes the whole bootstrap with it, and Navigation Timing is not
+    // universal. No answer reads as "they asked for it", which is the safe way to be wrong —
+    // it leaves the URL alone rather than overriding a language somebody may have meant.
+    if (typeof performance?.getEntriesByType !== 'function') return false;
+    const [nav] = performance.getEntriesByType(
+      'navigation',
+    ) as PerformanceNavigationTiming[];
+    return (nav?.redirectCount ?? 0) > 0;
   }
 }

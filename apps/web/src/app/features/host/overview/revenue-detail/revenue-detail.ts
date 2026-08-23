@@ -20,6 +20,7 @@ import { revenueBars } from '@features/host/analytics/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -39,7 +40,7 @@ const toISO = (d: Date | undefined): string | undefined => {
 @Component({
   selector: 'app-revenue-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, DecimalPipe, Card, CompactNumber, ErrorState, Skeleton, DateRangePicker],
+  imports: [DashboardLayout, DecimalPipe, Card, CompactNumber, ErrorState, Skeleton, DateRangePicker, TranslocoPipe],
   templateUrl: './revenue-detail.html',
 })
 export class RevenueDetail {

@@ -49,6 +49,7 @@ import { utilityFilterGroups } from '@app/util/filter-configs/utility-filter-gro
 import { format, parseISO } from 'date-fns';
 import { HasPermission } from '@core/auth';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 function fmtDate(s?: string): string {
   if (!s) return '—';
@@ -85,6 +86,7 @@ interface ViewState {
     ErrorState,
     GlobalFilter,
     Skeleton,
+    TranslocoPipe,
   ],
   templateUrl: './utilities.html',
 })

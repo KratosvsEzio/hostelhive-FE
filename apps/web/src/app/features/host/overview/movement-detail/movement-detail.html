@@ -9,8 +9,8 @@
     @let s = state();
 
     <div class="mb-6">
-      <h1 class="font-display text-2xl font-semibold text-ink-900">Tenant movement</h1>
-      <p class="mt-1 text-sm text-ink-400">Move-ins and move-outs · {{ dateRange()?.label ?? 'All time' }}</p>
+      <h1 class="font-display text-2xl font-semibold text-ink-900">{{ 'common.tenantMovement' | transloco }}</h1>
+      <p class="mt-1 text-sm text-ink-400">{{ 'hostOverview.moveInsAndOuts' | transloco }} · {{ dateRange()?.label ?? ('common.allTime' | transloco) }}</p>
     </div>
 
     @if (s.loading) {
@@ -26,12 +26,12 @@
       <hh-card [allowOverflow]="true">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 class="font-display text-base font-semibold text-ink-900">Move-ins vs move-outs</h2>
+            <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostOverview.moveInsVsMoveOuts' | transloco }}</h2>
             <p class="text-xs text-ink-400">{{ dateRange()?.label ?? 'All time' }}</p>
           </div>
           <div class="flex items-center gap-4 text-xs text-ink-500">
-            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Moved in</span>
-            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>Moved out</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>{{ 'common.movedIn' | transloco }}</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>{{ 'common.movedOut' | transloco }}</span>
           </div>
         </div>
         <div class="flex h-48 items-end gap-2 sm:gap-3">
@@ -46,15 +46,15 @@
                   <p class="mb-2 text-[11px] font-semibold text-white">{{ b.month }}</p>
                   <div class="space-y-1.5 text-[11px]">
                     <div class="flex items-center justify-between gap-2">
-                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-emerald-500"></span>Moved in</span>
+                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-emerald-500"></span>{{ 'common.movedIn' | transloco }}</span>
                       <span class="font-medium text-white">{{ b.movedIn }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-2">
-                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-rose-400"></span>Moved out</span>
+                      <span class="flex items-center gap-1.5 text-ink-400"><span class="h-2 w-2 rounded-sm bg-rose-400"></span>{{ 'common.movedOut' | transloco }}</span>
                       <span class="font-medium text-white">{{ b.movedOut }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-2 border-t border-white/10 pt-1.5">
-                      <span class="text-ink-400">Net change</span>
+                      <span class="text-ink-400">{{ 'common.netChange' | transloco }}</span>
                       <span class="font-medium" [class]="b.movedIn >= b.movedOut ? 'text-emerald-400' : 'text-rose-400'">
                         {{ b.movedIn >= b.movedOut ? '+' : '' }}{{ b.movedIn - b.movedOut }}
                       </span>
@@ -79,16 +79,16 @@
       <!-- Movement table -->
       <hh-card class="mt-6" padding="none">
         <div class="border-b border-ink-100 px-5 py-3.5">
-          <h2 class="font-display text-base font-semibold text-ink-900">Monthly breakdown</h2>
+          <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostOverview.monthlyBreakdown' | transloco }}</h2>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="text-start text-xs uppercase tracking-wide text-ink-400">
               <tr>
-                <th class="px-5 py-2.5 font-medium">Month</th>
-                <th class="px-5 py-2.5 text-end font-medium">Moved in</th>
-                <th class="px-5 py-2.5 text-end font-medium">Moved out</th>
-                <th class="px-5 py-2.5 text-end font-medium">Net change</th>
+                <th class="px-5 py-2.5 font-medium">{{ 'hostOverview.month' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.movedIn' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.movedOut' | transloco }}</th>
+                <th class="px-5 py-2.5 text-end font-medium">{{ 'common.netChange' | transloco }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-ink-100">
@@ -104,7 +104,7 @@
                 </tr>
               }
               @if (tenantBars().length === 0) {
-                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">No data for the selected period.</td></tr>
+                <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-ink-400">{{ 'hostOverview.noDataForTheSelected' | transloco }}</td></tr>
               }
             </tbody>
           </table>

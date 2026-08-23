@@ -45,14 +45,14 @@
             type="button"
             class="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-surface"
             (click)="prevMonth()"
-            aria-label="Previous month"
+            [attr.aria-label]="'a11y.previousMonth' | transloco"
           ><i class="ti ti-chevron-left"></i></button>
           <p class="text-sm font-semibold text-ink-800">{{ monthLabel() }}</p>
           <button
             type="button"
             class="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-surface"
             (click)="nextMonth()"
-            aria-label="Next month"
+            [attr.aria-label]="'a11y.nextMonth' | transloco"
           ><i class="ti ti-chevron-right"></i></button>
         </div>
 
@@ -84,7 +84,7 @@
         <!-- Footer -->
         <div class="mt-3 flex min-h-[28px] items-center justify-between border-t border-ink-100 pt-2.5 text-xs">
           @if (draftStart()) {
-            <span class="text-ink-400">Now click an end date</span>
+            <span class="text-ink-400">{{ 'layoutComponents.nowClickAnEndDate' | transloco }}</span>
           } @else if (value()) {
             <span class="text-ink-500">
               {{ value()!.start | date: 'dd MMM' }} – {{ value()!.end | date: 'dd MMM yyyy' }}
@@ -93,9 +93,9 @@
               type="button"
               class="ms-2 text-ink-400 transition hover:text-ink-700"
               (click)="clearRange()"
-            >Clear</button>
+            >{{ 'common.clear' | transloco }}</button>
           } @else {
-            <span class="text-ink-400">Select a start date</span>
+            <span class="text-ink-400">{{ 'layoutComponents.selectAStartDate' | transloco }}</span>
           }
         </div>
       </div>

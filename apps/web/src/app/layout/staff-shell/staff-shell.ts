@@ -11,6 +11,7 @@ import { Permission, SessionStore } from '@core/auth';
 import { routePath } from '@core/i18n/locales';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface NavEntry {
   label?: string;
@@ -49,7 +50,7 @@ const ADMIN_NAV: NavEntry[] = [
 @Component({
   selector: 'app-staff-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TranslocoPipe],
   templateUrl: './staff-shell.html',
 })
 export class StaffLayout {
