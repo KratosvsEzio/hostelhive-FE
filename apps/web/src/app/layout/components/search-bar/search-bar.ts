@@ -30,10 +30,10 @@ type Seg = 'where' | 'budget' | 'accommodation';
 // detail read afterwards on the listing itself.
 const ACCOMMODATIONS: { v: string; l: string }[] = [
   { v: '', l: 'searchBar.anyAccommodation' },
-  { v: 'boys', l: 'searchBar.boys' },
-  { v: 'girls', l: 'searchBar.girls' },
-  { v: 'coliving', l: 'searchBar.coliving' },
-  { v: 'backpacker', l: 'searchBar.backpacker' },
+  { v: 'boys', l: 'common.boys' },
+  { v: 'girls', l: 'common.girls' },
+  { v: 'coliving', l: 'common.coLiving' },
+  { v: 'backpacker', l: 'common.backpacker' },
 ];
 /**
  * Compact budget figure for the collapsed chip: `14.76k`, `900`, `20k`.
