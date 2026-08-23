@@ -119,7 +119,7 @@ export class SearchBar {
     (): Label => {
       const lo = this.budgetLow();
       const hi = this.budgetHigh();
-      if (lo <= BUDGET_MIN && hi >= BUDGET_MAX) return { key: 'searchBar.addBudget' };
+      if (lo <= BUDGET_MIN && hi >= BUDGET_MAX) return { key: 'common.addBudget' };
       if (lo <= BUDGET_MIN) {
         return {
           key: 'searchBar.underAmount',
