@@ -51,7 +51,7 @@ const ADMIN_NAV: NavEntry[] = [
 @Component({
   selector: 'app-staff-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TooltipFixed, TranslocoPipe],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TooltipFixed],
   templateUrl: './staff-shell.html',
 })
 export class StaffLayout {

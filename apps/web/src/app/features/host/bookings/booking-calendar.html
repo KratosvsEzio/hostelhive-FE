@@ -155,7 +155,7 @@
   </div>
 
   <!-- Day ledger. Beside the grid on desktop, beneath it on a phone. -->
-  <aside class="shrink-0 border-t border-ink-100 bg-surface lg:w-80 lg:border-t-0 xl:w-96">
+  <aside class="shrink-0 border-t border-ink-100 bg-white lg:w-80 lg:border-t-0 xl:w-96">
     <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
       <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-400">Day ledger</p>
       <div class="mt-1.5 flex items-center justify-between gap-3">
@@ -223,7 +223,7 @@
     @if (needsAction().length) {
       <ul class="space-y-2 px-4 py-2 sm:px-5">
         @for (b of needsAction(); track b.id) {
-          <li class="rounded-xl border border-warn/25 bg-white p-3">
+          <li class="rounded-xl border border-warn/25 bg-warn/5 p-3">
             <div class="flex items-center gap-2.5">
               <span
                 class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-warn/15 text-[11px] font-semibold text-warn"
