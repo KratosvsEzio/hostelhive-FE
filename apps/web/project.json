@@ -168,7 +168,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "node tools/generate-analytics-env.mjs"
+        "command": "node tools/generate-google-analytics-env.mjs"
       }
     },
     "watch-api-env": {

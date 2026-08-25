@@ -8,7 +8,7 @@ export * from './listings-api';
 export * from './offers-api';
 export * from './users-api';
 export * from './admin-api';
-export * from './analytics-api';
+export * from './overview-api';
 export * from './host-property-store';
 export * from './host-ops-api';
 export * from './host-shell-api';

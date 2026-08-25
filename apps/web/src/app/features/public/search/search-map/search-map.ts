@@ -48,7 +48,7 @@ import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/locati
 import { Seo } from '@core/seo';
 import { PLACES } from '@features/public/landing/places';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
-import { AnalyticsService } from '@core/analytics/analytics.service';
+import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import { SearchFilters } from '@features/public/search/search-filters/search-filters';
@@ -158,7 +158,7 @@ export class SearchMap {
    * app-level `showSeekerTabs` condition here.
    */
   protected readonly mobile = inject(MobileApp);
-  private readonly analytics = inject(AnalyticsService);
+  private readonly analytics = inject(GoogleAnalyticsService);
   private readonly seo = inject(Seo);
   private readonly mapEl = viewChild.required<ElementRef<HTMLElement>>('mapEl');
 

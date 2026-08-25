@@ -12,9 +12,9 @@ import {
   ErrorState,
   Skeleton,
 } from '@hostelhive/ui';
-import { AnalyticsApi, HostPropertyStore } from '@services';
+import { HostPropertyStore, OverviewApi } from '@services';
 import { TenantMovement } from '@hostelhive/data-access';
-import { tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';
+import { tenantMovementBars } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
@@ -42,7 +42,7 @@ const toISO = (d: Date | undefined): string | undefined => {
   templateUrl: './movement-detail.html',
 })
 export class MovementDetail {
-  private readonly api = inject(AnalyticsApi);
+  private readonly api = inject(OverviewApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
   protected readonly dateRange = signal<DateRange | null>(

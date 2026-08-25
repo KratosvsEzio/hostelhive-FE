@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "In- en uitchecks",
     "pctBedsFilled": "Percentage bezette bedden"
   },
-  "hostAnalytics": {
-    "analytics": "Analyses",
-    "bedsFilledLast12Months": "Bezette bedden · laatste 12 maanden",
-    "sortedByOutstanding": "Gesorteerd op openstaand",
-    "lastInvoice": "Laatste factuur"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Lijst",
     "nothingHereYet": "Hier is nog niets",
     "workingOutThePenalty": "Boete wordt berekend…",
     "youReCancellingOn": "Je annuleert op",

@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "Ingressi e uscite",
     "pctBedsFilled": "Percentuale di letti occupati"
   },
-  "hostAnalytics": {
-    "analytics": "Analisi",
-    "bedsFilledLast12Months": "Letti occupati · ultimi 12 mesi",
-    "sortedByOutstanding": "Ordinato per insoluto",
-    "lastInvoice": "Ultima fattura"
-  },
   "hostBookings": {
+    "calendarTab": "Calendario",
+    "listTab": "Elenco",
     "nothingHereYet": "Ancora niente qui",
     "workingOutThePenalty": "Calcolo della penale…",
     "youReCancellingOn": "Stai annullando il",

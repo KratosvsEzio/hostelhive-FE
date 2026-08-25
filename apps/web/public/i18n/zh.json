@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "入住与退租",
     "pctBedsFilled": "床位入住率"
   },
-  "hostAnalytics": {
-    "analytics": "分析",
-    "bedsFilledLast12Months": "已占用床位 · 近 12 个月",
-    "sortedByOutstanding": "按未结金额排序",
-    "lastInvoice": "最近一张发票"
-  },
   "hostBookings": {
+    "calendarTab": "日历",
+    "listTab": "列表",
     "nothingHereYet": "这里还没有内容",
     "workingOutThePenalty": "正在计算违约金…",
     "youReCancellingOn": "您将于",

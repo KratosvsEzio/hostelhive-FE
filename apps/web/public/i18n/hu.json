@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "Beköltözések és kiköltözések",
     "pctBedsFilled": "Foglalt ágyak aránya"
   },
-  "hostAnalytics": {
-    "analytics": "Elemzések",
-    "bedsFilledLast12Months": "Foglalt ágyak · elmúlt 12 hónap",
-    "sortedByOutstanding": "Kintlévőség szerint rendezve",
-    "lastInvoice": "Utolsó számla"
-  },
   "hostBookings": {
+    "calendarTab": "Naptár",
+    "listTab": "Lista",
     "nothingHereYet": "Itt még nincs semmi",
     "workingOutThePenalty": "A kötbér kiszámítása…",
     "youReCancellingOn": "Lemondás dátuma:",

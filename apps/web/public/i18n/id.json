@@ -1017,13 +1017,9 @@
     "moveInsAndOuts": "Masuk dan keluar",
     "pctBedsFilled": "Persentase tempat tidur terisi"
   },
-  "hostAnalytics": {
-    "analytics": "Analitik",
-    "bedsFilledLast12Months": "Tempat tidur terisi · 12 bulan terakhir",
-    "sortedByOutstanding": "Diurutkan menurut tunggakan",
-    "lastInvoice": "Faktur terakhir"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Daftar",
     "nothingHereYet": "Belum ada apa-apa di sini",
     "workingOutThePenalty": "Menghitung penalti…",
     "youReCancellingOn": "Anda membatalkan pada",

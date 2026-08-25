@@ -460,13 +460,9 @@
     "statCities": "cities",
     "statSeekerRating": "seeker rating"
   },
-  "hostAnalytics": {
-    "analytics": "Analytics",
-    "bedsFilledLast12Months": "Beds filled · last 12 months",
-    "sortedByOutstanding": "Sorted by outstanding",
-    "lastInvoice": "Last invoice"
-  },
   "hostBookings": {
+    "calendarTab": "Calendar",
+    "listTab": "List",
     "nothingHereYet": "Nothing here yet",
     "workingOutThePenalty": "Working out the penalty…",
     "youReCancellingOn": "You're cancelling on",

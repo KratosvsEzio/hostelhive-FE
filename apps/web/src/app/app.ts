@@ -16,7 +16,7 @@ import { MobileApp } from '@core/mobile-app';
 import { DevSetupGate } from '@app/features/dev-setup/dev-setup-gate';
 import { devSetupPending } from '@core/dev-api-base-url';
 import { routePath } from '@core/i18n/locales';
-import { ConsentBanner } from '@core/analytics/consent-banner';
+import { ConsentBanner } from '@core/google-analytics/consent-banner';
 import { StartupGate } from '@core/startup-gate';
 import { TranslocoPipe } from '@jsverse/transloco';
 

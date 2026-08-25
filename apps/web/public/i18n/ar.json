@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "عمليات الدخول والخروج",
     "pctBedsFilled": "نسبة الأسرة المشغولة"
   },
-  "hostAnalytics": {
-    "analytics": "التحليلات",
-    "bedsFilledLast12Months": "الأسرة المشغولة · آخر 12 شهراً",
-    "sortedByOutstanding": "مرتب حسب المستحق",
-    "lastInvoice": "آخر فاتورة"
-  },
   "hostBookings": {
+    "calendarTab": "التقويم",
+    "listTab": "القائمة",
     "nothingHereYet": "لا يوجد شيء هنا بعد",
     "workingOutThePenalty": "جارٍ حساب الغرامة…",
     "youReCancellingOn": "أنت تلغي في",

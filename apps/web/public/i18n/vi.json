@@ -1017,13 +1017,9 @@
     "moveInsAndOuts": "Nhận và trả phòng",
     "pctBedsFilled": "Tỷ lệ giường đã kín"
   },
-  "hostAnalytics": {
-    "analytics": "Phân tích",
-    "bedsFilledLast12Months": "Giường đã kín · 12 tháng qua",
-    "sortedByOutstanding": "Sắp xếp theo khoản còn nợ",
-    "lastInvoice": "Hóa đơn gần nhất"
-  },
   "hostBookings": {
+    "calendarTab": "Lịch",
+    "listTab": "Danh sách",
     "nothingHereYet": "Chưa có gì ở đây",
     "workingOutThePenalty": "Đang tính phí phạt…",
     "youReCancellingOn": "Bạn đang hủy vào",

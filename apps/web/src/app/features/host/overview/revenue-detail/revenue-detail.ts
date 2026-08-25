@@ -14,9 +14,9 @@ import {
   ErrorState,
   Skeleton,
 } from '@hostelhive/ui';
-import { AnalyticsApi, HostPropertyStore } from '@services';
+import { HostPropertyStore, OverviewApi } from '@services';
 import { RevenuePoint } from '@hostelhive/data-access';
-import { revenueBars } from '@features/host/analytics/charts/chart-helpers';
+import { revenueBars } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
@@ -44,7 +44,7 @@ const toISO = (d: Date | undefined): string | undefined => {
   templateUrl: './revenue-detail.html',
 })
 export class RevenueDetail {
-  private readonly api = inject(AnalyticsApi);
+  private readonly api = inject(OverviewApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
   protected readonly dateRange = signal<DateRange | null>(

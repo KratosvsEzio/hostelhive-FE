@@ -6,7 +6,7 @@ export * from './hostel';
 export * from './user';
 export * from './offer';
 export * from './admin';
-export * from './analytics';
+export * from './overview';
 export * from './host';
 export * from './host-ops';
 export * from './moderation';

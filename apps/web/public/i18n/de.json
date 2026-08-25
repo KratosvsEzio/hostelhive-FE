@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "Ein- und Auszüge",
     "pctBedsFilled": "Anteil belegter Betten"
   },
-  "hostAnalytics": {
-    "analytics": "Analysen",
-    "bedsFilledLast12Months": "Belegte Betten · letzte 12 Monate",
-    "sortedByOutstanding": "Nach offenem Betrag sortiert",
-    "lastInvoice": "Letzte Rechnung"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Liste",
     "nothingHereYet": "Hier ist noch nichts",
     "workingOutThePenalty": "Stornogebühr wird berechnet…",
     "youReCancellingOn": "Sie stornieren am",

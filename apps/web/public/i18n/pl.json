@@ -1017,13 +1017,9 @@
     "moveInsAndOuts": "Wprowadzki i wyprowadzki",
     "pctBedsFilled": "Odsetek zajętych łóżek"
   },
-  "hostAnalytics": {
-    "analytics": "Analityka",
-    "bedsFilledLast12Months": "Zajęte łóżka · ostatnie 12 miesięcy",
-    "sortedByOutstanding": "Sortowane według zaległości",
-    "lastInvoice": "Ostatnia faktura"
-  },
   "hostBookings": {
+    "calendarTab": "Kalendarz",
+    "listTab": "Lista",
     "nothingHereYet": "Jeszcze nic tu nie ma",
     "workingOutThePenalty": "Obliczanie kary…",
     "youReCancellingOn": "Anulujesz w dniu",

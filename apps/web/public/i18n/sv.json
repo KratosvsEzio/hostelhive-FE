@@ -1012,13 +1012,9 @@
     "moveInsAndOuts": "In- och utflyttningar",
     "pctBedsFilled": "Andel upptagna sängar"
   },
-  "hostAnalytics": {
-    "analytics": "Analyser",
-    "bedsFilledLast12Months": "Upptagna sängar · senaste 12 månaderna",
-    "sortedByOutstanding": "Sorterat efter utestående",
-    "lastInvoice": "Senaste fakturan"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Lista",
     "nothingHereYet": "Inget här ännu",
     "workingOutThePenalty": "Beräknar avgiften…",
     "youReCancellingOn": "Du avbokar den",

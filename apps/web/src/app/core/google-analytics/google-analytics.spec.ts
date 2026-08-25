@@ -1,10 +1,10 @@
-import { isMarketplacePath } from './analytics.service';
+import { isMarketplacePath } from './google-analytics.service';
 import {
-  analyticsConsent,
-  clearAnalyticsConsent,
-  restoreAnalyticsConsent,
-  setAnalyticsConsent,
-} from './analytics-consent';
+  googleAnalyticsConsent,
+  clearGoogleAnalyticsConsent,
+  restoreGoogleAnalyticsConsent,
+  setGoogleAnalyticsConsent,
+} from './google-analytics-consent';
 
 describe('isMarketplacePath', () => {
   it('counts the public seeker pages', () => {
@@ -55,33 +55,33 @@ describe('isMarketplacePath', () => {
 });
 
 describe('analytics consent', () => {
-  afterEach(() => clearAnalyticsConsent());
+  afterEach(() => clearGoogleAnalyticsConsent());
 
   it('starts unset, so the banner asks rather than assuming', () => {
-    clearAnalyticsConsent();
-    restoreAnalyticsConsent();
-    expect(analyticsConsent()).toBe('unset');
+    clearGoogleAnalyticsConsent();
+    restoreGoogleAnalyticsConsent();
+    expect(googleAnalyticsConsent()).toBe('unset');
   });
 
   it('persists a grant across a reload', () => {
-    setAnalyticsConsent('granted');
-    analyticsConsent.set('unset'); // simulate a fresh boot
-    restoreAnalyticsConsent();
-    expect(analyticsConsent()).toBe('granted');
+    setGoogleAnalyticsConsent('granted');
+    googleAnalyticsConsent.set('unset'); // simulate a fresh boot
+    restoreGoogleAnalyticsConsent();
+    expect(googleAnalyticsConsent()).toBe('granted');
   });
 
   // A decline has to persist too — otherwise the banner reappears every visit and the
   // "No thanks" is a dismissal rather than an answer.
   it('persists a decline across a reload', () => {
-    setAnalyticsConsent('denied');
-    analyticsConsent.set('unset');
-    restoreAnalyticsConsent();
-    expect(analyticsConsent()).toBe('denied');
+    setGoogleAnalyticsConsent('denied');
+    googleAnalyticsConsent.set('unset');
+    restoreGoogleAnalyticsConsent();
+    expect(googleAnalyticsConsent()).toBe('denied');
   });
 
   it('treats a corrupted stored value as unanswered', () => {
     localStorage.setItem('hh.consent.analytics', 'maybe');
-    restoreAnalyticsConsent();
-    expect(analyticsConsent()).toBe('unset');
+    restoreGoogleAnalyticsConsent();
+    expect(googleAnalyticsConsent()).toBe('unset');
   });
 });

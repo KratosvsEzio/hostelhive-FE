@@ -1017,13 +1017,9 @@
     "moveInsAndOuts": "آمد و رخصتی",
     "pctBedsFilled": "بھرے ہوئے بستروں کا تناسب"
   },
-  "hostAnalytics": {
-    "analytics": "اینالیٹکس",
-    "bedsFilledLast12Months": "بھرے بستر · گزشتہ 12 ماہ",
-    "sortedByOutstanding": "واجب الادا کے لحاظ سے ترتیب",
-    "lastInvoice": "آخری انوائس"
-  },
   "hostBookings": {
+    "calendarTab": "کیلنڈر",
+    "listTab": "فہرست",
     "nothingHereYet": "ابھی یہاں کچھ نہیں",
     "workingOutThePenalty": "جرمانہ نکالا جا رہا ہے…",
     "youReCancellingOn": "آپ منسوخ کر رہے ہیں",

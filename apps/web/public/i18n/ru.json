@@ -1017,13 +1017,9 @@
     "moveInsAndOuts": "Заселения и выезды",
     "pctBedsFilled": "Доля занятых мест"
   },
-  "hostAnalytics": {
-    "analytics": "Аналитика",
-    "bedsFilledLast12Months": "Занятые места · последние 12 месяцев",
-    "sortedByOutstanding": "Сортировка по задолженности",
-    "lastInvoice": "Последний счёт"
-  },
   "hostBookings": {
+    "calendarTab": "Календарь",
+    "listTab": "Список",
     "nothingHereYet": "Здесь пока пусто",
     "workingOutThePenalty": "Расчёт штрафа…",
     "youReCancellingOn": "Вы отменяете",

@@ -20,7 +20,7 @@ import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
-import { AnalyticsService } from '@core/analytics/analytics.service';
+import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { periodForAccommodation } from '@util/pricing-period';
 import { BookingBasket } from '../booking/booking-basket';
 import { BookingRail } from '../booking/booking-rail';
@@ -121,7 +121,7 @@ export class ListingDetail {
   private readonly seo = inject(Seo);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleStore);
-  private readonly analytics = inject(AnalyticsService);
+  private readonly analytics = inject(GoogleAnalyticsService);
 
   protected readonly phoneValue = signal<string | null>(null);
   protected readonly phoneLoading = signal(false);
