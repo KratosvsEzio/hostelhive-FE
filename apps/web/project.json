@@ -8,7 +8,7 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env", "i18n-check"],
+      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-google-analytics-env", "i18n-check"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/web",
@@ -58,7 +58,7 @@
     },
     "build-mobile": {
       "executor": "@angular/build:application",
-      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env", "i18n-check"],
+      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-google-analytics-env", "i18n-check"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/web-mobile",
@@ -119,7 +119,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
-      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-analytics-env"],
+      "dependsOn": ["sync-api-env", "sync-oauth-env", "sync-google-analytics-env"],
       "configurations": {
         "production": {
           "buildTarget": "web:build:production"
@@ -164,7 +164,7 @@
         "command": "node tools/i18n-check.mjs"
       }
     },
-    "sync-analytics-env": {
+    "sync-google-analytics-env": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
