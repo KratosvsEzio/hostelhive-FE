@@ -27,10 +27,23 @@ export class Tooltip {
   host: {
     '(mouseenter)': 'show()',
     '(mouseleave)': 'hide()',
+    // Focus as well as hover, so the tooltip is reachable by keyboard. It is often the only
+    // place an abbreviation is expanded, and hover cannot be the sole route to a meaning.
+    '(focus)': 'show()',
+    '(blur)': 'hide()',
   },
 })
 export class TooltipFixed implements OnDestroy {
   readonly hhTooltip = input('');
+
+  /**
+   * Which side the bubble sits on.
+   *
+   * Above suits a label under an icon in a row. Beside suits a vertical rail, where "above"
+   * lands on the previous item and reads as belonging to that one instead.
+   */
+  readonly hhTooltipPlacement = input<'top' | 'right'>('top');
+
 
   private readonly el = inject(ElementRef<HTMLElement>);
   private popup: HTMLDivElement | null = null;
@@ -43,12 +56,23 @@ export class TooltipFixed implements OnDestroy {
     const div = document.createElement('div');
     div.textContent = text;
 
+    const place =
+      this.hhTooltipPlacement() === 'right'
+        ? {
+            left: `${rect.right + 8}px`,
+            top: `${rect.top + rect.height / 2}px`,
+            transform: 'translateY(-50%)',
+          }
+        : {
+            left: `${rect.left + rect.width / 2}px`,
+            top: `${rect.top - 8}px`,
+            transform: 'translateX(-50%) translateY(-100%)',
+          };
+
     Object.assign(div.style, {
       position:     'fixed',
       zIndex:       '9999',
-      left:         `${rect.left + rect.width / 2}px`,
-      top:          `${rect.top - 8}px`,
-      transform:    'translateX(-50%) translateY(-100%)',
+      ...place,
       background:   '#1f1f1f',
       color:        '#fff',
       fontSize:     '11px',

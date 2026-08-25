@@ -8,15 +8,25 @@ import {
 
 describe('localeForCountry', () => {
   it('maps a country to the language most of its readers use', () => {
-    expect(localeForCountry('PK')).toBe('ur');
     expect(localeForCountry('DE')).toBe('de');
     expect(localeForCountry('JP')).toBe('ja');
     expect(localeForCountry('MX')).toBe('es');
   });
 
   it('accepts whatever case the geo service sends', () => {
-    expect(localeForCountry('pk')).toBe('ur');
+    expect(localeForCountry('jp')).toBe('ja');
     expect(localeForCountry(' De ')).toBe('de');
+  });
+
+  /**
+   * Pakistan is the one country that reads as a deletion rather than an omission, so it is
+   * asserted by name: `ur` is still a shipped language with an entry in the table, and only
+   * the country list under it is empty. A future edit that "restores" PK there would look
+   * like a fix and would silently put every first-time Pakistani visitor back into Urdu.
+   */
+  it('opens in English for Pakistan, which is a decision and not a gap', () => {
+    expect(localeForCountry('PK')).toBe('en');
+    expect(localeForCountry('pk')).toBe('en');
   });
 
   // The requirement: no language for the country means English, not nothing.
@@ -111,6 +121,13 @@ describe('resolving a visitor', () => {
   it('Thailand gets English, because there is no Thai — but still baht', () => {
     expect(localeForCountry('TH')).toBe('en');
     expect(currencyForCountry('TH')).toBe('THB');
+  });
+
+  // The same independence, but where the app *does* ship the local language and chooses
+  // not to assume it. The money is not a guess about a person, so it is unaffected.
+  it('Pakistan gets English, though Urdu is offered — and rupees either way', () => {
+    expect(localeForCountry('PK')).toBe('en');
+    expect(currencyForCountry('PK')).toBe('PKR');
   });
 
   it('a country with neither gets English and dollars', () => {

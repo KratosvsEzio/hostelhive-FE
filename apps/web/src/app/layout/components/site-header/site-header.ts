@@ -13,10 +13,8 @@ import { AccountMenu } from '../account-menu/account-menu';
 import { NotificationBell } from '../notification-bell/notification-bell';
 import { LanguageSwitcher } from '@core/i18n/language-switcher';
 import { routePath } from '@core/i18n/locales';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { Area, areaOf } from '@layout/area';
 import { LocaleLink } from '@core/i18n/locale-link';
-
-type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 
 /**
  * The one site header, shared by every area. The logo + chrome stay identical
@@ -30,7 +28,7 @@ type Area = 'seeker' | 'host' | 'admin' | 'moderator' | 'auth';
 @Component({
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, 
+  imports: [
     RouterLink, LocaleLink,
     SearchBar,
     AccountMenu,
@@ -57,18 +55,8 @@ export class SiteHeader {
     },
   );
 
-  /** Which area the active route belongs to — drives the action buttons. */
-  protected readonly area = computed<Area>(() => {
-    const u = this.path() || '/';
-    if (u.startsWith('/admin')) return 'admin';
-    if (u.startsWith('/moderator')) return 'moderator';
-    // Exact `/host` or `/host/...` only — must NOT swallow the public `/hostel/:id` listing
-    // pages (which start with "/host" but belong to the seeker area).
-    if (u === '/host' || u.startsWith('/host/')) return 'host';
-    if (u.startsWith('/auth') || u.startsWith('/confirm_invitation'))
-      return 'auth';
-    return 'seeker';
-  });
+  /** Which area the active route belongs to — now only drives the logo's destination. */
+  protected readonly area = computed<Area>(() => areaOf(this.path()));
   protected readonly showSearchBar = computed(() => {
     const u = this.path() || '/';
     return u === '/' || u.startsWith('/search');

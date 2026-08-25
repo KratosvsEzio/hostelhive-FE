@@ -1,0 +1,206 @@
+<hh-drawer heading="Record a booking" widthClass="max-w-xl" (closed)="closed.emit()">
+  <div class="space-y-5">
+    <!-- Says up front what this creates, because "booking" on its own implies a paid one. -->
+    <p class="flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-sm text-ink-700">
+      <i class="ti ti-info-circle mt-0.5 shrink-0" aria-hidden="true"></i>
+      <span>
+        Saved as <strong>unconfirmed</strong> — no deposit is taken and nothing is charged.
+        Use it for walk-ins and phone bookings.
+      </span>
+    </p>
+
+    <section>
+      <h3 class="mb-2 text-sm font-semibold text-ink-900">Guest</h3>
+      <div class="space-y-3">
+        <hh-input
+          label="Full name"
+          placeholder="Who is staying"
+          [value]="guestName()"
+          (valueChange)="guestName.set($event)"
+        />
+        <div class="grid gap-3 sm:grid-cols-2">
+          <hh-phone-input label="Phone" [phone]="guestPhone()" (phoneChange)="guestPhone.set($event)" />
+          <hh-input
+            label="Email · optional"
+            type="email"
+            placeholder="Only if they have one"
+            [value]="guestEmail()"
+            (valueChange)="guestEmail.set($event)"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h3 class="mb-2 text-sm font-semibold text-ink-900">Stay</h3>
+      <!-- One control for both ends: a stay is a range, and picking it as one is what stops a
+           check-out landing before its check-in rather than scolding the host afterwards. -->
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div class="sm:col-span-2">
+          <p class="mb-1 text-xs font-medium text-ink-600">Check in — check out</p>
+          <hh-date-range-picker
+            variant="field"
+            [from]="checkIn()"
+            [to]="checkOut()"
+            (rangeChange)="onRangePicked($event)"
+          />
+        </div>
+        <hh-input
+          label="Guests"
+          type="number"
+          [value]="guests() + ''"
+          (valueChange)="guests.set(+$event || 1)"
+        />
+      </div>
+      @if (nights() > 0) {
+        <p class="mt-1.5 text-xs text-ink-400">
+          {{ (nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: nights() } }}
+        </p>
+      }
+
+      <!-- Beside the dates rather than at the top of the form, because it answers a question
+           the dates raise: two calendar days is one night, and a host counting days rather
+           than nights would charge for one more than the guest is staying. -->
+      <p class="mt-2 flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-xs text-ink-500">
+        <i class="ti ti-clock-hour-12 mt-0.5 shrink-0" aria-hidden="true"></i>
+        <span>A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.</span>
+      </p>
+    </section>
+
+    <section>
+      <h3 class="mb-2 text-sm font-semibold text-ink-900">Rooms</h3>
+
+      @let s = state();
+      @if (!datesValid()) {
+        <p class="rounded-xl border border-dashed border-ink-200 px-3 py-4 text-center text-sm text-ink-400">
+          Pick the dates first — what is free depends on them.
+        </p>
+      } @else if (s.loading) {
+        <div class="space-y-2">
+          @for (i of [1, 2, 3]; track i) {
+            <hh-skeleton class="block h-14 w-full" radius="lg" />
+          }
+        </div>
+      } @else if (s.error) {
+        <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">{{ s.error }}</p>
+      } @else if (!s.rooms.length) {
+        <p class="rounded-xl border border-dashed border-ink-200 px-3 py-4 text-center text-sm text-ink-400">
+          No rooms on this property yet.
+        </p>
+      } @else {
+        <!-- A picker rather than the whole list laid out: a property with forty rooms turned
+             this section into most of the form, and the host already knows which room they
+             are putting someone in — they need to find it, not read all of them. -->
+        <hh-dropdown
+          variant="field"
+          [options]="roomOptions()"
+          [multiple]="true"
+          [searchable]="true"
+          [value]="pickedIds()"
+          (valueChange)="onRoomsPicked($event)"
+          (searchChange)="roomQuery.set($event)"
+          placeholder="Add a room"
+        />
+
+        <!-- Only what has been chosen. The count belongs here rather than in the picker: a
+             dropdown that closes on select is a bad place to type a number into. -->
+        <ul class="mt-2 space-y-2">
+          @for (l of lines(); track l.room.id) {
+            @let r = l.room;
+            <li
+              class="flex items-center justify-between gap-3 rounded-xl border border-ink-900 px-3 py-2.5 transition"
+            >
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-ink-900">{{ r.title }}</p>
+                <p class="mt-0.5 text-xs text-ink-500 tabular-nums">
+                  {{ r.kind === 'private' ? 'Whole room' : 'Per bed' }} ·
+                  Rs {{ r.price | number: '1.0-0' }} · {{ r.available }} free
+                </p>
+              </div>
+              <!-- Capped at what is free, so the field cannot express an oversell.
+
+                   Sized by the wrapper rather than the input: `.hh-input` sets width:100%
+                   at the same specificity as a Tailwind width, and wins on source order —
+                   so `w-20` on the input itself is ignored and the field swallows the row,
+                   squeezing the room's name and price into a column a few characters wide. -->
+              <div class="w-20 shrink-0">
+                <input
+                  type="number"
+                  class="hh-input text-center tabular-nums"
+                  min="0"
+                  [max]="r.available"
+                  [disabled]="r.available === 0"
+                  [value]="qty(r.id)"
+                  (input)="setQty(r, $any($event.target).value)"
+                  [attr.aria-label]="'How many of ' + r.title"
+                />
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    @if (lines().length) {
+      <section class="rounded-xl bg-surface px-3 py-3">
+        <!-- Rent, then what came off it, then what is actually collected. Shown as three
+             lines rather than one figure because a host reads this out to the guest, and
+             "why is it that much" is the next thing they are asked. -->
+        <div class="flex items-baseline justify-between text-sm text-ink-600">
+          <span>
+            Rooms ·
+            {{ (nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: nights() } }}
+          </span>
+          <span class="tabular-nums">Rs {{ subtotal() | number: '1.0-0' }}</span>
+        </div>
+
+        <div class="mt-2 flex items-center justify-between gap-3">
+          <label class="text-sm text-ink-600" for="hh-booking-discount">Discount</label>
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm text-ink-400">Rs</span>
+            <!-- Wrapper-sized for the same reason as the room counts: `.hh-input` forces
+                 width:100% and beats a width utility on the input itself. -->
+            <div class="w-28">
+              <input
+                id="hh-booking-discount"
+                type="number"
+                class="hh-input text-end tabular-nums"
+                min="0"
+                [max]="subtotal()"
+                [value]="discount()"
+                (input)="setDiscount($any($event.target).value)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-baseline justify-between border-t border-ink-100 pt-3">
+          <span class="text-sm font-medium text-ink-700">To collect at the desk</span>
+          <span class="text-lg font-semibold text-ink-900 tabular-nums">
+            Rs {{ total() | number: '1.0-0' }}
+          </span>
+        </div>
+        <!-- Sleeping places against headcount. A note, not a rule — see the component. -->
+        @if (guests() > capacity()) {
+          <p class="mt-1.5 flex items-start gap-1.5 text-xs text-ink-500">
+            <i class="ti ti-alert-triangle mt-0.5 shrink-0" aria-hidden="true"></i>
+            <span>{{ guests() }} guests, {{ capacity() }} sleeping {{ capacity() === 1 ? 'place' : 'places' }} picked.</span>
+          </p>
+        }
+      </section>
+    }
+
+    @if (saveError()) {
+      <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">{{ saveError() }}</p>
+    }
+  </div>
+
+  <ng-container footer>
+    <button hh-button variant="text" size="sm" [disabled]="saving()" (click)="closed.emit()">
+      {{ 'common.cancel' | transloco }}
+    </button>
+    <button hh-button color="primary" [loading]="saving()" [disabled]="!canSave()" (click)="save()">
+      Save booking
+    </button>
+  </ng-container>
+</hh-drawer>

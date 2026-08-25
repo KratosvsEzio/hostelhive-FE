@@ -318,6 +318,73 @@ body {
   color: #f36e21;
 }
 
+/**
+ * The same nav link with the label taken away.
+ *
+ * A modifier rather than a second class so the two states cannot drift: hover, active and
+ * the brand tint are all still inherited from `.nav-link`, and only the box changes. The
+ * icon centres and the row stays 40px tall, which keeps the rail's rhythm identical to the
+ * expanded sidebar’s — the links do not appear to move when it opens.
+ */
+.nav-link--rail {
+  justify-content: center;
+  gap: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/**
+ * A day with beds still waiting to be assigned.
+ *
+ * A pulse instead of a count badge. On a phone the cell is about 48px wide and already
+ * carries a date and an occupancy bar; a badge crowded the one number a host is reading and
+ * competed with the date for the same corner. Motion catches the eye without taking any
+ * space, and the exact count stays a tap away in the day ledger.
+ *
+ * Shaped so the eye catches it without the page feeling urgent: it rises over the first
+ * third, rests briefly, then fades over the rest. The tint is deliberately faint — across a
+ * desktop cell eight times the height of a phone one, the same alpha covers enough area to
+ * stop being a hint and start being a warning.
+ *
+ * At every screen size, not only the phone. Unassigned beds are the one thing on this
+ * calendar with a job still attached, and a host scanning a monitor needs to find them as
+ * readily as one glancing at a phone — the desktop cell names the count in its ledger, but
+ * that is something you read rather than something you notice.
+ */
+@keyframes hh-pending-pulse {
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgba(243, 110, 33, 0.17);
+  }
+  45% {
+    background-color: rgba(243, 110, 33, 0.17);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.hh-pending-pulse {
+  animation: hh-pending-pulse 1.6s ease-in-out infinite;
+}
+
+
+/**
+ * Motion is the delivery, not the message.
+ *
+ * With animation turned off the same days stay marked, just still — otherwise a reader who
+ * asked for less motion would get no signal at all, which is the one outcome worse than a
+ * badge.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .hh-pending-pulse {
+    animation: none;
+    background-color: rgba(243, 110, 33, 0.13);
+  }
+}
+
 /* Icon tooltip — show data-tip text on hover */
 .tip {
   position: relative;
@@ -460,6 +527,23 @@ hh-search-map {
   position: sticky;
   top: var(--hh-header-top, 0px);
   z-index: 20;
+}
+
+/**
+ * A bed sold twice.
+ *
+ * Hatched rather than just red because red alone is the same signal the app uses for a
+ * destructive control, and because a colour-blind reader gets nothing from it — the stripes
+ * carry the meaning where the hue cannot.
+ */
+.hh-pip-clash {
+  background: repeating-linear-gradient(
+    45deg,
+    #c0392b,
+    #c0392b 2px,
+    #f0bfb8 2px,
+    #f0bfb8 4px
+  );
 }
 
 /* Form controls (account + other forms) */

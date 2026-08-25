@@ -43,10 +43,27 @@ export interface CellPill {
   tone: 'ok' | 'warn' | 'danger' | 'neutral';
 }
 
+/**
+ * A filled status chip.
+ *
+ * The shape — padding, radius, size, weight — is the table's, so every badge in the app is
+ * the same object and a caller cannot make one by accident. `class` supplies **colour only**
+ * (`bg-warn/10 text-warn`); passing chrome there fights the chrome already applied, and the
+ * winner is whichever Tailwind emitted last.
+ */
 export interface CellBadge {
   kind: 'badge';
   text: string;
+  /** Background + text colour, e.g. `bg-ok/10 text-ok`. Not padding or radius. */
   class: string;
+  /**
+   * A colour dot before the text, e.g. `bg-warn`.
+   *
+   * Worth setting wherever the same column carries several states: the colours differ by
+   * hue, and hue alone is the one distinction a red-green colourblind reader does not get.
+   * The dot adds a second, positional cue at no cost in width.
+   */
+  dot?: string;
 }
 
 export interface CellIconText {
@@ -79,6 +96,17 @@ export interface CellComposite {
    * renders exactly as before.
    */
   badge?: { text: string; class?: string };
+  /**
+   * The same pill, on the second line and *before* the text rather than after it.
+   *
+   * For a state that qualifies the secondary value rather than the row — "Due" in front of
+   * what is owed. Putting it beside the primary instead would attach it to the total, which
+   * is the one number on the row it is not describing.
+   *
+   * Renders the second line even when there is no `secondary` text, so a row whose state
+   * needs no figure ("Paid") still carries its pill in the same place as every other row.
+   */
+  secondaryBadge?: { text: string; class?: string };
 }
 
 export interface CellLink {
@@ -293,16 +321,19 @@ export interface PaginationConfig {
                                   <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
                                 }
                               </p>
-                              @if ($any(cell).secondary) {
+                              @if ($any(cell).secondary || $any(cell).secondaryBadge) {
                                 <p
                                   class="text-xs text-ink-400"
-                                  [class.flex]="$any(cell).secondaryIcon"
-                                  [class.items-center]="$any(cell).secondaryIcon"
-                                  [class.gap-1]="$any(cell).secondaryIcon"
+                                  [class.flex]="$any(cell).secondaryIcon || $any(cell).secondaryBadge"
+                                  [class.items-center]="$any(cell).secondaryIcon || $any(cell).secondaryBadge"
+                                  [class.gap-1]="$any(cell).secondaryIcon || $any(cell).secondaryBadge"
                                 >
                                   @if ($any(cell).secondaryIcon) {
                                     <i class="ti {{ $any(cell).secondaryIcon }} {{ $any(cell).secondaryIconClass }} shrink-0 text-[11px]" aria-hidden="true"></i>
                                     <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
+                                  }
+                                  @if ($any(cell).secondaryBadge; as sBadge) {
+                                    <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ sBadge.class || 'bg-brand-50 text-brand-600' }}">{{ sBadge.text }}</span>
                                   }
                                   {{ $any(cell).secondary }}
                                 </p>
@@ -339,7 +370,19 @@ export interface PaginationConfig {
                           }
 
                           @case ('badge') {
-                            <span [class]="$any(cell).class">{{ $any(cell).text }}</span>
+                            <span
+                              class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold leading-none"
+                              [class]="$any(cell).class"
+                            >
+                              @if ($any(cell).dot) {
+                                <span
+                                  class="h-1.5 w-1.5 shrink-0 rounded-full"
+                                  [class]="$any(cell).dot"
+                                  aria-hidden="true"
+                                ></span>
+                              }
+                              {{ $any(cell).text }}
+                            </span>
                           }
 
                           @case ('icon-text') {
@@ -357,16 +400,19 @@ export interface PaginationConfig {
                                   <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
                                 }
                               </p>
-                              @if ($any(cell).secondary) {
+                              @if ($any(cell).secondary || $any(cell).secondaryBadge) {
                                 <p
                                   class="text-xs text-ink-400"
-                                  [class.flex]="$any(cell).secondaryIcon"
-                                  [class.items-center]="$any(cell).secondaryIcon"
-                                  [class.gap-1]="$any(cell).secondaryIcon"
+                                  [class.flex]="$any(cell).secondaryIcon || $any(cell).secondaryBadge"
+                                  [class.items-center]="$any(cell).secondaryIcon || $any(cell).secondaryBadge"
+                                  [class.gap-1]="$any(cell).secondaryIcon || $any(cell).secondaryBadge"
                                 >
                                   @if ($any(cell).secondaryIcon) {
                                     <i class="ti {{ $any(cell).secondaryIcon }} {{ $any(cell).secondaryIconClass }} shrink-0 text-[11px]" aria-hidden="true"></i>
                                     <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
+                                  }
+                                  @if ($any(cell).secondaryBadge; as sBadge) {
+                                    <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ sBadge.class || 'bg-brand-50 text-brand-600' }}">{{ sBadge.text }}</span>
                                   }
                                   {{ $any(cell).secondary }}
                                 </p>

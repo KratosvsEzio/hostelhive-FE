@@ -7,6 +7,7 @@
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
+import { TooltipFixed } from '@hostelhive/ui';
 import { Permission, SessionStore } from '@core/auth';
 import { routePath } from '@core/i18n/locales';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
@@ -50,7 +51,7 @@ const ADMIN_NAV: NavEntry[] = [
 @Component({
   selector: 'app-staff-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TranslocoPipe],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TooltipFixed, TranslocoPipe],
   templateUrl: './staff-shell.html',
 })
 export class StaffLayout {
@@ -58,14 +59,11 @@ export class StaffLayout {
   private readonly router = inject(Router);
   protected readonly drawer = inject(ConsoleDrawer);
 
-  private readonly onDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
-  protected readonly contentPadding = computed(() => this.drawer.open() && this.onDesktop ? '16rem' : '0');
+  /** Follows the sidebar's own width, so the rail does not leave 192px of empty gutter. */
+  protected readonly contentPadding = computed(() =>
+    this.drawer.width_(),
+  );
 
-  protected closeOnMobile(): void {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      this.drawer.close();
-    }
-  }
   protected readonly user = this.session.user;
 
   private readonly path = toSignal(

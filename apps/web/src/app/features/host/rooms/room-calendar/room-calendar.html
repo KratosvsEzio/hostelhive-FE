@@ -1,134 +1,275 @@
-<section class="rounded-2xl border border-ink-100 p-4">
-  <div class="flex items-center justify-between gap-3">
-    <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'common.bookings' | transloco }}</h2>
-    <div class="flex items-center gap-1">
-      <button
-        type="button"
-        class="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-        [attr.aria-label]="'a11y.previousMonth' | transloco"
-        (click)="step(-1)"
+<section class="overflow-hidden rounded-2xl border border-ink-100 bg-white">
+  <!-- Grid and roster sit side by side from xl: up, not lg:. The host sidebar takes 256px, so a
+       1024px viewport leaves the card 720px — the 640px grid and the 320px panel do not
+       both fit, and the grid would scroll inside itself while the panel squeezed it. Below
+       that the panel stacks under the month, where it is still whole. -->
+  <div class="flex flex-col xl:flex-row">
+    <div class="min-w-0 flex-1 xl:border-e xl:border-ink-100">
+      <div class="flex items-start justify-between gap-4 border-b border-ink-100 px-4 py-3.5">
+        <div>
+          <h2 class="font-display text-base font-semibold text-ink-900">
+            {{ 'common.bookings' | transloco }}
+          </h2>
+          <p class="mt-1 text-xs text-ink-400">
+            @if (isPrivate()) {
+              Sold as one unit · whole-room bookings only
+            } @else {
+              {{ capacity() }} beds · sold by the bed
+            }
+          </p>
+        </div>
+        <div class="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-surface"
+            [attr.aria-label]="'a11y.previousMonth' | transloco"
+            (click)="step(-1)"
+          >
+            <span class="ti ti-chevron-left text-sm" aria-hidden="true"></span>
+          </button>
+          <span class="min-w-[11ch] text-center text-sm font-semibold text-ink-900">
+            {{ monthLabel() }}
+          </span>
+          <button
+            type="button"
+            class="grid h-8 w-8 place-items-center rounded-lg border border-ink-200 text-ink-600 transition hover:bg-surface"
+            [attr.aria-label]="'a11y.nextMonth' | transloco"
+            (click)="step(1)"
+          >
+            <span class="ti ti-chevron-right text-sm" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bed ruler + legend. A private room has one unit and no ruler: numbering a single
+           bed implies there is another one to tell it apart from. -->
+      <div
+        class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-ink-100 bg-surface px-4 py-2"
       >
-        <span class="ti ti-chevron-left" aria-hidden="true"></span>
-      </button>
-      <span class="min-w-[9ch] text-center text-sm font-semibold text-ink-900">
-        {{ monthLabel() | date: 'MMMM yyyy' }}
-      </span>
-      <button
-        type="button"
-        class="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-        [attr.aria-label]="'a11y.nextMonth' | transloco"
-        (click)="step(1)"
-      >
-        <span class="ti ti-chevron-right" aria-hidden="true"></span>
-      </button>
-    </div>
-  </div>
+        @if (showBedRuler()) {
+          <div class="flex items-center gap-2">
+            <span class="text-[9.5px] font-semibold uppercase tracking-widest text-ink-400">Bed</span>
+            <div class="flex gap-[3px]">
+              @for (b of bedRuler(); track b) {
+                <span class="w-[15px] text-center text-[9px] font-semibold tabular-nums text-ink-400">{{ b }}</span>
+              }
+            </div>
+          </div>
+        }
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium text-ink-500">
+          <span class="flex items-center gap-1.5">
+            <span class="h-2.5 w-4 rounded-sm bg-ink-100"></span> free
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="h-2.5 w-4 rounded-sm bg-[#5B5FA8]"></span> taken
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="hh-pip-clash h-2.5 w-4 rounded-sm"></span> oversold
+          </span>
+        </div>
+      </div>
 
-  <!-- Three states, because two cannot describe a dorm. -->
-  <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-500">
-    <span class="flex items-center gap-1.5">
-      <span class="h-3 w-4 rounded border border-emerald-600 bg-tint-mint"></span> {{ 'hostRooms.available' | transloco }}
-    </span>
-    <span class="flex items-center gap-1.5">
-      <span class="h-3 w-4 rounded border border-amber-600 bg-tint-cream"></span> {{ 'hostRooms.partlyBooked' | transloco }}
-    </span>
-    <span class="flex items-center gap-1.5">
-      <span class="h-3 w-4 rounded border border-brand-500 bg-brand-100"></span> {{ 'hostRooms.booked' | transloco }}
-    </span>
-  </div>
+      @if (loading()) {
+        <div class="p-4">
+          <hh-skeleton class="block h-[420px] w-full" radius="lg" />
+        </div>
+      } @else if (error()) {
+        <p class="p-8 text-center text-sm text-ink-400">
+          {{ 'common.weCouldnTLoad2' | transloco }}
+        </p>
+      } @else {
+        <!-- A phone gets the month as a month: seven columns that fit, no sideways scroll.
+             The 640px floor and the week roll-up beside it are both desktop affordances —
+             below xl there is no room for an eighth column, and a month you have to scroll
+             horizontally is one you cannot read at a glance, which is the only reason to
+             draw a month rather than a list. -->
+        <div class="xl:overflow-x-auto">
+          <div class="xl:min-w-[640px]">
+            <div class="grid grid-cols-7 border-b border-ink-100 py-2 xl:grid-cols-[repeat(7,1fr)_76px]">
+              @for (w of weekdays(); track $index; let i = $index) {
+                <div class="text-center text-[10px] font-semibold uppercase tracking-widest text-ink-400">
+                  <span class="xl:hidden">{{ weekdaysNarrow()[i] }}</span>
+                  <span class="hidden xl:inline">{{ w }}</span>
+                </div>
+              }
+              <div class="hidden text-center text-[10px] font-semibold uppercase tracking-widest text-ink-300 xl:block">
+                Week
+              </div>
+            </div>
 
-  @if (loading()) {
-    <hh-skeleton class="mt-4 block h-64 w-full rounded-xl" />
-  } @else if (error()) {
-    <p class="mt-4 rounded-xl bg-ink-50 px-4 py-6 text-center text-sm text-ink-500">
-      {{ 'hostRooms.weCouldnTLoadThis' | transloco }}
-    </p>
-  } @else {
-    <div class="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-medium text-ink-400">
-      @for (d of weekdays; track d) {
-        <span>{{ d }}</span>
-      }
-    </div>
+            @for (week of weeks(); track $index) {
+              <div class="grid grid-cols-7 xl:grid-cols-[repeat(7,1fr)_76px]">
+                @for (d of week.days; track $index) {
+                  @if (!d.date) {
+                    <div class="min-h-[62px] border-b border-e border-ink-100 bg-surface/40 xl:min-h-[86px]"></div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="min-h-[62px] border-b border-e border-ink-100 px-1 pb-1.5 pt-1 text-start transition hover:bg-surface xl:min-h-[86px] xl:px-2 xl:pb-2 xl:pt-1.5"
+                      [class.bg-brand-50]="d.date === selected()"
+                      [class.ring-1]="d.date === selected()"
+                      [class.ring-inset]="d.date === selected()"
+                      [class.ring-brand-400]="d.date === selected()"
+                      [attr.aria-pressed]="d.date === selected()"
+                      (click)="select(d.date)"
+                    >
+                      <!-- Phone: the date centred in a disc, today filled — the cell is too
+                           narrow to carry a date and a count on one line. Desktop keeps the
+                           pair, which is more information in the space it has for it. -->
+                      <div class="flex justify-center xl:hidden">
+                        <span
+                          class="grid h-[21px] w-[21px] place-items-center rounded-full text-[11.5px] font-semibold tabular-nums"
+                          [class.bg-ink-900]="d.isToday"
+                          [class.text-white]="d.isToday"
+                          [class.text-ink-800]="!d.isToday"
+                        >{{ d.n }}</span>
+                      </div>
 
-    <div class="mt-1 grid grid-cols-7 gap-1">
-      @for (cell of cells(); track $index) {
-        @if (!cell.day) {
-          <span class="aspect-square"></span>
-        } @else {
-          @let day = cell.day;
-          @let st = state_(day);
-          <div class="relative">
-            <!-- A contiguous stay reads as one band: only its first and last day are rounded,
-                 so two adjacent bookings are visibly two rather than one long one. -->
-            <button
-              type="button"
-              class="grid aspect-square w-full place-items-center border text-sm transition"
-              [class.rounded-s-lg]="cell.startsHere || st === 'free'"
-              [class.rounded-e-lg]="cell.endsHere || st === 'free'"
-              [class.bg-tint-mint]="st === 'free'"
-              [class.border-emerald-600\/40]="st === 'free'"
-              [class.bg-tint-cream]="st === 'partial'"
-              [class.border-amber-600\/50]="st === 'partial'"
-              [class.bg-brand-100]="st === 'full'"
-              [class.border-brand-500\/50]="st === 'full'"
-              [attr.aria-label]="
-                (day.date | date: 'd MMMM') +
-                ': ' +
-                day.booked +
-                ' of ' +
-                day.capacity +
-                ' booked'
-              "
-              (mouseenter)="active.set(day.date)"
-              (mouseleave)="active.set(null)"
-              (focus)="active.set(day.date)"
-              (blur)="active.set(null)"
-              (click)="active.set(active() === day.date ? null : day.date)"
-            >
-              <span class="flex flex-col leading-tight">
-                <span class="font-medium text-ink-900">{{ day.date | date: 'd' }}</span>
-                @if (st === 'partial') {
-                  <span class="text-[10px] text-amber-800 tabular-nums">{{ 'common.nLeft' | transloco: { count: left(day) } }}</span>
-                }
-              </span>
-            </button>
+                      <div class="hidden items-baseline justify-between gap-1 xl:flex">
+                        <span
+                          class="text-[12.5px] font-semibold tabular-nums"
+                          [class.text-ink-900]="!d.isToday"
+                          [class.text-brand-600]="d.isToday"
+                        >{{ d.n }}</span>
+                        @if (!isPrivate() && d.free > 0) {
+                          <span class="text-[9.5px] font-medium text-ink-400">{{ d.free }} free</span>
+                        } @else if (d.oversold) {
+                          <span class="text-[9.5px] font-semibold text-danger">over</span>
+                        }
+                      </div>
 
-            <!-- Hover is a pointer affordance and hosts run properties from a phone, so the
-                 same card opens on tap. -->
-            @if (active() === day.date && day.booking_ids.length) {
-              <div
-                class="absolute left-1/2 top-full z-20 mt-1 w-64 -translate-x-1/2 rounded-xl border border-ink-100 bg-white p-3 text-left shadow-lg"
-                role="tooltip"
-              >
-                <p class="text-xs font-medium text-ink-500">
-                  {{ day.date | date: 'd MMMM' }} · {{ 'hostRooms.nOfMBooked' | transloco: { booked: day.booked, capacity: day.capacity } }}
-                </p>
-                <!-- A dorm routinely has several bookings on one date, so this is a list. -->
-                <ul class="mt-2 space-y-2">
-                  @for (b of bookingsOn(day.date); track b.id) {
-                    <li class="border-t border-ink-100 pt-2 first:border-0 first:pt-0">
-                      <p class="text-sm font-semibold text-ink-900">
-                        {{ b.guest?.name || 'Guest' }}
-                      </p>
-                      <p class="text-xs text-ink-500">
-                        {{ b.check_in | date: 'd MMM' }} – {{ b.check_out | date: 'd MMM' }} ·
-                        {{ quantityIn(b) }}
-                        {{ b.lines[0].room_type === 'private' ? 'room' : 'bed' }}{{ quantityIn(b) === 1 ? '' : 's' }}
-                      </p>
-                      @if (b.guest?.phone) {
-                        <p class="text-xs text-ink-500">{{ b.guest?.phone }}</p>
-                      }
-                      <p class="mt-0.5 text-xs text-ink-600 tabular-nums">
-                        PKR {{ b.total | number: '1.0-0' }}
-                      </p>
-                    </li>
+                      <!-- One pip per bed, wrapped into balanced rows. A single row would
+                           shrink each pip to a sliver on a large dorm — see `pipColumns`.
+                           At capacity 1 the one pip spans the cell, which is what makes a
+                           private room the same component rather than another one. -->
+                      <div
+                        class="mx-auto mt-1.5 grid w-[40px] gap-[1px] xl:mx-0 xl:mt-3 xl:w-auto xl:gap-[3px]"
+                        [style.grid-template-columns]="'repeat(' + pipColumns() + ', minmax(0,1fr))'"
+                      >
+                        @for (p of d.pips; track $index) {
+                          <span
+                            class="h-[9px] rounded-sm xl:h-[11px]"
+                            [class.hh-pip-clash]="p.clash"
+                            [class.bg-ink-100]="!p.bookingId"
+                            [style.background-color]="p.clash || !p.bookingId ? null : p.colour"
+                            [attr.title]="p.label || null"
+                          ></span>
+                        }
+                      </div>
+
+                      <!-- Phone: one word for the whole day. The header row above had no
+                           room for a count beside the date, and arrivals/departures are a
+                           desktop luxury — on a phone, tapping the day answers that in the
+                           roster below. -->
+                      <div
+                        class="mt-1 text-center text-[8.5px] font-semibold xl:hidden"
+                        [class]="freeTone(d)"
+                      >{{ freeShort(d) }}</div>
+
+                      <div class="mt-2 hidden min-h-[12px] items-center gap-1.5 text-[9.5px] font-semibold tabular-nums xl:flex">
+                        @if (d.arrivals) {
+                          <span class="text-ok">↓{{ d.arrivals }}</span>
+                        }
+                        @if (d.departures) {
+                          <span class="text-warn">↑{{ d.departures }}</span>
+                        }
+                      </div>
+                    </button>
                   }
-                </ul>
+                }
+
+                <!-- Week roll-up. Answers "was this a good week" without adding up seven cells.
+                     Desktop only: below xl the grid is seven columns wide, so an eighth child
+                     wraps onto a row of its own and breaks the month into ribbons. -->
+                <div class="hidden min-h-[86px] flex-col justify-center gap-1.5 border-b border-ink-100 bg-surface px-2.5 xl:flex">
+                  <div class="text-[15px] font-semibold tabular-nums text-ink-900">{{ week.pct }}%</div>
+                  <div class="h-1 overflow-hidden rounded-full bg-ink-100">
+                    <div
+                      class="h-full rounded-full bg-[#5B5FA8]"
+                      [style.width.%]="week.pct"
+                    ></div>
+                  </div>
+                  <div class="text-[9.5px] font-medium tabular-nums text-ink-400">{{ week.label }}</div>
+                </div>
               </div>
             }
           </div>
-        }
+        </div>
       }
     </div>
-  }
+
+    <!-- Day roster -->
+    <aside class="flex w-full shrink-0 flex-col border-t border-ink-100 bg-surface/50 xl:w-[320px] xl:border-t-0">
+      <div class="border-b border-ink-100 px-4 py-3.5">
+        <p class="text-[9.5px] font-semibold uppercase tracking-widest text-ink-400">Day roster</p>
+        @if (selectedDay(); as day) {
+          <div class="mt-2 flex items-center justify-between gap-3">
+            <p class="font-display text-lg font-semibold text-ink-900">
+              {{ day.date | date: 'd MMM' }}
+            </p>
+            <span
+              class="rounded-md px-2 py-1 text-[10.5px] font-semibold"
+              [class.bg-tint-mint]="day.booked === 0"
+              [class.text-emerald-800]="day.booked === 0"
+              [class.bg-tint-cream]="day.booked > 0 && day.booked < day.capacity"
+              [class.text-amber-800]="day.booked > 0 && day.booked < day.capacity"
+              [class.bg-brand-50]="day.booked >= day.capacity"
+              [class.text-brand-700]="day.booked >= day.capacity"
+            >
+              {{ day.booked === 0 ? 'Free' : day.booked >= day.capacity ? 'Full' : 'Partly booked' }}
+            </span>
+          </div>
+          <p class="mt-2 flex items-center gap-2 text-[11px] font-medium text-ink-400">
+            <span>{{ selectedRatio() }}</span>
+            <span class="text-ink-200">·</span>
+            <span class="tabular-nums">{{ selectedTurnover() }}</span>
+          </p>
+        } @else {
+          <p class="mt-2 text-sm text-ink-400">Pick a day.</p>
+        }
+      </div>
+
+      @if (roster().length) {
+        <ul>
+          @for (r of roster(); track r.booking.id) {
+            <!-- 52px on a phone: a roster row is a thing a host reads and taps, and 40px
+                 of it is under the comfortable minimum for a thumb. -->
+            <li class="flex min-h-[52px] items-center gap-3 border-b border-ink-100 px-4 py-2.5 xl:min-h-0 xl:gap-2.5">
+              <span
+                class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[9.5px] font-semibold text-white xl:h-6 xl:w-6 xl:text-[9px]"
+                [style.background-color]="r.colour"
+                aria-hidden="true"
+              >{{ r.initials }}</span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-[12.5px] font-semibold text-ink-900 xl:text-[11.5px]">{{ r.name }}</span>
+                <span class="mt-0.5 block truncate text-[10px] font-medium text-ink-400 xl:text-[9.5px]">
+                  {{ r.range }} · {{ r.units }} {{ isPrivate() ? 'room' : (r.units === 1 ? 'bed' : 'beds') }}
+                </span>
+              </span>
+              <!-- Arriving and leaving are what a host acts on today; the booking's own
+                   status is what it is regardless of which day is open. -->
+              @if (r.arriving) {
+                <span class="shrink-0 rounded bg-tint-mint px-1.5 py-0.5 text-[9px] font-semibold text-emerald-800">in</span>
+              } @else if (r.leaving) {
+                <span class="shrink-0 rounded bg-tint-cream px-1.5 py-0.5 text-[9px] font-semibold text-amber-800">out</span>
+              } @else {
+                <span class="shrink-0 text-[9px] font-medium text-ink-300">{{ r.status }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else if (!loading() && selectedDay()) {
+        <p class="px-4 py-8 text-center text-sm text-ink-400">Nobody in this room that day.</p>
+      }
+
+      <!-- Says what the panel cannot: the endpoint reports how many beds are taken, not
+           which. Better stated than implied by a bed column full of invented numbers. -->
+      @if (!isPrivate() && roster().length) {
+        <p class="mt-auto border-t border-ink-100 px-4 py-3 text-[10.5px] leading-relaxed text-ink-400">
+          Bed numbers are not assigned yet — the calendar reports how many beds are taken, not
+          which one each guest is in.
+        </p>
+      }
+    </aside>
+  </div>
 </section>

@@ -7,9 +7,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationStart, Router, RouterLink } from '@angular/router';
-import { filter } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
+import { filter, map } from 'rxjs';
 import {
   AuthService,
   HOST_ROLES,
@@ -19,6 +19,8 @@ import {
 import { Button } from '@hostelhive/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { routePath } from '@core/i18n/locales';
+import { areaOf, isConsoleArea } from '@layout/area';
 
 /** Account avatar + dropdown menu (seeker chrome). Reads the live session: shows the
  *  signed-in user + account links, or a Log in / Sign up prompt for guests.
@@ -85,6 +87,27 @@ export class AccountMenu {
   protected readonly hostCtaKey = computed(() =>
     this.isHost() ? 'account.hostDashboard' : 'nav.becomeAHost',
   );
+
+  /**
+   * Whether the user is currently inside a console rather than on the site.
+   *
+   * Read off the router rather than passed in, because this menu is mounted once by the
+   * one shared header and has no owner to tell it where it is.
+   */
+  private readonly path = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => routePath(this.router.url)),
+    ),
+    {
+      initialValue:
+        typeof window !== 'undefined'
+          ? routePath(window.location.pathname)
+          : routePath(this.router.url),
+    },
+  );
+
+  protected readonly inConsole = computed(() => isConsoleArea(areaOf(this.path())));
 
   protected readonly items = [
     { label: 'Favorites', icon: 'ti-heart', link: '/account/favorites' },

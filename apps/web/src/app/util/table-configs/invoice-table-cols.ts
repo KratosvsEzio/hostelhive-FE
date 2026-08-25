@@ -55,9 +55,11 @@ function invoiceTableConfig(hostelId: string): Record<string, Omit<ColumnDef, 'k
     label: 'Type',
     cell: (r) => {
       const inv = r as Invoice;
+      // Colour only — the table owns the badge's shape. This used to carry its own padding
+      // and radius, which is why these read as badges while the bookings table's did not.
       return inv.kind === 'rental'
-        ? ({ kind: 'badge', text: 'Rental',  class: 'rounded bg-tint-sky   px-1.5 py-0.5 text-[11px] text-ink-600'   }) satisfies CellDef
-        : ({ kind: 'badge', text: 'Utility', class: 'rounded bg-tint-cream px-1.5 py-0.5 text-[11px] text-brand-700' }) satisfies CellDef;
+        ? ({ kind: 'badge', text: 'Rental', class: 'bg-tint-sky text-ink-600' }) satisfies CellDef
+        : ({ kind: 'badge', text: 'Utility', class: 'bg-tint-cream text-brand-700' }) satisfies CellDef;
     },
   },
   amount: {

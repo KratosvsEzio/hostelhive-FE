@@ -1,4 +1,6 @@
-import { chargePercentFor } from './booking-api';
+import { firstValueFrom } from 'rxjs';
+import { BookingApi, chargePercentFor } from './booking-api';
+import { ApiHostBookingRequest } from './booking-api.contract';
 
 /**
  * The cancellation schedule from section 07 of the PRD.
@@ -47,5 +49,122 @@ describe('chargePercentFor', () => {
       expect(percent).toBeGreaterThanOrEqual(previous);
       previous = percent;
     }
+  });
+});
+
+/**
+ * The booking a host records for a walk-in.
+ *
+ * Worth testing through the service rather than as a pure function: the parts that can go
+ * wrong are the ones that touch stored state — what status it lands in, whether it can
+ * oversell a bed that is already spoken for, and whether cancelling it bills the host for a
+ * row they typed in themselves.
+ */
+describe('BookingApi.hostCreateBooking', () => {
+  const base: ApiHostBookingRequest = {
+    check_in: '2026-09-01',
+    check_out: '2026-09-03',
+    guests: 2,
+    lines: [{ room_id: 's-mixed-12', quantity: 2 }],
+    guest: { name: 'Ayesha' },
+  };
+
+  function api(): BookingApi {
+    return new BookingApi();
+  }
+
+  it('records it as unconfirmed, with no deposit', async () => {
+    const b = await firstValueFrom(api().hostCreateBooking('h1', base));
+
+    expect(b.status).toBe('unconfirmed');
+    expect(b.deposit).toBe(0);
+    expect(b.guest?.name).toBe('Ayesha');
+  });
+
+  it('prices the whole stay, not one night', async () => {
+    const one = await firstValueFrom(
+      api().hostCreateBooking('h1', { ...base, check_out: '2026-09-02' }),
+    );
+    const two = await firstValueFrom(api().hostCreateBooking('h1', base));
+
+    expect(two.total).toBe(one.total * 2);
+  });
+
+  it('shows up in that hostel’s list and not another’s', async () => {
+    const svc = api();
+    await firstValueFrom(svc.hostCreateBooking('h1', base));
+
+    expect((await firstValueFrom(svc.hostBookings('h1'))).length).toBe(1);
+    expect((await firstValueFrom(svc.hostBookings('h2'))).length).toBe(0);
+  });
+
+  it('refuses a range that ends before it starts', async () => {
+    await expect(
+      firstValueFrom(api().hostCreateBooking('h1', { ...base, check_out: '2026-08-30' })),
+    ).rejects.toThrow(/check_out/);
+  });
+
+  it('refuses a booking with no rooms on it', async () => {
+    await expect(
+      firstValueFrom(api().hostCreateBooking('h1', { ...base, lines: [] })),
+    ).rejects.toThrow(/at least one room/i);
+  });
+
+  it('refuses a nameless guest', async () => {
+    await expect(
+      firstValueFrom(api().hostCreateBooking('h1', { ...base, guest: { name: '  ' } })),
+    ).rejects.toThrow(/name/i);
+  });
+
+  // The reason availability is checked on a host-facing form at all: the person who finds
+  // out about a double-booked bed is the guest standing in reception.
+  it('refuses to oversell a room', async () => {
+    await expect(
+      firstValueFrom(
+        api().hostCreateBooking('h1', {
+          ...base,
+          lines: [{ room_id: 's-mixed-8', quantity: 99 }],
+        }),
+      ),
+    ).rejects.toThrow(/only/i);
+  });
+
+  it('counts an existing booking against what is left', async () => {
+    const svc = api();
+    await firstValueFrom(
+      svc.hostCreateBooking('h1', { ...base, lines: [{ room_id: 's-mixed-8', quantity: 2 }] }),
+    );
+
+    await expect(
+      firstValueFrom(
+        svc.hostCreateBooking('h1', { ...base, lines: [{ room_id: 's-mixed-8', quantity: 1 }] }),
+      ),
+    ).rejects.toThrow(/only 0 left/i);
+  });
+
+  it('leaves a non-overlapping range alone', async () => {
+    const svc = api();
+    await firstValueFrom(
+      svc.hostCreateBooking('h1', { ...base, lines: [{ room_id: 's-mixed-8', quantity: 2 }] }),
+    );
+
+    const later = await firstValueFrom(
+      svc.hostCreateBooking('h1', {
+        ...base,
+        check_in: '2026-10-01',
+        check_out: '2026-10-03',
+        lines: [{ room_id: 's-mixed-8', quantity: 2 }],
+      }),
+    );
+    expect(later.status).toBe('unconfirmed');
+  });
+
+  it('costs the host nothing to cancel', async () => {
+    const svc = api();
+    const b = await firstValueFrom(svc.hostCreateBooking('h1', base));
+    const quote = await firstValueFrom(svc.hostCancellationQuote(b.id));
+
+    expect(quote.penalty_amount).toBe(0);
+    expect(quote.refund_amount).toBe(0);
   });
 });

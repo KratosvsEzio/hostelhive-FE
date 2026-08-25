@@ -17,7 +17,7 @@ import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
 import { Permission, SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
-import { Button, Dropdown, DropdownOption, StatusTone } from '@hostelhive/ui';
+import { Button, Dropdown, DropdownOption, StatusTone, TooltipFixed } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -56,7 +56,7 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TranslocoPipe],
+  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
   templateUrl: './host-shell.html',
 })
 export class HostLayout {
@@ -73,10 +73,11 @@ export class HostLayout {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  private readonly onDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
   protected readonly gateState = signal<'loading' | 'leaving' | 'none'>('none');
+  /** Follows the sidebar's own width, so the rail does not leave 192px of empty gutter. */
   protected readonly contentPadding = computed(() =>
-    !this.mobile.isMobile() && this.drawer.open() && this.onDesktop ? '16rem' : '0');
+    !this.mobile.isMobile() ? this.drawer.width_() : '0',
+  );
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -97,11 +98,6 @@ export class HostLayout {
     }
   }
 
-  protected closeOnMobile(): void {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      this.drawer.close();
-    }
-  }
 
   private readonly routeHostelId = toSignal(
     this.route.paramMap.pipe(map((pm) => pm.get('hostelId') ?? '')),
@@ -250,7 +246,6 @@ export class HostLayout {
 
   protected onPropertySelect(value: string | string[] | null): void {
     if (typeof value !== 'string') return;
-    this.drawer.close();
     const segments = this.router.url.split('/').filter(Boolean);
     const page = segments.slice(2).join('/');
     void this.router.navigate(['/host', value, ...(page ? page.split('/') : [])]);
