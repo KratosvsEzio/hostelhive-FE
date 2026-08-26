@@ -96,8 +96,6 @@ export class RoomTypeRow {
 
   protected readonly isPrivate = computed(() => this.occupancyType() === 'private');
 
-  /** "Sleeps" counts people; "Beds" counts sellable units. Same field, different job. */
-  protected readonly capacityLabel = computed(() => (this.isPrivate() ? 'Sleeps' : 'Beds'));
 
   protected readonly priceLabel = computed(() =>
     this.isPrivate() ? 'Price per room' : 'Price per bed',

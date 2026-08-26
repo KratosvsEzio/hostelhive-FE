@@ -301,11 +301,54 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  /**
+   * A fixed row rather than one the content grows.
+   *
+   * The two states hold different things — the rail an icon, the sidebar an icon and a
+   * label — and a flex row takes its tallest child, so the height used to follow whichever
+   * that was: 18px for the icon (the tabler font sets line-height 1) against 21px for 14px
+   * text at the app's 1.5. That made the rail 38px and the sidebar 41px, so every link slid
+   * 3px further than the one above it as the drawer opened — the nth by 3(n−1)px.
+   *
+   * The padding is horizontal only for the same reason: 40px of *content* box leaves the
+   * label centred in far more room than its own line box needs, where 40px including 20px
+   * of padding would have left 20px for a 21px line and clipped the descenders off it —
+   * hardest on Urdu and Vietnamese, which is exactly where nobody would notice.
+   */
+  height: 40px;
+  padding: 0 14px;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
   color: #3b3b3b;
+  /**
+   * Never two lines.
+   *
+   * The sidebar animates between 4rem and 16rem over 200ms, so every width between the
+   * two is a width these labels are briefly laid out at. Longer locales would wrap at rest,
+   * too. Now that the row is a fixed 40px a second line is not shown at all — it is clipped,
+   * so the label would silently lose its tail rather than the nav reflowing. Either way the
+   * fix is the same: keep it to one line and let it end in an ellipsis that says so.
+   */
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* The icon is the one part with no slack in it: at 4rem it is the entire link. */
+.nav-link i {
+  flex-shrink: 0;
+}
+/**
+ * The label gives up width before anything else, and says so.
+ *
+ * `overflow: hidden` on the link alone would slice the text on the sidebar's own border,
+ * mid-glyph, with nothing to indicate there was more. The ellipsis needs a real element to
+ * belong to, which is why the shells wrap the label in a span rather than dropping it in
+ * as a bare text node — an anonymous flex item cannot carry `text-overflow`.
+ */
+.nav-link__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .nav-link:hover {
   background: #f4f4f4;

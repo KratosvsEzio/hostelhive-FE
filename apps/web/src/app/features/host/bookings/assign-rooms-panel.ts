@@ -11,7 +11,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, startWith, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
-import { HostOpsApi } from '@services';
+import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { HostRoom } from '@util/models/host-ops';
 import { HostBooking } from './host-bookings-api';
 
@@ -78,9 +78,9 @@ export class AssignRoomsPanel {
       switchMap((hostelId) =>
         !hostelId
           ? of<RoomsState>({ loading: false, error: false, rooms: [] })
-          : // A generous page rather than the default: the panel filters to one type, and a
-            // second page would silently hide the room the host is looking for.
-            this.api.rooms(hostelId, 1, 200).pipe(
+          : // Every room in one page: the panel filters to one type, and a second page would
+            // silently hide the room the host is looking for.
+            this.api.rooms(hostelId, 1, ALL_ROOMS_LIMIT).pipe(
               switchMap((r) => of<RoomsState>({ loading: false, error: false, rooms: r.rooms })),
               startWith<RoomsState>({ loading: true, error: false, rooms: [] }),
               catchError(() => of<RoomsState>({ loading: false, error: true, rooms: [] })),

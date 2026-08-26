@@ -24,7 +24,7 @@ import {
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { BookingApi } from '@features/public/listing/booking/booking-api';
-import { HostOpsApi } from '@services';
+import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { HostRoom } from '@hostelhive/data-access';
 
 /**
@@ -140,8 +140,8 @@ export class BookingFormDrawer {
         if (!r.hostelId || !r.from || !r.to || r.to <= r.from) {
           return of<RoomsState>({ loading: false, error: '', rooms: [] });
         }
-        // One page big enough for a property; the picker searches rather than paginates.
-        return this.hostOps.rooms(r.hostelId, 1, 200).pipe(
+        // Every room in one page; the picker searches rather than paginates.
+        return this.hostOps.rooms(r.hostelId, 1, ALL_ROOMS_LIMIT).pipe(
           map(
             (res): RoomsState => ({
               loading: false,

@@ -12,6 +12,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, Ro
 import { filter, map, take } from 'rxjs';
 import { HostPropertyStore, SubscriptionStore } from '@services';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
+import { hostPagePath, opensWithoutSubscription } from './host-route';
 import { SubscriptionLoading } from '../components/subscription-loading/subscription-loading';
 import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
@@ -58,6 +59,9 @@ const PILL_LABEL: Record<ListingStatus, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
   templateUrl: './host-shell.html',
+  // Escape closes the property flyout wherever focus happens to be -- it is a popover, and
+  // one that can only be dismissed by finding its backdrop is a trap for the keyboard.
+  host: { '(document:keydown.escape)': 'closePropertyFlyout()' },
 })
 export class HostLayout {
   protected readonly drawer = inject(ConsoleDrawer);
@@ -118,9 +122,15 @@ export class HostLayout {
     }
   });
 
+  /**
+   * Pages the gate must not bounce: the subscription page and the hostel profile.
+   *
+   * The decision itself lives in {@link opensWithoutSubscription}, beside its tests. It is
+   * segment arithmetic over a URL, and this file has already had it wrong once — the check
+   * read the third segment, which stopped being the page when English moved to `/en/…`.
+   */
   private isExemptRoute(): boolean {
-    const page = this.router.url.split('?')[0].split('/').filter(Boolean)[2] ?? '';
-    return page === 'subscription' || page === 'profile';
+    return opensWithoutSubscription(this.router.url);
   }
 
   /**
@@ -244,10 +254,44 @@ export class HostLayout {
     () => this.propertyStore.loaded() && this.propertyStore.properties().length === 0,
   );
 
+  /* ------------------------------------------------- property picker, in the rail */
+
+  /**
+   * The property picker as a flyout beside the rail, rather than a reason to widen it.
+   *
+   * Clicking it used to expand the whole sidebar, which answered "which hostel am I on?"
+   * by rearranging the entire console and leaving the host to put it back. The flyout
+   * carries the same dropdown and the same create button, and costs nothing to dismiss.
+   */
+  protected readonly propertyFlyout = signal(false);
+
+  protected togglePropertyFlyout(): void {
+    this.propertyFlyout.update((v) => !v);
+  }
+
+  protected closePropertyFlyout(): void {
+    this.propertyFlyout.set(false);
+  }
+
+  /**
+   * The collapse chevron, which has to get past the flyout first.
+   *
+   * Expanding while it is open would slide 192px of sidebar out underneath a panel pinned
+   * to where the rail's edge used to be, leaving it floating over the nav it belongs to.
+   * So the panel goes first and the sidebar opens in the same click \x2D\x2D one gesture, not two.
+   */
+  protected onToggleRail(): void {
+    if (this.propertyFlyout()) this.closePropertyFlyout();
+    this.drawer.toggleRail();
+  }
+
   protected onPropertySelect(value: string | string[] | null): void {
     if (typeof value !== 'string') return;
-    const segments = this.router.url.split('/').filter(Boolean);
-    const page = segments.slice(2).join('/');
+    this.closePropertyFlyout();
+    // The same page, on another hostel. Counting segments raw included the language prefix,
+    // so the old hostel id was carried into the new URL — `/host/<new>/<old>/rooms`, which
+    // matches no route and drops the host on the public home page.
+    const page = hostPagePath(this.router.url);
     void this.router.navigate(['/host', value, ...(page ? page.split('/') : [])]);
   }
 

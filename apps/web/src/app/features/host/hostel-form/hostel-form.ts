@@ -21,6 +21,7 @@ import {
 } from '@hostelhive/data-access';
 import {
   HostelsApi,
+  HostOpsApi,
   ImageUploadService,
   OffersApi,
 } from '@services';
@@ -28,6 +29,7 @@ import {
   ACCEPT_ATTR,
   Button,
   CollapsibleCard,
+  ConfirmModal,
   Dropdown,
   DropdownOption,
   Input,
@@ -123,6 +125,24 @@ function toEditRoomType(r: {
   };
 }
 
+/**
+ * One room in the "move these first" list, with the outcome of its own update.
+ *
+ * Status per row rather than one flag for the dialog: the host moves them one at a time and
+ * has to be able to see which of five succeeded and which needs another go. A failed row
+ * keeps its selection so retrying is one click, not a re-pick.
+ */
+interface RoomMoveRow {
+  /** Room hashid, as the update path needs it. */
+  id: string;
+  number: string;
+  floor: string;
+  /** Chosen replacement room type, as its server id. */
+  targetId: string | null;
+  status: 'idle' | 'saving' | 'done' | 'error';
+  error: string;
+}
+
 export interface EditRoomType {
   _key: string;
   id?: number;
@@ -211,6 +231,7 @@ const SECTION_ERROR_KEYS: Record<FormSection, readonly string[]> = {
     RoomTypeRow,
     StatusPill,
     CurrencySelect,
+    ConfirmModal,
     TranslocoPipe,
   ],
   templateUrl: './hostel-form.html',
@@ -220,6 +241,18 @@ export class HostelForm {
   private readonly offersApi = inject(OffersApi);
   private readonly imageUpload = inject(ImageUploadService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly hostOps = inject(HostOpsApi);
+
+  /**
+   * The hostel being edited, or null while creating one.
+   *
+   * Only edit mode can reach the delete dialog's API call \x2D\x2D a hostel that does not exist
+   * yet has no rooms to count.
+   */
+  private readonly hostelId = computed(() => {
+    const id = this.initialData()?.id;
+    return id != null ? String(id) : null;
+  });
 
   // ── parent inputs ──
   readonly mode = input.required<'create' | 'edit'>();
@@ -739,7 +772,182 @@ export class HostelForm {
     }
   }
 
+  /* ------------------------------------------------- deleting a room type */
+
+  /**
+   * The room type the host is trying to delete, held while we find out what it costs.
+   *
+   * Deleting used to be immediate. That is safe for a row nobody has built on and quietly
+   * destructive for one that carries rooms \x2D\x2D the `_destroy` goes out with the save and the
+   * rooms go with it, with nothing on screen having said so.
+   */
+  protected readonly rtPendingDelete = signal<EditRoomType | null>(null);
+
+  /** null while the room list is still in flight. */
+  protected readonly rtRooms = signal<RoomMoveRow[] | null>(null);
+  protected readonly rtLoadFailed = signal(false);
+
+  /**
+   * Where a room can go: every other room type that exists on the server.
+   *
+   * Unsaved rows are excluded \x2D\x2D they have no id yet, so nothing can be moved onto them
+   * until the hostel has been saved at least once.
+   */
+  protected readonly rtReplacementOptions = computed<DropdownOption[]>(() => {
+    const pending = this.rtPendingDelete();
+    return this.roomTypes()
+      .filter((rt) => rt._key !== pending?._key && rt.id != null)
+      .map((rt) => ({ value: String(rt.id), label: rt.name || 'Untitled room type' }));
+  });
+
+  protected readonly rtNeedsMoves = computed(() => (this.rtRooms()?.length ?? 0) > 0);
+
+  /** Nowhere to put them, so the delete cannot go ahead at all. */
+  protected readonly rtDeleteBlocked = computed(
+    () => this.rtNeedsMoves() && this.rtReplacementOptions().length === 0,
+  );
+
+  protected readonly rtMovedCount = computed(
+    () => this.rtRooms()?.filter((r) => r.status === 'done').length ?? 0,
+  );
+
+  /**
+   * The delete waits until the last room has actually moved.
+   *
+   * Not "every row has a selection" \x2D\x2D a chosen replacement that failed to save is still a
+   * room pointing at the type about to be destroyed.
+   */
+  protected readonly rtDeleteReady = computed(() => {
+    const rooms = this.rtRooms();
+    if (rooms == null || this.rtLoadFailed()) return false;
+    return rooms.every((r) => r.status === 'done');
+  });
+
+  /**
+   * The "move everything here" shortcut above the list.
+   *
+   * Most hostels are deleting a type whose rooms all go to the same place, and picking the
+   * same option six times is the kind of work a form should do for you. It only fills the
+   * rows in \x2D\x2D each room is still updated on its own button, so a host who wants two of them
+   * somewhere else just changes those two afterwards.
+   *
+   * Rows that already moved are left alone: their dropdown describes what happened, not what
+   * is planned, and rewriting it would claim a room went somewhere it did not.
+   */
+  protected readonly rtBulkTarget = signal<string | null>(null);
+
+  protected onBulkTargetPick(v: string | string[] | null): void {
+    const target = typeof v === 'string' && v ? v : null;
+    this.rtBulkTarget.set(target);
+    if (!target) return;
+    this.rtRooms.update((rows) =>
+      (rows ?? []).map((r) =>
+        r.status === 'done' || r.status === 'saving'
+          ? r
+          : { ...r, targetId: target, status: 'idle' as const, error: '' },
+      ),
+    );
+  }
+
+  protected onRoomTargetPick(roomId: string, v: string | string[] | null): void {
+    const target = typeof v === 'string' && v ? v : null;
+    this.rtRooms.update((rows) =>
+      (rows ?? []).map((r) =>
+        r.id === roomId ? { ...r, targetId: target, status: 'idle' as const, error: '' } : r,
+      ),
+    );
+  }
+
+  private patchRoom(roomId: string, patch: Partial<RoomMoveRow>): void {
+    this.rtRooms.update((rows) =>
+      (rows ?? []).map((r) => (r.id === roomId ? { ...r, ...patch } : r)),
+    );
+  }
+
+  /**
+   * Moves one room, now rather than on save.
+   *
+   * Per row because the host is choosing per row: batching them behind the save would hide
+   * which of five moves was the one that failed, and a partial batch is exactly the state
+   * this dialog exists to prevent.
+   */
+  protected updateRoomRow(row: RoomMoveRow): void {
+    const hostelId = this.hostelId();
+    if (!hostelId || !row.targetId || row.status === 'saving' || row.status === 'done') return;
+
+    this.patchRoom(row.id, { status: 'saving', error: '' });
+    this.hostOps
+      .updateRoom(hostelId, row.id, { room_type_id: row.targetId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.patchRoom(row.id, { status: 'done', error: '' }),
+        error: () =>
+          this.patchRoom(row.id, {
+            status: 'error',
+            error: "Couldn't move this room. Try again.",
+          }),
+      });
+  }
+
+  protected cancelRemoveRt(): void {
+    this.rtPendingDelete.set(null);
+    this.rtRooms.set(null);
+    this.rtLoadFailed.set(false);
+    this.rtBulkTarget.set(null);
+  }
+
+  protected confirmRemoveRt(): void {
+    const rt = this.rtPendingDelete();
+    if (!rt || !this.rtDeleteReady()) return;
+    this.dropRt(rt._key);
+    this.cancelRemoveRt();
+  }
+
+  /**
+   * Asks what the delete would cost before doing any of it.
+   *
+   * A room type that was never saved cannot have rooms on it, so it skips the round trip
+   * and the dialog entirely \x2D\x2D there is nothing to warn about and nothing to move.
+   */
   protected removeRt(key: string): void {
+    const rt = this.roomTypes().find((r) => r._key === key);
+    if (!rt) return;
+    if (rt.id == null) {
+      this.dropRt(key);
+      return;
+    }
+
+    this.rtPendingDelete.set(rt);
+    this.rtRooms.set(null);
+    this.rtLoadFailed.set(false);
+    this.rtBulkTarget.set(null);
+
+    const hostelId = this.hostelId();
+    if (!hostelId) {
+      this.rtLoadFailed.set(true);
+      return;
+    }
+    this.hostOps
+      .roomsOfType(hostelId, rt.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (rooms) =>
+          this.rtRooms.set(
+            rooms.map((r) => ({
+              id: r.id,
+              number: r.number,
+              floor: r.floor,
+              targetId: null,
+              status: 'idle' as const,
+              error: '',
+            })),
+          ),
+        error: () => this.rtLoadFailed.set(true),
+      });
+  }
+
+  /** The removal itself, once every room has been rehoused. */
+  private dropRt(key: string): void {
     const rt = this.roomTypes().find((r) => r._key === key);
     if (!rt) return;
     if (rt.id != null) this.removedRts.update((list) => [...list, rt]);

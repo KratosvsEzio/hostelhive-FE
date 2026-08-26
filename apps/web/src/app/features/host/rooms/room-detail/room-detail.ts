@@ -121,14 +121,13 @@ export class RoomDetail {
     return s === 'available' ? 'Available' : s === 'partial' ? 'Partial' : 'Full';
   });
 
+  /** Where the chevron and the parent crumb both point. */
+  protected readonly roomsUrl = computed(() => `/host/${this.store.selected()}/rooms`);
+
   protected readonly label = computed(() => {
     const r = this.state().room;
     return r ? `Room ${r.number}` : 'Room details';
   });
-
-  protected goBack(): void {
-    this.router.navigate(['/host', this.store.selected(), 'rooms']);
-  }
 
   protected goToTenant(tenantId: string): void {
     this.router.navigate(['/host', this.store.selected(), 'tenants', 'profile', tenantId]);

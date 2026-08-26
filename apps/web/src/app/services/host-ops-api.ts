@@ -435,6 +435,20 @@ export interface InvoiceBody {
   notes?: string;
 }
 
+/**
+ * One page big enough to be every room a property has.
+ *
+ * For the callers that are picking a room rather than browsing them — an assignment panel,
+ * a booking form — where a second page is not a page the user can reach. Under-asking there
+ * is silent: the picker renders a shorter list that looks complete, and the room somebody is
+ * hunting for is simply absent.
+ *
+ * Named rather than written at each call site, because it was written at each call site: two
+ * copies of `200` that had to be found and changed together, which is the way one of them
+ * gets missed.
+ */
+export const ALL_ROOMS_LIMIT = 9999;
+
 @Injectable({ providedIn: 'root' })
 export class HostOpsApi {
   private readonly api = inject(ApiClient);
@@ -458,6 +472,23 @@ export class HostOpsApi {
         },
         statuses: (res.possible_statuses ?? []).map(s => ({ id: s.id, name: s.name, slug: s.slug })),
       })));
+  }
+
+  /**
+   * Every room built on a room type.
+   *
+   * The filter names the association path. `f[room_type_id]`, which reads more naturally, is
+   * not a field this endpoint filters on \x2D\x2D and an unrecognised filter comes back 200 with the
+   * *unfiltered* set, so the mistake looks like "every room in the hostel uses this type"
+   * rather than like an error.
+   *
+   * One call answers both questions the delete dialog asks: an empty array means nothing is
+   * built on the type, and anything else is the list the host has to rehome.
+   */
+  roomsOfType(hostelId: string, roomTypeId: string | number): Observable<Room[]> {
+    return this.rooms(hostelId, 1, ALL_ROOMS_LIMIT, {
+      'f[room_type.id]': String(roomTypeId),
+    }).pipe(map((r) => r.rooms));
   }
 
   createRoom(

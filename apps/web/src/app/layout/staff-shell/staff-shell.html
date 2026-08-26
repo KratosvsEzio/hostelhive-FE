@@ -2,7 +2,7 @@
   class="group fixed bottom-0 start-0 hh-below-header z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
   [style.width]="drawer.width_()"
 >
-  <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+  <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-3">
     @for (item of nav(); track $index) {
       @if (item.divider) {
         <div class="my-2 border-t border-ink-100"></div>
@@ -11,14 +11,14 @@
           [routerLink]="item.link"
           routerLinkActive="active"
           class="nav-link"
-          [class.nav-link--rail]="drawer.railed()"
-          [hhTooltip]="drawer.railed() ? (item.label ?? '') : ''"
+          [class.nav-link--rail]="drawer.railVisual()"
+          [hhTooltip]="drawer.railVisual() ? (item.label ?? '') : ''"
           hhTooltipPlacement="right"
-          [attr.aria-label]="drawer.railed() ? item.label : null"
+          [attr.aria-label]="drawer.railVisual() ? item.label : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
-          @if (!drawer.railed()) {
-            {{ item.label }}
+          @if (!drawer.railVisual()) {
+            <span class="nav-link__label">{{ item.label }}</span>
           }
         </a>
       }
@@ -26,20 +26,20 @@
   </nav>
   <!-- In the rail the avatar carries the identity on its own; the name and role need width
        the rail does not have, and the disc is already the thing people look for. -->
-  <div class="border-t border-ink-100" [class.p-3]="!drawer.railed()" [class.p-2]="drawer.railed()">
+  <div class="border-t border-ink-100" [class.p-3]="!drawer.railVisual()" [class.p-2]="drawer.railVisual()">
     <div
       class="flex items-center rounded-xl"
-      [class.gap-3]="!drawer.railed()"
-      [class.p-2]="!drawer.railed()"
-      [class.justify-center]="drawer.railed()"
+      [class.gap-3]="!drawer.railVisual()"
+      [class.p-2]="!drawer.railVisual()"
+      [class.justify-center]="drawer.railVisual()"
     >
       <span
         class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white"
-        [hhTooltip]="drawer.railed() ? (user()?.name ?? '') : ''"
+        [hhTooltip]="drawer.railVisual() ? (user()?.name ?? '') : ''"
         hhTooltipPlacement="right"
         >{{ initials() }}</span
       >
-      @if (!drawer.railed()) {
+      @if (!drawer.railVisual()) {
         <div class="min-w-0">
           <p class="truncate text-sm font-medium text-ink-900">
             {{ user()?.name }}

@@ -10,6 +10,13 @@ export const FULL_WIDTH = '16rem';
 const KEY = 'hh.sidebar.expanded';
 
 /**
+ * How long the sidebar's width takes to settle, mirroring `duration-200` on the `<aside>`
+ * in both shells. A hair under it, so the labels go as the slide lands rather than after
+ * it has visibly stopped.
+ */
+export const RAIL_SETTLE_MS = 180;
+
+/**
  * How wide the console's sidebar is (HostShell + StaffShell).
  *
  * **Collapsed is the default, at every width.** Not a width rule: the console's own content
@@ -34,8 +41,31 @@ export class ConsoleDrawer {
    */
   private readonly expanded = signal(read());
 
+  private readonly _railVisual = signal(!read());
+
   /** True when the sidebar is a rail of icons — which is the starting state. */
   readonly railed = computed(() => !this.expanded());
+
+
+  /**
+   * What the sidebar's *contents* should look like, which is not what its width is doing.
+   *
+   * The box takes 200ms to travel between 4rem and 16rem. Switching the labels on
+   * {@link railed} threw them away on the first frame, so the text vanished while the panel
+   * was still at full width and the slide that followed looked like a separate, unrelated
+   * animation.
+   *
+   * So this lags {@link railed} in one direction only. **Collapsing**, it waits for the
+   * width to almost land, and the labels clip away under the closing edge. **Expanding**, it
+   * flips at once and they slide in behind the opening edge. Either way the text moves with
+   * the panel instead of blinking beside it.
+   *
+   * Bind layout to {@link railed} and anything that reads as content — labels, the rail
+   * class, tooltips — to this.
+   */
+  readonly railVisual = this._railVisual.asReadonly();
+
+  private settleTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** The sidebar's width, and so the inset the content needs to clear it. */
   readonly width_ = computed(() => (this.railed() ? RAIL_WIDTH : FULL_WIDTH));
@@ -44,6 +74,12 @@ export class ConsoleDrawer {
   toggleRail(): void {
     const next = !this.expanded();
     this.expanded.set(next);
+
+    // Expanding shows the labels at once; collapsing holds them until the width has run.
+    clearTimeout(this.settleTimer);
+    if (next) this._railVisual.set(false);
+    else this.settleTimer = setTimeout(() => this._railVisual.set(true), RAIL_SETTLE_MS);
+
     try {
       localStorage.setItem(KEY, next ? '1' : '0');
     } catch {

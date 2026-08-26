@@ -349,3 +349,125 @@
     </div>
   </hh-collapsible-card>
 </div>
+
+<!-- Deleting a room type, once we know what it would take with it.
+     Rooms are moved here and now, one button per room, rather than batched behind the save:
+     the host is choosing per room, and a batch that half-succeeded would hide which room
+     still points at the type about to be destroyed. The delete waits for the last green tick. -->
+@if (rtPendingDelete(); as rt) {
+  <hh-confirm-modal
+    [title]="rtRooms() === null ? 'Checking rooms…' : (rtNeedsMoves() ? 'Move these rooms first' : 'Delete room type?')"
+    icon="ti-trash"
+    tone="danger"
+    [size]="rtNeedsMoves() ? 'md' : 'sm'"
+    [confirmLabel]="rtNeedsMoves() ? 'Delete room type' : 'Delete'"
+    confirmColor="danger"
+    [confirmDisabled]="!rtDeleteReady()"
+    (confirm)="confirmRemoveRt()"
+    (cancel)="cancelRemoveRt()"
+  >
+    @if (rtLoadFailed()) {
+      <p class="text-danger">Couldn't check which rooms use this type. Try again.</p>
+    } @else if (rtRooms() === null) {
+      <p>Finding the rooms built on <span class="font-medium text-ink-700">{{ rt.name }}</span>…</p>
+    } @else if (!rtNeedsMoves()) {
+      <p>
+        No rooms are built on <span class="font-medium text-ink-700">{{ rt.name }}</span>, so
+        nothing else changes. It is removed when you save.
+      </p>
+    } @else if (rtDeleteBlocked()) {
+      <p>
+        {{ rtRooms()!.length }} {{ rtRooms()!.length === 1 ? 'room is' : 'rooms are' }} built on
+        <span class="font-medium text-ink-700">{{ rt.name }}</span>, and there is no other saved
+        room type to move them to. Add one, save, then delete this.
+      </p>
+    } @else {
+      <p class="mb-3">
+        {{ rtRooms()!.length }} {{ rtRooms()!.length === 1 ? 'room is' : 'rooms are' }} built on
+        <span class="font-medium text-ink-700">{{ rt.name }}</span>. Move each one, then the
+        type can go.
+      </p>
+
+      <!-- Fills the rows in; it does not move anything on its own. -->
+      <div class="mb-3 rounded-xl bg-surface p-2.5">
+        <span class="mb-1 block text-xs font-medium text-ink-700">Move all rooms to</span>
+        <hh-dropdown
+          variant="field"
+          placeholder="Select a room type"
+          [options]="rtReplacementOptions()"
+          [value]="rtBulkTarget()"
+          (valueChange)="onBulkTargetPick($event)"
+        />
+      </div>
+
+      <ul class="max-h-72 space-y-2 overflow-y-auto">
+        @for (room of rtRooms(); track room.id) {
+          <li class="rounded-xl border border-ink-100 p-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-16 shrink-0">
+                <span class="block truncate text-sm font-medium text-ink-900">{{ room.number }}</span>
+                <span class="block truncate text-[11px] text-ink-400">{{ room.floor }}</span>
+              </span>
+
+              <span class="min-w-0 flex-1">
+                <hh-dropdown
+                  variant="field"
+                  size="sm"
+                  placeholder="Room type"
+                  [options]="rtReplacementOptions()"
+                  [value]="room.targetId"
+                  [disabled]="room.status === 'done' || room.status === 'saving'"
+                  (valueChange)="onRoomTargetPick(room.id, $event)"
+                />
+              </span>
+
+              <!-- One slot, three outcomes: the button, then the tick or the cross that
+                   replaces it. Fixed width so the rows do not jump as each one resolves. -->
+              <span class="flex w-20 shrink-0 justify-end">
+                @if (room.status === 'done') {
+                  <span class="flex items-center gap-1 text-xs font-medium text-ok">
+                    <i class="ti ti-circle-check-filled text-base" aria-hidden="true"></i>
+                    Moved
+                  </span>
+                } @else if (room.status === 'error') {
+                  <span class="flex items-center gap-1">
+                    <i class="ti ti-circle-x-filled text-base text-danger" aria-hidden="true"></i>
+                    <button
+                      hh-button
+                      variant="text"
+                      size="sm"
+                      type="button"
+                      class="!px-0 text-xs"
+                      (click)="updateRoomRow(room)"
+                    >
+                      Retry
+                    </button>
+                  </span>
+                } @else {
+                  <button
+                    hh-button
+                    variant="outlined"
+                    size="sm"
+                    type="button"
+                    [disabled]="!room.targetId || room.status === 'saving'"
+                    (click)="updateRoomRow(room)"
+                  >
+                    {{ room.status === 'saving' ? 'Moving…' : 'Update' }}
+                  </button>
+                }
+              </span>
+            </div>
+
+            @if (room.error) {
+              <p class="mt-1.5 text-xs text-danger">{{ room.error }}</p>
+            }
+          </li>
+        }
+      </ul>
+
+      <p class="mt-3 text-xs text-ink-400">
+        {{ rtMovedCount() }} of {{ rtRooms()!.length }} moved.
+      </p>
+    }
+  </hh-confirm-modal>
+}

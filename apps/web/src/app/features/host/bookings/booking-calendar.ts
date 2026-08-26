@@ -93,6 +93,15 @@ export class BookingCalendar {
   private readonly api = inject(HostBookingsApi);
 
   protected readonly lanes = LANES;
+
+  /**
+   * Whether the last legend chip has to span both phone columns.
+   *
+   * Five lanes into a two-column grid leaves the last one alone in a half-width cell with a
+   * hole beside it. Spanning it closes the row. Derived rather than hardcoded so adding a
+   * sixth lane does not quietly leave a stretched chip in the middle of a full grid.
+   */
+  protected readonly lastLaneSpansRow = LANES.length % 2 === 1;
   protected readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   protected readonly weekdaysNarrow = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   /** 42, matching the grid, so the skeleton occupies exactly the space the month will. */

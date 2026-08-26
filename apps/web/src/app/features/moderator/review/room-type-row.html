@@ -97,8 +97,11 @@
              of its neighbours and left the row visibly ragged. -->
         <div class="grid gap-3 sm:grid-cols-[7rem_1fr]">
           <label class="block">
-            <!-- Named for the job it is doing: people on a private room, sellable units on a dorm. -->
-            <span class="mb-1 block text-xs font-medium text-ink-500">{{ capacityLabel() }}</span>
+            <!-- One word for both occupancies. It read "Sleeps" on a private room and "Beds" on
+                 a dorm, which named two different things and left a host comparing rows that
+                 did not appear to hold the same kind of number. It is one field, called
+                 `capacity` everywhere behind this input — the label now says so too. -->
+            <span class="mb-1 block text-xs font-medium text-ink-500">Capacity</span>
             <input
               type="number"
               [min]="minCapacity()"
