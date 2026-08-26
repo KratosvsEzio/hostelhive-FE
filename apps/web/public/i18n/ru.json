@@ -277,6 +277,7 @@
     "allTime": "За всё время",
     "saveChanges": "Сохранить изменения",
     "nNights": "{{count}} ночей",
+    "nNightsOne": "{{count}} ночь",
     "nGuests": "{{count}} гостей",
     "guest": "Гость",
     "forDateRange": "на {{from}} – {{to}}.",
@@ -773,6 +774,8 @@
     "nPhotosAttached": "Прикреплено фото: {{count}}"
   },
   "hostRooms": {
+    "calendarTab": "Календарь",
+    "detailsTab": "Подробности",
     "available": "Свободна",
     "partlyBooked": "Частично занята",
     "booked": "Занята",
@@ -1014,13 +1017,9 @@
     "moveInsAndOuts": "Заселения и выезды",
     "pctBedsFilled": "Доля занятых мест"
   },
-  "hostAnalytics": {
-    "analytics": "Аналитика",
-    "bedsFilledLast12Months": "Занятые места · последние 12 месяцев",
-    "sortedByOutstanding": "Сортировка по задолженности",
-    "lastInvoice": "Последний счёт"
-  },
   "hostBookings": {
+    "calendarTab": "Календарь",
+    "listTab": "Список",
     "nothingHereYet": "Здесь пока пусто",
     "workingOutThePenalty": "Расчёт штрафа…",
     "youReCancellingOn": "Вы отменяете",

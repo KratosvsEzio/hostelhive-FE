@@ -1,10 +1,16 @@
 import { OccupancyPoint, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
 
 /**
- * Pure SVG geometry helpers for the analytics charts. No chart library is
- * installed (by design) — these compute dasharrays / bar heights / path `d`
- * strings from fixture data so the template can render plain inline SVG sized
- * with the brand tokens. All functions are deterministic and side-effect free.
+ * Pure SVG geometry helpers for the host overview's charts and its three detail
+ * pages. No chart library is installed (by design) — these compute dasharrays /
+ * bar heights / path `d` strings from the API's own series so the template can
+ * render plain inline SVG sized with the brand tokens. All functions are
+ * deterministic and side-effect free.
+ *
+ * Lived under `host/analytics/` until that page was deleted: it drew the same
+ * charts from arrays its API layer hardcoded empty, and the overview had already
+ * taken over the job with real data and date ranges. These outlived it because
+ * only the wiring was duplicated, never the geometry.
  */
 
 /* ── Donut (occupancy KPI) ─────────────────────────────────────────────── */

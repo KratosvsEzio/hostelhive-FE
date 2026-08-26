@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { EMPTY, Observable, map } from 'rxjs';
-import { AnalyticsData, Kpi, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
+import { Kpi, OverviewData, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 
 interface RenterMovementResponse {
@@ -115,11 +115,23 @@ function toKpis(res: ApiOverviewCardsResponse, month: string): Kpi[] {
   ];
 }
 
+/**
+ * Everything the host overview and its three detail pages read.
+ *
+ * Four endpoints, called separately rather than as one payload: the KPI row lands as soon
+ * as `overview_cards` answers, and a chart that is slow or fails takes only its own card
+ * down with it. It is also what the pages actually need — each detail page asks for one
+ * series over its own date range, which a single combined call could not serve.
+ *
+ * Was `AnalyticsApi`, for a host analytics page that drew these same charts and has been
+ * deleted; the overview had the real wiring and the date ranges.
+ */
 @Injectable({ providedIn: 'root' })
-export class AnalyticsApi {
+export class OverviewApi {
   private readonly api = inject(ApiClient);
 
-  getAnalytics(hostelSlug: string): Observable<AnalyticsData> {
+  /** The KPI row. Named for its endpoint, which is the only thing it reads. */
+  overviewCards(hostelSlug: string): Observable<OverviewData> {
     if (!hostelSlug) return EMPTY;
 
     const month = new Date().getMonth();
@@ -128,14 +140,7 @@ export class AnalyticsApi {
       .get<ApiOverviewCardsResponse>(
         `/api/host/hostels/${hostelSlug}/overview_cards`,
       )
-      .pipe(
-        map((res) => ({
-          kpis: toKpis(res, SHORT_MONTHS[month]),
-          revenue: [],
-          occupancy: [],
-          ledger: [],
-        })),
-      );
+      .pipe(map((res) => ({ kpis: toKpis(res, SHORT_MONTHS[month]) })));
   }
 
   monthlyRevenue(slug: string, startDate?: string, endDate?: string): Observable<RevenuePoint[]> {

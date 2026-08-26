@@ -3,17 +3,6 @@
     class="relative z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-ink-100 bg-white/95 px-5 backdrop-blur sm:px-8"
   >
     <div class="flex min-w-0 items-center gap-2 sm:gap-3">
-      @if (!hideMenu && !noMenu()) {
-        <button
-          hh-button variant="icon" size="sm"
-          type="button"
-          class="shrink-0"
-          [attr.aria-label]="'a11y.toggleMenu' | transloco"
-          (click)="drawer.toggle()"
-        >
-          <i class="ti ti-menu-2 text-xl"></i>
-        </button>
-      }
       <div class="flex min-w-0 items-center">
         @if (breadcrumbs().length || backUrl()) {
           <hh-breadcrumb [backUrl]="backUrl()" [crumbs]="breadcrumbs()" />

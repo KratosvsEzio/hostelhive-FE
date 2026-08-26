@@ -13,6 +13,9 @@ import { BehaviorSubject, map } from 'rxjs';
 import { provideDataAccess } from '@core/provide-data-access';
 import { LeadWall } from './lead-wall';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { NotificationService } from '@core/notification.service';
+import { AuthService } from '@core/auth';
+import { Observable } from 'rxjs';
 
 /** The component's members are `protected`; the spec asserts on them through this shape. */
 interface LeadWallInternals {
@@ -236,5 +239,101 @@ describe('LeadWall', () => {
     expect(loggingIn.fixture.nativeElement.textContent).not.toContain(
       'Create a free account',
     );
+  });
+});
+
+/**
+ * Walking away from a request in flight.
+ *
+ * A login can take a while, and a guest who changes their mind can close the screen while it
+ * is still going. Two things have to happen and neither is visible from the outside: the call
+ * has to be cancelled — a late success would otherwise sign somebody in on a page they had
+ * left — and the cancellation has to be said out loud, because silence after pressing Log in
+ * reads as the button having done nothing.
+ */
+describe('LeadWall cancelling a request in flight', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  /**
+   * An auth call that never answers, and that records being torn down.
+   *
+   * A plain Observable is the whole trick: its teardown function runs on unsubscribe, which
+   * is precisely what `takeUntilDestroyed` does when the component goes away. Nothing else
+   * about cancellation is observable from outside the component.
+   */
+  function mountWithPendingLogin() {
+    let cancelled = false;
+    const pending = () =>
+      new Observable<never>(() => () => {
+        cancelled = true;
+      });
+    const auth = { signIn: pending, signUp: pending, googleLogin: pending };
+
+    const toasts: { kind: string; title: string }[] = [];
+    const notify = { show: (t: { kind: string; title: string }) => toasts.push(t) };
+
+    const route = stubRoute({ mode: 'login' });
+    TestBed.configureTestingModule({
+      imports: [LeadWall],
+      providers: [
+        provideRouter([]),
+        provideDataAccess({ baseUrl: 'https://api.test' }),
+        provideI18nTesting(),
+        route.provider,
+        { provide: AuthService, useValue: auth },
+        { provide: NotificationService, useValue: notify },
+      ],
+    });
+    const fixture = TestBed.createComponent(LeadWall);
+    fixture.detectChanges();
+    return { fixture, toasts, wasCancelled: () => cancelled };
+  }
+
+  function startLogin(fixture: ComponentFixture<LeadWall>) {
+    const c = fixture.componentInstance as unknown as {
+      email: WritableSignal<string>;
+      password: WritableSignal<string>;
+      busy: WritableSignal<boolean>;
+      submit(e: Event): void;
+    };
+    c.email.set('someone@example.com');
+    c.password.set('hunter2hunter2');
+    c.submit(new Event('submit'));
+    return c;
+  }
+
+  it('cancels the request when the screen is closed mid-flight', () => {
+    const { fixture, wasCancelled } = mountWithPendingLogin();
+    const c = startLogin(fixture);
+    expect(c.busy()).toBe(true);
+
+    fixture.destroy();
+    expect(wasCancelled()).toBe(true);
+  });
+
+  it('says the login was cancelled', () => {
+    const { fixture, toasts } = mountWithPendingLogin();
+    startLogin(fixture);
+
+    fixture.destroy();
+    expect(toasts).toEqual([{ kind: 'info', title: 'Login cancelled' }]);
+  });
+
+  // Success and failure both clear `busy` before teardown, so neither should be announced
+  // as a cancellation on the way out.
+  it('says nothing when the request already finished', () => {
+    const { fixture, toasts } = mountWithPendingLogin();
+    const c = startLogin(fixture);
+    c.busy.set(false);
+
+    fixture.destroy();
+    expect(toasts).toEqual([]);
+  });
+
+  it('says nothing when no request was ever started', () => {
+    const { fixture, toasts } = mountWithPendingLogin();
+
+    fixture.destroy();
+    expect(toasts).toEqual([]);
   });
 });

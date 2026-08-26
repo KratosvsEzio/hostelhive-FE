@@ -21,13 +21,31 @@ export const FALLBACK_CURRENCY = 'USD';
 /**
  * Countries per supported language, in the app's own locale codes.
  *
- * Only the fourteen languages the app actually ships. A country is listed under the
- * language most of its people read, not every language spoken there — Belgium is Dutch
- * here because most Belgians read Dutch, and Switzerland is German for the same reason.
- * Getting that wrong costs a reader one click on a switcher that is always in the header.
+ * Only languages the app actually ships. A country is listed under the language most of
+ * its people read, not every language spoken there — Belgium is Dutch here because most
+ * Belgians read Dutch, and Switzerland is German for the same reason. Getting that wrong
+ * costs a reader one click on a switcher that is always in the header.
+ *
+ * A language may be shipped and still map to no country at all. That is a statement about
+ * what to *assume*, not about what is offered: an unmapped language is one nobody is ever
+ * put into without asking, and it switches, stores and renders exactly like the rest.
  */
 const COUNTRIES_BY_LOCALE: Record<string, readonly string[]> = {
-  ur: ['PK'],
+  /**
+   * Empty on purpose — Pakistan used to be here.
+   *
+   * English is one of Pakistan's two official languages and the one its booking, banking
+   * and travel sites are written in, so it is what a visitor there expects this app to
+   * open in. Urdu is the language most Pakistanis *speak*, which is what made the entry
+   * look right, and it is not the same question: this table decides what a stranger sees
+   * before they have told us anything, and reading Urdu is a far narrower claim about a
+   * person than being in Pakistan supports.
+   *
+   * Nothing about the language is withdrawn. It is in the switcher, it lays out RTL, every
+   * `/ur/…` link opens in it, and a visitor who picks it is never moved back off it by this
+   * table — a recorded choice stands the guess down entirely, in Pakistan as anywhere else.
+   */
+  ur: [],
   hi: ['IN'],
   ar: [
     'SA', 'AE', 'EG', 'DZ', 'MA', 'IQ', 'SD', 'SY', 'YE', 'JO', 'TN', 'LY',

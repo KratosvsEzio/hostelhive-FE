@@ -45,20 +45,61 @@ function tenant(overrides: Partial<Tenant> = {}): Tenant {
 }
 
 describe('emptyCheckInForm', () => {
+  /**
+   * The clock is pinned for these.
+   *
+   * "Today" was previously read from a second `new Date()` inside the assertion, which made
+   * the test agree with the code by construction — it could only catch a disagreement, never
+   * a wrong answer, and it went red for seven minutes a night when the two calls landed on
+   * different days. A fixed instant asserts the actual string.
+   */
+  function at(y: number, monthIndex: number, day: number, h: number, m: number): void {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(y, monthIndex, day, h, m, 30));
+  }
+
+  afterEach(() => vi.useRealTimers());
+
   it('defaults the joining datetime to local now and the billing cycle to the 1st and 5th', () => {
+    at(2026, 7, 25, 14, 37);
     const f = emptyCheckInForm();
-    const d = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const localToday = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
     // Local parts, not toISOString(): the latter is UTC and returns the previous day
     // for the first five hours of every day in PKT.
-    expect(f.joiningDate.slice(0, 10)).toBe(localToday);
+    expect(f.joiningDate).toBe('2026-08-25T14:30');
     expect(f.billingDate).toBe('1');
     expect(f.billingDueDate).toBe('5');
   });
 
+  /**
+   * The bug this pair exists for.
+   *
+   * Rounding to the nearest step turned 23:53 into 00:00 and carried the date into the next
+   * day, so a tenant checked in at the desk on the 25th was recorded as joining on the 26th
+   * — and the joining time sat seven minutes in the future.
+   */
+  it('does not roll into tomorrow late at night', () => {
+    at(2026, 7, 25, 23, 53);
+    expect(emptyCheckInForm().joiningDate).toBe('2026-08-25T23:45');
+  });
+
+  it('never dates the joining in the future', () => {
+    for (const [h, m] of [[23, 59], [23, 53], [0, 14], [12, 44], [9, 7]]) {
+      at(2026, 7, 25, h, m);
+      const joined = emptyCheckInForm().joiningDate;
+
+      expect(joined.slice(0, 10)).toBe('2026-08-25');
+      expect(joined <= `2026-08-25T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`).toBe(true);
+    }
+  });
+
+  it('holds the last day of a month', () => {
+    at(2026, 7, 31, 23, 58);
+    expect(emptyCheckInForm().joiningDate).toBe('2026-08-31T23:45');
+  });
+
   it('carries a time, rounded to a step the picker actually offers', () => {
+    at(2026, 7, 25, 14, 37);
     const f = emptyCheckInForm();
     expect(f.joiningDate.length).toBe(16);
     expect(f.joiningDate[10]).toBe('T');

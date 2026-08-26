@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -8,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Button, Input, PhoneInput, Tabs, TabItem, Container } from '@hostelhive/ui';
@@ -23,6 +24,7 @@ import { ApiError } from '@hostelhive/data-access';
 import { GoogleAuthService } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { NotificationService } from '@core/notification.service';
 
 type AuthTab = 'register' | 'login';
 type Phase = 'form' | 'verify';
@@ -61,6 +63,8 @@ export class LeadWall {
   private readonly session = inject(SessionStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly notify = inject(NotificationService);
 
   protected readonly tabs: TabItem[] = [
     { label: 'Register', value: 'register' },
@@ -100,6 +104,23 @@ export class LeadWall {
 
   protected readonly phase = signal<Phase>('form');
   protected readonly busy = signal(false);
+  /**
+   * Says so when a request was abandoned rather than answered.
+   *
+   * Closing the screen mid-request cancels it — `takeUntilDestroyed` aborts the call, which
+   * is what stops a late success from signing somebody in on a page they walked away from.
+   * That cancellation is silent by default, and silence after pressing Log in reads as the
+   * button having failed. `busy` is still true only if nothing came back: success and failure
+   * both clear it before this runs.
+   */
+  private readonly announceIfAbandoned = this.destroyRef.onDestroy(() => {
+    if (!this.busy()) return;
+    this.notify.show(
+      { kind: 'info', title: this.isRegister() ? 'Sign-up cancelled' : 'Login cancelled' },
+      4000,
+    );
+  });
+
   protected readonly showErrors = signal(false);
   protected readonly error = signal('');
 
@@ -215,6 +236,7 @@ export class LeadWall {
           password,
           phone: this.phone(), // already E.164 from hh-phone-input
         })
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.busy.set(false);
@@ -225,7 +247,10 @@ export class LeadWall {
           error: (err: ApiError) => this.fail(err),
         });
     } else {
-      this.auth.signIn(email, password).subscribe({
+      this.auth
+        .signIn(email, password)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
         next: () => {
           this.busy.set(false);
           this.afterLogin();
@@ -248,6 +273,7 @@ export class LeadWall {
     this.error.set('');
     this.googleAuth.getAccessToken().pipe(
       switchMap((token) => this.auth.googleLogin(token)),
+      takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: () => { this.busy.set(false); this.afterLogin(); },
       error: (err: ApiError) => this.fail(err),
@@ -258,7 +284,10 @@ export class LeadWall {
   protected verify(): void {
     this.busy.set(true);
     this.error.set('');
-    this.auth.signIn(this.email().trim(), this.password()).subscribe({
+    this.auth
+      .signIn(this.email().trim(), this.password())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.busy.set(false);
         this.afterLogin();

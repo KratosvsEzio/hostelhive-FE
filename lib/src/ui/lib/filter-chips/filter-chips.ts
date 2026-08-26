@@ -3,6 +3,14 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 export interface FilterChipOption {
   label: string;
   value: string;
+  /**
+   * Optional tally shown beside the label, muted.
+   *
+   * Kept out of the label so it stays legible as a number rather than becoming part of the
+   * name — a chip reading "Past 0" tells a host there is nothing to go and look at, which is
+   * the whole reason to put it on the chip instead of inside the tab.
+   */
+  count?: number;
 }
 
 @Component({
@@ -16,7 +24,9 @@ export interface FilterChipOption {
           type="button"
           [class]="chipClass(tab.value)"
           (click)="activeChange.emit(tab.value)"
-        >{{ tab.label }}</button>
+        >
+          {{ tab.label }}@if (tab.count !== undefined) {<span class="ms-1 tabular-nums opacity-70">{{ tab.count }}</span>}
+        </button>
       }
     </div>
   `,

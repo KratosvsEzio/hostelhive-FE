@@ -1,9 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { Router } from '@angular/router';
-import { Breadcrumb as HhBreadcrumb, Button, Container } from '@hostelhive/ui';
-import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
+import { Breadcrumb as HhBreadcrumb, Container } from '@hostelhive/ui';
 import { MobileApp } from '@core/mobile-app';
-import { routePath } from '@core/i18n/locales';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 export interface Breadcrumb {
@@ -24,28 +21,22 @@ export interface Breadcrumb {
  * (`h-[calc(100dvh-4rem)] overflow-hidden`) so `h-full` resolves correctly.
  *
  * On the mobile app the © footer is dropped and the scroll area gets bottom
- * padding to clear the fixed tab bar; in the host area the burger disappears
- * too (the host tab bar + More screen replace the drawer there — the staff
- * console keeps its drawer, so its burger stays).
+ * padding to clear the fixed tab bar.
+ *
+ * There is no menu button: the sidebar is always on screen, narrowing to a rail
+ * of icons rather than hiding, so there is nothing left for a burger to reveal.
  */
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, HhBreadcrumb, Button, TranslocoPipe],
+  imports: [Container, HhBreadcrumb, TranslocoPipe],
   templateUrl: './dashboard-layout.html',
 })
 export class DashboardLayout {
-  /** Shared sidebar drawer — the subheader burger toggles it (collapse on desktop, overlay on mobile). */
-  protected readonly drawer = inject(ConsoleDrawer);
   protected readonly mobile = inject(MobileApp);
-
-  // Snapshot is enough: a dashboard-layout instance lives inside one routed page.
-  protected readonly hideMenu =
-    routePath(inject(Router).url).startsWith('/host/') && this.mobile.isMobile();
 
   readonly label = input<string>('');
   readonly backUrl = input<string>('');
   readonly breadcrumbs = input<Breadcrumb[]>([]);
-  readonly noMenu = input(false);
 }

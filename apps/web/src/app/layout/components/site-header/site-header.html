@@ -28,49 +28,13 @@
       }
 
       <div class="flex shrink-0 items-center gap-3">
-        <!-- No host CTA out here. It lives in the account menu, which already carried the
-             same action for signed-in users — so a host saw "Switch to hosting" twice, once
-             in the bar and once in their own menu, and neither told them which was which.
-             The bar keeps the controls that belong to nobody in particular: language, the
-             bell, the avatar. -->
-        @switch (area()) {
-          @case ('host') {
-            <!-- Icon-only below sm: the console areas have no other way off a phone, and
-                 the full label alongside the logo, bell and avatar overflows a 375px bar. -->
-            <a
-              routerLink="/"
-              class="rounded-full px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:px-4"
-              [attr.aria-label]="'a11y.viewSite' | transloco"
-            >
-              <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
-              <span class="hidden sm:inline">{{ 'nav.switchToHosting' | transloco }}</span>
-            </a>
-          }
-          @case ('admin') {
-            <!-- Icon-only below sm: the console areas have no other way off a phone, and
-                 the full label alongside the logo, bell and avatar overflows a 375px bar. -->
-            <a
-              routerLink="/"
-              class="rounded-full px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:px-4"
-              [attr.aria-label]="'a11y.viewSite' | transloco"
-            >
-              <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
-              <span class="hidden sm:inline">{{ 'nav.switchToHosting' | transloco }}</span>
-            </a>
-          }
-          @case ('moderator') {
-            <!-- Icon-only below sm: the console areas have no other way off a phone, and
-                 the full label alongside the logo, bell and avatar overflows a 375px bar. -->
-            <a
-              routerLink="/"
-              class="rounded-full px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 sm:px-4"
-              [attr.aria-label]="'a11y.viewSite' | transloco"
-            >
-              <i class="ti ti-door-exit text-lg sm:hidden" aria-hidden="true"></i>
-              <span class="hidden sm:inline">{{ 'nav.switchToHosting' | transloco }}</span>
-            </a>
-          }
-        }
+        <!-- Nothing role-specific out here. Both the host CTA and the way back out of a
+             console live in the account menu now: the bar keeps only the controls that
+             belong to nobody in particular — language, the bell, the avatar.
+
+             The three cases this replaced were identical, and all three labelled a link to
+             `/` "Switch to hosting" while their own aria-label said "View site". It went to
+             the public site. A host already in the console read it as the way further in. -->
         <!-- Sits before the account menu: a visitor who cannot read the page needs this
              before anything else in the header. -->
         <hh-language-switcher class="hidden sm:block" />

@@ -1,0 +1,171 @@
+@if (booking(); as b) {
+  <div class="fixed inset-0 z-[70] flex items-end justify-center bg-ink-900/40 sm:items-center sm:p-6">
+    <button
+      type="button"
+      class="absolute inset-0 -z-10 cursor-default"
+      aria-label="Close"
+      (click)="close()"
+    ></button>
+
+    <section
+      class="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-pill sm:max-h-[86vh] sm:max-w-2xl sm:rounded-2xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="hh-request-title"
+    >
+      <header class="flex items-center gap-3 border-b border-ink-100 px-4 py-3 sm:px-5 sm:py-4">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-warn/15 text-sm font-semibold text-warn">
+          {{ initials(b.guest.name) }}
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 id="hh-request-title" class="truncate font-display text-base font-semibold text-ink-900">
+              {{ b.guest.name }}
+            </h2>
+            <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" [class]="badge()">
+              {{ b.disposition.name || 'Booking' }}
+            </span>
+          </div>
+          <p class="mt-0.5 truncate text-xs text-ink-500">
+            @if (requestedAgo()) {
+              Requested {{ requestedAgo() }}
+            }
+            @if (b.source) {
+              · via {{ b.source }}
+            }
+            @if (b.ref) {
+              · {{ b.ref }}
+            }
+          </p>
+        </div>
+        <button hh-button variant="icon" size="sm" type="button" aria-label="Close" (click)="close()">
+          <i class="ti ti-x text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="min-h-0 flex-1 overflow-y-auto">
+        <!-- The four facts the decision turns on, in the design's order. Two columns on a
+             phone rather than four: at 402px, four columns wrap mid-figure. -->
+        <dl class="grid grid-cols-2 gap-px border-b border-ink-100 bg-ink-100 sm:grid-cols-4">
+          <div class="bg-white px-4 py-3">
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Stay</dt>
+            <dd class="mt-1 text-sm font-semibold text-ink-900">
+              {{ b.checkIn | date: 'EEE d' }} → {{ b.checkOut | date: 'EEE d MMM' }}
+            </dd>
+            <dd class="text-xs text-ink-500">{{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</dd>
+          </div>
+          <div class="bg-white px-4 py-3">
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Asked for</dt>
+            <dd class="mt-1 text-sm font-semibold text-ink-900">{{ askedFor() }}</dd>
+            <dd class="truncate text-xs text-ink-500">{{ askedForDetail() }}</dd>
+          </div>
+          <div class="bg-white px-4 py-3">
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Quoted</dt>
+            <dd class="mt-1 text-sm font-semibold text-ink-900">
+              @if (b.roomType.price) {
+                PKR {{ b.roomType.price | number: '1.0-0' }}
+                <span class="text-xs font-normal text-ink-500">/ night</span>
+              } @else {
+                —
+              }
+            </dd>
+            <dd class="text-xs text-ink-500">PKR {{ b.total | number: '1.0-0' }} total</dd>
+          </div>
+          <div class="bg-white px-4 py-3">
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Deposit</dt>
+            <dd class="mt-1 text-sm font-semibold text-ink-900">
+              PKR {{ b.deposit | number: '1.0-0' }}
+            </dd>
+            <!-- Held vs still owed changes what declining costs, so it is not decoration. -->
+            <dd class="text-xs" [class]="depositPaid() ? 'text-ok' : 'text-ink-500'">
+              {{ depositPaid() ? 'Paid online' : 'Not yet paid' }}
+            </dd>
+          </div>
+        </dl>
+
+        @if (b.notes) {
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+              Note from guest
+            </p>
+            <!-- Verbatim and in quotes: it is the guest's words, and paraphrasing a request
+                 for a lower bunk is how somebody ends up on a top one. -->
+            <blockquote class="mt-1.5 text-sm italic text-ink-700">“{{ b.notes }}”</blockquote>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 gap-px bg-ink-100 sm:grid-cols-2">
+          <div class="bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Contact</p>
+            @if (b.guest.phone || b.guest.email) {
+              @if (b.guest.phone) {
+                <a
+                  class="mt-1 block truncate text-sm font-medium text-brand-600 hover:underline"
+                  [href]="'tel:' + b.guest.phone"
+                  >{{ b.guest.phone }}</a
+                >
+              }
+              @if (b.guest.email) {
+                <a
+                  class="block truncate text-sm text-ink-600 hover:underline"
+                  [href]="'mailto:' + b.guest.email"
+                  >{{ b.guest.email }}</a
+                >
+              }
+            } @else {
+              <p class="mt-1 text-sm text-ink-400">No contact details on this booking</p>
+            }
+          </div>
+          <div class="bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Payment</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">
+              PKR {{ b.paid | number: '1.0-0' }} paid
+            </p>
+            <p class="text-xs" [class]="b.balanceDue ? 'text-warn' : 'text-ink-500'">
+              {{
+                b.balanceDue
+                  ? 'PKR ' + (b.balanceDue | number: '1.0-0') + ' still due'
+                  : 'Nothing outstanding'
+              }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="border-t border-ink-100 bg-surface px-4 py-3 sm:px-5">
+        @if (actionError()) {
+          <p class="mb-2 rounded-lg bg-danger/10 px-3 py-2 text-xs font-medium text-danger" role="alert">
+            {{ actionError() }}
+          </p>
+        }
+        <div class="flex items-center justify-between gap-3">
+          <p class="min-w-0 text-xs text-ink-500">
+            @if (actionable()) {
+              {{
+                depositPaid()
+                  ? 'Declining releases the room and refunds the deposit'
+                  : 'Declining releases the room; no deposit has been taken'
+              }}
+            } @else {
+              This booking already has a room.
+            }
+          </p>
+          <div class="flex shrink-0 items-center gap-2">
+            @if (actionable()) {
+              <button hh-button variant="outlined" size="sm" type="button" (click)="onDecline()">
+                Decline
+              </button>
+              <button hh-button color="primary" size="sm" type="button" (click)="onAssign()">
+                Assign room
+              </button>
+            } @else {
+              <button hh-button variant="outlined" size="sm" type="button" (click)="close()">
+                Close
+              </button>
+            }
+          </div>
+        </div>
+      </footer>
+    </section>
+  </div>
+}

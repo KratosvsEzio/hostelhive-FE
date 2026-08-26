@@ -277,6 +277,7 @@
     "allTime": "Todo el tiempo",
     "saveChanges": "Guardar cambios",
     "nNights": "{{count}} noches",
+    "nNightsOne": "{{count}} noche",
     "nGuests": "{{count}} huéspedes",
     "guest": "Huésped",
     "forDateRange": "del {{from}} al {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} fotos adjuntas"
   },
   "hostRooms": {
+    "calendarTab": "Calendario",
+    "detailsTab": "Detalles",
     "available": "Disponible",
     "partlyBooked": "Parcialmente reservada",
     "booked": "Reservada",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "Entradas y salidas",
     "pctBedsFilled": "Porcentaje de camas ocupadas"
   },
-  "hostAnalytics": {
-    "analytics": "Analíticas",
-    "bedsFilledLast12Months": "Camas ocupadas · últimos 12 meses",
-    "sortedByOutstanding": "Ordenado por pendiente",
-    "lastInvoice": "Última factura"
-  },
   "hostBookings": {
+    "calendarTab": "Calendario",
+    "listTab": "Lista",
     "nothingHereYet": "Aquí no hay nada aún",
     "workingOutThePenalty": "Calculando la penalización…",
     "youReCancellingOn": "Estás cancelando el",

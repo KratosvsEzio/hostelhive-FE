@@ -31,9 +31,12 @@ const STATUS_CLASS: Record<ListingStatus, string> = {
 /**
  * Mobile "More" tab of the host console (design board 42): everything that
  * doesn't fit in the bottom tab bar — account card, per-hostel destinations
- * (profile, team, utilities, analytics), account destinations (subscription,
- * settings, help, sign out) and the property switcher as a bottom sheet.
+ * (bookings, profile, team, utilities, mess, expenses), account destinations
+ * (subscription, settings, help, sign out) and the property switcher as a bottom sheet.
  * Reachable on desktop too, but only linked from the mobile tab bar.
+ *
+ * Together with the tab bar this is the whole of host navigation under 768px, where the
+ * sidebar is not rendered — so a destination absent from both cannot be reached at all.
  */
 @Component({
   selector: 'app-host-more',
@@ -47,6 +50,14 @@ export class HostMore {
   /** Permission-driven, not role-driven: the API decides who may create a hostel. */
   protected readonly canCreateHostel = computed(
     () => this.session.hasPermission('core:Hostel:create'),
+  );
+  /**
+   * The same permission the sidebar gates Bookings on, so the destination appears under
+   * exactly one rule rather than one per surface — a sub-user who cannot open the page on
+   * desktop should not be handed a link to it here.
+   */
+  protected readonly canSeeBookings = computed(
+    () => this.session.hasPermission('host:Room:index'),
   );
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);

@@ -34,8 +34,8 @@ import { LocaleSync } from '@core/i18n/locale-sync';
 import { GeoPreference } from '@core/geo/geo-preference';
 import { CountryBounds, centreOf } from '@core/geo/country-bounds';
 import { PlaceSearchBias } from '@hostelhive/maps';
-import { AnalyticsService } from '@core/analytics/analytics.service';
-import { restoreAnalyticsConsent } from '@core/analytics/analytics-consent';
+import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
+import { restoreGoogleAnalyticsConsent } from '@core/google-analytics/google-analytics-consent';
 
 const STAFF: Role[] = ['super-admin', 'admin', 'support', 'moderator'];
 
@@ -152,8 +152,8 @@ export const appConfig: ApplicationConfig = {
     // script, no cookie and no request: the banner is a gate, not a notice.
     provideAppInitializer(() => {
       if (typeof window === 'undefined') return; // SSR
-      restoreAnalyticsConsent();
-      inject(AnalyticsService).start();
+      restoreGoogleAnalyticsConsent();
+      inject(GoogleAnalyticsService).start();
     }),
     // DEV ONLY — seed a console session so guarded /host + /admin routes render
     // before the Lead Wall login ships. Public seeker pages stay session-less.

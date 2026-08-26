@@ -33,7 +33,7 @@ Airbnb-quality result.
 
 | Decision | Choice | Consequence for this plan |
 |----------|--------|---------------------------|
-| Release strategy | **Marketplace loop first** | v1.0 = Seeker + Host + Moderator (M0–M3 + hardening); Operations/Billing + Analytics ship as **Release 1.1** (M4–M5). |
+| Release strategy | **Marketplace loop first** | v1.0 = Seeker + Host + Moderator (M0–M3 + hardening); Operations/Billing + ~~Analytics~~ ship as **Release 1.1** (M4–~~M5~~). M5 was absorbed into the overview — Impl. Plan §11, 2026-08-26. |
 | UI foundation | **Tailwind CSS + Angular CDK** custom design system | Locked; Angular Material/PrimeNG not used. Maximises Airbnb-grade visual control. |
 | App topology | **Two apps**: `web` (public SSR) + `console` (host, Manager/Warden, Moderator **and** Super Admin behind role guards) | `/admin/**` (Moderator + Super Admin — incl. roles/contracts/payments, F6) is edge IP-allowlisted per §9.2; Manager/Warden are property-scoped hosts (F8). `/admin` can split into its own app later if sensitivity warrants. |
 | API contract | **To be confirmed with BE team** | Assume OpenAPI 3 + generated SDK; a 1–2 week contract-capture spike is held in reserve. |
@@ -95,6 +95,15 @@ These are **not** in the PRD and block the data layer. Listed by risk.
 - Date/timezone handling pinned to **UTC+5** (cron at server midnight) — be explicit in all date logic.
 
 **Feature 5 — Analytics Dashboard**
+
+> **Shipped differently (2026-08-26).** There is no analytics screen: the host **overview**
+> carries the KPI cards and the charts, with `overview/revenue|occupancy|movement` detail
+> pages behind them. The separate `16-analytics` page was built, superseded, and deleted —
+> see `HostelHive-Implementation-Plan.md` §11. The first question below was answered
+> **N calls, not one**: `overview_cards` for the KPI row and a per-series endpoint for each
+> chart, so a slow or failed chart costs only its own card. The multi-property selector
+> became a `:hostelId` path segment rather than a query param, and exports were not built.
+
 - KPI cards: confirm a **single aggregated endpoint** vs N calls (dashboard P95 < 2s).
 - Multi-property selector persists in URL (`?property=all|{id}`) — routing/state pattern.
 - Exports: PDF is "branded" → **BE-generated**; CSV can be **client-side**. Confirm per export.
@@ -146,7 +155,7 @@ These are **not** in the PRD and block the data layer. Listed by risk.
 - `data-access` — generated API SDK, DTOs, `httpResource` wrappers, interceptors.
 - `auth` — session SignalStore, guards, interceptors, Lead Wall.
 - `maps` — Google Maps pin/autocomplete/geocode.
-- `feature-*` — `feature-search`, `feature-listing`, `feature-onboarding`, `feature-moderation`, `feature-operations`, `feature-analytics`.
+- `feature-*` — `feature-search`, `feature-listing`, `feature-onboarding`, `feature-moderation`, `feature-operations`, ~~`feature-analytics`~~. *(Shipped as folders under `apps/web/src/app/features/`, not Nx libs — Impl. Plan §11, 2026-06-13. There is no analytics feature: it lives in the overview — §11, 2026-08-26.)*
 - `util` — pipes (PKR, dates @ UTC+5), validators, config, error handling.
 
 ### 2.3 Cross-cutting standards
@@ -179,7 +188,7 @@ de-risks the program, and gives stakeholders a working demo by the end of M1.
 | **M2 — Discovery depth (Feature 1 full)** | Full filter set, sort, rich listing detail, interactive detail map + info window, SSR/SEO, optional **map+list split search**, city landing pages. | Search engine, listing detail, SEO | **M–L** |
 | **M3 — Moderation depth (Feature 3 full)** | Full review queue (paginated, sortable, searchable), inline rich-text editing, per-image approve/reject/replace/set-primary, map verification, decision actions + notifications, **delta media pipeline** queue + badge, audit log. | Review queue, media pipeline | **M–L** |
 | **M4 — Operations & billing UI (Feature 4)** | Room CRUD, tenant check-in/out, utility entry + **pro-rata split override UI**, invoice list + PDF view. (Cron/PDF/WhatsApp are BE.) | Rooms, tenants, utilities, invoices | **L** |
-| **M5 — Analytics dashboard (Feature 5)** | KPI cards (deep-linking), revenue + occupancy charts, tenant ledger, **multi-property URL-persisted filter**, PDF/CSV exports. | KPIs, charts, ledger, exports | **M** |
+| ~~**M5 — Analytics dashboard (Feature 5)**~~ **— absorbed into the overview, 2026-08-26** | KPI cards (deep-linking), revenue + occupancy charts, tenant ledger, **multi-property URL-persisted filter**, ~~PDF/CSV exports~~ (not built). Delivered on `/host/:hostelId/overview` + three detail pages, not as its own screen — Impl. Plan §11. | KPIs, charts, ledger | **M** |
 | **M6 — Hardening & launch** | Hit all §9 NFRs: perf budgets green, WCAG 2.1 AA audit passed, security review (CSP/XSS/keys), cross-browser/device QA, e2e coverage, Sentry+analytics live, empty/error polish, UAT, launch runbook. | Perf, a11y, security, QA | **M–L** |
 
 ### 3.3 Indicative timeline & team (assumption — recalibrate after Q-API answer)
@@ -252,7 +261,7 @@ Status: success `#27AE60`, warning `#F39C12`, error `#E74C3C`. All tokens live i
 11. Tenants (check-in form, tenant list, check-out)
 12. Utilities — **bill entry + pro-rata split table with manual override**
 13. Invoices list + **invoice PDF view**
-14. **Analytics dashboard** — KPI cards, revenue chart, occupancy timeline, tenant ledger, multi-property selector, exports
+14. ~~**Analytics dashboard**~~ — KPI cards, revenue chart, occupancy timeline, tenant ledger, multi-property selector, ~~exports~~. **Shipped inside the host home (item 7), not as a screen of its own — 2026-08-26, Impl. Plan §11.**
 
 **Moderator / Admin**
 15. **Review queue** (table: thumbnail, name, city, host, submitted, days-in-queue; sort/search)

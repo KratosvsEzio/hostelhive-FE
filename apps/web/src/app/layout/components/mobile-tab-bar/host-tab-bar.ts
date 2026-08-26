@@ -12,8 +12,13 @@ import { LocaleLink } from '@core/i18n/locale-link';
 /**
  * Bottom tab bar for the host console on the mobile app (design boards 42–44):
  * Overview · Rooms · Tenants · Invoices · More. Rendered by HostShell when
- * `MobileApp.isMobile` is true; the remaining sidebar destinations (profile,
- * team, utilities, analytics, subscription, property switcher) live on /more.
+ * `MobileApp.isMobile` is true — which is any viewport under 768px, not only the
+ * packaged app, and at that width HostShell renders no sidebar at all.
+ *
+ * These five plus /more are therefore the *whole* of host navigation on a phone, so a
+ * sidebar destination missing from both is unreachable except by typing its URL. That is
+ * what happened to Bookings, which sat in neither list until it was added to /more. When
+ * adding a destination to the sidebar, give it a home here or there in the same change.
  */
 @Component({
   selector: 'app-host-tab-bar',

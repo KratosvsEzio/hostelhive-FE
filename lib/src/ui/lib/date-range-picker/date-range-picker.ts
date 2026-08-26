@@ -140,10 +140,7 @@ function shortLabel(iso: string | null): string {
         (click)="toggle()"
         aria-haspopup="dialog"
         [attr.aria-expanded]="open()"
-        class="inline-flex h-8 w-full items-center gap-2 rounded-full border bg-white px-3.5 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-100"
-        [class]="
-          open() ? 'border-brand-400' : 'border-ink-300 hover:border-ink-400'
-        "
+        [class]="triggerClass()"
       >
         <i class="ti ti-calendar shrink-0 text-ink-400"></i>
         <span
@@ -306,6 +303,16 @@ export class DateRangePicker {
     return this.i18n.translate(key);
   }
 
+  /**
+   * How the trigger is drawn.
+   *
+   * `pill` is the filter-bar chip this started as and stays the default, because every
+   * other caller is a filter bar. `field` is the form control — for a range sitting in a
+   * form beside `hh-input`, where a 32px fully-round chip reads as a different kind of
+   * thing from the boxes either side of it.
+   */
+  readonly variant = input<'pill' | 'field'>('pill');
+
   readonly from = input<string | null>(null);
   readonly to = input<string | null>(null);
   readonly placeholder = input<string | undefined>(undefined);
@@ -322,6 +329,23 @@ export class DateRangePicker {
   private readonly portal = viewChild<ElementRef<HTMLElement>>('portal');
 
   protected readonly open = signal(false);
+
+  protected readonly triggerClass = computed(() => {
+    const base =
+      'inline-flex w-full items-center gap-2 border bg-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-100';
+    const field = this.variant() === 'field';
+    // `py-2.5 px-3` is the 42px form control — the same box `hh-input` renders at, and
+    // the same one the dropdown's `field` variant uses, so the three line up in a row.
+    const shape = field
+      ? 'rounded-xl px-3 py-2.5 text-sm'
+      : 'h-8 rounded-full px-3.5 text-sm';
+    const edge = this.open()
+      ? 'border-brand-400'
+      : field
+        ? 'border-ink-200 hover:border-ink-400'
+        : 'border-ink-300 hover:border-ink-400';
+    return `${base} ${shape} ${edge}`;
+  });
   protected readonly pos = signal<{ top: number; left: number } | null>(null);
   /** First visible month (day 1). */
   private readonly viewMonth = signal(startOfMonth(new Date()));

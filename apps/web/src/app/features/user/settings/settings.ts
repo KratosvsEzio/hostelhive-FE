@@ -11,12 +11,12 @@ import { Button, Dropdown, DropdownOption, Toggle } from '@hostelhive/ui';
 import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { SessionStore } from '@core/auth';
 import { ImageUploadService, UsersApi } from '@services';
-import { AnalyticsService } from '@core/analytics/analytics.service';
+import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import {
-  analyticsConsent,
-  setAnalyticsConsent,
-} from '@core/analytics/analytics-consent';
-import { analyticsEnv } from '@app/analytics.env';
+  googleAnalyticsConsent,
+  setGoogleAnalyticsConsent,
+} from '@core/google-analytics/google-analytics-consent';
+import { googleAnalyticsEnv } from '@app/google-analytics.env';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { LOCALES, flagSrc } from '@core/i18n/locales';
@@ -34,18 +34,18 @@ export class AccountSettings implements OnInit {
   private readonly session = inject(SessionStore);
   private readonly usersApi = inject(UsersApi);
   private readonly imageUpload = inject(ImageUploadService);
-  private readonly analytics = inject(AnalyticsService);
+  private readonly analytics = inject(GoogleAnalyticsService);
 
   /**
    * Withdrawing consent has to be as easy as giving it (GDPR Art. 7(3)), and "clear your
    * localStorage" is not that. Hidden entirely when no measurement id is configured —
    * offering a switch that governs nothing would imply tracking that is not happening.
    */
-  protected readonly analyticsConfigured = !!analyticsEnv.measurementId;
-  protected readonly analyticsAllowed = computed(() => analyticsConsent() === 'granted');
+  protected readonly analyticsConfigured = !!googleAnalyticsEnv.measurementId;
+  protected readonly analyticsAllowed = computed(() => googleAnalyticsConsent() === 'granted');
 
   protected onAnalyticsToggle(allow: boolean): void {
-    setAnalyticsConsent(allow ? 'granted' : 'denied');
+    setGoogleAnalyticsConsent(allow ? 'granted' : 'denied');
     if (allow) this.analytics.start();
     else this.analytics.stop();
   }

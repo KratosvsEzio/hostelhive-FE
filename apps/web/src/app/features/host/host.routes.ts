@@ -17,7 +17,6 @@ import { ExpensesList } from './expenses/expenses-list';
 import { ExpenseDetailPage } from './expenses/expense-detail';
 import { MessConfirmations } from './mess/mess-confirmations';
 import { MessNotifications } from './mess/mess-notifications';
-import { Analytics } from './analytics/analytics';
 import { Utilities } from './utilities/utilities';
 import { HostOverview } from './overview/overview';
 import { NewHostel } from './new-hostel/new-hostel';
@@ -192,7 +191,6 @@ export const HOST_ROUTES: Route[] = [
           { path: ':expenseId/edit', component: AddGrocery, title: 'Edit expense — HostelHive' },
         ],
       },
-      { path: 'analytics', component: Analytics, title: 'Analytics — HostelHive' },
       {
         path: 'mess',
         canActivate: [permissionGuard('host:WeeklyMenu:index')],

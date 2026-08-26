@@ -8,8 +8,8 @@ import {
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Card, ErrorState, Skeleton } from '@hostelhive/ui';
-import { AnalyticsApi, HostPropertyStore, OccupancySummaryPoint } from '@services';
-import { occupancyLine } from '@features/host/analytics/charts/chart-helpers';
+import { HostPropertyStore, OccupancySummaryPoint, OverviewApi } from '@services';
+import { occupancyLine } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
@@ -33,7 +33,7 @@ const toISO = (d: Date | undefined): string | undefined =>
   templateUrl: './occupancy-detail.html',
 })
 export class OccupancyDetail {
-  private readonly api = inject(AnalyticsApi);
+  private readonly api = inject(OverviewApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
   protected readonly dateRange = signal<DateRange | null>(

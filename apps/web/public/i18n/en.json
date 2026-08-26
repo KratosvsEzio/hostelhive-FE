@@ -335,6 +335,7 @@
     "allTime": "All time",
     "saveChanges": "Save changes",
     "nNights": "{{count}} nights",
+    "nNightsOne": "{{count}} night",
     "nGuests": "{{count}} guests",
     "guest": "Guest",
     "forDateRange": "for {{from}} – {{to}}.",
@@ -459,13 +460,9 @@
     "statCities": "cities",
     "statSeekerRating": "seeker rating"
   },
-  "hostAnalytics": {
-    "analytics": "Analytics",
-    "bedsFilledLast12Months": "Beds filled · last 12 months",
-    "sortedByOutstanding": "Sorted by outstanding",
-    "lastInvoice": "Last invoice"
-  },
   "hostBookings": {
+    "calendarTab": "Calendar",
+    "listTab": "List",
     "nothingHereYet": "Nothing here yet",
     "workingOutThePenalty": "Working out the penalty…",
     "youReCancellingOn": "You're cancelling on",
@@ -641,6 +638,8 @@
     "pctBedsFilled": "Percentage of beds filled"
   },
   "hostRooms": {
+    "calendarTab": "Calendar",
+    "detailsTab": "Details",
     "available": "Available",
     "partlyBooked": "Partly booked",
     "booked": "Booked",

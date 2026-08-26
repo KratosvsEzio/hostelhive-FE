@@ -21,20 +21,20 @@ function read(): ConsentState {
  * HTML — the server cannot know what this visitor previously chose, and guessing would
  * either flash a banner at someone who already answered or hide it from someone who has not.
  */
-export const analyticsConsent = signal<ConsentState>('unset');
+export const googleAnalyticsConsent = signal<ConsentState>('unset');
 
 /** Reads the stored choice into the signal. Browser only; safe to call more than once. */
-export function restoreAnalyticsConsent(): void {
-  analyticsConsent.set(read());
+export function restoreGoogleAnalyticsConsent(): void {
+  googleAnalyticsConsent.set(read());
 }
 
-export function setAnalyticsConsent(state: Exclude<ConsentState, 'unset'>): void {
+export function setGoogleAnalyticsConsent(state: Exclude<ConsentState, 'unset'>): void {
   if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, state);
-  analyticsConsent.set(state);
+  googleAnalyticsConsent.set(state);
 }
 
 /** For a "withdraw consent" control in settings, and for tests. */
-export function clearAnalyticsConsent(): void {
+export function clearGoogleAnalyticsConsent(): void {
   if (typeof localStorage !== 'undefined') localStorage.removeItem(KEY);
-  analyticsConsent.set('unset');
+  googleAnalyticsConsent.set('unset');
 }

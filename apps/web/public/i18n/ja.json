@@ -277,6 +277,7 @@
     "allTime": "全期間",
     "saveChanges": "変更を保存",
     "nNights": "{{count}} 泊",
+    "nNightsOne": "{{count}} 泊",
     "nGuests": "{{count}} 名",
     "guest": "ゲスト",
     "forDateRange": "{{from}}〜{{to}} の分。",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "写真 {{count}} 枚を添付"
   },
   "hostRooms": {
+    "calendarTab": "カレンダー",
+    "detailsTab": "詳細",
     "available": "空室",
     "partlyBooked": "一部予約済み",
     "booked": "予約済み",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "入居と退去",
     "pctBedsFilled": "ベッド稼働率"
   },
-  "hostAnalytics": {
-    "analytics": "分析",
-    "bedsFilledLast12Months": "使用中のベッド · 過去12か月",
-    "sortedByOutstanding": "未払い額順",
-    "lastInvoice": "最新の請求書"
-  },
   "hostBookings": {
+    "calendarTab": "カレンダー",
+    "listTab": "一覧",
     "nothingHereYet": "ここにはまだ何もありません",
     "workingOutThePenalty": "違約金を計算中…",
     "youReCancellingOn": "キャンセル日：",

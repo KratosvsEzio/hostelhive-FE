@@ -277,6 +277,7 @@
     "allTime": "Hela tiden",
     "saveChanges": "Spara ändringar",
     "nNights": "{{count}} nätter",
+    "nNightsOne": "{{count}} natt",
     "nGuests": "{{count}} gäster",
     "guest": "Gäst",
     "forDateRange": "för {{from}} – {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} foton bifogade"
   },
   "hostRooms": {
+    "calendarTab": "Kalender",
+    "detailsTab": "Detaljer",
     "available": "Ledigt",
     "partlyBooked": "Delvis bokat",
     "booked": "Bokat",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "In- och utflyttningar",
     "pctBedsFilled": "Andel upptagna sängar"
   },
-  "hostAnalytics": {
-    "analytics": "Analyser",
-    "bedsFilledLast12Months": "Upptagna sängar · senaste 12 månaderna",
-    "sortedByOutstanding": "Sorterat efter utestående",
-    "lastInvoice": "Senaste fakturan"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Lista",
     "nothingHereYet": "Inget här ännu",
     "workingOutThePenalty": "Beräknar avgiften…",
     "youReCancellingOn": "Du avbokar den",

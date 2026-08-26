@@ -277,6 +277,7 @@
     "allTime": "सभी समय",
     "saveChanges": "परिवर्तन सहेजें",
     "nNights": "{{count}} रातें",
+    "nNightsOne": "{{count}} रात",
     "nGuests": "{{count}} अतिथि",
     "guest": "अतिथि",
     "forDateRange": "{{from}} – {{to}} के लिए।",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} फ़ोटो संलग्न"
   },
   "hostRooms": {
+    "calendarTab": "कैलेंडर",
+    "detailsTab": "विवरण",
     "available": "उपलब्ध",
     "partlyBooked": "आंशिक रूप से बुक",
     "booked": "बुक",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "आगमन और प्रस्थान",
     "pctBedsFilled": "भरे बेड का प्रतिशत"
   },
-  "hostAnalytics": {
-    "analytics": "एनालिटिक्स",
-    "bedsFilledLast12Months": "भरे बिस्तर · पिछले 12 महीने",
-    "sortedByOutstanding": "बकाया अनुसार क्रमबद्ध",
-    "lastInvoice": "अंतिम चालान"
-  },
   "hostBookings": {
+    "calendarTab": "कैलेंडर",
+    "listTab": "सूची",
     "nothingHereYet": "अभी यहाँ कुछ नहीं",
     "workingOutThePenalty": "जुर्माना निकाला जा रहा है…",
     "youReCancellingOn": "आप रद्द कर रहे हैं",

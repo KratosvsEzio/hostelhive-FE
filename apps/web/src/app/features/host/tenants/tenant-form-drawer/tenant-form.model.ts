@@ -69,21 +69,25 @@ const REQUIRED_FIELDS = [
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /**
- * Local now as `YYYY-MM-DDTHH:mm`, minutes rounded to the picker’s step.
+ * Local now as `YYYY-MM-DDTHH:mm`, minutes rounded down to the picker's step.
  *
  * Built from local getters rather than `toISOString()`, which is UTC — at UTC+5 that
- * returned yesterday’s date for the first five hours of every day, so a tenant checked
+ * returned yesterday's date for the first five hours of every day, so a tenant checked
  * in before 05:00 defaulted to the wrong day.
  *
  * Rounded because the time picker offers minutes in `minuteStep` increments (00/15/30/45);
  * an unrounded 14:37 would preselect a minute the column does not contain.
+ *
+ * **Down, not to the nearest.** Rounding to the nearest step pushed 23:53 to 00:00 and
+ * carried the date with it, so a tenant standing at the desk on the 25th was recorded as
+ * joining on the 26th. It also put the joining time up to seven minutes into the future,
+ * which is the wrong direction for a moment that has already happened. Flooring cannot
+ * cross a day boundary, so the date is always the one the host is actually living in.
  */
 function nowLocal(stepMinutes = 15): string {
   const d = new Date();
   d.setSeconds(0, 0);
-  // setMinutes handles the rollover when rounding up past 59 — and past 23:59 into
-  // tomorrow — so the date parts are read back out after this, never before.
-  d.setMinutes(Math.round(d.getMinutes() / stepMinutes) * stepMinutes);
+  d.setMinutes(Math.floor(d.getMinutes() / stepMinutes) * stepMinutes);
   const date = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   return `${date}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }

@@ -277,6 +277,7 @@
     "allTime": "Teljes időszak",
     "saveChanges": "Módosítások mentése",
     "nNights": "{{count}} éjszaka",
+    "nNightsOne": "{{count}} éjszaka",
     "nGuests": "{{count}} vendég",
     "guest": "Vendég",
     "forDateRange": "{{from}} – {{to}} időszakra.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} fotó csatolva"
   },
   "hostRooms": {
+    "calendarTab": "Naptár",
+    "detailsTab": "Részletek",
     "available": "Elérhető",
     "partlyBooked": "Részben foglalt",
     "booked": "Foglalt",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "Beköltözések és kiköltözések",
     "pctBedsFilled": "Foglalt ágyak aránya"
   },
-  "hostAnalytics": {
-    "analytics": "Elemzések",
-    "bedsFilledLast12Months": "Foglalt ágyak · elmúlt 12 hónap",
-    "sortedByOutstanding": "Kintlévőség szerint rendezve",
-    "lastInvoice": "Utolsó számla"
-  },
   "hostBookings": {
+    "calendarTab": "Naptár",
+    "listTab": "Lista",
     "nothingHereYet": "Itt még nincs semmi",
     "workingOutThePenalty": "A kötbér kiszámítása…",
     "youReCancellingOn": "Lemondás dátuma:",

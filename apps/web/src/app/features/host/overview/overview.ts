@@ -18,9 +18,9 @@ import {
   ErrorState,
   Skeleton,
 } from '@hostelhive/ui';
-import { AnalyticsApi, HostOpsApi, HostPropertyStore } from '@services';
-import { AnalyticsData, Invoice, Kpi, LedgerRow, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
-import { revenueBars, tenantMovementBars } from '@features/host/analytics/charts/chart-helpers';
+import { HostOpsApi, HostPropertyStore, OverviewApi } from '@services';
+import { Invoice, Kpi, LedgerRow, OverviewData, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
+import { revenueBars, tenantMovementBars } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -34,7 +34,7 @@ interface ViewState {
   error: boolean;
   subscriptionError: boolean;
   networkError: boolean;
-  data: AnalyticsData | null;
+  data: OverviewData | null;
 }
 
 @Component({
@@ -58,7 +58,7 @@ interface ViewState {
   templateUrl: './overview.html',
 })
 export class HostOverview {
-  private readonly api = inject(AnalyticsApi);
+  private readonly api = inject(OverviewApi);
   private readonly opsApi = inject(HostOpsApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
@@ -161,7 +161,7 @@ export class HostOverview {
   protected readonly state = toSignal(
     toObservable(this.query).pipe(
       switchMap((id) =>
-        this.api.getAnalytics(id).pipe(
+        this.api.overviewCards(id).pipe(
           map((data): ViewState => ({ loading: false, error: false, subscriptionError: false, networkError: false, data })),
           startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, data: null }),
           catchError((err) => {

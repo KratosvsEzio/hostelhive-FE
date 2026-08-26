@@ -4,9 +4,9 @@ import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
-import { analyticsEnv } from '@app/analytics.env';
-import { analyticsConsent } from './analytics-consent';
-import { AnalyticsEventName, AnalyticsEvents } from './analytics.events';
+import { googleAnalyticsEnv } from '@app/google-analytics.env';
+import { googleAnalyticsConsent } from './google-analytics-consent';
+import { GoogleAnalyticsEventName, GoogleAnalyticsEvents } from './google-analytics.events';
 
 type GtagArgs = [command: string, ...rest: unknown[]];
 
@@ -64,7 +64,7 @@ export function isMarketplacePath(url: string): boolean {
  * drives it instead.
  */
 @Injectable({ providedIn: 'root' })
-export class AnalyticsService {
+export class GoogleAnalyticsService {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -76,7 +76,7 @@ export class AnalyticsService {
   private get enabled(): boolean {
     return (
       this.isBrowser &&
-      !!analyticsEnv.measurementId &&
+      !!googleAnalyticsEnv.measurementId &&
       !Capacitor.isNativePlatform()
     );
   }
@@ -88,10 +88,10 @@ export class AnalyticsService {
    */
   start(): void {
     if (!this.enabled || this.started) return;
-    if (analyticsConsent() !== 'granted') return;
+    if (googleAnalyticsConsent() !== 'granted') return;
     this.started = true;
 
-    const id = analyticsEnv.measurementId;
+    const id = googleAnalyticsEnv.measurementId;
     window.dataLayer = window.dataLayer ?? [];
     // Must be `arguments`, not a rest array: gtag.js reads the raw arguments object off
     // dataLayer and an array lands as a single nested entry it cannot parse.
@@ -144,11 +144,11 @@ export class AnalyticsService {
   /**
    * Sends a typed marketplace event.
    *
-   * `params` is checked against {@link AnalyticsEvents}, so a typo in a name or a parameter
+   * `params` is checked against {@link GoogleAnalyticsEvents}, so a typo in a name or a parameter
    * is a compile error rather than a column of nulls discovered in GA four weeks later.
    */
-  track<K extends AnalyticsEventName>(name: K, params: AnalyticsEvents[K]): void {
-    if (!this.started || analyticsConsent() !== 'granted') return;
+  track<K extends GoogleAnalyticsEventName>(name: K, params: GoogleAnalyticsEvents[K]): void {
+    if (!this.started || googleAnalyticsConsent() !== 'granted') return;
     if (!isMarketplacePath(this.router.url)) return;
     window.gtag?.('event', name, params);
   }

@@ -103,7 +103,15 @@ export interface ApiBookingRequest {
   hold_id: string;
 }
 
-export type ApiBookingStatus = 'confirmed' | 'cancelled' | 'completed';
+/**
+ * `unconfirmed` is a booking the host wrote down, not one a guest paid for.
+ *
+ * Walk-ins and phone bookings are most of the trade for a small hostel, and they exist before
+ * any money moves. Kept distinct from `confirmed` rather than folded into it because the two
+ * differ in what they entitle: a confirmed booking has a deposit behind it and a cancellation
+ * schedule that pays out, and an unconfirmed one has neither.
+ */
+export type ApiBookingStatus = 'unconfirmed' | 'confirmed' | 'cancelled' | 'completed';
 
 export interface ApiBookingLine {
   room_id: string;
@@ -178,6 +186,37 @@ export interface ApiCancellation {
 // ─────────────────────────────────────────────────────────────────────────────
 // Host side
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/host/hostels/:id/bookings — a booking the host is recording on someone's behalf.
+ *
+ * No hold and no payment: the host is writing down something that already happened at the
+ * desk or on the phone, so it lands as `unconfirmed`. The server still has to check the rooms
+ * are free for the range — a host double-booking a bed by hand is the same oversell as a
+ * guest doing it, and the guest is the one who finds out at check-in.
+ *
+ * `email` is optional here and required on the guest-facing path. Somebody standing at a
+ * counter may not have one, and refusing the booking over it would push the host back to
+ * paper — which is the thing this screen exists to replace.
+ */
+export interface ApiHostBookingRequest {
+  check_in: string;
+  check_out: string;
+  guests: number;
+  lines: { room_id: string; quantity: number }[];
+  guest: { name: string; phone?: string | null; email?: string | null };
+  /**
+   * Taken off the whole stay, in whole rupees. Absent means none.
+   *
+   * Sent as an amount rather than a percentage because that is what is agreed at a desk
+   * — "call it 2,000 less" — and because a percentage has to be resolved against a total
+   * anyway, which is the server's number to compute, not the browser's.
+   *
+   * The server is expected to clamp it: a discount larger than the stay would otherwise
+   * make a booking worth less than nothing.
+   */
+  discount?: number;
+}
 
 /** GET /api/host/hostels/:id/bookings — arrivals first. */
 export interface ApiHostBookingsResponse {

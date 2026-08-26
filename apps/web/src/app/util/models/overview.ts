@@ -1,15 +1,13 @@
 /**
- * Host analytics domain models. **Stub pending Q-API (§0)** — these mirror the
- * shape we expect the analytics endpoint to return so the component, chart
- * helpers and fixtures all agree on one contract. When the typed SDK lands the
- * `AnalyticsApi` body swaps to HTTP; these interfaces stay put.
+ * Domain models for the host overview — its KPI cards, its three charts, and the
+ * revenue / occupancy / movement detail pages behind them.
+ *
+ * Named for analytics until the host analytics page was deleted. That page and the
+ * overview drew the same charts from the same endpoints; the overview had the real
+ * wiring and the date ranges, so it was the one that stayed, and these came with it.
+ * The stub note that used to head this file is gone with it too — {@link OverviewApi}
+ * has spoken HTTP for a while.
  */
-
-/** A selectable property scope in the header dropdown. `all` aggregates every property. */
-export interface PropertyOption {
-  id: string; // 'all' | property id
-  name: string;
-}
 
 /** A single headline metric rendered as a KPI card. */
 export interface Kpi {
@@ -61,11 +59,19 @@ export interface TenantMovement {
   movedOut: number;
 }
 
-/** Full payload for one property scope. */
-export interface AnalyticsData {
+/**
+ * What `overview_cards` answers for one property: the KPI row, and nothing else.
+ *
+ * It carried four more fields — `revenue`, `occupancy`, `ledger`, `tenantMovement` — which
+ * the API layer filled with empty arrays it never replaced. Only the deleted analytics page
+ * read them, and reading a permanent `[]` is how its three charts came out blank. The
+ * overview never used them: each series has an endpoint of its own ({@link OverviewApi}'s
+ * `monthlyRevenue`, `occupancySummaries`, `tenantMovement`), fetched separately so a slow or
+ * failed chart cannot hold up the numbers at the top of the page.
+ *
+ * One field is not much of an interface, and it is still worth naming: it is the contract
+ * between that endpoint and the KPI row, and the next card added to it belongs here.
+ */
+export interface OverviewData {
   kpis: Kpi[];
-  revenue: RevenuePoint[];
-  occupancy: OccupancyPoint[];
-  ledger: LedgerRow[];
-  tenantMovement?: TenantMovement[];
 }

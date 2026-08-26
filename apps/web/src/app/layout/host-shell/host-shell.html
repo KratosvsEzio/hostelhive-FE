@@ -1,7 +1,7 @@
 @if (!mobile.isMobile()) {
 <aside
-  class="fixed bottom-0 start-0 hh-below-header z-40 flex w-64 flex-col border-r border-ink-100 bg-white transition-transform duration-200 ease-in-out"
-  [style.transform]="drawer.open() ? '' : 'translateX(-100%)'"
+  class="group fixed bottom-0 start-0 hh-below-header z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
+  [style.width]="drawer.width_()"
 >
   <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
     @for (item of nav(); track $index) {
@@ -13,44 +13,91 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: !!item.exact }"
           class="nav-link"
-          (click)="closeOnMobile()"
+          [class.nav-link--rail]="drawer.railed()"
+          [hhTooltip]="drawer.railed() ? (item.label || '' | transloco) : ''"
+          hhTooltipPlacement="right"
+          [attr.aria-label]="drawer.railed() ? (item.label || '' | transloco) : null"
         >
-          <i class="ti text-lg" [class]="item.icon"></i>{{ item.label || "" | transloco }}
+          <i class="ti text-lg" [class]="item.icon"></i>
+          @if (!drawer.railed()) {
+            {{ item.label || "" | transloco }}
+          }
         </a>
       }
     }
   </nav>
 
-  <!-- Property picker -->
-  <div class="border-t border-ink-100 px-3 py-2">
-    <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostNav.property' | transloco }}</p>
-    <hh-dropdown
-      variant="borderless"
-      [placeholder]="propertiesLoading() ? ('common.loading' | transloco) : (propertiesUnavailable() ? ('common.unavailable' | transloco) : ('hostNav.selectAProperty' | transloco))"
-      triggerIcon="ti-building-community"
-      [openRight]="true"
-      [options]="propertyDropdownOptions()"
-      [value]="propertyStore.selected()"
-      [loading]="propertiesLoading()"
-      (valueChange)="onPropertySelect($event)"
-    />
-    @if (canCreateHostel()) {
-      <a hh-button color="primary" routerLink="/host/hostels/new" class="mt-1 w-full">
-        <i class="ti ti-plus"></i>
-        {{ 'hostNav.createNewHostel' | transloco }}
-      </a>
-    }
-  </div>
-</aside>
+  <!-- Property picker. In the rail it is a single button that opens the sidebar: a
+       searchable dropdown and a "create hostel" button do not fit 64px, and hiding the
+       property a host is scoped to would be worse than asking for one click to see it. -->
+  @if (drawer.railed()) {
+    <div class="border-t border-ink-100 px-2 py-2">
+      <button
+        type="button"
+        class="nav-link nav-link--rail w-full"
+        [hhTooltip]="'hostNav.property' | transloco"
+        hhTooltipPlacement="right"
+        [attr.aria-label]="'hostNav.property' | transloco"
+        (click)="drawer.toggleRail()"
+      >
+        <i class="ti ti-building-community text-lg"></i>
+      </button>
+    </div>
+  } @else {
+    <div class="border-t border-ink-100 px-3 py-2">
+      <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostNav.property' | transloco }}</p>
+      <hh-dropdown
+        variant="borderless"
+        [placeholder]="propertiesLoading() ? ('common.loading' | transloco) : (propertiesUnavailable() ? ('common.unavailable' | transloco) : ('hostNav.selectAProperty' | transloco))"
+        triggerIcon="ti-building-community"
+        [openRight]="true"
+        [options]="propertyDropdownOptions()"
+        [value]="propertyStore.selected()"
+        [loading]="propertiesLoading()"
+        (valueChange)="onPropertySelect($event)"
+      />
+      @if (canCreateHostel()) {
+        <a hh-button color="primary" routerLink="/host/hostels/new" class="mt-1 w-full">
+          <i class="ti ti-plus"></i>
+          {{ 'hostNav.createNewHostel' | transloco }}
+        </a>
+      }
+    </div>
+  }
 
-@if (drawer.open()) {
+  <!-- The collapse handle, straddling the sidebar's edge.
+       Hidden until the sidebar is hovered, because it is chrome rather than navigation and
+       a permanently visible control competes with the ten it sits beside. Reachable by
+       keyboard regardless — `focus-visible` shows it, or it would be a control only a
+       mouse could ever find.
+       `pointer-events` follow the same rule: invisible but clickable, it would sit over the
+       page swallowing clicks meant for the content behind it. Hover propagates up the DOM
+       rather than by geometry, so the handle keeps the group hovered even though half of it
+       hangs outside the sidebar's box. -->
   <button
     type="button"
-    class="fixed inset-0 z-30 bg-ink-900/40 lg:hidden"
-    [attr.aria-label]="'a11y.closeMenu' | transloco"
-    (click)="drawer.close()"
-  ></button>
-}
+    class="pointer-events-none absolute top-1/2 z-10 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full border border-ink-200 bg-white text-ink-500 opacity-0 shadow-pill transition hover:border-brand-400 hover:text-brand-600 focus-visible:pointer-events-auto focus-visible:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100"
+    style="inset-inline-end: -12px"
+    [attr.aria-label]="drawer.railed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    [attr.aria-expanded]="!drawer.railed()"
+    (click)="drawer.toggleRail()"
+  >
+    <i
+      class="ti text-sm"
+      [class.ti-chevron-right]="drawer.railed()"
+      [class.ti-chevron-left]="!drawer.railed()"
+    ></i>
+  </button>
+
+  <!-- The brand edge, on hover.
+       An overlay strip rather than thickening `border-r`: going from 1px to 2px would move
+       every child one pixel left, so the whole sidebar would twitch as the pointer crossed
+       it. -->
+  <span
+    class="pointer-events-none absolute inset-y-0 end-0 w-0.5 bg-brand-500 opacity-0 transition-opacity group-hover:opacity-100"
+    aria-hidden="true"
+  ></span>
+</aside>
 }
 
 <div

@@ -1,165 +1,195 @@
-<div class="flex flex-wrap items-center justify-between gap-3">
-  <h1 class="font-display text-2xl font-semibold text-ink-900">{{ 'common.bookings' | transloco }}</h1>
-</div>
-
-<!-- Counts on the tabs so a host can see there is something in Past without going there. -->
-<div class="mt-4 flex gap-2">
-  @for (t of [
-    { id: 'upcoming', label: 'Arrivals', n: counts().upcoming },
-    { id: 'past', label: 'Past', n: counts().past },
-    { id: 'cancelled', label: 'Cancelled', n: counts().cancelled }
-  ]; track t.id) {
-    <button
-      type="button"
-      class="rounded-full border px-3 py-1.5 text-sm font-medium transition"
-      [class.border-brand-500]="tab() === t.id"
-      [class.bg-brand-50]="tab() === t.id"
-      [class.text-brand-700]="tab() === t.id"
-      [class.border-ink-200]="tab() !== t.id"
-      [class.text-ink-600]="tab() !== t.id"
-      (click)="tab.set($any(t.id))"
-    >
-      {{ t.label }}
-      <span class="ms-1 tabular-nums opacity-70">{{ t.n }}</span>
+<app-dashboard-layout [label]="'common.bookings' | transloco">
+  <div hhActions class="flex shrink-0 items-center gap-2">
+    <button hh-button color="primary" size="sm" (click)="openForm()" aria-label="Create booking">
+      <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">Create booking</span>
     </button>
-  }
-</div>
-
-@let s = state();
-
-@if (s.loading) {
-  <div class="mt-5 space-y-3">
-    @for (i of [1, 2, 3]; track i) {
-      <hh-skeleton class="block h-24 w-full rounded-2xl" />
-    }
   </div>
-} @else if (s.error) {
-  <hh-error-state
-    class="mt-5 block"
-    [title]="'common.weCouldnTLoad2' | transloco"
-    message="Something went wrong reaching the server."
+
+  <!-- Two views of one dataset, not two pages. The calendar answers "what does August look
+       like and what needs me today"; the list answers "show me the bookings". They were
+       stacked, which put the table below the fold on every visit and made the month
+       something to scroll past. Both still read the one request this page already makes. -->
+  <hh-tabs class="mb-5 max-w-xs" [tabs]="viewTabs()" [(active)]="view" />
+
+  <hh-booking-details-panel
+    [booking]="viewing()"
+    [actionError]="viewError()"
+    (closed)="closeDetails()"
+    (assign)="openAssign($event)"
+    (decline)="onDecline()"
   />
-} @else if (!rows().length) {
-  <hh-empty-state
-    class="mt-5 block"
-    icon="ti-calendar"
-    [title]="'hostBookings.nothingHereYet' | transloco"
-    [message]="
-      tab() === 'upcoming'
-        ? 'Bookings for your rooms will appear here, soonest arrival first.'
-        : 'Nothing in this list.'
-    "
+
+  <hh-assign-rooms-panel
+    [hostelId]="hostelIdForForm()"
+    [booking]="assigning()"
+    [submitError]="assignError()"
+    (closed)="closeAssign()"
+    (assign)="onAssign($event)"
   />
-} @else {
-  <ul class="mt-5 space-y-3">
-    @for (b of rows(); track b.id) {
-      <li class="rounded-2xl border border-ink-100 p-4">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="font-semibold text-ink-900">
-              {{ b.guest?.name || ('common.guest' | transloco) }}
-              <span class="font-normal text-ink-500">· {{ summary(b) }}</span>
-            </p>
-            <p class="mt-0.5 text-sm text-ink-600">
-              {{ b.check_in | date: 'd MMM' }} – {{ b.check_out | date: 'd MMM yyyy' }} ·
-              {{ 'common.nGuests' | transloco: { count: b.guests } }}
-            </p>
-            @if (b.guest?.phone || b.guest?.email) {
-              <p class="mt-0.5 text-sm text-ink-500">
-                {{ b.guest?.phone || b.guest?.email }}
-              </p>
-            }
 
-            <!-- The lines sit under the summary rather than becoming rows of their own —
-                 four rows would read as four separate guests. -->
-            <ul class="mt-2 space-y-0.5 text-sm text-ink-500">
-              @for (line of b.lines; track line.room_id) {
-                <li>
-                  {{ line.quantity }}
-                  {{ line.room_type === 'private' ? 'room' : 'bed' }}{{ line.quantity === 1 ? '' : 's' }}
-                  · {{ line.room_title }}
-                </li>
-              }
-            </ul>
-          </div>
+  @if (view() === 'calendar') {
+    @if (hostelIdForForm()) {
+      <hh-booking-calendar
+        [hostelId]="hostelIdForForm()"
+        [bookings]="rows()"
+        (laneSelect)="onLaneSelect($event)"
+        (assignRequested)="openAssign($event)"
+        (detailsRequested)="openDetails($event)"
+      />
+    }
+  } @else {
 
-          <div class="text-right">
-            <span
-              class="rounded-full px-2.5 py-1 text-xs font-semibold"
-              [class.bg-tint-mint]="b.status === 'confirmed'"
-              [class.text-emerald-800]="b.status === 'confirmed'"
-              [class.bg-ink-100]="b.status !== 'confirmed'"
-              [class.text-ink-600]="b.status !== 'confirmed'"
-              >{{ statusLabel(b.status) }}</span
-            >
-            <p class="mt-2 font-semibold text-ink-900 tabular-nums">
-              PKR {{ b.total | number: '1.2-2' }}
-            </p>
-            <p class="text-xs text-ink-500 tabular-nums">
-              {{ 'hostBookings.pkrDeposit' | transloco: { amount: b.deposit | number: '1.2-2' } }}
-            </p>
-          </div>
-        </div>
+    <!-- One control, at the start of the row. The Arrivals / Past / Cancelled chips that
+         used to lead it were a coarser cut of the same disposition field this offers
+         precisely, so a host had two controls for one question and nothing on screen
+         said which of the two had won. -->
+    <div class="flex flex-wrap items-center gap-3">
+      <hh-global-filter
+        [groups]="filterGroups"
+        [value]="filters()"
+        (apply)="onFiltersApply($event)"
+      />
+    </div>
 
-        @if (b.cancellation; as c) {
-          <p class="mt-3 rounded-lg bg-ink-50 px-3 py-2 text-sm text-ink-600 tabular-nums">
-            {{ 'hostBookings.cancelledByOn' | transloco: { by: c.cancelled_by, date: c.cancelled_at | date: 'd MMM yyyy' } }}
-            @if (c.host_penalty) {
-              · {{ 'hostBookings.pkrPenaltyChargedToYou' | transloco: { amount: c.host_penalty | number: '1.2-2' } }}
-            } @else if (c.host_share) {
-              · {{ 'hostBookings.pkrToYou' | transloco: { amount: c.host_share | number: '1.2-2' } }}
-            }
-          </p>
-        } @else if (b.status === 'confirmed') {
-          <div class="mt-3 flex justify-end">
-            <button hh-button variant="outlined" size="sm" (click)="askToCancel(b)">
-              {{ 'common.cancelBooking' | transloco }}
-            </button>
-          </div>
+    @let s = state();
+
+    @if (s.loading) {
+      <div class="mt-5 space-y-3">
+        @for (i of [1, 2, 3]; track i) {
+          <hh-skeleton class="block h-24 w-full rounded-2xl" />
         }
-      </li>
-    }
-  </ul>
-}
+      </div>
+    } @else if (s.error) {
+      <hh-error-state
+        class="mt-5 block"
+        [title]="'common.weCouldnTLoad2' | transloco"
+        message="Something went wrong reaching the server."
+      />
+    } @else if (!rows().length) {
+      <hh-empty-state
+        class="mt-5 block"
+        icon="ti-calendar"
+        [title]="'hostBookings.nothingHereYet' | transloco"
+        [message]="
+          filtered()
+            ? 'No booking matches these filters.'
+            : 'Bookings for your rooms will appear here, soonest arrival first.'
+        "
+      />
+    } @else {
+      <div class="mt-5">
+        <hh-data-table
+          [columns]="tableCols"
+          [rows]="rows()"
+          [rowId]="bookingRowId"
+          [showActions]="true"
+          [actionActive]="menuActionActive"
+          [pagination]="paginationConf()"
+          minWidth="880px"
+          (rowAction)="openMenu($any($event.row), $event.event)"
+          (pageChange)="setPage($event)"
+        />
+      </div>
+  }
 
-@if (cancelOpen()) {
-  <hh-confirm-modal
-    [title]="'common.cancelThisBooking' | transloco"
-    icon="ti-calendar-x"
-    tone="danger"
-    [confirmLabel]="
-      quote()
-        ? 'Cancel booking and pay PKR ' + (quote()!.penalty_amount | number: '1.0-0')
-        : 'Cancel booking'
-    "
-    cancelLabel="Keep booking"
-    confirmColor="danger"
-    (confirm)="confirmCancel()"
-    (cancel)="closeCancel()"
-  >
-    @if (quoteLoading()) {
-      <p>{{ 'hostBookings.workingOutThePenalty' | transloco }}</p>
-    } @else if (cancelError()) {
-      <p class="text-danger">{{ cancelError() }}</p>
-    } @else if (quote(); as q) {
-      @let b = cancelling();
-      <!-- Figures, not policy language. A host should not have to do arithmetic to find out
-           what a button costs them. -->
-      <p>
-        {{ 'hostBookings.youReCancellingOn' | transloco }} <strong>{{ b?.guest?.name || ('hostBookings.thisGuest' | transloco) }}</strong>
-        {{ 'common.forDateRange' | transloco: { from: b?.check_in | date: 'd MMM', to: b?.check_out | date: 'd MMM yyyy' } }}
-      </p>
-      <ul class="mt-2 space-y-1 text-sm">
-        <li>
-          {{ 'hostBookings.theyAreRefunded' | transloco }}
-          <strong class="tabular-nums">PKR {{ q.refund_amount | number: '1.2-2' }}</strong> {{ 'hostBookings.inFullWithin5Working' | transloco }}
-        </li>
-        <li>
-          {{ 'hostBookings.youWillBeCharged' | transloco }}
-          <strong class="tabular-nums">PKR {{ q.penalty_amount | number: '1.2-2' }}</strong>{{ 'hostBookings.deductedFromYourNextMonthly' | transloco }}
-        </li>
-        <li>{{ 'hostBookings.theBedsReturnToSale' | transloco }}</li>
-      </ul>
+  }
+
+  <!-- One action, but it lives in the same row menu every other table here uses: a bespoke
+       button in a cell would be the only one of its kind in the app. -->
+  @if (menuOpenId(); as id) {
+    @if (menuPos(); as pos) {
+      @let menuBooking = rows().find((b) => b.id === id);
+      @if (menuBooking) {
+        <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="184" (close)="closeMenu()">
+          <!-- Only while it is still waiting on a room. Offering it on a checked-out stay
+               would be a control that cannot do anything. -->
+          @if (menuBooking.disposition.slug === 'pending-allotment') {
+            <button
+              type="button"
+              hh-button
+              variant="text"
+              role="menuitem"
+              class="w-full !justify-start"
+              (click)="openAssign(menuBooking)"
+            >
+              <i class="ti ti-bed text-sm" aria-hidden="true"></i>
+              Assign room
+            </button>
+          }
+          <button
+            type="button"
+            hh-button
+            variant="text"
+            role="menuitem"
+            class="w-full !justify-start"
+            (click)="openDetails(menuBooking)"
+          >
+            <i class="ti ti-file-text text-sm" aria-hidden="true"></i>
+            View details
+          </button>
+          <button
+            type="button"
+            hh-button
+            variant="text"
+            role="menuitem"
+            class="w-full !justify-start !text-danger"
+            (click)="askToCancel(menuBooking)"
+          >
+            <i class="ti ti-calendar-x text-sm" aria-hidden="true"></i>
+            {{ 'common.cancelBooking' | transloco }}
+          </button>
+        </hh-context-menu>
+      }
     }
-  </hh-confirm-modal>
-}
+  }
+
+  @if (cancelOpen()) {
+    <hh-confirm-modal
+      [title]="'common.cancelThisBooking' | transloco"
+      icon="ti-calendar-x"
+      tone="danger"
+      [confirmLabel]="
+        quote()
+          ? 'Cancel booking and pay PKR ' + (quote()!.penalty_amount | number: '1.0-0')
+          : 'Cancel booking'
+      "
+      cancelLabel="Keep booking"
+      confirmColor="danger"
+      (confirm)="confirmCancel()"
+      (cancel)="closeCancel()"
+    >
+      @if (quoteLoading()) {
+        <p>{{ 'hostBookings.workingOutThePenalty' | transloco }}</p>
+      } @else if (cancelError()) {
+        <p class="text-danger">{{ cancelError() }}</p>
+      } @else if (quote(); as q) {
+        @let b = cancelling();
+        <!-- Figures, not policy language. A host should not have to do arithmetic to find out
+             what a button costs them. -->
+        <p>
+          {{ 'hostBookings.youReCancellingOn' | transloco }} <strong>{{ b?.guest?.name || ('hostBookings.thisGuest' | transloco) }}</strong>
+          {{ 'common.forDateRange' | transloco: { from: b?.checkIn | date: 'd MMM', to: b?.checkOut | date: 'd MMM yyyy' } }}
+        </p>
+        <ul class="mt-2 space-y-1 text-sm">
+          <li>
+            {{ 'hostBookings.theyAreRefunded' | transloco }}
+            <strong class="tabular-nums">PKR {{ q.refund_amount | number: '1.2-2' }}</strong> {{ 'hostBookings.inFullWithin5Working' | transloco }}
+          </li>
+          <li>
+            {{ 'hostBookings.youWillBeCharged' | transloco }}
+            <strong class="tabular-nums">PKR {{ q.penalty_amount | number: '1.2-2' }}</strong>{{ 'hostBookings.deductedFromYourNextMonthly' | transloco }}
+          </li>
+          <li>{{ 'hostBookings.theBedsReturnToSale' | transloco }}</li>
+        </ul>
+      }
+    </hh-confirm-modal>
+  }
+  @if (formOpen()) {
+    <hh-booking-form-drawer
+      [hostelId]="hostelIdForForm()"
+      (closed)="closeForm()"
+      (saved)="onSaved()"
+    />
+  }
+
+</app-dashboard-layout>

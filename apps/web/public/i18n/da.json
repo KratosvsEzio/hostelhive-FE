@@ -277,6 +277,7 @@
     "allTime": "Hele perioden",
     "saveChanges": "Gem ændringer",
     "nNights": "{{count}} nætter",
+    "nNightsOne": "{{count}} nat",
     "nGuests": "{{count}} gæster",
     "guest": "Gæst",
     "forDateRange": "for {{from}} – {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} fotos vedhæftet"
   },
   "hostRooms": {
+    "calendarTab": "Kalender",
+    "detailsTab": "Detaljer",
     "available": "Ledig",
     "partlyBooked": "Delvist booket",
     "booked": "Booket",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "Ind- og udflytninger",
     "pctBedsFilled": "Andel optagne senge"
   },
-  "hostAnalytics": {
-    "analytics": "Analyser",
-    "bedsFilledLast12Months": "Optagne senge · sidste 12 måneder",
-    "sortedByOutstanding": "Sorteret efter udestående",
-    "lastInvoice": "Seneste faktura"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Liste",
     "nothingHereYet": "Der er intet her endnu",
     "workingOutThePenalty": "Beregner gebyret…",
     "youReCancellingOn": "Du annullerer den",

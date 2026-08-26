@@ -10,9 +10,9 @@ import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@hostelhive/ui';
-import { analyticsEnv } from '@app/analytics.env';
-import { AnalyticsService } from './analytics.service';
-import { analyticsConsent, setAnalyticsConsent } from './analytics-consent';
+import { googleAnalyticsEnv } from '@app/google-analytics.env';
+import { GoogleAnalyticsService } from './google-analytics.service';
+import { googleAnalyticsConsent, setGoogleAnalyticsConsent } from './google-analytics-consent';
 import { LocaleLink } from '@core/i18n/locale-link';
 
 /**
@@ -64,7 +64,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
   `,
 })
 export class ConsentBanner {
-  private readonly analytics = inject(AnalyticsService);
+  private readonly analytics = inject(GoogleAnalyticsService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   /**
@@ -73,18 +73,18 @@ export class ConsentBanner {
    * configured, and in the native app, which does not load GA at all.
    */
   private readonly configured =
-    this.isBrowser && !!analyticsEnv.measurementId && !Capacitor.isNativePlatform();
+    this.isBrowser && !!googleAnalyticsEnv.measurementId && !Capacitor.isNativePlatform();
 
   protected readonly open = computed(
-    () => this.configured && analyticsConsent() === 'unset',
+    () => this.configured && googleAnalyticsConsent() === 'unset',
   );
 
   protected allow(): void {
-    setAnalyticsConsent('granted');
+    setGoogleAnalyticsConsent('granted');
     this.analytics.start();
   }
 
   protected decline(): void {
-    setAnalyticsConsent('denied');
+    setGoogleAnalyticsConsent('denied');
   }
 }

@@ -277,6 +277,7 @@
     "allTime": "Alle tijden",
     "saveChanges": "Wijzigingen opslaan",
     "nNights": "{{count}} nachten",
+    "nNightsOne": "{{count}} nacht",
     "nGuests": "{{count}} gasten",
     "guest": "Gast",
     "forDateRange": "voor {{from}} – {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} foto’s bijgevoegd"
   },
   "hostRooms": {
+    "calendarTab": "Kalender",
+    "detailsTab": "Details",
     "available": "Beschikbaar",
     "partlyBooked": "Deels geboekt",
     "booked": "Geboekt",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "In- en uitchecks",
     "pctBedsFilled": "Percentage bezette bedden"
   },
-  "hostAnalytics": {
-    "analytics": "Analyses",
-    "bedsFilledLast12Months": "Bezette bedden · laatste 12 maanden",
-    "sortedByOutstanding": "Gesorteerd op openstaand",
-    "lastInvoice": "Laatste factuur"
-  },
   "hostBookings": {
+    "calendarTab": "Kalender",
+    "listTab": "Lijst",
     "nothingHereYet": "Hier is nog niets",
     "workingOutThePenalty": "Boete wordt berekend…",
     "youReCancellingOn": "Je annuleert op",

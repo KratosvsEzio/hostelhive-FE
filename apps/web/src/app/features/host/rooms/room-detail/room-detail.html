@@ -17,7 +17,8 @@
 
   } @else if (s.room; as room) {
 
-    <!-- Room header card -->
+    <!-- Which room this is, above the tabs rather than inside one: it answers "am I on the
+         right page", which stays worth answering whichever half is open. -->
     <div class="mb-5 rounded-2xl bg-white p-4 shadow-card sm:p-6">
       <div class="flex items-start justify-between gap-4">
         <div class="flex items-center gap-4">
@@ -31,96 +32,103 @@
         </div>
         <hh-status-pill [tone]="statusTone()">{{ statusLabel() }}</hh-status-pill>
       </div>
-
-      <div class="mt-6 grid grid-cols-2 gap-y-5 border-t border-ink-100 pt-5 sm:grid-cols-4">
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.type' | transloco }}</p>
-          <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.type }}</p>
-        </div>
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.floor' | transloco }}</p>
-          <p class="mt-1 text-sm font-semibold text-ink-900">
-            @if (room.floor && room.floor !== '—') { {{ room.floor | titlecase }} } @else { — }
-          </p>
-        </div>
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.capacity' | transloco }}</p>
-          <p class="mt-1 text-sm font-semibold text-ink-900">{{ 'common.nBeds' | transloco: { count: room.capacity } }}</p>
-        </div>
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.occupied' | transloco }}</p>
-          <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.occupied }} / {{ room.capacity }}</p>
-        </div>
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.rentPerBed' | transloco }}</p>
-          <p class="mt-1 text-sm font-semibold text-ink-900">
-            @if (room.rentPerBed) { Rs {{ room.rentPerBed | number }} } @else { — }
-          </p>
-        </div>
-      </div>
     </div>
 
-    <!-- Tenants card -->
-    <div class="rounded-2xl bg-white shadow-card">
-      <div class="border-b border-ink-100 px-5 py-4">
-        <p class="font-semibold text-ink-900">{{ 'hostRooms.currentTenants' | transloco }}</p>
-        <p class="mt-0.5 text-xs text-ink-400">
-          {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: s.renters.length, total: room.capacity } }}
-        </p>
-      </div>
+    <hh-tabs class="mb-5 max-w-xs" [tabs]="tabs()" [(active)]="view" />
 
-      @if (s.renters.length === 0) {
-        <hh-empty-state
-          icon="ti-users"
-          [title]="'hostRooms.noTenants' | transloco"
-          message="This room currently has no active tenants."
-        />
-      } @else {
-        <ul class="divide-y divide-ink-100">
-          @for (renter of s.renters; track renter.id) {
-            <li class="flex flex-wrap items-center gap-3 px-5 py-4 sm:flex-nowrap sm:gap-4">
-              <hh-avatar [initials]="renter.initials" size="md" />
-
-              <div class="min-w-0 flex-1">
-                <p class="truncate font-medium text-ink-900">{{ renter.name }}</p>
-                <p class="mt-0.5 truncate text-xs text-ink-500">{{ renter.phone }}</p>
-              </div>
-
-              <div class="hidden text-end sm:block">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.joiningDate' | transloco }}</p>
-                <p class="mt-0.5 text-sm text-ink-700">{{ renter.moveIn | apiDate:'mediumDate' }}</p>
-              </div>
-
-              <div class="hidden text-end sm:block">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.rent' | transloco }}</p>
-                <p class="mt-0.5 text-sm font-semibold text-ink-900">Rs {{ renter.rent | number }}</p>
-              </div>
-
-              <!-- The two blocks above are display:none below sm, so on mobile this pill
-                   collapses up next to the name and the button wraps to its own row. -->
-              <hh-status-pill [tone]="renterTone(renter.status)">{{ renterLabel(renter.status) }}</hh-status-pill>
-
-              <button
-                hh-button
-                variant="outlined"
-                size="sm"
-                type="button"
-                class="w-full sm:w-auto"
-                (click)="goToTenant(renter.id)"
-              >
-                {{ 'common.viewProfile' | transloco }}<i class="ti ti-arrow-right"></i>
-              </button>
-            </li>
-          }
-        </ul>
-      }
-    </div>
-
-    <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
-    @if (hostelId() && roomId()) {
-      <div class="mt-6">
+    @if (view() === 'calendar') {
+      <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
+      @if (hostelId() && roomId()) {
         <hh-room-calendar [hostelId]="hostelId()!" [roomId]="roomId()" />
+      }
+
+    } @else {
+
+      <div class="mb-5 rounded-2xl bg-white p-4 shadow-card sm:p-6">
+        <div class="grid grid-cols-2 gap-y-5 sm:grid-cols-4">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.type' | transloco }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.type }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.floor' | transloco }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">
+              @if (room.floor && room.floor !== '—') { {{ room.floor | titlecase }} } @else { — }
+            </p>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.capacity' | transloco }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">{{ 'common.nBeds' | transloco: { count: room.capacity } }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.occupied' | transloco }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.occupied }} / {{ room.capacity }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.rentPerBed' | transloco }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">
+              @if (room.rentPerBed) { Rs {{ room.rentPerBed | number }} } @else { — }
+            </p>
+          </div>
+        </div>
       </div>
+
+      <!-- Tenants card -->
+      <div class="rounded-2xl bg-white shadow-card">
+        <div class="border-b border-ink-100 px-5 py-4">
+          <p class="font-semibold text-ink-900">{{ 'hostRooms.currentTenants' | transloco }}</p>
+          <p class="mt-0.5 text-xs text-ink-400">
+            {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: s.renters.length, total: room.capacity } }}
+          </p>
+        </div>
+
+        @if (s.renters.length === 0) {
+          <hh-empty-state
+            icon="ti-users"
+            [title]="'hostRooms.noTenants' | transloco"
+            message="This room currently has no active tenants."
+          />
+        } @else {
+          <ul class="divide-y divide-ink-100">
+            @for (renter of s.renters; track renter.id) {
+              <li class="flex flex-wrap items-center gap-3 px-5 py-4 sm:flex-nowrap sm:gap-4">
+                <hh-avatar [initials]="renter.initials" size="md" />
+
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-medium text-ink-900">{{ renter.name }}</p>
+                  <p class="mt-0.5 truncate text-xs text-ink-500">{{ renter.phone }}</p>
+                </div>
+
+                <div class="hidden text-end sm:block">
+                  <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.joiningDate' | transloco }}</p>
+                  <p class="mt-0.5 text-sm text-ink-700">{{ renter.moveIn | apiDate:'mediumDate' }}</p>
+                </div>
+
+                <div class="hidden text-end sm:block">
+                  <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.rent' | transloco }}</p>
+                  <p class="mt-0.5 text-sm font-semibold text-ink-900">Rs {{ renter.rent | number }}</p>
+                </div>
+
+                <!-- The two blocks above are display:none below sm, so on mobile this pill
+                     collapses up next to the name and the button wraps to its own row. -->
+                <hh-status-pill [tone]="renterTone(renter.status)">{{ renterLabel(renter.status) }}</hh-status-pill>
+
+                <button
+                  hh-button
+                  variant="outlined"
+                  size="sm"
+                  type="button"
+                  class="w-full sm:w-auto"
+                  (click)="goToTenant(renter.id)"
+                >
+                  {{ 'common.viewProfile' | transloco }}<i class="ti ti-arrow-right"></i>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
     }
 
   }

@@ -13,7 +13,7 @@
  * it breaches Google's terms and can get the property terminated. Ids are fine: they mean
  * nothing without our database.
  */
-export interface AnalyticsEvents {
+export interface GoogleAnalyticsEvents {
   /** A search was run — the top of the seeker funnel. */
   search_performed: {
     /** City or free-text query, lowercased. Not a person's name — this is a place. */
@@ -46,4 +46,4 @@ export interface AnalyticsEvents {
   };
 }
 
-export type AnalyticsEventName = keyof AnalyticsEvents;
+export type GoogleAnalyticsEventName = keyof GoogleAnalyticsEvents;

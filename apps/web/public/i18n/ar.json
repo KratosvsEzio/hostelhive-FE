@@ -277,6 +277,7 @@
     "allTime": "كل الأوقات",
     "saveChanges": "حفظ التغييرات",
     "nNights": "{{count}} ليالٍ",
+    "nNightsOne": "{{count}} ليلة",
     "nGuests": "{{count}} ضيوف",
     "guest": "ضيف",
     "forDateRange": "من {{from}} إلى {{to}}.",
@@ -768,6 +769,8 @@
     "nPhotosAttached": "{{count}} صور مرفقة"
   },
   "hostRooms": {
+    "calendarTab": "التقويم",
+    "detailsTab": "التفاصيل",
     "available": "متاح",
     "partlyBooked": "محجوز جزئياً",
     "booked": "محجوز",
@@ -1009,13 +1012,9 @@
     "moveInsAndOuts": "عمليات الدخول والخروج",
     "pctBedsFilled": "نسبة الأسرة المشغولة"
   },
-  "hostAnalytics": {
-    "analytics": "التحليلات",
-    "bedsFilledLast12Months": "الأسرة المشغولة · آخر 12 شهراً",
-    "sortedByOutstanding": "مرتب حسب المستحق",
-    "lastInvoice": "آخر فاتورة"
-  },
   "hostBookings": {
+    "calendarTab": "التقويم",
+    "listTab": "القائمة",
     "nothingHereYet": "لا يوجد شيء هنا بعد",
     "workingOutThePenalty": "جارٍ حساب الغرامة…",
     "youReCancellingOn": "أنت تلغي في",

@@ -17,7 +17,8 @@ and the milestone slotting of all 25 screens. It reuses the design system verbat
 becomes the Tailwind preset and `30-design-system.html` is the spec for the `ui` library.
 
 **Intended outcome.** A production Angular FE implementing the marketplace loop first
-(Seeker + Host onboarding + Moderator), then Operations/Billing + Analytics, plus the v3 additions —
+(Seeker + Host onboarding + Moderator), then Operations/Billing + ~~Analytics~~ (shipped inside
+the host overview rather than as its own screen — §11, 2026-08-26), plus the v3 additions —
 a **Super Admin panel** (roles, contracts, payments), **subscription contracts** (webhook-gated publishing),
 and **Manager/Warden sub-users** — all matching the mockups because the same tokens drive both.
 
@@ -57,13 +58,27 @@ TipTap + DOMPurify · **Vitest** + **Playwright** + **Storybook**.
 `data-access` (SDK + interceptors + httpResource), `auth` (session store + guards + Lead Wall),
 `maps` (google-maps wrapper), `util` (PKR/date pipes, validators, presigned upload), and lazy feature
 libs: `feature-home`, `feature-search`, `feature-listing`, `feature-onboarding`, `feature-host-shell`,
-`feature-host-ops`, `feature-host-analytics`, `feature-moderation`, **`feature-subscription`** (host billing + plan checkout, F7), **`feature-team`** (host sub-user management, F8), and **`feature-admin`** (Super Admin: roles, contracts, payments, F6).
+`feature-host-ops`, ~~`feature-host-analytics`~~, `feature-moderation`, **`feature-subscription`** (host billing + plan checkout, F7), **`feature-team`** (host sub-user management, F8), and **`feature-admin`** (Super Admin: roles, contracts, payments, F6).
+
+> This split never shipped as Nx libs — see §11 (2026-06-13): the workspace was collapsed to
+> one app plus one library, and these became folders under `apps/web/src/app/features/`.
+> `feature-host-analytics` is struck through because its screen is gone entirely (§11,
+> 2026-08-26), not merely relocated.
 
 The `auth` lib expands to the full v3 role set — **Super Admin, Admin, Support Staff, Moderator, Host, Manager, Warden, Seeker** — with functional role guards plus a **`hasPermission` directive/guard** driven by granular flags (`contracts.view`, `payments.refund`, `roles.manage`, …), and **property-scope guards** so Manager/Warden routes resolve to a single `property_id`.
 
 ---
 
 ## 3. Design → Angular mapping (all 20 screens)
+
+> **Routes and topology updated 2026-08-26 to what actually shipped.** Two columns below are
+> the *original plan* and no longer describe the workspace: there is no separate `console`
+> app and there are no `feature-*` libs — both were collapsed into one app plus one library
+> (see §11, 2026-06-13). Read **App** as "which half of `web`" and **Feature lib** as the
+> folder under `apps/web/src/app/features/`. The **Route** column is current.
+>
+> Every host-console route is scoped to a property: `/host/:hostelId/<section>`, defaulting
+> to `overview`. A bare `/host` resolves the user's own hostel and redirects.
 
 | Mockup | App | Route | Feature lib | Key components |
 |--------|-----|-------|-------------|----------------|
@@ -72,17 +87,21 @@ The `auth` lib expands to the full v3 role set — **Super Admin, Admin, Support
 | `02-search-map` | web | `/search?view=map` | feature-search + maps | SplitListMap, MapPricePin, ListingRow, FilterChips, PriceRangeFilter (popover) |
 | `03-listing-detail` | web | `/hostel/:slug` | feature-listing | PhotoGallery, AmenitiesGrid, RoomCard, NearbyList, DetailMap, ContactCard, HostCard, MobileContactBar |
 | `04-lead-wall` | web | overlay + `/auth` | auth | LeadWallModal, AuthTabs, RegisterForm, VerifyEmailState |
-| `09-host-overview` | console | `/host` | feature-host-shell | ConsoleShell, KpiCard, NeedsAttentionList, ActivityFeed |
-| `10-host-listings` | console | `/host/listings` | feature-host-shell | ListingRowCard, StatusChip, ResumeDraftCard, StatStrip |
-| `11-onboarding-wizard` | console | `/host/listings/new` | feature-onboarding | Stepper, BasicInfoStep, MapPinStep, MediaUploadStep, RoomConfigStep, PaymentStep |
-| `12-rooms` | console | `/host/rooms` | feature-host-ops | RoomTable, RoomFormDrawer, AvailabilityBadge |
-| `13-tenants` | console | `/host/tenants` | feature-host-ops | TenantTable, CheckInDrawer, StatusChip |
-| `14-utilities` | console | `/host/utilities` | feature-host-ops | UtilityBillForm, SplitTable (override), PeriodSelector |
-| `15-invoices` | console | `/host/invoices` | feature-host-ops | InvoiceLedgerTable, InvoicePdfPreview |
-| `16-analytics` | console | `/host/analytics` | feature-host-analytics | KpiCard, RevenueChart, OccupancyTimeline, TenantLedger, PropertySelector |
-| `17-host-settings` | console | `/host/settings` | feature-host-shell | ProfileForm, PayoutForm (+invoice preview), NotificationToggles, Security, DangerZone |
-| `18-host-subscription` | console | `/host/subscription` | feature-subscription | CurrentPlanCard, PlanTierCard, RenewalCountdown, PaymentHistoryTable, failed/expired states |
-| `19-host-team` | console | `/host/team` | feature-team | StaffTable, AddStaffDrawer (Manager/Warden), ScopeBanner, reassign/deactivate |
+| `09-host-overview` + `16` | console | `/host/:hostelId/overview` (+ `/revenue`, `/occupancy`, `/movement`) | host/overview | KpiCard, RevenueChart, OccupancyTimeline, TenantLedger, NeedsAttentionList — see the `16` note below |
+| `10-host-listings` | console | *(no index route)* | — | Folded into the property switcher in the shell header and on `/more`; a host with one hostel never needed a list of one |
+| `11-onboarding-wizard` | console | `/host/listings/new` | public/onboarding | Stepper, BasicInfoStep, MapPinStep, MediaUploadStep, RoomConfigStep, PaymentStep |
+| `12-rooms` | console | `/host/:hostelId/rooms` (+ `create`, `bulk`, `edit/:roomId`, `:roomId`) | host/rooms | RoomTable, RoomFormDrawer, AvailabilityBadge, room-detail Calendar/Details tabs |
+| `13-tenants` | console | `/host/:hostelId/tenants` (+ `create`, `edit/:id`, `profile/:id`) | host/tenants | TenantTable, CheckInDrawer, StatusChip |
+| `14-utilities` | console | `/host/:hostelId/utilities` (+ `add`, `edit/:billId`) | host/utilities | UtilityBillForm, SplitTable (override), PeriodSelector |
+| `15-invoices` | console | `/host/:hostelId/invoices` (+ `create`, `edit/:billId`) | host/invoices | InvoiceLedgerTable, InvoicePdfPreview |
+| `16-analytics` | — | **deleted 2026-08-26** | — | Shipped as part of `09` instead. Mockup removed; see the §11 entry |
+| `17-host-settings` | web | `/account/settings` | user/settings | ProfileForm, NotificationToggles, Security, DangerZone, Google-Analytics consent toggle — moved out of the console, since it is the account and not the hostel |
+| `18-host-subscription` | console | `/host/:hostelId/subscription` | host/subscription | CurrentPlanCard, PlanTierCard, RenewalCountdown, PaymentHistoryTable, failed/expired states |
+| `19-host-team` | console | `/host/:hostelId/team` (+ `edit/:staffId`) | host/team | StaffTable, AddStaffDrawer (Manager/Warden), ScopeBanner, reassign/deactivate |
+| *(no mockup)* | console | `/host/:hostelId/bookings` | host/bookings | Month calendar + day ledger, bookings table, disposition + arrival filters, assign-room and booking-form drawers |
+| *(no mockup)* | console | `/host/:hostelId/expenses` (+ `new`, `:id`, `:id/edit`) | host/expenses | ExpenseTable, AddGrocery, ExpenseDetail |
+| *(no mockup)* | console | `/host/:hostelId/mess` (+ `add`, `confirmations`, `notifications`) | host/mess | WeeklyMenu, MessConfirmations, MessNotifications |
+| *(no mockup)* | console | `/host/:hostelId/more` | host/more | The phone's overflow menu — every console destination that has no slot in the 5-tab bar |
 | `20-moderation-queue` | console | `/admin/queue` | feature-moderation | ModConsoleShell, QueueTable, DaysInQueueBadge, QueueTabs |
 | `21-moderation-review` | console | `/admin/review/:id` | feature-moderation | InlineEditFields, PhotoGrid, MapVerify, DecisionBar, AuditSidebar |
 | `22-delta-media` | console | `/admin/media` | feature-moderation | PendingMediaGroup, PhotoApproveCard |
@@ -120,7 +139,7 @@ The `auth` lib expands to the full v3 role set — **Super Admin, Admin, Support
 | M3.5 Subscriptions · F7 | `18` host billing + plan tiers + contract state machine, renewal reminders, expiry → listings-pause gating | ~3 wk |
 | Hardening → ★ Release 1.0 | perf/a11y/security/QA | ~2 wk |
 | M4 Host ops, billing & Team · F8 | `09`,`10`,`12`,`13`,`14`,`15`,`17`,`19` + Manager/Warden per-hostel scoping | ~6 wk |
-| M5 Analytics | `16` + multi-property exports | ~3 wk |
+| ~~M5 Analytics~~ | ~~`16` + multi-property exports~~ — **dropped 2026-08-26**: the overview absorbed it (§11) | ~~≈3 wk~~ |
 | Hardening → ★ Release 1.1 | perf/a11y/QA | ~2 wk |
 
 ~3–4 senior Angular engineers + 1 QA ≈ **~26–29 weeks** (up from ~20–22 before Features 6–8).
@@ -202,7 +221,8 @@ Built against a **stub data layer** (fixtures behind services) pending the API c
 - [x] **Real map + functional search (2026-06-13, user-directed)**: `/search/map` faux map → **Leaflet + OpenStreetMap** (user chose free OSM over billable Google Maps — can't provision their API key). Real interactive map, price-pin markers at listing coords, auto-fit bounds, "search as I move", hover-row↔pin; SSR-safe (dynamic `import()` in `afterNextRender` + ResizeObserver `invalidateSize` for first-load tiles). **Search bar** — new nav `SearchBar` + wired home hero — selects city / budget / sharing → drives `?city&minPrice&maxPrice&sharing` query params that filter **both** list + map views; `ListingsApi` now filters city + sharing. Verified in-browser (Karachi → 2 stays, map auto-zooms in). Gate green for all 3 projects.
 - [x] ~~**Map → Google Maps + Places (2026-06-13, user-directed)**~~ — **SUPERSEDED 2026-08-20**: replaced Leaflet with **full Google** — Google Maps tiles + `AdvancedMarkerElement` price-pin markers + **Places Autocomplete** location search (nav SearchBar + home hero). The billable Maps JS + Places key is pasted once into `provideGoogleMaps({ apiKey, mapId })` in `apps/web/src/app/app.config.ts` (loader + token in `@hostelhive/maps`). A picked place → `?place&lat&lng` → proximity search (`ListingQuery.near` + Haversine). Graceful no-key notice + plain-text→city fallback (verified). Type-correct, gate green (3 projects); **renders only once the user adds their key** (can't verify Google live without it).
 - [x] **Search UX split (2026-06-13, user-directed)**: nav bar = Google Places location search only; gender / budget / sharing moved to a shared, URL-driven `SearchFilters` sub-header used by both search pages (shareable params, survives List⇄Map toggle). Verified filtering in-browser (Boys + Under Rs 10,000 → 1 stay). Gate green.
-- [x] **Maps back to OpenStreetMap, Google stack deleted (2026-08-20)**: reversed the two Google Maps entries in this section. `lib/src/maps/lib/google-maps.ts`, `tools/generate-google-maps-env.mjs`, the `sync-maps-env` build target and `provideGoogleMaps()` are **all gone** (`59d3692`) — do not go looking for them. The map is **Leaflet + OSM tiles** (`lib/src/maps/lib/leaflet.ts`, `shared-map.ts`), and location search is **Nominatim + Photon** (`nominatim.ts`, `photon.ts`, `place-search.ts`, cached by `place-cache.ts`). No API key, no billing account, nothing to allowlist. The two entries below are kept for the decision history only.
+- [x] **Maps back to OpenStreetMap, Google stack deleted (2026-08-20)**: reversed the two Google Maps entries in this section. `lib/src/maps/lib/google-maps.ts`, `tools/generate-google-maps-env.mjs`, the `sync-maps-env` build target and `provideGoogleMaps()` are **all gone** (`59d3692`) — do not go looking for them. The map is **Leaflet + OSM tiles** (`lib/src/maps/lib/leaflet.ts`, `shared-map.ts`), and location search is **Nominatim + Photon** (`nominatim.ts`, `photon.ts`, `place-search.ts`, cached by `place-cache.ts`). No API key, no billing account, nothing to allowlist. The two struck-through entries below are kept for the decision history only.
+- [x] **Host analytics screen (`16`) deleted, not finished (2026-08-26, user-directed)**: it had been unreachable for some time — routed at `/host/:hostelId/analytics` but linked from nowhere: not the sidebar, not the mobile tab bar, not `/more`. Investigating why turned up the real reason: **the overview had superseded it**. Both drew the same three charts, but `getAnalytics()` hardcoded `revenue`/`occupancy`/`ledger` to `[]` and never called the endpoints that fill them, so `16`'s charts rendered blank and its CSV export early-returned on empty revenue; the overview called `monthlyRevenue` / `occupancySummaries` / `tenantMovement` for real and grew three date-ranged detail pages (`overview/revenue|occupancy|movement`). Its ledger table never had a backing endpoint at all. Deleted: `features/host/analytics/` (545 lines), its route, `design-mockups/16-analytics.html`, and the orphaned `hostAnalytics` i18n group in all 18 locales. `charts/chart-helpers.ts` was **moved, not deleted** — it lived inside that folder but four live overview files import it, so it is now `features/host/overview/charts/`. Follow-on rename so nothing is misnamed after its page: `AnalyticsApi`→`OverviewApi` (`services/overview-api.ts`), `AnalyticsData`→`OverviewData` (`util/models/overview.ts`, trimmed to just `kpis`), `getAnalytics`→`overviewCards`. Separately, the GA4 tracking code — a different thing that only shared the word — moved to `core/google-analytics/` with `GoogleAnalyticsService` et al., `tools/generate-google-analytics-env.mjs`, and the `sync-google-analytics-env` target. **The `hh.consent.analytics` storage key and the `GA_MEASUREMENT_ID` env var were deliberately left alone**: renaming the first silently re-shows the cookie banner to everyone who already answered, and the second lives in `.env` and CI. Gate green (build + 646 tests).
 - [x] ~~**Google key via `.env` + Places migrated to PlaceAutocompleteElement (2026-06-13)**~~ — **SUPERSEDED 2026-08-20**: key in git-ignored `.env` → `tools/generate-google-maps-env.mjs` injects it at build (web `sync-maps-env` dependsOn) → `provideGoogleMaps(googleMapsEnv)`. Classic `places.Autocomplete` is blocked for post-Mar-2025 Google accounts → migrated nav + home search to the new `PlaceAutocompleteElement` (new Places API; `gmp-select`→`fetchFields`→lat/lng). **Verified live with the key:** Google map + price pins render, real PK autocomplete predictions, place select → proximity search + recenter. Gate green. User must enable Places API (New) + Maps JS API, billing, and allowlist localhost/domain referrers.
 
 ### Other locked decisions
