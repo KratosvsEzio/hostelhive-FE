@@ -96,3 +96,90 @@ describe('TooltipFixed', () => {
     expect(tip.style.pointerEvents).toBe('none');
   });
 });
+
+/**
+ * Bubbles that outlive the pointer.
+ *
+ * Every case here is the same failure from a different angle: a `<div>` left in `<body>` with
+ * nothing referencing it, so nothing can ever take it away again. It is invisible in a unit
+ * test that only ever shows and hides once, and on screen it is a label sitting over the page
+ * until reload.
+ */
+describe('TooltipFixed cleanup', () => {
+  let fixture: ComponentFixture<Host>;
+
+  function tips(): Element[] {
+    return [...document.body.children].filter(
+      (n) => n.tagName === 'DIV' && (n.getAttribute('style') ?? '').includes('position: fixed'),
+    );
+  }
+
+  function fire(type: string): void {
+    const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    btn.dispatchEvent(
+      type === 'focus' || type === 'blur' ? new FocusEvent(type) : new MouseEvent(type),
+    );
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [Host] });
+    fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    tips().forEach((n) => n.remove());
+  });
+
+  // The bug this was written for. Clicking a hovered control focuses it, so `mouseenter` and
+  // `focus` both fire for one interaction — and the second `show()` used to orphan the first
+  // bubble, which then stayed on screen for the life of the page.
+  it('never leaves a second bubble behind when shown twice', () => {
+    fire('mouseenter');
+    fire('focus');
+
+    expect(tips().length).toBe(1);
+  });
+
+  it('is gone after that pair is undone', () => {
+    fire('mouseenter');
+    fire('focus');
+    fire('mouseleave');
+
+    expect(tips().length).toBe(0);
+  });
+
+  // The pointer never moves when a click navigates, so `mouseleave` never arrives and the
+  // bubble would sit over whatever the click brought up.
+  it('dismisses on click', () => {
+    fire('mouseenter');
+    expect(tips().length).toBe(1);
+
+    fire('click');
+    expect(tips().length).toBe(0);
+  });
+
+  it('survives being hidden without ever being shown', () => {
+    fire('mouseleave');
+    fire('blur');
+
+    expect(tips().length).toBe(0);
+  });
+
+  it('leaves nothing behind when the anchor is destroyed mid-hover', () => {
+    fire('mouseenter');
+    expect(tips().length).toBe(1);
+
+    fixture.destroy();
+    expect(tips().length).toBe(0);
+  });
+
+  it('shows one bubble however many times it is re-entered', () => {
+    for (let i = 0; i < 5; i++) fire('mouseenter');
+
+    expect(tips().length).toBe(1);
+  });
+});

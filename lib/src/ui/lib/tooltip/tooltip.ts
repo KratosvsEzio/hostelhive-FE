@@ -30,6 +30,10 @@ export class Tooltip {
     // Focus as well as hover, so the tooltip is reachable by keyboard. It is often the only
     // place an abbreviation is expanded, and hover cannot be the sole route to a meaning.
     '(focus)': 'show()',
+    // Clicking dismisses. A tooltip whose anchor navigates, opens a panel, or simply stops
+    // being interesting is left hanging otherwise: the pointer never moves, so `mouseleave`
+    // never fires, and the bubble sits over whatever arrives next.
+    '(click)': 'hide()',
     '(blur)': 'hide()',
   },
 })
@@ -51,6 +55,14 @@ export class TooltipFixed implements OnDestroy {
   show(): void {
     const text = this.hhTooltip();
     if (!text) return;
+
+    // Clear any bubble already up before making another.
+    //
+    // `mouseenter` and `focus` both call this, and one interaction fires both — clicking a
+    // hovered element focuses it. Without this the second call overwrote `popup`, orphaning
+    // the first node in `<body>` with no reference left to remove it, so it stayed on screen
+    // for the life of the page. `hide()` then cleaned up only the most recent one.
+    this.hide();
 
     const rect = this.el.nativeElement.getBoundingClientRect();
     const div = document.createElement('div');
@@ -98,6 +110,6 @@ export class TooltipFixed implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.popup?.remove();
+    this.hide();
   }
 }
