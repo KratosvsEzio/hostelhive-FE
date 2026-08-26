@@ -1,11 +1,8 @@
-import {
-  ApiBooking,
-  ApiCalendarDay,
-} from '@features/public/listing/booking/booking-api.contract';
+import { RoomDay, RoomStay } from './room-stays';
 
 /** A cell in the month grid. `null` pads the weeks either side of the month. */
 export interface Cell {
-  day: ApiCalendarDay | null;
+  day: RoomDay | null;
   /** Rounded caps mark where occupancy starts and ends, so two adjacent stays read as two. */
   startsHere: boolean;
   endsHere: boolean;
@@ -20,7 +17,7 @@ export interface Cell {
  * square while the real start and end are rounded.
  */
 export interface Segment {
-  booking: ApiBooking;
+  booking: RoomStay;
   /** 1-based, for `grid-column-start`. */
   col: number;
   span: number;
@@ -50,8 +47,8 @@ const EMPTY: Cell = { day: null, startsHere: false, endsHere: false };
  * `check_out` is exclusive throughout: a guest leaving on the 5th does not occupy the 5th.
  */
 export function buildWeeks(
-  days: ApiCalendarDay[],
-  bookings: ApiBooking[],
+  days: RoomDay[],
+  bookings: RoomStay[],
   monthStart: Date,
 ): Week[] {
   if (!days.length) return [];

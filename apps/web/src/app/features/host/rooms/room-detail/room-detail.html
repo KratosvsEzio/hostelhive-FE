@@ -1,10 +1,10 @@
-<app-dashboard-layout [label]="label()">
-
-  <div hhActions class="flex items-center gap-2">
-    <button hh-button variant="outlined" size="sm" type="button" (click)="goBack()">
-      <i class="ti ti-arrow-left"></i>{{ 'common.rooms' | transloco }}
-    </button>
-  </div>
+<!-- Breadcrumb rather than a back button in the actions slot. Ten other detail pages take
+     the chevron the layout already offers; this one hand-rolled its own, which put the only
+     way back on the far side of the header from where every other page keeps it. -->
+<app-dashboard-layout
+  [backUrl]="roomsUrl()"
+  [breadcrumbs]="[{ label: 'common.rooms' | transloco, url: roomsUrl() }, { label: label() }]"
+>
 
   @let s = state();
 
@@ -39,7 +39,11 @@
     @if (view() === 'calendar') {
       <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
       @if (hostelId() && roomId()) {
-        <hh-room-calendar [hostelId]="hostelId()!" [roomId]="roomId()" />
+        <hh-room-calendar
+          [hostelId]="hostelId()!"
+          [roomId]="roomId()"
+          [capacity]="room.capacity"
+        />
       }
 
     } @else {

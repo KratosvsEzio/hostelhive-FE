@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
 import { dayRangeEnd, dayRangeStart } from '@util/date-range-filter';
 import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
@@ -13,6 +13,15 @@ import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/paginati
  * nothing on screen to explain it.
  */
 const DAY_ARRIVALS_LIMIT = 100;
+
+/**
+ * One page big enough to hold a month of one room's stays.
+ *
+ * The room calendar draws every stay touching the month, and a page boundary would not show
+ * as an error — it would show as a fortnight that looks free. A four-bed room turning over
+ * weekly tops out near twenty; a hundred leaves room for a hostel that sells by the night.
+ */
+const ROOM_MONTH_LIMIT = 100;
 
 /**
  * The host's bookings for one hostel — the list and the month, both real endpoints.
@@ -109,6 +118,46 @@ export class HostBookingsApi {
         ...pageParams(1, DAY_ARRIVALS_LIMIT),
         'f[checkin_date][gte]': dayRangeStart(date),
         'f[checkin_date][lte]': dayRangeEnd(date),
+      })
+      .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
+  }
+
+  /**
+   * Every stay **touching** `[from, to]` in one room — what the room calendar draws.
+   *
+   * Two filters, both verified against the live endpoint rather than assumed:
+   *
+   *  - `f[room.id]`, **not** `f[room_id]`. The flat key is accepted and matches nothing: it
+   *    returns zero rows for a room with nine stays, exactly as it does for an id that does
+   *    not exist. That failure is silent and it is the dangerous kind here — an empty
+   *    calendar is indistinguishable from a room nobody has booked. The dotted form is the
+   *    same convention `f[disposition.slug][]` already uses for the list's filters.
+   *
+   *  - **Overlap, not arrival.** A stay belongs on August's calendar if it is in the room on
+   *    any August day, so the test is `checkin_date <= end AND checkout_date >= start`.
+   *    Filtering on `checkin_date` alone — the obvious thing, and what the day ledger above
+   *    correctly does for a different question — drops every stay that began in July and is
+   *    still running, which is precisely the guest a host is looking for when they open a
+   *    room's month.
+   *
+   * A room with no bookings answers with none, and that is a fact worth rendering. It used to
+   * be a fixture: a room the seeker-side offers had never heard of was given invented stays,
+   * on the reasoning that an empty calendar might be mistaken for a broken one. That trade is
+   * only worth making while the endpoint does not exist.
+   */
+  bookingsInRoom(
+    hostelId: string,
+    roomId: string,
+    from: string,
+    to: string,
+  ): Observable<HostBooking[]> {
+    if (!hostelId || !roomId) return of([]);
+    return this.api
+      .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
+        ...pageParams(1, ROOM_MONTH_LIMIT),
+        'f[room.id]': roomId,
+        'f[checkin_date][lte]': dayRangeEnd(to),
+        'f[checkout_date][gte]': dayRangeStart(from),
       })
       .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
   }
