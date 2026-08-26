@@ -79,12 +79,32 @@
             class="relative aspect-[4/3] cursor-zoom-in overflow-hidden"
             (click)="openPreview(a)"
           >
-            <!-- Selection checkbox — top-left -->
+            <!-- Selection checkbox — top-left.
+                 Grey until it is ticked, then brand. It used to sit at `bg-brand-500/20`
+                 unchecked, which made every card look half-selected and left the actual
+                 selection reading as a slightly stronger orange rather than as a change of
+                 state. The rest of the app already draws a checkbox this way — see the terms
+                 box in the Lead Wall and the plan picker in subscription checkout — so this
+                 is the convention rather than a new opinion.
+
+                 White fill rather than a grey one because this sits on top of a photograph:
+                 white holds against any image beneath it, which a tint does not.
+
+                 `role="checkbox"` + `tabindex` + the key handlers because this is a `div`.
+                 The two boxes it now matches are real `<input type="checkbox" class="sr-only">`
+                 inside a `<label>` and get all of this for free; this one had none of it, so
+                 a moderator could not select a photo without a mouse. -->
             @if (activeStatus() !== 'rejected') {
               <div
-                class="absolute start-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 shadow-md transition-all duration-150 active:scale-95"
-                [class]="isSelected ? 'border-brand-500 bg-brand-500 shadow-brand-500/30 scale-105' : 'border-brand-500/50 bg-brand-500/20 hover:scale-105 hover:bg-brand-500/30 hover:border-brand-500/70'"
+                role="checkbox"
+                tabindex="0"
+                class="absolute start-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 shadow-md outline-none transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-95"
+                [class]="isSelected ? 'border-brand-500 bg-brand-500 shadow-brand-500/30 scale-105' : 'border-ink-300 bg-white hover:scale-105 hover:border-ink-400'"
+                [attr.aria-checked]="isSelected"
+                [attr.aria-label]="entityName(a)"
                 (click)="$event.stopPropagation(); toggleSelect(aid)"
+                (keydown.enter)="$event.stopPropagation(); toggleSelect(aid)"
+                (keydown.space)="$event.preventDefault(); $event.stopPropagation(); toggleSelect(aid)"
               >
                 @if (isSelected) {
                   <i class="ti ti-check text-xs font-bold text-white" aria-hidden="true"></i>
