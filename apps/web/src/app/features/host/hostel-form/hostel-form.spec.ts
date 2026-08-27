@@ -230,3 +230,89 @@ describe('HostelForm contact details', () => {
     expect(fixture.componentInstance.fieldErrors()['contact']).toBeTruthy();
   });
 });
+
+/**
+ * Removing a photo, when a moderator is the one doing it.
+ *
+ * A host removing a photo is deleting their own picture. A moderator "removing" one is
+ * *rejecting* it: the host has to be told which and why, and the decision has to be undoable
+ * until the review is submitted. So the form does not act — it asks, and the review screen
+ * decides what the answer means.
+ *
+ * The exception is a photo the moderator uploaded themselves a moment ago. That one is theirs
+ * and is simply deleted, which is why the check looks at the pending-upload map first.
+ */
+describe('HostelForm under moderation', () => {
+  const WITH_PHOTOS = {
+    id: 1,
+    name: 'Ever Care',
+    attachments: [
+      { id: 'a1', url: 'https://cdn.test/a1.jpg', is_primary: true },
+      { id: 'a2', url: 'https://cdn.test/a2.jpg' },
+    ],
+  } as unknown as HostelDetail;
+
+  function setUp(moderating: boolean) {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [HostelForm],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostelsApi, useValue: new HostelsApiStub() },
+        { provide: OffersApi, useValue: new OffersApiStub() },
+        { provide: ImageUploadService, useValue: {} },
+        { provide: HostOpsApi, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(HostelForm);
+    fixture.componentRef.setInput('mode', 'edit');
+    fixture.componentRef.setInput('initialData', WITH_PHOTOS);
+    fixture.componentRef.setInput('moderating', moderating);
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    const asked: string[] = [];
+    fixture.componentInstance.photoRejectRequested.subscribe((id) => asked.push(id));
+
+    return {
+      fixture,
+      asked,
+      form: fixture.componentInstance as unknown as {
+        photos(): { id: string }[];
+        removePhoto(p: { id: string }): void;
+        photoGridItems(): { id: string; rejected?: boolean; rejectReason?: string }[];
+      },
+    };
+  }
+
+  it('asks instead of removing, when a moderator presses remove', () => {
+    const { asked, form } = setUp(true);
+
+    form.removePhoto({ id: 'a2' });
+
+    expect(asked).toEqual(['a2']);
+    // Still there: only the review screen decides what a rejection does.
+    expect(form.photos().map((p) => p.id)).toEqual(['a1', 'a2']);
+  });
+
+  it('just removes it for the hostel’s own host', () => {
+    const { asked, form } = setUp(false);
+
+    form.removePhoto({ id: 'a2' });
+
+    expect(asked).toEqual([]);
+    expect(form.photos().map((p) => p.id)).toEqual(['a1']);
+  });
+
+  // The other direction of the loop: what the review screen decided has to show on the grid.
+  it('marks the photos the review screen rejected', () => {
+    const { fixture, form } = setUp(true);
+    fixture.componentRef.setInput('rejectedPhotos', new Map([['a2', 'blurry']]));
+    fixture.detectChanges();
+
+    const items = form.photoGridItems();
+    expect(items.find((p) => p.id === 'a1')?.rejected).toBe(false);
+    expect(items.find((p) => p.id === 'a2')?.rejected).toBe(true);
+    expect(items.find((p) => p.id === 'a2')?.rejectReason).toBe('blurry');
+  });
+});

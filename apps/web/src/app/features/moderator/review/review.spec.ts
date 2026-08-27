@@ -112,6 +112,44 @@ class ModerationApiStub {
   }
 }
 
+let api: ModerationApiStub;
+
+async function render(d: ReviewDetail | null, fail = false): Promise<ComponentFixture<Review>> {
+  TestBed.resetTestingModule();
+  api = new ModerationApiStub();
+  api.detail = d;
+  api.fail = fail;
+  TestBed.configureTestingModule({
+    imports: [Review],
+    providers: [
+      provideI18nTesting(),
+      provideRouter([]),
+      provideHttpClient(),
+      provideNoopAnimations(),
+      { provide: ModerationApi, useValue: api },
+      {
+        provide: HostelsApi,
+        useValue: {
+          formOptions: () => defer(() => Promise.resolve(OPTIONS)),
+          update: () => defer(() => Promise.resolve({})),
+        },
+      },
+      {
+        provide: OffersApi,
+        useValue: { categories: () => defer(() => Promise.resolve([] as OfferCategory[])) },
+      },
+      { provide: ImageUploadService, useValue: {} },
+      { provide: HostOpsApi, useValue: {} },
+      { provide: ActivatedRoute, useValue: { paramMap: of(new Map([['id', '1']])) } },
+    ],
+  });
+  const fixture = TestBed.createComponent(Review);
+  fixture.detectChanges();
+  await new Promise((r) => setTimeout(r, 20));
+  fixture.detectChanges();
+  return fixture;
+}
+
 /**
  * The gate on Approve & publish.
  *
@@ -120,51 +158,14 @@ class ModerationApiStub {
  * and publishing an unfinished listing is not an undo-able mistake.
  */
 describe('Review · approve & publish', () => {
-  let api: ModerationApiStub;
-
-  async function render(d: ReviewDetail | null, fail = false): Promise<ComponentFixture<Review>> {
-    TestBed.resetTestingModule();
-    api = new ModerationApiStub();
-    api.detail = d;
-    api.fail = fail;
-    TestBed.configureTestingModule({
-      imports: [Review],
-      providers: [
-        provideI18nTesting(),
-        provideRouter([]),
-        provideHttpClient(),
-        provideNoopAnimations(),
-        { provide: ModerationApi, useValue: api },
-        {
-          provide: HostelsApi,
-          useValue: {
-            formOptions: () => defer(() => Promise.resolve(OPTIONS)),
-            update: () => defer(() => Promise.resolve({})),
-          },
-        },
-        {
-          provide: OffersApi,
-          useValue: { categories: () => defer(() => Promise.resolve([] as OfferCategory[])) },
-        },
-        { provide: ImageUploadService, useValue: {} },
-        { provide: HostOpsApi, useValue: {} },
-        { provide: ActivatedRoute, useValue: { paramMap: of(new Map([['id', '1']])) } },
-      ],
-    });
-    const fixture = TestBed.createComponent(Review);
-    fixture.detectChanges();
-    await new Promise((r) => setTimeout(r, 20));
-    fixture.detectChanges();
-    return fixture;
-  }
-
   function approve(fixture: ComponentFixture<Review>): void {
     (fixture.componentInstance as unknown as { approve(): void }).approve();
   }
 
   function errorsOn(fixture: ComponentFixture<Review>): string[] {
-    return (fixture.componentInstance as unknown as { validationErrors(): string[] })
-      .validationErrors();
+    return (
+      fixture.componentInstance as unknown as { validationErrors(): string[] }
+    ).validationErrors();
   }
 
   it('refuses an empty listing and says why', async () => {
@@ -200,5 +201,92 @@ describe('Review · approve & publish', () => {
 
     approve(fixture);
     expect(api.markAsActiveCalls).toBe(0);
+  });
+});
+
+/**
+ * Rejecting a photo: ask, confirm, undo.
+ *
+ * A rejection is not an edit to the hostel — it is a message to its host — so it stays with
+ * this screen rather than the shared form. The form asks (`photoRejectRequested`), a modal
+ * confirms, and the grid's own Undo control takes it back. Nothing may happen on the ask
+ * alone: a moderator who opens the dialog and changes their mind has not rejected anything.
+ */
+describe('Review · rejecting a photo', () => {
+  interface Loop {
+    requestRemoveById(id: string): void;
+    confirmRemove(): void;
+    undoRejectById(id: string): void;
+    removeConfirmPhotoId: { (): string | null; set(v: string | null): void };
+    rejectedPhotos(): ReadonlyMap<string, string>;
+    dirty(): boolean;
+  }
+
+  async function loop(): Promise<Loop> {
+    const fixture = await render(detail(emptyListing({ name: 'Ever Care' })));
+    return fixture.componentInstance as unknown as Loop;
+  }
+
+  it('asks before it rejects', async () => {
+    const c = await loop();
+
+    c.requestRemoveById('a2');
+
+    expect(c.removeConfirmPhotoId()).toBe('a2');
+    // Nothing has happened yet — the dialog is a question, not the answer.
+    expect(c.rejectedPhotos().size).toBe(0);
+  });
+
+  it('rejects once confirmed, and closes the dialog', async () => {
+    const c = await loop();
+
+    c.requestRemoveById('a2');
+    c.confirmRemove();
+
+    expect([...c.rejectedPhotos().keys()]).toEqual(['a2']);
+    expect(c.removeConfirmPhotoId()).toBeNull();
+  });
+
+  it('rejects nothing when the dialog is dismissed', async () => {
+    const c = await loop();
+
+    c.requestRemoveById('a2');
+    c.removeConfirmPhotoId.set(null);
+
+    expect(c.rejectedPhotos().size).toBe(0);
+  });
+
+  it('takes it back on undo', async () => {
+    const c = await loop();
+
+    c.requestRemoveById('a2');
+    c.confirmRemove();
+    c.undoRejectById('a2');
+
+    expect(c.rejectedPhotos().size).toBe(0);
+  });
+
+  it('leaves the other photos alone', async () => {
+    const c = await loop();
+
+    c.requestRemoveById('a1');
+    c.confirmRemove();
+    c.requestRemoveById('a2');
+    c.confirmRemove();
+    c.undoRejectById('a1');
+
+    expect([...c.rejectedPhotos().keys()]).toEqual(['a2']);
+  });
+
+  // A rejection has to enable Update, or the moderator's decision is stranded: the form is
+  // untouched, so nothing else on the page would report the page as changed.
+  it('counts as an unsaved change', async () => {
+    const c = await loop();
+    expect(c.dirty()).toBe(false);
+
+    c.requestRemoveById('a2');
+    c.confirmRemove();
+
+    expect(c.dirty()).toBe(true);
   });
 });
