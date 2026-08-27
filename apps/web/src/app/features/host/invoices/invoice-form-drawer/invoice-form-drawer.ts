@@ -21,7 +21,7 @@ import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive
 import { MoneyInput } from '@app/shared/money-input/money-input';
 
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { ApiError, Invoice, Tenant } from '@hostelhive/data-access';
+import { Invoice, Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
 import { PAGE_SIZE } from '@util/pagination';
 import {
@@ -245,14 +245,9 @@ export class InvoiceFormDrawer {
           );
           this.saved.emit();
         },
-        error: (err) => {
-          this.saving.set(false);
-          const msg = (err as ApiError).message;
-          this.notifications.error(
-            existing ? "Couldn't update invoice" : "Couldn't create invoice",
-            msg ?? 'Please try again.',
-          );
-        },
+        // One toast, raised by `errorInterceptor` with the server's own wording and pinned
+        // open for a 4xx. This handler owns the inline state only.
+        error: () => this.saving.set(false),
       });
   }
 }

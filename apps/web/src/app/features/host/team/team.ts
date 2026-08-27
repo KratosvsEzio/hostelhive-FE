@@ -22,7 +22,7 @@ import {
   PaginationConfig,
   Skeleton,
 } from '@hostelhive/ui';
-import { ApiError, Staff } from '@hostelhive/data-access';
+import { Staff } from '@hostelhive/data-access';
 import { HostPropertyStore, HostShellApi, StaffApi, StaffPage } from '@services';
 import { StaffFormDrawer } from './staff-form-drawer/staff-form-drawer';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
@@ -312,10 +312,8 @@ export class HostTeam {
           this.reloadStaff();
           this.notifications.success('Staff removed', `${m.name} has been removed.`);
         },
-        error: (err: ApiError) => {
-          this.removingId.set(null);
-          this.notifications.error("Couldn't remove staff", err.message);
-        },
+        // `errorInterceptor` toasts it, titled "Couldn't delete" off the request verb.
+        error: () => this.removingId.set(null),
       });
   }
 
@@ -357,10 +355,8 @@ export class HostTeam {
             `${m.name} can no longer manage this hostel.`,
           );
         },
-        error: (err: ApiError) => {
-          this.removingId.set(null);
-          this.notifications.error("Couldn't remove manager access", err.message);
-        },
+        // As above: one toast, from the interceptor.
+        error: () => this.removingId.set(null),
       });
   }
 

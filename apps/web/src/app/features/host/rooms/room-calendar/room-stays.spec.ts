@@ -1,5 +1,5 @@
 import { HostBooking } from '@features/host/bookings/host-bookings-api';
-import { toRoomMonth } from './room-stays';
+import { RoomResident, toRoomMonth } from './room-stays';
 
 function booking(over: Partial<HostBooking> = {}): HostBooking {
   return {
@@ -140,5 +140,87 @@ describe('toRoomMonth', () => {
 
     expect(days).toHaveLength(31);
     expect(days.every((d) => d.booked === 0 && d.capacity === 4)).toBe(true);
+  });
+});
+
+function resident(over: Partial<RoomResident> = {}): RoomResident {
+  return { id: 'r1', name: 'Bilal', moveIn: '2026-08-10', status: 'active', ...over };
+}
+
+/**
+ * Tenants the host placed by hand, which the bookings endpoint knows nothing about.
+ *
+ * The failure this guards is quiet in the worst way: the room simply reads emptier than it
+ * is. Nothing errors, no row is missing from a list — the pips are just short by however many
+ * people live there, and a host sizing up free beds believes them.
+ */
+describe('toRoomMonth — residents', () => {
+  const day = (r: ReturnType<typeof toRoomMonth>, d: string) =>
+    r.days.find((x) => x.date === d)!;
+
+  it('holds a bed from the day they moved in', () => {
+    const m = toRoomMonth([], 4, AUG.from, AUG.to, [resident()]);
+
+    expect(day(m, '2026-08-09').booked).toBe(0);
+    expect(day(m, '2026-08-10').booked).toBe(1);
+  });
+
+  // No move-out exists, so they occupy every remaining night — including the last of the month.
+  it('does not stop before the end of the window', () => {
+    const m = toRoomMonth([], 4, AUG.from, AUG.to, [resident()]);
+
+    expect(day(m, '2026-08-31').booked).toBe(1);
+  });
+
+  // Moved in months ago: the whole window is theirs, not just from the 1st onwards by luck.
+  it('covers a window that starts after they arrived', () => {
+    const m = toRoomMonth([], 4, AUG.from, AUG.to, [resident({ moveIn: '2026-03-02' })]);
+
+    expect(day(m, '2026-08-01').booked).toBe(1);
+    expect(day(m, '2026-08-31').booked).toBe(1);
+  });
+
+  it('ignores somebody who has not moved in yet', () => {
+    const m = toRoomMonth([], 4, AUG.from, AUG.to, [resident({ moveIn: '2026-09-04' })]);
+
+    expect(m.stays).toHaveLength(0);
+  });
+
+  it('ignores a record with no move-in date at all', () => {
+    const m = toRoomMonth([], 4, AUG.from, AUG.to, [resident({ moveIn: '' })]);
+
+    expect(m.stays).toHaveLength(0);
+  });
+
+  // One person is one bed, in a dorm or a private room. A booking holds beds for a party;
+  // this is why the two are counted separately rather than run through the same mapping.
+  it('counts one bed each, however big the room', () => {
+    const m = toRoomMonth([], 8, AUG.from, AUG.to, [
+      resident({ id: 'a', moveIn: '2026-08-01' }),
+      resident({ id: 'b', moveIn: '2026-08-01' }),
+    ]);
+
+    expect(day(m, '2026-08-05').booked).toBe(2);
+  });
+
+  it('adds to the beds bookings already hold, rather than replacing them', () => {
+    const withBooking = toRoomMonth(
+      [booking({ checkIn: '2026-08-01', checkOut: '2026-08-20', guests: 2 })],
+      6, AUG.from, AUG.to,
+      [resident({ moveIn: '2026-08-01' })],
+    );
+
+    expect(day(withBooking, '2026-08-05').booked).toBe(3);
+  });
+
+  // `open` is the only thing standing between a resident and a UI that announces a departure.
+  it('marks the stay open and accepts a timestamp move-in', () => {
+    const m = toRoomMonth([], 4, AUG.from, AUG.to, [
+      resident({ moveIn: '2026-08-10T14:30:00+05:00' }),
+    ]);
+
+    expect(m.stays[0].open).toBe(true);
+    expect(m.stays[0].check_in).toBe('2026-08-10');
+    expect(day(m, '2026-08-10').booked).toBe(1);
   });
 });

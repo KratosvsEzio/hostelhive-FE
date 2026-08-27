@@ -11,6 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
 import { Button, DatePicker, Drawer, Input, PhoneInput, Toggle } from '@hostelhive/ui';
+import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { ApiError, Staff } from '@hostelhive/data-access';
 import { ImageUploadKey, ImageUploadService, StaffApi } from '@services';
 import { MoneyInput } from '@app/shared/money-input/money-input';
@@ -47,7 +48,7 @@ const UPLOAD_KEY: Record<ImageSlot, ImageUploadKey> = {
 @Component({
   selector: 'hh-staff-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DatePicker, Drawer, Input, MoneyInput, PhoneInput, Toggle, TranslocoPipe],
+  imports: [Button, DatePicker, Drawer, Input, MoneyInput, PhoneInput, PhotoPicker, Toggle, TranslocoPipe],
   templateUrl: './staff-form-drawer.html',
 })
 export class StaffFormDrawer {
@@ -125,12 +126,20 @@ export class StaffFormDrawer {
     return String(this.form()[key] ?? '').trim() ? '' : 'Required.';
   }
 
+  /** A file or a camera shot from the picker — the upload is the same either way. */
+  protected onPicked(slot: ImageSlot, file: File): void {
+    this.startUpload(slot, file);
+  }
+
   protected onFile(slot: ImageSlot, event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = ''; // let the same file be re-picked after a failure
     if (!file) return;
+    this.startUpload(slot, file);
+  }
 
+  private startUpload(slot: ImageSlot, file: File): void {
     this.uploading.set(slot);
     this.uploads
       .upload(UPLOAD_KEY[slot], file)
@@ -180,13 +189,9 @@ export class StaffFormDrawer {
         );
         this.saved.emit();
       },
-      error: (err: ApiError) => {
-        this.saving.set(false);
-        this.notifications.error(
-          f.id ? "Couldn't update staff" : "Couldn't add staff",
-          err.message,
-        );
-      },
+      // One toast, from `errorInterceptor`. The image-upload handler above keeps its own
+      // because it names a step the interceptor cannot see — see there.
+      error: () => this.saving.set(false),
     });
   }
 }

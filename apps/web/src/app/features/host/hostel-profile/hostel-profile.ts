@@ -81,7 +81,9 @@ export class HostelProfile {
   protected save(): void {
     const id = this.hostelId();
     const f = this.form();
-    if (!id || !f || !f.dirty() || this.saving() || f.uploading()) return;
+    // isValid is false only for a genuine conflict on this screen: every other rule in the
+    // form is create-only, so this blocks the save without gating edits behind them.
+    if (!id || !f || !f.dirty() || this.saving() || f.uploading() || !f.isValid()) return;
     this.saving.set(true);
     this.saveError.set(false);
     this.saved.set(false);

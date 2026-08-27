@@ -292,17 +292,24 @@ export interface PhotoGridPhoto {
         }
       }
 
-      <!-- Add / replace tile -->
-      <button
-        type="button"
-        [disabled]="atLimit()"
-        [title]="atLimit() ? atLimitTitle() : ''"
-        (click)="addPhoto.emit()"
-        class="flex aspect-[4/3] flex-col items-center justify-center rounded-xl border border-dashed border-ink-300 text-ink-400 transition enabled:hover:border-brand-300 enabled:hover:text-brand-500 disabled:cursor-not-allowed disabled:border-ink-200 disabled:bg-ink-50 disabled:text-ink-300"
-      >
-        <i class="ti ti-upload text-xl" aria-hidden="true"></i>
-        <span class="mt-1 text-xs font-medium">Replace / add</span>
-      </button>
+      <!-- Add / replace tile.
+
+           Projected when the caller supplies one, because offering "take a photo" as well as
+           "choose a file" needs the camera — Capacitor natively, getUserMedia on the web — and
+           that lives in the app, not here. The default below stays for callers that only need
+           a file, so nothing has to change to keep working. -->
+      <ng-content select="[addTile]">
+        <button
+          type="button"
+          [disabled]="atLimit()"
+          [title]="atLimit() ? atLimitTitle() : ''"
+          (click)="addPhoto.emit()"
+          class="flex aspect-[4/3] w-full flex-col items-center justify-center rounded-xl border border-dashed border-ink-300 text-ink-400 transition enabled:hover:border-brand-300 enabled:hover:text-brand-500 disabled:cursor-not-allowed disabled:border-ink-200 disabled:bg-ink-50 disabled:text-ink-300"
+        >
+          <i class="ti ti-upload text-xl" aria-hidden="true"></i>
+          <span class="mt-1 text-xs font-medium">Replace / add</span>
+        </button>
+      </ng-content>
     </div>
   `,
 })

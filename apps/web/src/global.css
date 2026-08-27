@@ -297,6 +297,26 @@ body {
 }
 
 /* Console sidebar nav links */
+/**
+ * The brand mark inlined by the `hhLogo` directive.
+ *
+ * The <i> is the sized box and the <svg> fills it, so callers keep writing `h-7 w-auto` on
+ * the element exactly as they did when this was an <img> — nothing at the call sites had to
+ * learn a new way to size a logo.
+ *
+ * `width: auto` on the svg rather than 100%: the wordmark is 8:1 and stretching it to the
+ * box would squash it the moment a caller set both dimensions.
+ */
+.hh-logo {
+  display: inline-flex;
+  align-items: center;
+}
+.hh-logo > svg {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
 .nav-link {
   display: flex;
   align-items: center;

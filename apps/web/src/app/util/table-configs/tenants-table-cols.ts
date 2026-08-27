@@ -1,7 +1,8 @@
 import { format, parseISO } from 'date-fns';
 import { CellDef, ColumnDef } from '@hostelhive/ui';
-import { Tenant, TenantStatus } from '@hostelhive/data-access';
+import { Tenant } from '@hostelhive/data-access';
 import { ordinal } from '@util/ordinal';
+import { tenantStatusLabel, tenantStatusTone } from '@util/tenant-status';
 
 /**
  * The status pill renders the tenant's status **as the API defines it** — no client
@@ -9,20 +10,6 @@ import { ordinal } from '@util/ordinal';
  * `inactive` tenant read as "Checked-out" even though the backend has no such status
  * (see B9). Unknown slugs fall through to the raw value / neutral tone.
  */
-const STATUS_LABEL: Record<TenantStatus, string> = {
-  active: 'Active',
-  inactive: 'Inactive',
-  'on-notice': 'On notice',
-  'checked-out': 'Checked-out',
-};
-
-const STATUS_TONE: Record<TenantStatus, 'ok' | 'warn' | 'danger' | 'neutral'> = {
-  active: 'ok',
-  inactive: 'neutral',
-  'on-notice': 'warn',
-  'checked-out': 'neutral',
-};
-
 function fmtBillingDay(day: number | undefined): string {
   return day ? ordinal(day) : '—';
 }
@@ -93,8 +80,8 @@ const TENANTS_TABLE_CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
       const t = r as Tenant;
       return {
         kind: 'pill',
-        text: STATUS_LABEL[t.status] ?? t.status,
-        tone: STATUS_TONE[t.status] ?? 'neutral',
+        text: tenantStatusLabel(t.status),
+        tone: tenantStatusTone(t.status),
       } satisfies CellDef;
     },
   },

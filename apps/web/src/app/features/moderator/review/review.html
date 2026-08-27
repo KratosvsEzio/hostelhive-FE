@@ -6,25 +6,51 @@
   >
     <i class="ti ti-chevron-left" aria-hidden="true"></i>{{ 'moderatorReview.queue' | transloco }}
   </a>
+  <!-- Both actions act on a listing, so neither is offered until there is one: they used to
+       sit over "Can't connect to server" waiting to be pressed for nothing. -->
   <div hhActions class="flex items-center gap-2">
-    @if (approveError()) {
-      <span
-        class="flex shrink-0 items-center gap-1 text-xs font-medium text-danger"
-        [title]="'moderatorReview.approvalFailedTryAgain' | transloco"
+    @if (state().data) {
+      @if (approveError()) {
+        <span
+          class="flex shrink-0 items-center gap-1 text-xs font-medium text-danger"
+          [title]="'moderatorReview.approvalFailedTryAgain' | transloco"
+        >
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>
+          <span class="hidden sm:inline">{{ 'moderatorReview.approvalFailedTryAgain' | transloco }}</span>
+        </span>
+      }
+      @if (saveError()) {
+        <span class="hidden text-xs font-medium text-danger sm:inline"
+          >{{ 'common.couldnTUpdateTry' | transloco }}</span
+        >
+      }
+      @if (saved() && !dirty()) {
+        <span class="hidden items-center gap-1 text-xs font-medium text-ok sm:flex"
+          ><i class="ti ti-check" aria-hidden="true"></i>{{ 'common.changesSaved' | transloco }}</span
+        >
+      }
+      @if (dirty()) {
+        <span class="hidden text-xs text-ink-400 sm:inline">{{ 'common.youHaveUnsavedChanges' | transloco }}</span>
+      }
+      <button
+        hh-button
+        size="sm"
+        variant="outlined"
+        [disabled]="saving() || uploading() || !!validationErrors().length"
+        (click)="save()"
       >
-        <i class="ti ti-alert-circle" aria-hidden="true"></i>
-        <span class="hidden sm:inline">{{ 'moderatorReview.approvalFailedTryAgain' | transloco }}</span>
-      </span>
+        {{ saving() ? 'Saving…' : 'Update hostel' }}
+      </button>
+      <button
+        hh-button
+        color="success"
+        size="sm"
+        [disabled]="uploading() || approving() || !!decision()"
+        (click)="approve()"
+      >
+        {{ approving() ? 'Approving…' : 'Approve & publish' }}
+      </button>
     }
-    <button
-      hh-button
-      color="success"
-      size="sm"
-      [disabled]="uploading() || approving() || !!decision()"
-      (click)="approve()"
-    >
-      {{ approving() ? 'Approving…' : 'Approve & publish' }}
-    </button>
   </div>
   @let s = state();
   @if (s.loading) {
@@ -48,314 +74,64 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.7fr_1fr]">
       <!-- main -->
       <div class="space-y-5">
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <div class="mb-3 flex items-center justify-between">
-            <h2 class="font-display text-base font-semibold text-ink-900">
-              {{ 'common.listingDetails' | transloco }}
-            </h2>
-            <span
-              class="flex items-center gap-1 text-xs font-medium text-brand-600"
-              ><i class="ti ti-edit" aria-hidden="true"></i>{{ 'moderatorReview.inlineEditingOn' | transloco }}</span
-            >
-          </div>
+        <!-- What is stopping the save, said before the form rather than after it.
 
-          <label
-            class="mb-1 block text-xs font-medium text-ink-500"
-            [for]="ids.name"
-          >
-            {{ 'common.propertyName' | transloco }} <span class="text-danger">*</span>
-          </label>
-          <input
-            [id]="ids.name"
-            [value]="name()"
-            (input)="name.set(asValue($event))"
-            class="w-full rounded-xl border px-3 py-2 text-sm text-ink-900 outline-none transition focus:ring-2"
-            [class]="
-              saveAttempted() && !name().trim()
-                ? 'border-danger focus:border-danger focus:ring-danger/20 mb-0.5'
-                : 'border-ink-200 focus:border-brand-400 focus:ring-brand-100 mb-3'
-            "
-          />
-          @if (saveAttempted() && !name().trim()) {
-            <p class="mb-2.5 text-xs text-danger">{{ 'moderatorReview.propertyNameIsRequired' | transloco }}</p>
-          }
-
-          <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label class="mb-1 block text-xs font-medium text-ink-500">
-                {{ 'common.type' | transloco }} <span class="text-danger">*</span>
-              </label>
-              <hh-dropdown
-                variant="field"
-                [placeholder]="'common.selectType' | transloco"
-                [options]="typeOptions()"
-                [value]="propertyType()"
-                (valueChange)="setType($event)"
-              />
-              @if (saveAttempted() && !propertyType()) {
-                <p class="mt-0.5 text-xs text-danger">{{ 'moderatorReview.required' | transloco }}</p>
-              }
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-ink-500">
-                {{ 'common.accommodationtype' | transloco }} <span class="text-danger">*</span>
-              </label>
-              <hh-dropdown
-                variant="field"
-                [placeholder]="'common.selectGender' | transloco"
-                [options]="genderOptions()"
-                [value]="genderType()"
-                (valueChange)="setGender($event)"
-              />
-              @if (saveAttempted() && !genderType()) {
-                <p class="mt-0.5 text-xs text-danger">{{ 'moderatorReview.required' | transloco }}</p>
-              }
-            </div>
-          </div>
-
-          <label class="mb-1 block text-xs font-medium text-ink-500">
-            {{ 'common.description' | transloco }} <span class="text-danger">*</span>
-          </label>
-          <hh-rich-text
-            [value]="description()"
-            (valueChange)="description.set($event)"
-            [minHeight]="100"
-          />
-          @if (saveAttempted() && !hasDescription()) {
-            <p class="mt-0.5 text-xs text-danger">{{ 'moderatorReview.descriptionIsRequired' | transloco }}</p>
-          }
-
-        </div>
-
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-3 font-display text-base font-semibold text-ink-900">
-            {{ 'moderatorReview.photosCount' | transloco: { count: photos().length } }} <span class="text-danger">*</span>
-            @if (
-              saveAttempted() &&
-              photos().filter((p) => p.decision !== 'rejected').length === 0
-            ) {
-              <span class="ms-2 text-xs font-normal text-danger">
-                {{ 'moderatorReview.atLeastOnePhotoIs' | transloco }}
-              </span>
-            }
-          </h2>
-          <!-- Hidden device-file picker — opened by "Replace / add" and the per-photo Replace button. -->
-          <input
-            #fileInput
-            type="file"
-            accept="image/*"
-            multiple
-            class="hidden"
-            (change)="onFileSelected($event)"
-          />
-          <hh-photo-grid
-            [photos]="photoGridItems()"
-            [labelOptions]="labelOptions()"
-            [labelMap]="photoLabelMap()"
-            [uploadError]="uploadError() ?? ''"
-            (addPhoto)="addPhoto()"
-            (replacePhoto)="replace(findPhoto($event)!)"
-            (setPrimary)="setPrimary(findPhoto($event)!)"
-            (removePhoto)="requestRemove(findPhoto($event)!)"
-            (undoReject)="setDecision(findPhoto($event)!, 'pending')"
-            (labelChange)="setPhotoLabel(findPhoto($event.id)!, $event.value)"
-          />
-        </div>
-
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <div class="mb-3 flex items-center justify-between">
-            <h2 class="font-display text-base font-semibold text-ink-900">
-              {{ 'common.amenities' | transloco }}
-            </h2>
-            <span class="text-xs font-medium text-ink-400"
-              >{{ 'common.nSelected' | transloco: { count: selectedOfferIds().size } }}</span
-            >
-          </div>
-          @if (s.data.offerCatalog.length === 0) {
-            <p class="text-sm text-ink-400">{{ 'common.amenityCatalogueUnavailable' | transloco }}</p>
-          } @else {
-            <div class="space-y-4">
-              @for (cat of s.data.offerCatalog; track cat.id) {
-                <div>
-                  <div class="mb-2 flex items-center gap-2">
-                    <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
-                    @if (catSelectedCount(cat); as c) {
-                      <span class="text-[11px] font-semibold text-brand-600">{{ 'common.nSelected' | transloco: { count: c } }}</span>
-                    }
-                  </div>
-                  <div class="flex flex-wrap gap-2">
-                    @for (o of cat.offers; track o.id) {
-                      <button
-                        type="button"
-                        class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition"
-                        [class]="
-                          isOfferSelected(o.id)
-                            ? 'border-brand-200 bg-brand-50 text-brand-800'
-                            : 'border-ink-200 bg-white text-ink-700 hover:border-ink-300'
-                        "
-                        (click)="toggleOffer(o.id)"
-                        [attr.aria-pressed]="isOfferSelected(o.id)"
-                      >
-                        <i class="ti shrink-0 text-base" [class]="offerIcon(o.slug)" aria-hidden="true"></i>
-                        <span class="text-start">{{ o.name }}</span>
-                        <i
-                          class="ti shrink-0 text-lg"
-                          [class]="isOfferSelected(o.id) ? 'ti-circle-check-filled text-brand-600' : 'ti-circle text-ink-300'"
-                          aria-hidden="true"
-                        ></i>
-                      </button>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-4 font-display text-base font-semibold text-ink-900">{{ 'common.roomTypes' | transloco }}</h2>
-
-
-          <div class="mb-2 flex items-center justify-between">
-            <p class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ 'common.roomTypes' | transloco }}</p>
-            @if (roomTypes().length > 0) {
-              <span class="text-xs text-ink-400">{{ 'moderatorReview.nTypes' | transloco: { count: roomTypes().length } }}</span>
-            }
-          </div>
-
-          @if (roomTypes().length === 0) {
-            <p class="text-sm text-ink-400">{{ 'moderatorReview.noRoomTypesAddedYet' | transloco }}</p>
-          } @else {
-            <ul class="space-y-2">
-              @for (rt of roomTypes(); track rt._key) {
-                <li>
-                  <!-- Moderation edits the four fields it binds below. The booking controls —
-                       discount, photos, bookability — are hidden because nothing here saves
-                       them: shown, they would look live and quietly discard every change. -->
-                  <hh-room-type-row
-                    [showBookingFields]="false"
-                    [name]="rt.name"
-                    [capacity]="rt.capacity"
-                    [price]="rt.price"
-                    (nameChange)="patchRoomField(rt._key, 'name', $event)"
-                    (capacityChange)="patchRoomField(rt._key, 'capacity', $event)"
-                    (priceChange)="patchRoomField(rt._key, 'price', $event)"
-                  />
-                </li>
-              }
-            </ul>
-          }
-          <button
-            type="button"
-            hh-button
-            variant="text"
-            size="sm"
-            class="mt-3"
-            (click)="addRoomType()"
-          >
-            <i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.addRoomType' | transloco }}
-          </button>
-        </div>
-
-        <div class="rounded-2xl bg-white p-5 shadow-card">
-          <h2 class="mb-3 font-display text-base font-semibold text-ink-900">
-            {{ 'moderatorReview.verifyLocation' | transloco }} <span class="text-danger">*</span>
-          </h2>
-
-          <hh-location-picker
-            [initialLat]="s.data.lat !== null && s.data.lat !== undefined ? +s.data.lat : undefined"
-            [initialLng]="s.data.lng !== null && s.data.lng !== undefined ? +s.data.lng : undefined"
-            [initialZoom]="15"
-            (picked)="onLocationPicked($event)"
-          />
-
-          @if (locLat() && locLng()) {
-            <!-- Address summary — populated by reverse geocoding on every pin move / place search -->
-            <div class="mt-3 rounded-xl border border-ink-100 bg-surface p-3">
-              <div class="flex items-start gap-2.5">
-                <i class="ti ti-map-pin mt-0.5 shrink-0 text-sm text-brand-500" aria-hidden="true"></i>
-                <div class="min-w-0 flex-1 space-y-0.5 text-xs">
-                  @if (locAddress1()) {
-                    <p class="font-medium text-ink-800">{{ locAddress1() }}</p>
-                  }
-                  @if (locArea()) {
-                    <p class="text-ink-600">{{ locArea() }}</p>
-                  }
-                  @if (locCityLine()) {
-                    <p class="text-ink-600">{{ locCityLine() }}</p>
-                  }
-                  <p class="mt-1.5 font-mono text-ink-400">
-                    {{ locLat()?.toFixed(5) }}, {{ locLng()?.toFixed(5) }}
-                    <span class="mx-1 not-italic text-ink-300">·</span>
-                    <a
-                      [href]="mapsLink(locLat(), locLng())"
-                      target="_blank"
-                      rel="noopener"
-                      class="not-italic font-medium text-brand-600 hover:underline"
-                      >{{ 'moderatorReview.openInGoogleMaps' | transloco }}</a
-                    >
-                  </p>
-                </div>
-              </div>
-            </div>
-          } @else if (saveAttempted()) {
-            <p
-              class="mt-2 flex items-center gap-1.5 text-xs font-medium text-danger"
-            >
-              <i class="ti ti-map-pin-off" aria-hidden="true"></i>{{ 'moderatorReview.locationCoordinatesAreRequiredSearch' | transloco }}
+             The list used to sit at the bottom, under a button that has since moved to the
+             sub-header: a moderator pressed a greyed-out button at the top of the screen and
+             the reason why was a full page-scroll away, out of sight. -->
+        @if (saveAttempted() && validationErrors().length) {
+          <div class="rounded-2xl border border-danger/30 bg-danger/5 px-5 py-4">
+            <p class="flex items-center gap-2 font-medium text-danger">
+              <i class="ti ti-alert-circle text-base" aria-hidden="true"></i>{{ 'moderatorReview.pleaseFixTheFollowingBefore' | transloco }}
             </p>
-          }
-
-          <label
-            class="mb-1 mt-3 block text-xs font-medium text-ink-500"
-            [for]="ids.landmarks"
-            >{{ 'common.nearbyLandmarks' | transloco }}</label
-          >
-          <input
-            [id]="ids.landmarks"
-            [value]="landmarks()"
-            (input)="landmarks.set(asValue($event))"
-            class="w-full rounded-xl border border-ink-200 px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-          />
-        </div>
-
-        <!-- Save actions -->
-        <div class="space-y-2">
-          @if (saveAttempted() && validationErrors().length) {
-            <ul
-              class="space-y-0.5 rounded-xl bg-danger/5 px-4 py-3 text-xs font-medium text-danger"
-            >
+            <ul class="mt-2 space-y-1 ps-6">
               @for (e of validationErrors(); track e) {
-                <li class="flex items-center gap-1.5">
-                  <i class="ti ti-circle-x text-sm" aria-hidden="true"></i>{{ e }}
-                </li>
+                <li class="list-disc text-sm text-danger/90">{{ e }}</li>
               }
             </ul>
-          }
-          <div class="flex flex-wrap items-center justify-end gap-3">
-            @if (saveError()) {
-              <span class="text-sm font-medium text-danger"
-                >{{ 'common.couldnTUpdateTry' | transloco }}</span
-              >
-            }
-            @if (saved() && !dirty()) {
-              <span class="flex items-center gap-1 text-sm font-medium text-ok"
-                ><i class="ti ti-check" aria-hidden="true"></i>{{ 'common.changesSaved' | transloco }}</span
-              >
-            }
-            @if (dirty()) {
-              <span class="text-sm text-ink-400">{{ 'common.youHaveUnsavedChanges' | transloco }}</span>
-            }
-            <button hh-button color="primary" [disabled]="saving() || uploading() || !!validationErrors().length" (click)="save()">
-              {{ saving() ? 'Saving…' : 'Update hostel' }}
-            </button>
           </div>
-        </div>
+        }
+
+        <!--
+             The host's own hostel form, rendered here rather than a second copy of it.
+
+             This screen used to hand-roll the same five sections and drifted: no contact
+             fields, no billing cycle or currency, and room types that saved four of their
+             ten columns. A moderator was correcting a listing through a narrower window
+             than the host filled in, and neither form knew the other existed.
+
+             The data still comes from moderation's own endpoints — `initialData` is the
+             record `ModerationApi.getById` already fetched, `options` is
+             `/api/moderator/hostels/new`, and the catalogue is the one loaded alongside
+             the listing. The form supplies the fields; this screen supplies the data and
+             everything around it that is about reviewing rather than editing.
+        -->
+        <hh-hostel-form
+          #hostelForm
+          mode="edit"
+          [initialData]="s.data.hostel"
+          [options]="formOptions()"
+          [catalogue]="s.data.offerCatalog"
+          [saving]="saving()"
+          [showValidation]="saveAttempted()"
+          [moderating]="true"
+          [requireComplete]="true"
+          [rejectedPhotos]="rejectedPhotos()"
+          (photoRejectRequested)="requestRemoveById($event)"
+          (photoRejectUndone)="undoRejectById($event)"
+        />
       </div>
 
       <!-- sidebar -->
-      <div class="space-y-5">
+      <!-- Host and Submission follow the form down the page: the moderator is checking one
+           against the other, and both were scrolling away by the second section.
+
+           `self-start` is load-bearing. A grid item stretches to its row, so this column was
+           already as tall as the form beside it and sticky had nowhere to travel; sizing it to
+           its content is what gives it the room. `top-6` matches the scroll pane's own padding,
+           the same offset the new-hostel sidebar uses -- this sticks inside the dashboard
+           layout's pane, not the document, so the site header's height is not the measure. -->
+      <div class="space-y-5 lg:sticky lg:top-6 lg:self-start">
         <div class="rounded-2xl bg-white p-5 shadow-card">
           <h3 class="mb-3 font-display text-sm font-semibold text-ink-900">
             {{ 'common.host' | transloco }}
@@ -481,7 +257,7 @@
     </hh-confirm-modal>
   }
 
-  @if (removeConfirmPhoto(); as photo) {
+  @if (removeConfirmPhotoId()) {
     <hh-confirm-modal
       [title]="'moderatorReview.removePhoto' | transloco"
       icon="ti-trash"
@@ -489,13 +265,11 @@
       confirmLabel="Remove"
       confirmColor="danger"
       (confirm)="confirmRemove()"
-      (cancel)="removeConfirmPhoto.set(null)"
+      (cancel)="removeConfirmPhotoId.set(null)"
     >
-      @if (newPhotoMap().has(photo.id)) {
-        {{ 'moderatorReview.photoWillBeRemoved' | transloco }}
-      } @else {
-        {{ 'moderatorReview.photoWillBeRejected' | transloco }}
-      }
+      <!-- Always a rejection: the form deletes a photo the moderator uploaded itself
+           and only asks about the host's. -->
+      {{ 'moderatorReview.photoWillBeRejected' | transloco }}
     </hh-confirm-modal>
   }
 

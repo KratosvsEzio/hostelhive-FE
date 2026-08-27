@@ -15,6 +15,7 @@ import { LanguageSwitcher } from '@core/i18n/language-switcher';
 import { routePath } from '@core/i18n/locales';
 import { Area, areaOf } from '@layout/area';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Logo } from '@core/brand/logo';
 
 /**
  * The one site header, shared by every area. The logo + chrome stay identical
@@ -28,7 +29,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
 @Component({
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [Logo, 
     RouterLink, LocaleLink,
     SearchBar,
     AccountMenu,

@@ -15,11 +15,7 @@
     type="button"
     (click)="toggleMenu($event)"
     class="group relative block border-2 border-dashed transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
-    [class]="
-      shape() === 'circle'
-        ? 'h-24 w-24 rounded-full'
-        : 'aspect-[4/3] w-full overflow-hidden rounded-xl'
-    "
+    [class]="tileClass()"
     [class.border-brand-400]="dragOver()"
     [class.bg-brand-50]="dragOver()"
     [class.border-ink-200]="!dragOver()"
@@ -71,7 +67,7 @@
       <div class="mx-3 border-t border-ink-100"></div>
       <label [class]="menuItemClass">
         <i class="ti ti-photo shrink-0 text-base text-ink-400" aria-hidden="true"></i>{{ 'common.chooseFromFiles' | transloco }}
-        <input type="file" [accept]="accept()" class="sr-only" (change)="onFileInput($event)" />
+        <input type="file" [accept]="accept()" [multiple]="maxFiles() > 1" class="sr-only" (change)="onFileInput($event)" />
       </label>
     </div>
   }

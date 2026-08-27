@@ -119,6 +119,7 @@ export type DropdownSize = 'sm' | 'md';
         [disabled]="disabled()"
         aria-haspopup="listbox"
         [attr.aria-expanded]="open()"
+        [attr.aria-invalid]="error() ? 'true' : null"
         [class]="triggerClass()"
       >
         @if (triggerLoading()) {
@@ -330,6 +331,15 @@ export type DropdownSize = 'sm' | 'md';
           </div>
         </div>
       }
+
+      <!-- Same markup and spacing as the text input's, so a message under a select and one
+           under a text field are the same thing on the page, not two conventions. -->
+      @if (error()) {
+        <p class="mt-1 flex items-start gap-1 text-xs text-danger">
+          <i class="ti ti-alert-circle mt-px shrink-0" aria-hidden="true"></i>
+          <span>{{ error() }}</span>
+        </p>
+      }
     </div>
   `,
 })
@@ -339,6 +349,18 @@ export class Dropdown {
   readonly placeholder = input<string | undefined>(undefined);
   /** Single-select only: label for a top row that clears the selection (e.g. "All stays"). */
   readonly clearLabel = input('');
+  /**
+   * What is wrong with the selection. Reddens the trigger and prints beneath it.
+   *
+   * The control had no error state at all, so a form with an invalid *select* had to write
+   * its own message under the field — which several did — and the trigger itself stayed a
+   * neutral grey. A red sentence under an untouched-looking box reads as a note about the
+   * form rather than as this control being the thing to fix.
+   *
+   * Same input name, same rendering and the same border colour as `hh-input`, because a
+   * seeker or a host does not know which of the two a given field happens to be.
+   */
+  readonly error = input('');
   readonly variant = input<'pill' | 'field' | 'borderless'>('pill');
   /**
    * Which surface the trigger sits on.
@@ -580,10 +602,19 @@ export class Dropdown {
     return !this.opts().find((o) => o.value === v);
   });
 
+  /**
+   * An error recolours the box; a disabled control does not get to look broken.
+   *
+   * Disabled wins because it is the stronger statement: a field nobody can change is not
+   * asking to be fixed, and red on grey reads as a control demanding an edit it will refuse.
+   */
+  private readonly showsError = computed(() => !!this.error() && !this.disabled());
+
   protected readonly triggerClass = computed(() => {
     const base =
       'inline-flex select-none items-center gap-2 border font-medium text-start ' +
-      'transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ' +
+      'transition focus:outline-none focus-visible:ring-2 ' +
+      (this.showsError() ? 'focus-visible:ring-danger/20 ' : 'focus-visible:ring-brand-300 ') +
       (this.disabled()
         ? 'cursor-not-allowed bg-ink-50 text-ink-500 opacity-70'
         : 'cursor-pointer');
@@ -595,7 +626,13 @@ export class Dropdown {
       const size = this.isSm()
         ? 'h-8 rounded-lg px-2.5 text-[11px]'
         : 'rounded-xl px-3 py-2.5 text-sm';
-      return `${base} w-full justify-between whitespace-nowrap border-ink-200 bg-white ${size} text-ink-800 hover:border-ink-400 focus-visible:border-ink-400`;
+      // The error border stays put on hover and focus. Letting `hover:border-ink-400` win
+      // would turn the box grey again the moment a host moved the pointer towards the thing
+      // they are being asked to fix.
+      const border = this.showsError()
+        ? 'border-danger'
+        : 'border-ink-200 hover:border-ink-400 focus-visible:border-ink-400';
+      return `${base} w-full justify-between whitespace-nowrap bg-white ${size} text-ink-800 ${border}`;
     }
 
     if (this.variant() === 'borderless') {

@@ -3,6 +3,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Button } from '@hostelhive/ui';
 import { laneFor } from './booking-month';
 import { HostBooking } from './host-bookings-api';
+import { isPrivateOccupancy } from '@util/occupancy-type';
 
 /**
  * The request behind a pending allotment — everything a host needs before placing it.
@@ -39,7 +40,7 @@ export class BookingDetailsPanel {
   );
 
   protected readonly isShared = computed(
-    () => this.booking()?.roomType.occupancyType !== 'private',
+    () => !isPrivateOccupancy(this.booking()?.roomType.occupancyType),
   );
 
   /**

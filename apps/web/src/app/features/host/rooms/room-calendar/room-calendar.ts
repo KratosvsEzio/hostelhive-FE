@@ -2,9 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -12,7 +12,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Skeleton } from '@hostelhive/ui';
 import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
-import { RoomDay, RoomStay, toRoomMonth } from './room-stays';
+import { RoomDay, RoomResident, RoomStay, toRoomMonth } from './room-stays';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { buildWeeks } from './month-grid';
@@ -121,6 +121,18 @@ export class RoomCalendar {
    */
   readonly capacity = input(0);
 
+  /**
+   * Tenants the host placed in this room by hand.
+   *
+   * Passed in for the same reason {@link capacity} is: the page above has already fetched
+   * them for the roster beside this calendar, and asking again would be a second request
+   * for a list already on screen.
+   *
+   * Without them the month is drawn from bookings alone, and a room somebody lives in but
+   * never booked reads as empty every night of it.
+   */
+  readonly residents = input<readonly RoomResident[]>([]);
+
   private readonly api = inject(HostBookingsApi);
   private readonly locale = inject(LocaleStore);
 
@@ -187,12 +199,13 @@ export class RoomCalendar {
         room: this.roomId(),
         hostel: this.hostelId(),
         capacity: this.capacity(),
+        residents: this.residents(),
       })),
     ).pipe(
       switchMap((q) =>
         this.api.bookingsInRoom(q.hostel, q.room, q.from, q.to).pipe(
           map((bookings) => {
-            const { days, stays } = toRoomMonth(bookings, q.capacity, q.from, q.to);
+            const { days, stays } = toRoomMonth(bookings, q.capacity, q.from, q.to, q.residents);
             return { loading: false, error: false, days, bookings: stays };
           }),
           catchError(() =>
@@ -367,7 +380,18 @@ export class RoomCalendar {
 
   /* ------------------------------------------------------------------ day roster */
 
-  private readonly picked = signal<string | null>(null);
+  /**
+   * The day the host clicked, or null for the default.
+   *
+   * A `linkedSignal` on the month rather than an effect that nulls it. The effect wrote to
+   * a signal while the template was rendering, which throws NG0600 — not caught anywhere,
+   * so it surfaced as an unhandled error rather than a broken calendar, and the panel went
+   * on working. Deriving the reset removes the write entirely.
+   */
+  private readonly picked = linkedSignal<Date, string | null>({
+    source: this.month,
+    computation: () => null,
+  });
 
   /**
    * The day the roster is showing — whatever was clicked, else the first day worth opening
@@ -386,13 +410,6 @@ export class RoomCalendar {
     return days.find((d) => d.booked > 0)?.date ?? days[0]?.date ?? null;
   });
 
-  /** A month change makes the old selection meaningless, so it is dropped. */
-  constructor() {
-    effect(() => {
-      this.month();
-      this.picked.set(null);
-    });
-  }
 
   protected select(date: string | null): void {
     if (date) this.picked.set(date);
@@ -424,10 +441,15 @@ export class RoomCalendar {
           .toUpperCase(),
         name,
         units: this.unitsIn(booking),
-        range: `${fmt.format(new Date(booking.check_in))} – ${fmt.format(new Date(booking.check_out))}`,
+        // An open stay has no end to print. Its `check_out` is the edge of the window being
+        // drawn, so formatting it as a range would tell a host their tenant leaves on the
+        // last of the month — a date that changes every time they page forward.
+        range: booking.open
+          ? `since ${fmt.format(new Date(booking.check_in))}`
+          : `${fmt.format(new Date(booking.check_in))} – ${fmt.format(new Date(booking.check_out))}`,
         status: booking.status,
         arriving: booking.check_in === date,
-        leaving: booking.check_out === date,
+        leaving: !booking.open && booking.check_out === date,
       };
     });
   });

@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Logo } from '@core/brand/logo';
 
 @Component({
   selector: 'hh-subscription-loading',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Logo],
   template: `
     <div
       class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white transition-opacity duration-300"
       [class.opacity-0]="leaving()"
     >
-      <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7" />
+      <i hhLogo class="h-7 text-ink-900"></i>
 
       <div class="mt-8 h-0.5 w-40 overflow-hidden rounded-full bg-ink-100">
         <div class="progress-bar h-full w-2/5 rounded-full bg-brand-500"></div>

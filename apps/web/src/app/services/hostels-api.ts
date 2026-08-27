@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   AttachmentLabel,
+  HostelFormOptions,
   Paginated,
   HostelDetail,
   HostelEnumOption,
@@ -314,20 +315,23 @@ export class HostelsApi {
       );
   }
 
-  /** GET /api/hostels/new — gender, property, billing-frequency & attachment-label options. */
-  formOptions(): Observable<{
-    genderTypes: HostelEnumOption[];
-    propertyTypes: HostelEnumOption[];
-    billingFrequencyTypes: HostelEnumOption[];
-    attachmentLabels: AttachmentLabel[];
-  }> {
+  /**
+   * GET /api/hostels/new — gender, property, billing-frequency, occupancy & label options.
+   *
+   * Every enum the hostel form offers comes from here, so adding a value server-side does not
+   * need a release. The `?? []` on each is not defensive noise: a missing key means the caller
+   * falls back to its hardcoded pair rather than rendering a dropdown with nothing in it.
+   */
+  formOptions(): Observable<HostelFormOptions> {
     return this.api
       .get<HostelFormOptionsResponse>('/api/hostels/new')
       .pipe(
         map((r) => ({
           genderTypes: r.gender_types ?? [],
           propertyTypes: r.property_types ?? [],
-          billingFrequencyTypes: r.billing_frequency_types ?? [],
+          // Singular first: that is what the endpoint sends. See the contract for why both.
+          billingFrequencyTypes: r.billing_frequency_type ?? r.billing_frequency_types ?? [],
+          occupancyTypes: r.occupancy_type ?? r.occupancy_types ?? [],
           attachmentLabels: r.attachment_labels ?? [],
         })),
       );

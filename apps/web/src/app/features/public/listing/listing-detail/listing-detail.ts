@@ -128,6 +128,15 @@ export class ListingDetail {
   protected readonly phoneError = signal(false);
   protected readonly modalOpen = signal(false);
   protected readonly loginGateOpen = signal(false);
+  /**
+   * Why the gate opened, so it can say so.
+   *
+   * The same dialog stands in front of two different asks. Left on the contact wording, a
+   * seeker who clicked "Choose a room" was shown a WhatsApp mark and told they were about to
+   * see verified contact details — an answer to a question they had not asked, which reads
+   * less like a sign-in prompt than like the button did the wrong thing.
+   */
+  protected readonly gateIntent = signal<'contact' | 'rooms'>('contact');
   protected readonly copied = signal(false);
   protected readonly shareOpen = signal(false);
   protected readonly shareLinkCopied = signal(false);
@@ -343,8 +352,30 @@ export class ListingDetail {
     if (link) window.open(link, '_blank', 'noopener,noreferrer');
   }
 
+  /**
+   * "Choose a room" — the empty-basket call to action in the rail.
+   *
+   * Gated the same way the phone and WhatsApp buttons are, and for the same reason: picking a
+   * room is the start of a booking, and a booking needs somebody to belong to. Signing in
+   * first also means the basket survives the trip, which it would not if the seeker chose
+   * rooms and only then discovered they had to leave the page.
+   *
+   * Signed in, it scrolls to the picker rather than navigating: the rooms are on this page.
+   */
+  protected onChooseRoom(): void {
+    if (!this.session.isAuthenticated()) {
+      this.gateIntent.set('rooms');
+      this.loginGateOpen.set(true);
+      this.analytics.track('lead_wall_shown', { intent: 'choose_room' });
+      return;
+    }
+    if (!this.isBrowser) return;
+    this.doc.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   protected openModal(): void {
     if (!this.session.isAuthenticated()) {
+      this.gateIntent.set('contact');
       this.loginGateOpen.set(true);
       this.analytics.track('lead_wall_shown', { intent: 'contact' });
       return;
@@ -356,6 +387,7 @@ export class ListingDetail {
 
   protected openWhatsApp(): void {
     if (!this.session.isAuthenticated()) {
+      this.gateIntent.set('contact');
       this.loginGateOpen.set(true);
       this.analytics.track('lead_wall_shown', { intent: 'whatsapp' });
       return;

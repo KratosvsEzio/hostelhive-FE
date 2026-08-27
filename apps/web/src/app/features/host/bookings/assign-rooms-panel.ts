@@ -14,6 +14,7 @@ import { Button, Skeleton } from '@hostelhive/ui';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { HostRoom } from '@util/models/host-ops';
 import { HostBooking } from './host-bookings-api';
+import { isPrivateOccupancy } from '@util/occupancy-type';
 
 /** One room the host can put this booking into, with how much of it is free. */
 export interface AssignRow {
@@ -94,7 +95,7 @@ export class AssignRoomsPanel {
   protected readonly error = computed(() => this.rooms().error);
 
   protected readonly isShared = computed(
-    () => this.booking()?.roomType.occupancyType !== 'private',
+    () => !isPrivateOccupancy(this.booking()?.roomType.occupancyType),
   );
 
   /**

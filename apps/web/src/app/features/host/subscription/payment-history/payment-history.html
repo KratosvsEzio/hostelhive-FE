@@ -1,0 +1,29 @@
+<!-- Breadcrumb rather than a back button, matching every other host detail page. -->
+<app-dashboard-layout
+  [backUrl]="subscriptionUrl()"
+  [breadcrumbs]="[
+    { label: 'common.subscription' | transloco, url: subscriptionUrl() },
+    { label: 'hostSubscription.paymentHistory' | transloco }
+  ]"
+>
+  @let s = state();
+
+  @if (s.loading) {
+    <hh-skeleton class="h-64" radius="lg" />
+  } @else if (s.error) {
+    <hh-error-state [networkError]="s.networkError" (retry)="reload()" />
+  } @else if (!s.payments?.length) {
+    <hh-empty-state
+      icon="ti-receipt"
+      [title]="'hostSubscription.noPaymentsYet' | transloco"
+      message="Invoices appear here after your first charge."
+    />
+  } @else {
+    <hh-data-table [columns]="cols" [rows]="paged()" [rowId]="rowId" [expandable]="expand" />
+    @if (pageCount() > 1) {
+      <div class="mt-4 flex justify-end">
+        <hh-pagination [pageCount]="pageCount()" [(page)]="page" />
+      </div>
+    }
+  }
+</app-dashboard-layout>

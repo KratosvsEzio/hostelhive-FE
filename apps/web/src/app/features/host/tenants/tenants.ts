@@ -36,7 +36,7 @@ import {
 } from '@hostelhive/ui';
 
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { Tenant, TenantStatus } from '@hostelhive/data-access';
+import { Tenant } from '@hostelhive/data-access';
 import { RefetchDelay } from '@core/refetch-delay';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -241,7 +241,7 @@ export class Tenants {
     if (!hostelId || !dispositionId) return;
     this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.applyStatus(t.id, 'inactive') });
+      .subscribe({ next: (updated) => this.applyUpdated(updated) });
   }
 
   protected setActive(t: Tenant): void {
@@ -251,7 +251,7 @@ export class Tenants {
     if (!hostelId || !dispositionId) return;
     this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.applyStatus(t.id, 'active') });
+      .subscribe({ next: (updated) => this.applyUpdated(updated) });
   }
 
   protected reinvite(t: Tenant): void {
@@ -263,9 +263,21 @@ export class Tenants {
       .subscribe();
   }
 
-  private applyStatus(id: string, status: TenantStatus): void {
+  /**
+   * Puts the record the server just returned into the row it belongs to.
+   *
+   * Every write here answers with the whole updated renter, and that answer is the only
+   * thing that knows what else the write changed. This used to patch the one field it had
+   * asked about — `{ ...row, status }` — so inactivating a tenant flipped the pill and left
+   * the room number sitting there, while the response said `room: null`, because releasing
+   * the bed is something the *backend* does in response to the status, not something the
+   * caller asked for. The row then disagreed with the server about which bed was free.
+   *
+   * Replacing the row wholesale means the next such rule needs no change here at all.
+   */
+  private applyUpdated(updated: Tenant): void {
     const current = this.state().data ?? [];
-    this.local.set(current.map((x) => (x.id === id ? { ...x, status } : x)));
+    this.local.set(current.map((x) => (x.id === updated.id ? updated : x)));
   }
 
   protected onTenantAction(ev: { row: unknown; event: MouseEvent }): void {
@@ -287,8 +299,17 @@ export class Tenants {
     this.router.navigate(['/host', hostelId, 'tenants', 'edit', t.id]);
   }
 
-  protected onDrawerSaved(): void {
-    this.local.set(null);
+  /**
+   * The drawer hands back the persisted tenant; the row shows it immediately.
+   *
+   * `$event` used to be dropped and the list left to a refetch. That refetch still runs —
+   * a create adds a row this cannot know about, and other fields may have moved — but it is
+   * no longer the only thing standing between a host and the truth: it is deliberately
+   * delayed (see {@link RefetchDelay}), and until it lands the row was showing what was on
+   * screen before the save.
+   */
+  protected onDrawerSaved(saved: Tenant): void {
+    this.applyUpdated(saved);
     this.refetchDelay.track('/renters');
     this.refresh.update((n) => n + 1);
     this.goToList();

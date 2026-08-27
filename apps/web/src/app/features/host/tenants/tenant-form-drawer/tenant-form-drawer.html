@@ -165,7 +165,7 @@
                 <!-- cspell:ignore Tariq -->
                 <hh-input
                   [label]="'common.fullName' | transloco"
-                  [placeholder]="'hostTenants.eGHamzaTariq' | transloco"
+                  [placeholder]="'common.enterFullName' | transloco"
                   [value]="f.fullName"
                   [error]="fieldError('fullName')"
                   (valueChange)="patch('fullName', $event)"
@@ -173,7 +173,7 @@
                 />
                 <hh-input
                   [label]="'hostTenants.email' | transloco"
-                  [placeholder]="'common.nameEmailCom' | transloco"
+                  [placeholder]="'common.enterEmail' | transloco"
                   [value]="f.email"
                   [error]="fieldError('email')"
                   (valueChange)="patch('email', $event)"
@@ -183,7 +183,7 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
                   [label]="'hostTenants.phone' | transloco"
-                  placeholder="0312 5556677"
+                  [placeholder]="'common.enterPhone' | transloco"
                   [value]="f.phone"
                   [error]="fieldError('phone')"
                   (valueChange)="patch('phone', $event)"
@@ -191,7 +191,7 @@
                 />
                 <hh-input
                   [label]="'hostTenants.emergencyContact' | transloco"
-                  placeholder="0321 1234567"
+                  [placeholder]="'common.enterPhone' | transloco"
                   [value]="f.emergencyContact"
                   [error]="fieldError('emergencyContact')"
                   (valueChange)="patch('emergencyContact', $event)"
@@ -201,7 +201,7 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-input
                   [label]="'hostTenants.cnicNumber' | transloco"
-                  placeholder="42101-1234567-1"
+                  [placeholder]="'common.enterIdNumber' | transloco"
                   [value]="f.cnicNumber"
                   [error]="fieldError('cnicNumber')"
                   (valueChange)="patch('cnicNumber', $event)"
@@ -209,7 +209,7 @@
                 />
                 <hh-input
                   [label]="'hostTenants.address' | transloco"
-                  [placeholder]="'hostTenants.n123MainStKarachi' | transloco"
+                  [placeholder]="'common.enterAddress' | transloco"
                   [value]="f.address"
                   [error]="fieldError('address')"
                   (valueChange)="patch('address', $event)"
@@ -269,7 +269,7 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-date-picker
                   [withTime]="true"
-                  [label]="nightly() ? 'Check-in *' : 'Joining date *'"
+                  [label]="(joiningLabelKey() | transloco) + ' *'"
                   [value]="f.joiningDate"
                   [error]="fieldError('joiningDate')"
                   (valueChange)="
@@ -278,7 +278,7 @@
                 />
                 <hh-date-picker
                   [withTime]="true"
-                  [label]="nightly() ? 'Check-out' : 'Leave date'"
+                  [label]="leavingLabelKey() | transloco"
                   [value]="f.leaveDate"
                   [error]="fieldError('leaveDate')"
                   (valueChange)="
@@ -286,6 +286,30 @@
                   "
                 />
               </div>
+
+              <!-- Beneath the dates, because it is a fact about the dates and the room
+                   together — neither field is wrong on its own, so neither can carry it.
+                   Only the refusal is shown: a clear room needs no announcement, and a
+                   green tick under every date pair is noise a host learns to skip. -->
+              @if (availabilityChecking()) {
+                <p class="flex items-center gap-2 text-xs text-ink-500">
+                  <i class="ti ti-loader-2 animate-spin text-sm" aria-hidden="true"></i>
+                  {{ 'hostTenants.checkingRoomAvailability' | transloco }}
+                </p>
+              } @else if (roomUnavailable()) {
+                <div
+                  class="flex items-start gap-2.5 rounded-xl border border-danger/25 bg-danger/5 p-3"
+                  role="alert"
+                >
+                  <i class="ti ti-calendar-x mt-0.5 text-base text-danger" aria-hidden="true"></i>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-danger">
+                      {{ 'hostTenants.roomNotAvailableForTheseDates' | transloco }}
+                    </p>
+                    <p class="mt-0.5 text-xs text-ink-600">{{ unavailableReason() }}</p>
+                  </div>
+                </div>
+              }
             </div>
 
             <!-- Financial -->
@@ -301,7 +325,7 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <hh-money-input
                   [label]="'hostTenants.rent' | transloco"
-                  placeholder="5000"
+                  [placeholder]="'common.enterAmount' | transloco"
                   [value]="+f.rent || 0"
                   [error]="fieldError('rent')"
                   (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
@@ -309,7 +333,7 @@
                 />
                 <hh-money-input
                   [label]="'hostTenants.securityDeposit' | transloco"
-                  placeholder="3333"
+                  [placeholder]="'common.enterAmount' | transloco"
                   [value]="+f.advanceDeposit || 0"
                   [error]="fieldError('advanceDeposit')"
                   (valueChange)="patch('advanceDeposit', $event ? $any($event).toString() : '')"
@@ -317,8 +341,9 @@
                 />
               </div>
 
-              <!-- Monthly hostels only: a nightly stay has no day-of-month cycle. -->
-              @if (!nightly()) {
+              <!-- Monthly hostels only: a nightly stay has no day-of-month cycle. Read from
+                   the billing frequency, not the accommodation type — see `formContext`. -->
+              @if (monthlyBilling()) {
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <p class="mb-1 block text-xs font-medium text-ink-600">
@@ -380,7 +405,7 @@
               <hh-input
                 [label]="'common.transportCharges' | transloco"
                 type="number"
-                placeholder="500"
+                [placeholder]="'common.enterAmount' | transloco"
                 [value]="f.transportationCharges"
                 (valueChange)="patch('transportationCharges', $event)"
               />
@@ -403,7 +428,7 @@
                 <hh-input
                   [label]="'common.messCharges' | transloco"
                   type="number"
-                  placeholder="3000"
+                  [placeholder]="'common.enterAmount' | transloco"
                   [value]="f.messCharges"
                   (valueChange)="patch('messCharges', $event)"
                 />
@@ -468,118 +493,48 @@
               <!-- CNIC front -->
               <div>
                 <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostTenants.cnicFront' | transloco }}</p>
-                <label
-                  class="group block cursor-pointer overflow-hidden rounded-xl border border-dashed border-ink-200 hover:border-brand-300"
-                  [class.pointer-events-none]="cnicFrontUploading()"
-                >
-                  @if (cnicFrontUploading()) {
-                    <div
-                      class="flex flex-col items-center gap-2 py-5 text-ink-400"
-                    >
-                      <i
-                        class="ti ti-loader-2 animate-spin text-xl"
-                        aria-hidden="true"
-                      ></i>
-                      <span class="text-xs">{{ 'common.uploading' | transloco }}</span>
-                    </div>
-                  } @else if (f.cnicFrontPreview) {
-                    <img
-                      [src]="f.cnicFrontPreview"
-                      [alt]="'hostTenants.cnicFront' | transloco"
-                      class="h-24 w-full object-cover"
-                    />
-                    <div
-                      class="flex items-center gap-1.5 border-t border-ink-100 px-3 py-2 text-xs"
-                    >
-                      @if (cnicFrontUploadError()) {
-                        <i class="ti ti-alert-circle text-danger shrink-0"></i>
-                        <span class="truncate text-danger"
-                          >{{ 'hostTenants.failedTapToRetry' | transloco }}</span
-                        >
-                      } @else {
-                        <i class="ti ti-check text-ok shrink-0"></i>
-                        <span class="truncate text-ink-600">{{
-                          f.cnicFrontName
-                        }}</span>
-                      }
-                      <span class="ms-auto shrink-0 text-ink-400">{{ 'hostTenants.change' | transloco }}</span>
-                    </div>
-                  } @else {
-                    <div
-                      class="flex flex-col items-center gap-2 py-5 text-ink-400 group-hover:text-ink-600"
-                    >
-                      <i class="ti ti-id text-2xl" aria-hidden="true"></i>
-                      <span class="text-xs">{{
-                        f.cnicFrontName || 'Upload front'
-                      }}</span>
-                    </div>
+                <hh-photo-picker
+                  class="block"
+                  [preview]="f.cnicFrontPreview || null"
+                  [uploading]="cnicFrontUploading()"
+                  [label]="'hostTenants.cnicFront' | transloco"
+                  (picked)="onPickedDoc('cnicFront', $event)"
+                />
+                <!-- Kept beside the picker rather than inside it: the filename and the retry
+                     prompt are this drawer’s business, and the shared tile has no room for
+                     either. -->
+                <p class="mt-1 flex items-center gap-1.5 text-xs">
+                  @if (cnicFrontUploadError()) {
+                    <i class="ti ti-alert-circle shrink-0 text-danger" aria-hidden="true"></i>
+                    <span class="truncate text-danger">{{ 'hostTenants.failedTapToRetry' | transloco }}</span>
+                  } @else if (f.cnicFrontName) {
+                    <i class="ti ti-check shrink-0 text-ok" aria-hidden="true"></i>
+                    <span class="truncate text-ink-600">{{ f.cnicFrontName }}</span>
                   }
-                  <input
-                    type="file"
-                    accept="image/*"
-                    class="sr-only"
-                    [disabled]="cnicFrontUploading()"
-                    (change)="patchFile('cnicFront', $event)"
-                  />
-                </label>
+                </p>
               </div>
               <!-- CNIC back -->
               <div>
                 <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostTenants.cnicBack' | transloco }}</p>
-                <label
-                  class="group block cursor-pointer overflow-hidden rounded-xl border border-dashed border-ink-200 hover:border-brand-300"
-                  [class.pointer-events-none]="cnicBackUploading()"
-                >
-                  @if (cnicBackUploading()) {
-                    <div
-                      class="flex flex-col items-center gap-2 py-5 text-ink-400"
-                    >
-                      <i
-                        class="ti ti-loader-2 animate-spin text-xl"
-                        aria-hidden="true"
-                      ></i>
-                      <span class="text-xs">{{ 'common.uploading' | transloco }}</span>
-                    </div>
-                  } @else if (f.cnicBackPreview) {
-                    <img
-                      [src]="f.cnicBackPreview"
-                      [alt]="'hostTenants.cnicBack' | transloco"
-                      class="h-24 w-full object-cover"
-                    />
-                    <div
-                      class="flex items-center gap-1.5 border-t border-ink-100 px-3 py-2 text-xs"
-                    >
-                      @if (cnicBackUploadError()) {
-                        <i class="ti ti-alert-circle text-danger shrink-0"></i>
-                        <span class="truncate text-danger"
-                          >{{ 'hostTenants.failedTapToRetry' | transloco }}</span
-                        >
-                      } @else {
-                        <i class="ti ti-check text-ok shrink-0"></i>
-                        <span class="truncate text-ink-600">{{
-                          f.cnicBackName
-                        }}</span>
-                      }
-                      <span class="ms-auto shrink-0 text-ink-400">{{ 'hostTenants.change' | transloco }}</span>
-                    </div>
-                  } @else {
-                    <div
-                      class="flex flex-col items-center gap-2 py-5 text-ink-400 group-hover:text-ink-600"
-                    >
-                      <i class="ti ti-id text-2xl" aria-hidden="true"></i>
-                      <span class="text-xs">{{
-                        f.cnicBackName || 'Upload back'
-                      }}</span>
-                    </div>
+                <hh-photo-picker
+                  class="block"
+                  [preview]="f.cnicBackPreview || null"
+                  [uploading]="cnicBackUploading()"
+                  [label]="'hostTenants.cnicBack' | transloco"
+                  (picked)="onPickedDoc('cnicBack', $event)"
+                />
+                <!-- Kept beside the picker rather than inside it: the filename and the retry
+                     prompt are this drawer’s business, and the shared tile has no room for
+                     either. -->
+                <p class="mt-1 flex items-center gap-1.5 text-xs">
+                  @if (cnicBackUploadError()) {
+                    <i class="ti ti-alert-circle shrink-0 text-danger" aria-hidden="true"></i>
+                    <span class="truncate text-danger">{{ 'hostTenants.failedTapToRetry' | transloco }}</span>
+                  } @else if (f.cnicBackName) {
+                    <i class="ti ti-check shrink-0 text-ok" aria-hidden="true"></i>
+                    <span class="truncate text-ink-600">{{ f.cnicBackName }}</span>
                   }
-                  <input
-                    type="file"
-                    accept="image/*"
-                    class="sr-only"
-                    [disabled]="cnicBackUploading()"
-                    (change)="patchFile('cnicBack', $event)"
-                  />
-                </label>
+                </p>
               </div>
             </div>
           </div>

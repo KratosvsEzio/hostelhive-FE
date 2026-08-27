@@ -7,14 +7,18 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, of } from 'rxjs';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
 import {
+  EMPTY_HOSTEL_FORM_OPTIONS,
   HostelDetail,
   HostelEnumOption,
+  HostelFormOptions,
   HostelInput,
   iconForSlug,
   OfferCategory,
@@ -42,7 +46,8 @@ import {
   imageFormatLabel,
 } from '@hostelhive/ui';
 import { RoomTypeRow } from '../../moderator/review/room-type-row';
-import { LocationPicker, PickedLocation, PlaceSearchField } from '@hostelhive/maps';
+import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
+import { LocationPicker, PickedLocation } from '@hostelhive/maps';
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
 import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
@@ -50,10 +55,17 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
 import {
   DEFAULT_OCCUPANCY_TYPE,
+  defaultOccupancyFrom,
+  occupancyOptionsFrom,
   discountError,
   isValidDiscount,
 } from '@util/occupancy-type';
 import { MAX_ROOM_IMAGES, MIN_ROOM_CAPACITY, RoomImage } from '@util/room-types';
+import {
+  BILLING_CONFLICT_ERROR,
+  conflicts,
+  gateBillingOptions,
+} from '@util/billing-frequency';
 
 /** Stands in for the not-yet-added row, which has no `_key` until it is committed. */
 const NEW_RT_KEY = '__new__';
@@ -208,7 +220,7 @@ type FormSection = 'details' | 'photos' | 'amenities' | 'roomTypes' | 'location'
  * the host cannot see.
  */
 const SECTION_ERROR_KEYS: Record<FormSection, readonly string[]> = {
-  details: ['name', 'city', 'email', 'phone', 'description'],
+  details: ['name', 'city', 'email', 'phone', 'description', 'billingFrequency'],
   photos: [],
   amenities: [],
   roomTypes: ['rooms'],
@@ -226,7 +238,7 @@ const SECTION_ERROR_KEYS: Record<FormSection, readonly string[]> = {
     PhoneInput,
     LocationPicker,
     PhotoGrid,
-    PlaceSearchField,
+    PhotoPicker,
     RichText,
     RoomTypeRow,
     StatusPill,
@@ -246,7 +258,7 @@ export class HostelForm {
   /**
    * The hostel being edited, or null while creating one.
    *
-   * Only edit mode can reach the delete dialog's API call \x2D\x2D a hostel that does not exist
+   * Only edit mode can reach the delete dialog's API call — a hostel that does not exist
    * yet has no rooms to count.
    */
   private readonly hostelId = computed(() => {
@@ -260,30 +272,63 @@ export class HostelForm {
   readonly saving = input(false);
   readonly showValidation = input(false);
 
+  /**
+   * Demand every field, not only the ones an existing record can break.
+   *
+   * `mode: 'edit'` deliberately checks almost nothing: a host opening their profile should not
+   * be told off for a field their listing was created without, years of records predate any
+   * given rule, and a form that opens covered in red is a form nobody reads.
+   *
+   * Approval is the opposite situation. A moderator is deciding whether this listing goes
+   * live, and there "required" means required — the checklist that gates Approve & publish is
+   * the same set of rules, asked of a record rather than a draft.
+   */
+  readonly requireComplete = input(false);
+
   protected readonly acceptAttr = ACCEPT_ATTR;
-  protected readonly cityTypes = ['(cities)'];
   protected readonly ids = { name: 'hh-form-name' };
+
+  /**
+   * The enum choices to offer, when the parent already has them.
+   *
+   * Left null, the form asks `/api/hostels/new` itself — which is right for the host console
+   * and wrong everywhere else. Moderation has its own `…/moderator/hostels/new`, and a form
+   * that picks its own endpoint can only ever live on one screen. Passing them in is what
+   * lets both consoles render *this* form instead of maintaining a second one.
+   */
+  readonly options = input<HostelFormOptions | null>(null);
+
+  /**
+   * Whether a moderator is looking at this, rather than the hostel's own host.
+   *
+   * One difference, and it is about photos. A host removing a photo is deleting their own
+   * picture; a moderator "removing" one is *rejecting* it — the host has to be told which and
+   * why, and the decision has to be undoable until the review is submitted. So under
+   * moderation the delete control asks instead of acting: it emits {@link photoRejectRequested}
+   * and the review screen runs its own confirm-with-reason, feeding the result back through
+   * {@link rejectedPhotos}. Everything else on this form behaves identically for both.
+   */
+  readonly moderating = input(false);
+
+  /** Rejected photo id → the reason shown to the host. Overlays the grid; moderation only. */
+  readonly rejectedPhotos = input<ReadonlyMap<string, string>>(new Map());
+
+  /** A moderator pressed remove: the review screen decides what that means. */
+  readonly photoRejectRequested = output<string>();
+
+  /** A moderator undid a rejection from the grid's own Undo control. */
+  readonly photoRejectUndone = output<string>();
 
   // ── form options (type / gender / labels) ──
   private readonly formOptions = toSignal(
-    this.hostels.formOptions().pipe(
-      catchError(() =>
-        of({
-          genderTypes: [] as HostelEnumOption[],
-          propertyTypes: [] as HostelEnumOption[],
-          billingFrequencyTypes: [] as HostelEnumOption[],
-          attachmentLabels: [] as { id: number | string; name: string }[],
-        }),
+    toObservable(this.options).pipe(
+      switchMap((given) =>
+        given
+          ? of(given)
+          : this.hostels.formOptions().pipe(catchError(() => of(EMPTY_HOSTEL_FORM_OPTIONS))),
       ),
     ),
-    {
-      initialValue: {
-        genderTypes: [] as HostelEnumOption[],
-        propertyTypes: [] as HostelEnumOption[],
-        billingFrequencyTypes: [] as HostelEnumOption[],
-        attachmentLabels: [] as { id: number | string; name: string }[],
-      },
-    },
+    { initialValue: EMPTY_HOSTEL_FORM_OPTIONS },
   );
   protected readonly typeOptions = computed<DropdownOption[]>(() =>
     this.formOptions().propertyTypes.map((t) => ({ value: t.slug, label: toLabel(t.name) })),
@@ -291,11 +336,24 @@ export class HostelForm {
   protected readonly genderOptions = computed<DropdownOption[]>(() =>
     this.formOptions().genderTypes.map((g) => ({ value: g.slug, label: toLabel(g.name) })),
   );
+
   protected readonly labelOptions = computed<DropdownOption[]>(() =>
     this.formOptions().attachmentLabels.map((l) => ({ value: String(l.id), label: l.name })),
   );
+  /**
+   * The amenity catalogue, when the parent already has it — same reasoning as {@link options}.
+   * The review screen loads it alongside the listing and would otherwise fetch it twice.
+   */
+  readonly catalogue = input<OfferCategory[] | null>(null);
+
   protected readonly catalog = toSignal(
-    this.offersApi.categories().pipe(catchError(() => of([] as OfferCategory[]))),
+    toObservable(this.catalogue).pipe(
+      switchMap((given) =>
+        given
+          ? of(given)
+          : this.offersApi.categories().pipe(catchError(() => of([] as OfferCategory[]))),
+      ),
+    ),
     { initialValue: [] as OfferCategory[] },
   );
 
@@ -336,7 +394,22 @@ export class HostelForm {
   protected readonly newRtName = signal('');
   protected readonly newRtCapacity = signal(1);
   protected readonly newRtPrice = signal(0);
-  protected readonly newRtOccupancy = signal<string>(DEFAULT_OCCUPANCY_TYPE);
+  /**
+   * What a new room type is "Sold as" before the host touches the field.
+   *
+   * Linked to the offered list rather than set to a slug compiled into this file: the
+   * options arrive after the form renders, so a plain initial value is a guess made before
+   * the answer exists, and a guess the backend does not list renders as a blank dropdown.
+   * A choice the host has already made survives the list arriving; anything else re-seeds
+   * from it. See `defaultOccupancyFrom` for which one it picks.
+   */
+  protected readonly newRtOccupancy = linkedSignal<DropdownOption[], string>({
+    source: () => this.occupancyOptions(),
+    computation: (options, previous) =>
+      previous && options.some((o) => o.value === previous.value)
+        ? previous.value
+        : defaultOccupancyFrom(options),
+  });
 
   /**
    * How this hostel prices everything — one value for the whole property, and a hostel field
@@ -354,22 +427,50 @@ export class HostelForm {
    */
   protected readonly billingOptions = computed<DropdownOption[]>(() => {
     const fromApi = this.formOptions().billingFrequencyTypes;
-    if (fromApi.length) {
-      return fromApi.map((b) => ({ value: b.slug, label: `Per ${b.name.toLowerCase()}` }));
-    }
-    return [
-      { value: 'month', label: 'Per month' },
-      { value: 'night', label: 'Per night' },
-    ];
+    const base: DropdownOption[] = fromApi.length
+      ? fromApi.map((b) => ({ value: b.slug, label: `Per ${b.name.toLowerCase()}` }))
+      : [
+          { value: 'month', label: 'Per month' },
+          { value: 'night', label: 'Per night' },
+        ];
+    return gateBillingOptions(base, this.genderType());
   });
+
+  /**
+   * How a room is sold, as the backend says it can be.
+   *
+   * Every room-type row on this form shares one list, so a host cannot be offered different
+   * choices on two rows of the same hostel.
+   */
+  protected readonly occupancyOptions = computed<DropdownOption[]>(() =>
+    occupancyOptionsFrom(this.formOptions().occupancyTypes),
+  );
+
+  /** The conflict message, or empty. Read from `fieldErrors` so the note and the save agree. */
+  protected readonly billingConflict = computed(
+    () => this.fieldErrors()['billingFrequency'] ?? '',
+  );
+
   protected readonly newRtDiscount = signal<number | null>(null);
   protected readonly newRtDiscountEnabled = signal(false);
   protected readonly newRtDescription = signal('');
   protected readonly newRtImages = signal<RoomImage[]>([]);
 
-  /** Room type key currently uploading a photo, so only its tile spins. */
-  protected readonly uploadingRtImage = signal<string | null>(null);
-  protected readonly rtImageError = signal('');
+  /**
+   * Photo uploads still in flight, counted per room-type key, so only that row's tile spins.
+   *
+   * A count rather than "the row that is uploading": three photos picked at once start three
+   * uploads on one row, and a single key clears on the first to land — the tile would go still
+   * with two still climbing, and those two slots would read as free.
+   */
+  private readonly rtUploads = signal<Record<string, number>>({});
+  /**
+   * Upload failures, per room-type key, so the message sits on the row it belongs to.
+   *
+   * Keyed rather than one string shown while that row uploads, which meant it was never shown:
+   * the failure clears the uploading flag the message was rendered behind.
+   */
+  private readonly rtImageErrors = signal<Record<string, string>>({});
   protected readonly newRtBookable = signal(false);
   protected readonly usedRtNames = computed(() => this.roomTypes().map((rt) => rt.name));
   protected readonly newRtError = computed(() => {
@@ -404,10 +505,21 @@ export class HostelForm {
       primary: p.primary,
       format: p.format,
       uploadProgress: this.uploadingPhotos().get(p.id),
-      rejected: false,
+      rejected: this.rejectedPhotos().has(p.id),
+      rejectReason: this.rejectedPhotos().get(p.id),
     })),
   );
   protected readonly atPhotoLimit = computed(() => this.photos().length >= MAX_PHOTOS);
+
+  /**
+   * Photos the hostel can still take — what the picker may accept in one go.
+   *
+   * No separate count of uploads in flight, unlike the room-type rows: a photo appears in this
+   * grid the moment its upload starts, so `photos()` already includes the ones still climbing.
+   */
+  protected readonly freePhotoSlots = computed(() =>
+    Math.max(0, MAX_PHOTOS - this.photos().length),
+  );
 
   // ── public state for parents ──
   readonly amenityCount = computed(() => this.selectedOfferIds().size);
@@ -435,7 +547,7 @@ export class HostelForm {
         (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
       currency: d.currency ?? DEFAULT_CURRENCY_CODE,
       offerIds: [...offerIds].sort(),
-      email: '',
+      email: d.email ?? '',
       phone: d.primary_phone ?? '',
       lat: Number.isFinite(lat) ? lat : null,
       lng: Number.isFinite(lng) ? lng : null,
@@ -492,19 +604,42 @@ export class HostelForm {
   });
 
   readonly fieldErrors = computed<Partial<Record<string, string>>>(() => {
-    if (this.mode() !== 'create') return {};
     const e: Record<string, string> = {};
+
+    // Checked in both modes, unlike everything below it. The rest describe a hostel being
+    // filled in; this one describes a pair that is wrong however the hostel got here, and
+    // the hostels that have it were saved before the rule existed. Skipping it on edit would
+    // leave the only screen that can reach the conflict as the only one that cannot flag it.
+    if (conflicts(this.genderType(), this.billingFrequency()))
+      e['billingFrequency'] = BILLING_CONFLICT_ERROR;
+
+    // A malformed address is wrong whoever is looking and whatever mode this is in — unlike
+    // the rules below, which are about a record being *finished*.
+    const emailVal = this.email().trim();
+    if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal))
+      e['email'] = 'Enter a valid email address';
+
+    if (this.mode() !== 'create' && !this.requireComplete()) return e;
     if (!this.name().trim()) e['name'] = 'Hostel name is required';
     if (!this.city().trim()) e['city'] = 'City is required';
-    const emailVal = this.email().trim();
-    if (!emailVal) e['email'] = 'Contact email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal))
-      e['email'] = 'Enter a valid email address';
-    if (!this.phone().trim()) e['phone'] = 'Primary phone is required';
+
+    // Creating asks for both. Approving asks only that there is *some* way to reach the
+    // hostel: an existing listing predates this pair being editable at all, and refusing to
+    // publish one that carries a phone number but no email would block it on a field its
+    // host was never shown.
+    if (this.mode() === 'create') {
+      if (!emailVal) e['email'] = 'Contact email is required';
+      if (!this.phone().trim()) e['phone'] = 'Primary phone is required';
+    } else if (!emailVal && !this.phone().trim()) {
+      e['contact'] = 'A contact email or phone number is required';
+    }
     const descText = this.description().replace(/<[^>]*>/g, '').trim();
     if (!descText) e['description'] = 'Description is required';
     if (!this.roomTypes().length) e['rooms'] = 'At least one room type is required';
     if (!this.locationPinned()) e['location'] = 'Pin your hostel location on the map';
+    // Only asked of a record being approved: a draft gets photos before it is submitted, and
+    // nagging for one on an empty create form is noise. See `requireComplete`.
+    if (this.requireComplete() && !this.photoCount()) e['photos'] = 'At least one photo is required';
     return e;
   });
   readonly isValid = computed(() => Object.keys(this.fieldErrors()).length === 0);
@@ -552,7 +687,7 @@ export class HostelForm {
         (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
       );
       this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
-      this.email.set('');
+      this.email.set(d.email ?? '');
       this.phone.set(d.primary_phone ?? '');
       const lat = d.latitude != null ? Number(d.latitude) : null;
       const lng = d.longitude != null ? Number(d.longitude) : null;
@@ -691,12 +826,12 @@ export class HostelForm {
     this.newRtName.set('');
     this.newRtCapacity.set(1);
     this.newRtPrice.set(0);
-    this.newRtOccupancy.set(DEFAULT_OCCUPANCY_TYPE);
+    this.newRtOccupancy.set(defaultOccupancyFrom(this.occupancyOptions()));
     this.newRtDiscount.set(null);
     this.newRtDiscountEnabled.set(false);
     this.newRtDescription.set('');
     this.newRtImages.set([]);
-    this.rtImageError.set('');
+    this.setRtImageError(NEW_RT_KEY, '');
     this.newRtBookable.set(false);
   }
   protected closeAddRt(): void {
@@ -732,13 +867,11 @@ export class HostelForm {
    * could otherwise let a fourth in behind it.
    */
   protected onRtImagePicked(key: string | null, file: File): void {
-    const current = key
-      ? (this.roomTypes().find((r) => r._key === key)?.images ?? [])
-      : this.newRtImages();
-    if (current.length >= MAX_ROOM_IMAGES) return;
+    if (this.rtFreeSlots(key) <= 0) return;
+    const slot = key ?? NEW_RT_KEY;
 
-    this.rtImageError.set('');
-    this.uploadingRtImage.set(key ?? NEW_RT_KEY);
+    this.setRtImageError(slot, '');
+    this.bumpRtUploads(slot, 1);
     this.imageUpload.upload('attachments', file).subscribe({
       next: (res) => {
         const image: RoomImage = { id: res.id, url: res.url };
@@ -751,13 +884,45 @@ export class HostelForm {
         } else {
           this.newRtImages.update((list) => [...list, image]);
         }
-        this.uploadingRtImage.set(null);
+        this.bumpRtUploads(slot, -1);
       },
       error: () => {
-        this.rtImageError.set('That photo could not be uploaded. Please try again.');
-        this.uploadingRtImage.set(null);
+        this.setRtImageError(slot, 'That photo could not be uploaded. Please try again.');
+        this.bumpRtUploads(slot, -1);
       },
     });
+  }
+
+  /** Whether this row has a photo on its way up. */
+  protected rtUploading(key: string | null): boolean {
+    return (this.rtUploads()[key ?? NEW_RT_KEY] ?? 0) > 0;
+  }
+
+  protected rtImageError(key: string | null): string {
+    return this.rtImageErrors()[key ?? NEW_RT_KEY] ?? '';
+  }
+
+  /**
+   * Photos this row can still take, counting the ones already on their way up.
+   *
+   * In-flight uploads count because three photos picked together arrive as three calls before
+   * any of them lands: without them the cap would read as free three times over and let a
+   * fourth through behind a slow upload.
+   */
+  protected rtFreeSlots(key: string | null): number {
+    const current = key
+      ? (this.roomTypes().find((r) => r._key === key)?.images ?? [])
+      : this.newRtImages();
+    const slot = key ?? NEW_RT_KEY;
+    return Math.max(0, MAX_ROOM_IMAGES - current.length - (this.rtUploads()[slot] ?? 0));
+  }
+
+  private bumpRtUploads(slot: string, delta: number): void {
+    this.rtUploads.update((m) => ({ ...m, [slot]: Math.max(0, (m[slot] ?? 0) + delta) }));
+  }
+
+  private setRtImageError(slot: string, message: string): void {
+    this.rtImageErrors.update((m) => ({ ...m, [slot]: message }));
   }
 
   protected onRtImageRemoved(key: string | null, id: string): void {
@@ -778,7 +943,7 @@ export class HostelForm {
    * The room type the host is trying to delete, held while we find out what it costs.
    *
    * Deleting used to be immediate. That is safe for a row nobody has built on and quietly
-   * destructive for one that carries rooms \x2D\x2D the `_destroy` goes out with the save and the
+   * destructive for one that carries rooms — the `_destroy` goes out with the save and the
    * rooms go with it, with nothing on screen having said so.
    */
   protected readonly rtPendingDelete = signal<EditRoomType | null>(null);
@@ -790,7 +955,7 @@ export class HostelForm {
   /**
    * Where a room can go: every other room type that exists on the server.
    *
-   * Unsaved rows are excluded \x2D\x2D they have no id yet, so nothing can be moved onto them
+   * Unsaved rows are excluded — they have no id yet, so nothing can be moved onto them
    * until the hostel has been saved at least once.
    */
   protected readonly rtReplacementOptions = computed<DropdownOption[]>(() => {
@@ -814,7 +979,7 @@ export class HostelForm {
   /**
    * The delete waits until the last room has actually moved.
    *
-   * Not "every row has a selection" \x2D\x2D a chosen replacement that failed to save is still a
+   * Not "every row has a selection" — a chosen replacement that failed to save is still a
    * room pointing at the type about to be destroyed.
    */
   protected readonly rtDeleteReady = computed(() => {
@@ -828,7 +993,7 @@ export class HostelForm {
    *
    * Most hostels are deleting a type whose rooms all go to the same place, and picking the
    * same option six times is the kind of work a form should do for you. It only fills the
-   * rows in \x2D\x2D each room is still updated on its own button, so a host who wants two of them
+   * rows in — each room is still updated on its own button, so a host who wants two of them
    * somewhere else just changes those two afterwards.
    *
    * Rows that already moved are left alone: their dropdown describes what happened, not what
@@ -907,7 +1072,7 @@ export class HostelForm {
    * Asks what the delete would cost before doing any of it.
    *
    * A room type that was never saved cannot have rooms on it, so it skips the round trip
-   * and the dialog entirely \x2D\x2D there is nothing to warn about and nothing to move.
+   * and the dialog entirely — there is nothing to warn about and nothing to move.
    */
   protected removeRt(key: string): void {
     const rt = this.roomTypes().find((r) => r._key === key);
@@ -970,7 +1135,17 @@ export class HostelForm {
     this.photos.update((list) => list.map((p) => ({ ...p, primary: p.id === photo.id })));
   }
   protected removePhoto(photo: EditPhoto): void {
+    // Under moderation, removing a photo the *host* uploaded is a rejection: it needs a
+    // reason, the host is told, and it can be undone — all of which belong to the review
+    // screen, so ask rather than act. A photo the moderator uploaded a moment ago is their
+    // own and is simply deleted, which is why this looks at the pending-upload map first.
+    if (this.moderating() && this.newPhotoMap().get(photo.id) === undefined) {
+      this.photoRejectRequested.emit(photo.id);
+      return;
+    }
     const s3 = this.newPhotoMap().get(photo.id);
+    // Freeing a slot makes "only two more fit" untrue, so the message goes with the photo.
+    this.uploadError.set(null);
     this.photos.update((list) => list.filter((p) => p.id !== photo.id));
     if (s3 !== undefined) {
       this.pendingAttachmentIds.update((ids) => ids.filter((id) => id !== s3));
@@ -1013,6 +1188,21 @@ export class HostelForm {
       : screenPickedPhotos(files, this.photos().length);
     this.uploadError.set(error);
     for (const file of accepted) this.uploadOneFile(file, target);
+  }
+
+  /**
+   * A photo chosen through the picker — file or camera, one path from here. A batch arrives as
+   * one call per file, and each is in the grid before the next lands, so the count below stays
+   * right without anything having to track the batch.
+   *
+   * The picker screens type, size and the free-slot count itself now that it is told how many
+   * are left; the shared screen stays as the backstop, since it is what every other way into
+   * this grid goes through.
+   */
+  protected onPickedPhoto(file: File): void {
+    const { accepted, error } = screenPickedPhotos([file], this.photos().length);
+    this.uploadError.set(error);
+    for (const f of accepted) this.uploadOneFile(f, null);
   }
 
   private uploadOneFile(file: File, target: EditPhoto | null): void {

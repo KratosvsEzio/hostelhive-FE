@@ -16,7 +16,7 @@
       [id]="ids.name"
       [value]="name()"
       (input)="name.set(asValue($event))"
-      [placeholder]="'common.eGSunriseBoys' | transloco"
+      [placeholder]="'common.enterHostelName' | transloco"
       class="mb-3 w-full rounded-xl border px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
       [class]="showValidation() && fieldErrors()['name'] ? 'border-danger' : 'border-ink-200'"
     />
@@ -27,41 +27,28 @@
     }
 
     <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-      @if (mode() === 'edit') {
-        <div>
-          <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'common.type' | transloco }}</label>
-          <hh-dropdown
-            variant="field"
-            [placeholder]="'common.selectType' | transloco"
-            [options]="typeOptions()"
-            [value]="propertyType()"
-            (valueChange)="setType($event)"
-          />
-        </div>
-      } @else {
-        <div>
-          <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'common.city' | transloco }}</label>
-          <div
-            class="flex items-center gap-2 rounded-xl border px-3 transition focus-within:ring-2 focus-within:ring-brand-100"
-            [class]="showValidation() && fieldErrors()['city'] ? 'border-danger focus-within:border-danger' : 'border-ink-200 focus-within:border-brand-400'"
-          >
-            <i class="ti ti-map-pin text-ink-400" aria-hidden="true"></i>
-            <hh-place-search
-              class="block flex-1 py-2.5"
-              [value]="city()"
-              [includedPrimaryTypes]="cityTypes"
-              labelMode="main"
-              [placeholder]="'common.searchYourCity' | transloco"
-              (textChange)="city.set($event)"
-            />
-          </div>
-          @if (showValidation() && fieldErrors()['city']) {
-            <p class="mt-1 flex items-center gap-1 text-xs text-danger">
-              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['city'] }}
-            </p>
-          }
-        </div>
-      }
+      <!-- Both modes. This was edit-only, and City was given the slot on create — so every
+           hostel was created with an empty `property_type`, which is a live public search
+           filter (`f[property_type]`). A new listing was absent from every type-filtered
+           search until somebody happened to open the profile page and set it, and nothing
+           in the create flow suggested they needed to. -->
+      <div>
+        <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'common.type' | transloco }}</label>
+        <hh-dropdown
+          variant="field"
+          [placeholder]="'common.selectType' | transloco"
+          [options]="typeOptions()"
+          [value]="propertyType()"
+          (valueChange)="setType($event)"
+        />
+      </div>
+      <!-- City is not here. It was, on create only — a places autocomplete in this slot and a
+           plain text box in the address block below, both writing the same `city` signal, so
+           typing in one silently rewrote the other. The address block keeps it: it is the one
+           that exists in both modes, sits with Area / Province / Country where a city belongs,
+           and is what the map pin fills in. Nothing is lost with the autocomplete gone — the
+           location picker searches places too, and sets the whole address rather than one line
+           of it. -->
       <div>
         <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'hostelForm.accommodationFor' | transloco }}</label>
         <hh-dropdown
@@ -78,42 +65,65 @@
       </div>
       <div>
         <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'hostelForm.billingFrequency' | transloco }}</label>
+        <!-- The conflict goes to the control, not beside it: `hh-dropdown` reddens its own
+             trigger and prints the message, the same way `hh-input` does. Written out here as
+             a separate paragraph, the sentence was red while the box it was about stayed a
+             neutral grey — so nothing on screen pointed at the field to change.
+
+             Only reachable by switching an already-monthly hostel to Backpacker: the cycle is
+             disabled from then on, but the value it was already on stays selected. Blocks the
+             save rather than warning, so the pair cannot be persisted from here. -->
         <hh-dropdown
           variant="field"
           [placeholder]="'hostelForm.howYouCharge' | transloco"
           [options]="billingOptions()"
           [value]="billingFrequency()"
+          [error]="billingConflict()"
           (valueChange)="setBillingFrequency($event)"
         />
         <!-- One cycle for the whole property: every room is priced the same way, and only
-             nightly hostels can be booked online. -->
-        <p class="mt-1 text-xs text-ink-500">
-          @if (billingFrequency() === 'night') {
-            {{ 'hostelForm.pricedPerNight' | transloco }}
-          } @else {
-            {{ 'hostelForm.pricedPerMonth' | transloco }}
-          }
-        </p>
+             nightly hostels can be booked online.
+
+             Hidden while the conflict stands, because the two disagree: the hint describes
+             the selection as though it were settled ("every room is priced per month") while
+             the error says that selection is the thing that is wrong. Reading both, a host
+             cannot tell which one the form means.
+
+             Tested as "not monthly" rather than against a nightly slug: `month` is the only
+             one confirmed against the live payload, and the code disagrees with itself about
+             the other (the signal above documents `day`, everything else assumes `night`).
+             Whichever it is, a hostel that is not month-billed is nightly. -->
+        @if (!billingConflict()) {
+          <p class="mt-1 text-xs text-ink-500">
+            @if (billingFrequency() !== 'month') {
+              {{ 'hostelForm.pricedPerNight' | transloco }}
+            } @else {
+              {{ 'hostelForm.pricedPerMonth' | transloco }}
+            }
+          </p>
+        }
       </div>
     </div>
 
-    @if (mode() === 'create') {
-      <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <hh-input
-          [label]="'common.contactEmail' | transloco"
-          icon="ti-mail"
-          type="email"
-          [placeholder]="'common.eGInfoMyhostel' | transloco"
-          [(value)]="email"
-          [error]="showValidation() ? (fieldErrors()['email'] ?? '') : ''"
-        />
-        <hh-phone-input
-          [label]="'common.primaryPhone' | transloco"
-          [(phone)]="phone"
-          [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
-        />
-      </div>
-    }
+    <!-- Shown on every mode. These were create-only, which meant the two screens that edit a
+         *live* listing — the hostel profile and the moderator's review — could not see or
+         correct the contact details a seeker actually uses to reach the place. A field the
+         form can write once and never show again is a field nobody can fix. -->
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <hh-input
+        [label]="'common.contactEmail' | transloco"
+        icon="ti-mail"
+        type="email"
+        [placeholder]="'common.enterEmail' | transloco"
+        [(value)]="email"
+        [error]="showValidation() ? (fieldErrors()['email'] ?? '') : ''"
+      />
+      <hh-phone-input
+        [label]="'common.primaryPhone' | transloco"
+        [(phone)]="phone"
+        [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
+      />
+    </div>
 
     <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'common.description' | transloco }}</label>
     <div
@@ -161,8 +171,24 @@
       (replacePhoto)="replace(findPhoto($event)!)"
       (setPrimary)="setPrimary(findPhoto($event)!)"
       (removePhoto)="removePhoto(findPhoto($event)!)"
+      (undoReject)="photoRejectUndone.emit($event)"
       (labelChange)="setPhotoLabel(findPhoto($event.id)!, $event.value)"
-    />
+    >
+      <!-- Replaces the grid’s own tile so a photo can come from the camera as well as the
+           files. Dropped at the limit rather than disabled: with nothing projected the grid
+           falls back to its greyed tile, which already explains why. -->
+      @if (!atPhotoLimit()) {
+        <hh-photo-picker
+          addTile
+          class="block"
+          [accept]="acceptAttr"
+          [label]="'common.addPhoto' | transloco"
+          [maxFiles]="freePhotoSlots()"
+          (picked)="onPickedPhoto($event)"
+          (rejected)="uploadError.set($event)"
+        />
+      }
+    </hh-photo-grid>
   </hh-collapsible-card>
 
   <!-- AMENITIES -->
@@ -228,6 +254,7 @@
         @for (rt of roomTypes(); track rt._key) {
           <li>
             <hh-room-type-row
+              [occupancyOptions]="occupancyOptions()"
               class="block"
               [name]="rt.name"
               [capacity]="rt.capacity"
@@ -237,8 +264,9 @@
               [discountEnabled]="rt.discountEnabled"
               [description]="rt.description"
               [images]="rt.images"
-              [uploadingImage]="uploadingRtImage() === rt._key"
-              [imageError]="uploadingRtImage() === rt._key ? rtImageError() : ''"
+              [uploadingImage]="rtUploading(rt._key)"
+              [freeSlots]="rtFreeSlots(rt._key)"
+              [imageError]="rtImageError(rt._key)"
               [bookable]="rt.bookable"
               [currency]="currency()"
               (nameChange)="updateRt(rt._key, 'name', $event)"
@@ -277,6 +305,7 @@
     @if (addRtOpen()) {
       <div class="mt-3 rounded-xl border border-ink-200 bg-surface p-3">
         <hh-room-type-row
+          [occupancyOptions]="occupancyOptions()"
           [alwaysOpen]="true"
           [name]="newRtName()"
           [capacity]="newRtCapacity()"
@@ -286,8 +315,9 @@
           [discountEnabled]="newRtDiscountEnabled()"
           [description]="newRtDescription()"
           [images]="newRtImages()"
-          [uploadingImage]="uploadingRtImage() === '__new__'"
-          [imageError]="uploadingRtImage() === '__new__' ? rtImageError() : ''"
+          [uploadingImage]="rtUploading(null)"
+          [freeSlots]="rtFreeSlots(null)"
+          [imageError]="rtImageError(null)"
           [bookable]="newRtBookable()"
           [currency]="currency()"
           (nameChange)="newRtName.set($event)"
@@ -336,14 +366,18 @@
     />
     <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
       <hh-input [label]="'common.area' | transloco" [(value)]="area" />
-      <hh-input [label]="'common.city' | transloco" [(value)]="city" />
+      <hh-input
+        [label]="'common.city' | transloco"
+        [(value)]="city"
+        [error]="showValidation() ? (fieldErrors()['city'] ?? '') : ''"
+      />
       <hh-input [label]="'common.province' | transloco" [(value)]="province" />
       <hh-input [label]="'common.country' | transloco" [(value)]="country" />
       <hh-input class="sm:col-span-2" [label]="'common.streetAddress' | transloco" [(value)]="street" />
       <hh-input
         class="sm:col-span-2"
         [label]="'common.nearbyLandmarks' | transloco"
-        [placeholder]="'hostelForm.landmarksPlaceholder' | transloco"
+        [placeholder]="'common.enterLandmarks' | transloco"
         [(value)]="landmarks"
       />
     </div>

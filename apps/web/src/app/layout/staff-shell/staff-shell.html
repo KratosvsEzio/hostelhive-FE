@@ -1,3 +1,4 @@
+@if (!mobile.isMobile()) {
 <aside
   class="group fixed bottom-0 start-0 hh-below-header z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
   [style.width]="drawer.width_()"
@@ -88,6 +89,7 @@
     aria-hidden="true"
   ></span>
 </aside>
+}
 
 <div
   class="hh-viewport-below-header overflow-hidden transition-[padding-left] duration-200 ease-in-out"
@@ -95,3 +97,10 @@
 >
   <router-outlet />
 </div>
+
+<!-- Below 768px the sidebar above is not rendered, so these are the whole of staff
+     navigation. Fed from the shell's own nav, so moderator and admin each get their
+     own destinations under the same permission rules. -->
+@if (mobile.isMobile()) {
+  <app-staff-tab-bar [tabs]="tabs()" [ariaLabel]="consoleLabel()" />
+}

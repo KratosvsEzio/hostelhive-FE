@@ -7,6 +7,7 @@ import {
   HostelAttachment,
   HostelDetail,
   HostelEnumOption,
+  HostelFormOptions,
   HostelOffer,
   OfferCategory,
   User,
@@ -187,12 +188,20 @@ export class ModerationApi {
     );
   }
 
-  /** `GET /api/moderator/hostels/new` — enum options for the review edit form. */
-  formOptions(): Observable<ModFormOptions> {
+  /**
+   * `GET /api/moderator/hostels/new` — the enum options for the review form.
+   *
+   * Answers {@link HostelFormOptions}, the same shape `/api/hostels/new` answers for the host
+   * console, so one form renders from either. Two endpoints, one contract; the review screen
+   * passes this one in rather than the form reaching for the host's.
+   */
+  formOptions(): Observable<HostelFormOptions> {
     return this.api.get<ModNewResponse>('/api/moderator/hostels/new').pipe(
       map((r) => ({
         genderTypes: r.gender_types ?? [],
         propertyTypes: r.property_types ?? [],
+        billingFrequencyTypes: r.billing_frequency_type ?? r.billing_frequency_types ?? [],
+        occupancyTypes: r.occupancy_type ?? r.occupancy_types ?? [],
         attachmentLabels: r.attachment_labels ?? [],
       })),
     );
@@ -223,16 +232,15 @@ function extractModerationAttachments(
 
 /* ------------------------------------------------- form options (moderator API) */
 
-export interface ModFormOptions {
-  genderTypes: HostelEnumOption[];
-  propertyTypes: HostelEnumOption[];
-  attachmentLabels: AttachmentLabel[];
-}
-
 interface ModNewResponse {
   success?: boolean;
   gender_types?: HostelEnumOption[];
   property_types?: HostelEnumOption[];
+  /** `shared` | `private_room`. Singular is what the hostel endpoint sends; both are read. */
+  occupancy_type?: HostelEnumOption[];
+  occupancy_types?: HostelEnumOption[];
+  billing_frequency_type?: HostelEnumOption[];
+  billing_frequency_types?: HostelEnumOption[];
   attachment_labels?: AttachmentLabel[];
 }
 
@@ -359,6 +367,7 @@ function toReviewDetail(
   const submitted = hostel.q_at ?? null; // queued-for-review timestamp, not record creation
   const hours = submitted ? hoursSince(submitted) : null;
   return {
+    hostel,
     id: String(hostel.id),
     name: hostel.name?.trim() || 'Untitled hostel',
     kindLabel:

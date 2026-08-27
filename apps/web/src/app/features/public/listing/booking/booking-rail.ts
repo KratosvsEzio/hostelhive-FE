@@ -30,6 +30,15 @@ export class BookingRail {
   /** Emitted when the basket is payable. The page decides whether that means sign in first. */
   readonly book = output<void>();
 
+  /**
+   * The empty-basket call to action — "Choose a room".
+   *
+   * Raised rather than handled here for the same reason {@link book} is: whether it scrolls to
+   * the picker or asks the seeker to sign in first is the page's decision, and the page is
+   * where the sign-in gate already lives.
+   */
+  readonly chooseRoom = output<void>();
+
   protected readonly basket = inject(BookingBasket);
   private readonly session = inject(SessionStore);
 

@@ -24,6 +24,14 @@ export interface RoomStay {
   status: string;
   /** Beds this stay holds in this room. One, for a room sold whole. */
   beds: number;
+  /**
+   * No end date is known — a tenant living here, not a stay that was booked to finish.
+   *
+   * `check_out` still carries a date because everything downstream counts nights between two
+   * of them, but for an open stay that date is the end of the window being drawn, not a
+   * departure. Anything that would *tell a host* somebody is leaving has to check this first.
+   */
+  open?: boolean;
 }
 
 /**
@@ -54,6 +62,51 @@ function holdsBeds(b: HostBooking): boolean {
 }
 
 /**
+ * Somebody the host put in this room directly, rather than through a booking.
+ *
+ * Structurally what `RoomRenter` already is, declared here rather than imported so the
+ * calendar keeps depending on a shape instead of on the services layer.
+ */
+export interface RoomResident {
+  id: string;
+  name: string;
+  /** When they moved in. A date or a full timestamp; only the day is read. */
+  moveIn: string;
+  status: string;
+}
+
+/** The day after `date`, as `yyyy-MM-dd`. Parsed locally — see {@link eachDate}. */
+function dayAfter(date: string): string {
+  const [y, m, d] = date.slice(0, 10).split('-').map(Number);
+  const next = new Date(y, m - 1, d + 1);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
+}
+
+/**
+ * A resident as a stay the calendar can draw.
+ *
+ * They have a move-in and no move-out, so the stay is closed off at the end of the window
+ * being rendered: they occupy every night of it from the day they arrived. Extending only to
+ * the window keeps the arithmetic honest — nothing here is claiming to know when they leave,
+ * and `open` is what says so to anything that would otherwise render a departure.
+ *
+ * One bed each, in a dorm or a private room alike. A booking holds beds for a party; a
+ * resident is one person, which is the whole reason they are counted separately.
+ */
+function residentStay(r: RoomResident, windowEnd: string): RoomStay {
+  return {
+    id: `renter:${r.id}`,
+    guest: { name: r.name },
+    check_in: r.moveIn.slice(0, 10),
+    check_out: dayAfter(windowEnd),
+    status: r.status,
+    beds: 1,
+    open: true,
+  };
+}
+
+/**
  * @param capacity beds in the room, which decides what a booking *holds*.
  *
  * A dorm is sold by the bed, so a party of two holds two of them — reading the room's whole
@@ -64,7 +117,10 @@ function holdsBeds(b: HostBooking): boolean {
 export function toRoomStay(b: HostBooking, capacity: number): RoomStay {
   return {
     id: b.id,
-    guest: { name: b.guest.name },
+    // The renter when the booking names one, the booker otherwise. They are usually
+    // different people here -- one account books beds for others -- and the roster is asking
+    // who is *in the room*, not who paid for it.
+    guest: { name: b.renter?.name || b.guest.name },
     check_in: b.checkIn,
     check_out: b.checkOut,
     status: b.disposition.slug,
@@ -127,7 +183,20 @@ export function toRoomMonth(
   capacity: number,
   from: string,
   to: string,
+  residents: readonly RoomResident[] = [],
 ): { days: RoomDay[]; stays: RoomStay[] } {
-  const stays = bookings.filter(holdsBeds).map((b) => toRoomStay(b, capacity));
+  const stays = [
+    ...bookings.filter(holdsBeds).map((b) => toRoomStay(b, capacity)),
+    // Residents were missing from this month entirely: the calendar reads the bookings
+    // endpoint, and a tenant placed by hand never becomes a booking. The room showed empty
+    // on nights somebody was asleep in it, and the pips under-counted by exactly them.
+    //
+    // Only the ones still here, and only from the day they arrived. Somebody who has already
+    // left has no record of when — `renter.room_id` is nulled on the way out — so a past
+    // residency cannot be drawn at all until the occupancy ledger has been running.
+    ...residents
+      .filter((r) => !!r.moveIn && r.moveIn.slice(0, 10) <= to)
+      .map((r) => residentStay(r, to)),
+  ];
   return { days: buildRoomDays(stays, capacity, from, to), stays };
 }

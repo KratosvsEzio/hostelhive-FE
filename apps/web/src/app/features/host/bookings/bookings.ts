@@ -38,8 +38,7 @@ import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
 import { BookingDetailsPanel } from './booking-details-panel';
 import { BookingApi } from '@features/public/listing/booking/booking-api';
 import { ApiHostCancellationQuote } from '@features/public/listing/booking/booking-api.contract';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { LocaleStore } from '@core/i18n/locale-store';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
   loading: boolean;
@@ -87,8 +86,6 @@ const LOADING: ViewState = { loading: true, error: false, data: null };
 })
 export class HostBookings {
   private readonly api = inject(BookingApi);
-  private readonly i18n = inject(TranslocoService);
-  private readonly locale = inject(LocaleStore);
   private readonly route = inject(ActivatedRoute);
   private readonly bookingsApi = inject(HostBookingsApi);
 
@@ -155,18 +152,18 @@ export class HostBookings {
   protected readonly view = signal<'calendar' | 'list'>('calendar');
 
   /**
-   * Rebuilt on both signals for the same reason the room detail tabs are: `ready` flips
-   * once when the strings arrive, so a computed cannot cache a raw key from the render
-   * before they did, and `active` moves on every switch after that.
+   * A plain list now the pipe does the translating.
+   *
+   * This was a computed that read `locale.ready()` and `locale.active()` and used neither —
+   * signals touched purely to force a second evaluation once the language file arrived,
+   * because the imperative `translate()` below them returned the key on the first pass and
+   * logged a missing-translation warning doing it. Handing `hh-tabs` the key removes the
+   * warning and the ceremony together.
    */
-  protected readonly viewTabs = computed<TabItem[]>(() => {
-    this.locale.ready();
-    this.locale.active();
-    return [
-      { value: 'calendar', label: this.i18n.translate<string>('hostBookings.calendarTab') },
-      { value: 'list', label: this.i18n.translate<string>('hostBookings.listTab') },
-    ];
-  });
+  protected readonly viewTabs: TabItem[] = [
+    { value: 'calendar', labelKey: 'hostBookings.calendarTab' },
+    { value: 'list', labelKey: 'hostBookings.listTab' },
+  ];
 
   /**
    * Whether anything is narrowing the table.

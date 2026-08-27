@@ -223,3 +223,92 @@ describe('Dropdown panel placement', () => {
     expect(box.maxHeight).toBeGreaterThanOrEqual(120);
   });
 });
+
+/**
+ * A select with something wrong with it has to look wrong.
+ *
+ * The control had no error state, so a form with an invalid selection wrote its own red
+ * sentence beneath the field while the trigger stayed neutral grey — the message pointed at
+ * a box that looked untouched. These pin the border and the message to the same input a text
+ * field uses, since a host does not know which of the two a given field happens to be.
+ */
+@Component({
+  imports: [Dropdown],
+  template: `<hh-dropdown variant="field" [options]="options" [error]="error()" [disabled]="disabled()" />`,
+})
+class ErrorHost {
+  readonly options = OPTIONS;
+  readonly error = signal('');
+  readonly disabled = signal(false);
+}
+
+describe('Dropdown error state', () => {
+  async function render() {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [ErrorHost],
+      providers: [provideTranslocoTesting()],
+    }).compileComponents();
+    const fixture: ComponentFixture<ErrorHost> = TestBed.createComponent(ErrorHost);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      trigger: () => el.querySelector('button') as HTMLButtonElement,
+      message: () => el.querySelector('p.text-danger')?.textContent?.trim() ?? null,
+    };
+  }
+
+  it('leaves a valid control alone', async () => {
+    const { trigger, message } = await render();
+
+    expect(trigger().className).toContain('border-ink-200');
+    expect(trigger().className).not.toContain('border-danger');
+    expect(message()).toBeNull();
+    expect(trigger().getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('reddens the trigger and prints the message', async () => {
+    const { fixture, host, trigger, message } = await render();
+    host.error.set('Set the billing frequency to Per night.');
+    fixture.detectChanges();
+
+    expect(trigger().className).toContain('border-danger');
+    expect(trigger().className).not.toContain('border-ink-200');
+    expect(message()).toBe('Set the billing frequency to Per night.');
+    expect(trigger().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  // Letting the hover rule survive would turn the box grey again the moment the pointer
+  // moved towards the very field the message is asking the host to fix.
+  it('does not let hover paint over the error border', async () => {
+    const { fixture, host, trigger } = await render();
+    host.error.set('nope');
+    fixture.detectChanges();
+
+    expect(trigger().className).not.toContain('hover:border-ink-400');
+  });
+
+  // A field nobody can change is not asking to be fixed; red on grey reads as a control
+  // demanding an edit it would refuse.
+  it('lets disabled win over error', async () => {
+    const { fixture, host, trigger } = await render();
+    host.error.set('nope');
+    host.disabled.set(true);
+    fixture.detectChanges();
+
+    expect(trigger().className).not.toContain('border-danger');
+  });
+
+  it('clears the state when the error goes away', async () => {
+    const { fixture, host, trigger, message } = await render();
+    host.error.set('nope');
+    fixture.detectChanges();
+    host.error.set('');
+    fixture.detectChanges();
+
+    expect(trigger().className).toContain('border-ink-200');
+    expect(message()).toBeNull();
+  });
+});

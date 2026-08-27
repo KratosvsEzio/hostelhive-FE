@@ -104,6 +104,73 @@ const createHostelGate: CanActivateFn = () => {
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), switchMap(check));
 };
 
+/**
+ * `:hostelId` must name a hostel this host actually has.
+ *
+ * The segment is not just read, it is *kept*: the shell copies it into the property store,
+ * which persists it to localStorage. So a URL naming a hostel that does not exist does not
+ * fail once — it replaces the host's saved selection and keeps failing on every later visit,
+ * across reloads, until something overwrites the key. `/host/hostels` is the easy way in
+ * (a truncated `/host/hostels/new`: `hostels/new` needs both segments and `''` is
+ * `pathMatch: 'full'`, so one segment falls through to here), and what it leaves behind is
+ * requests like `/api/hostels/hostels/edit` from every screen that reads the stored id.
+ *
+ * The store's own reconciliation cannot dig out of this alone: it heals the saved id when the
+ * listings arrive, but the shell's effect re-reads the URL — still naming the bad hostel — and
+ * writes it straight back. Refusing entry is what breaks that loop.
+ *
+ * An empty list is not evidence the hostel is fake. `loaded` is set on the error path too, so
+ * a flaky network would otherwise bounce a host off a perfectly good hostel; this lets those
+ * through and leaves the page's own error state to speak. Unknown ids go to `/host` rather
+ * than to a hostel picked here, so "which hostel, or none, or not allowed" stays in
+ * {@link hostRootRedirect} alone.
+ */
+/** Exported for its test; the route table below is the only production caller. */
+export const knownHostelGate: CanActivateFn = (route) => {
+  const store = inject(HostPropertyStore);
+  const router = inject(Router);
+  const id = route.paramMap.get('hostelId') ?? '';
+
+  const decide = (): boolean | UrlTree => {
+    const props = store.properties();
+    if (!props.length) return true;
+    return props.some((p) => p.id === id) ? true : router.parseUrl('/host');
+  };
+
+  if (store.loaded() && store.properties().length) return decide();
+  store.load();
+  return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(decide));
+};
+
+/**
+ * Bookings belong to a hostel that sells nights.
+ *
+ * A month-billed hostel lets beds to tenants: there are no nightly bookings to list, and the
+ * page's own create form would write a stay into a hostel that has no stays. The sidebar and
+ * the phone's More list already leave the entry out, so what reaches here is a typed URL, a
+ * bookmark, or a link shared from a hostel billed the other way — which is exactly the case
+ * that would otherwise land a host on a permanently empty page and a form that cannot be
+ * submitted.
+ *
+ * The hostel is read from the route rather than from the store's selection: this runs before
+ * the shell syncs the two, so asking about "the current hostel" here can answer about the one
+ * the host was looking at a moment ago. An unknown or unstated billing cycle is treated as
+ * nightly and let through — see {@link HostPropertyStore.isMonthlyBilled}.
+ */
+/** Exported for its test; the route table below is the only production caller. */
+export const bookingsGate: CanActivateFn = (route) => {
+  const store = inject(HostPropertyStore);
+  const router = inject(Router);
+  const hostelId = route.parent?.paramMap.get('hostelId') ?? '';
+
+  const decide = (): boolean | UrlTree =>
+    store.isMonthlyBilled(hostelId) ? router.parseUrl(`/host/${hostelId}/overview`) : true;
+
+  if (store.loaded()) return decide();
+  store.load();
+  return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(decide));
+};
+
 export const HOST_ROUTES: Route[] = [
   {
     path: 'hostels/new',
@@ -120,6 +187,7 @@ export const HOST_ROUTES: Route[] = [
   {
     path: ':hostelId',
     component: HostLayout,
+    canActivate: [knownHostelGate],
     children: [
       { path: 'profile', component: HostelProfile, title: 'Hostel profile — HostelHive', canActivate: [permissionGuard('host:Hostel:show')] },
       // Mobile-app "More" tab (bottom tab bar) — the destinations that don't fit in the tabs.
@@ -136,6 +204,7 @@ export const HOST_ROUTES: Route[] = [
         path: 'bookings',
         component: HostBookings,
         title: 'Bookings — HostelHive',
+        canActivate: [bookingsGate],
       },
       {
         path: 'rooms',

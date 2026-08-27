@@ -13,27 +13,17 @@ import { filter, map, take } from 'rxjs';
 import { HostPropertyStore, SubscriptionStore } from '@services';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { hostPagePath, opensWithoutSubscription } from './host-route';
+import { NavEntry, hostNav } from './host-nav';
 import { SubscriptionLoading } from '../components/subscription-loading/subscription-loading';
 import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
-import { Permission, SessionStore } from '@core/auth';
+import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
 import { Button, Dropdown, DropdownOption, StatusTone, TooltipFixed } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
-
-interface NavEntry {
-  /** A translation key, not display text — resolved by the pipe so it follows a language change. */
-  label?: string;
-  icon?: string;
-  link?: string;
-  exact?: boolean;
-  divider?: boolean;
-  /** Hidden unless the session holds this flag. Omit for entries everyone may see. */
-  permission?: Permission;
-}
 
 const PILL_TONE: Record<ListingStatus, StatusTone> = {
   published: 'ok',
@@ -197,34 +187,12 @@ export class HostLayout {
     });
   }
 
-  protected readonly nav = computed<NavEntry[]>(() => {
-    const pid = this.propertyStore.selected();
-    const b = `/host/${pid}`;
-    // Each destination names the API action it needs, so a sub-user only sees the sections
-    // their permissions actually reach. Overview is ungated: it is a dashboard over whatever
-    // the user can already see, not a resource of its own.
-    const entries: NavEntry[] = [
-      { label: 'common.overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
-      { label: 'common.hostelProfile', icon: 'ti-building',         link: `${b}/profile`,      permission: 'host:Hostel:show' },
-      { label: 'common.rooms',          icon: 'ti-bed',              link: `${b}/rooms`,        permission: 'host:Room:index' },
-      { label: 'common.bookings',       icon: 'ti-calendar',         link: `${b}/bookings`,     permission: 'host:Room:index' },
-      { label: 'common.tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
-      { label: 'hostNav.teamStaff',   icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
-      { label: 'common.utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
-      { label: 'common.mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess`,         permission: 'host:WeeklyMenu:index' },
-      { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
-      { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
-      { divider: true },
-      { label: 'common.subscription',   icon: 'ti-rosette',          link: `${b}/subscription`, permission: 'core:Hostel:subscription' },
-    ];
-    const visible = entries.filter(
-      (e) => !e.permission || this.session.hasPermission(e.permission),
-    );
-    // Drop a divider that lost everything below it, so the list never ends on a stray rule.
-    return visible.filter(
-      (e, i) => !e.divider || visible.slice(i + 1).some((n) => !n.divider),
-    );
-  });
+  protected readonly nav = computed<NavEntry[]>(() =>
+    hostNav(`/host/${this.propertyStore.selected()}`, {
+      monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      can: (permission) => this.session.hasPermission(permission),
+    }),
+  );
 
   protected readonly propertyDropdownOptions = computed<DropdownOption[]>(() =>
     this.propertyStore.properties().map((p) => ({

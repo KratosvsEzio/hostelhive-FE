@@ -46,6 +46,7 @@ import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
 import { HasPermission } from '@core/auth';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Logo } from '@core/brand/logo';
 
 interface InvoiceAggs {
   utilityTotal: number;
@@ -117,7 +118,7 @@ async function rasterise(
 @Component({
   selector: 'hh-invoices',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [Logo, 
     HasPermission,
     DecimalPipe,
     DashboardLayout,
@@ -605,7 +606,7 @@ export class Invoices {
       // is painted onto a canvas and handed over as PNG bytes. Nothing else in the app
       // references a .png logo; this is a PDF-format constraint, not a second asset.
       const logoH = 5;
-      const logo = await rasterise('/hostelhive-logo.png', logoH, RASTER_SCALE);
+      const logo = await rasterise('/hostelhive-logo.svg', logoH, RASTER_SCALE);
       doc.addImage(logo.dataUrl, 'PNG', ml, footerY - 2, logo.widthMm, logoH);
     } catch {
       doc.setFont('helvetica', 'bold');
@@ -713,7 +714,7 @@ export class Invoices {
   </div>
   ${inv.payNote ? `<p class="pay-note">${inv.payNote}</p>` : ''}
   <div class="footer">
-    <img src="${origin}/hostelhive-logo.png" alt="HostelHive" />
+    <img src="${origin}/hostelhive-logo.svg" alt="HostelHive" />
     <a href="mailto:support@hostelhive.com">support@hostelhive.com</a>
   </div>
 </body>

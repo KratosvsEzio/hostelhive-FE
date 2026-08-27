@@ -11,6 +11,7 @@ import { AuthService } from '@core/auth';
 import { ApiError } from '@hostelhive/data-access';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Logo } from '@core/brand/logo';
 
 type Phase = 'verifying' | 'error';
 
@@ -27,7 +28,7 @@ type Phase = 'verifying' | 'error';
 @Component({
   selector: 'hh-confirm-invitation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, Button, TranslocoPipe],
+  imports: [Logo, RouterLink, LocaleLink, Button, TranslocoPipe],
   templateUrl: './confirm-invitation.html',
 })
 export class ConfirmInvitation {

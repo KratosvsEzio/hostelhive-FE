@@ -9,12 +9,18 @@
         <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
       </p>
     }
-    <a
-      href="#rooms"
-      class="mt-3 grid h-11 place-items-center rounded-full bg-brand-500 font-semibold text-white transition hover:bg-brand-600"
+    <!-- A button, not `href="#rooms"`.
+         The document carries `<base href="/">`, and a fragment-only href resolves against
+         the *base* rather than the current URL — so this sent a seeker reading
+         `/en/hostel/nHelLt` to `/#rooms`, which is the landing page. It looked like a scroll
+         link and behaved like "leave this listing". -->
+    <button
+      type="button"
+      class="mt-3 grid h-11 w-full place-items-center rounded-full bg-brand-500 font-semibold text-white transition hover:bg-brand-600"
+      (click)="chooseRoom.emit()"
     >
       {{ 'publicListing.chooseARoom' | transloco }}
-    </a>
+    </button>
   }
 
   <div class="mt-3 grid grid-cols-2 gap-2">

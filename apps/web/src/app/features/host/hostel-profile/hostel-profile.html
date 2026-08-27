@@ -34,7 +34,7 @@
       color="primary"
       size="sm"
       [attr.aria-label]="'a11y.updateHostel' | transloco"
-      [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()"
+      [disabled]="!form()?.dirty() || saving() || !!form()?.uploading() || form()?.isValid() === false"
       (click)="save()"
     >
       @if (saving()) {
@@ -73,7 +73,7 @@
         @if (form()?.dirty()) {
           <span class="text-sm text-ink-400">{{ 'common.youHaveUnsavedChanges' | transloco }}</span>
         }
-        <button hh-button color="primary" [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()" (click)="save()">
+        <button hh-button color="primary" [disabled]="!form()?.dirty() || saving() || !!form()?.uploading() || form()?.isValid() === false" (click)="save()">
           {{ saving() ? 'Saving…' : 'Update hostel' }}
         </button>
       </div>

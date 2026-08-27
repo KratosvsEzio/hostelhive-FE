@@ -27,7 +27,7 @@
         class="hh-input"
         [value]="name()"
         (input)="name.set($any($event.target).value)"
-        [placeholder]="'userSettings.yourFullName' | transloco"
+        [placeholder]="'common.enterFullName' | transloco"
       />
     </label>
     <label class="block">
@@ -37,7 +37,7 @@
         type="tel"
         [value]="phone()"
         (input)="phone.set($any($event.target).value)"
-        placeholder="+92 300 0000000"
+        [placeholder]="'common.enterPhone' | transloco"
       />
     </label>
     <label class="block sm:col-span-2">

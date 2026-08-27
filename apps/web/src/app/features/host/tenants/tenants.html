@@ -121,7 +121,7 @@
     [mode]="r.mode"
     [tenantId]="r.tenantId ?? null"
     [initialRoomId]="r.roomId ?? null"
-    (saved)="onDrawerSaved()"
+    (saved)="onDrawerSaved($event)"
     (closed)="onDrawerClosed()"
   />
 }

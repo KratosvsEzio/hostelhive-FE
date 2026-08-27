@@ -11,6 +11,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, filter, firstValueFrom, map, of, switchMap, take } from 'rxjs';
 import { Button, DatePicker, Dropdown, DropdownOption } from '@hostelhive/ui';
+import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { format } from 'date-fns';
 import { Breadcrumb, DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
@@ -54,7 +55,7 @@ const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
 @Component({
   selector: 'hh-add-grocery',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput, TranslocoPipe],
+  imports: [PhotoPicker, DecimalPipe, RouterLink, LocaleLink, DashboardLayout, Button, Dropdown, DatePicker, MoneyInput, TranslocoPipe],
   templateUrl: './add-grocery.html',
 })
 export class AddGrocery {
@@ -211,25 +212,26 @@ export class AddGrocery {
     this.billTotal.set(Number.isFinite(n) && n < 0 ? '' : v);
   }
 
-  protected onFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-    Array.from(input.files).forEach((file) => {
-      const id = `${Date.now()}-${Math.random()}`;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        this.images.update((list) => [
-          ...list,
-          { id, dataUrl, name: file.name, file, uploading: true, progress: 0 },
-        ]);
-        // Upload the receipt to S3 as soon as it's picked (presigned-url + PUT), so the
-        // receipt_id is ready by save time and the user sees upload progress.
-        this.uploadReceipt(id, file);
-      };
-      reader.readAsDataURL(file);
-    });
-    input.value = '';
+  /** One receipt from the picker — file or camera. Same draft + upload as a file pick. */
+  protected onPickedReceipt(file: File): void {
+    this.addReceipt(file);
+  }
+
+  /** Adds one receipt as a draft and starts its upload. */
+  private addReceipt(file: File): void {
+    const id = `${Date.now()}-${Math.random()}`;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      this.images.update((list) => [
+        ...list,
+        { id, dataUrl, name: file.name, file, uploading: true, progress: 0 },
+      ]);
+      // Upload the receipt to S3 as soon as it's picked (presigned-url + PUT), so the
+      // receipt_id is ready by save time and the user sees upload progress.
+      this.uploadReceipt(id, file);
+    };
+    reader.readAsDataURL(file);
   }
 
   /** Runs the two-step upload for one draft image and tracks its progress/result on the signal. */

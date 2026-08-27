@@ -43,6 +43,16 @@ export interface RoomOption {
   number: string;
   label: string;
   isFull: boolean;
+  /**
+   * Beds, and how many are taken — straight off the rooms list.
+   *
+   * Kept rather than collapsed into {@link isFull} because the same two numbers answer the
+   * availability question on a monthly hostel, which has no bookings to check against. They
+   * were already on the wire; dropping them meant fetching the room again to learn what the
+   * list had just been told.
+   */
+  capacity: number;
+  occupied: number;
 }
 
 /** Request body accepted by the renter create endpoint. */
@@ -69,25 +79,24 @@ const REQUIRED_FIELDS = [
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /**
- * Local now as `YYYY-MM-DDTHH:mm`, minutes rounded down to the picker's step.
+ * Local now, to the minute, as `YYYY-MM-DDTHH:mm`.
  *
  * Built from local getters rather than `toISOString()`, which is UTC — at UTC+5 that
  * returned yesterday's date for the first five hours of every day, so a tenant checked
  * in before 05:00 defaulted to the wrong day.
  *
- * Rounded because the time picker offers minutes in `minuteStep` increments (00/15/30/45);
- * an unrounded 14:37 would preselect a minute the column does not contain.
+ * It used to floor the minutes to the picker's step, because the column only offered
+ * 00/15/30/45 and an unrounded 14:37 would preselect a minute that was not in it. The
+ * column offers every minute now, so the rounding is pure loss: it filed a check-in up to
+ * fourteen minutes before it happened.
  *
- * **Down, not to the nearest.** Rounding to the nearest step pushed 23:53 to 00:00 and
- * carried the date with it, so a tenant standing at the desk on the 25th was recorded as
- * joining on the 26th. It also put the joining time up to seven minutes into the future,
- * which is the wrong direction for a moment that has already happened. Flooring cannot
- * cross a day boundary, so the date is always the one the host is actually living in.
+ * Losing it also removes the hazard the flooring was carefully arranged to avoid. Rounding
+ * to the *nearest* step had pushed 23:53 to 00:00 and carried the date with it, recording a
+ * tenant who arrived on the 25th as joining on the 26th. No rounding, no carry.
  */
-function nowLocal(stepMinutes = 15): string {
+function nowLocal(): string {
   const d = new Date();
   d.setSeconds(0, 0);
-  d.setMinutes(Math.floor(d.getMinutes() / stepMinutes) * stepMinutes);
   const date = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   return `${date}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
@@ -186,11 +195,19 @@ export function checkInFormFromTenant(t: Tenant): CheckInForm {
 }
 
 /**
- * A backpacker hostel bills per night, so a stay has no day-of-month cycle: the billing
- * date and billing due date are neither collected nor sent. Everything else is unchanged.
+ * A hostel billed per night has no day-of-month cycle, so the billing date and billing due
+ * date are neither collected nor sent. Everything else is unchanged.
  */
 export interface RenterFormContext {
-  /** True when the hostel bills per night (accommodation type `backpacker`). */
+  /**
+   * True when the hostel bills per night.
+   *
+   * Read from `billingFrequency`, **not** the accommodation type. It used to be
+   * `accommodationType === 'backpacker'`, which is a different question: the type says what
+   * kind of place it is, the frequency says whether a monthly cycle exists. A backpacker
+   * hostel billed monthly had its billing day silently dropped from the payload — and a PG
+   * billed nightly was made to supply one it would never use.
+   */
   nightly: boolean;
 }
 
@@ -205,6 +222,19 @@ function requiredFields(ctx?: RenterFormContext): readonly RequiredField[] {
   return REQUIRED_FIELDS.filter(
     (k) => !(MONTHLY_ONLY_FIELDS as readonly string[]).includes(k),
   );
+}
+
+/**
+ * Whether this field has to be filled in for *this* hostel.
+ *
+ * The same list {@link isCheckInFormValid} submits against, so the red text under a field and
+ * the Register button cannot disagree about what is required. They did: the drawer decided it
+ * per field by asking whether the value was blank, which made every *optional* field report
+ * itself as required the moment a host tabbed past it — the emergency contact, and the
+ * check-out date on any form that failed to submit for some other reason.
+ */
+export function isFieldRequired(key: keyof CheckInForm, ctx?: RenterFormContext): boolean {
+  return (requiredFields(ctx) as readonly string[]).includes(key);
 }
 
 /** True when every required field carries a non-blank value. Room stays optional. */
@@ -235,6 +265,27 @@ export function leaveBeforeJoin(f: CheckInForm): boolean {
   if (!f.joiningDate || !f.leaveDate) return false;
   const at = (v: string) => (v.includes('T') ? v : `${v}T00:00`);
   return at(f.leaveDate) < at(f.joiningDate);
+}
+
+/**
+ * The message to show under one field, or `''` when there is nothing wrong with it.
+ *
+ * Pure, and here rather than in the drawer, because this is the half that was wrong: the
+ * drawer used to decide "required" by asking whether the box was empty, which is a different
+ * question from {@link isFieldRequired} and gave a different answer on every optional field.
+ * *Whether* to show the message is still the drawer's call — it waits until the host has
+ * touched the field or pressed Register.
+ */
+export function fieldErrorFor(
+  f: CheckInForm,
+  key: keyof CheckInForm,
+  ctx?: RenterFormContext,
+): string {
+  // Ahead of the required check on purpose: check-out is optional, but a check-out that falls
+  // before check-in is wrong whether or not the field had to be filled in at all.
+  if (key === 'leaveDate' && leaveBeforeJoin(f)) return 'Check-out must be after check-in';
+  if (!isFieldRequired(key, ctx)) return '';
+  return (f[key] as string).trim() ? '' : 'This field is required';
 }
 
 export function toCreateRenterPayload(

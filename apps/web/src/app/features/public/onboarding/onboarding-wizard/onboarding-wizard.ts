@@ -40,6 +40,7 @@ import {
   PlaceSearchField,
 } from '@hostelhive/maps';
 import { screenPickedPhotos, screenReplacementPhoto } from '@util/photo-picker';
+import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import {
   clampCapacity,
   displayLabelFor,
@@ -49,8 +50,11 @@ import {
 } from '@util/room-types';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Logo } from '@core/brand/logo';
 
 type GenderType = 'boys' | 'girls' | 'co-living';
+/** The Rails enum, not a free string — see {@link HostelPropertyType}. */
+type PropertyType = 'apartment' | 'room' | 'building' | 'house';
 
 interface MediaItem {
   id: number;
@@ -86,6 +90,7 @@ interface OnboardingDraft {
   name: string;
   city: string;
   gender: GenderType;
+  propertyType?: PropertyType;
   description: string;
   lat: number;
   lng: number;
@@ -147,7 +152,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 @Component({
   selector: 'hh-onboarding-wizard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [Logo, 
     DecimalPipe,
     Button,
     Card,
@@ -157,6 +162,7 @@ const CATEGORY_ICONS: Record<string, string> = {
     PhoneInput,
     LocationPicker,
     PhotoGrid,
+    PhotoPicker,
     PlaceSearchField,
     RichText,
     RouterLink, LocaleLink,
@@ -192,6 +198,14 @@ export class OnboardingWizard {
   protected readonly name = signal('');
   protected readonly city = signal('Karachi');
   protected readonly accommodationType = signal<GenderType>('boys');
+  /**
+   * Empty until chosen, unlike gender, which defaults.
+   *
+   * The options are fetched, so there is no slug that can be hard-coded as a default here
+   * without guessing at the backend vocabulary — and guessing would silently file every
+   * new listing under whichever type happened to be picked.
+   */
+  protected readonly propertyType = signal<PropertyType | ''>('');
   protected readonly description = signal('');
 
   // --- Step 2: location ---
@@ -224,6 +238,18 @@ export class OnboardingWizard {
       catchError(() => of({ genderTypes: [], propertyTypes: [], attachmentLabels: [] as AttachmentLabel[] })),
     ),
     { initialValue: { genderTypes: [], propertyTypes: [], attachmentLabels: [] as AttachmentLabel[] } },
+  );
+
+  /**
+   * `propertyTypes` was already being fetched here and thrown away — the request was made,
+   * the list parsed, and no control ever offered it. The wizard then posted a hostel with
+   * no `property_type` at all.
+   */
+  protected readonly propertyTypeOptions = computed<DropdownOption[]>(() =>
+    this.hostFormOptions().propertyTypes.map((t) => ({
+      value: t.slug,
+      label: t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase(),
+    })),
   );
 
   protected readonly labelOptions = computed<DropdownOption[]>(() =>
@@ -455,6 +481,8 @@ export class OnboardingWizard {
       name: this.name(),
       city: this.city(),
       gender: this.accommodationType(),
+      // Omitted rather than saved as an empty string — the draft field is the enum or nothing.
+      propertyType: this.propertyType() || undefined,
       description: this.description(),
       lat: this.lat(),
       lng: this.lng(),
@@ -510,6 +538,13 @@ export class OnboardingWizard {
   }
 
   // --- Step 3: media ---
+  /** A photo from the picker — file or camera. The count is this screen’s to enforce. */
+  protected onPickedPhoto(file: File): void {
+    const { accepted, error } = screenPickedPhotos([file], this.media().length);
+    this.uploadError.set(error);
+    for (const f of accepted) this.uploadOneFile(f, null);
+  }
+
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
@@ -815,6 +850,16 @@ export class OnboardingWizard {
     if (v === 'boys' || v === 'girls' || v === 'co-living') this.accommodationType.set(v);
   }
 
+  // Checked against the fetched list rather than a copy of the enum: duplicating the four
+  // slugs here would mean a fifth added on the server is offered by the dropdown and then
+  // silently dropped on the way out. That also earns the cast — the value came from the
+  // server's own options, not from anything a user could type.
+  protected setPropertyType(v: string | string[] | null): void {
+    if (typeof v !== 'string') return;
+    if (!this.propertyTypeOptions().some((o) => o.value === v)) return;
+    this.propertyType.set(v as PropertyType);
+  }
+
   protected setRoomType(v: string | string[] | null): void {
     if (typeof v !== 'string' || !v) return;
     if (this.rooms().some((r) => r.type === v)) return;
@@ -870,6 +915,7 @@ export class OnboardingWizard {
       description: this.description() || undefined,
       nearby_landmarks: this.landmarks() || undefined,
       gender_type: this.accommodationType(),
+      property_type: this.propertyType() || undefined,
       city: this.city() || undefined,
       area: this.area() || undefined,
       state: this.province() || undefined,
@@ -924,6 +970,9 @@ export class OnboardingWizard {
         d.gender === 'co-living'
       )
         this.accommodationType.set(d.gender);
+      // Saved from the server's own option list, so it needs no re-checking against a list
+      // that may not have loaded yet when a draft is restored.
+      if (typeof d.propertyType === 'string') this.propertyType.set(d.propertyType);
       if (typeof d.description === 'string')
         this.description.set(d.description);
       if (typeof d.lat === 'number') this.lat.set(d.lat);

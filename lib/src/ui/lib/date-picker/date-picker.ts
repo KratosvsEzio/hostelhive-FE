@@ -345,7 +345,17 @@ export class DatePicker {
   readonly withTime = input(false);
   /** Time used when a day is picked before any time has been chosen. */
   readonly defaultTime = input('12:00');
-  readonly minuteStep = input(15);
+  /**
+   * Minute granularity in the time column. Every minute, by default.
+   *
+   * This was 15, which offered four: 00, 15, 30 and 45. Quarter-hours are a reasonable guess
+   * for booking a meeting and the wrong one for recording something that already happened —
+   * a host checking a tenant in at 3:22 had to file it as 3:15 or 3:30, and the times a
+   * hostel actually deals in are not on the quarter.
+   *
+   * Still an input, so a caller scheduling rather than recording can coarsen it back.
+   */
+  readonly minuteStep = input(1);
 
   protected readonly weekdays = WEEKDAYS;
   protected readonly monthsAbbr = MONTHS_ABBR;

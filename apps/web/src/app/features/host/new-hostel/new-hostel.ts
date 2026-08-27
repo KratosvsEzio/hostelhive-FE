@@ -21,6 +21,16 @@ import { TranslocoPipe } from '@jsverse/transloco';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DashboardLayout, RouterLink, LocaleLink, Button, ConfirmModal, HostelForm, TranslocoPipe],
   templateUrl: './new-hostel.html',
+  /**
+   * Bounds the page to the viewport, the way the host shell bounds every console route.
+   *
+   * This one sits outside that shell, so nothing gave it a definite height — which made
+   * `DashboardLayout`'s `h-full` collapse to auto. Two things followed from that, and both
+   * looked like separate bugs: the document scrolled instead of the inner pane, taking the
+   * sub-header with it, and the progress panel stopped sticking, because its nearest
+   * scrolling ancestor was a pane that never scrolled rather than the viewport.
+   */
+  host: { class: 'hh-viewport-below-header block' },
 })
 export class NewHostel {
   private readonly hostels = inject(HostelsApi);
@@ -54,7 +64,11 @@ export class NewHostel {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (hostel) => {
-          this.router.navigate(['/host', hostel.id, 'profile']);
+          // Plans, not the profile. A hostel is created without a subscription, and the shell
+          // bounces every console page to this one until it has an active plan — the profile
+          // is one of the two routes exempt from that gate, so landing there handed the host
+          // the one page that worked and let them discover the rest by being turned away.
+          this.router.navigate(['/host', hostel.id, 'subscription']);
         },
         // The error interceptor normalises failures to ApiError, so the Rails `errors[]`
         // envelope is on `serverMessages` — NOT `err.error.errors`, which is undefined here.

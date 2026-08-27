@@ -25,7 +25,7 @@
       aria-labelledby="hh-lead-wall-title"
     >
       <div class="mb-4 flex items-center justify-between">
-        <img src="/hostelhive-logo.png" alt="HostelHive" class="h-6 w-auto" />
+        <i hhLogo class="h-6 w-auto text-ink-900"></i>
         <a
           [routerLink]="closeTarget()"
           [replaceUrl]="true"
@@ -93,7 +93,7 @@
               <hh-input
                 label="Full name"
                 icon="ti-user"
-                [placeholder]="'leadWall.ahmedRaza' | transloco"
+                [placeholder]="'common.enterFullName' | transloco"
                 [value]="name()"
                 (valueChange)="name.set($event)"
                 [error]="showErrors() ? nameError() : ''"
@@ -104,7 +104,7 @@
               label="Email address"
               icon="ti-mail"
               type="email"
-              [placeholder]="'common.youEmailCom' | transloco"
+              [placeholder]="'common.enterEmail' | transloco"
               [value]="email()"
               (valueChange)="email.set($event)"
               [error]="showErrors() ? emailError() : ''"

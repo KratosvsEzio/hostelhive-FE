@@ -51,9 +51,10 @@ export class AccountSecurity {
           this.newPassword.set('');
           this.confirmPassword.set('');
         },
-        error: (err) => {
-          this.notifications.error('Couldn\'t update password', err?.message ?? 'Something went wrong.');
-        },
+        // `errorInterceptor` raises the toast, with whatever the API said about the
+        // password — "Current password is incorrect" is its wording, not ours to restate.
+        // `finalize` above already clears `saving`, so there is nothing left to do here.
+        error: () => undefined,
       });
   }
 }

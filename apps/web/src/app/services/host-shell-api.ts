@@ -23,8 +23,34 @@ interface ApiHostHostel {
   status?: { slug?: string; name?: string } | null;
   disposition?: { slug?: string; name?: string } | null;
   total_rooms?: number | null;
-  /** Room types — each entry's `capacity` = max beds for that type. */
-  room_types?: { capacity: number }[] | null;
+  /**
+   * `month` or `night` -- how the hostel charges, which moved from the room type onto the
+   * hostel. Optional because it is only as reliable as the index serializer: absent reads as
+   * unknown, and callers fall back to their existing behaviour rather than guessing.
+   */
+  billing_frequency?: string | null;
+  currency?: string | null;
+  property_type?: string | null;
+  total_floors?: number | null;
+  address_1?: string | null;
+  state?: string | null;
+  country?: string | null;
+  nearby_landmarks?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  review?: { score?: number | null; count?: number | null } | null;
+  offers?: { id: number; name?: string | null; slug?: string | null }[] | null;
+  /** The full room-type record, not just the capacity the bed count needed. */
+  room_types?: {
+    id?: string | null;
+    name?: string | null;
+    capacity: number;
+    price?: number | null;
+    discounted_price?: number | null;
+    is_discountable?: boolean | null;
+    is_bookable?: boolean | null;
+    occupancy_type?: string | null;
+  }[] | null;
   q_at?: string | null;
   views_count?: number | null;
   attachments?: {
@@ -148,6 +174,32 @@ function toHostListing(h: ApiHostHostel): HostListing {
     area: h.area ?? '',
     city: h.city ?? '',
     accommodationType: mapGender(h.gender_type),
+    billingFrequency: h.billing_frequency ?? '',
+    currency: h.currency ?? '',
+    propertyType: h.property_type ?? '',
+    totalFloors: h.total_floors ?? undefined,
+    roomTypes: (h.room_types ?? []).map((r) => ({
+      id: String(r.id ?? ''),
+      name: r.name ?? '',
+      capacity: r.capacity ?? 0,
+      price: Number(r.price ?? 0),
+      discountedPrice: Number(r.discounted_price ?? 0),
+      isDiscountable: !!r.is_discountable,
+      isBookable: !!r.is_bookable,
+      occupancyType: r.occupancy_type ?? '',
+    })),
+    offers: (h.offers ?? []).map((o) => ({
+      id: o.id,
+      name: o.name ?? '',
+      slug: o.slug ?? '',
+    })),
+    review: { score: h.review?.score ?? null, count: h.review?.count ?? 0 },
+    address: h.address_1 ?? undefined,
+    state: h.state ?? undefined,
+    country: h.country ?? undefined,
+    landmarks: h.nearby_landmarks ?? undefined,
+    lat: h.latitude ?? undefined,
+    lng: h.longitude ?? undefined,
     status,
     image: resolveThumb(h.attachments),
     rooms: h.total_rooms ?? undefined,

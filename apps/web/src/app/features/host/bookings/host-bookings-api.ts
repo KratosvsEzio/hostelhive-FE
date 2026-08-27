@@ -271,6 +271,28 @@ export interface ApiHostBooking {
         price?: number | null;
       })
     | null;
+  /**
+   * The room this stay was allotted, or null while it is still pending allotment.
+   *
+   * Both forms travel: the flat id, and the nested record carrying the number a host reads.
+   * A booking can be paid and roomless \x2D\x2D that is what `pending-allotment` means \x2D\x2D so this
+   * being null is an ordinary state, not missing data.
+   */
+  room_id?: string | null;
+  room?: { id?: string | null; room_number?: string | null } | null;
+  /**
+   * The person actually staying, once one is on file.
+   *
+   * Distinct from `guest_name`, which is whoever made the booking. They are often different
+   * people and in this data usually are \x2D\x2D one account booking beds for others.
+   */
+  renter_id?: string | null;
+  renter?: {
+    id?: string | null;
+    full_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  } | null;
   /** Payment state — `paid`, `cancelled`. Not what the calendar counts. */
   status?: ApiNamedSlug | null;
   /** Where the stay is in its life. This is what the calendar's `by_status` is keyed by. */
@@ -307,6 +329,15 @@ export interface HostBooking {
   deposit: number;
   paid: number;
   balanceDue: number;
+  /** Allotted room, or null while the booking is still pending allotment. */
+  room: { id: string; number: string } | null;
+  /**
+   * Who is actually staying, when the record names someone.
+   *
+   * Null on a booking nobody has been assigned to yet, in which case {@link guest} \x2D\x2D the
+   * person who made the booking \x2D\x2D is the only name there is.
+   */
+  renter: { id: string; name: string; email: string; phone: string } | null;
   /** Payment state. Shown nowhere yet — kept so the table can grow a column without a remap. */
   status: { name: string; slug: string };
   disposition: { name: string; slug: string };
@@ -365,6 +396,19 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     deposit: b.deposit ?? 0,
     paid: b.paid_amount ?? 0,
     balanceDue: b.balance_due ?? 0,
+    room: b.room?.id
+      ? { id: String(b.room.id), number: b.room.room_number ?? '—' }
+      : b.room_id
+        ? { id: String(b.room_id), number: '—' }
+        : null,
+    renter: b.renter?.id
+      ? {
+          id: String(b.renter.id),
+          name: b.renter.full_name?.trim() || 'Guest',
+          email: b.renter.email ?? '',
+          phone: b.renter.phone ?? '',
+        }
+      : null,
     status: { name: b.status?.name ?? '', slug: b.status?.slug ?? '' },
     disposition: { name: b.disposition?.name ?? '', slug: b.disposition?.slug ?? '' },
     notes: b.notes?.trim() ?? '',

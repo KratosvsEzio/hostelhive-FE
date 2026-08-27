@@ -98,6 +98,34 @@ describe('toToastCopy', () => {
     expect(toToastCopy(error({ status: 403, method: 'GET' })).title).toBe('Not allowed');
   });
 
+  /**
+   * A removal is neither a load nor a save, and both of the other titles misread it.
+   *
+   * This exists because the features that delete things used to raise their own toast to say
+   * so — "Couldn't remove staff" — on top of this one, which titled the same failure
+   * "Couldn't save changes". Dropping the duplicate meant this title had to carry the
+   * meaning on its own.
+   */
+  it('titles a failed removal as a removal', () => {
+    const copy = toToastCopy(
+      error({ status: 422, method: 'DELETE', serverMessages: ['Staff has unpaid bills'] }),
+    );
+    expect(copy.title).toBe("Couldn't delete");
+    expect(copy.message).toBe('Staff has unpaid bills');
+  });
+
+  // A DELETE that 404s means the row is already gone — a fact about the delete, not a
+  // failed read, so the load title does not apply here either.
+  it('keeps the removal title on a 404', () => {
+    expect(toToastCopy(error({ status: 404, method: 'DELETE' })).title).toBe("Couldn't delete");
+    expect(toToastCopy(error({ status: 404, method: 'GET' })).title).toBe("Couldn't load");
+  });
+
+  // 403 is about the caller, not the verb, and stays the more useful of the two.
+  it('still lets a forbidden removal say so', () => {
+    expect(toToastCopy(error({ status: 403, method: 'DELETE' })).title).toBe('Not allowed');
+  });
+
   it('echoes a 403 message under the not-allowed title', () => {
     const copy = toToastCopy(
       error({ status: 403, serverMessages: ['You are not authorized to perform this action.'] }),

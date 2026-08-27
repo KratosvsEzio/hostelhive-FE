@@ -365,7 +365,12 @@
                gated phone is still how a seeker asks a question before committing. It does
                not repeat the "From" price, which the card below already carries. -->
           @if (bookingEnabled()) {
-            <hh-booking-rail [period]="bookingPeriod()" [currency]="l.currency" (book)="startBooking()" />
+            <hh-booking-rail
+              [period]="bookingPeriod()"
+              [currency]="l.currency"
+              (book)="startBooking()"
+              (chooseRoom)="onChooseRoom()"
+            />
           }
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
@@ -1068,7 +1073,10 @@
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
         <h2 id="login-gate-title" class="font-display text-base font-semibold text-ink-900">
-          {{ 'listing.signInToContact' | transloco }}
+          {{
+            (gateIntent() === 'rooms' ? 'listing.signInToBook' : 'listing.signInToContact')
+              | transloco
+          }}
         </h2>
         <button
           type="button"
@@ -1083,15 +1091,27 @@
       <!-- Body -->
       <div class="px-5 py-5">
         <div class="flex items-start gap-3">
-          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#25D366]/10">
-            <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
-          </div>
-          <div>
-            <p class="font-semibold text-ink-900">{{ 'listing.seeVerifiedContactDetails' | transloco }}</p>
-            <p class="mt-1 text-sm text-ink-500">
-              {{ 'listing.createAFreeAccountTo' | transloco }}
-            </p>
-          </div>
+          @if (gateIntent() === 'rooms') {
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50">
+              <i class="ti ti-bed text-xl text-brand-600" aria-hidden="true"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-ink-900">{{ 'listing.pickYourRoomOnce' | transloco }}</p>
+              <p class="mt-1 text-sm text-ink-500">
+                {{ 'listing.createAFreeAccountToBook' | transloco }}
+              </p>
+            </div>
+          } @else {
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#25D366]/10">
+              <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-ink-900">{{ 'listing.seeVerifiedContactDetails' | transloco }}</p>
+              <p class="mt-1 text-sm text-ink-500">
+                {{ 'listing.createAFreeAccountTo' | transloco }}
+              </p>
+            </div>
+          }
         </div>
 
         <div class="mt-5 flex flex-col gap-2">

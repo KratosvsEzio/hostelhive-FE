@@ -280,7 +280,7 @@
 
           @if (bf.mode === 'range') {
             <div class="grid grid-cols-3 gap-3">
-              <hh-input [label]="'hostRooms.prefix' | transloco" placeholder="1" [value]="bf.prefix" (valueChange)="patchBulk('prefix', $event)" />
+              <hh-input [label]="'hostRooms.prefix' | transloco" [placeholder]="'common.enterPrefix' | transloco" [value]="bf.prefix" (valueChange)="patchBulk('prefix', $event)" />
               <hh-input [label]="'hostRooms.startAt' | transloco" type="number" [value]="bf.start" (valueChange)="patchBulk('start', $event)" />
               <hh-input [label]="'hostRooms.count' | transloco" type="number" [value]="bf.count" (valueChange)="patchBulk('count', $event)" />
             </div>
@@ -291,7 +291,7 @@
                 <div class="rounded-xl border border-ink-100 p-3 space-y-2.5">
                   <div class="flex items-start gap-2">
                     <div class="flex-1">
-                      <hh-input [label]="'hostRooms.roomNumber' | transloco" placeholder="e.g. 101" [value]="row.number" (valueChange)="patchManualRow($index, 'number', $event)" />
+                      <hh-input [label]="'hostRooms.roomNumber' | transloco" [placeholder]="'common.enterRoomNumber' | transloco" [value]="row.number" (valueChange)="patchManualRow($index, 'number', $event)" />
                     </div>
                     @if (bf.rows.length > 1) {
                       <button
@@ -335,7 +335,7 @@
               </button>
             </div>
           } @else {
-            <hh-input [label]="'hostRooms.roomNumbersCommaSeparated' | transloco" placeholder="101, 102, 103A, 104" [value]="bf.custom" (valueChange)="patchBulk('custom', $event)" />
+            <hh-input [label]="'hostRooms.roomNumbersCommaSeparated' | transloco" [placeholder]="'common.enterRoomNumbers' | transloco" [value]="bf.custom" (valueChange)="patchBulk('custom', $event)" />
           }
         </div>
 
@@ -436,13 +436,13 @@
         </div>
         <hh-input
           [label]="'hostRooms.roomNumber' | transloco"
-          placeholder="e.g. 101"
+          [placeholder]="'common.enterRoomNumber' | transloco"
           [value]="f.number"
           (valueChange)="patch('number', $event)"
         />
         <hh-input
           [label]="'hostRooms.floor' | transloco"
-          [placeholder]="'hostRooms.eGGround12' | transloco"
+          [placeholder]="'common.enterFloor' | transloco"
           [value]="f.floor"
           (valueChange)="patch('floor', $event)"
         />
