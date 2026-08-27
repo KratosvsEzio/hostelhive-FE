@@ -45,7 +45,7 @@
         hh-button
         color="success"
         size="sm"
-        [disabled]="uploading() || approving() || !!decision()"
+        [disabled]="!listingReady() || uploading() || approving() || !!decision()"
         (click)="approve()"
       >
         {{ approving() ? 'Approving…' : 'Approve & publish' }}

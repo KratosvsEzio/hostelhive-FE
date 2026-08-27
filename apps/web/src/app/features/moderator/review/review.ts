@@ -2,7 +2,6 @@
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
   computed,
   effect,
   inject,
@@ -121,11 +120,6 @@ export class Review {
   );
   protected readonly photos = signal<ReviewPhoto[]>([]);
 
-  /** Hidden <input type=file> in the template; opened to pick a device image. */
-  private readonly fileInput =
-    viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
-  /** The photo to overwrite when the picker returns; null = append a new photo. */
-  private readonly replaceTarget = signal<ReviewPhoto | null>(null);
   /** True when at least one photo upload is in progress. */
   /** The form owns the uploads; this screen only needs to know not to save mid-flight. */
   protected readonly uploading = computed(() => this.hostelForm()?.uploading() ?? false);
@@ -186,6 +180,14 @@ export class Review {
   protected readonly saveAttempted = signal(false);
 
   /**
+   * Whether there is a listing on screen to act on.
+   *
+   * Approve & publish lives in the page header, which renders while the listing is still
+   * loading and again if it fails to load. Neither state has a form behind it, so neither
+   * has anything to validate.
+   */
+  protected readonly listingReady = computed(() => !!this.hostelForm());
+  /**
    * What stands between this listing and Approve & publish.
    *
    * The field rules are the form's — one definition, asked of a record rather than a draft
@@ -196,7 +198,11 @@ export class Review {
    */
   protected readonly validationErrors = computed<string[]>(() => {
     const form = this.hostelForm();
-    if (!form) return [];
+    // No form on screen means the listing is still loading, or failed to load. Returning
+    // "nothing wrong" there would let Approve & publish go through on a listing nobody has
+    // seen — the button sits in the page header and renders in every state, including the
+    // error one. Fail closed: an unanswerable question is not a pass.
+    if (!form) return ['The listing has not finished loading.'];
     const errs = Object.values(form.fieldErrors()).filter(
       (m): m is string => typeof m === 'string',
     );
@@ -271,13 +277,7 @@ export class Review {
     });
   }
 
-  /** Per-photo Replace → pick a device image to overwrite this photo. */
-  protected replace(photo: ReviewPhoto): void {
-    this.replaceTarget.set(photo);
-    this.fileInput().nativeElement.click();
-  }
 
-  private static readonly MAX_PHOTOS = 10;
   protected approve(): void {
     this.saveAttempted.set(true);
     if (this.validationErrors().length) {
