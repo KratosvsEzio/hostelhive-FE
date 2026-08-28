@@ -1203,7 +1203,6 @@
     "checkIn": "Nhận phòng",
     "checkOut": "Trả phòng",
     "guests": "Khách",
-    "payableNow": "Phải trả ngay",
     "youLlNeedAnAccount": "Bạn cần một tài khoản để hoàn tất đặt phòng.",
     "chooseYourRoom": "Chọn phòng của bạn",
     "add": "Thêm",
@@ -1383,9 +1382,16 @@
     "rolesCount": "Vai trò · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} thanh toán tại chỗ",
     "sleepsN": "Ngủ {{count}} người",
-    "taxIncluded": "Đã gồm thuế"
+    "taxIncluded": "Đã gồm thuế",
+    "payAtTheProperty": "Thanh toán tại nhà nghỉ — hiện chưa thu khoản nào",
+    "reviewYourBooking": "Xem lại đặt phòng",
+    "theHostelWillConfirm": "Nhà nghỉ sẽ xác nhận đặt phòng của bạn. Hiện chưa thu khoản nào.",
+    "confirmBooking": "Xác nhận đặt phòng",
+    "yourStay": "Kỳ lưu trú của bạn",
+    "bookingSent": "Đã gửi đặt phòng",
+    "weLlEmailYouWhenConfirmed": "Chúng tôi sẽ gửi email ngay khi nhà nghỉ xác nhận.",
+    "couldnTBook": "Không thể hoàn tất đặt phòng"
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",

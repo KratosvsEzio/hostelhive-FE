@@ -1198,7 +1198,6 @@
     "checkIn": "Ankomst",
     "checkOut": "Afrejse",
     "guests": "Gæster",
-    "payableNow": "Betales nu",
     "youLlNeedAnAccount": "Du skal bruge en konto for at gennemføre en booking.",
     "chooseYourRoom": "Vælg dit værelse",
     "add": "Tilføj",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Roller · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} betales på stedet",
     "sleepsN": "Plads til {{count}}",
-    "taxIncluded": "Inkl. skat"
+    "taxIncluded": "Inkl. skat",
+    "payAtTheProperty": "Betales på vandrerhjemmet — der trækkes intet nu",
+    "reviewYourBooking": "Gennemgå din booking",
+    "theHostelWillConfirm": "Vandrerhjemmet bekræfter din booking. Der trækkes intet nu.",
+    "confirmBooking": "Bekræft booking",
+    "yourStay": "Dit ophold",
+    "bookingSent": "Booking sendt",
+    "weLlEmailYouWhenConfirmed": "Vi sender en mail, så snart vandrerhjemmet bekræfter.",
+    "couldnTBook": "Bookingen kunne ikke gennemføres"
   },
   "states": {
     "nothingHereYet": "Der er intet her endnu",

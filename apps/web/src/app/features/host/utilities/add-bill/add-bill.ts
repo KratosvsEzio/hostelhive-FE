@@ -33,7 +33,7 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { splitByDays, SplitRow } from '../split';
-import { localToday } from '@util/api-date';
+import { localDay } from '@util/api-date';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
@@ -88,7 +88,7 @@ export class AddBill {
   protected readonly dueDateInput = signal<string | null>((() => {
     const d = new Date();
     d.setDate(d.getDate() + 5);
-    return localToday(d);
+    return localDay(d);
   })());
   protected readonly submitting = signal(false);
   protected readonly submitError = signal(false);
@@ -424,9 +424,9 @@ export class AddBill {
     // Date-only, matching what the invoice form sends for these same fields. A full
     // toISOString() would convert the local day to UTC and land the bill a day early for
     // anyone east of UTC — 1 Sep in +05:00 serialises as 2026-08-31T19:00Z.
-    const issuedDate = localToday(new Date(year, month, 1));
+    const issuedDate = localDay(new Date(year, month, 1));
     const dueDateInput = this.dueDateInput();
-    const dueDate = dueDateInput ?? localToday(new Date(year, month + 1, 0));
+    const dueDate = dueDateInput ?? localDay(new Date(year, month + 1, 0));
     const rate = isElec ? (Number(this.rateInput()) || 0) : 0;
 
     const body = {

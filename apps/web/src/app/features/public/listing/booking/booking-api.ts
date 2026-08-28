@@ -6,6 +6,7 @@ import {
   ApiCancellationQuote,
   ApiHold,
   ApiHoldLine,
+  ApiBookingRequest,
   ApiHostBookingRequest,
   ApiHostCancellationQuote,
   ApiCalendarDay,
@@ -128,33 +129,75 @@ export class BookingApi {
   }
 
   /**
-   * `POST /api/bookings` — converts a hold into a booking.
+   * `POST /api/bookings` — a guest booking rooms from a listing page.
    *
-   * Fails whole rather than part-fulfilling when the hold has lapsed. Booking what is left
-   * charges for a basket the guest never agreed to, which is a consent problem before it is a
-   * UX one.
+   * **Nothing is paid online.** The guest reviews a summary, confirms, and the booking exists;
+   * the money is settled with the hostel. So it lands `unconfirmed` with `deposit: 0`, which
+   * is what those two words already mean here — a booking with no money behind it and no
+   * cancellation schedule that pays out. The host confirms it, exactly as they confirm the
+   * walk-ins they write down themselves.
+   *
+   * Priced here rather than taken from the request. The basket computes a total to show the
+   * guest, but a total that arrives from a browser is a number the guest can edit, and this
+   * one decides what a hostel is owed.
+   *
+   * Availability is checked before anything is created. Overselling a bed is discovered by
+   * the person standing in reception, so a booking that cannot be honoured is refused whole
+   * rather than part-filled — half a basket is not what anybody agreed to.
    */
-  book(holdId: string, context: BookingContext): Observable<ApiBooking> {
-    const hold = this.holds.get(holdId);
-    if (!hold || hold.expiresAt < this.now()) {
-      return throwError(() => new Error('Your hold expired before payment completed.'));
+  requestBooking(req: ApiBookingRequest): Observable<ApiBooking> {
+    if (!req.hostel_id) return throwError(() => new Error('hostel_id is required'));
+    if (req.check_out <= req.check_in) {
+      return throwError(() => new Error('check_out must be after check_in'));
     }
+    if (!req.lines.length) return throwError(() => new Error('Pick at least one room.'));
+
+    const lines: ApiBookingLine[] = [];
+    for (const want of req.lines) {
+      const offer = ROOM_OFFERS.find((o) => o.id === want.room_id);
+      if (!offer) return throwError(() => new Error('That room is no longer available.'));
+      const free =
+        offer.available -
+        this.heldByOthers(offer.id) -
+        this.bookedUnits(offer.id, req.check_in, req.check_out);
+      if (want.quantity > free) {
+        return throwError(
+          () => new Error(`Only ${Math.max(0, free)} left of ${offer.title} for those dates.`),
+        );
+      }
+      lines.push({
+        room_id: offer.id,
+        room_title: offer.title,
+        room_type: offer.kind,
+        quantity: want.quantity,
+        unit_price: offer.discountedPrice ?? offer.actualPrice,
+        actual_price: offer.actualPrice,
+      });
+    }
+
+    // Nights, not dates: a 1–3 Sept stay is two nights. See `hostCreateBooking`.
+    const nights = Math.max(
+      1,
+      Math.round(
+        (new Date(req.check_out).getTime() - new Date(req.check_in).getTime()) / 86_400_000,
+      ),
+    );
+
     const booking: ApiBooking = {
       id: this.id('bkg'),
-      hostel_id: context.hostelId,
-      hostel_name: context.hostelName,
-      check_in: context.checkIn,
-      check_out: context.checkOut,
-      guests: context.guests,
-      lines: context.lines,
-      total: context.total,
-      deposit: context.deposit,
-      status: 'confirmed',
+      hostel_id: req.hostel_id,
+      hostel_name: '',
+      check_in: req.check_in,
+      check_out: req.check_out,
+      guests: req.guests,
+      lines,
+      total: lines.reduce((n, l) => n + l.unit_price * l.quantity * nights, 0),
+      deposit: 0, // nothing is taken online — see above
+      status: 'unconfirmed',
       created_at: new Date(this.now()).toISOString(),
       cancellation: null,
     };
     this.bookings.update((all) => [booking, ...all]);
-    this.holds.delete(holdId);
     return of(booking).pipe(delay(BookingApi.LAG));
   }
 

@@ -371,6 +371,19 @@
               (book)="startBooking()"
               (chooseRoom)="onChooseRoom()"
             />
+
+            <!-- The last screen before the booking exists. Rendered beside the rail rather
+                 than at the page root so it shares the basket instance this page provides. -->
+            @if (summaryOpen()) {
+              <hh-booking-summary
+                [currency]="l.currency"
+                [hostelName]="l.name"
+                [submitting]="booking()"
+                [error]="bookingError()"
+                (confirmed)="confirmBooking()"
+                (dismissed)="dismissSummary()"
+              />
+            }
           }
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">

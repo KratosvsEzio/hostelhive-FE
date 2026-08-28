@@ -1203,7 +1203,6 @@
     "checkIn": "Заезд",
     "checkOut": "Выезд",
     "guests": "Гости",
-    "payableNow": "К оплате сейчас",
     "youLlNeedAnAccount": "Для завершения бронирования нужен аккаунт.",
     "chooseYourRoom": "Выберите комнату",
     "add": "Добавить",
@@ -1383,9 +1382,16 @@
     "rolesCount": "Роли · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} к оплате на месте",
     "sleepsN": "Спальных мест: {{count}}",
-    "taxIncluded": "Налог включён"
+    "taxIncluded": "Налог включён",
+    "payAtTheProperty": "Оплата в хостеле — сейчас ничего не списывается",
+    "reviewYourBooking": "Проверьте бронирование",
+    "theHostelWillConfirm": "Хостел подтвердит бронирование. Сейчас ничего не списывается.",
+    "confirmBooking": "Подтвердить бронирование",
+    "yourStay": "Ваше проживание",
+    "bookingSent": "Бронирование отправлено",
+    "weLlEmailYouWhenConfirmed": "Мы напишем вам, как только хостел подтвердит бронирование.",
+    "couldnTBook": "Не удалось завершить бронирование"
   },
   "states": {
     "nothingHereYet": "Здесь пока пусто",

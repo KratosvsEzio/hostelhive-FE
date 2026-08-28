@@ -1198,7 +1198,6 @@
     "checkIn": "Check-in",
     "checkOut": "Check-out",
     "guests": "Ospiti",
-    "payableNow": "Da pagare ora",
     "youLlNeedAnAccount": "Ti servirà un account per completare una prenotazione.",
     "chooseYourRoom": "Scegli la tua camera",
     "add": "Aggiungi",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Ruoli · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} da pagare in struttura",
     "sleepsN": "Posti letto {{count}}",
-    "taxIncluded": "Tasse incluse"
+    "taxIncluded": "Tasse incluse",
+    "payAtTheProperty": "Si paga in ostello: non viene addebitato nulla adesso",
+    "reviewYourBooking": "Controlla la tua prenotazione",
+    "theHostelWillConfirm": "L'ostello confermerà la prenotazione. Non viene addebitato nulla adesso.",
+    "confirmBooking": "Conferma prenotazione",
+    "yourStay": "Il tuo soggiorno",
+    "bookingSent": "Prenotazione inviata",
+    "weLlEmailYouWhenConfirmed": "Ti scriveremo appena l'ostello avrà confermato.",
+    "couldnTBook": "Impossibile completare la prenotazione"
   },
   "states": {
     "nothingHereYet": "Ancora nulla qui",

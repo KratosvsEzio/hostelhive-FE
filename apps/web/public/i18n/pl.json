@@ -1203,7 +1203,6 @@
     "checkIn": "Zameldowanie",
     "checkOut": "Wymeldowanie",
     "guests": "Goście",
-    "payableNow": "Do zapłaty teraz",
     "youLlNeedAnAccount": "Do dokończenia rezerwacji potrzebujesz konta.",
     "chooseYourRoom": "Wybierz swój pokój",
     "add": "Dodaj",
@@ -1383,9 +1382,16 @@
     "rolesCount": "Role · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} do zapłaty na miejscu",
     "sleepsN": "Dla {{count}} osób",
-    "taxIncluded": "Podatek wliczony"
+    "taxIncluded": "Podatek wliczony",
+    "payAtTheProperty": "Płatność w hostelu — teraz nic nie pobieramy",
+    "reviewYourBooking": "Sprawdź rezerwację",
+    "theHostelWillConfirm": "Hostel potwierdzi rezerwację. Teraz nic nie pobieramy.",
+    "confirmBooking": "Potwierdź rezerwację",
+    "yourStay": "Twój pobyt",
+    "bookingSent": "Rezerwacja wysłana",
+    "weLlEmailYouWhenConfirmed": "Wyślemy e-mail, gdy hostel potwierdzi rezerwację.",
+    "couldnTBook": "Nie udało się dokończyć rezerwacji"
   },
   "states": {
     "nothingHereYet": "Jeszcze nic tu nie ma",

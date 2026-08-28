@@ -1198,7 +1198,6 @@
     "checkIn": "Incheckning",
     "checkOut": "Utcheckning",
     "guests": "Gäster",
-    "payableNow": "Att betala nu",
     "youLlNeedAnAccount": "Du behöver ett konto för att slutföra en bokning.",
     "chooseYourRoom": "Välj ditt rum",
     "add": "Lägg till",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Roller · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} betalas på plats",
     "sleepsN": "Plats för {{count}}",
-    "taxIncluded": "Inkl. skatt"
+    "taxIncluded": "Inkl. skatt",
+    "payAtTheProperty": "Betalas på vandrarhemmet — inget dras nu",
+    "reviewYourBooking": "Granska din bokning",
+    "theHostelWillConfirm": "Vandrarhemmet bekräftar din bokning. Inget dras nu.",
+    "confirmBooking": "Bekräfta bokning",
+    "yourStay": "Din vistelse",
+    "bookingSent": "Bokning skickad",
+    "weLlEmailYouWhenConfirmed": "Vi mejlar dig så snart vandrarhemmet bekräftar.",
+    "couldnTBook": "Bokningen kunde inte slutföras"
   },
   "states": {
     "nothingHereYet": "Inget här ännu",

@@ -1203,7 +1203,6 @@
     "checkIn": "چیک ان",
     "checkOut": "چیک آؤٹ",
     "guests": "مہمان",
-    "payableNow": "ابھی قابل ادائیگی",
     "youLlNeedAnAccount": "بکنگ مکمل کرنے کے لیے آپ کو اکاؤنٹ کی ضرورت ہوگی۔",
     "chooseYourRoom": "اپنا کمرہ منتخب کریں",
     "add": "شامل کریں",
@@ -1383,9 +1382,16 @@
     "rolesCount": "کردار · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} جائیداد پر واجب الادا",
     "sleepsN": "{{count}} افراد کے لیے",
-    "taxIncluded": "ٹیکس شامل"
+    "taxIncluded": "ٹیکس شامل",
+    "payAtTheProperty": "ادائیگی ہاسٹل کو کی جائے گی — ابھی کچھ وصول نہیں کیا جائے گا",
+    "reviewYourBooking": "اپنی بکنگ کا جائزہ لیں",
+    "theHostelWillConfirm": "ہاسٹل آپ کی بکنگ کی تصدیق کرے گا۔ ابھی کوئی رقم وصول نہیں کی جائے گی۔",
+    "confirmBooking": "بکنگ کی تصدیق کریں",
+    "yourStay": "آپ کا قیام",
+    "bookingSent": "بکنگ بھیج دی گئی",
+    "weLlEmailYouWhenConfirmed": "جیسے ہی ہاسٹل تصدیق کرے گا، ہم آپ کو ای میل کر دیں گے۔",
+    "couldnTBook": "بکنگ مکمل نہیں ہو سکی"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",

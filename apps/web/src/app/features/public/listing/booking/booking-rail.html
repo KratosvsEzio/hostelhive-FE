@@ -105,14 +105,11 @@
           {{ currency() }} {{ basket.total() | number: '1.2-2' }}
         </span>
       </div>
-      <div class="mt-1 flex items-baseline justify-between">
-        <span class="font-semibold text-emerald-700">{{ 'publicListing.payableNow' | transloco }}</span>
-        <span class="font-semibold text-emerald-700 tabular-nums">
-          {{ currency() }} {{ basket.deposit() | number: '1.2-2' }}
-        </span>
-      </div>
-      <p class="mt-1 text-xs text-ink-500 tabular-nums">
-        {{ 'publicBooking.dueAtProperty' | transloco: { amount: currency() + ' ' + (basket.balanceAtProperty() | number: '1.2-2') } }}
+      <!-- Nothing is taken online any more, so there is no second figure to reconcile
+           against the first. What the stay costs is what this says, and it is settled with
+           the hostel. -->
+      <p class="mt-1 text-xs text-ink-500">
+        {{ 'publicBooking.payAtTheProperty' | transloco }}
       </p>
     </div>
 

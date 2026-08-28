@@ -21,9 +21,15 @@ export function offsetOf(value: string): string | null {
   return m && value.length > 10 ? `${m[1]}${m[2]}${m[3]}` : null;
 }
 
-/** Today as `YYYY-MM-DD` from local parts. `toISOString()` would give the UTC day, which
- *  is yesterday for any viewer west of UTC. */
-export function localToday(date: Date = new Date()): string {
+/**
+ * A date as `YYYY-MM-DD`, read from its local parts. Defaults to today.
+ *
+ * `toISOString()` would give the UTC day, which is yesterday for any viewer west of UTC —
+ * so a stay starting today would be sent as starting yesterday.
+ *
+ * Was `localToday`, which four of its six callers already contradicted by passing a date.
+ */
+export function localDay(date: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }

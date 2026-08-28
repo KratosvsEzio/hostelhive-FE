@@ -1,10 +1,8 @@
 import { Injectable, computed, signal } from '@angular/core';
 import {
   BasketLine,
-  DEPOSIT_RATE,
   GuestFit,
   RoomOffer,
-  depositFor,
   guestFit,
   lineFor,
   lineTotal,
@@ -54,16 +52,11 @@ export class BookingBasket {
     return this._lines().reduce((sum, l) => sum + lineTotalUndiscounted(l, nights), 0);
   });
 
-  /** Paid online now; the balance falls due at the property. */
-  readonly deposit = computed(() => depositFor(this.total(), DEPOSIT_RATE));
-
-  readonly balanceAtProperty = computed(() => this.total() - this.deposit());
-
   /** Drives the "3 of 4 guests placed" tally, and gates checkout. */
   readonly fit = computed<GuestFit>(() => guestFit(this._lines(), this.guests()));
 
   /**
-   * Whether the basket can be paid for.
+   * Whether the basket can be booked.
    *
    * Dates and a workable seating arrangement, both. A basket that seats everybody but has no
    * dates has no nights to price, and would total zero.

@@ -1203,7 +1203,6 @@
     "checkIn": "Check-in",
     "checkOut": "Check-out",
     "guests": "Tamu",
-    "payableNow": "Dibayar sekarang",
     "youLlNeedAnAccount": "Anda memerlukan akun untuk menyelesaikan pemesanan.",
     "chooseYourRoom": "Pilih kamar Anda",
     "add": "Tambah",
@@ -1383,9 +1382,16 @@
     "rolesCount": "Peran · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} dibayar di properti",
     "sleepsN": "Untuk {{count}} orang",
-    "taxIncluded": "Termasuk pajak"
+    "taxIncluded": "Termasuk pajak",
+    "payAtTheProperty": "Dibayar di hostel — tidak ada tagihan sekarang",
+    "reviewYourBooking": "Periksa pemesanan Anda",
+    "theHostelWillConfirm": "Hostel akan mengonfirmasi pemesanan Anda. Tidak ada tagihan sekarang.",
+    "confirmBooking": "Konfirmasi pemesanan",
+    "yourStay": "Menginap Anda",
+    "bookingSent": "Pemesanan terkirim",
+    "weLlEmailYouWhenConfirmed": "Kami akan mengirim email begitu hostel mengonfirmasi.",
+    "couldnTBook": "Pemesanan tidak dapat diselesaikan"
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",

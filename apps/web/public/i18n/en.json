@@ -1095,9 +1095,16 @@
     "weReWorkingOnSome": "We're working on some great content about student life, hostel tips, and city guides across Pakistan. Stay tuned!"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} due at the property",
     "sleepsN": "Sleeps {{count}}",
-    "taxIncluded": "Tax included"
+    "taxIncluded": "Tax included",
+    "payAtTheProperty": "Settled with the hostel — nothing is charged now",
+    "reviewYourBooking": "Review your booking",
+    "theHostelWillConfirm": "The hostel will confirm your booking. Nothing is charged now.",
+    "confirmBooking": "Confirm booking",
+    "yourStay": "Your stay",
+    "bookingSent": "Booking sent",
+    "weLlEmailYouWhenConfirmed": "We'll email you as soon as the hostel confirms it.",
+    "couldnTBook": "Couldn't complete the booking"
   },
   "publicCareers": {
     "joinUsInBuildingPakistan": "Join us in building Pakistan's #1 hostel platform",
@@ -1159,7 +1166,6 @@
     "checkIn": "Check in",
     "checkOut": "Check out",
     "guests": "Guests",
-    "payableNow": "Payable now",
     "youLlNeedAnAccount": "You'll need an account to complete a booking.",
     "chooseYourRoom": "Choose your room",
     "add": "Add",

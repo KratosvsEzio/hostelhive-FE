@@ -1198,7 +1198,6 @@
     "checkIn": "تسجيل الوصول",
     "checkOut": "تسجيل المغادرة",
     "guests": "الضيوف",
-    "payableNow": "المستحق الآن",
     "youLlNeedAnAccount": "ستحتاج إلى حساب لإتمام الحجز.",
     "chooseYourRoom": "اختر غرفتك",
     "add": "إضافة",
@@ -1378,9 +1377,16 @@
     "rolesCount": "الأدوار · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} مستحقة عند العقار",
     "sleepsN": "تتسع لـ{{count}}",
-    "taxIncluded": "شامل الضريبة"
+    "taxIncluded": "شامل الضريبة",
+    "payAtTheProperty": "الدفع يتم في النزل — لا يُخصم أي مبلغ الآن",
+    "reviewYourBooking": "راجع حجزك",
+    "theHostelWillConfirm": "سيؤكد النزل حجزك. لا يُخصم أي مبلغ الآن.",
+    "confirmBooking": "تأكيد الحجز",
+    "yourStay": "إقامتك",
+    "bookingSent": "تم إرسال الحجز",
+    "weLlEmailYouWhenConfirmed": "سنراسلك عبر البريد الإلكتروني فور تأكيد النزل للحجز.",
+    "couldnTBook": "تعذّر إتمام الحجز"
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",

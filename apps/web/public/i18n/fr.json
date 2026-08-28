@@ -1198,7 +1198,6 @@
     "checkIn": "Arrivée",
     "checkOut": "Départ",
     "guests": "Voyageurs",
-    "payableNow": "À payer maintenant",
     "youLlNeedAnAccount": "Vous aurez besoin d’un compte pour finaliser une réservation.",
     "chooseYourRoom": "Choisissez votre chambre",
     "add": "Ajouter",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Rôles · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} à régler sur place",
     "sleepsN": "Couchage {{count}}",
-    "taxIncluded": "Taxes incluses"
+    "taxIncluded": "Taxes incluses",
+    "payAtTheProperty": "Réglé auprès de l'auberge — rien n'est débité maintenant",
+    "reviewYourBooking": "Vérifiez votre réservation",
+    "theHostelWillConfirm": "L'auberge confirmera votre réservation. Rien n'est débité maintenant.",
+    "confirmBooking": "Confirmer la réservation",
+    "yourStay": "Votre séjour",
+    "bookingSent": "Réservation envoyée",
+    "weLlEmailYouWhenConfirmed": "Nous vous enverrons un e-mail dès que l'auberge l'aura confirmée.",
+    "couldnTBook": "Impossible de finaliser la réservation"
   },
   "states": {
     "nothingHereYet": "Rien pour l’instant",

@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
 import { AMENITIES, AccommodationType } from '@hostelhive/data-access';
+import { translate } from '@jsverse/transloco';
 import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelsApi, ListingDetailApi } from '@services';
@@ -22,8 +23,12 @@ import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { periodForAccommodation } from '@util/pricing-period';
+import { localDay } from '@util/api-date';
+import { NotificationService } from '@core/notification.service';
 import { BookingBasket } from '../booking/booking-basket';
 import { BookingRail } from '../booking/booking-rail';
+import { BookingSummary } from '../booking/booking-summary';
+import { BookingApi } from '../booking/booking-api';
 import { RoomPicker } from '../booking/room-picker';
 import { ROOM_OFFERS } from '../booking/room-offers.fixture';
 import { canBookOnline } from '../booking/room-offer';
@@ -99,6 +104,7 @@ const ROOM_TINTS = [
     CurrencyNamePipe,
     RoomPicker,
     BookingRail,
+    BookingSummary,
   ],
   // Scoped to this page: a basket belongs to one hostel, and leaving disposes it — which is
   // also what should release the hold once holds exist.
@@ -117,6 +123,9 @@ export class ListingDetail {
   protected readonly mobile = inject(MobileApp);
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
+  private readonly bookingApi = inject(BookingApi);
+  protected readonly basket = inject(BookingBasket);
+  private readonly notifications = inject(NotificationService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
   private readonly i18n = inject(TranslocoService);
@@ -220,11 +229,22 @@ export class ListingDetail {
    */
   protected readonly roomOffers = computed(() => (this.bookingEnabled() ? ROOM_OFFERS : []));
 
+  // ── booking ────────────────────────────────────────────────────────────────
+
+  /** The summary modal, shown between pressing Book and the booking existing. */
+  protected readonly summaryOpen = signal(false);
+  protected readonly booking = signal(false);
+  protected readonly bookingError = signal('');
+
   /**
    * Book now. Browsing and building a basket are open to anyone; completing a booking is not.
    *
    * Anonymous seekers go to the auth page and come back to this listing, basket and all —
    * which is why the basket lives in the page rather than in a query string.
+   *
+   * This opens the summary rather than booking. Nothing is paid online, so pressing Book is
+   * the whole commitment — and the rail it was pressed from may be scrolled out of sight and
+   * unread since the dates were set. See {@link BookingSummary}.
    */
   protected startBooking(): void {
     if (!this.session.isAuthenticated()) {
@@ -233,8 +253,59 @@ export class ListingDetail {
       });
       return;
     }
-    // TODO: place the hold, then payment. Both need backend endpoints that do not exist yet
-    // (see the Rooms & Booking PRD, sections 04 and 06).
+    this.bookingError.set('');
+    this.summaryOpen.set(true);
+  }
+
+  protected dismissSummary(): void {
+    // Not while the request is in flight: the booking may already exist by the time the
+    // modal closes, and a guest who saw it vanish would reasonably try again.
+    if (this.booking()) return;
+    this.summaryOpen.set(false);
+  }
+
+  /**
+   * Confirmed in the summary — make the booking.
+   *
+   * The basket is not cleared on failure. Whatever went wrong, the rooms the guest picked are
+   * still the rooms they want, and making them choose again is a second punishment for the
+   * first problem.
+   */
+  protected confirmBooking(): void {
+    const listing = this.state().data;
+    const from = this.basket.checkIn();
+    const to = this.basket.checkOut();
+    if (!listing || !from || !to || this.booking()) return;
+
+    this.booking.set(true);
+    this.bookingError.set('');
+    this.bookingApi
+      .requestBooking({
+        hostel_id: String(listing.id),
+        check_in: localDay(from),
+        check_out: localDay(to),
+        guests: this.basket.guests(),
+        lines: this.basket.lines().map((l) => ({ room_id: l.roomId, quantity: l.quantity })),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.booking.set(false);
+          this.summaryOpen.set(false);
+          this.basket.clear();
+          this.notifications.success(
+            translate('publicBooking.bookingSent'),
+            translate('publicBooking.weLlEmailYouWhenConfirmed'),
+          );
+        },
+        error: (err: Error) => {
+          this.booking.set(false);
+          // Shown in the modal rather than as a toast: the guest is standing in front of the
+          // thing that failed, and "only 2 left of that room" is an instruction about the
+          // basket they are looking at.
+          this.bookingError.set(err?.message || translate('publicBooking.couldnTBook'));
+        },
+      });
   }
 
   protected readonly skeletons = [1, 2, 3];

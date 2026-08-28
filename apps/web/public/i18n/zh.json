@@ -1198,7 +1198,6 @@
     "checkIn": "入住",
     "checkOut": "退房",
     "guests": "入住人数",
-    "payableNow": "现在应付",
     "youLlNeedAnAccount": "完成预订需要一个账户。",
     "chooseYourRoom": "选择您的房间",
     "add": "添加",
@@ -1378,9 +1377,16 @@
     "rolesCount": "角色 · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "到店支付 {{amount}}",
     "sleepsN": "可住 {{count}} 人",
-    "taxIncluded": "含税"
+    "taxIncluded": "含税",
+    "payAtTheProperty": "费用与旅舍直接结算 — 现在不会收取任何费用",
+    "reviewYourBooking": "确认您的预订",
+    "theHostelWillConfirm": "旅舍将确认您的预订。现在不会收取任何费用。",
+    "confirmBooking": "确认预订",
+    "yourStay": "您的入住",
+    "bookingSent": "预订已提交",
+    "weLlEmailYouWhenConfirmed": "旅舍确认后我们会立即向您发送邮件。",
+    "couldnTBook": "无法完成预订"
   },
   "states": {
     "nothingHereYet": "这里还没有内容",

@@ -1198,7 +1198,6 @@
     "checkIn": "Érkezés",
     "checkOut": "Távozás",
     "guests": "Vendégek",
-    "payableNow": "Most fizetendő",
     "youLlNeedAnAccount": "Foglaláshoz fiókra lesz szükséged.",
     "chooseYourRoom": "Válaszd ki a szobád",
     "add": "Hozzáadás",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Szerepkörök · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} a helyszínen fizetendő",
     "sleepsN": "{{count}} fő részére",
-    "taxIncluded": "Adóval együtt"
+    "taxIncluded": "Adóval együtt",
+    "payAtTheProperty": "A szálláson fizetendő — most nem terhelünk semmit",
+    "reviewYourBooking": "Ellenőrizze a foglalást",
+    "theHostelWillConfirm": "A szállás visszaigazolja a foglalást. Most nem terhelünk semmit.",
+    "confirmBooking": "Foglalás megerősítése",
+    "yourStay": "Az Ön tartózkodása",
+    "bookingSent": "Foglalás elküldve",
+    "weLlEmailYouWhenConfirmed": "E-mailt küldünk, amint a szállás visszaigazolja.",
+    "couldnTBook": "A foglalás nem sikerült"
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",

@@ -1198,7 +1198,6 @@
     "checkIn": "चेक इन",
     "checkOut": "चेक आउट",
     "guests": "मेहमान",
-    "payableNow": "अभी देय",
     "youLlNeedAnAccount": "बुकिंग पूरी करने के लिए आपको खाता चाहिए।",
     "chooseYourRoom": "अपना कमरा चुनें",
     "add": "जोड़ें",
@@ -1378,9 +1377,16 @@
     "rolesCount": "भूमिकाएँ · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} संपत्ति पर देय",
     "sleepsN": "{{count}} लोगों के लिए",
-    "taxIncluded": "कर सहित"
+    "taxIncluded": "कर सहित",
+    "payAtTheProperty": "भुगतान हॉस्टल को किया जाएगा — अभी कुछ नहीं लिया जाएगा",
+    "reviewYourBooking": "अपनी बुकिंग की समीक्षा करें",
+    "theHostelWillConfirm": "हॉस्टल आपकी बुकिंग की पुष्टि करेगा। अभी कोई शुल्क नहीं लिया जाएगा।",
+    "confirmBooking": "बुकिंग की पुष्टि करें",
+    "yourStay": "आपका ठहराव",
+    "bookingSent": "बुकिंग भेज दी गई",
+    "weLlEmailYouWhenConfirmed": "हॉस्टल की पुष्टि मिलते ही हम आपको ईमेल करेंगे।",
+    "couldnTBook": "बुकिंग पूरी नहीं हो सकी"
   },
   "states": {
     "nothingHereYet": "अभी यहाँ कुछ नहीं",

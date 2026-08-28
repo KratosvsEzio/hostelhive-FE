@@ -1198,7 +1198,6 @@
     "checkIn": "Inchecken",
     "checkOut": "Uitchecken",
     "guests": "Gasten",
-    "payableNow": "Nu te betalen",
     "youLlNeedAnAccount": "Je hebt een account nodig om een boeking te voltooien.",
     "chooseYourRoom": "Kies je kamer",
     "add": "Toevoegen",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Rollen · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} te betalen op locatie",
     "sleepsN": "Slaapplaats voor {{count}}",
-    "taxIncluded": "incl. belasting"
+    "taxIncluded": "incl. belasting",
+    "payAtTheProperty": "Je betaalt in het hostel — er wordt nu niets afgeschreven",
+    "reviewYourBooking": "Controleer je boeking",
+    "theHostelWillConfirm": "Het hostel bevestigt je boeking. Er wordt nu niets afgeschreven.",
+    "confirmBooking": "Boeking bevestigen",
+    "yourStay": "Je verblijf",
+    "bookingSent": "Boeking verzonden",
+    "weLlEmailYouWhenConfirmed": "We mailen je zodra het hostel het bevestigt.",
+    "couldnTBook": "Boeking kon niet worden voltooid"
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",

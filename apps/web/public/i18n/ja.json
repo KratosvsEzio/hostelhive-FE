@@ -1198,7 +1198,6 @@
     "checkIn": "チェックイン",
     "checkOut": "チェックアウト",
     "guests": "ゲスト",
-    "payableNow": "今回のお支払い",
     "youLlNeedAnAccount": "予約を完了するにはアカウントが必要です。",
     "chooseYourRoom": "部屋を選ぶ",
     "add": "追加",
@@ -1378,9 +1377,16 @@
     "rolesCount": "ロール · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "現地払い {{amount}}",
     "sleepsN": "{{count}} 名",
-    "taxIncluded": "税込"
+    "taxIncluded": "税込",
+    "payAtTheProperty": "お支払いは宿泊施設で — 今は請求されません",
+    "reviewYourBooking": "予約内容の確認",
+    "theHostelWillConfirm": "宿泊施設が予約を確定します。今は請求されません。",
+    "confirmBooking": "予約を確定",
+    "yourStay": "ご滞在",
+    "bookingSent": "予約を送信しました",
+    "weLlEmailYouWhenConfirmed": "宿泊施設が確定次第、メールでお知らせします。",
+    "couldnTBook": "予約を完了できませんでした"
   },
   "states": {
     "nothingHereYet": "まだ何もありません",

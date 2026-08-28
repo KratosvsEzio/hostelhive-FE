@@ -1198,7 +1198,6 @@
     "checkIn": "Entrada",
     "checkOut": "Salida",
     "guests": "Huéspedes",
-    "payableNow": "A pagar ahora",
     "youLlNeedAnAccount": "Necesitarás una cuenta para completar una reserva.",
     "chooseYourRoom": "Elige tu habitación",
     "add": "Añadir",
@@ -1378,9 +1377,16 @@
     "rolesCount": "Roles · {{count}}"
   },
   "publicBooking": {
-    "dueAtProperty": "{{amount}} a pagar en el alojamiento",
     "sleepsN": "Para {{count}}",
-    "taxIncluded": "Impuestos incluidos"
+    "taxIncluded": "Impuestos incluidos",
+    "payAtTheProperty": "Se paga en el hostal: no se cobra nada ahora",
+    "reviewYourBooking": "Revisa tu reserva",
+    "theHostelWillConfirm": "El hostal confirmará tu reserva. No se cobra nada ahora.",
+    "confirmBooking": "Confirmar reserva",
+    "yourStay": "Tu estancia",
+    "bookingSent": "Reserva enviada",
+    "weLlEmailYouWhenConfirmed": "Te enviaremos un correo en cuanto el hostal lo confirme.",
+    "couldnTBook": "No se pudo completar la reserva"
   },
   "states": {
     "nothingHereYet": "Aún no hay nada aquí",
