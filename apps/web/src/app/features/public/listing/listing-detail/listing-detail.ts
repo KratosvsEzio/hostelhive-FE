@@ -22,7 +22,11 @@ import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
-import { periodForAccommodation } from '@util/pricing-period';
+import {
+  PricingPeriod,
+  periodForAccommodation,
+  periodFromBillingFrequency,
+} from '@util/pricing-period';
 import { localDay } from '@util/api-date';
 import { NotificationService } from '@core/notification.service';
 import { BookingBasket } from '../booking/booking-basket';
@@ -209,17 +213,33 @@ export class ListingDetail {
     return slug ? `/hostel/${slug}` : '/';
   });
 
-  /** The hostel's pricing cycle — one value for the whole property. */
-  protected readonly bookingPeriod = computed(() => {
+  /**
+   * The hostel's pricing cycle — one value for the whole property.
+   *
+   * **What it charges, not what its type implies.** This read `accommodationType` alone, which
+   * is a rule about what a backpacker hostel *usually* does — so a backpacker hostel that bills
+   * monthly was offered online booking, and a boys hostel that bills nightly was refused it.
+   * The serializer has said `billing_frequency` all along; nothing carried it this far.
+   *
+   * The accommodation type stays as the fallback, exactly as `periodForAccommodation` says it
+   * should be used: a payload that does not name a cycle is not evidence of a monthly one, and
+   * defaulting a backpacker hostel to monthly would silently close its booking path.
+   */
+  protected readonly bookingPeriod = computed<PricingPeriod>(() => {
     const l = this.state().data;
-    return l ? periodForAccommodation(l.accommodationType) : 'monthly';
+    if (!l) return 'monthly';
+    return (
+      periodFromBillingFrequency(l.billingFrequency) ??
+      periodForAccommodation(l.accommodationType)
+    );
   });
 
   /**
    * Whether this hostel offers online booking at all.
    *
    * Nightly only. A monthly hostel is a tenancy rather than a checkout, so it keeps the
-   * enquiry path — the picker and the rail simply do not render.
+   * enquiry path — the picker and the rail simply do not render, and {@link startBooking}
+   * is unreachable because nothing renders that can call it.
    */
   protected readonly bookingEnabled = computed(() => canBookOnline(this.bookingPeriod()));
 

@@ -43,6 +43,22 @@ export function periodForAccommodation(gender: string): PricingPeriod {
   return gender === 'backpacker' ? 'nightly' : 'monthly';
 }
 
+/**
+ * The backend's own answer, translated: `night` → `nightly`, `month` → `monthly`.
+ *
+ * `null` when the payload did not say, or said something this app does not know — which is
+ * the caller's cue to fall back to {@link periodForAccommodation} rather than to guess. The
+ * two are not interchangeable: the accommodation type is a rule about what a backpacker
+ * hostel *usually* does, and this is what one actually charges.
+ */
+export function periodFromBillingFrequency(
+  value: string | null | undefined,
+): PricingPeriod | null {
+  if (value === 'night') return 'nightly';
+  if (value === 'month') return 'monthly';
+  return null;
+}
+
 /** Short suffix for tight layouts (cards, table cells): `/mo` · `/night`. */
 export function periodSuffix(period: PricingPeriod): string {
   return period === 'nightly' ? '/night' : '/mo';

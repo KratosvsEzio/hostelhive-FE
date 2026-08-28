@@ -171,6 +171,13 @@ export interface HostelDetail {
    * serializer returns it — a blank field is the same thing the form showed before either way.
    */
   email?: string | null;
+  /**
+   * `month` | `night` — how this hostel charges, and therefore whether it can be booked by
+   * the night at all. Sent by the serializer; this contract never declared it, so the one
+   * screen that needed it reached in through a cast and everything else guessed from the
+   * accommodation type instead.
+   */
+  billing_frequency?: string | null;
   primary_phone: string;
   secondary_phone?: string | null;
   nearby_landmarks?: string | null;

@@ -544,7 +544,7 @@ export class HostelForm {
       propertyType: d.property_type ?? '',
       genderType: d.gender_type ?? '',
       billingFrequency:
-        (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
+        d.billing_frequency ?? 'month',
       currency: d.currency ?? DEFAULT_CURRENCY_CODE,
       offerIds: [...offerIds].sort(),
       email: d.email ?? '',
@@ -684,7 +684,7 @@ export class HostelForm {
       this.propertyType.set(d.property_type ?? '');
       this.genderType.set(d.gender_type ?? '');
       this.billingFrequency.set(
-        (d as typeof d & { billing_frequency?: string }).billing_frequency ?? 'month',
+        d.billing_frequency ?? 'month',
       );
       this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
       this.email.set(d.email ?? '');

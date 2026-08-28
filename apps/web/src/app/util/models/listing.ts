@@ -35,6 +35,8 @@ export interface Listing {
   area: string;
   city: string;
   accommodationType: AccommodationType;
+  /** `month` | `night` from the serializer, or absent. See `periodFromBillingFrequency`. */
+  billingFrequency?: string;
   verified: boolean;
   propertyType?: string; // display label from the BE enum ('Building', 'Apartment', 'Room', 'House')
   sharing: string[]; // ['2-sharing', '3-sharing']

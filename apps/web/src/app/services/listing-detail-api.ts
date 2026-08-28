@@ -67,6 +67,7 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     area: d.area ?? '',
     city: d.city ?? '',
     accommodationType: GENDER_MAP[d.gender_type] ?? 'coliving',
+    billingFrequency: d.billing_frequency ?? undefined,
     verified: d.status?.slug === 'active',
     sharing,
     amenities,
