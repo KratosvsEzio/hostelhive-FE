@@ -59,6 +59,24 @@
           (valueChange)="setGender($event)"
         />
       </div>
+      <!-- Contact details sit between what the property *is* and what it *costs*, rather
+           than below both in a grid of their own. They were create-only once, which meant
+           the two screens that edit a live listing — the hostel profile and the moderator’s
+           review — could neither see nor correct the details a seeker actually uses to reach
+           the place. A field the form writes once and never shows again is one nobody can fix. -->
+      <hh-input
+        [label]="'common.contactEmail' | transloco"
+        icon="ti-mail"
+        type="email"
+        [placeholder]="'common.enterEmail' | transloco"
+        [(value)]="email"
+        [error]="showValidation() ? (fieldErrors()['email'] ?? '') : ''"
+      />
+      <hh-phone-input
+        [label]="'common.primaryPhone' | transloco"
+        [(phone)]="phone"
+        [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
+      />
       <div>
         <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'hostelForm.currency' | transloco }}</label>
         <hh-currency-select [value]="currency()" (valueChange)="setCurrency($event)" />
@@ -103,26 +121,6 @@
           </p>
         }
       </div>
-    </div>
-
-    <!-- Shown on every mode. These were create-only, which meant the two screens that edit a
-         *live* listing — the hostel profile and the moderator's review — could not see or
-         correct the contact details a seeker actually uses to reach the place. A field the
-         form can write once and never show again is a field nobody can fix. -->
-    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <hh-input
-        [label]="'common.contactEmail' | transloco"
-        icon="ti-mail"
-        type="email"
-        [placeholder]="'common.enterEmail' | transloco"
-        [(value)]="email"
-        [error]="showValidation() ? (fieldErrors()['email'] ?? '') : ''"
-      />
-      <hh-phone-input
-        [label]="'common.primaryPhone' | transloco"
-        [(phone)]="phone"
-        [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
-      />
     </div>
 
     <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'common.description' | transloco }}</label>
