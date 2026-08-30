@@ -1,199 +1,265 @@
-<section class="mt-10" id="rooms">
-  <h2 class="font-display text-2xl font-semibold text-ink-900">{{ 'publicListing.chooseYourRoom' | transloco }}</h2>
+<!-- Carded like every other section on the listing. `mt-10` is gone with it: the page
+     column spaces its cards itself now, and a margin here would double that gap. -->
+<!-- `scroll-mt-24` is for the jump from the booking rail: the site header is `sticky
+     top-0`, and without a scroll margin `scrollIntoView` parks this section underneath
+     it — landing a seeker on a section whose title is behind the header. 24 is what the
+     sidebar already uses (`sticky top-24`) to clear the same bar. -->
+<section class="scroll-mt-24 rounded-2xl border border-ink-100 bg-white p-5 sm:p-6" id="rooms">
+  <h2 class="font-display text-2xl font-semibold text-ink-900">{{ 'listing.roomsAmpPricing' | transloco }}</h2>
 
-  @for (group of groups(); track group.kind) {
-    <div class="mt-6">
-      <h3 class="font-display text-lg font-semibold text-ink-900">{{ group.heading }}</h3>
+  <!-- One list, private first. The per-kind headings are gone — each card names its own
+       kind — but the order still carries the grouping.
 
-      @if (group.offers.length === 0) {
-        <!-- An empty group says so. A seeker cannot tell "there are none" from "they failed
-             to load" if the heading simply disappears. -->
-        <p class="mt-3 rounded-xl border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-500">
-          {{ group.emptyText }}
-        </p>
-      }
+       Empty means the hostel has entered no room types. Nothing is filtered out of this
+       list any more, so this cannot be a hostel whose rooms were all withheld. -->
+  @if (rows().length === 0) {
+    <p class="mt-4 rounded-xl border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-500">
+      {{ 'publicBooking.noRoomsListed' | transloco }}
+    </p>
+  }
 
-      @for (offer of group.offers; track offer.id) {
-        <article
-          class="mt-3 overflow-hidden rounded-2xl border transition"
-          [class.border-ink-100]="qty(offer) === 0"
-          [class.border-brand-300]="qty(offer) > 0"
-          [class.bg-white]="qty(offer) === 0"
-          [class.bg-brand-50]="qty(offer) > 0"
+  @for (row of rows(); track row.offer.id) {
+    @let offer = row.offer;
+    <article
+      class="mt-3 overflow-hidden rounded-2xl border transition"
+      [class.border-ink-100]="qty(offer) === 0"
+      [class.border-brand-300]="qty(offer) > 0"
+      [class.bg-white]="qty(offer) === 0"
+      [class.bg-brand-50]="qty(offer) > 0"
+    >
+      <div class="flex flex-col sm:flex-row">
+        <!-- Photo. The aspect ratio gives it height while the row is stacked; once it is
+             a row it stretches to whatever the details column ends up being, so the
+             three zones stay flush at the bottom. -->
+        <div
+          class="group/photo relative aspect-[4/3] shrink-0 overflow-hidden bg-ink-100 sm:aspect-auto sm:w-56"
         >
-          <div class="flex flex-col sm:flex-row">
-            <!-- Photo. The aspect ratio gives it height while the row is stacked; once it is
-                 a row it stretches to whatever the details column ends up being, so the
-                 three zones stay flush at the bottom. -->
+          @if (photosOf(offer).length) {
+            <!-- A sliding track rather than scroll-snap: the arrows have to drive it, and
+                 a scroll container can be left resting between two photos by a trackpad
+                 flick, which the dots then cannot describe. -->
             <div
-              class="group/photo relative aspect-[4/3] shrink-0 overflow-hidden bg-ink-100 sm:aspect-auto sm:w-56"
+              class="absolute inset-0 flex transition-transform duration-300 ease-out"
+              [style.transform]="'translateX(-' + photoIndex(offer) * 100 + '%)'"
             >
-              @if (photosOf(offer).length) {
-                <!-- A sliding track rather than scroll-snap: the arrows have to drive it, and
-                     a scroll container can be left resting between two photos by a trackpad
-                     flick, which the dots then cannot describe. -->
-                <div
-                  class="absolute inset-0 flex transition-transform duration-300 ease-out"
-                  [style.transform]="'translateX(-' + photoIndex(offer) * 100 + '%)'"
-                >
-                  @for (src of photosOf(offer); track $index) {
-                    <img
-                      [src]="src"
-                      [alt]="offer.title"
-                      loading="lazy"
-                      class="h-full w-full shrink-0 object-cover"
-                    />
-                  }
-                </div>
-
-                @if (photosOf(offer).length > 1) {
-                  <!-- Each arrow is dropped at the end of its travel rather than disabled: a
-                       control that stays visible but does nothing invites the second click. -->
-                  @if (photoIndex(offer) > 0) {
-                    <button
-                      type="button"
-                      class="absolute start-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
-                      [attr.aria-label]="'Previous photo of ' + offer.title"
-                      (click)="stepPhoto(offer, -1, $event)"
-                    >
-                      <i class="ti ti-chevron-left text-sm" aria-hidden="true"></i>
-                    </button>
-                  }
-                  @if (photoIndex(offer) < photosOf(offer).length - 1) {
-                    <button
-                      type="button"
-                      class="absolute end-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
-                      [attr.aria-label]="'Next photo of ' + offer.title"
-                      (click)="stepPhoto(offer, 1, $event)"
-                    >
-                      <i class="ti ti-chevron-right text-sm" aria-hidden="true"></i>
-                    </button>
-                  }
-                  <div class="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
-                    @for (src of photosOf(offer); track $index) {
-                      <span
-                        class="h-1.5 w-1.5 rounded-full transition-colors"
-                        [class]="$index === photoIndex(offer) ? 'bg-white' : 'bg-white/50'"
-                      ></span>
-                    }
-                  </div>
-                }
-              } @else {
-                <!-- A room with no photo still occupies its slot, so the rows below it do not
-                     shift left and lose the column the eye is following down the list. -->
-                <div class="grid h-full w-full place-items-center text-ink-300">
-                  <i class="ti ti-photo text-2xl" aria-hidden="true"></i>
-                </div>
+              @for (src of photosOf(offer); track $index) {
+                <img
+                  [src]="src"
+                  [alt]="offer.title"
+                  loading="lazy"
+                  class="h-full w-full shrink-0 object-cover"
+                />
               }
             </div>
 
-            <div class="min-w-0 flex-1 p-4">
-              <h4 class="font-semibold text-ink-900">{{ offer.title }}</h4>
-
-              @if (offer.description) {
-                <p
-                  class="mt-1 text-sm text-ink-600"
-                  [class.line-clamp-2]="!isExpanded(offer.id)"
-                >
-                  {{ offer.description }}
-                </p>
+            @if (photosOf(offer).length > 1) {
+              <!-- Each arrow is dropped at the end of its travel rather than disabled: a
+                   control that stays visible but does nothing invites the second click. -->
+              @if (photoIndex(offer) > 0) {
                 <button
                   type="button"
-                  class="mt-1 text-sm font-medium text-brand-600 underline-offset-2 hover:underline"
-                  (click)="toggleDescription(offer.id)"
+                  class="absolute start-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
+                  [attr.aria-label]="'Previous photo of ' + offer.title"
+                  (click)="stepPhoto(offer, -1, $event)"
                 >
-                  {{ isExpanded(offer.id) ? 'Show less' : 'Read more' }}
+                  <i class="ti ti-chevron-left text-sm" aria-hidden="true"></i>
                 </button>
               }
-
-              <div class="mt-2 flex flex-wrap items-center gap-2">
-                <span
-                  class="inline-flex items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1 text-xs text-ink-700"
+              @if (photoIndex(offer) < photosOf(offer).length - 1) {
+                <button
+                  type="button"
+                  class="absolute end-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
+                  [attr.aria-label]="'Next photo of ' + offer.title"
+                  (click)="stepPhoto(offer, 1, $event)"
                 >
-                  <i class="ti ti-users text-sm" aria-hidden="true"></i>
-                  {{ 'publicBooking.sleepsN' | transloco: { count: offer.capacity } }}
-                </span>
-                @if (offer.available <= 3) {
-                  <!-- Scarcity only when it is true and actionable. -->
-                  <span class="rounded-full bg-tint-cream px-2.5 py-1 text-xs font-medium text-amber-800">
-                    {{ 'common.nLeft' | transloco: { count: unitLabel(offer, offer.available) } }}
-                  </span>
-                }
-              </div>
-
-              @if (group.bestId === offer.id) {
-                <p class="mt-2">
-                  <span class="hh-tag-skew bg-emerald-50 text-xs font-semibold text-emerald-800">
-                    <span>{{ group.kind === 'private' ? 'Best private price' : 'Best bed price' }}</span>
-                  </span>
-                </p>
+                  <i class="ti ti-chevron-right text-sm" aria-hidden="true"></i>
+                </button>
               }
+              <div class="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+                @for (src of photosOf(offer); track $index) {
+                  <span
+                    class="h-1.5 w-1.5 rounded-full transition-colors"
+                    [class]="$index === photoIndex(offer) ? 'bg-white' : 'bg-white/50'"
+                  ></span>
+                }
+              </div>
+            }
+          } @else {
+            <!-- A room with no photo still occupies its slot, so the rows below it do not
+                 shift left and lose the column the eye is following down the list. -->
+            <div class="grid h-full w-full place-items-center text-ink-300">
+              <i class="ti ti-photo text-2xl" aria-hidden="true"></i>
             </div>
+          }
+        </div>
 
-            <!-- Rate. One row today because a room carries exactly one price: the backend has
-                 no rate-plan concept, so a "Standard" label beside a lone rate would name a
-                 choice that does not exist. When plans arrive this becomes a loop. -->
-            <div
-              class="flex shrink-0 items-end justify-between gap-4 border-t border-ink-100 p-4 sm:w-60 sm:flex-col sm:justify-center sm:border-s sm:border-t-0"
+        <div class="min-w-0 flex-1 p-4">
+          <!-- h3 now the group headings are gone: this is the first heading under the
+               section, and h4 would skip a level. -->
+          <h3 class="font-semibold text-ink-900">{{ offer.title }}</h3>
+
+          @if (offer.description) {
+            <p class="mt-1 line-clamp-2 text-sm text-ink-600">
+              {{ offer.description }}
+            </p>
+            <!-- Only when the clamp is hiding something. A control that reveals nothing
+                 is worse than no control: it reads as broken. -->
+            @if (hasMoreToRead(offer)) {
+              <button
+                type="button"
+                class="mt-1 text-sm font-medium text-brand-600 underline-offset-2 hover:underline"
+                (click)="openDescription.set(offer)"
+              >
+                {{ 'listing.showMore' | transloco }}
+              </button>
+            }
+          }
+
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1 text-xs text-ink-700"
             >
-              <div class="text-left sm:text-right">
-                <p class="font-display text-lg font-semibold text-ink-900">
-                  {{ currency() }} {{ price(offer) | number: '1.2-2' }}
-                  <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
-                </p>
-                @if (discount(offer); as pct) {
-                  <p class="mt-1 flex flex-wrap items-center gap-2 sm:justify-end">
-                    <span class="hh-tag-skew bg-rose-100 text-xs font-semibold text-rose-700">
-                      <span>−{{ pct }}%</span>
-                    </span>
-                    <span class="text-sm text-ink-400 line-through">
-                      {{ currency() }} {{ offer.actualPrice | number: '1.2-2' }}
-                    </span>
-                  </p>
-                }
-              </div>
+              <i class="ti ti-users text-sm" aria-hidden="true"></i>
+              {{ 'publicBooking.sleepsN' | transloco: { count: offer.capacity } }}
+            </span>
+            @if (nightly()) {
+              <!-- What the heading above used to say, now attached to the room it
+                   describes. Private and shared sit in one list, so without this a
+                   seeker cannot tell a whole room from a bed in a dorm. -->
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                [class]="
+                  row.kind === 'private' ? 'bg-sky-100 text-sky-800' : 'bg-violet-100 text-violet-800'
+                "
+              >
+                {{ kindLabel(row.kind) }}
+              </span>
 
-              <div class="shrink-0">
-                @if (qty(offer) === 0) {
-                  <button hh-button variant="outlined" size="md" (click)="add(offer)">
-                    <span class="ti ti-plus" aria-hidden="true"></span> {{ 'publicListing.add' | transloco }}
-                  </button>
-                } @else {
-                  <!-- The unit is spelled out under the number. "2" means rooms on one row
-                       and beds on the next, and a bare stepper cannot say which. -->
-                  <div class="text-center">
-                    <div class="flex items-center gap-1 rounded-full border border-ink-200 bg-white p-1">
-                      <button
-                        type="button"
-                        class="grid h-8 w-8 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-                        [attr.aria-label]="'Remove one from ' + offer.title"
-                        (click)="step(offer, -1)"
-                      >
-                        <span class="ti ti-minus" aria-hidden="true"></span>
-                      </button>
-                      <span class="min-w-[2ch] text-center font-semibold tabular-nums">{{ qty(offer) }}</span>
-                      <button
-                        type="button"
-                        class="grid h-8 w-8 place-items-center rounded-full text-ink-700 hover:bg-ink-50 disabled:cursor-not-allowed disabled:text-ink-300"
-                        [disabled]="atMax(offer)"
-                        [attr.aria-label]="'Add one more ' + offer.title"
-                        (click)="step(offer, 1)"
-                      >
-                        <span class="ti ti-plus" aria-hidden="true"></span>
-                      </button>
-                    </div>
-                    <p class="mt-1 text-xs text-ink-500">{{ unitLabel(offer, qty(offer)) }}</p>
-                  </div>
-                }
-              </div>
-            </div>
+            }
+
+            @if (canAdd(offer) && offer.available <= 3) {
+              <!-- Scarcity only when it is true and actionable. -->
+              <span class="rounded-full bg-tint-cream px-2.5 py-1 text-xs font-medium text-amber-800">
+                {{ 'common.nLeft' | transloco: { count: unitLabel(offer, offer.available) } }}
+              </span>
+            }
           </div>
 
-          <p class="border-t border-ink-100 px-4 py-2 text-xs text-ink-500">
-            {{ unitNote(group.kind) }} · {{ 'publicBooking.taxIncluded' | transloco }}
-          </p>
-        </article>
-      }
-    </div>
+          @if (row.best) {
+            <p class="mt-2">
+              <span class="hh-tag-skew bg-emerald-50 text-xs font-semibold text-emerald-800">
+                <span>{{ row.kind === 'private' ? 'Best private price' : 'Best bed price' }}</span>
+              </span>
+            </p>
+          }
+        </div>
+
+        <!-- Rate. One row today because a room carries exactly one price: the backend has
+             no rate-plan concept, so a "Standard" label beside a lone rate would name a
+             choice that does not exist. When plans arrive this becomes a loop. -->
+        <div
+          class="flex shrink-0 items-end justify-between gap-4 border-t border-ink-100 p-4 sm:w-60 sm:flex-col sm:justify-center sm:border-s sm:border-t-0"
+        >
+          <div class="text-left sm:text-right">
+            <p class="font-display text-lg font-semibold text-ink-900">
+              {{ currency() | currencySym }} {{ price(offer) | number: '1.2-2' }}
+              <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
+            </p>
+            @if (discount(offer); as pct) {
+              <p class="mt-1 flex flex-wrap items-center gap-2 sm:justify-end">
+                <span class="hh-tag-skew bg-rose-100 text-xs font-semibold text-rose-700">
+                  <span>−{{ pct }}%</span>
+                </span>
+                <span class="text-sm text-ink-400 line-through">
+                  {{ currency() | currencySym }} {{ offer.actualPrice | number: '1.2-2' }}
+                </span>
+              </p>
+            }
+          </div>
+
+          <!-- Nothing to add to on a monthly listing, and nothing to add for a room the
+               host has left closed. The room and its price stay either way. -->
+          @if (canAdd(offer)) {
+            <div class="shrink-0">
+              @if (qty(offer) === 0) {
+                <button hh-button variant="outlined" size="md" (click)="add(offer)">
+                  <span class="ti ti-plus" aria-hidden="true"></span> {{ 'publicListing.add' | transloco }}
+                </button>
+              } @else {
+                <!-- The unit is spelled out under the number. "2" means rooms on one row
+                     and beds on the next, and a bare stepper cannot say which. -->
+                <div class="text-center">
+                  <div class="flex items-center gap-1 rounded-full border border-ink-200 bg-white p-1">
+                    <button
+                      type="button"
+                      class="grid h-8 w-8 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
+                      [attr.aria-label]="'Remove one from ' + offer.title"
+                      (click)="step(offer, -1)"
+                    >
+                      <span class="ti ti-minus" aria-hidden="true"></span>
+                    </button>
+                    <span class="min-w-[2ch] text-center font-semibold tabular-nums">{{ qty(offer) }}</span>
+                    <button
+                      type="button"
+                      class="grid h-8 w-8 place-items-center rounded-full text-ink-700 hover:bg-ink-50 disabled:cursor-not-allowed disabled:text-ink-300"
+                      [disabled]="atMax(offer)"
+                      [attr.aria-label]="'Add one more ' + offer.title"
+                      (click)="step(offer, 1)"
+                    >
+                      <span class="ti ti-plus" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                  <p class="mt-1 text-xs text-ink-500">{{ unitLabel(offer, qty(offer)) }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <p class="border-t border-ink-100 px-4 py-2 text-xs text-ink-500">
+        {{ unitNote(row.kind) }} · {{ 'publicBooking.taxIncluded' | transloco }}
+      </p>
+    </article>
   }
 </section>
+
+<!--
+     The room description in full.
+
+     A modal rather than expanding the row in place: the rows are a comparison list, and
+     growing one pushes every room below it down the page — so reading about the second
+     room moves the fourth out from under the cursor. The modal leaves the list where it is.
+-->
+@if (openDescription(); as room) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="room.title"
+  >
+    <div class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" (click)="openDescription.set(null)"></div>
+    <div class="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div class="flex items-start justify-between gap-3 border-b border-ink-100 px-5 py-4">
+        <h2 class="font-display text-lg font-semibold text-ink-900">
+          {{ room.title }}
+        </h2>
+        <button
+          type="button"
+          class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-400 transition hover:bg-surface hover:text-ink-700"
+          (click)="openDescription.set(null)"
+          [attr.aria-label]="'common.close' | transloco"
+        >
+          <i class="ti ti-x text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+      <!-- Host-written prose: scrolls rather than growing the dialog off a short screen,
+           and keeps the line breaks the host typed. -->
+      <div class="max-h-[60vh] overflow-y-auto px-5 py-4">
+        <p class="whitespace-pre-line text-sm leading-relaxed text-ink-700">
+          {{ room.description }}
+        </p>
+      </div>
+    </div>
+  </div>
+}

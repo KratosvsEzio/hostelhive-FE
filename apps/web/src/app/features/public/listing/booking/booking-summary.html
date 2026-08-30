@@ -1,0 +1,78 @@
+<!-- The app's own dialog rather than a hand-rolled one: it already carries `role="dialog"`,
+     `aria-modal`, the labelled title and a backdrop that dismisses, and a booking confirmation
+     is the last screen anybody should meet a bespoke modal on. -->
+<hh-confirm-modal
+  size="md"
+  icon="ti-calendar-check"
+  tone="info"
+  [title]="'publicBooking.reviewYourBooking' | transloco"
+  [confirmLabel]="'publicBooking.confirmBooking' | transloco"
+  [confirmColor]="'primary'"
+  [confirmDisabled]="submitting()"
+  (confirm)="confirmed.emit()"
+  (cancel)="dismissed.emit()"
+>
+  @if (hostelName()) {
+    <p class="-mt-1 mb-3 font-medium text-ink-700">{{ hostelName() }}</p>
+  }
+
+  <!-- The stay first: it is what prices everything below it, and a guest checking a booking
+       checks the dates before the arithmetic. -->
+  <div class="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5">
+    <span class="ti ti-calendar shrink-0 text-base text-ink-400" aria-hidden="true"></span>
+    <div class="min-w-0 flex-1">
+      <p class="font-medium text-ink-900">
+        {{ basket.checkIn() | date: 'd MMM' }} – {{ basket.checkOut() | date: 'd MMM yyyy' }}
+      </p>
+      <p>
+        {{ 'common.nNights' | transloco: { count: basket.nights() } }}
+        <span class="mx-1 text-ink-300">·</span>
+        {{ 'common.nGuests' | transloco: { count: basket.guests() } }}
+      </p>
+    </div>
+  </div>
+
+  <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-500">
+    {{ 'common.rooms' | transloco }}
+  </p>
+  <ul class="mt-1 divide-y divide-ink-100">
+    @for (row of rooms(); track row.line.roomId) {
+      <li class="flex items-start justify-between gap-3 py-2.5">
+        <div class="min-w-0">
+          <p class="font-medium text-ink-900">{{ row.line.title }}</p>
+          <!-- The arithmetic, not just its answer — the same line the rail shows, so a guest
+               comparing the two never finds them disagreeing. -->
+          <p class="tabular-nums">
+            {{ units(row.line) }} × {{ row.unit }}
+            <span class="mx-1 text-ink-300">·</span>
+            {{ 'common.nNights' | transloco: { count: basket.nights() } }}
+          </p>
+        </div>
+        <p class="shrink-0 font-semibold text-ink-900 tabular-nums">
+          {{ currency() | currencySym }} {{ row.total | number: '1.2-2' }}
+        </p>
+      </li>
+    }
+  </ul>
+
+  <div class="mt-2 flex items-baseline justify-between border-t border-ink-100 pt-3">
+    <span class="font-semibold text-ink-900">{{ 'common.total' | transloco }}</span>
+    <span class="font-display text-xl font-semibold text-ink-900 tabular-nums">
+      {{ currency() | currencySym }} {{ basket.total() | number: '1.2-2' }}
+    </span>
+  </div>
+
+  <!-- Said here as well as on the rail. This is the screen somebody reads before they commit,
+       and "what will I be charged now" is the question it has to answer. -->
+  <p class="mt-3 flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-xs text-amber-900">
+    <span class="ti ti-info-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
+    {{ 'publicBooking.theHostelWillConfirm' | transloco }}
+  </p>
+
+  @if (error()) {
+    <p class="mt-2 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger">
+      <span class="ti ti-alert-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
+      {{ error() }}
+    </p>
+  }
+</hh-confirm-modal>

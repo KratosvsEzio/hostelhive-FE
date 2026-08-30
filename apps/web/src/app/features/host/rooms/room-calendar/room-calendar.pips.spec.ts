@@ -1,74 +1,49 @@
 import { TestBed } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
-import { BookingApi } from '@features/public/listing/booking/booking-api';
-import {
-  ApiBooking,
-  ApiRoomCalendarResponse,
-} from '@features/public/listing/booking/booking-api.contract';
+import { HostBooking, HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { RoomCalendar } from './room-calendar';
 
 const ROOM = 'r1';
 
-function booking(id: string, from: string, to: string, name: string, qty = 1): ApiBooking {
+/**
+ * A stay as the bookings endpoint returns it, narrowed to what this screen reads.
+ *
+ * `qty` is guests, which is what the component counts as beds held: a party of three in a
+ * dorm fills three pips, not one.
+ */
+function booking(id: string, from: string, to: string, name: string, qty = 1): HostBooking {
   return {
     id,
-    hostel_id: 'h1',
-    hostel_name: 'Demo',
-    check_in: from,
-    check_out: to,
+    ref: `HH-${id}`,
+    guest: { name, phone: '', email: '' },
+    checkIn: from,
+    checkOut: to,
+    nights: 1,
     guests: qty,
-    lines: [
-      {
-        room_id: ROOM,
-        room_title: 'Sunset 8',
-        room_type: 'shared',
-        quantity: qty,
-        unit_price: 1000,
-        actual_price: 1000,
-      },
-    ],
     total: 1000 * qty,
     deposit: 0,
-    status: 'confirmed',
-    created_at: '2026-02-01T00:00:00Z',
-    cancellation: null,
-    guest: { name, email: '', phone: null },
-  };
+    paid: 0,
+    balanceDue: 0,
+    roomType: { name: 'Sunset 8', occupancyType: 'shared', capacity: 8, price: 1000 },
+    status: { slug: 'paid', name: 'Paid' },
+    disposition: { slug: 'checked-in', name: 'Checked in' },
+  } as HostBooking;
 }
 
 /**
- * `booked` is units, not bookings — one booking holding three beds books three.
+ * The per-day occupancy is no longer part of the fixture.
  *
- * Derived from the bookings rather than passed in, because writing the two by hand is how a
- * fixture ends up describing a room the API could never return.
+ * It used to be written out alongside the bookings — a date-to-ids map the test had to keep
+ * in step with the stays it listed — because the endpoint used to return it. The component
+ * derives it now, so the fixture states the stays and the arithmetic under test is the
+ * component's own rather than something the harness handed it the answer to.
  */
-function days(capacity: number, booked: Record<string, string[]>, bookings: ApiBooking[] = []) {
-  const units = new Map(
-    bookings.map((b) => [
-      b.id,
-      b.lines.filter((l) => l.room_id === ROOM).reduce((n, l) => n + l.quantity, 0),
-    ]),
-  );
-  const out = [];
-  for (let d = 1; d <= 31; d++) {
-    const date = `2026-03-${String(d).padStart(2, '0')}`;
-    const ids = booked[date] ?? [];
-    out.push({
-      date,
-      booked: ids.reduce((n, id) => n + (units.get(id) ?? 1), 0),
-      capacity,
-      booking_ids: ids,
-    });
-  }
-  return out;
-}
-
 class ApiStub {
-  response: ApiRoomCalendarResponse = { days: [], bookings: [], success: true };
-  roomCalendar(): Observable<ApiRoomCalendarResponse> {
-    return of(this.response);
+  bookings: HostBooking[] = [];
+  bookingsInRoom(): Observable<HostBooking[]> {
+    return of(this.bookings);
   }
 }
 
@@ -84,17 +59,18 @@ describe('RoomCalendar pips', () => {
   let api: ApiStub;
   let fixture: ComponentFixture<RoomCalendar>;
 
-  function setUp(capacity: number, booked: Record<string, string[]>, bookings: ApiBooking[]) {
+  function setUp(capacity: number, bookings: HostBooking[]) {
     TestBed.resetTestingModule();
     api = new ApiStub();
-    api.response = { days: days(capacity, booked, bookings), bookings, success: true };
+    api.bookings = bookings;
     TestBed.configureTestingModule({
       imports: [RoomCalendar],
-      providers: [provideI18nTesting(), { provide: BookingApi, useValue: api }],
+      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
     });
     fixture = TestBed.createComponent(RoomCalendar);
     fixture.componentRef.setInput('hostelId', 'h1');
     fixture.componentRef.setInput('roomId', ROOM);
+    fixture.componentRef.setInput('capacity', capacity);
     // March 2026 relative to whenever the suite runs.
     const now = new Date();
     const offset = (2026 - now.getFullYear()) * 12 + (2 - now.getMonth());
@@ -124,7 +100,7 @@ describe('RoomCalendar pips', () => {
   }
 
   it('draws one pip per bed, whatever is sold', () => {
-    const c = setUp(8, { '2026-03-10': ['b1'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha', 3),
     ]);
 
@@ -133,7 +109,7 @@ describe('RoomCalendar pips', () => {
   });
 
   it('fills a pip per unit the booking holds, not one per booking', () => {
-    const c = setUp(8, { '2026-03-10': ['b1'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha', 3),
     ]);
 
@@ -144,7 +120,7 @@ describe('RoomCalendar pips', () => {
   });
 
   it('gives every guest their own colour', () => {
-    const c = setUp(8, { '2026-03-10': ['b1', 'b2'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-09', '2026-03-12', 'Ayesha', 2),
       booking('b2', '2026-03-10', '2026-03-11', 'Bilal', 1),
     ]);
@@ -157,7 +133,7 @@ describe('RoomCalendar pips', () => {
 
   // An oversell is a thing a host has to see, not a rounding error to clamp away.
   it('marks pips past capacity as a clash rather than dropping them', () => {
-    const c = setUp(2, { '2026-03-10': ['b1'] }, [
+    const c = setUp(2, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha', 4),
     ]);
 
@@ -169,7 +145,7 @@ describe('RoomCalendar pips', () => {
   });
 
   it('counts arrivals and departures separately, with check-out exclusive', () => {
-    const c = setUp(8, { '2026-03-10': ['b1', 'b2'], '2026-03-12': ['b1'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha'),
       booking('b2', '2026-03-10', '2026-03-11', 'Bilal'),
     ]);
@@ -181,7 +157,7 @@ describe('RoomCalendar pips', () => {
   });
 
   it('reports beds still sellable', () => {
-    const c = setUp(8, { '2026-03-10': ['b1'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha', 3),
     ]);
 
@@ -191,7 +167,7 @@ describe('RoomCalendar pips', () => {
   // The padding cells either side of the month belong to other months; counting their
   // capacity would drag every first and last week of the year down towards zero.
   it('measures a week against its own days only', () => {
-    const c = setUp(2, { '2026-03-02': ['b1'], '2026-03-03': ['b1'] }, [
+    const c = setUp(2, [
       booking('b1', '2026-03-02', '2026-03-04', 'Ayesha', 2),
     ]);
 
@@ -202,7 +178,7 @@ describe('RoomCalendar pips', () => {
   });
 
   it('never reports more than a hundred per cent, even oversold', () => {
-    const c = setUp(1, { '2026-03-02': ['b1'] }, [
+    const c = setUp(1, [
       booking('b1', '2026-03-02', '2026-03-03', 'Ayesha', 5),
     ]);
 
@@ -211,14 +187,14 @@ describe('RoomCalendar pips', () => {
   });
 
   it('treats a capacity-one room as private, with no bed ruler', () => {
-    const c = setUp(1, {}, []);
+    const c = setUp(1, []);
 
     expect(c.isPrivate()).toBe(true);
     expect(c.bedRuler()).toEqual([]);
   });
 
   it('numbers the ruler once per bed on a shared room', () => {
-    const c = setUp(6, {}, []);
+    const c = setUp(6, []);
 
     expect(c.isPrivate()).toBe(false);
     expect(c.bedRuler()).toEqual([1, 2, 3, 4, 5, 6]);
@@ -233,7 +209,7 @@ describe('RoomCalendar pips', () => {
    * where it stops working without one.
    */
   it('wraps a sixteen-bed dorm into two rows of eight', () => {
-    const c = setUp(16, {}, []);
+    const c = setUp(16, []);
 
     expect(c.pipColumns()).toBe(8);
     expect(dayOf(c, '2026-03-10')?.pips.length).toBe(16);
@@ -241,50 +217,51 @@ describe('RoomCalendar pips', () => {
 
   it('balances the rows rather than leaving a stub', () => {
     // Twelve as 6+6 rather than 8+4, which reads as four beds missing.
-    expect(setUp(12, {}, []).pipColumns()).toBe(6);
-    expect(setUp(9, {}, []).pipColumns()).toBe(5);
-    expect(setUp(20, {}, []).pipColumns()).toBe(7);
+    expect(setUp(12, []).pipColumns()).toBe(6);
+    expect(setUp(9, []).pipColumns()).toBe(5);
+    expect(setUp(20, []).pipColumns()).toBe(7);
   });
 
   it('leaves a small room on one row', () => {
-    expect(setUp(8, {}, []).pipColumns()).toBe(8);
-    expect(setUp(4, {}, []).pipColumns()).toBe(4);
-    expect(setUp(1, {}, []).pipColumns()).toBe(1);
+    expect(setUp(8, []).pipColumns()).toBe(8);
+    expect(setUp(4, []).pipColumns()).toBe(4);
+    expect(setUp(1, []).pipColumns()).toBe(1);
   });
 
   // Whatever the capacity, a pip has to stay wide enough to see. 65px of cell, 3px gaps.
   it('keeps every pip at least three pixels wide up to forty beds', () => {
     const CELL = 64.6;
     for (let n = 1; n <= 40; n++) {
-      const cols = setUp(n, {}, []).pipColumns();
+      const cols = setUp(n, []).pipColumns();
       const width = (CELL - 3 * (cols - 1)) / cols;
       expect(width).toBeGreaterThan(3);
     }
   });
 
   it('drops the bed ruler once it is more digits than legend', () => {
-    expect(setUp(8, {}, []).showBedRuler()).toBe(true);
-    expect(setUp(12, {}, []).showBedRuler()).toBe(true);
-    expect(setUp(16, {}, []).showBedRuler()).toBe(false);
+    expect(setUp(8, []).showBedRuler()).toBe(true);
+    expect(setUp(12, []).showBedRuler()).toBe(true);
+    expect(setUp(16, []).showBedRuler()).toBe(false);
     // A private room has one unit, so numbering it says there is another to tell it from.
-    expect(setUp(1, {}, []).showBedRuler()).toBe(false);
+    expect(setUp(1, []).showBedRuler()).toBe(false);
   });
 });
 
 describe('RoomCalendar day roster', () => {
   let api: ApiStub;
 
-  function setUp(capacity: number, booked: Record<string, string[]>, bookings: ApiBooking[]) {
+  function setUp(capacity: number, bookings: HostBooking[]) {
     TestBed.resetTestingModule();
     api = new ApiStub();
-    api.response = { days: days(capacity, booked, bookings), bookings, success: true };
+    api.bookings = bookings;
     TestBed.configureTestingModule({
       imports: [RoomCalendar],
-      providers: [provideI18nTesting(), { provide: BookingApi, useValue: api }],
+      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
     });
     const fixture = TestBed.createComponent(RoomCalendar);
     fixture.componentRef.setInput('hostelId', 'h1');
     fixture.componentRef.setInput('roomId', ROOM);
+    fixture.componentRef.setInput('capacity', capacity);
     const now = new Date();
     const offset = (2026 - now.getFullYear()) * 12 + (2 - now.getMonth());
     (fixture.componentInstance as unknown as { offset: { set(n: number): void } }).offset.set(
@@ -300,7 +277,7 @@ describe('RoomCalendar day roster', () => {
   }
 
   it('lists who is in the room on the day picked', () => {
-    const c = setUp(8, { '2026-03-10': ['b1', 'b2'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-09', '2026-03-12', 'Ayesha Khan', 2),
       booking('b2', '2026-03-10', '2026-03-11', 'Bilal Ahmed', 1),
     ]);
@@ -312,7 +289,7 @@ describe('RoomCalendar day roster', () => {
   });
 
   it('marks who is arriving and who is leaving that day', () => {
-    const c = setUp(8, { '2026-03-10': ['b1', 'b2'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-09', '2026-03-10', 'Leaver'),
       booking('b2', '2026-03-10', '2026-03-14', 'Arriver'),
     ]);
@@ -324,18 +301,23 @@ describe('RoomCalendar day roster', () => {
   });
 
   it('reads out the ratio and the turnover', () => {
-    const c = setUp(8, { '2026-03-10': ['b1', 'b2'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-09', '2026-03-10', 'Leaver'),
       booking('b2', '2026-03-10', '2026-03-14', 'Arriver'),
     ]);
     c.select('2026-03-10');
 
-    expect(c.selectedRatio()).toBe('2 of 8 beds');
+    // One bed, not two. The leaver has released theirs by the night of the 10th — the same
+    // check-out-exclusive rule asserted above — so a turnover day is one occupied bed and two
+    // names on the roster. This read "2 of 8" while the harness hand-wrote the day's
+    // occupancy: the fixture counted the departing guest as still in bed, and the assertion
+    // was pinning that mistake rather than the component.
+    expect(c.selectedRatio()).toBe('1 of 8 beds');
     expect(c.selectedTurnover()).toBe('1 in · 1 out');
   });
 
   it('says so plainly when a day has neither', () => {
-    const c = setUp(8, { '2026-03-10': ['b1'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-08', '2026-03-14', 'Stayer'),
     ]);
     c.select('2026-03-10');
@@ -344,7 +326,7 @@ describe('RoomCalendar day roster', () => {
   });
 
   it('is empty for a day nobody is in', () => {
-    const c = setUp(8, { '2026-03-10': ['b1'] }, [
+    const c = setUp(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha'),
     ]);
     c.select('2026-03-20');
@@ -361,17 +343,18 @@ describe('RoomCalendar day roster', () => {
  * behind a collapsed flex column, and the signal tests would pass either way.
  */
 describe('RoomCalendar roster panel renders', () => {
-  function mount(capacity: number, booked: Record<string, string[]>, bookings: ApiBooking[]) {
+  function mount(capacity: number, bookings: HostBooking[]) {
     TestBed.resetTestingModule();
     const api = new ApiStub();
-    api.response = { days: days(capacity, booked, bookings), bookings, success: true };
+    api.bookings = bookings;
     TestBed.configureTestingModule({
       imports: [RoomCalendar],
-      providers: [provideI18nTesting(), { provide: BookingApi, useValue: api }],
+      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
     });
     const fixture = TestBed.createComponent(RoomCalendar);
     fixture.componentRef.setInput('hostelId', 'h1');
     fixture.componentRef.setInput('roomId', ROOM);
+    fixture.componentRef.setInput('capacity', capacity);
     const now = new Date();
     (fixture.componentInstance as unknown as { offset: { set(n: number): void } }).offset.set(
       (2026 - now.getFullYear()) * 12 + (2 - now.getMonth()),
@@ -381,7 +364,7 @@ describe('RoomCalendar roster panel renders', () => {
   }
 
   it('puts the panel on the page beside the grid', () => {
-    const f = mount(8, { '2026-03-10': ['b1'] }, [
+    const f = mount(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha Khan', 2),
     ]);
     const aside: HTMLElement | null = f.nativeElement.querySelector('aside');
@@ -393,7 +376,7 @@ describe('RoomCalendar roster panel renders', () => {
   });
 
   it('lists the guests of the day it opens on', () => {
-    const f = mount(8, { '2026-03-10': ['b1', 'b2'] }, [
+    const f = mount(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha Khan', 2),
       booking('b2', '2026-03-10', '2026-03-11', 'Bilal Ahmed', 1),
     ]);
@@ -406,7 +389,7 @@ describe('RoomCalendar roster panel renders', () => {
   });
 
   it('still shows the panel on a private room', () => {
-    const f = mount(1, {}, []);
+    const f = mount(1, []);
     const aside: HTMLElement | null = f.nativeElement.querySelector('aside');
 
     expect(aside).not.toBeNull();
@@ -414,7 +397,7 @@ describe('RoomCalendar roster panel renders', () => {
   });
 
   it('says the day is empty rather than showing nothing at all', () => {
-    const f = mount(8, { '2026-03-10': ['b1'] }, [
+    const f = mount(8, [
       booking('b1', '2026-03-10', '2026-03-12', 'Ayesha'),
     ]);
     (f.componentInstance as unknown as { select(d: string): void }).select('2026-03-20');

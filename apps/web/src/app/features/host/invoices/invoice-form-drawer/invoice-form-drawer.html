@@ -92,20 +92,20 @@
           <div class="space-y-3">
             <hh-money-input
               [label]="'common.rent' | transloco"
-              placeholder="5000"
+              [placeholder]="'common.enterAmount' | transloco"
               [value]="+f.rent || 0"
               (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
             />
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <hh-money-input
                 [label]="'common.messCharges' | transloco"
-                placeholder="3000"
+                [placeholder]="'common.enterAmount' | transloco"
                 [value]="+f.messCharges || 0"
                 (valueChange)="patch('messCharges', $event ? $any($event).toString() : '')"
               />
               <hh-money-input
                 [label]="'common.transportCharges' | transloco"
-                placeholder="500"
+                [placeholder]="'common.enterAmount' | transloco"
                 [value]="+f.transportationCharges || 0"
                 (valueChange)="patch('transportationCharges', $event ? $any($event).toString() : '')"
               />
@@ -122,7 +122,7 @@
           <!-- Note -->
           <hh-input
             [label]="'hostInvoices.note' | transloco"
-            [placeholder]="'hostInvoices.eGPayOnOr' | transloco"
+            [placeholder]="'common.enterNote' | transloco"
             [value]="f.notes"
             (valueChange)="patch('notes', $event)"
           />

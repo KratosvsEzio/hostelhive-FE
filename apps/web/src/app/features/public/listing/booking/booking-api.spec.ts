@@ -1,6 +1,6 @@
 import { firstValueFrom } from 'rxjs';
 import { BookingApi, chargePercentFor } from './booking-api';
-import { ApiHostBookingRequest } from './booking-api.contract';
+import { ApiBookingRequest, ApiHostBookingRequest } from './booking-api.contract';
 
 /**
  * The cancellation schedule from section 07 of the PRD.
@@ -166,5 +166,87 @@ describe('BookingApi.hostCreateBooking', () => {
 
     expect(quote.penalty_amount).toBe(0);
     expect(quote.refund_amount).toBe(0);
+  });
+});
+
+/**
+ * A guest booking from a listing page, now that nothing is paid online.
+ *
+ * The old path took a deposit and turned a hold into a `confirmed` booking. With the payment
+ * gone there is no money behind the booking and no cancellation schedule to pay out of, which
+ * is precisely what `unconfirmed` already meant here — so a guest's booking now lands in the
+ * host's list beside the walk-ins they write down themselves, for the host to confirm.
+ */
+describe('BookingApi.requestBooking', () => {
+  const base: ApiBookingRequest = {
+    hostel_id: 'h1',
+    check_in: '2026-09-01',
+    check_out: '2026-09-03',
+    guests: 2,
+    lines: [{ room_id: 's-mixed-12', quantity: 2 }],
+  };
+
+  function api(): BookingApi {
+    return new BookingApi();
+  }
+
+  it('lands unconfirmed, with nothing taken', async () => {
+    const b = await firstValueFrom(api().requestBooking(base));
+
+    expect(b.status).toBe('unconfirmed');
+    expect(b.deposit).toBe(0);
+  });
+
+  it('prices the whole stay, not one night', async () => {
+    const one = await firstValueFrom(
+      api().requestBooking({ ...base, check_out: '2026-09-02' }),
+    );
+    const two = await firstValueFrom(api().requestBooking(base));
+
+    expect(two.total).toBe(one.total * 2);
+  });
+
+  /**
+   * The total is computed here, never read from the request.
+   *
+   * The basket works one out to show the guest, but a figure that arrives from a browser is
+   * a figure the guest can edit, and this one decides what a hostel is owed.
+   */
+  it('ignores any total the caller tries to supply', async () => {
+    const b = await firstValueFrom(
+      api().requestBooking({ ...base, total: 1 } as ApiBookingRequest & { total: number }),
+    );
+
+    expect(b.total).toBeGreaterThan(1);
+  });
+
+  it('reaches the hostel’s own booking list', async () => {
+    const svc = api();
+    await firstValueFrom(svc.requestBooking(base));
+
+    expect((await firstValueFrom(svc.hostBookings('h1'))).length).toBe(1);
+    expect((await firstValueFrom(svc.hostBookings('h2'))).length).toBe(0);
+  });
+
+  // Whole or not at all. Part-filling gives the guest a stay they never agreed to, and the
+  // person who discovers the missing bed is standing in reception.
+  it('refuses the basket outright when one room cannot be honoured', async () => {
+    const svc = api();
+    const greedy = { ...base, lines: [{ room_id: 's-mixed-12', quantity: 999 }] };
+
+    await expect(firstValueFrom(svc.requestBooking(greedy))).rejects.toThrow(/left of/i);
+    expect((await firstValueFrom(svc.hostBookings('h1'))).length).toBe(0);
+  });
+
+  it('refuses a stay that ends before it starts', async () => {
+    await expect(
+      firstValueFrom(api().requestBooking({ ...base, check_out: '2026-08-31' })),
+    ).rejects.toThrow(/check_out/);
+  });
+
+  it('refuses an empty basket', async () => {
+    await expect(
+      firstValueFrom(api().requestBooking({ ...base, lines: [] })),
+    ).rejects.toThrow(/at least one room/i);
   });
 });

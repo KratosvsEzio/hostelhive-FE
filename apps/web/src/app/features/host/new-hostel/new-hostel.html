@@ -45,7 +45,10 @@
 
     <!-- RIGHT: progress sidebar -->
     <div>
-      <div class="sticky top-20 space-y-5">
+      <!-- Sticks inside the layout’s scroll pane, not the document, so the offset is the
+           pane's own top padding rather than the site header's height. It was `top-20`, sized
+           to clear a header this no longer scrolls under. -->
+      <div class="sticky top-6 space-y-5">
         <div class="rounded-2xl bg-white p-5 shadow-card">
           <p class="mb-3 text-sm font-semibold text-ink-900">{{ 'common.listingProgress' | transloco }}</p>
           <dl class="space-y-2.5 text-xs">

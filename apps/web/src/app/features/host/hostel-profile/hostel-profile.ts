@@ -14,7 +14,7 @@ import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi, HostPropertyStore } from '@services';
-import { Button, ErrorState, Skeleton } from '@hostelhive/ui';
+import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { HostelForm } from '../hostel-form/hostel-form';
@@ -30,7 +30,7 @@ interface ViewState {
 @Component({
   selector: 'hh-hostel-profile',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardLayout, Button, ErrorState, Skeleton, HostelForm, TranslocoPipe],
+  imports: [DashboardLayout, Button, ConfirmModal, ErrorState, Skeleton, HostelForm, TranslocoPipe],
   templateUrl: './hostel-profile.html',
 })
 export class HostelProfile {
@@ -78,10 +78,46 @@ export class HostelProfile {
   protected readonly saved = signal(false);
   protected readonly saveError = signal(false);
 
+  /** The fields that would send this listing back to moderation, empty when none did. */
+  protected readonly reviewKeys = computed(() => this.form()?.reviewTriggerKeys() ?? []);
+  protected readonly reviewOpen = signal(false);
+
+  /**
+   * Asks first when the edit costs the host their visibility.
+   *
+   * Only for the fields a moderator re-reads — see `REVIEW_TRIGGER_FIELDS`. Everything else
+   * saves straight through, because a dialogue on every edit is one nobody reads by the
+   * third time, and this one has to still be worth stopping for.
+   */
   protected save(): void {
+    if (!this.canSave()) return;
+    if (this.reviewKeys().length > 0) {
+      this.reviewOpen.set(true);
+      return;
+    }
+    this.commit();
+  }
+
+  protected confirmReview(): void {
+    this.reviewOpen.set(false);
+    this.commit();
+  }
+
+  protected cancelReview(): void {
+    this.reviewOpen.set(false);
+  }
+
+  private canSave(): boolean {
+    const f = this.form();
+    // isValid is false only for a genuine conflict on this screen: every other rule in the
+    // form is create-only, so this blocks the save without gating edits behind them.
+    return !!this.hostelId() && !!f && f.dirty() && !this.saving() && !f.uploading() && f.isValid();
+  }
+
+  private commit(): void {
     const id = this.hostelId();
     const f = this.form();
-    if (!id || !f || !f.dirty() || this.saving() || f.uploading()) return;
+    if (!id || !f) return;
     this.saving.set(true);
     this.saveError.set(false);
     this.saved.set(false);

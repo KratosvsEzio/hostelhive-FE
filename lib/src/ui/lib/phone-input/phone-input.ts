@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ViewEncapsulation,
   effect,
+  signal,
   inject,
   input,
   model,
@@ -45,6 +46,8 @@ const PREFERRED: CountryISO[] = [
   encapsulation: ViewEncapsulation.None,
   imports: [ReactiveFormsModule, NgxMaterialIntlTelInputComponent, TranslocoPipe],
   providers: [{ provide: ControlContainer, useClass: NullControlContainer }],
+  // Any focus inside the field counts as the user arriving — see `onValue`.
+  host: { '(focusin)': 'touched.set(true)' },
   styles: [`
     /* ── Outer pill container ──────────────────────────────────────── */
     hh-phone-input {
@@ -187,6 +190,9 @@ export class PhoneInput {
 
   private readonly destroyRef = inject(DestroyRef);
 
+  /** Whether anyone has actually put the cursor in this field. See {@link onValue}. */
+  protected readonly touched = signal(false);
+
   constructor() {
     // Sync an externally-set phone value into the FormControl.
     effect(() => {
@@ -195,7 +201,22 @@ export class PhoneInput {
     });
   }
 
+  /**
+   * Accepts what the control reports — except an empty value nobody asked for.
+   *
+   * `ngx-material-intl-tel-input` emits `currentValue` while it initialises, before the
+   * effect above has handed it the number, and that emission is an empty string. Taken at
+   * face value it wrote '' straight back over the number the form had just loaded, so a
+   * hostel profile opened and left alone reported itself as edited: `dirty()` was true on
+   * arrival and the Update button was live before anybody typed.
+   *
+   * Gated on focus rather than on the control's own value, because the spurious emission
+   * arrives during change detection and the effect flushes after it — any guard comparing
+   * the two is racing them. Nobody clears a field they have not first put a cursor in.
+   */
   protected onValue(val: string): void {
-    this.phone.set(val ?? '');
+    const next = val ?? '';
+    if (!next && !this.touched()) return;
+    this.phone.set(next);
   }
 }

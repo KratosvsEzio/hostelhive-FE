@@ -3,7 +3,9 @@ import {
   CheckInForm,
   checkInFormFromTenant,
   emptyCheckInForm,
+  fieldErrorFor,
   isCheckInFormValid,
+  isFieldRequired,
   toCreateRenterPayload,
   toUpdateRenterPayload,
 } from './tenant-form.model';
@@ -66,7 +68,10 @@ describe('emptyCheckInForm', () => {
 
     // Local parts, not toISOString(): the latter is UTC and returns the previous day
     // for the first five hours of every day in PKT.
-    expect(f.joiningDate).toBe('2026-08-25T14:30');
+    // 14:37, not 14:30. The minute used to be floored to the picker's step because the
+    // column only offered quarter-hours; it offers all sixty now, so the default is the
+    // minute the host is actually standing in.
+    expect(f.joiningDate).toBe('2026-08-25T14:37');
     expect(f.billingDate).toBe('1');
     expect(f.billingDueDate).toBe('5');
   });
@@ -77,10 +82,14 @@ describe('emptyCheckInForm', () => {
    * Rounding to the nearest step turned 23:53 into 00:00 and carried the date into the next
    * day, so a tenant checked in at the desk on the 25th was recorded as joining on the 26th
    * — and the joining time sat seven minutes in the future.
+   *
+   * There is no rounding left to carry, so these hold by construction rather than by
+   * flooring. They are kept because the invariant is the point, not the mechanism:
+   * whatever this function does next must not move a check-in onto another day.
    */
   it('does not roll into tomorrow late at night', () => {
     at(2026, 7, 25, 23, 53);
-    expect(emptyCheckInForm().joiningDate).toBe('2026-08-25T23:45');
+    expect(emptyCheckInForm().joiningDate).toBe('2026-08-25T23:53');
   });
 
   it('never dates the joining in the future', () => {
@@ -95,16 +104,18 @@ describe('emptyCheckInForm', () => {
 
   it('holds the last day of a month', () => {
     at(2026, 7, 31, 23, 58);
-    expect(emptyCheckInForm().joiningDate).toBe('2026-08-31T23:45');
+    expect(emptyCheckInForm().joiningDate).toBe('2026-08-31T23:58');
   });
 
-  it('carries a time, rounded to a step the picker actually offers', () => {
+  // Any minute, not one of four. The picker has no grid to preselect onto now, so a
+  // check-in at 14:37 is recorded as 14:37 rather than filed thirteen minutes early.
+  it('carries the minute it actually happened on', () => {
     at(2026, 7, 25, 14, 37);
     const f = emptyCheckInForm();
     expect(f.joiningDate.length).toBe(16);
     expect(f.joiningDate[10]).toBe('T');
     expect(f.joiningDate[13]).toBe(':');
-    expect([0, 15, 30, 45]).toContain(Number(f.joiningDate.slice(14, 16)));
+    expect(f.joiningDate.slice(14, 16)).toBe('37');
   });
 
   it('leaves the check-out blank — it is optional and has no sensible default', () => {
@@ -313,8 +324,14 @@ describe('toUpdateRenterPayload', () => {
   });
 });
 
-// A backpacker hostel bills per night, so there is no day-of-month billing cycle.
-describe('nightly (backpacker) stays', () => {
+/**
+ * A hostel billed per night has no day-of-month cycle.
+ *
+ * The flag comes from `billingFrequency`, not the accommodation type it used to read — the
+ * two are set independently, so a backpacker hostel billed monthly was having its billing
+ * day dropped from the payload. What the flag *does* is unchanged; only where it comes from.
+ */
+describe('nightly-billed stays', () => {
   const nightly = { nightly: true };
 
   it('does not require the billing cycle', () => {
@@ -344,5 +361,116 @@ describe('nightly (backpacker) stays', () => {
     const p = toCreateRenterPayload(validForm({ billingDate: '3', billingDueDate: '7' }));
     expect(p.billing_date).toBe(3);
     expect(p.billing_due_date).toBe(7);
+  });
+});
+
+/**
+ * Which fields a host actually has to fill in.
+ *
+ * This exists because the drawer used to answer the question twice. The Register button asked
+ * REQUIRED_FIELDS; the red text under each field asked "is this box empty" — so the emergency
+ * contact, which the button has always been happy to submit blank, told the host it was
+ * required the moment they tabbed past it. The two answers have to come from one list, and the
+ * last case here is what holds them together.
+ */
+describe('isFieldRequired', () => {
+  const OPTIONAL = [
+    'emergencyContact',
+    'leaveDate',
+    'roomId',
+    'roomNumber',
+    'messCharges',
+    'transportationCharges',
+    'imageName',
+    'avatarUploadId',
+    'cnicFrontUploadId',
+    'cnicBackUploadId',
+  ] as const;
+
+  it('does not require the fields the form submits without', () => {
+    for (const key of OPTIONAL) {
+      expect([key, isFieldRequired(key)]).toEqual([key, false]);
+    }
+  });
+
+  it('requires the ones it does', () => {
+    for (const key of ['fullName', 'email', 'phone', 'cnicNumber', 'address', 'rent'] as const) {
+      expect([key, isFieldRequired(key)]).toEqual([key, true]);
+    }
+  });
+
+  // A nightly hostel has no day-of-month cycle, so the billing pair drops out of the
+  // requirement — and has to drop out of the field errors with it.
+  it('drops the billing cycle for a nightly stay', () => {
+    expect(isFieldRequired('billingDate')).toBe(true);
+    expect(isFieldRequired('billingDate', { nightly: false })).toBe(true);
+    expect(isFieldRequired('billingDate', { nightly: true })).toBe(false);
+    expect(isFieldRequired('billingDueDate', { nightly: true })).toBe(false);
+  });
+
+  /**
+   * The invariant: a field is required exactly when blanking it stops the form submitting.
+   *
+   * Stated over every string field rather than a hand-written list, so a field added to one
+   * definition and not the other fails here rather than in a host's face.
+   */
+  it('agrees with isCheckInFormValid on every field, monthly and nightly', () => {
+    const FIELDS = Object.entries(validForm())
+      .filter(([, v]) => typeof v === 'string')
+      .map(([k]) => k as keyof CheckInForm);
+    expect(FIELDS.length).toBeGreaterThan(15);
+
+    for (const ctx of [undefined, { nightly: false }, { nightly: true }]) {
+      expect(isCheckInFormValid(validForm(), ctx)).toBe(true);
+      for (const key of FIELDS) {
+        const blanked = validForm({ [key]: '' });
+        expect([key, ctx?.nightly, isFieldRequired(key, ctx)]).toEqual([
+          key,
+          ctx?.nightly,
+          !isCheckInFormValid(blanked, ctx),
+        ]);
+      }
+    }
+  });
+});
+
+/**
+ * The message under a field.
+ *
+ * The reported bug in one line: "Emergency contact" carries no asterisk and the Register
+ * button has always accepted it blank, but leaving it empty printed "This field is required"
+ * in red under it. Check-out did the same on any form that failed to submit for some other
+ * reason — and since the drawer scrolls to the first red message, a host could be sent to an
+ * optional field to fix a problem that was somewhere else entirely.
+ */
+describe('fieldErrorFor', () => {
+  it('says nothing about an empty optional field', () => {
+    const f = validForm({ emergencyContact: '', leaveDate: '', messCharges: '' });
+    expect(fieldErrorFor(f, 'emergencyContact')).toBe('');
+    expect(fieldErrorFor(f, 'leaveDate')).toBe('');
+    expect(fieldErrorFor(f, 'messCharges')).toBe('');
+  });
+
+  it('still reports an empty required field', () => {
+    expect(fieldErrorFor(validForm({ phone: '' }), 'phone')).toBe('This field is required');
+    expect(fieldErrorFor(validForm({ cnicNumber: '   ' }), 'cnicNumber')).toBe('This field is required');
+  });
+
+  it('says nothing when a required field is filled in', () => {
+    expect(fieldErrorFor(validForm(), 'phone')).toBe('');
+  });
+
+  // Optional does not mean unchecked. A check-out is not required, but one that lands before
+  // the check-in is a real error and has to survive the optional-field shortcut above it.
+  it('still catches a check-out before the check-in', () => {
+    const f = validForm({ joiningDate: '2026-06-22', leaveDate: '2026-06-21' });
+    expect(fieldErrorFor(f, 'leaveDate')).toBe('Check-out must be after check-in');
+  });
+
+  it('leaves the billing cycle alone on a nightly stay', () => {
+    const f = validForm({ billingDate: '', billingDueDate: '' });
+    expect(fieldErrorFor(f, 'billingDate')).toBe('This field is required');
+    expect(fieldErrorFor(f, 'billingDate', { nightly: true })).toBe('');
+    expect(fieldErrorFor(f, 'billingDueDate', { nightly: true })).toBe('');
   });
 });

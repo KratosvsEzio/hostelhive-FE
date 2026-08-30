@@ -19,11 +19,12 @@ import { routePath } from '@core/i18n/locales';
 import { ConsentBanner } from '@core/google-analytics/consent-banner';
 import { StartupGate } from '@core/startup-gate';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Logo } from '@core/brand/logo';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [Logo, 
     RouterOutlet,
     SiteHeader,
     SiteFooter,

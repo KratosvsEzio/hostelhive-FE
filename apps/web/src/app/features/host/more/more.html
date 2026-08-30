@@ -30,53 +30,29 @@
     <!-- This hostel -->
     <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostMore.thisHostel' | transloco }}</p>
     <div class="divide-y divide-ink-100 overflow-hidden rounded-2xl bg-white shadow-card">
-      <!-- First, not in sidebar order. Below 768px the sidebar is not rendered at all, so
-           this row is the only way into the bookings calendar on a phone — it was in neither
-           the tab bar nor this list, and the page was reachable only by typing its URL.
-           Everything else here is something a host opens occasionally; arrivals and room
-           assignments are the daily job, and this screen already costs one tap to reach. -->
-      @if (canSeeBookings()) {
-        <a [routerLink]="base() + '/bookings'" class="flex w-full items-center gap-3 px-4 py-3.5">
-          <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-blue text-ink-600"><i class="ti ti-calendar" aria-hidden="true"></i></span>
-          <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.bookings' | transloco }}</span>
+      @for (item of hostelRows(); track item.link) {
+        <a [routerLink]="item.link" class="flex w-full items-center gap-3 px-4 py-3.5">
+          <span class="grid h-9 w-9 place-items-center rounded-xl" [class]="tint(item)">
+            <i class="ti" [class]="item.icon" aria-hidden="true"></i>
+          </span>
+          <span class="flex-1 text-sm font-medium text-ink-800">{{ item.label || '' | transloco }}</span>
           <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
         </a>
       }
-      <a [routerLink]="base() + '/profile'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-building" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.hostelProfile' | transloco }}</span>
-        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
-      </a>
-      <a [routerLink]="base() + '/team'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-user-shield" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.teamAmpStaff' | transloco }}</span>
-        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
-      </a>
-      <a [routerLink]="base() + '/utilities'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-mint text-ink-600"><i class="ti ti-bolt" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.utilities' | transloco }}</span>
-        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
-      </a>
-      <a [routerLink]="base() + '/mess'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-purple text-ink-600"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.mess' | transloco }}</span>
-        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
-      </a>
-      <a [routerLink]="base() + '/expenses'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-sky text-ink-600"><i class="ti ti-report-money" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.expenses' | transloco }}</span>
-        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
-      </a>
     </div>
 
     <!-- Account -->
     <p class="mb-2 mt-5 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'common.account' | transloco }}</p>
     <div class="divide-y divide-ink-100 overflow-hidden rounded-2xl bg-white shadow-card">
-      <a [routerLink]="base() + '/subscription'" class="flex w-full items-center gap-3 px-4 py-3.5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-tint-cream text-brand-600"><i class="ti ti-rosette" aria-hidden="true"></i></span>
-        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.subscription' | transloco }}</span>
-        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
-      </a>
+      @for (item of accountRows(); track item.link) {
+        <a [routerLink]="item.link" class="flex w-full items-center gap-3 px-4 py-3.5">
+          <span class="grid h-9 w-9 place-items-center rounded-xl" [class]="tint(item)">
+            <i class="ti" [class]="item.icon" aria-hidden="true"></i>
+          </span>
+          <span class="flex-1 text-sm font-medium text-ink-800">{{ item.label || '' | transloco }}</span>
+          <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+        </a>
+      }
       <a routerLink="/account/settings" class="flex w-full items-center gap-3 px-4 py-3.5">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-settings" aria-hidden="true"></i></span>
         <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.accountSettings' | transloco }}</span>

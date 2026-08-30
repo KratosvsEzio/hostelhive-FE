@@ -7,12 +7,13 @@ import {
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { Dropdown, Toggle } from '@hostelhive/ui';
+import { Dropdown, DropdownOption, Toggle } from '@hostelhive/ui';
 import { MAX_ROOM_IMAGES, MIN_ROOM_CAPACITY, RoomImage } from '@util/room-types';
 import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
 import {
   DEFAULT_OCCUPANCY_TYPE,
   OCCUPANCY_OPTIONS,
+  isPrivateOccupancy,
   discountError,
   unitNoun,
 } from '@util/occupancy-type';
@@ -56,6 +57,14 @@ export class RoomTypeRow {
   readonly description = input('');
   readonly images = input<readonly RoomImage[]>([]);
   readonly uploadingImage = input(false);
+  /**
+   * How many more photos this row can take — uploads already on their way included.
+   *
+   * The parent owns the number because only the parent knows about a file that has left the
+   * picker and not yet come back with an id; `images()` counts what has landed. Left unset it
+   * falls back to the visibly free slots, which is right for a parent that uploads nothing.
+   */
+  readonly freeSlots = input<number | null>(null);
   readonly imageError = input('');
   readonly bookable = input(false);
   readonly currency = input(DEFAULT_CURRENCY_CODE);
@@ -76,7 +85,12 @@ export class RoomTypeRow {
   readonly bookableChange = output<boolean>();
   readonly removed = output<void>();
 
-  protected readonly occupancyOptions = OCCUPANCY_OPTIONS;
+  /**
+   * What "Sold as" offers. Defaulted rather than required: the moderator's review screen
+   * renders this row without the host form's options call behind it, and a row that cannot
+   * show its own occupancy is worse than one showing the pair the app has always known.
+   */
+  readonly occupancyOptions = input<DropdownOption[]>(OCCUPANCY_OPTIONS);
   protected readonly maxImages = MAX_ROOM_IMAGES;
 
   /** Opened by the host. A row that has no name yet has nothing to collapse into. */
@@ -94,10 +108,8 @@ export class RoomTypeRow {
     return MIN_ROOM_CAPACITY;
   }
 
-  protected readonly isPrivate = computed(() => this.occupancyType() === 'private');
+  protected readonly isPrivate = computed(() => isPrivateOccupancy(this.occupancyType()));
 
-  /** "Sleeps" counts people; "Beds" counts sellable units. Same field, different job. */
-  protected readonly capacityLabel = computed(() => (this.isPrivate() ? 'Sleeps' : 'Beds'));
 
   protected readonly priceLabel = computed(() =>
     this.isPrivate() ? 'Price per room' : 'Price per bed',
@@ -142,7 +154,33 @@ export class RoomTypeRow {
       : this.price();
   });
 
-  protected readonly canAddImage = computed(() => this.images().length < MAX_ROOM_IMAGES);
+  /** What the picker may take in one go, so three empty slots can be filled in one trip. */
+  protected readonly openSlots = computed(
+    () => this.freeSlots() ?? Math.max(0, MAX_ROOM_IMAGES - this.images().length),
+  );
+
+  /**
+   * What the picker turned away, kept here because the picker may not survive saying it.
+   *
+   * Filling the last slot takes the tile out of the grid, and that is exactly the pick most
+   * likely to have dropped a file — so the message would vanish in the one case it is needed.
+   * This line sits below the grid and stays.
+   */
+  protected readonly pickerError = signal('');
+
+  /** The upload failure from the parent, or what the picker refused — whichever is live. */
+  protected readonly imageProblem = computed(() => this.imageError() || this.pickerError());
+
+  protected onImagePicked(file: File): void {
+    this.pickerError.set('');
+    this.imagePicked.emit(file);
+  }
+
+  /** Freeing a slot makes "no room left" untrue, so the message goes with the photo. */
+  protected onImageRemoved(id: string): void {
+    this.pickerError.set('');
+    this.imageRemoved.emit(id);
+  }
 
   /**
    * Always three slots: the photos so far, then the picker, then whatever is still free.

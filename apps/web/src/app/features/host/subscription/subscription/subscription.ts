@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
@@ -18,24 +18,17 @@ import {
   switchMap,
 } from 'rxjs';
 import type { Observable } from 'rxjs';
-import { format, isValid, parse } from 'date-fns';
 import {
   Button,
   Card,
-  CellDef,
-  ColumnDef,
-  DataTable,
-  Pagination,
   EmptyState,
   ErrorState,
-  ExpandConfig,
   Skeleton,
   StatusPill,
   Toast,
 } from '@hostelhive/ui';
 import type { StatusTone } from '@hostelhive/ui';
 import {
-  PaymentProduct,
   Product,
   SubscriptionContract as Contract,
   SubscriptionContractStatus as ContractStatus,
@@ -51,7 +44,6 @@ import {
   hasListingDiscount,
 } from '@util/product-pricing';
 import { ApiDate } from '@util/api-date';
-import { PAGE_SIZE } from '@util/pagination';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 interface FeaturedStatus {
@@ -72,27 +64,6 @@ interface ViewState {
   error: boolean;
   networkError: boolean;
   data: BillingData | null;
-}
-
-const PAYMENT_TONE: Record<Payment['status'], StatusTone> = {
-  paid: 'ok',
-  failed: 'danger',
-  refunded: 'neutral',
-  pending: 'warn',
-};
-
-const PAYMENT_LABEL: Record<Payment['status'], string> = {
-  paid: 'Paid',
-  failed: 'Failed',
-  refunded: 'Refunded',
-  pending: 'Pending',
-};
-
-function fmtDate(s: string): string {
-  if (!s) return '—';
-  let d = new Date(s);
-  if (!isValid(d)) d = parse(s, 'yyyy-MM-dd', new Date());
-  return isValid(d) ? format(d, 'd MMM y') : '—';
 }
 
 const STATUS_META: Record<ContractStatus, { label: string; tone: StatusTone }> = {
@@ -130,14 +101,12 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
 @Component({
   selector: 'hh-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [RouterLink, 
     ApiDate,
     DecimalPipe,
     DashboardLayout,
     Button,
     Card,
-    DataTable,
-    Pagination,
     EmptyState,
     ErrorState,
     Skeleton,
@@ -150,7 +119,7 @@ const PRODUCT_FEATURES: Record<string, string[]> = {
 export class Subscription {
   private readonly api = inject(SubscriptionApi);
   private readonly productsApi = inject(ProductsApi);
-  private readonly store = inject(HostPropertyStore);
+  protected readonly store = inject(HostPropertyStore);
   private readonly subStore = inject(SubscriptionStore);
   private readonly router = inject(Router);
 
@@ -211,25 +180,11 @@ export class Subscription {
     { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
   );
 
-  // Paged client-side rather than through the API: `paidListingCount` below counts paid
-  // listing purchases across the WHOLE history to work out the remaining discount, so
-  // fetching one page at a time would silently under-count it. A host has few
-  // subscription payments, so holding them all is cheap.
-  protected readonly paymentPage = signal(1);
-
+  // The whole history is still fetched, and still held whole: `paidListingCount` counts paid
+  // listing purchases across all of it to work out the remaining discount, so a page at a
+  // time would silently under-count. The table it also used to feed now lives on its own
+  // page (see `PaymentHistory`), which fetches for itself.
   private readonly allPayments = computed(() => this.state()?.data?.payments ?? []);
-
-  protected readonly paymentPageCount = computed(() =>
-    Math.max(1, Math.ceil(this.allPayments().length / PAGE_SIZE)),
-  );
-
-  protected readonly pagedPayments = computed(() => {
-    // Clamped so switching to a hostel with fewer payments cannot leave the table blank
-    // on an out-of-range page.
-    const page = Math.min(this.paymentPage(), this.paymentPageCount());
-    const start = (page - 1) * PAGE_SIZE;
-    return this.allPayments().slice(start, start + PAGE_SIZE);
-  });
 
   protected readonly paidListingCount = computed(() =>
     countPaidListingPurchases(this.state()?.data?.payments ?? []),
@@ -274,29 +229,6 @@ export class Subscription {
       (contract.status === 'active' || contract.status === 'pending-payment')
     );
   }
-
-  protected readonly paymentRowId = (r: unknown) => (r as Payment).id;
-  protected readonly paymentCols: ColumnDef[] = [
-    { key: 'date',        label: 'Date',        cell: (r) => ({ kind: 'text', value: fmtDate((r as Payment).date), class: 'whitespace-nowrap text-ink-600' }) satisfies CellDef },
-    { key: 'description', label: 'Description', cell: (r) => ({ kind: 'composite', primary: (r as Payment).description, secondary: (r as Payment).products.length > 1 ? `${(r as Payment).products.length} products` : undefined }) satisfies CellDef },
-    { key: 'method',      label: 'Method',      cell: (r) => ({ kind: 'text', value: (r as Payment).method, class: 'text-ink-600' }) satisfies CellDef },
-    { key: 'status',      label: 'Status',      cell: (r) => ({ kind: 'pill', text: PAYMENT_LABEL[(r as Payment).status], tone: PAYMENT_TONE[(r as Payment).status] }) satisfies CellDef },
-    { key: 'amount', align: 'right', label: 'Amount',  cell: (r) => ({ kind: 'currency', amount: (r as Payment).amount, class: 'font-medium text-ink-900' }) satisfies CellDef },
-  ];
-
-  protected readonly paymentExpand: ExpandConfig = {
-    childRows: (r) => (r as Payment).products.length > 1 ? (r as Payment).products : [],
-    childId: (s) => (s as PaymentProduct).id,
-    childName: (s) => (s as PaymentProduct).name,
-    nameLabel: 'Product',
-    nameColSpan: 4,
-    columns: [
-      {
-        label: 'Price', align: 'right',
-        cell: (s) => ({ kind: 'currency', amount: (s as PaymentProduct).price, class: 'font-medium text-ink-900' }) satisfies CellDef,
-      },
-    ],
-  };
 
   protected statusMeta(status: ContractStatus) {
     return STATUS_META[status];

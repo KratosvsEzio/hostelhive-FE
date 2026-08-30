@@ -70,7 +70,7 @@
           <span class="mb-1 block text-xs font-medium text-ink-500">{{ 'moderatorReview.roomName' | transloco }}</span>
           <input
             type="text"
-            [placeholder]="'moderatorReview.eGDeluxe6Bed' | transloco"
+            [placeholder]="'common.enterRoomTypeName' | transloco"
             class="h-[42px] w-full rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-900 outline-none transition focus:border-ink-400"
             [value]="name()"
             (input)="onName($any($event.target).value)"
@@ -82,7 +82,7 @@
           <hh-dropdown
             variant="field"
             [placeholder]="'common.roomType' | transloco"
-            [options]="occupancyOptions"
+            [options]="occupancyOptions()"
             [value]="occupancyType()"
             (valueChange)="onOccupancy($event)"
           />
@@ -97,8 +97,11 @@
              of its neighbours and left the row visibly ragged. -->
         <div class="grid gap-3 sm:grid-cols-[7rem_1fr]">
           <label class="block">
-            <!-- Named for the job it is doing: people on a private room, sellable units on a dorm. -->
-            <span class="mb-1 block text-xs font-medium text-ink-500">{{ capacityLabel() }}</span>
+            <!-- One word for both occupancies. It read "Sleeps" on a private room and "Beds" on
+                 a dorm, which named two different things and left a host comparing rows that
+                 did not appear to hold the same kind of number. It is one field, called
+                 `capacity` everywhere behind this input — the label now says so too. -->
+            <span class="mb-1 block text-xs font-medium text-ink-500">Capacity</span>
             <input
               type="number"
               [min]="minCapacity()"
@@ -169,7 +172,7 @@
             </span>
             <textarea
               rows="3"
-              [placeholder]="'moderatorReview.bunksLockersEnsuiteTheView' | transloco"
+              [placeholder]="'common.enterDescription' | transloco"
               class="w-full resize-y rounded-xl border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 outline-none transition focus:border-ink-400"
               [value]="description()"
               (input)="descriptionChange.emit($any($event.target).value)"
@@ -189,7 +192,7 @@
                       type="button"
                       class="absolute end-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
                       [attr.aria-label]="'a11y.removePhoto' | transloco"
-                      (click)="imageRemoved.emit(img.id)"
+                      (click)="onImageRemoved(img.id)"
                     >
                       <i class="ti ti-x text-xs" aria-hidden="true"></i>
                     </button>
@@ -200,7 +203,9 @@
                     [label]="'common.addPhoto' | transloco"
                     shape="rect"
                     [uploading]="uploadingImage()"
-                    (picked)="imagePicked.emit($event)"
+                    [maxFiles]="openSlots()"
+                    (picked)="onImagePicked($event)"
+                    (rejected)="pickerError.set($event)"
                   />
                 } @else {
                   <!-- A slot still to fill. Inert — the picker is the only way in, so two live
@@ -215,10 +220,10 @@
               }
             </div>
 
-            @if (imageError()) {
+            @if (imageProblem()) {
               <p class="mt-2 flex items-start gap-1.5 text-xs text-danger">
                 <i class="ti ti-alert-circle mt-px shrink-0" aria-hidden="true"></i>
-                <span class="min-w-0">{{ imageError() }}</span>
+                <span class="min-w-0">{{ imageProblem() }}</span>
               </p>
             }
           </div>

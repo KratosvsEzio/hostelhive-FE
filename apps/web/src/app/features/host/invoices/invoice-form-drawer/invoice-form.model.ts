@@ -1,6 +1,6 @@
 import type { Invoice, Tenant } from '@hostelhive/data-access';
 import type { HostOpsApi } from '@services/host-ops-api';
-import { localToday } from '@util/api-date';
+import { localDay } from '@util/api-date';
 
 /** Every field the add-invoice drawer binds to, held as form-shaped strings. */
 export interface InvoiceForm {
@@ -27,7 +27,7 @@ export interface TenantOption {
 export type CreateInvoicePayload = Parameters<HostOpsApi['createInvoice']>[1];
 
 function today(): string {
-  return localToday();
+  return localDay();
 }
 
 /** Blank form a fresh invoice starts from, defaulting the issue date to today. */

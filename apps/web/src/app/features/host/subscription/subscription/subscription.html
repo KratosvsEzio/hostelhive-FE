@@ -151,33 +151,33 @@
       }
     </section>
 
-    <!-- 2. Payment history -->
+    <!-- 2. Payment history — its own page now.
+
+         It sat here between the current plan and the plans on offer, so a host comparing
+         plans scrolled past their whole billing history to reach them. The count is kept
+         because it is the useful part at a glance; the rows are one click away. -->
     <section>
-      <div class="mb-4">
-        <h2 class="font-display text-base font-semibold text-ink-900">{{ 'hostSubscription.paymentHistory' | transloco }}</h2>
-      </div>
-      @if (s.data.payments.length === 0) {
-        <hh-empty-state
-          icon="ti-receipt"
-          [title]="'hostSubscription.noPaymentsYet' | transloco"
-          message="Invoices appear here after your first charge."
-        />
-      } @else {
-        <hh-data-table
-          [columns]="paymentCols"
-          [rows]="pagedPayments()"
-          [rowId]="paymentRowId"
-          [expandable]="paymentExpand"
-        />
-        @if (paymentPageCount() > 1) {
-          <div class="mt-4 flex justify-end">
-            <hh-pagination
-              [pageCount]="paymentPageCount()"
-              [(page)]="paymentPage"
-            />
-          </div>
-        }
-      }
+      <a
+        [routerLink]="['/host', store.selected(), 'subscription', 'payments']"
+        class="flex items-center justify-between gap-4 rounded-2xl border border-ink-100 bg-white p-4 transition hover:border-brand-300 sm:p-5"
+      >
+        <span class="flex min-w-0 items-center gap-3">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-tint-cream text-brand-600">
+            <i class="ti ti-receipt text-lg" aria-hidden="true"></i>
+          </span>
+          <span class="min-w-0">
+            <span class="block font-display text-base font-semibold text-ink-900">{{ 'hostSubscription.paymentHistory' | transloco }}</span>
+            <span class="mt-0.5 block text-sm text-ink-500">
+              @if (s.data.payments.length) {
+                {{ s.data.payments.length }} {{ s.data.payments.length === 1 ? 'charge' : 'charges' }}
+              } @else {
+                {{ 'hostSubscription.noPaymentsYet' | transloco }}
+              }
+            </span>
+          </span>
+        </span>
+        <i class="ti ti-chevron-right shrink-0 text-ink-400" aria-hidden="true"></i>
+      </a>
     </section>
 
     <!-- 3. Plans & Add-ons -->

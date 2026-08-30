@@ -1,10 +1,10 @@
-<app-dashboard-layout [label]="label()">
-
-  <div hhActions class="flex items-center gap-2">
-    <button hh-button variant="outlined" size="sm" type="button" (click)="goBack()">
-      <i class="ti ti-arrow-left"></i>{{ 'common.rooms' | transloco }}
-    </button>
-  </div>
+<!-- Breadcrumb rather than a back button in the actions slot. Ten other detail pages take
+     the chevron the layout already offers; this one hand-rolled its own, which put the only
+     way back on the far side of the header from where every other page keeps it. -->
+<app-dashboard-layout
+  [backUrl]="roomsUrl()"
+  [breadcrumbs]="[{ label: 'common.rooms' | transloco, url: roomsUrl() }, { label: label() }]"
+>
 
   @let s = state();
 
@@ -39,7 +39,12 @@
     @if (view() === 'calendar') {
       <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
       @if (hostelId() && roomId()) {
-        <hh-room-calendar [hostelId]="hostelId()!" [roomId]="roomId()" />
+        <hh-room-calendar
+          [hostelId]="hostelId()!"
+          [roomId]="roomId()"
+          [capacity]="room.capacity"
+          [residents]="s.renters"
+        />
       }
 
     } @else {
@@ -77,8 +82,16 @@
       <div class="rounded-2xl bg-white shadow-card">
         <div class="border-b border-ink-100 px-5 py-4">
           <p class="font-semibold text-ink-900">{{ 'hostRooms.currentTenants' | transloco }}</p>
+          <!-- Counted from the active tenants, which is what the header above reports too.
+               Counting every returned row put "4 of 4 beds occupied" under a header reading
+               "Occupied 0 / 4". The inactive ones are still listed — this is the only place
+               their stay in this room shows — so their number is said separately rather than
+               folded into occupancy. -->
           <p class="mt-0.5 text-xs text-ink-400">
-            {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: s.renters.length, total: room.capacity } }}
+            {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: activeRenters().length, total: room.capacity } }}
+            @if (pastRenters().length) {
+              · {{ 'hostRooms.nNoLongerActive' | transloco: { count: pastRenters().length } }}
+            }
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 <header
-  class="safe-pt sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur"
+  class="safe-pt sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur transition-[margin] duration-200 ease-in-out"
+  [style.marginInlineStart]="sidebarInset()"
 >
   <div class="px-5 sm:px-8">
     <!-- Row 1: logo + inline location search (home/search only) + route actions -->
@@ -8,16 +9,22 @@
       [class.h-16]="!showSearchBar()"
       [class.py-2.5]="showSearchBar()"
     >
+      <!-- The mark, unless the sidebar beside this bar is already showing it: on a console
+           the brand sits in the sidebar's top row, at the true top-left of the window, and a
+           second one here would be the same logo twice on one screen. The empty div stays so
+           `justify-between` still pushes the controls to the end. -->
       <div class="flex items-center gap-2.5">
-        <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
-          <img src="/hostelhive-logo.png" alt="HostelHive" class="h-5 w-auto sm:h-7" />
-        </a>
-        @if (area() === 'admin' || area() === 'moderator') {
-          <span
-            class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
-            [class]="area() === 'admin' ? 'bg-brand-500' : 'bg-ink-900'"
-            >{{ area() === 'admin' ? 'Admin' : 'Mod' }}</span
-          >
+        @if (!hasConsoleSidebar()) {
+          <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
+            <i hhLogo class="h-5 w-auto text-ink-900 sm:h-7"></i>
+          </a>
+          @if (area() === 'admin' || area() === 'moderator') {
+            <span
+              class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
+              [class]="area() === 'admin' ? 'bg-brand-500' : 'bg-ink-900'"
+              >{{ area() === 'admin' ? 'Admin' : 'Mod' }}</span
+            >
+          }
         }
       </div>
 

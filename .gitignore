@@ -67,3 +67,4 @@ vitest.config.*.timestamp*
 storybook-static
 debug-storybook.log
 apps/web/src/app/google-analytics.env.ts
+apps/web/src/app/maps.env.ts

@@ -71,8 +71,19 @@
           class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-500"
         >
           <hh-badge [variant]="l.accommodationType">{{ genderLabel(l.accommodationType) }}</hh-badge>
-          @if (l.verified) {
-            <hh-badge variant="verified">{{ 'listing.verified' | transloco }}</hh-badge>
+          <!-- Featured, and nothing in its place when it is not.
+
+               This was a "Verified" badge, which was derived from `status.slug === 'active'`
+               — every listing a seeker could reach was active, so the badge marked all of
+               them and told nobody anything, while claiming a check that never happened.
+
+               Same gold pill the search cards use, so a hostel the seeker noticed in results
+               is still visibly the same hostel here. -->
+          @if (l.isFeatured) {
+            <span class="featured-badge">
+              <i class="ti ti-crown-filled relative z-[1] text-xs" aria-hidden="true"></i>
+              <span class="relative z-[1]">{{ 'card.featured' | transloco }}</span>
+            </span>
           }
           @if (l.rating) {
             <button
@@ -131,7 +142,10 @@
     <!-- Two columns -->
     <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
       <!-- MAIN -->
-      <div class="lg:col-span-2">
+      <!-- `space-y` rather than a margin on each card: the sections used to be separated
+           by hairlines and now they are separate objects, so the gap belongs to the stack
+           rather than to any one of them. -->
+      <div class="lg:col-span-2 space-y-4">
         <!-- Host summary -->
         <div
           class="flex items-center justify-between gap-4 border-b border-ink-100 pb-6"
@@ -147,20 +161,50 @@
           }
         </div>
 
-        <!-- Choose your room. Nightly hostels only — a monthly hostel is a tenancy and keeps
-             the enquiry path below instead. -->
-        @if (bookingEnabled()) {
-          <hh-room-picker
-            [offers]="roomOffers()"
-            [period]="bookingPeriod()"
-            [currency]="l.currency"
-          />
+        <!-- What the place is, before what it costs. It sat below the room picker and the
+             reviews, so a seeker met a list of rooms and prices before a word about the
+             hostel — and had to scroll past their own booking to find out what they were
+             booking. -->
+        @if (l.description) {
+          <section class="rounded-2xl border border-ink-100 bg-white p-5 sm:p-6">
+            <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">
+              {{ 'listing.aboutThisHostel' | transloco }}
+            </h3>
+            <div class="max-h-[168px] overflow-hidden">
+              <div
+                class="hh-rich text-[15px] leading-relaxed text-ink-600"
+                [innerHTML]="l.description"
+              ></div>
+            </div>
+            <button
+              type="button"
+              class="mt-3 text-sm font-semibold text-ink-900 underline hover:text-ink-600"
+              (click)="descriptionModalOpen.set(true)"
+            >
+              {{ 'listing.showMore' | transloco }}
+            </button>
+          </section>
         }
+
+        <!-- The rooms, both frequencies. A monthly hostel had its own plainer list further
+             down the page — same room types off the same payload, without the photos,
+             descriptions or discounts — on the reasoning that a tenancy has no checkout.
+             True, but that is an argument against the Add button, not against showing a
+             seeker what the rooms are; the picker drops the controls itself on `period`.
+
+             Ungated: the picker renders every room type the hostel has, and says so itself
+             when there are none. A hostel with rooms it has not opened to booking is not
+             a hostel without rooms, which is what withholding the section here implied. -->
+        <hh-room-picker
+          [offers]="roomOffers()"
+          [period]="bookingPeriod()"
+          [currency]="l.currency"
+        />
 
         <!-- Reviews (in-page section) -->
         @if (reviews().length) {
           @let rstats = reviewStats();
-          <section class="border-b border-ink-100 py-6">
+          <section class="rounded-2xl border border-ink-100 bg-white p-5 sm:p-6">
             <div class="mb-4 flex items-center gap-2">
               <i class="ti ti-star-filled text-lg text-amber-400" aria-hidden="true"></i>
               <h3 class="font-display text-lg font-semibold text-ink-900">
@@ -219,69 +263,9 @@
           </section>
         }
 
-        <!-- About -->
-        @if (l.description) {
-          <section class="border-b border-ink-100 py-6">
-            <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">
-              {{ 'listing.aboutThisHostel' | transloco }}
-            </h3>
-            <div class="max-h-[168px] overflow-hidden">
-              <div
-                class="hh-rich text-[15px] leading-relaxed text-ink-600"
-                [innerHTML]="l.description"
-              ></div>
-            </div>
-            <button
-              type="button"
-              class="mt-3 text-sm font-semibold text-ink-900 underline hover:text-ink-600"
-              (click)="descriptionModalOpen.set(true)"
-            >
-              {{ 'listing.showMore' | transloco }}
-            </button>
-          </section>
-        }
-
-        <!-- Rooms & pricing -->
-        @if (l.rooms?.length) {
-          <section class="border-b border-ink-100 py-6">
-            <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
-              {{ 'listing.roomsAmpPricing' | transloco }}
-            </h3>
-            <div class="space-y-3">
-              @for (room of l.rooms; track room.id; let i = $index) {
-                <div
-                  class="flex items-center justify-between gap-3 rounded-2xl border border-ink-100 p-4 transition hover:shadow-card"
-                >
-                  <div class="flex min-w-0 items-center gap-3">
-                    <span
-                      class="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-brand-600"
-                      [class]="roomTint(i)"
-                    >
-                      <i class="ti ti-bed text-xl" aria-hidden="true"></i>
-                    </span>
-                    <div class="min-w-0">
-                      <p class="font-medium text-ink-900">{{ room.type }}</p>
-                      <p class="text-sm text-ink-500">
-                        {{ room.attachedBath ? 'Attached bath' : 'Shared bath' }}
-                        · {{ room.bedsLeft }} {{ room.bedsLeft === 1 ? 'bed' : 'beds' }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="shrink-0 text-end">
-                    <p class="font-semibold text-ink-900">
-                      <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ room.price | number }}
-                    </p>
-                    <p class="text-xs text-ink-400">{{ 'listing.month' | transloco }}</p>
-                  </div>
-                </div>
-              }
-            </div>
-          </section>
-        }
-
         <!-- Amenities (driven by AMENITIES) -->
         @if (amenityList().length) {
-        <section class="border-b border-ink-100 py-6">
+        <section class="rounded-2xl border border-ink-100 bg-white p-5 sm:p-6">
           <h3 class="mb-4 font-display text-lg font-semibold text-ink-900">
             {{ 'listing.whatThisPlaceOffers' | transloco }}
           </h3>
@@ -307,7 +291,7 @@
 
         <!-- Nearby landmarks -->
         @if (l.nearby.length) {
-          <section class="border-b border-ink-100 py-6">
+          <section class="rounded-2xl border border-ink-100 bg-white p-5 sm:p-6">
             <h3 class="mb-3 font-display text-lg font-semibold text-ink-900">
               {{ 'common.nearbyLandmarks' | transloco }}
             </h3>
@@ -329,7 +313,7 @@
         }
 
         <!-- Faux map (CSS grid background) + text address -->
-        <section class="py-6">
+        <section class="rounded-2xl border border-ink-100 bg-white p-5 sm:p-6">
           <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
             <h3 class="font-display text-lg font-semibold text-ink-900">
               {{ 'listing.whereYouLlBe' | transloco }}
@@ -365,7 +349,25 @@
                gated phone is still how a seeker asks a question before committing. It does
                not repeat the "From" price, which the card below already carries. -->
           @if (bookingEnabled()) {
-            <hh-booking-rail [period]="bookingPeriod()" [currency]="l.currency" (book)="startBooking()" />
+            <hh-booking-rail
+              [period]="bookingPeriod()"
+              [currency]="l.currency"
+              (book)="startBooking()"
+              (chooseRoom)="onChooseRoom()"
+            />
+
+            <!-- The last screen before the booking exists. Rendered beside the rail rather
+                 than at the page root so it shares the basket instance this page provides. -->
+            @if (summaryOpen()) {
+              <hh-booking-summary
+                [currency]="l.currency"
+                [hostelName]="l.name"
+                [submitting]="booking()"
+                [error]="bookingError()"
+                (confirmed)="confirmBooking()"
+                (dismissed)="dismissSummary()"
+              />
+            }
           }
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
@@ -374,7 +376,12 @@
               <span class="text-2xl font-semibold text-ink-900"
                 ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}</span
               >
-              <span class="text-sm text-ink-400">{{ 'listing.month' | transloco }}</span>
+              <!-- The unit the hostel actually charges in. Hardcoded "/ month", this read
+                   "From Rs 1,200 / month" over a bed let at Rs 1,200 a *night* — the one
+                   number on the page a seeker decides on, understated thirtyfold. -->
+              <span class="text-sm text-ink-400">{{
+                (bookingEnabled() ? 'listing.perNight' : 'listing.month') | transloco
+              }}</span>
             </div>
             <p class="mt-1 text-sm text-ink-500">{{ sharingSummary() }}</p>
 
@@ -468,7 +475,7 @@
       <p class="text-xs text-ink-400">{{ 'common.from' | transloco }}</p>
       <p class="truncate font-semibold text-ink-900">
         <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}
-        <span class="text-xs font-normal text-ink-400">/ mo</span>
+        <span class="text-xs font-normal text-ink-400">{{ fromPeriodLabel() }}</span>
       </p>
     </div>
     <div class="flex shrink-0 items-center gap-2">
@@ -624,7 +631,7 @@
           <div class="min-w-0">
             <p class="truncate font-semibold text-ink-900">{{ l.name }}</p>
             <p class="mt-0.5 truncate text-sm text-ink-500">{{ l.area }}, {{ l.city }}</p>
-            <p class="mt-0.5 text-xs text-ink-400"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }} / mo</p>
+            <p class="mt-0.5 text-xs text-ink-400"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }} {{ fromPeriodLabel() }}</p>
           </div>
         </div>
 
@@ -793,38 +800,68 @@
             {{ 'common.retry' | transloco }}
           </button>
         } @else if (revealed()) {
-          <!-- Phone row -->
-          <div class="mt-4 flex items-center justify-between rounded-xl border border-ink-100 px-4 py-3">
-            <div>
-              <p class="text-xs text-ink-400">{{ 'listing.mobile' | transloco }}</p>
-              <a
-                [href]="'tel:' + phoneValue()"
-                class="font-mono text-base font-semibold text-brand-600 hover:underline"
-              >{{ phoneValue() }}</a>
+          <!-- Phone row. Conditional now: a hostel that left only an email is still
+               reachable, and an empty row with a `tel:` link to nothing is worse than none. -->
+          @if (phoneValue()) {
+            <div class="mt-4 flex items-center justify-between rounded-xl border border-ink-100 px-4 py-3">
+              <div>
+                <p class="text-xs text-ink-400">{{ 'listing.mobile' | transloco }}</p>
+                <a
+                  [href]="'tel:' + phoneValue()"
+                  class="font-mono text-base font-semibold text-brand-600 hover:underline"
+                >{{ phoneValue() }}</a>
+              </div>
+              <button
+                type="button"
+                class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-ink-500 transition hover:bg-surface"
+                (click)="copyPhone()"
+              >
+                @if (copied()) {
+                  <i class="ti ti-check text-ok" aria-hidden="true"></i>Copied
+                } @else {
+                  <i class="ti ti-copy" aria-hidden="true"></i>Copy
+                }
+              </button>
             </div>
-            <button
-              type="button"
-              class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-ink-500 transition hover:bg-surface"
-              (click)="copyPhone()"
-            >
-              @if (copied()) {
-                <i class="ti ti-check text-ok" aria-hidden="true"></i>Copied
-              } @else {
-                <i class="ti ti-copy" aria-hidden="true"></i>Copy
-              }
-            </button>
-          </div>
+          }
+
+          <!-- Only when there is a primary above it to be secondary *to*: with no primary,
+               the secondary is promoted into the row above rather than shown twice. -->
+          @if (secondaryPhoneValue(); as second) {
+            <div class="mt-2 rounded-xl border border-ink-100 px-4 py-3">
+              <p class="text-xs text-ink-400">{{ 'common.secondaryPhone' | transloco }}</p>
+              <a
+                [href]="'tel:' + second"
+                class="font-mono text-base font-semibold text-brand-600 hover:underline"
+              >{{ second }}</a>
+            </div>
+          }
+
+          @if (contactEmail(); as mail) {
+            <div class="mt-2 rounded-xl border border-ink-100 px-4 py-3">
+              <p class="text-xs text-ink-400">{{ 'common.contactEmail' | transloco }}</p>
+              <a
+                [href]="'mailto:' + mail"
+                class="block truncate text-base font-semibold text-brand-600 hover:underline"
+              >{{ mail }}</a>
+            </div>
+          }
 
           <!-- Action buttons -->
           <div class="mt-3 flex flex-col gap-2">
-            <a
-              hh-button
-              color="primary"
-              class="w-full"
-              [href]="'tel:' + phoneValue()"
-            >
-              <i class="ti ti-phone" aria-hidden="true"></i>{{ 'listing.callNow' | transloco }}
-            </a>
+            <!-- Guarded like the WhatsApp button beside it. Now that the reveal succeeds on
+                 an email alone, an unguarded Call would render `tel:null` — a button that
+                 looks live and dials nothing. -->
+            @if (phoneValue(); as callNumber) {
+              <a
+                hh-button
+                color="primary"
+                class="w-full"
+                [href]="'tel:' + callNumber"
+              >
+                <i class="ti ti-phone" aria-hidden="true"></i>{{ 'listing.callNow' | transloco }}
+              </a>
+            }
             @if (whatsAppUrl(); as waUrl) {
               <a
                 hh-button
@@ -1068,7 +1105,10 @@
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
         <h2 id="login-gate-title" class="font-display text-base font-semibold text-ink-900">
-          {{ 'listing.signInToContact' | transloco }}
+          {{
+            (gateIntent() === 'rooms' ? 'listing.signInToBook' : 'listing.signInToContact')
+              | transloco
+          }}
         </h2>
         <button
           type="button"
@@ -1083,15 +1123,27 @@
       <!-- Body -->
       <div class="px-5 py-5">
         <div class="flex items-start gap-3">
-          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#25D366]/10">
-            <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
-          </div>
-          <div>
-            <p class="font-semibold text-ink-900">{{ 'listing.seeVerifiedContactDetails' | transloco }}</p>
-            <p class="mt-1 text-sm text-ink-500">
-              {{ 'listing.createAFreeAccountTo' | transloco }}
-            </p>
-          </div>
+          @if (gateIntent() === 'rooms') {
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50">
+              <i class="ti ti-bed text-xl text-brand-600" aria-hidden="true"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-ink-900">{{ 'listing.pickYourRoomOnce' | transloco }}</p>
+              <p class="mt-1 text-sm text-ink-500">
+                {{ 'listing.createAFreeAccountToBook' | transloco }}
+              </p>
+            </div>
+          } @else {
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#25D366]/10">
+              <i class="ti ti-brand-whatsapp text-xl text-[#25D366]" aria-hidden="true"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-ink-900">{{ 'listing.seeVerifiedContactDetails' | transloco }}</p>
+              <p class="mt-1 text-sm text-ink-500">
+                {{ 'listing.createAFreeAccountTo' | transloco }}
+              </p>
+            </div>
+          }
         </div>
 
         <div class="mt-5 flex flex-col gap-2">

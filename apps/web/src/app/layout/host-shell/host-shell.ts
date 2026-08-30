@@ -12,27 +12,19 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, Ro
 import { filter, map, take } from 'rxjs';
 import { HostPropertyStore, SubscriptionStore } from '@services';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
+import { hostPagePath, opensWithoutSubscription } from './host-route';
+import { NavEntry, hostNav } from './host-nav';
 import { SubscriptionLoading } from '../components/subscription-loading/subscription-loading';
 import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
-import { Permission, SessionStore } from '@core/auth';
+import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
 import { Button, Dropdown, DropdownOption, StatusTone, TooltipFixed } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Logo } from '@core/brand/logo';
 import { TranslocoPipe } from '@jsverse/transloco';
-
-interface NavEntry {
-  /** A translation key, not display text — resolved by the pipe so it follows a language change. */
-  label?: string;
-  icon?: string;
-  link?: string;
-  exact?: boolean;
-  divider?: boolean;
-  /** Hidden unless the session holds this flag. Omit for entries everyone may see. */
-  permission?: Permission;
-}
 
 const PILL_TONE: Record<ListingStatus, StatusTone> = {
   published: 'ok',
@@ -56,8 +48,11 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
+  imports: [Logo, RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
   templateUrl: './host-shell.html',
+  // Escape closes the property flyout wherever focus happens to be -- it is a popover, and
+  // one that can only be dismissed by finding its backdrop is a trap for the keyboard.
+  host: { '(document:keydown.escape)': 'closePropertyFlyout()' },
 })
 export class HostLayout {
   protected readonly drawer = inject(ConsoleDrawer);
@@ -118,9 +113,15 @@ export class HostLayout {
     }
   });
 
+  /**
+   * Pages the gate must not bounce: the subscription page and the hostel profile.
+   *
+   * The decision itself lives in {@link opensWithoutSubscription}, beside its tests. It is
+   * segment arithmetic over a URL, and this file has already had it wrong once — the check
+   * read the third segment, which stopped being the page when English moved to `/en/…`.
+   */
   private isExemptRoute(): boolean {
-    const page = this.router.url.split('?')[0].split('/').filter(Boolean)[2] ?? '';
-    return page === 'subscription' || page === 'profile';
+    return opensWithoutSubscription(this.router.url);
   }
 
   /**
@@ -187,34 +188,12 @@ export class HostLayout {
     });
   }
 
-  protected readonly nav = computed<NavEntry[]>(() => {
-    const pid = this.propertyStore.selected();
-    const b = `/host/${pid}`;
-    // Each destination names the API action it needs, so a sub-user only sees the sections
-    // their permissions actually reach. Overview is ungated: it is a dashboard over whatever
-    // the user can already see, not a resource of its own.
-    const entries: NavEntry[] = [
-      { label: 'common.overview',       icon: 'ti-layout-dashboard', link: `${b}/overview` },
-      { label: 'common.hostelProfile', icon: 'ti-building',         link: `${b}/profile`,      permission: 'host:Hostel:show' },
-      { label: 'common.rooms',          icon: 'ti-bed',              link: `${b}/rooms`,        permission: 'host:Room:index' },
-      { label: 'common.bookings',       icon: 'ti-calendar',         link: `${b}/bookings`,     permission: 'host:Room:index' },
-      { label: 'common.tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
-      { label: 'hostNav.teamStaff',   icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
-      { label: 'common.utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
-      { label: 'common.mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess`,         permission: 'host:WeeklyMenu:index' },
-      { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
-      { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
-      { divider: true },
-      { label: 'common.subscription',   icon: 'ti-rosette',          link: `${b}/subscription`, permission: 'core:Hostel:subscription' },
-    ];
-    const visible = entries.filter(
-      (e) => !e.permission || this.session.hasPermission(e.permission),
-    );
-    // Drop a divider that lost everything below it, so the list never ends on a stray rule.
-    return visible.filter(
-      (e, i) => !e.divider || visible.slice(i + 1).some((n) => !n.divider),
-    );
-  });
+  protected readonly nav = computed<NavEntry[]>(() =>
+    hostNav(`/host/${this.propertyStore.selected()}`, {
+      monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      can: (permission) => this.session.hasPermission(permission),
+    }),
+  );
 
   protected readonly propertyDropdownOptions = computed<DropdownOption[]>(() =>
     this.propertyStore.properties().map((p) => ({
@@ -244,10 +223,44 @@ export class HostLayout {
     () => this.propertyStore.loaded() && this.propertyStore.properties().length === 0,
   );
 
+  /* ------------------------------------------------- property picker, in the rail */
+
+  /**
+   * The property picker as a flyout beside the rail, rather than a reason to widen it.
+   *
+   * Clicking it used to expand the whole sidebar, which answered "which hostel am I on?"
+   * by rearranging the entire console and leaving the host to put it back. The flyout
+   * carries the same dropdown and the same create button, and costs nothing to dismiss.
+   */
+  protected readonly propertyFlyout = signal(false);
+
+  protected togglePropertyFlyout(): void {
+    this.propertyFlyout.update((v) => !v);
+  }
+
+  protected closePropertyFlyout(): void {
+    this.propertyFlyout.set(false);
+  }
+
+  /**
+   * The collapse chevron, which has to get past the flyout first.
+   *
+   * Expanding while it is open would slide 192px of sidebar out underneath a panel pinned
+   * to where the rail's edge used to be, leaving it floating over the nav it belongs to.
+   * So the panel goes first and the sidebar opens in the same click \x2D\x2D one gesture, not two.
+   */
+  protected onToggleRail(): void {
+    if (this.propertyFlyout()) this.closePropertyFlyout();
+    this.drawer.toggleRail();
+  }
+
   protected onPropertySelect(value: string | string[] | null): void {
     if (typeof value !== 'string') return;
-    const segments = this.router.url.split('/').filter(Boolean);
-    const page = segments.slice(2).join('/');
+    this.closePropertyFlyout();
+    // The same page, on another hostel. Counting segments raw included the language prefix,
+    // so the old hostel id was carried into the new URL — `/host/<new>/<old>/rooms`, which
+    // matches no route and drops the host on the public home page.
+    const page = hostPagePath(this.router.url);
     void this.router.navigate(['/host', value, ...(page ? page.split('/') : [])]);
   }
 

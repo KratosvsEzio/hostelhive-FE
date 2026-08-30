@@ -6,11 +6,12 @@ import { LanguageSwitcher } from '@core/i18n/language-switcher';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
 import { Container } from '@hostelhive/ui';
+import { Logo } from '@core/brand/logo';
 
 @Component({
   selector: 'app-site-footer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [Logo, 
     Container,
     TranslocoPipe,
     RouterLink,

@@ -15,12 +15,27 @@ import { AccommodationType } from './listing';
 export type PropertyAccommodationType = AccommodationType;
 
 /** A single property owned by the signed-in host. */
+/** A room type as the hostel list returns it — the same shape the host form edits. */
+export interface HostListingRoomType {
+  id: string;
+  name: string;
+  capacity: number;
+  price: number;
+  discountedPrice: number;
+  isDiscountable: boolean;
+  isBookable: boolean;
+  /** `private` | `shared`. */
+  occupancyType: string;
+}
+
 export interface HostListing {
   id: string;
   name: string;
   area: string;
   city: string;
   accommodationType: PropertyAccommodationType;
+  /** `month` | `night`, or empty when the payload did not say. */
+  billingFrequency: string;
   status: ListingStatus;
   image: string;
   /** Total rooms (published/paused properties only). */
@@ -28,6 +43,22 @@ export interface HostListing {
   bedsFilled?: number;
   bedsTotal?: number;
   views?: number;
+  /** ISO-4217, as the hostel is priced. */
+  currency: string;
+  /** `house` | `building` | `apartment`. */
+  propertyType: string;
+  totalFloors?: number;
+  /** Every room type on the hostel, so a page needing one does not re-fetch the hostel. */
+  roomTypes: HostListingRoomType[];
+  /** Amenity ids/slugs, as the offers filter uses them. */
+  offers: { id: number; name: string; slug: string }[];
+  review: { score: number | null; count: number };
+  address?: string;
+  state?: string;
+  country?: string;
+  landmarks?: string;
+  lat?: number;
+  lng?: number;
   /** Human "submitted N ago" line for in-review listings. */
   submittedAt?: string;
   photos?: number;

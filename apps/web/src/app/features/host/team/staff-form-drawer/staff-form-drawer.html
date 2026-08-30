@@ -7,47 +7,15 @@
   <div class="space-y-4">
     <!-- Photo leads the form, matching the tenant drawer. -->
     <div class="flex items-center gap-4">
-      <label
-        class="relative block shrink-0 cursor-pointer rounded-full focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-300"
-        [class.pointer-events-none]="uploading() === 'avatar'"
-        [attr.aria-label]="'a11y.addPhoto' | transloco"
-      >
-        <input
-          type="file"
-          accept="image/*"
-          class="sr-only"
-          (change)="onFile('avatar', $event)"
-        />
-        @if (f.avatarUrl) {
-          <img
-            [src]="f.avatarUrl"
-            [alt]="'hostTeam.staffPhoto' | transloco"
-            class="h-16 w-16 rounded-full object-cover ring-2 ring-brand-200"
-          />
-        } @else {
-          <div
-            class="grid h-16 w-16 place-items-center rounded-full bg-surface ring-2 ring-ink-100"
-          >
-            <i class="ti ti-user text-2xl text-ink-300" aria-hidden="true"></i>
-          </div>
-        }
-        @if (uploading() === 'avatar') {
-          <div
-            class="absolute inset-0 grid place-items-center rounded-full bg-black/40"
-          >
-            <i
-              class="ti ti-loader-2 animate-spin text-lg text-white"
-              aria-hidden="true"
-            ></i>
-          </div>
-        } @else {
-          <span
-            class="absolute bottom-0 end-0 grid h-6 w-6 place-items-center rounded-full bg-brand-500 text-white shadow"
-          >
-            <i class="ti ti-camera text-xs" aria-hidden="true"></i>
-          </span>
-        }
-      </label>
+      <!-- The shared picker: file or camera, and the same control the settings page and the
+           tenant drawer use. The bespoke label here only ever opened a file dialog. -->
+      <hh-photo-picker
+        shape="circle"
+        [preview]="f.avatarUrl || null"
+        [uploading]="uploading() === 'avatar'"
+        [label]="'a11y.addPhoto' | transloco"
+        (picked)="onPicked('avatar', $event)"
+      />
 
       <div>
         <p class="text-sm font-medium text-ink-900">
@@ -67,14 +35,14 @@
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <hh-input
         [label]="'common.fullName' | transloco"
-        [placeholder]="'hostTeam.eGAliKhan' | transloco"
+        [placeholder]="'common.enterFullName' | transloco"
         [value]="f.name"
         [error]="fieldError('name')"
         (valueChange)="patch('name', $event)"
       />
       <hh-input
         [label]="'hostTeam.jobTitle' | transloco"
-        [placeholder]="'hostTeam.eGWardenCookNight' | transloco"
+        [placeholder]="'common.enterJobTitle' | transloco"
         [value]="f.title"
         [error]="fieldError('title')"
         (valueChange)="patch('title', $event)"
@@ -89,14 +57,14 @@
 
     <hh-input
       [label]="'hostTeam.cnicNumber' | transloco"
-      placeholder="3520212345671"
+      [placeholder]="'common.enterIdNumber' | transloco"
       [value]="f.cnicNumber"
       (valueChange)="patch('cnicNumber', $event)"
     />
 
     <hh-input
       [label]="'common.address' | transloco"
-      [placeholder]="'hostTeam.blockALahore' | transloco"
+      [placeholder]="'common.enterAddress' | transloco"
       [value]="f.address"
       (valueChange)="patch('address', $event)"
     />
@@ -127,7 +95,7 @@
           [label]="f.hasUserAccount ? 'Email' : 'Email *'"
           type="email"
           autocomplete="off"
-          [placeholder]="'common.nameEmailCom' | transloco"
+          [placeholder]="'common.enterEmail' | transloco"
           [disabled]="f.hasUserAccount"
           [value]="f.managerEmail"
           [error]="managerEmailError()"
@@ -171,7 +139,7 @@
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <hh-money-input
         [label]="'hostTeam.salary' | transloco"
-        placeholder="25000"
+        [placeholder]="'common.enterAmount' | transloco"
         [value]="+f.salary || 0"
         [error]="fieldError('salary')"
         (valueChange)="patch('salary', $event ? $any($event).toString() : '')"
@@ -198,26 +166,13 @@
       ]; track slot.key) {
         <div>
           <p class="mb-1 block text-xs font-medium text-ink-600">{{ slot.label }}</p>
-          <label
-            class="flex h-24 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-ink-200 bg-ink-50/50 transition hover:border-brand-400"
-          >
-            <input
-              type="file"
-              accept="image/*"
-              class="sr-only"
-              (change)="onFile($any(slot.key), $event)"
-            />
-            @if (uploading() === slot.key) {
-              <i class="ti ti-loader-2 animate-spin text-lg text-brand-500" aria-hidden="true"></i>
-            } @else if (slot.url) {
-              <img [src]="slot.url" alt="" class="h-full w-full object-cover" />
-            } @else {
-              <span class="flex flex-col items-center gap-1 text-ink-400">
-                <i class="ti ti-camera-plus text-lg" aria-hidden="true"></i>
-                <span class="text-[11px]">{{ 'hostTeam.upload' | transloco }}</span>
-              </span>
-            }
-          </label>
+          <hh-photo-picker
+            class="block"
+            [preview]="slot.url || null"
+            [uploading]="uploading() === slot.key"
+            [label]="'hostTeam.upload' | transloco"
+            (picked)="onPicked($any(slot.key), $event)"
+          />
         </div>
       }
     </div>

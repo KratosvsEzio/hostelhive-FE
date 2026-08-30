@@ -25,6 +25,7 @@ import { GoogleAuthService } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { NotificationService } from '@core/notification.service';
+import { Logo } from '@core/brand/logo';
 
 type AuthTab = 'register' | 'login';
 type Phase = 'form' | 'verify';
@@ -54,7 +55,7 @@ const PASSWORD_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 @Component({
   selector: 'hh-lead-wall',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, TranslocoPipe, RouterLink, LocaleLink, FormsModule, Button, Input, PhoneInput, Tabs],
+  imports: [Logo, Container, TranslocoPipe, RouterLink, LocaleLink, FormsModule, Button, Input, PhoneInput, Tabs],
   templateUrl: './lead-wall.html',
 })
 export class LeadWall {

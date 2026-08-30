@@ -16,6 +16,7 @@ import { Badge, BadgeVariant, Button } from '@hostelhive/ui';
 import { SessionStore } from '@app/core/auth/session-store';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Logo } from '@core/brand/logo';
 
 const DRAFT_KEY = 'hh:onboarding:draft';
 
@@ -24,7 +25,7 @@ type GenderType = 'boys' | 'girls' | 'co-living';
 @Component({
   selector: 'hh-onboarding-payment',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, LocaleLink, Badge, Button, TranslocoPipe],
+  imports: [Logo, DecimalPipe, RouterLink, LocaleLink, Badge, Button, TranslocoPipe],
   templateUrl: './onboarding-payment.html',
 })
 export class OnboardingPayment {

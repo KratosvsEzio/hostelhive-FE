@@ -4,7 +4,7 @@
 // lands; only the service bodies swap from `of(...)` to HTTP.
 
 import { OfferCategory } from './offer';
-import { RoomType } from './hostel';
+import { HostelDetail, RoomType } from './hostel';
 
 export type ListingKind = 'boys' | 'girls' | 'coliving';
 
@@ -66,6 +66,15 @@ export interface ReviewAmenityGroup {
  * Hydrated from `GET /api/hostels/:id` (HostelSerializer) + `GET /api/users/:hostId`
  * (host) + `GET /api/offer_categories` (amenity catalogue). */
 export interface ReviewDetail {
+  /**
+   * The record this view model was built from, kept rather than discarded.
+   *
+   * Everything below is a *rendering* of the hostel — labels, tone pills, "2 days in queue".
+   * The editable form needs the hostel itself, and it was already in hand: `getById` fetches
+   * it and the mapper threw it away, so the review screen had to re-derive a handful of fields
+   * into its own signals and could only edit the ones somebody had remembered to carry across.
+   */
+  hostel: HostelDetail;
   id: string;
   name: string;
   kindLabel: string; // property type — 'Building', 'Apartment' …

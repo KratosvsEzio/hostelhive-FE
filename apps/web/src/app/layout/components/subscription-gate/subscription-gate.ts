@@ -76,7 +76,12 @@ export class SubscriptionGate {
   protected readonly subscriptionLink = computed(
     () => `/host/${this.store.selected()}/subscription`,
   );
+  /**
+   * The hostel profile, which is one segment — the route is `/host/:hostelId/profile`, with no
+   * id of its own. Naming the hostel twice matched nothing and fell through to the catch-all,
+   * so the "complete hostel profile first" button dropped the host on the public home page.
+   */
   protected readonly profileLink = computed(
-    () => `/host/${this.store.selected()}/profile/${this.store.selected()}`,
+    () => `/host/${this.store.selected()}/profile`,
   );
 }

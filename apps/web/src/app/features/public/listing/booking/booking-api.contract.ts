@@ -99,8 +99,22 @@ export type ApiHoldUpdateRequest = Omit<ApiHoldRequest, 'hostel_id'>;
 // POST /api/bookings
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * What a guest sends from a listing page.
+ *
+ * No `hold_id`, because there is no payment step to hold inventory across any more: the
+ * summary modal is the last thing between choosing rooms and the booking existing, and it is
+ * open for seconds. The rooms and dates travel in full so the backend prices the stay itself —
+ * a client-supplied total is a number the guest can edit.
+ */
 export interface ApiBookingRequest {
-  hold_id: string;
+  hostel_id: string;
+  /** `YYYY-MM-DD`. */
+  check_in: string;
+  /** `YYYY-MM-DD`, exclusive — nobody pays for the morning they leave. */
+  check_out: string;
+  guests: number;
+  lines: { room_id: string; quantity: number }[];
 }
 
 /**

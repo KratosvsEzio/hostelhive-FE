@@ -1,9 +1,33 @@
 @if (!mobile.isMobile()) {
 <aside
-  class="group fixed bottom-0 start-0 hh-below-header z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
+  class="group safe-pt fixed inset-y-0 start-0 z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
   [style.width]="drawer.width_()"
 >
-  <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+  <!-- The brand row, the same height as the site header beside it.
+
+       The sidebar runs the full height of the window now, so this corner is the top-left of
+       the page and the header starts to its right. Without a row of the header's own height
+       the first nav icon would sit level with nothing, twelve pixels from the top, against a
+       64px bar — which reads as a sidebar that failed to load its top rather than a deliberate
+       edge. `safe-pt` is on the <aside> for the same reason the header carries it: on a
+       notched device the mark would otherwise sit under the cutout. -->
+  <!-- `hh-brand-row`, not `h-16`: no rule under the mark, but the row still has to stand as
+       tall as the header's whole box so the first nav item starts level with the top of the
+       page beside it. See the class in global.css. -->
+  <a
+    routerLink="/host"
+    class="hh-brand-row flex shrink-0 items-center gap-2 overflow-hidden"
+    [class.justify-center]="drawer.railVisual()"
+    [class.px-4]="!drawer.railVisual()"
+  >
+    @if (drawer.railVisual()) {
+      <i hhLogo="mark" class="h-6 w-auto text-ink-900"></i>
+    } @else {
+      <i hhLogo class="h-6 w-auto text-ink-900"></i>
+    }
+  </a>
+
+  <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-3">
     @for (item of nav(); track $index) {
       @if (item.divider) {
         <div class="my-2 border-t border-ink-100"></div>
@@ -13,35 +37,72 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: !!item.exact }"
           class="nav-link"
-          [class.nav-link--rail]="drawer.railed()"
-          [hhTooltip]="drawer.railed() ? (item.label || '' | transloco) : ''"
+          [class.nav-link--rail]="drawer.railVisual()"
+          [hhTooltip]="drawer.railVisual() ? (item.label || '' | transloco) : ''"
           hhTooltipPlacement="right"
-          [attr.aria-label]="drawer.railed() ? (item.label || '' | transloco) : null"
+          [attr.aria-label]="drawer.railVisual() ? (item.label || '' | transloco) : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
-          @if (!drawer.railed()) {
-            {{ item.label || "" | transloco }}
+          @if (!drawer.railVisual()) {
+            <span class="nav-link__label">{{ item.label || "" | transloco }}</span>
           }
         </a>
       }
     }
   </nav>
 
-  <!-- Property picker. In the rail it is a single button that opens the sidebar: a
-       searchable dropdown and a "create hostel" button do not fit 64px, and hiding the
-       property a host is scoped to would be worse than asking for one click to see it. -->
-  @if (drawer.railed()) {
-    <div class="border-t border-ink-100 px-2 py-2">
+  <!-- Property picker. In the rail it opens a flyout rather than the sidebar: a searchable
+       dropdown and a "create hostel" button do not fit 64px, but widening the whole console
+       to answer "which hostel am I on?" is a heavier answer than the question deserves. -->
+  @if (drawer.railVisual()) {
+    <div class="relative border-t border-ink-100 px-2 py-2">
       <button
         type="button"
         class="nav-link nav-link--rail w-full"
-        [hhTooltip]="'hostNav.property' | transloco"
+        [class.bg-ink-100]="propertyFlyout()"
+        [hhTooltip]="propertyFlyout() ? '' : ('hostNav.property' | transloco)"
         hhTooltipPlacement="right"
         [attr.aria-label]="'hostNav.property' | transloco"
-        (click)="drawer.toggleRail()"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="propertyFlyout()"
+        (click)="togglePropertyFlyout()"
       >
         <i class="ti ti-building-community text-lg"></i>
       </button>
+
+      <!-- Sits against the rail's edge, overlapping it by a hair so it reads as hanging off
+           the icon rather than floating near it. Anchored to this row's bottom so it grows
+           upward, which is the only direction with room. -->
+      @if (propertyFlyout()) {
+        <div
+          class="absolute bottom-2 start-full z-20 -ms-1 w-64 rounded-xl border border-ink-100 bg-white p-3 shadow-pill"
+          role="dialog"
+          [attr.aria-label]="'hostNav.property' | transloco"
+        >
+          <p class="mb-1 px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostNav.property' | transloco }}</p>
+          <hh-dropdown
+            variant="borderless"
+            [placeholder]="propertiesLoading() ? ('common.loading' | transloco) : (propertiesUnavailable() ? ('common.unavailable' | transloco) : ('hostNav.selectAProperty' | transloco))"
+            triggerIcon="ti-building-community"
+            [options]="propertyDropdownOptions()"
+            [value]="propertyStore.selected()"
+            [loading]="propertiesLoading()"
+            (valueChange)="onPropertySelect($event)"
+          />
+          @if (canCreateHostel()) {
+            <a
+              hh-button
+              color="primary"
+              routerLink="/host/hostels/new"
+              class="mt-1 w-full"
+              (click)="closePropertyFlyout()"
+            >
+              <i class="ti ti-plus"></i>
+              {{ 'hostNav.createNewHostel' | transloco }}
+            </a>
+          }
+        </div>
+      }
     </div>
   } @else {
     <div class="border-t border-ink-100 px-3 py-2">
@@ -80,7 +141,7 @@
     style="inset-inline-end: -12px"
     [attr.aria-label]="drawer.railed() ? 'Expand sidebar' : 'Collapse sidebar'"
     [attr.aria-expanded]="!drawer.railed()"
-    (click)="drawer.toggleRail()"
+    (click)="onToggleRail()"
   >
     <i
       class="ti text-sm"
@@ -98,6 +159,15 @@
     aria-hidden="true"
   ></span>
 </aside>
+}
+
+@if (!mobile.isMobile() && propertyFlyout()) {
+  <button
+    type="button"
+    class="fixed inset-0 z-30 cursor-default"
+    aria-label="Close property menu"
+    (click)="closePropertyFlyout()"
+  ></button>
 }
 
 <div

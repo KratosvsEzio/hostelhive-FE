@@ -111,6 +111,13 @@ export interface RoomType {
   description?: string | null;
   capacity: number;
   price: number;
+  /**
+   * `shared` | `private_room` — how this room is sold. See `@util/occupancy-type`.
+   *
+   * The wire has always carried it; this contract did not, so every screen that needed it
+   * declared its own local shape and read it through that instead.
+   */
+  occupancy_type?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -156,6 +163,28 @@ export interface HostelDetail {
   max_price: number;
   /** ISO-4217 code the hostel's prices are quoted in (e.g. 'PKR', 'USD'). */
   currency?: string | null;
+  /**
+   * How a seeker reaches this hostel.
+   *
+   * `HostelInput` has always accepted an `email`; this side never declared one, so the form
+   * could send an address and never read it back. Optional because it is not certain every
+   * serializer returns it — a blank field is the same thing the form showed before either way.
+   */
+  email?: string | null;
+  /**
+   * `month` | `night` — how this hostel charges, and therefore whether it can be booked by
+   * the night at all. Sent by the serializer; this contract never declared it, so the one
+   * screen that needed it reached in through a cast and everything else guessed from the
+   * accommodation type instead.
+   */
+  billing_frequency?: string | null;
+  /**
+   * Promoted listing. Declared here, but **`/public/hostel_detail/:id` does not send it** —
+   * checked on the wire, that payload carries no key matching /feature/i, while the index
+   * at `/public/hostels` returns it per hostel. Optional and read defensively so the
+   * listing header simply shows no badge until the detail serializer includes it.
+   */
+  is_featured?: boolean | null;
   primary_phone: string;
   secondary_phone?: string | null;
   nearby_landmarks?: string | null;
@@ -395,12 +424,48 @@ export interface HostelResponse {
   hostel?: HostelDetail;
   errors?: string[];
 }
+/**
+ * The enum choices a hostel form offers, once an endpoint has answered.
+ *
+ * Named because two dashboards answer it from two different endpoints — `/api/hostels/new` for
+ * the host console, `/api/moderator/hostels/new` for review — and the form takes whichever its
+ * parent hands it rather than picking an endpoint on their behalf. That is the whole reason
+ * one form can serve both consoles instead of the two drifting into different sets of fields.
+ */
+export interface HostelFormOptions {
+  genderTypes: HostelEnumOption[];
+  propertyTypes: HostelEnumOption[];
+  billingFrequencyTypes: HostelEnumOption[];
+  occupancyTypes: HostelEnumOption[];
+  attachmentLabels: AttachmentLabel[];
+}
+
+/** What a form shows while the options are in flight, or after the call failed. */
+export const EMPTY_HOSTEL_FORM_OPTIONS: HostelFormOptions = {
+  genderTypes: [],
+  propertyTypes: [],
+  billingFrequencyTypes: [],
+  occupancyTypes: [],
+  attachmentLabels: [],
+};
+
 export interface HostelFormOptionsResponse {
   success: boolean;
   gender_types: HostelEnumOption[];
   property_types: HostelEnumOption[];
-  /** `month` | `night` — how a hostel prices everything. */
+  /**
+   * `month` | `night` — how a hostel prices everything.
+   *
+   * Both spellings are declared because the endpoint sends the singular and this contract has
+   * always asked for the plural, so `billingFrequencyTypes` has in fact been empty every time
+   * and the form has been running on its hardcoded fallback. Reading either is what makes that
+   * stop being true without betting on which one a given deploy sends.
+   */
+  billing_frequency_type?: HostelEnumOption[];
   billing_frequency_types?: HostelEnumOption[];
+  /** `shared` | `private_room` — how one room type is sold. Singular, like the key above. */
+  occupancy_type?: HostelEnumOption[];
+  occupancy_types?: HostelEnumOption[];
   attachment_labels?: AttachmentLabel[];
   errors?: string[];
 }

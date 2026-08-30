@@ -12,20 +12,29 @@ import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
-import { AMENITIES, AccommodationType } from '@hostelhive/data-access';
+import { AMENITIES, AccommodationType, iconForSlug } from '@hostelhive/data-access';
+import { translate } from '@jsverse/transloco';
 import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
-import { HostelsApi, ListingDetailApi } from '@services';
+import { HostelPhoneDetail, HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { MobileApp } from '@core/mobile-app';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
-import { periodForAccommodation } from '@util/pricing-period';
+import {
+  PricingPeriod,
+  periodForAccommodation,
+  periodFromBillingFrequency,
+  periodLabel,
+} from '@util/pricing-period';
+import { localDay } from '@util/api-date';
+import { NotificationService } from '@core/notification.service';
 import { BookingBasket } from '../booking/booking-basket';
 import { BookingRail } from '../booking/booking-rail';
+import { BookingSummary } from '../booking/booking-summary';
+import { BookingApi } from '../booking/booking-api';
 import { RoomPicker } from '../booking/room-picker';
-import { ROOM_OFFERS } from '../booking/room-offers.fixture';
 import { canBookOnline } from '../booking/room-offer';
 import { FavoritesStore } from '@util/favorites-store';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
@@ -46,40 +55,6 @@ interface ViewState {
   data: ListingDetailModel | null;
 }
 
-/** Maps a generic offer slug to the best-fit Tabler icon class. */
-function iconForSlug(slug: string): string {
-  const s = slug.toLowerCase();
-  if (s === 'wifi' || s.includes('wifi') || s.includes('internet')) return 'ti-wifi';
-  if (s === 'ac' || s.includes('air-con') || s.includes('cooling')) return 'ti-air-conditioning';
-  if (s.includes('kitchen') || s.includes('cook') || s.includes('stove') || s.includes('oven') || s.includes('microwave')) return 'ti-tools-kitchen-2';
-  if (s === 'security' || s.includes('security') || s.includes('guard')) return 'ti-shield-check';
-  if (s === 'cctv' || s.includes('cctv') || s.includes('camera') || s.includes('surveillance')) return 'ti-device-cctv';
-  if (s === 'parking' || s.includes('parking') || s.includes('garage')) return 'ti-car';
-  if (s === 'generator' || s.includes('generator') || s.includes('backup-power')) return 'ti-bolt';
-  if (s === 'laundry' || s.includes('laundry') || s.includes('washing')) return 'ti-wash-machine';
-  if (s.includes('bath') || s.includes('shower') || s.includes('tub')) return 'ti-bath';
-  if (s.includes('hot-water') || s.includes('geyser') || s.includes('heater')) return 'ti-temperature';
-  if (s.includes('fridge') || s.includes('refrigerator')) return 'ti-fridge';
-  if (s.includes('tv') || s.includes('television') || s.includes('cable') || s.includes('entertain')) return 'ti-device-tv';
-  if (s.includes('bed') || s.includes('mattress')) return 'ti-bed';
-  if (s === 'attached' || s.includes('attached')) return 'ti-bath';
-  if (s.includes('staff') || s.includes('personnel') || s.includes('caretaker')) return 'ti-users';
-  if (s.includes('clean') || s.includes('housekeep')) return 'ti-sparkles';
-  if (s.includes('study') || s.includes('desk') || s.includes('workspace')) return 'ti-desk';
-  if (s.includes('lift') || s.includes('elevator')) return 'ti-elevator';
-  if (s.includes('gym') || s.includes('fitness')) return 'ti-barbell';
-  if (s.includes('pool') || s.includes('swim')) return 'ti-swimming';
-  return 'ti-star';
-}
-
-/** Tint backgrounds cycled across the room cards (matches mockup 03). */
-const ROOM_TINTS = [
-  'bg-tint-cream',
-  'bg-tint-mint',
-  'bg-tint-sky',
-  'bg-tint-purple',
-  'bg-tint-blue',
-];
 
 @Component({
   selector: 'hh-listing-detail',
@@ -99,6 +74,7 @@ const ROOM_TINTS = [
     CurrencyNamePipe,
     RoomPicker,
     BookingRail,
+    BookingSummary,
   ],
   // Scoped to this page: a basket belongs to one hostel, and leaving disposes it — which is
   // also what should release the hold once holds exist.
@@ -117,17 +93,47 @@ export class ListingDetail {
   protected readonly mobile = inject(MobileApp);
   private readonly destroyRef = inject(DestroyRef);
   private readonly doc = inject(DOCUMENT);
+  private readonly bookingApi = inject(BookingApi);
+  protected readonly basket = inject(BookingBasket);
+  private readonly notifications = inject(NotificationService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleStore);
   private readonly analytics = inject(GoogleAnalyticsService);
 
-  protected readonly phoneValue = signal<string | null>(null);
+  /**
+   * Everything the hostel can be reached on, or null before the reveal.
+   *
+   * Replaces a lone `phoneValue` signal. The endpoint always returned three fields and the
+   * page only ever read one, so a second number simply did not exist as far as a seeker
+   * was concerned.
+   */
+  protected readonly phoneDetail = signal<HostelPhoneDetail | null>(null);
+
+  /** The number to call and to hand WhatsApp: primary if there is one, else the secondary. */
+  protected readonly phoneValue = computed(
+    () => this.phoneDetail()?.primaryPhone ?? this.phoneDetail()?.secondaryPhone ?? null,
+  );
+  /** Shown as its own row only when it is not already the number above. */
+  protected readonly secondaryPhoneValue = computed(() => {
+    const d = this.phoneDetail();
+    return d?.primaryPhone ? d.secondaryPhone : null;
+  });
+  protected readonly contactEmail = computed(() => this.phoneDetail()?.email ?? null);
   protected readonly phoneLoading = signal(false);
   protected readonly phoneError = signal(false);
   protected readonly modalOpen = signal(false);
   protected readonly loginGateOpen = signal(false);
+  /**
+   * Why the gate opened, so it can say so.
+   *
+   * The same dialog stands in front of two different asks. Left on the contact wording, a
+   * seeker who clicked "Choose a room" was shown a WhatsApp mark and told they were about to
+   * see verified contact details — an answer to a question they had not asked, which reads
+   * less like a sign-in prompt than like the button did the wrong thing.
+   */
+  protected readonly gateIntent = signal<'contact' | 'rooms'>('contact');
   protected readonly copied = signal(false);
   protected readonly shareOpen = signal(false);
   protected readonly shareLinkCopied = signal(false);
@@ -191,31 +197,87 @@ export class ListingDetail {
     return slug ? `/hostel/${slug}` : '/';
   });
 
-  /** The hostel's pricing cycle — one value for the whole property. */
-  protected readonly bookingPeriod = computed(() => {
+  /**
+   * The hostel's pricing cycle — one value for the whole property.
+   *
+   * **What it charges, not what its type implies.** This read `accommodationType` alone, which
+   * is a rule about what a backpacker hostel *usually* does — so a backpacker hostel that bills
+   * monthly was offered online booking, and a boys hostel that bills nightly was refused it.
+   * The serializer has said `billing_frequency` all along; nothing carried it this far.
+   *
+   * The accommodation type stays as the fallback, exactly as `periodForAccommodation` says it
+   * should be used: a payload that does not name a cycle is not evidence of a monthly one, and
+   * defaulting a backpacker hostel to monthly would silently close its booking path.
+   */
+  protected readonly bookingPeriod = computed<PricingPeriod>(() => {
     const l = this.state().data;
-    return l ? periodForAccommodation(l.accommodationType) : 'monthly';
+    if (!l) return 'monthly';
+    return (
+      periodFromBillingFrequency(l.billingFrequency) ??
+      periodForAccommodation(l.accommodationType)
+    );
   });
 
   /**
    * Whether this hostel offers online booking at all.
    *
    * Nightly only. A monthly hostel is a tenancy rather than a checkout, so it keeps the
-   * enquiry path — the picker and the rail simply do not render.
+   * enquiry path — the picker and the rail simply do not render, and {@link startBooking}
+   * is unreachable because nothing renders that can call it.
    */
+  /**
+   * `/ month` or `/ night`, from the same signal the room cards and the booking rail use.
+   *
+   * Two surfaces printed `/ mo` outright, so a backpacker hostel quoting nightly beds
+   * still advertised its From price by the month — the same number, off by a factor of
+   * thirty, on the two places a seeker looks first.
+   */
+  protected readonly fromPeriodLabel = computed(() => periodLabel(this.bookingPeriod()));
+
   protected readonly bookingEnabled = computed(() => canBookOnline(this.bookingPeriod()));
 
   /**
-   * Bookable rooms. **Stub pending Q-API** — the backend has no room-type split, no
-   * discounted price, no per-room images and no availability endpoint yet.
+   * The hostel's rooms, from `hostel_detail.room_types`.
+   *
+   * This used to be a five-room fixture, so every listing in the app offered the same Deluxe
+   * 6 Bed Private Ensuite at the same price. The record has carried the room types all along:
+   * name, description, capacity, list and discounted price, the bookable flag and the photos.
+   *
+   * Availability is the one thing it cannot answer — see `toRoomOffers` in
+   * `listing-detail-api.ts` for what stands in until that endpoint exists.
    */
-  protected readonly roomOffers = computed(() => (this.bookingEnabled() ? ROOM_OFFERS : []));
+  /*
+   * Not gated on `bookingEnabled()` any more. This was emptied for monthly hostels back
+   * when the picker was the booking path and nothing else; the picker now lists rooms for
+   * both frequencies and drops only the controls, so withholding the rooms would leave it
+   * with nothing to show.
+   */
+  protected readonly roomOffers = computed(() => this.state().data?.roomOffers ?? []);
+
+  /**
+   * Hands the picker's rooms to the booking mock, which is still keyed by room id.
+   *
+   * Without this every "Add" failed with "That room is no longer available": the mock looked
+   * the id up in the fixture it used to serve, and a real room-type id is not in there.
+   */
+  private readonly _publishRooms = effect(() => this.bookingApi.setCatalogue(this.roomOffers()));
+
+  // ── booking ────────────────────────────────────────────────────────────────
+
+  /** The summary modal, shown between pressing Book and the booking existing. */
+  protected readonly summaryOpen = signal(false);
+  protected readonly booking = signal(false);
+  protected readonly bookingError = signal('');
 
   /**
    * Book now. Browsing and building a basket are open to anyone; completing a booking is not.
    *
    * Anonymous seekers go to the auth page and come back to this listing, basket and all —
    * which is why the basket lives in the page rather than in a query string.
+   *
+   * This opens the summary rather than booking. Nothing is paid online, so pressing Book is
+   * the whole commitment — and the rail it was pressed from may be scrolled out of sight and
+   * unread since the dates were set. See {@link BookingSummary}.
    */
   protected startBooking(): void {
     if (!this.session.isAuthenticated()) {
@@ -224,8 +286,59 @@ export class ListingDetail {
       });
       return;
     }
-    // TODO: place the hold, then payment. Both need backend endpoints that do not exist yet
-    // (see the Rooms & Booking PRD, sections 04 and 06).
+    this.bookingError.set('');
+    this.summaryOpen.set(true);
+  }
+
+  protected dismissSummary(): void {
+    // Not while the request is in flight: the booking may already exist by the time the
+    // modal closes, and a guest who saw it vanish would reasonably try again.
+    if (this.booking()) return;
+    this.summaryOpen.set(false);
+  }
+
+  /**
+   * Confirmed in the summary — make the booking.
+   *
+   * The basket is not cleared on failure. Whatever went wrong, the rooms the guest picked are
+   * still the rooms they want, and making them choose again is a second punishment for the
+   * first problem.
+   */
+  protected confirmBooking(): void {
+    const listing = this.state().data;
+    const from = this.basket.checkIn();
+    const to = this.basket.checkOut();
+    if (!listing || !from || !to || this.booking()) return;
+
+    this.booking.set(true);
+    this.bookingError.set('');
+    this.bookingApi
+      .requestBooking({
+        hostel_id: String(listing.id),
+        check_in: localDay(from),
+        check_out: localDay(to),
+        guests: this.basket.guests(),
+        lines: this.basket.lines().map((l) => ({ room_id: l.roomId, quantity: l.quantity })),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.booking.set(false);
+          this.summaryOpen.set(false);
+          this.basket.clear();
+          this.notifications.success(
+            translate('publicBooking.bookingSent'),
+            translate('publicBooking.weLlEmailYouWhenConfirmed'),
+          );
+        },
+        error: (err: Error) => {
+          this.booking.set(false);
+          // Shown in the modal rather than as a toast: the guest is standing in front of the
+          // thing that failed, and "only 2 left of that room" is an instruction about the
+          // basket they are looking at.
+          this.bookingError.set(err?.message || translate('publicBooking.couldnTBook'));
+        },
+      });
   }
 
   protected readonly skeletons = [1, 2, 3];
@@ -286,7 +399,14 @@ export class ListingDetail {
     return labels.length ? `${labels.join(', ')}-sharing available` : '';
   });
 
-  protected readonly revealed = computed(() => this.phoneValue() !== null);
+  /**
+   * Whether the contact details have been fetched — not whether a phone number came back.
+   *
+   * A hostel with only an email is reachable, and the modal has something to show. Keying
+   * this on the phone alone would have reported "could not load the phone" for a record
+   * that loaded perfectly well and simply has no number on it.
+   */
+  protected readonly revealed = computed(() => this.phoneDetail() !== null);
 
   protected readonly whatsAppUrl = computed(() => {
     const phone = this.phoneValue();
@@ -343,8 +463,30 @@ export class ListingDetail {
     if (link) window.open(link, '_blank', 'noopener,noreferrer');
   }
 
+  /**
+   * "Choose a room" — the empty-basket call to action in the rail.
+   *
+   * Gated the same way the phone and WhatsApp buttons are, and for the same reason: picking a
+   * room is the start of a booking, and a booking needs somebody to belong to. Signing in
+   * first also means the basket survives the trip, which it would not if the seeker chose
+   * rooms and only then discovered they had to leave the page.
+   *
+   * Signed in, it scrolls to the picker rather than navigating: the rooms are on this page.
+   */
+  protected onChooseRoom(): void {
+    if (!this.session.isAuthenticated()) {
+      this.gateIntent.set('rooms');
+      this.loginGateOpen.set(true);
+      this.analytics.track('lead_wall_shown', { intent: 'choose_room' });
+      return;
+    }
+    if (!this.isBrowser) return;
+    this.doc.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   protected openModal(): void {
     if (!this.session.isAuthenticated()) {
+      this.gateIntent.set('contact');
       this.loginGateOpen.set(true);
       this.analytics.track('lead_wall_shown', { intent: 'contact' });
       return;
@@ -356,6 +498,7 @@ export class ListingDetail {
 
   protected openWhatsApp(): void {
     if (!this.session.isAuthenticated()) {
+      this.gateIntent.set('contact');
       this.loginGateOpen.set(true);
       this.analytics.track('lead_wall_shown', { intent: 'whatsapp' });
       return;
@@ -396,10 +539,14 @@ export class ListingDetail {
     this.hostelsApi.showPhone(id)
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (phone) => {
+        next: (detail) => {
           this.phoneLoading.set(false);
-          if (phone) {
-            this.phoneValue.set(phone);
+          // Reachable on any of the three. Insisting on a phone number reported a load
+          // failure for a hostel that had only left an email, which is not a failure and
+          // not what the message said.
+          const reachable = !!(detail.primaryPhone || detail.secondaryPhone || detail.email);
+          if (reachable) {
+            this.phoneDetail.set(detail);
             const listing = this.state().data;
             if (listing) {
               this.analytics.track('lead_submitted', {
@@ -789,9 +936,6 @@ export class ListingDetail {
     this.seo.setJsonLd('listing', jsonLd);
   }
 
-  protected roomTint(index: number): string {
-    return ROOM_TINTS[index % ROOM_TINTS.length];
-  }
 
   /**
    * Whether the hostel feeds its residents.

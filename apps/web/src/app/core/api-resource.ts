@@ -32,8 +32,9 @@ export class ApiClient {
   get<T>(
     path: string,
     params?: Record<string, string | number | boolean | ReadonlyArray<string | number | boolean>>,
+    context?: HttpContext,
   ): Observable<T> {
-    return this.http.get<T>(this.base + path, { params });
+    return this.http.get<T>(this.base + path, context ? { params, context } : { params });
   }
   post<T>(path: string, body: unknown, context?: HttpContext): Observable<T> {
     return this.http.post<T>(this.base + path, body, context ? { context } : undefined);

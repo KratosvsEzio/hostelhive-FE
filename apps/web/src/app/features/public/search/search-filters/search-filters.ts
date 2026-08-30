@@ -13,6 +13,7 @@ import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 /**
  * Filter sub-header for search results. A "Filters" button opens the full
@@ -37,18 +38,28 @@ export class SearchFilters {
   protected readonly modalOpen = signal(false);
 
   // Sort. 'newest'/'oldest' → sort[created_at] desc/asc; 'price-*' → sort[starting_price] (API layer).
-  /**
-   * Option labels live in TypeScript, so they cannot use the pipe. Reading the active
-   * language here makes the arrays below recompute on a language change — without it they
-   * would keep whatever language was active when this component was constructed.
-   */
   private readonly i18n = inject(TranslocoService);
-  private readonly lang = toSignal(this.i18n.langChanges$, {
-    initialValue: this.i18n.getActiveLang(),
-  });
+  private readonly locale = inject(LocaleStore);
+
+  /**
+   * An option label, once there is one to read.
+   *
+   * Labels live in TypeScript here, so they cannot use the pipe — which subscribes, renders
+   * blank and fills itself in. `translate()` cannot: it answers from whatever is loaded at
+   * the moment it is called, and the first evaluation of the lists below happens before the
+   * language file has landed. It found nothing and logged "Missing translation" for six keys
+   * that are present in all eighteen locale files.
+   *
+   * The labels were never wrong — the load completes, this recomputes, and the real string
+   * appears. Only the warning was, and a log that cries missing about keys that are not is a
+   * log nobody finds the real misses in.
+   *
+   * `ready()` rather than `langChanges`: it re-asks whenever Transloco stirs, so it still
+   * covers a language switch, and it answers by looking rather than by remembering an event
+   * — which matters for a language served from cache, where no load event is raised at all.
+   */
   private t(key: string): string {
-    this.lang();
-    return this.i18n.translate(key);
+    return this.locale.ready() ? this.i18n.translate(key) : '';
   }
 
   private readonly allSortOptions = computed<DropdownOption[]>(() => [

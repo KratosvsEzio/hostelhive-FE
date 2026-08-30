@@ -13,7 +13,7 @@ import { occupancyLine } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
-import { localToday } from '@util/api-date';
+import { localDay } from '@util/api-date';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
@@ -24,7 +24,7 @@ interface ViewState {
 }
 
 const toISO = (d: Date | undefined): string | undefined =>
-  d ? localToday(d) : undefined;
+  d ? localDay(d) : undefined;
 
 @Component({
   selector: 'app-occupancy-detail',

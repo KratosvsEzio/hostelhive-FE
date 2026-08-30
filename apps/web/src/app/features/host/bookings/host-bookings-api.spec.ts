@@ -264,3 +264,61 @@ describe('HostBookingsApi.list', () => {
     expect(page?.page).toBe(1);
   });
 });
+/**
+ * The room and the renter, both of which arrive on the booking and neither of which the
+ * model carried until the room calendar needed them.
+ *
+ * Two things here are easy to read as bugs and are not:
+ *
+ *  - **`room` is null on a paid booking.** That is what `pending-allotment` *is* \x2D\x2D money
+ *    taken, bed not yet chosen. Treating it as missing data would put a placeholder room on
+ *    the calendar for a stay that has not been given one.
+ *  - **`guest_name` is not who is staying.** In this data one account books beds for other
+ *    people, so the booker is "Andy" while the renter is somebody else. A roster that reads
+ *    the booker lists the same name against every bed in the room.
+ */
+describe('toHostBooking room and renter', () => {
+  it('reads the allotted room from the nested record', () => {
+    const b = toHostBooking(
+      raw({ room_id: 'eTcpbc', room: { id: 'eTcpbc', room_number: '1111' } }),
+    );
+
+    expect(b.room).toEqual({ id: 'eTcpbc', number: '1111' });
+  });
+
+  it('leaves the room null while the booking is pending allotment', () => {
+    const b = toHostBooking(raw({ room_id: null, room: null }));
+
+    expect(b.room).toBeNull();
+  });
+
+  // The flat id without the nested record still says which room, just not its number.
+  it('falls back to the flat id when only that travels', () => {
+    const b = toHostBooking(raw({ room_id: 'eTcpbc' }));
+
+    expect(b.room?.id).toBe('eTcpbc');
+    expect(b.room?.number).toBe('—');
+  });
+
+  it('reads the renter, who is not the booker', () => {
+    const b = toHostBooking(
+      raw({
+        renter_id: 'ksVzCJ',
+        renter: {
+          id: 'ksVzCJ',
+          full_name: 'AASHIR AZEEM',
+          email: 'jadude19+hostelhive4@gmail.com',
+          phone: '03030491909',
+        },
+      }),
+    );
+
+    expect(b.guest.name).toBe('Andy');
+    expect(b.renter?.name).toBe('AASHIR AZEEM');
+    expect(b.renter?.phone).toBe('03030491909');
+  });
+
+  it('leaves the renter null when nobody has been assigned', () => {
+    expect(toHostBooking(raw()).renter).toBeNull();
+  });
+});

@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -25,8 +26,8 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
 import { RoomCalendar } from '../room-calendar/room-calendar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { LocaleStore } from '@core/i18n/locale-store';
+import { tenantStatusLabel, tenantStatusTone } from '@util/tenant-status';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 type RoomStatus = 'available' | 'partial' | 'full';
 
@@ -51,8 +52,18 @@ export class RoomDetail {
   private readonly store  = inject(HostPropertyStore);
   private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly i18n = inject(TranslocoService);
-  private readonly locale = inject(LocaleStore);
+
+  /**
+   * A month-billed hostel has no night-by-night calendar to draw.
+   *
+   * The calendar answers "which beds are sold on which nights", which is a question only a
+   * per-night hostel asks \x2D\x2D the same rule that gates online booking. Showing it to a
+   * monthly hostel offered a tab whose every cell was a guess.
+   *
+   * Empty reads as unknown and keeps the tab: hiding a page's main view because a field did
+   * not arrive is a worse failure than showing one that does not apply.
+   */
+  protected readonly monthlyBilling = computed(() => this.store.isMonthlyBilled());
 
   /**
    * Which half of the room is on screen. Calendar first: the page is reached from the
@@ -62,18 +73,29 @@ export class RoomDetail {
   protected readonly view = signal<'calendar' | 'details'>('calendar');
 
   /**
-   * Rebuilt on both signals for the same reason the SEO headings are: `ready` flips once
-   * when the strings arrive, so a computed cannot cache a raw key from the render before
-   * they did, and `active` moves on every switch after that.
+   * Still a computed, but only because the list itself changes: a hostel billed monthly
+   * has no calendar to show. The language no longer enters into it — `hh-tabs` resolves
+   * the key through the pipe, so the `ready`/`active` reads that used to force a second
+   * pass after the strings loaded are gone, and with them the missing-translation warning
+   * the first pass logged.
    */
   protected readonly tabs = computed<TabItem[]>(() => {
-    this.locale.ready();
-    this.locale.active();
-    return [
-      { value: 'calendar', label: this.i18n.translate<string>('hostRooms.calendarTab') },
-      { value: 'details', label: this.i18n.translate<string>('hostRooms.detailsTab') },
-    ];
+    const details = { value: 'details', labelKey: 'hostRooms.detailsTab' };
+    if (this.monthlyBilling()) return [details];
+    return [{ value: 'calendar', labelKey: 'hostRooms.calendarTab' }, details];
   });
+
+  /**
+   * Keeps the view on a tab that exists.
+   *
+   * `view` starts on the calendar and the hostel arrives afterwards, so without this a
+   * monthly hostel lands on a tab that has just been removed from the strip \x2D\x2D the calendar
+   * still rendered, with nothing selected above it.
+   */
+  private readonly forceDetails = effect(() => {
+    if (this.monthlyBilling() && this.view() === 'calendar') this.view.set('details');
+  });
+
 
   /** Both ids the booking calendar needs, read from the same sources the page already uses. */
   protected readonly hostelId = this.store.selected;
@@ -105,6 +127,26 @@ export class RoomDetail {
     { initialValue: LOADING },
   );
 
+  /**
+   * Tenants actually in a bed, and those only on the record.
+   *
+   * The header and this card disagreed: the header counts what `roomShow` puts on
+   * `room.occupied` — active renters — while the card counted every row the endpoint
+   * returned. A room whose four tenants had all gone inactive read "Occupied 0 / 4" beside
+   * "4 of 4 beds occupied", on the same screen, about the same four people.
+   *
+   * Active is the number that means anything: a bed with a former tenant's record against it
+   * is a bed a host can sell. The past ones stay listed — this is the only place their stay
+   * in *this* room is visible — but they are counted separately rather than as occupancy.
+   */
+  protected readonly activeRenters = computed(() =>
+    this.state().renters.filter((r) => r.status === 'active'),
+  );
+
+  protected readonly pastRenters = computed(() =>
+    this.state().renters.filter((r) => r.status !== 'active'),
+  );
+
   protected readonly roomStatus = computed<RoomStatus>(() => {
     const r = this.state().room;
     if (!r || r.occupied <= 0) return 'available';
@@ -121,24 +163,20 @@ export class RoomDetail {
     return s === 'available' ? 'Available' : s === 'partial' ? 'Partial' : 'Full';
   });
 
+  /** Where the chevron and the parent crumb both point. */
+  protected readonly roomsUrl = computed(() => `/host/${this.store.selected()}/rooms`);
+
   protected readonly label = computed(() => {
     const r = this.state().room;
     return r ? `Room ${r.number}` : 'Room details';
   });
 
-  protected goBack(): void {
-    this.router.navigate(['/host', this.store.selected(), 'rooms']);
-  }
-
   protected goToTenant(tenantId: string): void {
     this.router.navigate(['/host', this.store.selected(), 'tenants', 'profile', tenantId]);
   }
 
-  protected renterTone(status: string): 'ok' | 'neutral' {
-    return status === 'active' ? 'ok' : 'neutral';
-  }
-
-  protected renterLabel(status: string): string {
-    return status === 'active' ? 'Active' : 'Checked out';
-  }
+  // Both from the console's one status table. These were a local two-way guess — `active`
+  // or "Checked out" — which labelled an Inactive tenant, and one on notice, as gone.
+  protected readonly renterTone = tenantStatusTone;
+  protected readonly renterLabel = tenantStatusLabel;
 }

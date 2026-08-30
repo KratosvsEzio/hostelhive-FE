@@ -160,6 +160,21 @@ body {
   height: calc(100dvh - var(--hh-header-h));
 }
 
+/* The console sidebar's brand row, matched to the header's *total* height rather than its
+   content height.
+
+   The row carries no rule of its own — the mark sits on the sidebar, not on a shelf — but the
+   header beside it carries one on the <header> itself, outside the 4rem row inside it, so the
+   header's box stands 4rem + 1px tall. Left as `h-16` the sidebar's nav would start a pixel
+   above the page content next to it, and the two columns would read as slightly out of step
+   all the way down.
+
+   Plain CSS for the same reason the rules above are: `calc()` needs real whitespace around
+   its operator, and a Tailwind arbitrary value puts that at the mercy of the normalizer. */
+.hh-brand-row {
+  height: calc(4rem + 1px);
+}
+
 /* Data tables never wrap a cell onto a second line. Pair with an `overflow-x-auto` wrapper
    (the console tables already have one) so a table wider than its container scrolls
    horizontally instead of wrapping its content. */
@@ -297,15 +312,78 @@ body {
 }
 
 /* Console sidebar nav links */
+/**
+ * The brand mark inlined by the `hhLogo` directive.
+ *
+ * The <i> is the sized box and the <svg> fills it, so callers keep writing `h-7 w-auto` on
+ * the element exactly as they did when this was an <img> — nothing at the call sites had to
+ * learn a new way to size a logo.
+ *
+ * `width: auto` on the svg rather than 100%: the wordmark is 8:1 and stretching it to the
+ * box would squash it the moment a caller set both dimensions.
+ */
+.hh-logo {
+  display: inline-flex;
+  align-items: center;
+}
+.hh-logo > svg {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
 .nav-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  /**
+   * A fixed row rather than one the content grows.
+   *
+   * The two states hold different things — the rail an icon, the sidebar an icon and a
+   * label — and a flex row takes its tallest child, so the height used to follow whichever
+   * that was: 18px for the icon (the tabler font sets line-height 1) against 21px for 14px
+   * text at the app's 1.5. That made the rail 38px and the sidebar 41px, so every link slid
+   * 3px further than the one above it as the drawer opened — the nth by 3(n−1)px.
+   *
+   * The padding is horizontal only for the same reason: 40px of *content* box leaves the
+   * label centred in far more room than its own line box needs, where 40px including 20px
+   * of padding would have left 20px for a 21px line and clipped the descenders off it —
+   * hardest on Urdu and Vietnamese, which is exactly where nobody would notice.
+   */
+  height: 40px;
+  padding: 0 14px;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
   color: #3b3b3b;
+  /**
+   * Never two lines.
+   *
+   * The sidebar animates between 4rem and 16rem over 200ms, so every width between the
+   * two is a width these labels are briefly laid out at. Longer locales would wrap at rest,
+   * too. Now that the row is a fixed 40px a second line is not shown at all — it is clipped,
+   * so the label would silently lose its tail rather than the nav reflowing. Either way the
+   * fix is the same: keep it to one line and let it end in an ellipsis that says so.
+   */
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* The icon is the one part with no slack in it: at 4rem it is the entire link. */
+.nav-link i {
+  flex-shrink: 0;
+}
+/**
+ * The label gives up width before anything else, and says so.
+ *
+ * `overflow: hidden` on the link alone would slice the text on the sidebar's own border,
+ * mid-glyph, with nothing to indicate there was more. The ellipsis needs a real element to
+ * belong to, which is why the shells wrap the label in a span rather than dropping it in
+ * as a bare text node — an anonymous flex item cannot carry `text-overflow`.
+ */
+.nav-link__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .nav-link:hover {
   background: #f4f4f4;

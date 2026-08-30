@@ -9,10 +9,31 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, SessionStore } from '@core/auth';
 import { HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
+import { NavEntry, TAB_BAR_SUFFIXES, hostNav, splitNav } from '@layout/host-shell/host-nav';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
+
+/**
+ * Row colour, by translation key.
+ *
+ * Here rather than on `NavEntry` because only this surface tints its rows — the sidebar
+ * draws plain icons. A key with no entry falls back to the neutral tint, so a new section
+ * appears looking ordinary instead of not appearing at all.
+ */
+const TINT: Record<string, string> = {
+  'common.bookings': 'bg-tint-blue text-ink-600',
+  'common.hostelProfile': 'bg-tint-cream text-brand-600',
+  'hostNav.teamStaff': 'bg-tint-sky text-ink-600',
+  'common.utilities': 'bg-tint-mint text-ink-600',
+  'common.mess': 'bg-tint-purple text-ink-600',
+  'common.expenses': 'bg-tint-sky text-ink-600',
+  'common.subscription': 'bg-tint-cream text-brand-600',
+  'hostSubscription.paymentHistory': 'bg-tint-cream text-brand-600',
+};
+
+const NEUTRAL_TINT = 'bg-ink-100 text-ink-600';
 
 const STATUS_LABEL: Record<ListingStatus, string> = {
   published: 'Live',
@@ -51,18 +72,49 @@ export class HostMore {
   protected readonly canCreateHostel = computed(
     () => this.session.hasPermission('core:Hostel:create'),
   );
-  /**
-   * The same permission the sidebar gates Bookings on, so the destination appears under
-   * exactly one rule rather than one per surface — a sub-user who cannot open the page on
-   * desktop should not be handed a link to it here.
-   */
-  protected readonly canSeeBookings = computed(
-    () => this.session.hasPermission('host:Room:index'),
-  );
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   protected readonly switcherOpen = signal(false);
+
+  /**
+   * The sidebar’s list, minus what the tab bar already reaches.
+   *
+   * Derived rather than written out again: this page and the sidebar are the only two
+   * places host navigation exists, and when each kept its own list they drifted — ten
+   * sections were on the sidebar and not here. Under 768px there is no sidebar, so that
+   * drift is not cosmetic; it is a page nobody can reach.
+   */
+  private readonly entries = computed(() =>
+    hostNav(this.base(), {
+      monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      can: (permission) => this.session.hasPermission(permission),
+    }).filter((e) => {
+      const link = e.link;
+      return !link || !TAB_BAR_SUFFIXES.some((t) => link.endsWith(t));
+    }),
+  );
+
+  /**
+   * Hostel sections, with Bookings first rather than in sidebar order.
+   *
+   * Everything else here is opened occasionally; arrivals and room assignments are the
+   * daily job, and this screen already costs a tap to reach.
+   */
+  protected readonly hostelRows = computed<NavEntry[]>(() => {
+    const rows = splitNav(this.entries()).hostel;
+    const at = rows.findIndex((e) => e.label === 'common.bookings');
+    return at <= 0 ? rows : [rows[at], ...rows.filter((_, i) => i !== at)];
+  });
+
+  /** What sat below the divider: the billing pages. */
+  protected readonly accountRows = computed<NavEntry[]>(
+    () => splitNav(this.entries()).account,
+  );
+
+  protected tint(entry: NavEntry): string {
+    return TINT[entry.label ?? ""] ?? NEUTRAL_TINT;
+  }
 
   protected readonly base = computed(
     () => `/host/${this.propertyStore.selected()}`,

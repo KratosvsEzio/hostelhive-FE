@@ -5,49 +5,49 @@
     @if (fromPrice() !== null) {
       <p class="text-sm text-ink-500">{{ 'common.from' | transloco }}</p>
       <p class="font-display text-2xl font-semibold text-ink-900">
-        {{ currency() }} {{ fromPrice() | number: '1.2-2' }}
+        {{ currency() | currencySym }} {{ fromPrice() | number: '1.2-2' }}
         <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
       </p>
     }
-    <a
-      href="#rooms"
-      class="mt-3 grid h-11 place-items-center rounded-full bg-brand-500 font-semibold text-white transition hover:bg-brand-600"
+    <!-- A button, not `href="#rooms"`.
+         The document carries `<base href="/">`, and a fragment-only href resolves against
+         the *base* rather than the current URL — so this sent a seeker reading
+         `/en/hostel/nHelLt` to `/#rooms`, which is the landing page. It looked like a scroll
+         link and behaved like "leave this listing". -->
+    <button
+      hh-button
+      type="button"
+      class="mt-3 w-full"
+      variant="filled"
+      color="primary"
+      size="lg"
+      (click)="chooseRoom.emit()"
     >
-      {{ 'publicListing.chooseARoom' | transloco }}
-    </a>
+      {{ 'publicListing.bookARoom' | transloco }}
+    </button>
   }
 
-  <div class="mt-3 grid grid-cols-2 gap-2">
-    <label class="rounded-xl border border-ink-200 px-3 py-2">
-      <span class="block text-xs text-ink-500">{{ 'publicListing.checkIn' | transloco }}</span>
-      <input
-        type="date"
-        class="w-full bg-transparent text-sm font-medium text-ink-900 outline-none"
-        [value]="basket.checkIn() ? (basket.checkIn() | date: 'yyyy-MM-dd') : ''"
-        (change)="onCheckIn($any($event.target).value)"
-      />
-    </label>
-    <label class="rounded-xl border border-ink-200 px-3 py-2">
-      <span class="block text-xs text-ink-500">{{ 'publicListing.checkOut' | transloco }}</span>
-      <input
-        type="date"
-        class="w-full bg-transparent text-sm font-medium text-ink-900 outline-none"
-        [value]="basket.checkOut() ? (basket.checkOut() | date: 'yyyy-MM-dd') : ''"
-        (change)="onCheckOut($any($event.target).value)"
-      />
-    </label>
-  </div>
+  <!-- One range picker rather than two native date inputs. Two of them let a seeker set a
+       check-out before their check-in, which the rail then priced as negative nights; a
+       calendar range cannot express that. `min` is today, since a stay cannot start in the
+       past, and the presets are dropped – "last month" is not a thing anyone books.
 
-  <label class="mt-2 block rounded-xl border border-ink-200 px-3 py-2">
-    <span class="block text-xs text-ink-500">{{ 'publicListing.guests' | transloco }}</span>
-    <input
-      type="number"
-      min="1"
-      class="w-full bg-transparent text-sm font-medium text-ink-900 outline-none"
-      [value]="basket.guests()"
-      (change)="onGuests($any($event.target).value)"
-    />
-  </label>
+       The placeholder is composed from the two existing keys rather than a new one: it stays
+       translated in every locale, and its separator matches what the trigger shows once a
+       range is picked ("Aug 5 – Aug 9"), so empty and filled read as one control. -->
+  <hh-date-range-picker
+    class="mt-3"
+    variant="field"
+    [from]="checkInIso()"
+    [to]="checkOutIso()"
+    [min]="todayIso"
+    [presets]="[]"
+    [placeholder]="
+      ('publicListing.checkIn' | transloco) + ' – ' + ('publicListing.checkOut' | transloco)
+    "
+    (rangeChange)="onRange($event)"
+  />
+
 
   @if (!basket.isEmpty()) {
     <ul class="mt-4 divide-y divide-ink-100 border-t border-ink-100">
@@ -59,16 +59,16 @@
             <!-- The arithmetic, not just its answer. A six-figure total that appears from
                  nowhere is a total nobody trusts. -->
             <p class="mt-1 text-sm text-ink-600 tabular-nums">
-              {{ currency() }} {{ linePerNight(line) | number: '1.2-2' }} × {{ 'common.nNights' | transloco: { count: basket.nights() } }}
+              {{ currency() | currencySym }} {{ linePerNight(line) | number: '1.2-2' }} × {{ 'common.nNights' | transloco: { count: basket.nights() } }}
             </p>
           </div>
           <div class="shrink-0 text-right">
             <p class="font-semibold text-ink-900 tabular-nums">
-              {{ currency() }} {{ lineTotal(line) | number: '1.2-2' }}
+              {{ currency() | currencySym }} {{ lineTotal(line) | number: '1.2-2' }}
             </p>
             @if (hasLineDiscount(line)) {
               <p class="text-xs text-ink-400 line-through tabular-nums">
-                {{ currency() }} {{ lineWas(line) | number: '1.2-2' }}
+                {{ currency() | currencySym }} {{ lineWas(line) | number: '1.2-2' }}
               </p>
             }
           </div>
@@ -84,36 +84,30 @@
       }
     </ul>
 
-    @if (tally(); as message) {
-      <!-- Shown while they are still choosing, not as an error after they think they are
-           done — the seeker can see the gap and close it themselves. -->
-      <p class="mt-2 rounded-lg bg-tint-cream px-3 py-2 text-sm text-amber-900">
-        {{ message }}
-      </p>
-    }
 
     <div class="mt-4 border-t border-ink-100 pt-3">
       <div class="flex items-baseline justify-between">
         <span class="font-semibold text-ink-900">{{ 'common.total' | transloco }}</span>
         <span class="font-display text-lg font-semibold text-ink-900 tabular-nums">
-          {{ currency() }} {{ basket.total() | number: '1.2-2' }}
+          {{ currency() | currencySym }} {{ basket.total() | number: '1.2-2' }}
         </span>
       </div>
-      <div class="mt-1 flex items-baseline justify-between">
-        <span class="font-semibold text-emerald-700">{{ 'publicListing.payableNow' | transloco }}</span>
-        <span class="font-semibold text-emerald-700 tabular-nums">
-          {{ currency() }} {{ basket.deposit() | number: '1.2-2' }}
-        </span>
-      </div>
-      <p class="mt-1 text-xs text-ink-500 tabular-nums">
-        {{ 'publicBooking.dueAtProperty' | transloco: { amount: currency() + ' ' + (basket.balanceAtProperty() | number: '1.2-2') } }}
+      <!-- Nothing is taken online any more, so there is no second figure to reconcile
+           against the first. What the stay costs is what this says, and it is settled with
+           the hostel. -->
+      <p class="mt-1 text-xs text-ink-500">
+        {{ 'publicBooking.payAtTheProperty' | transloco }}
       </p>
     </div>
 
+    <!-- The commit action, in the same brand fill as the "Choose a room" button above it and
+         the "Confirm booking" button after it. On the default colour it came out grey — the
+         one step in the flow that looked disabled was the one that finishes it. -->
     <button
       hh-button
       class="mt-3 w-full"
       variant="filled"
+      color="primary"
       size="lg"
       [disabled]="!basket.canBook()"
       (click)="book.emit()"

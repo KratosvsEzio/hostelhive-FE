@@ -11,6 +11,7 @@ const TITLE_NOT_ALLOWED = 'Not allowed';
 const TITLE_NOT_FOUND = "Couldn't load";
 const TITLE_LOAD_FAILED = "Couldn't load";
 const TITLE_SAVE_FAILED = "Couldn't save changes";
+const TITLE_DELETE_FAILED = "Couldn't delete";
 const TITLE_SERVER = 'Something went wrong';
 const TITLE_NETWORK = 'Connection problem';
 
@@ -80,8 +81,14 @@ export function toToastCopy(e: ApiError): { title: string; message: string } {
  */
 function titleFor(status: number, method?: string): string {
   if (status === 403) return TITLE_NOT_ALLOWED;
+  const verb = method?.toUpperCase();
+  // Ahead of the 404 branch on purpose. A DELETE is neither a load nor a save, and both of
+  // the other titles misdescribe it: "Couldn't save changes" on a failed removal reads as
+  // though an edit was lost, and a 404 here means the row is already gone, which is a fact
+  // about the delete rather than a failed read.
+  if (verb === 'DELETE') return TITLE_DELETE_FAILED;
   if (status === 404) return TITLE_NOT_FOUND;
-  if (method && READ_METHODS.has(method.toUpperCase())) return TITLE_LOAD_FAILED;
+  if (verb && READ_METHODS.has(verb)) return TITLE_LOAD_FAILED;
   return TITLE_SAVE_FAILED;
 }
 

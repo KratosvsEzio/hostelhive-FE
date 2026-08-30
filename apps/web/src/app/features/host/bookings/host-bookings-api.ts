@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
 import { dayRangeEnd, dayRangeStart } from '@util/date-range-filter';
 import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
@@ -13,6 +13,15 @@ import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/paginati
  * nothing on screen to explain it.
  */
 const DAY_ARRIVALS_LIMIT = 100;
+
+/**
+ * One page big enough to hold a month of one room's stays.
+ *
+ * The room calendar draws every stay touching the month, and a page boundary would not show
+ * as an error — it would show as a fortnight that looks free. A four-bed room turning over
+ * weekly tops out near twenty; a hundred leaves room for a hostel that sells by the night.
+ */
+const ROOM_MONTH_LIMIT = 100;
 
 /**
  * The host's bookings for one hostel — the list and the month, both real endpoints.
@@ -109,6 +118,46 @@ export class HostBookingsApi {
         ...pageParams(1, DAY_ARRIVALS_LIMIT),
         'f[checkin_date][gte]': dayRangeStart(date),
         'f[checkin_date][lte]': dayRangeEnd(date),
+      })
+      .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
+  }
+
+  /**
+   * Every stay **touching** `[from, to]` in one room — what the room calendar draws.
+   *
+   * Two filters, both verified against the live endpoint rather than assumed:
+   *
+   *  - `f[room.id]`, **not** `f[room_id]`. The flat key is accepted and matches nothing: it
+   *    returns zero rows for a room with nine stays, exactly as it does for an id that does
+   *    not exist. That failure is silent and it is the dangerous kind here — an empty
+   *    calendar is indistinguishable from a room nobody has booked. The dotted form is the
+   *    same convention `f[disposition.slug][]` already uses for the list's filters.
+   *
+   *  - **Overlap, not arrival.** A stay belongs on August's calendar if it is in the room on
+   *    any August day, so the test is `checkin_date <= end AND checkout_date >= start`.
+   *    Filtering on `checkin_date` alone — the obvious thing, and what the day ledger above
+   *    correctly does for a different question — drops every stay that began in July and is
+   *    still running, which is precisely the guest a host is looking for when they open a
+   *    room's month.
+   *
+   * A room with no bookings answers with none, and that is a fact worth rendering. It used to
+   * be a fixture: a room the seeker-side offers had never heard of was given invented stays,
+   * on the reasoning that an empty calendar might be mistaken for a broken one. That trade is
+   * only worth making while the endpoint does not exist.
+   */
+  bookingsInRoom(
+    hostelId: string,
+    roomId: string,
+    from: string,
+    to: string,
+  ): Observable<HostBooking[]> {
+    if (!hostelId || !roomId) return of([]);
+    return this.api
+      .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
+        ...pageParams(1, ROOM_MONTH_LIMIT),
+        'f[room.id]': roomId,
+        'f[checkin_date][lte]': dayRangeEnd(to),
+        'f[checkout_date][gte]': dayRangeStart(from),
       })
       .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
   }
@@ -222,6 +271,28 @@ export interface ApiHostBooking {
         price?: number | null;
       })
     | null;
+  /**
+   * The room this stay was allotted, or null while it is still pending allotment.
+   *
+   * Both forms travel: the flat id, and the nested record carrying the number a host reads.
+   * A booking can be paid and roomless \x2D\x2D that is what `pending-allotment` means \x2D\x2D so this
+   * being null is an ordinary state, not missing data.
+   */
+  room_id?: string | null;
+  room?: { id?: string | null; room_number?: string | null } | null;
+  /**
+   * The person actually staying, once one is on file.
+   *
+   * Distinct from `guest_name`, which is whoever made the booking. They are often different
+   * people and in this data usually are \x2D\x2D one account booking beds for others.
+   */
+  renter_id?: string | null;
+  renter?: {
+    id?: string | null;
+    full_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  } | null;
   /** Payment state — `paid`, `cancelled`. Not what the calendar counts. */
   status?: ApiNamedSlug | null;
   /** Where the stay is in its life. This is what the calendar's `by_status` is keyed by. */
@@ -258,6 +329,15 @@ export interface HostBooking {
   deposit: number;
   paid: number;
   balanceDue: number;
+  /** Allotted room, or null while the booking is still pending allotment. */
+  room: { id: string; number: string } | null;
+  /**
+   * Who is actually staying, when the record names someone.
+   *
+   * Null on a booking nobody has been assigned to yet, in which case {@link guest} \x2D\x2D the
+   * person who made the booking \x2D\x2D is the only name there is.
+   */
+  renter: { id: string; name: string; email: string; phone: string } | null;
   /** Payment state. Shown nowhere yet — kept so the table can grow a column without a remap. */
   status: { name: string; slug: string };
   disposition: { name: string; slug: string };
@@ -316,6 +396,19 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     deposit: b.deposit ?? 0,
     paid: b.paid_amount ?? 0,
     balanceDue: b.balance_due ?? 0,
+    room: b.room?.id
+      ? { id: String(b.room.id), number: b.room.room_number ?? '—' }
+      : b.room_id
+        ? { id: String(b.room_id), number: '—' }
+        : null,
+    renter: b.renter?.id
+      ? {
+          id: String(b.renter.id),
+          name: b.renter.full_name?.trim() || 'Guest',
+          email: b.renter.email ?? '',
+          phone: b.renter.phone ?? '',
+        }
+      : null,
     status: { name: b.status?.name ?? '', slug: b.status?.slug ?? '' },
     disposition: { name: b.disposition?.name ?? '', slug: b.disposition?.slug ?? '' },
     notes: b.notes?.trim() ?? '',

@@ -3,7 +3,7 @@
   class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-ink-100 bg-white px-5 sm:px-8"
 >
   <a routerLink="/" class="flex shrink-0 items-center" (click)="onLogoClick($event)">
-    <img src="/hostelhive-logo.png" alt="HostelHive" class="h-7 w-auto" />
+    <i hhLogo class="h-7 w-auto text-ink-900"></i>
   </a>
   <div class="flex items-center gap-3">
     @if (showDraftStatus()) {
@@ -60,7 +60,7 @@
           class="mb-4 block"
           [label]="'common.hostelName' | transloco"
           icon="ti-building"
-          [placeholder]="'common.eGSunriseBoys' | transloco"
+          [placeholder]="'common.enterHostelName' | transloco"
           [(value)]="name"
           [error]="showValidation() ? (fieldErrors()['name'] ?? '') : ''"
         />
@@ -100,13 +100,23 @@
               (valueChange)="setGenderType($event)"
             />
           </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'common.type' | transloco }}</label>
+            <hh-dropdown
+              variant="field"
+              [placeholder]="'common.selectType' | transloco"
+              [options]="propertyTypeOptions()"
+              [value]="propertyType()"
+              (valueChange)="setPropertyType($event)"
+            />
+          </div>
         </div>
         <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <hh-input
             [label]="'common.contactEmail' | transloco"
             icon="ti-mail"
             type="email"
-            [placeholder]="'common.eGInfoMyhostel' | transloco"
+            [placeholder]="'common.enterEmail' | transloco"
             [(value)]="email"
             [error]="showValidation() ? (fieldErrors()['email'] ?? '') : ''"
           />
@@ -114,6 +124,10 @@
             [label]="'common.primaryPhone' | transloco"
             [(phone)]="phone"
             [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
+          />
+          <hh-phone-input
+            [label]="'common.secondaryPhone' | transloco"
+            [(phone)]="secondaryPhone"
           />
         </div>
         <div>
@@ -168,7 +182,11 @@
           (setPrimary)="setPrimary(findMedia($event)!)"
           (removePhoto)="removeMedia(findMedia($event)!)"
           (labelChange)="setPhotoLabel($event.id, $event.value)"
-        />
+        >
+          @if (!atPhotoLimit()) {
+            <hh-photo-picker addTile class="block" [accept]="acceptAttr" (picked)="onPickedPhoto($event)" />
+          }
+        </hh-photo-grid>
         @if (showValidation() && fieldErrors()['photos']) {
           <p class="mt-2 flex items-center gap-1 text-xs font-medium text-danger">
             <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['photos'] }}
@@ -401,7 +419,7 @@
           <hh-input
             class="sm:col-span-2"
             [label]="'common.nearbyLandmarks' | transloco"
-            [placeholder]="'publicOnboarding.eGNearDolmenMall' | transloco"
+            [placeholder]="'common.enterLandmarks' | transloco"
             [(value)]="landmarks"
           />
         </div>

@@ -5,9 +5,21 @@ import {
   input,
   model,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export interface TabItem {
-  label: string;
+  /** A literal label. For anything the user reads in their own language, use {@link labelKey}. */
+  label?: string;
+  /**
+   * A translation key, resolved here by the pipe.
+   *
+   * Callers used to translate the label themselves and hand over the finished string. That
+   * put an imperative `translate()` inside a computed, which runs before the language file
+   * has loaded — so the first pass logged "Missing translation" and returned the key itself,
+   * and every such caller had to depend on a `ready` signal to force a second pass once the
+   * strings landed. The pipe waits on its own; none of that ceremony is needed.
+   */
+  labelKey?: string;
   value: string;
 }
 
@@ -27,6 +39,7 @@ export interface TabItem {
 @Component({
   selector: 'hh-tabs',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoPipe],
   template: `
     @for (tab of tabs(); track tab.value) {
       <button
@@ -36,7 +49,7 @@ export interface TabItem {
         (click)="active.set(tab.value)"
         [class]="btnClass(tab.value)"
       >
-        {{ tab.label }}
+        {{ tab.labelKey ? (tab.labelKey | transloco) : tab.label }}
       </button>
     }
   `,
@@ -46,6 +59,18 @@ export interface TabItem {
     class: 'grid gap-1 rounded-xl bg-surface p-1 font-medium',
     '[class]': 'hostTextClass()',
     '[style.grid-template-columns]': 'cols()',
+    // A control offering one option is not a control. Whichever tab is showing is the only
+    // tab there is, so the chip says nothing the heading below it does not, and a lone
+    // "Details" pill invites a host to look for the other one.
+    //
+    // Hidden here rather than at each call site because the callers cannot all know: this
+    // one's tab list is computed — a monthly-billing hostel has no calendar to show — so the
+    // count is only known at render, and every caller would need the same guard around it.
+    //
+    // `display` rather than a `hidden` class: the host class already sets `grid`, and both
+    // are display utilities of equal specificity, so which one won would come down to the
+    // order Tailwind happened to emit them in. An inline style has no such argument.
+    '[style.display]': 'tabs().length > 1 ? null : "none"',
     role: 'tablist',
   },
 })

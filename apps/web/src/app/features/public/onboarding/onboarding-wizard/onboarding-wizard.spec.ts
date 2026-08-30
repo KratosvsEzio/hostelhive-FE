@@ -43,6 +43,9 @@ interface WizardInternals {
   capacityFixed: Signal<boolean>;
   roomFormError: Signal<string | null>;
   rooms: WritableSignal<{ id: number; type: string; capacity: number; price: number }[]>;
+  propertyType: WritableSignal<'apartment' | 'room' | 'building' | 'house' | ''>;
+  propertyTypeOptions: Signal<{ value: string; label: string }[]>;
+  setPropertyType(v: string | string[] | null): void;
   setNewRoomCapacity(raw: string): void;
   addRoom(): void;
   saveAndExit(): void;
@@ -69,7 +72,14 @@ function stubHostelsApi() {
       create,
       update,
       formOptions: () =>
-        of({ genderTypes: [], propertyTypes: [], attachmentLabels: [] }),
+        of({
+          genderTypes: [],
+          propertyTypes: [
+            { id: 0, slug: 'apartment', name: 'APARTMENT' },
+            { id: 2, slug: 'building', name: 'Building' },
+          ],
+          attachmentLabels: [],
+        }),
     },
   };
 }
@@ -249,7 +259,15 @@ describe('OnboardingWizard', () => {
         'header a[href="/en"]',
       ) as HTMLAnchorElement | null;
       expect(logo).not.toBeNull();
-      expect(logo?.querySelector('img')?.getAttribute('alt')).toBe('HostelHive');
+
+      // The mark is inline SVG in an <i> now, not an <img>, so the accessible name moved from
+      // `alt` to `role="img"` + `aria-label`. Still asserted, because it is the only text in
+      // this link — without it a screen reader announces the way home as an empty link.
+      const mark = logo?.querySelector('i[hhLogo]') as HTMLElement | null;
+      expect(mark).not.toBeNull();
+      expect(mark?.getAttribute('role')).toBe('img');
+      expect(mark?.getAttribute('aria-label')).toBe('HostelHive');
+      expect(mark?.querySelector('svg')).not.toBeNull();
     });
 
     it('lets the router handle the click when nothing is uploading', () => {
@@ -420,3 +438,74 @@ function startUpload(fixture: ComponentFixture<OnboardingWizard>): void {
   };
   target.uploadingPhotos.set(new Map([['1', 25]]));
 }
+
+/**
+ * Property type, which the wizard collected from nobody until it was added.
+ *
+ * `propertyTypes` was already being fetched here and discarded — no control offered it — so
+ * every hostel created through onboarding was posted with no `property_type` at all. That is
+ * a live public search filter, so the listing existed and simply never matched a type-filtered
+ * search, which is the kind of absence nobody reports.
+ */
+describe('OnboardingWizard — property type', () => {
+  // Its own lifecycle: this block sits outside the suite above, so without these every
+  // render() here reuses the previous TestBed and the last chosen type leaks into the
+  // next assertion — which is how a passing test can be measuring the test before it.
+  beforeEach(() => localStorage.clear());
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.restoreAllMocks();
+  });
+
+  it('offers what the server returned, cased for reading', () => {
+    const { vm } = render();
+
+    expect(vm.propertyTypeOptions()).toEqual([
+      { value: 'apartment', label: 'Apartment' },
+      { value: 'building', label: 'Building' },
+    ]);
+  });
+
+  it('sends the chosen type when the hostel is created', () => {
+    const { vm, hostels } = render();
+    fillValidForm(vm);
+    vm.setPropertyType('building');
+
+    vm.saveAndExit();
+
+    const [input] = hostels.create.mock.calls[0];
+    expect(input.property_type).toBe('building');
+  });
+
+  // Omitted, not sent empty. An empty string is a value the backend would have to interpret.
+  it('omits the field entirely when nothing was chosen', () => {
+    const { vm, hostels } = render();
+    fillValidForm(vm);
+
+    vm.saveAndExit();
+
+    const [input] = hostels.create.mock.calls[0];
+    expect(input.property_type).toBeUndefined();
+  });
+
+  // The guard is the fetched list, not a copy of the enum — so a slug the server never
+  // offered cannot reach the payload, whatever hands it over.
+  it('refuses a type the server did not offer', () => {
+    const { vm } = render();
+
+    vm.setPropertyType('castle');
+
+    expect(vm.propertyType()).toBe('');
+  });
+
+  it('keeps the choice in the local draft', () => {
+    const { vm } = render();
+    vm.name.set('Half-typed hostel');
+    vm.setPropertyType('apartment');
+
+    vm.saveAndExit();
+
+    const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? '{}');
+    expect(saved.propertyType).toBe('apartment');
+  });
+});

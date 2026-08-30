@@ -7,6 +7,7 @@ import {
   HostelAttachment,
   HostelDetail,
   HostelEnumOption,
+  HostelFormOptions,
   HostelOffer,
   OfferCategory,
   User,
@@ -86,13 +87,22 @@ export class ModerationApi {
   }
 
   /**
-   * Full review detail for one queued listing (screen 21) — hydrated live from
-   * `GET /api/hostels/:id` (HostelSerializer), enriched with the host
-   * (`GET /api/users/:hostId`) and the amenity catalogue (`GET /api/offer_categories`).
-   * Host / catalogue failures degrade gracefully (embedded host, amenities without totals).
+   * Full review detail for one queued listing (screen 21) — read from
+   * `GET /api/moderator/hostels/:id`, enriched with the host (`GET /api/users/:hostId`)
+   * and the amenity catalogue (`GET /api/offer_categories`). Host / catalogue failures
+   * degrade gracefully (embedded host, amenities without totals).
+   *
+   * The moderator endpoint rather than the public one this used to read. A queued listing
+   * is by definition not published, so the public document either lags the version being
+   * reviewed or does not exist at all — either way it is not the record the decision is
+   * about.
+   *
+   * The host lookup survives the move: the moderator payload embeds name, email, phone and
+   * is_active, all of which `toReviewDetail` already falls back to — but not `created_at`,
+   * and that is the whole of "Member since".
    */
   getById(id: string): Observable<ReviewDetail> {
-    return this.hostels.getById(id).pipe(
+    return this.hostels.getForModeration(id).pipe(
       switchMap((hostel) =>
         forkJoin({
           host:
@@ -187,12 +197,20 @@ export class ModerationApi {
     );
   }
 
-  /** `GET /api/moderator/hostels/new` — enum options for the review edit form. */
-  formOptions(): Observable<ModFormOptions> {
+  /**
+   * `GET /api/moderator/hostels/new` — the enum options for the review form.
+   *
+   * Answers {@link HostelFormOptions}, the same shape `/api/hostels/new` answers for the host
+   * console, so one form renders from either. Two endpoints, one contract; the review screen
+   * passes this one in rather than the form reaching for the host's.
+   */
+  formOptions(): Observable<HostelFormOptions> {
     return this.api.get<ModNewResponse>('/api/moderator/hostels/new').pipe(
       map((r) => ({
         genderTypes: r.gender_types ?? [],
         propertyTypes: r.property_types ?? [],
+        billingFrequencyTypes: r.billing_frequency_type ?? r.billing_frequency_types ?? [],
+        occupancyTypes: r.occupancy_type ?? r.occupancy_types ?? [],
         attachmentLabels: r.attachment_labels ?? [],
       })),
     );
@@ -223,16 +241,15 @@ function extractModerationAttachments(
 
 /* ------------------------------------------------- form options (moderator API) */
 
-export interface ModFormOptions {
-  genderTypes: HostelEnumOption[];
-  propertyTypes: HostelEnumOption[];
-  attachmentLabels: AttachmentLabel[];
-}
-
 interface ModNewResponse {
   success?: boolean;
   gender_types?: HostelEnumOption[];
   property_types?: HostelEnumOption[];
+  /** `shared` | `private_room`. Singular is what the hostel endpoint sends; both are read. */
+  occupancy_type?: HostelEnumOption[];
+  occupancy_types?: HostelEnumOption[];
+  billing_frequency_type?: HostelEnumOption[];
+  billing_frequency_types?: HostelEnumOption[];
   attachment_labels?: AttachmentLabel[];
 }
 
@@ -359,6 +376,7 @@ function toReviewDetail(
   const submitted = hostel.q_at ?? null; // queued-for-review timestamp, not record creation
   const hours = submitted ? hoursSince(submitted) : null;
   return {
+    hostel,
     id: String(hostel.id),
     name: hostel.name?.trim() || 'Untitled hostel',
     kindLabel:

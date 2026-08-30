@@ -34,7 +34,7 @@
       color="primary"
       size="sm"
       [attr.aria-label]="'a11y.updateHostel' | transloco"
-      [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()"
+      [disabled]="!form()?.dirty() || saving() || !!form()?.uploading() || form()?.isValid() === false"
       (click)="save()"
     >
       @if (saving()) {
@@ -73,9 +73,36 @@
         @if (form()?.dirty()) {
           <span class="text-sm text-ink-400">{{ 'common.youHaveUnsavedChanges' | transloco }}</span>
         }
-        <button hh-button color="primary" [disabled]="!form()?.dirty() || saving() || !!form()?.uploading()" (click)="save()">
+        <button hh-button color="primary" [disabled]="!form()?.dirty() || saving() || !!form()?.uploading() || form()?.isValid() === false" (click)="save()">
           {{ saving() ? 'Saving…' : 'Update hostel' }}
         </button>
+
+        <!-- Only raised for the fields a moderator re-reads, and it names them. A warning
+             that just says "your listing will be reviewed" leaves the host guessing which
+             of their edits cost them the visibility, and unable to undo the one they did
+             not mean to make. -->
+        @if (reviewOpen()) {
+          <hh-confirm-modal
+            [title]="'hostHostelProfile.reviewTitle' | transloco"
+            icon="ti-eye-off"
+            tone="warn"
+            [confirmLabel]="'hostHostelProfile.reviewConfirm' | transloco"
+            [cancelLabel]="'common.cancel' | transloco"
+            confirmColor="primary"
+            (confirm)="confirmReview()"
+            (cancel)="cancelReview()"
+          >
+            <p>{{ 'hostHostelProfile.reviewBody' | transloco }}</p>
+            <ul class="mt-3 space-y-1">
+              @for (key of reviewKeys(); track key) {
+                <li class="flex items-center gap-2 text-sm font-medium text-ink-900">
+                  <i class="ti ti-point-filled text-warn" aria-hidden="true"></i>
+                  {{ key | transloco }}
+                </li>
+              }
+            </ul>
+          </hh-confirm-modal>
+        }
       </div>
     }
   </main>

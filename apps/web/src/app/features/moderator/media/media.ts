@@ -7,6 +7,7 @@
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { format, parseISO } from 'date-fns';
@@ -41,6 +42,10 @@ export class Media {
   // ── data ─────────────────────────────────────────────────────────────────────
   private readonly _allItems = signal<ModeratorAttachment[]>([]);
   private readonly _nextPage = signal<number | null>(null);
+  /** How deep the moderator has paged, so a refresh can put back what they had. */
+  private readonly loadedPages = signal(1);
+  /** A refresh in flight. Never shown — it exists so refreshes cannot stack. */
+  private readonly refreshing = signal(false);
   protected readonly totalCount = signal(0);
   protected readonly hasMore = computed(() => this._nextPage() !== null);
   protected readonly possibleStatuses = signal<AttachmentStatusOption[]>([]);
@@ -129,6 +134,7 @@ export class Media {
             this._allItems.set(data.items);
           }
           this._nextPage.set(data.nextPage);
+          this.loadedPages.set(page);
           this.totalCount.set(data.totalCount);
           if (data.possibleStatuses.length) this.possibleStatuses.set(data.possibleStatuses);
           this.loadStatus.set('ready');
@@ -150,11 +156,66 @@ export class Media {
     this.fetchPage(next, true);
   }
 
+  /**
+   * Re-reads the queue after a decision, without the page going blank.
+   *
+   * A decision changes the list underneath the moderator — an approved photo leaves the
+   * pending set and everything behind it moves up — so what is on screen stops matching the
+   * server the moment they act. Going through {@link fetchPage} would say so by flipping to
+   * skeletons, which is a flash for a wait nobody asked for; this leaves the loading state
+   * alone and swaps the data in when it arrives.
+   *
+   * Every page already loaded is re-read, not just the first: snapping the queue back to page
+   * one on each approval would make it impossible to work past the first screenful.
+   *
+   * `decisions` is deliberately left alone. The grid has no notion of an approved card — it
+   * renders what is undecided — so forgetting a decision would put a photo the moderator has
+   * already approved back in front of them with its buttons live.
+   */
+  private refreshQuietly(): void {
+    // Nothing to refresh into: the first load or a retry owns the list, and a load-more is
+    // already on its way with a page this would drop.
+    if (this.refreshing() || this.loadStatus() !== 'ready') return;
+
+    const status = this.activeStatus() || undefined;
+    const pages = Array.from({ length: this.loadedPages() }, (_, i) => i + 1);
+    this.refreshing.set(true);
+    forkJoin(pages.map((p) => this.api.attachments(p, status)))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (loaded) => {
+          const last = loaded[loaded.length - 1];
+          // Deduplicated because the pages are read together but the server paginates a list
+          // that just got shorter: an item on page 2 a moment ago can come back on page 1 as
+          // well, and two cards with one id is a duplicate-key error in the grid.
+          const seen = new Set<string>();
+          this._allItems.set(
+            loaded
+              .flatMap((d) => d.items)
+              .filter((a) => {
+                const id = String(a.id);
+                if (seen.has(id)) return false;
+                seen.add(id);
+                return true;
+              }),
+          );
+          this._nextPage.set(last.nextPage);
+          this.totalCount.set(last.totalCount);
+          if (last.possibleStatuses.length) this.possibleStatuses.set(last.possibleStatuses);
+          this.refreshing.set(false);
+        },
+        // A refresh that fails is not the moderator's problem to solve: what is on screen
+        // still reflects every decision they made, so the quiet thing to do is stay quiet.
+        error: () => this.refreshing.set(false),
+      });
+  }
+
   protected setStatus(slug: string): void {
     if (this.activeStatus() === slug) return;
     this.activeStatus.set(slug);
     this._allItems.set([]);
     this._nextPage.set(null);
+    this.loadedPages.set(1);
     this.decisions.set({});
     this.approving.set(new Set());
     this.approveErrors.set(new Set());
@@ -202,6 +263,7 @@ export class Media {
               return next;
             });
             this.decisions.update(m => ({ ...m, [String(a.id)]: 'approved' }));
+            this.refreshWhenSettled(this.approveModalProgress());
           },
           error: () => {
             this.approveModalQueue.update(q => {
@@ -209,9 +271,15 @@ export class Media {
               next[i] = { ...next[i], status: 'error' };
               return next;
             });
+            this.refreshWhenSettled(this.approveModalProgress());
           },
         });
     });
+  }
+
+  /** Once the batch stops moving — deciding ten photos is one list to re-read, not ten. */
+  private refreshWhenSettled(progress: { allDone: boolean }): void {
+    if (progress.allDone) this.refreshQuietly();
   }
 
   protected closeApproveModal(): void {
@@ -268,6 +336,7 @@ export class Media {
               return next;
             });
             this.decisions.update(m => ({ ...m, [String(a.id)]: 'rejected' }));
+            this.refreshWhenSettled(this.rejectProgressProgress());
           },
           error: () => {
             this.rejectProgressQueue.update(q => {
@@ -275,6 +344,7 @@ export class Media {
               next[i] = { ...next[i], status: 'error' };
               return next;
             });
+            this.refreshWhenSettled(this.rejectProgressProgress());
           },
         });
     });
@@ -296,6 +366,7 @@ export class Media {
         next: () => {
           this.approving.update((s) => { const n = new Set(s); n.delete(id); return n; });
           this.decisions.update((m) => ({ ...m, [id]: 'approved' }));
+          this.refreshQuietly();
         },
         error: () => {
           this.approving.update((s) => { const n = new Set(s); n.delete(id); return n; });
@@ -310,6 +381,7 @@ export class Media {
   protected retry(): void {
     this._allItems.set([]);
     this._nextPage.set(null);
+    this.loadedPages.set(1);
     this.decisions.set({});
     this.approving.set(new Set());
     this.approveErrors.set(new Set());

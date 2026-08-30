@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, switchMap, map } from 'rxjs';
+import { HttpContext } from '@angular/common/http';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import { imageMimeType } from '@hostelhive/ui';
 import { PresignedUrlResponse } from './documents-api';
 
@@ -34,10 +36,17 @@ export class ImageUploadService {
   ): Observable<ImageUploadResult> {
     const contentType = imageMimeType(file);
     return this.api
-      .get<PresignedUrlResponse>('/api/documents/presigned_url', {
-        key,
-        content_type: contentType,
-      })
+      .get<PresignedUrlResponse>(
+        '/api/documents/presigned_url',
+        { key, content_type: contentType },
+        // Opted out of the global error toast. Presigning is a step inside `upload()`, not
+        // something a host asked for, so the interceptor's "Couldn't load" would name a
+        // request they never made — and it would arrive alongside the caller's own
+        // "Couldn't upload image", which is the one that describes what they were doing.
+        // That toast has to survive, because the S3 PUT below is raw XHR: when *it* fails
+        // there is no interceptor in the path and the caller's toast is the only signal.
+        new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
+      )
       .pipe(
         switchMap((res) =>
           this.uploadToS3(res.url, file, contentType, onProgress).pipe(

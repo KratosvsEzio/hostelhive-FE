@@ -5,7 +5,7 @@ import { HostShellApi } from './host-shell-api';
 // which imports AuthApi from `@services` — routing this through it would form a @services↔@core/auth
 // import cycle. `session-store.ts` itself imports nothing from @services, so the direct path is safe.
 import { SessionStore } from '@app/core/auth/session-store';
-import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
+import { HostListing, ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 
 export interface PropertyEntry {
   id: string;
@@ -34,6 +34,17 @@ export class HostPropertyStore {
   private readonly session = inject(SessionStore);
 
   readonly properties = signal<PropertyEntry[]>([]);
+
+  /**
+   * The full hostel records behind {@link properties}, exactly as the list endpoint sent them.
+   *
+   * The store used to keep six fields per hostel and throw the rest away, so a page needing
+   * the currency, the room types or the billing cycle had to re-fetch a hostel the app had
+   * already loaded \x2D\x2D and every one of those needs arrived as a separate round trip on a
+   * screen that had the answer in memory. One request already carries all of it; this keeps
+   * it. Read it through {@link activeHostel}.
+   */
+  readonly hostels = signal<HostListing[]>([]);
   readonly selected = signal<string>(this.restore() ?? '');
   /** True once a `load()` has resolved (success or failure) — lets the `/host` root redirect
    *  wait for the real hostel list instead of guessing from an empty selection. */
@@ -44,6 +55,40 @@ export class HostPropertyStore {
   readonly activeProperty = computed<PropertyEntry | undefined>(
     () => this.properties().find((p) => p.id === this.selected()) ?? this.properties()[0],
   );
+
+  /**
+   * Everything known about the hostel the host is working in.
+   *
+   * The one place any host screen should reach for hostel data. Falls back to the first
+   * hostel the same way {@link activeProperty} does, so the two never disagree about which
+   * hostel is current.
+   */
+  readonly activeHostel = computed<HostListing | undefined>(
+    () => this.hostels().find((h) => h.id === this.selected()) ?? this.hostels()[0],
+  );
+
+  /**
+   * Whether a hostel bills by the month rather than by the night.
+   *
+   * The distinction decides what half of the console applies: a month-billed hostel sells
+   * tenancies to renters, so it has no night-by-night calendar, no bookings, and nothing for
+   * the availability check to collide with. Three screens were each deriving that from
+   * `activeHostel()` themselves; this is the one place it is decided.
+   *
+   * `id` names the hostel to ask about, and defaults to the active one. Pass it wherever the
+   * answer has to be about a hostel the store may not have been switched to yet — a route
+   * guard runs before the shell syncs the selection from the URL, so "the active hostel"
+   * there can still be the previous one.
+   *
+   * **Strict on `'month'`.** `billingFrequency` is empty when the payload did not say, and an
+   * unknown value answers false — nightly. Hiding a page because a field failed to arrive is
+   * the worse failure of the two: showing Bookings on a hostel that has none costs a host one
+   * empty list, while hiding it on a hostel that lives by it removes the daily job.
+   */
+  isMonthlyBilled(id?: string): boolean {
+    const hostel = id ? this.hostels().find((h) => h.id === id) : this.activeHostel();
+    return hostel?.billingFrequency === 'month';
+  }
 
   private loadSub?: Subscription;
   /** Whether the session was authenticated on the previous effect run. Used so `clear()` fires only
@@ -83,6 +128,7 @@ export class HostPropertyStore {
           accommodationType: l.accommodationType,
         }));
         this.properties.set(entries);
+        this.hostels.set(data.listings);
         const saved = this.selected();
         if (!saved || !entries.some((p) => p.id === saved)) {
           // Persist the auto-picked hostel so a reload (or the first post-login /host click)
@@ -103,6 +149,7 @@ export class HostPropertyStore {
     this.loadSub?.unsubscribe();
     this.loadSub = undefined;
     this.properties.set([]);
+    this.hostels.set([]);
     this.selected.set('');
     this.loaded.set(false);
     try {
