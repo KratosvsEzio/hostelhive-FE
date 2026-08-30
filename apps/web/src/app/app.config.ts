@@ -20,6 +20,7 @@ import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
 import { pushTokenInterceptor } from '@core/interceptors/push-token-interceptor';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
+import { ssrTimeoutInterceptor } from '@core/interceptors/ssr-timeout-interceptor';
 import { refetchDelayInterceptor } from '@core/refetch-delay';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuthService } from '@services';
@@ -55,6 +56,9 @@ export const appConfig: ApplicationConfig = {
       pushTokenInterceptor,
       errorInterceptor,
       refetchDelayInterceptor,
+      // Last, closest to the backend: it measures the network wait rather than what the
+      // interceptors above add, and its TimeoutError surfaces back through errorInterceptor.
+      ssrTimeoutInterceptor,
     ]),
     provideAuth(),
     // Runtime i18n. Transloco rather than @angular/localize, which is compile-time and
