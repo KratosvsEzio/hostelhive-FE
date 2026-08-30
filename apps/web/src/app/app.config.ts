@@ -26,6 +26,7 @@ import { Capacitor } from '@capacitor/core';
 import { GoogleAuthService } from '@services';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
+import { mapsEnv } from './maps.env';
 import { readDevApiBaseUrl } from '@core/dev-api-base-url';
 import { provideCapacitorNative } from '@app/capacitor/native';
 import { appRoutes } from './app.routes';
@@ -34,7 +35,7 @@ import { provideI18n } from '@core/i18n/provide-i18n';
 import { LocaleSync } from '@core/i18n/locale-sync';
 import { GeoPreference } from '@core/geo/geo-preference';
 import { CountryBounds, centreOf } from '@core/geo/country-bounds';
-import { PlaceSearchBias } from '@hostelhive/maps';
+import { PlaceSearchBias, provideLeafletMaps, withCartoKey } from '@hostelhive/maps';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { restoreGoogleAnalyticsConsent } from '@core/google-analytics/google-analytics-consent';
 
@@ -61,6 +62,10 @@ export const appConfig: ApplicationConfig = {
       ssrTimeoutInterceptor,
     ]),
     provideAuth(),
+    // Attaches the CARTO basemap key to the tile URL. The key is generated into
+    // maps.env.ts from .env, so the value lives with the deployment and the provider URL
+    // stays in the maps lib. Unset is a working state: the map draws, watermarked.
+    provideLeafletMaps(withCartoKey(mapsEnv.cartoApiKey)),
     // Runtime i18n. Transloco rather than @angular/localize, which is compile-time and
     // cannot switch language without a reload — see provide-i18n.ts.
     provideI18n(),

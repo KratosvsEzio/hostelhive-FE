@@ -24,14 +24,23 @@ export interface LeafletMapsConfig {
 }
 
 /**
- * CARTO Voyager — free, no API key, and a clean, muted basemap with English/Latin labels.
- * It deliberately renders fewer POI labels than the standard OSM style (a cleaner look at
- * the cost of shop density); place search runs through Photon (see `photon.ts`), so the
- * map itself just needs to read clearly.
+ * CARTO Voyager — a clean, muted basemap with English/Latin labels. It deliberately
+ * renders fewer POI labels than the standard OSM style (a cleaner look at the cost of
+ * shop density); place search runs through Photon (see `photon.ts`), so the map itself
+ * just needs to read clearly.
  *
- * Fair-use rather than a hard quota — right to launch on, wrong to stay on at sustained
- * production traffic: move to MapTiler or self-hosted Protomaps tiles by overriding this
- * config (see `provideLeafletMaps`); nothing else in the app changes.
+ * **Needs an API key.** CARTO used to serve these keyless and this comment used to say so.
+ * They now stamp "API KEY REQUIRED" diagonally across every tile served without one — and
+ * they do it by rendering it into the PNG, not by failing the request, so there is no error
+ * anywhere to notice. See {@link withCartoKey} for where the key comes from. The free tier
+ * is 5M tile requests a month and permits commercial use; attribution must stay visible,
+ * which the `attribution` below satisfies.
+ *
+ * Every keyless alternative was measured before settling here: Esri renders no residential
+ * street grid across the semi-rural areas most hostels sit in, Wikimedia's terms forbid
+ * non-Wikimedia sites, OSM Germany restricts commercial use, and the OSM/HOT community
+ * servers are donation-funded with no SLA. Moving anyway is still a change to this file and
+ * nowhere else.
  */
 const DEFAULT_CONFIG: LeafletMapsConfig = {
   roadmap: {
@@ -52,6 +61,28 @@ export const LEAFLET_MAPS_CONFIG = new InjectionToken<LeafletMapsConfig>(
   'LEAFLET_MAPS_CONFIG',
   { factory: () => DEFAULT_CONFIG },
 );
+
+/**
+ * The roadmap layer with a CARTO key attached — pass the result to {@link provideLeafletMaps}.
+ *
+ * The key lives in the app (generated from `.env`) while the URL stays here, so the app
+ * supplies a value and never a provider. A tile key is public by design: it travels in the
+ * tile URL and is visible to anyone with devtools. What protects it is the domain allow-list
+ * set when requesting it, not secrecy — so this is compiled into the bundle like the GA id.
+ *
+ * An empty key returns an empty override, leaving {@link DEFAULT_CONFIG} untouched: the map
+ * still draws, watermarked, exactly as it does today. That is the right failure for a missing
+ * key — a developer who has not set one gets a usable map rather than a blank panel.
+ */
+export function withCartoKey(key: string): Partial<LeafletMapsConfig> {
+  if (!key) return {};
+  return {
+    roadmap: {
+      ...DEFAULT_CONFIG.roadmap,
+      url: `${DEFAULT_CONFIG.roadmap.url}?key=${encodeURIComponent(key)}`,
+    },
+  };
+}
 
 /** Override the basemap tile provider in the app config (see app.config.ts). */
 export function provideLeafletMaps(
