@@ -23,6 +23,7 @@ import { Button, Dropdown, DropdownOption, StatusTone, TooltipFixed } from '@hos
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Logo } from '@core/brand/logo';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 const PILL_TONE: Record<ListingStatus, StatusTone> = {
@@ -47,7 +48,7 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
+  imports: [Logo, RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
   templateUrl: './host-shell.html',
   // Escape closes the property flyout wherever focus happens to be -- it is a popover, and
   // one that can only be dismissed by finding its backdrop is a trap for the keyboard.

@@ -14,6 +14,7 @@ import { MobileApp } from '@core/mobile-app';
 import { StaffTabBar } from '../components/mobile-tab-bar/staff-tab-bar';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Logo } from '@core/brand/logo';
 
 interface NavEntry {
   label?: string;
@@ -67,7 +68,7 @@ const ADMIN_NAV: NavEntry[] = [
 @Component({
   selector: 'app-staff-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TooltipFixed, StaffTabBar],
+  imports: [Logo, RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, TooltipFixed, StaffTabBar],
   templateUrl: './staff-shell.html',
 })
 export class StaffLayout {
@@ -133,6 +134,12 @@ export class StaffLayout {
   protected readonly consoleLabel = computed(() =>
     this.path().startsWith('/moderator') ? 'Moderator console' : 'Admin console',
   );
+
+  /** Which of the two consoles this is — the badge and the brand link both turn on it. */
+  protected readonly isAdmin = computed(() => !this.path().startsWith('/moderator'));
+
+  /** Home is the console's own front page, as it has always been from the header's mark. */
+  protected readonly homeLink = computed(() => (this.isAdmin() ? '/admin' : '/moderator'));
 
   protected readonly roleLabel = computed(() =>
     (this.session.role() ?? '').replace('-', ' '),
