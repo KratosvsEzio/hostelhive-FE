@@ -68,7 +68,6 @@
     "backToSearch": "Torna alla ricerca",
     "share": "Condividi",
     "showMore": "Mostra altro",
-    "roomsAmpPricing": "Camere e prezzi",
     "month": "/ mese",
     "whatThisPlaceOffers": "Cosa offre questa struttura",
     "nearbyLandmarks": "Punti di riferimento nelle vicinanze",
@@ -102,7 +101,8 @@
     "maybeLater": "Più tardi",
     "signInToBook": "Accedi per prenotare",
     "pickYourRoomOnce": "Scegli la tua camera dopo l'accesso",
-    "createAFreeAccountToBook": "Crea un account gratuito per scegliere le camere e tenerle mentre decidi. Bastano 30 secondi."
+    "createAFreeAccountToBook": "Crea un account gratuito per scegliere le camere e tenerle mentre decidi. Bastano 30 secondi.",
+    "roomsAmpPricing": "Camere e prezzi"
   },
   "common": {
     "loading": "Caricamento…",
@@ -175,6 +175,7 @@
     "selectGender": "Seleziona il genere",
     "contactEmail": "Email di contatto",
     "primaryPhone": "Telefono principale",
+    "secondaryPhone": "Telefono secondario",
     "tellStudentsWhatMakes": "Racconta agli studenti perché il tuo ostello è un ottimo posto in cui vivere…",
     "amenityCatalogueUnavailable": "Catalogo dei servizi non disponibile.",
     "addRoomType": "Aggiungi tipo di camera",
@@ -526,7 +527,8 @@
     "province": "Provincia",
     "country": "Paese",
     "streetAddress": "Indirizzo",
-    "nearbyLandmarks": "Punti di riferimento vicini"
+    "nearbyLandmarks": "Punti di riferimento vicini",
+    "roomTypeDescription": "Descrizione del tipo di camera"
   },
   "a11y": {
     "close": "Chiudi",
@@ -1034,7 +1036,10 @@
     "saved": "Salvato",
     "unsavedChanges": "Modifiche non salvate",
     "update": "Aggiorna",
-    "updateHostel": "Aggiorna ostello"
+    "updateHostel": "Aggiorna ostello",
+    "reviewTitle": "Questo rimanderà il tuo annuncio in revisione",
+    "reviewBody": "Hai modificato quanto segue. Il tuo annuncio sarà rivisto di nuovo e gli ospiti non lo vedranno finché non sarà approvato.",
+    "reviewConfirm": "Salva e invia in revisione"
   },
   "hostMore": {
     "property": "Struttura",
@@ -1199,7 +1204,6 @@
     "checkOut": "Check-out",
     "guests": "Ospiti",
     "youLlNeedAnAccount": "Ti servirà un account per completare una prenotazione.",
-    "chooseYourRoom": "Scegli la tua camera",
     "add": "Aggiungi",
     "showAllNPhotos": "Mostra tutte le {{count}} foto",
     "genderHostelHostedBy": "Ostello {{gender}}, ospitato da {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Il tuo soggiorno",
     "bookingSent": "Prenotazione inviata",
     "weLlEmailYouWhenConfirmed": "Ti scriveremo appena l'ostello avrà confermato.",
-    "couldnTBook": "Impossibile completare la prenotazione"
+    "couldnTBook": "Impossibile completare la prenotazione",
+    "noRoomsListed": "Questo ostello non ha ancora inserito camere."
   },
   "states": {
     "nothingHereYet": "Ancora nulla qui",

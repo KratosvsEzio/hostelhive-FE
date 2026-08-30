@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { Button } from '@hostelhive/ui';
+import { DecimalPipe } from '@angular/common';
+import { Button, DateRange, DateRangePicker } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth';
 import { PricingPeriod, periodLabel } from '@util/pricing-period';
 import { BookingBasket } from './booking-basket';
 import { BasketLine, lineTotal, lineTotalUndiscounted, unitFor } from './room-offer';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 
 /**
  * The sticky panel beside the room list: what you have chosen, what it costs, and the button.
@@ -18,7 +19,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 @Component({
   selector: 'hh-booking-rail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DecimalPipe, DatePipe, TranslocoPipe],
+  imports: [Button, DateRangePicker, DecimalPipe, TranslocoPipe, CurrencySymbolPipe],
   templateUrl: './booking-rail.html',
 })
 export class BookingRail {
@@ -81,23 +82,24 @@ export class BookingRail {
   }
 
   /**
-   * The running tally that replaces a validation error on submit.
+   * The basket holds `Date`s; the picker speaks `YYYY-MM-DD`.
    *
-   * "3 of 4 guests placed" while they are still choosing beats "your selection does not match
-   * your guest count" after they think they are finished — the second leaves them to work out
-   * which of two numbers to change.
+   * Formatted from the local parts rather than `toISOString()`, which converts to UTC and
+   * would hand the picker the previous day for anyone west of Greenwich — the same bug
+   * `parseDate` exists to avoid on the way back in.
    */
-  protected readonly tally = computed(() => {
-    const fit = this.basket.fit();
-    const guests = this.basket.guests();
-    if (this.basket.isEmpty()) return null;
-    if (fit.overBedded) {
-      const spare = fit.beds - guests;
-      return `${spare} bed${spare === 1 ? '' : 's'} more than guests`;
-    }
-    if (fit.shortfall > 0) return `${fit.seated} of ${guests} guests placed`;
-    return null;
-  });
+  private iso(d: Date | null): string | null {
+    if (!d) return null;
+    const m = `${d.getMonth() + 1}`.padStart(2, "0");
+    const day = `${d.getDate()}`.padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${day}`;
+  }
+
+  protected readonly checkInIso = computed(() => this.iso(this.basket.checkIn()));
+  protected readonly checkOutIso = computed(() => this.iso(this.basket.checkOut()));
+
+  /** A stay cannot start in the past, so the calendar will not offer it. */
+  protected readonly todayIso = this.iso(new Date()) ?? '';
 
   protected remove(roomId: string): void {
     this.basket.remove(roomId);
@@ -108,21 +110,22 @@ export class BookingRail {
    * enough to shift a check-in a day backwards west of Greenwich. Parsed by parts instead, so
    * the date the seeker picked is the date the booking carries.
    */
-  private parseDate(value: string): Date | null {
+  private parseDate(value: string | null): Date | null {
+    if (!value) return null;
     const [y, m, d] = value.split('-').map(Number);
     return y && m && d ? new Date(y, m - 1, d) : null;
   }
 
-  protected onCheckIn(value: string): void {
-    this.basket.checkIn.set(this.parseDate(value));
+  /**
+   * Both ends at once, because the picker only reports a range once it has one.
+   *
+   * That is the point of moving off two `<input type="date">`: a seeker could set a
+   * check-out before their check-in and the rail would price the gap as negative nights.
+   * The calendar cannot express that — the second click is always the later day.
+   */
+  protected onRange(range: DateRange): void {
+    this.basket.checkIn.set(this.parseDate(range.from));
+    this.basket.checkOut.set(this.parseDate(range.to));
   }
 
-  protected onCheckOut(value: string): void {
-    this.basket.checkOut.set(this.parseDate(value));
-  }
-
-  protected onGuests(value: string): void {
-    const n = Number(value);
-    this.basket.guests.set(Number.isFinite(n) && n > 0 ? Math.floor(n) : 1);
-  }
 }

@@ -9,24 +9,25 @@
       <hh-status-pill aside tone="neutral">{{ initialData()!.status!.name }}</hh-status-pill>
     }
 
-    <label class="mb-1 block text-xs font-medium text-ink-500" [for]="ids.name">
-      {{ 'common.propertyName' | transloco }}
-    </label>
-    <input
-      [id]="ids.name"
-      [value]="name()"
-      (input)="name.set(asValue($event))"
-      [placeholder]="'common.enterHostelName' | transloco"
-      class="mb-3 w-full rounded-xl border px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-      [class]="showValidation() && fieldErrors()['name'] ? 'border-danger' : 'border-ink-200'"
-    />
-    @if (showValidation() && fieldErrors()['name']) {
-      <p class="-mt-2 mb-3 flex items-center gap-1 text-xs text-danger">
-        <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['name'] }}
-      </p>
-    }
-
     <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label class="mb-1 block text-xs font-medium text-ink-500" [for]="ids.name">
+          {{ 'common.propertyName' | transloco }}
+        </label>
+        <input
+          [id]="ids.name"
+          [value]="name()"
+          (input)="name.set(asValue($event))"
+          [placeholder]="'common.enterHostelName' | transloco"
+          class="w-full rounded-xl border px-3 py-2 text-sm text-ink-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+          [class]="showValidation() && fieldErrors()['name'] ? 'border-danger' : 'border-ink-200'"
+        />
+        @if (showValidation() && fieldErrors()['name']) {
+          <p class="mt-1 flex items-center gap-1 text-xs text-danger">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ fieldErrors()['name'] }}
+          </p>
+        }
+      </div>
       <!-- Both modes. This was edit-only, and City was given the slot on create — so every
            hostel was created with an empty `property_type`, which is a live public search
            filter (`f[property_type]`). A new listing was absent from every type-filtered
@@ -59,11 +60,14 @@
           (valueChange)="setGender($event)"
         />
       </div>
-      <!-- Contact details sit between what the property *is* and what it *costs*, rather
-           than below both in a grid of their own. They were create-only once, which meant
-           the two screens that edit a live listing — the hostel profile and the moderator’s
-           review — could neither see nor correct the details a seeker actually uses to reach
-           the place. A field the form writes once and never shows again is one nobody can fix. -->
+      <!-- Contact details, between what the property *is* and what it *costs*. They were
+           create-only once, which meant the two screens that edit a live listing — the hostel
+           profile and the moderator’s review — could neither see nor correct the details a
+           seeker actually uses to reach the place. A field the form writes once and never
+           shows again is one nobody can fix.
+
+           The two numbers share a row, so the optional one reads as a continuation of the
+           required one rather than a field of its own. -->
       <hh-input
         [label]="'common.contactEmail' | transloco"
         icon="ti-mail"
@@ -76,6 +80,10 @@
         [label]="'common.primaryPhone' | transloco"
         [(phone)]="phone"
         [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
+      />
+      <hh-phone-input
+        [label]="'common.secondaryPhone' | transloco"
+        [(phone)]="secondaryPhone"
       />
       <div>
         <label class="mb-1 block text-xs font-medium text-ink-500">{{ 'hostelForm.currency' | transloco }}</label>

@@ -70,6 +70,27 @@ import {
 /** Stands in for the not-yet-added row, which has no `_key` until it is committed. */
 const NEW_RT_KEY = '__new__';
 
+/**
+ * The fields a moderator has to look at again.
+ *
+ * Everything here is public-facing prose or a contact detail a guest is given — the parts
+ * of a listing that can be quietly rewritten into something the moderator never approved.
+ * Editing one sends the listing back into review, so the host is warned before it happens
+ * rather than discovering it from a delisted property.
+ *
+ * Labelled with the keys the form itself uses, so the warning names each field exactly as
+ * the control the host just typed into. A separate wording here would drift from the form
+ * the first time either changed.
+ */
+const REVIEW_TRIGGER_FIELDS: readonly (readonly [keyof EditableHostel, string])[] = [
+  ['name', 'common.propertyName'],
+  ['description', 'common.description'],
+  ['email', 'common.contactEmail'],
+  ['phone', 'common.primaryPhone'],
+  ['secondaryPhone', 'common.secondaryPhone'],
+  ['billingFrequency', 'hostelForm.billingFrequency'],
+] as const;
+
 function toLabel(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
@@ -202,6 +223,7 @@ interface EditableHostel {
   offerIds: string[];
   email: string;
   phone: string;
+  secondaryPhone: string;
   lat: number | null;
   lng: number | null;
   country: string;
@@ -371,6 +393,14 @@ export class HostelForm {
   protected readonly currency = signal(inject(CurrencyPreference).code());
   protected readonly email = signal('');
   protected readonly phone = signal('');
+  /**
+   * Optional, unlike the primary.
+   *
+   * Absent from validation on purpose: the contact rule is that a listing must carry a
+   * way to reach it, and the primary already satisfies that. Requiring a second number
+   * would block hostels that only have one.
+   */
+  protected readonly secondaryPhone = signal('');
 
   // ── location signals ──
   protected readonly lat = signal<number | null>(null);
@@ -549,6 +579,7 @@ export class HostelForm {
       offerIds: [...offerIds].sort(),
       email: d.email ?? '',
       phone: d.primary_phone ?? '',
+      secondaryPhone: d.secondary_phone ?? '',
       lat: Number.isFinite(lat) ? lat : null,
       lng: Number.isFinite(lng) ? lng : null,
       country: d.country ?? '',
@@ -570,6 +601,7 @@ export class HostelForm {
     offerIds: [...this.selectedOfferIds()].sort(),
     email: this.email(),
     phone: this.phone(),
+    secondaryPhone: this.secondaryPhone(),
     lat: this.lat(),
     lng: this.lng(),
     country: this.country(),
@@ -601,6 +633,44 @@ export class HostelForm {
       imageIds: r.images.map((i) => i.id),
     });
     return JSON.stringify(curr.map(key)) !== JSON.stringify(orig.map(key));
+  });
+
+  /**
+   * Which of {@link REVIEW_TRIGGER_FIELDS} the host has actually changed.
+   *
+   * Translation keys rather than finished strings: the caller pipes them, so the warning
+   * is in the reader’s language without this component reaching for TranslocoService and
+   * translating before the strings have loaded.
+   *
+   * Empty in create mode. A listing that does not exist yet cannot be sent back to review,
+   * and every field on it is new to the moderator regardless.
+   */
+  readonly reviewTriggerKeys = computed<string[]>(() => {
+    if (this.mode() !== 'edit') return [];
+    const base = this.savedSnapshot() ?? this.loadedSnapshot();
+    if (!base) return [];
+
+    const now = this.currentSnapshot();
+    const keys = REVIEW_TRIGGER_FIELDS.filter(([f]) => base[f] !== now[f]).map(([, k]) => k);
+
+    if (this.roomTypeDescriptionEdited()) keys.push('hostelForm.roomTypeDescription');
+    return keys;
+  });
+
+  /**
+   * Whether any room type carries prose the moderator has not seen.
+   *
+   * Matched on `_key`, the row identity the template already tracks by — `id` is absent
+   * until a room type has been saved once, so keying on it would treat every new row as a
+   * change to the same nonexistent original.
+   *
+   * A row added during this edit compares against an empty string, so it counts only if it
+   * was actually given a description. The other fields on a new room type are numbers and
+   * flags, which moderation does not read.
+   */
+  private readonly roomTypeDescriptionEdited = computed(() => {
+    const orig = new Map(this.origRoomTypes().map((r) => [r._key, r.description ?? '']));
+    return this.roomTypes().some((r) => (r.description ?? '') !== (orig.get(r._key) ?? ''));
   });
 
   readonly fieldErrors = computed<Partial<Record<string, string>>>(() => {
@@ -689,6 +759,7 @@ export class HostelForm {
       this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
       this.email.set(d.email ?? '');
       this.phone.set(d.primary_phone ?? '');
+      this.secondaryPhone.set(d.secondary_phone ?? '');
       const lat = d.latitude != null ? Number(d.latitude) : null;
       const lng = d.longitude != null ? Number(d.longitude) : null;
       this.lat.set(Number.isFinite(lat) ? lat : null);
@@ -1293,6 +1364,7 @@ export class HostelForm {
       ...(bannerId ? { banner_id: bannerId as unknown as number } : {}),
       ...(snap.email ? { email: snap.email } : {}),
       ...(snap.phone ? { primary_phone: snap.phone } : {}),
+      ...(snap.secondaryPhone ? { secondary_phone: snap.secondaryPhone } : {}),
     };
   }
 

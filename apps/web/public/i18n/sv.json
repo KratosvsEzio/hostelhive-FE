@@ -68,7 +68,6 @@
     "backToSearch": "Tillbaka till sökningen",
     "share": "Dela",
     "showMore": "Visa mer",
-    "roomsAmpPricing": "Rum och priser",
     "month": "/ månad",
     "whatThisPlaceOffers": "Vad boendet erbjuder",
     "nearbyLandmarks": "Landmärken i närheten",
@@ -102,7 +101,8 @@
     "maybeLater": "Kanske senare",
     "signInToBook": "Logga in för att boka",
     "pickYourRoomOnce": "Välj ditt rum när du loggat in",
-    "createAFreeAccountToBook": "Skapa ett gratiskonto för att välja rum och hålla dem medan du bestämmer dig. Det tar 30 sekunder."
+    "createAFreeAccountToBook": "Skapa ett gratiskonto för att välja rum och hålla dem medan du bestämmer dig. Det tar 30 sekunder.",
+    "roomsAmpPricing": "Rum och priser"
   },
   "common": {
     "loading": "Laddar…",
@@ -175,6 +175,7 @@
     "selectGender": "Välj kön",
     "contactEmail": "Kontakt-e-post",
     "primaryPhone": "Primärt telefonnummer",
+    "secondaryPhone": "Sekundärt telefonnummer",
     "tellStudentsWhatMakes": "Berätta för studenter vad som gör ditt vandrarhem till ett bra ställe att bo på…",
     "amenityCatalogueUnavailable": "Bekvämlighetskatalogen är inte tillgänglig.",
     "addRoomType": "Lägg till rumstyp",
@@ -526,7 +527,8 @@
     "province": "Provins",
     "country": "Land",
     "streetAddress": "Gatuadress",
-    "nearbyLandmarks": "Landmärken i närheten"
+    "nearbyLandmarks": "Landmärken i närheten",
+    "roomTypeDescription": "Beskrivning av rumstyp"
   },
   "a11y": {
     "close": "Stäng",
@@ -1034,7 +1036,10 @@
     "saved": "Sparad",
     "unsavedChanges": "Osparade ändringar",
     "update": "Uppdatera",
-    "updateHostel": "Uppdatera vandrarhem"
+    "updateHostel": "Uppdatera vandrarhem",
+    "reviewTitle": "Detta skickar din annons för ny granskning",
+    "reviewBody": "Du har ändrat följande. Din annons granskas igen och gästerna ser den inte förrän den är godkänd.",
+    "reviewConfirm": "Spara och skicka för granskning"
   },
   "hostMore": {
     "property": "Fastighet",
@@ -1199,7 +1204,6 @@
     "checkOut": "Utcheckning",
     "guests": "Gäster",
     "youLlNeedAnAccount": "Du behöver ett konto för att slutföra en bokning.",
-    "chooseYourRoom": "Välj ditt rum",
     "add": "Lägg till",
     "showAllNPhotos": "Visa alla {{count}} foton",
     "genderHostelHostedBy": "{{gender}}-vandrarhem, värd {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Din vistelse",
     "bookingSent": "Bokning skickad",
     "weLlEmailYouWhenConfirmed": "Vi mejlar dig så snart vandrarhemmet bekräftar.",
-    "couldnTBook": "Bokningen kunde inte slutföras"
+    "couldnTBook": "Bokningen kunde inte slutföras",
+    "noRoomsListed": "Det här vandrarhemmet har inte lagt till några rum än."
   },
   "states": {
     "nothingHereYet": "Inget här ännu",

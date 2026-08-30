@@ -68,7 +68,6 @@
     "backToSearch": "Vissza a kereséshez",
     "share": "Megosztás",
     "showMore": "Több megjelenítése",
-    "roomsAmpPricing": "Szobák és árak",
     "month": "/ hó",
     "whatThisPlaceOffers": "Amit a szállás kínál",
     "nearbyLandmarks": "Közeli tájékozódási pontok",
@@ -102,7 +101,8 @@
     "maybeLater": "Talán később",
     "signInToBook": "Jelentkezzen be a foglaláshoz",
     "pickYourRoomOnce": "Válassza ki a szobát bejelentkezés után",
-    "createAFreeAccountToBook": "Hozzon létre ingyenes fiókot, hogy szobákat válasszon és lefoglalja őket, amíg dönt. Mindössze 30 másodperc."
+    "createAFreeAccountToBook": "Hozzon létre ingyenes fiókot, hogy szobákat válasszon és lefoglalja őket, amíg dönt. Mindössze 30 másodperc.",
+    "roomsAmpPricing": "Szobák és árak"
   },
   "common": {
     "loading": "Betöltés…",
@@ -175,6 +175,7 @@
     "selectGender": "Válassz nemet",
     "contactEmail": "Kapcsolattartó e-mail",
     "primaryPhone": "Elsődleges telefonszám",
+    "secondaryPhone": "Másodlagos telefonszám",
     "tellStudentsWhatMakes": "Meséld el a diákoknak, miért jó hely lakni a szálládon…",
     "amenityCatalogueUnavailable": "A felszereltségi katalógus nem érhető el.",
     "addRoomType": "Szobatípus hozzáadása",
@@ -526,7 +527,8 @@
     "province": "Megye",
     "country": "Ország",
     "streetAddress": "Utca és házszám",
-    "nearbyLandmarks": "Közeli nevezetességek"
+    "nearbyLandmarks": "Közeli nevezetességek",
+    "roomTypeDescription": "Szobatípus leírása"
   },
   "a11y": {
     "close": "Bezárás",
@@ -1034,7 +1036,10 @@
     "saved": "Mentve",
     "unsavedChanges": "Nem mentett módosítások",
     "update": "Frissítés",
-    "updateHostel": "Szálláshely frissítése"
+    "updateHostel": "Szálláshely frissítése",
+    "reviewTitle": "Ezzel a hirdetése újra ellenőrzésre kerül",
+    "reviewBody": "A következőket módosította. Hirdetését újra ellenőrizzük, és a vendégek a jóváhagyásig nem látják.",
+    "reviewConfirm": "Mentés és beküldés ellenőrzésre"
   },
   "hostMore": {
     "property": "Ingatlan",
@@ -1199,7 +1204,6 @@
     "checkOut": "Távozás",
     "guests": "Vendégek",
     "youLlNeedAnAccount": "Foglaláshoz fiókra lesz szükséged.",
-    "chooseYourRoom": "Válaszd ki a szobád",
     "add": "Hozzáadás",
     "showAllNPhotos": "Mind a(z) {{count}} fotó",
     "genderHostelHostedBy": "{{gender}} szálláshely, házigazda: {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Az Ön tartózkodása",
     "bookingSent": "Foglalás elküldve",
     "weLlEmailYouWhenConfirmed": "E-mailt küldünk, amint a szállás visszaigazolja.",
-    "couldnTBook": "A foglalás nem sikerült"
+    "couldnTBook": "A foglalás nem sikerült",
+    "noRoomsListed": "Ez a szállás még nem adott meg szobákat."
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",

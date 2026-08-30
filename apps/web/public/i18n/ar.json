@@ -68,7 +68,6 @@
     "backToSearch": "العودة إلى البحث",
     "share": "مشاركة",
     "showMore": "عرض المزيد",
-    "roomsAmpPricing": "الغرف والأسعار",
     "month": "/ شهريًا",
     "whatThisPlaceOffers": "ما يوفره هذا المكان",
     "nearbyLandmarks": "معالم قريبة",
@@ -102,7 +101,8 @@
     "maybeLater": "لاحقًا",
     "signInToBook": "سجّل الدخول للحجز",
     "pickYourRoomOnce": "اختر غرفتك بمجرد تسجيل الدخول",
-    "createAFreeAccountToBook": "أنشئ حسابًا مجانيًا لاختيار الغرف وحجزها ريثما تقرر. لا يستغرق سوى 30 ثانية."
+    "createAFreeAccountToBook": "أنشئ حسابًا مجانيًا لاختيار الغرف وحجزها ريثما تقرر. لا يستغرق سوى 30 ثانية.",
+    "roomsAmpPricing": "الغرف والأسعار"
   },
   "common": {
     "loading": "جارٍ التحميل…",
@@ -175,6 +175,7 @@
     "selectGender": "اختر الجنس",
     "contactEmail": "البريد الإلكتروني للتواصل",
     "primaryPhone": "الهاتف الأساسي",
+    "secondaryPhone": "الهاتف الثانوي",
     "tellStudentsWhatMakes": "أخبر الطلاب بما يجعل نزلك مكاناً رائعاً للعيش…",
     "amenityCatalogueUnavailable": "قائمة المرافق غير متاحة.",
     "addRoomType": "إضافة نوع غرفة",
@@ -526,7 +527,8 @@
     "province": "المحافظة",
     "country": "الدولة",
     "streetAddress": "عنوان الشارع",
-    "nearbyLandmarks": "المعالم القريبة"
+    "nearbyLandmarks": "المعالم القريبة",
+    "roomTypeDescription": "وصف نوع الغرفة"
   },
   "a11y": {
     "close": "إغلاق",
@@ -1034,7 +1036,10 @@
     "saved": "تم الحفظ",
     "unsavedChanges": "تغييرات غير محفوظة",
     "update": "تحديث",
-    "updateHostel": "تحديث النزل"
+    "updateHostel": "تحديث النزل",
+    "reviewTitle": "سيؤدي هذا إلى إعادة إعلانك للمراجعة",
+    "reviewBody": "لقد غيّرت ما يلي. ستتم مراجعة إعلانك مرة أخرى، ولن يراه النزلاء حتى تتم الموافقة عليه.",
+    "reviewConfirm": "حفظ وإرسال للمراجعة"
   },
   "hostMore": {
     "property": "العقار",
@@ -1199,7 +1204,6 @@
     "checkOut": "تسجيل المغادرة",
     "guests": "الضيوف",
     "youLlNeedAnAccount": "ستحتاج إلى حساب لإتمام الحجز.",
-    "chooseYourRoom": "اختر غرفتك",
     "add": "إضافة",
     "showAllNPhotos": "عرض كل الصور الـ{{count}}",
     "genderHostelHostedBy": "نزل {{gender}} يستضيفه {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "إقامتك",
     "bookingSent": "تم إرسال الحجز",
     "weLlEmailYouWhenConfirmed": "سنراسلك عبر البريد الإلكتروني فور تأكيد النزل للحجز.",
-    "couldnTBook": "تعذّر إتمام الحجز"
+    "couldnTBook": "تعذّر إتمام الحجز",
+    "noRoomsListed": "لم يُدرج هذا النزل أي غرف بعد."
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",

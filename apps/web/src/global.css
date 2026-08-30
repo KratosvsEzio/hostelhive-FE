@@ -163,10 +163,11 @@ body {
 /* The console sidebar's brand row, matched to the header's *total* height rather than its
    content height.
 
-   The header carries its rule on the <header> itself, outside the 4rem row inside it, so it
-   stands 4rem + 1px tall. This row is border-box and folds its own rule into the 4rem. Left
-   as `h-16` the two hairlines land one pixel apart, which reads as a smudge where the sidebar
-   meets the header rather than as one line across the top of the page.
+   The row carries no rule of its own — the mark sits on the sidebar, not on a shelf — but the
+   header beside it carries one on the <header> itself, outside the 4rem row inside it, so the
+   header's box stands 4rem + 1px tall. Left as `h-16` the sidebar's nav would start a pixel
+   above the page content next to it, and the two columns would read as slightly out of step
+   all the way down.
 
    Plain CSS for the same reason the rules above are: `calc()` needs real whitespace around
    its operator, and a Tailwind arbitrary value puts that at the mercy of the normalizer. */

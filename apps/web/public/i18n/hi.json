@@ -68,7 +68,6 @@
     "backToSearch": "खोज पर वापस",
     "share": "शेयर करें",
     "showMore": "और दिखाएँ",
-    "roomsAmpPricing": "कमरे और कीमतें",
     "month": "/ महीना",
     "whatThisPlaceOffers": "यहाँ क्या-क्या मिलता है",
     "nearbyLandmarks": "आसपास के लैंडमार्क",
@@ -102,7 +101,8 @@
     "maybeLater": "बाद में",
     "signInToBook": "बुक करने के लिए साइन इन करें",
     "pickYourRoomOnce": "साइन इन करते ही अपना कमरा चुनें",
-    "createAFreeAccountToBook": "मुफ़्त खाता बनाएँ, कमरे चुनें और फ़ैसला करने तक उन्हें रोके रखें। सिर्फ़ 30 सेकंड लगते हैं।"
+    "createAFreeAccountToBook": "मुफ़्त खाता बनाएँ, कमरे चुनें और फ़ैसला करने तक उन्हें रोके रखें। सिर्फ़ 30 सेकंड लगते हैं।",
+    "roomsAmpPricing": "कमरे और कीमतें"
   },
   "common": {
     "loading": "लोड हो रहा है…",
@@ -175,6 +175,7 @@
     "selectGender": "लिंग चुनें",
     "contactEmail": "संपर्क ईमेल",
     "primaryPhone": "प्राथमिक फ़ोन",
+    "secondaryPhone": "द्वितीयक फ़ोन",
     "tellStudentsWhatMakes": "छात्रों को बताएं कि आपका हॉस्टल रहने के लिए बढ़िया जगह क्यों है…",
     "amenityCatalogueUnavailable": "सुविधा सूची उपलब्ध नहीं है।",
     "addRoomType": "कमरे का प्रकार जोड़ें",
@@ -526,7 +527,8 @@
     "province": "प्रांत",
     "country": "देश",
     "streetAddress": "गली का पता",
-    "nearbyLandmarks": "आसपास के लैंडमार्क"
+    "nearbyLandmarks": "आसपास के लैंडमार्क",
+    "roomTypeDescription": "कमरे के प्रकार का विवरण"
   },
   "a11y": {
     "close": "बंद करें",
@@ -1034,7 +1036,10 @@
     "saved": "सहेजा गया",
     "unsavedChanges": "असहेजे परिवर्तन",
     "update": "अपडेट",
-    "updateHostel": "हॉस्टल अपडेट करें"
+    "updateHostel": "हॉस्टल अपडेट करें",
+    "reviewTitle": "इससे आपकी लिस्टिंग दोबारा समीक्षा में चली जाएगी",
+    "reviewBody": "आपने ये बदलाव किए हैं। आपकी लिस्टिंग की दोबारा समीक्षा होगी, और मंज़ूरी मिलने तक मेहमानों को यह नहीं दिखेगी।",
+    "reviewConfirm": "सहेजें और समीक्षा के लिए भेजें"
   },
   "hostMore": {
     "property": "संपत्ति",
@@ -1199,7 +1204,6 @@
     "checkOut": "चेक आउट",
     "guests": "मेहमान",
     "youLlNeedAnAccount": "बुकिंग पूरी करने के लिए आपको खाता चाहिए।",
-    "chooseYourRoom": "अपना कमरा चुनें",
     "add": "जोड़ें",
     "showAllNPhotos": "सभी {{count}} फ़ोटो देखें",
     "genderHostelHostedBy": "{{host}} द्वारा होस्ट किया गया {{gender}} हॉस्टल"
@@ -1386,7 +1390,8 @@
     "yourStay": "आपका ठहराव",
     "bookingSent": "बुकिंग भेज दी गई",
     "weLlEmailYouWhenConfirmed": "हॉस्टल की पुष्टि मिलते ही हम आपको ईमेल करेंगे।",
-    "couldnTBook": "बुकिंग पूरी नहीं हो सकी"
+    "couldnTBook": "बुकिंग पूरी नहीं हो सकी",
+    "noRoomsListed": "इस हॉस्टल ने अभी तक कोई कमरा नहीं जोड़ा है।"
   },
   "states": {
     "nothingHereYet": "अभी यहाँ कुछ नहीं",

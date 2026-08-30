@@ -68,7 +68,6 @@
     "backToSearch": "Kembali ke pencarian",
     "share": "Bagikan",
     "showMore": "Tampilkan lebih banyak",
-    "roomsAmpPricing": "Kamar & harga",
     "month": "/ bulan",
     "whatThisPlaceOffers": "Yang ditawarkan tempat ini",
     "nearbyLandmarks": "Landmark terdekat",
@@ -102,7 +101,8 @@
     "maybeLater": "Nanti saja",
     "signInToBook": "Masuk untuk memesan",
     "pickYourRoomOnce": "Pilih kamar Anda setelah masuk",
-    "createAFreeAccountToBook": "Buat akun gratis untuk memilih kamar dan menahannya selagi Anda memutuskan. Hanya butuh 30 detik."
+    "createAFreeAccountToBook": "Buat akun gratis untuk memilih kamar dan menahannya selagi Anda memutuskan. Hanya butuh 30 detik.",
+    "roomsAmpPricing": "Kamar & harga"
   },
   "common": {
     "loading": "Memuat…",
@@ -175,6 +175,7 @@
     "selectGender": "Pilih jenis kelamin",
     "contactEmail": "Email kontak",
     "primaryPhone": "Telepon utama",
+    "secondaryPhone": "Telepon sekunder",
     "tellStudentsWhatMakes": "Ceritakan kepada mahasiswa apa yang membuat hostel Anda tempat tinggal yang baik…",
     "amenityCatalogueUnavailable": "Katalog fasilitas tidak tersedia.",
     "addRoomType": "Tambah tipe kamar",
@@ -531,7 +532,8 @@
     "province": "Provinsi",
     "country": "Negara",
     "streetAddress": "Alamat jalan",
-    "nearbyLandmarks": "Landmark terdekat"
+    "nearbyLandmarks": "Landmark terdekat",
+    "roomTypeDescription": "Deskripsi tipe kamar"
   },
   "a11y": {
     "close": "Tutup",
@@ -1039,7 +1041,10 @@
     "saved": "Tersimpan",
     "unsavedChanges": "Perubahan belum disimpan",
     "update": "Perbarui",
-    "updateHostel": "Perbarui hostel"
+    "updateHostel": "Perbarui hostel",
+    "reviewTitle": "Ini akan mengirim listing Anda untuk ditinjau ulang",
+    "reviewBody": "Anda mengubah hal berikut. Listing Anda akan ditinjau lagi, dan tamu tidak akan melihatnya sampai disetujui.",
+    "reviewConfirm": "Simpan dan kirim untuk ditinjau"
   },
   "hostMore": {
     "property": "Properti",
@@ -1204,7 +1209,6 @@
     "checkOut": "Check-out",
     "guests": "Tamu",
     "youLlNeedAnAccount": "Anda memerlukan akun untuk menyelesaikan pemesanan.",
-    "chooseYourRoom": "Pilih kamar Anda",
     "add": "Tambah",
     "showAllNPhotos": "Lihat semua {{count}} foto",
     "genderHostelHostedBy": "Hostel {{gender}}, dikelola oleh {{host}}"
@@ -1391,7 +1395,8 @@
     "yourStay": "Menginap Anda",
     "bookingSent": "Pemesanan terkirim",
     "weLlEmailYouWhenConfirmed": "Kami akan mengirim email begitu hostel mengonfirmasi.",
-    "couldnTBook": "Pemesanan tidak dapat diselesaikan"
+    "couldnTBook": "Pemesanan tidak dapat diselesaikan",
+    "noRoomsListed": "Hostel ini belum menambahkan kamar apa pun."
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",

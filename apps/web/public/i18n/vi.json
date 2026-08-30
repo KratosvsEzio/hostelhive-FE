@@ -68,7 +68,6 @@
     "backToSearch": "Quay lại tìm kiếm",
     "share": "Chia sẻ",
     "showMore": "Xem thêm",
-    "roomsAmpPricing": "Phòng & giá",
     "month": "/ tháng",
     "whatThisPlaceOffers": "Nơi này có gì",
     "nearbyLandmarks": "Địa điểm lân cận",
@@ -102,7 +101,8 @@
     "maybeLater": "Để sau",
     "signInToBook": "Đăng nhập để đặt phòng",
     "pickYourRoomOnce": "Chọn phòng ngay khi đăng nhập",
-    "createAFreeAccountToBook": "Tạo tài khoản miễn phí để chọn phòng và giữ chỗ trong khi bạn quyết định. Chỉ mất 30 giây."
+    "createAFreeAccountToBook": "Tạo tài khoản miễn phí để chọn phòng và giữ chỗ trong khi bạn quyết định. Chỉ mất 30 giây.",
+    "roomsAmpPricing": "Phòng & giá"
   },
   "common": {
     "loading": "Đang tải…",
@@ -175,6 +175,7 @@
     "selectGender": "Chọn giới tính",
     "contactEmail": "Email liên hệ",
     "primaryPhone": "Điện thoại chính",
+    "secondaryPhone": "Điện thoại phụ",
     "tellStudentsWhatMakes": "Hãy cho sinh viên biết điều gì khiến nhà nghỉ của bạn là nơi đáng sống…",
     "amenityCatalogueUnavailable": "Danh mục tiện nghi không khả dụng.",
     "addRoomType": "Thêm loại phòng",
@@ -531,7 +532,8 @@
     "province": "Tỉnh",
     "country": "Quốc gia",
     "streetAddress": "Địa chỉ đường phố",
-    "nearbyLandmarks": "Địa điểm nổi bật gần đó"
+    "nearbyLandmarks": "Địa điểm nổi bật gần đó",
+    "roomTypeDescription": "Mô tả loại phòng"
   },
   "a11y": {
     "close": "Đóng",
@@ -1039,7 +1041,10 @@
     "saved": "Đã lưu",
     "unsavedChanges": "Thay đổi chưa lưu",
     "update": "Cập nhật",
-    "updateHostel": "Cập nhật nhà nghỉ"
+    "updateHostel": "Cập nhật nhà nghỉ",
+    "reviewTitle": "Thao tác này sẽ đưa tin đăng của bạn về trạng thái chờ duyệt",
+    "reviewBody": "Bạn đã thay đổi những mục sau. Tin đăng sẽ được duyệt lại và khách sẽ không nhìn thấy cho đến khi được phê duyệt.",
+    "reviewConfirm": "Lưu và gửi duyệt"
   },
   "hostMore": {
     "property": "Cơ sở",
@@ -1204,7 +1209,6 @@
     "checkOut": "Trả phòng",
     "guests": "Khách",
     "youLlNeedAnAccount": "Bạn cần một tài khoản để hoàn tất đặt phòng.",
-    "chooseYourRoom": "Chọn phòng của bạn",
     "add": "Thêm",
     "showAllNPhotos": "Xem tất cả {{count}} ảnh",
     "genderHostelHostedBy": "Nhà nghỉ {{gender}}, chủ nhà {{host}}"
@@ -1391,7 +1395,8 @@
     "yourStay": "Kỳ lưu trú của bạn",
     "bookingSent": "Đã gửi đặt phòng",
     "weLlEmailYouWhenConfirmed": "Chúng tôi sẽ gửi email ngay khi nhà nghỉ xác nhận.",
-    "couldnTBook": "Không thể hoàn tất đặt phòng"
+    "couldnTBook": "Không thể hoàn tất đặt phòng",
+    "noRoomsListed": "Nhà nghỉ này chưa thêm phòng nào."
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",

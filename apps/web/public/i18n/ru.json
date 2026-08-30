@@ -68,7 +68,6 @@
     "backToSearch": "Назад к поиску",
     "share": "Поделиться",
     "showMore": "Показать ещё",
-    "roomsAmpPricing": "Комнаты и цены",
     "month": "/ месяц",
     "whatThisPlaceOffers": "Что есть в этом месте",
     "nearbyLandmarks": "Что рядом",
@@ -102,7 +101,8 @@
     "maybeLater": "Может быть, позже",
     "signInToBook": "Войдите, чтобы забронировать",
     "pickYourRoomOnce": "Выберите номер после входа",
-    "createAFreeAccountToBook": "Создайте бесплатный аккаунт, чтобы выбирать номера и удерживать их, пока решаете. Это займёт 30 секунд."
+    "createAFreeAccountToBook": "Создайте бесплатный аккаунт, чтобы выбирать номера и удерживать их, пока решаете. Это займёт 30 секунд.",
+    "roomsAmpPricing": "Комнаты и цены"
   },
   "common": {
     "loading": "Загрузка…",
@@ -175,6 +175,7 @@
     "selectGender": "Выберите пол",
     "contactEmail": "Контактный e-mail",
     "primaryPhone": "Основной телефон",
+    "secondaryPhone": "Дополнительный телефон",
     "tellStudentsWhatMakes": "Расскажите студентам, почему в вашем хостеле хорошо жить…",
     "amenityCatalogueUnavailable": "Каталог удобств недоступен.",
     "addRoomType": "Добавить тип комнаты",
@@ -531,7 +532,8 @@
     "province": "Область",
     "country": "Страна",
     "streetAddress": "Адрес",
-    "nearbyLandmarks": "Ориентиры поблизости"
+    "nearbyLandmarks": "Ориентиры поблизости",
+    "roomTypeDescription": "Описание типа комнаты"
   },
   "a11y": {
     "close": "Закрыть",
@@ -1039,7 +1041,10 @@
     "saved": "Сохранено",
     "unsavedChanges": "Несохранённые изменения",
     "update": "Обновить",
-    "updateHostel": "Обновить хостел"
+    "updateHostel": "Обновить хостел",
+    "reviewTitle": "Объявление снова уйдёт на проверку",
+    "reviewBody": "Вы изменили следующее. Объявление будет проверено заново, и гости не увидят его до одобрения.",
+    "reviewConfirm": "Сохранить и отправить на проверку"
   },
   "hostMore": {
     "property": "Объект",
@@ -1204,7 +1209,6 @@
     "checkOut": "Выезд",
     "guests": "Гости",
     "youLlNeedAnAccount": "Для завершения бронирования нужен аккаунт.",
-    "chooseYourRoom": "Выберите комнату",
     "add": "Добавить",
     "showAllNPhotos": "Показать все {{count}} фото",
     "genderHostelHostedBy": "{{gender}} хостел, владелец {{host}}"
@@ -1391,7 +1395,8 @@
     "yourStay": "Ваше проживание",
     "bookingSent": "Бронирование отправлено",
     "weLlEmailYouWhenConfirmed": "Мы напишем вам, как только хостел подтвердит бронирование.",
-    "couldnTBook": "Не удалось завершить бронирование"
+    "couldnTBook": "Не удалось завершить бронирование",
+    "noRoomsListed": "Этот хостел ещё не добавил комнаты."
   },
   "states": {
     "nothingHereYet": "Здесь пока пусто",

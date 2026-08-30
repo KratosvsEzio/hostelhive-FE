@@ -110,6 +110,7 @@ interface OnboardingDraft {
   publishOnApproval: boolean;
   email: string;
   phone: string;
+  secondaryPhone: string;
 }
 
 const DRAFT_KEY = 'hh:onboarding:draft';
@@ -361,6 +362,8 @@ export class OnboardingWizard {
   // --- Contact info (required by backend) ---
   protected readonly email = signal('');
   protected readonly phone = signal('');
+  /** Optional, like the hostel form’s. The primary already satisfies the contact rule. */
+  protected readonly secondaryPhone = signal('');
 
   // --- Submit error state ---
   protected readonly apiErrors = signal<string[]>([]);
@@ -501,6 +504,7 @@ export class OnboardingWizard {
       publishOnApproval: this.publishOnApproval(),
       email: this.email(),
       phone: this.phone(),
+      secondaryPhone: this.secondaryPhone(),
     };
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -926,6 +930,7 @@ export class OnboardingWizard {
       offer_ids: this.selectedAmenities(),
       email: this.email() || undefined,
       primary_phone: this.phone() || undefined,
+      secondary_phone: this.secondaryPhone() || undefined,
       total_rooms: this.rooms().length || 1,
       total_floors: 1,
       ...(attachmentIds.length ? { attachment_ids: attachmentIds } : {}),
@@ -1043,6 +1048,7 @@ export class OnboardingWizard {
         this.publishOnApproval.set(d.publishOnApproval);
       if (typeof d.email === 'string') this.email.set(d.email);
       if (typeof d.phone === 'string') this.phone.set(d.phone);
+      if (typeof d.secondaryPhone === 'string') this.secondaryPhone.set(d.secondaryPhone);
     } catch {
       /* corrupt draft: start fresh */
     }

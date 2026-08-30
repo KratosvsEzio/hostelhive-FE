@@ -101,7 +101,28 @@ export class NotificationBell {
 
   protected readonly loading = computed(() => this.state().loading || this.dismissing());
   protected readonly allItems = computed(() => this.state().items);
-  protected readonly unreadCount = computed(() => this.state().unread);
+  /**
+   * The server's unread tally, less the ones marked read since it was taken.
+   *
+   * Notifications are marked read as they scroll into view, and the badge sat on whatever the
+   * last list call reported — so a reader watched the panel empty itself while the number over
+   * the bell insisted the messages were still waiting.
+   *
+   * Subtracted rather than recounted from `items`: `unread` is an aggregate over every
+   * notification the account has, and the panel holds one page of them, so counting what is on
+   * screen would report a smaller number than the truth the moment there are more.
+   *
+   * Only marks the server has not caught up with are deducted — an item still flagged unread
+   * in the last response that this session has since marked. That makes the correction
+   * self-cancelling: once the list is re-read those items come back `isRead`, they stop
+   * matching, and the badge is the server's number again with nothing subtracted twice.
+   */
+  protected readonly unreadCount = computed(() => {
+    const marked = this.locallyMarkedIds();
+    if (!marked.size) return this.state().unread;
+    const justRead = this.allItems().filter((i) => !i.isRead && marked.has(i.id)).length;
+    return Math.max(0, this.state().unread - justRead);
+  });
   protected readonly recentItems = computed(() => this.allItems().slice(0, 5));
 
   protected toggle(): void {

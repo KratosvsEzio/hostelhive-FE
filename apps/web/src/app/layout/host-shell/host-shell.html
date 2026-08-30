@@ -11,11 +11,12 @@
        64px bar — which reads as a sidebar that failed to load its top rather than a deliberate
        edge. `safe-pt` is on the <aside> for the same reason the header carries it: on a
        notched device the mark would otherwise sit under the cutout. -->
-  <!-- `hh-brand-row`, not `h-16`: it has to match the header's total height, rule included.
-       See the class in global.css. -->
+  <!-- `hh-brand-row`, not `h-16`: no rule under the mark, but the row still has to stand as
+       tall as the header's whole box so the first nav item starts level with the top of the
+       page beside it. See the class in global.css. -->
   <a
     routerLink="/host"
-    class="hh-brand-row flex shrink-0 items-center gap-2 overflow-hidden border-b border-ink-100"
+    class="hh-brand-row flex shrink-0 items-center gap-2 overflow-hidden"
     [class.justify-center]="drawer.railVisual()"
     [class.px-4]="!drawer.railVisual()"
   >

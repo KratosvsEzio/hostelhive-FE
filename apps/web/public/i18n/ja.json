@@ -68,7 +68,6 @@
     "backToSearch": "検索に戻る",
     "share": "シェア",
     "showMore": "もっと見る",
-    "roomsAmpPricing": "部屋と料金",
     "month": "/ 月",
     "whatThisPlaceOffers": "この物件の設備",
     "nearbyLandmarks": "近くの目印",
@@ -102,7 +101,8 @@
     "maybeLater": "あとで",
     "signInToBook": "予約するにはサインイン",
     "pickYourRoomOnce": "サインインすれば部屋を選べます",
-    "createAFreeAccountToBook": "無料アカウントを作成すると、部屋を選んで決めるまで確保できます。30秒で完了します。"
+    "createAFreeAccountToBook": "無料アカウントを作成すると、部屋を選んで決めるまで確保できます。30秒で完了します。",
+    "roomsAmpPricing": "部屋と料金"
   },
   "common": {
     "loading": "読み込み中…",
@@ -175,6 +175,7 @@
     "selectGender": "性別を選択",
     "contactEmail": "連絡先メールアドレス",
     "primaryPhone": "主要電話番号",
+    "secondaryPhone": "予備の電話番号",
     "tellStudentsWhatMakes": "あなたのホステルが暮らしやすい理由を学生に伝えましょう…",
     "amenityCatalogueUnavailable": "設備カタログを利用できません。",
     "addRoomType": "部屋タイプを追加",
@@ -526,7 +527,8 @@
     "province": "州・県",
     "country": "国",
     "streetAddress": "番地",
-    "nearbyLandmarks": "近くの目印"
+    "nearbyLandmarks": "近くの目印",
+    "roomTypeDescription": "部屋タイプの説明"
   },
   "a11y": {
     "close": "閉じる",
@@ -1034,7 +1036,10 @@
     "saved": "保存しました",
     "unsavedChanges": "未保存の変更",
     "update": "更新",
-    "updateHostel": "ホステルを更新"
+    "updateHostel": "ホステルを更新",
+    "reviewTitle": "この変更で掲載は再審査になります",
+    "reviewBody": "以下を変更しました。掲載は再度審査され、承認されるまでゲストには表示されません。",
+    "reviewConfirm": "保存して審査に送る"
   },
   "hostMore": {
     "property": "物件",
@@ -1199,7 +1204,6 @@
     "checkOut": "チェックアウト",
     "guests": "ゲスト",
     "youLlNeedAnAccount": "予約を完了するにはアカウントが必要です。",
-    "chooseYourRoom": "部屋を選ぶ",
     "add": "追加",
     "showAllNPhotos": "{{count}} 枚すべての写真を見る",
     "genderHostelHostedBy": "{{gender}}向けホステル · ホスト: {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "ご滞在",
     "bookingSent": "予約を送信しました",
     "weLlEmailYouWhenConfirmed": "宿泊施設が確定次第、メールでお知らせします。",
-    "couldnTBook": "予約を完了できませんでした"
+    "couldnTBook": "予約を完了できませんでした",
+    "noRoomsListed": "この宿はまだ部屋を登録していません。"
   },
   "states": {
     "nothingHereYet": "まだ何もありません",

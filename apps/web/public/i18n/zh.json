@@ -68,7 +68,6 @@
     "backToSearch": "返回搜索",
     "share": "分享",
     "showMore": "显示更多",
-    "roomsAmpPricing": "房型与价格",
     "month": "/ 月",
     "whatThisPlaceOffers": "房源设施",
     "nearbyLandmarks": "附近地标",
@@ -102,7 +101,8 @@
     "maybeLater": "以后再说",
     "signInToBook": "登录后预订",
     "pickYourRoomOnce": "登录后即可挑选房间",
-    "createAFreeAccountToBook": "创建免费账户即可挑选房间，并在您决定前为您保留。只需 30 秒。"
+    "createAFreeAccountToBook": "创建免费账户即可挑选房间，并在您决定前为您保留。只需 30 秒。",
+    "roomsAmpPricing": "房型与价格"
   },
   "common": {
     "loading": "加载中…",
@@ -175,6 +175,7 @@
     "selectGender": "选择性别",
     "contactEmail": "联系邮箱",
     "primaryPhone": "主要电话",
+    "secondaryPhone": "备用电话",
     "tellStudentsWhatMakes": "告诉学生您的旅舍为何是理想的居住地…",
     "amenityCatalogueUnavailable": "设施目录不可用。",
     "addRoomType": "添加房间类型",
@@ -526,7 +527,8 @@
     "province": "省份",
     "country": "国家",
     "streetAddress": "街道地址",
-    "nearbyLandmarks": "附近地标"
+    "nearbyLandmarks": "附近地标",
+    "roomTypeDescription": "房型描述"
   },
   "a11y": {
     "close": "关闭",
@@ -1034,7 +1036,10 @@
     "saved": "已保存",
     "unsavedChanges": "未保存的更改",
     "update": "更新",
-    "updateHostel": "更新旅舍"
+    "updateHostel": "更新旅舍",
+    "reviewTitle": "此操作会将您的房源重新提交审核",
+    "reviewBody": "您修改了以下内容。房源将重新接受审核，在通过之前房客将无法看到。",
+    "reviewConfirm": "保存并提交审核"
   },
   "hostMore": {
     "property": "房源",
@@ -1199,7 +1204,6 @@
     "checkOut": "退房",
     "guests": "入住人数",
     "youLlNeedAnAccount": "完成预订需要一个账户。",
-    "chooseYourRoom": "选择您的房间",
     "add": "添加",
     "showAllNPhotos": "查看全部 {{count}} 张照片",
     "genderHostelHostedBy": "{{gender}}旅舍 · 房东：{{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "您的入住",
     "bookingSent": "预订已提交",
     "weLlEmailYouWhenConfirmed": "旅舍确认后我们会立即向您发送邮件。",
-    "couldnTBook": "无法完成预订"
+    "couldnTBook": "无法完成预订",
+    "noRoomsListed": "该旅舍尚未添加任何房间。"
   },
   "states": {
     "nothingHereYet": "这里还没有内容",

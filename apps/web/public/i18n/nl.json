@@ -68,7 +68,6 @@
     "backToSearch": "Terug naar zoeken",
     "share": "Delen",
     "showMore": "Meer tonen",
-    "roomsAmpPricing": "Kamers en prijzen",
     "month": "/ maand",
     "whatThisPlaceOffers": "Wat deze accommodatie biedt",
     "nearbyLandmarks": "Herkenningspunten in de buurt",
@@ -102,7 +101,8 @@
     "maybeLater": "Misschien later",
     "signInToBook": "Log in om te boeken",
     "pickYourRoomOnce": "Kies je kamer zodra je bent ingelogd",
-    "createAFreeAccountToBook": "Maak een gratis account om kamers te kiezen en vast te houden terwijl je beslist. Het duurt 30 seconden."
+    "createAFreeAccountToBook": "Maak een gratis account om kamers te kiezen en vast te houden terwijl je beslist. Het duurt 30 seconden.",
+    "roomsAmpPricing": "Kamers en prijzen"
   },
   "common": {
     "loading": "Laden…",
@@ -175,6 +175,7 @@
     "selectGender": "Kies geslacht",
     "contactEmail": "Contact-e-mail",
     "primaryPhone": "Primair telefoonnummer",
+    "secondaryPhone": "Secundair telefoonnummer",
     "tellStudentsWhatMakes": "Vertel studenten waarom jouw hostel een fijne plek is om te wonen…",
     "amenityCatalogueUnavailable": "Voorzieningencatalogus niet beschikbaar.",
     "addRoomType": "Kamertype toevoegen",
@@ -526,7 +527,8 @@
     "province": "Provincie",
     "country": "Land",
     "streetAddress": "Straatnaam en huisnummer",
-    "nearbyLandmarks": "Bezienswaardigheden in de buurt"
+    "nearbyLandmarks": "Bezienswaardigheden in de buurt",
+    "roomTypeDescription": "Beschrijving van kamertype"
   },
   "a11y": {
     "close": "Sluiten",
@@ -1034,7 +1036,10 @@
     "saved": "Opgeslagen",
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "update": "Bijwerken",
-    "updateHostel": "Hostel bijwerken"
+    "updateHostel": "Hostel bijwerken",
+    "reviewTitle": "Hiermee gaat je advertentie opnieuw ter beoordeling",
+    "reviewBody": "Je hebt het volgende gewijzigd. Je advertentie wordt opnieuw beoordeeld en is voor gasten pas zichtbaar na goedkeuring.",
+    "reviewConfirm": "Opslaan en ter beoordeling sturen"
   },
   "hostMore": {
     "property": "Object",
@@ -1199,7 +1204,6 @@
     "checkOut": "Uitchecken",
     "guests": "Gasten",
     "youLlNeedAnAccount": "Je hebt een account nodig om een boeking te voltooien.",
-    "chooseYourRoom": "Kies je kamer",
     "add": "Toevoegen",
     "showAllNPhotos": "Alle {{count}} foto’s bekijken",
     "genderHostelHostedBy": "{{gender}}-hostel, gehost door {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Je verblijf",
     "bookingSent": "Boeking verzonden",
     "weLlEmailYouWhenConfirmed": "We mailen je zodra het hostel het bevestigt.",
-    "couldnTBook": "Boeking kon niet worden voltooid"
+    "couldnTBook": "Boeking kon niet worden voltooid",
+    "noRoomsListed": "Dit hostel heeft nog geen kamers toegevoegd."
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",

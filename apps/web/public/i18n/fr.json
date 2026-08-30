@@ -68,7 +68,6 @@
     "backToSearch": "Retour à la recherche",
     "share": "Partager",
     "showMore": "Voir plus",
-    "roomsAmpPricing": "Chambres et tarifs",
     "month": "/ mois",
     "whatThisPlaceOffers": "Ce que propose ce logement",
     "nearbyLandmarks": "Points de repère à proximité",
@@ -102,7 +101,8 @@
     "maybeLater": "Plus tard",
     "signInToBook": "Connectez-vous pour réserver",
     "pickYourRoomOnce": "Choisissez votre chambre une fois connecté",
-    "createAFreeAccountToBook": "Créez un compte gratuit pour choisir vos chambres et les garder le temps de décider. Cela prend 30 secondes."
+    "createAFreeAccountToBook": "Créez un compte gratuit pour choisir vos chambres et les garder le temps de décider. Cela prend 30 secondes.",
+    "roomsAmpPricing": "Chambres et tarifs"
   },
   "common": {
     "loading": "Chargement…",
@@ -175,6 +175,7 @@
     "selectGender": "Choisir le genre",
     "contactEmail": "E-mail de contact",
     "primaryPhone": "Téléphone principal",
+    "secondaryPhone": "Téléphone secondaire",
     "tellStudentsWhatMakes": "Expliquez aux étudiants ce qui fait de votre auberge un endroit où il fait bon vivre…",
     "amenityCatalogueUnavailable": "Catalogue d’équipements indisponible.",
     "addRoomType": "Ajouter un type de chambre",
@@ -526,7 +527,8 @@
     "province": "Province",
     "country": "Pays",
     "streetAddress": "Adresse",
-    "nearbyLandmarks": "Points de repère à proximité"
+    "nearbyLandmarks": "Points de repère à proximité",
+    "roomTypeDescription": "Description du type de chambre"
   },
   "a11y": {
     "close": "Fermer",
@@ -1034,7 +1036,10 @@
     "saved": "Enregistré",
     "unsavedChanges": "Modifications non enregistrées",
     "update": "Mettre à jour",
-    "updateHostel": "Mettre à jour l’auberge"
+    "updateHostel": "Mettre à jour l’auberge",
+    "reviewTitle": "Votre annonce repassera en validation",
+    "reviewBody": "Vous avez modifié les éléments suivants. Votre annonce sera réexaminée et les voyageurs ne la verront pas tant qu’elle n’est pas approuvée.",
+    "reviewConfirm": "Enregistrer et envoyer en validation"
   },
   "hostMore": {
     "property": "Établissement",
@@ -1199,7 +1204,6 @@
     "checkOut": "Départ",
     "guests": "Voyageurs",
     "youLlNeedAnAccount": "Vous aurez besoin d’un compte pour finaliser une réservation.",
-    "chooseYourRoom": "Choisissez votre chambre",
     "add": "Ajouter",
     "showAllNPhotos": "Voir les {{count}} photos",
     "genderHostelHostedBy": "Auberge {{gender}}, hébergée par {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Votre séjour",
     "bookingSent": "Réservation envoyée",
     "weLlEmailYouWhenConfirmed": "Nous vous enverrons un e-mail dès que l'auberge l'aura confirmée.",
-    "couldnTBook": "Impossible de finaliser la réservation"
+    "couldnTBook": "Impossible de finaliser la réservation",
+    "noRoomsListed": "Cette auberge n'a encore ajouté aucune chambre."
   },
   "states": {
     "nothingHereYet": "Rien pour l’instant",

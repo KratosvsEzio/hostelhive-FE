@@ -34,6 +34,24 @@ import { RoomOffer } from './room-offer';
 export class BookingApi {
   /** In-memory stand-in for the hold table. Keyed by hold id. */
   private readonly holds = new Map<string, { lines: ApiHoldLine[]; expiresAt: number }>();
+
+  /**
+   * The rooms this mock is answering about — the ones actually on screen.
+   *
+   * Every lookup below is by room id, and the listing page now shows the hostel's own room
+   * types rather than the fixture. Left reading {@link ROOM_OFFERS}, a real id matched nothing
+   * and the first "Add" failed with "That room is no longer available" — a message about
+   * availability for what was really a mock that had never heard of the room.
+   *
+   * The fixture stays as the fallback so callers that register nothing — the specs, and
+   * anything reaching for the mock outside a listing page — behave exactly as before.
+   */
+  private catalogue: readonly RoomOffer[] = ROOM_OFFERS;
+
+  /** Point the mock at the rooms on screen. Empty restores the fixture. */
+  setCatalogue(offers: readonly RoomOffer[]): void {
+    this.catalogue = offers.length ? offers : ROOM_OFFERS;
+  }
   private readonly bookings = signal<ApiBooking[]>([]);
   private seq = 0;
 
@@ -91,7 +109,7 @@ export class BookingApi {
       return throwError(() => new Error('check_out must be after check_in'));
     }
     return of({
-      rooms: ROOM_OFFERS.map((o) => this.toApi(o)),
+      rooms: this.catalogue.map((o) => this.toApi(o)),
       billing_frequency_type: 'night' as const,
       success: true,
     }).pipe(delay(BookingApi.LAG));
@@ -123,7 +141,7 @@ export class BookingApi {
     return {
       id,
       expires_at: new Date(hold?.expiresAt ?? this.now()).toISOString(),
-      rooms: ROOM_OFFERS.map((o) => this.toApi(o, id)),
+      rooms: this.catalogue.map((o) => this.toApi(o, id)),
       success: true,
     };
   }
@@ -154,7 +172,7 @@ export class BookingApi {
 
     const lines: ApiBookingLine[] = [];
     for (const want of req.lines) {
-      const offer = ROOM_OFFERS.find((o) => o.id === want.room_id);
+      const offer = this.catalogue.find((o) => o.id === want.room_id);
       if (!offer) return throwError(() => new Error('That room is no longer available.'));
       const free =
         offer.available -
@@ -280,7 +298,7 @@ export class BookingApi {
 
     const lines: ApiBookingLine[] = [];
     for (const want of req.lines) {
-      const offer = ROOM_OFFERS.find((o) => o.id === want.room_id);
+      const offer = this.catalogue.find((o) => o.id === want.room_id);
       // A room the fixtures do not know is one of the host's own, picked from the real
       // rooms endpoint. There is nothing here to check it against, so it is taken at its
       // word — the alternative is refusing every booking a host actually makes.
@@ -423,7 +441,7 @@ export class BookingApi {
     from: string,
     to: string,
   ): Observable<ApiRoomCalendarResponse> {
-    const room = ROOM_OFFERS.find((r) => r.id === roomId);
+    const room = this.catalogue.find((r) => r.id === roomId);
     // A room the fixtures have never heard of came from the host console, whose ids are the
     // backend's. Nothing here can know what is sold in it until the endpoint exists — and an
     // empty calendar looks exactly like a room nobody has booked, which is the one thing this

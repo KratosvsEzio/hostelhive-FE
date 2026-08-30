@@ -202,10 +202,13 @@ export class BookingFormDrawer {
    * alarming thing than "that one is taken this week".
    */
   protected readonly roomOptions = computed<DropdownOption[]>(() => {
-    this.locale.ready();
+    // Read as a gate, not only as a dependency: `ready()` already made this recompute when the
+    // language file lands, but translating *before* it lands logs "Missing translation" for two
+    // keys that every locale file has. The blank is replaced the moment this runs again.
+    const ready = this.locale.ready();
     const lang = this.locale.active();
-    const shared = this.i18n.translate<string>('search.sharedRoom');
-    const priv = this.i18n.translate<string>('search.privateRoom');
+    const shared = ready ? this.i18n.translate<string>('search.sharedRoom') : '';
+    const priv = ready ? this.i18n.translate<string>('search.privateRoom') : '';
     const q = this.roomQuery().trim().toLowerCase();
 
     return this.state()

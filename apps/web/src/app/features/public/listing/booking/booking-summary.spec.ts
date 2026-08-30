@@ -41,7 +41,7 @@ describe('BookingSummary', () => {
 
     basket.checkIn.set(new Date(2026, 8, 1));
     basket.checkOut.set(new Date(2026, 8, 4)); // three nights
-    basket.guests.set(2);
+    // No guest count to seed: the basket derives it from what is in it.
     const [first, second] = ROOM_OFFERS;
     basket.setQuantity(first, 2);
     basket.setQuantity(second, 1);

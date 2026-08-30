@@ -1,4 +1,5 @@
 import { Listing } from '@hostelhive/data-access';
+import { RoomOffer } from '@features/public/listing/booking/room-offer';
 
 /**
  * Detail view-model — the canonical {@link Listing} plus a few fields the detail
@@ -17,4 +18,11 @@ export interface ListingDetail extends Listing {
   nearby: { icon: string; label: string }[];
   /** Offer items with human-readable name (from the API); drives "What this place offers". */
   offers?: { slug: string; name: string }[];
+  /**
+   * The hostel's own room types, as "Choose your room" shows them.
+   *
+   * Straight off `hostel_detail.room_types` — the picker used to render a fixture that was
+   * the same five rooms on every listing in the app.
+   */
+  roomOffers: RoomOffer[];
 }

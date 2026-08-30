@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { ConfirmModal } from '@hostelhive/ui';
 import { BookingBasket } from './booking-basket';
 import { BasketLine, lineTotal, unitFor } from './room-offer';
@@ -20,7 +21,7 @@ import { BasketLine, lineTotal, unitFor } from './room-offer';
 @Component({
   selector: 'hh-booking-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmModal, DecimalPipe, DatePipe, TranslocoPipe],
+  imports: [ConfirmModal, DecimalPipe, DatePipe, TranslocoPipe, CurrencySymbolPipe],
   templateUrl: './booking-summary.html',
 })
 export class BookingSummary {

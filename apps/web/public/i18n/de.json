@@ -68,7 +68,6 @@
     "backToSearch": "Zurück zur Suche",
     "share": "Teilen",
     "showMore": "Mehr anzeigen",
-    "roomsAmpPricing": "Zimmer & Preise",
     "month": "/ Monat",
     "whatThisPlaceOffers": "Was diese Unterkunft bietet",
     "nearbyLandmarks": "Orientierungspunkte in der Nähe",
@@ -102,7 +101,8 @@
     "maybeLater": "Vielleicht später",
     "signInToBook": "Zum Buchen anmelden",
     "pickYourRoomOnce": "Wählen Sie Ihr Zimmer nach der Anmeldung",
-    "createAFreeAccountToBook": "Erstellen Sie ein kostenloses Konto, um Zimmer auszuwählen und sie zu reservieren, während Sie sich entscheiden. Dauert nur 30 Sekunden."
+    "createAFreeAccountToBook": "Erstellen Sie ein kostenloses Konto, um Zimmer auszuwählen und sie zu reservieren, während Sie sich entscheiden. Dauert nur 30 Sekunden.",
+    "roomsAmpPricing": "Zimmer & Preise"
   },
   "common": {
     "loading": "Wird geladen…",
@@ -175,6 +175,7 @@
     "selectGender": "Geschlecht wählen",
     "contactEmail": "Kontakt-E-Mail",
     "primaryPhone": "Haupttelefonnummer",
+    "secondaryPhone": "Zweittelefonnummer",
     "tellStudentsWhatMakes": "Erzählen Sie Studierenden, was Ihr Hostel zu einem großartigen Zuhause macht…",
     "amenityCatalogueUnavailable": "Ausstattungskatalog nicht verfügbar.",
     "addRoomType": "Zimmertyp hinzufügen",
@@ -526,7 +527,8 @@
     "province": "Provinz",
     "country": "Land",
     "streetAddress": "Straße und Hausnummer",
-    "nearbyLandmarks": "Sehenswürdigkeiten in der Nähe"
+    "nearbyLandmarks": "Sehenswürdigkeiten in der Nähe",
+    "roomTypeDescription": "Beschreibung des Zimmertyps"
   },
   "a11y": {
     "close": "Schließen",
@@ -1034,7 +1036,10 @@
     "saved": "Gespeichert",
     "unsavedChanges": "Ungespeicherte Änderungen",
     "update": "Aktualisieren",
-    "updateHostel": "Hostel aktualisieren"
+    "updateHostel": "Hostel aktualisieren",
+    "reviewTitle": "Damit geht Ihr Inserat erneut in die Prüfung",
+    "reviewBody": "Sie haben Folgendes geändert. Ihr Inserat wird erneut geprüft und ist für Gäste erst nach der Freigabe sichtbar.",
+    "reviewConfirm": "Speichern und zur Prüfung senden"
   },
   "hostMore": {
     "property": "Objekt",
@@ -1199,7 +1204,6 @@
     "checkOut": "Abreise",
     "guests": "Gäste",
     "youLlNeedAnAccount": "Für eine Buchung benötigen Sie ein Konto.",
-    "chooseYourRoom": "Wählen Sie Ihr Zimmer",
     "add": "Hinzufügen",
     "showAllNPhotos": "Alle {{count}} Fotos ansehen",
     "genderHostelHostedBy": "{{gender}}-Hostel, gastgeberin/gastgeber {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Ihr Aufenthalt",
     "bookingSent": "Buchung gesendet",
     "weLlEmailYouWhenConfirmed": "Wir schreiben Ihnen, sobald das Hostel bestätigt hat.",
-    "couldnTBook": "Buchung konnte nicht abgeschlossen werden"
+    "couldnTBook": "Buchung konnte nicht abgeschlossen werden",
+    "noRoomsListed": "Dieses Hostel hat noch keine Zimmer eingetragen."
   },
   "states": {
     "nothingHereYet": "Hier ist noch nichts",

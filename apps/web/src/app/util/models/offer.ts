@@ -50,7 +50,9 @@ export function iconForSlug(slug: string): string {
   if (s.includes('blanket') || s.includes('comforter') || s.includes('duvet')) return 'ti-stack';
   if (s.includes('drying') || s.includes('rack')) return 'ti-hanger-2';
   if (s.includes('iron') || s.includes('press')) return 'ti-ironing-steam';
-  if (s.includes('bunk')) return 'ti-bunk-bed';
+  // `ti-bunk-bed` is not in the installed Tabler set, and a class the font does not carry
+  // renders as nothing at all — worse than a generic bed.
+  if (s.includes('bunk')) return 'ti-bed';
   if (s.includes('single') && s.includes('bed')) return 'ti-bed-flat';
   if (s.includes('bed') || s.includes('mattress')) return 'ti-bed';
   if (s === 'laundry' || s.includes('laundry') || s.includes('washing')) return 'ti-wash-machine';

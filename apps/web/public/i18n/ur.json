@@ -68,7 +68,6 @@
     "backToSearch": "واپس تلاش پر",
     "share": "شیئر",
     "showMore": "مزید دیکھیں",
-    "roomsAmpPricing": "کمرے اور کرایہ",
     "month": "/ ماہ",
     "whatThisPlaceOffers": "یہاں کیا سہولیات ہیں",
     "nearbyLandmarks": "قریبی مقامات",
@@ -102,7 +101,8 @@
     "maybeLater": "شاید بعد میں",
     "signInToBook": "بکنگ کے لیے سائن اِن کریں",
     "pickYourRoomOnce": "سائن اِن کرتے ہی اپنا کمرہ منتخب کریں",
-    "createAFreeAccountToBook": "مفت اکاؤنٹ بنائیں، کمرے منتخب کریں اور فیصلہ کرنے تک محفوظ رکھیں۔ صرف 30 سیکنڈ لگتے ہیں۔"
+    "createAFreeAccountToBook": "مفت اکاؤنٹ بنائیں، کمرے منتخب کریں اور فیصلہ کرنے تک محفوظ رکھیں۔ صرف 30 سیکنڈ لگتے ہیں۔",
+    "roomsAmpPricing": "کمرے اور کرایہ"
   },
   "common": {
     "loading": "لوڈ ہو رہا ہے…",
@@ -175,6 +175,7 @@
     "selectGender": "جنس منتخب کریں",
     "contactEmail": "رابطہ ای میل",
     "primaryPhone": "بنیادی فون",
+    "secondaryPhone": "ثانوی فون",
     "tellStudentsWhatMakes": "طلبہ کو بتائیں کہ آپ کا ہاسٹل رہنے کے لیے بہترین جگہ کیوں ہے…",
     "amenityCatalogueUnavailable": "سہولیات کی فہرست دستیاب نہیں۔",
     "addRoomType": "کمرے کی قسم شامل کریں",
@@ -531,7 +532,8 @@
     "province": "صوبہ",
     "country": "ملک",
     "streetAddress": "گلی کا پتہ",
-    "nearbyLandmarks": "قریبی نشانیاں"
+    "nearbyLandmarks": "قریبی نشانیاں",
+    "roomTypeDescription": "کمرے کی قسم کی تفصیل"
   },
   "a11y": {
     "close": "بند کریں",
@@ -1039,7 +1041,10 @@
     "saved": "محفوظ ہو گیا",
     "unsavedChanges": "غیر محفوظ تبدیلیاں",
     "update": "اپ ڈیٹ",
-    "updateHostel": "ہاسٹل اپ ڈیٹ کریں"
+    "updateHostel": "ہاسٹل اپ ڈیٹ کریں",
+    "reviewTitle": "اس سے آپ کی لسٹنگ دوبارہ جائزے میں چلی جائے گی",
+    "reviewBody": "آپ نے یہ تبدیلیاں کی ہیں۔ آپ کی لسٹنگ کا دوبارہ جائزہ لیا جائے گا، اور منظوری تک مہمانوں کو نظر نہیں آئے گی۔",
+    "reviewConfirm": "محفوظ کریں اور جائزے کے لیے بھیجیں"
   },
   "hostMore": {
     "property": "پراپرٹی",
@@ -1204,7 +1209,6 @@
     "checkOut": "چیک آؤٹ",
     "guests": "مہمان",
     "youLlNeedAnAccount": "بکنگ مکمل کرنے کے لیے آپ کو اکاؤنٹ کی ضرورت ہوگی۔",
-    "chooseYourRoom": "اپنا کمرہ منتخب کریں",
     "add": "شامل کریں",
     "showAllNPhotos": "تمام {{count}} تصاویر دیکھیں",
     "genderHostelHostedBy": "{{host}} کا میزبان کردہ {{gender}} ہاسٹل"
@@ -1391,7 +1395,8 @@
     "yourStay": "آپ کا قیام",
     "bookingSent": "بکنگ بھیج دی گئی",
     "weLlEmailYouWhenConfirmed": "جیسے ہی ہاسٹل تصدیق کرے گا، ہم آپ کو ای میل کر دیں گے۔",
-    "couldnTBook": "بکنگ مکمل نہیں ہو سکی"
+    "couldnTBook": "بکنگ مکمل نہیں ہو سکی",
+    "noRoomsListed": "اس ہاسٹل نے ابھی تک کوئی کمرہ شامل نہیں کیا۔"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",

@@ -125,6 +125,10 @@
             [(phone)]="phone"
             [error]="showValidation() ? (fieldErrors()['phone'] ?? '') : ''"
           />
+          <hh-phone-input
+            [label]="'common.secondaryPhone' | transloco"
+            [(phone)]="secondaryPhone"
+          />
         </div>
         <div>
           <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'common.description' | transloco }}</label>

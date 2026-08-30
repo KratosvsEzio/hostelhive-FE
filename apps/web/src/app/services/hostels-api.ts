@@ -344,6 +344,23 @@ export class HostelsApi {
       .pipe(map((r) => requireHostel(r, id)));
   }
 
+  /**
+   * `GET /api/moderator/hostels/:id` — the same hostel, read as a moderator.
+   *
+   * Separate from {@link getById}, which reads the *public* document. That one is the
+   * listing as a seeker sees it, so it can only ever show what has already been published —
+   * which is the wrong record to review, because reviewing is deciding whether the pending
+   * version should become the public one.
+   *
+   * Same envelope and the same mapper: the response is `{ hostel, success }`, and this one
+   * additionally embeds the host and the offer catalogue.
+   */
+  getForModeration(id: number | string): Observable<HostelDetail> {
+    return this.api
+      .get<HostelResponse>(`/api/moderator/hostels/${id}`)
+      .pipe(map((r) => requireHostel(r, id)));
+  }
+
   /** GET /api/hostels/:id/edit — same detail shape, for edit forms. */
   getForEdit(id: number | string): Observable<HostelDetail> {
     return this.api
@@ -367,11 +384,27 @@ export class HostelsApi {
       .pipe(map((r) => requireHostel(r, id)));
   }
 
-  /** GET /api/hostels/:id/show_phone — gated contact reveal. Returns the primary phone number. */
-  showPhone(id: number | string): Observable<string> {
+  /**
+   * `GET /api/hostels/:id/show_phone` — the gated contact reveal.
+   *
+   * Returns the whole detail rather than the primary number alone. The endpoint has always
+   * answered with a secondary number and an email beside it; this read them and threw them
+   * away, so a hostel reachable on two numbers appeared to have one.
+   *
+   * Empty strings are normalised to null. The wire uses null for "not given" but the old
+   * mapper's `?? ''` turned that into a string the caller then had to re-test for falsiness,
+   * and "" and null meaning the same thing in two places is how one of them gets missed.
+   */
+  showPhone(id: number | string): Observable<HostelPhoneDetail> {
     return this.api
-      .get<{ phone_detail?: { primary_phone?: string | null } }>(`/api/hostels/${id}/show_phone`)
-      .pipe(map((r) => r.phone_detail?.primary_phone ?? ''));
+      .get<ShowPhoneResponse>(`/api/hostels/${id}/show_phone`)
+      .pipe(
+        map((r) => ({
+          primaryPhone: r.phone_detail?.primary_phone || null,
+          secondaryPhone: r.phone_detail?.secondary_phone || null,
+          email: r.phone_detail?.email || null,
+        })),
+      );
   }
 
   /** GET /api/hostels/:id/room_types — the hostel's room types. */
@@ -668,6 +701,21 @@ export class HostelsApi {
  * (`create()` has no prior id — if the backend doesn't echo one, add `:id` to
  * HostelSerializer server-side; until then `id` may be absent on the create result.)
  */
+/** What a hostel can be reached on, once the reveal has been unlocked. */
+export interface HostelPhoneDetail {
+  primaryPhone: string | null;
+  secondaryPhone: string | null;
+  email: string | null;
+}
+
+interface ShowPhoneResponse {
+  phone_detail?: {
+    primary_phone?: string | null;
+    secondary_phone?: string | null;
+    email?: string | null;
+  } | null;
+}
+
 function requireHostel(r: HostelResponse, id?: number | string): HostelDetail {
   const h = r.hostel;
   if (!h) throw new Error('Hostel response did not include a hostel.');

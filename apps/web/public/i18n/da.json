@@ -68,7 +68,6 @@
     "backToSearch": "Tilbage til søgningen",
     "share": "Del",
     "showMore": "Vis mere",
-    "roomsAmpPricing": "Værelser og priser",
     "month": "/ måned",
     "whatThisPlaceOffers": "Hvad stedet tilbyder",
     "nearbyLandmarks": "Landemærker i nærheden",
@@ -102,7 +101,8 @@
     "maybeLater": "Måske senere",
     "signInToBook": "Log ind for at booke",
     "pickYourRoomOnce": "Vælg dit værelse, når du er logget ind",
-    "createAFreeAccountToBook": "Opret en gratis konto for at vælge værelser og holde dem, mens du beslutter dig. Det tager 30 sekunder."
+    "createAFreeAccountToBook": "Opret en gratis konto for at vælge værelser og holde dem, mens du beslutter dig. Det tager 30 sekunder.",
+    "roomsAmpPricing": "Værelser og priser"
   },
   "common": {
     "loading": "Indlæser…",
@@ -175,6 +175,7 @@
     "selectGender": "Vælg køn",
     "contactEmail": "Kontakt-e-mail",
     "primaryPhone": "Primært telefonnummer",
+    "secondaryPhone": "Sekundært telefonnummer",
     "tellStudentsWhatMakes": "Fortæl studerende, hvad der gør dit hostel til et godt sted at bo…",
     "amenityCatalogueUnavailable": "Facilitetskatalog utilgængeligt.",
     "addRoomType": "Tilføj værelsestype",
@@ -526,7 +527,8 @@
     "province": "Provins",
     "country": "Land",
     "streetAddress": "Vejnavn og nummer",
-    "nearbyLandmarks": "Vartegn i nærheden"
+    "nearbyLandmarks": "Vartegn i nærheden",
+    "roomTypeDescription": "Beskrivelse af værelsestype"
   },
   "a11y": {
     "close": "Luk",
@@ -1034,7 +1036,10 @@
     "saved": "Gemt",
     "unsavedChanges": "Ikke-gemte ændringer",
     "update": "Opdater",
-    "updateHostel": "Opdater hostel"
+    "updateHostel": "Opdater hostel",
+    "reviewTitle": "Dette sender din annonce til fornyet gennemgang",
+    "reviewBody": "Du har ændret følgende. Din annonce gennemgås igen, og gæster kan ikke se den, før den er godkendt.",
+    "reviewConfirm": "Gem og send til gennemgang"
   },
   "hostMore": {
     "property": "Ejendom",
@@ -1199,7 +1204,6 @@
     "checkOut": "Afrejse",
     "guests": "Gæster",
     "youLlNeedAnAccount": "Du skal bruge en konto for at gennemføre en booking.",
-    "chooseYourRoom": "Vælg dit værelse",
     "add": "Tilføj",
     "showAllNPhotos": "Se alle {{count}} fotos",
     "genderHostelHostedBy": "{{gender}}-hostel, vært {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Dit ophold",
     "bookingSent": "Booking sendt",
     "weLlEmailYouWhenConfirmed": "Vi sender en mail, så snart vandrerhjemmet bekræfter.",
-    "couldnTBook": "Bookingen kunne ikke gennemføres"
+    "couldnTBook": "Bookingen kunne ikke gennemføres",
+    "noRoomsListed": "Dette hostel har endnu ikke oprettet nogen værelser."
   },
   "states": {
     "nothingHereYet": "Der er intet her endnu",

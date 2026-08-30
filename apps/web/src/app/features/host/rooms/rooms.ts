@@ -201,6 +201,15 @@ export class Rooms {
 
   /** Locally-mutated copy so create/edit reflect immediately (no write API yet). */
   private readonly local = signal<Room[] | null>(null);
+  /**
+   * The aggregate counts adjusted for a room added locally.
+   *
+   * The header reads `aggs` from the server when it has them, so appending a row without
+   * this leaves "16 TOTAL BEDS" beside a grid that now shows more — the two halves of one
+   * screen disagreeing. A delta rather than a recount, because the visible rows are one
+   * page and the counts are the whole property.
+   */
+  private readonly localAggs = signal<RoomAggs | null>(null);
 
   protected readonly searchQuery = signal('');
   protected readonly statusFilter = signal(
@@ -471,9 +480,8 @@ export class Rooms {
   protected readonly state = computed<ViewState>(() => {
     const base = this.fetched();
     const overlay = this.local();
-    return overlay && !base.loading && !base.error
-      ? { ...base, data: overlay }
-      : base;
+    if (!overlay || base.loading || base.error) return base;
+    return { ...base, data: overlay, aggs: this.localAggs() ?? base.aggs };
   });
 
   protected readonly totalRooms = computed(() =>
@@ -569,6 +577,7 @@ export class Rooms {
 
   protected setSearch(v: string): void {
     this.local.set(null);
+    this.localAggs.set(null);
     this.page.set(1);
     this.searchQuery.set(v);
   }
@@ -577,6 +586,7 @@ export class Rooms {
     this.statusFilter.set(v);
     this.page.set(1);
     this.local.set(null);
+    this.localAggs.set(null);
     void this.router.navigate([], {
       queryParams: { status: v === 'all' ? null : v },
       queryParamsHandling: 'merge',
@@ -586,6 +596,7 @@ export class Rooms {
 
   protected goToPage(n: number): void {
     this.local.set(null);
+    this.localAggs.set(null);
     this.page.set(n);
   }
 
@@ -777,6 +788,7 @@ export class Rooms {
     if (!r) return;
     this.roomDeletePending.set(null);
     this.local.set((this.state().data ?? []).filter((x) => x.id !== r.id));
+    this.localAggs.set(null);
     const hostelId = this.store.selected();
     if (!hostelId) return;
     this.api.deleteRoom(hostelId, r.id).subscribe({
@@ -815,11 +827,10 @@ export class Rooms {
           floor: f.floor.trim() || null,
         })
         .subscribe({
-          next: () => {
+          next: (updated) => {
             this.saving.set(false);
             this.close();
-            this.refetchDelay.track('/rooms');
-            this.refresh.update((n) => n + 1);
+            this.replaceRoom(updated);
           },
           error: () => {
             this.saving.set(false);
@@ -844,13 +855,61 @@ export class Rooms {
       })
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
-        next: () => {
+        // The created room, straight onto the grid. This used to bump `refresh`, which
+        // re-read every room in the property to display the one just returned — a second
+        // round trip, and a visible wait, for information already in hand.
+        next: (created) => {
           this.close();
-          this.refetchDelay.track('/rooms');
-          this.refresh.update((n) => n + 1);
+          this.insertRoom(created);
         },
         error: () => this.saveError.set('Failed to create room. Please try again.'),
       });
+  }
+
+  /**
+   * Puts a newly created room on the grid without re-reading the list.
+   *
+   * Appended rather than sorted into place: the floor grouping re-derives from the array,
+   * so the card lands under its own floor either way, and the newest room sitting last in
+   * that group is what a host who just typed it expects to see.
+   */
+  private insertRoom(room: Room): void {
+    this.local.set([...(this.state().data ?? []), room]);
+    this.shiftAggs(null, room);
+  }
+
+  /**
+   * Swaps an edited room for the version the server returned.
+   *
+   * In place, so a room does not jump to the end of its floor because its capacity changed.
+   * A miss leaves the list untouched rather than appending a duplicate: the row can only be
+   * absent if the list moved under the edit, and in that case the next load is the truth.
+   */
+  private replaceRoom(room: Room): void {
+    const rows = this.state().data ?? [];
+    const previous = rows.find((r) => r.id === room.id);
+    if (!previous) return;
+    this.local.set(rows.map((r) => (r.id === room.id ? room : r)));
+    this.shiftAggs(previous, room);
+  }
+
+  /**
+   * Moves the header counts by the difference one room made.
+   *
+   * A delta rather than a recount of what is on screen: the grid is one page and the counts
+   * describe the whole property, so summing the visible rows would quietly redefine them.
+   * Null aggs means the server sent none and the header is already summing rows itself.
+   */
+  private shiftAggs(before: Room | null, after: Room): void {
+    const aggs = this.state().aggs;
+    if (!aggs) { this.localAggs.set(null); return; }
+    const free = (r: Room) => r.capacity - r.occupied;
+    this.localAggs.set({
+      totalRooms: aggs.totalRooms + (before ? 0 : 1),
+      totalCapacity: aggs.totalCapacity + after.capacity - (before?.capacity ?? 0),
+      occupiedCapacity: aggs.occupiedCapacity + after.occupied - (before?.occupied ?? 0),
+      vacantCapacity: aggs.vacantCapacity + free(after) - (before ? free(before) : 0),
+    });
   }
 
   protected openBulkCreate(): void {
@@ -959,13 +1018,45 @@ export class Rooms {
       .bulkCreateRooms(hostelId, rooms)
       .pipe(finalize(() => this.bulkSaving.set(false)))
       .subscribe({
-        next: () => { this.closeBulk(); this.refetchDelay.track('/rooms'); this.refresh.update((n) => n + 1); },
+        next: (all) => {
+          this.closeBulk();
+          this.showAllRooms(all);
+        },
         error: () => this.bulkError.set('Failed to create rooms. Please try again.'),
       });
   }
 
+  /**
+   * Replaces the grid with the full room list the bulk create returned.
+   *
+   * A wholesale replacement rather than the delta the single create uses, because this
+   * response is the whole set — so the counts can be summed from it exactly rather than
+   * nudged.
+   *
+   * Unless something is narrowing the view. The list the server sent is unfiltered and
+   * unpaged, and dropping it onto a screen showing "Fully occupied" or a room-number search
+   * would silently widen the filter without the chip changing — so in that case this falls
+   * back to a re-read, which is one request to keep the screen honest.
+   */
+  private showAllRooms(all: Room[]): void {
+    const narrowed = this.searchQuery().trim() !== '' || this.statusFilter() !== 'all';
+    if (narrowed || !all.length) {
+      this.refetchDelay.track('/rooms');
+      this.refresh.update((n) => n + 1);
+      return;
+    }
+    this.local.set(all);
+    this.localAggs.set({
+      totalRooms: all.length,
+      totalCapacity: all.reduce((n, r) => n + r.capacity, 0),
+      occupiedCapacity: all.reduce((n, r) => n + r.occupied, 0),
+      vacantCapacity: all.reduce((n, r) => n + (r.capacity - r.occupied), 0),
+    });
+  }
+
   protected retry(): void {
     this.local.set(null);
+    this.localAggs.set(null);
     this.refresh.update((n) => n + 1);
   }
 }

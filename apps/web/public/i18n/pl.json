@@ -68,7 +68,6 @@
     "backToSearch": "Wróć do wyników",
     "share": "Udostępnij",
     "showMore": "Pokaż więcej",
-    "roomsAmpPricing": "Pokoje i ceny",
     "month": "/ miesiąc",
     "whatThisPlaceOffers": "Co oferuje to miejsce",
     "nearbyLandmarks": "W okolicy",
@@ -102,7 +101,8 @@
     "maybeLater": "Może później",
     "signInToBook": "Zaloguj się, aby zarezerwować",
     "pickYourRoomOnce": "Wybierz pokój po zalogowaniu",
-    "createAFreeAccountToBook": "Załóż darmowe konto, aby wybierać pokoje i rezerwować je, gdy się zastanawiasz. Zajmie to 30 sekund."
+    "createAFreeAccountToBook": "Załóż darmowe konto, aby wybierać pokoje i rezerwować je, gdy się zastanawiasz. Zajmie to 30 sekund.",
+    "roomsAmpPricing": "Pokoje i ceny"
   },
   "common": {
     "loading": "Ładowanie…",
@@ -175,6 +175,7 @@
     "selectGender": "Wybierz płeć",
     "contactEmail": "E-mail kontaktowy",
     "primaryPhone": "Główny telefon",
+    "secondaryPhone": "Dodatkowy telefon",
     "tellStudentsWhatMakes": "Opowiedz studentom, dlaczego Twój hostel to świetne miejsce do życia…",
     "amenityCatalogueUnavailable": "Katalog udogodnień niedostępny.",
     "addRoomType": "Dodaj typ pokoju",
@@ -531,7 +532,8 @@
     "province": "Województwo",
     "country": "Kraj",
     "streetAddress": "Ulica i numer",
-    "nearbyLandmarks": "Punkty orientacyjne w pobliżu"
+    "nearbyLandmarks": "Punkty orientacyjne w pobliżu",
+    "roomTypeDescription": "Opis typu pokoju"
   },
   "a11y": {
     "close": "Zamknij",
@@ -1039,7 +1041,10 @@
     "saved": "Zapisano",
     "unsavedChanges": "Niezapisane zmiany",
     "update": "Aktualizuj",
-    "updateHostel": "Zaktualizuj hostel"
+    "updateHostel": "Zaktualizuj hostel",
+    "reviewTitle": "To wyśle Twoją ofertę do ponownej weryfikacji",
+    "reviewBody": "Zmieniono następujące pola. Oferta zostanie zweryfikowana ponownie i nie będzie widoczna dla gości do czasu zatwierdzenia.",
+    "reviewConfirm": "Zapisz i wyślij do weryfikacji"
   },
   "hostMore": {
     "property": "Obiekt",
@@ -1204,7 +1209,6 @@
     "checkOut": "Wymeldowanie",
     "guests": "Goście",
     "youLlNeedAnAccount": "Do dokończenia rezerwacji potrzebujesz konta.",
-    "chooseYourRoom": "Wybierz swój pokój",
     "add": "Dodaj",
     "showAllNPhotos": "Zobacz wszystkie {{count}} zdjęć",
     "genderHostelHostedBy": "Hostel {{gender}}, gospodarz: {{host}}"
@@ -1391,7 +1395,8 @@
     "yourStay": "Twój pobyt",
     "bookingSent": "Rezerwacja wysłana",
     "weLlEmailYouWhenConfirmed": "Wyślemy e-mail, gdy hostel potwierdzi rezerwację.",
-    "couldnTBook": "Nie udało się dokończyć rezerwacji"
+    "couldnTBook": "Nie udało się dokończyć rezerwacji",
+    "noRoomsListed": "Ten hostel nie dodał jeszcze żadnych pokoi."
   },
   "states": {
     "nothingHereYet": "Jeszcze nic tu nie ma",

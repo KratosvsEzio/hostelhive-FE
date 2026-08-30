@@ -87,13 +87,22 @@ export class ModerationApi {
   }
 
   /**
-   * Full review detail for one queued listing (screen 21) — hydrated live from
-   * `GET /api/hostels/:id` (HostelSerializer), enriched with the host
-   * (`GET /api/users/:hostId`) and the amenity catalogue (`GET /api/offer_categories`).
-   * Host / catalogue failures degrade gracefully (embedded host, amenities without totals).
+   * Full review detail for one queued listing (screen 21) — read from
+   * `GET /api/moderator/hostels/:id`, enriched with the host (`GET /api/users/:hostId`)
+   * and the amenity catalogue (`GET /api/offer_categories`). Host / catalogue failures
+   * degrade gracefully (embedded host, amenities without totals).
+   *
+   * The moderator endpoint rather than the public one this used to read. A queued listing
+   * is by definition not published, so the public document either lags the version being
+   * reviewed or does not exist at all — either way it is not the record the decision is
+   * about.
+   *
+   * The host lookup survives the move: the moderator payload embeds name, email, phone and
+   * is_active, all of which `toReviewDetail` already falls back to — but not `created_at`,
+   * and that is the whole of "Member since".
    */
   getById(id: string): Observable<ReviewDetail> {
-    return this.hostels.getById(id).pipe(
+    return this.hostels.getForModeration(id).pipe(
       switchMap((hostel) =>
         forkJoin({
           host:

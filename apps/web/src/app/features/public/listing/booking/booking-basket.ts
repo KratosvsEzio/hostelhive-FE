@@ -3,7 +3,9 @@ import {
   BasketLine,
   GuestFit,
   RoomOffer,
+  bedsBooked,
   guestFit,
+  privateCapacityBooked,
   lineFor,
   lineTotal,
   lineTotalUndiscounted,
@@ -29,7 +31,19 @@ export class BookingBasket {
 
   readonly checkIn = signal<Date | null>(null);
   readonly checkOut = signal<Date | null>(null);
-  readonly guests = signal(1);
+  /**
+   * How many people the selection seats — derived, not asked for.
+   *
+   * The rail used to carry a Guests number input beside the dates, from back when a seeker
+   * described their party and the hostel worked out the rooms. The room picker replaced
+   * that: a seeker now chooses beds and whole rooms directly, so the headcount is a
+   * restatement of what they already picked, and two ways to say one thing can disagree.
+   * They did — the field defaulted to 1, so choosing a four-bed dorm read as three beds
+   * too many and `fit.ok` refused the booking until the number was corrected by hand.
+   */
+  readonly guests = computed(
+    () => bedsBooked(this._lines()) + privateCapacityBooked(this._lines()),
+  );
 
   /** Zero until both dates are set, which is what keeps totals from rendering as NaN. */
   readonly nights = computed(() => {

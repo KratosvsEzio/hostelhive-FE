@@ -68,7 +68,6 @@
     "backToSearch": "Volver a la búsqueda",
     "share": "Compartir",
     "showMore": "Ver más",
-    "roomsAmpPricing": "Habitaciones y precios",
     "month": "/ mes",
     "whatThisPlaceOffers": "Lo que ofrece este alojamiento",
     "nearbyLandmarks": "Puntos de referencia cercanos",
@@ -102,7 +101,8 @@
     "maybeLater": "Quizá más tarde",
     "signInToBook": "Inicia sesión para reservar",
     "pickYourRoomOnce": "Elige tu habitación al iniciar sesión",
-    "createAFreeAccountToBook": "Crea una cuenta gratuita para elegir habitaciones y reservarlas mientras decides. Solo tarda 30 segundos."
+    "createAFreeAccountToBook": "Crea una cuenta gratuita para elegir habitaciones y reservarlas mientras decides. Solo tarda 30 segundos.",
+    "roomsAmpPricing": "Habitaciones y precios"
   },
   "common": {
     "loading": "Cargando…",
@@ -175,6 +175,7 @@
     "selectGender": "Selecciona el género",
     "contactEmail": "Correo de contacto",
     "primaryPhone": "Teléfono principal",
+    "secondaryPhone": "Teléfono secundario",
     "tellStudentsWhatMakes": "Cuenta a los estudiantes por qué tu hostal es un gran lugar para vivir…",
     "amenityCatalogueUnavailable": "Catálogo de servicios no disponible.",
     "addRoomType": "Añadir tipo de habitación",
@@ -526,7 +527,8 @@
     "province": "Provincia",
     "country": "País",
     "streetAddress": "Dirección",
-    "nearbyLandmarks": "Puntos de referencia cercanos"
+    "nearbyLandmarks": "Puntos de referencia cercanos",
+    "roomTypeDescription": "Descripción del tipo de habitación"
   },
   "a11y": {
     "close": "Cerrar",
@@ -1034,7 +1036,10 @@
     "saved": "Guardado",
     "unsavedChanges": "Cambios sin guardar",
     "update": "Actualizar",
-    "updateHostel": "Actualizar hostal"
+    "updateHostel": "Actualizar hostal",
+    "reviewTitle": "Esto enviará tu anuncio de nuevo a revisión",
+    "reviewBody": "Has cambiado lo siguiente. Tu anuncio se revisará otra vez y los huéspedes no lo verán hasta que se apruebe.",
+    "reviewConfirm": "Guardar y enviar a revisión"
   },
   "hostMore": {
     "property": "Propiedad",
@@ -1199,7 +1204,6 @@
     "checkOut": "Salida",
     "guests": "Huéspedes",
     "youLlNeedAnAccount": "Necesitarás una cuenta para completar una reserva.",
-    "chooseYourRoom": "Elige tu habitación",
     "add": "Añadir",
     "showAllNPhotos": "Ver las {{count}} fotos",
     "genderHostelHostedBy": "Hostal {{gender}}, anfitrión {{host}}"
@@ -1386,7 +1390,8 @@
     "yourStay": "Tu estancia",
     "bookingSent": "Reserva enviada",
     "weLlEmailYouWhenConfirmed": "Te enviaremos un correo en cuanto el hostal lo confirme.",
-    "couldnTBook": "No se pudo completar la reserva"
+    "couldnTBook": "No se pudo completar la reserva",
+    "noRoomsListed": "Este hostal aún no ha añadido ninguna habitación."
   },
   "states": {
     "nothingHereYet": "Aún no hay nada aquí",

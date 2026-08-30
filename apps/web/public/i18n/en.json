@@ -229,6 +229,7 @@
     "selectGender": "Select gender",
     "contactEmail": "Contact email",
     "primaryPhone": "Primary phone",
+    "secondaryPhone": "Secondary phone",
     "tellStudentsWhatMakes": "Tell students what makes your hostel a great place to live…",
     "amenityCatalogueUnavailable": "Amenity catalogue unavailable.",
     "addRoomType": "Add room type",
@@ -517,7 +518,10 @@
     "saved": "Saved",
     "unsavedChanges": "Unsaved changes",
     "update": "Update",
-    "updateHostel": "Update hostel"
+    "updateHostel": "Update hostel",
+    "reviewTitle": "This will send your listing back for review",
+    "reviewBody": "You changed the following. Your listing will be reviewed again, and guests will not see it until it is approved.",
+    "reviewConfirm": "Save and send for review"
   },
   "hostInvoices": {
     "selectATenant": "Select a tenant",
@@ -903,7 +907,8 @@
     "pricedPerNight": "Every room is priced per night. Guests can book online.",
     "pricedPerMonth": "Every room is priced per month. Seekers enquire rather than book.",
     "selectedCount": "{{count}} selected",
-    "noRoomsYet": "No rooms added yet."
+    "noRoomsYet": "No rooms added yet.",
+    "roomTypeDescription": "Room type description"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Now click an end date",
@@ -942,7 +947,6 @@
     "writeYourReviewRequired": "Write your review (required)...",
     "backToSearch": "Back to search",
     "showMore": "Show more",
-    "roomsAmpPricing": "Rooms & pricing",
     "month": "/ month",
     "whatThisPlaceOffers": "What this place offers",
     "whereYouLlBe": "Where you'll be",
@@ -969,7 +973,8 @@
     "maybeLater": "Maybe later",
     "signInToBook": "Sign in to book",
     "pickYourRoomOnce": "Pick your room once you're signed in",
-    "createAFreeAccountToBook": "Create a free account to choose rooms and hold them while you decide. It only takes 30 seconds."
+    "createAFreeAccountToBook": "Create a free account to choose rooms and hold them while you decide. It only takes 30 seconds.",
+    "roomsAmpPricing": "Rooms & pricing"
   },
   "maps": {
     "searchAddressPlaceholder": "Search an address or landmark…",
@@ -1104,7 +1109,8 @@
     "yourStay": "Your stay",
     "bookingSent": "Booking sent",
     "weLlEmailYouWhenConfirmed": "We'll email you as soon as the hostel confirms it.",
-    "couldnTBook": "Couldn't complete the booking"
+    "couldnTBook": "Couldn't complete the booking",
+    "noRoomsListed": "This hostel has not listed any rooms yet."
   },
   "publicCareers": {
     "joinUsInBuildingPakistan": "Join us in building Pakistan's #1 hostel platform",
@@ -1167,7 +1173,6 @@
     "checkOut": "Check out",
     "guests": "Guests",
     "youLlNeedAnAccount": "You'll need an account to complete a booking.",
-    "chooseYourRoom": "Choose your room",
     "add": "Add",
     "showAllNPhotos": "Show all {{count}} photos",
     "genderHostelHostedBy": "{{gender}} hostel hosted by {{host}}"
