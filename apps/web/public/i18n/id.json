@@ -1204,14 +1204,14 @@
     "weReWorkingOnSome": "Kami sedang menyiapkan konten menarik tentang kehidupan mahasiswa, tips hostel, dan panduan kota di seluruh Pakistan. Nantikan!"
   },
   "publicListing": {
-    "chooseARoom": "Pilih kamar",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
     "guests": "Tamu",
     "youLlNeedAnAccount": "Anda memerlukan akun untuk menyelesaikan pemesanan.",
     "add": "Tambah",
     "showAllNPhotos": "Lihat semua {{count}} foto",
-    "genderHostelHostedBy": "Hostel {{gender}}, dikelola oleh {{host}}"
+    "genderHostelHostedBy": "Hostel {{gender}}, dikelola oleh {{host}}",
+    "bookARoom": "Pesan kamar"
   },
   "featuresPublic": {
     "checkingYourLink": "Memeriksa tautan Anda…",

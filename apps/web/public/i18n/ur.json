@@ -1204,14 +1204,14 @@
     "weReWorkingOnSome": "ہم طالب علمی زندگی، ہاسٹل کی تجاویز اور پاکستان بھر کے شہروں کی رہنمائی پر بہترین مواد تیار کر رہے ہیں۔ منتظر رہیں!"
   },
   "publicListing": {
-    "chooseARoom": "کمرہ منتخب کریں",
     "checkIn": "چیک ان",
     "checkOut": "چیک آؤٹ",
     "guests": "مہمان",
     "youLlNeedAnAccount": "بکنگ مکمل کرنے کے لیے آپ کو اکاؤنٹ کی ضرورت ہوگی۔",
     "add": "شامل کریں",
     "showAllNPhotos": "تمام {{count}} تصاویر دیکھیں",
-    "genderHostelHostedBy": "{{host}} کا میزبان کردہ {{gender}} ہاسٹل"
+    "genderHostelHostedBy": "{{host}} کا میزبان کردہ {{gender}} ہاسٹل",
+    "bookARoom": "کمرہ بک کریں"
   },
   "featuresPublic": {
     "checkingYourLink": "آپ کا لنک چیک کیا جا رہا ہے…",

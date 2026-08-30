@@ -1,6 +1,10 @@
 <!-- Carded like every other section on the listing. `mt-10` is gone with it: the page
      column spaces its cards itself now, and a margin here would double that gap. -->
-<section class="rounded-2xl border border-ink-100 bg-white p-5 sm:p-6" id="rooms">
+<!-- `scroll-mt-24` is for the jump from the booking rail: the site header is `sticky
+     top-0`, and without a scroll margin `scrollIntoView` parks this section underneath
+     it — landing a seeker on a section whose title is behind the header. 24 is what the
+     sidebar already uses (`sticky top-24`) to clear the same bar. -->
+<section class="scroll-mt-24 rounded-2xl border border-ink-100 bg-white p-5 sm:p-6" id="rooms">
   <h2 class="font-display text-2xl font-semibold text-ink-900">{{ 'listing.roomsAmpPricing' | transloco }}</h2>
 
   <!-- One list, private first. The per-kind headings are gone — each card names its own

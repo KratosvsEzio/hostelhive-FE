@@ -1204,14 +1204,14 @@
     "weReWorkingOnSome": "Pracujemy nad świetnymi treściami o życiu studenckim, poradami o hostelach i przewodnikami po miastach Pakistanu. Bądź na bieżąco!"
   },
   "publicListing": {
-    "chooseARoom": "Wybierz pokój",
     "checkIn": "Zameldowanie",
     "checkOut": "Wymeldowanie",
     "guests": "Goście",
     "youLlNeedAnAccount": "Do dokończenia rezerwacji potrzebujesz konta.",
     "add": "Dodaj",
     "showAllNPhotos": "Zobacz wszystkie {{count}} zdjęć",
-    "genderHostelHostedBy": "Hostel {{gender}}, gospodarz: {{host}}"
+    "genderHostelHostedBy": "Hostel {{gender}}, gospodarz: {{host}}",
+    "bookARoom": "Zarezerwuj pokój"
   },
   "featuresPublic": {
     "checkingYourLink": "Sprawdzanie linku…",

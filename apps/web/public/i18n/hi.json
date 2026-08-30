@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "हम छात्र जीवन, हॉस्टल टिप्स और पूरे पाकिस्तान के शहरों की गाइड पर बेहतरीन सामग्री तैयार कर रहे हैं। बने रहें!"
   },
   "publicListing": {
-    "chooseARoom": "कमरा चुनें",
     "checkIn": "चेक इन",
     "checkOut": "चेक आउट",
     "guests": "मेहमान",
     "youLlNeedAnAccount": "बुकिंग पूरी करने के लिए आपको खाता चाहिए।",
     "add": "जोड़ें",
     "showAllNPhotos": "सभी {{count}} फ़ोटो देखें",
-    "genderHostelHostedBy": "{{host}} द्वारा होस्ट किया गया {{gender}} हॉस्टल"
+    "genderHostelHostedBy": "{{host}} द्वारा होस्ट किया गया {{gender}} हॉस्टल",
+    "bookARoom": "कमरा बुक करें"
   },
   "featuresPublic": {
     "checkingYourLink": "आपका लिंक जाँचा जा रहा है…",

@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "Vi jobbar på bra innehåll om studentliv, vandrarhemstips och stadsguider i hela Pakistan. Håll utkik!"
   },
   "publicListing": {
-    "chooseARoom": "Välj ett rum",
     "checkIn": "Incheckning",
     "checkOut": "Utcheckning",
     "guests": "Gäster",
     "youLlNeedAnAccount": "Du behöver ett konto för att slutföra en bokning.",
     "add": "Lägg till",
     "showAllNPhotos": "Visa alla {{count}} foton",
-    "genderHostelHostedBy": "{{gender}}-vandrarhem, värd {{host}}"
+    "genderHostelHostedBy": "{{gender}}-vandrarhem, värd {{host}}",
+    "bookARoom": "Boka ett rum"
   },
   "featuresPublic": {
     "checkingYourLink": "Kontrollerar din länk…",

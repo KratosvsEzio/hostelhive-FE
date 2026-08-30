@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "我们正在准备关于学生生活、旅舍技巧和巴基斯坦各城市指南的精彩内容，敬请期待！"
   },
   "publicListing": {
-    "chooseARoom": "选择房间",
     "checkIn": "入住",
     "checkOut": "退房",
     "guests": "入住人数",
     "youLlNeedAnAccount": "完成预订需要一个账户。",
     "add": "添加",
     "showAllNPhotos": "查看全部 {{count}} 张照片",
-    "genderHostelHostedBy": "{{gender}}旅舍 · 房东：{{host}}"
+    "genderHostelHostedBy": "{{gender}}旅舍 · 房东：{{host}}",
+    "bookARoom": "预订房间"
   },
   "featuresPublic": {
     "checkingYourLink": "正在检查您的链接…",

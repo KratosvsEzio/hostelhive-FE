@@ -1204,14 +1204,14 @@
     "weReWorkingOnSome": "Мы готовим материалы о студенческой жизни, советы по хостелам и путеводители по городам Пакистана. Следите за обновлениями!"
   },
   "publicListing": {
-    "chooseARoom": "Выберите комнату",
     "checkIn": "Заезд",
     "checkOut": "Выезд",
     "guests": "Гости",
     "youLlNeedAnAccount": "Для завершения бронирования нужен аккаунт.",
     "add": "Добавить",
     "showAllNPhotos": "Показать все {{count}} фото",
-    "genderHostelHostedBy": "{{gender}} хостел, владелец {{host}}"
+    "genderHostelHostedBy": "{{gender}} хостел, владелец {{host}}",
+    "bookARoom": "Забронировать комнату"
   },
   "featuresPublic": {
     "checkingYourLink": "Проверяем вашу ссылку…",

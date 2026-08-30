@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "Stiamo lavorando a contenuti sulla vita studentesca, consigli sugli ostelli e guide alle città del Pakistan. Restate sintonizzati!"
   },
   "publicListing": {
-    "chooseARoom": "Scegli una camera",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
     "guests": "Ospiti",
     "youLlNeedAnAccount": "Ti servirà un account per completare una prenotazione.",
     "add": "Aggiungi",
     "showAllNPhotos": "Mostra tutte le {{count}} foto",
-    "genderHostelHostedBy": "Ostello {{gender}}, ospitato da {{host}}"
+    "genderHostelHostedBy": "Ostello {{gender}}, ospitato da {{host}}",
+    "bookARoom": "Prenota una camera"
   },
   "featuresPublic": {
     "checkingYourLink": "Verifica del link…",

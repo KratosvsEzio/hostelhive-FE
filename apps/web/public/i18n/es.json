@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "Estamos preparando contenido sobre la vida estudiantil, consejos de hostales y guías de ciudades de Pakistán. ¡Atento!"
   },
   "publicListing": {
-    "chooseARoom": "Elige una habitación",
     "checkIn": "Entrada",
     "checkOut": "Salida",
     "guests": "Huéspedes",
     "youLlNeedAnAccount": "Necesitarás una cuenta para completar una reserva.",
     "add": "Añadir",
     "showAllNPhotos": "Ver las {{count}} fotos",
-    "genderHostelHostedBy": "Hostal {{gender}}, anfitrión {{host}}"
+    "genderHostelHostedBy": "Hostal {{gender}}, anfitrión {{host}}",
+    "bookARoom": "Reservar una habitación"
   },
   "featuresPublic": {
     "checkingYourLink": "Comprobando tu enlace…",

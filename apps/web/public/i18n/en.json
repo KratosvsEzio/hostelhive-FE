@@ -1168,14 +1168,14 @@
     "hostelsIn": "Hostels in {{place}}"
   },
   "publicListing": {
-    "chooseARoom": "Choose a room",
     "checkIn": "Check in",
     "checkOut": "Check out",
     "guests": "Guests",
     "youLlNeedAnAccount": "You'll need an account to complete a booking.",
     "add": "Add",
     "showAllNPhotos": "Show all {{count}} photos",
-    "genderHostelHostedBy": "{{gender}} hostel hosted by {{host}}"
+    "genderHostelHostedBy": "{{gender}} hostel hosted by {{host}}",
+    "bookARoom": "Book a room"
   },
   "publicOnboarding": {
     "visitProfile": "Visit profile",

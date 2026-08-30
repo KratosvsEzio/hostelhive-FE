@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "We werken aan mooie content over studentenleven, hosteltips en stadsgidsen in heel Pakistan. Blijf kijken!"
   },
   "publicListing": {
-    "chooseARoom": "Kies een kamer",
     "checkIn": "Inchecken",
     "checkOut": "Uitchecken",
     "guests": "Gasten",
     "youLlNeedAnAccount": "Je hebt een account nodig om een boeking te voltooien.",
     "add": "Toevoegen",
     "showAllNPhotos": "Alle {{count}} foto’s bekijken",
-    "genderHostelHostedBy": "{{gender}}-hostel, gehost door {{host}}"
+    "genderHostelHostedBy": "{{gender}}-hostel, gehost door {{host}}",
+    "bookARoom": "Een kamer boeken"
   },
   "featuresPublic": {
     "checkingYourLink": "Je link wordt gecontroleerd…",

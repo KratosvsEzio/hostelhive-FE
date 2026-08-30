@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "学生生活、ホステルのヒント、パキスタン各都市のガイドなど、充実したコンテンツを準備中です。お楽しみに！"
   },
   "publicListing": {
-    "chooseARoom": "部屋を選択",
     "checkIn": "チェックイン",
     "checkOut": "チェックアウト",
     "guests": "ゲスト",
     "youLlNeedAnAccount": "予約を完了するにはアカウントが必要です。",
     "add": "追加",
     "showAllNPhotos": "{{count}} 枚すべての写真を見る",
-    "genderHostelHostedBy": "{{gender}}向けホステル · ホスト: {{host}}"
+    "genderHostelHostedBy": "{{gender}}向けホステル · ホスト: {{host}}",
+    "bookARoom": "部屋を予約する"
   },
   "featuresPublic": {
     "checkingYourLink": "リンクを確認中…",

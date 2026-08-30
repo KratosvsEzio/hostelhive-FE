@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "Nagyszerű tartalmakon dolgozunk a diákéletről, szállástippekről és pakisztáni városkalauzokról. Maradj velünk!"
   },
   "publicListing": {
-    "chooseARoom": "Válassz szobát",
     "checkIn": "Érkezés",
     "checkOut": "Távozás",
     "guests": "Vendégek",
     "youLlNeedAnAccount": "Foglaláshoz fiókra lesz szükséged.",
     "add": "Hozzáadás",
     "showAllNPhotos": "Mind a(z) {{count}} fotó",
-    "genderHostelHostedBy": "{{gender}} szálláshely, házigazda: {{host}}"
+    "genderHostelHostedBy": "{{gender}} szálláshely, házigazda: {{host}}",
+    "bookARoom": "Szoba foglalása"
   },
   "featuresPublic": {
     "checkingYourLink": "A linked ellenőrzése…",

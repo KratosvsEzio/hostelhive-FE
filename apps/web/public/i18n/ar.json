@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "نعمل على محتوى رائع عن حياة الطلاب ونصائح النزل وأدلة المدن في جميع أنحاء باكستان. ترقّبوا!"
   },
   "publicListing": {
-    "chooseARoom": "اختر غرفة",
     "checkIn": "تسجيل الوصول",
     "checkOut": "تسجيل المغادرة",
     "guests": "الضيوف",
     "youLlNeedAnAccount": "ستحتاج إلى حساب لإتمام الحجز.",
     "add": "إضافة",
     "showAllNPhotos": "عرض كل الصور الـ{{count}}",
-    "genderHostelHostedBy": "نزل {{gender}} يستضيفه {{host}}"
+    "genderHostelHostedBy": "نزل {{gender}} يستضيفه {{host}}",
+    "bookARoom": "احجز غرفة"
   },
   "featuresPublic": {
     "checkingYourLink": "جارٍ التحقق من الرابط…",

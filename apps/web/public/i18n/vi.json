@@ -1204,14 +1204,14 @@
     "weReWorkingOnSome": "Chúng tôi đang chuẩn bị nội dung hay về đời sống sinh viên, mẹo nhà nghỉ và cẩm nang các thành phố khắp Pakistan. Hãy đón xem!"
   },
   "publicListing": {
-    "chooseARoom": "Chọn phòng",
     "checkIn": "Nhận phòng",
     "checkOut": "Trả phòng",
     "guests": "Khách",
     "youLlNeedAnAccount": "Bạn cần một tài khoản để hoàn tất đặt phòng.",
     "add": "Thêm",
     "showAllNPhotos": "Xem tất cả {{count}} ảnh",
-    "genderHostelHostedBy": "Nhà nghỉ {{gender}}, chủ nhà {{host}}"
+    "genderHostelHostedBy": "Nhà nghỉ {{gender}}, chủ nhà {{host}}",
+    "bookARoom": "Đặt phòng"
   },
   "featuresPublic": {
     "checkingYourLink": "Đang kiểm tra liên kết của bạn…",

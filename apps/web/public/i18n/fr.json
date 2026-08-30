@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "Nous préparons du contenu sur la vie étudiante, des conseils sur les auberges et des guides de villes au Pakistan. Restez à l’écoute !"
   },
   "publicListing": {
-    "chooseARoom": "Choisir une chambre",
     "checkIn": "Arrivée",
     "checkOut": "Départ",
     "guests": "Voyageurs",
     "youLlNeedAnAccount": "Vous aurez besoin d’un compte pour finaliser une réservation.",
     "add": "Ajouter",
     "showAllNPhotos": "Voir les {{count}} photos",
-    "genderHostelHostedBy": "Auberge {{gender}}, hébergée par {{host}}"
+    "genderHostelHostedBy": "Auberge {{gender}}, hébergée par {{host}}",
+    "bookARoom": "Réserver une chambre"
   },
   "featuresPublic": {
     "checkingYourLink": "Vérification de votre lien…",

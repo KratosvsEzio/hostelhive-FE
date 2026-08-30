@@ -1199,14 +1199,14 @@
     "weReWorkingOnSome": "Vi arbejder på godt indhold om studieliv, hosteltips og byguides i hele Pakistan. Hold øje!"
   },
   "publicListing": {
-    "chooseARoom": "Vælg et værelse",
     "checkIn": "Ankomst",
     "checkOut": "Afrejse",
     "guests": "Gæster",
     "youLlNeedAnAccount": "Du skal bruge en konto for at gennemføre en booking.",
     "add": "Tilføj",
     "showAllNPhotos": "Se alle {{count}} fotos",
-    "genderHostelHostedBy": "{{gender}}-hostel, vært {{host}}"
+    "genderHostelHostedBy": "{{gender}}-hostel, vært {{host}}",
+    "bookARoom": "Book et værelse"
   },
   "featuresPublic": {
     "checkingYourLink": "Kontrollerer dit link…",
