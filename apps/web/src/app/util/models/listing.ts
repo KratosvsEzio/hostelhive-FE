@@ -62,6 +62,16 @@ export interface Listing {
   rating?: number; // average review score, e.g. 4.8 — from the API's review.score; absent until reviewed
   reviews?: number; // number of reviews — from the API's review.count; absent until reviewed
   createdAt?: string; // ISO — the API's created_at; drives the "New" badge (recently listed)
+  /**
+   * Promoted, from the API's `is_featured`. Drives the gold badge on the search card and on
+   * the listing header.
+   *
+   * `/public/hostels` sends it; **`/public/hostel_detail/:id` does not** — verified on the
+   * wire, that payload has no key matching /feature/i. So a listing built from the detail
+   * endpoint reads undefined here whatever the hostel actually is, and the badge stays
+   * hidden on the very page a featured hostel most wants it. Nothing to change on this side
+   * when the serializer catches up.
+   */
   isFeatured?: boolean;
 }
 

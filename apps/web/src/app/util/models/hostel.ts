@@ -178,6 +178,13 @@ export interface HostelDetail {
    * accommodation type instead.
    */
   billing_frequency?: string | null;
+  /**
+   * Promoted listing. Declared here, but **`/public/hostel_detail/:id` does not send it** —
+   * checked on the wire, that payload carries no key matching /feature/i, while the index
+   * at `/public/hostels` returns it per hostel. Optional and read defensively so the
+   * listing header simply shows no badge until the detail serializer includes it.
+   */
+  is_featured?: boolean | null;
   primary_phone: string;
   secondary_phone?: string | null;
   nearby_landmarks?: string | null;

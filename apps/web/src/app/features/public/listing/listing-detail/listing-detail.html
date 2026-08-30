@@ -71,8 +71,19 @@
           class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-500"
         >
           <hh-badge [variant]="l.accommodationType">{{ genderLabel(l.accommodationType) }}</hh-badge>
-          @if (l.verified) {
-            <hh-badge variant="verified">{{ 'listing.verified' | transloco }}</hh-badge>
+          <!-- Featured, and nothing in its place when it is not.
+
+               This was a "Verified" badge, which was derived from `status.slug === 'active'`
+               — every listing a seeker could reach was active, so the badge marked all of
+               them and told nobody anything, while claiming a check that never happened.
+
+               Same gold pill the search cards use, so a hostel the seeker noticed in results
+               is still visibly the same hostel here. -->
+          @if (l.isFeatured) {
+            <span class="featured-badge">
+              <i class="ti ti-crown-filled relative z-[1] text-xs" aria-hidden="true"></i>
+              <span class="relative z-[1]">{{ 'card.featured' | transloco }}</span>
+            </span>
           }
           @if (l.rating) {
             <button

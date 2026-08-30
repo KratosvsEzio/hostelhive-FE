@@ -165,6 +165,11 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     accommodationType: GENDER_MAP[d.gender_type] ?? 'coliving',
     billingFrequency: d.billing_frequency ?? undefined,
     verified: d.status?.slug === 'active',
+    // `/public/hostel_detail/:id` does not send `is_featured` today — only the index does —
+    // so this reads undefined and the badge stays hidden. Mapped anyway rather than left
+    // out: the day the serializer adds the field, the badge appears with nothing to change
+    // here. Verified on the wire: the detail payload has no key matching /feature/i.
+    isFeatured: !!d.is_featured,
     sharing,
     amenities,
     offers: offers.length ? offers : undefined,
