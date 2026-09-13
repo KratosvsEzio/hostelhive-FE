@@ -119,7 +119,6 @@ export class Tenants {
   protected readonly formRequest = signal<FormRequest | null>(null);
   protected readonly menuOpenId = signal<string | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
-  private readonly deletedIds = signal(new Set<string>());
   protected readonly fetching = signal(false);
 
   private readonly fetchKey = computed(() => ({
@@ -186,11 +185,15 @@ export class Tenants {
     this.totalDelta.set(0);
   }
 
-  protected readonly filtered = computed<Tenant[]>(() => {
-    const data = this.state().data ?? [];
-    const deleted = this.deletedIds();
-    return deleted.size ? data.filter((t) => !deleted.has(t.id)) : data;
-  });
+  /**
+   * The rows on screen.
+   *
+   * Was `filtered`, which removed ids from a `deletedIds` set — a set nothing ever wrote to,
+   * because this page has no delete. Filtering nothing under a name that says it does is
+   * worse than the wasted pass: the next person to want an optimistic delete here would have
+   * found the machinery apparently already in place.
+   */
+  protected readonly rows = computed<Tenant[]>(() => this.state().data ?? []);
 
   protected readonly totalPages = computed(() => {
     const total = this.state().total;

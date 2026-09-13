@@ -60,7 +60,7 @@
     <hh-data-table
       minWidth="980px"
       [columns]="tableCols"
-      [rows]="filtered()"
+      [rows]="rows()"
       [rowId]="tenantsRowId"
       [showActions]="true"
       [clearable]="true"
@@ -77,7 +77,7 @@
 
 @if (menuOpenId(); as openId) {
   @if (menuPos(); as pos) {
-    @let menuTenant = filtered().find(t => t.id === openId);
+    @let menuTenant = rows().find(t => t.id === openId);
     @if (menuTenant) {
       <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
         <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="goToProfile(menuTenant); closeMenu()">
