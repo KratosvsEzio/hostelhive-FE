@@ -802,8 +802,9 @@ export class HostOpsApi {
    * it; and `renter.room` is absent while a top-level `room` carries the number and floor,
    * which is the fallback the mapper already takes.
    *
-   * {@link createInvoice} is still `unknown` on purpose — POST is a separate action and
-   * nobody has seen its response, so assuming it echoes too would be a guess.
+   * POST and `mark_as_paid` have since been read on the wire too, and answer with the same
+   * envelope and the same field set — so all three share one mapper rather than each
+   * guessing at its own.
    */
   updateInvoice(
     hostelId: string,
@@ -827,22 +828,24 @@ export class HostOpsApi {
    * (The route nests under the plural `hostels` collection on the current backend, same as
    * every other renter_bills call here — despite older Swagger showing a singular `hostel`.)
    *
-   * Typed as *maybe* returning the record, which is the honest shape. Create and update on
-   * this controller both echo `{ renter_bill: … }`, but this is a custom member action and
-   * nobody has read its response — Rails renders those every which way: the record, a bare
-   * `{ success: true }`, or `head :ok`.
+   * Answers with the settled bill, so the row can move to paid without re-reading the page.
+   * This was typed `Invoice | null` and guarded both ways, because a custom member action
+   * can be rendered every which way in Rails — the record, a bare `{ success: true }`, or
+   * `head :ok` — and nobody had read this one. Verified on the wire since: the reply is
+   * `{ renter_bill: …, success: true }`, the same envelope create and update already use,
+   * carrying the same field set.
    *
-   * So it is not guessed at. `null` when nothing came back, and the caller reloads exactly
-   * as it did before; the saved bill when it did, and the row settles in place. Correct
-   * either way, without marking a live invoice paid just to find out which.
+   * What matters is that `status` is in it — `{ slug: 'paid' }`, alongside a filled
+   * `paid_at`. Without it {@link toInvoice} would default the row to `due`, and settling a
+   * bill would leave it on screen still saying it was owed.
    */
-  markInvoicePaid(hostelId: string, billId: string): Observable<Invoice | null> {
+  markInvoicePaid(hostelId: string, billId: string): Observable<Invoice> {
     return this.api
       .put<{ renter_bill?: ApiRenterBillTop }>(
         `/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`,
         {},
       )
-      .pipe(map((res) => (res?.renter_bill ? toInvoice(res.renter_bill) : null)));
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
   deleteRenter(hostelId: string, renterId: string): Observable<unknown> {

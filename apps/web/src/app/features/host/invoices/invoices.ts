@@ -859,10 +859,8 @@ export class Invoices {
    * {@link applyEdited} carries over from the response. So the reload had nothing left to
    * tell us, and cost a spinner and the host's place in a list they were reading.
    *
-   * `null` is the create path, which shares this drawer but not its endpoint: POST has never
-   * been observed to echo the record, so that half still reloads. It is also the safety net
-   * here — if PUT ever stops answering with the bill, this falls back to the old behaviour
-   * instead of silently dropping the edit.
+   * `null` is the safety net — if PUT ever stops answering with the bill, this falls back to
+   * the old behaviour instead of silently dropping the edit.
    */
   protected onInvoiceUpdated(saved: Invoice | null): void {
     this.closeEdit();
@@ -918,16 +916,10 @@ export class Invoices {
     this.api.markInvoicePaid(hostelId, inv.id).subscribe({
       next: (settled) => {
         this.notifications.success('Invoice marked paid', `${buildInvoiceId(inv)} is now settled.`);
-        // Unlike create and amend, this endpoint has never been read, so whether it echoes
-        // the bill is unknown — and finding out would mean settling a live invoice. Instead
-        // both answers are handled: the row settles in place if one came back, and the page
-        // reloads as it always did if not. `applyEdited` records what the bill was, which is
-        // what lets the summary move its amount out of the balance and into paid.
-        if (settled) this.applyEdited(settled);
-        else {
-          this.refetchDelay.track('/renter_bills');
-          this.refresh.update((n) => n + 1);
-        }
+        // The endpoint echoes the settled bill, so the row moves to paid in place.
+        // `applyEdited` records what the bill was as well as what it is, which is what lets
+        // the summary take its amount out of the balance and put it into paid.
+        this.applyEdited(settled);
       },
       error: (err: ApiError) => {
         const { title, message } = toToastCopy(err);
