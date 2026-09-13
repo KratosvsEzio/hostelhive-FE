@@ -839,13 +839,12 @@ export class HostelForm {
       // hostel, or one whose photos were uploaded before the flag existed. Without it the
       // form opened with no primary: no badge, every star empty, and the first save would
       // have sent that back as the truth.
-      this.photos.set(
-        ensurePrimary(
-          (d.attachments ?? [])
-            .filter((a) => a.url)
-            .map((a) => ({ id: String(a.id), url: a.url as string, primary: !!a.is_primary })),
-        ),
+      const loadedPhotos = ensurePrimary(
+        (d.attachments ?? [])
+          .filter((a) => a.url)
+          .map((a) => ({ id: String(a.id), url: a.url as string, primary: !!a.is_primary })),
       );
+      this.photos.set(loadedPhotos);
       const labels = new Map<string, string | null>(
         (d.attachments ?? []).map((a) => [
           String(a.id),
@@ -854,15 +853,18 @@ export class HostelForm {
       );
       this.photoLabelMap.set(labels);
       this.savedPhotoLabels.set(new Map(labels));
-      // Baselined from the grid as `ensurePrimary` just settled it, not from the server's
-      // flag. A hostel whose records carry none shows a star on its first photo, and reading
-      // the baseline as "no primary" would make that display default look like an edit — so
-      // an untouched form would be dirty and would PUT it on the next unrelated save.
+      // Baselined from `ensurePrimary`'s own result, not from the server's flag. A hostel
+      // whose records carry none shows a star on its first photo, and reading the baseline
+      // as "no primary" would make that display default look like an edit — so an untouched
+      // form would be dirty and would PUT it on the next unrelated save.
       //
-      // Nothing is lost by not persisting it: a hostel with no flag already resolves to its
-      // first attachment everywhere that reads one, so the default the grid shows and the
-      // one the server falls back to are the same photo.
-      this.savedPrimaryPhotoId.set(this.photos().find((p) => p.primary)?.id ?? null);
+      // Read from the local `loadedPhotos` rather than from `this.photos()`, and that is
+      // load-bearing: this whole block is an effect keyed on `initialData`, so reading the
+      // `photos` signal here would subscribe the effect to it. Starring a photo writes
+      // `photos`, which would re-run the effect, which re-seeds `photos` from `initialData`
+      // — and the star snapped straight back to the server's original. The write went out,
+      // the badge never moved.
+      this.savedPrimaryPhotoId.set(loadedPhotos.find((p) => p.primary)?.id ?? null);
       this.pendingAttachmentIds.set([]);
       this.newPhotoMap.set(new Map());
       this.savedSnapshot.set(null);

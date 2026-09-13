@@ -363,7 +363,7 @@ describe('HostelForm primary photo', () => {
         newPhotoMap: { set(m: Map<string, string>): void };
         photos_: unknown;
       },
-      { emitted },
+      { emitted, flush: () => fixture.detectChanges() },
     );
   }
 
@@ -423,6 +423,25 @@ describe('HostelForm primary photo', () => {
     // Starring it deliberately is a change, because the server holds no primary at all.
     form.setPrimary({ id: 'a2' });
     expect(form.changedPrimaryPhoto()).toBe('a2');
+  });
+
+  /**
+   * The star has to survive change detection, and for a while it did not.
+   *
+   * Everything in this file seeds `initialData` inside an `effect`. Reading the `photos`
+   * signal anywhere in that effect subscribes the effect to it — so starring a photo wrote
+   * `photos`, the effect re-ran, and re-seeded `photos` from `initialData`, putting the star
+   * straight back on the server's original. The PUT went out and the badge never moved,
+   * which is exactly how it was reported.
+   *
+   * Every other test here passed throughout, because none of them ran change detection after
+   * pressing the star. This one does, which is the whole point of it.
+   */
+  it('keeps the star through change detection, rather than being re-seeded', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    form.flush();
+    expect(form.photos().find((p) => p.primary)?.id).toBe('a2');
   });
 
   it('emits the moment the host stars a photo the hostel already has', () => {
