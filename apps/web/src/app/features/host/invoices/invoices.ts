@@ -149,6 +149,14 @@ export class Invoices {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  /**
+   * Back to the property's overview.
+   *
+   * Absolute rather than `..`, because this component answers to three routes — the list,
+   * `create` and `edit/:billId` — and a relative hop would land somewhere different on each.
+   */
+  protected readonly backUrl = computed(() => `/host/${this.store.selected()}`);
+
   protected readonly invoiceRowId = (row: unknown) => (row as Invoice).id;
   protected readonly menuInv = signal<Invoice | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);

@@ -170,6 +170,58 @@ export function spendBars(
 
 /* ── Y-axis ticks ──────────────────────────────────────────────────────── */
 
+/**
+ * Both overview charts share an interval count and a max fill, so their gridlines line up
+ * across the two cards even though one counts rupees and the other counts people.
+ */
+export const AXIS_INTERVALS = 3;
+export const AXIS_MAXFILL = 92;
+
+export interface AxisTick {
+  /** The number printed beside the gridline. */
+  value: number;
+  /** Where the gridline sits, as a percentage of the plot box's height. */
+  bottomPct: number;
+}
+
+/**
+ * Exactly `INTERVALS + 1` ticks up to a round ceiling at or above `peak`.
+ *
+ * `integer` keeps the step whole, for an axis counting people.
+ *
+ * Two things here are load-bearing, and both were learned from the same bug: an empty
+ * revenue chart drew its top gridline *through the card's heading*, with a stray label
+ * beside it, and repeated the label "1" twice underneath.
+ *
+ * The cause was a fractional step. At a peak of 1 the nice-rounding produced 0.5, so the
+ * ticks were 0, 0.5, 1, 1.5 — printed as 0, 1, 1, 2 — and the position of each was computed
+ * from that *printed* number against the true ceiling of 1.5. The top one came out at
+ * 2 / 1.5 = 133% of a box that ends at 100%.
+ *
+ * So: the step is floored at 1 (a gridline at half a rupee is not a quantity anyone has,
+ * and it is what made two ticks print the same), and each tick's position comes from its
+ * index rather than its rounded value. The two agree exactly for a whole step; they diverge
+ * for a fractional one, and the index is the one that cannot leave the box.
+ */
+export function fixedAxis(peak: number, integer: boolean): { ceiling: number; ticks: AxisTick[] } {
+  let step = Math.max(1, peak) / AXIS_INTERVALS;
+  if (integer) {
+    step = Math.max(1, Math.ceil(step));
+  } else {
+    const mag = Math.pow(10, Math.floor(Math.log10(step)));
+    const norm = step / mag;
+    const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10;
+    step = Math.max(1, nice * mag);
+  }
+  return {
+    ceiling: step * AXIS_INTERVALS,
+    ticks: Array.from({ length: AXIS_INTERVALS + 1 }, (_, i) => ({
+      value: Math.round(step * i),
+      bottomPct: (i / AXIS_INTERVALS) * AXIS_MAXFILL,
+    })),
+  };
+}
+
 /* ── utils ─────────────────────────────────────────────────────────────── */
 
 function clamp(n: number, lo: number, hi: number): number {

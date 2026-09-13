@@ -20,7 +20,13 @@ import {
 } from '@hostelhive/ui';
 import { HostOpsApi, HostPropertyStore, OverviewApi } from '@services';
 import { Invoice, Kpi, LedgerRow, OverviewData, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
-import { revenueBars, tenantMovementBars } from '@features/host/overview/charts/chart-helpers';
+import {
+  AXIS_MAXFILL,
+  AxisTick,
+  fixedAxis,
+  revenueBars,
+  tenantMovementBars,
+} from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -217,60 +223,42 @@ export class HostOverview {
     tenantMovementBars(this.tenantMovementResp().data),
   );
 
-  // Both charts share a fixed interval count + max-fill so their gridlines line up, even though
-  // one is PKR and the other a small count. Bars are rescaled to the same ceiling below.
-  private readonly AXIS_INTERVALS = 3;
-  private readonly AXIS_MAXFILL = 92;
-
-  /** Exactly INTERVALS+1 ticks up to a nice ceiling ≥ peak; `integer` keeps the step whole. */
-  private fixedAxis(peak: number, integer: boolean): { ceiling: number; ticks: number[] } {
-    let step = Math.max(1, peak) / this.AXIS_INTERVALS;
-    if (integer) {
-      step = Math.max(1, Math.ceil(step));
-    } else {
-      const mag = Math.pow(10, Math.floor(Math.log10(step)));
-      const norm = step / mag;
-      const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10;
-      step = nice * mag;
-    }
-    const ceiling = step * this.AXIS_INTERVALS;
-    return { ceiling, ticks: Array.from({ length: this.AXIS_INTERVALS + 1 }, (_, i) => Math.round(step * i)) };
-  }
+  // The axis itself lives in `charts/chart-helpers`, with the rest of the chart geometry —
+  // it is arithmetic, and it is where it can be tested. See `axis.spec.ts` for the bug that
+  // moved it: an empty revenue chart drew its top gridline through the card's heading.
 
   private readonly revenueScale = computed(() => {
     const bars = this.bars();
-    if (!bars.length) return { ceiling: 1, ticks: [] as number[] };
-    return this.fixedAxis(Math.max(1, ...bars.map((b) => b.total)), false);
+    if (!bars.length) return { ceiling: 1, ticks: [] as AxisTick[] };
+    return fixedAxis(Math.max(1, ...bars.map((b) => b.total)), false);
   });
-  protected readonly revenueYAxis = computed(() => {
-    const { ceiling, ticks } = this.revenueScale();
-    return ticks.map((v) => ({ value: v, bottomPct: (v / ceiling) * this.AXIS_MAXFILL, label: this.fmtY(v) }));
-  });
+  protected readonly revenueYAxis = computed(() =>
+    this.revenueScale().ticks.map((t) => ({ ...t, label: this.fmtY(t.value) })),
+  );
   /** Bars rescaled to the shared ceiling so their heights sit against the fixed gridlines. */
   protected readonly revenueBarsScaled = computed(() => {
     const ceiling = this.revenueScale().ceiling;
     return this.bars().map((b) => ({
       ...b,
-      rentPct: (b.rent / ceiling) * this.AXIS_MAXFILL,
-      utilityPct: (b.utility / ceiling) * this.AXIS_MAXFILL,
+      rentPct: (b.rent / ceiling) * AXIS_MAXFILL,
+      utilityPct: (b.utility / ceiling) * AXIS_MAXFILL,
     }));
   });
 
   private readonly movementScale = computed(() => {
     const bars = this.tenantBars();
-    if (!bars.length) return { ceiling: 1, ticks: [] as number[] };
-    return this.fixedAxis(Math.max(1, ...bars.flatMap((b) => [b.movedIn, b.movedOut])), true);
+    if (!bars.length) return { ceiling: 1, ticks: [] as AxisTick[] };
+    return fixedAxis(Math.max(1, ...bars.flatMap((b) => [b.movedIn, b.movedOut])), true);
   });
-  protected readonly movementYAxis = computed(() => {
-    const { ceiling, ticks } = this.movementScale();
-    return ticks.map((v) => ({ value: v, bottomPct: (v / ceiling) * this.AXIS_MAXFILL, label: String(v) }));
-  });
+  protected readonly movementYAxis = computed(() =>
+    this.movementScale().ticks.map((t) => ({ ...t, label: String(t.value) })),
+  );
   protected readonly movementBarsScaled = computed(() => {
     const ceiling = this.movementScale().ceiling;
     return this.tenantBars().map((b) => ({
       ...b,
-      moveInPct: (b.movedIn / ceiling) * this.AXIS_MAXFILL,
-      moveOutPct: (b.movedOut / ceiling) * this.AXIS_MAXFILL,
+      moveInPct: (b.movedIn / ceiling) * AXIS_MAXFILL,
+      moveOutPct: (b.movedOut / ceiling) * AXIS_MAXFILL,
     }));
   });
 
