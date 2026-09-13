@@ -111,6 +111,9 @@ export type FilterValues = Record<string, FilterFieldValue>;
 
 // ── component ─────────────────────────────────────────────────────────────────
 
+/** Instance counter behind `uid`. Module scope, so it survives across component instances. */
+let instances = 0;
+
 @Component({
   selector: 'hh-global-filter',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,6 +121,14 @@ export type FilterValues = Record<string, FilterFieldValue>;
   templateUrl: './global-filter.html',
 })
 export class GlobalFilter {
+  /**
+   * Namespace for the ids that tie a label to its input, and for the radio group `name`.
+   *
+   * Per instance rather than per field: two filters on one page would otherwise mint the same
+   * id from the same field key, and a duplicate id sends every label to the first match.
+   */
+  protected readonly uid = `hh-gf-${++instances}-`;
+
   private readonly http       = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly host       = inject(ElementRef<HTMLElement>);
