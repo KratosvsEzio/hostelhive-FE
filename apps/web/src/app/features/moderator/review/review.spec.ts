@@ -89,6 +89,23 @@ class ModerationApiStub {
   fail = false;
   markAsActiveCalls = 0;
 
+  /** Every attachment rejection sent, in order, with the note the host would receive. */
+  rejected: { id: string; notes: string }[] = [];
+  /** Attachment ids un-rejected — the undo path. */
+  unrejected: string[] = [];
+  /** Makes the rejection call fail, to check that nothing is published behind it. */
+  rejectFails = false;
+
+  markAttachmentAsRejected(id: string, notes: string): Observable<unknown> {
+    if (this.rejectFails) return defer(() => Promise.reject(new Error('nope')));
+    this.rejected.push({ id, notes });
+    return of({});
+  }
+  markAttachmentAsActive(id: string): Observable<unknown> {
+    this.unrejected.push(id);
+    return of({});
+  }
+
   /** Deferred to a microtask: a synchronous source makes `toSignal` write mid-render. */
   getById(): Observable<ReviewDetail> {
     return defer(() =>
@@ -123,7 +140,11 @@ async function render(d: ReviewDetail | null, fail = false): Promise<ComponentFi
     imports: [Review],
     providers: [
       provideI18nTesting(),
-      provideRouter([]),
+      // A successful approve navigates back to the queue. With no routes registered that
+      // navigation rejects, and the rejection surfaces as an unhandled error detached from
+      // the test that caused it — green suite, two errors in the log. A catch-all is enough:
+      // where it lands is the router's business, that it can land at all is this file's.
+      provideRouter([{ path: '**', children: [] }]),
       provideHttpClient(),
       provideNoopAnimations(),
       { provide: ModerationApi, useValue: api },
@@ -288,5 +309,204 @@ describe('Review · rejecting a photo', () => {
     c.confirmRemove();
 
     expect(c.dirty()).toBe(true);
+  });
+});
+
+/**
+ * That a rejection actually leaves the browser.
+ *
+ * This screen held rejections in a `Map` and nothing else. A moderator could reject a photo,
+ * watch the card grey out, press Update, be told the listing saved — and nothing had been
+ * sent: `save` wrote the hostel's own fields and `approve` published the listing, neither of
+ * them so much as reading the map. The decision died with the page, and the confirm dialog
+ * had promised the opposite in as many words: "This photo will be marked as rejected and
+ * excluded from the listing."
+ *
+ * Publishing is where it mattered most. Rejecting a photo and then approving the listing put
+ * that photo straight onto the public page — the one outcome the control exists to prevent.
+ */
+describe('Review · a rejected photo reaches the server', () => {
+  /** Complete enough to pass the approve gate, with two photos so one can go. */
+  function completeListing(): HostelDetail {
+    return emptyListing({
+      name: 'Ever Care',
+      city: 'Lahore',
+      description: 'A clean, quiet hostel a short walk from the university.',
+      gender_type: 'boys',
+      property_type: 'house',
+      primary_phone: '+923001234567',
+      latitude: 31.5204,
+      longitude: 74.3587,
+      billing_frequency: 'month',
+      room_types: [
+        {
+          id: 'rt1',
+          name: 'Double sharing',
+          capacity: 2,
+          price: 10000,
+          discounted_price: 0,
+          is_discountable: false,
+          is_bookable: false,
+          occupancy_type: 'shared',
+        },
+      ],
+      attachments: [
+        { id: 'a1', url: 'https://cdn.test/a1.jpg', is_primary: true },
+        { id: 'a2', url: 'https://cdn.test/a2.jpg' },
+      ],
+    } as unknown as Partial<HostelDetail>);
+  }
+
+  interface Loop {
+    requestRemoveById(id: string): void;
+    confirmRemove(): void;
+    undoRejectById(id: string): void;
+    rejectedPhotos(): ReadonlyMap<string, string>;
+    dirty(): boolean;
+    save(): void;
+    approve(): void;
+    validationErrors(): string[];
+  }
+
+  async function loop(): Promise<Loop> {
+    const fixture = await render(detail(completeListing()));
+    return fixture.componentInstance as unknown as Loop;
+  }
+
+  /** Lets the flush and the write that follows it settle. */
+  const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 20)) as Promise<void>;
+
+  function reject(c: Loop, id: string): void {
+    c.requestRemoveById(id);
+    c.confirmRemove();
+  }
+
+  it('the fixture is approvable, so a refusal below means something', async () => {
+    expect((await loop()).validationErrors()).toEqual([]);
+  });
+
+  it('sends the rejection when the moderator saves', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+
+    c.save();
+    await settle();
+
+    expect(api.rejected.map((r) => r.id)).toEqual(['a2']);
+  });
+
+  /** "flagged" is the internal marker; a host reading it learns nothing. */
+  it('sends a note a host can read rather than the internal token', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+
+    c.save();
+    await settle();
+
+    expect(api.rejected[0]!.notes).not.toBe('flagged');
+    expect(api.rejected[0]!.notes).toMatch(/reject/i);
+  });
+
+  it('sends the rejection before it publishes the listing', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+
+    c.approve();
+    await settle();
+
+    expect(api.rejected.map((r) => r.id)).toEqual(['a2']);
+    expect(api.markAsActiveCalls).toBe(1);
+  });
+
+  /**
+   * The ordering is the point, not a detail. A listing published with a photo the moderator
+   * has already rejected is the exact harm the control exists to prevent, so a rejection that
+   * cannot be recorded has to stop the publish — an unpublished listing is the recoverable
+   * half of the two.
+   */
+  it('does not publish at all when the rejection cannot be recorded', async () => {
+    const c = await loop();
+    api.rejectFails = true;
+    reject(c, 'a2');
+
+    c.approve();
+    await settle();
+
+    expect(api.markAsActiveCalls).toBe(0);
+  });
+
+  it('does not send the same rejection twice across two saves', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+
+    c.save();
+    await settle();
+    c.save();
+    await settle();
+
+    expect(api.rejected.length).toBe(1);
+  });
+
+  // Once sent, there is nothing left for Update to do about it.
+  it('stops counting as an unsaved change once it has been sent', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+    expect(c.dirty()).toBe(true);
+
+    c.save();
+    await settle();
+
+    expect(c.dirty()).toBe(false);
+  });
+
+  /**
+   * The card has to keep reading as rejected after a save. Clearing the map to settle the
+   * dirty check would make every photo just rejected look live again until a reload.
+   */
+  it('keeps showing the photo as rejected after the save', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+
+    c.save();
+    await settle();
+
+    expect([...c.rejectedPhotos().keys()]).toEqual(['a2']);
+  });
+
+  /** Undoing something the server holds means telling the server, not forgetting it here. */
+  it('un-rejects on the server when undone after a save', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+    c.save();
+    await settle();
+
+    c.undoRejectById('a2');
+    await settle();
+
+    expect(api.unrejected).toEqual(['a2']);
+    expect(c.rejectedPhotos().size).toBe(0);
+  });
+
+  /** Undone before it was ever sent, there is nothing to tell the server about. */
+  it('says nothing to the server when undone before a save', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+    c.undoRejectById('a2');
+
+    c.save();
+    await settle();
+
+    expect(api.rejected).toEqual([]);
+    expect(api.unrejected).toEqual([]);
+  });
+
+  it('leaves the attachment endpoints alone when nothing was rejected', async () => {
+    const c = await loop();
+
+    c.approve();
+    await settle();
+
+    expect(api.rejected).toEqual([]);
+    expect(api.markAsActiveCalls).toBe(1);
   });
 });
