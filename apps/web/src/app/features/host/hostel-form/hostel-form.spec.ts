@@ -316,3 +316,97 @@ describe('HostelForm under moderation', () => {
     expect(items.find((p) => p.id === 'a2')?.rejectReason).toBe('blurry');
   });
 });
+
+/**
+ * Which photo the hostel leads with.
+ *
+ * The star had nowhere to go: the hostel payload carries `attachment_ids` and nothing about
+ * what any of them are, so pressing it moved the badge in the grid and the choice was gone on
+ * the next load. It now sends its own PUT — but only when the host actually moved it, which
+ * is the part worth guarding.
+ */
+describe('HostelForm primary photo', () => {
+  function mount(attachments: unknown[]) {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [HostelForm],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostelsApi, useValue: new HostelsApiStub() },
+        { provide: OffersApi, useValue: new OffersApiStub() },
+        { provide: ImageUploadService, useValue: {} },
+        { provide: HostOpsApi, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(HostelForm);
+    fixture.componentRef.setInput('mode', 'edit');
+    fixture.componentRef.setInput('initialData', {
+      id: 1,
+      name: 'Ever Care',
+      attachments,
+    } as unknown as HostelDetail);
+    fixture.detectChanges();
+    fixture.detectChanges();
+    return fixture.componentInstance as unknown as {
+      photos(): { id: string; primary: boolean }[];
+      setPrimary(p: { id: string }): void;
+      changedPrimaryPhoto(): string | null;
+      dirty(): boolean;
+    };
+  }
+
+  const WITH_FLAG = [
+    { id: 'a1', url: 'https://cdn.test/a1.jpg', is_primary: true },
+    { id: 'a2', url: 'https://cdn.test/a2.jpg' },
+  ];
+
+  it('sends nothing when the host has not touched the star', () => {
+    expect(mount(WITH_FLAG).changedPrimaryPhoto()).toBeNull();
+  });
+
+  it('names the photo the host starred', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    expect(form.changedPrimaryPhoto()).toBe('a2');
+  });
+
+  it('stops naming it once the host stars the original again', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    form.setPrimary({ id: 'a1' });
+    expect(form.changedPrimaryPhoto()).toBeNull();
+  });
+
+  /**
+   * The trap, and it cost me the first implementation.
+   *
+   * `ensurePrimary` stars the first photo when the records carry no flag, so the grid always
+   * shows one. Baselining from the server's flag reads that as "server has none, grid has
+   * one" — a change — so every untouched form of such a hostel was dirty and would have PUT
+   * the default on the next unrelated save. Three existing label specs caught it.
+   *
+   * Baselined from the grid instead. Nothing is lost: a hostel with no flag already resolves
+   * to its first attachment everywhere that reads one.
+   */
+  it('treats the displayed default as a default, not as a choice', () => {
+    const noFlag = [
+      { id: 'a1', url: 'https://cdn.test/a1.jpg' },
+      { id: 'a2', url: 'https://cdn.test/a2.jpg' },
+    ];
+    const form = mount(noFlag);
+    expect(form.photos()[0].primary).toBe(true); // the grid shows one
+    expect(form.changedPrimaryPhoto()).toBeNull(); // and asserts nothing
+
+    // Starring it deliberately is a change, because the server holds no primary at all.
+    form.setPrimary({ id: 'a2' });
+    expect(form.changedPrimaryPhoto()).toBe('a2');
+  });
+
+  it('makes the form dirty, so Update is not left greyed out', () => {
+    // The label dropdown had exactly this bug: it wrote to a signal nothing else read.
+    const form = mount(WITH_FLAG);
+    expect(form.dirty()).toBe(false);
+    form.setPrimary({ id: 'a2' });
+    expect(form.dirty()).toBe(true);
+  });
+});

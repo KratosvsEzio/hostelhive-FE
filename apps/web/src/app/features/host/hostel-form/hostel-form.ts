@@ -522,6 +522,16 @@ export class HostelForm {
   private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
   protected readonly photos = signal<EditPhoto[]>([]);
   protected readonly photoLabelMap = signal<Map<string, string | null>>(new Map());
+  /**
+   * The labels as the server last told us, to diff the live map against.
+   *
+   * Kept apart from {@link photoLabelMap} rather than inside the snapshot the rest of the
+   * form diffs, because labels do not travel with the hostel payload — they are saved one
+   * PUT per photo, so what the save needs is the list of changes, not a dirty flag.
+   */
+  private readonly savedPhotoLabels = signal<Map<string, string | null>>(new Map());
+  /** The primary on record, so the star only sends a PUT when it has actually moved. */
+  private readonly savedPrimaryPhotoId = signal<string | null>(null);
   private readonly replaceTarget = signal<EditPhoto | null>(null);
   protected readonly uploadingPhotos = signal<Map<string, number>>(new Map());
   readonly uploading = computed(() => this.uploadingPhotos().size > 0);
@@ -612,9 +622,44 @@ export class HostelForm {
     address1: this.street(),
   }));
 
+  /**
+   * Photos whose label the host has moved since it was loaded.
+   *
+   * What {@link HostelProfile} sends, one PUT each, and what makes the form dirty. Both
+   * were missing: the label dropdown wrote to a signal nothing else read, so picking one
+   * left Update disabled and would not have saved the label even if it had not.
+   */
+  readonly changedPhotoLabels = computed<{ id: string; labelId: string | null }[]>(() => {
+    const saved = this.savedPhotoLabels();
+    const out: { id: string; labelId: string | null }[] = [];
+    for (const [id, labelId] of this.photoLabelMap()) {
+      // A photo added this session is not in the baseline; its label is a change if set.
+      const before = saved.has(id) ? (saved.get(id) ?? null) : null;
+      if ((labelId ?? null) !== before) out.push({ id, labelId: labelId ?? null });
+    }
+    return out;
+  });
+
+  /**
+   * The photo the host starred, when it is not the one already on record.
+   *
+   * Its own PUT, like the labels above, and for the same reason: the hostel payload carries
+   * `attachment_ids` and nothing about what any of them are, so the star had nowhere to go.
+   * It moved the badge in the grid and was gone on the next load.
+   *
+   * Null when nothing moved, so a save that touched only the address does not re-assert a
+   * primary the server already holds.
+   */
+  readonly changedPrimaryPhoto = computed<string | null>(() => {
+    const now = this.photos().find((p) => p.primary)?.id ?? null;
+    return now && now !== this.savedPrimaryPhotoId() ? now : null;
+  });
+
   readonly dirty = computed(() => {
     if (this.mode() !== 'edit') return false;
     if (this.pendingAttachmentIds().length > 0) return true;
+    if (this.changedPhotoLabels().length > 0) return true;
+    if (this.changedPrimaryPhoto()) return true;
     const base = this.savedSnapshot() ?? this.loadedSnapshot();
     if (!base) return false;
     if (JSON.stringify(base) !== JSON.stringify(this.currentSnapshot())) return true;
@@ -782,14 +827,23 @@ export class HostelForm {
             .map((a) => ({ id: String(a.id), url: a.url as string, primary: !!a.is_primary })),
         ),
       );
-      this.photoLabelMap.set(
-        new Map(
-          (d.attachments ?? []).map((a) => [
-            String(a.id),
-            a.attachment_label ? String(a.attachment_label.id) : null,
-          ]),
-        ),
+      const labels = new Map<string, string | null>(
+        (d.attachments ?? []).map((a) => [
+          String(a.id),
+          a.attachment_label ? String(a.attachment_label.id) : null,
+        ]),
       );
+      this.photoLabelMap.set(labels);
+      this.savedPhotoLabels.set(new Map(labels));
+      // Baselined from the grid as `ensurePrimary` just settled it, not from the server's
+      // flag. A hostel whose records carry none shows a star on its first photo, and reading
+      // the baseline as "no primary" would make that display default look like an edit — so
+      // an untouched form would be dirty and would PUT it on the next unrelated save.
+      //
+      // Nothing is lost by not persisting it: a hostel with no flag already resolves to its
+      // first attachment everywhere that reads one, so the default the grid shows and the
+      // one the server falls back to are the same photo.
+      this.savedPrimaryPhotoId.set(this.photos().find((p) => p.primary)?.id ?? null);
       this.pendingAttachmentIds.set([]);
       this.newPhotoMap.set(new Map());
       this.savedSnapshot.set(null);
@@ -1375,6 +1429,10 @@ export class HostelForm {
   // Called by edit parent after a successful save.
   onSaveSuccess(hostel: HostelDetail): void {
     this.savedSnapshot.set(this.currentSnapshot());
+    // The labels just went up in their own requests; this is what stops the form reading
+    // as dirty the moment it settles.
+    this.savedPhotoLabels.set(new Map(this.photoLabelMap()));
+    this.savedPrimaryPhotoId.set(this.photos().find((p) => p.primary)?.id ?? null);
     this.pendingAttachmentIds.set([]);
     this.newPhotoMap.set(new Map());
     const serverRts = (hostel.room_types ?? []).map(toEditRoomType);

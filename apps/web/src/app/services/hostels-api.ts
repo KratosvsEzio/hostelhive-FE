@@ -377,6 +377,44 @@ export class HostelsApi {
   }
 
   /** PUT /api/hostels/:id — update (full replace). Body is nested under `hostel`. */
+  /**
+   * `PUT /api/attachments/:id/update_label` — file one photo under a label.
+   *
+   * A separate request from the hostel update, which carries `attachment_ids` and nothing
+   * about what any of them are. One call per photo whose label moved.
+   *
+   * **The body is nested**, unlike its moderator twin in `ModerationApi`, which sends
+   * `attachment_label_id` flat. Same action name, different shape; sending the flat one
+   * here reads as no label at all and the server answers 422.
+   */
+  updateAttachmentLabel(
+    attachmentId: string,
+    labelId: string | null,
+  ): Observable<void> {
+    return this.api.put<void>(`/api/attachments/${attachmentId}/update_label`, {
+      attachment: { attachment_label_id: labelId },
+    });
+  }
+
+  /**
+   * `PUT /api/attachments/:id/mark_as_primary` — the photo a hostel leads with.
+   *
+   * Like the label above, and for the same reason: the hostel payload carries
+   * `attachment_ids` and says nothing about what any of them are, so the star had nowhere
+   * to go. It moved the badge in the grid and was gone on the next load.
+   *
+   * **No body.** The server reads the attachment from the URL, sets `is_primary` on it, and
+   * clears the flag on every other attachment of the same hostel itself — so there is no
+   * second call to unset the old one, and no window where a hostel has two primaries or
+   * none. It reindexes the hostel too, which is what moves the picture on the search card.
+   *
+   * Host-only: the moderator attachment controller has `update_label`, `mark_as_active` and
+   * `mark_as_rejected`, and no equivalent of this.
+   */
+  markAttachmentAsPrimary(attachmentId: string): Observable<void> {
+    return this.api.put<void>(`/api/attachments/${attachmentId}/mark_as_primary`, {});
+  }
+
   update(id: number | string, input: HostelInput): Observable<HostelDetail> {
     const body: HostelWriteRequest = { hostel: input };
     return this.api

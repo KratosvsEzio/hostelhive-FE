@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { toObservable, toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { catchError, forkJoin, map, of, startWith, switchMap } from 'rxjs';
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi, HostPropertyStore } from '@services';
 import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
@@ -122,9 +122,31 @@ export class HostelProfile {
     this.saveError.set(false);
     this.saved.set(false);
     const payload = f.getPayload();
+    const labels = f.changedPhotoLabels();
+    // The starred photo, when the host moved it. Its own endpoint for the same reason the
+    // labels have one, and sent in the same batch.
+    const primary = f.changedPrimaryPhoto();
     this.hostels
       .update(id, payload)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        // Photo labels are their own endpoint — the hostel payload carries `attachment_ids`
+        // and says nothing about what any of them are. Sent after the hostel lands rather
+        // than beside it, so a rejected hostel save does not leave labels written for a
+        // change that did not happen.
+        //
+        // After, too, because `mark_as_primary` only clears the flag on the hostel's *other*
+        // attachments when the one it is given is already attached to that hostel. A photo
+        // added this session is linked by the `attachment_ids` in the update above, so
+        // marking it before that lands would set a second primary rather than move the one.
+        switchMap((hostel) => {
+          const writes = [
+            ...labels.map((l) => this.hostels.updateAttachmentLabel(l.id, l.labelId)),
+            ...(primary ? [this.hostels.markAttachmentAsPrimary(primary)] : []),
+          ];
+          return writes.length ? forkJoin(writes).pipe(map(() => hostel)) : of(hostel);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (hostel) => {
           this.saving.set(false);
