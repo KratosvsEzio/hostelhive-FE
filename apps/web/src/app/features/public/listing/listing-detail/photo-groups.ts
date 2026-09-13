@@ -8,21 +8,31 @@ export interface PhotoGroup {
   offset: number;
 }
 
-/** The wire shape, before it is known to be a usable photo. */
+/**
+ * The wire shape, before it is known to be a usable photo.
+ *
+ * The label is a record the host picks from a fixed list, not free text they type — so it
+ * arrives nested, as `attachment_label`, and the same few names recur across every hostel.
+ */
 interface RawAttachment {
   url?: string | null;
-  label?: string | null;
+  attachment_label?: { name?: string | null } | null;
 }
 
 /**
  * The host's label for a photo, or `null` when there isn't one.
  *
- * Blank and whitespace-only count as absent: a label the host cleared comes back as `""` from
- * some form paths, and a group headed by an empty string is indistinguishable from the
- * unlabelled bucket while sorting apart from it.
+ * Reads the name rather than the id, because the name is what the section is headed with and
+ * the id is not dependable: the options list sends it obfuscated while the copy embedded on
+ * each photo has been sending the raw database integer, so the two do not compare. The name
+ * is the same string on both sides.
+ *
+ * Blank and whitespace-only count as absent, as does the whole `attachment_label` being
+ * missing — a photo nobody has filed yet. A group headed by an empty string would be
+ * indistinguishable from the unlabelled bucket while sorting apart from it.
  */
 export function photoLabel(raw: RawAttachment): string | null {
-  const label = raw.label;
+  const label = raw.attachment_label?.name;
   if (typeof label !== 'string') return null;
   const trimmed = label.trim();
   return trimmed === '' ? null : trimmed;

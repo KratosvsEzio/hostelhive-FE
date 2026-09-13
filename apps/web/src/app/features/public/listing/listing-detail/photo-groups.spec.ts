@@ -17,11 +17,11 @@ function shape(photos: ListingPhoto[]): [string | null, string[]][] {
 
 describe('photoLabel', () => {
   it('takes the label the host set', () => {
-    expect(photoLabel({ label: 'Kitchen' })).toBe('Kitchen');
+    expect(photoLabel({ attachment_label: { name: 'Kitchen' } })).toBe('Kitchen');
   });
 
   it('trims it', () => {
-    expect(photoLabel({ label: '  Kitchen  ' })).toBe('Kitchen');
+    expect(photoLabel({ attachment_label: { name: '  Kitchen  ' } })).toBe('Kitchen');
   });
 
   /**
@@ -33,17 +33,39 @@ describe('photoLabel', () => {
   });
 
   it('reads an explicit null as unlabelled', () => {
-    expect(photoLabel({ label: null })).toBeNull();
+    expect(photoLabel({ attachment_label: { name: null } })).toBeNull();
   });
 
   it('reads a blank string as unlabelled', () => {
-    expect(photoLabel({ label: '' })).toBeNull();
-    expect(photoLabel({ label: '   ' })).toBeNull();
+    expect(photoLabel({ attachment_label: { name: '' } })).toBeNull();
+    expect(photoLabel({ attachment_label: { name: '   ' } })).toBeNull();
   });
 
-  // A label that arrives as a number or an object is not a label.
-  it('reads a non-string as unlabelled', () => {
-    expect(photoLabel({ label: 7 } as unknown as { label?: string | null })).toBeNull();
+  // A photo nobody has filed has no `attachment_label` at all, not an empty one.
+  it('reads a null attachment_label as unlabelled', () => {
+    expect(photoLabel({ attachment_label: null })).toBeNull();
+  });
+
+  // A name that arrives as a number or an object is not a name.
+  it('reads a non-string name as unlabelled', () => {
+    expect(
+      photoLabel({ attachment_label: { name: 7 } } as unknown as {
+        attachment_label?: { name?: string | null } | null;
+      }),
+    ).toBeNull();
+  });
+
+  /**
+   * The id is deliberately not read. The options list sends it obfuscated while the copy
+   * embedded on each photo has been sending the raw database integer, so grouping on it would
+   * split one label into two sections depending on which endpoint the photo came from.
+   */
+  it('ignores the id entirely', () => {
+    expect(
+      photoLabel({ attachment_label: { id: 31, name: 'Bathroom' } } as unknown as {
+        attachment_label?: { name?: string | null } | null;
+      }),
+    ).toBe('Bathroom');
   });
 });
 
@@ -61,7 +83,7 @@ describe('toListingPhotos', () => {
   });
 
   it('carries the label through', () => {
-    expect(toListingPhotos([{ url: 'a', label: 'Kitchen' }])[0]!.label).toBe('Kitchen');
+    expect(toListingPhotos([{ url: 'a', attachment_label: { name: 'Kitchen' } }])[0]!.label).toBe('Kitchen');
   });
 
   it('survives a null payload', () => {
@@ -117,8 +139,8 @@ describe('photoGroups', () => {
   it('files every shape of missing label together', () => {
     const photos = toListingPhotos([
       { url: 'a' },
-      { url: 'b', label: null },
-      { url: 'c', label: '  ' },
+      { url: 'b', attachment_label: { name: null } },
+      { url: 'c', attachment_label: { name: '  ' } },
     ]);
 
     expect(shape(photos)).toEqual([[null, ['a', 'b', 'c']]]);
@@ -126,8 +148,8 @@ describe('photoGroups', () => {
 
   it('treats labels differing only in surrounding space as one', () => {
     const photos = toListingPhotos([
-      { url: 'a', label: 'Kitchen' },
-      { url: 'b', label: ' Kitchen ' },
+      { url: 'a', attachment_label: { name: 'Kitchen' } },
+      { url: 'b', attachment_label: { name: ' Kitchen ' } },
     ]);
 
     expect(shape(photos)).toEqual([['Kitchen', ['a', 'b']]]);
