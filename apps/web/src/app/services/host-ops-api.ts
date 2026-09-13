@@ -826,9 +826,23 @@ export class HostOpsApi {
    * PUT /api/host/hostels/:id/renter_bills/:billId/mark_as_paid — settle a renter bill.
    * (The route nests under the plural `hostels` collection on the current backend, same as
    * every other renter_bills call here — despite older Swagger showing a singular `hostel`.)
+   *
+   * Typed as *maybe* returning the record, which is the honest shape. Create and update on
+   * this controller both echo `{ renter_bill: … }`, but this is a custom member action and
+   * nobody has read its response — Rails renders those every which way: the record, a bare
+   * `{ success: true }`, or `head :ok`.
+   *
+   * So it is not guessed at. `null` when nothing came back, and the caller reloads exactly
+   * as it did before; the saved bill when it did, and the row settles in place. Correct
+   * either way, without marking a live invoice paid just to find out which.
    */
-  markInvoicePaid(hostelId: string, billId: string): Observable<unknown> {
-    return this.api.put(`/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`, {});
+  markInvoicePaid(hostelId: string, billId: string): Observable<Invoice | null> {
+    return this.api
+      .put<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`,
+        {},
+      )
+      .pipe(map((res) => (res?.renter_bill ? toInvoice(res.renter_bill) : null)));
   }
 
   deleteRenter(hostelId: string, renterId: string): Observable<unknown> {

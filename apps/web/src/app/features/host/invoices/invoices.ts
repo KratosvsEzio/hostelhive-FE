@@ -47,15 +47,11 @@ import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
 import { HasPermission } from '@core/auth';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
-
-interface InvoiceAggs {
-  utilityTotal: number;
-  utilityPaid: number;
-  utilityBalance: number;
-  rentTotal: number;
-  rentPaid: number;
-  rentBalance: number;
-}
+import {
+  InvoiceAggs,
+  InvoiceChange,
+  shiftInvoiceCounts,
+} from './invoice-overlay';
 
 interface ViewState {
   loading: boolean;
@@ -240,7 +236,7 @@ export class Invoices {
         // Leaving it would let rows patched in for the previous query reappear over the new
         // page the moment `loading` went false again.
         this.local.set(null);
-        this.addedIds.set(new Set());
+        this.baseline.set(new Map());
         const filters: Record<string, string> = {};
         if (status !== 'all') filters['f[status.slug]'] = status;
         if (kind !== 'all') filters['f[bill_type]'] = kind;
@@ -287,48 +283,33 @@ export class Invoices {
   private readonly local = signal<Invoice[] | null>(null);
 
   /**
-   * Ids of bills created in this session, of those in {@link local}.
+   * Every row changed locally, as the last fetch reported it. `null` means it is new.
    *
-   * Held apart from the rows because an edit and a create move different things: an edit
-   * replaces a row and changes nothing that counts it, while a create adds to the total, to
-   * its status's count and to the rent or utility summary. This says which of the overlaid
-   * rows are the new ones, so those three can be adjusted from the rows themselves rather
-   * than from a second tally kept in step by hand.
+   * The *previous* state is the part that matters, which is why this holds rows rather than
+   * a set of ids. A bill moving from due to paid takes its amount out of the balance as well
+   * as adding it to paid, and an edited amount has to be subtracted before the new one is
+   * added — neither is answerable from the result alone.
    */
-  private readonly addedIds = signal<ReadonlySet<string>>(new Set());
+  private readonly baseline = signal<ReadonlyMap<string, Invoice | null>>(new Map());
 
   protected readonly state = computed<ViewState>(() => {
     const base = this.fetched();
     const overlay = this.local();
     if (!overlay || base.loading || base.error) return base;
 
-    const added = this.addedIds();
-    if (!added.size) return { ...base, data: overlay };
+    const touched = this.baseline();
+    if (!touched.size) return { ...base, data: overlay };
 
-    // Everything below is arithmetic on what the last fetch reported, not a recount of the
-    // page: this page holds one page of bills while the totals describe all of them.
-    const fresh = overlay.filter((i) => added.has(i.id));
-    const statuses = base.statuses.map((s) => {
-      const n = fresh.filter((i) => i.status === s.slug).length;
-      return n ? { ...s, count: s.count + n } : s;
-    });
-    const sum = (kind: Invoice['kind']) =>
-      fresh.filter((i) => i.kind === kind).reduce((n, i) => n + i.amount, 0);
-    const rent = sum('rental');
-    const utility = sum('utility');
-    // A bill is unpaid the moment it is issued, so it lands on total and balance and leaves
-    // `paid` alone.
-    const aggs = base.aggs
-      ? {
-          ...base.aggs,
-          rentTotal: base.aggs.rentTotal + rent,
-          rentBalance: base.aggs.rentBalance + rent,
-          utilityTotal: base.aggs.utilityTotal + utility,
-          utilityBalance: base.aggs.utilityBalance + utility,
-        }
-      : base.aggs;
+    const changes: InvoiceChange[] = [];
+    for (const [id, before] of touched) {
+      const after = overlay.find((i) => i.id === id);
+      // A row can leave the overlay — deleted while its change was still held. Nothing to
+      // reconcile then: the delete path keeps its own count of what it removed.
+      if (after) changes.push({ before, after });
+    }
 
-    return { ...base, data: overlay, total: base.total + fresh.length, statuses, aggs };
+    const { total, statuses, aggs } = shiftInvoiceCounts(base, changes);
+    return { ...base, data: overlay, total, statuses, aggs };
   });
 
   // ── filter panel ───────────────────────────────────────────────────────────
@@ -890,8 +871,30 @@ export class Invoices {
    */
   private applyEdited(saved: Invoice): void {
     const current = this.state().data ?? [];
-    if (!current.some((i) => i.id === saved.id)) return;
+    const before = current.find((i) => i.id === saved.id);
+    if (!before) return;
     this.local.set(current.map((i) => (i.id === saved.id ? saved : i)));
+    this.remember(saved.id, before);
+  }
+
+  /**
+   * Records what a row was, the first time it is touched.
+   *
+   * Only the first: two edits in a row must still measure against what the server last sent,
+   * not against the intermediate state this page invented. Overwriting would make the second
+   * edit subtract a figure the server never reported, and the summary would drift a little
+   * further with each save.
+   *
+   * `before` is null for a create, which is how {@link shiftInvoiceCounts} knows to add to
+   * the total rather than move a row between buckets.
+   */
+  private remember(id: string, before: Invoice | null): void {
+    this.baseline.update((map) => {
+      if (map.has(id)) return map;
+      const next = new Map(map);
+      next.set(id, before);
+      return next;
+    });
   }
 
   protected markPaid(inv: Invoice, event: MouseEvent): void {
@@ -901,10 +904,18 @@ export class Invoices {
     if (!inv || !hostelId || inv.status === 'paid') return;
 
     this.api.markInvoicePaid(hostelId, inv.id).subscribe({
-      next: () => {
+      next: (settled) => {
         this.notifications.success('Invoice marked paid', `${buildInvoiceId(inv)} is now settled.`);
-        this.refetchDelay.track('/renter_bills');
-        this.refresh.update((n) => n + 1);
+        // Unlike create and amend, this endpoint has never been read, so whether it echoes
+        // the bill is unknown — and finding out would mean settling a live invoice. Instead
+        // both answers are handled: the row settles in place if one came back, and the page
+        // reloads as it always did if not. `applyEdited` records what the bill was, which is
+        // what lets the summary move its amount out of the balance and into paid.
+        if (settled) this.applyEdited(settled);
+        else {
+          this.refetchDelay.track('/renter_bills');
+          this.refresh.update((n) => n + 1);
+        }
       },
       error: (err: ApiError) => {
         const { title, message } = toToastCopy(err);
@@ -940,7 +951,7 @@ export class Invoices {
    * A create moves more than the rows: the pagination total, the per-status counts behind
    * the filter labels, and the rent/utility summary cards — which prefer the server's `aggs`
    * over summing the page, so appending a row alone would leave the cards describing the
-   * list as it was a moment ago. {@link addedIds} is what lets all three follow.
+   * list as it was a moment ago. {@link baseline} is what lets all three follow.
    *
    * Null falls back to reloading, which is what happens if a response ever arrives without
    * a record. A row is worth more caution than an edit: getting it wrong invents an invoice
@@ -961,7 +972,7 @@ export class Invoices {
       return;
     }
     this.local.set([...current, saved]);
-    this.addedIds.update((ids) => new Set(ids).add(saved.id));
+    this.remember(saved.id, null);
   }
 
   protected exportCsv(): void {
