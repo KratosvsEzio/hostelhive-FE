@@ -81,7 +81,7 @@ const cities = [
     "licence": "CC BY-SA 4.0",
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Photo by Usman Nadeem, via Wikimedia Commons — CC BY-SA 4.0",
-    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+    "note": "Kept on Commons by decision, not pending a swap. Share-alike attaches to this cropped tile and not only to the original, so the tile is itself offered under the same licence — stated on /credits. Commons has no attribution-only photograph of this city: its Pakistani city set is almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
   },
   {
     "slug": "peshawar",
@@ -92,7 +92,7 @@ const cities = [
     "licence": "CC BY-SA 4.0",
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Photo by Zafarmaini, via Wikimedia Commons — CC BY-SA 4.0",
-    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+    "note": "Kept on Commons by decision, not pending a swap. Share-alike attaches to this cropped tile and not only to the original, so the tile is itself offered under the same licence — stated on /credits. Commons has no attribution-only photograph of this city: its Pakistani city set is almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
   },
   {
     "slug": "multan",
@@ -103,7 +103,7 @@ const cities = [
     "licence": "CC BY-SA 3.0",
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
     "attribution": "Photo by ZainShahid117, via Wikimedia Commons — CC BY-SA 3.0",
-    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+    "note": "Kept on Commons by decision, not pending a swap. Share-alike attaches to this cropped tile and not only to the original, so the tile is itself offered under the same licence — stated on /credits. Commons has no attribution-only photograph of this city: its Pakistani city set is almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
   },
   {
     "slug": "quetta",
@@ -114,7 +114,7 @@ const cities = [
     "licence": "CC BY-SA 4.0",
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Photo by Aysafaran, via Wikimedia Commons — CC BY-SA 4.0",
-    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+    "note": "Kept on Commons by decision, not pending a swap. Share-alike attaches to this cropped tile and not only to the original, so the tile is itself offered under the same licence — stated on /credits. Commons has no attribution-only photograph of this city: its Pakistani city set is almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
   },
   {
     "slug": "hyderabad",
@@ -125,7 +125,7 @@ const cities = [
     "licence": "CC BY-SA 4.0",
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Photo by Waheed.chandio, via Wikimedia Commons — CC BY-SA 4.0",
-    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+    "note": "Kept on Commons by decision, not pending a swap. Share-alike attaches to this cropped tile and not only to the original, so the tile is itself offered under the same licence — stated on /credits. Commons has no attribution-only photograph of this city: its Pakistani city set is almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
   },
   {
     "slug": "sialkot",
@@ -136,7 +136,7 @@ const cities = [
     "licence": "CC BY-SA 3.0",
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
     "attribution": "Photo by PakGuru99, via Wikimedia Commons — CC BY-SA 3.0",
-    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+    "note": "Kept on Commons by decision, not pending a swap. Share-alike attaches to this cropped tile and not only to the original, so the tile is itself offered under the same licence — stated on /credits. Commons has no attribution-only photograph of this city: its Pakistani city set is almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
   }
 ];
 
@@ -209,7 +209,7 @@ writeFileSync(
   `${JSON.stringify(
     {
       licence:
-        'Mixed, and deliberately recorded as such. Four tiles come from Pexels photographs this repository already ships for the blog — free for commercial use, no attribution, no share-alike. The remaining six are Wikimedia Commons originals and are still copyleft: the tiles are cropped re-encodes, which makes them derivative works, so the share-alike terms attach to the tiles themselves. Credits are rendered at /credits.',
+        'Mixed, and deliberately recorded as such. Four tiles come from Pexels photographs this repository already ships for the blog — free for commercial use, no attribution, no share-alike. The remaining six are cropped from CC BY-SA photographs on Wikimedia Commons and are kept that way by decision; a crop is a derivative work, so each of those six tiles is itself offered under the same CC BY-SA licence as the photograph it comes from. That is stated on /credits, which is where the credits are rendered.',
       note: 'Re-encoded to JPEG: a 560x480 carousel tile and a 1200x630 social card, both smart-cropped from the full-resolution original.',
       images: credits,
     },

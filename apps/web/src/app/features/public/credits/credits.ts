@@ -61,12 +61,25 @@ export function toCredits(raw: readonly RawCredit[]): Credit[] {
 }
 
 /**
+ * How many of the images on this page are share-alike.
+ *
+ * Counted rather than written into the copy. The declaration it drives is the thing that makes
+ * this site's use of those photographs lawful, and a sentence claiming "six" while the data
+ * says seven would be worse than no sentence at all — it would be a licensing statement that
+ * is wrong. Swapping an image changes this number on its own.
+ */
+export function shareAlikeCount(credits: readonly Credit[]): number {
+  return credits.filter((c) => /BY-SA/i.test(c.licence)).length;
+}
+
+/**
  * Who took the photographs, and under what terms.
  *
- * Every hero and city image is a crop of a Wikimedia Commons photograph, and every one of them
- * carries an attribution condition — most are share-alike, one is the Free Art License, and one
- * states in its own words that a named site must be credited. Recording the source in
- * `CREDITS.json` made attribution *possible*; this page is where it is actually *given*.
+ * The hero images and four of the city tiles are attribution-only — CC BY or Pexels — and add
+ * no terms of their own. The remaining six city tiles are crops of CC BY-SA photographs, which
+ * makes them derivative works, so this page carries the declaration that satisfies share-alike
+ * rather than merely describing it. Recording the source in `CREDITS.json` made attribution
+ * *possible*; this page is where it is actually *given*.
  *
  * The licence names and credit lines are English on purpose, like the legal pages: "CC BY-SA
  * 4.0" is the name of an instrument, not copy, and a translated approximation of a licence
@@ -78,9 +91,13 @@ export function toCredits(raw: readonly RawCredit[]): Credit[] {
   imports: [RouterLink, LocaleLink, TranslocoPipe],
   templateUrl: './credits.html',
 })
+
 export class Credits {
   protected readonly groups: { heading: string; items: Credit[] }[] = [
     { heading: 'Home page photographs', items: toCredits(HERO_CREDITS.images as RawCredit[]) },
     { heading: 'City photographs', items: toCredits(CITY_CREDITS.images as RawCredit[]) },
   ];
+
+  /** Drives the share-alike declaration, so the claim cannot drift from the data. */
+  protected readonly shareAlike = shareAlikeCount(this.groups.flatMap((g) => g.items));
 }

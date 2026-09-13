@@ -1,6 +1,6 @@
 import HERO_CREDITS from '../../../../../public/hero/CREDITS.json';
 import CITY_CREDITS from '../../../../../public/cities/CREDITS.json';
-import { toCredits } from './credits';
+import { shareAlikeCount, toCredits } from './credits';
 
 /**
  * That every photograph the site serves can actually be credited.
@@ -79,5 +79,41 @@ describe('image credits', () => {
     );
 
     expect(undescribed).toEqual([]);
+  });
+});
+
+/**
+ * The share-alike declaration.
+ *
+ * Attribution alone does not satisfy CC BY-SA. The licence also requires that the derivative
+ * be offered under the same terms, and every tile here is a crop — a derivative work. The
+ * paragraph on the page is not a description of that obligation, it is where the offer is
+ * actually made, which is why the count behind it is derived from the data rather than typed
+ * into the copy: a licensing statement claiming six while the files say seven is worse than
+ * no statement at all.
+ */
+describe('share-alike declaration', () => {
+  const all = SETS.flatMap(([, set]) => toCredits(set.images));
+
+  it('counts exactly the images whose licence is share-alike', () => {
+    const bySa = all.filter((c) => /BY-SA/i.test(c.licence)).map((c) => c.file);
+
+    expect(shareAlikeCount(all)).toBe(bySa.length);
+  });
+
+  it('does not count CC BY or Pexels images, which carry no such condition', () => {
+    const free = all.filter((c) => !/BY-SA/i.test(c.licence));
+
+    expect(shareAlikeCount(free)).toBe(0);
+    expect(free.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Guards the guard. If every image were somehow share-alike the first test would still pass,
+   * and the page would be declaring the whole site copyleft without anybody noticing.
+   */
+  it('is a real subset, so the declaration says something', () => {
+    expect(shareAlikeCount(all)).toBeGreaterThan(0);
+    expect(shareAlikeCount(all)).toBeLessThan(all.length);
   });
 });
