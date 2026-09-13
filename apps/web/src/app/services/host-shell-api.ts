@@ -3,6 +3,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { primaryFirst } from '@util/primary-photo';
+import { usableVariant } from '@util/attachment-url';
 import { ApiClient } from '@core/api-resource';
 import {
   HostListing,
@@ -233,10 +234,9 @@ function resolveThumb(
   if (!attachments?.length) return '';
   const a = primaryFirst(attachments)[0];
   if (a.url) return a.url;
-  const v = a.variants ?? {};
-  return (
-    v['thumb'] ?? v['small'] ?? v['medium'] ?? Object.values(v).find(Boolean) ?? ''
-  );
+  // The backend's variant addresses are malformed — see `usableVariant`. A sibling's `url` is
+  // the reference for what a well-formed one looks like on this payload.
+  return usableVariant(a.variants, attachments.find((x) => x.url)?.url) ?? '';
 }
 
 function relativeTime(iso: string): string {
