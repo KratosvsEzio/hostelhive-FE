@@ -29,6 +29,18 @@ import { RoomOffer } from './room-offer';
  * The mock is deliberately more than a fixture returned unchanged — holds actually decrement
  * availability and expire, cancellations actually compute their band. A mock that always
  * succeeds teaches the UI nothing, and the states worth building for are the awkward ones.
+ *
+ * **When the real endpoints land, the host bookings list stops refetching.** Every other
+ * list in the console was converted to apply the saved record and leave the request unmade:
+ * `hostCreateBooking` and `hostCancel` both already answer with an `ApiBooking`, so the page
+ * is handed exactly what it currently reloads to discover — and the contract commits the real
+ * endpoints to the same shape. It was left alone only because reloading a mock costs nothing,
+ * so converting it now would be moving code around a fixture.
+ *
+ * Two call sites, both in `bookings.ts`: `onSaved` and `confirmCancel`. Whoever does the
+ * swap should carry over what those conversions taught — the figures that *count* the rows
+ * have to move with them, or the page shows a correct list beside a summary describing it
+ * from a moment ago. See `invoice-overlay.ts` for that arithmetic written out and tested.
  */
 @Injectable({ providedIn: 'root' })
 export class BookingApi {
