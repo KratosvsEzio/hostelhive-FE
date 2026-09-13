@@ -54,7 +54,14 @@ export function hostNav(
     ...(opts.monthlyBilled
       ? []
       : [{ label: 'common.bookings', icon: 'ti-calendar', link: `${b}/bookings`, permission: 'host:Room:index' } as NavEntry]),
-    { label: 'common.tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
+    // Tenants is the other half of the Bookings swap. A nightly hostel turns arrivals over;
+    // it has guests, not tenancies, so the list is empty by construction and the register
+    // form writes a record nothing on that hostel reads. The bottom tab bar already chose
+    // between the two — see {@link hostTabBar} — and this is the sidebar and More list
+    // agreeing with it.
+    ...(opts.nightlyBilled
+      ? []
+      : [{ label: 'common.tenants', icon: 'ti-users', link: `${b}/tenants`, permission: 'host:Renter:index' } as NavEntry]),
     { label: 'hostNav.teamStaff',     icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
     // The mirror of Bookings above. Utilities and Mess belong to a hostel that houses
     // people by the month: a nightly hostel has guests for two days, not meters to split
@@ -100,8 +107,8 @@ export interface TabBarEntry {
  *
  * Four fixed destinations plus More, and the third slot is the one that moves: a month-billed
  * hostel houses tenants, a nightly one turns arrivals over, and only one of those two can
- * have the tab. The bar was a fixed five, so a backpacker hostel got Tenants — a page its
- * own route guard lets through but which is empty by construction — while Bookings, the
+ * have the tab. The bar was a fixed five, so a backpacker hostel got Tenants — a page empty
+ * by construction, and one `monthlyOnlyGate` now turns away outright — while Bookings, the
  * thing its day is made of, sat two taps away under More.
  *
  * Nightly on an unknown billing cycle, matching the Bookings rule in {@link hostNav}:

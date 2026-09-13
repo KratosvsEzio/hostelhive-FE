@@ -4,7 +4,7 @@ import { Observable, isObservable, of } from 'rxjs';
 import { HostListing, HostListingsData } from '@hostelhive/data-access';
 import { HostPropertyStore } from '@services';
 import { HostShellApi } from '@services/host-shell-api';
-import { bookingsGate, knownHostelGate, monthlyOnlyGate } from './host.routes';
+import { HOST_ROUTES, bookingsGate, knownHostelGate, monthlyOnlyGate } from './host.routes';
 
 function listing(over: Partial<HostListing> = {}): HostListing {
   return {
@@ -195,6 +195,44 @@ async function runMonthlyOnly(hostelId: string): Promise<boolean | UrlTree> {
  * hidden Utilities from every hostel with a missing field — which is the failure
  * `isMonthlyBilled` documents itself as avoiding, pointed the other way.
  */
+/**
+ * Which sections the gate is actually wired to.
+ *
+ * The tests below prove the gate decides correctly; this proves it is asked. A guard is easy
+ * to reason about and easy to forget — the whole failure is a route that quietly never calls
+ * it, and nothing else in the suite would notice.
+ */
+describe('the sections behind monthlyOnlyGate', () => {
+  const hostel = HOST_ROUTES.find((r) => r.path === ':hostelId');
+  const guardsOn = (path: string) =>
+    (hostel?.children ?? []).find((c) => c.path === path)?.canActivate ?? [];
+
+  it('gates the pages a nightly hostel has no use for', () => {
+    for (const path of ['tenants', 'utilities', 'mess']) {
+      expect({ path, gated: guardsOn(path).includes(monthlyOnlyGate) }).toEqual({
+        path,
+        gated: true,
+      });
+    }
+  });
+
+  it('leaves Bookings to its own gate, which points the other way', () => {
+    // Bookings is the counterpart, not another monthly-only page: it belongs to the nightly
+    // hostel. Wiring `monthlyOnlyGate` here would turn away the one hostel that needs it.
+    expect(guardsOn('bookings')).toContain(bookingsGate);
+    expect(guardsOn('bookings')).not.toContain(monthlyOnlyGate);
+  });
+
+  it('leaves the sections both kinds of hostel use alone', () => {
+    for (const path of ['rooms', 'expenses', 'invoices', 'team']) {
+      expect({ path, gated: guardsOn(path).includes(monthlyOnlyGate) }).toEqual({
+        path,
+        gated: false,
+      });
+    }
+  });
+});
+
 describe('monthlyOnlyGate', () => {
   afterEach(() => localStorage.clear());
 

@@ -172,11 +172,15 @@ export const bookingsGate: CanActivateFn = (route) => {
 };
 
 /**
- * The mirror of {@link bookingsGate}, for Utilities and Mess.
+ * The mirror of {@link bookingsGate}, for Tenants, Utilities and Mess.
  *
  * Those pages belong to a hostel that houses people by the month. A nightly hostel has
- * guests for two days — no meters to split between them, no weekly menu to plan — so the
- * lists are empty by construction and the forms would write records nothing reads.
+ * guests for two days — tenancies it never signs, no meters to split between them, no
+ * weekly menu to plan — so the lists are empty by construction and the forms would write
+ * records nothing reads.
+ *
+ * Tenants is the exact counterpart of Bookings: whichever of the two a hostel's billing
+ * frequency makes real, the other is the one being turned away here.
  *
  * Turned away rather than hidden, for the same reason as Bookings: the sidebar and the
  * phone's More list already drop the entry, so what arrives here is a typed URL, a
@@ -251,7 +255,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'tenants',
-        canActivate: [permissionGuard('host:Renter:index')],
+        canActivate: [permissionGuard('host:Renter:index'), monthlyOnlyGate],
         children: [
           { path: '', pathMatch: 'full', component: Tenants, title: 'Tenants — HostelHive' },
           { path: 'create', component: Tenants, title: 'Register Tenant — HostelHive' },
