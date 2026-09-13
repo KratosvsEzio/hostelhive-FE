@@ -18,15 +18,18 @@ export interface InvoiceCounts {
 }
 
 /**
- * One row the page changed locally. `before` is null when the row is new.
+ * One row the page changed locally — `before` null when it is new, `after` null when it is
+ * gone. Never both.
  *
- * Both sides are needed, not just the result: a bill moving from due to paid takes its
+ * Both sides are carried, not just the result: a bill moving from due to paid takes its
  * amount out of the balance as well as putting it into paid, and only the previous state
- * says which bucket to take it from.
+ * says which bucket to take it from. A deletion is the same shape with nothing on the far
+ * side, which is what lets create, amend, settle and delete share one piece of arithmetic
+ * instead of four that each have to remember the figures.
  */
 export interface InvoiceChange {
   before: Invoice | null;
-  after: Invoice;
+  after: Invoice | null;
 }
 
 /** What one bill contributes to its kind's three figures. */
@@ -38,11 +41,11 @@ function contribution(inv: Invoice): { total: number; paid: number; balance: num
 /**
  * The page's counts, moved to match rows that were changed without refetching.
  *
- * Create, edit and mark-as-paid all land here, because they are the same question asked
- * three ways: a row was one thing and is now another, and the figures describing the list
- * have to follow. Handling them separately is how a page ends up with a correct list and a
- * summary card stating what was true a moment ago — the worse failure, because the two
- * disagree on screen and neither looks wrong on its own.
+ * Create, amend, settle and delete all land here, because they are the same question asked
+ * four ways: a row was one thing and is now another — possibly nothing — and the figures
+ * describing the list have to follow. Handling them separately is how a page ends up with a
+ * correct list and a summary card stating what was true a moment ago: the worse failure,
+ * because the two disagree on screen and neither looks wrong on its own.
  *
  * Arithmetic on what the last fetch reported, never a recount: the page holds one page of
  * bills while these figures describe every bill the filter matches. Counting what is visible
@@ -62,13 +65,14 @@ export function shiftInvoiceCounts(
   const money = { rental: { total: 0, paid: 0, balance: 0 }, utility: { total: 0, paid: 0, balance: 0 } };
 
   for (const { before, after } of changes) {
-    if (!before) total += 1;
+    if (!before && after) total += 1;
+    if (before && !after) total -= 1;
 
     if (before) byStatus.set(before.status, (byStatus.get(before.status) ?? 0) - 1);
-    byStatus.set(after.status, (byStatus.get(after.status) ?? 0) + 1);
+    if (after) byStatus.set(after.status, (byStatus.get(after.status) ?? 0) + 1);
 
-    // A bill can be edited from one kind to the other, so the before and after are booked
-    // against their own kinds rather than both against the after's.
+    // A bill can be edited from one kind to the other, so each side is booked against its
+    // own kind rather than both against the after's.
     if (before) {
       const c = contribution(before);
       const m = money[before.kind];
@@ -76,11 +80,13 @@ export function shiftInvoiceCounts(
       m.paid -= c.paid;
       m.balance -= c.balance;
     }
-    const c = contribution(after);
-    const m = money[after.kind];
-    m.total += c.total;
-    m.paid += c.paid;
-    m.balance += c.balance;
+    if (after) {
+      const c = contribution(after);
+      const m = money[after.kind];
+      m.total += c.total;
+      m.paid += c.paid;
+      m.balance += c.balance;
+    }
   }
 
   const statuses = base.statuses.map((s) =>
@@ -98,5 +104,8 @@ export function shiftInvoiceCounts(
       }
     : base.aggs;
 
-  return { total, statuses, aggs };
+  // Floored rather than trusted. These figures and the page disagree by design — the page
+  // holds ten rows while the total counts every bill the filter matches — so a server total
+  // that has drifted low must not be driven negative by deletions it never counted.
+  return { total: Math.max(0, total), statuses, aggs };
 }

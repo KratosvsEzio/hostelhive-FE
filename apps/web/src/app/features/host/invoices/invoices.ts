@@ -295,21 +295,33 @@ export class Invoices {
   protected readonly state = computed<ViewState>(() => {
     const base = this.fetched();
     const overlay = this.local();
-    if (!overlay || base.loading || base.error) return base;
+    const rows = overlay && !base.loading && !base.error ? overlay : base.data;
 
     const touched = this.baseline();
-    if (!touched.size) return { ...base, data: overlay };
+    const removed = this.deletedIds();
+    if (!touched.size && !removed.size) return overlay && rows ? { ...base, data: rows } : base;
 
     const changes: InvoiceChange[] = [];
+    const seen = new Set<string>();
+
     for (const [id, before] of touched) {
-      const after = overlay.find((i) => i.id === id);
-      // A row can leave the overlay — deleted while its change was still held. Nothing to
-      // reconcile then: the delete path keeps its own count of what it removed.
-      if (after) changes.push({ before, after });
+      seen.add(id);
+      // A deleted row is gone whatever else was done to it, so `after` is null even when the
+      // overlay still carries the edit that preceded the delete.
+      const after = removed.has(id) ? null : (rows?.find((i) => i.id === id) ?? null);
+      changes.push({ before, after });
+    }
+
+    // Deleted without having been touched first — the common case, since most bills are
+    // removed straight from the list. Their previous state is whatever the fetch reported.
+    for (const id of removed) {
+      if (seen.has(id)) continue;
+      const before = base.data?.find((i) => i.id === id);
+      if (before) changes.push({ before, after: null });
     }
 
     const { total, statuses, aggs } = shiftInvoiceCounts(base, changes);
-    return { ...base, data: overlay, total, statuses, aggs };
+    return { ...base, data: rows, total, statuses, aggs };
   });
 
   // ── filter panel ───────────────────────────────────────────────────────────

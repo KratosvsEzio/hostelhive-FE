@@ -138,3 +138,65 @@ describe('shiftInvoiceCounts', () => {
     expect(out.statuses[0].count).toBe(0);
   });
 });
+
+/**
+ * Deletions.
+ *
+ * The page already removed the row optimistically and rolled back on failure — but the
+ * figures counting it did not move, so a deleted bill stayed in the footer, in its status
+ * tab and in the summary until something refetched.
+ */
+describe('shiftInvoiceCounts — deletions', () => {
+  it('takes a deleted bill out of the total, its status and the money', () => {
+    const out = shiftInvoiceCounts(BASE, [
+      { before: bill({ amount: 5000, status: 'due', kind: 'rental' }), after: null },
+    ]);
+
+    expect(out.total).toBe(9);
+    expect(out.statuses.find((s) => s.slug === 'due')!.count).toBe(5);
+    expect(out.aggs!.rentTotal).toBe(45_000);
+    expect(out.aggs!.rentBalance).toBe(25_000);
+    expect(out.aggs!.rentPaid).toBe(20_000);
+  });
+
+  // A settled bill sits in `paid`, so removing it has to come out of there instead.
+  it('takes a deleted paid bill out of paid, not the balance', () => {
+    const out = shiftInvoiceCounts(BASE, [
+      { before: bill({ amount: 5000, status: 'paid' }), after: null },
+    ]);
+
+    expect(out.aggs!.rentPaid).toBe(15_000);
+    expect(out.aggs!.rentBalance).toBe(30_000);
+    expect(out.statuses.find((s) => s.slug === 'paid')!.count).toBe(3);
+  });
+
+  // Edited, then deleted. The amend never reached the server's figures, so the deletion has
+  // to be measured against what was fetched — not against the amount typed in between.
+  it('measures a delete against the fetched row, not an edit made first', () => {
+    const out = shiftInvoiceCounts(BASE, [
+      { before: bill({ amount: 5000 }), after: null },
+    ]);
+    expect(out.aggs!.rentTotal).toBe(45_000);
+  });
+
+  it('nets a create and a delete back to where it started', () => {
+    const out = shiftInvoiceCounts(BASE, [
+      { before: null, after: bill({ id: 'n1', amount: 1000 }) },
+      { before: bill({ id: 'old', amount: 1000 }), after: null },
+    ]);
+
+    expect(out.total).toBe(10);
+    expect(out.aggs!.rentTotal).toBe(50_000);
+  });
+
+  // These figures describe every matching bill while the page holds ten, so a server total
+  // that has drifted low must not be driven below zero by deletions it never counted.
+  it('never drives the total negative', () => {
+    const thin: InvoiceCounts = { ...BASE, total: 1 };
+    const out = shiftInvoiceCounts(thin, [
+      { before: bill({ id: 'a' }), after: null },
+      { before: bill({ id: 'b' }), after: null },
+    ]);
+    expect(out.total).toBe(0);
+  });
+});
