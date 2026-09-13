@@ -5,14 +5,23 @@ import { LocaleLink } from '@core/i18n/locale-link';
 import HERO_CREDITS from '../../../../../public/hero/CREDITS.json';
 import CITY_CREDITS from '../../../../../public/cities/CREDITS.json';
 
-/** One photograph, as the page renders it. Both credit files agree on these fields. */
+/**
+ * One photograph, as the page renders it.
+ *
+ * Flattened from two shapes, because the images now come from two places. A Commons file names
+ * a photographer who must be credited; a Pexels file names nobody and requires no credit at
+ * all. Rather than render "Photo by Unknown" for the second kind, each record carries the
+ * credit line its own licence actually calls for, and this page prints that.
+ */
 export interface Credit {
   file: string;
   subject: string;
-  author: string;
+  attribution: string;
   licence: string;
   licenceUrl: string;
-  commonsPage: string;
+  /** The Commons file page, or the Pexels photo page — wherever the terms can be read. */
+  sourceUrl: string;
+  sourceLabel: string;
   note?: string;
 }
 
@@ -21,9 +30,11 @@ interface RawCredit {
   label?: string;
   landmark?: string;
   author?: string;
+  attribution?: string;
   licence?: string;
   licenceUrl?: string;
   commonsPage?: string;
+  source?: string;
   note?: string;
 }
 
@@ -40,10 +51,11 @@ export function toCredits(raw: readonly RawCredit[]): Credit[] {
   return raw.map((r) => ({
     file: r.file,
     subject: r.label ?? r.landmark ?? r.file,
-    author: r.author ?? 'Unknown',
+    attribution: r.attribution ?? (r.author ? `Photo by ${r.author}` : 'Unknown'),
     licence: r.licence ?? 'Unknown',
     licenceUrl: r.licenceUrl ?? '',
-    commonsPage: r.commonsPage ?? '',
+    sourceUrl: r.commonsPage ?? r.source ?? '',
+    sourceLabel: r.commonsPage ? 'View on Wikimedia Commons' : 'View on Pexels',
     note: r.note,
   }));
 }

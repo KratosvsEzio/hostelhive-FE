@@ -1,51 +1,50 @@
 {
-  "licence": "Checked against Wikimedia Commons. Every photograph below is copyleft — nine CC BY-SA, one Free Art License — and all require attribution. The tiles are cropped re-encodes, which makes them derivative works, so the share-alike terms attach to the tiles themselves and not only to the originals. Credits are rendered at /credits.",
+  "licence": "Mixed, and deliberately recorded as such. Four tiles come from Pexels photographs this repository already ships for the blog — free for commercial use, no attribution, no share-alike. The remaining six are Wikimedia Commons originals and are still copyleft: the tiles are cropped re-encodes, which makes them derivative works, so the share-alike terms attach to the tiles themselves. Credits are rendered at /credits.",
   "note": "Re-encoded to JPEG: a 560x480 carousel tile and a 1200x630 social card, both smart-cropped from the full-resolution original.",
   "images": [
     {
       "file": "/cities/karachi.jpg",
       "social": "/cities/social/karachi.jpg",
-      "landmark": "Mazar-e-Quaid",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/4/47/PK_Karachi_asv2020-02_img52_Mazar-e-Quaid.jpg",
-      "commonsPage": "https://commons.wikimedia.org/wiki/File:PK_Karachi_asv2020-02_img52_Mazar-e-Quaid.jpg",
-      "author": "A. Savin",
-      "licence": "Free Art License 1.3",
-      "licenceUrl": "https://artlibre.org/licence/lal/en/",
-      "attribution": "Photo by A. Savin, via Wikimedia Commons — Free Art License 1.3",
-      "note": "The odd one out: FAL rather than Creative Commons, and copyleft. The page names no author in an Author field — the credit comes from the photographer's own template, so confirm the exact wording they ask for on the file page before publishing."
+      "landmark": "KMC Building",
+      "source": "https://www.pexels.com/photo/29296199/",
+      "sourceDescription": "View of the iconic KMC Building in Karachi at twilight, showcasing colonial architecture",
+      "licence": "Pexels License",
+      "licenceUrl": "https://www.pexels.com/license/",
+      "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+      "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
     },
     {
       "file": "/cities/lahore.jpg",
       "social": "/cities/social/lahore.jpg",
       "landmark": "Badshahi Mosque",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Badshahi_Mosque_front_picture.jpg",
-      "commonsPage": "https://commons.wikimedia.org/wiki/File:Badshahi_Mosque_front_picture.jpg",
-      "author": "Romero Maia",
-      "licence": "CC BY-SA 4.0",
-      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "attribution": "Photo by Romero Maia, via Wikimedia Commons — CC BY-SA 4.0"
+      "source": "https://www.pexels.com/photo/13629907/",
+      "sourceDescription": "Scenic view of Badshahi Mosque in Lahore with flying birds against a clear blue sky",
+      "licence": "Pexels License",
+      "licenceUrl": "https://www.pexels.com/license/",
+      "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+      "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
     },
     {
       "file": "/cities/islamabad.jpg",
       "social": "/cities/social/islamabad.jpg",
       "landmark": "Faisal Mosque",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Ali_Mujtaba_WLM2017_FAISAL_MOSQUE_019.jpg",
-      "commonsPage": "https://commons.wikimedia.org/wiki/File:Ali_Mujtaba_WLM2017_FAISAL_MOSQUE_019.jpg",
-      "author": "Ali Mujtaba",
-      "licence": "CC BY-SA 4.0",
-      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "attribution": "Photo by Ali Mujtaba, via Wikimedia Commons — CC BY-SA 4.0"
+      "source": "https://www.pexels.com/photo/5258953/",
+      "sourceDescription": "Iconic view of Faisal Mosque in Islamabad, Pakistan, under a bright blue sky with clouds",
+      "licence": "Pexels License",
+      "licenceUrl": "https://www.pexels.com/license/",
+      "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+      "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
     },
     {
       "file": "/cities/rawalpindi.jpg",
       "social": "/cities/social/rawalpindi.jpg",
-      "landmark": "Railway Station",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Rawalpindi_railway_station_4.JPG",
-      "commonsPage": "https://commons.wikimedia.org/wiki/File:Rawalpindi_railway_station_4.JPG",
-      "author": "Miiqbal",
-      "licence": "CC BY-SA 3.0",
-      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-      "attribution": "Photo by Miiqbal, via Wikimedia Commons — CC BY-SA 3.0"
+      "landmark": "City mosque",
+      "source": "https://www.pexels.com/photo/17483503/",
+      "sourceDescription": "A stunning view of a mosque's ornate dome and minarets in Rawalpindi, Pakistan, showcasing Islamic architecture",
+      "licence": "Pexels License",
+      "licenceUrl": "https://www.pexels.com/license/",
+      "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+      "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
     },
     {
       "file": "/cities/faisalabad.jpg",
@@ -56,7 +55,8 @@
       "author": "Usman Nadeem",
       "licence": "CC BY-SA 4.0",
       "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "attribution": "Photo by Usman Nadeem, via Wikimedia Commons — CC BY-SA 4.0"
+      "attribution": "Photo by Usman Nadeem, via Wikimedia Commons — CC BY-SA 4.0",
+      "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
     },
     {
       "file": "/cities/peshawar.jpg",
@@ -67,7 +67,8 @@
       "author": "Zafarmaini",
       "licence": "CC BY-SA 4.0",
       "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "attribution": "Photo by Zafarmaini, via Wikimedia Commons — CC BY-SA 4.0"
+      "attribution": "Photo by Zafarmaini, via Wikimedia Commons — CC BY-SA 4.0",
+      "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
     },
     {
       "file": "/cities/multan.jpg",
@@ -78,7 +79,8 @@
       "author": "ZainShahid117",
       "licence": "CC BY-SA 3.0",
       "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-      "attribution": "Photo by ZainShahid117, via Wikimedia Commons — CC BY-SA 3.0"
+      "attribution": "Photo by ZainShahid117, via Wikimedia Commons — CC BY-SA 3.0",
+      "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
     },
     {
       "file": "/cities/quetta.jpg",
@@ -89,7 +91,8 @@
       "author": "Aysafaran",
       "licence": "CC BY-SA 4.0",
       "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "attribution": "Photo by Aysafaran, via Wikimedia Commons — CC BY-SA 4.0"
+      "attribution": "Photo by Aysafaran, via Wikimedia Commons — CC BY-SA 4.0",
+      "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
     },
     {
       "file": "/cities/hyderabad.jpg",
@@ -100,7 +103,8 @@
       "author": "Waheed.chandio",
       "licence": "CC BY-SA 4.0",
       "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "attribution": "Photo by Waheed.chandio, via Wikimedia Commons — CC BY-SA 4.0"
+      "attribution": "Photo by Waheed.chandio, via Wikimedia Commons — CC BY-SA 4.0",
+      "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
     },
     {
       "file": "/cities/sialkot.jpg",
@@ -111,7 +115,8 @@
       "author": "PakGuru99",
       "licence": "CC BY-SA 3.0",
       "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-      "attribution": "Photo by PakGuru99, via Wikimedia Commons — CC BY-SA 3.0"
+      "attribution": "Photo by PakGuru99, via Wikimedia Commons — CC BY-SA 3.0",
+      "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
     }
   ]
 }

@@ -1,10 +1,13 @@
-// Downloads each city's landmark photo from Wikimedia Commons (full-size original),
-// smart-crops + resizes to a hex-friendly tile, and bundles it under
-// apps/web/public/cities/ so the carousel works offline (Capacitor) and fast.
-// Source images are CC-licensed on Wikimedia Commons — keep attribution for production.
+// Builds each city's hex tile and social card into apps/web/public/cities/, so the carousel
+// works offline (Capacitor) and fast.
+//
+// Two kinds of source. Pexels photographs already vetted for the blog are read off disk:
+// their licence is free for commercial use with no attribution and no share-alike, so a
+// cropped tile carries no terms of its own. The rest are still Wikimedia Commons originals,
+// fetched over the network, and every one of those is copyleft — see CREDITS.json and /credits.
 // Re-run with:  node tools/fetch-city-images.mjs
 import sharp from 'sharp';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const OUT = join(process.cwd(), 'apps/web/public/cities');
@@ -13,58 +16,128 @@ mkdirSync(OUT, { recursive: true });
 const UA =
   'HostelHiveBot/1.0 (landing page city tiles; contact: dev@hostelhive.pk)';
 
-// [slug, landmark, full-resolution Wikimedia Commons original URL]
+/**
+ * The ten tiles, with where each photograph comes from and what it may be used for.
+ *
+ * Four are Pexels images this repository already ships for the blog — free for commercial
+ * use, no attribution, no share-alike — read off disk rather than downloaded again.
+ *
+ * The other six are still Wikimedia Commons originals and are still copyleft. Commons has no
+ * attribution-only photograph of those cities: its Pakistani city set is almost entirely Wiki
+ * Loves Monuments, which is share-alike by contest rule. They are waiting on Pexels
+ * replacements, and until then the share-alike terms attach to the tiles this site serves.
+ */
 const cities = [
-  [
-    'karachi',
-    'Mazar-e-Quaid',
-    'https://upload.wikimedia.org/wikipedia/commons/4/47/PK_Karachi_asv2020-02_img52_Mazar-e-Quaid.jpg',
-  ],
-  [
-    'lahore',
-    'Badshahi Mosque',
-    'https://upload.wikimedia.org/wikipedia/commons/c/c8/Badshahi_Mosque_front_picture.jpg',
-  ],
-  [
-    'islamabad',
-    'Faisal Mosque',
-    'https://upload.wikimedia.org/wikipedia/commons/e/e0/Ali_Mujtaba_WLM2017_FAISAL_MOSQUE_019.jpg',
-  ],
-  [
-    'rawalpindi',
-    'Railway Station',
-    'https://upload.wikimedia.org/wikipedia/commons/7/7d/Rawalpindi_railway_station_4.JPG',
-  ],
-  [
-    'faisalabad',
-    'Clock Tower',
-    'https://upload.wikimedia.org/wikipedia/commons/f/f1/Clock_Tower_Faisalabad_by_Usman_Nadeem.jpg',
-  ],
-  [
-    'peshawar',
-    'Islamia College',
-    'https://upload.wikimedia.org/wikipedia/commons/a/ab/Islamia_College_Peshawar_%28Public_Sector_University%29%2C_Khyber_Pakhtunkhwa%2C_Pakistan_cropped.jpg',
-  ],
-  [
-    'multan',
-    'Shah Rukn-e-Alam',
-    'https://upload.wikimedia.org/wikipedia/commons/7/7c/Tomb_of_Shah_Rukn-e-Alam_2014-07-31.jpg',
-  ],
-  [
-    'quetta',
-    'Hanna Lake',
-    'https://upload.wikimedia.org/wikipedia/commons/f/f2/Hanna_Lake_Quetta.jpg',
-  ],
-  [
-    'hyderabad',
-    'Talpur Tombs',
-    'https://upload.wikimedia.org/wikipedia/commons/d/df/Mir_Karam_Ali_Khan_Talpur_Tombs_were_restored_in_2016_1.jpg',
-  ],
-  [
-    'sialkot',
-    'Clock Tower',
-    'https://upload.wikimedia.org/wikipedia/commons/0/0d/Clock_Tower%2C_Sialkot_21.jpg',
-  ],
+  {
+    "slug": "karachi",
+    "landmark": "KMC Building",
+    "local": "/blog/student-hostels-in-karachi-where-students-live/kmc-building.webp",
+    "source": "https://www.pexels.com/photo/29296199/",
+    "sourceDescription": "View of the iconic KMC Building in Karachi at twilight, showcasing colonial architecture",
+    "licence": "Pexels License",
+    "licenceUrl": "https://www.pexels.com/license/",
+    "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+    "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
+  },
+  {
+    "slug": "lahore",
+    "landmark": "Badshahi Mosque",
+    "local": "/blog/student-hostels-in-lahore-a-practical-guide/badshahi.webp",
+    "source": "https://www.pexels.com/photo/13629907/",
+    "sourceDescription": "Scenic view of Badshahi Mosque in Lahore with flying birds against a clear blue sky",
+    "licence": "Pexels License",
+    "licenceUrl": "https://www.pexels.com/license/",
+    "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+    "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
+  },
+  {
+    "slug": "islamabad",
+    "landmark": "Faisal Mosque",
+    "local": "/blog/student-hostels-in-islamabad-sector-by-sector/faisal-mosque.webp",
+    "source": "https://www.pexels.com/photo/5258953/",
+    "sourceDescription": "Iconic view of Faisal Mosque in Islamabad, Pakistan, under a bright blue sky with clouds",
+    "licence": "Pexels License",
+    "licenceUrl": "https://www.pexels.com/license/",
+    "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+    "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
+  },
+  {
+    "slug": "rawalpindi",
+    "landmark": "City mosque",
+    "local": "/blog/rawalpindi-or-islamabad-for-students/pindi-mosque.webp",
+    "source": "https://www.pexels.com/photo/17483503/",
+    "sourceDescription": "A stunning view of a mosque's ornate dome and minarets in Rawalpindi, Pakistan, showcasing Islamic architecture",
+    "licence": "Pexels License",
+    "licenceUrl": "https://www.pexels.com/license/",
+    "attribution": "Photo from Pexels — free for commercial use, no attribution required",
+    "note": "Re-used from the blog set rather than downloaded again: same file, already vetted. No attribution and no share-alike, so the cropped tile carries no terms of its own."
+  },
+  {
+    "slug": "faisalabad",
+    "landmark": "Clock Tower",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Clock_Tower_Faisalabad_by_Usman_Nadeem.jpg",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File:Clock_Tower_Faisalabad_by_Usman_Nadeem.jpg",
+    "author": "Usman Nadeem",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Photo by Usman Nadeem, via Wikimedia Commons — CC BY-SA 4.0",
+    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+  },
+  {
+    "slug": "peshawar",
+    "landmark": "Islamia College",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Islamia_College_Peshawar_%28Public_Sector_University%29%2C_Khyber_Pakhtunkhwa%2C_Pakistan_cropped.jpg",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File:Islamia_College_Peshawar_(Public_Sector_University),_Khyber_Pakhtunkhwa,_Pakistan_cropped.jpg",
+    "author": "Zafarmaini",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Photo by Zafarmaini, via Wikimedia Commons — CC BY-SA 4.0",
+    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+  },
+  {
+    "slug": "multan",
+    "landmark": "Shah Rukn-e-Alam",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Tomb_of_Shah_Rukn-e-Alam_2014-07-31.jpg",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File:Tomb_of_Shah_Rukn-e-Alam_2014-07-31.jpg",
+    "author": "ZainShahid117",
+    "licence": "CC BY-SA 3.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "attribution": "Photo by ZainShahid117, via Wikimedia Commons — CC BY-SA 3.0",
+    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+  },
+  {
+    "slug": "quetta",
+    "landmark": "Hanna Lake",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Hanna_Lake_Quetta.jpg",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File:Hanna_Lake_Quetta.jpg",
+    "author": "Aysafaran",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Photo by Aysafaran, via Wikimedia Commons — CC BY-SA 4.0",
+    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+  },
+  {
+    "slug": "hyderabad",
+    "landmark": "Talpur Tombs",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/d/df/Mir_Karam_Ali_Khan_Talpur_Tombs_were_restored_in_2016_1.jpg",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File:Mir_Karam_Ali_Khan_Talpur_Tombs_were_restored_in_2016_1.jpg",
+    "author": "Waheed.chandio",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Photo by Waheed.chandio, via Wikimedia Commons — CC BY-SA 4.0",
+    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+  },
+  {
+    "slug": "sialkot",
+    "landmark": "Clock Tower",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Clock_Tower%2C_Sialkot_21.jpg",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File:Clock_Tower,_Sialkot_21.jpg",
+    "author": "PakGuru99",
+    "licence": "CC BY-SA 3.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "attribution": "Photo by PakGuru99, via Wikimedia Commons — CC BY-SA 3.0",
+    "note": "Still copyleft: share-alike attaches to this cropped tile, not only to the original. Awaiting a Pexels replacement — Commons has no attribution-only photograph of this city, its Pakistani city set being almost entirely Wiki Loves Monuments, which is share-alike by contest rule."
+  }
 ];
 
 /**
@@ -80,14 +153,16 @@ mkdirSync(SOCIAL, { recursive: true });
 
 let ok = 0;
 const credits = [];
-for (const [slug, landmark, url] of cities) {
+for (const city of cities) {
+  const { slug, landmark, local, source } = city;
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': UA } });
-    if (!res.ok) {
-      console.error('  ✗', slug, '->', res.status, res.statusText);
-      continue;
-    }
-    const buf = Buffer.from(await res.arrayBuffer());
+    // A local source is an image this repository already ships and has already cleared.
+    const buf = local
+      ? readFileSync(join(process.cwd(), 'apps/web/public', local.slice(1)))
+      : await fetch(source, { headers: { 'User-Agent': UA } }).then(async (res) => {
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          return Buffer.from(await res.arrayBuffer());
+        });
     await sharp(buf)
       .resize(560, 480, { fit: 'cover', position: 'attention' })
       .jpeg({ quality: 82, mozjpeg: true })
@@ -96,7 +171,19 @@ for (const [slug, landmark, url] of cities) {
       .resize(1200, 630, { fit: 'cover', position: 'attention' })
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(join(SOCIAL, `${slug}.jpg`));
-    credits.push({ file: `/cities/${slug}.jpg`, social: `/cities/social/${slug}.jpg`, landmark, source: url });
+    credits.push({
+      file: `/cities/${slug}.jpg`,
+      social: `/cities/social/${slug}.jpg`,
+      landmark,
+      source,
+      ...(city.sourceDescription ? { sourceDescription: city.sourceDescription } : {}),
+      ...(city.commonsPage ? { commonsPage: city.commonsPage } : {}),
+      ...(city.author ? { author: city.author } : {}),
+      licence: city.licence,
+      licenceUrl: city.licenceUrl,
+      attribution: city.attribution,
+      ...(city.note ? { note: city.note } : {}),
+    });
     ok++;
     console.log(
       '  ✓',
@@ -122,7 +209,7 @@ writeFileSync(
   `${JSON.stringify(
     {
       licence:
-        'Each file below is derived from a photograph on Wikimedia Commons. Commons images carry their own CC licence — check the source page before publishing, and attribute as it requires.',
+        'Mixed, and deliberately recorded as such. Four tiles come from Pexels photographs this repository already ships for the blog — free for commercial use, no attribution, no share-alike. The remaining six are Wikimedia Commons originals and are still copyleft: the tiles are cropped re-encodes, which makes them derivative works, so the share-alike terms attach to the tiles themselves. Credits are rendered at /credits.',
       note: 'Re-encoded to JPEG: a 560x480 carousel tile and a 1200x630 social card, both smart-cropped from the full-resolution original.',
       images: credits,
     },

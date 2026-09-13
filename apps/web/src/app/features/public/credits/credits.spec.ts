@@ -29,9 +29,9 @@ describe('image credits', () => {
         expect(images.length).toBeGreaterThan(0);
       });
 
-      it('names an author and a licence for every one', () => {
+      it('carries a credit line and a licence for every one', () => {
         const missing = toCredits(set.images)
-          .filter((c) => c.author === 'Unknown' || c.licence === 'Unknown')
+          .filter((c) => c.attribution === 'Unknown' || c.licence === 'Unknown')
           .map((c) => c.file);
 
         expect(missing).toEqual([]);
@@ -46,13 +46,18 @@ describe('image credits', () => {
       });
 
       /**
-       * The file page, not the media URL. `upload.wikimedia.org` serves the bytes and says
-       * nothing about who took the picture — which is exactly why the licences went unchecked
-       * for so long: the tool that downloaded them could not have read a licence if it tried.
+       * Where the terms can be read, not where the bytes live. For a Commons image that is the
+       * file page — `upload.wikimedia.org` serves the picture and says nothing about who took
+       * it, which is exactly why the licences went unchecked for so long. For a Pexels image it
+       * is the photo page, which is where its licence is stated.
        */
-      it('points at the Commons file page, not the media host', () => {
+      it('points at a page that states the terms, not at a media host', () => {
         const wrong = toCredits(set.images)
-          .filter((c) => !c.commonsPage.startsWith('https://commons.wikimedia.org/wiki/File:'))
+          .filter(
+            (c) =>
+              !c.sourceUrl.startsWith('https://commons.wikimedia.org/wiki/File:') &&
+              !c.sourceUrl.startsWith('https://www.pexels.com/photo/'),
+          )
           .map((c) => c.file);
 
         expect(wrong).toEqual([]);

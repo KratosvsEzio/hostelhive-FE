@@ -41,18 +41,25 @@ describe('social card images', () => {
   });
 
   it('records where every card came from, so the licence is checkable', async () => {
-    // These are CC-licensed Wikimedia photographs. The fetch tools said "keep attribution
-    // for production" for a long time while nothing did; this is what makes that true.
+    // The fetch tools said "keep attribution for production" for a long time while nothing
+    // did; this is what makes that true. Two sources now: Wikimedia Commons originals, and
+    // Pexels photographs this repository already ships for the blog. What matters is not
+    // which host served the bytes but that the record points somewhere the terms are stated.
     for (const dir of ['cities', 'hero']) {
       const credits = await import(`../../../public/${dir}/CREDITS.json`).then((m) => m.default);
-      expect(credits.licence).toMatch(/Wikimedia/);
+      expect(credits.licence).toMatch(/Commons|Pexels/);
       for (const img of credits.images) {
         expect({ dir, social: img.social, exists: existsSync(join(PUBLIC, img.social)) }).toEqual({
           dir,
           social: img.social,
           exists: true,
         });
-        expect(img.source).toMatch(/^https:\/\/upload\.wikimedia\.org\//);
+        expect(img.source).toMatch(
+          /^https:\/\/(upload\.wikimedia\.org\/|www\.pexels\.com\/photo\/)/,
+        );
+        // Whatever the source, the terms have to be stated and reachable.
+        expect(img.licence).toBeTruthy();
+        expect(img.licenceUrl).toMatch(/^https:\/\//);
       }
     }
   });
