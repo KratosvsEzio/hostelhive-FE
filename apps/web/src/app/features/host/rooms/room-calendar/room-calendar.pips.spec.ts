@@ -24,7 +24,10 @@ const ROOM = 'r1';
  * Only `Date` is faked — Angular still needs real timers and microtasks to render.
  */
 function freezeMidMarch2026(): void {
-  vi.useFakeTimers({ toFake: ['Date'] });
+  // Installed once, then only re-pointed. `setUp` runs forty times inside the pip-width test,
+  // and installing the fake clock on every one of those pushed it past vitest's five-second
+  // limit on CI while passing locally in two — a green suite here and a red one there.
+  if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(2026, 2, 15, 12, 0, 0));
 }
 
@@ -246,13 +249,26 @@ describe('RoomCalendar pips', () => {
     expect(setUp(1, []).pipColumns()).toBe(1);
   });
 
-  // Whatever the capacity, a pip has to stay wide enough to see. 65px of cell, 3px gaps.
+  /**
+   * Whatever the capacity, a pip has to stay wide enough to see. 65px of cell, 3px gaps.
+   *
+   * One component, re-pointed at each capacity, rather than forty of them. `setUp` resets the
+   * testing module and builds a fresh fixture every call, and doing that forty times took long
+   * enough to pass here in two seconds and time out on CI at five — which is the intermittent
+   * failure this file was carrying. It was a slow test, not the date race fixed alongside it:
+   * the symptom was a timeout, never a wrong assertion.
+   *
+   * `pipColumns` reads `capacity` and nothing else, so setting the input is the whole of what
+   * a rebuild was achieving.
+   */
   it('keeps every pip at least three pixels wide up to forty beds', () => {
     const CELL = 64.6;
+    const c = setUp(1, []);
     for (let n = 1; n <= 40; n++) {
-      const cols = setUp(n, []).pipColumns();
+      fixture.componentRef.setInput('capacity', n);
+      const cols = c.pipColumns();
       const width = (CELL - 3 * (cols - 1)) / cols;
-      expect(width).toBeGreaterThan(3);
+      expect({ n, wideEnough: width > 3 }).toEqual({ n, wideEnough: true });
     }
   });
 
