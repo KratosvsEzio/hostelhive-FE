@@ -102,7 +102,18 @@
     "signInToBook": "Masuk untuk memesan",
     "pickYourRoomOnce": "Pilih kamar Anda setelah masuk",
     "createAFreeAccountToBook": "Buat akun gratis untuk memilih kamar dan menahannya selagi Anda memutuskan. Hanya butuh 30 detik.",
-    "roomsAmpPricing": "Kamar & harga"
+    "roomsAmpPricing": "Kamar & harga",
+    "andNMore": "+{{count}} lainnya",
+    "favorite": "Favorit",
+    "showPhoneNumber": "Tampilkan nomor telepon",
+    "showAllNReviews": "Lihat semua {{count}} ulasan",
+    "hostSince": "Tuan rumah sejak {{year}}",
+    "writeAReview": "Tulis ulasan",
+    "roomSummary": "{{beds}} tempat tidur · {{types}} tipe kamar · {{sharing}} opsi berbagi",
+    "nSharingAvailable": "Tersedia berbagi {{labels}}",
+    "bookNow": "Pesan sekarang",
+    "nPhotos": "{{count}} foto",
+    "otherPhotos": "Lainnya"
   },
   "common": {
     "loading": "Memuat…",
@@ -626,7 +637,12 @@
     "closeTimePicker": "Tutup pemilih waktu",
     "chooseTime": "Pilih waktu",
     "dismiss": "Tutup",
-    "closePropertyMenu": "Tutup menu properti"
+    "closePropertyMenu": "Tutup menu properti",
+    "goToPhotoN": "Ke foto {{n}}",
+    "removeFrom": "Hapus {{title}}",
+    "removeOneFrom": "Kurangi satu dari {{title}}",
+    "onePhotoAtATime": "Satu foto sekaligus",
+    "allPhotosByGroup": "Semua foto, dikelompokkan"
   },
   "hostTenants": {
     "tenantPhoto": "Foto penyewa",
@@ -1508,7 +1524,9 @@
     "bookingSent": "Pemesanan terkirim",
     "weLlEmailYouWhenConfirmed": "Kami akan mengirim email begitu hostel mengonfirmasi.",
     "couldnTBook": "Pemesanan tidak dapat diselesaikan",
-    "noRoomsListed": "Hostel ini belum menambahkan kamar apa pun."
+    "noRoomsListed": "Hostel ini belum menambahkan kamar apa pun.",
+    "pricesArePerRoom": "Harga per kamar",
+    "pricesArePerBed": "Harga per tempat tidur"
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",

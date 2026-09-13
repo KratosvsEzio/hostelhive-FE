@@ -102,7 +102,18 @@
     "signInToBook": "Log in om te boeken",
     "pickYourRoomOnce": "Kies je kamer zodra je bent ingelogd",
     "createAFreeAccountToBook": "Maak een gratis account om kamers te kiezen en vast te houden terwijl je beslist. Het duurt 30 seconden.",
-    "roomsAmpPricing": "Kamers en prijzen"
+    "roomsAmpPricing": "Kamers en prijzen",
+    "andNMore": "+{{count}} meer",
+    "favorite": "Favoriet",
+    "showPhoneNumber": "Telefoonnummer tonen",
+    "showAllNReviews": "Alle {{count}} beoordelingen tonen",
+    "hostSince": "Gastheer sinds {{year}}",
+    "writeAReview": "Een beoordeling schrijven",
+    "roomSummary": "{{beds}} bedden · {{types}} kamertypes · {{sharing}} deelopties",
+    "nSharingAvailable": "{{labels}}-persoonskamers beschikbaar",
+    "bookNow": "Nu boeken",
+    "nPhotos": "{{count}} foto’s",
+    "otherPhotos": "Overige"
   },
   "common": {
     "loading": "Laden…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Tijdkiezer sluiten",
     "chooseTime": "Tijd kiezen",
     "dismiss": "Sluiten",
-    "closePropertyMenu": "Accommodatiemenu sluiten"
+    "closePropertyMenu": "Accommodatiemenu sluiten",
+    "goToPhotoN": "Naar foto {{n}}",
+    "removeFrom": "{{title}} verwijderen",
+    "removeOneFrom": "Eén van {{title}} verwijderen",
+    "onePhotoAtATime": "Eén foto tegelijk",
+    "allPhotosByGroup": "Alle foto’s, gegroepeerd"
   },
   "hostTenants": {
     "tenantPhoto": "Foto van huurder",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Boeking verzonden",
     "weLlEmailYouWhenConfirmed": "We mailen je zodra het hostel het bevestigt.",
     "couldnTBook": "Boeking kon niet worden voltooid",
-    "noRoomsListed": "Dit hostel heeft nog geen kamers toegevoegd."
+    "noRoomsListed": "Dit hostel heeft nog geen kamers toegevoegd.",
+    "pricesArePerRoom": "Prijzen per kamer",
+    "pricesArePerBed": "Prijzen per bed"
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",

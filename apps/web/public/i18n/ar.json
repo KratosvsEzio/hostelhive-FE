@@ -102,7 +102,18 @@
     "signInToBook": "سجّل الدخول للحجز",
     "pickYourRoomOnce": "اختر غرفتك بمجرد تسجيل الدخول",
     "createAFreeAccountToBook": "أنشئ حسابًا مجانيًا لاختيار الغرف وحجزها ريثما تقرر. لا يستغرق سوى 30 ثانية.",
-    "roomsAmpPricing": "الغرف والأسعار"
+    "roomsAmpPricing": "الغرف والأسعار",
+    "andNMore": "و{{count}} أخرى",
+    "favorite": "المفضلة",
+    "showPhoneNumber": "إظهار رقم الهاتف",
+    "showAllNReviews": "عرض كل التقييمات ({{count}})",
+    "hostSince": "مضيف منذ {{year}}",
+    "writeAReview": "اكتب تقييماً",
+    "roomSummary": "{{beds}} سرير · {{types}} أنواع غرف · {{sharing}} خيارات مشاركة",
+    "nSharingAvailable": "متاح بمشاركة {{labels}}",
+    "bookNow": "احجز الآن",
+    "nPhotos": "{{count}} صورة",
+    "otherPhotos": "أخرى"
   },
   "common": {
     "loading": "جارٍ التحميل…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "إغلاق منتقي الوقت",
     "chooseTime": "اختيار وقت",
     "dismiss": "تجاهل",
-    "closePropertyMenu": "إغلاق قائمة العقارات"
+    "closePropertyMenu": "إغلاق قائمة العقارات",
+    "goToPhotoN": "الانتقال إلى الصورة {{n}}",
+    "removeFrom": "إزالة {{title}}",
+    "removeOneFrom": "إزالة واحد من {{title}}",
+    "onePhotoAtATime": "صورة واحدة في كل مرة",
+    "allPhotosByGroup": "كل الصور مجمّعة"
   },
   "hostTenants": {
     "tenantPhoto": "صورة المستأجر",
@@ -1503,7 +1519,9 @@
     "bookingSent": "تم إرسال الحجز",
     "weLlEmailYouWhenConfirmed": "سنراسلك عبر البريد الإلكتروني فور تأكيد النزل للحجز.",
     "couldnTBook": "تعذّر إتمام الحجز",
-    "noRoomsListed": "لم يُدرج هذا النزل أي غرف بعد."
+    "noRoomsListed": "لم يُدرج هذا النزل أي غرف بعد.",
+    "pricesArePerRoom": "الأسعار لكل غرفة",
+    "pricesArePerBed": "الأسعار لكل سرير"
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",

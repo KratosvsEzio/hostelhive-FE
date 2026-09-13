@@ -102,7 +102,18 @@
     "signInToBook": "登录后预订",
     "pickYourRoomOnce": "登录后即可挑选房间",
     "createAFreeAccountToBook": "创建免费账户即可挑选房间，并在您决定前为您保留。只需 30 秒。",
-    "roomsAmpPricing": "房型与价格"
+    "roomsAmpPricing": "房型与价格",
+    "andNMore": "另外 {{count}} 项",
+    "favorite": "收藏",
+    "showPhoneNumber": "显示电话号码",
+    "showAllNReviews": "查看全部 {{count}} 条评价",
+    "hostSince": "自 {{year}} 年起成为房东",
+    "writeAReview": "撰写评价",
+    "roomSummary": "{{beds}} 张床 · {{types}} 种房型 · {{sharing}} 种合住选项",
+    "nSharingAvailable": "提供 {{labels}} 人间",
+    "bookNow": "立即预订",
+    "nPhotos": "{{count}} 张照片",
+    "otherPhotos": "其他"
   },
   "common": {
     "loading": "加载中…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "关闭时间选择器",
     "chooseTime": "选择时间",
     "dismiss": "关闭",
-    "closePropertyMenu": "关闭房源菜单"
+    "closePropertyMenu": "关闭房源菜单",
+    "goToPhotoN": "跳到第 {{n}} 张照片",
+    "removeFrom": "移除{{title}}",
+    "removeOneFrom": "从{{title}}中减少一个",
+    "onePhotoAtATime": "逐张查看",
+    "allPhotosByGroup": "全部照片，按分组"
   },
   "hostTenants": {
     "tenantPhoto": "租客照片",
@@ -1503,7 +1519,9 @@
     "bookingSent": "预订已提交",
     "weLlEmailYouWhenConfirmed": "旅舍确认后我们会立即向您发送邮件。",
     "couldnTBook": "无法完成预订",
-    "noRoomsListed": "该旅舍尚未添加任何房间。"
+    "noRoomsListed": "该旅舍尚未添加任何房间。",
+    "pricesArePerRoom": "价格为每间房",
+    "pricesArePerBed": "价格为每张床"
   },
   "states": {
     "nothingHereYet": "这里还没有内容",

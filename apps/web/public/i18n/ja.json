@@ -102,7 +102,18 @@
     "signInToBook": "予約するにはサインイン",
     "pickYourRoomOnce": "サインインすれば部屋を選べます",
     "createAFreeAccountToBook": "無料アカウントを作成すると、部屋を選んで決めるまで確保できます。30秒で完了します。",
-    "roomsAmpPricing": "部屋と料金"
+    "roomsAmpPricing": "部屋と料金",
+    "andNMore": "他{{count}}件",
+    "favorite": "お気に入り",
+    "showPhoneNumber": "電話番号を表示",
+    "showAllNReviews": "{{count}}件のレビューをすべて表示",
+    "hostSince": "{{year}}年からのホスト",
+    "writeAReview": "レビューを書く",
+    "roomSummary": "ベッド{{beds}}台・部屋タイプ{{types}}種・シェア{{sharing}}種",
+    "nSharingAvailable": "{{labels}}人部屋あり",
+    "bookNow": "今すぐ予約",
+    "nPhotos": "写真{{count}}枚",
+    "otherPhotos": "その他"
   },
   "common": {
     "loading": "読み込み中…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "時刻選択を閉じる",
     "chooseTime": "時刻を選ぶ",
     "dismiss": "閉じる",
-    "closePropertyMenu": "物件メニューを閉じる"
+    "closePropertyMenu": "物件メニューを閉じる",
+    "goToPhotoN": "写真 {{n}} へ移動",
+    "removeFrom": "{{title}}を削除",
+    "removeOneFrom": "{{title}}を1つ減らす",
+    "onePhotoAtATime": "1枚ずつ表示",
+    "allPhotosByGroup": "すべての写真をグループ表示"
   },
   "hostTenants": {
     "tenantPhoto": "入居者の写真",
@@ -1503,7 +1519,9 @@
     "bookingSent": "予約を送信しました",
     "weLlEmailYouWhenConfirmed": "宿泊施設が確定次第、メールでお知らせします。",
     "couldnTBook": "予約を完了できませんでした",
-    "noRoomsListed": "この宿はまだ部屋を登録していません。"
+    "noRoomsListed": "この宿はまだ部屋を登録していません。",
+    "pricesArePerRoom": "料金は1部屋あたり",
+    "pricesArePerBed": "料金は1ベッドあたり"
   },
   "states": {
     "nothingHereYet": "まだ何もありません",

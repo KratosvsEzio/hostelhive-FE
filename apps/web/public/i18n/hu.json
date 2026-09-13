@@ -102,7 +102,18 @@
     "signInToBook": "Jelentkezzen be a foglaláshoz",
     "pickYourRoomOnce": "Válassza ki a szobát bejelentkezés után",
     "createAFreeAccountToBook": "Hozzon létre ingyenes fiókot, hogy szobákat válasszon és lefoglalja őket, amíg dönt. Mindössze 30 másodperc.",
-    "roomsAmpPricing": "Szobák és árak"
+    "roomsAmpPricing": "Szobák és árak",
+    "andNMore": "+{{count}} további",
+    "favorite": "Kedvenc",
+    "showPhoneNumber": "Telefonszám megjelenítése",
+    "showAllNReviews": "Mind a(z) {{count}} értékelés megtekintése",
+    "hostSince": "{{year}} óta házigazda",
+    "writeAReview": "Értékelés írása",
+    "roomSummary": "{{beds}} ágy · {{types}} szobatípus · {{sharing}} megosztási lehetőség",
+    "nSharingAvailable": "{{labels}} fős megosztás elérhető",
+    "bookNow": "Foglalás most",
+    "nPhotos": "{{count}} fotó",
+    "otherPhotos": "Egyéb"
   },
   "common": {
     "loading": "Betöltés…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Időválasztó bezárása",
     "chooseTime": "Időpont kiválasztása",
     "dismiss": "Elvetés",
-    "closePropertyMenu": "Ingatlan menü bezárása"
+    "closePropertyMenu": "Ingatlan menü bezárása",
+    "goToPhotoN": "Ugrás a(z) {{n}}. fotóra",
+    "removeFrom": "{{title}} eltávolítása",
+    "removeOneFrom": "Egy eltávolítása: {{title}}",
+    "onePhotoAtATime": "Egy fotó egyszerre",
+    "allPhotosByGroup": "Minden fotó, csoportosítva"
   },
   "hostTenants": {
     "tenantPhoto": "Bérlő fotója",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Foglalás elküldve",
     "weLlEmailYouWhenConfirmed": "E-mailt küldünk, amint a szállás visszaigazolja.",
     "couldnTBook": "A foglalás nem sikerült",
-    "noRoomsListed": "Ez a szállás még nem adott meg szobákat."
+    "noRoomsListed": "Ez a szállás még nem adott meg szobákat.",
+    "pricesArePerRoom": "Az árak szobánként",
+    "pricesArePerBed": "Az árak ágyanként"
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",

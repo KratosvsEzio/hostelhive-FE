@@ -95,6 +95,13 @@ export interface HostelAttachment {
   status?: string | null;
   /** Whether this attachment is the primary/banner image. */
   is_primary?: boolean | null;
+  /**
+   * What the host filed this photo under — "Kitchen", "Rooftop" — for the grouped gallery.
+   *
+   * Optional because it is new: every photo uploaded before the field existed comes back
+   * without it, and those group under "Others". Blank counts as absent — see `photoLabel`.
+   */
+  label?: string | null;
   url?: string | null;
   variants?: Record<string, string> | null;
   attached_id?: number | null;

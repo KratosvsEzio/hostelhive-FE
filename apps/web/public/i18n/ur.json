@@ -102,7 +102,18 @@
     "signInToBook": "بکنگ کے لیے سائن اِن کریں",
     "pickYourRoomOnce": "سائن اِن کرتے ہی اپنا کمرہ منتخب کریں",
     "createAFreeAccountToBook": "مفت اکاؤنٹ بنائیں، کمرے منتخب کریں اور فیصلہ کرنے تک محفوظ رکھیں۔ صرف 30 سیکنڈ لگتے ہیں۔",
-    "roomsAmpPricing": "کمرے اور کرایہ"
+    "roomsAmpPricing": "کمرے اور کرایہ",
+    "andNMore": "+{{count}} مزید",
+    "favorite": "پسندیدہ",
+    "showPhoneNumber": "فون نمبر دکھائیں",
+    "showAllNReviews": "تمام {{count}} جائزے دکھائیں",
+    "hostSince": "{{year}} سے میزبان",
+    "writeAReview": "جائزہ لکھیں",
+    "roomSummary": "{{beds}} بستر · {{types}} کمروں کی اقسام · {{sharing}} شیئرنگ آپشنز",
+    "nSharingAvailable": "{{labels}} شیئرنگ دستیاب",
+    "bookNow": "ابھی بک کریں",
+    "nPhotos": "{{count}} تصاویر",
+    "otherPhotos": "دیگر"
   },
   "common": {
     "loading": "لوڈ ہو رہا ہے…",
@@ -626,7 +637,12 @@
     "closeTimePicker": "وقت کا انتخاب بند کریں",
     "chooseTime": "وقت منتخب کریں",
     "dismiss": "بند کریں",
-    "closePropertyMenu": "پراپرٹی مینو بند کریں"
+    "closePropertyMenu": "پراپرٹی مینو بند کریں",
+    "goToPhotoN": "تصویر {{n}} پر جائیں",
+    "removeFrom": "{{title}} ہٹائیں",
+    "removeOneFrom": "{{title}} سے ایک ہٹائیں",
+    "onePhotoAtATime": "ایک وقت میں ایک تصویر",
+    "allPhotosByGroup": "تمام تصاویر، گروپ کے مطابق"
   },
   "hostTenants": {
     "tenantPhoto": "کرایہ دار کی تصویر",
@@ -1508,7 +1524,9 @@
     "bookingSent": "بکنگ بھیج دی گئی",
     "weLlEmailYouWhenConfirmed": "جیسے ہی ہاسٹل تصدیق کرے گا، ہم آپ کو ای میل کر دیں گے۔",
     "couldnTBook": "بکنگ مکمل نہیں ہو سکی",
-    "noRoomsListed": "اس ہاسٹل نے ابھی تک کوئی کمرہ شامل نہیں کیا۔"
+    "noRoomsListed": "اس ہاسٹل نے ابھی تک کوئی کمرہ شامل نہیں کیا۔",
+    "pricesArePerRoom": "قیمتیں فی کمرہ",
+    "pricesArePerBed": "قیمتیں فی بستر"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",

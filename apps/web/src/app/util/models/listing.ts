@@ -28,6 +28,17 @@ export interface HostSummary {
   verified: boolean;
 }
 
+/**
+ * A gallery photo and the label the host filed it under.
+ *
+ * `label` is null when the photo has none — the key absent, an explicit null, or blank,
+ * all of which mean the same thing and group together. See `photoLabel`.
+ */
+export interface ListingPhoto {
+  url: string;
+  label: string | null;
+}
+
 export interface Listing {
   id: string;
   slug: string;
@@ -53,7 +64,14 @@ export interface Listing {
   discountedPriceFrom?: number;
   priceByCapacity?: Record<string, number>; // capacity key ('1'|'2'|'3'|'4'|'5+') → price
   currency?: string; // ISO-4217 code the prices are quoted in (e.g. 'PKR', 'USD')
+  /**
+   * Photo urls in wire order — the hero, the JSON-LD and anything that just needs a src.
+   *
+   * Kept beside {@link ListingDetail.photos} rather than derived from it at each call site,
+   * because most consumers want a url and nothing else.
+   */
   images: string[];
+
   lat: number;
   lng: number;
   rooms?: Room[];

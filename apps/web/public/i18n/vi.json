@@ -102,7 +102,18 @@
     "signInToBook": "Đăng nhập để đặt phòng",
     "pickYourRoomOnce": "Chọn phòng ngay khi đăng nhập",
     "createAFreeAccountToBook": "Tạo tài khoản miễn phí để chọn phòng và giữ chỗ trong khi bạn quyết định. Chỉ mất 30 giây.",
-    "roomsAmpPricing": "Phòng & giá"
+    "roomsAmpPricing": "Phòng & giá",
+    "andNMore": "+{{count}} nữa",
+    "favorite": "Yêu thích",
+    "showPhoneNumber": "Hiện số điện thoại",
+    "showAllNReviews": "Xem tất cả {{count}} đánh giá",
+    "hostSince": "Chủ nhà từ {{year}}",
+    "writeAReview": "Viết đánh giá",
+    "roomSummary": "{{beds}} giường · {{types}} loại phòng · {{sharing}} tùy chọn ở ghép",
+    "nSharingAvailable": "Có phòng ghép {{labels}} người",
+    "bookNow": "Đặt ngay",
+    "nPhotos": "{{count}} ảnh",
+    "otherPhotos": "Khác"
   },
   "common": {
     "loading": "Đang tải…",
@@ -626,7 +637,12 @@
     "closeTimePicker": "Đóng bộ chọn giờ",
     "chooseTime": "Chọn giờ",
     "dismiss": "Bỏ qua",
-    "closePropertyMenu": "Đóng menu cơ sở"
+    "closePropertyMenu": "Đóng menu cơ sở",
+    "goToPhotoN": "Đến ảnh {{n}}",
+    "removeFrom": "Xoá {{title}}",
+    "removeOneFrom": "Bớt một từ {{title}}",
+    "onePhotoAtATime": "Từng ảnh một",
+    "allPhotosByGroup": "Tất cả ảnh, theo nhóm"
   },
   "hostTenants": {
     "tenantPhoto": "Ảnh người thuê",
@@ -1508,7 +1524,9 @@
     "bookingSent": "Đã gửi đặt phòng",
     "weLlEmailYouWhenConfirmed": "Chúng tôi sẽ gửi email ngay khi nhà nghỉ xác nhận.",
     "couldnTBook": "Không thể hoàn tất đặt phòng",
-    "noRoomsListed": "Nhà nghỉ này chưa thêm phòng nào."
+    "noRoomsListed": "Nhà nghỉ này chưa thêm phòng nào.",
+    "pricesArePerRoom": "Giá theo phòng",
+    "pricesArePerBed": "Giá theo giường"
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",

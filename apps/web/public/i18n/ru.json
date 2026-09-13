@@ -102,7 +102,18 @@
     "signInToBook": "Войдите, чтобы забронировать",
     "pickYourRoomOnce": "Выберите номер после входа",
     "createAFreeAccountToBook": "Создайте бесплатный аккаунт, чтобы выбирать номера и удерживать их, пока решаете. Это займёт 30 секунд.",
-    "roomsAmpPricing": "Комнаты и цены"
+    "roomsAmpPricing": "Комнаты и цены",
+    "andNMore": "Ещё {{count}}",
+    "favorite": "В избранное",
+    "showPhoneNumber": "Показать номер телефона",
+    "showAllNReviews": "Показать все отзывы ({{count}})",
+    "hostSince": "Хозяин с {{year}}",
+    "writeAReview": "Написать отзыв",
+    "roomSummary": "{{beds}} мест · {{types}} типов комнат · {{sharing}} вариантов размещения",
+    "nSharingAvailable": "Доступно размещение на {{labels}}",
+    "bookNow": "Забронировать",
+    "nPhotos": "фото: {{count}}",
+    "otherPhotos": "Прочее"
   },
   "common": {
     "loading": "Загрузка…",
@@ -626,7 +637,12 @@
     "closeTimePicker": "Закрыть выбор времени",
     "chooseTime": "Выбрать время",
     "dismiss": "Закрыть",
-    "closePropertyMenu": "Закрыть меню объектов"
+    "closePropertyMenu": "Закрыть меню объектов",
+    "goToPhotoN": "Перейти к фото {{n}}",
+    "removeFrom": "Удалить {{title}}",
+    "removeOneFrom": "Убрать один из {{title}}",
+    "onePhotoAtATime": "По одному фото",
+    "allPhotosByGroup": "Все фото по группам"
   },
   "hostTenants": {
     "tenantPhoto": "Фото жильца",
@@ -1508,7 +1524,9 @@
     "bookingSent": "Бронирование отправлено",
     "weLlEmailYouWhenConfirmed": "Мы напишем вам, как только хостел подтвердит бронирование.",
     "couldnTBook": "Не удалось завершить бронирование",
-    "noRoomsListed": "Этот хостел ещё не добавил комнаты."
+    "noRoomsListed": "Этот хостел ещё не добавил комнаты.",
+    "pricesArePerRoom": "Цены за комнату",
+    "pricesArePerBed": "Цены за койко-место"
   },
   "states": {
     "nothingHereYet": "Здесь пока пусто",

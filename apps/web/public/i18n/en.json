@@ -77,7 +77,12 @@
     "closeTimePicker": "Close time picker",
     "chooseTime": "Choose time",
     "dismiss": "Dismiss",
-    "closePropertyMenu": "Close property menu"
+    "closePropertyMenu": "Close property menu",
+    "goToPhotoN": "Go to photo {{n}}",
+    "removeFrom": "Remove {{title}}",
+    "removeOneFrom": "Remove one from {{title}}",
+    "onePhotoAtATime": "One photo at a time",
+    "allPhotosByGroup": "All photos, grouped"
   },
   "account": {
     "accountMenu": "Account menu",
@@ -1051,7 +1056,18 @@
     "signInToBook": "Sign in to book",
     "pickYourRoomOnce": "Pick your room once you're signed in",
     "createAFreeAccountToBook": "Create a free account to choose rooms and hold them while you decide. It only takes 30 seconds.",
-    "roomsAmpPricing": "Rooms & pricing"
+    "roomsAmpPricing": "Rooms & pricing",
+    "andNMore": "+{{count}} more",
+    "favorite": "Favorite",
+    "showPhoneNumber": "Show phone number",
+    "showAllNReviews": "Show all {{count}} reviews",
+    "hostSince": "Host since {{year}}",
+    "writeAReview": "Write a review",
+    "roomSummary": "{{beds}} beds · {{types}} room types · {{sharing}} sharing options",
+    "nSharingAvailable": "{{labels}}-sharing available",
+    "bookNow": "Book now",
+    "nPhotos": "{{count}} photos",
+    "otherPhotos": "Others"
   },
   "maps": {
     "searchAddressPlaceholder": "Search an address or landmark…",
@@ -1222,7 +1238,9 @@
     "bookingSent": "Booking sent",
     "weLlEmailYouWhenConfirmed": "We'll email you as soon as the hostel confirms it.",
     "couldnTBook": "Couldn't complete the booking",
-    "noRoomsListed": "This hostel has not listed any rooms yet."
+    "noRoomsListed": "This hostel has not listed any rooms yet.",
+    "pricesArePerRoom": "Prices are per room",
+    "pricesArePerBed": "Prices are per bed"
   },
   "publicCareers": {
     "joinUsInBuildingPakistan": "Join us in building Pakistan's #1 hostel platform",

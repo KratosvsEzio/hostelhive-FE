@@ -102,7 +102,18 @@
     "signInToBook": "Accedi per prenotare",
     "pickYourRoomOnce": "Scegli la tua camera dopo l'accesso",
     "createAFreeAccountToBook": "Crea un account gratuito per scegliere le camere e tenerle mentre decidi. Bastano 30 secondi.",
-    "roomsAmpPricing": "Camere e prezzi"
+    "roomsAmpPricing": "Camere e prezzi",
+    "andNMore": "+{{count}} altri",
+    "favorite": "Preferito",
+    "showPhoneNumber": "Mostra numero di telefono",
+    "showAllNReviews": "Mostra tutte le {{count}} recensioni",
+    "hostSince": "Host dal {{year}}",
+    "writeAReview": "Scrivi una recensione",
+    "roomSummary": "{{beds}} letti · {{types}} tipi di camera · {{sharing}} opzioni di condivisione",
+    "nSharingAvailable": "Condivisione da {{labels}} disponibile",
+    "bookNow": "Prenota ora",
+    "nPhotos": "{{count}} foto",
+    "otherPhotos": "Altre"
   },
   "common": {
     "loading": "Caricamento…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Chiudi selettore orario",
     "chooseTime": "Scegli orario",
     "dismiss": "Chiudi",
-    "closePropertyMenu": "Chiudi il menu delle strutture"
+    "closePropertyMenu": "Chiudi il menu delle strutture",
+    "goToPhotoN": "Vai alla foto {{n}}",
+    "removeFrom": "Rimuovi {{title}}",
+    "removeOneFrom": "Rimuovi uno da {{title}}",
+    "onePhotoAtATime": "Una foto alla volta",
+    "allPhotosByGroup": "Tutte le foto, raggruppate"
   },
   "hostTenants": {
     "tenantPhoto": "Foto dell’inquilino",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Prenotazione inviata",
     "weLlEmailYouWhenConfirmed": "Ti scriveremo appena l'ostello avrà confermato.",
     "couldnTBook": "Impossibile completare la prenotazione",
-    "noRoomsListed": "Questo ostello non ha ancora inserito camere."
+    "noRoomsListed": "Questo ostello non ha ancora inserito camere.",
+    "pricesArePerRoom": "Prezzi per camera",
+    "pricesArePerBed": "Prezzi per letto"
   },
   "states": {
     "nothingHereYet": "Ancora nulla qui",

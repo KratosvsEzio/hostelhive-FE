@@ -1,4 +1,4 @@
-import { Listing } from '@hostelhive/data-access';
+import { Listing, ListingPhoto } from '@hostelhive/data-access';
 import { RoomOffer } from '@features/public/listing/booking/room-offer';
 
 /**
@@ -12,6 +12,13 @@ export interface ListingDetail extends Listing {
   address: string;
   /** Total photo count (gallery shows a subset, button reveals the rest). */
   photoCount: number;
+  /**
+   * The gallery photos, each with the label the grouped layout sections on.
+   *
+   * Detail-only: a search result shows one thumbnail and has no gallery to group.
+   * Same order as `images`, which is derived from it.
+   */
+  photos: ListingPhoto[];
   /** Total amenity count (grid shows a subset). */
   amenityCount: number;
   /** Walking-distance points of interest. */

@@ -102,7 +102,18 @@
     "signInToBook": "Log ind for at booke",
     "pickYourRoomOnce": "Vælg dit værelse, når du er logget ind",
     "createAFreeAccountToBook": "Opret en gratis konto for at vælge værelser og holde dem, mens du beslutter dig. Det tager 30 sekunder.",
-    "roomsAmpPricing": "Værelser og priser"
+    "roomsAmpPricing": "Værelser og priser",
+    "andNMore": "+{{count}} flere",
+    "favorite": "Favorit",
+    "showPhoneNumber": "Vis telefonnummer",
+    "showAllNReviews": "Vis alle {{count}} anmeldelser",
+    "hostSince": "Vært siden {{year}}",
+    "writeAReview": "Skriv en anmeldelse",
+    "roomSummary": "{{beds}} senge · {{types}} værelsestyper · {{sharing}} delemuligheder",
+    "nSharingAvailable": "{{labels}}-deling tilgængelig",
+    "bookNow": "Book nu",
+    "nPhotos": "{{count}} billeder",
+    "otherPhotos": "Andre"
   },
   "common": {
     "loading": "Indlæser…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Luk tidsvælger",
     "chooseTime": "Vælg tidspunkt",
     "dismiss": "Afvis",
-    "closePropertyMenu": "Luk ejendomsmenuen"
+    "closePropertyMenu": "Luk ejendomsmenuen",
+    "goToPhotoN": "Gå til foto {{n}}",
+    "removeFrom": "Fjern {{title}}",
+    "removeOneFrom": "Fjern én fra {{title}}",
+    "onePhotoAtATime": "Ét billede ad gangen",
+    "allPhotosByGroup": "Alle billeder, grupperet"
   },
   "hostTenants": {
     "tenantPhoto": "Lejerens billede",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Booking sendt",
     "weLlEmailYouWhenConfirmed": "Vi sender en mail, så snart vandrerhjemmet bekræfter.",
     "couldnTBook": "Bookingen kunne ikke gennemføres",
-    "noRoomsListed": "Dette hostel har endnu ikke oprettet nogen værelser."
+    "noRoomsListed": "Dette hostel har endnu ikke oprettet nogen værelser.",
+    "pricesArePerRoom": "Priser er pr. værelse",
+    "pricesArePerBed": "Priser er pr. seng"
   },
   "states": {
     "nothingHereYet": "Der er intet her endnu",

@@ -102,7 +102,18 @@
     "signInToBook": "Inicia sesión para reservar",
     "pickYourRoomOnce": "Elige tu habitación al iniciar sesión",
     "createAFreeAccountToBook": "Crea una cuenta gratuita para elegir habitaciones y reservarlas mientras decides. Solo tarda 30 segundos.",
-    "roomsAmpPricing": "Habitaciones y precios"
+    "roomsAmpPricing": "Habitaciones y precios",
+    "andNMore": "+{{count}} más",
+    "favorite": "Favorito",
+    "showPhoneNumber": "Mostrar número de teléfono",
+    "showAllNReviews": "Ver las {{count}} reseñas",
+    "hostSince": "Anfitrión desde {{year}}",
+    "writeAReview": "Escribir una reseña",
+    "roomSummary": "{{beds}} camas · {{types}} tipos de habitación · {{sharing}} opciones de ocupación",
+    "nSharingAvailable": "Disponible en {{labels}} personas",
+    "bookNow": "Reservar ahora",
+    "nPhotos": "{{count}} fotos",
+    "otherPhotos": "Otras"
   },
   "common": {
     "loading": "Cargando…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Cerrar selector de hora",
     "chooseTime": "Elegir hora",
     "dismiss": "Descartar",
-    "closePropertyMenu": "Cerrar el menú de propiedades"
+    "closePropertyMenu": "Cerrar el menú de propiedades",
+    "goToPhotoN": "Ir a la foto {{n}}",
+    "removeFrom": "Quitar {{title}}",
+    "removeOneFrom": "Quitar uno de {{title}}",
+    "onePhotoAtATime": "Una foto a la vez",
+    "allPhotosByGroup": "Todas las fotos, agrupadas"
   },
   "hostTenants": {
     "tenantPhoto": "Foto del inquilino",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Reserva enviada",
     "weLlEmailYouWhenConfirmed": "Te enviaremos un correo en cuanto el hostal lo confirme.",
     "couldnTBook": "No se pudo completar la reserva",
-    "noRoomsListed": "Este hostal aún no ha añadido ninguna habitación."
+    "noRoomsListed": "Este hostal aún no ha añadido ninguna habitación.",
+    "pricesArePerRoom": "Precios por habitación",
+    "pricesArePerBed": "Precios por cama"
   },
   "states": {
     "nothingHereYet": "Aún no hay nada aquí",

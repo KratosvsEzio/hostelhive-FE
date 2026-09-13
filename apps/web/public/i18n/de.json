@@ -102,7 +102,18 @@
     "signInToBook": "Zum Buchen anmelden",
     "pickYourRoomOnce": "Wählen Sie Ihr Zimmer nach der Anmeldung",
     "createAFreeAccountToBook": "Erstellen Sie ein kostenloses Konto, um Zimmer auszuwählen und sie zu reservieren, während Sie sich entscheiden. Dauert nur 30 Sekunden.",
-    "roomsAmpPricing": "Zimmer & Preise"
+    "roomsAmpPricing": "Zimmer & Preise",
+    "andNMore": "+{{count}} weitere",
+    "favorite": "Merken",
+    "showPhoneNumber": "Telefonnummer anzeigen",
+    "showAllNReviews": "Alle {{count}} Bewertungen anzeigen",
+    "hostSince": "Gastgeber seit {{year}}",
+    "writeAReview": "Bewertung schreiben",
+    "roomSummary": "{{beds}} Betten · {{types}} Zimmertypen · {{sharing}} Belegungsoptionen",
+    "nSharingAvailable": "{{labels}}er-Belegung verfügbar",
+    "bookNow": "Jetzt buchen",
+    "nPhotos": "{{count}} Fotos",
+    "otherPhotos": "Sonstige"
   },
   "common": {
     "loading": "Wird geladen…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Zeitauswahl schließen",
     "chooseTime": "Uhrzeit auswählen",
     "dismiss": "Schließen",
-    "closePropertyMenu": "Objektmenü schließen"
+    "closePropertyMenu": "Objektmenü schließen",
+    "goToPhotoN": "Zu Foto {{n}}",
+    "removeFrom": "{{title}} entfernen",
+    "removeOneFrom": "Eins von {{title}} entfernen",
+    "onePhotoAtATime": "Ein Foto nach dem anderen",
+    "allPhotosByGroup": "Alle Fotos, gruppiert"
   },
   "hostTenants": {
     "tenantPhoto": "Foto des Mieters",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Buchung gesendet",
     "weLlEmailYouWhenConfirmed": "Wir schreiben Ihnen, sobald das Hostel bestätigt hat.",
     "couldnTBook": "Buchung konnte nicht abgeschlossen werden",
-    "noRoomsListed": "Dieses Hostel hat noch keine Zimmer eingetragen."
+    "noRoomsListed": "Dieses Hostel hat noch keine Zimmer eingetragen.",
+    "pricesArePerRoom": "Preise pro Zimmer",
+    "pricesArePerBed": "Preise pro Bett"
   },
   "states": {
     "nothingHereYet": "Hier ist noch nichts",

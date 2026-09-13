@@ -102,7 +102,18 @@
     "signInToBook": "बुक करने के लिए साइन इन करें",
     "pickYourRoomOnce": "साइन इन करते ही अपना कमरा चुनें",
     "createAFreeAccountToBook": "मुफ़्त खाता बनाएँ, कमरे चुनें और फ़ैसला करने तक उन्हें रोके रखें। सिर्फ़ 30 सेकंड लगते हैं।",
-    "roomsAmpPricing": "कमरे और कीमतें"
+    "roomsAmpPricing": "कमरे और कीमतें",
+    "andNMore": "+{{count}} और",
+    "favorite": "पसंदीदा",
+    "showPhoneNumber": "फ़ोन नंबर दिखाएँ",
+    "showAllNReviews": "सभी {{count}} समीक्षाएँ देखें",
+    "hostSince": "{{year}} से मेज़बान",
+    "writeAReview": "समीक्षा लिखें",
+    "roomSummary": "{{beds}} बेड · {{types}} कमरे के प्रकार · {{sharing}} शेयरिंग विकल्प",
+    "nSharingAvailable": "{{labels}}-शेयरिंग उपलब्ध",
+    "bookNow": "अभी बुक करें",
+    "nPhotos": "{{count}} तस्वीरें",
+    "otherPhotos": "अन्य"
   },
   "common": {
     "loading": "लोड हो रहा है…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "समय चयनकर्ता बंद करें",
     "chooseTime": "समय चुनें",
     "dismiss": "खारिज करें",
-    "closePropertyMenu": "प्रॉपर्टी मेन्यू बंद करें"
+    "closePropertyMenu": "प्रॉपर्टी मेन्यू बंद करें",
+    "goToPhotoN": "फ़ोटो {{n}} पर जाएँ",
+    "removeFrom": "{{title}} हटाएँ",
+    "removeOneFrom": "{{title}} से एक हटाएँ",
+    "onePhotoAtATime": "एक बार में एक तस्वीर",
+    "allPhotosByGroup": "सभी तस्वीरें, समूह में"
   },
   "hostTenants": {
     "tenantPhoto": "किरायेदार की तस्वीर",
@@ -1503,7 +1519,9 @@
     "bookingSent": "बुकिंग भेज दी गई",
     "weLlEmailYouWhenConfirmed": "हॉस्टल की पुष्टि मिलते ही हम आपको ईमेल करेंगे।",
     "couldnTBook": "बुकिंग पूरी नहीं हो सकी",
-    "noRoomsListed": "इस हॉस्टल ने अभी तक कोई कमरा नहीं जोड़ा है।"
+    "noRoomsListed": "इस हॉस्टल ने अभी तक कोई कमरा नहीं जोड़ा है।",
+    "pricesArePerRoom": "कीमतें प्रति कमरा",
+    "pricesArePerBed": "कीमतें प्रति बेड"
   },
   "states": {
     "nothingHereYet": "अभी यहाँ कुछ नहीं",

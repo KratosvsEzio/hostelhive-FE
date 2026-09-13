@@ -6,6 +6,7 @@ import { ListingDetail } from './listing-detail.fixture';
 import type { AccommodationType, Room } from '@hostelhive/data-access';
 import { RoomOffer } from '@features/public/listing/booking/room-offer';
 import { isPrivateOccupancy } from '@util/occupancy-type';
+import { toListingPhotos } from '@features/public/listing/listing-detail/photo-groups';
 
 /**
  * How many rooms of a private type a seeker may take while nothing counts them.
@@ -93,9 +94,9 @@ function toListingDetail(d: HostelDetail): ListingDetail {
   const lat = typeof d.latitude === 'string' ? parseFloat(d.latitude) : (d.latitude ?? 0);
   const lng = typeof d.longitude === 'string' ? parseFloat(d.longitude) : (d.longitude ?? 0);
 
-  const images = (d.attachments ?? [])
-    .filter((a) => !!a.url)
-    .map((a) => a.url as string);
+  // Photos first and urls from them, so `images[n]` and `photos[n]` can never disagree.
+  const photos = toListingPhotos(d.attachments);
+  const images = photos.map((p) => p.url);
 
   const rooms: Room[] = (d.room_types ?? []).map((rt) => ({
     id: String(rt.id),
@@ -189,6 +190,7 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     rooms,
     roomOffers,
     address,
+    photos,
     photoCount: (d.attachments ?? []).length,
     amenityCount: (d.offers ?? d.hostel_offers ?? []).length,
     nearby,

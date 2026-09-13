@@ -36,6 +36,16 @@
       </div>
       <hh-skeleton class="mt-8 hidden h-72 w-full rounded-3xl lg:block" />
     </div>
+  } @else if (s.error) {
+    <!-- REQUEST FAILED — deliberately ahead of the not-found branch, which used to catch
+         this case and tell the seeker the hostel had been removed. A timeout is not a
+         deletion: this one says the load failed and offers another go. -->
+    <div class="mx-auto mt-16 max-w-md">
+      <hh-error-state
+        [message]="'common.couldnTLoadHostel' | transloco"
+        (retry)="reload()"
+      />
+    </div>
   } @else if (!s.data) {
     <!-- NOT FOUND -->
     <div class="mx-auto mt-16 max-w-md">
@@ -104,39 +114,77 @@
           </span>
         </div>
       </div>
+      <!-- `min-h-11` on both: `size="sm"` is `py-2 text-xs`, which lands at 32px — under the
+           44px touch floor, on the two actions a seeker reaches for one-handed. -->
       <div class="flex items-center gap-2">
-        <button hh-button variant="outlined" size="sm" (click)="openShare()">
+        <button hh-button variant="outlined" size="sm" class="min-h-11" (click)="openShare()">
           <i class="ti ti-share-2" aria-hidden="true"></i>{{ 'common.share' | transloco }}
         </button>
-        <button hh-button [color]="saved() ? 'default' : 'primary'" size="sm" (click)="toggleSaved()">
+        <button
+          hh-button
+          [color]="saved() ? 'default' : 'primary'"
+          size="sm"
+          class="min-h-11"
+          (click)="toggleSaved()"
+        >
           <i class="ti" [class.ti-heart-off]="saved()" [class.ti-heart]="!saved()" aria-hidden="true"></i>
-          {{ saved() ? 'Unfavorite' : 'Favorite' }}
+          {{ saved() ? ('userFavorites.unfavorite' | transloco) : ('listing.favorite' | transloco) }}
         </button>
       </div>
     </div>
 
     <!-- Gallery: hero + thumbs -->
     <div
-      class="relative mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-3xl sm:grid-cols-4 sm:grid-rows-2 sm:h-[420px]"
+      class="relative mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-3xl sm:h-[420px]"
+      [class]="galleryGridClass()"
     >
-      <img
-        [src]="l.images[0]"
-        [alt]="l.name"
-        class="card-img aspect-video h-auto w-full cursor-pointer object-cover sm:aspect-auto sm:col-span-2 sm:h-full sm:row-span-2"
-        (click)="openLightbox(0)"
-      />
-      @for (img of thumbs(); track img; let i = $index) {
-        <img [src]="img" alt="" class="card-img hidden h-full w-full cursor-pointer object-cover sm:block" (click)="openLightbox(i + 1)" />
-      }
       <button
-        hh-button
-        variant="outlined"
-        size="sm"
-        class="absolute bottom-4 end-4 bg-white shadow-card"
+        type="button"
+        class="aspect-video h-auto w-full overflow-hidden sm:aspect-auto sm:h-full"
+        [class]="galleryHeroClass()"
         (click)="openLightbox(0)"
       >
-        <i class="ti ti-layout-grid" aria-hidden="true"></i>{{ 'publicListing.showAllNPhotos' | transloco: { count: l.photoCount } }}
+        <!-- The hero is the LCP element on this page: eager, high priority, decoded off the
+             main thread. The thumbnails beside it are not, and on a phone they are not even
+             displayed (`hidden sm:block`) — so they load lazily and stop competing with the
+             one image the seeker is waiting for. -->
+        <img
+          [src]="l.images[0]"
+          [alt]="l.name"
+          class="card-img h-full w-full object-cover"
+          fetchpriority="high"
+          decoding="async"
+        />
       </button>
+      @for (img of thumbs(); track img; let i = $index) {
+        <button
+          type="button"
+          class="hidden h-full w-full overflow-hidden sm:block"
+          [attr.aria-label]="'listing.galleryPhoto' | transloco"
+          (click)="openLightbox(i + 1)"
+        >
+          <img
+            [src]="img"
+            alt=""
+            class="card-img h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </button>
+      }
+      <!-- Nothing to show "all" of when there is one photo, and the lightbox it opens is the
+           same picture the seeker is already looking at. -->
+      @if (l.photoCount > 1) {
+        <button
+          hh-button
+          variant="outlined"
+          size="sm"
+          class="absolute bottom-4 end-4 min-h-11 bg-white shadow-card"
+          (click)="openLightbox(0)"
+        >
+          <i class="ti ti-layout-grid" aria-hidden="true"></i>{{ 'publicListing.showAllNPhotos' | transloco: { count: l.photoCount } }}
+        </button>
+      }
     </div>
 
     <!-- Two columns -->
@@ -154,7 +202,11 @@
             <h2 class="font-display text-xl font-semibold text-ink-900">
               {{ 'publicListing.genderHostelHostedBy' | transloco: { gender: genderLabel(l.accommodationType), host: l.host?.name } }}
             </h2>
-            <p class="mt-1 text-sm text-ink-500">{{ roomSummary() }}</p>
+            @if (roomCounts(); as rc) {
+              <p class="mt-1 text-sm text-ink-500">
+                {{ 'listing.roomSummary' | transloco: { beds: rc.beds, types: rc.types, sharing: rc.sharing } }}
+              </p>
+            }
           </div>
           @if (l.host) {
             <hh-avatar class="shrink-0" [initials]="initials(l.host.name)" size="lg" />
@@ -170,19 +222,23 @@
             <h3 class="mb-2 font-display text-lg font-semibold text-ink-900">
               {{ 'listing.aboutThisHostel' | transloco }}
             </h3>
-            <div class="max-h-[168px] overflow-hidden">
+            <div class="max-h-[168px] overflow-hidden" hhOverflows #descClip="hhOverflows">
               <div
-                class="hh-rich text-[15px] leading-relaxed text-ink-600"
+                class="hh-rich text-base leading-relaxed text-ink-600"
                 [innerHTML]="l.description"
               ></div>
             </div>
-            <button
-              type="button"
-              class="mt-3 text-sm font-semibold text-ink-900 underline hover:text-ink-600"
-              (click)="descriptionModalOpen.set(true)"
-            >
-              {{ 'listing.showMore' | transloco }}
-            </button>
+            <!-- Only when the box is genuinely clipping. It used to render whenever a
+                 description existed, so "asd" got a Show more that opened a modal on "asd". -->
+            @if (descClip.overflowing()) {
+              <button
+                type="button"
+                class="mt-3 text-sm font-semibold text-ink-900 underline hover:text-ink-600"
+                (click)="descriptionModalOpen.set(true)"
+              >
+                {{ 'listing.showMore' | transloco }}
+              </button>
+            }
           </section>
         }
 
@@ -208,7 +264,7 @@
             <div class="mb-4 flex items-center gap-2">
               <i class="ti ti-star-filled text-lg text-amber-400" aria-hidden="true"></i>
               <h3 class="font-display text-lg font-semibold text-ink-900">
-                {{ rstats.avg | number: '1.1-1' }} · {{ rstats.total }} {{ rstats.total === 1 ? 'review' : 'reviews' }}
+                {{ rstats.avg | number: '1.1-1' }} · {{ rstats.total }} {{ rstats.total === 1 ? ('common.review' | transloco) : ('listing.reviews' | transloco) }}
               </h3>
             </div>
 
@@ -257,7 +313,7 @@
 
             @if (reviews().length > previewReviewCount) {
               <button hh-button variant="outlined" size="sm" class="mt-8" (click)="openReviews()">
-                Show all {{ reviews().length }} reviews
+                {{ 'listing.showAllNReviews' | transloco: { count: reviews().length } }}
               </button>
             }
           </section>
@@ -271,7 +327,7 @@
           </h3>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             @for (am of amenityList(); track am.key) {
-              <div class="flex items-center gap-3 text-[15px] text-ink-700">
+              <div class="flex items-center gap-3 text-base text-ink-700">
                 <i
                   class="ti text-xl text-ink-500"
                   [class]="am.icon"
@@ -281,10 +337,15 @@
               </div>
             }
           </div>
+          <!-- A "Show all N amenities" button stood here with no click handler: it rendered
+               only when the payload counted more amenities than it sent, which is exactly the
+               case where there is nothing more to show and no endpoint to ask. It was dead
+               precisely when it appeared. The honest version is to say the list is partial
+               rather than to offer a door that opens onto the same room. -->
           @if (l.amenityCount > l.amenities.length) {
-            <button hh-button variant="outlined" size="sm" class="mt-4">
-              Show all {{ l.amenityCount }} amenities
-            </button>
+            <p class="mt-4 text-sm text-ink-500">
+              {{ 'listing.andNMore' | transloco: { count: l.amenityCount - l.amenities.length } }}
+            </p>
           }
         </section>
         }
@@ -296,7 +357,7 @@
               {{ 'common.nearbyLandmarks' | transloco }}
             </h3>
             <div
-              class="grid grid-cols-1 gap-2 text-[15px] text-ink-700 sm:grid-cols-2"
+              class="grid grid-cols-1 gap-2 text-base text-ink-700 sm:grid-cols-2"
             >
               @for (n of l.nearby; track n.label) {
                 <div class="flex items-center gap-2">
@@ -372,51 +433,57 @@
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
             <div class="flex items-baseline gap-1.5">
-              <span class="text-sm text-ink-400">{{ 'common.from' | transloco }}</span>
+              <span class="text-sm text-ink-500">{{ 'common.from' | transloco }}</span>
               <span class="text-2xl font-semibold text-ink-900"
                 ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}</span
               >
               <!-- The unit the hostel actually charges in. Hardcoded "/ month", this read
                    "From Rs 1,200 / month" over a bed let at Rs 1,200 a *night* — the one
                    number on the page a seeker decides on, understated thirtyfold. -->
-              <span class="text-sm text-ink-400">{{
+              <span class="text-sm text-ink-500">{{
                 (bookingEnabled() ? 'listing.perNight' : 'listing.month') | transloco
               }}</span>
             </div>
-            <p class="mt-1 text-sm text-ink-500">{{ sharingSummary() }}</p>
+            @if (sharingLabels()) {
+              <p class="mt-1 text-sm text-ink-500">
+                {{ 'listing.nSharingAvailable' | transloco: { labels: sharingLabels() } }}
+              </p>
+            }
 
             <div class="mt-4 flex flex-col gap-2">
               <button
                 hh-button
                 color="primary"
+                size="lg"
                 class="w-full"
                 [disabled]="phoneLoading() && pendingAction === 'modal'"
                 (click)="openModal()"
               >
                 @if (phoneLoading() && pendingAction === 'modal') {
-                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Loading…
+                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.loading' | transloco }}
                 } @else {
-                  <i class="ti ti-phone" aria-hidden="true"></i>Show phone number
+                  <i class="ti ti-phone" aria-hidden="true"></i>{{ 'listing.showPhoneNumber' | transloco }}
                 }
               </button>
               <button
                 hh-button
                 variant="outlined"
+                size="lg"
                 class="w-full border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5"
                 [disabled]="phoneLoading() && pendingAction === 'whatsapp'"
                 (click)="openWhatsApp()"
               >
                 @if (phoneLoading() && pendingAction === 'whatsapp') {
-                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>Loading…
+                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'common.loading' | transloco }}
                 } @else {
-                  <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp
+                  <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>{{ 'common.whatsapp' | transloco }}
                 }
               </button>
             </div>
             @if (phoneError()) {
               <p class="mt-2 text-center text-xs text-danger">{{ 'listing.couldnTLoadNumberTry' | transloco }}</p>
             }
-            <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400">
+            <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-500">
               <i class="ti ti-lock" aria-hidden="true"></i>{{ 'listing.signInOnceToView' | transloco }}
             </p>
           </div>
@@ -429,7 +496,7 @@
                 <div>
                   <p class="font-medium text-ink-900">{{ host.name }}</p>
                   <p class="text-xs text-ink-500">
-                    Host since {{ host.since }}
+                    {{ 'listing.hostSince' | transloco: { year: host.since } }}
                   </p>
                 </div>
               </div>
@@ -472,18 +539,24 @@
     [class.safe-pb-3]="!mobile.isMobile()"
   >
     <div class="min-w-0">
-      <p class="text-xs text-ink-400">{{ 'common.from' | transloco }}</p>
+      <p class="text-xs text-ink-500">{{ 'common.from' | transloco }}</p>
       <p class="truncate font-semibold text-ink-900">
         <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}
-        <span class="text-xs font-normal text-ink-400">{{ fromPeriodLabel() }}</span>
+        <span class="text-xs font-normal text-ink-500">{{ fromPeriodLabel() }}</span>
       </p>
     </div>
     <div class="flex shrink-0 items-center gap-2">
+      <!-- The label is `hidden` below 640px, which left this icon-only and nameless — a
+           38×30 green square announced as "button". The `aria-label` is unconditional, so
+           the name survives the breakpoint that hides the text; `min-h-11` gets it to the
+           44px floor, which matters more here than anywhere since it is the narrow-screen
+           contact action. -->
       <button
         hh-button
         variant="outlined"
         size="sm"
-        class="border-[#25D366] text-[#25D366]"
+        class="min-h-11 min-w-11 border-[#25D366] text-[#25D366]"
+        [attr.aria-label]="'common.whatsapp' | transloco"
         [disabled]="phoneLoading() && pendingAction === 'whatsapp'"
         (click)="openWhatsApp()"
       >
@@ -498,6 +571,7 @@
         hh-button
         color="primary"
         size="sm"
+        class="min-h-11"
         [disabled]="phoneLoading() && pendingAction === 'modal'"
         (click)="openModal()"
       >
@@ -506,7 +580,7 @@
         } @else {
           <i class="ti ti-phone" aria-hidden="true"></i>
         }
-        Show number
+        {{ 'listing.showNumber' | transloco }}
       </button>
     </div>
   </div>
@@ -516,15 +590,49 @@
 @if (lightboxIndex() !== null) {
   <div
     class="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [aria-label]="'listing.photoGallery' | transloco"
   >
     <!-- Header: counter + close -->
     <div class="flex shrink-0 items-center justify-between px-4 py-3">
-      <span class="text-sm font-medium text-white/60">
-        {{ (lightboxIndex() ?? 0) + 1 }} / {{ lightboxImages().length }}
-      </span>
+      @if (galleryView() === 'one') {
+        <span class="text-sm font-medium text-white/60">
+          {{ (lightboxIndex() ?? 0) + 1 }} / {{ lightboxImages().length }}
+        </span>
+      } @else {
+        <span class="text-sm font-medium text-white/60">
+          {{ 'listing.nPhotos' | transloco: { count: lightboxImages().length } }}
+        </span>
+      }
+
+      <!-- Layout switch. The gallery opens on the carousel, because that is what clicking
+           the hero leads to; the grid is for readers who want the whole place at once. -->
+      @if (photoSections().length) {
+        <div class="flex items-center gap-1 rounded-full bg-white/10 p-1" role="group">
+          <button
+            type="button"
+            class="grid h-7 w-9 place-items-center rounded-full transition"
+            [class]="galleryView() === 'one' ? 'bg-white text-ink-900' : 'text-white/70 hover:text-white'"
+            [attr.aria-pressed]="galleryView() === 'one'"
+            [attr.aria-label]="'a11y.onePhotoAtATime' | transloco"
+            (click)="galleryView.set('one')"
+          >
+            <i class="ti ti-square text-base" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="grid h-7 w-9 place-items-center rounded-full transition"
+            [class]="galleryView() === 'grid' ? 'bg-white text-ink-900' : 'text-white/70 hover:text-white'"
+            [attr.aria-pressed]="galleryView() === 'grid'"
+            [attr.aria-label]="'a11y.allPhotosByGroup' | transloco"
+            (click)="galleryView.set('grid')"
+          >
+            <i class="ti ti-layout-grid text-base" aria-hidden="true"></i>
+          </button>
+        </div>
+      }
       <button
         type="button"
         class="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
@@ -535,59 +643,142 @@
       </button>
     </div>
 
-    <!-- Image area (click backdrop to close) -->
-    <div
-      class="relative flex flex-1 items-center justify-center overflow-hidden"
-      (click)="closeLightbox()"
-    >
-      <!-- Prev -->
-      @if ((lightboxIndex() ?? 0) > 0) {
+    @if (galleryView() === 'one') {
+      <!-- Image area (click backdrop to close) -->
+      <div class="relative flex flex-1 items-center justify-center overflow-hidden">
         <button
           type="button"
-          class="absolute start-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
-          (click)="prevImage(); $event.stopPropagation()"
-          [aria-label]="'common.previousPhoto' | transloco"
-        >
-          <i class="ti ti-chevron-left text-xl" aria-hidden="true"></i>
-        </button>
-      }
-
-      <img
-        [src]="lightboxImages()[lightboxIndex() ?? 0]"
-        [alt]="'listing.galleryPhoto' | transloco"
-        class="max-h-full max-w-full rounded-xl object-contain p-3 shadow-2xl sm:p-6"
-        (click)="$event.stopPropagation()"
-      />
-
-      <!-- Next -->
-      @if ((lightboxIndex() ?? 0) < lightboxImages().length - 1) {
-        <button
-          type="button"
-          class="absolute end-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
-          (click)="nextImage(); $event.stopPropagation()"
-          [aria-label]="'common.nextPhoto' | transloco"
-        >
-          <i class="ti ti-chevron-right text-xl" aria-hidden="true"></i>
-        </button>
-      }
-    </div>
-
-    <!-- Thumbnail strip (scrollable when many images) -->
-    <div class="shrink-0 overflow-x-auto px-4 pb-4 pt-2">
-      <div class="mx-auto flex gap-2">
-        @for (img of lightboxImages(); track img; let i = $index) {
+          class="absolute inset-0 cursor-default"
+          [attr.aria-label]="'a11y.close' | transloco"
+          (click)="closeLightbox()"
+        ></button>
+        <!-- Prev. Ungated at both ends: the gallery wraps, so there is always a photo behind
+             you and always one ahead. They used to disappear on the first and last, which is
+             where a reader is most likely to want the other end. -->
+        @if (lightboxImages().length > 1) {
           <button
             type="button"
-            class="h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition"
-            [class]="i === (lightboxIndex() ?? -1) ? 'border-white' : 'border-transparent opacity-50 hover:opacity-80'"
-            (click)="openLightbox(i)"
-            [attr.aria-label]="'Go to photo ' + (i + 1)"
+            class="absolute start-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            (click)="prevImage(); $event.stopPropagation()"
+            [aria-label]="'common.previousPhoto' | transloco"
           >
-            <img [src]="img" alt="" class="h-full w-full object-cover" />
+            <i class="ti ti-chevron-left text-xl" aria-hidden="true"></i>
+          </button>
+        }
+
+        <img
+          [src]="lightboxImages()[lightboxIndex() ?? 0]"
+          [alt]="'listing.galleryPhoto' | transloco"
+          class="relative max-h-full max-w-full rounded-xl object-contain p-3 shadow-2xl sm:p-6"
+        />
+
+        <!-- Next -->
+        @if (lightboxImages().length > 1) {
+          <button
+            type="button"
+            class="absolute end-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            (click)="nextImage(); $event.stopPropagation()"
+            [aria-label]="'common.nextPhoto' | transloco"
+          >
+            <i class="ti ti-chevron-right text-xl" aria-hidden="true"></i>
           </button>
         }
       </div>
-    </div>
+
+      <!-- Thumbnail strip: a window on the gallery, not the whole of it.
+
+           Three sharp — the photo on screen and the two after it — with the neighbour past
+           each edge blurred behind the arrow that goes there. Ten thumbnails in a scroller
+           made the current one merely the brightest of them, and on a narrow screen the ones
+           that mattered were off the edge. See `filmstrip` for the wrapping. -->
+      <div class="shrink-0 px-4 pb-4 pt-2">
+        <div class="mx-auto flex w-max items-center gap-2">
+          @if (strip().lead; as lead) {
+            <div class="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+              <img
+                [src]="imageAt(lead.index)"
+                alt=""
+                class="h-full w-full scale-110 object-cover blur-sm brightness-50"
+              />
+              <button
+                type="button"
+                class="absolute inset-0 grid place-items-center text-white transition hover:bg-black/20"
+                (click)="prevImage()"
+                [attr.aria-label]="'common.previousPhoto' | transloco"
+              >
+                <i class="ti ti-chevron-left text-xl" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+
+          @for (s of strip().clear; track s.index) {
+            <button
+              type="button"
+              class="h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition"
+              [class]="
+                s.index === (lightboxIndex() ?? -1)
+                  ? 'border-white'
+                  : 'border-transparent opacity-50 hover:opacity-80'
+              "
+              (click)="openLightbox(s.index)"
+              [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: s.number }"
+            >
+              <img [src]="imageAt(s.index)" alt="" class="h-full w-full object-cover" />
+            </button>
+          }
+
+          @if (strip().trail; as trail) {
+            <div class="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+              <img
+                [src]="imageAt(trail.index)"
+                alt=""
+                class="h-full w-full scale-110 object-cover blur-sm brightness-50"
+              />
+              <button
+                type="button"
+                class="absolute inset-0 grid place-items-center text-white transition hover:bg-black/20"
+                (click)="nextImage()"
+                [attr.aria-label]="'common.nextPhoto' | transloco"
+              >
+                <i class="ti ti-chevron-right text-xl" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- Grouped layout: every photo at once, under the label the host filed it under.
+           Photos with no label fall into one section at the end — which is all of them
+           until hosts start labelling, so this reads as one long grid for now. -->
+      <div class="flex-1 overflow-y-auto px-4 pb-8 pt-2 sm:px-8">
+        <div class="mx-auto max-w-4xl space-y-8">
+          @for (section of photoSections(); track section.label) {
+            <section>
+              <div class="mb-3 flex items-baseline justify-between gap-3">
+                <h3 class="font-display text-lg font-semibold text-white">
+                  {{ section.label ?? ('listing.otherPhotos' | transloco) }}
+                </h3>
+                <span class="shrink-0 text-xs text-white/50">
+                  {{ 'listing.nPhotos' | transloco: { count: section.photos.length } }}
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                @for (photo of section.photos; track photo.url; let i = $index) {
+                  <button
+                    type="button"
+                    class="aspect-[4/3] overflow-hidden rounded-xl transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    (click)="openPhoto(section.offset + i)"
+                    [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: section.offset + i + 1 }"
+                  >
+                    <img [src]="photo.url" alt="" class="h-full w-full object-cover" />
+                  </button>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </div>
+    }
   </div>
 }
 
@@ -595,14 +786,17 @@
 @if (shareOpen() && state().data; as l) {
   <div
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [aria-label]="'listing.shareThisListing' | transloco"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-ink-900/40 backdrop-blur-sm"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeShare()"
-    ></div>
+    ></button>
 
     <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl">
       <!-- Header -->
@@ -725,14 +919,17 @@
 @if (descriptionModalOpen() && state().data; as l) {
   <div
     class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [aria-label]="'listing.aboutThisHostel' | transloco"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-ink-900/40 backdrop-blur-sm"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="descriptionModalOpen.set(false)"
-    ></div>
+    ></button>
     <div class="relative mx-auto mt-8 w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl sm:mt-16">
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
         <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'listing.aboutThisHostel' | transloco }}</h2>
@@ -747,7 +944,7 @@
       </div>
       <div class="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6">
         <div
-          class="hh-rich text-[15px] leading-relaxed text-ink-700"
+          class="hh-rich text-base leading-relaxed text-ink-700"
           [innerHTML]="l.description"
         ></div>
       </div>
@@ -759,14 +956,17 @@
 @if (modalOpen() && state().data; as l) {
   <div
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [aria-label]="'listing.contactHostel' | transloco"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-ink-900/40 backdrop-blur-sm"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeModal()"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
@@ -885,19 +1085,22 @@
 @if (reviewsOpen() && state().data; as l) {
   <div
     class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [aria-label]="'listing.hostelReviews' | transloco"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-ink-900/40 backdrop-blur-sm"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeReviews()"
-    ></div>
+    ></button>
     <div class="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl sm:mt-16">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
         <div>
-          <h2 class="font-display text-lg font-semibold text-ink-900">{{ canReview() ? 'Write a review' : 'Reviews' }}</h2>
+          <h2 class="font-display text-lg font-semibold text-ink-900">{{ canReview() ? ('listing.writeAReview' | transloco) : ('listing.reviews' | transloco) }}</h2>
         </div>
         <button
           type="button"
@@ -1038,7 +1241,7 @@
 
             <div class="mt-4 mb-5 flex items-center gap-1.5 text-sm font-semibold text-ink-900">
               <i class="ti ti-message-2 text-base text-ink-500" aria-hidden="true"></i>
-              {{ stats.total }} {{ stats.total === 1 ? 'review' : 'reviews' }}
+              {{ stats.total }} {{ stats.total === 1 ? ('common.review' | transloco) : ('listing.reviews' | transloco) }}
             </div>
 
             <!-- Review cards -->
@@ -1093,14 +1296,17 @@
 @if (loginGateOpen()) {
   <div
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     aria-labelledby="login-gate-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-ink-900/40 backdrop-blur-sm"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeLoginGate()"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">

@@ -102,7 +102,18 @@
     "signInToBook": "Logga in för att boka",
     "pickYourRoomOnce": "Välj ditt rum när du loggat in",
     "createAFreeAccountToBook": "Skapa ett gratiskonto för att välja rum och hålla dem medan du bestämmer dig. Det tar 30 sekunder.",
-    "roomsAmpPricing": "Rum och priser"
+    "roomsAmpPricing": "Rum och priser",
+    "andNMore": "+{{count}} till",
+    "favorite": "Favorit",
+    "showPhoneNumber": "Visa telefonnummer",
+    "showAllNReviews": "Visa alla {{count}} omdömen",
+    "hostSince": "Värd sedan {{year}}",
+    "writeAReview": "Skriv ett omdöme",
+    "roomSummary": "{{beds}} sängar · {{types}} rumstyper · {{sharing}} delningsalternativ",
+    "nSharingAvailable": "{{labels}}-delning tillgänglig",
+    "bookNow": "Boka nu",
+    "nPhotos": "{{count}} bilder",
+    "otherPhotos": "Övriga"
   },
   "common": {
     "loading": "Laddar…",
@@ -621,7 +632,12 @@
     "closeTimePicker": "Stäng tidväljaren",
     "chooseTime": "Välj tid",
     "dismiss": "Avfärda",
-    "closePropertyMenu": "Stäng fastighetsmenyn"
+    "closePropertyMenu": "Stäng fastighetsmenyn",
+    "goToPhotoN": "Gå till foto {{n}}",
+    "removeFrom": "Ta bort {{title}}",
+    "removeOneFrom": "Ta bort en från {{title}}",
+    "onePhotoAtATime": "En bild i taget",
+    "allPhotosByGroup": "Alla bilder, grupperade"
   },
   "hostTenants": {
     "tenantPhoto": "Hyresgästens bild",
@@ -1503,7 +1519,9 @@
     "bookingSent": "Bokning skickad",
     "weLlEmailYouWhenConfirmed": "Vi mejlar dig så snart vandrarhemmet bekräftar.",
     "couldnTBook": "Bokningen kunde inte slutföras",
-    "noRoomsListed": "Det här vandrarhemmet har inte lagt till några rum än."
+    "noRoomsListed": "Det här vandrarhemmet har inte lagt till några rum än.",
+    "pricesArePerRoom": "Priser per rum",
+    "pricesArePerBed": "Priser per säng"
   },
   "states": {
     "nothingHereYet": "Inget här ännu",
