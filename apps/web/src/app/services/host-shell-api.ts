@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { primaryFirst } from '@util/primary-photo';
 import { ApiClient } from '@core/api-resource';
 import {
   HostListing,
@@ -230,7 +231,7 @@ function resolveThumb(
   attachments?: ApiHostHostel['attachments'],
 ): string {
   if (!attachments?.length) return '';
-  const a = attachments.find((x) => x.is_primary) ?? attachments[0];
+  const a = primaryFirst(attachments)[0];
   if (a.url) return a.url;
   const v = a.variants ?? {};
   return (

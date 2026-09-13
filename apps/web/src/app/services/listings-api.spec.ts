@@ -352,3 +352,54 @@ describe('toListing price resolution', () => {
     expect(l.currency).toBe('PKR');
   });
 });
+
+/**
+ * Which photograph a search card and a map pin lead with.
+ *
+ * A host picks it by starring a photo in the hostel form, which the app sends straight to
+ * `PUT /api/attachments/:uuid/mark_as_primary`. The public search payload returns that choice
+ * as `is_primary` on one attachment and otherwise hands the list back in upload order — so a
+ * mapper that reads position alone shows the wrong photo on every surface a seeker sees, and
+ * the star reads as broken even though the write landed.
+ */
+describe('toListing lead photograph', () => {
+  function withPhotos(attachments: ApiHostel['attachments']): ApiHostel {
+    return { id: 'MjvuEl', name: 'Backpacker', attachments } as ApiHostel;
+  }
+
+  // "Backpacker" as the live payload returns it: ten active photos, the sixth one starred.
+  it('leads with the starred photo, not the first uploaded', () => {
+    const l = toListing(
+      withPhotos([
+        { url: 'a.jpg' }, { url: 'b.jpg' }, { url: 'c.jpg' }, { url: 'd.jpg' }, { url: 'e.jpg' },
+        { url: 'starred.jpg', is_primary: true },
+        { url: 'g.jpg' }, { url: 'h.jpg' }, { url: 'i.jpg' }, { url: 'j.jpg' },
+      ]),
+    );
+
+    expect(l.images[0]).toBe('starred.jpg');
+    expect(l.images).toHaveLength(10);
+  });
+
+  it('keeps the rest in upload order, so the gallery still reads as the host arranged it', () => {
+    const l = toListing(
+      withPhotos([{ url: 'a.jpg' }, { url: 'b.jpg' }, { url: 'c.jpg', is_primary: true }]),
+    );
+
+    expect(l.images).toEqual(['c.jpg', 'a.jpg', 'b.jpg']);
+  });
+
+  // Most hostels in the live payload have no primary at all — every one uploaded before the
+  // star shipped. Their cards must keep showing what they showed yesterday.
+  it('falls back to upload order when nothing is starred', () => {
+    const l = toListing(withPhotos([{ url: 'a.jpg' }, { url: 'b.jpg' }]));
+
+    expect(l.images).toEqual(['a.jpg', 'b.jpg']);
+  });
+
+  it('drops a starred attachment that carries no url rather than leading with a blank', () => {
+    const l = toListing(withPhotos([{ url: 'a.jpg' }, { is_primary: true }, { url: 'b.jpg' }]));
+
+    expect(l.images).toEqual(['a.jpg', 'b.jpg']);
+  });
+});

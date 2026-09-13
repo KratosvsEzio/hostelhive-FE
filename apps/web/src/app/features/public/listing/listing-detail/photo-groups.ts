@@ -1,4 +1,5 @@
 import { ListingPhoto } from '@hostelhive/data-access';
+import { primaryFirst } from '@util/primary-photo';
 
 export interface PhotoGroup {
   /** `null` is the unlabelled bucket; the view names it, so the name can be translated. */
@@ -17,6 +18,8 @@ export interface PhotoGroup {
 interface RawAttachment {
   url?: string | null;
   attachment_label?: { name?: string | null } | null;
+  /** Set by `mark_as_primary` on the one photo the hostel leads with. */
+  is_primary?: boolean | null;
 }
 
 /**
@@ -38,9 +41,16 @@ export function photoLabel(raw: RawAttachment): string | null {
   return trimmed === '' ? null : trimmed;
 }
 
-/** Attachments that are actually photos, in wire order, each carrying its label. */
+/**
+ * Attachments that are actually photos, each carrying its label, the starred one first.
+ *
+ * Upload order otherwise. Leading with the primary settles four things at once that all read
+ * index 0 — the gallery hero, the `og:image`, the JSON-LD, and the carousel's opening frame —
+ * and it also puts the section that photo belongs to at the top of the grouped gallery, since
+ * {@link photoGroups} orders sections by where their first photo lands.
+ */
 export function toListingPhotos(raw: readonly RawAttachment[] | null | undefined): ListingPhoto[] {
-  return (raw ?? [])
+  return primaryFirst(raw)
     .filter((a) => !!a?.url)
     .map((a) => ({ url: a.url as string, label: photoLabel(a) }));
 }

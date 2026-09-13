@@ -218,3 +218,54 @@ describe('groupedOrder', () => {
     expect(groupedOrder(photoGroups(photos)).map((p) => p.url)).toEqual(['a', 'b', 'c']);
   });
 });
+
+/**
+ * The listing page's lead photograph.
+ *
+ * Four things read index 0 of this list and nothing else: the gallery hero, the `og:image`
+ * a shared link previews with, the JSON-LD `image`, and the frame the carousel opens on.
+ * All four were showing whatever the host happened to upload first, whatever they starred.
+ */
+describe('toListingPhotos leads with the starred photo', () => {
+  it('hoists it out of the middle of the upload order', () => {
+    const out = toListingPhotos([
+      { url: 'a' },
+      { url: 'starred', is_primary: true },
+      { url: 'c' },
+    ]);
+
+    expect(out.map((p) => p.url)).toEqual(['starred', 'a', 'c']);
+  });
+
+  it('carries the starred photo its own label, not the one it displaced', () => {
+    const out = toListingPhotos([
+      { url: 'a', attachment_label: { name: 'Bedroom' } },
+      { url: 'starred', attachment_label: { name: 'Kitchen' }, is_primary: true },
+    ]);
+
+    expect(out[0]).toEqual({ url: 'starred', label: 'Kitchen' });
+  });
+
+  /**
+   * Sections come out in the order their first photo lands, so hoisting the starred photo
+   * also moves its section to the top. That is the point: the gallery should open on the
+   * part of the hostel the host chose to lead with, not on whichever room was uploaded first.
+   */
+  it('brings the starred photo section to the top of the grouped gallery', () => {
+    const photos = toListingPhotos([
+      { url: 'bed1', attachment_label: { name: 'Bedroom' } },
+      { url: 'bed2', attachment_label: { name: 'Bedroom' } },
+      { url: 'kit1', attachment_label: { name: 'Kitchen' }, is_primary: true },
+    ]);
+
+    expect(photoGroups(photos).map((g) => g.label)).toEqual(['Kitchen', 'Bedroom']);
+    // …and the flat list the hero reads agrees with the order the carousel walks.
+    expect(groupedOrder(photoGroups(photos))[0]!.url).toBe(photos[0]!.url);
+  });
+
+  it('leaves upload order alone when nothing is starred', () => {
+    const out = toListingPhotos([{ url: 'a' }, { url: 'b' }, { url: 'c' }]);
+
+    expect(out.map((p) => p.url)).toEqual(['a', 'b', 'c']);
+  });
+});

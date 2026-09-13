@@ -26,6 +26,7 @@ import {
   RoleDef,
 } from '@hostelhive/data-access';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
+import { primaryFirst } from '@util/primary-photo';
 import { PERMISSION_GROUPS } from './admin.fixtures';
 
 /**
@@ -720,7 +721,7 @@ function resolveThumb(
   attachments?: ApiAdminHostel['attachments'],
 ): string | null {
   if (!attachments?.length) return null;
-  const a = attachments.find((x) => x.is_primary) ?? attachments[0];
+  const a = primaryFirst(attachments)[0];
   if (a.url) return a.url;
   if (a.variants) {
     const v =
