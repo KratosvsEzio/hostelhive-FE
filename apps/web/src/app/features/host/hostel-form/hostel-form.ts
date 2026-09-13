@@ -342,6 +342,25 @@ export class HostelForm {
   /** A moderator undid a rejection from the grid's own Undo control. */
   readonly photoRejectUndone = output<string>();
 
+  /**
+   * The host starred a photo that already belongs to this hostel.
+   *
+   * Emitted so the owning screen can send it straight away rather than holding it until
+   * Update. The star gives instant feedback — the badge moves — so nothing tells a host the
+   * choice is unsaved, and leaving the page would lose it silently: the exact defect this
+   * whole endpoint exists to fix, moved a step later.
+   *
+   * **Only for photos the server already has attached.** A photo added this session is an
+   * `Attachment` the moment its presigned URL is issued, but it is not attached to the
+   * hostel until `attachment_ids` lands with the save — and `mark_as_primary` only clears
+   * the flag on siblings once `attached_type` is `Hostel`. Sending it early would set a
+   * second primary rather than move the one. Those wait for {@link changedPrimaryPhoto}.
+   *
+   * An output rather than a call from here, because this form also serves the moderator
+   * and admin consoles, and their attachment controller has no such action.
+   */
+  readonly primarySelected = output<string>();
+
   // ── form options (type / gender / labels) ──
   private readonly formOptions = toSignal(
     toObservable(this.options).pipe(
@@ -1265,6 +1284,20 @@ export class HostelForm {
   }
   protected setPrimary(photo: EditPhoto): void {
     this.photos.update((list) => list.map((p) => ({ ...p, primary: p.id === photo.id })));
+    // Already on the hostel: send it now. Added this session: it is not attached yet, so it
+    // rides along with the save — see `primarySelected`.
+    if (!this.newPhotoMap().has(photo.id)) this.primarySelected.emit(photo.id);
+  }
+
+  /** The owning screen persisted the star; stop counting it as a pending change. */
+  onPrimarySaved(id: string): void {
+    this.savedPrimaryPhotoId.set(id);
+  }
+
+  /** The call failed. Put the badge back where the server still has it. */
+  revertPrimary(): void {
+    const saved = this.savedPrimaryPhotoId();
+    this.photos.update((list) => list.map((p) => ({ ...p, primary: p.id === saved })));
   }
   protected removePhoto(photo: EditPhoto): void {
     // Under moderation, removing a photo the *host* uploaded is a rejection: it needs a

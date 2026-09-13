@@ -114,6 +114,28 @@ export class HostelProfile {
     return !!this.hostelId() && !!f && f.dirty() && !this.saving() && !f.uploading() && f.isValid();
   }
 
+  /**
+   * The star, sent the moment it is pressed.
+   *
+   * Not held until Update: the badge moves immediately, so nothing would tell a host the
+   * choice was unsaved, and leaving the page would lose it without a word.
+   *
+   * The server clears the flag on every sibling itself, so there is nothing else to send.
+   * A failure puts the badge back rather than leaving the page claiming something the
+   * server does not hold.
+   */
+  protected onPrimarySelected(attachmentId: string): void {
+    const f = this.form();
+    if (!f) return;
+    this.hostels
+      .markAttachmentAsPrimary(attachmentId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => f.onPrimarySaved(attachmentId),
+        error: () => f.revertPrimary(),
+      });
+  }
+
   private commit(): void {
     const id = this.hostelId();
     const f = this.form();

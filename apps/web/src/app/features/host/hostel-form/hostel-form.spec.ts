@@ -347,12 +347,35 @@ describe('HostelForm primary photo', () => {
     } as unknown as HostelDetail);
     fixture.detectChanges();
     fixture.detectChanges();
-    return fixture.componentInstance as unknown as {
-      photos(): { id: string; primary: boolean }[];
-      setPrimary(p: { id: string }): void;
-      changedPrimaryPhoto(): string | null;
-      dirty(): boolean;
-    };
+
+    const emitted: string[] = [];
+    fixture.componentInstance.primarySelected.subscribe((id) => emitted.push(id));
+
+    return Object.assign(
+      fixture.componentInstance as unknown as {
+        photos(): { id: string; primary: boolean }[];
+        setPrimary(p: { id: string }): void;
+        changedPrimaryPhoto(): string | null;
+        onPrimarySaved(id: string): void;
+        revertPrimary(): void;
+        dirty(): boolean;
+        /** Private, reached the same way this spec reaches the protected members. */
+        newPhotoMap: { set(m: Map<string, string>): void };
+        photos_: unknown;
+      },
+      { emitted },
+    );
+  }
+
+  /** Puts a photo in the grid as an upload from this session, as the picker would. */
+  function addUnattached(
+    form: ReturnType<typeof mount>,
+    id: string,
+  ): void {
+    form.newPhotoMap.set(new Map([[id, 's3-key']]));
+    (form as unknown as { photos: { update(f: (l: unknown[]) => unknown[]): void } }).photos.update(
+      (list) => [...list, { id, url: `https://cdn.test/${id}.jpg`, primary: false }],
+    );
   }
 
   const WITH_FLAG = [
@@ -400,6 +423,50 @@ describe('HostelForm primary photo', () => {
     // Starring it deliberately is a change, because the server holds no primary at all.
     form.setPrimary({ id: 'a2' });
     expect(form.changedPrimaryPhoto()).toBe('a2');
+  });
+
+  it('emits the moment the host stars a photo the hostel already has', () => {
+    // The point of sending it on the click: the badge moves instantly, so the write has to
+    // be instant too. Held until Update, a host who navigated away lost the choice silently.
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    expect(form.emitted).toEqual(['a2']);
+  });
+
+  /**
+   * The trap that decides which photos may be sent early.
+   *
+   * `presigned_url` creates the Attachment as soon as a file is picked, so a photo added
+   * this session has a real id — but it is not *attached* to the hostel until
+   * `attachment_ids` lands with the save, and `mark_as_primary` only clears the flag on
+   * siblings once `attached_type` is `Hostel`. Sending it early would leave the hostel
+   * holding two primaries, so this one waits for the save instead.
+   */
+  it('does not send a photo added this session, which is not attached yet', () => {
+    const form = mount(WITH_FLAG);
+    addUnattached(form, 'fresh-1');
+    form.setPrimary({ id: 'fresh-1' });
+    expect(form.emitted).toEqual([]);
+    // Still saved — by the other path, after `attachment_ids` has linked it.
+    expect(form.changedPrimaryPhoto()).toBe('fresh-1');
+  });
+
+  it('stops counting it as pending once the screen reports the write landed', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    expect(form.changedPrimaryPhoto()).toBe('a2');
+    form.onPrimarySaved('a2');
+    expect(form.changedPrimaryPhoto()).toBeNull();
+  });
+
+  it('puts the badge back when the write fails', () => {
+    // Otherwise the page shows a primary the server does not hold, and nothing corrects it
+    // until a reload.
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    form.revertPrimary();
+    expect(form.photos().find((p) => p.primary)?.id).toBe('a1');
+    expect(form.changedPrimaryPhoto()).toBeNull();
   });
 
   it('makes the form dirty, so Update is not left greyed out', () => {
