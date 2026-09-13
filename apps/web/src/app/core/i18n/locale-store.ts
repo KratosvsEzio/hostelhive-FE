@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { merge } from 'rxjs';
+import { asapScheduler, merge, observeOn } from 'rxjs';
 import { Router } from '@angular/router';
 import { PreferenceSource } from '@core/preferences/currency-preference';
 import { TranslocoService } from '@jsverse/transloco';
@@ -76,9 +76,32 @@ export class LocaleStore {
   /** `'rtl'` for Urdu and Arabic. Templates read this for direction-aware bits. */
   readonly dir = signal<'ltr' | 'rtl'>('ltr');
 
-  /** Bumped by anything Transloco does — a language change, a file arriving. */
+  /**
+   * Bumped by anything Transloco does — a language change, a file arriving.
+   *
+   * **Delivered a microtask late, on purpose.** Transloco answers a cache hit
+   * *synchronously*: the first `| transloco` pipe on a page subscribes while Angular is
+   * evaluating the template, and the event comes straight back down the same stack. A signal
+   * written there is refused — Angular's reactive nodes disallow writes while a consumer is
+   * computing — and `signalSetFn` throws *before* it assigns, so the tick is not merely
+   * noisy, it is **dropped**. `ready` then never re-asks for that emission.
+   *
+   * None of that is development-only. Dev names it NG0600; a production build throws a bare
+   * error from the same line. What hid it in both is RxJS: a throw inside a `next` handler is
+   * caught by the subscriber and re-reported on a later tick, detached from the stack that
+   * caused it — so it failed nothing, and a later emission landing outside a render usually
+   * rescued `ready` before anyone noticed.
+   *
+   * Nothing is lost by the delay, because nothing reads the value — {@link ready} reads only
+   * *that it changed*, and then asks Transloco itself. The first evaluation of `ready` is
+   * therefore already correct with no tick at all; this only decides when it re-asks, and a
+   * microtask still lands well inside the same task, before effects run or SSR reports
+   * stable.
+   */
   private readonly translocoActivity = toSignal(
-    merge(this.transloco.langChanges$, this.transloco.events$),
+    merge(this.transloco.langChanges$, this.transloco.events$).pipe(
+      observeOn(asapScheduler),
+    ),
     { initialValue: null },
   );
 
