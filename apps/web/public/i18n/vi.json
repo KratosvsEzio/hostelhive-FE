@@ -102,7 +102,6 @@
     "signInToBook": "Đăng nhập để đặt phòng",
     "pickYourRoomOnce": "Chọn phòng ngay khi đăng nhập",
     "createAFreeAccountToBook": "Tạo tài khoản miễn phí để chọn phòng và giữ chỗ trong khi bạn quyết định. Chỉ mất 30 giây.",
-    "roomsAmpPricing": "Phòng & giá",
     "andNMore": "+{{count}} nữa",
     "favorite": "Yêu thích",
     "showPhoneNumber": "Hiện số điện thoại",
@@ -1338,7 +1337,8 @@
     "showAllNPhotos": "Xem tất cả {{count}} ảnh",
     "genderHostelHostedBy": "Nhà nghỉ {{gender}}, chủ nhà {{host}}",
     "bookARoom": "Đặt phòng",
-    "theListingMayHaveBeen": "Tin đăng có thể đã bị gỡ hoặc liên kết không đúng."
+    "theListingMayHaveBeen": "Tin đăng có thể đã bị gỡ hoặc liên kết không đúng.",
+    "chooseYourRoom": "Chọn phòng của bạn"
   },
   "featuresPublic": {
     "checkingYourLink": "Đang kiểm tra liên kết của bạn…",

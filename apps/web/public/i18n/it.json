@@ -102,7 +102,6 @@
     "signInToBook": "Accedi per prenotare",
     "pickYourRoomOnce": "Scegli la tua camera dopo l'accesso",
     "createAFreeAccountToBook": "Crea un account gratuito per scegliere le camere e tenerle mentre decidi. Bastano 30 secondi.",
-    "roomsAmpPricing": "Camere e prezzi",
     "andNMore": "+{{count}} altri",
     "favorite": "Preferito",
     "showPhoneNumber": "Mostra numero di telefono",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Mostra tutte le {{count}} foto",
     "genderHostelHostedBy": "Ostello {{gender}}, ospitato da {{host}}",
     "bookARoom": "Prenota una camera",
-    "theListingMayHaveBeen": "L'annuncio potrebbe essere stato rimosso o il link non è corretto."
+    "theListingMayHaveBeen": "L'annuncio potrebbe essere stato rimosso o il link non è corretto.",
+    "chooseYourRoom": "Scegli la tua camera"
   },
   "featuresPublic": {
     "checkingYourLink": "Verifica del link…",

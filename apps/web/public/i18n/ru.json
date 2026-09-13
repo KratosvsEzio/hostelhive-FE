@@ -102,7 +102,6 @@
     "signInToBook": "Войдите, чтобы забронировать",
     "pickYourRoomOnce": "Выберите номер после входа",
     "createAFreeAccountToBook": "Создайте бесплатный аккаунт, чтобы выбирать номера и удерживать их, пока решаете. Это займёт 30 секунд.",
-    "roomsAmpPricing": "Комнаты и цены",
     "andNMore": "Ещё {{count}}",
     "favorite": "В избранное",
     "showPhoneNumber": "Показать номер телефона",
@@ -1338,7 +1337,8 @@
     "showAllNPhotos": "Показать все {{count}} фото",
     "genderHostelHostedBy": "{{gender}} хостел, владелец {{host}}",
     "bookARoom": "Забронировать комнату",
-    "theListingMayHaveBeen": "Объявление могло быть удалено, или ссылка неверна."
+    "theListingMayHaveBeen": "Объявление могло быть удалено, или ссылка неверна.",
+    "chooseYourRoom": "Выберите комнату"
   },
   "featuresPublic": {
     "checkingYourLink": "Проверяем вашу ссылку…",

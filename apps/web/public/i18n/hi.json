@@ -102,7 +102,6 @@
     "signInToBook": "बुक करने के लिए साइन इन करें",
     "pickYourRoomOnce": "साइन इन करते ही अपना कमरा चुनें",
     "createAFreeAccountToBook": "मुफ़्त खाता बनाएँ, कमरे चुनें और फ़ैसला करने तक उन्हें रोके रखें। सिर्फ़ 30 सेकंड लगते हैं।",
-    "roomsAmpPricing": "कमरे और कीमतें",
     "andNMore": "+{{count}} और",
     "favorite": "पसंदीदा",
     "showPhoneNumber": "फ़ोन नंबर दिखाएँ",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "सभी {{count}} फ़ोटो देखें",
     "genderHostelHostedBy": "{{host}} द्वारा होस्ट किया गया {{gender}} हॉस्टल",
     "bookARoom": "कमरा बुक करें",
-    "theListingMayHaveBeen": "हो सकता है लिस्टिंग हटा दी गई हो या लिंक ग़लत हो।"
+    "theListingMayHaveBeen": "हो सकता है लिस्टिंग हटा दी गई हो या लिंक ग़लत हो।",
+    "chooseYourRoom": "अपना कमरा चुनें"
   },
   "featuresPublic": {
     "checkingYourLink": "आपका लिंक जाँचा जा रहा है…",

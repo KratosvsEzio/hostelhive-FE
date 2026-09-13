@@ -242,7 +242,7 @@ describe('RoomPicker', () => {
     it('sits under the same heading a nightly listing uses', () => {
       renderMonthly([PRIVATE]);
 
-      expect(text()).toContain('listing.roomsAmpPricing');
+      expect(text()).toContain('publicListing.chooseYourRoom');
     });
   });
 
@@ -406,6 +406,40 @@ describe('RoomPicker', () => {
       expect(d).not.toBeNull();
       expect(d!.textContent).toContain('Deluxe 6 Bed Private Ensuite');
       expect(d!.textContent).toContain('wardrobe wide enough for two');
+    });
+
+    /**
+     * Escape closes it.
+     *
+     * Pinned because the dialog carries `hhDialogFocus`, which holds Tab inside it — and a
+     * trap with no key that releases it is worse than no trap at all. The two arrived in the
+     * same change for that reason, and this is what keeps them together: the trap is invisible
+     * to a mouse user, so nothing else here would notice the escape hatch going away.
+     *
+     * Its own listener rather than the listing page's Escape chain, because this component
+     * owns the signal — the chain's `descriptionModalOpen` is the *hostel* description.
+     */
+    it('closes on Escape', () => {
+      render([{ ...PRIVATE, description: LONG }]);
+      showMoreButton()!.click();
+      fixture.detectChanges();
+      expect(dialog()).not.toBeNull();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+
+      expect(dialog()).toBeNull();
+    });
+
+    it('leaves other keys alone', () => {
+      render([{ ...PRIVATE, description: LONG }]);
+      showMoreButton()!.click();
+      fixture.detectChanges();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+      fixture.detectChanges();
+
+      expect(dialog()).not.toBeNull();
     });
 
     // Growing the row would push every room below it down the page, which is the reason

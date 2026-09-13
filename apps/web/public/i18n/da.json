@@ -102,7 +102,6 @@
     "signInToBook": "Log ind for at booke",
     "pickYourRoomOnce": "Vælg dit værelse, når du er logget ind",
     "createAFreeAccountToBook": "Opret en gratis konto for at vælge værelser og holde dem, mens du beslutter dig. Det tager 30 sekunder.",
-    "roomsAmpPricing": "Værelser og priser",
     "andNMore": "+{{count}} flere",
     "favorite": "Favorit",
     "showPhoneNumber": "Vis telefonnummer",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Se alle {{count}} fotos",
     "genderHostelHostedBy": "{{gender}}-hostel, vært {{host}}",
     "bookARoom": "Book et værelse",
-    "theListingMayHaveBeen": "Annoncen er måske fjernet, eller linket er forkert."
+    "theListingMayHaveBeen": "Annoncen er måske fjernet, eller linket er forkert.",
+    "chooseYourRoom": "Vælg dit værelse"
   },
   "featuresPublic": {
     "checkingYourLink": "Kontrollerer dit link…",

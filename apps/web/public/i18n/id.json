@@ -102,7 +102,6 @@
     "signInToBook": "Masuk untuk memesan",
     "pickYourRoomOnce": "Pilih kamar Anda setelah masuk",
     "createAFreeAccountToBook": "Buat akun gratis untuk memilih kamar dan menahannya selagi Anda memutuskan. Hanya butuh 30 detik.",
-    "roomsAmpPricing": "Kamar & harga",
     "andNMore": "+{{count}} lainnya",
     "favorite": "Favorit",
     "showPhoneNumber": "Tampilkan nomor telepon",
@@ -1338,7 +1337,8 @@
     "showAllNPhotos": "Lihat semua {{count}} foto",
     "genderHostelHostedBy": "Hostel {{gender}}, dikelola oleh {{host}}",
     "bookARoom": "Pesan kamar",
-    "theListingMayHaveBeen": "Listing mungkin telah dihapus atau tautannya salah."
+    "theListingMayHaveBeen": "Listing mungkin telah dihapus atau tautannya salah.",
+    "chooseYourRoom": "Pilih kamar Anda"
   },
   "featuresPublic": {
     "checkingYourLink": "Memeriksa tautan Anda…",

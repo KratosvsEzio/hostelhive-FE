@@ -102,7 +102,6 @@
     "signInToBook": "سجّل الدخول للحجز",
     "pickYourRoomOnce": "اختر غرفتك بمجرد تسجيل الدخول",
     "createAFreeAccountToBook": "أنشئ حسابًا مجانيًا لاختيار الغرف وحجزها ريثما تقرر. لا يستغرق سوى 30 ثانية.",
-    "roomsAmpPricing": "الغرف والأسعار",
     "andNMore": "و{{count}} أخرى",
     "favorite": "المفضلة",
     "showPhoneNumber": "إظهار رقم الهاتف",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "عرض كل الصور الـ{{count}}",
     "genderHostelHostedBy": "نزل {{gender}} يستضيفه {{host}}",
     "bookARoom": "احجز غرفة",
-    "theListingMayHaveBeen": "ربما تمت إزالة القائمة أو أن الرابط غير صحيح."
+    "theListingMayHaveBeen": "ربما تمت إزالة القائمة أو أن الرابط غير صحيح.",
+    "chooseYourRoom": "اختر غرفتك"
   },
   "featuresPublic": {
     "checkingYourLink": "جارٍ التحقق من الرابط…",

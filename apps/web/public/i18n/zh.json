@@ -102,7 +102,6 @@
     "signInToBook": "登录后预订",
     "pickYourRoomOnce": "登录后即可挑选房间",
     "createAFreeAccountToBook": "创建免费账户即可挑选房间，并在您决定前为您保留。只需 30 秒。",
-    "roomsAmpPricing": "房型与价格",
     "andNMore": "另外 {{count}} 项",
     "favorite": "收藏",
     "showPhoneNumber": "显示电话号码",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "查看全部 {{count}} 张照片",
     "genderHostelHostedBy": "{{gender}}旅舍 · 房东：{{host}}",
     "bookARoom": "预订房间",
-    "theListingMayHaveBeen": "该房源可能已被下架，或链接有误。"
+    "theListingMayHaveBeen": "该房源可能已被下架，或链接有误。",
+    "chooseYourRoom": "选择您的房间"
   },
   "featuresPublic": {
     "checkingYourLink": "正在检查您的链接…",

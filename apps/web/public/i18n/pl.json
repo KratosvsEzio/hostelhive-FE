@@ -102,7 +102,6 @@
     "signInToBook": "Zaloguj się, aby zarezerwować",
     "pickYourRoomOnce": "Wybierz pokój po zalogowaniu",
     "createAFreeAccountToBook": "Załóż darmowe konto, aby wybierać pokoje i rezerwować je, gdy się zastanawiasz. Zajmie to 30 sekund.",
-    "roomsAmpPricing": "Pokoje i ceny",
     "andNMore": "+{{count}} więcej",
     "favorite": "Ulubione",
     "showPhoneNumber": "Pokaż numer telefonu",
@@ -1338,7 +1337,8 @@
     "showAllNPhotos": "Zobacz wszystkie {{count}} zdjęć",
     "genderHostelHostedBy": "Hostel {{gender}}, gospodarz: {{host}}",
     "bookARoom": "Zarezerwuj pokój",
-    "theListingMayHaveBeen": "Ogłoszenie mogło zostać usunięte lub link jest nieprawidłowy."
+    "theListingMayHaveBeen": "Ogłoszenie mogło zostać usunięte lub link jest nieprawidłowy.",
+    "chooseYourRoom": "Wybierz swój pokój"
   },
   "featuresPublic": {
     "checkingYourLink": "Sprawdzanie linku…",

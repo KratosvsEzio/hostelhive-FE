@@ -102,7 +102,6 @@
     "signInToBook": "Jelentkezzen be a foglaláshoz",
     "pickYourRoomOnce": "Válassza ki a szobát bejelentkezés után",
     "createAFreeAccountToBook": "Hozzon létre ingyenes fiókot, hogy szobákat válasszon és lefoglalja őket, amíg dönt. Mindössze 30 másodperc.",
-    "roomsAmpPricing": "Szobák és árak",
     "andNMore": "+{{count}} további",
     "favorite": "Kedvenc",
     "showPhoneNumber": "Telefonszám megjelenítése",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Mind a(z) {{count}} fotó",
     "genderHostelHostedBy": "{{gender}} szálláshely, házigazda: {{host}}",
     "bookARoom": "Szoba foglalása",
-    "theListingMayHaveBeen": "Lehet, hogy a hirdetést eltávolították, vagy a hivatkozás hibás."
+    "theListingMayHaveBeen": "Lehet, hogy a hirdetést eltávolították, vagy a hivatkozás hibás.",
+    "chooseYourRoom": "Válaszd ki a szobád"
   },
   "featuresPublic": {
     "checkingYourLink": "A linked ellenőrzése…",

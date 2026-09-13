@@ -102,7 +102,6 @@
     "signInToBook": "بکنگ کے لیے سائن اِن کریں",
     "pickYourRoomOnce": "سائن اِن کرتے ہی اپنا کمرہ منتخب کریں",
     "createAFreeAccountToBook": "مفت اکاؤنٹ بنائیں، کمرے منتخب کریں اور فیصلہ کرنے تک محفوظ رکھیں۔ صرف 30 سیکنڈ لگتے ہیں۔",
-    "roomsAmpPricing": "کمرے اور کرایہ",
     "andNMore": "+{{count}} مزید",
     "favorite": "پسندیدہ",
     "showPhoneNumber": "فون نمبر دکھائیں",
@@ -1338,7 +1337,8 @@
     "showAllNPhotos": "تمام {{count}} تصاویر دیکھیں",
     "genderHostelHostedBy": "{{host}} کا میزبان کردہ {{gender}} ہاسٹل",
     "bookARoom": "کمرہ بک کریں",
-    "theListingMayHaveBeen": "ممکن ہے فہرست ہٹا دی گئی ہو یا لنک غلط ہو۔"
+    "theListingMayHaveBeen": "ممکن ہے فہرست ہٹا دی گئی ہو یا لنک غلط ہو۔",
+    "chooseYourRoom": "اپنا کمرہ منتخب کریں"
   },
   "featuresPublic": {
     "checkingYourLink": "آپ کا لنک چیک کیا جا رہا ہے…",

@@ -102,7 +102,6 @@
     "signInToBook": "Log in om te boeken",
     "pickYourRoomOnce": "Kies je kamer zodra je bent ingelogd",
     "createAFreeAccountToBook": "Maak een gratis account om kamers te kiezen en vast te houden terwijl je beslist. Het duurt 30 seconden.",
-    "roomsAmpPricing": "Kamers en prijzen",
     "andNMore": "+{{count}} meer",
     "favorite": "Favoriet",
     "showPhoneNumber": "Telefoonnummer tonen",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Alle {{count}} foto’s bekijken",
     "genderHostelHostedBy": "{{gender}}-hostel, gehost door {{host}}",
     "bookARoom": "Een kamer boeken",
-    "theListingMayHaveBeen": "De advertentie is mogelijk verwijderd of de link klopt niet."
+    "theListingMayHaveBeen": "De advertentie is mogelijk verwijderd of de link klopt niet.",
+    "chooseYourRoom": "Kies je kamer"
   },
   "featuresPublic": {
     "checkingYourLink": "Je link wordt gecontroleerd…",

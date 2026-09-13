@@ -102,7 +102,6 @@
     "signInToBook": "Connectez-vous pour réserver",
     "pickYourRoomOnce": "Choisissez votre chambre une fois connecté",
     "createAFreeAccountToBook": "Créez un compte gratuit pour choisir vos chambres et les garder le temps de décider. Cela prend 30 secondes.",
-    "roomsAmpPricing": "Chambres et tarifs",
     "andNMore": "+{{count}} de plus",
     "favorite": "Favori",
     "showPhoneNumber": "Afficher le numéro",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Voir les {{count}} photos",
     "genderHostelHostedBy": "Auberge {{gender}}, hébergée par {{host}}",
     "bookARoom": "Réserver une chambre",
-    "theListingMayHaveBeen": "L'annonce a peut-être été supprimée ou le lien est incorrect."
+    "theListingMayHaveBeen": "L'annonce a peut-être été supprimée ou le lien est incorrect.",
+    "chooseYourRoom": "Choisissez votre chambre"
   },
   "featuresPublic": {
     "checkingYourLink": "Vérification de votre lien…",

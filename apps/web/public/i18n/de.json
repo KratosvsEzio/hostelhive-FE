@@ -102,7 +102,6 @@
     "signInToBook": "Zum Buchen anmelden",
     "pickYourRoomOnce": "Wählen Sie Ihr Zimmer nach der Anmeldung",
     "createAFreeAccountToBook": "Erstellen Sie ein kostenloses Konto, um Zimmer auszuwählen und sie zu reservieren, während Sie sich entscheiden. Dauert nur 30 Sekunden.",
-    "roomsAmpPricing": "Zimmer & Preise",
     "andNMore": "+{{count}} weitere",
     "favorite": "Merken",
     "showPhoneNumber": "Telefonnummer anzeigen",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Alle {{count}} Fotos ansehen",
     "genderHostelHostedBy": "{{gender}}-Hostel, gastgeberin/gastgeber {{host}}",
     "bookARoom": "Zimmer buchen",
-    "theListingMayHaveBeen": "Das Inserat wurde möglicherweise entfernt oder der Link ist falsch."
+    "theListingMayHaveBeen": "Das Inserat wurde möglicherweise entfernt oder der Link ist falsch.",
+    "chooseYourRoom": "Wählen Sie Ihr Zimmer"
   },
   "featuresPublic": {
     "checkingYourLink": "Ihr Link wird geprüft…",

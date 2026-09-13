@@ -1056,7 +1056,6 @@
     "signInToBook": "Sign in to book",
     "pickYourRoomOnce": "Pick your room once you're signed in",
     "createAFreeAccountToBook": "Create a free account to choose rooms and hold them while you decide. It only takes 30 seconds.",
-    "roomsAmpPricing": "Rooms & pricing",
     "andNMore": "+{{count}} more",
     "favorite": "Favorite",
     "showPhoneNumber": "Show phone number",
@@ -1306,7 +1305,8 @@
     "showAllNPhotos": "Show all {{count}} photos",
     "genderHostelHostedBy": "{{gender}} hostel hosted by {{host}}",
     "bookARoom": "Book a room",
-    "theListingMayHaveBeen": "The listing may have been removed or the link is incorrect."
+    "theListingMayHaveBeen": "The listing may have been removed or the link is incorrect.",
+    "chooseYourRoom": "Choose your room"
   },
   "publicOnboarding": {
     "visitProfile": "Visit profile",

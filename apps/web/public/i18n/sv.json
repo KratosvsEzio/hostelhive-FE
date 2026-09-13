@@ -102,7 +102,6 @@
     "signInToBook": "Logga in för att boka",
     "pickYourRoomOnce": "Välj ditt rum när du loggat in",
     "createAFreeAccountToBook": "Skapa ett gratiskonto för att välja rum och hålla dem medan du bestämmer dig. Det tar 30 sekunder.",
-    "roomsAmpPricing": "Rum och priser",
     "andNMore": "+{{count}} till",
     "favorite": "Favorit",
     "showPhoneNumber": "Visa telefonnummer",
@@ -1333,7 +1332,8 @@
     "showAllNPhotos": "Visa alla {{count}} foton",
     "genderHostelHostedBy": "{{gender}}-vandrarhem, värd {{host}}",
     "bookARoom": "Boka ett rum",
-    "theListingMayHaveBeen": "Annonsen kan ha tagits bort eller så är länken felaktig."
+    "theListingMayHaveBeen": "Annonsen kan ha tagits bort eller så är länken felaktig.",
+    "chooseYourRoom": "Välj ditt rum"
   },
   "featuresPublic": {
     "checkingYourLink": "Kontrollerar din länk…",
