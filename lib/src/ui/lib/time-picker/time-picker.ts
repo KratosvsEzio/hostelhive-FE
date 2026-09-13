@@ -53,6 +53,9 @@ function label(value: string | null): string {
  *   <hh-time-picker label="Meal time" [(value)]="mealTime" />
  *   <hh-time-picker variant="pill" [(value)]="t" [minuteStep]="15" />
  */
+/** Instance counter behind `triggerId`. */
+let instances = 0;
+
 @Component({
   selector: 'hh-time-picker',
   imports: [TranslocoPipe],
@@ -61,12 +64,13 @@ function label(value: string | null): string {
   template: `
     <div class="relative block">
       @if (label()) {
-        <label class="mb-1 block text-xs font-medium text-ink-600">{{ label() }}</label>
+        <label class="mb-1 block text-xs font-medium text-ink-600" [for]="triggerId">{{ label() }}</label>
       }
 
       <!-- Trigger -->
       <button
         type="button"
+        [id]="triggerId"
         (click)="toggle()"
         [disabled]="disabled()"
         aria-haspopup="dialog"
@@ -161,6 +165,10 @@ function label(value: string | null): string {
   `,
 })
 export class TimePicker {
+  /** Ties the caption to the trigger. Unique per instance — a duplicate id sends
+   *  every label to whichever control the document happens to reach first. */
+  protected readonly triggerId = `hh-tp-${++instances}`;
+
   /** Two-way 24-hour `HH:mm` string. */
   readonly value = model<string | null>(null);
   readonly placeholder = input<string | undefined>(undefined);

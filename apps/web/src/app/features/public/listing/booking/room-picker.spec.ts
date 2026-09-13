@@ -138,10 +138,13 @@ describe('RoomPicker', () => {
 
   // The unit is the whole point of the split — a bare "2" means rooms on one row and beds on
   // the next.
+  // Asserted as keys because this harness renders no translations — which is also the point
+  // of the assertion now: the note used to be an English literal built in the component, so
+  // it read "Prices are per bed" on a page otherwise translated into Urdu.
   it('labels the unit per row, not per page', () => {
     render([PRIVATE, DORM]);
-    expect(text()).toContain('Prices are per room');
-    expect(text()).toContain('Prices are per bed');
+    expect(text()).toContain('publicBooking.pricesArePerRoom');
+    expect(text()).toContain('publicBooking.pricesArePerBed');
   });
 
   it('shows the derived discount badge, not a stored one', () => {

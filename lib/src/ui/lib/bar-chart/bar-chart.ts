@@ -40,8 +40,11 @@ export interface BarChartTick {
           <!-- Bars -->
           <div class="absolute inset-x-0 top-2 bottom-2 flex items-end" [class]="barGap()">
             @for (b of bars(); track $index; let i = $index; let first = $first; let last = $last) {
-              <div
+              <button
+                type="button"
                 class="group relative flex h-full flex-1 flex-col justify-end"
+                [attr.aria-label]="b.label + ': ' + b.value"
+                [attr.aria-pressed]="selected() === i"
                 (click)="toggle(i)"
               >
                 <!-- Value tooltip. Hover-driven on pointer devices; the selected index is
@@ -73,7 +76,7 @@ export interface BarChartTick {
                   [style.height.%]="b.pct"
                   [style.min-height.px]="b.value > 0 ? 3 : 0"
                 ></div>
-              </div>
+              </button>
             }
           </div>
         </div>

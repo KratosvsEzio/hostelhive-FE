@@ -11,9 +11,21 @@ export type ButtonVariant = 'filled' | 'outlined' | 'text' | 'icon' | 'filled-ic
 export type ButtonColor = 'default' | 'primary' | 'success' | 'danger' | 'dark';
 export type ButtonSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 
+/**
+ * `ink-900` with an offset, not `brand-300`.
+ *
+ * A brand-tinted ring is invisible exactly where it matters. `brand-300` (#F69A6A) measures
+ * 2.02:1 on white, 1.86:1 on the page ground and **1.47:1 against the `brand-500` fill it
+ * hugs** — so the branded controls were the least visible ones when focused, and a keyboard
+ * user tabbing through the booking flow could not see where they were.
+ *
+ * `ink-900` is 18.4:1 on white, 16.9:1 on the ground and 6.2:1 on the brand fill. The offset
+ * is what earns the last one: two pixels of page colour between the button and the ring, so
+ * the ring is read against the background rather than against the fill it surrounds.
+ */
 const BASE =
   'inline-flex items-center justify-center whitespace-nowrap transition select-none ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 ' +
   'disabled:cursor-not-allowed disabled:opacity-60';
 
 /** Padding + text + gap + radius for text/filled/outlined variants */
@@ -46,6 +58,15 @@ const SIZE_ICON: Record<ButtonSize, string> = {
 
 const FILLED: Record<ButtonColor, string> = {
   default: 'border border-ink-200 bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
+  // White on `brand-500` measures **2.97:1** (hover `brand-600`, 4.14:1) — below AA's 4.5:1
+  // for text and below the 3:1 floor for a UI component. Kept anyway, as a deliberate call:
+  // the brand orange with a white label is the identity, and the alternatives each cost more
+  // than the contrast buys. Recorded here so it reads as a decision rather than an oversight.
+  //
+  // Measured, if it is ever revisited: `brand-700` carries white at 6.05:1; `brand-500` with
+  // an `ink-900` label is 6.20:1 but needs the hover to brighten (`brand-400`, 6.84:1) since
+  // `brand-600` under dark text is 4.46:1; a new `#C05408` step carries white at 4.65:1 and
+  // sits closer to the brand hue than `brand-700`. All three were tried and rejected.
   primary: 'bg-brand-500 font-semibold text-white shadow-card hover:bg-brand-600',
   success: 'bg-ok font-semibold text-white hover:brightness-95',
   danger: 'bg-danger font-semibold text-white hover:brightness-95',

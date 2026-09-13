@@ -75,10 +75,13 @@
           [class]="hasError ? 'ring-danger/50' : isSelected ? 'ring-brand-500/50 shadow-brand-500/10' : 'ring-ink-100 hover:ring-ink-200 hover:shadow-lg'"
         >
           <!-- Thumbnail -->
-          <div
-            class="relative aspect-[4/3] cursor-zoom-in overflow-hidden"
-            (click)="openPreview(a)"
-          >
+          <div class="relative aspect-[4/3] overflow-hidden">
+            <button
+              type="button"
+              class="absolute inset-0 cursor-zoom-in"
+              [attr.aria-label]="'a11y.preview' | transloco"
+              (click)="openPreview(a)"
+            ></button>
             <!-- Selection checkbox — top-left.
                  Grey until it is ticked, then brand. It used to sit at `bg-brand-500/20`
                  unchecked, which made every card look half-selected and left the actual
@@ -243,10 +246,12 @@
     aria-modal="true"
     aria-labelledby="reject-modal-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="cancelReject()"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       @if (rejectQueue().length === 1 && rejectQueue()[0].url) {
@@ -365,10 +370,12 @@
     aria-modal="true"
     aria-labelledby="reject-progress-modal-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="prog.allDone ? closeRejectProgressModal() : null"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       <!-- Header: title + progress bar -->
@@ -467,10 +474,12 @@
     aria-modal="true"
     aria-labelledby="approve-modal-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="prog.allDone ? closeApproveModal() : null"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       <!-- Header: title + progress bar -->
@@ -564,14 +573,14 @@
 @if (previewAttachment(); as preview) {
   @let previewBadge = kindBadge(preview);
   @let previewId = '' + preview.id;
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-    (click)="closePreview()"
-  >
-    <div
-      class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-      (click)="$event.stopPropagation()"
-    >
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
+      (click)="closePreview()"
+    ></button>
+    <div class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
       <!-- Close -->
       <button
         hh-button variant="icon"

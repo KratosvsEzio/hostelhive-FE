@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Button, ButtonColor } from '../button/button';
+import { DialogFocus } from '../dialog-focus/dialog-focus';
 
 export type ConfirmModalTone = 'danger' | 'warn' | 'ok' | 'info';
 
@@ -58,18 +59,21 @@ let _id = 0;
 @Component({
   selector: 'hh-confirm-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TranslocoPipe],
+  imports: [Button, DialogFocus, TranslocoPipe],
   template: `
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      hhDialogFocus
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="titleId"
     >
-      <div
-        class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
+      <button
+        type="button"
+        class="absolute inset-0 cursor-default bg-ink-900/40 backdrop-blur-sm"
+        [attr.aria-label]="'a11y.close' | transloco"
         (click)="cancel.emit()"
-      ></div>
+      ></button>
       <div class="relative w-full rounded-2xl bg-white p-6 shadow-xl" [class]="sizeClass()">
         @if (icon()) {
           <div

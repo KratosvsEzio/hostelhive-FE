@@ -66,7 +66,7 @@
         />
         <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-xs font-medium text-ink-600"
+            <label class="mb-1 block text-xs font-medium text-ink-600" for="ob-city"
               >{{ 'common.city' | transloco }}</label
             >
             <div
@@ -75,6 +75,7 @@
             >
               <i class="ti ti-map-pin text-ink-400" aria-hidden="true"></i>
               <hh-place-search
+                inputId="ob-city"
                 class="block flex-1 py-2.5"
                 [value]="city()"
                 [includedPrimaryTypes]="cityTypes"
@@ -90,10 +91,11 @@
             }
           </div>
           <div>
-            <label class="mb-1 block text-xs font-medium text-ink-600"
+            <label class="mb-1 block text-xs font-medium text-ink-600" for="ob-accom"
               >{{ 'common.accommodationtype' | transloco }}</label
             >
             <hh-dropdown
+              controlId="ob-accom"
               variant="field"
               [options]="genderOptions"
               [value]="accommodationType()"
@@ -101,8 +103,9 @@
             />
           </div>
           <div>
-            <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'common.type' | transloco }}</label>
+            <label class="mb-1 block text-xs font-medium text-ink-600" for="ob-type">{{ 'common.type' | transloco }}</label>
             <hh-dropdown
+              controlId="ob-type"
               variant="field"
               [placeholder]="'common.selectType' | transloco"
               [options]="propertyTypeOptions()"
@@ -131,7 +134,7 @@
           />
         </div>
         <div>
-          <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'common.description' | transloco }}</label>
+          <span class="mb-1 block text-xs font-medium text-ink-600">{{ 'common.description' | transloco }}</span>
           <div
             class="rounded-xl transition"
             [class]="showValidation() && fieldErrors()['description'] ? 'ring-2 ring-danger' : ''"
@@ -207,10 +210,11 @@
           <p class="text-sm font-semibold text-ink-900">{{ 'publicOnboarding.addARoomType' | transloco }}</p>
           <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
             <div class="sm:col-span-5">
-              <label class="mb-1 block text-xs font-medium text-ink-600">
+              <label class="mb-1 block text-xs font-medium text-ink-600" for="ob-roomtype">
                 {{ 'common.roomType' | transloco }}
               </label>
               <hh-dropdown
+                controlId="ob-roomtype"
                 variant="field"
                 [placeholder]="'publicOnboarding.allTypesAdded' | transloco"
                 [options]="roomTypeOptions()"

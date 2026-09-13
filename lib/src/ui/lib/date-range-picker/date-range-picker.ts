@@ -140,12 +140,13 @@ function shortLabel(iso: string | null): string {
         (click)="toggle()"
         aria-haspopup="dialog"
         [attr.aria-expanded]="open()"
+        [attr.aria-label]="ariaLabel()"
         [class]="triggerClass()"
       >
         <i class="ti ti-calendar shrink-0 text-ink-400"></i>
         <span
           class="flex-1 truncate text-start"
-          [class]="hasRange() ? 'text-ink-900' : 'text-ink-400'"
+          [class]="hasRange() ? 'text-ink-900' : 'text-ink-500'"
           >{{ triggerLabel() }}</span
         >
         @if (hasRange()) {
@@ -314,6 +315,15 @@ export class DateRangePicker {
   readonly from = input<string | null>(null);
   readonly to = input<string | null>(null);
   readonly placeholder = input<string | undefined>(undefined);
+  /**
+   * What the control *is*, as opposed to what it currently says.
+   *
+   * Without it the trigger's accessible name is its own text, which is the placeholder while
+   * empty and the chosen range once filled — so a screen reader announces "Aug 5 – Aug 9,
+   * button" and never says those are arrival and departure dates. The visible text is the
+   * value; this is the label, and a form control needs both.
+   */
+  readonly ariaLabel = input<string | undefined>(undefined);
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
   readonly months = input(2);

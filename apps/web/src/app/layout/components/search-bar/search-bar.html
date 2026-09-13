@@ -1,21 +1,22 @@
 <div class="relative mx-auto w-full max-w-[850px]">
   <div class="hhsb-bar" [class.is-open]="!!open()">
-    <div
+    <label
       #whereSeg
       class="hhsb-seg hhsb-where"
       [class.on]="open() === 'where'"
-      (click)="focusWhere()"
+      [for]="whereInputId"
       (focusin)="open.set('where')"
       style="flex: 1.5 1 0"
     >
       <span class="hhsb-lab">{{ 'search.where' | transloco }}</span>
       <hh-place-search
+        [inputId]="whereInputId"
         [value]="place()"
         [placeholder]="'common.searchCityOrArea' | transloco"
         (textChange)="onText($event)"
         (selected)="onSelected($event)"
       />
-    </div>
+    </label>
     <span class="hhsb-dv"></span>
     <button
       type="button"

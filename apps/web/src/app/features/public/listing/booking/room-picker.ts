@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { Button } from '@hostelhive/ui';
+import { Button, DialogFocus } from '@hostelhive/ui';
 import { PricingPeriod, periodLabel } from '@util/pricing-period';
 import { BookingBasket } from './booking-basket';
 import {
@@ -46,7 +46,7 @@ interface RoomGroup {
 @Component({
   selector: 'hh-room-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DecimalPipe, TranslocoPipe, CurrencySymbolPipe],
+  imports: [Button, DialogFocus, DecimalPipe, TranslocoPipe, CurrencySymbolPipe],
   templateUrl: './room-picker.html',
   // The listing column spaces its cards with `space-y-4`, which works by putting a
   // margin-top on each sibling. A custom element defaults to `display: inline`, and
@@ -172,9 +172,17 @@ export class RoomPicker {
     return discountPercent(offer);
   }
 
-  /** "per room" / "per bed" — the footnote that makes a dorm price legible. */
+  /**
+   * "per room" / "per bed" — the footnote that makes a dorm price legible.
+   *
+   * Returns the key rather than the sentence: this is the line that tells a seeker whether
+   * `Rs 12,000` buys the room or one bed in it, and it was rendering in English against a
+   * translated page in all eighteen locales.
+   */
   protected unitNote(kind: RoomKind): string {
-    return kind === 'private' ? 'Prices are per room' : 'Prices are per bed';
+    return kind === 'private'
+      ? 'publicBooking.pricesArePerRoom'
+      : 'publicBooking.pricesArePerBed';
   }
 
   /** "2 Rooms" / "3 Beds", pluralised. Shown under the stepper so a bare number is never alone. */

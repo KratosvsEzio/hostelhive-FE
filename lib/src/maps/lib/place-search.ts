@@ -64,6 +64,7 @@ const DEBOUNCE_MS = 300;
     <input
       #input
       type="text"
+      [id]="inputId() || null"
       [placeholder]="placeholder() ?? ('maps.searchCityOrArea' | transloco)"
       (input)="onInput()"
       (keydown)="onKeydown($event)"
@@ -131,6 +132,8 @@ export class PlaceSearchField {
   private readonly inputEl =
     viewChild.required<ElementRef<HTMLInputElement>>('input');
 
+  /** Put on the native input, so a <label for> elsewhere can name it. */
+  readonly inputId = input('');
   readonly value = input('');
   readonly placeholder = input<string | undefined>(undefined);
   /** Non-empty restricts results to populated places (cities/towns/villages) — the address

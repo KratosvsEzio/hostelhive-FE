@@ -1,7 +1,12 @@
 <div class="hh-modal-root">
   @if (open()) {
     <!-- backdrop -->
-    <div class="fixed inset-0 z-[60] bg-black/40" (click)="close()"></div>
+    <button
+      type="button"
+      class="fixed inset-0 z-[60] bg-black/40 cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
+      (click)="close()"
+    ></button>
 
     <!-- modal -->
     <div

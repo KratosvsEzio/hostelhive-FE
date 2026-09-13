@@ -19,6 +19,9 @@ const SIZES: Record<AvatarSize, string> = {
 };
 
 const TONES: Record<AvatarTone, string> = {
+  // White on `brand-500` is 2.97:1, the same deliberate exception the primary button carries
+  // — see the note in `button.ts`. The other tones are 5% tints holding ink, so they pass
+  // comfortably and were never in question.
   brand: 'bg-brand-500 text-white',
   sky: 'bg-tint-sky text-ink-700',
   cream: 'bg-tint-cream text-ink-700',

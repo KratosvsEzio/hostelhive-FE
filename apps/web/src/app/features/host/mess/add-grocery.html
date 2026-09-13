@@ -13,10 +13,11 @@
     <div class="rounded-2xl bg-white p-5 shadow-card">
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
-          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400" for="ag-type">
             {{ 'common.expenseType' | transloco }} <span class="text-danger">*</span>
           </label>
           <hh-dropdown
+            controlId="ag-type"
             variant="field"
             [options]="expenseTypeOptions()"
             [value]="expenseType()"
@@ -28,10 +29,10 @@
           }
         </div>
         <div>
-          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400" for="ag-date">
             {{ 'hostMess.expenseDate' | transloco }} <span class="text-danger">*</span>
           </label>
-          <hh-date-picker [(value)]="date" [max]="todayIso" [placeholder]="'hostMess.pickADate' | transloco" />
+          <hh-date-picker controlId="ag-date" [(value)]="date" [max]="todayIso" [placeholder]="'hostMess.pickADate' | transloco" />
           @if (dateError()) {
             <p class="mt-1 text-xs font-medium text-danger">{{ dateError() }}</p>
           }
@@ -120,10 +121,11 @@
 
       <!-- Notes -->
       <div class="mt-5 border-t border-ink-100 pt-5">
-        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400" for="ag-notes">
           {{ 'common.notes' | transloco }} <span class="font-normal normal-case text-ink-300">{{ 'hostMess.optional' | transloco }}</span>
         </label>
         <textarea
+          id="ag-notes"
           class="hh-input min-h-[88px] resize-y"
           rows="3"
           [placeholder]="'hostMess.anyExtraDetailAboutThis' | transloco"

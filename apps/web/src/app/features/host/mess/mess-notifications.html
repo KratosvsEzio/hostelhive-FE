@@ -176,8 +176,8 @@
 
             <!-- Meal time -->
             <div>
-              <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostMess.mealTime' | transloco }}</label>
               <hh-time-picker
+                [label]="'hostMess.mealTime' | transloco"
                 [value]="cfg.mealTime"
                 (valueChange)="setMealTime(meal, $event)"
               />
@@ -185,8 +185,9 @@
 
             <!-- Notify before meal -->
             <div>
-              <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostMess.notifyBeforeMeal' | transloco }}</label>
+              <label class="mb-1 block text-xs font-medium text-ink-600" [for]="'mn-notify-' + meal">{{ 'hostMess.notifyBeforeMeal' | transloco }}</label>
               <hh-dropdown
+                [controlId]="'mn-notify-' + meal"
                 variant="field"
                 [options]="notifyBeforeOptions"
                 [value]="cfg.notifyBefore.toString()"
@@ -202,8 +203,9 @@
 
             <!-- Confirmation window -->
             <div class="sm:col-span-2">
-              <label class="mb-1 block text-xs font-medium text-ink-600">{{ 'hostMess.confirmationWindow' | transloco }}</label>
+              <label class="mb-1 block text-xs font-medium text-ink-600" [for]="'mn-window-' + meal">{{ 'hostMess.confirmationWindow' | transloco }}</label>
               <hh-dropdown
+                [controlId]="'mn-window-' + meal"
                 variant="field"
                 [options]="windowOptionsFor(meal)"
                 [value]="cfg.windowMinutes.toString()"

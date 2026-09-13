@@ -115,6 +115,7 @@ export type DropdownSize = 'sm' | 'md';
     >
       <button
         type="button"
+        [id]="controlId() || null"
         (click)="toggle()"
         [disabled]="disabled()"
         aria-haspopup="listbox"
@@ -345,6 +346,14 @@ export type DropdownSize = 'sm' | 'md';
 })
 export class Dropdown {
   readonly options = input<DropdownOption[]>([]);
+  /**
+   * Id for the trigger, so a caption beside the field can be a real <label for>.
+   *
+   * A <button> is a labelable element, so `for` is valid here and clicking the caption
+   * moves focus onto the trigger — which is what a caption above a field implies.
+   */
+  readonly controlId = input('');
+
   readonly multiple = input(false);
   readonly placeholder = input<string | undefined>(undefined);
   /** Single-select only: label for a top row that clears the selection (e.g. "All stays"). */

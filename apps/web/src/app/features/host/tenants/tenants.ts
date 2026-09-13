@@ -99,6 +99,15 @@ export class Tenants {
   private readonly refresh = signal(0);
   private readonly local = signal<Tenant[] | null>(null);
 
+  /**
+   * Rows added locally since the last fetch, added to the server's `total`.
+   *
+   * The list overlay can hold a new row, but the count in the footer comes from the response
+   * and would otherwise still describe the page before it. Reset whenever a fetch lands —
+   * the server's number then already includes what this was compensating for.
+   */
+  private readonly totalDelta = signal(0);
+
   protected readonly search = signal('');
   protected readonly statusFilter = signal(
     this.route.snapshot.queryParams['status'] ?? 'all',
@@ -162,7 +171,7 @@ export class Tenants {
     const base = this.fetched();
     const overlay = this.local();
     return overlay && !base.loading && !base.error
-      ? { ...base, data: overlay }
+      ? { ...base, data: overlay, total: base.total + this.totalDelta() }
       : base;
   });
 
@@ -275,9 +284,52 @@ export class Tenants {
    *
    * Replacing the row wholesale means the next such rule needs no change here at all.
    */
-  private applyUpdated(updated: Tenant): void {
+  /**
+   * Puts the saved tenant on the list without re-reading it.
+   *
+   * The drawer hands back the persisted record, so the row the host just filled in is
+   * already known — refetching the page to learn it costs a request, a spinner and their
+   * place in the table to be told what is in hand.
+   *
+   * Replace or append is decided by whether the id is already on the page rather than by a
+   * flag from the drawer: that is the same question, and asking the list means a create that
+   * somehow arrives with a known id corrects the row instead of duplicating it.
+   *
+   * An appended row lands at the end rather than in the server's sort position. That is the
+   * one thing this cannot reproduce, and the trade is deliberate — a host who just typed a
+   * tenant is looking for confirmation it saved, and the bottom of the list they are already
+   * on says that better than a reload that moves everything.
+   */
+  private applySaved(saved: Tenant): void {
     const current = this.state().data ?? [];
-    this.local.set(current.map((x) => (x.id === updated.id ? updated : x)));
+    const before = current.find((x) => x.id === saved.id) ?? null;
+    this.local.set(
+      before ? current.map((x) => (x.id === saved.id ? saved : x)) : [...current, saved],
+    );
+    this.shiftCounts(before, saved);
+  }
+
+  /**
+   * Keeps the status tabs and the pagination total honest after a local edit.
+   *
+   * Without this, dropping the refetch would leave "Active (5)" reading 5 after a sixth was
+   * added, and the footer counting a page that now holds one more row — the list correct and
+   * everything describing it wrong, which is worse than either alone.
+   *
+   * Both moves are arithmetic on what the last fetch reported, not a recount of the page:
+   * the page holds one page of tenants and the counts describe all of them.
+   */
+  private shiftCounts(before: Tenant | null, after: Tenant): void {
+    if (before?.status === after.status) return;
+    this.statuses.update((list) =>
+      list.map((s) => {
+        if (before && s.slug === before.status) return { ...s, count: Math.max(0, s.count - 1) };
+        if (s.slug === after.status) return { ...s, count: s.count + 1 };
+        return s;
+      }),
+    );
+    // A create is the only case that adds a tenant; an edit moves one between tabs.
+    if (!before) this.totalDelta.update((n) => n + 1);
   }
 
   protected onTenantAction(ev: { row: unknown; event: MouseEvent }): void {
@@ -300,18 +352,17 @@ export class Tenants {
   }
 
   /**
-   * The drawer hands back the persisted tenant; the row shows it immediately.
+   * The drawer hands back the persisted tenant, so the list already has what a refetch would
+   * have gone to fetch.
    *
-   * `$event` used to be dropped and the list left to a refetch. That refetch still runs —
-   * a create adds a row this cannot know about, and other fields may have moved — but it is
-   * no longer the only thing standing between a host and the truth: it is deliberately
-   * delayed (see {@link RefetchDelay}), and until it lands the row was showing what was on
-   * screen before the save.
+   * This used to patch the row *and* refetch, the refetch justified by a create adding a row
+   * the patch could not know about. {@link applySaved} appends that row now, and
+   * {@link shiftCounts} moves the tab counts and the total with it, so the request had
+   * nothing left to tell us. What it did cost was a spinner and the host's place in the
+   * table, immediately after an action they had already been told succeeded.
    */
   protected onDrawerSaved(saved: Tenant): void {
-    this.applyUpdated(saved);
-    this.refetchDelay.track('/renters');
-    this.refresh.update((n) => n + 1);
+    this.applySaved(saved);
     this.goToList();
   }
 

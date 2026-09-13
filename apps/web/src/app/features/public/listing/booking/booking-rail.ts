@@ -46,13 +46,26 @@ export class BookingRail {
   protected readonly signedIn = computed(() => !!this.session.user());
 
   /**
+   * Whether there is a stay to price yet.
+   *
+   * `nights()` is zero until both dates are set, and every total in this rail multiplies by
+   * it — so without this the panel renders its arithmetic against zero and states that the
+   * stay costs nothing. The basket already refuses to book in that state ({@link
+   * BookingBasket.canBook}); this is the same fact, said before the seeker presses anything.
+   */
+  protected readonly priced = computed(() => this.basket.nights() > 0);
+
+  /**
    * Browsing is open; booking is not.
    *
    * The wall is here rather than on Add so that the picker, the prices and the basket stay
    * available to anyone — those are the pages that get indexed and the ones a seeker judges
    * the hostel on. It is also why the basket holds nothing on the server until this point.
    */
-  protected readonly cta = computed(() => (this.signedIn() ? 'Book now' : 'Sign in to book'));
+  /** The key, not the sentence — the template translates it, so it follows a language switch. */
+  protected readonly cta = computed(() =>
+    this.signedIn() ? 'listing.bookNow' : 'listing.signInToBook',
+  );
 
   protected periodLabel(): string {
     return periodLabel(this.period());

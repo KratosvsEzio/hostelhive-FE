@@ -68,6 +68,15 @@ type Label = { key: string; params?: Record<string, string> };
   templateUrl: './search-bar.html',
 })
 export class SearchBar {
+  /**
+   * Ties the "Where" caption to the place input inside `hh-place-search`.
+   *
+   * The segment used to be a div that focused the input from a click handler — which works
+   * for a pointer and leaves the caption naming nothing. A real `<label for>` does the
+   * focusing itself and gives the field its accessible name.
+   */
+  protected readonly whereInputId = 'hhsb-where-input';
+
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly capacityStore = inject(SearchCapacity);
@@ -218,12 +227,10 @@ export class SearchBar {
   protected toggle(seg: Seg): void {
     this.open.update((o) => (o === seg ? null : seg));
   }
-  protected focusWhere(): void {
-    this.open.set('where');
-    const el = this.whereEl()?.nativeElement;
-    const input = el?.querySelector('input');
-    input?.focus();
-  }
+  // `focusWhere()` lived here to move focus into the place input when the segment was
+  // clicked. The segment is a `<label for>` now, which does that natively, so the method had
+  // no callers left.
+
   protected close(): void {
     this.open.set(null);
   }

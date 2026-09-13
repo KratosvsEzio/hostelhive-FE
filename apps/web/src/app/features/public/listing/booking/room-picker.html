@@ -170,7 +170,7 @@
                 <span class="hh-tag-skew bg-rose-100 text-xs font-semibold text-rose-700">
                   <span>−{{ pct }}%</span>
                 </span>
-                <span class="text-sm text-ink-400 line-through">
+                <span class="text-sm text-ink-500 line-through">
                   {{ currency() | currencySym }} {{ offer.actualPrice | number: '1.2-2' }}
                 </span>
               </p>
@@ -193,7 +193,7 @@
                     <button
                       type="button"
                       class="grid h-8 w-8 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-                      [attr.aria-label]="'Remove one from ' + offer.title"
+                      [attr.aria-label]="'a11y.removeOneFrom' | transloco: { title: offer.title }"
                       (click)="step(offer, -1)"
                     >
                       <span class="ti ti-minus" aria-hidden="true"></span>
@@ -218,7 +218,7 @@
       </div>
 
       <p class="border-t border-ink-100 px-4 py-2 text-xs text-ink-500">
-        {{ unitNote(row.kind) }} · {{ 'publicBooking.taxIncluded' | transloco }}
+        {{ unitNote(row.kind) | transloco }} · {{ 'publicBooking.taxIncluded' | transloco }}
       </p>
     </article>
   }
@@ -234,11 +234,17 @@
 @if (openDescription(); as room) {
   <div
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [attr.aria-label]="room.title"
   >
-    <div class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" (click)="openDescription.set(null)"></div>
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
+      (click)="openDescription.set(null)"
+    ></button>
     <div class="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
       <div class="flex items-start justify-between gap-3 border-b border-ink-100 px-5 py-4">
         <h2 class="font-display text-lg font-semibold text-ink-900">
