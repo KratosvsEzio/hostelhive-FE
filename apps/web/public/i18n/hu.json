@@ -335,7 +335,8 @@
     "noThanks": "Köszönöm, nem",
     "password": "Jelszó",
     "selectYear": "Válasszon évet",
-    "allow": "Engedélyezés"
+    "allow": "Engedélyezés",
+    "noPhotosYet": "Még nincsenek fotók"
   },
   "leadWall": {
     "close": "Bezárás",

@@ -335,7 +335,8 @@
     "noThanks": "No, gracias",
     "password": "Contraseña",
     "selectYear": "Seleccionar año",
-    "allow": "Permitir"
+    "allow": "Permitir",
+    "noPhotosYet": "Aún no hay fotos"
   },
   "leadWall": {
     "close": "Cerrar",

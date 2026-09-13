@@ -134,6 +134,13 @@
     </div>
 
     <!-- Gallery: hero + thumbs -->
+    @if (!l.images.length) {
+      <!-- A hostel with no photographs says so, rather than being handed a random picture
+           from picsum. Not a button: there is no lightbox to open. -->
+      <div class="relative mt-5 aspect-video overflow-hidden rounded-3xl sm:aspect-auto sm:h-[420px]">
+        <hh-photo-placeholder />
+      </div>
+    } @else {
     <div
       class="relative mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-3xl sm:h-[420px]"
       [class]="galleryGridClass()"
@@ -186,6 +193,7 @@
         </button>
       }
     </div>
+    }
 
     <!-- Two columns -->
     <div class="mt-8 grid grid-cols-1 gap-x-12 lg:grid-cols-3">
@@ -435,7 +443,7 @@
             <div class="flex items-baseline gap-1.5">
               <span class="text-sm text-ink-500">{{ 'common.from' | transloco }}</span>
               <span class="text-2xl font-semibold text-ink-900"
-                ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}</span
+                ><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | money }}</span
               >
               <!-- The unit the hostel actually charges in. Hardcoded "/ month", this read
                    "From Rs 1,200 / month" over a bed let at Rs 1,200 a *night* — the one
@@ -541,7 +549,7 @@
     <div class="min-w-0">
       <p class="text-xs text-ink-500">{{ 'common.from' | transloco }}</p>
       <p class="truncate font-semibold text-ink-900">
-        <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }}
+        <span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | money }}
         <span class="text-xs font-normal text-ink-500">{{ fromPeriodLabel() }}</span>
       </p>
     </div>
@@ -821,11 +829,17 @@
               [alt]="l.name"
               class="h-16 w-16 shrink-0 rounded-xl object-cover"
             />
+          } @else {
+            <!-- Keeps the row's shape when the hostel has no photographs; dropping the tile
+                 shifted the name and price left by 80px. -->
+            <div class="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+              <hh-photo-placeholder [compact]="true" />
+            </div>
           }
           <div class="min-w-0">
             <p class="truncate font-semibold text-ink-900">{{ l.name }}</p>
             <p class="mt-0.5 truncate text-sm text-ink-500">{{ l.area }}, {{ l.city }}</p>
-            <p class="mt-0.5 text-xs text-ink-400"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | number }} {{ fromPeriodLabel() }}</p>
+            <p class="mt-0.5 text-xs text-ink-400"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | money }} {{ fromPeriodLabel() }}</p>
           </div>
         </div>
 

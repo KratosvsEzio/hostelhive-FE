@@ -335,7 +335,8 @@
     "noThanks": "Нет, спасибо",
     "password": "Пароль",
     "selectYear": "Выберите год",
-    "allow": "Разрешить"
+    "allow": "Разрешить",
+    "noPhotosYet": "Фотографий пока нет"
   },
   "leadWall": {
     "close": "Закрыть",

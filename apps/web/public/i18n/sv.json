@@ -335,7 +335,8 @@
     "noThanks": "Nej tack",
     "password": "Lösenord",
     "selectYear": "Välj år",
-    "allow": "Tillåt"
+    "allow": "Tillåt",
+    "noPhotosYet": "Inga foton ännu"
   },
   "leadWall": {
     "close": "Stäng",

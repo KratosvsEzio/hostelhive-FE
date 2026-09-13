@@ -262,7 +262,7 @@ export function toListing(
     priceByCapacity: Object.keys(priceByCapacity).length ? priceByCapacity : undefined,
     images: images.length
       ? images
-      : [`https://picsum.photos/seed/hh-be-${h.id}/800/800`],
+      : [],
     lat,
     lng,
     host: h.host

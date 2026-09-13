@@ -58,12 +58,16 @@
         (click)="openListing(sel)"
       ></button>
       <div class="relative aspect-[16/10] bg-ink-100">
-        <img
-          [src]="cardImage(sel)"
-          alt=""
-          class="h-full w-full object-cover"
-          loading="lazy"
-        />
+        @if (cardImage(sel)) {
+          <img
+            [src]="cardImage(sel)"
+            alt=""
+            class="h-full w-full object-cover"
+            loading="lazy"
+          />
+        } @else {
+          <hh-photo-placeholder [compact]="true" />
+        }
         <button
           type="button"
           [aria-label]="'common.close' | transloco"

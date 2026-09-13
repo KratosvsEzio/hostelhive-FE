@@ -335,7 +335,8 @@
     "noThanks": "Tidak, terima kasih",
     "password": "Kata sandi",
     "selectYear": "Pilih tahun",
-    "allow": "Izinkan"
+    "allow": "Izinkan",
+    "noPhotosYet": "Belum ada foto"
   },
   "leadWall": {
     "close": "Tutup",

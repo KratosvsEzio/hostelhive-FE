@@ -335,7 +335,8 @@
     "noThanks": "Nee, bedankt",
     "password": "Wachtwoord",
     "selectYear": "Jaar selecteren",
-    "allow": "Toestaan"
+    "allow": "Toestaan",
+    "noPhotosYet": "Nog geen foto's"
   },
   "leadWall": {
     "close": "Sluiten",

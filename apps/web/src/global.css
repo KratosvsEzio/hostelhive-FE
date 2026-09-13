@@ -1012,6 +1012,19 @@ hh-search-map {
   object-fit: cover;
   display: block;
 }
+/* The honest tile for a hostel with no photographs. Hand-built rather than
+   `hh-photo-placeholder`, because this popup is raw DOM assembled in `buildCard` and never
+   passes through a template — see `search-map.ts`. Kept visually identical to the component
+   so the map and the cards beside it do not disagree. */
+.hh-mapcard__nophoto {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: #f4f4f5;
+  color: #9ca3af;
+  font-size: 20px;
+}
 .hh-mapcard__close,
 .hh-mapcard__heart {
   position: absolute;

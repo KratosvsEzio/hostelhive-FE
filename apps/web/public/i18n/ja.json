@@ -335,7 +335,8 @@
     "noThanks": "結構です",
     "password": "パスワード",
     "selectYear": "年を選択",
-    "allow": "許可する"
+    "allow": "許可する",
+    "noPhotosYet": "写真はまだありません"
   },
   "leadWall": {
     "close": "閉じる",

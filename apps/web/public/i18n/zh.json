@@ -335,7 +335,8 @@
     "noThanks": "不用了",
     "password": "密码",
     "selectYear": "选择年份",
-    "allow": "允许"
+    "allow": "允许",
+    "noPhotosYet": "暂无照片"
   },
   "leadWall": {
     "close": "关闭",

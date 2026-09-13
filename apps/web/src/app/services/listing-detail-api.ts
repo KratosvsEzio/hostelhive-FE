@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, catchError, of } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
 import { ListingDetail } from './listing-detail.fixture';
@@ -175,7 +175,10 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     amenities,
     offers: offers.length ? offers : undefined,
     priceFrom,
-    images: images.length ? images : [`https://picsum.photos/seed/hh-be-${d.id}/800/800`],
+    // No invented photograph when the hostel has none. A random picture from picsum
+    // filled the gallery with somewhere that is not this hostel, on the page whose job is
+    // to show what it looks like — see `hh-photo-placeholder`.
+    images,
     lat: Number.isFinite(lat) ? (lat as number) : 0,
     lng: Number.isFinite(lng) ? (lng as number) : 0,
     host: d.host
@@ -201,12 +204,19 @@ function toListingDetail(d: HostelDetail): ListingDetail {
 export class ListingDetailApi {
   private readonly hostels = inject(HostelsApi);
 
+  /**
+   * Errors are left to the caller. `undefined` means "no such listing", nothing else.
+   *
+   * This used to end in `catchError(() => of(undefined))`, which turned every timeout, 500
+   * and dropped connection into a *successful* emission of nothing. The listing page has its
+   * own `catchError` and a whole error branch with a retry behind it — none of which could
+   * ever run, because the failure had already been laundered into a success one layer down.
+   * A seeker whose signal dropped was told the hostel may have been removed and offered the
+   * search page: wrong, final, and it sends them away from a hostel that exists.
+   *
+   * The distinction only survives if this observable is allowed to fail.
+   */
   getBySlug(slug: string): Observable<ListingDetail | undefined> {
-    return this.hostels
-      .getById(slug)
-      .pipe(
-        map((d) => toListingDetail(d)),
-        catchError(() => of(undefined)),
-      );
+    return this.hostels.getById(slug).pipe(map((d) => toListingDetail(d)));
   }
 }

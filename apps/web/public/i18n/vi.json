@@ -335,7 +335,8 @@
     "noThanks": "Không, cảm ơn",
     "password": "Mật khẩu",
     "selectYear": "Chọn năm",
-    "allow": "Cho phép"
+    "allow": "Cho phép",
+    "noPhotosYet": "Chưa có ảnh"
   },
   "leadWall": {
     "close": "Đóng",

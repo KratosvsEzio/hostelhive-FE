@@ -335,7 +335,8 @@
     "noThanks": "لا، شكرًا",
     "password": "كلمة المرور",
     "selectYear": "اختر السنة",
-    "allow": "السماح"
+    "allow": "السماح",
+    "noPhotosYet": "لا توجد صور بعد"
   },
   "leadWall": {
     "close": "إغلاق",

@@ -388,7 +388,8 @@
     "noThanks": "No thanks",
     "password": "Password",
     "selectYear": "Select year",
-    "allow": "Allow"
+    "allow": "Allow",
+    "noPhotosYet": "No photos yet"
   },
   "coreForbidden": {
     "accessBlocked": "Access blocked",

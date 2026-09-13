@@ -335,7 +335,8 @@
     "noThanks": "Nej tak",
     "password": "Adgangskode",
     "selectYear": "Vælg år",
-    "allow": "Tillad"
+    "allow": "Tillad",
+    "noPhotosYet": "Ingen billeder endnu"
   },
   "leadWall": {
     "close": "Luk",

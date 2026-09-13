@@ -14,7 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, catchError, distinctUntilChanged, fromEvent, map, of, startWith, switchMap, take } from 'rxjs';
 import { AMENITIES, AccommodationType, iconForSlug } from '@hostelhive/data-access';
 import { translate } from '@jsverse/transloco';
-import { Avatar, Badge, Button, DialogFocus, EmptyState, ErrorState, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
+import { Avatar, Badge, Button, DialogFocus, EmptyState, ErrorState, PhotoPlaceholder, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelPhoneDetail, HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
@@ -46,6 +46,7 @@ import {
 } from '@util/accommodation-type';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { MoneyPipe } from '@app/shared/currency/money.pipe';
 import { ApiDate } from '@util/api-date';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -108,11 +109,13 @@ interface ViewState {
     EmptyState,
     ErrorState,
     OverflowProbe,
+    PhotoPlaceholder,
     Skeleton,
     StaticMap,
     TooltipFixed,
     CurrencySymbolPipe,
     CurrencyNamePipe,
+    MoneyPipe,
     RoomPicker,
     BookingRail,
     BookingSummary,
@@ -913,6 +916,7 @@ export class ListingDetail {
         if (this.lightboxIndex() !== null) this.closeLightbox();
         else if (this.loginGateOpen()) this.closeLoginGate();
         else if (this.shareOpen()) this.closeShare();
+        else if (this.summaryOpen()) this.dismissSummary();
         else if (this.reviewsOpen()) this.closeReviews();
         else if (this.modalOpen()) this.closeModal();
         else if (this.descriptionModalOpen()) this.descriptionModalOpen.set(false);

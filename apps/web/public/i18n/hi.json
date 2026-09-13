@@ -335,7 +335,8 @@
     "noThanks": "नहीं, धन्यवाद",
     "password": "पासवर्ड",
     "selectYear": "वर्ष चुनें",
-    "allow": "अनुमति दें"
+    "allow": "अनुमति दें",
+    "noPhotosYet": "अभी कोई फ़ोटो नहीं"
   },
   "leadWall": {
     "close": "बंद करें",

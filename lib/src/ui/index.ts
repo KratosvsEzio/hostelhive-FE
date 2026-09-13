@@ -31,6 +31,7 @@ export * from './lib/phone-input/phone-input';
 export * from './lib/filter-chips/filter-chips';
 export * from './lib/context-menu/context-menu';
 export * from './lib/photo-grid/photo-grid';
+export * from './lib/photo-placeholder/photo-placeholder';
 export * from './lib/compact-number/compact-number';
 export * from './lib/breadcrumb/breadcrumb';
 export * from './lib/link-localiser';
