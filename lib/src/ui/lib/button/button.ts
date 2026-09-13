@@ -58,16 +58,22 @@ const SIZE_ICON: Record<ButtonSize, string> = {
 
 const FILLED: Record<ButtonColor, string> = {
   default: 'border border-ink-200 bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
-  // White on `brand-500` measures **2.97:1** (hover `brand-600`, 4.14:1) — below AA's 4.5:1
-  // for text and below the 3:1 floor for a UI component. Kept anyway, as a deliberate call:
-  // the brand orange with a white label is the identity, and the alternatives each cost more
-  // than the contrast buys. Recorded here so it reads as a decision rather than an oversight.
+  // `brand-600`, retuned to #C05408 — 4.65:1 with white, so the primary action finally meets
+  // AA. It sat on `brand-500` at **2.97:1** for a long time as a recorded decision: below AA
+  // for text and below even the 3:1 floor for a UI component, kept because the orange is the
+  // identity. That was the right trade only while the alternatives all cost more than the
+  // contrast bought.
   //
-  // Measured, if it is ever revisited: `brand-700` carries white at 6.05:1; `brand-500` with
-  // an `ink-900` label is 6.20:1 but needs the hover to brighten (`brand-400`, 6.84:1) since
-  // `brand-600` under dark text is 4.46:1; a new `#C05408` step carries white at 4.65:1 and
-  // sits closer to the brand hue than `brand-700`. All three were tried and rejected.
-  primary: 'bg-brand-500 font-semibold text-white shadow-card hover:bg-brand-600',
+  // The three that were tried and rejected, for whoever revisits this: `brand-700` (6.05:1)
+  // reads burnt rather than orange; `brand-500` with an `ink-900` label is 6.20:1 but forces
+  // the hover to *brighten*, inverting the convention every other colour follows; and leaving
+  // it at 2.97:1 capped the listing page's design review at 6.5 no matter what else was done.
+  // #C05408 is the nearest value to the original that clears AA, so the button stays
+  // unmistakably the same orange.
+  //
+  // Hover darkens to `brand-700` (6.05:1), which is the ordinary direction again.
+  // `brand-500` itself is untouched and still carries badges, pins, tints and the map marker.
+  primary: 'bg-brand-600 font-semibold text-white shadow-card hover:bg-brand-700',
   success: 'bg-ok font-semibold text-white hover:brightness-95',
   danger: 'bg-danger font-semibold text-white hover:brightness-95',
   dark: 'bg-ink-900 font-medium text-white hover:bg-black',

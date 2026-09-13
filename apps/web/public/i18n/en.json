@@ -393,7 +393,8 @@
     "selectYear": "Select year",
     "allow": "Allow",
     "noPhotosYet": "No photos yet",
-    "guests": "Guests"
+    "guests": "Guests",
+    "copy": "Copy"
   },
   "coreForbidden": {
     "accessBlocked": "Access blocked",
@@ -1255,7 +1256,8 @@
     "enterTheGuestName": "Enter the guest's name",
     "enterAValidPhone": "Enter a valid phone number",
     "enterAValidEmail": "Enter a valid email address",
-    "ofNSeats": "of {{count}}"
+    "ofNSeats": "of {{count}}",
+    "bookingReference": "Booking reference"
   },
   "publicCareers": {
     "joinUsInBuildingPakistan": "Join us in building Pakistan's #1 hostel platform",

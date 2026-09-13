@@ -337,7 +337,8 @@
     "selectYear": "年を選択",
     "allow": "許可する",
     "noPhotosYet": "写真はまだありません",
-    "guests": "ゲスト"
+    "guests": "ゲスト",
+    "copy": "コピー"
   },
   "leadWall": {
     "close": "閉じる",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "ゲストの名前を入力してください",
     "enterAValidPhone": "有効な電話番号を入力してください",
     "enterAValidEmail": "有効なメールアドレスを入力してください",
-    "ofNSeats": "/ {{count}}"
+    "ofNSeats": "/ {{count}}",
+    "bookingReference": "予約番号"
   },
   "states": {
     "nothingHereYet": "まだ何もありません",

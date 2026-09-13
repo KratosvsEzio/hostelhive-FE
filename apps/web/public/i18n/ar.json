@@ -337,7 +337,8 @@
     "selectYear": "اختر السنة",
     "allow": "السماح",
     "noPhotosYet": "لا توجد صور بعد",
-    "guests": "الضيوف"
+    "guests": "الضيوف",
+    "copy": "نسخ"
   },
   "leadWall": {
     "close": "إغلاق",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "أدخل اسم الضيف",
     "enterAValidPhone": "أدخل رقم هاتف صالح",
     "enterAValidEmail": "أدخل بريدًا إلكترونيًا صالحًا",
-    "ofNSeats": "من {{count}}"
+    "ofNSeats": "من {{count}}",
+    "bookingReference": "رقم الحجز"
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",

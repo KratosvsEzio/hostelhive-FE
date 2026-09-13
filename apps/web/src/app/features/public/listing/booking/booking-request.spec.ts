@@ -1,5 +1,5 @@
 import { BasketLine } from './room-offer';
-import { toBookingRequest, toLineItem } from './booking-request';
+import { readCreatedBooking, toBookingRequest, toLineItem } from './booking-request';
 
 const GUEST = { name: 'Ali Raza', phone: '923001234567', email: 'ali@example.com' };
 
@@ -165,5 +165,58 @@ describe('toBookingRequest', () => {
       { room_type_id: 'KGJwMC', guests: 4, quantity: 2 },
       { room_type_id: 'MqVuEl', guests: 2 },
     ]);
+  });
+});
+
+/**
+ * The reference off the create response.
+ *
+ * The only field read from the created booking, and the one the confirmation is built on. It
+ * is read leniently because the POST's envelope is the one shape in this flow that has not
+ * been seen on the wire — every other endpoint on this API wraps its record, so wrapped is
+ * what this expects, and the bare spelling costs one `??`.
+ */
+describe('readCreatedBooking', () => {
+  it('reads the reference out of the wrapped record', () => {
+    expect(
+      readCreatedBooking({ booking: { booking_ref: 'HH-2026-5CW0EZ0N' } }).reference,
+    ).toBe('HH-2026-5CW0EZ0N');
+  });
+
+  it('reads a bare reference too', () => {
+    expect(readCreatedBooking({ booking_ref: 'HH-2026-5CW0EZ0N' }).reference).toBe(
+      'HH-2026-5CW0EZ0N',
+    );
+  });
+
+  it('prefers the wrapped one when both are there', () => {
+    expect(
+      readCreatedBooking({ booking: { booking_ref: 'WRAPPED' }, booking_ref: 'BARE' }).reference,
+    ).toBe('WRAPPED');
+  });
+
+  it('trims it', () => {
+    expect(readCreatedBooking({ booking: { booking_ref: '  HH-1  ' } }).reference).toBe('HH-1');
+  });
+
+  /**
+   * Every shape of "no reference" answers `null`, never an empty string — the confirmation
+   * branches on it, and a blank one would render a receipt with a hole where the number goes.
+   */
+  it('answers null when there is nothing to quote', () => {
+    expect(readCreatedBooking({}).reference).toBeNull();
+    expect(readCreatedBooking(null).reference).toBeNull();
+    expect(readCreatedBooking(undefined).reference).toBeNull();
+    expect(readCreatedBooking({ booking: null }).reference).toBeNull();
+    expect(readCreatedBooking({ booking: { booking_ref: null } }).reference).toBeNull();
+    expect(readCreatedBooking({ booking: { booking_ref: '   ' } }).reference).toBeNull();
+  });
+
+  it('ignores a non-string reference', () => {
+    expect(
+      readCreatedBooking({ booking: { booking_ref: 7 } } as unknown as {
+        booking?: { booking_ref?: string | null } | null;
+      }).reference,
+    ).toBeNull();
   });
 });

@@ -337,7 +337,8 @@
     "selectYear": "Seleziona l'anno",
     "allow": "Consenti",
     "noPhotosYet": "Ancora nessuna foto",
-    "guests": "Ospiti"
+    "guests": "Ospiti",
+    "copy": "Copia"
   },
   "leadWall": {
     "close": "Chiudi",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "Inserisci il nome dell'ospite",
     "enterAValidPhone": "Inserisci un numero di telefono valido",
     "enterAValidEmail": "Inserisci un indirizzo email valido",
-    "ofNSeats": "su {{count}}"
+    "ofNSeats": "su {{count}}",
+    "bookingReference": "Riferimento prenotazione"
   },
   "states": {
     "nothingHereYet": "Ancora nulla qui",

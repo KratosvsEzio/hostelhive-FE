@@ -337,7 +337,8 @@
     "selectYear": "वर्ष चुनें",
     "allow": "अनुमति दें",
     "noPhotosYet": "अभी कोई फ़ोटो नहीं",
-    "guests": "मेहमान"
+    "guests": "मेहमान",
+    "copy": "कॉपी करें"
   },
   "leadWall": {
     "close": "बंद करें",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "अतिथि का नाम दर्ज करें",
     "enterAValidPhone": "मान्य फ़ोन नंबर दर्ज करें",
     "enterAValidEmail": "मान्य ईमेल पता दर्ज करें",
-    "ofNSeats": "{{count}} में से"
+    "ofNSeats": "{{count}} में से",
+    "bookingReference": "बुकिंग संदर्भ"
   },
   "states": {
     "nothingHereYet": "अभी यहाँ कुछ नहीं",

@@ -337,7 +337,8 @@
     "selectYear": "سال منتخب کریں",
     "allow": "اجازت دیں",
     "noPhotosYet": "ابھی کوئی تصویر نہیں",
-    "guests": "مہمان"
+    "guests": "مہمان",
+    "copy": "کاپی کریں"
   },
   "leadWall": {
     "close": "بند کریں",
@@ -1542,7 +1543,8 @@
     "enterTheGuestName": "مہمان کا نام درج کریں",
     "enterAValidPhone": "درست فون نمبر درج کریں",
     "enterAValidEmail": "درست ای میل ایڈریس درج کریں",
-    "ofNSeats": "{{count}} میں سے"
+    "ofNSeats": "{{count}} میں سے",
+    "bookingReference": "بکنگ ریفرنس"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",

@@ -59,6 +59,40 @@ export interface ApiCreateBookingRequest {
   };
 }
 
+/**
+ * What the booking is worth quoting afterwards.
+ *
+ * Only the reference is read. The server answers with the whole booking priced and dated, but
+ * everything else on it is either already on screen or the hostel's business rather than the
+ * guest's — and a field read here is a field that breaks the confirmation when it is renamed.
+ */
+export interface CreatedBooking {
+  /** `HH-2026-5CW0EZ0N`, or `null` when the answer did not carry one. */
+  reference: string | null;
+}
+
+/**
+ * The wire shape, as far as it is depended on.
+ *
+ * Both the wrapped and bare spellings are read. Every other endpoint on this API wraps its
+ * record — `{booking: …}`, `{attachment: …}` — and the cancel action does too, so wrapped is
+ * what this expects; the bare key costs one `??` and covers the create being the exception.
+ */
+export interface ApiCreatedBookingResponse {
+  booking?: { booking_ref?: string | null } | null;
+  booking_ref?: string | null;
+}
+
+/** The reference off the create response, or `null` — never an empty string. */
+export function readCreatedBooking(
+  res: ApiCreatedBookingResponse | null | undefined,
+): CreatedBooking {
+  const ref = res?.booking?.booking_ref ?? res?.booking_ref;
+  if (typeof ref !== 'string') return { reference: null };
+  const trimmed = ref.trim();
+  return { reference: trimmed === '' ? null : trimmed };
+}
+
 export interface BookingRequestInput {
   hostelId: string;
   /** The country on the hostel record — what its clock runs on. See `countryTimeZone`. */

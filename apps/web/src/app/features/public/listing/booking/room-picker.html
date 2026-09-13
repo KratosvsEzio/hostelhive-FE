@@ -50,13 +50,30 @@
               class="absolute inset-0 flex transition-transform duration-300 ease-out"
               [style.transform]="'translateX(-' + photoIndex(offer) * 100 + '%)'"
             >
+              <!-- Slide one is gated on the viewport; the rest on the step.
+
+                   Every slide sits at the same offset inside the sliding track, so they all
+                   intersect at the same moment — a viewport observer cannot tell them apart,
+                   and loaded all three per room: 2.69 MB across two cards before the reader
+                   had scrolled anywhere near them. Only the first is ever on screen without
+                   a tap, so the others wait for the carousel index to reach them and arrive
+                   one step ahead of being looked at. -->
               @for (src of photosOf(offer); track $index) {
-                <img
-                  [src]="src"
-                  [alt]="offer.title"
-                  loading="lazy"
-                  class="h-full w-full shrink-0 object-cover"
-                />
+                @if ($index === 0) {
+                  <img
+                    [hhLazySrc]="src"
+                    [alt]="offer.title"
+                    decoding="async"
+                    class="h-full w-full shrink-0 object-cover"
+                  />
+                } @else {
+                  <img
+                    [attr.src]="$index <= photoIndex(offer) ? src : null"
+                    [alt]="offer.title"
+                    decoding="async"
+                    class="h-full w-full shrink-0 object-cover"
+                  />
+                }
               }
             </div>
 

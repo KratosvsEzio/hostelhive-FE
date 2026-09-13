@@ -45,8 +45,36 @@ export class BookingSummary {
   /** Whatever the API said went wrong, verbatim. Empty when nothing has failed. */
   readonly error = input('');
 
+  /**
+   * The booking's reference, once it exists — which turns this from a review into a receipt.
+   *
+   * Shown here rather than in the toast the confirmation used to be. A reference is the one
+   * thing a guest needs to keep: it is what they quote when they ring the hostel, and a
+   * notification that takes itself off the screen after a few seconds is not somewhere to put
+   * a number somebody has to write down.
+   */
+  readonly reference = input<string | null>(null);
+
   readonly confirmed = output<BookingGuest>();
   readonly dismissed = output<void>();
+
+  /** A receipt has nothing to cancel out of — one button, and it closes. */
+  protected readonly done = computed(() => this.reference() !== null);
+  protected readonly copied = signal(false);
+
+  protected copyReference(): void {
+    const ref = this.reference();
+    if (!ref) return;
+    void navigator.clipboard
+      ?.writeText(ref)
+      .then(() => {
+        this.copied.set(true);
+        setTimeout(() => this.copied.set(false), 2000);
+      })
+      // A clipboard the browser will not give up is not worth an error: the reference is on
+      // screen and selectable, which is how it was going to be copied anyway.
+      .catch(() => undefined);
+  }
 
   protected readonly basket = inject(BookingBasket);
   private readonly session = inject(SessionStore);

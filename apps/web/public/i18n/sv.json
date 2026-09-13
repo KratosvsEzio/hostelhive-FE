@@ -337,7 +337,8 @@
     "selectYear": "Välj år",
     "allow": "Tillåt",
     "noPhotosYet": "Inga foton ännu",
-    "guests": "Gäster"
+    "guests": "Gäster",
+    "copy": "Kopiera"
   },
   "leadWall": {
     "close": "Stäng",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "Ange gästens namn",
     "enterAValidPhone": "Ange ett giltigt telefonnummer",
     "enterAValidEmail": "Ange en giltig e-postadress",
-    "ofNSeats": "av {{count}}"
+    "ofNSeats": "av {{count}}",
+    "bookingReference": "Bokningsreferens"
   },
   "states": {
     "nothingHereYet": "Inget här ännu",

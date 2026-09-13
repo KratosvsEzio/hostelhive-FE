@@ -337,7 +337,8 @@
     "selectYear": "Pilih tahun",
     "allow": "Izinkan",
     "noPhotosYet": "Belum ada foto",
-    "guests": "Tamu"
+    "guests": "Tamu",
+    "copy": "Salin"
   },
   "leadWall": {
     "close": "Tutup",
@@ -1542,7 +1543,8 @@
     "enterTheGuestName": "Masukkan nama tamu",
     "enterAValidPhone": "Masukkan nomor telepon yang valid",
     "enterAValidEmail": "Masukkan alamat email yang valid",
-    "ofNSeats": "dari {{count}}"
+    "ofNSeats": "dari {{count}}",
+    "bookingReference": "Referensi pemesanan"
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",

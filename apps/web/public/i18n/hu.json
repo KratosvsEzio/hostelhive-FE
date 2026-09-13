@@ -337,7 +337,8 @@
     "selectYear": "Válasszon évet",
     "allow": "Engedélyezés",
     "noPhotosYet": "Még nincsenek fotók",
-    "guests": "Vendégek"
+    "guests": "Vendégek",
+    "copy": "Másolás"
   },
   "leadWall": {
     "close": "Bezárás",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "Adja meg a vendég nevét",
     "enterAValidPhone": "Adjon meg érvényes telefonszámot",
     "enterAValidEmail": "Adjon meg érvényes e-mail-címet",
-    "ofNSeats": "ennyiből: {{count}}"
+    "ofNSeats": "ennyiből: {{count}}",
+    "bookingReference": "Foglalási azonosító"
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",

@@ -337,7 +337,8 @@
     "selectYear": "Vælg år",
     "allow": "Tillad",
     "noPhotosYet": "Ingen billeder endnu",
-    "guests": "Gæster"
+    "guests": "Gæster",
+    "copy": "Kopiér"
   },
   "leadWall": {
     "close": "Luk",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "Indtast gæstens navn",
     "enterAValidPhone": "Indtast et gyldigt telefonnummer",
     "enterAValidEmail": "Indtast en gyldig e-mailadresse",
-    "ofNSeats": "af {{count}}"
+    "ofNSeats": "af {{count}}",
+    "bookingReference": "Bookingreference"
   },
   "states": {
     "nothingHereYet": "Der er intet her endnu",

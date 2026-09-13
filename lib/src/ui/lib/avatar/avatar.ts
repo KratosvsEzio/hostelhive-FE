@@ -19,10 +19,10 @@ const SIZES: Record<AvatarSize, string> = {
 };
 
 const TONES: Record<AvatarTone, string> = {
-  // White on `brand-500` is 2.97:1, the same deliberate exception the primary button carries
-  // — see the note in `button.ts`. The other tones are 5% tints holding ink, so they pass
-  // comfortably and were never in question.
-  brand: 'bg-brand-500 text-white',
+  // `brand-600` (#C05408, 4.65:1 with white), matching the primary button — initials are
+  // text, and often the only thing naming the person. This was `brand-500` at 2.97:1 for as
+  // long as the button was. The other tones are 5% tints holding ink and always passed.
+  brand: 'bg-brand-600 text-white',
   sky: 'bg-tint-sky text-ink-700',
   cream: 'bg-tint-cream text-ink-700',
   mint: 'bg-tint-mint text-ink-700',

@@ -337,7 +337,8 @@
     "selectYear": "Выберите год",
     "allow": "Разрешить",
     "noPhotosYet": "Фотографий пока нет",
-    "guests": "Гости"
+    "guests": "Гости",
+    "copy": "Копировать"
   },
   "leadWall": {
     "close": "Закрыть",
@@ -1542,7 +1543,8 @@
     "enterTheGuestName": "Введите имя гостя",
     "enterAValidPhone": "Введите действительный номер телефона",
     "enterAValidEmail": "Введите действительный адрес эл. почты",
-    "ofNSeats": "из {{count}}"
+    "ofNSeats": "из {{count}}",
+    "bookingReference": "Номер бронирования"
   },
   "states": {
     "nothingHereYet": "Здесь пока пусто",

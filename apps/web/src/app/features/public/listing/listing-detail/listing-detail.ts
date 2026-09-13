@@ -31,6 +31,7 @@ import {
 } from '@util/pricing-period';
 import { NotificationService } from '@core/notification.service';
 import { OverflowProbe } from '@app/shared/overflow-probe/overflow-probe';
+import { LazySrc } from '@app/shared/lazy-src/lazy-src';
 import { BookingBasket } from '../booking/booking-basket';
 import { BookingRail } from '../booking/booking-rail';
 import { BookingSummary } from '../booking/booking-summary';
@@ -118,6 +119,7 @@ interface ViewState {
     EmptyState,
     ErrorState,
     OverflowProbe,
+    LazySrc,
     PhotoPlaceholder,
     Skeleton,
     StaticMap,
@@ -321,6 +323,8 @@ export class ListingDetail {
   protected readonly summaryOpen = signal(false);
   protected readonly booking = signal(false);
   protected readonly bookingError = signal('');
+  /** Set once the booking exists — turns the summary modal into its receipt. */
+  protected readonly bookingRef = signal<string | null>(null);
 
   /**
    * Book now. Browsing and building a basket are open to anyone; completing a booking is not.
@@ -340,6 +344,7 @@ export class ListingDetail {
       return;
     }
     this.bookingError.set('');
+    this.bookingRef.set(null);
     this.summaryOpen.set(true);
   }
 
@@ -348,6 +353,10 @@ export class ListingDetail {
     // modal closes, and a guest who saw it vanish would reasonably try again.
     if (this.booking()) return;
     this.summaryOpen.set(false);
+    // Cleared on the way out, not on the way in: the modal is still on screen while it
+    // closes, and blanking the reference first would flip it back to the review it is no
+    // longer about.
+    this.bookingRef.set(null);
   }
 
   /**
@@ -386,10 +395,18 @@ export class ListingDetail {
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (created) => {
           this.booking.set(false);
-          this.summaryOpen.set(false);
           this.basket.clear();
+          if (created.reference) {
+            // The modal stays up and becomes the receipt. A reference is the one thing the
+            // guest has to keep hold of, and a toast takes itself off the screen before
+            // anybody has written it down.
+            this.bookingRef.set(created.reference);
+            return;
+          }
+          // No reference came back, so there is nothing to keep them here for.
+          this.summaryOpen.set(false);
           this.notifications.success(
             translate('publicBooking.bookingSent'),
             translate('publicBooking.weLlEmailYouWhenConfirmed'),

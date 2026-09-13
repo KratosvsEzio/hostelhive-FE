@@ -451,6 +451,7 @@
                 [hostelName]="l.name"
                 [submitting]="booking()"
                 [error]="bookingError()"
+                [reference]="bookingRef()"
                 (confirmed)="confirmBooking($event)"
                 (dismissed)="dismissSummary()"
               />
@@ -790,13 +791,30 @@
               </div>
               <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 @for (photo of section.photos; track photo.url; let i = $index) {
+                  <!-- Lazy, and a ground to load onto. This grid opens every photograph the
+                       hostel has at full size — on this listing 15 files totalling 17.4 MB,
+                       one of them 7.8 MB — and without this it fetched all of them the
+                       instant the grid appeared, including the ones below the fold. It is a
+                       scrolling container, so the browser only needs to be told. -->
                   <button
                     type="button"
-                    class="aspect-[4/3] overflow-hidden rounded-xl transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    class="aspect-[4/3] overflow-hidden rounded-xl bg-white/10 transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     (click)="openPhoto(section.offset + i)"
                     [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: section.offset + i + 1 }"
                   >
-                    <img [src]="photo.url" alt="" class="h-full w-full object-cover" />
+                    <!-- 100px, not the 200px default: these tiles are two across and
+                         only ~126px tall, so half the grid by height is four-fifths of it by
+                         photograph. Measured tops at 375x812 are 108..1162, so 0px and 100px
+                         both defer the same three tiles while 200px defers two — 100px is the
+                         one that also keeps a screen of lead, so nothing fills in under the
+                         reader. The real cost here is the missing size variants, not this. -->
+                    <img
+                      [hhLazySrc]="photo.url"
+                      lazyMargin="100px"
+                      alt=""
+                      class="h-full w-full object-cover"
+                      decoding="async"
+                    />
                   </button>
                 }
               </div>

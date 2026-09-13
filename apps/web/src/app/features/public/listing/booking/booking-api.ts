@@ -1,7 +1,13 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, delay, of, throwError } from 'rxjs';
+import { Observable, delay, map, of, throwError } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
-import { BookingRequestInput, toBookingRequest } from './booking-request';
+import {
+  ApiCreatedBookingResponse,
+  BookingRequestInput,
+  CreatedBooking,
+  readCreatedBooking,
+  toBookingRequest,
+} from './booking-request';
 import {
   ApiBooking,
   ApiBookingLine,
@@ -174,11 +180,14 @@ export class BookingApi {
    * **Nothing is paid online.** The guest reviews a summary, confirms, and the booking exists;
    * the money is settled with the hostel.
    *
-   * The response body is not read. What the caller needs is whether it worked, and depending
-   * on a shape nobody has pinned down yet would break on the first field that gets renamed.
+   * Answers with the booking reference and nothing else. That is the one thing on the created
+   * record a guest needs afterwards — what they quote when they ring the hostel — and every
+   * further field read here is a field that breaks the confirmation when it gets renamed.
    */
-  createBooking(input: BookingRequestInput): Observable<void> {
-    return this.api.post<void>('/api/bookings', toBookingRequest(input));
+  createBooking(input: BookingRequestInput): Observable<CreatedBooking> {
+    return this.api
+      .post<ApiCreatedBookingResponse>('/api/bookings', toBookingRequest(input))
+      .pipe(map(readCreatedBooking));
   }
 
   /** `GET /api/bookings` — the guest's own. */

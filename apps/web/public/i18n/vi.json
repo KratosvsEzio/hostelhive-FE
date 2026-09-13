@@ -337,7 +337,8 @@
     "selectYear": "Chọn năm",
     "allow": "Cho phép",
     "noPhotosYet": "Chưa có ảnh",
-    "guests": "Khách"
+    "guests": "Khách",
+    "copy": "Sao chép"
   },
   "leadWall": {
     "close": "Đóng",
@@ -1542,7 +1543,8 @@
     "enterTheGuestName": "Nhập tên khách",
     "enterAValidPhone": "Nhập số điện thoại hợp lệ",
     "enterAValidEmail": "Nhập địa chỉ email hợp lệ",
-    "ofNSeats": "trên {{count}}"
+    "ofNSeats": "trên {{count}}",
+    "bookingReference": "Mã đặt phòng"
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",

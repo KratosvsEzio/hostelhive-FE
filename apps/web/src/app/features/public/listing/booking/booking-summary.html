@@ -3,15 +3,49 @@
      is the last screen anybody should meet a bespoke modal on. -->
 <hh-confirm-modal
   size="md"
-  icon="ti-calendar-check"
-  tone="info"
-  [title]="'publicBooking.reviewYourBooking' | transloco"
-  [confirmLabel]="'publicBooking.confirmBooking' | transloco"
+  [icon]="done() ? 'ti-circle-check' : 'ti-calendar-check'"
+  [tone]="done() ? 'ok' : 'info'"
+  [title]="(done() ? 'publicBooking.bookingSent' : 'publicBooking.reviewYourBooking') | transloco"
+  [confirmLabel]="(done() ? 'common.done' : 'publicBooking.confirmBooking') | transloco"
+  [cancelLabel]="done() ? '' : undefined"
   [confirmColor]="'primary'"
   [confirmDisabled]="submitting()"
-  (confirm)="submit()"
+  (confirm)="done() ? dismissed.emit() : submit()"
   (cancel)="dismissed.emit()"
 >
+  @if (done()) {
+    <!-- The receipt. Everything the review showed is either still on the rail or no longer
+         actionable, so this says only what the guest did not already know: that it went
+         through, what to quote, and who settles the money. -->
+    <p class="text-ink-700">
+      {{ 'publicBooking.weLlEmailYouWhenConfirmed' | transloco }}
+    </p>
+
+    <div class="mt-4 rounded-xl border border-ink-200 bg-surface px-4 py-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-ink-500">
+        {{ 'publicBooking.bookingReference' | transloco }}
+      </p>
+      <div class="mt-1 flex items-center gap-2">
+        <!-- Selectable, and tabular so the characters line up when read aloud down a phone. -->
+        <span class="select-all font-display text-lg font-semibold tracking-wide text-ink-900 tabular-nums">
+          {{ reference() }}
+        </span>
+        <button
+          type="button"
+          class="ms-auto grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
+          [attr.aria-label]="'common.copy' | transloco"
+          (click)="copyReference()"
+        >
+          <span class="ti" [class]="copied() ? 'ti-check text-ok' : 'ti-copy'" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <p class="mt-3 flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-xs text-amber-900">
+      <span class="ti ti-info-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
+      {{ 'publicBooking.theHostelWillConfirm' | transloco }}
+    </p>
+  } @else {
   @if (hostelName()) {
     <p class="-mt-1 mb-3 font-medium text-ink-700">{{ hostelName() }}</p>
   }
@@ -106,5 +140,6 @@
       <span class="ti ti-alert-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
       {{ error() }}
     </p>
+  }
   }
 </hh-confirm-modal>

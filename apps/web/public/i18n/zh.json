@@ -337,7 +337,8 @@
     "selectYear": "选择年份",
     "allow": "允许",
     "noPhotosYet": "暂无照片",
-    "guests": "入住人"
+    "guests": "入住人",
+    "copy": "复制"
   },
   "leadWall": {
     "close": "关闭",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "请输入入住人姓名",
     "enterAValidPhone": "请输入有效的电话号码",
     "enterAValidEmail": "请输入有效的电子邮箱",
-    "ofNSeats": "/ {{count}}"
+    "ofNSeats": "/ {{count}}",
+    "bookingReference": "预订编号"
   },
   "states": {
     "nothingHereYet": "这里还没有内容",

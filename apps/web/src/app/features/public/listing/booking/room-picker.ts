@@ -23,6 +23,7 @@ import {
 } from './room-offer';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { LazySrc } from '@app/shared/lazy-src/lazy-src';
 import { MoneyPipe } from '@app/shared/currency/money.pipe';
 
 /**
@@ -57,7 +58,7 @@ interface RoomGroup {
 @Component({
   selector: 'hh-room-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DialogFocus, TranslocoPipe, CurrencySymbolPipe, MoneyPipe],
+  imports: [Button, DialogFocus, TranslocoPipe, CurrencySymbolPipe, MoneyPipe, LazySrc],
   templateUrl: './room-picker.html',
   // The listing column spaces its cards with `space-y-4`, which works by putting a
   // margin-top on each sibling. A custom element defaults to `display: inline`, and

@@ -337,7 +337,8 @@
     "selectYear": "Jaar selecteren",
     "allow": "Toestaan",
     "noPhotosYet": "Nog geen foto's",
-    "guests": "Gasten"
+    "guests": "Gasten",
+    "copy": "Kopiëren"
   },
   "leadWall": {
     "close": "Sluiten",
@@ -1537,7 +1538,8 @@
     "enterTheGuestName": "Voer de naam van de gast in",
     "enterAValidPhone": "Voer een geldig telefoonnummer in",
     "enterAValidEmail": "Voer een geldig e-mailadres in",
-    "ofNSeats": "van {{count}}"
+    "ofNSeats": "van {{count}}",
+    "bookingReference": "Boekingsreferentie"
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",
