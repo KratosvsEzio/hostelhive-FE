@@ -13,9 +13,10 @@ import { FormsModule } from '@angular/forms';
 import { format, parseISO } from 'date-fns';
 import { Button, EmptyState, ErrorState, FilterChipOption, FilterChips, Skeleton } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { ModerationApi } from '@services';
-import { AttachmentStatusOption, ModeratorAttachment } from '@hostelhive/data-access';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { ModerationApi, UNLABELLED } from '@services';
+import { AttachmentLabel, AttachmentStatusOption, ModeratorAttachment } from '@hostelhive/data-access';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 type LoadStatus = 'loading' | 'ready' | 'loading-more' | 'error';
 type ApproveModalItem = { attachment: ModeratorAttachment; status: 'pending' | 'success' | 'error' };
@@ -32,6 +33,8 @@ export class Media {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly i18n = inject(TranslocoService);
+  private readonly locale = inject(LocaleStore);
 
   protected readonly skeletons = [1, 2, 3, 4];
 
@@ -52,10 +55,34 @@ export class Media {
   protected readonly activeStatus = signal(
     this.route.snapshot.queryParams['status'] ?? '',
   );
+  // Named rather than a bare "All" now that a second chip row sits under this one, where two
+  // rows each opening on "All" say nothing about which is which. It was also the one chip in
+  // the queue whose text never went through Transloco.
   protected readonly statusTabs = computed<FilterChipOption[]>(() => [
-    { label: 'All', value: '' },
+    { label: this.t('moderatorMedia.allStatuses'), value: '' },
     ...this.possibleStatuses().map((s) => ({ label: s.name, value: s.slug })),
   ]);
+
+  // ── label filter ──────────────────────────────────────────────────────────────
+  /** The label catalogue. Empty until it loads, and left empty if the call fails. */
+  private readonly labels = signal<AttachmentLabel[]>([]);
+  protected readonly activeLabel = signal<string>(
+    this.route.snapshot.queryParams['label'] ?? '',
+  );
+  /**
+   * The filter is only worth drawing once there is something to filter by — a row offering
+   * "All labels" and "Unlabelled" on a tenant that has defined no labels is two chips that
+   * both mean "everything".
+   */
+  protected readonly labelTabs = computed<FilterChipOption[]>(() => {
+    const labels = this.labels();
+    if (!labels.length) return [];
+    return [
+      { label: this.t('moderatorMedia.allLabels'), value: '' },
+      ...labels.map((l) => ({ label: l.name, value: l.name })),
+      { label: this.t('moderatorMedia.unlabelled'), value: UNLABELLED },
+    ];
+  });
 
   // ── decision tracking ─────────────────────────────────────────────────────────
   private readonly decisions = signal<Record<string, 'approved' | 'rejected'>>({});
@@ -116,6 +143,15 @@ export class Media {
   // ── lifecycle ─────────────────────────────────────────────────────────────────
   constructor() {
     this.fetchPage(1, false);
+    this.api
+      .attachmentLabels()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (labels) => this.labels.set(labels),
+        // A catalogue that will not load costs the moderator a filter, not the queue: the
+        // chip row stays away and the photos come through as they always did.
+        error: () => this.labels.set([]),
+      });
   }
 
   // ── pagination ────────────────────────────────────────────────────────────────
@@ -124,7 +160,7 @@ export class Media {
     this.loadStatus.set(append ? 'loading-more' : 'loading');
 
     this.api
-      .attachments(page, this.activeStatus() || undefined)
+      .attachments(page, this.activeStatus() || undefined, this.activeLabel() || undefined)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
@@ -178,9 +214,10 @@ export class Media {
     if (this.refreshing() || this.loadStatus() !== 'ready') return;
 
     const status = this.activeStatus() || undefined;
+    const label = this.activeLabel() || undefined;
     const pages = Array.from({ length: this.loadedPages() }, (_, i) => i + 1);
     this.refreshing.set(true);
-    forkJoin(pages.map((p) => this.api.attachments(p, status)))
+    forkJoin(pages.map((p) => this.api.attachments(p, status, label)))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (loaded) => {
@@ -210,9 +247,13 @@ export class Media {
       });
   }
 
-  protected setStatus(slug: string): void {
-    if (this.activeStatus() === slug) return;
-    this.activeStatus.set(slug);
+  /**
+   * Everything the queue was holding about the list it is about to stop showing.
+   *
+   * Decisions go with it: they are what hides an approved card, and a photo carried across a
+   * filter change would be one the moderator cannot see but the count still counts.
+   */
+  private clearQueueState(): void {
     this._allItems.set([]);
     this._nextPage.set(null);
     this.loadedPages.set(1);
@@ -223,8 +264,33 @@ export class Media {
     this.rejectProgressQueue.set([]);
     this.selectedIds.set(new Set());
     this.imgErrors.set(new Set());
+  }
+
+  protected setStatus(slug: string): void {
+    if (this.activeStatus() === slug) return;
+    this.activeStatus.set(slug);
+    this.clearQueueState();
     void this.router.navigate([], {
       queryParams: { status: slug || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    this.fetchPage(1, false);
+  }
+
+  /**
+   * Narrows the queue to one label — server-side, via `f[attachment_label.name]`.
+   *
+   * It has to be the server that filters: the queue is paged ten at a time, so sifting what
+   * happens to be on screen would answer "photos labelled Kitchen" with the Kitchen photos of
+   * page one and call the rest of them absent.
+   */
+  protected setLabel(value: string): void {
+    if (this.activeLabel() === value) return;
+    this.activeLabel.set(value);
+    this.clearQueueState();
+    void this.router.navigate([], {
+      queryParams: { label: value || null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
@@ -380,20 +446,24 @@ export class Media {
   protected closePreview(): void { this.previewAttachment.set(null); }
 
   protected retry(): void {
-    this._allItems.set([]);
-    this._nextPage.set(null);
-    this.loadedPages.set(1);
-    this.decisions.set({});
-    this.approving.set(new Set());
-    this.approveErrors.set(new Set());
-    this.approveModalQueue.set([]);
-    this.rejectProgressQueue.set([]);
-    this.selectedIds.set(new Set());
-    this.imgErrors.set(new Set());
+    this.clearQueueState();
     this.fetchPage(1, false);
   }
 
   // ── display helpers ───────────────────────────────────────────────────────────
+  /**
+   * A chip label, once there is one to read.
+   *
+   * The chip rows are built in TypeScript, so they cannot use the pipe. `translate()` alone
+   * cannot do it either: it answers from whatever is loaded when it is called, and the rows
+   * are first built before the language file has landed — which logs a miss for a key that is
+   * present in all eighteen locales. `ready()` re-asks whenever Transloco stirs, so the real
+   * string arrives on the recompute, and a language switch is covered by the same mechanism.
+   */
+  private t(key: string): string {
+    return this.locale.ready() ? this.i18n.translate(key) : '';
+  }
+
   protected kindBadge(a: ModeratorAttachment): { label: string; cls: string } | null {
     switch (a.key) {
       case 'attachments': return { label: 'Photo',      cls: 'bg-gray-500/90 text-white' };

@@ -1388,7 +1388,13 @@
     "doneNFailed": "Klaar — {{count}} mislukt",
     "nPhotosFailedRetry": "{{count}} foto’s mislukt — je kunt het opnieuw proberen vanuit de wachtrij.",
     "approving": "Goedkeuren…",
-    "newUploadsWillAppearHere": "Nieuwe uploads verschijnen hier ter goedkeuring."
+    "newUploadsWillAppearHere": "Nieuwe uploads verschijnen hier ter goedkeuring.",
+    "allStatuses": "Alle statussen",
+    "allLabels": "Alle labels",
+    "unlabelled": "Zonder label",
+    "nothingMatchesThisFilter": "Niets komt overeen met dit filter",
+    "tryAnotherLabelOrShowAll": "Probeer een ander label of toon ze allemaal.",
+    "showAllLabels": "Alle labels tonen"
   },
   "publicContact": {
     "contactUs": "Neem contact op",

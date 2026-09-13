@@ -1388,7 +1388,13 @@
     "doneNFailed": "完成 — {{count}} 项失败",
     "nPhotosFailedRetry": "{{count}} 张照片失败 — 可从队列重试。",
     "approving": "批准中…",
-    "newUploadsWillAppearHere": "新上传的内容将显示在这里等待审核。"
+    "newUploadsWillAppearHere": "新上传的内容将显示在这里等待审核。",
+    "allStatuses": "全部状态",
+    "allLabels": "全部标签",
+    "unlabelled": "未加标签",
+    "nothingMatchesThisFilter": "没有符合此筛选条件的内容",
+    "tryAnotherLabelOrShowAll": "换一个标签，或显示全部。",
+    "showAllLabels": "显示全部标签"
   },
   "publicContact": {
     "contactUs": "联系我们",

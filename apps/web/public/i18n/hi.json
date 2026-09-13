@@ -1388,7 +1388,13 @@
     "doneNFailed": "हो गया — {{count}} विफल",
     "nPhotosFailedRetry": "{{count}} फ़ोटो विफल — आप कतार से पुनः प्रयास कर सकते हैं।",
     "approving": "स्वीकृत हो रहा है…",
-    "newUploadsWillAppearHere": "नए अपलोड स्वीकृति के लिए यहाँ दिखाई देंगे।"
+    "newUploadsWillAppearHere": "नए अपलोड स्वीकृति के लिए यहाँ दिखाई देंगे।",
+    "allStatuses": "सभी स्थितियाँ",
+    "allLabels": "सभी लेबल",
+    "unlabelled": "बिना लेबल",
+    "nothingMatchesThisFilter": "इस फ़िल्टर से कुछ मेल नहीं खाता",
+    "tryAnotherLabelOrShowAll": "कोई दूसरा लेबल आज़माएँ, या सभी दिखाएँ।",
+    "showAllLabels": "सभी लेबल दिखाएँ"
   },
   "publicContact": {
     "contactUs": "हमसे संपर्क करें",

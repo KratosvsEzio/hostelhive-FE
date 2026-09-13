@@ -1393,7 +1393,13 @@
     "doneNFailed": "Xong — {{count}} thất bại",
     "nPhotosFailedRetry": "{{count}} ảnh thất bại — bạn có thể thử lại từ hàng đợi.",
     "approving": "Đang duyệt…",
-    "newUploadsWillAppearHere": "Tệp tải lên mới sẽ xuất hiện ở đây để duyệt."
+    "newUploadsWillAppearHere": "Tệp tải lên mới sẽ xuất hiện ở đây để duyệt.",
+    "allStatuses": "Tất cả trạng thái",
+    "allLabels": "Tất cả nhãn",
+    "unlabelled": "Chưa gắn nhãn",
+    "nothingMatchesThisFilter": "Không có gì khớp với bộ lọc này",
+    "tryAnotherLabelOrShowAll": "Thử nhãn khác, hoặc hiển thị tất cả.",
+    "showAllLabels": "Hiển thị tất cả nhãn"
   },
   "publicContact": {
     "contactUs": "Liên hệ với chúng tôi",

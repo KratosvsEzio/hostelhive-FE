@@ -1393,7 +1393,13 @@
     "doneNFailed": "Gotowe — {{count}} nieudanych",
     "nPhotosFailedRetry": "{{count}} zdjęć nie powiodło się — możesz ponowić z kolejki.",
     "approving": "Zatwierdzanie…",
-    "newUploadsWillAppearHere": "Nowe pliki pojawią się tutaj do zatwierdzenia."
+    "newUploadsWillAppearHere": "Nowe pliki pojawią się tutaj do zatwierdzenia.",
+    "allStatuses": "Wszystkie statusy",
+    "allLabels": "Wszystkie etykiety",
+    "unlabelled": "Bez etykiety",
+    "nothingMatchesThisFilter": "Nic nie pasuje do tego filtra",
+    "tryAnotherLabelOrShowAll": "Wypróbuj inną etykietę lub pokaż wszystkie.",
+    "showAllLabels": "Pokaż wszystkie etykiety"
   },
   "publicContact": {
     "contactUs": "Skontaktuj się z nami",

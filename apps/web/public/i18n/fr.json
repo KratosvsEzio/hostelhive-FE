@@ -1388,7 +1388,13 @@
     "doneNFailed": "Terminé — {{count}} en échec",
     "nPhotosFailedRetry": "{{count}} photos en échec — vous pouvez réessayer depuis la file.",
     "approving": "Approbation…",
-    "newUploadsWillAppearHere": "Les nouveaux envois apparaîtront ici pour approbation."
+    "newUploadsWillAppearHere": "Les nouveaux envois apparaîtront ici pour approbation.",
+    "allStatuses": "Tous les statuts",
+    "allLabels": "Tous les libellés",
+    "unlabelled": "Sans libellé",
+    "nothingMatchesThisFilter": "Rien ne correspond à ce filtre",
+    "tryAnotherLabelOrShowAll": "Essayez un autre libellé, ou affichez-les tous.",
+    "showAllLabels": "Afficher tous les libellés"
   },
   "publicContact": {
     "contactUs": "Nous contacter",

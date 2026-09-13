@@ -1388,7 +1388,13 @@
     "doneNFailed": "完了 — {{count}} 件失敗",
     "nPhotosFailedRetry": "{{count}} 枚の写真が失敗しました — キューから再試行できます。",
     "approving": "承認中…",
-    "newUploadsWillAppearHere": "新しいアップロードは承認待ちとしてここに表示されます。"
+    "newUploadsWillAppearHere": "新しいアップロードは承認待ちとしてここに表示されます。",
+    "allStatuses": "すべてのステータス",
+    "allLabels": "すべてのラベル",
+    "unlabelled": "ラベルなし",
+    "nothingMatchesThisFilter": "このフィルターに一致するものはありません",
+    "tryAnotherLabelOrShowAll": "別のラベルを試すか、すべて表示してください。",
+    "showAllLabels": "すべてのラベルを表示"
   },
   "publicContact": {
     "contactUs": "お問い合わせ",

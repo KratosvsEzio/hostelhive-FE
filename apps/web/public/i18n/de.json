@@ -1388,7 +1388,13 @@
     "doneNFailed": "Fertig — {{count}} fehlgeschlagen",
     "nPhotosFailedRetry": "{{count}} Fotos fehlgeschlagen — Sie können es aus der Warteschlange erneut versuchen.",
     "approving": "Wird genehmigt…",
-    "newUploadsWillAppearHere": "Neue Uploads erscheinen hier zur Freigabe."
+    "newUploadsWillAppearHere": "Neue Uploads erscheinen hier zur Freigabe.",
+    "allStatuses": "Alle Status",
+    "allLabels": "Alle Labels",
+    "unlabelled": "Ohne Label",
+    "nothingMatchesThisFilter": "Nichts entspricht diesem Filter",
+    "tryAnotherLabelOrShowAll": "Anderes Label wählen oder alle anzeigen.",
+    "showAllLabels": "Alle Labels anzeigen"
   },
   "publicContact": {
     "contactUs": "Kontakt",

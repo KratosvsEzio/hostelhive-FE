@@ -1388,7 +1388,13 @@
     "doneNFailed": "Listo — {{count}} con error",
     "nPhotosFailedRetry": "{{count}} fotos con error: puedes reintentar desde la cola.",
     "approving": "Aprobando…",
-    "newUploadsWillAppearHere": "Las nuevas subidas aparecerán aquí para su aprobación."
+    "newUploadsWillAppearHere": "Las nuevas subidas aparecerán aquí para su aprobación.",
+    "allStatuses": "Todos los estados",
+    "allLabels": "Todas las etiquetas",
+    "unlabelled": "Sin etiqueta",
+    "nothingMatchesThisFilter": "Nada coincide con este filtro",
+    "tryAnotherLabelOrShowAll": "Prueba con otra etiqueta o muéstralas todas.",
+    "showAllLabels": "Mostrar todas las etiquetas"
   },
   "publicContact": {
     "contactUs": "Contáctanos",

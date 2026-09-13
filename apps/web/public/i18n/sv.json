@@ -1388,7 +1388,13 @@
     "doneNFailed": "Klart — {{count}} misslyckades",
     "nPhotosFailedRetry": "{{count}} foton misslyckades — du kan försöka igen från kön.",
     "approving": "Godkänner…",
-    "newUploadsWillAppearHere": "Nya uppladdningar visas här för godkännande."
+    "newUploadsWillAppearHere": "Nya uppladdningar visas här för godkännande.",
+    "allStatuses": "Alla statusar",
+    "allLabels": "Alla etiketter",
+    "unlabelled": "Utan etikett",
+    "nothingMatchesThisFilter": "Inget matchar det här filtret",
+    "tryAnotherLabelOrShowAll": "Prova en annan etikett, eller visa alla.",
+    "showAllLabels": "Visa alla etiketter"
   },
   "publicContact": {
     "contactUs": "Kontakta oss",

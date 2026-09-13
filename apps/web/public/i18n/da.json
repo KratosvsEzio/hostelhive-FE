@@ -1388,7 +1388,13 @@
     "doneNFailed": "Færdig — {{count}} mislykkedes",
     "nPhotosFailedRetry": "{{count}} fotos mislykkedes — du kan prøve igen fra køen.",
     "approving": "Godkender…",
-    "newUploadsWillAppearHere": "Nye uploads vises her til godkendelse."
+    "newUploadsWillAppearHere": "Nye uploads vises her til godkendelse.",
+    "allStatuses": "Alle statusser",
+    "allLabels": "Alle etiketter",
+    "unlabelled": "Uden etiket",
+    "nothingMatchesThisFilter": "Intet matcher dette filter",
+    "tryAnotherLabelOrShowAll": "Prøv en anden etiket, eller vis dem alle.",
+    "showAllLabels": "Vis alle etiketter"
   },
   "publicContact": {
     "contactUs": "Kontakt os",

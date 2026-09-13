@@ -1388,7 +1388,13 @@
     "doneNFailed": "Kész — {{count}} sikertelen",
     "nPhotosFailedRetry": "{{count}} fotó sikertelen — a sorból újrapróbálhatod.",
     "approving": "Jóváhagyás…",
-    "newUploadsWillAppearHere": "Az új feltöltések itt jelennek meg jóváhagyásra."
+    "newUploadsWillAppearHere": "Az új feltöltések itt jelennek meg jóváhagyásra.",
+    "allStatuses": "Összes állapot",
+    "allLabels": "Összes címke",
+    "unlabelled": "Címke nélkül",
+    "nothingMatchesThisFilter": "Semmi sem felel meg ennek a szűrőnek",
+    "tryAnotherLabelOrShowAll": "Próbáljon másik címkét, vagy mutassa mindet.",
+    "showAllLabels": "Összes címke mutatása"
   },
   "publicContact": {
     "contactUs": "Kapcsolat",

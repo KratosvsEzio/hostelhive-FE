@@ -1116,7 +1116,13 @@
     "doneNFailed": "Done — {{count}} failed",
     "nPhotosFailedRetry": "{{count}} photos failed — you can retry from the queue.",
     "approving": "Approving…",
-    "newUploadsWillAppearHere": "New uploads will appear here for approval."
+    "newUploadsWillAppearHere": "New uploads will appear here for approval.",
+    "allStatuses": "All statuses",
+    "allLabels": "All labels",
+    "unlabelled": "Unlabelled",
+    "nothingMatchesThisFilter": "Nothing matches this filter",
+    "tryAnotherLabelOrShowAll": "Try another label, or show them all.",
+    "showAllLabels": "Show all labels"
   },
   "moderatorQueue": {
     "reviewQueue": "Review queue",

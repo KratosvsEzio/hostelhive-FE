@@ -1388,7 +1388,13 @@
     "doneNFailed": "Fatto — {{count}} non riusciti",
     "nPhotosFailedRetry": "{{count}} foto non riuscite — puoi riprovare dalla coda.",
     "approving": "Approvazione…",
-    "newUploadsWillAppearHere": "I nuovi caricamenti compariranno qui per l'approvazione."
+    "newUploadsWillAppearHere": "I nuovi caricamenti compariranno qui per l'approvazione.",
+    "allStatuses": "Tutti gli stati",
+    "allLabels": "Tutte le etichette",
+    "unlabelled": "Senza etichetta",
+    "nothingMatchesThisFilter": "Nessun risultato per questo filtro",
+    "tryAnotherLabelOrShowAll": "Prova un'altra etichetta oppure mostrale tutte.",
+    "showAllLabels": "Mostra tutte le etichette"
   },
   "publicContact": {
     "contactUs": "Contattaci",

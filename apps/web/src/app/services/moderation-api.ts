@@ -126,13 +126,36 @@ export class ModerationApi {
     return of(DELTA_GROUPS).pipe(delay(150));
   }
 
-  /** Pending media attachments — `GET /api/moderator/attachments`. */
-  attachments(page = 1, status?: string): Observable<AttachmentPage> {
+  /**
+   * Pending media attachments — `GET /api/moderator/attachments`.
+   *
+   * `label` filters on the label's **name**, not its id. The search index carries the label's
+   * raw database id while the options endpoints hand out an obfuscated one, so an id filter
+   * would compare two different numbering schemes and quietly match nothing. The name is the
+   * same string on both sides, and the search layer maps a key ending in `name` onto its
+   * exact-match subfield — so this matches the whole name, not a prefix of it.
+   *
+   * Pass {@link UNLABELLED} for the photos nobody has filed yet.
+   */
+  attachments(page = 1, status?: string, label?: string): Observable<AttachmentPage> {
     const params: Record<string, string | number> = { page, limit: 10 };
     if (status) params['f[status.slug]'] = status;
+    if (label) params['f[attachment_label.name]'] = label;
     return this.api
       .get<ModeratorAttachmentsResponse>('/api/moderator/attachments', params)
       .pipe(map((res) => extractModerationAttachments(res)));
+  }
+
+  /**
+   * The labels a moderator can filter the queue by — `GET /api/moderator/attachments/new`.
+   *
+   * The attachment controller's own options endpoint rather than the review form's: it answers
+   * with the labels alone, and the queue wants nothing else from it.
+   */
+  attachmentLabels(): Observable<AttachmentLabel[]> {
+    return this.api
+      .get<ModeratorAttachmentLabelsResponse>('/api/moderator/attachments/new')
+      .pipe(map((r) => r.attachment_label ?? r.attachment_labels ?? []));
   }
 
   /** Disposition counts for the stat strip + filter chips (screen 23). */
@@ -218,6 +241,23 @@ export class ModerationApi {
 }
 
 /* ----------------------------------------------- attachments (moderator API) */
+
+/**
+ * Asks the queue for the photos that carry no label at all.
+ *
+ * `null` is the search layer's own sentinel — it turns the filter into "this field is absent"
+ * rather than comparing against a value — which is why it is the literal string and not `null`
+ * itself. A label actually named "null" would collide with it; none is, and one would be
+ * visible the moment anybody looked at the chip row.
+ */
+export const UNLABELLED = 'null';
+
+interface ModeratorAttachmentLabelsResponse {
+  success?: boolean;
+  /** Singular is what the endpoint sends; the plural is read in case it is ever regularised. */
+  attachment_label?: AttachmentLabel[];
+  attachment_labels?: AttachmentLabel[];
+}
 
 interface ModeratorAttachmentsResponse {
   success?: boolean;

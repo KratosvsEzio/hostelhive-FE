@@ -1393,7 +1393,13 @@
     "doneNFailed": "Готово — {{count}} с ошибкой",
     "nPhotosFailedRetry": "{{count}} фото не загрузились — можно повторить из очереди.",
     "approving": "Одобрение…",
-    "newUploadsWillAppearHere": "Новые загрузки появятся здесь для утверждения."
+    "newUploadsWillAppearHere": "Новые загрузки появятся здесь для утверждения.",
+    "allStatuses": "Все статусы",
+    "allLabels": "Все метки",
+    "unlabelled": "Без метки",
+    "nothingMatchesThisFilter": "Ничего не соответствует этому фильтру",
+    "tryAnotherLabelOrShowAll": "Попробуйте другую метку или покажите все.",
+    "showAllLabels": "Показать все метки"
   },
   "publicContact": {
     "contactUs": "Свяжитесь с нами",

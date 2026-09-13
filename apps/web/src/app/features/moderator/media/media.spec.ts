@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
-import { AttachmentPage, ModeratorAttachment } from '@hostelhive/data-access';
+import { AttachmentLabel, AttachmentPage, ModeratorAttachment } from '@hostelhive/data-access';
+import { FilterChipOption } from '@hostelhive/ui';
 import { ModerationApi } from '@services';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { Media } from './media';
@@ -31,6 +32,10 @@ interface MediaInternals {
   rejectNote: { set(value: string): void };
   toggleSelect(id: string): void;
   loadMore(): void;
+  setStatus(slug: string): void;
+  setLabel(value: string): void;
+  labelTabs(): FilterChipOption[];
+  activeLabel(): string;
   pending(): ModeratorAttachment[];
   totalCount(): number;
   loadStatus(): string;
@@ -47,27 +52,41 @@ describe('Media queue', () => {
   let rejectResult: () => Observable<void>;
   /** Makes the next list read fail the way a dropped request does. */
   let listFails: boolean;
+  /** The label filter sent with each read, in the same order as `reads`. */
+  let labelReads: (string | undefined)[];
+  let labelCatalogue: () => Observable<AttachmentLabel[]>;
+  /** What the route says on entry — a deep link into a filtered queue sets these. */
+  let queryParams: Record<string, string>;
 
   beforeEach(async () => {
     reads = [];
     approved = [];
     rejected = [];
+    labelReads = [];
     listPage = (p) => (p === 1 ? page([1, 2, 3], 2) : page([4, 5, 6], null));
     approveResult = () => of(undefined);
     rejectResult = () => of(undefined);
     listFails = false;
+    labelCatalogue = () =>
+      of([
+        { id: 11, name: 'Kitchen' },
+        { id: 12, name: 'Rooftop' },
+      ]);
+    queryParams = {};
 
     await TestBed.configureTestingModule({
       imports: [Media],
       providers: [
         provideRouter([]),
         provideI18nTesting(),
-        { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { get queryParams() { return queryParams; } } } },
         {
           provide: ModerationApi,
           useValue: {
-            attachments: (p: number, status?: string) => {
+            attachmentLabels: () => labelCatalogue(),
+            attachments: (p: number, status?: string, label?: string) => {
               reads.push(`${p}:${status ?? 'all'}`);
+              labelReads.push(label);
               return listFails ? throwError(() => new Error('offline')) : of(listPage(p));
             },
             markAttachmentAsActive: (id: string) => {
@@ -256,5 +275,125 @@ describe('Media queue', () => {
     // The failed refresh must release its guard, or the queue never re-reads again.
     expect(ids()).toEqual([3]);
     expect(media().totalCount()).toBe(60);
+  });
+
+  /**
+   * Narrowing the queue to one photo label.
+   *
+   * The filtering has to happen on the server. The queue is paged ten at a time, so sifting
+   * what is in hand would answer "the Kitchen photos" with the Kitchen photos of page one and
+   * call every other page empty.
+   */
+  describe('label filter', () => {
+    /** A fresh queue, as if the moderator had just landed on a URL carrying `params`. */
+    function recreate(params: Record<string, string>): void {
+      queryParams = params;
+      reads.length = 0;
+      labelReads.length = 0;
+      fixture = TestBed.createComponent(Media);
+      fixture.detectChanges();
+    }
+
+    it('asks for everything until a label is picked', () => {
+      expect(labelReads).toEqual([undefined]);
+    });
+
+    it('sends the label the moderator picked', () => {
+      labelReads.length = 0;
+
+      media().setLabel('Kitchen');
+
+      expect(labelReads).toEqual(['Kitchen']);
+    });
+
+    it('asks for the unlabelled photos by the search layer own sentinel', () => {
+      // `null` is how the search layer is told "this field is absent" — the one way to ask
+      // for the photos nobody has filed.
+      labelReads.length = 0;
+
+      media().setLabel('null');
+
+      expect(labelReads).toEqual(['null']);
+    });
+
+    it('starts the narrowed queue at the first page', () => {
+      media().loadMore();
+      reads.length = 0;
+
+      media().setLabel('Kitchen');
+
+      // Not page 2 as well: the moderator is looking at a different list now, and the depth
+      // they had reached in the old one says nothing about this one.
+      expect(reads).toEqual(['1:all']);
+    });
+
+    it('keeps the label when it re-reads after a decision', () => {
+      media().setLabel('Kitchen');
+      labelReads.length = 0;
+
+      media().setOne(attachment(1), 'approved');
+
+      // A refresh that dropped the filter would refill the grid with photos the moderator
+      // had just filtered away.
+      expect(labelReads).toEqual(['Kitchen']);
+    });
+
+    it('keeps the label alongside a status', () => {
+      media().setLabel('Kitchen');
+      reads.length = 0;
+      labelReads.length = 0;
+
+      media().setStatus('rejected');
+
+      expect(reads).toEqual(['1:rejected']);
+      expect(labelReads).toEqual(['Kitchen']);
+    });
+
+    it('does not re-read for the label already showing', () => {
+      media().setLabel('Kitchen');
+      reads.length = 0;
+
+      media().setLabel('Kitchen');
+
+      expect(reads).toEqual([]);
+    });
+
+    it('opens on the label the URL names', () => {
+      recreate({ label: 'Rooftop' });
+
+      expect(media().activeLabel()).toBe('Rooftop');
+      expect(labelReads).toEqual(['Rooftop']);
+    });
+
+    it('offers every label, with all and unlabelled around them', () => {
+      expect(media().labelTabs().map((t) => t.value)).toEqual([
+        '',
+        'Kitchen',
+        'Rooftop',
+        'null',
+      ]);
+    });
+
+    /**
+     * Labels are something a tenant defines, so a tenant that has defined none has nothing to
+     * filter by — and a row reading "All labels · Unlabelled" would be two chips that both
+     * mean everything.
+     */
+    it('has no row to show when the tenant has defined no labels', () => {
+      labelCatalogue = () => of([]);
+      recreate({});
+
+      expect(media().labelTabs()).toEqual([]);
+    });
+
+    it('still shows the queue when the catalogue will not load', () => {
+      labelCatalogue = () => throwError(() => new Error('offline'));
+      recreate({});
+
+      // The filter is a convenience; the photos are the job.
+      expect(media().labelTabs()).toEqual([]);
+      expect(ids()).toEqual([1, 2, 3]);
+      expect(media().loadStatus()).toBe('ready');
+    });
   });
 });

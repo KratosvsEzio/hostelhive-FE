@@ -1393,7 +1393,13 @@
     "doneNFailed": "Selesai — {{count}} gagal",
     "nPhotosFailedRetry": "{{count}} foto gagal — Anda dapat mencoba lagi dari antrean.",
     "approving": "Menyetujui…",
-    "newUploadsWillAppearHere": "Unggahan baru akan muncul di sini untuk disetujui."
+    "newUploadsWillAppearHere": "Unggahan baru akan muncul di sini untuk disetujui.",
+    "allStatuses": "Semua status",
+    "allLabels": "Semua label",
+    "unlabelled": "Tanpa label",
+    "nothingMatchesThisFilter": "Tidak ada yang cocok dengan filter ini",
+    "tryAnotherLabelOrShowAll": "Coba label lain, atau tampilkan semuanya.",
+    "showAllLabels": "Tampilkan semua label"
   },
   "publicContact": {
     "contactUs": "Hubungi kami",

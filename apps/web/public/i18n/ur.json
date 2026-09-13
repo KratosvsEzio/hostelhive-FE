@@ -1393,7 +1393,13 @@
     "doneNFailed": "مکمل — {{count}} ناکام",
     "nPhotosFailedRetry": "{{count}} تصاویر ناکام — آپ قطار سے دوبارہ کوشش کر سکتے ہیں۔",
     "approving": "منظور ہو رہا ہے…",
-    "newUploadsWillAppearHere": "نئی اپ لوڈز منظوری کے لیے یہاں ظاہر ہوں گی۔"
+    "newUploadsWillAppearHere": "نئی اپ لوڈز منظوری کے لیے یہاں ظاہر ہوں گی۔",
+    "allStatuses": "تمام حالتیں",
+    "allLabels": "تمام لیبلز",
+    "unlabelled": "بغیر لیبل",
+    "nothingMatchesThisFilter": "اس فلٹر سے کچھ مطابقت نہیں رکھتا",
+    "tryAnotherLabelOrShowAll": "کوئی اور لیبل آزمائیں، یا سب دکھائیں۔",
+    "showAllLabels": "تمام لیبلز دکھائیں"
   },
   "publicContact": {
     "contactUs": "ہم سے رابطہ کریں",

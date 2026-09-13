@@ -1,9 +1,14 @@
 <app-dashboard-layout [label]="'moderatorMedia.mediaQueue' | transloco">
   <span hhActions class="hidden text-sm text-ink-400 sm:block">{{ 'moderatorMedia.photosBannersLogosAndAvatars' | transloco }}</span>
-  <!-- Status filter chips -->
-  @if (statusTabs().length > 1) {
-    <hh-filter-chips class="mb-5" [tabs]="statusTabs()" [active]="activeStatus()" (activeChange)="setStatus($event)" />
-  }
+  <!-- Filters — status, then label. Both narrow the queue server-side. -->
+  <div class="mb-5 flex flex-col gap-2 empty:hidden">
+    @if (statusTabs().length > 1) {
+      <hh-filter-chips [tabs]="statusTabs()" [active]="activeStatus()" (activeChange)="setStatus($event)" />
+    }
+    @if (labelTabs().length) {
+      <hh-filter-chips [tabs]="labelTabs()" [active]="activeLabel()" (activeChange)="setLabel($event)" />
+    }
+  </div>
 
   @if (loadStatus() === 'loading') {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -15,11 +20,26 @@
     <div class="mt-5"><hh-error-state (retry)="retry()" /></div>
   } @else if (allCleared()) {
     <div class="mt-5">
-      <hh-empty-state
-        icon="ti-photo-check"
-        [title]="'moderatorMedia.allClear' | transloco"
-        [message]="'moderatorMedia.newUploadsWillAppearHere' | transloco"
-      />
+      @if (activeLabel()) {
+        <!-- Not "all clear": there may well be a queue, it just holds nothing under this
+             label. Saying the work is done — and saying it without a way back out — leaves
+             the moderator looking at a finished page over a full queue. -->
+        <hh-empty-state
+          icon="ti-photo-search"
+          [title]="'moderatorMedia.nothingMatchesThisFilter' | transloco"
+          [message]="'moderatorMedia.tryAnotherLabelOrShowAll' | transloco"
+        >
+          <button hh-button variant="outlined" size="sm" (click)="setLabel('')">
+            {{ 'moderatorMedia.showAllLabels' | transloco }}
+          </button>
+        </hh-empty-state>
+      } @else {
+        <hh-empty-state
+          icon="ti-photo-check"
+          [title]="'moderatorMedia.allClear' | transloco"
+          [message]="'moderatorMedia.newUploadsWillAppearHere' | transloco"
+        />
+      }
     </div>
   } @else {
     <!-- Controls row -->

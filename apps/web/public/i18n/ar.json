@@ -1388,7 +1388,13 @@
     "doneNFailed": "تم — فشل {{count}}",
     "nPhotosFailedRetry": "فشلت {{count}} صور — يمكنك إعادة المحاولة من قائمة الانتظار.",
     "approving": "جارٍ الموافقة…",
-    "newUploadsWillAppearHere": "ستظهر الملفات المرفوعة الجديدة هنا للموافقة عليها."
+    "newUploadsWillAppearHere": "ستظهر الملفات المرفوعة الجديدة هنا للموافقة عليها.",
+    "allStatuses": "كل الحالات",
+    "allLabels": "كل التصنيفات",
+    "unlabelled": "بدون تصنيف",
+    "nothingMatchesThisFilter": "لا يوجد ما يطابق هذا الفلتر",
+    "tryAnotherLabelOrShowAll": "جرّب تصنيفًا آخر، أو اعرضها كلها.",
+    "showAllLabels": "عرض كل التصنيفات"
   },
   "publicContact": {
     "contactUs": "اتصل بنا",
