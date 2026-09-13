@@ -1,7 +1,9 @@
 // Downloads accommodation photos (hostel dorm, room, bunk beds, co-living) from
 // Wikimedia Commons, smart-crops to hex tiles, and bundles them under
-// apps/web/public/hero/ for the landing hero honeycomb. CC-licensed — keep
-// attribution for production. Re-run:  node tools/fetch-hero-images.mjs
+// apps/web/public/hero/ for the landing hero honeycomb.
+// Every photograph here requires attribution; the licence and author travel with each entry
+// below and are written into CREDITS.json, which /credits renders.
+// Re-run:  node tools/fetch-hero-images.mjs
 import sharp from 'sharp';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,27 +12,63 @@ const OUT = join(process.cwd(), 'apps/web/public/hero');
 mkdirSync(OUT, { recursive: true });
 const UA = 'HostelHiveBot/1.0 (landing hero tiles; contact: dev@hostelhive.pk)';
 
+/**
+ * The photographs, with the terms they come under.
+ *
+ * The licence lives here rather than only in the generated file, because this script writes
+ * `CREDITS.json` wholesale: when the licences were finally read off Commons and recorded, a
+ * re-run of this tool would have wiped them and left the thin "check the source page" note
+ * behind. What a photograph is licensed under belongs next to its URL.
+ */
 const items = [
-  [
-    'dorm',
-    'Hostel dormitory',
-    'https://upload.wikimedia.org/wikipedia/commons/e/e8/Hostel_Dormitory.jpg',
-  ],
-  [
-    'coliving',
-    'Co-living shared space',
-    'https://upload.wikimedia.org/wikipedia/commons/1/1a/Northernhay_House_shared_kitchen_%289622567534%29.jpg',
-  ],
-  [
-    'loft',
-    'Loft living space',
-    'https://upload.wikimedia.org/wikipedia/commons/4/40/400SGreenLoft.jpg',
-  ],
-  [
-    'living',
-    'Shared lounge',
-    'https://upload.wikimedia.org/wikipedia/commons/4/46/Sittingroom-edit1.jpg',
-  ],
+  {
+    slug: 'dorm',
+    label: 'Hostel dormitory',
+    source:
+      'https://upload.wikimedia.org/wikipedia/commons/0/0c/Hostel_6-bed_dorm_room%2C_Kuching%2C_Malaysia.jpg',
+    commonsPage:
+      'https://commons.wikimedia.org/wiki/File:Hostel_6-bed_dorm_room,_Kuching,_Malaysia.jpg',
+    author: 'Sgroey',
+    licence: 'CC BY 4.0',
+    licenceUrl: 'https://creativecommons.org/licenses/by/4.0/',
+    attribution: 'Photo by Sgroey, via Wikimedia Commons — CC BY 4.0',
+    note: 'Replaced File:Hostel_Dormitory.jpg, which was GFDL and whose file page demanded that a named third-party site be credited — a condition this product should not be carrying on its home page. Attribution only, no share-alike, so the crop below inherits no obligation of its own.',
+  },
+  {
+    slug: 'coliving',
+    label: 'Co-living shared space',
+    source:
+      'https://upload.wikimedia.org/wikipedia/commons/1/1a/Northernhay_House_shared_kitchen_%289622567534%29.jpg',
+    commonsPage:
+      'https://commons.wikimedia.org/wiki/File:Northernhay_House_shared_kitchen_(9622567534).jpg',
+    author: 'University of Exeter',
+    licence: 'CC BY 2.0',
+    licenceUrl: 'https://creativecommons.org/licenses/by/2.0/',
+    attribution: 'Photo by University of Exeter, via Wikimedia Commons — CC BY 2.0',
+    note: 'Attribution only, no copyleft: the crop carries no obligation of its own.',
+  },
+  {
+    slug: 'loft',
+    label: 'Loft living space',
+    source: 'https://upload.wikimedia.org/wikipedia/commons/4/40/400SGreenLoft.jpg',
+    commonsPage: 'https://commons.wikimedia.org/wiki/File:400SGreenLoft.jpg',
+    author: 'Jennifer D. Ames',
+    licence: 'CC BY-SA 3.0 / GFDL (dual)',
+    licenceUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+    attribution: 'Photo by Jennifer D. Ames, via Wikimedia Commons — CC BY-SA 3.0',
+    note: 'Dual-licensed; CC BY-SA 3.0 is the workable half. Share-alike attaches to the cropped tile.',
+  },
+  {
+    slug: 'living',
+    label: 'Shared lounge',
+    source: 'https://upload.wikimedia.org/wikipedia/commons/4/46/Sittingroom-edit1.jpg',
+    commonsPage: 'https://commons.wikimedia.org/wiki/File:Sittingroom-edit1.jpg',
+    author: 'Mruk20 (English Wikipedia), edited by a later contributor',
+    licence: 'CC BY-SA 2.5/2.0/1.0 + GFDL',
+    licenceUrl: 'https://creativecommons.org/licenses/by-sa/2.5/',
+    attribution: 'Photo by Mruk20 (English Wikipedia), via Wikimedia Commons — CC BY-SA 2.5',
+    note: 'Already a derivative — the Commons file is a rotated, cropped and enhanced version of an earlier upload, so the page names an editor as well as the original photographer. Check the file page for both before relying on the credit line above.',
+  },
 ];
 
 /**
@@ -43,7 +81,8 @@ mkdirSync(SOCIAL, { recursive: true });
 
 let ok = 0;
 const credits = [];
-for (const [slug, label, url] of items) {
+for (const item of items) {
+  const { slug, label, source: url } = item;
   try {
     const res = await fetch(url, { headers: { 'User-Agent': UA } });
     if (!res.ok) {
@@ -59,7 +98,18 @@ for (const [slug, label, url] of items) {
       .resize(1200, 630, { fit: 'cover', position: 'attention' })
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(join(SOCIAL, `${slug}.jpg`));
-    credits.push({ file: `/hero/${slug}.jpg`, social: `/hero/social/${slug}.jpg`, label, source: url });
+    credits.push({
+      file: `/hero/${slug}.jpg`,
+      social: `/hero/social/${slug}.jpg`,
+      label,
+      source: url,
+      commonsPage: item.commonsPage,
+      author: item.author,
+      licence: item.licence,
+      licenceUrl: item.licenceUrl,
+      attribution: item.attribution,
+      ...(item.note ? { note: item.note } : {}),
+    });
     ok++;
     console.log(
       '  ✓',
@@ -83,7 +133,7 @@ writeFileSync(
   `${JSON.stringify(
     {
       licence:
-        'Each file below is derived from a photograph on Wikimedia Commons. Commons images carry their own CC licence — check the source page before publishing, and attribute as it requires.',
+        'Checked against Wikimedia Commons. Every photograph below requires attribution, and two of the four are copyleft — the tiles are cropped re-encodes, which makes them derivative works, so the share-alike terms attach to the tiles themselves and not only to the originals. Credits are rendered at /credits.',
       note: 'Re-encoded to JPEG: a 560x480 hero tile and a 1200x630 social card, both smart-cropped from the full-resolution original.',
       images: credits,
     },
