@@ -22,9 +22,15 @@ const ROWS = [{ id: '1' }];
  * ResizeObserver, and without one ngAfterViewInit throws before a single row renders.
  */
 class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
+  observe(): void {
+    // Nothing here needs to fire — only to exist, so the lifecycle hook survives.
+  }
+  unobserve(): void {
+    // Nothing was observed.
+  }
+  disconnect(): void {
+    // Nothing to tear down.
+  }
 }
 
 /**

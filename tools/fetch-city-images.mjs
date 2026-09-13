@@ -4,7 +4,7 @@
 // Source images are CC-licensed on Wikimedia Commons — keep attribution for production.
 // Re-run with:  node tools/fetch-city-images.mjs
 import sharp from 'sharp';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const OUT = join(process.cwd(), 'apps/web/public/cities');
@@ -67,7 +67,19 @@ const cities = [
   ],
 ];
 
+/**
+ * The social card, at the size the crawlers actually ask for.
+ *
+ * The carousel tile is 560x480 — below Facebook's 600px floor and nowhere near the 1.91:1
+ * they crop to — so a shared city page rendered a small card, or none. These are cut from
+ * the same originals rather than upscaled from the tile, because upscaling a 560px crop to
+ * 1200 is visibly soft on exactly the screens a link preview is looked at on.
+ */
+const SOCIAL = join(OUT, 'social');
+mkdirSync(SOCIAL, { recursive: true });
+
 let ok = 0;
+const credits = [];
 for (const [slug, landmark, url] of cities) {
   try {
     const res = await fetch(url, { headers: { 'User-Agent': UA } });
@@ -80,16 +92,45 @@ for (const [slug, landmark, url] of cities) {
       .resize(560, 480, { fit: 'cover', position: 'attention' })
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(join(OUT, `${slug}.jpg`));
+    await sharp(buf)
+      .resize(1200, 630, { fit: 'cover', position: 'attention' })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toFile(join(SOCIAL, `${slug}.jpg`));
+    credits.push({ file: `/cities/${slug}.jpg`, social: `/cities/social/${slug}.jpg`, landmark, source: url });
     ok++;
     console.log(
       '  ✓',
-      `${slug}.jpg`,
+      `${slug}.jpg + social/${slug}.jpg`,
       `— ${landmark} (${(buf.length / 1024).toFixed(0)} KB source)`,
     );
   } catch (e) {
     console.error('  ✗', slug, '->', e.message);
   }
 }
+
+/**
+ * Attribution, recorded rather than remembered.
+ *
+ * These are CC-licensed photographs from Wikimedia Commons, and the licence follows the
+ * file wherever it is used. The note at the top of this script has said "keep attribution
+ * for production" since it was written, and until now nothing did — so the claim was not
+ * checkable from the repository. It is now, in the same shape `public/blog/CREDITS.json`
+ * uses for the article photographs.
+ */
+writeFileSync(
+  join(OUT, 'CREDITS.json'),
+  `${JSON.stringify(
+    {
+      licence:
+        'Each file below is derived from a photograph on Wikimedia Commons. Commons images carry their own CC licence — check the source page before publishing, and attribute as it requires.',
+      note: 'Re-encoded to JPEG: a 560x480 carousel tile and a 1200x630 social card, both smart-cropped from the full-resolution original.',
+      images: credits,
+    },
+    null,
+    2,
+  )}\n`,
+);
+
 console.log(
-  `\n${ok}/${cities.length} city tiles written to apps/web/public/cities/`,
+  `\n${ok}/${cities.length} cities written to apps/web/public/cities/ (tile + social card), attribution in CREDITS.json`,
 );

@@ -20,6 +20,7 @@ import { HostelPhoneDetail, HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
+import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
 import { MobileApp } from '@core/mobile-app';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import {
@@ -861,7 +862,10 @@ export class ListingDetail {
       socialTitle,
       description,
       path: `/hostel/${l.slug ?? ''}`,
-      image: l.images?.[0],
+      // A listing with no photos yet falls back to a dormitory rather than to the logo,
+      // which is what `Seo` would otherwise reach for. Shared into a chat, a room is at
+      // least the right kind of thing; a logo says nothing about the listing at all.
+      image: l.images?.[0] ?? DEFAULT_SOCIAL_IMAGE,
     });
 
     const jsonLd: Record<string, unknown> = {

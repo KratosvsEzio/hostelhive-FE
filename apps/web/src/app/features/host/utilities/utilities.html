@@ -85,7 +85,7 @@
   @if (menuPos(); as pos) {
     @let menuBill = bills().find(b => b.id === id);
     @if (menuBill) {
-      <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="176" (close)="closeMenu()">
+      <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="176" (closed)="closeMenu()">
         <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editBill(menuBill, $event)" *hhHasPermission="'host:UtilityBill:update'">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           {{ 'common.edit' | transloco }}

@@ -22,7 +22,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
  *
  * @example
  * @if (menuPos(); as pos) {
- *   <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+ *   <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
  *     <button hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="edit()">
  *       <i class="ti ti-pencil text-sm text-ink-400"></i> Edit
  *     </button>
@@ -42,7 +42,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
       type="button"
       class="fixed inset-0 z-40 cursor-default"
       [attr.aria-label]="'a11y.closeMenu' | transloco"
-      (click)="close.emit()"
+      (click)="closed.emit()"
     ></button>
     <div
       class="fixed z-50 overflow-hidden rounded-xl border border-ink-100 bg-white p-1.5 shadow-lg"
@@ -65,7 +65,7 @@ export class ContextMenu {
   /** Panel width in pixels. Defaults to 160 (w-40). */
   readonly width = input(160);
 
-  readonly close = output<void>();
+  readonly closed = output<void>();
 
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panel');
   private readonly adj = signal({ dy: 0, dx: 0 });

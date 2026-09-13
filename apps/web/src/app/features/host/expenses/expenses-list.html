@@ -91,7 +91,7 @@
   @if (menuPos(); as pos) {
     @let menuExpense = items().find((e) => e.id === openId);
     @if (menuExpense) {
-      <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+      <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
         <button
           type="button" hh-button variant="text" role="menuitem"
           class="w-full !justify-start"

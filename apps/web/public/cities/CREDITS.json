@@ -1,0 +1,66 @@
+{
+  "licence": "Each file below is derived from a photograph on Wikimedia Commons. Commons images carry their own CC licence — check the source page before publishing, and attribute as it requires.",
+  "note": "Re-encoded to JPEG: a 560x480 carousel tile and a 1200x630 social card, both smart-cropped from the full-resolution original.",
+  "images": [
+    {
+      "file": "/cities/karachi.jpg",
+      "social": "/cities/social/karachi.jpg",
+      "landmark": "Mazar-e-Quaid",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/4/47/PK_Karachi_asv2020-02_img52_Mazar-e-Quaid.jpg"
+    },
+    {
+      "file": "/cities/lahore.jpg",
+      "social": "/cities/social/lahore.jpg",
+      "landmark": "Badshahi Mosque",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Badshahi_Mosque_front_picture.jpg"
+    },
+    {
+      "file": "/cities/islamabad.jpg",
+      "social": "/cities/social/islamabad.jpg",
+      "landmark": "Faisal Mosque",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Ali_Mujtaba_WLM2017_FAISAL_MOSQUE_019.jpg"
+    },
+    {
+      "file": "/cities/rawalpindi.jpg",
+      "social": "/cities/social/rawalpindi.jpg",
+      "landmark": "Railway Station",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Rawalpindi_railway_station_4.JPG"
+    },
+    {
+      "file": "/cities/faisalabad.jpg",
+      "social": "/cities/social/faisalabad.jpg",
+      "landmark": "Clock Tower",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Clock_Tower_Faisalabad_by_Usman_Nadeem.jpg"
+    },
+    {
+      "file": "/cities/peshawar.jpg",
+      "social": "/cities/social/peshawar.jpg",
+      "landmark": "Islamia College",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Islamia_College_Peshawar_%28Public_Sector_University%29%2C_Khyber_Pakhtunkhwa%2C_Pakistan_cropped.jpg"
+    },
+    {
+      "file": "/cities/multan.jpg",
+      "social": "/cities/social/multan.jpg",
+      "landmark": "Shah Rukn-e-Alam",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Tomb_of_Shah_Rukn-e-Alam_2014-07-31.jpg"
+    },
+    {
+      "file": "/cities/quetta.jpg",
+      "social": "/cities/social/quetta.jpg",
+      "landmark": "Hanna Lake",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Hanna_Lake_Quetta.jpg"
+    },
+    {
+      "file": "/cities/hyderabad.jpg",
+      "social": "/cities/social/hyderabad.jpg",
+      "landmark": "Talpur Tombs",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/d/df/Mir_Karam_Ali_Khan_Talpur_Tombs_were_restored_in_2016_1.jpg"
+    },
+    {
+      "file": "/cities/sialkot.jpg",
+      "social": "/cities/social/sialkot.jpg",
+      "landmark": "Clock Tower",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Clock_Tower%2C_Sialkot_21.jpg"
+    }
+  ]
+}

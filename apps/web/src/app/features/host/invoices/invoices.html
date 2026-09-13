@@ -138,7 +138,7 @@
 
     @if (menuInv(); as inv) {
       @if (menuPos(); as pos) {
-        <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+        <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
           <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:update'">
             <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
             {{ 'common.edit' | transloco }}

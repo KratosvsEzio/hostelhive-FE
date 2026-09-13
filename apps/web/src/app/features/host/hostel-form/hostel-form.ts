@@ -43,6 +43,7 @@ import {
   PhotoGridPhoto,
   RichText,
   StatusPill,
+  ensurePrimary,
   imageFormatLabel,
 } from '@hostelhive/ui';
 import { RoomTypeRow } from '../../moderator/review/room-type-row';
@@ -770,10 +771,16 @@ export class HostelForm {
       this.area.set(d.area ?? '');
       this.street.set(d.address_1 ?? '');
       this.locationPinned.set(Number.isFinite(lat) && Number.isFinite(lng));
+      // `ensurePrimary` because the record may carry no `is_primary` at all — an older
+      // hostel, or one whose photos were uploaded before the flag existed. Without it the
+      // form opened with no primary: no badge, every star empty, and the first save would
+      // have sent that back as the truth.
       this.photos.set(
-        (d.attachments ?? [])
-          .filter((a) => a.url)
-          .map((a) => ({ id: String(a.id), url: a.url as string, primary: !!a.is_primary })),
+        ensurePrimary(
+          (d.attachments ?? [])
+            .filter((a) => a.url)
+            .map((a) => ({ id: String(a.id), url: a.url as string, primary: !!a.is_primary })),
+        ),
       );
       this.photoLabelMap.set(
         new Map(
@@ -1226,10 +1233,8 @@ export class HostelForm {
         return n;
       });
     }
-    const remaining = this.photos();
-    if (remaining.length && !remaining.some((p) => p.primary)) {
-      this.photos.update((list) => list.map((p, i) => (i === 0 ? { ...p, primary: true } : p)));
-    }
+    // Removing the primary leaves the hostel without one — the first of what is left takes over.
+    this.photos.update(ensurePrimary);
   }
   protected setPhotoLabel(photo: EditPhoto, v: string | string[] | null): void {
     const labelId = typeof v === 'string' ? v : null;
@@ -1283,14 +1288,13 @@ export class HostelForm {
       ? target.id
       : `uploading-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     if (!target) {
-      this.photos.update((list) => {
-        const next = [
+      // The very first photo a hostel gets becomes its primary.
+      this.photos.update((list) =>
+        ensurePrimary([
           ...list,
           { id: trackingId, url: previewUrl, primary: false, format },
-        ];
-        if (!next.some((p) => p.primary)) next[0] = { ...next[0], primary: true };
-        return next;
-      });
+        ]),
+      );
     }
     this.setPhotoProgress(trackingId, 0);
     this.imageUpload

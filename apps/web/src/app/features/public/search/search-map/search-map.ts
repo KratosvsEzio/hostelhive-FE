@@ -46,6 +46,7 @@ import { LocaleStore } from '@core/i18n/locale-store';
 import { MobileApp } from '@core/mobile-app';
 import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
 import { Seo } from '@core/seo';
+import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { PLACES } from '@features/public/landing/places';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
@@ -798,6 +799,10 @@ export class SearchMap {
           title: this.i18n.translate<string>('seo.worldwideTitle'),
           description: this.i18n.translate<string>('seo.worldwideDescription'),
           noindex: true,
+          // `noindex` keeps it out of the index, not out of a chat. A search link pasted
+          // into WhatsApp still renders a card, and a logo is the least useful thing to
+          // put in it.
+          image: DEFAULT_SOCIAL_IMAGE,
         });
         return;
       }
@@ -811,6 +816,7 @@ export class SearchMap {
             place: name,
           }),
           noindex: true,
+          image: DEFAULT_SOCIAL_IMAGE,
         });
         return;
       }
@@ -823,6 +829,9 @@ export class SearchMap {
           place: place.name,
         }),
         path: `/hostels/${place.slug}`,
+        // Canonicalised to the city landing page, so it shares that page's picture rather
+        // than the generic one — the two links are the same place.
+        image: placeSocialImage(place.slug),
       });
     });
 

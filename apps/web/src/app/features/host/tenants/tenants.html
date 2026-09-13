@@ -79,7 +79,7 @@
   @if (menuPos(); as pos) {
     @let menuTenant = filtered().find(t => t.id === openId);
     @if (menuTenant) {
-      <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+      <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
         <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="goToProfile(menuTenant); closeMenu()">
           <i class="ti ti-user text-sm text-ink-400" aria-hidden="true"></i>
           {{ 'common.viewProfile' | transloco }}

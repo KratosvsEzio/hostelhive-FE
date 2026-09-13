@@ -159,7 +159,7 @@
   @if (menuPos(); as pos) {
     @let menuRoom = sorted().find(r => r.id === openId);
     @if (menuRoom) {
-      <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+      <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
         <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openEdit(menuRoom); closeMenu()" *hhHasPermission="'host:Room:update'">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           {{ 'hostRooms.editRoom' | transloco }}

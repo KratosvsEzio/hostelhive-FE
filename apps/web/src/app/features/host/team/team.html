@@ -106,7 +106,7 @@
     @if (menuMember) {
       <!-- Wider than the 160px default: "Remove manager role" needs ~145px of content width and
            would otherwise overrun the panel, eating its right padding. -->
-      <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="190" (close)="closeMenu()">
+      <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="190" (closed)="closeMenu()">
         <button *hhHasPermission="'host:Staff:update'" type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="openStaffForm(menuMember); closeMenu()">
           <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
           {{ 'common.edit' | transloco }}

@@ -24,11 +24,21 @@ const localiser = (prefix: string) => ({
     typeof link === 'string' && link.startsWith('/') ? `${prefix}${link}` : link,
 });
 
-/** The table observes its own width; the test DOM has no ResizeObserver. */
+/**
+ * The table observes its own width to fade the sticky column's edge, and the test DOM has no
+ * ResizeObserver — without one `ngAfterViewInit` throws before a single row renders. Nothing
+ * here needs to fire, only to exist.
+ */
 class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
+  observe(): void {
+    // The table never reads a measurement in these tests.
+  }
+  unobserve(): void {
+    // Nothing was observed.
+  }
+  disconnect(): void {
+    // Nothing to tear down.
+  }
 }
 
 describe('breadcrumb links', () => {

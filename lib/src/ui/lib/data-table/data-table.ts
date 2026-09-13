@@ -763,7 +763,10 @@ export class DataTable implements AfterViewInit, OnDestroy {
     if (this.expandable() && hasChildren) {
       this.expandedIds.update((s) => {
         const n = new Set(s);
-        n.has(id) ? n.delete(id) : n.add(id);
+        // A statement rather than a ternary: both branches are here for their effect, and a
+        // conditional *expression* whose value is thrown away reads as a returned result.
+        if (n.has(id)) n.delete(id);
+        else n.add(id);
         return n;
       });
     }

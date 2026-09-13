@@ -127,6 +127,27 @@ export interface PhotoGridPhoto {
 }
 
 /**
+ * The list with exactly one photo marked primary — the first, when none is.
+ *
+ * A hostel's primary photo is the one every card, search result and share preview leads
+ * with, so "none" is not a state the product has: it just means nobody has chosen yet, and
+ * the first photo is the answer until they do.
+ *
+ * The callers had this rule on the paths where a photo is added or removed, but not on the
+ * one that loads them — so a hostel whose API records carry no `is_primary` opened with no
+ * primary at all, no badge, and every star empty. Same rule, one place, applied wherever the
+ * list is rebuilt.
+ *
+ * Returns the list untouched when it is empty or already has one, so a load that needs
+ * nothing allocates nothing. Only the first flag is set: a payload claiming two primaries is
+ * the server's to reconcile, and silently picking a winner here would hide that.
+ */
+export function ensurePrimary<T extends { primary: boolean }>(photos: T[]): T[] {
+  if (!photos.length || photos.some((p) => p.primary)) return photos;
+  return photos.map((p, i) => (i === 0 ? { ...p, primary: true } : p));
+}
+
+/**
  * Reusable photo grid used in the moderator/admin review pages and the host
  * onboarding wizard. Handles the visual layer only — file input, upload logic,
  * and confirmation modals stay in the parent.
@@ -255,6 +276,15 @@ export interface PhotoGridPhoto {
                   class="absolute inset-x-0 bottom-0 flex justify-end gap-1 bg-gradient-to-t from-ink-900/70 to-transparent p-2"
                 >
                   @if (p.primary) {
+                    <!-- Filled, and not a button: this photo is already primary, so the star
+                         states what is true rather than offering an action that would do
+                         nothing. The badge above carries the word for screen readers, which
+                         is why this one is decorative. -->
+                    <span
+                      class="grid h-7 w-7 place-items-center rounded-lg bg-white/90 text-brand-500"
+                    >
+                      <i class="ti ti-star-filled text-sm" aria-hidden="true"></i>
+                    </span>
                     <button
                       type="button"
                       class="grid h-7 w-7 place-items-center rounded-lg bg-white/90 text-ink-700 hover:bg-white"
