@@ -329,7 +329,7 @@
                   [value]="+f.rent || 0"
                   [error]="fieldError('rent')"
                   (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
-                  (blurred)="probeBlur($event)"
+                  (blurred)="markDirty('rent')"
                 />
                 <hh-money-input
                   [label]="'hostTenants.securityDeposit' | transloco"
