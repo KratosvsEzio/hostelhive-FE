@@ -50,24 +50,28 @@ const items = [
   {
     slug: 'loft',
     label: 'Loft living space',
-    source: 'https://upload.wikimedia.org/wikipedia/commons/4/40/400SGreenLoft.jpg',
-    commonsPage: 'https://commons.wikimedia.org/wiki/File:400SGreenLoft.jpg',
-    author: 'Jennifer D. Ames',
-    licence: 'CC BY-SA 3.0 / GFDL (dual)',
-    licenceUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
-    attribution: 'Photo by Jennifer D. Ames, via Wikimedia Commons — CC BY-SA 3.0',
-    note: 'Dual-licensed; CC BY-SA 3.0 is the workable half. Share-alike attaches to the cropped tile.',
+    source:
+      'https://upload.wikimedia.org/wikipedia/commons/3/37/Stylish_living_room_features_a_comfortable_gray_sofa_and_wooden_paneling_under_a_high_ceiling.jpg',
+    commonsPage:
+      'https://commons.wikimedia.org/wiki/File:Stylish_living_room_features_a_comfortable_gray_sofa_and_wooden_paneling_under_a_high_ceiling.jpg',
+    author: 'Shixart1985',
+    licence: 'CC BY 2.0',
+    licenceUrl: 'https://creativecommons.org/licenses/by/2.0/',
+    attribution: 'Photo by Shixart1985, via Wikimedia Commons — CC BY 2.0',
+    note: 'Replaced File:400SGreenLoft.jpg, which was CC BY-SA 3.0 / GFDL. The source calls this "a stylish living room ... under a high ceiling" rather than a loft, which is the closest honest match Commons offers under an attribution-only licence — a search for residential loft interiors returns church choir lofts and building exteriors. The tile\'s alt text still reads "Loft living space"; it should be re-worded to the source\'s own description when the locale files are next editable.',
   },
   {
     slug: 'living',
     label: 'Shared lounge',
-    source: 'https://upload.wikimedia.org/wikipedia/commons/4/46/Sittingroom-edit1.jpg',
-    commonsPage: 'https://commons.wikimedia.org/wiki/File:Sittingroom-edit1.jpg',
-    author: 'Mruk20 (English Wikipedia), edited by a later contributor',
-    licence: 'CC BY-SA 2.5/2.0/1.0 + GFDL',
-    licenceUrl: 'https://creativecommons.org/licenses/by-sa/2.5/',
-    attribution: 'Photo by Mruk20 (English Wikipedia), via Wikimedia Commons — CC BY-SA 2.5',
-    note: 'Already a derivative — the Commons file is a rotated, cropped and enhanced version of an earlier upload, so the page names an editor as well as the original photographer. Check the file page for both before relying on the credit line above.',
+    source:
+      'https://upload.wikimedia.org/wikipedia/commons/6/65/Cozy_cabin_living_room_with_wooden_interior.jpg',
+    commonsPage:
+      'https://commons.wikimedia.org/wiki/File:Cozy_cabin_living_room_with_wooden_interior.jpg',
+    author: 'Shixart1985',
+    licence: 'CC BY 2.0',
+    licenceUrl: 'https://creativecommons.org/licenses/by/2.0/',
+    attribution: 'Photo by Shixart1985, via Wikimedia Commons — CC BY 2.0',
+    note: 'Replaced File:Sittingroom-edit1.jpg, which was CC BY-SA 2.5/2.0/1.0 plus GFDL and was itself a derivative, so its page named an editor as well as the photographer. Attribution only, no share-alike.',
   },
 ];
 
@@ -133,7 +137,7 @@ writeFileSync(
   `${JSON.stringify(
     {
       licence:
-        'Checked against Wikimedia Commons. Every photograph below requires attribution, and two of the four are copyleft — the tiles are cropped re-encodes, which makes them derivative works, so the share-alike terms attach to the tiles themselves and not only to the originals. Credits are rendered at /credits.',
+        'Checked against Wikimedia Commons. Every photograph below is attribution-only — CC BY, no share-alike and no third-party credit conditions — so the cropped tiles carry no licence terms of their own. Credits are rendered at /credits.',
       note: 'Re-encoded to JPEG: a 560x480 hero tile and a 1200x630 social card, both smart-cropped from the full-resolution original.',
       images: credits,
     },
