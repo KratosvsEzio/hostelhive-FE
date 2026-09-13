@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
 import { ListingDetail } from './listing-detail.fixture';
@@ -163,6 +163,7 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     currency: d.currency ?? undefined,
     area: d.area ?? '',
     city: d.city ?? '',
+    country: d.country ?? '',
     accommodationType: GENDER_MAP[d.gender_type] ?? 'coliving',
     billingFrequency: d.billing_frequency ?? undefined,
     verified: d.status?.slug === 'active',
@@ -200,23 +201,56 @@ function toListingDetail(d: HostelDetail): ListingDetail {
   };
 }
 
+/**
+ * The listing does not exist, as opposed to the request having failed.
+ *
+ * Narrow on purpose. A 0 status (offline, CORS, aborted), a 500 and a timeout are all
+ * *failures* — they might succeed on a retry, and the page offers one. A 404 will not, so it
+ * is the only status that earns the "removed, here is search" screen.
+ *
+ * Reads `status` off the object rather than testing `instanceof HttpErrorResponse`, which was
+ * the first attempt and never matched: `errorInterceptor` normalises every failure to
+ * {@link ApiError} before any caller sees it, so the `HttpErrorResponse` is already gone by
+ * the time this runs. Both shapes carry `status`, so duck-typing it covers the interceptor's
+ * output and a direct `HttpClient` error alike.
+ *
+ * `/public/hostel_detail/:id` answers 404 for an unknown id, verified on the wire. A 200
+ * carrying no hostel throws a plain `Error` with no status, which stays a failure — the
+ * honest outcome for a response that broke its own contract.
+ */
+function isNotFound(e: unknown): boolean {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    (e as { status?: unknown }).status === 404
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class ListingDetailApi {
   private readonly hostels = inject(HostelsApi);
 
   /**
-   * Errors are left to the caller. `undefined` means "no such listing", nothing else.
+   * `undefined` means "no such listing". Anything else fails, and stays failed.
    *
-   * This used to end in `catchError(() => of(undefined))`, which turned every timeout, 500
-   * and dropped connection into a *successful* emission of nothing. The listing page has its
-   * own `catchError` and a whole error branch with a retry behind it — none of which could
-   * ever run, because the failure had already been laundered into a success one layer down.
-   * A seeker whose signal dropped was told the hostel may have been removed and offered the
-   * search page: wrong, final, and it sends them away from a hostel that exists.
+   * Two outcomes the page renders very differently, and it has been wrong about them in both
+   * directions. It once ended in a blanket `catchError(() => of(undefined))`, so a dropped
+   * connection was laundered into a success and the seeker was told the hostel may have been
+   * removed — wrong, final, and it sent them away from a hostel that exists. Removing that
+   * blanket took the 404 with it: `requireHostel` throws on a missing hostel, so a genuinely
+   * deleted listing then reported "Something went wrong" and offered a Retry that could never
+   * succeed, with no way back to search.
    *
-   * The distinction only survives if this observable is allowed to fail.
+   * So the status is the thing to branch on, and only 404 becomes `undefined`. A 500, a
+   * timeout and an offline device are all failures, because all three might work on a second
+   * attempt — and a deleted hostel will not.
    */
   getBySlug(slug: string): Observable<ListingDetail | undefined> {
-    return this.hostels.getById(slug).pipe(map((d) => toListingDetail(d)));
+    return this.hostels.getById(slug).pipe(
+      map((d) => toListingDetail(d)),
+      catchError((e: unknown) =>
+        isNotFound(e) ? of(undefined) : throwError(() => e),
+      ),
+    );
   }
 }

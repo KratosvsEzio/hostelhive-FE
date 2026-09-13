@@ -336,7 +336,8 @@
     "password": "Kata sandi",
     "selectYear": "Pilih tahun",
     "allow": "Izinkan",
-    "noPhotosYet": "Belum ada foto"
+    "noPhotosYet": "Belum ada foto",
+    "guests": "Tamu"
   },
   "leadWall": {
     "close": "Tutup",
@@ -642,7 +643,10 @@
     "removeFrom": "Hapus {{title}}",
     "removeOneFrom": "Kurangi satu dari {{title}}",
     "onePhotoAtATime": "Satu foto sekaligus",
-    "allPhotosByGroup": "Semua foto, dikelompokkan"
+    "allPhotosByGroup": "Semua foto, dikelompokkan",
+    "fewerGuestsIn": "Kurangi tamu di {{title}}",
+    "moreGuestsIn": "Tambah tamu di {{title}}",
+    "skipToContent": "Lewati ke konten"
   },
   "hostTenants": {
     "tenantPhoto": "Foto penyewa",
@@ -1533,7 +1537,12 @@
     "couldnTBook": "Pemesanan tidak dapat diselesaikan",
     "noRoomsListed": "Hostel ini belum menambahkan kamar apa pun.",
     "pricesArePerRoom": "Harga per kamar",
-    "pricesArePerBed": "Harga per tempat tidur"
+    "pricesArePerBed": "Harga per tempat tidur",
+    "guestDetails": "Detail tamu",
+    "enterTheGuestName": "Masukkan nama tamu",
+    "enterAValidPhone": "Masukkan nomor telepon yang valid",
+    "enterAValidEmail": "Masukkan alamat email yang valid",
+    "ofNSeats": "dari {{count}}"
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",

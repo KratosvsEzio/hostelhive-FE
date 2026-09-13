@@ -1,5 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { fromEvent } from 'rxjs';
 import { Button, DialogFocus } from '@hostelhive/ui';
 import { PricingPeriod, periodLabel } from '@util/pricing-period';
 import { BookingBasket } from './booking-basket';
@@ -13,6 +23,7 @@ import {
 } from './room-offer';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { MoneyPipe } from '@app/shared/currency/money.pipe';
 
 /**
  * A kind and its rooms. Not rendered as a block any more — {@link RoomPicker.rows}
@@ -46,7 +57,7 @@ interface RoomGroup {
 @Component({
   selector: 'hh-room-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DialogFocus, DecimalPipe, TranslocoPipe, CurrencySymbolPipe],
+  imports: [Button, DialogFocus, TranslocoPipe, CurrencySymbolPipe, MoneyPipe],
   templateUrl: './room-picker.html',
   // The listing column spaces its cards with `space-y-4`, which works by putting a
   // margin-top on each sibling. A custom element defaults to `display: inline`, and
@@ -70,6 +81,27 @@ export class RoomPicker {
    * to head itself with and cannot render against a row that has since left the list.
    */
   protected readonly openDescription = signal<RoomOffer | null>(null);
+
+  constructor() {
+    /**
+     * Escape closes the description.
+     *
+     * Its own listener rather than an entry in the listing page's chain, because this
+     * component is self-contained: the page has no signal for this dialog and would have to
+     * reach into the picker to learn it was open. The chain there closes the *hostel*
+     * description, which is a different modal that happens to share a name.
+     *
+     * Added with the focus trap, not after it: trapping Tab inside a dialog while leaving no
+     * key that releases it is worse than not trapping at all, which is the exact mistake this
+     * pairing exists to avoid.
+     */
+    const doc = inject(DOCUMENT);
+    fromEvent<KeyboardEvent>(doc, 'keydown')
+      .pipe(takeUntilDestroyed(inject(DestroyRef)))
+      .subscribe((e) => {
+        if (e.key === 'Escape' && this.openDescription()) this.openDescription.set(null);
+      });
+  }
 
   /**
    * Which photo each room is showing.

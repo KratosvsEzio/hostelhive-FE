@@ -336,7 +336,8 @@
     "password": "Contraseña",
     "selectYear": "Seleccionar año",
     "allow": "Permitir",
-    "noPhotosYet": "Aún no hay fotos"
+    "noPhotosYet": "Aún no hay fotos",
+    "guests": "Huéspedes"
   },
   "leadWall": {
     "close": "Cerrar",
@@ -637,7 +638,10 @@
     "removeFrom": "Quitar {{title}}",
     "removeOneFrom": "Quitar uno de {{title}}",
     "onePhotoAtATime": "Una foto a la vez",
-    "allPhotosByGroup": "Todas las fotos, agrupadas"
+    "allPhotosByGroup": "Todas las fotos, agrupadas",
+    "fewerGuestsIn": "Menos huéspedes en {{title}}",
+    "moreGuestsIn": "Más huéspedes en {{title}}",
+    "skipToContent": "Saltar al contenido"
   },
   "hostTenants": {
     "tenantPhoto": "Foto del inquilino",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "No se pudo completar la reserva",
     "noRoomsListed": "Este hostal aún no ha añadido ninguna habitación.",
     "pricesArePerRoom": "Precios por habitación",
-    "pricesArePerBed": "Precios por cama"
+    "pricesArePerBed": "Precios por cama",
+    "guestDetails": "Datos del huésped",
+    "enterTheGuestName": "Introduce el nombre del huésped",
+    "enterAValidPhone": "Introduce un teléfono válido",
+    "enterAValidEmail": "Introduce un correo electrónico válido",
+    "ofNSeats": "de {{count}}"
   },
   "states": {
     "nothingHereYet": "Aún no hay nada aquí",

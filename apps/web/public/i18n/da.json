@@ -336,7 +336,8 @@
     "password": "Adgangskode",
     "selectYear": "Vælg år",
     "allow": "Tillad",
-    "noPhotosYet": "Ingen billeder endnu"
+    "noPhotosYet": "Ingen billeder endnu",
+    "guests": "Gæster"
   },
   "leadWall": {
     "close": "Luk",
@@ -637,7 +638,10 @@
     "removeFrom": "Fjern {{title}}",
     "removeOneFrom": "Fjern én fra {{title}}",
     "onePhotoAtATime": "Ét billede ad gangen",
-    "allPhotosByGroup": "Alle billeder, grupperet"
+    "allPhotosByGroup": "Alle billeder, grupperet",
+    "fewerGuestsIn": "Færre gæster i {{title}}",
+    "moreGuestsIn": "Flere gæster i {{title}}",
+    "skipToContent": "Gå til indhold"
   },
   "hostTenants": {
     "tenantPhoto": "Lejerens billede",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "Bookingen kunne ikke gennemføres",
     "noRoomsListed": "Dette hostel har endnu ikke oprettet nogen værelser.",
     "pricesArePerRoom": "Priser er pr. værelse",
-    "pricesArePerBed": "Priser er pr. seng"
+    "pricesArePerBed": "Priser er pr. seng",
+    "guestDetails": "Gæsteoplysninger",
+    "enterTheGuestName": "Indtast gæstens navn",
+    "enterAValidPhone": "Indtast et gyldigt telefonnummer",
+    "enterAValidEmail": "Indtast en gyldig e-mailadresse",
+    "ofNSeats": "af {{count}}"
   },
   "states": {
     "nothingHereYet": "Der er intet her endnu",

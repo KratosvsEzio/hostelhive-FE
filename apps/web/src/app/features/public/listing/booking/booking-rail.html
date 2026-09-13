@@ -5,7 +5,7 @@
     @if (fromPrice() !== null) {
       <p class="text-sm text-ink-500">{{ 'common.from' | transloco }}</p>
       <p class="font-display text-2xl font-semibold text-ink-900">
-        {{ currency() | currencySym }} {{ fromPrice() | number: '1.2-2' }}
+        {{ currency() | currencySym }} {{ fromPrice() | money }}
         <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
       </p>
     }
@@ -68,22 +68,57 @@
                  wrong number on the one screen that has to be trusted. The rate is still
                  shown, because what a bed costs per night is true before any dates exist. -->
             <p class="mt-1 text-sm text-ink-600 tabular-nums">
-              {{ currency() | currencySym }} {{ linePerNight(line) | number: '1.2-2' }}
+              {{ currency() | currencySym }} {{ linePerNight(line) | money }}
               @if (priced()) {
                 × {{ (basket.nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: basket.nights() } }}
               } @else {
                 {{ periodLabel() }}
               }
             </p>
+            <!-- How many people are in these rooms.
+                 Private lines only: a bed is sold to one person, so a shared line's headcount
+                 is its bed count and there is nothing to ask. A private room might hold one
+                 guest or four, and the booking has to say which — a party of four taking two
+                 rooms that each sleep four is four people, not eight. Starts at the full
+                 capacity, which is what the basket assumed before it asked at all. -->
+            @if (line.kind === 'private') {
+              <div class="mt-2 flex items-center gap-2">
+                <span class="text-xs text-ink-500">{{ 'common.guests' | transloco }}</span>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="grid h-6 w-6 place-items-center rounded-full border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
+                    [disabled]="line.guests <= 1"
+                    [attr.aria-label]="'a11y.fewerGuestsIn' | transloco: { title: line.title }"
+                    (click)="setGuests(line.roomId, line.guests - 1)"
+                  >
+                    <span class="ti ti-minus text-xs" aria-hidden="true"></span>
+                  </button>
+                  <span class="w-5 text-center text-sm font-medium tabular-nums text-ink-900">{{ line.guests }}</span>
+                  <button
+                    type="button"
+                    class="grid h-6 w-6 place-items-center rounded-full border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
+                    [disabled]="line.guests >= basket.guestCapacityOf(line.roomId)"
+                    [attr.aria-label]="'a11y.moreGuestsIn' | transloco: { title: line.title }"
+                    (click)="setGuests(line.roomId, line.guests + 1)"
+                  >
+                    <span class="ti ti-plus text-xs" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <span class="text-xs text-ink-400">
+                  {{ 'publicBooking.ofNSeats' | transloco: { count: basket.guestCapacityOf(line.roomId) } }}
+                </span>
+              </div>
+            }
           </div>
           @if (priced()) {
             <div class="shrink-0 text-right">
               <p class="font-semibold text-ink-900 tabular-nums">
-                {{ currency() | currencySym }} {{ lineTotal(line) | number: '1.2-2' }}
+                {{ currency() | currencySym }} {{ lineTotal(line) | money }}
               </p>
               @if (hasLineDiscount(line)) {
-                <p class="text-xs text-ink-400 line-through tabular-nums">
-                  {{ currency() | currencySym }} {{ lineWas(line) | number: '1.2-2' }}
+                <p class="text-xs text-ink-500 line-through tabular-nums">
+                  {{ currency() | currencySym }} {{ lineWas(line) | money }}
                 </p>
               }
             </div>
@@ -106,7 +141,7 @@
         <div class="flex items-baseline justify-between">
           <span class="font-semibold text-ink-900">{{ 'common.total' | transloco }}</span>
           <span class="font-display text-lg font-semibold text-ink-900 tabular-nums">
-            {{ currency() | currencySym }} {{ basket.total() | number: '1.2-2' }}
+            {{ currency() | currencySym }} {{ basket.total() | money }}
           </span>
         </div>
         <!-- Nothing is taken online any more, so there is no second figure to reconcile

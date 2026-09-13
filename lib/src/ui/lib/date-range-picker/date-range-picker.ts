@@ -14,7 +14,9 @@ import {
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, fromEvent } from 'rxjs';
+import { DOCUMENT } from '@angular/common';
+import { DialogFocus } from '../dialog-focus/dialog-focus';
 
 /** Emitted selection — ISO `YYYY-MM-DD` strings (local), or `null` when unset. */
 export interface DateRange {
@@ -130,7 +132,7 @@ function shortLabel(iso: string | null): string {
  */
 @Component({
   selector: 'hh-date-range-picker',
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, DialogFocus],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -171,8 +173,22 @@ function shortLabel(iso: string | null): string {
             [attr.aria-label]="'a11y.closeCalendar' | transloco"
             (click)="close()"
           ></button>
+          <!-- The panel is portalled to the body, which is what makes its fixed coordinates
+               viewport-relative — and also what put it *after the footer* in tab order. It
+               announced itself as a dialog and behaved like nothing of the sort: focus stayed
+               on the trigger, and reaching the first day cell took twenty tab stops through
+               the footer, the language and currency pickers and four social links.
+
+               hhDialogFocus moves focus in and traps it; aria-modal tells assistive
+               technology to ignore the page behind. Dates are required to book, so this was
+               the one dialog on the page that nobody could route around.
+
+               No backticks in this comment: the template is a JS template literal, and a
+               backtick here ends the string rather than quoting a symbol. -->
           <div
+            hhDialogFocus
             role="dialog"
+            aria-modal="true"
             [attr.aria-label]="'a11y.chooseDateRange' | transloco"
             class="fixed z-[81] max-w-[calc(100vw-1rem)] rounded-3xl border border-ink-100 bg-white p-5 shadow-pill"
             [style.top.px]="pos()?.top"
@@ -340,7 +356,7 @@ export class DateRangePicker {
 
   protected readonly triggerClass = computed(() => {
     const base =
-      'inline-flex w-full items-center gap-2 border bg-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-100';
+      'inline-flex w-full items-center gap-2 border bg-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2';
     const field = this.variant() === 'field';
     // `py-2.5 px-3` is the 42px form control — the same box `hh-input` renders at, and
     // the same one the dropdown's `field` variant uses, so the three line up in a row.
@@ -376,10 +392,20 @@ export class DateRangePicker {
   });
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => {
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => {
       this.detachListeners();
       this.portal()?.nativeElement.remove();
     });
+
+    // Escape closes the calendar, discarding a half-picked range the same way the backdrop
+    // does. Paired with the focus trap on the panel: a dialog that holds Tab and answers to
+    // no key is a dialog a keyboard user cannot leave.
+    fromEvent<KeyboardEvent>(inject(DOCUMENT), 'keydown')
+      .pipe(takeUntilDestroyed(destroyRef))
+      .subscribe((e) => {
+        if (e.key === 'Escape' && this.open()) this.close();
+      });
     // Keep the live selection in sync with the inputs (external set / clear).
     effect(() => {
       this.selFrom.set(this.from() ?? null);

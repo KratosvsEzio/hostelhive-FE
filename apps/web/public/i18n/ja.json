@@ -336,7 +336,8 @@
     "password": "パスワード",
     "selectYear": "年を選択",
     "allow": "許可する",
-    "noPhotosYet": "写真はまだありません"
+    "noPhotosYet": "写真はまだありません",
+    "guests": "ゲスト"
   },
   "leadWall": {
     "close": "閉じる",
@@ -637,7 +638,10 @@
     "removeFrom": "{{title}}を削除",
     "removeOneFrom": "{{title}}を1つ減らす",
     "onePhotoAtATime": "1枚ずつ表示",
-    "allPhotosByGroup": "すべての写真をグループ表示"
+    "allPhotosByGroup": "すべての写真をグループ表示",
+    "fewerGuestsIn": "{{title}} のゲストを減らす",
+    "moreGuestsIn": "{{title}} のゲストを増やす",
+    "skipToContent": "本文へスキップ"
   },
   "hostTenants": {
     "tenantPhoto": "入居者の写真",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "予約を完了できませんでした",
     "noRoomsListed": "この宿はまだ部屋を登録していません。",
     "pricesArePerRoom": "料金は1部屋あたり",
-    "pricesArePerBed": "料金は1ベッドあたり"
+    "pricesArePerBed": "料金は1ベッドあたり",
+    "guestDetails": "ゲスト情報",
+    "enterTheGuestName": "ゲストの名前を入力してください",
+    "enterAValidPhone": "有効な電話番号を入力してください",
+    "enterAValidEmail": "有効なメールアドレスを入力してください",
+    "ofNSeats": "/ {{count}}"
   },
   "states": {
     "nothingHereYet": "まだ何もありません",

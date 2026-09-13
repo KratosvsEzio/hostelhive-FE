@@ -336,7 +336,8 @@
     "password": "Password",
     "selectYear": "Seleziona l'anno",
     "allow": "Consenti",
-    "noPhotosYet": "Ancora nessuna foto"
+    "noPhotosYet": "Ancora nessuna foto",
+    "guests": "Ospiti"
   },
   "leadWall": {
     "close": "Chiudi",
@@ -637,7 +638,10 @@
     "removeFrom": "Rimuovi {{title}}",
     "removeOneFrom": "Rimuovi uno da {{title}}",
     "onePhotoAtATime": "Una foto alla volta",
-    "allPhotosByGroup": "Tutte le foto, raggruppate"
+    "allPhotosByGroup": "Tutte le foto, raggruppate",
+    "fewerGuestsIn": "Meno ospiti in {{title}}",
+    "moreGuestsIn": "Più ospiti in {{title}}",
+    "skipToContent": "Vai al contenuto"
   },
   "hostTenants": {
     "tenantPhoto": "Foto dell’inquilino",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "Impossibile completare la prenotazione",
     "noRoomsListed": "Questo ostello non ha ancora inserito camere.",
     "pricesArePerRoom": "Prezzi per camera",
-    "pricesArePerBed": "Prezzi per letto"
+    "pricesArePerBed": "Prezzi per letto",
+    "guestDetails": "Dati dell'ospite",
+    "enterTheGuestName": "Inserisci il nome dell'ospite",
+    "enterAValidPhone": "Inserisci un numero di telefono valido",
+    "enterAValidEmail": "Inserisci un indirizzo email valido",
+    "ofNSeats": "su {{count}}"
   },
   "states": {
     "nothingHereYet": "Ancora nulla qui",

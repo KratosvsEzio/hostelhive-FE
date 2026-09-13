@@ -1,4 +1,4 @@
-<main hhContainer class="pb-28 pt-6">
+<div hhContainer class="pb-28 pt-6">
   @let s = state();
 
   @if (!s || s.loading) {
@@ -42,7 +42,8 @@
          deletion: this one says the load failed and offers another go. -->
     <div class="mx-auto mt-16 max-w-md">
       <hh-error-state
-        [message]="'common.couldnTLoadHostel' | transloco"
+        [networkError]="s.networkError"
+        [message]="s.networkError ? '' : ('common.couldnTLoadHostel' | transloco)"
         (retry)="reload()"
       />
     </div>
@@ -64,7 +65,7 @@
     <!-- Breadcrumb -->
     <a
       routerLink="/search"
-      class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600"
+      class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-700"
     >
       <i class="ti ti-chevron-left" aria-hidden="true"></i>{{ 'listing.backToSearch' | transloco }}
     </a>
@@ -104,7 +105,7 @@
               <i class="ti ti-star-filled text-amber-400" aria-hidden="true"></i>
               <span class="font-medium text-ink-900">{{ l.rating | number: '1.1-1' }}</span>
               @if (l.reviews) {
-                <span class="text-ink-400">({{ l.reviews }})</span>
+                <span class="text-ink-500">({{ l.reviews }})</span>
               }
             </button>
           }
@@ -145,16 +146,20 @@
       class="relative mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-3xl sm:h-[420px]"
       [class]="galleryGridClass()"
     >
+      <!-- `bg-ink-100` on every tile, because the tile is visible before its photograph is.
+           Without it the 420px band is the hero plus three white rectangles on a white card
+           for the first seconds of every load, with the "Show all" pill floating in the
+           middle of nothing — which on a patchy connection reads as broken rather than as
+           loading. The room cards already do this (`room-picker.html`). -->
       <button
         type="button"
-        class="aspect-video h-auto w-full overflow-hidden sm:aspect-auto sm:h-full"
+        class="aspect-video h-auto w-full overflow-hidden bg-ink-100 sm:aspect-auto sm:h-full"
         [class]="galleryHeroClass()"
+        [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: 1 }"
         (click)="openLightbox(0)"
       >
         <!-- The hero is the LCP element on this page: eager, high priority, decoded off the
-             main thread. The thumbnails beside it are not, and on a phone they are not even
-             displayed (`hidden sm:block`) — so they load lazily and stop competing with the
-             one image the seeker is waiting for. -->
+             main thread. -->
         <img
           [src]="l.images[0]"
           [alt]="l.name"
@@ -164,10 +169,23 @@
         />
       </button>
       @for (img of thumbs(); track img; let i = $index) {
+        <!-- Named individually. All four said "Gallery photo", so a screen reader heard the
+             same four words with nothing to tell them apart — and the hero, unlabelled, took
+             its name from the hostel and never said it opened anything.
+
+             `loading="lazy"` is load-bearing on a phone, which is not obvious and cost 1.44 MB
+             when it was removed. Below 640px `hidden sm:block` makes these `display: none` —
+             and `display: none` does *not* stop an image downloading. Lazy-loading is what
+             stops it: an element with no box never intersects the viewport, so the fetch never
+             starts. Without it a 375px phone pulled all four full-size photographs, 37% of the
+             page's image payload, for four elements of zero pixels.
+
+             It costs nothing at 640px and up: these sit inside the initial viewport there, and
+             the browser starts an in-viewport lazy image immediately. -->
         <button
           type="button"
-          class="hidden h-full w-full overflow-hidden sm:block"
-          [attr.aria-label]="'listing.galleryPhoto' | transloco"
+          class="hidden h-full w-full overflow-hidden bg-ink-100 sm:block"
+          [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: i + 2 }"
           (click)="openLightbox(i + 1)"
         >
           <img
@@ -285,7 +303,7 @@
                     <hh-avatar [initials]="initials(review.userName)" size="sm" />
                     <div class="min-w-0">
                       <p class="truncate text-sm font-semibold text-ink-900">{{ review.userName }}</p>
-                      <div class="flex items-center gap-1.5 text-xs text-ink-400">
+                      <div class="flex items-center gap-1.5 text-xs text-ink-500">
                         <span class="flex items-center gap-0.5">
                           @for (s of stars; track s) {
                             @if (review.score >= s) {
@@ -309,7 +327,7 @@
                   @if (isLongComment(review.comments)) {
                     <button
                       type="button"
-                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-600"
+                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-700"
                       (click)="togglePreviewExpanded(idx)"
                     >
                       {{ isPreviewExpanded(idx) ? 'Show less' : 'Show more' }}
@@ -433,7 +451,7 @@
                 [hostelName]="l.name"
                 [submitting]="booking()"
                 [error]="bookingError()"
-                (confirmed)="confirmBooking()"
+                (confirmed)="confirmBooking($event)"
                 (dismissed)="dismissSummary()"
               />
             }
@@ -510,7 +528,7 @@
               </div>
               @if (host.verified) {
                 <div
-                  class="mt-3 flex items-center gap-2 text-sm text-brand-600"
+                  class="mt-3 flex items-center gap-2 text-sm text-brand-700"
                 >
                   <i
                     class="ti ti-rosette-discount-check"
@@ -527,7 +545,7 @@
       </aside>
     </div>
   }
-</main>
+</div>
 
 <!-- Mobile sticky contact bar -->
 @if (state().data; as l) {
@@ -839,7 +857,7 @@
           <div class="min-w-0">
             <p class="truncate font-semibold text-ink-900">{{ l.name }}</p>
             <p class="mt-0.5 truncate text-sm text-ink-500">{{ l.area }}, {{ l.city }}</p>
-            <p class="mt-0.5 text-xs text-ink-400"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | money }} {{ fromPeriodLabel() }}</p>
+            <p class="mt-0.5 text-xs text-ink-500"><span class="cursor-help" [hhTooltip]="l.currency | currencyName">{{ l.currency | currencySym }}</span> {{ l.priceFrom | money }} {{ fromPeriodLabel() }}</p>
           </div>
         </div>
 
@@ -1004,7 +1022,7 @@
 
         @if (phoneLoading()) {
           <!-- Loading -->
-          <div class="mt-4 flex items-center justify-center gap-2 py-4 text-sm text-ink-400">
+          <div class="mt-4 flex items-center justify-center gap-2 py-4 text-sm text-ink-500">
             <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>{{ 'listing.fetchingContact' | transloco }}
           </div>
         } @else if (phoneError()) {
@@ -1019,10 +1037,10 @@
           @if (phoneValue()) {
             <div class="mt-4 flex items-center justify-between rounded-xl border border-ink-100 px-4 py-3">
               <div>
-                <p class="text-xs text-ink-400">{{ 'listing.mobile' | transloco }}</p>
+                <p class="text-xs text-ink-500">{{ 'listing.mobile' | transloco }}</p>
                 <a
                   [href]="'tel:' + phoneValue()"
-                  class="font-mono text-base font-semibold text-brand-600 hover:underline"
+                  class="font-mono text-base font-semibold text-brand-700 hover:underline"
                 >{{ phoneValue() }}</a>
               </div>
               <button
@@ -1043,20 +1061,20 @@
                the secondary is promoted into the row above rather than shown twice. -->
           @if (secondaryPhoneValue(); as second) {
             <div class="mt-2 rounded-xl border border-ink-100 px-4 py-3">
-              <p class="text-xs text-ink-400">{{ 'common.secondaryPhone' | transloco }}</p>
+              <p class="text-xs text-ink-500">{{ 'common.secondaryPhone' | transloco }}</p>
               <a
                 [href]="'tel:' + second"
-                class="font-mono text-base font-semibold text-brand-600 hover:underline"
+                class="font-mono text-base font-semibold text-brand-700 hover:underline"
               >{{ second }}</a>
             </div>
           }
 
           @if (contactEmail(); as mail) {
             <div class="mt-2 rounded-xl border border-ink-100 px-4 py-3">
-              <p class="text-xs text-ink-400">{{ 'common.contactEmail' | transloco }}</p>
+              <p class="text-xs text-ink-500">{{ 'common.contactEmail' | transloco }}</p>
               <a
                 [href]="'mailto:' + mail"
-                class="block truncate text-base font-semibold text-brand-600 hover:underline"
+                class="block truncate text-base font-semibold text-brand-700 hover:underline"
               >{{ mail }}</a>
             </div>
           }
@@ -1070,6 +1088,7 @@
               <a
                 hh-button
                 color="primary"
+                size="lg"
                 class="w-full"
                 [href]="'tel:' + callNumber"
               >
@@ -1080,6 +1099,7 @@
               <a
                 hh-button
                 variant="outlined"
+                size="lg"
                 class="w-full border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5"
                 [href]="waUrl"
                 target="_blank"
@@ -1196,7 +1216,7 @@
             <div class="flex items-center gap-3 rounded-xl border border-ink-100 p-4">
               <i class="ti ti-login text-xl text-ink-400" aria-hidden="true"></i>
               <p class="text-sm text-ink-500">
-                <button type="button" class="font-semibold text-brand-600 hover:underline" (click)="goToAuth()">{{ 'common.signIn' | transloco }}</button>
+                <button type="button" class="font-semibold text-brand-700 hover:underline" (click)="goToAuth()">{{ 'common.signIn' | transloco }}</button>
                 {{ 'listing.toLeaveAReview' | transloco }}
               </p>
             </div>
@@ -1218,13 +1238,13 @@
               </div>
             }
           } @else if (reviewsError()) {
-            <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
+            <div class="flex flex-col items-center gap-2 py-6 text-ink-500">
               <i class="ti ti-mood-sad text-2xl" aria-hidden="true"></i>
               <p class="text-sm">{{ 'listing.couldnTLoadReviews' | transloco }}</p>
               <button hh-button variant="outlined" size="sm" [loading]="reviewsLoading()" (click)="fetchReviews()">{{ 'common.retry' | transloco }}</button>
             </div>
           } @else if (!reviews().length) {
-            <div class="flex flex-col items-center gap-2 py-6 text-ink-400">
+            <div class="flex flex-col items-center gap-2 py-6 text-ink-500">
               <i class="ti ti-message-dots text-2xl" aria-hidden="true"></i>
               <p class="text-sm">{{ 'listing.noReviewsYet' | transloco }}</p>
               <p class="text-xs">{{ 'listing.beTheFirstToReview' | transloco }}</p>
@@ -1237,7 +1257,7 @@
               <div class="flex shrink-0 items-end gap-2">
                 <i class="ti ti-star-filled text-2xl text-amber-400" aria-hidden="true"></i>
                 <span class="text-4xl font-semibold leading-none text-ink-900">{{ stats.avg | number: '1.1-1' }}</span>
-                <span class="pb-1 text-sm text-ink-400">/ 5</span>
+                <span class="pb-1 text-sm text-ink-500">/ 5</span>
               </div>
               <div class="flex-1 space-y-1.5">
                 @for (b of stats.buckets; track b.star) {
@@ -1247,7 +1267,7 @@
                     <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-100">
                       <div class="h-full rounded-full bg-amber-400" [style.width.%]="b.pct"></div>
                     </div>
-                    <span class="w-5 text-end text-xs text-ink-400">{{ b.count }}</span>
+                    <span class="w-5 text-end text-xs text-ink-500">{{ b.count }}</span>
                   </div>
                 }
               </div>
@@ -1266,7 +1286,7 @@
                     <hh-avatar [initials]="initials(review.userName)" size="sm" />
                     <div class="min-w-0">
                       <p class="truncate text-sm font-semibold text-ink-900">{{ review.userName }}</p>
-                      <div class="flex items-center gap-1.5 text-xs text-ink-400">
+                      <div class="flex items-center gap-1.5 text-xs text-ink-500">
                         <span class="flex items-center gap-0.5">
                           @for (s of stars; track s) {
                             @if (review.score >= s) {
@@ -1290,7 +1310,7 @@
                   @if (isLongComment(review.comments)) {
                     <button
                       type="button"
-                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-600"
+                      class="mt-1 text-sm font-semibold text-ink-900 underline underline-offset-2 hover:text-brand-700"
                       (click)="toggleReviewExpanded(idx)"
                     >
                       {{ isReviewExpanded(idx) ? 'Show less' : 'Show more' }}

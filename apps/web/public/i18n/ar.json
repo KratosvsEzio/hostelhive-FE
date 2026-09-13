@@ -336,7 +336,8 @@
     "password": "كلمة المرور",
     "selectYear": "اختر السنة",
     "allow": "السماح",
-    "noPhotosYet": "لا توجد صور بعد"
+    "noPhotosYet": "لا توجد صور بعد",
+    "guests": "الضيوف"
   },
   "leadWall": {
     "close": "إغلاق",
@@ -637,7 +638,10 @@
     "removeFrom": "إزالة {{title}}",
     "removeOneFrom": "إزالة واحد من {{title}}",
     "onePhotoAtATime": "صورة واحدة في كل مرة",
-    "allPhotosByGroup": "كل الصور مجمّعة"
+    "allPhotosByGroup": "كل الصور مجمّعة",
+    "fewerGuestsIn": "عدد أقل من الضيوف في {{title}}",
+    "moreGuestsIn": "عدد أكبر من الضيوف في {{title}}",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "hostTenants": {
     "tenantPhoto": "صورة المستأجر",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "تعذّر إتمام الحجز",
     "noRoomsListed": "لم يُدرج هذا النزل أي غرف بعد.",
     "pricesArePerRoom": "الأسعار لكل غرفة",
-    "pricesArePerBed": "الأسعار لكل سرير"
+    "pricesArePerBed": "الأسعار لكل سرير",
+    "guestDetails": "بيانات الضيف",
+    "enterTheGuestName": "أدخل اسم الضيف",
+    "enterAValidPhone": "أدخل رقم هاتف صالح",
+    "enterAValidEmail": "أدخل بريدًا إلكترونيًا صالحًا",
+    "ofNSeats": "من {{count}}"
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",

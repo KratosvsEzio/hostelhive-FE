@@ -27,12 +27,20 @@
       [class.bg-white]="qty(offer) === 0"
       [class.bg-brand-50]="qty(offer) > 0"
     >
-      <div class="flex flex-col sm:flex-row">
+      <!-- Row at `lg`, not `sm`. The photo is a fixed 224px and the rate column a fixed
+           240px, so the row commits 464px of chrome before the details column gets a pixel.
+           Inside a 528px card — which is what a 657px viewport gives, and what a 1280px
+           laptop at 200% zoom gives — that left 62px for the room name: "King size room"
+           wrapped to three lines and the third was cut off by the card's own overflow, with
+           the "Sleeps 4" chip spilling across the divider. `overflow-x: clip` on the body
+           meant none of it could be scrolled to. `lg` is where the page's own two-column
+           split happens, so the card now turns at the same width the layout does. -->
+      <div class="flex flex-col lg:flex-row">
         <!-- Photo. The aspect ratio gives it height while the row is stacked; once it is
              a row it stretches to whatever the details column ends up being, so the
              three zones stay flush at the bottom. -->
         <div
-          class="group/photo relative aspect-[4/3] shrink-0 overflow-hidden bg-ink-100 sm:aspect-auto sm:w-56"
+          class="group/photo relative aspect-[4/3] shrink-0 overflow-hidden bg-ink-100 lg:aspect-auto lg:w-56"
         >
           @if (photosOf(offer).length) {
             <!-- A sliding track rather than scroll-snap: the arrows have to drive it, and
@@ -58,7 +66,7 @@
               @if (photoIndex(offer) > 0) {
                 <button
                   type="button"
-                  class="absolute start-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
+                  class="absolute start-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
                   [attr.aria-label]="'Previous photo of ' + offer.title"
                   (click)="stepPhoto(offer, -1, $event)"
                 >
@@ -68,7 +76,7 @@
               @if (photoIndex(offer) < photosOf(offer).length - 1) {
                 <button
                   type="button"
-                  class="absolute end-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
+                  class="absolute end-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
                   [attr.aria-label]="'Next photo of ' + offer.title"
                   (click)="stepPhoto(offer, 1, $event)"
                 >
@@ -158,20 +166,20 @@
              no rate-plan concept, so a "Standard" label beside a lone rate would name a
              choice that does not exist. When plans arrive this becomes a loop. -->
         <div
-          class="flex shrink-0 items-end justify-between gap-4 border-t border-ink-100 p-4 sm:w-60 sm:flex-col sm:justify-center sm:border-s sm:border-t-0"
+          class="flex shrink-0 items-end justify-between gap-4 border-t border-ink-100 p-4 lg:w-60 lg:flex-col lg:justify-center lg:border-s lg:border-t-0"
         >
-          <div class="text-left sm:text-right">
+          <div class="text-left lg:text-right">
             <p class="font-display text-lg font-semibold text-ink-900">
-              {{ currency() | currencySym }} {{ price(offer) | number: '1.2-2' }}
+              {{ currency() | currencySym }} {{ price(offer) | money }}
               <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
             </p>
             @if (discount(offer); as pct) {
-              <p class="mt-1 flex flex-wrap items-center gap-2 sm:justify-end">
+              <p class="mt-1 flex flex-wrap items-center gap-2 lg:justify-end">
                 <span class="hh-tag-skew bg-rose-100 text-xs font-semibold text-rose-700">
                   <span>−{{ pct }}%</span>
                 </span>
                 <span class="text-sm text-ink-500 line-through">
-                  {{ currency() | currencySym }} {{ offer.actualPrice | number: '1.2-2' }}
+                  {{ currency() | currencySym }} {{ offer.actualPrice | money }}
                 </span>
               </p>
             }

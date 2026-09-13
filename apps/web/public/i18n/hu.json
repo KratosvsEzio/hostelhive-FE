@@ -336,7 +336,8 @@
     "password": "Jelszó",
     "selectYear": "Válasszon évet",
     "allow": "Engedélyezés",
-    "noPhotosYet": "Még nincsenek fotók"
+    "noPhotosYet": "Még nincsenek fotók",
+    "guests": "Vendégek"
   },
   "leadWall": {
     "close": "Bezárás",
@@ -637,7 +638,10 @@
     "removeFrom": "{{title}} eltávolítása",
     "removeOneFrom": "Egy eltávolítása: {{title}}",
     "onePhotoAtATime": "Egy fotó egyszerre",
-    "allPhotosByGroup": "Minden fotó, csoportosítva"
+    "allPhotosByGroup": "Minden fotó, csoportosítva",
+    "fewerGuestsIn": "Kevesebb vendég itt: {{title}}",
+    "moreGuestsIn": "Több vendég itt: {{title}}",
+    "skipToContent": "Ugrás a tartalomra"
   },
   "hostTenants": {
     "tenantPhoto": "Bérlő fotója",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "A foglalás nem sikerült",
     "noRoomsListed": "Ez a szállás még nem adott meg szobákat.",
     "pricesArePerRoom": "Az árak szobánként",
-    "pricesArePerBed": "Az árak ágyanként"
+    "pricesArePerBed": "Az árak ágyanként",
+    "guestDetails": "Vendégadatok",
+    "enterTheGuestName": "Adja meg a vendég nevét",
+    "enterAValidPhone": "Adjon meg érvényes telefonszámot",
+    "enterAValidEmail": "Adjon meg érvényes e-mail-címet",
+    "ofNSeats": "ennyiből: {{count}}"
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",

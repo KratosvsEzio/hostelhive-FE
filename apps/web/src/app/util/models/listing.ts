@@ -45,6 +45,14 @@ export interface Listing {
   name: string;
   area: string;
   city: string;
+  /**
+   * Which country the hostel is in — what its clock runs on.
+   *
+   * Only the detail payload carries it, so it is absent on search cards. Read when a booking
+   * is built: check-in is 2pm at the hostel, not 2pm wherever the guest is browsing from.
+   * See `countryTimeZone`.
+   */
+  country?: string;
   accommodationType: AccommodationType;
   /** `month` | `night` from the serializer, or absent. See `periodFromBillingFrequency`. */
   billingFrequency?: string;

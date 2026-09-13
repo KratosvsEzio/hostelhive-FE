@@ -336,7 +336,8 @@
     "password": "Hasło",
     "selectYear": "Wybierz rok",
     "allow": "Zezwól",
-    "noPhotosYet": "Brak zdjęć"
+    "noPhotosYet": "Brak zdjęć",
+    "guests": "Goście"
   },
   "leadWall": {
     "close": "Zamknij",
@@ -642,7 +643,10 @@
     "removeFrom": "Usuń {{title}}",
     "removeOneFrom": "Usuń jeden z {{title}}",
     "onePhotoAtATime": "Jedno zdjęcie naraz",
-    "allPhotosByGroup": "Wszystkie zdjęcia, pogrupowane"
+    "allPhotosByGroup": "Wszystkie zdjęcia, pogrupowane",
+    "fewerGuestsIn": "Mniej gości w {{title}}",
+    "moreGuestsIn": "Więcej gości w {{title}}",
+    "skipToContent": "Przejdź do treści"
   },
   "hostTenants": {
     "tenantPhoto": "Zdjęcie najemcy",
@@ -1533,7 +1537,12 @@
     "couldnTBook": "Nie udało się dokończyć rezerwacji",
     "noRoomsListed": "Ten hostel nie dodał jeszcze żadnych pokoi.",
     "pricesArePerRoom": "Ceny za pokój",
-    "pricesArePerBed": "Ceny za łóżko"
+    "pricesArePerBed": "Ceny za łóżko",
+    "guestDetails": "Dane gościa",
+    "enterTheGuestName": "Podaj imię i nazwisko gościa",
+    "enterAValidPhone": "Podaj prawidłowy numer telefonu",
+    "enterAValidEmail": "Podaj prawidłowy adres e-mail",
+    "ofNSeats": "z {{count}}"
   },
   "states": {
     "nothingHereYet": "Jeszcze nic tu nie ma",

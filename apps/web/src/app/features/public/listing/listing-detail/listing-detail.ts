@@ -29,12 +29,12 @@ import {
   periodFromBillingFrequency,
   periodLabel,
 } from '@util/pricing-period';
-import { localDay } from '@util/api-date';
 import { NotificationService } from '@core/notification.service';
 import { OverflowProbe } from '@app/shared/overflow-probe/overflow-probe';
 import { BookingBasket } from '../booking/booking-basket';
 import { BookingRail } from '../booking/booking-rail';
 import { BookingSummary } from '../booking/booking-summary';
+import { BookingGuest } from '../booking/booking-request';
 import { BookingApi } from '../booking/booking-api';
 import { RoomPicker } from '../booking/room-picker';
 import { canBookOnline } from '../booking/room-offer';
@@ -91,6 +91,15 @@ interface ViewState {
    * answer — it is wrong, it is final, and it sends them away from a hostel that exists.
    */
   error: boolean;
+  /**
+   * The failure was a lost connection, not a server that answered.
+   *
+   * Status 0 is offline, a dropped request, a blocked origin. The error component already
+   * carries the right words for it — "Can't connect / Check your connection" — and the page
+   * was never telling it which case this was, so a seeker on a train got "Something went
+   * wrong", which sounds like the site is broken rather than like their signal went.
+   */
+  networkError: boolean;
   data: ListingDetailModel | null;
 }
 
@@ -348,21 +357,32 @@ export class ListingDetail {
    * still the rooms they want, and making them choose again is a second punishment for the
    * first problem.
    */
-  protected confirmBooking(): void {
+  protected confirmBooking(guest: BookingGuest): void {
     const listing = this.state().data;
     const from = this.basket.checkIn();
     const to = this.basket.checkOut();
     if (!listing || !from || !to || this.booking()) return;
 
+    // `POST /api/bookings` is authenticated — signed out it answers 401, which would surface
+    // as a failure the guest can do nothing about. Sent to the Log in tab and returned here,
+    // the same way favouriting is, with the basket still assembled when they come back.
+    if (!this.session.isAuthenticated()) {
+      void this.router.navigate(['/auth'], {
+        queryParams: { mode: 'login', returnUrl: this.router.url },
+      });
+      return;
+    }
+
     this.booking.set(true);
     this.bookingError.set('');
     this.bookingApi
-      .requestBooking({
-        hostel_id: String(listing.id),
-        check_in: localDay(from),
-        check_out: localDay(to),
-        guests: this.basket.guests(),
-        lines: this.basket.lines().map((l) => ({ room_id: l.roomId, quantity: l.quantity })),
+      .createBooking({
+        hostelId: String(listing.id),
+        hostelCountry: listing.country,
+        checkIn: from,
+        checkOut: to,
+        lines: this.basket.lines(),
+        guest,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -406,7 +426,7 @@ export class ListingDetail {
     if (listing) this.favorites.toggle(listing);
   }
 
-  private readonly _state = signal<ViewState>({ loading: true, error: false, data: null });
+  private readonly _state = signal<ViewState>({ loading: true, error: false, networkError: false, data: null });
   protected readonly state = this._state.asReadonly();
 
   /** Fires when the seeker asks for another go after a failed load. */
@@ -870,10 +890,17 @@ export class ListingDetail {
         this.reload$.pipe(
           startWith(null),
           switchMap(() => {
-            this._state.set({ loading: true, error: false, data: null });
+            this._state.set({ loading: true, error: false, networkError: false, data: null });
             return this.api.getBySlug(slug).pipe(
-              map((data): ViewState => ({ loading: false, error: false, data: data ?? null })),
-              catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
+              map((data): ViewState => ({ loading: false, error: false, networkError: false, data: data ?? null })),
+              catchError((e: unknown) =>
+                of<ViewState>({
+                  loading: false,
+                  error: true,
+                  networkError: (e as { status?: number } | null)?.status === 0,
+                  data: null,
+                }),
+              ),
             );
           }),
         ),
@@ -943,6 +970,12 @@ export class ListingDetail {
   private applySeo(s: ViewState): void {
     this.seo.clearJsonLd('listing');
     const l = s.data;
+
+    // The hero is this page's LCP element, and the server already knows which file it is.
+    // Emitting the preload here puts it in flight with the HTML rather than three seconds
+    // later, once the bundle has parsed and the component has finally rendered the `<img>`.
+    // Cleared when there is no listing, so a not-found page preloads nothing.
+    this.seo.preloadImage(l?.images?.[0] ?? null);
 
     if (!l) {
       // Missing or failed: never let a not-found page into the index.

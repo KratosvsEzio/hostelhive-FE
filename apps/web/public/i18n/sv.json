@@ -336,7 +336,8 @@
     "password": "Lösenord",
     "selectYear": "Välj år",
     "allow": "Tillåt",
-    "noPhotosYet": "Inga foton ännu"
+    "noPhotosYet": "Inga foton ännu",
+    "guests": "Gäster"
   },
   "leadWall": {
     "close": "Stäng",
@@ -637,7 +638,10 @@
     "removeFrom": "Ta bort {{title}}",
     "removeOneFrom": "Ta bort en från {{title}}",
     "onePhotoAtATime": "En bild i taget",
-    "allPhotosByGroup": "Alla bilder, grupperade"
+    "allPhotosByGroup": "Alla bilder, grupperade",
+    "fewerGuestsIn": "Färre gäster i {{title}}",
+    "moreGuestsIn": "Fler gäster i {{title}}",
+    "skipToContent": "Hoppa till innehåll"
   },
   "hostTenants": {
     "tenantPhoto": "Hyresgästens bild",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "Bokningen kunde inte slutföras",
     "noRoomsListed": "Det här vandrarhemmet har inte lagt till några rum än.",
     "pricesArePerRoom": "Priser per rum",
-    "pricesArePerBed": "Priser per säng"
+    "pricesArePerBed": "Priser per säng",
+    "guestDetails": "Gästuppgifter",
+    "enterTheGuestName": "Ange gästens namn",
+    "enterAValidPhone": "Ange ett giltigt telefonnummer",
+    "enterAValidEmail": "Ange en giltig e-postadress",
+    "ofNSeats": "av {{count}}"
   },
   "states": {
     "nothingHereYet": "Inget här ännu",

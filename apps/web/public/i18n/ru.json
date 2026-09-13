@@ -336,7 +336,8 @@
     "password": "Пароль",
     "selectYear": "Выберите год",
     "allow": "Разрешить",
-    "noPhotosYet": "Фотографий пока нет"
+    "noPhotosYet": "Фотографий пока нет",
+    "guests": "Гости"
   },
   "leadWall": {
     "close": "Закрыть",
@@ -642,7 +643,10 @@
     "removeFrom": "Удалить {{title}}",
     "removeOneFrom": "Убрать один из {{title}}",
     "onePhotoAtATime": "По одному фото",
-    "allPhotosByGroup": "Все фото по группам"
+    "allPhotosByGroup": "Все фото по группам",
+    "fewerGuestsIn": "Меньше гостей в {{title}}",
+    "moreGuestsIn": "Больше гостей в {{title}}",
+    "skipToContent": "Перейти к содержимому"
   },
   "hostTenants": {
     "tenantPhoto": "Фото жильца",
@@ -1533,7 +1537,12 @@
     "couldnTBook": "Не удалось завершить бронирование",
     "noRoomsListed": "Этот хостел ещё не добавил комнаты.",
     "pricesArePerRoom": "Цены за комнату",
-    "pricesArePerBed": "Цены за койко-место"
+    "pricesArePerBed": "Цены за койко-место",
+    "guestDetails": "Данные гостя",
+    "enterTheGuestName": "Введите имя гостя",
+    "enterAValidPhone": "Введите действительный номер телефона",
+    "enterAValidEmail": "Введите действительный адрес эл. почты",
+    "ofNSeats": "из {{count}}"
   },
   "states": {
     "nothingHereYet": "Здесь пока пусто",

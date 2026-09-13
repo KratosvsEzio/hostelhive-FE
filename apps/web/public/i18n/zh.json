@@ -336,7 +336,8 @@
     "password": "密码",
     "selectYear": "选择年份",
     "allow": "允许",
-    "noPhotosYet": "暂无照片"
+    "noPhotosYet": "暂无照片",
+    "guests": "入住人"
   },
   "leadWall": {
     "close": "关闭",
@@ -637,7 +638,10 @@
     "removeFrom": "移除{{title}}",
     "removeOneFrom": "从{{title}}中减少一个",
     "onePhotoAtATime": "逐张查看",
-    "allPhotosByGroup": "全部照片，按分组"
+    "allPhotosByGroup": "全部照片，按分组",
+    "fewerGuestsIn": "减少 {{title}} 的入住人数",
+    "moreGuestsIn": "增加 {{title}} 的入住人数",
+    "skipToContent": "跳转到主要内容"
   },
   "hostTenants": {
     "tenantPhoto": "租客照片",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "无法完成预订",
     "noRoomsListed": "该旅舍尚未添加任何房间。",
     "pricesArePerRoom": "价格为每间房",
-    "pricesArePerBed": "价格为每张床"
+    "pricesArePerBed": "价格为每张床",
+    "guestDetails": "入住人信息",
+    "enterTheGuestName": "请输入入住人姓名",
+    "enterAValidPhone": "请输入有效的电话号码",
+    "enterAValidEmail": "请输入有效的电子邮箱",
+    "ofNSeats": "/ {{count}}"
   },
   "states": {
     "nothingHereYet": "这里还没有内容",

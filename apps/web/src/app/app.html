@@ -1,11 +1,44 @@
 <div class="flex min-h-screen flex-col bg-surface text-ink-800">
+  <!-- The first thing Tab reaches, on every route.
+       Without it a keyboard user crosses the whole header — logo, five nav links, language,
+       currency, account — before the first word of content, on every page they open. The
+       listing page alone puts more than forty stops in front of the booking controls.
+
+       A button, not `<a href="#main-content">`. The document carries `<base href="/">`, so a
+       fragment-only href resolves against the *base* rather than the current URL — the first
+       version of this sent a reader on `/en/hostel/MjvuEl` to `/en#main-content`, which is
+       the landing page. Exactly the trap the booking rail documents for its own "Choose a
+       room" link. Moving focus is an action, so a button is the honest element for it, and
+       it announces as "Skip to content, button".
+
+       Parked off-screen and slid in on focus, rather than `sr-only` + `focus:not-sr-only`:
+       that pair does not survive here. `sr-only`'s own `padding: 0` and `width: 1px` lose to
+       the `px-4` on the same element — same specificity, later in the sheet — and Tailwind
+       never emitted `focus:not-sr-only` at all, so the button stayed clipped when focused and
+       the reader got an invisible control. Moving it with `top` keeps it in the accessibility
+       tree and in the tab order at all times, which `display: none` would not. -->
+  <button
+    type="button"
+    class="fixed -top-20 start-4 z-[300] rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white focus:top-4 focus:outline-none focus:ring-2 focus:ring-ink-900 focus:ring-offset-2"
+    (click)="skipToContent()"
+  >
+    {{ 'a11y.skipToContent' | transloco }}
+  </button>
   @if (showHeader()) {
     <app-site-header />
   }
   <!-- Clears the fixed bottom tab bar. Derived from --hh-tabbar-h + the device inset
        rather than a fixed pb-*, so it stays correct when the bar grows on a
        gesture-nav device (see .hh-pb-tabbar in global.css). -->
-  <main class="flex-1" [class.hh-pb-tabbar]="showTabBarClearance()"><router-outlet /></main>
+  <!-- `tabindex="-1"` so the skip link can actually put focus here. Without it the browser
+       scrolls to the anchor but leaves focus in the header, and the next Tab carries on
+       through the nav the reader just skipped. -->
+  <main
+    id="main-content"
+    tabindex="-1"
+    class="flex-1 focus:outline-none"
+    [class.hh-pb-tabbar]="showTabBarClearance()"
+  ><router-outlet /></main>
   @if (showFooter()) {
     <!-- `hidden md:block` mirrors showFooter()'s width half in CSS. The server can't
          know the viewport, so it always renders the footer; without this the ~650px

@@ -9,7 +9,7 @@
   [confirmLabel]="'publicBooking.confirmBooking' | transloco"
   [confirmColor]="'primary'"
   [confirmDisabled]="submitting()"
-  (confirm)="confirmed.emit()"
+  (confirm)="submit()"
   (cancel)="dismissed.emit()"
 >
   @if (hostelName()) {
@@ -60,6 +60,38 @@
     <span class="font-display text-xl font-semibold text-ink-900 tabular-nums">
       {{ currency() | currencySym }} {{ basket.total() | number: '1.2-2' }}
     </span>
+  </div>
+
+  <!-- Who is staying. Prefilled from the account and editable, because people book for other
+       people — and the phone is never on the account, so it has to be asked for regardless. -->
+  <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-500">
+    {{ 'publicBooking.guestDetails' | transloco }}
+  </p>
+  <div class="mt-2 grid gap-3 sm:grid-cols-2">
+    <hh-input
+      class="sm:col-span-2"
+      size="sm"
+      autocomplete="name"
+      [label]="'common.fullName' | transloco"
+      [(value)]="guestName"
+      [error]="nameError() ? ('publicBooking.enterTheGuestName' | transloco) : ''"
+    />
+    <hh-input
+      size="sm"
+      type="tel"
+      autocomplete="tel"
+      [label]="'common.phone' | transloco"
+      [(value)]="guestPhone"
+      [error]="phoneError() ? ('publicBooking.enterAValidPhone' | transloco) : ''"
+    />
+    <hh-input
+      size="sm"
+      type="email"
+      autocomplete="email"
+      [label]="'common.email' | transloco"
+      [(value)]="guestEmail"
+      [error]="emailError() ? ('publicBooking.enterAValidEmail' | transloco) : ''"
+    />
   </div>
 
   <!-- Said here as well as on the rail. This is the screen somebody reads before they commit,

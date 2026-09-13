@@ -82,7 +82,10 @@
     "removeFrom": "Remove {{title}}",
     "removeOneFrom": "Remove one from {{title}}",
     "onePhotoAtATime": "One photo at a time",
-    "allPhotosByGroup": "All photos, grouped"
+    "allPhotosByGroup": "All photos, grouped",
+    "fewerGuestsIn": "Fewer guests in {{title}}",
+    "moreGuestsIn": "More guests in {{title}}",
+    "skipToContent": "Skip to content"
   },
   "account": {
     "accountMenu": "Account menu",
@@ -389,7 +392,8 @@
     "password": "Password",
     "selectYear": "Select year",
     "allow": "Allow",
-    "noPhotosYet": "No photos yet"
+    "noPhotosYet": "No photos yet",
+    "guests": "Guests"
   },
   "coreForbidden": {
     "accessBlocked": "Access blocked",
@@ -1246,7 +1250,12 @@
     "couldnTBook": "Couldn't complete the booking",
     "noRoomsListed": "This hostel has not listed any rooms yet.",
     "pricesArePerRoom": "Prices are per room",
-    "pricesArePerBed": "Prices are per bed"
+    "pricesArePerBed": "Prices are per bed",
+    "guestDetails": "Guest details",
+    "enterTheGuestName": "Enter the guest's name",
+    "enterAValidPhone": "Enter a valid phone number",
+    "enterAValidEmail": "Enter a valid email address",
+    "ofNSeats": "of {{count}}"
   },
   "publicCareers": {
     "joinUsInBuildingPakistan": "Join us in building Pakistan's #1 hostel platform",

@@ -336,7 +336,8 @@
     "password": "Mot de passe",
     "selectYear": "Sélectionner l'année",
     "allow": "Autoriser",
-    "noPhotosYet": "Pas encore de photos"
+    "noPhotosYet": "Pas encore de photos",
+    "guests": "Voyageurs"
   },
   "leadWall": {
     "close": "Fermer",
@@ -637,7 +638,10 @@
     "removeFrom": "Retirer {{title}}",
     "removeOneFrom": "Retirer un de {{title}}",
     "onePhotoAtATime": "Une photo à la fois",
-    "allPhotosByGroup": "Toutes les photos, groupées"
+    "allPhotosByGroup": "Toutes les photos, groupées",
+    "fewerGuestsIn": "Moins de voyageurs dans {{title}}",
+    "moreGuestsIn": "Plus de voyageurs dans {{title}}",
+    "skipToContent": "Aller au contenu"
   },
   "hostTenants": {
     "tenantPhoto": "Photo du locataire",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "Impossible de finaliser la réservation",
     "noRoomsListed": "Cette auberge n'a encore ajouté aucune chambre.",
     "pricesArePerRoom": "Prix par chambre",
-    "pricesArePerBed": "Prix par lit"
+    "pricesArePerBed": "Prix par lit",
+    "guestDetails": "Coordonnées du client",
+    "enterTheGuestName": "Saisissez le nom du client",
+    "enterAValidPhone": "Saisissez un numéro de téléphone valide",
+    "enterAValidEmail": "Saisissez une adresse e-mail valide",
+    "ofNSeats": "sur {{count}}"
   },
   "states": {
     "nothingHereYet": "Rien pour l’instant",

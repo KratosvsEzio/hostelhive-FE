@@ -11,9 +11,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <i class="ti text-3xl text-ink-300" [class]="icon()" aria-hidden="true"></i>
-    <p class="mt-2 text-sm font-medium text-ink-700">{{ title() ?? ('states.nothingHereYet' | transloco) }}</p>
+    <h1 class="mt-2 text-sm font-medium text-ink-700">{{ title() ?? ('states.nothingHereYet' | transloco) }}</h1>
     @if (message()) {
-      <p class="mt-1 text-xs text-ink-400">{{ message() }}</p>
+      <p class="mt-1 text-sm text-ink-500">{{ message() }}</p>
     }
     <div class="mt-2 empty:hidden"><ng-content /></div>
   `,

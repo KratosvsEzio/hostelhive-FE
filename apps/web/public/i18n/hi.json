@@ -336,7 +336,8 @@
     "password": "पासवर्ड",
     "selectYear": "वर्ष चुनें",
     "allow": "अनुमति दें",
-    "noPhotosYet": "अभी कोई फ़ोटो नहीं"
+    "noPhotosYet": "अभी कोई फ़ोटो नहीं",
+    "guests": "मेहमान"
   },
   "leadWall": {
     "close": "बंद करें",
@@ -637,7 +638,10 @@
     "removeFrom": "{{title}} हटाएँ",
     "removeOneFrom": "{{title}} से एक हटाएँ",
     "onePhotoAtATime": "एक बार में एक तस्वीर",
-    "allPhotosByGroup": "सभी तस्वीरें, समूह में"
+    "allPhotosByGroup": "सभी तस्वीरें, समूह में",
+    "fewerGuestsIn": "{{title}} में कम मेहमान",
+    "moreGuestsIn": "{{title}} में अधिक मेहमान",
+    "skipToContent": "सामग्री पर जाएँ"
   },
   "hostTenants": {
     "tenantPhoto": "किरायेदार की तस्वीर",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "बुकिंग पूरी नहीं हो सकी",
     "noRoomsListed": "इस हॉस्टल ने अभी तक कोई कमरा नहीं जोड़ा है।",
     "pricesArePerRoom": "कीमतें प्रति कमरा",
-    "pricesArePerBed": "कीमतें प्रति बेड"
+    "pricesArePerBed": "कीमतें प्रति बेड",
+    "guestDetails": "अतिथि विवरण",
+    "enterTheGuestName": "अतिथि का नाम दर्ज करें",
+    "enterAValidPhone": "मान्य फ़ोन नंबर दर्ज करें",
+    "enterAValidEmail": "मान्य ईमेल पता दर्ज करें",
+    "ofNSeats": "{{count}} में से"
   },
   "states": {
     "nothingHereYet": "अभी यहाँ कुछ नहीं",

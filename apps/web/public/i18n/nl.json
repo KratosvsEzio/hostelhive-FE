@@ -336,7 +336,8 @@
     "password": "Wachtwoord",
     "selectYear": "Jaar selecteren",
     "allow": "Toestaan",
-    "noPhotosYet": "Nog geen foto's"
+    "noPhotosYet": "Nog geen foto's",
+    "guests": "Gasten"
   },
   "leadWall": {
     "close": "Sluiten",
@@ -637,7 +638,10 @@
     "removeFrom": "{{title}} verwijderen",
     "removeOneFrom": "Eén van {{title}} verwijderen",
     "onePhotoAtATime": "Eén foto tegelijk",
-    "allPhotosByGroup": "Alle foto’s, gegroepeerd"
+    "allPhotosByGroup": "Alle foto’s, gegroepeerd",
+    "fewerGuestsIn": "Minder gasten in {{title}}",
+    "moreGuestsIn": "Meer gasten in {{title}}",
+    "skipToContent": "Naar inhoud springen"
   },
   "hostTenants": {
     "tenantPhoto": "Foto van huurder",
@@ -1528,7 +1532,12 @@
     "couldnTBook": "Boeking kon niet worden voltooid",
     "noRoomsListed": "Dit hostel heeft nog geen kamers toegevoegd.",
     "pricesArePerRoom": "Prijzen per kamer",
-    "pricesArePerBed": "Prijzen per bed"
+    "pricesArePerBed": "Prijzen per bed",
+    "guestDetails": "Gastgegevens",
+    "enterTheGuestName": "Voer de naam van de gast in",
+    "enterAValidPhone": "Voer een geldig telefoonnummer in",
+    "enterAValidEmail": "Voer een geldig e-mailadres in",
+    "ofNSeats": "van {{count}}"
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",

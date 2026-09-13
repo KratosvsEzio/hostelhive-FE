@@ -182,4 +182,35 @@ export class Seo {
       .querySelectorAll(`script[data-seo="${id}"]`)
       .forEach((el) => el.remove());
   }
+
+  /**
+   * Asks the browser to start fetching the page's headline image immediately.
+   *
+   * Written from the server, which is the whole point: the hero is the LCP element on a
+   * listing, and without this it is not discovered until the bundle has parsed, the route
+   * has resolved and the component has rendered an `<img>` — several seconds of a patchy
+   * mobile connection after the HTML arrived. A preload in the SSR head puts the request in
+   * flight while the page is still downloading its scripts.
+   *
+   * `fetchpriority="high"` matches the `<img>` it is preloading; a mismatch makes the
+   * browser fetch the image twice. One at a time and replaced on navigation — preloading
+   * the previous listing's photograph would cost bandwidth for an image nobody will see,
+   * and this audience pays for it.
+   *
+   * Pass `null` to clear, which every page without a hero should do.
+   */
+  preloadImage(url: string | null): void {
+    this.doc.head
+      .querySelectorAll('link[data-seo="preload-image"]')
+      .forEach((el) => el.remove());
+    if (!url) return;
+
+    const link = this.doc.createElement('link');
+    link.setAttribute('rel', 'preload');
+    link.setAttribute('as', 'image');
+    link.setAttribute('fetchpriority', 'high');
+    link.setAttribute('data-seo', 'preload-image');
+    link.setAttribute('href', url);
+    this.doc.head.appendChild(link);
+  }
 }

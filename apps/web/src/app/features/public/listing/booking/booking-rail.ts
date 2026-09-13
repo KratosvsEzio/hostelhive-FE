@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { Button, DateRange, DateRangePicker } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth';
 import { PricingPeriod, periodLabel } from '@util/pricing-period';
@@ -7,6 +6,7 @@ import { BookingBasket } from './booking-basket';
 import { BasketLine, lineTotal, lineTotalUndiscounted, unitFor } from './room-offer';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { MoneyPipe } from '@app/shared/currency/money.pipe';
 
 /**
  * The sticky panel beside the room list: what you have chosen, what it costs, and the button.
@@ -19,7 +19,7 @@ import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 @Component({
   selector: 'hh-booking-rail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, DateRangePicker, DecimalPipe, TranslocoPipe, CurrencySymbolPipe],
+  imports: [Button, DateRangePicker, TranslocoPipe, CurrencySymbolPipe, MoneyPipe],
   templateUrl: './booking-rail.html',
 })
 export class BookingRail {
@@ -116,6 +116,16 @@ export class BookingRail {
 
   protected remove(roomId: string): void {
     this.basket.remove(roomId);
+  }
+
+  /**
+   * How many people are in one private line's rooms.
+   *
+   * The basket clamps, so the stepper cannot be driven past what the line seats even if a
+   * stale render leaves a button live.
+   */
+  protected setGuests(roomId: string, guests: number): void {
+    this.basket.setGuests(roomId, guests);
   }
 
   /**

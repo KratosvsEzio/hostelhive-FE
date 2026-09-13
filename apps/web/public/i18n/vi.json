@@ -336,7 +336,8 @@
     "password": "Mật khẩu",
     "selectYear": "Chọn năm",
     "allow": "Cho phép",
-    "noPhotosYet": "Chưa có ảnh"
+    "noPhotosYet": "Chưa có ảnh",
+    "guests": "Khách"
   },
   "leadWall": {
     "close": "Đóng",
@@ -642,7 +643,10 @@
     "removeFrom": "Xoá {{title}}",
     "removeOneFrom": "Bớt một từ {{title}}",
     "onePhotoAtATime": "Từng ảnh một",
-    "allPhotosByGroup": "Tất cả ảnh, theo nhóm"
+    "allPhotosByGroup": "Tất cả ảnh, theo nhóm",
+    "fewerGuestsIn": "Bớt khách trong {{title}}",
+    "moreGuestsIn": "Thêm khách trong {{title}}",
+    "skipToContent": "Chuyển đến nội dung"
   },
   "hostTenants": {
     "tenantPhoto": "Ảnh người thuê",
@@ -1533,7 +1537,12 @@
     "couldnTBook": "Không thể hoàn tất đặt phòng",
     "noRoomsListed": "Nhà nghỉ này chưa thêm phòng nào.",
     "pricesArePerRoom": "Giá theo phòng",
-    "pricesArePerBed": "Giá theo giường"
+    "pricesArePerBed": "Giá theo giường",
+    "guestDetails": "Thông tin khách",
+    "enterTheGuestName": "Nhập tên khách",
+    "enterAValidPhone": "Nhập số điện thoại hợp lệ",
+    "enterAValidEmail": "Nhập địa chỉ email hợp lệ",
+    "ofNSeats": "trên {{count}}"
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",

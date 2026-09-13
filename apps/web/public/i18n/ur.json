@@ -336,7 +336,8 @@
     "password": "پاس ورڈ",
     "selectYear": "سال منتخب کریں",
     "allow": "اجازت دیں",
-    "noPhotosYet": "ابھی کوئی تصویر نہیں"
+    "noPhotosYet": "ابھی کوئی تصویر نہیں",
+    "guests": "مہمان"
   },
   "leadWall": {
     "close": "بند کریں",
@@ -642,7 +643,10 @@
     "removeFrom": "{{title}} ہٹائیں",
     "removeOneFrom": "{{title}} سے ایک ہٹائیں",
     "onePhotoAtATime": "ایک وقت میں ایک تصویر",
-    "allPhotosByGroup": "تمام تصاویر، گروپ کے مطابق"
+    "allPhotosByGroup": "تمام تصاویر، گروپ کے مطابق",
+    "fewerGuestsIn": "{{title}} میں کم مہمان",
+    "moreGuestsIn": "{{title}} میں زیادہ مہمان",
+    "skipToContent": "مواد پر جائیں"
   },
   "hostTenants": {
     "tenantPhoto": "کرایہ دار کی تصویر",
@@ -1533,7 +1537,12 @@
     "couldnTBook": "بکنگ مکمل نہیں ہو سکی",
     "noRoomsListed": "اس ہاسٹل نے ابھی تک کوئی کمرہ شامل نہیں کیا۔",
     "pricesArePerRoom": "قیمتیں فی کمرہ",
-    "pricesArePerBed": "قیمتیں فی بستر"
+    "pricesArePerBed": "قیمتیں فی بستر",
+    "guestDetails": "مہمان کی تفصیلات",
+    "enterTheGuestName": "مہمان کا نام درج کریں",
+    "enterAValidPhone": "درست فون نمبر درج کریں",
+    "enterAValidEmail": "درست ای میل ایڈریس درج کریں",
+    "ofNSeats": "{{count}} میں سے"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",

@@ -26,8 +26,15 @@
    **Run `npm run icons:font` after adding or removing an icon.** A class outside the
    subset renders blank, silently. `npm run icons:check` is the guard. */
 @import './icons/tabler-icons.generated.css';
-html {
-  scroll-behavior: smooth;
+/* Smooth scrolling is opt-in, and opting in has a cost the five blocks below never covered.
+   `scroll-behavior` on `html` does not only animate anchor jumps — sequential focus
+   navigation routes through it too, so Tab moving focus to an off-screen control becomes an
+   animation. For a reader who asked for no motion that is the one place it is least welcome,
+   because it is not decoration, it is how they move through the page. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 body {
   font-family: 'Inter', system-ui, sans-serif;
