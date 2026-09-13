@@ -70,6 +70,12 @@ const LOCALISED_ROUTES: Route[] = [
     title: 'Service Policy — HostelHive',
   },
   {
+    path: 'credits',
+    loadComponent: () =>
+      import('@features/public/credits/credits').then((m) => m.Credits),
+    title: 'Image credits — HostelHive',
+  },
+  {
     path: 'about',
     loadComponent: () =>
       import('@features/public/about/about').then((m) => m.About),
