@@ -16,7 +16,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { Button } from '../button/button';
 import { HhLink } from '../link/link';
-import { HH_LINK_LOCALISER } from '../link-localiser';
+import { HH_LINK_LOCALISER, HhLinkCommands } from '../link-localiser';
 import { StatusPill } from '../status-pill/status-pill';
 import { NoResults } from '../states/no-results';
 
@@ -653,7 +653,7 @@ export class DataTable implements AfterViewInit, OnDestroy {
    * Only the routed branch calls this. An `external` cell is an absolute URL to somewhere
    * else entirely, and prefixing it would be nonsense.
    */
-  protected inAppLink(href: string): unknown {
+  protected inAppLink(href: string): HhLinkCommands {
     return this.localiser(href);
   }
 
