@@ -42,7 +42,7 @@
       <hh-empty-state
         icon="ti-home-off"
         [title]="'listing.weCouldnTFindThat' | transloco"
-        message="The listing may have been removed or the link is incorrect."
+        [message]="'publicListing.theListingMayHaveBeen' | transloco"
       >
         <a hh-button variant="outlined" size="sm" routerLink="/search"
           >{{ 'listing.backToSearch' | transloco }}</a

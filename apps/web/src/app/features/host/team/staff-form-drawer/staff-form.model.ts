@@ -22,9 +22,18 @@ export interface StaffForm {
   leavingDate: string;
 
   /**
-   * Grants this staff member a manager login for the hostel. The staff record itself has no
-   * concept of a login, so turning this on additionally posts to the `add_manager` endpoint;
-   * the two fields below are only read while it is on.
+   * Grants this staff member a manager login for the hostel.
+   *
+   * Carried on the ordinary staff payload as `is_manager` — see {@link managerFields} — not
+   * by a second request. `HostShellApi` does expose an `add_manager` endpoint and this said
+   * the toggle posts to it, which was true of an earlier design and has not been for a while;
+   * nothing in this drawer calls it.
+   *
+   * Worth knowing rather than buried: because the grant rides the staff write, whoever may
+   * save a staff record may also hand out manager access. It is not separately gated on
+   * either side of the wire.
+   *
+   * The two fields below are only read while this is on.
    */
   isManager: boolean;
   managerEmail: string;
@@ -32,11 +41,23 @@ export interface StaffForm {
   /** True when the record already had a manager login — the password is then optional. */
   wasManager: boolean;
   /**
-   * The staff already has a login account (the API returned `user.id`). Manager access then
-   * needs nothing but the flag — there are no credentials to collect, so the email and
-   * password fields are shown disabled with a note rather than asked for again.
+   * The record arrived with an email, so the login is built from that rather than asked for.
+   *
+   * Both credentials are then fixed: the server looks the address up and reuses whatever
+   * account it finds, so neither field is collected.
+   *
+   * Known limit, by product decision. Having an email is not the same as having an account —
+   * it is a plain column set when the staff is created, while a `User` appears only when
+   * manager access is first granted. For a staff member with an address but no account,
+   * `Staff#validate_and_prepare_manager` finds no user and demands a password that this form
+   * no longer offers, so the save returns 422 and cannot be completed from here. Granting
+   * that person access needs the address cleared first, or a fix on the server.
+   *
+   * `user.id` would be the honest key for all this, but `StaffSerializer#user` returns
+   * `{id: object.obfuscated_id}` — the staff's own id, sent for every record — so it is
+   * always present and proves nothing. The address is the best evidence on the wire.
    */
-  hasUserAccount: boolean;
+  hasStoredEmail: boolean;
 
   // Uploads. `*UploadId` is what gets sent; `*Url` is only for showing what is already
   // stored. The API returns CNIC images as bare URLs with no id, so an existing image can
@@ -87,7 +108,8 @@ export function emptyStaffForm(): StaffForm {
     managerEmail: '',
     managerPassword: '',
     wasManager: false,
-    hasUserAccount: false,
+    // A record being created has nothing stored yet, so the fields are always asked for.
+    hasStoredEmail: false,
     avatarUploadId: '',
     avatarUrl: '',
     cnicFrontUploadId: '',
@@ -118,7 +140,7 @@ export function staffFormFrom(s: Staff): StaffForm {
     managerEmail: s.email ?? '',
     managerPassword: '',
     wasManager: !!s.isManager,
-    hasUserAccount: !!s.userId,
+    hasStoredEmail: !!s.email,
     avatarUploadId: s.avatarId ?? '',
     avatarUrl: s.avatarUrl ?? '',
     cnicFrontUploadId: '',
@@ -131,24 +153,33 @@ export function staffFormFrom(s: Staff): StaffForm {
 /** Deliberately permissive — the server is the authority on whether an address is real. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Email problem while manager access is on; empty when it is off or the value is good. */
+/**
+ * Email problem while manager access is on.
+ *
+ * Nothing to validate once the record carries an address: the field is disabled and shows
+ * what the API returned, so there is no input to be wrong.
+ */
 export function managerEmailError(f: StaffForm): string {
-  // Nothing to validate when the account already exists — the field is disabled and the
-  // address shown is whatever the API returned.
-  if (!f.isManager || f.hasUserAccount) return '';
+  if (!f.isManager || f.hasStoredEmail) return '';
   const value = f.managerEmail.trim();
   if (!value) return 'Required.';
   return EMAIL_RE.test(value) ? '' : 'Enter a valid email address.';
 }
 
 /**
- * Password problem while manager access is on. Presence is only demanded when a login is
- * actually being created: an existing manager keeps their current password unless a new one
- * is typed, an existing user account has one already, and the API never returns it for us to
- * prefill. Never trimmed — spaces are legal in a password.
+ * Password problem while manager access is on.
+ *
+ * Only demanded when a login is being created. An existing manager keeps their current
+ * password unless a new one is typed, and the API never returns it for us to prefill.
+ *
+ * Demanded only when a login is being created from scratch: no stored address and no manager
+ * role already. With a stored address the field is disabled and there is nothing to check;
+ * with an existing manager the current password stands unless a new one is typed.
+ *
+ * Never trimmed — spaces are legal in a password.
  */
 export function managerPasswordError(f: StaffForm): string {
-  if (!f.isManager || f.wasManager || f.hasUserAccount) return '';
+  if (!f.isManager || f.hasStoredEmail || f.wasManager) return '';
   return f.managerPassword ? '' : 'Required.';
 }
 
@@ -158,13 +189,16 @@ export function managerPasswordError(f: StaffForm): string {
  * Omitted entirely while the toggle is off, rather than sent as `is_manager: false`: a host
  * editing an ordinary field should never revoke someone's access as a side effect.
  *
- * When the staff already has a login account, only the flag is sent — the credentials exist
- * server-side and the form never collected them. Otherwise the password rides along only when
- * one was typed, so saving an existing manager's record leaves their current password alone.
+ * When the record already carries an address, only the flag is sent. Both credential fields
+ * are disabled in that state, so there is nothing collected to send: the email is on the
+ * record for the server to look up, and no password was ever asked for.
+ *
+ * Otherwise the password rides along only when one was typed. A blank field means leave it
+ * alone, so saving an existing manager's record does not disturb their password.
  */
 function managerFields(f: StaffForm): Pick<StaffWrite, 'email' | 'password' | 'is_manager'> {
   if (!f.isManager) return {};
-  if (f.hasUserAccount) return { is_manager: true };
+  if (f.hasStoredEmail) return { is_manager: true };
   return {
     is_manager: true,
     email: f.managerEmail.trim(),

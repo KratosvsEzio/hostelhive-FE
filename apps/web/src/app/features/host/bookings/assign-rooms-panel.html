@@ -82,7 +82,7 @@
           </div>
         } @else if (error()) {
           <p class="p-6 text-center text-sm text-ink-500">
-            The rooms for this property could not be loaded.
+            {{ 'hostBookings.theRoomsForThisProperty' | transloco }}
           </p>
         } @else if (!rows().length) {
           <p class="p-6 text-center text-sm text-ink-500">

@@ -226,6 +226,7 @@
     "dinner": "晚餐",
     "teamAmpStaff": "团队与员工",
     "accountSettings": "账户设置",
+    "passwordAmpSecurity": "密码与安全",
     "someRequiredFieldsAre": "部分必填项未填写",
     "uploading": "上传中…",
     "listingProgress": "房源完成度",
@@ -318,7 +319,8 @@
     "enterDescription": "请输入描述",
     "enterLandmarks": "请输入附近地标",
     "enterReason": "请输入原因",
-    "enterNote": "请输入备注"
+    "enterNote": "请输入备注",
+    "somethingWentWrongReachingThe": "连接服务器时出现问题。"
   },
   "leadWall": {
     "close": "关闭",
@@ -334,7 +336,8 @@
     "weSentASigned24": "我们已发送有效期 24 小时的验证链接至",
     "clickingItActivatesYourAccount": "。点击即可激活账户并显示号码。",
     "iVeVerifiedContinue": "已验证 — 继续",
-    "back": "返回"
+    "back": "返回",
+    "confirmPassword": "确认密码"
   },
   "home": {
     "searchCityOrArea": "搜索城市或区域",
@@ -528,7 +531,12 @@
     "country": "国家",
     "streetAddress": "街道地址",
     "nearbyLandmarks": "附近地标",
-    "roomTypeDescription": "房型描述"
+    "roomTypeDescription": "房型描述",
+    "couldnTCheckWhichRooms": "无法确认哪些房间使用此类型。请重试。",
+    "findingTheRoomsBuiltOn": "正在查找使用 {{name}} 的房间…",
+    "moveAllRoomsTo": "将所有房间移至",
+    "selectARoomType": "选择房间类型",
+    "noRoomsAreBuiltOn": "没有房间使用 {{name}}，因此不会有其他变化。保存时将其删除。"
   },
   "a11y": {
     "close": "关闭",
@@ -607,7 +615,8 @@
     "clearSearch": "清除搜索",
     "closeTimePicker": "关闭时间选择器",
     "chooseTime": "选择时间",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "closePropertyMenu": "关闭房源菜单"
   },
   "hostTenants": {
     "tenantPhoto": "租客照片",
@@ -672,7 +681,10 @@
     "roomNotAvailableForTheseDates": "所选日期该房间不可用",
     "checkIn": "入住",
     "checkOut": "退房",
-    "leavingDate": "离开日期"
+    "leavingDate": "离开日期",
+    "thisTenantHasNoRent": "该租客暂无租金发票记录。",
+    "noUtilityChargesHaveBeen": "尚未记录该租客房间的水电费用。",
+    "checkInYourFirstTenant": "为第一位租客办理入住，开始追踪租金。"
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "无法加载您的订阅",
@@ -726,7 +738,10 @@
     "thenRsPerPeriod": "之后 Rs {{price}} / {{period}}",
     "paymentStarted": "已发起支付",
     "payRs": "支付 Rs {{amount}}",
-    "selectAProduct": "选择产品"
+    "selectAProduct": "选择产品",
+    "invoicesAppearHereAfterYour": "首次扣款后，发票将显示在这里。",
+    "pleaseCheckYourConnectionAnd": "请检查网络连接后重试。",
+    "youDonTHaveAn": "您还没有有效的方案。请浏览下方方案开始使用。"
   },
   "hostMess": {
     "pickADate": "选择日期",
@@ -786,7 +801,8 @@
     "last12MonthsPkr": "近 12 个月 · PKR",
     "last30DaysPkr": "近 30 天 · PKR",
     "uploadingReceipt": "正在上传收据…",
-    "nPhotosAttached": "已附加 {{count}} 张照片"
+    "nPhotosAttached": "已附加 {{count}} 张照片",
+    "logYourBulkGroceryPurchases": "记录大宗采购，以便掌握食堂开支。"
   },
   "hostRooms": {
     "calendarTab": "日历",
@@ -842,7 +858,13 @@
     "createRooms": "创建房间",
     "bedsOccupiedOf": "{{total}} 张床中已住 {{filled}} 张",
     "nOfMBooked": "{{capacity}} 中已订 {{booked}}",
-    "nNoLongerActive": "{{count}} 位已不在住"
+    "nNoLongerActive": "{{count}} 位已不在住",
+    "dayRoster": "当日名单",
+    "pickADay": "请选择日期。",
+    "nobodyInThisRoomThat": "当天此房间无人入住。",
+    "thisRoomCurrentlyHasNo": "此房间目前没有在住租客。",
+    "addYourFirstRoomTo": "添加第一个房间，开始追踪入住率。",
+    "bedNumbersAreNotAssigned": "尚未分配床位号 — 日历显示已占用的床位数量，而非每位客人具体在哪张床。"
   },
   "hostUtilities": {
     "ratePerUnit": "单价",
@@ -882,7 +904,9 @@
     "shareFormulaStart": "分摊 = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} 入住天数",
     "rsUnallocated": "未分配 Rs {{amount}}",
-    "rsOver": "超出 Rs {{amount}}"
+    "rsOver": "超出 Rs {{amount}}",
+    "pickARoomWithActive": "选择有在住租客的房间以分摊账单。",
+    "addAUtilityBillTo": "添加水电账单，开始追踪用量与费用。"
   },
   "hostTeam": {
     "staffPhoto": "员工照片",
@@ -894,7 +918,6 @@
     "salaryIssueDate": "薪资发放日期",
     "chooseAnImageFromYour": "从您的文件中选择图片",
     "managerAccess": "管理员权限",
-    "thisPersonAlreadyHasAn": "此人已有账户，因此无需设置 — 保持开关开启，保存后将授予其本旅舍的管理员权限。",
     "employment": "雇佣",
     "upload": "上传",
     "scopedToThisHostelOnly": "仅限本旅舍。",
@@ -913,7 +936,11 @@
     "fromTheTeamThisAction": "出团队。此操作无法撤销。",
     "keepsTheirStaffRecordBut": "保留其员工记录，但无法再登录或管理本旅舍。",
     "createsLoginFor": "创建登录账号，让 {{name}} 可以管理这家旅舍。",
-    "thisStaffMember": "这位员工"
+    "thisStaffMember": "这位员工",
+    "existingAccountKeepsPassword": "若该邮箱已有账号，将保留其现有密码；你设置的密码仅在需要新建账号时使用。",
+    "storedEmailBecomesLogin": "其已保存的邮箱将作为登录账号。若该邮箱已有账号，则保留该账号的密码。",
+    "pickADifferentStatusTo": "选择其他状态以查看团队其他成员。",
+    "addAWardenCookOr": "添加宿管、厨师或保安，以便存档其薪资与证件。"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "审批失败 — 请重试。",
@@ -968,7 +995,9 @@
     "billedTo": "开具给",
     "issued": "已开具",
     "due": "到期",
-    "thisWillPermanentlyDeleteInvoice": "此操作将永久删除该发票"
+    "thisWillPermanentlyDeleteInvoice": "此操作将永久删除该发票",
+    "invoicesAppearHereOnceYou": "当您开出租金或水电账单后，发票会显示在这里。",
+    "tryAdjustingYourFilters": "请尝试调整筛选条件。"
   },
   "hostExpenses": {
     "allTypes": "全部类型",
@@ -1012,7 +1041,13 @@
     "pctVsLastMonth": "较上月 {{pct}}%",
     "nTenantsUnpaid": "{{count}} 位租客未付",
     "moveInsAndOuts": "入住与退租",
-    "pctBedsFilled": "床位入住率"
+    "pctBedsFilled": "床位入住率",
+    "weCouldnTLoadTenant": "无法加载租客异动数据。",
+    "weCouldnTLoadOccupancy": "无法加载入住率数据。",
+    "weCouldnTLoadAnalytics": "无法加载该房源的分析数据。",
+    "allUtilityInvoicesAreSettled": "所有水电账单均已结清。",
+    "noInvoicesForThisProperty": "该房源暂无发票。",
+    "weCouldnTLoadRevenue": "无法加载收入数据。"
   },
   "hostBookings": {
     "calendarTab": "日历",
@@ -1029,7 +1064,23 @@
     "cancelledByOn": "由 {{by}} 于 {{date}} 取消",
     "pkrPenaltyChargedToYou": "向你收取 PKR {{amount}} 罚金",
     "pkrToYou": "PKR {{amount}} 归你",
-    "thisGuest": "这位客人"
+    "thisGuest": "这位客人",
+    "dayLedger": "当日记录",
+    "pendingAllotments": "待分配",
+    "askedFor": "需求",
+    "noContactDetailsOnThis": "此预订没有联系方式",
+    "recordABooking": "登记预订",
+    "whoIsStaying": "入住人",
+    "onlyIfTheyHaveOne": "仅当对方有时填写",
+    "addARoom": "添加房间",
+    "toCollectAtTheDesk": "在前台收取",
+    "createBooking": "创建预订",
+    "theRoomsForThisProperty": "无法加载该房源的房间。",
+    "everyRoomEveryState": "所有房间与状态 — 点按某一天查看当日记录",
+    "thisMonthSCalendarCould": "无法加载本月日历。",
+    "nothingIsWaitingOnYou": "这一天没有待办事项。",
+    "pickTheDatesFirst": "请先选择日期 — 空房情况取决于日期。",
+    "noRoomsOnThisProperty": "该房源暂无房间。"
   },
   "hostHostelProfile": {
     "failed": "失败",
@@ -1039,7 +1090,8 @@
     "updateHostel": "更新旅舍",
     "reviewTitle": "此操作会将您的房源重新提交审核",
     "reviewBody": "您修改了以下内容。房源将重新接受审核，在通过之前房客将无法看到。",
-    "reviewConfirm": "保存并提交审核"
+    "reviewConfirm": "保存并提交审核",
+    "weCouldnTLoadYour": "无法加载您的旅舍。"
   },
   "hostMore": {
     "property": "房源",
@@ -1060,11 +1112,13 @@
   "adminAdminContracts": {
     "contracts": "合同",
     "noContractsMatchThisFilter": "没有符合此筛选条件的合同",
-    "term": "期限"
+    "term": "期限",
+    "searchContractsByHostel": "按旅舍搜索合同"
   },
   "adminAdminListings": {
     "allListings": "全部房源",
-    "noListingsFound": "未找到房源"
+    "noListingsFound": "未找到房源",
+    "searchListingsByHostel": "按旅舍搜索房源"
   },
   "adminAdminPayments": {
     "payments": "付款",
@@ -1074,21 +1128,25 @@
     "transactionId": "交易 ID",
     "created": "创建时间",
     "contract": "合同",
-    "product": "产品"
+    "product": "产品",
+    "searchPaymentsByHostel": "按旅舍搜索付款"
   },
   "moderatorQueue": {
     "reviewQueue": "审核队列",
-    "queueIsClear": "队列已清空"
+    "queueIsClear": "队列已清空",
+    "noSubmissionsAreWaitingFor": "没有待审核的提交。"
   },
   "moderatorAudit": {
     "auditLog": "审计日志",
     "noMatchingActivity": "没有匹配的活动",
     "allModerators": "全部审核员",
     "last7Days": "近 7 天",
-    "loadOlderEntries": "加载更早的记录"
+    "loadOlderEntries": "加载更早的记录",
+    "tryADifferentActionFilter": "请尝试其他操作筛选或日期范围。"
   },
   "coreForbidden": {
-    "accessBlocked": "访问被阻止"
+    "accessBlocked": "访问被阻止",
+    "youDonTHavePermission": "您没有权限查看此区域。"
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "您的旅舍邀请、用餐确认和待处理收据。"
@@ -1114,7 +1172,8 @@
     "refundsReachYourOriginalPayment": "退款将在 5 个工作日内退回原支付方式。",
     "pkrPaid": "已付 PKR {{amount}}",
     "cancelledSummary": "{{date}} 取消 · 退款 PKR {{refund}} · 取消费 PKR {{charge}}",
-    "cancelRefundExplainer": "你将获得 <strong class=\"tabular-nums\">PKR {{refund}}</strong> 退款。由于你在周期的 {{pct}}% 处取消，<strong class=\"tabular-nums\">PKR {{charge}}</strong> 将作为取消费用扣留。"
+    "cancelRefundExplainer": "你将获得 <strong class=\"tabular-nums\">PKR {{refund}}</strong> 退款。由于你在周期的 {{pct}}% 处取消，<strong class=\"tabular-nums\">PKR {{charge}}</strong> 将作为取消费用扣留。",
+    "whenYouBookAHostel": "预订旅舍后，将在此显示您的日期和付款金额。"
   },
   "userFavorites": {
     "removeFromFavorites": "从收藏中移除？",
@@ -1123,7 +1182,8 @@
     "noFavoritesYet": "暂无收藏",
     "saveHostelsYouLikeAnd": "收藏喜欢的旅舍，在这里再次找到它们。",
     "browseHostels": "浏览旅舍",
-    "fromYourSavedHostels": "从您收藏的旅舍中移除？"
+    "fromYourSavedHostels": "从您收藏的旅舍中移除？",
+    "weCouldnTLoadYour": "无法加载您的收藏。"
   },
   "userSecurity": {
     "currentPassword": "当前密码",
@@ -1196,7 +1256,34 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "来自 HostelHive 团队的技巧、指南与最新动态",
     "comingSoon": "敬请期待",
-    "weReWorkingOnSome": "我们正在准备关于学生生活、旅舍技巧和巴基斯坦各城市指南的精彩内容，敬请期待！"
+    "weReWorkingOnSome": "我们正在准备关于学生生活、旅舍技巧和巴基斯坦各城市指南的精彩内容，敬请期待！",
+    "onThisPage": "本页内容",
+    "theHostelhiveTeam": "HostelHive 团队",
+    "keepReading": "继续阅读",
+    "blogHomePage": "前往博客首页。",
+    "filterArticlesByCategory": "按分类筛选文章",
+    "archiveLayout": "存档布局",
+    "everyArticle": "全部文章",
+    "theHostelhiveJournal": "HostelHive 手记",
+    "guidesForFindingARoom": "找房间的指南 — 以及一张过夜的床。",
+    "whatHostelsActuallyCost": "逐城了解旅舍的真实花费、哪个片区适合哪所校园，以及从焦哈尔镇到喀喇昆仑该在哪里落脚。取材自房源与路上见闻。",
+    "allPosts": "全部文章",
+    "grid": "网格",
+    "index": "列表",
+    "nMinRead": "阅读 {{count}} 分钟",
+    "nMin": "{{count}} 分钟",
+    "article": "文章",
+    "category": "分类",
+    "published": "发布",
+    "read": "阅读",
+    "nothingFiledHereYet": "这里还没有内容。",
+    "lookingForARoomRather": "在找房间而不是攻略？",
+    "everyListingShowsTheRent": "每条房源都会列出每床或每间的租金、包含哪些项目，以及由谁经营。",
+    "swipeTheTableToSee": "滑动表格可查看所有列",
+    "weVerifyListingsAcross": "我们核实巴基斯坦各地的房源，并把过程中的所见所得写下来。",
+    "weCouldnTFindThatPost": "没有找到这篇文章",
+    "theLinkMayBeOld": "链接可能已过期，或地址稍有出入。",
+    "browseEveryPostInstead": "改为浏览全部文章。"
   },
   "publicListing": {
     "checkIn": "入住",
@@ -1206,7 +1293,8 @@
     "add": "添加",
     "showAllNPhotos": "查看全部 {{count}} 张照片",
     "genderHostelHostedBy": "{{gender}}旅舍 · 房东：{{host}}",
-    "bookARoom": "预订房间"
+    "bookARoom": "预订房间",
+    "theListingMayHaveBeen": "该房源可能已被下架，或链接有误。"
   },
   "featuresPublic": {
     "checkingYourLink": "正在检查您的链接…",
@@ -1260,7 +1348,8 @@
     "allApproved": "已全部批准！",
     "doneNFailed": "完成 — {{count}} 项失败",
     "nPhotosFailedRetry": "{{count}} 张照片失败 — 可从队列重试。",
-    "approving": "批准中…"
+    "approving": "批准中…",
+    "newUploadsWillAppearHere": "新上传的内容将显示在这里等待审核。"
   },
   "publicContact": {
     "contactUs": "联系我们",

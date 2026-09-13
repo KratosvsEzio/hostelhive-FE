@@ -226,6 +226,7 @@
     "dinner": "रात का भोजन",
     "teamAmpStaff": "टीम और स्टाफ़",
     "accountSettings": "खाता सेटिंग्स",
+    "passwordAmpSecurity": "पासवर्ड और सुरक्षा",
     "someRequiredFieldsAre": "कुछ आवश्यक फ़ील्ड अनुपस्थित हैं",
     "uploading": "अपलोड हो रहा है…",
     "listingProgress": "लिस्टिंग प्रगति",
@@ -318,7 +319,8 @@
     "enterDescription": "विवरण दर्ज करें",
     "enterLandmarks": "आस-पास के स्थल दर्ज करें",
     "enterReason": "कारण दर्ज करें",
-    "enterNote": "नोट दर्ज करें"
+    "enterNote": "नोट दर्ज करें",
+    "somethingWentWrongReachingThe": "सर्वर से संपर्क करने में कुछ गड़बड़ हो गई।"
   },
   "leadWall": {
     "close": "बंद करें",
@@ -334,7 +336,8 @@
     "weSentASigned24": "हमने 24 घंटे तक वैध वेरिफिकेशन लिंक भेजा है",
     "clickingItActivatesYourAccount": "। उस पर क्लिक करते ही आपका अकाउंट चालू हो जाएगा और नंबर दिख जाएगा।",
     "iVeVerifiedContinue": "वेरिफाई हो गया — आगे बढ़ें",
-    "back": "वापस"
+    "back": "वापस",
+    "confirmPassword": "पासवर्ड की पुष्टि करें"
   },
   "home": {
     "searchCityOrArea": "शहर या इलाका खोजें",
@@ -528,7 +531,12 @@
     "country": "देश",
     "streetAddress": "गली का पता",
     "nearbyLandmarks": "आसपास के लैंडमार्क",
-    "roomTypeDescription": "कमरे के प्रकार का विवरण"
+    "roomTypeDescription": "कमरे के प्रकार का विवरण",
+    "couldnTCheckWhichRooms": "यह जांचा नहीं जा सका कि कौन से कमरे इस प्रकार का उपयोग करते हैं। फिर से प्रयास करें।",
+    "findingTheRoomsBuiltOn": "{{name}} पर आधारित कमरे खोजे जा रहे हैं…",
+    "moveAllRoomsTo": "सभी कमरों को यहाँ ले जाएँ",
+    "selectARoomType": "कमरे का प्रकार चुनें",
+    "noRoomsAreBuiltOn": "{{name}} पर कोई कमरा आधारित नहीं है, इसलिए और कुछ नहीं बदलेगा। सहेजने पर यह हटा दिया जाएगा।"
   },
   "a11y": {
     "close": "बंद करें",
@@ -607,7 +615,8 @@
     "clearSearch": "खोज साफ़ करें",
     "closeTimePicker": "समय चयनकर्ता बंद करें",
     "chooseTime": "समय चुनें",
-    "dismiss": "खारिज करें"
+    "dismiss": "खारिज करें",
+    "closePropertyMenu": "प्रॉपर्टी मेन्यू बंद करें"
   },
   "hostTenants": {
     "tenantPhoto": "किरायेदार की तस्वीर",
@@ -672,7 +681,10 @@
     "roomNotAvailableForTheseDates": "इन तारीख़ों के लिए कमरा उपलब्ध नहीं",
     "checkIn": "चेक-इन",
     "checkOut": "चेक-आउट",
-    "leavingDate": "जाने की तारीख़"
+    "leavingDate": "जाने की तारीख़",
+    "thisTenantHasNoRent": "इस किरायेदार का अभी कोई किराया चालान दर्ज नहीं है।",
+    "noUtilityChargesHaveBeen": "इस किरायेदार के कमरे के लिए कोई यूटिलिटी शुल्क दर्ज नहीं किया गया है।",
+    "checkInYourFirstTenant": "किराया ट्रैक करना शुरू करने के लिए अपने पहले किरायेदार को चेक इन करें।"
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "आपकी सदस्यता लोड नहीं हो सकी",
@@ -726,7 +738,10 @@
     "thenRsPerPeriod": "फिर Rs {{price}} / {{period}}",
     "paymentStarted": "भुगतान शुरू",
     "payRs": "Rs {{amount}} भुगतान करें",
-    "selectAProduct": "उत्पाद चुनें"
+    "selectAProduct": "उत्पाद चुनें",
+    "invoicesAppearHereAfterYour": "आपके पहले शुल्क के बाद चालान यहाँ दिखाई देंगे।",
+    "pleaseCheckYourConnectionAnd": "कृपया अपना कनेक्शन जांचें और फिर से प्रयास करें।",
+    "youDonTHaveAn": "आपके पास अभी कोई सक्रिय प्लान नहीं है। शुरू करने के लिए नीचे दिए प्लान देखें।"
   },
   "hostMess": {
     "pickADate": "तिथि चुनें",
@@ -786,7 +801,8 @@
     "last12MonthsPkr": "पिछले 12 महीने · PKR",
     "last30DaysPkr": "पिछले 30 दिन · PKR",
     "uploadingReceipt": "रसीद अपलोड हो रही है…",
-    "nPhotosAttached": "{{count}} फ़ोटो संलग्न"
+    "nPhotosAttached": "{{count}} फ़ोटो संलग्न",
+    "logYourBulkGroceryPurchases": "मेस खर्च पर नज़र रखने के लिए अपनी थोक खरीदारी दर्ज करें।"
   },
   "hostRooms": {
     "calendarTab": "कैलेंडर",
@@ -842,7 +858,13 @@
     "createRooms": "कमरे बनाएँ",
     "bedsOccupiedOf": "{{total}} में से {{filled}} बेड भरे",
     "nOfMBooked": "{{capacity}} में से {{booked}} बुक",
-    "nNoLongerActive": "{{count}} अब सक्रिय नहीं"
+    "nNoLongerActive": "{{count}} अब सक्रिय नहीं",
+    "dayRoster": "दिन की सूची",
+    "pickADay": "एक दिन चुनें।",
+    "nobodyInThisRoomThat": "उस दिन इस कमरे में कोई नहीं था।",
+    "thisRoomCurrentlyHasNo": "इस कमरे में फ़िलहाल कोई सक्रिय किरायेदार नहीं है।",
+    "addYourFirstRoomTo": "अधिभोग ट्रैक करना शुरू करने के लिए अपना पहला कमरा जोड़ें।",
+    "bedNumbersAreNotAssigned": "बेड नंबर अभी आवंटित नहीं हैं — कैलेंडर बताता है कि कितने बेड भरे हैं, यह नहीं कि कौन-सा बेड किस मेहमान के पास है।"
   },
   "hostUtilities": {
     "ratePerUnit": "प्रति यूनिट दर",
@@ -882,7 +904,9 @@
     "shareFormulaStart": "हिस्सा = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} अधिभोग-दिन",
     "rsUnallocated": "Rs {{amount}} अनावंटित",
-    "rsOver": "Rs {{amount}} अधिक"
+    "rsOver": "Rs {{amount}} अधिक",
+    "pickARoomWithActive": "बिल बाँटने के लिए सक्रिय किरायेदारों वाला कमरा चुनें।",
+    "addAUtilityBillTo": "उपयोग और शुल्क ट्रैक करना शुरू करने के लिए यूटिलिटी बिल जोड़ें।"
   },
   "hostTeam": {
     "staffPhoto": "स्टाफ़ की तस्वीर",
@@ -894,7 +918,6 @@
     "salaryIssueDate": "वेतन जारी करने की तिथि",
     "chooseAnImageFromYour": "अपनी फ़ाइलों से छवि चुनें",
     "managerAccess": "प्रबंधक पहुँच",
-    "thisPersonAlreadyHasAn": "इस व्यक्ति के पास पहले से खाता है, इसलिए कुछ सेट अप करने की आवश्यकता नहीं — टॉगल चालू रखने पर सहेजते समय उन्हें इस हॉस्टल की प्रबंधक पहुँच मिल जाएगी।",
     "employment": "रोज़गार",
     "upload": "अपलोड",
     "scopedToThisHostelOnly": "केवल इस हॉस्टल तक सीमित।",
@@ -913,7 +936,11 @@
     "fromTheTeamThisAction": "टीम से। यह क्रिया पूर्ववत नहीं की जा सकती।",
     "keepsTheirStaffRecordBut": "उनका स्टाफ़ रिकॉर्ड बना रहेगा लेकिन वे साइन इन या इस हॉस्टल का प्रबंधन नहीं कर सकेंगे।",
     "createsLoginFor": "{{name}} के लिए लॉगिन बनाता है ताकि वे इस हॉस्टल का प्रबंधन कर सकें।",
-    "thisStaffMember": "यह स्टाफ सदस्य"
+    "thisStaffMember": "यह स्टाफ सदस्य",
+    "existingAccountKeepsPassword": "यदि इस ईमेल का पहले से खाता है, तो उसका मौजूदा पासवर्ड ही रहेगा — आपका केवल नया खाता बनाने पर उपयोग होगा।",
+    "storedEmailBecomesLogin": "उनका सहेजा गया ईमेल ही लॉगिन होगा। यदि उस पते का पहले से खाता है, तो वही पासवर्ड बना रहेगा।",
+    "pickADifferentStatusTo": "अपनी बाकी टीम देखने के लिए दूसरी स्थिति चुनें।",
+    "addAWardenCookOr": "वेतन और दस्तावेज़ सहेजने के लिए वार्डन, रसोइया या गार्ड जोड़ें।"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "अनुमोदन विफल — पुनः प्रयास करें।",
@@ -968,7 +995,9 @@
     "billedTo": "किसे बिल किया",
     "issued": "जारी किया गया",
     "due": "देय",
-    "thisWillPermanentlyDeleteInvoice": "यह स्थायी रूप से चालान हटा देगा"
+    "thisWillPermanentlyDeleteInvoice": "यह स्थायी रूप से चालान हटा देगा",
+    "invoicesAppearHereOnceYou": "जैसे ही आप किराया या यूटिलिटी बिल जारी करेंगे, चालान यहाँ दिखाई देंगे।",
+    "tryAdjustingYourFilters": "अपने फ़िल्टर बदलकर देखें।"
   },
   "hostExpenses": {
     "allTypes": "सभी प्रकार",
@@ -1012,7 +1041,13 @@
     "pctVsLastMonth": "पिछले महीने से {{pct}}%",
     "nTenantsUnpaid": "{{count}} किरायेदार अवैतनिक",
     "moveInsAndOuts": "आगमन और प्रस्थान",
-    "pctBedsFilled": "भरे बेड का प्रतिशत"
+    "pctBedsFilled": "भरे बेड का प्रतिशत",
+    "weCouldnTLoadTenant": "हम किरायेदारों की आवाजाही का डेटा लोड नहीं कर सके।",
+    "weCouldnTLoadOccupancy": "हम अधिभोग डेटा लोड नहीं कर सके।",
+    "weCouldnTLoadAnalytics": "हम इस प्रॉपर्टी के लिए एनालिटिक्स लोड नहीं कर सके।",
+    "allUtilityInvoicesAreSettled": "सभी यूटिलिटी चालान चुका दिए गए हैं।",
+    "noInvoicesForThisProperty": "इस प्रॉपर्टी के लिए अभी कोई चालान नहीं है।",
+    "weCouldnTLoadRevenue": "हम राजस्व डेटा लोड नहीं कर सके।"
   },
   "hostBookings": {
     "calendarTab": "कैलेंडर",
@@ -1029,7 +1064,23 @@
     "cancelledByOn": "{{by}} द्वारा {{date}} को रद्द",
     "pkrPenaltyChargedToYou": "PKR {{amount}} जुर्माना आपसे",
     "pkrToYou": "PKR {{amount}} आपको",
-    "thisGuest": "इस अतिथि"
+    "thisGuest": "इस अतिथि",
+    "dayLedger": "दिन का लेखा",
+    "pendingAllotments": "लंबित आवंटन",
+    "askedFor": "अनुरोध किया गया",
+    "noContactDetailsOnThis": "इस बुकिंग पर कोई संपर्क विवरण नहीं है",
+    "recordABooking": "बुकिंग दर्ज करें",
+    "whoIsStaying": "कौन ठहर रहा है",
+    "onlyIfTheyHaveOne": "केवल यदि उनके पास हो",
+    "addARoom": "कमरा जोड़ें",
+    "toCollectAtTheDesk": "रिसेप्शन पर लिया जाना है",
+    "createBooking": "बुकिंग बनाएं",
+    "theRoomsForThisProperty": "इस प्रॉपर्टी के कमरे लोड नहीं हो सके।",
+    "everyRoomEveryState": "हर कमरा, हर स्थिति — किसी दिन का लेखा देखने के लिए उस पर टैप करें",
+    "thisMonthSCalendarCould": "इस माह का कैलेंडर लोड नहीं हो सका।",
+    "nothingIsWaitingOnYou": "इस दिन के लिए आपके पास कुछ भी लंबित नहीं है।",
+    "pickTheDatesFirst": "पहले तारीख़ें चुनें — उपलब्धता उन्हीं पर निर्भर करती है।",
+    "noRoomsOnThisProperty": "इस प्रॉपर्टी में अभी कोई कमरा नहीं है।"
   },
   "hostHostelProfile": {
     "failed": "विफल",
@@ -1039,7 +1090,8 @@
     "updateHostel": "हॉस्टल अपडेट करें",
     "reviewTitle": "इससे आपकी लिस्टिंग दोबारा समीक्षा में चली जाएगी",
     "reviewBody": "आपने ये बदलाव किए हैं। आपकी लिस्टिंग की दोबारा समीक्षा होगी, और मंज़ूरी मिलने तक मेहमानों को यह नहीं दिखेगी।",
-    "reviewConfirm": "सहेजें और समीक्षा के लिए भेजें"
+    "reviewConfirm": "सहेजें और समीक्षा के लिए भेजें",
+    "weCouldnTLoadYour": "हम आपका हॉस्टल लोड नहीं कर सके।"
   },
   "hostMore": {
     "property": "संपत्ति",
@@ -1060,11 +1112,13 @@
   "adminAdminContracts": {
     "contracts": "अनुबंध",
     "noContractsMatchThisFilter": "इस फ़िल्टर से कोई अनुबंध मेल नहीं खाता",
-    "term": "अवधि"
+    "term": "अवधि",
+    "searchContractsByHostel": "हॉस्टल के अनुसार अनुबंध खोजें"
   },
   "adminAdminListings": {
     "allListings": "सभी लिस्टिंग",
-    "noListingsFound": "कोई लिस्टिंग नहीं मिली"
+    "noListingsFound": "कोई लिस्टिंग नहीं मिली",
+    "searchListingsByHostel": "हॉस्टल के अनुसार लिस्टिंग खोजें"
   },
   "adminAdminPayments": {
     "payments": "भुगतान",
@@ -1074,21 +1128,25 @@
     "transactionId": "लेनदेन आईडी",
     "created": "बनाया गया",
     "contract": "अनुबंध",
-    "product": "उत्पाद"
+    "product": "उत्पाद",
+    "searchPaymentsByHostel": "हॉस्टल के अनुसार भुगतान खोजें"
   },
   "moderatorQueue": {
     "reviewQueue": "समीक्षा कतार",
-    "queueIsClear": "कतार खाली है"
+    "queueIsClear": "कतार खाली है",
+    "noSubmissionsAreWaitingFor": "समीक्षा के लिए कोई सबमिशन लंबित नहीं है।"
   },
   "moderatorAudit": {
     "auditLog": "ऑडिट लॉग",
     "noMatchingActivity": "कोई मेल खाती गतिविधि नहीं",
     "allModerators": "सभी मॉडरेटर",
     "last7Days": "पिछले 7 दिन",
-    "loadOlderEntries": "पुरानी प्रविष्टियाँ लोड करें"
+    "loadOlderEntries": "पुरानी प्रविष्टियाँ लोड करें",
+    "tryADifferentActionFilter": "कोई दूसरा एक्शन फ़िल्टर या तारीख़ सीमा आज़माएँ।"
   },
   "coreForbidden": {
-    "accessBlocked": "पहुँच अवरुद्ध"
+    "accessBlocked": "पहुँच अवरुद्ध",
+    "youDonTHavePermission": "आपके पास यह क्षेत्र देखने की अनुमति नहीं है।"
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "आपके हॉस्टल आमंत्रण, भोजन पुष्टियाँ और लंबित रसीदें।"
@@ -1114,7 +1172,8 @@
     "refundsReachYourOriginalPayment": "रिफंड 5 कार्य दिवसों के भीतर आपके मूल भुगतान माध्यम में पहुँच जाता है।",
     "pkrPaid": "PKR {{amount}} भुगतान",
     "cancelledSummary": "रद्द {{date}} · PKR {{refund}} वापस · PKR {{charge}} रद्दीकरण शुल्क",
-    "cancelRefundExplainer": "आपको <strong class=\"tabular-nums\">PKR {{refund}}</strong> वापस मिलेंगे। <strong class=\"tabular-nums\">PKR {{charge}}</strong> रद्दीकरण शुल्क के रूप में रखा जाता है, क्योंकि आप शेड्यूल के {{pct}}% पर रद्द कर रहे हैं।"
+    "cancelRefundExplainer": "आपको <strong class=\"tabular-nums\">PKR {{refund}}</strong> वापस मिलेंगे। <strong class=\"tabular-nums\">PKR {{charge}}</strong> रद्दीकरण शुल्क के रूप में रखा जाता है, क्योंकि आप शेड्यूल के {{pct}}% पर रद्द कर रहे हैं।",
+    "whenYouBookAHostel": "जब आप कोई हॉस्टल बुक करेंगे, वह आपकी तारीख़ों और भुगतान के साथ यहाँ दिखेगा।"
   },
   "userFavorites": {
     "removeFromFavorites": "पसंदीदा से हटाएँ?",
@@ -1123,7 +1182,8 @@
     "noFavoritesYet": "अभी कोई पसंदीदा नहीं",
     "saveHostelsYouLikeAnd": "जो हॉस्टल पसंद आएँ उन्हें सहेजें और यहाँ पाएँ।",
     "browseHostels": "हॉस्टल देखें",
-    "fromYourSavedHostels": "आपके सहेजे गए हॉस्टल से?"
+    "fromYourSavedHostels": "आपके सहेजे गए हॉस्टल से?",
+    "weCouldnTLoadYour": "हम आपके पसंदीदा लोड नहीं कर सके।"
   },
   "userSecurity": {
     "currentPassword": "वर्तमान पासवर्ड",
@@ -1196,7 +1256,34 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "HostelHive टीम से टिप्स, गाइड और अपडेट",
     "comingSoon": "जल्द आ रहा है",
-    "weReWorkingOnSome": "हम छात्र जीवन, हॉस्टल टिप्स और पूरे पाकिस्तान के शहरों की गाइड पर बेहतरीन सामग्री तैयार कर रहे हैं। बने रहें!"
+    "weReWorkingOnSome": "हम छात्र जीवन, हॉस्टल टिप्स और पूरे पाकिस्तान के शहरों की गाइड पर बेहतरीन सामग्री तैयार कर रहे हैं। बने रहें!",
+    "onThisPage": "इस पेज पर",
+    "theHostelhiveTeam": "HostelHive टीम",
+    "keepReading": "पढ़ना जारी रखें",
+    "blogHomePage": "ब्लॉग होम पेज देखें।",
+    "filterArticlesByCategory": "श्रेणी के अनुसार लेख फ़िल्टर करें",
+    "archiveLayout": "आर्काइव लेआउट",
+    "everyArticle": "सभी लेख",
+    "theHostelhiveJournal": "HostelHive जर्नल",
+    "guidesForFindingARoom": "कमरा ढूँढने की गाइड — और रात भर के लिए एक बिस्तर।",
+    "whatHostelsActuallyCost": "शहर-दर-शहर हॉस्टल की असली लागत, कौन-सा इलाक़ा किस कैंपस के लिए ठीक है, और जौहर टाउन से काराकोरम तक कहाँ ठहरें। लिस्टिंग से और सफ़र से लिखा गया।",
+    "allPosts": "सभी पोस्ट",
+    "grid": "ग्रिड",
+    "index": "सूची",
+    "nMinRead": "{{count}} मिनट का पठन",
+    "nMin": "{{count}} मिनट",
+    "article": "लेख",
+    "category": "श्रेणी",
+    "published": "प्रकाशित",
+    "read": "पठन",
+    "nothingFiledHereYet": "यहाँ अभी कुछ भी दर्ज नहीं है।",
+    "lookingForARoomRather": "गाइड नहीं, कमरा ढूँढ रहे हैं?",
+    "everyListingShowsTheRent": "हर लिस्टिंग प्रति बेड या प्रति कमरा किराया, क्या-क्या शामिल है, और इसे कौन चलाता है — सब दिखाती है।",
+    "swipeTheTableToSee": "सभी कॉलम देखने के लिए तालिका को स्वाइप करें",
+    "weVerifyListingsAcross": "हम पूरे पाकिस्तान में लिस्टिंग सत्यापित करते हैं और उस दौरान जो सीखते हैं, वही लिखते हैं।",
+    "weCouldnTFindThatPost": "हमें वह पोस्ट नहीं मिली",
+    "theLinkMayBeOld": "हो सकता है लिंक पुराना हो, या पता थोड़ा ग़लत हो।",
+    "browseEveryPostInstead": "इसके बजाय सभी पोस्ट देखें।"
   },
   "publicListing": {
     "checkIn": "चेक इन",
@@ -1206,7 +1293,8 @@
     "add": "जोड़ें",
     "showAllNPhotos": "सभी {{count}} फ़ोटो देखें",
     "genderHostelHostedBy": "{{host}} द्वारा होस्ट किया गया {{gender}} हॉस्टल",
-    "bookARoom": "कमरा बुक करें"
+    "bookARoom": "कमरा बुक करें",
+    "theListingMayHaveBeen": "हो सकता है लिस्टिंग हटा दी गई हो या लिंक ग़लत हो।"
   },
   "featuresPublic": {
     "checkingYourLink": "आपका लिंक जाँचा जा रहा है…",
@@ -1260,7 +1348,8 @@
     "allApproved": "सभी स्वीकृत हो गईं!",
     "doneNFailed": "हो गया — {{count}} विफल",
     "nPhotosFailedRetry": "{{count}} फ़ोटो विफल — आप कतार से पुनः प्रयास कर सकते हैं।",
-    "approving": "स्वीकृत हो रहा है…"
+    "approving": "स्वीकृत हो रहा है…",
+    "newUploadsWillAppearHere": "नए अपलोड स्वीकृति के लिए यहाँ दिखाई देंगे।"
   },
   "publicContact": {
     "contactUs": "हमसे संपर्क करें",

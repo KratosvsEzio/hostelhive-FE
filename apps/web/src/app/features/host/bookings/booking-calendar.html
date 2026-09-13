@@ -15,18 +15,18 @@
           Booking calendar
         </h2>
         <p class="mt-1 text-xs text-ink-500 sm:truncate">
-          Every room, every state — tap a day for its ledger
+          {{ 'hostBookings.everyRoomEveryState' | transloco }}
         </p>
       </div>
       <!-- Full width on a phone so the arrows sit at the thumbs and the month reads centred. -->
       <div class="flex w-full shrink-0 items-center justify-between gap-1 sm:w-auto sm:justify-start">
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Previous month" (click)="step(-1)">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.previousMonth' | transloco" (click)="step(-1)">
           <i class="ti ti-chevron-left text-base" aria-hidden="true"></i>
         </button>
         <span class="text-sm font-semibold text-ink-900 sm:min-w-[7.5rem] sm:text-center">
           {{ monthStart() | date: 'MMMM y' }}
         </span>
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Next month" (click)="step(1)">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.nextMonth' | transloco" (click)="step(1)">
           <i class="ti ti-chevron-right text-base" aria-hidden="true"></i>
         </button>
       </div>
@@ -81,7 +81,7 @@
       </div>
     } @else if (state().error) {
       <p class="px-4 py-10 text-center text-sm text-ink-500">
-        This month's calendar could not be loaded.
+          {{ 'hostBookings.thisMonthSCalendarCould' | transloco }}
         <button
           type="button"
           class="font-semibold text-brand-600 underline-offset-2 hover:underline"
@@ -163,7 +163,7 @@
   <!-- Day ledger. Beside the grid on desktop, beneath it on a phone. -->
   <aside class="shrink-0 border-t border-ink-100 bg-white lg:w-80 lg:border-t-0 xl:w-96">
     <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
-      <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-400">Day ledger</p>
+      <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-400">{{ 'hostBookings.dayLedger' | transloco }}</p>
       <div class="mt-1.5 flex items-center justify-between gap-3">
         <h3 class="truncate font-display text-base font-semibold text-ink-900">
           {{ selected() | date: 'EEE d MMMM' }}
@@ -224,7 +224,7 @@
     <div class="flex items-center justify-between gap-2 px-4 pb-1 pt-3 sm:px-5">
       <span class="flex items-center gap-2">
         <span class="h-2 w-2 rounded-full bg-warn"></span>
-        <span class="text-sm font-semibold text-ink-900">Pending allotments</span>
+        <span class="text-sm font-semibold text-ink-900">{{ 'hostBookings.pendingAllotments' | transloco }}</span>
       </span>
       <span class="text-xs font-semibold tabular-nums text-warn">{{ needsAction().length }}</span>
     </div>
@@ -271,7 +271,7 @@
       </ul>
     } @else {
       <p class="px-4 py-4 text-sm text-ink-500 sm:px-5">
-        Nothing is waiting on you for this day.
+        {{ 'hostBookings.nothingIsWaitingOnYou' | transloco }}
       </p>
     }
   </aside>

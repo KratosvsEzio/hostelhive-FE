@@ -30,7 +30,7 @@
     <div class="mt-4">
       <hh-error-state
         [networkError]="s.networkError"
-        message="We couldn't load analytics for this property."
+        [message]="'hostOverview.weCouldnTLoadAnalytics' | transloco"
         (retry)="retry()"
       />
     </div>
@@ -394,7 +394,7 @@
               <hh-empty-state
                 icon="ti-bolt-off"
                 [title]="'hostOverview.noPendingUtilityBills' | transloco"
-                message="All utility invoices are settled."
+                [message]="'hostOverview.allUtilityInvoicesAreSettled' | transloco"
               />
             </div>
           } @else {
@@ -488,7 +488,7 @@
               <hh-empty-state
                 icon="ti-receipt"
                 [title]="'common.noLedgerActivity' | transloco"
-                message="No invoices for this property yet."
+                [message]="'hostOverview.noInvoicesForThisProperty' | transloco"
               />
             </div>
           } @else {

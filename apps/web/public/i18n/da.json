@@ -226,6 +226,7 @@
     "dinner": "Aftensmad",
     "teamAmpStaff": "Team og personale",
     "accountSettings": "Kontoindstillinger",
+    "passwordAmpSecurity": "Adgangskode og sikkerhed",
     "someRequiredFieldsAre": "Nogle påkrævede felter mangler",
     "uploading": "Uploader…",
     "listingProgress": "Annoncens fremdrift",
@@ -318,7 +319,8 @@
     "enterDescription": "Indtast beskrivelse",
     "enterLandmarks": "Indtast nærliggende landemærker",
     "enterReason": "Indtast en årsag",
-    "enterNote": "Indtast en note"
+    "enterNote": "Indtast en note",
+    "somethingWentWrongReachingThe": "Noget gik galt under forbindelsen til serveren."
   },
   "leadWall": {
     "close": "Luk",
@@ -334,7 +336,8 @@
     "weSentASigned24": "Vi har sendt et verificeringslink, der gælder i 24 timer, til",
     "clickingItActivatesYourAccount": ". Når du klikker på det, aktiveres din konto, og nummeret vises.",
     "iVeVerifiedContinue": "Verificeret — fortsæt",
-    "back": "Tilbage"
+    "back": "Tilbage",
+    "confirmPassword": "Bekræft adgangskode"
   },
   "home": {
     "searchCityOrArea": "Søg by eller område",
@@ -528,7 +531,12 @@
     "country": "Land",
     "streetAddress": "Vejnavn og nummer",
     "nearbyLandmarks": "Vartegn i nærheden",
-    "roomTypeDescription": "Beskrivelse af værelsestype"
+    "roomTypeDescription": "Beskrivelse af værelsestype",
+    "couldnTCheckWhichRooms": "Kunne ikke tjekke, hvilke værelser der bruger denne type. Prøv igen.",
+    "findingTheRoomsBuiltOn": "Finder værelser baseret på {{name}}…",
+    "moveAllRoomsTo": "Flyt alle værelser til",
+    "selectARoomType": "Vælg en værelsestype",
+    "noRoomsAreBuiltOn": "Ingen værelser er baseret på {{name}}, så intet andet ændres. Den fjernes, når du gemmer."
   },
   "a11y": {
     "close": "Luk",
@@ -607,7 +615,8 @@
     "clearSearch": "Ryd søgning",
     "closeTimePicker": "Luk tidsvælger",
     "chooseTime": "Vælg tidspunkt",
-    "dismiss": "Afvis"
+    "dismiss": "Afvis",
+    "closePropertyMenu": "Luk ejendomsmenuen"
   },
   "hostTenants": {
     "tenantPhoto": "Lejerens billede",
@@ -672,7 +681,10 @@
     "roomNotAvailableForTheseDates": "Værelset er ikke ledigt på disse datoer",
     "checkIn": "Check-ind",
     "checkOut": "Check-ud",
-    "leavingDate": "Fraflytningsdato"
+    "leavingDate": "Fraflytningsdato",
+    "thisTenantHasNoRent": "Denne lejer har endnu ingen registrerede huslejefakturaer.",
+    "noUtilityChargesHaveBeen": "Der er ikke registreret forbrugsudgifter for denne lejers værelse.",
+    "checkInYourFirstTenant": "Tjek din første lejer ind for at begynde at følge huslejen."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Vi kunne ikke indlæse dit abonnement",
@@ -726,7 +738,10 @@
     "thenRsPerPeriod": "Derefter Rs {{price}} / {{period}}",
     "paymentStarted": "Betaling startet",
     "payRs": "Betal Rs {{amount}}",
-    "selectAProduct": "Vælg et produkt"
+    "selectAProduct": "Vælg et produkt",
+    "invoicesAppearHereAfterYour": "Fakturaer vises her efter din første betaling.",
+    "pleaseCheckYourConnectionAnd": "Tjek din forbindelse, og prøv igen.",
+    "youDonTHaveAn": "Du har endnu ingen aktiv plan. Se planerne nedenfor for at komme i gang."
   },
   "hostMess": {
     "pickADate": "Vælg en dato",
@@ -786,7 +801,8 @@
     "last12MonthsPkr": "Seneste 12 måneder · PKR",
     "last30DaysPkr": "Seneste 30 dage · PKR",
     "uploadingReceipt": "Uploader kvittering…",
-    "nPhotosAttached": "{{count}} fotos vedhæftet"
+    "nPhotosAttached": "{{count}} fotos vedhæftet",
+    "logYourBulkGroceryPurchases": "Registrér dine storindkøb for at holde styr på udgifterne til kantinen."
   },
   "hostRooms": {
     "calendarTab": "Kalender",
@@ -842,7 +858,13 @@
     "createRooms": "Opret værelser",
     "bedsOccupiedOf": "{{filled}} af {{total}} senge optaget",
     "nOfMBooked": "{{booked}} af {{capacity}} booket",
-    "nNoLongerActive": "{{count}} ikke længere aktive"
+    "nNoLongerActive": "{{count}} ikke længere aktive",
+    "dayRoster": "Dagsliste",
+    "pickADay": "Vælg en dag.",
+    "nobodyInThisRoomThat": "Ingen på dette værelse den dag.",
+    "thisRoomCurrentlyHasNo": "Dette værelse har i øjeblikket ingen aktive lejere.",
+    "addYourFirstRoomTo": "Tilføj dit første værelse for at begynde at følge belægningen.",
+    "bedNumbersAreNotAssigned": "Sengenumre er endnu ikke tildelt — kalenderen viser, hvor mange senge der er optaget, ikke hvilken seng hver gæst har."
   },
   "hostUtilities": {
     "ratePerUnit": "Pris pr. enhed",
@@ -882,7 +904,9 @@
     "shareFormulaStart": "Andel = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} belægningsdage",
     "rsUnallocated": "Rs {{amount}} ikke fordelt",
-    "rsOver": "Rs {{amount}} for meget"
+    "rsOver": "Rs {{amount}} for meget",
+    "pickARoomWithActive": "Vælg et værelse med aktive lejere for at dele regningen.",
+    "addAUtilityBillTo": "Tilføj en forbrugsregning for at begynde at følge forbrug og udgifter."
   },
   "hostTeam": {
     "staffPhoto": "Medarbejderbillede",
@@ -894,7 +918,6 @@
     "salaryIssueDate": "Lønudbetalingsdato",
     "chooseAnImageFromYour": "Vælg et billede fra dine filer",
     "managerAccess": "Manageradgang",
-    "thisPersonAlreadyHasAn": "Denne person har allerede en konto, så der er intet at opsætte — lader du kontakten stå til, får vedkommende manageradgang til dette hostel ved gem.",
     "employment": "Ansættelse",
     "upload": "Upload",
     "scopedToThisHostelOnly": "Kun begrænset til dette hostel.",
@@ -913,7 +936,11 @@
     "fromTheTeamThisAction": "fra teamet. Handlingen kan ikke fortrydes.",
     "keepsTheirStaffRecordBut": "beholder sin medarbejderpost, men kan ikke længere logge ind eller administrere dette hostel.",
     "createsLoginFor": "Opretter et login, så {{name}} kan administrere dette hostel.",
-    "thisStaffMember": "dette medarbejder"
+    "thisStaffMember": "dette medarbejder",
+    "existingAccountKeepsPassword": "Hvis denne e-mail allerede har en konto, beholdes den nuværende adgangskode — din bruges kun, hvis der oprettes en ny konto.",
+    "storedEmailBecomesLogin": "Deres gemte e-mail bliver loginnet. Har adressen allerede en konto, beholder de dens adgangskode.",
+    "pickADifferentStatusTo": "Vælg en anden status for at se resten af dit team.",
+    "addAWardenCookOr": "Tilføj en inspektør, kok eller vagt for at gemme løn og dokumenter."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Godkendelse mislykkedes — prøv igen.",
@@ -968,7 +995,9 @@
     "billedTo": "Faktureret til",
     "issued": "Udstedt",
     "due": "Forfalder",
-    "thisWillPermanentlyDeleteInvoice": "Dette sletter fakturaen permanent"
+    "thisWillPermanentlyDeleteInvoice": "Dette sletter fakturaen permanent",
+    "invoicesAppearHereOnceYou": "Fakturaer vises her, når du udsteder husleje- eller forbrugsregninger.",
+    "tryAdjustingYourFilters": "Prøv at justere dine filtre."
   },
   "hostExpenses": {
     "allTypes": "Alle typer",
@@ -1012,7 +1041,13 @@
     "pctVsLastMonth": "{{pct}} % ift. sidste måned",
     "nTenantsUnpaid": "{{count}} lejere ubetalt",
     "moveInsAndOuts": "Ind- og udflytninger",
-    "pctBedsFilled": "Andel optagne senge"
+    "pctBedsFilled": "Andel optagne senge",
+    "weCouldnTLoadTenant": "Vi kunne ikke indlæse data om lejerbevægelser.",
+    "weCouldnTLoadOccupancy": "Vi kunne ikke indlæse belægningsdata.",
+    "weCouldnTLoadAnalytics": "Vi kunne ikke indlæse analyser for denne ejendom.",
+    "allUtilityInvoicesAreSettled": "Alle forbrugsregninger er betalt.",
+    "noInvoicesForThisProperty": "Ingen fakturaer for denne ejendom endnu.",
+    "weCouldnTLoadRevenue": "Vi kunne ikke indlæse omsætningsdata."
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1029,7 +1064,23 @@
     "cancelledByOn": "Annulleret af {{by}} den {{date}}",
     "pkrPenaltyChargedToYou": "PKR {{amount}} i gebyr trukket hos dig",
     "pkrToYou": "PKR {{amount}} til dig",
-    "thisGuest": "denne gæst"
+    "thisGuest": "denne gæst",
+    "dayLedger": "Dagsoversigt",
+    "pendingAllotments": "Afventende tildelinger",
+    "askedFor": "Ønsket",
+    "noContactDetailsOnThis": "Ingen kontaktoplysninger på denne booking",
+    "recordABooking": "Registrér en booking",
+    "whoIsStaying": "Hvem bor her",
+    "onlyIfTheyHaveOne": "Kun hvis de har et",
+    "addARoom": "Tilføj et værelse",
+    "toCollectAtTheDesk": "Opkræves i receptionen",
+    "createBooking": "Opret booking",
+    "theRoomsForThisProperty": "Værelserne for denne ejendom kunne ikke indlæses.",
+    "everyRoomEveryState": "Alle værelser, alle tilstande — tryk på en dag for dens oversigt",
+    "thisMonthSCalendarCould": "Denne måneds kalender kunne ikke indlæses.",
+    "nothingIsWaitingOnYou": "Der er intet, der venter på dig denne dag.",
+    "pickTheDatesFirst": "Vælg datoerne først — hvad der er ledigt afhænger af dem.",
+    "noRoomsOnThisProperty": "Ingen værelser på denne ejendom endnu."
   },
   "hostHostelProfile": {
     "failed": "Mislykkedes",
@@ -1039,7 +1090,8 @@
     "updateHostel": "Opdater hostel",
     "reviewTitle": "Dette sender din annonce til fornyet gennemgang",
     "reviewBody": "Du har ændret følgende. Din annonce gennemgås igen, og gæster kan ikke se den, før den er godkendt.",
-    "reviewConfirm": "Gem og send til gennemgang"
+    "reviewConfirm": "Gem og send til gennemgang",
+    "weCouldnTLoadYour": "Vi kunne ikke indlæse dit hostel."
   },
   "hostMore": {
     "property": "Ejendom",
@@ -1060,11 +1112,13 @@
   "adminAdminContracts": {
     "contracts": "Kontrakter",
     "noContractsMatchThisFilter": "Ingen kontrakter matcher dette filter",
-    "term": "Løbetid"
+    "term": "Løbetid",
+    "searchContractsByHostel": "Søg i kontrakter efter hostel"
   },
   "adminAdminListings": {
     "allListings": "Alle annoncer",
-    "noListingsFound": "Ingen annoncer fundet"
+    "noListingsFound": "Ingen annoncer fundet",
+    "searchListingsByHostel": "Søg i annoncer efter hostel"
   },
   "adminAdminPayments": {
     "payments": "Betalinger",
@@ -1074,21 +1128,25 @@
     "transactionId": "Transaktions-ID",
     "created": "Oprettet",
     "contract": "Kontrakt",
-    "product": "Produkt"
+    "product": "Produkt",
+    "searchPaymentsByHostel": "Søg i betalinger efter hostel"
   },
   "moderatorQueue": {
     "reviewQueue": "Gennemgangskø",
-    "queueIsClear": "Køen er tom"
+    "queueIsClear": "Køen er tom",
+    "noSubmissionsAreWaitingFor": "Ingen indsendelser venter på gennemgang."
   },
   "moderatorAudit": {
     "auditLog": "Revisionslog",
     "noMatchingActivity": "Ingen matchende aktivitet",
     "allModerators": "Alle moderatorer",
     "last7Days": "Sidste 7 dage",
-    "loadOlderEntries": "Indlæs ældre poster"
+    "loadOlderEntries": "Indlæs ældre poster",
+    "tryADifferentActionFilter": "Prøv et andet handlingsfilter eller datointerval."
   },
   "coreForbidden": {
-    "accessBlocked": "Adgang blokeret"
+    "accessBlocked": "Adgang blokeret",
+    "youDonTHavePermission": "Du har ikke tilladelse til at se dette område."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Dine hostelinvitationer, måltidsbekræftelser og udestående kvitteringer."
@@ -1114,7 +1172,8 @@
     "refundsReachYourOriginalPayment": "Refusioner når din oprindelige betalingsmetode inden for 5 hverdage.",
     "pkrPaid": "PKR {{amount}} betalt",
     "cancelledSummary": "Annulleret {{date}} · PKR {{refund}} refunderet · PKR {{charge}} i afbestillingsgebyr",
-    "cancelRefundExplainer": "Du får <strong class=\"tabular-nums\">PKR {{refund}}</strong> tilbage. <strong class=\"tabular-nums\">PKR {{charge}}</strong> beholdes som afbestillingsgebyr, fordi du afbestiller {{pct}} % inde i perioden."
+    "cancelRefundExplainer": "Du får <strong class=\"tabular-nums\">PKR {{refund}}</strong> tilbage. <strong class=\"tabular-nums\">PKR {{charge}}</strong> beholdes som afbestillingsgebyr, fordi du afbestiller {{pct}} % inde i perioden.",
+    "whenYouBookAHostel": "Når du booker et hostel, vises det her med dine datoer og det, du betalte."
   },
   "userFavorites": {
     "removeFromFavorites": "Fjern fra favoritter?",
@@ -1123,7 +1182,8 @@
     "noFavoritesYet": "Ingen favoritter endnu",
     "saveHostelsYouLikeAnd": "Gem hosteller, du kan lide, og find dem her.",
     "browseHostels": "Se hosteller",
-    "fromYourSavedHostels": "fra dine gemte hosteller?"
+    "fromYourSavedHostels": "fra dine gemte hosteller?",
+    "weCouldnTLoadYour": "Vi kunne ikke indlæse dine favoritter."
   },
   "userSecurity": {
     "currentPassword": "Nuværende adgangskode",
@@ -1196,7 +1256,34 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Tips, guides og nyheder fra HostelHive-teamet",
     "comingSoon": "Kommer snart",
-    "weReWorkingOnSome": "Vi arbejder på godt indhold om studieliv, hosteltips og byguides i hele Pakistan. Hold øje!"
+    "weReWorkingOnSome": "Vi arbejder på godt indhold om studieliv, hosteltips og byguides i hele Pakistan. Hold øje!",
+    "onThisPage": "På denne side",
+    "theHostelhiveTeam": "HostelHive-teamet",
+    "keepReading": "Læs videre",
+    "blogHomePage": "Gå til bloggens forside.",
+    "filterArticlesByCategory": "Filtrér artikler efter kategori",
+    "archiveLayout": "Arkivvisning",
+    "everyArticle": "Alle artikler",
+    "theHostelhiveJournal": "HostelHive-journalen",
+    "guidesForFindingARoom": "Guides til at finde et værelse — og en seng for natten.",
+    "whatHostelsActuallyCost": "Hvad hosteller faktisk koster by for by, hvilke områder der passer til hvilket campus, og hvor man sover fra Johar Town til Karakoram. Skrevet ud fra annoncer og fra vejen.",
+    "allPosts": "Alle indlæg",
+    "grid": "Gitter",
+    "index": "Liste",
+    "nMinRead": "{{count}} min læsning",
+    "nMin": "{{count}} min",
+    "article": "Artikel",
+    "category": "Kategori",
+    "published": "Udgivet",
+    "read": "Læsetid",
+    "nothingFiledHereYet": "Der er intet arkiveret her endnu.",
+    "lookingForARoomRather": "Leder du efter et værelse frem for en guide?",
+    "everyListingShowsTheRent": "Hver annonce viser lejen pr. seng eller pr. værelse, hvad der er inkluderet, og hvem der driver stedet.",
+    "swipeTheTableToSee": "Stryg i tabellen for at se alle kolonner",
+    "weVerifyListingsAcross": "Vi verificerer annoncer i hele Pakistan og skriver om det, vi lærer undervejs.",
+    "weCouldnTFindThatPost": "Vi kunne ikke finde det indlæg",
+    "theLinkMayBeOld": "Linket kan være gammelt, eller adressen en smule forkert.",
+    "browseEveryPostInstead": "Gennemse alle indlæg i stedet."
   },
   "publicListing": {
     "checkIn": "Ankomst",
@@ -1206,7 +1293,8 @@
     "add": "Tilføj",
     "showAllNPhotos": "Se alle {{count}} fotos",
     "genderHostelHostedBy": "{{gender}}-hostel, vært {{host}}",
-    "bookARoom": "Book et værelse"
+    "bookARoom": "Book et værelse",
+    "theListingMayHaveBeen": "Annoncen er måske fjernet, eller linket er forkert."
   },
   "featuresPublic": {
     "checkingYourLink": "Kontrollerer dit link…",
@@ -1260,7 +1348,8 @@
     "allApproved": "Alle godkendt!",
     "doneNFailed": "Færdig — {{count}} mislykkedes",
     "nPhotosFailedRetry": "{{count}} fotos mislykkedes — du kan prøve igen fra køen.",
-    "approving": "Godkender…"
+    "approving": "Godkender…",
+    "newUploadsWillAppearHere": "Nye uploads vises her til godkendelse."
   },
   "publicContact": {
     "contactUs": "Kontakt os",

@@ -25,7 +25,7 @@
     <hh-empty-state
       icon="ti-bed"
       [title]="'hostRooms.noRoomsYet' | transloco"
-      message="Add your first room to start tracking occupancy."
+      [message]="'hostRooms.addYourFirstRoomTo' | transloco"
     >
       <div class="flex gap-2">
         <button hh-button variant="outlined" size="sm" (click)="openBulkCreate()">

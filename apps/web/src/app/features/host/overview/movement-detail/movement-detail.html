@@ -18,7 +18,7 @@
       <hh-card class="mt-6"><hh-skeleton class="h-4 w-32" /><hh-skeleton class="mt-4 h-64 w-full" radius="lg" /></hh-card>
     } @else if (s.error || !s.data) {
       <div class="mt-4">
-        <hh-error-state [networkError]="s.networkError" message="We couldn't load tenant movement data." (retry)="retry()" />
+        <hh-error-state [networkError]="s.networkError" [message]="'hostOverview.weCouldnTLoadTenant' | transloco" (retry)="retry()" />
       </div>
     } @else {
 

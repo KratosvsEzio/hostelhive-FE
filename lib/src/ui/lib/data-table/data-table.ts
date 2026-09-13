@@ -475,18 +475,20 @@ export interface PaginationConfig {
                       @if (!atScrollEnd()) {
                         <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                       }
-                      <button
-                        hh-button
-                        variant="icon"
-                        size="sm"
-                        type="button"
-                        [attr.aria-label]="'a11y.rowActions' | transloco"
-                        [class.bg-ink-100]="actionActive()(row)"
-                        [class.text-ink-700]="actionActive()(row)"
-                        (click)="rowAction.emit({ row, event: $event })"
-                      >
-                        <i class="ti ti-dots-vertical"></i>
-                      </button>
+                      @if (canRowAct()(row)) {
+                        <button
+                          hh-button
+                          variant="icon"
+                          size="sm"
+                          type="button"
+                          [attr.aria-label]="'a11y.rowActions' | transloco"
+                          [class.bg-ink-100]="actionActive()(row)"
+                          [class.text-ink-700]="actionActive()(row)"
+                          (click)="rowAction.emit({ row, event: $event })"
+                        >
+                          <i class="ti ti-dots-vertical"></i>
+                        </button>
+                      }
                     </td>
                   }
                 </tr>
@@ -636,8 +638,12 @@ export class DataTable implements AfterViewInit, OnDestroy {
   @ViewChild('scrollWrap') private readonly scrollWrap!: ElementRef<HTMLElement>;
   private scrollCleanup?: () => void;
 
-  readonly columns      = input.required<ColumnDef[]>();
-  readonly rows         = input.required<unknown[]>();
+  // `readonly` on both: the table only reads them (`.length` and an `@for`). Demanding a
+  // mutable array made every caller hand one over, so a component exposing the safer
+  // `readonly T[]` from a computed failed with TS4104 on the binding rather than on
+  // anything real. Widening accepts both.
+  readonly columns      = input.required<readonly ColumnDef[]>();
+  readonly rows         = input.required<readonly unknown[]>();
   readonly rowId        = input.required<(row: unknown) => string>();
   readonly expandable   = input<ExpandConfig | null>(null);
   readonly pagination   = input<PaginationConfig | null>(null);
@@ -645,6 +651,17 @@ export class DataTable implements AfterViewInit, OnDestroy {
   readonly showActions  = input(false);
   readonly clearable    = input(false);
   readonly actionActive = input<(row: unknown) => boolean>(() => false);
+  /**
+   * Per-row veto on the action button. `showActions` says the table has a menu at all; this
+   * says whether *this* row gets one.
+   *
+   * The column still renders for a vetoed row — only the button goes. Dropping the cell
+   * would pull every row after it one column left, and the actions column is sticky, so the
+   * table would come apart at exactly the row being singled out.
+   *
+   * Default true, so a table that does not care is unchanged.
+   */
+  readonly canRowAct    = input<(row: unknown) => boolean>(() => true);
   readonly sort         = input<SortState | null>(null);
   /**
    * Whether a third click on the sorted column clears the sort.

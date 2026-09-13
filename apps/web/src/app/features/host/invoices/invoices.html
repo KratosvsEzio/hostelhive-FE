@@ -37,7 +37,7 @@
     <hh-empty-state
       icon="ti-file-invoice"
       [title]="'hostInvoices.noInvoicesYet' | transloco"
-      message="Invoices appear here once you issue rent or utility bills."
+      [message]="'hostInvoices.invoicesAppearHereOnceYou' | transloco"
     />
   } @else {
     <!-- Filters + scope search -->
@@ -119,7 +119,7 @@
       <hh-empty-state
         icon="ti-filter-off"
         [title]="'hostInvoices.noInvoicesMatch' | transloco"
-        message="Try adjusting your filters."
+        [message]="'hostInvoices.tryAdjustingYourFilters' | transloco"
       />
     } @else {
       <hh-data-table

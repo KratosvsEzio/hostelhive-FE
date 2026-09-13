@@ -14,7 +14,7 @@
     </div>
   } @else if (s.error) {
     <div class="mt-6">
-      <hh-error-state message="We couldn't load your favorites." (retry)="retry()" />
+      <hh-error-state [message]="'userFavorites.weCouldnTLoadYour' | transloco" (retry)="retry()" />
     </div>
   } @else if (saved().length) {
     <!-- Same card as the search results, so the two never drift apart again. Its heart is

@@ -226,6 +226,7 @@
     "dinner": "夕食",
     "teamAmpStaff": "チームとスタッフ",
     "accountSettings": "アカウント設定",
+    "passwordAmpSecurity": "パスワードとセキュリティ",
     "someRequiredFieldsAre": "必須項目が未入力です",
     "uploading": "アップロード中…",
     "listingProgress": "掲載の進捗",
@@ -318,7 +319,8 @@
     "enterDescription": "説明を入力",
     "enterLandmarks": "近くの目印を入力",
     "enterReason": "理由を入力",
-    "enterNote": "メモを入力"
+    "enterNote": "メモを入力",
+    "somethingWentWrongReachingThe": "サーバーへの接続中に問題が発生しました。"
   },
   "leadWall": {
     "close": "閉じる",
@@ -334,7 +336,8 @@
     "weSentASigned24": "24 時間有効な確認リンクを送信しました:",
     "clickingItActivatesYourAccount": "。クリックするとアカウントが有効になり、番号が表示されます。",
     "iVeVerifiedContinue": "確認しました — 続ける",
-    "back": "戻る"
+    "back": "戻る",
+    "confirmPassword": "パスワードを確認"
   },
   "home": {
     "searchCityOrArea": "都市・エリアを検索",
@@ -528,7 +531,12 @@
     "country": "国",
     "streetAddress": "番地",
     "nearbyLandmarks": "近くの目印",
-    "roomTypeDescription": "部屋タイプの説明"
+    "roomTypeDescription": "部屋タイプの説明",
+    "couldnTCheckWhichRooms": "このタイプを使用している部屋を確認できませんでした。もう一度お試しください。",
+    "findingTheRoomsBuiltOn": "{{name}} の部屋を検索しています…",
+    "moveAllRoomsTo": "すべての部屋を次に移動",
+    "selectARoomType": "部屋タイプを選択",
+    "noRoomsAreBuiltOn": "{{name}} を使用している部屋はないため、他に変更はありません。保存時に削除されます。"
   },
   "a11y": {
     "close": "閉じる",
@@ -607,7 +615,8 @@
     "clearSearch": "検索をクリア",
     "closeTimePicker": "時刻選択を閉じる",
     "chooseTime": "時刻を選ぶ",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "closePropertyMenu": "物件メニューを閉じる"
   },
   "hostTenants": {
     "tenantPhoto": "入居者の写真",
@@ -672,7 +681,10 @@
     "roomNotAvailableForTheseDates": "この日程では部屋を利用できません",
     "checkIn": "チェックイン",
     "checkOut": "チェックアウト",
-    "leavingDate": "退去日"
+    "leavingDate": "退去日",
+    "thisTenantHasNoRent": "この入居者の家賃請求はまだ記録されていません。",
+    "noUtilityChargesHaveBeen": "この入居者の部屋の光熱費は記録されていません。",
+    "checkInYourFirstTenant": "最初の入居者をチェックインして、家賃の記録を始めましょう。"
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "サブスクリプションを読み込めませんでした",
@@ -726,7 +738,10 @@
     "thenRsPerPeriod": "以降 Rs {{price}} / {{period}}",
     "paymentStarted": "支払いを開始しました",
     "payRs": "Rs {{amount}} を支払う",
-    "selectAProduct": "商品を選択"
+    "selectAProduct": "商品を選択",
+    "invoicesAppearHereAfterYour": "最初の請求後、ここに請求書が表示されます。",
+    "pleaseCheckYourConnectionAnd": "接続を確認して、もう一度お試しください。",
+    "youDonTHaveAn": "有効なプランがまだありません。下のプランからお選びください。"
   },
   "hostMess": {
     "pickADate": "日付を選択",
@@ -786,7 +801,8 @@
     "last12MonthsPkr": "過去12か月 · PKR",
     "last30DaysPkr": "過去30日 · PKR",
     "uploadingReceipt": "領収書をアップロード中…",
-    "nPhotosAttached": "写真 {{count}} 枚を添付"
+    "nPhotosAttached": "写真 {{count}} 枚を添付",
+    "logYourBulkGroceryPurchases": "食堂の支出を把握するために、まとめ買いを記録しましょう。"
   },
   "hostRooms": {
     "calendarTab": "カレンダー",
@@ -842,7 +858,13 @@
     "createRooms": "部屋を作成",
     "bedsOccupiedOf": "ベッド {{total}} 台中 {{filled}} 台使用中",
     "nOfMBooked": "{{capacity}} 中 {{booked}} 予約済み",
-    "nNoLongerActive": "{{count}}名は現在入居していません"
+    "nNoLongerActive": "{{count}}名は現在入居していません",
+    "dayRoster": "当日の在室者",
+    "pickADay": "日を選択してください。",
+    "nobodyInThisRoomThat": "その日はこの部屋に誰もいません。",
+    "thisRoomCurrentlyHasNo": "この部屋には現在、入居中の方はいません。",
+    "addYourFirstRoomTo": "最初の部屋を追加して、稼働状況の記録を始めましょう。",
+    "bedNumbersAreNotAssigned": "ベッド番号はまだ割り当てられていません — カレンダーは使用中のベッド数を示すもので、誰がどのベッドかは示しません。"
   },
   "hostUtilities": {
     "ratePerUnit": "単価",
@@ -882,7 +904,9 @@
     "shareFormulaStart": "按分額 = (Rs {{total}} ÷",
     "nOccupancyDays": "稼働日数 {{count}} 日",
     "rsUnallocated": "未配分 Rs {{amount}}",
-    "rsOver": "超過 Rs {{amount}}"
+    "rsOver": "超過 Rs {{amount}}",
+    "pickARoomWithActive": "請求を分担するには、入居者のいる部屋を選んでください。",
+    "addAUtilityBillTo": "光熱費の請求を追加して、使用量と費用の記録を始めましょう。"
   },
   "hostTeam": {
     "staffPhoto": "スタッフの写真",
@@ -894,7 +918,6 @@
     "salaryIssueDate": "給与支給日",
     "chooseAnImageFromYour": "ファイルから画像を選択",
     "managerAccess": "管理者権限",
-    "thisPersonAlreadyHasAn": "この人はすでにアカウントを持っているため設定は不要です — スイッチをオンのままにすると、保存時にこのホステルの管理者権限が付与されます。",
     "employment": "雇用",
     "upload": "アップロード",
     "scopedToThisHostelOnly": "このホステルのみに限定されます。",
@@ -913,7 +936,11 @@
     "fromTheTeamThisAction": "をチームから。この操作は取り消せません。",
     "keepsTheirStaffRecordBut": "スタッフ記録は残りますが、サインインやこのホステルの管理はできなくなります。",
     "createsLoginFor": "{{name}} がこのホステルを管理できるログインを作成します。",
-    "thisStaffMember": "このスタッフ"
+    "thisStaffMember": "このスタッフ",
+    "existingAccountKeepsPassword": "このメールに既にアカウントがある場合は現在のパスワードが保持されます。ここで設定したものは新規作成時のみ使われます。",
+    "storedEmailBecomesLogin": "保存済みのメールがログインになります。そのアドレスに既にアカウントがある場合は、そのパスワードが維持されます。",
+    "pickADifferentStatusTo": "他のステータスを選ぶと、残りのスタッフが表示されます。",
+    "addAWardenCookOr": "寮監・調理担当・警備員を追加して、給与と書類を登録しましょう。"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "承認に失敗しました — もう一度お試しください。",
@@ -968,7 +995,9 @@
     "billedTo": "請求先",
     "issued": "発行日",
     "due": "期日",
-    "thisWillPermanentlyDeleteInvoice": "この請求書は完全に削除されます"
+    "thisWillPermanentlyDeleteInvoice": "この請求書は完全に削除されます",
+    "invoicesAppearHereOnceYou": "家賃や光熱費の請求を発行すると、ここに請求書が表示されます。",
+    "tryAdjustingYourFilters": "フィルターを調整してみてください。"
   },
   "hostExpenses": {
     "allTypes": "すべての種類",
@@ -1012,7 +1041,13 @@
     "pctVsLastMonth": "前月比 {{pct}}%",
     "nTenantsUnpaid": "未払いの入居者 {{count}} 名",
     "moveInsAndOuts": "入居と退去",
-    "pctBedsFilled": "ベッド稼働率"
+    "pctBedsFilled": "ベッド稼働率",
+    "weCouldnTLoadTenant": "入居者の異動データを読み込めませんでした。",
+    "weCouldnTLoadOccupancy": "稼働状況のデータを読み込めませんでした。",
+    "weCouldnTLoadAnalytics": "この物件の分析データを読み込めませんでした。",
+    "allUtilityInvoicesAreSettled": "光熱費の請求はすべて精算済みです。",
+    "noInvoicesForThisProperty": "この物件の請求書はまだありません。",
+    "weCouldnTLoadRevenue": "売上データを読み込めませんでした。"
   },
   "hostBookings": {
     "calendarTab": "カレンダー",
@@ -1029,7 +1064,23 @@
     "cancelledByOn": "{{date}} に {{by}} がキャンセル",
     "pkrPenaltyChargedToYou": "PKR {{amount}} の違約金があなたに請求されます",
     "pkrToYou": "PKR {{amount}} をあなたへ",
-    "thisGuest": "このゲスト"
+    "thisGuest": "このゲスト",
+    "dayLedger": "当日の記録",
+    "pendingAllotments": "保留中の割り当て",
+    "askedFor": "希望内容",
+    "noContactDetailsOnThis": "この予約に連絡先はありません",
+    "recordABooking": "予約を記録する",
+    "whoIsStaying": "宿泊者",
+    "onlyIfTheyHaveOne": "ある場合のみ",
+    "addARoom": "部屋を追加",
+    "toCollectAtTheDesk": "受付で受け取る",
+    "createBooking": "予約を作成",
+    "theRoomsForThisProperty": "この物件の部屋を読み込めませんでした。",
+    "everyRoomEveryState": "すべての部屋とその状態 — 日付をタップすると記録が開きます",
+    "thisMonthSCalendarCould": "今月のカレンダーを読み込めませんでした。",
+    "nothingIsWaitingOnYou": "この日に対応が必要なものはありません。",
+    "pickTheDatesFirst": "先に日程を選んでください — 空き状況は日程によって変わります。",
+    "noRoomsOnThisProperty": "この物件にはまだ部屋がありません。"
   },
   "hostHostelProfile": {
     "failed": "失敗",
@@ -1039,7 +1090,8 @@
     "updateHostel": "ホステルを更新",
     "reviewTitle": "この変更で掲載は再審査になります",
     "reviewBody": "以下を変更しました。掲載は再度審査され、承認されるまでゲストには表示されません。",
-    "reviewConfirm": "保存して審査に送る"
+    "reviewConfirm": "保存して審査に送る",
+    "weCouldnTLoadYour": "ホステルを読み込めませんでした。"
   },
   "hostMore": {
     "property": "物件",
@@ -1060,11 +1112,13 @@
   "adminAdminContracts": {
     "contracts": "契約",
     "noContractsMatchThisFilter": "このフィルターに一致する契約はありません",
-    "term": "契約期間"
+    "term": "契約期間",
+    "searchContractsByHostel": "ホステル別に契約を検索"
   },
   "adminAdminListings": {
     "allListings": "すべての掲載",
-    "noListingsFound": "掲載が見つかりません"
+    "noListingsFound": "掲載が見つかりません",
+    "searchListingsByHostel": "ホステル別に掲載を検索"
   },
   "adminAdminPayments": {
     "payments": "支払い",
@@ -1074,21 +1128,25 @@
     "transactionId": "取引ID",
     "created": "作成日",
     "contract": "契約",
-    "product": "商品"
+    "product": "商品",
+    "searchPaymentsByHostel": "ホステル別に支払いを検索"
   },
   "moderatorQueue": {
     "reviewQueue": "レビュー待ち",
-    "queueIsClear": "キューは空です"
+    "queueIsClear": "キューは空です",
+    "noSubmissionsAreWaitingFor": "審査待ちの申請はありません。"
   },
   "moderatorAudit": {
     "auditLog": "監査ログ",
     "noMatchingActivity": "一致するアクティビティはありません",
     "allModerators": "すべてのモデレーター",
     "last7Days": "過去7日間",
-    "loadOlderEntries": "過去のエントリを読み込む"
+    "loadOlderEntries": "過去のエントリを読み込む",
+    "tryADifferentActionFilter": "別の操作フィルターまたは期間をお試しください。"
   },
   "coreForbidden": {
-    "accessBlocked": "アクセスがブロックされました"
+    "accessBlocked": "アクセスがブロックされました",
+    "youDonTHavePermission": "このエリアを表示する権限がありません。"
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "ホステルの招待、食事の確認、保留中の領収書。"
@@ -1114,7 +1172,8 @@
     "refundsReachYourOriginalPayment": "返金は5営業日以内に元のお支払い方法へ返されます。",
     "pkrPaid": "PKR {{amount}} 支払済み",
     "cancelledSummary": "{{date}} キャンセル · PKR {{refund}} 返金 · キャンセル料 PKR {{charge}}",
-    "cancelRefundExplainer": "<strong class=\"tabular-nums\">PKR {{refund}}</strong> が返金されます。期間の {{pct}}% を過ぎてのキャンセルのため、<strong class=\"tabular-nums\">PKR {{charge}}</strong> はキャンセル料として差し引かれます。"
+    "cancelRefundExplainer": "<strong class=\"tabular-nums\">PKR {{refund}}</strong> が返金されます。期間の {{pct}}% を過ぎてのキャンセルのため、<strong class=\"tabular-nums\">PKR {{charge}}</strong> はキャンセル料として差し引かれます。",
+    "whenYouBookAHostel": "ホステルを予約すると、日程と支払額とともにここに表示されます。"
   },
   "userFavorites": {
     "removeFromFavorites": "お気に入りから削除しますか？",
@@ -1123,7 +1182,8 @@
     "noFavoritesYet": "お気に入りはまだありません",
     "saveHostelsYouLikeAnd": "気に入ったホステルを保存すると、ここに表示されます。",
     "browseHostels": "ホステルを見る",
-    "fromYourSavedHostels": "保存済みのホステルから削除しますか？"
+    "fromYourSavedHostels": "保存済みのホステルから削除しますか？",
+    "weCouldnTLoadYour": "お気に入りを読み込めませんでした。"
   },
   "userSecurity": {
     "currentPassword": "現在のパスワード",
@@ -1196,7 +1256,34 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "HostelHive チームによるヒント、ガイド、最新情報",
     "comingSoon": "近日公開",
-    "weReWorkingOnSome": "学生生活、ホステルのヒント、パキスタン各都市のガイドなど、充実したコンテンツを準備中です。お楽しみに！"
+    "weReWorkingOnSome": "学生生活、ホステルのヒント、パキスタン各都市のガイドなど、充実したコンテンツを準備中です。お楽しみに！",
+    "onThisPage": "このページの内容",
+    "theHostelhiveTeam": "HostelHive チーム",
+    "keepReading": "続きを読む",
+    "blogHomePage": "ブログのトップページを見る。",
+    "filterArticlesByCategory": "カテゴリーで記事を絞り込む",
+    "archiveLayout": "アーカイブの表示",
+    "everyArticle": "すべての記事",
+    "theHostelhiveJournal": "HostelHive ジャーナル",
+    "guidesForFindingARoom": "部屋を見つけるためのガイド — そして一晩のベッドのために。",
+    "whatHostelsActuallyCost": "都市ごとのホステルの実際の費用、どの地区がどのキャンパスに向くか、そしてジョハル・タウンからカラコルムまでどこに泊まるか。掲載情報と旅先から書いています。",
+    "allPosts": "すべての投稿",
+    "grid": "グリッド",
+    "index": "一覧",
+    "nMinRead": "読了 {{count}} 分",
+    "nMin": "{{count}} 分",
+    "article": "記事",
+    "category": "カテゴリー",
+    "published": "公開日",
+    "read": "読了時間",
+    "nothingFiledHereYet": "ここにはまだ何もありません。",
+    "lookingForARoomRather": "ガイドではなく部屋をお探しですか？",
+    "everyListingShowsTheRent": "各掲載には、ベッド単位または部屋単位の料金、含まれるもの、運営者が記載されています。",
+    "swipeTheTableToSee": "表をスワイプするとすべての列が見られます",
+    "weVerifyListingsAcross": "私たちはパキスタン各地の掲載を検証し、そこで学んだことを書いています。",
+    "weCouldnTFindThatPost": "その投稿は見つかりませんでした",
+    "theLinkMayBeOld": "リンクが古いか、アドレスが少し違っている可能性があります。",
+    "browseEveryPostInstead": "代わりにすべての投稿を見る。"
   },
   "publicListing": {
     "checkIn": "チェックイン",
@@ -1206,7 +1293,8 @@
     "add": "追加",
     "showAllNPhotos": "{{count}} 枚すべての写真を見る",
     "genderHostelHostedBy": "{{gender}}向けホステル · ホスト: {{host}}",
-    "bookARoom": "部屋を予約する"
+    "bookARoom": "部屋を予約する",
+    "theListingMayHaveBeen": "掲載が削除されたか、リンクが正しくない可能性があります。"
   },
   "featuresPublic": {
     "checkingYourLink": "リンクを確認中…",
@@ -1260,7 +1348,8 @@
     "allApproved": "すべて承認しました！",
     "doneNFailed": "完了 — {{count}} 件失敗",
     "nPhotosFailedRetry": "{{count}} 枚の写真が失敗しました — キューから再試行できます。",
-    "approving": "承認中…"
+    "approving": "承認中…",
+    "newUploadsWillAppearHere": "新しいアップロードは承認待ちとしてここに表示されます。"
   },
   "publicContact": {
     "contactUs": "お問い合わせ",

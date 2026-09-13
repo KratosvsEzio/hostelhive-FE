@@ -1,6 +1,6 @@
 <app-dashboard-layout [label]="'common.bookings' | transloco">
   <div hhActions class="flex shrink-0 items-center gap-2">
-    <button hh-button color="primary" size="sm" (click)="openForm()" aria-label="Create booking">
+    <button hh-button color="primary" size="sm" (click)="openForm()" [attr.aria-label]="'hostBookings.createBooking' | transloco">
       <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">Create booking</span>
     </button>
   </div>
@@ -63,7 +63,7 @@
       <hh-error-state
         class="mt-5 block"
         [title]="'common.weCouldnTLoad2' | transloco"
-        message="Something went wrong reaching the server."
+        [message]="'common.somethingWentWrongReachingThe' | transloco"
       />
     } @else if (!rows().length) {
       <hh-empty-state

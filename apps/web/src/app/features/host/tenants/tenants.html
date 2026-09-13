@@ -50,7 +50,7 @@
     <hh-empty-state
       icon="ti-users"
       [title]="'hostTenants.noTenantsYet' | transloco"
-      message="Check in your first tenant to start tracking rent."
+      [message]="'hostTenants.checkInYourFirstTenant' | transloco"
     >
       <button hh-button color="primary" size="sm" (click)="openCheckIn()">
         <i class="ti ti-user-plus"></i>{{ 'hostTenants.registerTenant' | transloco }}

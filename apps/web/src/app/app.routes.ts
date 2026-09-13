@@ -83,9 +83,8 @@ const LOCALISED_ROUTES: Route[] = [
   },
   {
     path: 'blog',
-    loadComponent: () =>
-      import('@features/public/blog/blog').then((m) => m.Blog),
-    title: 'Blog — HostelHive',
+    loadChildren: () =>
+      import('@features/public/blog/blog.routes').then((m) => m.BLOG_ROUTES),
   },
   {
     path: 'careers',

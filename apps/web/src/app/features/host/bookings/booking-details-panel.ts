@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Button } from '@hostelhive/ui';
@@ -18,7 +19,7 @@ import { isPrivateOccupancy } from '@util/occupancy-type';
 @Component({
   selector: 'hh-booking-details-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Button],
+  imports: [DatePipe, DecimalPipe, Button, TranslocoPipe],
   templateUrl: './booking-details-panel.html',
 })
 export class BookingDetailsPanel {

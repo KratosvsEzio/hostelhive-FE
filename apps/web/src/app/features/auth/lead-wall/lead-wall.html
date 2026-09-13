@@ -91,7 +91,7 @@
           <form class="space-y-3" (submit)="submit($event)">
             @if (isRegister()) {
               <hh-input
-                label="Full name"
+                [label]="'userSettings.fullName' | transloco"
                 icon="ti-user"
                 [placeholder]="'common.enterFullName' | transloco"
                 [value]="name()"
@@ -101,7 +101,7 @@
             }
 
             <hh-input
-              label="Email address"
+              [label]="'common.emailAddress' | transloco"
               icon="ti-mail"
               type="email"
               [placeholder]="'common.enterEmail' | transloco"
@@ -123,7 +123,7 @@
                 <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'leadWall.min8Characters1Uppercase' | transloco }}
               </p>
               <hh-input
-                label="Confirm password"
+                [label]="'leadWall.confirmPassword' | transloco"
                 icon="ti-lock"
                 type="password"
                 [value]="confirmPassword()"

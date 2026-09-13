@@ -370,7 +370,7 @@ describe('RoomCalendar roster panel renders', () => {
     const aside: HTMLElement | null = f.nativeElement.querySelector('aside');
 
     expect(aside).not.toBeNull();
-    expect(aside?.textContent).toContain('Day roster');
+    expect(aside?.textContent).toContain('hostRooms.dayRoster');
     // xl: puts it to the right of the grid; below that it stacks under it.
     expect(aside?.className).toContain('xl:w-[320px]');
   });
@@ -393,7 +393,7 @@ describe('RoomCalendar roster panel renders', () => {
     const aside: HTMLElement | null = f.nativeElement.querySelector('aside');
 
     expect(aside).not.toBeNull();
-    expect(aside?.textContent).toContain('Day roster');
+    expect(aside?.textContent).toContain('hostRooms.dayRoster');
   });
 
   it('says the day is empty rather than showing nothing at all', () => {
@@ -403,6 +403,6 @@ describe('RoomCalendar roster panel renders', () => {
     (f.componentInstance as unknown as { select(d: string): void }).select('2026-03-20');
     f.detectChanges();
 
-    expect(f.nativeElement.querySelector('aside')?.textContent).toContain('Nobody in this room');
+    expect(f.nativeElement.querySelector('aside')?.textContent).toContain('hostRooms.nobodyInThisRoomThat');
   });
 });

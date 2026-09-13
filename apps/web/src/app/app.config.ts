@@ -38,6 +38,7 @@ import { CountryBounds, centreOf } from '@core/geo/country-bounds';
 import { PlaceSearchBias, provideLeafletMaps, withCartoKey } from '@hostelhive/maps';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { restoreGoogleAnalyticsConsent } from '@core/google-analytics/google-analytics-consent';
+import { startScrollReset } from '@core/scroll-reset';
 
 const STAFF: Role[] = ['super-admin', 'admin', 'support', 'moderator'];
 
@@ -48,6 +49,12 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
     { provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy },
+    // Open a new page at the top. Deliberately not `withInMemoryScrolling`, which would
+    // also fire on the search page's query-param navigations — see scroll-reset.ts.
+    provideAppInitializer(() => {
+      if (typeof window === 'undefined') return; // SSR: nothing to scroll
+      startScrollReset();
+    }),
     // Base URL = API origin (paths carry their own /api or /public prefix).
     // Driven from .env → api.env.ts at build time by tools/generate-api-env.mjs.
     // TEMPORARY (testing): a tester-entered base URL from the dev-setup gate wins when set,

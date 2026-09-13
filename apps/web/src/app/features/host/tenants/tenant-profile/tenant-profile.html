@@ -273,7 +273,7 @@
             <hh-empty-state
               icon="ti-file-invoice"
               [title]="'hostTenants.noRentInvoices' | transloco"
-              message="This tenant has no rent invoices on record yet."
+              [message]="'hostTenants.thisTenantHasNoRent' | transloco"
             />
           } @else {
             <hh-data-table
@@ -294,7 +294,7 @@
             <hh-empty-state
               icon="ti-bolt"
               [title]="'hostTenants.noUtilityBills' | transloco"
-              message="No utility charges have been recorded for this tenant's room."
+              [message]="'hostTenants.noUtilityChargesHaveBeen' | transloco"
             />
           } @else {
             <hh-data-table

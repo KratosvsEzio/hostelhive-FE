@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -57,7 +58,7 @@ interface RoomsState {
 @Component({
   selector: 'hh-assign-rooms-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Button, Skeleton],
+  imports: [DatePipe, DecimalPipe, Button, Skeleton, TranslocoPipe],
   templateUrl: './assign-rooms-panel.html',
 })
 export class AssignRoomsPanel {

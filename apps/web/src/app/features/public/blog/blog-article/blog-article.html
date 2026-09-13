@@ -1,0 +1,382 @@
+@if (post(); as p) {
+  <!-- Reading progress.
+
+       Under the site header, not over it: `hh-below-header` is the same offset the console
+       sidebars use, so it clears the notch inset the header carries. `-mt-px` lands it on the
+       header's own bottom rule, so it reads as that rule filling rather than a second bar.
+       Animated with `transform` rather than `width` — the latter lays out the page on every
+       scroll frame and visibly lags the scroll it is describing. -->
+  <div class="hh-below-header pointer-events-none fixed inset-x-0 z-40 -mt-px h-0.5" aria-hidden="true">
+    <div
+      class="h-full w-full origin-left bg-brand-500 transition-transform duration-150 ease-out motion-reduce:transition-none"
+      [style.transform]="'scaleX(' + progress() / 100 + ')'"
+    ></div>
+  </div>
+
+  <article>
+    <!-- Header.
+
+         Set in ink on a light ground rather than reversed out of the category colour. The
+         saturated version looked striking and put a standfirst at roughly 2.6:1 against its
+         background — under half what WCAG asks of body text, and unreadable in daylight on a
+         phone, which is where most of this will be read. The colour survives as the rule
+         above the eyebrow, which is all it was ever doing: saying which category this is. -->
+    <header class="border-b border-ink-100 bg-gradient-to-b from-surface to-white">
+      <div class="mx-auto w-full max-w-[42rem] px-5 sm:px-8 xl:grid xl:max-w-[76rem] xl:grid-cols-[13rem_42rem_13rem] xl:justify-center xl:gap-x-12 xl:px-0 pb-12 pt-8 sm:pb-14 sm:pt-10">
+        <div class="xl:col-start-2">
+          <a
+            routerLink="/blog"
+            class="inline-flex items-center gap-1.5 rounded text-sm font-medium text-ink-500 transition hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          >
+            <i class="ti ti-arrow-left text-xs" aria-hidden="true"></i>{{ 'publicBlog.allPosts' | transloco }}
+          </a>
+
+          <span class="mt-8 block h-1 w-12 rounded-full" [class]="categoryGround(p.category)" aria-hidden="true"></span>
+          <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+            {{ categoryLabel(p.category) }}
+          </p>
+
+          <h1 class="mt-3 text-balance font-display text-[clamp(2rem,1.4rem+2.2vw,2.75rem)] font-bold leading-[1.1] tracking-tight text-ink-900">
+            <span lang="en" dir="ltr">{{ p.title }}</span>
+          </h1>
+          <p class="mt-4 text-base leading-relaxed text-ink-500 sm:text-lg" lang="en" dir="ltr">{{ p.excerpt }}</p>
+          <p class="mt-6 flex flex-wrap items-center gap-x-2.5 gap-y-2 text-xs text-ink-500">
+            <time [attr.datetime]="p.publishedAt">{{ p.publishedAt | date: 'd MMMM yyyy' }}</time>
+            <span class="h-1 w-1 rounded-full bg-ink-200" aria-hidden="true"></span>
+            <span>{{ 'publicBlog.nMinRead' | transloco: { count: p.readMinutes } }}</span>
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Three tracks above 1280px: a contents rail, the measure, and a margin the notes and
+         tables hang into. Below that it is one column and the rail is not rendered at all.
+
+         The rail exists because the article is 672px inside a 1440px window and the other
+         768px was doing nothing. Every piece here carries three to six h2s — enough that a
+         reader wants to navigate — and because the body is typed blocks rather than HTML, the
+         contents list is a `computed()` over data rather than a scrape of the DOM. -->
+    <!-- One white reading field.
+
+         The page ground is #F5F5F5, so the closing author card and the Keep-reading band were
+         both bg-surface on bg-surface and painted nothing at all, and the header gradient ran
+         to white and then stepped back to grey at its own bottom edge — a seam under a
+         hairline. Giving the body its own white settles all three at once: the gradient
+         resolves into it, the grey card sits on it, and the footer band is a band again. -->
+    <div class="bg-white">
+    <div class="mx-auto w-full max-w-[42rem] px-5 sm:px-8 xl:grid xl:max-w-[76rem] xl:grid-cols-[13rem_42rem_13rem] xl:justify-center xl:gap-x-12 xl:px-0">
+      <!-- The rail starts on the body's first line rather than 80px above it, and its rule is
+           ink-200: ink-100 against this ground is 1.14:1 and simply is not there, which left
+           the contents list floating in the margin instead of hanging off an edge. -->
+      <nav class="hidden pt-10 sm:pt-14 xl:block" [attr.aria-label]="'publicBlog.onThisPage' | transloco">
+        <div class="sticky top-24 border-s border-ink-200 ps-5">
+          <p class="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-ink-500">
+            {{ 'publicBlog.onThisPage' | transloco }}
+          </p>
+          <ul role="list" class="mt-4 space-y-2.5">
+            @for (s of toc(); track s.id) {
+              <li>
+                <!-- Active state as a rule on the rail, not as font weight. Weight alone said
+                     nothing to a screen reader, and a 400-600 swap changes the string's advance
+                     width, so a heading sitting near the wrap threshold made the whole rail jump
+                     as you scrolled past it. -->
+                <a
+                  [href]="'#' + s.id"
+                  [attr.aria-current]="activeSection() === s.id ? 'location' : null"
+                  class="-ms-5 block rounded-e border-s-2 ps-[1.125rem] text-[0.8125rem] leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                  [class]="
+                    activeSection() === s.id
+                      ? 'border-brand-500 text-ink-900'
+                      : 'border-transparent text-ink-500 hover:text-ink-900'
+                  "
+                  lang="en" dir="ltr"
+                  >{{ s.text }}</a
+                >
+              </li>
+            }
+          </ul>
+          <!-- The rail was 94% empty for the entire scroll. This is the part of it that
+               belongs to the article as a whole rather than to one section of it. -->
+          <p class="mt-6 border-t border-ink-100 pt-4 text-[0.6875rem] uppercase tracking-[0.12em] text-ink-500">
+            <span lang="en" dir="ltr">{{ categoryLabel(p.category) }}</span> · {{ 'publicBlog.nMin' | transloco: { count: p.readMinutes } }}
+          </p>
+          <a
+            [routerLink]="['/blog']"
+            class="mt-3 inline-flex items-center gap-1.5 rounded text-[0.8125rem] text-ink-500 transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          >
+            <i class="ti ti-arrow-left text-xs" aria-hidden="true"></i>{{ 'publicBlog.allPosts' | transloco }}
+          </a>
+        </div>
+      </nav>
+
+      <!-- Body.
+
+           Held to a reading measure rather than the page width. 672px at 19px Inter is about
+           68 characters, which is where a line stops costing the eye a hunt for the next one.
+           The previous 17px in the same column ran to nearly 80.
+
+           The spacing is one scale on one idiom — top margins only, never `my-*`. The mixed
+           version worked purely because adjacent margins collapse, so the first block that
+           became a flex child would silently have doubled every gap after a quote. -->
+      <div class="pb-4 pt-10 sm:pt-14" lang="en" dir="ltr">
+        @for (block of p.body; track $index) {
+          @switch (block.kind) {
+            @case ('h2') {
+              <h2
+                [id]="headingId(block.text)"
+                class="mt-12 scroll-mt-24 text-balance font-display text-[1.5rem] font-bold leading-snug tracking-tight text-ink-900 sm:text-[1.75rem]"
+              >
+                {{ block.text }}
+              </h2>
+            }
+            @case ('h3') {
+              <!-- A kicker rather than a bigger paragraph. At 18px against 19px body it was a
+                   1.06x step — a subhead you had to read to recognise as one. Smaller and in
+                   caps is unambiguous at a glance, and it leaves Poppins to mean display. -->
+              <h3 class="mt-10 font-sans text-[0.8125rem] font-bold uppercase tracking-[0.11em] text-ink-500">
+                {{ block.text }}
+              </h3>
+            }
+            @case ('p') {
+              <p class="mt-6 text-[1.0625rem] leading-[1.6] text-ink-700 sm:text-[1.1875rem] sm:leading-[1.75]"><app-blog-prose [value]="block.text" /></p>
+            }
+            @case ('ul') {
+              <!-- `role="list"` because preflight removes the marker, and WebKit drops the
+                   list role with it — a bulleted list would be announced as loose paragraphs.
+                   The marker centres itself on the first line box at any body size, rather
+                   than on a magic em offset that dies the next time the type scale moves. -->
+              <ul role="list" class="mt-6 space-y-4">
+                @for (item of block.items; track $index) {
+                  <li class="flex gap-3 text-[1.0625rem] leading-[1.6] text-ink-700 sm:text-[1.1875rem] sm:leading-[1.75]">
+                    <span class="flex h-[1.75em] w-1.5 shrink-0 items-center" aria-hidden="true">
+                      <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+                    </span>
+                    <span><app-blog-prose [value]="item" /></span>
+                  </li>
+                }
+              </ul>
+            }
+            @case ('ol') {
+              <ol role="list" class="mt-6 space-y-4">
+                @for (item of block.items; track $index) {
+                  <li class="flex gap-3.5 text-[1.0625rem] leading-[1.6] text-ink-700 sm:text-[1.1875rem] sm:leading-[1.75]">
+                    <span class="flex h-[1.75em] shrink-0 items-center" aria-hidden="true">
+                      <span class="grid h-6 w-6 place-items-center rounded-full bg-brand-50 text-xs font-semibold tabular-nums text-brand-700">
+                        {{ $index + 1 }}
+                      </span>
+                    </span>
+                    <span><app-blog-prose [value]="item" /></span>
+                  </li>
+                }
+              </ol>
+            }
+            @case ('quote') {
+              <!-- Set in Inter, not Poppins. A running quote is a reading role, and Poppins'
+                   geometric bowls at 22px read as marketing copy rather than as emphasis. -->
+              <blockquote class="mt-12 border-s-[3px] border-brand-400 ps-6 xl:-ms-8 xl:ps-8">
+                <p class="text-[1.375rem] font-medium leading-[1.35] tracking-tight text-ink-900 sm:text-[1.75rem]">
+                  {{ block.text }}
+                </p>
+                @if (block.by) {
+                  <cite class="mt-3 block text-sm not-italic text-ink-500">— {{ block.by }}</cite>
+                }
+              </blockquote>
+            }
+            @case ('note') {
+              <!-- In flow, at full measure. These ran in the right margin for one revision:
+                   208px less padding is a 23-character line, and the notes here average 205
+                   characters, so a tip became an eleven-line ribbon. Marginalia works for
+                   caption-length content; a paragraph is not that.
+
+                   The ground hangs into the right track; the copy does not. A table earns
+                   the extra width because the width buys legible columns — a paragraph
+                   cannot spend it on anything, so widening the box to the same hanging line
+                   put this text at 120 characters a line against 70 in the prose below it,
+                   in the one block whose whole job is to slow a reader down. Hence a wide
+                   tinted ground with the copy capped inside it: the right track stays
+                   occupied on the six posts that carry no table, and the measure survives.
+                   `role="note"` rather than `<aside>` — an inline tip box is not a
+                   complementary landmark. -->
+              <div
+                role="note"
+                class="mt-10 rounded-2xl border p-5 sm:p-6 xl:w-[58rem]"
+                [class]="
+                  block.tone === 'tip'
+                    ? 'border-ink-100 bg-tint-blue'
+                    : 'border-warn/40 bg-tint-cream'
+                "
+              >
+                <p class="flex max-w-full items-center gap-2 text-sm font-semibold text-ink-900 xl:max-w-[32.5rem]">
+                  <i
+                    class="ti shrink-0 text-base"
+                    [class]="block.tone === 'tip' ? 'ti-bulb text-brand-700' : 'ti-alert-triangle text-warn-700'"
+                    aria-hidden="true"
+                  ></i>
+                  {{ block.title }}
+                </p>
+                <p class="mt-2 max-w-full text-base leading-relaxed text-ink-600 xl:max-w-[32.5rem]">
+                  <app-blog-prose [value]="block.text" />
+                </p>
+              </div>
+            }
+            @case ('figure') {
+              <!-- A photograph hangs into the right track, because this is the case the
+                   hanging line is for: width buys a picture something, exactly as it buys a
+                   table legible columns. The caption does not follow it out there — it is
+                   prose, and it stays on the measure with the rest of the prose.
+
+                   width and height are on the element so the page does not reflow as each
+                   image lands, which on a phone is the difference between reading and
+                   chasing the paragraph down the screen.
+
+                   Three renditions, because `sizes` alone is inert: without a `srcset` to
+                   choose from, every device downloads the 1200px original, and a 375px phone
+                   was pulling nine times the pixels it could draw. 480 covers a phone at 1x,
+                   800 a phone at 2x, 1200 the 928px desktop column.
+
+                   The first figure loads eagerly: it sits just below the fold, so deferring
+                   it guarantees the reader's first scroll lands on a grey rectangle. -->
+              <figure class="mt-10 xl:w-[58rem]">
+                <img
+                  [src]="block.src"
+                  [srcset]="srcSet(block.src)"
+                  [alt]="block.alt"
+                  [width]="figureWidth"
+                  [height]="figureHeight"
+                  sizes="(min-width: 1280px) 928px, (min-width: 640px) 90vw, 100vw"
+                  [attr.loading]="block.src === leadFigure() ? 'eager' : 'lazy'"
+                  [attr.fetchpriority]="block.src === leadFigure() ? 'high' : null"
+                  decoding="async"
+                  class="aspect-[3/2] w-full rounded-2xl bg-ink-50 object-cover"
+                />
+                @if (block.caption) {
+                  <figcaption class="mt-2.5 text-sm leading-relaxed text-ink-500 xl:max-w-[34rem]">
+                    {{ block.caption }}
+                  </figcaption>
+                }
+              </figure>
+            }
+            @case ('table') {
+              <!-- The chrome sits on a wrapper and the table itself stays square: under
+                   `border-collapse: collapse` a radius on the table does not clip its cells,
+                   so the grey header would poke out of both top corners of the ring.
+
+                   `whitespace-normal` because global.css sets `nowrap` on every th and td in
+                   the app — right for a console data grid, catastrophic for a prose table
+                   whose cells are sentences. -->
+              <div class="mt-10 xl:w-[58rem]">
+                <div class="overflow-x-auto overflow-y-hidden rounded-2xl ring-1 ring-ink-100">
+                  <table class="w-full min-w-[34rem] text-start text-sm">
+                    <thead class="bg-ink-50 text-[11px] uppercase tracking-wider text-ink-500">
+                      <tr>
+                        @for (h of block.head; track $index) {
+                          <th scope="col" class="whitespace-normal px-4 py-3 text-start font-semibold">
+                            {{ h }}
+                          </th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink-100 bg-white tabular-nums">
+                      @for (row of block.rows; track $index) {
+                        <tr>
+                          @for (cell of row; track $index) {
+                            <td class="whitespace-normal px-4 py-3.5 align-top leading-relaxed text-ink-700 first:font-medium first:text-ink-900">
+                              {{ cell }}
+                            </td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <!-- 544px of table inside a 335px measure, wrapped in a ring so it looks
+                     complete. The last column carries the advice and is off-screen. -->
+                <p class="mt-2 flex items-center gap-1.5 text-xs text-ink-500 sm:hidden">
+                  <i class="ti ti-arrows-horizontal text-sm" aria-hidden="true"></i>Swipe the
+                  table to see every column
+                </p>
+              </div>
+            }
+          }
+        }
+
+        <!-- Closing note. Says who wrote it and points at the thing the article is for. -->
+        <div class="mt-16 flex flex-wrap items-center gap-4 rounded-2xl bg-surface px-6 py-5">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-sm font-semibold text-white">
+            HH
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-ink-900">{{ 'publicBlog.theHostelhiveTeam' | transloco }}</p>
+            <p class="mt-0.5 text-sm text-ink-500">
+              We verify listings across Pakistan and write what we learn doing it.
+            </p>
+          </div>
+          <a
+            routerLink="/search"
+            class="inline-flex items-center gap-1.5 rounded-full border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700 transition hover:border-ink-400 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          >
+            Browse hostels<i class="ti ti-arrow-right text-sm" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+    </div>
+
+    <!-- Keep reading.
+
+         A stacked list on the article's own measure, not a third card grid at twice the
+         width. The reader has tracked one left margin the whole way down; moving it 240px for
+         a footer reads as a different page stapled on. -->
+    @if (related().length) {
+      <section class="mt-16 border-t border-ink-100 bg-surface">
+        <div class="mx-auto w-full max-w-[42rem] px-5 sm:px-8 xl:grid xl:max-w-[76rem] xl:grid-cols-[13rem_42rem_13rem] xl:justify-center xl:gap-x-12 xl:px-0 py-14 sm:py-16">
+          <div class="xl:col-start-2">
+            <h2 class="font-display text-lg font-bold tracking-tight text-ink-900">{{ 'publicBlog.keepReading' | transloco }}</h2>
+            <div class="mt-6 divide-y divide-ink-100 border-y border-ink-100">
+              @for (r of related(); track r.slug) {
+                <a
+                  [routerLink]="['/blog', r.slug]"
+                  class="group relative flex items-baseline gap-4 rounded-lg py-5 ps-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                >
+                  <span
+                    class="absolute inset-y-0 start-0 w-0.5 origin-top scale-y-0 transition-transform duration-300 ease-out group-hover:scale-y-100 motion-reduce:transition-none"
+                    [class]="categoryGround(r.category)"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block font-display text-[1.0625rem] font-semibold leading-snug tracking-tight text-ink-900 transition-colors group-hover:text-brand-700">
+                      {{ r.title }}
+                    </span>
+                    <span class="mt-1 block text-xs text-ink-500">
+                      <span lang="en" dir="ltr">{{ categoryLabel(r.category) }}</span> · {{ 'publicBlog.nMinRead' | transloco: { count: r.readMinutes } }}
+                    </span>
+                  </span>
+                  <i
+                    class="ti ti-arrow-right shrink-0 text-sm text-ink-400 transition-[transform,color] duration-300 group-hover:translate-x-0.5 group-hover:text-brand-700 motion-reduce:transform-none"
+                    aria-hidden="true"
+                  ></i>
+                </a>
+              }
+              </div>
+          </div>
+        </div>
+      </section>
+    }
+  </article>
+} @else {
+  <!-- An unknown slug. Kept useful rather than blank: the way out is the archive. -->
+  <div class="mx-auto max-w-[42rem] px-5 py-24 sm:px-8 sm:py-32">
+    <h1 class="font-display text-2xl font-bold tracking-tight text-ink-900">
+      {{ 'publicBlog.weCouldnTFindThatPost' | transloco }}
+    </h1>
+    <p class="mt-3 text-[1.0625rem] leading-relaxed text-ink-600 sm:text-[1.1875rem]">
+      {{ 'publicBlog.theLinkMayBeOld' | transloco }}
+      <a
+        routerLink="/blog"
+        class="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+        >{{ 'publicBlog.blogHomePage' | transloco }}</a
+      >
+    </p>
+  </div>
+}

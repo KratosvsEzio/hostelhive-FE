@@ -55,7 +55,7 @@
             <dd class="text-xs text-ink-500">{{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</dd>
           </div>
           <div class="bg-white px-4 py-3">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Asked for</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.askedFor' | transloco }}</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">{{ askedFor() }}</dd>
             <dd class="truncate text-xs text-ink-500">{{ askedForDetail() }}</dd>
           </div>
@@ -113,7 +113,7 @@
                 >
               }
             } @else {
-              <p class="mt-1 text-sm text-ink-400">No contact details on this booking</p>
+              <p class="mt-1 text-sm text-ink-400">{{ 'hostBookings.noContactDetailsOnThis' | transloco }}</p>
             }
           </div>
           <div class="bg-white px-4 py-3">

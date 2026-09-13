@@ -55,7 +55,7 @@
     <hh-empty-state
       icon="ti-receipt-off"
       [title]="'hostUtilities.noUtilityBillsYet' | transloco"
-      message="Add a utility bill to start tracking usage and charges."
+      [message]="'hostUtilities.addAUtilityBillTo' | transloco"
     >
       <a *hhHasPermission="'host:UtilityBill:create'" hh-button color="primary" size="sm" routerLink="add">
         <i class="ti ti-plus"></i>{{ 'hostUtilities.addUtilityBill' | transloco }}

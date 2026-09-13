@@ -407,14 +407,11 @@
     (cancel)="cancelRemoveRt()"
   >
     @if (rtLoadFailed()) {
-      <p class="text-danger">Couldn't check which rooms use this type. Try again.</p>
+      <p class="text-danger">{{ 'hostelForm.couldnTCheckWhichRooms' | transloco }}</p>
     } @else if (rtRooms() === null) {
-      <p>Finding the rooms built on <span class="font-medium text-ink-700">{{ rt.name }}</span>…</p>
+      <p>{{ 'hostelForm.findingTheRoomsBuiltOn' | transloco: { name: rt.name } }}</p>
     } @else if (!rtNeedsMoves()) {
-      <p>
-        No rooms are built on <span class="font-medium text-ink-700">{{ rt.name }}</span>, so
-        nothing else changes. It is removed when you save.
-      </p>
+      <p>{{ 'hostelForm.noRoomsAreBuiltOn' | transloco: { name: rt.name } }}</p>
     } @else if (rtDeleteBlocked()) {
       <p>
         {{ rtRooms()!.length }} {{ rtRooms()!.length === 1 ? 'room is' : 'rooms are' }} built on
@@ -430,10 +427,10 @@
 
       <!-- Fills the rows in; it does not move anything on its own. -->
       <div class="mb-3 rounded-xl bg-surface p-2.5">
-        <span class="mb-1 block text-xs font-medium text-ink-700">Move all rooms to</span>
+        <span class="mb-1 block text-xs font-medium text-ink-700">{{ 'hostelForm.moveAllRoomsTo' | transloco }}</span>
         <hh-dropdown
           variant="field"
-          placeholder="Select a room type"
+          [placeholder]="'hostelForm.selectARoomType' | transloco"
           [options]="rtReplacementOptions()"
           [value]="rtBulkTarget()"
           (valueChange)="onBulkTargetPick($event)"
@@ -453,7 +450,7 @@
                 <hh-dropdown
                   variant="field"
                   size="sm"
-                  placeholder="Room type"
+                  [placeholder]="'common.roomType' | transloco"
                   [options]="rtReplacementOptions()"
                   [value]="room.targetId"
                   [disabled]="room.status === 'done' || room.status === 'saving'"
