@@ -502,7 +502,14 @@ function buildAddress(h: HostelDetail): string | null {
   return parts.length ? parts.join(', ') : null;
 }
 
-/** Attachments → review photo grid; `is_primary` (else banner URL, else first image) marks primary. */
+/**
+ * Attachments → review photo grid; `is_primary` (else banner URL, else first image) marks primary.
+ *
+ * `decision` carries the attachment's **stored** status. Every photo used to arrive `pending`
+ * whatever the server held, so a rejection recorded in an earlier review came back looking
+ * untouched: the moderator who returned to the listing saw a photo somebody had already turned
+ * down, sitting there as though nothing had happened, and could only reject it again.
+ */
 function toReviewPhotos(h: HostelDetail): ReviewPhoto[] {
   const bannerUrl = (h.banner ?? []).find((b) => b?.url)?.url ?? null;
   const hasPrimaryFlag = (h.attachments ?? []).some((a) => a?.is_primary);
@@ -513,7 +520,7 @@ function toReviewPhotos(h: HostelDetail): ReviewPhoto[] {
     .map((a, i) => ({
       id: String(a.id ?? `att-${i}`),
       url: a.url,
-      decision: 'pending' as PhotoDecision,
+      decision: (a.status === 'rejected' ? 'rejected' : 'pending') as PhotoDecision,
       primary: hasPrimaryFlag
         ? !!a.is_primary
         : bannerUrl

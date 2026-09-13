@@ -104,3 +104,67 @@ describe('ModerationApi.attachmentLabels', () => {
     expect(labels({ success: true })).toEqual([]);
   });
 });
+
+/**
+ * The stored status of a photo, carried through to the review grid.
+ *
+ * Every attachment used to be mapped `pending` whatever the server held, so a rejection
+ * recorded in an earlier review came back looking untouched. The rejection persisted; the
+ * screen never looked. A moderator returning to the listing saw a photo somebody had already
+ * turned down sitting there as an ordinary photo, and the only thing left to do with it was
+ * reject it again.
+ *
+ * Found against the live API, not here — the tests written when rejections were first made to
+ * persist all asserted the write, and none asserted the read.
+ */
+describe('ModerationApi.getById — a photo the server has rejected', () => {
+  function hostelWith(statuses: string[]): unknown {
+    return {
+      hostel: {
+        id: 1,
+        name: 'Ever Care',
+        attachments: statuses.map((status, i) => ({
+          id: `a${i + 1}`,
+          url: `https://cdn.test/a${i + 1}.jpg`,
+          status,
+          content_type: 'image/jpeg',
+        })),
+      },
+    };
+  }
+
+  function decisions(statuses: string[]): string[] {
+    const { api } = setUp(hostelWith(statuses));
+    let out: string[] = [];
+    api.getById('1').subscribe((d) => {
+      out = d.photos.map((p) => p.decision);
+    });
+    return out;
+  }
+
+  it('marks it rejected rather than pending', () => {
+    expect(decisions(['active', 'rejected', 'active'])).toEqual([
+      'pending',
+      'rejected',
+      'pending',
+    ]);
+  });
+
+  it('leaves a live photo pending', () => {
+    expect(decisions(['active', 'active'])).toEqual(['pending', 'pending']);
+  });
+
+  /** No status at all is the older serializer; it is not evidence of a rejection. */
+  it('treats a missing status as pending rather than guessing', () => {
+    const { api } = setUp({
+      hostel: {
+        id: 1,
+        attachments: [{ id: 'a1', url: 'https://cdn.test/a1.jpg', content_type: 'image/jpeg' }],
+      },
+    });
+    let out: string[] = [];
+    api.getById('1').subscribe((d) => (out = d.photos.map((p) => p.decision)));
+
+    expect(out).toEqual(['pending']);
+  });
+});

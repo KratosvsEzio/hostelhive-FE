@@ -510,3 +510,110 @@ describe('Review · a rejected photo reaches the server', () => {
     expect(api.markAsActiveCalls).toBe(1);
   });
 });
+
+/**
+ * A rejection the server already holds, read back.
+ *
+ * Found by checking the live API rather than by any test here, which is the part worth
+ * keeping: the previous change made the rejection *persist*, and every test written for it
+ * asserted the write. None asserted the read, so none noticed that the screen never looked.
+ * Rejecting a photo and coming back showed it sitting there untouched — the moderator's
+ * decision was recorded and invisible, and the only thing left to do with it was reject it
+ * again.
+ *
+ * Two traps sit either side of the fix. Seed too little and the grid lies; seed carelessly
+ * and a freshly loaded page reports itself as having unsaved changes, whereupon Update sends
+ * rejections the server already has.
+ */
+describe('Review · rejections the server already holds', () => {
+  /**
+   * The component's half of the fix. Whether `decision` arrives set correctly is the mapper's
+   * half, and is asserted in `moderation-api.spec.ts` against the wire shape — the two meet at
+   * `ReviewDetail.photos`, so each is tested on its own side of it.
+   */
+  async function loadWith(decisions: ('pending' | 'rejected')[]) {
+    const photos = decisions.map((decision, i) => ({
+      id: `a${i + 1}`,
+      url: `https://cdn.test/a${i + 1}.jpg`,
+      decision,
+      primary: i === 0,
+    }));
+    // Complete on purpose. `save` returns early on a validation error, so on a half-filled
+    // listing "nothing was sent" is true however the code behaves — the assertion below would
+    // hold against a version that re-sends every rejection it reads. It did, until this
+    // fixture was filled in: seeding the map but not what had been sent left that test green.
+    const base = detail(
+      emptyListing({
+        name: 'Ever Care',
+        city: 'Lahore',
+        description: 'A clean, quiet hostel a short walk from the university.',
+        gender_type: 'boys',
+        property_type: 'house',
+        primary_phone: '+923001234567',
+        latitude: 31.5204,
+        longitude: 74.3587,
+        billing_frequency: 'month',
+        room_types: [
+          {
+            id: 'rt1',
+            name: 'Double sharing',
+            capacity: 2,
+            price: 10000,
+            discounted_price: 0,
+            is_discountable: false,
+            is_bookable: false,
+            occupancy_type: 'shared',
+          },
+        ],
+        attachments: photos.map((p) => ({ id: p.id, url: p.url })),
+      } as unknown as Partial<HostelDetail>),
+    );
+    const fixture = await render({ ...base, photos } as unknown as ReviewDetail);
+    return fixture.componentInstance as unknown as {
+      rejectedPhotos(): ReadonlyMap<string, string>;
+      dirty(): boolean;
+      save(): void;
+    };
+  }
+
+  it('shows a photo the server has rejected as rejected', async () => {
+    const c = await loadWith(['pending', 'rejected', 'pending']);
+
+    expect([...c.rejectedPhotos().keys()]).toEqual(['a2']);
+  });
+
+  it('leaves a listing whose photos are all live with nothing rejected', async () => {
+    const c = await loadWith(['pending', 'pending']);
+
+    expect(c.rejectedPhotos().size).toBe(0);
+  });
+
+  /**
+   * The first trap. A rejection already on the server is not an unsaved change, and a page
+   * that reports itself dirty the moment it loads offers an Update the moderator never asked
+   * for.
+   */
+  it('does not report a freshly loaded page as having unsaved changes', async () => {
+    const c = await loadWith(['pending', 'rejected']);
+
+    expect(c.dirty()).toBe(false);
+  });
+
+  /** The second trap: Update must not send again what the server already holds. */
+  it('does not re-send a rejection it only read', async () => {
+    const c = await loadWith(['pending', 'rejected']);
+
+    c.save();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(api.rejected).toEqual([]);
+  });
+
+  /** The badge reads "Rejected · {reason}", so the seeded value is copy, not a token. */
+  it('labels it as an earlier decision rather than with an internal token', async () => {
+    const c = await loadWith(['rejected']);
+
+    expect(c.rejectedPhotos().get('a1')).not.toBe('flagged');
+    expect(c.rejectedPhotos().get('a1')).toMatch(/earlier/i);
+  });
+});

@@ -249,6 +249,17 @@ export class Review {
       this.propertyType.set(d.propertyType);
       this.genderType.set(d.genderType);
       this.photos.set(d.photos.map((p) => ({ ...p })));
+      // Rejections the server already holds, so the grid shows them as rejected rather than
+      // as ordinary photos. Seeded into `rejectionsSent` as well as `rejectedPhotos`: they
+      // are already recorded, so they must not make a freshly loaded page read as unsaved,
+      // and Update must not send them a second time. Read off the local `d`, never off the
+      // `photos` signal just written — reading a signal here would subscribe this effect to
+      // it and re-seed every field from `initialData` on the next edit.
+      const alreadyRejected = d.photos.filter((p) => p.decision === 'rejected');
+      this.rejectedPhotos.set(
+        new Map(alreadyRejected.map((p) => [p.id, p.rejectReason ?? 'in an earlier review'])),
+      );
+      this.rejectionsSent.set(new Set(alreadyRejected.map((p) => p.id)));
       this.photoLabelMap.set(
         new Map(
           d.photos.map((p) => [
