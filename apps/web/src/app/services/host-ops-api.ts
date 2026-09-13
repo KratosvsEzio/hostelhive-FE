@@ -423,6 +423,18 @@ function toInvoice(rb: ApiRenterBillTop): Invoice {
  */
 export interface InvoiceBody {
   renter_id: string | number;
+  /**
+   * The bill's polymorphic owner, which for a renter bill is the renter itself — so
+   * `billable_id` repeats `renter_id` rather than saying anything new.
+   *
+   * Required rather than optional, despite being a duplicate, because the record validates
+   * `billable` on create and the controller does not derive it from `renter_id`: a POST
+   * without this pair is rejected with 422 `Billable must exist`. Optional would let a
+   * caller omit it and find that out from the server; required makes it a compile error.
+   * Harmless on update, where the row already has a billable and this restates it.
+   */
+  billable_type: 'Renter';
+  billable_id: string | number;
   room_id?: string | number;
   amount: number;
   issued_date: string;
