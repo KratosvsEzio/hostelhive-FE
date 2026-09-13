@@ -88,18 +88,48 @@ export function hostNav(
   );
 }
 
+/** One destination in the bottom tab bar. `suffix` joins the hostel base, as in {@link hostNav}. */
+export interface TabBarEntry {
+  label: string;
+  icon: string;
+  suffix: string;
+}
+
 /**
- * Where the bottom tab bar already goes.
+ * What the bottom tab bar carries, for this hostel.
  *
- * The More page lists what the tab bar does not, so these are the entries it drops. Suffixes
- * rather than full links, since the hostel id is in every one.
+ * Four fixed destinations plus More, and the third slot is the one that moves: a month-billed
+ * hostel houses tenants, a nightly one turns arrivals over, and only one of those two can
+ * have the tab. The bar was a fixed five, so a backpacker hostel got Tenants — a page its
+ * own route guard lets through but which is empty by construction — while Bookings, the
+ * thing its day is made of, sat two taps away under More.
+ *
+ * Nightly on an unknown billing cycle, matching the Bookings rule in {@link hostNav}:
+ * `bookingsGate` lets an unknown hostel through, and whichever page loses the slot is still
+ * one tap away under More — see {@link tabBarSuffixes}.
  */
-export const TAB_BAR_SUFFIXES: readonly string[] = [
-  '/overview',
-  '/rooms',
-  '/tenants',
-  '/invoices',
-];
+export function hostTabBar(opts: { monthlyBilled: boolean }): TabBarEntry[] {
+  return [
+    { label: 'common.overview', icon: 'ti-layout-dashboard', suffix: '/overview' },
+    { label: 'common.rooms', icon: 'ti-bed', suffix: '/rooms' },
+    opts.monthlyBilled
+      ? { label: 'common.tenants', icon: 'ti-users', suffix: '/tenants' }
+      : { label: 'common.bookings', icon: 'ti-calendar', suffix: '/bookings' },
+    { label: 'common.invoices', icon: 'ti-file-invoice', suffix: '/invoices' },
+  ];
+}
+
+/**
+ * Where the bottom tab bar already goes, as suffixes.
+ *
+ * The More page lists what the tab bar does not, so these are the entries it drops. Derived
+ * from {@link hostTabBar} rather than written out beside it: the two were separate lists, and
+ * a swap in one without the other either hides a page from both surfaces — unreachable on a
+ * phone, where there is no sidebar — or shows it on both.
+ */
+export function tabBarSuffixes(opts: { monthlyBilled: boolean }): readonly string[] {
+  return hostTabBar(opts).map((t) => t.suffix);
+}
 
 /** Splits the nav at its divider: hostel sections, then the billing ones below it. */
 export function splitNav(entries: NavEntry[]): { hostel: NavEntry[]; account: NavEntry[] } {

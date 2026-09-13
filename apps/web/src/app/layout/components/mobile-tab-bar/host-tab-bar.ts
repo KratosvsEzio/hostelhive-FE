@@ -8,10 +8,11 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { HostPropertyStore } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { hostTabBar } from '@layout/host-shell/host-nav';
 
 /**
  * Bottom tab bar for the host console on the mobile app (design boards 42–44):
- * Overview · Rooms · Tenants · Invoices · More. Rendered by HostShell when
+ * Overview · Rooms · Tenants-or-Bookings · Invoices · More. Rendered by HostShell when
  * `MobileApp.isMobile` is true — which is any viewport under 768px, not only the
  * packaged app, and at that width HostShell renders no sidebar at all.
  *
@@ -19,6 +20,10 @@ import { LocaleLink } from '@core/i18n/locale-link';
  * sidebar destination missing from both is unreachable except by typing its URL. That is
  * what happened to Bookings, which sat in neither list until it was added to /more. When
  * adding a destination to the sidebar, give it a home here or there in the same change.
+ *
+ * The destinations come from `hostTabBar`, which `/more` also reads to know what to leave
+ * out — so the two cannot drift into hiding a page between them. They were separate lists
+ * until the third slot started moving with the billing cycle.
  */
 @Component({
   selector: 'app-host-tab-bar',
@@ -46,18 +51,11 @@ import { LocaleLink } from '@core/i18n/locale-link';
       [attr.aria-label]="'a11y.hostConsole' | transloco"
     >
       <div class="flex px-1 pt-1.5">
-        <a [routerLink]="base() + '/overview'" routerLinkActive="on" class="tab">
-          <i class="ti ti-layout-dashboard text-xl" aria-hidden="true"></i>{{ 'common.overview' | transloco }}
-        </a>
-        <a [routerLink]="base() + '/rooms'" routerLinkActive="on" class="tab">
-          <i class="ti ti-bed text-xl" aria-hidden="true"></i>{{ 'common.rooms' | transloco }}
-        </a>
-        <a [routerLink]="base() + '/tenants'" routerLinkActive="on" class="tab">
-          <i class="ti ti-users text-xl" aria-hidden="true"></i>{{ 'common.tenants' | transloco }}
-        </a>
-        <a [routerLink]="base() + '/invoices'" routerLinkActive="on" class="tab">
-          <i class="ti ti-file-invoice text-xl" aria-hidden="true"></i>{{ 'common.invoices' | transloco }}
-        </a>
+        @for (t of tabs(); track t.suffix) {
+          <a [routerLink]="base() + t.suffix" routerLinkActive="on" class="tab">
+            <i class="ti text-xl" [class]="t.icon" aria-hidden="true"></i>{{ t.label | transloco }}
+          </a>
+        }
         <a [routerLink]="base() + '/more'" routerLinkActive="on" class="tab">
           <i class="ti ti-dots text-xl" aria-hidden="true"></i>{{ 'common.more' | transloco }}
         </a>
@@ -69,5 +67,9 @@ export class HostTabBar {
   private readonly propertyStore = inject(HostPropertyStore);
   protected readonly base = computed(
     () => `/host/${this.propertyStore.selected()}`,
+  );
+
+  protected readonly tabs = computed(() =>
+    hostTabBar({ monthlyBilled: this.propertyStore.isMonthlyBilled() }),
   );
 }
