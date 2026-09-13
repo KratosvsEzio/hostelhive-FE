@@ -28,6 +28,7 @@ import {
   StaffRowPermissions,
   StaffRowViewer,
   applyDemotions,
+  applySaved,
   canActOnStaffRow,
   isOwnStaffRecord,
 } from './staff-row-actions';
@@ -205,11 +206,38 @@ export class HostTeam {
    */
   private readonly demoted = signal<ReadonlySet<string>>(new Set());
 
+  /**
+   * Staff saved in this session, applied over the fetched page.
+   *
+   * `StaffApi.create` and `update` both answer with the persisted record, so the drawer can
+   * hand the row straight back and the page has nothing left to fetch. Cleared by
+   * {@link reloadStaff} alongside the other overlays.
+   */
+  private readonly saved = signal<readonly Staff[]>([]);
+
+  /** Rows added locally, added to the server's `total`. See {@link saved}. */
+  private readonly totalDelta = signal(0);
+
+  /** Per-status adjustments to the fetched aggs, keyed by slug. See {@link shiftAggs}. */
+  private readonly aggDelta = signal<ReadonlyMap<string, number>>(new Map());
+
   protected readonly staffRecords = computed(() =>
-    applyDemotions(this.staffState().data?.items ?? [], this.demoted()),
+    applySaved(
+      applyDemotions(this.staffState().data?.items ?? [], this.demoted()),
+      this.saved(),
+    ),
   );
-  protected readonly staffTotal = computed(() => this.staffState().data?.total ?? 0);
-  protected readonly staffAggs = computed(() => this.staffState().data?.aggs ?? []);
+  protected readonly staffTotal = computed(
+    () => (this.staffState().data?.total ?? 0) + this.totalDelta(),
+  );
+  protected readonly staffAggs = computed(() => {
+    const aggs = this.staffState().data?.aggs ?? [];
+    const delta = this.aggDelta();
+    if (!delta.size) return aggs;
+    return aggs.map((a) =>
+      delta.has(a.slug) ? { ...a, count: Math.max(0, a.count + delta.get(a.slug)!) } : a,
+    );
+  });
 
   /**
    * Status chips for `hh-filter-chips`, matching the rooms/tenants pages. "All" is the empty
@@ -325,9 +353,42 @@ export class HostTeam {
     this.staffEditing.set(null);
   }
 
-  protected onStaffSaved(): void {
+  /**
+   * The drawer hands back the persisted record, so the list needs no second request.
+   *
+   * This used to close the form and reload the page. The reload had nothing to tell us that
+   * the response had not already said — it cost a spinner and the host's place in the table
+   * immediately after being told the save worked.
+   */
+  protected onStaffSaved(persisted: Staff): void {
+    const before = this.staffRecords().find((s) => s.id === persisted.id) ?? null;
+    this.saved.update((list) => [...list.filter((s) => s.id !== persisted.id), persisted]);
+    this.shiftAggs(before, persisted);
     this.closeStaffForm();
-    this.reloadStaff();
+  }
+
+  /**
+   * Moves the status-tab counts and the total to match a locally-applied save.
+   *
+   * Without it the list would be right and everything describing it wrong — "Active (5)"
+   * still reading 5 after a sixth was added, and the footer counting a page that now holds
+   * one more row. That is a worse state than either being stale alone, because the two
+   * disagree on screen.
+   *
+   * Arithmetic on what the last fetch reported rather than a recount: the page holds one
+   * page of staff and the aggs describe all of them, so counting what is visible would be
+   * counting the wrong set.
+   */
+  private shiftAggs(before: Staff | null, after: Staff): void {
+    if (before?.status === after.status) return;
+    this.aggDelta.update((map) => {
+      const next = new Map(map);
+      if (before) next.set(before.status, (next.get(before.status) ?? 0) - 1);
+      next.set(after.status, (next.get(after.status) ?? 0) + 1);
+      return next;
+    });
+    // Only a create adds a person; an edit moves an existing one between tabs.
+    if (!before) this.totalDelta.update((n) => n + 1);
   }
 
   // ── List ──────────────────────────────────────────────────────────────────
@@ -343,9 +404,14 @@ export class HostTeam {
 
   protected reloadStaff(): void {
     this.refetchDelay.track(STAFF_PATH);
-    // The incoming page is the server's own answer, so any local patch is now redundant at
-    // best and contradicted at worst.
+    // The incoming page is the server's own answer, so every local patch is now redundant at
+    // best and contradicted at worst. All four go together: the rows, the demotions, and the
+    // two counts that describe them — clearing a subset leaves the list and its totals
+    // disagreeing on screen.
     this.demoted.set(new Set());
+    this.saved.set([]);
+    this.totalDelta.set(0);
+    this.aggDelta.set(new Map());
     this.staffRefresh.update((n) => n + 1);
   }
 

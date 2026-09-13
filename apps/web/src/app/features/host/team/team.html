@@ -95,7 +95,7 @@
       [hostelId]="propertyId()"
       [editing]="staffEditing()"
       (closed)="closeStaffForm()"
-      (saved)="onStaffSaved()"
+      (saved)="onStaffSaved($event)"
     />
   }
 </app-dashboard-layout>

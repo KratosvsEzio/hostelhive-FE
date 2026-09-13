@@ -1,6 +1,7 @@
 import { Staff } from '@hostelhive/data-access';
 import {
   applyDemotions,
+  applySaved,
   StaffRowPermissions,
   StaffRowViewer,
   canActOnStaffRow,
@@ -165,5 +166,53 @@ describe('applyDemotions', () => {
   it('ignores ids that are not on the page', () => {
     const items = [cook];
     expect(applyDemotions(items, new Set(['gone']))).toBe(items);
+  });
+});
+
+/**
+ * Local application of a saved record.
+ *
+ * `StaffApi.create` and `update` both answer with the persisted `Staff`, so the page has the
+ * row a refetch would have gone to read. These pin that an edit corrects in place, a create
+ * appends, and neither churns a reference it did not need to.
+ */
+describe('applySaved', () => {
+  const a = staff({ id: 'a', name: 'Warden A' });
+  const b = staff({ id: 'b', name: 'Cook B' });
+
+  it('replaces a row the page already has', () => {
+    const edited = { ...a, name: 'Warden A (renamed)' };
+    const out = applySaved([a, b], [edited]);
+    expect(out.map((s) => s.name)).toEqual(['Warden A (renamed)', 'Cook B']);
+  });
+
+  it('appends a row the page has never seen', () => {
+    const fresh = staff({ id: 'c', name: 'Guard C' });
+    const out = applySaved([a, b], [fresh]);
+    expect(out.map((s) => s.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  // Replace-or-append is decided by the page, not a flag — so a create that somehow comes
+  // back with a known id corrects that row instead of doubling it.
+  it('does not duplicate when a create returns a known id', () => {
+    const out = applySaved([a, b], [{ ...a, name: 'Same row' }]);
+    expect(out.length).toBe(2);
+  });
+
+  it('handles a replace and an append together', () => {
+    const out = applySaved([a, b], [{ ...b, name: 'Cook B2' }, staff({ id: 'c' })]);
+    expect(out.map((s) => s.id)).toEqual(['a', 'b', 'c']);
+    expect(out[1].name).toBe('Cook B2');
+  });
+
+  it('returns the same array when nothing was saved', () => {
+    const items = [a, b];
+    expect(applySaved(items, [])).toBe(items);
+  });
+
+  // The fetched rows belong to the list signal and are replaced wholesale on the next load.
+  it('does not mutate the fetched rows', () => {
+    applySaved([a], [{ ...a, name: 'changed' }]);
+    expect(a.name).toBe('Warden A');
   });
 });

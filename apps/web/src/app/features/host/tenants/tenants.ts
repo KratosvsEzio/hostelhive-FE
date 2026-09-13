@@ -37,7 +37,6 @@ import {
 
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant } from '@hostelhive/data-access';
-import { RefetchDelay } from '@core/refetch-delay';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -92,7 +91,6 @@ const TONES = ['sky', 'cream', 'mint'] as const;
 export class Tenants {
   private readonly api = inject(HostOpsApi);
   private readonly store = inject(HostPropertyStore);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -175,6 +173,19 @@ export class Tenants {
       : base;
   });
 
+  /**
+   * Drops everything patched in since the last fetch, because a new one is coming.
+   *
+   * The two have to go together. `local` holds the rows and `totalDelta` the count that
+   * describes them, so clearing one alone leaves a footer counting rows that are no longer
+   * there, or a list whose additions the footer has forgotten. One method so a future caller
+   * cannot reset half of it.
+   */
+  private clearOverlay(): void {
+    this.local.set(null);
+    this.totalDelta.set(0);
+  }
+
   protected readonly filtered = computed<Tenant[]>(() => {
     const data = this.state().data ?? [];
     const deleted = this.deletedIds();
@@ -250,7 +261,7 @@ export class Tenants {
     if (!hostelId || !dispositionId) return;
     this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (updated) => this.applyUpdated(updated) });
+      .subscribe({ next: (updated) => this.applySaved(updated) });
   }
 
   protected setActive(t: Tenant): void {
@@ -260,7 +271,7 @@ export class Tenants {
     if (!hostelId || !dispositionId) return;
     this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (updated) => this.applyUpdated(updated) });
+      .subscribe({ next: (updated) => this.applySaved(updated) });
   }
 
   protected reinvite(t: Tenant): void {
@@ -421,14 +432,14 @@ export class Tenants {
   protected setSearch(v: string): void {
     this.search.set(v);
     this.page.set(1);
-    this.local.set(null);
+    this.clearOverlay();
   }
 
   protected setFilter(f: string): void {
     if (f === this.statusFilter()) return;
     this.statusFilter.set(f);
     this.page.set(1);
-    this.local.set(null);
+    this.clearOverlay();
     void this.router.navigate([], {
       queryParams: { status: f === 'all' ? null : f },
       queryParamsHandling: 'merge',
@@ -437,12 +448,12 @@ export class Tenants {
   }
 
   protected goToPage(n: number): void {
-    this.local.set(null);
+    this.clearOverlay();
     this.page.set(n);
   }
 
   protected retry(): void {
-    this.local.set(null);
+    this.clearOverlay();
     this.page.set(1);
     this.refresh.update((n) => n + 1);
   }

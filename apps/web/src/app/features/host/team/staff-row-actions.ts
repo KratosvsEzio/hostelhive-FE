@@ -93,3 +93,27 @@ export function applyDemotions<T extends Staff>(
   // list that did not change does not look changed to everything downstream.
   return changed ? next : items;
 }
+
+/**
+ * The fetched page with locally-saved records applied — replaced in place, or appended.
+ *
+ * `StaffApi.create` and `update` both answer with the persisted `Staff`, so a save already
+ * knows the row a refetch would have gone to read. Replace-or-append is decided by whether
+ * the id is on the page, not by a flag from the drawer: it is the same question, and asking
+ * the list means a create arriving with a known id corrects that row instead of doubling it.
+ *
+ * An appended row lands last rather than in the server's sort position — the one thing this
+ * cannot reproduce. The trade is deliberate: someone who just filled in a staff member is
+ * looking for confirmation it saved, and a row appearing where they are already looking says
+ * that better than a reload that moves the whole table.
+ *
+ * Returns the original array when there is nothing to apply, so an untouched list does not
+ * hand every downstream reader a new reference.
+ */
+export function applySaved<T extends Staff>(items: T[], saved: readonly T[]): T[] {
+  if (!saved.length) return items;
+  const byId = new Map(saved.map((s) => [s.id, s]));
+  const next = items.map((row) => byId.get(row.id) ?? row);
+  const added = saved.filter((s) => !items.some((row) => row.id === s.id));
+  return added.length ? [...next, ...added] : next;
+}

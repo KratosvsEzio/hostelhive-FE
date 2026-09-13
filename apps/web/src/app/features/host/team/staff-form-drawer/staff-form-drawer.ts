@@ -58,7 +58,14 @@ export class StaffFormDrawer {
   readonly editing = input<Staff | null>(null);
 
   readonly closed = output<void>();
-  readonly saved = output<void>();
+  /**
+   * The persisted record, not a bare signal that something happened.
+   *
+   * `StaffApi.create` and `update` both answer with the saved `Staff`, so the list already
+   * has what it would otherwise refetch a page to learn. This used to emit `void` and the
+   * page reloaded the whole list for one row it was being handed.
+   */
+  readonly saved = output<Staff>();
 
   private readonly api = inject(StaffApi);
   private readonly uploads = inject(ImageUploadService);
@@ -179,7 +186,7 @@ export class StaffFormDrawer {
       : this.api.create(hostelId, toCreateStaffPayload(f));
 
     request.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
+      next: (persisted) => {
         this.saving.set(false);
         this.notifications.success(
           f.id ? 'Staff updated' : 'Staff added',
@@ -187,7 +194,7 @@ export class StaffFormDrawer {
             ? `${f.name.trim()} has been saved and can now manage this hostel.`
             : `${f.name.trim()} has been saved.`,
         );
-        this.saved.emit();
+        this.saved.emit(persisted);
       },
       // One toast, from `errorInterceptor`. The image-upload handler above keeps its own
       // because it names a step the interceptor cannot see — see there.
