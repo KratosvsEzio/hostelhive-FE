@@ -230,11 +230,17 @@ export class Invoices {
     searchTerm: this.debouncedTerm(),
   }));
 
-  protected readonly state = toSignal(
+  private readonly fetched = toSignal(
     toObservable(this.fetchKey).pipe(
       switchMap(({ hostelId, page, status, kind, room, tenant, dateFrom, dateTo, searchTerm }) => {
         if (!hostelId) { this.fetching.set(false); return of(EMPTY_STATE); }
         this.fetching.set(true);
+        // Every query change funnels through here, whichever setter caused it — so this is
+        // the one place the overlay can be dropped without a caller being able to forget.
+        // Leaving it would let rows patched in for the previous query reappear over the new
+        // page the moment `loading` went false again.
+        this.local.set(null);
+        this.addedIds.set(new Set());
         const filters: Record<string, string> = {};
         if (status !== 'all') filters['f[status.slug]'] = status;
         if (kind !== 'all') filters['f[bill_type]'] = kind;
@@ -270,6 +276,60 @@ export class Invoices {
     ),
     { initialValue: LOADING as ViewState },
   );
+
+  /**
+   * Bills amended in this session, shown over the fetched page.
+   *
+   * PUT answers with the saved bill, so an edit already knows the row a reload would go and
+   * read. Cleared whenever the query changes, because the incoming page is the server's own
+   * answer and supersedes anything patched in here.
+   */
+  private readonly local = signal<Invoice[] | null>(null);
+
+  /**
+   * Ids of bills created in this session, of those in {@link local}.
+   *
+   * Held apart from the rows because an edit and a create move different things: an edit
+   * replaces a row and changes nothing that counts it, while a create adds to the total, to
+   * its status's count and to the rent or utility summary. This says which of the overlaid
+   * rows are the new ones, so those three can be adjusted from the rows themselves rather
+   * than from a second tally kept in step by hand.
+   */
+  private readonly addedIds = signal<ReadonlySet<string>>(new Set());
+
+  protected readonly state = computed<ViewState>(() => {
+    const base = this.fetched();
+    const overlay = this.local();
+    if (!overlay || base.loading || base.error) return base;
+
+    const added = this.addedIds();
+    if (!added.size) return { ...base, data: overlay };
+
+    // Everything below is arithmetic on what the last fetch reported, not a recount of the
+    // page: this page holds one page of bills while the totals describe all of them.
+    const fresh = overlay.filter((i) => added.has(i.id));
+    const statuses = base.statuses.map((s) => {
+      const n = fresh.filter((i) => i.status === s.slug).length;
+      return n ? { ...s, count: s.count + n } : s;
+    });
+    const sum = (kind: Invoice['kind']) =>
+      fresh.filter((i) => i.kind === kind).reduce((n, i) => n + i.amount, 0);
+    const rent = sum('rental');
+    const utility = sum('utility');
+    // A bill is unpaid the moment it is issued, so it lands on total and balance and leaves
+    // `paid` alone.
+    const aggs = base.aggs
+      ? {
+          ...base.aggs,
+          rentTotal: base.aggs.rentTotal + rent,
+          rentBalance: base.aggs.rentBalance + rent,
+          utilityTotal: base.aggs.utilityTotal + utility,
+          utilityBalance: base.aggs.utilityBalance + utility,
+        }
+      : base.aggs;
+
+    return { ...base, data: overlay, total: base.total + fresh.length, statuses, aggs };
+  });
 
   // ── filter panel ───────────────────────────────────────────────────────────
 
@@ -798,10 +858,40 @@ export class Invoices {
     void this.router.navigate(base, { queryParamsHandling: 'preserve' });
   }
 
-  protected onInvoiceUpdated(): void {
+  /**
+   * The drawer hands back the amended bill, so the row updates without re-reading the page.
+   *
+   * An edit changes one row in place: the bill stays on the same page, in the same position,
+   * and the totals along the top move only if the amount or the status did — which
+   * {@link applyEdited} carries over from the response. So the reload had nothing left to
+   * tell us, and cost a spinner and the host's place in a list they were reading.
+   *
+   * `null` is the create path, which shares this drawer but not its endpoint: POST has never
+   * been observed to echo the record, so that half still reloads. It is also the safety net
+   * here — if PUT ever stops answering with the bill, this falls back to the old behaviour
+   * instead of silently dropping the edit.
+   */
+  protected onInvoiceUpdated(saved: Invoice | null): void {
     this.closeEdit();
-    this.refetchDelay.track('/renter_bills');
-    this.refresh.update((n) => n + 1);
+    if (!saved) {
+      this.refetchDelay.track('/renter_bills');
+      this.refresh.update((n) => n + 1);
+      return;
+    }
+    this.applyEdited(saved);
+  }
+
+  /**
+   * Replaces one bill on the page in place.
+   *
+   * Replace only — never append. This is the edit path, so the row is on the page by
+   * definition; a bill arriving here with an unknown id would mean the response described
+   * something other than what was edited, and adding it would be inventing a row.
+   */
+  private applyEdited(saved: Invoice): void {
+    const current = this.state().data ?? [];
+    if (!current.some((i) => i.id === saved.id)) return;
+    this.local.set(current.map((i) => (i.id === saved.id ? saved : i)));
   }
 
   protected markPaid(inv: Invoice, event: MouseEvent): void {
@@ -844,10 +934,34 @@ export class Invoices {
     void this.router.navigate(base, { queryParamsHandling: 'preserve' });
   }
 
-  protected onInvoiceCreated(): void {
+  /**
+   * The drawer hands back the new bill, so it joins the list without a reload.
+   *
+   * A create moves more than the rows: the pagination total, the per-status counts behind
+   * the filter labels, and the rent/utility summary cards — which prefer the server's `aggs`
+   * over summing the page, so appending a row alone would leave the cards describing the
+   * list as it was a moment ago. {@link addedIds} is what lets all three follow.
+   *
+   * Null falls back to reloading, which is what happens if a response ever arrives without
+   * a record. A row is worth more caution than an edit: getting it wrong invents an invoice
+   * rather than mis-stating one.
+   */
+  protected onInvoiceCreated(saved: Invoice | null): void {
     this.closeAdd();
-    this.refetchDelay.track('/renter_bills');
-    this.refresh.update((n) => n + 1);
+    if (!saved) {
+      this.refetchDelay.track('/renter_bills');
+      this.refresh.update((n) => n + 1);
+      return;
+    }
+    const current = this.state().data ?? [];
+    // Guard against a create that answers with an id already on the page — correct the row
+    // rather than show the same bill twice.
+    if (current.some((i) => i.id === saved.id)) {
+      this.applyEdited(saved);
+      return;
+    }
+    this.local.set([...current, saved]);
+    this.addedIds.update((ids) => new Set(ids).add(saved.id));
   }
 
   protected exportCsv(): void {

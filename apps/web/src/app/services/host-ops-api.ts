@@ -779,23 +779,43 @@ export class HostOpsApi {
   createInvoice(
     hostelId: string,
     body: InvoiceBody,
-  ): Observable<unknown> {
-    return this.api.post(`/api/host/hostels/${hostelId}/renter_bills`, { renter_bill: body });
+  ): Observable<Invoice> {
+    return this.api
+      .post<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills`,
+        { renter_bill: body },
+      )
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
   /**
    * PUT /api/host/hostels/:id/renter_bills/:billId — amend an existing bill.
    * Takes the same `renter_bill` body as {@link createInvoice}, so the drawer builds one
    * payload for both and only the verb and URL differ.
+   *
+   * Answers with the saved bill, so the list can show the row without re-reading the page.
+   * This was typed `unknown` and the response thrown away — verified on the wire since: the
+   * reply is `{ renter_bill: … }`, the same envelope {@link createRenter} already relies on.
+   *
+   * Everything {@link toInvoice} reads is in it. Two absences are deliberate to record:
+   * `received_amount` is not sent, which costs nothing because only the utility mappers read
+   * it; and `renter.room` is absent while a top-level `room` carries the number and floor,
+   * which is the fallback the mapper already takes.
+   *
+   * {@link createInvoice} is still `unknown` on purpose — POST is a separate action and
+   * nobody has seen its response, so assuming it echoes too would be a guess.
    */
   updateInvoice(
     hostelId: string,
     billId: string,
     body: InvoiceBody,
-  ): Observable<unknown> {
-    return this.api.put(`/api/host/hostels/${hostelId}/renter_bills/${billId}`, {
-      renter_bill: body,
-    });
+  ): Observable<Invoice> {
+    return this.api
+      .put<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills/${billId}`,
+        { renter_bill: body },
+      )
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
   deleteInvoice(hostelId: string, billId: string): Observable<unknown> {

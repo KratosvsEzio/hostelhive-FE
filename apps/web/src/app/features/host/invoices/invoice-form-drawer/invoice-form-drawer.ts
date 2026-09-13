@@ -62,7 +62,14 @@ export class InvoiceFormDrawer {
   protected readonly isEdit = computed(() => this.invoice() !== null);
 
   /** Emits when a bill is created or amended so the host page can refresh its list. */
-  readonly saved = output<void>();
+  /**
+   * The persisted bill — from the create or the amend, whichever ran.
+   *
+   * Both endpoints answer with the record under `{ renter_bill: … }`, verified on the wire,
+   * so the list is handed the row instead of reloading a page to find it. Null only if a
+   * response ever arrives without one, which the page treats as its cue to fall back.
+   */
+  readonly saved = output<Invoice | null>();
 
   /** Emits when the drawer wants to go away — cancelled or dismissed. */
   readonly closed = output<void>();
@@ -235,7 +242,7 @@ export class InvoiceFormDrawer {
     request$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (result) => {
           this.saving.set(false);
           this.notifications.success(
             existing ? 'Invoice updated' : 'Invoice created',
@@ -243,7 +250,7 @@ export class InvoiceFormDrawer {
               ? `The bill for ${f.renterName} has been amended.`
               : `A new bill for ${f.renterName} has been issued.`,
           );
-          this.saved.emit();
+          this.saved.emit(result ?? null);
         },
         // One toast, raised by `errorInterceptor` with the server's own wording and pinned
         // open for a 4xx. This handler owns the inline state only.

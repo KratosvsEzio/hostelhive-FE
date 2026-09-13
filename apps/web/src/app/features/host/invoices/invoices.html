@@ -278,7 +278,7 @@
 
 @if (addOpen()) {
   <hh-invoice-form-drawer
-    (saved)="onInvoiceCreated()"
+    (saved)="onInvoiceCreated($event)"
     (closed)="closeAdd()"
   />
 }
@@ -289,7 +289,7 @@
 @if (editingInvoice(); as inv) {
   <hh-invoice-form-drawer
     [invoice]="inv"
-    (saved)="onInvoiceUpdated()"
+    (saved)="onInvoiceUpdated($event)"
     (closed)="closeEdit()"
   />
 }
