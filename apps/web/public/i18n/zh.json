@@ -320,7 +320,12 @@
     "enterLandmarks": "请输入附近地标",
     "enterReason": "请输入原因",
     "enterNote": "请输入备注",
-    "somethingWentWrongReachingThe": "连接服务器时出现问题。"
+    "somethingWentWrongReachingThe": "连接服务器时出现问题。",
+    "weDLikeToCountPage": "我们希望统计页面浏览量，了解大家在找哪些旅舍和城市，以便改进搜索。不会发送任何个人信息，这也与保持登录状态无关。",
+    "noThanks": "不用了",
+    "password": "密码",
+    "selectYear": "选择年份",
+    "allow": "允许"
   },
   "leadWall": {
     "close": "关闭",
@@ -741,7 +746,8 @@
     "selectAProduct": "选择产品",
     "invoicesAppearHereAfterYour": "首次扣款后，发票将显示在这里。",
     "pleaseCheckYourConnectionAnd": "请检查网络连接后重试。",
-    "youDonTHaveAn": "您还没有有效的方案。请浏览下方方案开始使用。"
+    "youDonTHaveAn": "您还没有有效的方案。请浏览下方方案开始使用。",
+    "checkBackSoonPlans": "请稍后再来 — 方案将显示在这里。"
   },
   "hostMess": {
     "pickADate": "选择日期",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "无法加载该房源的分析数据。",
     "allUtilityInvoicesAreSettled": "所有水电账单均已结清。",
     "noInvoicesForThisProperty": "该房源暂无发票。",
-    "weCouldnTLoadRevenue": "无法加载收入数据。"
+    "weCouldnTLoadRevenue": "无法加载收入数据。",
+    "upcomingBookings": "即将到来的预订",
+    "nArriving": "{{count}} 入住",
+    "nLeaving": "{{count}} 退房",
+    "nothingBookedYet": "暂无预订",
+    "noArrivalsOrDeparturesAhead": "未来两周没有入住或退房。",
+    "inOverOutPerDay": "上为入住、下为退房（按天）",
+    "viewAllBookings": "查看全部预订 →"
   },
   "hostBookings": {
     "calendarTab": "日历",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "无法加载本月日历。",
     "nothingIsWaitingOnYou": "这一天没有待办事项。",
     "pickTheDatesFirst": "请先选择日期 — 空房情况取决于日期。",
-    "noRoomsOnThisProperty": "该房源暂无房间。"
+    "noRoomsOnThisProperty": "该房源暂无房间。",
+    "bookingCalendar": "预订日历",
+    "assignRoom": "分配房间",
+    "noteFromGuest": "客人备注",
+    "savedAs": "保存为",
+    "checkInCheckOut": "入住 — 退房",
+    "aNightRuns12": "一晚从中午 12:00 计到次日中午 12:00 — 中午起可入住，次日中午前退房。",
+    "discount": "折扣",
+    "saveBooking": "保存预订"
   },
   "hostHostelProfile": {
     "failed": "失败",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "您的旅舍邀请、用餐确认和待处理收据。"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "拖放、上传或拍照"
+    "dragAmpDropUploadOr": "拖放、上传或拍照",
+    "replaceAdd": "替换 / 添加"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "现在点击结束日期",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "我们核实巴基斯坦各地的房源，并把过程中的所见所得写下来。",
     "weCouldnTFindThatPost": "没有找到这篇文章",
     "theLinkMayBeOld": "链接可能已过期，或地址稍有出入。",
-    "browseEveryPostInstead": "改为浏览全部文章。"
+    "browseEveryPostInstead": "改为浏览全部文章。",
+    "readTheGuide": "阅读指南"
   },
   "publicListing": {
     "checkIn": "入住",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "搜索地址或地标…",
-    "searchCityOrArea": "搜索城市或区域"
+    "searchCityOrArea": "搜索城市或区域",
+    "satellite": "卫星",
+    "noMatchingPlaces": "没有匹配的地点",
+    "poweredByOpenstreetmap": "由 OpenStreetMap 提供",
+    "noCoordinatesSetFor": "此房源未设置坐标。"
   },
   "subscriptionGate": {
     "unlockFeature": "解锁{{feature}}",
-    "thisFeature": "此功能"
+    "thisFeature": "此功能",
+    "dashboardOverview": "仪表板概览",
+    "roomManagement": "房间管理",
+    "tenantManagement": "租客管理",
+    "utilityBilling": "水电账单",
+    "thisFeatureIsAvailable": "此功能需付费方案。订阅后即可完整使用您的旅舍管理后台。",
+    "completeHostelProfileFirst": "请先完善旅舍资料",
+    "onceSubscribedAllFeatures": "订阅后，所有功能将自动解锁。",
+    "roomAmpOccupancyManagement": "房间与入住率管理",
+    "tenantTrackingAmpPayment": "租客追踪与付款记录",
+    "rentAndUtilityInvoice": "生成租金与水电发票",
+    "analyticsAndRevenueReports": "分析与收入报表"
   },
   "notifications": {
     "nUnread": "{{count}} 条未读"

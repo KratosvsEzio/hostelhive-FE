@@ -320,7 +320,12 @@
     "enterLandmarks": "Введите ближайшие ориентиры",
     "enterReason": "Введите причину",
     "enterNote": "Введите примечание",
-    "somethingWentWrongReachingThe": "Не удалось связаться с сервером."
+    "somethingWentWrongReachingThe": "Не удалось связаться с сервером.",
+    "weDLikeToCountPage": "Мы хотели бы считать просмотры страниц, чтобы знать, какие хостелы и города ищут, и улучшить поиск. Личные данные не отправляются, и к тому, чтобы оставаться в системе, это отношения не имеет.",
+    "noThanks": "Нет, спасибо",
+    "password": "Пароль",
+    "selectYear": "Выберите год",
+    "allow": "Разрешить"
   },
   "leadWall": {
     "close": "Закрыть",
@@ -746,7 +751,8 @@
     "selectAProduct": "Выберите продукт",
     "invoicesAppearHereAfterYour": "Счета появятся здесь после первого списания.",
     "pleaseCheckYourConnectionAnd": "Проверьте подключение и повторите попытку.",
-    "youDonTHaveAn": "У вас пока нет активного тарифа. Выберите тариф ниже, чтобы начать."
+    "youDonTHaveAn": "У вас пока нет активного тарифа. Выберите тариф ниже, чтобы начать.",
+    "checkBackSoonPlans": "Загляните позже — тарифы появятся здесь."
   },
   "hostMess": {
     "pickADate": "Выберите дату",
@@ -1052,7 +1058,14 @@
     "weCouldnTLoadAnalytics": "Не удалось загрузить аналитику по этому объекту.",
     "allUtilityInvoicesAreSettled": "Все счета за коммунальные услуги оплачены.",
     "noInvoicesForThisProperty": "Для этого объекта пока нет счетов.",
-    "weCouldnTLoadRevenue": "Не удалось загрузить данные о доходах."
+    "weCouldnTLoadRevenue": "Не удалось загрузить данные о доходах.",
+    "upcomingBookings": "Ближайшие брони",
+    "nArriving": "заездов: {{count}}",
+    "nLeaving": "выездов: {{count}}",
+    "nothingBookedYet": "Броней пока нет",
+    "noArrivalsOrDeparturesAhead": "В ближайшие две недели заездов и выездов нет.",
+    "inOverOutPerDay": "Заезды над выездами, по дням",
+    "viewAllBookings": "Все брони →"
   },
   "hostBookings": {
     "calendarTab": "Календарь",
@@ -1085,7 +1098,15 @@
     "thisMonthSCalendarCould": "Не удалось загрузить календарь на этот месяц.",
     "nothingIsWaitingOnYou": "На этот день ничего не требует вашего внимания.",
     "pickTheDatesFirst": "Сначала выберите даты — от них зависит, что свободно.",
-    "noRoomsOnThisProperty": "В этом объекте пока нет комнат."
+    "noRoomsOnThisProperty": "В этом объекте пока нет комнат.",
+    "bookingCalendar": "Календарь бронирований",
+    "assignRoom": "Назначить комнату",
+    "noteFromGuest": "Примечание от гостя",
+    "savedAs": "Сохранено как",
+    "checkInCheckOut": "Заезд — выезд",
+    "aNightRuns12": "Сутки считаются с 12:00 до 12:00 — заезд с полудня, выезд до полудня следующего дня.",
+    "discount": "Скидка",
+    "saveBooking": "Сохранить бронирование"
   },
   "hostHostelProfile": {
     "failed": "Ошибка",
@@ -1157,7 +1178,8 @@
     "yourHostelInvitesMealConfirmations": "Ваши приглашения от хостела, подтверждения питания и ожидающие чеки."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Перетащите, загрузите или сделайте фото"
+    "dragAmpDropUploadOr": "Перетащите, загрузите или сделайте фото",
+    "replaceAdd": "Заменить / добавить"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Теперь выберите дату окончания",
@@ -1288,7 +1310,8 @@
     "weVerifyListingsAcross": "Мы проверяем объявления по всему Пакистану и пишем о том, что узнаём.",
     "weCouldnTFindThatPost": "Мы не нашли эту запись",
     "theLinkMayBeOld": "Возможно, ссылка устарела или адрес немного неверен.",
-    "browseEveryPostInstead": "Посмотрите вместо этого все записи."
+    "browseEveryPostInstead": "Посмотрите вместо этого все записи.",
+    "readTheGuide": "Читать руководство"
   },
   "publicListing": {
     "checkIn": "Заезд",
@@ -1497,11 +1520,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Поиск адреса или ориентира…",
-    "searchCityOrArea": "Поиск города или района"
+    "searchCityOrArea": "Поиск города или района",
+    "satellite": "Спутник",
+    "noMatchingPlaces": "Подходящих мест нет",
+    "poweredByOpenstreetmap": "На основе OpenStreetMap",
+    "noCoordinatesSetFor": "Для этого объявления не заданы координаты."
   },
   "subscriptionGate": {
     "unlockFeature": "Открыть {{feature}}",
-    "thisFeature": "эту функцию"
+    "thisFeature": "эту функцию",
+    "dashboardOverview": "Обзор панели",
+    "roomManagement": "Управление комнатами",
+    "tenantManagement": "Управление жильцами",
+    "utilityBilling": "Начисление коммунальных услуг",
+    "thisFeatureIsAvailable": "Эта возможность доступна в платных тарифах. Оформите подписку для полного доступа к панели хостела.",
+    "completeHostelProfileFirst": "Сначала заполните профиль хостела",
+    "onceSubscribedAllFeatures": "После оформления подписки все возможности открываются автоматически.",
+    "roomAmpOccupancyManagement": "Управление комнатами и заполняемостью",
+    "tenantTrackingAmpPayment": "Учёт жильцов и история платежей",
+    "rentAndUtilityInvoice": "Формирование счетов за аренду и коммунальные услуги",
+    "analyticsAndRevenueReports": "Аналитика и отчёты о доходах"
   },
   "notifications": {
     "nUnread": "{{count}} непрочитанных"

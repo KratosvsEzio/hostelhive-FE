@@ -282,9 +282,7 @@ function shortLabel(iso: string | null): string {
                 type="button"
                 (click)="clearAndEmit()"
                 class="rounded-lg px-3 py-1.5 text-sm font-medium text-ink-600 underline-offset-2 transition hover:bg-ink-50 hover:underline"
-              >
-                Clear dates
-              </button>
+              >{{ 'a11y.clearDates' | transloco }}</button>
             </div>
           </div>
         }

@@ -48,7 +48,7 @@
   @if (s.loading) {
     <hh-skeleton class="h-80 w-full" radius="lg" />
   } @else if (s.subscriptionError) {
-    <hh-subscription-gate feature="Utility billing" />
+    <hh-subscription-gate [feature]="'subscriptionGate.utilityBilling' | transloco" />
   } @else if (s.error) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
   } @else if (!s.bills || (s.bills.length === 0 && statusFilter() === 'all' && !roomFilter() && !tenantFilter())) {

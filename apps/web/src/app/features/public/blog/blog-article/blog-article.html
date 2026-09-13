@@ -292,9 +292,7 @@
                 <!-- 544px of table inside a 335px measure, wrapped in a ring so it looks
                      complete. The last column carries the advice and is off-screen. -->
                 <p class="mt-2 flex items-center gap-1.5 text-xs text-ink-500 sm:hidden">
-                  <i class="ti ti-arrows-horizontal text-sm" aria-hidden="true"></i>Swipe the
-                  table to see every column
-                </p>
+                  <i class="ti ti-arrows-horizontal text-sm" aria-hidden="true"></i>{{ 'publicBlog.swipeTheTableToSee' | transloco }}</p>
               </div>
             }
           }
@@ -307,15 +305,12 @@
           </span>
           <div class="min-w-0 flex-1">
             <p class="text-sm font-semibold text-ink-900">{{ 'publicBlog.theHostelhiveTeam' | transloco }}</p>
-            <p class="mt-0.5 text-sm text-ink-500">
-              We verify listings across Pakistan and write what we learn doing it.
-            </p>
+            <p class="mt-0.5 text-sm text-ink-500">{{ 'publicBlog.weVerifyListingsAcross' | transloco }}</p>
           </div>
           <a
             routerLink="/search"
             class="inline-flex items-center gap-1.5 rounded-full border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700 transition hover:border-ink-400 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-          >
-            Browse hostels<i class="ti ti-arrow-right text-sm" aria-hidden="true"></i>
+          >{{ 'userFavorites.browseHostels' | transloco }}<i class="ti ti-arrow-right text-sm" aria-hidden="true"></i>
           </a>
         </div>
       </div>

@@ -286,9 +286,7 @@ function buildMonth(
 
             <!-- ── YEAR VIEW ── -->
             @if (mode() === 'year') {
-              <div class="mb-3 text-center text-sm font-semibold text-ink-900">
-                Select year
-              </div>
+              <div class="mb-3 text-center text-sm font-semibold text-ink-900">{{ 'common.selectYear' | transloco }}</div>
               <div class="hh-scroll-thin h-52 overflow-y-auto">
                 @for (y of yearList; track y) {
                   <button

@@ -33,10 +33,7 @@ const BENEFITS = [
       <h2 class="font-display text-2xl font-bold text-ink-900">
         {{ 'subscriptionGate.unlockFeature' | transloco: { feature: feature() ?? ('subscriptionGate.thisFeature' | transloco) } }}
       </h2>
-      <p class="mx-auto mt-2 max-w-sm text-sm text-ink-500">
-        This feature is available on paid plans. Subscribe to get full access
-        to your hostel dashboard.
-      </p>
+      <p class="mx-auto mt-2 max-w-sm text-sm text-ink-500">{{ 'subscriptionGate.thisFeatureIsAvailable' | transloco }}</p>
 
       <!-- Benefits -->
       <ul class="mt-7 space-y-2.5 text-start">
@@ -54,15 +51,11 @@ const BENEFITS = [
           <i class="ti ti-rosette" aria-hidden="true"></i>View plans &amp; subscribe
         </a>
         @if (showProfileLink()) {
-          <a hh-button variant="text" size="sm" [routerLink]="profileLink()">
-            Complete hostel profile first
-          </a>
+          <a hh-button variant="text" size="sm" [routerLink]="profileLink()">{{ 'subscriptionGate.completeHostelProfileFirst' | transloco }}</a>
         }
       </div>
 
-      <p class="mt-6 text-xs text-ink-400">
-        Once subscribed, all features unlock automatically.
-      </p>
+      <p class="mt-6 text-xs text-ink-400">{{ 'subscriptionGate.onceSubscribedAllFeatures' | transloco }}</p>
     </div>
   `,
 })

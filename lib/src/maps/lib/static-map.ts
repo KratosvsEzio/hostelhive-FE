@@ -11,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type * as L from 'leaflet';
 import { brandPinIcon, LeafletLoader, whenSized } from './leaflet';
 
@@ -27,6 +28,7 @@ import { brandPinIcon, LeafletLoader, whenSized } from './leaflet';
   selector: 'hh-static-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
+  imports: [TranslocoPipe],
   template: `
     @if (!coords()) {
       <div
@@ -37,7 +39,7 @@ import { brandPinIcon, LeafletLoader, whenSized } from './leaflet';
             class="ti ti-map-pin-off text-2xl text-ink-300"
             aria-hidden="true"
           ></i>
-          <p class="mt-2 text-sm">No coordinates set for this listing.</p>
+          <p class="mt-2 text-sm">{{ 'maps.noCoordinatesSetFor' | transloco }}</p>
         </div>
       </div>
     } @else {

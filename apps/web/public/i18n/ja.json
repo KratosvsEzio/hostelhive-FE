@@ -320,7 +320,12 @@
     "enterLandmarks": "近くの目印を入力",
     "enterReason": "理由を入力",
     "enterNote": "メモを入力",
-    "somethingWentWrongReachingThe": "サーバーへの接続中に問題が発生しました。"
+    "somethingWentWrongReachingThe": "サーバーへの接続中に問題が発生しました。",
+    "weDLikeToCountPage": "どのホステルや都市が探されているかを知り、検索を改善するためにページビューを計測させてください。個人情報は送信されず、ログイン状態の維持とは関係ありません。",
+    "noThanks": "結構です",
+    "password": "パスワード",
+    "selectYear": "年を選択",
+    "allow": "許可する"
   },
   "leadWall": {
     "close": "閉じる",
@@ -741,7 +746,8 @@
     "selectAProduct": "商品を選択",
     "invoicesAppearHereAfterYour": "最初の請求後、ここに請求書が表示されます。",
     "pleaseCheckYourConnectionAnd": "接続を確認して、もう一度お試しください。",
-    "youDonTHaveAn": "有効なプランがまだありません。下のプランからお選びください。"
+    "youDonTHaveAn": "有効なプランがまだありません。下のプランからお選びください。",
+    "checkBackSoonPlans": "まもなくプランがここに表示されます。"
   },
   "hostMess": {
     "pickADate": "日付を選択",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "この物件の分析データを読み込めませんでした。",
     "allUtilityInvoicesAreSettled": "光熱費の請求はすべて精算済みです。",
     "noInvoicesForThisProperty": "この物件の請求書はまだありません。",
-    "weCouldnTLoadRevenue": "売上データを読み込めませんでした。"
+    "weCouldnTLoadRevenue": "売上データを読み込めませんでした。",
+    "upcomingBookings": "今後の予約",
+    "nArriving": "チェックイン {{count}}",
+    "nLeaving": "チェックアウト {{count}}",
+    "nothingBookedYet": "まだ予約はありません",
+    "noArrivalsOrDeparturesAhead": "今後2週間はチェックイン・チェックアウトがありません。",
+    "inOverOutPerDay": "上段がチェックイン、下段がチェックアウト（日別）",
+    "viewAllBookings": "すべての予約を見る →"
   },
   "hostBookings": {
     "calendarTab": "カレンダー",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "今月のカレンダーを読み込めませんでした。",
     "nothingIsWaitingOnYou": "この日に対応が必要なものはありません。",
     "pickTheDatesFirst": "先に日程を選んでください — 空き状況は日程によって変わります。",
-    "noRoomsOnThisProperty": "この物件にはまだ部屋がありません。"
+    "noRoomsOnThisProperty": "この物件にはまだ部屋がありません。",
+    "bookingCalendar": "予約カレンダー",
+    "assignRoom": "部屋を割り当てる",
+    "noteFromGuest": "ゲストからのメモ",
+    "savedAs": "保存名",
+    "checkInCheckOut": "チェックイン — チェックアウト",
+    "aNightRuns12": "1泊は正午から翌日の正午までです — チェックインは正午から、チェックアウトは翌日の正午までに。",
+    "discount": "割引",
+    "saveBooking": "予約を保存"
   },
   "hostHostelProfile": {
     "failed": "失敗",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "ホステルの招待、食事の確認、保留中の領収書。"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "ドラッグ＆ドロップ、アップロード、または撮影"
+    "dragAmpDropUploadOr": "ドラッグ＆ドロップ、アップロード、または撮影",
+    "replaceAdd": "差し替え / 追加"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "次に終了日をクリック",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "私たちはパキスタン各地の掲載を検証し、そこで学んだことを書いています。",
     "weCouldnTFindThatPost": "その投稿は見つかりませんでした",
     "theLinkMayBeOld": "リンクが古いか、アドレスが少し違っている可能性があります。",
-    "browseEveryPostInstead": "代わりにすべての投稿を見る。"
+    "browseEveryPostInstead": "代わりにすべての投稿を見る。",
+    "readTheGuide": "ガイドを読む"
   },
   "publicListing": {
     "checkIn": "チェックイン",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "住所やランドマークを検索…",
-    "searchCityOrArea": "都市やエリアを検索"
+    "searchCityOrArea": "都市やエリアを検索",
+    "satellite": "衛星",
+    "noMatchingPlaces": "一致する場所はありません",
+    "poweredByOpenstreetmap": "OpenStreetMap 提供",
+    "noCoordinatesSetFor": "この掲載には座標が設定されていません。"
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} を利用可能にする",
-    "thisFeature": "この機能"
+    "thisFeature": "この機能",
+    "dashboardOverview": "ダッシュボードの概要",
+    "roomManagement": "部屋管理",
+    "tenantManagement": "入居者管理",
+    "utilityBilling": "光熱費の請求",
+    "thisFeatureIsAvailable": "この機能は有料プランでご利用いただけます。ご契約いただくとホステル管理画面のすべてをお使いになれます。",
+    "completeHostelProfileFirst": "先にホステルのプロフィールを完成させてください",
+    "onceSubscribedAllFeatures": "ご契約後、すべての機能が自動的に使えるようになります。",
+    "roomAmpOccupancyManagement": "部屋と稼働状況の管理",
+    "tenantTrackingAmpPayment": "入居者の管理と支払い記録",
+    "rentAndUtilityInvoice": "家賃・光熱費の請求書作成",
+    "analyticsAndRevenueReports": "分析と売上レポート"
   },
   "notifications": {
     "nUnread": "未読 {{count}} 件"

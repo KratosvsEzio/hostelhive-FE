@@ -320,7 +320,12 @@
     "enterLandmarks": "قریبی نشانیاں درج کریں",
     "enterReason": "وجہ درج کریں",
     "enterNote": "نوٹ درج کریں",
-    "somethingWentWrongReachingThe": "سرور سے رابطہ کرنے میں کچھ غلط ہو گیا۔"
+    "somethingWentWrongReachingThe": "سرور سے رابطہ کرنے میں کچھ غلط ہو گیا۔",
+    "weDLikeToCountPage": "ہم صفحہ ویوز گننا چاہیں گے تاکہ معلوم ہو کہ لوگ کون سے ہاسٹل اور شہر تلاش کرتے ہیں اور ہم تلاش بہتر بنا سکیں۔ کوئی ذاتی معلومات نہیں بھیجی جاتیں، اور اس کا سائن اِن رہنے سے کوئی تعلق نہیں۔",
+    "noThanks": "نہیں، شکریہ",
+    "password": "پاس ورڈ",
+    "selectYear": "سال منتخب کریں",
+    "allow": "اجازت دیں"
   },
   "leadWall": {
     "close": "بند کریں",
@@ -746,7 +751,8 @@
     "selectAProduct": "پروڈکٹ منتخب کریں",
     "invoicesAppearHereAfterYour": "آپ کی پہلی ادائیگی کے بعد انوائسز یہاں ظاہر ہوں گی۔",
     "pleaseCheckYourConnectionAnd": "براہ کرم اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
-    "youDonTHaveAn": "آپ کے پاس ابھی کوئی فعال پلان نہیں ہے۔ شروع کرنے کے لیے نیچے دیے پلان دیکھیں۔"
+    "youDonTHaveAn": "آپ کے پاس ابھی کوئی فعال پلان نہیں ہے۔ شروع کرنے کے لیے نیچے دیے پلان دیکھیں۔",
+    "checkBackSoonPlans": "جلد دوبارہ دیکھیں — پلان یہاں ظاہر ہوں گے۔"
   },
   "hostMess": {
     "pickADate": "تاریخ منتخب کریں",
@@ -1052,7 +1058,14 @@
     "weCouldnTLoadAnalytics": "ہم اس پراپرٹی کے تجزیات لوڈ نہیں کر سکے۔",
     "allUtilityInvoicesAreSettled": "تمام یوٹیلیٹی انوائسز ادا ہو چکی ہیں۔",
     "noInvoicesForThisProperty": "اس پراپرٹی کے لیے ابھی کوئی انوائس نہیں ہے۔",
-    "weCouldnTLoadRevenue": "ہم آمدنی کا ڈیٹا لوڈ نہیں کر سکے۔"
+    "weCouldnTLoadRevenue": "ہم آمدنی کا ڈیٹا لوڈ نہیں کر سکے۔",
+    "upcomingBookings": "آنے والی بکنگز",
+    "nArriving": "{{count}} آمد",
+    "nLeaving": "{{count}} روانگی",
+    "nothingBookedYet": "ابھی کوئی بکنگ نہیں",
+    "noArrivalsOrDeparturesAhead": "اگلے دو ہفتوں میں کوئی آمد یا روانگی نہیں۔",
+    "inOverOutPerDay": "روزانہ آمد، اس کے نیچے روانگی",
+    "viewAllBookings": "تمام بکنگز دیکھیں ←"
   },
   "hostBookings": {
     "calendarTab": "کیلنڈر",
@@ -1085,7 +1098,15 @@
     "thisMonthSCalendarCould": "اس مہینے کا کیلنڈر لوڈ نہیں ہو سکا۔",
     "nothingIsWaitingOnYou": "اس دن کے لیے آپ کا کوئی کام باقی نہیں ہے۔",
     "pickTheDatesFirst": "پہلے تاریخیں منتخب کریں — دستیابی انہی پر منحصر ہے۔",
-    "noRoomsOnThisProperty": "اس پراپرٹی میں ابھی کوئی کمرہ نہیں ہے۔"
+    "noRoomsOnThisProperty": "اس پراپرٹی میں ابھی کوئی کمرہ نہیں ہے۔",
+    "bookingCalendar": "بکنگ کیلنڈر",
+    "assignRoom": "کمرہ مختص کریں",
+    "noteFromGuest": "مہمان کا پیغام",
+    "savedAs": "اس نام سے محفوظ",
+    "checkInCheckOut": "چیک اِن — چیک آؤٹ",
+    "aNightRuns12": "ایک رات دوپہر 12:00 سے اگلے دن دوپہر 12:00 تک ہوتی ہے — دوپہر سے چیک اِن، اگلے دن دوپہر تک چیک آؤٹ۔",
+    "discount": "رعایت",
+    "saveBooking": "بکنگ محفوظ کریں"
   },
   "hostHostelProfile": {
     "failed": "ناکام",
@@ -1157,7 +1178,8 @@
     "yourHostelInvitesMealConfirmations": "آپ کے ہاسٹل کے دعوت نامے، کھانے کی تصدیقات اور زیر التوا رسیدیں۔"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "ڈریگ اینڈ ڈراپ کریں، اپ لوڈ کریں، یا تصویر لیں"
+    "dragAmpDropUploadOr": "ڈریگ اینڈ ڈراپ کریں، اپ لوڈ کریں، یا تصویر لیں",
+    "replaceAdd": "تبدیل کریں / شامل کریں"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "اب اختتامی تاریخ منتخب کریں",
@@ -1288,7 +1310,8 @@
     "weVerifyListingsAcross": "ہم پورے پاکستان میں فہرستوں کی تصدیق کرتے ہیں اور اس دوران جو سیکھتے ہیں وہی لکھتے ہیں۔",
     "weCouldnTFindThatPost": "ہمیں وہ پوسٹ نہیں ملی",
     "theLinkMayBeOld": "ممکن ہے لنک پرانا ہو، یا پتہ کچھ غلط ہو۔",
-    "browseEveryPostInstead": "اس کے بجائے تمام پوسٹس دیکھیں۔"
+    "browseEveryPostInstead": "اس کے بجائے تمام پوسٹس دیکھیں۔",
+    "readTheGuide": "رہنمائی پڑھیں"
   },
   "publicListing": {
     "checkIn": "چیک ان",
@@ -1497,11 +1520,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "پتہ یا نشانی تلاش کریں…",
-    "searchCityOrArea": "شہر یا علاقہ تلاش کریں"
+    "searchCityOrArea": "شہر یا علاقہ تلاش کریں",
+    "satellite": "سیٹلائٹ",
+    "noMatchingPlaces": "کوئی مماثل جگہ نہیں",
+    "poweredByOpenstreetmap": "OpenStreetMap کے ذریعے",
+    "noCoordinatesSetFor": "اس فہرست کے لیے کوئی کوآرڈینیٹس مقرر نہیں ہیں۔"
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} کھولیں",
-    "thisFeature": "یہ خصوصیت"
+    "thisFeature": "یہ خصوصیت",
+    "dashboardOverview": "ڈیش بورڈ کا جائزہ",
+    "roomManagement": "کمروں کا انتظام",
+    "tenantManagement": "کرایہ داروں کا انتظام",
+    "utilityBilling": "یوٹیلیٹی بلنگ",
+    "thisFeatureIsAvailable": "یہ سہولت ادائیگی والے پلانز میں دستیاب ہے۔ اپنے ہاسٹل ڈیش بورڈ تک مکمل رسائی کے لیے سبسکرائب کریں۔",
+    "completeHostelProfileFirst": "پہلے ہاسٹل پروفائل مکمل کریں",
+    "onceSubscribedAllFeatures": "سبسکرائب کرتے ہی تمام سہولتیں خود بخود کھل جاتی ہیں۔",
+    "roomAmpOccupancyManagement": "کمروں اور آکوپنسی کا انتظام",
+    "tenantTrackingAmpPayment": "کرایہ داروں کی ٹریکنگ اور ادائیگی کا ریکارڈ",
+    "rentAndUtilityInvoice": "کرایہ اور یوٹیلیٹی انوائس بنانا",
+    "analyticsAndRevenueReports": "تجزیات اور آمدنی کی رپورٹس"
   },
   "notifications": {
     "nUnread": "{{count}} غیر پڑھے"

@@ -12,7 +12,7 @@
       />
     </div>
   } @else if (s.subscriptionError) {
-    <hh-subscription-gate feature="Utility billing" />
+    <hh-subscription-gate [feature]="'subscriptionGate.utilityBilling' | transloco" />
   } @else if (s.error || editError()) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
   } @else {

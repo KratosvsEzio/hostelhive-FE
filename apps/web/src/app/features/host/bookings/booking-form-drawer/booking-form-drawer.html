@@ -3,8 +3,7 @@
     <!-- Says up front what this creates, because "booking" on its own implies a paid one. -->
     <p class="flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-sm text-ink-700">
       <i class="ti ti-info-circle mt-0.5 shrink-0" aria-hidden="true"></i>
-      <span>
-        Saved as <strong>unconfirmed</strong> — no deposit is taken and nothing is charged.
+      <span>{{ 'hostBookings.savedAs' | transloco }}<strong>unconfirmed</strong> — no deposit is taken and nothing is charged.
         Use it for walk-ins and phone bookings.
       </span>
     </p>
@@ -37,7 +36,7 @@
            check-out landing before its check-in rather than scolding the host afterwards. -->
       <div class="grid gap-3 sm:grid-cols-3">
         <div class="sm:col-span-2">
-          <p class="mb-1 text-xs font-medium text-ink-600">Check in — check out</p>
+          <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostBookings.checkInCheckOut' | transloco }}</p>
           <hh-date-range-picker
             variant="field"
             [from]="checkIn()"
@@ -63,7 +62,7 @@
            than nights would charge for one more than the guest is staying. -->
       <p class="mt-2 flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-xs text-ink-500">
         <i class="ti ti-clock-hour-12 mt-0.5 shrink-0" aria-hidden="true"></i>
-        <span>A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.</span>
+        <span>{{ 'hostBookings.aNightRuns12' | transloco }}</span>
       </p>
     </section>
 
@@ -155,7 +154,7 @@
         </div>
 
         <div class="mt-2 flex items-center justify-between gap-3">
-          <label class="text-sm text-ink-600" for="hh-booking-discount">Discount</label>
+          <label class="text-sm text-ink-600" for="hh-booking-discount">{{ 'hostBookings.discount' | transloco }}</label>
           <div class="flex items-center gap-1.5">
             <span class="text-sm text-ink-400">Rs</span>
             <!-- Wrapper-sized for the same reason as the room counts: `.hh-input` forces
@@ -199,8 +198,6 @@
     <button hh-button variant="text" size="sm" [disabled]="saving()" (click)="closed.emit()">
       {{ 'common.cancel' | transloco }}
     </button>
-    <button hh-button color="primary" [loading]="saving()" [disabled]="!canSave()" (click)="save()">
-      Save booking
-    </button>
+    <button hh-button color="primary" [loading]="saving()" [disabled]="!canSave()" (click)="save()">{{ 'hostBookings.saveBooking' | transloco }}</button>
   </ng-container>
 </hh-drawer>

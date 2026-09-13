@@ -112,7 +112,7 @@
 
             @if (isRegister()) {
               <hh-input
-                label="Password"
+                [label]="'common.password' | transloco"
                 icon="ti-lock"
                 type="password"
                 [value]="password()"
@@ -136,7 +136,7 @@
               />
             } @else {
               <hh-input
-                label="Password"
+                [label]="'common.password' | transloco"
                 icon="ti-lock"
                 type="password"
                 [value]="password()"

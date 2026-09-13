@@ -8,6 +8,7 @@ import {
   OnDestroy,
   ViewChild,
   computed,
+  inject,
   input,
   output,
   signal,
@@ -15,6 +16,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { Button } from '../button/button';
 import { HhLink } from '../link/link';
+import { HH_LINK_LOCALISER } from '../link-localiser';
 import { StatusPill } from '../status-pill/status-pill';
 import { NoResults } from '../states/no-results';
 
@@ -270,8 +272,7 @@ export interface PaginationConfig {
                   <hh-no-results>
                     @if (clearable()) {
                       <button hh-button variant="outlined" size="sm" (click)="clearFilters.emit()">
-                        <i class="ti ti-x" aria-hidden="true"></i>Clear filters
-                      </button>
+                        <i class="ti ti-x" aria-hidden="true"></i>{{ 'hostExpenses.clearFilters' | transloco }}</button>
                     }
                   </hh-no-results>
                 </td>
@@ -455,7 +456,7 @@ export interface PaginationConfig {
                             } @else {
                               <a
                                 hhLink
-                                [routerLink]="$any(cell).href"
+                                [routerLink]="inAppLink($any(cell).href)"
                                 [class]="$any(cell).class"
                                 (click)="$event.stopPropagation()"
                               >{{ $any(cell).value }}</a>
@@ -637,6 +638,24 @@ export interface PaginationConfig {
 export class DataTable implements AfterViewInit, OnDestroy {
   @ViewChild('scrollWrap') private readonly scrollWrap!: ElementRef<HTMLElement>;
   private scrollCleanup?: () => void;
+
+  private readonly localiser = inject(HH_LINK_LOCALISER);
+
+  /**
+   * An in-app cell link, carrying whatever prefix the app's language needs.
+   *
+   * Called from the template rather than precomputed: these links sit inside a loop over
+   * every row and column, so memoising them would mean rebuilding a parallel structure on
+   * each rows change to save a string comparison. The implementation reads its locale from a
+   * signal, which the view therefore tracks — so a language switch rewrites the hrefs already
+   * on screen rather than leaving the table pointing at the previous language.
+   *
+   * Only the routed branch calls this. An `external` cell is an absolute URL to somewhere
+   * else entirely, and prefixing it would be nonsense.
+   */
+  protected inAppLink(href: string): unknown {
+    return this.localiser(href);
+  }
 
   // `readonly` on both: the table only reads them (`.length` and an `@for`). Demanding a
   // mutable array made every caller hand one over, so a component exposing the safer

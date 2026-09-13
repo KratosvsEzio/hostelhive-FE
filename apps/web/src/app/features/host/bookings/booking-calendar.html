@@ -11,9 +11,7 @@
       class="flex flex-col gap-2.5 border-b border-ink-100 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-5"
     >
       <div class="min-w-0">
-        <h2 class="font-display text-base font-semibold text-ink-900 sm:text-lg">
-          Booking calendar
-        </h2>
+        <h2 class="font-display text-base font-semibold text-ink-900 sm:text-lg">{{ 'hostBookings.bookingCalendar' | transloco }}</h2>
         <p class="mt-1 text-xs text-ink-500 sm:truncate">
           {{ 'hostBookings.everyRoomEveryState' | transloco }}
         </p>
@@ -86,9 +84,7 @@
           type="button"
           class="font-semibold text-brand-600 underline-offset-2 hover:underline"
           (click)="step(0)"
-        >
-          Try again
-        </button>
+        >{{ 'common.tryAgain' | transloco }}</button>
       </p>
     } @else {
     <div class="grid grid-cols-7">
@@ -253,9 +249,7 @@
                 type="button"
                 class="flex-1"
                 (click)="assignRequested.emit(b)"
-              >
-                Assign room
-              </button>
+              >{{ 'hostBookings.assignRoom' | transloco }}</button>
               <button
                 hh-button
                 variant="outlined"

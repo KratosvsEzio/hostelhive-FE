@@ -320,7 +320,12 @@
     "enterLandmarks": "Nhập địa danh lân cận",
     "enterReason": "Nhập lý do",
     "enterNote": "Nhập ghi chú",
-    "somethingWentWrongReachingThe": "Đã xảy ra lỗi khi kết nối tới máy chủ."
+    "somethingWentWrongReachingThe": "Đã xảy ra lỗi khi kết nối tới máy chủ.",
+    "weDLikeToCountPage": "Chúng tôi muốn đếm lượt xem trang để biết mọi người tìm nhà nghỉ và thành phố nào, nhằm cải thiện tìm kiếm. Không có thông tin cá nhân nào được gửi đi, và điều này không liên quan đến việc duy trì đăng nhập.",
+    "noThanks": "Không, cảm ơn",
+    "password": "Mật khẩu",
+    "selectYear": "Chọn năm",
+    "allow": "Cho phép"
   },
   "leadWall": {
     "close": "Đóng",
@@ -746,7 +751,8 @@
     "selectAProduct": "Chọn sản phẩm",
     "invoicesAppearHereAfterYour": "Hóa đơn sẽ xuất hiện ở đây sau lần thanh toán đầu tiên.",
     "pleaseCheckYourConnectionAnd": "Vui lòng kiểm tra kết nối và thử lại.",
-    "youDonTHaveAn": "Bạn chưa có gói nào đang hoạt động. Xem các gói bên dưới để bắt đầu."
+    "youDonTHaveAn": "Bạn chưa có gói nào đang hoạt động. Xem các gói bên dưới để bắt đầu.",
+    "checkBackSoonPlans": "Hãy quay lại sau — các gói sẽ xuất hiện ở đây."
   },
   "hostMess": {
     "pickADate": "Chọn ngày",
@@ -1052,7 +1058,14 @@
     "weCouldnTLoadAnalytics": "Chúng tôi không tải được phân tích cho cơ sở này.",
     "allUtilityInvoicesAreSettled": "Tất cả hóa đơn tiện ích đã được thanh toán.",
     "noInvoicesForThisProperty": "Chưa có hóa đơn nào cho cơ sở này.",
-    "weCouldnTLoadRevenue": "Chúng tôi không tải được dữ liệu doanh thu."
+    "weCouldnTLoadRevenue": "Chúng tôi không tải được dữ liệu doanh thu.",
+    "upcomingBookings": "Đặt phòng sắp tới",
+    "nArriving": "{{count}} nhận phòng",
+    "nLeaving": "{{count}} trả phòng",
+    "nothingBookedYet": "Chưa có đặt phòng nào",
+    "noArrivalsOrDeparturesAhead": "Không có lượt nhận hay trả phòng trong hai tuần tới.",
+    "inOverOutPerDay": "Nhận phòng trên, trả phòng dưới, theo ngày",
+    "viewAllBookings": "Xem tất cả đặt phòng →"
   },
   "hostBookings": {
     "calendarTab": "Lịch",
@@ -1085,7 +1098,15 @@
     "thisMonthSCalendarCould": "Không thể tải lịch của tháng này.",
     "nothingIsWaitingOnYou": "Không có việc gì chờ bạn trong ngày này.",
     "pickTheDatesFirst": "Chọn ngày trước — phòng trống phụ thuộc vào ngày.",
-    "noRoomsOnThisProperty": "Cơ sở này chưa có phòng nào."
+    "noRoomsOnThisProperty": "Cơ sở này chưa có phòng nào.",
+    "bookingCalendar": "Lịch đặt phòng",
+    "assignRoom": "Gán phòng",
+    "noteFromGuest": "Ghi chú từ khách",
+    "savedAs": "Đã lưu là",
+    "checkInCheckOut": "Nhận phòng — trả phòng",
+    "aNightRuns12": "Một đêm tính từ 12:00 trưa đến 12:00 trưa — nhận phòng từ giữa trưa, trả phòng trước giữa trưa hôm sau.",
+    "discount": "Giảm giá",
+    "saveBooking": "Lưu đặt phòng"
   },
   "hostHostelProfile": {
     "failed": "Thất bại",
@@ -1157,7 +1178,8 @@
     "yourHostelInvitesMealConfirmations": "Lời mời từ nhà nghỉ, xác nhận bữa ăn và biên lai đang chờ của bạn."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Kéo thả, tải lên hoặc chụp ảnh"
+    "dragAmpDropUploadOr": "Kéo thả, tải lên hoặc chụp ảnh",
+    "replaceAdd": "Thay / thêm"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Bây giờ nhấp vào ngày kết thúc",
@@ -1288,7 +1310,8 @@
     "weVerifyListingsAcross": "Chúng tôi xác minh tin đăng khắp Pakistan và viết lại những gì học được.",
     "weCouldnTFindThatPost": "Chúng tôi không tìm thấy bài đăng đó",
     "theLinkMayBeOld": "Liên kết có thể đã cũ, hoặc địa chỉ hơi sai.",
-    "browseEveryPostInstead": "Xem tất cả bài đăng thay vì vậy."
+    "browseEveryPostInstead": "Xem tất cả bài đăng thay vì vậy.",
+    "readTheGuide": "Đọc cẩm nang"
   },
   "publicListing": {
     "checkIn": "Nhận phòng",
@@ -1497,11 +1520,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Tìm địa chỉ hoặc địa danh…",
-    "searchCityOrArea": "Tìm thành phố hoặc khu vực"
+    "searchCityOrArea": "Tìm thành phố hoặc khu vực",
+    "satellite": "Vệ tinh",
+    "noMatchingPlaces": "Không có địa điểm phù hợp",
+    "poweredByOpenstreetmap": "Cung cấp bởi OpenStreetMap",
+    "noCoordinatesSetFor": "Tin đăng này chưa có tọa độ."
   },
   "subscriptionGate": {
     "unlockFeature": "Mở khóa {{feature}}",
-    "thisFeature": "tính năng này"
+    "thisFeature": "tính năng này",
+    "dashboardOverview": "Tổng quan bảng điều khiển",
+    "roomManagement": "Quản lý phòng",
+    "tenantManagement": "Quản lý khách thuê",
+    "utilityBilling": "Lập hóa đơn tiện ích",
+    "thisFeatureIsAvailable": "Tính năng này có trong các gói trả phí. Hãy đăng ký để dùng đầy đủ bảng điều khiển nhà nghỉ của bạn.",
+    "completeHostelProfileFirst": "Hoàn tất hồ sơ nhà nghỉ trước",
+    "onceSubscribedAllFeatures": "Sau khi đăng ký, mọi tính năng sẽ mở khóa tự động.",
+    "roomAmpOccupancyManagement": "Quản lý phòng và tỷ lệ lấp đầy",
+    "tenantTrackingAmpPayment": "Theo dõi khách thuê và lịch sử thanh toán",
+    "rentAndUtilityInvoice": "Tạo hóa đơn tiền thuê và tiện ích",
+    "analyticsAndRevenueReports": "Phân tích và báo cáo doanh thu"
   },
   "notifications": {
     "nUnread": "{{count}} chưa đọc"

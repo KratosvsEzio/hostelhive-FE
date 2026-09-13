@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RouterLink } from '@angular/router';
+import { HH_LINK_LOCALISER } from '../link-localiser';
 
 export interface BreadcrumbItem {
   label: string;
@@ -15,7 +16,7 @@ export interface BreadcrumbItem {
     <div class="flex min-w-0 items-center gap-1.5">
       @if (backUrl()) {
         <a
-          [routerLink]="backUrl()"
+          [routerLink]="backLink()"
           class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-500 transition hover:bg-surface hover:text-ink-900"
           [attr.aria-label]="'a11y.goBack' | transloco"
         ><i class="ti ti-arrow-left text-sm"></i></a>
@@ -33,9 +34,9 @@ export interface BreadcrumbItem {
           using this have no <h1> of their own, so it is their only title.
         -->
         <nav class="flex min-w-0 items-center gap-1 text-sm" [attr.aria-label]="'a11y.breadcrumb' | transloco">
-          @for (crumb of crumbs(); track crumb.label; let last = $last) {
+          @for (crumb of links(); track crumb.label; let last = $last) {
             @if (!last && crumb.url) {
-              <a [routerLink]="crumb.url" class="hidden shrink-0 text-ink-400 transition hover:text-ink-700 sm:inline">
+              <a [routerLink]="crumb.link" class="hidden shrink-0 text-ink-400 transition hover:text-ink-700 sm:inline">
                 {{ crumb.label }}
               </a>
             } @else if (!last) {
@@ -55,4 +56,19 @@ export interface BreadcrumbItem {
 export class Breadcrumb {
   readonly backUrl = input('');
   readonly crumbs = input<BreadcrumbItem[]>([]);
+
+  private readonly localise = inject(HH_LINK_LOCALISER);
+
+  /**
+   * The same targets, carrying whatever prefix the app's language needs.
+   *
+   * Computed rather than called from the template so the work happens once per change — and
+   * so a language switch rewrites the links already on screen: the app's implementation reads
+   * the active locale from a signal, which this then tracks.
+   */
+  protected readonly backLink = computed(() => this.localise(this.backUrl()));
+
+  protected readonly links = computed(() =>
+    this.crumbs().map((crumb) => ({ ...crumb, link: this.localise(crumb.url) })),
+  );
 }

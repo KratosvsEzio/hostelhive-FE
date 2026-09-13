@@ -320,7 +320,12 @@
     "enterLandmarks": "Ange landmärken i närheten",
     "enterReason": "Ange en anledning",
     "enterNote": "Ange en anteckning",
-    "somethingWentWrongReachingThe": "Något gick fel vid anslutningen till servern."
+    "somethingWentWrongReachingThe": "Något gick fel vid anslutningen till servern.",
+    "weDLikeToCountPage": "Vi vill gärna räkna sidvisningar för att se vilka vandrarhem och städer folk söker efter, så att vi kan förbättra sökningen. Inga personuppgifter skickas, och det har inget med att förbli inloggad att göra.",
+    "noThanks": "Nej tack",
+    "password": "Lösenord",
+    "selectYear": "Välj år",
+    "allow": "Tillåt"
   },
   "leadWall": {
     "close": "Stäng",
@@ -741,7 +746,8 @@
     "selectAProduct": "Välj en produkt",
     "invoicesAppearHereAfterYour": "Fakturor visas här efter din första betalning.",
     "pleaseCheckYourConnectionAnd": "Kontrollera din anslutning och försök igen.",
-    "youDonTHaveAn": "Du har ingen aktiv plan ännu. Bläddra bland planerna nedan för att komma igång."
+    "youDonTHaveAn": "Du har ingen aktiv plan ännu. Bläddra bland planerna nedan för att komma igång.",
+    "checkBackSoonPlans": "Titta in snart igen – planerna visas här."
   },
   "hostMess": {
     "pickADate": "Välj ett datum",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "Vi kunde inte ladda analyser för den här fastigheten.",
     "allUtilityInvoicesAreSettled": "Alla förbrukningsfakturor är betalda.",
     "noInvoicesForThisProperty": "Inga fakturor för den här fastigheten ännu.",
-    "weCouldnTLoadRevenue": "Vi kunde inte ladda intäktsdata."
+    "weCouldnTLoadRevenue": "Vi kunde inte ladda intäktsdata.",
+    "upcomingBookings": "Kommande bokningar",
+    "nArriving": "{{count}} anländer",
+    "nLeaving": "{{count}} reser",
+    "nothingBookedYet": "Inga bokningar än",
+    "noArrivalsOrDeparturesAhead": "Inga ankomster eller avresor de närmaste två veckorna.",
+    "inOverOutPerDay": "Ankomster över avresor, per dag",
+    "viewAllBookings": "Visa alla bokningar →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "Månadens kalender kunde inte laddas.",
     "nothingIsWaitingOnYou": "Inget väntar på dig den här dagen.",
     "pickTheDatesFirst": "Välj datum först – vad som är ledigt beror på dem.",
-    "noRoomsOnThisProperty": "Inga rum i den här fastigheten ännu."
+    "noRoomsOnThisProperty": "Inga rum i den här fastigheten ännu.",
+    "bookingCalendar": "Bokningskalender",
+    "assignRoom": "Tilldela rum",
+    "noteFromGuest": "Meddelande från gästen",
+    "savedAs": "Sparad som",
+    "checkInCheckOut": "Incheckning — utcheckning",
+    "aNightRuns12": "Ett dygn löper från kl. 12.00 till kl. 12.00 — incheckning från lunchtid, utcheckning senast lunchtid dagen efter.",
+    "discount": "Rabatt",
+    "saveBooking": "Spara bokning"
   },
   "hostHostelProfile": {
     "failed": "Misslyckades",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "Dina vandrarhemsinbjudningar, måltidsbekräftelser och väntande kvitton."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Dra & släpp, ladda upp eller ta ett foto"
+    "dragAmpDropUploadOr": "Dra & släpp, ladda upp eller ta ett foto",
+    "replaceAdd": "Ersätt / lägg till"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Klicka nu på ett slutdatum",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "Vi verifierar annonser i hela Pakistan och skriver om det vi lär oss på vägen.",
     "weCouldnTFindThatPost": "Vi kunde inte hitta det inlägget",
     "theLinkMayBeOld": "Länken kan vara gammal, eller adressen något fel.",
-    "browseEveryPostInstead": "Bläddra bland alla inlägg i stället."
+    "browseEveryPostInstead": "Bläddra bland alla inlägg i stället.",
+    "readTheGuide": "Läs guiden"
   },
   "publicListing": {
     "checkIn": "Incheckning",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Sök adress eller landmärke…",
-    "searchCityOrArea": "Sök stad eller område"
+    "searchCityOrArea": "Sök stad eller område",
+    "satellite": "Satellit",
+    "noMatchingPlaces": "Inga matchande platser",
+    "poweredByOpenstreetmap": "Drivs av OpenStreetMap",
+    "noCoordinatesSetFor": "Inga koordinater angivna för den här annonsen."
   },
   "subscriptionGate": {
     "unlockFeature": "Lås upp {{feature}}",
-    "thisFeature": "denna funktion"
+    "thisFeature": "denna funktion",
+    "dashboardOverview": "Översikt i instrumentpanelen",
+    "roomManagement": "Rumshantering",
+    "tenantManagement": "Hyresgästhantering",
+    "utilityBilling": "Förbrukningsfakturering",
+    "thisFeatureIsAvailable": "Den här funktionen finns i betalplanerna. Teckna ett abonnemang för full tillgång till din instrumentpanel.",
+    "completeHostelProfileFirst": "Fyll i vandrarhemsprofilen först",
+    "onceSubscribedAllFeatures": "När du abonnerar låses alla funktioner upp automatiskt.",
+    "roomAmpOccupancyManagement": "Rums- och beläggningshantering",
+    "tenantTrackingAmpPayment": "Hyresgästuppföljning och betalningshistorik",
+    "rentAndUtilityInvoice": "Skapa hyres- och förbrukningsfakturor",
+    "analyticsAndRevenueReports": "Analyser och intäktsrapporter"
   },
   "notifications": {
     "nUnread": "{{count}} olästa"

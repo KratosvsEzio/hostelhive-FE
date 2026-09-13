@@ -320,7 +320,12 @@
     "enterLandmarks": "أدخل المعالم القريبة",
     "enterReason": "أدخل سببًا",
     "enterNote": "أدخل ملاحظة",
-    "somethingWentWrongReachingThe": "حدث خطأ أثناء الاتصال بالخادم."
+    "somethingWentWrongReachingThe": "حدث خطأ أثناء الاتصال بالخادم.",
+    "weDLikeToCountPage": "نودّ إحصاء مشاهدات الصفحات لمعرفة النُزل والمدن التي يبحث عنها الناس، حتى نحسّن البحث. لا تُرسَل أي بيانات شخصية، ولا علاقة لهذا ببقائك مسجّلًا للدخول.",
+    "noThanks": "لا، شكرًا",
+    "password": "كلمة المرور",
+    "selectYear": "اختر السنة",
+    "allow": "السماح"
   },
   "leadWall": {
     "close": "إغلاق",
@@ -741,7 +746,8 @@
     "selectAProduct": "اختر منتجاً",
     "invoicesAppearHereAfterYour": "تظهر الفواتير هنا بعد أول عملية دفع.",
     "pleaseCheckYourConnectionAnd": "يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
-    "youDonTHaveAn": "ليس لديك خطة نشطة بعد. تصفّح الخطط أدناه للبدء."
+    "youDonTHaveAn": "ليس لديك خطة نشطة بعد. تصفّح الخطط أدناه للبدء.",
+    "checkBackSoonPlans": "عد قريبًا — ستظهر الخطط هنا."
   },
   "hostMess": {
     "pickADate": "اختر تاريخاً",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "تعذّر تحميل التحليلات لهذا العقار.",
     "allUtilityInvoicesAreSettled": "تمت تسوية جميع فواتير المرافق.",
     "noInvoicesForThisProperty": "لا توجد فواتير لهذا العقار بعد.",
-    "weCouldnTLoadRevenue": "تعذّر تحميل بيانات الإيرادات."
+    "weCouldnTLoadRevenue": "تعذّر تحميل بيانات الإيرادات.",
+    "upcomingBookings": "الحجوزات القادمة",
+    "nArriving": "{{count}} قادمون",
+    "nLeaving": "{{count}} مغادرون",
+    "nothingBookedYet": "لا توجد حجوزات بعد",
+    "noArrivalsOrDeparturesAhead": "لا وصول أو مغادرة خلال الأسبوعين القادمين.",
+    "inOverOutPerDay": "الوصول فوق المغادرة، لكل يوم",
+    "viewAllBookings": "عرض كل الحجوزات ←"
   },
   "hostBookings": {
     "calendarTab": "التقويم",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "تعذّر تحميل تقويم هذا الشهر.",
     "nothingIsWaitingOnYou": "لا شيء ينتظر إجراءً منك في هذا اليوم.",
     "pickTheDatesFirst": "اختر التواريخ أولًا — يعتمد المتاح عليها.",
-    "noRoomsOnThisProperty": "لا توجد غرف في هذا العقار بعد."
+    "noRoomsOnThisProperty": "لا توجد غرف في هذا العقار بعد.",
+    "bookingCalendar": "تقويم الحجوزات",
+    "assignRoom": "تخصيص غرفة",
+    "noteFromGuest": "ملاحظة من النزيل",
+    "savedAs": "محفوظ باسم",
+    "checkInCheckOut": "تسجيل الوصول — تسجيل المغادرة",
+    "aNightRuns12": "تمتد الليلة من الساعة 12:00 ظهرًا حتى 12:00 ظهرًا — سجّل الوصول من الظهيرة وغادر بحلول ظهر اليوم التالي.",
+    "discount": "الخصم",
+    "saveBooking": "حفظ الحجز"
   },
   "hostHostelProfile": {
     "failed": "فشل",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "دعوات النزل وتأكيدات الوجبات والإيصالات المعلقة الخاصة بك."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "اسحب وأفلت، أو ارفع، أو التقط صورة"
+    "dragAmpDropUploadOr": "اسحب وأفلت، أو ارفع، أو التقط صورة",
+    "replaceAdd": "استبدال / إضافة"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "الآن اختر تاريخ الانتهاء",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "نتحقق من القوائم في أنحاء باكستان ونكتب ما نتعلّمه أثناء ذلك.",
     "weCouldnTFindThatPost": "تعذّر العثور على هذه المقالة",
     "theLinkMayBeOld": "قد يكون الرابط قديمًا، أو العنوان غير دقيق قليلًا.",
-    "browseEveryPostInstead": "تصفّح كل المقالات بدلًا من ذلك."
+    "browseEveryPostInstead": "تصفّح كل المقالات بدلًا من ذلك.",
+    "readTheGuide": "اقرأ الدليل"
   },
   "publicListing": {
     "checkIn": "تسجيل الوصول",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "ابحث عن عنوان أو معلم…",
-    "searchCityOrArea": "ابحث عن مدينة أو منطقة"
+    "searchCityOrArea": "ابحث عن مدينة أو منطقة",
+    "satellite": "قمر صناعي",
+    "noMatchingPlaces": "لا توجد أماكن مطابقة",
+    "poweredByOpenstreetmap": "مدعوم بواسطة OpenStreetMap",
+    "noCoordinatesSetFor": "لم تُحدَّد إحداثيات لهذه القائمة."
   },
   "subscriptionGate": {
     "unlockFeature": "افتح {{feature}}",
-    "thisFeature": "هذه الميزة"
+    "thisFeature": "هذه الميزة",
+    "dashboardOverview": "نظرة عامة على لوحة التحكم",
+    "roomManagement": "إدارة الغرف",
+    "tenantManagement": "إدارة المستأجرين",
+    "utilityBilling": "فوترة المرافق",
+    "thisFeatureIsAvailable": "هذه الميزة متاحة في الخطط المدفوعة. اشترك للحصول على وصول كامل إلى لوحة تحكم النُزل.",
+    "completeHostelProfileFirst": "أكمل ملف النُزل أولًا",
+    "onceSubscribedAllFeatures": "بمجرد الاشتراك، تُفتح جميع الميزات تلقائيًا.",
+    "roomAmpOccupancyManagement": "إدارة الغرف والإشغال",
+    "tenantTrackingAmpPayment": "تتبّع المستأجرين وسجلات المدفوعات",
+    "rentAndUtilityInvoice": "إصدار فواتير الإيجار والمرافق",
+    "analyticsAndRevenueReports": "التحليلات وتقارير الإيرادات"
   },
   "notifications": {
     "nUnread": "{{count}} غير مقروءة"

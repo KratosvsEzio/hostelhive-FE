@@ -320,7 +320,12 @@
     "enterLandmarks": "Inserisci i punti di riferimento vicini",
     "enterReason": "Inserisci un motivo",
     "enterNote": "Inserisci una nota",
-    "somethingWentWrongReachingThe": "Si è verificato un errore durante la connessione al server."
+    "somethingWentWrongReachingThe": "Si è verificato un errore durante la connessione al server.",
+    "weDLikeToCountPage": "Vorremmo contare le visualizzazioni per capire quali ostelli e città vengono cercati, così da migliorare la ricerca. Non viene inviato alcun dato personale e non ha nulla a che fare con il restare connessi.",
+    "noThanks": "No, grazie",
+    "password": "Password",
+    "selectYear": "Seleziona l'anno",
+    "allow": "Consenti"
   },
   "leadWall": {
     "close": "Chiudi",
@@ -741,7 +746,8 @@
     "selectAProduct": "Seleziona un prodotto",
     "invoicesAppearHereAfterYour": "Le fatture compaiono qui dopo il primo addebito.",
     "pleaseCheckYourConnectionAnd": "Controlla la connessione e riprova.",
-    "youDonTHaveAn": "Non hai ancora un piano attivo. Sfoglia i piani qui sotto per iniziare."
+    "youDonTHaveAn": "Non hai ancora un piano attivo. Sfoglia i piani qui sotto per iniziare.",
+    "checkBackSoonPlans": "Torna presto: i piani compariranno qui."
   },
   "hostMess": {
     "pickADate": "Scegli una data",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "Non siamo riusciti a caricare le statistiche di questa struttura.",
     "allUtilityInvoicesAreSettled": "Tutte le bollette sono saldate.",
     "noInvoicesForThisProperty": "Nessuna fattura per questa struttura al momento.",
-    "weCouldnTLoadRevenue": "Non siamo riusciti a caricare i dati sui ricavi."
+    "weCouldnTLoadRevenue": "Non siamo riusciti a caricare i dati sui ricavi.",
+    "upcomingBookings": "Prenotazioni in arrivo",
+    "nArriving": "{{count}} in arrivo",
+    "nLeaving": "{{count}} in partenza",
+    "nothingBookedYet": "Nessuna prenotazione",
+    "noArrivalsOrDeparturesAhead": "Nessun arrivo o partenza nelle prossime due settimane.",
+    "inOverOutPerDay": "Arrivi sopra le partenze, per giorno",
+    "viewAllBookings": "Vedi tutte le prenotazioni →"
   },
   "hostBookings": {
     "calendarTab": "Calendario",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "Non è stato possibile caricare il calendario di questo mese.",
     "nothingIsWaitingOnYou": "Non c'è nulla in sospeso per questo giorno.",
     "pickTheDatesFirst": "Scegli prima le date: la disponibilità dipende da queste.",
-    "noRoomsOnThisProperty": "Nessuna camera in questa struttura al momento."
+    "noRoomsOnThisProperty": "Nessuna camera in questa struttura al momento.",
+    "bookingCalendar": "Calendario prenotazioni",
+    "assignRoom": "Assegna camera",
+    "noteFromGuest": "Nota dell'ospite",
+    "savedAs": "Salvato come",
+    "checkInCheckOut": "Check-in — check-out",
+    "aNightRuns12": "Una notte va dalle 12:00 alle 12:00 — check-in da mezzogiorno, check-out entro mezzogiorno del giorno dopo.",
+    "discount": "Sconto",
+    "saveBooking": "Salva prenotazione"
   },
   "hostHostelProfile": {
     "failed": "Non riuscito",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "I tuoi inviti dell’ostello, le conferme dei pasti e le ricevute in sospeso."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Trascina, carica o scatta una foto"
+    "dragAmpDropUploadOr": "Trascina, carica o scatta una foto",
+    "replaceAdd": "Sostituisci / aggiungi"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Ora clicca una data di fine",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "Verifichiamo annunci in tutto il Pakistan e scriviamo ciò che impariamo facendolo.",
     "weCouldnTFindThatPost": "Non abbiamo trovato quel post",
     "theLinkMayBeOld": "Il link potrebbe essere vecchio, o l'indirizzo leggermente errato.",
-    "browseEveryPostInstead": "Sfoglia invece tutti i post."
+    "browseEveryPostInstead": "Sfoglia invece tutti i post.",
+    "readTheGuide": "Leggi la guida"
   },
   "publicListing": {
     "checkIn": "Check-in",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Cerca un indirizzo o un punto di riferimento…",
-    "searchCityOrArea": "Cerca città o zona"
+    "searchCityOrArea": "Cerca città o zona",
+    "satellite": "Satellite",
+    "noMatchingPlaces": "Nessun luogo corrispondente",
+    "poweredByOpenstreetmap": "Basato su OpenStreetMap",
+    "noCoordinatesSetFor": "Nessuna coordinata impostata per questo annuncio."
   },
   "subscriptionGate": {
     "unlockFeature": "Sblocca {{feature}}",
-    "thisFeature": "questa funzione"
+    "thisFeature": "questa funzione",
+    "dashboardOverview": "Panoramica della dashboard",
+    "roomManagement": "Gestione delle camere",
+    "tenantManagement": "Gestione degli inquilini",
+    "utilityBilling": "Fatturazione delle utenze",
+    "thisFeatureIsAvailable": "Questa funzione è disponibile nei piani a pagamento. Abbonati per accedere completamente alla dashboard del tuo ostello.",
+    "completeHostelProfileFirst": "Completa prima il profilo dell'ostello",
+    "onceSubscribedAllFeatures": "Una volta abbonato, tutte le funzioni si sbloccano automaticamente.",
+    "roomAmpOccupancyManagement": "Gestione di camere e occupazione",
+    "tenantTrackingAmpPayment": "Monitoraggio degli inquilini e storico pagamenti",
+    "rentAndUtilityInvoice": "Generazione di fatture per affitto e utenze",
+    "analyticsAndRevenueReports": "Statistiche e report sui ricavi"
   },
   "notifications": {
     "nUnread": "{{count}} non letti"

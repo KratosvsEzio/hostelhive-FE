@@ -85,9 +85,7 @@
 
         @if (b.notes) {
           <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
-              Note from guest
-            </p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.noteFromGuest' | transloco }}</p>
             <!-- Verbatim and in quotes: it is the guest's words, and paraphrasing a request
                  for a lower bunk is how somebody ends up on a top one. -->
             <blockquote class="mt-1.5 text-sm italic text-ink-700">“{{ b.notes }}”</blockquote>
@@ -155,9 +153,7 @@
               <button hh-button variant="outlined" size="sm" type="button" (click)="onDecline()">
                 Decline
               </button>
-              <button hh-button color="primary" size="sm" type="button" (click)="onAssign()">
-                Assign room
-              </button>
+              <button hh-button color="primary" size="sm" type="button" (click)="onAssign()">{{ 'hostBookings.assignRoom' | transloco }}</button>
             } @else {
               <button hh-button variant="outlined" size="sm" type="button" (click)="close()">
                 Close

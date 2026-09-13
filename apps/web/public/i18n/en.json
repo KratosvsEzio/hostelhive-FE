@@ -378,7 +378,12 @@
     "enterLandmarks": "Enter nearby landmarks",
     "enterReason": "Enter a reason",
     "enterNote": "Enter a note",
-    "somethingWentWrongReachingThe": "Something went wrong reaching the server."
+    "somethingWentWrongReachingThe": "Something went wrong reaching the server.",
+    "weDLikeToCountPage": "We'd like to count page views to see which hostels and cities people look for, so we can improve search. No personal details are sent, and this has nothing to do with staying signed in.",
+    "noThanks": "No thanks",
+    "password": "Password",
+    "selectYear": "Select year",
+    "allow": "Allow"
   },
   "coreForbidden": {
     "accessBlocked": "Access blocked",
@@ -512,7 +517,15 @@
     "thisMonthSCalendarCould": "This month's calendar could not be loaded.",
     "nothingIsWaitingOnYou": "Nothing is waiting on you for this day.",
     "pickTheDatesFirst": "Pick the dates first — what is free depends on them.",
-    "noRoomsOnThisProperty": "No rooms on this property yet."
+    "noRoomsOnThisProperty": "No rooms on this property yet.",
+    "bookingCalendar": "Booking calendar",
+    "assignRoom": "Assign room",
+    "noteFromGuest": "Note from guest",
+    "savedAs": "Saved as",
+    "checkInCheckOut": "Check in — check out",
+    "aNightRuns12": "A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.",
+    "discount": "Discount",
+    "saveBooking": "Save booking"
   },
   "hostExpenses": {
     "allTypes": "All types",
@@ -684,7 +697,14 @@
     "weCouldnTLoadAnalytics": "We couldn't load analytics for this property.",
     "allUtilityInvoicesAreSettled": "All utility invoices are settled.",
     "noInvoicesForThisProperty": "No invoices for this property yet.",
-    "weCouldnTLoadRevenue": "We couldn't load revenue data."
+    "weCouldnTLoadRevenue": "We couldn't load revenue data.",
+    "upcomingBookings": "Upcoming bookings",
+    "nArriving": "{{count}} arriving",
+    "nLeaving": "{{count}} leaving",
+    "nothingBookedYet": "Nothing booked yet",
+    "noArrivalsOrDeparturesAhead": "No arrivals or departures in the next two weeks.",
+    "inOverOutPerDay": "Arrivals over departures, per day",
+    "viewAllBookings": "View all bookings →"
   },
   "hostRooms": {
     "calendarTab": "Calendar",
@@ -803,7 +823,8 @@
     "selectAProduct": "Select a product",
     "invoicesAppearHereAfterYour": "Invoices appear here after your first charge.",
     "pleaseCheckYourConnectionAnd": "Please check your connection and try again.",
-    "youDonTHaveAn": "You don't have an active plan yet. Browse the plans below to get started."
+    "youDonTHaveAn": "You don't have an active plan yet. Browse the plans below to get started.",
+    "checkBackSoonPlans": "Check back soon — plans will appear here."
   },
   "hostTeam": {
     "staffPhoto": "Staff photo",
@@ -1034,7 +1055,11 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Search an address or landmark…",
-    "searchCityOrArea": "Search city or area"
+    "searchCityOrArea": "Search city or area",
+    "satellite": "Satellite",
+    "noMatchingPlaces": "No matching places",
+    "poweredByOpenstreetmap": "Powered by OpenStreetMap",
+    "noCoordinatesSetFor": "No coordinates set for this listing."
   },
   "moderatorAudit": {
     "auditLog": "Audit log",
@@ -1183,7 +1208,8 @@
     "weVerifyListingsAcross": "We verify listings across Pakistan and write what we learn doing it.",
     "weCouldnTFindThatPost": "We couldn’t find that post",
     "theLinkMayBeOld": "The link may be old, or the address slightly off.",
-    "browseEveryPostInstead": "Browse every post instead."
+    "browseEveryPostInstead": "Browse every post instead.",
+    "readTheGuide": "Read the guide"
   },
   "publicBooking": {
     "sleepsN": "Sleeps {{count}}",
@@ -1340,7 +1366,8 @@
     "locating": "Locating…"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Drag & drop, upload, or take a photo"
+    "dragAmpDropUploadOr": "Drag & drop, upload, or take a photo",
+    "replaceAdd": "Replace / add"
   },
   "states": {
     "nothingHereYet": "Nothing here yet",
@@ -1352,7 +1379,18 @@
   },
   "subscriptionGate": {
     "unlockFeature": "Unlock {{feature}}",
-    "thisFeature": "This feature"
+    "thisFeature": "This feature",
+    "dashboardOverview": "Dashboard overview",
+    "roomManagement": "Room management",
+    "tenantManagement": "Tenant management",
+    "utilityBilling": "Utility billing",
+    "thisFeatureIsAvailable": "This feature is available on paid plans. Subscribe to get full access to your hostel dashboard.",
+    "completeHostelProfileFirst": "Complete hostel profile first",
+    "onceSubscribedAllFeatures": "Once subscribed, all features unlock automatically.",
+    "roomAmpOccupancyManagement": "Room & occupancy management",
+    "tenantTrackingAmpPayment": "Tenant tracking & payment records",
+    "rentAndUtilityInvoice": "Rent and utility invoice generation",
+    "analyticsAndRevenueReports": "Analytics and revenue reports"
   },
   "userAccountShell": {
     "manageYourProfileSavedHostels": "Manage your profile, saved hostels and preferences."

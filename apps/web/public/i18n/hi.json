@@ -320,7 +320,12 @@
     "enterLandmarks": "आस-पास के स्थल दर्ज करें",
     "enterReason": "कारण दर्ज करें",
     "enterNote": "नोट दर्ज करें",
-    "somethingWentWrongReachingThe": "सर्वर से संपर्क करने में कुछ गड़बड़ हो गई।"
+    "somethingWentWrongReachingThe": "सर्वर से संपर्क करने में कुछ गड़बड़ हो गई।",
+    "weDLikeToCountPage": "हम पेज व्यू गिनना चाहेंगे ताकि पता चले कि लोग कौन-से हॉस्टल और शहर खोजते हैं, और हम खोज बेहतर कर सकें। कोई निजी जानकारी नहीं भेजी जाती, और इसका साइन इन बने रहने से कोई संबंध नहीं है।",
+    "noThanks": "नहीं, धन्यवाद",
+    "password": "पासवर्ड",
+    "selectYear": "वर्ष चुनें",
+    "allow": "अनुमति दें"
   },
   "leadWall": {
     "close": "बंद करें",
@@ -741,7 +746,8 @@
     "selectAProduct": "उत्पाद चुनें",
     "invoicesAppearHereAfterYour": "आपके पहले शुल्क के बाद चालान यहाँ दिखाई देंगे।",
     "pleaseCheckYourConnectionAnd": "कृपया अपना कनेक्शन जांचें और फिर से प्रयास करें।",
-    "youDonTHaveAn": "आपके पास अभी कोई सक्रिय प्लान नहीं है। शुरू करने के लिए नीचे दिए प्लान देखें।"
+    "youDonTHaveAn": "आपके पास अभी कोई सक्रिय प्लान नहीं है। शुरू करने के लिए नीचे दिए प्लान देखें।",
+    "checkBackSoonPlans": "जल्द ही फिर देखें — प्लान यहाँ दिखाई देंगे।"
   },
   "hostMess": {
     "pickADate": "तिथि चुनें",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "हम इस प्रॉपर्टी के लिए एनालिटिक्स लोड नहीं कर सके।",
     "allUtilityInvoicesAreSettled": "सभी यूटिलिटी चालान चुका दिए गए हैं।",
     "noInvoicesForThisProperty": "इस प्रॉपर्टी के लिए अभी कोई चालान नहीं है।",
-    "weCouldnTLoadRevenue": "हम राजस्व डेटा लोड नहीं कर सके।"
+    "weCouldnTLoadRevenue": "हम राजस्व डेटा लोड नहीं कर सके।",
+    "upcomingBookings": "आगामी बुकिंग",
+    "nArriving": "{{count}} आ रहे हैं",
+    "nLeaving": "{{count}} जा रहे हैं",
+    "nothingBookedYet": "अभी कोई बुकिंग नहीं",
+    "noArrivalsOrDeparturesAhead": "अगले दो हफ़्तों में कोई आगमन या प्रस्थान नहीं।",
+    "inOverOutPerDay": "प्रतिदिन आगमन, उसके नीचे प्रस्थान",
+    "viewAllBookings": "सभी बुकिंग देखें →"
   },
   "hostBookings": {
     "calendarTab": "कैलेंडर",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "इस माह का कैलेंडर लोड नहीं हो सका।",
     "nothingIsWaitingOnYou": "इस दिन के लिए आपके पास कुछ भी लंबित नहीं है।",
     "pickTheDatesFirst": "पहले तारीख़ें चुनें — उपलब्धता उन्हीं पर निर्भर करती है।",
-    "noRoomsOnThisProperty": "इस प्रॉपर्टी में अभी कोई कमरा नहीं है।"
+    "noRoomsOnThisProperty": "इस प्रॉपर्टी में अभी कोई कमरा नहीं है।",
+    "bookingCalendar": "बुकिंग कैलेंडर",
+    "assignRoom": "कमरा आवंटित करें",
+    "noteFromGuest": "मेहमान का संदेश",
+    "savedAs": "इस रूप में सहेजा गया",
+    "checkInCheckOut": "चेक-इन — चेक-आउट",
+    "aNightRuns12": "एक रात दोपहर 12:00 से अगले दिन दोपहर 12:00 तक होती है — दोपहर से चेक-इन, अगले दिन दोपहर तक चेक-आउट।",
+    "discount": "छूट",
+    "saveBooking": "बुकिंग सहेजें"
   },
   "hostHostelProfile": {
     "failed": "विफल",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "आपके हॉस्टल आमंत्रण, भोजन पुष्टियाँ और लंबित रसीदें।"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "खींचें और छोड़ें, अपलोड करें, या फ़ोटो लें"
+    "dragAmpDropUploadOr": "खींचें और छोड़ें, अपलोड करें, या फ़ोटो लें",
+    "replaceAdd": "बदलें / जोड़ें"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "अब समाप्ति तिथि चुनें",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "हम पूरे पाकिस्तान में लिस्टिंग सत्यापित करते हैं और उस दौरान जो सीखते हैं, वही लिखते हैं।",
     "weCouldnTFindThatPost": "हमें वह पोस्ट नहीं मिली",
     "theLinkMayBeOld": "हो सकता है लिंक पुराना हो, या पता थोड़ा ग़लत हो।",
-    "browseEveryPostInstead": "इसके बजाय सभी पोस्ट देखें।"
+    "browseEveryPostInstead": "इसके बजाय सभी पोस्ट देखें।",
+    "readTheGuide": "गाइड पढ़ें"
   },
   "publicListing": {
     "checkIn": "चेक इन",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "पता या लैंडमार्क खोजें…",
-    "searchCityOrArea": "शहर या क्षेत्र खोजें"
+    "searchCityOrArea": "शहर या क्षेत्र खोजें",
+    "satellite": "उपग्रह",
+    "noMatchingPlaces": "कोई मेल खाता स्थान नहीं",
+    "poweredByOpenstreetmap": "OpenStreetMap द्वारा संचालित",
+    "noCoordinatesSetFor": "इस लिस्टिंग के लिए कोई निर्देशांक सेट नहीं हैं।"
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} अनलॉक करें",
-    "thisFeature": "यह सुविधा"
+    "thisFeature": "यह सुविधा",
+    "dashboardOverview": "डैशबोर्ड अवलोकन",
+    "roomManagement": "कमरा प्रबंधन",
+    "tenantManagement": "किरायेदार प्रबंधन",
+    "utilityBilling": "यूटिलिटी बिलिंग",
+    "thisFeatureIsAvailable": "यह सुविधा सशुल्क प्लान में उपलब्ध है। अपने हॉस्टल डैशबोर्ड तक पूरी पहुँच के लिए सदस्यता लें।",
+    "completeHostelProfileFirst": "पहले हॉस्टल प्रोफ़ाइल पूरी करें",
+    "onceSubscribedAllFeatures": "सदस्यता लेते ही सभी सुविधाएँ अपने आप खुल जाती हैं।",
+    "roomAmpOccupancyManagement": "कमरा और अधिभोग प्रबंधन",
+    "tenantTrackingAmpPayment": "किरायेदार ट्रैकिंग और भुगतान रिकॉर्ड",
+    "rentAndUtilityInvoice": "किराया और यूटिलिटी चालान बनाना",
+    "analyticsAndRevenueReports": "एनालिटिक्स और राजस्व रिपोर्ट"
   },
   "notifications": {
     "nUnread": "{{count}} अपठित"

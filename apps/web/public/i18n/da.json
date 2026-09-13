@@ -320,7 +320,12 @@
     "enterLandmarks": "Indtast nærliggende landemærker",
     "enterReason": "Indtast en årsag",
     "enterNote": "Indtast en note",
-    "somethingWentWrongReachingThe": "Noget gik galt under forbindelsen til serveren."
+    "somethingWentWrongReachingThe": "Noget gik galt under forbindelsen til serveren.",
+    "weDLikeToCountPage": "Vi vil gerne tælle sidevisninger for at se, hvilke hosteller og byer folk søger efter, så vi kan forbedre søgningen. Ingen personlige oplysninger sendes, og det har intet med at forblive logget ind at gøre.",
+    "noThanks": "Nej tak",
+    "password": "Adgangskode",
+    "selectYear": "Vælg år",
+    "allow": "Tillad"
   },
   "leadWall": {
     "close": "Luk",
@@ -741,7 +746,8 @@
     "selectAProduct": "Vælg et produkt",
     "invoicesAppearHereAfterYour": "Fakturaer vises her efter din første betaling.",
     "pleaseCheckYourConnectionAnd": "Tjek din forbindelse, og prøv igen.",
-    "youDonTHaveAn": "Du har endnu ingen aktiv plan. Se planerne nedenfor for at komme i gang."
+    "youDonTHaveAn": "Du har endnu ingen aktiv plan. Se planerne nedenfor for at komme i gang.",
+    "checkBackSoonPlans": "Kig forbi igen snart — planerne vises her."
   },
   "hostMess": {
     "pickADate": "Vælg en dato",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "Vi kunne ikke indlæse analyser for denne ejendom.",
     "allUtilityInvoicesAreSettled": "Alle forbrugsregninger er betalt.",
     "noInvoicesForThisProperty": "Ingen fakturaer for denne ejendom endnu.",
-    "weCouldnTLoadRevenue": "Vi kunne ikke indlæse omsætningsdata."
+    "weCouldnTLoadRevenue": "Vi kunne ikke indlæse omsætningsdata.",
+    "upcomingBookings": "Kommende bookinger",
+    "nArriving": "{{count}} ankommer",
+    "nLeaving": "{{count}} rejser",
+    "nothingBookedYet": "Ingen bookinger endnu",
+    "noArrivalsOrDeparturesAhead": "Ingen ankomster eller afrejser de næste to uger.",
+    "inOverOutPerDay": "Ankomster over afrejser, pr. dag",
+    "viewAllBookings": "Se alle bookinger →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "Denne måneds kalender kunne ikke indlæses.",
     "nothingIsWaitingOnYou": "Der er intet, der venter på dig denne dag.",
     "pickTheDatesFirst": "Vælg datoerne først — hvad der er ledigt afhænger af dem.",
-    "noRoomsOnThisProperty": "Ingen værelser på denne ejendom endnu."
+    "noRoomsOnThisProperty": "Ingen værelser på denne ejendom endnu.",
+    "bookingCalendar": "Bookingkalender",
+    "assignRoom": "Tildel værelse",
+    "noteFromGuest": "Besked fra gæsten",
+    "savedAs": "Gemt som",
+    "checkInCheckOut": "Ankomst — afrejse",
+    "aNightRuns12": "En overnatning løber fra kl. 12.00 til kl. 12.00 — ankomst fra middag, afrejse senest middag dagen efter.",
+    "discount": "Rabat",
+    "saveBooking": "Gem booking"
   },
   "hostHostelProfile": {
     "failed": "Mislykkedes",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "Dine hostelinvitationer, måltidsbekræftelser og udestående kvitteringer."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Træk & slip, upload eller tag et billede"
+    "dragAmpDropUploadOr": "Træk & slip, upload eller tag et billede",
+    "replaceAdd": "Erstat / tilføj"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Klik nu på en slutdato",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "Vi verificerer annoncer i hele Pakistan og skriver om det, vi lærer undervejs.",
     "weCouldnTFindThatPost": "Vi kunne ikke finde det indlæg",
     "theLinkMayBeOld": "Linket kan være gammelt, eller adressen en smule forkert.",
-    "browseEveryPostInstead": "Gennemse alle indlæg i stedet."
+    "browseEveryPostInstead": "Gennemse alle indlæg i stedet.",
+    "readTheGuide": "Læs guiden"
   },
   "publicListing": {
     "checkIn": "Ankomst",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Søg efter adresse eller vartegn…",
-    "searchCityOrArea": "Søg efter by eller område"
+    "searchCityOrArea": "Søg efter by eller område",
+    "satellite": "Satellit",
+    "noMatchingPlaces": "Ingen matchende steder",
+    "poweredByOpenstreetmap": "Drevet af OpenStreetMap",
+    "noCoordinatesSetFor": "Der er ikke angivet koordinater for denne annonce."
   },
   "subscriptionGate": {
     "unlockFeature": "Lås {{feature}} op",
-    "thisFeature": "denne funktion"
+    "thisFeature": "denne funktion",
+    "dashboardOverview": "Oversigt over dashboard",
+    "roomManagement": "Værelsesadministration",
+    "tenantManagement": "Lejeradministration",
+    "utilityBilling": "Forbrugsafregning",
+    "thisFeatureIsAvailable": "Denne funktion findes i betalte planer. Abonnér for at få fuld adgang til dit hosteldashboard.",
+    "completeHostelProfileFirst": "Udfyld hostelprofilen først",
+    "onceSubscribedAllFeatures": "Når du abonnerer, låses alle funktioner op automatisk.",
+    "roomAmpOccupancyManagement": "Værelses- og belægningsstyring",
+    "tenantTrackingAmpPayment": "Lejeroversigt og betalingshistorik",
+    "rentAndUtilityInvoice": "Oprettelse af husleje- og forbrugsfakturaer",
+    "analyticsAndRevenueReports": "Analyser og omsætningsrapporter"
   },
   "notifications": {
     "nUnread": "{{count}} ulæste"

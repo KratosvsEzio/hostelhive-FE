@@ -320,7 +320,12 @@
     "enterLandmarks": "Wpisz pobliskie punkty orientacyjne",
     "enterReason": "Wpisz powód",
     "enterNote": "Wpisz notatkę",
-    "somethingWentWrongReachingThe": "Wystąpił błąd podczas łączenia z serwerem."
+    "somethingWentWrongReachingThe": "Wystąpił błąd podczas łączenia z serwerem.",
+    "weDLikeToCountPage": "Chcielibyśmy liczyć odsłony, aby wiedzieć, jakich hosteli i miast szukają ludzie, i ulepszyć wyszukiwanie. Nie wysyłamy żadnych danych osobowych, a to nie ma nic wspólnego z pozostawaniem zalogowanym.",
+    "noThanks": "Nie, dziękuję",
+    "password": "Hasło",
+    "selectYear": "Wybierz rok",
+    "allow": "Zezwól"
   },
   "leadWall": {
     "close": "Zamknij",
@@ -746,7 +751,8 @@
     "selectAProduct": "Wybierz produkt",
     "invoicesAppearHereAfterYour": "Faktury pojawią się tutaj po pierwszej płatności.",
     "pleaseCheckYourConnectionAnd": "Sprawdź połączenie i spróbuj ponownie.",
-    "youDonTHaveAn": "Nie masz jeszcze aktywnego planu. Przejrzyj plany poniżej, aby zacząć."
+    "youDonTHaveAn": "Nie masz jeszcze aktywnego planu. Przejrzyj plany poniżej, aby zacząć.",
+    "checkBackSoonPlans": "Zajrzyj wkrótce — plany pojawią się tutaj."
   },
   "hostMess": {
     "pickADate": "Wybierz datę",
@@ -1052,7 +1058,14 @@
     "weCouldnTLoadAnalytics": "Nie udało się wczytać analiz dla tego obiektu.",
     "allUtilityInvoicesAreSettled": "Wszystkie rachunki za media są rozliczone.",
     "noInvoicesForThisProperty": "Brak faktur dla tego obiektu.",
-    "weCouldnTLoadRevenue": "Nie udało się wczytać danych o przychodach."
+    "weCouldnTLoadRevenue": "Nie udało się wczytać danych o przychodach.",
+    "upcomingBookings": "Nadchodzące rezerwacje",
+    "nArriving": "{{count}} przyjazdów",
+    "nLeaving": "{{count}} wyjazdów",
+    "nothingBookedYet": "Brak rezerwacji",
+    "noArrivalsOrDeparturesAhead": "Brak przyjazdów i wyjazdów w ciągu najbliższych dwóch tygodni.",
+    "inOverOutPerDay": "Przyjazdy nad wyjazdami, dziennie",
+    "viewAllBookings": "Zobacz wszystkie rezerwacje →"
   },
   "hostBookings": {
     "calendarTab": "Kalendarz",
@@ -1085,7 +1098,15 @@
     "thisMonthSCalendarCould": "Nie udało się wczytać kalendarza na ten miesiąc.",
     "nothingIsWaitingOnYou": "Nic nie czeka na Ciebie w tym dniu.",
     "pickTheDatesFirst": "Najpierw wybierz daty — dostępność od nich zależy.",
-    "noRoomsOnThisProperty": "Brak pokoi w tym obiekcie."
+    "noRoomsOnThisProperty": "Brak pokoi w tym obiekcie.",
+    "bookingCalendar": "Kalendarz rezerwacji",
+    "assignRoom": "Przypisz pokój",
+    "noteFromGuest": "Notatka od gościa",
+    "savedAs": "Zapisano jako",
+    "checkInCheckOut": "Zameldowanie — wymeldowanie",
+    "aNightRuns12": "Doba trwa od 12:00 do 12:00 — zameldowanie od południa, wymeldowanie do południa następnego dnia.",
+    "discount": "Rabat",
+    "saveBooking": "Zapisz rezerwację"
   },
   "hostHostelProfile": {
     "failed": "Niepowodzenie",
@@ -1157,7 +1178,8 @@
     "yourHostelInvitesMealConfirmations": "Twoje zaproszenia z hostelu, potwierdzenia posiłków i oczekujące paragony."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Przeciągnij i upuść, prześlij lub zrób zdjęcie"
+    "dragAmpDropUploadOr": "Przeciągnij i upuść, prześlij lub zrób zdjęcie",
+    "replaceAdd": "Zamień / dodaj"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Teraz kliknij datę końcową",
@@ -1288,7 +1310,8 @@
     "weVerifyListingsAcross": "Weryfikujemy ogłoszenia w całym Pakistanie i piszemy o tym, czego się uczymy.",
     "weCouldnTFindThatPost": "Nie znaleźliśmy tego wpisu",
     "theLinkMayBeOld": "Link może być stary lub adres nieco błędny.",
-    "browseEveryPostInstead": "Przejrzyj zamiast tego wszystkie wpisy."
+    "browseEveryPostInstead": "Przejrzyj zamiast tego wszystkie wpisy.",
+    "readTheGuide": "Przeczytaj poradnik"
   },
   "publicListing": {
     "checkIn": "Zameldowanie",
@@ -1497,11 +1520,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Szukaj adresu lub punktu orientacyjnego…",
-    "searchCityOrArea": "Szukaj miasta lub obszaru"
+    "searchCityOrArea": "Szukaj miasta lub obszaru",
+    "satellite": "Satelita",
+    "noMatchingPlaces": "Brak pasujących miejsc",
+    "poweredByOpenstreetmap": "Obsługiwane przez OpenStreetMap",
+    "noCoordinatesSetFor": "Brak współrzędnych dla tego ogłoszenia."
   },
   "subscriptionGate": {
     "unlockFeature": "Odblokuj {{feature}}",
-    "thisFeature": "tę funkcję"
+    "thisFeature": "tę funkcję",
+    "dashboardOverview": "Przegląd pulpitu",
+    "roomManagement": "Zarządzanie pokojami",
+    "tenantManagement": "Zarządzanie najemcami",
+    "utilityBilling": "Rozliczanie mediów",
+    "thisFeatureIsAvailable": "Ta funkcja jest dostępna w planach płatnych. Wykup subskrypcję, aby uzyskać pełny dostęp do pulpitu hostelu.",
+    "completeHostelProfileFirst": "Najpierw uzupełnij profil hostelu",
+    "onceSubscribedAllFeatures": "Po wykupieniu subskrypcji wszystkie funkcje odblokowują się automatycznie.",
+    "roomAmpOccupancyManagement": "Zarządzanie pokojami i obłożeniem",
+    "tenantTrackingAmpPayment": "Śledzenie najemców i historia płatności",
+    "rentAndUtilityInvoice": "Tworzenie faktur za czynsz i media",
+    "analyticsAndRevenueReports": "Analizy i raporty przychodów"
   },
   "notifications": {
     "nUnread": "{{count}} nieprzeczytanych"

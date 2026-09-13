@@ -320,7 +320,12 @@
     "enterLandmarks": "Orientierungspunkte in der Nähe eingeben",
     "enterReason": "Grund eingeben",
     "enterNote": "Notiz eingeben",
-    "somethingWentWrongReachingThe": "Beim Verbinden mit dem Server ist ein Fehler aufgetreten."
+    "somethingWentWrongReachingThe": "Beim Verbinden mit dem Server ist ein Fehler aufgetreten.",
+    "weDLikeToCountPage": "Wir möchten Seitenaufrufe zählen, um zu sehen, welche Hostels und Städte gesucht werden, damit wir die Suche verbessern können. Es werden keine persönlichen Daten gesendet, und mit dem Angemeldetbleiben hat das nichts zu tun.",
+    "noThanks": "Nein, danke",
+    "password": "Passwort",
+    "selectYear": "Jahr auswählen",
+    "allow": "Zulassen"
   },
   "leadWall": {
     "close": "Schließen",
@@ -741,7 +746,8 @@
     "selectAProduct": "Produkt auswählen",
     "invoicesAppearHereAfterYour": "Rechnungen erscheinen hier nach Ihrer ersten Abbuchung.",
     "pleaseCheckYourConnectionAnd": "Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-    "youDonTHaveAn": "Sie haben noch keinen aktiven Tarif. Sehen Sie sich die Tarife unten an, um zu starten."
+    "youDonTHaveAn": "Sie haben noch keinen aktiven Tarif. Sehen Sie sich die Tarife unten an, um zu starten.",
+    "checkBackSoonPlans": "Schauen Sie bald wieder vorbei — die Tarife erscheinen hier."
   },
   "hostMess": {
     "pickADate": "Datum wählen",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "Für dieses Objekt konnten keine Auswertungen geladen werden.",
     "allUtilityInvoicesAreSettled": "Alle Nebenkostenrechnungen sind beglichen.",
     "noInvoicesForThisProperty": "Für dieses Objekt gibt es noch keine Rechnungen.",
-    "weCouldnTLoadRevenue": "Umsatzdaten konnten nicht geladen werden."
+    "weCouldnTLoadRevenue": "Umsatzdaten konnten nicht geladen werden.",
+    "upcomingBookings": "Anstehende Buchungen",
+    "nArriving": "{{count}} Anreisen",
+    "nLeaving": "{{count}} Abreisen",
+    "nothingBookedYet": "Noch nichts gebucht",
+    "noArrivalsOrDeparturesAhead": "Keine An- oder Abreisen in den nächsten zwei Wochen.",
+    "inOverOutPerDay": "Anreisen über Abreisen, pro Tag",
+    "viewAllBookings": "Alle Buchungen ansehen →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "Der Kalender für diesen Monat konnte nicht geladen werden.",
     "nothingIsWaitingOnYou": "An diesem Tag wartet nichts auf Sie.",
     "pickTheDatesFirst": "Wählen Sie zuerst die Daten — was frei ist, hängt davon ab.",
-    "noRoomsOnThisProperty": "Für dieses Objekt gibt es noch keine Zimmer."
+    "noRoomsOnThisProperty": "Für dieses Objekt gibt es noch keine Zimmer.",
+    "bookingCalendar": "Buchungskalender",
+    "assignRoom": "Zimmer zuweisen",
+    "noteFromGuest": "Notiz vom Gast",
+    "savedAs": "Gespeichert als",
+    "checkInCheckOut": "Anreise — Abreise",
+    "aNightRuns12": "Eine Nacht läuft von 12:00 bis 12:00 Uhr — Anreise ab Mittag, Abreise bis Mittag am Folgetag.",
+    "discount": "Rabatt",
+    "saveBooking": "Buchung speichern"
   },
   "hostHostelProfile": {
     "failed": "Fehlgeschlagen",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "Ihre Hostel-Einladungen, Essensbestätigungen und offenen Belege."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Ziehen & ablegen, hochladen oder Foto aufnehmen"
+    "dragAmpDropUploadOr": "Ziehen & ablegen, hochladen oder Foto aufnehmen",
+    "replaceAdd": "Ersetzen / hinzufügen"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Klicken Sie nun ein Enddatum an",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "Wir prüfen Inserate in ganz Pakistan und schreiben auf, was wir dabei lernen.",
     "weCouldnTFindThatPost": "Dieser Beitrag wurde nicht gefunden",
     "theLinkMayBeOld": "Der Link ist vielleicht alt oder die Adresse leicht falsch.",
-    "browseEveryPostInstead": "Stattdessen alle Beiträge durchsehen."
+    "browseEveryPostInstead": "Stattdessen alle Beiträge durchsehen.",
+    "readTheGuide": "Ratgeber lesen"
   },
   "publicListing": {
     "checkIn": "Anreise",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Adresse oder Wahrzeichen suchen…",
-    "searchCityOrArea": "Stadt oder Gegend suchen"
+    "searchCityOrArea": "Stadt oder Gegend suchen",
+    "satellite": "Satellit",
+    "noMatchingPlaces": "Keine passenden Orte",
+    "poweredByOpenstreetmap": "Ermöglicht durch OpenStreetMap",
+    "noCoordinatesSetFor": "Für dieses Inserat sind keine Koordinaten hinterlegt."
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} freischalten",
-    "thisFeature": "diese Funktion"
+    "thisFeature": "diese Funktion",
+    "dashboardOverview": "Dashboard-Übersicht",
+    "roomManagement": "Zimmerverwaltung",
+    "tenantManagement": "Mieterverwaltung",
+    "utilityBilling": "Nebenkostenabrechnung",
+    "thisFeatureIsAvailable": "Diese Funktion ist in den kostenpflichtigen Tarifen enthalten. Abonnieren Sie für vollen Zugriff auf Ihr Hostel-Dashboard.",
+    "completeHostelProfileFirst": "Zuerst das Hostel-Profil vervollständigen",
+    "onceSubscribedAllFeatures": "Nach dem Abonnieren werden alle Funktionen automatisch freigeschaltet.",
+    "roomAmpOccupancyManagement": "Zimmer- und Belegungsverwaltung",
+    "tenantTrackingAmpPayment": "Mieterverfolgung und Zahlungsnachweise",
+    "rentAndUtilityInvoice": "Erstellung von Miet- und Nebenkostenrechnungen",
+    "analyticsAndRevenueReports": "Auswertungen und Umsatzberichte"
   },
   "notifications": {
     "nUnread": "{{count}} ungelesen"

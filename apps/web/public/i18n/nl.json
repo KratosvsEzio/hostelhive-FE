@@ -320,7 +320,12 @@
     "enterLandmarks": "Voer nabijgelegen herkenningspunten in",
     "enterReason": "Voer een reden in",
     "enterNote": "Voer een notitie in",
-    "somethingWentWrongReachingThe": "Er is iets misgegaan bij het bereiken van de server."
+    "somethingWentWrongReachingThe": "Er is iets misgegaan bij het bereiken van de server.",
+    "weDLikeToCountPage": "We willen graag paginaweergaven tellen om te zien welke hostels en steden mensen zoeken, zodat we het zoeken kunnen verbeteren. Er worden geen persoonlijke gegevens verzonden, en dit staat los van ingelogd blijven.",
+    "noThanks": "Nee, bedankt",
+    "password": "Wachtwoord",
+    "selectYear": "Jaar selecteren",
+    "allow": "Toestaan"
   },
   "leadWall": {
     "close": "Sluiten",
@@ -741,7 +746,8 @@
     "selectAProduct": "Kies een product",
     "invoicesAppearHereAfterYour": "Facturen verschijnen hier na uw eerste afschrijving.",
     "pleaseCheckYourConnectionAnd": "Controleer uw verbinding en probeer het opnieuw.",
-    "youDonTHaveAn": "U hebt nog geen actief abonnement. Bekijk de abonnementen hieronder om te beginnen."
+    "youDonTHaveAn": "U hebt nog geen actief abonnement. Bekijk de abonnementen hieronder om te beginnen.",
+    "checkBackSoonPlans": "Kom snel terug — de abonnementen verschijnen hier."
   },
   "hostMess": {
     "pickADate": "Kies een datum",
@@ -1047,7 +1053,14 @@
     "weCouldnTLoadAnalytics": "We konden de statistieken voor deze accommodatie niet laden.",
     "allUtilityInvoicesAreSettled": "Alle nutsfacturen zijn voldaan.",
     "noInvoicesForThisProperty": "Nog geen facturen voor deze accommodatie.",
-    "weCouldnTLoadRevenue": "We konden de omzetgegevens niet laden."
+    "weCouldnTLoadRevenue": "We konden de omzetgegevens niet laden.",
+    "upcomingBookings": "Aankomende boekingen",
+    "nArriving": "{{count}} aankomst",
+    "nLeaving": "{{count}} vertrek",
+    "nothingBookedYet": "Nog geen boekingen",
+    "noArrivalsOrDeparturesAhead": "Geen aankomsten of vertrekken in de komende twee weken.",
+    "inOverOutPerDay": "Aankomsten boven vertrekken, per dag",
+    "viewAllBookings": "Alle boekingen bekijken →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1080,7 +1093,15 @@
     "thisMonthSCalendarCould": "De kalender van deze maand kon niet worden geladen.",
     "nothingIsWaitingOnYou": "Er wacht niets op u voor deze dag.",
     "pickTheDatesFirst": "Kies eerst de data — wat vrij is hangt daarvan af.",
-    "noRoomsOnThisProperty": "Nog geen kamers in deze accommodatie."
+    "noRoomsOnThisProperty": "Nog geen kamers in deze accommodatie.",
+    "bookingCalendar": "Boekingskalender",
+    "assignRoom": "Kamer toewijzen",
+    "noteFromGuest": "Notitie van de gast",
+    "savedAs": "Opgeslagen als",
+    "checkInCheckOut": "Inchecken — uitchecken",
+    "aNightRuns12": "Een nacht loopt van 12:00 tot 12:00 uur — inchecken vanaf het middaguur, uitchecken vóór het middaguur de volgende dag.",
+    "discount": "Korting",
+    "saveBooking": "Boeking opslaan"
   },
   "hostHostelProfile": {
     "failed": "Mislukt",
@@ -1152,7 +1173,8 @@
     "yourHostelInvitesMealConfirmations": "Je hosteluitnodigingen, maaltijdbevestigingen en openstaande bonnen."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Slepen & neerzetten, uploaden of een foto maken"
+    "dragAmpDropUploadOr": "Slepen & neerzetten, uploaden of een foto maken",
+    "replaceAdd": "Vervangen / toevoegen"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Klik nu een einddatum",
@@ -1283,7 +1305,8 @@
     "weVerifyListingsAcross": "We verifiëren advertenties in heel Pakistan en schrijven op wat we daarbij leren.",
     "weCouldnTFindThatPost": "We konden dat bericht niet vinden",
     "theLinkMayBeOld": "De link is misschien oud, of het adres klopt net niet.",
-    "browseEveryPostInstead": "Bekijk in plaats daarvan alle berichten."
+    "browseEveryPostInstead": "Bekijk in plaats daarvan alle berichten.",
+    "readTheGuide": "Lees de gids"
   },
   "publicListing": {
     "checkIn": "Inchecken",
@@ -1492,11 +1515,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Zoek een adres of oriëntatiepunt…",
-    "searchCityOrArea": "Zoek stad of gebied"
+    "searchCityOrArea": "Zoek stad of gebied",
+    "satellite": "Satelliet",
+    "noMatchingPlaces": "Geen overeenkomende plaatsen",
+    "poweredByOpenstreetmap": "Mogelijk gemaakt door OpenStreetMap",
+    "noCoordinatesSetFor": "Voor deze advertentie zijn geen coördinaten ingesteld."
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} ontgrendelen",
-    "thisFeature": "deze functie"
+    "thisFeature": "deze functie",
+    "dashboardOverview": "Dashboardoverzicht",
+    "roomManagement": "Kamerbeheer",
+    "tenantManagement": "Huurdersbeheer",
+    "utilityBilling": "Nutsfacturatie",
+    "thisFeatureIsAvailable": "Deze functie is beschikbaar in de betaalde abonnementen. Neem een abonnement voor volledige toegang tot uw hosteldashboard.",
+    "completeHostelProfileFirst": "Vul eerst het hostelprofiel in",
+    "onceSubscribedAllFeatures": "Zodra u een abonnement hebt, worden alle functies automatisch ontgrendeld.",
+    "roomAmpOccupancyManagement": "Kamer- en bezettingsbeheer",
+    "tenantTrackingAmpPayment": "Huurdersopvolging en betalingsgegevens",
+    "rentAndUtilityInvoice": "Huur- en nutsfacturen aanmaken",
+    "analyticsAndRevenueReports": "Statistieken en omzetrapporten"
   },
   "notifications": {
     "nUnread": "{{count}} ongelezen"

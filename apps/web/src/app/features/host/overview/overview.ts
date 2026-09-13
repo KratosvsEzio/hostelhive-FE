@@ -27,6 +27,13 @@ import {
   revenueBars,
   tenantMovementBars,
 } from '@features/host/overview/charts/chart-helpers';
+import {
+  StripLevel,
+  UpcomingStrip,
+  stripRange,
+  upcomingStrip,
+} from '@features/host/overview/charts/upcoming-strip';
+import { CalendarDayCounts, HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { isSubscriptionError } from '@util/subscription-error';
@@ -34,6 +41,30 @@ import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
+
+/**
+ * Cell tints by volume band.
+ *
+ * Written out rather than composed, because Tailwind only emits the classes it can find as
+ * literal text — a `bg-emerald-${n}00` would compile and then render untinted.
+ *
+ * Arrivals green, departures rose, matching the legend above the strip. A day with none is
+ * flat grey rather than a pale tint, so an empty cell reads as nothing happening rather than
+ * as the quietest band.
+ */
+const IN_TINTS: Record<StripLevel, string> = {
+  0: 'bg-ink-50 text-ink-300',
+  1: 'bg-emerald-50 text-emerald-700',
+  2: 'bg-emerald-100 text-emerald-800',
+  3: 'bg-emerald-200 text-emerald-900',
+};
+
+const OUT_TINTS: Record<StripLevel, string> = {
+  0: 'bg-ink-50 text-ink-300',
+  1: 'bg-rose-50 text-rose-700',
+  2: 'bg-rose-100 text-rose-800',
+  3: 'bg-rose-200 text-rose-900',
+};
 
 interface ViewState {
   loading: boolean;
@@ -66,7 +97,18 @@ interface ViewState {
 export class HostOverview {
   private readonly api = inject(OverviewApi);
   private readonly opsApi = inject(HostOpsApi);
+  private readonly bookingsApi = inject(HostBookingsApi);
   protected readonly propertyStore = inject(HostPropertyStore);
+
+  /**
+   * Which pair of cards the bottom row carries.
+   *
+   * A monthly hostel lets to tenants who run up utility bills and a rent ledger. A nightly
+   * one has neither — it has arrivals — so those two cards sat empty on every backpacker
+   * dashboard, saying "No pending utility bills" about a thing the hostel does not do. The
+   * strip takes their place there.
+   */
+  protected readonly monthlyBilled = computed(() => this.propertyStore.isMonthlyBilled());
 
   protected readonly billTab = signal<'due' | 'over-due'>('due');
   protected readonly ledgerTab = signal<'due' | 'over-due'>('due');
@@ -80,6 +122,48 @@ export class HostOverview {
     hostelId: this.propertyStore.selected(),
     tab: this.ledgerTab(),
   }));
+
+  /**
+   * The fortnight ahead, for nightly hostels only.
+   *
+   * Gated on {@link monthlyBilled} in the query rather than at the call site, so a monthly
+   * hostel never asks: `booking_calender` is a real request, and the bottom row it would
+   * feed is not on screen.
+   */
+  private readonly upcomingQuery = computed(() => ({
+    hostelId: this.monthlyBilled() ? '' : this.propertyStore.selected(),
+  }));
+
+  private readonly upcomingResp = toSignal(
+    toObservable(this.upcomingQuery).pipe(
+      switchMap(({ hostelId }) => {
+        if (!hostelId) return of({ loading: false, error: false, days: [] as CalendarDayCounts[] });
+        const { from, to } = stripRange(new Date());
+        return this.bookingsApi.calendar(hostelId, from, to).pipe(
+          map((cal) => ({ loading: false, error: false, days: cal.days })),
+          startWith({ loading: true, error: false, days: [] as CalendarDayCounts[] }),
+          catchError(() => of({ loading: false, error: true, days: [] as CalendarDayCounts[] })),
+        );
+      }),
+    ),
+    { initialValue: { loading: true, error: false, days: [] as CalendarDayCounts[] } },
+  );
+
+  protected readonly upcomingLoading = computed(() => this.upcomingResp().loading);
+  protected readonly upcomingError = computed(() => this.upcomingResp().error);
+
+  /** Rebuilt from `new Date()` on every read so the strip cannot outlive midnight. */
+  protected readonly strip = computed<UpcomingStrip>(() =>
+    upcomingStrip(this.upcomingResp().days, new Date()),
+  );
+
+  protected inTint(level: StripLevel): string {
+    return IN_TINTS[level];
+  }
+
+  protected outTint(level: StripLevel): string {
+    return OUT_TINTS[level];
+  }
 
   private readonly pendingUtilityResp = toSignal(
     toObservable(this.billTabQuery).pipe(

@@ -115,13 +115,11 @@ const DEBOUNCE_MS = 300;
             Searching…
           </div>
         } @else if (noMatches()) {
-          <div class="px-3.5 py-3 text-sm text-ink-400">No matching places</div>
+          <div class="px-3.5 py-3 text-sm text-ink-400">{{ 'maps.noMatchingPlaces' | transloco }}</div>
         }
         <div
           class="flex items-center justify-end gap-1 px-3.5 pb-0.5 pt-2 text-[10px] font-medium text-ink-300"
-        >
-          Powered by OpenStreetMap
-        </div>
+        >{{ 'maps.poweredByOpenstreetmap' | transloco }}</div>
       </div>
     }
   `,

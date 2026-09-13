@@ -33,6 +33,7 @@ export * from './lib/context-menu/context-menu';
 export * from './lib/photo-grid/photo-grid';
 export * from './lib/compact-number/compact-number';
 export * from './lib/breadcrumb/breadcrumb';
+export * from './lib/link-localiser';
 export * from './lib/states/no-results';
 export * from './lib/data-table/data-table';
 export * from './lib/global-filter/global-filter';
