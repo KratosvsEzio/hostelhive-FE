@@ -191,6 +191,7 @@ export class HostLayout {
   protected readonly nav = computed<NavEntry[]>(() =>
     hostNav(`/host/${this.propertyStore.selected()}`, {
       monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      nightlyBilled: this.propertyStore.isNightlyBilled(),
       can: (permission) => this.session.hasPermission(permission),
     }),
   );

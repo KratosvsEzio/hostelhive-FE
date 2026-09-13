@@ -329,7 +329,7 @@
                   [value]="+f.rent || 0"
                   [error]="fieldError('rent')"
                   (valueChange)="patch('rent', $event ? $any($event).toString() : '')"
-                  (blur)="markDirty('rent')"
+                  (blurred)="probeBlur($event)"
                 />
                 <hh-money-input
                   [label]="'hostTenants.securityDeposit' | transloco"
@@ -337,7 +337,7 @@
                   [value]="+f.advanceDeposit || 0"
                   [error]="fieldError('advanceDeposit')"
                   (valueChange)="patch('advanceDeposit', $event ? $any($event).toString() : '')"
-                  (blur)="markDirty('advanceDeposit')"
+                  (blurred)="markDirty('advanceDeposit')"
                 />
               </div>
 

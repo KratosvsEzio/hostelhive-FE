@@ -41,7 +41,7 @@ function group(raw: string): string {
  * would fight the caret fix and make it jump to the end.
  *
  * Optional `label` / `error` render the same chrome as `hh-input`, so it drops into existing
- * forms; `(blur)` fires for dirty-tracking. Amounts are numbers here — string-backed form
+ * forms; `(blurred)` fires for dirty-tracking. Amounts are numbers here — string-backed form
  * models adapt at the binding: `[value]="+f.rent" (valueChange)="patch('rent', $any($event))"`.
  *
  * `<hh-money-input label="Rent" [(value)]="amount" [currency]="'USD'" fieldClass="w-28" />`
@@ -78,7 +78,7 @@ function group(raw: string): string {
         class="w-full min-w-0 bg-transparent text-ink-900 outline-none placeholder:text-ink-400"
         [class]="fieldPadClass()"
         (input)="onInput()"
-        (blur)="blur.emit()"
+        (blur)="blurred.emit()"
       />
     </div>
     @if (error()) {
@@ -103,8 +103,8 @@ export class MoneyInput {
   /** Extra classes for the field wrapper — width, etc. (`w-28`, `w-full`). */
   readonly fieldClass = input('');
 
-  /** Fires on blur, for dirty-tracking (`(blur)="markDirty('rent')"`). */
-  readonly blur = output<void>();
+  /** Fires on blur, for dirty-tracking (`(blurred)="markDirty('rent')"`). */
+  readonly blurred = output<void>();
 
   protected readonly id = `hh-money-${++uid}`;
   protected readonly symbol = computed(() => currencySymbol(this.currency()));

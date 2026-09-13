@@ -88,6 +88,7 @@ export class HostMore {
   private readonly entries = computed(() =>
     hostNav(this.base(), {
       monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      nightlyBilled: this.propertyStore.isNightlyBilled(),
       can: (permission) => this.session.hasPermission(permission),
     }).filter((e) => {
       const link = e.link;

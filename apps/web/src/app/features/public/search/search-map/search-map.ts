@@ -1395,7 +1395,10 @@ export class SearchMap {
   }
 
   /** Typed text in the mobile place input — no navigation until a suggestion is picked. */
-  protected onPlaceText(_text: string): void {}
+  protected onPlaceText(_text: string): void {
+    // Deliberately inert: typing must not navigate, because every keystroke would push a
+    // history entry and refetch. The suggestion click is what commits.
+  }
 
   /** A Place was picked from the autocomplete dropdown → recenter the map and refetch. */
   protected onPlaceSelected(r: PlaceResult): void {

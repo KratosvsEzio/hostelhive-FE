@@ -445,7 +445,10 @@ export class ListingDetail {
     const text = encodeURIComponent(`Check out ${l?.name ?? 'this hostel'} on HostelHive: ${href}`);
 
     if (platform === 'native') {
-      if (navigator.share) navigator.share({ title: l?.name ?? '', url: href }).catch(() => {});
+      if (navigator.share) navigator.share({ title: l?.name ?? '', url: href }).catch(() => {
+          // Dismissing the share sheet rejects the promise. That is the user declining,
+          // not an error to report.
+        });
       return;
     }
 

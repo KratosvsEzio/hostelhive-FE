@@ -15,7 +15,9 @@ const DRAWER_HOST_COMPONENTS: unknown[] = [Tenants, Rooms, Invoices];
 
 export class AppRouteReuseStrategy implements RouteReuseStrategy {
   shouldDetach(_route: ActivatedRouteSnapshot): boolean { return false; }
-  store(_route: ActivatedRouteSnapshot, _handle: DetachedRouteHandle | null): void {}
+  store(_route: ActivatedRouteSnapshot, _handle: DetachedRouteHandle | null): void {
+    // Nothing is ever detached (shouldDetach is always false), so there is no handle to keep.
+  }
   shouldAttach(_route: ActivatedRouteSnapshot): boolean { return false; }
   retrieve(_route: ActivatedRouteSnapshot): DetachedRouteHandle | null { return null; }
 

@@ -33,7 +33,11 @@ export interface NavEntry {
  */
 export function hostNav(
   base: string,
-  opts: { monthlyBilled: boolean; can: (permission: Permission) => boolean },
+  opts: {
+    monthlyBilled: boolean;
+    nightlyBilled: boolean;
+    can: (permission: Permission) => boolean;
+  },
 ): NavEntry[] {
   const b = base;
   // Each destination names the API action it needs, so a sub-user only sees the sections
@@ -52,8 +56,20 @@ export function hostNav(
       : [{ label: 'common.bookings', icon: 'ti-calendar', link: `${b}/bookings`, permission: 'host:Room:index' } as NavEntry]),
     { label: 'common.tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
     { label: 'hostNav.teamStaff',     icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
-    { label: 'common.utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
-    { label: 'common.mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess`,         permission: 'host:WeeklyMenu:index' },
+    // The mirror of Bookings above. Utilities and Mess belong to a hostel that houses
+    // people by the month: a nightly hostel has guests for two days, not meters to split
+    // between them or a weekly menu to plan, so both pages are empty by construction.
+    //
+    // Gated on `nightlyBilled` rather than on `!monthlyBilled`, so a hostel whose billing
+    // cycle failed to arrive keeps them. Hiding a working page because a field was missing
+    // is the worse of the two failures — the same argument `isMonthlyBilled` makes for
+    // leaving Bookings visible.
+    ...(opts.nightlyBilled
+      ? []
+      : [
+          { label: 'common.utilities', icon: 'ti-bolt',            link: `${b}/utilities`, permission: 'host:UtilityBill:index' } as NavEntry,
+          { label: 'common.mess',      icon: 'ti-tools-kitchen-2', link: `${b}/mess`,      permission: 'host:WeeklyMenu:index' } as NavEntry,
+        ]),
     { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
     { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
     { divider: true },

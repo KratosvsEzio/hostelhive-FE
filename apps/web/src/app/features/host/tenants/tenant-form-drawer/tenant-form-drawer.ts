@@ -126,6 +126,8 @@ export class TenantFormDrawer {
    * the language file. Translating inside a computed runs before it has loaded and returns
    * the key itself, which is the trap `hh-tabs` was just rebuilt to avoid.
    */
+  protected probeBlur(_x: void): void { void _x; }
+
   protected readonly joiningLabelKey = computed(() =>
     this.monthlyBilling() ? 'common.joiningDate' : 'hostTenants.checkIn',
   );

@@ -235,7 +235,8 @@ export class Media {
   protected toggleSelect(id: string): void {
     this.selectedIds.update((s) => {
       const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
   }

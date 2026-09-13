@@ -4,7 +4,7 @@ import { Observable, isObservable, of } from 'rxjs';
 import { HostListing, HostListingsData } from '@hostelhive/data-access';
 import { HostPropertyStore } from '@services';
 import { HostShellApi } from '@services/host-shell-api';
-import { bookingsGate, knownHostelGate } from './host.routes';
+import { bookingsGate, knownHostelGate, monthlyOnlyGate } from './host.routes';
 
 function listing(over: Partial<HostListing> = {}): HostListing {
   return {
@@ -171,5 +171,85 @@ describe('knownHostelGate', () => {
     setUp([listing({ id: 'nHelLt' })]);
     TestBed.inject(HostPropertyStore).setProperty('nHelLt');
     expect(await runKnown('hostels')).toBeInstanceOf(UrlTree);
+  });
+});
+
+/** The guard answers synchronously once the store has loaded; unwrap either shape. */
+async function runMonthlyOnly(hostelId: string): Promise<boolean | UrlTree> {
+  const result = TestBed.runInInjectionContext(() =>
+    monthlyOnlyGate(snapshotFor(hostelId), {} as RouterStateSnapshot),
+  );
+  return isObservable(result) ? await new Promise((r) => result.subscribe(r)) : (result as boolean | UrlTree);
+}
+
+/**
+ * Who may open Utilities and Mess.
+ *
+ * The mirror of `bookingsGate`. Those pages belong to a hostel that houses people by the
+ * month: a nightly hostel has guests for two days, so there are no meters to split between
+ * them and no weekly menu to plan.
+ *
+ * The important asymmetry is what each guard does with silence. Both are strict on the value
+ * they name, so a hostel whose billing cycle never arrived is neither monthly nor nightly and
+ * keeps **both** halves of the console. Written as `!isMonthlyBilled()` this guard would have
+ * hidden Utilities from every hostel with a missing field — which is the failure
+ * `isMonthlyBilled` documents itself as avoiding, pointed the other way.
+ */
+describe('monthlyOnlyGate', () => {
+  afterEach(() => localStorage.clear());
+
+  it('lets a monthly hostel through', async () => {
+    setUp([listing({ id: 'monthly-1', billingFrequency: 'month' })]);
+    expect(await runMonthlyOnly('monthly-1')).toBe(true);
+  });
+
+  it('sends a nightly hostel to its overview', async () => {
+    setUp([listing({ id: 'nightly-1', billingFrequency: 'night' })]);
+    const result = await runMonthlyOnly('nightly-1');
+    expect(result).toBeInstanceOf(UrlTree);
+    expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/host/nightly-1/overview');
+  });
+
+  it('judges the hostel in the URL, not the one still selected', async () => {
+    setUp([
+      listing({ id: 'nightly-1', billingFrequency: 'night' }),
+      listing({ id: 'monthly-1', billingFrequency: 'month' }),
+    ]);
+    const store = TestBed.inject(HostPropertyStore);
+
+    store.setProperty('monthly-1');
+    expect(await runMonthlyOnly('nightly-1')).toBeInstanceOf(UrlTree);
+
+    store.setProperty('nightly-1');
+    expect(await runMonthlyOnly('monthly-1')).toBe(true);
+  });
+
+  // The half that `!isMonthlyBilled()` would have got wrong.
+  it('lets an unstated billing cycle through', async () => {
+    setUp([
+      listing({ id: 'blank-1', billingFrequency: '' }),
+      listing({ id: 'odd-1', billingFrequency: 'fortnight' }),
+    ]);
+    expect(await runMonthlyOnly('blank-1')).toBe(true);
+    expect(await runMonthlyOnly('odd-1')).toBe(true);
+  });
+
+  it('lets an unknown hostel through rather than guessing', async () => {
+    setUp([listing({ id: 'nightly-1', billingFrequency: 'night' })]);
+    expect(await runMonthlyOnly('not-in-the-list')).toBe(true);
+  });
+
+  // Neither guard may turn the same hostel away: a host would have nowhere left to work.
+  it('never blocks the same hostel as bookingsGate', async () => {
+    setUp([
+      listing({ id: 'monthly-1', billingFrequency: 'month' }),
+      listing({ id: 'nightly-1', billingFrequency: 'night' }),
+      listing({ id: 'blank-1', billingFrequency: '' }),
+    ]);
+    for (const id of ['monthly-1', 'nightly-1', 'blank-1']) {
+      const blockedByBoth =
+        (await run(id)) instanceof UrlTree && (await runMonthlyOnly(id)) instanceof UrlTree;
+      expect({ id, blockedByBoth }).toEqual({ id, blockedByBoth: false });
+    }
   });
 });

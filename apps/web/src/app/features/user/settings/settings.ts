@@ -103,7 +103,10 @@ export class AccountSettings implements OnInit {
         this.phone.set(profile.phone ?? '');
         this.avatarUrl.set(profile.avatar?.url ?? null);
       },
-      error: () => {},
+      error: () => {
+        // The form keeps its defaults; the page is still usable and the user can save over
+        // them. Surfacing a toast here would fire on every transient network blip.
+      },
     });
   }
 

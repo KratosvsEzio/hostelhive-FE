@@ -63,6 +63,14 @@
         <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.faqs' | transloco }}</span>
         <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
       </a>
+      <!-- Public reading, so it sits with FAQs rather than with the account rows — the same
+           placement the desktop account menu gives it. It was in that menu and in the footer
+           but never here, so the blog was simply unreachable from a phone once signed in. -->
+      <a routerLink="/blog" class="flex w-full items-center gap-3 px-4 py-3.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink-100 text-ink-600"><i class="ti ti-news" aria-hidden="true"></i></span>
+        <span class="flex-1 text-sm font-medium text-ink-800">{{ 'common.blog' | transloco }}</span>
+        <i class="ti ti-chevron-right text-ink-300" aria-hidden="true"></i>
+      </a>
       <!-- The desktop header's "View site" link is `hidden sm:block`, so without this there
            is no way off the console on a phone. Carries a subtitle because "Exit dashboard"
            sitting next to "Sign out" would otherwise read as another way to log out. -->
