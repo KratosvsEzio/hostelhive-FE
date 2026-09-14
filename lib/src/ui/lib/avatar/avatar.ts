@@ -19,7 +19,7 @@ const SIZES: Record<AvatarSize, string> = {
 };
 
 const TONES: Record<AvatarTone, string> = {
-  // `brand-600` (#C05408, 4.65:1 with white), matching the primary button — initials are
+  // `brand-600` (#B94F06, 5.02:1 with white), matching the primary button — initials are
   // text, and often the only thing naming the person. This was `brand-500` at 2.97:1 for as
   // long as the button was. The other tones are 5% tints holding ink and always passed.
   brand: 'bg-brand-600 text-white',

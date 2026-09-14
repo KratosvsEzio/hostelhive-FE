@@ -237,7 +237,7 @@ function shortLabel(iso: string | null): string {
                         }
                       </div>
                       <div
-                        class="grid grid-cols-7 text-center text-[11px] font-medium text-ink-400"
+                        class="grid grid-cols-7 text-center text-[11px] font-medium text-ink-500"
                       >
                         @for (w of weekdays; track $index) {
                           <span class="py-1.5">{{ w }}</span>
@@ -274,7 +274,7 @@ function shortLabel(iso: string | null): string {
               @if (showTime()) {
                 <div class="flex items-center gap-3">
                   <div class="flex items-center gap-1.5">
-                    <span class="text-xs font-medium text-ink-400">From</span>
+                    <span class="text-xs font-medium text-ink-500">From</span>
                     <input
                       type="time"
                       [value]="fromTime()"
@@ -283,7 +283,7 @@ function shortLabel(iso: string | null): string {
                     />
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <span class="text-xs font-medium text-ink-400">To</span>
+                    <span class="text-xs font-medium text-ink-500">To</span>
                     <input
                       type="time"
                       [value]="toTime()"

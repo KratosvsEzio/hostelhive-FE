@@ -58,7 +58,7 @@ const SIZE_ICON: Record<ButtonSize, string> = {
 
 const FILLED: Record<ButtonColor, string> = {
   default: 'border border-ink-200 bg-ink-100 font-medium text-ink-700 hover:bg-ink-200',
-  // `brand-600`, retuned to #C05408 — 4.65:1 with white, so the primary action finally meets
+  // `brand-600`, retuned to #B94F06 — 5.02:1 with white, so the primary action finally meets
   // AA. It sat on `brand-500` at **2.97:1** for a long time as a recorded decision: below AA
   // for text and below even the 3:1 floor for a UI component, kept because the orange is the
   // identity. That was the right trade only while the alternatives all cost more than the
@@ -68,8 +68,8 @@ const FILLED: Record<ButtonColor, string> = {
   // reads burnt rather than orange; `brand-500` with an `ink-900` label is 6.20:1 but forces
   // the hover to *brighten*, inverting the convention every other colour follows; and leaving
   // it at 2.97:1 capped the listing page's design review at 6.5 no matter what else was done.
-  // #C05408 is the nearest value to the original that clears AA, so the button stays
-  // unmistakably the same orange.
+  // #B94F06 is the nearest value to the original that clears AA on every ground the token
+  // touches, so the button stays unmistakably the same orange.
   //
   // Hover darkens to `brand-700` (6.05:1), which is the ordinary direction again.
   // `brand-500` itself is untouched and still carries badges, pins, tints and the map marker.

@@ -124,7 +124,7 @@ export type DropdownSize = 'sm' | 'md';
         [class]="triggerClass()"
       >
         @if (triggerLoading()) {
-          <span class="flex items-center gap-1.5 text-ink-400">
+          <span class="flex items-center gap-1.5 text-ink-500">
             <i class="ti ti-loader-2 animate-spin text-xs" aria-hidden="true"></i>Loading…
           </span>
         } @else {
@@ -152,7 +152,7 @@ export type DropdownSize = 'sm' | 'md';
               />
             }
           }
-          <span class="min-w-0 flex-1" [class.text-ink-400]="!count()">
+          <span class="min-w-0 flex-1" [class.text-ink-500]="!count()">
             <span [class]="labelClass()">{{ triggerLabel() }}</span>
             @if (selectedOption()?.statusLabel && variant() !== 'pill') {
               <hh-status-pill size="xs" [tone]="selectedOption()!.statusTone ?? 'neutral'" class="mt-0.5">
@@ -204,7 +204,7 @@ export type DropdownSize = 'sm' | 'md';
                   <input
                     type="text"
                     [placeholder]="searchPlaceholder() ?? ('common.searchEllipsis' | transloco)"
-                    class="flex-1 bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-400"
+                    class="flex-1 bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-500"
                     [value]="searchQuery()"
                     (input)="onSearch($event)"
                     (click)="$event.stopPropagation()"
@@ -235,11 +235,11 @@ export type DropdownSize = 'sm' | 'md';
                   }
                 </div>
               } @else if (visibleOptions().length === 0) {
-                <p class="py-5 text-center text-sm text-ink-400">{{ emptyLabel() ?? ('common.noOptionsFound' | transloco) }}</p>
+                <p class="py-5 text-center text-sm text-ink-500">{{ emptyLabel() ?? ('common.noOptionsFound' | transloco) }}</p>
               } @else {
                 @for (o of visibleOptions(); track o.value; let i = $index) {
                   @if (o.group && o.group !== visibleOptions()[i - 1]?.group) {
-                    <p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-400 first:pt-1">{{ o.group }}</p>
+                    <p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-500 first:pt-1">{{ o.group }}</p>
                   }
                   <button
                     type="button"
@@ -291,7 +291,7 @@ export type DropdownSize = 'sm' | 'md';
                         @if (o.subtitle || o.suffixBadge) {
                           <span class="mt-0.5 flex items-center gap-1.5">
                             @if (o.subtitle) {
-                              <span class="truncate text-xs text-ink-400">{{ o.subtitle }}</span>
+                              <span class="truncate text-xs text-ink-500">{{ o.subtitle }}</span>
                             }
                             @if (o.suffixBadge) {
                               <span
@@ -310,7 +310,7 @@ export type DropdownSize = 'sm' | 'md';
                     }
 
                     @if (o.badge) {
-                      <span class="shrink-0 rounded-full bg-ink-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-400">{{ o.badge }}</span>
+                      <span class="shrink-0 rounded-full bg-ink-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-500">{{ o.badge }}</span>
                     }
                     @if (o.disabledTooltip) {
                       <!-- Reason this option can't be picked. Rendered inline, not as a hover
@@ -318,7 +318,7 @@ export type DropdownSize = 'sm' | 'md';
                            (it must clip to scroll) so it was always cut off, and a disabled
                            <button> swallows pointer events on its children, so the hover often
                            never fired anyway. Inline text is un-clippable and touch-friendly. -->
-                      <span class="ms-auto shrink-0 self-center whitespace-nowrap text-[11px] text-ink-400">{{ o.disabledTooltip }}</span>
+                      <span class="ms-auto shrink-0 self-center whitespace-nowrap text-[11px] text-ink-500">{{ o.disabledTooltip }}</span>
                     }
                   </button>
                 }
@@ -721,8 +721,8 @@ export class Dropdown {
   );
 
   protected readonly labelClass = computed(() => {
-    if (this.variant() === 'field' && !this.count()) return 'truncate text-ink-400';
-    if (this.variant() === 'borderless' && !this.count()) return 'block truncate text-sm text-ink-400';
+    if (this.variant() === 'field' && !this.count()) return 'truncate text-ink-500';
+    if (this.variant() === 'borderless' && !this.count()) return 'block truncate text-sm text-ink-500';
     if (this.variant() === 'borderless') return 'block truncate text-sm font-medium text-ink-800';
     return 'truncate';
   });
