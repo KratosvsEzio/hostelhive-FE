@@ -153,7 +153,7 @@
            loading. The room cards already do this (`room-picker.html`). -->
       <button
         type="button"
-        class="aspect-video h-auto w-full overflow-hidden bg-ink-100 sm:aspect-auto sm:h-full"
+        class="relative aspect-video h-auto w-full overflow-hidden bg-ink-100 sm:aspect-auto sm:h-full after:pointer-events-none after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:shadow-[inset_0_0_0_2px_#fff,inset_0_0_0_5px_#141414]"
         [class]="galleryHeroClass()"
         [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: 1 }"
         (click)="openLightbox(0)"
@@ -184,7 +184,7 @@
              the browser starts an in-viewport lazy image immediately. -->
         <button
           type="button"
-          class="hidden h-full w-full overflow-hidden bg-ink-100 sm:block"
+          class="relative hidden h-full w-full overflow-hidden bg-ink-100 sm:block after:pointer-events-none after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:shadow-[inset_0_0_0_2px_#fff,inset_0_0_0_5px_#141414]"
           [attr.aria-label]="'a11y.goToPhotoN' | transloco: { n: i + 2 }"
           (click)="openLightbox(i + 1)"
         >

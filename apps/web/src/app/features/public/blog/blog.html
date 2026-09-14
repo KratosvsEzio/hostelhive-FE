@@ -86,12 +86,27 @@
       }
     </div>
       <!-- Grid or index. Two readings of the same archive: covers to browse, or all fifteen
-           at once with the read time in a column you can scan down. -->
-      <div class="flex shrink-0 items-center gap-1 rounded-full bg-ink-50 p-1" role="group" [attr.aria-label]="'publicBlog.archiveLayout' | transloco">
+           at once with the read time in a column you can scan down.
+
+           The selected chip is `ink-900`, not white. A white chip on the `ink-50` track is
+           1.10:1 — the state was carried almost entirely by a `shadow-sm` and a 2.36:1 step
+           between two icon greys, which is under 1.4.11's 3:1 for the one thing on a control
+           that says which of two it is. `aria-pressed` was already right, so this was only
+           ever broken for people looking at it. Inverting the chip also stops the toggle
+           inventing a third selected-state treatment: it is now the same `ink-900` fill the
+           filter pills beside it use for exactly the same meaning.
+
+           The track then needs `ring-1`. The white chip had been doing two jobs — carrying
+           the state, badly, and drawing the group, well enough. Moving the state onto the
+           fill left the second job with nobody: `ink-50` on `surface` is 1.01:1, so there
+           was no track there to see, and a black circle beside a bare glyph reads as a sixth
+           filter pill rather than as one of two alternatives. The ring is what says these
+           two belong to each other. -->
+      <div class="flex shrink-0 items-center gap-1 rounded-full bg-ink-50 p-1 ring-1 ring-ink-200" role="group" [attr.aria-label]="'publicBlog.archiveLayout' | transloco">
         <button
           type="button"
           class="grid h-8 w-8 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
-          [class]="view() === 'grid' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-900'"
+          [class]="view() === 'grid' ? 'bg-ink-900 text-white' : 'text-ink-500 hover:text-ink-900'"
           [attr.aria-pressed]="view() === 'grid'"
           (click)="setView('grid')"
         >
@@ -101,7 +116,7 @@
         <button
           type="button"
           class="grid h-8 w-8 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
-          [class]="view() === 'index' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-900'"
+          [class]="view() === 'index' ? 'bg-ink-900 text-white' : 'text-ink-500 hover:text-ink-900'"
           [attr.aria-pressed]="view() === 'index'"
           (click)="setView('index')"
         >

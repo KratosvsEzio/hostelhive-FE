@@ -31,7 +31,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
            two lines and pushed the icon off centre. The aria-label above carries the meaning
            either way, so nothing is lost to a screen reader. -->
       @if (!compact()) {
-        <span class="text-xs font-medium">{{ 'common.noPhotosYet' | transloco }}</span>
+        <span class="text-xs font-medium text-ink-500">{{ 'common.noPhotosYet' | transloco }}</span>
       }
     </div>
   `,

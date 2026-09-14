@@ -64,7 +64,7 @@
                   >{{ typeLabel(invite.inviteType) }}</span>
                   <p class="mt-0.5 text-sm font-medium text-ink-900">{{ invite.message }}</p>
                   <div class="mt-1 flex items-center gap-2">
-                    <span class="text-[11px] text-ink-300">{{ timeAgo(invite.createdAt) }}</span>
+                    <span class="text-[11px] text-ink-500">{{ timeAgo(invite.createdAt) }}</span>
                     @if (invite.status === 'accepted') {
                       <span class="rounded-full bg-emerald-50 px-1.5 py-px text-[10px] font-semibold text-emerald-600">{{ 'notif.accepted' | transloco }}</span>
                     } @else if (invite.status === 'rejected') {
@@ -107,7 +107,7 @@
       } @else {
         <div class="flex flex-col items-center py-10">
           <i class="ti ti-bell-off text-3xl text-ink-200"></i>
-          <p class="mt-2 text-sm text-ink-400">{{ 'notif.noNotifications' | transloco }}</p>
+          <p class="mt-2 text-sm text-ink-500">{{ 'notif.noNotifications' | transloco }}</p>
         </div>
       }
 

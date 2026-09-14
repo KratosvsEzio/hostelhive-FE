@@ -1,12 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   computed,
   inject,
   input,
   signal,
 } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '@hostelhive/ui';
 import { LocaleStore } from './locale-store';
 import { LOCALES, flagSrc, localeFor } from './locales';
@@ -22,11 +22,31 @@ import { LOCALES, flagSrc, localeFor } from './locales';
  *
  * Options are labelled with each language's own name — someone escaping a language they
  * cannot read is not helped by a list written in it.
+ *
+ * Dismissal uses guarded `document` listeners, not a backdrop element — the same choice
+ * `AccountMenu` documents, and here it is a correctness fix rather than a preference.
+ *
+ * The backdrop this replaced was `fixed inset-0`, which reads as "cover the viewport" and
+ * did not. The header it lives in carries `backdrop-blur` (`site-header.html:2`), and a
+ * `backdrop-filter` makes that ancestor the containing block for every `fixed` descendant
+ * under it. So the backdrop resolved to the header's own box — measured at 1815×64 against
+ * a 1830×940 viewport — and a click anywhere below the header, which is essentially the
+ * whole page, missed it entirely. The panel could not be dismissed by clicking away, and
+ * with no Escape handler either, a keyboard user's only exit was tabbing all eighteen
+ * options. Listeners have no geometry, so there is nothing left for a containing block to
+ * clip; Escape comes with them rather than needing to be remembered separately.
+ *
+ * If this ever moves back to a backdrop element, it has to be portalled to the body the way
+ * `hh-dropdown` and `hh-date-range-picker` portal their panels, and for exactly this reason.
  */
 @Component({
   selector: 'hh-language-switcher',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TranslocoPipe],
+  imports: [Button],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'onEscape()',
+  },
   template: `
     <div class="relative">
       <!--
@@ -60,12 +80,6 @@ import { LOCALES, flagSrc, localeFor } from './locales';
       </button>
 
       @if (open()) {
-        <button
-          type="button"
-          class="fixed inset-0 z-[70] cursor-default"
-          [attr.aria-label]="'a11y.close' | transloco"
-          (click)="open.set(false)"
-        ></button>
         <ul
           role="listbox"
           [class]="panelClass()"
@@ -104,7 +118,7 @@ import { LOCALES, flagSrc, localeFor } from './locales';
                        lands if a name is ever long enough to clip. -->
                   <span class="truncate" [attr.dir]="l.dir">{{ l.name }}</span>
                 </span>
-                <span class="shrink-0 text-xs text-ink-400" dir="ltr">{{ l.englishName }}</span>
+                <span class="shrink-0 text-xs text-ink-500" dir="ltr">{{ l.englishName }}</span>
               </button>
             </li>
           }
@@ -115,6 +129,21 @@ import { LOCALES, flagSrc, localeFor } from './locales';
 })
 export class LanguageSwitcher {
   private readonly store = inject(LocaleStore);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  /**
+   * Found by query rather than by a `#trigger` template reference.
+   *
+   * A local ref here is the obvious way to write this and it breaks hydration. The trigger
+   * element is also the `hh-button` component's host, and annotating it with a local ref
+   * shifted the node the server's hydration data pointed at, so the client looked for the
+   * flag `<img>` and found `hh-button`'s own `@if` anchor comment instead — NG0500, which
+   * kills the component subtree and leaves the control dead to every click. It fails only
+   * against a server-rendered page, so unit tests pass either way.
+   *
+   * There is exactly one `<button>` in this template, so the query is unambiguous.
+   */
+  private readonly triggerEl = (): HTMLButtonElement | null =>
+    this.host.nativeElement.querySelector('button');
 
   /**
    * Which side of the trigger the list opens on.
@@ -170,6 +199,23 @@ export class LanguageSwitcher {
     const vertical = this.placement() === 'above' ? 'bottom-full mb-2' : 'mt-2';
     return `${base} ${side} ${vertical}`;
   });
+
+  // The trigger sits inside the host, so its own (click) runs first: closing by trigger hits
+  // the `!open()` return and opening hits the `contains()` return, so neither path re-toggles.
+  protected onDocumentClick(event: MouseEvent): void {
+    if (!this.open()) return;
+    if (this.host.nativeElement.contains(event.target as Node)) return;
+    this.open.set(false);
+  }
+
+  // Escape returns focus to the trigger, because the list is where the keyboard user is
+  // standing and closing it would otherwise drop focus to the body. An outside click leaves
+  // focus alone — the click already said where they want to be.
+  protected onEscape(): void {
+    if (!this.open()) return;
+    this.open.set(false);
+    this.triggerEl()?.focus();
+  }
 
   protected choose(code: string): void {
     this.open.set(false);

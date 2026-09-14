@@ -15,7 +15,7 @@
            `justify-between` still pushes the controls to the end. -->
       <div class="flex items-center gap-2.5">
         @if (!hasConsoleSidebar()) {
-          <a [routerLink]="homeLink()" class="flex shrink-0 items-center">
+          <a [routerLink]="homeLink()" class="flex shrink-0 items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2">
             <i hhLogo class="h-5 w-auto text-ink-900 sm:h-7"></i>
           </a>
           @if (area() === 'admin' || area() === 'moderator') {

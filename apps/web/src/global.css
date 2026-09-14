@@ -190,6 +190,11 @@ body {
     background-position: -100% 0;
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}
 
 .card-img {
   transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -890,6 +895,12 @@ hh-search-map {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-bell-ring {
+    animation: none;
+  }
+}
+
 /* ── Running honeycomb carousel ("explore cities") ───────────────────── */
 @keyframes hh-comb {
   to {
@@ -1387,7 +1398,8 @@ hh-search-map {
 @media (prefers-reduced-motion: reduce) {
   [class*='group-hover:scale-'],
   [class*='group-hover:-translate-'],
-  [class*='group-hover:translate-'] {
+  [class*='group-hover:translate-'],
+  .card-img {
     transition-duration: 0.01ms !important;
   }
 }
