@@ -2,6 +2,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { Button } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { BLOG_CATEGORIES, BlogCategorySlug } from './blog-post.model';
@@ -54,7 +55,7 @@ const FIELD_VARIANTS = dealFieldVariants();
 @Component({
   selector: 'app-blog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, DatePipe, DecimalPipe, TranslocoPipe],
+  imports: [RouterLink, LocaleLink, DatePipe, DecimalPipe, TranslocoPipe, Button],
   templateUrl: './blog.html',
 })
 export class Blog {

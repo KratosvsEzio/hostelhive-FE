@@ -25,7 +25,7 @@ import { BlogSpan, BlogText } from '../blog-post.model';
     isBold(s)
   ) {<strong class="font-semibold text-ink-900">{{ s.b }}</strong>} @else if (isLink(s)) {<a
       [routerLink]="s.to"
-      class="rounded font-medium text-brand-700 underline decoration-brand-200 decoration-2 underline-offset-[3px] transition-colors hover:text-brand-800 hover:decoration-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+      class="rounded font-medium text-brand-700 underline decoration-brand-200 decoration-2 underline-offset-[3px] transition-colors hover:text-brand-800 hover:decoration-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
       >{{ s.text }}</a
     >} @else {{{ s }}}}} @else {{{ value() }}}`,
 })

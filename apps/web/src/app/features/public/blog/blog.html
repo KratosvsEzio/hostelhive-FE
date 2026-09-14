@@ -26,22 +26,45 @@
   <!-- Filters. A row of six, scrollable rather than wrapped on a phone: two ragged lines of
        pills is the thing that makes a tidy page look untidy at 375px. Trailing padding rather
        than a fade: a static mask still says "more this way" once the row is scrolled to its
-       end, and it dimmed the focus ring of any pill near the edge. -->
+       end, and it dimmed the focus ring of any pill near the edge.
+
+       `py-1`, not `pb-1`: `overflow-x: auto` forces `overflow-y` to compute to `auto` too,
+       so this scroller clips vertically whether or not anything ever scrolls that way. With
+       no top padding it sliced the top edge off every pill's focus ring — 2px of ring plus
+       2px of offset, against a measured 0px of clearance at 375, 768 and 1280. It only
+       became visible once the ring stopped being a `brand-400` nobody could see; the
+       geometry was always wrong.
+
+       At `sm` the answer is `overflow-visible` rather than more padding. The row wraps from
+       that breakpoint up, so a horizontal scroller is meaningless there — but the class was
+       never dropped, which is why the ring was clipped at 1280 too, where nothing scrolls
+       and nothing ever could. Removing the overflow removes the clip, and the desktop
+       spacing stays exactly as it was. -->
   <div class="mt-8 border-b border-ink-100 pb-4 sm:mt-10">
     <div class="flex items-center gap-3">
     <div
-      class="-ms-5 flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1 pe-4 ps-5 sm:ms-0 sm:flex-wrap sm:pb-0 sm:pe-0 sm:ps-0"
+      class="-ms-5 flex min-w-0 flex-1 gap-2 overflow-x-auto py-1 pe-4 ps-5 sm:ms-0 sm:flex-wrap sm:overflow-visible sm:pb-0 sm:pe-0 sm:ps-0 sm:pt-0"
       role="group"
       [attr.aria-label]="'publicBlog.filterArticlesByCategory' | transloco"
     >
+      <!-- The shared button, carrying its own state through `variant`/`color` rather than a
+           `[class]` ternary. The journal had been re-deriving these decisions by hand — and
+           a hand-derived control is how the closing CTA ended up on the one orange the
+           design system had already written down as failing AA.
+
+           `!rounded-full` is the one thing overridden. The size ramp gives `rounded-xl`,
+           which is right for the console and wrong here: the pill is this surface's own
+           language, shared with the category badges on every cover. Shape is the blog's to
+           choose; contrast, hover direction, focus ring and the size scale are not.
+
+           `md` rather than `sm` also lifts the pills from 38px to 42px. -->
       <button
+        hh-button
         type="button"
-        class="shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-        [class]="
-          active() === 'all'
-            ? 'border-ink-900 bg-ink-900 text-white'
-            : 'border-ink-200 text-ink-600 hover:border-ink-400 hover:text-ink-900'
-        "
+        [variant]="active() === 'all' ? 'filled' : 'outlined'"
+        [color]="active() === 'all' ? 'dark' : 'default'"
+        size="md"
+        class="shrink-0 !rounded-full focus-visible:ring-offset-surface"
         [attr.aria-pressed]="active() === 'all'"
         (click)="select('all')"
       >
@@ -49,13 +72,12 @@
       </button>
       @for (c of categories; track c.slug) {
         <button
+          hh-button
           type="button"
-          class="shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-          [class]="
-            active() === c.slug
-              ? 'border-ink-900 bg-ink-900 text-white'
-              : 'border-ink-200 text-ink-600 hover:border-ink-400 hover:text-ink-900'
-          "
+          [variant]="active() === c.slug ? 'filled' : 'outlined'"
+          [color]="active() === c.slug ? 'dark' : 'default'"
+          size="md"
+          class="shrink-0 !rounded-full focus-visible:ring-offset-surface"
           [attr.aria-pressed]="active() === c.slug"
           (click)="select(c.slug)"
         >
@@ -68,7 +90,7 @@
       <div class="flex shrink-0 items-center gap-1 rounded-full bg-ink-50 p-1" role="group" [attr.aria-label]="'publicBlog.archiveLayout' | transloco">
         <button
           type="button"
-          class="grid h-7 w-7 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          class="grid h-8 w-8 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
           [class]="view() === 'grid' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-900'"
           [attr.aria-pressed]="view() === 'grid'"
           (click)="setView('grid')"
@@ -78,7 +100,7 @@
         </button>
         <button
           type="button"
-          class="grid h-7 w-7 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          class="grid h-8 w-8 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
           [class]="view() === 'index' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-900'"
           [attr.aria-pressed]="view() === 'index'"
           (click)="setView('index')"
@@ -122,9 +144,9 @@
              page is for. -->
         @if (hero(lead); as img) {
           <img
-            [src]="img.src"
             [srcset]="heroSrcset(img.src)"
             sizes="(min-width: 1024px) 46rem, 100vw"
+            [src]="img.src"
             [alt]="img.alt"
             width="1200"
             height="800"
@@ -203,7 +225,7 @@
         <li>
           <a
             [routerLink]="['/blog', post.slug]"
-            class="group relative grid grid-cols-[2rem_1fr] items-baseline gap-x-4 border-b border-ink-100 py-5 ps-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 sm:grid-cols-[2rem_1fr_8rem_6rem_5rem] sm:gap-x-6"
+            class="group relative grid grid-cols-[2rem_1fr] items-baseline gap-x-4 border-b border-ink-100 py-5 ps-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink-900 sm:grid-cols-[2rem_1fr_8rem_6rem_5rem] sm:gap-x-6"
           >
             <span
               class="absolute inset-y-0 start-0 w-0.5 origin-top scale-y-0 transition-transform duration-300 ease-out group-hover:scale-y-100 motion-reduce:transition-none"
@@ -237,15 +259,28 @@
   <div class="mt-10 grid gap-x-7 gap-y-11 sm:grid-cols-2 lg:grid-cols-3">
     <!-- The break in the rhythm is editorial, not arithmetic. It was i % 7 === 6, which gave
          the seventh card the largest cover on the page for no reason but being seventh — a
-         2-minute piece outranking an 8-minute one because of where it landed. A full-width
-         card always takes a whole row at both breakpoints, so promoting by hand cannot leave
-         a hole wherever it falls. -->
+         2-minute piece outranking an 8-minute one because of where it landed.
+
+         Two of three columns at `lg`, not three. The claim this replaces — that a full-width
+         card "always takes a whole row, so promoting by hand cannot leave a hole wherever it
+         falls" — is the one thing here that was not true. A span-3 card takes a whole row
+         only if it *starts* one: the spotlight sits at archive index 1, so the ordinary card
+         at index 0 held column 1 and the spotlight could not fit beside it, dropped to the
+         next row, and left 716px of empty grid in the first — the large blank beside "What a
+         hostel agent actually costs you".
+
+         A span-2 card fits whatever column it starts in, at either two or three columns, so
+         the hole cannot form wherever the editor puts the flag. It is still unmistakably the
+         promoted card at twice the width of its neighbours. `grid-auto-flow: dense` would
+         also have closed the gap — it backfills with any later card that fits — but it does
+         that by painting cards in a different order from the one they are read and tabbed
+         in, which buys the layout back at the accessibility desk. -->
     @for (post of posts(); track post.slug) {
       @let wide = !!post.spotlight;
-      <article class="group" [class.sm:col-span-2]="wide" [class.lg:col-span-3]="wide">
+      <article class="group" [class.sm:col-span-2]="wide" [class.lg:col-span-2]="wide">
         <a
           [routerLink]="['/blog', post.slug]"
-          class="rounded-2xl transition-transform duration-300 ease-out group-hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-4 focus-visible:ring-offset-surface motion-reduce:transform-none"
+          class="rounded-2xl transition-transform duration-300 ease-out group-hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-4 focus-visible:ring-offset-surface motion-reduce:transform-none"
           [class]="
             wide
               ? 'grid gap-5 sm:grid-cols-[1.1fr_1fr] sm:items-center sm:gap-7'
@@ -257,10 +292,20 @@
             [class]="categoryCover(post)"
           >
             @if (hero(post); as img) {
+              <!-- A spotlight card spans two of the three columns and lays its cover across
+                   the 1.1fr track of that span — 360px at the container's full 1088px,
+                   against 344px for an ordinary card in one column. Close enough that one
+                   `sizes` string would now do, but they are kept apart because the two
+                   numbers are arrived at differently and the spotlight's has moved once
+                   already: it was 555px while the card spanned all three columns. -->
               <img
-                [src]="img.src"
                 [srcset]="heroSrcset(img.src)"
-                sizes="(min-width: 1024px) 24rem, (min-width: 640px) 45vw, 100vw"
+                [attr.sizes]="
+                  wide
+                    ? '(min-width: 1024px) 23rem, (min-width: 640px) 45vw, 100vw'
+                    : '(min-width: 1024px) 21.5rem, (min-width: 640px) 45vw, 100vw'
+                "
+                [src]="img.src"
                 [alt]="img.alt"
                 width="1200"
                 height="800"
@@ -326,9 +371,26 @@
         {{ 'publicBlog.everyListingShowsTheRent' | transloco }}
       </p>
     </div>
+    <!-- `brand-600`, not `brand-500`. White on #F36E21 is 2.97:1 — under AA for 14px
+         semibold — and the hover was already `brand-600`, so the control only became
+         legible while the pointer was on it. This is the same 2.97 that button.ts records
+         retuning away from; the blog re-derived the decision by hand and landed on the
+         value that had already been rejected. #B94F06 is 5.02:1 under white and 3.67:1
+         against the ink-900 band it sits on, so both the label and the pill's own edge
+         clear their thresholds.
+
+         This one stays hand-rolled where the filter pills above became `hh-button`, and the
+         reason is the band. Every shape the shared button offers assumes a light ground: its
+         focus ring is `ring-ink-900`, which is the correct choice on white and invisible on
+         `ink-900`. Adopting it here would mean overriding the fill, the ring and the ring
+         offset — at which point the component is supplying nothing but a class string, while
+         the next person to read it reasonably assumes the system vouched for the result.
+         `ring-brand-300` on this band measures 8.55:1, which is the inversion the system has
+         no variant for. Worth revisiting if an on-dark treatment is ever added to button.ts;
+         until then the honest version is the one that does not pretend. -->
     <a
       routerLink="/search"
-      class="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 sm:self-auto"
+      class="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 sm:self-auto"
     >{{ 'userFavorites.browseHostels' | transloco }}<i class="ti ti-arrow-right text-base" aria-hidden="true"></i>
     </a>
   </section>

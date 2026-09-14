@@ -47,6 +47,15 @@ const TEMPLATES = templatesUnder(HERE);
 /** `text-ink-300` / `text-ink-400`, including any variant prefix such as `group-hover:`. */
 const TOO_LIGHT = /(?:^|[\s"'])(?:[a-z-]+:)*text-ink-(?:300|400)(?:[\s"']|$)/;
 
+/** Any brand step below 600 used as a fill. Ordered longest-first so `500` is not read as `50`. */
+const LIGHT_BRAND_FILL = /(?:^|[\s"'])(?:[a-z-]+:)*bg-brand-(?:500|400|300|200|100|50)(?:[\s"'/]|$)/;
+
+/** Any brand step below 600 used as a focus ring. */
+const LIGHT_BRAND_RING = /(?:^|[\s"'])(?:[a-z-]+:)*ring-brand-(?:500|400|300|200|100|50)(?:[\s"'/]|$)/;
+
+/** A white label, which is the thing that makes a fill's contrast a 1.4.3 question. */
+const WHITE_LABEL = /(?:^|[\s"'])(?:[a-z-]+:)*text-white(?:[\s"'/]|$)/;
+
 /**
  * Every opening tag in the file, as one string each.
  *
@@ -85,4 +94,42 @@ describe('the journal never sets text in a colour that fails contrast', () => {
       expect(readFileSync(file, 'utf8').length).toBeGreaterThan(400);
     }
   });
+});
+
+/**
+ * The other half of the same lesson, learned from a fourth review pass.
+ *
+ * That one found the index's closing CTA on `brand-500` under white — 2.97:1 — and twelve
+ * focus rings on `brand-400`, which is 2.47:1 against the page's own `surface` ground. Both
+ * were decisions the design system had already made and written down: `button.ts` records
+ * retuning the primary fill off that exact 2.97 onto `brand-600`, and rejecting brand tints
+ * for focus rings in favour of `ink-900`. The blog re-derived both by hand and arrived at the
+ * values that had been rejected.
+ *
+ * So the same treatment: not a thing to remember. The brand ramp only clears AA from 600 up
+ * (#B94F06, 5.02:1 on white), and a 2px ring needs 3:1 against whatever sits behind it.
+ */
+describe('the journal uses the brand ramp at steps that clear their thresholds', () => {
+  for (const file of TEMPLATES) {
+    const name = relative(HERE, file).split('\\').join('/');
+
+    it(`${name} never sets a white label on a brand fill below 600`, () => {
+      const offenders = openingTags(readFileSync(file, 'utf8'))
+        .filter((tag) => LIGHT_BRAND_FILL.test(tag) && WHITE_LABEL.test(tag))
+        .map((tag) => `${name}  ${tag.replace(/\s+/g, ' ').slice(0, 110)}`);
+
+      expect(offenders).toEqual([]);
+    });
+
+    it(`${name} keeps brand-tinted focus rings off light grounds`, () => {
+      const offenders = openingTags(readFileSync(file, 'utf8'))
+        .filter((tag) => LIGHT_BRAND_RING.test(tag))
+        // Over the dark band the tint is the legible choice, not the lazy one: `brand-300`
+        // on `ink-900` is 8.55:1, where `ink-900` on `ink-900` would be invisible.
+        .filter((tag) => !tag.includes('ring-offset-ink-900'))
+        .map((tag) => `${name}  ${tag.replace(/\s+/g, ' ').slice(0, 110)}`);
+
+      expect(offenders).toEqual([]);
+    });
+  }
 });

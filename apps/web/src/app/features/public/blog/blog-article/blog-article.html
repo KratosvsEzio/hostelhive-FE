@@ -26,7 +26,7 @@
         <div class="xl:col-start-2">
           <a
             routerLink="/blog"
-            class="inline-flex items-center gap-1.5 rounded text-sm font-medium text-ink-500 transition hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            class="inline-flex items-center gap-1.5 rounded text-sm font-medium text-ink-500 transition hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
             <i class="ti ti-arrow-left text-xs" aria-hidden="true"></i>{{ 'publicBlog.allPosts' | transloco }}
           </a>
@@ -81,9 +81,11 @@
                      width, so a heading sitting near the wrap threshold made the whole rail jump
                      as you scrolled past it. -->
                 <a
-                  [href]="'#' + s.id"
+                  [routerLink]="[]"
+                  [fragment]="s.id"
+                  (click)="jumpTo(s.id)"
                   [attr.aria-current]="activeSection() === s.id ? 'location' : null"
-                  class="-ms-5 block rounded-e border-s-2 ps-[1.125rem] text-[0.8125rem] leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                  class="-ms-5 block rounded-e border-s-2 ps-[1.125rem] text-[0.8125rem] leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
                   [class]="
                     activeSection() === s.id
                       ? 'border-brand-500 text-ink-900'
@@ -102,7 +104,7 @@
           </p>
           <a
             [routerLink]="['/blog']"
-            class="mt-3 inline-flex items-center gap-1.5 rounded text-[0.8125rem] text-ink-500 transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            class="mt-3 inline-flex items-center gap-1.5 rounded text-[0.8125rem] text-ink-500 transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
           >
             <i class="ti ti-arrow-left text-xs" aria-hidden="true"></i>{{ 'publicBlog.allPosts' | transloco }}
           </a>
@@ -118,6 +120,56 @@
            The spacing is one scale on one idiom — top margins only, never `my-*`. The mixed
            version worked purely because adjacent margins collapse, so the first block that
            became a flex child would silently have doubled every gap after a quote. -->
+      <!-- The same contents, for the 99% of widths that cannot have the rail.
+
+           The rail is `xl:block` because it needs 208px of margin that does not exist below
+           1280px — so a reader on a 1024px laptop got a 9,080px article, seven sections and
+           no map of any of it. This is the second presentation of the same `toc()`: closed by
+           default so it costs one line above the opening paragraph, and native `<details>`
+           rather than a signal, which means it opens with no JavaScript, is keyboard- and
+           screen-reader-operable for free, and renders identically on the server.
+
+           `xl:hidden` also keeps it out of the three-track grid above that breakpoint —
+           `display: none` takes it out of grid placement entirely, so it cannot claim a
+           column from the rail or the measure. -->
+      <nav class="xl:hidden" [attr.aria-label]="'publicBlog.onThisPage' | transloco">
+        <!-- The vertical padding belongs to the `<summary>`, not to the `<details>` around
+             it. On the box it looked identical and measured 278x17: a 17px target with 17px
+             of dead, non-toggling space above and below it inside a 51px card. This is the
+             only in-page navigation a phone reader has, so it was the thinnest control on
+             the page. On the summary the same 4 units give a 49px target and nothing moves.
+             `-mx-5 px-5` puts the horizontal padding there too, so the whole width of the
+             card toggles rather than just the text. -->
+        <details class="group mt-10 rounded-2xl border border-ink-200 bg-surface px-5">
+          <summary
+            class="-mx-5 flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-ink-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 focus-visible:ring-offset-surface [&::-webkit-details-marker]:hidden"
+          >
+            {{ 'publicBlog.onThisPage' | transloco }}
+            <i
+              class="ti ti-chevron-down text-base transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+              aria-hidden="true"
+            ></i>
+          </summary>
+          <!-- Carries its own bottom padding now that the card has none: the summary owns
+               the closed state's spacing, so the open list has to own its own. -->
+          <ul role="list" class="space-y-2.5 border-t border-ink-100 pb-4 pt-3.5">
+            @for (s of toc(); track s.id) {
+              <li>
+                <a
+                  [routerLink]="[]"
+                  [fragment]="s.id"
+                  (click)="jumpTo(s.id)"
+                  class="block rounded text-[0.8125rem] leading-snug text-ink-600 transition-colors hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+                  lang="en"
+                  dir="ltr"
+                  >{{ s.text }}</a
+                >
+              </li>
+            }
+          </ul>
+        </details>
+      </nav>
+
       <div class="pb-4 pt-10 sm:pt-14" lang="en" dir="ltr">
         @for (block of p.body; track $index) {
           @switch (block.kind) {
@@ -234,16 +286,31 @@
                    was pulling nine times the pixels it could draw. 480 covers a phone at 1x,
                    800 a phone at 2x, 1200 the 928px desktop column.
 
+                   The middle `sizes` branch is 38rem, not 90vw: between 640 and 1279 the
+                   figure is on the 42rem measure less its 2rem gutters — 608px, measured —
+                   while 90vw claimed over a thousand on a laptop, which bought the 1200
+                   rendition for every figure across the whole tablet band.
+
+                   If you catch the eager figure — and only the eager one — holding the 1200
+                   original while its lazy siblings take the 800, that is a warm cache, not a
+                   bug here. Chrome reuses a candidate it already has rather than fetching a
+                   smaller one, and the eager image resolves early enough to hit that reuse
+                   while the lazy ones re-select at intersection. Reproduced on a post whose
+                   originals were already cached, then ruled out on one whose were not: the
+                   eager figure there takes the 800 like everything else. It has been
+                   reported twice as a binding-order fault; `[srcset]` sits before `[src]`
+                   only so the serialised markup leads with the candidate list.
+
                    The first figure loads eagerly: it sits just below the fold, so deferring
                    it guarantees the reader's first scroll lands on a grey rectangle. -->
               <figure class="mt-10 xl:w-[58rem]">
                 <img
-                  [src]="block.src"
                   [srcset]="srcSet(block.src)"
+                  [src]="block.src"
                   [alt]="block.alt"
                   [width]="figureWidth"
                   [height]="figureHeight"
-                  sizes="(min-width: 1280px) 928px, (min-width: 640px) 90vw, 100vw"
+                  sizes="(min-width: 1280px) 928px, (min-width: 640px) 38rem, 100vw"
                   [attr.loading]="block.src === leadFigure() ? 'eager' : 'lazy'"
                   [attr.fetchpriority]="block.src === leadFigure() ? 'high' : null"
                   decoding="async"
@@ -265,7 +332,26 @@
                    the app — right for a console data grid, catastrophic for a prose table
                    whose cells are sentences. -->
               <div class="mt-10 xl:w-[58rem]">
-                <div class="overflow-x-auto overflow-y-hidden rounded-2xl ring-1 ring-ink-100">
+                <!-- Focusable, because below `sm` this scrolls and the clipped column is the
+                     one carrying the advice. A pointer swipes it; without `tabindex` a
+                     keyboard has no way to reach it at all.
+
+                     Named from the swipe hint rather than a new string: an unnamed `region`
+                     is not exposed as a landmark, so the role would be worse than useless,
+                     and `aria-labelledby` reads a referenced element even when it is
+                     `sm:hidden`. The hint is already translated into all eighteen locales.
+
+                     `tabindex` is unconditional, which costs one tab stop above `sm` where
+                     the 34rem table fits the 38rem measure and nothing scrolls. The version
+                     that tracks a media query renders one way on the server and another
+                     after hydration, and a hydration mismatch is a worse bug than a spare
+                     tab stop on a region that still announces what it is. -->
+                <div
+                  class="overflow-x-auto overflow-y-hidden rounded-2xl ring-1 ring-ink-100"
+                  tabindex="0"
+                  role="region"
+                  [attr.aria-labelledby]="'blog-table-hint-' + $index"
+                >
                   <table class="w-full min-w-[34rem] text-start text-sm">
                     <thead class="bg-ink-50 text-[11px] uppercase tracking-wider text-ink-500">
                       <tr>
@@ -291,7 +377,7 @@
                 </div>
                 <!-- 544px of table inside a 335px measure, wrapped in a ring so it looks
                      complete. The last column carries the advice and is off-screen. -->
-                <p class="mt-2 flex items-center gap-1.5 text-xs text-ink-500 sm:hidden">
+                <p [id]="'blog-table-hint-' + $index" class="mt-2 flex items-center gap-1.5 text-xs text-ink-500 sm:hidden">
                   <i class="ti ti-arrows-horizontal text-sm" aria-hidden="true"></i>{{ 'publicBlog.swipeTheTableToSee' | transloco }}</p>
               </div>
             }
@@ -307,9 +393,15 @@
             <p class="text-sm font-semibold text-ink-900">{{ 'publicBlog.theHostelhiveTeam' | transloco }}</p>
             <p class="mt-0.5 text-sm text-ink-500">{{ 'publicBlog.weVerifyListingsAcross' | transloco }}</p>
           </div>
+          <!-- The shared button. This one sits on `surface`, a light ground, which is what
+               the system's shapes are drawn for — so it takes the component whole and
+               overrides only the radius, the way the filter pills on the index do. -->
           <a
+            hh-button
             routerLink="/search"
-            class="inline-flex items-center gap-1.5 rounded-full border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700 transition hover:border-ink-400 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            variant="outlined"
+            size="md"
+            class="!rounded-full focus-visible:ring-offset-surface"
           >{{ 'userFavorites.browseHostels' | transloco }}<i class="ti ti-arrow-right text-sm" aria-hidden="true"></i>
           </a>
         </div>
@@ -332,7 +424,7 @@
               @for (r of related(); track r.slug) {
                 <a
                   [routerLink]="['/blog', r.slug]"
-                  class="group relative flex items-baseline gap-4 rounded-lg py-5 ps-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                  class="group relative flex items-baseline gap-4 rounded-lg py-5 ps-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
                 >
                   <span
                     class="absolute inset-y-0 start-0 w-0.5 origin-top scale-y-0 transition-transform duration-300 ease-out group-hover:scale-y-100 motion-reduce:transition-none"

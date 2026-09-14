@@ -12,6 +12,7 @@ import { DOCUMENT, DatePipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { Button } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { heroFor } from '../blog-figures';
@@ -35,7 +36,7 @@ import { BlogRichText } from './blog-rich-text';
 @Component({
   selector: 'app-blog-article',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LocaleLink, DatePipe, BlogRichText, TranslocoPipe],
+  imports: [RouterLink, LocaleLink, DatePipe, BlogRichText, TranslocoPipe, Button],
   host: { '(window:scroll)': 'onScroll()' },
   templateUrl: './blog-article.html',
 })
@@ -110,6 +111,43 @@ export class BlogArticle {
 
   /** Which section the reader is in, for the rail's highlight. */
   protected readonly activeSection = signal('');
+
+  /**
+   * Jump to a section, for both presentations of the contents.
+   *
+   * The links were `href="#section-id"`, which does not mean "this page, that section". A
+   * bare fragment resolves against `<base href="/">`, so every contents link on every
+   * article went to the **home page** carrying the fragment — `/en#iqbal-town-and-samanabad`
+   * — and the reader lost the article. It is the same fault `booking-rail` records finding
+   * in its own scroll links, from the same cause.
+   *
+   * `[routerLink]="[]"` with `[fragment]` builds the href off the current route instead, so
+   * the link is right when it is clicked, middle-clicked, copied or reloaded. The router
+   * will not scroll to it — `app.config.ts` deliberately declines `withInMemoryScrolling`,
+   * because the search page publishes its filters as query parameters and the built-in
+   * scroller would throw a reader back to the top every time one changed — so the scroll is
+   * done here. `pagePath()` in `scroll-reset` already strips the fragment, so this counts as
+   * the same page and nothing resets.
+   *
+   * The headings carry `scroll-mt-24`, which is what keeps the target clear of the sticky
+   * header rather than under it.
+   */
+  protected jumpTo(id: string): void {
+    if (!this.isBrowser) return;
+    const target = this.doc.getElementById(id);
+    if (!target) return;
+
+    // Closed *before* the scroll, not after. Picking a section from the list is the end of
+    // using the list — but the list sits above the target, so collapsing it after scrolling
+    // takes its ~214px out from under the reader and lands them that far past the heading
+    // they asked for. Measured: the heading came to rest 118px above the viewport instead of
+    // 96px below it. Settle the layout first, then scroll into what the layout now is.
+    // Scoped to the contents nav so it cannot reach a disclosure elsewhere on the page.
+    this.doc.querySelector('nav details[open]')?.removeAttribute('open');
+
+    const reduced = this.doc.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }
 
   /**
    * Rewrites the head on every article, not only the first.
