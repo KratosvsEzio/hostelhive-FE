@@ -33,6 +33,24 @@ describe('the photographs', () => {
     }
   });
 
+  it('ships every rendition the srcset offers, not just the original', () => {
+    // A missing rendition is worse than a missing original: the `src` still resolves, so the
+    // page looks finished, and only the one viewport width whose `sizes` picks the absent
+    // candidate gets a broken image. The 960 step was added for the 928px `xl` figure and
+    // had no guard at all until this existed — nor did the 480 and 800 that predate it.
+    const missing: string[] = [];
+    for (const post of BLOG_POSTS) {
+      for (const f of figuresIn(post.body)) {
+        if (f.kind !== 'figure') continue;
+        for (const w of [480, 800, 960]) {
+          const rendition = f.src.replace(/\.webp$/, `-${w}w.webp`);
+          if (!existsSync(join(PUBLIC, rendition))) missing.push(rendition);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
   it('gives every one of them a caption', () => {
     // An uncaptioned photograph in a piece of practical writing is decoration. The caption is
     // where the picture earns the space it takes — by saying something the prose has not.

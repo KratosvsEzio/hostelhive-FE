@@ -44,13 +44,24 @@ export class BlogArticle {
   /**
    * The renditions of a figure, widest last.
    *
-   * Derived from the source rather than stored: the pipeline writes `name-480w.webp` and
-   * `name-800w.webp` beside every `name.webp`, so the set is a fact about the file layout
-   * and duplicating it into the data would just be a second place to get it wrong.
+   * Derived from the source rather than stored: the pipeline writes `name-480w.webp`,
+   * `name-800w.webp` and `name-960w.webp` beside every `name.webp`, so the set is a fact
+   * about the file layout and duplicating it into the data would just be a second place to
+   * get it wrong.
+   *
+   * 960 exists because of the one slot that had nothing to land on. A figure breaks out to
+   * **928px** at `xl`, and the ladder went 800 then 1200 — so every figure on a desktop
+   * article took the 1200px original to fill 928px of box. Seven figures came to 586KB
+   * where the same article now costs about 340KB. It is deliberately not in `heroSrcset`:
+   * an index card tops out around 555px and would never choose this rendition, so adding it
+   * there would be a candidate the browser is guaranteed to skip.
    */
   protected srcSet(src: string): string {
     const base = src.replace(/\.webp$/, '');
-    return `${base}-480w.webp 480w, ${base}-800w.webp 800w, ${src} ${FIGURE_WIDTH}w`;
+    return (
+      `${base}-480w.webp 480w, ${base}-800w.webp 800w, ` +
+      `${base}-960w.webp 960w, ${src} ${FIGURE_WIDTH}w`
+    );
   }
 
   protected readonly figureWidth = FIGURE_WIDTH;
@@ -108,6 +119,29 @@ export class BlogArticle {
 
   /** The rendered heading's id, from the same function the rail uses. */
   protected readonly headingId = headingId;
+
+  /**
+   * The id of the `h2` a block sits under, so a region can be named after its section.
+   *
+   * The costs table's scroll region used to take its accessible name from the swipe hint
+   * beside it — "Swipe the table to see every column". That was chosen to avoid adding a
+   * nineteenth string to eighteen locale files, and it is true at 375px. Above `sm` it is
+   * false: the table fits, nothing scrolls, and the region was the one place on either page
+   * telling a screen-reader user something untrue. `aria-labelledby` reads a `display: none`
+   * element, which is why it kept working and why it never looked wrong.
+   *
+   * The section heading is already in the DOM, already translated, already has a stable id
+   * from `headingId()`, and is what the table is actually about — so it costs no new string
+   * either, and it is true at every width.
+   */
+  protected sectionIdAt(index: number): string | null {
+    const body = this.post()?.body ?? [];
+    for (let i = Math.min(index, body.length - 1); i >= 0; i--) {
+      const block = body[i];
+      if (block.kind === 'h2') return headingId(block.text);
+    }
+    return null;
+  }
 
   /** Which section the reader is in, for the rail's highlight. */
   protected readonly activeSection = signal('');

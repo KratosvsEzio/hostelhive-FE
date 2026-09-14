@@ -132,7 +132,14 @@
            `xl:hidden` also keeps it out of the three-track grid above that breakpoint —
            `display: none` takes it out of grid placement entirely, so it cannot claim a
            column from the rail or the measure. -->
-      <nav class="xl:hidden" [attr.aria-label]="'publicBlog.onThisPage' | transloco">
+      <!-- `pt-10` on the nav, not `mt-10` on the card. A top margin on the first rendered
+           child collapses up and out through this nav and the container, taking the white
+           field's top edge 40px down the page with it — so the reader got white, a hairline,
+           a 40px shelf of page grey, then white again, at every width below `xl`. Above `xl`
+           the container is a grid, which stops the collapse, which is why it measured 0
+           there and why the seam only existed on the widths most people read at. Padding
+           does not collapse. -->
+      <nav class="pt-10 xl:hidden" [attr.aria-label]="'publicBlog.onThisPage' | transloco">
         <!-- The vertical padding belongs to the `<summary>`, not to the `<details>` around
              it. On the box it looked identical and measured 278x17: a 17px target with 17px
              of dead, non-toggling space above and below it inside a 51px card. This is the
@@ -140,7 +147,7 @@
              the page. On the summary the same 4 units give a 49px target and nothing moves.
              `-mx-5 px-5` puts the horizontal padding there too, so the whole width of the
              card toggles rather than just the text. -->
-        <details class="group mt-10 rounded-2xl border border-ink-200 bg-surface px-5">
+        <details class="group rounded-2xl border border-ink-200 bg-surface px-5">
           <summary
             class="-mx-5 flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-ink-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 focus-visible:ring-offset-surface [&::-webkit-details-marker]:hidden"
           >
@@ -336,10 +343,14 @@
                      one carrying the advice. A pointer swipes it; without `tabindex` a
                      keyboard has no way to reach it at all.
 
-                     Named from the swipe hint rather than a new string: an unnamed `region`
-                     is not exposed as a landmark, so the role would be worse than useless,
-                     and `aria-labelledby` reads a referenced element even when it is
-                     `sm:hidden`. The hint is already translated into all eighteen locales.
+                     Named after the section it sits in, not after the swipe hint. An unnamed
+                     `region` is not exposed as a landmark, so the role would be worse than
+                     useless — but the hint says "Swipe the table to see every column", and
+                     above `sm` the table fits and nothing scrolls, so that name was false at
+                     every width but the narrowest. The `h2` is already translated and
+                     already carries a stable id, so this costs no new string either. The
+                     hint keeps its id only as a fallback for a table with no heading above
+                     it.
 
                      `tabindex` is unconditional, which costs one tab stop above `sm` where
                      the 34rem table fits the 38rem measure and nothing scrolls. The version
@@ -350,7 +361,7 @@
                   class="overflow-x-auto overflow-y-hidden rounded-2xl ring-1 ring-ink-100"
                   tabindex="0"
                   role="region"
-                  [attr.aria-labelledby]="'blog-table-hint-' + $index"
+                  [attr.aria-labelledby]="sectionIdAt($index) ?? 'blog-table-hint-' + $index"
                 >
                   <table class="w-full min-w-[34rem] text-start text-sm">
                     <thead class="bg-ink-50 text-[11px] uppercase tracking-wider text-ink-500">
