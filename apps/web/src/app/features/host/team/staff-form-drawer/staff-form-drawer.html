@@ -78,11 +78,14 @@
       <hh-toggle [checked]="f.isManager" (checkedChange)="onManagerToggle($event)" />
     </div>
     @if (f.isManager) {
-      @if (f.hasUserAccount) {
+      <!-- Keyed on the stored email, not on `user.id`: the serializer sends that for every
+           record (it is the staff's own id), so it read as "already has an account" for
+           everyone and disabled the credentials nobody could then set. -->
+      @if (f.hasStoredEmail) {
         <div class="flex items-start gap-2 rounded-xl bg-tint-sky px-3 py-2.5 text-xs text-ink-600">
           <i class="ti ti-info-circle mt-0.5 shrink-0 text-ink-500" aria-hidden="true"></i>
           <p>
-            {{ 'hostTeam.thisPersonAlreadyHasAn' | transloco }}
+            {{ 'hostTeam.storedEmailBecomesLogin' | transloco }}
           </p>
         </div>
       } @else {
@@ -92,26 +95,45 @@
       }
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <hh-input
-          [label]="f.hasUserAccount ? 'Email' : 'Email *'"
+          [label]="f.hasStoredEmail ? 'Email' : 'Email *'"
           type="email"
           autocomplete="off"
           [placeholder]="'common.enterEmail' | transloco"
-          [disabled]="f.hasUserAccount"
+          [disabled]="f.hasStoredEmail"
           [value]="f.managerEmail"
           [error]="managerEmailError()"
           (valueChange)="patch('managerEmail', $event)"
         />
+        <!-- Disabled alongside the email whenever the record carries one: with the address
+             fixed, the login it resolves to is the server's to decide and there is nothing
+             here to set. A password is only collected for a staff member who has no address
+             yet, where a login has to be created from scratch. -->
         <hh-input
-          [label]="f.hasUserAccount ? 'Password' : 'Password *'"
+          [label]="f.hasStoredEmail || f.wasManager ? 'Password' : 'Password *'"
           type="password"
           autocomplete="new-password"
-          [placeholder]="f.hasUserAccount ? 'Managed by their account' : (f.wasManager ? 'Leave blank to keep current' : 'Set a password')"
-          [disabled]="f.hasUserAccount"
+          [placeholder]="
+            f.hasStoredEmail
+              ? 'Managed by their account'
+              : (f.wasManager ? 'Leave blank to keep current' : 'Set a password')
+          "
+          [disabled]="f.hasStoredEmail"
           [value]="f.managerPassword"
           [error]="managerPasswordError()"
           (valueChange)="patch('managerPassword', $event)"
         />
       </div>
+      @if (!f.hasStoredEmail) {
+        <!-- The address being typed may already belong to someone. The server reuses that
+             account and ignores the password sent with it, so say so before the host
+             assumes the one they just chose is what the person will sign in with. -->
+        <div class="flex items-start gap-2 rounded-xl bg-tint-sky px-3 py-2.5 text-xs text-ink-600">
+          <i class="ti ti-info-circle mt-0.5 shrink-0 text-ink-500" aria-hidden="true"></i>
+          <p>
+            {{ 'hostTeam.existingAccountKeepsPassword' | transloco }}
+          </p>
+        </div>
+      }
     }
     <!-- Employment -->
     <div class="flex items-center gap-3 pt-1">

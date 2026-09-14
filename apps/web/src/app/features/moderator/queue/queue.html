@@ -30,7 +30,7 @@
     <hh-empty-state
       icon="ti-inbox-off"
       [title]="'moderatorQueue.queueIsClear' | transloco"
-      message="No submissions are waiting for review."
+      [message]="'moderatorQueue.noSubmissionsAreWaitingFor' | transloco"
     />
   } @else {
     <hh-data-table

@@ -102,7 +102,17 @@
     "signInToBook": "بکنگ کے لیے سائن اِن کریں",
     "pickYourRoomOnce": "سائن اِن کرتے ہی اپنا کمرہ منتخب کریں",
     "createAFreeAccountToBook": "مفت اکاؤنٹ بنائیں، کمرے منتخب کریں اور فیصلہ کرنے تک محفوظ رکھیں۔ صرف 30 سیکنڈ لگتے ہیں۔",
-    "roomsAmpPricing": "کمرے اور کرایہ"
+    "andNMore": "+{{count}} مزید",
+    "favorite": "پسندیدہ",
+    "showPhoneNumber": "فون نمبر دکھائیں",
+    "showAllNReviews": "تمام {{count}} جائزے دکھائیں",
+    "hostSince": "{{year}} سے میزبان",
+    "writeAReview": "جائزہ لکھیں",
+    "roomSummary": "{{beds}} بستر · {{types}} کمروں کی اقسام · {{sharing}} شیئرنگ آپشنز",
+    "nSharingAvailable": "{{labels}} شیئرنگ دستیاب",
+    "bookNow": "ابھی بک کریں",
+    "nPhotos": "{{count}} تصاویر",
+    "otherPhotos": "دیگر"
   },
   "common": {
     "loading": "لوڈ ہو رہا ہے…",
@@ -226,6 +236,7 @@
     "dinner": "رات کا کھانا",
     "teamAmpStaff": "ٹیم اور عملہ",
     "accountSettings": "اکاؤنٹ کی ترتیبات",
+    "passwordAmpSecurity": "پاس ورڈ اور سیکیورٹی",
     "someRequiredFieldsAre": "کچھ ضروری خانے خالی ہیں",
     "uploading": "اپ لوڈ ہو رہا ہے…",
     "listingProgress": "لسٹنگ کی پیش رفت",
@@ -318,7 +329,16 @@
     "enterDescription": "تفصیل درج کریں",
     "enterLandmarks": "قریبی نشانیاں درج کریں",
     "enterReason": "وجہ درج کریں",
-    "enterNote": "نوٹ درج کریں"
+    "enterNote": "نوٹ درج کریں",
+    "somethingWentWrongReachingThe": "سرور سے رابطہ کرنے میں کچھ غلط ہو گیا۔",
+    "weDLikeToCountPage": "ہم صفحہ ویوز گننا چاہیں گے تاکہ معلوم ہو کہ لوگ کون سے ہاسٹل اور شہر تلاش کرتے ہیں اور ہم تلاش بہتر بنا سکیں۔ کوئی ذاتی معلومات نہیں بھیجی جاتیں، اور اس کا سائن اِن رہنے سے کوئی تعلق نہیں۔",
+    "noThanks": "نہیں، شکریہ",
+    "password": "پاس ورڈ",
+    "selectYear": "سال منتخب کریں",
+    "allow": "اجازت دیں",
+    "noPhotosYet": "ابھی کوئی تصویر نہیں",
+    "guests": "مہمان",
+    "copy": "کاپی کریں"
   },
   "leadWall": {
     "close": "بند کریں",
@@ -334,7 +354,8 @@
     "weSentASigned24": "ہم نے ۲۴ گھنٹے کے لیے تصدیقی لنک بھیجا ہے",
     "clickingItActivatesYourAccount": "۔ اس پر کلک کرنے سے آپ کا اکاؤنٹ فعال ہو جائے گا اور نمبر ظاہر ہو گا۔",
     "iVeVerifiedContinue": "تصدیق ہو گئی — جاری رکھیں",
-    "back": "واپس"
+    "back": "واپس",
+    "confirmPassword": "پاس ورڈ کی تصدیق کریں"
   },
   "home": {
     "searchCityOrArea": "شہر یا علاقہ تلاش کریں",
@@ -533,7 +554,12 @@
     "country": "ملک",
     "streetAddress": "گلی کا پتہ",
     "nearbyLandmarks": "قریبی نشانیاں",
-    "roomTypeDescription": "کمرے کی قسم کی تفصیل"
+    "roomTypeDescription": "کمرے کی قسم کی تفصیل",
+    "couldnTCheckWhichRooms": "یہ جانچا نہیں جا سکا کہ کون سے کمرے یہ قسم استعمال کرتے ہیں۔ دوبارہ کوشش کریں۔",
+    "findingTheRoomsBuiltOn": "{{name}} پر بنے کمرے تلاش کیے جا رہے ہیں…",
+    "moveAllRoomsTo": "تمام کمرے یہاں منتقل کریں",
+    "selectARoomType": "کمرے کی قسم منتخب کریں",
+    "noRoomsAreBuiltOn": "{{name}} پر کوئی کمرہ نہیں بنا، اس لیے اور کچھ نہیں بدلے گا۔ محفوظ کرنے پر یہ ہٹا دیا جائے گا۔"
   },
   "a11y": {
     "close": "بند کریں",
@@ -612,7 +638,16 @@
     "clearSearch": "تلاش صاف کریں",
     "closeTimePicker": "وقت کا انتخاب بند کریں",
     "chooseTime": "وقت منتخب کریں",
-    "dismiss": "بند کریں"
+    "dismiss": "بند کریں",
+    "closePropertyMenu": "پراپرٹی مینو بند کریں",
+    "goToPhotoN": "تصویر {{n}} پر جائیں",
+    "removeFrom": "{{title}} ہٹائیں",
+    "removeOneFrom": "{{title}} سے ایک ہٹائیں",
+    "onePhotoAtATime": "ایک وقت میں ایک تصویر",
+    "allPhotosByGroup": "تمام تصاویر، گروپ کے مطابق",
+    "fewerGuestsIn": "{{title}} میں کم مہمان",
+    "moreGuestsIn": "{{title}} میں زیادہ مہمان",
+    "skipToContent": "مواد پر جائیں"
   },
   "hostTenants": {
     "tenantPhoto": "کرایہ دار کی تصویر",
@@ -677,7 +712,10 @@
     "roomNotAvailableForTheseDates": "ان تاریخوں کے لیے کمرہ دستیاب نہیں",
     "checkIn": "چیک اِن",
     "checkOut": "چیک آؤٹ",
-    "leavingDate": "روانگی کی تاریخ"
+    "leavingDate": "روانگی کی تاریخ",
+    "thisTenantHasNoRent": "اس کرایہ دار کا ابھی کوئی کرایہ انوائس ریکارڈ نہیں ہے۔",
+    "noUtilityChargesHaveBeen": "اس کرایہ دار کے کمرے کے لیے کوئی یوٹیلیٹی چارج ریکارڈ نہیں کیا گیا۔",
+    "checkInYourFirstTenant": "کرایہ ٹریک کرنا شروع کرنے کے لیے اپنے پہلے کرایہ دار کو چیک اِن کریں۔"
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "آپ کی سبسکرپشن لوڈ نہیں ہو سکی",
@@ -731,7 +769,11 @@
     "thenRsPerPeriod": "پھر Rs {{price}} / {{period}}",
     "paymentStarted": "ادائیگی شروع ہو گئی",
     "payRs": "Rs {{amount}} ادا کریں",
-    "selectAProduct": "پروڈکٹ منتخب کریں"
+    "selectAProduct": "پروڈکٹ منتخب کریں",
+    "invoicesAppearHereAfterYour": "آپ کی پہلی ادائیگی کے بعد انوائسز یہاں ظاہر ہوں گی۔",
+    "pleaseCheckYourConnectionAnd": "براہ کرم اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+    "youDonTHaveAn": "آپ کے پاس ابھی کوئی فعال پلان نہیں ہے۔ شروع کرنے کے لیے نیچے دیے پلان دیکھیں۔",
+    "checkBackSoonPlans": "جلد دوبارہ دیکھیں — پلان یہاں ظاہر ہوں گے۔"
   },
   "hostMess": {
     "pickADate": "تاریخ منتخب کریں",
@@ -791,7 +833,8 @@
     "last12MonthsPkr": "گزشتہ 12 ماہ · PKR",
     "last30DaysPkr": "گزشتہ 30 دن · PKR",
     "uploadingReceipt": "رسید اپ لوڈ ہو رہی ہے…",
-    "nPhotosAttached": "{{count}} تصاویر منسلک"
+    "nPhotosAttached": "{{count}} تصاویر منسلک",
+    "logYourBulkGroceryPurchases": "میس کے اخراجات پر نظر رکھنے کے لیے اپنی تھوک خریداری درج کریں۔"
   },
   "hostRooms": {
     "calendarTab": "کیلنڈر",
@@ -847,7 +890,13 @@
     "createRooms": "کمرے بنائیں",
     "bedsOccupiedOf": "{{total}} میں سے {{filled}} بستر مشغول",
     "nOfMBooked": "{{capacity}} میں سے {{booked}} بک",
-    "nNoLongerActive": "{{count}} اب فعال نہیں"
+    "nNoLongerActive": "{{count}} اب فعال نہیں",
+    "dayRoster": "دن کی فہرست",
+    "pickADay": "ایک دن منتخب کریں۔",
+    "nobodyInThisRoomThat": "اس دن اس کمرے میں کوئی نہیں تھا۔",
+    "thisRoomCurrentlyHasNo": "اس کمرے میں فی الحال کوئی فعال کرایہ دار نہیں ہے۔",
+    "addYourFirstRoomTo": "آکوپنسی ٹریک کرنا شروع کرنے کے لیے اپنا پہلا کمرہ شامل کریں۔",
+    "bedNumbersAreNotAssigned": "بیڈ نمبر ابھی مختص نہیں کیے گئے — کیلنڈر بتاتا ہے کہ کتنے بیڈ بھرے ہیں، یہ نہیں کہ کون سا بیڈ کس مہمان کے پاس ہے۔"
   },
   "hostUtilities": {
     "ratePerUnit": "فی یونٹ نرخ",
@@ -887,7 +936,9 @@
     "shareFormulaStart": "حصہ = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} قیام-دن",
     "rsUnallocated": "Rs {{amount}} غیر مختص",
-    "rsOver": "Rs {{amount}} زیادہ"
+    "rsOver": "Rs {{amount}} زیادہ",
+    "pickARoomWithActive": "بل تقسیم کرنے کے لیے فعال کرایہ داروں والا کمرہ منتخب کریں۔",
+    "addAUtilityBillTo": "استعمال اور چارجز ٹریک کرنے کے لیے یوٹیلیٹی بل شامل کریں۔"
   },
   "hostTeam": {
     "staffPhoto": "عملے کی تصویر",
@@ -899,7 +950,6 @@
     "salaryIssueDate": "تنخواہ جاری ہونے کی تاریخ",
     "chooseAnImageFromYour": "اپنی فائلوں سے تصویر منتخب کریں",
     "managerAccess": "مینیجر رسائی",
-    "thisPersonAlreadyHasAn": "اس شخص کا پہلے سے اکاؤنٹ ہے، اس لیے کچھ ترتیب دینے کی ضرورت نہیں — ٹوگل آن رکھنے سے محفوظ کرنے پر انہیں اس ہاسٹل تک مینیجر رسائی مل جائے گی۔",
     "employment": "ملازمت",
     "upload": "اپ لوڈ",
     "scopedToThisHostelOnly": "صرف اس ہاسٹل تک محدود۔",
@@ -918,7 +968,11 @@
     "fromTheTeamThisAction": "ٹیم سے۔ یہ عمل واپس نہیں کیا جا سکتا۔",
     "keepsTheirStaffRecordBut": "ان کا عملے کا ریکارڈ برقرار رہے گا لیکن وہ سائن ان یا اس ہاسٹل کا انتظام نہیں کر سکیں گے۔",
     "createsLoginFor": "{{name}} کے لیے لاگ اِن بناتا ہے تاکہ وہ اس ہاسٹل کا انتظام کر سکیں۔",
-    "thisStaffMember": "یہ عملہ رکن"
+    "thisStaffMember": "یہ عملہ رکن",
+    "existingAccountKeepsPassword": "اگر اس ای میل کا پہلے سے اکاؤنٹ ہے تو اس کا موجودہ پاس ورڈ ہی رہے گا — آپ کا صرف نیا اکاؤنٹ بناتے وقت استعمال ہوگا۔",
+    "storedEmailBecomesLogin": "ان کا محفوظ ای میل ہی لاگ اِن ہوگا۔ اگر اس پتے کا پہلے سے اکاؤنٹ ہے تو وہی پاس ورڈ برقرار رہے گا۔",
+    "pickADifferentStatusTo": "اپنی باقی ٹیم دیکھنے کے لیے مختلف اسٹیٹس منتخب کریں۔",
+    "addAWardenCookOr": "تنخواہ اور دستاویزات محفوظ رکھنے کے لیے وارڈن، باورچی یا گارڈ شامل کریں۔"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "منظوری ناکام — دوبارہ کوشش کریں۔",
@@ -973,7 +1027,9 @@
     "billedTo": "بل بھیجا گیا",
     "issued": "جاری کیا گیا",
     "due": "واجب الادا",
-    "thisWillPermanentlyDeleteInvoice": "یہ مستقل طور پر انوائس حذف کر دے گا"
+    "thisWillPermanentlyDeleteInvoice": "یہ مستقل طور پر انوائس حذف کر دے گا",
+    "invoicesAppearHereOnceYou": "جیسے ہی آپ کرایہ یا یوٹیلیٹی بل جاری کریں گے، انوائسز یہاں ظاہر ہوں گی۔",
+    "tryAdjustingYourFilters": "اپنے فلٹرز تبدیل کر کے دیکھیں۔"
   },
   "hostExpenses": {
     "allTypes": "تمام اقسام",
@@ -1017,7 +1073,20 @@
     "pctVsLastMonth": "{{pct}}% گزشتہ ماہ کے مقابلے",
     "nTenantsUnpaid": "{{count}} کرایہ دار غیر ادا شدہ",
     "moveInsAndOuts": "آمد و رخصتی",
-    "pctBedsFilled": "بھرے ہوئے بستروں کا تناسب"
+    "pctBedsFilled": "بھرے ہوئے بستروں کا تناسب",
+    "weCouldnTLoadTenant": "ہم کرایہ داروں کی نقل و حرکت کا ڈیٹا لوڈ نہیں کر سکے۔",
+    "weCouldnTLoadOccupancy": "ہم آکوپنسی کا ڈیٹا لوڈ نہیں کر سکے۔",
+    "weCouldnTLoadAnalytics": "ہم اس پراپرٹی کے تجزیات لوڈ نہیں کر سکے۔",
+    "allUtilityInvoicesAreSettled": "تمام یوٹیلیٹی انوائسز ادا ہو چکی ہیں۔",
+    "noInvoicesForThisProperty": "اس پراپرٹی کے لیے ابھی کوئی انوائس نہیں ہے۔",
+    "weCouldnTLoadRevenue": "ہم آمدنی کا ڈیٹا لوڈ نہیں کر سکے۔",
+    "upcomingBookings": "آنے والی بکنگز",
+    "nArriving": "{{count}} آمد",
+    "nLeaving": "{{count}} روانگی",
+    "nothingBookedYet": "ابھی کوئی بکنگ نہیں",
+    "noArrivalsOrDeparturesAhead": "اگلے دو ہفتوں میں کوئی آمد یا روانگی نہیں۔",
+    "inOverOutPerDay": "روزانہ آمد، اس کے نیچے روانگی",
+    "viewAllBookings": "تمام بکنگز دیکھیں ←"
   },
   "hostBookings": {
     "calendarTab": "کیلنڈر",
@@ -1034,7 +1103,31 @@
     "cancelledByOn": "{{by}} نے {{date}} کو منسوخ کیا",
     "pkrPenaltyChargedToYou": "PKR {{amount}} جرمانہ آپ سے وصول",
     "pkrToYou": "PKR {{amount}} آپ کو",
-    "thisGuest": "اس مہمان"
+    "thisGuest": "اس مہمان",
+    "dayLedger": "دن کا کھاتہ",
+    "pendingAllotments": "زیر التوا تفویضات",
+    "askedFor": "درخواست کردہ",
+    "noContactDetailsOnThis": "اس بکنگ پر کوئی رابطہ تفصیل نہیں ہے",
+    "recordABooking": "بکنگ درج کریں",
+    "whoIsStaying": "کون ٹھہر رہا ہے",
+    "onlyIfTheyHaveOne": "صرف اگر ان کے پاس ہو",
+    "addARoom": "کمرہ شامل کریں",
+    "toCollectAtTheDesk": "استقبالیہ پر وصول کرنا ہے",
+    "createBooking": "بکنگ بنائیں",
+    "theRoomsForThisProperty": "اس پراپرٹی کے کمرے لوڈ نہیں ہو سکے۔",
+    "everyRoomEveryState": "ہر کمرہ، ہر حالت — کسی دن کا کھاتہ دیکھنے کے لیے اس پر ٹیپ کریں",
+    "thisMonthSCalendarCould": "اس مہینے کا کیلنڈر لوڈ نہیں ہو سکا۔",
+    "nothingIsWaitingOnYou": "اس دن کے لیے آپ کا کوئی کام باقی نہیں ہے۔",
+    "pickTheDatesFirst": "پہلے تاریخیں منتخب کریں — دستیابی انہی پر منحصر ہے۔",
+    "noRoomsOnThisProperty": "اس پراپرٹی میں ابھی کوئی کمرہ نہیں ہے۔",
+    "bookingCalendar": "بکنگ کیلنڈر",
+    "assignRoom": "کمرہ مختص کریں",
+    "noteFromGuest": "مہمان کا پیغام",
+    "savedAs": "اس نام سے محفوظ",
+    "checkInCheckOut": "چیک اِن — چیک آؤٹ",
+    "aNightRuns12": "ایک رات دوپہر 12:00 سے اگلے دن دوپہر 12:00 تک ہوتی ہے — دوپہر سے چیک اِن، اگلے دن دوپہر تک چیک آؤٹ۔",
+    "discount": "رعایت",
+    "saveBooking": "بکنگ محفوظ کریں"
   },
   "hostHostelProfile": {
     "failed": "ناکام",
@@ -1044,7 +1137,8 @@
     "updateHostel": "ہاسٹل اپ ڈیٹ کریں",
     "reviewTitle": "اس سے آپ کی لسٹنگ دوبارہ جائزے میں چلی جائے گی",
     "reviewBody": "آپ نے یہ تبدیلیاں کی ہیں۔ آپ کی لسٹنگ کا دوبارہ جائزہ لیا جائے گا، اور منظوری تک مہمانوں کو نظر نہیں آئے گی۔",
-    "reviewConfirm": "محفوظ کریں اور جائزے کے لیے بھیجیں"
+    "reviewConfirm": "محفوظ کریں اور جائزے کے لیے بھیجیں",
+    "weCouldnTLoadYour": "ہم آپ کا ہاسٹل لوڈ نہیں کر سکے۔"
   },
   "hostMore": {
     "property": "پراپرٹی",
@@ -1065,11 +1159,13 @@
   "adminAdminContracts": {
     "contracts": "معاہدے",
     "noContractsMatchThisFilter": "اس فلٹر سے کوئی معاہدہ میل نہیں کھاتا",
-    "term": "مدت"
+    "term": "مدت",
+    "searchContractsByHostel": "ہاسٹل کے لحاظ سے معاہدے تلاش کریں"
   },
   "adminAdminListings": {
     "allListings": "تمام فہرستیں",
-    "noListingsFound": "کوئی فہرست نہیں ملی"
+    "noListingsFound": "کوئی فہرست نہیں ملی",
+    "searchListingsByHostel": "ہاسٹل کے لحاظ سے فہرستیں تلاش کریں"
   },
   "adminAdminPayments": {
     "payments": "ادائیگیاں",
@@ -1079,27 +1175,32 @@
     "transactionId": "ٹرانزیکشن آئی ڈی",
     "created": "تخلیق شدہ",
     "contract": "معاہدہ",
-    "product": "پروڈکٹ"
+    "product": "پروڈکٹ",
+    "searchPaymentsByHostel": "ہاسٹل کے لحاظ سے ادائیگیاں تلاش کریں"
   },
   "moderatorQueue": {
     "reviewQueue": "جائزے کی قطار",
-    "queueIsClear": "قطار خالی ہے"
+    "queueIsClear": "قطار خالی ہے",
+    "noSubmissionsAreWaitingFor": "جائزے کے لیے کوئی درخواست زیر التوا نہیں ہے۔"
   },
   "moderatorAudit": {
     "auditLog": "آڈٹ لاگ",
     "noMatchingActivity": "کوئی متعلقہ سرگرمی نہیں",
     "allModerators": "تمام موڈریٹرز",
     "last7Days": "گزشتہ 7 دن",
-    "loadOlderEntries": "پرانی اندراجات لوڈ کریں"
+    "loadOlderEntries": "پرانی اندراجات لوڈ کریں",
+    "tryADifferentActionFilter": "کوئی اور ایکشن فلٹر یا تاریخ کی حد آزمائیں۔"
   },
   "coreForbidden": {
-    "accessBlocked": "رسائی مسدود"
+    "accessBlocked": "رسائی مسدود",
+    "youDonTHavePermission": "آپ کو یہ حصہ دیکھنے کی اجازت نہیں ہے۔"
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "آپ کے ہاسٹل کے دعوت نامے، کھانے کی تصدیقات اور زیر التوا رسیدیں۔"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "ڈریگ اینڈ ڈراپ کریں، اپ لوڈ کریں، یا تصویر لیں"
+    "dragAmpDropUploadOr": "ڈریگ اینڈ ڈراپ کریں، اپ لوڈ کریں، یا تصویر لیں",
+    "replaceAdd": "تبدیل کریں / شامل کریں"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "اب اختتامی تاریخ منتخب کریں",
@@ -1119,7 +1220,8 @@
     "refundsReachYourOriginalPayment": "رقم کی واپسی 5 کام کے دنوں کے اندر آپ کے اصل ذریعۂ ادائیگی پر پہنچ جاتی ہے۔",
     "pkrPaid": "PKR {{amount}} ادا شدہ",
     "cancelledSummary": "منسوخ {{date}} · PKR {{refund}} واپس · PKR {{charge}} منسوخی فیس",
-    "cancelRefundExplainer": "آپ کو <strong class=\"tabular-nums\">PKR {{refund}}</strong> واپس ملیں گے۔ <strong class=\"tabular-nums\">PKR {{charge}}</strong> منسوخی فیس کے طور پر رکھے جاتے ہیں، کیونکہ آپ شیڈول کے {{pct}}% پر منسوخ کر رہے ہیں۔"
+    "cancelRefundExplainer": "آپ کو <strong class=\"tabular-nums\">PKR {{refund}}</strong> واپس ملیں گے۔ <strong class=\"tabular-nums\">PKR {{charge}}</strong> منسوخی فیس کے طور پر رکھے جاتے ہیں، کیونکہ آپ شیڈول کے {{pct}}% پر منسوخ کر رہے ہیں۔",
+    "whenYouBookAHostel": "جب آپ کوئی ہاسٹل بک کریں گے، وہ آپ کی تاریخوں اور ادائیگی کے ساتھ یہاں دکھائی دے گا۔"
   },
   "userFavorites": {
     "removeFromFavorites": "پسندیدہ سے ہٹائیں؟",
@@ -1128,7 +1230,8 @@
     "noFavoritesYet": "ابھی کوئی پسندیدہ نہیں",
     "saveHostelsYouLikeAnd": "پسند آنے والے ہاسٹل محفوظ کریں اور انہیں یہاں تلاش کریں۔",
     "browseHostels": "ہاسٹل دیکھیں",
-    "fromYourSavedHostels": "آپ کے محفوظ ہاسٹلوں سے؟"
+    "fromYourSavedHostels": "آپ کے محفوظ ہاسٹلوں سے؟",
+    "weCouldnTLoadYour": "ہم آپ کے پسندیدہ لوڈ نہیں کر سکے۔"
   },
   "userSecurity": {
     "currentPassword": "موجودہ پاس ورڈ",
@@ -1201,7 +1304,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "HostelHive ٹیم کی طرف سے تجاویز، رہنمائی اور اپ ڈیٹس",
     "comingSoon": "جلد آ رہا ہے",
-    "weReWorkingOnSome": "ہم طالب علمی زندگی، ہاسٹل کی تجاویز اور پاکستان بھر کے شہروں کی رہنمائی پر بہترین مواد تیار کر رہے ہیں۔ منتظر رہیں!"
+    "weReWorkingOnSome": "ہم طالب علمی زندگی، ہاسٹل کی تجاویز اور پاکستان بھر کے شہروں کی رہنمائی پر بہترین مواد تیار کر رہے ہیں۔ منتظر رہیں!",
+    "onThisPage": "اس صفحے پر",
+    "theHostelhiveTeam": "HostelHive ٹیم",
+    "keepReading": "پڑھنا جاری رکھیں",
+    "blogHomePage": "بلاگ ہوم پیج دیکھیں۔",
+    "filterArticlesByCategory": "زمرے کے لحاظ سے مضامین فلٹر کریں",
+    "archiveLayout": "آرکائیو لے آؤٹ",
+    "everyArticle": "تمام مضامین",
+    "theHostelhiveJournal": "HostelHive جرنل",
+    "guidesForFindingARoom": "کمرہ تلاش کرنے کی رہنمائی — اور رات بھر کے لیے ایک بستر۔",
+    "whatHostelsActuallyCost": "شہر بہ شہر ہاسٹل کی اصل قیمت، کون سا علاقہ کس کیمپس کے لیے مناسب ہے، اور جوہر ٹاؤن سے قراقرم تک کہاں ٹھہریں۔ فہرستوں سے اور سفر سے لکھا گیا۔",
+    "allPosts": "تمام پوسٹس",
+    "grid": "گرڈ",
+    "index": "فہرست",
+    "nMinRead": "{{count}} منٹ کا مطالعہ",
+    "nMin": "{{count}} منٹ",
+    "article": "مضمون",
+    "category": "زمرہ",
+    "published": "اشاعت",
+    "read": "مطالعہ",
+    "nothingFiledHereYet": "یہاں ابھی کچھ درج نہیں ہے۔",
+    "lookingForARoomRather": "رہنمائی نہیں، کمرہ تلاش کر رہے ہیں؟",
+    "everyListingShowsTheRent": "ہر فہرست فی بیڈ یا فی کمرہ کرایہ، کیا کچھ شامل ہے، اور اسے کون چلاتا ہے — سب دکھاتی ہے۔",
+    "swipeTheTableToSee": "تمام کالم دیکھنے کے لیے ٹیبل کو سوائپ کریں",
+    "weVerifyListingsAcross": "ہم پورے پاکستان میں فہرستوں کی تصدیق کرتے ہیں اور اس دوران جو سیکھتے ہیں وہی لکھتے ہیں۔",
+    "weCouldnTFindThatPost": "ہمیں وہ پوسٹ نہیں ملی",
+    "theLinkMayBeOld": "ممکن ہے لنک پرانا ہو، یا پتہ کچھ غلط ہو۔",
+    "browseEveryPostInstead": "اس کے بجائے تمام پوسٹس دیکھیں۔",
+    "readTheGuide": "رہنمائی پڑھیں"
   },
   "publicListing": {
     "checkIn": "چیک ان",
@@ -1211,7 +1342,9 @@
     "add": "شامل کریں",
     "showAllNPhotos": "تمام {{count}} تصاویر دیکھیں",
     "genderHostelHostedBy": "{{host}} کا میزبان کردہ {{gender}} ہاسٹل",
-    "bookARoom": "کمرہ بک کریں"
+    "bookARoom": "کمرہ بک کریں",
+    "theListingMayHaveBeen": "ممکن ہے فہرست ہٹا دی گئی ہو یا لنک غلط ہو۔",
+    "chooseYourRoom": "اپنا کمرہ منتخب کریں"
   },
   "featuresPublic": {
     "checkingYourLink": "آپ کا لنک چیک کیا جا رہا ہے…",
@@ -1265,7 +1398,14 @@
     "allApproved": "سب منظور ہو گئیں!",
     "doneNFailed": "مکمل — {{count}} ناکام",
     "nPhotosFailedRetry": "{{count}} تصاویر ناکام — آپ قطار سے دوبارہ کوشش کر سکتے ہیں۔",
-    "approving": "منظور ہو رہا ہے…"
+    "approving": "منظور ہو رہا ہے…",
+    "newUploadsWillAppearHere": "نئی اپ لوڈز منظوری کے لیے یہاں ظاہر ہوں گی۔",
+    "allStatuses": "تمام حالتیں",
+    "allLabels": "تمام لیبلز",
+    "unlabelled": "بغیر لیبل",
+    "nothingMatchesThisFilter": "اس فلٹر سے کچھ مطابقت نہیں رکھتا",
+    "tryAnotherLabelOrShowAll": "کوئی اور لیبل آزمائیں، یا سب دکھائیں۔",
+    "showAllLabels": "تمام لیبلز دکھائیں"
   },
   "publicContact": {
     "contactUs": "ہم سے رابطہ کریں",
@@ -1396,7 +1536,15 @@
     "bookingSent": "بکنگ بھیج دی گئی",
     "weLlEmailYouWhenConfirmed": "جیسے ہی ہاسٹل تصدیق کرے گا، ہم آپ کو ای میل کر دیں گے۔",
     "couldnTBook": "بکنگ مکمل نہیں ہو سکی",
-    "noRoomsListed": "اس ہاسٹل نے ابھی تک کوئی کمرہ شامل نہیں کیا۔"
+    "noRoomsListed": "اس ہاسٹل نے ابھی تک کوئی کمرہ شامل نہیں کیا۔",
+    "pricesArePerRoom": "قیمتیں فی کمرہ",
+    "pricesArePerBed": "قیمتیں فی بستر",
+    "guestDetails": "مہمان کی تفصیلات",
+    "enterTheGuestName": "مہمان کا نام درج کریں",
+    "enterAValidPhone": "درست فون نمبر درج کریں",
+    "enterAValidEmail": "درست ای میل ایڈریس درج کریں",
+    "ofNSeats": "{{count}} میں سے",
+    "bookingReference": "بکنگ ریفرنس"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",
@@ -1408,11 +1556,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "پتہ یا نشانی تلاش کریں…",
-    "searchCityOrArea": "شہر یا علاقہ تلاش کریں"
+    "searchCityOrArea": "شہر یا علاقہ تلاش کریں",
+    "satellite": "سیٹلائٹ",
+    "noMatchingPlaces": "کوئی مماثل جگہ نہیں",
+    "poweredByOpenstreetmap": "OpenStreetMap کے ذریعے",
+    "noCoordinatesSetFor": "اس فہرست کے لیے کوئی کوآرڈینیٹس مقرر نہیں ہیں۔"
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} کھولیں",
-    "thisFeature": "یہ خصوصیت"
+    "thisFeature": "یہ خصوصیت",
+    "dashboardOverview": "ڈیش بورڈ کا جائزہ",
+    "roomManagement": "کمروں کا انتظام",
+    "tenantManagement": "کرایہ داروں کا انتظام",
+    "utilityBilling": "یوٹیلیٹی بلنگ",
+    "thisFeatureIsAvailable": "یہ سہولت ادائیگی والے پلانز میں دستیاب ہے۔ اپنے ہاسٹل ڈیش بورڈ تک مکمل رسائی کے لیے سبسکرائب کریں۔",
+    "completeHostelProfileFirst": "پہلے ہاسٹل پروفائل مکمل کریں",
+    "onceSubscribedAllFeatures": "سبسکرائب کرتے ہی تمام سہولتیں خود بخود کھل جاتی ہیں۔",
+    "roomAmpOccupancyManagement": "کمروں اور آکوپنسی کا انتظام",
+    "tenantTrackingAmpPayment": "کرایہ داروں کی ٹریکنگ اور ادائیگی کا ریکارڈ",
+    "rentAndUtilityInvoice": "کرایہ اور یوٹیلیٹی انوائس بنانا",
+    "analyticsAndRevenueReports": "تجزیات اور آمدنی کی رپورٹس"
   },
   "notifications": {
     "nUnread": "{{count}} غیر پڑھے"

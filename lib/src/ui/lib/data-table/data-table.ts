@@ -8,6 +8,7 @@ import {
   OnDestroy,
   ViewChild,
   computed,
+  inject,
   input,
   output,
   signal,
@@ -15,6 +16,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { Button } from '../button/button';
 import { HhLink } from '../link/link';
+import { HH_LINK_LOCALISER, HhLinkCommands } from '../link-localiser';
 import { StatusPill } from '../status-pill/status-pill';
 import { NoResults } from '../states/no-results';
 
@@ -270,8 +272,7 @@ export interface PaginationConfig {
                   <hh-no-results>
                     @if (clearable()) {
                       <button hh-button variant="outlined" size="sm" (click)="clearFilters.emit()">
-                        <i class="ti ti-x" aria-hidden="true"></i>Clear filters
-                      </button>
+                        <i class="ti ti-x" aria-hidden="true"></i>{{ 'hostExpenses.clearFilters' | transloco }}</button>
                     }
                   </hh-no-results>
                 </td>
@@ -455,7 +456,7 @@ export interface PaginationConfig {
                             } @else {
                               <a
                                 hhLink
-                                [routerLink]="$any(cell).href"
+                                [routerLink]="inAppLink($any(cell).href)"
                                 [class]="$any(cell).class"
                                 (click)="$event.stopPropagation()"
                               >{{ $any(cell).value }}</a>
@@ -475,18 +476,20 @@ export interface PaginationConfig {
                       @if (!atScrollEnd()) {
                         <div class="pointer-events-none absolute inset-y-0 end-full w-5 bg-gradient-to-r from-transparent to-black/[0.07]"></div>
                       }
-                      <button
-                        hh-button
-                        variant="icon"
-                        size="sm"
-                        type="button"
-                        [attr.aria-label]="'a11y.rowActions' | transloco"
-                        [class.bg-ink-100]="actionActive()(row)"
-                        [class.text-ink-700]="actionActive()(row)"
-                        (click)="rowAction.emit({ row, event: $event })"
-                      >
-                        <i class="ti ti-dots-vertical"></i>
-                      </button>
+                      @if (canRowAct()(row)) {
+                        <button
+                          hh-button
+                          variant="icon"
+                          size="sm"
+                          type="button"
+                          [attr.aria-label]="'a11y.rowActions' | transloco"
+                          [class.bg-ink-100]="actionActive()(row)"
+                          [class.text-ink-700]="actionActive()(row)"
+                          (click)="rowAction.emit({ row, event: $event })"
+                        >
+                          <i class="ti ti-dots-vertical"></i>
+                        </button>
+                      }
                     </td>
                   }
                 </tr>
@@ -636,8 +639,30 @@ export class DataTable implements AfterViewInit, OnDestroy {
   @ViewChild('scrollWrap') private readonly scrollWrap!: ElementRef<HTMLElement>;
   private scrollCleanup?: () => void;
 
-  readonly columns      = input.required<ColumnDef[]>();
-  readonly rows         = input.required<unknown[]>();
+  private readonly localiser = inject(HH_LINK_LOCALISER);
+
+  /**
+   * An in-app cell link, carrying whatever prefix the app's language needs.
+   *
+   * Called from the template rather than precomputed: these links sit inside a loop over
+   * every row and column, so memoising them would mean rebuilding a parallel structure on
+   * each rows change to save a string comparison. The implementation reads its locale from a
+   * signal, which the view therefore tracks — so a language switch rewrites the hrefs already
+   * on screen rather than leaving the table pointing at the previous language.
+   *
+   * Only the routed branch calls this. An `external` cell is an absolute URL to somewhere
+   * else entirely, and prefixing it would be nonsense.
+   */
+  protected inAppLink(href: string): HhLinkCommands {
+    return this.localiser(href);
+  }
+
+  // `readonly` on both: the table only reads them (`.length` and an `@for`). Demanding a
+  // mutable array made every caller hand one over, so a component exposing the safer
+  // `readonly T[]` from a computed failed with TS4104 on the binding rather than on
+  // anything real. Widening accepts both.
+  readonly columns      = input.required<readonly ColumnDef[]>();
+  readonly rows         = input.required<readonly unknown[]>();
   readonly rowId        = input.required<(row: unknown) => string>();
   readonly expandable   = input<ExpandConfig | null>(null);
   readonly pagination   = input<PaginationConfig | null>(null);
@@ -645,6 +670,17 @@ export class DataTable implements AfterViewInit, OnDestroy {
   readonly showActions  = input(false);
   readonly clearable    = input(false);
   readonly actionActive = input<(row: unknown) => boolean>(() => false);
+  /**
+   * Per-row veto on the action button. `showActions` says the table has a menu at all; this
+   * says whether *this* row gets one.
+   *
+   * The column still renders for a vetoed row — only the button goes. Dropping the cell
+   * would pull every row after it one column left, and the actions column is sticky, so the
+   * table would come apart at exactly the row being singled out.
+   *
+   * Default true, so a table that does not care is unchanged.
+   */
+  readonly canRowAct    = input<(row: unknown) => boolean>(() => true);
   readonly sort         = input<SortState | null>(null);
   /**
    * Whether a third click on the sorted column clears the sort.
@@ -727,7 +763,10 @@ export class DataTable implements AfterViewInit, OnDestroy {
     if (this.expandable() && hasChildren) {
       this.expandedIds.update((s) => {
         const n = new Set(s);
-        n.has(id) ? n.delete(id) : n.add(id);
+        // A statement rather than a ternary: both branches are here for their effect, and a
+        // conditional *expression* whose value is thrown away reads as a returned result.
+        if (n.has(id)) n.delete(id);
+        else n.add(id);
         return n;
       });
     }

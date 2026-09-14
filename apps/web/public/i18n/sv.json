@@ -102,7 +102,17 @@
     "signInToBook": "Logga in för att boka",
     "pickYourRoomOnce": "Välj ditt rum när du loggat in",
     "createAFreeAccountToBook": "Skapa ett gratiskonto för att välja rum och hålla dem medan du bestämmer dig. Det tar 30 sekunder.",
-    "roomsAmpPricing": "Rum och priser"
+    "andNMore": "+{{count}} till",
+    "favorite": "Favorit",
+    "showPhoneNumber": "Visa telefonnummer",
+    "showAllNReviews": "Visa alla {{count}} omdömen",
+    "hostSince": "Värd sedan {{year}}",
+    "writeAReview": "Skriv ett omdöme",
+    "roomSummary": "{{beds}} sängar · {{types}} rumstyper · {{sharing}} delningsalternativ",
+    "nSharingAvailable": "{{labels}}-delning tillgänglig",
+    "bookNow": "Boka nu",
+    "nPhotos": "{{count}} bilder",
+    "otherPhotos": "Övriga"
   },
   "common": {
     "loading": "Laddar…",
@@ -226,6 +236,7 @@
     "dinner": "Middag",
     "teamAmpStaff": "Team och personal",
     "accountSettings": "Kontoinställningar",
+    "passwordAmpSecurity": "Lösenord och säkerhet",
     "someRequiredFieldsAre": "Vissa obligatoriska fält saknas",
     "uploading": "Laddar upp…",
     "listingProgress": "Annonsens förlopp",
@@ -318,7 +329,16 @@
     "enterDescription": "Ange beskrivning",
     "enterLandmarks": "Ange landmärken i närheten",
     "enterReason": "Ange en anledning",
-    "enterNote": "Ange en anteckning"
+    "enterNote": "Ange en anteckning",
+    "somethingWentWrongReachingThe": "Något gick fel vid anslutningen till servern.",
+    "weDLikeToCountPage": "Vi vill gärna räkna sidvisningar för att se vilka vandrarhem och städer folk söker efter, så att vi kan förbättra sökningen. Inga personuppgifter skickas, och det har inget med att förbli inloggad att göra.",
+    "noThanks": "Nej tack",
+    "password": "Lösenord",
+    "selectYear": "Välj år",
+    "allow": "Tillåt",
+    "noPhotosYet": "Inga foton ännu",
+    "guests": "Gäster",
+    "copy": "Kopiera"
   },
   "leadWall": {
     "close": "Stäng",
@@ -334,7 +354,8 @@
     "weSentASigned24": "Vi skickade en verifieringslänk som gäller i 24 timmar till",
     "clickingItActivatesYourAccount": ". När du klickar på den aktiveras kontot och numret visas.",
     "iVeVerifiedContinue": "Verifierat — fortsätt",
-    "back": "Tillbaka"
+    "back": "Tillbaka",
+    "confirmPassword": "Bekräfta lösenord"
   },
   "home": {
     "searchCityOrArea": "Sök stad eller område",
@@ -528,7 +549,12 @@
     "country": "Land",
     "streetAddress": "Gatuadress",
     "nearbyLandmarks": "Landmärken i närheten",
-    "roomTypeDescription": "Beskrivning av rumstyp"
+    "roomTypeDescription": "Beskrivning av rumstyp",
+    "couldnTCheckWhichRooms": "Kunde inte kontrollera vilka rum som använder den här typen. Försök igen.",
+    "findingTheRoomsBuiltOn": "Söker rum som bygger på {{name}}…",
+    "moveAllRoomsTo": "Flytta alla rum till",
+    "selectARoomType": "Välj en rumstyp",
+    "noRoomsAreBuiltOn": "Inga rum bygger på {{name}}, så inget annat ändras. Den tas bort när du sparar."
   },
   "a11y": {
     "close": "Stäng",
@@ -607,7 +633,16 @@
     "clearSearch": "Rensa sökning",
     "closeTimePicker": "Stäng tidväljaren",
     "chooseTime": "Välj tid",
-    "dismiss": "Avfärda"
+    "dismiss": "Avfärda",
+    "closePropertyMenu": "Stäng fastighetsmenyn",
+    "goToPhotoN": "Gå till foto {{n}}",
+    "removeFrom": "Ta bort {{title}}",
+    "removeOneFrom": "Ta bort en från {{title}}",
+    "onePhotoAtATime": "En bild i taget",
+    "allPhotosByGroup": "Alla bilder, grupperade",
+    "fewerGuestsIn": "Färre gäster i {{title}}",
+    "moreGuestsIn": "Fler gäster i {{title}}",
+    "skipToContent": "Hoppa till innehåll"
   },
   "hostTenants": {
     "tenantPhoto": "Hyresgästens bild",
@@ -672,7 +707,10 @@
     "roomNotAvailableForTheseDates": "Rummet är inte ledigt dessa datum",
     "checkIn": "Incheckning",
     "checkOut": "Utcheckning",
-    "leavingDate": "Utflyttningsdatum"
+    "leavingDate": "Utflyttningsdatum",
+    "thisTenantHasNoRent": "Den här hyresgästen har inga registrerade hyresfakturor ännu.",
+    "noUtilityChargesHaveBeen": "Inga förbrukningsavgifter har registrerats för den här hyresgästens rum.",
+    "checkInYourFirstTenant": "Checka in din första hyresgäst för att börja följa hyran."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Vi kunde inte ladda din prenumeration",
@@ -726,7 +764,11 @@
     "thenRsPerPeriod": "Därefter Rs {{price}} / {{period}}",
     "paymentStarted": "Betalning påbörjad",
     "payRs": "Betala Rs {{amount}}",
-    "selectAProduct": "Välj en produkt"
+    "selectAProduct": "Välj en produkt",
+    "invoicesAppearHereAfterYour": "Fakturor visas här efter din första betalning.",
+    "pleaseCheckYourConnectionAnd": "Kontrollera din anslutning och försök igen.",
+    "youDonTHaveAn": "Du har ingen aktiv plan ännu. Bläddra bland planerna nedan för att komma igång.",
+    "checkBackSoonPlans": "Titta in snart igen – planerna visas här."
   },
   "hostMess": {
     "pickADate": "Välj ett datum",
@@ -786,7 +828,8 @@
     "last12MonthsPkr": "Senaste 12 månaderna · PKR",
     "last30DaysPkr": "Senaste 30 dagarna · PKR",
     "uploadingReceipt": "Laddar upp kvitto…",
-    "nPhotosAttached": "{{count}} foton bifogade"
+    "nPhotosAttached": "{{count}} foton bifogade",
+    "logYourBulkGroceryPurchases": "Registrera dina storinköp för att hålla koll på matsalens utgifter."
   },
   "hostRooms": {
     "calendarTab": "Kalender",
@@ -842,7 +885,13 @@
     "createRooms": "Skapa rum",
     "bedsOccupiedOf": "{{filled}} av {{total}} sängar upptagna",
     "nOfMBooked": "{{booked}} av {{capacity}} bokade",
-    "nNoLongerActive": "{{count}} inte längre aktiva"
+    "nNoLongerActive": "{{count}} inte längre aktiva",
+    "dayRoster": "Dagslista",
+    "pickADay": "Välj en dag.",
+    "nobodyInThisRoomThat": "Ingen i det här rummet den dagen.",
+    "thisRoomCurrentlyHasNo": "Det här rummet har för närvarande inga aktiva hyresgäster.",
+    "addYourFirstRoomTo": "Lägg till ditt första rum för att börja följa beläggningen.",
+    "bedNumbersAreNotAssigned": "Sängnummer är ännu inte tilldelade – kalendern visar hur många sängar som är upptagna, inte vilken varje gäst har."
   },
   "hostUtilities": {
     "ratePerUnit": "Pris per enhet",
@@ -882,7 +931,9 @@
     "shareFormulaStart": "Andel = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} beläggningsdagar",
     "rsUnallocated": "Rs {{amount}} ofördelat",
-    "rsOver": "Rs {{amount}} för mycket"
+    "rsOver": "Rs {{amount}} för mycket",
+    "pickARoomWithActive": "Välj ett rum med aktiva hyresgäster för att dela räkningen.",
+    "addAUtilityBillTo": "Lägg till en förbrukningsräkning för att följa förbrukning och avgifter."
   },
   "hostTeam": {
     "staffPhoto": "Personalbild",
@@ -894,7 +945,6 @@
     "salaryIssueDate": "Löneutbetalningsdatum",
     "chooseAnImageFromYour": "Välj en bild från dina filer",
     "managerAccess": "Chefsbehörighet",
-    "thisPersonAlreadyHasAn": "Den här personen har redan ett konto, så det finns inget att ställa in — om reglaget lämnas på får hen chefsbehörighet till det här vandrarhemmet när du sparar.",
     "employment": "Anställning",
     "upload": "Ladda upp",
     "scopedToThisHostelOnly": "Endast för det här vandrarhemmet.",
@@ -913,7 +963,11 @@
     "fromTheTeamThisAction": "från teamet. Åtgärden kan inte ångras.",
     "keepsTheirStaffRecordBut": "behåller sin personalpost men kan inte längre logga in eller hantera det här vandrarhemmet.",
     "createsLoginFor": "Skapar en inloggning så att {{name}} kan hantera detta vandrarhem.",
-    "thisStaffMember": "denna medarbetare"
+    "thisStaffMember": "denna medarbetare",
+    "existingAccountKeepsPassword": "Om e-postadressen redan har ett konto behålls det nuvarande lösenordet — ditt används bara om ett nytt konto skapas.",
+    "storedEmailBecomesLogin": "Deras sparade e-post blir inloggningen. Har adressen redan ett konto behåller de dess lösenord.",
+    "pickADifferentStatusTo": "Välj en annan status för att se resten av teamet.",
+    "addAWardenCookOr": "Lägg till en föreståndare, kock eller vakt för att spara lön och dokument."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Godkännandet misslyckades — försök igen.",
@@ -968,7 +1022,9 @@
     "billedTo": "Fakturerad till",
     "issued": "Utfärdad",
     "due": "Förfaller",
-    "thisWillPermanentlyDeleteInvoice": "Detta tar bort fakturan permanent"
+    "thisWillPermanentlyDeleteInvoice": "Detta tar bort fakturan permanent",
+    "invoicesAppearHereOnceYou": "Fakturor visas här när du utfärdar hyres- eller förbrukningsräkningar.",
+    "tryAdjustingYourFilters": "Prova att justera dina filter."
   },
   "hostExpenses": {
     "allTypes": "Alla typer",
@@ -1012,7 +1068,20 @@
     "pctVsLastMonth": "{{pct}} % mot förra månaden",
     "nTenantsUnpaid": "{{count}} hyresgäster obetalda",
     "moveInsAndOuts": "In- och utflyttningar",
-    "pctBedsFilled": "Andel upptagna sängar"
+    "pctBedsFilled": "Andel upptagna sängar",
+    "weCouldnTLoadTenant": "Vi kunde inte ladda data om hyresgäströrelser.",
+    "weCouldnTLoadOccupancy": "Vi kunde inte ladda beläggningsdata.",
+    "weCouldnTLoadAnalytics": "Vi kunde inte ladda analyser för den här fastigheten.",
+    "allUtilityInvoicesAreSettled": "Alla förbrukningsfakturor är betalda.",
+    "noInvoicesForThisProperty": "Inga fakturor för den här fastigheten ännu.",
+    "weCouldnTLoadRevenue": "Vi kunde inte ladda intäktsdata.",
+    "upcomingBookings": "Kommande bokningar",
+    "nArriving": "{{count}} anländer",
+    "nLeaving": "{{count}} reser",
+    "nothingBookedYet": "Inga bokningar än",
+    "noArrivalsOrDeparturesAhead": "Inga ankomster eller avresor de närmaste två veckorna.",
+    "inOverOutPerDay": "Ankomster över avresor, per dag",
+    "viewAllBookings": "Visa alla bokningar →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1029,7 +1098,31 @@
     "cancelledByOn": "Avbokad av {{by}} den {{date}}",
     "pkrPenaltyChargedToYou": "PKR {{amount}} i avgift dras från dig",
     "pkrToYou": "PKR {{amount}} till dig",
-    "thisGuest": "denna gäst"
+    "thisGuest": "denna gäst",
+    "dayLedger": "Dagsjournal",
+    "pendingAllotments": "Väntande tilldelningar",
+    "askedFor": "Efterfrågat",
+    "noContactDetailsOnThis": "Inga kontaktuppgifter på den här bokningen",
+    "recordABooking": "Registrera en bokning",
+    "whoIsStaying": "Vem som bor",
+    "onlyIfTheyHaveOne": "Bara om de har ett",
+    "addARoom": "Lägg till ett rum",
+    "toCollectAtTheDesk": "Att ta betalt i receptionen",
+    "createBooking": "Skapa bokning",
+    "theRoomsForThisProperty": "Rummen för den här fastigheten kunde inte laddas.",
+    "everyRoomEveryState": "Varje rum, varje status – tryck på en dag för dess journal",
+    "thisMonthSCalendarCould": "Månadens kalender kunde inte laddas.",
+    "nothingIsWaitingOnYou": "Inget väntar på dig den här dagen.",
+    "pickTheDatesFirst": "Välj datum först – vad som är ledigt beror på dem.",
+    "noRoomsOnThisProperty": "Inga rum i den här fastigheten ännu.",
+    "bookingCalendar": "Bokningskalender",
+    "assignRoom": "Tilldela rum",
+    "noteFromGuest": "Meddelande från gästen",
+    "savedAs": "Sparad som",
+    "checkInCheckOut": "Incheckning — utcheckning",
+    "aNightRuns12": "Ett dygn löper från kl. 12.00 till kl. 12.00 — incheckning från lunchtid, utcheckning senast lunchtid dagen efter.",
+    "discount": "Rabatt",
+    "saveBooking": "Spara bokning"
   },
   "hostHostelProfile": {
     "failed": "Misslyckades",
@@ -1039,7 +1132,8 @@
     "updateHostel": "Uppdatera vandrarhem",
     "reviewTitle": "Detta skickar din annons för ny granskning",
     "reviewBody": "Du har ändrat följande. Din annons granskas igen och gästerna ser den inte förrän den är godkänd.",
-    "reviewConfirm": "Spara och skicka för granskning"
+    "reviewConfirm": "Spara och skicka för granskning",
+    "weCouldnTLoadYour": "Vi kunde inte ladda ditt vandrarhem."
   },
   "hostMore": {
     "property": "Fastighet",
@@ -1060,11 +1154,13 @@
   "adminAdminContracts": {
     "contracts": "Kontrakt",
     "noContractsMatchThisFilter": "Inga kontrakt matchar det här filtret",
-    "term": "Löptid"
+    "term": "Löptid",
+    "searchContractsByHostel": "Sök avtal efter vandrarhem"
   },
   "adminAdminListings": {
     "allListings": "Alla annonser",
-    "noListingsFound": "Inga annonser hittades"
+    "noListingsFound": "Inga annonser hittades",
+    "searchListingsByHostel": "Sök annonser efter vandrarhem"
   },
   "adminAdminPayments": {
     "payments": "Betalningar",
@@ -1074,27 +1170,32 @@
     "transactionId": "Transaktions-ID",
     "created": "Skapad",
     "contract": "Kontrakt",
-    "product": "Produkt"
+    "product": "Produkt",
+    "searchPaymentsByHostel": "Sök betalningar efter vandrarhem"
   },
   "moderatorQueue": {
     "reviewQueue": "Granskningskö",
-    "queueIsClear": "Kön är tom"
+    "queueIsClear": "Kön är tom",
+    "noSubmissionsAreWaitingFor": "Inga inskickade ärenden väntar på granskning."
   },
   "moderatorAudit": {
     "auditLog": "Granskningslogg",
     "noMatchingActivity": "Ingen matchande aktivitet",
     "allModerators": "Alla moderatorer",
     "last7Days": "Senaste 7 dagarna",
-    "loadOlderEntries": "Ladda äldre poster"
+    "loadOlderEntries": "Ladda äldre poster",
+    "tryADifferentActionFilter": "Prova ett annat åtgärdsfilter eller datumintervall."
   },
   "coreForbidden": {
-    "accessBlocked": "Åtkomst blockerad"
+    "accessBlocked": "Åtkomst blockerad",
+    "youDonTHavePermission": "Du har inte behörighet att se det här området."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Dina vandrarhemsinbjudningar, måltidsbekräftelser och väntande kvitton."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Dra & släpp, ladda upp eller ta ett foto"
+    "dragAmpDropUploadOr": "Dra & släpp, ladda upp eller ta ett foto",
+    "replaceAdd": "Ersätt / lägg till"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Klicka nu på ett slutdatum",
@@ -1114,7 +1215,8 @@
     "refundsReachYourOriginalPayment": "Återbetalningar når din ursprungliga betalmetod inom 5 arbetsdagar.",
     "pkrPaid": "PKR {{amount}} betalt",
     "cancelledSummary": "Avbokad {{date}} · PKR {{refund}} återbetalt · PKR {{charge}} i avbokningsavgift",
-    "cancelRefundExplainer": "Du får tillbaka <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> behålls som avbokningsavgift, eftersom du avbokar {{pct}} % in i perioden."
+    "cancelRefundExplainer": "Du får tillbaka <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> behålls som avbokningsavgift, eftersom du avbokar {{pct}} % in i perioden.",
+    "whenYouBookAHostel": "När du bokar ett vandrarhem visas det här med dina datum och vad du betalade."
   },
   "userFavorites": {
     "removeFromFavorites": "Ta bort från favoriter?",
@@ -1123,7 +1225,8 @@
     "noFavoritesYet": "Inga favoriter ännu",
     "saveHostelsYouLikeAnd": "Spara vandrarhem du gillar och hitta dem här.",
     "browseHostels": "Bläddra bland vandrarhem",
-    "fromYourSavedHostels": "från dina sparade vandrarhem?"
+    "fromYourSavedHostels": "från dina sparade vandrarhem?",
+    "weCouldnTLoadYour": "Vi kunde inte ladda dina favoriter."
   },
   "userSecurity": {
     "currentPassword": "Nuvarande lösenord",
@@ -1196,7 +1299,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Tips, guider och uppdateringar från HostelHive-teamet",
     "comingSoon": "Kommer snart",
-    "weReWorkingOnSome": "Vi jobbar på bra innehåll om studentliv, vandrarhemstips och stadsguider i hela Pakistan. Håll utkik!"
+    "weReWorkingOnSome": "Vi jobbar på bra innehåll om studentliv, vandrarhemstips och stadsguider i hela Pakistan. Håll utkik!",
+    "onThisPage": "På den här sidan",
+    "theHostelhiveTeam": "HostelHive-teamet",
+    "keepReading": "Fortsätt läsa",
+    "blogHomePage": "Gå till bloggens startsida.",
+    "filterArticlesByCategory": "Filtrera artiklar efter kategori",
+    "archiveLayout": "Arkivvy",
+    "everyArticle": "Alla artiklar",
+    "theHostelhiveJournal": "HostelHive-journalen",
+    "guidesForFindingARoom": "Guider för att hitta ett rum – och en säng för natten.",
+    "whatHostelsActuallyCost": "Vad vandrarhem faktiskt kostar stad för stad, vilka områden som passar vilket campus, och var man sover från Johar Town till Karakoram. Skrivet utifrån annonser och från vägen.",
+    "allPosts": "Alla inlägg",
+    "grid": "Rutnät",
+    "index": "Lista",
+    "nMinRead": "{{count}} min läsning",
+    "nMin": "{{count}} min",
+    "article": "Artikel",
+    "category": "Kategori",
+    "published": "Publicerad",
+    "read": "Lästid",
+    "nothingFiledHereYet": "Inget är arkiverat här ännu.",
+    "lookingForARoomRather": "Letar du efter ett rum snarare än en guide?",
+    "everyListingShowsTheRent": "Varje annons visar hyran per säng eller per rum, vad som ingår och vem som driver stället.",
+    "swipeTheTableToSee": "Svep i tabellen för att se alla kolumner",
+    "weVerifyListingsAcross": "Vi verifierar annonser i hela Pakistan och skriver om det vi lär oss på vägen.",
+    "weCouldnTFindThatPost": "Vi kunde inte hitta det inlägget",
+    "theLinkMayBeOld": "Länken kan vara gammal, eller adressen något fel.",
+    "browseEveryPostInstead": "Bläddra bland alla inlägg i stället.",
+    "readTheGuide": "Läs guiden"
   },
   "publicListing": {
     "checkIn": "Incheckning",
@@ -1206,7 +1337,9 @@
     "add": "Lägg till",
     "showAllNPhotos": "Visa alla {{count}} foton",
     "genderHostelHostedBy": "{{gender}}-vandrarhem, värd {{host}}",
-    "bookARoom": "Boka ett rum"
+    "bookARoom": "Boka ett rum",
+    "theListingMayHaveBeen": "Annonsen kan ha tagits bort eller så är länken felaktig.",
+    "chooseYourRoom": "Välj ditt rum"
   },
   "featuresPublic": {
     "checkingYourLink": "Kontrollerar din länk…",
@@ -1260,7 +1393,14 @@
     "allApproved": "Alla godkända!",
     "doneNFailed": "Klart — {{count}} misslyckades",
     "nPhotosFailedRetry": "{{count}} foton misslyckades — du kan försöka igen från kön.",
-    "approving": "Godkänner…"
+    "approving": "Godkänner…",
+    "newUploadsWillAppearHere": "Nya uppladdningar visas här för godkännande.",
+    "allStatuses": "Alla statusar",
+    "allLabels": "Alla etiketter",
+    "unlabelled": "Utan etikett",
+    "nothingMatchesThisFilter": "Inget matchar det här filtret",
+    "tryAnotherLabelOrShowAll": "Prova en annan etikett, eller visa alla.",
+    "showAllLabels": "Visa alla etiketter"
   },
   "publicContact": {
     "contactUs": "Kontakta oss",
@@ -1391,7 +1531,15 @@
     "bookingSent": "Bokning skickad",
     "weLlEmailYouWhenConfirmed": "Vi mejlar dig så snart vandrarhemmet bekräftar.",
     "couldnTBook": "Bokningen kunde inte slutföras",
-    "noRoomsListed": "Det här vandrarhemmet har inte lagt till några rum än."
+    "noRoomsListed": "Det här vandrarhemmet har inte lagt till några rum än.",
+    "pricesArePerRoom": "Priser per rum",
+    "pricesArePerBed": "Priser per säng",
+    "guestDetails": "Gästuppgifter",
+    "enterTheGuestName": "Ange gästens namn",
+    "enterAValidPhone": "Ange ett giltigt telefonnummer",
+    "enterAValidEmail": "Ange en giltig e-postadress",
+    "ofNSeats": "av {{count}}",
+    "bookingReference": "Bokningsreferens"
   },
   "states": {
     "nothingHereYet": "Inget här ännu",
@@ -1403,11 +1551,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Sök adress eller landmärke…",
-    "searchCityOrArea": "Sök stad eller område"
+    "searchCityOrArea": "Sök stad eller område",
+    "satellite": "Satellit",
+    "noMatchingPlaces": "Inga matchande platser",
+    "poweredByOpenstreetmap": "Drivs av OpenStreetMap",
+    "noCoordinatesSetFor": "Inga koordinater angivna för den här annonsen."
   },
   "subscriptionGate": {
     "unlockFeature": "Lås upp {{feature}}",
-    "thisFeature": "denna funktion"
+    "thisFeature": "denna funktion",
+    "dashboardOverview": "Översikt i instrumentpanelen",
+    "roomManagement": "Rumshantering",
+    "tenantManagement": "Hyresgästhantering",
+    "utilityBilling": "Förbrukningsfakturering",
+    "thisFeatureIsAvailable": "Den här funktionen finns i betalplanerna. Teckna ett abonnemang för full tillgång till din instrumentpanel.",
+    "completeHostelProfileFirst": "Fyll i vandrarhemsprofilen först",
+    "onceSubscribedAllFeatures": "När du abonnerar låses alla funktioner upp automatiskt.",
+    "roomAmpOccupancyManagement": "Rums- och beläggningshantering",
+    "tenantTrackingAmpPayment": "Hyresgästuppföljning och betalningshistorik",
+    "rentAndUtilityInvoice": "Skapa hyres- och förbrukningsfakturor",
+    "analyticsAndRevenueReports": "Analyser och intäktsrapporter"
   },
   "notifications": {
     "nUnread": "{{count}} olästa"

@@ -29,7 +29,7 @@ import {
   tap,
 } from 'rxjs';
 import { AccommodationType, Listing, Paginated } from '@hostelhive/data-access';
-import { Button, TooltipFixed } from '@hostelhive/ui';
+import { Button, PhotoPlaceholder, TooltipFixed } from '@hostelhive/ui';
 import { FavoritesStore } from '@util/favorites-store';
 import {
   formatAmount,
@@ -46,6 +46,7 @@ import { LocaleStore } from '@core/i18n/locale-store';
 import { MobileApp } from '@core/mobile-app';
 import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
 import { Seo } from '@core/seo';
+import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { PLACES } from '@features/public/landing/places';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
@@ -55,7 +56,7 @@ import { SearchFilters } from '@features/public/search/search-filters/search-fil
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabel } from '@util/accommodation-type';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService, translate } from '@jsverse/transloco';
 
 /** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
 interface Bounds {
@@ -116,7 +117,7 @@ type SheetSnap = 'peek' | 'half' | 'full';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, Button, TooltipFixed, CurrencyNamePipe, CurrencySelect],
+  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, Button, PhotoPlaceholder, TooltipFixed, CurrencyNamePipe, CurrencySelect],
   templateUrl: './search-map.html',
 })
 export class SearchMap {
@@ -736,8 +737,9 @@ export class SearchMap {
     this.favorites.toggle(l);
   }
 
+  /** The card photo, or `''` when the hostel has none — the template shows a placeholder. */
   protected cardImage(l: Listing): string {
-    return l.images[0] ?? 'https://picsum.photos/seed/hh-fallback/800/800';
+    return l.images[0] ?? '';
   }
 
   protected cardPrice(l: Listing): string {
@@ -798,6 +800,10 @@ export class SearchMap {
           title: this.i18n.translate<string>('seo.worldwideTitle'),
           description: this.i18n.translate<string>('seo.worldwideDescription'),
           noindex: true,
+          // `noindex` keeps it out of the index, not out of a chat. A search link pasted
+          // into WhatsApp still renders a card, and a logo is the least useful thing to
+          // put in it.
+          image: DEFAULT_SOCIAL_IMAGE,
         });
         return;
       }
@@ -811,6 +817,7 @@ export class SearchMap {
             place: name,
           }),
           noindex: true,
+          image: DEFAULT_SOCIAL_IMAGE,
         });
         return;
       }
@@ -823,6 +830,9 @@ export class SearchMap {
           place: place.name,
         }),
         path: `/hostels/${place.slug}`,
+        // Canonicalised to the city landing page, so it shares that page's picture rather
+        // than the generic one — the two links are the same place.
+        image: placeSocialImage(place.slug),
       });
     });
 
@@ -1209,9 +1219,7 @@ export class SearchMap {
 
   /** Builds the Airbnb-style popup card (photo carousel + details) as DOM, anchored to the pin. */
   private buildCard(l: Listing): HTMLElement {
-    const images = l.images.length
-      ? l.images
-      : ['https://picsum.photos/seed/hh-fallback/800/800'];
+    const images = l.images;
     let idx = 0;
 
     const card = document.createElement('div');
@@ -1228,11 +1236,29 @@ export class SearchMap {
     const media = document.createElement('div');
     media.className = 'hh-mapcard__media';
 
-    const img = document.createElement('img');
-    img.src = images[0];
-    img.alt = '';
-    img.loading = 'lazy';
-    media.appendChild(img);
+    // A hostel with no photographs gets the same honest tile the cards use, built by hand
+    // because this popup is raw DOM rather than a template. It used to be handed a random
+    // picture from picsum, which put somewhere that is not this hostel on the map.
+    // Hoisted: the carousel below rebinds its `src`, and it only runs when there are two
+    // or more photographs, so it can never reach a null one.
+    let img: HTMLImageElement | null = null;
+    if (images.length) {
+      img = document.createElement('img');
+      img.src = images[0];
+      img.alt = '';
+      img.loading = 'lazy';
+      media.appendChild(img);
+    } else {
+      const blank = document.createElement('div');
+      blank.className = 'hh-mapcard__nophoto';
+      blank.setAttribute('role', 'img');
+      blank.setAttribute('aria-label', translate('common.noPhotosYet'));
+      const icon = document.createElement('i');
+      icon.className = 'ti ti-photo-off';
+      icon.setAttribute('aria-hidden', 'true');
+      blank.appendChild(icon);
+      media.appendChild(blank);
+    }
 
     // Icon + label, matching hh-badge's default glyph per variant so the pill is identical
     // to the one on a listing card. textContent on a child, never innerHTML on the label,
@@ -1288,7 +1314,7 @@ export class SearchMap {
       dots.className = 'hh-mapcard__dots';
       images.forEach(() => dots.appendChild(document.createElement('span')));
       const sync = () => {
-        img.src = images[idx];
+        if (img) img.src = images[idx];
         Array.from(dots.children).forEach((c, i) =>
           c.classList.toggle('is-on', i === idx),
         );
@@ -1386,7 +1412,10 @@ export class SearchMap {
   }
 
   /** Typed text in the mobile place input — no navigation until a suggestion is picked. */
-  protected onPlaceText(_text: string): void {}
+  protected onPlaceText(_text: string): void {
+    // Deliberately inert: typing must not navigate, because every keystroke would push a
+    // history entry and refetch. The suggestion click is what commits.
+  }
 
   /** A Place was picked from the autocomplete dropdown → recenter the map and refetch. */
   protected onPlaceSelected(r: PlaceResult): void {

@@ -33,6 +33,18 @@ class Host {
   readonly cancelled = signal(0);
 }
 
+/**
+ * The dialog's action buttons, in order.
+ *
+ * The row is the flex that holds them, and it is the only one inside the dialog panel. Found
+ * by structure rather than by taking every `<button>` in the tree, because the dismiss
+ * backdrop is a button as well.
+ */
+function actionRow(el: HTMLElement): HTMLButtonElement[] {
+  const row = el.querySelector('div.flex.gap-3');
+  return [...(row?.querySelectorAll('button') ?? [])] as HTMLButtonElement[];
+}
+
 async function render() {
   await TestBed.configureTestingModule({
     imports: [Host],
@@ -44,10 +56,13 @@ async function render() {
   return {
     fixture,
     host: fixture.componentInstance,
-    // The action row is the last two-button flex in the dialog; read its buttons in order.
-    buttons: () => [...el.querySelectorAll('button')] as HTMLButtonElement[],
-    labels: () =>
-      [...el.querySelectorAll('button')].map((b) => (b.textContent ?? '').trim()),
+    // The action row, read in order.
+    //
+    // Scoped to that row rather than to every button in the dialog: the dismiss backdrop is
+    // a button too — it has to be, or the modal cannot be closed from a keyboard — and a
+    // bare `querySelectorAll('button')` counted it as a third action.
+    buttons: () => actionRow(el),
+    labels: () => actionRow(el).map((b) => (b.textContent ?? '').trim()),
   };
 }
 

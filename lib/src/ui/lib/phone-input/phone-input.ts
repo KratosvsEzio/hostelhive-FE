@@ -156,7 +156,7 @@ const PREFERRED: CountryISO[] = [
   `],
   template: `
     @if (label() !== '') {
-      <label class="mb-1 block text-xs font-medium text-ink-600">{{ label() ?? ('common.phone' | transloco) }}</label>
+      <span class="mb-1 block text-xs font-medium text-ink-600">{{ label() ?? ('common.phone' | transloco) }}</span>
     }
     <ngx-material-intl-tel-input
       [class.hh-phone--error]="!!error()"

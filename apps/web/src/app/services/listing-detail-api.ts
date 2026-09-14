@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
 import { ListingDetail } from './listing-detail.fixture';
 import type { AccommodationType, Room } from '@hostelhive/data-access';
 import { RoomOffer } from '@features/public/listing/booking/room-offer';
 import { isPrivateOccupancy } from '@util/occupancy-type';
+import { toListingPhotos } from '@features/public/listing/listing-detail/photo-groups';
 
 /**
  * How many rooms of a private type a seeker may take while nothing counts them.
@@ -93,9 +94,9 @@ function toListingDetail(d: HostelDetail): ListingDetail {
   const lat = typeof d.latitude === 'string' ? parseFloat(d.latitude) : (d.latitude ?? 0);
   const lng = typeof d.longitude === 'string' ? parseFloat(d.longitude) : (d.longitude ?? 0);
 
-  const images = (d.attachments ?? [])
-    .filter((a) => !!a.url)
-    .map((a) => a.url as string);
+  // Photos first and urls from them, so `images[n]` and `photos[n]` can never disagree.
+  const photos = toListingPhotos(d.attachments);
+  const images = photos.map((p) => p.url);
 
   const rooms: Room[] = (d.room_types ?? []).map((rt) => ({
     id: String(rt.id),
@@ -162,6 +163,7 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     currency: d.currency ?? undefined,
     area: d.area ?? '',
     city: d.city ?? '',
+    country: d.country ?? '',
     accommodationType: GENDER_MAP[d.gender_type] ?? 'coliving',
     billingFrequency: d.billing_frequency ?? undefined,
     verified: d.status?.slug === 'active',
@@ -174,7 +176,10 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     amenities,
     offers: offers.length ? offers : undefined,
     priceFrom,
-    images: images.length ? images : [`https://picsum.photos/seed/hh-be-${d.id}/800/800`],
+    // No invented photograph when the hostel has none. A random picture from picsum
+    // filled the gallery with somewhere that is not this hostel, on the page whose job is
+    // to show what it looks like — see `hh-photo-placeholder`.
+    images,
     lat: Number.isFinite(lat) ? (lat as number) : 0,
     lng: Number.isFinite(lng) ? (lng as number) : 0,
     host: d.host
@@ -189,22 +194,63 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     rooms,
     roomOffers,
     address,
+    photos,
     photoCount: (d.attachments ?? []).length,
     amenityCount: (d.offers ?? d.hostel_offers ?? []).length,
     nearby,
   };
 }
 
+/**
+ * The listing does not exist, as opposed to the request having failed.
+ *
+ * Narrow on purpose. A 0 status (offline, CORS, aborted), a 500 and a timeout are all
+ * *failures* — they might succeed on a retry, and the page offers one. A 404 will not, so it
+ * is the only status that earns the "removed, here is search" screen.
+ *
+ * Reads `status` off the object rather than testing `instanceof HttpErrorResponse`, which was
+ * the first attempt and never matched: `errorInterceptor` normalises every failure to
+ * {@link ApiError} before any caller sees it, so the `HttpErrorResponse` is already gone by
+ * the time this runs. Both shapes carry `status`, so duck-typing it covers the interceptor's
+ * output and a direct `HttpClient` error alike.
+ *
+ * `/public/hostel_detail/:id` answers 404 for an unknown id, verified on the wire. A 200
+ * carrying no hostel throws a plain `Error` with no status, which stays a failure — the
+ * honest outcome for a response that broke its own contract.
+ */
+function isNotFound(e: unknown): boolean {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    (e as { status?: unknown }).status === 404
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class ListingDetailApi {
   private readonly hostels = inject(HostelsApi);
 
+  /**
+   * `undefined` means "no such listing". Anything else fails, and stays failed.
+   *
+   * Two outcomes the page renders very differently, and it has been wrong about them in both
+   * directions. It once ended in a blanket `catchError(() => of(undefined))`, so a dropped
+   * connection was laundered into a success and the seeker was told the hostel may have been
+   * removed — wrong, final, and it sent them away from a hostel that exists. Removing that
+   * blanket took the 404 with it: `requireHostel` throws on a missing hostel, so a genuinely
+   * deleted listing then reported "Something went wrong" and offered a Retry that could never
+   * succeed, with no way back to search.
+   *
+   * So the status is the thing to branch on, and only 404 becomes `undefined`. A 500, a
+   * timeout and an offline device are all failures, because all three might work on a second
+   * attempt — and a deleted hostel will not.
+   */
   getBySlug(slug: string): Observable<ListingDetail | undefined> {
-    return this.hostels
-      .getById(slug)
-      .pipe(
-        map((d) => toListingDetail(d)),
-        catchError(() => of(undefined)),
-      );
+    return this.hostels.getById(slug).pipe(
+      map((d) => toListingDetail(d)),
+      catchError((e: unknown) =>
+        isNotFound(e) ? of(undefined) : throwError(() => e),
+      ),
+    );
   }
 }

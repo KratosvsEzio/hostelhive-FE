@@ -139,10 +139,30 @@ export class RoomCalendar {
   /** Months from the current one. 0 is this month; the arrows step it. */
   protected readonly offset = signal(0);
 
-  protected readonly month = computed(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() + this.offset(), 1);
-  });
+  /**
+   * The month this calendar opened on — read from the clock **once**.
+   *
+   * It used to be read inside {@link month} itself. A computed re-evaluates only when a
+   * signal it read has changed, and wall-clock time is not one, so the "now" the grid was
+   * built from was whenever it last happened to recompute. Pressing an arrow was the only
+   * thing that invalidated it — which meant pressing an arrow re-based the calendar on
+   * today's date at the same moment it applied the step.
+   *
+   * Across midnight on the last night of a month those two movements compound: the offset
+   * goes 0 to 1 while the base moves August to September, so August is followed by October
+   * and September cannot be reached by pressing forward at all.
+   *
+   * Fixed at construction, an arrow moves exactly one month and the same calendar is on
+   * screen from one press to the next. A page left open past midnight keeps calling the
+   * month it opened on "this month", which is the lesser of the two surprises and the one
+   * a host can see the cause of.
+   */
+  private readonly openedOn = new Date();
+
+  protected readonly month = computed(
+    () =>
+      new Date(this.openedOn.getFullYear(), this.openedOn.getMonth() + this.offset(), 1),
+  );
 
   /**
    * Month and weekday names in the language being read.

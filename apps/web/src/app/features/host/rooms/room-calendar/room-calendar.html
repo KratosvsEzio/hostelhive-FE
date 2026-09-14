@@ -201,7 +201,7 @@
     <!-- Day roster -->
     <aside class="flex w-full shrink-0 flex-col border-t border-ink-100 bg-surface/50 xl:w-[320px] xl:border-t-0">
       <div class="border-b border-ink-100 px-4 py-3.5">
-        <p class="text-[9.5px] font-semibold uppercase tracking-widest text-ink-400">Day roster</p>
+        <p class="text-[9.5px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostRooms.dayRoster' | transloco }}</p>
         @if (selectedDay(); as day) {
           <div class="mt-2 flex items-center justify-between gap-3">
             <p class="font-display text-lg font-semibold text-ink-900">
@@ -225,7 +225,7 @@
             <span class="tabular-nums">{{ selectedTurnover() }}</span>
           </p>
         } @else {
-          <p class="mt-2 text-sm text-ink-400">Pick a day.</p>
+          <p class="mt-2 text-sm text-ink-400">{{ 'hostRooms.pickADay' | transloco }}</p>
         }
       </div>
 
@@ -259,15 +259,14 @@
           }
         </ul>
       } @else if (!loading() && selectedDay()) {
-        <p class="px-4 py-8 text-center text-sm text-ink-400">Nobody in this room that day.</p>
+        <p class="px-4 py-8 text-center text-sm text-ink-400">{{ 'hostRooms.nobodyInThisRoomThat' | transloco }}</p>
       }
 
       <!-- Says what the panel cannot: the endpoint reports how many beds are taken, not
            which. Better stated than implied by a bed column full of invented numbers. -->
       @if (!isPrivate() && roster().length) {
         <p class="mt-auto border-t border-ink-100 px-4 py-3 text-[10.5px] leading-relaxed text-ink-400">
-          Bed numbers are not assigned yet — the calendar reports how many beds are taken, not
-          which one each guest is in.
+          {{ 'hostRooms.bedNumbersAreNotAssigned' | transloco }}
         </p>
       }
     </aside>

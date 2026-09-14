@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SITE_ORIGIN, Seo } from '@core/seo';
+import { placeSocialImage } from '@core/social-image';
 import { Faq, faqJsonLd, placeFaqs } from './place-faqs';
 import { findUniversity, universitiesIn } from './universities';
 import { SearchMap } from '@features/public/search/search-map/search-map';
@@ -225,6 +226,7 @@ export class PlaceLanding {
                 place: p.name,
               }),
               path,
+              image: placeSocialImage(p.slug),
             }
           : {
               title: this.i18n.translate<string>('seo.placeTitle', {
@@ -236,6 +238,7 @@ export class PlaceLanding {
                 place: p.name,
               }),
               path,
+              image: placeSocialImage(p.slug),
             },
       );
 

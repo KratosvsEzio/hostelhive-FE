@@ -104,9 +104,7 @@ export interface PickedLocation {
                   ? 'text-brand-600'
                   : 'text-ink-500 hover:text-ink-700'
               "
-            >
-              Satellite
-            </button>
+            >{{ 'maps.satellite' | transloco }}</button>
           </div>
 
           <!-- coordinate readout -->

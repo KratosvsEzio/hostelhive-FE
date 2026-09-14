@@ -102,7 +102,17 @@
     "signInToBook": "Inicia sesión para reservar",
     "pickYourRoomOnce": "Elige tu habitación al iniciar sesión",
     "createAFreeAccountToBook": "Crea una cuenta gratuita para elegir habitaciones y reservarlas mientras decides. Solo tarda 30 segundos.",
-    "roomsAmpPricing": "Habitaciones y precios"
+    "andNMore": "+{{count}} más",
+    "favorite": "Favorito",
+    "showPhoneNumber": "Mostrar número de teléfono",
+    "showAllNReviews": "Ver las {{count}} reseñas",
+    "hostSince": "Anfitrión desde {{year}}",
+    "writeAReview": "Escribir una reseña",
+    "roomSummary": "{{beds}} camas · {{types}} tipos de habitación · {{sharing}} opciones de ocupación",
+    "nSharingAvailable": "Disponible en {{labels}} personas",
+    "bookNow": "Reservar ahora",
+    "nPhotos": "{{count}} fotos",
+    "otherPhotos": "Otras"
   },
   "common": {
     "loading": "Cargando…",
@@ -226,6 +236,7 @@
     "dinner": "Cena",
     "teamAmpStaff": "Equipo y personal",
     "accountSettings": "Configuración de la cuenta",
+    "passwordAmpSecurity": "Contraseña y seguridad",
     "someRequiredFieldsAre": "Faltan algunos campos obligatorios",
     "uploading": "Subiendo…",
     "listingProgress": "Progreso del anuncio",
@@ -318,7 +329,16 @@
     "enterDescription": "Introduce la descripción",
     "enterLandmarks": "Introduce los puntos de referencia cercanos",
     "enterReason": "Introduce un motivo",
-    "enterNote": "Introduce una nota"
+    "enterNote": "Introduce una nota",
+    "somethingWentWrongReachingThe": "Se produjo un error al conectar con el servidor.",
+    "weDLikeToCountPage": "Nos gustaría contar las visitas para saber qué hostales y ciudades busca la gente y así mejorar la búsqueda. No se envía ningún dato personal, y esto no tiene nada que ver con mantener la sesión iniciada.",
+    "noThanks": "No, gracias",
+    "password": "Contraseña",
+    "selectYear": "Seleccionar año",
+    "allow": "Permitir",
+    "noPhotosYet": "Aún no hay fotos",
+    "guests": "Huéspedes",
+    "copy": "Copiar"
   },
   "leadWall": {
     "close": "Cerrar",
@@ -334,7 +354,8 @@
     "weSentASigned24": "Enviamos un enlace de verificación válido 24 horas a",
     "clickingItActivatesYourAccount": ". Al hacer clic se activa tu cuenta y se muestra el número.",
     "iVeVerifiedContinue": "Ya lo verifiqué — continuar",
-    "back": "Atrás"
+    "back": "Atrás",
+    "confirmPassword": "Confirmar contraseña"
   },
   "home": {
     "searchCityOrArea": "Busca una ciudad o zona",
@@ -528,7 +549,12 @@
     "country": "País",
     "streetAddress": "Dirección",
     "nearbyLandmarks": "Puntos de referencia cercanos",
-    "roomTypeDescription": "Descripción del tipo de habitación"
+    "roomTypeDescription": "Descripción del tipo de habitación",
+    "couldnTCheckWhichRooms": "No se pudo comprobar qué habitaciones usan este tipo. Inténtalo de nuevo.",
+    "findingTheRoomsBuiltOn": "Buscando las habitaciones basadas en {{name}}…",
+    "moveAllRoomsTo": "Mover todas las habitaciones a",
+    "selectARoomType": "Selecciona un tipo de habitación",
+    "noRoomsAreBuiltOn": "Ninguna habitación se basa en {{name}}, así que no cambia nada más. Se elimina al guardar."
   },
   "a11y": {
     "close": "Cerrar",
@@ -607,7 +633,16 @@
     "clearSearch": "Borrar búsqueda",
     "closeTimePicker": "Cerrar selector de hora",
     "chooseTime": "Elegir hora",
-    "dismiss": "Descartar"
+    "dismiss": "Descartar",
+    "closePropertyMenu": "Cerrar el menú de propiedades",
+    "goToPhotoN": "Ir a la foto {{n}}",
+    "removeFrom": "Quitar {{title}}",
+    "removeOneFrom": "Quitar uno de {{title}}",
+    "onePhotoAtATime": "Una foto a la vez",
+    "allPhotosByGroup": "Todas las fotos, agrupadas",
+    "fewerGuestsIn": "Menos huéspedes en {{title}}",
+    "moreGuestsIn": "Más huéspedes en {{title}}",
+    "skipToContent": "Saltar al contenido"
   },
   "hostTenants": {
     "tenantPhoto": "Foto del inquilino",
@@ -672,7 +707,10 @@
     "roomNotAvailableForTheseDates": "Habitación no disponible en estas fechas",
     "checkIn": "Entrada",
     "checkOut": "Salida",
-    "leavingDate": "Fecha de salida"
+    "leavingDate": "Fecha de salida",
+    "thisTenantHasNoRent": "Este inquilino aún no tiene facturas de alquiler registradas.",
+    "noUtilityChargesHaveBeen": "No se han registrado cargos de servicios para la habitación de este inquilino.",
+    "checkInYourFirstTenant": "Registra la entrada de tu primer inquilino para empezar a controlar el alquiler."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "No pudimos cargar tu suscripción",
@@ -726,7 +764,11 @@
     "thenRsPerPeriod": "Después Rs {{price}} / {{period}}",
     "paymentStarted": "Pago iniciado",
     "payRs": "Pagar Rs {{amount}}",
-    "selectAProduct": "Selecciona un producto"
+    "selectAProduct": "Selecciona un producto",
+    "invoicesAppearHereAfterYour": "Las facturas aparecen aquí tras tu primer cargo.",
+    "pleaseCheckYourConnectionAnd": "Comprueba tu conexión e inténtalo de nuevo.",
+    "youDonTHaveAn": "Todavía no tienes un plan activo. Explora los planes de abajo para empezar.",
+    "checkBackSoonPlans": "Vuelve pronto: los planes aparecerán aquí."
   },
   "hostMess": {
     "pickADate": "Elige una fecha",
@@ -786,7 +828,8 @@
     "last12MonthsPkr": "Últimos 12 meses · PKR",
     "last30DaysPkr": "Últimos 30 días · PKR",
     "uploadingReceipt": "Subiendo recibo…",
-    "nPhotosAttached": "{{count}} fotos adjuntas"
+    "nPhotosAttached": "{{count}} fotos adjuntas",
+    "logYourBulkGroceryPurchases": "Registra tus compras al por mayor para controlar el gasto del comedor."
   },
   "hostRooms": {
     "calendarTab": "Calendario",
@@ -842,7 +885,13 @@
     "createRooms": "Crear habitaciones",
     "bedsOccupiedOf": "{{filled}} de {{total}} camas ocupadas",
     "nOfMBooked": "{{booked}} de {{capacity}} reservados",
-    "nNoLongerActive": "{{count}} ya no activos"
+    "nNoLongerActive": "{{count}} ya no activos",
+    "dayRoster": "Lista del día",
+    "pickADay": "Elige un día.",
+    "nobodyInThisRoomThat": "Nadie en esta habitación ese día.",
+    "thisRoomCurrentlyHasNo": "Esta habitación no tiene inquilinos activos actualmente.",
+    "addYourFirstRoomTo": "Añade tu primera habitación para empezar a controlar la ocupación.",
+    "bedNumbersAreNotAssigned": "Aún no se asignan números de cama: el calendario indica cuántas camas están ocupadas, no cuál tiene cada huésped."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarifa por unidad",
@@ -882,7 +931,9 @@
     "shareFormulaStart": "Parte = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} días de ocupación",
     "rsUnallocated": "Rs {{amount}} sin asignar",
-    "rsOver": "Rs {{amount}} de más"
+    "rsOver": "Rs {{amount}} de más",
+    "pickARoomWithActive": "Elige una habitación con inquilinos activos para dividir la factura.",
+    "addAUtilityBillTo": "Añade una factura de servicios para empezar a controlar consumo y cargos."
   },
   "hostTeam": {
     "staffPhoto": "Foto del empleado",
@@ -894,7 +945,6 @@
     "salaryIssueDate": "Fecha de pago del salario",
     "chooseAnImageFromYour": "Elige una imagen de tus archivos",
     "managerAccess": "Acceso de gestor",
-    "thisPersonAlreadyHasAn": "Esta persona ya tiene cuenta, así que no hay nada que configurar — si dejas el interruptor activado, obtendrá acceso de gestor a este hostal al guardar.",
     "employment": "Empleo",
     "upload": "Subir",
     "scopedToThisHostelOnly": "Limitado solo a este hostal.",
@@ -913,7 +963,11 @@
     "fromTheTeamThisAction": "del equipo. Esta acción no se puede deshacer.",
     "keepsTheirStaffRecordBut": "conserva su registro de empleo pero ya no puede iniciar sesión ni gestionar este hostal.",
     "createsLoginFor": "Crea un acceso para que {{name}} pueda gestionar este hostal.",
-    "thisStaffMember": "este miembro del personal"
+    "thisStaffMember": "este miembro del personal",
+    "existingAccountKeepsPassword": "Si este correo ya tiene una cuenta, se conserva su contraseña actual; la tuya solo se usa si se crea una cuenta nueva.",
+    "storedEmailBecomesLogin": "Su correo guardado será el acceso. Si esa dirección ya tiene una cuenta, conservan su contraseña.",
+    "pickADifferentStatusTo": "Elige otro estado para ver al resto de tu equipo.",
+    "addAWardenCookOr": "Añade un encargado, cocinero o guardia para guardar su salario y documentos."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Falló la aprobación — inténtalo de nuevo.",
@@ -968,7 +1022,9 @@
     "billedTo": "Facturado a",
     "issued": "Emitida",
     "due": "Vence",
-    "thisWillPermanentlyDeleteInvoice": "Esto eliminará permanentemente la factura"
+    "thisWillPermanentlyDeleteInvoice": "Esto eliminará permanentemente la factura",
+    "invoicesAppearHereOnceYou": "Las facturas aparecen aquí cuando emites recibos de alquiler o servicios.",
+    "tryAdjustingYourFilters": "Prueba a ajustar los filtros."
   },
   "hostExpenses": {
     "allTypes": "Todos los tipos",
@@ -1012,7 +1068,20 @@
     "pctVsLastMonth": "{{pct}} % frente al mes pasado",
     "nTenantsUnpaid": "{{count}} inquilinos sin pagar",
     "moveInsAndOuts": "Entradas y salidas",
-    "pctBedsFilled": "Porcentaje de camas ocupadas"
+    "pctBedsFilled": "Porcentaje de camas ocupadas",
+    "weCouldnTLoadTenant": "No pudimos cargar los datos de movimiento de inquilinos.",
+    "weCouldnTLoadOccupancy": "No pudimos cargar los datos de ocupación.",
+    "weCouldnTLoadAnalytics": "No pudimos cargar las analíticas de esta propiedad.",
+    "allUtilityInvoicesAreSettled": "Todas las facturas de servicios están saldadas.",
+    "noInvoicesForThisProperty": "Todavía no hay facturas para esta propiedad.",
+    "weCouldnTLoadRevenue": "No pudimos cargar los datos de ingresos.",
+    "upcomingBookings": "Próximas reservas",
+    "nArriving": "{{count}} llegan",
+    "nLeaving": "{{count}} salen",
+    "nothingBookedYet": "Aún no hay reservas",
+    "noArrivalsOrDeparturesAhead": "Sin llegadas ni salidas en las próximas dos semanas.",
+    "inOverOutPerDay": "Llegadas sobre salidas, por día",
+    "viewAllBookings": "Ver todas las reservas →"
   },
   "hostBookings": {
     "calendarTab": "Calendario",
@@ -1029,7 +1098,31 @@
     "cancelledByOn": "Cancelado por {{by}} el {{date}}",
     "pkrPenaltyChargedToYou": "PKR {{amount}} de penalización a tu cargo",
     "pkrToYou": "PKR {{amount}} para ti",
-    "thisGuest": "este huésped"
+    "thisGuest": "este huésped",
+    "dayLedger": "Registro del día",
+    "pendingAllotments": "Asignaciones pendientes",
+    "askedFor": "Solicitado",
+    "noContactDetailsOnThis": "Esta reserva no tiene datos de contacto",
+    "recordABooking": "Registrar una reserva",
+    "whoIsStaying": "Quién se aloja",
+    "onlyIfTheyHaveOne": "Solo si tiene uno",
+    "addARoom": "Añadir una habitación",
+    "toCollectAtTheDesk": "A cobrar en recepción",
+    "createBooking": "Crear reserva",
+    "theRoomsForThisProperty": "No se pudieron cargar las habitaciones de esta propiedad.",
+    "everyRoomEveryState": "Cada habitación y cada estado: toca un día para ver su registro",
+    "thisMonthSCalendarCould": "No se pudo cargar el calendario de este mes.",
+    "nothingIsWaitingOnYou": "No hay nada pendiente para este día.",
+    "pickTheDatesFirst": "Elige primero las fechas: la disponibilidad depende de ellas.",
+    "noRoomsOnThisProperty": "Esta propiedad aún no tiene habitaciones.",
+    "bookingCalendar": "Calendario de reservas",
+    "assignRoom": "Asignar habitación",
+    "noteFromGuest": "Nota del huésped",
+    "savedAs": "Guardado como",
+    "checkInCheckOut": "Entrada — salida",
+    "aNightRuns12": "Una noche va de las 12:00 a las 12:00 — entrada desde el mediodía, salida antes del mediodía siguiente.",
+    "discount": "Descuento",
+    "saveBooking": "Guardar reserva"
   },
   "hostHostelProfile": {
     "failed": "Fallido",
@@ -1039,7 +1132,8 @@
     "updateHostel": "Actualizar hostal",
     "reviewTitle": "Esto enviará tu anuncio de nuevo a revisión",
     "reviewBody": "Has cambiado lo siguiente. Tu anuncio se revisará otra vez y los huéspedes no lo verán hasta que se apruebe.",
-    "reviewConfirm": "Guardar y enviar a revisión"
+    "reviewConfirm": "Guardar y enviar a revisión",
+    "weCouldnTLoadYour": "No pudimos cargar tu hostal."
   },
   "hostMore": {
     "property": "Propiedad",
@@ -1060,11 +1154,13 @@
   "adminAdminContracts": {
     "contracts": "Contratos",
     "noContractsMatchThisFilter": "Ningún contrato coincide con este filtro",
-    "term": "Plazo"
+    "term": "Plazo",
+    "searchContractsByHostel": "Buscar contratos por hostal"
   },
   "adminAdminListings": {
     "allListings": "Todos los anuncios",
-    "noListingsFound": "No se encontraron anuncios"
+    "noListingsFound": "No se encontraron anuncios",
+    "searchListingsByHostel": "Buscar anuncios por hostal"
   },
   "adminAdminPayments": {
     "payments": "Pagos",
@@ -1074,27 +1170,32 @@
     "transactionId": "ID de transacción",
     "created": "Creado",
     "contract": "Contrato",
-    "product": "Producto"
+    "product": "Producto",
+    "searchPaymentsByHostel": "Buscar pagos por hostal"
   },
   "moderatorQueue": {
     "reviewQueue": "Cola de revisión",
-    "queueIsClear": "La cola está vacía"
+    "queueIsClear": "La cola está vacía",
+    "noSubmissionsAreWaitingFor": "No hay envíos pendientes de revisión."
   },
   "moderatorAudit": {
     "auditLog": "Registro de auditoría",
     "noMatchingActivity": "Sin actividad coincidente",
     "allModerators": "Todos los moderadores",
     "last7Days": "Últimos 7 días",
-    "loadOlderEntries": "Cargar entradas anteriores"
+    "loadOlderEntries": "Cargar entradas anteriores",
+    "tryADifferentActionFilter": "Prueba con otro filtro de acción o rango de fechas."
   },
   "coreForbidden": {
-    "accessBlocked": "Acceso bloqueado"
+    "accessBlocked": "Acceso bloqueado",
+    "youDonTHavePermission": "No tienes permiso para ver esta sección."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Tus invitaciones de hostal, confirmaciones de comidas y recibos pendientes."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Arrastra y suelta, sube o toma una foto"
+    "dragAmpDropUploadOr": "Arrastra y suelta, sube o toma una foto",
+    "replaceAdd": "Reemplazar / añadir"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Ahora haz clic en una fecha de fin",
@@ -1114,7 +1215,8 @@
     "refundsReachYourOriginalPayment": "Los reembolsos llegan a tu método de pago original en 5 días hábiles.",
     "pkrPaid": "PKR {{amount}} pagados",
     "cancelledSummary": "Cancelado el {{date}} · PKR {{refund}} reembolsados · PKR {{charge}} de cargo por cancelación",
-    "cancelRefundExplainer": "Recibirás <strong class=\"tabular-nums\">PKR {{refund}}</strong> de vuelta. Se retienen <strong class=\"tabular-nums\">PKR {{charge}}</strong> como cargo por cancelación, porque cancelas al {{pct}} % del periodo."
+    "cancelRefundExplainer": "Recibirás <strong class=\"tabular-nums\">PKR {{refund}}</strong> de vuelta. Se retienen <strong class=\"tabular-nums\">PKR {{charge}}</strong> como cargo por cancelación, porque cancelas al {{pct}} % del periodo.",
+    "whenYouBookAHostel": "Cuando reserves un hostal, aparecerá aquí con tus fechas y lo que pagaste."
   },
   "userFavorites": {
     "removeFromFavorites": "¿Quitar de favoritos?",
@@ -1123,7 +1225,8 @@
     "noFavoritesYet": "Aún no hay favoritos",
     "saveHostelsYouLikeAnd": "Guarda los hostales que te gusten y encuéntralos aquí.",
     "browseHostels": "Explorar hostales",
-    "fromYourSavedHostels": "¿de tus hostales guardados?"
+    "fromYourSavedHostels": "¿de tus hostales guardados?",
+    "weCouldnTLoadYour": "No pudimos cargar tus favoritos."
   },
   "userSecurity": {
     "currentPassword": "Contraseña actual",
@@ -1196,7 +1299,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Consejos, guías y novedades del equipo de HostelHive",
     "comingSoon": "Próximamente",
-    "weReWorkingOnSome": "Estamos preparando contenido sobre la vida estudiantil, consejos de hostales y guías de ciudades de Pakistán. ¡Atento!"
+    "weReWorkingOnSome": "Estamos preparando contenido sobre la vida estudiantil, consejos de hostales y guías de ciudades de Pakistán. ¡Atento!",
+    "onThisPage": "En esta página",
+    "theHostelhiveTeam": "El equipo de HostelHive",
+    "keepReading": "Seguir leyendo",
+    "blogHomePage": "Ir a la página principal del blog.",
+    "filterArticlesByCategory": "Filtrar artículos por categoría",
+    "archiveLayout": "Diseño del archivo",
+    "everyArticle": "Todos los artículos",
+    "theHostelhiveJournal": "El diario de HostelHive",
+    "guidesForFindingARoom": "Guías para encontrar una habitación — y una cama para pasar la noche.",
+    "whatHostelsActuallyCost": "Lo que cuestan de verdad los hostales ciudad por ciudad, qué zonas convienen a cada campus y dónde dormir desde Johar Town hasta el Karakórum. Escrito a partir de anuncios y de la carretera.",
+    "allPosts": "Todas las entradas",
+    "grid": "Cuadrícula",
+    "index": "Índice",
+    "nMinRead": "{{count}} min de lectura",
+    "nMin": "{{count}} min",
+    "article": "Artículo",
+    "category": "Categoría",
+    "published": "Publicado",
+    "read": "Lectura",
+    "nothingFiledHereYet": "Aquí todavía no hay nada.",
+    "lookingForARoomRather": "¿Buscas una habitación en lugar de una guía?",
+    "everyListingShowsTheRent": "Cada anuncio muestra el alquiler por cama o por habitación, qué incluye y quién lo gestiona.",
+    "swipeTheTableToSee": "Desliza la tabla para ver todas las columnas",
+    "weVerifyListingsAcross": "Verificamos anuncios por todo Pakistán y escribimos lo que aprendemos haciéndolo.",
+    "weCouldnTFindThatPost": "No encontramos esa entrada",
+    "theLinkMayBeOld": "Puede que el enlace sea antiguo o que la dirección no sea exacta.",
+    "browseEveryPostInstead": "Explora todas las entradas en su lugar.",
+    "readTheGuide": "Leer la guía"
   },
   "publicListing": {
     "checkIn": "Entrada",
@@ -1206,7 +1337,9 @@
     "add": "Añadir",
     "showAllNPhotos": "Ver las {{count}} fotos",
     "genderHostelHostedBy": "Hostal {{gender}}, anfitrión {{host}}",
-    "bookARoom": "Reservar una habitación"
+    "bookARoom": "Reservar una habitación",
+    "theListingMayHaveBeen": "Puede que el anuncio se haya eliminado o que el enlace sea incorrecto.",
+    "chooseYourRoom": "Elige tu habitación"
   },
   "featuresPublic": {
     "checkingYourLink": "Comprobando tu enlace…",
@@ -1260,7 +1393,14 @@
     "allApproved": "¡Todo aprobado!",
     "doneNFailed": "Listo — {{count}} con error",
     "nPhotosFailedRetry": "{{count}} fotos con error: puedes reintentar desde la cola.",
-    "approving": "Aprobando…"
+    "approving": "Aprobando…",
+    "newUploadsWillAppearHere": "Las nuevas subidas aparecerán aquí para su aprobación.",
+    "allStatuses": "Todos los estados",
+    "allLabels": "Todas las etiquetas",
+    "unlabelled": "Sin etiqueta",
+    "nothingMatchesThisFilter": "Nada coincide con este filtro",
+    "tryAnotherLabelOrShowAll": "Prueba con otra etiqueta o muéstralas todas.",
+    "showAllLabels": "Mostrar todas las etiquetas"
   },
   "publicContact": {
     "contactUs": "Contáctanos",
@@ -1391,7 +1531,15 @@
     "bookingSent": "Reserva enviada",
     "weLlEmailYouWhenConfirmed": "Te enviaremos un correo en cuanto el hostal lo confirme.",
     "couldnTBook": "No se pudo completar la reserva",
-    "noRoomsListed": "Este hostal aún no ha añadido ninguna habitación."
+    "noRoomsListed": "Este hostal aún no ha añadido ninguna habitación.",
+    "pricesArePerRoom": "Precios por habitación",
+    "pricesArePerBed": "Precios por cama",
+    "guestDetails": "Datos del huésped",
+    "enterTheGuestName": "Introduce el nombre del huésped",
+    "enterAValidPhone": "Introduce un teléfono válido",
+    "enterAValidEmail": "Introduce un correo electrónico válido",
+    "ofNSeats": "de {{count}}",
+    "bookingReference": "Referencia de la reserva"
   },
   "states": {
     "nothingHereYet": "Aún no hay nada aquí",
@@ -1403,11 +1551,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Buscar una dirección o punto de referencia…",
-    "searchCityOrArea": "Buscar ciudad o zona"
+    "searchCityOrArea": "Buscar ciudad o zona",
+    "satellite": "Satélite",
+    "noMatchingPlaces": "No hay lugares coincidentes",
+    "poweredByOpenstreetmap": "Con tecnología de OpenStreetMap",
+    "noCoordinatesSetFor": "Este anuncio no tiene coordenadas definidas."
   },
   "subscriptionGate": {
     "unlockFeature": "Desbloquear {{feature}}",
-    "thisFeature": "esta función"
+    "thisFeature": "esta función",
+    "dashboardOverview": "Resumen del panel",
+    "roomManagement": "Gestión de habitaciones",
+    "tenantManagement": "Gestión de inquilinos",
+    "utilityBilling": "Facturación de servicios",
+    "thisFeatureIsAvailable": "Esta función está disponible en los planes de pago. Suscríbete para acceder por completo al panel de tu hostal.",
+    "completeHostelProfileFirst": "Completa primero el perfil del hostal",
+    "onceSubscribedAllFeatures": "Al suscribirte, todas las funciones se desbloquean automáticamente.",
+    "roomAmpOccupancyManagement": "Gestión de habitaciones y ocupación",
+    "tenantTrackingAmpPayment": "Seguimiento de inquilinos y registros de pago",
+    "rentAndUtilityInvoice": "Generación de facturas de alquiler y servicios",
+    "analyticsAndRevenueReports": "Analíticas e informes de ingresos"
   },
   "notifications": {
     "nUnread": "{{count}} sin leer"

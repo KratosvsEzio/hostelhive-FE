@@ -1,21 +1,397 @@
-<div class="mx-auto max-w-3xl px-5 py-12 sm:px-8">
-  <a routerLink="/" class="mb-8 inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-brand-600 transition-colors">
-    <i class="ti ti-arrow-left text-xs"></i>{{ 'common.backToHome' | transloco }}
-  </a>
+<!-- Masthead.
 
-  <h1 class="font-display text-3xl font-bold text-ink-900 sm:text-4xl">{{ 'common.blog' | transloco }}</h1>
-  <p class="mt-2 text-sm text-ink-400">{{ 'publicBlog.tipsGuidesAndUpdatesFrom' | transloco }}</p>
+     Set on the page's own tinted band rather than on white, so the archive below reads as
+     cards resting on a surface instead of floating in nothing. The measure is held well
+     short of the container: a headline that runs the full width of a desktop monitor is
+     not a headline anybody finishes.
 
-  <div class="mt-12 flex flex-col items-center rounded-2xl border border-ink-100 bg-white px-6 py-16 text-center shadow-card">
-    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-500">
-      <i class="ti ti-pencil text-2xl"></i>
-    </div>
-    <h2 class="mt-5 font-display text-lg font-semibold text-ink-900">{{ 'publicBlog.comingSoon' | transloco }}</h2>
-    <p class="mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
-      {{ 'publicBlog.weReWorkingOnSome' | transloco }}
+     `clamp()` rather than three breakpoint steps — the old ramp jumped 43% at `sm` alone,
+     which is a visible lurch on a tablet. `text-balance` keeps the last line from breaking
+     one word onto its own row. -->
+<section class="border-b border-ink-100 bg-gradient-to-b from-brand-50/70 via-surface to-surface">
+  <div class="mx-auto max-w-6xl px-5 pb-10 pt-12 sm:px-8 sm:pb-14 sm:pt-16">
+    <p class="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+      <span class="h-px w-8 bg-brand-400" aria-hidden="true"></span>{{ 'publicBlog.theHostelhiveJournal' | transloco }}
     </p>
-    <a routerLink="/" class="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors">
-      {{ 'common.backToHome' | transloco }} <i class="ti ti-arrow-right text-xs"></i>
-    </a>
+    <h1 class="mt-5 max-w-3xl text-balance font-display text-[clamp(2rem,1.1rem+3.4vw,3.4rem)] font-bold leading-[1.05] tracking-tight text-ink-900">
+      {{ 'publicBlog.guidesForFindingARoom' | transloco }}
+    </h1>
+    <p class="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
+      {{ 'publicBlog.whatHostelsActuallyCost' | transloco }}
+    </p>
   </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-5 pb-20 sm:px-8">
+  <!-- Filters. A row of six, scrollable rather than wrapped on a phone: two ragged lines of
+       pills is the thing that makes a tidy page look untidy at 375px. Trailing padding rather
+       than a fade: a static mask still says "more this way" once the row is scrolled to its
+       end, and it dimmed the focus ring of any pill near the edge.
+
+       `py-1`, not `pb-1`: `overflow-x: auto` forces `overflow-y` to compute to `auto` too,
+       so this scroller clips vertically whether or not anything ever scrolls that way. With
+       no top padding it sliced the top edge off every pill's focus ring — 2px of ring plus
+       2px of offset, against a measured 0px of clearance at 375, 768 and 1280. It only
+       became visible once the ring stopped being a `brand-400` nobody could see; the
+       geometry was always wrong.
+
+       At `sm` the answer is `overflow-visible` rather than more padding. The row wraps from
+       that breakpoint up, so a horizontal scroller is meaningless there — but the class was
+       never dropped, which is why the ring was clipped at 1280 too, where nothing scrolls
+       and nothing ever could. Removing the overflow removes the clip, and the desktop
+       spacing stays exactly as it was. -->
+  <div class="mt-8 border-b border-ink-100 pb-4 sm:mt-10">
+    <div class="flex items-center gap-3">
+    <div
+      class="-ms-5 flex min-w-0 flex-1 gap-2 overflow-x-auto py-1 pe-4 ps-5 sm:ms-0 sm:flex-wrap sm:overflow-visible sm:pb-0 sm:pe-0 sm:ps-0 sm:pt-0"
+      role="group"
+      [attr.aria-label]="'publicBlog.filterArticlesByCategory' | transloco"
+    >
+      <!-- The shared button, carrying its own state through `variant`/`color` rather than a
+           `[class]` ternary. The journal had been re-deriving these decisions by hand — and
+           a hand-derived control is how the closing CTA ended up on the one orange the
+           design system had already written down as failing AA.
+
+           `!rounded-full` is the one thing overridden. The size ramp gives `rounded-xl`,
+           which is right for the console and wrong here: the pill is this surface's own
+           language, shared with the category badges on every cover. Shape is the blog's to
+           choose; contrast, hover direction, focus ring and the size scale are not.
+
+           `md` rather than `sm` also lifts the pills from 38px to 42px. -->
+      <button
+        hh-button
+        type="button"
+        [variant]="active() === 'all' ? 'filled' : 'outlined'"
+        [color]="active() === 'all' ? 'dark' : 'default'"
+        size="md"
+        class="shrink-0 !rounded-full focus-visible:ring-offset-surface"
+        [attr.aria-pressed]="active() === 'all'"
+        (click)="select('all')"
+      >
+        {{ 'publicBlog.allPosts' | transloco }}
+      </button>
+      @for (c of categories; track c.slug) {
+        <button
+          hh-button
+          type="button"
+          [variant]="active() === c.slug ? 'filled' : 'outlined'"
+          [color]="active() === c.slug ? 'dark' : 'default'"
+          size="md"
+          class="shrink-0 !rounded-full focus-visible:ring-offset-surface"
+          [attr.aria-pressed]="active() === c.slug"
+          (click)="select(c.slug)"
+        >
+          <span lang="en" dir="ltr">{{ c.label }}</span>
+        </button>
+      }
+    </div>
+      <!-- Grid or index. Two readings of the same archive: covers to browse, or all fifteen
+           at once with the read time in a column you can scan down. -->
+      <div class="flex shrink-0 items-center gap-1 rounded-full bg-ink-50 p-1" role="group" [attr.aria-label]="'publicBlog.archiveLayout' | transloco">
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+          [class]="view() === 'grid' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-900'"
+          [attr.aria-pressed]="view() === 'grid'"
+          (click)="setView('grid')"
+        >
+          <i class="ti ti-layout-grid text-sm" aria-hidden="true"></i>
+          <span class="sr-only">{{ 'publicBlog.grid' | transloco }}</span>
+        </button>
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+          [class]="view() === 'index' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-900'"
+          [attr.aria-pressed]="view() === 'index'"
+          (click)="setView('index')"
+        >
+          <i class="ti ti-list text-sm" aria-hidden="true"></i>
+          <span class="sr-only">{{ 'publicBlog.index' | transloco }}</span>
+        </button>
+      </div>
+    </div>
+    @if (activeBlurb(); as blurb) {
+      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-500" lang="en" dir="ltr">{{ blurb }}</p>
+    }
+  </div>
+
+  <!-- Featured.
+
+       The same card as every other, laid sideways and given room — not a different
+       component. It used to be a contained card (white, ringed, cover bleeding to the edge)
+       sitting above twelve uncontained ones, and the difference read as two designs rather
+       than one hierarchy. Rank comes from composition and scale alone now.
+
+       It sits below the filter row rather than above it. The lead is the page's opening
+       image and that argued for putting it first, but the row it pushed down was the one
+       carrying six controls — and a control that moves when you press it is worse than a
+       lead that opens second. -->
+  @let lead = featured();
+  @if (showFeatured()) {
+  <article class="group mt-8 sm:mt-10">
+    <a
+      [routerLink]="['/blog', lead.slug]"
+      class="grid gap-6 rounded-3xl transition-transform duration-300 ease-out group-hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-4 focus-visible:ring-offset-surface motion-reduce:transform-none lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-10"
+    >
+      <div
+        class="relative aspect-[16/10] overflow-hidden rounded-3xl shadow-card transition-shadow duration-300 group-hover:shadow-cardhover lg:aspect-[4/3]"
+        [class]="categoryCover(lead)"
+      >
+        <!-- The lead photograph, over the generated ground rather than instead of it: the
+             ground is what the card looks like until this decodes, and what it keeps looking
+             like if the file never arrives. `eager` because this one is above the fold on
+             every visit — lazy-loading the largest image on the page delays the thing the
+             page is for. -->
+        @if (hero(lead); as img) {
+          <img
+            [srcset]="heroSrcset(img.src)"
+            sizes="(min-width: 1024px) 46rem, 100vw"
+            [src]="img.src"
+            [alt]="img.alt"
+            width="1200"
+            height="800"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none"
+          />
+          <!-- Keeps the white/15 glyph legible over a photograph. The flat ground it was
+               designed against held it at any hue; a photograph does not. -->
+          <span
+            class="absolute inset-0 bg-gradient-to-t from-ink-900/50 via-ink-900/10 to-ink-900/5"
+            aria-hidden="true"
+          ></span>
+        }
+        <span
+          class="absolute start-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-ink-800 shadow-sm backdrop-blur"
+        >
+          <i class="ti ti-star-filled text-[10px] text-brand-500" aria-hidden="true"></i>{{ 'card.featured' | transloco }}</span>
+        <span
+          class="absolute bottom-4 end-4 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-transform duration-500 group-hover:scale-110 motion-reduce:transform-none"
+        >
+          <i class="ti text-xl" [class]="lead.glyph" aria-hidden="true"></i>
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700">
+          <span lang="en" dir="ltr">{{ categoryLabel(lead.category) }}</span>
+        </p>
+        <h2 class="mt-3 text-balance font-display text-2xl font-bold leading-snug tracking-tight text-ink-900 transition-colors group-hover:text-brand-700 sm:text-[1.75rem]">
+          <span lang="en" dir="ltr">{{ lead.title }}</span>
+        </h2>
+        <p class="mt-3.5 text-[15px] leading-relaxed text-ink-500" lang="en" dir="ltr">{{ lead.excerpt }}</p>
+        <p class="mt-6 flex items-center gap-2 text-xs text-ink-500">
+          <time [attr.datetime]="lead.publishedAt">{{ lead.publishedAt | date: 'd MMM yyyy' }}</time>
+          <span class="h-1 w-1 rounded-full bg-ink-200" aria-hidden="true"></span>
+          <span>{{ 'publicBlog.nMinRead' | transloco: { count: lead.readMinutes } }}</span>
+        </p>
+        <!-- The page's main call to action, given its own rank instead of being the third
+             item in a row of metadata at the same size as the date. -->
+        <span
+          class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transform-none"
+        >{{ 'publicBlog.readTheGuide' | transloco }}<i class="ti ti-arrow-right text-base" aria-hidden="true"></i>
+        </span>
+      </div>
+    </a>
+  </article>
+  }
+
+  <!-- The archive. -->
+  <!-- The count, not the contents. A live region on the grid itself announced twelve whole
+       articles — title, excerpt, date and read time — on every filter press, with no way to
+       interrupt it. `role="status"` carries the polite live region implicitly. -->
+  <p class="sr-only" role="status">
+    {{ shownCount() }} {{ shownCount() === 1 ? 'article' : 'articles' }}{{
+      activeLabel() ? ' in ' + activeLabel() : ''
+    }}
+  </p>
+
+  @if (view() === 'index') {
+    <h2 class="sr-only">{{ 'publicBlog.everyArticle' | transloco }}</h2>
+    <!-- The archive as a table of contents: every piece at once, numbered, with the read time
+         in a column the eye can run down. The category arrives as a rule that grows under the
+         cursor rather than as a cover, which is the only place on the page the flat category
+         colours are used as a line instead of a field. -->
+    <div
+      class="mt-10 hidden grid-cols-[2rem_1fr_8rem_6rem_5rem] gap-x-6 border-b border-ink-100 pb-2 ps-4 text-[11px] uppercase tracking-wider text-ink-500 sm:grid"
+      aria-hidden="true"
+    >
+      <span>#</span><span>{{ 'publicBlog.article' | transloco }}</span><span>{{ 'publicBlog.category' | transloco }}</span><span>{{ 'publicBlog.published' | transloco }}</span>
+      <span class="text-end">{{ 'publicBlog.read' | transloco }}</span>
+    </div>
+    <ol role="list" class="border-t border-ink-100 sm:border-t-0">
+      @for (post of posts(); track post.slug; let i = $index) {
+        <li>
+          <a
+            [routerLink]="['/blog', post.slug]"
+            class="group relative grid grid-cols-[2rem_1fr] items-baseline gap-x-4 border-b border-ink-100 py-5 ps-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink-900 sm:grid-cols-[2rem_1fr_8rem_6rem_5rem] sm:gap-x-6"
+          >
+            <span
+              class="absolute inset-y-0 start-0 w-0.5 origin-top scale-y-0 transition-transform duration-300 ease-out group-hover:scale-y-100 motion-reduce:transition-none"
+              [class]="categoryGround(post.category)"
+              aria-hidden="true"
+            ></span>
+            <span class="text-xs font-medium tabular-nums text-ink-500">
+              {{ i + 1 | number: '2.0-0' }}
+            </span>
+            <span class="block text-balance font-display text-[1.0625rem] font-semibold leading-snug tracking-tight text-ink-900 transition-colors group-hover:text-brand-700 sm:text-lg">
+              <span lang="en" dir="ltr">{{ post.title }}</span>
+            </span>
+            <span class="hidden text-xs text-ink-500 sm:block" lang="en" dir="ltr">{{ categoryLabel(post.category) }}</span>
+            <span class="col-start-2 mt-1.5 text-xs text-ink-500 sm:hidden">
+              <span lang="en" dir="ltr">{{ categoryLabel(post.category) }}</span> · {{ post.publishedAt | date: 'd MMM yyyy' }} ·
+              {{ 'publicBlog.nMin' | transloco: { count: post.readMinutes } }}
+            </span>
+            <time
+              [attr.datetime]="post.publishedAt"
+              class="hidden text-xs tabular-nums text-ink-500 sm:block"
+              >{{ post.publishedAt | date: 'd MMM yyyy' }}</time
+            >
+            <span class="hidden text-xs tabular-nums text-ink-500 sm:block sm:text-end">
+              {{ 'publicBlog.nMin' | transloco: { count: post.readMinutes } }}
+            </span>
+          </a>
+        </li>
+      }
+    </ol>
+  } @else {
+  <div class="mt-10 grid gap-x-7 gap-y-11 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- The break in the rhythm is editorial, not arithmetic. It was i % 7 === 6, which gave
+         the seventh card the largest cover on the page for no reason but being seventh — a
+         2-minute piece outranking an 8-minute one because of where it landed.
+
+         Two of three columns at `lg`, not three. The claim this replaces — that a full-width
+         card "always takes a whole row, so promoting by hand cannot leave a hole wherever it
+         falls" — is the one thing here that was not true. A span-3 card takes a whole row
+         only if it *starts* one: the spotlight sits at archive index 1, so the ordinary card
+         at index 0 held column 1 and the spotlight could not fit beside it, dropped to the
+         next row, and left 716px of empty grid in the first — the large blank beside "What a
+         hostel agent actually costs you".
+
+         A span-2 card fits whatever column it starts in, at either two or three columns, so
+         the hole cannot form wherever the editor puts the flag. It is still unmistakably the
+         promoted card at twice the width of its neighbours. `grid-auto-flow: dense` would
+         also have closed the gap — it backfills with any later card that fits — but it does
+         that by painting cards in a different order from the one they are read and tabbed
+         in, which buys the layout back at the accessibility desk. -->
+    @for (post of posts(); track post.slug) {
+      @let wide = !!post.spotlight;
+      <article class="group" [class.sm:col-span-2]="wide" [class.lg:col-span-2]="wide">
+        <a
+          [routerLink]="['/blog', post.slug]"
+          class="rounded-2xl transition-transform duration-300 ease-out group-hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-4 focus-visible:ring-offset-surface motion-reduce:transform-none"
+          [class]="
+            wide
+              ? 'grid gap-5 sm:grid-cols-[1.1fr_1fr] sm:items-center sm:gap-7'
+              : 'flex h-full flex-col'
+          "
+        >
+          <div
+            class="relative aspect-[16/10] overflow-hidden rounded-2xl shadow-card transition-shadow duration-300 group-hover:shadow-cardhover"
+            [class]="categoryCover(post)"
+          >
+            @if (hero(post); as img) {
+              <!-- A spotlight card spans two of the three columns and lays its cover across
+                   the 1.1fr track of that span — 360px at the container's full 1088px,
+                   against 344px for an ordinary card in one column. Close enough that one
+                   `sizes` string would now do, but they are kept apart because the two
+                   numbers are arrived at differently and the spotlight's has moved once
+                   already: it was 555px while the card spanned all three columns. -->
+              <img
+                [srcset]="heroSrcset(img.src)"
+                [attr.sizes]="
+                  wide
+                    ? '(min-width: 1024px) 23rem, (min-width: 640px) 45vw, 100vw'
+                    : '(min-width: 1024px) 21.5rem, (min-width: 640px) 45vw, 100vw'
+                "
+                [src]="img.src"
+                [alt]="img.alt"
+                width="1200"
+                height="800"
+                loading="lazy"
+                decoding="async"
+                class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none"
+              />
+              <span
+                class="absolute inset-0 bg-gradient-to-t from-ink-900/50 via-ink-900/10 to-ink-900/5"
+                aria-hidden="true"
+              ></span>
+            }
+            <span
+              class="absolute start-3.5 top-3.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-ink-800 shadow-sm backdrop-blur"
+            >
+              <span lang="en" dir="ltr">{{ categoryLabel(post.category) }}</span>
+            </span>
+            <span
+              class="absolute bottom-3.5 end-3.5 grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-transform duration-500 group-hover:scale-110 motion-reduce:transform-none"
+            >
+              <i class="ti text-lg" [class]="post.glyph" aria-hidden="true"></i>
+            </span>
+          </div>
+
+          <!-- Two lines reserved whatever the title runs to, so every excerpt in a row starts
+               on the same baseline. 18px at `leading-snug` is 24.75px a line. -->
+          <div class="flex flex-1 flex-col">
+            <h2
+              class="line-clamp-2 font-display font-semibold leading-snug tracking-tight text-ink-900 transition-colors group-hover:text-brand-700"
+              [class]="wide ? 'mt-5 text-lg sm:mt-0 sm:text-2xl' : 'mt-5 text-lg sm:min-h-[3.1rem]'"
+            >
+              <span lang="en" dir="ltr">{{ post.title }}</span>
+            </h2>
+            <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-500" lang="en" dir="ltr">{{ post.excerpt }}</p>
+            <p class="mt-auto flex items-center gap-2 pt-4 text-xs text-ink-500">
+              <time [attr.datetime]="post.publishedAt">{{ post.publishedAt | date: 'd MMM yyyy' }}</time>
+              <span class="h-1 w-1 rounded-full bg-ink-200" aria-hidden="true"></span>
+              <span>{{ 'publicBlog.nMinRead' | transloco: { count: post.readMinutes } }}</span>
+            </p>
+          </div>
+        </a>
+      </article>
+    } @empty {
+      <p class="py-10 text-sm text-ink-500 sm:col-span-2 lg:col-span-3">
+        {{ 'publicBlog.nothingFiledHereYet' | transloco }}
+        <button type="button" class="font-medium text-brand-700 underline underline-offset-2" (click)="select('all')">
+          {{ 'publicBlog.browseEveryPostInstead' | transloco }}
+        </button>
+      </p>
+    }
+  </div>
+  }
+
+  <!-- The section exists to send people to listings; saying so once at the bottom is the
+       honest placement for it. Set flush left like everything else on the page — a centred
+       block here was the one element that did not belong to its own layout. -->
+  <section class="mt-20 flex flex-col gap-6 overflow-hidden rounded-3xl bg-ink-900 px-6 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-12 sm:py-12">
+    <div class="max-w-md">
+      <h2 class="font-display text-2xl font-bold tracking-tight text-white">
+        {{ 'publicBlog.lookingForARoomRather' | transloco }}
+      </h2>
+      <p class="mt-2.5 text-sm leading-relaxed text-ink-200">
+        {{ 'publicBlog.everyListingShowsTheRent' | transloco }}
+      </p>
+    </div>
+    <!-- `brand-600`, not `brand-500`. White on #F36E21 is 2.97:1 — under AA for 14px
+         semibold — and the hover was already `brand-600`, so the control only became
+         legible while the pointer was on it. This is the same 2.97 that button.ts records
+         retuning away from; the blog re-derived the decision by hand and landed on the
+         value that had already been rejected. #B94F06 is 5.02:1 under white and 3.67:1
+         against the ink-900 band it sits on, so both the label and the pill's own edge
+         clear their thresholds.
+
+         This one stays hand-rolled where the filter pills above became `hh-button`, and the
+         reason is the band. Every shape the shared button offers assumes a light ground: its
+         focus ring is `ring-ink-900`, which is the correct choice on white and invisible on
+         `ink-900`. Adopting it here would mean overriding the fill, the ring and the ring
+         offset — at which point the component is supplying nothing but a class string, while
+         the next person to read it reasonably assumes the system vouched for the result.
+         `ring-brand-300` on this band measures 8.55:1, which is the inversion the system has
+         no variant for. Worth revisiting if an on-dark treatment is ever added to button.ts;
+         until then the honest version is the one that does not pretend. -->
+    <a
+      routerLink="/search"
+      class="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900 sm:self-auto"
+    >{{ 'userFavorites.browseHostels' | transloco }}<i class="ti ti-arrow-right text-base" aria-hidden="true"></i>
+    </a>
+  </section>
 </div>

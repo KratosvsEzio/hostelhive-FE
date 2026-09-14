@@ -90,6 +90,25 @@ export class HostPropertyStore {
     return hostel?.billingFrequency === 'month';
   }
 
+  /**
+   * Whether a hostel bills by the night rather than by the month.
+   *
+   * **Not `!isMonthlyBilled()`.** That would answer true for a hostel whose billing cycle
+   * simply failed to arrive, and the pages this gates — Utilities and Mess — would vanish
+   * from a month-billed console because a field was missing. Both predicates are therefore
+   * strict on the value they name, and both fail toward *showing* the page: an unknown
+   * cycle is neither monthly nor nightly, so it keeps Bookings **and** Utilities.
+   *
+   * Utilities and Mess belong to a hostel that houses people by the month. A nightly hostel
+   * has guests for two days, not electricity meters to split between them or a weekly menu
+   * to plan — so the pages are empty by construction, and their forms write records the
+   * hostel has no use for.
+   */
+  isNightlyBilled(id?: string): boolean {
+    const hostel = id ? this.hostels().find((h) => h.id === id) : this.activeHostel();
+    return hostel?.billingFrequency === 'night';
+  }
+
   private loadSub?: Subscription;
   /** Whether the session was authenticated on the previous effect run. Used so `clear()` fires only
    *  on the authed→signed-out transition — never on the initial `null` at bootstrap, which would

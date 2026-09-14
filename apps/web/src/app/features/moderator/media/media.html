@@ -1,9 +1,14 @@
 <app-dashboard-layout [label]="'moderatorMedia.mediaQueue' | transloco">
   <span hhActions class="hidden text-sm text-ink-400 sm:block">{{ 'moderatorMedia.photosBannersLogosAndAvatars' | transloco }}</span>
-  <!-- Status filter chips -->
-  @if (statusTabs().length > 1) {
-    <hh-filter-chips class="mb-5" [tabs]="statusTabs()" [active]="activeStatus()" (activeChange)="setStatus($event)" />
-  }
+  <!-- Filters — status, then label. Both narrow the queue server-side. -->
+  <div class="mb-5 flex flex-col gap-2 empty:hidden">
+    @if (statusTabs().length > 1) {
+      <hh-filter-chips [tabs]="statusTabs()" [active]="activeStatus()" (activeChange)="setStatus($event)" />
+    }
+    @if (labelTabs().length) {
+      <hh-filter-chips [tabs]="labelTabs()" [active]="activeLabel()" (activeChange)="setLabel($event)" />
+    }
+  </div>
 
   @if (loadStatus() === 'loading') {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -15,11 +20,26 @@
     <div class="mt-5"><hh-error-state (retry)="retry()" /></div>
   } @else if (allCleared()) {
     <div class="mt-5">
-      <hh-empty-state
-        icon="ti-photo-check"
-        [title]="'moderatorMedia.allClear' | transloco"
-        message="New uploads will appear here for approval."
-      />
+      @if (activeLabel()) {
+        <!-- Not "all clear": there may well be a queue, it just holds nothing under this
+             label. Saying the work is done — and saying it without a way back out — leaves
+             the moderator looking at a finished page over a full queue. -->
+        <hh-empty-state
+          icon="ti-photo-search"
+          [title]="'moderatorMedia.nothingMatchesThisFilter' | transloco"
+          [message]="'moderatorMedia.tryAnotherLabelOrShowAll' | transloco"
+        >
+          <button hh-button variant="outlined" size="sm" (click)="setLabel('')">
+            {{ 'moderatorMedia.showAllLabels' | transloco }}
+          </button>
+        </hh-empty-state>
+      } @else {
+        <hh-empty-state
+          icon="ti-photo-check"
+          [title]="'moderatorMedia.allClear' | transloco"
+          [message]="'moderatorMedia.newUploadsWillAppearHere' | transloco"
+        />
+      }
     </div>
   } @else {
     <!-- Controls row -->
@@ -75,10 +95,13 @@
           [class]="hasError ? 'ring-danger/50' : isSelected ? 'ring-brand-500/50 shadow-brand-500/10' : 'ring-ink-100 hover:ring-ink-200 hover:shadow-lg'"
         >
           <!-- Thumbnail -->
-          <div
-            class="relative aspect-[4/3] cursor-zoom-in overflow-hidden"
-            (click)="openPreview(a)"
-          >
+          <div class="relative aspect-[4/3] overflow-hidden">
+            <button
+              type="button"
+              class="absolute inset-0 cursor-zoom-in"
+              [attr.aria-label]="'a11y.preview' | transloco"
+              (click)="openPreview(a)"
+            ></button>
             <!-- Selection checkbox — top-left.
                  Grey until it is ticked, then brand. It used to sit at `bg-brand-500/20`
                  unchecked, which made every card look half-selected and left the actual
@@ -243,10 +266,12 @@
     aria-modal="true"
     aria-labelledby="reject-modal-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="cancelReject()"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       @if (rejectQueue().length === 1 && rejectQueue()[0].url) {
@@ -365,10 +390,12 @@
     aria-modal="true"
     aria-labelledby="reject-progress-modal-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="prog.allDone ? closeRejectProgressModal() : null"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       <!-- Header: title + progress bar -->
@@ -467,10 +494,12 @@
     aria-modal="true"
     aria-labelledby="approve-modal-title"
   >
-    <div
-      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
       (click)="prog.allDone ? closeApproveModal() : null"
-    ></div>
+    ></button>
     <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       <!-- Header: title + progress bar -->
@@ -564,14 +593,14 @@
 @if (previewAttachment(); as preview) {
   @let previewBadge = kindBadge(preview);
   @let previewId = '' + preview.id;
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-    (click)="closePreview()"
-  >
-    <div
-      class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-      (click)="$event.stopPropagation()"
-    >
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
+      (click)="closePreview()"
+    ></button>
+    <div class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
       <!-- Close -->
       <button
         hh-button variant="icon"

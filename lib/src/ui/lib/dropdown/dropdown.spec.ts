@@ -312,3 +312,104 @@ describe('Dropdown error state', () => {
     expect(message()).toBeNull();
   });
 });
+
+/**
+ * Local filtering.
+ *
+ * `searchable` alone only renders the box and emits the query — the list stays whatever the
+ * consumer passes, which suits a picker backed by a request. `filterLocally` is for the other
+ * kind: options already in memory, where the consumer would otherwise hand-roll the same
+ * filter. The photo grid needs it per instance, because it renders one dropdown per photo and
+ * a query signal held by the consumer would be shared across all of them.
+ */
+describe('Dropdown local filtering', () => {
+  const LABELS: DropdownOption[] = [
+    { value: 'room', label: 'Room' },
+    { value: 'bath', label: 'Bathroom' },
+    { value: 'kitchen', label: 'Kitchen', subtitle: 'Shared cooking area' },
+    { value: 'ext', label: 'Exterior' },
+  ];
+
+  @Component({
+    imports: [Dropdown],
+    template: `<hh-dropdown [options]="options" [searchable]="true" [filterLocally]="local()" />`,
+  })
+  class FilterHost {
+    readonly options = LABELS;
+    readonly local = signal(true);
+  }
+
+  let fixture: ComponentFixture<FilterHost>;
+
+  async function open(local = true): Promise<void> {
+    fixture = TestBed.createComponent(FilterHost);
+    fixture.componentInstance.local.set(local);
+    fixture.detectChanges();
+    (fixture.nativeElement as HTMLElement).querySelector('button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  /** The panel is teleported to <body>, so it is not under the fixture element. */
+  function optionLabels(): string[] {
+    return Array.from(document.querySelectorAll('[role="option"]')).map((el) =>
+      (el.querySelector('span.truncate')?.textContent ?? el.textContent ?? '').trim(),
+    );
+  }
+
+  function type(q: string): void {
+    const input = document.querySelector('input') as HTMLInputElement;
+    input.value = q;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FilterHost],
+      providers: [provideTranslocoTesting()],
+    }).compileComponents();
+  });
+
+  afterEach(() => fixture?.destroy());
+
+  it('lists everything before anything is typed', async () => {
+    await open();
+    expect(optionLabels()).toEqual(['Room', 'Bathroom', 'Kitchen', 'Exterior']);
+  });
+
+  it('narrows to what matches the query', async () => {
+    await open();
+    type('room');
+    expect(optionLabels()).toEqual(['Room', 'Bathroom']);
+  });
+
+  it('ignores case and surrounding space', async () => {
+    await open();
+    type('  KITCH ');
+    expect(optionLabels()).toEqual(['Kitchen']);
+  });
+
+  // A label can be short and its subtitle the part worth searching.
+  it('matches on the subtitle too', async () => {
+    await open();
+    type('cooking');
+    expect(optionLabels()).toEqual(['Kitchen']);
+  });
+
+  it('says so when nothing matches', async () => {
+    await open();
+    type('zzz');
+    expect(optionLabels()).toEqual([]);
+  });
+
+  // The async consumers pass `searchable` without this and answer the query with a request.
+  // Filtering their reply again here could hide a row the server matched on something this
+  // component cannot see.
+  it('leaves the list alone when filtering locally is off', async () => {
+    await open(false);
+    type('zzz');
+    expect(optionLabels()).toEqual(['Room', 'Bathroom', 'Kitchen', 'Exterior']);
+  });
+});

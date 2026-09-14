@@ -171,6 +171,39 @@ export const bookingsGate: CanActivateFn = (route) => {
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(decide));
 };
 
+/**
+ * The mirror of {@link bookingsGate}, for Tenants, Utilities and Mess.
+ *
+ * Those pages belong to a hostel that houses people by the month. A nightly hostel has
+ * guests for two days — tenancies it never signs, no meters to split between them, no
+ * weekly menu to plan — so the lists are empty by construction and the forms would write
+ * records nothing reads.
+ *
+ * Tenants is the exact counterpart of Bookings: whichever of the two a hostel's billing
+ * frequency makes real, the other is the one being turned away here.
+ *
+ * Turned away rather than hidden, for the same reason as Bookings: the sidebar and the
+ * phone's More list already drop the entry, so what arrives here is a typed URL, a
+ * bookmark, or a link shared from a hostel billed the other way.
+ *
+ * Asks `isNightlyBilled`, **not** `!isMonthlyBilled`. A hostel whose billing cycle failed
+ * to arrive is neither, and is let through — hiding a working page because a field was
+ * missing is the worse failure, which is the argument `isMonthlyBilled` already makes in
+ * the other direction.
+ */
+export const monthlyOnlyGate: CanActivateFn = (route) => {
+  const store = inject(HostPropertyStore);
+  const router = inject(Router);
+  const hostelId = route.parent?.paramMap.get('hostelId') ?? '';
+
+  const decide = (): boolean | UrlTree =>
+    store.isNightlyBilled(hostelId) ? router.parseUrl(`/host/${hostelId}/overview`) : true;
+
+  if (store.loaded()) return decide();
+  store.load();
+  return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(decide));
+};
+
 export const HOST_ROUTES: Route[] = [
   {
     path: 'hostels/new',
@@ -222,7 +255,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'tenants',
-        canActivate: [permissionGuard('host:Renter:index')],
+        canActivate: [permissionGuard('host:Renter:index'), monthlyOnlyGate],
         children: [
           { path: '', pathMatch: 'full', component: Tenants, title: 'Tenants — HostelHive' },
           { path: 'create', component: Tenants, title: 'Register Tenant — HostelHive' },
@@ -232,7 +265,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'utilities',
-        canActivate: [permissionGuard('host:UtilityBill:index')],
+        canActivate: [permissionGuard('host:UtilityBill:index'), monthlyOnlyGate],
         children: [
           { path: '', pathMatch: 'full', component: Utilities, title: 'Utilities — HostelHive' },
           { path: 'add', component: AddBill, title: 'Add utility bill — HostelHive' },
@@ -262,7 +295,7 @@ export const HOST_ROUTES: Route[] = [
       },
       {
         path: 'mess',
-        canActivate: [permissionGuard('host:WeeklyMenu:index')],
+        canActivate: [permissionGuard('host:WeeklyMenu:index'), monthlyOnlyGate],
         children: [
           { path: '', pathMatch: 'full', component: MessList, title: 'Mess — HostelHive' },
           {

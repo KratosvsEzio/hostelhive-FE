@@ -165,7 +165,7 @@
   <button
     type="button"
     class="fixed inset-0 z-30 cursor-default"
-    aria-label="Close property menu"
+    [attr.aria-label]="'a11y.closePropertyMenu' | transloco"
     (click)="closePropertyFlyout()"
   ></button>
 }

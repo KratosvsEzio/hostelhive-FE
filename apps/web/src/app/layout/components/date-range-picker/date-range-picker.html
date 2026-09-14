@@ -14,7 +14,12 @@
 
   @if (open()) {
     <!-- Click-away backdrop -->
-    <div class="fixed inset-0 z-40" (click)="open.set(false)"></div>
+    <button
+      type="button"
+      class="fixed inset-0 z-40 cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
+      (click)="open.set(false)"
+    ></button>
 
     <!-- Dropdown panel -->
     <div class="absolute end-0 top-full z-[9999] mt-2 flex max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-pill sm:flex-row">

@@ -14,7 +14,7 @@ import {
   toObservable,
   toSignal,
 } from '@angular/core/rxjs-interop';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, startWith, switchMap, tap } from 'rxjs';
 import { HostelsApi, ModerationApi } from '@services';
 import {
   Button,
@@ -43,6 +43,16 @@ interface ViewState {
   networkError: boolean;
   data: ReviewDetail | null;
 }
+
+/**
+ * What the host is told when a photo is rejected.
+ *
+ * The confirm dialog does not ask why — it asks only whether the moderator is sure, and the
+ * reason is stored as the token `flagged`, which is an internal marker and not a sentence
+ * anybody should receive. Until that dialog collects a reason, every rejection carries the
+ * same generic note rather than a word the host cannot act on.
+ */
+const REJECTION_NOTE = 'Rejected during listing review.';
 
 @Component({
   selector: 'hh-review',
@@ -138,6 +148,23 @@ export class Review {
    */
   protected readonly rejectedPhotos = signal<ReadonlyMap<string, string>>(new Map());
 
+  /**
+   * Rejections the server has been told about.
+   *
+   * Kept apart from {@link rejectedPhotos} rather than clearing entries out of it, because the
+   * grid reads that map to draw a card as rejected: emptying it on a successful save would
+   * make every photo the moderator had just rejected look live again until the page reloaded.
+   * So the map stays as the record of *what* is rejected, and this is the record of what has
+   * been sent — which is what decides whether there is anything left to save, and what stops a
+   * second press of Update re-sending the same rejections.
+   */
+  private readonly rejectionsSent = signal<ReadonlySet<string>>(new Set());
+
+  /** Rejections made but not yet sent — the only ones a save still has work to do about. */
+  private readonly pendingRejections = computed(() =>
+    [...this.rejectedPhotos().keys()].filter((id) => !this.rejectionsSent().has(id)),
+  );
+
   /** The photo awaiting a confirm, by id. Only ever a host's photo — see `moderating`. */
   protected readonly removeConfirmPhotoId = signal<string | null>(null);
   /** Attachment IDs from completed S3 uploads, flushed to the hostel on the next save. */
@@ -173,7 +200,7 @@ export class Review {
    * to the host, and it still has to enable Update.
    */
   protected readonly dirty = computed(
-    () => (this.hostelForm()?.dirty() ?? false) || this.rejectedPhotos().size > 0,
+    () => (this.hostelForm()?.dirty() ?? false) || this.pendingRejections().length > 0,
   );
 
   /** Whether the user has attempted to save/approve — enables inline validation feedback. */
@@ -222,6 +249,17 @@ export class Review {
       this.propertyType.set(d.propertyType);
       this.genderType.set(d.genderType);
       this.photos.set(d.photos.map((p) => ({ ...p })));
+      // Rejections the server already holds, so the grid shows them as rejected rather than
+      // as ordinary photos. Seeded into `rejectionsSent` as well as `rejectedPhotos`: they
+      // are already recorded, so they must not make a freshly loaded page read as unsaved,
+      // and Update must not send them a second time. Read off the local `d`, never off the
+      // `photos` signal just written — reading a signal here would subscribe this effect to
+      // it and re-seed every field from `initialData` on the next edit.
+      const alreadyRejected = d.photos.filter((p) => p.decision === 'rejected');
+      this.rejectedPhotos.set(
+        new Map(alreadyRejected.map((p) => [p.id, p.rejectReason ?? 'in an earlier review'])),
+      );
+      this.rejectionsSent.set(new Set(alreadyRejected.map((p) => p.id)));
       this.photoLabelMap.set(
         new Map(
           d.photos.map((p) => [
@@ -270,11 +308,62 @@ export class Review {
 
   /** Undo, from the grid's own control on a rejected card. */
   protected undoRejectById(id: string): void {
+    // A rejection the server already holds cannot be undone by forgetting it here — that is
+    // the same mistake as never sending it, with the card now lying in the other direction.
+    // `mark_as_active` is the inverse the attachment controller offers.
+    if (this.rejectionsSent().has(id)) {
+      this.api
+        .markAttachmentAsActive(id)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.rejectionsSent.update((s) => {
+              const next = new Set(s);
+              next.delete(id);
+              return next;
+            });
+            this.dropRejection(id);
+          },
+          // The card stays rejected, because on the server it still is.
+          error: () => this.saveError.set(true),
+        });
+      return;
+    }
+    this.dropRejection(id);
+  }
+
+  private dropRejection(id: string): void {
     this.rejectedPhotos.update((m) => {
       const next = new Map(m);
       next.delete(id);
       return next;
     });
+  }
+
+  /**
+   * Tells the server about every rejection it has not been told about yet.
+   *
+   * This screen used to hold rejections in memory and nothing else. A moderator could reject
+   * a photo, watch the card grey out, press Update, be told it saved — and nothing had been
+   * sent: `save` wrote the hostel's own fields and `approve` published the listing, neither
+   * of them so much as reading the map. The rejection died with the page.
+   *
+   * Publishing is where that mattered most. A moderator rejecting a photo and then approving
+   * the listing put the rejected photo straight onto the public page, which is the one
+   * outcome the reject control exists to prevent — so this runs *before* both writes, and a
+   * failure stops them: better to leave the listing unpublished than to publish it carrying a
+   * photo somebody has already decided against.
+   *
+   * Sent together rather than one at a time: they are one decision the moderator made in one
+   * sitting, and a partial flush leaves the grid disagreeing with the server about which
+   * photos are live.
+   */
+  private flushRejections(): Observable<unknown> {
+    const ids = this.pendingRejections();
+    if (!ids.length) return of(null);
+    return forkJoin(
+      ids.map((id) => this.api.markAttachmentAsRejected(id, REJECTION_NOTE)),
+    ).pipe(tap(() => this.rejectionsSent.update((s) => new Set([...s, ...ids]))));
   }
 
 
@@ -288,9 +377,14 @@ export class Review {
     if (!id || this.approving()) return;
     this.approving.set(true);
     this.approveError.set(false);
-    this.api
-      .markAsActive(id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    // Rejections first: publishing a listing that still carries a photo this moderator has
+    // rejected is the one thing the control is there to stop. A failure here leaves the
+    // listing unpublished, which is the recoverable half of the two.
+    this.flushRejections()
+      .pipe(
+        switchMap(() => this.api.markAsActive(id)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: () => {
           this.approving.set(false);
@@ -373,14 +467,18 @@ export class Review {
     // The same PUT the host console makes, with the same body — the form builds it. This
     // screen used to assemble its own, which is how it came to send four of a room type's
     // ten columns and none of the contact or billing fields.
-    this.hostels
-      .update(id, form.getPayload())
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    const rejected = this.pendingRejections().length;
+    this.flushRejections()
+      .pipe(
+        switchMap(() => this.hostels.update(id, form.getPayload())),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (hostel) => {
           this.saving.set(false);
           this.saved.set(true);
           form.onSaveSuccess(hostel);
+          if (rejected) this.logAudit(`Rejected ${rejected} photo(s) — host notified`);
           this.logAudit('Updated hostel information');
         },
         error: () => {

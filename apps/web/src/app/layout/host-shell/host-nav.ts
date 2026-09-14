@@ -33,7 +33,11 @@ export interface NavEntry {
  */
 export function hostNav(
   base: string,
-  opts: { monthlyBilled: boolean; can: (permission: Permission) => boolean },
+  opts: {
+    monthlyBilled: boolean;
+    nightlyBilled: boolean;
+    can: (permission: Permission) => boolean;
+  },
 ): NavEntry[] {
   const b = base;
   // Each destination names the API action it needs, so a sub-user only sees the sections
@@ -50,10 +54,29 @@ export function hostNav(
     ...(opts.monthlyBilled
       ? []
       : [{ label: 'common.bookings', icon: 'ti-calendar', link: `${b}/bookings`, permission: 'host:Room:index' } as NavEntry]),
-    { label: 'common.tenants',        icon: 'ti-users',            link: `${b}/tenants`,      permission: 'host:Renter:index' },
+    // Tenants is the other half of the Bookings swap. A nightly hostel turns arrivals over;
+    // it has guests, not tenancies, so the list is empty by construction and the register
+    // form writes a record nothing on that hostel reads. The bottom tab bar already chose
+    // between the two — see {@link hostTabBar} — and this is the sidebar and More list
+    // agreeing with it.
+    ...(opts.nightlyBilled
+      ? []
+      : [{ label: 'common.tenants', icon: 'ti-users', link: `${b}/tenants`, permission: 'host:Renter:index' } as NavEntry]),
     { label: 'hostNav.teamStaff',     icon: 'ti-user-shield',      link: `${b}/team`,         permission: 'host:Staff:index' },
-    { label: 'common.utilities',      icon: 'ti-bolt',             link: `${b}/utilities`,    permission: 'host:UtilityBill:index' },
-    { label: 'common.mess',           icon: 'ti-tools-kitchen-2',  link: `${b}/mess`,         permission: 'host:WeeklyMenu:index' },
+    // The mirror of Bookings above. Utilities and Mess belong to a hostel that houses
+    // people by the month: a nightly hostel has guests for two days, not meters to split
+    // between them or a weekly menu to plan, so both pages are empty by construction.
+    //
+    // Gated on `nightlyBilled` rather than on `!monthlyBilled`, so a hostel whose billing
+    // cycle failed to arrive keeps them. Hiding a working page because a field was missing
+    // is the worse of the two failures — the same argument `isMonthlyBilled` makes for
+    // leaving Bookings visible.
+    ...(opts.nightlyBilled
+      ? []
+      : [
+          { label: 'common.utilities', icon: 'ti-bolt',            link: `${b}/utilities`, permission: 'host:UtilityBill:index' } as NavEntry,
+          { label: 'common.mess',      icon: 'ti-tools-kitchen-2', link: `${b}/mess`,      permission: 'host:WeeklyMenu:index' } as NavEntry,
+        ]),
     { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
     { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
     { divider: true },
@@ -72,18 +95,48 @@ export function hostNav(
   );
 }
 
+/** One destination in the bottom tab bar. `suffix` joins the hostel base, as in {@link hostNav}. */
+export interface TabBarEntry {
+  label: string;
+  icon: string;
+  suffix: string;
+}
+
 /**
- * Where the bottom tab bar already goes.
+ * What the bottom tab bar carries, for this hostel.
  *
- * The More page lists what the tab bar does not, so these are the entries it drops. Suffixes
- * rather than full links, since the hostel id is in every one.
+ * Four fixed destinations plus More, and the third slot is the one that moves: a month-billed
+ * hostel houses tenants, a nightly one turns arrivals over, and only one of those two can
+ * have the tab. The bar was a fixed five, so a backpacker hostel got Tenants — a page empty
+ * by construction, and one `monthlyOnlyGate` now turns away outright — while Bookings, the
+ * thing its day is made of, sat two taps away under More.
+ *
+ * Nightly on an unknown billing cycle, matching the Bookings rule in {@link hostNav}:
+ * `bookingsGate` lets an unknown hostel through, and whichever page loses the slot is still
+ * one tap away under More — see {@link tabBarSuffixes}.
  */
-export const TAB_BAR_SUFFIXES: readonly string[] = [
-  '/overview',
-  '/rooms',
-  '/tenants',
-  '/invoices',
-];
+export function hostTabBar(opts: { monthlyBilled: boolean }): TabBarEntry[] {
+  return [
+    { label: 'common.overview', icon: 'ti-layout-dashboard', suffix: '/overview' },
+    { label: 'common.rooms', icon: 'ti-bed', suffix: '/rooms' },
+    opts.monthlyBilled
+      ? { label: 'common.tenants', icon: 'ti-users', suffix: '/tenants' }
+      : { label: 'common.bookings', icon: 'ti-calendar', suffix: '/bookings' },
+    { label: 'common.invoices', icon: 'ti-file-invoice', suffix: '/invoices' },
+  ];
+}
+
+/**
+ * Where the bottom tab bar already goes, as suffixes.
+ *
+ * The More page lists what the tab bar does not, so these are the entries it drops. Derived
+ * from {@link hostTabBar} rather than written out beside it: the two were separate lists, and
+ * a swap in one without the other either hides a page from both surfaces — unreachable on a
+ * phone, where there is no sidebar — or shows it on both.
+ */
+export function tabBarSuffixes(opts: { monthlyBilled: boolean }): readonly string[] {
+  return hostTabBar(opts).map((t) => t.suffix);
+}
 
 /** Splits the nav at its divider: hostel sections, then the billing ones below it. */
 export function splitNav(entries: NavEntry[]): { hostel: NavEntry[]; account: NavEntry[] } {

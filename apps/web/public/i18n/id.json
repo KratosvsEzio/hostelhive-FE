@@ -102,7 +102,17 @@
     "signInToBook": "Masuk untuk memesan",
     "pickYourRoomOnce": "Pilih kamar Anda setelah masuk",
     "createAFreeAccountToBook": "Buat akun gratis untuk memilih kamar dan menahannya selagi Anda memutuskan. Hanya butuh 30 detik.",
-    "roomsAmpPricing": "Kamar & harga"
+    "andNMore": "+{{count}} lainnya",
+    "favorite": "Favorit",
+    "showPhoneNumber": "Tampilkan nomor telepon",
+    "showAllNReviews": "Lihat semua {{count}} ulasan",
+    "hostSince": "Tuan rumah sejak {{year}}",
+    "writeAReview": "Tulis ulasan",
+    "roomSummary": "{{beds}} tempat tidur · {{types}} tipe kamar · {{sharing}} opsi berbagi",
+    "nSharingAvailable": "Tersedia berbagi {{labels}}",
+    "bookNow": "Pesan sekarang",
+    "nPhotos": "{{count}} foto",
+    "otherPhotos": "Lainnya"
   },
   "common": {
     "loading": "Memuat…",
@@ -226,6 +236,7 @@
     "dinner": "Makan malam",
     "teamAmpStaff": "Tim & staf",
     "accountSettings": "Pengaturan akun",
+    "passwordAmpSecurity": "Kata sandi & keamanan",
     "someRequiredFieldsAre": "Beberapa kolom wajib belum diisi",
     "uploading": "Mengunggah…",
     "listingProgress": "Progres listing",
@@ -318,7 +329,16 @@
     "enterDescription": "Masukkan deskripsi",
     "enterLandmarks": "Masukkan patokan terdekat",
     "enterReason": "Masukkan alasan",
-    "enterNote": "Masukkan catatan"
+    "enterNote": "Masukkan catatan",
+    "somethingWentWrongReachingThe": "Terjadi kesalahan saat menghubungi server.",
+    "weDLikeToCountPage": "Kami ingin menghitung tampilan halaman untuk melihat hostel dan kota yang dicari orang, agar bisa memperbaiki pencarian. Tidak ada data pribadi yang dikirim, dan ini tidak ada kaitannya dengan tetap masuk.",
+    "noThanks": "Tidak, terima kasih",
+    "password": "Kata sandi",
+    "selectYear": "Pilih tahun",
+    "allow": "Izinkan",
+    "noPhotosYet": "Belum ada foto",
+    "guests": "Tamu",
+    "copy": "Salin"
   },
   "leadWall": {
     "close": "Tutup",
@@ -334,7 +354,8 @@
     "weSentASigned24": "Kami mengirim tautan verifikasi bertanda tangan yang berlaku 24 jam ke",
     "clickingItActivatesYourAccount": ". Mengekliknya akan mengaktifkan akun Anda dan menampilkan nomornya.",
     "iVeVerifiedContinue": "Saya sudah verifikasi — lanjutkan",
-    "back": "Kembali"
+    "back": "Kembali",
+    "confirmPassword": "Konfirmasi kata sandi"
   },
   "home": {
     "searchCityOrArea": "Cari kota atau area",
@@ -533,7 +554,12 @@
     "country": "Negara",
     "streetAddress": "Alamat jalan",
     "nearbyLandmarks": "Landmark terdekat",
-    "roomTypeDescription": "Deskripsi tipe kamar"
+    "roomTypeDescription": "Deskripsi tipe kamar",
+    "couldnTCheckWhichRooms": "Tidak dapat memeriksa kamar mana yang memakai tipe ini. Coba lagi.",
+    "findingTheRoomsBuiltOn": "Mencari kamar yang menggunakan {{name}}…",
+    "moveAllRoomsTo": "Pindahkan semua kamar ke",
+    "selectARoomType": "Pilih tipe kamar",
+    "noRoomsAreBuiltOn": "Tidak ada kamar yang memakai {{name}}, jadi tidak ada yang berubah. Tipe ini dihapus saat Anda menyimpan."
   },
   "a11y": {
     "close": "Tutup",
@@ -612,7 +638,16 @@
     "clearSearch": "Hapus pencarian",
     "closeTimePicker": "Tutup pemilih waktu",
     "chooseTime": "Pilih waktu",
-    "dismiss": "Tutup"
+    "dismiss": "Tutup",
+    "closePropertyMenu": "Tutup menu properti",
+    "goToPhotoN": "Ke foto {{n}}",
+    "removeFrom": "Hapus {{title}}",
+    "removeOneFrom": "Kurangi satu dari {{title}}",
+    "onePhotoAtATime": "Satu foto sekaligus",
+    "allPhotosByGroup": "Semua foto, dikelompokkan",
+    "fewerGuestsIn": "Kurangi tamu di {{title}}",
+    "moreGuestsIn": "Tambah tamu di {{title}}",
+    "skipToContent": "Lewati ke konten"
   },
   "hostTenants": {
     "tenantPhoto": "Foto penyewa",
@@ -677,7 +712,10 @@
     "roomNotAvailableForTheseDates": "Kamar tidak tersedia pada tanggal ini",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
-    "leavingDate": "Tanggal keluar"
+    "leavingDate": "Tanggal keluar",
+    "thisTenantHasNoRent": "Penghuni ini belum memiliki catatan tagihan sewa.",
+    "noUtilityChargesHaveBeen": "Belum ada biaya utilitas yang dicatat untuk kamar penghuni ini.",
+    "checkInYourFirstTenant": "Check-in penghuni pertama Anda untuk mulai memantau sewa."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Kami tidak dapat memuat langganan Anda",
@@ -731,7 +769,11 @@
     "thenRsPerPeriod": "Selanjutnya Rs {{price}} / {{period}}",
     "paymentStarted": "Pembayaran dimulai",
     "payRs": "Bayar Rs {{amount}}",
-    "selectAProduct": "Pilih produk"
+    "selectAProduct": "Pilih produk",
+    "invoicesAppearHereAfterYour": "Tagihan muncul di sini setelah penagihan pertama Anda.",
+    "pleaseCheckYourConnectionAnd": "Periksa koneksi Anda lalu coba lagi.",
+    "youDonTHaveAn": "Anda belum memiliki paket aktif. Lihat paket di bawah untuk memulai.",
+    "checkBackSoonPlans": "Cek lagi nanti — paket akan muncul di sini."
   },
   "hostMess": {
     "pickADate": "Pilih tanggal",
@@ -791,7 +833,8 @@
     "last12MonthsPkr": "12 bulan terakhir · PKR",
     "last30DaysPkr": "30 hari terakhir · PKR",
     "uploadingReceipt": "Mengunggah struk…",
-    "nPhotosAttached": "{{count}} foto dilampirkan"
+    "nPhotosAttached": "{{count}} foto dilampirkan",
+    "logYourBulkGroceryPurchases": "Catat pembelian bahan makanan borongan untuk memantau pengeluaran dapur."
   },
   "hostRooms": {
     "calendarTab": "Kalender",
@@ -847,7 +890,13 @@
     "createRooms": "Buat kamar",
     "bedsOccupiedOf": "{{filled}} dari {{total}} tempat tidur terisi",
     "nOfMBooked": "{{booked}} dari {{capacity}} dipesan",
-    "nNoLongerActive": "{{count}} tidak lagi aktif"
+    "nNoLongerActive": "{{count}} tidak lagi aktif",
+    "dayRoster": "Daftar harian",
+    "pickADay": "Pilih hari.",
+    "nobodyInThisRoomThat": "Tidak ada orang di kamar ini pada hari itu.",
+    "thisRoomCurrentlyHasNo": "Kamar ini saat ini tidak memiliki penghuni aktif.",
+    "addYourFirstRoomTo": "Tambahkan kamar pertama Anda untuk mulai memantau hunian.",
+    "bedNumbersAreNotAssigned": "Nomor tempat tidur belum ditetapkan — kalender menunjukkan berapa banyak yang terisi, bukan siapa di tempat tidur mana."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarif per unit",
@@ -887,7 +936,9 @@
     "shareFormulaStart": "Bagian = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} hari hunian",
     "rsUnallocated": "Rs {{amount}} belum dialokasikan",
-    "rsOver": "Rs {{amount}} berlebih"
+    "rsOver": "Rs {{amount}} berlebih",
+    "pickARoomWithActive": "Pilih kamar dengan penghuni aktif untuk membagi tagihan.",
+    "addAUtilityBillTo": "Tambahkan tagihan utilitas untuk mulai memantau pemakaian dan biaya."
   },
   "hostTeam": {
     "staffPhoto": "Foto staf",
@@ -899,7 +950,6 @@
     "salaryIssueDate": "Tanggal pembayaran gaji",
     "chooseAnImageFromYour": "Pilih gambar dari file Anda",
     "managerAccess": "Akses manajer",
-    "thisPersonAlreadyHasAn": "Orang ini sudah punya akun, jadi tidak ada yang perlu disiapkan — membiarkan sakelar aktif memberinya akses manajer ke hostel ini saat Anda menyimpan.",
     "employment": "Kepegawaian",
     "upload": "Unggah",
     "scopedToThisHostelOnly": "Hanya berlaku untuk hostel ini.",
@@ -918,7 +968,11 @@
     "fromTheTeamThisAction": "dari tim. Tindakan ini tidak dapat dibatalkan.",
     "keepsTheirStaffRecordBut": "tetap memiliki catatan staf tetapi tidak dapat lagi masuk atau mengelola hostel ini.",
     "createsLoginFor": "Membuat login agar {{name}} dapat mengelola hostel ini.",
-    "thisStaffMember": "staf ini"
+    "thisStaffMember": "staf ini",
+    "existingAccountKeepsPassword": "Jika email ini sudah punya akun, kata sandinya saat ini tetap dipakai — milik Anda hanya dipakai bila akun baru dibuat.",
+    "storedEmailBecomesLogin": "Email tersimpan akan menjadi login. Jika alamat itu sudah punya akun, kata sandinya tetap dipakai.",
+    "pickADifferentStatusTo": "Pilih status lain untuk melihat anggota tim lainnya.",
+    "addAWardenCookOr": "Tambahkan penjaga, juru masak, atau satpam untuk menyimpan gaji dan dokumennya."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Persetujuan gagal — coba lagi.",
@@ -973,7 +1027,9 @@
     "billedTo": "Ditagihkan ke",
     "issued": "Diterbitkan",
     "due": "Jatuh tempo",
-    "thisWillPermanentlyDeleteInvoice": "Ini akan menghapus faktur secara permanen"
+    "thisWillPermanentlyDeleteInvoice": "Ini akan menghapus faktur secara permanen",
+    "invoicesAppearHereOnceYou": "Tagihan muncul di sini setelah Anda menerbitkan tagihan sewa atau utilitas.",
+    "tryAdjustingYourFilters": "Coba sesuaikan filter Anda."
   },
   "hostExpenses": {
     "allTypes": "Semua jenis",
@@ -1017,7 +1073,20 @@
     "pctVsLastMonth": "{{pct}}% dibanding bulan lalu",
     "nTenantsUnpaid": "{{count}} penyewa belum bayar",
     "moveInsAndOuts": "Masuk dan keluar",
-    "pctBedsFilled": "Persentase tempat tidur terisi"
+    "pctBedsFilled": "Persentase tempat tidur terisi",
+    "weCouldnTLoadTenant": "Kami tidak dapat memuat data perpindahan penghuni.",
+    "weCouldnTLoadOccupancy": "Kami tidak dapat memuat data hunian.",
+    "weCouldnTLoadAnalytics": "Kami tidak dapat memuat analitik untuk properti ini.",
+    "allUtilityInvoicesAreSettled": "Semua tagihan utilitas telah lunas.",
+    "noInvoicesForThisProperty": "Belum ada tagihan untuk properti ini.",
+    "weCouldnTLoadRevenue": "Kami tidak dapat memuat data pendapatan.",
+    "upcomingBookings": "Pemesanan mendatang",
+    "nArriving": "{{count}} datang",
+    "nLeaving": "{{count}} pergi",
+    "nothingBookedYet": "Belum ada pemesanan",
+    "noArrivalsOrDeparturesAhead": "Tidak ada kedatangan atau kepergian dalam dua minggu ke depan.",
+    "inOverOutPerDay": "Kedatangan di atas kepergian, per hari",
+    "viewAllBookings": "Lihat semua pemesanan →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1034,7 +1103,31 @@
     "cancelledByOn": "Dibatalkan oleh {{by}} pada {{date}}",
     "pkrPenaltyChargedToYou": "Denda PKR {{amount}} dibebankan kepada Anda",
     "pkrToYou": "PKR {{amount}} untuk Anda",
-    "thisGuest": "tamu ini"
+    "thisGuest": "tamu ini",
+    "dayLedger": "Buku harian",
+    "pendingAllotments": "Penetapan tertunda",
+    "askedFor": "Diminta",
+    "noContactDetailsOnThis": "Tidak ada detail kontak pada pemesanan ini",
+    "recordABooking": "Catat pemesanan",
+    "whoIsStaying": "Siapa yang menginap",
+    "onlyIfTheyHaveOne": "Hanya jika mereka punya",
+    "addARoom": "Tambah kamar",
+    "toCollectAtTheDesk": "Ditagih di meja resepsionis",
+    "createBooking": "Buat pemesanan",
+    "theRoomsForThisProperty": "Kamar untuk properti ini tidak dapat dimuat.",
+    "everyRoomEveryState": "Setiap kamar, setiap status — ketuk satu hari untuk melihat catatannya",
+    "thisMonthSCalendarCould": "Kalender bulan ini tidak dapat dimuat.",
+    "nothingIsWaitingOnYou": "Tidak ada yang menunggu tindakan Anda pada hari ini.",
+    "pickTheDatesFirst": "Pilih tanggal terlebih dahulu — ketersediaan bergantung pada itu.",
+    "noRoomsOnThisProperty": "Belum ada kamar di properti ini.",
+    "bookingCalendar": "Kalender pemesanan",
+    "assignRoom": "Tetapkan kamar",
+    "noteFromGuest": "Catatan dari tamu",
+    "savedAs": "Disimpan sebagai",
+    "checkInCheckOut": "Check-in — check-out",
+    "aNightRuns12": "Satu malam berlaku pukul 12.00 sampai 12.00 — check-in mulai tengah hari, check-out sebelum tengah hari besoknya.",
+    "discount": "Diskon",
+    "saveBooking": "Simpan pemesanan"
   },
   "hostHostelProfile": {
     "failed": "Gagal",
@@ -1044,7 +1137,8 @@
     "updateHostel": "Perbarui hostel",
     "reviewTitle": "Ini akan mengirim listing Anda untuk ditinjau ulang",
     "reviewBody": "Anda mengubah hal berikut. Listing Anda akan ditinjau lagi, dan tamu tidak akan melihatnya sampai disetujui.",
-    "reviewConfirm": "Simpan dan kirim untuk ditinjau"
+    "reviewConfirm": "Simpan dan kirim untuk ditinjau",
+    "weCouldnTLoadYour": "Kami tidak dapat memuat hostel Anda."
   },
   "hostMore": {
     "property": "Properti",
@@ -1065,11 +1159,13 @@
   "adminAdminContracts": {
     "contracts": "Kontrak",
     "noContractsMatchThisFilter": "Tidak ada kontrak yang cocok dengan filter ini",
-    "term": "Jangka waktu"
+    "term": "Jangka waktu",
+    "searchContractsByHostel": "Cari kontrak berdasarkan hostel"
   },
   "adminAdminListings": {
     "allListings": "Semua listing",
-    "noListingsFound": "Listing tidak ditemukan"
+    "noListingsFound": "Listing tidak ditemukan",
+    "searchListingsByHostel": "Cari listing berdasarkan hostel"
   },
   "adminAdminPayments": {
     "payments": "Pembayaran",
@@ -1079,27 +1175,32 @@
     "transactionId": "ID transaksi",
     "created": "Dibuat",
     "contract": "Kontrak",
-    "product": "Produk"
+    "product": "Produk",
+    "searchPaymentsByHostel": "Cari pembayaran berdasarkan hostel"
   },
   "moderatorQueue": {
     "reviewQueue": "Antrean tinjauan",
-    "queueIsClear": "Antrean kosong"
+    "queueIsClear": "Antrean kosong",
+    "noSubmissionsAreWaitingFor": "Tidak ada pengajuan yang menunggu peninjauan."
   },
   "moderatorAudit": {
     "auditLog": "Log audit",
     "noMatchingActivity": "Tidak ada aktivitas yang cocok",
     "allModerators": "Semua moderator",
     "last7Days": "7 hari terakhir",
-    "loadOlderEntries": "Muat entri lama"
+    "loadOlderEntries": "Muat entri lama",
+    "tryADifferentActionFilter": "Coba filter tindakan atau rentang tanggal lain."
   },
   "coreForbidden": {
-    "accessBlocked": "Akses diblokir"
+    "accessBlocked": "Akses diblokir",
+    "youDonTHavePermission": "Anda tidak memiliki izin untuk melihat area ini."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Undangan hostel, konfirmasi makan, dan struk tertunda Anda."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Seret & lepas, unggah, atau ambil foto"
+    "dragAmpDropUploadOr": "Seret & lepas, unggah, atau ambil foto",
+    "replaceAdd": "Ganti / tambah"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Sekarang klik tanggal akhir",
@@ -1119,7 +1220,8 @@
     "refundsReachYourOriginalPayment": "Pengembalian dana sampai ke metode pembayaran asal dalam 5 hari kerja.",
     "pkrPaid": "PKR {{amount}} dibayar",
     "cancelledSummary": "Dibatalkan {{date}} · PKR {{refund}} dikembalikan · PKR {{charge}} biaya pembatalan",
-    "cancelRefundExplainer": "Anda akan menerima kembali <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> ditahan sebagai biaya pembatalan, karena Anda membatalkan pada {{pct}}% masa berlaku."
+    "cancelRefundExplainer": "Anda akan menerima kembali <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> ditahan sebagai biaya pembatalan, karena Anda membatalkan pada {{pct}}% masa berlaku.",
+    "whenYouBookAHostel": "Saat Anda memesan hostel, pesanan akan muncul di sini beserta tanggal dan biayanya."
   },
   "userFavorites": {
     "removeFromFavorites": "Hapus dari favorit?",
@@ -1128,7 +1230,8 @@
     "noFavoritesYet": "Belum ada favorit",
     "saveHostelsYouLikeAnd": "Simpan hostel yang Anda suka dan temukan di sini.",
     "browseHostels": "Jelajahi hostel",
-    "fromYourSavedHostels": "dari hostel tersimpan Anda?"
+    "fromYourSavedHostels": "dari hostel tersimpan Anda?",
+    "weCouldnTLoadYour": "Kami tidak dapat memuat favorit Anda."
   },
   "userSecurity": {
     "currentPassword": "Kata sandi saat ini",
@@ -1201,7 +1304,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Tips, panduan, dan pembaruan dari tim HostelHive",
     "comingSoon": "Segera hadir",
-    "weReWorkingOnSome": "Kami sedang menyiapkan konten menarik tentang kehidupan mahasiswa, tips hostel, dan panduan kota di seluruh Pakistan. Nantikan!"
+    "weReWorkingOnSome": "Kami sedang menyiapkan konten menarik tentang kehidupan mahasiswa, tips hostel, dan panduan kota di seluruh Pakistan. Nantikan!",
+    "onThisPage": "Di halaman ini",
+    "theHostelhiveTeam": "Tim HostelHive",
+    "keepReading": "Lanjut membaca",
+    "blogHomePage": "Buka halaman utama blog.",
+    "filterArticlesByCategory": "Saring artikel berdasarkan kategori",
+    "archiveLayout": "Tata letak arsip",
+    "everyArticle": "Semua artikel",
+    "theHostelhiveJournal": "Jurnal HostelHive",
+    "guidesForFindingARoom": "Panduan mencari kamar — dan tempat tidur untuk semalam.",
+    "whatHostelsActuallyCost": "Berapa biaya hostel sebenarnya kota demi kota, kawasan mana yang cocok untuk kampus mana, dan di mana menginap dari Johar Town hingga Karakoram. Ditulis dari listing dan dari perjalanan.",
+    "allPosts": "Semua pos",
+    "grid": "Kisi",
+    "index": "Indeks",
+    "nMinRead": "baca {{count}} menit",
+    "nMin": "{{count}} menit",
+    "article": "Artikel",
+    "category": "Kategori",
+    "published": "Terbit",
+    "read": "Baca",
+    "nothingFiledHereYet": "Belum ada apa pun di sini.",
+    "lookingForARoomRather": "Mencari kamar, bukan panduan?",
+    "everyListingShowsTheRent": "Setiap listing menampilkan sewa per tempat tidur atau per kamar, apa saja yang termasuk, dan siapa pengelolanya.",
+    "swipeTheTableToSee": "Geser tabel untuk melihat semua kolom",
+    "weVerifyListingsAcross": "Kami memverifikasi listing di seluruh Pakistan dan menulis apa yang kami pelajari.",
+    "weCouldnTFindThatPost": "Kami tidak menemukan pos itu",
+    "theLinkMayBeOld": "Tautannya mungkin sudah lama, atau alamatnya sedikit keliru.",
+    "browseEveryPostInstead": "Jelajahi semua pos saja.",
+    "readTheGuide": "Baca panduan"
   },
   "publicListing": {
     "checkIn": "Check-in",
@@ -1211,7 +1342,9 @@
     "add": "Tambah",
     "showAllNPhotos": "Lihat semua {{count}} foto",
     "genderHostelHostedBy": "Hostel {{gender}}, dikelola oleh {{host}}",
-    "bookARoom": "Pesan kamar"
+    "bookARoom": "Pesan kamar",
+    "theListingMayHaveBeen": "Listing mungkin telah dihapus atau tautannya salah.",
+    "chooseYourRoom": "Pilih kamar Anda"
   },
   "featuresPublic": {
     "checkingYourLink": "Memeriksa tautan Anda…",
@@ -1265,7 +1398,14 @@
     "allApproved": "Semua disetujui!",
     "doneNFailed": "Selesai — {{count}} gagal",
     "nPhotosFailedRetry": "{{count}} foto gagal — Anda dapat mencoba lagi dari antrean.",
-    "approving": "Menyetujui…"
+    "approving": "Menyetujui…",
+    "newUploadsWillAppearHere": "Unggahan baru akan muncul di sini untuk disetujui.",
+    "allStatuses": "Semua status",
+    "allLabels": "Semua label",
+    "unlabelled": "Tanpa label",
+    "nothingMatchesThisFilter": "Tidak ada yang cocok dengan filter ini",
+    "tryAnotherLabelOrShowAll": "Coba label lain, atau tampilkan semuanya.",
+    "showAllLabels": "Tampilkan semua label"
   },
   "publicContact": {
     "contactUs": "Hubungi kami",
@@ -1396,7 +1536,15 @@
     "bookingSent": "Pemesanan terkirim",
     "weLlEmailYouWhenConfirmed": "Kami akan mengirim email begitu hostel mengonfirmasi.",
     "couldnTBook": "Pemesanan tidak dapat diselesaikan",
-    "noRoomsListed": "Hostel ini belum menambahkan kamar apa pun."
+    "noRoomsListed": "Hostel ini belum menambahkan kamar apa pun.",
+    "pricesArePerRoom": "Harga per kamar",
+    "pricesArePerBed": "Harga per tempat tidur",
+    "guestDetails": "Detail tamu",
+    "enterTheGuestName": "Masukkan nama tamu",
+    "enterAValidPhone": "Masukkan nomor telepon yang valid",
+    "enterAValidEmail": "Masukkan alamat email yang valid",
+    "ofNSeats": "dari {{count}}",
+    "bookingReference": "Referensi pemesanan"
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",
@@ -1408,11 +1556,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Cari alamat atau penanda…",
-    "searchCityOrArea": "Cari kota atau area"
+    "searchCityOrArea": "Cari kota atau area",
+    "satellite": "Satelit",
+    "noMatchingPlaces": "Tidak ada tempat yang cocok",
+    "poweredByOpenstreetmap": "Didukung oleh OpenStreetMap",
+    "noCoordinatesSetFor": "Belum ada koordinat untuk listing ini."
   },
   "subscriptionGate": {
     "unlockFeature": "Buka {{feature}}",
-    "thisFeature": "fitur ini"
+    "thisFeature": "fitur ini",
+    "dashboardOverview": "Ringkasan dasbor",
+    "roomManagement": "Manajemen kamar",
+    "tenantManagement": "Manajemen penghuni",
+    "utilityBilling": "Penagihan utilitas",
+    "thisFeatureIsAvailable": "Fitur ini tersedia pada paket berbayar. Berlangganan untuk akses penuh ke dasbor hostel Anda.",
+    "completeHostelProfileFirst": "Lengkapi profil hostel dulu",
+    "onceSubscribedAllFeatures": "Setelah berlangganan, semua fitur terbuka otomatis.",
+    "roomAmpOccupancyManagement": "Manajemen kamar dan hunian",
+    "tenantTrackingAmpPayment": "Pelacakan penghuni dan catatan pembayaran",
+    "rentAndUtilityInvoice": "Pembuatan tagihan sewa dan utilitas",
+    "analyticsAndRevenueReports": "Analitik dan laporan pendapatan"
   },
   "notifications": {
     "nUnread": "{{count}} belum dibaca"

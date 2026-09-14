@@ -8,6 +8,32 @@ import { RoomCalendar } from './room-calendar';
 const ROOM = 'r1';
 
 /**
+ * The clock, pinned inside the month every fixture here is written in.
+ *
+ * The stays below are all dated March 2026 and the component bases its grid on the month it
+ * was constructed in, so the harness used to work out an offset from its own `new Date()`
+ * while the component read its own. Two reads of a moving value, trusted to agree — and they
+ * do, except across midnight at the turn of a month, where the grid renders a month either
+ * side of the dates and every `dayOf` lookup comes back undefined. That is the intermittent
+ * failure this file produced in a full run; parallel load only widened the gap between the
+ * two reads, it was never the cause.
+ *
+ * Pinned mid-month so there is no boundary to be near, which also makes the offset zero and
+ * lets the fixtures simply say March 2026 rather than computing their way there.
+ *
+ * Only `Date` is faked — Angular still needs real timers and microtasks to render.
+ */
+function freezeMidMarch2026(): void {
+  // Installed once, then only re-pointed. `setUp` runs forty times inside the pip-width test,
+  // and installing the fake clock on every one of those pushed it past vitest's five-second
+  // limit on CI while passing locally in two — a green suite here and a red one there.
+  if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 2, 15, 12, 0, 0));
+}
+
+afterEach(() => vi.useRealTimers());
+
+/**
  * A stay as the bookings endpoint returns it, narrowed to what this screen reads.
  *
  * `qty` is guests, which is what the component counts as beds held: a party of three in a
@@ -60,6 +86,7 @@ describe('RoomCalendar pips', () => {
   let fixture: ComponentFixture<RoomCalendar>;
 
   function setUp(capacity: number, bookings: HostBooking[]) {
+    freezeMidMarch2026(); // before the component is built: it reads the clock once, there
     TestBed.resetTestingModule();
     api = new ApiStub();
     api.bookings = bookings;
@@ -71,12 +98,6 @@ describe('RoomCalendar pips', () => {
     fixture.componentRef.setInput('hostelId', 'h1');
     fixture.componentRef.setInput('roomId', ROOM);
     fixture.componentRef.setInput('capacity', capacity);
-    // March 2026 relative to whenever the suite runs.
-    const now = new Date();
-    const offset = (2026 - now.getFullYear()) * 12 + (2 - now.getMonth());
-    (fixture.componentInstance as unknown as { offset: { set(n: number): void } }).offset.set(
-      offset,
-    );
     fixture.detectChanges();
     return fixture.componentInstance as unknown as {
       weeks(): { days: { date: string | null; pips: unknown[]; free: number; oversold: boolean; arrivals: number; departures: number }[]; pct: number; label: string }[];
@@ -228,13 +249,26 @@ describe('RoomCalendar pips', () => {
     expect(setUp(1, []).pipColumns()).toBe(1);
   });
 
-  // Whatever the capacity, a pip has to stay wide enough to see. 65px of cell, 3px gaps.
+  /**
+   * Whatever the capacity, a pip has to stay wide enough to see. 65px of cell, 3px gaps.
+   *
+   * One component, re-pointed at each capacity, rather than forty of them. `setUp` resets the
+   * testing module and builds a fresh fixture every call, and doing that forty times took long
+   * enough to pass here in two seconds and time out on CI at five — which is the intermittent
+   * failure this file was carrying. It was a slow test, not the date race fixed alongside it:
+   * the symptom was a timeout, never a wrong assertion.
+   *
+   * `pipColumns` reads `capacity` and nothing else, so setting the input is the whole of what
+   * a rebuild was achieving.
+   */
   it('keeps every pip at least three pixels wide up to forty beds', () => {
     const CELL = 64.6;
+    const c = setUp(1, []);
     for (let n = 1; n <= 40; n++) {
-      const cols = setUp(n, []).pipColumns();
+      fixture.componentRef.setInput('capacity', n);
+      const cols = c.pipColumns();
       const width = (CELL - 3 * (cols - 1)) / cols;
-      expect(width).toBeGreaterThan(3);
+      expect({ n, wideEnough: width > 3 }).toEqual({ n, wideEnough: true });
     }
   });
 
@@ -251,6 +285,7 @@ describe('RoomCalendar day roster', () => {
   let api: ApiStub;
 
   function setUp(capacity: number, bookings: HostBooking[]) {
+    freezeMidMarch2026(); // before the component is built: it reads the clock once, there
     TestBed.resetTestingModule();
     api = new ApiStub();
     api.bookings = bookings;
@@ -262,11 +297,6 @@ describe('RoomCalendar day roster', () => {
     fixture.componentRef.setInput('hostelId', 'h1');
     fixture.componentRef.setInput('roomId', ROOM);
     fixture.componentRef.setInput('capacity', capacity);
-    const now = new Date();
-    const offset = (2026 - now.getFullYear()) * 12 + (2 - now.getMonth());
-    (fixture.componentInstance as unknown as { offset: { set(n: number): void } }).offset.set(
-      offset,
-    );
     fixture.detectChanges();
     return fixture.componentInstance as unknown as {
       select(d: string): void;
@@ -344,6 +374,7 @@ describe('RoomCalendar day roster', () => {
  */
 describe('RoomCalendar roster panel renders', () => {
   function mount(capacity: number, bookings: HostBooking[]) {
+    freezeMidMarch2026(); // before the component is built: it reads the clock once, there
     TestBed.resetTestingModule();
     const api = new ApiStub();
     api.bookings = bookings;
@@ -355,10 +386,6 @@ describe('RoomCalendar roster panel renders', () => {
     fixture.componentRef.setInput('hostelId', 'h1');
     fixture.componentRef.setInput('roomId', ROOM);
     fixture.componentRef.setInput('capacity', capacity);
-    const now = new Date();
-    (fixture.componentInstance as unknown as { offset: { set(n: number): void } }).offset.set(
-      (2026 - now.getFullYear()) * 12 + (2 - now.getMonth()),
-    );
     fixture.detectChanges();
     return fixture;
   }
@@ -370,7 +397,7 @@ describe('RoomCalendar roster panel renders', () => {
     const aside: HTMLElement | null = f.nativeElement.querySelector('aside');
 
     expect(aside).not.toBeNull();
-    expect(aside?.textContent).toContain('Day roster');
+    expect(aside?.textContent).toContain('hostRooms.dayRoster');
     // xl: puts it to the right of the grid; below that it stacks under it.
     expect(aside?.className).toContain('xl:w-[320px]');
   });
@@ -393,7 +420,7 @@ describe('RoomCalendar roster panel renders', () => {
     const aside: HTMLElement | null = f.nativeElement.querySelector('aside');
 
     expect(aside).not.toBeNull();
-    expect(aside?.textContent).toContain('Day roster');
+    expect(aside?.textContent).toContain('hostRooms.dayRoster');
   });
 
   it('says the day is empty rather than showing nothing at all', () => {
@@ -403,6 +430,113 @@ describe('RoomCalendar roster panel renders', () => {
     (f.componentInstance as unknown as { select(d: string): void }).select('2026-03-20');
     f.detectChanges();
 
-    expect(f.nativeElement.querySelector('aside')?.textContent).toContain('Nobody in this room');
+    expect(f.nativeElement.querySelector('aside')?.textContent).toContain('hostRooms.nobodyInThisRoomThat');
+  });
+});
+
+/**
+ * Which month the arrows actually land on.
+ *
+ * `month` was a computed that read `new Date()` inside its own body:
+ *
+ *     const now = new Date();
+ *     return new Date(now.getFullYear(), now.getMonth() + this.offset(), 1);
+ *
+ * A computed is only re-evaluated when a *signal* it read has changed, and wall-clock time
+ * is not one — so the "now" it was built from was whenever it last happened to recompute,
+ * which is to say arbitrary. Pressing an arrow was the only thing that invalidated it, and
+ * pressing an arrow therefore re-based the whole calendar on today's date at the same
+ * moment it applied the step.
+ *
+ * For a host that is a skipped month: open the calendar late on the last night of August,
+ * leave it, press the forward arrow after midnight, and the offset goes 0 to 1 while the
+ * base moves August to September — so August is followed by October and September cannot be
+ * reached by pressing forward at all.
+ *
+ * For this suite it was the same defect wearing its other face. Every `setUp` here works out
+ * a month offset from its own `new Date()`, so component and harness were reading the clock
+ * twice and trusting the two to agree; on the boundary they do not, the grid renders a month
+ * either side of the one the dates belong to, and every `dayOf` lookup comes back undefined.
+ * That is the intermittent failure in a full run — rare, because the window is the turn of a
+ * month, and load only decides how wide it is.
+ *
+ * The base is captured once now, at construction, so an arrow moves exactly one month and
+ * the same calendar is on screen from one press to the next.
+ */
+describe('RoomCalendar month navigation', () => {
+  /**
+   * As {@link freezeMidMarch2026}, but these tests pick their own instant — the whole point
+   * here is standing on the boundary the others are pinned away from. The file-level
+   * `afterEach` puts the real clock back.
+   */
+  function clockAt(y: number, monthIndex: number, day: number, hour: number, min: number): void {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(y, monthIndex, day, hour, min, 0));
+  }
+
+  function mount() {
+    TestBed.resetTestingModule();
+    const api = new ApiStub();
+    TestBed.configureTestingModule({
+      imports: [RoomCalendar],
+      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
+    });
+    const fixture = TestBed.createComponent(RoomCalendar);
+    fixture.componentRef.setInput('hostelId', 'h1');
+    fixture.componentRef.setInput('roomId', ROOM);
+    fixture.componentRef.setInput('capacity', 8);
+    fixture.detectChanges();
+    return fixture.componentInstance as unknown as {
+      month(): Date;
+      step(by: number): void;
+    };
+  }
+
+  /** `[year, monthIndex]`, which is what the assertions are actually about. */
+  const ym = (d: Date): [number, number] => [d.getFullYear(), d.getMonth()];
+
+  it('advances one month when the clock crosses midnight into a new month', () => {
+    clockAt(2026, 7, 31, 23, 59); // 31 August 2026, a minute to midnight
+    const c = mount();
+    expect(ym(c.month())).toEqual([2026, 7]); // August
+
+    vi.setSystemTime(new Date(2026, 8, 1, 0, 1)); // the host comes back after midnight
+    c.step(1);
+
+    // September. Re-reading the clock here gave October and put September out of reach.
+    expect(ym(c.month())).toEqual([2026, 8]);
+  });
+
+  it('goes back one month across the same boundary', () => {
+    clockAt(2026, 7, 31, 23, 59);
+    const c = mount();
+
+    vi.setSystemTime(new Date(2026, 8, 1, 0, 1));
+    c.step(-1);
+
+    expect(ym(c.month())).toEqual([2026, 6]); // July
+  });
+
+  it('returns to the month it opened on after a step out and back', () => {
+    clockAt(2026, 7, 31, 23, 59);
+    const c = mount();
+
+    vi.setSystemTime(new Date(2026, 8, 1, 0, 1));
+    c.step(1);
+    c.step(-1);
+
+    expect(ym(c.month())).toEqual([2026, 7]);
+  });
+
+  /** The ordinary case, so the fix is not just "pinned to whatever the first read was". */
+  it('still steps a month at a time well away from a boundary', () => {
+    clockAt(2026, 2, 15, 12, 0); // 15 March 2026
+    const c = mount();
+    expect(ym(c.month())).toEqual([2026, 2]);
+
+    c.step(1);
+    expect(ym(c.month())).toEqual([2026, 3]);
+    c.step(10);
+    expect(ym(c.month())).toEqual([2027, 1]); // wraps the year
   });
 });

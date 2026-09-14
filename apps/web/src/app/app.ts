@@ -4,6 +4,7 @@ import {
   computed,
   inject,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
@@ -39,6 +40,22 @@ import { Logo } from '@core/brand/logo';
 export class App {
   private readonly router = inject(Router);
   private readonly mobile = inject(MobileApp);
+  private readonly doc = inject(DOCUMENT);
+
+  /**
+   * Moves focus past the header, to the start of the page's content.
+   *
+   * Focus, not just scroll. A skip link that only scrolls leaves focus in the header, so the
+   * reader's next Tab walks straight back into the navigation they just asked to skip — the
+   * link appears to work and changes nothing. `<main>` carries `tabindex="-1"` so it can
+   * receive focus without joining the tab order.
+   */
+  protected skipToContent(): void {
+    // `focus()` alone. It scrolls the element into view itself unless asked not to, so the
+    // `scrollIntoView` that was here bought nothing — and threw outright in any environment
+    // that does not implement it, which is every test runner.
+    this.doc.getElementById('main-content')?.focus();
+  }
 
   /** True while startup is still resolving the session and the country. */
   protected readonly startingUp = inject(StartupGate).busy;

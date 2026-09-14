@@ -28,12 +28,31 @@ export interface HostSummary {
   verified: boolean;
 }
 
+/**
+ * A gallery photo and the label the host filed it under.
+ *
+ * `label` is null when the photo has none — the key absent, an explicit null, or blank,
+ * all of which mean the same thing and group together. See `photoLabel`.
+ */
+export interface ListingPhoto {
+  url: string;
+  label: string | null;
+}
+
 export interface Listing {
   id: string;
   slug: string;
   name: string;
   area: string;
   city: string;
+  /**
+   * Which country the hostel is in — what its clock runs on.
+   *
+   * Only the detail payload carries it, so it is absent on search cards. Read when a booking
+   * is built: check-in is 2pm at the hostel, not 2pm wherever the guest is browsing from.
+   * See `countryTimeZone`.
+   */
+  country?: string;
   accommodationType: AccommodationType;
   /** `month` | `night` from the serializer, or absent. See `periodFromBillingFrequency`. */
   billingFrequency?: string;
@@ -53,7 +72,14 @@ export interface Listing {
   discountedPriceFrom?: number;
   priceByCapacity?: Record<string, number>; // capacity key ('1'|'2'|'3'|'4'|'5+') → price
   currency?: string; // ISO-4217 code the prices are quoted in (e.g. 'PKR', 'USD')
+  /**
+   * Photo urls in wire order — the hero, the JSON-LD and anything that just needs a src.
+   *
+   * Kept beside {@link ListingDetail.photos} rather than derived from it at each call site,
+   * because most consumers want a url and nothing else.
+   */
   images: string[];
+
   lat: number;
   lng: number;
   rooms?: Room[];

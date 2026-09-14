@@ -76,7 +76,16 @@
     "clearSearch": "Clear search",
     "closeTimePicker": "Close time picker",
     "chooseTime": "Choose time",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "closePropertyMenu": "Close property menu",
+    "goToPhotoN": "Go to photo {{n}}",
+    "removeFrom": "Remove {{title}}",
+    "removeOneFrom": "Remove one from {{title}}",
+    "onePhotoAtATime": "One photo at a time",
+    "allPhotosByGroup": "All photos, grouped",
+    "fewerGuestsIn": "Fewer guests in {{title}}",
+    "moreGuestsIn": "More guests in {{title}}",
+    "skipToContent": "Skip to content"
   },
   "account": {
     "accountMenu": "Account menu",
@@ -99,11 +108,13 @@
   "adminAdminContracts": {
     "contracts": "Contracts",
     "noContractsMatchThisFilter": "No contracts match this filter",
-    "term": "Term"
+    "term": "Term",
+    "searchContractsByHostel": "Search contracts by hostel"
   },
   "adminAdminListings": {
     "allListings": "All listings",
-    "noListingsFound": "No listings found"
+    "noListingsFound": "No listings found",
+    "searchListingsByHostel": "Search listings by hostel"
   },
   "adminAdminPayments": {
     "payments": "Payments",
@@ -113,7 +124,8 @@
     "transactionId": "Transaction ID",
     "created": "Created",
     "contract": "Contract",
-    "product": "Product"
+    "product": "Product",
+    "searchPaymentsByHostel": "Search payments by hostel"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roles & permissions",
@@ -280,6 +292,7 @@
     "dinner": "Dinner",
     "teamAmpStaff": "Team & staff",
     "accountSettings": "Account settings",
+    "passwordAmpSecurity": "Password & security",
     "someRequiredFieldsAre": "Some required fields are missing",
     "uploading": "Uploading…",
     "listingProgress": "Listing progress",
@@ -372,10 +385,20 @@
     "enterDescription": "Enter description",
     "enterLandmarks": "Enter nearby landmarks",
     "enterReason": "Enter a reason",
-    "enterNote": "Enter a note"
+    "enterNote": "Enter a note",
+    "somethingWentWrongReachingThe": "Something went wrong reaching the server.",
+    "weDLikeToCountPage": "We'd like to count page views to see which hostels and cities people look for, so we can improve search. No personal details are sent, and this has nothing to do with staying signed in.",
+    "noThanks": "No thanks",
+    "password": "Password",
+    "selectYear": "Select year",
+    "allow": "Allow",
+    "noPhotosYet": "No photos yet",
+    "guests": "Guests",
+    "copy": "Copy"
   },
   "coreForbidden": {
-    "accessBlocked": "Access blocked"
+    "accessBlocked": "Access blocked",
+    "youDonTHavePermission": "You don't have permission to view this area."
   },
   "currency": {
     "searchNameOrCode": "Search name or code…",
@@ -489,7 +512,31 @@
     "cancelledByOn": "Cancelled by {{by}} on {{date}}",
     "pkrPenaltyChargedToYou": "PKR {{amount}} penalty charged to you",
     "pkrToYou": "PKR {{amount}} to you",
-    "thisGuest": "this guest"
+    "thisGuest": "this guest",
+    "dayLedger": "Day ledger",
+    "pendingAllotments": "Pending allotments",
+    "askedFor": "Asked for",
+    "noContactDetailsOnThis": "No contact details on this booking",
+    "recordABooking": "Record a booking",
+    "whoIsStaying": "Who is staying",
+    "onlyIfTheyHaveOne": "Only if they have one",
+    "addARoom": "Add a room",
+    "toCollectAtTheDesk": "To collect at the desk",
+    "createBooking": "Create booking",
+    "theRoomsForThisProperty": "The rooms for this property could not be loaded.",
+    "everyRoomEveryState": "Every room, every state — tap a day for its ledger",
+    "thisMonthSCalendarCould": "This month's calendar could not be loaded.",
+    "nothingIsWaitingOnYou": "Nothing is waiting on you for this day.",
+    "pickTheDatesFirst": "Pick the dates first — what is free depends on them.",
+    "noRoomsOnThisProperty": "No rooms on this property yet.",
+    "bookingCalendar": "Booking calendar",
+    "assignRoom": "Assign room",
+    "noteFromGuest": "Note from guest",
+    "savedAs": "Saved as",
+    "checkInCheckOut": "Check in — check out",
+    "aNightRuns12": "A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.",
+    "discount": "Discount",
+    "saveBooking": "Save booking"
   },
   "hostExpenses": {
     "allTypes": "All types",
@@ -521,7 +568,8 @@
     "updateHostel": "Update hostel",
     "reviewTitle": "This will send your listing back for review",
     "reviewBody": "You changed the following. Your listing will be reviewed again, and guests will not see it until it is approved.",
-    "reviewConfirm": "Save and send for review"
+    "reviewConfirm": "Save and send for review",
+    "weCouldnTLoadYour": "We couldn't load your hostel."
   },
   "hostInvoices": {
     "selectATenant": "Select a tenant",
@@ -547,7 +595,9 @@
     "billedTo": "Billed to",
     "issued": "Issued",
     "due": "Due",
-    "thisWillPermanentlyDeleteInvoice": "This will permanently delete invoice"
+    "thisWillPermanentlyDeleteInvoice": "This will permanently delete invoice",
+    "invoicesAppearHereOnceYou": "Invoices appear here once you issue rent or utility bills.",
+    "tryAdjustingYourFilters": "Try adjusting your filters."
   },
   "hostMess": {
     "pickADate": "Pick a date",
@@ -607,7 +657,8 @@
     "last12MonthsPkr": "Last 12 months · PKR",
     "last30DaysPkr": "Last 30 days · PKR",
     "uploadingReceipt": "Uploading receipt…",
-    "nPhotosAttached": "{{count}} photos attached"
+    "nPhotosAttached": "{{count}} photos attached",
+    "logYourBulkGroceryPurchases": "Log your bulk grocery purchases to keep track of mess spend."
   },
   "hostMore": {
     "property": "Property",
@@ -651,7 +702,20 @@
     "pctVsLastMonth": "{{pct}}% vs last month",
     "nTenantsUnpaid": "{{count}} tenants unpaid",
     "moveInsAndOuts": "Move-ins and move-outs",
-    "pctBedsFilled": "Percentage of beds filled"
+    "pctBedsFilled": "Percentage of beds filled",
+    "weCouldnTLoadTenant": "We couldn't load tenant movement data.",
+    "weCouldnTLoadOccupancy": "We couldn't load occupancy data.",
+    "weCouldnTLoadAnalytics": "We couldn't load analytics for this property.",
+    "allUtilityInvoicesAreSettled": "All utility invoices are settled.",
+    "noInvoicesForThisProperty": "No invoices for this property yet.",
+    "weCouldnTLoadRevenue": "We couldn't load revenue data.",
+    "upcomingBookings": "Upcoming bookings",
+    "nArriving": "{{count}} arriving",
+    "nLeaving": "{{count}} leaving",
+    "nothingBookedYet": "Nothing booked yet",
+    "noArrivalsOrDeparturesAhead": "No arrivals or departures in the next two weeks.",
+    "inOverOutPerDay": "Arrivals over departures, per day",
+    "viewAllBookings": "View all bookings →"
   },
   "hostRooms": {
     "calendarTab": "Calendar",
@@ -707,7 +771,13 @@
     "createRooms": "Create rooms",
     "bedsOccupiedOf": "{{filled}} of {{total}} beds occupied",
     "nOfMBooked": "{{booked}} of {{capacity}} booked",
-    "nNoLongerActive": "{{count}} no longer active"
+    "nNoLongerActive": "{{count}} no longer active",
+    "dayRoster": "Day roster",
+    "pickADay": "Pick a day.",
+    "nobodyInThisRoomThat": "Nobody in this room that day.",
+    "thisRoomCurrentlyHasNo": "This room currently has no active tenants.",
+    "addYourFirstRoomTo": "Add your first room to start tracking occupancy.",
+    "bedNumbersAreNotAssigned": "Bed numbers are not assigned yet — the calendar reports how many beds are taken, not which one each guest is in."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Couldn't load your subscription",
@@ -761,7 +831,11 @@
     "thenRsPerPeriod": "Then Rs {{price}} / {{period}}",
     "paymentStarted": "Payment started",
     "payRs": "Pay Rs {{amount}}",
-    "selectAProduct": "Select a product"
+    "selectAProduct": "Select a product",
+    "invoicesAppearHereAfterYour": "Invoices appear here after your first charge.",
+    "pleaseCheckYourConnectionAnd": "Please check your connection and try again.",
+    "youDonTHaveAn": "You don't have an active plan yet. Browse the plans below to get started.",
+    "checkBackSoonPlans": "Check back soon — plans will appear here."
   },
   "hostTeam": {
     "staffPhoto": "Staff photo",
@@ -773,7 +847,6 @@
     "salaryIssueDate": "Salary issue date",
     "chooseAnImageFromYour": "Choose an image from your files",
     "managerAccess": "Manager access",
-    "thisPersonAlreadyHasAn": "This person already has an account, so there is nothing to set up — leaving the toggle on gives them manager access to this hostel when you save.",
     "employment": "Employment",
     "upload": "Upload",
     "scopedToThisHostelOnly": "Scoped to this hostel only.",
@@ -792,7 +865,11 @@
     "fromTheTeamThisAction": "from the team. This action cannot be undone.",
     "keepsTheirStaffRecordBut": "keeps their staff record but can no longer sign in or manage this hostel.",
     "createsLoginFor": "Creates a login so {{name}} can manage this hostel.",
-    "thisStaffMember": "this staff member"
+    "thisStaffMember": "this staff member",
+    "existingAccountKeepsPassword": "If this email already has an account, its current password is kept — yours is only used if a new account is created.",
+    "storedEmailBecomesLogin": "Their stored email will be the login. If that address already has an account, they keep its password.",
+    "pickADifferentStatusTo": "Pick a different status to see the rest of your team.",
+    "addAWardenCookOr": "Add a warden, cook or guard to keep their salary and documents on file."
   },
   "hostTenants": {
     "tenantPhoto": "Tenant photo",
@@ -857,7 +934,10 @@
     "roomNotAvailableForTheseDates": "Room not available for these dates",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
-    "leavingDate": "Leaving date"
+    "leavingDate": "Leaving date",
+    "thisTenantHasNoRent": "This tenant has no rent invoices on record yet.",
+    "noUtilityChargesHaveBeen": "No utility charges have been recorded for this tenant's room.",
+    "checkInYourFirstTenant": "Check in your first tenant to start tracking rent."
   },
   "hostUtilities": {
     "ratePerUnit": "Rate per unit",
@@ -897,7 +977,9 @@
     "shareFormulaStart": "Share = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} occupancy-days",
     "rsUnallocated": "Rs {{amount}} unallocated",
-    "rsOver": "Rs {{amount}} over"
+    "rsOver": "Rs {{amount}} over",
+    "pickARoomWithActive": "Pick a room with active tenants to split the bill.",
+    "addAUtilityBillTo": "Add a utility bill to start tracking usage and charges."
   },
   "hostelForm": {
     "accommodationFor": "Accommodation for",
@@ -908,7 +990,12 @@
     "pricedPerMonth": "Every room is priced per month. Seekers enquire rather than book.",
     "selectedCount": "{{count}} selected",
     "noRoomsYet": "No rooms added yet.",
-    "roomTypeDescription": "Room type description"
+    "roomTypeDescription": "Room type description",
+    "couldnTCheckWhichRooms": "Couldn't check which rooms use this type. Try again.",
+    "findingTheRoomsBuiltOn": "Finding the rooms built on {{name}}…",
+    "moveAllRoomsTo": "Move all rooms to",
+    "selectARoomType": "Select a room type",
+    "noRoomsAreBuiltOn": "No rooms are built on {{name}}, so nothing else changes. It is removed when you save."
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Now click an end date",
@@ -923,7 +1010,8 @@
     "and": "and",
     "weSentASigned24": "We sent a signed 24-hour verification link to",
     "clickingItActivatesYourAccount": ". Clicking it activates your account and reveals the number.",
-    "iVeVerifiedContinue": "I've verified — continue"
+    "iVeVerifiedContinue": "I've verified — continue",
+    "confirmPassword": "Confirm password"
   },
   "listing": {
     "verified": "Verified",
@@ -974,18 +1062,33 @@
     "signInToBook": "Sign in to book",
     "pickYourRoomOnce": "Pick your room once you're signed in",
     "createAFreeAccountToBook": "Create a free account to choose rooms and hold them while you decide. It only takes 30 seconds.",
-    "roomsAmpPricing": "Rooms & pricing"
+    "andNMore": "+{{count}} more",
+    "favorite": "Favorite",
+    "showPhoneNumber": "Show phone number",
+    "showAllNReviews": "Show all {{count}} reviews",
+    "hostSince": "Host since {{year}}",
+    "writeAReview": "Write a review",
+    "roomSummary": "{{beds}} beds · {{types}} room types · {{sharing}} sharing options",
+    "nSharingAvailable": "{{labels}}-sharing available",
+    "bookNow": "Book now",
+    "nPhotos": "{{count}} photos",
+    "otherPhotos": "Others"
   },
   "maps": {
     "searchAddressPlaceholder": "Search an address or landmark…",
-    "searchCityOrArea": "Search city or area"
+    "searchCityOrArea": "Search city or area",
+    "satellite": "Satellite",
+    "noMatchingPlaces": "No matching places",
+    "poweredByOpenstreetmap": "Powered by OpenStreetMap",
+    "noCoordinatesSetFor": "No coordinates set for this listing."
   },
   "moderatorAudit": {
     "auditLog": "Audit log",
     "noMatchingActivity": "No matching activity",
     "allModerators": "All moderators",
     "last7Days": "Last 7 days",
-    "loadOlderEntries": "Load older entries"
+    "loadOlderEntries": "Load older entries",
+    "tryADifferentActionFilter": "Try a different action filter or date range."
   },
   "moderatorMedia": {
     "mediaQueue": "Media queue",
@@ -1018,11 +1121,19 @@
     "allApproved": "All approved!",
     "doneNFailed": "Done — {{count}} failed",
     "nPhotosFailedRetry": "{{count}} photos failed — you can retry from the queue.",
-    "approving": "Approving…"
+    "approving": "Approving…",
+    "newUploadsWillAppearHere": "New uploads will appear here for approval.",
+    "allStatuses": "All statuses",
+    "allLabels": "All labels",
+    "unlabelled": "Unlabelled",
+    "nothingMatchesThisFilter": "Nothing matches this filter",
+    "tryAnotherLabelOrShowAll": "Try another label, or show them all.",
+    "showAllLabels": "Show all labels"
   },
   "moderatorQueue": {
     "reviewQueue": "Review queue",
-    "queueIsClear": "Queue is clear"
+    "queueIsClear": "Queue is clear",
+    "noSubmissionsAreWaitingFor": "No submissions are waiting for review."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Approval failed — try again.",
@@ -1097,7 +1208,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Tips, guides, and updates from the HostelHive team",
     "comingSoon": "Coming soon",
-    "weReWorkingOnSome": "We're working on some great content about student life, hostel tips, and city guides across Pakistan. Stay tuned!"
+    "weReWorkingOnSome": "We're working on some great content about student life, hostel tips, and city guides across Pakistan. Stay tuned!",
+    "onThisPage": "On this page",
+    "theHostelhiveTeam": "The HostelHive team",
+    "keepReading": "Keep reading",
+    "blogHomePage": "Browse the blog home page.",
+    "filterArticlesByCategory": "Filter articles by category",
+    "archiveLayout": "Archive layout",
+    "everyArticle": "Every article",
+    "theHostelhiveJournal": "The HostelHive journal",
+    "guidesForFindingARoom": "Guides for finding a room — and a bed for the night.",
+    "whatHostelsActuallyCost": "What hostels actually cost city by city, which areas suit which campus, and where to sleep from Johar Town to the Karakoram. Written from listings and from the road.",
+    "allPosts": "All posts",
+    "grid": "Grid",
+    "index": "Index",
+    "nMinRead": "{{count}} min read",
+    "nMin": "{{count}} min",
+    "article": "Article",
+    "category": "Category",
+    "published": "Published",
+    "read": "Read",
+    "nothingFiledHereYet": "Nothing filed here yet.",
+    "lookingForARoomRather": "Looking for a room rather than a guide?",
+    "everyListingShowsTheRent": "Every listing shows the rent per bed or per room, what is included, and who runs it.",
+    "swipeTheTableToSee": "Swipe the table to see every column",
+    "weVerifyListingsAcross": "We verify listings across Pakistan and write what we learn doing it.",
+    "weCouldnTFindThatPost": "We couldn’t find that post",
+    "theLinkMayBeOld": "The link may be old, or the address slightly off.",
+    "browseEveryPostInstead": "Browse every post instead.",
+    "readTheGuide": "Read the guide"
   },
   "publicBooking": {
     "sleepsN": "Sleeps {{count}}",
@@ -1110,7 +1249,15 @@
     "bookingSent": "Booking sent",
     "weLlEmailYouWhenConfirmed": "We'll email you as soon as the hostel confirms it.",
     "couldnTBook": "Couldn't complete the booking",
-    "noRoomsListed": "This hostel has not listed any rooms yet."
+    "noRoomsListed": "This hostel has not listed any rooms yet.",
+    "pricesArePerRoom": "Prices are per room",
+    "pricesArePerBed": "Prices are per bed",
+    "guestDetails": "Guest details",
+    "enterTheGuestName": "Enter the guest's name",
+    "enterAValidPhone": "Enter a valid phone number",
+    "enterAValidEmail": "Enter a valid email address",
+    "ofNSeats": "of {{count}}",
+    "bookingReference": "Booking reference"
   },
   "publicCareers": {
     "joinUsInBuildingPakistan": "Join us in building Pakistan's #1 hostel platform",
@@ -1175,7 +1322,9 @@
     "add": "Add",
     "showAllNPhotos": "Show all {{count}} photos",
     "genderHostelHostedBy": "{{gender}} hostel hosted by {{host}}",
-    "bookARoom": "Book a room"
+    "bookARoom": "Book a room",
+    "theListingMayHaveBeen": "The listing may have been removed or the link is incorrect.",
+    "chooseYourRoom": "Choose your room"
   },
   "publicOnboarding": {
     "visitProfile": "Visit profile",
@@ -1253,7 +1402,8 @@
     "locating": "Locating…"
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Drag & drop, upload, or take a photo"
+    "dragAmpDropUploadOr": "Drag & drop, upload, or take a photo",
+    "replaceAdd": "Replace / add"
   },
   "states": {
     "nothingHereYet": "Nothing here yet",
@@ -1265,7 +1415,18 @@
   },
   "subscriptionGate": {
     "unlockFeature": "Unlock {{feature}}",
-    "thisFeature": "This feature"
+    "thisFeature": "This feature",
+    "dashboardOverview": "Dashboard overview",
+    "roomManagement": "Room management",
+    "tenantManagement": "Tenant management",
+    "utilityBilling": "Utility billing",
+    "thisFeatureIsAvailable": "This feature is available on paid plans. Subscribe to get full access to your hostel dashboard.",
+    "completeHostelProfileFirst": "Complete hostel profile first",
+    "onceSubscribedAllFeatures": "Once subscribed, all features unlock automatically.",
+    "roomAmpOccupancyManagement": "Room & occupancy management",
+    "tenantTrackingAmpPayment": "Tenant tracking & payment records",
+    "rentAndUtilityInvoice": "Rent and utility invoice generation",
+    "analyticsAndRevenueReports": "Analytics and revenue reports"
   },
   "userAccountShell": {
     "manageYourProfileSavedHostels": "Manage your profile, saved hostels and preferences."
@@ -1281,7 +1442,8 @@
     "refundsReachYourOriginalPayment": "Refunds reach your original payment method within 5 working days.",
     "pkrPaid": "PKR {{amount}} paid",
     "cancelledSummary": "Cancelled {{date}} · PKR {{refund}} refunded · PKR {{charge}} cancellation charge",
-    "cancelRefundExplainer": "You'll get <strong class=\"tabular-nums\">PKR {{refund}}</strong> back. <strong class=\"tabular-nums\">PKR {{charge}}</strong> is kept as a cancellation charge, because you're cancelling {{pct}}% into the schedule."
+    "cancelRefundExplainer": "You'll get <strong class=\"tabular-nums\">PKR {{refund}}</strong> back. <strong class=\"tabular-nums\">PKR {{charge}}</strong> is kept as a cancellation charge, because you're cancelling {{pct}}% into the schedule.",
+    "whenYouBookAHostel": "When you book a hostel, it will show up here with your dates and what you paid."
   },
   "userFavorites": {
     "removeFromFavorites": "Remove from favorites?",
@@ -1290,7 +1452,8 @@
     "noFavoritesYet": "No favorites yet",
     "saveHostelsYouLikeAnd": "Save hostels you like and find them here.",
     "browseHostels": "Browse hostels",
-    "fromYourSavedHostels": "from your saved hostels?"
+    "fromYourSavedHostels": "from your saved hostels?",
+    "weCouldnTLoadYour": "We couldn't load your favorites."
   },
   "userSecurity": {
     "currentPassword": "Current password",

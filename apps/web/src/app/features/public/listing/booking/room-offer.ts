@@ -95,10 +95,52 @@ export interface BasketLine {
   actualPrice: number;
   /** Only meaningful on a private line — a shared line seats exactly its bed count. */
   capacity: number;
+  /**
+   * How many people are on this line — what the booking sends as the line's `guests`.
+   *
+   * On a shared line this is the bed count and nothing else: beds are sold one to a person,
+   * so there is no second number to ask for. On a private line it is a real question with a
+   * real answer — two rooms sleeping four each might be a party of eight or a party of five —
+   * so it starts at the full capacity and the guest can bring it down.
+   */
+  guests: number;
 }
 
-/** Turns an offer into a basket line, snapshotting both prices. */
-export function lineFor(offer: RoomOffer, quantity: number): BasketLine {
+/** The most people a line can seat: its beds, or its rooms' capacity. */
+export function lineGuestCapacity(kind: RoomKind, capacity: number, quantity: number): number {
+  return kind === 'shared' ? quantity : capacity * quantity;
+}
+
+/**
+ * A headcount this line can actually seat.
+ *
+ * Clamped rather than rejected: the places that produce a number here are a stepper and a
+ * quantity change underneath an existing choice, and neither is somewhere to raise an error.
+ */
+export function clampLineGuests(
+  kind: RoomKind,
+  capacity: number,
+  quantity: number,
+  guests: number,
+): number {
+  // A shared line is not a range. Beds are sold one to a person, so its headcount *is* its
+  // bed count — three beds for one guest is two beds nobody is sleeping in and paying for.
+  // Enforced here rather than by the rail simply not drawing a stepper, so the invariant
+  // holds for every caller rather than for the one that happens to be careful.
+  if (kind === 'shared') return quantity;
+  const most = lineGuestCapacity(kind, capacity, quantity);
+  if (most <= 0) return 0;
+  return Math.min(Math.max(Math.round(guests), 1), most);
+}
+
+/**
+ * Turns an offer into a basket line, snapshotting both prices.
+ *
+ * `guests` defaults to the line's full capacity, which is what the basket assumed before it
+ * asked at all — so a guest who never touches the control books exactly what they used to.
+ */
+export function lineFor(offer: RoomOffer, quantity: number, guests?: number): BasketLine {
+  const most = lineGuestCapacity(offer.kind, offer.capacity, quantity);
   return {
     roomId: offer.id,
     title: offer.title,
@@ -107,6 +149,10 @@ export function lineFor(offer: RoomOffer, quantity: number): BasketLine {
     unitPrice: effectivePrice(offer),
     actualPrice: offer.actualPrice,
     capacity: offer.capacity,
+    guests:
+      guests === undefined
+        ? most
+        : clampLineGuests(offer.kind, offer.capacity, quantity, guests),
   };
 }
 

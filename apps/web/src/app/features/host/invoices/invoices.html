@@ -1,4 +1,4 @@
-<app-dashboard-layout [label]="'common.invoices' | transloco">
+<app-dashboard-layout [label]="'common.invoices' | transloco" [backUrl]="backUrl()">
   <!-- Icon-only below sm so the pair fits a 375px header without pushing the title out. -->
   <div hhActions class="flex shrink-0 items-center gap-2">
     <button
@@ -30,14 +30,14 @@
       />
     </div>
   } @else if (s.subscriptionError) {
-    <hh-subscription-gate feature="Invoices" />
+    <hh-subscription-gate [feature]="'common.invoices' | transloco" />
   } @else if (s.error) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
   } @else if ((!s.data || s.data.length === 0) && !hasActiveFilters() && filter() === 'all') {
     <hh-empty-state
       icon="ti-file-invoice"
       [title]="'hostInvoices.noInvoicesYet' | transloco"
-      message="Invoices appear here once you issue rent or utility bills."
+      [message]="'hostInvoices.invoicesAppearHereOnceYou' | transloco"
     />
   } @else {
     <!-- Filters + scope search -->
@@ -119,7 +119,7 @@
       <hh-empty-state
         icon="ti-filter-off"
         [title]="'hostInvoices.noInvoicesMatch' | transloco"
-        message="Try adjusting your filters."
+        [message]="'hostInvoices.tryAdjustingYourFilters' | transloco"
       />
     } @else {
       <hh-data-table
@@ -138,7 +138,7 @@
 
     @if (menuInv(); as inv) {
       @if (menuPos(); as pos) {
-        <hh-context-menu [top]="pos.top" [right]="pos.right" (close)="closeMenu()">
+        <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
           <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:update'">
             <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
             {{ 'common.edit' | transloco }}
@@ -278,7 +278,7 @@
 
 @if (addOpen()) {
   <hh-invoice-form-drawer
-    (saved)="onInvoiceCreated()"
+    (saved)="onInvoiceCreated($event)"
     (closed)="closeAdd()"
   />
 }
@@ -289,7 +289,7 @@
 @if (editingInvoice(); as inv) {
   <hh-invoice-form-drawer
     [invoice]="inv"
-    (saved)="onInvoiceUpdated()"
+    (saved)="onInvoiceUpdated($event)"
     (closed)="closeEdit()"
   />
 }

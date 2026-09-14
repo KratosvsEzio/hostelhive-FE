@@ -11,15 +11,16 @@ import {
 import { DOCUMENT, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, distinctUntilChanged, fromEvent, map, of, switchMap, take } from 'rxjs';
+import { Subject, catchError, distinctUntilChanged, fromEvent, map, of, startWith, switchMap, take } from 'rxjs';
 import { AMENITIES, AccommodationType, iconForSlug } from '@hostelhive/data-access';
 import { translate } from '@jsverse/transloco';
-import { Avatar, Badge, Button, EmptyState, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
+import { Avatar, Badge, Button, DialogFocus, EmptyState, ErrorState, PhotoPlaceholder, Skeleton, TooltipFixed, Container } from '@hostelhive/ui';
 import { StaticMap } from '@hostelhive/maps';
 import { HostelPhoneDetail, HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
+import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
 import { MobileApp } from '@core/mobile-app';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import {
@@ -28,11 +29,13 @@ import {
   periodFromBillingFrequency,
   periodLabel,
 } from '@util/pricing-period';
-import { localDay } from '@util/api-date';
 import { NotificationService } from '@core/notification.service';
+import { OverflowProbe } from '@app/shared/overflow-probe/overflow-probe';
+import { LazySrc } from '@app/shared/lazy-src/lazy-src';
 import { BookingBasket } from '../booking/booking-basket';
 import { BookingRail } from '../booking/booking-rail';
 import { BookingSummary } from '../booking/booking-summary';
+import { BookingGuest } from '../booking/booking-request';
 import { BookingApi } from '../booking/booking-api';
 import { RoomPicker } from '../booking/room-picker';
 import { canBookOnline } from '../booking/room-offer';
@@ -44,14 +47,60 @@ import {
 } from '@util/accommodation-type';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
+import { MoneyPipe } from '@app/shared/currency/money.pipe';
 import { ApiDate } from '@util/api-date';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { Filmstrip, filmstrip, wrapIndex } from './filmstrip';
+import { PhotoGroup, groupedOrder, photoGroups } from './photo-groups';
 import { LocaleStore } from '@core/i18n/locale-store';
+
+/** How many thumbnails fill the mosaic exactly, for the number of photos left after the hero. */
+function thumbCount(spare: number): 0 | 1 | 2 | 4 {
+  if (spare >= 4) return 4;
+  if (spare >= 2) return 2;
+  if (spare >= 1) return 1;
+  return 0;
+}
+
+/**
+ * Written out in full because Tailwind reads these files as text — a class assembled as
+ * `sm:grid-cols-${n}` is a class Tailwind never sees and never emits.
+ */
+const GALLERY_GRID: Record<number, string> = {
+  0: '',
+  1: 'sm:grid-cols-2 sm:grid-rows-2',
+  2: 'sm:grid-cols-3 sm:grid-rows-2',
+  4: 'sm:grid-cols-4 sm:grid-rows-2',
+};
+
+const GALLERY_HERO: Record<number, string> = {
+  0: '',
+  1: 'sm:row-span-2',
+  2: 'sm:col-span-2 sm:row-span-2',
+  4: 'sm:col-span-2 sm:row-span-2',
+};
 
 interface ViewState {
   loading: boolean;
+  /**
+   * The request failed — as opposed to succeeding and finding nothing.
+   *
+   * The distinction is the whole point: the template branched on `!data` alone, so a dropped
+   * connection told the seeker "this listing may have been removed" and offered them the
+   * search page. For an audience on patchy mobile connections, that is the worst available
+   * answer — it is wrong, it is final, and it sends them away from a hostel that exists.
+   */
   error: boolean;
+  /**
+   * The failure was a lost connection, not a server that answered.
+   *
+   * Status 0 is offline, a dropped request, a blocked origin. The error component already
+   * carries the right words for it — "Can't connect / Check your connection" — and the page
+   * was never telling it which case this was, so a seeker on a train got "Something went
+   * wrong", which sounds like the site is broken rather than like their signal went.
+   */
+  networkError: boolean;
   data: ListingDetailModel | null;
 }
 
@@ -66,12 +115,18 @@ interface ViewState {
     Avatar,
     Badge,
     Button,
+    DialogFocus,
     EmptyState,
+    ErrorState,
+    OverflowProbe,
+    LazySrc,
+    PhotoPlaceholder,
     Skeleton,
     StaticMap,
     TooltipFixed,
     CurrencySymbolPipe,
     CurrencyNamePipe,
+    MoneyPipe,
     RoomPicker,
     BookingRail,
     BookingSummary,
@@ -268,6 +323,8 @@ export class ListingDetail {
   protected readonly summaryOpen = signal(false);
   protected readonly booking = signal(false);
   protected readonly bookingError = signal('');
+  /** Set once the booking exists — turns the summary modal into its receipt. */
+  protected readonly bookingRef = signal<string | null>(null);
 
   /**
    * Book now. Browsing and building a basket are open to anyone; completing a booking is not.
@@ -287,6 +344,7 @@ export class ListingDetail {
       return;
     }
     this.bookingError.set('');
+    this.bookingRef.set(null);
     this.summaryOpen.set(true);
   }
 
@@ -295,6 +353,10 @@ export class ListingDetail {
     // modal closes, and a guest who saw it vanish would reasonably try again.
     if (this.booking()) return;
     this.summaryOpen.set(false);
+    // Cleared on the way out, not on the way in: the modal is still on screen while it
+    // closes, and blanking the reference first would flip it back to the review it is no
+    // longer about.
+    this.bookingRef.set(null);
   }
 
   /**
@@ -304,28 +366,47 @@ export class ListingDetail {
    * still the rooms they want, and making them choose again is a second punishment for the
    * first problem.
    */
-  protected confirmBooking(): void {
+  protected confirmBooking(guest: BookingGuest): void {
     const listing = this.state().data;
     const from = this.basket.checkIn();
     const to = this.basket.checkOut();
     if (!listing || !from || !to || this.booking()) return;
 
+    // `POST /api/bookings` is authenticated — signed out it answers 401, which would surface
+    // as a failure the guest can do nothing about. Sent to the Log in tab and returned here,
+    // the same way favouriting is, with the basket still assembled when they come back.
+    if (!this.session.isAuthenticated()) {
+      void this.router.navigate(['/auth'], {
+        queryParams: { mode: 'login', returnUrl: this.router.url },
+      });
+      return;
+    }
+
     this.booking.set(true);
     this.bookingError.set('');
     this.bookingApi
-      .requestBooking({
-        hostel_id: String(listing.id),
-        check_in: localDay(from),
-        check_out: localDay(to),
-        guests: this.basket.guests(),
-        lines: this.basket.lines().map((l) => ({ room_id: l.roomId, quantity: l.quantity })),
+      .createBooking({
+        hostelId: String(listing.id),
+        hostelCountry: listing.country,
+        checkIn: from,
+        checkOut: to,
+        lines: this.basket.lines(),
+        guest,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (created) => {
           this.booking.set(false);
-          this.summaryOpen.set(false);
           this.basket.clear();
+          if (created.reference) {
+            // The modal stays up and becomes the receipt. A reference is the one thing the
+            // guest has to keep hold of, and a toast takes itself off the screen before
+            // anybody has written it down.
+            this.bookingRef.set(created.reference);
+            return;
+          }
+          // No reference came back, so there is nothing to keep them here for.
+          this.summaryOpen.set(false);
           this.notifications.success(
             translate('publicBooking.bookingSent'),
             translate('publicBooking.weLlEmailYouWhenConfirmed'),
@@ -362,15 +443,63 @@ export class ListingDetail {
     if (listing) this.favorites.toggle(listing);
   }
 
-  private readonly _state = signal<ViewState>({ loading: true, error: false, data: null });
+  private readonly _state = signal<ViewState>({ loading: true, error: false, networkError: false, data: null });
   protected readonly state = this._state.asReadonly();
 
-  protected readonly lightboxIndex = signal<number | null>(null);
-  protected readonly lightboxImages = computed(() => this.state().data?.images ?? []);
+  /** Fires when the seeker asks for another go after a failed load. */
+  private readonly reload$ = new Subject<void>();
 
-  /** Gallery thumbnails — up to 4 images after the hero to fill the 2×2 grid. */
-  protected readonly thumbs = computed(
-    () => this.state().data?.images.slice(1, 5) ?? [],
+  protected reload(): void {
+    this.reload$.next();
+  }
+
+  protected readonly lightboxIndex = signal<number | null>(null);
+  /**
+   * Which layout the gallery is showing.
+   *
+   * A view preference, not a route: it opens on the carousel every time, because that is
+   * what the hero photo the reader just clicked leads to.
+   */
+  protected readonly galleryView = signal<'one' | 'grid'>('one');
+
+  /** The gallery in sections — see {@link photoGroups}. */
+  protected readonly photoSections = computed<PhotoGroup[]>(() =>
+    photoGroups(this.state().data?.photos ?? []),
+  );
+
+  /**
+   * The carousel walks the grouped order, not the wire order.
+   *
+   * So an index means the same photo in both layouts: clicking the second photo of the
+   * third section opens the carousel on that photo. Identical to the wire order until
+   * hosts start labelling, since one unlabelled group preserves it.
+   */
+  protected readonly lightboxImages = computed(() =>
+    groupedOrder(this.photoSections()).map((p) => p.url),
+  );
+
+  /**
+   * Gallery thumbnails, cut to a number that leaves no holes.
+   *
+   * The mosaic was a fixed 4-column, 2-row band with the hero spanning 2×2 — a shape that
+   * only works with exactly four thumbnails. A listing with one photo rendered the hero into
+   * the left half and left the right half of a 420px band blank, with the "Show all 1 photos"
+   * button floating in the white space. Most listings are not photographed like show homes.
+   *
+   * So the grid follows the photos rather than the other way round: 4, 2, 1 or none, with the
+   * column count to match. Three spare photos show two — dropping one from the mosaic is
+   * better than a gap in it, and the lightbox still carries every image.
+   */
+  protected readonly thumbs = computed(() => {
+    const images = this.state().data?.images ?? [];
+    return images.slice(1, 1 + thumbCount(Math.max(0, images.length - 1)));
+  });
+
+  protected readonly galleryGridClass = computed(
+    () => GALLERY_GRID[this.thumbs().length] ?? GALLERY_GRID[4],
+  );
+  protected readonly galleryHeroClass = computed(
+    () => GALLERY_HERO[this.thumbs().length] ?? GALLERY_HERO[4],
   );
 
   /** Offer rows with resolved icon and human-readable label. */
@@ -386,17 +515,32 @@ export class ListingDetail {
     }));
   });
 
-  protected readonly roomSummary = computed(() => {
+  /**
+   * The parts of the room summary, not the sentence.
+   *
+   * It used to be assembled here as a template literal — English word order baked into a
+   * computed, so every locale got "12 beds · 3 room types · 3 sharing options" verbatim. In
+   * Urdu the bidi algorithm then reordered what it was handed and produced "beds · 3 room
+   * types · 3 sharing options 12", with the count marooned at the far end of the line.
+   *
+   * Handing the numbers to a translated string instead lets each locale decide where they
+   * go, which is the only thing that fixes the ordering — and makes the phrase translatable
+   * at all.
+   */
+  protected readonly roomCounts = computed(() => {
     const l = this.state().data;
-    if (!l?.rooms?.length) return '';
-    const beds = l.rooms.reduce((sum, r) => sum + r.capacity, 0);
-    return `${beds} beds · ${l.rooms.length} room types · ${l.sharing.length} sharing options`;
+    if (!l?.rooms?.length) return null;
+    return {
+      beds: l.rooms.reduce((sum, r) => sum + r.capacity, 0),
+      types: l.rooms.length,
+      sharing: l.sharing.length,
+    };
   });
 
-  protected readonly sharingSummary = computed(() => {
+  /** `4, 6, 12` — the occupancies on offer, for the translated "…-sharing available". */
+  protected readonly sharingLabels = computed(() => {
     const sharing = this.state().data?.sharing ?? [];
-    const labels = sharing.map((s) => s.replace('-sharing', ''));
-    return labels.length ? `${labels.join(', ')}-sharing available` : '';
+    return sharing.map((s) => s.replace('-sharing', '')).join(', ');
   });
 
   /**
@@ -444,7 +588,10 @@ export class ListingDetail {
     const text = encodeURIComponent(`Check out ${l?.name ?? 'this hostel'} on HostelHive: ${href}`);
 
     if (platform === 'native') {
-      if (navigator.share) navigator.share({ title: l?.name ?? '', url: href }).catch(() => {});
+      if (navigator.share) navigator.share({ title: l?.name ?? '', url: href }).catch(() => {
+          // Dismissing the share sheet rejects the promise. That is the user declining,
+          // not an error to report.
+        });
       return;
     }
 
@@ -665,6 +812,12 @@ export class ListingDetail {
       });
   }
 
+  /** Open the carousel on a photo picked out of the grid, and switch to it. */
+  protected openPhoto(index: number): void {
+    this.galleryView.set('one');
+    this.lightboxIndex.set(index);
+  }
+
   protected openLightbox(index: number): void {
     this.lightboxIndex.set(index);
     this.doc.body.style.overflow = 'hidden';
@@ -675,15 +828,39 @@ export class ListingDetail {
     this.doc.body.style.overflow = '';
   }
 
+  /**
+   * The thumbnail window under the photo — three sharp, one blurred at each end.
+   *
+   * See {@link filmstrip}; the geometry is there so it can be tested without a gallery.
+   */
+  protected readonly strip = computed<Filmstrip>(() =>
+    filmstrip(this.lightboxImages().length, this.lightboxIndex() ?? 0),
+  );
+
+  /**
+   * The gallery is a ring: past the last photo is the first one again.
+   *
+   * It used to stop dead at both ends, and the arrows vanished with it — so a reader who
+   * wanted the first photo after reaching the tenth had to click back through all nine.
+   */
   protected prevImage(): void {
-    const i = this.lightboxIndex();
-    if (i !== null && i > 0) this.lightboxIndex.set(i - 1);
+    this.stepImage(-1);
   }
 
   protected nextImage(): void {
+    this.stepImage(1);
+  }
+
+  private stepImage(by: number): void {
     const i = this.lightboxIndex();
-    const max = this.lightboxImages().length - 1;
-    if (i !== null && i < max) this.lightboxIndex.set(i + 1);
+    const count = this.lightboxImages().length;
+    if (i === null || count === 0) return;
+    this.lightboxIndex.set(wrapIndex(i + by, count));
+  }
+
+  /** `noUncheckedIndexedAccess` makes a bare lookup `string | undefined` in the template. */
+  protected imageAt(index: number): string {
+    return this.lightboxImages()[index] ?? '';
   }
 
   constructor() {
@@ -722,13 +899,29 @@ export class ListingDetail {
     this.route.paramMap.pipe(
       map((p) => p.get('slug') ?? ''),
       distinctUntilChanged(),
-      switchMap((slug) => {
-        this._state.set({ loading: true, error: false, data: null });
-        return this.api.getBySlug(slug).pipe(
-          map((data): ViewState => ({ loading: false, error: false, data: data ?? null })),
-          catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
-        );
-      }),
+      // Re-runnable per slug: the inner `startWith(null)` is the first attempt, and every
+      // `reload()` after it is the seeker pressing Try again. Nested rather than merged into
+      // the outer stream so a retry re-fetches the listing being viewed, not whichever slug
+      // happened to arrive last.
+      switchMap((slug) =>
+        this.reload$.pipe(
+          startWith(null),
+          switchMap(() => {
+            this._state.set({ loading: true, error: false, networkError: false, data: null });
+            return this.api.getBySlug(slug).pipe(
+              map((data): ViewState => ({ loading: false, error: false, networkError: false, data: data ?? null })),
+              catchError((e: unknown) =>
+                of<ViewState>({
+                  loading: false,
+                  error: true,
+                  networkError: (e as { status?: number } | null)?.status === 0,
+                  data: null,
+                }),
+              ),
+            );
+          }),
+        ),
+      ),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe((s) => {
       this._state.set(s);
@@ -760,8 +953,14 @@ export class ListingDetail {
     fromEvent<KeyboardEvent>(this.doc, 'keydown').pipe(
       takeUntilDestroyed(this.destroyRef),
     ).subscribe((e) => {
+      // Every dialog on the page, innermost first. Share and the login gate were missing,
+      // so two of the six trapped focus — correctly — with no key that would let go of it.
+      // The order is the stacking order: the gate can open over the share sheet.
       if (e.key === 'Escape') {
         if (this.lightboxIndex() !== null) this.closeLightbox();
+        else if (this.loginGateOpen()) this.closeLoginGate();
+        else if (this.shareOpen()) this.closeShare();
+        else if (this.summaryOpen()) this.dismissSummary();
         else if (this.reviewsOpen()) this.closeReviews();
         else if (this.modalOpen()) this.closeModal();
         else if (this.descriptionModalOpen()) this.descriptionModalOpen.set(false);
@@ -788,6 +987,12 @@ export class ListingDetail {
   private applySeo(s: ViewState): void {
     this.seo.clearJsonLd('listing');
     const l = s.data;
+
+    // The hero is this page's LCP element, and the server already knows which file it is.
+    // Emitting the preload here puts it in flight with the HTML rather than three seconds
+    // later, once the bundle has parsed and the component has finally rendered the `<img>`.
+    // Cleared when there is no listing, so a not-found page preloads nothing.
+    this.seo.preloadImage(l?.images?.[0] ?? null);
 
     if (!l) {
       // Missing or failed: never let a not-found page into the index.
@@ -861,7 +1066,10 @@ export class ListingDetail {
       socialTitle,
       description,
       path: `/hostel/${l.slug ?? ''}`,
-      image: l.images?.[0],
+      // A listing with no photos yet falls back to a dormitory rather than to the logo,
+      // which is what `Seo` would otherwise reach for. Shared into a chat, a room is at
+      // least the right kind of thing; a logo says nothing about the listing at all.
+      image: l.images?.[0] ?? DEFAULT_SOCIAL_IMAGE,
     });
 
     const jsonLd: Record<string, unknown> = {

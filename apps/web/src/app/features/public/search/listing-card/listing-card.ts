@@ -13,7 +13,7 @@ import { RouterLink } from '@angular/router';
 import { AccommodationType, Listing } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
 import { SearchCapacity } from '@services';
-import { Badge, TooltipFixed } from '@hostelhive/ui';
+import { Badge, PhotoPlaceholder, TooltipFixed } from '@hostelhive/ui';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { periodForAccommodation, periodSuffix } from '@util/pricing-period';
@@ -34,7 +34,7 @@ const MAX_AMENITY_PILLS = 2;
 @Component({
   selector: 'hh-listing-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, LocaleLink, DecimalPipe, Badge, TooltipFixed, CurrencySymbolPipe, CurrencyNamePipe],
+  imports: [TranslocoPipe, RouterLink, LocaleLink, DecimalPipe, Badge, PhotoPlaceholder, TooltipFixed, CurrencySymbolPipe, CurrencyNamePipe],
   templateUrl: './listing-card.html',
 })
 export class ListingCard {
@@ -106,10 +106,7 @@ export class ListingCard {
   /** Image indices whose <img> has finished downloading — a shimmer shows until then. */
   private readonly readyImgs = signal<ReadonlySet<number>>(new Set<number>());
 
-  protected readonly images = computed(() => {
-    const im = this.listing().images;
-    return im.length ? im : ['https://picsum.photos/seed/hh-fallback/800/800'];
-  });
+  protected readonly images = computed(() => this.listing().images);
 
   /** Airbnb-style sliding dot window: show max 5 dots, shrink edge dots. */
   protected readonly visibleDots = computed(() => {

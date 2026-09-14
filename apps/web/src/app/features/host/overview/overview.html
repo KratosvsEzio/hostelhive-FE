@@ -25,12 +25,12 @@
       </hh-card>
     </div>
   } @else if (s.subscriptionError) {
-    <hh-subscription-gate feature="Dashboard overview" />
+    <hh-subscription-gate [feature]="'subscriptionGate.dashboardOverview' | transloco" />
   } @else if (s.error || !s.data) {
     <div class="mt-4">
       <hh-error-state
         [networkError]="s.networkError"
-        message="We couldn't load analytics for this property."
+        [message]="'hostOverview.weCouldnTLoadAnalytics' | transloco"
         (retry)="retry()"
       />
     </div>
@@ -331,202 +331,296 @@
       </hh-card>
     </div>
 
-    <!-- Pending utility bills + Tenant ledger -->
-    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <hh-card padding="none" class="flex flex-col">
-        <div
-          class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
-        >
-          <div>
-            <h2 class="font-display text-base font-semibold text-ink-900">
-              {{ 'hostOverview.pendingUtilityBills' | transloco }}
-            </h2>
-            <p class="text-xs text-ink-400">
-              {{ 'hostOverview.utilityInvoicesAwaitingCollection' | transloco }}
-            </p>
+    @if (monthlyBilled()) {
+      <!-- Pending utility bills + Tenant ledger -->
+      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <hh-card padding="none" class="flex flex-col">
+          <div
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
+          >
+            <div>
+              <h2 class="font-display text-base font-semibold text-ink-900">
+                {{ 'hostOverview.pendingUtilityBills' | transloco }}
+              </h2>
+              <p class="text-xs text-ink-400">
+                {{ 'hostOverview.utilityInvoicesAwaitingCollection' | transloco }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex gap-0.5 rounded-lg bg-ink-100 p-0.5">
+                <button
+                  (click)="billTab.set('due')"
+                  class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+                  [class]="
+                    billTab() === 'due'
+                      ? 'bg-white shadow-sm text-ink-900'
+                      : 'text-ink-500 hover:text-ink-700'
+                  "
+                >
+                  {{ 'common.dueN' | transloco: { count: billDueCount() } }}
+                </button>
+                <button
+                  (click)="billTab.set('over-due')"
+                  class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+                  [class]="
+                    billTab() === 'over-due'
+                      ? 'bg-white shadow-sm text-ink-900'
+                      : 'text-ink-500 hover:text-ink-700'
+                  "
+                >
+                  {{ 'common.overdueN' | transloco: { count: billOverdueCount() } }}
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex-1 overflow-y-auto" style="max-height: 280px">
+            @if (billsLoading()) {
+              <div class="divide-y divide-ink-100">
+                @for (i of [1, 2, 3]; track i) {
+                  <div class="flex items-center gap-3 px-5 py-3">
+                    <hh-skeleton class="h-8 w-8 shrink-0 rounded-full" />
+                    <div class="min-w-0 flex-1 space-y-1.5">
+                      <hh-skeleton class="h-3 w-28" />
+                      <hh-skeleton class="h-2.5 w-20" />
+                    </div>
+                    <div class="shrink-0 space-y-1.5 text-end">
+                      <hh-skeleton class="h-3 w-16" />
+                      <hh-skeleton class="h-4 w-10 rounded-full" />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else if (pendingUtility().length === 0) {
+              <div class="p-5">
+                <hh-empty-state
+                  icon="ti-bolt-off"
+                  [title]="'hostOverview.noPendingUtilityBills' | transloco"
+                  [message]="'hostOverview.allUtilityInvoicesAreSettled' | transloco"
+                />
+              </div>
+            } @else {
+              <div class="divide-y divide-ink-100">
+                @for (inv of pendingUtility().slice(0, 4); track inv.id) {
+                  <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface">
+                    <hh-avatar
+                      size="sm"
+                      [tone]="inv.status === 'over-due' ? 'brand' : 'cream'"
+                      [initials]="initials(inv.tenantName)"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm font-medium text-ink-800">
+                        {{ inv.tenantName }}
+                      </p>
+                      <p class="text-xs text-ink-400">
+                        {{ 'common.roomNumber' | transloco: { number: inv.roomNumber } }} ·
+                        {{ inv.due | apiDate: 'dd MMM yyyy' }}
+                      </p>
+                    </div>
+                    <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ inv.amount | number }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
+            <a
+              [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
+              [queryParams]="{ kind: 'utility', status: billTab() }"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700"
+              >{{ 'hostOverview.viewAllBills' | transloco }}</a
+            >
+          </div>
+        </hh-card>
+
+        <!-- Tenant ledger -->
+        <hh-card padding="none" class="flex flex-col">
+          <div
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
+          >
+            <div>
+              <h2 class="font-display text-base font-semibold text-ink-900">
+                {{ 'common.tenantLedger' | transloco }}
+              </h2>
+              <p class="text-xs text-ink-400">
+                {{ 'hostOverview.rentOutstandingBalancesPerTenant' | transloco }}
+              </p>
+            </div>
             <div class="flex gap-0.5 rounded-lg bg-ink-100 p-0.5">
               <button
-                (click)="billTab.set('due')"
+                (click)="ledgerTab.set('due')"
                 class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
                 [class]="
-                  billTab() === 'due'
+                  ledgerTab() === 'due'
                     ? 'bg-white shadow-sm text-ink-900'
                     : 'text-ink-500 hover:text-ink-700'
                 "
               >
-                {{ 'common.dueN' | transloco: { count: billDueCount() } }}
+                {{ 'common.dueN' | transloco: { count: ledgerDueCount() } }}
               </button>
               <button
-                (click)="billTab.set('over-due')"
+                (click)="ledgerTab.set('over-due')"
                 class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
                 [class]="
-                  billTab() === 'over-due'
+                  ledgerTab() === 'over-due'
                     ? 'bg-white shadow-sm text-ink-900'
                     : 'text-ink-500 hover:text-ink-700'
                 "
               >
-                {{ 'common.overdueN' | transloco: { count: billOverdueCount() } }}
+                {{ 'common.overdueN' | transloco: { count: ledgerOverdueCount() } }}
               </button>
             </div>
           </div>
-        </div>
-        <div class="flex-1 overflow-y-auto" style="max-height: 280px">
-          @if (billsLoading()) {
-            <div class="divide-y divide-ink-100">
-              @for (i of [1, 2, 3]; track i) {
-                <div class="flex items-center gap-3 px-5 py-3">
-                  <hh-skeleton class="h-8 w-8 shrink-0 rounded-full" />
-                  <div class="min-w-0 flex-1 space-y-1.5">
-                    <hh-skeleton class="h-3 w-28" />
-                    <hh-skeleton class="h-2.5 w-20" />
+          <div class="flex-1">
+            @if (ledgerLoading()) {
+              <div class="divide-y divide-ink-100">
+                @for (i of [1, 2, 3]; track i) {
+                  <div class="flex items-center gap-3 px-5 py-3">
+                    <hh-skeleton class="h-8 w-8 shrink-0 rounded-full" />
+                    <div class="min-w-0 flex-1 space-y-1.5">
+                      <hh-skeleton class="h-3 w-28" />
+                      <hh-skeleton class="h-2.5 w-20" />
+                    </div>
+                    <hh-skeleton class="h-5 w-20 shrink-0 rounded-full" />
                   </div>
-                  <div class="shrink-0 space-y-1.5 text-end">
-                    <hh-skeleton class="h-3 w-16" />
-                    <hh-skeleton class="h-4 w-10 rounded-full" />
+                }
+              </div>
+            } @else if (ledger().length === 0) {
+              <div class="p-5">
+                <hh-empty-state
+                  icon="ti-receipt"
+                  [title]="'common.noLedgerActivity' | transloco"
+                  [message]="'hostOverview.noInvoicesForThisProperty' | transloco"
+                />
+              </div>
+            } @else {
+              <div class="divide-y divide-ink-100">
+                @for (row of ledger().slice(0, 4); track row.id) {
+                  <div class="flex items-center gap-3 px-5 py-3">
+                    <hh-avatar
+                      size="sm"
+                      [tone]="row.outstanding > 0 ? 'cream' : 'mint'"
+                      [initials]="row.initials"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm text-ink-700">
+                        {{ row.tenant }}
+                      </p>
+                      <p class="text-xs text-ink-400">
+                        {{ 'common.roomNumber' | transloco: { number: row.room } }} · {{ row.lastInvoice }}
+                      </p>
+                    </div>
+                    @if (row.outstanding > 0) {
+                      <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ row.outstanding | number }}</span>
+                    } @else {
+                      <span class="shrink-0 text-sm font-semibold text-ok">{{ 'common.settled' | transloco }}</span>
+                    }
                   </div>
-                </div>
-              }
-            </div>
-          } @else if (pendingUtility().length === 0) {
-            <div class="p-5">
-              <hh-empty-state
-                icon="ti-bolt-off"
-                [title]="'hostOverview.noPendingUtilityBills' | transloco"
-                message="All utility invoices are settled."
-              />
-            </div>
-          } @else {
-            <div class="divide-y divide-ink-100">
-              @for (inv of pendingUtility().slice(0, 4); track inv.id) {
-                <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface">
-                  <hh-avatar
-                    size="sm"
-                    [tone]="inv.status === 'over-due' ? 'brand' : 'cream'"
-                    [initials]="initials(inv.tenantName)"
-                  />
-                  <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-ink-800">
-                      {{ inv.tenantName }}
-                    </p>
-                    <p class="text-xs text-ink-400">
-                      {{ 'common.roomNumber' | transloco: { number: inv.roomNumber } }} ·
-                      {{ inv.due | apiDate: 'dd MMM yyyy' }}
-                    </p>
-                  </div>
-                  <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ inv.amount | number }}</span>
-                </div>
-              }
-            </div>
-          }
-        </div>
-        <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
-          <a
-            [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
-            [queryParams]="{ kind: 'utility', status: billTab() }"
-            class="text-xs font-medium text-brand-600 hover:text-brand-700"
-            >{{ 'hostOverview.viewAllBills' | transloco }}</a
-          >
-        </div>
-      </hh-card>
+                }
+              </div>
+            }
+          </div>
+          <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
+            <a
+              [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
+              [queryParams]="{ kind: 'rental', status: ledgerTab() }"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700"
+              >{{ 'hostOverview.viewAllRentals' | transloco }}</a
+            >
+          </div>
+        </hh-card>
+      </div>
+    } @else {
+      <!-- Upcoming bookings — the nightly hostel's counterpart to the two cards above.
 
-      <!-- Tenant ledger -->
-      <hh-card padding="none" class="flex flex-col">
-        <div
-          class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
-        >
-          <div>
-            <h2 class="font-display text-base font-semibold text-ink-900">
-              {{ 'common.tenantLedger' | transloco }}
-            </h2>
-            <p class="text-xs text-ink-400">
-              {{ 'hostOverview.rentOutstandingBalancesPerTenant' | transloco }}
-            </p>
+           A fortnight of arrivals and departures, one cell per day. Deliberately not a third
+           bar chart: two sit directly above it, and the question here is "what is my week",
+           which a diary answers at a glance and a chart makes you read. -->
+      <div class="mt-6">
+        <hh-card padding="none" class="flex flex-col">
+          <div
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3"
+          >
+            <div>
+              <h2 class="font-display text-base font-semibold text-ink-900">
+                {{ 'hostOverview.upcomingBookings' | transloco }}
+              </h2>
+              <p class="text-xs text-ink-400">{{ strip().rangeLabel }}</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-ink-500">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true"></span>
+                {{ 'hostOverview.nArriving' | transloco: { count: strip().totalIn } }}
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <span class="h-2 w-2 shrink-0 rounded-full bg-rose-400" aria-hidden="true"></span>
+                {{ 'hostOverview.nLeaving' | transloco: { count: strip().totalOut } }}
+              </span>
+            </div>
           </div>
-          <div class="flex gap-0.5 rounded-lg bg-ink-100 p-0.5">
-            <button
-              (click)="ledgerTab.set('due')"
-              class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
-              [class]="
-                ledgerTab() === 'due'
-                  ? 'bg-white shadow-sm text-ink-900'
-                  : 'text-ink-500 hover:text-ink-700'
-              "
-            >
-              {{ 'common.dueN' | transloco: { count: ledgerDueCount() } }}
-            </button>
-            <button
-              (click)="ledgerTab.set('over-due')"
-              class="rounded-md px-2.5 py-1 text-xs font-medium transition-all"
-              [class]="
-                ledgerTab() === 'over-due'
-                  ? 'bg-white shadow-sm text-ink-900'
-                  : 'text-ink-500 hover:text-ink-700'
-              "
-            >
-              {{ 'common.overdueN' | transloco: { count: ledgerOverdueCount() } }}
-            </button>
-          </div>
-        </div>
-        <div class="flex-1">
-          @if (ledgerLoading()) {
-            <div class="divide-y divide-ink-100">
-              @for (i of [1, 2, 3]; track i) {
-                <div class="flex items-center gap-3 px-5 py-3">
-                  <hh-skeleton class="h-8 w-8 shrink-0 rounded-full" />
-                  <div class="min-w-0 flex-1 space-y-1.5">
-                    <hh-skeleton class="h-3 w-28" />
-                    <hh-skeleton class="h-2.5 w-20" />
-                  </div>
-                  <hh-skeleton class="h-5 w-20 shrink-0 rounded-full" />
-                </div>
+
+          @if (upcomingLoading()) {
+            <div class="flex gap-1.5 px-5 py-4">
+              @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]; track i) {
+                <hh-skeleton class="h-24 flex-1 rounded-xl" />
               }
             </div>
-          } @else if (ledger().length === 0) {
+          } @else if (upcomingError()) {
+            <div class="p-5">
+              <hh-error-state
+                [message]="'common.weCouldnTLoad2' | transloco"
+                [showRetry]="false"
+              />
+            </div>
+          } @else if (strip().busiest === 0) {
             <div class="p-5">
               <hh-empty-state
-                icon="ti-receipt"
-                [title]="'common.noLedgerActivity' | transloco"
-                message="No invoices for this property yet."
+                icon="ti-calendar-off"
+                [title]="'hostOverview.nothingBookedYet' | transloco"
+                [message]="'hostOverview.noArrivalsOrDeparturesAhead' | transloco"
               />
             </div>
           } @else {
-            <div class="divide-y divide-ink-100">
-              @for (row of ledger().slice(0, 4); track row.id) {
-                <div class="flex items-center gap-3 px-5 py-3">
-                  <hh-avatar
-                    size="sm"
-                    [tone]="row.outstanding > 0 ? 'cream' : 'mint'"
-                    [initials]="row.initials"
-                  />
-                  <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm text-ink-700">
-                      {{ row.tenant }}
+            <!-- Scrolls rather than squeezes: fourteen cells under ~640px would put the
+                 counts on top of each other. -->
+            <div class="overflow-x-auto px-5 py-4">
+              <div class="flex min-w-[660px] gap-1.5">
+                @for (d of strip().days; track d.date) {
+                  <div
+                    class="flex-1 rounded-xl border px-1 pb-2 pt-1.5 text-center transition"
+                    [class]="d.isToday ? 'border-brand-300 bg-brand-50/60' : 'border-ink-100'"
+                  >
+                    <p
+                      class="text-[10px] font-medium uppercase tracking-wide"
+                      [class]="d.isWeekend ? 'text-ink-400' : 'text-ink-300'"
+                    >
+                      {{ d.weekday }}
                     </p>
-                    <p class="text-xs text-ink-400">
-                      {{ 'common.roomNumber' | transloco: { number: row.room } }} · {{ row.lastInvoice }}
-                    </p>
+                    <p class="font-display text-sm font-semibold text-ink-900">{{ d.dayOfMonth }}</p>
+                    <div class="mt-1.5 space-y-1">
+                      <p class="rounded-md py-1 text-xs font-semibold tabular-nums" [class]="inTint(d.inLevel)">
+                        {{ d.checkins || '–' }}
+                      </p>
+                      <p class="rounded-md py-1 text-xs font-semibold tabular-nums" [class]="outTint(d.outLevel)">
+                        {{ d.checkouts || '–' }}
+                      </p>
+                    </div>
                   </div>
-                  @if (row.outstanding > 0) {
-                    <span class="shrink-0 text-sm font-semibold text-ink-900">Rs {{ row.outstanding | number }}</span>
-                  } @else {
-                    <span class="shrink-0 text-sm font-semibold text-ok">{{ 'common.settled' | transloco }}</span>
-                  }
-                </div>
-              }
+                }
+              </div>
+            </div>
+            <div class="mt-auto flex items-center justify-between gap-3 border-t border-ink-100 px-5 py-3">
+              <p class="text-xs text-ink-400">
+                {{ 'hostOverview.inOverOutPerDay' | transloco }}
+              </p>
+              <a
+                [routerLink]="'/host/' + propertyStore.selected() + '/bookings'"
+                class="shrink-0 text-xs font-medium text-brand-600 hover:text-brand-700"
+                >{{ 'hostOverview.viewAllBookings' | transloco }}</a
+              >
             </div>
           }
-        </div>
-        <div class="flex justify-end border-t border-ink-100 px-5 py-2.5">
-          <a
-            [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
-            [queryParams]="{ kind: 'rental', status: ledgerTab() }"
-            class="text-xs font-medium text-brand-600 hover:text-brand-700"
-            >{{ 'hostOverview.viewAllRentals' | transloco }}</a
-          >
-        </div>
-      </hh-card>
-    </div>
+        </hh-card>
+      </div>
+    }
   }
 </app-dashboard-layout>

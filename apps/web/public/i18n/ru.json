@@ -102,7 +102,17 @@
     "signInToBook": "Войдите, чтобы забронировать",
     "pickYourRoomOnce": "Выберите номер после входа",
     "createAFreeAccountToBook": "Создайте бесплатный аккаунт, чтобы выбирать номера и удерживать их, пока решаете. Это займёт 30 секунд.",
-    "roomsAmpPricing": "Комнаты и цены"
+    "andNMore": "Ещё {{count}}",
+    "favorite": "В избранное",
+    "showPhoneNumber": "Показать номер телефона",
+    "showAllNReviews": "Показать все отзывы ({{count}})",
+    "hostSince": "Хозяин с {{year}}",
+    "writeAReview": "Написать отзыв",
+    "roomSummary": "{{beds}} мест · {{types}} типов комнат · {{sharing}} вариантов размещения",
+    "nSharingAvailable": "Доступно размещение на {{labels}}",
+    "bookNow": "Забронировать",
+    "nPhotos": "фото: {{count}}",
+    "otherPhotos": "Прочее"
   },
   "common": {
     "loading": "Загрузка…",
@@ -226,6 +236,7 @@
     "dinner": "Ужин",
     "teamAmpStaff": "Команда и персонал",
     "accountSettings": "Настройки аккаунта",
+    "passwordAmpSecurity": "Пароль и безопасность",
     "someRequiredFieldsAre": "Не заполнены обязательные поля",
     "uploading": "Загрузка…",
     "listingProgress": "Готовность объявления",
@@ -318,7 +329,16 @@
     "enterDescription": "Введите описание",
     "enterLandmarks": "Введите ближайшие ориентиры",
     "enterReason": "Введите причину",
-    "enterNote": "Введите примечание"
+    "enterNote": "Введите примечание",
+    "somethingWentWrongReachingThe": "Не удалось связаться с сервером.",
+    "weDLikeToCountPage": "Мы хотели бы считать просмотры страниц, чтобы знать, какие хостелы и города ищут, и улучшить поиск. Личные данные не отправляются, и к тому, чтобы оставаться в системе, это отношения не имеет.",
+    "noThanks": "Нет, спасибо",
+    "password": "Пароль",
+    "selectYear": "Выберите год",
+    "allow": "Разрешить",
+    "noPhotosYet": "Фотографий пока нет",
+    "guests": "Гости",
+    "copy": "Копировать"
   },
   "leadWall": {
     "close": "Закрыть",
@@ -334,7 +354,8 @@
     "weSentASigned24": "Мы отправили ссылку для подтверждения, действительную 24 часа, на адрес",
     "clickingItActivatesYourAccount": ". Переход по ней активирует аккаунт и откроет номер.",
     "iVeVerifiedContinue": "Я подтвердил — продолжить",
-    "back": "Назад"
+    "back": "Назад",
+    "confirmPassword": "Подтвердите пароль"
   },
   "home": {
     "searchCityOrArea": "Город или район",
@@ -533,7 +554,12 @@
     "country": "Страна",
     "streetAddress": "Адрес",
     "nearbyLandmarks": "Ориентиры поблизости",
-    "roomTypeDescription": "Описание типа комнаты"
+    "roomTypeDescription": "Описание типа комнаты",
+    "couldnTCheckWhichRooms": "Не удалось проверить, какие комнаты используют этот тип. Повторите попытку.",
+    "findingTheRoomsBuiltOn": "Поиск комнат на основе {{name}}…",
+    "moveAllRoomsTo": "Переместить все комнаты в",
+    "selectARoomType": "Выберите тип комнаты",
+    "noRoomsAreBuiltOn": "Ни одна комната не использует {{name}}, поэтому больше ничего не изменится. Тип удалится при сохранении."
   },
   "a11y": {
     "close": "Закрыть",
@@ -612,7 +638,16 @@
     "clearSearch": "Очистить поиск",
     "closeTimePicker": "Закрыть выбор времени",
     "chooseTime": "Выбрать время",
-    "dismiss": "Закрыть"
+    "dismiss": "Закрыть",
+    "closePropertyMenu": "Закрыть меню объектов",
+    "goToPhotoN": "Перейти к фото {{n}}",
+    "removeFrom": "Удалить {{title}}",
+    "removeOneFrom": "Убрать один из {{title}}",
+    "onePhotoAtATime": "По одному фото",
+    "allPhotosByGroup": "Все фото по группам",
+    "fewerGuestsIn": "Меньше гостей в {{title}}",
+    "moreGuestsIn": "Больше гостей в {{title}}",
+    "skipToContent": "Перейти к содержимому"
   },
   "hostTenants": {
     "tenantPhoto": "Фото жильца",
@@ -677,7 +712,10 @@
     "roomNotAvailableForTheseDates": "Номер недоступен на эти даты",
     "checkIn": "Заезд",
     "checkOut": "Выезд",
-    "leavingDate": "Дата выезда"
+    "leavingDate": "Дата выезда",
+    "thisTenantHasNoRent": "У этого жильца пока нет счетов за аренду.",
+    "noUtilityChargesHaveBeen": "Для комнаты этого жильца не записаны коммунальные начисления.",
+    "checkInYourFirstTenant": "Заселите первого жильца, чтобы отслеживать аренду."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Не удалось загрузить вашу подписку",
@@ -731,7 +769,11 @@
     "thenRsPerPeriod": "Далее Rs {{price}} / {{period}}",
     "paymentStarted": "Оплата начата",
     "payRs": "Оплатить Rs {{amount}}",
-    "selectAProduct": "Выберите продукт"
+    "selectAProduct": "Выберите продукт",
+    "invoicesAppearHereAfterYour": "Счета появятся здесь после первого списания.",
+    "pleaseCheckYourConnectionAnd": "Проверьте подключение и повторите попытку.",
+    "youDonTHaveAn": "У вас пока нет активного тарифа. Выберите тариф ниже, чтобы начать.",
+    "checkBackSoonPlans": "Загляните позже — тарифы появятся здесь."
   },
   "hostMess": {
     "pickADate": "Выберите дату",
@@ -791,7 +833,8 @@
     "last12MonthsPkr": "Последние 12 месяцев · PKR",
     "last30DaysPkr": "Последние 30 дней · PKR",
     "uploadingReceipt": "Загрузка чека…",
-    "nPhotosAttached": "Прикреплено фото: {{count}}"
+    "nPhotosAttached": "Прикреплено фото: {{count}}",
+    "logYourBulkGroceryPurchases": "Записывайте оптовые закупки, чтобы отслеживать расходы на питание."
   },
   "hostRooms": {
     "calendarTab": "Календарь",
@@ -847,7 +890,13 @@
     "createRooms": "Создать комнаты",
     "bedsOccupiedOf": "{{filled}} из {{total}} мест занято",
     "nOfMBooked": "{{booked}} из {{capacity}} забронировано",
-    "nNoLongerActive": "{{count}} больше не проживают"
+    "nNoLongerActive": "{{count}} больше не проживают",
+    "dayRoster": "Список на день",
+    "pickADay": "Выберите день.",
+    "nobodyInThisRoomThat": "В этот день в комнате никого не было.",
+    "thisRoomCurrentlyHasNo": "В этой комнате сейчас нет активных жильцов.",
+    "addYourFirstRoomTo": "Добавьте первую комнату, чтобы отслеживать заполняемость.",
+    "bedNumbersAreNotAssigned": "Номера кроватей ещё не назначены — календарь показывает, сколько мест занято, а не кто на какой кровати."
   },
   "hostUtilities": {
     "ratePerUnit": "Тариф за единицу",
@@ -887,7 +936,9 @@
     "shareFormulaStart": "Доля = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} дней проживания",
     "rsUnallocated": "Rs {{amount}} не распределено",
-    "rsOver": "Rs {{amount}} превышение"
+    "rsOver": "Rs {{amount}} превышение",
+    "pickARoomWithActive": "Выберите комнату с активными жильцами, чтобы разделить счёт.",
+    "addAUtilityBillTo": "Добавьте счёт за коммунальные услуги, чтобы отслеживать расход и начисления."
   },
   "hostTeam": {
     "staffPhoto": "Фото сотрудника",
@@ -899,7 +950,6 @@
     "salaryIssueDate": "Дата выплаты зарплаты",
     "chooseAnImageFromYour": "Выберите изображение из файлов",
     "managerAccess": "Доступ менеджера",
-    "thisPersonAlreadyHasAn": "У этого человека уже есть аккаунт, поэтому настраивать нечего — если переключатель останется включённым, при сохранении он получит доступ менеджера к этому хостелу.",
     "employment": "Занятость",
     "upload": "Загрузить",
     "scopedToThisHostelOnly": "Только в пределах этого хостела.",
@@ -918,7 +968,11 @@
     "fromTheTeamThisAction": "из команды. Действие нельзя отменить.",
     "keepsTheirStaffRecordBut": "сохраняет кадровую запись, но больше не может входить или управлять этим хостелом.",
     "createsLoginFor": "Создаёт вход, чтобы {{name}} мог управлять этим хостелом.",
-    "thisStaffMember": "этот сотрудник"
+    "thisStaffMember": "этот сотрудник",
+    "existingAccountKeepsPassword": "Если у этого адреса уже есть аккаунт, его текущий пароль сохранится — ваш нужен только для создания нового аккаунта.",
+    "storedEmailBecomesLogin": "Сохранённый адрес станет логином. Если у него уже есть аккаунт, пароль от него сохранится.",
+    "pickADifferentStatusTo": "Выберите другой статус, чтобы увидеть остальную команду.",
+    "addAWardenCookOr": "Добавьте коменданта, повара или охранника, чтобы сохранить зарплату и документы."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Не удалось одобрить — попробуйте снова.",
@@ -973,7 +1027,9 @@
     "billedTo": "Выставлен на",
     "issued": "Выставлен",
     "due": "К оплате",
-    "thisWillPermanentlyDeleteInvoice": "Это навсегда удалит счёт"
+    "thisWillPermanentlyDeleteInvoice": "Это навсегда удалит счёт",
+    "invoicesAppearHereOnceYou": "Счета появятся здесь, как только вы выставите счета за аренду или коммунальные услуги.",
+    "tryAdjustingYourFilters": "Попробуйте изменить фильтры."
   },
   "hostExpenses": {
     "allTypes": "Все типы",
@@ -1017,7 +1073,20 @@
     "pctVsLastMonth": "{{pct}}% к прошлому месяцу",
     "nTenantsUnpaid": "{{count}} жильцов не оплатили",
     "moveInsAndOuts": "Заселения и выезды",
-    "pctBedsFilled": "Доля занятых мест"
+    "pctBedsFilled": "Доля занятых мест",
+    "weCouldnTLoadTenant": "Не удалось загрузить данные о движении жильцов.",
+    "weCouldnTLoadOccupancy": "Не удалось загрузить данные о заполняемости.",
+    "weCouldnTLoadAnalytics": "Не удалось загрузить аналитику по этому объекту.",
+    "allUtilityInvoicesAreSettled": "Все счета за коммунальные услуги оплачены.",
+    "noInvoicesForThisProperty": "Для этого объекта пока нет счетов.",
+    "weCouldnTLoadRevenue": "Не удалось загрузить данные о доходах.",
+    "upcomingBookings": "Ближайшие брони",
+    "nArriving": "заездов: {{count}}",
+    "nLeaving": "выездов: {{count}}",
+    "nothingBookedYet": "Броней пока нет",
+    "noArrivalsOrDeparturesAhead": "В ближайшие две недели заездов и выездов нет.",
+    "inOverOutPerDay": "Заезды над выездами, по дням",
+    "viewAllBookings": "Все брони →"
   },
   "hostBookings": {
     "calendarTab": "Календарь",
@@ -1034,7 +1103,31 @@
     "cancelledByOn": "Отменено {{by}} {{date}}",
     "pkrPenaltyChargedToYou": "штраф PKR {{amount}} с вас",
     "pkrToYou": "PKR {{amount}} вам",
-    "thisGuest": "этого гостя"
+    "thisGuest": "этого гостя",
+    "dayLedger": "Журнал за день",
+    "pendingAllotments": "Ожидающие распределения",
+    "askedFor": "Запрошено",
+    "noContactDetailsOnThis": "В этом бронировании нет контактных данных",
+    "recordABooking": "Записать бронирование",
+    "whoIsStaying": "Кто проживает",
+    "onlyIfTheyHaveOne": "Только если он есть",
+    "addARoom": "Добавить комнату",
+    "toCollectAtTheDesk": "К оплате на стойке",
+    "createBooking": "Создать бронирование",
+    "theRoomsForThisProperty": "Не удалось загрузить комнаты этого объекта.",
+    "everyRoomEveryState": "Все комнаты и их состояния — нажмите на день, чтобы открыть журнал",
+    "thisMonthSCalendarCould": "Не удалось загрузить календарь на этот месяц.",
+    "nothingIsWaitingOnYou": "На этот день ничего не требует вашего внимания.",
+    "pickTheDatesFirst": "Сначала выберите даты — от них зависит, что свободно.",
+    "noRoomsOnThisProperty": "В этом объекте пока нет комнат.",
+    "bookingCalendar": "Календарь бронирований",
+    "assignRoom": "Назначить комнату",
+    "noteFromGuest": "Примечание от гостя",
+    "savedAs": "Сохранено как",
+    "checkInCheckOut": "Заезд — выезд",
+    "aNightRuns12": "Сутки считаются с 12:00 до 12:00 — заезд с полудня, выезд до полудня следующего дня.",
+    "discount": "Скидка",
+    "saveBooking": "Сохранить бронирование"
   },
   "hostHostelProfile": {
     "failed": "Ошибка",
@@ -1044,7 +1137,8 @@
     "updateHostel": "Обновить хостел",
     "reviewTitle": "Объявление снова уйдёт на проверку",
     "reviewBody": "Вы изменили следующее. Объявление будет проверено заново, и гости не увидят его до одобрения.",
-    "reviewConfirm": "Сохранить и отправить на проверку"
+    "reviewConfirm": "Сохранить и отправить на проверку",
+    "weCouldnTLoadYour": "Не удалось загрузить ваш хостел."
   },
   "hostMore": {
     "property": "Объект",
@@ -1065,11 +1159,13 @@
   "adminAdminContracts": {
     "contracts": "Договоры",
     "noContractsMatchThisFilter": "Нет договоров по этому фильтру",
-    "term": "Срок"
+    "term": "Срок",
+    "searchContractsByHostel": "Поиск договоров по хостелу"
   },
   "adminAdminListings": {
     "allListings": "Все объявления",
-    "noListingsFound": "Объявления не найдены"
+    "noListingsFound": "Объявления не найдены",
+    "searchListingsByHostel": "Поиск объявлений по хостелу"
   },
   "adminAdminPayments": {
     "payments": "Платежи",
@@ -1079,27 +1175,32 @@
     "transactionId": "ID транзакции",
     "created": "Создано",
     "contract": "Договор",
-    "product": "Продукт"
+    "product": "Продукт",
+    "searchPaymentsByHostel": "Поиск платежей по хостелу"
   },
   "moderatorQueue": {
     "reviewQueue": "Очередь на проверку",
-    "queueIsClear": "Очередь пуста"
+    "queueIsClear": "Очередь пуста",
+    "noSubmissionsAreWaitingFor": "Нет заявок, ожидающих проверки."
   },
   "moderatorAudit": {
     "auditLog": "Журнал аудита",
     "noMatchingActivity": "Нет подходящей активности",
     "allModerators": "Все модераторы",
     "last7Days": "Последние 7 дней",
-    "loadOlderEntries": "Загрузить более старые записи"
+    "loadOlderEntries": "Загрузить более старые записи",
+    "tryADifferentActionFilter": "Попробуйте другой фильтр действий или период."
   },
   "coreForbidden": {
-    "accessBlocked": "Доступ заблокирован"
+    "accessBlocked": "Доступ заблокирован",
+    "youDonTHavePermission": "У вас нет прав для просмотра этого раздела."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Ваши приглашения от хостела, подтверждения питания и ожидающие чеки."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Перетащите, загрузите или сделайте фото"
+    "dragAmpDropUploadOr": "Перетащите, загрузите или сделайте фото",
+    "replaceAdd": "Заменить / добавить"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Теперь выберите дату окончания",
@@ -1119,7 +1220,8 @@
     "refundsReachYourOriginalPayment": "Возврат поступает на исходный способ оплаты в течение 5 рабочих дней.",
     "pkrPaid": "PKR {{amount}} оплачено",
     "cancelledSummary": "Отменено {{date}} · PKR {{refund}} возвращено · PKR {{charge}} сбор за отмену",
-    "cancelRefundExplainer": "Вы получите обратно <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> удерживается как сбор за отмену, так как вы отменяете на {{pct}}% срока."
+    "cancelRefundExplainer": "Вы получите обратно <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> удерживается как сбор за отмену, так как вы отменяете на {{pct}}% срока.",
+    "whenYouBookAHostel": "Когда вы забронируете хостел, он появится здесь с датами и суммой оплаты."
   },
   "userFavorites": {
     "removeFromFavorites": "Убрать из избранного?",
@@ -1128,7 +1230,8 @@
     "noFavoritesYet": "Избранного пока нет",
     "saveHostelsYouLikeAnd": "Сохраняйте понравившиеся хостелы и находите их здесь.",
     "browseHostels": "Смотреть хостелы",
-    "fromYourSavedHostels": "из ваших сохранённых хостелов?"
+    "fromYourSavedHostels": "из ваших сохранённых хостелов?",
+    "weCouldnTLoadYour": "Не удалось загрузить избранное."
   },
   "userSecurity": {
     "currentPassword": "Текущий пароль",
@@ -1201,7 +1304,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Советы, руководства и новости от команды HostelHive",
     "comingSoon": "Скоро",
-    "weReWorkingOnSome": "Мы готовим материалы о студенческой жизни, советы по хостелам и путеводители по городам Пакистана. Следите за обновлениями!"
+    "weReWorkingOnSome": "Мы готовим материалы о студенческой жизни, советы по хостелам и путеводители по городам Пакистана. Следите за обновлениями!",
+    "onThisPage": "На этой странице",
+    "theHostelhiveTeam": "Команда HostelHive",
+    "keepReading": "Продолжить чтение",
+    "blogHomePage": "Перейти на главную страницу блога.",
+    "filterArticlesByCategory": "Фильтровать статьи по категории",
+    "archiveLayout": "Вид архива",
+    "everyArticle": "Все статьи",
+    "theHostelhiveJournal": "Журнал HostelHive",
+    "guidesForFindingARoom": "Руководства по поиску комнаты — и койки на ночь.",
+    "whatHostelsActuallyCost": "Сколько на самом деле стоят хостелы город за городом, какие районы подходят какому кампусу и где ночевать от Джохар-Тауна до Каракорума. Написано по объявлениям и из поездок.",
+    "allPosts": "Все записи",
+    "grid": "Сетка",
+    "index": "Список",
+    "nMinRead": "{{count}} мин чтения",
+    "nMin": "{{count}} мин",
+    "article": "Статья",
+    "category": "Категория",
+    "published": "Опубликовано",
+    "read": "Чтение",
+    "nothingFiledHereYet": "Здесь пока ничего нет.",
+    "lookingForARoomRather": "Ищете комнату, а не руководство?",
+    "everyListingShowsTheRent": "В каждом объявлении указана цена за койку или за комнату, что входит и кто управляет.",
+    "swipeTheTableToSee": "Проведите по таблице, чтобы увидеть все столбцы",
+    "weVerifyListingsAcross": "Мы проверяем объявления по всему Пакистану и пишем о том, что узнаём.",
+    "weCouldnTFindThatPost": "Мы не нашли эту запись",
+    "theLinkMayBeOld": "Возможно, ссылка устарела или адрес немного неверен.",
+    "browseEveryPostInstead": "Посмотрите вместо этого все записи.",
+    "readTheGuide": "Читать руководство"
   },
   "publicListing": {
     "checkIn": "Заезд",
@@ -1211,7 +1342,9 @@
     "add": "Добавить",
     "showAllNPhotos": "Показать все {{count}} фото",
     "genderHostelHostedBy": "{{gender}} хостел, владелец {{host}}",
-    "bookARoom": "Забронировать комнату"
+    "bookARoom": "Забронировать комнату",
+    "theListingMayHaveBeen": "Объявление могло быть удалено, или ссылка неверна.",
+    "chooseYourRoom": "Выберите комнату"
   },
   "featuresPublic": {
     "checkingYourLink": "Проверяем вашу ссылку…",
@@ -1265,7 +1398,14 @@
     "allApproved": "Все одобрены!",
     "doneNFailed": "Готово — {{count}} с ошибкой",
     "nPhotosFailedRetry": "{{count}} фото не загрузились — можно повторить из очереди.",
-    "approving": "Одобрение…"
+    "approving": "Одобрение…",
+    "newUploadsWillAppearHere": "Новые загрузки появятся здесь для утверждения.",
+    "allStatuses": "Все статусы",
+    "allLabels": "Все метки",
+    "unlabelled": "Без метки",
+    "nothingMatchesThisFilter": "Ничего не соответствует этому фильтру",
+    "tryAnotherLabelOrShowAll": "Попробуйте другую метку или покажите все.",
+    "showAllLabels": "Показать все метки"
   },
   "publicContact": {
     "contactUs": "Свяжитесь с нами",
@@ -1396,7 +1536,15 @@
     "bookingSent": "Бронирование отправлено",
     "weLlEmailYouWhenConfirmed": "Мы напишем вам, как только хостел подтвердит бронирование.",
     "couldnTBook": "Не удалось завершить бронирование",
-    "noRoomsListed": "Этот хостел ещё не добавил комнаты."
+    "noRoomsListed": "Этот хостел ещё не добавил комнаты.",
+    "pricesArePerRoom": "Цены за комнату",
+    "pricesArePerBed": "Цены за койко-место",
+    "guestDetails": "Данные гостя",
+    "enterTheGuestName": "Введите имя гостя",
+    "enterAValidPhone": "Введите действительный номер телефона",
+    "enterAValidEmail": "Введите действительный адрес эл. почты",
+    "ofNSeats": "из {{count}}",
+    "bookingReference": "Номер бронирования"
   },
   "states": {
     "nothingHereYet": "Здесь пока пусто",
@@ -1408,11 +1556,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Поиск адреса или ориентира…",
-    "searchCityOrArea": "Поиск города или района"
+    "searchCityOrArea": "Поиск города или района",
+    "satellite": "Спутник",
+    "noMatchingPlaces": "Подходящих мест нет",
+    "poweredByOpenstreetmap": "На основе OpenStreetMap",
+    "noCoordinatesSetFor": "Для этого объявления не заданы координаты."
   },
   "subscriptionGate": {
     "unlockFeature": "Открыть {{feature}}",
-    "thisFeature": "эту функцию"
+    "thisFeature": "эту функцию",
+    "dashboardOverview": "Обзор панели",
+    "roomManagement": "Управление комнатами",
+    "tenantManagement": "Управление жильцами",
+    "utilityBilling": "Начисление коммунальных услуг",
+    "thisFeatureIsAvailable": "Эта возможность доступна в платных тарифах. Оформите подписку для полного доступа к панели хостела.",
+    "completeHostelProfileFirst": "Сначала заполните профиль хостела",
+    "onceSubscribedAllFeatures": "После оформления подписки все возможности открываются автоматически.",
+    "roomAmpOccupancyManagement": "Управление комнатами и заполняемостью",
+    "tenantTrackingAmpPayment": "Учёт жильцов и история платежей",
+    "rentAndUtilityInvoice": "Формирование счетов за аренду и коммунальные услуги",
+    "analyticsAndRevenueReports": "Аналитика и отчёты о доходах"
   },
   "notifications": {
     "nUnread": "{{count}} непрочитанных"

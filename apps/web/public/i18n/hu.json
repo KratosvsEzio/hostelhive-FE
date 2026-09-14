@@ -102,7 +102,17 @@
     "signInToBook": "Jelentkezzen be a foglaláshoz",
     "pickYourRoomOnce": "Válassza ki a szobát bejelentkezés után",
     "createAFreeAccountToBook": "Hozzon létre ingyenes fiókot, hogy szobákat válasszon és lefoglalja őket, amíg dönt. Mindössze 30 másodperc.",
-    "roomsAmpPricing": "Szobák és árak"
+    "andNMore": "+{{count}} további",
+    "favorite": "Kedvenc",
+    "showPhoneNumber": "Telefonszám megjelenítése",
+    "showAllNReviews": "Mind a(z) {{count}} értékelés megtekintése",
+    "hostSince": "{{year}} óta házigazda",
+    "writeAReview": "Értékelés írása",
+    "roomSummary": "{{beds}} ágy · {{types}} szobatípus · {{sharing}} megosztási lehetőség",
+    "nSharingAvailable": "{{labels}} fős megosztás elérhető",
+    "bookNow": "Foglalás most",
+    "nPhotos": "{{count}} fotó",
+    "otherPhotos": "Egyéb"
   },
   "common": {
     "loading": "Betöltés…",
@@ -226,6 +236,7 @@
     "dinner": "Vacsora",
     "teamAmpStaff": "Csapat és személyzet",
     "accountSettings": "Fiókbeállítások",
+    "passwordAmpSecurity": "Jelszó és biztonság",
     "someRequiredFieldsAre": "Néhány kötelező mező hiányzik",
     "uploading": "Feltöltés…",
     "listingProgress": "Hirdetés állapota",
@@ -318,7 +329,16 @@
     "enterDescription": "Adja meg a leírást",
     "enterLandmarks": "Adja meg a közeli tájékozódási pontokat",
     "enterReason": "Adja meg az okot",
-    "enterNote": "Adja meg a megjegyzést"
+    "enterNote": "Adja meg a megjegyzést",
+    "somethingWentWrongReachingThe": "Hiba történt a kiszolgáló elérésekor.",
+    "weDLikeToCountPage": "Szeretnénk megszámolni az oldalletöltéseket, hogy lássuk, mely hosteleket és városokat keresik, és javíthassuk a keresést. Személyes adatot nem küldünk, és ennek semmi köze a bejelentkezve maradáshoz.",
+    "noThanks": "Köszönöm, nem",
+    "password": "Jelszó",
+    "selectYear": "Válasszon évet",
+    "allow": "Engedélyezés",
+    "noPhotosYet": "Még nincsenek fotók",
+    "guests": "Vendégek",
+    "copy": "Másolás"
   },
   "leadWall": {
     "close": "Bezárás",
@@ -334,7 +354,8 @@
     "weSentASigned24": "24 órán át érvényes megerősítő linket küldtünk ide:",
     "clickingItActivatesYourAccount": ". Rákattintva aktiválódik a fiókja, és megjelenik a telefonszám.",
     "iVeVerifiedContinue": "Megerősítettem — tovább",
-    "back": "Vissza"
+    "back": "Vissza",
+    "confirmPassword": "Jelszó megerősítése"
   },
   "home": {
     "searchCityOrArea": "Város vagy környék keresése",
@@ -528,7 +549,12 @@
     "country": "Ország",
     "streetAddress": "Utca és házszám",
     "nearbyLandmarks": "Közeli nevezetességek",
-    "roomTypeDescription": "Szobatípus leírása"
+    "roomTypeDescription": "Szobatípus leírása",
+    "couldnTCheckWhichRooms": "Nem sikerült ellenőrizni, mely szobák használják ezt a típust. Próbálja újra.",
+    "findingTheRoomsBuiltOn": "{{name}} típusra épülő szobák keresése…",
+    "moveAllRoomsTo": "Összes szoba áthelyezése ide:",
+    "selectARoomType": "Válasszon szobatípust",
+    "noRoomsAreBuiltOn": "Egyetlen szoba sem épül a(z) {{name}} típusra, így más nem változik. Mentéskor törlődik."
   },
   "a11y": {
     "close": "Bezárás",
@@ -607,7 +633,16 @@
     "clearSearch": "Keresés törlése",
     "closeTimePicker": "Időválasztó bezárása",
     "chooseTime": "Időpont kiválasztása",
-    "dismiss": "Elvetés"
+    "dismiss": "Elvetés",
+    "closePropertyMenu": "Ingatlan menü bezárása",
+    "goToPhotoN": "Ugrás a(z) {{n}}. fotóra",
+    "removeFrom": "{{title}} eltávolítása",
+    "removeOneFrom": "Egy eltávolítása: {{title}}",
+    "onePhotoAtATime": "Egy fotó egyszerre",
+    "allPhotosByGroup": "Minden fotó, csoportosítva",
+    "fewerGuestsIn": "Kevesebb vendég itt: {{title}}",
+    "moreGuestsIn": "Több vendég itt: {{title}}",
+    "skipToContent": "Ugrás a tartalomra"
   },
   "hostTenants": {
     "tenantPhoto": "Bérlő fotója",
@@ -672,7 +707,10 @@
     "roomNotAvailableForTheseDates": "A szoba ezekre a dátumokra nem elérhető",
     "checkIn": "Bejelentkezés",
     "checkOut": "Kijelentkezés",
-    "leavingDate": "Távozás dátuma"
+    "leavingDate": "Távozás dátuma",
+    "thisTenantHasNoRent": "Ehhez a bérlőhöz még nincs rögzített bérleti számla.",
+    "noUtilityChargesHaveBeen": "Ennek a bérlőnek a szobájához nincs rögzített rezsiköltség.",
+    "checkInYourFirstTenant": "Jelentkeztesse be az első bérlőt a bérleti díj követéséhez."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Nem sikerült betölteni az előfizetésed",
@@ -726,7 +764,11 @@
     "thenRsPerPeriod": "Utána Rs {{price}} / {{period}}",
     "paymentStarted": "Fizetés elindítva",
     "payRs": "Fizess Rs {{amount}}",
-    "selectAProduct": "Válassz terméket"
+    "selectAProduct": "Válassz terméket",
+    "invoicesAppearHereAfterYour": "A számlák az első terhelés után jelennek meg itt.",
+    "pleaseCheckYourConnectionAnd": "Ellenőrizze a kapcsolatot, és próbálja újra.",
+    "youDonTHaveAn": "Még nincs aktív csomagja. Az induláshoz böngéssze az alábbi csomagokat.",
+    "checkBackSoonPlans": "Nézzen vissza hamarosan – a csomagok itt jelennek meg."
   },
   "hostMess": {
     "pickADate": "Válassz dátumot",
@@ -786,7 +828,8 @@
     "last12MonthsPkr": "Elmúlt 12 hónap · PKR",
     "last30DaysPkr": "Elmúlt 30 nap · PKR",
     "uploadingReceipt": "Nyugta feltöltése…",
-    "nPhotosAttached": "{{count}} fotó csatolva"
+    "nPhotosAttached": "{{count}} fotó csatolva",
+    "logYourBulkGroceryPurchases": "Rögzítse a nagybani bevásárlásokat a menza kiadásainak követéséhez."
   },
   "hostRooms": {
     "calendarTab": "Naptár",
@@ -842,7 +885,13 @@
     "createRooms": "Szobák létrehozása",
     "bedsOccupiedOf": "{{total}} ágyból {{filled}} foglalt",
     "nOfMBooked": "{{capacity}}-ből {{booked}} lefoglalva",
-    "nNoLongerActive": "{{count}} már nem aktív"
+    "nNoLongerActive": "{{count}} már nem aktív",
+    "dayRoster": "Napi névsor",
+    "pickADay": "Válasszon egy napot.",
+    "nobodyInThisRoomThat": "Aznap senki sem volt ebben a szobában.",
+    "thisRoomCurrentlyHasNo": "Ebben a szobában jelenleg nincs aktív bérlő.",
+    "addYourFirstRoomTo": "Adja hozzá az első szobát a kihasználtság követéséhez.",
+    "bedNumbersAreNotAssigned": "Az ágyszámok még nincsenek kiosztva – a naptár azt mutatja, hány ágy foglalt, nem azt, ki melyikben alszik."
   },
   "hostUtilities": {
     "ratePerUnit": "Egységár",
@@ -882,7 +931,9 @@
     "shareFormulaStart": "Rész = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} kihasználtsági nap",
     "rsUnallocated": "Rs {{amount}} nincs elosztva",
-    "rsOver": "Rs {{amount}} túllépés"
+    "rsOver": "Rs {{amount}} túllépés",
+    "pickARoomWithActive": "Válasszon aktív bérlőkkel rendelkező szobát a számla felosztásához.",
+    "addAUtilityBillTo": "Adjon hozzá rezsiszámlát a fogyasztás és a költségek követéséhez."
   },
   "hostTeam": {
     "staffPhoto": "Munkatárs fotója",
@@ -894,7 +945,6 @@
     "salaryIssueDate": "Fizetés kiutalásának dátuma",
     "chooseAnImageFromYour": "Válassz képet a fájljaidból",
     "managerAccess": "Vezetői hozzáférés",
-    "thisPersonAlreadyHasAn": "Ennek a személynek már van fiókja, így nincs mit beállítani — ha a kapcsoló bekapcsolva marad, mentéskor vezetői hozzáférést kap ehhez a szálláshoz.",
     "employment": "Foglalkoztatás",
     "upload": "Feltöltés",
     "scopedToThisHostelOnly": "Csak erre a szálláshelyre érvényes.",
@@ -913,7 +963,11 @@
     "fromTheTeamThisAction": "a csapatból. A művelet nem vonható vissza.",
     "keepsTheirStaffRecordBut": "megtartja a munkatársi nyilvántartását, de nem tud többé bejelentkezni vagy kezelni ezt a szálláshelyet.",
     "createsLoginFor": "Belépést hoz létre, hogy {{name}} kezelhesse ezt a szálláshelyet.",
-    "thisStaffMember": "ez a munkatárs"
+    "thisStaffMember": "ez a munkatárs",
+    "existingAccountKeepsPassword": "Ha ehhez az e-mailhez már tartozik fiók, a jelenlegi jelszó marad — az Öné csak új fiók létrehozásakor lesz használva.",
+    "storedEmailBecomesLogin": "A tárolt e-mail lesz a belépési azonosító. Ha ehhez a címhez már tartozik fiók, annak jelszava marad érvényben.",
+    "pickADifferentStatusTo": "Válasszon másik státuszt a csapat többi tagjának megtekintéséhez.",
+    "addAWardenCookOr": "Adjon hozzá gondnokot, szakácsot vagy őrt a fizetés és iratok nyilvántartásához."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "A jóváhagyás sikertelen — próbáld újra.",
@@ -968,7 +1022,9 @@
     "billedTo": "Számlázva neki",
     "issued": "Kiállítva",
     "due": "Esedékes",
-    "thisWillPermanentlyDeleteInvoice": "Ez véglegesen törli a számlát"
+    "thisWillPermanentlyDeleteInvoice": "Ez véglegesen törli a számlát",
+    "invoicesAppearHereOnceYou": "A számlák itt jelennek meg, amint bérleti vagy rezsiszámlát állít ki.",
+    "tryAdjustingYourFilters": "Próbálja módosítani a szűrőket."
   },
   "hostExpenses": {
     "allTypes": "Minden típus",
@@ -1012,7 +1068,20 @@
     "pctVsLastMonth": "{{pct}}% az előző hónaphoz képest",
     "nTenantsUnpaid": "{{count}} bérlő nem fizetett",
     "moveInsAndOuts": "Beköltözések és kiköltözések",
-    "pctBedsFilled": "Foglalt ágyak aránya"
+    "pctBedsFilled": "Foglalt ágyak aránya",
+    "weCouldnTLoadTenant": "Nem sikerült betölteni a bérlőmozgási adatokat.",
+    "weCouldnTLoadOccupancy": "Nem sikerült betölteni a kihasználtsági adatokat.",
+    "weCouldnTLoadAnalytics": "Nem sikerült betölteni az elemzéseket ehhez az ingatlanhoz.",
+    "allUtilityInvoicesAreSettled": "Minden rezsiszámla rendezve.",
+    "noInvoicesForThisProperty": "Ehhez az ingatlanhoz még nincs számla.",
+    "weCouldnTLoadRevenue": "Nem sikerült betölteni a bevételi adatokat.",
+    "upcomingBookings": "Közelgő foglalások",
+    "nArriving": "{{count}} érkezik",
+    "nLeaving": "{{count}} távozik",
+    "nothingBookedYet": "Még nincs foglalás",
+    "noArrivalsOrDeparturesAhead": "Nincs érkezés vagy távozás a következő két hétben.",
+    "inOverOutPerDay": "Érkezések a távozások felett, naponta",
+    "viewAllBookings": "Összes foglalás →"
   },
   "hostBookings": {
     "calendarTab": "Naptár",
@@ -1029,7 +1098,31 @@
     "cancelledByOn": "{{by}} lemondta {{date}} napján",
     "pkrPenaltyChargedToYou": "PKR {{amount}} kötbér terheli",
     "pkrToYou": "PKR {{amount}} neked",
-    "thisGuest": "ezt a vendéget"
+    "thisGuest": "ezt a vendéget",
+    "dayLedger": "Napi napló",
+    "pendingAllotments": "Függőben lévő kiosztások",
+    "askedFor": "Kért",
+    "noContactDetailsOnThis": "Ehhez a foglaláshoz nincs elérhetőség",
+    "recordABooking": "Foglalás rögzítése",
+    "whoIsStaying": "Ki száll meg",
+    "onlyIfTheyHaveOne": "Csak ha van neki",
+    "addARoom": "Szoba hozzáadása",
+    "toCollectAtTheDesk": "A recepción beszedendő",
+    "createBooking": "Foglalás létrehozása",
+    "theRoomsForThisProperty": "Az ingatlan szobái nem tölthetők be.",
+    "everyRoomEveryState": "Minden szoba, minden állapot – koppintson egy napra a naplójáért",
+    "thisMonthSCalendarCould": "A havi naptár nem tölthető be.",
+    "nothingIsWaitingOnYou": "Ezen a napon semmi sem vár Önre.",
+    "pickTheDatesFirst": "Először válassza ki a dátumokat – a szabad helyek ettől függenek.",
+    "noRoomsOnThisProperty": "Ehhez az ingatlanhoz még nincs szoba.",
+    "bookingCalendar": "Foglalási naptár",
+    "assignRoom": "Szoba kiosztása",
+    "noteFromGuest": "Megjegyzés a vendégtől",
+    "savedAs": "Mentve mint",
+    "checkInCheckOut": "Érkezés — távozás",
+    "aNightRuns12": "Egy éjszaka 12:00-tól 12:00-ig tart — érkezés déltől, távozás másnap délig.",
+    "discount": "Kedvezmény",
+    "saveBooking": "Foglalás mentése"
   },
   "hostHostelProfile": {
     "failed": "Sikertelen",
@@ -1039,7 +1132,8 @@
     "updateHostel": "Szálláshely frissítése",
     "reviewTitle": "Ezzel a hirdetése újra ellenőrzésre kerül",
     "reviewBody": "A következőket módosította. Hirdetését újra ellenőrizzük, és a vendégek a jóváhagyásig nem látják.",
-    "reviewConfirm": "Mentés és beküldés ellenőrzésre"
+    "reviewConfirm": "Mentés és beküldés ellenőrzésre",
+    "weCouldnTLoadYour": "Nem sikerült betölteni a hostelt."
   },
   "hostMore": {
     "property": "Ingatlan",
@@ -1060,11 +1154,13 @@
   "adminAdminContracts": {
     "contracts": "Szerződések",
     "noContractsMatchThisFilter": "Nincs a szűrőnek megfelelő szerződés",
-    "term": "Időtartam"
+    "term": "Időtartam",
+    "searchContractsByHostel": "Szerződések keresése hostel szerint"
   },
   "adminAdminListings": {
     "allListings": "Összes hirdetés",
-    "noListingsFound": "Nem található hirdetés"
+    "noListingsFound": "Nem található hirdetés",
+    "searchListingsByHostel": "Hirdetések keresése hostel szerint"
   },
   "adminAdminPayments": {
     "payments": "Fizetések",
@@ -1074,27 +1170,32 @@
     "transactionId": "Tranzakcióazonosító",
     "created": "Létrehozva",
     "contract": "Szerződés",
-    "product": "Termék"
+    "product": "Termék",
+    "searchPaymentsByHostel": "Fizetések keresése hostel szerint"
   },
   "moderatorQueue": {
     "reviewQueue": "Ellenőrzési sor",
-    "queueIsClear": "A sor üres"
+    "queueIsClear": "A sor üres",
+    "noSubmissionsAreWaitingFor": "Nincs elbírálásra váró beküldés."
   },
   "moderatorAudit": {
     "auditLog": "Auditnapló",
     "noMatchingActivity": "Nincs egyező tevékenység",
     "allModerators": "Összes moderátor",
     "last7Days": "Elmúlt 7 nap",
-    "loadOlderEntries": "Régebbi bejegyzések betöltése"
+    "loadOlderEntries": "Régebbi bejegyzések betöltése",
+    "tryADifferentActionFilter": "Próbáljon másik műveletszűrőt vagy időszakot."
   },
   "coreForbidden": {
-    "accessBlocked": "Hozzáférés letiltva"
+    "accessBlocked": "Hozzáférés letiltva",
+    "youDonTHavePermission": "Nincs jogosultsága megtekinteni ezt a területet."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "A szálláshelyi meghívóid, étkezési visszaigazolásaid és függőben lévő nyugtáid."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Húzd ide, tölts fel vagy készíts fényképet"
+    "dragAmpDropUploadOr": "Húzd ide, tölts fel vagy készíts fényképet",
+    "replaceAdd": "Csere / hozzáadás"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Most kattints egy záró dátumra",
@@ -1114,7 +1215,8 @@
     "refundsReachYourOriginalPayment": "A visszatérítés 5 munkanapon belül megérkezik az eredeti fizetési módodra.",
     "pkrPaid": "PKR {{amount}} kifizetve",
     "cancelledSummary": "Lemondva: {{date}} · PKR {{refund}} visszatérítve · PKR {{charge}} lemondási díj",
-    "cancelRefundExplainer": "Visszakapsz <strong class=\"tabular-nums\">PKR {{refund}}</strong> összeget. <strong class=\"tabular-nums\">PKR {{charge}}</strong> lemondási díjként marad, mert az időszak {{pct}}%-ánál mondasz le."
+    "cancelRefundExplainer": "Visszakapsz <strong class=\"tabular-nums\">PKR {{refund}}</strong> összeget. <strong class=\"tabular-nums\">PKR {{charge}}</strong> lemondási díjként marad, mert az időszak {{pct}}%-ánál mondasz le.",
+    "whenYouBookAHostel": "Ha lefoglal egy hostelt, itt jelenik meg a dátumokkal és a fizetett összeggel."
   },
   "userFavorites": {
     "removeFromFavorites": "Eltávolítod a kedvencekből?",
@@ -1123,7 +1225,8 @@
     "noFavoritesYet": "Még nincs kedvenc",
     "saveHostelsYouLikeAnd": "Mentsd el a tetsző szállásokat, és itt megtalálod őket.",
     "browseHostels": "Szállások böngészése",
-    "fromYourSavedHostels": "a mentett szállásaid közül?"
+    "fromYourSavedHostels": "a mentett szállásaid közül?",
+    "weCouldnTLoadYour": "Nem sikerült betölteni a kedvenceit."
   },
   "userSecurity": {
     "currentPassword": "Jelenlegi jelszó",
@@ -1196,7 +1299,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Tippek, útmutatók és hírek a HostelHive csapatától",
     "comingSoon": "Hamarosan",
-    "weReWorkingOnSome": "Nagyszerű tartalmakon dolgozunk a diákéletről, szállástippekről és pakisztáni városkalauzokról. Maradj velünk!"
+    "weReWorkingOnSome": "Nagyszerű tartalmakon dolgozunk a diákéletről, szállástippekről és pakisztáni városkalauzokról. Maradj velünk!",
+    "onThisPage": "Ezen az oldalon",
+    "theHostelhiveTeam": "A HostelHive csapata",
+    "keepReading": "Olvasson tovább",
+    "blogHomePage": "Ugrás a blog kezdőlapjára.",
+    "filterArticlesByCategory": "Cikkek szűrése kategória szerint",
+    "archiveLayout": "Archívum elrendezése",
+    "everyArticle": "Összes cikk",
+    "theHostelhiveJournal": "A HostelHive napló",
+    "guidesForFindingARoom": "Útmutatók szobakereséshez – és egy ágyhoz éjszakára.",
+    "whatHostelsActuallyCost": "Mennyibe kerülnek valójában a hostelek városról városra, melyik környék illik melyik kampuszhoz, és hol aludjon az ember Johar Towntól a Karakorumig. Hirdetésekből és az útról írva.",
+    "allPosts": "Összes bejegyzés",
+    "grid": "Rács",
+    "index": "Lista",
+    "nMinRead": "{{count}} perc olvasás",
+    "nMin": "{{count}} perc",
+    "article": "Cikk",
+    "category": "Kategória",
+    "published": "Közzétéve",
+    "read": "Olvasás",
+    "nothingFiledHereYet": "Ide még nem került semmi.",
+    "lookingForARoomRather": "Szobát keres útmutató helyett?",
+    "everyListingShowsTheRent": "Minden hirdetés mutatja az ágyankénti vagy szobánkénti bérleti díjat, hogy mi van benne, és ki üzemelteti.",
+    "swipeTheTableToSee": "Húzza el a táblázatot az összes oszlop megtekintéséhez",
+    "weVerifyListingsAcross": "Pakisztán-szerte ellenőrizzük a hirdetéseket, és megírjuk, amit közben tanulunk.",
+    "weCouldnTFindThatPost": "Nem találtuk azt a bejegyzést",
+    "theLinkMayBeOld": "Lehet, hogy a hivatkozás régi, vagy a cím kissé hibás.",
+    "browseEveryPostInstead": "Nézze meg helyette az összes bejegyzést.",
+    "readTheGuide": "Útmutató elolvasása"
   },
   "publicListing": {
     "checkIn": "Érkezés",
@@ -1206,7 +1337,9 @@
     "add": "Hozzáadás",
     "showAllNPhotos": "Mind a(z) {{count}} fotó",
     "genderHostelHostedBy": "{{gender}} szálláshely, házigazda: {{host}}",
-    "bookARoom": "Szoba foglalása"
+    "bookARoom": "Szoba foglalása",
+    "theListingMayHaveBeen": "Lehet, hogy a hirdetést eltávolították, vagy a hivatkozás hibás.",
+    "chooseYourRoom": "Válaszd ki a szobád"
   },
   "featuresPublic": {
     "checkingYourLink": "A linked ellenőrzése…",
@@ -1260,7 +1393,14 @@
     "allApproved": "Mind jóváhagyva!",
     "doneNFailed": "Kész — {{count}} sikertelen",
     "nPhotosFailedRetry": "{{count}} fotó sikertelen — a sorból újrapróbálhatod.",
-    "approving": "Jóváhagyás…"
+    "approving": "Jóváhagyás…",
+    "newUploadsWillAppearHere": "Az új feltöltések itt jelennek meg jóváhagyásra.",
+    "allStatuses": "Összes állapot",
+    "allLabels": "Összes címke",
+    "unlabelled": "Címke nélkül",
+    "nothingMatchesThisFilter": "Semmi sem felel meg ennek a szűrőnek",
+    "tryAnotherLabelOrShowAll": "Próbáljon másik címkét, vagy mutassa mindet.",
+    "showAllLabels": "Összes címke mutatása"
   },
   "publicContact": {
     "contactUs": "Kapcsolat",
@@ -1391,7 +1531,15 @@
     "bookingSent": "Foglalás elküldve",
     "weLlEmailYouWhenConfirmed": "E-mailt küldünk, amint a szállás visszaigazolja.",
     "couldnTBook": "A foglalás nem sikerült",
-    "noRoomsListed": "Ez a szállás még nem adott meg szobákat."
+    "noRoomsListed": "Ez a szállás még nem adott meg szobákat.",
+    "pricesArePerRoom": "Az árak szobánként",
+    "pricesArePerBed": "Az árak ágyanként",
+    "guestDetails": "Vendégadatok",
+    "enterTheGuestName": "Adja meg a vendég nevét",
+    "enterAValidPhone": "Adjon meg érvényes telefonszámot",
+    "enterAValidEmail": "Adjon meg érvényes e-mail-címet",
+    "ofNSeats": "ennyiből: {{count}}",
+    "bookingReference": "Foglalási azonosító"
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",
@@ -1403,11 +1551,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Cím vagy nevezetesség keresése…",
-    "searchCityOrArea": "Város vagy körzet keresése"
+    "searchCityOrArea": "Város vagy körzet keresése",
+    "satellite": "Műhold",
+    "noMatchingPlaces": "Nincs találat",
+    "poweredByOpenstreetmap": "OpenStreetMap alapján",
+    "noCoordinatesSetFor": "Ehhez a hirdetéshez nincs koordináta megadva."
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} feloldása",
-    "thisFeature": "ezt a funkciót"
+    "thisFeature": "ezt a funkciót",
+    "dashboardOverview": "Irányítópult áttekintés",
+    "roomManagement": "Szobakezelés",
+    "tenantManagement": "Bérlőkezelés",
+    "utilityBilling": "Rezsiszámlázás",
+    "thisFeatureIsAvailable": "Ez a funkció a fizetős csomagokban érhető el. Fizessen elő a hostel irányítópult teljes eléréséhez.",
+    "completeHostelProfileFirst": "Előbb töltse ki a hostel profilját",
+    "onceSubscribedAllFeatures": "Előfizetés után minden funkció automatikusan feloldódik.",
+    "roomAmpOccupancyManagement": "Szoba- és kihasználtságkezelés",
+    "tenantTrackingAmpPayment": "Bérlőkövetés és fizetési nyilvántartás",
+    "rentAndUtilityInvoice": "Bérleti és rezsiszámlák készítése",
+    "analyticsAndRevenueReports": "Elemzések és bevételi jelentések"
   },
   "notifications": {
     "nUnread": "{{count}} olvasatlan"

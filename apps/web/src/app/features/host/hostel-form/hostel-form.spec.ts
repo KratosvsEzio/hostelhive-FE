@@ -316,3 +316,183 @@ describe('HostelForm under moderation', () => {
     expect(items.find((p) => p.id === 'a2')?.rejectReason).toBe('blurry');
   });
 });
+
+/**
+ * Which photo the hostel leads with.
+ *
+ * The star had nowhere to go: the hostel payload carries `attachment_ids` and nothing about
+ * what any of them are, so pressing it moved the badge in the grid and the choice was gone on
+ * the next load. It now sends its own PUT — but only when the host actually moved it, which
+ * is the part worth guarding.
+ */
+describe('HostelForm primary photo', () => {
+  function mount(attachments: unknown[]) {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [HostelForm],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostelsApi, useValue: new HostelsApiStub() },
+        { provide: OffersApi, useValue: new OffersApiStub() },
+        { provide: ImageUploadService, useValue: {} },
+        { provide: HostOpsApi, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(HostelForm);
+    fixture.componentRef.setInput('mode', 'edit');
+    fixture.componentRef.setInput('initialData', {
+      id: 1,
+      name: 'Ever Care',
+      attachments,
+    } as unknown as HostelDetail);
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    const emitted: string[] = [];
+    fixture.componentInstance.primarySelected.subscribe((id) => emitted.push(id));
+
+    return Object.assign(
+      fixture.componentInstance as unknown as {
+        photos(): { id: string; primary: boolean }[];
+        setPrimary(p: { id: string }): void;
+        changedPrimaryPhoto(): string | null;
+        onPrimarySaved(id: string): void;
+        revertPrimary(): void;
+        dirty(): boolean;
+        /** Private, reached the same way this spec reaches the protected members. */
+        newPhotoMap: { set(m: Map<string, string>): void };
+        photos_: unknown;
+      },
+      { emitted, flush: () => fixture.detectChanges() },
+    );
+  }
+
+  /** Puts a photo in the grid as an upload from this session, as the picker would. */
+  function addUnattached(
+    form: ReturnType<typeof mount>,
+    id: string,
+  ): void {
+    form.newPhotoMap.set(new Map([[id, 's3-key']]));
+    (form as unknown as { photos: { update(f: (l: unknown[]) => unknown[]): void } }).photos.update(
+      (list) => [...list, { id, url: `https://cdn.test/${id}.jpg`, primary: false }],
+    );
+  }
+
+  const WITH_FLAG = [
+    { id: 'a1', url: 'https://cdn.test/a1.jpg', is_primary: true },
+    { id: 'a2', url: 'https://cdn.test/a2.jpg' },
+  ];
+
+  it('sends nothing when the host has not touched the star', () => {
+    expect(mount(WITH_FLAG).changedPrimaryPhoto()).toBeNull();
+  });
+
+  it('names the photo the host starred', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    expect(form.changedPrimaryPhoto()).toBe('a2');
+  });
+
+  it('stops naming it once the host stars the original again', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    form.setPrimary({ id: 'a1' });
+    expect(form.changedPrimaryPhoto()).toBeNull();
+  });
+
+  /**
+   * The trap, and it cost me the first implementation.
+   *
+   * `ensurePrimary` stars the first photo when the records carry no flag, so the grid always
+   * shows one. Baselining from the server's flag reads that as "server has none, grid has
+   * one" — a change — so every untouched form of such a hostel was dirty and would have PUT
+   * the default on the next unrelated save. Three existing label specs caught it.
+   *
+   * Baselined from the grid instead. Nothing is lost: a hostel with no flag already resolves
+   * to its first attachment everywhere that reads one.
+   */
+  it('treats the displayed default as a default, not as a choice', () => {
+    const noFlag = [
+      { id: 'a1', url: 'https://cdn.test/a1.jpg' },
+      { id: 'a2', url: 'https://cdn.test/a2.jpg' },
+    ];
+    const form = mount(noFlag);
+    expect(form.photos()[0].primary).toBe(true); // the grid shows one
+    expect(form.changedPrimaryPhoto()).toBeNull(); // and asserts nothing
+
+    // Starring it deliberately is a change, because the server holds no primary at all.
+    form.setPrimary({ id: 'a2' });
+    expect(form.changedPrimaryPhoto()).toBe('a2');
+  });
+
+  /**
+   * The star has to survive change detection, and for a while it did not.
+   *
+   * Everything in this file seeds `initialData` inside an `effect`. Reading the `photos`
+   * signal anywhere in that effect subscribes the effect to it — so starring a photo wrote
+   * `photos`, the effect re-ran, and re-seeded `photos` from `initialData`, putting the star
+   * straight back on the server's original. The PUT went out and the badge never moved,
+   * which is exactly how it was reported.
+   *
+   * Every other test here passed throughout, because none of them ran change detection after
+   * pressing the star. This one does, which is the whole point of it.
+   */
+  it('keeps the star through change detection, rather than being re-seeded', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    form.flush();
+    expect(form.photos().find((p) => p.primary)?.id).toBe('a2');
+  });
+
+  it('emits the moment the host stars a photo the hostel already has', () => {
+    // The point of sending it on the click: the badge moves instantly, so the write has to
+    // be instant too. Held until Update, a host who navigated away lost the choice silently.
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    expect(form.emitted).toEqual(['a2']);
+  });
+
+  /**
+   * The trap that decides which photos may be sent early.
+   *
+   * `presigned_url` creates the Attachment as soon as a file is picked, so a photo added
+   * this session has a real id — but it is not *attached* to the hostel until
+   * `attachment_ids` lands with the save, and `mark_as_primary` only clears the flag on
+   * siblings once `attached_type` is `Hostel`. Sending it early would leave the hostel
+   * holding two primaries, so this one waits for the save instead.
+   */
+  it('does not send a photo added this session, which is not attached yet', () => {
+    const form = mount(WITH_FLAG);
+    addUnattached(form, 'fresh-1');
+    form.setPrimary({ id: 'fresh-1' });
+    expect(form.emitted).toEqual([]);
+    // Still saved — by the other path, after `attachment_ids` has linked it.
+    expect(form.changedPrimaryPhoto()).toBe('fresh-1');
+  });
+
+  it('stops counting it as pending once the screen reports the write landed', () => {
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    expect(form.changedPrimaryPhoto()).toBe('a2');
+    form.onPrimarySaved('a2');
+    expect(form.changedPrimaryPhoto()).toBeNull();
+  });
+
+  it('puts the badge back when the write fails', () => {
+    // Otherwise the page shows a primary the server does not hold, and nothing corrects it
+    // until a reload.
+    const form = mount(WITH_FLAG);
+    form.setPrimary({ id: 'a2' });
+    form.revertPrimary();
+    expect(form.photos().find((p) => p.primary)?.id).toBe('a1');
+    expect(form.changedPrimaryPhoto()).toBeNull();
+  });
+
+  it('makes the form dirty, so Update is not left greyed out', () => {
+    // The label dropdown had exactly this bug: it wrote to a signal nothing else read.
+    const form = mount(WITH_FLAG);
+    expect(form.dirty()).toBe(false);
+    form.setPrimary({ id: 'a2' });
+    expect(form.dirty()).toBe(true);
+  });
+});

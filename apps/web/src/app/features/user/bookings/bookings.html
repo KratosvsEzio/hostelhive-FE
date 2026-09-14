@@ -12,14 +12,14 @@
   <hh-error-state
     class="mt-6 block"
     [title]="'common.weCouldnTLoad2' | transloco"
-    message="Something went wrong reaching the server."
+    [message]="'common.somethingWentWrongReachingThe' | transloco"
   />
 } @else if (!bookings().length) {
   <hh-empty-state
     class="mt-6 block"
     icon="ti-calendar"
     [title]="'userBookings.noBookingsYet' | transloco"
-    message="When you book a hostel, it will show up here with your dates and what you paid."
+    [message]="'userBookings.whenYouBookAHostel' | transloco"
   >
     <a hh-button variant="filled" [routerLink]="['/search']">{{ 'userBookings.findAPlace' | transloco }}</a>
   </hh-empty-state>

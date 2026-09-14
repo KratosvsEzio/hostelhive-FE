@@ -788,7 +788,10 @@ export class Rooms {
     if (!r) return;
     this.roomDeletePending.set(null);
     this.local.set((this.state().data ?? []).filter((x) => x.id !== r.id));
-    this.localAggs.set(null);
+    // Subtract the room rather than discard the local figures. `null` here meant "fall back
+    // to the server's aggs", which still counted the room that had just gone from the grid —
+    // so the cards read one room and its beds too many until something refetched.
+    this.shiftAggs(r, null);
     const hostelId = this.store.selected();
     if (!hostelId) return;
     this.api.deleteRoom(hostelId, r.id).subscribe({
@@ -900,15 +903,17 @@ export class Rooms {
    * describe the whole property, so summing the visible rows would quietly redefine them.
    * Null aggs means the server sent none and the header is already summing rows itself.
    */
-  private shiftAggs(before: Room | null, after: Room): void {
+  private shiftAggs(before: Room | null, after: Room | null): void {
     const aggs = this.state().aggs;
     if (!aggs) { this.localAggs.set(null); return; }
-    const free = (r: Room) => r.capacity - r.occupied;
+    const cap = (r: Room | null) => r?.capacity ?? 0;
+    const occ = (r: Room | null) => r?.occupied ?? 0;
+    const free = (r: Room | null) => (r ? r.capacity - r.occupied : 0);
     this.localAggs.set({
-      totalRooms: aggs.totalRooms + (before ? 0 : 1),
-      totalCapacity: aggs.totalCapacity + after.capacity - (before?.capacity ?? 0),
-      occupiedCapacity: aggs.occupiedCapacity + after.occupied - (before?.occupied ?? 0),
-      vacantCapacity: aggs.vacantCapacity + free(after) - (before ? free(before) : 0),
+      totalRooms: Math.max(0, aggs.totalRooms + (after ? 1 : 0) - (before ? 1 : 0)),
+      totalCapacity: Math.max(0, aggs.totalCapacity + cap(after) - cap(before)),
+      occupiedCapacity: Math.max(0, aggs.occupiedCapacity + occ(after) - occ(before)),
+      vacantCapacity: Math.max(0, aggs.vacantCapacity + free(after) - free(before)),
     });
   }
 

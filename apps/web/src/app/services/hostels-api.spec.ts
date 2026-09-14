@@ -200,3 +200,51 @@ describe('HostelsApi.showPhone', () => {
     expect(d.primaryPhone).toBeNull();
   });
 });
+
+class PutSpyClient {
+  calls: { url: string; body: unknown }[] = [];
+  put<T>(url: string, body: unknown): Observable<T> {
+    this.calls.push({ url, body });
+    return of(undefined as T);
+  }
+}
+
+/**
+ * `PUT /api/attachments/:id/mark_as_primary`.
+ *
+ * The shape matters more than it looks. Its neighbour `update_label` nests its body under
+ * `attachment` and answers 422 to a flat one; this action reads the attachment from the URL
+ * and takes no body at all. Sending it label-shaped would be a silent no-op at best.
+ */
+describe('HostelsApi.markAttachmentAsPrimary', () => {
+  function spyApi(): { api: PutSpyClient; hostels: HostelsApi } {
+    TestBed.resetTestingModule();
+    const api = new PutSpyClient();
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: api }] });
+    return { api, hostels: TestBed.inject(HostelsApi) };
+  }
+
+  it('puts to the attachment, and sends no body', () => {
+    const { api, hostels } = spyApi();
+    hostels.markAttachmentAsPrimary('a1b2c3').subscribe();
+    expect(api.calls).toHaveLength(1);
+    expect(api.calls[0].url).toBe('/api/attachments/a1b2c3/mark_as_primary');
+    expect(api.calls[0].body).toEqual({});
+  });
+
+  it('sends one call, not one per photo', () => {
+    // The server clears `is_primary` on every sibling itself. A client-side unset of the old
+    // one would be a second request, and a window in which the hostel had two or none.
+    const { api, hostels } = spyApi();
+    hostels.markAttachmentAsPrimary('new-primary').subscribe();
+    expect(api.calls).toHaveLength(1);
+  });
+
+  it('keeps the label endpoint nested, which this one is not', () => {
+    const { api, hostels } = spyApi();
+    hostels.updateAttachmentLabel('a1', '7').subscribe();
+    hostels.markAttachmentAsPrimary('a1').subscribe();
+    expect(api.calls[0].body).toEqual({ attachment: { attachment_label_id: '7' } });
+    expect(api.calls[1].body).toEqual({});
+  });
+});

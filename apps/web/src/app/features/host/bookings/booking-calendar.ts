@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -60,7 +61,7 @@ const EMPTY: CalendarData = { days: [], totals: {}, revenue: {} };
 @Component({
   selector: 'hh-booking-calendar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button, Skeleton],
+  imports: [DatePipe, Button, Skeleton, TranslocoPipe],
   templateUrl: './booking-calendar.html',
 })
 export class BookingCalendar {

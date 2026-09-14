@@ -1,0 +1,54 @@
+{
+  "licence": "Checked against Wikimedia Commons. Every photograph below is attribution-only — CC BY, no share-alike and no third-party credit conditions — so the cropped tiles carry no licence terms of their own. Credits are rendered at /credits.",
+  "note": "Re-encoded to JPEG: a 560x480 hero tile and a 1200x630 social card, both smart-cropped from the full-resolution original.",
+  "images": [
+    {
+      "file": "/hero/dorm.jpg",
+      "social": "/hero/social/dorm.jpg",
+      "label": "Hostel dormitory",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Hostel_6-bed_dorm_room%2C_Kuching%2C_Malaysia.jpg",
+      "commonsPage": "https://commons.wikimedia.org/wiki/File:Hostel_6-bed_dorm_room,_Kuching,_Malaysia.jpg",
+      "author": "Sgroey",
+      "licence": "CC BY 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "Photo by Sgroey, via Wikimedia Commons — CC BY 4.0",
+      "note": "Replaced File:Hostel_Dormitory.jpg, which was GFDL and whose file page demanded that a named third-party site be credited — a condition this product should not be carrying on its home page. Attribution only, no share-alike, so the crop below inherits no obligation of its own."
+    },
+    {
+      "file": "/hero/coliving.jpg",
+      "social": "/hero/social/coliving.jpg",
+      "label": "Co-living shared space",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Northernhay_House_shared_kitchen_%289622567534%29.jpg",
+      "commonsPage": "https://commons.wikimedia.org/wiki/File:Northernhay_House_shared_kitchen_(9622567534).jpg",
+      "author": "University of Exeter",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "attribution": "Photo by University of Exeter, via Wikimedia Commons — CC BY 2.0",
+      "note": "Attribution only, no copyleft: the crop carries no obligation of its own."
+    },
+    {
+      "file": "/hero/loft.jpg",
+      "social": "/hero/social/loft.jpg",
+      "label": "Loft living space",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/3/37/Stylish_living_room_features_a_comfortable_gray_sofa_and_wooden_paneling_under_a_high_ceiling.jpg",
+      "commonsPage": "https://commons.wikimedia.org/wiki/File:Stylish_living_room_features_a_comfortable_gray_sofa_and_wooden_paneling_under_a_high_ceiling.jpg",
+      "author": "Shixart1985",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "attribution": "Photo by Shixart1985, via Wikimedia Commons — CC BY 2.0",
+      "note": "Replaced File:400SGreenLoft.jpg, which was CC BY-SA 3.0 / GFDL. The source calls this \"a stylish living room ... under a high ceiling\" rather than a loft, which is the closest honest match Commons offers under an attribution-only licence — a search for residential loft interiors returns church choir lofts and building exteriors. The tile's alt text still reads \"Loft living space\"; it should be re-worded to the source's own description when the locale files are next editable."
+    },
+    {
+      "file": "/hero/living.jpg",
+      "social": "/hero/social/living.jpg",
+      "label": "Shared lounge",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/6/65/Cozy_cabin_living_room_with_wooden_interior.jpg",
+      "commonsPage": "https://commons.wikimedia.org/wiki/File:Cozy_cabin_living_room_with_wooden_interior.jpg",
+      "author": "Shixart1985",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "attribution": "Photo by Shixart1985, via Wikimedia Commons — CC BY 2.0",
+      "note": "Replaced File:Sittingroom-edit1.jpg, which was CC BY-SA 2.5/2.0/1.0 plus GFDL and was itself a derivative, so its page named an editor as well as the photographer. Attribution only, no share-alike."
+    }
+  ]
+}

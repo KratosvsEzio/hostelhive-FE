@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser, DecimalPipe } from '@angular/common';
 import { SITE_ORIGIN, Seo } from '@core/seo';
+import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
 import { Router, RouterLink } from '@angular/router';
 import { searchRouteFor } from '@util/location-slug';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -51,6 +52,7 @@ export class Home {
         title: this.i18n.translate('seo.homeTitle'),
         description: this.i18n.translate('seo.defaultDescription'),
         path: '/',
+        image: DEFAULT_SOCIAL_IMAGE,
       });
     });
 

@@ -17,9 +17,15 @@ import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
  * would against a permanently hidden element in a browser.
  */
 class ResizeObserverStub implements ResizeObserver {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
+  observe(): void {
+    // Never emits, by design — see above.
+  }
+  unobserve(): void {
+    // Nothing was observed.
+  }
+  disconnect(): void {
+    // Nothing to tear down.
+  }
 }
 
 globalThis.ResizeObserver ??= ResizeObserverStub;

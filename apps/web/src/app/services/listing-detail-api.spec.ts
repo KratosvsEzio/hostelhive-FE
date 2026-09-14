@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
 import { ListingDetailApi } from './listing-detail-api';
@@ -114,5 +115,64 @@ describe('ListingDetailApi — From price', () => {
 
   it('reports zero when there is nothing to price', () => {
     expect(listing([]).priceFrom).toBe(0);
+  });
+});
+
+/**
+ * "Removed" and "failed" are two different screens, and this layer decides which.
+ *
+ * Both directions are pinned because the page has been wrong about it twice, each time as a
+ * side effect of fixing the other. A blanket `catchError(() => of(undefined))` turned every
+ * timeout into "this hostel may have been removed"; removing it took the 404 with it, so a
+ * genuinely deleted listing reported "Something went wrong" and offered a Retry that could
+ * never succeed. One assertion alone would have passed happily through both regressions.
+ */
+/** What `errorInterceptor` hands every caller — an ApiError, never the HttpErrorResponse. */
+function apiError(status: number) {
+  return { status, code: 'x', message: 'x' };
+}
+
+describe('ListingDetailApi.getBySlug — missing versus broken', () => {
+  function withError(error: unknown): ListingDetailApi {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: HostelsApi, useValue: { getById: () => throwError(() => error) } },
+      ],
+    });
+    return TestBed.inject(ListingDetailApi);
+  }
+
+  function outcome(api: ListingDetailApi): { value?: unknown; failed: boolean } {
+    const out: { value?: unknown; failed: boolean } = { failed: false };
+    api.getBySlug('nope').subscribe({
+      next: (v) => (out.value = v),
+      error: () => (out.failed = true),
+    });
+    return out;
+  }
+
+  it('reports a 404 as "no such listing", not as a failure', () => {
+    const out = outcome(withError(apiError(404)));
+
+    expect(out.failed).toBe(false);
+    expect(out.value).toBeUndefined();
+  });
+
+  // The half that the blanket catch used to swallow. Each of these might work on a retry,
+  // which is exactly why the page must be allowed to offer one.
+  it.each([500, 502, 503, 429, 0])('lets a %i through as a failure', (status) => {
+    const out = outcome(withError(apiError(status)));
+
+    expect(out.failed).toBe(true);
+    expect(out.value).toBeUndefined();
+  });
+
+  // A thrown `Error` is not an HTTP status and must not be mistaken for a missing hostel —
+  // `requireHostel` throws one when a 200 carries no hostel at all.
+  it('lets a non-HTTP error through as a failure', () => {
+    const out = outcome(withError(new Error('Hostel response did not include a hostel.')));
+
+    expect(out.failed).toBe(true);
   });
 });

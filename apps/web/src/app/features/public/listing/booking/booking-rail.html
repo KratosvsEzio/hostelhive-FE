@@ -5,7 +5,7 @@
     @if (fromPrice() !== null) {
       <p class="text-sm text-ink-500">{{ 'common.from' | transloco }}</p>
       <p class="font-display text-2xl font-semibold text-ink-900">
-        {{ currency() | currencySym }} {{ fromPrice() | number: '1.2-2' }}
+        {{ currency() | currencySym }} {{ fromPrice() | money }}
         <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
       </p>
     }
@@ -45,6 +45,9 @@
     [placeholder]="
       ('publicListing.checkIn' | transloco) + ' – ' + ('publicListing.checkOut' | transloco)
     "
+    [ariaLabel]="
+      ('publicListing.checkIn' | transloco) + ' – ' + ('publicListing.checkOut' | transloco)
+    "
     (rangeChange)="onRange($event)"
   />
 
@@ -57,25 +60,73 @@
             <p class="font-medium text-ink-900">{{ line.title }}</p>
             <p class="text-sm text-ink-500">{{ unitLabel(line) }}</p>
             <!-- The arithmetic, not just its answer. A six-figure total that appears from
-                 nowhere is a total nobody trusts. -->
+                 nowhere is a total nobody trusts.
+
+                 Only once there are nights to multiply by. Browsing then dating is the
+                 natural order, so the dateless basket is the state most seekers see first —
+                 and priced with `nights() === 0` it read "× 0 nights … Rs 0.00", a confident
+                 wrong number on the one screen that has to be trusted. The rate is still
+                 shown, because what a bed costs per night is true before any dates exist. -->
             <p class="mt-1 text-sm text-ink-600 tabular-nums">
-              {{ currency() | currencySym }} {{ linePerNight(line) | number: '1.2-2' }} × {{ 'common.nNights' | transloco: { count: basket.nights() } }}
+              {{ currency() | currencySym }} {{ linePerNight(line) | money }}
+              @if (priced()) {
+                × {{ (basket.nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: basket.nights() } }}
+              } @else {
+                {{ periodLabel() }}
+              }
             </p>
-          </div>
-          <div class="shrink-0 text-right">
-            <p class="font-semibold text-ink-900 tabular-nums">
-              {{ currency() | currencySym }} {{ lineTotal(line) | number: '1.2-2' }}
-            </p>
-            @if (hasLineDiscount(line)) {
-              <p class="text-xs text-ink-400 line-through tabular-nums">
-                {{ currency() | currencySym }} {{ lineWas(line) | number: '1.2-2' }}
-              </p>
+            <!-- How many people are in these rooms.
+                 Private lines only: a bed is sold to one person, so a shared line's headcount
+                 is its bed count and there is nothing to ask. A private room might hold one
+                 guest or four, and the booking has to say which — a party of four taking two
+                 rooms that each sleep four is four people, not eight. Starts at the full
+                 capacity, which is what the basket assumed before it asked at all. -->
+            @if (line.kind === 'private') {
+              <div class="mt-2 flex items-center gap-2">
+                <span class="text-xs text-ink-500">{{ 'common.guests' | transloco }}</span>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="grid h-6 w-6 place-items-center rounded-full border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
+                    [disabled]="line.guests <= 1"
+                    [attr.aria-label]="'a11y.fewerGuestsIn' | transloco: { title: line.title }"
+                    (click)="setGuests(line.roomId, line.guests - 1)"
+                  >
+                    <span class="ti ti-minus text-xs" aria-hidden="true"></span>
+                  </button>
+                  <span class="w-5 text-center text-sm font-medium tabular-nums text-ink-900">{{ line.guests }}</span>
+                  <button
+                    type="button"
+                    class="grid h-6 w-6 place-items-center rounded-full border border-ink-200 text-ink-600 transition hover:bg-ink-50 disabled:opacity-40"
+                    [disabled]="line.guests >= basket.guestCapacityOf(line.roomId)"
+                    [attr.aria-label]="'a11y.moreGuestsIn' | transloco: { title: line.title }"
+                    (click)="setGuests(line.roomId, line.guests + 1)"
+                  >
+                    <span class="ti ti-plus text-xs" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <span class="text-xs text-ink-400">
+                  {{ 'publicBooking.ofNSeats' | transloco: { count: basket.guestCapacityOf(line.roomId) } }}
+                </span>
+              </div>
             }
           </div>
+          @if (priced()) {
+            <div class="shrink-0 text-right">
+              <p class="font-semibold text-ink-900 tabular-nums">
+                {{ currency() | currencySym }} {{ lineTotal(line) | money }}
+              </p>
+              @if (hasLineDiscount(line)) {
+                <p class="text-xs text-ink-500 line-through tabular-nums">
+                  {{ currency() | currencySym }} {{ lineWas(line) | money }}
+                </p>
+              }
+            </div>
+          }
           <button
             type="button"
             class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-400 hover:bg-ink-50 hover:text-ink-700"
-            [attr.aria-label]="'Remove ' + line.title"
+            [attr.aria-label]="'a11y.removeFrom' | transloco: { title: line.title }"
             (click)="remove(line.roomId)"
           >
             <span class="ti ti-trash" aria-hidden="true"></span>
@@ -85,20 +136,33 @@
     </ul>
 
 
-    <div class="mt-4 border-t border-ink-100 pt-3">
-      <div class="flex items-baseline justify-between">
-        <span class="font-semibold text-ink-900">{{ 'common.total' | transloco }}</span>
-        <span class="font-display text-lg font-semibold text-ink-900 tabular-nums">
-          {{ currency() | currencySym }} {{ basket.total() | number: '1.2-2' }}
-        </span>
+    @if (priced()) {
+      <div class="mt-4 border-t border-ink-100 pt-3">
+        <div class="flex items-baseline justify-between">
+          <span class="font-semibold text-ink-900">{{ 'common.total' | transloco }}</span>
+          <span class="font-display text-lg font-semibold text-ink-900 tabular-nums">
+            {{ currency() | currencySym }} {{ basket.total() | money }}
+          </span>
+        </div>
+        <!-- Nothing is taken online any more, so there is no second figure to reconcile
+             against the first. What the stay costs is what this says, and it is settled with
+             the hostel. -->
+        <p class="mt-1 text-xs text-ink-500">
+          {{ 'publicBooking.payAtTheProperty' | transloco }}
+        </p>
       </div>
-      <!-- Nothing is taken online any more, so there is no second figure to reconcile
-           against the first. What the stay costs is what this says, and it is settled with
-           the hostel. -->
-      <p class="mt-1 text-xs text-ink-500">
-        {{ 'publicBooking.payAtTheProperty' | transloco }}
-      </p>
-    </div>
+    } @else {
+      <!-- What is missing, said plainly, where the total would be.
+           "Book now" is disabled in this state, and a disabled button on a brand fill reads
+           as "loading" rather than "you have not finished" — so the reason has to be written
+           somewhere the eye already is. -->
+      <div
+        class="mt-4 flex items-center gap-2 rounded-xl border border-ink-100 bg-ink-50 px-3 py-2.5 text-sm text-ink-600"
+      >
+        <span class="ti ti-calendar-plus shrink-0 text-ink-400" aria-hidden="true"></span>
+        <span>{{ 'common.addDates' | transloco }}</span>
+      </div>
+    }
 
     <!-- The commit action, in the same brand fill as the "Choose a room" button above it and
          the "Confirm booking" button after it. On the default colour it came out grey — the
@@ -112,7 +176,7 @@
       [disabled]="!basket.canBook()"
       (click)="book.emit()"
     >
-      {{ cta() }}
+      {{ cta() | transloco }}
     </button>
 
     @if (!signedIn()) {

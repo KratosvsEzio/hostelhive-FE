@@ -1,12 +1,19 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, delay, of, throwError } from 'rxjs';
+import { Injectable, inject, signal } from '@angular/core';
+import { Observable, delay, map, of, throwError } from 'rxjs';
+import { ApiClient } from '@core/api-resource';
+import {
+  ApiCreatedBookingResponse,
+  BookingRequestInput,
+  CreatedBooking,
+  readCreatedBooking,
+  toBookingRequest,
+} from './booking-request';
 import {
   ApiBooking,
   ApiBookingLine,
   ApiCancellationQuote,
   ApiHold,
   ApiHoldLine,
-  ApiBookingRequest,
   ApiHostBookingRequest,
   ApiHostCancellationQuote,
   ApiCalendarDay,
@@ -29,9 +36,24 @@ import { RoomOffer } from './room-offer';
  * The mock is deliberately more than a fixture returned unchanged — holds actually decrement
  * availability and expire, cancellations actually compute their band. A mock that always
  * succeeds teaches the UI nothing, and the states worth building for are the awkward ones.
+ *
+ * **When the real endpoints land, the host bookings list stops refetching.** Every other
+ * list in the console was converted to apply the saved record and leave the request unmade:
+ * `hostCreateBooking` and `hostCancel` both already answer with an `ApiBooking`, so the page
+ * is handed exactly what it currently reloads to discover — and the contract commits the real
+ * endpoints to the same shape. It was left alone only because reloading a mock costs nothing,
+ * so converting it now would be moving code around a fixture.
+ *
+ * Two call sites, both in `bookings.ts`: `onSaved` and `confirmCancel`. Whoever does the
+ * swap should carry over what those conversions taught — the figures that *count* the rows
+ * have to move with them, or the page shows a correct list beside a summary describing it
+ * from a moment ago. See `invoice-overlay.ts` for that arithmetic written out and tested.
  */
 @Injectable({ providedIn: 'root' })
 export class BookingApi {
+  /** Real HTTP, for the one method that has a real endpoint behind it. */
+  private readonly api = inject(ApiClient);
+
   /** In-memory stand-in for the hold table. Keyed by hold id. */
   private readonly holds = new Map<string, { lines: ApiHoldLine[]; expiresAt: number }>();
 
@@ -147,76 +169,25 @@ export class BookingApi {
   }
 
   /**
-   * `POST /api/bookings` — a guest booking rooms from a listing page.
+   * `POST /api/bookings` — a guest booking rooms from a listing page. **The real endpoint.**
+   *
+   * The one method on this class that is no longer a mock. Everything the old in-memory
+   * version did — pricing the stay, checking a bed was still free, refusing the basket whole
+   * rather than part-filling it — is the server's job now, and the server is the only place
+   * any of it can be done honestly: a total computed in a browser is a number the guest can
+   * edit, and availability read from a snapshot is availability as of some earlier moment.
    *
    * **Nothing is paid online.** The guest reviews a summary, confirms, and the booking exists;
-   * the money is settled with the hostel. So it lands `unconfirmed` with `deposit: 0`, which
-   * is what those two words already mean here — a booking with no money behind it and no
-   * cancellation schedule that pays out. The host confirms it, exactly as they confirm the
-   * walk-ins they write down themselves.
+   * the money is settled with the hostel.
    *
-   * Priced here rather than taken from the request. The basket computes a total to show the
-   * guest, but a total that arrives from a browser is a number the guest can edit, and this
-   * one decides what a hostel is owed.
-   *
-   * Availability is checked before anything is created. Overselling a bed is discovered by
-   * the person standing in reception, so a booking that cannot be honoured is refused whole
-   * rather than part-filled — half a basket is not what anybody agreed to.
+   * Answers with the booking reference and nothing else. That is the one thing on the created
+   * record a guest needs afterwards — what they quote when they ring the hostel — and every
+   * further field read here is a field that breaks the confirmation when it gets renamed.
    */
-  requestBooking(req: ApiBookingRequest): Observable<ApiBooking> {
-    if (!req.hostel_id) return throwError(() => new Error('hostel_id is required'));
-    if (req.check_out <= req.check_in) {
-      return throwError(() => new Error('check_out must be after check_in'));
-    }
-    if (!req.lines.length) return throwError(() => new Error('Pick at least one room.'));
-
-    const lines: ApiBookingLine[] = [];
-    for (const want of req.lines) {
-      const offer = this.catalogue.find((o) => o.id === want.room_id);
-      if (!offer) return throwError(() => new Error('That room is no longer available.'));
-      const free =
-        offer.available -
-        this.heldByOthers(offer.id) -
-        this.bookedUnits(offer.id, req.check_in, req.check_out);
-      if (want.quantity > free) {
-        return throwError(
-          () => new Error(`Only ${Math.max(0, free)} left of ${offer.title} for those dates.`),
-        );
-      }
-      lines.push({
-        room_id: offer.id,
-        room_title: offer.title,
-        room_type: offer.kind,
-        quantity: want.quantity,
-        unit_price: offer.discountedPrice ?? offer.actualPrice,
-        actual_price: offer.actualPrice,
-      });
-    }
-
-    // Nights, not dates: a 1–3 Sept stay is two nights. See `hostCreateBooking`.
-    const nights = Math.max(
-      1,
-      Math.round(
-        (new Date(req.check_out).getTime() - new Date(req.check_in).getTime()) / 86_400_000,
-      ),
-    );
-
-    const booking: ApiBooking = {
-      id: this.id('bkg'),
-      hostel_id: req.hostel_id,
-      hostel_name: '',
-      check_in: req.check_in,
-      check_out: req.check_out,
-      guests: req.guests,
-      lines,
-      total: lines.reduce((n, l) => n + l.unit_price * l.quantity * nights, 0),
-      deposit: 0, // nothing is taken online — see above
-      status: 'unconfirmed',
-      created_at: new Date(this.now()).toISOString(),
-      cancellation: null,
-    };
-    this.bookings.update((all) => [booking, ...all]);
-    return of(booking).pipe(delay(BookingApi.LAG));
+  createBooking(input: BookingRequestInput): Observable<CreatedBooking> {
+    return this.api
+      .post<ApiCreatedBookingResponse>('/api/bookings', toBookingRequest(input))
+      .pipe(map(readCreatedBooking));
   }
 
   /** `GET /api/bookings` — the guest's own. */

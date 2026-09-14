@@ -7,6 +7,7 @@ import {
   PhotoGrid,
   PhotoGridPhoto,
   classifyImageFile,
+  ensurePrimary,
   fileExtension,
   imageFormatLabel,
   imageMimeType,
@@ -157,5 +158,51 @@ describe('PhotoGrid', () => {
     fixture.detectChanges();
     expect(tile().disabled).toBe(true);
     expect(tile().title).toContain('at most 10 photos');
+  });
+});
+
+/**
+ * Which photo leads.
+ *
+ * A hostel's primary photo is what every card, search result and share preview shows, so
+ * "none" is not a state the product has — it means nobody has chosen, and the first photo
+ * answers until they do. The callers had this on add and remove but not on load, so a hostel
+ * whose records carry no `is_primary` opened with no badge and every star empty.
+ */
+describe('ensurePrimary', () => {
+  const photo = (id: string, primary = false) => ({ id, url: `/${id}.jpg`, primary });
+
+  it('promotes the first photo when none is primary', () => {
+    const out = ensurePrimary([photo('a'), photo('b')]);
+    expect(out.map((p) => p.primary)).toEqual([true, false]);
+  });
+
+  it('leaves an existing primary where it is', () => {
+    const out = ensurePrimary([photo('a'), photo('b', true)]);
+    expect(out.map((p) => p.primary)).toEqual([false, true]);
+  });
+
+  // Two primaries is the server contradicting itself. Quietly picking one would hide that;
+  // the list is handed back untouched so the state stays visible.
+  it('does not arbitrate between two primaries', () => {
+    const items = [photo('a', true), photo('b', true)];
+    expect(ensurePrimary(items)).toBe(items);
+  });
+
+  it('has nothing to do with an empty list', () => {
+    const items: PhotoGridPhoto[] = [];
+    expect(ensurePrimary(items)).toBe(items);
+  });
+
+  // A load that needs no change should not hand every downstream reader a new array.
+  it('returns the same array when nothing changes', () => {
+    const items = [photo('a', true)];
+    expect(ensurePrimary(items)).toBe(items);
+  });
+
+  it('copies rather than mutating the caller’s photo', () => {
+    const first = photo('a');
+    ensurePrimary([first]);
+    expect(first.primary).toBe(false);
   });
 });

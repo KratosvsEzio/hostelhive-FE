@@ -125,6 +125,9 @@ export function toCreateInvoicePayload(f: InvoiceForm): CreateInvoicePayload {
   if (transport) breakdown.transportation_charges = transport;
   return {
     renter_id: f.renterId,
+    // The renter is also the bill's polymorphic owner; see `InvoiceBody`.
+    billable_type: 'Renter',
+    billable_id: f.renterId,
     room_id: f.roomId || undefined,
     amount: rent + mess + transport,
     issued_date: f.issuedDate,

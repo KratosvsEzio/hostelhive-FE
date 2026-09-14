@@ -43,19 +43,15 @@ import { LocaleLink } from '@core/i18n/locale-link';
           class="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-pill sm:flex-row sm:items-center sm:gap-4 sm:p-5"
         >
           <p class="flex-1 text-sm text-ink-600">
-            We'd like to count page views to see which hostels and cities people look for,
-            so we can improve search. No personal details are sent, and this has nothing to
-            do with staying signed in.
+            {{ 'common.weDLikeToCountPage' | transloco }}
             <a routerLink="/privacy-policy" class="font-medium text-brand-600 underline">
-              Privacy Policy
+              {{ 'common.privacyPolicy' | transloco }}
             </a>
           </p>
           <div class="flex shrink-0 items-center gap-2">
-            <button hh-button variant="text" size="sm" (click)="decline()">
-              No thanks
-            </button>
+            <button hh-button variant="text" size="sm" (click)="decline()">{{ 'common.noThanks' | transloco }}</button>
             <button hh-button color="primary" size="sm" (click)="allow()">
-              Allow
+              {{ 'common.allow' | transloco }}
             </button>
           </div>
         </div>

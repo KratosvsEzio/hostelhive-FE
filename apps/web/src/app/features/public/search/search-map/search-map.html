@@ -49,16 +49,25 @@
     [style.bottom.px]="toggleBottom()"
   >
     <div
-      (click)="openListing(sel)"
-      class="hh-mapcard-dock relative cursor-pointer overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.28)]"
+      class="hh-mapcard-dock relative overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.28)]"
     >
+      <button
+        type="button"
+        class="absolute inset-0 cursor-pointer"
+        [attr.aria-label]="'common.viewDetails' | transloco"
+        (click)="openListing(sel)"
+      ></button>
       <div class="relative aspect-[16/10] bg-ink-100">
-        <img
-          [src]="cardImage(sel)"
-          alt=""
-          class="h-full w-full object-cover"
-          loading="lazy"
-        />
+        @if (cardImage(sel)) {
+          <img
+            [src]="cardImage(sel)"
+            alt=""
+            class="h-full w-full object-cover"
+            loading="lazy"
+          />
+        } @else {
+          <hh-photo-placeholder [compact]="true" />
+        }
         <button
           type="button"
           [aria-label]="'common.close' | transloco"

@@ -13,7 +13,7 @@
     <hh-error-state
       [networkError]="s.networkError"
       [title]="'hostSubscription.couldnTLoadYourSubscription' | transloco"
-      message="Please check your connection and try again."
+      [message]="'hostSubscription.pleaseCheckYourConnectionAnd' | transloco"
       (retry)="reload()"
     />
   } @else {
@@ -144,7 +144,7 @@
             <hh-empty-state
               icon="ti-rosette-discount-off"
               [title]="'hostSubscription.noActiveSubscription' | transloco"
-              message="You don't have an active plan yet. Browse the plans below to get started."
+              [message]="'hostSubscription.youDonTHaveAn' | transloco"
             />
           </div>
         </hh-card>
@@ -191,7 +191,7 @@
         <hh-empty-state
           icon="ti-package"
           [title]="'hostSubscription.noPlansAvailable' | transloco"
-          message="Check back soon — plans will appear here."
+          [message]="'hostSubscription.checkBackSoonPlans' | transloco"
         />
       } @else {
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

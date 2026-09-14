@@ -16,7 +16,7 @@
     <hh-empty-state
       icon="ti-receipt"
       [title]="'hostSubscription.noPaymentsYet' | transloco"
-      message="Invoices appear here after your first charge."
+      [message]="'hostSubscription.invoicesAppearHereAfterYour' | transloco"
     />
   } @else {
     <hh-data-table [columns]="cols" [rows]="paged()" [rowId]="rowId" [expandable]="expand" />

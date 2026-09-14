@@ -14,11 +14,11 @@ import { TranslocoPipe } from '@jsverse/transloco';
   template: `
     @if (networkError()) {
       <i class="ti ti-wifi-off text-3xl text-ink-400" aria-hidden="true"></i>
-      <p class="mt-2 text-sm font-medium text-ink-800">{{ title() || ('states.cantConnect' | transloco) }}</p>
+      <h1 class="mt-2 text-sm font-medium text-ink-800">{{ title() || ('states.cantConnect' | transloco) }}</h1>
       <p class="mt-1 text-xs text-ink-500">{{ message() || ('states.checkConnection' | transloco) }}</p>
     } @else {
       <i class="ti ti-alert-triangle text-3xl text-danger" aria-hidden="true"></i>
-      <p class="mt-2 text-sm font-medium text-ink-800">{{ title() || ('states.somethingWentWrong' | transloco) }}</p>
+      <h1 class="mt-2 text-sm font-medium text-ink-800">{{ title() || ('states.somethingWentWrong' | transloco) }}</h1>
       @if (message()) {
         <p class="mt-1 text-xs text-ink-500">{{ message() }}</p>
       }
@@ -26,7 +26,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
     @if (showRetry()) {
       <button
         type="button"
-        class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
+        class="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
         (click)="retry.emit()"
       >
         <i class="ti ti-refresh" aria-hidden="true"></i>{{ retryLabel() ?? ('common.retry' | transloco) }}

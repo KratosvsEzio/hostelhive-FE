@@ -1,7 +1,7 @@
 <app-dashboard-layout [label]="'common.bookings' | transloco">
   <div hhActions class="flex shrink-0 items-center gap-2">
-    <button hh-button color="primary" size="sm" (click)="openForm()" aria-label="Create booking">
-      <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">Create booking</span>
+    <button hh-button color="primary" size="sm" (click)="openForm()" [attr.aria-label]="'hostBookings.createBooking' | transloco">
+      <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostBookings.createBooking' | transloco }}</span>
     </button>
   </div>
 
@@ -63,7 +63,7 @@
       <hh-error-state
         class="mt-5 block"
         [title]="'common.weCouldnTLoad2' | transloco"
-        message="Something went wrong reaching the server."
+        [message]="'common.somethingWentWrongReachingThe' | transloco"
       />
     } @else if (!rows().length) {
       <hh-empty-state
@@ -100,7 +100,7 @@
     @if (menuPos(); as pos) {
       @let menuBooking = rows().find((b) => b.id === id);
       @if (menuBooking) {
-        <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="184" (close)="closeMenu()">
+        <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="184" (closed)="closeMenu()">
           <!-- Only while it is still waiting on a room. Offering it on a checked-out stay
                would be a control that cannot do anything. -->
           @if (menuBooking.disposition.slug === 'pending-allotment') {
@@ -112,9 +112,7 @@
               class="w-full !justify-start"
               (click)="openAssign(menuBooking)"
             >
-              <i class="ti ti-bed text-sm" aria-hidden="true"></i>
-              Assign room
-            </button>
+              <i class="ti ti-bed text-sm" aria-hidden="true"></i>{{ 'hostBookings.assignRoom' | transloco }}</button>
           }
           <button
             type="button"
@@ -124,9 +122,7 @@
             class="w-full !justify-start"
             (click)="openDetails(menuBooking)"
           >
-            <i class="ti ti-file-text text-sm" aria-hidden="true"></i>
-            View details
-          </button>
+            <i class="ti ti-file-text text-sm" aria-hidden="true"></i>{{ 'common.viewDetails' | transloco }}</button>
           <button
             type="button"
             hh-button

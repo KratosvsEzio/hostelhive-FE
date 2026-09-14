@@ -11,10 +11,16 @@ import { TranslocoPipe } from '@jsverse/transloco';
   templateUrl: './account-shell.html',
 })
 export class AccountShell {
+  /**
+   * `label` is a translation key, resolved by the template — the same fix the account
+   * menu's `items` needed. This sidebar names the very same pages, so it carried the very
+   * same defect: four English literals in an otherwise fully translated shell, sitting
+   * directly under a heading that did translate.
+   */
   protected readonly nav = [
-    { path: 'bookings', label: 'Bookings', icon: 'ti-calendar' },
-    { path: 'favorites', label: 'Favorites', icon: 'ti-heart' },
-    { path: 'settings', label: 'Account settings', icon: 'ti-settings' },
-    { path: 'security', label: 'Password & security', icon: 'ti-lock' },
+    { path: 'bookings', label: 'common.bookings', icon: 'ti-calendar' },
+    { path: 'favorites', label: 'common.favorites', icon: 'ti-heart' },
+    { path: 'settings', label: 'common.accountSettings', icon: 'ti-settings' },
+    { path: 'security', label: 'common.passwordAmpSecurity', icon: 'ti-lock' },
   ];
 }

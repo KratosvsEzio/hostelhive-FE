@@ -1,0 +1,517 @@
+{
+  "licence": "Pexels License — https://www.pexels.com/license/ — free for commercial use, no attribution required.",
+  "note": "Every file below was downloaded from Pexels and re-encoded to WebP at 1200x800, with 480w and 800w renditions beside it.",
+  "rule": "sourceDescription is the photographer’s own words. Alt text, captions and file names may not name a place it does not — enforced by blog-figures.spec.ts.",
+  "images": [
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/residential-blocks.webp",
+      "source": "https://www.pexels.com/photo/10753082/",
+      "sourceDescription": "High-angle view of residential buildings in Karachi, Pakistan, showcasing local architecture"
+    },
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/flyover-traffic.webp",
+      "source": "https://www.pexels.com/photo/5591156/",
+      "sourceDescription": "Modern cars and scooters driving along asphalt highway and over bridge in megapolis"
+    },
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/papers-with-client.webp",
+      "source": "https://www.pexels.com/photo/8292784/",
+      "sourceDescription": "Real estate agent reviewing property documents with a client"
+    },
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/signing.webp",
+      "source": "https://www.pexels.com/photo/8292838/",
+      "sourceDescription": "Close-up of hands signing real estate document at meeting table"
+    },
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/front-desk.webp",
+      "source": "https://www.pexels.com/photo/5137954/",
+      "sourceDescription": "Backpackers cheerfully checking in at a vibrant hostel reception desk"
+    },
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/keys-and-papers.webp",
+      "source": "https://www.pexels.com/photo/34135038/",
+      "sourceDescription": "Keys and real estate documents on a desk with colorful house models"
+    },
+    {
+      "file": "/blog/what-a-hostel-agent-actually-costs-you/agent-keyring.webp",
+      "source": "https://www.pexels.com/photo/7937684/",
+      "sourceDescription": "Close-up of a realtor holding a keychain and clipboard with interior office background"
+    },
+    {
+      "file": "/blog/what-a-hostel-room-actually-costs-in-pakistan/dorm-bunks.webp",
+      "source": "https://www.pexels.com/photo/5137980/",
+      "sourceDescription": "Comfortable hostel dorm room with clean bunk beds and a cozy ambiance"
+    },
+    {
+      "file": "/blog/what-a-hostel-room-actually-costs-in-pakistan/room-door.webp",
+      "source": "https://www.pexels.com/photo/5137982/",
+      "sourceDescription": "Cozy hostel room with a white door labeled No. 18 and bunk bed"
+    },
+    {
+      "file": "/blog/what-a-hostel-room-actually-costs-in-pakistan/modern-dorm.webp",
+      "source": "https://www.pexels.com/photo/4907433/",
+      "sourceDescription": "Two women enjoying a casual chat in a modern hostel dorm room"
+    },
+    {
+      "file": "/blog/what-a-hostel-room-actually-costs-in-pakistan/packing-in-dorm.webp",
+      "source": "https://www.pexels.com/photo/5158963/",
+      "sourceDescription": "Couple packing bags in a bright cozy hostel dormitory room with wooden floor"
+    },
+    {
+      "file": "/blog/what-a-hostel-room-actually-costs-in-pakistan/lahore-plaza.webp",
+      "source": "https://www.pexels.com/photo/37880937/",
+      "sourceDescription": "Zaman Plaza captured with warm sunset light showcasing Lahore's urban architecture"
+    },
+    {
+      "file": "/blog/what-a-hostel-room-actually-costs-in-pakistan/karachi-rooftops.webp",
+      "source": "https://www.pexels.com/photo/27937606/",
+      "sourceDescription": "Aerial view of residential homes and Karachi skyline with clear blue sky"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/railway-station.webp",
+      "source": "https://www.pexels.com/photo/35734272/",
+      "sourceDescription": "Iconic clock towers of Lahore Railway Station with vintage architecture under a clear sky"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/busy-street.webp",
+      "source": "https://www.pexels.com/photo/34142168/",
+      "sourceDescription": "A stunning minaret towers over a busy city street filled with people and scaffolding"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/delhi-gate.webp",
+      "source": "https://www.pexels.com/photo/25002542/",
+      "sourceDescription": "View of the historic Delhi Gate a famous landmark in Lahore Pakistan"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/arfa-tower-night.webp",
+      "source": "https://www.pexels.com/photo/16021536/",
+      "sourceDescription": "Stunning aerial night view of Arfa Software Technology Park in Lahore, showcasing city lights and traffic trails"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/badshahi.webp",
+      "source": "https://www.pexels.com/photo/13629907/",
+      "sourceDescription": "Scenic view of Badshahi Mosque in Lahore with flying birds against a clear blue sky"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/minar-e-pakistan.webp",
+      "source": "https://www.pexels.com/photo/16364707/",
+      "sourceDescription": "A vibrant view of Minar-e-Pakistan surrounded by a lush green park in Lahore"
+    },
+    {
+      "file": "/blog/student-hostels-in-lahore-a-practical-guide/lahore-fort.webp",
+      "source": "https://www.pexels.com/photo/13023314/",
+      "sourceDescription": "Explore the historical beauty of Lahore Fort with its lush gardens and elegance"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/islamabad-aerial.webp",
+      "source": "https://www.pexels.com/photo/38773558/",
+      "sourceDescription": "A stunning aerial view of Islamabad with highways, buildings, and mountains at dusk"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/expressway.webp",
+      "source": "https://www.pexels.com/photo/37937785/",
+      "sourceDescription": "An aerial view of Islamabad Expressway showcasing the city's urban landscape and modern architecture"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/sector-street.webp",
+      "source": "https://www.pexels.com/photo/38647413/",
+      "sourceDescription": "A picturesque street in Islamabad graced with colorful flowering trees and lush greenery"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/road-to-tower.webp",
+      "source": "https://www.pexels.com/photo/39439859/",
+      "sourceDescription": "A tree-lined urban road leading to a modern skyscraper, captured on a cloudy day"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/interchange.webp",
+      "source": "https://www.pexels.com/photo/6259182/",
+      "sourceDescription": "Aerial shot of Islamabad's intricate expressway system, showcasing lush greenery and urban development"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/faisal-mosque.webp",
+      "source": "https://www.pexels.com/photo/5258953/",
+      "sourceDescription": "Iconic view of Faisal Mosque in Islamabad, Pakistan, under a bright blue sky with clouds"
+    },
+    {
+      "file": "/blog/student-hostels-in-islamabad-sector-by-sector/hills-sunset.webp",
+      "source": "https://www.pexels.com/photo/9487445/",
+      "sourceDescription": "Scenic view of Faisal Mosque in Islamabad under a dramatic sunset with mountainous backdrop"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/empress-market.webp",
+      "source": "https://www.pexels.com/photo/29296410/",
+      "sourceDescription": "View of Empress Market, a historical site in Karachi, showcasing colonial architecture at sunrise"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/street-traffic.webp",
+      "source": "https://www.pexels.com/photo/37284639/",
+      "sourceDescription": "A bustling urban street scene with traffic and high-rise apartment buildings at sunset"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/density-aerial.webp",
+      "source": "https://www.pexels.com/photo/34096453/",
+      "sourceDescription": "A detailed aerial shot of Karachi showing dense settlements and a distinct circular park"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/skyline.webp",
+      "source": "https://www.pexels.com/photo/33045005/",
+      "sourceDescription": "Explore the dynamic skyline of Karachi with its high-rise buildings and vibrant city planning"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/kmc-building.webp",
+      "source": "https://www.pexels.com/photo/29296199/",
+      "sourceDescription": "View of the iconic KMC Building in Karachi at twilight, showcasing colonial architecture"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/decorated-bus.webp",
+      "source": "https://www.pexels.com/photo/28183727/",
+      "sourceDescription": "Vibrant Pakistani bus adorned with traditional art on a bustling Karachi street"
+    },
+    {
+      "file": "/blog/student-hostels-in-karachi-where-students-live/street-food.webp",
+      "source": "https://www.pexels.com/photo/14894500/",
+      "sourceDescription": "Two adults enjoying a lively night at a bustling street food market, Karachi"
+    },
+    {
+      "file": "/blog/rawalpindi-or-islamabad-for-students/highway-sunset.webp",
+      "source": "https://www.pexels.com/photo/8583526/",
+      "sourceDescription": "A vibrant sunset over a busy highway in Rawalpindi, Pakistan, showcasing city life and architecture"
+    },
+    {
+      "file": "/blog/rawalpindi-or-islamabad-for-students/decorated-truck.webp",
+      "source": "https://www.pexels.com/photo/32753946/",
+      "sourceDescription": "Vibrant decorated truck parked on a bustling Rawalpindi street. Captured with dynamic urban scenery"
+    },
+    {
+      "file": "/blog/rawalpindi-or-islamabad-for-students/food-stall.webp",
+      "source": "https://www.pexels.com/photo/35054151/",
+      "sourceDescription": "Street food vendors preparing meals at an outdoor stall surrounded by customers, showcasing authentic local cuisine"
+    },
+    {
+      "file": "/blog/rawalpindi-or-islamabad-for-students/motorbike.webp",
+      "source": "https://www.pexels.com/photo/16718447/",
+      "sourceDescription": "A bustling street scene in Pakistan featuring a man on a motorbike, capturing the urban life"
+    },
+    {
+      "file": "/blog/rawalpindi-or-islamabad-for-students/pindi-mosque.webp",
+      "source": "https://www.pexels.com/photo/17483503/",
+      "sourceDescription": "A stunning view of a mosque's ornate dome and minarets in Rawalpindi, Pakistan, showcasing Islamic architecture"
+    },
+    {
+      "file": "/blog/rawalpindi-or-islamabad-for-students/street-festival.webp",
+      "source": "https://www.pexels.com/photo/13149335/",
+      "sourceDescription": "Street festival in Rawalpindi, showcasing cultural celebration with vibrant decorations"
+    },
+    {
+      "file": "/blog/hostels-near-punjab-university-lahore/lecture-hall.webp",
+      "source": "https://www.pexels.com/photo/26732543/",
+      "sourceDescription": "Black and white photo of attentive university students seated in lecture hall"
+    },
+    {
+      "file": "/blog/hostels-near-punjab-university-lahore/jamia-mosque.webp",
+      "source": "https://www.pexels.com/photo/2383832/",
+      "sourceDescription": "Beautiful view of the Grand Jamia Mosque in Lahore with clear skies and greenery"
+    },
+    {
+      "file": "/blog/hostels-near-punjab-university-lahore/studying-outside.webp",
+      "source": "https://www.pexels.com/photo/33016085/",
+      "sourceDescription": "Young man studying outside historic building in Peshawar, Pakistan"
+    },
+    {
+      "file": "/blog/hostels-near-punjab-university-lahore/minarets-fog.webp",
+      "source": "https://www.pexels.com/photo/11171970/",
+      "sourceDescription": "A moody silhouette of minarets and trees enveloped in fog during a vibrant sunset"
+    },
+    {
+      "file": "/blog/hostels-near-punjab-university-lahore/old-lahore.webp",
+      "source": "https://www.pexels.com/photo/2884865/",
+      "sourceDescription": "Ornate facade of ancient building in Lahore with colorful mosaic and arched entrance"
+    },
+    {
+      "file": "/blog/hostels-near-punjab-university-lahore/reception-map.webp",
+      "source": "https://www.pexels.com/photo/5137963/",
+      "sourceDescription": "Backpackers consulting map at hostel reception desk for directions"
+    },
+    {
+      "file": "/blog/hostels-near-nust-islamabad/electronics-lab.webp",
+      "source": "https://www.pexels.com/photo/33992840/",
+      "sourceDescription": "Students working on electronics projects in a lab, focusing on practical learning"
+    },
+    {
+      "file": "/blog/hostels-near-nust-islamabad/reception.webp",
+      "source": "https://www.pexels.com/photo/5137967/",
+      "sourceDescription": "Friendly hostel reception area with travelers checking in"
+    },
+    {
+      "file": "/blog/hostels-near-nust-islamabad/faisal-aerial.webp",
+      "source": "https://www.pexels.com/photo/27698081/",
+      "sourceDescription": "Captured from above, Islamabad's Faisal Mosque silhouetted against a vibrant sunset sky"
+    },
+    {
+      "file": "/blog/hostels-near-nust-islamabad/city-from-above.webp",
+      "source": "https://www.pexels.com/photo/38418609/",
+      "sourceDescription": "Overhead view of a cityscape surrounded by greenery under a clear sky, emphasizing urban architecture"
+    },
+    {
+      "file": "/blog/hostels-near-nust-islamabad/office-street.webp",
+      "source": "https://www.pexels.com/photo/37704879/",
+      "sourceDescription": "A sunny day view of a city street lined with trees and modern office buildings"
+    },
+    {
+      "file": "/blog/hostels-near-nust-islamabad/shared-room.webp",
+      "source": "https://www.pexels.com/photo/4907197/",
+      "sourceDescription": "Two women engaging in conversation on bunk beds in a modern dormitory room"
+    },
+    {
+      "file": "/blog/hostels-near-umt-and-johar-town-lahore/minar-vertical.webp",
+      "source": "https://www.pexels.com/photo/19949958/",
+      "sourceDescription": "Vertical shot of Minar-e-Pakistan showcasing architectural details against a blue sky"
+    },
+    {
+      "file": "/blog/hostels-near-umt-and-johar-town-lahore/construction.webp",
+      "source": "https://www.pexels.com/photo/14189083/",
+      "sourceDescription": "Dynamic urban street scene featuring traffic against construction and office buildings"
+    },
+    {
+      "file": "/blog/hostels-near-umt-and-johar-town-lahore/night-market.webp",
+      "source": "https://www.pexels.com/photo/14687230/",
+      "sourceDescription": "Lively night market illuminated by streetlights and vibrant vendor stalls showcasing local culture"
+    },
+    {
+      "file": "/blog/hostels-near-umt-and-johar-town-lahore/handcart.webp",
+      "source": "https://www.pexels.com/photo/16718406/",
+      "sourceDescription": "A man pulls a cart loaded with goods in a vibrant street market in Pakistan, illustrating daily life"
+    },
+    {
+      "file": "/blog/hostels-near-umt-and-johar-town-lahore/check-in.webp",
+      "source": "https://www.pexels.com/photo/4907442/",
+      "sourceDescription": "Two women enjoying a cheerful check-in at a hostel reception desk"
+    },
+    {
+      "file": "/blog/hostels-near-umt-and-johar-town-lahore/room-talk.webp",
+      "source": "https://www.pexels.com/photo/4907212/",
+      "sourceDescription": "Two women in a hostel room enjoying conversation by the bunk beds"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/altit-fort.webp",
+      "source": "https://www.pexels.com/photo/1454405/",
+      "sourceDescription": "Breathtaking view of Hunza Valley and mountains framed by Altit Fort architecture"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/karimabad-night.webp",
+      "source": "https://www.pexels.com/photo/15817300/",
+      "sourceDescription": "Majestic starry night over the illuminated mountains of Karimabad"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/autumn-road.webp",
+      "source": "https://www.pexels.com/photo/35061891/",
+      "sourceDescription": "Picturesque road winding through autumn trees in Hunza Valley, Gilgit-Baltistan"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/passu-autumn.webp",
+      "source": "https://www.pexels.com/photo/29890582/",
+      "sourceDescription": "Beautiful autumn landscape in Passu, Pakistan, featuring golden foliage"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/valley-aerial.webp",
+      "source": "https://www.pexels.com/photo/35061821/",
+      "sourceDescription": "Stunning aerial view of the Hunza Valley with autumn foliage and winding river"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/karimabad-view.webp",
+      "source": "https://www.pexels.com/photo/11407532/",
+      "sourceDescription": "Person standing on rocky cliff overlooking striking mountain ranges of Karimabad"
+    },
+    {
+      "file": "/blog/backpacker-hostels-in-hunza-valley/town-in-mountains.webp",
+      "source": "https://www.pexels.com/photo/8419054/",
+      "sourceDescription": "Breathtaking view of a small town nestled between towering mountains"
+    },
+    {
+      "file": "/blog/skardu-hostels-and-when-to-visit/shangrila.webp",
+      "source": "https://www.pexels.com/photo/35302567/",
+      "sourceDescription": "Capture of Shangrila Resort with mountains and lake in Skardu, Pakistan"
+    },
+    {
+      "file": "/blog/skardu-hostels-and-when-to-visit/shigar-lake.webp",
+      "source": "https://www.pexels.com/photo/33784883/",
+      "sourceDescription": "Captivating shot of Shigar Lake in Skardu with red-roofed buildings and majestic mountains reflecting in the water"
+    },
+    {
+      "file": "/blog/skardu-hostels-and-when-to-visit/cold-desert.webp",
+      "source": "https://www.pexels.com/photo/17692933/",
+      "sourceDescription": "A stunning vertical view of the sand dunes in Skardu with snowy mountains in the background"
+    },
+    {
+      "file": "/blog/skardu-hostels-and-when-to-visit/autumn-lake.webp",
+      "source": "https://www.pexels.com/photo/19442074/",
+      "sourceDescription": "Peaceful autumn scene of a lake and mountains in Skardu, with vibrant foliage and a clear sky"
+    },
+    {
+      "file": "/blog/skardu-hostels-and-when-to-visit/peaks.webp",
+      "source": "https://www.pexels.com/photo/27948636/",
+      "sourceDescription": "Stunning view of Skardu's mountain peaks with clouds and snow, perfect for adventure seekers"
+    },
+    {
+      "file": "/blog/skardu-hostels-and-when-to-visit/lone-tree.webp",
+      "source": "https://www.pexels.com/photo/37961647/",
+      "sourceDescription": "A person stands under a lone tree in Skardu Valley, Pakistan, with stunning mountain views"
+    },
+    {
+      "file": "/blog/naran-kaghan-budget-stays/boat-on-lake.webp",
+      "source": "https://www.pexels.com/photo/38513598/",
+      "sourceDescription": "Scenic boat ride on mountain lake"
+    },
+    {
+      "file": "/blog/naran-kaghan-budget-stays/saif-ul-malook.webp",
+      "source": "https://www.pexels.com/photo/34948624/",
+      "sourceDescription": "Majestic lake Saif-ul-Malook with stunning snow-capped mountains"
+    },
+    {
+      "file": "/blog/naran-kaghan-budget-stays/boats.webp",
+      "source": "https://www.pexels.com/photo/14220902/",
+      "sourceDescription": "Boats on the lake near a mountain"
+    },
+    {
+      "file": "/blog/naran-kaghan-budget-stays/mountain-reflection.webp",
+      "source": "https://www.pexels.com/photo/31431305/",
+      "sourceDescription": "Stunning reflection of snowy mountains in lake"
+    },
+    {
+      "file": "/blog/naran-kaghan-budget-stays/tent-by-river.webp",
+      "source": "https://www.pexels.com/photo/14064740/",
+      "sourceDescription": "Tent over river in mountains"
+    },
+    {
+      "file": "/blog/naran-kaghan-budget-stays/green-valley.webp",
+      "source": "https://www.pexels.com/photo/12370780/",
+      "sourceDescription": "A green mountain near body of water under blue sky"
+    },
+    {
+      "file": "/blog/murree-and-galiyat-weekend-hostels/pine-road.webp",
+      "source": "https://www.pexels.com/photo/39439842/",
+      "sourceDescription": "A beautiful winding road through lush pine forests in the enchanting Murree Hills"
+    },
+    {
+      "file": "/blog/murree-and-galiyat-weekend-hostels/murree-aerial.webp",
+      "source": "https://www.pexels.com/photo/13458601/",
+      "sourceDescription": "A stunning aerial view of Murree, nestled in the lush green hills of Punjab, Pakistan"
+    },
+    {
+      "file": "/blog/murree-and-galiyat-weekend-hostels/chairlift.webp",
+      "source": "https://www.pexels.com/photo/17410793/",
+      "sourceDescription": "A scenic view of a chairlift over an evergreen forest in Murree, Pakistan on a sunny day"
+    },
+    {
+      "file": "/blog/murree-and-galiyat-weekend-hostels/pine-forest.webp",
+      "source": "https://www.pexels.com/photo/11586310/",
+      "sourceDescription": "Breathtaking view of a lush pine forest and mountains on a clear day"
+    },
+    {
+      "file": "/blog/murree-and-galiyat-weekend-hostels/snow-peaks.webp",
+      "source": "https://www.pexels.com/photo/13428934/",
+      "sourceDescription": "Majestic view of snow-capped mountains and lush green trees in Murree, Pakistan"
+    },
+    {
+      "file": "/blog/murree-and-galiyat-weekend-hostels/forest-curve.webp",
+      "source": "https://www.pexels.com/photo/39439840/",
+      "sourceDescription": "Curved road cutting through a lush pine forest in Rawalpindi, Pakistan, during daylight"
+    },
+    {
+      "file": "/blog/first-time-in-a-dorm-hostel-etiquette/dorm-talking.webp",
+      "source": "https://www.pexels.com/photo/4907208/",
+      "sourceDescription": "Two women talking and relaxing in a modern hostel room with bunk beds"
+    },
+    {
+      "file": "/blog/first-time-in-a-dorm-hostel-etiquette/travellers-bunks.webp",
+      "source": "https://www.pexels.com/photo/7969098/",
+      "sourceDescription": "Two young travelers enjoying their hostel stay with bunk beds and backpacks"
+    },
+    {
+      "file": "/blog/first-time-in-a-dorm-hostel-etiquette/shared-downtime.webp",
+      "source": "https://www.pexels.com/photo/5158945/",
+      "sourceDescription": "Diverse friends enjoying leisure time in a cozy shared dorm room with bunks"
+    },
+    {
+      "file": "/blog/first-time-in-a-dorm-hostel-etiquette/arriving.webp",
+      "source": "https://www.pexels.com/photo/4907190/",
+      "sourceDescription": "Two women with backpacks walking into a bright hostel dormitory"
+    },
+    {
+      "file": "/blog/first-time-in-a-dorm-hostel-etiquette/bunk-seated.webp",
+      "source": "https://www.pexels.com/photo/4907227/",
+      "sourceDescription": "Two women seated on bunk beds in a minimalist room setting, talking"
+    },
+    {
+      "file": "/blog/first-time-in-a-dorm-hostel-etiquette/dorm-conversation.webp",
+      "source": "https://www.pexels.com/photo/4907600/",
+      "sourceDescription": "Two travelers conversing in a hostel dormitory, showcasing diverse culture"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/packing-gear.webp",
+      "source": "https://www.pexels.com/photo/9186036/",
+      "sourceDescription": "Young woman packing for an adventure trip indoors, organizing gear"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/luggage-flatlay.webp",
+      "source": "https://www.pexels.com/photo/4004224/",
+      "sourceDescription": "Aerial view of modern luggage and backpacks arranged on a wooden floor"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/packs-ready.webp",
+      "source": "https://www.pexels.com/photo/13945428/",
+      "sourceDescription": "Backpacks and luggage ready for an outdoor travel adventure"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/kit-laid-out.webp",
+      "source": "https://www.pexels.com/photo/18447532/",
+      "sourceDescription": "Organized gear for hiking photography, including camera, tripod, and backpack"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/packs-on-peak.webp",
+      "source": "https://www.pexels.com/photo/19102197/",
+      "sourceDescription": "Blue and orange backpacks resting on rocky mountain peak under clear sky"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/winter-layers.webp",
+      "source": "https://www.pexels.com/photo/6395034/",
+      "sourceDescription": "Man in winter attire observes snowy mountain landscape from wooden railing"
+    },
+    {
+      "file": "/blog/hostel-packing-list-pakistan/preparing.webp",
+      "source": "https://www.pexels.com/photo/4273755/",
+      "sourceDescription": "Positive young ethnic male in casual wear and hat preparing backpacks before travelling"
+    },
+    {
+      "file": "/blog/girls-hostel-safety-checklist/entering-room.webp",
+      "source": "https://www.pexels.com/photo/4907181/",
+      "sourceDescription": "Two women backpackers entering a hostel dorm room with bunk beds, smiling"
+    },
+    {
+      "file": "/blog/girls-hostel-safety-checklist/reception-desk.webp",
+      "source": "https://www.pexels.com/photo/5137957/",
+      "sourceDescription": "A backpacker checks in at a hostel reception greeted warmly"
+    },
+    {
+      "file": "/blog/girls-hostel-safety-checklist/night-branches.webp",
+      "source": "https://www.pexels.com/photo/17356627/",
+      "sourceDescription": "A serene shot of the moon seen through autumn tree branches in Rawalpindi, Pakistan"
+    },
+    {
+      "file": "/blog/girls-hostel-safety-checklist/bunk-conversation.webp",
+      "source": "https://www.pexels.com/photo/4907236/",
+      "sourceDescription": "Two women conversing casually on bunk beds in a hostel room setting"
+    },
+    {
+      "file": "/blog/girls-hostel-safety-checklist/back-alley.webp",
+      "source": "https://www.pexels.com/photo/8235969/",
+      "sourceDescription": "Atmospheric view of an abandoned urban alley with rusty carts and derelict walls in Rawalpindi, Pakistan"
+    },
+    {
+      "file": "/blog/girls-hostel-safety-checklist/doorway-light.webp",
+      "source": "https://www.pexels.com/photo/25786799/",
+      "sourceDescription": "A moody urban alleyway in Rawalpindi featuring an old wooden door and street light"
+    }
+  ]
+}

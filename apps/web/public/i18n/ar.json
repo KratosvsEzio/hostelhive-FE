@@ -102,7 +102,17 @@
     "signInToBook": "سجّل الدخول للحجز",
     "pickYourRoomOnce": "اختر غرفتك بمجرد تسجيل الدخول",
     "createAFreeAccountToBook": "أنشئ حسابًا مجانيًا لاختيار الغرف وحجزها ريثما تقرر. لا يستغرق سوى 30 ثانية.",
-    "roomsAmpPricing": "الغرف والأسعار"
+    "andNMore": "و{{count}} أخرى",
+    "favorite": "المفضلة",
+    "showPhoneNumber": "إظهار رقم الهاتف",
+    "showAllNReviews": "عرض كل التقييمات ({{count}})",
+    "hostSince": "مضيف منذ {{year}}",
+    "writeAReview": "اكتب تقييماً",
+    "roomSummary": "{{beds}} سرير · {{types}} أنواع غرف · {{sharing}} خيارات مشاركة",
+    "nSharingAvailable": "متاح بمشاركة {{labels}}",
+    "bookNow": "احجز الآن",
+    "nPhotos": "{{count}} صورة",
+    "otherPhotos": "أخرى"
   },
   "common": {
     "loading": "جارٍ التحميل…",
@@ -226,6 +236,7 @@
     "dinner": "العشاء",
     "teamAmpStaff": "الفريق والموظفون",
     "accountSettings": "إعدادات الحساب",
+    "passwordAmpSecurity": "كلمة المرور والأمان",
     "someRequiredFieldsAre": "بعض الحقول المطلوبة ناقصة",
     "uploading": "جارٍ الرفع…",
     "listingProgress": "تقدم الإعلان",
@@ -318,7 +329,16 @@
     "enterDescription": "أدخل الوصف",
     "enterLandmarks": "أدخل المعالم القريبة",
     "enterReason": "أدخل سببًا",
-    "enterNote": "أدخل ملاحظة"
+    "enterNote": "أدخل ملاحظة",
+    "somethingWentWrongReachingThe": "حدث خطأ أثناء الاتصال بالخادم.",
+    "weDLikeToCountPage": "نودّ إحصاء مشاهدات الصفحات لمعرفة النُزل والمدن التي يبحث عنها الناس، حتى نحسّن البحث. لا تُرسَل أي بيانات شخصية، ولا علاقة لهذا ببقائك مسجّلًا للدخول.",
+    "noThanks": "لا، شكرًا",
+    "password": "كلمة المرور",
+    "selectYear": "اختر السنة",
+    "allow": "السماح",
+    "noPhotosYet": "لا توجد صور بعد",
+    "guests": "الضيوف",
+    "copy": "نسخ"
   },
   "leadWall": {
     "close": "إغلاق",
@@ -334,7 +354,8 @@
     "weSentASigned24": "أرسلنا رابط تحقق صالحًا لمدة ٢٤ ساعة إلى",
     "clickingItActivatesYourAccount": ". النقر عليه يفعّل حسابك ويكشف الرقم.",
     "iVeVerifiedContinue": "تم التحقق — متابعة",
-    "back": "رجوع"
+    "back": "رجوع",
+    "confirmPassword": "تأكيد كلمة المرور"
   },
   "home": {
     "searchCityOrArea": "ابحث عن مدينة أو منطقة",
@@ -528,7 +549,12 @@
     "country": "الدولة",
     "streetAddress": "عنوان الشارع",
     "nearbyLandmarks": "المعالم القريبة",
-    "roomTypeDescription": "وصف نوع الغرفة"
+    "roomTypeDescription": "وصف نوع الغرفة",
+    "couldnTCheckWhichRooms": "تعذّر التحقق من الغرف التي تستخدم هذا النوع. حاول مرة أخرى.",
+    "findingTheRoomsBuiltOn": "جارٍ البحث عن الغرف المبنية على {{name}}…",
+    "moveAllRoomsTo": "نقل جميع الغرف إلى",
+    "selectARoomType": "اختر نوع الغرفة",
+    "noRoomsAreBuiltOn": "لا توجد غرف مبنية على {{name}}، لذا لن يتغيّر شيء آخر. ستتم إزالته عند الحفظ."
   },
   "a11y": {
     "close": "إغلاق",
@@ -607,7 +633,16 @@
     "clearSearch": "مسح البحث",
     "closeTimePicker": "إغلاق منتقي الوقت",
     "chooseTime": "اختيار وقت",
-    "dismiss": "تجاهل"
+    "dismiss": "تجاهل",
+    "closePropertyMenu": "إغلاق قائمة العقارات",
+    "goToPhotoN": "الانتقال إلى الصورة {{n}}",
+    "removeFrom": "إزالة {{title}}",
+    "removeOneFrom": "إزالة واحد من {{title}}",
+    "onePhotoAtATime": "صورة واحدة في كل مرة",
+    "allPhotosByGroup": "كل الصور مجمّعة",
+    "fewerGuestsIn": "عدد أقل من الضيوف في {{title}}",
+    "moreGuestsIn": "عدد أكبر من الضيوف في {{title}}",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "hostTenants": {
     "tenantPhoto": "صورة المستأجر",
@@ -672,7 +707,10 @@
     "roomNotAvailableForTheseDates": "الغرفة غير متاحة في هذه التواريخ",
     "checkIn": "تسجيل الدخول",
     "checkOut": "تسجيل الخروج",
-    "leavingDate": "تاريخ المغادرة"
+    "leavingDate": "تاريخ المغادرة",
+    "thisTenantHasNoRent": "لا توجد فواتير إيجار مسجّلة لهذا المستأجر بعد.",
+    "noUtilityChargesHaveBeen": "لم تُسجَّل أي رسوم مرافق لغرفة هذا المستأجر.",
+    "checkInYourFirstTenant": "سجّل وصول أول مستأجر لبدء تتبّع الإيجار."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "تعذر تحميل اشتراكك",
@@ -726,7 +764,11 @@
     "thenRsPerPeriod": "بعد ذلك Rs {{price}} / {{period}}",
     "paymentStarted": "بدأ الدفع",
     "payRs": "ادفع Rs {{amount}}",
-    "selectAProduct": "اختر منتجاً"
+    "selectAProduct": "اختر منتجاً",
+    "invoicesAppearHereAfterYour": "تظهر الفواتير هنا بعد أول عملية دفع.",
+    "pleaseCheckYourConnectionAnd": "يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+    "youDonTHaveAn": "ليس لديك خطة نشطة بعد. تصفّح الخطط أدناه للبدء.",
+    "checkBackSoonPlans": "عد قريبًا — ستظهر الخطط هنا."
   },
   "hostMess": {
     "pickADate": "اختر تاريخاً",
@@ -786,7 +828,8 @@
     "last12MonthsPkr": "آخر 12 شهراً · PKR",
     "last30DaysPkr": "آخر 30 يوماً · PKR",
     "uploadingReceipt": "جارٍ رفع الإيصال…",
-    "nPhotosAttached": "{{count}} صور مرفقة"
+    "nPhotosAttached": "{{count}} صور مرفقة",
+    "logYourBulkGroceryPurchases": "سجّل مشترياتك بالجملة لتتبّع مصروفات المطعم."
   },
   "hostRooms": {
     "calendarTab": "التقويم",
@@ -842,7 +885,13 @@
     "createRooms": "إنشاء غرف",
     "bedsOccupiedOf": "{{filled}} من {{total}} سرير مشغول",
     "nOfMBooked": "{{booked}} من {{capacity}} محجوز",
-    "nNoLongerActive": "{{count}} لم يعودوا نشطين"
+    "nNoLongerActive": "{{count}} لم يعودوا نشطين",
+    "dayRoster": "قائمة اليوم",
+    "pickADay": "اختر يومًا.",
+    "nobodyInThisRoomThat": "لا أحد في هذه الغرفة في ذلك اليوم.",
+    "thisRoomCurrentlyHasNo": "لا يوجد حاليًا مستأجرون نشطون في هذه الغرفة.",
+    "addYourFirstRoomTo": "أضف غرفتك الأولى لبدء تتبّع الإشغال.",
+    "bedNumbersAreNotAssigned": "لم تُخصَّص أرقام الأسرّة بعد — يوضّح التقويم عدد الأسرّة المشغولة، لا السرير الذي يشغله كل نزيل."
   },
   "hostUtilities": {
     "ratePerUnit": "السعر لكل وحدة",
@@ -882,7 +931,9 @@
     "shareFormulaStart": "الحصة = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} يوم إشغال",
     "rsUnallocated": "Rs {{amount}} غير مخصصة",
-    "rsOver": "Rs {{amount}} زائدة"
+    "rsOver": "Rs {{amount}} زائدة",
+    "pickARoomWithActive": "اختر غرفة بها مستأجرون نشطون لتقسيم الفاتورة.",
+    "addAUtilityBillTo": "أضف فاتورة مرافق لبدء تتبّع الاستهلاك والرسوم."
   },
   "hostTeam": {
     "staffPhoto": "صورة الموظف",
@@ -894,7 +945,6 @@
     "salaryIssueDate": "تاريخ صرف الراتب",
     "chooseAnImageFromYour": "اختر صورة من ملفاتك",
     "managerAccess": "صلاحية المدير",
-    "thisPersonAlreadyHasAn": "هذا الشخص لديه حساب بالفعل، لذا لا يوجد ما يتم إعداده — إبقاء المفتاح مفعّلاً يمنحه صلاحية مدير على هذا النزل عند الحفظ.",
     "employment": "التوظيف",
     "upload": "رفع",
     "scopedToThisHostelOnly": "مقصور على هذا النزل فقط.",
@@ -913,7 +963,11 @@
     "fromTheTeamThisAction": "من الفريق. لا يمكن التراجع عن هذا الإجراء.",
     "keepsTheirStaffRecordBut": "يحتفظ بسجله الوظيفي لكنه لن يتمكن من تسجيل الدخول أو إدارة هذا النزل.",
     "createsLoginFor": "ينشئ حساب دخول حتى يتمكن {{name}} من إدارة هذا النزل.",
-    "thisStaffMember": "عضو الفريق هذا"
+    "thisStaffMember": "عضو الفريق هذا",
+    "existingAccountKeepsPassword": "إذا كان هذا البريد مرتبطًا بحساب بالفعل، فسيُحتفظ بكلمة المرور الحالية — ولن تُستخدم كلمتك إلا عند إنشاء حساب جديد.",
+    "storedEmailBecomesLogin": "سيكون بريدهم المحفوظ هو بيانات الدخول. وإذا كان لهذا العنوان حساب بالفعل، فسيحتفظون بكلمة المرور الخاصة به.",
+    "pickADifferentStatusTo": "اختر حالة مختلفة لعرض بقية فريقك.",
+    "addAWardenCookOr": "أضف مشرفًا أو طاهيًا أو حارسًا لحفظ راتبه ومستنداته."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "فشلت الموافقة — حاول مرة أخرى.",
@@ -968,7 +1022,9 @@
     "billedTo": "صادرة إلى",
     "issued": "صدرت في",
     "due": "مستحقة",
-    "thisWillPermanentlyDeleteInvoice": "سيؤدي هذا إلى حذف الفاتورة نهائياً"
+    "thisWillPermanentlyDeleteInvoice": "سيؤدي هذا إلى حذف الفاتورة نهائياً",
+    "invoicesAppearHereOnceYou": "تظهر الفواتير هنا بمجرد إصدار فواتير الإيجار أو المرافق.",
+    "tryAdjustingYourFilters": "جرّب تعديل عوامل التصفية."
   },
   "hostExpenses": {
     "allTypes": "جميع الأنواع",
@@ -1012,7 +1068,20 @@
     "pctVsLastMonth": "{{pct}}% مقارنة بالشهر الماضي",
     "nTenantsUnpaid": "{{count}} مستأجرين لم يدفعوا",
     "moveInsAndOuts": "عمليات الدخول والخروج",
-    "pctBedsFilled": "نسبة الأسرة المشغولة"
+    "pctBedsFilled": "نسبة الأسرة المشغولة",
+    "weCouldnTLoadTenant": "تعذّر تحميل بيانات حركة المستأجرين.",
+    "weCouldnTLoadOccupancy": "تعذّر تحميل بيانات الإشغال.",
+    "weCouldnTLoadAnalytics": "تعذّر تحميل التحليلات لهذا العقار.",
+    "allUtilityInvoicesAreSettled": "تمت تسوية جميع فواتير المرافق.",
+    "noInvoicesForThisProperty": "لا توجد فواتير لهذا العقار بعد.",
+    "weCouldnTLoadRevenue": "تعذّر تحميل بيانات الإيرادات.",
+    "upcomingBookings": "الحجوزات القادمة",
+    "nArriving": "{{count}} قادمون",
+    "nLeaving": "{{count}} مغادرون",
+    "nothingBookedYet": "لا توجد حجوزات بعد",
+    "noArrivalsOrDeparturesAhead": "لا وصول أو مغادرة خلال الأسبوعين القادمين.",
+    "inOverOutPerDay": "الوصول فوق المغادرة، لكل يوم",
+    "viewAllBookings": "عرض كل الحجوزات ←"
   },
   "hostBookings": {
     "calendarTab": "التقويم",
@@ -1029,7 +1098,31 @@
     "cancelledByOn": "أُلغي بواسطة {{by}} في {{date}}",
     "pkrPenaltyChargedToYou": "غرامة PKR {{amount}} محمّلة عليك",
     "pkrToYou": "PKR {{amount}} لك",
-    "thisGuest": "هذا الضيف"
+    "thisGuest": "هذا الضيف",
+    "dayLedger": "سجل اليوم",
+    "pendingAllotments": "التخصيصات المعلّقة",
+    "askedFor": "المطلوب",
+    "noContactDetailsOnThis": "لا توجد بيانات اتصال لهذا الحجز",
+    "recordABooking": "تسجيل حجز",
+    "whoIsStaying": "من سيقيم",
+    "onlyIfTheyHaveOne": "فقط إذا كان لديهم واحد",
+    "addARoom": "إضافة غرفة",
+    "toCollectAtTheDesk": "يُحصَّل عند الاستقبال",
+    "createBooking": "إنشاء حجز",
+    "theRoomsForThisProperty": "تعذّر تحميل غرف هذا العقار.",
+    "everyRoomEveryState": "كل غرفة وكل حالة — اضغط على يوم لعرض سجله",
+    "thisMonthSCalendarCould": "تعذّر تحميل تقويم هذا الشهر.",
+    "nothingIsWaitingOnYou": "لا شيء ينتظر إجراءً منك في هذا اليوم.",
+    "pickTheDatesFirst": "اختر التواريخ أولًا — يعتمد المتاح عليها.",
+    "noRoomsOnThisProperty": "لا توجد غرف في هذا العقار بعد.",
+    "bookingCalendar": "تقويم الحجوزات",
+    "assignRoom": "تخصيص غرفة",
+    "noteFromGuest": "ملاحظة من النزيل",
+    "savedAs": "محفوظ باسم",
+    "checkInCheckOut": "تسجيل الوصول — تسجيل المغادرة",
+    "aNightRuns12": "تمتد الليلة من الساعة 12:00 ظهرًا حتى 12:00 ظهرًا — سجّل الوصول من الظهيرة وغادر بحلول ظهر اليوم التالي.",
+    "discount": "الخصم",
+    "saveBooking": "حفظ الحجز"
   },
   "hostHostelProfile": {
     "failed": "فشل",
@@ -1039,7 +1132,8 @@
     "updateHostel": "تحديث النزل",
     "reviewTitle": "سيؤدي هذا إلى إعادة إعلانك للمراجعة",
     "reviewBody": "لقد غيّرت ما يلي. ستتم مراجعة إعلانك مرة أخرى، ولن يراه النزلاء حتى تتم الموافقة عليه.",
-    "reviewConfirm": "حفظ وإرسال للمراجعة"
+    "reviewConfirm": "حفظ وإرسال للمراجعة",
+    "weCouldnTLoadYour": "تعذّر تحميل النُزل الخاص بك."
   },
   "hostMore": {
     "property": "العقار",
@@ -1060,11 +1154,13 @@
   "adminAdminContracts": {
     "contracts": "العقود",
     "noContractsMatchThisFilter": "لا توجد عقود مطابقة لهذا الفلتر",
-    "term": "المدة"
+    "term": "المدة",
+    "searchContractsByHostel": "البحث في العقود حسب النُزل"
   },
   "adminAdminListings": {
     "allListings": "جميع الإعلانات",
-    "noListingsFound": "لم يتم العثور على إعلانات"
+    "noListingsFound": "لم يتم العثور على إعلانات",
+    "searchListingsByHostel": "البحث في القوائم حسب النُزل"
   },
   "adminAdminPayments": {
     "payments": "المدفوعات",
@@ -1074,27 +1170,32 @@
     "transactionId": "معرّف المعاملة",
     "created": "تاريخ الإنشاء",
     "contract": "العقد",
-    "product": "المنتج"
+    "product": "المنتج",
+    "searchPaymentsByHostel": "البحث في المدفوعات حسب النُزل"
   },
   "moderatorQueue": {
     "reviewQueue": "قائمة انتظار المراجعة",
-    "queueIsClear": "قائمة الانتظار فارغة"
+    "queueIsClear": "قائمة الانتظار فارغة",
+    "noSubmissionsAreWaitingFor": "لا توجد طلبات في انتظار المراجعة."
   },
   "moderatorAudit": {
     "auditLog": "سجل التدقيق",
     "noMatchingActivity": "لا يوجد نشاط مطابق",
     "allModerators": "جميع المشرفين",
     "last7Days": "آخر 7 أيام",
-    "loadOlderEntries": "تحميل إدخالات أقدم"
+    "loadOlderEntries": "تحميل إدخالات أقدم",
+    "tryADifferentActionFilter": "جرّب عامل تصفية إجراء مختلف أو نطاقًا زمنيًا آخر."
   },
   "coreForbidden": {
-    "accessBlocked": "تم حظر الوصول"
+    "accessBlocked": "تم حظر الوصول",
+    "youDonTHavePermission": "ليس لديك إذن لعرض هذا القسم."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "دعوات النزل وتأكيدات الوجبات والإيصالات المعلقة الخاصة بك."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "اسحب وأفلت، أو ارفع، أو التقط صورة"
+    "dragAmpDropUploadOr": "اسحب وأفلت، أو ارفع، أو التقط صورة",
+    "replaceAdd": "استبدال / إضافة"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "الآن اختر تاريخ الانتهاء",
@@ -1114,7 +1215,8 @@
     "refundsReachYourOriginalPayment": "تصل المبالغ المستردة إلى وسيلة الدفع الأصلية خلال 5 أيام عمل.",
     "pkrPaid": "PKR {{amount}} مدفوعة",
     "cancelledSummary": "أُلغي في {{date}} · PKR {{refund}} مسترد · PKR {{charge}} رسوم إلغاء",
-    "cancelRefundExplainer": "ستسترد <strong class=\"tabular-nums\">PKR {{refund}}</strong>. ويُحتفظ بمبلغ <strong class=\"tabular-nums\">PKR {{charge}}</strong> كرسوم إلغاء، لأنك تلغي بعد {{pct}}% من المدة."
+    "cancelRefundExplainer": "ستسترد <strong class=\"tabular-nums\">PKR {{refund}}</strong>. ويُحتفظ بمبلغ <strong class=\"tabular-nums\">PKR {{charge}}</strong> كرسوم إلغاء، لأنك تلغي بعد {{pct}}% من المدة.",
+    "whenYouBookAHostel": "عند حجز نُزل، سيظهر هنا مع تواريخك والمبلغ المدفوع."
   },
   "userFavorites": {
     "removeFromFavorites": "إزالة من المفضلة؟",
@@ -1123,7 +1225,8 @@
     "noFavoritesYet": "لا توجد مفضلات بعد",
     "saveHostelsYouLikeAnd": "احفظ النزل التي تعجبك واعثر عليها هنا.",
     "browseHostels": "تصفح النزل",
-    "fromYourSavedHostels": "من النزل المحفوظة لديك؟"
+    "fromYourSavedHostels": "من النزل المحفوظة لديك؟",
+    "weCouldnTLoadYour": "تعذّر تحميل المفضلة لديك."
   },
   "userSecurity": {
     "currentPassword": "كلمة المرور الحالية",
@@ -1196,7 +1299,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "نصائح وأدلة وتحديثات من فريق HostelHive",
     "comingSoon": "قريباً",
-    "weReWorkingOnSome": "نعمل على محتوى رائع عن حياة الطلاب ونصائح النزل وأدلة المدن في جميع أنحاء باكستان. ترقّبوا!"
+    "weReWorkingOnSome": "نعمل على محتوى رائع عن حياة الطلاب ونصائح النزل وأدلة المدن في جميع أنحاء باكستان. ترقّبوا!",
+    "onThisPage": "في هذه الصفحة",
+    "theHostelhiveTeam": "فريق HostelHive",
+    "keepReading": "تابع القراءة",
+    "blogHomePage": "تصفّح الصفحة الرئيسية للمدونة.",
+    "filterArticlesByCategory": "تصفية المقالات حسب الفئة",
+    "archiveLayout": "تخطيط الأرشيف",
+    "everyArticle": "كل المقالات",
+    "theHostelhiveJournal": "مجلة HostelHive",
+    "guidesForFindingARoom": "أدلة للعثور على غرفة — وعلى سرير لليلة واحدة.",
+    "whatHostelsActuallyCost": "ما تكلفة النُزل فعليًا مدينةً بمدينة، وأي المناطق تناسب أي حرم جامعي، وأين تنام من جوهر تاون إلى قراقرم. مكتوب من القوائم ومن الطريق.",
+    "allPosts": "كل المقالات",
+    "grid": "شبكة",
+    "index": "فهرس",
+    "nMinRead": "قراءة {{count}} دقيقة",
+    "nMin": "{{count}} دقيقة",
+    "article": "المقال",
+    "category": "الفئة",
+    "published": "تاريخ النشر",
+    "read": "القراءة",
+    "nothingFiledHereYet": "لم يُنشر شيء هنا بعد.",
+    "lookingForARoomRather": "تبحث عن غرفة بدلًا من دليل؟",
+    "everyListingShowsTheRent": "تعرض كل قائمة الإيجار لكل سرير أو لكل غرفة، وما هو مشمول، ومن يديرها.",
+    "swipeTheTableToSee": "اسحب الجدول لعرض كل الأعمدة",
+    "weVerifyListingsAcross": "نتحقق من القوائم في أنحاء باكستان ونكتب ما نتعلّمه أثناء ذلك.",
+    "weCouldnTFindThatPost": "تعذّر العثور على هذه المقالة",
+    "theLinkMayBeOld": "قد يكون الرابط قديمًا، أو العنوان غير دقيق قليلًا.",
+    "browseEveryPostInstead": "تصفّح كل المقالات بدلًا من ذلك.",
+    "readTheGuide": "اقرأ الدليل"
   },
   "publicListing": {
     "checkIn": "تسجيل الوصول",
@@ -1206,7 +1337,9 @@
     "add": "إضافة",
     "showAllNPhotos": "عرض كل الصور الـ{{count}}",
     "genderHostelHostedBy": "نزل {{gender}} يستضيفه {{host}}",
-    "bookARoom": "احجز غرفة"
+    "bookARoom": "احجز غرفة",
+    "theListingMayHaveBeen": "ربما تمت إزالة القائمة أو أن الرابط غير صحيح.",
+    "chooseYourRoom": "اختر غرفتك"
   },
   "featuresPublic": {
     "checkingYourLink": "جارٍ التحقق من الرابط…",
@@ -1260,7 +1393,14 @@
     "allApproved": "تمت الموافقة على الكل!",
     "doneNFailed": "تم — فشل {{count}}",
     "nPhotosFailedRetry": "فشلت {{count}} صور — يمكنك إعادة المحاولة من قائمة الانتظار.",
-    "approving": "جارٍ الموافقة…"
+    "approving": "جارٍ الموافقة…",
+    "newUploadsWillAppearHere": "ستظهر الملفات المرفوعة الجديدة هنا للموافقة عليها.",
+    "allStatuses": "كل الحالات",
+    "allLabels": "كل التصنيفات",
+    "unlabelled": "بدون تصنيف",
+    "nothingMatchesThisFilter": "لا يوجد ما يطابق هذا الفلتر",
+    "tryAnotherLabelOrShowAll": "جرّب تصنيفًا آخر، أو اعرضها كلها.",
+    "showAllLabels": "عرض كل التصنيفات"
   },
   "publicContact": {
     "contactUs": "اتصل بنا",
@@ -1391,7 +1531,15 @@
     "bookingSent": "تم إرسال الحجز",
     "weLlEmailYouWhenConfirmed": "سنراسلك عبر البريد الإلكتروني فور تأكيد النزل للحجز.",
     "couldnTBook": "تعذّر إتمام الحجز",
-    "noRoomsListed": "لم يُدرج هذا النزل أي غرف بعد."
+    "noRoomsListed": "لم يُدرج هذا النزل أي غرف بعد.",
+    "pricesArePerRoom": "الأسعار لكل غرفة",
+    "pricesArePerBed": "الأسعار لكل سرير",
+    "guestDetails": "بيانات الضيف",
+    "enterTheGuestName": "أدخل اسم الضيف",
+    "enterAValidPhone": "أدخل رقم هاتف صالح",
+    "enterAValidEmail": "أدخل بريدًا إلكترونيًا صالحًا",
+    "ofNSeats": "من {{count}}",
+    "bookingReference": "رقم الحجز"
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",
@@ -1403,11 +1551,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "ابحث عن عنوان أو معلم…",
-    "searchCityOrArea": "ابحث عن مدينة أو منطقة"
+    "searchCityOrArea": "ابحث عن مدينة أو منطقة",
+    "satellite": "قمر صناعي",
+    "noMatchingPlaces": "لا توجد أماكن مطابقة",
+    "poweredByOpenstreetmap": "مدعوم بواسطة OpenStreetMap",
+    "noCoordinatesSetFor": "لم تُحدَّد إحداثيات لهذه القائمة."
   },
   "subscriptionGate": {
     "unlockFeature": "افتح {{feature}}",
-    "thisFeature": "هذه الميزة"
+    "thisFeature": "هذه الميزة",
+    "dashboardOverview": "نظرة عامة على لوحة التحكم",
+    "roomManagement": "إدارة الغرف",
+    "tenantManagement": "إدارة المستأجرين",
+    "utilityBilling": "فوترة المرافق",
+    "thisFeatureIsAvailable": "هذه الميزة متاحة في الخطط المدفوعة. اشترك للحصول على وصول كامل إلى لوحة تحكم النُزل.",
+    "completeHostelProfileFirst": "أكمل ملف النُزل أولًا",
+    "onceSubscribedAllFeatures": "بمجرد الاشتراك، تُفتح جميع الميزات تلقائيًا.",
+    "roomAmpOccupancyManagement": "إدارة الغرف والإشغال",
+    "tenantTrackingAmpPayment": "تتبّع المستأجرين وسجلات المدفوعات",
+    "rentAndUtilityInvoice": "إصدار فواتير الإيجار والمرافق",
+    "analyticsAndRevenueReports": "التحليلات وتقارير الإيرادات"
   },
   "notifications": {
     "nUnread": "{{count}} غير مقروءة"

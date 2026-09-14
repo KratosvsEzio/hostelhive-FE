@@ -423,6 +423,18 @@ function toInvoice(rb: ApiRenterBillTop): Invoice {
  */
 export interface InvoiceBody {
   renter_id: string | number;
+  /**
+   * The bill's polymorphic owner, which for a renter bill is the renter itself — so
+   * `billable_id` repeats `renter_id` rather than saying anything new.
+   *
+   * Required rather than optional, despite being a duplicate, because the record validates
+   * `billable` on create and the controller does not derive it from `renter_id`: a POST
+   * without this pair is rejected with 422 `Billable must exist`. Optional would let a
+   * caller omit it and find that out from the server; required makes it a compile error.
+   * Harmless on update, where the row already has a billable and this restates it.
+   */
+  billable_type: 'Renter';
+  billable_id: string | number;
   room_id?: string | number;
   amount: number;
   issued_date: string;
@@ -779,23 +791,44 @@ export class HostOpsApi {
   createInvoice(
     hostelId: string,
     body: InvoiceBody,
-  ): Observable<unknown> {
-    return this.api.post(`/api/host/hostels/${hostelId}/renter_bills`, { renter_bill: body });
+  ): Observable<Invoice> {
+    return this.api
+      .post<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills`,
+        { renter_bill: body },
+      )
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
   /**
    * PUT /api/host/hostels/:id/renter_bills/:billId — amend an existing bill.
    * Takes the same `renter_bill` body as {@link createInvoice}, so the drawer builds one
    * payload for both and only the verb and URL differ.
+   *
+   * Answers with the saved bill, so the list can show the row without re-reading the page.
+   * This was typed `unknown` and the response thrown away — verified on the wire since: the
+   * reply is `{ renter_bill: … }`, the same envelope {@link createRenter} already relies on.
+   *
+   * Everything {@link toInvoice} reads is in it. Two absences are deliberate to record:
+   * `received_amount` is not sent, which costs nothing because only the utility mappers read
+   * it; and `renter.room` is absent while a top-level `room` carries the number and floor,
+   * which is the fallback the mapper already takes.
+   *
+   * POST and `mark_as_paid` have since been read on the wire too, and answer with the same
+   * envelope and the same field set — so all three share one mapper rather than each
+   * guessing at its own.
    */
   updateInvoice(
     hostelId: string,
     billId: string,
     body: InvoiceBody,
-  ): Observable<unknown> {
-    return this.api.put(`/api/host/hostels/${hostelId}/renter_bills/${billId}`, {
-      renter_bill: body,
-    });
+  ): Observable<Invoice> {
+    return this.api
+      .put<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills/${billId}`,
+        { renter_bill: body },
+      )
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
   deleteInvoice(hostelId: string, billId: string): Observable<unknown> {
@@ -806,9 +839,25 @@ export class HostOpsApi {
    * PUT /api/host/hostels/:id/renter_bills/:billId/mark_as_paid — settle a renter bill.
    * (The route nests under the plural `hostels` collection on the current backend, same as
    * every other renter_bills call here — despite older Swagger showing a singular `hostel`.)
+   *
+   * Answers with the settled bill, so the row can move to paid without re-reading the page.
+   * This was typed `Invoice | null` and guarded both ways, because a custom member action
+   * can be rendered every which way in Rails — the record, a bare `{ success: true }`, or
+   * `head :ok` — and nobody had read this one. Verified on the wire since: the reply is
+   * `{ renter_bill: …, success: true }`, the same envelope create and update already use,
+   * carrying the same field set.
+   *
+   * What matters is that `status` is in it — `{ slug: 'paid' }`, alongside a filled
+   * `paid_at`. Without it {@link toInvoice} would default the row to `due`, and settling a
+   * bill would leave it on screen still saying it was owed.
    */
-  markInvoicePaid(hostelId: string, billId: string): Observable<unknown> {
-    return this.api.put(`/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`, {});
+  markInvoicePaid(hostelId: string, billId: string): Observable<Invoice> {
+    return this.api
+      .put<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`,
+        {},
+      )
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
   deleteRenter(hostelId: string, renterId: string): Observable<unknown> {

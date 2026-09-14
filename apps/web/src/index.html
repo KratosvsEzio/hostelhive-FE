@@ -56,6 +56,23 @@
     />
     <meta name="twitter:image" content="https://hostelhive.com/hostelhive-logo.png" />
 
+    <!-- The photograph bucket, which every listing and every search result reads from.
+
+         This one is not a guess: it is the host in `attachment.url` on the live payload, and
+         the listing page's own `<link rel="preload" as="image">` already points at it. The
+         hero is the Largest Contentful Paint element, so its request was paying a cold DNS +
+         TCP + TLS handshake to an origin nothing had touched yet — the preload cannot start
+         the transfer until that completes. Warming the connection costs one socket and buys
+         the whole handshake back on the critical path.
+
+         `crossorigin` because images are fetched anonymously; without it the browser opens a
+         second connection and the warmed one goes unused. -->
+    <link
+      rel="preconnect"
+      href="https://hostel-hive-images.s3.ap-south-1.amazonaws.com"
+      crossorigin
+    />
+
     <!-- TODO: add `<link rel="preconnect" href="https://<api-host>" crossorigin>` once the
          production API hostname is known. It saves a DNS + TLS round trip on the first
          data request, which is on the critical path to Largest Contentful Paint — but

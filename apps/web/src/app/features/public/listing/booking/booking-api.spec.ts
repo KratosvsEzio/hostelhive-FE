@@ -1,6 +1,34 @@
-import { firstValueFrom } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
+import { Observable, firstValueFrom, of } from 'rxjs';
+import { ApiClient } from '@core/api-resource';
+import { BasketLine } from './room-offer';
 import { BookingApi, chargePercentFor } from './booking-api';
-import { ApiBookingRequest, ApiHostBookingRequest } from './booking-api.contract';
+import { ApiHostBookingRequest } from './booking-api.contract';
+
+/** Records the one real call this service makes. Everything else on it is still in memory. */
+class ApiClientStub {
+  url = '';
+  body: unknown = null;
+
+  post<T>(url: string, body: unknown): Observable<T> {
+    this.url = url;
+    this.body = body;
+    return of(undefined as T);
+  }
+}
+
+/**
+ * Through the injector rather than `new`, now that one method reaches for `ApiClient`.
+ *
+ * The rest of the service is unchanged and still answers from memory — only `createBooking`
+ * has an endpoint behind it.
+ */
+function makeApi(): { api: BookingApi; http: ApiClientStub } {
+  TestBed.resetTestingModule();
+  const http = new ApiClientStub();
+  TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: http }] });
+  return { api: TestBed.inject(BookingApi), http };
+}
 
 /**
  * The cancellation schedule from section 07 of the PRD.
@@ -70,7 +98,7 @@ describe('BookingApi.hostCreateBooking', () => {
   };
 
   function api(): BookingApi {
-    return new BookingApi();
+    return makeApi().api;
   }
 
   it('records it as unconfirmed, with no deposit', async () => {
@@ -169,84 +197,74 @@ describe('BookingApi.hostCreateBooking', () => {
   });
 });
 
+
 /**
- * A guest booking from a listing page, now that nothing is paid online.
+ * A guest booking from a listing page — the one call on this service that leaves the browser.
  *
- * The old path took a deposit and turned a hold into a `confirmed` booking. With the payment
- * gone there is no money behind the booking and no cancellation schedule to pay out of, which
- * is precisely what `unconfirmed` already meant here — so a guest's booking now lands in the
- * host's list beside the walk-ins they write down themselves, for the host to confirm.
+ * What is asserted is the request, not the answer. A booking that goes out with the wrong
+ * shape does not fail loudly: the server takes it, and the guest finds out at reception that
+ * they booked two rooms for eight people instead of four, or arrived a day early. The payload
+ * is built by `toBookingRequest` and tested in full there; this checks it is that payload,
+ * sent to that URL.
  */
-describe('BookingApi.requestBooking', () => {
-  const base: ApiBookingRequest = {
-    hostel_id: 'h1',
-    check_in: '2026-09-01',
-    check_out: '2026-09-03',
-    guests: 2,
-    lines: [{ room_id: 's-mixed-12', quantity: 2 }],
+describe('BookingApi.createBooking', () => {
+  const LINE: BasketLine = {
+    roomId: 'KGJwMC',
+    title: 'King size room',
+    kind: 'private',
+    quantity: 2,
+    unitPrice: 10_000,
+    actualPrice: 12_000,
+    capacity: 4,
+    guests: 4,
   };
 
-  function api(): BookingApi {
-    return new BookingApi();
+  function send() {
+    const { api, http } = makeApi();
+    api
+      .createBooking({
+        hostelId: 'MjvuEl',
+        hostelCountry: 'Pakistan',
+        checkIn: new Date(2026, 8, 20),
+        checkOut: new Date(2026, 8, 23),
+        lines: [LINE],
+        guest: { name: 'Ali Raza', phone: '923001234567', email: 'ali@example.com' },
+      })
+      .subscribe();
+    return http;
   }
 
-  it('lands unconfirmed, with nothing taken', async () => {
-    const b = await firstValueFrom(api().requestBooking(base));
-
-    expect(b.status).toBe('unconfirmed');
-    expect(b.deposit).toBe(0);
+  it('posts to the guest bookings endpoint', () => {
+    expect(send().url).toBe('/api/bookings');
   });
 
-  it('prices the whole stay, not one night', async () => {
-    const one = await firstValueFrom(
-      api().requestBooking({ ...base, check_out: '2026-09-02' }),
-    );
-    const two = await firstValueFrom(api().requestBooking(base));
+  it('sends the hostel outside the booking and everything else inside it', () => {
+    const body = send().body as { hostel_id: string; booking: Record<string, unknown> };
 
-    expect(two.total).toBe(one.total * 2);
+    expect(body.hostel_id).toBe('MjvuEl');
+    expect(Object.keys(body.booking).sort()).toEqual([
+      'checkin_date',
+      'checkout_date',
+      'guest_email',
+      'guest_name',
+      'guest_phone',
+      'line_items',
+    ]);
   });
 
-  /**
-   * The total is computed here, never read from the request.
-   *
-   * The basket works one out to show the guest, but a figure that arrives from a browser is
-   * a figure the guest can edit, and this one decides what a hostel is owed.
-   */
-  it('ignores any total the caller tries to supply', async () => {
-    const b = await firstValueFrom(
-      api().requestBooking({ ...base, total: 1 } as ApiBookingRequest & { total: number }),
-    );
+  // 2pm at the hostel, not 2pm in the browser — five hours apart in the home market.
+  it('dates the stay on the hostel’s clock', () => {
+    const body = send().body as { booking: { checkin_date: string; checkout_date: string } };
 
-    expect(b.total).toBeGreaterThan(1);
+    expect(body.booking.checkin_date).toBe('2026-09-20T09:00:00.000Z');
+    expect(body.booking.checkout_date).toBe('2026-09-23T06:00:00.000Z');
   });
 
-  it('reaches the hostel’s own booking list', async () => {
-    const svc = api();
-    await firstValueFrom(svc.requestBooking(base));
+  it('sends the basket as line items', () => {
+    const body = send().body as { booking: { line_items: unknown[] } };
 
-    expect((await firstValueFrom(svc.hostBookings('h1'))).length).toBe(1);
-    expect((await firstValueFrom(svc.hostBookings('h2'))).length).toBe(0);
-  });
-
-  // Whole or not at all. Part-filling gives the guest a stay they never agreed to, and the
-  // person who discovers the missing bed is standing in reception.
-  it('refuses the basket outright when one room cannot be honoured', async () => {
-    const svc = api();
-    const greedy = { ...base, lines: [{ room_id: 's-mixed-12', quantity: 999 }] };
-
-    await expect(firstValueFrom(svc.requestBooking(greedy))).rejects.toThrow(/left of/i);
-    expect((await firstValueFrom(svc.hostBookings('h1'))).length).toBe(0);
-  });
-
-  it('refuses a stay that ends before it starts', async () => {
-    await expect(
-      firstValueFrom(api().requestBooking({ ...base, check_out: '2026-08-31' })),
-    ).rejects.toThrow(/check_out/);
-  });
-
-  it('refuses an empty basket', async () => {
-    await expect(
-      firstValueFrom(api().requestBooking({ ...base, lines: [] })),
-    ).rejects.toThrow(/at least one room/i);
+    expect(body.booking.line_items).toEqual([
+      { room_type_id: 'KGJwMC', guests: 4, quantity: 2 },
+    ]);
   });
 });

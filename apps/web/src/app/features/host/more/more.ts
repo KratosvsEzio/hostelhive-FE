@@ -9,7 +9,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, SessionStore } from '@core/auth';
 import { HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { NavEntry, TAB_BAR_SUFFIXES, hostNav, splitNav } from '@layout/host-shell/host-nav';
+import { NavEntry, hostNav, splitNav, tabBarSuffixes } from '@layout/host-shell/host-nav';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -88,10 +88,14 @@ export class HostMore {
   private readonly entries = computed(() =>
     hostNav(this.base(), {
       monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      nightlyBilled: this.propertyStore.isNightlyBilled(),
       can: (permission) => this.session.hasPermission(permission),
     }).filter((e) => {
       const link = e.link;
-      return !link || !TAB_BAR_SUFFIXES.some((t) => link.endsWith(t));
+      const inBar = tabBarSuffixes({
+        monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      });
+      return !link || !inBar.some((t) => link.endsWith(t));
     }),
   );
 

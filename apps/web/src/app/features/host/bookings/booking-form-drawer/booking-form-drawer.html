@@ -1,10 +1,9 @@
-<hh-drawer heading="Record a booking" widthClass="max-w-xl" (closed)="closed.emit()">
+<hh-drawer [heading]="'hostBookings.recordABooking' | transloco" widthClass="max-w-xl" (closed)="closed.emit()">
   <div class="space-y-5">
     <!-- Says up front what this creates, because "booking" on its own implies a paid one. -->
     <p class="flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-sm text-ink-700">
       <i class="ti ti-info-circle mt-0.5 shrink-0" aria-hidden="true"></i>
-      <span>
-        Saved as <strong>unconfirmed</strong> — no deposit is taken and nothing is charged.
+      <span>{{ 'hostBookings.savedAs' | transloco }}<strong>unconfirmed</strong> — no deposit is taken and nothing is charged.
         Use it for walk-ins and phone bookings.
       </span>
     </p>
@@ -13,8 +12,8 @@
       <h3 class="mb-2 text-sm font-semibold text-ink-900">Guest</h3>
       <div class="space-y-3">
         <hh-input
-          label="Full name"
-          placeholder="Who is staying"
+          [label]="'userSettings.fullName' | transloco"
+          [placeholder]="'hostBookings.whoIsStaying' | transloco"
           [value]="guestName()"
           (valueChange)="guestName.set($event)"
         />
@@ -23,7 +22,7 @@
           <hh-input
             label="Email · optional"
             type="email"
-            placeholder="Only if they have one"
+            [placeholder]="'hostBookings.onlyIfTheyHaveOne' | transloco"
             [value]="guestEmail()"
             (valueChange)="guestEmail.set($event)"
           />
@@ -37,7 +36,7 @@
            check-out landing before its check-in rather than scolding the host afterwards. -->
       <div class="grid gap-3 sm:grid-cols-3">
         <div class="sm:col-span-2">
-          <p class="mb-1 text-xs font-medium text-ink-600">Check in — check out</p>
+          <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostBookings.checkInCheckOut' | transloco }}</p>
           <hh-date-range-picker
             variant="field"
             [from]="checkIn()"
@@ -63,7 +62,7 @@
            than nights would charge for one more than the guest is staying. -->
       <p class="mt-2 flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-xs text-ink-500">
         <i class="ti ti-clock-hour-12 mt-0.5 shrink-0" aria-hidden="true"></i>
-        <span>A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.</span>
+        <span>{{ 'hostBookings.aNightRuns12' | transloco }}</span>
       </p>
     </section>
 
@@ -73,7 +72,7 @@
       @let s = state();
       @if (!datesValid()) {
         <p class="rounded-xl border border-dashed border-ink-200 px-3 py-4 text-center text-sm text-ink-400">
-          Pick the dates first — what is free depends on them.
+          {{ 'hostBookings.pickTheDatesFirst' | transloco }}
         </p>
       } @else if (s.loading) {
         <div class="space-y-2">
@@ -85,7 +84,7 @@
         <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">{{ s.error }}</p>
       } @else if (!s.rooms.length) {
         <p class="rounded-xl border border-dashed border-ink-200 px-3 py-4 text-center text-sm text-ink-400">
-          No rooms on this property yet.
+          {{ 'hostBookings.noRoomsOnThisProperty' | transloco }}
         </p>
       } @else {
         <!-- A picker rather than the whole list laid out: a property with forty rooms turned
@@ -99,7 +98,7 @@
           [value]="pickedIds()"
           (valueChange)="onRoomsPicked($event)"
           (searchChange)="roomQuery.set($event)"
-          placeholder="Add a room"
+          [placeholder]="'hostBookings.addARoom' | transloco"
         />
 
         <!-- Only what has been chosen. The count belongs here rather than in the picker: a
@@ -155,7 +154,7 @@
         </div>
 
         <div class="mt-2 flex items-center justify-between gap-3">
-          <label class="text-sm text-ink-600" for="hh-booking-discount">Discount</label>
+          <label class="text-sm text-ink-600" for="hh-booking-discount">{{ 'hostBookings.discount' | transloco }}</label>
           <div class="flex items-center gap-1.5">
             <span class="text-sm text-ink-400">Rs</span>
             <!-- Wrapper-sized for the same reason as the room counts: `.hh-input` forces
@@ -175,7 +174,7 @@
         </div>
 
         <div class="mt-3 flex items-baseline justify-between border-t border-ink-100 pt-3">
-          <span class="text-sm font-medium text-ink-700">To collect at the desk</span>
+          <span class="text-sm font-medium text-ink-700">{{ 'hostBookings.toCollectAtTheDesk' | transloco }}</span>
           <span class="text-lg font-semibold text-ink-900 tabular-nums">
             Rs {{ total() | number: '1.0-0' }}
           </span>
@@ -199,8 +198,6 @@
     <button hh-button variant="text" size="sm" [disabled]="saving()" (click)="closed.emit()">
       {{ 'common.cancel' | transloco }}
     </button>
-    <button hh-button color="primary" [loading]="saving()" [disabled]="!canSave()" (click)="save()">
-      Save booking
-    </button>
+    <button hh-button color="primary" [loading]="saving()" [disabled]="!canSave()" (click)="save()">{{ 'hostBookings.saveBooking' | transloco }}</button>
   </ng-container>
 </hh-drawer>

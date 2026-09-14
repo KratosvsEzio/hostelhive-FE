@@ -1,5 +1,6 @@
 import { GENDER_SEGMENTS, PLACES } from './places';
 import { UNIVERSITIES } from './universities';
+import { BLOG_POSTS } from '@features/public/blog/blog-posts';
 import {
   INDEXED_LOCALE_CODES,
   localeAlternates,
@@ -61,7 +62,10 @@ export function sitemapPaths(): string[] {
   // Campus pages. Listed explicitly rather than derived from the city, because a
   // university only has a page when one was written for it.
   const campuses = UNIVERSITIES.map((u) => `/hostels/${u.placeSlug}/${u.slug}`);
-  return [...STATIC_PATHS, ...landing, ...campuses].flatMap((p) =>
+  // Articles, derived from the archive for the same reason the landing pages are: a post
+  // added without its sitemap entry is a post nobody finds.
+  const articles = BLOG_POSTS.map((p) => `/blog/${p.slug}`);
+  return [...STATIC_PATHS, ...landing, ...campuses, ...articles].flatMap((p) =>
     INDEXED_LOCALE_CODES.map((code) => withLocale(code, p)),
   );
 }

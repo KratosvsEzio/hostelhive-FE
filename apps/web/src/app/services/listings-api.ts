@@ -8,6 +8,7 @@ import {
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 import { ApiPagination, toPageInfo } from '@util/pagination';
+import { primaryFirst } from '@util/primary-photo';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
 import {
   DEFAULT_OCCUPANCY_TYPE,
@@ -142,7 +143,7 @@ export interface ApiHostel {
   nearby_landmarks?: string | null;
   host?: { id: number; name: string } | null;
   status?: { id?: number; name?: string; slug?: string } | null;
-  attachments?: { url?: string; file_name?: string }[] | null;
+  attachments?: { url?: string; file_name?: string; is_primary?: boolean | null }[] | null;
   location?: { lat: number; lon: number } | null;
   // Amenities the hostel offers. Present on the public search payload but often empty;
   // the card simply renders no amenity pills in that case.
@@ -225,7 +226,9 @@ export function toListing(
   const area = h.area || h.city || '';
   const type = h.property_type ? cap(h.property_type) : 'Stay';
   const derivedName = h.name || h.title || (area ? `${type} in ${area}` : type);
-  const images = (h.attachments ?? [])
+  // The card and the map pin both lead with `images[0]`, so the host's starred photo has to
+  // be the one at index 0 — the wire order is upload order and says nothing about the choice.
+  const images = primaryFirst(h.attachments)
     .map((a) => a?.url)
     .filter((u): u is string => !!u);
 
@@ -262,7 +265,7 @@ export function toListing(
     priceByCapacity: Object.keys(priceByCapacity).length ? priceByCapacity : undefined,
     images: images.length
       ? images
-      : [`https://picsum.photos/seed/hh-be-${h.id}/800/800`],
+      : [],
     lat,
     lng,
     host: h.host

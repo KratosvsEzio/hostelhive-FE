@@ -12,7 +12,9 @@
     "mobile:sync": "nx run web:cap-sync",
     "mobile:android": "nx run web:cap-open-android",
     "mobile:ios": "npm run build:mobile && cap sync ios && cap open ios",
-    "icons:ios": "capacitor-assets generate --ios"
+    "icons:ios": "capacitor-assets generate --ios",
+    "icons:font": "node tools/build-icon-font.mjs",
+    "icons:check": "node tools/icon-check.mjs"
   },
   "private": true,
   "dependencies": {

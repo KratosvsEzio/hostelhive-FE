@@ -20,7 +20,7 @@
       [term]="searchTerm()"
       (termChange)="onSearchTerm($event)"
       [placeholder]="'common.searchByHostel' | transloco"
-      ariaLabel="Search contracts by hostel"
+      [ariaLabel]="'adminAdminContracts.searchContractsByHostel' | transloco"
     />
     <span class="mx-3 h-5 w-px shrink-0 bg-ink-200"></span>
     <hh-global-filter
@@ -84,14 +84,14 @@
   <!-- Contract detail panel (drawer) -->
   @let sel = selected();
   @if (sel) {
-    <div
-      class="fixed inset-x-0 bottom-0 hh-below-header z-40 flex justify-end bg-ink-900/40"
-      (click)="close()"
-    >
-      <div
-        class="h-full w-full max-w-md overflow-y-auto bg-white shadow-pill"
-        (click)="$event.stopPropagation()"
-      >
+    <div class="fixed inset-x-0 bottom-0 hh-below-header z-40 flex justify-end bg-ink-900/40">
+      <button
+        type="button"
+        class="absolute inset-0 cursor-default"
+        [attr.aria-label]="'a11y.close' | transloco"
+        (click)="close()"
+      ></button>
+      <div class="relative h-full w-full max-w-md overflow-y-auto bg-white shadow-pill">
         <div
           class="flex items-start justify-between border-b border-ink-100 px-5 py-4"
         >

@@ -102,7 +102,17 @@
     "signInToBook": "Đăng nhập để đặt phòng",
     "pickYourRoomOnce": "Chọn phòng ngay khi đăng nhập",
     "createAFreeAccountToBook": "Tạo tài khoản miễn phí để chọn phòng và giữ chỗ trong khi bạn quyết định. Chỉ mất 30 giây.",
-    "roomsAmpPricing": "Phòng & giá"
+    "andNMore": "+{{count}} nữa",
+    "favorite": "Yêu thích",
+    "showPhoneNumber": "Hiện số điện thoại",
+    "showAllNReviews": "Xem tất cả {{count}} đánh giá",
+    "hostSince": "Chủ nhà từ {{year}}",
+    "writeAReview": "Viết đánh giá",
+    "roomSummary": "{{beds}} giường · {{types}} loại phòng · {{sharing}} tùy chọn ở ghép",
+    "nSharingAvailable": "Có phòng ghép {{labels}} người",
+    "bookNow": "Đặt ngay",
+    "nPhotos": "{{count}} ảnh",
+    "otherPhotos": "Khác"
   },
   "common": {
     "loading": "Đang tải…",
@@ -226,6 +236,7 @@
     "dinner": "Bữa tối",
     "teamAmpStaff": "Đội ngũ & nhân viên",
     "accountSettings": "Cài đặt tài khoản",
+    "passwordAmpSecurity": "Mật khẩu & bảo mật",
     "someRequiredFieldsAre": "Thiếu một số trường bắt buộc",
     "uploading": "Đang tải lên…",
     "listingProgress": "Tiến độ tin đăng",
@@ -318,7 +329,16 @@
     "enterDescription": "Nhập mô tả",
     "enterLandmarks": "Nhập địa danh lân cận",
     "enterReason": "Nhập lý do",
-    "enterNote": "Nhập ghi chú"
+    "enterNote": "Nhập ghi chú",
+    "somethingWentWrongReachingThe": "Đã xảy ra lỗi khi kết nối tới máy chủ.",
+    "weDLikeToCountPage": "Chúng tôi muốn đếm lượt xem trang để biết mọi người tìm nhà nghỉ và thành phố nào, nhằm cải thiện tìm kiếm. Không có thông tin cá nhân nào được gửi đi, và điều này không liên quan đến việc duy trì đăng nhập.",
+    "noThanks": "Không, cảm ơn",
+    "password": "Mật khẩu",
+    "selectYear": "Chọn năm",
+    "allow": "Cho phép",
+    "noPhotosYet": "Chưa có ảnh",
+    "guests": "Khách",
+    "copy": "Sao chép"
   },
   "leadWall": {
     "close": "Đóng",
@@ -334,7 +354,8 @@
     "weSentASigned24": "Chúng tôi đã gửi liên kết xác minh có hiệu lực 24 giờ tới",
     "clickingItActivatesYourAccount": ". Nhấp vào đó sẽ kích hoạt tài khoản và hiển thị số điện thoại.",
     "iVeVerifiedContinue": "Tôi đã xác minh — tiếp tục",
-    "back": "Quay lại"
+    "back": "Quay lại",
+    "confirmPassword": "Xác nhận mật khẩu"
   },
   "home": {
     "searchCityOrArea": "Tìm thành phố hoặc khu vực",
@@ -533,7 +554,12 @@
     "country": "Quốc gia",
     "streetAddress": "Địa chỉ đường phố",
     "nearbyLandmarks": "Địa điểm nổi bật gần đó",
-    "roomTypeDescription": "Mô tả loại phòng"
+    "roomTypeDescription": "Mô tả loại phòng",
+    "couldnTCheckWhichRooms": "Không thể kiểm tra phòng nào dùng loại này. Vui lòng thử lại.",
+    "findingTheRoomsBuiltOn": "Đang tìm các phòng dựa trên {{name}}…",
+    "moveAllRoomsTo": "Chuyển tất cả phòng sang",
+    "selectARoomType": "Chọn loại phòng",
+    "noRoomsAreBuiltOn": "Không có phòng nào dùng {{name}}, nên không có gì khác thay đổi. Loại này sẽ bị xóa khi bạn lưu."
   },
   "a11y": {
     "close": "Đóng",
@@ -612,7 +638,16 @@
     "clearSearch": "Xóa tìm kiếm",
     "closeTimePicker": "Đóng bộ chọn giờ",
     "chooseTime": "Chọn giờ",
-    "dismiss": "Bỏ qua"
+    "dismiss": "Bỏ qua",
+    "closePropertyMenu": "Đóng menu cơ sở",
+    "goToPhotoN": "Đến ảnh {{n}}",
+    "removeFrom": "Xoá {{title}}",
+    "removeOneFrom": "Bớt một từ {{title}}",
+    "onePhotoAtATime": "Từng ảnh một",
+    "allPhotosByGroup": "Tất cả ảnh, theo nhóm",
+    "fewerGuestsIn": "Bớt khách trong {{title}}",
+    "moreGuestsIn": "Thêm khách trong {{title}}",
+    "skipToContent": "Chuyển đến nội dung"
   },
   "hostTenants": {
     "tenantPhoto": "Ảnh người thuê",
@@ -677,7 +712,10 @@
     "roomNotAvailableForTheseDates": "Phòng không còn trống vào những ngày này",
     "checkIn": "Nhận phòng",
     "checkOut": "Trả phòng",
-    "leavingDate": "Ngày rời đi"
+    "leavingDate": "Ngày rời đi",
+    "thisTenantHasNoRent": "Khách thuê này chưa có hóa đơn tiền thuê nào được ghi nhận.",
+    "noUtilityChargesHaveBeen": "Chưa ghi nhận khoản tiện ích nào cho phòng của khách thuê này.",
+    "checkInYourFirstTenant": "Nhận phòng cho khách thuê đầu tiên để bắt đầu theo dõi tiền thuê."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Không thể tải gói đăng ký của bạn",
@@ -731,7 +769,11 @@
     "thenRsPerPeriod": "Sau đó Rs {{price}} / {{period}}",
     "paymentStarted": "Đã bắt đầu thanh toán",
     "payRs": "Thanh toán Rs {{amount}}",
-    "selectAProduct": "Chọn sản phẩm"
+    "selectAProduct": "Chọn sản phẩm",
+    "invoicesAppearHereAfterYour": "Hóa đơn sẽ xuất hiện ở đây sau lần thanh toán đầu tiên.",
+    "pleaseCheckYourConnectionAnd": "Vui lòng kiểm tra kết nối và thử lại.",
+    "youDonTHaveAn": "Bạn chưa có gói nào đang hoạt động. Xem các gói bên dưới để bắt đầu.",
+    "checkBackSoonPlans": "Hãy quay lại sau — các gói sẽ xuất hiện ở đây."
   },
   "hostMess": {
     "pickADate": "Chọn ngày",
@@ -791,7 +833,8 @@
     "last12MonthsPkr": "12 tháng gần nhất · PKR",
     "last30DaysPkr": "30 ngày gần nhất · PKR",
     "uploadingReceipt": "Đang tải hóa đơn lên…",
-    "nPhotosAttached": "Đã đính kèm {{count}} ảnh"
+    "nPhotosAttached": "Đã đính kèm {{count}} ảnh",
+    "logYourBulkGroceryPurchases": "Ghi lại các lần mua sỉ để theo dõi chi phí nhà ăn."
   },
   "hostRooms": {
     "calendarTab": "Lịch",
@@ -847,7 +890,13 @@
     "createRooms": "Tạo phòng",
     "bedsOccupiedOf": "{{filled}} trên {{total}} giường đã kín",
     "nOfMBooked": "{{booked}} trên {{capacity}} đã đặt",
-    "nNoLongerActive": "{{count}} không còn ở"
+    "nNoLongerActive": "{{count}} không còn ở",
+    "dayRoster": "Danh sách trong ngày",
+    "pickADay": "Chọn một ngày.",
+    "nobodyInThisRoomThat": "Không có ai trong phòng này vào ngày đó.",
+    "thisRoomCurrentlyHasNo": "Phòng này hiện chưa có khách thuê nào.",
+    "addYourFirstRoomTo": "Thêm phòng đầu tiên để bắt đầu theo dõi tỷ lệ lấp đầy.",
+    "bedNumbersAreNotAssigned": "Số giường chưa được gán — lịch cho biết có bao nhiêu giường đã kín, không phải ai nằm giường nào."
   },
   "hostUtilities": {
     "ratePerUnit": "Đơn giá",
@@ -887,7 +936,9 @@
     "shareFormulaStart": "Phần chia = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} ngày lưu trú",
     "rsUnallocated": "Rs {{amount}} chưa phân bổ",
-    "rsOver": "Rs {{amount}} vượt mức"
+    "rsOver": "Rs {{amount}} vượt mức",
+    "pickARoomWithActive": "Chọn phòng có khách thuê để chia hóa đơn.",
+    "addAUtilityBillTo": "Thêm hóa đơn tiện ích để bắt đầu theo dõi mức dùng và chi phí."
   },
   "hostTeam": {
     "staffPhoto": "Ảnh nhân viên",
@@ -899,7 +950,6 @@
     "salaryIssueDate": "Ngày trả lương",
     "chooseAnImageFromYour": "Chọn ảnh từ tệp của bạn",
     "managerAccess": "Quyền quản lý",
-    "thisPersonAlreadyHasAn": "Người này đã có tài khoản nên không cần thiết lập gì — để bật công tắc sẽ cấp quyền quản lý nhà nghỉ này khi bạn lưu.",
     "employment": "Việc làm",
     "upload": "Tải lên",
     "scopedToThisHostelOnly": "Chỉ áp dụng cho nhà nghỉ này.",
@@ -918,7 +968,11 @@
     "fromTheTeamThisAction": "khỏi nhóm. Không thể hoàn tác.",
     "keepsTheirStaffRecordBut": "vẫn giữ hồ sơ nhân viên nhưng không thể đăng nhập hoặc quản lý nhà nghỉ này nữa.",
     "createsLoginFor": "Tạo tài khoản đăng nhập để {{name}} có thể quản lý nhà nghỉ này.",
-    "thisStaffMember": "nhân viên này"
+    "thisStaffMember": "nhân viên này",
+    "existingAccountKeepsPassword": "Nếu email này đã có tài khoản, mật khẩu hiện tại sẽ được giữ nguyên — mật khẩu bạn đặt chỉ dùng khi tạo tài khoản mới.",
+    "storedEmailBecomesLogin": "Email đã lưu sẽ là thông tin đăng nhập. Nếu địa chỉ đó đã có tài khoản, họ giữ nguyên mật khẩu của tài khoản đó.",
+    "pickADifferentStatusTo": "Chọn trạng thái khác để xem những người còn lại.",
+    "addAWardenCookOr": "Thêm quản sinh, đầu bếp hoặc bảo vệ để lưu lương và giấy tờ của họ."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Phê duyệt thất bại — hãy thử lại.",
@@ -973,7 +1027,9 @@
     "billedTo": "Xuất cho",
     "issued": "Đã phát hành",
     "due": "Đến hạn",
-    "thisWillPermanentlyDeleteInvoice": "Thao tác này sẽ xóa vĩnh viễn hóa đơn"
+    "thisWillPermanentlyDeleteInvoice": "Thao tác này sẽ xóa vĩnh viễn hóa đơn",
+    "invoicesAppearHereOnceYou": "Hóa đơn sẽ xuất hiện ở đây khi bạn phát hành tiền thuê hoặc tiện ích.",
+    "tryAdjustingYourFilters": "Hãy thử điều chỉnh bộ lọc."
   },
   "hostExpenses": {
     "allTypes": "Tất cả loại",
@@ -1017,7 +1073,20 @@
     "pctVsLastMonth": "{{pct}}% so với tháng trước",
     "nTenantsUnpaid": "{{count}} người thuê chưa thanh toán",
     "moveInsAndOuts": "Nhận và trả phòng",
-    "pctBedsFilled": "Tỷ lệ giường đã kín"
+    "pctBedsFilled": "Tỷ lệ giường đã kín",
+    "weCouldnTLoadTenant": "Chúng tôi không tải được dữ liệu biến động khách thuê.",
+    "weCouldnTLoadOccupancy": "Chúng tôi không tải được dữ liệu lấp đầy.",
+    "weCouldnTLoadAnalytics": "Chúng tôi không tải được phân tích cho cơ sở này.",
+    "allUtilityInvoicesAreSettled": "Tất cả hóa đơn tiện ích đã được thanh toán.",
+    "noInvoicesForThisProperty": "Chưa có hóa đơn nào cho cơ sở này.",
+    "weCouldnTLoadRevenue": "Chúng tôi không tải được dữ liệu doanh thu.",
+    "upcomingBookings": "Đặt phòng sắp tới",
+    "nArriving": "{{count}} nhận phòng",
+    "nLeaving": "{{count}} trả phòng",
+    "nothingBookedYet": "Chưa có đặt phòng nào",
+    "noArrivalsOrDeparturesAhead": "Không có lượt nhận hay trả phòng trong hai tuần tới.",
+    "inOverOutPerDay": "Nhận phòng trên, trả phòng dưới, theo ngày",
+    "viewAllBookings": "Xem tất cả đặt phòng →"
   },
   "hostBookings": {
     "calendarTab": "Lịch",
@@ -1034,7 +1103,31 @@
     "cancelledByOn": "Đã hủy bởi {{by}} ngày {{date}}",
     "pkrPenaltyChargedToYou": "PKR {{amount}} tiền phạt tính cho bạn",
     "pkrToYou": "PKR {{amount}} cho bạn",
-    "thisGuest": "vị khách này"
+    "thisGuest": "vị khách này",
+    "dayLedger": "Sổ trong ngày",
+    "pendingAllotments": "Phân bổ đang chờ",
+    "askedFor": "Yêu cầu",
+    "noContactDetailsOnThis": "Đặt phòng này không có thông tin liên hệ",
+    "recordABooking": "Ghi nhận đặt phòng",
+    "whoIsStaying": "Người lưu trú",
+    "onlyIfTheyHaveOne": "Chỉ khi họ có",
+    "addARoom": "Thêm phòng",
+    "toCollectAtTheDesk": "Thu tại quầy lễ tân",
+    "createBooking": "Tạo đặt phòng",
+    "theRoomsForThisProperty": "Không thể tải các phòng của cơ sở này.",
+    "everyRoomEveryState": "Mọi phòng, mọi trạng thái — chạm vào một ngày để xem sổ",
+    "thisMonthSCalendarCould": "Không thể tải lịch của tháng này.",
+    "nothingIsWaitingOnYou": "Không có việc gì chờ bạn trong ngày này.",
+    "pickTheDatesFirst": "Chọn ngày trước — phòng trống phụ thuộc vào ngày.",
+    "noRoomsOnThisProperty": "Cơ sở này chưa có phòng nào.",
+    "bookingCalendar": "Lịch đặt phòng",
+    "assignRoom": "Gán phòng",
+    "noteFromGuest": "Ghi chú từ khách",
+    "savedAs": "Đã lưu là",
+    "checkInCheckOut": "Nhận phòng — trả phòng",
+    "aNightRuns12": "Một đêm tính từ 12:00 trưa đến 12:00 trưa — nhận phòng từ giữa trưa, trả phòng trước giữa trưa hôm sau.",
+    "discount": "Giảm giá",
+    "saveBooking": "Lưu đặt phòng"
   },
   "hostHostelProfile": {
     "failed": "Thất bại",
@@ -1044,7 +1137,8 @@
     "updateHostel": "Cập nhật nhà nghỉ",
     "reviewTitle": "Thao tác này sẽ đưa tin đăng của bạn về trạng thái chờ duyệt",
     "reviewBody": "Bạn đã thay đổi những mục sau. Tin đăng sẽ được duyệt lại và khách sẽ không nhìn thấy cho đến khi được phê duyệt.",
-    "reviewConfirm": "Lưu và gửi duyệt"
+    "reviewConfirm": "Lưu và gửi duyệt",
+    "weCouldnTLoadYour": "Chúng tôi không tải được nhà nghỉ của bạn."
   },
   "hostMore": {
     "property": "Cơ sở",
@@ -1065,11 +1159,13 @@
   "adminAdminContracts": {
     "contracts": "Hợp đồng",
     "noContractsMatchThisFilter": "Không có hợp đồng khớp bộ lọc này",
-    "term": "Thời hạn"
+    "term": "Thời hạn",
+    "searchContractsByHostel": "Tìm hợp đồng theo nhà nghỉ"
   },
   "adminAdminListings": {
     "allListings": "Tất cả tin đăng",
-    "noListingsFound": "Không tìm thấy tin đăng"
+    "noListingsFound": "Không tìm thấy tin đăng",
+    "searchListingsByHostel": "Tìm tin đăng theo nhà nghỉ"
   },
   "adminAdminPayments": {
     "payments": "Thanh toán",
@@ -1079,27 +1175,32 @@
     "transactionId": "Mã giao dịch",
     "created": "Đã tạo",
     "contract": "Hợp đồng",
-    "product": "Sản phẩm"
+    "product": "Sản phẩm",
+    "searchPaymentsByHostel": "Tìm thanh toán theo nhà nghỉ"
   },
   "moderatorQueue": {
     "reviewQueue": "Hàng đợi duyệt",
-    "queueIsClear": "Hàng đợi trống"
+    "queueIsClear": "Hàng đợi trống",
+    "noSubmissionsAreWaitingFor": "Không có hồ sơ nào đang chờ duyệt."
   },
   "moderatorAudit": {
     "auditLog": "Nhật ký kiểm tra",
     "noMatchingActivity": "Không có hoạt động khớp",
     "allModerators": "Tất cả người kiểm duyệt",
     "last7Days": "7 ngày qua",
-    "loadOlderEntries": "Tải các mục cũ hơn"
+    "loadOlderEntries": "Tải các mục cũ hơn",
+    "tryADifferentActionFilter": "Hãy thử bộ lọc hành động hoặc khoảng ngày khác."
   },
   "coreForbidden": {
-    "accessBlocked": "Quyền truy cập bị chặn"
+    "accessBlocked": "Quyền truy cập bị chặn",
+    "youDonTHavePermission": "Bạn không có quyền xem khu vực này."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Lời mời từ nhà nghỉ, xác nhận bữa ăn và biên lai đang chờ của bạn."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Kéo thả, tải lên hoặc chụp ảnh"
+    "dragAmpDropUploadOr": "Kéo thả, tải lên hoặc chụp ảnh",
+    "replaceAdd": "Thay / thêm"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Bây giờ nhấp vào ngày kết thúc",
@@ -1119,7 +1220,8 @@
     "refundsReachYourOriginalPayment": "Tiền hoàn về phương thức thanh toán ban đầu trong vòng 5 ngày làm việc.",
     "pkrPaid": "Đã trả PKR {{amount}}",
     "cancelledSummary": "Đã hủy {{date}} · hoàn PKR {{refund}} · phí hủy PKR {{charge}}",
-    "cancelRefundExplainer": "Bạn sẽ được hoàn <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> được giữ lại làm phí hủy, vì bạn hủy khi đã qua {{pct}}% thời hạn."
+    "cancelRefundExplainer": "Bạn sẽ được hoàn <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> được giữ lại làm phí hủy, vì bạn hủy khi đã qua {{pct}}% thời hạn.",
+    "whenYouBookAHostel": "Khi bạn đặt một nhà nghỉ, nó sẽ hiện ở đây kèm ngày ở và số tiền đã trả."
   },
   "userFavorites": {
     "removeFromFavorites": "Xóa khỏi yêu thích?",
@@ -1128,7 +1230,8 @@
     "noFavoritesYet": "Chưa có mục yêu thích",
     "saveHostelsYouLikeAnd": "Lưu những nhà nghỉ bạn thích và tìm lại ở đây.",
     "browseHostels": "Xem nhà nghỉ",
-    "fromYourSavedHostels": "khỏi các nhà nghỉ đã lưu của bạn?"
+    "fromYourSavedHostels": "khỏi các nhà nghỉ đã lưu của bạn?",
+    "weCouldnTLoadYour": "Chúng tôi không tải được mục yêu thích của bạn."
   },
   "userSecurity": {
     "currentPassword": "Mật khẩu hiện tại",
@@ -1201,7 +1304,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Mẹo, hướng dẫn và cập nhật từ đội ngũ HostelHive",
     "comingSoon": "Sắp ra mắt",
-    "weReWorkingOnSome": "Chúng tôi đang chuẩn bị nội dung hay về đời sống sinh viên, mẹo nhà nghỉ và cẩm nang các thành phố khắp Pakistan. Hãy đón xem!"
+    "weReWorkingOnSome": "Chúng tôi đang chuẩn bị nội dung hay về đời sống sinh viên, mẹo nhà nghỉ và cẩm nang các thành phố khắp Pakistan. Hãy đón xem!",
+    "onThisPage": "Trong trang này",
+    "theHostelhiveTeam": "Đội ngũ HostelHive",
+    "keepReading": "Đọc tiếp",
+    "blogHomePage": "Xem trang chủ blog.",
+    "filterArticlesByCategory": "Lọc bài viết theo chuyên mục",
+    "archiveLayout": "Bố cục lưu trữ",
+    "everyArticle": "Tất cả bài viết",
+    "theHostelhiveJournal": "Nhật ký HostelHive",
+    "guidesForFindingARoom": "Cẩm nang tìm phòng — và một chỗ ngủ qua đêm.",
+    "whatHostelsActuallyCost": "Nhà nghỉ thực sự tốn bao nhiêu ở từng thành phố, khu nào hợp với trường nào, và ngủ ở đâu từ Johar Town đến Karakoram. Viết từ tin đăng và từ những chuyến đi.",
+    "allPosts": "Tất cả bài đăng",
+    "grid": "Lưới",
+    "index": "Danh mục",
+    "nMinRead": "đọc {{count}} phút",
+    "nMin": "{{count}} phút",
+    "article": "Bài viết",
+    "category": "Chuyên mục",
+    "published": "Đăng ngày",
+    "read": "Đọc",
+    "nothingFiledHereYet": "Chưa có gì ở đây.",
+    "lookingForARoomRather": "Bạn đang tìm phòng chứ không phải cẩm nang?",
+    "everyListingShowsTheRent": "Mỗi tin đăng đều ghi giá theo giường hoặc theo phòng, những gì đã bao gồm, và ai vận hành.",
+    "swipeTheTableToSee": "Vuốt bảng để xem hết các cột",
+    "weVerifyListingsAcross": "Chúng tôi xác minh tin đăng khắp Pakistan và viết lại những gì học được.",
+    "weCouldnTFindThatPost": "Chúng tôi không tìm thấy bài đăng đó",
+    "theLinkMayBeOld": "Liên kết có thể đã cũ, hoặc địa chỉ hơi sai.",
+    "browseEveryPostInstead": "Xem tất cả bài đăng thay vì vậy.",
+    "readTheGuide": "Đọc cẩm nang"
   },
   "publicListing": {
     "checkIn": "Nhận phòng",
@@ -1211,7 +1342,9 @@
     "add": "Thêm",
     "showAllNPhotos": "Xem tất cả {{count}} ảnh",
     "genderHostelHostedBy": "Nhà nghỉ {{gender}}, chủ nhà {{host}}",
-    "bookARoom": "Đặt phòng"
+    "bookARoom": "Đặt phòng",
+    "theListingMayHaveBeen": "Tin đăng có thể đã bị gỡ hoặc liên kết không đúng.",
+    "chooseYourRoom": "Chọn phòng của bạn"
   },
   "featuresPublic": {
     "checkingYourLink": "Đang kiểm tra liên kết của bạn…",
@@ -1265,7 +1398,14 @@
     "allApproved": "Đã duyệt tất cả!",
     "doneNFailed": "Xong — {{count}} thất bại",
     "nPhotosFailedRetry": "{{count}} ảnh thất bại — bạn có thể thử lại từ hàng đợi.",
-    "approving": "Đang duyệt…"
+    "approving": "Đang duyệt…",
+    "newUploadsWillAppearHere": "Tệp tải lên mới sẽ xuất hiện ở đây để duyệt.",
+    "allStatuses": "Tất cả trạng thái",
+    "allLabels": "Tất cả nhãn",
+    "unlabelled": "Chưa gắn nhãn",
+    "nothingMatchesThisFilter": "Không có gì khớp với bộ lọc này",
+    "tryAnotherLabelOrShowAll": "Thử nhãn khác, hoặc hiển thị tất cả.",
+    "showAllLabels": "Hiển thị tất cả nhãn"
   },
   "publicContact": {
     "contactUs": "Liên hệ với chúng tôi",
@@ -1396,7 +1536,15 @@
     "bookingSent": "Đã gửi đặt phòng",
     "weLlEmailYouWhenConfirmed": "Chúng tôi sẽ gửi email ngay khi nhà nghỉ xác nhận.",
     "couldnTBook": "Không thể hoàn tất đặt phòng",
-    "noRoomsListed": "Nhà nghỉ này chưa thêm phòng nào."
+    "noRoomsListed": "Nhà nghỉ này chưa thêm phòng nào.",
+    "pricesArePerRoom": "Giá theo phòng",
+    "pricesArePerBed": "Giá theo giường",
+    "guestDetails": "Thông tin khách",
+    "enterTheGuestName": "Nhập tên khách",
+    "enterAValidPhone": "Nhập số điện thoại hợp lệ",
+    "enterAValidEmail": "Nhập địa chỉ email hợp lệ",
+    "ofNSeats": "trên {{count}}",
+    "bookingReference": "Mã đặt phòng"
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",
@@ -1408,11 +1556,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Tìm địa chỉ hoặc địa danh…",
-    "searchCityOrArea": "Tìm thành phố hoặc khu vực"
+    "searchCityOrArea": "Tìm thành phố hoặc khu vực",
+    "satellite": "Vệ tinh",
+    "noMatchingPlaces": "Không có địa điểm phù hợp",
+    "poweredByOpenstreetmap": "Cung cấp bởi OpenStreetMap",
+    "noCoordinatesSetFor": "Tin đăng này chưa có tọa độ."
   },
   "subscriptionGate": {
     "unlockFeature": "Mở khóa {{feature}}",
-    "thisFeature": "tính năng này"
+    "thisFeature": "tính năng này",
+    "dashboardOverview": "Tổng quan bảng điều khiển",
+    "roomManagement": "Quản lý phòng",
+    "tenantManagement": "Quản lý khách thuê",
+    "utilityBilling": "Lập hóa đơn tiện ích",
+    "thisFeatureIsAvailable": "Tính năng này có trong các gói trả phí. Hãy đăng ký để dùng đầy đủ bảng điều khiển nhà nghỉ của bạn.",
+    "completeHostelProfileFirst": "Hoàn tất hồ sơ nhà nghỉ trước",
+    "onceSubscribedAllFeatures": "Sau khi đăng ký, mọi tính năng sẽ mở khóa tự động.",
+    "roomAmpOccupancyManagement": "Quản lý phòng và tỷ lệ lấp đầy",
+    "tenantTrackingAmpPayment": "Theo dõi khách thuê và lịch sử thanh toán",
+    "rentAndUtilityInvoice": "Tạo hóa đơn tiền thuê và tiện ích",
+    "analyticsAndRevenueReports": "Phân tích và báo cáo doanh thu"
   },
   "notifications": {
     "nUnread": "{{count}} chưa đọc"

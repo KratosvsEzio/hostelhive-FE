@@ -95,6 +95,7 @@ export interface HostelAttachment {
   status?: string | null;
   /** Whether this attachment is the primary/banner image. */
   is_primary?: boolean | null;
+
   url?: string | null;
   variants?: Record<string, string> | null;
   attached_id?: number | null;

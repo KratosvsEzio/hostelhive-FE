@@ -33,6 +33,7 @@ const COMPACT_OPTIONS: DropdownOption[] = CURRENCIES.map((c) => ({
   imports: [Dropdown, TranslocoPipe],
   template: `
     <hh-dropdown
+      [controlId]="controlId()"
       [variant]="variant()"
       [surface]="surface()"
       [size]="compact() ? 'sm' : 'md'"
@@ -55,6 +56,9 @@ export class CurrencySelect {
    * Shorter control with code-first labels, for tight spots like the search map overlay.
    * The option set is unchanged — only the label order and the field height.
    */
+  /** Forwarded to the trigger, so a <label for> outside can name this field. */
+  readonly controlId = input('');
+
   readonly compact = input(false);
 
   /**

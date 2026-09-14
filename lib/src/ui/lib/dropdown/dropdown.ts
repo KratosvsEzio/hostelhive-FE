@@ -115,6 +115,7 @@ export type DropdownSize = 'sm' | 'md';
     >
       <button
         type="button"
+        [id]="controlId() || null"
         (click)="toggle()"
         [disabled]="disabled()"
         aria-haspopup="listbox"
@@ -227,17 +228,17 @@ export type DropdownSize = 'sm' | 'md';
                 </button>
               }
 
-              @if (loading() && options().length === 0) {
+              @if (loading() && visibleOptions().length === 0) {
                 <div class="flex flex-col gap-1">
                   @for (_ of loadingRows; track $index) {
                     <div class="h-8 animate-pulse rounded-lg bg-ink-100"></div>
                   }
                 </div>
-              } @else if (options().length === 0) {
+              } @else if (visibleOptions().length === 0) {
                 <p class="py-5 text-center text-sm text-ink-400">{{ emptyLabel() ?? ('common.noOptionsFound' | transloco) }}</p>
               } @else {
-                @for (o of options(); track o.value; let i = $index) {
-                  @if (o.group && o.group !== options()[i - 1]?.group) {
+                @for (o of visibleOptions(); track o.value; let i = $index) {
+                  @if (o.group && o.group !== visibleOptions()[i - 1]?.group) {
                     <p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-400 first:pt-1">{{ o.group }}</p>
                   }
                   <button
@@ -345,6 +346,14 @@ export type DropdownSize = 'sm' | 'md';
 })
 export class Dropdown {
   readonly options = input<DropdownOption[]>([]);
+  /**
+   * Id for the trigger, so a caption beside the field can be a real <label for>.
+   *
+   * A <button> is a labelable element, so `for` is valid here and clicking the caption
+   * moves focus onto the trigger — which is what a caption above a field implies.
+   */
+  readonly controlId = input('');
+
   readonly multiple = input(false);
   readonly placeholder = input<string | undefined>(undefined);
   /** Single-select only: label for a top row that clears the selection (e.g. "All stays"). */
@@ -408,6 +417,21 @@ export class Dropdown {
 
   // Async / searchable mode
   readonly searchable = input(false);
+  /**
+   * Narrow `options` against the search box here, rather than asking the consumer to.
+   *
+   * For a list that is already in memory — labels, currencies, a fixed enum — where there is
+   * no request to make and the only thing standing between the box and a filtered list is a
+   * `filter` call. Consumers were writing that themselves, which is fine for one dropdown and
+   * wrong for many: the photo grid renders one per photo, and a query signal held by the
+   * consumer would be shared across all of them. Here it is per instance, which is what the
+   * search box already is.
+   *
+   * Off by default, so the async consumers are untouched: they answer the query with a
+   * request, and filtering their reply again here could hide a row the server matched on
+   * something this component cannot see.
+   */
+  readonly filterLocally = input(false);
   readonly searchPlaceholder = input<string | undefined>(undefined);
   readonly loading = input(false);
   readonly hasMore = input(false);
@@ -436,6 +460,27 @@ export class Dropdown {
 
   protected readonly open = signal(false);
   protected readonly searchQuery = signal('');
+
+  /**
+   * What the panel actually lists — `options`, narrowed by the search box when
+   * {@link filterLocally} is on.
+   *
+   * Matches the subtitle as well as the label, so a currency found by its code or a label
+   * found by its description both work without the consumer flattening the two into one
+   * string first. Case- and whitespace-insensitive; an empty query is not a filter.
+   *
+   * Identity is preserved when nothing is being filtered, so the common case does not hand
+   * the template a fresh array on every read.
+   */
+  protected readonly visibleOptions = computed(() => {
+    const all = this.options();
+    if (!this.filterLocally()) return all;
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return all;
+    return all.filter((o) =>
+      `${o.label} ${o.subtitle ?? ''}`.toLowerCase().includes(q),
+    );
+  });
   private readonly injector = inject(Injector);
 
   protected readonly loadingRows = [1, 2, 3];

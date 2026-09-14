@@ -5,7 +5,7 @@
      it — landing a seeker on a section whose title is behind the header. 24 is what the
      sidebar already uses (`sticky top-24`) to clear the same bar. -->
 <section class="scroll-mt-24 rounded-2xl border border-ink-100 bg-white p-5 sm:p-6" id="rooms">
-  <h2 class="font-display text-2xl font-semibold text-ink-900">{{ 'listing.roomsAmpPricing' | transloco }}</h2>
+  <h2 class="font-display text-2xl font-semibold text-ink-900">{{ 'publicListing.chooseYourRoom' | transloco }}</h2>
 
   <!-- One list, private first. The per-kind headings are gone — each card names its own
        kind — but the order still carries the grouping.
@@ -27,12 +27,20 @@
       [class.bg-white]="qty(offer) === 0"
       [class.bg-brand-50]="qty(offer) > 0"
     >
-      <div class="flex flex-col sm:flex-row">
+      <!-- Row at `lg`, not `sm`. The photo is a fixed 224px and the rate column a fixed
+           240px, so the row commits 464px of chrome before the details column gets a pixel.
+           Inside a 528px card — which is what a 657px viewport gives, and what a 1280px
+           laptop at 200% zoom gives — that left 62px for the room name: "King size room"
+           wrapped to three lines and the third was cut off by the card's own overflow, with
+           the "Sleeps 4" chip spilling across the divider. `overflow-x: clip` on the body
+           meant none of it could be scrolled to. `lg` is where the page's own two-column
+           split happens, so the card now turns at the same width the layout does. -->
+      <div class="flex flex-col lg:flex-row">
         <!-- Photo. The aspect ratio gives it height while the row is stacked; once it is
              a row it stretches to whatever the details column ends up being, so the
              three zones stay flush at the bottom. -->
         <div
-          class="group/photo relative aspect-[4/3] shrink-0 overflow-hidden bg-ink-100 sm:aspect-auto sm:w-56"
+          class="group/photo relative aspect-[4/3] shrink-0 overflow-hidden bg-ink-100 lg:aspect-auto lg:w-56"
         >
           @if (photosOf(offer).length) {
             <!-- A sliding track rather than scroll-snap: the arrows have to drive it, and
@@ -42,13 +50,30 @@
               class="absolute inset-0 flex transition-transform duration-300 ease-out"
               [style.transform]="'translateX(-' + photoIndex(offer) * 100 + '%)'"
             >
+              <!-- Slide one is gated on the viewport; the rest on the step.
+
+                   Every slide sits at the same offset inside the sliding track, so they all
+                   intersect at the same moment — a viewport observer cannot tell them apart,
+                   and loaded all three per room: 2.69 MB across two cards before the reader
+                   had scrolled anywhere near them. Only the first is ever on screen without
+                   a tap, so the others wait for the carousel index to reach them and arrive
+                   one step ahead of being looked at. -->
               @for (src of photosOf(offer); track $index) {
-                <img
-                  [src]="src"
-                  [alt]="offer.title"
-                  loading="lazy"
-                  class="h-full w-full shrink-0 object-cover"
-                />
+                @if ($index === 0) {
+                  <img
+                    [hhLazySrc]="src"
+                    [alt]="offer.title"
+                    decoding="async"
+                    class="h-full w-full shrink-0 object-cover"
+                  />
+                } @else {
+                  <img
+                    [attr.src]="$index <= photoIndex(offer) ? src : null"
+                    [alt]="offer.title"
+                    decoding="async"
+                    class="h-full w-full shrink-0 object-cover"
+                  />
+                }
               }
             </div>
 
@@ -58,7 +83,7 @@
               @if (photoIndex(offer) > 0) {
                 <button
                   type="button"
-                  class="absolute start-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
+                  class="absolute start-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
                   [attr.aria-label]="'Previous photo of ' + offer.title"
                   (click)="stepPhoto(offer, -1, $event)"
                 >
@@ -68,7 +93,7 @@
               @if (photoIndex(offer) < photosOf(offer).length - 1) {
                 <button
                   type="button"
-                  class="absolute end-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
+                  class="absolute end-2 top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink-800 opacity-0 shadow-md transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100"
                   [attr.aria-label]="'Next photo of ' + offer.title"
                   (click)="stepPhoto(offer, 1, $event)"
                 >
@@ -158,20 +183,20 @@
              no rate-plan concept, so a "Standard" label beside a lone rate would name a
              choice that does not exist. When plans arrive this becomes a loop. -->
         <div
-          class="flex shrink-0 items-end justify-between gap-4 border-t border-ink-100 p-4 sm:w-60 sm:flex-col sm:justify-center sm:border-s sm:border-t-0"
+          class="flex shrink-0 items-end justify-between gap-4 border-t border-ink-100 p-4 lg:w-60 lg:flex-col lg:justify-center lg:border-s lg:border-t-0"
         >
-          <div class="text-left sm:text-right">
+          <div class="text-left lg:text-right">
             <p class="font-display text-lg font-semibold text-ink-900">
-              {{ currency() | currencySym }} {{ price(offer) | number: '1.2-2' }}
+              {{ currency() | currencySym }} {{ price(offer) | money }}
               <span class="text-sm font-normal text-ink-500">{{ periodLabel() }}</span>
             </p>
             @if (discount(offer); as pct) {
-              <p class="mt-1 flex flex-wrap items-center gap-2 sm:justify-end">
+              <p class="mt-1 flex flex-wrap items-center gap-2 lg:justify-end">
                 <span class="hh-tag-skew bg-rose-100 text-xs font-semibold text-rose-700">
                   <span>−{{ pct }}%</span>
                 </span>
-                <span class="text-sm text-ink-400 line-through">
-                  {{ currency() | currencySym }} {{ offer.actualPrice | number: '1.2-2' }}
+                <span class="text-sm text-ink-500 line-through">
+                  {{ currency() | currencySym }} {{ offer.actualPrice | money }}
                 </span>
               </p>
             }
@@ -193,7 +218,7 @@
                     <button
                       type="button"
                       class="grid h-8 w-8 place-items-center rounded-full text-ink-700 hover:bg-ink-50"
-                      [attr.aria-label]="'Remove one from ' + offer.title"
+                      [attr.aria-label]="'a11y.removeOneFrom' | transloco: { title: offer.title }"
                       (click)="step(offer, -1)"
                     >
                       <span class="ti ti-minus" aria-hidden="true"></span>
@@ -218,7 +243,7 @@
       </div>
 
       <p class="border-t border-ink-100 px-4 py-2 text-xs text-ink-500">
-        {{ unitNote(row.kind) }} · {{ 'publicBooking.taxIncluded' | transloco }}
+        {{ unitNote(row.kind) | transloco }} · {{ 'publicBooking.taxIncluded' | transloco }}
       </p>
     </article>
   }
@@ -234,11 +259,17 @@
 @if (openDescription(); as room) {
   <div
     class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    hhDialogFocus
     role="dialog"
     aria-modal="true"
     [attr.aria-label]="room.title"
   >
-    <div class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" (click)="openDescription.set(null)"></div>
+    <button
+      type="button"
+      class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm cursor-default"
+      [attr.aria-label]="'a11y.close' | transloco"
+      (click)="openDescription.set(null)"
+    ></button>
     <div class="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
       <div class="flex items-start justify-between gap-3 border-b border-ink-100 px-5 py-4">
         <h2 class="font-display text-lg font-semibold text-ink-900">

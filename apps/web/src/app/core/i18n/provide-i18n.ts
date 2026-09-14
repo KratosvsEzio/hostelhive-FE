@@ -11,7 +11,10 @@ import {
   TranslocoLoader,
   provideTransloco,
 } from '@jsverse/transloco';
+import { HH_LINK_LOCALISER, HhLinkCommands } from '@hostelhive/ui';
 import { DEFAULT_LOCALE, LOCALE_CODES } from './locales';
+import { LinkCommands, localiseCommands } from './locale-commands';
+import { LocaleStore } from './locale-store';
 
 /**
  * Loads `public/i18n/<lang>.json` over HTTP.
@@ -53,5 +56,25 @@ export function provideI18n(): EnvironmentProviders {
       },
       loader: HttpTranslationLoader,
     }),
+    /**
+     * Teach the shared components to keep their links in-language.
+     *
+     * `LocaleLink` matches `a[routerLink]`, and Angular matches directives against the
+     * template's own component imports — so it covers every anchor written in this app and
+     * none written inside `@hostelhive/ui`. The breadcrumb builds its own links, and was
+     * rendering them unprefixed: the click survived, because the router sends a bare path to
+     * its prefixed twin, but the href a person copies or middle-clicks did not.
+     *
+     * Reading `active()` inside the returned function rather than closing over its value is
+     * what makes a switch rewrite links already on the page — the component calls this from a
+     * `computed`, which then tracks the signal.
+     */
+    {
+      provide: HH_LINK_LOCALISER,
+      useFactory: () => {
+        const store = inject(LocaleStore);
+        return (link: HhLinkCommands) => localiseCommands(link as LinkCommands, store.active());
+      },
+    },
   ]);
 }

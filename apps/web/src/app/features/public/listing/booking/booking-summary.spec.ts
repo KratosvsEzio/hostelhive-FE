@@ -7,12 +7,18 @@ import { ROOM_OFFERS } from './room-offers.fixture';
 
 @Component({
   imports: [BookingSummary],
-  template: `<hh-booking-summary currency="PKR" [hostelName]="name()" [error]="err()" />`,
+  template: `<hh-booking-summary
+    currency="PKR"
+    [hostelName]="name()"
+    [error]="err()"
+    [reference]="ref()"
+  />`,
   providers: [BookingBasket],
 })
 class Host {
   readonly name = signal('Ever Care Hostel');
   readonly err = signal('');
+  readonly ref = signal<string | null>(null);
 }
 
 /**
@@ -110,5 +116,69 @@ describe('BookingSummary', () => {
 
     summary.confirmed.emit();
     expect(confirmed).toBe(1);
+  });
+});
+
+/**
+ * The receipt.
+ *
+ * Once the booking exists, the modal stops being a review of something about to happen and
+ * becomes the record of something that has. The reference is the whole reason it stays on
+ * screen at all: it is what the guest quotes when they ring the hostel, and it used to appear
+ * only in a toast that removed itself after a few seconds.
+ */
+describe('BookingSummary — once the booking exists', () => {
+  let fixture: ComponentFixture<Host>;
+
+  function setUp(reference: string | null): string {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [Host],
+      providers: [provideI18nTesting()],
+    });
+    fixture = TestBed.createComponent(Host);
+    const basket = fixture.debugElement.injector.get(BookingBasket);
+    basket.checkIn.set(new Date(2026, 8, 1));
+    basket.checkOut.set(new Date(2026, 8, 4));
+    basket.setQuantity(ROOM_OFFERS[0]!, 2);
+    fixture.componentInstance.ref.set(reference);
+    fixture.detectChanges();
+    return (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ');
+  }
+
+  it('shows the reference', () => {
+    expect(setUp('HH-2026-5CW0EZ0N')).toContain('HH-2026-5CW0EZ0N');
+  });
+
+  /**
+   * The rooms and the total go. They were the case for confirming, and that decision is made
+   * — leaving them up invites a guest to keep reading a quote as though it were still an
+   * offer. What is left is only what they did not already know.
+   */
+  it('stops reviewing the basket', () => {
+    const text = setUp('HH-2026-5CW0EZ0N');
+
+    expect(text).not.toContain(ROOM_OFFERS[0]!.title);
+  });
+
+  // Nothing to cancel out of any more — a receipt has one button and it closes.
+  it('offers one way out rather than confirm-or-cancel', () => {
+    setUp('HH-2026-5CW0EZ0N');
+    const buttons = [...fixture.nativeElement.querySelectorAll('button')] as HTMLButtonElement[];
+    const labels = buttons.map((b) => (b.textContent ?? '').trim()).filter(Boolean);
+
+    expect(labels).not.toContain('publicBooking.confirmBooking');
+    expect(labels.some((l) => l.includes('common.done'))).toBe(true);
+  });
+
+  /**
+   * No reference means no receipt. The listing page falls back to closing the modal in that
+   * case, so this only has to not render a box with a hole where the number goes.
+   */
+  it('stays a review when nothing came back to quote', () => {
+    const text = setUp(null);
+
+    expect(text).toContain(ROOM_OFFERS[0]!.title);
+    expect(text).toContain('publicBooking.confirmBooking');
   });
 });

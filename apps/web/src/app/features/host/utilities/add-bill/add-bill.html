@@ -12,7 +12,7 @@
       />
     </div>
   } @else if (s.subscriptionError) {
-    <hh-subscription-gate feature="Utility billing" />
+    <hh-subscription-gate [feature]="'subscriptionGate.utilityBilling' | transloco" />
   } @else if (s.error || editError()) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
   } @else {
@@ -100,7 +100,7 @@
             <!-- Meter reading inputs for electricity -->
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
-                <label class="mb-1 block text-xs font-medium text-ink-600"
+                <label class="mb-1 block text-xs font-medium text-ink-600" for="ab-prev-reading"
                   >{{ 'hostUtilities.previousReading' | transloco }}</label
                 >
                 <div
@@ -124,7 +124,7 @@
                 }
               </div>
               <div>
-                <label class="mb-1 block text-xs font-medium text-ink-600"
+                <label class="mb-1 block text-xs font-medium text-ink-600" for="ab-curr-reading"
                   >{{ 'hostUtilities.currentReading' | transloco }}</label
                 >
                 <div
@@ -269,7 +269,7 @@
           <hh-empty-state
             icon="ti-user-off"
             [title]="'hostUtilities.noTenantsInThisRoom' | transloco"
-            message="Pick a room with active tenants to split the bill."
+            [message]="'hostUtilities.pickARoomWithActive' | transloco"
           />
         } @else {
           <div class="overflow-x-auto">

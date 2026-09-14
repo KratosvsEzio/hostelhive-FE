@@ -26,6 +26,8 @@ import {
   RoleDef,
 } from '@hostelhive/data-access';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
+import { primaryFirst } from '@util/primary-photo';
+import { usableVariant } from '@util/attachment-url';
 import { PERMISSION_GROUPS } from './admin.fixtures';
 
 /**
@@ -720,15 +722,9 @@ function resolveThumb(
   attachments?: ApiAdminHostel['attachments'],
 ): string | null {
   if (!attachments?.length) return null;
-  const a = attachments.find((x) => x.is_primary) ?? attachments[0];
+  const a = primaryFirst(attachments)[0];
   if (a.url) return a.url;
-  if (a.variants) {
-    const v =
-      a.variants['thumb'] ??
-      a.variants['small'] ??
-      a.variants['medium'] ??
-      Object.values(a.variants).find(Boolean);
-    if (v) return v;
-  }
-  return null;
+  // The backend's variant addresses are malformed — see `usableVariant`. A sibling's `url` is
+  // the reference for what a well-formed one looks like on this payload.
+  return usableVariant(a.variants, attachments.find((x) => x.url)?.url);
 }

@@ -109,19 +109,27 @@ export class AccountMenu {
 
   protected readonly inConsole = computed(() => isConsoleArea(areaOf(this.path())));
 
+  /**
+   * `label` is a translation *key*, resolved by the template.
+   *
+   * These four were English string literals rendered verbatim, so they stayed English in
+   * the other seventeen languages while every hand-written row around them translated —
+   * the same defect `hostCtaKey` above was fixed for. Three of the keys already existed;
+   * `common.passwordAmpSecurity` was added for the fourth.
+   */
   protected readonly items = [
-    { label: 'Favorites', icon: 'ti-heart', link: '/account/favorites' },
+    { label: 'common.favorites', icon: 'ti-heart', link: '/account/favorites' },
     {
-      label: 'Account settings',
+      label: 'common.accountSettings',
       icon: 'ti-settings',
       link: '/account/settings',
     },
     {
-      label: 'Password & security',
+      label: 'common.passwordAmpSecurity',
       icon: 'ti-lock',
       link: '/account/security',
     },
-    { label: 'FAQs', icon: 'ti-help-circle', link: '/faqs' },
+    { label: 'common.faqs', icon: 'ti-help-circle', link: '/faqs' },
   ];
 
   protected readonly initials = computed(() => {

@@ -54,12 +54,13 @@
         <hh-skeleton class="h-72" radius="lg" />
       </div>
     } @else if (s.error) {
-      <hh-error-state [networkError]="s.networkError" message="We couldn't load your hostel." (retry)="retry()" />
+      <hh-error-state [networkError]="s.networkError" [message]="'hostHostelProfile.weCouldnTLoadYour' | transloco" (retry)="retry()" />
     } @else if (s.data) {
       <hh-hostel-form
         mode="edit"
         [initialData]="s.data"
         [saving]="saving()"
+        (primarySelected)="onPrimarySelected($event)"
       />
 
       <!-- bottom save row -->

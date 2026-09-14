@@ -70,6 +70,12 @@ const LOCALISED_ROUTES: Route[] = [
     title: 'Service Policy — HostelHive',
   },
   {
+    path: 'credits',
+    loadComponent: () =>
+      import('@features/public/credits/credits').then((m) => m.Credits),
+    title: 'Image credits — HostelHive',
+  },
+  {
     path: 'about',
     loadComponent: () =>
       import('@features/public/about/about').then((m) => m.About),
@@ -83,9 +89,8 @@ const LOCALISED_ROUTES: Route[] = [
   },
   {
     path: 'blog',
-    loadComponent: () =>
-      import('@features/public/blog/blog').then((m) => m.Blog),
-    title: 'Blog — HostelHive',
+    loadChildren: () =>
+      import('@features/public/blog/blog.routes').then((m) => m.BLOG_ROUTES),
   },
   {
     path: 'careers',

@@ -126,6 +126,9 @@ function buildMonth(
  *   `<hh-date-picker label="Due date" [(value)]="dueDate" />`
  *   `<hh-date-picker variant="pill" placeholder="Pick date" [(value)]="date" />`
  */
+/** Instance counter behind `triggerId`. */
+let instances = 0;
+
 @Component({
   selector: 'hh-date-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -134,12 +137,13 @@ function buildMonth(
   template: `
     <div class="relative block">
       @if (label()) {
-        <label class="mb-1 block text-xs font-medium text-ink-600">{{ label() }}</label>
+        <label class="mb-1 block text-xs font-medium text-ink-600" [for]="triggerId">{{ label() }}</label>
       }
 
       <!-- Trigger -->
       <button
         type="button"
+        [id]="controlId() || triggerId"
         (click)="toggle()"
         [disabled]="disabled()"
         aria-haspopup="dialog"
@@ -286,9 +290,7 @@ function buildMonth(
 
             <!-- ── YEAR VIEW ── -->
             @if (mode() === 'year') {
-              <div class="mb-3 text-center text-sm font-semibold text-ink-900">
-                Select year
-              </div>
+              <div class="mb-3 text-center text-sm font-semibold text-ink-900">{{ 'common.selectYear' | transloco }}</div>
               <div class="hh-scroll-thin h-52 overflow-y-auto">
                 @for (y of yearList; track y) {
                   <button
@@ -328,6 +330,13 @@ function buildMonth(
   `,
 })
 export class DatePicker {
+  /** Ties the caption to the trigger. Unique per instance — a duplicate id sends
+   *  every label to whichever control the document happens to reach first. */
+  /** Overrides the generated id, so a <label for> written by the caller can name this. */
+  readonly controlId = input('');
+
+  protected readonly triggerId = `hh-dp-${++instances}`;
+
   readonly value = model<string | null>(null);
   readonly placeholder = input<string | undefined>(undefined);
   readonly label = input('');

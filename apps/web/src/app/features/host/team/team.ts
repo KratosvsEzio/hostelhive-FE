@@ -24,6 +24,14 @@ import {
 } from '@hostelhive/ui';
 import { Staff } from '@hostelhive/data-access';
 import { HostPropertyStore, HostShellApi, StaffApi, StaffPage } from '@services';
+import {
+  StaffRowPermissions,
+  StaffRowViewer,
+  applyDemotions,
+  applySaved,
+  canActOnStaffRow,
+  isOwnStaffRecord,
+} from './staff-row-actions';
 import { StaffFormDrawer } from './staff-form-drawer/staff-form-drawer';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NotificationService } from '@core/notification.service';
@@ -77,17 +85,52 @@ export class HostTeam {
   private readonly shellApi = inject(HostShellApi);
   private readonly session = inject(SessionStore);
 
+  private readonly canEditStaff = computed(() =>
+    this.session.hasPermission('host:Staff:update'),
+  );
+  private readonly canDeleteStaff = computed(() =>
+    this.session.hasPermission('host:Staff:destroy'),
+  );
   /**
-   * Whether this session has any row action at all. Without it the kebab still opens on a
-   * row the user can only read, showing an empty popup — worse than offering no menu.
-   * Removing a manager is its own hostel-level permission, so it counts here too.
+   * `core:`, not `host:`.
+   *
+   * This asked for `host:Hostel:remove_manager`, which the API has never issued — read off a
+   * live session, `remove_manager` exists only in the `core` group, and `host:Hostel:` is
+   * granted for `index` and `show` alone. `permissionGranted` matches exactly, with only a
+   * `group:subject:manage` umbrella as fallback and no umbrellas granted at all, so the old
+   * string could not be satisfied by any role. It silently failed closed: the menu item
+   * never rendered and nobody saw an error.
+   */
+  private readonly canRemoveManager = computed(() =>
+    this.session.hasPermission('core:Hostel:remove_manager'),
+  );
+
+  /**
+   * Whether the table gets an actions column at all — the cheap question, asked once.
+   *
+   * Not the whole answer: which rows get a button is {@link canActOnRow}, because a session
+   * holding only `remove_manager` can act on a manager row and on nothing else. This decides
+   * whether the column exists; that decides whether each row fills it.
    */
   protected readonly canActOnStaff = computed(
-    () =>
-      this.session.hasPermission('host:Staff:update') ||
-      this.session.hasPermission('host:Staff:destroy') ||
-      this.session.hasPermission('host:Hostel:remove_manager'),
+    () => this.canEditStaff() || this.canDeleteStaff() || this.canRemoveManager(),
   );
+
+  /** The viewer, in the shape {@link canActOnStaffRow} needs. Null before the session lands. */
+  private readonly viewer = computed<StaffRowViewer | null>(() => {
+    const me = this.session.user();
+    return me ? { id: me.id, email: me.email } : null;
+  });
+
+  private readonly staffPerms = computed<StaffRowPermissions>(() => ({
+    edit: this.canEditStaff(),
+    remove: this.canDeleteStaff(),
+    removeManager: this.canRemoveManager(),
+  }));
+
+  /** Per-row menu rule — see {@link canActOnStaffRow} for why a row goes quiet. */
+  protected readonly canActOnRow = (row: unknown): boolean =>
+    canActOnStaffRow(row as Staff, this.viewer(), this.staffPerms());
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
   private readonly refetchDelay = inject(RefetchDelay);
@@ -147,9 +190,54 @@ export class HostTeam {
 
   protected readonly staffLoading = computed(() => this.staffState().loading);
   protected readonly staffError = computed(() => this.staffState().error);
-  protected readonly staffRecords = computed(() => this.staffState().data?.items ?? []);
-  protected readonly staffTotal = computed(() => this.staffState().data?.total ?? 0);
-  protected readonly staffAggs = computed(() => this.staffState().data?.aggs ?? []);
+  /**
+   * Staff whose manager access was revoked in this session, applied over the fetched page.
+   *
+   * `remove_manager` changes exactly one field on one row. Refetching the whole list to learn
+   * that costs a request, a spinner and a scroll position, and the answer was already on the
+   * screen — the server has confirmed with a 200, so the record in hand is now known to be
+   * stale in precisely one place, and patching it there is both cheaper and steadier than
+   * asking again.
+   *
+   * Held as ids over the fetched items rather than by mutating them, because the items belong
+   * to {@link staffState} and are replaced wholesale on every fetch. Cleared by
+   * {@link reloadStaff} — once the server has spoken again its answer is the better one, and
+   * a stale overlay could otherwise hide a role granted from somewhere else.
+   */
+  private readonly demoted = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * Staff saved in this session, applied over the fetched page.
+   *
+   * `StaffApi.create` and `update` both answer with the persisted record, so the drawer can
+   * hand the row straight back and the page has nothing left to fetch. Cleared by
+   * {@link reloadStaff} alongside the other overlays.
+   */
+  private readonly saved = signal<readonly Staff[]>([]);
+
+  /** Rows added locally, added to the server's `total`. See {@link saved}. */
+  private readonly totalDelta = signal(0);
+
+  /** Per-status adjustments to the fetched aggs, keyed by slug. See {@link shiftAggs}. */
+  private readonly aggDelta = signal<ReadonlyMap<string, number>>(new Map());
+
+  protected readonly staffRecords = computed(() =>
+    applySaved(
+      applyDemotions(this.staffState().data?.items ?? [], this.demoted()),
+      this.saved(),
+    ),
+  );
+  protected readonly staffTotal = computed(
+    () => (this.staffState().data?.total ?? 0) + this.totalDelta(),
+  );
+  protected readonly staffAggs = computed(() => {
+    const aggs = this.staffState().data?.aggs ?? [];
+    const delta = this.aggDelta();
+    if (!delta.size) return aggs;
+    return aggs.map((a) =>
+      delta.has(a.slug) ? { ...a, count: Math.max(0, a.count + delta.get(a.slug)!) } : a,
+    );
+  });
 
   /**
    * Status chips for `hh-filter-chips`, matching the rooms/tenants pages. "All" is the empty
@@ -222,6 +310,18 @@ export class HostTeam {
       .subscribe({
         next: (full) => {
           this.staffDetailLoadingId.set(null);
+          // Same rule as the row menu, applied where the drawer actually opens. Hiding the
+          // button closes the route through the table; `team/edit/:staffId` is a second door
+          // onto the same form, reachable by typing it or from a bookmark made before this
+          // guard existed. It is also the better place to ask, because the detail record
+          // carries `userId` where the list row does not.
+          //
+          // `isOwnStaffRecord` rather than the menu's predicate: this is the *edit* form, so
+          // the menu's "or you could delete it" is not enough to have earned it.
+          if (isOwnStaffRecord(full, this.viewer())) {
+            this.closeStaffForm();
+            return;
+          }
           this.staffEditing.set(full);
           this.staffFormOpen.set(true);
         },
@@ -253,9 +353,42 @@ export class HostTeam {
     this.staffEditing.set(null);
   }
 
-  protected onStaffSaved(): void {
+  /**
+   * The drawer hands back the persisted record, so the list needs no second request.
+   *
+   * This used to close the form and reload the page. The reload had nothing to tell us that
+   * the response had not already said — it cost a spinner and the host's place in the table
+   * immediately after being told the save worked.
+   */
+  protected onStaffSaved(persisted: Staff): void {
+    const before = this.staffRecords().find((s) => s.id === persisted.id) ?? null;
+    this.saved.update((list) => [...list.filter((s) => s.id !== persisted.id), persisted]);
+    this.shiftAggs(before, persisted);
     this.closeStaffForm();
-    this.reloadStaff();
+  }
+
+  /**
+   * Moves the status-tab counts and the total to match a locally-applied save.
+   *
+   * Without it the list would be right and everything describing it wrong — "Active (5)"
+   * still reading 5 after a sixth was added, and the footer counting a page that now holds
+   * one more row. That is a worse state than either being stale alone, because the two
+   * disagree on screen.
+   *
+   * Arithmetic on what the last fetch reported rather than a recount: the page holds one
+   * page of staff and the aggs describe all of them, so counting what is visible would be
+   * counting the wrong set.
+   */
+  private shiftAggs(before: Staff | null, after: Staff): void {
+    if (before?.status === after.status) return;
+    this.aggDelta.update((map) => {
+      const next = new Map(map);
+      if (before) next.set(before.status, (next.get(before.status) ?? 0) - 1);
+      next.set(after.status, (next.get(after.status) ?? 0) + 1);
+      return next;
+    });
+    // Only a create adds a person; an edit moves an existing one between tabs.
+    if (!before) this.totalDelta.update((n) => n + 1);
   }
 
   // ── List ──────────────────────────────────────────────────────────────────
@@ -271,6 +404,14 @@ export class HostTeam {
 
   protected reloadStaff(): void {
     this.refetchDelay.track(STAFF_PATH);
+    // The incoming page is the server's own answer, so every local patch is now redundant at
+    // best and contradicted at worst. All four go together: the rows, the demotions, and the
+    // two counts that describe them — clearing a subset leaves the list and its totals
+    // disagreeing on screen.
+    this.demoted.set(new Set());
+    this.saved.set([]);
+    this.totalDelta.set(0);
+    this.aggDelta.set(new Map());
     this.staffRefresh.update((n) => n + 1);
   }
 
@@ -349,7 +490,10 @@ export class HostTeam {
       .subscribe({
         next: () => {
           this.removingId.set(null);
-          this.reloadStaff();
+          // No refetch: the 200 tells us the one thing that changed, and the row is already
+          // here. See `demoted` — the badge and the menu item both come off this flag, so
+          // patching it is the whole of the update the list needs.
+          this.demoted.update((ids) => new Set(ids).add(m.id));
           this.notifications.success(
             'Manager access removed',
             `${m.name} can no longer manage this hostel.`,

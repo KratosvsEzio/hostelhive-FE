@@ -102,7 +102,17 @@
     "signInToBook": "Log in om te boeken",
     "pickYourRoomOnce": "Kies je kamer zodra je bent ingelogd",
     "createAFreeAccountToBook": "Maak een gratis account om kamers te kiezen en vast te houden terwijl je beslist. Het duurt 30 seconden.",
-    "roomsAmpPricing": "Kamers en prijzen"
+    "andNMore": "+{{count}} meer",
+    "favorite": "Favoriet",
+    "showPhoneNumber": "Telefoonnummer tonen",
+    "showAllNReviews": "Alle {{count}} beoordelingen tonen",
+    "hostSince": "Gastheer sinds {{year}}",
+    "writeAReview": "Een beoordeling schrijven",
+    "roomSummary": "{{beds}} bedden · {{types}} kamertypes · {{sharing}} deelopties",
+    "nSharingAvailable": "{{labels}}-persoonskamers beschikbaar",
+    "bookNow": "Nu boeken",
+    "nPhotos": "{{count}} foto’s",
+    "otherPhotos": "Overige"
   },
   "common": {
     "loading": "Laden…",
@@ -226,6 +236,7 @@
     "dinner": "Diner",
     "teamAmpStaff": "Team & personeel",
     "accountSettings": "Accountinstellingen",
+    "passwordAmpSecurity": "Wachtwoord & beveiliging",
     "someRequiredFieldsAre": "Sommige verplichte velden ontbreken",
     "uploading": "Uploaden…",
     "listingProgress": "Voortgang advertentie",
@@ -318,7 +329,16 @@
     "enterDescription": "Voer beschrijving in",
     "enterLandmarks": "Voer nabijgelegen herkenningspunten in",
     "enterReason": "Voer een reden in",
-    "enterNote": "Voer een notitie in"
+    "enterNote": "Voer een notitie in",
+    "somethingWentWrongReachingThe": "Er is iets misgegaan bij het bereiken van de server.",
+    "weDLikeToCountPage": "We willen graag paginaweergaven tellen om te zien welke hostels en steden mensen zoeken, zodat we het zoeken kunnen verbeteren. Er worden geen persoonlijke gegevens verzonden, en dit staat los van ingelogd blijven.",
+    "noThanks": "Nee, bedankt",
+    "password": "Wachtwoord",
+    "selectYear": "Jaar selecteren",
+    "allow": "Toestaan",
+    "noPhotosYet": "Nog geen foto's",
+    "guests": "Gasten",
+    "copy": "Kopiëren"
   },
   "leadWall": {
     "close": "Sluiten",
@@ -334,7 +354,8 @@
     "weSentASigned24": "We hebben een verificatielink van 24 uur gestuurd naar",
     "clickingItActivatesYourAccount": ". Als je erop klikt, wordt je account geactiveerd en verschijnt het nummer.",
     "iVeVerifiedContinue": "Geverifieerd — doorgaan",
-    "back": "Terug"
+    "back": "Terug",
+    "confirmPassword": "Wachtwoord bevestigen"
   },
   "home": {
     "searchCityOrArea": "Zoek stad of wijk",
@@ -528,7 +549,12 @@
     "country": "Land",
     "streetAddress": "Straatnaam en huisnummer",
     "nearbyLandmarks": "Bezienswaardigheden in de buurt",
-    "roomTypeDescription": "Beschrijving van kamertype"
+    "roomTypeDescription": "Beschrijving van kamertype",
+    "couldnTCheckWhichRooms": "Kon niet controleren welke kamers dit type gebruiken. Probeer het opnieuw.",
+    "findingTheRoomsBuiltOn": "Kamers zoeken die gebaseerd zijn op {{name}}…",
+    "moveAllRoomsTo": "Alle kamers verplaatsen naar",
+    "selectARoomType": "Selecteer een kamertype",
+    "noRoomsAreBuiltOn": "Geen kamers zijn gebaseerd op {{name}}, dus er verandert verder niets. Het wordt verwijderd bij opslaan."
   },
   "a11y": {
     "close": "Sluiten",
@@ -607,7 +633,16 @@
     "clearSearch": "Zoekopdracht wissen",
     "closeTimePicker": "Tijdkiezer sluiten",
     "chooseTime": "Tijd kiezen",
-    "dismiss": "Sluiten"
+    "dismiss": "Sluiten",
+    "closePropertyMenu": "Accommodatiemenu sluiten",
+    "goToPhotoN": "Naar foto {{n}}",
+    "removeFrom": "{{title}} verwijderen",
+    "removeOneFrom": "Eén van {{title}} verwijderen",
+    "onePhotoAtATime": "Eén foto tegelijk",
+    "allPhotosByGroup": "Alle foto’s, gegroepeerd",
+    "fewerGuestsIn": "Minder gasten in {{title}}",
+    "moreGuestsIn": "Meer gasten in {{title}}",
+    "skipToContent": "Naar inhoud springen"
   },
   "hostTenants": {
     "tenantPhoto": "Foto van huurder",
@@ -672,7 +707,10 @@
     "roomNotAvailableForTheseDates": "Kamer niet beschikbaar op deze datums",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
-    "leavingDate": "Vertrekdatum"
+    "leavingDate": "Vertrekdatum",
+    "thisTenantHasNoRent": "Deze huurder heeft nog geen huurfacturen op naam.",
+    "noUtilityChargesHaveBeen": "Er zijn geen nutskosten geregistreerd voor de kamer van deze huurder.",
+    "checkInYourFirstTenant": "Check uw eerste huurder in om de huur bij te houden."
   },
   "hostSubscription": {
     "couldnTLoadYourSubscription": "Je abonnement kon niet worden geladen",
@@ -726,7 +764,11 @@
     "thenRsPerPeriod": "Daarna Rs {{price}} / {{period}}",
     "paymentStarted": "Betaling gestart",
     "payRs": "Betaal Rs {{amount}}",
-    "selectAProduct": "Kies een product"
+    "selectAProduct": "Kies een product",
+    "invoicesAppearHereAfterYour": "Facturen verschijnen hier na uw eerste afschrijving.",
+    "pleaseCheckYourConnectionAnd": "Controleer uw verbinding en probeer het opnieuw.",
+    "youDonTHaveAn": "U hebt nog geen actief abonnement. Bekijk de abonnementen hieronder om te beginnen.",
+    "checkBackSoonPlans": "Kom snel terug — de abonnementen verschijnen hier."
   },
   "hostMess": {
     "pickADate": "Kies een datum",
@@ -786,7 +828,8 @@
     "last12MonthsPkr": "Laatste 12 maanden · PKR",
     "last30DaysPkr": "Laatste 30 dagen · PKR",
     "uploadingReceipt": "Bon uploaden…",
-    "nPhotosAttached": "{{count}} foto’s bijgevoegd"
+    "nPhotosAttached": "{{count}} foto’s bijgevoegd",
+    "logYourBulkGroceryPurchases": "Registreer uw groothandelsaankopen om de kantine-uitgaven bij te houden."
   },
   "hostRooms": {
     "calendarTab": "Kalender",
@@ -842,7 +885,13 @@
     "createRooms": "Kamers aanmaken",
     "bedsOccupiedOf": "{{filled}} van {{total}} bedden bezet",
     "nOfMBooked": "{{booked}} van {{capacity}} geboekt",
-    "nNoLongerActive": "{{count}} niet meer actief"
+    "nNoLongerActive": "{{count}} niet meer actief",
+    "dayRoster": "Daglijst",
+    "pickADay": "Kies een dag.",
+    "nobodyInThisRoomThat": "Niemand in deze kamer op die dag.",
+    "thisRoomCurrentlyHasNo": "Deze kamer heeft momenteel geen actieve huurders.",
+    "addYourFirstRoomTo": "Voeg uw eerste kamer toe om de bezetting bij te houden.",
+    "bedNumbersAreNotAssigned": "Bednummers zijn nog niet toegewezen — de kalender toont hoeveel bedden bezet zijn, niet welk bed elke gast heeft."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarief per eenheid",
@@ -882,7 +931,9 @@
     "shareFormulaStart": "Aandeel = (Rs {{total}} ÷",
     "nOccupancyDays": "{{count}} bezettingsdagen",
     "rsUnallocated": "Rs {{amount}} niet toegewezen",
-    "rsOver": "Rs {{amount}} te veel"
+    "rsOver": "Rs {{amount}} te veel",
+    "pickARoomWithActive": "Kies een kamer met actieve huurders om de rekening te splitsen.",
+    "addAUtilityBillTo": "Voeg een nutsrekening toe om verbruik en kosten bij te houden."
   },
   "hostTeam": {
     "staffPhoto": "Foto van medewerker",
@@ -894,7 +945,6 @@
     "salaryIssueDate": "Salarisbetaaldatum",
     "chooseAnImageFromYour": "Kies een afbeelding uit je bestanden",
     "managerAccess": "Managertoegang",
-    "thisPersonAlreadyHasAn": "Deze persoon heeft al een account, dus er valt niets in te stellen — als je de schakelaar aan laat, krijgt hij bij opslaan managertoegang tot dit hostel.",
     "employment": "Dienstverband",
     "upload": "Uploaden",
     "scopedToThisHostelOnly": "Alleen voor dit hostel.",
@@ -913,7 +963,11 @@
     "fromTheTeamThisAction": "uit het team. Deze actie kan niet ongedaan worden gemaakt.",
     "keepsTheirStaffRecordBut": "behoudt zijn medewerkersgegevens maar kan niet meer inloggen of dit hostel beheren.",
     "createsLoginFor": "Maakt een login aan zodat {{name}} dit hostel kan beheren.",
-    "thisStaffMember": "dit personeelslid"
+    "thisStaffMember": "dit personeelslid",
+    "existingAccountKeepsPassword": "Heeft dit e-mailadres al een account, dan blijft het huidige wachtwoord staan — dat van jou geldt alleen bij een nieuw account.",
+    "storedEmailBecomesLogin": "Hun opgeslagen e-mail wordt de login. Heeft dat adres al een account, dan behouden ze het wachtwoord daarvan.",
+    "pickADifferentStatusTo": "Kies een andere status om de rest van uw team te zien.",
+    "addAWardenCookOr": "Voeg een beheerder, kok of bewaker toe om salaris en documenten vast te leggen."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Goedkeuring mislukt — probeer opnieuw.",
@@ -968,7 +1022,9 @@
     "billedTo": "Gefactureerd aan",
     "issued": "Uitgegeven",
     "due": "Verschuldigd",
-    "thisWillPermanentlyDeleteInvoice": "Hiermee wordt de factuur definitief verwijderd"
+    "thisWillPermanentlyDeleteInvoice": "Hiermee wordt de factuur definitief verwijderd",
+    "invoicesAppearHereOnceYou": "Facturen verschijnen hier zodra u huur- of nutsrekeningen uitgeeft.",
+    "tryAdjustingYourFilters": "Probeer uw filters aan te passen."
   },
   "hostExpenses": {
     "allTypes": "Alle types",
@@ -1012,7 +1068,20 @@
     "pctVsLastMonth": "{{pct}}% t.o.v. vorige maand",
     "nTenantsUnpaid": "{{count}} huurders onbetaald",
     "moveInsAndOuts": "In- en uitchecks",
-    "pctBedsFilled": "Percentage bezette bedden"
+    "pctBedsFilled": "Percentage bezette bedden",
+    "weCouldnTLoadTenant": "We konden de gegevens over huurderbewegingen niet laden.",
+    "weCouldnTLoadOccupancy": "We konden de bezettingsgegevens niet laden.",
+    "weCouldnTLoadAnalytics": "We konden de statistieken voor deze accommodatie niet laden.",
+    "allUtilityInvoicesAreSettled": "Alle nutsfacturen zijn voldaan.",
+    "noInvoicesForThisProperty": "Nog geen facturen voor deze accommodatie.",
+    "weCouldnTLoadRevenue": "We konden de omzetgegevens niet laden.",
+    "upcomingBookings": "Aankomende boekingen",
+    "nArriving": "{{count}} aankomst",
+    "nLeaving": "{{count}} vertrek",
+    "nothingBookedYet": "Nog geen boekingen",
+    "noArrivalsOrDeparturesAhead": "Geen aankomsten of vertrekken in de komende twee weken.",
+    "inOverOutPerDay": "Aankomsten boven vertrekken, per dag",
+    "viewAllBookings": "Alle boekingen bekijken →"
   },
   "hostBookings": {
     "calendarTab": "Kalender",
@@ -1029,7 +1098,31 @@
     "cancelledByOn": "Geannuleerd door {{by}} op {{date}}",
     "pkrPenaltyChargedToYou": "PKR {{amount}} boete voor jouw rekening",
     "pkrToYou": "PKR {{amount}} naar jou",
-    "thisGuest": "deze gast"
+    "thisGuest": "deze gast",
+    "dayLedger": "Dagoverzicht",
+    "pendingAllotments": "Openstaande toewijzingen",
+    "askedFor": "Gevraagd",
+    "noContactDetailsOnThis": "Geen contactgegevens bij deze boeking",
+    "recordABooking": "Een boeking vastleggen",
+    "whoIsStaying": "Wie er verblijft",
+    "onlyIfTheyHaveOne": "Alleen als ze er een hebben",
+    "addARoom": "Een kamer toevoegen",
+    "toCollectAtTheDesk": "Te innen bij de balie",
+    "createBooking": "Boeking aanmaken",
+    "theRoomsForThisProperty": "De kamers van deze accommodatie konden niet worden geladen.",
+    "everyRoomEveryState": "Elke kamer, elke status — tik op een dag voor het overzicht",
+    "thisMonthSCalendarCould": "De kalender van deze maand kon niet worden geladen.",
+    "nothingIsWaitingOnYou": "Er wacht niets op u voor deze dag.",
+    "pickTheDatesFirst": "Kies eerst de data — wat vrij is hangt daarvan af.",
+    "noRoomsOnThisProperty": "Nog geen kamers in deze accommodatie.",
+    "bookingCalendar": "Boekingskalender",
+    "assignRoom": "Kamer toewijzen",
+    "noteFromGuest": "Notitie van de gast",
+    "savedAs": "Opgeslagen als",
+    "checkInCheckOut": "Inchecken — uitchecken",
+    "aNightRuns12": "Een nacht loopt van 12:00 tot 12:00 uur — inchecken vanaf het middaguur, uitchecken vóór het middaguur de volgende dag.",
+    "discount": "Korting",
+    "saveBooking": "Boeking opslaan"
   },
   "hostHostelProfile": {
     "failed": "Mislukt",
@@ -1039,7 +1132,8 @@
     "updateHostel": "Hostel bijwerken",
     "reviewTitle": "Hiermee gaat je advertentie opnieuw ter beoordeling",
     "reviewBody": "Je hebt het volgende gewijzigd. Je advertentie wordt opnieuw beoordeeld en is voor gasten pas zichtbaar na goedkeuring.",
-    "reviewConfirm": "Opslaan en ter beoordeling sturen"
+    "reviewConfirm": "Opslaan en ter beoordeling sturen",
+    "weCouldnTLoadYour": "We konden uw hostel niet laden."
   },
   "hostMore": {
     "property": "Object",
@@ -1060,11 +1154,13 @@
   "adminAdminContracts": {
     "contracts": "Contracten",
     "noContractsMatchThisFilter": "Geen contracten voldoen aan dit filter",
-    "term": "Looptijd"
+    "term": "Looptijd",
+    "searchContractsByHostel": "Contracten zoeken op hostel"
   },
   "adminAdminListings": {
     "allListings": "Alle advertenties",
-    "noListingsFound": "Geen advertenties gevonden"
+    "noListingsFound": "Geen advertenties gevonden",
+    "searchListingsByHostel": "Advertenties zoeken op hostel"
   },
   "adminAdminPayments": {
     "payments": "Betalingen",
@@ -1074,27 +1170,32 @@
     "transactionId": "Transactie-ID",
     "created": "Aangemaakt",
     "contract": "Contract",
-    "product": "Product"
+    "product": "Product",
+    "searchPaymentsByHostel": "Betalingen zoeken op hostel"
   },
   "moderatorQueue": {
     "reviewQueue": "Beoordelingswachtrij",
-    "queueIsClear": "Wachtrij is leeg"
+    "queueIsClear": "Wachtrij is leeg",
+    "noSubmissionsAreWaitingFor": "Er wachten geen inzendingen op beoordeling."
   },
   "moderatorAudit": {
     "auditLog": "Auditlogboek",
     "noMatchingActivity": "Geen overeenkomende activiteit",
     "allModerators": "Alle moderators",
     "last7Days": "Laatste 7 dagen",
-    "loadOlderEntries": "Oudere items laden"
+    "loadOlderEntries": "Oudere items laden",
+    "tryADifferentActionFilter": "Probeer een ander actiefilter of datumbereik."
   },
   "coreForbidden": {
-    "accessBlocked": "Toegang geblokkeerd"
+    "accessBlocked": "Toegang geblokkeerd",
+    "youDonTHavePermission": "U hebt geen toestemming om dit gedeelte te bekijken."
   },
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Je hosteluitnodigingen, maaltijdbevestigingen en openstaande bonnen."
   },
   "sharedPhotoPicker": {
-    "dragAmpDropUploadOr": "Slepen & neerzetten, uploaden of een foto maken"
+    "dragAmpDropUploadOr": "Slepen & neerzetten, uploaden of een foto maken",
+    "replaceAdd": "Vervangen / toevoegen"
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Klik nu een einddatum",
@@ -1114,7 +1215,8 @@
     "refundsReachYourOriginalPayment": "Terugbetalingen bereiken je oorspronkelijke betaalmethode binnen 5 werkdagen.",
     "pkrPaid": "PKR {{amount}} betaald",
     "cancelledSummary": "Geannuleerd {{date}} · PKR {{refund}} terugbetaald · PKR {{charge}} annuleringskosten",
-    "cancelRefundExplainer": "Je krijgt <strong class=\"tabular-nums\">PKR {{refund}}</strong> terug. <strong class=\"tabular-nums\">PKR {{charge}}</strong> wordt ingehouden als annuleringskosten, omdat je op {{pct}}% van de periode annuleert."
+    "cancelRefundExplainer": "Je krijgt <strong class=\"tabular-nums\">PKR {{refund}}</strong> terug. <strong class=\"tabular-nums\">PKR {{charge}}</strong> wordt ingehouden als annuleringskosten, omdat je op {{pct}}% van de periode annuleert.",
+    "whenYouBookAHostel": "Als u een hostel boekt, verschijnt het hier met uw data en het betaalde bedrag."
   },
   "userFavorites": {
     "removeFromFavorites": "Uit favorieten verwijderen?",
@@ -1123,7 +1225,8 @@
     "noFavoritesYet": "Nog geen favorieten",
     "saveHostelsYouLikeAnd": "Sla hostels op die je leuk vindt en vind ze hier terug.",
     "browseHostels": "Hostels bekijken",
-    "fromYourSavedHostels": "uit je opgeslagen hostels?"
+    "fromYourSavedHostels": "uit je opgeslagen hostels?",
+    "weCouldnTLoadYour": "We konden uw favorieten niet laden."
   },
   "userSecurity": {
     "currentPassword": "Huidig wachtwoord",
@@ -1196,7 +1299,35 @@
   "publicBlog": {
     "tipsGuidesAndUpdatesFrom": "Tips, gidsen en updates van het HostelHive-team",
     "comingSoon": "Binnenkort",
-    "weReWorkingOnSome": "We werken aan mooie content over studentenleven, hosteltips en stadsgidsen in heel Pakistan. Blijf kijken!"
+    "weReWorkingOnSome": "We werken aan mooie content over studentenleven, hosteltips en stadsgidsen in heel Pakistan. Blijf kijken!",
+    "onThisPage": "Op deze pagina",
+    "theHostelhiveTeam": "Het HostelHive-team",
+    "keepReading": "Verder lezen",
+    "blogHomePage": "Ga naar de startpagina van de blog.",
+    "filterArticlesByCategory": "Artikelen filteren op categorie",
+    "archiveLayout": "Archiefweergave",
+    "everyArticle": "Alle artikelen",
+    "theHostelhiveJournal": "Het HostelHive-journaal",
+    "guidesForFindingARoom": "Gidsen om een kamer te vinden — en een bed voor de nacht.",
+    "whatHostelsActuallyCost": "Wat hostels echt kosten, stad voor stad, welke wijken bij welke campus passen, en waar je slaapt van Johar Town tot de Karakoram. Geschreven vanuit advertenties en vanaf de weg.",
+    "allPosts": "Alle berichten",
+    "grid": "Raster",
+    "index": "Lijst",
+    "nMinRead": "{{count}} min lezen",
+    "nMin": "{{count}} min",
+    "article": "Artikel",
+    "category": "Categorie",
+    "published": "Gepubliceerd",
+    "read": "Leestijd",
+    "nothingFiledHereYet": "Hier staat nog niets.",
+    "lookingForARoomRather": "Zoekt u een kamer in plaats van een gids?",
+    "everyListingShowsTheRent": "Elke advertentie toont de huur per bed of per kamer, wat inbegrepen is en wie het beheert.",
+    "swipeTheTableToSee": "Veeg over de tabel om alle kolommen te zien",
+    "weVerifyListingsAcross": "We verifiëren advertenties in heel Pakistan en schrijven op wat we daarbij leren.",
+    "weCouldnTFindThatPost": "We konden dat bericht niet vinden",
+    "theLinkMayBeOld": "De link is misschien oud, of het adres klopt net niet.",
+    "browseEveryPostInstead": "Bekijk in plaats daarvan alle berichten.",
+    "readTheGuide": "Lees de gids"
   },
   "publicListing": {
     "checkIn": "Inchecken",
@@ -1206,7 +1337,9 @@
     "add": "Toevoegen",
     "showAllNPhotos": "Alle {{count}} foto’s bekijken",
     "genderHostelHostedBy": "{{gender}}-hostel, gehost door {{host}}",
-    "bookARoom": "Een kamer boeken"
+    "bookARoom": "Een kamer boeken",
+    "theListingMayHaveBeen": "De advertentie is mogelijk verwijderd of de link klopt niet.",
+    "chooseYourRoom": "Kies je kamer"
   },
   "featuresPublic": {
     "checkingYourLink": "Je link wordt gecontroleerd…",
@@ -1260,7 +1393,14 @@
     "allApproved": "Alles goedgekeurd!",
     "doneNFailed": "Klaar — {{count}} mislukt",
     "nPhotosFailedRetry": "{{count}} foto’s mislukt — je kunt het opnieuw proberen vanuit de wachtrij.",
-    "approving": "Goedkeuren…"
+    "approving": "Goedkeuren…",
+    "newUploadsWillAppearHere": "Nieuwe uploads verschijnen hier ter goedkeuring.",
+    "allStatuses": "Alle statussen",
+    "allLabels": "Alle labels",
+    "unlabelled": "Zonder label",
+    "nothingMatchesThisFilter": "Niets komt overeen met dit filter",
+    "tryAnotherLabelOrShowAll": "Probeer een ander label of toon ze allemaal.",
+    "showAllLabels": "Alle labels tonen"
   },
   "publicContact": {
     "contactUs": "Neem contact op",
@@ -1391,7 +1531,15 @@
     "bookingSent": "Boeking verzonden",
     "weLlEmailYouWhenConfirmed": "We mailen je zodra het hostel het bevestigt.",
     "couldnTBook": "Boeking kon niet worden voltooid",
-    "noRoomsListed": "Dit hostel heeft nog geen kamers toegevoegd."
+    "noRoomsListed": "Dit hostel heeft nog geen kamers toegevoegd.",
+    "pricesArePerRoom": "Prijzen per kamer",
+    "pricesArePerBed": "Prijzen per bed",
+    "guestDetails": "Gastgegevens",
+    "enterTheGuestName": "Voer de naam van de gast in",
+    "enterAValidPhone": "Voer een geldig telefoonnummer in",
+    "enterAValidEmail": "Voer een geldig e-mailadres in",
+    "ofNSeats": "van {{count}}",
+    "bookingReference": "Boekingsreferentie"
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",
@@ -1403,11 +1551,26 @@
   },
   "maps": {
     "searchAddressPlaceholder": "Zoek een adres of oriëntatiepunt…",
-    "searchCityOrArea": "Zoek stad of gebied"
+    "searchCityOrArea": "Zoek stad of gebied",
+    "satellite": "Satelliet",
+    "noMatchingPlaces": "Geen overeenkomende plaatsen",
+    "poweredByOpenstreetmap": "Mogelijk gemaakt door OpenStreetMap",
+    "noCoordinatesSetFor": "Voor deze advertentie zijn geen coördinaten ingesteld."
   },
   "subscriptionGate": {
     "unlockFeature": "{{feature}} ontgrendelen",
-    "thisFeature": "deze functie"
+    "thisFeature": "deze functie",
+    "dashboardOverview": "Dashboardoverzicht",
+    "roomManagement": "Kamerbeheer",
+    "tenantManagement": "Huurdersbeheer",
+    "utilityBilling": "Nutsfacturatie",
+    "thisFeatureIsAvailable": "Deze functie is beschikbaar in de betaalde abonnementen. Neem een abonnement voor volledige toegang tot uw hosteldashboard.",
+    "completeHostelProfileFirst": "Vul eerst het hostelprofiel in",
+    "onceSubscribedAllFeatures": "Zodra u een abonnement hebt, worden alle functies automatisch ontgrendeld.",
+    "roomAmpOccupancyManagement": "Kamer- en bezettingsbeheer",
+    "tenantTrackingAmpPayment": "Huurdersopvolging en betalingsgegevens",
+    "rentAndUtilityInvoice": "Huur- en nutsfacturen aanmaken",
+    "analyticsAndRevenueReports": "Statistieken en omzetrapporten"
   },
   "notifications": {
     "nUnread": "{{count}} ongelezen"
