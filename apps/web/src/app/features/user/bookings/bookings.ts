@@ -1,35 +1,35 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  PLATFORM_ID,
   computed,
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
-import { Button, ConfirmModal, EmptyState, ErrorState, Skeleton } from '@hostelhive/ui';
+import { DatePipe, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Button, EmptyState, ErrorState, Skeleton, StatusPill } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
-import { BookingApi } from '@features/public/listing/booking/booking-api';
-import {
-  ApiBooking,
-  ApiCancellationQuote,
-} from '@features/public/listing/booking/booking-api.contract';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { PageInfo } from '@util/pagination';
+import { BookingTiming, GuestBooking, MyBookingsApi, timingOf } from './my-bookings-api';
+import { asDay, statusOf } from './booking-status';
 
-interface ViewState {
-  loading: boolean;
-  error: boolean;
-  data: ApiBooking[];
+interface Section {
+  key: BookingTiming;
+  titleKey: string;
+  bookings: GuestBooking[];
 }
 
 /**
- * The guest's own bookings, and the only place they can cancel one.
+ * The guest's own bookings, one row each. A row opens the booking's own page.
  *
- * Upcoming stays sort first because that is what somebody opens this page for; past ones stay
- * listed rather than disappearing, since "where did I stay in March" is a real errand and the
- * booking is the receipt.
+ * Grouped by *when*, not by status: somebody opens this page to find the stay they are about
+ * to leave for, so what is happening now comes first, then what is coming, then the past,
+ * which stays listed because the booking is the receipt.
+ *
+ * Each row hands its booking to the detail page in the navigation state, so the page draws
+ * at once instead of fetching what this one already has.
  */
 @Component({
   selector: 'app-account-bookings',
@@ -40,104 +40,87 @@ interface ViewState {
     RouterLink,
     LocaleLink,
     Button,
-    ConfirmModal,
     EmptyState,
     ErrorState,
     Skeleton,
+    StatusPill,
     TranslocoPipe,
   ],
   templateUrl: './bookings.html',
 })
 export class AccountBookings {
-  private readonly api = inject(BookingApi);
+  private readonly api = inject(MyBookingsApi);
 
-  private readonly refresh = signal(0);
+  protected readonly loading = signal(true);
+  protected readonly error = signal(false);
+  protected readonly loadingMore = signal(false);
+  protected readonly moreError = signal(false);
+  private readonly rows = signal<GuestBooking[]>([]);
+  private readonly pageInfo = signal<PageInfo | null>(null);
 
-  protected readonly state = toSignal(
-    toObservable(this.refresh).pipe(
-      switchMap(() =>
-        this.api.myBookings().pipe(
-          map((data): ViewState => ({ loading: false, error: false, data })),
-          catchError(() => of({ loading: false, error: true, data: [] as ApiBooking[] })),
-          startWith({ loading: true, error: false, data: [] as ApiBooking[] }),
-        ),
-      ),
-    ),
-    { initialValue: { loading: true, error: false, data: [] as ApiBooking[] } },
-  );
+  protected readonly hasMore = computed(() => this.pageInfo()?.hasNextPage ?? false);
+  protected readonly isEmpty = computed(() => !this.rows().length);
 
-  /** Soonest arrival first; anything already past or cancelled falls below. */
-  protected readonly bookings = computed(() =>
-    [...this.state().data].sort((a, b) => {
-      const aPast = this.isPast(a) ? 1 : 0;
-      const bPast = this.isPast(b) ? 1 : 0;
-      return aPast - bPast || a.check_in.localeCompare(b.check_in);
-    }),
-  );
+  protected readonly status = statusOf;
+  protected readonly day = asDay;
 
-  /** The booking a cancel dialogue is open for, with the server's quote. */
-  protected readonly cancelling = signal<ApiBooking | null>(null);
-  protected readonly quote = signal<ApiCancellationQuote | null>(null);
-  protected readonly quoteLoading = signal(false);
-  protected readonly cancelError = signal('');
+  /** Read once per load: a page left open does not need to re-sort itself at midnight. */
+  private now = Date.now();
 
-  protected readonly cancelOpen = computed(() => this.cancelling() !== null);
+  protected readonly sections = computed<Section[]>(() => {
+    const now = this.now;
+    const by = { current: [], upcoming: [], past: [] } as Record<BookingTiming, GuestBooking[]>;
+    for (const b of this.rows()) by[timingOf(b, now)].push(b);
+    by.current.sort((a, b) => a.checkOutAt - b.checkOutAt);
+    by.upcoming.sort((a, b) => a.checkInAt - b.checkInAt);
+    by.past.sort((a, b) => b.checkInAt - a.checkInAt);
+    const all: Section[] = [
+      { key: 'current', titleKey: 'userBookings.happeningNow', bookings: by.current },
+      { key: 'upcoming', titleKey: 'userBookings.upcoming', bookings: by.upcoming },
+      { key: 'past', titleKey: 'userBookings.past', bookings: by.past },
+    ];
+    return all.filter((s) => s.bookings.length);
+  });
 
-  protected isPast(b: ApiBooking): boolean {
-    return b.status !== 'confirmed' || b.check_out < this.today();
+  constructor() {
+    // The server render has no token, so the request would 401 and paint the error state
+    // until the browser took over. It stays on the skeleton instead.
+    if (isPlatformBrowser(inject(PLATFORM_ID))) this.load();
   }
 
-  protected nights(b: ApiBooking): number {
-    const [y1, m1, d1] = b.check_in.split('-').map(Number);
-    const [y2, m2, d2] = b.check_out.split('-').map(Number);
-    return Math.round(
-      (new Date(y2, m2 - 1, d2).getTime() - new Date(y1, m1 - 1, d1).getTime()) / 86_400_000,
-    );
-  }
-
-  private today(): string {
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  }
-
-  /**
-   * Opens the dialogue and asks the server what cancelling costs.
-   *
-   * The figure is fetched rather than computed here: the band depends on time remaining, and a
-   * page left open overnight would quote yesterday's number and charge today's.
-   */
-  protected askToCancel(booking: ApiBooking): void {
-    this.cancelling.set(booking);
-    this.quote.set(null);
-    this.cancelError.set('');
-    this.quoteLoading.set(true);
-    this.api.cancellationQuote(booking.id).subscribe({
-      next: (q) => {
-        this.quote.set(q);
-        this.quoteLoading.set(false);
+  protected load(): void {
+    this.loading.set(true);
+    this.error.set(false);
+    this.now = Date.now();
+    this.api.list(1).subscribe({
+      next: (res) => {
+        this.rows.set(res.bookings);
+        this.pageInfo.set(res.page);
+        this.loading.set(false);
       },
       error: () => {
-        this.cancelError.set('We could not work out your refund. Please try again.');
-        this.quoteLoading.set(false);
+        this.error.set(true);
+        this.loading.set(false);
       },
     });
   }
 
-  protected closeCancel(): void {
-    this.cancelling.set(null);
-    this.quote.set(null);
-  }
-
-  protected confirmCancel(): void {
-    const booking = this.cancelling();
-    if (!booking) return;
-    this.api.cancel(booking.id).subscribe({
-      next: () => {
-        this.closeCancel();
-        this.refresh.update((n) => n + 1);
+  protected loadMore(): void {
+    const info = this.pageInfo();
+    if (!info?.hasNextPage || this.loadingMore()) return;
+    this.loadingMore.set(true);
+    this.moreError.set(false);
+    this.api.list(info.page + 1).subscribe({
+      next: (res) => {
+        const seen = new Set(this.rows().map((b) => b.id));
+        this.rows.update((rows) => [...rows, ...res.bookings.filter((b) => !seen.has(b.id))]);
+        this.pageInfo.set(res.page);
+        this.loadingMore.set(false);
       },
-      error: () => this.cancelError.set('We could not cancel this booking. Please try again.'),
+      error: () => {
+        this.moreError.set(true);
+        this.loadingMore.set(false);
+      },
     });
   }
 }

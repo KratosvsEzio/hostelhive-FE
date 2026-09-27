@@ -118,6 +118,7 @@ export class AccountMenu {
    * `common.passwordAmpSecurity` was added for the fourth.
    */
   protected readonly items = [
+    { label: 'common.bookings', icon: 'ti-calendar', link: '/account/bookings' },
     { label: 'common.favorites', icon: 'ti-heart', link: '/account/favorites' },
     {
       label: 'common.accountSettings',

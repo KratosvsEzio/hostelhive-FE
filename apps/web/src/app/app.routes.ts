@@ -142,6 +142,12 @@ const LOCALISED_ROUTES: Route[] = [
         title: 'Your bookings — HostelHive',
       },
       {
+        path: 'bookings/:id',
+        loadComponent: () =>
+          import('@features/user/bookings/booking-detail').then((m) => m.AccountBookingDetail),
+        title: 'Booking — HostelHive',
+      },
+      {
         path: 'favorites',
         loadComponent: () =>
           import('@features/user/favorites/favorites').then(
