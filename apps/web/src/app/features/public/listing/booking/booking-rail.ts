@@ -27,6 +27,12 @@ export class BookingRail {
   readonly currency = input<string | null | undefined>('PKR');
   /** Lowest price across both groups, shown before anything is selected. */
   readonly fromPrice = input<number | null>(null);
+  /**
+   * A translation key for the button, for pages that reuse the rail for something other than
+   * a new booking — changing one says "Review changes", not "Book now". Unset keeps the
+   * listing's own wording.
+   */
+  readonly ctaKey = input<string | null>(null);
 
   /** Emitted when the basket is payable. The page decides whether that means sign in first. */
   readonly book = output<void>();
@@ -63,8 +69,8 @@ export class BookingRail {
    * the hostel on. It is also why the basket holds nothing on the server until this point.
    */
   /** The key, not the sentence — the template translates it, so it follows a language switch. */
-  protected readonly cta = computed(() =>
-    this.signedIn() ? 'listing.bookNow' : 'listing.signInToBook',
+  protected readonly cta = computed(
+    () => this.ctaKey() ?? (this.signedIn() ? 'listing.bookNow' : 'listing.signInToBook'),
   );
 
   protected periodLabel(): string {

@@ -2,14 +2,57 @@
   size="md"
   icon="ti-edit"
   tone="info"
-  [title]="'userBookings.editDetails' | transloco"
+  [title]="(stay() ? 'userBookings.reviewChanges' : 'userBookings.editDetails') | transloco"
   [confirmLabel]="(saving() ? 'common.saving' : 'common.saveChanges') | transloco"
   [confirmColor]="'primary'"
   [confirmDisabled]="saving()"
   (confirm)="submit()"
   (cancel)="dismissed.emit()"
 >
-  <p class="text-sm text-ink-600">{{ 'userBookings.editDetailsHint' | transloco }}</p>
+  @if (stay(); as s) {
+    <!-- The new stay, and what it now costs against what it did. The figure is the page's
+         estimate from the room rates; the server prices it again on save, and the booking
+         page shows whatever it stored. -->
+    <div class="rounded-xl border border-ink-100 bg-surface px-3 py-3 text-sm">
+      <p class="font-medium text-ink-900">
+        {{ s.checkIn | date: 'EEE, d MMM' }} – {{ s.checkOut | date: 'EEE, d MMM yyyy' }}
+        <span class="font-normal text-ink-500">
+          · {{ (s.nights === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: s.nights } }}
+        </span>
+      </p>
+      <ul class="mt-2 space-y-1">
+        @for (line of s.lines; track line.title) {
+          <li class="flex items-baseline justify-between gap-3 text-ink-700">
+            <span class="min-w-0">
+              {{
+                (line.shared
+                  ? (line.units === 1 ? 'userBookings.nBedsOne' : 'userBookings.nBeds')
+                  : (line.units === 1 ? 'userBookings.nRoomsOne' : 'userBookings.nRooms'))
+                  | transloco: { count: line.units }
+              }}
+              · {{ line.title }}
+              <span class="text-ink-400">· {{ 'common.nGuests' | transloco: { count: line.guests } }}</span>
+            </span>
+            <span class="shrink-0 whitespace-nowrap tabular-nums">{{ s.currency | currencySym }} {{ line.total | number }}</span>
+          </li>
+        }
+      </ul>
+      <p class="mt-2 flex items-baseline justify-between gap-3 border-t border-ink-100 pt-2">
+        <span class="font-semibold text-ink-900">{{ 'userBookings.newTotal' | transloco }}</span>
+        <span class="whitespace-nowrap tabular-nums">
+          @if (s.previousTotal !== s.total) {
+            <span class="me-1.5 text-xs text-ink-400 line-through">{{ s.currency | currencySym }} {{ s.previousTotal | number }}</span>
+          }
+          <span class="font-semibold text-ink-900">{{ s.currency | currencySym }} {{ s.total | number }}</span>
+        </span>
+      </p>
+    </div>
+    <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-500">
+      {{ 'publicBooking.guestDetails' | transloco }}
+    </p>
+  } @else {
+    <p class="text-sm text-ink-600">{{ 'userBookings.editDetailsHint' | transloco }}</p>
+  }
 
   <div class="mt-4 grid gap-3">
     <hh-input

@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
 import { ApiPagination, PageInfo, pageParams, toPageInfo } from '@util/pagination';
+import { toBookingRequest } from '@features/public/listing/booking/booking-request';
+import { BasketLine } from '@features/public/listing/booking/room-offer';
 
 /**
  * A guest's page of their own bookings is short — a handful a year for anyone. One page this
@@ -139,6 +141,8 @@ export interface WallTime {
 
 export interface GuestBookingLine {
   id: string;
+  /** The room type — the id the room picker's offers carry, for putting it back in a basket. */
+  roomTypeId: string;
   name: string;
   shared: boolean;
   /** Rooms on a private line, beds on a shared one. */
@@ -288,6 +292,7 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
     bookedOn: wallTime(b.created_at).date,
     lines: (b.line_items ?? []).map((l) => ({
       id: l.id,
+      roomTypeId: l.room_type_id ?? l.room_type?.id ?? '',
       name: l.room_type_name ?? l.room_type?.name ?? '',
       shared: l.occupancy_type === 'shared',
       units: num(l.quantity) || num(l.guests),
@@ -346,25 +351,39 @@ export class MyBookingsApi {
   }
 
   /**
-   * `PATCH /api/bookings/:id` — the guest's contact details and note, while it is pending.
+   * `PATCH /api/bookings/:id` — anything the guest chose when booking, while it is pending.
    *
-   * Deliberately only these four. The endpoint also takes dates, `guests` and `line_items`,
-   * but as built (azeem-hamza/hostelhive#7) none of them is safe to send: totals are priced
-   * once, on create, so new dates would keep the old total; `guests` is a separate column
-   * from the lines it should be the sum of; and `line_items` goes to the association as bare
-   * hashes, which Rails cannot assign. The server answers 422 once the booking has left
-   * pending.
+   * Contact details and the note always. Dates and rooms only when {@link
+   * GuestBookingPatch.stay} is given, and then in exactly the shape create sends them —
+   * built by the same `toBookingRequest`, so the hostel-timezone check-in and check-out and
+   * the per-line `guests` / `quantity` rules cannot drift between making and changing a
+   * booking. `guests` is never sent: the server sums it from the lines.
+   *
+   * The server answers 422 once the booking has left pending.
    */
   update(id: string, patch: GuestBookingPatch): Observable<GuestBooking> {
+    const notes = patch.notes.trim();
+    const booking: Record<string, unknown> = {
+      guest_name: patch.guestName.trim(),
+      // Digits, as create sends it and as the server stores it.
+      guest_phone: patch.guestPhone.replace(/\D/g, ''),
+      guest_email: patch.guestEmail.trim(),
+      // Sent even when empty: clearing the note is a change.
+      notes,
+    };
+    if (patch.stay) {
+      const { checkin_date, checkout_date, line_items } = toBookingRequest({
+        hostelId: '',
+        hostelCountry: patch.stay.hostelCountry,
+        checkIn: patch.stay.checkIn,
+        checkOut: patch.stay.checkOut,
+        lines: patch.stay.lines,
+        guest: { name: '', phone: '', email: '' },
+      }).booking;
+      Object.assign(booking, { checkin_date, checkout_date, line_items });
+    }
     return this.api
-      .patch<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`, {
-        booking: {
-          guest_name: patch.guestName.trim(),
-          guest_phone: patch.guestPhone.trim(),
-          guest_email: patch.guestEmail.trim(),
-          notes: patch.notes.trim(),
-        },
-      })
+      .patch<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`, { booking })
       .pipe(map((res) => readBooking(res, id)));
   }
 
@@ -382,6 +401,17 @@ export interface GuestBookingPatch {
   guestPhone: string;
   guestEmail: string;
   notes: string;
+  /** New dates and rooms. Absent when only the details changed, so those alone are sent. */
+  stay?: GuestStayPatch;
+}
+
+export interface GuestStayPatch {
+  /** Local midnights from the date picker; only their calendar dates are read. */
+  checkIn: Date;
+  checkOut: Date;
+  /** The hostel's country — what its clock, and so the check-in hour, runs on. */
+  hostelCountry: string | null | undefined;
+  lines: readonly BasketLine[];
 }
 
 /**

@@ -111,15 +111,16 @@
       }
     </div>
 
-    <!-- What the guest can still do. Offered only while the server allows it: details while
-         pending, cancelling while pending or confirmed. Past that, the hostel is the one to
-         talk to, and the page says so rather than showing buttons that answer 422. -->
+    <!-- What the guest can still do. Offered only while the server allows it: changing it
+         while pending, cancelling while pending or confirmed. Past that, the hostel is the one
+         to talk to, and the page says so rather than showing buttons that answer 422. -->
     @if (editable() || cancellable() || (b.stage !== 'cancelled' && b.stage !== 'checked-out')) {
       <div class="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pb-4 sm:px-5 sm:pb-5">
         @if (editable()) {
-          <button hh-button variant="outlined" size="sm" (click)="openEdit()">
-            <i class="ti ti-edit" aria-hidden="true"></i>{{ 'userBookings.editDetails' | transloco }}
-          </button>
+          <!-- Hands the booking over, as the list does, so the change page draws at once. -->
+          <a hh-button variant="outlined" size="sm" routerLink="edit" [state]="{ booking: b }">
+            <i class="ti ti-edit" aria-hidden="true"></i>{{ 'userBookings.changeBooking' | transloco }}
+          </a>
         }
         @if (cancellable()) {
           <button hh-button variant="outlined" color="danger" size="sm" (click)="openCancel()">
@@ -132,16 +133,6 @@
       </div>
     }
   </header>
-
-  @if (editOpen()) {
-    <app-booking-edit-modal
-      [booking]="b"
-      [saving]="busy()"
-      [error]="actionError()"
-      (saved)="saveEdit($event)"
-      (dismissed)="closeDialogs()"
-    />
-  }
 
   @if (cancelOpen()) {
     <hh-confirm-modal

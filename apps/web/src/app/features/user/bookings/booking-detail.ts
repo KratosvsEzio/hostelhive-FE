@@ -18,7 +18,6 @@ import { NotificationService } from '@core/notification.service';
 import { ListingDetailApi } from '@services';
 import {
   GuestBooking,
-  GuestBookingPatch,
   MyBookingsApi,
   STAGE_ORDER,
   canCancel,
@@ -26,7 +25,6 @@ import {
   mapsUrl,
   timingOf,
 } from './my-bookings-api';
-import { BookingEditModal } from './booking-edit-modal';
 import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-status';
 
 /**
@@ -50,7 +48,6 @@ import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-st
     LocaleLink,
     Button,
     ConfirmModal,
-    BookingEditModal,
     ErrorState,
     PhotoPlaceholder,
     Skeleton,
@@ -226,16 +223,10 @@ export class AccountBookingDetail {
     return !!b && canCancel(b);
   });
 
-  protected readonly editOpen = signal(false);
   protected readonly cancelOpen = signal(false);
-  /** One request at a time: both dialogs lock while it is out. */
+  /** Locks the dialog while the request is out. */
   protected readonly busy = signal(false);
   protected readonly actionError = signal('');
-
-  protected openEdit(): void {
-    this.actionError.set('');
-    this.editOpen.set(true);
-  }
 
   protected openCancel(): void {
     this.actionError.set('');
@@ -244,44 +235,25 @@ export class AccountBookingDetail {
 
   protected closeDialogs(): void {
     if (this.busy()) return;
-    this.editOpen.set(false);
     this.cancelOpen.set(false);
   }
 
-  protected saveEdit(patch: GuestBookingPatch): void {
-    const b = this.booking();
-    if (!b || this.busy()) return;
-    this.run(this.api.update(b.id, patch), () => {
-      this.editOpen.set(false);
-      this.notifications.success(translate('userBookings.detailsUpdated'));
-    });
-  }
-
+  /**
+   * Cancels, and takes the server's copy of the booking back as the new truth — the reply,
+   * not a guess, since cancelling moves the status and the disposition together. A failure
+   * stays in the dialog, where the guest is looking, with the server's own reason.
+   */
   protected confirmCancel(): void {
     const b = this.booking();
     if (!b || this.busy()) return;
-    this.run(this.api.cancel(b.id), () => {
-      this.cancelOpen.set(false);
-      this.notifications.success(translate('userBookings.bookingCancelled'));
-    });
-  }
-
-  /**
-   * Sends a change and takes the server's copy of the booking back as the new truth.
-   *
-   * The reply, not the form: the server may have changed more than was asked — a cancel moves
-   * the status and the disposition together — and the page should show what is now stored.
-   * A failure stays in the dialog, where the guest is looking, with the server's own reason
-   * ("Only pending bookings can be updated" when the hostel confirmed it meanwhile).
-   */
-  private run(request: ReturnType<MyBookingsApi['update']>, done: () => void): void {
     this.busy.set(true);
     this.actionError.set('');
-    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.api.cancel(b.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
         this.busy.set(false);
         this.booking.set(updated);
-        done();
+        this.cancelOpen.set(false);
+        this.notifications.success(translate('userBookings.bookingCancelled'));
       },
       error: (err: { message?: string } | null) => {
         this.busy.set(false);

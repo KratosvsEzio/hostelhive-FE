@@ -2,11 +2,11 @@ import { DebugElement, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ConfirmModal } from '@hostelhive/ui';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, RouterLink, convertToParamMap, provideRouter } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { AccountBookingDetail } from './booking-detail';
-import { BookingEditModal, asE164 } from './booking-edit-modal';
+import { asE164 } from './booking-edit-modal';
 import { ListingDetailApi } from '@services';
 import { GuestBooking, GuestBookingPatch, MyBookingsApi, toGuestBooking } from './my-bookings-api';
 
@@ -268,23 +268,31 @@ describe('AccountBookingDetail', () => {
 
   describe('editing and cancelling', () => {
     const pending = () => booking({ statusSlug: 'pending' });
+    /** The action controls under the header — a link to change it, a button to cancel it. */
     const headerButtons = (el: HTMLElement) =>
-      [...el.querySelectorAll('header button')].map((b) => b.textContent?.trim() ?? '').filter((t) => t !== '');
+      [...el.querySelectorAll('header a[hh-button], header button')]
+        .map((b) => b.textContent?.trim() ?? '')
+        .filter((t) => t !== '');
     const click = (el: HTMLElement, key: string) =>
       [...el.querySelectorAll<HTMLButtonElement>('header button')].find((b) => b.textContent?.includes(key))?.click();
     const modal = <T>(fixture: { debugElement: DebugElement }, type: Type<T>) =>
       fixture.debugElement.query(By.directive(type))?.componentInstance as T | undefined;
-    const PATCH: GuestBookingPatch = {
-      guestName: 'Hassan K',
-      guestPhone: '+923001234567',
-      guestEmail: 'h@example.com',
-      notes: 'arriving late',
-    };
 
     it('offers both while pending', () => {
       const { el } = render(() => of(pending()));
-      expect(headerButtons(el)).toEqual(['userBookings.editDetails', 'common.cancelBooking']);
+      expect(headerButtons(el)).toEqual(['userBookings.changeBooking', 'common.cancelBooking']);
       expect(el.textContent).not.toContain('userBookings.contactToChange');
+    });
+
+    it('links to the change page, handing the booking over', () => {
+      const { fixture, el } = render(() => of(pending()));
+      const link = [...el.querySelectorAll<HTMLAnchorElement>('header a[hh-button]')].find((a) =>
+        a.textContent?.includes('userBookings.changeBooking'),
+      );
+      // The route stub cannot resolve a relative href, so the link's own target is read.
+      expect(link?.getAttribute('routerLink')).toBe('edit');
+      const dir = fixture.debugElement.query(By.css('header a[hh-button]')).injector.get(RouterLink);
+      expect(dir.state).toEqual({ booking: pending() });
     });
 
     it('offers only cancelling once confirmed, and says who to call for the rest', () => {
@@ -305,33 +313,18 @@ describe('AccountBookingDetail', () => {
       expect(el.textContent).not.toContain('userBookings.contactToChange');
     });
 
-    it('saves the details and shows what the server stored', () => {
-      const stored = booking({ statusSlug: 'pending', notes: 'arriving late', guest: { name: 'Hassan K', phone: '923001234567', email: 'h@example.com' } });
-      const { fixture, el } = render(() => of(pending()), undefined, { update: () => of(stored) });
+    it("keeps the cancel dialog open with the server's reason when it is refused", () => {
+      const refused = () => throwError(() => ({ message: 'This booking can no longer be cancelled' }));
+      const { fixture, el } = render(() => of(pending()), undefined, { cancel: refused });
 
-      click(el, 'userBookings.editDetails');
+      click(el, 'common.cancelBooking');
       fixture.detectChanges();
-      modal(fixture, BookingEditModal)?.saved.emit(PATCH);
-      fixture.detectChanges();
-
-      expect(TestBed.inject(MyBookingsApi).update).toHaveBeenCalledWith('RbNKwO', PATCH);
-      expect(modal(fixture, BookingEditModal)).toBeUndefined();
-      expect(el.textContent).toContain('arriving late');
-      expect(el.textContent).toContain('Hassan K');
-    });
-
-    it("keeps the dialog open with the server's reason when the change is refused", () => {
-      const refused = () => throwError(() => ({ message: 'Only pending bookings can be updated' }));
-      const { fixture, el } = render(() => of(pending()), undefined, { update: refused });
-
-      click(el, 'userBookings.editDetails');
-      fixture.detectChanges();
-      modal(fixture, BookingEditModal)?.saved.emit(PATCH);
+      modal(fixture, ConfirmModal)?.confirm.emit();
       fixture.detectChanges();
 
-      expect(modal(fixture, BookingEditModal)).toBeDefined();
-      expect(el.querySelector('app-booking-edit-modal [role="alert"]')?.textContent).toContain(
-        'Only pending bookings can be updated',
+      expect(modal(fixture, ConfirmModal)).toBeDefined();
+      expect(el.querySelector('hh-confirm-modal [role="alert"]')?.textContent).toContain(
+        'This booking can no longer be cancelled',
       );
     });
 

@@ -125,7 +125,7 @@ describe('toGuestBooking', () => {
 
   it('reads rooms off a private line and beds off a shared one', () => {
     const [king, dorm] = toGuestBooking(raw()).lines;
-    expect(king).toEqual({ id: 'giRYjo', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 250000 });
+    expect(king).toEqual({ id: 'giRYjo', roomTypeId: 'KGJwMC', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 250000 });
     expect(dorm).toMatchObject({ name: 'Dormitory', shared: true, units: 2, guests: 2 });
   });
 
@@ -416,22 +416,58 @@ describe('MyBookingsApi — changing a booking', () => {
     return { svc: TestBed.inject(MyBookingsApi), patch, post };
   }
 
-  it('sends only the contact details and note, trimmed, nested under booking', () => {
+  const DETAILS = { guestName: ' Hassan ', guestPhone: '+92 300 1234567', guestEmail: ' a@b.co ', notes: ' late ' };
+
+  it('sends only the details when the stay did not change — trimmed, phone as digits', () => {
     const { svc, patch } = api();
     let result: unknown;
-    svc
-      .update('RbNKwO', { guestName: ' Hassan ', guestPhone: '+923001234567', guestEmail: ' a@b.co ', notes: ' late ' })
-      .subscribe((r) => (result = r));
+    svc.update('RbNKwO', DETAILS).subscribe((r) => (result = r));
 
     expect(patch).toHaveBeenCalledWith('/api/bookings/RbNKwO', {
-      booking: { guest_name: 'Hassan', guest_phone: '+923001234567', guest_email: 'a@b.co', notes: 'late' },
+      booking: { guest_name: 'Hassan', guest_phone: '923001234567', guest_email: 'a@b.co', notes: 'late' },
     });
-    // Never dates, guests or line_items: the server does not reprice an existing booking.
     const body = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
-    for (const key of ['checkin_date', 'checkout_date', 'guests', 'line_items', 'room_type_id']) {
+    for (const key of ['checkin_date', 'checkout_date', 'guests', 'line_items']) {
       expect(body.booking).not.toHaveProperty(key);
     }
     expect(result).toMatchObject({ id: 'RbNKwO', notes: 'changed' });
+  });
+
+  it('sends an emptied note, since clearing it is a change', () => {
+    const { svc, patch } = api();
+    svc.update('RbNKwO', { ...DETAILS, notes: '   ' }).subscribe();
+    expect((patch.mock.calls[0][1] as { booking: { notes: string } }).booking.notes).toBe('');
+  });
+
+  it("sends new dates and rooms in create's shape, at the hostel's check-in and check-out hours", () => {
+    const { svc, patch } = api();
+    svc
+      .update('RbNKwO', {
+        ...DETAILS,
+        stay: {
+          checkIn: new Date(2026, 9, 1),
+          checkOut: new Date(2026, 9, 4),
+          hostelCountry: 'Pakistan',
+          lines: [
+            { roomId: 'KGJwMC', title: 'King size room', kind: 'private', quantity: 2, unitPrice: 10000, actualPrice: 12000, capacity: 4, guests: 5 },
+            { roomId: 'MqVuEl', title: 'Dormitory', kind: 'shared', quantity: 2, unitPrice: 1200, actualPrice: 2000, capacity: 12, guests: 2 },
+          ],
+        },
+      })
+      .subscribe();
+
+    const { booking } = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
+    // 14:00 and 11:00 in Lahore (UTC+5), whatever zone the browser is in.
+    expect(booking['checkin_date']).toBe('2026-10-01T09:00:00.000Z');
+    expect(booking['checkout_date']).toBe('2026-10-04T06:00:00.000Z');
+    expect(booking['line_items']).toEqual([
+      { room_type_id: 'KGJwMC', guests: 5, quantity: 2, occupancy_type: 'private_room' },
+      // A shared line's bed count is its guests, so it carries no quantity.
+      { room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' },
+    ]);
+    // The headcount is the server's sum of the lines, never sent on its own.
+    expect(booking).not.toHaveProperty('guests');
+    expect(booking['guest_name']).toBe('Hassan');
   });
 
   it('cancels through mark_as_cancelled and returns the stored booking', () => {
