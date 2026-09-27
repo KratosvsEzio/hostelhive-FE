@@ -79,7 +79,7 @@ export interface ApiMyBooking {
     longitude?: ApiNumber;
   } | null;
   line_items?: ApiMyBookingLine[] | null;
-  /** The payment state. */
+  /** The lifecycle group (`pending`, `confirmed`, …) the server's edit and cancel rules read. */
   status?: ApiNamedSlug | null;
   /** Where the stay is in its life — the one a guest tracks. */
   disposition?: ApiNamedSlug | null;
@@ -182,6 +182,12 @@ export interface GuestBooking {
   stage: BookingStage | null;
   /** The server's own name for the disposition. */
   stageName: string;
+  /**
+   * The booking's status group — `pending`, `confirmed`, … — which is what the server's edit
+   * and cancel rules read. Not the disposition above: a `pending-payment` disposition sits
+   * under the `pending` status and is still editable.
+   */
+  statusSlug: string;
 }
 
 export interface GuestBookingPage {
@@ -290,6 +296,7 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
     })),
     stage: stageFor(b.disposition?.slug),
     stageName: b.disposition?.name ?? '',
+    statusSlug: b.status?.slug ?? '',
   };
 }
 
@@ -330,17 +337,68 @@ export class MyBookingsApi {
   }
 
   /**
-   * `GET /api/bookings/:id` — one of the caller's bookings.
-   *
-   * An envelope with no booking in it errors rather than emitting an empty one, so the page
-   * shows "not found" instead of a card of blanks.
+   * `GET /api/bookings/:id` — one of the caller's bookings. Someone else's answers 404.
    */
   get(id: string): Observable<GuestBooking> {
-    return this.api.get<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`).pipe(
-      map((res) => {
-        if (!res?.booking?.id) throw new Error(`booking ${id} not in response`);
-        return toGuestBooking(res.booking);
-      }),
-    );
+    return this.api
+      .get<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`)
+      .pipe(map((res) => readBooking(res, id)));
   }
+
+  /**
+   * `PATCH /api/bookings/:id` — the guest's contact details and note, while it is pending.
+   *
+   * Deliberately only these four. The endpoint also takes dates, `guests` and `line_items`,
+   * but as built (azeem-hamza/hostelhive#7) none of them is safe to send: totals are priced
+   * once, on create, so new dates would keep the old total; `guests` is a separate column
+   * from the lines it should be the sum of; and `line_items` goes to the association as bare
+   * hashes, which Rails cannot assign. The server answers 422 once the booking has left
+   * pending.
+   */
+  update(id: string, patch: GuestBookingPatch): Observable<GuestBooking> {
+    return this.api
+      .patch<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`, {
+        booking: {
+          guest_name: patch.guestName.trim(),
+          guest_phone: patch.guestPhone.trim(),
+          guest_email: patch.guestEmail.trim(),
+          notes: patch.notes.trim(),
+        },
+      })
+      .pipe(map((res) => readBooking(res, id)));
+  }
+
+  /** `POST /api/bookings/:id/mark_as_cancelled` — from pending or confirmed; 422 after that. */
+  cancel(id: string): Observable<GuestBooking> {
+    return this.api
+      .post<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}/mark_as_cancelled`, {})
+      .pipe(map((res) => readBooking(res, id)));
+  }
+}
+
+/** What the guest may change on a booking. See {@link MyBookingsApi.update} for why only this. */
+export interface GuestBookingPatch {
+  guestName: string;
+  guestPhone: string;
+  guestEmail: string;
+  notes: string;
+}
+
+/**
+ * The booking out of a single-booking envelope. One with no booking in it errors rather
+ * than emitting an empty one, so the page shows "not found" instead of a card of blanks.
+ */
+function readBooking(res: ApiMyBookingResponse | null | undefined, id: string): GuestBooking {
+  if (!res?.booking?.id) throw new Error(`booking ${id} not in response`);
+  return toGuestBooking(res.booking);
+}
+
+/** Changing the details is allowed only while the booking is pending. */
+export function canEdit(b: GuestBooking): boolean {
+  return b.statusSlug === 'pending';
+}
+
+/** Cancelling is allowed while pending or confirmed. */
+export function canCancel(b: GuestBooking): boolean {
+  return b.statusSlug === 'pending' || b.statusSlug === 'confirmed';
 }

@@ -10,12 +10,23 @@ import {
 import { DatePipe, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ErrorState, PhotoPlaceholder, Skeleton, StatusPill } from '@hostelhive/ui';
+import { Button, ConfirmModal, ErrorState, PhotoPlaceholder, Skeleton, StatusPill } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { NotificationService } from '@core/notification.service';
 import { ListingDetailApi } from '@services';
-import { GuestBooking, MyBookingsApi, STAGE_ORDER, mapsUrl, timingOf } from './my-bookings-api';
+import {
+  GuestBooking,
+  GuestBookingPatch,
+  MyBookingsApi,
+  STAGE_ORDER,
+  canCancel,
+  canEdit,
+  mapsUrl,
+  timingOf,
+} from './my-bookings-api';
+import { BookingEditModal } from './booking-edit-modal';
 import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-status';
 
 /**
@@ -37,6 +48,9 @@ import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-st
     DecimalPipe,
     RouterLink,
     LocaleLink,
+    Button,
+    ConfirmModal,
+    BookingEditModal,
     ErrorState,
     PhotoPlaceholder,
     Skeleton,
@@ -197,6 +211,83 @@ export class AccountBookingDetail {
           if (!this.booking()) this.error.set(true);
         },
       });
+  }
+
+  // ── changing it ─────────────────────────────────────────────────────────────────
+  private readonly notifications = inject(NotificationService);
+
+  /** What the server allows now. It re-checks both, and answers 422 if the booking moved on. */
+  protected readonly editable = computed(() => {
+    const b = this.booking();
+    return !!b && canEdit(b);
+  });
+  protected readonly cancellable = computed(() => {
+    const b = this.booking();
+    return !!b && canCancel(b);
+  });
+
+  protected readonly editOpen = signal(false);
+  protected readonly cancelOpen = signal(false);
+  /** One request at a time: both dialogs lock while it is out. */
+  protected readonly busy = signal(false);
+  protected readonly actionError = signal('');
+
+  protected openEdit(): void {
+    this.actionError.set('');
+    this.editOpen.set(true);
+  }
+
+  protected openCancel(): void {
+    this.actionError.set('');
+    this.cancelOpen.set(true);
+  }
+
+  protected closeDialogs(): void {
+    if (this.busy()) return;
+    this.editOpen.set(false);
+    this.cancelOpen.set(false);
+  }
+
+  protected saveEdit(patch: GuestBookingPatch): void {
+    const b = this.booking();
+    if (!b || this.busy()) return;
+    this.run(this.api.update(b.id, patch), () => {
+      this.editOpen.set(false);
+      this.notifications.success(translate('userBookings.detailsUpdated'));
+    });
+  }
+
+  protected confirmCancel(): void {
+    const b = this.booking();
+    if (!b || this.busy()) return;
+    this.run(this.api.cancel(b.id), () => {
+      this.cancelOpen.set(false);
+      this.notifications.success(translate('userBookings.bookingCancelled'));
+    });
+  }
+
+  /**
+   * Sends a change and takes the server's copy of the booking back as the new truth.
+   *
+   * The reply, not the form: the server may have changed more than was asked — a cancel moves
+   * the status and the disposition together — and the page should show what is now stored.
+   * A failure stays in the dialog, where the guest is looking, with the server's own reason
+   * ("Only pending bookings can be updated" when the hostel confirmed it meanwhile).
+   */
+  private run(request: ReturnType<MyBookingsApi['update']>, done: () => void): void {
+    this.busy.set(true);
+    this.actionError.set('');
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (updated) => {
+        this.busy.set(false);
+        this.booking.set(updated);
+        done();
+      },
+      error: (err: { message?: string } | null) => {
+        this.busy.set(false);
+        this.actionError.set(err?.message || translate('userBookings.changeFailed'));
+      },
+    });
   }
 
   protected stepLabel(step: TrackStep): string {

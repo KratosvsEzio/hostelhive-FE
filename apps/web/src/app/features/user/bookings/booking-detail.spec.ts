@@ -1,10 +1,14 @@
+import { DebugElement, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { ConfirmModal } from '@hostelhive/ui';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { AccountBookingDetail } from './booking-detail';
+import { BookingEditModal, asE164 } from './booking-edit-modal';
 import { ListingDetailApi } from '@services';
-import { GuestBooking, MyBookingsApi, toGuestBooking } from './my-bookings-api';
+import { GuestBooking, GuestBookingPatch, MyBookingsApi, toGuestBooking } from './my-bookings-api';
 
 function booking(over: Partial<GuestBooking> = {}): GuestBooking {
   return {
@@ -35,16 +39,29 @@ interface ListingStub {
   publicPhones?: string[];
 }
 
+interface ChangeStubs {
+  update?: (id: string, patch: GuestBookingPatch) => Observable<GuestBooking>;
+  cancel?: (id: string) => Observable<GuestBooking>;
+}
+
 function render(
   get: (id: string) => Observable<GuestBooking>,
   listing: () => Observable<ListingStub | undefined> = () => of(undefined),
+  changes: ChangeStubs = {},
 ) {
   TestBed.configureTestingModule({
     imports: [AccountBookingDetail],
     providers: [
       provideRouter([]),
       provideI18nTesting(),
-      { provide: MyBookingsApi, useValue: { get: vi.fn(get) } },
+      {
+        provide: MyBookingsApi,
+        useValue: {
+          get: vi.fn(get),
+          update: vi.fn(changes.update ?? (() => new Subject<GuestBooking>())),
+          cancel: vi.fn(changes.cancel ?? (() => new Subject<GuestBooking>())),
+        },
+      },
       { provide: ListingDetailApi, useValue: { getBySlug: vi.fn(listing) } },
       {
         provide: ActivatedRoute,
@@ -247,5 +264,119 @@ describe('AccountBookingDetail', () => {
       expect(priceText(el)).not.toContain('userBookings.deposit');
       expect(priceText(el)).not.toContain('userBookings.paid');
     });
+  });
+
+  describe('editing and cancelling', () => {
+    const pending = () => booking({ statusSlug: 'pending' });
+    const headerButtons = (el: HTMLElement) =>
+      [...el.querySelectorAll('header button')].map((b) => b.textContent?.trim() ?? '').filter((t) => t !== '');
+    const click = (el: HTMLElement, key: string) =>
+      [...el.querySelectorAll<HTMLButtonElement>('header button')].find((b) => b.textContent?.includes(key))?.click();
+    const modal = <T>(fixture: { debugElement: DebugElement }, type: Type<T>) =>
+      fixture.debugElement.query(By.directive(type))?.componentInstance as T | undefined;
+    const PATCH: GuestBookingPatch = {
+      guestName: 'Hassan K',
+      guestPhone: '+923001234567',
+      guestEmail: 'h@example.com',
+      notes: 'arriving late',
+    };
+
+    it('offers both while pending', () => {
+      const { el } = render(() => of(pending()));
+      expect(headerButtons(el)).toEqual(['userBookings.editDetails', 'common.cancelBooking']);
+      expect(el.textContent).not.toContain('userBookings.contactToChange');
+    });
+
+    it('offers only cancelling once confirmed, and says who to call for the rest', () => {
+      const { el } = render(() => of(booking({ statusSlug: 'confirmed', stage: 'assigned' })));
+      expect(headerButtons(el)).toEqual(['common.cancelBooking']);
+      expect(el.textContent).toContain('userBookings.contactToChange');
+    });
+
+    it('offers nothing once checked in, beyond calling the hostel', () => {
+      const { el } = render(() => of(booking({ statusSlug: 'checked-in', stage: 'checked-in' })));
+      expect(headerButtons(el)).toEqual([]);
+      expect(el.textContent).toContain('userBookings.contactToChange');
+    });
+
+    it('offers and says nothing on a cancelled booking', () => {
+      const { el } = render(() => of(booking({ statusSlug: 'cancelled', stage: 'cancelled' })));
+      expect(headerButtons(el)).toEqual([]);
+      expect(el.textContent).not.toContain('userBookings.contactToChange');
+    });
+
+    it('saves the details and shows what the server stored', () => {
+      const stored = booking({ statusSlug: 'pending', notes: 'arriving late', guest: { name: 'Hassan K', phone: '923001234567', email: 'h@example.com' } });
+      const { fixture, el } = render(() => of(pending()), undefined, { update: () => of(stored) });
+
+      click(el, 'userBookings.editDetails');
+      fixture.detectChanges();
+      modal(fixture, BookingEditModal)?.saved.emit(PATCH);
+      fixture.detectChanges();
+
+      expect(TestBed.inject(MyBookingsApi).update).toHaveBeenCalledWith('RbNKwO', PATCH);
+      expect(modal(fixture, BookingEditModal)).toBeUndefined();
+      expect(el.textContent).toContain('arriving late');
+      expect(el.textContent).toContain('Hassan K');
+    });
+
+    it("keeps the dialog open with the server's reason when the change is refused", () => {
+      const refused = () => throwError(() => ({ message: 'Only pending bookings can be updated' }));
+      const { fixture, el } = render(() => of(pending()), undefined, { update: refused });
+
+      click(el, 'userBookings.editDetails');
+      fixture.detectChanges();
+      modal(fixture, BookingEditModal)?.saved.emit(PATCH);
+      fixture.detectChanges();
+
+      expect(modal(fixture, BookingEditModal)).toBeDefined();
+      expect(el.querySelector('app-booking-edit-modal [role="alert"]')?.textContent).toContain(
+        'Only pending bookings can be updated',
+      );
+    });
+
+    it('cancels after asking, then shows the booking as cancelled', () => {
+      const cancelled = booking({ statusSlug: 'cancelled', stage: 'cancelled' });
+      const { fixture, el } = render(() => of(pending()), undefined, { cancel: () => of(cancelled) });
+
+      click(el, 'common.cancelBooking');
+      fixture.detectChanges();
+      expect(TestBed.inject(MyBookingsApi).cancel).not.toHaveBeenCalled();
+
+      modal(fixture, ConfirmModal)?.confirm.emit();
+      fixture.detectChanges();
+
+      expect(TestBed.inject(MyBookingsApi).cancel).toHaveBeenCalledWith('RbNKwO');
+      expect(modal(fixture, ConfirmModal)).toBeUndefined();
+      expect(el.textContent).toContain('userBookings.cancelledNote');
+      expect(headerButtons(el)).toEqual([]);
+    });
+
+    it('leaves the booking alone when the guest keeps it', () => {
+      const { fixture, el } = render(() => of(pending()));
+
+      click(el, 'common.cancelBooking');
+      fixture.detectChanges();
+      modal(fixture, ConfirmModal)?.cancel.emit();
+      fixture.detectChanges();
+
+      expect(TestBed.inject(MyBookingsApi).cancel).not.toHaveBeenCalled();
+      expect(modal(fixture, ConfirmModal)).toBeUndefined();
+    });
+  });
+});
+
+describe('asE164', () => {
+  it('adds the plus the stored digits-only number is missing', () => {
+    expect(asE164('923030491909')).toBe('+923030491909');
+  });
+
+  it('leaves an E.164 number alone, and strips formatting from the rest', () => {
+    expect(asE164('+923030491909')).toBe('+923030491909');
+    expect(asE164(' 92 303-0491909 ')).toBe('+923030491909');
+  });
+
+  it('is empty for nothing', () => {
+    expect(asE164('  ')).toBe('');
   });
 });

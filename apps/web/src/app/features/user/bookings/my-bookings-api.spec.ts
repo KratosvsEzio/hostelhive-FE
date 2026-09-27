@@ -5,6 +5,8 @@ import {
   ApiMyBooking,
   MY_BOOKINGS_LIMIT,
   MyBookingsApi,
+  canCancel,
+  canEdit,
   mapsUrl,
   stageFor,
   timingOf,
@@ -371,5 +373,80 @@ describe('MyBookingsApi', () => {
     TestBed.inject(MyBookingsApi).get('a/b').subscribe();
 
     expect(get).toHaveBeenCalledWith('/api/bookings/a%2Fb');
+  });
+});
+
+describe('what the guest may change', () => {
+  const withStatus = (slug: string) => toGuestBooking(raw({ status: { name: slug, slug } }));
+
+  it('reads the status group off the row', () => {
+    expect(withStatus('confirmed').statusSlug).toBe('confirmed');
+    expect(toGuestBooking(raw({ status: null })).statusSlug).toBe('');
+  });
+
+  it('edits only while pending', () => {
+    expect(canEdit(withStatus('pending'))).toBe(true);
+    for (const slug of ['confirmed', 'checked-in', 'checked-out', 'cancelled', '']) {
+      expect(canEdit(withStatus(slug))).toBe(false);
+    }
+  });
+
+  it('cancels while pending or confirmed, and not after', () => {
+    expect(canCancel(withStatus('pending'))).toBe(true);
+    expect(canCancel(withStatus('confirmed'))).toBe(true);
+    for (const slug of ['checked-in', 'checked-out', 'cancelled', '']) {
+      expect(canCancel(withStatus(slug))).toBe(false);
+    }
+  });
+
+  it('follows the status, not the disposition beside it', () => {
+    // A `pending-payment` disposition sits under the `pending` status and is still editable.
+    const b = toGuestBooking(
+      raw({ status: { slug: 'pending' }, disposition: { slug: 'pending-payment', name: 'Pending payment' } }),
+    );
+    expect(canEdit(b)).toBe(true);
+  });
+});
+
+describe('MyBookingsApi — changing a booking', () => {
+  function api(response: unknown = { booking: raw({ notes: 'changed' }), success: true }) {
+    const patch = vi.fn().mockReturnValue(of(response));
+    const post = vi.fn().mockReturnValue(of(response));
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: { patch, post } }] });
+    return { svc: TestBed.inject(MyBookingsApi), patch, post };
+  }
+
+  it('sends only the contact details and note, trimmed, nested under booking', () => {
+    const { svc, patch } = api();
+    let result: unknown;
+    svc
+      .update('RbNKwO', { guestName: ' Hassan ', guestPhone: '+923001234567', guestEmail: ' a@b.co ', notes: ' late ' })
+      .subscribe((r) => (result = r));
+
+    expect(patch).toHaveBeenCalledWith('/api/bookings/RbNKwO', {
+      booking: { guest_name: 'Hassan', guest_phone: '+923001234567', guest_email: 'a@b.co', notes: 'late' },
+    });
+    // Never dates, guests or line_items: the server does not reprice an existing booking.
+    const body = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
+    for (const key of ['checkin_date', 'checkout_date', 'guests', 'line_items', 'room_type_id']) {
+      expect(body.booking).not.toHaveProperty(key);
+    }
+    expect(result).toMatchObject({ id: 'RbNKwO', notes: 'changed' });
+  });
+
+  it('cancels through mark_as_cancelled and returns the stored booking', () => {
+    const { svc, post } = api({ booking: raw({ disposition: { slug: 'cancelled', name: 'Cancelled' } }) });
+    let result: { stage?: string | null } | undefined;
+    svc.cancel('RbNKwO').subscribe((r) => (result = r));
+
+    expect(post).toHaveBeenCalledWith('/api/bookings/RbNKwO/mark_as_cancelled', {});
+    expect(result?.stage).toBe('cancelled');
+  });
+
+  it('errors when the reply carries no booking', () => {
+    const { svc } = api({ success: true });
+    let failed = false;
+    svc.cancel('RbNKwO').subscribe({ error: () => (failed = true) });
+    expect(failed).toBe(true);
   });
 });
