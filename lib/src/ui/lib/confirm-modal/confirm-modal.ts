@@ -74,27 +74,37 @@ let _id = 0;
         [attr.aria-label]="'a11y.close' | transloco"
         (click)="cancel.emit()"
       ></button>
-      <div class="relative w-full rounded-2xl bg-white p-6 shadow-xl" [class]="sizeClass()">
-        @if (icon()) {
-          <div
-            class="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
-            [class]="bgClass()"
+      <!-- Capped at 90vh: header and actions stay put, and only the body between them
+           scrolls. A cap alone would push the buttons off a short screen — and the booking
+           review, the tallest body this carries, is exactly where losing "Confirm" matters. -->
+      <div
+        class="relative flex max-h-[90vh] w-full flex-col rounded-2xl bg-white shadow-xl"
+        [class]="sizeClass()"
+      >
+        <div class="shrink-0 px-6 pt-6">
+          @if (icon()) {
+            <div
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
+              [class]="bgClass()"
+            >
+              <i
+                class="ti text-xl"
+                [class]="[icon(), iconClass()]"
+                aria-hidden="true"
+              ></i>
+            </div>
+          }
+          <h2
+            [id]="titleId"
+            class="mb-1 font-display text-base font-semibold text-ink-900"
           >
-            <i
-              class="ti text-xl"
-              [class]="[icon(), iconClass()]"
-              aria-hidden="true"
-            ></i>
-          </div>
-        }
-        <h2
-          [id]="titleId"
-          class="mb-1 font-display text-base font-semibold text-ink-900"
-        >
-          {{ title() }}
-        </h2>
-        <div class="mb-5 text-sm text-ink-500"><ng-content /></div>
-        <div class="flex gap-3">
+            {{ title() }}
+          </h2>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-5 text-sm text-ink-500">
+          <ng-content />
+        </div>
+        <div class="flex shrink-0 gap-3 border-t border-ink-100 px-6 pt-4 pb-6">
           <!-- Shown unless a caller opts out with an explicit empty string. The guard was a
                plain truthiness test, which hid the button for an *unset* label too — so every
                dialog that did not name one rendered a lone confirm button, and the default

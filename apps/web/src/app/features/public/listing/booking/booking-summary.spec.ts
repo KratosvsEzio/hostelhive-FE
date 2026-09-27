@@ -1,5 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { PhoneInput } from '@hostelhive/ui';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { BookingBasket } from './booking-basket';
 import { BookingSummary } from './booking-summary';
@@ -117,6 +119,58 @@ describe('BookingSummary', () => {
     summary.confirmed.emit();
     expect(confirmed).toBe(1);
   });
+
+  /** Typed into the page, not set on the component — what's under test is that the box is wired. */
+  it('sends what the guest wrote for the hostel along with their details', () => {
+    setUp();
+    const summary = fixture.debugElement.children[0].componentInstance as BookingSummary;
+    let sent: unknown = null;
+    summary.confirmed.subscribe((guest) => (sent = guest));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const type = (field: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+      field.value = value;
+      field.dispatchEvent(new Event('input'));
+    };
+    type(el.querySelector('input[autocomplete="name"]')!, 'Ali Raza');
+    // The phone widget validates and formats itself (see its own spec); what it hands on is
+    // E.164 through its `phone` model, so that is the channel driven here.
+    phoneField().phone.set('+923001234567');
+    type(el.querySelector('input[autocomplete="email"]')!, 'ali@example.com');
+    type(el.querySelector('textarea#booking-notes')!, 'late arrival');
+    fixture.detectChanges();
+
+    (summary as unknown as { submit(): void }).submit();
+
+    expect(sent).toEqual({
+      name: 'Ali Raza',
+      phone: '+923001234567',
+      email: 'ali@example.com',
+      notes: 'late arrival',
+    });
+  });
+
+  /**
+   * The widget reports an incomplete or invalid number as an empty string, so empty is the
+   * one thing to refuse — and every field but the notes is required.
+   */
+  it('will not confirm without a phone number, and says so', () => {
+    setUp();
+    const summary = fixture.debugElement.children[0].componentInstance as BookingSummary;
+    let sent = 0;
+    summary.confirmed.subscribe(() => sent++);
+
+    phoneField().phone.set('');
+    (summary as unknown as { submit(): void }).submit();
+    fixture.detectChanges();
+
+    expect(sent).toBe(0);
+    expect(fixture.nativeElement.textContent).toContain('publicBooking.enterAValidPhone');
+  });
+
+  function phoneField(): PhoneInput {
+    return fixture.debugElement.query(By.directive(PhoneInput)).componentInstance as PhoneInput;
+  }
 });
 
 /**

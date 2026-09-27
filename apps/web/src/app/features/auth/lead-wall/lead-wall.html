@@ -16,15 +16,15 @@
 
   <!-- overlay -->
   <div
-    class="absolute inset-0 flex items-start justify-center overflow-y-auto bg-ink-900/55 px-4 py-10 backdrop-blur-sm"
+    class="absolute inset-0 flex items-center justify-center bg-ink-900/55 p-4 backdrop-blur-sm"
   >
     <div
-      class="w-full max-w-md rounded-3xl bg-white p-5 shadow-pill sm:p-7"
+      class="flex max-h-[90vh] w-full max-w-md flex-col rounded-3xl bg-white shadow-pill"
       role="dialog"
       aria-modal="true"
       aria-labelledby="hh-lead-wall-title"
     >
-      <div class="mb-4 flex items-center justify-between">
+      <div class="flex shrink-0 items-center justify-between px-5 pt-5 pb-3 sm:px-7 sm:pt-7">
         <i hhLogo class="h-6 w-auto text-ink-900"></i>
         <a
           [routerLink]="closeTarget()"
@@ -37,246 +37,248 @@
         </a>
       </div>
 
-      @switch (phase()) {
-        @case ('form') {
-          <h2
-            id="hh-lead-wall-title"
-            class="font-display text-xl font-semibold text-ink-900"
-          >
-            {{ isRegister() ? 'See verified contact details' : 'Welcome back' }}
-          </h2>
-          <p class="mt-1 text-sm text-ink-500">
-            {{
-              isRegister()
-                ? 'Create a free account to view phone numbers for every listing. It takes 30 seconds.'
-                : 'Log in to view verified phone numbers and manage your saved hostels.'
-            }}
-          </p>
+      <div class="min-h-0 flex-1 overflow-y-auto px-5 pt-1 pb-5 sm:px-7 sm:pb-7">
+        @switch (phase()) {
+          @case ('form') {
+            <h2
+              id="hh-lead-wall-title"
+              class="font-display text-xl font-semibold text-ink-900"
+            >
+              {{ isRegister() ? 'See verified contact details' : 'Welcome back' }}
+            </h2>
+            <p class="mt-1 text-sm text-ink-500">
+              {{
+                isRegister()
+                  ? 'Create a free account to view phone numbers for every listing. It takes 30 seconds.'
+                  : 'Log in to view verified phone numbers and manage your saved hostels.'
+              }}
+            </p>
 
-          <hh-tabs
-            class="mt-5"
-            [tabs]="tabs"
-            [active]="tab()"
-            (activeChange)="onTabChange($event)"
-          />
-
-          <!-- Google OAuth -->
-          <button
-            type="button"
-            class="mt-5 flex w-full items-center justify-center gap-3 rounded-xl border border-ink-200 bg-white px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 disabled:opacity-50"
-            [disabled]="busy() || googleBlocked()"
-            [attr.title]="
-              googleBlocked()
-                ? 'Accept the Terms of Service and Privacy Policy to continue with Google.'
-                : null
-            "
-            [attr.aria-disabled]="googleBlocked() ? 'true' : null"
-            (click)="googleSignIn()"
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-              <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/>
-              <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/>
-              <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/>
-              <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/>
-            </svg>
-            {{ 'leadWall.continueWithGoogle' | transloco }}
-          </button>
-
-          <div class="relative my-4 flex items-center">
-            <div class="flex-1 border-t border-ink-100"></div>
-            <span class="mx-3 text-xs text-ink-400">or</span>
-            <div class="flex-1 border-t border-ink-100"></div>
-          </div>
-
-          <form class="space-y-3" (submit)="submit($event)">
-            @if (isRegister()) {
-              <hh-input
-                [label]="'userSettings.fullName' | transloco"
-                icon="ti-user"
-                [placeholder]="'common.enterFullName' | transloco"
-                [value]="name()"
-                (valueChange)="name.set($event)"
-                [error]="showErrors() ? nameError() : ''"
-              />
-            }
-
-            <hh-input
-              [label]="'common.emailAddress' | transloco"
-              icon="ti-mail"
-              type="email"
-              [placeholder]="'common.enterEmail' | transloco"
-              [value]="email()"
-              (valueChange)="email.set($event)"
-              [error]="showErrors() ? emailError() : ''"
+            <hh-tabs
+              class="mt-5"
+              [tabs]="tabs"
+              [active]="tab()"
+              (activeChange)="onTabChange($event)"
             />
 
-            @if (isRegister()) {
+            <!-- Google OAuth -->
+            <button
+              type="button"
+              class="mt-5 flex w-full items-center justify-center gap-3 rounded-xl border border-ink-200 bg-white px-4 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50 disabled:opacity-50"
+              [disabled]="busy() || googleBlocked()"
+              [attr.title]="
+                googleBlocked()
+                  ? 'Accept the Terms of Service and Privacy Policy to continue with Google.'
+                  : null
+              "
+              [attr.aria-disabled]="googleBlocked() ? 'true' : null"
+              (click)="googleSignIn()"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/>
+                <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/>
+              </svg>
+              {{ 'leadWall.continueWithGoogle' | transloco }}
+            </button>
+
+            <div class="relative my-4 flex items-center">
+              <div class="flex-1 border-t border-ink-100"></div>
+              <span class="mx-3 text-xs text-ink-400">or</span>
+              <div class="flex-1 border-t border-ink-100"></div>
+            </div>
+
+            <form class="space-y-3" (submit)="submit($event)">
+              @if (isRegister()) {
+                <hh-input
+                  [label]="'userSettings.fullName' | transloco"
+                  icon="ti-user"
+                  [placeholder]="'common.enterFullName' | transloco"
+                  [value]="name()"
+                  (valueChange)="name.set($event)"
+                  [error]="showErrors() ? nameError() : ''"
+                />
+              }
+
               <hh-input
-                [label]="'common.password' | transloco"
-                icon="ti-lock"
-                type="password"
-                [value]="password()"
-                (valueChange)="password.set($event)"
-                [error]="showErrors() ? passwordError() : ''"
+                [label]="'common.emailAddress' | transloco"
+                icon="ti-mail"
+                type="email"
+                [placeholder]="'common.enterEmail' | transloco"
+                [value]="email()"
+                (valueChange)="email.set($event)"
+                [error]="showErrors() ? emailError() : ''"
               />
-              <p class="flex items-center gap-1 text-xs text-ink-400">
-                <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'leadWall.min8Characters1Uppercase' | transloco }}
-              </p>
-              <hh-input
-                [label]="'leadWall.confirmPassword' | transloco"
-                icon="ti-lock"
-                type="password"
-                [value]="confirmPassword()"
-                (valueChange)="confirmPassword.set($event)"
-                [error]="showErrors() ? confirmPasswordError() : ''"
-              />
-              <hh-phone-input
-                [(phone)]="phone"
-                [error]="showErrors() ? phoneError() : ''"
-              />
-            } @else {
-              <hh-input
-                [label]="'common.password' | transloco"
-                icon="ti-lock"
-                type="password"
-                [value]="password()"
-                (valueChange)="password.set($event)"
-                [error]="showErrors() ? passwordError() : ''"
-              />
-              <div class="flex justify-end">
-                <a
-                  routerLink="/auth/forgot-password"
-                  class="text-sm font-medium text-brand-500 transition hover:text-brand-500"
+
+              @if (isRegister()) {
+                <hh-input
+                  [label]="'common.password' | transloco"
+                  icon="ti-lock"
+                  type="password"
+                  [value]="password()"
+                  (valueChange)="password.set($event)"
+                  [error]="showErrors() ? passwordError() : ''"
+                />
+                <p class="flex items-center gap-1 text-xs text-ink-400">
+                  <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'leadWall.min8Characters1Uppercase' | transloco }}
+                </p>
+                <hh-input
+                  [label]="'leadWall.confirmPassword' | transloco"
+                  icon="ti-lock"
+                  type="password"
+                  [value]="confirmPassword()"
+                  (valueChange)="confirmPassword.set($event)"
+                  [error]="showErrors() ? confirmPasswordError() : ''"
+                />
+                <hh-phone-input
+                  [(phone)]="phone"
+                  [error]="showErrors() ? phoneError() : ''"
+                />
+              } @else {
+                <hh-input
+                  [label]="'common.password' | transloco"
+                  icon="ti-lock"
+                  type="password"
+                  [value]="password()"
+                  (valueChange)="password.set($event)"
+                  [error]="showErrors() ? passwordError() : ''"
+                />
+                <div class="flex justify-end">
+                  <a
+                    routerLink="/auth/forgot-password"
+                    class="text-sm font-medium text-brand-500 transition hover:text-brand-500"
+                  >
+                    {{ 'leadWall.forgotPassword' | transloco }}
+                  </a>
+                </div>
+              }
+
+              @if (error()) {
+                <p
+                  class="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                  role="alert"
                 >
-                  {{ 'leadWall.forgotPassword' | transloco }}
-                </a>
-              </div>
-            }
+                  {{ error() }}
+                </p>
+              }
+
+              @if (isRegister()) {
+                <!-- Consent sits above the submit button because ticking it is what
+                     enables the button — the old copy sat below and was passive text. -->
+                <div>
+                  <label class="flex cursor-pointer items-start gap-2.5">
+                    <input
+                      type="checkbox"
+                      class="sr-only"
+                      [checked]="acceptedTerms()"
+                      (change)="acceptedTerms.set(!acceptedTerms())"
+                    />
+                    <span
+                      class="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border-2 transition"
+                      [class]="
+                        acceptedTerms()
+                          ? 'border-brand-500 bg-brand-500'
+                          : showErrors() && termsError()
+                            ? 'border-danger bg-white'
+                            : 'border-ink-300 bg-white'
+                      "
+                      aria-hidden="true"
+                    >
+                      @if (acceptedTerms()) {
+                        <i class="ti ti-check text-[10px] text-white"></i>
+                      }
+                    </span>
+                    <span class="text-xs leading-relaxed text-ink-500">
+                      {{ 'leadWall.iAgreeToThe' | transloco }}
+                      <!-- stopPropagation so tapping a link opens it instead of
+                           toggling the surrounding label. -->
+                      <a
+                        routerLink="/terms-of-service"
+                        target="_blank"
+                        class="font-medium text-brand-500 underline hover:text-brand-500"
+                        (click)="$event.stopPropagation()"
+                        >{{ 'leadWall.termsOfService' | transloco }}</a
+                      >
+                      {{ 'leadWall.and' | transloco }}
+                      <a
+                        routerLink="/privacy-policy"
+                        target="_blank"
+                        class="font-medium text-brand-500 underline hover:text-brand-500"
+                        (click)="$event.stopPropagation()"
+                        >{{ 'common.privacyPolicy' | transloco }}</a
+                      >.
+                    </span>
+                  </label>
+                  @if (showErrors() && termsError()) {
+                    <p class="mt-1.5 text-xs font-medium text-danger" role="alert">
+                      {{ termsError() }}
+                    </p>
+                  }
+                </div>
+              }
+
+              <button hh-button color="primary" type="submit" class="w-full" [disabled]="!isValid()" [loading]="busy()">
+                {{
+                  isRegister()
+                    ? 'Create account & view number'
+                    : 'Log in & view number'
+                }}
+              </button>
+            </form>
+          }
+
+          @case ('verify') {
+            <span
+              class="grid h-12 w-12 place-items-center rounded-full bg-tint-sky text-brand-500"
+            >
+              <i class="ti ti-mail-opened text-2xl" aria-hidden="true"></i>
+            </span>
+            <h2
+              id="hh-lead-wall-title"
+              class="mt-4 font-display text-xl font-semibold text-ink-900"
+            >
+              {{ 'common.checkYourEmail' | transloco }}
+            </h2>
+            <p class="mt-1 text-sm text-ink-500">
+              {{ 'leadWall.weSentASigned24' | transloco }}
+              <span class="font-medium text-ink-800">{{ email() }}</span
+              >{{ 'leadWall.clickingItActivatesYourAccount' | transloco }}
+            </p>
 
             @if (error()) {
               <p
-                class="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                class="mt-4 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
                 role="alert"
               >
                 {{ error() }}
               </p>
             }
 
-            @if (isRegister()) {
-              <!-- Consent sits above the submit button because ticking it is what
-                   enables the button — the old copy sat below and was passive text. -->
-              <div>
-                <label class="flex cursor-pointer items-start gap-2.5">
-                  <input
-                    type="checkbox"
-                    class="sr-only"
-                    [checked]="acceptedTerms()"
-                    (change)="acceptedTerms.set(!acceptedTerms())"
-                  />
-                  <span
-                    class="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border-2 transition"
-                    [class]="
-                      acceptedTerms()
-                        ? 'border-brand-500 bg-brand-500'
-                        : showErrors() && termsError()
-                          ? 'border-danger bg-white'
-                          : 'border-ink-300 bg-white'
-                    "
-                    aria-hidden="true"
-                  >
-                    @if (acceptedTerms()) {
-                      <i class="ti ti-check text-[10px] text-white"></i>
-                    }
-                  </span>
-                  <span class="text-xs leading-relaxed text-ink-500">
-                    {{ 'leadWall.iAgreeToThe' | transloco }}
-                    <!-- stopPropagation so tapping a link opens it instead of
-                         toggling the surrounding label. -->
-                    <a
-                      routerLink="/terms-of-service"
-                      target="_blank"
-                      class="font-medium text-brand-500 underline hover:text-brand-500"
-                      (click)="$event.stopPropagation()"
-                      >{{ 'leadWall.termsOfService' | transloco }}</a
-                    >
-                    {{ 'leadWall.and' | transloco }}
-                    <a
-                      routerLink="/privacy-policy"
-                      target="_blank"
-                      class="font-medium text-brand-500 underline hover:text-brand-500"
-                      (click)="$event.stopPropagation()"
-                      >{{ 'common.privacyPolicy' | transloco }}</a
-                    >.
-                  </span>
-                </label>
-                @if (showErrors() && termsError()) {
-                  <p class="mt-1.5 text-xs font-medium text-danger" role="alert">
-                    {{ termsError() }}
-                  </p>
-                }
-              </div>
-            }
-
-            <button hh-button color="primary" type="submit" class="w-full" [disabled]="!isValid()" [loading]="busy()">
-              {{
-                isRegister()
-                  ? 'Create account & view number'
-                  : 'Log in & view number'
-              }}
-            </button>
-          </form>
-        }
-
-        @case ('verify') {
-          <span
-            class="grid h-12 w-12 place-items-center rounded-full bg-tint-sky text-brand-500"
-          >
-            <i class="ti ti-mail-opened text-2xl" aria-hidden="true"></i>
-          </span>
-          <h2
-            id="hh-lead-wall-title"
-            class="mt-4 font-display text-xl font-semibold text-ink-900"
-          >
-            {{ 'common.checkYourEmail' | transloco }}
-          </h2>
-          <p class="mt-1 text-sm text-ink-500">
-            {{ 'leadWall.weSentASigned24' | transloco }}
-            <span class="font-medium text-ink-800">{{ email() }}</span
-            >{{ 'leadWall.clickingItActivatesYourAccount' | transloco }}
-          </p>
-
-          @if (error()) {
-            <p
-              class="mt-4 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
-              role="alert"
-            >
-              {{ error() }}
-            </p>
+            <div class="mt-5 space-y-3">
+              <button
+                hh-button color="primary"
+                type="button"
+                class="w-full"
+                [loading]="busy()"
+                (click)="verify()"
+              >
+                {{ 'leadWall.iVeVerifiedContinue' | transloco }}
+              </button>
+              <button
+                hh-button
+                type="button"
+                variant="text"
+                size="sm"
+                class="w-full"
+                (click)="phase.set('form')"
+              >
+                <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'common.back' | transloco }}
+              </button>
+            </div>
           }
-
-          <div class="mt-5 space-y-3">
-            <button
-              hh-button color="primary"
-              type="button"
-              class="w-full"
-              [loading]="busy()"
-              (click)="verify()"
-            >
-              {{ 'leadWall.iVeVerifiedContinue' | transloco }}
-            </button>
-            <button
-              hh-button
-              type="button"
-              variant="text"
-              size="sm"
-              class="w-full"
-              (click)="phase.set('form')"
-            >
-              <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'common.back' | transloco }}
-            </button>
-          </div>
         }
-      }
+      </div>
     </div>
   </div>
 </div>

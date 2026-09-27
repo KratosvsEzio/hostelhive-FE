@@ -11,7 +11,7 @@ import {
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
-import { ConfirmModal, Input as HhInput } from '@hostelhive/ui';
+import { ConfirmModal, Input as HhInput, PhoneInput } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth/session-store';
 import { BookingBasket } from './booking-basket';
 import { BookingGuest } from './booking-request';
@@ -32,7 +32,7 @@ import { BasketLine, lineTotal, unitFor } from './room-offer';
 @Component({
   selector: 'hh-booking-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmModal, DecimalPipe, DatePipe, TranslocoPipe, CurrencySymbolPipe, HhInput],
+  imports: [ConfirmModal, DecimalPipe, DatePipe, TranslocoPipe, CurrencySymbolPipe, HhInput, PhoneInput],
   templateUrl: './booking-summary.html',
 })
 export class BookingSummary {
@@ -91,6 +91,10 @@ export class BookingSummary {
   protected readonly guestName = signal('');
   protected readonly guestPhone = signal('');
   protected readonly guestEmail = signal('');
+  /** Optional, so never validated — and never prefilled, since nothing on the account says it. */
+  protected readonly notes = signal('');
+  /** Long enough for a paragraph, short enough that nobody pastes a letter into it. */
+  protected readonly notesMax = 500;
   /** Set once the guest has tried to confirm — errors stay quiet until then. */
   protected readonly attempted = signal(false);
 
@@ -111,14 +115,12 @@ export class BookingSummary {
   );
 
   /**
-   * Digits, not shape.
-   *
-   * Eight is short enough to admit every national format this app will meet and long enough
-   * to reject a number somebody gave up halfway through typing. Anything stricter is a
-   * validator that tells a guest with a perfectly good foreign number that it is wrong.
+   * `hh-phone-input` does the validating: it emits the number in E.164, country code
+   * included, once libphonenumber accepts it for the chosen country, and an empty string
+   * until then. So a non-empty value is a valid one, and there is nothing to re-check here.
    */
   protected readonly phoneError = computed(() =>
-    this.attempted() && this.guestPhone().replace(/\D/g, '').length < 8 ? 'invalid' : '',
+    this.attempted() && !this.guestPhone().trim() ? 'invalid' : '',
   );
 
   protected readonly emailError = computed(() =>
@@ -131,7 +133,7 @@ export class BookingSummary {
   private readonly detailsValid = computed(
     () =>
       !!this.guestName().trim() &&
-      this.guestPhone().replace(/\D/g, '').length >= 8 &&
+      !!this.guestPhone().trim() &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.guestEmail().trim()),
   );
 
@@ -148,6 +150,7 @@ export class BookingSummary {
       name: this.guestName(),
       phone: this.guestPhone(),
       email: this.guestEmail(),
+      notes: this.notes(),
     });
   }
 

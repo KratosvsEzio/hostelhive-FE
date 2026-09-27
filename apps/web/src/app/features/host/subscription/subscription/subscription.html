@@ -329,12 +329,12 @@
   >
     <div class="absolute inset-0 bg-ink-900/80 backdrop-blur-sm"></div>
     <div
-      class="relative z-10 w-full max-w-5xl overflow-hidden rounded-2xl shadow-2xl"
+      class="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl shadow-2xl"
       (click)="$event.stopPropagation()"
       (keydown)="$event.stopPropagation()"
       tabindex="0"
     >
-      <div class="flex items-center justify-between bg-ink-900 px-4 py-3">
+      <div class="flex shrink-0 items-center justify-between bg-ink-900 px-4 py-3">
         <span class="text-sm font-medium text-white">{{ 'hostSubscription.dashboardPreview' | transloco }}</span>
         <button
           hh-button variant="icon" size="sm"
@@ -347,7 +347,10 @@
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
       </div>
-      <img src="/screenshots/overview.png" [alt]="'hostSubscription.fullDashboardPreview' | transloco" class="w-full" />
+      <!-- The screenshot is taller than most screens: it scrolls under the bar, not the bar with it. -->
+      <div class="min-h-0 flex-1 overflow-y-auto bg-white">
+        <img src="/screenshots/overview.png" [alt]="'hostSubscription.fullDashboardPreview' | transloco" class="w-full" />
+      </div>
     </div>
   </div>
 }
