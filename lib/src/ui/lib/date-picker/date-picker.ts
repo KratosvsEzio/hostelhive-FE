@@ -428,7 +428,7 @@ export class DatePicker {
     if (this.variant() === 'pill') {
       const active = !!this.value();
       const tone = active
-        ? 'border-brand-500 bg-brand-50 text-brand-700'
+        ? 'border-brand-500 bg-brand-50 text-brand-500'
         : 'border-ink-300 bg-white text-ink-800 hover:border-ink-400';
       return `${base} h-8 rounded-full px-3 text-[13px] ${tone}`;
     }
@@ -459,7 +459,7 @@ export class DatePicker {
     }
     const now = new Date();
     if (monthIndex === now.getMonth() && this.viewYear() === now.getFullYear()) {
-      return `${base} font-semibold text-brand-700 hover:bg-ink-50`;
+      return `${base} font-semibold text-brand-500 hover:bg-ink-50`;
     }
     return `${base} text-ink-700 hover:bg-ink-50`;
   }
@@ -471,7 +471,7 @@ export class DatePicker {
       return `${base} bg-ink-900 font-semibold text-white`;
     }
     if (year === this._curYear) {
-      return `${base} font-semibold text-brand-700 hover:bg-ink-50`;
+      return `${base} font-semibold text-brand-500 hover:bg-ink-50`;
     }
     return `${base} text-ink-700 hover:bg-ink-50`;
   }

@@ -4,10 +4,10 @@
        for, then a sentence true only of this place. -->
   <section hhContainer class="pt-6">
     <nav class="mb-2 flex items-center gap-1.5 text-sm text-ink-400" [attr.aria-label]="'a11y.breadcrumb' | transloco">
-      <a routerLink="/" class="transition hover:text-brand-600">{{ 'publicLanding.home' | transloco }}</a>
+      <a routerLink="/" class="transition hover:text-brand-500">{{ 'publicLanding.home' | transloco }}</a>
       <i class="ti ti-chevron-right text-[10px]" aria-hidden="true"></i>
       @if (genderSegment(); as g) {
-        <a [routerLink]="'/hostels/' + p.slug" class="transition hover:text-brand-600"
+        <a [routerLink]="'/hostels/' + p.slug" class="transition hover:text-brand-500"
           >{{ 'publicLanding.hostelsIn' | transloco: { place: p.name } }}</a
         >
         <i class="ti ti-chevron-right text-[10px]" aria-hidden="true"></i>
@@ -43,7 +43,7 @@
         @for (u of universityLinks(); track u.path) {
           <a
             [routerLink]="u.path"
-            class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-600"
+            class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-500"
             >{{ u.label }}</a
           >
         }
@@ -57,7 +57,7 @@
         @for (link of genderLinks(); track link.path) {
           <a
             [routerLink]="link.path"
-            class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-600"
+            class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-500"
             >{{ link.label }}</a
           >
         }
@@ -71,7 +71,7 @@
       @for (other of otherPlaces(); track other.slug) {
         <a
           [routerLink]="'/hostels/' + other.slug"
-          class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-600"
+          class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-500"
           >Hostels in {{ other.name }}</a
         >
       }

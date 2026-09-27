@@ -65,7 +65,7 @@ export interface BarChartTick {
                 <!-- Pill label — hidden on phones, where bars are far too narrow to hold it
                      (12 months across ~267px leaves ~15px per bar). Tap the bar instead. -->
                 @if (b.value > 0) {
-                  <span class="mb-1 hidden self-center rounded-full bg-brand-50 px-1.5 py-0.5 text-[8px] font-bold leading-none text-brand-600 sm:inline-flex">
+                  <span class="mb-1 hidden self-center rounded-full bg-brand-50 px-1.5 py-0.5 text-[8px] font-bold leading-none text-brand-500 sm:inline-flex">
                     {{ b.value | compactNum }}
                   </span>
                 }

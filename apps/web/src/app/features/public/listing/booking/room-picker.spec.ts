@@ -369,7 +369,7 @@ describe('RoomPicker', () => {
       'an attached bath, a study desk, and a wardrobe wide enough for two.';
 
     function showMoreButton(): HTMLButtonElement | null {
-      return (fixture.nativeElement as HTMLElement).querySelector('button.text-brand-600');
+      return (fixture.nativeElement as HTMLElement).querySelector('button.text-brand-500');
     }
 
     function dialog(): HTMLElement | null {
@@ -474,7 +474,7 @@ describe('RoomPicker', () => {
         { ...DORM, description: LONG + ' Bunks are steel-framed.' },
       ]);
       const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll(
-        'button.text-brand-600',
+        'button.text-brand-500',
       );
       expect(buttons.length).toBe(2);
 

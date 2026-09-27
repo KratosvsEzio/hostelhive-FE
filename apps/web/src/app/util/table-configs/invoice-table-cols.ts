@@ -41,14 +41,14 @@ function invoiceTableConfig(hostelId: string): Record<string, Omit<ColumnDef, 'k
     label: 'Room',
     cell: (r) => {
       const inv = r as Invoice;
-      return ({ kind: 'link', value: `Room ${inv.roomNumber}`, href: `/host/${hostelId}/rooms/${inv.roomId}`, class: 'font-medium text-ink-900 hover:text-brand-600' }) satisfies CellDef;
+      return ({ kind: 'link', value: `Room ${inv.roomNumber}`, href: `/host/${hostelId}/rooms/${inv.roomId}`, class: 'font-medium text-ink-900 hover:text-brand-500' }) satisfies CellDef;
     },
   },
   tenant: {
     label: 'Tenant',
     cell: (r) => {
       const inv = r as Invoice;
-      return ({ kind: 'link', value: inv.tenantName, href: `/host/${hostelId}/tenants/profile/${inv.renterId}`, class: 'text-ink-600 hover:text-brand-600' }) satisfies CellDef;
+      return ({ kind: 'link', value: inv.tenantName, href: `/host/${hostelId}/tenants/profile/${inv.renterId}`, class: 'text-ink-600 hover:text-brand-500' }) satisfies CellDef;
     },
   },
   kind: {
@@ -59,7 +59,7 @@ function invoiceTableConfig(hostelId: string): Record<string, Omit<ColumnDef, 'k
       // and radius, which is why these read as badges while the bookings table's did not.
       return inv.kind === 'rental'
         ? ({ kind: 'badge', text: 'Rental', class: 'bg-tint-sky text-ink-600' }) satisfies CellDef
-        : ({ kind: 'badge', text: 'Utility', class: 'bg-tint-cream text-brand-700' }) satisfies CellDef;
+        : ({ kind: 'badge', text: 'Utility', class: 'bg-tint-cream text-brand-500' }) satisfies CellDef;
     },
   },
   amount: {

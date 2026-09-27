@@ -377,7 +377,7 @@ body {
 }
 .nav-link.active {
   background: #fef1e9;
-  color: #d2560f;
+  color: #f36e21;
 }
 .nav-link.active i {
   color: #f36e21;
@@ -944,7 +944,7 @@ hh-search-map {
   transition: fill 0.12s ease;
 }
 .hh-region:hover {
-  fill: #d2560f;
+  fill: #f36e21;
 }
 
 /* ── Map popup card (Airbnb-style) — Leaflet marker content, so global. ──
@@ -1100,7 +1100,7 @@ hh-search-map {
   color: #be3a75;
 }
 .hh-mapcard__badge--coliving {
-  color: #d2560f;
+  color: #f36e21;
 }
 .hh-mapcard__verified {
   position: absolute;

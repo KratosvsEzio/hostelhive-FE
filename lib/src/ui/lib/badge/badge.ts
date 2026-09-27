@@ -18,7 +18,7 @@ export type BadgeVariant =
 const PILL: Record<Exclude<BadgeVariant, 'verified'>, string> = {
   boys: 'border-boys bg-white text-boys',
   girls: 'border-girls bg-white text-girls',
-  coliving: 'border-brand-400 bg-white text-brand-600',
+  coliving: 'border-brand-400 bg-white text-brand-500',
   backpacker: 'border-backpacker bg-white text-backpacker',
   neutral: 'border-ink-300 bg-white text-ink-700',
 };
@@ -59,7 +59,7 @@ export class Badge {
   protected readonly classes = computed(() => {
     const v = this.variant();
     if (v === 'verified') {
-      return 'inline-flex items-center gap-1 text-xs font-medium text-brand-600';
+      return 'inline-flex items-center gap-1 text-xs font-medium text-brand-500';
     }
     const outline = this.bordered() ? 'border ' : '';
     return `inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium ${outline}${PILL[v]}`;

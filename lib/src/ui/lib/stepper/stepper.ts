@@ -56,7 +56,7 @@ export class Stepper {
 
   protected labelClass(i: number): string {
     if (i < this.current()) return 'font-medium text-ok';
-    if (i === this.current()) return 'font-semibold text-brand-600';
+    if (i === this.current()) return 'font-semibold text-brand-500';
     return 'font-medium text-ink-400';
   }
 

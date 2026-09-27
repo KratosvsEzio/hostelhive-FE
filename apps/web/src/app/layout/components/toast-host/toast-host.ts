@@ -50,6 +50,6 @@ export class ToastHost {
       ? 'bg-danger/10 text-danger'
       : kind === 'success'
         ? 'bg-ok/10 text-ok'
-        : 'bg-brand-50 text-brand-600';
+        : 'bg-brand-50 text-brand-500';
   }
 }

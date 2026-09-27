@@ -221,7 +221,7 @@
         <button
           type="button"
           hh-button variant="text" size="sm"
-          [class]="bf.mode === 'range' ? 'text-brand-600' : 'text-ink-500 hover:text-ink-700'"
+          [class]="bf.mode === 'range' ? 'text-brand-500' : 'text-ink-500 hover:text-ink-700'"
           (click)="setBulkMode('range')"
         >
           {{ 'hostRooms.sequential' | transloco }}
@@ -232,7 +232,7 @@
         <button
           type="button"
           hh-button variant="text" size="sm"
-          [class]="bf.mode === 'custom' ? 'text-brand-600' : 'text-ink-500 hover:text-ink-700'"
+          [class]="bf.mode === 'custom' ? 'text-brand-500' : 'text-ink-500 hover:text-ink-700'"
           (click)="setBulkMode('custom')"
         >
           {{ 'hostRooms.customList' | transloco }}
@@ -243,7 +243,7 @@
         <button
           type="button"
           hh-button variant="text" size="sm"
-          [class]="bf.mode === 'manual' ? 'text-brand-600' : 'text-ink-500 hover:text-ink-700'"
+          [class]="bf.mode === 'manual' ? 'text-brand-500' : 'text-ink-500 hover:text-ink-700'"
           (click)="setBulkMode('manual')"
         >
           {{ 'hostRooms.manual' | transloco }}
@@ -344,7 +344,7 @@
           <div>
             <p class="mb-2 text-xs font-medium uppercase tracking-wide text-ink-400">
               {{ 'common.preview' | transloco }}
-              <span class="ms-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-600">{{ nums.length }}</span>
+              <span class="ms-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-500">{{ nums.length }}</span>
             </p>
             <div class="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-ink-100 p-3">
               @for (n of nums; track n) {

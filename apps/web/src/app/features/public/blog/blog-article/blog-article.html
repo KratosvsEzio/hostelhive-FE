@@ -26,13 +26,13 @@
         <div class="xl:col-start-2">
           <a
             routerLink="/blog"
-            class="inline-flex items-center gap-1.5 rounded text-sm font-medium text-ink-500 transition hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            class="inline-flex items-center gap-1.5 rounded text-sm font-medium text-ink-500 transition hover:text-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
             <i class="ti ti-arrow-left text-xs" aria-hidden="true"></i>{{ 'publicBlog.allPosts' | transloco }}
           </a>
 
           <span class="mt-8 block h-1 w-12 rounded-full" [class]="categoryGround(p.category)" aria-hidden="true"></span>
-          <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+          <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-500">
             {{ categoryLabel(p.category) }}
           </p>
 
@@ -104,7 +104,7 @@
           </p>
           <a
             [routerLink]="['/blog']"
-            class="mt-3 inline-flex items-center gap-1.5 rounded text-[0.8125rem] text-ink-500 transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+            class="mt-3 inline-flex items-center gap-1.5 rounded text-[0.8125rem] text-ink-500 transition-colors hover:text-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
           >
             <i class="ti ti-arrow-left text-xs" aria-hidden="true"></i>{{ 'publicBlog.allPosts' | transloco }}
           </a>
@@ -220,7 +220,7 @@
                 @for (item of block.items; track $index) {
                   <li class="flex gap-3.5 text-[1.0625rem] leading-[1.6] text-ink-700 sm:text-[1.1875rem] sm:leading-[1.75]">
                     <span class="flex h-[1.75em] shrink-0 items-center" aria-hidden="true">
-                      <span class="grid h-6 w-6 place-items-center rounded-full bg-brand-50 text-xs font-semibold tabular-nums text-brand-700">
+                      <span class="grid h-6 w-6 place-items-center rounded-full bg-brand-50 text-xs font-semibold tabular-nums text-brand-500">
                         {{ $index + 1 }}
                       </span>
                     </span>
@@ -268,7 +268,7 @@
                 <p class="flex max-w-full items-center gap-2 text-sm font-semibold text-ink-900 xl:max-w-[32.5rem]">
                   <i
                     class="ti shrink-0 text-base"
-                    [class]="block.tone === 'tip' ? 'ti-bulb text-brand-700' : 'ti-alert-triangle text-warn-700'"
+                    [class]="block.tone === 'tip' ? 'ti-bulb text-brand-500' : 'ti-alert-triangle text-warn-700'"
                     aria-hidden="true"
                   ></i>
                   {{ block.title }}
@@ -443,7 +443,7 @@
                     aria-hidden="true"
                   ></span>
                   <span class="min-w-0 flex-1">
-                    <span class="block font-display text-[1.0625rem] font-semibold leading-snug tracking-tight text-ink-900 transition-colors group-hover:text-brand-700">
+                    <span class="block font-display text-[1.0625rem] font-semibold leading-snug tracking-tight text-ink-900 transition-colors group-hover:text-brand-500">
                       {{ r.title }}
                     </span>
                     <span class="mt-1 block text-xs text-ink-500">
@@ -451,7 +451,7 @@
                     </span>
                   </span>
                   <i
-                    class="ti ti-arrow-right shrink-0 text-sm text-ink-400 transition-[transform,color] duration-300 group-hover:translate-x-0.5 group-hover:text-brand-700 motion-reduce:transform-none"
+                    class="ti ti-arrow-right shrink-0 text-sm text-ink-400 transition-[transform,color] duration-300 group-hover:translate-x-0.5 group-hover:text-brand-500 motion-reduce:transform-none"
                     aria-hidden="true"
                   ></i>
                 </a>
@@ -472,7 +472,7 @@
       {{ 'publicBlog.theLinkMayBeOld' | transloco }}
       <a
         routerLink="/blog"
-        class="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+        class="font-medium text-brand-500 underline underline-offset-2 hover:text-brand-800"
         >{{ 'publicBlog.blogHomePage' | transloco }}</a
       >
     </p>

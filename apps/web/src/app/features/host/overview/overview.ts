@@ -381,7 +381,7 @@ export class HostOverview {
 
   protected valueClass(tone: Kpi['tone']): string {
     return {
-      brand: 'text-brand-600',
+      brand: 'text-brand-500',
       ok: 'text-ok',
       warn: 'text-warn',
       danger: 'text-danger',
@@ -429,7 +429,7 @@ export class HostOverview {
 
   protected kpiFooterClass(tone: Kpi['tone']): string {
     return {
-      brand: 'border-brand-100 bg-brand-50/60 text-brand-600 hover:bg-brand-100/60',
+      brand: 'border-brand-100 bg-brand-50/60 text-brand-500 hover:bg-brand-100/60',
       ok: 'border-ok/20 bg-ok/5 text-ok hover:bg-ok/10',
       warn: 'border-warn/20 bg-warn/5 text-warn hover:bg-warn/10',
       danger: 'border-danger/20 bg-danger/5 text-danger hover:bg-danger/10',

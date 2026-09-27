@@ -153,7 +153,7 @@ let instances = 0;
               <button
                 type="button"
                 (click)="close()"
-                class="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-600 transition hover:bg-brand-50"
+                class="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-500 transition hover:bg-brand-50"
               >
                 Done
               </button>
@@ -227,7 +227,7 @@ export class TimePicker {
 
     if (this.variant() === 'pill') {
       const tone = this.value()
-        ? 'border-brand-500 bg-brand-50 text-brand-700'
+        ? 'border-brand-500 bg-brand-50 text-brand-500'
         : 'border-ink-300 bg-white text-ink-800 hover:border-ink-400';
       return `${base} h-8 rounded-full px-3 text-[13px] ${tone}`;
     }

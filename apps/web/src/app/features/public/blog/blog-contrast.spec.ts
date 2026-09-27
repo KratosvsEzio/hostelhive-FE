@@ -48,7 +48,7 @@ const TEMPLATES = templatesUnder(HERE);
 const TOO_LIGHT = /(?:^|[\s"'])(?:[a-z-]+:)*text-ink-(?:300|400)(?:[\s"']|$)/;
 
 /** Any brand step below 600 used as a fill. Ordered longest-first so `500` is not read as `50`. */
-const LIGHT_BRAND_FILL = /(?:^|[\s"'])(?:[a-z-]+:)*bg-brand-(?:500|400|300|200|100|50)(?:[\s"'/]|$)/;
+const LIGHT_BRAND_FILL = /(?:^|[\s"'])(?:[a-z-]+:)*bg-brand-(?:400|300|200|100|50)(?:[\s"'/]|$)/;
 
 /** Any brand step below 600 used as a focus ring. */
 const LIGHT_BRAND_RING = /(?:^|[\s"'])(?:[a-z-]+:)*ring-brand-(?:500|400|300|200|100|50)(?:[\s"'/]|$)/;
@@ -106,14 +106,15 @@ describe('the journal never sets text in a colour that fails contrast', () => {
  * for focus rings in favour of `ink-900`. The blog re-derived both by hand and arrived at the
  * values that had been rejected.
  *
- * So the same treatment: not a thing to remember. The brand ramp only clears AA from 600 up
- * (#B94F06, 5.02:1 on white), and a 2px ring needs 3:1 against whatever sits behind it.
+ * So the same treatment: not a thing to remember. White labels sit on `brand-500` or darker —
+ * 500 by product decision (see button.ts), anything lighter is never acceptable — and a 2px
+ * ring needs 3:1 against whatever sits behind it.
  */
 describe('the journal uses the brand ramp at steps that clear their thresholds', () => {
   for (const file of TEMPLATES) {
     const name = relative(HERE, file).split('\\').join('/');
 
-    it(`${name} never sets a white label on a brand fill below 600`, () => {
+    it(`${name} never sets a white label on a brand fill below 500`, () => {
       const offenders = openingTags(readFileSync(file, 'utf8'))
         .filter((tag) => LIGHT_BRAND_FILL.test(tag) && WHITE_LABEL.test(tag))
         .map((tag) => `${name}  ${tag.replace(/\s+/g, ' ').slice(0, 110)}`);

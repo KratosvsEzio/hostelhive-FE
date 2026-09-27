@@ -15,7 +15,7 @@
     <!-- copy -->
     <div class="max-w-xl">
       <span
-        class="hh-rise inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 py-1.5 ps-1.5 pe-4 text-sm font-medium text-brand-700"
+        class="hh-rise inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 py-1.5 ps-1.5 pe-4 text-sm font-medium text-brand-500"
       >
         <span class="grid h-6 w-6 place-items-center rounded-full bg-brand-500">
           <svg viewBox="0 0 64 64" class="h-3.5 w-3.5" aria-hidden="true">
@@ -68,7 +68,7 @@
         @for (c of cities.slice(0, 4); track c.name) {
           <a
             [routerLink]="'/hostels/' + c.slug"
-            class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+            class="rounded-full border border-ink-100 bg-white px-3 py-1 font-medium text-ink-600 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-500"
             >{{ c.name }}</a
           >
         }
@@ -165,7 +165,7 @@
           class="absolute -left-5 bottom-[42px] flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-pill"
         >
           <span
-            class="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-600"
+            class="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-500"
             ><i class="ti ti-star-filled text-lg"></i
           ></span>
           <div>
@@ -236,7 +236,7 @@
 <!-- ════ EXPLORE PAKISTAN (interactive map) ════ -->
 <section hhContainer class="py-16 lg:py-24">
   <div class="mb-8 text-center">
-    <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">
+    <p class="text-sm font-semibold uppercase tracking-wide text-brand-500">
       {{ 'home.findByLocation' | transloco }}
     </p>
     <h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">
@@ -336,7 +336,7 @@
 <!-- ════ WHY HOSTELHIVE ════ -->
 <section hhContainer class="py-16 lg:py-24">
   <div class="mx-auto max-w-2xl text-center">
-    <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">
+    <p class="text-sm font-semibold uppercase tracking-wide text-brand-500">
       {{ 'home.whyHostelhive' | transloco }}
     </p>
     <h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">
@@ -360,7 +360,7 @@
             />
           </svg>
           <i
-            class="ti relative text-2xl text-brand-600"
+            class="ti relative text-2xl text-brand-500"
             [class]="feat.icon"
           ></i>
         </span>
@@ -377,7 +377,7 @@
 <section id="how-it-works" class="bg-tint-cream py-16 sm:py-20">
   <div class="mx-auto max-w-6xl px-5 sm:px-8">
     <div class="mx-auto max-w-2xl text-center">
-      <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">
+      <p class="text-sm font-semibold uppercase tracking-wide text-brand-500">
         {{ 'home.threeSteps' | transloco }}
       </p>
       <h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">
@@ -401,7 +401,7 @@
             <i class="ti relative text-3xl text-white" [class]="st.icon"></i>
           </span>
           <p
-            class="mt-5 text-xs font-semibold uppercase tracking-wide text-brand-600"
+            class="mt-5 text-xs font-semibold uppercase tracking-wide text-brand-500"
           >
             {{ 'publicHome.stepN' | transloco: { n: st.n } }}
           </p>
@@ -488,7 +488,7 @@
 <!-- ════ TESTIMONIALS ════ -->
 <section hhContainer class="py-16 lg:py-24">
   <div class="mb-10 text-center">
-    <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">
+    <p class="text-sm font-semibold uppercase tracking-wide text-brand-500">
       {{ 'home.lovedByMovers' | transloco }}
     </p>
     <h2 class="mt-1 font-display text-3xl font-bold text-ink-900 sm:text-4xl">
@@ -512,7 +512,7 @@
         </blockquote>
         <figcaption class="mt-5 flex items-center gap-3">
           <span
-            class="grid h-11 w-11 place-items-center rounded-full bg-brand-100 font-display font-semibold text-brand-700"
+            class="grid h-11 w-11 place-items-center rounded-full bg-brand-100 font-display font-semibold text-brand-500"
             >{{ t.initials }}</span
           >
           <div>
