@@ -510,7 +510,7 @@ export class RoomCalendar {
   protected freeTone(d: DayCell): string {
     if (d.oversold) return 'text-danger';
     if (this.isPrivate()) return d.booked > 0 ? 'text-amber-700' : 'text-emerald-700';
-    if (d.free === 0) return 'text-brand-600';
+    if (d.free === 0) return 'text-brand-500';
     return d.booked ? 'text-ink-400' : 'text-emerald-700';
   }
 

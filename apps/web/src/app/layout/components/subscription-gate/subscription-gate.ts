@@ -25,7 +25,7 @@ const BENEFITS = [
     <div class="flex flex-col items-center px-6 py-16 text-center">
 
       <!-- Icon -->
-      <div class="mb-6 grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-200">
+      <div class="mb-6 grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-500 shadow-lg shadow-brand-200">
         <i class="ti ti-crown text-4xl text-white" aria-hidden="true"></i>
       </div>
 

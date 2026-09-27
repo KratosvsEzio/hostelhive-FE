@@ -13,7 +13,7 @@
 
         @case ('valid') {
           @if (p) {
-            <span class="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-brand-600" [class]="mealMeta[p.m].tint">
+            <span class="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-brand-500" [class]="mealMeta[p.m].tint">
               <i class="ti text-3xl" [class]="mealMeta[p.m].icon" aria-hidden="true"></i>
             </span>
             <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
@@ -51,7 +51,7 @@
         }
 
         @case ('already') {
-          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-tint-sky text-brand-600">
+          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-tint-sky text-brand-500">
             <i class="ti ti-checks text-4xl" aria-hidden="true"></i>
           </span>
           <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">{{ 'featuresPublic.alreadyConfirmed' | transloco }}</h1>

@@ -44,7 +44,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
         >
           <p class="flex-1 text-sm text-ink-600">
             {{ 'common.weDLikeToCountPage' | transloco }}
-            <a routerLink="/privacy-policy" class="font-medium text-brand-600 underline">
+            <a routerLink="/privacy-policy" class="font-medium text-brand-500 underline">
               {{ 'common.privacyPolicy' | transloco }}
             </a>
           </p>

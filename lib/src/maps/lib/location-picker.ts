@@ -89,7 +89,7 @@ export interface PickedLocation {
               class="border-b border-ink-100 px-2.5 py-1.5 text-xs font-medium transition"
               [class]="
                 mapType() === 'roadmap'
-                  ? 'text-brand-600'
+                  ? 'text-brand-500'
                   : 'text-ink-500 hover:text-ink-700'
               "
             >
@@ -101,7 +101,7 @@ export interface PickedLocation {
               class="px-2.5 py-1.5 text-xs font-medium transition"
               [class]="
                 mapType() === 'satellite'
-                  ? 'text-brand-600'
+                  ? 'text-brand-500'
                   : 'text-ink-500 hover:text-ink-700'
               "
             >{{ 'maps.satellite' | transloco }}</button>

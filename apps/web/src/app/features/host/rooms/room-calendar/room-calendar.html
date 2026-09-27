@@ -129,7 +129,7 @@
                         <span
                           class="text-[12.5px] font-semibold tabular-nums"
                           [class.text-ink-900]="!d.isToday"
-                          [class.text-brand-600]="d.isToday"
+                          [class.text-brand-500]="d.isToday"
                         >{{ d.n }}</span>
                         @if (!isPrivate() && d.free > 0) {
                           <span class="text-[9.5px] font-medium text-ink-400">{{ d.free }} free</span>
@@ -214,7 +214,7 @@
               [class.bg-tint-cream]="day.booked > 0 && day.booked < day.capacity"
               [class.text-amber-800]="day.booked > 0 && day.booked < day.capacity"
               [class.bg-brand-50]="day.booked >= day.capacity"
-              [class.text-brand-700]="day.booked >= day.capacity"
+              [class.text-brand-500]="day.booked >= day.capacity"
             >
               {{ day.booked === 0 ? 'Free' : day.booked >= day.capacity ? 'Full' : 'Partly booked' }}
             </span>

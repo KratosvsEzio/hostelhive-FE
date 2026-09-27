@@ -7,14 +7,14 @@
   @if (isHost() && draftId()) {
     <a
       [routerLink]="['/host', draftId(), 'profile']"
-      class="flex items-center gap-1.5 text-sm font-medium text-brand-600 transition hover:text-brand-700"
+      class="flex items-center gap-1.5 text-sm font-medium text-brand-500 transition hover:text-brand-500"
     >
       {{ 'publicOnboarding.visitProfile' | transloco }}<i class="ti ti-arrow-right" aria-hidden="true"></i>
     </a>
   } @else {
     <a
       routerLink="/host/listings/new"
-      class="flex items-center gap-1.5 text-sm font-medium text-ink-600 transition hover:text-brand-600"
+      class="flex items-center gap-1.5 text-sm font-medium text-ink-600 transition hover:text-brand-500"
     >
       <i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'publicOnboarding.backToForm' | transloco }}
     </a>

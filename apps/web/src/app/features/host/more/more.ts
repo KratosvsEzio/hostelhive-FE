@@ -24,13 +24,13 @@ import { TranslocoPipe } from '@jsverse/transloco';
  */
 const TINT: Record<string, string> = {
   'common.bookings': 'bg-tint-blue text-ink-600',
-  'common.hostelProfile': 'bg-tint-cream text-brand-600',
+  'common.hostelProfile': 'bg-tint-cream text-brand-500',
   'hostNav.teamStaff': 'bg-tint-sky text-ink-600',
   'common.utilities': 'bg-tint-mint text-ink-600',
   'common.mess': 'bg-tint-purple text-ink-600',
   'common.expenses': 'bg-tint-sky text-ink-600',
-  'common.subscription': 'bg-tint-cream text-brand-600',
-  'hostSubscription.paymentHistory': 'bg-tint-cream text-brand-600',
+  'common.subscription': 'bg-tint-cream text-brand-500',
+  'hostSubscription.paymentHistory': 'bg-tint-cream text-brand-500',
 };
 
 const NEUTRAL_TINT = 'bg-ink-100 text-ink-600';

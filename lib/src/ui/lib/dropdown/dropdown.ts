@@ -170,7 +170,7 @@ export type DropdownSize = 'sm' | 'md';
           }
           <i
             class="ti ti-chevron-down transition-transform"
-            [class.text-brand-700]="chevronBrand()"
+            [class.text-brand-500]="chevronBrand()"
             [class.text-ink-400]="!chevronBrand()"
             [class.text-base]="variant() === 'field' && !isSm()"
             [class.text-sm]="variant() !== 'field' || isSm()"
@@ -222,7 +222,7 @@ export type DropdownSize = 'sm' | 'md';
                   [attr.aria-selected]="count() === 0"
                   (click)="clear()"
                   class="flex w-full items-center rounded-lg px-3 py-2 text-start text-sm transition"
-                  [class]="count() === 0 ? 'bg-brand-50 font-medium text-brand-700 hover:bg-brand-100' : 'text-ink-700 hover:bg-ink-50'"
+                  [class]="count() === 0 ? 'bg-brand-50 font-medium text-brand-500 hover:bg-brand-100' : 'text-ink-700 hover:bg-ink-50'"
                 >
                   {{ clearLabel() }}
                 </button>
@@ -700,7 +700,7 @@ export class Dropdown {
 
     const tone =
       this.tone() === 'auto' && this.active()
-        ? 'border-brand-500 bg-brand-50 text-brand-700'
+        ? 'border-brand-500 bg-brand-50 text-brand-500'
         : 'border-ink-300 text-ink-800 hover:border-ink-400';
     return `${pill} bg-white ${tone}`;
   });
@@ -738,7 +738,7 @@ export class Dropdown {
   protected optionClass(o: DropdownOption): string {
     const align = o.subtitle || o.statusLabel || o.suffixBadge ? 'items-start' : 'items-center';
     if (o.disabled) return `cursor-not-allowed text-ink-300 ${align}`;
-    return `${this.isSelected(o.value) ? 'bg-brand-50 hover:bg-brand-100 font-medium text-brand-700' : 'hover:bg-ink-50 text-ink-700'} ${align}`;
+    return `${this.isSelected(o.value) ? 'bg-brand-50 hover:bg-brand-100 font-medium text-brand-500' : 'hover:bg-ink-50 text-ink-700'} ${align}`;
   }
 
   protected isSelected(v: string): boolean {

@@ -3,7 +3,7 @@
     #trigger
     type="button"
     (click)="toggle()"
-    class="grid h-10 w-10 place-items-center rounded-full bg-brand-600 text-sm font-semibold text-white shadow-card transition hover:bg-brand-700 hover:shadow-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2"
+    class="grid h-10 w-10 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white shadow-card transition hover:bg-brand-600 hover:shadow-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2"
     [aria-label]="'account.accountMenu' | transloco"
     aria-haspopup="menu"
     [attr.aria-expanded]="open()"
@@ -22,7 +22,7 @@
       @if (user(); as u) {
         <div class="flex items-center gap-3 px-4 py-2">
           <span
-            class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-600 text-sm font-semibold text-white"
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-500 text-sm font-semibold text-white"
             >{{ initials() }}</span
           >
           <span class="min-w-0">
@@ -41,7 +41,7 @@
             <a
               routerLink="/admin/contracts"
               (click)="close()"
-              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-brand-50"
             >
               <i class="ti ti-shield-lock text-lg" aria-hidden="true"></i
               >{{ 'account.adminDashboard' | transloco }}
@@ -51,7 +51,7 @@
             <a
               routerLink="/moderator/queue"
               (click)="close()"
-              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-brand-50"
             >
               <i class="ti ti-layout-kanban text-lg" aria-hidden="true"></i
               >{{ 'account.moderatorDashboard' | transloco }}
@@ -61,7 +61,7 @@
             <a
               routerLink="/host"
               (click)="close()"
-              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-brand-50"
             >
               <i class="ti ti-building-community text-lg" aria-hidden="true"></i
               >{{ 'account.hostDashboard' | transloco }}
@@ -71,7 +71,7 @@
           <a
             routerLink="/notifications"
             (click)="close()"
-            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-brand-50"
           >
             <i class="ti ti-bell text-lg" aria-hidden="true"></i
             >{{ 'common.notifications' | transloco }}
@@ -79,7 +79,7 @@
           <a
             [routerLink]="hostLink()"
             (click)="close()"
-            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-brand-50"
           >
             <i class="ti ti-building-community text-lg" aria-hidden="true"></i
             >{{ hostCtaKey() | transloco }}
@@ -99,7 +99,7 @@
           <a
             routerLink="/"
             (click)="close()"
-            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-brand-50"
           >
             <i class="ti ti-door-exit text-lg" aria-hidden="true"></i
             >{{ 'a11y.viewSite' | transloco }}
@@ -154,7 +154,7 @@
           routerLink="/auth"
           [queryParams]="{ mode: 'login' }"
           (click)="close()"
-          class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-ink-50"
+          class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-brand-500 transition hover:bg-ink-50"
         >
           <i class="ti ti-login text-lg" aria-hidden="true"></i>{{ 'common.logIn' | transloco }}
         </a>

@@ -2,7 +2,7 @@
   <a
     hhTitle
     routerLink="../../queue"
-    class="flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
+    class="flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-500"
   >
     <i class="ti ti-chevron-left" aria-hidden="true"></i>{{ 'moderatorReview.queue' | transloco }}
   </a>
@@ -138,7 +138,7 @@
           </h3>
           <div class="flex items-center gap-3">
             <span
-              class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700"
+              class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-500"
               >{{ hostInitials(s.data.host) }}</span
             >
             <div class="min-w-0 flex-1">
@@ -163,7 +163,7 @@
                   <dd class="min-w-0 truncate">
                     <a
                       [href]="'mailto:' + s.data.hostEmail"
-                      class="text-brand-600 hover:underline"
+                      class="text-brand-500 hover:underline"
                       >{{ s.data.hostEmail }}</a
                     >
                   </dd>
@@ -175,7 +175,7 @@
                   <dd>
                     <a
                       [href]="'tel:' + s.data.hostPhone"
-                      class="text-ink-700 hover:text-brand-600"
+                      class="text-ink-700 hover:text-brand-500"
                       >{{ s.data.hostPhone }}</a
                     >
                   </dd>

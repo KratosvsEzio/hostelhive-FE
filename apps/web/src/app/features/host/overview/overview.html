@@ -245,7 +245,7 @@
             [routerLink]="
               '/host/' + propertyStore.selected() + '/overview/revenue'
             "
-            class="text-xs font-medium text-brand-600 hover:text-brand-700"
+            class="text-xs font-medium text-brand-500 hover:text-brand-500"
             >{{ 'hostOverview.viewFullRevenueBreakdown' | transloco }}</a
           >
         </div>
@@ -326,7 +326,7 @@
           </div>
         }
         <div class="mt-4 flex justify-end border-t border-ink-100 pt-3">
-          <a [routerLink]="'/host/' + propertyStore.selected() + '/overview/movement'" class="text-xs font-medium text-brand-600 hover:text-brand-700">{{ 'hostOverview.viewFullMovementBreakdown' | transloco }}</a>
+          <a [routerLink]="'/host/' + propertyStore.selected() + '/overview/movement'" class="text-xs font-medium text-brand-500 hover:text-brand-500">{{ 'hostOverview.viewFullMovementBreakdown' | transloco }}</a>
         </div>
       </hh-card>
     </div>
@@ -426,7 +426,7 @@
             <a
               [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
               [queryParams]="{ kind: 'utility', status: billTab() }"
-              class="text-xs font-medium text-brand-600 hover:text-brand-700"
+              class="text-xs font-medium text-brand-500 hover:text-brand-500"
               >{{ 'hostOverview.viewAllBills' | transloco }}</a
             >
           </div>
@@ -523,7 +523,7 @@
             <a
               [routerLink]="'/host/' + propertyStore.selected() + '/invoices'"
               [queryParams]="{ kind: 'rental', status: ledgerTab() }"
-              class="text-xs font-medium text-brand-600 hover:text-brand-700"
+              class="text-xs font-medium text-brand-500 hover:text-brand-500"
               >{{ 'hostOverview.viewAllRentals' | transloco }}</a
             >
           </div>
@@ -614,7 +614,7 @@
               </p>
               <a
                 [routerLink]="'/host/' + propertyStore.selected() + '/bookings'"
-                class="shrink-0 text-xs font-medium text-brand-600 hover:text-brand-700"
+                class="shrink-0 text-xs font-medium text-brand-500 hover:text-brand-500"
                 >{{ 'hostOverview.viewAllBookings' | transloco }}</a
               >
             </div>

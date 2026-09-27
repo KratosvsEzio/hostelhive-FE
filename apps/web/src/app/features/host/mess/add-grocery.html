@@ -88,7 +88,7 @@
           (picked)="onPickedReceipt($event)"
           />
         </div>
-        <p class="mt-2 text-xs" [class]="uploadingReceipt() ? 'text-brand-600' : 'text-ink-400'">
+        <p class="mt-2 text-xs" [class]="uploadingReceipt() ? 'text-brand-500' : 'text-ink-400'">
           @if (uploadingReceipt()) {
             <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'hostMess.uploadingReceipt' | transloco }}
           } @else {

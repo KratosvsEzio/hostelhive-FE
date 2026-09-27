@@ -93,7 +93,7 @@
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-2.5">
             <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-cream">
-              <i class="ti ti-bolt text-sm text-brand-600"></i>
+              <i class="ti ti-bolt text-sm text-brand-500"></i>
             </span>
             <p class="text-sm font-semibold text-ink-700">{{ 'hostInvoices.utilityBills' | transloco }}</p>
           </div>
@@ -233,7 +233,7 @@
                 <td class="py-3">
                   <span
                     class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-                    [class]="inv.kind === 'utility' ? 'bg-tint-cream text-brand-700' : 'bg-tint-sky text-ink-600'"
+                    [class]="inv.kind === 'utility' ? 'bg-tint-cream text-brand-500' : 'bg-tint-sky text-ink-600'"
                   >{{ line.label }}</span>
                 </td>
                 <td class="py-3 text-end font-medium text-ink-800">Rs {{ line.amount | number }}</td>
@@ -245,7 +245,7 @@
 
       <div class="mt-5 flex items-center justify-between rounded-xl bg-tint-cream px-5 py-4">
         <span class="font-semibold text-ink-700">{{ 'hostInvoices.totalDue' | transloco }}</span>
-        <span class="text-xl font-bold text-brand-700">Rs {{ inv.amount | number }}</span>
+        <span class="text-xl font-bold text-brand-500">Rs {{ inv.amount | number }}</span>
       </div>
 
       @if (inv.payNote) {

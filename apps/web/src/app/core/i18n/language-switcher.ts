@@ -92,7 +92,7 @@ import { LOCALES, flagSrc, localeFor } from './locales';
                 [attr.aria-selected]="l.code === current().code"
                 [attr.lang]="l.code"
                 class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm transition hover:bg-surface"
-                [class.text-brand-600]="l.code === current().code"
+                [class.text-brand-500]="l.code === current().code"
                 [class.font-medium]="l.code === current().code"
                 (click)="choose(l.code)"
               >

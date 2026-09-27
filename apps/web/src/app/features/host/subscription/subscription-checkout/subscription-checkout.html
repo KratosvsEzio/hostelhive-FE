@@ -68,11 +68,11 @@
                 <div class="flex flex-wrap items-center gap-2">
                   <span
                     class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
-                    [class]="product.product_type === 'add_on' ? 'bg-warn/10 text-warn' : 'bg-brand-50 text-brand-600'"
+                    [class]="product.product_type === 'add_on' ? 'bg-warn/10 text-warn' : 'bg-brand-50 text-brand-500'"
                   >{{ product.product_type === 'add_on' ? 'Add-on' : 'Subscription' }}</span>
                   <span class="font-display text-sm font-semibold text-ink-900">{{ product.name }}</span>
                   @if (isLeadRadar) {
-                    <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-brand-400 to-brand-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
                       <i class="ti ti-clock-hour-3 text-xs" aria-hidden="true"></i>{{ 'hostSubscription.comingSoon' | transloco }}
                     </span>
                   }

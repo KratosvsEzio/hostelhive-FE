@@ -319,7 +319,7 @@ export interface PaginationConfig {
                               <p class="flex items-center gap-1.5 font-medium text-ink-900">
                                 <span class="min-w-0 truncate">{{ $any(cell).primary }}</span>
                                 @if ($any(cell).badge; as badge) {
-                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
+                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-500' }}">{{ badge.text }}</span>
                                 }
                               </p>
                               @if ($any(cell).secondary || $any(cell).secondaryBadge) {
@@ -334,7 +334,7 @@ export interface PaginationConfig {
                                     <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
                                   }
                                   @if ($any(cell).secondaryBadge; as sBadge) {
-                                    <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ sBadge.class || 'bg-brand-50 text-brand-600' }}">{{ sBadge.text }}</span>
+                                    <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ sBadge.class || 'bg-brand-50 text-brand-500' }}">{{ sBadge.text }}</span>
                                   }
                                   {{ $any(cell).secondary }}
                                 </p>
@@ -398,7 +398,7 @@ export interface PaginationConfig {
                               <p class="flex items-center gap-1.5 font-medium text-ink-900">
                                 <span class="min-w-0 truncate">{{ $any(cell).primary }}</span>
                                 @if ($any(cell).badge; as badge) {
-                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-600' }}">{{ badge.text }}</span>
+                                  <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ badge.class || 'bg-brand-50 text-brand-500' }}">{{ badge.text }}</span>
                                 }
                               </p>
                               @if ($any(cell).secondary || $any(cell).secondaryBadge) {
@@ -413,7 +413,7 @@ export interface PaginationConfig {
                                     <span class="sr-only">{{ $any(cell).secondaryLabel }}</span>
                                   }
                                   @if ($any(cell).secondaryBadge; as sBadge) {
-                                    <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ sBadge.class || 'bg-brand-50 text-brand-600' }}">{{ sBadge.text }}</span>
+                                    <span class="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold {{ sBadge.class || 'bg-brand-50 text-brand-500' }}">{{ sBadge.text }}</span>
                                   }
                                   {{ $any(cell).secondary }}
                                 </p>

@@ -150,7 +150,7 @@ export class DateRangePicker {
   protected circleClass(d: CalDay): string {
     const base = 'relative z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-sm transition-colors select-none';
     if (d.isStart || d.isEnd) return `${base} bg-brand-500 font-semibold text-white`;
-    if (d.inRange) return `${base} ${d.inMonth ? 'text-brand-700 hover:bg-brand-100' : 'text-brand-300'}`;
+    if (d.inRange) return `${base} ${d.inMonth ? 'text-brand-500 hover:bg-brand-100' : 'text-brand-300'}`;
     if (!d.inMonth) return `${base} text-ink-300 hover:bg-ink-50`;
     return `${base} text-ink-800 hover:bg-ink-50${d.isToday ? ' ring-1 ring-brand-400' : ''}`;
   }

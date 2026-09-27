@@ -33,7 +33,7 @@
 
     <!-- Info banner -->
     <div class="flex items-start gap-3 rounded-2xl border border-brand-100 bg-tint-cream px-5 py-4">
-      <i class="ti ti-info-circle mt-0.5 text-lg text-brand-600" aria-hidden="true"></i>
+      <i class="ti ti-info-circle mt-0.5 text-lg text-brand-500" aria-hidden="true"></i>
       <p class="text-sm text-ink-600">
         {{ 'hostMess.planTheWeekSMenu' | transloco }} <span class="font-medium text-ink-800">{{ 'hostMess.notificationTiming' | transloco }}</span> {{ 'hostMess.belowToControlWhenAnd' | transloco }}
       </p>
@@ -59,7 +59,7 @@
             [attr.aria-label]="day.full + (todayIndex === i ? ' (today)' : '')"
             class="relative flex min-w-[calc(100%/7)] flex-1 flex-col items-center gap-1.5 px-2 py-3 text-xs transition focus-visible:outline-none"
             [class]="selectedDay() === i
-              ? 'border-b-2 border-brand-500 font-semibold text-brand-600 -mb-px'
+              ? 'border-b-2 border-brand-500 font-semibold text-brand-500 -mb-px'
               : 'border-b-2 border-transparent font-medium text-ink-500 hover:bg-surface hover:text-ink-700 -mb-px'"
           >
             <span class="flex items-center gap-1">
@@ -83,7 +83,7 @@
       <!-- Meal inputs for the selected day -->
       <div class="p-5">
         @if (todayIndex === selectedDay()) {
-          <p class="mb-4 flex items-center gap-1.5 text-xs font-medium text-brand-600">
+          <p class="mb-4 flex items-center gap-1.5 text-xs font-medium text-brand-500">
             <i class="ti ti-calendar-event" aria-hidden="true"></i>
             {{ 'hostMess.todayThisMenuAppearsIn' | transloco }}
           </p>
@@ -95,7 +95,7 @@
           @for (meal of mealOrder; track meal) {
             <div class="flex items-center gap-3">
               <span
-                class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-600"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-500"
                 [class]="mealMeta[meal].tint"
               >
                 <i class="ti text-xl" [class]="mealMeta[meal].icon" aria-hidden="true"></i>
@@ -152,7 +152,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-4">
           <div class="flex min-w-0 items-center gap-3">
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-600" [class]="meta.tint">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-brand-500" [class]="meta.tint">
               <i class="ti text-xl" [class]="meta.icon" aria-hidden="true"></i>
             </span>
             <div class="min-w-0">

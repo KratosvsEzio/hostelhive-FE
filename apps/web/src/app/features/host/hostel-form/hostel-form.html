@@ -217,7 +217,7 @@
               <i class="ti {{ categoryIcon(cat.name) }} text-sm text-brand-500" aria-hidden="true"></i>
               <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ cat.name }}</h3>
               @if (catSelectedCount(cat); as c) {
-                <span class="text-[11px] font-semibold text-brand-600">{{ 'hostelForm.selectedCount' | transloco: { count: c } }}</span>
+                <span class="text-[11px] font-semibold text-brand-500">{{ 'hostelForm.selectedCount' | transloco: { count: c } }}</span>
               }
             </div>
             <div class="flex flex-wrap gap-2">
@@ -237,7 +237,7 @@
                   <span class="text-start">{{ o.name }}</span>
                   <i
                     class="ti shrink-0 text-lg"
-                    [class]="isOfferSelected(o.id) ? 'ti-circle-check-filled text-brand-600' : 'ti-circle text-ink-300'"
+                    [class]="isOfferSelected(o.id) ? 'ti-circle-check-filled text-brand-500' : 'ti-circle text-ink-300'"
                     aria-hidden="true"
                   ></i>
                 </button>

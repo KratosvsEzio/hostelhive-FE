@@ -22,8 +22,9 @@ import { LocaleLink } from '@core/i18n/locale-link';
    * vision deficiency, "which tab am I on" had no answer. Below 768px this is the only
    * navigation the product has.
    *
-   * `ink-500` is 7.82:1 and `brand-700` is 6.05:1, both already in the palette. The weight
-   * change is what carries the state without relying on hue at all — paired with
+   * Inactive is `ink-500` at 7.82:1. Active is `brand-500` by product decision (the darker
+   * brand steps read as muddy), so the weight change and the top rule carry the state
+   * rather than the hue — paired with
    * `aria-current="page"` in the template, which is the same cue for a screen reader.
    *
    * 11px rather than 10px: these are the smallest labels in the product, on the smallest
@@ -45,7 +46,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
       text-decoration: none;
     }
     .tab.on {
-      color: #a8430c;
+      color: #f36e21;
       font-weight: 600;
     }
     /* The cue that survives colour being removed.
@@ -62,7 +63,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
       inset-inline: 25%;
       height: 2px;
       border-radius: 1px;
-      background: #a8430c;
+      background: #f36e21;
     }
   `,
   template: `
