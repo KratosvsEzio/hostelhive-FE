@@ -169,6 +169,7 @@
 .ti-photo::before{content:"\eb0a"}
 .ti-photo-check::before{content:"\f35e"}
 .ti-photo-off::before{content:"\ecf6"}
+.ti-photo-search::before{content:"\f364"}
 .ti-photo-x::before{content:"\f367"}
 .ti-pillow::before{content:"\10226"}
 .ti-player-pause::before{content:"\ed45"}
