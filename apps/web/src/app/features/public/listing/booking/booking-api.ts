@@ -190,11 +190,6 @@ export class BookingApi {
       .pipe(map(readCreatedBooking));
   }
 
-  /** `GET /api/bookings` — the guest's own. */
-  myBookings(): Observable<ApiBooking[]> {
-    return of(this.bookings()).pipe(delay(BookingApi.LAG));
-  }
-
   /**
    * `GET /api/bookings/:id/cancellation_quote`
    *

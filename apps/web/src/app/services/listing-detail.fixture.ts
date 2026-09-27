@@ -10,6 +10,14 @@ import { RoomOffer } from '@features/public/listing/booking/room-offer';
 export interface ListingDetail extends Listing {
   /** Human-readable street address shown above the faux map. */
   address: string;
+  /**
+   * The numbers the public hostel document carries, when the host has filled them in.
+   *
+   * Not what the listing page's contact button shows: that goes through the gated
+   * `show_phone` reveal. These are read by pages where the guest already has a relationship
+   * with the hostel — a booking — and the reveal would be the wrong gate.
+   */
+  publicPhones?: string[];
   /** Total photo count (gallery shows a subset, button reveals the rest). */
   photoCount: number;
   /**
