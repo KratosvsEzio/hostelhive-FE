@@ -21,11 +21,16 @@ import { BasketLine } from './room-offer';
 export const CHECK_IN_HOUR = 14;
 export const CHECK_OUT_HOUR = 11;
 
-/** Who the booking is for. Not necessarily the account holder — people book for other people. */
+/**
+ * Who the booking is for — not necessarily the account holder, since people book for other
+ * people — and anything they want the hostel to know before they arrive.
+ */
 export interface BookingGuest {
   name: string;
   phone: string;
   email: string;
+  /** Free text for the hostel: "arriving late", "travelling with a child". Optional. */
+  notes?: string;
 }
 
 /**
@@ -43,7 +48,17 @@ export interface ApiBookingLineItem {
   room_type_id: string;
   guests: number;
   quantity?: number;
+  /**
+   * How the line is sold, in the API's own slugs — `private_room`, not the `private` the rest
+   * of this app says. Repeats what the room type already records, but the contract carries it
+   * on every line, and it is what tells the server whether `quantity` counts rooms or is absent
+   * because the line is counted in beds.
+   */
+  occupancy_type: ApiOccupancyType;
 }
+
+/** The two spellings `POST /api/bookings` accepts. See `@util/occupancy-type` for the others. */
+export type ApiOccupancyType = 'private_room' | 'shared';
 
 export interface ApiCreateBookingRequest {
   hostel_id: string;
@@ -55,6 +70,8 @@ export interface ApiCreateBookingRequest {
     guest_name: string;
     guest_phone: string;
     guest_email: string;
+    /** Absent rather than empty when the guest wrote nothing. */
+    notes?: string;
     line_items: ApiBookingLineItem[];
   };
 }
@@ -109,6 +126,7 @@ export function toLineItem(line: BasketLine): ApiBookingLineItem {
   const item: ApiBookingLineItem = {
     room_type_id: line.roomId,
     guests: line.guests,
+    occupancy_type: line.kind === 'private' ? 'private_room' : 'shared',
   };
   // Only private lines carry one — see `ApiBookingLineItem`.
   if (line.kind === 'private') item.quantity = line.quantity;
@@ -129,6 +147,7 @@ export function toLineItem(line: BasketLine): ApiBookingLineItem {
  */
 export function toBookingRequest(input: BookingRequestInput): ApiCreateBookingRequest {
   const zone = countryTimeZone(input.hostelCountry);
+  const notes = input.guest.notes?.trim();
   return {
     hostel_id: input.hostelId,
     booking: {
@@ -137,6 +156,7 @@ export function toBookingRequest(input: BookingRequestInput): ApiCreateBookingRe
       guest_name: input.guest.name.trim(),
       guest_phone: input.guest.phone.replace(/\D/g, ''),
       guest_email: input.guest.email.trim(),
+      ...(notes ? { notes } : {}),
       line_items: input.lines.map(toLineItem),
     },
   };

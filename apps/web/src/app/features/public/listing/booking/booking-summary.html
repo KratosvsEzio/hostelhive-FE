@@ -104,28 +104,47 @@
   <div class="mt-2 grid gap-3 sm:grid-cols-2">
     <hh-input
       class="sm:col-span-2"
-      size="sm"
+      size="md"
       autocomplete="name"
       [label]="'common.fullName' | transloco"
       [(value)]="guestName"
       [error]="nameError() ? ('publicBooking.enterTheGuestName' | transloco) : ''"
     />
-    <hh-input
-      size="sm"
-      type="tel"
-      autocomplete="tel"
-      [label]="'common.phone' | transloco"
-      [(value)]="guestPhone"
+    <!-- With a country picker, defaulting to Pakistan: guests book from abroad, and a number
+         without its country code is one the hostel cannot call back. -->
+    <hh-phone-input
+      class="sm:col-span-2"
+      [label]="'publicBooking.phone' | transloco"
+      [(phone)]="guestPhone"
       [error]="phoneError() ? ('publicBooking.enterAValidPhone' | transloco) : ''"
     />
     <hh-input
-      size="sm"
+      size="md"
       type="email"
       autocomplete="email"
-      [label]="'common.email' | transloco"
+      class="sm:col-span-2"
+      [label]="'publicBooking.email' | transloco"
       [(value)]="guestEmail"
       [error]="emailError() ? ('publicBooking.enterAValidEmail' | transloco) : ''"
     />
+    <!-- Styled as an hh-input at size md: the library has no textarea, and a field that looked
+         different from the three above it would read as belonging to something else. The
+         whole form is md, not sm, because that is the size the phone widget is fixed at. -->
+    <div class="sm:col-span-2">
+      <label for="booking-notes" class="mb-1 block text-xs font-medium text-ink-600">
+        {{ 'publicBooking.notesForTheHostel' | transloco }}
+      </label>
+      <textarea
+        #notesField
+        id="booking-notes"
+        rows="3"
+        class="block w-full resize-none rounded-xl border border-ink-200 bg-transparent px-3 py-2.5 text-sm text-ink-900 outline-none transition placeholder:text-ink-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+        [attr.maxlength]="notesMax"
+        [placeholder]="'publicBooking.notesPlaceholder' | transloco"
+        [value]="notes()"
+        (input)="notes.set(notesField.value)"
+      ></textarea>
+    </div>
   </div>
 
   <!-- Said here as well as on the rail. This is the screen somebody reads before they commit,

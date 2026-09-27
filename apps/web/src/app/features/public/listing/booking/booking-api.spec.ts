@@ -264,7 +264,7 @@ describe('BookingApi.createBooking', () => {
     const body = send().body as { booking: { line_items: unknown[] } };
 
     expect(body.booking.line_items).toEqual([
-      { room_type_id: 'KGJwMC', guests: 4, quantity: 2 },
+      { room_type_id: 'KGJwMC', guests: 4, quantity: 2, occupancy_type: 'private_room' },
     ]);
   });
 });

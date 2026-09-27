@@ -17,14 +17,16 @@ function line(over: Partial<BasketLine> = {}): BasketLine {
   };
 }
 
-function request(over: { lines?: BasketLine[]; country?: string | null } = {}) {
+function request(
+  over: { lines?: BasketLine[]; country?: string | null; notes?: string } = {},
+) {
   return toBookingRequest({
     hostelId: 'MjvuEl',
     hostelCountry: over.country === undefined ? 'Pakistan' : over.country,
     checkIn: new Date(2026, 8, 20), // 20 September, local midnight
     checkOut: new Date(2026, 8, 23),
     lines: over.lines ?? [line()],
-    guest: GUEST,
+    guest: over.notes === undefined ? GUEST : { ...GUEST, notes: over.notes },
   });
 }
 
@@ -39,6 +41,7 @@ describe('toLineItem', () => {
       room_type_id: 'KGJwMC',
       guests: 4,
       quantity: 2,
+      occupancy_type: 'private_room',
     });
   });
 
@@ -50,8 +53,17 @@ describe('toLineItem', () => {
   it('sends beds as the headcount on a shared line, with no quantity', () => {
     const item = toLineItem(line({ roomId: 'MqVuEl', kind: 'shared', quantity: 2, guests: 2 }));
 
-    expect(item).toEqual({ room_type_id: 'MqVuEl', guests: 2 });
+    expect(item).toEqual({ room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' });
     expect('quantity' in item).toBe(false);
+  });
+
+  /**
+   * The API spells private `private_room`, while this app says `private`. Sending the app's
+   * spelling would be a slug the server does not know.
+   */
+  it("sends the API's occupancy slug, not the app's", () => {
+    expect(toLineItem(line({ kind: 'private' })).occupancy_type).toBe('private_room');
+    expect(toLineItem(line({ kind: 'shared' })).occupancy_type).toBe('shared');
   });
 
   it('carries the room type id the listing gave it', () => {
@@ -138,6 +150,24 @@ describe('toBookingRequest', () => {
     expect(req.booking.guest_email).toBe('ali@example.com');
   });
 
+  it("sends the guest's notes to the hostel", () => {
+    expect(request({ notes: 'late arrival' }).booking.notes).toBe('late arrival');
+  });
+
+  it('trims the notes', () => {
+    expect(request({ notes: '  late arrival \n' }).booking.notes).toBe('late arrival');
+  });
+
+  /**
+   * Absent, not empty. An empty string is a value the hostel's screen would render as a notes
+   * section with nothing in it.
+   */
+  it('leaves notes off entirely when the guest wrote nothing', () => {
+    expect('notes' in request().booking).toBe(false);
+    expect('notes' in request({ notes: '' }).booking).toBe(false);
+    expect('notes' in request({ notes: '   \n ' }).booking).toBe(false);
+  });
+
   it('sends every line, in basket order', () => {
     const { booking } = request({
       lines: [
@@ -147,8 +177,8 @@ describe('toBookingRequest', () => {
     });
 
     expect(booking.line_items).toEqual([
-      { room_type_id: 'KGJwMC', guests: 4, quantity: 2 },
-      { room_type_id: 'MqVuEl', guests: 1 },
+      { room_type_id: 'KGJwMC', guests: 4, quantity: 2, occupancy_type: 'private_room' },
+      { room_type_id: 'MqVuEl', guests: 1, occupancy_type: 'shared' },
     ]);
   });
 
@@ -162,8 +192,8 @@ describe('toBookingRequest', () => {
     });
 
     expect(booking.line_items).toEqual([
-      { room_type_id: 'KGJwMC', guests: 4, quantity: 2 },
-      { room_type_id: 'MqVuEl', guests: 2 },
+      { room_type_id: 'KGJwMC', guests: 4, quantity: 2, occupancy_type: 'private_room' },
+      { room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' },
     ]);
   });
 });
