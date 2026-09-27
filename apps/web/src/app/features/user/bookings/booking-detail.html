@@ -111,10 +111,11 @@
       }
     </div>
 
-    <!-- What the guest can still do. Offered only while the server allows it: changing it
-         while pending, cancelling while pending or confirmed. Past that, the hostel is the one
-         to talk to, and the page says so rather than showing buttons that answer 422. -->
-    @if (editable() || cancellable() || (b.stage !== 'cancelled' && b.stage !== 'checked-out')) {
+    <!-- What the guest can still do, offered only while the server allows it: a pending
+         booking at any time, a confirmed one until three days before check-in. Past that the
+         hostel is the one to talk to, and the page says so — and says why, when the reason is
+         the three days — rather than showing buttons that answer 422. -->
+    @if (!finished()) {
       <div class="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pb-4 sm:px-5 sm:pb-5">
         @if (editable()) {
           <!-- Hands the booking over, as the list does, so the change page draws at once. -->
@@ -127,7 +128,11 @@
             <i class="ti ti-calendar-x" aria-hidden="true"></i>{{ 'common.cancelBooking' | transloco }}
           </button>
         }
-        @if (!editable() && b.stage !== 'cancelled' && b.stage !== 'checked-out') {
+        @if (reconfirm()) {
+          <p class="basis-full text-xs text-ink-500">{{ 'userBookings.changeNeedsReconfirm' | transloco }}</p>
+        } @else if (inCutoff()) {
+          <p class="basis-full text-xs text-ink-500">{{ 'userBookings.withinCutoff' | transloco }}</p>
+        } @else if (!editable()) {
           <p class="text-xs text-ink-500">{{ 'userBookings.contactToChange' | transloco }}</p>
         }
       </div>
@@ -167,13 +172,13 @@
     </hh-confirm-modal>
   }
 
-  <!-- Progress. Cancelled bookings have left the track, so they get a line instead. -->
+  <!-- Progress. Cancelled and no-show bookings have left the track, so they get a line instead. -->
   <section class="mt-4 rounded-2xl border border-ink-100 bg-white p-4 sm:p-5" aria-labelledby="booking-progress">
     <h2 id="booking-progress" class="text-sm font-semibold text-ink-900">{{ 'userBookings.progress' | transloco }}</h2>
-    @if (b.stage === 'cancelled') {
+    @if (b.stage === 'cancelled' || b.stage === 'no-show') {
       <p class="mt-3 flex items-center gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">
-        <i class="ti ti-calendar-x" aria-hidden="true"></i>
-        {{ 'userBookings.cancelledNote' | transloco }}
+        <i class="ti" [class]="b.stage === 'no-show' ? 'ti-user-x' : 'ti-calendar-x'" aria-hidden="true"></i>
+        {{ (b.stage === 'no-show' ? 'userBookings.noShowNote' : 'userBookings.cancelledNote') | transloco }}
       </p>
     } @else if (at() >= 0) {
       <ol class="mt-4 grid grid-cols-4">
@@ -276,7 +281,7 @@
         <dt class="font-semibold text-ink-900">{{ 'userBookings.dueAtHostel' | transloco }}</dt>
         <dd
           class="whitespace-nowrap font-semibold tabular-nums"
-          [class]="b.due > 0 && b.stage !== 'cancelled' ? 'text-ink-900' : 'text-ink-500'"
+          [class]="b.due > 0 && b.stage !== 'cancelled' && b.stage !== 'no-show' ? 'text-ink-900' : 'text-ink-500'"
         >
           {{ currency() | currencySym }} {{ b.due | number }}
         </dd>

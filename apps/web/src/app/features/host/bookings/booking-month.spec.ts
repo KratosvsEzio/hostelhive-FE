@@ -1,5 +1,14 @@
 import { CalendarDayCounts } from './host-bookings-api';
-import { LANES, barSegments, buildBookingMonth, isoDate, monthRange } from './booking-month';
+import {
+  LANES,
+  barSegments,
+  buildBookingMonth,
+  isoDate,
+  laneFor,
+  laneKeyFor,
+  monthRange,
+  slugsFor,
+} from './booking-month';
 
 /** August 2026 starts on a Saturday, so the grid needs five leading pad cells. */
 const AUG = new Date(2026, 7, 1);
@@ -62,14 +71,14 @@ describe('buildBookingMonth grid', () => {
 describe('buildBookingMonth lane placement', () => {
   it('lays each day’s dispositions into its own cell', () => {
     const month = buildBookingMonth(
-      [day('2026-08-26', { byDisposition: { 'pending-allotment': 2, 'room-assigned': 2 } })],
+      [day('2026-08-26', { byDisposition: { 'pending': 2, 'confirmed': 2 } })],
       AUG,
       TODAY,
     );
     const c = cell(month, '2026-08-26').counts;
 
-    expect(c['pending-allotment']).toBe(2);
-    expect(c['room-assigned']).toBe(2);
+    expect(c['pending']).toBe(2);
+    expect(c['confirmed']).toBe(2);
     expect(c['checked-in']).toBe(0);
   });
 
@@ -92,19 +101,19 @@ describe('buildBookingMonth lane placement', () => {
 
   it('ignores days outside the month it was asked for', () => {
     const month = buildBookingMonth(
-      [day('2026-09-04', { byDisposition: { 'room-assigned': 9 } })],
+      [day('2026-09-04', { byDisposition: { 'confirmed': 9 } })],
       AUG,
       TODAY,
     );
 
-    expect(month.totals['room-assigned']).toBe(0);
+    expect(month.totals['confirmed']).toBe(0);
   });
 
   // Arrivals and departures are events, not dispositions — a stay can be checked-in and also
   // arriving that day, so folding them into the lanes would double-count it.
   it('keeps check-ins and check-outs beside the lanes, not inside them', () => {
     const month = buildBookingMonth(
-      [day('2026-08-30', { checkouts: 5, byDisposition: { 'room-assigned': 1 } })],
+      [day('2026-08-30', { checkouts: 5, byDisposition: { 'confirmed': 1 } })],
       AUG,
       TODAY,
     );
@@ -112,7 +121,7 @@ describe('buildBookingMonth lane placement', () => {
 
     expect(c.checkouts).toBe(5);
     expect(c.counts['checked-out']).toBe(0);
-    expect(c.counts['room-assigned']).toBe(1);
+    expect(c.counts['confirmed']).toBe(1);
   });
 });
 
@@ -120,16 +129,16 @@ describe('buildBookingMonth totals', () => {
   it('sums each lane across the month', () => {
     const month = buildBookingMonth(
       [
-        day('2026-08-21', { byDisposition: { 'room-assigned': 1 } }),
-        day('2026-08-25', { byDisposition: { 'room-assigned': 2, cancelled: 1 } }),
-        day('2026-08-26', { byDisposition: { 'pending-allotment': 2, 'room-assigned': 2 } }),
+        day('2026-08-21', { byDisposition: { 'confirmed': 1 } }),
+        day('2026-08-25', { byDisposition: { 'confirmed': 2, cancelled: 1 } }),
+        day('2026-08-26', { byDisposition: { 'pending': 2, 'confirmed': 2 } }),
       ],
       AUG,
       TODAY,
     );
 
-    expect(month.totals['room-assigned']).toBe(5);
-    expect(month.totals['pending-allotment']).toBe(2);
+    expect(month.totals['confirmed']).toBe(5);
+    expect(month.totals['pending']).toBe(2);
     expect(month.totals['cancelled']).toBe(1);
     expect(month.totals['checked-in']).toBe(0);
   });
@@ -138,11 +147,12 @@ describe('buildBookingMonth totals', () => {
 describe('barSegments', () => {
   const counts = (over: Record<string, number> = {}) =>
     ({
-      'pending-allotment': 0,
-      'room-assigned': 0,
+      pending: 0,
+      confirmed: 0,
       'checked-in': 0,
       'checked-out': 0,
       cancelled: 0,
+      'no-show': 0,
       ...over,
     }) as Parameters<typeof barSegments>[0];
 
@@ -151,16 +161,17 @@ describe('barSegments', () => {
   });
 
   it('splits the bar in proportion and fills it', () => {
-    const segs = barSegments(counts({ 'pending-allotment': 1, 'room-assigned': 3 }));
+    const segs = barSegments(counts({ 'pending': 1, 'confirmed': 3 }));
 
-    expect(segs.map((s) => s.key)).toEqual(['pending-allotment', 'room-assigned']);
+    expect(segs.map((s) => s.key)).toEqual(['pending', 'confirmed']);
     expect(segs.reduce((n, s) => n + s.pct, 0)).toBe(100);
   });
 
   // A day with one stay and three cancellations would otherwise draw three-quarters red for
   // rooms nobody is in.
-  it('leaves cancellations out of the occupancy bar', () => {
+  it('leaves cancellations and no-shows out of the occupancy bar', () => {
     expect(barSegments(counts({ cancelled: 4 }))).toEqual([]);
+    expect(barSegments(counts({ 'no-show': 2 }))).toEqual([]);
   });
 
   it('drops zero-width lanes rather than rendering slivers', () => {
@@ -168,8 +179,8 @@ describe('barSegments', () => {
   });
 
   it('uses the lane palette', () => {
-    const [seg] = barSegments(counts({ 'room-assigned': 1 }));
-    expect(seg.dot).toBe(LANES.find((l) => l.key === 'room-assigned')!.dot);
+    const [seg] = barSegments(counts({ 'confirmed': 1 }));
+    expect(seg.dot).toBe(LANES.find((l) => l.key === 'confirmed')!.dot);
   });
 });
 
@@ -203,11 +214,48 @@ describe('lane names', () => {
 
   it('says what each disposition actually is', () => {
     expect(LANES.map((l) => l.label)).toEqual([
-      'Pending allotment',
-      'Room assigned',
+      'Pending',
+      'Confirmed',
       'Checked in',
       'Checked out',
       'Cancelled',
+      'No show',
     ]);
+  });
+});
+
+/**
+ * Records made before the lifecycle was reseeded still carry the host side's old names. They
+ * are the same stays in the same states, so every place that reads a slug has to count them.
+ */
+describe('legacy disposition slugs', () => {
+  it('folds them into the lane they now belong to', () => {
+    expect(laneKeyFor('pending-allotment')).toBe('pending');
+    expect(laneKeyFor('room-assigned')).toBe('confirmed');
+    expect(laneKeyFor('checked-in')).toBe('checked-in');
+    expect(laneKeyFor('mystery')).toBeUndefined();
+  });
+
+  it('counts an old and a new slug on the same day as one lane', () => {
+    const month = buildBookingMonth(
+      [day('2026-08-26', { byDisposition: { 'pending-allotment': 2, pending: 1, 'room-assigned': 3 } })],
+      AUG,
+      TODAY,
+    );
+    const c = cell(month, '2026-08-26').counts;
+
+    expect(c.pending).toBe(3);
+    expect(c.confirmed).toBe(3);
+    expect(month.totals.pending).toBe(3);
+  });
+
+  it('gives an old record its lane badge', () => {
+    expect(laneFor('pending-allotment')?.key).toBe('pending');
+  });
+
+  it('asks the server for the old slug too when filtering on a lane', () => {
+    expect(slugsFor('pending')).toEqual(['pending', 'pending-allotment']);
+    expect(slugsFor('confirmed')).toEqual(['confirmed', 'room-assigned']);
+    expect(slugsFor('no-show')).toEqual(['no-show']);
   });
 });

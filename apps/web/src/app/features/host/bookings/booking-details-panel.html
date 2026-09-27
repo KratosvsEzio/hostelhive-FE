@@ -59,22 +59,19 @@
             <dd class="mt-1 text-sm font-semibold text-ink-900">{{ askedFor() }}</dd>
             <dd class="truncate text-xs text-ink-500">{{ askedForDetail() }}</dd>
           </div>
+          <!-- The total, not one room type's nightly rate: a stay can mix rooms and beds, and
+               the first line's rate is not the booking's. The lines below carry each price. -->
           <div class="bg-white px-4 py-3">
             <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Quoted</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">
-              @if (b.roomType.price) {
-                PKR {{ b.roomType.price | number: '1.0-0' }}
-                <span class="text-xs font-normal text-ink-500">/ night</span>
-              } @else {
-                —
-              }
+              {{ b.currency | currencySym }} {{ b.total | number: '1.0-0' }}
             </dd>
-            <dd class="text-xs text-ink-500">PKR {{ b.total | number: '1.0-0' }} total</dd>
+            <dd class="text-xs text-ink-500">for {{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</dd>
           </div>
           <div class="bg-white px-4 py-3">
             <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Deposit</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">
-              PKR {{ b.deposit | number: '1.0-0' }}
+              {{ b.currency | currencySym }} {{ b.deposit | number: '1.0-0' }}
             </dd>
             <!-- Held vs still owed changes what declining costs, so it is not decoration. -->
             <dd class="text-xs" [class]="depositPaid() ? 'text-ok' : 'text-ink-500'">
@@ -82,6 +79,75 @@
             </dd>
           </div>
         </dl>
+
+        @if (b.lines.length) {
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Booked</p>
+            <ul class="mt-1.5 space-y-1 text-sm">
+              @for (line of b.lines; track $index) {
+                <li class="flex items-baseline justify-between gap-3">
+                  <span class="min-w-0 text-ink-700">
+                    {{ line.units }} {{ line.shared ? 'bed' : 'room' }}{{ line.units === 1 ? '' : 's' }} · {{ line.name }}
+                    <span class="text-ink-400">· {{ line.guests }} guest{{ line.guests === 1 ? '' : 's' }}</span>
+                  </span>
+                  <span class="shrink-0 whitespace-nowrap tabular-nums text-ink-900">
+                    {{ b.currency | currencySym }} {{ line.subtotal | number: '1.0-0' }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (showOccupancies()) {
+          <!-- Who is in which room. Checking out releases all of them; a room can be released
+               early here, when part of a party leaves first. -->
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">In rooms</p>
+            @let occ = occupancies();
+            @if (occ.loading) {
+              <p class="mt-1.5 text-sm text-ink-400">Loading rooms…</p>
+            } @else if (occ.error) {
+              <p class="mt-1.5 text-sm text-danger">Could not load the rooms for this booking.</p>
+            } @else if (!occ.rows.length) {
+              <p class="mt-1.5 text-sm text-ink-400">No rooms recorded yet.</p>
+            } @else {
+              <ul class="mt-1.5 space-y-1.5 text-sm">
+                @for (o of occ.rows; track o.id) {
+                  <li class="flex items-center justify-between gap-3">
+                    <span [class]="o.active ? 'text-ink-800' : 'text-ink-400 line-through'">
+                      Room {{ o.roomNumber }} · {{ o.guests }} guest{{ o.guests === 1 ? '' : 's' }}
+                    </span>
+                    @if (o.active) {
+                      <button
+                        hh-button
+                        variant="outlined"
+                        size="xs"
+                        type="button"
+                        [disabled]="releasing() !== null || busy()"
+                        (click)="release(o)"
+                      >
+                        {{ releasing() === o.id ? 'Releasing…' : 'Release' }}
+                      </button>
+                    } @else {
+                      <span class="text-xs text-ink-400">Released</span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+            @if (releaseError()) {
+              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ releaseError() }}</p>
+            }
+          </div>
+        }
+
+        @if (b.cancellationReason && (lane() === 'cancelled' || lane() === 'no-show')) {
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Reason</p>
+            <p class="mt-1 text-sm text-ink-700">{{ b.cancellationReason }}</p>
+          </div>
+        }
 
         @if (b.notes) {
           <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
@@ -117,12 +183,12 @@
           <div class="bg-white px-4 py-3">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Payment</p>
             <p class="mt-1 text-sm font-semibold text-ink-900">
-              PKR {{ b.paid | number: '1.0-0' }} paid
+              {{ b.currency | currencySym }} {{ b.paid | number: '1.0-0' }} paid
             </p>
             <p class="text-xs" [class]="b.balanceDue ? 'text-warn' : 'text-ink-500'">
               {{
                 b.balanceDue
-                  ? 'PKR ' + (b.balanceDue | number: '1.0-0') + ' still due'
+                  ? (b.currency | currencySym) + ' ' + (b.balanceDue | number: '1.0-0') + ' still due'
                   : 'Nothing outstanding'
               }}
             </p>
@@ -136,28 +202,25 @@
             {{ actionError() }}
           </p>
         }
-        <div class="flex items-center justify-between gap-3">
-          <p class="min-w-0 text-xs text-ink-500">
-            @if (actionable()) {
-              {{
-                depositPaid()
-                  ? 'Declining releases the room and refunds the deposit'
-                  : 'Declining releases the room; no deposit has been taken'
-              }}
-            } @else {
-              This booking already has a room.
-            }
-          </p>
-          <div class="flex shrink-0 items-center gap-2">
-            @if (actionable()) {
-              <button hh-button variant="outlined" size="sm" type="button" (click)="onDecline()">
-                Decline
+        <!-- The next moves this stage allows, the one that finishes it filled. Everything is
+             held while one is in flight, so a double press cannot send two. -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="min-w-0 flex-1 basis-56 text-xs text-ink-500">{{ hint() }}</p>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            @for (action of actions(); track action) {
+              <button
+                hh-button
+                size="sm"
+                type="button"
+                [variant]="action === primary() ? 'filled' : 'outlined'"
+                [color]="action === primary() ? 'primary' : action === 'cancel' ? 'danger' : 'default'"
+                [disabled]="busy()"
+                (click)="run(action)"
+              >
+                {{ label(action) }}
               </button>
-              <button hh-button color="primary" size="sm" type="button" (click)="onAssign()">{{ 'hostBookings.assignRoom' | transloco }}</button>
-            } @else {
-              <button hh-button variant="outlined" size="sm" type="button" (click)="close()">
-                Close
-              </button>
+            } @empty {
+              <button hh-button variant="outlined" size="sm" type="button" (click)="close()">Close</button>
             }
           </div>
         </div>

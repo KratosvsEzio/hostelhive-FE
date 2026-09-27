@@ -177,10 +177,38 @@ describe('AccountBookingEdit', () => {
     );
   });
 
-  it('offers no controls once the booking has left pending', () => {
-    const { el } = render(booking('confirmed'));
+  describe('a confirmed booking', () => {
+    // Check-in is 14:00 Lahore on 30 Sep 2026. Only Date is faked; Angular's own timers run.
+    afterEach(() => vi.useRealTimers());
+    const at = (iso: string) => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(iso));
+    };
+
+    it('can be changed more than 3 days out, and the review warns it goes back for confirmation', () => {
+      at('2026-09-20T09:00:00Z');
+      const { el, review } = render(booking('confirmed'));
+      expect(el.querySelector('hh-room-picker')).not.toBeNull();
+      expect(review()?.reconfirm()).toBe(true);
+    });
+
+    it('cannot be changed inside 3 days, and the page says that is why', () => {
+      at('2026-09-28T09:00:00Z');
+      const { el } = render(booking('confirmed'));
+      expect(el.querySelector('hh-room-picker')).toBeNull();
+      expect(el.textContent).toContain('userBookings.withinCutoff');
+    });
+  });
+
+  it('offers no controls once the booking is checked in', () => {
+    const { el } = render(booking('checked-in'));
     expect(el.querySelector('hh-room-picker')).toBeNull();
     expect(el.textContent).toContain('userBookings.noLongerEditable');
+  });
+
+  it('does not warn about reconfirming a pending booking', () => {
+    const { review } = render(booking());
+    expect(review()?.reconfirm()).toBe(false);
   });
 
   it('says which rooms the hostel no longer offers, rather than dropping them silently', () => {

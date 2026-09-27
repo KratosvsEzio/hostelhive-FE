@@ -85,6 +85,7 @@
 .ti-device-mobile::before{content:"\ea8a"}
 .ti-device-tv::before{content:"\ea8d"}
 .ti-door::before{content:"\ef4e"}
+.ti-door-enter::before{content:"\ef4c"}
 .ti-door-exit::before{content:"\ef4d"}
 .ti-dots::before{content:"\ea95"}
 .ti-dots-circle-horizontal::before{content:"\ea91"}
@@ -229,6 +230,7 @@
 .ti-user-off::before{content:"\ecf9"}
 .ti-user-plus::before{content:"\eb4b"}
 .ti-user-shield::before{content:"\f7d0"}
+.ti-user-x::before{content:"\eb4c"}
 .ti-users::before{content:"\ebf2"}
 .ti-users-group::before{content:"\fa21"}
 .ti-wash-machine::before{content:"\f25e"}

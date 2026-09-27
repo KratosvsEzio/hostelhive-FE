@@ -7,6 +7,7 @@ import {
   MyBookingsApi,
   canCancel,
   canEdit,
+  withinChangeCutoff,
   mapsUrl,
   stageFor,
   timingOf,
@@ -83,10 +84,15 @@ describe('stageFor', () => {
   });
 
   it('maps the rest of the lifecycle', () => {
-    expect(stageFor('room-assigned')).toBe('assigned');
+    expect(stageFor('confirmed')).toBe('confirmed');
     expect(stageFor('checked-in')).toBe('checked-in');
     expect(stageFor('checked-out')).toBe('checked-out');
     expect(stageFor('cancelled')).toBe('cancelled');
+    expect(stageFor('no-show')).toBe('no-show');
+  });
+
+  it("reads the host side's older names too", () => {
+    expect(stageFor('room-assigned')).toBe('confirmed');
   });
 
   it('answers null for a disposition it has never seen, so the page can show the server name', () => {
@@ -117,10 +123,10 @@ describe('toGuestBooking', () => {
     const b = toGuestBooking(
       raw({
         status: { name: 'Paid', slug: 'paid' },
-        disposition: { name: 'Room Assigned', slug: 'room-assigned' },
+        disposition: { name: 'Confirmed', slug: 'confirmed' },
       }),
     );
-    expect(b.stage).toBe('assigned');
+    expect(b.stage).toBe('confirmed');
   });
 
   it('reads rooms off a private line and beds off a shared one', () => {
@@ -384,18 +390,40 @@ describe('what the guest may change', () => {
     expect(toGuestBooking(raw({ status: null })).statusSlug).toBe('');
   });
 
-  it('edits only while pending', () => {
-    expect(canEdit(withStatus('pending'))).toBe(true);
-    for (const slug of ['confirmed', 'checked-in', 'checked-out', 'cancelled', '']) {
-      expect(canEdit(withStatus(slug))).toBe(false);
+  // raw() checks in at 14:00 Lahore on 30 Sep 2026 — 09:00Z.
+  const WEEK_BEFORE = Date.parse('2026-09-23T09:00:00Z');
+  const JUST_OVER_3_DAYS = Date.parse('2026-09-27T08:59:00Z');
+  const EXACTLY_3_DAYS = Date.parse('2026-09-27T09:00:00Z');
+  const DAY_BEFORE = Date.parse('2026-09-29T09:00:00Z');
+
+  it('changes and cancels a pending booking at any time — the hostel has not committed', () => {
+    for (const now of [WEEK_BEFORE, DAY_BEFORE]) {
+      expect(canEdit(withStatus('pending'), now)).toBe(true);
+      expect(canCancel(withStatus('pending'), now)).toBe(true);
     }
   });
 
-  it('cancels while pending or confirmed, and not after', () => {
-    expect(canCancel(withStatus('pending'))).toBe(true);
-    expect(canCancel(withStatus('confirmed'))).toBe(true);
-    for (const slug of ['checked-in', 'checked-out', 'cancelled', '']) {
-      expect(canCancel(withStatus(slug))).toBe(false);
+  it('changes and cancels a confirmed booking only while check-in is more than 3 days away', () => {
+    const b = withStatus('confirmed');
+    expect(canEdit(b, WEEK_BEFORE)).toBe(true);
+    expect(canCancel(b, WEEK_BEFORE)).toBe(true);
+    expect(canEdit(b, JUST_OVER_3_DAYS)).toBe(true);
+    // The server's `checkin_date <= 3.days.from_now` refuses at exactly three days.
+    expect(canEdit(b, EXACTLY_3_DAYS)).toBe(false);
+    expect(canCancel(b, EXACTLY_3_DAYS)).toBe(false);
+    expect(canEdit(b, DAY_BEFORE)).toBe(false);
+  });
+
+  it('says a confirmed booking is inside the cutoff, and never a pending one', () => {
+    expect(withinChangeCutoff(withStatus('confirmed'), DAY_BEFORE)).toBe(true);
+    expect(withinChangeCutoff(withStatus('confirmed'), WEEK_BEFORE)).toBe(false);
+    expect(withinChangeCutoff(withStatus('pending'), DAY_BEFORE)).toBe(false);
+  });
+
+  it('changes nothing once it is checked in, over, cancelled or a no-show', () => {
+    for (const slug of ['checked-in', 'checked-out', 'cancelled', 'no-show', '']) {
+      expect(canEdit(withStatus(slug), WEEK_BEFORE)).toBe(false);
+      expect(canCancel(withStatus(slug), WEEK_BEFORE)).toBe(false);
     }
   });
 

@@ -23,34 +23,37 @@ import {
 } from '@hostelhive/ui';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
-import { BookingApi } from '@features/public/listing/booking/booking-api';
-import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
-import { HostRoom } from '@hostelhive/data-access';
+import { HostelsApi } from '@services';
+import { RoomType } from '@hostelhive/data-access';
+import { countryTimeZone } from '@core/geo/country-time-zones';
+import { localDateAtWallTime } from '@util/zoned-time';
+import { CHECK_IN_HOUR, CHECK_OUT_HOUR } from '@features/public/listing/booking/booking-request';
+import { HostBookingsApi } from '../host-bookings-api';
 
 /**
- * A room as this form needs it: what it is called, what it costs, how much is free.
+ * A room type as this form needs it: what it is called, how it is sold, what it costs.
  *
- * Its own shape rather than the booking contract's `ApiRoomOffer`, because that type
- * promises something this data cannot deliver — `available` there means units free
- * across a date range, and the endpoint behind this one reports only what is occupied
- * right now. Borrowing the name would have made the difference invisible.
+ * Room types, not rooms. The lifecycle (Trello #80) books types and places guests in rooms
+ * at check-in — a walk-in is written down the same way a guest's own booking is, and the
+ * room is chosen when they are checked in.
  */
 interface PickableRoom {
+  /** The room type id the booking's line carries. */
   id: string;
   title: string;
   kind: 'private' | 'shared';
-  /** Sleeping places in the room. */
+  /** Sleeping places in one room of this type. */
   capacity: number;
-  /** Per unit, per night. */
+  /** Per unit, per night — the rate the server will record: discounted when it applies. */
   price: number;
-  /** Beds nobody is currently in. Not date-aware — see {@link BookingFormDrawer.state}. */
-  available: number;
 }
 
 interface RoomsState {
   loading: boolean;
   error: string;
   rooms: PickableRoom[];
+  /** The hostel's IANA zone, from its country — what 'check-in at 14:00' is measured in. */
+  zone: string;
 }
 
 /** Local midnight as `yyyy-mm-dd`, which is what the API takes. */
@@ -62,12 +65,9 @@ function isoDay(d: Date): string {
  * The booking a host writes down for someone standing at the desk.
  *
  * A walk-in has already happened by the time it is recorded, so this form takes no payment
- * and holds nothing — it lands as `unconfirmed`, which is the honest description of a stay
- * agreed in person and not yet paid for.
- *
- * Availability is still shown and still enforced. The temptation with a host-facing form is
- * to trust the person using it, but a host is exactly as capable of double-booking a bed as
- * a guest is, and the guest is the one who finds out about it at check-in.
+ * and holds nothing. It lands as pending, like any other booking, and moves through the same
+ * lifecycle: confirmed, then checked in — which is where rooms are chosen and bed capacity is
+ * enforced, since the server keeps no availability for a booking before that.
  */
 @Component({
   selector: 'hh-booking-form-drawer',
@@ -81,8 +81,8 @@ export class BookingFormDrawer {
   readonly closed = output<void>();
   readonly saved = output<void>();
 
-  private readonly api = inject(BookingApi);
-  private readonly hostOps = inject(HostOpsApi);
+  private readonly bookings = inject(HostBookingsApi);
+  private readonly hostels = inject(HostelsApi);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleStore);
 
@@ -115,66 +115,50 @@ export class BookingFormDrawer {
   protected readonly saving = signal(false);
   protected readonly saveError = signal('');
 
-  private readonly range = computed(() => ({
-    hostelId: this.hostelId(),
-    from: this.checkIn(),
-    to: this.checkOut(),
-  }));
-
   /**
-   * The host's own rooms, from the endpoint the rooms page already lists from.
+   * The hostel's room types and its country, from the one detail call that carries both.
    *
-   * **`available` here is beds nobody is in right now, not beds free for these dates.**
-   * The endpoint reports occupancy as a snapshot, and the one that would answer the real
-   * question — units free across a check-in/check-out range — does not exist yet; it is
-   * described by `ApiRoomOffer` in the booking contract. Until it lands, a bed let go
-   * halfway through the stay still counts as free here, so this form narrows the chance
-   * of a double booking rather than removing it.
-   *
-   * Re-asked whenever the dates move regardless, so it is already in the right shape when
-   * the answer does start depending on them.
+   * Loaded once per hostel rather than per date change: nothing here depends on the dates.
+   * The server keeps no availability for a booking before check-in either, so none is shown;
+   * capacity is checked when the guests are placed.
    */
   protected readonly state = toSignal(
-    toObservable(this.range).pipe(
-      switchMap((r) => {
-        if (!r.hostelId || !r.from || !r.to || r.to <= r.from) {
-          return of<RoomsState>({ loading: false, error: '', rooms: [] });
-        }
-        // Every room in one page; the picker searches rather than paginates.
-        return this.hostOps.rooms(r.hostelId, 1, ALL_ROOMS_LIMIT).pipe(
+    toObservable(this.hostelId).pipe(
+      switchMap((hostelId) => {
+        if (!hostelId) return of<RoomsState>({ loading: false, error: '', rooms: [], zone: countryTimeZone(null) });
+        return this.hostels.getById(hostelId).pipe(
           map(
-            (res): RoomsState => ({
+            (h): RoomsState => ({
               loading: false,
               error: '',
-              rooms: res.rooms.map((room) => this.toPickable(room)),
+              rooms: (h.room_types ?? []).map((rt) => this.toPickable(rt)),
+              zone: countryTimeZone(h.country),
             }),
           ),
-          startWith<RoomsState>({ loading: true, error: '', rooms: [] }),
+          startWith<RoomsState>({ loading: true, error: '', rooms: [], zone: countryTimeZone(null) }),
           catchError((e: Error) =>
-            of<RoomsState>({ loading: false, error: e.message, rooms: [] }),
+            of<RoomsState>({ loading: false, error: e.message, rooms: [], zone: countryTimeZone(null) }),
           ),
         );
       }),
     ),
-    { initialValue: { loading: true, error: '', rooms: [] } as RoomsState },
+    { initialValue: { loading: true, error: '', rooms: [], zone: countryTimeZone(null) } as RoomsState },
   );
 
   /**
-   * A host room in the terms this form deals in.
-   *
-   * `kind` is read out of the free-text `type` because that is all the payload carries —
-   * anything not saying "private" is treated as shared, which is the safe way round: a
-   * shared room is sold by the bed, so a private room mislabelled shared undersells by
-   * one, while the reverse would sell a whole room to someone booking a single bed.
+   * A room type in the terms this form deals in. Priced at the rate the server records —
+   * the discounted one when the type is discountable — so the total here is the total there.
    */
-  private toPickable(room: HostRoom): PickableRoom {
+  private toPickable(rt: RoomType): PickableRoom {
+    const wire = rt as RoomType & { discounted_price?: number | string | null; is_discountable?: boolean | null };
+    const list = Number(rt.price) || 0;
+    const discounted = Number(wire.discounted_price) || 0;
     return {
-      id: room.id,
-      title: this.i18n.translate<string>('common.roomNumber', { number: room.number }),
-      kind: /private/i.test(room.type) ? 'private' : 'shared',
-      capacity: room.capacity,
-      price: room.rentPerBed,
-      available: Math.max(0, room.capacity - room.occupied),
+      id: String(rt.id),
+      title: rt.name,
+      kind: rt.occupancy_type === 'private_room' ? 'private' : 'shared',
+      capacity: Number(rt.capacity) || 1,
+      price: wire.is_discountable && discounted > 0 ? discounted : list,
     };
   }
 
@@ -222,10 +206,8 @@ export class BookingFormDrawer {
         // Whole rupees, matching the rows below and the total. A price carrying two
         // decimals in one place and none in another reads as two different prices.
         subtitle: `Rs ${Math.round(r.price).toLocaleString(lang)} · ${
-          r.kind === 'private' ? 'whole room' : 'per bed'
+          r.kind === 'private' ? `whole room · sleeps ${r.capacity}` : 'per bed'
         }`,
-        suffixBadge: r.available > 0 ? `${r.available} free` : 'Full',
-        disabled: r.available === 0,
       }));
   });
 
@@ -246,8 +228,8 @@ export class BookingFormDrawer {
       const out: Record<string, number> = {};
       for (const id of next) {
         const room = rooms.find((r) => r.id === id);
-        if (!room || room.available <= 0) continue;
-        out[id] = Math.min(all[id] || 1, room.available);
+        if (!room) continue;
+        out[id] = all[id] || 1;
       }
       return out;
     });
@@ -257,10 +239,10 @@ export class BookingFormDrawer {
     return this.picked()[roomId] ?? 0;
   }
 
-  /** Clamped to what is actually free, so the stepper cannot express an oversell. */
+  /** Whole units, at least none. Beds are checked against rooms when the guests are placed. */
   protected setQty(room: PickableRoom, raw: string | number): void {
     const n = Math.floor(Number(raw));
-    const safe = Number.isFinite(n) ? Math.min(Math.max(0, n), room.available) : 0;
+    const safe = Number.isFinite(n) ? Math.max(0, n) : 0;
     this.picked.update((all) => {
       const next = { ...all };
       if (safe > 0) next[room.id] = safe;
@@ -281,26 +263,8 @@ export class BookingFormDrawer {
     this.lines().reduce((n, l) => n + l.room.price * l.quantity * this.nights(), 0),
   );
 
-  private readonly discountRaw = signal(0);
-
-  /**
-   * What the host knocks off, capped at the stay itself.
-   *
-   * Capped rather than rejected: a host typing an extra zero wants the booking free, not
-   * an error, and a negative total is not a thing a desk can collect. The cap moves with
-   * the rooms, so removing one cannot leave a discount stranded above the new total.
-   */
-  protected readonly discount = computed(() =>
-    Math.min(Math.max(0, this.discountRaw()), this.subtotal()),
-  );
-
-  protected setDiscount(raw: string | number): void {
-    const n = Math.floor(Number(raw));
-    this.discountRaw.set(Number.isFinite(n) && n > 0 ? n : 0);
-  }
-
-  /** What the host will charge at the desk. Not a deposit — nothing is taken here. */
-  protected readonly total = computed(() => this.subtotal() - this.discount());
+  /** What the host will collect at the desk: the rent. Nothing is taken here. */
+  protected readonly total = computed(() => this.subtotal());
 
   /**
    * Beds and rooms a guest can actually sleep in, against the headcount entered.
@@ -317,30 +281,61 @@ export class BookingFormDrawer {
 
   protected readonly datesValid = computed(() => this.nights() > 0);
 
+  /** The server refuses a booking without a phone number, so the form asks for one. */
+  protected readonly phoneMissing = computed(() => !this.guestPhone().trim());
+
   protected readonly canSave = computed(
     () =>
       !!this.guestName().trim() &&
+      !this.phoneMissing() &&
       this.datesValid() &&
       this.lines().length > 0 &&
       !this.saving(),
   );
 
+  /**
+   * Who sleeps on each line, which the endpoint wants per line.
+   *
+   * A shared line is one bed per person, so its guests are its beds. The rest of the party
+   * goes to the private lines in order, each taking up to what its rooms sleep and at least
+   * one — a room booked for nobody is refused.
+   */
+  protected readonly lineGuests = computed(() => {
+    const lines = this.lines();
+    let left = Math.max(1, this.guests()) - lines.filter((l) => l.room.kind === 'shared').reduce((n, l) => n + l.quantity, 0);
+    return lines.map((l) => {
+      if (l.room.kind === 'shared') return l.quantity;
+      const g = Math.max(1, Math.min(l.room.capacity * l.quantity, left));
+      left -= g;
+      return g;
+    });
+  });
+
   protected save(): void {
     if (!this.canSave()) return;
+    const from = this.checkIn() as string;
+    const to = this.checkOut() as string;
+    const zone = this.state().zone;
+    const at = (day: string, hour: number) => {
+      const [y, m, d] = day.split('-').map(Number);
+      return localDateAtWallTime(new Date(y, m - 1, d), hour, 0, zone).toISOString();
+    };
+    const guests = this.lineGuests();
     this.saving.set(true);
     this.saveError.set('');
-    this.api
-      .hostCreateBooking(this.hostelId(), {
-        check_in: this.checkIn() as string,
-        check_out: this.checkOut() as string,
-        guests: Math.max(1, this.guests()),
-        discount: this.discount() || undefined,
-        lines: this.lines().map((l) => ({ room_id: l.room.id, quantity: l.quantity })),
-        guest: {
-          name: this.guestName().trim(),
-          phone: this.guestPhone().trim() || null,
-          email: this.guestEmail().trim() || null,
-        },
+    this.bookings
+      .create(this.hostelId(), {
+        checkInAt: at(from, CHECK_IN_HOUR),
+        checkOutAt: at(to, CHECK_OUT_HOUR),
+        guestName: this.guestName(),
+        guestPhone: this.guestPhone(),
+        guestEmail: this.guestEmail(),
+        lines: this.lines().map((l, i) => ({
+          roomTypeId: l.room.id,
+          shared: l.room.kind === 'shared',
+          quantity: l.quantity,
+          guests: guests[i],
+        })),
       })
       .subscribe({
         next: () => {

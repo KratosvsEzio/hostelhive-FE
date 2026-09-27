@@ -122,10 +122,10 @@ describe('AccountBookingDetail', () => {
   });
 
   it('marks the current step of the track', () => {
-    const { el } = render(() => of(booking({ stage: 'assigned' })));
+    const { el } = render(() => of(booking({ stage: 'confirmed' })));
 
     const current = el.querySelector('[aria-current="step"]');
-    expect(current?.textContent).toContain('userBookings.stageAssigned');
+    expect(current?.textContent).toContain('userBookings.stageConfirmed');
   });
 
   it('swaps the track for a note when the booking was cancelled', () => {
@@ -295,10 +295,28 @@ describe('AccountBookingDetail', () => {
       expect(dir.state).toEqual({ booking: pending() });
     });
 
-    it('offers only cancelling once confirmed, and says who to call for the rest', () => {
-      const { el } = render(() => of(booking({ statusSlug: 'confirmed', stage: 'assigned' })));
-      expect(headerButtons(el)).toEqual(['common.cancelBooking']);
-      expect(el.textContent).toContain('userBookings.contactToChange');
+    const DAY = 24 * 60 * 60 * 1000;
+    const confirmedIn = (days: number) =>
+      booking({ statusSlug: 'confirmed', stage: 'confirmed', checkInAt: Date.now() + days * DAY });
+
+    it('offers both on a confirmed booking more than 3 days out, warning it goes back for confirmation', () => {
+      const { el } = render(() => of(confirmedIn(10)));
+      expect(headerButtons(el)).toEqual(['userBookings.changeBooking', 'common.cancelBooking']);
+      expect(el.textContent).toContain('userBookings.changeNeedsReconfirm');
+    });
+
+    it('offers nothing on a confirmed booking inside 3 days, and says that is why', () => {
+      const { el } = render(() => of(confirmedIn(2)));
+      expect(headerButtons(el)).toEqual([]);
+      expect(el.textContent).toContain('userBookings.withinCutoff');
+      expect(el.textContent).not.toContain('userBookings.contactToChange');
+    });
+
+    it('shows a no-show as off the track, with nothing to do', () => {
+      const { el } = render(() => of(booking({ statusSlug: 'no-show', stage: 'no-show' })));
+      expect(headerButtons(el)).toEqual([]);
+      expect(el.querySelector('ol')).toBeNull();
+      expect(el.textContent).toContain('userBookings.noShowNote');
     });
 
     it('offers nothing once checked in, beyond calling the hostel', () => {

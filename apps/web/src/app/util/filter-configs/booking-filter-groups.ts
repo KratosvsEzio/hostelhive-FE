@@ -1,5 +1,5 @@
 import { FilterGroup, FilterValues } from '@hostelhive/ui';
-import { LANES } from '@features/host/bookings/booking-month';
+import { LANES, slugsFor } from '@features/host/bookings/booking-month';
 import { dayRangeEnd, dayRangeStart } from '@util/date-range-filter';
 
 /**
@@ -69,7 +69,8 @@ export function bookingFilterParams(values: FilterValues): Record<string, string
   const dispositions = Array.isArray(values['disposition'])
     ? (values['disposition'] as string[])
     : [];
-  if (dispositions.length) params['f[disposition.slug][]'] = dispositions;
+  // Each lane also asks for its pre-reseed slug, so older records are not silently missed.
+  if (dispositions.length) params['f[disposition.slug][]'] = dispositions.flatMap(slugsFor);
 
   const range = (values['checkIn'] ?? {}) as { from?: string; to?: string };
   if (range.from) params['f[checkin_date][gte]'] = dayRangeStart(range.from);

@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
 import {
   ApiHostBooking,
+  HostBooking,
   HostBookingPage,
   HostBookingsApi,
   nightsBetween,
@@ -320,5 +321,168 @@ describe('toHostBooking room and renter', () => {
 
   it('leaves the renter null when nobody has been assigned', () => {
     expect(toHostBooking(raw()).renter).toBeNull();
+  });
+});
+
+/**
+ * `GET …/bookings/:id` and every lifecycle reply are the serializer, not the search document:
+ * amounts arrive as decimal strings, `source` as a number, and each line's name nested.
+ */
+describe('toHostBooking on a single booking', () => {
+  const single = raw({
+    total_price: '310000.0',
+    deposit: '31000.0',
+    paid_amount: '0.0',
+    balance_due: undefined,
+    nights: undefined,
+    source: 0,
+    currency: 'pkr',
+    line_items: [
+      { id: 'a', guests: 3, quantity: 1, occupancy_type: 'private_room', subtotal: '250000.0', room_type: { id: 'KGJwMC', name: 'King size room' } },
+      { id: 'b', guests: 2, quantity: 2, occupancy_type: 'shared', subtotal: '60000.0', room_type: { id: 'MqVuEl', name: 'Dormitory' } },
+    ],
+    cancellation_reason: ' Water leak ',
+  });
+
+  it('reads amounts sent as strings, and derives what is still due', () => {
+    const b = toHostBooking(single);
+    expect([b.total, b.deposit, b.paid, b.balanceDue]).toEqual([310000, 31000, 0, 310000]);
+  });
+
+  it('does not choke on a numeric source', () => {
+    expect(toHostBooking(single).source).toBe('');
+  });
+
+  it('reads the lines, names nested or flat', () => {
+    expect(toHostBooking(single).lines).toEqual([
+      { roomTypeId: 'KGJwMC', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 250000 },
+      { roomTypeId: 'MqVuEl', name: 'Dormitory', shared: true, units: 2, guests: 2, subtotal: 60000 },
+    ]);
+    const flat = toHostBooking(raw({ line_items: [{ room_type_id: 'x', room_type_name: 'Dorm', guests: 1, occupancy_type: 'shared' }] }));
+    expect(flat.lines[0]).toMatchObject({ roomTypeId: 'x', name: 'Dorm', units: 1 });
+  });
+
+  it('keeps the currency and the reason', () => {
+    const b = toHostBooking(single);
+    expect(b.currency).toBe('PKR');
+    expect(b.cancellationReason).toBe('Water leak');
+  });
+});
+
+describe('HostBookingsApi — the lifecycle', () => {
+  const reply = { booking: raw({ disposition: { name: 'Confirmed', slug: 'confirmed' } }), success: true };
+  let post: ReturnType<typeof vi.fn>;
+  let put: ReturnType<typeof vi.fn>;
+  let get: ReturnType<typeof vi.fn>;
+
+  function svc(): HostBookingsApi {
+    post = vi.fn().mockReturnValue(of(reply));
+    put = vi.fn().mockReturnValue(of({ message: 'Occupancy released' }));
+    get = vi.fn().mockReturnValue(
+      of({
+        occupancies: [
+          { id: 'o1', guests: 2, status: 'active', room: { id: 'r1', room_number: '101' } },
+          { id: 'o2', guests: 1, status: 'inactive', room_id: 'r2' },
+        ],
+      }),
+    );
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: { post, put, get } }] });
+    return TestBed.inject(HostBookingsApi);
+  }
+  const base = '/api/host/hostels/MjvuEl/bookings/vKkMIE';
+
+  it('confirms, and returns the booking the server now holds', () => {
+    let out: HostBooking | undefined;
+    svc().confirm('MjvuEl', 'vKkMIE').subscribe((b) => (out = b));
+    expect(post).toHaveBeenCalledWith(`${base}/mark_as_confirmed`, {});
+    expect(out?.disposition.slug).toBe('confirmed');
+  });
+
+  it('checks in with one allocation per room', () => {
+    svc()
+      .checkIn('MjvuEl', 'vKkMIE', [
+        { roomId: 'aVXGyz', guests: 2 },
+        { roomId: 'AmBKhx', guests: 1 },
+      ])
+      .subscribe();
+    expect(post).toHaveBeenCalledWith(`${base}/mark_as_checked_in`, {
+      allocations: [
+        { room_id: 'aVXGyz', guests: 2 },
+        { room_id: 'AmBKhx', guests: 1 },
+      ],
+    });
+  });
+
+  it('checks out', () => {
+    svc().checkOut('MjvuEl', 'vKkMIE').subscribe();
+    expect(post).toHaveBeenCalledWith(`${base}/mark_as_checked_out`, {});
+  });
+
+  it('cancels and marks a no show with the reason, trimmed', () => {
+    const api = svc();
+    api.cancel('MjvuEl', 'vKkMIE', '  Water leak in dorm ').subscribe();
+    api.markNoShow('MjvuEl', 'vKkMIE', 'Guest did not arrive').subscribe();
+    expect(post).toHaveBeenCalledWith(`${base}/mark_as_cancelled`, { reason: 'Water leak in dorm' });
+    expect(post).toHaveBeenCalledWith(`${base}/mark_as_no_show`, { reason: 'Guest did not arrive' });
+  });
+
+  it('generates the invoice, which answers with a bill rather than the booking', () => {
+    post = vi.fn();
+    const api = svc();
+    post.mockReturnValue(of({ renter_bill: { id: 'x' }, success: true }));
+    let done = false;
+    api.generateInvoice('MjvuEl', 'vKkMIE').subscribe(() => (done = true));
+    expect(post).toHaveBeenCalledWith(`${base}/generate_invoice`, {});
+    expect(done).toBe(true);
+  });
+
+  it('errors on a reply with no booking in it', () => {
+    const api = svc();
+    post.mockReturnValue(of({ success: true }));
+    let failed = false;
+    api.confirm('MjvuEl', 'vKkMIE').subscribe({ error: () => (failed = true) });
+    expect(failed).toBe(true);
+  });
+
+  it('reads the rooms a checked-in booking holds, and releases one', () => {
+    const api = svc();
+    let rows: unknown;
+    api.occupancies('MjvuEl', 'vKkMIE').subscribe((r) => (rows = r));
+    expect(get).toHaveBeenCalledWith(`${base}/occupancies`, { page: 1, limit: 100 });
+    expect(rows).toEqual([
+      { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true },
+      { id: 'o2', roomId: 'r2', roomNumber: '—', guests: 1, active: false },
+    ]);
+
+    api.releaseOccupancy('MjvuEl', 'vKkMIE', 'o1').subscribe();
+    expect(put).toHaveBeenCalledWith(`${base}/occupancies/o1/mark_as_inactive`, {});
+  });
+
+  it('creates a walk-in in the guest booking shape: room types, per-line guests, phone as digits', () => {
+    svc()
+      .create('MjvuEl', {
+        checkInAt: '2026-10-10T09:00:00.000Z',
+        checkOutAt: '2026-10-12T06:00:00.000Z',
+        guestName: ' Walk In ',
+        guestPhone: '+92 300 5556666',
+        guestEmail: '',
+        lines: [
+          { roomTypeId: 'KGJwMC', shared: false, quantity: 1, guests: 2 },
+          { roomTypeId: 'MqVuEl', shared: true, quantity: 2, guests: 2 },
+        ],
+      })
+      .subscribe();
+    expect(post).toHaveBeenCalledWith('/api/host/hostels/MjvuEl/bookings', {
+      booking: {
+        checkin_date: '2026-10-10T09:00:00.000Z',
+        checkout_date: '2026-10-12T06:00:00.000Z',
+        guest_name: 'Walk In',
+        guest_phone: '923005556666',
+        line_items: [
+          { room_type_id: 'KGJwMC', guests: 2, occupancy_type: 'private_room', quantity: 1 },
+          { room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' },
+        ],
+      },
+    });
   });
 });

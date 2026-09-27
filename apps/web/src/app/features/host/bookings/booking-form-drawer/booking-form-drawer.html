@@ -18,7 +18,9 @@
           (valueChange)="guestName.set($event)"
         />
         <div class="grid gap-3 sm:grid-cols-2">
-          <hh-phone-input label="Phone" [phone]="guestPhone()" (phoneChange)="guestPhone.set($event)" />
+          <!-- Required: the server refuses a booking without one, and it is how the hostel
+               reaches a guest who has not turned up. -->
+          <hh-phone-input label="Phone *" [phone]="guestPhone()" (phoneChange)="guestPhone.set($event)" />
           <hh-input
             label="Email · optional"
             type="email"
@@ -112,23 +114,18 @@
               <div class="min-w-0">
                 <p class="truncate text-sm font-medium text-ink-900">{{ r.title }}</p>
                 <p class="mt-0.5 text-xs text-ink-500 tabular-nums">
-                  {{ r.kind === 'private' ? 'Whole room' : 'Per bed' }} ·
-                  Rs {{ r.price | number: '1.0-0' }} · {{ r.available }} free
+                  {{ r.kind === 'private' ? 'Rooms · sleeps ' + r.capacity : 'Beds' }} ·
+                  Rs {{ r.price | number: '1.0-0' }} a night
                 </p>
               </div>
-              <!-- Capped at what is free, so the field cannot express an oversell.
-
-                   Sized by the wrapper rather than the input: `.hh-input` sets width:100%
-                   at the same specificity as a Tailwind width, and wins on source order —
-                   so `w-20` on the input itself is ignored and the field swallows the row,
-                   squeezing the room's name and price into a column a few characters wide. -->
+              <!-- Sized by the wrapper rather than the input: `.hh-input` sets width:100% at
+                   the same specificity as a Tailwind width, and wins on source order — so
+                   `w-20` on the input itself is ignored and the field swallows the row. -->
               <div class="w-20 shrink-0">
                 <input
                   type="number"
                   class="hh-input text-center tabular-nums"
                   min="0"
-                  [max]="r.available"
-                  [disabled]="r.available === 0"
                   [value]="qty(r.id)"
                   (input)="setQty(r, $any($event.target).value)"
                   [attr.aria-label]="'How many of ' + r.title"
@@ -142,35 +139,15 @@
 
     @if (lines().length) {
       <section class="rounded-xl bg-surface px-3 py-3">
-        <!-- Rent, then what came off it, then what is actually collected. Shown as three
-             lines rather than one figure because a host reads this out to the guest, and
-             "why is it that much" is the next thing they are asked. -->
+        <!-- The rent, then what is collected. No discount line: the booking endpoint has no
+             field for one, and a figure the server would silently ignore is worse than none.
+             The server prices the stay itself from the same rates. -->
         <div class="flex items-baseline justify-between text-sm text-ink-600">
           <span>
             Rooms ·
             {{ (nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: nights() } }}
           </span>
           <span class="tabular-nums">Rs {{ subtotal() | number: '1.0-0' }}</span>
-        </div>
-
-        <div class="mt-2 flex items-center justify-between gap-3">
-          <label class="text-sm text-ink-600" for="hh-booking-discount">{{ 'hostBookings.discount' | transloco }}</label>
-          <div class="flex items-center gap-1.5">
-            <span class="text-sm text-ink-400">Rs</span>
-            <!-- Wrapper-sized for the same reason as the room counts: `.hh-input` forces
-                 width:100% and beats a width utility on the input itself. -->
-            <div class="w-28">
-              <input
-                id="hh-booking-discount"
-                type="number"
-                class="hh-input text-end tabular-nums"
-                min="0"
-                [max]="subtotal()"
-                [value]="discount()"
-                (input)="setDiscount($any($event.target).value)"
-              />
-            </div>
-          </div>
         </div>
 
         <div class="mt-3 flex items-baseline justify-between border-t border-ink-100 pt-3">
@@ -187,6 +164,10 @@
           </p>
         }
       </section>
+    }
+
+    @if (phoneMissing() && guestName().trim() && lines().length) {
+      <p class="rounded-xl bg-warn/10 px-3 py-2.5 text-sm text-warn">Add the guest's phone number — a booking cannot be saved without one.</p>
     }
 
     @if (saveError()) {

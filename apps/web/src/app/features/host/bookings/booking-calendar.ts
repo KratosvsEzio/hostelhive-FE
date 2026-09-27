@@ -22,6 +22,7 @@ import {
   DayCell,
   LANES,
   LaneKey,
+  laneKeyFor,
   barSegments,
   buildBookingMonth,
   isoDate,
@@ -87,7 +88,8 @@ export class BookingCalendar {
   /** Emitted when a lane in the day ledger is clicked, so the table below can filter to it. */
   readonly laneSelect = output<{ date: string; lane: LaneKey }>();
   /** A pending card asking to be placed. The panel that does it lives on the page. */
-  readonly assignRequested = output<HostBooking>();
+  /** A pending request the host wants to confirm straight from the day ledger. */
+  readonly confirmRequested = output<HostBooking>();
   /** A pending card asking to be read before it is placed. */
   readonly detailsRequested = output<HostBooking>();
 
@@ -210,7 +212,7 @@ export class BookingCalendar {
     const rows = day.loading
       ? this.bookings().filter((b) => b.checkIn === date)
       : day.data;
-    return rows.filter((b) => b.disposition.slug === 'pending-allotment');
+    return rows.filter((b) => laneKeyFor(b.disposition.slug) === 'pending');
   });
 
   protected step(by: number): void {

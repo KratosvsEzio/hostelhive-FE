@@ -8,7 +8,7 @@ import {
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import {
   Button,
   ConfirmModal,
@@ -27,7 +27,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { BookingFormDrawer } from './booking-form-drawer/booking-form-drawer';
 import { HOST_BOOKINGS_TABLE_COLS } from '@util/table-configs/host-bookings-table-cols';
 import { BookingCalendar } from './booking-calendar';
-import { LaneKey } from './booking-month';
+import { LaneKey, laneKeyFor } from './booking-month';
 import {
   bookingFilterGroups,
   bookingFilterParams,
@@ -35,10 +35,10 @@ import {
 import { HostBooking, HostBookingPage, HostBookingsApi } from './host-bookings-api';
 import { PAGE_SIZE } from '@util/pagination';
 import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
-import { BookingDetailsPanel } from './booking-details-panel';
-import { BookingApi } from '@features/public/listing/booking/booking-api';
-import { ApiHostCancellationQuote } from '@features/public/listing/booking/booking-api.contract';
+import { ACTIONS_BY_LANE, BookingAction, BookingDetailsPanel } from './booking-details-panel';
+import { NotificationService } from '@core/notification.service';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 
 interface ViewState {
   loading: boolean;
@@ -80,12 +80,12 @@ const LOADING: ViewState = { loading: true, error: false, data: null };
     GlobalFilter,
     Tabs,
     Skeleton,
+    CurrencySymbolPipe,
     TranslocoPipe,
   ],
   templateUrl: './bookings.html',
 })
 export class HostBookings {
-  private readonly api = inject(BookingApi);
   private readonly route = inject(ActivatedRoute);
   private readonly bookingsApi = inject(HostBookingsApi);
 
@@ -197,14 +197,13 @@ export class HostBookings {
     this.page.set(page);
   }
 
-  /* ------------------------------------------------------- assigning a room */
+  /* ------------------------------------------------------- the lifecycle (Trello #80) */
 
-  protected readonly assigning = signal<HostBooking | null>(null);
-  protected readonly assignError = signal('');
-
-  /** The request behind a pending allotment, read before deciding what to do with it. */
+  /** The booking open in the details panel. */
   protected readonly viewing = signal<HostBooking | null>(null);
   protected readonly viewError = signal('');
+  /** One lifecycle request at a time; every control holds while it is out. */
+  protected readonly busy = signal(false);
 
   protected openDetails(booking: HostBooking | null | undefined): void {
     if (!booking) return;
@@ -214,50 +213,166 @@ export class HostBookings {
   }
 
   protected closeDetails(): void {
+    if (this.busy()) return;
     this.viewing.set(null);
     this.viewError.set('');
   }
 
   /**
-   * Declining releases the room and refunds the deposit — a real, irreversible thing.
+   * One door for every move, from the panel, the row menu and the calendar.
    *
-   * Which is exactly why it is not wired to a guessed URL. There is no decline route on the
-   * API, and inventing one on a path that moves money is the last place to be optimistic.
+   * Confirming goes straight out — it is the move a pending request is waiting for, and the
+   * guest is the one it helps. Checking in opens the room allocation. Everything that ends a
+   * stay, bills it, or needs a reason asks first.
    */
-  protected onDecline(): void {
-    this.viewError.set(
-      'Declining needs its endpoint — nothing was sent, and no deposit has been touched.',
-    );
+  protected onAct(e: { action: BookingAction; booking: HostBooking }): void {
+    this.closeMenu();
+    switch (e.action) {
+      case 'confirm':
+        this.send(e.booking, (id) => this.bookingsApi.confirm(this.hostelId(), id), 'Booking confirmed', 'The guest has been emailed their confirmation.');
+        return;
+      case 'checkIn':
+        this.openAssign(e.booking);
+        return;
+      default:
+        this.dialogReason.set('');
+        this.dialogError.set('');
+        this.dialog.set({ action: e.action, booking: e.booking });
+    }
   }
 
-  /** Opened from the calendar's pending card and from the row menu — one panel, three doors. */
+  /**
+   * Sends one move and takes the server's copy of the booking back.
+   *
+   * The details panel, if open on it, redraws from that copy — the next moves follow from
+   * where the booking now is — and the list re-reads, since the move may take the row out of
+   * whatever the filter is narrowing to. A refusal is shown where the host pressed the button.
+   */
+  private send(
+    booking: HostBooking,
+    request: (id: string) => Observable<HostBooking>,
+    title: string,
+    message = '',
+    onError: (text: string) => void = (text) => this.viewError.set(text),
+    onSuccess: () => void = () => undefined,
+  ): void {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.viewError.set('');
+    request(booking.id).subscribe({
+      next: (updated) => {
+        this.busy.set(false);
+        if (this.viewing()?.id === updated.id) this.viewing.set(updated);
+        this.dialog.set(null);
+        onSuccess();
+        this.refresh.update((n) => n + 1);
+        this.notifications.success(title, message);
+      },
+      error: (err: { message?: string } | null) => {
+        this.busy.set(false);
+        onError(err?.message || 'The server did not accept that. Please try again.');
+      },
+    });
+  }
+
+  // ── asking first: cancel, no-show, check-out, invoice ──────────────────────────
+
+  protected readonly dialog = signal<{ action: BookingAction; booking: HostBooking } | null>(null);
+  protected readonly dialogReason = signal('');
+  protected readonly dialogError = signal('');
+  /** The server refuses a cancellation without one; a no-show's is kept on the record too. */
+  protected readonly reasonRequired = computed(() => this.dialog()?.action === 'cancel');
+  protected readonly asksReason = computed(() => {
+    const a = this.dialog()?.action;
+    return a === 'cancel' || a === 'noShow';
+  });
+
+  protected closeDialog(): void {
+    if (!this.busy()) this.dialog.set(null);
+  }
+
+  protected confirmDialog(): void {
+    const d = this.dialog();
+    if (!d) return;
+    const reason = this.dialogReason().trim();
+    if (this.reasonRequired() && !reason) {
+      this.dialogError.set('Give the guest a reason — it is sent to them and kept on the booking.');
+      return;
+    }
+    const hostelId = this.hostelId();
+    const fail = (text: string) => this.dialogError.set(text);
+    switch (d.action) {
+      case 'cancel':
+        this.send(d.booking, (id) => this.bookingsApi.cancel(hostelId, id, reason), 'Booking cancelled', 'The guest, host and manager have been told.', fail);
+        return;
+      case 'noShow':
+        this.send(d.booking, (id) => this.bookingsApi.markNoShow(hostelId, id, reason), 'Marked as a no show', '', fail);
+        return;
+      case 'checkOut':
+        this.send(d.booking, (id) => this.bookingsApi.checkOut(hostelId, id), 'Checked out', 'Every bed this booking held is free again.', fail);
+        return;
+      case 'invoice':
+        this.send(
+          d.booking,
+          // The invoice answers with the bill, not the booking; the booking itself is unchanged.
+          (id) => this.bookingsApi.generateInvoice(hostelId, id).pipe(map(() => d.booking)),
+          'Invoice generated',
+          'Find it under Invoices.',
+          fail,
+        );
+        return;
+    }
+  }
+
+  // ── checking in: placing guests in rooms ───────────────────────────────────────
+
+  protected readonly assigning = signal<HostBooking | null>(null);
+  protected readonly assignError = signal('');
+
   protected openAssign(booking: HostBooking | null | undefined): void {
     if (!booking) return;
     this.closeMenu();
-    // Hand off from the request panel rather than stacking two dialogs on each other.
+    // Hand off from the details panel rather than stacking two dialogs on each other.
     this.viewing.set(null);
     this.assignError.set('');
     this.assigning.set(booking);
   }
 
   protected closeAssign(): void {
+    if (this.busy()) return;
     this.assigning.set(null);
     this.assignError.set('');
   }
 
-  /**
-   * The host has settled on where the booking goes; nothing sends it yet.
-   *
-   * There is no assignment endpoint — a booking carries `room_id: null` and no route sets it —
-   * so this stops here rather than guessing a URL, which would either 404 or, worse, hit an
-   * unverified write path. The panel keeps the selection on screen so the work is not lost
-   * when the endpoint lands.
-   */
+  /** `mark_as_checked_in` with one allocation per room; capacity is the server's to refuse. */
   protected onAssign(sel: AssignSelection): void {
-    const where = sel.rooms.map((r) => `${r.roomNumber} × ${r.beds}`).join(', ');
-    this.assignError.set(
-      `Ready to assign ${where} — but this build has no assignment endpoint to send it to.`,
+    const booking = this.assigning();
+    if (!booking) return;
+    const allocations = sel.rooms.map((r) => ({ roomId: r.roomId, guests: r.guests }));
+    this.send(
+      booking,
+      (id) => this.bookingsApi.checkIn(this.hostelId(), id, allocations),
+      'Checked in',
+      sel.rooms.map((r) => `Room ${r.roomNumber} × ${r.guests}`).join(', '),
+      (text) => this.assignError.set(text),
+      () => this.assigning.set(null),
     );
+  }
+
+  private readonly notifications = inject(NotificationService);
+
+  /** The moves the row menu offers — the same set the panel does, from the same table. */
+  protected rowActions(b: HostBooking): readonly BookingAction[] {
+    const lane = laneKeyFor(b.disposition.slug);
+    return lane ? ACTIONS_BY_LANE[lane] : [];
+  }
+
+  protected actionLabel(action: BookingAction): string {
+    return ACTION_MENU_LABEL[action];
+  }
+
+  protected actionIcon(action: BookingAction): string {
+    return ACTION_ICON[action];
   }
 
   /**
@@ -358,52 +473,23 @@ export class HostBookings {
       itemLabel: 'booking',
     };
   });
-
-  // ── cancelling ─────────────────────────────────────────────────────────────
-
-  protected readonly cancelling = signal<HostBooking | null>(null);
-  protected readonly quote = signal<ApiHostCancellationQuote | null>(null);
-  protected readonly quoteLoading = signal(false);
-  protected readonly cancelError = signal('');
-  protected readonly cancelOpen = computed(() => this.cancelling() !== null);
-
-  /**
-   * Asks the server what cancelling costs before showing the dialogue.
-   *
-   * Never derived here: a host looking at a stale page would be quoted one figure and charged
-   * another, and this is the screen where that is least forgivable.
-   */
-  protected askToCancel(booking: HostBooking): void {
-    this.cancelling.set(booking);
-    this.quote.set(null);
-    this.cancelError.set('');
-    this.quoteLoading.set(true);
-    this.api.hostCancellationQuote(booking.id).subscribe({
-      next: (q) => {
-        this.quote.set(q);
-        this.quoteLoading.set(false);
-      },
-      error: () => {
-        this.cancelError.set('We could not work out the penalty. Please try again.');
-        this.quoteLoading.set(false);
-      },
-    });
-  }
-
-  protected closeCancel(): void {
-    this.cancelling.set(null);
-    this.quote.set(null);
-  }
-
-  protected confirmCancel(): void {
-    const booking = this.cancelling();
-    if (!booking) return;
-    this.api.hostCancel(booking.id).subscribe({
-      next: () => {
-        this.closeCancel();
-        this.refresh.update((n) => n + 1);
-      },
-      error: () => this.cancelError.set('We could not cancel this booking. Please try again.'),
-    });
-  }
 }
+
+/** The row menu's wording — a verb phrase, since a menu item stands without the panel's context. */
+const ACTION_MENU_LABEL: Record<BookingAction, string> = {
+  confirm: 'Confirm booking',
+  checkIn: 'Check in',
+  checkOut: 'Check out',
+  invoice: 'Generate invoice',
+  cancel: 'Cancel booking',
+  noShow: 'Mark no show',
+};
+
+const ACTION_ICON: Record<BookingAction, string> = {
+  confirm: 'ti-circle-check',
+  checkIn: 'ti-door-enter',
+  checkOut: 'ti-door-exit',
+  invoice: 'ti-file-invoice',
+  cancel: 'ti-calendar-x',
+  noShow: 'ti-user-x',
+};

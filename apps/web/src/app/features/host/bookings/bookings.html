@@ -13,16 +13,18 @@
 
   <hh-booking-details-panel
     [booking]="viewing()"
+    [hostelId]="hostelIdForForm()"
     [actionError]="viewError()"
+    [busy]="busy()"
     (closed)="closeDetails()"
-    (assign)="openAssign($event)"
-    (decline)="onDecline()"
+    (act)="onAct($event)"
   />
 
   <hh-assign-rooms-panel
     [hostelId]="hostelIdForForm()"
     [booking]="assigning()"
     [submitError]="assignError()"
+    [busy]="busy()"
     (closed)="closeAssign()"
     (assign)="onAssign($event)"
   />
@@ -33,7 +35,7 @@
         [hostelId]="hostelIdForForm()"
         [bookings]="rows()"
         (laneSelect)="onLaneSelect($event)"
-        (assignRequested)="openAssign($event)"
+        (confirmRequested)="onAct({ action: 'confirm', booking: $event })"
         (detailsRequested)="openDetails($event)"
       />
     }
@@ -94,26 +96,13 @@
 
   }
 
-  <!-- One action, but it lives in the same row menu every other table here uses: a bespoke
-       button in a cell would be the only one of its kind in the app. -->
+  <!-- The row menu offers what the details panel does, from the same table, so a host can act
+       from the list without opening the booking — and never sees a move the stage forbids. -->
   @if (menuOpenId(); as id) {
     @if (menuPos(); as pos) {
       @let menuBooking = rows().find((b) => b.id === id);
       @if (menuBooking) {
-        <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="184" (closed)="closeMenu()">
-          <!-- Only while it is still waiting on a room. Offering it on a checked-out stay
-               would be a control that cannot do anything. -->
-          @if (menuBooking.disposition.slug === 'pending-allotment') {
-            <button
-              type="button"
-              hh-button
-              variant="text"
-              role="menuitem"
-              class="w-full !justify-start"
-              (click)="openAssign(menuBooking)"
-            >
-              <i class="ti ti-bed text-sm" aria-hidden="true"></i>{{ 'hostBookings.assignRoom' | transloco }}</button>
-          }
+        <hh-context-menu [top]="pos.top" [right]="pos.right" [width]="200" (closed)="closeMenu()">
           <button
             type="button"
             hh-button
@@ -123,60 +112,99 @@
             (click)="openDetails(menuBooking)"
           >
             <i class="ti ti-file-text text-sm" aria-hidden="true"></i>{{ 'common.viewDetails' | transloco }}</button>
-          <button
-            type="button"
-            hh-button
-            variant="text"
-            role="menuitem"
-            class="w-full !justify-start !text-danger"
-            (click)="askToCancel(menuBooking)"
-          >
-            <i class="ti ti-calendar-x text-sm" aria-hidden="true"></i>
-            {{ 'common.cancelBooking' | transloco }}
-          </button>
+          @for (action of rowActions(menuBooking); track action) {
+            <button
+              type="button"
+              hh-button
+              variant="text"
+              role="menuitem"
+              class="w-full !justify-start"
+              [class.!text-danger]="action === 'cancel'"
+              [disabled]="busy()"
+              (click)="onAct({ action: action, booking: menuBooking })"
+            >
+              <i class="ti text-sm" [class]="actionIcon(action)" aria-hidden="true"></i>{{ actionLabel(action) }}
+            </button>
+          }
         </hh-context-menu>
       }
     }
   }
 
-  @if (cancelOpen()) {
+  <!-- Everything that ends a stay, bills it, or needs a reason asks first. The reason is sent
+       to the guest and kept on the booking, so it is asked for in words, not a checkbox. -->
+  @if (dialog(); as d) {
     <hh-confirm-modal
-      [title]="'common.cancelThisBooking' | transloco"
-      icon="ti-calendar-x"
-      tone="danger"
-      [confirmLabel]="
-        quote()
-          ? 'Cancel booking and pay PKR ' + (quote()!.penalty_amount | number: '1.0-0')
-          : 'Cancel booking'
+      [title]="
+        d.action === 'cancel'
+          ? 'Cancel this booking?'
+          : d.action === 'noShow'
+            ? 'Mark as a no show?'
+            : d.action === 'checkOut'
+              ? 'Check out ' + d.booking.guest.name + '?'
+              : 'Generate the invoice?'
       "
-      cancelLabel="Keep booking"
-      confirmColor="danger"
-      (confirm)="confirmCancel()"
-      (cancel)="closeCancel()"
+      [icon]="
+        d.action === 'cancel' ? 'ti-calendar-x' : d.action === 'noShow' ? 'ti-user-x' : d.action === 'checkOut' ? 'ti-door-exit' : 'ti-file-invoice'
+      "
+      [tone]="d.action === 'cancel' || d.action === 'noShow' ? 'danger' : 'info'"
+      [confirmLabel]="
+        busy()
+          ? 'Working…'
+          : d.action === 'cancel'
+            ? 'Cancel booking'
+            : d.action === 'noShow'
+              ? 'Mark no show'
+              : d.action === 'checkOut'
+                ? 'Check out'
+                : 'Generate invoice'
+      "
+      [cancelLabel]="d.action === 'cancel' ? 'Keep booking' : 'Not now'"
+      [confirmColor]="d.action === 'cancel' || d.action === 'noShow' ? 'danger' : 'primary'"
+      [confirmDisabled]="busy()"
+      (confirm)="confirmDialog()"
+      (cancel)="closeDialog()"
     >
-      @if (quoteLoading()) {
-        <p>{{ 'hostBookings.workingOutThePenalty' | transloco }}</p>
-      } @else if (cancelError()) {
-        <p class="text-danger">{{ cancelError() }}</p>
-      } @else if (quote(); as q) {
-        @let b = cancelling();
-        <!-- Figures, not policy language. A host should not have to do arithmetic to find out
-             what a button costs them. -->
-        <p>
-          {{ 'hostBookings.youReCancellingOn' | transloco }} <strong>{{ b?.guest?.name || ('hostBookings.thisGuest' | transloco) }}</strong>
-          {{ 'common.forDateRange' | transloco: { from: b?.checkIn | date: 'd MMM', to: b?.checkOut | date: 'd MMM yyyy' } }}
-        </p>
-        <ul class="mt-2 space-y-1 text-sm">
-          <li>
-            {{ 'hostBookings.theyAreRefunded' | transloco }}
-            <strong class="tabular-nums">PKR {{ q.refund_amount | number: '1.2-2' }}</strong> {{ 'hostBookings.inFullWithin5Working' | transloco }}
-          </li>
-          <li>
-            {{ 'hostBookings.youWillBeCharged' | transloco }}
-            <strong class="tabular-nums">PKR {{ q.penalty_amount | number: '1.2-2' }}</strong>{{ 'hostBookings.deductedFromYourNextMonthly' | transloco }}
-          </li>
-          <li>{{ 'hostBookings.theBedsReturnToSale' | transloco }}</li>
-        </ul>
+      <p class="text-ink-700">
+        <strong>{{ d.booking.guest.name }}</strong> ·
+        {{ d.booking.checkIn | date: 'd MMM' }} – {{ d.booking.checkOut | date: 'd MMM yyyy' }}
+        @if (d.booking.ref) {
+          · <span class="tabular-nums">{{ d.booking.ref }}</span>
+        }
+      </p>
+      <p class="mt-2 text-sm text-ink-500">
+        @switch (d.action) {
+          @case ('cancel') {
+            The guest, you and the manager are told. Any beds it holds are released.
+          }
+          @case ('noShow') {
+            For a guest who never arrived. They, you and the manager are told; the booking can still be invoiced.
+          }
+          @case ('checkOut') {
+            Every bed this booking holds is released.
+          }
+          @case ('invoice') {
+            Raised once per booking, for {{ d.booking.currency | currencySym }} {{ d.booking.total | number: '1.0-0' }}. It appears under Invoices.
+          }
+        }
+      </p>
+      @if (asksReason()) {
+        <label for="hh-booking-reason" class="mb-1 mt-4 block text-xs font-medium text-ink-600">
+          Reason{{ reasonRequired() ? ' *' : ' (optional)' }}
+        </label>
+        <textarea
+          #reasonField
+          id="hh-booking-reason"
+          rows="3"
+          maxlength="500"
+          class="block w-full resize-none rounded-xl border border-ink-200 bg-transparent px-3 py-2.5 text-sm text-ink-900 outline-none transition placeholder:text-ink-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+          [placeholder]="d.action === 'cancel' ? 'e.g. Water leak in the dorm' : 'e.g. Guest did not arrive'"
+          [value]="dialogReason()"
+          (input)="dialogReason.set(reasonField.value)"
+        ></textarea>
+      }
+      @if (dialogError()) {
+        <p class="mt-3 rounded-lg bg-danger/10 px-3 py-2 text-xs font-medium text-danger" role="alert">{{ dialogError() }}</p>
       }
     </hh-confirm-modal>
   }

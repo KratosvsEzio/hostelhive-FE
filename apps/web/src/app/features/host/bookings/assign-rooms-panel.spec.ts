@@ -3,15 +3,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { HostOpsApi } from '@services';
 import { HostRoom } from '@util/models/host-ops';
-import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
+import { AssignGroup, AssignRoomsPanel, AssignRow, AssignSelection } from './assign-rooms-panel';
 import { HostBooking } from './host-bookings-api';
 
 function room(over: Partial<HostRoom> = {}): HostRoom {
   return {
     id: 'r1',
-    number: 'Harbour 6',
-    floor: '1',
-    type: 'Mixed Dorm',
+    number: '101',
+    floor: 'ground',
+    type: 'Dormitory',
     capacity: 6,
     occupied: 4,
     rentPerBed: 2000,
@@ -21,23 +21,34 @@ function room(over: Partial<HostRoom> = {}): HostRoom {
   };
 }
 
+/** A confirmed booking for four: one king room for three, one dorm bed. */
 function booking(over: Partial<HostBooking> = {}): HostBooking {
   return {
     id: 'b1',
     ref: 'HH-1',
     guest: { name: 'Ayesha Khan', phone: '', email: '' },
-    checkIn: '2026-08-24',
-    checkOut: '2026-08-30',
-    nights: 6,
-    guests: 3,
-    roomType: { name: 'Mixed Dorm', occupancyType: 'shared', capacity: 6 },
-    total: 396,
-    deposit: 0,
+    checkIn: '2026-10-10',
+    checkOut: '2026-10-13',
+    nights: 3,
+    guests: 4,
+    roomType: { name: 'King size room', occupancyType: 'private_room', capacity: 4, price: 12000 },
+    total: 33600,
+    deposit: 3360,
     paid: 0,
-    balanceDue: 0,
-    status: { name: 'Paid', slug: 'paid' },
-    disposition: { name: 'Pending Allotment', slug: 'pending-allotment' },
-    createdAt: '2026-08-01',
+    balanceDue: 33600,
+    room: null,
+    renter: null,
+    status: { name: 'Confirmed', slug: 'confirmed' },
+    disposition: { name: 'Confirmed', slug: 'confirmed' },
+    notes: '',
+    lines: [
+      { roomTypeId: 'KGJwMC', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 30000 },
+      { roomTypeId: 'MqVuEl', name: 'Dormitory', shared: true, units: 1, guests: 1, subtotal: 3600 },
+    ],
+    currency: 'PKR',
+    cancellationReason: '',
+    source: '',
+    createdAt: '2026-09-27',
     ...over,
   };
 }
@@ -51,32 +62,25 @@ class HostOpsStub {
 
 @Component({
   imports: [AssignRoomsPanel],
-  template: `<hh-assign-rooms-panel
-    hostelId="h1"
-    [booking]="booking()"
-    (assign)="last = $event"
-  />`,
+  template: `<hh-assign-rooms-panel hostelId="h1" [booking]="booking()" [busy]="busy()" (assign)="last = $event" />`,
 })
 class Host {
   readonly booking = signal<HostBooking | null>(booking());
+  readonly busy = signal(false);
   last: AssignSelection | null = null;
 }
 
 /**
- * Assignment is filling a shopping list, not searching a building.
- *
- * The numbers here are the whole feature: how many units the booking still owes, what each
- * room can actually take, and whether the primary action may fire. Every one of them fails
- * silently — an over-allocated booking still looks fine on screen, and a host only finds out
- * when two guests are sent to the same bed.
+ * Checking in is placing a party in rooms: how many are left to seat, what each room can take,
+ * and whether the host may press the button. Each can fail silently — an over-full room still
+ * looks fine on screen until two guests are sent to the same bed.
  */
-describe('AssignRoomsPanel allocation', () => {
+describe('AssignRoomsPanel — checking in', () => {
   let fixture: ComponentFixture<Host>;
   let panel: AssignRoomsPanel;
-  let api: HostOpsStub;
 
   async function render(rooms: HostRoom[], b: HostBooking = booking()): Promise<void> {
-    api = new HostOpsStub();
+    const api = new HostOpsStub();
     api.rooms$ = rooms;
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
@@ -87,205 +91,148 @@ describe('AssignRoomsPanel allocation', () => {
     fixture.componentInstance.booking.set(b);
     fixture.detectChanges();
     panel = fixture.debugElement.children[0].componentInstance as AssignRoomsPanel;
+    // The panel clears its picks in a microtask when it opens on a booking.
+    await Promise.resolve();
     fixture.detectChanges();
   }
 
   /** The component's members are `protected`; the template reads them, so the tests may too. */
-  function p(): Record<string, (...a: unknown[]) => unknown> {
-    return panel as unknown as Record<string, (...a: unknown[]) => unknown>;
-  }
+  const p = () => panel as unknown as Record<string, (...a: unknown[]) => unknown>;
+  const groups = () => p()['groups']() as AssignGroup[];
+  const row = (number: string) => groups().flatMap((g) => g.rows).find((r) => r.room.number === number) as AssignRow;
+  const step = (number: string, by: number) => {
+    p()['step'](row(number), by);
+    fixture.detectChanges();
+  };
+
+  const ROOMS = [
+    room({ id: 'd1', number: '101', type: 'Dormitory', capacity: 6, occupied: 4 }),
+    room({ id: 'k1', number: '102', type: 'King size room', capacity: 4, occupied: 0 }),
+    room({ id: 'k2', number: '103', type: 'King size room', capacity: 4, occupied: 4 }),
+    room({ id: 's1', number: '201', type: 'Studio', capacity: 2, occupied: 0 }),
+  ];
 
   afterEach(() => fixture?.destroy());
 
-  it('lists only rooms of the booked type', async () => {
-    await render([
-      room({ id: 'a', number: 'Harbour 6' }),
-      room({ id: 'b', number: 'Loft 4', type: 'Female Dorm' }),
+  it('offers every room on the property, grouped by type, the booked types first', async () => {
+    await render(ROOMS);
+    expect(groups().map((g) => [g.type, g.booked])).toEqual([
+      ['Dormitory', true],
+      ['King size room', true],
+      ['Studio', false],
     ]);
-
-    const rows = p()['rows']() as { room: HostRoom }[];
-    expect(rows.map((r) => r.room.number)).toEqual(['Harbour 6']);
   });
 
-  it('counts free beds as capacity less what is taken', async () => {
-    await render([room({ capacity: 6, occupied: 4 })]);
-
-    expect((p()['rows']() as { free: number }[])[0].free).toBe(2);
+  it('counts free beds as capacity less what is taken, and lists the freest first', async () => {
+    await render(ROOMS);
+    const king = groups().find((g) => g.type === 'King size room');
+    expect(king?.rows.map((r) => [r.room.number, r.free])).toEqual([
+      ['102', 4],
+      ['103', 0],
+    ]);
   });
 
-  // A dorm booking owes one bed per guest — that is the only reading of the record.
-  it('needs one bed per guest on a shared booking', async () => {
-    await render([room()], booking({ guests: 3 }));
-
-    expect(p()['needed']()).toBe(3);
-    expect(p()['isShared']()).toBe(true);
+  it('aims to place the whole party', async () => {
+    await render(ROOMS);
+    expect(p()['needed']()).toBe(4);
   });
 
-  /**
-   * Private rooms carry no quantity on the record, so the count is derived: the fewest rooms
-   * of this type that seat everybody. Six guests in a two-bed suite is three rooms.
-   */
-  it('derives the room count on a private booking', async () => {
-    await render(
-      [room({ type: 'King Suite', capacity: 2, occupied: 0 })],
-      booking({
-        guests: 6,
-        roomType: { name: 'King Suite', occupancyType: 'private', capacity: 2 },
-      }),
-    );
+  it('places guests in any room, of any type, and totals them', async () => {
+    await render(ROOMS);
+    step('102', 1);
+    step('102', 1);
+    step('201', 1);
+    step('101', 1);
 
-    expect(p()['needed']()).toBe(3);
-    expect(p()['isShared']()).toBe(false);
-  });
-
-  it('never needs fewer than one', async () => {
-    await render([room()], booking({ guests: 0 }));
-    expect(p()['needed']()).toBe(1);
-  });
-
-  it('steps beds up and down within a room', async () => {
-    await render([room({ capacity: 6, occupied: 4 })]);
-    const rows = () => p()['rows']() as { picked: number }[];
-
-    p()['stepBeds'](rows()[0], 1);
-    fixture.detectChanges();
-    expect(rows()[0].picked).toBe(1);
-
-    p()['stepBeds'](rows()[0], -1);
-    fixture.detectChanges();
-    expect(rows()[0].picked).toBe(0);
-  });
-
-  // Two guests sent to a bed that does not exist is the failure this bound prevents.
-  it('will not allocate more beds than the room has free', async () => {
-    await render([room({ capacity: 6, occupied: 4 })], booking({ guests: 5 }));
-    const rows = () => p()['rows']() as { picked: number }[];
-
-    for (let i = 0; i < 5; i++) p()['stepBeds'](rows()[0], 1);
-    fixture.detectChanges();
-
-    expect(rows()[0].picked).toBe(2);
-  });
-
-  it('will not allocate more beds than the booking asked for', async () => {
-    await render([room({ id: 'a', capacity: 10, occupied: 0 })], booking({ guests: 3 }));
-    const rows = () => p()['rows']() as { picked: number }[];
-
-    for (let i = 0; i < 6; i++) p()['stepBeds'](rows()[0], 1);
-    fixture.detectChanges();
-
-    expect(rows()[0].picked).toBe(3);
-    expect(p()['allocated']()).toBe(3);
-  });
-
-  it('spreads an allocation across rooms and totals it', async () => {
-    await render(
-      [
-        room({ id: 'a', number: 'Harbour 6', capacity: 6, occupied: 4 }),
-        room({ id: 'b', number: 'Garden 10', capacity: 10, occupied: 7 }),
-      ],
-      booking({ guests: 3 }),
-    );
-    const rows = () => p()['rows']() as { room: HostRoom; picked: number }[];
-
-    const harbour = rows().find((r) => r.room.id === 'a')!;
-    p()['stepBeds'](harbour, 1);
-    p()['stepBeds'](harbour, 1);
-    fixture.detectChanges();
-    p()['stepBeds'](rows().find((r) => r.room.id === 'b')!, 1);
-    fixture.detectChanges();
-
-    expect(p()['allocated']()).toBe(3);
-    expect(p()['remaining']()).toBe(0);
+    expect(p()['allocated']()).toBe(4);
     expect(p()['complete']()).toBe(true);
+    expect(p()['summaryLine']()).toBe('101 × 1 · 102 × 2 · 201 × 1');
   });
 
-  it('keeps the action blocked until every bed is placed', async () => {
-    await render([room({ capacity: 6, occupied: 0 })], booking({ guests: 3 }));
-    const rows = () => p()['rows']() as { picked: number }[];
+  it('will not place more in a room than it has free beds', async () => {
+    await render(ROOMS);
+    step('101', 1);
+    step('101', 1);
+    step('101', 1);
+    expect(row('101').placed).toBe(2);
+  });
 
-    expect(p()['complete']()).toBe(false);
-    p()['submit']();
-    expect(fixture.componentInstance.last).toBeNull();
+  it('will not place more people than the booking holds', async () => {
+    await render(ROOMS);
+    for (let i = 0; i < 6; i++) step('102', 1);
+    step('201', 1);
+    expect(p()['allocated']()).toBe(4);
+    expect(row('201').placed).toBe(0);
+  });
 
-    for (let i = 0; i < 3; i++) p()['stepBeds'](rows()[0], 1);
-    fixture.detectChanges();
+  it('steps back down, and forgets a room at zero', async () => {
+    await render(ROOMS);
+    step('102', 1);
+    step('102', -1);
+    step('102', -1);
+    expect(row('102').placed).toBe(0);
+  });
+
+  it('shows a full room without a stepper, rather than hiding it', async () => {
+    await render(ROOMS);
+    const el = fixture.nativeElement as HTMLElement;
+    const full = [...el.querySelectorAll('li')].find((li) => li.textContent?.includes('Room 103'));
+    expect(full?.textContent).toContain('Full');
+    expect(full?.querySelector('button')).toBeNull();
+  });
+
+  it('sends one allocation per room, as guests', async () => {
+    await render(ROOMS);
+    step('102', 1);
+    step('102', 1);
+    step('102', 1);
+    step('101', 1);
     p()['submit']();
 
     expect(fixture.componentInstance.last).toEqual({
       bookingId: 'b1',
-      rooms: [{ roomId: 'r1', roomNumber: 'Harbour 6', beds: 3 }],
+      rooms: [
+        { roomId: 'd1', roomNumber: '101', guests: 1 },
+        { roomId: 'k1', roomNumber: '102', guests: 3 },
+      ],
     });
   });
 
-  it('leaves a full room unpickable rather than hiding it', async () => {
-    await render([room({ capacity: 4, occupied: 4 })]);
-    const rows = () => p()['rows']() as { free: number; picked: number }[];
+  it('sends nothing with nobody placed', async () => {
+    await render(ROOMS);
+    p()['submit']();
+    expect(fixture.componentInstance.last).toBeNull();
+  });
 
-    expect(rows().length).toBe(1);
-    expect(rows()[0].free).toBe(0);
+  it('lets a smaller party be checked in, and says the headcount will change', async () => {
+    await render(ROOMS);
+    step('102', 1);
+    step('102', 1);
+    expect(p()['partial']()).toBe(true);
+    const footer = (fixture.nativeElement as HTMLElement).querySelector('footer')?.textContent ?? '';
+    expect(footer).toContain('records');
+    expect(footer).toContain('2 guests');
 
-    p()['stepBeds'](rows()[0], 1);
+    p()['submit']();
+    expect(fixture.componentInstance.last?.rooms).toEqual([{ roomId: 'k1', roomNumber: '102', guests: 2 }]);
+  });
+
+  it('holds the button while the check-in is being sent', async () => {
+    await render(ROOMS);
+    step('102', 1);
+    fixture.componentInstance.busy.set(true);
     fixture.detectChanges();
-    expect(rows()[0].picked).toBe(0);
+    p()['submit']();
+    expect(fixture.componentInstance.last).toBeNull();
   });
 
-  describe('private rooms', () => {
-    const priv = (over: Partial<HostBooking> = {}) =>
-      booking({
-        guests: 2,
-        roomType: { name: 'King Suite', occupancyType: 'private', capacity: 2 },
-        ...over,
-      });
-
-    it('takes a whole room per tick', async () => {
-      await render([room({ id: 'a', number: 'King 201', type: 'King Suite', capacity: 2, occupied: 0 })], priv());
-      const rows = () => p()['rows']() as { picked: number }[];
-
-      p()['toggleRoom'](rows()[0]);
-      fixture.detectChanges();
-      expect(rows()[0].picked).toBe(1);
-      expect(p()['complete']()).toBe(true);
-    });
-
-    it('unticks on a second click', async () => {
-      await render([room({ id: 'a', type: 'King Suite', capacity: 2, occupied: 0 })], priv());
-      const rows = () => p()['rows']() as { picked: number }[];
-
-      p()['toggleRoom'](rows()[0]);
-      fixture.detectChanges();
-      p()['toggleRoom'](rows()[0]);
-      fixture.detectChanges();
-
-      expect(rows()[0].picked).toBe(0);
-    });
-
-    // Otherwise the counter reads "3 of 2" and the host has to work out which to undo.
-    it('refuses a tick beyond what the booking needs', async () => {
-      await render(
-        [
-          room({ id: 'a', number: 'King 201', type: 'King Suite', capacity: 2, occupied: 0 }),
-          room({ id: 'b', number: 'King 204', type: 'King Suite', capacity: 2, occupied: 0 }),
-        ],
-        priv({ guests: 2 }),
-      );
-      const rows = () => p()['rows']() as { picked: number }[];
-
-      p()['toggleRoom'](rows()[0]);
-      fixture.detectChanges();
-      p()['toggleRoom'](rows()[1]);
-      fixture.detectChanges();
-
-      expect(p()['allocated']()).toBe(1);
-    });
-
-    it('will not tick an occupied room', async () => {
-      await render([room({ id: 'a', type: 'King Suite', capacity: 2, occupied: 2 })], priv());
-      const rows = () => p()['rows']() as { picked: number }[];
-
-      p()['toggleRoom'](rows()[0]);
-      fixture.detectChanges();
-      expect(rows()[0].picked).toBe(0);
-    });
+  it('starts from nothing again when opened on another booking', async () => {
+    await render(ROOMS);
+    step('102', 1);
+    fixture.componentInstance.booking.set(booking({ id: 'b2' }));
+    fixture.detectChanges();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(p()['allocated']()).toBe(0);
   });
 });

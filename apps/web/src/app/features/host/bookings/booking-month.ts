@@ -15,12 +15,36 @@ import { CalendarDayCounts } from './host-bookings-api';
  * directly beneath this calendar pills the same bookings, and a second colour system would
  * have one booking reading amber in one half of the page and indigo in the other.
  */
-export type LaneKey =
-  | 'pending-allotment'
-  | 'room-assigned'
-  | 'checked-in'
-  | 'checked-out'
-  | 'cancelled';
+/**
+ * The booking lifecycle's dispositions (Trello #80), in the order a stay moves through them:
+ * the host confirms a request, checks the guest in — assigning rooms then — and checks them
+ * out; or it ends cancelled, or as a no-show when a confirmed guest never arrives.
+ */
+export type LaneKey = 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' | 'no-show';
+
+/**
+ * Slugs from before the lifecycle was reseeded, and the lane each now belongs to. Records made
+ * then still carry them, so the calendar folds their counts in, the badge reads them, and the
+ * status filter asks for them alongside the new name — otherwise "Pending" would silently
+ * miss every older request.
+ */
+export const LEGACY_SLUGS: Readonly<Record<string, LaneKey>> = {
+  'pending-allotment': 'pending',
+  'room-assigned': 'confirmed',
+};
+
+const LANE_KEYS: readonly LaneKey[] = ['pending', 'confirmed', 'checked-in', 'checked-out', 'cancelled', 'no-show'];
+
+/** The lane a disposition slug belongs to, legacy names included. */
+export function laneKeyFor(slug: string): LaneKey | undefined {
+  if (LEGACY_SLUGS[slug]) return LEGACY_SLUGS[slug];
+  return (LANE_KEYS as readonly string[]).includes(slug) ? (slug as LaneKey) : undefined;
+}
+
+/** Every slug that means this lane — what a filter on it has to ask the server for. */
+export function slugsFor(key: string): string[] {
+  return [key, ...Object.keys(LEGACY_SLUGS).filter((s) => LEGACY_SLUGS[s] === key)];
+}
 
 export interface Lane {
   /** The disposition slug, which is also the key into the API's `by_status`. */
@@ -50,19 +74,19 @@ export interface Lane {
 
 export const LANES: readonly Lane[] = [
   {
-    key: 'pending-allotment',
-    label: 'Pending allotment',
+    key: 'pending',
+    label: 'Pending',
     dot: 'bg-warn',
     value: 'text-warn',
     tile: 'bg-warn/10',
     badge: 'bg-warn/10 text-warn',
   },
   {
-    key: 'room-assigned',
-    label: 'Room assigned',
+    key: 'confirmed',
+    label: 'Confirmed',
     // Violet, not the brand orange this used to be. Orange and the cancelled red are
     // neighbouring hues, and at the 8px dot these lanes are drawn as they were near enough
-    // indistinguishable — which put "assigned" and "cancelled", two states a host reacts to
+    // indistinguishable — which put "confirmed" and "cancelled", two states a host reacts to
     // in opposite ways, on the same colour. Violet is far enough round the wheel to survive
     // both the small size and a colour-blind reader.
     dot: 'bg-violet-500',
@@ -94,6 +118,16 @@ export const LANES: readonly Lane[] = [
     tile: 'bg-danger/10',
     badge: 'bg-danger/10 text-danger',
   },
+  {
+    key: 'no-show',
+    label: 'No show',
+    // Not the cancelled red: a no-show is the guest's doing, not a decision, and the host
+    // reads the two differently. Amber-brown sits apart from both the pending amber and red.
+    dot: 'bg-amber-700',
+    value: 'text-amber-800',
+    tile: 'bg-amber-50',
+    badge: 'bg-amber-50 text-amber-800',
+  },
 ] as const;
 
 export type LaneCounts = Record<LaneKey, number>;
@@ -120,11 +154,12 @@ export interface BookingMonth {
 }
 
 const ZERO = (): LaneCounts => ({
-  'pending-allotment': 0,
-  'room-assigned': 0,
+  pending: 0,
+  confirmed: 0,
   'checked-in': 0,
   'checked-out': 0,
   cancelled: 0,
+  'no-show': 0,
 });
 
 /** `yyyy-MM-dd` in local time. `toISOString` would shift the date west of Greenwich. */
@@ -190,10 +225,13 @@ export function buildBookingMonth(
     const date = isoDate(cellDate);
     const src = byDate.get(date);
     const counts = ZERO();
-    for (const lane of LANES) {
-      const n = src?.byDisposition?.[lane.key] ?? 0;
-      counts[lane.key] = n;
-      totals[lane.key] += n;
+    // Every slug the day names, folded into its lane — so a day holding both an older
+    // `pending-allotment` request and a new `pending` one counts two pending, not one.
+    for (const [slug, n] of Object.entries(src?.byDisposition ?? {})) {
+      const key = laneKeyFor(slug);
+      if (!key || !n) continue;
+      counts[key] += n;
+      totals[key] += n;
     }
 
     cells.push({
@@ -214,11 +252,11 @@ export function buildBookingMonth(
 /**
  * The share each lane takes of the mobile micro-bar.
  *
- * Cancelled is left out: it is not occupancy, and a day with one stay and three cancellations
- * would draw a bar three-quarters red for rooms nobody is in.
+ * Cancelled and no-show are left out: neither is occupancy, and a day with one stay and three
+ * cancellations would draw a bar three-quarters red for rooms nobody is in.
  */
 export function barSegments(counts: LaneCounts): { key: LaneKey; pct: number; dot: string }[] {
-  const live: LaneKey[] = ['pending-allotment', 'room-assigned', 'checked-in'];
+  const live: LaneKey[] = ['pending', 'confirmed', 'checked-in'];
   const total = live.reduce((n, k) => n + counts[k], 0);
   if (!total) return [];
   return live
@@ -230,7 +268,8 @@ export function barSegments(counts: LaneCounts): { key: LaneKey; pct: number; do
     }));
 }
 
-/** The lane for a disposition slug, or undefined for one this app does not draw. */
+/** The lane for a disposition slug — legacy names included — or undefined for one it does not draw. */
 export function laneFor(slug: string): Lane | undefined {
-  return LANES.find((l) => l.key === slug);
+  const key = laneKeyFor(slug);
+  return key ? LANES.find((l) => l.key === key) : undefined;
 }

@@ -23,7 +23,7 @@ import { BookingRail } from '@features/public/listing/booking/booking-rail';
 import { RoomPicker } from '@features/public/listing/booking/room-picker';
 import { RoomOffer, lineTotal } from '@features/public/listing/booking/room-offer';
 import { BookingEditModal, StayChangeSummary } from './booking-edit-modal';
-import { GuestBooking, GuestBookingPatch, MyBookingsApi, canEdit } from './my-bookings-api';
+import { GuestBooking, GuestBookingPatch, MyBookingsApi, canEdit, withinChangeCutoff } from './my-bookings-api';
 
 /** A wall date (`yyyy-MM-dd`) as the local midnight the date picker works in. */
 function localDay(date: string): Date | null {
@@ -73,6 +73,12 @@ export class AccountBookingEdit {
     const b = this.booking();
     return !!b && canEdit(b);
   });
+  protected readonly inCutoff = computed(() => {
+    const b = this.booking();
+    return !!b && withinChangeCutoff(b);
+  });
+  /** A confirmed booking goes back to pending on any change; the review says so first. */
+  protected readonly reconfirm = computed(() => this.booking()?.statusSlug === 'confirmed');
 
   protected readonly offers = computed<readonly RoomOffer[]>(() => this.listing()?.roomOffers ?? []);
   protected readonly currency = computed(() => this.listing()?.currency || this.booking()?.currency || '');
