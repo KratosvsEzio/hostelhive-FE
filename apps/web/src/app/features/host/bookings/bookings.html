@@ -9,6 +9,16 @@
        like and what needs me today"; the list answers "show me the bookings". They were
        stacked, which put the table below the fold on every visit and made the month
        something to scroll past. Both still read the one request this page already makes. -->
+  @if (lapsed()) {
+    <div class="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3" role="status">
+      <i class="ti ti-crown text-lg text-brand-500" aria-hidden="true"></i>
+      <p class="min-w-0 flex-1 basis-64 text-sm text-ink-800">
+        This hostel's subscription has lapsed, so it is not taking new bookings. The bookings below still work — confirm, check guests in and out, take payment or cancel.
+      </p>
+      <a hh-button size="sm" [routerLink]="subscriptionLink()">Renew subscription</a>
+    </div>
+  }
+
   <hh-tabs class="mb-5 max-w-xs" [tabs]="viewTabs" [(active)]="view" />
 
   <hh-booking-details-panel
@@ -47,7 +57,7 @@
          said which of the two had won. -->
     <div class="flex flex-wrap items-center gap-3">
       <hh-global-filter
-        [groups]="filterGroups"
+        [groups]="filterGroups()"
         [value]="filters()"
         (apply)="onFiltersApply($event)"
       />
@@ -135,6 +145,7 @@
        to the guest and kept on the booking, so it is asked for in words, not a checkbox. -->
   @if (dialog(); as d) {
     <hh-confirm-modal
+      size="md"
       [title]="
         d.action === 'cancel'
           ? 'Cancel this booking?'
@@ -142,10 +153,12 @@
             ? 'Mark as a no show?'
             : d.action === 'checkOut'
               ? 'Check out ' + d.booking.guest.name + '?'
-              : 'Generate the invoice?'
+              : d.action === 'markPaid'
+                ? 'Mark as paid?'
+                : 'Generate the invoice?'
       "
       [icon]="
-        d.action === 'cancel' ? 'ti-calendar-x' : d.action === 'noShow' ? 'ti-user-x' : d.action === 'checkOut' ? 'ti-door-exit' : 'ti-file-invoice'
+        d.action === 'cancel' ? 'ti-calendar-x' : d.action === 'noShow' ? 'ti-user-x' : d.action === 'checkOut' ? 'ti-door-exit' : d.action === 'markPaid' ? 'ti-cash' : 'ti-file-invoice'
       "
       [tone]="d.action === 'cancel' || d.action === 'noShow' ? 'danger' : 'info'"
       [confirmLabel]="
@@ -157,7 +170,9 @@
               ? 'Mark no show'
               : d.action === 'checkOut'
                 ? 'Check out'
-                : 'Generate invoice'
+                : d.action === 'markPaid'
+                  ? 'Mark as paid'
+                  : 'Generate invoice'
       "
       [cancelLabel]="d.action === 'cancel' ? 'Keep booking' : 'Not now'"
       [confirmColor]="d.action === 'cancel' || d.action === 'noShow' ? 'danger' : 'primary'"
@@ -165,14 +180,68 @@
       (confirm)="confirmDialog()"
       (cancel)="closeDialog()"
     >
-      <p class="text-ink-700">
-        <strong>{{ d.booking.guest.name }}</strong> ·
-        {{ d.booking.checkIn | date: 'd MMM' }} – {{ d.booking.checkOut | date: 'd MMM yyyy' }}
-        @if (d.booking.ref) {
-          · <span class="tabular-nums">{{ d.booking.ref }}</span>
-        }
-      </p>
-      <p class="mt-2 text-sm text-ink-500">
+      <!-- The whole booking being acted on, not a one-line hint. Cancelling, a no-show or a
+           check-out is irreversible, and the host should be able to confirm it is the right
+           guest, stay and money without closing this to go and look. -->
+      @let bk = d.booking;
+      <div class="rounded-xl border border-ink-100 text-sm">
+        <div class="flex items-start justify-between gap-3 border-b border-ink-100 px-3 py-2.5">
+          <div class="min-w-0">
+            <p class="truncate font-semibold text-ink-900">{{ bk.guest.name }}</p>
+            @if (bk.guest.phone || bk.guest.email) {
+              <p class="truncate text-xs text-ink-500">
+                {{ bk.guest.phone }}{{ bk.guest.phone && bk.guest.email ? ' · ' : '' }}{{ bk.guest.email }}
+              </p>
+            }
+          </div>
+          <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" [class]="laneBadge(bk)">
+            {{ bk.disposition.name || 'Booking' }}
+          </span>
+        </div>
+        <dl class="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
+          <div>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Stay</dt>
+            <dd class="text-ink-900">{{ bk.checkIn | date: 'EEE d MMM' }} → {{ bk.checkOut | date: 'EEE d MMM yyyy' }}</dd>
+            <dd class="text-xs text-ink-500">
+              {{ bk.nights }} night{{ bk.nights === 1 ? '' : 's' }} · {{ bk.guests }} guest{{ bk.guests === 1 ? '' : 's' }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Reference</dt>
+            <dd class="tabular-nums text-ink-900">{{ bk.ref || '—' }}</dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Booked</dt>
+            @for (line of bk.lines; track $index) {
+              <dd class="flex items-baseline justify-between gap-3">
+                <span class="min-w-0 text-ink-800">
+                  {{ line.units }} {{ line.shared ? 'bed' : 'room' }}{{ line.units === 1 ? '' : 's' }} · {{ line.name }}
+                  <span class="text-ink-400">· {{ line.guests }} guest{{ line.guests === 1 ? '' : 's' }}</span>
+                </span>
+                <span class="shrink-0 tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ line.subtotal | number: '1.0-0' }}</span>
+              </dd>
+            } @empty {
+              <dd class="text-ink-800">{{ bk.roomType.name }}</dd>
+            }
+            @let inRooms = activeRooms(bk);
+            @if (inRooms) {
+              <dd class="mt-1 text-xs text-ink-500">In rooms: {{ inRooms }}</dd>
+            }
+          </div>
+        </dl>
+        <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-ink-100 bg-surface px-3 py-2.5">
+          <span class="text-ink-600">
+            Total <strong class="tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ bk.total | number: '1.0-0' }}</strong>
+          </span>
+          <span class="text-ink-600">
+            Paid <strong class="tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ bk.paid | number: '1.0-0' }}</strong>
+          </span>
+          <span [class]="bk.balanceDue > 0 ? 'text-warn' : 'text-ink-500'">
+            Due <strong class="tabular-nums">{{ bk.currency | currencySym }} {{ bk.balanceDue | number: '1.0-0' }}</strong>
+          </span>
+        </div>
+      </div>
+      <p class="mt-3 text-sm text-ink-500">
         @switch (d.action) {
           @case ('cancel') {
             The guest, you and the manager are told. Any beds it holds are released.
@@ -182,6 +251,9 @@
           }
           @case ('checkOut') {
             Every bed this booking holds is released.
+          }
+          @case ('markPaid') {
+            Records {{ d.booking.currency | currencySym }} {{ (d.booking.total - d.booking.paid) | number: '1.0-0' }} as settled at the property, so nothing is left due. The invoice, if there is one, is marked paid separately.
           }
           @case ('invoice') {
             Raised once per booking, for {{ d.booking.currency | currencySym }} {{ d.booking.total | number: '1.0-0' }}. It appears under Invoices.
@@ -198,7 +270,7 @@
           rows="3"
           maxlength="500"
           class="block w-full resize-none rounded-xl border border-ink-200 bg-transparent px-3 py-2.5 text-sm text-ink-900 outline-none transition placeholder:text-ink-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-          [placeholder]="d.action === 'cancel' ? 'e.g. Water leak in the dorm' : 'e.g. Guest did not arrive'"
+          [placeholder]="d.action === 'cancel' ? 'Write the reason for cancellation' : 'Write the reason for marking a no show'"
           [value]="dialogReason()"
           (input)="dialogReason.set(reasonField.value)"
         ></textarea>

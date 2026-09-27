@@ -245,3 +245,37 @@ describe('HostOpsApi.bulkCreateRooms', () => {
     expect(out).toEqual([]);
   });
 });
+
+/**
+ * Bills past their due date now really move to `over-due` (Trello #81) — a nightly job does it,
+ * where before the status never changed. It has to survive the mapper as its own state, not
+ * fold into `due`, or the overdue badge, filter and counts never show anything.
+ */
+describe('HostOpsApi.invoices — bill statuses', () => {
+  function withBills(bills: unknown[], statuses: unknown[] = []): HostOpsApi {
+    const http = new ApiClientStub();
+    http.get = <T>() =>
+      of({ renter_bills: bills, pagination: { total_count: bills.length, total_pages: 1 }, aggs: { statuses } } as T);
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: http }] });
+    return TestBed.inject(HostOpsApi);
+  }
+
+  it('keeps over-due apart from due and paid', () => {
+    const api = withBills([
+      { id: 'a', status: { slug: 'due', name: 'Due' } },
+      { id: 'b', status: { slug: 'over-due', name: 'Over Due' } },
+      { id: 'c', status: { slug: 'paid', name: 'Paid' } },
+    ]);
+    let statuses: string[] = [];
+    api.invoices('h1').subscribe((r) => (statuses = r.bills.map((b) => b.status)));
+    expect(statuses).toEqual(['due', 'over-due', 'paid']);
+  });
+
+  it('passes the over-due tally through for the counts and the filter', () => {
+    const api = withBills([], [{ name: 'Over Due', slug: 'over-due', count: 3, total_amount: 4500 }]);
+    let tally: unknown;
+    api.invoices('h1').subscribe((r) => (tally = r.statuses));
+    expect(tally).toEqual([{ name: 'Over Due', slug: 'over-due', count: 3, totalAmount: 4500 }]);
+  });
+});

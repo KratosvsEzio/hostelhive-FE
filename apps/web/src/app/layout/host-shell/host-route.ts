@@ -1,7 +1,7 @@
 import { routePath } from '@core/i18n/locales';
 
 /** Pages a host may still open once the plan has lapsed — see {@link opensWithoutSubscription}. */
-const OPEN_WHILE_LAPSED = ['subscription', 'profile'];
+const OPEN_WHILE_LAPSED = ['subscription', 'profile', 'bookings'];
 
 /**
  * A host-console URL, below the hostel it names.
@@ -27,6 +27,10 @@ export function hostPagePath(url: string): string {
  * is bought against. Bouncing either to the subscription page leaves an expired host circling —
  * and the "complete hostel profile first" link the paywall itself offers would land back on the
  * paywall that offered it.
+ *
+ * `bookings` is the third, for a different reason (Trello #81): a lapse stops *new* bookings,
+ * not the stays already booked. The server keeps listing, confirming, checking in and out,
+ * cancelling and settling them working, and a guest arriving tomorrow still has to be let in.
  *
  * Matched on the first segment, so `subscription/checkout/:productId` is covered: the page a
  * host pays on is not a different question from the page they start paying from.

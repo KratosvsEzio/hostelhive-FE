@@ -45,9 +45,14 @@ describe('opensWithoutSubscription', () => {
     expect(opensWithoutSubscription('/en/host/nHelLt/subscription/checkout/p1')).toBe(true);
   });
 
+  // A lapse stops new bookings, not the ones already made — guests still arrive.
+  it('keeps the bookings a lapsed hostel already has usable', () => {
+    expect(opensWithoutSubscription('/en/host/nHelLt/bookings')).toBe(true);
+  });
+
   it('still paywalls the rest of the console', () => {
     const paid = [
-      'overview', 'rooms', 'bookings', 'tenants', 'team',
+      'overview', 'rooms', 'tenants', 'team',
       'utilities', 'mess', 'expenses', 'invoices', 'more',
     ];
     for (const page of paid) {

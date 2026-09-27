@@ -496,3 +496,55 @@ describe('HostelForm primary photo', () => {
     expect(form.dirty()).toBe(true);
   });
 });
+
+/**
+ * The hostel's time zone (Trello #81). Required by the server on create — a hostel sent without
+ * one fails with "Timezone can't be blank" — and locked for a host once the hostel has bookings.
+ */
+describe('HostelForm time zone', () => {
+  function setUp(mode: 'create' | 'edit', data: Partial<HostelDetail> | null = null, locked = false) {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [HostelForm],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostelsApi, useValue: new HostelsApiStub() },
+        { provide: OffersApi, useValue: new OffersApiStub() },
+        { provide: ImageUploadService, useValue: {} },
+        { provide: HostOpsApi, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(HostelForm);
+    fixture.componentRef.setInput('mode', mode);
+    fixture.componentRef.setInput('timezoneLocked', locked);
+    if (data) fixture.componentRef.setInput('initialData', data as HostelDetail);
+    fixture.detectChanges();
+    fixture.detectChanges();
+    return fixture;
+  }
+  const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  it("sends one on create, pre-filled from the host's browser", () => {
+    const form = setUp('create').componentInstance;
+    expect(form.getPayload().timezone).toBe(browserZone);
+  });
+
+  it('sends the zone the hostel was saved in, not the browser one', () => {
+    const form = setUp('edit', { id: 1, name: 'Backpacker', timezone: 'Europe/Lisbon' }).componentInstance;
+    expect(form.getPayload().timezone).toBe('Europe/Lisbon');
+  });
+
+  it('does not read as unsaved on an older hostel that has no zone yet', () => {
+    const form = setUp('edit', { id: 1, name: 'Old', timezone: null }).componentInstance;
+    expect(form.dirty()).toBe(false);
+  });
+
+  it('holds the field read-only, says why, and sends nothing while locked', () => {
+    const fixture = setUp('edit', { id: 1, name: 'Backpacker', timezone: 'Asia/Karachi' }, true);
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(fixture.componentInstance.getPayload()).not.toHaveProperty('timezone');
+    expect(el.textContent).toContain('Locked because this hostel has bookings');
+    expect(el.querySelector('#hf-timezone')?.hasAttribute('disabled') || el.querySelector('#hf-timezone')?.getAttribute('aria-disabled') === 'true').toBe(true);
+  });
+});

@@ -143,7 +143,6 @@ describe('AccountBookingEdit', () => {
     const [, patch] = vi.mocked(TestBed.inject(MyBookingsApi).update).mock.calls[0];
     expect(patch.stay?.checkIn).toEqual(new Date(2026, 8, 30));
     expect(patch.stay?.checkOut).toEqual(new Date(2026, 9, 3));
-    expect(patch.stay?.hostelCountry).toBe('Pakistan');
     expect(patch.stay?.lines.map((l) => [l.roomId, l.quantity])).toEqual([
       ['KGJwMC', 2],
       ['MqVuEl', 2],

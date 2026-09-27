@@ -20,11 +20,66 @@ function booking(over: Partial<HostBooking> = {}): HostBooking {
     status: { name: 'Paid', slug: 'paid' },
     disposition: { name: 'Pending Allotment', slug: 'pending-allotment' },
     notes: '',
+    lines: [],
+    currency: 'PKR',
+    cancellationReason: '',
+    occupancies: [],
+    room: null,
+    renter: null,
     source: '',
     createdAt: '',
     ...over,
   };
 }
+
+function roomCell(over: Partial<HostBooking> = {}): string {
+  const col = HOST_BOOKINGS_TABLE_COLS.find((c) => c.key === 'room');
+  if (!col) throw new Error('room column missing');
+  return (col.cell(booking(over)) as { value: string }).value;
+}
+
+/**
+ * Where the party is (Trello #81): the rooms they were checked into once they are in, what
+ * they booked before that, and the one room type for an older record with neither.
+ */
+describe('host-bookings-table-cols — room', () => {
+  it('names the rooms and how many are in each, once checked in', () => {
+    expect(
+      roomCell({
+        occupancies: [
+          { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true },
+          { id: 'o2', roomId: 'r2', roomNumber: '102', guests: 1, active: true },
+        ],
+      }),
+    ).toBe('101 × 2 · 102 × 1');
+  });
+
+  it('leaves out rooms already released', () => {
+    expect(
+      roomCell({
+        occupancies: [
+          { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: false },
+          { id: 'o2', roomId: 'r2', roomNumber: '102', guests: 1, active: true },
+        ],
+      }),
+    ).toBe('102 × 1');
+  });
+
+  it('says what was booked before anyone is placed', () => {
+    expect(
+      roomCell({
+        lines: [
+          { roomTypeId: 'k', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 0 },
+          { roomTypeId: 'd', name: 'Dormitory', shared: true, units: 2, guests: 2, subtotal: 0 },
+        ],
+      }),
+    ).toBe('1 room · King size room, 2 beds · Dormitory');
+  });
+
+  it('falls back to the one room type on an older record', () => {
+    expect(roomCell()).toBe('Dormitory · shared');
+  });
+});
 
 function totalCell(over: Partial<HostBooking> = {}) {
   const col = HOST_BOOKINGS_TABLE_COLS.find((c) => c.key === 'total');

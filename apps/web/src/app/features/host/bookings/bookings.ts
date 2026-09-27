@@ -3,7 +3,9 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   signal,
+  viewChild,
 } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -16,6 +18,7 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  FilterOption,
   FilterValues,
   GlobalFilter,
   PaginationConfig,
@@ -27,7 +30,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { BookingFormDrawer } from './booking-form-drawer/booking-form-drawer';
 import { HOST_BOOKINGS_TABLE_COLS } from '@util/table-configs/host-bookings-table-cols';
 import { BookingCalendar } from './booking-calendar';
-import { LaneKey, laneKeyFor } from './booking-month';
+import { LaneKey, laneFor } from './booking-month';
 import {
   bookingFilterGroups,
   bookingFilterParams,
@@ -35,8 +38,11 @@ import {
 import { HostBooking, HostBookingPage, HostBookingsApi } from './host-bookings-api';
 import { PAGE_SIZE } from '@util/pagination';
 import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
-import { ACTIONS_BY_LANE, BookingAction, BookingDetailsPanel } from './booking-details-panel';
+import { BookingAction, BookingDetailsPanel, actionsFor } from './booking-details-panel';
 import { NotificationService } from '@core/notification.service';
+import { ALL_ROOMS_LIMIT, HostOpsApi, SubscriptionStore } from '@services';
+import { RouterLink } from '@angular/router';
+import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 
@@ -73,6 +79,8 @@ const LOADING: ViewState = { loading: true, error: false, data: null };
     BookingDetailsPanel,
     BookingFormDrawer,
     DashboardLayout,
+    RouterLink,
+    LocaleLink,
     EmptyState,
     ErrorState,
     ContextMenu,
@@ -90,6 +98,7 @@ export class HostBookings {
   private readonly bookingsApi = inject(HostBookingsApi);
 
   private readonly refresh = signal(0);
+  private readonly calendar = viewChild(BookingCalendar);
 
   /**
    * Page and filter are declared up here, above {@link state}, and the order is load-bearing.
@@ -99,7 +108,6 @@ export class HostBookings {
    * would still be `undefined` at that moment and the page would throw on construction.
    */
   private readonly page = signal(1);
-  protected readonly filterGroups = bookingFilterGroups();
   protected readonly filters = signal<FilterValues>({});
 
   /**
@@ -111,6 +119,23 @@ export class HostBookings {
     (this.route.parent ?? this.route).paramMap.pipe(map((p) => p.get('hostelId') ?? '')),
     { initialValue: '' },
   );
+
+  private readonly hostOps = inject(HostOpsApi);
+  /** The hostel's rooms, for the "Guests in room" filter. */
+  private readonly roomOptions = toSignal(
+    toObservable(computed(() => this.hostelId())).pipe(
+      switchMap((id) =>
+        !id
+          ? of([] as FilterOption[])
+          : this.hostOps.rooms(id, 1, ALL_ROOMS_LIMIT).pipe(
+              map((r) => r.rooms.map((room) => ({ value: room.id, label: `Room ${room.number}` }))),
+              catchError(() => of([] as FilterOption[])),
+            ),
+      ),
+    ),
+    { initialValue: [] as FilterOption[] },
+  );
+  protected readonly filterGroups = computed(() => bookingFilterGroups(this.roomOptions()));
 
   /**
    * One request per hostel, page and filter — the server does the narrowing now.
@@ -175,7 +200,7 @@ export class HostBookings {
     const f = this.filters();
     const dispositions = Array.isArray(f['disposition']) ? (f['disposition'] as string[]) : [];
     const range = (f['checkIn'] ?? {}) as { from?: string; to?: string };
-    return dispositions.length > 0 || !!range.from || !!range.to;
+    return dispositions.length > 0 || !!range.from || !!range.to || !!f['room'];
   });
 
   protected onFiltersApply(values: FilterValues): void {
@@ -237,9 +262,17 @@ export class HostBookings {
       default:
         this.dialogReason.set('');
         this.dialogError.set('');
+        // The details panel steps aside rather than stacking under the dialog: it sits a layer
+        // above modals (z-[70]) so its own dropdowns can open over it, which put a dialog opened
+        // from it *behind* it. It comes back when the dialog closes — see `closeDialog`.
+        this.panelBehindDialog = this.viewing()?.id === e.booking.id ? this.viewing() : null;
+        if (this.panelBehindDialog) this.viewing.set(null);
         this.dialog.set({ action: e.action, booking: e.booking });
     }
   }
+
+  /** The booking whose details panel stepped aside for a dialog, to reopen afterwards. */
+  private panelBehindDialog: HostBooking | null = null;
 
   /**
    * Sends one move and takes the server's copy of the booking back.
@@ -263,9 +296,15 @@ export class HostBookings {
       next: (updated) => {
         this.busy.set(false);
         if (this.viewing()?.id === updated.id) this.viewing.set(updated);
+        // A panel that stepped aside for the dialog comes back showing what the move did.
+        if (this.panelBehindDialog?.id === updated.id) this.viewing.set(updated);
+        this.panelBehindDialog = null;
         this.dialog.set(null);
         onSuccess();
-        this.refresh.update((n) => n + 1);
+        // The reply is the updated booking: the calendar's counts and the table's row move
+        // from it locally, with no second request.
+        this.calendar()?.applyChange(booking, updated);
+        this.listData.update((d) => d && { ...d, items: d.items.map((b) => (b.id === updated.id ? updated : b)) });
         this.notifications.success(title, message);
       },
       error: (err: { message?: string } | null) => {
@@ -288,7 +327,11 @@ export class HostBookings {
   });
 
   protected closeDialog(): void {
-    if (!this.busy()) this.dialog.set(null);
+    if (this.busy()) return;
+    this.dialog.set(null);
+    // Backed out: the host is returned to the booking they were looking at.
+    if (this.panelBehindDialog) this.viewing.set(this.panelBehindDialog);
+    this.panelBehindDialog = null;
   }
 
   protected confirmDialog(): void {
@@ -310,6 +353,9 @@ export class HostBookings {
         return;
       case 'checkOut':
         this.send(d.booking, (id) => this.bookingsApi.checkOut(hostelId, id), 'Checked out', 'Every bed this booking held is free again.', fail);
+        return;
+      case 'markPaid':
+        this.send(d.booking, (id) => this.bookingsApi.markPaid(hostelId, id), 'Marked as paid', 'Nothing is left due on this booking.', fail);
         return;
       case 'invoice':
         this.send(
@@ -361,14 +407,37 @@ export class HostBookings {
 
   private readonly notifications = inject(NotificationService);
 
+  /**
+   * The hostel's subscription has lapsed. This page stays open (the server keeps existing
+   * bookings working), so it says what is paused and how to renew, rather than letting the
+   * host find out from a refused walk-in.
+   */
+  private readonly subscription = inject(SubscriptionStore);
+  protected readonly lapsed = computed(
+    () => this.subscription.status() === 'ready' && !this.subscription.isActive(),
+  );
+  protected readonly subscriptionLink = computed(() => `/host/${this.hostelId()}/subscription`);
+
   /** The moves the row menu offers — the same set the panel does, from the same table. */
   protected rowActions(b: HostBooking): readonly BookingAction[] {
-    const lane = laneKeyFor(b.disposition.slug);
-    return lane ? ACTIONS_BY_LANE[lane] : [];
+    return actionsFor(b);
   }
 
   protected actionLabel(action: BookingAction): string {
     return ACTION_MENU_LABEL[action];
+  }
+
+  /** The status badge the list uses, so the dialog names the stage the same way. */
+  protected laneBadge(b: HostBooking): string {
+    return laneFor(b.disposition.slug)?.badge ?? 'bg-ink-100 text-ink-600';
+  }
+
+  /** "101 × 2 · 102 × 1" — who is in which room now, or `''` before check-in. */
+  protected activeRooms(b: HostBooking): string {
+    return b.occupancies
+      .filter((o) => o.active)
+      .map((o) => `${o.roomNumber} × ${o.guests}`)
+      .join(' · ');
   }
 
   protected actionIcon(action: BookingAction): string {
@@ -454,7 +523,15 @@ export class HostBookings {
    * but because it was answering with only the rows that happened to be in hand: one page
    * of ten, presented as though it were the property’s whole book.
    */
-  protected readonly rows = computed(() => this.state().data?.items ?? []);
+  protected readonly rows = computed(() => this.listData()?.items ?? []);
+
+  /**
+   * The fetched page, with this page's own actions applied on top.
+   *
+   * An action's reply is the updated booking, so a cancel or a confirm swaps that one row in
+   * place instead of asking for the page again. Re-seeded by every real fetch.
+   */
+  private readonly listData = linkedSignal(() => this.state().data);
 
   /**
    * Null below two pages, which is what hides the pager: a control whose every button is
@@ -483,6 +560,7 @@ const ACTION_MENU_LABEL: Record<BookingAction, string> = {
   invoice: 'Generate invoice',
   cancel: 'Cancel booking',
   noShow: 'Mark no show',
+  markPaid: 'Mark as paid',
 };
 
 const ACTION_ICON: Record<BookingAction, string> = {
@@ -492,4 +570,5 @@ const ACTION_ICON: Record<BookingAction, string> = {
   invoice: 'ti-file-invoice',
   cancel: 'ti-calendar-x',
   noShow: 'ti-user-x',
+  markPaid: 'ti-cash',
 };

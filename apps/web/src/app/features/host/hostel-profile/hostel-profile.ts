@@ -18,6 +18,8 @@ import { Button, ConfirmModal, ErrorState, Skeleton } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
 import { HostelForm } from '../hostel-form/hostel-form';
+import { SessionStore } from '@core/auth/session-store';
+import { HostBookingsApi } from '../bookings/host-bookings-api';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 interface ViewState {
@@ -44,6 +46,30 @@ export class HostelProfile {
   protected readonly hostelId = toSignal(
     this.route.parent!.paramMap.pipe(map((pm) => pm.get('hostelId') ?? '')),
     { initialValue: this.store.selected() },
+  );
+
+  /**
+   * Whether the hostel's time zone is locked for whoever is editing.
+   *
+   * The server refuses a host moving the zone once the hostel has bookings — every stay is
+   * stored against it — but does not say in advance whether there are any. So one row of the
+   * bookings list is asked for. Admins and moderators may still change it. If the count cannot
+   * be read, the field stays open and the server's 422 is the backstop.
+   */
+  private readonly session = inject(SessionStore);
+  private readonly bookingsApi = inject(HostBookingsApi);
+  protected readonly timezoneLocked = toSignal(
+    toObservable(this.hostelId).pipe(
+      switchMap((id) =>
+        !id || this.session.hasRole('super-admin', 'admin', 'moderator')
+          ? of(false)
+          : this.bookingsApi.list(id, 1, 1).pipe(
+              map((page) => page.total > 0),
+              catchError(() => of(false)),
+            ),
+      ),
+    ),
+    { initialValue: false },
   );
 
   protected readonly previewUrl = computed(() => {

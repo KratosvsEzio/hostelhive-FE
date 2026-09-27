@@ -33,8 +33,19 @@ function dayYear(iso: string | undefined | null): string {
   }
 }
 
-/** "Dormitory · shared", or just the name when the API omits the occupancy. */
+/**
+ * Where the party is: the rooms they were checked into — "101 × 2 · 102 × 1" — once they are
+ * in (Trello #81); before that, what they booked, line by line; and for an older record with
+ * neither, its one room type.
+ */
 function roomLine(b: HostBooking): string {
+  const inRooms = b.occupancies.filter((o) => o.active);
+  if (inRooms.length) return inRooms.map((o) => `${o.roomNumber} × ${o.guests}`).join(' · ');
+  if (b.lines.length) {
+    return b.lines
+      .map((l) => `${l.units} ${l.shared ? 'bed' : 'room'}${l.units === 1 ? '' : 's'} · ${l.name}`)
+      .join(', ');
+  }
   const { name, occupancyType } = b.roomType;
   return occupancyType ? `${name} · ${occupancyType}` : name;
 }

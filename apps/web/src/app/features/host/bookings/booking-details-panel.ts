@@ -10,7 +10,7 @@ import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-
 import { isPrivateOccupancy } from '@util/occupancy-type';
 
 /** What a host can do to a booking, as the lifecycle (Trello #80) allows it. */
-export type BookingAction = 'confirm' | 'checkIn' | 'checkOut' | 'invoice' | 'cancel' | 'noShow';
+export type BookingAction = 'confirm' | 'checkIn' | 'checkOut' | 'invoice' | 'cancel' | 'noShow' | 'markPaid';
 
 /**
  * Which actions each stage offers, primary last.
@@ -28,6 +28,28 @@ export const ACTIONS_BY_LANE: Readonly<Record<LaneKey, readonly BookingAction[]>
   'no-show': ['invoice'],
   cancelled: [],
 };
+
+/**
+ * Stages a booking can be marked paid from.
+ *
+ * Narrower than the server's `PAYABLE_STATUSES`, which also takes `no-show`: a booking that
+ * ended as a no-show or was cancelled is closed, and the host does not record payment on it.
+ */
+const PAYABLE: readonly LaneKey[] = ['confirmed', 'checked-in', 'checked-out'];
+
+/**
+ * The moves a booking offers now: its stage's, plus "Mark as paid" while money is still owed on
+ * a stage that can be paid (Trello #81). Placed before the stage's primary move, so the move
+ * that finishes the stage stays last and filled.
+ */
+export function actionsFor(b: HostBooking): readonly BookingAction[] {
+  const lane = laneKeyFor(b.disposition.slug);
+  if (!lane) return [];
+  const base = ACTIONS_BY_LANE[lane];
+  const owed = b.paid < b.total;
+  if (!owed || !PAYABLE.includes(lane)) return base;
+  return [...base.slice(0, -1), 'markPaid', ...base.slice(-1)];
+}
 
 interface OccupancyState {
   loading: boolean;
@@ -69,14 +91,14 @@ export class BookingDetailsPanel {
   );
 
   protected readonly actions = computed<readonly BookingAction[]>(() => {
-    const lane = this.lane();
-    return lane ? ACTIONS_BY_LANE[lane] : [];
+    const b = this.booking();
+    return b ? actionsFor(b) : [];
   });
   /** The move that finishes this stage — drawn filled, the rest outlined. */
   protected readonly primary = computed(() => {
     const a = this.actions();
     const last = a[a.length - 1];
-    return last && last !== 'cancel' && last !== 'invoice' ? last : null;
+    return last && last !== 'cancel' && last !== 'invoice' && last !== 'markPaid' ? last : null;
   });
 
   protected readonly isShared = computed(
@@ -150,15 +172,23 @@ export class BookingDetailsPanel {
         const b = this.booking();
         const checkedIn = b && laneKeyFor(b.disposition.slug) === 'checked-in';
         return { key: checkedIn ? `${this.hostelId()}|${b.id}` : '', tick: this.occupancyTick() };
-      }),
+      },
+      // The page swaps in the server's copy after every action (marked paid, say). Same
+      // booking, same rooms — so only a different booking or a release re-reads them.
+      { equal: (a, b) => a.key === b.key && a.tick === b.tick }),
     ).pipe(
       switchMap(({ key }) => {
         if (!key) return of<OccupancyState>({ loading: false, error: false, rows: [] });
         const [hostelId, bookingId] = key.split('|');
+        // The booking carries its rooms now (Trello #81): shown at once, then refreshed from
+        // the endpoint — which is also what a release re-reads.
+        const carried = this.booking()?.occupancies ?? [];
         return this.api.occupancies(hostelId, bookingId).pipe(
           map((rows) => ({ loading: false, error: false, rows })),
-          startWith<OccupancyState>({ loading: true, error: false, rows: [] }),
-          catchError(() => of<OccupancyState>({ loading: false, error: true, rows: [] })),
+          startWith<OccupancyState>({ loading: !carried.length, error: false, rows: carried }),
+          catchError(() =>
+            of<OccupancyState>({ loading: false, error: !carried.length, rows: carried }),
+          ),
         );
       }),
     ),
@@ -237,4 +267,5 @@ const ACTION_LABEL: Record<BookingAction, string> = {
   invoice: 'Generate invoice',
   cancel: 'Cancel booking',
   noShow: 'Mark no show',
+  markPaid: 'Mark as paid',
 };

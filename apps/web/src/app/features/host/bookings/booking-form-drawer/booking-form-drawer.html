@@ -170,6 +170,16 @@
       <p class="rounded-xl bg-warn/10 px-3 py-2.5 text-sm text-warn">Add the guest's phone number — a booking cannot be saved without one.</p>
     }
 
+    @if (needsSubscription()) {
+      <div class="rounded-xl border border-brand-200 bg-brand-50 px-3 py-3 text-sm text-ink-800" role="alert">
+        <p class="flex items-start gap-2">
+          <i class="ti ti-crown mt-0.5 shrink-0 text-brand-500" aria-hidden="true"></i>
+          <span>This hostel's subscription has lapsed, so new bookings are paused. Bookings already made still work — check-in, check-out, payments and cancellations.</span>
+        </p>
+        <a hh-button size="sm" class="mt-2.5" [routerLink]="subscriptionLink()" (click)="closed.emit()">Renew subscription</a>
+      </div>
+    }
+
     @if (saveError()) {
       <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">{{ saveError() }}</p>
     }

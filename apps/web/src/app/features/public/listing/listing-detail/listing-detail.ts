@@ -387,7 +387,6 @@ export class ListingDetail {
     this.bookingApi
       .createBooking({
         hostelId: String(listing.id),
-        hostelCountry: listing.country,
         checkIn: from,
         checkOut: to,
         lines: this.basket.lines(),

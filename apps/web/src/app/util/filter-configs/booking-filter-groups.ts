@@ -1,6 +1,5 @@
-import { FilterGroup, FilterValues } from '@hostelhive/ui';
+import { FilterGroup, FilterOption, FilterValues } from '@hostelhive/ui';
 import { LANES, slugsFor } from '@features/host/bookings/booking-month';
-import { dayRangeEnd, dayRangeStart } from '@util/date-range-filter';
 
 /**
  * The only filter on the bookings list — the table half of the page.
@@ -14,7 +13,7 @@ import { dayRangeEnd, dayRangeStart } from '@util/date-range-filter';
  * list reads as a life cycle rather than an alphabet. They are the same five the calendar
  * counts and the status column badges, which is the point: one vocabulary for the page.
  */
-export function bookingFilterGroups(): FilterGroup[] {
+export function bookingFilterGroups(rooms: readonly FilterOption[] = []): FilterGroup[] {
   return [
     {
       key: 'disposition',
@@ -43,6 +42,25 @@ export function bookingFilterGroups(): FilterGroup[] {
         },
       ],
     },
+    // Only once the rooms are known: an empty picker would read as a hostel with none.
+    ...(rooms.length
+      ? [
+          {
+            key: 'room',
+            label: 'Room',
+            icon: 'ti-door',
+            fields: [
+              {
+                key: 'room',
+                type: 'select' as const,
+                label: 'Guests in room',
+                description: 'Bookings with guests checked into this room now.',
+                options: [...rooms],
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 }
 
@@ -60,8 +78,8 @@ export function bookingFilterGroups(): FilterGroup[] {
  * Two conventions, both the backend’s:
  *  - `f[disposition.slug][]` repeats one key per value. The `[]` is required — without it a
  *    repeated key collapses to whichever value happened to come last.
- *  - `checkin_date` is a datetime, so a day is a *range* across it. A bare `2026-08-24` on
- *    both ends matches only arrivals recorded at exactly midnight, which is none of them.
+ *  - Days go **plain**, `2026-08-24` (Trello #81): the server applies the hostel's own day
+ *    boundaries. Booking lists only — other lists still send the time-bounded convention.
  */
 export function bookingFilterParams(values: FilterValues): Record<string, string | string[]> {
   const params: Record<string, string | string[]> = {};
@@ -73,8 +91,12 @@ export function bookingFilterParams(values: FilterValues): Record<string, string
   if (dispositions.length) params['f[disposition.slug][]'] = dispositions.flatMap(slugsFor);
 
   const range = (values['checkIn'] ?? {}) as { from?: string; to?: string };
-  if (range.from) params['f[checkin_date][gte]'] = dayRangeStart(range.from);
-  if (range.to) params['f[checkin_date][lte]'] = dayRangeEnd(range.to);
+  if (range.from) params['f[checkin_date][gte]'] = range.from;
+  if (range.to) params['f[checkin_date][lte]'] = range.to;
+
+  // Bookings with guests in this room now — the index's active occupancies (Trello #81).
+  const room = values['room'];
+  if (typeof room === 'string' && room) params['f[occupied_room_ids]'] = room;
 
   return params;
 }

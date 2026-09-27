@@ -91,6 +91,22 @@
         <label class="mb-1 block text-xs font-medium text-ink-500" for="hf-currency">{{ 'hostelForm.currency' | transloco }}</label>
         <hh-currency-select controlId="hf-currency" [value]="currency()" (valueChange)="setCurrency($event)" />
       </div>
+      <!-- Every booking, invoice and bill is in this zone, so it sits beside the currency: both
+           are how the property counts. Read-only once a host's hostel has bookings. -->
+      <div>
+        <label class="mb-1 block text-xs font-medium text-ink-500" for="hf-timezone">Time zone</label>
+        <hh-timezone-select
+          controlId="hf-timezone"
+          [value]="timezone()"
+          [disabled]="timezoneLocked()"
+          (valueChange)="setTimezone($event)"
+        />
+        @if (timezoneLocked()) {
+          <p class="mt-1 text-xs text-ink-500">Locked because this hostel has bookings — changing it would move every stay. Ask support if it is wrong.</p>
+        } @else {
+          <p class="mt-1 text-xs text-ink-400">Bookings, invoices and bills use the hostel's local time.</p>
+        }
+      </div>
       <div>
         <label class="mb-1 block text-xs font-medium text-ink-500" for="hf-billing">{{ 'hostelForm.billingFrequency' | transloco }}</label>
         <!-- The conflict goes to the control, not beside it: `hh-dropdown` reddens its own

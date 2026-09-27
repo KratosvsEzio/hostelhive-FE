@@ -59,6 +59,7 @@
       <hh-hostel-form
         mode="edit"
         [initialData]="s.data"
+        [timezoneLocked]="timezoneLocked()"
         [saving]="saving()"
         (primarySelected)="onPrimarySelected($event)"
       />

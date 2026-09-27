@@ -97,7 +97,29 @@ describe('BookingDetailsPanel', () => {
   });
 
   it('draws check-in and no-show for a confirmed booking', () => {
-    expect(buttons(render(booking('confirmed')))).toEqual(['Cancel booking', 'Mark no show', 'Check in']);
+    expect(buttons(render(booking('confirmed', { paid: 67200, balanceDue: 0 })))).toEqual([
+      'Cancel booking',
+      'Mark no show',
+      'Check in',
+    ]);
+  });
+
+  // Mark as paid (Trello #81): only on a payable stage, only while money is owed, and never
+  // displacing the stage's own finishing move from the end.
+  it('offers mark as paid on a confirmed booking with a balance, before check-in', () => {
+    expect(buttons(render(booking('confirmed')))).toEqual(['Cancel booking', 'Mark no show', 'Mark as paid', 'Check in']);
+  });
+
+  it('does not offer mark as paid once nothing is owed', () => {
+    expect(buttons(render(booking('checked-out', { paid: 67200, balanceDue: 0 })))).toEqual(['Generate invoice']);
+  });
+
+  it('does not offer mark as paid on a booking the hostel has not confirmed', () => {
+    expect(buttons(render(booking('pending')))).not.toContain('Mark as paid');
+  });
+
+  it('does not offer mark as paid on a no-show, even one that still owes', () => {
+    expect(buttons(render(booking('no-show')))).toEqual(['Generate invoice']);
   });
 
   it('offers only a Close on a cancelled booking', () => {
@@ -150,6 +172,27 @@ describe('BookingDetailsPanel', () => {
     // Re-read after the release — on the next change detection, as the page would get it.
     fixture.detectChanges();
     expect(api.occupancies).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not re-read the rooms when the same booking comes back marked paid', () => {
+    const b = booking('checked-in');
+    api = new ApiStub();
+    TestBed.configureTestingModule({
+      imports: [Host],
+      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
+    });
+    fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.booking.set(b);
+    fixture.detectChanges();
+    expect(api.occupancies).toHaveBeenCalledTimes(1);
+
+    // The page swaps in the server's reply to mark_as_paid: same booking, now settled.
+    fixture.componentInstance.booking.set({ ...b, paid: b.total, balanceDue: 0 });
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(api.occupancies).toHaveBeenCalledTimes(1);
+    expect(text).not.toContain('Mark as paid');
   });
 
   it('does not ask for rooms on a booking that is not checked in', () => {

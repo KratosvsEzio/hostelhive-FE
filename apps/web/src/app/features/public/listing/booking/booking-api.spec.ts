@@ -223,9 +223,7 @@ describe('BookingApi.createBooking', () => {
     const { api, http } = makeApi();
     api
       .createBooking({
-        hostelId: 'MjvuEl',
-        hostelCountry: 'Pakistan',
-        checkIn: new Date(2026, 8, 20),
+        hostelId: 'MjvuEl',        checkIn: new Date(2026, 8, 20),
         checkOut: new Date(2026, 8, 23),
         lines: [LINE],
         guest: { name: 'Ali Raza', phone: '923001234567', email: 'ali@example.com' },
@@ -253,11 +251,12 @@ describe('BookingApi.createBooking', () => {
   });
 
   // 2pm at the hostel, not 2pm in the browser — five hours apart in the home market.
-  it('dates the stay on the hostel’s clock', () => {
+  // Plain days: the server reads them in the hostel's zone (Trello #81).
+  it('dates the stay as the plain days picked', () => {
     const body = send().body as { booking: { checkin_date: string; checkout_date: string } };
 
-    expect(body.booking.checkin_date).toBe('2026-09-20T09:00:00.000Z');
-    expect(body.booking.checkout_date).toBe('2026-09-23T06:00:00.000Z');
+    expect(body.booking.checkin_date).toBe('2026-09-20');
+    expect(body.booking.checkout_date).toBe('2026-09-23');
   });
 
   it('sends the basket as line items', () => {

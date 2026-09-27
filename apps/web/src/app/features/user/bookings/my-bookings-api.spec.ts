@@ -149,7 +149,7 @@ describe('toGuestBooking', () => {
       checkout_date: '2026-10-01T11:00:00.000+05:00',
       hostel_id: 'H1',
     });
-    expect(b.hostel).toEqual({ id: 'H1', name: '', place: '', address: '', lat: null, lng: null });
+    expect(b.hostel).toEqual({ id: 'H1', name: '', place: '', address: '', timezone: '', lat: null, lng: null });
     expect(b.lines).toEqual([]);
     expect(b.total).toBe(0);
     expect(b.stage).toBeNull();
@@ -467,7 +467,7 @@ describe('MyBookingsApi — changing a booking', () => {
     expect((patch.mock.calls[0][1] as { booking: { notes: string } }).booking.notes).toBe('');
   });
 
-  it("sends new dates and rooms in create's shape, at the hostel's check-in and check-out hours", () => {
+  it("sends new dates and rooms in create's shape, as plain days", () => {
     const { svc, patch } = api();
     svc
       .update('RbNKwO', {
@@ -475,7 +475,6 @@ describe('MyBookingsApi — changing a booking', () => {
         stay: {
           checkIn: new Date(2026, 9, 1),
           checkOut: new Date(2026, 9, 4),
-          hostelCountry: 'Pakistan',
           lines: [
             { roomId: 'KGJwMC', title: 'King size room', kind: 'private', quantity: 2, unitPrice: 10000, actualPrice: 12000, capacity: 4, guests: 5 },
             { roomId: 'MqVuEl', title: 'Dormitory', kind: 'shared', quantity: 2, unitPrice: 1200, actualPrice: 2000, capacity: 12, guests: 2 },
@@ -485,9 +484,9 @@ describe('MyBookingsApi — changing a booking', () => {
       .subscribe();
 
     const { booking } = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
-    // 14:00 and 11:00 in Lahore (UTC+5), whatever zone the browser is in.
-    expect(booking['checkin_date']).toBe('2026-10-01T09:00:00.000Z');
-    expect(booking['checkout_date']).toBe('2026-10-04T06:00:00.000Z');
+    // Plain days: the server reads them in the hostel's zone (Trello #81).
+    expect(booking['checkin_date']).toBe('2026-10-01');
+    expect(booking['checkout_date']).toBe('2026-10-04');
     expect(booking['line_items']).toEqual([
       { room_type_id: 'KGJwMC', guests: 5, quantity: 2, occupancy_type: 'private_room' },
       // A shared line's bed count is its guests, so it carries no quantity.

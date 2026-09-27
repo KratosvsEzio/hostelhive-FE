@@ -54,6 +54,8 @@ import { DEFAULT_CURRENCY_CODE } from '@util/currencies';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
+import { TimezoneSelect } from '@app/shared/timezone/timezone-select';
+import { browserTimeZone } from '@util/time-zones';
 import {
   DEFAULT_OCCUPANCY_TYPE,
   defaultOccupancyFrom,
@@ -221,6 +223,7 @@ interface EditableHostel {
   genderType: string;
   billingFrequency: string;
   currency: string;
+  timezone: string;
   offerIds: string[];
   email: string;
   phone: string;
@@ -265,7 +268,7 @@ const SECTION_ERROR_KEYS: Record<FormSection, readonly string[]> = {
     RichText,
     RoomTypeRow,
     StatusPill,
-    CurrencySelect,
+    CurrencySelect, TimezoneSelect,
     ConfirmModal,
     TranslocoPipe,
   ],
@@ -332,6 +335,13 @@ export class HostelForm {
    * {@link rejectedPhotos}. Everything else on this form behaves identically for both.
    */
   readonly moderating = input(false);
+
+  /**
+   * The hostel has bookings, and whoever is editing is its host: the server refuses to move
+   * the zone then (every stay is stored against it), so the field is shown read-only with the
+   * reason instead of failing on save. Moderators and admins can still change it.
+   */
+  readonly timezoneLocked = input(false);
 
   /** Rejected photo id → the reason shown to the host. Overlays the grid; moderation only. */
   readonly rejectedPhotos = input<ReadonlyMap<string, string>>(new Map());
@@ -411,6 +421,11 @@ export class HostelForm {
    * opening someone else's listing never quietly reprices it.
    */
   protected readonly currency = signal(inject(CurrencyPreference).code());
+  /**
+   * The zone the property keeps its dates in. A new hostel starts from the host's browser,
+   * which is the likely answer and only that; an existing one loads what it was saved in.
+   */
+  protected readonly timezone = signal(browserTimeZone());
   protected readonly email = signal('');
   protected readonly phone = signal('');
   /**
@@ -606,6 +621,7 @@ export class HostelForm {
       billingFrequency:
         d.billing_frequency ?? 'month',
       currency: d.currency ?? DEFAULT_CURRENCY_CODE,
+      timezone: d.timezone || browserTimeZone(),
       offerIds: [...offerIds].sort(),
       email: d.email ?? '',
       phone: d.primary_phone ?? '',
@@ -628,6 +644,7 @@ export class HostelForm {
     genderType: this.genderType(),
     billingFrequency: this.billingFrequency(),
     currency: this.currency(),
+    timezone: this.timezone(),
     offerIds: [...this.selectedOfferIds()].sort(),
     email: this.email(),
     phone: this.phone(),
@@ -822,6 +839,8 @@ export class HostelForm {
         d.billing_frequency ?? 'month',
       );
       this.currency.set(d.currency ?? DEFAULT_CURRENCY_CODE);
+      // An older hostel saved before zones existed has none; the browser's is the proposal.
+      this.timezone.set(d.timezone || browserTimeZone());
       this.email.set(d.email ?? '');
       this.phone.set(d.primary_phone ?? '');
       this.secondaryPhone.set(d.secondary_phone ?? '');
@@ -897,6 +916,9 @@ export class HostelForm {
   }
   protected setCurrency(v: string | string[] | null): void {
     if (typeof v === 'string' && v) this.currency.set(v);
+  }
+  protected setTimezone(v: string | null): void {
+    if (v && !this.timezoneLocked()) this.timezone.set(v);
   }
 
   // ── location ──
@@ -1424,6 +1446,8 @@ export class HostelForm {
       gender_type: snap.genderType as HostelInput['gender_type'],
       billing_frequency: snap.billingFrequency,
       currency: snap.currency,
+      // Not sent while locked: the host cannot change it, and an unchanged value is no change.
+      ...(this.timezoneLocked() || !snap.timezone ? {} : { timezone: snap.timezone }),
       nearby_landmarks: snap.landmarks || undefined,
       offer_ids: snap.offerIds,
       total_rooms: currentRts.length || 1,

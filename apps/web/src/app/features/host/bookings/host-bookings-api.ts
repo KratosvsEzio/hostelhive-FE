@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
-import { dayRangeEnd, dayRangeStart } from '@util/date-range-filter';
 import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
 
 /**
@@ -107,17 +106,16 @@ export class HostBookingsApi {
    * as much of the day as that list happened to contain. A day is a question the server can
    * answer exactly, so it is asked.
    *
-   * The bounds span the whole day — `T00:00:00` to `T23:59:59` — because `checkin_date` is a
-   * datetime, not a date. A bare `2026-08-24` on both ends would match only arrivals recorded
-   * at exactly midnight, which is none of them. {@link dayRangeStart}/{@link dayRangeEnd} are
-   * the same helpers expenses, invoices and utilities send their ranges with.
+   * **Plain days on both ends** (Trello #81): the server applies the hostel's own day
+   * boundaries, so `2026-08-24` means that day at the property. A time with this browser's
+   * offset — what used to be sent — pins the day to wherever the host happens to be.
    */
   bookingsOn(hostelId: string, date: string): Observable<HostBooking[]> {
     return this.api
       .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
         ...pageParams(1, DAY_ARRIVALS_LIMIT),
-        'f[checkin_date][gte]': dayRangeStart(date),
-        'f[checkin_date][lte]': dayRangeEnd(date),
+        'f[checkin_date][gte]': date,
+        'f[checkin_date][lte]': date,
       })
       .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
   }
@@ -156,8 +154,8 @@ export class HostBookingsApi {
       .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
         ...pageParams(1, ROOM_MONTH_LIMIT),
         'f[room.id]': roomId,
-        'f[checkin_date][lte]': dayRangeEnd(to),
-        'f[checkout_date][gte]': dayRangeStart(from),
+        'f[checkin_date][lte]': to,
+        'f[checkout_date][gte]': from,
       })
       .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
   }
@@ -174,14 +172,14 @@ export class HostBookingsApi {
    * `POST …/bookings` — a walk-in or phone booking the host writes down.
    *
    * The same body the guest endpoint takes: room types and how many, not rooms — rooms are
-   * placed at check-in. The dates arrive already resolved to instants in the hostel's zone.
+   * placed at check-in. Dates go as plain days, which the server reads in the hostel's zone.
    */
   create(hostelId: string, input: HostBookingInput): Observable<HostBooking> {
     return this.api
       .post<{ booking?: ApiHostBooking | null }>(`/api/host/hostels/${hostelId}/bookings`, {
         booking: {
-          checkin_date: input.checkInAt,
-          checkout_date: input.checkOutAt,
+          checkin_date: input.checkIn,
+          checkout_date: input.checkOut,
           guest_name: input.guestName.trim(),
           guest_phone: input.guestPhone.replace(/\D/g, ''),
           ...(input.guestEmail.trim() ? { guest_email: input.guestEmail.trim() } : {}),
@@ -217,6 +215,16 @@ export class HostBookingsApi {
     return this.post(hostelId, bookingId, 'mark_as_checked_in', {
       allocations: allocations.map((a) => ({ room_id: a.roomId, guests: a.guests })),
     });
+  }
+
+  /**
+   * `POST …/mark_as_paid` — the guest settled at the property (Trello #81). Sets what was paid
+   * to the total, so nothing is left due. Confirmed, checked in, checked out or no-show only;
+   * 422 on anything else, and on a booking already paid. It does not touch the invoice, which
+   * is marked paid on its own.
+   */
+  markPaid(hostelId: string, bookingId: string): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_paid', {});
   }
 
   /** `POST …/mark_as_checked_out` — checked-in → checked-out, releasing every bed. */
@@ -278,9 +286,9 @@ export class HostBookingsApi {
 }
 
 export interface HostBookingInput {
-  /** UTC instants of the hostel's check-in and check-out hours on the chosen days. */
-  checkInAt: string;
-  checkOutAt: string;
+  /** Plain `yyyy-MM-dd` days — the server reads them in the hostel's zone (Trello #81). */
+  checkIn: string;
+  checkOut: string;
   guestName: string;
   guestPhone: string;
   guestEmail: string;
@@ -306,6 +314,8 @@ interface ApiOccupanciesResponse {
     | {
         id: string;
         room_id?: string | null;
+        /** Flat on the booking payload; nested under `room` on the occupancies endpoint. */
+        room_number?: string | null;
         guests?: HostApiNumber;
         status?: string | null;
         room?: { id?: string | null; room_number?: string | null } | null;
@@ -317,7 +327,7 @@ function toOccupancy(o: NonNullable<ApiOccupanciesResponse['occupancies']>[numbe
   return {
     id: String(o.id),
     roomId: o.room?.id ?? o.room_id ?? '',
-    roomNumber: o.room?.room_number ?? '—',
+    roomNumber: o.room?.room_number ?? o.room_number ?? '—',
     guests: num(o.guests),
     active: (o.status ?? 'active') === 'active',
   };
@@ -449,6 +459,11 @@ export interface ApiHostBooking {
     | null;
   /** Written by a host cancel or no-show. Not serialised yet; read when it is. */
   cancellation_reason?: string | null;
+  /**
+   * The rooms the party was checked into, one per room (Trello #81). `inactive` means released
+   * or checked out. On both the list and a single booking.
+   */
+  occupancies?: ApiOccupanciesResponse['occupancies'];
   /** Where the booking came from — `Hostelworld`, `Direct`. Often null. */
   source?: string | number | null;
   created_at?: string | null;
@@ -537,6 +552,8 @@ export interface HostBooking {
   currency: string;
   /** Why the host cancelled it or marked it a no-show, once the server sends it. */
   cancellationReason: string;
+  /** Which rooms the party is (or was) in, and how many in each. Empty until checked in. */
+  occupancies: BookingOccupancy[];
   /** Channel, when the record names one. */
   source: string;
   createdAt: string;
@@ -630,6 +647,7 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     })),
     currency: b.currency?.trim().toUpperCase() ?? '',
     cancellationReason: b.cancellation_reason?.trim() ?? '',
+    occupancies: (b.occupancies ?? []).map(toOccupancy),
     // A number (`0`) on a single booking, a channel name on the list.
     source: typeof b.source === 'string' ? b.source.trim() : '',
     createdAt: b.created_at ?? '',

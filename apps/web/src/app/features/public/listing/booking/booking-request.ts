@@ -1,5 +1,3 @@
-import { countryTimeZone } from '@core/geo/country-time-zones';
-import { localDateAtWallTime } from '@util/zoned-time';
 import { BasketLine } from './room-offer';
 
 /**
@@ -10,16 +8,6 @@ import { BasketLine } from './room-offer';
  * line, a `quantity` on a line that should not carry one. None of those fail — they book
  * something other than what the guest chose, and the guest finds out at reception.
  */
-
-/**
- * When a stay starts and ends, on the hostel's clock.
- *
- * Two fixed hours rather than anything the guest picks, because the picker asks for dates and
- * a hostel's check-in window is the hostel's to set. They are the hours the API's own example
- * carries, and 2pm-in / 11am-out is the near-universal arrangement besides.
- */
-export const CHECK_IN_HOUR = 14;
-export const CHECK_OUT_HOUR = 11;
 
 /**
  * Who the booking is for — not necessarily the account holder, since people book for other
@@ -112,8 +100,6 @@ export function readCreatedBooking(
 
 export interface BookingRequestInput {
   hostelId: string;
-  /** The country on the hostel record — what its clock runs on. See `countryTimeZone`. */
-  hostelCountry: string | null | undefined;
   /** Local midnights from the date picker; only their calendar dates are read. */
   checkIn: Date;
   checkOut: Date;
@@ -134,25 +120,36 @@ export function toLineItem(line: BasketLine): ApiBookingLineItem {
 }
 
 /**
+ * A calendar day as the API takes it, `yyyy-MM-dd`, from the picker's local midnight.
+ *
+ * Read from the local components on purpose: the picker's Date is midnight *here*, and
+ * `toISOString()` would move it to the previous day for anyone east of Greenwich.
+ */
+export function calendarDay(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
  * The whole request.
  *
- * The dates are resolved against the hostel's zone, so a guest in London booking a room in
- * Lahore agrees to arrive at 2pm Lahore time. Reading the browser's zone instead is the bug
- * this exists to prevent, and it is a five-hour one in the app's home market — enough to move
- * a check-in onto the previous day.
+ * **Dates go as plain days** (Trello #81). The server reads `2026-10-17` in the hostel's own
+ * zone — stored on the hostel since azeem-hamza/hostelhive#10 — so a guest in London booking a
+ * room in Lahore books Lahore's 17th. The instant used to be worked out here, from a zone
+ * guessed off the hostel's country; sending one pins the booking to whatever zone this browser
+ * or that guess put it in, which is wrong for any hostel elsewhere.
  *
  * Phone numbers go out as digits. The input renders them spaced and bracketed for reading and
  * the API takes them plain, and stripping here rather than at the input keeps what the guest
  * typed intact in the field they typed it in.
  */
 export function toBookingRequest(input: BookingRequestInput): ApiCreateBookingRequest {
-  const zone = countryTimeZone(input.hostelCountry);
   const notes = input.guest.notes?.trim();
   return {
     hostel_id: input.hostelId,
     booking: {
-      checkin_date: localDateAtWallTime(input.checkIn, CHECK_IN_HOUR, 0, zone).toISOString(),
-      checkout_date: localDateAtWallTime(input.checkOut, CHECK_OUT_HOUR, 0, zone).toISOString(),
+      checkin_date: calendarDay(input.checkIn),
+      checkout_date: calendarDay(input.checkOut),
       guest_name: input.guest.name.trim(),
       guest_phone: input.guest.phone.replace(/\D/g, ''),
       guest_email: input.guest.email.trim(),

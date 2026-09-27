@@ -137,13 +137,14 @@ describe('HostBookingsApi.bookingsOn', () => {
     return { api: TestBed.inject(HostBookingsApi), calls };
   }
 
-  it('spans the whole day rather than a bare date', () => {
+  // Plain days: the server applies the hostel's own day boundaries (Trello #81).
+  it('asks for the day as a plain date on both ends', () => {
     const { api, calls } = capture();
     api.bookingsOn('nHelLt', '2026-08-24').subscribe();
 
     const p = calls[0].params as Record<string, unknown>;
-    expect(p['f[checkin_date][gte]']).toBe('2026-08-24T00:00:00');
-    expect(p['f[checkin_date][lte]']).toBe('2026-08-24T23:59:59');
+    expect(p['f[checkin_date][gte]']).toBe('2026-08-24');
+    expect(p['f[checkin_date][lte]']).toBe('2026-08-24');
   });
 
   /**
@@ -461,8 +462,8 @@ describe('HostBookingsApi — the lifecycle', () => {
   it('creates a walk-in in the guest booking shape: room types, per-line guests, phone as digits', () => {
     svc()
       .create('MjvuEl', {
-        checkInAt: '2026-10-10T09:00:00.000Z',
-        checkOutAt: '2026-10-12T06:00:00.000Z',
+        checkIn: '2026-10-10',
+        checkOut: '2026-10-12',
         guestName: ' Walk In ',
         guestPhone: '+92 300 5556666',
         guestEmail: '',
@@ -474,8 +475,8 @@ describe('HostBookingsApi — the lifecycle', () => {
       .subscribe();
     expect(post).toHaveBeenCalledWith('/api/host/hostels/MjvuEl/bookings', {
       booking: {
-        checkin_date: '2026-10-10T09:00:00.000Z',
-        checkout_date: '2026-10-12T06:00:00.000Z',
+        checkin_date: '2026-10-10',
+        checkout_date: '2026-10-12',
         guest_name: 'Walk In',
         guest_phone: '923005556666',
         line_items: [
@@ -484,5 +485,39 @@ describe('HostBookingsApi — the lifecycle', () => {
         ],
       },
     });
+  });
+});
+
+describe('HostBookingsApi — mark as paid (Trello #81)', () => {
+  it('posts to mark_as_paid with no body, and returns the settled booking', () => {
+    const post = vi.fn().mockReturnValue(of({ booking: raw({ paid_amount: '616000.0', total_price: '616000.0', balance_due: undefined }) }));
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: { post } }] });
+    let out: HostBooking | undefined;
+    TestBed.inject(HostBookingsApi).markPaid('MjvuEl', 'vKkMIE').subscribe((b) => (out = b));
+
+    expect(post).toHaveBeenCalledWith('/api/host/hostels/MjvuEl/bookings/vKkMIE/mark_as_paid', {});
+    expect(out?.paid).toBe(616000);
+    expect(out?.balanceDue).toBe(0);
+  });
+});
+
+describe('toHostBooking occupancies (Trello #81)', () => {
+  it('reads the rooms a party was checked into, flat on the booking payload', () => {
+    const b = toHostBooking(
+      raw({
+        occupancies: [
+          { id: 'o1', room_id: 'aVXGyz', room_number: '101', guests: 2, status: 'active' },
+          { id: 'o2', room_id: 'AmBKhx', room_number: '102', guests: 1, status: 'inactive' },
+        ],
+      }),
+    );
+    expect(b.occupancies).toEqual([
+      { id: 'o1', roomId: 'aVXGyz', roomNumber: '101', guests: 2, active: true },
+      { id: 'o2', roomId: 'AmBKhx', roomNumber: '102', guests: 1, active: false },
+    ]);
+  });
+
+  it('has none before check-in', () => {
+    expect(toHostBooking(raw()).occupancies).toEqual([]);
   });
 });
