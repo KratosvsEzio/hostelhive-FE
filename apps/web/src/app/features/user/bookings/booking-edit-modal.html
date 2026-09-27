@@ -1,0 +1,101 @@
+<hh-confirm-modal
+  size="md"
+  icon="ti-edit"
+  tone="info"
+  [title]="(stay() ? 'userBookings.reviewChanges' : 'userBookings.editDetails') | transloco"
+  [confirmLabel]="(saving() ? 'common.saving' : 'common.saveChanges') | transloco"
+  [confirmColor]="'primary'"
+  [confirmDisabled]="saving()"
+  (confirm)="submit()"
+  (cancel)="dismissed.emit()"
+>
+  @if (stay(); as s) {
+    <!-- The new stay, and what it now costs against what it did. The figure is the page's
+         estimate from the room rates; the server prices it again on save, and the booking
+         page shows whatever it stored. -->
+    <div class="rounded-xl border border-ink-100 bg-surface px-3 py-3 text-sm">
+      <p class="font-medium text-ink-900">
+        {{ s.checkIn | date: 'EEE, d MMM' }} – {{ s.checkOut | date: 'EEE, d MMM yyyy' }}
+        <span class="font-normal text-ink-500">
+          · {{ (s.nights === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: s.nights } }}
+        </span>
+      </p>
+      <ul class="mt-2 space-y-1">
+        @for (line of s.lines; track line.title) {
+          <li class="flex items-baseline justify-between gap-3 text-ink-700">
+            <span class="min-w-0">
+              {{
+                (line.shared
+                  ? (line.units === 1 ? 'userBookings.nBedsOne' : 'userBookings.nBeds')
+                  : (line.units === 1 ? 'userBookings.nRoomsOne' : 'userBookings.nRooms'))
+                  | transloco: { count: line.units }
+              }}
+              · {{ line.title }}
+              <span class="text-ink-400">· {{ 'common.nGuests' | transloco: { count: line.guests } }}</span>
+            </span>
+            <span class="shrink-0 whitespace-nowrap tabular-nums">{{ s.currency | currencySym }} {{ line.total | number }}</span>
+          </li>
+        }
+      </ul>
+      <p class="mt-2 flex items-baseline justify-between gap-3 border-t border-ink-100 pt-2">
+        <span class="font-semibold text-ink-900">{{ 'userBookings.newTotal' | transloco }}</span>
+        <span class="whitespace-nowrap tabular-nums">
+          @if (s.previousTotal !== s.total) {
+            <span class="me-1.5 text-xs text-ink-400 line-through">{{ s.currency | currencySym }} {{ s.previousTotal | number }}</span>
+          }
+          <span class="font-semibold text-ink-900">{{ s.currency | currencySym }} {{ s.total | number }}</span>
+        </span>
+      </p>
+    </div>
+    <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-500">
+      {{ 'publicBooking.guestDetails' | transloco }}
+    </p>
+  } @else {
+    <p class="text-sm text-ink-600">{{ 'userBookings.editDetailsHint' | transloco }}</p>
+  }
+
+  <div class="mt-4 grid gap-3">
+    <hh-input
+      size="md"
+      autocomplete="name"
+      [label]="'common.fullName' | transloco"
+      [(value)]="guestName"
+      [error]="nameError() ? ('publicBooking.enterTheGuestName' | transloco) : ''"
+    />
+    <hh-phone-input
+      [label]="'publicBooking.phone' | transloco"
+      [(phone)]="guestPhone"
+      [error]="phoneError() ? ('publicBooking.enterAValidPhone' | transloco) : ''"
+    />
+    <hh-input
+      size="md"
+      type="email"
+      autocomplete="email"
+      [label]="'publicBooking.email' | transloco"
+      [(value)]="guestEmail"
+      [error]="emailError() ? ('publicBooking.enterAValidEmail' | transloco) : ''"
+    />
+    <div>
+      <label for="booking-edit-notes" class="mb-1 block text-xs font-medium text-ink-600">
+        {{ 'publicBooking.notesForTheHostel' | transloco }}
+      </label>
+      <textarea
+        #notesField
+        id="booking-edit-notes"
+        rows="3"
+        class="block w-full resize-none rounded-xl border border-ink-200 bg-transparent px-3 py-2.5 text-sm text-ink-900 outline-none transition placeholder:text-ink-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+        [attr.maxlength]="notesMax"
+        [placeholder]="'publicBooking.notesPlaceholder' | transloco"
+        [value]="notes()"
+        (input)="notes.set(notesField.value)"
+      ></textarea>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="mt-3 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger" role="alert">
+      <span class="ti ti-alert-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
+      {{ error() }}
+    </p>
+  }
+</hh-confirm-modal>

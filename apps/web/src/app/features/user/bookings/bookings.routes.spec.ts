@@ -21,7 +21,7 @@ function find(routes: Route[], path: string, inherited: unknown[] = []): { route
  * `authGuard`, in every copy of the tree (the bare one and the `:locale` one).
  */
 describe('the bookings pages require a signed-in user', () => {
-  for (const path of ['bookings', 'bookings/:id']) {
+  for (const path of ['bookings', 'bookings/:id', 'bookings/:id/edit']) {
     it(`guards /account/${path} in every locale tree`, () => {
       const hits = find(appRoutes, path).filter(({ guards }) => guards.includes(authGuard));
       const all = find(appRoutes, path).filter(({ route }) => !route.redirectTo);

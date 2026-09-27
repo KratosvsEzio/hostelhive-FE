@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
 import { ApiPagination, PageInfo, pageParams, toPageInfo } from '@util/pagination';
+import { toBookingRequest } from '@features/public/listing/booking/booking-request';
+import { BasketLine } from '@features/public/listing/booking/room-offer';
 
 /**
  * A guest's page of their own bookings is short — a handful a year for anyone. One page this
@@ -79,7 +81,7 @@ export interface ApiMyBooking {
     longitude?: ApiNumber;
   } | null;
   line_items?: ApiMyBookingLine[] | null;
-  /** The payment state. */
+  /** The lifecycle group (`pending`, `confirmed`, …) the server's edit and cancel rules read. */
   status?: ApiNamedSlug | null;
   /** Where the stay is in its life — the one a guest tracks. */
   disposition?: ApiNamedSlug | null;
@@ -139,6 +141,8 @@ export interface WallTime {
 
 export interface GuestBookingLine {
   id: string;
+  /** The room type — the id the room picker's offers carry, for putting it back in a basket. */
+  roomTypeId: string;
   name: string;
   shared: boolean;
   /** Rooms on a private line, beds on a shared one. */
@@ -182,6 +186,12 @@ export interface GuestBooking {
   stage: BookingStage | null;
   /** The server's own name for the disposition. */
   stageName: string;
+  /**
+   * The booking's status group — `pending`, `confirmed`, … — which is what the server's edit
+   * and cancel rules read. Not the disposition above: a `pending-payment` disposition sits
+   * under the `pending` status and is still editable.
+   */
+  statusSlug: string;
 }
 
 export interface GuestBookingPage {
@@ -282,6 +292,7 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
     bookedOn: wallTime(b.created_at).date,
     lines: (b.line_items ?? []).map((l) => ({
       id: l.id,
+      roomTypeId: l.room_type_id ?? l.room_type?.id ?? '',
       name: l.room_type_name ?? l.room_type?.name ?? '',
       shared: l.occupancy_type === 'shared',
       units: num(l.quantity) || num(l.guests),
@@ -290,6 +301,7 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
     })),
     stage: stageFor(b.disposition?.slug),
     stageName: b.disposition?.name ?? '',
+    statusSlug: b.status?.slug ?? '',
   };
 }
 
@@ -330,17 +342,93 @@ export class MyBookingsApi {
   }
 
   /**
-   * `GET /api/bookings/:id` — one of the caller's bookings.
-   *
-   * An envelope with no booking in it errors rather than emitting an empty one, so the page
-   * shows "not found" instead of a card of blanks.
+   * `GET /api/bookings/:id` — one of the caller's bookings. Someone else's answers 404.
    */
   get(id: string): Observable<GuestBooking> {
-    return this.api.get<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`).pipe(
-      map((res) => {
-        if (!res?.booking?.id) throw new Error(`booking ${id} not in response`);
-        return toGuestBooking(res.booking);
-      }),
-    );
+    return this.api
+      .get<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`)
+      .pipe(map((res) => readBooking(res, id)));
   }
+
+  /**
+   * `PATCH /api/bookings/:id` — anything the guest chose when booking, while it is pending.
+   *
+   * Contact details and the note always. Dates and rooms only when {@link
+   * GuestBookingPatch.stay} is given, and then in exactly the shape create sends them —
+   * built by the same `toBookingRequest`, so the hostel-timezone check-in and check-out and
+   * the per-line `guests` / `quantity` rules cannot drift between making and changing a
+   * booking. `guests` is never sent: the server sums it from the lines.
+   *
+   * The server answers 422 once the booking has left pending.
+   */
+  update(id: string, patch: GuestBookingPatch): Observable<GuestBooking> {
+    const notes = patch.notes.trim();
+    const booking: Record<string, unknown> = {
+      guest_name: patch.guestName.trim(),
+      // Digits, as create sends it and as the server stores it.
+      guest_phone: patch.guestPhone.replace(/\D/g, ''),
+      guest_email: patch.guestEmail.trim(),
+      // Sent even when empty: clearing the note is a change.
+      notes,
+    };
+    if (patch.stay) {
+      const { checkin_date, checkout_date, line_items } = toBookingRequest({
+        hostelId: '',
+        hostelCountry: patch.stay.hostelCountry,
+        checkIn: patch.stay.checkIn,
+        checkOut: patch.stay.checkOut,
+        lines: patch.stay.lines,
+        guest: { name: '', phone: '', email: '' },
+      }).booking;
+      Object.assign(booking, { checkin_date, checkout_date, line_items });
+    }
+    return this.api
+      .patch<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`, { booking })
+      .pipe(map((res) => readBooking(res, id)));
+  }
+
+  /** `POST /api/bookings/:id/mark_as_cancelled` — from pending or confirmed; 422 after that. */
+  cancel(id: string): Observable<GuestBooking> {
+    return this.api
+      .post<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}/mark_as_cancelled`, {})
+      .pipe(map((res) => readBooking(res, id)));
+  }
+}
+
+/** What the guest may change on a booking. See {@link MyBookingsApi.update} for why only this. */
+export interface GuestBookingPatch {
+  guestName: string;
+  guestPhone: string;
+  guestEmail: string;
+  notes: string;
+  /** New dates and rooms. Absent when only the details changed, so those alone are sent. */
+  stay?: GuestStayPatch;
+}
+
+export interface GuestStayPatch {
+  /** Local midnights from the date picker; only their calendar dates are read. */
+  checkIn: Date;
+  checkOut: Date;
+  /** The hostel's country — what its clock, and so the check-in hour, runs on. */
+  hostelCountry: string | null | undefined;
+  lines: readonly BasketLine[];
+}
+
+/**
+ * The booking out of a single-booking envelope. One with no booking in it errors rather
+ * than emitting an empty one, so the page shows "not found" instead of a card of blanks.
+ */
+function readBooking(res: ApiMyBookingResponse | null | undefined, id: string): GuestBooking {
+  if (!res?.booking?.id) throw new Error(`booking ${id} not in response`);
+  return toGuestBooking(res.booking);
+}
+
+/** Changing the details is allowed only while the booking is pending. */
+export function canEdit(b: GuestBooking): boolean {
+  return b.statusSlug === 'pending';
+}
+
+/** Cancelling is allowed while pending or confirmed. */
+export function canCancel(b: GuestBooking): boolean {
+  return b.statusSlug === 'pending' || b.statusSlug === 'confirmed';
 }

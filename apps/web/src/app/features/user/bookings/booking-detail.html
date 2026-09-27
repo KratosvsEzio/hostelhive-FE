@@ -110,7 +110,62 @@
         </span>
       }
     </div>
+
+    <!-- What the guest can still do. Offered only while the server allows it: changing it
+         while pending, cancelling while pending or confirmed. Past that, the hostel is the one
+         to talk to, and the page says so rather than showing buttons that answer 422. -->
+    @if (editable() || cancellable() || (b.stage !== 'cancelled' && b.stage !== 'checked-out')) {
+      <div class="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pb-4 sm:px-5 sm:pb-5">
+        @if (editable()) {
+          <!-- Hands the booking over, as the list does, so the change page draws at once. -->
+          <a hh-button variant="outlined" size="sm" routerLink="edit" [state]="{ booking: b }">
+            <i class="ti ti-edit" aria-hidden="true"></i>{{ 'userBookings.changeBooking' | transloco }}
+          </a>
+        }
+        @if (cancellable()) {
+          <button hh-button variant="outlined" color="danger" size="sm" (click)="openCancel()">
+            <i class="ti ti-calendar-x" aria-hidden="true"></i>{{ 'common.cancelBooking' | transloco }}
+          </button>
+        }
+        @if (!editable() && b.stage !== 'cancelled' && b.stage !== 'checked-out') {
+          <p class="text-xs text-ink-500">{{ 'userBookings.contactToChange' | transloco }}</p>
+        }
+      </div>
+    }
   </header>
+
+  @if (cancelOpen()) {
+    <hh-confirm-modal
+      icon="ti-calendar-x"
+      tone="danger"
+      [title]="'common.cancelThisBooking' | transloco"
+      [confirmLabel]="(busy() ? 'userBookings.cancelling' : 'common.cancelBooking') | transloco"
+      [cancelLabel]="'userBookings.keepBooking' | transloco"
+      confirmColor="danger"
+      [confirmDisabled]="busy()"
+      (confirm)="confirmCancel()"
+      (cancel)="closeDialogs()"
+    >
+      <p class="text-ink-700">
+        {{
+          'userBookings.cancelExplainer'
+            | transloco
+              : {
+                  hostel: b.hostel.name || ('userBookings.aHostel' | transloco),
+                  from: (day(b.checkIn.date) | date: 'd MMM'),
+                  to: (day(b.checkOut.date) | date: 'd MMM yyyy'),
+                }
+        }}
+      </p>
+      <p class="mt-2 text-sm text-ink-500">{{ 'userBookings.cancelFinal' | transloco }}</p>
+      @if (actionError()) {
+        <p class="mt-3 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger" role="alert">
+          <span class="ti ti-alert-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
+          {{ actionError() }}
+        </p>
+      }
+    </hh-confirm-modal>
+  }
 
   <!-- Progress. Cancelled bookings have left the track, so they get a line instead. -->
   <section class="mt-4 rounded-2xl border border-ink-100 bg-white p-4 sm:p-5" aria-labelledby="booking-progress">

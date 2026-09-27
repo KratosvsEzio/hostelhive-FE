@@ -1,0 +1,68 @@
+<a
+  routerLink=".."
+  class="inline-flex items-center gap-1 rounded-lg text-sm font-medium text-ink-600 transition hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+>
+  <i class="ti ti-arrow-left rtl:rotate-180" aria-hidden="true"></i>{{ 'userBookings.backToBooking' | transloco }}
+</a>
+
+@if (loadError()) {
+  <hh-error-state
+    class="mt-6 block"
+    [title]="'userBookings.couldNotLoadBooking' | transloco"
+    [message]="'userBookings.couldNotLoadBookingHint' | transloco"
+    (retry)="reload()"
+  />
+} @else if (loading()) {
+  <div class="mt-4 space-y-4">
+    <hh-skeleton class="block h-10 w-2/3 rounded-xl" />
+    <hh-skeleton class="block h-64 w-full rounded-2xl" />
+  </div>
+} @else if (booking(); as b) {
+  <h1 class="mt-4 font-display text-2xl font-semibold text-ink-900">{{ 'userBookings.changeBooking' | transloco }}</h1>
+  <p class="mt-1 text-sm text-ink-500">
+    {{ b.hostel.name }} · <span class="tabular-nums">{{ b.ref }}</span>
+  </p>
+
+  @if (!editable()) {
+    <!-- Past pending the server refuses any change, so no controls are offered at all. -->
+    <p class="mt-6 flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-sm text-amber-900">
+      <i class="ti ti-info-circle mt-0.5 shrink-0" aria-hidden="true"></i>
+      {{ 'userBookings.noLongerEditable' | transloco }}
+    </p>
+  } @else {
+    @if (droppedRooms().length) {
+      <p class="mt-4 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger" role="status">
+        <i class="ti ti-alert-circle mt-0.5 shrink-0" aria-hidden="true"></i>
+        {{ 'userBookings.roomsNoLongerOffered' | transloco: { rooms: droppedRooms().join(', ') } }}
+      </p>
+    }
+
+    <!-- Stacked, not the listing's two columns: the account area is ~730px beside its own
+         sidebar, which left the room cards a third of it. The rail comes first because it is
+         the booking as it stands — dates, rooms, total — and the rooms below are what to add. -->
+    <div class="mt-6 space-y-6">
+      <!-- The listing's own rail. Its button reviews the change instead of booking. -->
+      <hh-booking-rail
+        [period]="period()"
+        [currency]="currency()"
+        ctaKey="userBookings.reviewChanges"
+        (book)="review()"
+        (chooseRoom)="toRooms()"
+      />
+      <div id="edit-rooms" class="min-w-0">
+        <hh-room-picker [offers]="offers()" [period]="period()" [currency]="currency()" />
+      </div>
+    </div>
+  }
+
+  @if (reviewOpen()) {
+    <app-booking-edit-modal
+      [booking]="b"
+      [stay]="summary()"
+      [saving]="saving()"
+      [error]="saveError()"
+      (saved)="save($event)"
+      (dismissed)="closeReview()"
+    />
+  }
+}

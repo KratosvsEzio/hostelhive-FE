@@ -5,6 +5,8 @@ import {
   ApiMyBooking,
   MY_BOOKINGS_LIMIT,
   MyBookingsApi,
+  canCancel,
+  canEdit,
   mapsUrl,
   stageFor,
   timingOf,
@@ -123,7 +125,7 @@ describe('toGuestBooking', () => {
 
   it('reads rooms off a private line and beds off a shared one', () => {
     const [king, dorm] = toGuestBooking(raw()).lines;
-    expect(king).toEqual({ id: 'giRYjo', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 250000 });
+    expect(king).toEqual({ id: 'giRYjo', roomTypeId: 'KGJwMC', name: 'King size room', shared: false, units: 1, guests: 3, subtotal: 250000 });
     expect(dorm).toMatchObject({ name: 'Dormitory', shared: true, units: 2, guests: 2 });
   });
 
@@ -371,5 +373,116 @@ describe('MyBookingsApi', () => {
     TestBed.inject(MyBookingsApi).get('a/b').subscribe();
 
     expect(get).toHaveBeenCalledWith('/api/bookings/a%2Fb');
+  });
+});
+
+describe('what the guest may change', () => {
+  const withStatus = (slug: string) => toGuestBooking(raw({ status: { name: slug, slug } }));
+
+  it('reads the status group off the row', () => {
+    expect(withStatus('confirmed').statusSlug).toBe('confirmed');
+    expect(toGuestBooking(raw({ status: null })).statusSlug).toBe('');
+  });
+
+  it('edits only while pending', () => {
+    expect(canEdit(withStatus('pending'))).toBe(true);
+    for (const slug of ['confirmed', 'checked-in', 'checked-out', 'cancelled', '']) {
+      expect(canEdit(withStatus(slug))).toBe(false);
+    }
+  });
+
+  it('cancels while pending or confirmed, and not after', () => {
+    expect(canCancel(withStatus('pending'))).toBe(true);
+    expect(canCancel(withStatus('confirmed'))).toBe(true);
+    for (const slug of ['checked-in', 'checked-out', 'cancelled', '']) {
+      expect(canCancel(withStatus(slug))).toBe(false);
+    }
+  });
+
+  it('follows the status, not the disposition beside it', () => {
+    // A `pending-payment` disposition sits under the `pending` status and is still editable.
+    const b = toGuestBooking(
+      raw({ status: { slug: 'pending' }, disposition: { slug: 'pending-payment', name: 'Pending payment' } }),
+    );
+    expect(canEdit(b)).toBe(true);
+  });
+});
+
+describe('MyBookingsApi — changing a booking', () => {
+  function api(response: unknown = { booking: raw({ notes: 'changed' }), success: true }) {
+    const patch = vi.fn().mockReturnValue(of(response));
+    const post = vi.fn().mockReturnValue(of(response));
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: { patch, post } }] });
+    return { svc: TestBed.inject(MyBookingsApi), patch, post };
+  }
+
+  const DETAILS = { guestName: ' Hassan ', guestPhone: '+92 300 1234567', guestEmail: ' a@b.co ', notes: ' late ' };
+
+  it('sends only the details when the stay did not change — trimmed, phone as digits', () => {
+    const { svc, patch } = api();
+    let result: unknown;
+    svc.update('RbNKwO', DETAILS).subscribe((r) => (result = r));
+
+    expect(patch).toHaveBeenCalledWith('/api/bookings/RbNKwO', {
+      booking: { guest_name: 'Hassan', guest_phone: '923001234567', guest_email: 'a@b.co', notes: 'late' },
+    });
+    const body = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
+    for (const key of ['checkin_date', 'checkout_date', 'guests', 'line_items']) {
+      expect(body.booking).not.toHaveProperty(key);
+    }
+    expect(result).toMatchObject({ id: 'RbNKwO', notes: 'changed' });
+  });
+
+  it('sends an emptied note, since clearing it is a change', () => {
+    const { svc, patch } = api();
+    svc.update('RbNKwO', { ...DETAILS, notes: '   ' }).subscribe();
+    expect((patch.mock.calls[0][1] as { booking: { notes: string } }).booking.notes).toBe('');
+  });
+
+  it("sends new dates and rooms in create's shape, at the hostel's check-in and check-out hours", () => {
+    const { svc, patch } = api();
+    svc
+      .update('RbNKwO', {
+        ...DETAILS,
+        stay: {
+          checkIn: new Date(2026, 9, 1),
+          checkOut: new Date(2026, 9, 4),
+          hostelCountry: 'Pakistan',
+          lines: [
+            { roomId: 'KGJwMC', title: 'King size room', kind: 'private', quantity: 2, unitPrice: 10000, actualPrice: 12000, capacity: 4, guests: 5 },
+            { roomId: 'MqVuEl', title: 'Dormitory', kind: 'shared', quantity: 2, unitPrice: 1200, actualPrice: 2000, capacity: 12, guests: 2 },
+          ],
+        },
+      })
+      .subscribe();
+
+    const { booking } = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
+    // 14:00 and 11:00 in Lahore (UTC+5), whatever zone the browser is in.
+    expect(booking['checkin_date']).toBe('2026-10-01T09:00:00.000Z');
+    expect(booking['checkout_date']).toBe('2026-10-04T06:00:00.000Z');
+    expect(booking['line_items']).toEqual([
+      { room_type_id: 'KGJwMC', guests: 5, quantity: 2, occupancy_type: 'private_room' },
+      // A shared line's bed count is its guests, so it carries no quantity.
+      { room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' },
+    ]);
+    // The headcount is the server's sum of the lines, never sent on its own.
+    expect(booking).not.toHaveProperty('guests');
+    expect(booking['guest_name']).toBe('Hassan');
+  });
+
+  it('cancels through mark_as_cancelled and returns the stored booking', () => {
+    const { svc, post } = api({ booking: raw({ disposition: { slug: 'cancelled', name: 'Cancelled' } }) });
+    let result: { stage?: string | null } | undefined;
+    svc.cancel('RbNKwO').subscribe((r) => (result = r));
+
+    expect(post).toHaveBeenCalledWith('/api/bookings/RbNKwO/mark_as_cancelled', {});
+    expect(result?.stage).toBe('cancelled');
+  });
+
+  it('errors when the reply carries no booking', () => {
+    const { svc } = api({ success: true });
+    let failed = false;
+    svc.cancel('RbNKwO').subscribe({ error: () => (failed = true) });
+    expect(failed).toBe(true);
   });
 });

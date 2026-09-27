@@ -10,12 +10,21 @@ import {
 import { DatePipe, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ErrorState, PhotoPlaceholder, Skeleton, StatusPill } from '@hostelhive/ui';
+import { Button, ConfirmModal, ErrorState, PhotoPlaceholder, Skeleton, StatusPill } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { NotificationService } from '@core/notification.service';
 import { ListingDetailApi } from '@services';
-import { GuestBooking, MyBookingsApi, STAGE_ORDER, mapsUrl, timingOf } from './my-bookings-api';
+import {
+  GuestBooking,
+  MyBookingsApi,
+  STAGE_ORDER,
+  canCancel,
+  canEdit,
+  mapsUrl,
+  timingOf,
+} from './my-bookings-api';
 import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-status';
 
 /**
@@ -37,6 +46,8 @@ import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-st
     DecimalPipe,
     RouterLink,
     LocaleLink,
+    Button,
+    ConfirmModal,
     ErrorState,
     PhotoPlaceholder,
     Skeleton,
@@ -197,6 +208,58 @@ export class AccountBookingDetail {
           if (!this.booking()) this.error.set(true);
         },
       });
+  }
+
+  // ── changing it ─────────────────────────────────────────────────────────────────
+  private readonly notifications = inject(NotificationService);
+
+  /** What the server allows now. It re-checks both, and answers 422 if the booking moved on. */
+  protected readonly editable = computed(() => {
+    const b = this.booking();
+    return !!b && canEdit(b);
+  });
+  protected readonly cancellable = computed(() => {
+    const b = this.booking();
+    return !!b && canCancel(b);
+  });
+
+  protected readonly cancelOpen = signal(false);
+  /** Locks the dialog while the request is out. */
+  protected readonly busy = signal(false);
+  protected readonly actionError = signal('');
+
+  protected openCancel(): void {
+    this.actionError.set('');
+    this.cancelOpen.set(true);
+  }
+
+  protected closeDialogs(): void {
+    if (this.busy()) return;
+    this.cancelOpen.set(false);
+  }
+
+  /**
+   * Cancels, and takes the server's copy of the booking back as the new truth — the reply,
+   * not a guess, since cancelling moves the status and the disposition together. A failure
+   * stays in the dialog, where the guest is looking, with the server's own reason.
+   */
+  protected confirmCancel(): void {
+    const b = this.booking();
+    if (!b || this.busy()) return;
+    this.busy.set(true);
+    this.actionError.set('');
+    this.api.cancel(b.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (updated) => {
+        this.busy.set(false);
+        this.booking.set(updated);
+        this.cancelOpen.set(false);
+        this.notifications.success(translate('userBookings.bookingCancelled'));
+      },
+      error: (err: { message?: string } | null) => {
+        this.busy.set(false);
+        this.actionError.set(err?.message || translate('userBookings.changeFailed'));
+      },
+    });
   }
 
   protected stepLabel(step: TrackStep): string {
