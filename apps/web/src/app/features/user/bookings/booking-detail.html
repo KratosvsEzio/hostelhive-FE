@@ -249,6 +249,13 @@
       {{ (b.nights === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: b.nights } }}
       · {{ 'common.nGuests' | transloco: { count: b.guests } }}
     </p>
+    <!-- The times are the hostel's, not this device's: a guest planning from abroad reads
+         "from 14:00" as 14:00 at the property. Said once, where the times are. -->
+    @if (b.hostel.timezone) {
+      <p class="border-t border-ink-100 px-4 py-2.5 text-xs text-ink-500 sm:px-5">
+        {{ 'userBookings.timesInZone' | transloco: { zone: b.hostel.timezone.replace('_', ' ') } }}
+      </p>
+    }
   </section>
 
   <!-- What was booked and what is left to pay. Nothing is paid online, so "due" is what the

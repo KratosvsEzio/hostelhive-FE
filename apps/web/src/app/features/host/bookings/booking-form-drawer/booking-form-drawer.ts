@@ -25,10 +25,10 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { HostelsApi } from '@services';
 import { RoomType } from '@hostelhive/data-access';
-import { countryTimeZone } from '@core/geo/country-time-zones';
-import { localDateAtWallTime } from '@util/zoned-time';
-import { CHECK_IN_HOUR, CHECK_OUT_HOUR } from '@features/public/listing/booking/booking-request';
 import { HostBookingsApi } from '../host-bookings-api';
+import { RouterLink } from '@angular/router';
+import { LocaleLink } from '@core/i18n/locale-link';
+import { isSubscriptionError } from '@util/subscription-error';
 
 /**
  * A room type as this form needs it: what it is called, how it is sold, what it costs.
@@ -52,8 +52,6 @@ interface RoomsState {
   loading: boolean;
   error: string;
   rooms: PickableRoom[];
-  /** The hostel's IANA zone, from its country — what 'check-in at 14:00' is measured in. */
-  zone: string;
 }
 
 /** Local midnight as `yyyy-mm-dd`, which is what the API takes. */
@@ -72,7 +70,7 @@ function isoDay(d: Date): string {
 @Component({
   selector: 'hh-booking-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Button, DateRangePicker, Drawer, Dropdown, Input, PhoneInput, Skeleton, TranslocoPipe],
+  imports: [DecimalPipe, RouterLink, LocaleLink, Button, DateRangePicker, Drawer, Dropdown, Input, PhoneInput, Skeleton, TranslocoPipe],
   templateUrl: './booking-form-drawer.html',
 })
 export class BookingFormDrawer {
@@ -114,9 +112,16 @@ export class BookingFormDrawer {
 
   protected readonly saving = signal(false);
   protected readonly saveError = signal('');
+  /**
+   * The hostel's subscription has lapsed: the server refuses new bookings (400) while the ones
+   * already made still work (Trello #81). Said as a renewal, with the way to renew, not as the
+   * raw refusal.
+   */
+  protected readonly needsSubscription = signal(false);
+  protected readonly subscriptionLink = computed(() => `/host/${this.hostelId()}/subscription`);
 
   /**
-   * The hostel's room types and its country, from the one detail call that carries both.
+   * The hostel's room types, from its detail.
    *
    * Loaded once per hostel rather than per date change: nothing here depends on the dates.
    * The server keeps no availability for a booking before check-in either, so none is shown;
@@ -125,24 +130,27 @@ export class BookingFormDrawer {
   protected readonly state = toSignal(
     toObservable(this.hostelId).pipe(
       switchMap((hostelId) => {
-        if (!hostelId) return of<RoomsState>({ loading: false, error: '', rooms: [], zone: countryTimeZone(null) });
+        if (!hostelId) return of<RoomsState>({ loading: false, error: '', rooms: [] });
         return this.hostels.getById(hostelId).pipe(
           map(
             (h): RoomsState => ({
               loading: false,
               error: '',
-              rooms: (h.room_types ?? []).map((rt) => this.toPickable(rt)),
-              zone: countryTimeZone(h.country),
+              // A type the host switched off is refused by the server ("… is not available
+              // for booking"), so it is not offered — the same rule the guest picker follows.
+              rooms: (h.room_types ?? [])
+                .filter((rt) => (rt as RoomType & { is_bookable?: boolean | null }).is_bookable !== false)
+                .map((rt) => this.toPickable(rt)),
             }),
           ),
-          startWith<RoomsState>({ loading: true, error: '', rooms: [], zone: countryTimeZone(null) }),
+          startWith<RoomsState>({ loading: true, error: '', rooms: [] }),
           catchError((e: Error) =>
-            of<RoomsState>({ loading: false, error: e.message, rooms: [], zone: countryTimeZone(null) }),
+            of<RoomsState>({ loading: false, error: e.message, rooms: [] }),
           ),
         );
       }),
     ),
-    { initialValue: { loading: true, error: '', rooms: [], zone: countryTimeZone(null) } as RoomsState },
+    { initialValue: { loading: true, error: '', rooms: [] } as RoomsState },
   );
 
   /**
@@ -313,20 +321,15 @@ export class BookingFormDrawer {
 
   protected save(): void {
     if (!this.canSave()) return;
-    const from = this.checkIn() as string;
-    const to = this.checkOut() as string;
-    const zone = this.state().zone;
-    const at = (day: string, hour: number) => {
-      const [y, m, d] = day.split('-').map(Number);
-      return localDateAtWallTime(new Date(y, m - 1, d), hour, 0, zone).toISOString();
-    };
     const guests = this.lineGuests();
     this.saving.set(true);
     this.saveError.set('');
+    this.needsSubscription.set(false);
     this.bookings
       .create(this.hostelId(), {
-        checkInAt: at(from, CHECK_IN_HOUR),
-        checkOutAt: at(to, CHECK_OUT_HOUR),
+        // Plain days: the server reads them in the hostel's zone (Trello #81).
+        checkIn: this.checkIn() as string,
+        checkOut: this.checkOut() as string,
         guestName: this.guestName(),
         guestPhone: this.guestPhone(),
         guestEmail: this.guestEmail(),
@@ -344,6 +347,10 @@ export class BookingFormDrawer {
         },
         error: (e: Error) => {
           this.saving.set(false);
+          if (isSubscriptionError(e)) {
+            this.needsSubscription.set(true);
+            return;
+          }
           this.saveError.set(e.message || 'Could not save that booking.');
         },
       });

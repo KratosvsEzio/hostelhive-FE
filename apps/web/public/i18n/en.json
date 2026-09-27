@@ -1507,7 +1507,8 @@
     "noShow": "No show",
     "noShowNote": "The hostel marked this booking as a no show — the guest did not arrive.",
     "withinCutoff": "Changes and cancellations close 3 days before check-in. To change anything now, call the hostel and quote your booking reference.",
-    "changeNeedsReconfirm": "Changing a confirmed booking sends it back to the hostel, which will need to confirm it again. Changes close 3 days before check-in."
+    "changeNeedsReconfirm": "Changing a confirmed booking sends it back to the hostel, which will need to confirm it again. Changes close 3 days before check-in.",
+    "timesInZone": "Times are the hostel's local time ({{zone}})."
   },
   "userFavorites": {
     "removeFromFavorites": "Remove from favorites?",

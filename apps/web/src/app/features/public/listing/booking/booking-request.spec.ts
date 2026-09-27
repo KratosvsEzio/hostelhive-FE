@@ -18,11 +18,10 @@ function line(over: Partial<BasketLine> = {}): BasketLine {
 }
 
 function request(
-  over: { lines?: BasketLine[]; country?: string | null; notes?: string } = {},
+  over: { lines?: BasketLine[]; notes?: string } = {},
 ) {
   return toBookingRequest({
     hostelId: 'MjvuEl',
-    hostelCountry: over.country === undefined ? 'Pakistan' : over.country,
     checkIn: new Date(2026, 8, 20), // 20 September, local midnight
     checkOut: new Date(2026, 8, 23),
     lines: over.lines ?? [line()],
@@ -80,35 +79,22 @@ describe('toBookingRequest', () => {
   });
 
   /**
-   * 2pm and 11am **on the hostel's clock**, sent as UTC. Pakistan is five hours ahead, so a
-   * 2pm check-in is 09:00Z. Reading the browser's zone instead is the bug this prevents, and
-   * in the home market it is a five-hour error — enough to move a check-in onto the day before.
+   * **Plain days** (Trello #81): the server reads `2026-09-20` in the hostel's own zone. A time
+   * — or a UTC instant worked out here — pins the stay to whatever zone produced it, which is
+   * wrong for any hostel in another one.
    */
-  it('puts check-in at 2pm and check-out at 11am, in the hostel country', () => {
+  it('sends the check-in and check-out as the plain days the picker showed', () => {
     const { booking } = request();
 
-    expect(booking.checkin_date).toBe('2026-09-20T09:00:00.000Z');
-    expect(booking.checkout_date).toBe('2026-09-23T06:00:00.000Z');
+    expect(booking.checkin_date).toBe('2026-09-20');
+    expect(booking.checkout_date).toBe('2026-09-23');
   });
 
-  it('resolves the times against a different country', () => {
-    // Sydney in September is on standard time, ten hours ahead.
-    const { booking } = request({ country: 'Australia' });
-
-    expect(booking.checkin_date).toBe('2026-09-20T04:00:00.000Z');
-  });
-
-  // An unrecognised country falls back to UTC rather than guessing — see `countryTimeZone`.
-  it('falls back to UTC for a country it does not know', () => {
-    expect(request({ country: 'Atlantis' }).booking.checkin_date).toBe('2026-09-20T14:00:00.000Z');
-    expect(request({ country: null }).booking.checkin_date).toBe('2026-09-20T14:00:00.000Z');
-  });
-
-  it('keeps the calendar dates the picker showed', () => {
+  it('never carries a time or an offset', () => {
     const { booking } = request();
 
-    expect(booking.checkin_date.slice(0, 10)).toBe('2026-09-20');
-    expect(booking.checkout_date.slice(0, 10)).toBe('2026-09-23');
+    expect(booking.checkin_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(booking.checkout_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it('carries the guest details', () => {
@@ -126,7 +112,6 @@ describe('toBookingRequest', () => {
   it('sends the phone as digits', () => {
     const req = toBookingRequest({
       hostelId: 'MjvuEl',
-      hostelCountry: 'Pakistan',
       checkIn: new Date(2026, 8, 20),
       checkOut: new Date(2026, 8, 23),
       lines: [line()],
@@ -139,7 +124,6 @@ describe('toBookingRequest', () => {
   it('trims the name and email', () => {
     const req = toBookingRequest({
       hostelId: 'MjvuEl',
-      hostelCountry: 'Pakistan',
       checkIn: new Date(2026, 8, 20),
       checkOut: new Date(2026, 8, 23),
       lines: [line()],

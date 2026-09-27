@@ -76,6 +76,8 @@ export interface ApiMyBooking {
     city?: string | null;
     /** Single booking only, like the coordinates below. */
     address_1?: string | null;
+    /** IANA zone the property keeps its dates in (Trello #81), e.g. `Asia/Karachi`. */
+    timezone?: string | null;
     /** Decimal strings (`"31.31401"`). */
     latitude?: ApiNumber;
     longitude?: ApiNumber;
@@ -177,6 +179,8 @@ export interface GuestBooking {
     place: string;
     /** The street address — only the single-booking payload carries it. */
     address: string;
+    /** The property's IANA zone, `''` when the payload does not say. Dates are already in it. */
+    timezone: string;
     /** Only the single-booking payload carries these; `null` from the list. */
     lat: number | null;
     lng: number | null;
@@ -290,6 +294,7 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
       name: hostel.name ?? '',
       place: [hostel.area, hostel.city].filter((s) => !!s?.trim()).join(', '),
       address: hostel.address_1?.trim() ?? '',
+      timezone: hostel.timezone?.trim() ?? '',
       ...coordinates(hostel.latitude, hostel.longitude),
     },
     checkIn,
@@ -370,9 +375,9 @@ export class MyBookingsApi {
    *
    * Contact details and the note always. Dates and rooms only when {@link
    * GuestBookingPatch.stay} is given, and then in exactly the shape create sends them —
-   * built by the same `toBookingRequest`, so the hostel-timezone check-in and check-out and
-   * the per-line `guests` / `quantity` rules cannot drift between making and changing a
-   * booking. `guests` is never sent: the server sums it from the lines.
+   * built by the same `toBookingRequest`, so the plain `yyyy-MM-dd` days (read by the server
+   * in the hostel's zone) and the per-line `guests` / `quantity` rules cannot drift between
+   * making and changing a booking. `guests` is never sent: the server sums it from the lines.
    *
    * The server answers 422 once the booking has left pending.
    */
@@ -389,7 +394,6 @@ export class MyBookingsApi {
     if (patch.stay) {
       const { checkin_date, checkout_date, line_items } = toBookingRequest({
         hostelId: '',
-        hostelCountry: patch.stay.hostelCountry,
         checkIn: patch.stay.checkIn,
         checkOut: patch.stay.checkOut,
         lines: patch.stay.lines,
@@ -424,8 +428,6 @@ export interface GuestStayPatch {
   /** Local midnights from the date picker; only their calendar dates are read. */
   checkIn: Date;
   checkOut: Date;
-  /** The hostel's country — what its clock, and so the check-in hour, runs on. */
-  hostelCountry: string | null | undefined;
   lines: readonly BasketLine[];
 }
 

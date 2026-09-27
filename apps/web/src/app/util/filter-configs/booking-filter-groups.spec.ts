@@ -1,4 +1,4 @@
-import { bookingFilterParams } from './booking-filter-groups';
+import { bookingFilterGroups, bookingFilterParams } from './booking-filter-groups';
 
 /**
  * The half of the filter contract that turns panel state into query params.
@@ -41,33 +41,47 @@ describe('bookingFilterParams', () => {
    * recorded at exactly midnight — which is none of them — so a day has to become a range
    * that spans it.
    */
-  it('spans whole days rather than sending bare dates', () => {
+  // Plain days (Trello #81): the server applies the hostel's own day boundaries.
+  it('sends the days plain, for the server to read in the hostel zone', () => {
     const p = bookingFilterParams({ checkIn: { from: '2026-08-01', to: '2026-08-31' } });
 
-    expect(p['f[checkin_date][gte]']).toBe('2026-08-01T00:00:00');
-    expect(p['f[checkin_date][lte]']).toBe('2026-08-31T23:59:59');
+    expect(p['f[checkin_date][gte]']).toBe('2026-08-01');
+    expect(p['f[checkin_date][lte]']).toBe('2026-08-31');
   });
 
   it('sends whichever end of the range was given', () => {
     expect(bookingFilterParams({ checkIn: { from: '2026-08-01' } })).toEqual({
-      'f[checkin_date][gte]': '2026-08-01T00:00:00',
+      'f[checkin_date][gte]': '2026-08-01',
     });
     expect(bookingFilterParams({ checkIn: { to: '2026-08-31' } })).toEqual({
-      'f[checkin_date][lte]': '2026-08-31T23:59:59',
+      'f[checkin_date][lte]': '2026-08-31',
     });
   });
 
   // What a lane click in the day ledger produces: one disposition, one day, both ends.
   it('turns a single day into a closed range', () => {
     const p = bookingFilterParams({
-      disposition: ['pending-allotment'],
+      disposition: ['pending'],
       checkIn: { from: '2026-08-26', to: '2026-08-26' },
     });
 
     expect(p).toEqual({
-      'f[disposition.slug][]': ['pending-allotment'],
-      'f[checkin_date][gte]': '2026-08-26T00:00:00',
-      'f[checkin_date][lte]': '2026-08-26T23:59:59',
+      // The lane asks for its pre-reseed slug too.
+      'f[disposition.slug][]': ['pending', 'pending-allotment'],
+      'f[checkin_date][gte]': '2026-08-26',
+      'f[checkin_date][lte]': '2026-08-26',
     });
+  });
+
+  // Bookings with guests in a room now — the index's active occupancies (Trello #81).
+  it('filters by the room guests are checked into', () => {
+    expect(bookingFilterParams({ room: 'aVXGyz' })).toEqual({ 'f[occupied_room_ids]': 'aVXGyz' });
+    expect(bookingFilterParams({ room: '' })).toEqual({});
+  });
+
+  it('offers the room filter only once the rooms are known', () => {
+    expect(bookingFilterGroups().map((g) => g.key)).not.toContain('room');
+    const withRooms = bookingFilterGroups([{ value: 'aVXGyz', label: 'Room 101' }]);
+    expect(withRooms.find((g) => g.key === 'room')?.fields[0].options).toEqual([{ value: 'aVXGyz', label: 'Room 101' }]);
   });
 });

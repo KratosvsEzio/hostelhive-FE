@@ -145,6 +145,8 @@ export interface HostelRoom {
  * Decimal columns (latitude/longitude) can serialize as strings in Rails JSON.
  */
 export interface HostelDetail {
+  /** IANA zone the property keeps its dates in, e.g. `Asia/Karachi`. Older records may lack it. */
+  timezone?: string | null;
   id: number;
   name: string;
   description?: string | null;
@@ -351,6 +353,11 @@ export interface RoomInput {
 /** The permitted fields of `hostel_params`. Enums accept the slug or the integer. */
 export interface HostelInput {
   name?: string;
+  /**
+   * IANA zone the property keeps its dates in (Trello #81). Required on create; locked for a
+   * host once the hostel has bookings, since moving it would shift every stay.
+   */
+  timezone?: string;
   description?: string;
   gender_type?: HostelGenderType | number;
   property_type?: HostelPropertyType | number;

@@ -138,8 +138,16 @@ export class BookingCalendar {
     { initialValue: { loading: true, error: false, data: EMPTY } as CalendarState },
   );
 
+  /**
+   * The month as last fetched, plus any moves made on this page since.
+   *
+   * Re-seeded whenever a new month arrives, so a local adjustment never outlives the next
+   * real answer from the server. See {@link applyChange}.
+   */
+  private readonly monthData = linkedSignal(() => this.state().data);
+
   protected readonly month = computed(() =>
-    buildBookingMonth(this.state().data.days, this.monthStart(), this.today),
+    buildBookingMonth(this.monthData().days, this.monthStart(), this.today),
   );
 
   /**
@@ -194,6 +202,43 @@ export class BookingCalendar {
     { initialValue: { loading: true, error: false, data: [] } as DayState },
   );
 
+  /** The selected day's stays as fetched, with this page's own moves applied on top. */
+  private readonly dayBookings = linkedSignal(() => this.dayState().data);
+
+  /**
+   * Moves one booking from the lane it was in to the lane the server now says it is in —
+   * a cancel, a no-show, a confirm — without asking for the month again.
+   *
+   * The action's reply already carries the updated booking, and the aggregation counts a
+   * booking once, on its check-in day, by disposition. So the day's numbers change by
+   * exactly one out of the old lane and one into the new: nothing a refetch would tell us
+   * that we do not already know.
+   */
+  applyChange(before: HostBooking, after: HostBooking): void {
+    const from = before.disposition.slug;
+    const to = after.disposition.slug;
+    const date = (after.checkIn || before.checkIn).slice(0, 10);
+
+    if (from !== to) {
+      this.monthData.update((data) => {
+        if (!data.days.some((d) => d.date === date)) return data;
+        const move = (counts: Record<string, number>): Record<string, number> => {
+          const next = { ...counts };
+          if (from && (next[from] ?? 0) > 0) next[from] -= 1;
+          if (to) next[to] = (next[to] ?? 0) + 1;
+          return next;
+        };
+        return {
+          ...data,
+          days: data.days.map((d) => (d.date === date ? { ...d, byDisposition: move(d.byDisposition) } : d)),
+          totals: move(data.totals),
+        };
+      });
+    }
+
+    this.dayBookings.update((rows) => rows.map((b) => (b.id === after.id ? after : b)));
+  }
+
   /**
    * The stays awaiting a room on the selected day, for the cards under the ledger.
    *
@@ -211,7 +256,7 @@ export class BookingCalendar {
     const date = this.selected();
     const rows = day.loading
       ? this.bookings().filter((b) => b.checkIn === date)
-      : day.data;
+      : this.dayBookings();
     return rows.filter((b) => laneKeyFor(b.disposition.slug) === 'pending');
   });
 

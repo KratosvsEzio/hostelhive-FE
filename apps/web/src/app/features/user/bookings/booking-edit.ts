@@ -230,7 +230,6 @@ export class AccountBookingEdit {
           stay: {
             checkIn: from,
             checkOut: to,
-            hostelCountry: this.listing()?.country,
             lines: this.basket.lines(),
           },
         }

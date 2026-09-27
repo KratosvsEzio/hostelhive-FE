@@ -16,6 +16,8 @@ import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { ApiError, AttachmentLabel, HostelInput, iconForSlug, OfferCategory } from '@hostelhive/data-access';
+import { TimezoneSelect } from '@app/shared/timezone/timezone-select';
+import { browserTimeZone } from '@util/time-zones';
 import { HostelsApi, ImageUploadService, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import {
@@ -97,6 +99,8 @@ interface OnboardingDraft {
   area: string;
   province: string;
   country: string;
+  /** IANA zone, optional in drafts saved before it existed. */
+  timezone?: string;
   street: string;
   landmarks: string;
   media: PersistedMediaItem[];
@@ -153,7 +157,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 @Component({
   selector: 'hh-onboarding-wizard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Logo, 
+  imports: [Logo, TimezoneSelect, 
     DecimalPipe,
     Button,
     Card,
@@ -215,6 +219,11 @@ export class OnboardingWizard {
   protected readonly area = signal('DHA Phase 6');
   protected readonly province = signal('Sindh');
   protected readonly country = signal('Pakistan');
+  /**
+   * The zone the hostel keeps its dates in — required by the server on create (Trello #81).
+   * Pre-filled from the host's browser, which is usually where the hostel is; they can change it.
+   */
+  protected readonly timezone = signal(browserTimeZone());
   protected readonly street = signal('Street 12, House 4-C, DHA Phase 6');
   protected readonly landmarks = signal('');
 
@@ -492,6 +501,7 @@ export class OnboardingWizard {
       area: this.area(),
       province: this.province(),
       country: this.country(),
+      timezone: this.timezone(),
       street: this.street(),
       landmarks: this.landmarks(),
       media: this.persistableMedia(),
@@ -924,6 +934,7 @@ export class OnboardingWizard {
       area: this.area() || undefined,
       state: this.province() || undefined,
       country: this.country() || undefined,
+      timezone: this.timezone() || undefined,
       address_1: this.street() || undefined,
       latitude: this.lat() || undefined,
       longitude: this.lng() || undefined,
@@ -985,6 +996,7 @@ export class OnboardingWizard {
       if (typeof d.area === 'string') this.area.set(d.area);
       if (typeof d.province === 'string') this.province.set(d.province);
       if (typeof d.country === 'string') this.country.set(d.country);
+      if (typeof d.timezone === 'string' && d.timezone) this.timezone.set(d.timezone);
       if (typeof d.street === 'string') this.street.set(d.street);
       if (typeof d.landmarks === 'string') this.landmarks.set(d.landmarks);
       if (Array.isArray(d.media)) {

@@ -415,6 +415,13 @@
           <hh-input [label]="'common.city' | transloco" [(value)]="city" />
           <hh-input [label]="'common.province' | transloco" [(value)]="province" />
           <hh-input [label]="'common.country' | transloco" [(value)]="country" />
+          <!-- The hostel's clock: bookings, invoices and bills are all in its local time.
+               Pre-filled from this browser; a host adding a hostel elsewhere changes it. -->
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-xs font-medium text-ink-600" for="ow-timezone">Time zone</label>
+            <hh-timezone-select controlId="ow-timezone" [(value)]="timezone" />
+            <p class="mt-1 text-xs text-ink-400">Bookings, invoices and bills use the hostel's local time. It cannot be changed once guests have booked.</p>
+          </div>
           <hh-input
             class="sm:col-span-2"
             [label]="'common.streetAddress' | transloco"
