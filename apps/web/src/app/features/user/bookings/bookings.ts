@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 import { Button, EmptyState, ErrorState, Skeleton, StatusPill } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { PageInfo } from '@util/pagination';
 import { BookingTiming, GuestBooking, MyBookingsApi, timingOf } from './my-bookings-api';
 import { asDay, statusOf } from './booking-status';
@@ -44,6 +45,7 @@ interface Section {
     ErrorState,
     Skeleton,
     StatusPill,
+    CurrencySymbolPipe,
     TranslocoPipe,
   ],
   templateUrl: './bookings.html',

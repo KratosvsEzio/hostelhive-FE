@@ -1466,9 +1466,7 @@
     "fromTime": "from {{time}}",
     "byTime": "by {{time}}",
     "total": "Total",
-    "paid": "Paid",
     "dueAtHostel": "Due at hostel",
-    "deposit": "Deposit",
     "yourNote": "Your note to the hostel",
     "nRooms": "{{count}} rooms",
     "nRoomsOne": "{{count}} room",
@@ -1485,7 +1483,11 @@
     "guestPhone": "Phone",
     "guestEmail": "Email",
     "couldNotLoadBooking": "We couldn't load this booking",
-    "couldNotLoadBookingHint": "It may have been removed, or the server did not answer. Try again, or go back to all your bookings."
+    "couldNotLoadBookingHint": "It may have been removed, or the server did not answer. Try again, or go back to all your bookings.",
+    "openInMaps": "Open in Google Maps",
+    "opensInNewTab": "(opens in a new tab)",
+    "callHostel": "Call the hostel on {{phone}}",
+    "noHostelPhone": "The hostel has not shared a phone number"
   },
   "userFavorites": {
     "removeFromFavorites": "Remove from favorites?",

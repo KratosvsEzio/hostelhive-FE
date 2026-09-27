@@ -5,6 +5,7 @@ import {
   ApiMyBooking,
   MY_BOOKINGS_LIMIT,
   MyBookingsApi,
+  mapsUrl,
   stageFor,
   timingOf,
   toGuestBooking,
@@ -98,7 +99,7 @@ describe('toGuestBooking', () => {
 
     expect(b.ref).toBe('HH-2026-LI9V1AQC');
     expect(b.guest).toEqual({ name: 'hassan Khossa', phone: '923000000000', email: 'guest@example.com' });
-    expect(b.hostel).toEqual({ id: 'MjvuEl', name: 'Backpacker', place: 'Bahria Orchard, Phare 4, Lahore' });
+    expect(b.hostel).toMatchObject({ id: 'MjvuEl', name: 'Backpacker', place: 'Bahria Orchard, Phare 4, Lahore' });
     expect(b.checkIn).toEqual({ date: '2026-09-30', time: '14:00' });
     expect(b.checkOut).toEqual({ date: '2026-10-25', time: '11:00' });
     expect(b.nights).toBe(25);
@@ -140,10 +141,133 @@ describe('toGuestBooking', () => {
       checkout_date: '2026-10-01T11:00:00.000+05:00',
       hostel_id: 'H1',
     });
-    expect(b.hostel).toEqual({ id: 'H1', name: '', place: '' });
+    expect(b.hostel).toEqual({ id: 'H1', name: '', place: '', address: '', lat: null, lng: null });
     expect(b.lines).toEqual([]);
     expect(b.total).toBe(0);
     expect(b.stage).toBeNull();
+  });
+});
+
+/**
+ * `GET /api/bookings/:id` for the same booking, live 2026-09-27 — a different serializer:
+ * amounts are decimal strings, `nights` and `balance_due` are absent, and each line's name
+ * is nested under `room_type`. Read as-is, it drew a detail page of zeroes.
+ */
+const DETAIL = {
+  id: 'RbNKwO',
+  checkin_date: '2026-09-30T14:00:00.000+05:00',
+  checkout_date: '2026-10-25T11:00:00.000+05:00',
+  guests: 5,
+  total_price: '310000.0',
+  deposit: '31000.0',
+  paid_amount: '0.0',
+  currency: 'PKR',
+  hostel: { name: 'Backpacker', area: 'Bahria Orchard, Phare 4', city: 'Lahore', id: 'MjvuEl' },
+  booking_ref: 'HH-2026-LI9V1AQC',
+  guest_name: 'hassan Khossa',
+  notes: 'Testing the notes',
+  created_at: '2026-09-27T14:57:46.693+05:00',
+  line_items: [
+    {
+      id: 'giRYjo',
+      guests: 3,
+      quantity: 1,
+      occupancy_type: 'private_room',
+      unit_price: '10000.0',
+      subtotal: '250000.0',
+      room_type: { id: 'KGJwMC', name: 'King size room', occupancy_type: 'private_room', capacity: 4 },
+    },
+    {
+      id: 'VPHELB',
+      guests: 2,
+      quantity: 2,
+      occupancy_type: 'shared',
+      unit_price: '1200.0',
+      subtotal: '60000.0',
+      room_type: { id: 'MqVuEl', name: 'Dormitory', occupancy_type: 'shared', capacity: 12 },
+    },
+  ],
+  status: { id: 'sTikBJ', name: 'Pending', slug: 'pending' },
+  disposition: { id: 'YUyQxm', name: 'Pending', slug: 'pending' },
+} as ApiMyBooking;
+
+describe('mapsUrl', () => {
+  it('points at the coordinates when there are some', () => {
+    expect(mapsUrl({ lat: 31.31401, lng: 74.23497, query: 'ignored' })).toBe(
+      'https://www.google.com/maps/search/?api=1&query=31.31401,74.23497',
+    );
+  });
+
+  it('searches the query, encoded, when there are none', () => {
+    expect(mapsUrl({ lat: null, lng: null, query: 'Backpacker, Bahria Orchard & Lahore' })).toBe(
+      'https://www.google.com/maps/search/?api=1&query=Backpacker%2C%20Bahria%20Orchard%20%26%20Lahore',
+    );
+  });
+
+  it('is empty with nothing to point at', () => {
+    expect(mapsUrl({ lat: null, lng: null, query: '  ' })).toBe('');
+  });
+});
+
+describe('toGuestBooking on the single-booking payload', () => {
+  it('reads the street address and the coordinates, which arrive as strings', () => {
+    const b = toGuestBooking({
+      ...DETAIL,
+      hostel: { ...DETAIL.hostel, address_1: ' 355-G1, Bahria Orchard ', latitude: '31.31401', longitude: '74.23497' },
+    });
+    expect(b.hostel).toMatchObject({ address: '355-G1, Bahria Orchard', lat: 31.31401, lng: 74.23497 });
+  });
+
+  it('refuses coordinates that cannot be a place', () => {
+    const at = (latitude: string, longitude: string) =>
+      toGuestBooking({ ...DETAIL, hostel: { ...DETAIL.hostel, latitude, longitude } }).hostel;
+    expect(at('0', '0')).toMatchObject({ lat: null, lng: null });
+    expect(at('95', '74')).toMatchObject({ lat: null, lng: null });
+    expect(at('', '74')).toMatchObject({ lat: null, lng: null });
+  });
+
+  it('has no coordinates from the list, which does not send them', () => {
+    expect(toGuestBooking(raw()).hostel).toMatchObject({ address: '', lat: null, lng: null });
+  });
+
+  it('reads amounts sent as decimal strings', () => {
+    const b = toGuestBooking(DETAIL);
+    expect([b.total, b.deposit, b.paid]).toEqual([310000, 31000, 0]);
+  });
+
+  it('derives what the endpoint omits: nights from the dates, due from total less paid', () => {
+    const b = toGuestBooking(DETAIL);
+    expect(b.nights).toBe(25);
+    expect(b.due).toBe(310000);
+  });
+
+  it('reads each line name from the nested room type', () => {
+    const lines = toGuestBooking(DETAIL).lines;
+    expect(lines.map((l) => [l.name, l.units, l.subtotal])).toEqual([
+      ['King size room', 1, 250000],
+      ['Dormitory', 2, 60000],
+    ]);
+  });
+
+  it('draws the same booking the list does', () => {
+    const fromList = toGuestBooking(raw());
+    const fromDetail = toGuestBooking(DETAIL);
+    for (const key of ['total', 'deposit', 'paid', 'due', 'nights', 'guests', 'ref'] as const) {
+      expect(fromDetail[key]).toEqual(fromList[key]);
+    }
+    expect(fromDetail.lines.map((l) => l.name)).toEqual(fromList.lines.map((l) => l.name));
+    expect(fromDetail.hostel).toEqual(fromList.hostel);
+  });
+
+  it('never reports more due than is owed', () => {
+    const b = toGuestBooking({ ...DETAIL, paid_amount: '400000.0' });
+    expect(b.due).toBe(0);
+  });
+
+  it('treats a blank or non-numeric amount as zero rather than NaN', () => {
+    const b = toGuestBooking({ ...DETAIL, total_price: '', deposit: 'n/a' });
+    expect(b.total).toBe(0);
+    expect(b.deposit).toBe(0);
   });
 });
 

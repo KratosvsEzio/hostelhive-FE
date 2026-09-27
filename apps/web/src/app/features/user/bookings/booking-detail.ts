@@ -10,10 +10,12 @@ import {
 import { DatePipe, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ErrorState, Skeleton, StatusPill } from '@hostelhive/ui';
+import { ErrorState, PhotoPlaceholder, Skeleton, StatusPill } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { GuestBooking, MyBookingsApi, STAGE_ORDER, timingOf } from './my-bookings-api';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { ListingDetailApi } from '@services';
+import { GuestBooking, MyBookingsApi, STAGE_ORDER, mapsUrl, timingOf } from './my-bookings-api';
 import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-status';
 
 /**
@@ -30,11 +32,23 @@ import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-st
 @Component({
   selector: 'app-account-booking-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, RouterLink, LocaleLink, ErrorState, Skeleton, StatusPill, TranslocoPipe],
+  imports: [
+    DatePipe,
+    DecimalPipe,
+    RouterLink,
+    LocaleLink,
+    ErrorState,
+    PhotoPlaceholder,
+    Skeleton,
+    StatusPill,
+    CurrencySymbolPipe,
+    TranslocoPipe,
+  ],
   templateUrl: './booking-detail.html',
 })
 export class AccountBookingDetail {
   private readonly api = inject(MyBookingsApi);
+  private readonly listings = inject(ListingDetailApi);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -63,14 +77,96 @@ export class AccountBookingDetail {
   protected readonly copied = signal(false);
   private copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
+  /**
+   * The hostel as its public listing describes it — for the photo, which no booking payload
+   * carries, and as a second source for the location. Fetched once per hostel, alongside the
+   * booking rather than after it, and never allowed to fail the page: a booking without its
+   * photo is still the whole booking.
+   */
+  private readonly listing = signal<{
+    photo: string;
+    lat: number | null;
+    lng: number | null;
+    address: string;
+    currency: string;
+    phones: string[];
+  } | null>(null);
+  /** The hostel lookup has answered, either way — so "no phone" can be said, not guessed. */
+  protected readonly listingSettled = signal(false);
+
+  /** The hostel's own numbers, as dialable `tel:` links beside the display text. */
+  protected readonly phones = computed(() =>
+    (this.listing()?.phones ?? []).map((display) => ({ display, href: `tel:${display.replace(/[^\d+]/g, '')}` })),
+  );
+  private listingFor = '';
+  protected readonly photoBroken = signal(false);
+
+  protected readonly photo = computed(() => (this.photoBroken() ? '' : (this.listing()?.photo ?? '')));
+
+  /**
+   * The currency the hostel prices in, from the hostel itself; the booking's own field until
+   * the hostel answers. Blank lets the symbol pipe fall back to the app default.
+   */
+  protected readonly currency = computed(() => this.listing()?.currency || this.booking()?.currency || '');
+
+  /** The street address when either source has one, else the area and city. */
+  protected readonly address = computed(() => {
+    const b = this.booking();
+    return b?.hostel.address || this.listing()?.address || b?.hostel.place || '';
+  });
+
+  /** Google Maps, at the pin when either source has coordinates, else searching the address. */
+  protected readonly mapLink = computed(() => {
+    const b = this.booking();
+    if (!b) return '';
+    const own = { lat: b.hostel.lat ?? null, lng: b.hostel.lng ?? null };
+    const l = this.listing();
+    const pin = own.lat !== null && own.lng !== null ? own : { lat: l?.lat ?? null, lng: l?.lng ?? null };
+    // `address()` falls back to the place, so the two can be the same string.
+    const query = [...new Set([b.hostel.name, this.address(), b.hostel.place])].filter(Boolean).join(', ');
+    return mapsUrl({ ...pin, query });
+  });
+
   constructor() {
     this.destroyRef.onDestroy(() => clearTimeout(this.copiedTimer));
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const id = params.get('id') ?? '';
-      this.booking.set(this.handedOver(id));
+      const handed = this.handedOver(id);
+      this.booking.set(handed);
       // No token on the server render — stay on the skeleton until the browser has one.
-      if (this.browser) this.load(id);
+      if (this.browser) {
+        if (handed) this.loadListing(handed.hostel.id);
+        this.load(id);
+      }
     });
+  }
+
+  private loadListing(hostelId: string): void {
+    if (!hostelId || hostelId === this.listingFor) return;
+    this.listingFor = hostelId;
+    this.photoBroken.set(false);
+    this.listingSettled.set(false);
+    this.listings
+      .getBySlug(hostelId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (l) => {
+          this.listingSettled.set(true);
+          if (!l) return;
+          const lat = Number.isFinite(l.lat) && l.lat !== 0 ? l.lat : null;
+          const lng = Number.isFinite(l.lng) && l.lng !== 0 ? l.lng : null;
+          this.listing.set({
+            photo: l.images[0] ?? '',
+            lat,
+            lng,
+            address: l.address ?? '',
+            currency: l.currency?.trim().toUpperCase() ?? '',
+            phones: l.publicPhones ?? [],
+          });
+        },
+        // Decoration: the page is complete without it.
+        error: () => this.listingSettled.set(true),
+      });
   }
 
   /** The booking the list row passed along, if it is this one. */
@@ -94,6 +190,7 @@ export class AccountBookingDetail {
         next: (b) => {
           this.booking.set(b);
           this.loading.set(false);
+          this.loadListing(b.hostel.id);
         },
         error: () => {
           this.loading.set(false);

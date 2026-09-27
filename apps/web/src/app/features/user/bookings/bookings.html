@@ -78,7 +78,7 @@
               </span>
 
               <span class="shrink-0 text-end">
-                <span class="block whitespace-nowrap font-semibold text-ink-900 tabular-nums">Rs {{ b.total | number }}</span>
+                <span class="block whitespace-nowrap font-semibold text-ink-900 tabular-nums">{{ b.currency | currencySym }} {{ b.total | number }}</span>
                 @if (b.ref) {
                   <span class="mt-0.5 hidden text-xs text-ink-500 tabular-nums sm:block">{{ b.ref }}</span>
                 }

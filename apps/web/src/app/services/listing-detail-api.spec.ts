@@ -51,6 +51,23 @@ const KING = { id: 2, name: 'King size room', capacity: 4, price: 12000, occupan
  * It is also the number a seeker filters and compares listings on, so quoting the undiscounted
  * price makes a discounted hostel look more expensive than it is against its neighbours.
  */
+describe('ListingDetailApi — public phones', () => {
+  const phones = (extra: Record<string, unknown>) =>
+    (listing([DORM], extra) as { publicPhones?: string[] }).publicPhones;
+
+  it('carries both numbers, primary first', () => {
+    expect(phones({ primary_phone: '+923001234567', secondary_phone: '042111222333' })).toEqual([
+      '+923001234567',
+      '042111222333',
+    ]);
+  });
+
+  it('drops blanks and nulls, and a secondary that repeats the primary', () => {
+    expect(phones({ primary_phone: null, secondary_phone: '  ' })).toEqual([]);
+    expect(phones({ primary_phone: '0300 1234567 ', secondary_phone: '0300 1234567' })).toEqual(['0300 1234567']);
+  });
+});
+
 describe('ListingDetailApi — From price', () => {
   it('takes the cheapest room when nothing is discounted', () => {
     expect(listing([DORM, KING]).priceFrom).toBe(2000);

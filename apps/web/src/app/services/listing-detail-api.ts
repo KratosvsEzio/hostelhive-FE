@@ -161,6 +161,7 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     slug: String(d.id),
     name: d.name,
     currency: d.currency ?? undefined,
+    publicPhones: [...new Set([d.primary_phone, d.secondary_phone].map((p) => p?.trim() ?? '').filter(Boolean))],
     area: d.area ?? '',
     city: d.city ?? '',
     country: d.country ?? '',

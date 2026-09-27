@@ -17,20 +17,33 @@ export interface ApiNamedSlug {
   slug?: string | null;
 }
 
+/**
+ * Money and counts as the two endpoints send them: the list sends numbers (`310000`), the
+ * single booking sends decimal strings (`"310000.0"`). Both are read the same way.
+ */
+export type ApiNumber = number | string | null | undefined;
+
 export interface ApiMyBookingLine {
   id: string;
   room_type_id?: string | null;
+  /** The list's flat name. */
   room_type_name?: string | null;
+  /** The single booking's nested one. */
+  room_type?: { id?: string | null; name?: string | null } | null;
   /** Total people on the line — not per room. */
-  guests?: number | null;
+  guests?: ApiNumber;
   /** Rooms on a private line, beds on a shared one. */
-  quantity?: number | null;
+  quantity?: ApiNumber;
   occupancy_type?: string | null;
-  subtotal?: number | null;
+  subtotal?: ApiNumber;
 }
 
 /**
- * One row of `GET /api/bookings`, verified live 2026-09-27.
+ * One booking, as either `GET /api/bookings` or `GET /api/bookings/:id` sends it — both
+ * verified live 2026-09-27, and **they are not the same serializer**. The list carries
+ * `nights`, `balance_due` and flat `room_type_name`s, all as numbers; the single booking
+ * drops `nights` and `balance_due`, nests each line's name under `room_type`, and sends
+ * every amount as a decimal string. The mapper reads both, deriving what one of them omits.
  *
  * Dates arrive as timestamps carrying the **hostel's** offset
  * (`2026-09-30T14:00:00.000+05:00`), which is the zone the stay happens in.
@@ -43,16 +56,28 @@ export interface ApiMyBooking {
   guest_email?: string | null;
   checkin_date: string;
   checkout_date: string;
-  nights?: number | null;
-  guests?: number | null;
-  total_price?: number | null;
-  deposit?: number | null;
-  paid_amount?: number | null;
-  balance_due?: number | null;
+  nights?: ApiNumber;
+  guests?: ApiNumber;
+  total_price?: ApiNumber;
+  deposit?: ApiNumber;
+  paid_amount?: ApiNumber;
+  balance_due?: ApiNumber;
   notes?: string | null;
+  /** ISO-4217, single booking only (`"PKR"`). */
+  currency?: string | null;
   created_at?: string | null;
   hostel_id?: string | null;
-  hostel?: { id?: string | null; name?: string | null; area?: string | null; city?: string | null } | null;
+  hostel?: {
+    id?: string | null;
+    name?: string | null;
+    area?: string | null;
+    city?: string | null;
+    /** Single booking only, like the coordinates below. */
+    address_1?: string | null;
+    /** Decimal strings (`"31.31401"`). */
+    latitude?: ApiNumber;
+    longitude?: ApiNumber;
+  } | null;
   line_items?: ApiMyBookingLine[] | null;
   /** The payment state. */
   status?: ApiNamedSlug | null;
@@ -127,7 +152,16 @@ export interface GuestBooking {
   ref: string;
   /** Who the booking is for — often not the account holder. */
   guest: { name: string; phone: string; email: string };
-  hostel: { id: string; name: string; place: string };
+  hostel: {
+    id: string;
+    name: string;
+    place: string;
+    /** The street address — only the single-booking payload carries it. */
+    address: string;
+    /** Only the single-booking payload carries these; `null` from the list. */
+    lat: number | null;
+    lng: number | null;
+  };
   checkIn: WallTime;
   checkOut: WallTime;
   /** The instants, for deciding upcoming / current / past. */
@@ -140,6 +174,8 @@ export interface GuestBooking {
   paid: number;
   due: number;
   notes: string;
+  /** ISO-4217 code, `''` when the payload did not say — the symbol pipe then uses the default. */
+  currency: string;
   bookedOn: string;
   lines: GuestBookingLine[];
   /** `null` for a disposition this app does not know — the page falls back to `stageName`. */
@@ -170,8 +206,44 @@ function instant(iso: string | null | undefined): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-function num(v: number | null | undefined): number {
-  return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+/** A number or a numeric string, or `null` when it is neither. */
+function numOrNull(v: ApiNumber): number | null {
+  const n = typeof v === 'string' ? (v.trim() ? Number(v) : NaN) : v;
+  return typeof n === 'number' && Number.isFinite(n) ? n : null;
+}
+
+function num(v: ApiNumber): number {
+  return numOrNull(v) ?? 0;
+}
+
+/**
+ * A usable position, or none. `0,0` is in the Gulf of Guinea and is what an unset pair
+ * parses to, so it is treated as missing rather than sent to a map.
+ */
+function coordinates(lat: ApiNumber, lng: ApiNumber): { lat: number | null; lng: number | null } {
+  const a = numOrNull(lat);
+  const b = numOrNull(lng);
+  const valid = a !== null && b !== null && Math.abs(a) <= 90 && Math.abs(b) <= 180 && (a !== 0 || b !== 0);
+  return valid ? { lat: a, lng: b } : { lat: null, lng: null };
+}
+
+/**
+ * A Google Maps link to a hostel: its exact position when known, otherwise a search for its
+ * address. Empty when there is nothing to point at.
+ */
+export function mapsUrl(place: { lat: number | null; lng: number | null; query?: string }): string {
+  if (typeof place.lat === 'number' && typeof place.lng === 'number') {
+    return `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`;
+  }
+  const q = place.query?.trim();
+  return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '';
+}
+
+/** Nights between two wall dates, for the endpoint that does not send them. */
+function nightsBetween(from: string, to: string): number {
+  if (!from || !to) return 0;
+  const n = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
 export function stageFor(slug: string | null | undefined): BookingStage | null {
@@ -180,6 +252,10 @@ export function stageFor(slug: string | null | undefined): BookingStage | null {
 
 export function toGuestBooking(b: ApiMyBooking): GuestBooking {
   const hostel = b.hostel ?? {};
+  const checkIn = wallTime(b.checkin_date);
+  const checkOut = wallTime(b.checkout_date);
+  const total = num(b.total_price);
+  const paid = num(b.paid_amount);
   return {
     id: b.id,
     ref: b.booking_ref ?? '',
@@ -188,22 +264,25 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
       id: hostel.id ?? b.hostel_id ?? '',
       name: hostel.name ?? '',
       place: [hostel.area, hostel.city].filter((s) => !!s?.trim()).join(', '),
+      address: hostel.address_1?.trim() ?? '',
+      ...coordinates(hostel.latitude, hostel.longitude),
     },
-    checkIn: wallTime(b.checkin_date),
-    checkOut: wallTime(b.checkout_date),
+    checkIn,
+    checkOut,
     checkInAt: instant(b.checkin_date),
     checkOutAt: instant(b.checkout_date),
-    nights: num(b.nights),
+    nights: numOrNull(b.nights) ?? nightsBetween(checkIn.date, checkOut.date),
     guests: num(b.guests),
-    total: num(b.total_price),
+    total,
     deposit: num(b.deposit),
-    paid: num(b.paid_amount),
-    due: num(b.balance_due),
+    paid,
+    due: numOrNull(b.balance_due) ?? Math.max(total - paid, 0),
     notes: b.notes?.trim() ?? '',
+    currency: b.currency?.trim().toUpperCase() ?? '',
     bookedOn: wallTime(b.created_at).date,
     lines: (b.line_items ?? []).map((l) => ({
       id: l.id,
-      name: l.room_type_name ?? '',
+      name: l.room_type_name ?? l.room_type?.name ?? '',
       shared: l.occupancy_type === 'shared',
       units: num(l.quantity) || num(l.guests),
       guests: num(l.guests),
