@@ -1,4 +1,3 @@
-import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,28 +7,33 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, startWith, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { HostRoom } from '@util/models/host-ops';
 import { HostBooking } from './host-bookings-api';
-import { isPrivateOccupancy } from '@util/occupancy-type';
 
-/** One room the host can put this booking into, with how much of it is free. */
 export interface AssignRow {
   room: HostRoom;
-  /** Beds not already taken. Zero means the row is shown but cannot be picked. */
+  /** Beds not already taken. Zero means the row is shown but cannot take anyone. */
   free: number;
-  /** Beds allocated here — 0 or 1 for a private room, 0..free for a dorm. */
-  picked: number;
+  /** Guests placed here. */
+  placed: number;
 }
 
-/** What the host settled on, for whoever ends up sending it. */
+export interface AssignGroup {
+  type: string;
+  /** A type the guest booked — listed first, since that is where they expect to sleep. */
+  booked: boolean;
+  rows: AssignRow[];
+}
+
+/** One allocation per room — what `mark_as_checked_in` takes. */
 export interface AssignSelection {
   bookingId: string;
-  rooms: { roomId: string; roomNumber: string; beds: number }[];
+  rooms: { roomId: string; roomNumber: string; guests: number }[];
 }
 
 interface RoomsState {
@@ -39,49 +43,43 @@ interface RoomsState {
 }
 
 /**
- * Putting a pending allotment into real rooms.
+ * Checking a booking in: placing its guests in rooms.
  *
- * Assignment is not a search — the guest chose the room *type* when they booked, so this is
- * filling a shopping list. The panel lists only rooms of the booked type, counts what is
- * still needed, and keeps the primary action blocked until the count is met. Offering the
- * whole building would invite a host to move somebody into a type they did not pay for,
- * which needs their agreement and a re-price rather than a click.
+ * The lifecycle (Trello #80) assigns rooms at check-in, not before, and the host "may put
+ * guests in any room type" — so every room on the property is offered, the types the guest
+ * booked first, each with a stepper for how many of the party sleep there. One room or
+ * several: a party of four can be two in 101, one in 102 and one in a dorm.
  *
- * The two modes differ in one thing only. A private room is taken whole, so it is a
- * checkbox. A dorm sells beds, and **beds are allocated by count, never by number** — the
- * desk picks the physical bed at check-in — so it is a stepper bounded by what is free.
- *
- * Where the design shows several sections (a booking of "2 × King Suite + 1 × Deluxe"), the
- * API carries one room type per booking, so there is exactly one section today. The layout
- * is per-type rather than flat so that a multi-line booking needs no rework here.
+ * Capped at each room's free beds, and at the booking's headcount — placing more people than
+ * booked is a new booking, not a check-in. Placing fewer is allowed (somebody did not come),
+ * and the server then records the headcount as what was placed; the footer says so.
  */
 @Component({
   selector: 'hh-assign-rooms-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Button, Skeleton, TranslocoPipe],
+  imports: [DatePipe, Button, Skeleton],
   templateUrl: './assign-rooms-panel.html',
 })
 export class AssignRoomsPanel {
   readonly hostelId = input('');
-  /** The booking being placed. `null` closes the panel. */
+  /** The booking being checked in. `null` closes the panel. */
   readonly booking = input<HostBooking | null>(null);
-  /** Set by the page when a submit could not be sent, so the footer can say why. */
+  /** The server's refusal, shown in the footer — "Room 101 has only 1 bed(s) available". */
   readonly submitError = input('');
+  /** The check-in is being sent; the button waits for it. */
+  readonly busy = input(false);
 
   readonly closed = output<void>();
   readonly assign = output<AssignSelection>();
 
   private readonly api = inject(HostOpsApi);
 
-  protected readonly open = computed(() => !!this.booking());
-
   private readonly rooms = toSignal(
     toObservable(computed(() => (this.booking() ? this.hostelId() : ''))).pipe(
       switchMap((hostelId) =>
         !hostelId
           ? of<RoomsState>({ loading: false, error: false, rooms: [] })
-          : // Every room in one page: the panel filters to one type, and a second page would
-            // silently hide the room the host is looking for.
+          : // Every room in one page: a second page would silently hide the room the host wants.
             this.api.rooms(hostelId, 1, ALL_ROOMS_LIMIT).pipe(
               switchMap((r) => of<RoomsState>({ loading: false, error: false, rooms: r.rooms })),
               startWith<RoomsState>({ loading: true, error: false, rooms: [] }),
@@ -95,99 +93,63 @@ export class AssignRoomsPanel {
   protected readonly loading = computed(() => this.rooms().loading);
   protected readonly error = computed(() => this.rooms().error);
 
-  protected readonly isShared = computed(
-    () => !isPrivateOccupancy(this.booking()?.roomType.occupancyType),
-  );
+  /** The party to place: the booking's headcount. */
+  protected readonly needed = computed(() => Math.max(1, this.booking()?.guests ?? 1));
 
-  /**
-   * How many units this booking still owes.
-   *
-   * Beds for a dorm is the guest count and nothing else. Rooms for a private booking has to
-   * be **derived** — the record carries a room type and a headcount but no quantity — so it
-   * is the smallest number of rooms of this type that seats everybody. That is a guess where
-   * the design had a real line item, and it is why the footer names the figure it used.
-   */
-  protected readonly needed = computed(() => {
+  /** The room types the guest booked, by name — the rooms list carries names, not type ids. */
+  private readonly bookedTypes = computed(() => {
     const b = this.booking();
-    if (!b) return 0;
-    if (this.isShared()) return Math.max(1, b.guests);
-    const per = b.roomType.capacity || 1;
-    return Math.max(1, Math.ceil(b.guests / per));
+    if (!b) return new Set<string>();
+    return new Set(b.lines.length ? b.lines.map((l) => l.name) : [b.roomType.name]);
   });
 
-  /** Beds picked per room id. Cleared whenever the panel opens on another booking. */
-  private readonly picks = signal<Record<string, number>>({});
+  /** Guests placed per room id. Cleared whenever the panel opens on another booking. */
+  private readonly placed = signal<Record<string, number>>({});
   private lastBookingId = '';
 
-  /**
-   * Rooms of the booked type, most free first.
-   *
-   * `HostRoom.type` is the type's *name*, which is what the booking carries too — there is no
-   * type id on the room list — so the match is by name. A rename on the backend would empty
-   * this list rather than mis-fill it, which is the safer of the two failures.
-   */
-  protected readonly rows = computed<AssignRow[]>(() => {
+  protected readonly groups = computed<AssignGroup[]>(() => {
     const b = this.booking();
     if (!b) return [];
-    // Reset the picks when the panel is reused for a different booking.
     if (b.id !== this.lastBookingId) {
       this.lastBookingId = b.id;
-      queueMicrotask(() => this.picks.set({}));
+      queueMicrotask(() => this.placed.set({}));
     }
-    const picks = this.picks();
-    return this.rooms()
-      .rooms.filter((r) => r.type === b.roomType.name)
-      .map((room) => ({
-        room,
-        free: Math.max(0, room.capacity - room.occupied),
-        picked: picks[room.id] ?? 0,
+    const placed = this.placed();
+    const booked = this.bookedTypes();
+    const byType = new Map<string, AssignRow[]>();
+    for (const room of this.rooms().rooms) {
+      const rows = byType.get(room.type) ?? [];
+      rows.push({ room, free: Math.max(0, room.capacity - room.occupied), placed: placed[room.id] ?? 0 });
+      byType.set(room.type, rows);
+    }
+    return [...byType.entries()]
+      .map(([type, rows]) => ({
+        type,
+        booked: booked.has(type),
+        rows: rows.sort((a, x) => x.free - a.free || a.room.number.localeCompare(x.room.number)),
       }))
-      .sort((a, x) => x.free - a.free || a.room.number.localeCompare(x.room.number));
+      .sort((a, x) => Number(x.booked) - Number(a.booked) || a.type.localeCompare(x.type));
   });
 
   protected readonly allocated = computed(() =>
-    this.rows().reduce((n, r) => n + r.picked, 0),
+    this.groups().reduce((n, g) => n + g.rows.reduce((m, r) => m + r.placed, 0), 0),
   );
-
   protected readonly remaining = computed(() => Math.max(0, this.needed() - this.allocated()));
   protected readonly complete = computed(() => this.allocated() === this.needed());
+  /** Some placed, not all: allowed, and the footer says the headcount will change. */
+  protected readonly partial = computed(() => this.allocated() > 0 && !this.complete());
 
-  /** "Harbour 6 × 2 beds · Garden 10 × 1 bed", the sentence the footer confirms with. */
-  protected readonly summaryLine = computed(() => {
-    const parts = this.rows()
-      .filter((r) => r.picked > 0)
-      .map((r) =>
-        this.isShared()
-          ? `${r.room.number} × ${r.picked} bed${r.picked === 1 ? '' : 's'}`
-          : r.room.number,
-      );
-    return parts.join(' · ');
-  });
+  /** "101 × 2 · 102 × 1", the sentence the footer confirms with. */
+  protected readonly summaryLine = computed(() =>
+    this.groups()
+      .flatMap((g) => g.rows)
+      .filter((r) => r.placed > 0)
+      .map((r) => `${r.room.number} × ${r.placed}`)
+      .join(' · '),
+  );
 
-  /** Nightly rate × units × nights. The type's own price, since only this type is offered. */
-  protected readonly total = computed(() => {
-    const b = this.booking();
-    if (!b) return 0;
-    const rate = b.roomType.capacity && !this.isShared() ? 0 : 0;
-    void rate;
-    // The booking already carries what the guest is paying; assignment does not re-price it.
-    return b.total;
-  });
-
-  protected toggleRoom(row: AssignRow): void {
-    if (!row.free) return;
-    this.picks.update((p) => {
-      const next = { ...p };
-      if (next[row.room.id]) delete next[row.room.id];
-      // Never let the host over-fill: the button would still be blocked, but a counter that
-      // reads "4 of 3" makes them hunt for which one to undo.
-      else if (this.allocated() < this.needed()) next[row.room.id] = 1;
-      return next;
-    });
-  }
-
-  protected stepBeds(row: AssignRow, by: number): void {
-    this.picks.update((p) => {
+  protected step(row: AssignRow, by: number): void {
+    this.placed.update((p) => {
       const current = p[row.room.id] ?? 0;
       const ceiling = Math.min(row.free, current + this.remaining());
       const next = Math.max(0, Math.min(ceiling, current + by));
@@ -199,22 +161,24 @@ export class AssignRoomsPanel {
   }
 
   protected canAdd(row: AssignRow): boolean {
-    return row.picked < row.free && this.remaining() > 0;
+    return row.placed < row.free && this.remaining() > 0;
   }
 
   protected submit(): void {
     const b = this.booking();
-    if (!b || !this.complete()) return;
+    if (!b || !this.allocated() || this.busy()) return;
     this.assign.emit({
       bookingId: b.id,
-      rooms: this.rows()
-        .filter((r) => r.picked > 0)
-        .map((r) => ({ roomId: r.room.id, roomNumber: r.room.number, beds: r.picked })),
+      rooms: this.groups()
+        .flatMap((g) => g.rows)
+        .filter((r) => r.placed > 0)
+        .map((r) => ({ roomId: r.room.id, roomNumber: r.room.number, guests: r.placed })),
     });
   }
 
   protected close(): void {
-    this.picks.set({});
+    if (this.busy()) return;
+    this.placed.set({});
     this.lastBookingId = '';
     this.closed.emit();
   }

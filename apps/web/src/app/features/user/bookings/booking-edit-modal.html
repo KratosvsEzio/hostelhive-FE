@@ -92,6 +92,13 @@
     </div>
   </div>
 
+  @if (reconfirm()) {
+    <p class="mt-3 flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-xs text-amber-900">
+      <span class="ti ti-info-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
+      {{ 'userBookings.changeNeedsReconfirm' | transloco }}
+    </p>
+  }
+
   @if (error()) {
     <p class="mt-3 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger" role="alert">
       <span class="ti ti-alert-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>

@@ -556,7 +556,7 @@ export class DateRangePicker {
     const lo = Math.min(s, e);
     const hi = Math.max(s, e);
     if (cell.ms < lo || cell.ms > hi) return base;
-    let c = `${base} bg-ink-100`;
+    let c = `${base} bg-brand-50`;
     if (cell.ms === lo) c += ' rounded-s-full';
     if (cell.ms === hi) c += ' rounded-e-full';
     return c;
@@ -570,13 +570,13 @@ export class DateRangePicker {
     const s = this.startMs();
     const e = this.endMs();
     if (cell.ms === s || (this.selTo() && cell.ms === e)) {
-      return `${base} bg-ink-900 font-semibold text-white`;
+      return `${base} bg-brand-500 font-semibold text-white`;
     }
     // Hovered preview endpoint (mid-selection) — outline it.
     if (!this.selTo() && cell.ms === e) {
-      return `${base} font-semibold ring-1 ring-inset ring-ink-900 text-ink-900`;
+      return `${base} font-semibold ring-2 ring-inset ring-brand-500 text-ink-900`;
     }
-    return `${base} text-ink-800 hover:ring-1 hover:ring-inset hover:ring-ink-300 ${cell.today ? 'font-semibold' : ''}`;
+    return `${base} text-ink-800 hover:ring-1 hover:ring-inset hover:ring-brand-300 ${cell.today ? 'font-semibold' : ''}`;
   }
 
   // ── positioning (mirror of hh-dropdown) ──────────────────────────────────────

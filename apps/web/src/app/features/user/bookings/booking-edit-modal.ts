@@ -39,6 +39,8 @@ export class BookingEditModal implements OnInit {
   readonly error = input('');
   /** Set when the dates or rooms changed; the dialog then reviews them above the details. */
   readonly stay = input<StayChangeSummary | null>(null);
+  /** Saving sends a confirmed booking back to pending; the dialog says so before it happens. */
+  readonly reconfirm = input(false);
 
   /** Only the guest's details — the page adds the stay it is holding. */
   readonly saved = output<Omit<GuestBookingPatch, 'stay'>>();

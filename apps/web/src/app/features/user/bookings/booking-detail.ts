@@ -22,6 +22,7 @@ import {
   STAGE_ORDER,
   canCancel,
   canEdit,
+  withinChangeCutoff,
   mapsUrl,
   timingOf,
 } from './my-bookings-api';
@@ -222,6 +223,18 @@ export class AccountBookingDetail {
     const b = this.booking();
     return !!b && canCancel(b);
   });
+  /** Nothing left to do or say: it ended, one way or another. */
+  protected readonly finished = computed(() => {
+    const s = this.booking()?.stage;
+    return s === 'cancelled' || s === 'no-show' || s === 'checked-out';
+  });
+  /** Confirmed and inside the last three days — the refusal worth explaining. */
+  protected readonly inCutoff = computed(() => {
+    const b = this.booking();
+    return !!b && withinChangeCutoff(b);
+  });
+  /** Confirmed and still changeable: a change sends it back to the hostel to confirm again. */
+  protected readonly reconfirm = computed(() => this.editable() && this.booking()?.statusSlug === 'confirmed');
 
   protected readonly cancelOpen = signal(false);
   /** Locks the dialog while the request is out. */

@@ -99,12 +99,12 @@
           [class.ring-inset]="d.date === selected() && d.inMonth"
           [class.ring-brand-500]="d.date === selected() && d.inMonth"
           [attr.aria-current]="d.isToday ? 'date' : null"
-          [class.hh-pending-pulse]="d.inMonth && d.counts['pending-allotment'] > 0"
+          [class.hh-pending-pulse]="d.inMonth && d.counts['pending'] > 0"
           [attr.aria-label]="
             d.inMonth
               ? (d.date | date: 'fullDate') +
-                (d.counts['pending-allotment']
-                  ? ', ' + d.counts['pending-allotment'] + ' awaiting room assignment'
+                (d.counts['pending']
+                  ? ', ' + d.counts['pending'] + ' awaiting confirmation'
                   : '')
               : null
           "
@@ -164,12 +164,12 @@
         <h3 class="truncate font-display text-base font-semibold text-ink-900">
           {{ selected() | date: 'EEE d MMMM' }}
         </h3>
-        @let pending = sel?.counts?.['pending-allotment'] ?? 0;
+        @let pending = sel?.counts?.['pending'] ?? 0;
         <span
           class="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
           [class]="pending ? 'bg-warn/10 text-warn' : 'bg-ok/10 text-ok'"
         >
-          {{ pending ? pending + ' to assign' : 'Nothing pending' }}
+          {{ pending ? pending + ' to confirm' : 'Nothing pending' }}
         </span>
       </div>
 
@@ -220,7 +220,7 @@
     <div class="flex items-center justify-between gap-2 px-4 pb-1 pt-3 sm:px-5">
       <span class="flex items-center gap-2">
         <span class="h-2 w-2 rounded-full bg-warn"></span>
-        <span class="text-sm font-semibold text-ink-900">{{ 'hostBookings.pendingAllotments' | transloco }}</span>
+        <span class="text-sm font-semibold text-ink-900">Awaiting confirmation</span>
       </span>
       <span class="text-xs font-semibold tabular-nums text-warn">{{ needsAction().length }}</span>
     </div>
@@ -248,8 +248,8 @@
                 size="sm"
                 type="button"
                 class="flex-1"
-                (click)="assignRequested.emit(b)"
-              >{{ 'hostBookings.assignRoom' | transloco }}</button>
+                (click)="confirmRequested.emit(b)"
+              >Confirm</button>
               <button
                 hh-button
                 variant="outlined"

@@ -105,11 +105,19 @@ export interface ApiMyBookingsResponse {
  * The steps a stay moves through, in order. `cancelled` sits outside the sequence: a
  * cancelled booking has left the track rather than reached a point on it.
  */
-export type BookingStage = 'requested' | 'assigned' | 'checked-in' | 'checked-out' | 'cancelled';
+/**
+ * The booking lifecycle (Trello #80): the hostel confirms a request, checks the guest in —
+ * assigning rooms then — and checks them out. A booking can instead end cancelled, by either
+ * side, or as a no-show, which the hostel marks when a confirmed guest never arrives.
+ */
+export type BookingStage = 'requested' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' | 'no-show';
 
-export const STAGE_ORDER: readonly Exclude<BookingStage, 'cancelled'>[] = [
+/** The two ways a booking leaves the track without finishing it. */
+export type OffTrackStage = 'cancelled' | 'no-show';
+
+export const STAGE_ORDER: readonly Exclude<BookingStage, OffTrackStage>[] = [
   'requested',
-  'assigned',
+  'confirmed',
   'checked-in',
   'checked-out',
 ];
@@ -117,17 +125,24 @@ export const STAGE_ORDER: readonly Exclude<BookingStage, 'cancelled'>[] = [
 /**
  * Disposition slug → stage.
  *
- * A guest's own booking arrives as `pending`; the host's view of the same record calls it
- * `pending-allotment`. Both mean the hostel has not given it a room yet.
+ * `pending-allotment` and `room-assigned` are the host side's names from before the
+ * lifecycle was reseeded; records made then still carry them.
  */
 const STAGE_BY_SLUG: Record<string, BookingStage> = {
   pending: 'requested',
   'pending-allotment': 'requested',
-  'room-assigned': 'assigned',
+  confirmed: 'confirmed',
+  'room-assigned': 'confirmed',
   'checked-in': 'checked-in',
   'checked-out': 'checked-out',
   cancelled: 'cancelled',
+  'no-show': 'no-show',
 };
+
+/** Whether a stage is one of the endings that leave the track. */
+export function isOffTrack(stage: BookingStage | null): stage is OffTrackStage {
+  return stage === 'cancelled' || stage === 'no-show';
+}
 
 /** Which section of the page a booking belongs in. */
 export type BookingTiming = 'upcoming' | 'current' | 'past';
@@ -313,7 +328,7 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
  * never "current", whatever its dates say.
  */
 export function timingOf(b: GuestBooking, now: number): BookingTiming {
-  if (b.stage === 'checked-out') return 'past';
+  if (b.stage === 'checked-out' || b.stage === 'no-show') return 'past';
   if (b.stage === 'checked-in') return 'current';
   if (b.checkOutAt && b.checkOutAt <= now) return 'past';
   if (b.stage === 'cancelled') return b.checkInAt > now ? 'upcoming' : 'past';
@@ -423,12 +438,31 @@ function readBooking(res: ApiMyBookingResponse | null | undefined, id: string): 
   return toGuestBooking(res.booking);
 }
 
-/** Changing the details is allowed only while the booking is pending. */
-export function canEdit(b: GuestBooking): boolean {
-  return b.statusSlug === 'pending';
+/** Changing any of it: pending at any time, or confirmed while check-in is more than 3 days away. */
+export function canEdit(b: GuestBooking, now = Date.now()): boolean {
+  return guestMayChange(b, now);
 }
 
-/** Cancelling is allowed while pending or confirmed. */
-export function canCancel(b: GuestBooking): boolean {
-  return b.statusSlug === 'pending' || b.statusSlug === 'confirmed';
+/** Cancelling follows the same rule as changing. */
+export function canCancel(b: GuestBooking, now = Date.now()): boolean {
+  return guestMayChange(b, now);
+}
+
+/** How close to check-in a confirmed booking stops being the guest's to change. */
+export const GUEST_CHANGE_CUTOFF_MS = 3 * 24 * 60 * 60 * 1000;
+
+/**
+ * The server's `guest_editable?` / `guest_cancellable?`, mirrored: a pending booking at any
+ * time — the hostel has not committed to it — and a confirmed one only while check-in is
+ * more than three days away. Nothing after that.
+ */
+function guestMayChange(b: GuestBooking, now: number): boolean {
+  if (b.statusSlug === 'pending') return true;
+  if (b.statusSlug !== 'confirmed') return false;
+  return !withinChangeCutoff(b, now);
+}
+
+/** A confirmed booking inside the last three days before check-in — the one refusal worth explaining. */
+export function withinChangeCutoff(b: GuestBooking, now = Date.now()): boolean {
+  return b.statusSlug === 'confirmed' && !!b.checkInAt && b.checkInAt <= now + GUEST_CHANGE_CUTOFF_MS;
 }

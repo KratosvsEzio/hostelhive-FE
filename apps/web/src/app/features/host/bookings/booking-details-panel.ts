@@ -1,59 +1,108 @@
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Button } from '@hostelhive/ui';
-import { laneFor } from './booking-month';
-import { HostBooking } from './host-bookings-api';
+import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
+import { LaneKey, laneFor, laneKeyFor } from './booking-month';
+import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
 import { isPrivateOccupancy } from '@util/occupancy-type';
 
+/** What a host can do to a booking, as the lifecycle (Trello #80) allows it. */
+export type BookingAction = 'confirm' | 'checkIn' | 'checkOut' | 'invoice' | 'cancel' | 'noShow';
+
 /**
- * The request behind a pending allotment — everything a host needs before placing it.
+ * Which actions each stage offers, primary last.
  *
- * One layout for both occupancy types. The design makes that explicit: only the "Asked for"
- * field changes, reading "1 shared bed · 1 guest" or "1 private room · 2 guests", and the
- * primary action then either opens the bed stepper or the room list. Two panels would drift.
+ * Offered only from the state the lifecycle allows, because the server does not guard two of
+ * them: it would confirm a cancelled booking, and check in one nobody confirmed. Cancel is
+ * open until the stay ends; a no-show only from confirmed; an invoice once there is a stay to
+ * bill — checked in, checked out, or a no-show, which stays invoiceable.
+ */
+export const ACTIONS_BY_LANE: Readonly<Record<LaneKey, readonly BookingAction[]>> = {
+  pending: ['cancel', 'confirm'],
+  confirmed: ['cancel', 'noShow', 'checkIn'],
+  'checked-in': ['cancel', 'invoice', 'checkOut'],
+  'checked-out': ['invoice'],
+  'no-show': ['invoice'],
+  cancelled: [],
+};
+
+interface OccupancyState {
+  loading: boolean;
+  error: boolean;
+  rows: BookingOccupancy[];
+}
+
+/**
+ * One booking and what can be done with it next.
  *
- * Read-only by construction. Everything here is a fact the host is deciding *on*; the two
- * things they can do about it are the buttons at the bottom, and both belong to the page.
+ * One layout for every stage: the facts at the top, what was booked, who is in which room
+ * once checked in, and the lifecycle's next moves at the bottom. The moves are emitted, not
+ * performed — the page owns the requests, their confirmations and the refresh after.
  */
 @Component({
   selector: 'hh-booking-details-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Button, TranslocoPipe],
+  imports: [DatePipe, DecimalPipe, Button, CurrencySymbolPipe, TranslocoPipe],
   templateUrl: './booking-details-panel.html',
 })
 export class BookingDetailsPanel {
   readonly booking = input<HostBooking | null>(null);
+  /** The hostel, for reading the booking's rooms once it is checked in. */
+  readonly hostelId = input('');
   /** Set by the page when an action could not be sent, so the footer can say why. */
   readonly actionError = input('');
+  /** An action is in flight; every button waits for it. */
+  readonly busy = input(false);
 
   readonly closed = output<void>();
-  readonly assign = output<HostBooking>();
-  readonly decline = output<HostBooking>();
+  readonly act = output<{ action: BookingAction; booking: HostBooking }>();
 
-  /** Only a stay still waiting on a room can be placed or turned away from here. */
-  protected readonly actionable = computed(
-    () => this.booking()?.disposition.slug === 'pending-allotment',
-  );
+  private readonly api = inject(HostBookingsApi);
+
+  protected readonly lane = computed(() => laneKeyFor(this.booking()?.disposition.slug ?? ''));
 
   protected readonly badge = computed(
     () => laneFor(this.booking()?.disposition.slug ?? '')?.badge ?? 'bg-ink-100 text-ink-600',
   );
+
+  protected readonly actions = computed<readonly BookingAction[]>(() => {
+    const lane = this.lane();
+    return lane ? ACTIONS_BY_LANE[lane] : [];
+  });
+  /** The move that finishes this stage — drawn filled, the rest outlined. */
+  protected readonly primary = computed(() => {
+    const a = this.actions();
+    const last = a[a.length - 1];
+    return last && last !== 'cancel' && last !== 'invoice' ? last : null;
+  });
 
   protected readonly isShared = computed(
     () => !isPrivateOccupancy(this.booking()?.roomType.occupancyType),
   );
 
   /**
-   * "3 shared beds" / "1 private room" — the line the design says carries the room type.
+   * "3 shared beds" / "1 private room" — the headline of what was booked.
    *
-   * Beds are counted per guest on a dorm. A private booking has no quantity on the record, so
-   * it is the fewest rooms of that type that seat the party — the same derivation the assign
-   * panel uses, and named the same way so the two cannot disagree.
+   * From the lines when the booking has them: a stay can mix rooms and beds, and the first
+   * line's type is not the booking's. A single-type booking without lines falls back to the
+   * old derivation — beds per guest on a dorm, the fewest rooms that seat the party otherwise.
    */
   protected readonly askedFor = computed(() => {
     const b = this.booking();
     if (!b) return '';
+    if (b.lines.length) {
+      const rooms = b.lines.filter((l) => !l.shared).reduce((n, l) => n + l.units, 0);
+      const beds = b.lines.filter((l) => l.shared).reduce((n, l) => n + l.units, 0);
+      return [
+        rooms ? `${rooms} private room${rooms === 1 ? '' : 's'}` : '',
+        beds ? `${beds} shared bed${beds === 1 ? '' : 's'}` : '',
+      ]
+        .filter(Boolean)
+        .join(' + ');
+    }
     if (this.isShared()) {
       const n = Math.max(1, b.guests);
       return `${n} shared bed${n === 1 ? '' : 's'}`;
@@ -62,14 +111,16 @@ export class BookingDetailsPanel {
     return `${n} private room${n === 1 ? '' : 's'}`;
   });
 
-  /** "1 guest · Dormitory" — the qualifier under "Asked for". */
+  /** "3 guests · King size room" — or "· 2 room types" for a mixed stay. */
   protected readonly askedForDetail = computed(() => {
     const b = this.booking();
     if (!b) return '';
-    return `${b.guests} guest${b.guests === 1 ? '' : 's'} · ${b.roomType.name}`;
+    const what =
+      b.lines.length > 1 ? `${b.lines.length} room types` : (b.lines[0]?.name ?? b.roomType.name);
+    return `${b.guests} guest${b.guests === 1 ? '' : 's'} · ${what}`;
   });
 
-  /** Whether the deposit has actually been taken, which changes what declining costs. */
+  /** Whether the deposit has actually been taken. */
   protected readonly depositPaid = computed(() => (this.booking()?.paid ?? 0) > 0);
 
   /** "12 minutes ago" from `created_at`, so the wait is legible without doing the sum. */
@@ -87,18 +138,84 @@ export class BookingDetailsPanel {
     return `${days} day${days === 1 ? '' : 's'} ago`;
   });
 
+  // ── who is in which room ─────────────────────────────────────────────────────────
+  /** Bumped after a release, so the list re-reads what the server now holds. */
+  private readonly occupancyTick = signal(0);
+  protected readonly releasing = signal<string | null>(null);
+  protected readonly releaseError = signal('');
+
+  private readonly occupancyState = toSignal(
+    toObservable(
+      computed(() => {
+        const b = this.booking();
+        const checkedIn = b && laneKeyFor(b.disposition.slug) === 'checked-in';
+        return { key: checkedIn ? `${this.hostelId()}|${b.id}` : '', tick: this.occupancyTick() };
+      }),
+    ).pipe(
+      switchMap(({ key }) => {
+        if (!key) return of<OccupancyState>({ loading: false, error: false, rows: [] });
+        const [hostelId, bookingId] = key.split('|');
+        return this.api.occupancies(hostelId, bookingId).pipe(
+          map((rows) => ({ loading: false, error: false, rows })),
+          startWith<OccupancyState>({ loading: true, error: false, rows: [] }),
+          catchError(() => of<OccupancyState>({ loading: false, error: true, rows: [] })),
+        );
+      }),
+    ),
+    { initialValue: { loading: false, error: false, rows: [] } as OccupancyState },
+  );
+
+  protected readonly showOccupancies = computed(() => this.lane() === 'checked-in');
+  protected readonly occupancies = computed(() => this.occupancyState());
+
+  protected release(o: BookingOccupancy): void {
+    const b = this.booking();
+    if (!b || this.releasing()) return;
+    this.releasing.set(o.id);
+    this.releaseError.set('');
+    this.api.releaseOccupancy(this.hostelId(), b.id, o.id).subscribe({
+      next: () => {
+        this.releasing.set(null);
+        this.occupancyTick.update((n) => n + 1);
+      },
+      error: (err: { message?: string } | null) => {
+        this.releasing.set(null);
+        this.releaseError.set(err?.message || `Could not release room ${o.roomNumber}.`);
+      },
+    });
+  }
+
+  // ── the next move ────────────────────────────────────────────────────────────────
+  protected label(action: BookingAction): string {
+    return ACTION_LABEL[action];
+  }
+
+  protected run(action: BookingAction): void {
+    const b = this.booking();
+    if (b && !this.busy()) this.act.emit({ action, booking: b });
+  }
+
+  /** The line under the buttons: what the primary move does, so pressing it is not a guess. */
+  protected readonly hint = computed(() => {
+    switch (this.lane()) {
+      case 'pending':
+        return 'Confirming emails the guest their confirmation, with the booking as a PDF.';
+      case 'confirmed':
+        return 'Rooms are assigned at check-in. A guest who never arrives is a no show.';
+      case 'checked-in':
+        return 'Checking out releases every bed this booking holds.';
+      case 'checked-out':
+      case 'no-show':
+        return 'An invoice can be raised once per booking.';
+      case 'cancelled':
+        return 'This booking was cancelled.';
+      default:
+        return '';
+    }
+  });
+
   protected close(): void {
     this.closed.emit();
-  }
-
-  protected onAssign(): void {
-    const b = this.booking();
-    if (b) this.assign.emit(b);
-  }
-
-  protected onDecline(): void {
-    const b = this.booking();
-    if (b) this.decline.emit(b);
   }
 
   protected initials(name: string): string {
@@ -112,3 +229,12 @@ export class BookingDetailsPanel {
       : '–';
   }
 }
+
+const ACTION_LABEL: Record<BookingAction, string> = {
+  confirm: 'Confirm',
+  checkIn: 'Check in',
+  checkOut: 'Check out',
+  invoice: 'Generate invoice',
+  cancel: 'Cancel booking',
+  noShow: 'Mark no show',
+};

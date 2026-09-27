@@ -24,10 +24,11 @@
   </p>
 
   @if (!editable()) {
-    <!-- Past pending the server refuses any change, so no controls are offered at all. -->
+    <!-- The server would refuse any change, so no controls are offered at all — and when the
+         reason is the three days before check-in, that is what it says. -->
     <p class="mt-6 flex items-start gap-2 rounded-xl bg-tint-cream px-3 py-2.5 text-sm text-amber-900">
       <i class="ti ti-info-circle mt-0.5 shrink-0" aria-hidden="true"></i>
-      {{ 'userBookings.noLongerEditable' | transloco }}
+      {{ (inCutoff() ? 'userBookings.withinCutoff' : 'userBookings.noLongerEditable') | transloco }}
     </p>
   } @else {
     @if (droppedRooms().length) {
@@ -59,6 +60,7 @@
     <app-booking-edit-modal
       [booking]="b"
       [stay]="summary()"
+      [reconfirm]="reconfirm()"
       [saving]="saving()"
       [error]="saveError()"
       (saved)="save($event)"

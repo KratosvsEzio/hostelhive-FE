@@ -161,6 +161,166 @@ export class HostBookingsApi {
       })
       .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
   }
+
+  /* ── the lifecycle (Trello #80) ────────────────────────────────────────────────
+   *
+   * Each answers with the booking as the server now stores it, and the page draws that
+   * rather than guessing what the move did. Every guard is the server's; the page offers each
+   * action only from the state it is valid in, because two of them are not guarded there —
+   * confirm would re-confirm a cancelled booking, check-in would skip confirming.
+   */
+
+  /**
+   * `POST …/bookings` — a walk-in or phone booking the host writes down.
+   *
+   * The same body the guest endpoint takes: room types and how many, not rooms — rooms are
+   * placed at check-in. The dates arrive already resolved to instants in the hostel's zone.
+   */
+  create(hostelId: string, input: HostBookingInput): Observable<HostBooking> {
+    return this.api
+      .post<{ booking?: ApiHostBooking | null }>(`/api/host/hostels/${hostelId}/bookings`, {
+        booking: {
+          checkin_date: input.checkInAt,
+          checkout_date: input.checkOutAt,
+          guest_name: input.guestName.trim(),
+          guest_phone: input.guestPhone.replace(/\D/g, ''),
+          ...(input.guestEmail.trim() ? { guest_email: input.guestEmail.trim() } : {}),
+          line_items: input.lines.map((l) => ({
+            room_type_id: l.roomTypeId,
+            guests: l.guests,
+            occupancy_type: l.shared ? 'shared' : 'private_room',
+            // A shared line's bed count is its guests; only a private line says how many rooms.
+            ...(l.shared ? {} : { quantity: l.quantity }),
+          })),
+        },
+      })
+      .pipe(
+        map((res) => {
+          if (!res?.booking?.id) throw new Error('booking not in response');
+          return toHostBooking(res.booking);
+        }),
+      );
+  }
+
+  /** `POST …/mark_as_confirmed` — pending → confirmed. The guest is emailed the PDF. */
+  confirm(hostelId: string, bookingId: string): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_confirmed', {});
+  }
+
+  /**
+   * `POST …/mark_as_checked_in` — confirmed → checked-in, placing guests in rooms.
+   *
+   * One allocation per room, any room type; the server refuses a room without that many free
+   * beds, and the booking's headcount becomes the sum of what was placed.
+   */
+  checkIn(hostelId: string, bookingId: string, allocations: readonly CheckInAllocation[]): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_checked_in', {
+      allocations: allocations.map((a) => ({ room_id: a.roomId, guests: a.guests })),
+    });
+  }
+
+  /** `POST …/mark_as_checked_out` — checked-in → checked-out, releasing every bed. */
+  checkOut(hostelId: string, bookingId: string): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_checked_out', {});
+  }
+
+  /** `POST …/mark_as_cancelled` — any time, with a reason the server requires. */
+  cancel(hostelId: string, bookingId: string, reason: string): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_cancelled', { reason: reason.trim() });
+  }
+
+  /** `POST …/mark_as_no_show` — confirmed only: the guest never arrived. */
+  markNoShow(hostelId: string, bookingId: string, reason: string): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_no_show', { reason: reason.trim() });
+  }
+
+  /**
+   * `POST …/generate_invoice` — after check-in, once per booking; the server says 422 to a
+   * second. Answers with the bill, not the booking, so this reports only that it worked.
+   */
+  generateInvoice(hostelId: string, bookingId: string): Observable<void> {
+    return this.api
+      .post<unknown>(`${this.base(hostelId, bookingId)}/generate_invoice`, {})
+      .pipe(map(() => undefined));
+  }
+
+  /** `GET …/occupancies` — who is in which room, for a checked-in booking. */
+  occupancies(hostelId: string, bookingId: string): Observable<BookingOccupancy[]> {
+    return this.api
+      .get<ApiOccupanciesResponse>(`${this.base(hostelId, bookingId)}/occupancies`, pageParams(1, 100))
+      .pipe(map((res) => (res?.occupancies ?? []).map(toOccupancy)));
+  }
+
+  /** `PUT …/occupancies/:id/mark_as_inactive` — releases one room's beds before check-out. */
+  releaseOccupancy(hostelId: string, bookingId: string, occupancyId: string): Observable<void> {
+    return this.api
+      .put<unknown>(
+        `${this.base(hostelId, bookingId)}/occupancies/${encodeURIComponent(occupancyId)}/mark_as_inactive`,
+        {},
+      )
+      .pipe(map(() => undefined));
+  }
+
+  private base(hostelId: string, bookingId: string): string {
+    return `/api/host/hostels/${hostelId}/bookings/${encodeURIComponent(bookingId)}`;
+  }
+
+  private post(hostelId: string, bookingId: string, action: string, body: object): Observable<HostBooking> {
+    return this.api
+      .post<{ booking?: ApiHostBooking | null }>(`${this.base(hostelId, bookingId)}/${action}`, body)
+      .pipe(
+        map((res) => {
+          if (!res?.booking?.id) throw new Error(`booking ${bookingId} not in response`);
+          return toHostBooking(res.booking);
+        }),
+      );
+  }
+}
+
+export interface HostBookingInput {
+  /** UTC instants of the hostel's check-in and check-out hours on the chosen days. */
+  checkInAt: string;
+  checkOutAt: string;
+  guestName: string;
+  guestPhone: string;
+  guestEmail: string;
+  lines: readonly { roomTypeId: string; shared: boolean; quantity: number; guests: number }[];
+}
+
+export interface CheckInAllocation {
+  roomId: string;
+  guests: number;
+}
+
+/** One room a checked-in booking holds beds in. */
+export interface BookingOccupancy {
+  id: string;
+  roomId: string;
+  roomNumber: string;
+  guests: number;
+  active: boolean;
+}
+
+interface ApiOccupanciesResponse {
+  occupancies?:
+    | {
+        id: string;
+        room_id?: string | null;
+        guests?: HostApiNumber;
+        status?: string | null;
+        room?: { id?: string | null; room_number?: string | null } | null;
+      }[]
+    | null;
+}
+
+function toOccupancy(o: NonNullable<ApiOccupanciesResponse['occupancies']>[number]): BookingOccupancy {
+  return {
+    id: String(o.id),
+    roomId: o.room?.id ?? o.room_id ?? '',
+    roomNumber: o.room?.room_number ?? '—',
+    guests: num(o.guests),
+    active: (o.status ?? 'active') === 'active',
+  };
 }
 
 /* ───────────────────────────────────────────────────────────── the month ── */
@@ -243,6 +403,14 @@ interface ApiNamedSlug {
   slug?: string | null;
 }
 
+export type HostApiNumber = number | string | null | undefined;
+
+/** A number or a numeric string (`"310000.0"`), as either shape of the booking sends it. */
+function num(v: HostApiNumber): number {
+  const n = typeof v === 'string' ? (v.trim() ? Number(v) : NaN) : v;
+  return typeof n === 'number' && Number.isFinite(n) ? n : 0;
+}
+
 /** The wire shape. Everything optional: this is a search document, not a serializer. */
 export interface ApiHostBooking {
   id: string;
@@ -254,21 +422,41 @@ export interface ApiHostBooking {
   /** Full offset timestamps (`2026-08-26T22:44:01+05:00`), not calendar dates. */
   checkin_date?: string | null;
   checkout_date?: string | null;
-  nights?: number | null;
-  guests?: number | null;
-  total_price?: number | null;
-  deposit?: number | null;
-  paid_amount?: number | null;
-  balance_due?: number | null;
+  nights?: HostApiNumber;
+  guests?: HostApiNumber;
+  /** Numbers from the list (a search document), decimal strings from a single booking. */
+  total_price?: HostApiNumber;
+  deposit?: HostApiNumber;
+  paid_amount?: HostApiNumber;
+  balance_due?: HostApiNumber;
+  currency?: string | null;
   notes?: string | null;
+  /**
+   * What was booked, one line per room type. The list sends a flat `room_type_name`; a
+   * single booking nests it under `room_type`.
+   */
+  line_items?:
+    | {
+        id?: string | null;
+        room_type_id?: string | null;
+        room_type_name?: string | null;
+        room_type?: { id?: string | null; name?: string | null } | null;
+        guests?: HostApiNumber;
+        quantity?: HostApiNumber;
+        occupancy_type?: string | null;
+        subtotal?: HostApiNumber;
+      }[]
+    | null;
+  /** Written by a host cancel or no-show. Not serialised yet; read when it is. */
+  cancellation_reason?: string | null;
   /** Where the booking came from — `Hostelworld`, `Direct`. Often null. */
-  source?: string | null;
+  source?: string | number | null;
   created_at?: string | null;
   room_type?:
     | (ApiNamedSlug & {
         occupancy_type?: string | null;
-        capacity?: number | null;
-        price?: number | null;
+        capacity?: HostApiNumber;
+        price?: HostApiNumber;
       })
     | null;
   /**
@@ -343,9 +531,25 @@ export interface HostBooking {
   disposition: { name: string; slug: string };
   /** The guest’s own note, shown verbatim on the request panel. */
   notes: string;
+  /** What was booked, one line per room type — a stay can mix private rooms and dorm beds. */
+  lines: HostBookingLine[];
+  /** ISO-4217, when the record says; `''` lets the symbol pipe use the default. */
+  currency: string;
+  /** Why the host cancelled it or marked it a no-show, once the server sends it. */
+  cancellationReason: string;
   /** Channel, when the record names one. */
   source: string;
   createdAt: string;
+}
+
+export interface HostBookingLine {
+  roomTypeId: string;
+  name: string;
+  shared: boolean;
+  /** Rooms on a private line, beds on a shared one. */
+  units: number;
+  guests: number;
+  subtotal: number;
 }
 
 /** One page of the list, plus what a pager needs to describe where it sits. */
@@ -383,19 +587,23 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     checkIn,
     checkOut,
     // Trust the server's count when it sends one — it knows the property's day boundary.
-    nights: b.nights ?? nightsBetween(checkIn, checkOut),
-    guests: b.guests ?? 0,
+    nights: b.nights != null && b.nights !== '' ? num(b.nights) : nightsBetween(checkIn, checkOut),
+    guests: num(b.guests),
     roomType: {
       name: b.room_type?.name ?? '—',
       occupancyType: b.room_type?.occupancy_type ?? '',
-      capacity: b.room_type?.capacity ?? 0,
+      capacity: num(b.room_type?.capacity),
       // Per night for a bed, per night for the room — whichever the type sells.
-      price: b.room_type?.price ?? 0,
+      price: num(b.room_type?.price),
     },
-    total: b.total_price ?? 0,
-    deposit: b.deposit ?? 0,
-    paid: b.paid_amount ?? 0,
-    balanceDue: b.balance_due ?? 0,
+    total: num(b.total_price),
+    deposit: num(b.deposit),
+    paid: num(b.paid_amount),
+    // A single booking omits it; what is owed is then what is not yet paid.
+    balanceDue:
+      b.balance_due != null && b.balance_due !== ''
+        ? num(b.balance_due)
+        : Math.max(num(b.total_price) - num(b.paid_amount), 0),
     room: b.room?.id
       ? { id: String(b.room.id), number: b.room.room_number ?? '—' }
       : b.room_id
@@ -412,7 +620,18 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     status: { name: b.status?.name ?? '', slug: b.status?.slug ?? '' },
     disposition: { name: b.disposition?.name ?? '', slug: b.disposition?.slug ?? '' },
     notes: b.notes?.trim() ?? '',
-    source: b.source?.trim() ?? '',
+    lines: (b.line_items ?? []).map((l) => ({
+      roomTypeId: l.room_type_id ?? l.room_type?.id ?? '',
+      name: l.room_type_name ?? l.room_type?.name ?? '',
+      shared: l.occupancy_type === 'shared',
+      units: num(l.quantity) || num(l.guests),
+      guests: num(l.guests),
+      subtotal: num(l.subtotal),
+    })),
+    currency: b.currency?.trim().toUpperCase() ?? '',
+    cancellationReason: b.cancellation_reason?.trim() ?? '',
+    // A number (`0`) on a single booking, a channel name on the list.
+    source: typeof b.source === 'string' ? b.source.trim() : '',
     createdAt: b.created_at ?? '',
   };
 }
