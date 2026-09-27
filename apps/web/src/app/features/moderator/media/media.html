@@ -272,11 +272,11 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="cancelReject()"
     ></button>
-    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       @if (rejectQueue().length === 1 && rejectQueue()[0].url) {
         <!-- Single photo — show photo as a hero header -->
-        <div class="relative h-44 overflow-hidden">
+        <div class="relative h-44 shrink-0 overflow-hidden">
           <img
             [src]="rejectQueue()[0].url"
             class="h-full w-full object-cover"
@@ -302,7 +302,7 @@
         </div>
       } @else {
         <!-- Bulk / no-image — animated warning block -->
-        <div class="flex flex-col items-center bg-danger/5 pb-5 pt-7">
+        <div class="flex shrink-0 flex-col items-center bg-danger/5 pb-5 pt-7">
           <div class="relative flex h-20 w-20 items-center justify-center">
             <span
               class="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger/25"
@@ -323,7 +323,7 @@
       }
 
       <!-- Modal body -->
-      <div class="p-5">
+      <div class="min-h-0 flex-1 overflow-y-auto p-5">
         <h2
           id="reject-modal-title"
           class="mb-0.5 font-display text-base font-semibold text-ink-900"
@@ -357,25 +357,27 @@
           </p>
         }
 
-        <div class="mt-4 flex gap-3">
-          <button
-            hh-button
-            variant="outlined"
-            class="flex-1"
-            (click)="cancelReject()"
-          >
-            {{ 'common.cancel' | transloco }}
-          </button>
-          <button
-            hh-button
-            variant="outlined" color="danger"
-            class="flex-1"
-            [disabled]="!rejectNote().trim()"
-            (click)="confirmReject()"
-          >
-            {{ 'moderatorMedia.reject' | transloco }}
-          </button>
-        </div>
+      </div>
+
+      <!-- Footer: pinned, so the reason can scroll on a short screen without losing Reject. -->
+      <div class="flex shrink-0 gap-3 border-t border-ink-100 px-5 pt-4 pb-5">
+        <button
+          hh-button
+          variant="outlined"
+          class="flex-1"
+          (click)="cancelReject()"
+        >
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button
+          hh-button
+          variant="outlined" color="danger"
+          class="flex-1"
+          [disabled]="!rejectNote().trim()"
+          (click)="confirmReject()"
+        >
+          {{ 'moderatorMedia.reject' | transloco }}
+        </button>
       </div>
     </div>
   </div>
@@ -396,10 +398,10 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="prog.allDone ? closeRejectProgressModal() : null"
     ></button>
-    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       <!-- Header: title + progress bar -->
-      <div class="border-b border-ink-100 px-5 pb-4 pt-5">
+      <div class="shrink-0 border-b border-ink-100 px-5 pb-4 pt-5">
         <div class="mb-3 flex items-center justify-between">
           <h2
             id="reject-progress-modal-title"
@@ -430,7 +432,7 @@
       </div>
 
       <!-- Per-item list -->
-      <div class="max-h-60 divide-y divide-ink-100 overflow-y-auto">
+      <div class="min-h-0 max-h-60 divide-y divide-ink-100 overflow-y-auto">
         @for (item of rejectProgressQueue(); track item.attachment.id) {
           <div class="flex items-center gap-3 px-4 py-3">
             <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-ink-100">
@@ -463,7 +465,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="border-t border-ink-100 p-4">
+      <div class="shrink-0 border-t border-ink-100 p-4">
         <button
           hh-button
           variant="outlined" color="danger"
@@ -500,10 +502,10 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="prog.allDone ? closeApproveModal() : null"
     ></button>
-    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
 
       <!-- Header: title + progress bar -->
-      <div class="border-b border-ink-100 px-5 pb-4 pt-5">
+      <div class="shrink-0 border-b border-ink-100 px-5 pb-4 pt-5">
         <div class="mb-3 flex items-center justify-between">
           <h2
             id="approve-modal-title"
@@ -534,7 +536,7 @@
       </div>
 
       <!-- Per-item list -->
-      <div class="max-h-60 divide-y divide-ink-100 overflow-y-auto">
+      <div class="min-h-0 max-h-60 divide-y divide-ink-100 overflow-y-auto">
         @for (item of approveModalQueue(); track item.attachment.id) {
           <div class="flex items-center gap-3 px-4 py-3">
             <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-ink-100">
@@ -567,7 +569,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="border-t border-ink-100 p-4">
+      <div class="shrink-0 border-t border-ink-100 p-4">
         <button
           hh-button
           color="primary"
@@ -600,7 +602,7 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="closePreview()"
     ></button>
-    <div class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
       <!-- Close -->
       <button
         hh-button variant="icon"
@@ -619,14 +621,14 @@
       } @else {
         <img
           [src]="preview.url"
-          class="max-h-[70vh] w-full object-contain"
+          class="min-h-0 max-h-[70vh] w-full object-contain"
           style="background:#111"
           alt=""
         />
       }
 
       <!-- Info bar -->
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-ink-100 px-5 py-4">
+      <div class="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-t border-ink-100 px-5 py-4">
         <div class="flex flex-1 flex-col gap-1.5 min-w-0">
           <div class="flex flex-wrap gap-1.5">
             @if (previewBadge) {

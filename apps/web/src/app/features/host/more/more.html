@@ -101,10 +101,10 @@
   <!-- safe-pb-4 not safe-pb: `.safe-pb` overrides `pb-4` (global.css loads after the
        Tailwind utilities), which left this sheet with no bottom padding at all on a
        device without an inset. -->
-  <div class="safe-pb-4 fixed inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-white px-5 pt-3" role="dialog" [attr.aria-label]="'a11y.switchProperty' | transloco">
-    <span class="mx-auto block h-1 w-10 rounded-full bg-ink-200"></span>
-    <p class="mt-4 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostMore.property' | transloco }}</p>
-    <div class="mt-2 max-h-72 space-y-1.5 overflow-y-auto">
+  <div class="safe-pb-4 fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col rounded-t-[28px] bg-white px-5 pt-3" role="dialog" [attr.aria-label]="'a11y.switchProperty' | transloco">
+    <span class="mx-auto block h-1 w-10 shrink-0 rounded-full bg-ink-200"></span>
+    <p class="mt-4 shrink-0 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{{ 'hostMore.property' | transloco }}</p>
+    <div class="mt-2 min-h-0 max-h-72 space-y-1.5 overflow-y-auto">
       @for (p of propertyStore.properties(); track p.id) {
         <button
           type="button"
@@ -129,13 +129,15 @@
       }
     </div>
     @if (canCreateHostel()) {
-      <a
-        routerLink="/host/hostels/new"
-        class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
-        (click)="switcherOpen.set(false)"
-      >
-        <i class="ti ti-plus" aria-hidden="true"></i>{{ 'hostMore.createNewHostel' | transloco }}
-      </a>
+      <div class="mt-4 shrink-0 border-t border-ink-100 pt-4">
+        <a
+          routerLink="/host/hostels/new"
+          class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
+          (click)="switcherOpen.set(false)"
+        >
+          <i class="ti ti-plus" aria-hidden="true"></i>{{ 'hostMore.createNewHostel' | transloco }}
+        </a>
+      </div>
     }
   </div>
 }

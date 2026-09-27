@@ -582,19 +582,20 @@
     tabindex="-1"
   >
     <div
-      class="mx-4 w-full max-w-md rounded-2xl bg-white shadow-pill"
+      class="mx-4 flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-pill"
       (click)="$event.stopPropagation()"
       (keydown)="$event.stopPropagation()"
       role="dialog"
       aria-modal="true"
     >
-      <div class="px-4 pt-5 pb-4 sm:px-6 sm:pt-6">
-        <div class="mb-4 flex items-center gap-3">
-          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50">
-            <i class="ti ti-alert-triangle text-xl text-amber-500" aria-hidden="true"></i>
-          </div>
-          <h3 class="font-display text-lg font-semibold text-ink-900">{{ 'hostTenants.confirmLeaveDate' | transloco }}</h3>
+      <div class="flex shrink-0 items-center gap-3 px-4 pt-5 pb-4 sm:px-6 sm:pt-6">
+        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50">
+          <i class="ti ti-alert-triangle text-xl text-amber-500" aria-hidden="true"></i>
         </div>
+        <h3 class="font-display text-lg font-semibold text-ink-900">{{ 'hostTenants.confirmLeaveDate' | transloco }}</h3>
+      </div>
+
+      <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6">
 
         @if (leaveInfo(); as info) {
           <p class="text-sm text-ink-600">
@@ -635,7 +636,7 @@
         </div>
       </div>
 
-      <div class="flex gap-3 border-t border-ink-100 px-4 py-4 sm:px-6">
+      <div class="flex shrink-0 gap-3 border-t border-ink-100 px-4 py-4 sm:px-6">
         <button
           hh-button
           variant="outlined"

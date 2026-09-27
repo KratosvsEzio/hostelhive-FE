@@ -442,20 +442,6 @@
               (book)="startBooking()"
               (chooseRoom)="onChooseRoom()"
             />
-
-            <!-- The last screen before the booking exists. Rendered beside the rail rather
-                 than at the page root so it shares the basket instance this page provides. -->
-            @if (summaryOpen()) {
-              <hh-booking-summary
-                [currency]="l.currency"
-                [hostelName]="l.name"
-                [submitting]="booking()"
-                [error]="bookingError()"
-                [reference]="bookingRef()"
-                (confirmed)="confirmBooking($event)"
-                (dismissed)="dismissSummary()"
-              />
-            }
           }
           <!-- Pricing + gated phone -->
           <div class="rounded-2xl border border-ink-100 p-5 shadow-card">
@@ -543,6 +529,23 @@
             </div>
           }
         </div>
+
+        <!-- The last screen before the booking exists. Outside the sticky div above on
+             purpose: `position: sticky` makes a stacking context, and a modal inside one can
+             never out-rank the site header however high its own z-index — the header stayed
+             bright above the dimmed page. It still shares the basket, which this page
+             provides to its whole template, not only to the rail. -->
+        @if (bookingEnabled() && summaryOpen()) {
+          <hh-booking-summary
+            [currency]="l.currency"
+            [hostelName]="l.name"
+            [submitting]="booking()"
+            [error]="bookingError()"
+            [reference]="bookingRef()"
+            (confirmed)="confirmBooking($event)"
+            (dismissed)="dismissSummary()"
+          />
+        }
       </aside>
     </div>
   }
@@ -842,9 +845,9 @@
       (click)="closeShare()"
     ></button>
 
-    <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+    <div class="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
+      <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
         <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'listing.shareThisListing' | transloco }}</h2>
         <button
           type="button"
@@ -856,7 +859,7 @@
         </button>
       </div>
 
-      <div class="p-4 sm:p-6">
+      <div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
         <!-- Hostel preview -->
         <div class="mb-6 flex items-center gap-4 rounded-xl border border-ink-100 p-3">
           @if (l.images[0]) {
@@ -968,7 +971,7 @@
 <!-- Description modal -->
 @if (descriptionModalOpen() && state().data; as l) {
   <div
-    class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
     hhDialogFocus
     role="dialog"
     aria-modal="true"
@@ -980,8 +983,8 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="descriptionModalOpen.set(false)"
     ></button>
-    <div class="relative mx-auto mt-8 w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl sm:mt-16">
-      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
+    <div class="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
         <h2 class="font-display text-lg font-semibold text-ink-900">{{ 'listing.aboutThisHostel' | transloco }}</h2>
         <button
           type="button"
@@ -992,7 +995,7 @@
           <i class="ti ti-x text-base" aria-hidden="true"></i>
         </button>
       </div>
-      <div class="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6">
+      <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
         <div
           class="hh-rich text-base leading-relaxed text-ink-700"
           [innerHTML]="l.description"
@@ -1017,9 +1020,9 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeModal()"
     ></button>
-    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
+    <div class="relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+      <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-4">
         <h2 class="font-display text-base font-semibold text-ink-900">{{ 'listing.contactHostel' | transloco }}</h2>
         <button
           type="button"
@@ -1031,7 +1034,7 @@
         </button>
       </div>
 
-      <div class="px-5 py-4">
+      <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
         <!-- Hostel + host info -->
         <p class="font-semibold text-ink-900">{{ l.name }}</p>
         @if (l.host) {
@@ -1136,7 +1139,7 @@
 <!-- Reviews modal -->
 @if (reviewsOpen() && state().data; as l) {
   <div
-    class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
     hhDialogFocus
     role="dialog"
     aria-modal="true"
@@ -1148,9 +1151,9 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeReviews()"
     ></button>
-    <div class="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl sm:mt-16">
+    <div class="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
+      <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-4 sm:px-6">
         <div>
           <h2 class="font-display text-lg font-semibold text-ink-900">{{ canReview() ? ('listing.writeAReview' | transloco) : ('listing.reviews' | transloco) }}</h2>
         </div>
@@ -1164,7 +1167,7 @@
         </button>
       </div>
 
-      <div class="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6">
+      <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
         @if (canReview()) {
           <!-- ── Write-a-review flow (only reachable from a review-request notification) ── -->
           @if (isLoggedIn()) {
@@ -1359,9 +1362,9 @@
       [attr.aria-label]="'a11y.close' | transloco"
       (click)="closeLoginGate()"
     ></button>
-    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl">
+    <div class="relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+      <div class="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-4">
         <h2 id="login-gate-title" class="font-display text-base font-semibold text-ink-900">
           {{
             (gateIntent() === 'rooms' ? 'listing.signInToBook' : 'listing.signInToContact')
@@ -1379,7 +1382,7 @@
       </div>
 
       <!-- Body -->
-      <div class="px-5 py-5">
+      <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5">
         <div class="flex items-start gap-3">
           @if (gateIntent() === 'rooms') {
             <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50">
@@ -1404,14 +1407,16 @@
           }
         </div>
 
-        <div class="mt-5 flex flex-col gap-2">
-          <button hh-button color="primary" class="w-full" (click)="goToAuth()">
-            {{ 'listing.logInRegister' | transloco }}
-          </button>
-          <button hh-button variant="outlined" class="w-full" (click)="closeLoginGate()">
-            {{ 'listing.maybeLater' | transloco }}
-          </button>
-        </div>
+      </div>
+
+      <!-- Footer: pinned below the body, the same as every other dialog's actions. -->
+      <div class="flex shrink-0 flex-col gap-2 border-t border-ink-100 px-5 pt-4 pb-5">
+        <button hh-button color="primary" class="w-full" (click)="goToAuth()">
+          {{ 'listing.logInRegister' | transloco }}
+        </button>
+        <button hh-button variant="outlined" class="w-full" (click)="closeLoginGate()">
+          {{ 'listing.maybeLater' | transloco }}
+        </button>
       </div>
     </div>
   </div>
