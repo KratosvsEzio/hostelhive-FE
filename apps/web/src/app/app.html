@@ -70,7 +70,8 @@
   >
     <div class="flex flex-col items-center gap-4">
       <i hhLogo class="h-7 w-auto text-ink-900"></i>
-      <i class="ti ti-loader-2 animate-spin text-2xl text-brand-500" aria-hidden="true"></i>
+      <!-- The bee only for a wait worth showing: a quick start never sees it. -->
+      <hh-mascot mode="searching" [size]="96" [delay]="300" />
       <span class="sr-only">{{ 'common.loading' | transloco }}</span>
     </div>
   </div>

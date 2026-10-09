@@ -21,11 +21,12 @@ import { ConsentBanner } from '@core/google-analytics/consent-banner';
 import { StartupGate } from '@core/startup-gate';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
+import { Mascot } from '@app/shared/mascot/mascot';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Logo, 
+  imports: [Logo, Mascot, 
     RouterOutlet,
     SiteHeader,
     SiteFooter,
