@@ -436,7 +436,6 @@ export interface ApiHostBooking {
   guests?: HostApiNumber;
   /** Numbers from the list (a search document), decimal strings from a single booking. */
   total_price?: HostApiNumber;
-  deposit?: HostApiNumber;
   paid_amount?: HostApiNumber;
   balance_due?: HostApiNumber;
   currency?: string | null;
@@ -529,7 +528,6 @@ export interface HostBooking {
   guests: number;
   roomType: { name: string; occupancyType: string; capacity: number; price: number };
   total: number;
-  deposit: number;
   paid: number;
   balanceDue: number;
   /** Allotted room, or null while the booking is still pending allotment. */
@@ -614,7 +612,6 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
       price: num(b.room_type?.price),
     },
     total: num(b.total_price),
-    deposit: num(b.deposit),
     paid: num(b.paid_amount),
     // A single booking omits it; what is owed is then what is not yet paid.
     balanceDue:

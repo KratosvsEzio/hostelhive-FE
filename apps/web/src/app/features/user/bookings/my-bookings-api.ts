@@ -61,7 +61,6 @@ export interface ApiMyBooking {
   nights?: ApiNumber;
   guests?: ApiNumber;
   total_price?: ApiNumber;
-  deposit?: ApiNumber;
   paid_amount?: ApiNumber;
   balance_due?: ApiNumber;
   notes?: string | null;
@@ -193,7 +192,6 @@ export interface GuestBooking {
   nights: number;
   guests: number;
   total: number;
-  deposit: number;
   paid: number;
   due: number;
   notes: string;
@@ -304,7 +302,6 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
     nights: numOrNull(b.nights) ?? nightsBetween(checkIn.date, checkOut.date),
     guests: num(b.guests),
     total,
-    deposit: num(b.deposit),
     paid,
     due: numOrNull(b.balance_due) ?? Math.max(total - paid, 0),
     notes: b.notes?.trim() ?? '',

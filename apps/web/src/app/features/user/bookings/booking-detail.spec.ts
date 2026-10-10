@@ -257,7 +257,7 @@ describe('AccountBookingDetail', () => {
     });
 
     it('shows the total and what is due, and not the deposit or what was paid', () => {
-      const { el } = render(() => of(booking({ deposit: 31000, paid: 0 })));
+      const { el } = render(() => of(booking({ paid: 0 })));
 
       expect(priceText(el)).toContain('userBookings.total');
       expect(priceText(el)).toContain('userBookings.dueAtHostel');

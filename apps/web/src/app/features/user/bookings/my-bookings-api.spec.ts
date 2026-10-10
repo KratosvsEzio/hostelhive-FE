@@ -29,7 +29,6 @@ function raw(over: Partial<ApiMyBooking> = {}): ApiMyBooking {
     nights: 25,
     guests: 5,
     total_price: 310000,
-    deposit: 31000,
     paid_amount: 0,
     balance_due: 310000,
     notes: 'Testing the notes',
@@ -112,7 +111,7 @@ describe('toGuestBooking', () => {
     expect(b.checkOut).toEqual({ date: '2026-10-25', time: '11:00' });
     expect(b.nights).toBe(25);
     expect(b.guests).toBe(5);
-    expect([b.total, b.deposit, b.paid, b.due]).toEqual([310000, 31000, 0, 310000]);
+    expect([b.total, b.paid, b.due]).toEqual([310000, 0, 310000]);
     expect(b.notes).toBe('Testing the notes');
     expect(b.bookedOn).toBe('2026-09-27');
     expect(b.stage).toBe('requested');
@@ -167,7 +166,6 @@ const DETAIL = {
   checkout_date: '2026-10-25T11:00:00.000+05:00',
   guests: 5,
   total_price: '310000.0',
-  deposit: '31000.0',
   paid_amount: '0.0',
   currency: 'PKR',
   hostel: { name: 'Backpacker', area: 'Bahria Orchard, Phare 4', city: 'Lahore', id: 'MjvuEl' },
@@ -240,7 +238,7 @@ describe('toGuestBooking on the single-booking payload', () => {
 
   it('reads amounts sent as decimal strings', () => {
     const b = toGuestBooking(DETAIL);
-    expect([b.total, b.deposit, b.paid]).toEqual([310000, 31000, 0]);
+    expect([b.total, b.paid]).toEqual([310000, 0]);
   });
 
   it('derives what the endpoint omits: nights from the dates, due from total less paid', () => {
@@ -260,7 +258,7 @@ describe('toGuestBooking on the single-booking payload', () => {
   it('draws the same booking the list does', () => {
     const fromList = toGuestBooking(raw());
     const fromDetail = toGuestBooking(DETAIL);
-    for (const key of ['total', 'deposit', 'paid', 'due', 'nights', 'guests', 'ref'] as const) {
+    for (const key of ['total', 'paid', 'due', 'nights', 'guests', 'ref'] as const) {
       expect(fromDetail[key]).toEqual(fromList[key]);
     }
     expect(fromDetail.lines.map((l) => l.name)).toEqual(fromList.lines.map((l) => l.name));
@@ -273,9 +271,9 @@ describe('toGuestBooking on the single-booking payload', () => {
   });
 
   it('treats a blank or non-numeric amount as zero rather than NaN', () => {
-    const b = toGuestBooking({ ...DETAIL, total_price: '', deposit: 'n/a' });
+    const b = toGuestBooking({ ...DETAIL, total_price: '', paid_amount: 'n/a' });
     expect(b.total).toBe(0);
-    expect(b.deposit).toBe(0);
+    expect(b.paid).toBe(0);
   });
 });
 

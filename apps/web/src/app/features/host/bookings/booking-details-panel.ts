@@ -142,8 +142,11 @@ export class BookingDetailsPanel {
     return `${b.guests} guest${b.guests === 1 ? '' : 's'} · ${what}`;
   });
 
-  /** Whether the deposit has actually been taken. */
-  protected readonly depositPaid = computed(() => (this.booking()?.paid ?? 0) > 0);
+  /** Whether nothing is left to collect at the property. */
+  protected readonly settled = computed(() => {
+    const b = this.booking();
+    return !!b && b.total > 0 && b.balanceDue <= 0;
+  });
 
   /** "12 minutes ago" from `created_at`, so the wait is legible without doing the sum. */
   protected readonly requestedAgo = computed(() => {

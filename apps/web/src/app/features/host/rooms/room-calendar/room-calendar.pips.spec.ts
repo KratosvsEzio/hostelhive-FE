@@ -49,7 +49,6 @@ function booking(id: string, from: string, to: string, name: string, qty = 1): H
     nights: 1,
     guests: qty,
     total: 1000 * qty,
-    deposit: 0,
     paid: 0,
     balanceDue: 0,
     roomType: { name: 'Sunset 8', occupancyType: 'shared', capacity: 8, price: 1000 },
