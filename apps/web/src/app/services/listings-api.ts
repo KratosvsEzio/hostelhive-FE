@@ -125,6 +125,8 @@ export interface ApiHostel {
   city?: string | null;
   state?: string | null;
   country?: string | null;
+  /** ISO alpha-2 the backend derives from `country`; absent where it could not recognise the name. */
+  country_code?: string | null;
   gender_type?: string | null; // 'co-living' | 'boys' | 'girls'
   property_type?: string | null; // 'apartment' | 'room' | 'building' | 'house'
   total_rooms?: number | null;
@@ -249,6 +251,8 @@ export function toListing(
     name: derivedName,
     area: h.area ?? '',
     city: h.city ?? '',
+    state: h.state?.trim() || undefined,
+    country: h.country?.trim() || undefined,
     accommodationType: GENDER_MAP[h.gender_type ?? ''] ?? 'coliving',
     verified: h.status?.slug === 'active',
     propertyType: h.property_type ? cap(h.property_type) : undefined,
@@ -330,6 +334,11 @@ export class ListingsApi {
     // City fallback (used only when there's no map viewport). Full-text `s[...]` is
     // forgiving — lowercased + edge-ngram — unlike an exact term on the raw analyzed field.
     if (city) params['s[city]'] = city;
+
+    // Country, as the exact ISO code. Named with `.keyword` because parse_key only appends it
+    // to fields ending in "type", "name" and a few others: a bare `f[country_code]` becomes a
+    // term on the analysed text field, whose tokens are lower-cased, so "PK" matches nothing.
+    if (query.countryCode) params['f[country_code.keyword]'] = query.countryCode.toUpperCase();
 
     // Enum filters. parse_key (search_helper) auto-appends `.keyword` to any field ending in
     // "type", so these are exact term matches — including the hyphenated "co-living".

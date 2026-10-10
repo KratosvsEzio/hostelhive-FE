@@ -6,6 +6,8 @@ import {
   afterNextRender,
   computed,
   inject,
+  input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -19,12 +21,18 @@ import { feature } from 'topojson-client';
 import type { Feature, FeatureCollection } from 'geojson';
 import { ListingsApi } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { CountryBounds } from '@core/geo/country-bounds';
+import { iso3For } from '@core/geo/country-iso3';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { sameRegionName } from '../country-locations';
+import { BOUNDARIES_ATTRIBUTION, fetchCountryBoundaries } from './country-boundaries';
 
 // Boundary levels by drill depth: 0 = provinces, 1 = districts, 2 = tehsils.
 const KEYS = ['adm1', 'adm2', 'adm3'] as const;
 // Map zoom applied when a province / district / tehsil is selected.
 const ZOOMS = [7, 9, 11] as const;
+// The opening view of Pakistan, which the bundled boundaries were framed for.
+const PAKISTAN_VIEW: [number, number] = [30.4, 69.3];
 
 function priceLabel(price: number): string {
   return price > 0 ? `${Math.round(price / 1000)}k` : '·';
@@ -37,27 +45,52 @@ function priceMarkerHtml(price: number, featured?: boolean): string {
   return `<div class="hh-marker__anchor"><div class="${cls}">${crown}<span>${label}</span></div></div>`;
 }
 
+function shapeName(f: Feature): string | null {
+  return (f.properties?.['shapeName'] as string) ?? null;
+}
+
 /**
- * "Explore Pakistan" drill-down rendered on a real base map.
- *  Boundaries (geoBoundaries, CC-BY — bundled as TopoJSON in /geo) are rendered as a
- *  Leaflet GeoJSON layer, which gives per-feature hover-highlight + click for free.
- *  Drilling province → district → tehsil swaps the layer and re-zooms; the deepest level
- *  fetches live hostel markers and offers a "Browse stays" CTA. SSR-safe.
+ * "Explore <country>" rendered on a real base map.
+ *
+ *  Boundaries come from geoBoundaries (CC-BY) and are drawn as a Leaflet GeoJSON layer, which
+ *  gives per-feature hover-highlight + click for free.
+ *
+ *  Pakistan drills province → district → tehsil from TopoJSON bundled in /geo; each drill
+ *  swaps the layer and re-zooms. Every other country is one level deep — its provinces or
+ *  states, fetched on demand — because three levels for every country on earth is far more
+ *  than this page should ship or fetch. Either way the deepest level fetches live hostel
+ *  markers and offers a "Browse stays" CTA. SSR-safe.
+ *
+ *  Emits `failed` when the map cannot be drawn at all, so the page can drop it rather than
+ *  show a dead frame.
  */
 @Component({
-  selector: 'app-pakistan-map',
+  selector: 'app-country-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, LocaleLink, TranslocoPipe],
-  templateUrl: './pakistan-map.html',
+  templateUrl: './country-map.html',
 })
-export class PakistanMap {
+export class CountryMap {
   private readonly loader = inject(LeafletLoader);
   private readonly router = inject(Router);
   private readonly listingsApi = inject(ListingsApi);
+  private readonly countryBounds = inject(CountryBounds);
   private readonly destroyRef = inject(DestroyRef);
   private readonly mapRef = viewChild.required<ElementRef<HTMLDivElement>>('map');
 
-  protected readonly breadcrumb = signal<string[]>(['Pakistan']);
+  /** ISO alpha-2. Read once, when the map is built; give the component a new instance to change it. */
+  readonly country = input('PK');
+  /** The country as the visitor reads it, for the first breadcrumb. */
+  readonly countryName = input('');
+  readonly failed = output<void>();
+
+  /** Only Pakistan ships district and tehsil boundaries. */
+  private readonly drillable = computed(() => this.country().toUpperCase() === 'PK');
+  private readonly maxDepth = computed(() => (this.drillable() ? 2 : 0));
+  protected readonly rootLabel = computed(() => this.countryName() || this.country());
+
+  // The first entry stands for the country; the template labels it with rootLabel().
+  protected readonly breadcrumb = signal<string[]>(['']);
   protected readonly hovered = signal<string | null>(null);
   protected readonly loading = signal(true);
   protected readonly leaf = signal<string | null>(null);
@@ -74,14 +107,15 @@ export class PakistanMap {
 
   /**
    * Shows one province, as if it had been clicked on the map — for a list beside the map.
-   * Goes back to the country view first, so it works from any depth.
+   * Goes back to the country view first, so it works from any depth. The name may be spelled
+   * the way a host typed it; see `sameRegionName`.
    */
   async showProvince(name: string): Promise<void> {
     if (!this.ready) {
       this.pendingProvince = name;
       return;
     }
-    if (this.province() === name && this.breadcrumb().length === 2) return;
+    if (sameRegionName(this.province(), name) && this.breadcrumb().length === 2) return;
     if (this.breadcrumb().length > 1) {
       // Back to the province level without moving the map: the drill below zooms once. Going
       // through goTo(0) zoomed out and straight back in, and Leaflet sometimes dropped the
@@ -90,7 +124,7 @@ export class PakistanMap {
       this.listingCount.set(null);
       this.leafCentroid.set(null);
       this.clearMarkers();
-      this.breadcrumb.set(['Pakistan']);
+      this.breadcrumb.set(['']);
       this.stack = [];
       this.renderLevel((await this.load('adm1')).features, 0);
     }
@@ -103,6 +137,7 @@ export class PakistanMap {
       if (n === null) return 'Finding stays…';
       return n > 0 ? `${n} verified stay${n > 1 ? 's' : ''} found` : 'No stays listed yet';
     }
+    if (!this.drillable()) return 'Hover a region · click for stays';
     return (
       [
         'Hover a province · click to zoom in',
@@ -137,16 +172,19 @@ export class PakistanMap {
     try {
       this.leaflet = await this.loader.load();
       this.map = this.leaflet.map(this.mapRef().nativeElement, {
-        center: [30.4, 69.3],
+        center: PAKISTAN_VIEW,
         zoom: 5,
         zoomControl: true,
         scrollWheelZoom: false, // don't hijack the page scroll on the landing page
       });
       this.loader.tileLayer(this.leaflet, 'roadmap').addTo(this.map);
+      this.map.attributionControl?.addAttribution(BOUNDARIES_ATTRIBUTION);
       this.renderLevel((await this.load('adm1')).features, 0);
+      await this.frameCountry();
       this.ready = true;
     } catch {
       this.error.set('Could not load the map — check your connection.');
+      this.failed.emit();
     } finally {
       this.loading.set(false);
     }
@@ -166,10 +204,47 @@ export class PakistanMap {
 
   private async load(key: string): Promise<FeatureCollection> {
     if (this.cache[key]) return this.cache[key];
-    const topo = await (await fetch(`/geo/pak-${key}.json`)).json();
-    const fc = feature(topo, topo.objects['data']) as unknown as FeatureCollection;
+    const fc = this.drillable() ? await this.loadBundled(key) : await this.loadRemote();
     this.cache[key] = fc;
     return fc;
+  }
+
+  private async loadBundled(key: string): Promise<FeatureCollection> {
+    const topo = await (await fetch(`/geo/pak-${key}.json`)).json();
+    return feature(topo, topo.objects['data']) as unknown as FeatureCollection;
+  }
+
+  private loadRemote(): Promise<FeatureCollection> {
+    const iso3 = iso3For(this.country());
+    if (!iso3) return Promise.reject(new Error(`Unknown country ${this.country()}`));
+    return fetchCountryBoundaries(iso3);
+  }
+
+  /**
+   * The whole country in view.
+   *
+   * Pakistan keeps the fixed view it always had. Anywhere else is framed on the boundaries
+   * just drawn — unless they straddle the antimeridian (the United States with the Aleutians,
+   * Russia, Fiji), where a plain box spans the globe; those fall back to the box around the
+   * main landmass that the search page frames on.
+   */
+  private async frameCountry(): Promise<void> {
+    if (this.drillable()) {
+      this.map.setView(PAKISTAN_VIEW, 5);
+      return;
+    }
+    const drawn = this.boundaries?.getBounds();
+    if (drawn && this.fits(drawn)) {
+      this.map.fitBounds(drawn, { padding: [12, 12] });
+      return;
+    }
+    const box = await this.countryBounds.forCountry(this.country());
+    if (box) this.map.fitBounds([[box.south, box.west], [box.north, box.east]]);
+  }
+
+  /** Whether a box can be framed without spanning the whole globe. */
+  private fits(bounds: L.LatLngBounds): boolean {
+    return bounds.isValid() && bounds.getEast() - bounds.getWest() <= 180;
   }
 
   private renderLevel(features: Feature[], depth: number): void {
@@ -179,9 +254,9 @@ export class PakistanMap {
     this.boundaries?.remove();
     this.boundaries = this.leaflet
       .geoJSON({ type: 'FeatureCollection', features } as FeatureCollection, {
-        style: () => PakistanMap.BOUNDARY_STYLE,
+        style: () => CountryMap.BOUNDARY_STYLE,
         onEachFeature: (f, layer) => {
-          const name = (f.properties?.['shapeName'] as string) ?? null;
+          const name = shapeName(f);
           layer.on({
             mouseover: (e) => {
               (e.target as L.Path).setStyle({
@@ -239,23 +314,30 @@ export class PakistanMap {
       });
   }
 
-  private async drill(name: string | null): Promise<void> {
-    if (!name) return;
-    const f = this.current.find(
-      (c) => (c.properties?.['shapeName'] as string) === name,
+  /** The shape a name refers to: its own name first, then a looser spelling of it. */
+  private findShape(name: string): Feature | undefined {
+    return (
+      this.current.find((c) => shapeName(c) === name) ??
+      this.current.find((c) => sameRegionName(shapeName(c), name))
     );
+  }
+
+  private async drill(requested: string | null): Promise<void> {
+    if (!requested) return;
+    const f = this.findShape(requested);
     if (!f) return;
+    const name = shapeName(f) ?? requested;
     const depth = this.depth;
-    if (depth >= 2) {
-      this.stack[2] = f;
-      this.breadcrumb.update((b) => [...b.slice(0, 3), name]);
+    if (depth >= this.maxDepth()) {
+      this.stack[depth] = f;
+      this.breadcrumb.update((b) => [...b.slice(0, depth + 1), name]);
       this.leaf.set(name);
       this.listingCount.set(null);
       const [lng, lat] = geoCentroid(f as Parameters<typeof geoCentroid>[0]);
       this.leafCentroid.set(
         Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null,
       );
-      this.zoomToFeature(f, ZOOMS[2]);
+      this.focus(f, depth);
       this.fetchMarkers(f);
       return;
     }
@@ -287,8 +369,8 @@ export class PakistanMap {
     this.breadcrumb.update((b) => b.slice(0, index + 1));
     this.stack = this.stack.slice(0, index);
     if (index === 0) {
-      this.map.setView([30.4, 69.3], 5);
       this.renderLevel((await this.load('adm1')).features, 0);
+      await this.frameCountry();
       return;
     }
     const parent = this.stack[index - 1];
@@ -298,6 +380,21 @@ export class PakistanMap {
     );
     this.zoomToFeature(parent, ZOOMS[index - 1]);
     this.renderLevel(kids.length ? kids : all.features, index);
+  }
+
+  /**
+   * Brings a selected shape into view. Pakistan's levels have known sizes, so a fixed zoom per
+   * level reads well; a province elsewhere may be a city-state or half a continent, so it is
+   * framed on its own outline instead.
+   */
+  private focus(f: Feature, depth: number): void {
+    if (this.drillable()) {
+      this.zoomToFeature(f, ZOOMS[depth]);
+      return;
+    }
+    const bounds = this.leaflet.geoJSON(f).getBounds();
+    if (this.fits(bounds)) this.map.fitBounds(bounds, { padding: [12, 12] });
+    else this.zoomToFeature(f, 5);
   }
 
   private zoomToFeature(f: Feature, zoom: number): void {

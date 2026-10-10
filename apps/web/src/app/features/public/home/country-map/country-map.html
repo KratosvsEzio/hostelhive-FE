@@ -15,7 +15,7 @@
             : 'bg-white text-ink-600 hover:text-brand-500'
         "
       >
-        {{ b }}
+        {{ i === 0 ? rootLabel() : b }}
       </button>
       @if (!last) {
         <i class="ti ti-chevron-right text-sm text-ink-300"></i>

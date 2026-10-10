@@ -1,4 +1,4 @@
-<section class="hl-sec hl-cities" aria-labelledby="hl-cities-title">
+<section class="hl-sec hl-cities" aria-labelledby="hl-cities-title" [attr.aria-busy]="loading()">
   <div hhContainer class="hl-wrap">
     <div class="hl-head">
       <div>
@@ -9,15 +9,23 @@
       <a routerLink="/search" class="hl-more">{{ 'home.allCities' | transloco }}</a>
     </div>
     <ul class="hl-orbs">
-      @for (c of cities(); track c.slug) {
-        <li>
-          <a class="hl-orb" [routerLink]="'/hostels/' + c.slug">
-            <span class="hl-ball"><img [src]="c.img" [alt]="c.name" loading="lazy" decoding="async" /></span>
-            <b>{{ c.name }}</b>
-          </a>
-        </li>
+      @if (loading()) {
+        @for (i of placeholders; track i) {
+          <li class="hl-orb">
+            <hh-skeleton class="hl-ball" radius="full" />
+            <hh-skeleton class="mx-auto mt-3 h-4 w-20" radius="lg" />
+          </li>
+        }
+      } @else {
+        @for (c of cities(); track c.slug) {
+          <li>
+            <a class="hl-orb" [routerLink]="'/hostels/' + c.slug">
+              <span class="hl-ball"><img [src]="c.img" [alt]="c.name" loading="lazy" decoding="async" /></span>
+              <b>{{ c.name }}</b>
+            </a>
+          </li>
+        }
       }
     </ul>
   </div>
 </section>
-

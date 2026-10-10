@@ -41,38 +41,78 @@
 }
 
 <!-- ════ CITIES: round worlds ════ -->
-<app-home-cities [cities]="cities" />
+<!-- Pakistan only, where the photographs are. Placeholder globes while the country is still
+     unknown — the same on the server and the first browser render, so hydration matches. -->
+@if (country.pending()) {
+  <app-home-cities [cities]="[]" [loading]="true" />
+} @else if (country.globeCities().length) {
+  <app-home-cities [cities]="country.globeCities()" />
+}
 
 <!-- ════ FIND BY LOCATION ════ -->
-<section class="hl-sec hl-region-sec" aria-labelledby="hl-region-title">
+<section class="hl-sec hl-region-sec" aria-labelledby="hl-region-title" [attr.aria-busy]="country.pending()">
   <div class="hl-glow" aria-hidden="true"><i></i><i></i><i></i></div>
   <div hhContainer class="hl-wrap hl-region">
     <div>
       <p class="hl-eyebrow">{{ 'home.findByLocation' | transloco }}</p>
-      <h2 id="hl-region-title">{{ 'home.explorePakistanRegionByRegion' | transloco }}</h2>
-      <p class="hl-sub">{{ 'home.drillFromProvinceToDistrict' | transloco }}</p>
-      <div class="hl-regs">
-        @for (r of provinces; track r.name) {
-          <button
-            type="button"
-            [attr.aria-pressed]="mapProvince() === r.name"
-            (click)="showProvince(r.name)"
-          >
-            <b>{{ r.name }}</b><span>{{ r.cities }}</span><i class="ti ti-arrow-right" aria-hidden="true"></i>
-          </button>
+      @if (country.pending()) {
+        <h2 id="hl-region-title"><hh-skeleton class="h-10 w-4/5" radius="lg" /></h2>
+        <div class="hl-sub space-y-2">
+          <hh-skeleton class="h-4 w-full" radius="lg" />
+          <hh-skeleton class="h-4 w-2/3" radius="lg" />
+        </div>
+        <div class="hl-regs">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <hh-skeleton class="h-[62px] w-full" radius="lg" />
+          }
+        </div>
+      } @else {
+        <h2 id="hl-region-title">
+          {{ 'home.exploreCountryRegionByRegion' | transloco: { country: country.name() } }}
+        </h2>
+        <p class="hl-sub">
+          {{ (country.isPakistan() ? 'home.drillFromProvinceToDistrict' : 'home.pickARegionToSeeStays') | transloco }}
+        </p>
+        @if (regionRows().length) {
+          <div class="hl-regs">
+            @for (r of regionRows(); track r.slug) {
+              <button
+                type="button"
+                [attr.aria-pressed]="r.active"
+                (click)="showProvince(r.name)"
+              >
+                <b>{{ r.name }}</b><span>{{ r.cities }}</span><i class="ti ti-arrow-right" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
+        } @else if (!country.hasStays() && !country.failed()) {
+          <p class="hl-region-empty">
+            {{ 'home.noStaysInCountryYet' | transloco: { country: country.name() } }}
+          </p>
         }
-      </div>
-    </div>
-    <div class="hl-map">
-      @defer (on viewport) {
-        <app-pakistan-map />
-      } @placeholder {
-        <div class="hl-map-wait"></div>
-      } @loading (minimum 300ms) {
-        <div class="hl-map-wait"></div>
       }
-      <hh-mascot class="hl-map-bee" mode="search" [size]="150" />
     </div>
+    @if (mapFailed()) {
+      <p class="hl-map-off">{{ 'home.mapUnavailable' | transloco }}</p>
+    } @else {
+      <div class="hl-map">
+        @if (country.pending()) {
+          <div class="hl-map-wait"></div>
+        } @else {
+          <!-- Keyed on the country so a change rebuilds the map rather than half-switching it. -->
+          @for (code of mapCountry(); track code) {
+            @defer (on viewport) {
+              <app-country-map [country]="code" [countryName]="country.name()" (failed)="onMapFailed()" />
+            } @placeholder {
+              <div class="hl-map-wait"></div>
+            } @loading (minimum 300ms) {
+              <div class="hl-map-wait"></div>
+            }
+          }
+        }
+        <hh-mascot class="hl-map-bee" mode="search" [size]="150" />
+      </div>
+    }
   </div>
 </section>
 
@@ -137,11 +177,13 @@
       <app-search-bar class="hl-closer-wide" />
       <a routerLink="/search" class="hl-closer-cta"><i class="ti ti-search"></i>{{ 'home.browseStays' | transloco }}</a>
     </div>
-    <div class="hl-popular">
-      <span>{{ 'home.popular' | transloco }}</span>
-      @for (c of cities.slice(0, 4); track c.slug) {
-        <a [routerLink]="'/hostels/' + c.slug">{{ c.name }}</a>
-      }
-    </div>
+    @if (country.popular().length) {
+      <div class="hl-popular">
+        <span>{{ 'home.popular' | transloco }}</span>
+        @for (c of country.popular(); track c.slug) {
+          <a [routerLink]="c.path" [queryParams]="c.query">{{ c.name }}</a>
+        }
+      </div>
+    }
   </div>
 </section>

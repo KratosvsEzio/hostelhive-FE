@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   PLATFORM_ID,
+  signal,
   viewChild,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -18,7 +19,9 @@ import { catchError, map, of, startWith } from 'rxjs';
 import { Listing } from '@hostelhive/data-access';
 import { Skeleton, Container } from '@hostelhive/ui';
 import { ListingsApi } from '@services';
-import { PakistanMap } from './pakistan-map/pakistan-map';
+import { CountryMap } from './country-map/country-map';
+import { HomeCountry } from './home-country';
+import { sameRegionName } from './country-locations';
 import { ListingCard } from '../search/listing-card/listing-card';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
@@ -29,6 +32,9 @@ import { HomeWhy } from './home-why/home-why';
 import { HomeCities } from './home-cities/home-cities';
 import { HomeHosts } from './home-hosts/home-hosts';
 import { useSmoothScroll } from './smooth-scroll';
+
+/** How many of a region's cities are named under it in the list beside the map. */
+const REGION_CITY_COUNT = 5;
 
 @Component({
   selector: 'app-home',
@@ -42,7 +48,7 @@ import { useSmoothScroll } from './smooth-scroll';
     RouterLink,
     LocaleLink,
     Skeleton,
-    PakistanMap,
+    CountryMap,
     ListingCard,
     Mascot,
     SearchBar,
@@ -53,8 +59,10 @@ import { useSmoothScroll } from './smooth-scroll';
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
+  providers: [HomeCountry],
 })
 export class Home {
+  protected readonly country = inject(HomeCountry);
   private readonly listingsApi = inject(ListingsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
@@ -133,90 +141,44 @@ export class Home {
   protected readonly featuredLoading = computed(() => this.featuredState().loading);
   protected readonly featured = computed(() => this.featuredState().items);
 
-  protected readonly cities = [
-    {
-      name: 'Karachi',
-      slug: 'karachi',
-      img: '/cities/karachi.jpg',
-      lat: 24.8607,
-      lng: 67.0011,
-    },
-    {
-      name: 'Lahore',
-      slug: 'lahore',
-      img: '/cities/lahore.jpg',
-      lat: 31.5204,
-      lng: 74.3587,
-    },
-    {
-      name: 'Islamabad',
-      slug: 'islamabad',
-      img: '/cities/islamabad.jpg',
-      lat: 33.6844,
-      lng: 73.0479,
-    },
-    {
-      name: 'Rawalpindi',
-      slug: 'rawalpindi',
-      img: '/cities/rawalpindi.jpg',
-      lat: 33.5651,
-      lng: 73.0169,
-    },
-    {
-      name: 'Faisalabad',
-      slug: 'faisalabad',
-      img: '/cities/faisalabad.jpg',
-      lat: 31.4504,
-      lng: 73.135,
-    },
-    {
-      name: 'Peshawar',
-      slug: 'peshawar',
-      img: '/cities/peshawar.jpg',
-      lat: 34.0151,
-      lng: 71.5249,
-    },
-    {
-      name: 'Multan',
-      slug: 'multan',
-      img: '/cities/multan.jpg',
-      lat: 30.1575,
-      lng: 71.5249,
-    },
-    {
-      name: 'Quetta',
-      slug: 'quetta',
-      img: '/cities/quetta.jpg',
-      lat: 30.1798,
-      lng: 66.975,
-    },
-    {
-      name: 'Hyderabad',
-      slug: 'hyderabad',
-      img: '/cities/hyderabad.jpg',
-      lat: 25.396,
-      lng: 68.3578,
-    },
-    {
-      name: 'Sialkot',
-      slug: 'sialkot',
-      img: '/cities/sialkot.jpg',
-      lat: 32.4945,
-      lng: 74.5229,
-    },
-  ];
+  /** The province list beside the map: a region's busiest cities, and whether the map is on it. */
+  protected readonly regionRows = computed(() => {
+    const onMap = this.mapProvince();
+    return this.country.regions().map((r) => ({
+      name: r.name,
+      slug: r.slug,
+      cities: r.cities
+        .slice(0, REGION_CITY_COUNT)
+        .map((c) => c.name)
+        .join(' · '),
+      active: sameRegionName(onMap, r.name),
+    }));
+  });
 
-  /** Provinces listed beside the map; picking one drills the map into it. */
-  protected readonly provinces = [
-    { name: 'Punjab', cities: 'Lahore · Rawalpindi · Faisalabad · Multan · Sialkot' },
-    { name: 'Sindh', cities: 'Karachi · Hyderabad' },
-    { name: 'Islamabad Capital Territory', cities: 'Islamabad' },
-    { name: 'Khyber Pakhtunkhwa', cities: 'Peshawar' },
-    { name: 'Balochistan', cities: 'Quetta' },
-  ];
+  /**
+   * The country the map is drawn for, as a one-item list so the template can key on it.
+   *
+   * The map reads its country once, when Leaflet is built; a visitor whose country changes
+   * mid-visit (the re-ask after sign-in) gets a fresh map rather than one half-switched.
+   */
+  protected readonly mapCountry = computed(() => {
+    const code = this.country.code();
+    return code ? [code] : [];
+  });
+
+  private readonly mapFailedFor = signal<string | null>(null);
+  /** Set when the map could not be drawn — the section carries on without it. */
+  protected readonly mapFailed = computed(() => {
+    const failed = this.mapFailedFor();
+    return failed !== null && failed === this.country.code();
+  });
+
+  protected onMapFailed(): void {
+    this.mapFailedFor.set(this.country.code());
+  }
 
   /** The map arrives with `@defer`, so it is absent until the section scrolls into view. */
-  private readonly map = viewChild(PakistanMap);
+  private readonly map = viewChild(CountryMap);
   protected readonly mapProvince = computed(() => this.map()?.province() ?? null);
 
   protected showProvince(name: string): void {
