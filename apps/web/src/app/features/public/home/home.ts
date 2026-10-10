@@ -28,6 +28,7 @@ import { HeroClouds } from './hero-clouds/hero-clouds';
 import { HomeWhy } from './home-why/home-why';
 import { HomeCities } from './home-cities/home-cities';
 import { HomeHosts } from './home-hosts/home-hosts';
+import { DEFAULT_POPULAR, PopularCities, cityLink } from './popular-cities';
 
 @Component({
   selector: 'app-home',
@@ -202,6 +203,19 @@ export class Home {
       lng: 74.5229,
     },
   ];
+
+  /**
+   * The links under the closing search bar: the busiest cities in the visitor's own country,
+   * once that is known. Until then — and on the prerendered page, for a country with nothing
+   * listed, or when the lookup fails — the first of the cities above.
+   */
+  private readonly visitorCities = toSignal(inject(PopularCities).forVisitor(), {
+    initialValue: null,
+  });
+  private readonly defaultPopular = this.cities
+    .slice(0, DEFAULT_POPULAR)
+    .map((c) => cityLink(c.name, null));
+  protected readonly popular = computed(() => this.visitorCities() ?? this.defaultPopular);
 
   /** Provinces listed beside the map; picking one drills the map into it. */
   protected readonly provinces = [

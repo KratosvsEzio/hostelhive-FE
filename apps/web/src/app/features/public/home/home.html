@@ -139,8 +139,8 @@
     </div>
     <div class="hl-popular">
       <span>{{ 'home.popular' | transloco }}</span>
-      @for (c of cities.slice(0, 4); track c.slug) {
-        <a [routerLink]="'/hostels/' + c.slug">{{ c.name }}</a>
+      @for (c of popular(); track c.name) {
+        <a [routerLink]="c.link" [queryParams]="c.query">{{ c.name }}</a>
       }
     </div>
   </div>
