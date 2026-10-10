@@ -21,7 +21,7 @@ Everything geographic on the client: the `@hostelhive/maps` library (Leaflet loa
 - **SSR.** Leaflet touches `window`, so every caller awaits `LeafletLoader.load()` from `afterNextRender`, and `load()` throws on the server. `whenSized` waits for a non-zero box (or 2 s) before construction; on mobile the map pane is `display:none` until opened.
 - **Where maps appear:**
   - Search split view: `apps/web/src/app/features/public/search/search-map/search-map.ts`, borrowing `SharedMap`.
-  - Explore-Pakistan drill-down (province → district → tehsil on Leaflet GeoJSON layers, deferred `on viewport`): `apps/web/src/app/features/public/home/pakistan-map/pakistan-map.ts`.
+  - Explore-{country} map (deferred `on viewport`): `apps/web/src/app/features/public/home/country-map/country-map.ts`. Pakistan drills province → district → tehsil from bundled TopoJSON; other countries get one level of ADM1 regions fetched from geoBoundaries (`country-map/country-boundaries.ts`, which rewrites the GitHub raw link to `media.githubusercontent.com` because the redirect fails CORS).
   - Listing location: `hh-static-map` in `apps/web/src/app/features/public/listing/listing-detail/listing-detail.ts`.
   - Location picker: `apps/web/src/app/features/host/hostel-form/hostel-form.ts` and `apps/web/src/app/features/public/onboarding/onboarding-wizard/onboarding-wizard.ts`.
   - Header and hero typeahead: `apps/web/src/app/layout/components/search-bar/search-bar.ts` and `apps/web/src/app/features/public/home/home.ts`.
@@ -37,7 +37,7 @@ Everything geographic on the client: the `@hostelhive/maps` library (Leaflet loa
 
 ## Traps
 - **Leaflet has no build-time error for a wrong or missing key.** CARTO answers HTTP 200 with "API KEY REQUIRED" stamped into the PNG, so `lib/src/maps/lib/carto-key.spec.ts` asserts the URL instead.
-- **Popup and pin markup bypass templates.** The search-map card is assembled with `innerHTML` and `esc()` (`apps/web/src/app/features/public/search/search-map/search-map.ts`). Escape any new field, and expect hard-coded English ("Verified", "Shared rooms", nav aria-labels). The Pakistan map's hints and errors are also hard-coded English (`apps/web/src/app/features/public/home/pakistan-map/pakistan-map.ts`).
+- **Popup and pin markup bypass templates.** The search-map card is assembled with `innerHTML` and `esc()` (`apps/web/src/app/features/public/search/search-map/search-map.ts`). Escape any new field, and expect hard-coded English ("Verified", "Shared rooms", nav aria-labels). The country map's hints and errors are also hard-coded English (`apps/web/src/app/features/public/home/country-map/country-map.ts`).
 - Photon is called with `lang: 'en'` regardless of the active locale (`lib/src/maps/lib/photon.ts`).
 - `afterNextRender` is used by the map components. If one is created inside an `@if` after the app is idle, see the warning in `lib/src/ui/lib/dialog-focus/dialog-focus.ts`.
 - **Dead leftovers:**

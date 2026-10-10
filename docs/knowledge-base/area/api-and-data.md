@@ -15,7 +15,6 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 - `apps/web/src/app/util/pagination.ts` — `ApiPagination`, `pageParams` (`page` + `limit`).
 - `apps/web/src/app/services/` — one typed service per area, all re-exported from `index.ts` as `@services`.
 - `tools/generate-api-env.mjs` — writes the git-ignored, generated `api.env.ts` (next to `apps/web/src/app/app.config.ts`) from `.env` `API_URL` (default `http://localhost:3000`); run by `sync-api-env` before build and serve (`apps/web/project.json`).
-- `apps/web/src/app/core/dev-api-base-url.ts` + `apps/web/src/app/features/dev-setup/` — TEMPORARY tester override of the base URL, stored in localStorage.
 
 ## How it works
 Chain order (`apps/web/src/app/app.config.ts`): `authInterceptor` → `pushTokenInterceptor` → `errorInterceptor` → `refetchDelayInterceptor` → `ssrTimeoutInterceptor`. Base URL = `readDevApiBaseUrl() ?? apiEnv.apiUrl`.

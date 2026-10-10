@@ -1,10 +1,5 @@
 # Landing page
 
-> **Pending — not on `main`.** Everything below describes the "Above the clouds" redesign on branch
-> `feat/mascot-loader` (PR #43). `main` still has the earlier home page: a split hero with a plain place
-> search and a honeycomb photo mesh, a dark featured strip, a running honeycomb city carousel. Remove
-> this marker when the branch merges.
-
 The public home page at `/` (and `/:locale/`). It is a seeker's first screen and the site's brand
 moment, so it carries more motion than any other page, all of it built on the app's real components
 rather than copies of them.
@@ -21,9 +16,14 @@ rather than copies of them.
   HeroClouds animates its elements directly.
 - `features/public/home/home-cities/`, `home-why/`, `home-hosts/`: the city globes, the Why HostelHive
   cards with product mock-ups, the dusk host band.
-- `features/public/home/pakistan-map/`: the province → district → tehsil Leaflet drill-down
-  (see [maps](./maps.md)). On the branch it gained `showProvince()` and a `province` signal so the
-  province list beside it can drive it.
+- `features/public/home/home-country.ts`, `country-locations.ts`: the page follows the visitor's
+  country (`GeoPreference`, falling back to `PK`). Regions, cities and the four popular-city chips are
+  tallied from one `/public/hostels` page of up to 500 hostels (`COUNTRY_HOSTEL_LIMIT`), a stopgap
+  until the backend has a locations endpoint. City globes show only for Pakistan.
+- `features/public/home/country-map/`: "Explore {country}" on Leaflet (see [maps](./maps.md)).
+  Pakistan drills province → district → tehsil from bundled TopoJSON; other countries show one level
+  of regions fetched from geoBoundaries. `showProvince()` and the `province` signal let the region list
+  beside it drive it; `failed` lets the page drop the map.
 - `features/public/home/smooth-scroll.ts`: Lenis smooth wheel scrolling for this page only.
 - `apps/web/public/landing/`: scene photos with 160 px thumbs, the host photo, the baked cloud images.
 
@@ -47,7 +47,7 @@ rather than copies of them.
 
 ## Reuse, don't rebuild
 
-- `app-search-bar`, `hh-listing-card`, `app-pakistan-map`, `hh-mascot`: all the real components.
+- `app-search-bar`, `hh-listing-card`, `app-country-map`, `hh-mascot`: all the real components.
 - The `hl-` / `hc-` class prefixes: these components are unencapsulated so the page can dress shared
   components; keep the prefix on anything new so nothing leaks.
 
@@ -55,7 +55,7 @@ rather than copies of them.
 
 - **Per-component style budget is 8 kB** (`apps/web/project.json`). The page is split into section
   components partly to stay under it; adding styles to `home.scss` can fail the build.
-- **Leaflet panes carry z-index 400+**: `.hl-map app-pakistan-map` gets its own stacking context so
+- **Leaflet panes carry z-index 400+**: `.hl-map app-country-map` gets its own stacking context so
   the bee stays above the map.
 - **The footer's `mt-16`** would show a white strip under the closing photo band; `global.css` zeroes
   it only when `main` contains `app-home`.

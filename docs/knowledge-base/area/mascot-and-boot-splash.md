@@ -1,10 +1,5 @@
 # Mascot and boot splash
 
-> **Pending — not on `main`.** The Hive Bee mascot, the boot splash and the glass-free greeting live on
-> branch `feat/mascot-loader` (PR #43). On `main` the app still shows a plain startup veil and the dev
-> "Confirm backend URL" gate (`apps/web/src/app/features/dev-setup/`), which that branch removes.
-> Remove this marker when the branch merges.
-
 The Hive Bee is HostelHive's 3D mascot, used as decoration for waits, failed or empty searches, and
 the landing page. It never carries meaning on its own: the copy beside it does, and it is hidden from
 assistive tech. The boot splash is the first thing a full page load paints, before any JavaScript.

@@ -1,6 +1,6 @@
 # Bake the hero's clouds into transparent images
 
-**Status:** Pending — on branch `feat/mascot-loader` (PR #43), not on `main`
+**Status:** Accepted
 **Area:** [landing-page](../../area/landing-page.md)
 
 ## Context

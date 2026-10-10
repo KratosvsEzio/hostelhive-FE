@@ -1,6 +1,6 @@
 # Split the landing page into section components instead of raising the style budget
 
-**Status:** Pending — on branch `feat/mascot-loader` (PR #43), not on `main`
+**Status:** Accepted
 **Area:** [landing-page](../../area/landing-page.md)
 
 ## Context

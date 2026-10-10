@@ -1,6 +1,6 @@
 # Alpha WebM for Blink and Gecko, animated WebP for WebKit
 
-**Status:** Pending — on branch `feat/mascot-loader` (PR #43), not on `main`
+**Status:** Accepted
 **Area:** [mascot-and-boot-splash](../../area/mascot-and-boot-splash.md)
 
 ## Context

@@ -46,8 +46,7 @@ docs/knowledge-base/
   the visitor's country sets currency and language.
 
 ### Seekers
-- [Landing page](area/landing-page.md): the "Above the clouds" home page. *Pending, on
-  `feat/mascot-loader`.*
+- [Landing page](area/landing-page.md): the "Above the clouds" home page.
 - [Search and discovery](area/search-and-discovery.md): the header search bar, `/search` (state in
   the URL), filters, listing cards, the `/hostels/:place` landing pages and sitemap, and the public
   hostels filter contract as the code sends it.
@@ -72,7 +71,7 @@ docs/knowledge-base/
 - [UI library](area/ui-library.md): the `@hostelhive/ui` components, Tailwind brand tokens, global CSS,
   logo, fonts, the rich-text editor, and the subsetted Tabler icon font.
 - [Mascot and boot splash](area/mascot-and-boot-splash.md): the Hive Bee (`hh-mascot`) and the static
-  boot splash. *Pending, on `feat/mascot-loader`.*
+  boot splash.
 - [Maps](area/maps.md): `@hostelhive/maps` (Leaflet, CARTO tiles, place search, location picker),
   the shipped geodata and its build scripts, where maps are used, price-pin markers.
 - [i18n](area/i18n.md): Transloco across 18 locales, URL-prefixed languages, the locale store and link

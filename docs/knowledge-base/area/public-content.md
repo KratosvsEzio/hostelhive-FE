@@ -4,7 +4,7 @@ The marketing and editorial pages around the marketplace — About, Blog, Career
 
 ## Where it lives
 - `apps/web/src/app/app.routes.ts` — `/about`, `/faqs`, `/blog`, `/careers`, `/contact`, `/credits`, `/privacy-policy`, `/terms-of-service`, `/service-policy`, `/host/listings/new[/payment]`.
-- `apps/web/src/app/features/public/{about,careers,contact}/` — static templates keyed through Transloco.
+- `apps/web/src/app/features/public/about/`, `careers/`, `contact/` — static templates keyed through Transloco.
 - `apps/web/src/app/features/public/faqs/faqs.ts` — Q&A content as an English array in TS (the old `/account/help` redirects here).
 - `apps/web/src/app/features/public/legal/` — privacy, terms, service policy: English HTML, no Transloco.
 - `apps/web/src/app/features/public/blog/` — `blog.routes.ts`, `blog.ts` (index), `blog-article/blog-article.ts` + `blog-rich-text.ts` (renderer), `blog-post.model.ts` (block types), `blog-posts.ts` (`BLOG_POSTS`, the archive), `blog-figures.ts` (photographs per section).

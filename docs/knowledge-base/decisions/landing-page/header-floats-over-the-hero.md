@@ -1,6 +1,6 @@
 # The site header floats over the landing hero
 
-**Status:** Pending — on branch `feat/mascot-loader` (PR #43), not on `main`
+**Status:** Accepted
 **Area:** [landing-page](../../area/landing-page.md)
 
 ## Context

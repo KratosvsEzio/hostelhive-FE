@@ -9,8 +9,8 @@ host console, admin, moderator) are split and guarded at the route level. Auth i
 ## Where it lives
 
 - `apps/web/src/app/app.ts`, `app.html`: the root. Decides from the URL whether to show the header,
-  footer, seeker tab bar, consent banner and tab-bar clearance. Also holds the skip link, the startup
-  veil and the temporary dev-setup gate.
+  footer, seeker tab bar, consent banner and tab-bar clearance. Also holds the skip link and the
+  startup veil (the greeting bee, see [mascot and boot splash](./mascot-and-boot-splash.md)).
 - `apps/web/src/app/app.config.ts`: every provider and `provideAppInitializer` (scroll reset, API base
   URL, i18n, geo, Google auth, Capacitor, session restore, GA, dev `?role=` seed).
 - `apps/web/src/app/app.routes.ts`: `LOCALISED_ROUTES`, mounted twice by `appRoutes`.
@@ -83,9 +83,7 @@ on `Tenants`, `Rooms` or `Invoices`, so the list is not torn down and refetched.
 - Order in `app.routes.ts` matters: `host/listings/new/payment` and `host/listings/new` must stay before
   `host`, and the `:locale` mount before the bare one.
 - `{ path: '**', redirectTo: '' }` sends unknown URLs to the home page; there is no 404 page.
-- `app.config.ts` still has the DEV-ONLY `?role=` seed and the tester base-URL override
-  (`core/dev-api-base-url.ts`, `<hh-dev-setup-gate />` in `app.html`). Both are marked "remove before
-  go-live". With `?role=super-admin` on any URL, the client-side `roleGuard` lets anyone into the
+- `app.config.ts` still has the DEV-ONLY `?role=` seed, marked to go once login lands. With `?role=super-admin` on any URL, the client-side `roleGuard` lets anyone into the
   console chrome; only the API's refusals protect the data.
 - Stale comments: `layout/host-shell/host-shell.ts` ("slide-in drawer on mobile web") and
   `core/mobile-app.ts` ("overlay-drawer sidebar" at 768-1023px) describe a drawer that no longer

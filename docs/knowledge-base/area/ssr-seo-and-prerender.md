@@ -62,8 +62,7 @@ list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is pre
 - **Public pages fetch on the server on purpose,** so crawlers see content.
   `apps/web/src/app/features/public/listing/listing-detail/listing-detail.ts` calls the token-free `/public/hostel_detail/:id` during
   SSR.
-- Elements that exist only in the browser carry `ngSkipHydration` (`features/dev-setup/dev-setup-gate.ts`,
-  `core/google-analytics/consent-banner.ts`).
+- Elements that exist only in the browser carry `ngSkipHydration` (`core/google-analytics/consent-banner.ts`).
 - When markup depends on viewport width, mirror it in CSS so the server render matches the browser.
   The footer is `hidden md:block` in `app.html`.
 - Do not use `afterNextRender` to wait for DOM after an `@if`; in this zoneless app it can silently
