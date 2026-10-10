@@ -41,12 +41,17 @@
 }
 
 <!-- ════ CITIES: round worlds ════ -->
-<!-- Pakistan only, where the photographs are. Placeholder globes while the country is still
-     unknown — the same on the server and the first browser render, so hydration matches. -->
-@if (country.pending()) {
+<!-- Every country: Pakistan's photographed cities, anyone else's most populous. Placeholder
+     globes while that is still being worked out — the same on the server and the first browser
+     render, so hydration matches. No cities to show drops the section. -->
+@if (country.citiesPending()) {
   <app-home-cities [cities]="[]" [loading]="true" />
-} @else if (country.globeCities().length) {
-  <app-home-cities [cities]="country.globeCities()" />
+} @else if (country.cities().length) {
+  <app-home-cities
+    [cities]="country.cities()"
+    [countryName]="country.name()"
+    [creditGeoNames]="country.citiesFromGeoNames()"
+  />
 }
 
 <!-- ════ FIND BY LOCATION ════ -->

@@ -2,9 +2,13 @@
   <div hhContainer class="hl-wrap">
     <div class="hl-head">
       <div>
-        <p class="hl-eyebrow">{{ 'home.25Cities' | transloco }}</p>
+        <p class="hl-eyebrow">{{ 'home.popularCities' | transloco }}</p>
         <h2 id="hl-cities-title">{{ 'home.exploreTheHiveCityBy' | transloco }}</h2>
-        <p class="hl-sub">{{ 'home.thousandsOfVerifiedBedsIn' | transloco }}</p>
+        @if (loading()) {
+          <div class="hl-sub"><hh-skeleton class="h-4 w-3/5" radius="lg" /></div>
+        } @else {
+          <p class="hl-sub">{{ 'home.popularCitiesInCountry' | transloco: { country: countryName() } }}</p>
+        }
       </div>
       <a routerLink="/search" class="hl-more">{{ 'home.allCities' | transloco }}</a>
     </div>
@@ -19,13 +23,25 @@
       } @else {
         @for (c of cities(); track c.slug) {
           <li>
-            <a class="hl-orb" [routerLink]="'/hostels/' + c.slug">
-              <span class="hl-ball"><img [src]="c.img" [alt]="c.name" loading="lazy" decoding="async" /></span>
+            <a class="hl-orb" [routerLink]="c.path" [queryParams]="c.query">
+              @if (c.img) {
+                <span class="hl-ball"><img [src]="c.img" [alt]="c.name" loading="lazy" decoding="async" /></span>
+              } @else {
+                <span class="hl-ball"><span class="hl-ball-face" aria-hidden="true">{{ c.initial }}</span></span>
+              }
               <b>{{ c.name }}</b>
             </a>
           </li>
         }
       }
     </ul>
+    @if (creditGeoNames() && !loading()) {
+      <p class="hl-cities-credit">
+        {{ 'home.cityData' | transloco }}
+        <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a>
+        ·
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a>
+      </p>
+    }
   </div>
 </section>
