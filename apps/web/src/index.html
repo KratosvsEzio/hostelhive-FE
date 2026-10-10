@@ -85,8 +85,130 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
     <link rel="manifest" href="site.webmanifest" />
+
+    <!-- Boot splash styles. Plain CSS, not Tailwind: this paints before any stylesheet the
+         build produces has loaded. Mirrors the startup veil in app.html (surface ground,
+         28px wordmark, 96px bee, 16px gap) so the hand-over is invisible. -->
+    <style>
+      #hh-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 210;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #f5f5f5;
+        transition: opacity 0.25s ease;
+        /* Backstop: if the app never boots (a script error, a blocked bundle), get out of
+           the way rather than cover a server-rendered page forever. */
+        animation: hh-boot-cap 0s 10s forwards;
+      }
+      #hh-boot.hh-boot-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @keyframes hh-boot-cap {
+        to {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+      #hh-boot .hh-boot-logo {
+        display: block;
+        height: 28px;
+        width: auto;
+      }
+      #hh-boot .hh-boot-bee {
+        display: grid;
+        width: 96px;
+        height: 96px;
+      }
+      #hh-boot .hh-boot-bee > * {
+        grid-area: 1 / 1;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      #hh-boot .hh-boot-sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #hh-boot {
+          transition: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <!-- Boot splash: every full page load shows the bee flying in to wave hello while the app
+         boots and works out who and where the visitor is. No magnifying glass here — nobody
+         is searching yet; the glass belongs to the search states. Static HTML so it paints with the first
+         byte, before any JavaScript; App lifts it once startup has resolved (app.ts). -->
+    <div id="hh-boot" role="status" aria-live="polite">
+      <img class="hh-boot-logo" src="/hostelhive-wordmark.svg" alt="HostelHive" width="224" height="28" />
+      <div class="hh-boot-bee" aria-hidden="true"></div>
+      <span class="hh-boot-sr">Loading…</span>
+    </div>
+    <script>
+      // Picks the bee for this browser. Mirrors hh-mascot (shared/mascot/mascot.ts):
+      // reduced motion gets the still pose; WebKit (which drops VP9's alpha) gets WebP.
+      (function () {
+        var box = document.querySelector('#hh-boot .hh-boot-bee');
+        if (!box) return;
+        var ua = navigator.userAgent;
+        var webkit = /iPhone|iPad|iPod/.test(ua) || (/AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg\//.test(ua));
+        var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function image(src) {
+          var img = new Image();
+          img.alt = '';
+          img.src = src;
+          box.appendChild(img);
+          return img;
+        }
+        if (still) return void image('/mascot/hover-still.webp');
+        if (webkit) {
+          var bee = image('/mascot/hello.webp');
+          // An image has no 'ended': swap to the loop on the greeting's length, from its arrival.
+          bee.onload = function () {
+            bee.onload = null;
+            setTimeout(function () { bee.src = '/mascot/hover.webp'; }, 1500);
+          };
+          return;
+        }
+        function video(src, loop) {
+          var v = document.createElement('video');
+          v.muted = true;
+          v.defaultMuted = true;
+          v.playsInline = true;
+          v.setAttribute('muted', '');
+          v.setAttribute('playsinline', '');
+          v.preload = 'auto';
+          v.loop = loop;
+          v.src = src;
+          box.appendChild(v);
+          return v;
+        }
+        var hover = video('/mascot/hover.webm', true);
+        hover.style.opacity = '0';
+        var hello = video('/mascot/hello.webm', false);
+        hello.addEventListener('ended', function () {
+          hover.style.opacity = '1';
+          hello.style.opacity = '0';
+          var p = hover.play();
+          if (p) p.catch(function () {});
+        });
+        var p = hello.play();
+        if (p) p.catch(function () {});
+      })();
+    </script>
+    <noscript><style>#hh-boot { display: none; }</style></noscript>
     <app-root></app-root>
   </body>
 </html>

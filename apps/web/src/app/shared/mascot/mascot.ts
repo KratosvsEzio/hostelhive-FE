@@ -13,13 +13,20 @@ import {
 
 /**
  * What the bee is doing.
- * - `searching` — flies in, then hunts with the magnifying glass on a loop. For a wait.
- * - `oops`      — one apologetic shrug, then holds still. For a failure.
- * - `still`     — the resting pose, no motion. For an empty state.
+ * - `greeting` — flies in, waves hello, then hovers on a calm loop. No prop: for the app
+ *                starting up, where nobody is searching anything yet.
+ * - `oops`     — magnifying glass in hand, one apologetic shrug, then holds still. For a
+ *                failed search.
+ * - `still`    — the resting pose with the glass, no motion. For an empty search.
+ * - `search`   — hunts on a loop with the magnifying glass. For a search box.
+ * - `key`      — holds up a room key on a loop. For moving in and for hosting.
  */
-export type MascotMode = 'searching' | 'oops' | 'still';
+export type MascotMode = 'greeting' | 'oops' | 'still' | 'search' | 'key';
 
 const BASE = '/mascot';
+
+/** Length of `hello.webp`, in milliseconds. */
+const HELLO_MS = 1500;
 
 /**
  * Whether this engine can play VP9 WebM *with its alpha channel*.
@@ -41,12 +48,12 @@ export function supportsAlphaWebm(userAgent: string): boolean {
  * Kept on a short leash on purpose: it never carries meaning (the copy beside it does, and it
  * is `aria-hidden`), it shows nothing at all on the server, and anyone who asked their system
  * for less motion gets the still pose. Chrome, Edge and Firefox get the alpha WebM; Safari gets
- * the animated WebP. Both are 60 fps and framed tight on the bee, so `size` is the bee itself.
+ * the animated WebP. Both are framed tight on the bee, so `size` is the bee itself.
  *
  * `delay` holds the bee back so a fast answer never flashes it — a loader that appears for
  * 80 ms reads as a glitch, not as a loader.
  *
- * `<hh-mascot mode="searching" [size]="96" [delay]="300" />`
+ * `<hh-mascot mode="greeting" [size]="96" [delay]="300" />`
  */
 @Component({
   selector: 'hh-mascot',
@@ -60,27 +67,27 @@ export function supportsAlphaWebm(userAgent: string): boolean {
   template: `
     @switch (render()) {
       @case ('still') {
-        <img [src]="base + '/still.webp'" alt="" class="size-full object-contain" />
+        <img [src]="stillSrc()" alt="" class="size-full object-contain" />
       }
       @case ('video') {
-        @if (mode() === 'searching') {
+        @if (mode() === 'greeting') {
           <video
             class="size-full [grid-area:1/1]"
             [class.opacity-0]="looping()"
-            [src]="base + '/enter.webm'"
+            [src]="base + '/hello.webm'"
             [muted]="true"
             muted
             autoplay
             playsinline
             preload="auto"
             disablepictureinpicture
-            (ended)="startLoop(search)"
+            (ended)="startLoop(hover)"
           ></video>
           <video
-            #search
+            #hover
             class="size-full [grid-area:1/1]"
             [class.opacity-0]="!looping()"
-            [src]="base + '/search.webm'"
+            [src]="base + '/hover.webm'"
             [muted]="true"
             muted
             loop
@@ -91,7 +98,8 @@ export function supportsAlphaWebm(userAgent: string): boolean {
         } @else {
           <video
             class="size-full"
-            [src]="base + '/oops.webm'"
+            [src]="base + '/' + mode() + '.webm'"
+            [loop]="mode() !== 'oops'"
             [muted]="true"
             muted
             autoplay
@@ -126,7 +134,7 @@ export class Mascot implements OnInit {
 
   /** False until the delay has run out — and always false on the server. */
   private readonly shown = signal(false);
-  /** The entrance has finished and the search loop has taken over. */
+  /** The greeting has finished and the hover loop has taken over. */
   protected readonly looping = signal(false);
 
   protected readonly render = computed<'none' | 'still' | 'video' | 'image'>(() => {
@@ -135,13 +143,22 @@ export class Mascot implements OnInit {
     return this.alphaVideo ? 'video' : 'image';
   });
 
-  /** WebP path. The entrance has no `ended` event as an image, so it is swapped on its length. */
+  /** The still pose matches the mode: no glass for the greeting, the glass for search states. */
+  protected readonly stillSrc = computed(() =>
+    this.mode() === 'greeting' || this.mode() === 'key'
+      ? `${BASE}/hover-still.webp`
+      : `${BASE}/still.webp`,
+  );
+
+  /** WebP path. An image has no `ended` event, so the greeting is swapped on its length. */
   protected readonly imageSrc = computed(() => {
-    if (this.mode() === 'oops') return `${BASE}/oops.webp`;
-    return `${BASE}/${this.looping() ? 'search' : 'enter'}.webp`;
+    const m = this.mode();
+    if (m === 'oops' || m === 'search' || m === 'key') return `${BASE}/${m}.webp`;
+    return `${BASE}/${this.looping() ? 'hover' : 'hello'}.webp`;
   });
 
   private readonly timers: ReturnType<typeof setTimeout>[] = [];
+  private swapScheduled = false;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.timers.forEach(clearTimeout));
@@ -155,27 +172,22 @@ export class Mascot implements OnInit {
     else show();
   }
 
-  private swapScheduled = false;
-
   /**
-   * Starts the entrance clock once the entrance WebP has actually arrived. Timed from mount, a
-   * slow connection swapped to the loop before the bee had finished flying in.
+   * Starts the greeting clock once the greeting WebP has actually arrived. Timed from mount, a
+   * slow connection swapped to the loop before the bee had finished waving.
    */
   protected imageLoaded(): void {
-    if (this.mode() !== 'searching' || this.swapScheduled) return;
+    if (this.mode() !== 'greeting' || this.swapScheduled) return;
     this.swapScheduled = true;
-    this.timers.push(setTimeout(() => this.looping.set(true), ENTER_MS));
+    this.timers.push(setTimeout(() => this.looping.set(true), HELLO_MS));
   }
 
-  /** Hands over from the entrance to the loop, on the frame the entrance ends. */
-  protected startLoop(search: HTMLVideoElement): void {
+  /** Hands over from the greeting to the loop, on the frame the greeting ends. */
+  protected startLoop(hover: HTMLVideoElement): void {
     this.looping.set(true);
-    search.currentTime = 0;
-    // A rejected play() (autoplay policy, tab in the background) leaves the last entrance
+    hover.currentTime = 0;
+    // A rejected play() (autoplay policy, tab in the background) leaves the last greeting
     // frame showing, which is the rest pose the loop starts from anyway.
-    search.play()?.catch(() => undefined);
+    hover.play()?.catch(() => undefined);
   }
 }
-
-/** Length of `enter.webp`, in milliseconds. */
-const ENTER_MS = 900;

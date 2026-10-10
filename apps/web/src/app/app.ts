@@ -14,11 +14,10 @@ import { ToastHost } from '@app/layout/components/toast-host/toast-host';
 import { SeekerTabBar } from '@app/layout/components/mobile-tab-bar/seeker-tab-bar';
 import { MobileApp } from '@core/mobile-app';
 // TEMPORARY (testing): startup gate to pick the BE base URL. Remove before go-live.
-import { DevSetupGate } from '@app/features/dev-setup/dev-setup-gate';
-import { devSetupPending } from '@core/dev-api-base-url';
 import { routePath } from '@core/i18n/locales';
 import { ConsentBanner } from '@core/google-analytics/consent-banner';
 import { StartupGate } from '@core/startup-gate';
+import { liftBootSplashWhenReady } from '@core/boot-splash';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
 import { Mascot } from '@app/shared/mascot/mascot';
@@ -32,7 +31,6 @@ import { Mascot } from '@app/shared/mascot/mascot';
     SiteFooter,
     ToastHost,
     SeekerTabBar,
-    DevSetupGate,
     ConsentBanner,
     TranslocoPipe,
   ],
@@ -61,8 +59,10 @@ export class App {
   /** True while startup is still resolving the session and the country. */
   protected readonly startingUp = inject(StartupGate).busy;
 
-  /** TEMPORARY (testing): true while the base-URL gate is still waiting for an answer. */
-  protected readonly pending = devSetupPending;
+  constructor() {
+    // The first full load shows the bee from index.html; take it down once startup resolves.
+    liftBootSplashWhenReady(this.startingUp);
+  }
 
   private readonly path = toSignal(
     this.router.events.pipe(
@@ -106,12 +106,9 @@ export class App {
 
   /**
    * The analytics consent banner, seeker area only — the consoles send nothing, so asking
-   * there would be asking for a permission we do not use. Held back until the base-URL gate
-   * clears so two overlays never stack.
+   * there would be asking for a permission we do not use.
    */
-  protected readonly showConsentBanner = computed(
-    () => this.inSeekerArea() && !this.pending(),
-  );
+  protected readonly showConsentBanner = this.inSeekerArea;
 
   // Footer is seeker-only, and the mobile app replaces it with the bottom tab bar.
   protected readonly showFooter = computed(

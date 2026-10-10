@@ -64,14 +64,36 @@ describe('Mascot', () => {
   });
 
   it('renders nothing on the server', () => {
-    const el = create('searching', { server: true });
+    const el = create('greeting', { server: true });
     expect(el.querySelector('img, video')).toBeNull();
   });
 
-  it('gives the still pose to anyone who asked for less motion', () => {
-    const el = create('searching', { reduce: true });
-    expect(el.querySelector('video')).toBeNull();
-    expect(el.querySelector('img')?.getAttribute('src')).toBe('/mascot/still.webp');
+  // Matched to the mode: the startup greeting has no magnifying glass, the search states do.
+  it('gives the matching still pose to anyone who asked for less motion', () => {
+    const greeting = create('greeting', { reduce: true });
+    expect(greeting.querySelector('video')).toBeNull();
+    expect(greeting.querySelector('img')?.getAttribute('src')).toBe('/mascot/hover-still.webp');
+    TestBed.resetTestingModule();
+    const oops = create('oops', { reduce: true });
+    expect(oops.querySelector('img')?.getAttribute('src')).toBe('/mascot/still.webp');
+  });
+
+  // The test DOM reports WebKit, so these are the Safari WebPs of the two loops.
+  it('loops the glass for a search box and the key for moving in', () => {
+    expect(create('search').querySelector('img')?.getAttribute('src')).toBe('/mascot/search.webp');
+    TestBed.resetTestingModule();
+    expect(create('key').querySelector('img')?.getAttribute('src')).toBe('/mascot/key.webp');
+  });
+
+  // The key is not a search: under reduced motion it rests without the glass.
+  it('gives the loops their matching still pose under reduced motion', () => {
+    expect(create('search', { reduce: true }).querySelector('img')?.getAttribute('src')).toBe(
+      '/mascot/still.webp',
+    );
+    TestBed.resetTestingModule();
+    expect(create('key', { reduce: true }).querySelector('img')?.getAttribute('src')).toBe(
+      '/mascot/hover-still.webp',
+    );
   });
 
   it('holds back until the delay runs out, so a fast answer never flashes it', () => {
@@ -84,19 +106,19 @@ describe('Mascot', () => {
   });
 
   // The test DOM reports a WebKit engine, so this is the Safari path: animated WebP.
-  it('swaps the WebP entrance for the search loop when the entrance ends', () => {
+  it('swaps the WebP greeting for the hover loop when the greeting ends', () => {
     vi.useFakeTimers();
-    const el = create('searching');
+    const el = create('greeting');
     expect(navigator.userAgent).toContain('AppleWebKit');
     const img = el.querySelector('img') as HTMLImageElement;
-    expect(img.getAttribute('src')).toBe('/mascot/enter.webp');
-    // The clock starts when the entrance has arrived, not at mount.
+    expect(img.getAttribute('src')).toBe('/mascot/hello.webp');
+    // The clock starts when the greeting has arrived, not at mount.
     vi.advanceTimersByTime(2000);
     fixture.detectChanges();
-    expect(img.getAttribute('src')).toBe('/mascot/enter.webp');
+    expect(img.getAttribute('src')).toBe('/mascot/hello.webp');
     img.dispatchEvent(new Event('load'));
-    vi.advanceTimersByTime(900);
+    vi.advanceTimersByTime(1500);
     fixture.detectChanges();
-    expect(el.querySelector('img')?.getAttribute('src')).toBe('/mascot/search.webp');
+    expect(el.querySelector('img')?.getAttribute('src')).toBe('/mascot/hover.webp');
   });
 });
