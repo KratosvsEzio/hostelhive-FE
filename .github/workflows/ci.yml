@@ -25,7 +25,9 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - run: npx playwright install --only-shell
+      # --with-deps: the runner lacks the system libraries WebKit needs (libgtk-4, libgraphene…),
+      # so without it the webkit project fails before a test runs.
+      - run: npx playwright install --with-deps
 
       # Lint enforces module boundaries; build runs AOT + bundle budgets.
       - run: npx nx run-many -t lint test build typecheck e2e
