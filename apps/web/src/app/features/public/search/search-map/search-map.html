@@ -18,7 +18,11 @@
     <div
       class="flex min-w-0 flex-1 items-center overflow-x-auto no-scrollbar pt-1.5"
     >
-      <hh-search-filters class="flex min-w-0 flex-1" />
+      <hh-search-filters
+        class="flex min-w-0 flex-1"
+        [params]="params()"
+        [genderRoutes]="genderRoutes()"
+      />
     </div>
   </div>
 </div>

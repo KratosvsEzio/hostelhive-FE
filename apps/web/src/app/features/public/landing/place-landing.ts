@@ -14,6 +14,7 @@ import { Faq, faqJsonLd, placeFaqs } from './place-faqs';
 import { findUniversity, universitiesIn } from './universities';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { GENDER_SEGMENTS, PLACES, findPlace } from './places';
+import { genderRoutesFor } from './gender-routes';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { Container } from '@hostelhive/ui';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -143,6 +144,16 @@ export class PlaceLanding {
       ...(g ? { gender: g.gender } : {}),
     };
   });
+
+  /**
+   * Where the filter row sends each accommodation type — gender pages only.
+   *
+   * Their path fixes the type, so the filters have to change the page rather than the
+   * query to change it. A city or campus page passes nothing and keeps the query merge.
+   */
+  protected readonly genderRoutes = computed(() =>
+    genderRoutesFor(this.place()?.slug, this.genderSegment() ? this.segment() : null),
+  );
 
   /** Sibling pages, for internal linking — the other genders for this place. */
   protected readonly genderLinks = computed(() => {

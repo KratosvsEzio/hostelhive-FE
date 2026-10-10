@@ -53,7 +53,11 @@ import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
-import { SearchFilters } from '@features/public/search/search-filters/search-filters';
+import {
+  GenderRoutes,
+  SearchFilters,
+} from '@features/public/search/search-filters/search-filters';
+import { mergeSearchParams } from '@features/public/search/search-params';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabel } from '@util/accommodation-type';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
@@ -175,32 +179,32 @@ export class SearchMap {
    */
   readonly seed = input<Record<string, string> | null>(null);
 
+  /**
+   * Where each accommodation type lives when the host page's path fixes one — set only by
+   * the gender landing pages. Passed through to the filter row untouched: the landing
+   * feature owns its URLs, and search only follows them.
+   */
+  readonly genderRoutes = input<GenderRoutes | null>(null);
+
   private readonly queryParams = toSignal(this.route.queryParamMap, {
     initialValue: null,
   });
 
   /**
-   * `queryParams` with `seed` beneath it. Everything downstream reads filters through
-   * `params()?.get(…)`, so merging here means the landing pages need no changes anywhere
-   * else in this component.
+   * `queryParams` with `seed` beneath it, and an unknown `gender` read as absent (see
+   * `mergeSearchParams`). Everything downstream reads filters through `params()?.get(…)` —
+   * this component directly, and `hh-search-filters` through its `params` input — so
+   * merging here means the landing pages need no changes anywhere else in the search.
+   *
+   * The filter row must not read the route itself: it would see the query without the
+   * seed, and on `/hostels/lahore/girls` show "Any type" above a list of girls' hostels.
+   * One merged reader is what keeps every control describing the list beneath it, and is
+   * why a bad `gender` is decided here rather than separately by each control and the
+   * request.
    */
-  private readonly params = computed<ParamMap | null>(() => {
-    const q = this.queryParams();
-    const seed = this.seed();
-    if (!seed) return q;
-    return {
-      get: (key: string) => q?.get(key) ?? seed[key] ?? null,
-      has: (key: string) => !!q?.has(key) || key in seed,
-      getAll: (key: string) => {
-        const fromQuery = q?.getAll(key) ?? [];
-        if (fromQuery.length) return fromQuery;
-        return seed[key] ? [seed[key]] : [];
-      },
-      get keys() {
-        return [...new Set([...(q?.keys ?? []), ...Object.keys(seed)])];
-      },
-    } as ParamMap;
-  });
+  protected readonly params = computed<ParamMap | null>(() =>
+    mergeSearchParams(this.queryParams(), this.seed()),
+  );
 
   /** The `:location` slug, when the URL carries one. */
   private readonly locationSlug = toSignal(

@@ -26,8 +26,13 @@
 
 <!-- The real search, with this page's filters pre-applied. Anything the visitor changes
      goes to the query string and overrides the seed, so filtering behaves as it does on
-     /search — the path only supplies the starting point. -->
-<hh-search-map [seed]="seed()" />
+     /search — the path only supplies the starting point. The one exception is the type on
+     a gender page: the path fixes it, so changing it moves to the page for the new type
+     (genderRoutes). -->
+<hh-search-map
+  [seed]="seed()"
+  [genderRoutes]="genderRoutes()"
+/>
 
 @if (place(); as p) {
   <!-- Onward links. Landing pages that dead-end are crawled once and forgotten; these
