@@ -69,7 +69,8 @@
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
-      }
+      },
+      "exclude": ["eslint.config.mjs"]
     },
     {
       "plugin": "@nx/vite/plugin",
