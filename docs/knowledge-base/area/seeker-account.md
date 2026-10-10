@@ -21,25 +21,27 @@ The signed-in seeker's own pages: `/account/*` (bookings, one booking, change a 
 - **Dates** arrive with the hostel's offset; `wallTime()` reads the wall clock from the string — never `new Date()`.
 - **Lifecycle**: `disposition.slug` drives the stage track (`requested → confirmed → checked-in → checked-out`, off-track `cancelled` / `no-show`; legacy `pending-allotment`/`room-assigned` folded in). Edit/cancel rules read `status.slug`: pending any time, confirmed only while check-in is more than 3 days away (`GUEST_CHANGE_CUTOFF_MS`), mirroring the server.
 - **Change booking** (`/account/bookings/:id/edit`): the listing's `hh-room-picker` and `hh-booking-rail` over a `BookingBasket` seeded from the booking; a review modal; one `PATCH /api/bookings/:id`. Dates and `line_items` are sent only if the stay changed, built by `toBookingRequest`; `guests` is never sent. Cancel: `POST /api/bookings/:id/mark_as_cancelled`, and the reply replaces the page's copy.
-- **Favourites page** lists `GET /api/favourites` through `toListing`, rendered with `hh-listing-card [savable]=false` and a confirm-before-remove.
+- **Favourite hearts** (search cards, home cards, the map card and popup, the listing page) read `FavoritesStore`, which follows `SessionStore`'s user **id**: sign-in, restore or an account switch empties it and reloads `GET /api/favourites` quietly (`SUPPRESS_ERROR_TOAST`); sign-out or a 401 empties it and deletes the cache. Writes are optimistic with an exact rollback, a per-hostel in-flight lock, a merge so a load never undoes an in-flight or just-settled write, and a quiet reload after any non-401 failure (`apps/web/src/app/util/favorites-store.ts`). Guests are sent to `/auth?mode=login&returnUrl=…` before the store is touched (`listing-card.ts`, `search-map.ts` `redirectGuest`, `listing-detail.ts` `toggleSaved`).
+- **Favourites page** lists `GET /api/favourites` through `toListing` (its own request), rendered with `hh-listing-card [savable]=false` and a confirm-before-remove; removal goes through `FavoritesStore.unsave`, and the row comes back if the server refuses (`favorites.ts`).
 - **Notifications**: `GET /api/notifications` (`user_invites`, `aggs.unread`); items are marked read as they scroll into view (`IntersectionObserver` → `mark_as_read`); invites accept/reject; review requests deep-link to `/hostel/:id?review=<id>`. `RefetchDelay` (`apps/web/src/app/core/refetch-delay.ts`) delays the refetch after a mutation.
 - **Settings**: language and currency apply on pick, not on Save; a picked avatar is committed immediately and rolled back on failure; the analytics switch is hidden when no GA id is configured.
 
 ## Reuse, don't rebuild
 - `MyBookingsApi` and its pure helpers (`wallTime`, `timingOf`, `canEdit`, `canCancel`, `mapsUrl`) for anything showing a guest booking.
 - `toBookingRequest` for any booking write; `BookingBasket` + picker + rail for any room selection UI.
-- `toListing` (via `FavouritesApi`) and `hh-listing-card` for saved hostels.
+- `toListing` (via `FavouritesApi`) and `hh-listing-card` for saved hostels; `FavoritesStore` (`isFavorite`, `toggle`, `unsave`) for any heart — never call the `FavouritesApi` writes directly.
 
 ## Traps
-- **Favourites have two sources of truth.** Hearts read `FavoritesStore`, a localStorage snapshot (`hh:favorites`) that is never seeded from `/api/favourites` and never cleared on sign-out (`clear()` has no caller); the Favorites page reads the server. A new device shows no hearts; a shared browser shows the previous user's. Writes are `catchError(() => of(null))`, so failures are silent (`favourites-api.ts`, RISKS R1).
-- **Signed-out hearts** on search cards and map popups save locally and fire a write that fails silently; only the listing page sends guests to `/auth` (`listing-card.ts`, `listing-detail.ts` `toggleSaved`).
+- **The favourites cache is per user, and only a paint-ahead.** `hh:favorites` holds `{ owner, items }` and is painted only when `owner` is the current session user id; anything else (another user, the legacy bare array) is discarded, and the server list replaces it on every load. Key anything new on `user()?.id`, not the user object — restore and `refreshSession` re-set the same user (`favorites-store.ts`).
+- **The dev `?role=` seed's fake token gets a 401 from the favourites load**, which signs that seeded session out on any page that creates the store (`favorites-store.ts` `load`). Dev only.
 - **Changing dates/rooms may not save.** PR #40 shipped it ahead of the backend (see decision); contact-only edits and cancel work.
 - **Disposition vs status**: a new guest booking's disposition can be `pending-payment` under status `pending` — still editable. Use `canEdit`, not the stage.
-- **`docs/RISKS.md` R4/BE-2** says no favourites route exists, while `favorites.ts` reads `GET /api/favourites`. One of them is stale — verify against the API.
+- **`docs/RISKS.md` R4/BE-2 is stale on favourites**: `GET /api/favourites`, `POST /api/favourites/mark_as_favourite` and `DELETE /api/favourites/mark_as_unfavourite` all exist (401 unauthenticated vs 404 for an unknown path, checked live 2026-10-10 — `docs/implement/Bugs/105.md`).
 - `NotificationsPage` builds an `IntersectionObserver` in its constructor; safe only because the route never server-renders. Its tabs, type labels and empty states are English literals; `security.ts` toasts are too.
 
 ## Decisions
 - [Guests can change a pending booking's stay, shipped ahead of backend support](../decisions/seeker-account/change-booking-shipped-ahead-of-backend.md)
+- [Favourites follow the session user, with the server as the source of truth](../decisions/seeker-account/favourites-follow-the-session-user.md)
 
 ## See also
 - [listing-and-booking](./listing-and-booking.md) — booking creation, room picker, basket
