@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderRobotsTxt } from './app/core/robots';
 import { SITE_ORIGIN } from './app/core/seo';
 import {
   renderSitemap,
@@ -70,6 +71,19 @@ app.get('/sitemap.xml', (_req, res) => {
     // An hour: the URL set only changes when a place is added, which is a deploy.
     .set('Cache-Control', 'public, max-age=3600')
     .send(renderSitemap(SITE_ORIGIN, sitemapPaths()));
+});
+
+/**
+ * `/robots.txt` — generated for the same reason as the sitemap: its rules are written per
+ * language from `LOCALE_CODES`, so a new language is covered without anyone remembering
+ * this file. The static file it replaces listed bare paths only, and stopped matching any
+ * real URL the day every URL gained a language prefix.
+ */
+app.get('/robots.txt', (_req, res) => {
+  res
+    .type('text/plain')
+    .set('Cache-Control', 'public, max-age=3600')
+    .send(renderRobotsTxt(SITE_ORIGIN));
 });
 
 /**

@@ -35,7 +35,7 @@ Airbnb-quality result.
 |----------|--------|---------------------------|
 | Release strategy | **Marketplace loop first** | v1.0 = Seeker + Host + Moderator (M0–M3 + hardening); Operations/Billing + ~~Analytics~~ ship as **Release 1.1** (M4–~~M5~~). M5 was absorbed into the overview — Impl. Plan §11, 2026-08-26. |
 | UI foundation | **Tailwind CSS + Angular CDK** custom design system | Locked; Angular Material/PrimeNG not used. Maximises Airbnb-grade visual control. |
-| App topology | **Two apps**: `web` (public SSR) + `console` (host, Manager/Warden, Moderator **and** Super Admin behind role guards) | `/admin/**` (Moderator + Super Admin — incl. roles/contracts/payments, F6) is edge IP-allowlisted per §9.2; Manager/Warden are property-scoped hosts (F8). `/admin` can split into its own app later if sensitivity warrants. |
+| App topology | **Two apps**: `web` (public SSR) + `console` (host, Manager/Warden, Moderator **and** Super Admin behind role guards) | `/admin/**` (Moderator + Super Admin — incl. roles/contracts/payments, F6) is edge IP-allowlisted per §9.2; Manager/Warden are property-scoped hosts (F8). `/admin` can split into its own app later if sensitivity warrants. *Superseded: there is one app. `console` was merged into `web` on 2026-06-13 (Impl. Plan §11, "Architecture consolidation → 1 app + 1 lib"); console routes are lazy, client-rendered and role-guarded, and the edge IP-allowlist became guards + lazy chunks + server-side auth.* |
 | API contract | **To be confirmed with BE team** | Assume OpenAPI 3 + generated SDK; a 1–2 week contract-capture spike is held in reserve. |
 
 **Resolved since:** palette = **orange `#F36E21` + ink `#1F1F1F` + white/`#F5F5F5`** (extracted from the client's Figma, not the PRD's navy/amber); design phase complete (25 screens); PRD v3 added Features 6–8. **Still open:** API-contract confirmation (Q-API).
@@ -61,10 +61,10 @@ These are **not** in the PRD and block the data layer. Listed by risk.
 | ID | Question | Why it's critical | Default if unanswered |
 |----|----------|-------------------|-----------------------|
 | **Q-API** | Is there an **OpenAPI/Swagger spec** (or at least a Postman collection) for the completed BE? Base URLs per env, error envelope shape, pagination style (cursor vs offset)? | The entire typed data layer, client generation, and ~30% of effort estimation hinge on this. A FE-only build with no contract is a reverse-engineering project. | Pending BE-team confirmation. Assume OpenAPI 3 and generate a typed SDK; a 1–2 week contract-capture spike is held in reserve if no spec exists. |
-| **Q-AUTH** | **Token lifecycle from the client**: access + refresh tokens? Where stored (httpOnly cookie strongly preferred vs localStorage)? Silent refresh on 401, or forced re-login at expiry (24h seeker / 8h moderator)? | Drives the HTTP interceptor, route guards, session UX, and security posture. | Access token in memory + refresh token in httpOnly secure cookie; interceptor does 401→refresh→retry. |
+| **Q-AUTH** | **Token lifecycle from the client**: access + refresh tokens? Where stored (httpOnly cookie strongly preferred vs localStorage)? Silent refresh on 401, or forced re-login at expiry (24h seeker / 8h moderator)? | Drives the HTTP interceptor, route guards, session UX, and security posture. | Access token in memory + refresh token in httpOnly secure cookie; interceptor does 401→refresh→retry. *Superseded: never built. The backend returns one JWT and has no refresh endpoint; the app keeps it in a first-party `hh_auth_token` cookie with a 30-day max-age (`apps/web/src/app/core/auth/session-store.ts`), and a 401 signs the user out. See `docs/knowledge-base/decisions/auth-and-session/jwt-in-readable-first-party-cookie.md`.* |
 | **Q-PAY** | **Payment integration shape**: hosted redirect (Stripe Checkout / JazzCash redirect) vs embedded (Stripe Elements)? What's the **return URL contract** and how does the FE learn success (poll status vs redirect with signed result)? Is the listing fee fixed and where displayed? | Feature 2 cannot complete without it; webhook confirms server-side but the *client* needs a deterministic "what now" after redirect. | Hosted redirect + return URL → FE polls `GET /listings/{id}/payment-status` until `active/in-review`. |
 | **Q-UPLOAD** | **Image upload mechanism**: presigned-URL direct-to-S3/R2 vs multipart-through-API? Is there server-side transcode/thumbnail generation, and how is the async malware-scan ("pending") state surfaced to the client? | Determines the upload component, progress UX, retry logic, and how "pending moderation/scan" states render. | Presigned direct-to-storage + client-side compression; poll/receive image status. |
-| **Q-MAPS** | One **Google Maps API key per environment**, referrer-restricted? Are **Places Autocomplete + Geocoding** called **directly from the browser** (same key) or **proxied through BE** (quota/billing control)? | Affects map module design, cost control, and the §9.2 "never expose unrestricted keys" requirement. | Browser-side Maps JS SDK with referrer-restricted key; Places/Geocoding proxied through BE if quota control is required. |
+| **Q-MAPS** | One **Google Maps API key per environment**, referrer-restricted? Are **Places Autocomplete + Geocoding** called **directly from the browser** (same key) or **proxied through BE** (quota/billing control)? | Affects map module design, cost control, and the §9.2 "never expose unrestricted keys" requirement. | Browser-side Maps JS SDK with referrer-restricted key; Places/Geocoding proxied through BE if quota control is required. *Superseded: no Google Maps. Maps are Leaflet with CARTO tiles (key `CARTO_BASEMAP_KEY`), Photon for search and Nominatim for reverse geocoding; the Google stack was removed in 59d3692. See `docs/knowledge-base/decisions/maps/leaflet-carto-over-google-maps.md`.* |
 | **Q-RT** | The moderator "new media pending" **badge counter** — polling or push (SSE/WebSocket)? Acceptable staleness? | Determines whether we need real-time infra or simple polling. | Poll every 30–60s; no realtime infra in v1. |
 | **Q-MULTIROLE** | Can one account be **both a Seeker and a Host**? One identity with multiple roles, or separate accounts? | Shapes auth model, routing, and the account/profile area across all apps. | One identity, role claims; UI surfaces the role(s) the user holds. |
 
@@ -133,12 +133,12 @@ These are **not** in the PRD and block the data layer. Listed by risk.
 | Forms | **Signal Forms** (stable in v22) for the onboarding wizard, billing, utility-split; typed Reactive Forms where needed | Native, signal-driven, ideal for the long multi-step wizard |
 | Server state / data | **`httpResource`/`rxResource`** (stable in v22) for read-heavy signal-driven fetching; thin typed API SDK **generated from the OpenAPI spec** | Native caching/loading/error as signals; generated client kills drift and a class of bugs |
 | Cross-cutting state | **NgRx SignalStore** only where genuinely shared (auth/session, dashboard filters); plain signal services elsewhere | Lightweight, signal-first; avoid classic Store/Effects boilerplate |
-| Maps | **`@angular/google-maps`** wrapper + a `maps` lib (Places Autocomplete, Geocoding, draggable pin, reverse-geocode) | Official wrapper; lazy-loaded SDK |
+| Maps | **`@angular/google-maps`** wrapper + a `maps` lib (Places Autocomplete, Geocoding, draggable pin, reverse-geocode) | Official wrapper; lazy-loaded SDK. *Superseded: Leaflet + CARTO tiles, Photon, Nominatim (see Q-MAPS).* |
 | Charts | **ApexCharts (`ng-apexcharts`)** or ECharts | Modern, responsive, good-looking analytics |
 | Rich text | **TipTap** (or Quill) + **DOMPurify** | Description editing with safe sanitisation |
 | Uploads | Presigned direct-to-storage + **`browser-image-compression`**, batch UI with per-file progress (signals) | Meets 3–20 images / 10MB / concurrent (§5.5) without proxying large files through the API |
 | i18n | **Transloco** (runtime) or Angular i18n; default English | Structured for Urdu later; PKR/number pipes |
-| Auth | JWT access (memory) + refresh (httpOnly cookie); functional `CanActivateFn` guards per role; HTTP interceptor for attach + 401-refresh-retry | Per §9.2; pending Q-AUTH |
+| Auth | JWT access (memory) + refresh (httpOnly cookie); functional `CanActivateFn` guards per role; HTTP interceptor for attach + 401-refresh-retry | Per §9.2; pending Q-AUTH. *Superseded: one JWT in a 30-day cookie, no refresh, a 401 signs out (see Q-AUTH).* |
 | Testing | **Vitest** (unit) + **Playwright** (e2e) + **Storybook** (component QA + visual regression via Chromatic) | Storybook doubles as the **design-handoff surface** |
 | Quality gates | ESLint + Prettier, Husky/lint-staged, Nx affected, bundle budgets, Lighthouse CI | Enforce §9.1 perf budgets in CI |
 | Observability | **Sentry** (FE errors) + product analytics (GA4/Amplitude) | Operability from day one |
@@ -149,12 +149,13 @@ These are **not** in the PRD and block the data layer. Listed by risk.
 - `web` — public seeker site (SSR): search, listing detail, Lead Wall, seeker account, SEO landing pages.
 - `console` — single authenticated app for **both host and moderator**, separated by **role-based route guards** and lazy-loaded feature areas. Moderator routes are additionally protected at the **edge/network layer (IP allowlist)** per §9.2, since they no longer have a separate deployment.
   *Trade-off accepted: simpler operations at the cost of weaker physical isolation between host and moderator surfaces; enforced instead by guards + edge rules + separate route bundles.*
+  *Superseded: there is no `console` app. It was merged into `web` (Impl. Plan §11, 2026-06-13); see `docs/knowledge-base/decisions/tooling/single-app-single-lib.md`.*
 
 **Libraries**
 - `ui` — design-system components (Tailwind + CDK).
 - `data-access` — generated API SDK, DTOs, `httpResource` wrappers, interceptors.
-- `auth` — session SignalStore, guards, interceptors, Lead Wall.
-- `maps` — Google Maps pin/autocomplete/geocode.
+- `auth` — session SignalStore, guards, interceptors, Lead Wall. *(Superseded: lives in `apps/web/src/app/core/auth/`, not a lib; no refresh flow — see Q-AUTH.)*
+- `maps` — Google Maps pin/autocomplete/geocode. *(Superseded: `@hostelhive/maps` in `lib/src/maps/` is Leaflet + CARTO, Photon and Nominatim — see Q-MAPS.)*
 - `feature-*` — `feature-search`, `feature-listing`, `feature-onboarding`, `feature-moderation`, `feature-operations`, ~~`feature-analytics`~~. *(Shipped as folders under `apps/web/src/app/features/`, not Nx libs — Impl. Plan §11, 2026-06-13. There is no analytics feature: it lives in the overview — §11, 2026-08-26.)*
 - `util` — pipes (PKR, dates @ UTC+5), validators, config, error handling.
 
@@ -293,10 +294,10 @@ library was partially started in the client's file — see implementation notes.
 
 ## Appendix A — Working assumptions (until answered)
 - BE exposes an OpenAPI 3 contract; typed SDK generated from it.
-- Auth: access token in memory + refresh in httpOnly cookie; interceptor handles refresh.
+- Auth: access token in memory + refresh in httpOnly cookie; interceptor handles refresh. *(Superseded — see Q-AUTH.)*
 - Payments: hosted redirect + FE status-poll on return.
 - Uploads: presigned direct-to-storage + client compression; async scan/moderation status polled.
-- Maps: referrer-restricted key per env; Places/Geocoding proxied through BE if quota control needed.
+- Maps: referrer-restricted key per env; Places/Geocoding proxied through BE if quota control needed. *(Superseded — see Q-MAPS.)*
 - OAuth, reviews/ratings, in-app messaging, online rent payment = **out of v1** (layout slots reserved).
 - English-only v1, PKR, dates in UTC+5; architected for later i18n.
 - One identity may hold multiple roles (seeker/host) pending confirmation.

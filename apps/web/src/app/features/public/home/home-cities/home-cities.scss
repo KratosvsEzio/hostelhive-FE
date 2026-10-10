@@ -2,6 +2,10 @@
 
 $brand-50: #fef1e9;
 $brand-200: #f9be9c;
+$brand-300: #f69a6a;
+$brand-500: #f36e21;
+$brand-600: #b94f06;
+$brand-800: #7e3209;
 $ink-100: #e6e6e6;
 $ink-500: #525252;
 $ink-900: #141414;
@@ -50,7 +54,8 @@ $display: Poppins, Inter, sans-serif;
   margin-inline: auto;
   border-radius: 50%;
 }
-.hl-ball img {
+.hl-ball img,
+.hl-ball-face {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -62,6 +67,22 @@ $display: Poppins, Inter, sans-serif;
     0 0 0 6px #fff,
     0 0 0 7px $ink-100;
   transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+// A city with no photograph: a brand-coloured world carrying its initial. The lit-sphere
+// shading below lands on it exactly as it does on a photo.
+.hl-ball-face {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 600 clamp(40px, 5vw, 64px) / 1 $display;
+  text-shadow: 0 2px 10px rgba(126, 50, 9, 0.45);
+  background: radial-gradient(
+    circle at 34% 30%,
+    $brand-300,
+    $brand-500 48%,
+    $brand-600 80%,
+    $brand-800
+  );
 }
 // The orange ring that appears around a city on hover.
 .hl-ball::before {
@@ -94,6 +115,8 @@ $display: Poppins, Inter, sans-serif;
 }
 .hl-orb:hover .hl-ball img,
 .hl-orb:focus-visible .hl-ball img,
+.hl-orb:hover .hl-ball-face,
+.hl-orb:focus-visible .hl-ball-face,
 .hl-orb:hover .hl-ball::after,
 .hl-orb:focus-visible .hl-ball::after {
   transform: scale(1.05);
@@ -107,6 +130,21 @@ $display: Poppins, Inter, sans-serif;
   display: block;
   margin-top: 16px;
   font: 600 17px/1.2 $display;
+}
+// The licence for the GeoNames city list asks for a credit; kept small and out of the way.
+.hl-cities-credit {
+  margin: 40px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: $ink-500;
+}
+.hl-cities-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.hl-cities-credit a:hover {
+  color: $brand-600;
 }
 @media (max-width: 980px) {
   .hl-orbs {
@@ -130,5 +168,8 @@ $display: Poppins, Inter, sans-serif;
   .hl-orb b {
     font-size: 15px;
     margin-top: 10px;
+  }
+  .hl-ball-face {
+    font-size: 32px;
   }
 }

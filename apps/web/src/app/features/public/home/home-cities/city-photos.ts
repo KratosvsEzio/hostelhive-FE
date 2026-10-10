@@ -8,12 +8,11 @@ export interface CityPhoto {
 }
 
 /**
- * The cities the home page has a photograph for, keyed by slug.
+ * The cities the home page has a photograph for, keyed by slug, most populous first.
  *
- * A registry of what can be drawn, not a statement of where the hostels are: which cities show
- * is decided by the hostel data, and a city only gets a globe when it is in both. Every entry
- * also has a curated landing page (landing/places.ts was seeded from this list), which is why
- * the cards can link to `/hostels/<slug>`.
+ * Also Pakistan's popular cities on the home page, in this order, whether or not they have
+ * hostels yet. Every entry has a curated landing page (landing/places.ts was seeded from this
+ * list), which is why the cards can link to `/hostels/<slug>`.
  *
  * Pakistani cities only, and looked up only for Pakistan — a slug alone cannot tell
  * Hyderabad, Sindh from Hyderabad, Telangana.
