@@ -24,7 +24,8 @@ pages' UI belongs to [search-and-discovery](./search-and-discovery.md); deployme
   page head and the sitemap.
 - `apps/web/src/app/core/i18n/fs-translation-loader.ts`: reads translations from disk during SSR.
 - `apps/web/src/app/core/interceptors/ssr-timeout-interceptor.ts`: 5s cap on each API call during SSR.
-- `apps/web/public/robots.txt`.
+- `apps/web/src/app/core/robots.ts`: `DISALLOWED_PATHS`, `disallowPatterns()` and `renderRobotsTxt()`,
+  served as `/robots.txt` by `server.ts`. There is no static `robots.txt` any more.
 
 ## How it works
 
@@ -44,6 +45,11 @@ id. `preloadImage(url)` puts the LCP hero in the server-rendered head. Absolute 
 **Sitemap.** `server.ts` answers `/sitemap.xml` before `express.static`. URLs come from the static page
 list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is prefixed with every
 `INDEXED_LOCALE_CODES` language and carries its own `hreflang` block.
+
+**robots.txt.** `server.ts` answers `/robots.txt` before `express.static`, from `renderRobotsTxt`. Each
+of `DISALLOWED_PATHS` is disallowed bare and under every `LOCALE_CODES` prefix (all routable languages,
+not only the indexed ones). `host` is anchored (`$`, `/`, `?`) so `/xx/hostel/…` and `/xx/hostels/…`
+stay crawlable. Search is deliberately not blocked; its pages carry their own canonical or `noindex`.
 
 **Translations on the server.** `FsTranslationLoader` reads `public/i18n/<lang>.json` from disk, trying
 `../browser/i18n` and then `apps/web/public/i18n` for `ng serve`. It registers the read with
@@ -74,18 +80,22 @@ list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is pre
 - `placeSocialImage` / `DEFAULT_SOCIAL_IMAGE` for `image`.
 - `localeAlternates` for anything that states `hreflang`.
 - `sitemapPaths()`: add a new indexable page here, or derive it from the list its route reads.
-- `clientOnly([...])` in `app.routes.server.ts` for a new authenticated area.
+- `clientOnly([...])` in `app.routes.server.ts` for a new authenticated area. It must also go in
+  `DISALLOWED_PATHS` (`core/robots.ts`); `robots.spec.ts` fails if a `CLIENT_ONLY` path is missing.
+- `robotsAllows()` (`core/robots-testing.ts`) to assert in a spec whether robots.txt blocks a URL.
 
 ## Traps
 
 - **Only the bare root is prerendered.** `''` matches `/` alone, and `keepLocale` redirects that to
   `/en`. `/en` and every other real page fall to `**` and render per request. In practice the home page
   is server-rendered, not prerendered. (Inferred from the route tables; not checked against a build.)
-- **`apps/web/public/robots.txt` predates the locale prefix.** It disallows `/account`, `/host/`, `/auth`,
-  `/mess/confirm` and the rest as bare paths, but real URLs are `/en/account`, `/ur/auth` and so on,
-  which those rules do not match. The render-mode table had the same bug and was fixed by `*/path`
-  entries (commit `2b679d6`); robots.txt was not.
-- **Domain mismatch.** `SITE_ORIGIN`, `apps/web/public/robots.txt` and the sitemap use `hostelhive.com`. The
+- **A robots.txt `*` is not a route `*`.** In `app.routes.server.ts`, `*` is one path segment. In
+  robots.txt it matches any run of characters, slashes included, so a rule like `/*/auth` would also
+  block `/en/blog/authentic-…`. That is why `core/robots.ts` names every language instead (PR #49; the
+  static file before it listed bare paths only and matched no real URL).
+- **robots.txt exists only where the Express server runs**, like the sitemap. A static-only host serves
+  none.
+- **Domain mismatch.** `SITE_ORIGIN`, `/robots.txt` and the sitemap use `hostelhive.com`. The
   `NG_ALLOWED_HOSTS` examples in `server.ts` and `docs/DEPLOY.md` use `hostelhive.pk`. If production is
   `.pk`, every canonical points at another host.
 - A render-mode entry written bare (`account/**`) matches no real URL. Use `clientOnly`, which also adds
