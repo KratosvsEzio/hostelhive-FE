@@ -1,0 +1,23 @@
+<div class="hc-scenes">
+  @for (s of scenes(); track s.key; let i = $index) {
+    <figure class="hc-scene" [class.on]="i === 0" [attr.data-i]="i">
+      <img
+        [src]="s.img"
+        [alt]="s.alt | transloco"
+        [attr.fetchpriority]="i === 0 ? 'high' : null"
+        [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+        decoding="async"
+      />
+    </figure>
+  }
+</div>
+<div class="hc-tint"></div>
+<div class="hc-wash"></div>
+<img class="hc-cl hc-rise" src="/landing/clouds-rise.webp" alt="" />
+<img class="hc-cl hc-bank1" src="/landing/clouds-bank.webp" alt="" />
+<img class="hc-cl hc-bank2" src="/landing/clouds-bank.webp" alt="" />
+<img class="hc-cl hc-roll hc-r1" src="/landing/clouds-roll.webp" alt="" />
+<img class="hc-cl hc-roll hc-r2" src="/landing/clouds-roll.webp" alt="" />
+<img class="hc-cl hc-roll hc-r3" src="/landing/clouds-roll-low.webp" alt="" />
+<div class="hc-fade"></div>
+<div class="hc-scrim"></div>

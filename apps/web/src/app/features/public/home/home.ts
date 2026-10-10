@@ -1,39 +1,59 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ViewEncapsulation,
   computed,
   effect,
   inject,
   PLATFORM_ID,
-  signal,
+  viewChild,
 } from '@angular/core';
-import { isPlatformBrowser, DecimalPipe } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
-import { Router, RouterLink } from '@angular/router';
-import { searchRouteFor } from '@util/location-slug';
+import { RouterLink } from '@angular/router';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
-import { HOST_ROLES, SessionStore } from '@core/auth';
 import { Listing } from '@hostelhive/data-access';
 import { Skeleton, Container } from '@hostelhive/ui';
 import { ListingsApi } from '@services';
-import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { PakistanMap } from './pakistan-map/pakistan-map';
 import { ListingCard } from '../search/listing-card/listing-card';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
+import { Mascot } from '@app/shared/mascot/mascot';
+import { SearchBar } from '@layout/components/search-bar/search-bar';
+import { HeroClouds } from './hero-clouds/hero-clouds';
+import { HomeWhy } from './home-why/home-why';
+import { HomeCities } from './home-cities/home-cities';
+import { HomeHosts } from './home-hosts/home-hosts';
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, TranslocoPipe, RouterLink, LocaleLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
+  // Unencapsulated so the frosted look reaches the listing cards and the map inside this page;
+  // every class in home.scss is `hl-` prefixed, so nothing leaks past it.
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+    Container,
+    TranslocoPipe,
+    RouterLink,
+    LocaleLink,
+    Skeleton,
+    PakistanMap,
+    ListingCard,
+    Mascot,
+    SearchBar,
+    HeroClouds,
+    HomeWhy,
+    HomeCities,
+    HomeHosts,
+  ],
   templateUrl: './home.html',
+  styleUrl: './home.scss',
 })
 export class Home {
-  private readonly router = inject(Router);
-  private readonly session = inject(SessionStore);
   private readonly listingsApi = inject(ListingsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
@@ -87,44 +107,6 @@ export class Home {
     });
   }
 
-  // Existing hosts (host/manager/warden) go straight to their dashboard; everyone
-  // else starts the become-a-host onboarding wizard.
-  private readonly isHost = computed(() => this.session.hasRole(...HOST_ROLES));
-  protected readonly hostLink = computed(() =>
-    this.isHost() ? '/host' : '/host/listings/new',
-  );
-  protected readonly hostCta = computed(() =>
-    this.isHost() ? 'Go to your dashboard' : 'Start hosting',
-  );
-
-  protected readonly place = signal('');
-  private readonly lat = signal<number | null>(null);
-  private readonly lng = signal<number | null>(null);
-
-  protected onText(text: string): void {
-    this.place.set(text);
-    this.lat.set(null);
-    this.lng.set(null);
-  }
-
-  protected onSelected(r: PlaceResult): void {
-    this.place.set(r.label);
-    this.lat.set(r.lat);
-    this.lng.set(r.lng);
-    this.search();
-  }
-
-  protected search(): void {
-    const hasGeo = this.lat() !== null && this.lng() !== null;
-    this.router.navigate(searchRouteFor(this.place()), {
-      queryParams: {
-        place: this.place() || null,
-        city: hasGeo ? null : this.place() || null,
-        lat: hasGeo ? this.lat() : null,
-        lng: hasGeo ? this.lng() : null,
-      },
-    });
-  }
 
   protected readonly stats = [
     // Keys, not copy: these are data rather than template text, so the extractor never
@@ -231,31 +213,22 @@ export class Home {
     },
   ];
 
-  /** Doubled list so the running honeycomb carousel loops seamlessly at translateX(-50%). */
-  protected readonly marqueeCities = [...this.cities, ...this.cities];
-
-  protected readonly features = [
-    {
-      icon: 'ti-rosette-discount-check',
-      title: 'Every listing verified',
-      desc: 'Each hostel is checked and approved before it goes live — what you see is real.',
-    },
-    {
-      icon: 'ti-filter',
-      title: 'Filter that fits you',
-      desc: 'Narrow by budget, gender, room sharing and amenities to find your exact match.',
-    },
-    {
-      icon: 'ti-phone-check',
-      title: 'Direct verified contacts',
-      desc: 'Unlock real phone numbers and reach hosts directly — no middlemen, no markup.',
-    },
-    {
-      icon: 'ti-shield-check',
-      title: 'Safe & transparent',
-      desc: 'Clear pricing, honest photos and reviews from people who actually stayed.',
-    },
+  /** Provinces listed beside the map; picking one drills the map into it. */
+  protected readonly provinces = [
+    { name: 'Punjab', cities: 'Lahore · Rawalpindi · Faisalabad · Multan · Sialkot' },
+    { name: 'Sindh', cities: 'Karachi · Hyderabad' },
+    { name: 'Islamabad Capital Territory', cities: 'Islamabad' },
+    { name: 'Khyber Pakhtunkhwa', cities: 'Peshawar' },
+    { name: 'Balochistan', cities: 'Quetta' },
   ];
+
+  /** The map arrives with `@defer`, so it is absent until the section scrolls into view. */
+  private readonly map = viewChild(PakistanMap);
+  protected readonly mapProvince = computed(() => this.map()?.province() ?? null);
+
+  protected showProvince(name: string): void {
+    void this.map()?.showProvince(name);
+  }
 
   protected readonly steps = [
     {
@@ -300,11 +273,5 @@ export class Home {
       role: 'Professional · Islamabad',
       initials: 'HS',
     },
-  ];
-
-  protected readonly hostPerks = [
-    { i: 'ti-users', t: 'Thousands of verified seekers' },
-    { i: 'ti-device-mobile', t: 'Rooms, tenants & billing in one app' },
-    { i: 'ti-chart-line', t: 'Insights that fill beds faster' },
   ];
 }

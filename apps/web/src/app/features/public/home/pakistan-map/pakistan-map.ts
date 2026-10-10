@@ -65,6 +65,38 @@ export class PakistanMap {
   protected readonly listingCount = signal<number | null>(null);
   protected readonly leafCentroid = signal<{ lat: number; lng: number } | null>(null);
 
+  /** The province currently drilled into, or null at the country view. */
+  readonly province = computed(() => this.breadcrumb()[1] ?? null);
+
+  /** Set when a province is asked for before the map has finished loading. */
+  private pendingProvince: string | null = null;
+  private ready = false;
+
+  /**
+   * Shows one province, as if it had been clicked on the map — for a list beside the map.
+   * Goes back to the country view first, so it works from any depth.
+   */
+  async showProvince(name: string): Promise<void> {
+    if (!this.ready) {
+      this.pendingProvince = name;
+      return;
+    }
+    if (this.province() === name && this.breadcrumb().length === 2) return;
+    if (this.breadcrumb().length > 1) {
+      // Back to the province level without moving the map: the drill below zooms once. Going
+      // through goTo(0) zoomed out and straight back in, and Leaflet sometimes dropped the
+      // second zoom while the first was still animating, leaving the map on the whole country.
+      this.leaf.set(null);
+      this.listingCount.set(null);
+      this.leafCentroid.set(null);
+      this.clearMarkers();
+      this.breadcrumb.set(['Pakistan']);
+      this.stack = [];
+      this.renderLevel((await this.load('adm1')).features, 0);
+    }
+    await this.drill(name);
+  }
+
   protected readonly hint = computed(() => {
     if (this.leaf()) {
       const n = this.listingCount();
@@ -112,10 +144,16 @@ export class PakistanMap {
       });
       this.loader.tileLayer(this.leaflet, 'roadmap').addTo(this.map);
       this.renderLevel((await this.load('adm1')).features, 0);
+      this.ready = true;
     } catch {
       this.error.set('Could not load the map — check your connection.');
     } finally {
       this.loading.set(false);
+    }
+    if (this.pendingProvince) {
+      const name = this.pendingProvince;
+      this.pendingProvince = null;
+      await this.showProvince(name);
     }
   }
 

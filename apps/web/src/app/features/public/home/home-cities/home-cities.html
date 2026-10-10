@@ -1,0 +1,24 @@
+<section class="hl-sec hl-cities" aria-labelledby="hl-cities-title">
+  <div hhContainer class="hl-wrap">
+    <div class="hl-head">
+      <div>
+        <p class="hl-eyebrow">{{ 'home.25Cities' | transloco }}</p>
+        <h2 id="hl-cities-title">{{ 'home.exploreTheHiveCityBy' | transloco }}</h2>
+        <p class="hl-sub">{{ 'home.thousandsOfVerifiedBedsIn' | transloco }}</p>
+      </div>
+      <a routerLink="/search" class="hl-more">{{ 'home.allCities' | transloco }}</a>
+    </div>
+    <ul class="hl-orbs">
+      @for (c of cities(); track c.slug) {
+        <li>
+          <a class="hl-orb" [routerLink]="'/hostels/' + c.slug">
+            <span class="hl-ball"><img [src]="c.img" [alt]="c.name" loading="lazy" decoding="async" /></span>
+            <b>{{ c.name }}</b>
+            <small>{{ 'publicHome.nStays' | transloco: { count: c.stays } }}</small>
+          </a>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+

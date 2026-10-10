@@ -1403,3 +1403,42 @@ hh-search-map {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Landing page: the site header floats over the full-screen hero ──
+   Fixed rather than sticky so the hero starts at the top of the window, under the bar. While
+   it sits over the photo it is transparent and its controls are light; past the hero it is
+   the usual white bar again (SiteHeader switches the classes). */
+header.hh-header-float {
+  position: fixed;
+  inset-inline: 0;
+  transition-property: margin, background-color, border-color;
+}
+header.hh-header-overlay {
+  background-color: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+}
+.hh-header-overlay hh-language-switcher button {
+  background-color: rgb(255 255 255 / 0.14);
+  border-color: rgb(255 255 255 / 0.34);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+.hh-header-overlay hh-language-switcher button:hover {
+  background-color: rgb(255 255 255 / 0.24);
+}
+.hh-header-overlay app-notification-bell > div > button {
+  color: #fff;
+}
+.hh-header-overlay app-notification-bell > div > button:hover {
+  background-color: rgb(255 255 255 / 0.15);
+}
+.hh-header-overlay app-account-menu > div > button {
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.5);
+}
+
+/* The landing page ends on a full-bleed photo band, so the footer sits flush against it; the
+   footer's usual top margin would show as a strip of page background between the two. */
+main:has(> app-home) + app-site-footer > footer[class] {
+  margin-top: 0;
+}

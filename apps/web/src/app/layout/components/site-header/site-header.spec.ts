@@ -96,3 +96,69 @@ describe('SiteHeader beside a console sidebar', () => {
     expect(header().sidebarInset()).toBe('0px');
   });
 });
+
+/** The members the landing-page tests read. */
+interface LandingInternals {
+  overlay(): boolean;
+  showSearchBar(): boolean;
+}
+
+describe('SiteHeader over the landing hero', () => {
+  let fixture: ComponentFixture<SiteHeader>;
+  let router: Router;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SiteHeader],
+      providers: [
+        provideRouter([{ path: '**', children: [] }]),
+        { provide: SessionStore, useValue: { role: signal(null), isAuthenticated: signal(false) } },
+      ],
+    })
+      .overrideComponent(SiteHeader, { set: { template: '' } })
+      .compileComponents();
+    router = TestBed.inject(Router);
+    fixture = TestBed.createComponent(SiteHeader);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => scrollTo(0));
+
+  function header(): LandingInternals {
+    return fixture.componentInstance as unknown as LandingInternals;
+  }
+
+  async function go(url: string): Promise<void> {
+    await router.navigateByUrl(url);
+    fixture.detectChanges();
+  }
+
+  function scrollTo(y: number): void {
+    Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+    fixture.detectChanges();
+  }
+
+  // The hero carries its own search, so the bar's copy would only be a second one.
+  it('floats over the hero without the search bar until the hero is mostly scrolled past', async () => {
+    await go('/');
+    expect(header().overlay()).toBe(true);
+    expect(header().showSearchBar()).toBe(false);
+
+    scrollTo(window.innerHeight * 0.5);
+    expect(header().overlay()).toBe(true);
+
+    scrollTo(window.innerHeight);
+    expect(header().overlay()).toBe(false);
+    expect(header().showSearchBar()).toBe(true);
+  });
+
+  it('is the usual solid bar everywhere else', async () => {
+    await go('/search');
+    expect(header().overlay()).toBe(false);
+    expect(header().showSearchBar()).toBe(true);
+    await go('/about');
+    expect(header().overlay()).toBe(false);
+    expect(header().showSearchBar()).toBe(false);
+  });
+});

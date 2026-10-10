@@ -1,0 +1,142 @@
+// City globes over faint orbits. Unencapsulated; classes are `hl-` prefixed like the page.
+
+$brand-50: #fef1e9;
+$brand-200: #f9be9c;
+$ink-100: #e6e6e6;
+$ink-500: #525252;
+$ink-900: #141414;
+$display: Poppins, Inter, sans-serif;
+
+// ── cities: round worlds over faint orbits ──
+.hl-cities {
+  overflow: hidden;
+  padding-block: clamp(40px, 5vw, 72px);
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, $brand-50, transparent 70%), #fff;
+}
+.hl-cities::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -60vw;
+  width: 120vw;
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0 calc(10vw - 1px),
+    rgba(185, 79, 6, 0.08) calc(10vw - 1px) 10vw
+  );
+}
+.hl-orbs {
+  list-style: none;
+  margin: 52px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 40px 24px;
+}
+.hl-orb {
+  display: block;
+  text-align: center;
+  color: $ink-900;
+}
+.hl-ball {
+  display: block;
+  position: relative;
+  width: min(100%, 168px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 50%;
+}
+.hl-ball img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  filter: saturate(1.12) contrast(1.06);
+  box-shadow:
+    0 18px 30px -14px rgba(126, 50, 9, 0.45),
+    0 0 0 6px #fff,
+    0 0 0 7px $ink-100;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+// The orange ring that appears around a city on hover.
+.hl-ball::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1px solid $brand-200;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.4s,
+    transform 0.6s;
+}
+// Lit-sphere shading: a soft highlight top-left and a dark rim.
+.hl-ball::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 31% 25%, rgba(255, 238, 220, 0.42), transparent 38%),
+    radial-gradient(circle at 72% 82%, rgba(6, 8, 16, 0.7), transparent 60%),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(6, 8, 16, 0.5) 71%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 214, 180, 0.22),
+    inset 2px 3px 6px rgba(255, 205, 160, 0.4);
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.hl-orb:hover .hl-ball img,
+.hl-orb:focus-visible .hl-ball img,
+.hl-orb:hover .hl-ball::after,
+.hl-orb:focus-visible .hl-ball::after {
+  transform: scale(1.05);
+}
+.hl-orb:hover .hl-ball::before,
+.hl-orb:focus-visible .hl-ball::before {
+  opacity: 1;
+  transform: none;
+}
+.hl-orb b {
+  display: block;
+  margin-top: 16px;
+  font: 600 17px/1.2 $display;
+}
+.hl-orb small {
+  display: block;
+  margin-top: 4px;
+  color: $ink-500;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 980px) {
+  .hl-orbs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .hl-orbs li:nth-child(n + 9) {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .hl-orbs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 14px;
+  }
+  .hl-orbs li:nth-child(n + 9) {
+    display: block;
+  }
+  .hl-orbs li:nth-child(n + 10) {
+    display: none;
+  }
+  .hl-orb b {
+    font-size: 15px;
+    margin-top: 10px;
+  }
+}
