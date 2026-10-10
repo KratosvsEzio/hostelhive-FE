@@ -1,12 +1,13 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Params } from '@angular/router';
 import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { GeoPreference } from '@core/geo/geo-preference';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { ListingsApi } from '@services';
+import { toLocationSlug } from '@util/location-slug';
 import { HomeCity } from './home-cities/home-cities';
 import { PAKISTAN_CITY_PHOTOS } from './home-cities/city-photos';
+import { GeoCity, PopularCities } from './popular-cities';
 import {
   CountryLocations,
   NO_LOCATIONS,
@@ -28,14 +29,6 @@ export const COUNTRY_HOSTEL_LIMIT = 500;
 /** How many cities the closing search offers as one-tap shortcuts. */
 const POPULAR_COUNT = 4;
 
-/** A shortcut under the closing search bar. */
-export interface PopularCity {
-  name: string;
-  slug: string;
-  path: string;
-  query: Params | null;
-}
-
 type CountryState =
   | { status: 'pending' }
   | { status: 'ready'; code: string; locations: CountryLocations }
@@ -43,8 +36,51 @@ type CountryState =
 
 const PENDING: CountryState = { status: 'pending' };
 
+type CitiesState =
+  | { status: 'pending' }
+  | { status: 'ready'; cities: HomeCity[]; fromGeoNames: boolean };
+
+const CITIES_PENDING: CitiesState = { status: 'pending' };
+
 /**
- * The home page's view of the visitor's country: which one, and where its hostels are.
+ * Pakistan's popular cities: the hand-picked list, each with a photograph and a landing page.
+ *
+ * Chosen over the population ranking because the curated landing pages are where a visitor
+ * lands best, and the photographs only exist for these.
+ */
+const PAKISTAN_CITIES: HomeCity[] = [...PAKISTAN_CITY_PHOTOS.values()].map(
+  ({ name, slug, img }) => ({
+    name,
+    slug,
+    img,
+    initial: initialOf(name),
+    path: `/hostels/${slug}`,
+    query: null,
+  }),
+);
+
+/** A GeoNames city as a globe with no photograph, opening search centred on it. */
+export function fromGeoCity({ name, lat, lng }: GeoCity): HomeCity {
+  return {
+    name,
+    // Names with no Latin letters slug to nothing; the name itself still keys the list.
+    slug: toLocationSlug(name) || name,
+    img: null,
+    initial: initialOf(name),
+    path: '/search',
+    query: { city: name, lat, lng },
+  };
+}
+
+/** The first letter of a name, skipping leading marks such as the ‘ in ‘Ajmān. */
+function initialOf(name: string): string {
+  const letter = /\p{L}/u.exec(name)?.[0] ?? name.charAt(0);
+  return letter.toLocaleUpperCase();
+}
+
+/**
+ * The home page's view of the visitor's country: which one, its popular cities, and where its
+ * hostels are.
  *
  * Provided by the home page rather than at root — it holds a country's worth of hostels, which
  * nothing else wants kept once the visitor moves on.
@@ -54,13 +90,16 @@ const PENDING: CountryState = { status: 'pending' };
  * placeholder rather than guessing. A lookup that fails outright falls back to
  * {@link FALLBACK_COUNTRY}.
  *
- * The locations are tallied in the browser from one page of the public search (see
- * `tallyLocations`). A stopgap until the backend can answer "which cities have hostels" itself.
+ * Popular cities do not depend on listings: Pakistan has its hand-picked list, every other
+ * country its most populous cities (see `PopularCities`). The regions, by contrast, are tallied
+ * in the browser from one page of the public search (see `tallyLocations`) — a stopgap until the
+ * backend can answer "which cities have hostels" itself.
  */
 @Injectable()
 export class HomeCountry {
   private readonly geo = inject(GeoPreference);
   private readonly listings = inject(ListingsApi);
+  private readonly popularCities = inject(PopularCities);
   private readonly locale = inject(LocaleStore);
 
   /** The ISO alpha-2 the page is about, or null while that is still being asked. */
@@ -75,6 +114,13 @@ export class HomeCountry {
       switchMap((code) => (code ? this.fetch(code) : of(PENDING))),
     ),
     { initialValue: PENDING },
+  );
+
+  private readonly citiesState = toSignal(
+    toObservable(this.code).pipe(
+      switchMap((code) => (code ? this.citiesFor(code) : of(CITIES_PENDING))),
+    ),
+    { initialValue: CITIES_PENDING },
   );
 
   readonly pending = computed(() => this.state().status === 'pending');
@@ -104,47 +150,44 @@ export class HomeCountry {
   readonly regions = computed(() => this.locations().regions);
   readonly hasStays = computed(() => this.locations().total > 0);
 
-  /** Cities with hostels that also have a photograph, busiest first. Pakistan only. */
-  readonly globeCities = computed<HomeCity[]>(() => {
-    if (!this.isPakistan()) return [];
-    return this.locations()
-      .cities.map((c) => PAKISTAN_CITY_PHOTOS.get(c.slug))
-      .filter((c) => c !== undefined)
-      .map(({ name, slug, img }) => ({ name, slug, img }));
+  readonly citiesPending = computed(
+    () => this.citiesState().status === 'pending',
+  );
+
+  /** The country's popular cities, most popular first; empty when none could be found. */
+  readonly cities = computed<HomeCity[]>(() => {
+    const state = this.citiesState();
+    return state.status === 'ready' ? state.cities : [];
   });
 
-  /**
-   * The busiest cities, linked where they will land best.
-   *
-   * A city with a curated landing page goes there, as these chips always did; any other opens
-   * search on the city by name, centred on its hostels when they carry coordinates — the same
-   * shape the map's "Browse stays" link uses.
-   */
-  readonly popular = computed<PopularCity[]>(() =>
-    this.locations()
-      .cities.slice(0, POPULAR_COUNT)
-      .map((c) => {
-        const landing = this.isPakistan()
-          ? PAKISTAN_CITY_PHOTOS.get(c.slug)
-          : undefined;
-        if (landing) {
-          return {
-            name: landing.name,
-            slug: c.slug,
-            path: `/hostels/${landing.slug}`,
-            query: null,
-          };
-        }
-        const near =
-          c.lat !== null && c.lng !== null ? { lat: c.lat, lng: c.lng } : {};
-        return {
-          name: c.name,
-          slug: c.slug,
-          path: '/search',
-          query: { city: c.name, ...near },
-        };
-      }),
-  );
+  /** Whether {@link cities} came from GeoNames, which the page has to credit. */
+  readonly citiesFromGeoNames = computed(() => {
+    const state = this.citiesState();
+    return state.status === 'ready' && state.fromGeoNames;
+  });
+
+  /** The shortcuts under the closing search: the top of the same list the globes show. */
+  readonly popular = computed(() => this.cities().slice(0, POPULAR_COUNT));
+
+  private citiesFor(code: string): Observable<CitiesState> {
+    if (code === 'PK') {
+      return of<CitiesState>({
+        status: 'ready',
+        cities: PAKISTAN_CITIES,
+        fromGeoNames: false,
+      });
+    }
+    return this.popularCities.forCountry(code).pipe(
+      map(
+        (cities): CitiesState => ({
+          status: 'ready',
+          cities: cities.map(fromGeoCity),
+          fromGeoNames: true,
+        }),
+      ),
+      startWith(CITIES_PENDING),
+    );
+  }
 
   private fetch(code: string): Observable<CountryState> {
     return this.listings
