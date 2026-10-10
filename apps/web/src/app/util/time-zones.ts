@@ -49,6 +49,10 @@ export function allTimeZones(): string[] {
 /**
  * "GMT+5", "GMT+1", "GMT" — the zone's offset right now, so a host picking "Europe/Lisbon"
  * sees what that means. Empty when the engine cannot say.
+ *
+ * Engines disagree on a zero offset: some ICU builds write "GMT", others "GMT+0" (Node 20 on the
+ * CI runner does). Both mean the same thing, so the label is normalised to "GMT" and the picker
+ * reads the same in every browser.
  */
 export function zoneOffsetLabel(zone: string, at: Date = new Date()): string {
   for (const timeZoneName of ['shortOffset', 'short'] as const) {
@@ -56,7 +60,7 @@ export function zoneOffsetLabel(zone: string, at: Date = new Date()): string {
       const part = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName })
         .formatToParts(at)
         .find((p) => p.type === 'timeZoneName');
-      if (part?.value) return part.value;
+      if (part?.value) return part.value.replace(/^GMT[+-]0{1,2}(?::?00)?$/, 'GMT');
     } catch {
       // an older engine without shortOffset; try the next form
     }

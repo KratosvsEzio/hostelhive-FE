@@ -19,6 +19,29 @@ describe('time zones', () => {
     expect(zoneOffsetLabel('Europe/Lisbon', new Date('2026-01-15T12:00:00Z'))).toBe('GMT');
   });
 
+  // Some ICU builds (Node 20 on the CI runner) write a zero offset as "GMT+0" rather than "GMT".
+  describe('whatever form the engine writes', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    function engineWrites(value: string) {
+      vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(function () {
+        return {
+          formatToParts: () => [{ type: 'timeZoneName', value }],
+        } as unknown as Intl.DateTimeFormat;
+      });
+    }
+
+    it.each(['GMT+0', 'GMT-0', 'GMT+00:00'])('labels a zero offset written %s as "GMT"', (raw) => {
+      engineWrites(raw);
+      expect(zoneOffsetLabel('Europe/Lisbon', new Date('2026-01-15T12:00:00Z'))).toBe('GMT');
+    });
+
+    it('keeps a non-zero offset as the engine wrote it', () => {
+      engineWrites('GMT+5:30');
+      expect(zoneOffsetLabel('Asia/Kolkata')).toBe('GMT+5:30');
+    });
+  });
+
   it('tells a real zone from a made-up one — the same test the server makes', () => {
     expect(isKnownTimeZone('Asia/Karachi')).toBe(true);
     expect(isKnownTimeZone('Mars/Olympus')).toBe(false);
