@@ -5,7 +5,7 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
  *
  * Listed once and expanded below into both shapes a URL can arrive in.
  */
-const CLIENT_ONLY = [
+export const CLIENT_ONLY = [
   // Console: guards and session must not run on the server, and the admin code stays out
   // of the public render path.
   'host',
