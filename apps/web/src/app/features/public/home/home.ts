@@ -95,9 +95,10 @@ export class Home {
       name: 'HostelHive',
       url: SITE_ORIGIN,
       logo: `${SITE_ORIGIN}/hostelhive-logo.png`,
+      // No `areaServed`: the home page serves whichever country the visitor is in, and one
+      // fixed country here would tell search engines the brand is local to it.
       description:
-        'Verified hostel, PG and co-living marketplace for students and professionals in Pakistan.',
-      areaServed: { '@type': 'Country', name: 'Pakistan' },
+        'Verified hostel, PG and co-living marketplace for students and professionals.',
     });
 
     // WebSite + SearchAction is the markup behind a sitelinks search box — it lets
