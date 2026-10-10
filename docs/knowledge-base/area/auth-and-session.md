@@ -40,7 +40,7 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **`jwt.ts` reads `exp`**, but `docs/api/hostelhive-api.md` documents the payload as `{…, jti, expiry}`. If the backend really sends `expiry`, local expiry never triggers and the server decides (safe, just a wasted request).
 - **`resetPassword` has no `SUPPRESS_ERROR_TOAST`**, so a failure shows both a toast and the inline error (`apps/web/src/app/services/auth-api.ts`).
 - **Stale layering comments**: `auth.service.ts`, `provide-auth.ts` and `tokens.ts` speak of separate `@hostelhive/auth` / `data-access` libraries; everything now lives in `apps/web/src/app/core/` and `lib/src/data-access/index.ts` is an empty stub.
-- **`docs/HostelHive-Frontend-Build-Plan.md` (Q-AUTH)** plans memory token + httpOnly refresh cookie + 401-refresh-retry. None of that exists; see the cookie decision below. A 401 silently signs the user out (RISKS R15).
+- **`docs/HostelHive-Frontend-Build-Plan.md` (Q-AUTH)** plans memory token + httpOnly refresh cookie + 401-refresh-retry. None of that exists (the plan now marks it *Superseded*); see the cookie decision below. A 401 silently signs the user out (RISKS R15).
 - `ConfirmInvitation` runs its one-time POST in `afterNextRender`; `lib/src/ui/lib/dialog-focus/dialog-focus.ts` documents that hook silently never firing in some zoneless renders. Check here first if the link "hangs on verifying".
 
 ## Decisions

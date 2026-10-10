@@ -54,8 +54,7 @@ How the workspace is put together and run: the Nx projects and their targets, th
 - **e2e is a single smoke test** (`apps/web-e2e/src/example.spec.ts`) against `nx run web:serve` on port 4200.
 - **`tools/gen-brand-logos.js` hard-codes absolute paths** under D:/GitHub/HostelHive, so it breaks in any other checkout or worktree.
 - **`serve.log` is committed** at the repo root.
-- **`README.md` is the stock Nx template** (projects `shop`, `api`), not this repo.
-- **`docs/HostelHive-Frontend-Build-Plan.md` describes two apps** (`web` + `console`); the workspace is one app.
+- **`docs/HostelHive-Frontend-Build-Plan.md` describes two apps** (`web` + `console`); the workspace is one app. The plan marks it *Superseded* inline, but the milestone rows (M0 "2 app shells") still read as written.
 - **`afterNextRender` can silently never fire** for elements created by a conditional render, and the suite will not catch it (`lib/src/ui/lib/dialog-focus/dialog-focus.ts`).
 - **Without `ResizeObserver`, jsdom fails the run** even though every test passes. Keep the stub in `apps/web/src/test-setup.ts`.
 

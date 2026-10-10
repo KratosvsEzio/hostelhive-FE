@@ -63,11 +63,6 @@ the notification bell reads.
 
 ## Traps
 
-- **`MOBILE.md` and `STORE.md` are partly stale.** `MOBILE.md` says push is "not set up", but FCM is
-  wired and `android/app/google-services.json` is committed. Both files say the Google Maps key must allow
-  `https://localhost`, but maps are Leaflet/OpenStreetMap now (comment in `app.config.ts`) and there
-  is no Google Maps key. `STORE.md` says release signing still has to be wired ("ask me to wire
-  this"), but `android/app/build.gradle` already does it.
 - The packaged app has no SSR and no `/sitemap.xml`. Bare paths go through `keepLocale` to `/en/...`,
   like on the web.
 - Without `android/app/google-services.json` the build still passes and push silently does nothing. The Gradle
@@ -87,7 +82,7 @@ the notification bell reads.
 
 ## See also
 
-- `MOBILE.md` (build commands, Capacitor 7 pin, Android/iOS prerequisites), `STORE.md` (signing,
-  store submission)
+- `MOBILE.md` (build commands, Capacitor 7 pin, Android/iOS prerequisites, push and maps on device),
+  `STORE.md` (release keystore, store submission checklist)
 - [app-shell-and-routing](./app-shell-and-routing.md), [auth-and-session](./auth-and-session.md),
   [maps](./maps.md), [ui-library](./ui-library.md), [tooling](./tooling.md)

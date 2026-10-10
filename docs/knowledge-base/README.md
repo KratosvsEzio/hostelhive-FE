@@ -83,10 +83,11 @@ docs/knowledge-base/
 
 - [Frontend build plan](../HostelHive-Frontend-Build-Plan.md) and
   [implementation plan](../HostelHive-Implementation-Plan.md): the original plans. Parts are out of
-  date (for example the separate console app and the refresh-token design); the area files say
-  where.
+  date; the build plan marks the separate console app, the refresh-token design and Google Maps
+  as *Superseded* inline, and the area files say where else.
 - [API contract notes](../api/hostelhive-api.md), [risks](../RISKS.md), [deploy](../DEPLOY.md),
   [Trello tickets](../trello-tickets.md).
 - [Implement run notes](../implement/): one file per ticket run, e.g. [#93 billing](../implement/93.md).
-- Repo root: `AGENTS.md` (house rules for Nx), `MOBILE.md` and `STORE.md` (app builds; partly stale,
-  see [mobile app](area/mobile-app.md)).
+- Repo root: `README.md` (what the repo is, setup and commands), `AGENTS.md` (house rules for Nx),
+  `MOBILE.md` and `STORE.md` (app builds, signing and store submission; see
+  [mobile app](area/mobile-app.md)).

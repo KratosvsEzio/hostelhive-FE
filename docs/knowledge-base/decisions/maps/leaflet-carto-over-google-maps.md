@@ -22,7 +22,7 @@ Render maps with Leaflet, loaded on demand in the browser (`LeafletLoader`, `lib
 - CARTO's free tier is 5M tiles a month with commercial use allowed, and attribution must stay visible. `SharedMap` reuses one map across search → listing → back, partly to keep tile requests down.
 - The CARTO key is public by design (it travels in the tile URL). It is protected by the domain allow-list set on the key, not by secrecy.
 - A wrong key produces no error. `lib/src/maps/lib/carto-key.spec.ts` can only assert the URL shape.
-- `map-style.airbnb.json` and the Google section of `MOBILE.md` are leftovers of the rejected option.
+- `map-style.airbnb.json` is a leftover of the rejected option. The Google sections of `MOBILE.md` and `STORE.md` were replaced by the CARTO key note, and the build plan marks its Google Maps choices *Superseded*.
 
 ## Evidence
 - d7e3812 fix(maps): pay CARTO's toll, and stop the basemap arriving stamped
