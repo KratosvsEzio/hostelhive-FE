@@ -22,7 +22,6 @@ function raw(over: Partial<ApiHostBooking> = {}): ApiHostBooking {
     nights: 7,
     guests: 4,
     total_price: 616000,
-    deposit: 61600,
     paid_amount: 0,
     balance_due: 616000,
     room_type: { id: 'TPVAMD', name: 'Dormitory', occupancy_type: 'shared', capacity: 15 },
@@ -332,7 +331,6 @@ describe('toHostBooking room and renter', () => {
 describe('toHostBooking on a single booking', () => {
   const single = raw({
     total_price: '310000.0',
-    deposit: '31000.0',
     paid_amount: '0.0',
     balance_due: undefined,
     nights: undefined,
@@ -347,7 +345,7 @@ describe('toHostBooking on a single booking', () => {
 
   it('reads amounts sent as strings, and derives what is still due', () => {
     const b = toHostBooking(single);
-    expect([b.total, b.deposit, b.paid, b.balanceDue]).toEqual([310000, 31000, 0, 310000]);
+    expect([b.total, b.paid, b.balanceDue]).toEqual([310000, 0, 310000]);
   });
 
   it('does not choke on a numeric source', () => {

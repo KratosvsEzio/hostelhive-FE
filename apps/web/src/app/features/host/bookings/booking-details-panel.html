@@ -68,14 +68,14 @@
             </dd>
             <dd class="text-xs text-ink-500">for {{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</dd>
           </div>
+          <!-- Paid at the property, never online: what is still owed is what the desk collects. -->
           <div class="bg-white px-4 py-3">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Deposit</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Due</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">
-              {{ b.currency | currencySym }} {{ b.deposit | number: '1.0-0' }}
+              {{ b.currency | currencySym }} {{ b.balanceDue | number: '1.0-0' }}
             </dd>
-            <!-- Held vs still owed changes what declining costs, so it is not decoration. -->
-            <dd class="text-xs" [class]="depositPaid() ? 'text-ok' : 'text-ink-500'">
-              {{ depositPaid() ? 'Paid online' : 'Not yet paid' }}
+            <dd class="text-xs" [class]="settled() ? 'text-ok' : 'text-ink-500'">
+              {{ settled() ? 'Paid' : 'At the property' }}
             </dd>
           </div>
         </dl>

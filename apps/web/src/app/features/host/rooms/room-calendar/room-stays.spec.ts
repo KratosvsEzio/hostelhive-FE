@@ -11,7 +11,6 @@ function booking(over: Partial<HostBooking> = {}): HostBooking {
     nights: 3,
     guests: 1,
     total: 0,
-    deposit: 0,
     paid: 0,
     balanceDue: 0,
     roomType: { name: 'Dorm', occupancyType: 'shared', capacity: 8, price: 0 },

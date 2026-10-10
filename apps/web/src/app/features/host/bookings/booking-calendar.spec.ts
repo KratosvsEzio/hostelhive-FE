@@ -18,7 +18,6 @@ function booking(slug: string, over: Partial<HostBooking> = {}): HostBooking {
     guests: 2,
     roomType: { name: 'Dormitory', occupancyType: 'shared_room', capacity: 4, price: 3600 },
     total: 7200,
-    deposit: 0,
     paid: 0,
     balanceDue: 7200,
     room: null,

@@ -16,7 +16,6 @@ function booking(slug: string, over: Partial<HostBooking> = {}): HostBooking {
     guests: 6,
     roomType: { name: 'King size room', occupancyType: 'private_room', capacity: 4, price: 12000 },
     total: 67200,
-    deposit: 6720,
     paid: 0,
     balanceDue: 67200,
     room: null,
@@ -145,6 +144,20 @@ describe('BookingDetailsPanel', () => {
     expect(text).toContain('2 rooms · King size room');
     expect(text).toContain('2 beds · Dormitory');
     expect(text).toContain('Rs 67,200');
+  });
+
+  it('shows what is still due at the property, and no deposit', () => {
+    const text = render(booking('confirmed', { paid: 20000, balanceDue: 47200 })).textContent ?? '';
+    expect(text).toContain('Rs 47,200');
+    expect(text).toContain('At the property');
+    expect(text).not.toContain('Deposit');
+    expect(text).not.toContain('Paid online');
+  });
+
+  it('marks the stay paid once nothing is left due', () => {
+    const text = render(booking('checked-out', { paid: 67200, balanceDue: 0 })).textContent ?? '';
+    expect(text).toContain('Paid');
+    expect(text).not.toContain('At the property');
   });
 
   it('shows who is in which room once checked in, and releases one', () => {

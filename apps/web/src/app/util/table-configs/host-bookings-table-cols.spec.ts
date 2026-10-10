@@ -13,7 +13,6 @@ function booking(over: Partial<HostBooking> = {}): HostBooking {
     guests: 4,
     roomType: { name: 'Dormitory', occupancyType: 'shared', capacity: 15, price: 0 },
     total: 616000,
-    deposit: 61600,
     paid: 0,
     balanceDue: 616000,
     // Deliberately contradicts the amounts — see the suite's note below.
