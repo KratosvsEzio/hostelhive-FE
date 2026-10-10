@@ -1,39 +1,68 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ViewEncapsulation,
   computed,
   effect,
   inject,
   PLATFORM_ID,
   signal,
+  viewChild,
 } from '@angular/core';
-import { isPlatformBrowser, DecimalPipe } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
-import { Router, RouterLink } from '@angular/router';
-import { searchRouteFor } from '@util/location-slug';
+import { RouterLink } from '@angular/router';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith } from 'rxjs';
-import { HOST_ROLES, SessionStore } from '@core/auth';
 import { Listing } from '@hostelhive/data-access';
 import { Skeleton, Container } from '@hostelhive/ui';
 import { ListingsApi } from '@services';
-import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
-import { PakistanMap } from './pakistan-map/pakistan-map';
+import { CountryMap } from './country-map/country-map';
+import { HomeCountry } from './home-country';
+import { sameRegionName } from './country-locations';
 import { ListingCard } from '../search/listing-card/listing-card';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
+import { Mascot } from '@app/shared/mascot/mascot';
+import { SearchBar } from '@layout/components/search-bar/search-bar';
+import { HeroClouds } from './hero-clouds/hero-clouds';
+import { HomeWhy } from './home-why/home-why';
+import { HomeCities } from './home-cities/home-cities';
+import { HomeHosts } from './home-hosts/home-hosts';
+import { useSmoothScroll } from './smooth-scroll';
+
+/** How many of a region's cities are named under it in the list beside the map. */
+const REGION_CITY_COUNT = 5;
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Container, TranslocoPipe, RouterLink, LocaleLink, Skeleton, PlaceSearchField, PakistanMap, ListingCard],
+  // Unencapsulated so the frosted look reaches the listing cards and the map inside this page;
+  // every class in home.scss is `hl-` prefixed, so nothing leaks past it.
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+    Container,
+    TranslocoPipe,
+    RouterLink,
+    LocaleLink,
+    Skeleton,
+    CountryMap,
+    ListingCard,
+    Mascot,
+    SearchBar,
+    HeroClouds,
+    HomeWhy,
+    HomeCities,
+    HomeHosts,
+  ],
   templateUrl: './home.html',
+  styleUrl: './home.scss',
+  providers: [HomeCountry],
 })
 export class Home {
-  private readonly router = inject(Router);
-  private readonly session = inject(SessionStore);
+  protected readonly country = inject(HomeCountry);
   private readonly listingsApi = inject(ListingsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
@@ -41,6 +70,8 @@ export class Home {
   private readonly locale = inject(LocaleStore);
 
   constructor() {
+    useSmoothScroll();
+
     // This route is prerendered, so these land in the static HTML.
     //
     // An effect rather than a plain call: the copy is translated now, and `translate`
@@ -87,44 +118,6 @@ export class Home {
     });
   }
 
-  // Existing hosts (host/manager/warden) go straight to their dashboard; everyone
-  // else starts the become-a-host onboarding wizard.
-  private readonly isHost = computed(() => this.session.hasRole(...HOST_ROLES));
-  protected readonly hostLink = computed(() =>
-    this.isHost() ? '/host' : '/host/listings/new',
-  );
-  protected readonly hostCta = computed(() =>
-    this.isHost() ? 'Go to your dashboard' : 'Start hosting',
-  );
-
-  protected readonly place = signal('');
-  private readonly lat = signal<number | null>(null);
-  private readonly lng = signal<number | null>(null);
-
-  protected onText(text: string): void {
-    this.place.set(text);
-    this.lat.set(null);
-    this.lng.set(null);
-  }
-
-  protected onSelected(r: PlaceResult): void {
-    this.place.set(r.label);
-    this.lat.set(r.lat);
-    this.lng.set(r.lng);
-    this.search();
-  }
-
-  protected search(): void {
-    const hasGeo = this.lat() !== null && this.lng() !== null;
-    this.router.navigate(searchRouteFor(this.place()), {
-      queryParams: {
-        place: this.place() || null,
-        city: hasGeo ? null : this.place() || null,
-        lat: hasGeo ? this.lat() : null,
-        lng: hasGeo ? this.lng() : null,
-      },
-    });
-  }
 
   protected readonly stats = [
     // Keys, not copy: these are data rather than template text, so the extractor never
@@ -148,114 +141,49 @@ export class Home {
   protected readonly featuredLoading = computed(() => this.featuredState().loading);
   protected readonly featured = computed(() => this.featuredState().items);
 
-  protected readonly cities = [
-    {
-      name: 'Karachi',
-      slug: 'karachi',
-      stays: '1,240',
-      img: '/cities/karachi.jpg',
-      lat: 24.8607,
-      lng: 67.0011,
-    },
-    {
-      name: 'Lahore',
-      slug: 'lahore',
-      stays: '980',
-      img: '/cities/lahore.jpg',
-      lat: 31.5204,
-      lng: 74.3587,
-    },
-    {
-      name: 'Islamabad',
-      slug: 'islamabad',
-      stays: '610',
-      img: '/cities/islamabad.jpg',
-      lat: 33.6844,
-      lng: 73.0479,
-    },
-    {
-      name: 'Rawalpindi',
-      slug: 'rawalpindi',
-      stays: '430',
-      img: '/cities/rawalpindi.jpg',
-      lat: 33.5651,
-      lng: 73.0169,
-    },
-    {
-      name: 'Faisalabad',
-      slug: 'faisalabad',
-      stays: '320',
-      img: '/cities/faisalabad.jpg',
-      lat: 31.4504,
-      lng: 73.135,
-    },
-    {
-      name: 'Peshawar',
-      slug: 'peshawar',
-      stays: '210',
-      img: '/cities/peshawar.jpg',
-      lat: 34.0151,
-      lng: 71.5249,
-    },
-    {
-      name: 'Multan',
-      slug: 'multan',
-      stays: '180',
-      img: '/cities/multan.jpg',
-      lat: 30.1575,
-      lng: 71.5249,
-    },
-    {
-      name: 'Quetta',
-      slug: 'quetta',
-      stays: '95',
-      img: '/cities/quetta.jpg',
-      lat: 30.1798,
-      lng: 66.975,
-    },
-    {
-      name: 'Hyderabad',
-      slug: 'hyderabad',
-      stays: '140',
-      img: '/cities/hyderabad.jpg',
-      lat: 25.396,
-      lng: 68.3578,
-    },
-    {
-      name: 'Sialkot',
-      slug: 'sialkot',
-      stays: '110',
-      img: '/cities/sialkot.jpg',
-      lat: 32.4945,
-      lng: 74.5229,
-    },
-  ];
+  /** The province list beside the map: a region's busiest cities, and whether the map is on it. */
+  protected readonly regionRows = computed(() => {
+    const onMap = this.mapProvince();
+    return this.country.regions().map((r) => ({
+      name: r.name,
+      slug: r.slug,
+      cities: r.cities
+        .slice(0, REGION_CITY_COUNT)
+        .map((c) => c.name)
+        .join(' · '),
+      active: sameRegionName(onMap, r.name),
+    }));
+  });
 
-  /** Doubled list so the running honeycomb carousel loops seamlessly at translateX(-50%). */
-  protected readonly marqueeCities = [...this.cities, ...this.cities];
+  /**
+   * The country the map is drawn for, as a one-item list so the template can key on it.
+   *
+   * The map reads its country once, when Leaflet is built; a visitor whose country changes
+   * mid-visit (the re-ask after sign-in) gets a fresh map rather than one half-switched.
+   */
+  protected readonly mapCountry = computed(() => {
+    const code = this.country.code();
+    return code ? [code] : [];
+  });
 
-  protected readonly features = [
-    {
-      icon: 'ti-rosette-discount-check',
-      title: 'Every listing verified',
-      desc: 'Each hostel is checked and approved before it goes live — what you see is real.',
-    },
-    {
-      icon: 'ti-filter',
-      title: 'Filter that fits you',
-      desc: 'Narrow by budget, gender, room sharing and amenities to find your exact match.',
-    },
-    {
-      icon: 'ti-phone-check',
-      title: 'Direct verified contacts',
-      desc: 'Unlock real phone numbers and reach hosts directly — no middlemen, no markup.',
-    },
-    {
-      icon: 'ti-shield-check',
-      title: 'Safe & transparent',
-      desc: 'Clear pricing, honest photos and reviews from people who actually stayed.',
-    },
-  ];
+  private readonly mapFailedFor = signal<string | null>(null);
+  /** Set when the map could not be drawn — the section carries on without it. */
+  protected readonly mapFailed = computed(() => {
+    const failed = this.mapFailedFor();
+    return failed !== null && failed === this.country.code();
+  });
+
+  protected onMapFailed(): void {
+    this.mapFailedFor.set(this.country.code());
+  }
+
+  /** The map arrives with `@defer`, so it is absent until the section scrolls into view. */
+  private readonly map = viewChild(CountryMap);
+  protected readonly mapProvince = computed(() => this.map()?.province() ?? null);
+
+  protected showProvince(name: string): void {
+    void this.map()?.showProvince(name);
+  }
 
   protected readonly steps = [
     {
@@ -300,11 +228,5 @@ export class Home {
       role: 'Professional · Islamabad',
       initials: 'HS',
     },
-  ];
-
-  protected readonly hostPerks = [
-    { i: 'ti-users', t: 'Thousands of verified seekers' },
-    { i: 'ti-device-mobile', t: 'Rooms, tenants & billing in one app' },
-    { i: 'ti-chart-line', t: 'Insights that fill beds faster' },
   ];
 }

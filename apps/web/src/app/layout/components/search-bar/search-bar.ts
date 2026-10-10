@@ -49,6 +49,8 @@ const round2 = (n: number): number => +n.toFixed(2);
 const fmtK = (n: number): string =>
   n >= 1000 ? `${round2(n / 1000)}k` : `${round2(n)}`;
 
+let nextWhereId = 0;
+
 /** A translation key with whatever it interpolates, for the template to resolve. */
 type Label = { key: string; params?: Record<string, string> };
 
@@ -75,7 +77,10 @@ export class SearchBar {
    * for a pointer and leaves the caption naming nothing. A real `<label for>` does the
    * focusing itself and gives the field its accessible name.
    */
-  protected readonly whereInputId = 'hhsb-where-input';
+  //
+  // Numbered per instance: the landing page shows this bar in the hero and again in its
+  // closing band, and a repeated id would point both captions at the first input.
+  protected readonly whereInputId = `hhsb-where-input-${nextWhereId++}`;
 
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

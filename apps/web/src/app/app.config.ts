@@ -27,7 +27,6 @@ import { GoogleAuthService } from '@services';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
 import { mapsEnv } from './maps.env';
-import { readDevApiBaseUrl } from '@core/dev-api-base-url';
 import { provideCapacitorNative } from '@app/capacitor/native';
 import { appRoutes } from './app.routes';
 import { NotificationService } from '@core/notification.service';
@@ -57,9 +56,7 @@ export const appConfig: ApplicationConfig = {
     }),
     // Base URL = API origin (paths carry their own /api or /public prefix).
     // Driven from .env → api.env.ts at build time by tools/generate-api-env.mjs.
-    // TEMPORARY (testing): a tester-entered base URL from the dev-setup gate wins when set,
-    // so the whole app targets their backend. Remove this override before go-live.
-    provideDataAccess({ baseUrl: readDevApiBaseUrl() ?? apiEnv.apiUrl }, [
+    provideDataAccess({ baseUrl: apiEnv.apiUrl }, [
       authInterceptor,
       pushTokenInterceptor,
       errorInterceptor,

@@ -1,9 +1,13 @@
 ﻿import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  PLATFORM_ID,
   computed,
   inject,
+  signal,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -68,10 +72,35 @@ export class SiteHeader {
 
   /** Which area the active route belongs to — now only drives the logo's destination. */
   protected readonly area = computed<Area>(() => areaOf(this.path()));
+
+  /**
+   * The landing page opens on a full-screen photo, so there the bar floats over it: fixed
+   * rather than sticky (the hero starts at the top of the window, under it) and transparent
+   * until the reader has scrolled most of the way past the hero, when it turns back into
+   * the usual white bar with the search in it.
+   */
+  protected readonly onLanding = computed(() => (this.path() || '/') === '/');
+  private readonly pastHero = signal(false);
+  protected readonly overlay = computed(() => this.onLanding() && !this.pastHero());
+
   protected readonly showSearchBar = computed(() => {
     const u = this.path() || '/';
-    return u === '/' || u.startsWith('/search');
+    // On the landing page the hero carries its own search until the bar turns solid.
+    if (u === '/') return !this.overlay();
+    return u.startsWith('/search');
   });
+
+  constructor() {
+    if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+    const update = () => this.pastHero.set(window.scrollY > window.innerHeight * 0.8);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    inject(DestroyRef).onDestroy(() => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    });
+  }
 
   /** The logo links to the active area's home (so it never bounces you out of the console). */
   /**

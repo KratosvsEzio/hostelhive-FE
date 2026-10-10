@@ -1,0 +1,138 @@
+// "List your hostel": a dusk band with clouds and the bee holding up a key. Unencapsulated; `hl-` prefixed.
+
+$brand-50: #fef1e9;
+$brand-200: #f9be9c;
+$brand-500: #f36e21;
+$brand-800: #7e3209;
+$ink-900: #141414;
+
+// ── for hosts: a dusk band with clouds ──
+.hl-hosts {
+  padding-top: 0;
+}
+.hl-band {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: clamp(32px, 5vw, 64px);
+  border-radius: 32px;
+  color: #fff;
+  background: linear-gradient(135deg, #2a1222 0%, #4a2230 55%, $brand-800 120%);
+}
+.hl-band > :not(.hl-band-cl) {
+  position: relative;
+  z-index: 1;
+}
+.hl-band-cl {
+  position: absolute;
+  z-index: 0;
+  left: -10%;
+  bottom: -24%;
+  width: 120%;
+  height: 70%;
+  max-width: none;
+  object-fit: cover;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.hl-band .hl-eyebrow {
+  color: $brand-200;
+}
+.hl-band h2 {
+  color: #fff;
+}
+.hl-band .hl-sub {
+  color: rgba(255, 255, 255, 0.8);
+}
+.hl-perks {
+  display: grid;
+  gap: 12px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.hl-perks li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15.5px;
+}
+.hl-perks li::before {
+  content: '';
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: $brand-500
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-8'/%3E%3C/svg%3E")
+    center / 14px no-repeat;
+}
+.hl-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+.hl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 24px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font: 600 15px/1 Inter, system-ui, sans-serif;
+  white-space: nowrap;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
+}
+.hl-btn:hover {
+  transform: translateY(-2px);
+}
+.hl-btn-light {
+  background: #fff;
+  color: $ink-900;
+}
+.hl-btn-light:hover {
+  background: $brand-50;
+}
+.hl-btn-ghost {
+  border-color: currentColor;
+  color: #fff;
+}
+.hl-shot {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 24px;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.6);
+}
+.hl-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hl-band > .hl-host-bee {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: -18px;
+}
+
+@media (max-width: 860px) {
+  .hl-band {
+    grid-template-columns: 1fr;
+  }
+  .hl-shot {
+    margin-bottom: 40px;
+  }
+  .hl-band > .hl-host-bee {
+    width: 120px !important;
+    height: 120px !important;
+    bottom: -14px;
+  }
+}

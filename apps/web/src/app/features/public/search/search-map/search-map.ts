@@ -40,6 +40,7 @@ import {
 import { currencyName } from '@util/currencies';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { CurrencySelect } from '@app/shared/currency/currency-select';
+import { Mascot } from '@app/shared/mascot/mascot';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { CountryBounds } from '@core/geo/country-bounds';
 import { LocaleStore } from '@core/i18n/locale-store';
@@ -117,7 +118,7 @@ type SheetSnap = 'peek' | 'half' | 'full';
 @Component({
   selector: 'hh-search-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, Button, PhotoPlaceholder, TooltipFixed, CurrencyNamePipe, CurrencySelect],
+  imports: [TranslocoPipe, SearchFilters, ListingCard, PlaceSearchField, Button, PhotoPlaceholder, TooltipFixed, CurrencyNamePipe, CurrencySelect, Mascot],
   templateUrl: './search-map.html',
 })
 export class SearchMap {

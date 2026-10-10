@@ -143,3 +143,34 @@
   color: #f36e21;
   font-weight: 600;
 }
+
+/* Hero variant (`<app-search-bar class="hhsb-hero" />`): sits over a photo on the landing
+   page, so it loses its border for a deep shadow, grows a little, and trades the orange
+   button for a round dark one, because there the bar is the call to action, not the button. */
+.hhsb-hero .hhsb-bar {
+  height: 72px;
+  border: 0;
+  padding: 8px 8px 8px 4px;
+  box-shadow: 0 24px 60px -22px rgba(70, 28, 10, 0.55), 0 2px 6px rgba(31, 31, 31, 0.08);
+}
+.hhsb-hero .hhsb-pop {
+  top: 82px;
+}
+.hhsb-hero .hhsb-go {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  background: #141414;
+  font-size: 0;
+  transition: background-color 0.2s, transform 0.2s;
+}
+.hhsb-hero .hhsb-go i {
+  font-size: 20px;
+}
+.hhsb-hero .hhsb-go:hover {
+  background: #b94f06;
+  filter: none;
+  transform: scale(1.05);
+}

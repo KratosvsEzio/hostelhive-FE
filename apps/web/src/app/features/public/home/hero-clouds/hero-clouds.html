@@ -1,0 +1,76 @@
+<section class="hc" aria-labelledby="hc-title">
+  <!-- Photos and clouds live in their own clipped layer. The hero itself does not clip, so the
+       search bar's popovers can open below its bottom edge. -->
+  <app-hero-sky class="hc-bg" aria-hidden="true" [scenes]="scenes" />
+
+  <div hhContainer class="hc-fg">
+    <div class="hc-copy">
+      <!-- The visible headline changes with the scene; the page's real title stays put. -->
+      <h1 id="hc-title" class="sr-only">
+        {{ 'home.heroTitleLead' | transloco }} {{ 'home.heroTitleTail' | transloco }} hive
+      </h1>
+      <p class="hc-kicker">{{ 'home.pakistanSVerifiedHostelNetwork' | transloco }}</p>
+      <div class="hc-words" aria-hidden="true">
+        @for (s of scenes; track s.key; let i = $index) {
+          <p class="hc-word" [class.on]="i === 0">
+            {{ s.lead | transloco }} <em>{{ s.accent | transloco }}</em>
+          </p>
+        }
+      </div>
+      <p class="hc-lede">{{ 'home.verifiedHostelsPgsAndCo' | transloco }}</p>
+    </div>
+
+    <div class="hc-rail" role="group" [attr.aria-label]="'home.scenes' | transloco">
+      <div class="hc-orbit" aria-hidden="true">
+        <div class="hc-spin"><i></i></div>
+      </div>
+      @for (s of scenes; track s.key; let i = $index) {
+        <button
+          type="button"
+          class="hc-th"
+          [attr.aria-pressed]="i === 0"
+          [attr.aria-label]="'home.sceneButton' | transloco: { n: i + 1, name: (s.name | transloco) }"
+          (click)="go(i)"
+        >
+          <img [src]="s.thumb" alt="" width="80" height="80" decoding="async" />
+        </button>
+      }
+      <div class="hc-labs" aria-live="polite">
+        @for (s of scenes; track s.key; let i = $index) {
+          <p class="hc-lab" [class.on]="i === 0">
+            <span class="hc-lab-n">{{ 'home.sceneOfTotal' | transloco: { n: '0' + (i + 1), total: '0' + scenes.length } }}</span>
+            <b>{{ s.name | transloco }}</b>
+            <small>{{ s.note | transloco }}</small>
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="hc-dock">
+      <div class="hc-pill">
+        <!-- The full Where · Budget · Accommodation bar from the header, from tablet width up. -->
+        <app-search-bar class="hc-search-wide hhsb-hero" />
+        <!-- Phones: the bar has no narrow layout, so the place field on its own. -->
+        <div class="hc-search-compact">
+          <i class="ti ti-map-pin text-xl text-brand-500"></i>
+          <span class="min-w-0 flex-1">
+            <span class="block text-xs font-medium text-ink-400">{{ 'home.whereTo' | transloco }}</span>
+            <hh-place-search
+              [value]="place()"
+              [placeholder]="'common.searchCityOrArea' | transloco"
+              (textChange)="onText($event)"
+              (selected)="onSelected($event)"
+            />
+          </span>
+          <button type="button" class="hc-go" (click)="search()" [attr.aria-label]="'a11y.search' | transloco">
+            <i class="ti ti-search text-lg"></i>
+          </button>
+        </div>
+        <div class="hc-beebox" aria-hidden="true">
+          <img class="hc-bee" src="/mascot/hover-still.webp" alt="" />
+          <video class="hc-bee" muted playsinline preload="none" disablepictureinpicture></video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,522 @@
+// The landing page below the hero. Unencapsulated (it dresses the listing cards and the map
+// inside it), so every class is `hl-` prefixed.
+
+$brand-50: #fef1e9;
+$brand-100: #fcdcc8;
+$brand-200: #f9be9c;
+$brand-300: #f69a6a;
+$brand-400: #f47c3f;
+$brand-500: #f36e21;
+$brand-600: #b94f06;
+$brand-700: #a8430c;
+$brand-800: #7e3209;
+$ink-100: #e6e6e6;
+$ink-500: #525252;
+$ink-600: #3b3b3b;
+$ink-700: #2b2b2b;
+$ink-900: #141414;
+$ok: #27ae60;
+$peach: #fff7f1;
+$display: Poppins, Inter, sans-serif;
+// The frosted look, from the Frosted Search design.
+$glass: rgba(255, 255, 255, 0.62);
+$glass-line: rgba(255, 255, 255, 0.85);
+$glass-glow:
+  0 24px 60px -28px rgba(185, 79, 6, 0.35),
+  0 2px 6px -2px rgba(31, 31, 31, 0.06);
+
+// No live `backdrop-filter`: these panels sit on soft glows that are already blurred, so a
+// blur behind them changed almost nothing you could see — but it was recomputed on every frame
+// for every card while the glows drifted and the skeletons shimmered, which made scrolling
+// through these sections stutter. A translucent fill gives the same frosted look for free.
+@mixin frosted {
+  background: $glass;
+  border: 1px solid $glass-line;
+  box-shadow:
+    $glass-glow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+// ── shared section pieces ──
+.hl-sec {
+  position: relative;
+  padding-block: clamp(64px, 8vw, 112px);
+}
+.hl-wrap {
+  position: relative;
+  z-index: 1;
+}
+.hl-sec h2,
+.hl-closer h2 {
+  margin: 12px 0 0;
+  font: 700 clamp(28px, 3.4vw, 46px) / 1.1 $display;
+  letter-spacing: -0.02em;
+  color: $ink-900;
+  text-wrap: balance;
+}
+.hl-eyebrow {
+  margin: 0;
+  font: 600 12.5px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: $brand-600;
+}
+.hl-sub {
+  margin: 12px 0 0;
+  max-width: 56ch;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: $ink-500;
+}
+.hl-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.hl-more {
+  font: 600 14px/1 Inter, system-ui, sans-serif;
+  color: $ink-900;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 18px -6px rgba(31, 31, 31, 0.18);
+  white-space: nowrap;
+  transition: transform 0.2s;
+}
+.hl-more:hover {
+  transform: translateY(-2px);
+}
+
+// Soft drifting light behind the frosted sections.
+.hl-glow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.hl-glow i {
+  position: absolute;
+  border-radius: 50%;
+  // Each blob is already a soft radial gradient: a CSS blur on top of it was nearly invisible
+  // but costly to paint at this size, and made the first scroll into these sections hitch.
+  opacity: 0.85;
+  animation: hl-glow 18s ease-in-out infinite alternate;
+}
+.hl-glow i:nth-child(1) {
+  width: 46vw;
+  height: 46vw;
+  left: -10vw;
+  top: 0;
+  background: radial-gradient(circle closest-side, $brand-200, rgba(249, 190, 156, 0.4) 45%, transparent);
+}
+.hl-glow i:nth-child(2) {
+  width: 40vw;
+  height: 40vw;
+  right: -8vw;
+  bottom: -6vw;
+  background: radial-gradient(circle closest-side, #ffd9a8, rgba(255, 217, 168, 0.4) 45%, transparent);
+  animation-delay: -6s;
+}
+.hl-glow i:nth-child(3) {
+  width: 34vw;
+  height: 34vw;
+  left: 34vw;
+  top: 30%;
+  background: radial-gradient(circle closest-side, $brand-100, rgba(252, 220, 200, 0.4) 45%, transparent);
+  animation-delay: -11s;
+}
+@keyframes hl-glow {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(3vw, 2vw) scale(1.08);
+  }
+}
+
+// ── hand-picked: frosted cards on peach, continuing the hero's mist ──
+.hl-stays {
+  padding-top: clamp(40px, 5vw, 64px);
+  background: linear-gradient(180deg, $brand-50 0, $peach 70%, #fff 100%);
+}
+.hl-stay-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 32px;
+}
+.hl-stays hh-listing-card > article,
+.hl-skel {
+  @include frosted;
+  border-radius: 20px;
+}
+.hl-skel {
+  overflow: hidden;
+}
+
+// ── find by location: a province list beside the real map ──
+.hl-region-sec {
+  padding-top: clamp(40px, 5vw, 72px);
+}
+.hl-region {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+.hl-regs {
+  display: grid;
+  gap: 8px;
+  margin-top: 28px;
+}
+.hl-regs button {
+  @include frosted;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  text-align: start;
+  border-radius: 14px;
+  padding: 13px 16px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.hl-regs button:hover {
+  border-color: $brand-200;
+}
+.hl-regs button[aria-pressed='true'] {
+  background: rgba(255, 240, 230, 0.8);
+  border-color: $brand-400;
+}
+.hl-regs b {
+  font: 600 16px/1.3 $display;
+}
+.hl-regs span {
+  grid-column: 1;
+  font-size: 13px;
+  color: $ink-500;
+}
+.hl-regs i {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  color: $brand-600;
+}
+.hl-map {
+  @include frosted;
+  position: relative;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: clamp(12px, 2vw, 24px);
+}
+// Leaflet's panes carry z-indexes of 400 and up; contain them so the bee stays on top.
+.hl-map app-country-map {
+  position: relative;
+  z-index: 0;
+  display: block;
+}
+.hl-map-wait {
+  aspect-ratio: 3 / 2;
+  min-height: 360px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.6);
+}
+.hl-map-bee {
+  position: absolute;
+  right: -18px;
+  bottom: -26px;
+  z-index: 25;
+}
+// In place of the province list when the visitor's country has nothing listed yet.
+.hl-region-empty {
+  @include frosted;
+  margin-top: 28px;
+  border-radius: 14px;
+  padding: 16px;
+  font: 600 16px/1.4 $display;
+}
+// In place of the map when it cannot be drawn: quiet, so the section still reads as whole.
+.hl-map-off {
+  align-self: center;
+  justify-self: center;
+  font-size: 14px;
+  color: $ink-500;
+}
+
+// ── how it works: three moons on an orbit ──
+.hl-how {
+  text-align: center;
+  padding-top: clamp(40px, 5vw, 72px);
+}
+.hl-how .hl-sub {
+  margin-inline: auto;
+}
+.hl-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 44px;
+  padding-top: 30px;
+}
+.hl-steps > svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 120px;
+  overflow: visible;
+}
+.hl-st {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.hl-st:nth-of-type(1),
+.hl-st:nth-of-type(3) {
+  margin-top: 34px;
+}
+.hl-moon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  font: 700 22px/1 $display;
+  color: #fff;
+  background: radial-gradient(circle at 32% 28%, $brand-300, $brand-600 72%);
+  box-shadow:
+    0 0 0 8px #fff,
+    0 12px 26px -8px rgba(185, 79, 6, 0.6);
+}
+.hl-st h3 {
+  margin: 0;
+  font: 600 18px/1.3 $display;
+  color: $ink-900;
+}
+.hl-st p {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: $ink-500;
+}
+
+// ── loved by movers: frosted quotes ──
+.hl-quotes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 44px;
+}
+.hl-quote {
+  @include frosted;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+  padding: 28px;
+  border-radius: 24px;
+}
+.hl-stars {
+  color: $brand-500;
+  letter-spacing: 3px;
+}
+.hl-quote blockquote {
+  flex: 1;
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: $ink-900;
+}
+.hl-quote figcaption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: $ink-500;
+}
+.hl-quote figcaption b {
+  display: block;
+  color: $ink-900;
+  font-weight: 600;
+}
+.hl-av {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font: 700 14px/1 $display;
+  color: $brand-700;
+  background: radial-gradient(circle at 32% 28%, #fff, $brand-200 75%);
+}
+
+// ── closing search over a photo ──
+.hl-closer {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(80px, 9vw, 140px);
+  text-align: center;
+  color: #fff;
+}
+.hl-closer-ph {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.hl-closer-ph img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hl-closer-ph::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(42, 18, 34, 0.62), rgba(42, 18, 34, 0.78));
+}
+.hl-closer-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hl-closer h2 {
+  margin-top: 0;
+  max-width: 18ch;
+  font-size: clamp(32px, 4.4vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+.hl-closer .hl-sub {
+  margin-inline: auto;
+  color: rgba(255, 255, 255, 0.86);
+}
+.hl-closer-search {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  margin-top: 36px;
+  text-align: start;
+}
+.hl-closer-wide .hhsb-bar {
+  border: 0;
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+}
+.hl-closer-bee {
+  position: absolute;
+  left: -170px;
+  top: 50%;
+  transform: translateY(-58%);
+}
+.hl-closer-cta {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  border-radius: 999px;
+  background: #fff;
+  color: $ink-900;
+  font-weight: 600;
+}
+.hl-popular {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+.hl-popular a {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.hl-popular a:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+// ── narrower screens ──
+@media (max-width: 1279px) {
+  .hl-stay-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hl-closer-bee {
+    left: auto;
+    right: 0;
+    top: auto;
+    bottom: 100%;
+    transform: translateY(26%);
+  }
+  .hl-closer-search {
+    margin-top: clamp(96px, 14vw, 140px);
+  }
+}
+@media (max-width: 860px) {
+  .hl-region {
+    grid-template-columns: 1fr;
+  }
+  .hl-steps,
+  .hl-quotes {
+    grid-template-columns: 1fr;
+  }
+  .hl-steps {
+    padding-top: 0;
+    gap: 36px;
+  }
+  .hl-steps > svg {
+    display: none;
+  }
+  .hl-st:nth-of-type(1),
+  .hl-st:nth-of-type(3) {
+    margin-top: 0;
+  }
+}
+// The header's bar has no phone layout: a plain call to action takes its place.
+@media (max-width: 767px) {
+  .hl-closer-wide {
+    display: none;
+  }
+  .hl-closer-cta {
+    display: flex;
+  }
+}
+@media (max-width: 640px) {
+  .hl-stay-grid {
+    grid-template-columns: 1fr;
+  }
+  .hl-map-bee,
+  .hl-closer-bee {
+    width: 110px !important;
+    height: 110px !important;
+  }
+  .hl-map-bee {
+    right: -8px;
+    bottom: -34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hl-glow i {
+    animation: none;
+  }
+}

@@ -1,0 +1,25 @@
+<section id="for-hosts" class="hl-sec hl-hosts" aria-labelledby="hl-hosts-title">
+  <div hhContainer class="hl-wrap">
+    <div class="hl-band">
+      <img class="hl-band-cl" src="/landing/clouds-bank.webp" alt="" aria-hidden="true" />
+      <div>
+        <p class="hl-eyebrow">{{ 'common.forHosts' | transloco }}</p>
+        <h2 id="hl-hosts-title">{{ 'home.listYourHostelAndFill' | transloco }}</h2>
+        <p class="hl-sub">{{ 'home.reachThousandsOfVerifiedSeekers' | transloco }}</p>
+        <ul class="hl-perks">
+          @for (h of hostPerks; track h.t) {
+            <li>{{ h.t }}</li>
+          }
+        </ul>
+        <div class="hl-acts">
+          <a [routerLink]="hostLink()" class="hl-btn hl-btn-light">{{ hostCta() }}</a>
+          <a routerLink="/search" class="hl-btn hl-btn-ghost">{{ 'home.browseStays' | transloco }}</a>
+        </div>
+      </div>
+      <div class="hl-shot">
+        <img src="/landing/host-reception.webp" [alt]="'home.hostReceptionAlt' | transloco" loading="lazy" decoding="async" />
+      </div>
+      <hh-mascot class="hl-host-bee" mode="key" [size]="200" />
+    </div>
+  </div>
+</section>

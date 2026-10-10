@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { PLATFORM_ID, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { LocaleStore } from '@core/i18n/locale-store';
@@ -102,7 +102,7 @@ function stubCountry(code: string): void {
   });
 }
 
-function setUp(): { geo: GeoPreference; currency: CurrencyPreference } {
+function setUp(platform = 'browser'): { geo: GeoPreference; currency: CurrencyPreference } {
   TestBed.resetTestingModule();
   locale = new LocaleStoreStub();
   router = new RouterStub();
@@ -111,6 +111,7 @@ function setUp(): { geo: GeoPreference; currency: CurrencyPreference } {
       { provide: LocaleStore, useValue: locale },
       { provide: Router, useValue: router },
       CurrencyPreference,
+      { provide: PLATFORM_ID, useValue: platform },
     ],
   });
   return {
@@ -511,5 +512,82 @@ describe('GeoPreference navigation deferral', () => {
     await done;
 
     expect(locale.switchedTo).toBe('de');
+  });
+});
+
+/**
+ * countryCode / countrySettled — the reactive face of the country, for views that render
+ * differently per country and so cannot wait for a cache that is empty on a first visit.
+ */
+describe('GeoPreference country signal', () => {
+  const realFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    localStorage.clear();
+    fetchCalls = 0;
+    stubCountry('DE');
+  });
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it('starts from the remembered country, already settled', () => {
+    localStorage.setItem(GEO_COUNTRY_STORAGE_KEY, 'FR');
+    const { geo } = setUp();
+
+    expect(geo.countryCode()).toBe('FR');
+    expect(geo.countrySettled()).toBe(true);
+  });
+
+  it('is empty and unsettled on a first visit until the lookup lands', async () => {
+    const { geo } = setUp();
+
+    expect(geo.countryCode()).toBeNull();
+    expect(geo.countrySettled()).toBe(false);
+
+    await geo.apply();
+
+    expect(geo.countryCode()).toBe('DE');
+    expect(geo.countrySettled()).toBe(true);
+  });
+
+  it('settles with no country when every source fails', async () => {
+    failFetch();
+    const { geo } = setUp();
+    await geo.apply();
+
+    expect(geo.countryCode()).toBeNull();
+    expect(geo.countrySettled()).toBe(true);
+  });
+
+  it('follows a refresh that finds a different country', async () => {
+    localStorage.setItem(GEO_COUNTRY_STORAGE_KEY, 'DE');
+    stubCountry('NL');
+    const { geo } = setUp();
+    await geo.refresh();
+
+    expect(geo.countryCode()).toBe('NL');
+    expect(geo.country()).toBe('NL');
+  });
+
+  it('keeps the known country when a refresh fails', async () => {
+    localStorage.setItem(GEO_COUNTRY_STORAGE_KEY, 'DE');
+    failFetch();
+    const { geo } = setUp();
+    await geo.refresh();
+
+    expect(geo.countryCode()).toBe('DE');
+  });
+
+  // Under SSR there is no visitor IP and no storage, so there is nothing to say yet.
+  it('is null and unsettled on the server', async () => {
+    localStorage.setItem(GEO_COUNTRY_STORAGE_KEY, 'FR');
+    const { geo } = setUp('server');
+    await geo.apply();
+
+    expect(geo.countryCode()).toBeNull();
+    expect(geo.countrySettled()).toBe(false);
+    expect(fetchCalls).toBe(0);
   });
 });

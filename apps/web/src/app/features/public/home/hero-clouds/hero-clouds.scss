@@ -1,0 +1,436 @@
+// The landing hero: three full-bleed scenes that change through rolling clouds, a rail of round
+// photos to pick them, one search bar that stays put and the bee perched on its end.
+// Unencapsulated (it restyles the shared search bar inside it), so every class is `hc-` prefixed.
+
+$brand-100: #fcdcc8;
+$brand-200: #f9be9c;
+$brand-300: #f69a6a;
+$brand-600: #b94f06;
+$ink-900: #141414;
+$plum: rgb(42, 18, 34);
+$ease-out: cubic-bezier(0.5, 0, 0.2, 1);
+
+app-hero-clouds {
+  display: block;
+}
+
+.hc {
+  --rail-t: 58px;
+  --step: 82px;
+  --i: 0;
+  position: relative;
+  isolation: isolate;
+  // Fills the screen; the site header floats over its top edge on this page.
+  height: max(640px, 100svh);
+  color: #fff;
+  background: #3a2230;
+}
+
+// ── foreground ──
+.hc-fg {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  // Clears the site header floating over the hero.
+  padding-top: calc(4rem + env(safe-area-inset-top));
+  padding-bottom: 34px;
+}
+.hc-copy {
+  margin-top: clamp(8px, 2.6vw, 40px);
+  max-width: calc(100% - 400px);
+}
+.hc-kicker,
+.hc-lede,
+.hc-words {
+  position: relative;
+  z-index: 3;
+}
+.hc-kicker {
+  margin: 0;
+  font: 600 12.5px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hc-kicker::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: $brand-300;
+}
+.hc-words {
+  display: grid;
+  margin-top: 18px;
+}
+.hc-word {
+  grid-area: 1 / 1;
+  margin: 0;
+  font: 800 clamp(42px, 6.1vw, 96px) / 0.95 Poppins, Inter, sans-serif;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.96);
+  text-wrap: balance;
+  opacity: 0;
+  text-shadow:
+    0 2px 26px rgba($plum, 0.55),
+    0 1px 3px rgba($plum, 0.35);
+}
+.hc-word.on {
+  opacity: 1;
+}
+.hc-word em {
+  font-style: normal;
+  color: $brand-300;
+}
+.hc-lede {
+  margin: 22px 0 0;
+  max-width: 44ch;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 12px rgba($plum, 0.5);
+}
+
+// ── the scene rail: round thumbs, an orbit ring on the active one and a pointer label ──
+.hc-rail {
+  position: absolute;
+  right: clamp(24px, 4vw, 64px);
+  // The middle thumb sits a little above the hero's middle, between the header and the search.
+  top: calc(44% - var(--rail-t) / 2 - var(--step));
+  width: var(--rail-t);
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--step) - var(--rail-t));
+  will-change: transform, opacity;
+}
+.hc-th {
+  flex: none;
+  aspect-ratio: 1;
+  width: var(--rail-t);
+  height: var(--rail-t);
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  background: #3a2230;
+  box-shadow: 0 10px 24px -8px rgba(30, 10, 20, 0.6);
+  transform: scale(0.82);
+  // Neighbours glide clear of the active ring.
+  translate: 0 var(--off, 0px);
+  transition:
+    transform 0.55s $ease-out,
+    translate 0.6s $ease-out,
+    border-color 0.3s;
+  position: relative;
+  z-index: 1;
+}
+.hc-th img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hc-th[aria-pressed='true'] {
+  transform: scale(1.32);
+  border-color: #fff;
+}
+.hc-th:hover {
+  border-color: #fff;
+}
+.hc-th:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+// The ring draws above the thumbs.
+.hc-orbit {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: calc(var(--rail-t) / 2);
+  width: 136px;
+  height: 136px;
+  margin: -68px 0 0 -68px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  transform: translateY(calc(var(--i) * var(--step)));
+  transition: transform 0.6s $ease-out;
+}
+.hc-orbit::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+}
+.hc-spin {
+  position: absolute;
+  inset: 0;
+}
+// The dot travels once round the ring per scene: it is the timer.
+.hc-spin i {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px 2px rgba(255, 220, 190, 0.9);
+}
+.hc-labs {
+  position: absolute;
+  right: calc(50% + 68px + 46px);
+  top: calc(var(--rail-t) / 2);
+  width: 210px;
+  display: grid;
+  transform: translateY(calc(var(--i) * var(--step) - 50% - 12px));
+  transition: transform 0.6s $ease-out;
+  text-shadow: 0 1px 14px rgba($plum, 0.6);
+}
+.hc-labs::after {
+  content: '';
+  position: absolute;
+  left: calc(100% + 10px);
+  top: calc(50% + 12px);
+  width: 36px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+}
+.hc-labs::before {
+  content: '';
+  position: absolute;
+  left: calc(100% + 6px);
+  top: calc(50% + 12px);
+  width: 5px;
+  height: 5px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: #fff;
+}
+.hc-lab {
+  grid-area: 1 / 1;
+  margin: 0;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.hc-lab.on {
+  opacity: 1;
+  transition: opacity 0.42s 0.12s;
+}
+.hc-lab b {
+  display: block;
+  font: 600 20px/1.2 Poppins, Inter, sans-serif;
+}
+.hc-lab small {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+.hc-lab-n {
+  display: block;
+  margin-bottom: 6px;
+  font: 600 11px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  color: $brand-200;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── one search, low over the scene, with the bee perched on its end ──
+.hc-dock {
+  margin-top: auto;
+  position: relative;
+}
+.hc-pill {
+  position: relative;
+  max-width: 900px;
+  margin-inline: auto;
+}
+.hc-search-wide,
+.hc-search-compact {
+  position: relative;
+  z-index: 8;
+}
+// The bar itself is dressed by its `hhsb-hero` variant in search-bar.scss.
+.hc-search-wide {
+  display: block;
+}
+.hc-search-compact {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  background: #fff;
+  color: $ink-900;
+  padding: 8px 8px 8px 20px;
+  box-shadow: 0 24px 60px -22px rgba(70, 28, 10, 0.55);
+}
+.hc-go {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: $ink-900;
+  color: #fff;
+  cursor: pointer;
+}
+.hc-beebox {
+  position: absolute;
+  right: -66px;
+  bottom: calc(100% - 18px);
+  width: 150px;
+  aspect-ratio: 1;
+  z-index: 9;
+  pointer-events: none;
+  will-change: transform;
+}
+// While it flies through a scene change the bee sits between the cloud layers.
+.hc-beebox.flying {
+  z-index: 5;
+}
+.hc-bee {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.hc-beebox video.hc-bee {
+  opacity: 0;
+}
+.hc-beebox.live video.hc-bee {
+  opacity: 1;
+}
+.hc-beebox.live img.hc-bee {
+  opacity: 0;
+}
+
+// ── narrower screens ──
+@media (max-width: 1100px) {
+  // Move the bee along the search so it clears the rail.
+  .hc-beebox {
+    right: 150px;
+  }
+}
+@media (max-width: 980px) {
+  .hc-copy {
+    max-width: calc(100% - 150px);
+  }
+  .hc-labs {
+    display: none;
+  }
+  .hc-beebox {
+    width: 128px;
+  }
+}
+// Below tablet width the header's bar has no room: the compact field takes its place.
+@media (max-width: 767px) {
+  .hc-search-wide {
+    display: none;
+  }
+  .hc-search-compact {
+    display: flex;
+  }
+}
+@media (max-width: 640px) {
+  .hc-fg {
+    // Clears the seeker tab bar fixed along the bottom of the screen.
+    padding-bottom: calc(var(--hh-tabbar-h, 3.375rem) + env(safe-area-inset-bottom) + 24px);
+  }
+  .hc-kicker {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+  .hc-kicker::before {
+    width: 18px;
+  }
+  .hc-copy {
+    max-width: none;
+    margin-top: 4px;
+  }
+  .hc-word {
+    font-size: clamp(36px, 11vw, 48px);
+    line-height: 1;
+  }
+  .hc-lede {
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin-top: 12px;
+  }
+  // The rail becomes a row of thumbs with the scene name beside them.
+  .hc-rail {
+    --rail-t: 40px;
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-right: 84px;
+  }
+  .hc-th {
+    transform: none;
+    translate: none;
+  }
+  .hc-th[aria-pressed='true'] {
+    transform: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+  }
+  .hc-orbit {
+    display: none;
+  }
+  .hc-labs {
+    display: grid;
+    position: static;
+    transform: none;
+    width: auto;
+    margin-left: 4px;
+    order: 9;
+    min-width: 0;
+  }
+  .hc-labs::before,
+  .hc-labs::after {
+    display: none;
+  }
+  .hc-lab {
+    text-align: left;
+  }
+  .hc-lab b {
+    font-size: 16px;
+  }
+  .hc-lab small {
+    font-size: 12.5px;
+    margin-top: 2px;
+  }
+  .hc-lab-n {
+    display: none;
+  }
+  .hc-beebox {
+    right: -4px;
+    width: 100px;
+    bottom: calc(100% - 12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-scene.on img,
+  .hc-bank1,
+  .hc-bank2 {
+    animation: none;
+  }
+}

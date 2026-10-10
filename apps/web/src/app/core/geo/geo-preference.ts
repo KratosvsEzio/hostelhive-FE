@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, firstValueFrom, take } from 'rxjs';
 import { LocaleStore } from '@core/i18n/locale-store';
@@ -95,6 +96,32 @@ export class GeoPreference {
   private readonly currency = inject(CurrencyPreference);
   private readonly router = inject(Router);
   private readonly gate = inject(StartupGate);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  private readonly code = signal<string | null>(
+    this.onServer() ? null : this.cached(),
+  );
+  private readonly settled = signal(this.code() !== null);
+
+  /**
+   * The visitor's country as a signal, for views that have to re-render when it lands.
+   *
+   * {@link country} answers from storage at the moment it is asked, which is null on a first
+   * visit until the lookup completes — and nothing tells the caller to ask again. This starts
+   * from the same stored value and is updated whenever a lookup resolves, including the
+   * re-ask after `GET /api/users/current`. Always null under SSR.
+   */
+  readonly countryCode = this.code.asReadonly();
+
+  /**
+   * Whether the country question has been answered — from storage, or by a lookup that has
+   * finished, successfully or not.
+   *
+   * Lets a view tell "still asking" from "nobody could say": with {@link countryCode} null,
+   * the first wants a placeholder and the second a fallback. Never true under SSR, where no
+   * lookup runs.
+   */
+  readonly countrySettled = this.settled.asReadonly();
 
   /**
    * Applies whichever of the two the visitor has not chosen for themselves. Safe to call
@@ -106,7 +133,7 @@ export class GeoPreference {
    * the app defaults.
    */
   async apply(): Promise<void> {
-    if (typeof window === 'undefined') return; // SSR: no visitor IP to read here
+    if (this.onServer()) return; // SSR: no visitor IP to read here
     await this.settle(this.cached() ?? (await this.lookup()));
   }
 
@@ -123,7 +150,7 @@ export class GeoPreference {
    * either, which is the whole point of recording the choice.
    */
   async refresh(): Promise<void> {
-    if (typeof window === 'undefined') return; // SSR: no visitor IP to read here
+    if (this.onServer()) return; // SSR: no visitor IP to read here
     await this.settle(await this.lookup());
   }
 
@@ -184,8 +211,13 @@ export class GeoPreference {
    * would be a second copy of the same fact waiting to disagree with this one.
    */
   country(): string | null {
-    if (typeof window === 'undefined') return null; // SSR: nothing stored to read
+    if (this.onServer()) return null; // SSR: nothing stored to read
     return this.cached();
+  }
+
+  /** No visitor to ask about: SSR, where there is no IP to read and no storage to remember it in. */
+  private onServer(): boolean {
+    return typeof window === 'undefined' || !this.isBrowser;
   }
 
   private cached(): string | null {
@@ -204,6 +236,7 @@ export class GeoPreference {
     try {
       return await this.resolve();
     } finally {
+      this.settled.set(true);
       release();
     }
   }
@@ -211,6 +244,7 @@ export class GeoPreference {
   private async resolve(): Promise<string | null> {
     const country = await this.raceSources();
     if (country) {
+      this.code.set(country);
       try {
         localStorage.setItem(KEY, country);
       } catch {

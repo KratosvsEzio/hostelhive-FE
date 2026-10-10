@@ -45,12 +45,13 @@ export interface Listing {
   name: string;
   area: string;
   city: string;
+  /** The province or state as the host typed it — free text, so spellings vary between hostels. */
+  state?: string;
   /**
    * Which country the hostel is in — what its clock runs on.
    *
-   * Only the detail payload carries it, so it is absent on search cards. Read when a booking
-   * is built: check-in is 2pm at the hostel, not 2pm wherever the guest is browsing from.
-   * See `countryTimeZone`.
+   * Free text as the host typed it. Read when a booking is built: check-in is 2pm at the
+   * hostel, not 2pm wherever the guest is browsing from. See `countryTimeZone`.
    */
   country?: string;
   accommodationType: AccommodationType;
@@ -103,6 +104,8 @@ export interface Listing {
 
 export interface ListingQuery {
   city?: string;
+  /** ISO 3166-1 alpha-2; matched exactly against the code the backend derives from the hostel's country. */
+  countryCode?: string;
   accommodationType?: AccommodationType | 'all';
   minPrice?: number;
   maxPrice?: number;

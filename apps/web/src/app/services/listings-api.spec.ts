@@ -403,3 +403,53 @@ describe('toListing lead photograph', () => {
     expect(l.images).toEqual(['a.jpg', 'b.jpg']);
   });
 });
+
+/**
+ * The country filter.
+ *
+ * Pinned on the `.keyword` sub-field: the backend only appends it for a handful of field
+ * suffixes, and a term against the analysed field never matches an upper-case code, so the
+ * bare key would answer every country with "no stays" rather than an error.
+ */
+describe('ListingsApi country filter', () => {
+  let api: ApiClientStub;
+
+  function setUp(): ListingsApi {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    api = new ApiClientStub();
+    TestBed.configureTestingModule({
+      providers: [{ provide: ApiClient, useValue: api }, CurrencyPreference],
+    });
+    return TestBed.inject(ListingsApi);
+  }
+
+  it('matches the exact upper-case code on the keyword field', () => {
+    setUp().list({ countryCode: 'pk' }).subscribe();
+
+    expect(api.lastParams['f[country_code.keyword]']).toBe('PK');
+    expect(api.lastParams['f[country_code]']).toBeUndefined();
+  });
+
+  it('sends no country filter when none is asked for', () => {
+    setUp().list({}).subscribe();
+
+    expect(Object.keys(api.lastParams).some((k) => k.includes('country'))).toBe(false);
+  });
+});
+
+describe('toListing location fields', () => {
+  it('carries the state and country, trimmed', () => {
+    const listing = toListing({ id: 1, city: 'Lahore', state: ' Punjab ', country: 'Pakistan' });
+
+    expect(listing.state).toBe('Punjab');
+    expect(listing.country).toBe('Pakistan');
+  });
+
+  it('leaves them unset when the hostel names neither', () => {
+    const listing = toListing({ id: 1, state: '  ', country: null });
+
+    expect(listing.state).toBeUndefined();
+    expect(listing.country).toBeUndefined();
+  });
+});

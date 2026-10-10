@@ -55,8 +55,6 @@
 @if (showConsentBanner()) {
   <hh-consent-banner />
 }
-<!-- TEMPORARY (testing): startup gate to set the BE base URL. Remove before go-live. -->
-<hh-dev-setup-gate />
 
 <!-- Startup veil. Up while the session and the country are still being resolved: the country
      decides the language, and switching language navigates — so without this the page becomes
@@ -70,7 +68,8 @@
   >
     <div class="flex flex-col items-center gap-4">
       <i hhLogo class="h-7 w-auto text-ink-900"></i>
-      <i class="ti ti-loader-2 animate-spin text-2xl text-brand-500" aria-hidden="true"></i>
+      <!-- The bee only for a wait worth showing: a quick start never sees it. -->
+      <hh-mascot mode="greeting" [size]="96" [delay]="300" />
       <span class="sr-only">{{ 'common.loading' | transloco }}</span>
     </div>
   </div>

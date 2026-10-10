@@ -1,0 +1,176 @@
+// The hero's backdrop: the scene photos, a dusk tint and the cloud layers. Unencapsulated and
+// `hc-` prefixed: HeroClouds animates these elements directly.
+
+$brand-100: #fcdcc8;
+$plum: rgb(42, 18, 34);
+
+app-hero-sky.hc-bg {
+  display: block;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hc-scenes,
+.hc-scene,
+.hc-tint,
+.hc-wash,
+.hc-fade {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+.hc-scenes {
+  z-index: 0;
+  will-change: transform;
+}
+.hc-scene {
+  opacity: 0;
+  // A slow, eased crossfade: the new photo blooms in while the clouds are at their thickest.
+  transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hc-scene.on {
+  opacity: 1;
+}
+.hc-scene img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hc-scene.on img {
+  animation: hc-kb 9s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+.hc-scene[data-i='0'] img {
+  object-position: 50% 40%;
+}
+.hc-scene[data-i='2'] img {
+  object-position: 50% 30%;
+}
+// The lounge photo is cropped in from its top-left so the bee never sits on the people in it.
+.hc-scene[data-i='1'] {
+  transform: scale(1.45);
+  transform-origin: 0 0;
+}
+.hc-scene[data-i='1']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba($plum, 0.5), rgba($plum, 0.15) 45%, transparent 70%);
+}
+@keyframes hc-kb {
+  from {
+    transform: scale(1.09);
+  }
+  to {
+    transform: scale(1.01);
+  }
+}
+
+// Dusk plum at the top for the headline, warm shade on the right for the rail.
+.hc-tint {
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba($plum, 0.72) 0%, rgba(58, 26, 40, 0.42) 26%, rgba(70, 30, 30, 0.08) 50%, transparent 62%),
+    radial-gradient(40% 46% at 92% 40%, rgba($plum, 0.42), transparent 70%),
+    linear-gradient(90deg, rgba($plum, 0.38), transparent 46%);
+}
+.hc-wash {
+  z-index: 2;
+  background: linear-gradient(180deg, $brand-100, #fef1e9);
+  opacity: 0;
+  pointer-events: none;
+}
+
+// The clouds are white with real transparency, their soft edges baked into the image (the top
+// fade, and the roll's billow shape). They used to be white-on-black plates blended with
+// `screen` and cut with CSS masks, which looks the same but made the browser re-blend and
+// re-mask six screen-sized layers on every frame while the photo zoomed and the banks drifted:
+// the hero idled at 13 fps. Now it only moves finished pictures, which the GPU does for free.
+.hc-cl {
+  position: absolute;
+  display: block;
+  max-width: none;
+  pointer-events: none;
+  object-fit: cover;
+}
+.hc-bank1 {
+  z-index: 4;
+  left: -12%;
+  width: 130%;
+  height: 62%;
+  bottom: -10px;
+  opacity: 0.95;
+  animation: hc-drift 34s ease-in-out infinite alternate;
+}
+.hc-bank2 {
+  z-index: 4;
+  left: -20%;
+  width: 140%;
+  height: 50%;
+  bottom: -50px;
+  opacity: 0.8;
+  transform: scaleX(-1);
+  animation: hc-drift2 46s ease-in-out infinite alternate;
+}
+@keyframes hc-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-7%, 2%, 0);
+  }
+}
+@keyframes hc-drift2 {
+  from {
+    transform: scaleX(-1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scaleX(-1) translate3d(-6%, -2%, 0);
+  }
+}
+// The scene-change clouds. Their image is already shaped to billow up from below with no plate
+// edge, so they need nothing but transform and opacity, the two properties a GPU animates alone.
+.hc-roll {
+  z-index: 5;
+  left: -25%;
+  top: -10%;
+  width: 150%;
+  height: 130%;
+  opacity: 0;
+}
+.hc-r2,
+.hc-r3 {
+  z-index: 6;
+}
+.hc-rise {
+  z-index: 5;
+  left: -15%;
+  width: 130%;
+  height: 120%;
+  top: 74%;
+  opacity: 0.98;
+}
+.hc-fade {
+  z-index: 6;
+  pointer-events: none;
+  top: auto;
+  height: 170px;
+  background: linear-gradient(
+    180deg,
+    rgba(254, 241, 233, 0) 0%,
+    rgba(254, 241, 233, 0.55) 38%,
+    rgba(254, 241, 233, 0.94) 62%,
+    #fef1e9 78%
+  );
+}
+// Keeps the header's logo and controls readable while the clouds pass.
+.hc-scrim {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 190px;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba($plum, 0.45), rgba($plum, 0));
+}
+
