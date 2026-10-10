@@ -31,6 +31,7 @@ import {
 import { AccommodationType, Listing, Paginated } from '@hostelhive/data-access';
 import { Button, PhotoPlaceholder, TooltipFixed } from '@hostelhive/ui';
 import { FavoritesStore } from '@util/favorites-store';
+import { SessionStore } from '@core/auth';
 import {
   formatAmount,
   periodForAccommodation,
@@ -136,6 +137,7 @@ export class SearchMap {
     if (typeof code === 'string' && code) this.currency.set(code);
   }
   private readonly favorites = inject(FavoritesStore);
+  private readonly session = inject(SessionStore);
   private readonly capacityStore = inject(SearchCapacity);
 
   /** Slug → offer ID map, populated once the offer-categories API resolves. */
@@ -739,7 +741,20 @@ export class SearchMap {
 
   protected toggleSaved(l: Listing, e: Event): void {
     e.stopPropagation();
+    if (this.redirectGuest()) return;
     this.favorites.toggle(l);
+  }
+
+  /**
+   * Favourites belong to an account: a guest's heart click goes to the Log in tab and comes
+   * back to this search, the same as the heart on the listing page. True when redirected.
+   */
+  private redirectGuest(): boolean {
+    if (this.session.isAuthenticated()) return false;
+    void this.router.navigate(['/auth'], {
+      queryParams: { mode: 'login', returnUrl: this.router.url },
+    });
+    return true;
   }
 
   /** The card photo, or `''` when the hostel has none — the template shows a placeholder. */
@@ -774,6 +789,8 @@ export class SearchMap {
     }
   >();
   private lastKey = '';
+  /** The open popup card's heart — its listing id and how to repaint it; null when closed. */
+  private popupHeart: { id: string; paint: (saved: boolean) => void } | null = null;
   /** True after the user manually drags or zooms the map — suppresses auto-fitBounds. */
   private userInteracted = false;
   /** True while we move the camera in code — keeps scripted zooms out of `userInteracted`. */
@@ -917,6 +934,15 @@ export class SearchMap {
           );
       }
       untracked(() => { if (this.selected()) this.renderSelection(); });
+    });
+    // Repaint the open popup's heart whenever the saved list changes. The popup is raw DOM,
+    // so it is painted in place rather than rebuilt (a rebuild restarts its entry animation).
+    effect(() => {
+      this.favorites.items();
+      untracked(() => {
+        const heart = this.popupHeart;
+        if (heart) heart.paint(this.favorites.isFavorite(heart.id));
+      });
     });
     // Toggle the hover highlight without rebuilding markers. Depends on active() only;
     // applyActive() runs untracked so its own active()/selected() reads don't leak in.
@@ -1188,6 +1214,8 @@ export class SearchMap {
   /** Swap the selected marker's content for the popup card; every other marker shows its pin. */
   private renderSelection(): void {
     const id = this.selected();
+    // Rebuilt below when a card opens on desktop; a stale painter would draw onto a detached card.
+    this.popupHeart = null;
     // On mobile the selected listing surfaces as a card docked to the bottom of the screen
     // (rendered in the template), so the marker only needs its selected pin styling — an
     // anchored card that wide would spill off a phone viewport.
@@ -1288,9 +1316,13 @@ export class SearchMap {
         : '<i class="ti ti-heart"></i>';
       heart.classList.toggle('is-saved', on);
     };
-    paintHeart(this.favorites.isFavorite(l.id)); // reflect persisted state on open
+    paintHeart(this.favorites.isFavorite(l.id)); // reflect saved state on open
+    // Later changes (a load arriving, a failed save rolling back) repaint through the
+    // favourites effect in the constructor.
+    this.popupHeart = { id: l.id, paint: paintHeart };
     heart.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (this.redirectGuest()) return;
       paintHeart(this.favorites.toggle(l));
     });
     media.appendChild(heart);
@@ -1388,6 +1420,7 @@ export class SearchMap {
   private clearMarkers(): void {
     for (const { marker } of this.markers.values()) marker.remove();
     this.markers.clear();
+    this.popupHeart = null;
   }
 
   private genderLabel(g: AccommodationType): string {
