@@ -31,8 +31,9 @@ so one entry covers every locale without naming all eighteen.
 ## Consequences
 
 - A new authenticated area goes into `CLIENT_ONLY`, not into a hand-written entry.
-- These pages ship an empty shell to crawlers. `apps/web/public/robots.txt` is meant to keep crawlers
-  out, but its rules are bare paths and do not match the prefixed URLs (see the area file's Traps).
+- These pages ship an empty shell to crawlers. robots.txt keeps crawlers out: every `CLIENT_ONLY` path
+  is in `DISALLOWED_PATHS` (`apps/web/src/app/core/robots.ts`), bare and under every language prefix,
+  and `robots.spec.ts` fails if one is missing.
 - Seeker pages that are public but call an authenticated endpoint are still server-rendered and must
   skip that fetch on the server themselves (see the area file).
 

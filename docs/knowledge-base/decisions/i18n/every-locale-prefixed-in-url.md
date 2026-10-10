@@ -19,7 +19,7 @@ Every page lives under a language prefix, `/en/…` included. Routes are mounted
 - Every unprefixed URL costs one redirect.
 - `hreflang` alternates and self-referencing canonicals per language ship with this (`localeAlternates` in `apps/web/src/app/core/i18n/locales.ts`).
 - Route-area checks must compare `routePath(url)`, not `router.url`. A raw `/de/search` does not match '/search'. Code written before this change read fixed segment positions and broke silently: `hostPagePath` in `apps/web/src/app/layout/host-shell/host-route.ts` and the server render-mode table in `apps/web/src/app/app.routes.server.ts` both had to be fixed later.
-- The sitemap lists only prefixed URLs. `apps/web/public/robots.txt` still lists bare paths only, so its disallow rules miss the real `/en/…` URLs (see [ssr-seo-and-prerender](../../area/ssr-seo-and-prerender.md)).
+- The sitemap lists only prefixed URLs. robots.txt has to disallow every prefixed form too. The static file missed them until PR #49 replaced it with one generated per language (`apps/web/src/app/core/robots.ts`, see [ssr-seo-and-prerender](../../area/ssr-seo-and-prerender.md)).
 - `LocaleSync` reads the entry URL from `PlatformLocation`, because `router.url` is still `/` during app init. It also records whether the URL itself named a language (`noteUrlNamedLanguage`), so the country guess cannot override a shared link.
 
 ## Evidence
