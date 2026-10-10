@@ -16,7 +16,7 @@ import { ApiError } from '@hostelhive/data-access';
 import { API_ERROR_NOTIFIER } from '@core/tokens';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { provideDataAccess } from '@core/provide-data-access';
-import { AuthService, Role, SessionStore, provideAuth } from '@core/auth';
+import { AuthService, provideAuth } from '@core/auth';
 import { pushTokenInterceptor } from '@core/interceptors/push-token-interceptor';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
@@ -38,8 +38,6 @@ import { PlaceSearchBias, provideLeafletMaps, withCartoKey } from '@hostelhive/m
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
 import { restoreGoogleAnalyticsConsent } from '@core/google-analytics/google-analytics-consent';
 import { startScrollReset } from '@core/scroll-reset';
-
-const STAFF: Role[] = ['super-admin', 'admin', 'support', 'moderator'];
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -153,11 +151,9 @@ export const appConfig: ApplicationConfig = {
     provideCapacitorNative(),
     // Restore a persisted session on load: validate the saved JWT (GET /api/users/current) and
     // log the user back in if it is still valid. Blocks bootstrap briefly (time-capped) so route
-    // guards on /host and /admin see the restored session after a reload. A `?role=` dev override
-    // (below) takes precedence and skips this.
+    // guards on /host and /admin see the restored session after a reload.
     provideAppInitializer(() => {
       if (typeof window === 'undefined') return; // SSR: nothing persisted to restore
-      if (new URLSearchParams(window.location.search).has('role')) return; // dev seed wins
       return inject(AuthService).restoreSession();
     }),
     // GA4 (public marketplace only). Reads the stored consent choice and, if it was
@@ -167,29 +163,6 @@ export const appConfig: ApplicationConfig = {
       if (typeof window === 'undefined') return; // SSR
       restoreGoogleAnalyticsConsent();
       inject(GoogleAnalyticsService).start();
-    }),
-    // DEV ONLY — seed a console session so guarded /host + /admin routes render
-    // before the Lead Wall login ships. Public seeker pages stay session-less.
-    // Test a role via `?role=super-admin|moderator|manager|host`. Remove once login lands.
-    provideAppInitializer(() => {
-      if (typeof window === 'undefined') return;
-      const role = new URLSearchParams(window.location.search).get(
-        'role',
-      ) as Role | null;
-      if (!role) return;
-      const isStaff = STAFF.includes(role);
-      inject(SessionStore).setSession(
-        {
-          id: 'dev',
-          name: isStaff ? 'Aashir Azeem' : 'Imran Khan',
-          email: isStaff ? 'admin@hostelhive.pk' : 'host@hostelhive.pk',
-          role,
-          allRoles: [role],
-          permissions: [],
-          propertyId: null,
-        },
-        'dev-token',
-      );
     }),
   ],
 };
