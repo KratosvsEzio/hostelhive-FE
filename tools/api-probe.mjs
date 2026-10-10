@@ -151,7 +151,6 @@ async function main() {
     { token },
   );
   await probe('Moderator hostels', 'GET', '/api/moderator/hostels', { token });
-  await probe('Admin contracts', 'GET', '/api/admin/contracts', { token });
   await probe('Admin payments', 'GET', '/api/admin/payments', { token });
 
   console.log('\nDone. Paste this output back if you ran it yourself.');

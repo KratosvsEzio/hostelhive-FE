@@ -40,9 +40,7 @@ import { PAGE_SIZE } from '@util/pagination';
 import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
 import { BookingAction, BookingDetailsPanel, actionsFor } from './booking-details-panel';
 import { NotificationService } from '@core/notification.service';
-import { ALL_ROOMS_LIMIT, HostOpsApi, SubscriptionStore } from '@services';
-import { RouterLink } from '@angular/router';
-import { LocaleLink } from '@core/i18n/locale-link';
+import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 
@@ -79,8 +77,6 @@ const LOADING: ViewState = { loading: true, error: false, data: null };
     BookingDetailsPanel,
     BookingFormDrawer,
     DashboardLayout,
-    RouterLink,
-    LocaleLink,
     EmptyState,
     ErrorState,
     ContextMenu,
@@ -406,17 +402,6 @@ export class HostBookings {
   }
 
   private readonly notifications = inject(NotificationService);
-
-  /**
-   * The hostel's subscription has lapsed. This page stays open (the server keeps existing
-   * bookings working), so it says what is paused and how to renew, rather than letting the
-   * host find out from a refused walk-in.
-   */
-  private readonly subscription = inject(SubscriptionStore);
-  protected readonly lapsed = computed(
-    () => this.subscription.status() === 'ready' && !this.subscription.isActive(),
-  );
-  protected readonly subscriptionLink = computed(() => `/host/${this.hostelId()}/subscription`);
 
   /** The moves the row menu offers — the same set the panel does, from the same table. */
   protected rowActions(b: HostBooking): readonly BookingAction[] {

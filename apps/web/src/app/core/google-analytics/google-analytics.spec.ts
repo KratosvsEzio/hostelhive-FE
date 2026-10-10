@@ -27,7 +27,7 @@ describe('isMarketplacePath', () => {
     for (const url of [
       '/host',
       '/host/nHelLt/team',
-      '/admin/contracts',
+      '/admin/payments',
       '/moderator/hostels',
       '/auth',
       '/account/settings',

@@ -1,0 +1,91 @@
+import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { Route, Router, provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { appRoutes } from './app.routes';
+import { SubscriptionPlaceholder } from '@features/host/subscription/subscription-placeholder';
+
+@Component({ selector: 'hh-route-stub', template: '' })
+class RouteStub {}
+
+/**
+ * The real route tree, reduced to what recognition needs.
+ *
+ * Paths, redirects, matchers and lazy children are kept as they are, so the router decides
+ * exactly as it does in production. Guards are dropped and components swapped for an empty
+ * stub, which keeps every console page out of the test and lets an unauthenticated session
+ * navigate. The component a route would have rendered is kept in `data.original`.
+ */
+function recognitionOnly(routes: Route[]): Route[] {
+  return routes.map((route) => {
+    const { canActivate, canActivateChild, canDeactivate, resolve, ...kept } = route;
+    void canActivate;
+    void canActivateChild;
+    void canDeactivate;
+    void resolve;
+    const lite: Route = { ...kept };
+    if (route.component) {
+      lite.component = RouteStub;
+      lite.data = { ...route.data, original: route.component };
+    }
+    if (route.loadComponent) {
+      lite.loadComponent = () => RouteStub;
+    }
+    if (route.children) {
+      lite.children = recognitionOnly(route.children);
+    }
+    const lazy = route.loadChildren;
+    if (typeof lazy === 'function') {
+      lite.loadChildren = async () => recognitionOnly((await lazy()) as Route[]);
+    }
+    return lite;
+  });
+}
+
+async function settleOn(url: string): Promise<{ url: string; original: unknown }> {
+  TestBed.configureTestingModule({ providers: [provideRouter(recognitionOnly(appRoutes))] });
+  const harness = await RouterTestingHarness.create();
+  await harness.navigateByUrl(url);
+  const router = TestBed.inject(Router);
+  let leaf = router.routerState.snapshot.root;
+  while (leaf.firstChild) leaf = leaf.firstChild;
+  return { url: router.url, original: leaf.data['original'] };
+}
+
+describe('the removed billing and contract URLs', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  const removed = [
+    '/admin/contracts',
+    '/host/listings/new/payment',
+    '/host/nHelLt/subscription/payments',
+    '/host/nHelLt/subscription/current',
+    '/host/nHelLt/subscription/checkout/p1',
+  ];
+
+  it.each(removed)('sends %s to the home page', async (path) => {
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe('/');
+  });
+
+  it.each(removed)('sends the /ur/ copy of %s to the home page in Urdu', async (path) => {
+    const settled = await settleOn(`/ur${path}`);
+
+    expect(settled.url).toBe('/ur');
+  });
+
+  it('still serves the billing page itself', async () => {
+    const settled = await settleOn('/host/nHelLt/subscription');
+
+    expect(settled.url).toBe('/host/nHelLt/subscription');
+    expect(settled.original).toBe(SubscriptionPlaceholder);
+  });
+
+  it('still serves the billing page under a language prefix', async () => {
+    const settled = await settleOn('/ur/host/nHelLt/subscription');
+
+    expect(settled.url).toBe('/ur/host/nHelLt/subscription');
+    expect(settled.original).toBe(SubscriptionPlaceholder);
+  });
+});

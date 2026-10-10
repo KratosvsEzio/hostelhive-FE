@@ -331,7 +331,7 @@ export class LeadWall {
   }
 
   private consoleHome(): string | null {
-    if (this.session.hasRole('super-admin', 'admin', 'support')) return '/admin/contracts';
+    if (this.session.hasRole('super-admin', 'admin', 'support')) return '/admin';
     if (this.session.hasRole('moderator')) return '/moderator/queue';
     if (this.session.hasRole(...HOST_ROLES)) return '/host';
     return null;

@@ -18,7 +18,7 @@ import { catchError, of } from 'rxjs';
 import { ApiError, AttachmentLabel, HostelInput, iconForSlug, OfferCategory } from '@hostelhive/data-access';
 import { TimezoneSelect } from '@app/shared/timezone/timezone-select';
 import { browserTimeZone } from '@util/time-zones';
-import { HostelsApi, ImageUploadService, OffersApi } from '@services';
+import { HostPropertyStore, HostelsApi, ImageUploadService, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import {
   ACCEPT_ATTR,
@@ -346,6 +346,7 @@ export class OnboardingWizard {
   private readonly hostelsApi = inject(HostelsApi);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly propertyStore = inject(HostPropertyStore);
   protected readonly draftId = signal<number | null>(null);
   protected readonly draftSaving = signal(false);
   protected readonly draftSaved = signal(false);
@@ -731,7 +732,7 @@ export class OnboardingWizard {
     return this.roomTypes.find((t) => !used.has(t)) ?? '';
   }
 
-  // --- Step 5: save form then navigate to payment page ---
+  // --- Step 5: save form then open the hostel's billing page ---
   protected saveAndContinue(): void {
     this.showValidation.set(true);
     if (!this.isFormValid()) {
@@ -756,14 +757,14 @@ export class OnboardingWizard {
           this.draftSaving.set(false);
           this.draftSaved.set(true);
           // After creating a hostel (not updating), the backend grants the host role.
-          // Refresh the session so the payment page sees the updated roles immediately.
+          // Refresh the session so the host console's role guard sees it immediately.
           if (isNew) {
             this.authService
               .refreshSession()
               .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-              .subscribe(() => this.router.navigate(['/host/listings/new/payment']));
+              .subscribe(() => this.landOnBilling(this.draftId()));
           } else {
-            this.router.navigate(['/host/listings/new/payment']);
+            this.landOnBilling(this.draftId());
           }
         },
         // Interceptor-normalised: the Rails errors[] envelope is on serverMessages.
@@ -773,6 +774,18 @@ export class OnboardingWizard {
           this.apiErrors.set(err?.serverMessages ? [...err.serverMessages] : []);
         },
       });
+  }
+
+  /**
+   * Opens the saved hostel's billing page in the host console.
+   *
+   * The hostel list is refetched first: the console's hostel-id gate trusts a loaded list, and
+   * a host who already had hostels holds one that predates this hostel — the gate would send
+   * them back to the hostel they had. Without an id to name, `/host` picks the hostel itself.
+   */
+  private landOnBilling(hostelId: number | null): void {
+    this.propertyStore.load();
+    void this.router.navigate(hostelId == null ? ['/host'] : ['/host', hostelId, 'subscription']);
   }
 
   /**

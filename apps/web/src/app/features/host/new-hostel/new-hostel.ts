@@ -9,7 +9,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiError } from '@hostelhive/data-access';
-import { HostelsApi } from '@services';
+import { HostPropertyStore, HostelsApi } from '@services';
 import { Button, ConfirmModal } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { HostelForm } from '../hostel-form/hostel-form';
@@ -34,6 +34,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 })
 export class NewHostel {
   private readonly hostels = inject(HostelsApi);
+  private readonly propertyStore = inject(HostPropertyStore);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -64,10 +65,10 @@ export class NewHostel {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (hostel) => {
-          // Plans, not the profile. A hostel is created without a subscription, and the shell
-          // bounces every console page to this one until it has an active plan — the profile
-          // is one of the two routes exempt from that gate, so landing there handed the host
-          // the one page that worked and let them discover the rest by being turned away.
+          // A new hostel has no plan yet, so the host lands where billing lives. The list is
+          // refetched first: the console's hostel-id gate trusts a loaded list, and the cached
+          // one predates this hostel — it would send the host back to the hostel they had.
+          this.propertyStore.load();
           this.router.navigate(['/host', hostel.id, 'subscription']);
         },
         // The error interceptor normalises failures to ApiError, so the Rails `errors[]`

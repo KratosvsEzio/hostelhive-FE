@@ -63,60 +63,6 @@ export interface RoleDef {
   apiId?: string;
 }
 
-/* -------------------------------------------------------------- Contracts (27) */
-
-// Backend contract status slug — dynamic; the filter tabs come from the API's `possible_statuses`
-// (currently draft / active / expired), so this is just the slug string.
-export type ContractStatus = string;
-export type PaymentState = 'paid' | 'pending' | 'failed' | 'refunded';
-
-export interface Contract {
-  id: string; // display ref, e.g. 'CT-2026-0418'
-  /** Real backend id (hashid string or number) — for GET /api/admin/contracts/:id (absent on fixtures). */
-  contractId?: string | number;
-  host: string;
-  plan: string; // e.g. 'Growth · Annual'
-  /** Human term range, e.g. 'Jun 8 → Jul 8 ’26'; null while pending. */
-  term: string | null;
-  status: ContractStatus;
-  payment: PaymentState;
-  amount: number; // PKR
-  /** True when the contract's end date is within the next 7 days — highlights the Term cell. */
-  endsSoon?: boolean;
-  /** Backend hostel id — for `GET /api/hostels/:id` (the contract's hostel detail in the drawer). */
-  hostelId?: number | string | null;
-  /** Hostel name (the contract's property). */
-  hostelName?: string | null;
-  /** Backend host (user) id — for `GET /api/users/:id` (the contract's host detail in the drawer). */
-  hostId?: number | string | null;
-}
-
-/** Filter chip value — a status slug from `possible_statuses`, or 'all'. */
-export type ContractFilter = string;
-
-/** A status option for the filter tabs — from `possible_statuses` in the contracts response. */
-export interface ContractStatusOption {
-  id: number;
-  name: string;
-  slug: string;
-  dispositions?: { id: number; name: string; slug: string }[];
-}
-
-/** Per-status aggregate for the stat cards — from `aggs` in the contracts response. */
-export interface ContractAgg {
-  name: string;
-  slug: string;
-  count: number;
-  total_amount: number;
-  ending_this_month: number;
-}
-
-/** Contracts index result — a page of contracts plus the dashboard `aggs` and the tab `statuses`. */
-export interface ContractsPage extends Paginated<Contract> {
-  aggs: ContractAgg[];
-  statuses: ContractStatusOption[];
-}
-
 /* --------------------------------------------------------------- Payments (28) */
 
 /** A subscription payment — from `GET /api/admin/payments` (Searchkick `search_data`). */

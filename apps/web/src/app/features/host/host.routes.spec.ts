@@ -1,10 +1,14 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { Observable, isObservable, of } from 'rxjs';
 import { HostListing, HostListingsData } from '@hostelhive/data-access';
 import { HostPropertyStore } from '@services';
 import { HostShellApi } from '@services/host-shell-api';
+import { SessionStore } from '@core/auth';
 import { HOST_ROUTES, bookingsGate, knownHostelGate, monthlyOnlyGate } from './host.routes';
+import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
 function listing(over: Partial<HostListing> = {}): HostListing {
   return {
@@ -289,5 +293,71 @@ describe('monthlyOnlyGate', () => {
         (await run(id)) instanceof UrlTree && (await runMonthlyOnly(id)) instanceof UrlTree;
       expect({ id, blockedByBoth }).toEqual({ id, blockedByBoth: false });
     }
+  });
+});
+
+describe('the billing page under :hostelId', () => {
+  const hostel = HOST_ROUTES.find((r) => r.path === ':hostelId');
+  const billing = (hostel?.children ?? []).find((c) => c.path === 'subscription');
+
+  it('serves the billing routes as its children', () => {
+    expect(billing?.children).toBe(SUBSCRIPTION_ROUTES);
+    expect(billing?.loadChildren).toBeUndefined();
+  });
+
+  // The paywall links every host here; the hostel gate on the parent is the only check.
+  it('adds no guard of its own', () => {
+    expect(billing?.canActivate).toBeUndefined();
+    expect(billing?.canMatch).toBeUndefined();
+    expect(hostel?.canActivate).toEqual([knownHostelGate]);
+  });
+});
+
+describe('the gate on hostels/new', () => {
+  const route = HOST_ROUTES.find((r) => r.path === 'hostels/new');
+
+  function runGate(permitted: boolean) {
+    const load = vi.fn();
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: SessionStore,
+          useValue: { hasPermission: (flag: string) => permitted && flag === 'core:Hostel:create' },
+        },
+        // Only `load` exists, so a gate that consults the list throws instead of passing quietly.
+        { provide: HostPropertyStore, useValue: { load } },
+      ],
+    });
+    const gate = route?.canActivate?.[0] as CanActivateFn;
+    const result = TestBed.runInInjectionContext(() =>
+      gate({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot),
+    );
+    return { result, load, http: TestBed.inject(HttpTestingController) };
+  }
+
+  it('is the only guard on the route', () => {
+    expect(route?.canActivate).toHaveLength(1);
+  });
+
+  it('opens synchronously for an account that may create a hostel, without loading anything', () => {
+    const { result, load, http } = runGate(true);
+
+    expect(result).toBe(true);
+    expect(load).not.toHaveBeenCalled();
+    http.verify();
+  });
+
+  it('sends an account that may not create a hostel to /host', () => {
+    const { result, load, http } = runGate(false);
+
+    expect(result).toBeInstanceOf(UrlTree);
+    expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/host');
+    expect(load).not.toHaveBeenCalled();
+    http.verify();
   });
 });

@@ -13,8 +13,6 @@ import {
   HostelRoomTypesResponse,
   HostelSearchQuery,
   HostelSearchResult,
-  HostelSubscription,
-  HostelSubscriptionResponse,
   HostelWriteRequest,
   RoomType,
 } from '@hostelhive/data-access';
@@ -452,17 +450,6 @@ export class HostelsApi {
       .pipe(map((r) => r.room_types ?? []));
   }
 
-  /** GET /api/hostels/:id/current_subscription — the most recent contract, or null. */
-  currentSubscription(
-    id: number | string,
-  ): Observable<HostelSubscription | null> {
-    return this.api
-      .get<HostelSubscriptionResponse>(
-        `/api/hostels/${id}/current_subscription`,
-      )
-      .pipe(map((r) => normalizeSubscription(r.subscription)));
-  }
-
   /** POST /api/host/hostels/:id/meal_types — bulk upsert notification settings for all meals. */
   saveMealTypes(hostelId: string, payloads: MealTypePayload[]): Observable<MealTypeRecord[]> {
     return this.api
@@ -758,13 +745,6 @@ function requireHostel(r: HostelResponse, id?: number | string): HostelDetail {
   const h = r.hostel;
   if (!h) throw new Error('Hostel response did not include a hostel.');
   return id != null && h.id == null ? { ...h, id: Number(id) } : h;
-}
-
-/** `current_subscription` returns `{}` (no id) when a hostel has no contract — normalize to null. */
-function normalizeSubscription(
-  s: HostelSubscription | null | undefined,
-): HostelSubscription | null {
-  return s && s.id != null ? s : null;
 }
 
 /** Map the typed query to the Rails search params (`f[...]`, `sort[...]`, `page`, `limit`). */

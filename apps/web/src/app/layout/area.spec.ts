@@ -17,7 +17,7 @@ describe('areaOf', () => {
   it('reads the three consoles', () => {
     expect(areaOf('/host')).toBe('host');
     expect(areaOf('/host/nHelLt/bookings')).toBe('host');
-    expect(areaOf('/admin/contracts')).toBe('admin');
+    expect(areaOf('/admin/payments')).toBe('admin');
     expect(areaOf('/moderator/queue')).toBe('moderator');
   });
 
@@ -43,7 +43,7 @@ describe('areaOf', () => {
   it('sees through a language prefix', () => {
     expect(areaOf('/ur/host')).toBe('host');
     expect(areaOf('/de/host/nHelLt/bookings')).toBe('host');
-    expect(areaOf('/ja/admin/contracts')).toBe('admin');
+    expect(areaOf('/ja/admin/payments')).toBe('admin');
     expect(areaOf('/ru')).toBe('seeker');
     // Both traps at once.
     expect(areaOf('/de/hostel/vKkMIE')).toBe('seeker');

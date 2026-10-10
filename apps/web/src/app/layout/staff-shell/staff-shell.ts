@@ -38,7 +38,6 @@ const MOD_NAV: NavEntry[] = [
 ];
 
 const ADMIN_NAV: NavEntry[] = [
-  { label: 'Contracts', icon: 'ti-file-dollar', link: '/admin/contracts', permission: 'admin:Contract:index' },
   { label: 'Payments', icon: 'ti-credit-card', link: '/admin/payments', permission: 'admin:Payment:index' },
   {
     label: 'Roles & permissions',

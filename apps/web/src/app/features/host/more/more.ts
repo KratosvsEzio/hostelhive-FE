@@ -29,8 +29,6 @@ const TINT: Record<string, string> = {
   'common.utilities': 'bg-tint-mint text-ink-600',
   'common.mess': 'bg-tint-purple text-ink-600',
   'common.expenses': 'bg-tint-sky text-ink-600',
-  'common.subscription': 'bg-tint-cream text-brand-500',
-  'hostSubscription.paymentHistory': 'bg-tint-cream text-brand-500',
 };
 
 const NEUTRAL_TINT = 'bg-ink-100 text-ink-600';
@@ -53,7 +51,7 @@ const STATUS_CLASS: Record<ListingStatus, string> = {
  * Mobile "More" tab of the host console (design board 42): everything that
  * doesn't fit in the bottom tab bar — account card, per-hostel destinations
  * (bookings, profile, team, utilities, mess, expenses), account destinations
- * (subscription, settings, help, sign out) and the property switcher as a bottom sheet.
+ * (settings, help, sign out) and the property switcher as a bottom sheet.
  * Reachable on desktop too, but only linked from the mobile tab bar.
  *
  * Together with the tab bar this is the whole of host navigation under 768px, where the
@@ -111,7 +109,7 @@ export class HostMore {
     return at <= 0 ? rows : [rows[at], ...rows.filter((_, i) => i !== at)];
   });
 
-  /** What sat below the divider: the billing pages. */
+  /** Whatever the nav puts below its divider; listed above the fixed account rows. */
   protected readonly accountRows = computed<NavEntry[]>(
     () => splitNav(this.entries()).account,
   );

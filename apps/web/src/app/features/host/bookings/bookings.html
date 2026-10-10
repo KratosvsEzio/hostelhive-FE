@@ -9,16 +9,6 @@
        like and what needs me today"; the list answers "show me the bookings". They were
        stacked, which put the table below the fold on every visit and made the month
        something to scroll past. Both still read the one request this page already makes. -->
-  @if (lapsed()) {
-    <div class="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3" role="status">
-      <i class="ti ti-crown text-lg text-brand-500" aria-hidden="true"></i>
-      <p class="min-w-0 flex-1 basis-64 text-sm text-ink-800">
-        This hostel's subscription has lapsed, so it is not taking new bookings. The bookings below still work — confirm, check guests in and out, take payment or cancel.
-      </p>
-      <a hh-button size="sm" [routerLink]="subscriptionLink()">Renew subscription</a>
-    </div>
-  }
-
   <hh-tabs class="mb-5 max-w-xs" [tabs]="viewTabs" [(active)]="view" />
 
   <hh-booking-details-panel

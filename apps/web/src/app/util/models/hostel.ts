@@ -257,53 +257,6 @@ export interface HostelPagination {
   total_count: number;
 }
 
-// ── contract / subscription (ContractSerializer) ─────────────────────────────
-
-/** Embedded product ref (Contract/Payment `product`). */
-export interface ProductRef {
-  id: number;
-  product_type?: string | null;
-  price?: number | null;
-  name?: string | null;
-  currency?: string | null;
-  duration?: number | null;
-}
-
-/** PaymentSerializer (cyclic back-refs to hostel/contract intentionally omitted). */
-export interface HostelPayment {
-  id: number;
-  amount?: number | null;
-  transaction_id?: string | null;
-  payment_method?: string | null;
-  currency?: string | null;
-  created_at?: string | null;
-  paid_at?: string | null;
-  product?: ProductRef | null;
-  host?: HostelUser | null;
-  status?: HostelStatus | null;
-  disposition?: HostelDisposition | null;
-}
-
-/**
- * GET /api/hostels/:id/current_subscription → `{ subscription: HostelSubscription | null }`.
- * The hostel's most recent contract (ContractSerializer); `null` when none exists.
- */
-export interface HostelSubscription {
-  id: number;
-  contract_type?: string | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  price?: number | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  product?: ProductRef | null;
-  host?: HostelUser | null;
-  hostel?: HostelDetail | null;
-  status?: HostelStatus | null;
-  disposition?: HostelDisposition | null;
-  payment?: HostelPayment | null;
-}
-
 // ── request bodies (create / update) — Rails strong-params (hostel_params) ────
 
 /** A nested hostel_offers_attributes row (accepts_nested_attributes_for). */
@@ -480,10 +433,5 @@ export interface HostelFormOptionsResponse {
 export interface HostelRoomTypesResponse {
   success: boolean;
   room_types: RoomType[];
-  errors?: string[];
-}
-export interface HostelSubscriptionResponse {
-  success: boolean;
-  subscription?: HostelSubscription | null;
   errors?: string[];
 }
