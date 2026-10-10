@@ -51,6 +51,8 @@ const LOCALISED_ROUTES: Route[] = [
       import('@features/public/mess-confirm/mess-confirm').then((m) => m.MessConfirm),
     title: 'Confirm your meal — HostelHive',
   },
+  // The backend's meal-confirmation email has linked here; the redirect keeps ?token=…
+  { path: 'meal_confirmation', redirectTo: 'mess/confirm', pathMatch: 'full' },
   {
     path: 'privacy-policy',
     loadComponent: () =>

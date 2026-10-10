@@ -8,7 +8,6 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
 import { Button, Dropdown, DropdownOption, Input, TimePicker, Toggle } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { HostelsApi, HostPropertyStore, MealTypePayload } from '@services';
@@ -88,7 +87,6 @@ const MEAL_PLACEHOLDERS: Record<MealType, string> = {
 })
 export class MessNotifications {
   protected readonly svc = inject(MessNotificationsService);
-  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostelApi = inject(HostelsApi);
   private readonly store = inject(HostPropertyStore);
@@ -187,12 +185,6 @@ export class MessNotifications {
 
   protected todayMenu(meal: MealType): string {
     return this.svc.settings().meals[meal].weeklyMenu[this.todayIndex] ?? '';
-  }
-
-  protected openTest(meal: MealType): void {
-    void this.router.navigate(['/mess/confirm'], {
-      queryParams: { token: this.svc.makeTestToken(meal) },
-    });
   }
 
   protected readonly menuSaveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');

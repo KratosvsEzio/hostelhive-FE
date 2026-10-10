@@ -248,3 +248,53 @@ describe('HostelsApi.markAttachmentAsPrimary', () => {
     expect(api.calls[1].body).toEqual({});
   });
 });
+
+class PostSpyClient {
+  calls: { url: string; body: unknown }[] = [];
+  reply: unknown = { success: true };
+  post<T>(url: string, body: unknown): Observable<T> {
+    this.calls.push({ url, body });
+    return of(this.reply as T);
+  }
+}
+
+/**
+ * `POST /public/meal_confirmations/confirm` — the contract agreed with the backend (#108).
+ * A repeat confirm is a 200 carrying `already_confirmed: true`, so the flag is the only thing
+ * telling the page which of its two success screens to show.
+ */
+describe('HostelsApi.confirmMeal', () => {
+  function spyApi(reply: unknown): { api: PostSpyClient; hostels: HostelsApi } {
+    TestBed.resetTestingModule();
+    const api = new PostSpyClient();
+    api.reply = reply;
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: api }] });
+    return { api, hostels: TestBed.inject(HostelsApi) };
+  }
+
+  const MEAL = { meal_type: 'lunch', meal_date: '2026-10-10', expired_time: '2026-10-10T13:00:00+05:00' };
+
+  it('posts the token to the public confirm route', () => {
+    const { api, hostels } = spyApi({ success: true, already_confirmed: false, meal_info: MEAL });
+    hostels.confirmMeal('abc123').subscribe();
+    expect(api.calls).toEqual([{ url: '/public/meal_confirmations/confirm', body: { token: 'abc123' } }]);
+  });
+
+  it('reads a first confirmation', async () => {
+    const { hostels } = spyApi({ success: true, already_confirmed: false, meal_info: MEAL });
+    const result = await new Promise((resolve) => hostels.confirmMeal('t').subscribe(resolve));
+    expect(result).toEqual({ alreadyConfirmed: false, mealInfo: MEAL });
+  });
+
+  it('reads a repeat confirmation', async () => {
+    const { hostels } = spyApi({ success: true, already_confirmed: true, meal_info: MEAL });
+    const result = await new Promise((resolve) => hostels.confirmMeal('t').subscribe(resolve));
+    expect(result).toEqual({ alreadyConfirmed: true, mealInfo: MEAL });
+  });
+
+  it('treats a missing flag and missing meal as a plain first confirmation', async () => {
+    const { hostels } = spyApi({ success: true });
+    const result = await new Promise((resolve) => hostels.confirmMeal('t').subscribe(resolve));
+    expect(result).toEqual({ alreadyConfirmed: false, mealInfo: null });
+  });
+});

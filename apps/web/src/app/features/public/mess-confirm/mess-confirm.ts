@@ -10,21 +10,41 @@ import { ActivatedRoute } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { Button } from '@hostelhive/ui';
 import { HostelsApi, MealInfoRaw } from '@services';
-import {
-  MEAL_META,
-  MealType,
-  MessNotificationsService,
-  TokenPayload,
-} from '@features/host/mess/mess-notifications.service';
+import { MEAL_META, MealType } from '@features/host/mess/mess-notifications.service';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 type ConfirmState = 'loading' | 'valid' | 'confirmed' | 'already' | 'expired' | 'invalid';
 
+/** The meal a token points at, as this page shows it. */
+export interface MealView {
+  meal: MealType;
+  /** Menu text, when the server sends one. */
+  menu: string;
+  /** Confirmation window close, epoch ms. */
+  exp: number;
+  /** yyyy-MM-dd */
+  date: string;
+}
+
+function toMealView(info: MealInfoRaw): MealView {
+  return {
+    meal: info.meal_type as MealType,
+    menu: '',
+    exp: new Date(info.expired_time).getTime(),
+    date: info.meal_date,
+  };
+}
+
+function statusOf(e: unknown): number | undefined {
+  const status = typeof e === 'object' && e !== null ? (e as { status?: unknown }).status : undefined;
+  return typeof status === 'number' ? status : undefined;
+}
+
 /**
- * Public opt-in landing — the page a student reaches from the WhatsApp/SMS/email link. Reads the
- * one-time token from the URL, validates it, and records the opt-in on confirm. Token resolve +
- * confirm are in-memory stubs today (see MessNotificationsService); the real backend validates
- * the signed token and persists the opt-in. Rendered chrome-free (see app.ts).
+ * Public opt-in landing — the page a student reaches from the WhatsApp/SMS/email link. The
+ * one-time token in the URL is the credential: the server resolves it to a meal and records
+ * the opt-in, and every outcome shown here (confirmed, already confirmed, expired, invalid) is
+ * the server's answer. Rendered chrome-free (see app.ts).
  */
 @Component({
   selector: 'hh-mess-confirm',
@@ -34,48 +54,59 @@ type ConfirmState = 'loading' | 'valid' | 'confirmed' | 'already' | 'expired' | 
 })
 export class MessConfirm {
   private readonly route = inject(ActivatedRoute);
-  private readonly svc = inject(MessNotificationsService);
   private readonly api = inject(HostelsApi);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly token = this.route.snapshot.queryParamMap.get('token');
 
   protected readonly mealMeta = MEAL_META;
   protected readonly state = signal<ConfirmState>('loading');
-  protected readonly payload = signal<TokenPayload | null>(null);
+  protected readonly view = signal<MealView | null>(null);
+  protected readonly confirming = signal(false);
+  /** The last confirm attempt failed in a way a retry might fix (offline, 5xx). */
+  protected readonly confirmFailed = signal(false);
 
   constructor() {
     if (!this.isBrowser) return;
-    const token = this.route.snapshot.queryParamMap.get('token');
-    if (!token) { this.state.set('invalid'); return; }
+    if (!this.token) { this.state.set('invalid'); return; }
 
-    this.api.getMealInfo(token)
+    this.api.getMealInfo(this.token)
       .pipe(catchError(() => of(null)))
-      .subscribe((info: MealInfoRaw | null) => {
-        if (!info) { this.state.set('invalid'); return; }
-        const payload: TokenPayload = {
-          m: info.meal_type as MealType,
-          menu: '',
-          exp: new Date(info.expired_time).getTime(),
-          n: '',
-          d: info.meal_date,
-        };
-        this.payload.set(payload);
-        if (Date.now() > payload.exp) { this.state.set('expired'); return; }
+      .subscribe((info) => {
+        // An unknown meal type has no label or icon to render, so it is as unusable as no meal.
+        if (!info || !(info.meal_type in MEAL_META)) { this.state.set('invalid'); return; }
+        const view = toMealView(info);
+        this.view.set(view);
+        if (info.is_confirmed) { this.state.set('already'); return; }
+        if (Date.now() > view.exp) { this.state.set('expired'); return; }
         this.state.set('valid');
       });
   }
 
   protected confirm(): void {
-    const p = this.payload();
-    if (!p || this.state() !== 'valid') return;
-    this.state.set(this.svc.confirm(p) === 'already' ? 'already' : 'confirmed');
-  }
+    if (!this.token || this.state() !== 'valid' || this.confirming()) return;
+    this.confirming.set(true);
+    this.confirmFailed.set(false);
 
-  protected get meal(): TokenPayload['m'] | null {
-    return this.payload()?.m ?? null;
+    this.api.confirmMeal(this.token).subscribe({
+      next: (result) => {
+        this.confirming.set(false);
+        if (result.mealInfo && result.mealInfo.meal_type in MEAL_META) {
+          this.view.set(toMealView(result.mealInfo));
+        }
+        this.state.set(result.alreadyConfirmed ? 'already' : 'confirmed');
+      },
+      error: (e: unknown) => {
+        this.confirming.set(false);
+        const status = statusOf(e);
+        if (status === 410) this.state.set('expired');
+        else if (status === 404) this.state.set('invalid');
+        else this.confirmFailed.set(true);
+      },
+    });
   }
 
   protected mealLabel(): string {
-    const p = this.payload();
-    return p ? this.mealMeta[p.m].label : '';
+    const v = this.view();
+    return v ? this.mealMeta[v.meal].label : '';
   }
 }

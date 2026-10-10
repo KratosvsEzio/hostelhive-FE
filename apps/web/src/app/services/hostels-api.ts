@@ -56,6 +56,16 @@ export interface MealInfoRaw {
   meal_type: string;      // 'breakfast' | 'lunch' | 'dinner'
   meal_date: string;      // 'yyyy-MM-dd'
   expired_time: string;   // ISO datetime — confirmation window close
+  is_confirmed?: boolean;
+  confirmed_at?: string | null;
+  hostel_name?: string;
+}
+
+/** What `POST /public/meal_confirmations/confirm` answers with on success. */
+export interface MealConfirmResult {
+  /** True when the meal was already confirmed before this call; nothing changed. */
+  alreadyConfirmed: boolean;
+  mealInfo: MealInfoRaw | null;
 }
 
 export interface MealConfirmationRaw {
@@ -496,6 +506,25 @@ export class HostelsApi {
     return this.api
       .get<{ meal_info: MealInfoRaw; success: boolean }>(`/public/meal_confirmations/meal_info/${token}`)
       .pipe(map((r) => r.meal_info));
+  }
+
+  /**
+   * POST /public/meal_confirmations/confirm — record the opt-in for a token (no auth required).
+   * Idempotent: a repeat call answers 200 with `already_confirmed: true`. An unknown token is
+   * 404 and a closed window is 410; both arrive as errors carrying `status`.
+   */
+  confirmMeal(token: string): Observable<MealConfirmResult> {
+    return this.api
+      .post<{ already_confirmed?: boolean; meal_info?: MealInfoRaw; success: boolean }>(
+        '/public/meal_confirmations/confirm',
+        { token },
+      )
+      .pipe(
+        map((r) => ({
+          alreadyConfirmed: r.already_confirmed === true,
+          mealInfo: r.meal_info ?? null,
+        })),
+      );
   }
 
   /** GET /api/host/hostels/:id/meal_confirmations — tenant meal opt-ins, filterable by date and meal type. */

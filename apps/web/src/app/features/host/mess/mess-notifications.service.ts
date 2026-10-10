@@ -1,5 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
-import { format } from 'date-fns';
+import { Injectable, signal } from '@angular/core';
 import { MealTypeRecord, WeeklyMenuPayload, WeeklyMenuRecord } from '@services';
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner';
@@ -52,31 +51,6 @@ export interface MessNotifSettings {
   meals: Record<MealType, MealNotifConfig>;
 }
 
-/** A student's meal confirmation for a given day. */
-export interface MealConfirmation {
-  id: string;
-  meal: MealType;
-  date: string; // yyyy-MM-dd
-  studentName: string;
-  rollNo?: string;
-  room?: string;
-  confirmedAt: Date;
-}
-
-/** Decoded contents of an opt-in token (issued by the backend in production). */
-export interface TokenPayload {
-  m: MealType;
-  menu: string;
-  exp: number; // expiry, epoch ms
-  n: string; // student name
-  d: string; // date yyyy-MM-dd
-}
-
-export type ResolveResult =
-  | { status: 'valid'; payload: TokenPayload }
-  | { status: 'expired'; payload: TokenPayload }
-  | { status: 'invalid' };
-
 const DEFAULT_SETTINGS: MessNotifSettings = {
   channels: ['whatsapp'],
   meals: {
@@ -128,92 +102,11 @@ const DEFAULT_SETTINGS: MessNotifSettings = {
   },
 };
 
-/** URL-safe base64 token codec. In production the backend issues + signs these. */
-function encodeToken(p: TokenPayload): string {
-  return btoa(encodeURIComponent(JSON.stringify(p)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-function decodeToken(token: string): TokenPayload | null {
-  try {
-    const b64 = token.replace(/-/g, '+').replace(/_/g, '/');
-    const p = JSON.parse(decodeURIComponent(atob(b64))) as TokenPayload;
-    return p && p.m && p.exp ? p : null;
-  } catch {
-    return null;
-  }
-}
-
-const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
-/** Today as Mon=0 … Sun=6 (JS getDay() is Sun=0). */
-const todayDayIndex = (): number => (new Date().getDay() + 6) % 7;
-
-const FIRST_NAMES = [
-  'Ali', 'Hassan', 'Bilal', 'Sara', 'Ayesha', 'Usman', 'Fatima', 'Zain', 'Hamza', 'Maryam',
-  'Omar', 'Hina', 'Saad', 'Noor', 'Ahmed', 'Iqra', 'Talha', 'Sana', 'Faizan', 'Rabia',
-  'Danish', 'Aiman', 'Kashif', 'Mahnoor', 'Shahzaib', 'Areeba', 'Waleed', 'Komal', 'Junaid', 'Nimra',
-];
-const LAST_NAMES = [
-  'Khan', 'Ahmed', 'Malik', 'Hussain', 'Raza', 'Iqbal', 'Butt', 'Sheikh', 'Qureshi', 'Farooq',
-  'Chaudhry', 'Aslam', 'Nawaz', 'Javed', 'Bhatti',
-];
-const BLOCKS = ['A', 'B', 'C', 'D'];
-
-/** Deterministically generate `count` opt-ins for a meal (demo data). */
-function genConfirmations(meal: MealType, count: number): MealConfirmation[] {
-  const d = todayIso();
-  return Array.from({ length: count }, (_, i): MealConfirmation => {
-    const first = FIRST_NAMES[(i * 3 + meal.length) % FIRST_NAMES.length];
-    const last = LAST_NAMES[(i * 5 + meal.length) % LAST_NAMES.length];
-    return {
-      id: `${meal}-${i}`,
-      meal,
-      date: d,
-      studentName: `${first} ${last}`,
-      rollNo: `BSCS-F${21 + (i % 4)}-${String((i % 300) + 1).padStart(3, '0')}`,
-      room: `${BLOCKS[i % BLOCKS.length]}-${101 + (i % 45)}`,
-      confirmedAt: new Date(Date.now() - ((i * 37) % 600) * 60_000),
-    };
-  });
-}
-
-function seedConfirmations(): MealConfirmation[] {
-  return [
-    ...genConfirmations('breakfast', 138),
-    ...genConfirmations('lunch', 226),
-    ...genConfirmations('dinner', 57),
-  ];
-}
-
 @Injectable({ providedIn: 'root' })
 export class MessNotificationsService {
   readonly settings = signal<MessNotifSettings>(DEFAULT_SETTINGS);
   private readonly weeklyMenuIds = signal<Record<string, string>>({});
   private readonly mealTypeIds = signal<Record<string, string>>({});
-  readonly confirmations = signal<MealConfirmation[]>(seedConfirmations());
-  /** Total students enrolled in the mess plan. */
-  readonly totalSubscribers = signal(150);
-
-  readonly todaysConfirmations = computed(() => {
-    const t = todayIso();
-    return this.confirmations().filter((o) => o.date === t);
-  });
-
-  readonly recentConfirmations = computed(() => this.todaysConfirmations().slice(0, 6));
-
-  readonly countsByMeal = computed<Record<MealType, number>>(() => {
-    const counts: Record<MealType, number> = { breakfast: 0, lunch: 0, dinner: 0 };
-    for (const o of this.todaysConfirmations()) counts[o.meal]++;
-    return counts;
-  });
-
-  readonly confirmationsByMeal = computed<Record<MealType, MealConfirmation[]>>(() => {
-    const groups: Record<MealType, MealConfirmation[]> = { breakfast: [], lunch: [], dinner: [] };
-    for (const o of this.todaysConfirmations()) groups[o.meal].push(o);
-    return groups;
-  });
 
   setChannels(channels: NotifChannel[]): void {
     this.settings.update((s) => ({ ...s, channels }));
@@ -309,42 +202,5 @@ export class MessNotificationsService {
       }
       return { ...s, meals };
     });
-  }
-
-  makeTestToken(meal: MealType, studentName = 'Demo Student'): string {
-    const cfg = this.settings().meals[meal];
-    return encodeToken({
-      m: meal,
-      menu: cfg.weeklyMenu[todayDayIndex()] ?? '',
-      exp: Date.now() + cfg.windowMinutes * 60_000,
-      n: studentName,
-      d: todayIso(),
-    });
-  }
-
-  resolve(token: string | null): ResolveResult {
-    if (!token) return { status: 'invalid' };
-    const payload = decodeToken(token);
-    if (!payload) return { status: 'invalid' };
-    if (Date.now() > payload.exp) return { status: 'expired', payload };
-    return { status: 'valid', payload };
-  }
-
-  confirm(payload: TokenPayload): 'confirmed' | 'already' {
-    const dup = this.confirmations().some(
-      (o) => o.meal === payload.m && o.date === payload.d && o.studentName === payload.n,
-    );
-    if (dup) return 'already';
-    this.confirmations.update((list) => [
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        meal: payload.m,
-        date: payload.d,
-        studentName: payload.n,
-        confirmedAt: new Date(),
-      },
-      ...list,
-    ]);
-    return 'confirmed';
   }
 }

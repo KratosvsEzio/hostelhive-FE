@@ -426,7 +426,8 @@
     "alreadyReservedMealToday": "You've already reserved your {{meal}} portion for today.",
     "optInWindowClosedAt": "The opt-in window for {{meal}} closed at {{time}}.",
     "optInWindowClosed": "The opt-in window for {{meal}} has closed.",
-    "reachOutToMessManager": "Please reach out to the mess manager if you still need a portion."
+    "reachOutToMessManager": "Please reach out to the mess manager if you still need a portion.",
+    "couldNotSaveConfirmation": "We couldn't save your confirmation. Check your connection and tap again."
   },
   "filters": {
     "selectAmenities": "Select amenities",
