@@ -10,7 +10,7 @@ const LOCALISED_ROUTES: Route[] = [
   {
     path: '',
     component: Home,
-    title: 'HostelHive — Find verified hostels in Pakistan',
+    title: 'HostelHive — Find verified hostels',
   },
   {
     path: 'search',
