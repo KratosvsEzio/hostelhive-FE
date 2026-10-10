@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Ricerca di soggiorni nelle vicinanze…",
     "noStaysListedYetBrowse": "Nessun soggiorno in elenco — esplora un’area più ampia.",
     "browseAllStays": "Sfoglia tutti i soggiorni",
-    "nStays": "{{count}} soggiorni",
     "stepN": "Passo {{n}}",
     "nHostelsInArea": "{{count}} ostelli in questa zona. Clicca su un segnaposto per vederlo."
   },

@@ -1345,7 +1345,6 @@
     "findingStaysNearby": "Finding stays nearby…",
     "noStaysListedYetBrowse": "No stays listed yet — browse the wider area.",
     "browseAllStays": "Browse all stays",
-    "nStays": "{{count}} stays",
     "stepN": "Step {{n}}",
     "nHostelsInArea": "{{count}} hostels listed in this area. Click a marker to view."
   },

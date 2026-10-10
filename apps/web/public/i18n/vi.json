@@ -1285,7 +1285,6 @@
     "findingStaysNearby": "Đang tìm chỗ ở gần đây…",
     "noStaysListedYetBrowse": "Chưa có chỗ ở nào — hãy xem khu vực rộng hơn.",
     "browseAllStays": "Xem tất cả chỗ ở",
-    "nStays": "{{count}} chỗ ở",
     "stepN": "Bước {{n}}",
     "nHostelsInArea": "{{count}} nhà nghỉ trong khu vực này. Nhấp vào điểm đánh dấu để xem."
   },

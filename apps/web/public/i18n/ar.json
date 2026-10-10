@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "جارٍ البحث عن إقامات قريبة…",
     "noStaysListedYetBrowse": "لا توجد إقامات مدرجة بعد — تصفح منطقة أوسع.",
     "browseAllStays": "تصفح جميع الإقامات",
-    "nStays": "{{count}} أماكن إقامة",
     "stepN": "الخطوة {{n}}",
     "nHostelsInArea": "{{count}} نزل مدرجة في هذه المنطقة. انقر على علامة لعرضها."
   },

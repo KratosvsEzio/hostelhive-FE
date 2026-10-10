@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Finder ophold i nærheden…",
     "noStaysListedYetBrowse": "Ingen ophold opslået endnu — se det bredere område.",
     "browseAllStays": "Se alle ophold",
-    "nStays": "{{count}} ophold",
     "stepN": "Trin {{n}}",
     "nHostelsInArea": "{{count}} hosteller i dette område. Klik på en markør for at se."
   },

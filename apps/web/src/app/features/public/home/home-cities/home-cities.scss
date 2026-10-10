@@ -108,14 +108,6 @@ $display: Poppins, Inter, sans-serif;
   margin-top: 16px;
   font: 600 17px/1.2 $display;
 }
-.hl-orb small {
-  display: block;
-  margin-top: 4px;
-  color: $ink-500;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-}
-
 @media (max-width: 980px) {
   .hl-orbs {
     grid-template-columns: repeat(4, minmax(0, 1fr));

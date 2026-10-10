@@ -7,7 +7,6 @@ import { LocaleLink } from '@core/i18n/locale-link';
 export interface HomeCity {
   name: string;
   slug: string;
-  stays: string;
   img: string;
 }
 

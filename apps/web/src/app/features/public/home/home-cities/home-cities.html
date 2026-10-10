@@ -14,7 +14,6 @@
           <a class="hl-orb" [routerLink]="'/hostels/' + c.slug">
             <span class="hl-ball"><img [src]="c.img" [alt]="c.name" loading="lazy" decoding="async" /></span>
             <b>{{ c.name }}</b>
-            <small>{{ 'publicHome.nStays' | transloco: { count: c.stays } }}</small>
           </a>
         </li>
       }

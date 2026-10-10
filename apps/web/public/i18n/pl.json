@@ -1285,7 +1285,6 @@
     "findingStaysNearby": "Wyszukiwanie pobytów w pobliżu…",
     "noStaysListedYetBrowse": "Brak ofert w pobliżu — przejrzyj szerszy obszar.",
     "browseAllStays": "Przeglądaj wszystkie pobyty",
-    "nStays": "{{count}} pobytów",
     "stepN": "Krok {{n}}",
     "nHostelsInArea": "{{count}} hosteli w tym obszarze. Kliknij znacznik, aby zobaczyć."
   },

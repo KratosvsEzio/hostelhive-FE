@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Közeli szállások keresése…",
     "noStaysListedYetBrowse": "Még nincs listázott szállás — nézd meg a tágabb környéket.",
     "browseAllStays": "Összes szállás böngészése",
-    "nStays": "{{count}} szállás",
     "stepN": "{{n}}. lépés",
     "nHostelsInArea": "{{count}} szálláshely ebben a körzetben. Kattints egy jelölőre a megtekintéshez."
   },

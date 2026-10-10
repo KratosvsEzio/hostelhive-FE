@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "正在查找附近住宿…",
     "noStaysListedYetBrowse": "附近暂无房源 — 请浏览更大范围。",
     "browseAllStays": "浏览全部住宿",
-    "nStays": "{{count}} 处住宿",
     "stepN": "第 {{n}} 步",
     "nHostelsInArea": "该区域有 {{count}} 家旅舍。点击标记查看。"
   },

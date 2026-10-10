@@ -1285,7 +1285,6 @@
     "findingStaysNearby": "Mencari penginapan terdekat…",
     "noStaysListedYetBrowse": "Belum ada penginapan terdaftar — jelajahi area lebih luas.",
     "browseAllStays": "Jelajahi semua penginapan",
-    "nStays": "{{count}} penginapan",
     "stepN": "Langkah {{n}}",
     "nHostelsInArea": "{{count}} hostel di area ini. Klik penanda untuk melihat."
   },

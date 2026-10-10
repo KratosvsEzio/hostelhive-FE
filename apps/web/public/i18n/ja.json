@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "近くの宿を検索中…",
     "noStaysListedYetBrowse": "近くに掲載はまだありません — もっと広い範囲を見る。",
     "browseAllStays": "すべての宿を見る",
-    "nStays": "{{count}} 件の宿泊先",
     "stepN": "ステップ {{n}}",
     "nHostelsInArea": "このエリアに {{count}} 件のホステルがあります。マーカーをクリックすると表示されます。"
   },

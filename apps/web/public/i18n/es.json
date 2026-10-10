@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Buscando estancias cercanas…",
     "noStaysListedYetBrowse": "Aún no hay estancias listadas — explora un área más amplia.",
     "browseAllStays": "Ver todas las estancias",
-    "nStays": "{{count}} alojamientos",
     "stepN": "Paso {{n}}",
     "nHostelsInArea": "{{count}} hostales en esta zona. Haz clic en un marcador para verlo."
   },

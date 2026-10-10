@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Söker boenden i närheten…",
     "noStaysListedYetBrowse": "Inga boenden listade ännu — bläddra i ett större område.",
     "browseAllStays": "Bläddra bland alla boenden",
-    "nStays": "{{count}} boenden",
     "stepN": "Steg {{n}}",
     "nHostelsInArea": "{{count}} vandrarhem i detta område. Klicka på en markör för att se."
   },

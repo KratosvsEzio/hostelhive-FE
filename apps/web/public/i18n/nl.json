@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Verblijven in de buurt zoeken…",
     "noStaysListedYetBrowse": "Nog geen verblijven vermeld — bekijk de ruimere omgeving.",
     "browseAllStays": "Alle verblijven bekijken",
-    "nStays": "{{count}} verblijven",
     "stepN": "Stap {{n}}",
     "nHostelsInArea": "{{count}} hostels in dit gebied. Klik op een markering om te bekijken."
   },

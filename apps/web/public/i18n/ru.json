@@ -1285,7 +1285,6 @@
     "findingStaysNearby": "Поиск жилья поблизости…",
     "noStaysListedYetBrowse": "Поблизости пока ничего нет — посмотрите шире.",
     "browseAllStays": "Смотреть всё жильё",
-    "nStays": "{{count}} вариантов",
     "stepN": "Шаг {{n}}",
     "nHostelsInArea": "В этом районе {{count}} хостелов. Нажмите на маркер, чтобы посмотреть."
   },

@@ -1280,7 +1280,6 @@
     "findingStaysNearby": "Recherche de séjours à proximité…",
     "noStaysListedYetBrowse": "Aucun séjour listé pour l’instant — élargissez la zone.",
     "browseAllStays": "Voir tous les séjours",
-    "nStays": "{{count}} séjours",
     "stepN": "Étape {{n}}",
     "nHostelsInArea": "{{count}} auberges dans cette zone. Cliquez sur un repère pour l’afficher."
   },
