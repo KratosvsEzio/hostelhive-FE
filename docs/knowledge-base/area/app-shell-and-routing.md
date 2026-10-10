@@ -12,7 +12,7 @@ host console, admin, moderator) are split and guarded at the route level. Auth i
   footer, seeker tab bar, consent banner and tab-bar clearance. Also holds the skip link and the
   startup veil (the greeting bee, see [mascot and boot splash](./mascot-and-boot-splash.md)).
 - `apps/web/src/app/app.config.ts`: every provider and `provideAppInitializer` (scroll reset, API base
-  URL, i18n, geo, Google auth, Capacitor, session restore, GA, dev `?role=` seed).
+  URL, i18n, geo, Google auth, Capacitor, session restore, GA).
 - `apps/web/src/app/app.routes.ts`: `LOCALISED_ROUTES`, mounted twice by `appRoutes`.
 - `apps/web/src/app/route-reuse-strategy.ts`: `AppRouteReuseStrategy`.
 - `apps/web/src/app/core/startup-gate.ts`: `StartupGate`, the counter behind the startup veil.
@@ -83,8 +83,6 @@ on `Tenants`, `Rooms` or `Invoices`, so the list is not torn down and refetched.
 - Order in `app.routes.ts` matters: `host/listings/new/payment` and `host/listings/new` must stay before
   `host`, and the `:locale` mount before the bare one.
 - `{ path: '**', redirectTo: '' }` sends unknown URLs to the home page; there is no 404 page.
-- `app.config.ts` still has the DEV-ONLY `?role=` seed, marked to go once login lands. With `?role=super-admin` on any URL, the client-side `roleGuard` lets anyone into the
-  console chrome; only the API's refusals protect the data.
 - Stale comments: `layout/host-shell/host-shell.ts` ("slide-in drawer on mobile web") and
   `core/mobile-app.ts` ("overlay-drawer sidebar" at 768-1023px) describe a drawer that no longer
   exists. `ConsoleDrawer` (`layout/components/console-drawer/console-drawer.ts`) says the sidebar

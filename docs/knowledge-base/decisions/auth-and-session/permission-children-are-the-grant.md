@@ -16,7 +16,7 @@
 - **Deny when the list is empty**: every route and button would vanish for cached sessions and for any deploy without the field. The server enforces regardless; this check is UX.
 
 ## Consequences
-- Anything that produces a session with an empty permission list, including the `?role=` dev seed in `app.config.ts`, sees every permission-gated control.
+- Anything that produces a session with an empty permission list sees every permission-gated control.
 - Hostel creation is gated on `core:Hostel:create` rather than a role.
 - End-to-end hiding was verified only with an all-permissions session (commit body).
 
