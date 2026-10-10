@@ -25,7 +25,6 @@ Trello #105: favourite hearts read `FavoritesStore`, a localStorage list (`hh:fa
 ## Consequences
 
 - A reload with a token but no cached user starts with no user until validation finishes. The cache is then dropped, and the hearts fill only when the load lands: correct, but not instant.
-- The dev `?role=` seed's fake token gets a 401 from the load and signs that seeded session out on pages that create the store.
 - `hh:onboarding:draft` and `HostPropertyStore`'s direct A→B switch still have the same per-user-cache shape (follow-ups).
 
 ## Evidence

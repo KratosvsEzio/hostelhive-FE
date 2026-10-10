@@ -33,7 +33,6 @@ The signed-in seeker's own pages: `/account/*` (bookings, one booking, change a 
 
 ## Traps
 - **The favourites cache is per user, and only a paint-ahead.** `hh:favorites` holds `{ owner, items }` and is painted only when `owner` is the current session user id; anything else (another user, the legacy bare array) is discarded, and the server list replaces it on every load. Key anything new on `user()?.id`, not the user object — restore and `refreshSession` re-set the same user (`favorites-store.ts`).
-- **The dev `?role=` seed's fake token gets a 401 from the favourites load**, which signs that seeded session out on any page that creates the store (`favorites-store.ts` `load`). Dev only.
 - **Changing dates/rooms may not save.** PR #40 shipped it ahead of the backend (see decision); contact-only edits and cancel work.
 - **Disposition vs status**: a new guest booking's disposition can be `pending-payment` under status `pending` — still editable. Use `canEdit`, not the stage.
 - **`docs/RISKS.md` R4/BE-2 is stale on favourites**: `GET /api/favourites`, `POST /api/favourites/mark_as_favourite` and `DELETE /api/favourites/mark_as_unfavourite` all exist (401 unauthenticated vs 404 for an unknown path, checked live 2026-10-10 — `docs/implement/Bugs/105.md`).

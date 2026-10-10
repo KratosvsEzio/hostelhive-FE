@@ -32,7 +32,6 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - Auth forms render errors inline; pass `SUPPRESS_ERROR_TOAST` as `AuthApi` does.
 
 ## Traps
-- **`?role=` dev seed is live in every build.** Any URL with `?role=super-admin` seats a fake session with token `dev-token`, persists it to the cookie and skips `restoreSession` (`apps/web/src/app/app.config.ts`). Its empty permission list passes every `hasPermission` check.
 - **Empty permissions = allow all.** `SessionStore.hasPermission` fails open when the payload has no flags; only a non-empty set denies.
 - **Flag format.** Real flags are `group:Subject:action` (`apps/web/src/app/features/host/host.routes.ts`); the `payments.refund` examples in `roles.ts`, `guards.ts` and `has-permission.directive.ts` are stale.
 - **Post-login destination reads unhydrated roles.** `LeadWall.destination()` runs before `/api/users/current` returns, so with no `returnUrl` staff can land on `/` instead of their console.
