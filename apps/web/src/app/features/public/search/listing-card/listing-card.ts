@@ -9,9 +9,10 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AccommodationType, Listing } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
+import { SessionStore } from '@core/auth';
 import { SearchCapacity } from '@services';
 import { Badge, PhotoPlaceholder, TooltipFixed } from '@hostelhive/ui';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
@@ -50,6 +51,8 @@ export class ListingCard {
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly favorites = inject(FavoritesStore);
+  private readonly session = inject(SessionStore);
+  private readonly router = inject(Router);
   private readonly capacityStore = inject(SearchCapacity);
 
   protected readonly newTab = isPlatformBrowser(this.platformId)
@@ -57,7 +60,7 @@ export class ListingCard {
     : true;
 
   protected readonly img = signal(0);
-  /** Reactive saved state, backed by the localStorage-persisted FavoritesStore. */
+  /** Reactive saved state, backed by the signed-in user's FavoritesStore. */
   protected readonly saved = computed(() =>
     this.favorites.isFavorite(this.listing().id),
   );
@@ -216,6 +219,14 @@ export class ListingCard {
   protected toggleSaved(e: Event): void {
     e.preventDefault();
     e.stopPropagation();
+    // Favourites belong to an account, so a guest is sent to the Log in tab and brought back
+    // here, the same as the heart on the listing page.
+    if (!this.session.isAuthenticated()) {
+      void this.router.navigate(['/auth'], {
+        queryParams: { mode: 'login', returnUrl: this.router.url },
+      });
+      return;
+    }
     this.favorites.toggle(this.listing());
   }
 

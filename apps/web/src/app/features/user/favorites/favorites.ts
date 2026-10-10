@@ -67,8 +67,16 @@ export class AccountFavorites {
     if (!item) return;
     this.removePending.set(null);
     this._removed.update((s) => new Set([...s, item.id]));
-    this.favorites.remove(item.id);
-    this.api.unmarkFavourite(item.id).subscribe();
+    // The row goes at once; if the server refuses, it comes back where it was (the store
+    // rolls its own heart back, and the error interceptor has already said why).
+    this.favorites.unsave(item).subscribe({
+      error: () =>
+        this._removed.update((s) => {
+          const next = new Set(s);
+          next.delete(item.id);
+          return next;
+        }),
+    });
   }
 
   protected cancelRemove(): void {
