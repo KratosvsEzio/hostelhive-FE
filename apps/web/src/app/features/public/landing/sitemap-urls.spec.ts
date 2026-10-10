@@ -1,6 +1,8 @@
 import { PLACES } from './places';
 import { renderSitemap, sitemapPaths } from './sitemap-urls';
 import { hasLocalePrefix } from '@core/i18n/locales';
+import { renderRobotsTxt } from '@core/robots';
+import { robotsAllows } from '@core/robots-testing';
 
 describe('sitemapPaths', () => {
   const paths = sitemapPaths();
@@ -40,14 +42,11 @@ describe('sitemapPaths', () => {
     expect(paths.filter((p) => p.startsWith('/en/search'))).toEqual([]);
   });
 
-  // Everything here is Disallow-ed in robots.txt; a sitemap that contradicts robots.txt
-  // is a sitemap the crawler resolves against you.
+  // A sitemap that contradicts robots.txt is a sitemap the crawler resolves against you.
+  // Checked against the generated file itself, so the two cannot disagree by drifting.
   it('excludes everything robots.txt blocks', () => {
-    const blocked = ['/host/', '/admin', '/moderator', '/account', '/auth', '/notifications'];
-    for (const prefix of blocked) {
-      expect(paths.filter((p) => p.startsWith(prefix))).toEqual([]);
-    }
-    expect(paths).not.toContain('/host');
+    const robots = renderRobotsTxt('https://hostelhive.com');
+    expect(paths.filter((p) => !robotsAllows(robots, p))).toEqual([]);
   });
 
   // robots.txt matches on prefix. A bare `Disallow: /host` would block every one of these,
