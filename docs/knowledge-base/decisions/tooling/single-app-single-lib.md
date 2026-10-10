@@ -21,7 +21,7 @@ The plan and the first scaffold had two apps (`web` for the public SSR site, `co
 - Nothing structural stops a UI component from importing app code. Review has to catch it. The library keeps its independence by convention and injection tokens (`HH_LINK_LOCALISER`, `LEAFLET_MAPS_CONFIG`), not by lint.
 - The CI comment "Lint enforces module boundaries" (`.github/workflows/ci.yml`) is out of date.
 - The app's ESLint accepts both `app` and `hh` selector prefixes, because features moved in from the library kept their `hh-` names (`apps/web/eslint.config.mjs`).
-- `docs/HostelHive-Frontend-Build-Plan.md` still describes the two-app topology.
+- `docs/HostelHive-Frontend-Build-Plan.md` still describes the two-app topology, with *Superseded* notes pointing here.
 
 ## Evidence
 - `eslint.config.mjs` ("Single-app + single-lib architecture: module boundaries no longer apply")

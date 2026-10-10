@@ -45,10 +45,9 @@ Everything geographic on the client: the `@hostelhive/maps` library (Leaflet loa
   - `map-style.airbnb.json` is a Google Maps style with no references.
   - `apps/web/public/geo/pak-adm0.json` is not loaded (the drill-down starts at adm1).
   - `.hh-region` in `apps/web/src/global.css` is unused since the drill-down moved to Leaflet layers.
-- **Stale comments and docs:**
+- **Stale comments:**
   - `lib/src/maps/lib/place-cache.ts` says autocomplete is "billed per request". That was Google; Photon is free.
   - `lib/src/maps/lib/location-picker.ts` calls the picker "keyless". The basemap now needs a CARTO key.
-  - `MOBILE.md` still has a "Google Maps on device — action required" section, but the Google stack was removed in 59d3692.
 - jsdom has no `ResizeObserver`; `apps/web/src/test-setup.ts` stubs it so `whenSized` does not raise an unhandled rejection.
 
 ## Decisions
@@ -58,4 +57,4 @@ Everything geographic on the client: the `@hostelhive/maps` library (Leaflet loa
 
 ## See also
 - [search-and-discovery](./search-and-discovery.md), [listing-and-booking](./listing-and-booking.md), [host-console](./host-console.md), [landing-page](./landing-page.md), [mobile-app](./mobile-app.md), [ui-library](./ui-library.md), [tooling](./tooling.md)
-- `MOBILE.md` (geolocation permissions; its Google Maps section is stale)
+- `MOBILE.md` (geolocation permissions; the CARTO key on device)

@@ -17,7 +17,7 @@
 ## Consequences
 - The token is readable by any script on the origin, so XSS exposes it, as it would with localStorage.
 - The cookie is never sent to the API cross-origin; it only exists for the app to read.
-- No silent refresh: a 401 signs the user out (`docs/RISKS.md` R15). The build plan's Q-AUTH answer does not describe the shipped code.
+- No silent refresh: a 401 signs the user out (`docs/RISKS.md` R15). The build plan's Q-AUTH answer does not describe the shipped code, and is marked *Superseded* there.
 - The server cannot read the cookie during SSR either, because the server never seats a session (see [auth-and-session](../../area/auth-and-session.md)).
 
 ## Evidence
