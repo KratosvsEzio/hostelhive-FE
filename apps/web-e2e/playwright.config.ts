@@ -2,8 +2,16 @@ import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
+// The suite starts its own dev server, on E2E_PORT (default 4200). It does not reuse one that
+// is already listening: with several checkouts or worktrees on one machine, the server on 4200
+// is often another tree's, and reusing it tests that code while reporting on this one. A busy
+// port therefore fails loudly — pick another with E2E_PORT, or set E2E_REUSE_SERVER=1 when the
+// running server is known to be this checkout's.
+const port = Number(process.env['E2E_PORT'] || 4200);
+const serverUrl = `http://localhost:${port}`;
+
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || serverUrl;
 
 /**
  * Read environment variables from file.
@@ -24,9 +32,9 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run web:serve',
-    url: 'http://localhost:4200',
-    reuseExistingServer: true,
+    command: `npx nx run web:serve --port ${port}`,
+    url: serverUrl,
+    reuseExistingServer: process.env['E2E_REUSE_SERVER'] === '1',
     cwd: workspaceRoot,
   },
   projects: [

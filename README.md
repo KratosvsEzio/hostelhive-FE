@@ -48,6 +48,11 @@ npx nx lint web           # ESLint
 npx nx e2e web-e2e        # Playwright
 ```
 
+`nx e2e web-e2e` starts its own dev server on port 4200 and fails if that port is already taken,
+rather than testing whatever is listening there (often another checkout's server). Use
+`E2E_PORT=4210 npx nx e2e web-e2e` to run beside another server, or `E2E_REUSE_SERVER=1` to reuse a
+server you know is serving this checkout.
+
 CI (`.github/workflows/ci.yml`) runs `npx nx run-many -t lint test build typecheck e2e` on every
 pull request and on pushes to `main`.
 
