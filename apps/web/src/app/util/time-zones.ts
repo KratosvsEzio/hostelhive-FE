@@ -56,7 +56,8 @@ export function zoneOffsetLabel(zone: string, at: Date = new Date()): string {
       const part = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName })
         .formatToParts(at)
         .find((p) => p.type === 'timeZoneName');
-      if (part?.value) return part.value;
+      // Engines disagree on a zero offset: some ICU builds say "GMT+0", others "GMT".
+      if (part?.value) return part.value === 'GMT+0' ? 'GMT' : part.value;
     } catch {
       // an older engine without shortOffset; try the next form
     }
