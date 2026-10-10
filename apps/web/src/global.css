@@ -1442,3 +1442,25 @@ header.hh-header-overlay {
 main:has(> app-home) + app-site-footer > footer[class] {
   margin-top: 0;
 }
+
+/* Lenis smooth wheel scrolling (the landing page turns it on; see home/smooth-scroll.ts).
+   From lenis/dist/lenis.css, plus one rule: the site-wide smooth scroll-behavior would fight
+   Lenis, which moves the page itself a little every frame. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}

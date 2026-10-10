@@ -28,6 +28,7 @@ import { HeroClouds } from './hero-clouds/hero-clouds';
 import { HomeWhy } from './home-why/home-why';
 import { HomeCities } from './home-cities/home-cities';
 import { HomeHosts } from './home-hosts/home-hosts';
+import { useSmoothScroll } from './smooth-scroll';
 
 @Component({
   selector: 'app-home',
@@ -61,6 +62,8 @@ export class Home {
   private readonly locale = inject(LocaleStore);
 
   constructor() {
+    useSmoothScroll();
+
     // This route is prerendered, so these land in the static HTML.
     //
     // An effect rather than a plain call: the copy is translated now, and `translate`

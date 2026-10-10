@@ -25,10 +25,12 @@ $glass-glow:
   0 24px 60px -28px rgba(185, 79, 6, 0.35),
   0 2px 6px -2px rgba(31, 31, 31, 0.06);
 
+// No live `backdrop-filter`: these panels sit on soft glows that are already blurred, so a
+// blur behind them changed almost nothing you could see — but it was recomputed on every frame
+// for every card while the glows drifted and the skeletons shimmered, which made scrolling
+// through these sections stutter. A translucent fill gives the same frosted look for free.
 @mixin frosted {
   background: $glass;
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
   border: 1px solid $glass-line;
   box-shadow:
     $glass-glow,
@@ -98,7 +100,8 @@ $glass-glow:
 .hl-glow i {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  // Each blob is already a soft radial gradient: a CSS blur on top of it was nearly invisible
+  // but costly to paint at this size, and made the first scroll into these sections hitch.
   opacity: 0.85;
   animation: hl-glow 18s ease-in-out infinite alternate;
 }
@@ -107,14 +110,14 @@ $glass-glow:
   height: 46vw;
   left: -10vw;
   top: 0;
-  background: radial-gradient(circle, $brand-200, transparent 70%);
+  background: radial-gradient(circle closest-side, $brand-200, rgba(249, 190, 156, 0.4) 45%, transparent);
 }
 .hl-glow i:nth-child(2) {
   width: 40vw;
   height: 40vw;
   right: -8vw;
   bottom: -6vw;
-  background: radial-gradient(circle, #ffd9a8, transparent 70%);
+  background: radial-gradient(circle closest-side, #ffd9a8, rgba(255, 217, 168, 0.4) 45%, transparent);
   animation-delay: -6s;
 }
 .hl-glow i:nth-child(3) {
@@ -122,7 +125,7 @@ $glass-glow:
   height: 34vw;
   left: 34vw;
   top: 30%;
-  background: radial-gradient(circle, $brand-100, transparent 70%);
+  background: radial-gradient(circle closest-side, $brand-100, rgba(252, 220, 200, 0.4) 45%, transparent);
   animation-delay: -11s;
 }
 @keyframes hl-glow {
