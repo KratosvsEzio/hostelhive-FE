@@ -22,31 +22,19 @@ Keep the `.jks` file and its passwords safe (a lost upload key can be reset with
 Signing; a lost *app* signing key cannot — so enrol in **Play App Signing**, which is the default).
 
 ### 2. Tell Gradle about it (secrets stay out of git)
-Create `android/keystore.properties` (git-ignored — see `keystore.properties.example`):
+Copy `android/keystore.properties.example` to `android/keystore.properties` (git-ignored)
+and fill in your values:
 ```
 storeFile=../../hostelhive-upload.jks
 storePassword=********
 keyAlias=hostelhive
 keyPassword=********
 ```
-Then the release `signingConfig` in `android/app/build.gradle` (ask me to wire this — it
-reads the file above only if present, so debug builds keep working without it):
-```gradle
-def ksFile = rootProject.file('keystore.properties')
-def ks = new Properties()
-if (ksFile.exists()) { ks.load(new FileInputStream(ksFile)) }
-android {
-  signingConfigs {
-    release {
-      if (ksFile.exists()) {
-        storeFile file(ks['storeFile']); storePassword ks['storePassword']
-        keyAlias ks['keyAlias'];          keyPassword ks['keyPassword']
-      }
-    }
-  }
-  buildTypes { release { signingConfig signingConfigs.release } }
-}
-```
+`storeFile` is resolved relative to `android/app/`, so `../../` is the repo root.
+
+That is all — the release `signingConfig` is already wired in `android/app/build.gradle`.
+It reads `android/keystore.properties` only if the file is present, so debug builds (and
+unsigned release builds) keep working without it.
 
 ### 3. Build the AAB
 ```powershell
@@ -75,10 +63,15 @@ your Apple Developer enrolment). Then **Product → Archive → Distribute App �
 - [ ] **Apple Developer Program** ($99/yr) and **Google Play Developer** ($25 one-time).
 - [ ] **Privacy policy URL** (hosted, public) — required by both.
 - [ ] **Data collection declarations** — HostelHive uses **location** (the "Near me" map
-      feature → `ACCESS_FINE/COARSE_LOCATION`) and **account data** (name/email). Declare
-      these in Play's *Data safety* form and Apple's *App Privacy* questionnaire.
-- [ ] **Maps key referrers** — add `https://localhost/*` and `capacitor://localhost/*` to
-      the Google Maps API key's allowed referrers, or the map is blank on device.
+      feature → `ACCESS_FINE/COARSE_LOCATION`), **account data** (name/email) and a
+      **push token** (Firebase Cloud Messaging, sent to the API with the device's
+      registration id). Declare these in Play's *Data safety* form and Apple's *App
+      Privacy* questionnaire.
+- [ ] **Map tiles** — build with `CARTO_BASEMAP_KEY` set in `.env`, or every map tile is
+      watermarked. Keep `localhost` on the key's domain allow-list — it is the app's
+      WebView origin (see `MOBILE.md` → *Maps on device*).
+- [ ] **Push on iOS** — configure APNs in the Firebase project and Xcode (Android push is
+      already wired through `android/app/google-services.json`).
 - [ ] **Screenshots** per device size — capture from the running app (phone + tablet/iPad).
 - [ ] **Store listing** — title, short/full description, feature graphic (Play), category,
       content rating questionnaire.
@@ -87,6 +80,7 @@ your Apple Developer enrolment). Then **Product → Archive → Distribute App �
 
 ## What's automated vs. manual
 - **Automated (Capacitor / this repo):** native projects, app id, icons, splash, the web
-  build, `bundleRelease` / Xcode archive once signing is set.
+  build, Android release signing (once `android/keystore.properties` exists), Android push,
+  `bundleRelease` / Xcode archive.
 - **Manual (you):** the two store accounts, the keystore + passwords, certificates, all
   listing content, privacy policy, and hitting "Submit".

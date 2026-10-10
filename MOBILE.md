@@ -3,7 +3,7 @@
 The Android & iOS apps are the **same Angular app** wrapped with **Capacitor 7** —
 no second codebase. Capacitor loads the no-SSR SPA build inside a native WebView
 and bridges native APIs (status bar, splash screen, hardware back button,
-geolocation) through plugins.
+geolocation, camera, push notifications, Google sign-in) through plugins.
 
 > Pinned to Capacitor **7** (not 8) on purpose: Capacitor 8's CLI requires
 > Node ≥ 22, and this workspace runs on Node 20. Capacitor 7 fully supports
@@ -36,8 +36,9 @@ powershell -ExecutionPolicy Bypass -File tools\build-android.ps1
 ```
 It is **resumable** — re-run it and it continues partial downloads (handy on a slow or
 flaky connection). Output: `android\app\build\outputs\apk\debug\app-debug.apk`.
-For a release/store build you must add a signing keystore (your passwords — do that
-step yourself) and run `gradlew bundleRelease`.
+For a release/store build, create `android/keystore.properties` from
+`android/keystore.properties.example` (your keystore and passwords — do that step yourself)
+and run `gradlew bundleRelease`; `android/app/build.gradle` picks it up. See `STORE.md`.
 
 ### iOS (requires a Mac — cannot build on Windows)
 On a Mac with **Xcode 16+** and CocoaPods installed:
@@ -61,19 +62,14 @@ bash tools/setup-ios.sh   # deps → SPA build → cap add ios → sync → icon
 - **`android/`** — the native project. It's committed; build artifacts inside are
   git-ignored by Capacitor's generated `android/.gitignore`.
 
-## ⚠️ Google Maps on device — action required
+## Maps on device
 
-The Google Maps key is **HTTP-referrer-restricted** to the web domains. Inside the
-app the WebView origin is `https://localhost` (Android) / `capacitor://localhost`
-(iOS), so **Maps and Places will be blocked on device** until those origins are
-allowed. In Google Cloud Console → the API key → *Website restrictions*, add:
-
-```
-https://localhost/*
-capacitor://localhost/*
-```
-
-(Or issue a separate key for the mobile app.)
+Maps are **Leaflet with CARTO Voyager tiles** (`@hostelhive/maps`), the same as on the web.
+The basemap key comes from `CARTO_BASEMAP_KEY` in the repo-root `.env`, written into the
+build by the `sync-maps-env` target (a dependency of `build-mobile`). Without it the map
+still draws, but every tile is watermarked. The key is protected by the domain allow-list
+set when it was requested (see `.env.example`); keep `localhost` on it, because inside the
+app the WebView origin is `https://localhost` (Android) / `capacitor://localhost` (iOS).
 
 ## Status & remaining follow-ups
 
@@ -89,8 +85,15 @@ capacitor://localhost/*
 - **Safe-area insets** — DONE. `viewport-fit=cover` + `env(safe-area-inset-*)`
   (`.safe-pt` on the top bars, a calc on the map FAB) so chrome clears notches /
   status bars / home indicators. A no-op until the app runs edge-to-edge.
-- **Push notifications** — not set up; needs `@capacitor/push-notifications` plus a
-  Firebase project (`google-services.json`) and APNs config.
+- **Push notifications** — DONE on Android. Firebase Cloud Messaging through
+  `@capacitor/push-notifications`; the Firebase config `android/app/google-services.json`
+  is committed. `PushNotificationsService` (`apps/web/src/app/core/push-notifications.ts`)
+  registers silently at startup if permission was already granted, asks for permission
+  after sign-in, and rotates the registration on sign-out; the token travels to the API
+  as `X-FCM-Token` / `X-Device-Id`. Notifications land on the `hh_default` channel, and a
+  tap opens `/notifications`. Without `google-services.json` the build still passes but
+  push does nothing. **iOS** still needs APNs configured in the Firebase project and
+  Xcode once the `ios/` project exists.
 - **Offline fonts/icons** — DONE. Inter + Poppins (`@fontsource`) and the Tabler icon
   webfont (`@tabler/icons-webfont`) are self-hosted via `global.css` and bundled into
   the build (woff2 land in `…/assets/public/media/`) — renders with no network.
