@@ -29,6 +29,8 @@ import { HostBookingsApi } from '../host-bookings-api';
 import { RouterLink } from '@angular/router';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { isSubscriptionError } from '@util/subscription-error';
+import { errorStatus } from '@core/errors/api-error-text';
+import { bookingSaveFailureKey } from './booking-save-failure';
 
 /**
  * A room type as this form needs it: what it is called, how it is sold, what it costs.
@@ -50,8 +52,14 @@ interface PickableRoom {
 
 interface RoomsState {
   loading: boolean;
+  /** A translation key, or `''` when the rooms loaded. */
   error: string;
   rooms: PickableRoom[];
+}
+
+/** The translation key for a room list that would not load. */
+function roomsFailureKey(err: unknown): string {
+  return errorStatus(err) === 0 ? 'common.cannotReachTheServer' : 'hostBookings.theRoomsForThisProperty';
 }
 
 /** Local midnight as `yyyy-mm-dd`, which is what the API takes. */
@@ -111,6 +119,7 @@ export class BookingFormDrawer {
   private readonly picked = signal<Record<string, number>>({});
 
   protected readonly saving = signal(false);
+  /** A translation key, or `''` while there is nothing to report. */
   protected readonly saveError = signal('');
   /**
    * The hostel's subscription has lapsed: the server refuses new bookings (400) while the ones
@@ -144,8 +153,8 @@ export class BookingFormDrawer {
             }),
           ),
           startWith<RoomsState>({ loading: true, error: '', rooms: [] }),
-          catchError((e: Error) =>
-            of<RoomsState>({ loading: false, error: e.message, rooms: [] }),
+          catchError((err: unknown) =>
+            of<RoomsState>({ loading: false, error: roomsFailureKey(err), rooms: [] }),
           ),
         );
       }),
@@ -345,13 +354,13 @@ export class BookingFormDrawer {
           this.saving.set(false);
           this.saved.emit();
         },
-        error: (e: Error) => {
+        error: (err: unknown) => {
           this.saving.set(false);
-          if (isSubscriptionError(e)) {
+          if (isSubscriptionError(err)) {
             this.needsSubscription.set(true);
             return;
           }
-          this.saveError.set(e.message || 'Could not save that booking.');
+          this.saveError.set(bookingSaveFailureKey(err));
         },
       });
   }

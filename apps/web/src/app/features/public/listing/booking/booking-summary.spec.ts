@@ -104,10 +104,22 @@ describe('BookingSummary', () => {
 
   it('shows a failure in place, rather than sending the guest away', () => {
     setUp();
-    fixture.componentInstance.err.set('Only 1 left of Mixed Dorm for those dates.');
+    fixture.componentInstance.err.set('publicBooking.roomNoLongerBookable');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Only 1 left of Mixed Dorm');
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
+    const text = alert?.textContent ?? '';
+    expect(text).toContain('publicBooking.couldnTBook');
+    expect(text).toContain('publicBooking.roomNoLongerBookable');
+    // The headline first, then why.
+    expect(text.indexOf('publicBooking.couldnTBook')).toBeLessThan(
+      text.indexOf('publicBooking.roomNoLongerBookable'),
+    );
+  });
+
+  it('shows no failure until one is set', () => {
+    setUp();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')).toBeNull();
   });
 
   it('emits rather than booking — the page owns the request', () => {

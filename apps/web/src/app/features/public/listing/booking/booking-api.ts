@@ -1,6 +1,8 @@
+import { HttpContext } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, delay, map, of, throwError } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import {
   ApiCreatedBookingResponse,
   BookingRequestInput,
@@ -183,10 +185,17 @@ export class BookingApi {
    * Answers with the booking reference and nothing else. That is the one thing on the created
    * record a guest needs afterwards — what they quote when they ring the hostel — and every
    * further field read here is a field that breaks the confirmation when it gets renamed.
+   *
+   * Opted out of the global error toast: the listing page says why the booking failed inline,
+   * and a toast on top would repeat it in the server's untranslated words.
    */
   createBooking(input: BookingRequestInput): Observable<CreatedBooking> {
     return this.api
-      .post<ApiCreatedBookingResponse>('/api/bookings', toBookingRequest(input))
+      .post<ApiCreatedBookingResponse>(
+        '/api/bookings',
+        toBookingRequest(input),
+        new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
+      )
       .pipe(map(readCreatedBooking));
   }
 

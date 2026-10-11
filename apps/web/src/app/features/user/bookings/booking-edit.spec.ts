@@ -164,16 +164,67 @@ describe('AccountBookingEdit', () => {
     expect(navigate).toHaveBeenCalledWith(['..'], expect.objectContaining({ state: { booking: stored } }));
   });
 
-  it("keeps the review open with the server's reason when the change is refused", () => {
-    const refused = () => throwError(() => ({ message: 'Only pending bookings can be updated' }));
-    const { review, fixture, el, navigate } = render(booking(), refused);
-    review()?.saved.emit(DETAILS);
-    fixture.detectChanges();
+  describe('when the change is refused', () => {
+    const API_URL = 'http://localhost/api/bookings/RbNKwO';
 
-    expect(navigate).not.toHaveBeenCalled();
-    expect(el.querySelector('app-booking-edit-modal [role="alert"]')?.textContent).toContain(
-      'Only pending bookings can be updated',
-    );
+    /** An error shaped the way the error interceptor rethrows it. */
+    function apiError(status: number, serverMessages?: readonly string[]) {
+      return {
+        status,
+        code: 'unknown_error',
+        message: serverMessages?.join(' ') ?? `Http failure response for ${API_URL}: ${status} Forbidden`,
+        serverMessages,
+        method: 'PATCH',
+      };
+    }
+
+    /** Saves the review against the given failure and returns what the dialog's alert says. */
+    function refuseWith(failure: unknown) {
+      const rendered = render(booking(), () => throwError(() => failure));
+      rendered.review()?.saved.emit(DETAILS);
+      rendered.fixture.detectChanges();
+      const alert = rendered.el.querySelector('app-booking-edit-modal [role="alert"]')?.textContent ?? '';
+      return { ...rendered, alert };
+    }
+
+    function expectNoLeak(el: HTMLElement, ...leaks: string[]): void {
+      const shown = el.textContent ?? '';
+      expect(shown).not.toContain('Http failure');
+      expect(shown).not.toContain('http://');
+      for (const leak of leaks) expect(shown).not.toContain(leak);
+    }
+
+    it('keeps the review open with the reason in the guest’s language, not the server’s', () => {
+      const text = 'This booking can no longer be updated';
+      const { el, navigate, alert } = refuseWith(apiError(422, [text]));
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(el.querySelector('app-booking-edit-modal')).not.toBeNull();
+      expect(alert).toContain('userBookings.noLongerEditable');
+      expectNoLeak(el, text);
+    });
+
+    it.each([
+      { text: 'Bookings cannot be updated within 3 days of check-in', key: 'userBookings.withinCutoff' },
+      { text: 'Mixed Dorm is not available for booking', key: 'userBookings.roomNoLongerBookable' },
+      { text: 'Checkout date must be after check-in date', key: 'userBookings.checkOutAfterCheckIn' },
+    ])('shows $key for "$text"', ({ text, key }) => {
+      const { el, alert } = refuseWith(apiError(422, [text]));
+      expect(alert).toContain(key);
+      expectNoLeak(el, text);
+    });
+
+    it.each([
+      { case: 'a URL-bearing 403', failure: apiError(403), key: 'userBookings.changeFailed' },
+      { case: 'a bare 404', failure: apiError(404), key: 'userBookings.bookingNotFound' },
+      { case: 'a network failure', failure: apiError(0), key: 'common.cannotReachTheServer' },
+      { case: 'a plain error from a mapper', failure: new Error('booking RbNKwO not in response'), key: 'userBookings.changeFailed' },
+    ])('shows $key and leaks nothing on $case', ({ failure, key }) => {
+      const { el, navigate, alert } = refuseWith(failure);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(alert).toContain(key);
+      expectNoLeak(el, 'booking RbNKwO not in response', API_URL);
+    });
   });
 
   describe('a confirmed booking', () => {

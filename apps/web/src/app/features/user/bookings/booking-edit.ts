@@ -23,6 +23,7 @@ import { BookingRail } from '@features/public/listing/booking/booking-rail';
 import { RoomPicker } from '@features/public/listing/booking/room-picker';
 import { RoomOffer, lineTotal } from '@features/public/listing/booking/room-offer';
 import { BookingEditModal, StayChangeSummary } from './booking-edit-modal';
+import { changeFailureKey } from './booking-change-failure';
 import { GuestBooking, GuestBookingPatch, MyBookingsApi, canEdit, withinChangeCutoff } from './my-bookings-api';
 
 /** A wall date (`yyyy-MM-dd`) as the local midnight the date picker works in. */
@@ -184,6 +185,7 @@ export class AccountBookingEdit {
   // ── review and save ────────────────────────────────────────────────────────────
   protected readonly reviewOpen = signal(false);
   protected readonly saving = signal(false);
+  /** A translation key, or `''` while there is nothing to report. */
   protected readonly saveError = signal('');
 
   protected readonly summary = computed<StayChangeSummary | null>(() => {
@@ -248,9 +250,9 @@ export class AccountBookingEdit {
           // Back to the booking, carrying what the server stored so it draws at once.
           void this.router.navigate(['..'], { relativeTo: this.route, state: { booking: updated } });
         },
-        error: (err: { message?: string } | null) => {
+        error: (err: unknown) => {
           this.saving.set(false);
-          this.saveError.set(err?.message || translate('userBookings.changeFailed'));
+          this.saveError.set(changeFailureKey(err, 'update'));
         },
       });
   }

@@ -27,6 +27,7 @@ import {
   timingOf,
 } from './my-bookings-api';
 import { STEP_LABEL, TrackStep, asDay, stageIndex, statusOf } from './booking-status';
+import { changeFailureKey } from './booking-change-failure';
 
 /**
  * One booking, in full: where it has got to, the stay, the money, and who it is for.
@@ -239,6 +240,7 @@ export class AccountBookingDetail {
   protected readonly cancelOpen = signal(false);
   /** Locks the dialog while the request is out. */
   protected readonly busy = signal(false);
+  /** A translation key, or `''` while there is nothing to report. */
   protected readonly actionError = signal('');
 
   protected openCancel(): void {
@@ -254,7 +256,7 @@ export class AccountBookingDetail {
   /**
    * Cancels, and takes the server's copy of the booking back as the new truth — the reply,
    * not a guess, since cancelling moves the status and the disposition together. A failure
-   * stays in the dialog, where the guest is looking, with the server's own reason.
+   * stays in the dialog, where the guest is looking, with the reason in their language.
    */
   protected confirmCancel(): void {
     const b = this.booking();
@@ -268,9 +270,9 @@ export class AccountBookingDetail {
         this.cancelOpen.set(false);
         this.notifications.success(translate('userBookings.bookingCancelled'));
       },
-      error: (err: { message?: string } | null) => {
+      error: (err: unknown) => {
         this.busy.set(false);
-        this.actionError.set(err?.message || translate('userBookings.changeFailed'));
+        this.actionError.set(changeFailureKey(err, 'cancel'));
       },
     });
   }
