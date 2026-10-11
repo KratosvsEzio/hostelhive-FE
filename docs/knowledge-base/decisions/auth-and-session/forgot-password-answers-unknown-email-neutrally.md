@@ -22,7 +22,7 @@ The page used to show the server's text for all of these. Trello #150 asked for 
 - **Treat a 500 as sent.** Rejected: an outage would look like success.
 
 ## Consequences
-- **The page alone does not stop enumeration.** The API's status codes, the "already sent" notice (only real accounts get a 422), sign-in's "User not found" and sign-up's "already registered" all still reveal accounts. The real fix is for the backend to return the same 201 for any email; that has been asked of the BE developer.
+- **The page alone does not stop enumeration.** The API's status codes, the "already sent" notice (only real accounts get a 422), sign-in's 404 "User not found" and sign-up's "already registered" all still reveal accounts. Since Trello #151 (PR #129), the sign-in page is neutral too: a wrong password and an unknown email show the same message. The real fix is for the backend to return the same 201 for any email; that has been asked of the BE developer.
 - **When the backend returns 201 for unknown emails, the FE needs no change.** The 404 mapping then becomes dead and can be removed.
 - `retry_after` is not shown: the interceptor drops it and CORS doesn't expose `Retry-After`. The copy says "a few minutes".
 
