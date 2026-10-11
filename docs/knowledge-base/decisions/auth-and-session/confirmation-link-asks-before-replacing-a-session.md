@@ -20,7 +20,8 @@
 - **Wait for startup validation before deciding**: replaced by reading the backend's `expiry` claim, which retires a dead overnight token before the page decides (see [Only a 401 ends a session](only-a-401-ends-a-session.md)).
 
 ## Consequences
-- After Continue, the device's push token is not linked to the new account until its next sign-in: the backend links devices only in `issue_token` and the confirm POST carries no FCM token once `rotate()` has run (Trello #142). The page is effectively web-only anyway — the Android app declares no app links.
+- After Continue, the confirm POST carries no FCM token (`rotate()` has just cleared it); the backend links the fresh token to the new account on its next authenticated request (BE PR #39, Trello #142 — before that it linked devices only in `issue_token`). The page is effectively web-only anyway — the Android app declares no app links.
+- Since BE PR #39 the backend answers an unknown or used confirmation token with 404 and an expired one with 403 (each with a message); the page still shows one combined translated message — Trello #149.
 - A revoked-but-unexpired previous token rejected during startup validation still sends the visitor home with the link unspent.
 
 ## Evidence
