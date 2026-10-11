@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
 import { ModerationApi, UNLABELLED } from './moderation-api';
 
@@ -166,5 +166,55 @@ describe('ModerationApi.getById — a photo the server has rejected', () => {
     api.getById('1').subscribe((d) => (out = d.photos.map((p) => p.decision)));
 
     expect(out).toEqual(['pending']);
+  });
+});
+
+/**
+ * "Member since" on the review screen.
+ *
+ * A moderator can't read `GET /api/users/:id` (403), so the user lookup fails for exactly the
+ * people who use this screen. The hostel payload embeds the host's `created_at`, and that has
+ * to be enough on its own.
+ */
+describe('ModerationApi.getById — the host\'s "Member since"', () => {
+  function setUpRoutes(hostCreatedAt: string | null, user: 'forbidden' | { created_at: string | null }) {
+    TestBed.resetTestingModule();
+    const http = {
+      get: (url: string): Observable<unknown> => {
+        if (url.startsWith('/api/moderator/hostels/')) {
+          return of({
+            hostel: { id: 'MjvuEl', name: 'Backpacker', host: { id: 'tDzjiS', name: 'Mia Amir', created_at: hostCreatedAt } },
+          });
+        }
+        if (url.startsWith('/api/users/')) {
+          return user === 'forbidden'
+            ? throwError(() => ({ status: 403 }))
+            : of({ user: { id: 'tDzjiS', name: 'Mia Amir', email: 'mia@test', is_active: true, created_at: user.created_at } });
+        }
+        return of({});
+      },
+    };
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: http }] });
+    return TestBed.inject(ModerationApi);
+  }
+
+  function memberSince(api: ModerationApi): string | null | undefined {
+    let out: string | null | undefined;
+    api.getById('MjvuEl').subscribe((d) => (out = d.hostMemberSince));
+    return out;
+  }
+
+  it('reads the embedded date when the user lookup is refused', () => {
+    expect(memberSince(setUpRoutes('2026-06-08T16:01:08.269+05:00', 'forbidden'))).toBe('Member since Jun 2026');
+  });
+
+  it('prefers the user lookup when it answers', () => {
+    expect(memberSince(setUpRoutes('2026-06-08T16:01:08.269+05:00', { created_at: '2025-11-02T09:00:00Z' }))).toBe(
+      'Member since Nov 2025',
+    );
+  });
+
+  it('stays empty when neither source has a date', () => {
+    expect(memberSince(setUpRoutes(null, 'forbidden'))).toBeNull();
   });
 });

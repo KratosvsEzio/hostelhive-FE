@@ -97,9 +97,10 @@ export class ModerationApi {
    * reviewed or does not exist at all — either way it is not the record the decision is
    * about.
    *
-   * The host lookup survives the move: the moderator payload embeds name, email, phone and
-   * is_active, all of which `toReviewDetail` already falls back to — but not `created_at`,
-   * and that is the whole of "Member since".
+   * The moderator payload embeds the host's name, email, phone and `created_at`, and
+   * `toReviewDetail` falls back to each. The lookup is kept for `is_active`, which the embed
+   * lacks. It answers admins; a moderator gets a 403, so for them "Member since" comes from
+   * the embed.
    */
   getById(id: string): Observable<ReviewDetail> {
     return this.hostels.getForModeration(id).pipe(
@@ -439,9 +440,7 @@ function toReviewDetail(
     hostEmail: host?.email ?? hostel.host?.email ?? null,
     hostPhone: host?.phone ?? hostel.host?.phone ?? null,
     hostActive: host?.is_active ?? hostel.host?.is_active ?? null,
-    hostMemberSince: host?.created_at
-      ? `Member since ${monthYear(host.created_at)}`
-      : null,
+    hostMemberSince: memberSince(host?.created_at ?? hostel.host?.created_at),
     statusLabel: hostel.status?.name ?? null,
     dispositionLabel: hostel.disposition?.name ?? null,
     address: buildAddress(hostel),
@@ -479,6 +478,17 @@ function dateLabel(iso: string | null): string {
 /** 'Jun 2026' from an ISO date; '' when missing/invalid. */
 function monthYear(iso: string): string {
   try { return format(parseISO(iso), 'MMM yyyy'); } catch { return ''; }
+}
+
+/**
+ * "Member since …" from the host's sign-up date, or null when there is none.
+ *
+ * The user lookup is tried first, then the host embedded on the hostel. A moderator can't read
+ * `GET /api/users/:id` (403), so for them the embedded `created_at` is the only source.
+ */
+function memberSince(createdAt: string | null | undefined): string | null {
+  const label = createdAt ? monthYear(createdAt) : '';
+  return label ? `Member since ${label}` : null;
 }
 
 /** Whole-day / hour label for the in-queue badge. */
