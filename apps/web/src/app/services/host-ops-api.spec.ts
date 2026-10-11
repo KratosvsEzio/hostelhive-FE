@@ -198,39 +198,89 @@ describe('HostOpsApi room writes', () => {
  * why the caller can replace the grid outright instead of re-reading it.
  */
 /**
- * Re-splitting a utility bill across renters.
+ * Saving an edited utility bill.
  *
- * Both halves were wrong: the path was the singular `/api/host/hostel/…`, which has no route,
- * and each renter bill id went through `Number(...)`, which turns an obfuscated id into NaN.
- * The backend decodes the ids as strings since azeem-hamza/hostelhive#34.
+ * The path was the singular `/api/host/hostel/…`, which has no route, and each renter bill id
+ * went through `Number(...)`, which turns an obfuscated id into NaN. The backend decodes the
+ * ids as strings since azeem-hamza/hostelhive#34.
  */
 describe('HostOpsApi.updateUtilityBill', () => {
+  const body = {
+    total_amount: 27900,
+    consumed_units: 300,
+    previous_units: 2000,
+    current_units: 2300,
+    cost_per_unit: 93,
+    issued_date: '2026-10-01',
+    due_date: '2026-10-30',
+    renter_bills_attributes: [
+      { id: 'rB1aaa', amount: 18600, bill_days: 31, due_date: '2026-10-30', issued_date: '2026-10-01', break_down: { electricity_bill: 18600 } },
+      { id: 'rB2bbb', amount: 9300, bill_days: 31, due_date: '2026-10-30', issued_date: '2026-10-01', break_down: { electricity_bill: 9300 } },
+    ],
+  };
+
   it('puts to the plural hostels route', () => {
     const { api, http } = setUp();
 
-    api.updateUtilityBill('MjvuEl', 'Xk3pQa', [{ id: 'rB1aaa', amount: 1200 }]).subscribe();
+    api.updateUtilityBill('MjvuEl', 'Xk3pQa', body).subscribe();
 
     expect(http.puts[0].path).toBe('/api/host/hostels/MjvuEl/utility_bills/Xk3pQa');
   });
 
-  it('sends the renter bill ids unchanged, as the obfuscated strings they are', () => {
+  it('sends the bill figures and the shares together, renter bill ids as the strings they are', () => {
     const { api, http } = setUp();
 
-    api
-      .updateUtilityBill('MjvuEl', 'Xk3pQa', [
-        { id: 'rB1aaa', amount: 1200 },
-        { id: 'rB2bbb', amount: 800 },
-      ])
-      .subscribe();
+    api.updateUtilityBill('MjvuEl', 'Xk3pQa', body).subscribe();
 
-    expect(http.puts[0].body).toEqual({
-      utility_bill: {
-        renter_bills_attributes: [
-          { id: 'rB1aaa', amount: 1200 },
-          { id: 'rB2bbb', amount: 800 },
-        ],
-      },
+    expect(http.puts[0].body).toEqual({ utility_bill: body });
+  });
+});
+
+/**
+ * Reading one utility bill back for the edit form.
+ *
+ * The edit form matches renter bills to renters and the bill to a room by these ids, against
+ * the renters and rooms endpoints, which use the obfuscated ids. Where a payload also carries
+ * the raw number (the list's `room_id` is `19` next to `room.id` `bCGPAU`, seen live on
+ * 2026-10-11), the nested obfuscated id has to win.
+ */
+describe('HostOpsApi.getUtilityBill', () => {
+  function withBill(bill: unknown): HostOpsApi {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [{ provide: ApiClient, useValue: { get: () => of({ renter_bill: bill }) } }],
     });
+    return TestBed.inject(HostOpsApi);
+  }
+
+  it('takes the room and renter ids from the nested objects over the raw numbers', () => {
+    const api = withBill({
+      id: 'aVXGyz',
+      room_id: 19,
+      room: { id: 'bCGPAU', room_number: '01' },
+      total_amount: '27600.0',
+      renter_bills: [{ id: 'ZNmJnB', renter_id: 7, renter: { id: 'EIpOsF', full_name: 'Aashir Azeem' }, amount: '27600.0', bill_days: 31 }],
+    });
+    let bill: { roomId: string; splits?: { tenantId: string }[] } | undefined;
+
+    api.getUtilityBill('DZNqAc', 'aVXGyz').subscribe((b) => (bill = b));
+
+    expect(bill?.roomId).toBe('bCGPAU');
+    expect(bill?.splits?.[0].tenantId).toBe('EIpOsF');
+  });
+
+  it('falls back to the flat ids when there is no nested object', () => {
+    const api = withBill({
+      id: 'aVXGyz',
+      room_id: 'bCGPAU',
+      renter_bills: [{ id: 'ZNmJnB', renter_id: 'EIpOsF', amount: 100 }],
+    });
+    let bill: { roomId: string; splits?: { tenantId: string }[] } | undefined;
+
+    api.getUtilityBill('DZNqAc', 'aVXGyz').subscribe((b) => (bill = b));
+
+    expect(bill?.roomId).toBe('bCGPAU');
+    expect(bill?.splits?.[0].tenantId).toBe('EIpOsF');
   });
 });
 
