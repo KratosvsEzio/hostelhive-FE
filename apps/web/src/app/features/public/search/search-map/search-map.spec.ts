@@ -1,10 +1,17 @@
-import { NO_ERRORS_SCHEMA, PLATFORM_ID, WritableSignal, signal } from '@angular/core';
+import {
+  Component,
+  NO_ERRORS_SCHEMA,
+  PLATFORM_ID,
+  WritableSignal,
+  inject,
+  signal,
+} from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { ActivatedRoute, Router, UrlSegment, provideRouter } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { Listing, Paginated } from '@hostelhive/data-access';
-import { GeolocationService, SharedMap } from '@hostelhive/maps';
+import { GeolocationService, PlaceResult, SharedMap } from '@hostelhive/maps';
 import { SessionStore } from '@core/auth';
 import { CountryBounds } from '@core/geo/country-bounds';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
@@ -36,82 +43,190 @@ const ROSE = {
   lng: 74.3,
 } as unknown as Listing;
 
-/** The component's members are `protected`; the spec reaches the docked card through this shape. */
+const ONE_PAGE: Paginated<Listing> = {
+  items: [ROSE],
+  total: 1,
+  page: 1,
+  pageSize: 20,
+  totalPages: 1,
+};
+
+/** The component's members are `protected`; the spec reaches them through this shape. */
 interface SearchMapInternals {
   narrow: WritableSignal<boolean>;
   selected: WritableSignal<string | null>;
+  unbounded: WritableSignal<boolean>;
+  map: unknown;
   listings(): Listing[];
+  onPlaceSelected(r: PlaceResult): void;
+  searchEverywhere(): void;
+  locateMe(): Promise<void>;
+  ensureMap(): Promise<void>;
+  syncBoundsToUrl(b: { north: number; south: number; east: number; west: number }): void;
+  leftHomeCountry(): void;
+  captureMapBounds(): void;
+  recenterTo(c: { lat: number; lng: number }): void;
 }
+
+/** The slice of the listings request these specs look at. */
+interface ListQuery {
+  near?: { lat: number; lng: number };
+  bounds?: unknown;
+}
+
+/** A page for the router to land on; the search component under test is mounted directly. */
+@Component({ template: '' })
+class BlankPage {}
+
+/** Resolves every URL, so real navigations (`:locale/hostels/**`, `:locale/search[/:slug]`) settle. */
+const anyUrl = (segments: UrlSegment[]) => ({ consumed: segments });
+
+interface SearchMapConfig {
+  /** Server keeps Leaflet, the infinite-scroll observer and the store load out. */
+  platform?: 'server' | 'browser';
+  locale?: string;
+  localeReady?: boolean;
+  list?: ReturnType<typeof vi.fn>;
+  geolocation?: { getCurrent: () => Promise<{ lat: number; lng: number }> };
+  forVisitor?: ReturnType<typeof vi.fn>;
+  acquire?: ReturnType<typeof vi.fn>;
+  seo?: { apply: ReturnType<typeof vi.fn>; setJsonLd: ReturnType<typeof vi.fn> };
+  favorites?: object;
+}
+
+const guestFavorites = {
+  toggle: vi.fn(),
+  isFavorite: () => false,
+  items: signal<Listing[]>([]),
+};
+
+/** Registers the component's collaborators; the page's own markup is all that renders. */
+function configureSearchMap(config: SearchMapConfig = {}): void {
+  // jsdom has no matchMedia; a non-matching desktop query is a phone-width viewport.
+  (window as unknown as Record<string, unknown>)['matchMedia'] = () => ({
+    matches: false,
+  });
+
+  TestBed.configureTestingModule({
+    imports: [SearchMap],
+    providers: [
+      provideRouter([
+        { path: ':locale/search/:location', component: BlankPage },
+        { matcher: anyUrl, component: BlankPage },
+      ]),
+      provideI18nTesting(),
+      { provide: PLATFORM_ID, useValue: config.platform ?? 'server' },
+      { provide: FavoritesStore, useValue: config.favorites ?? guestFavorites },
+      {
+        provide: ListingsApi,
+        useValue: { list: config.list ?? (() => of<Paginated<Listing>>(ONE_PAGE)) },
+      },
+      { provide: OffersApi, useValue: { categories: () => of([]) } },
+      {
+        provide: CountryBounds,
+        useValue: { forVisitor: config.forVisitor ?? (() => Promise.resolve(null)) },
+      },
+      // Never settles, so the map is never built.
+      {
+        provide: SharedMap,
+        useValue: {
+          acquire: config.acquire ?? (() => new Promise(() => undefined)),
+          release: () => undefined,
+          listen: () => undefined,
+        },
+      },
+      {
+        provide: GeolocationService,
+        useValue: config.geolocation ?? { getCurrent: () => new Promise(() => undefined) },
+      },
+      { provide: MobileApp, useValue: { isMobile: signal(false) } },
+      { provide: GoogleAnalyticsService, useValue: { track: () => undefined } },
+      {
+        provide: Seo,
+        useValue: config.seo ?? { apply: () => undefined, setJsonLd: () => undefined },
+      },
+      {
+        provide: LocaleStore,
+        useValue: {
+          ready: signal(config.localeReady ?? false),
+          active: signal(config.locale ?? 'en'),
+        },
+      },
+    ],
+  });
+  // Filters, cards, place search and the currency picker are inert elements.
+  TestBed.overrideComponent(SearchMap, {
+    set: {
+      imports: [TranslocoPipe, CurrencyNamePipe],
+      schemas: [NO_ERRORS_SCHEMA],
+      // Per instance, so a routed mount can hand the component its own route.
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useFactory: () => routedRoute ?? inject(Router).routerState.root,
+        },
+      ],
+    },
+  });
+}
+
+/** The route a routed mount gives the component; null leaves it on the root route. */
+let routedRoute: ActivatedRoute | null = null;
+
+function cleanupSearchMap(): void {
+  vi.useRealTimers();
+  routedRoute = null;
+  TestBed.inject(SessionStore).clear();
+  delete (window as unknown as Record<string, unknown>)['matchMedia'];
+  vi.restoreAllMocks();
+}
+
+/**
+ * Creates the component, optionally after really navigating to `url` (so the component's
+ * route carries that query), and with `seed` set the way a landing page sets it.
+ */
+async function mount(
+  url?: string,
+  seed?: Record<string, string> | null,
+  routed = false,
+): Promise<{ fixture: ComponentFixture<SearchMap>; map: SearchMapInternals }> {
+  const router = TestBed.inject(Router);
+  if (url) await router.navigateByUrl(url);
+  // A routed page gets the route that matched it, and with it the `:location` param. Without
+  // this the component sees the root route, which carries the query but no path params.
+  routedRoute = routed ? router.routerState.root.firstChild : null;
+  const fixture = TestBed.createComponent(SearchMap);
+  if (seed) fixture.componentRef.setInput('seed', seed);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  return { fixture, map: fixture.componentInstance as unknown as SearchMapInternals };
+}
+
+/** A listings stub that records each request and answers with one page. */
+const listSpy = (): ReturnType<typeof vi.fn> =>
+  vi.fn(() => of<Paginated<Listing>>(ONE_PAGE)) as ReturnType<typeof vi.fn>;
+
+const queryAt = (list: ReturnType<typeof vi.fn>, i: number): ListQuery =>
+  list.mock.calls[i][0] as ListQuery;
+
+const lastQuery = (list: ReturnType<typeof vi.fn>): ListQuery =>
+  queryAt(list, list.mock.calls.length - 1);
+
+/** The results pipeline is debounced, so wait for the search to land. */
+const firstSearch = (list: ReturnType<typeof vi.fn>) =>
+  vi.waitFor(() => expect(list).toHaveBeenCalled(), { timeout: 3000 });
+
 
 describe('SearchMap docked card heart', () => {
   let fixture: ComponentFixture<SearchMap>;
-  const favorites = {
-    toggle: vi.fn(),
-    isFavorite: () => false,
-    items: signal<Listing[]>([]),
-  };
 
   beforeEach(() => {
-    favorites.toggle.mockReset();
-    // jsdom has no matchMedia; a non-matching desktop query is a phone-width viewport.
-    (window as unknown as Record<string, unknown>)['matchMedia'] = () => ({
-      matches: false,
-    });
-
-    TestBed.configureTestingModule({
-      imports: [SearchMap],
-      providers: [
-        provideRouter([]),
-        provideI18nTesting(),
-        // Server platform keeps Leaflet, the infinite-scroll observer and the store load out.
-        { provide: PLATFORM_ID, useValue: 'server' },
-        { provide: FavoritesStore, useValue: favorites },
-        {
-          provide: ListingsApi,
-          useValue: {
-            list: () =>
-              of<Paginated<Listing>>({
-                items: [ROSE],
-                total: 1,
-                page: 1,
-                pageSize: 20,
-                totalPages: 1,
-              }),
-          },
-        },
-        { provide: OffersApi, useValue: { categories: () => of([]) } },
-        { provide: CountryBounds, useValue: { forVisitor: () => Promise.resolve(null) } },
-        // Never settles, so the map is never built.
-        {
-          provide: SharedMap,
-          useValue: {
-            acquire: () => new Promise(() => undefined),
-            release: () => undefined,
-            listen: () => undefined,
-          },
-        },
-        { provide: GeolocationService, useValue: { getCurrent: () => new Promise(() => undefined) } },
-        { provide: MobileApp, useValue: { isMobile: signal(false) } },
-        { provide: GoogleAnalyticsService, useValue: { track: () => undefined } },
-        { provide: Seo, useValue: { apply: () => undefined, setJsonLd: () => undefined } },
-        {
-          provide: LocaleStore,
-          useValue: { ready: signal(false), active: signal('en') },
-        },
-      ],
-    });
-    // Only the page's own markup is under test; filters, cards, place search and the
-    // currency picker are inert elements.
-    TestBed.overrideComponent(SearchMap, {
-      set: { imports: [TranslocoPipe, CurrencyNamePipe], schemas: [NO_ERRORS_SCHEMA] },
-    });
+    guestFavorites.toggle.mockReset();
+    configureSearchMap();
   });
 
-  afterEach(() => {
-    TestBed.inject(SessionStore).clear();
-    delete (window as unknown as Record<string, unknown>)['matchMedia'];
-    vi.restoreAllMocks();
-  });
+  afterEach(cleanupSearchMap);
 
   async function settle(): Promise<void> {
     fixture.detectChanges();
@@ -124,10 +239,9 @@ describe('SearchMap docked card heart', () => {
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     vi.spyOn(router, 'url', 'get').mockReturnValue(SEARCH_URL);
 
-    fixture = TestBed.createComponent(SearchMap);
-    const map = fixture.componentInstance as unknown as SearchMapInternals;
-    await settle();
-    // The results pipeline is debounced, so wait for the search to land.
+    const mounted = await mount();
+    fixture = mounted.fixture;
+    const map = mounted.map;
     await vi.waitFor(() => expect(map.listings().map((l) => l.id)).toEqual(['h1']), {
       timeout: 3000,
     });
@@ -149,7 +263,443 @@ describe('SearchMap docked card heart', () => {
     expect(navigate).toHaveBeenCalledWith(['/auth'], {
       queryParams: { mode: 'login', returnUrl: SEARCH_URL },
     });
-    expect(favorites.toggle).not.toHaveBeenCalled();
+    expect(guestFavorites.toggle).not.toHaveBeenCalled();
     expect(map.selected()).toBe('h1');
+  });
+});
+
+const LAHORE = { place: 'Lahore', lat: '31.5204', lng: '74.3587', zoom: '11' };
+const CITY_SEED = LAHORE;
+const GIRLS_SEED = { ...LAHORE, gender: 'girls' };
+const CAMPUS_SEED = { place: 'Punjab University', lat: '31.4979', lng: '74.3035', zoom: '13' };
+
+/** What the country table answers for a visitor, in the shape `CountryBounds.forVisitor` returns. */
+const HOME = { code: 'PK', box: { north: 37, south: 23, east: 77, west: 60 } };
+
+const KARACHI: PlaceResult = {
+  label: 'Karachi, Sindh, Pakistan',
+  lat: 24.8607,
+  lng: 67.0011,
+  zoom: 10,
+};
+
+/** What leaving a landing page always clears, whatever the new geography then says. */
+const LEFT_BEHIND = {
+  ne_lat: null,
+  ne_lng: null,
+  sw_lat: null,
+  sw_lng: null,
+  place: null,
+  city: null,
+  lat: null,
+  lng: null,
+  zoom: null,
+  capacity: null,
+  sharing: null,
+  frequency: null,
+  everywhere: null,
+};
+
+/** The first `router.navigate` call, split into its commands and its extras. */
+function firstNavigation(navigate: ReturnType<typeof vi.spyOn>) {
+  const [commands, extras] = navigate.mock.calls[0] as [
+    unknown[],
+    Record<string, unknown> & { queryParams: Record<string, unknown> },
+  ];
+  return { commands, extras };
+}
+
+describe('SearchMap on a landing page', () => {
+  const GIRLS_URL = '/en/hostels/lahore/girls';
+  const CITY_URL = '/en/hostels/lahore';
+
+  afterEach(cleanupSearchMap);
+
+  /** Mounts on `url` with `seed`, then spies `navigate` without letting it go anywhere. */
+  async function mountLanding(
+    url: string,
+    seed: Record<string, string>,
+    config: SearchMapConfig = {},
+  ) {
+    configureSearchMap(config);
+    const mounted = await mount(url, seed);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    return { ...mounted, navigate };
+  }
+
+  it('leaves for the picked place in one push, carrying the page gender and clearing the old viewport', async () => {
+    const { map, navigate } = await mountLanding(GIRLS_URL, GIRLS_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search', 'karachi-sindh-pakistan']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras.queryParams).toEqual({
+      ...LEFT_BEHIND,
+      gender: 'girls',
+      place: 'Karachi, Sindh, Pakistan',
+      lat: 24.8607,
+      lng: 67.0011,
+      zoom: 10,
+    });
+  });
+
+  it('nulls the zoom when the picked place carries none', async () => {
+    const { map, navigate } = await mountLanding(GIRLS_URL, GIRLS_SEED);
+
+    map.onPlaceSelected({ label: 'Karachi, Sindh, Pakistan', lat: 24.8607, lng: 67.0011 });
+
+    expect(firstNavigation(navigate).extras.queryParams['zoom']).toBeNull();
+  });
+
+  it('lands on the picked place keeping the visitor filters and dropping the old viewport and place', async () => {
+    configureSearchMap();
+    const viewport = 'ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.2';
+    const { map } = await mount(`${GIRLS_URL}?minPrice=5000&${viewport}`, GIRLS_SEED);
+    const router = TestBed.inject(Router);
+
+    map.onPlaceSelected(KARACHI);
+    await vi.waitFor(() => expect(router.url).toContain('/en/search/karachi-sindh-pakistan'));
+
+    const tree = router.parseUrl(router.url);
+    expect(tree.queryParams).toEqual({
+      minPrice: '5000',
+      gender: 'girls',
+      place: 'Karachi, Sindh, Pakistan',
+      lat: '24.8607',
+      lng: '67.0011',
+      zoom: '10',
+    });
+  });
+
+  it('prefixes the search route with the active locale', async () => {
+    const { map, navigate } = await mountLanding('/ur/hostels/lahore/girls', GIRLS_SEED, {
+      locale: 'ur',
+    });
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).commands).toEqual(['/ur/search', 'karachi-sindh-pakistan']);
+  });
+
+  it('writes no gender when a city page has none in force', async () => {
+    const { map, navigate } = await mountLanding(CITY_URL, CITY_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams['gender']).toBeNull();
+  });
+
+  it('carries a valid gender override in place of the page gender', async () => {
+    const { map, navigate } = await mountLanding(`${GIRLS_URL}?gender=boys`, GIRLS_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams['gender']).toBe('boys');
+  });
+
+  it('scrubs an invalid gender from a city page rather than carrying it', async () => {
+    const { map, navigate } = await mountLanding(`${CITY_URL}?gender=bogus`, CITY_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams['gender']).toBeNull();
+  });
+
+  it('drops a price sort when no type is in force', async () => {
+    const { map, navigate } = await mountLanding(`${CITY_URL}?sort=price-asc`, CITY_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).toHaveProperty('sort', null);
+  });
+
+  it('keeps a price sort when the page fixes a type', async () => {
+    const { map, navigate } = await mountLanding(`${GIRLS_URL}?sort=price-asc`, GIRLS_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).not.toHaveProperty('sort');
+  });
+
+  it('keeps a non-price sort when no type is in force', async () => {
+    const { map, navigate } = await mountLanding(`${CITY_URL}?sort=newest`, CITY_SEED);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).not.toHaveProperty('sort');
+  });
+
+  it('sends Near me from a gender page to a search around the visitor', async () => {
+    const { map, navigate } = await mountLanding(GIRLS_URL, GIRLS_SEED, {
+      geolocation: { getCurrent: () => Promise.resolve({ lat: 24.9, lng: 67.1 }) },
+    });
+
+    await map.locateMe();
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras.queryParams).toEqual({
+      ...LEFT_BEHIND,
+      gender: 'girls',
+      place: 'My location',
+      lat: 24.9,
+      lng: 67.1,
+    });
+  });
+
+  it('sends Search everywhere from a campus page to a worldwide search without searching again', async () => {
+    const list = listSpy();
+    const { map, navigate } = await mountLanding(
+      '/en/hostels/lahore/punjab-university',
+      CAMPUS_SEED,
+      { platform: 'browser', list },
+    );
+    await firstSearch(list);
+    const searches = list.mock.calls.length;
+
+    map.searchEverywhere();
+    // Fake timers never fire the results debounce under this harness (the pipeline is fed by
+    // effects the fake clock does not drive), so wait out more than twice the 600ms debounce.
+    // The stable assertions are the single navigation and `unbounded()` staying false: a local
+    // widening would flip it, and the wait only confirms no search follows.
+    await new Promise<void>((r) => setTimeout(r, 1500));
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, gender: null, everywhere: 1 });
+    expect(map.unbounded()).toBe(false);
+    expect(list).toHaveBeenCalledTimes(searches);
+  });
+
+  it('does not carry retired filters to the search', async () => {
+    const { map, navigate } = await mountLanding(
+      `${CITY_URL}?capacity=2&sharing=double&frequency=monthly`,
+      CITY_SEED,
+    );
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).toMatchObject({
+      capacity: null,
+      sharing: null,
+      frequency: null,
+    });
+  });
+});
+
+describe('SearchMap worldwide search', () => {
+  afterEach(cleanupSearchMap);
+
+  it('merges a picked place into the current search without leaving it', async () => {
+    configureSearchMap();
+    const { map } = await mount('/en/search/lahore');
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual([]);
+    expect(extras['relativeTo']).toBe(TestBed.inject(ActivatedRoute));
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras.queryParams).toEqual({
+      place: 'Karachi, Sindh, Pakistan',
+      city: null,
+      lat: 24.8607,
+      lng: 67.0011,
+      zoom: 10,
+    });
+  });
+
+  it('widens a search in place and the next request carries no place or box', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list });
+    const { map } = await mount('/en/search/lahore?lat=31.5204&lng=74.3587');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    await firstSearch(list);
+    expect(queryAt(list, 0).near).toEqual({ lat: 31.5204, lng: 74.3587 });
+
+    map.searchEverywhere();
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual([]);
+    expect(extras['relativeTo']).toBe(TestBed.inject(ActivatedRoute));
+    expect(extras['replaceUrl']).toBe(true);
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras.queryParams).toEqual({
+      ne_lat: null,
+      ne_lng: null,
+      sw_lat: null,
+      sw_lng: null,
+      lat: null,
+      lng: null,
+      place: null,
+      city: null,
+      everywhere: 1,
+    });
+    await vi.waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(1), { timeout: 3000 });
+    expect(lastQuery(list).near).toBeUndefined();
+    expect(lastQuery(list).bounds).toBeUndefined();
+  });
+
+  it('opens a worldwide link without framing the visitor country', async () => {
+    const list = listSpy();
+    // A real answer, so framing the country would put a box on the first request.
+    const forVisitor = vi.fn().mockResolvedValue(HOME);
+    const acquire = vi.fn(() => new Promise(() => undefined));
+    configureSearchMap({ platform: 'browser', list, forVisitor, acquire });
+    const { map } = await mount('/en/search?everywhere=1');
+
+    void map.ensureMap();
+    await firstSearch(list);
+
+    expect(acquire).toHaveBeenCalled();
+    expect(forVisitor).not.toHaveBeenCalled();
+    expect(queryAt(list, 0).near).toBeUndefined();
+    expect(queryAt(list, 0).bounds).toBeUndefined();
+  });
+
+  it('still frames the visitor country on a bare search', async () => {
+    const forVisitor = vi.fn().mockResolvedValue(HOME);
+    configureSearchMap({ platform: 'browser', forVisitor });
+    const { map } = await mount('/en/search');
+
+    void map.ensureMap();
+
+    await vi.waitFor(() => expect(forVisitor).toHaveBeenCalledTimes(1));
+  });
+
+  it('searches near the coordinates when the link names a place as well', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list });
+    const { map } = await mount('/en/search?everywhere=1&lat=31.5204&lng=74.3587');
+
+    await firstSearch(list);
+
+    expect(map.unbounded()).toBe(false);
+    expect(queryAt(list, 0).near).toEqual({ lat: 31.5204, lng: 74.3587 });
+  });
+
+  it('ignores the worldwide key on a landing page', async () => {
+    configureSearchMap();
+    const { map } = await mount('/en/hostels/lahore?everywhere=1', CITY_SEED);
+
+    expect(map.unbounded()).toBe(false);
+  });
+
+  it('writes the worldwide key with the viewport while the search is worldwide', async () => {
+    configureSearchMap({ platform: 'browser' });
+    const { map } = await mount('/en/search?everywhere=1');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    map.syncBoundsToUrl({ north: 31.6, south: 31.4, east: 74.5, west: 74.2 });
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual([]);
+    expect(extras['replaceUrl']).toBe(true);
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras.queryParams).toEqual({
+      ne_lat: 31.6,
+      ne_lng: 74.5,
+      sw_lat: 31.4,
+      sw_lng: 74.2,
+      everywhere: 1,
+    });
+  });
+
+  it('clears the worldwide key once the visitor pans away', async () => {
+    configureSearchMap({ platform: 'browser' });
+    const { map } = await mount('/en/search?everywhere=1');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    map.leftHomeCountry();
+    map.syncBoundsToUrl({ north: 31.6, south: 31.4, east: 74.5, west: 74.2 });
+
+    expect(map.unbounded()).toBe(false);
+    expect(firstNavigation(navigate).extras.queryParams['everywhere']).toBeNull();
+  });
+
+  it('ends the worldwide search when the camera recentres on a new place', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list });
+    const { map } = await mount('/en/search?everywhere=1');
+    const router = TestBed.inject(Router);
+    await firstSearch(list);
+    expect(map.unbounded()).toBe(true);
+
+    map.onPlaceSelected(KARACHI);
+    await vi.waitFor(() => expect(router.url).toContain('lat=24.8607'));
+    const setView = vi.fn();
+    const viewport = { north: 25.0, south: 24.7, east: 67.2, west: 66.8 };
+    map.map = {
+      setView,
+      getBounds: () => ({
+        getNorth: () => viewport.north,
+        getSouth: () => viewport.south,
+        getEast: () => viewport.east,
+        getWest: () => viewport.west,
+      }),
+    };
+    map.recenterTo({ lat: KARACHI.lat, lng: KARACHI.lng });
+    expect(map.unbounded()).toBe(false);
+    expect(setView).toHaveBeenCalledWith([24.8607, 67.0011], 15);
+
+    // The camera settling is what writes the viewport, and it only drops the worldwide key
+    // and filters by the box if the search really stopped being worldwide.
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    map.captureMapBounds();
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(firstNavigation(navigate).extras.queryParams).toEqual({
+      ne_lat: 25,
+      ne_lng: 67.2,
+      sw_lat: 24.7,
+      sw_lng: 66.8,
+      everywhere: null,
+    });
+    await vi.waitFor(() => expect(lastQuery(list).bounds).toEqual(viewport), { timeout: 3000 });
+    expect(lastQuery(list).near).toBeUndefined();
+  });
+
+  it('widens a slug search in place and the next request carries no place or box', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list });
+    const { map } = await mount('/en/search/lahore', null, true);
+    await firstSearch(list);
+    expect(queryAt(list, 0).near).toBeDefined();
+
+    map.searchEverywhere();
+
+    await vi.waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(1), { timeout: 3000 });
+    expect(lastQuery(list).near).toBeUndefined();
+    expect(lastQuery(list).bounds).toBeUndefined();
+  });
+
+  it('titles a server-rendered worldwide link as a worldwide search and keeps it out of the index', async () => {
+    const seo = { apply: vi.fn(), setJsonLd: vi.fn() };
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+    await mount('/en/search?everywhere=1');
+
+    expect(seo.apply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: TestBed.inject(TranslocoService).translate<string>('seo.worldwideTitle'),
+        noindex: true,
+      }),
+    );
   });
 });

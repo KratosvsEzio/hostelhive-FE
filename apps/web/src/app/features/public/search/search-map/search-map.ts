@@ -9,6 +9,7 @@ import {
   ElementRef,
   inject,
   input,
+  linkedSignal,
   signal,
   untracked,
   PLATFORM_ID,
@@ -46,7 +47,13 @@ import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { CountryBounds } from '@core/geo/country-bounds';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { MobileApp } from '@core/mobile-app';
-import { DEFAULT_LOCATION, fromLocationSlug, toLocationSlug } from '@util/location-slug';
+import {
+  DEFAULT_LOCATION,
+  fromLocationSlug,
+  searchRouteFor,
+  toLocationSlug,
+} from '@util/location-slug';
+import { localiseCommands } from '@core/i18n/locale-commands';
 import { Seo } from '@core/seo';
 import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { PLACES } from '@features/public/landing/places';
@@ -59,6 +66,13 @@ import {
   SearchFilters,
 } from '@features/public/search/search-filters/search-filters';
 import { mergeSearchParams } from '@features/public/search/search-params';
+import {
+  EVERYWHERE_KEY,
+  PLACE_KEYS_NULLED,
+  RETIRED_KEYS_NULLED,
+  VIEWPORT_KEYS_NULLED,
+  seededFilters,
+} from '@features/public/search/search-scope';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabel } from '@util/accommodation-type';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
@@ -89,14 +103,6 @@ const NE_LAT = 'ne_lat';
 const NE_LNG = 'ne_lng';
 const SW_LAT = 'sw_lat';
 const SW_LNG = 'sw_lng';
-
-/** Cleared together whenever a new place search invalidates the old viewport. */
-const BOUNDS_KEYS_NULLED = {
-  [NE_LAT]: null,
-  [NE_LNG]: null,
-  [SW_LAT]: null,
-  [SW_LNG]: null,
-} as const;
 
 /** ~0.1 m — matches captureMapBounds()'s 1e-6 no-op threshold, and keeps the URL readable. */
 const roundCoord = (n: number): number => +n.toFixed(6);
@@ -335,6 +341,19 @@ export class SearchMap {
   private readonly mapBounds = signal<Bounds | null>(this.urlBounds());
 
   /**
+   * Whether the URL this search opened on asked for the whole world. Read once, at
+   * construction, like {@link urlBounds}: afterwards `unbounded` is the live state and the
+   * URL only mirrors it (see `syncBoundsToUrl`).
+   *
+   * Explicit coordinates win. A place picked after "Search everywhere" writes `lat`/`lng`
+   * before the next camera settle clears the key, and a refresh in that gap should open
+   * on the place that was picked.
+   */
+  private readonly everywhereInUrl =
+    this.queryParams()?.get(EVERYWHERE_KEY) === '1' &&
+    !(this.queryParams()?.get('lat') && this.queryParams()?.get('lng'));
+
+  /**
    * Search the whole world rather than what is on screen — "Search everywhere", offered
    * when an area comes back empty.
    *
@@ -345,8 +364,14 @@ export class SearchMap {
    *
    * Cleared by the next real pan or zoom: moving the map is how you say you care about
    * a place again.
+   *
+   * Starts true when the URL says so (`everywhere=1`, see {@link everywhereInUrl}), so a
+   * refresh, a shared link, a server render or a landing page's "Search everywhere" opens
+   * on the worldwide search rather than on the visitor's country. A `linkedSignal` on the
+   * seed because the seed is an input, and inputs are not set yet at construction: a
+   * landing page's path names a place, so it is never worldwide, whatever its query says.
    */
-  protected readonly unbounded = signal(false);
+  protected readonly unbounded = linkedSignal(() => !this.seed() && this.everywhereInUrl);
 
   /**
    * The country the opening view was framed on, once that has been decided.
@@ -381,9 +406,15 @@ export class SearchMap {
     const p = this.params();
     const min = p?.get('minPrice');
     const max = p?.get('maxPrice');
-    const c = this.center();
+    const unbounded = this.unbounded();
+    // A worldwide search drops a place the URL only implies through its slug, so a pasted
+    // `/search/lahore` widens like any other. Explicit coordinates still win (`slugPlace` is
+    // null whenever they are present). Dropped here rather than in `slugPlace` or `center`,
+    // which also drive the camera: there, the pan that ends the worldwide search would
+    // bring the slug back as a "new" centre and fly the map away from where it was taken.
+    const c = unbounded && this.slugPlace() ? null : this.center();
     const amenities = this.amenities();
-    const mb = this.unbounded() ? null : this.mapBounds();
+    const mb = unbounded ? null : this.mapBounds();
     const slugToId = this._slugToId();
     const offerIds = amenities
       .map((slug) => slugToId.get(slug))
@@ -393,7 +424,7 @@ export class SearchMap {
       propertyType: p?.get('propertyType') || undefined,
       // No "Any" -- an absent param means the default, not "all room types".
       roomType: p?.get('roomType') || DEFAULT_OCCUPANCY_TYPE,
-      city: c || mb ? undefined : p?.get('city') || undefined,
+      city: c || mb || unbounded ? undefined : p?.get('city') || undefined,
       near: !mb && c ? { lat: c.lat, lng: c.lng } : undefined,
       bounds: mb ?? undefined,
       minPrice: min ? +min : undefined,
@@ -1043,8 +1074,11 @@ export class SearchMap {
     const restored = this.urlBounds();
     // Only when the URL names nowhere. A pasted viewport, a searched place or a landing
     // page's seed is somewhere the visitor asked for, and where they are is a guess — the
-    // same order the language and currency follow.
-    const home = c || restored ? null : await this.countryBounds.forVisitor();
+    // same order the language and currency follow. A worldwide search names nowhere on
+    // purpose: framing the country would scope the first request to it, and leave the
+    // camera on it rather than on the results.
+    const home =
+      c || restored || this.unbounded() ? null : await this.countryBounds.forVisitor();
     if (home) {
       // Scope the search too, not just the camera. `mapBounds` seeds itself from the URL
       // synchronously at construction, which this answer is far too late for, and the
@@ -1455,8 +1489,23 @@ export class SearchMap {
     // history entry and refetch. The suggestion click is what commits.
   }
 
-  /** A Place was picked from the autocomplete dropdown → recenter the map and refetch. */
+  /**
+   * A Place was picked from the autocomplete dropdown → recenter the map and refetch.
+   *
+   * On a landing page it leaves for the picked place's search page instead (see
+   * {@link leaveLanding}): the page's path names its own place, which a query merge can
+   * override in the request but not in the heading, the breadcrumb or the canonical.
+   */
   protected onPlaceSelected(r: PlaceResult): void {
+    if (this.seed()) {
+      void this.leaveLanding(searchRouteFor(r.label), {
+        place: r.label,
+        lat: r.lat,
+        lng: r.lng,
+        zoom: r.zoom ?? null,
+      });
+      return;
+    }
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
@@ -1509,8 +1558,18 @@ export class SearchMap {
    *
    * Clearing `userInteracted` and `lastKey` lets the next marker rebuild fit the camera
    * to the results, so the map follows the answer instead of staying over an empty sea.
+   *
+   * The URL records it as `everywhere=1`, so a refresh or a shared link stays worldwide
+   * instead of reopening on the visitor's country. A landing page cannot widen in place —
+   * its seed refills the place this clears and keeps the search local — so there it leaves
+   * for a worldwide `/search` (see {@link leaveLanding}), which reads the key at
+   * construction.
    */
   protected searchEverywhere(): void {
+    if (this.seed()) {
+      if (this.isBrowser) void this.leaveLanding(['/search'], { [EVERYWHERE_KEY]: 1 });
+      return;
+    }
     this.unbounded.set(true);
     this.page.set(1);
     this.mapBounds.set(null);
@@ -1521,10 +1580,60 @@ export class SearchMap {
     // `near`, which would survive clearing the viewport and quietly keep it local.
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...BOUNDS_KEYS_NULLED, lat: null, lng: null, place: null, city: null },
+      queryParams: {
+        ...VIEWPORT_KEYS_NULLED,
+        lat: null,
+        lng: null,
+        place: null,
+        city: null,
+        [EVERYWHERE_KEY]: 1,
+      },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
+  }
+
+  /**
+   * Leave a landing page for a search, in one navigation.
+   *
+   * A landing page's path supplies its place (and, on a gender page, its type) as the
+   * seed, and the seed refills any of those a query merge removes — so on a landing page a
+   * change of geography cannot happen in place. It goes to `commands` (a `/search` path)
+   * instead, which states everything in its query:
+   *
+   * - the viewport and the page's place are nulled, or the new search would restore the
+   *   old box or name the old place, and `geo` then says where the search is now;
+   * - the visitor's own filters carry over through the merge, and the ones the page's path
+   *   applied are written out (see `seededFilters`), so the list does not quietly widen;
+   * - retired params are cleared, as any new search clears them (see `RETIRED_KEYS_NULLED`);
+   * - `gender` is the effective type, which also scrubs an invalid `?gender=`;
+   * - a price sort is dropped when no type is in force, as the filter row and the header
+   *   bar do: nightly and monthly prices cannot be sorted against each other.
+   *
+   * A push rather than a replace: the landing page is a page, and Back should return to it.
+   */
+  private leaveLanding(
+    commands: string[],
+    geo: Record<string, string | number | null>,
+  ): Promise<boolean> {
+    const p = this.params();
+    const gender = p?.get('gender') || null;
+    return this.router.navigate(
+      localiseCommands(commands, this.locale.active()) as unknown[],
+      {
+        queryParams: {
+          ...VIEWPORT_KEYS_NULLED,
+          ...PLACE_KEYS_NULLED,
+          ...RETIRED_KEYS_NULLED,
+          [EVERYWHERE_KEY]: null,
+          gender,
+          ...(!gender && p?.get('sort')?.startsWith('price-') ? { sort: null } : {}),
+          ...seededFilters(this.seed(), p),
+          ...geo,
+        },
+        queryParamsHandling: 'merge',
+      },
+    );
   }
 
   /**
@@ -1538,12 +1647,14 @@ export class SearchMap {
     this.lastKey = ''; // let the next rebuild refit to the new area's pins
     this.programmaticMove = true; // cleared on the next moveend; keeps this zoom out of userInteracted
     this.mapBounds.set(null);
+    // A new place ends a worldwide search; the next moveend clears its key from the URL.
+    this.unbounded.set(false);
     // Drop the old viewport from the URL as well, or a refresh would restore the area the
     // user just navigated away from. The next moveend writes the new one.
     if (this.isBrowser) {
       void this.router.navigate([], {
         relativeTo: this.route,
-        queryParams: { ...BOUNDS_KEYS_NULLED },
+        queryParams: { ...VIEWPORT_KEYS_NULLED },
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });
@@ -1551,12 +1662,21 @@ export class SearchMap {
     this.map.setView([c.lat, c.lng], 15);
   }
 
-  /** "Near me" — native geolocation (Capacitor) or the browser API → recenter + proximity search. */
+  /**
+   * "Near me" — native geolocation (Capacitor) or the browser API → recenter + proximity search.
+   *
+   * On a landing page it leaves for `/search` around the visitor, for the same reason a
+   * picked place does (see {@link onPlaceSelected}).
+   */
   protected async locateMe(): Promise<void> {
     if (this.locating()) return;
     this.locating.set(true);
     try {
       const { lat, lng } = await this.geo.getCurrent();
+      if (this.seed()) {
+        await this.leaveLanding(['/search'], { place: 'My location', lat, lng });
+        return;
+      }
       await this.router.navigate([], {
         relativeTo: this.route,
         queryParams: { lat, lng, place: 'My location', city: null },
@@ -1628,6 +1748,11 @@ export class SearchMap {
    * `replaceUrl` because a pan is a refinement of the current search, not a new destination —
    * one history entry per pan would make Back unusable. The write re-emits the ParamMap, which
    * `query()`'s value comparator absorbs (see there); the round-trip does not refetch.
+   *
+   * The worldwide flag rides along, and this is the only place that writes it after
+   * "Search everywhere": the pan or zoom that ends a worldwide search also settles the
+   * camera, so the key is cleared by the same write that records the new viewport, with no
+   * second navigation to race it.
    */
   private syncBoundsToUrl(b: Bounds): void {
     if (!this.isBrowser) return; // no address bar to sync during SSR
@@ -1638,6 +1763,7 @@ export class SearchMap {
         [NE_LNG]: roundCoord(b.east),
         [SW_LAT]: roundCoord(b.south),
         [SW_LNG]: roundCoord(b.west),
+        [EVERYWHERE_KEY]: this.unbounded() ? 1 : null,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,
