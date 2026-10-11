@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { jsonLdIds, waitForClient } from './support/seo';
 import { KARACHI_PHOTON, ListingsStub, stubListings, stubPhoton } from './support/stubs';
 
 // A new place is a new search, and a landing page's structured data belongs to that page alone.
@@ -8,15 +9,6 @@ import { KARACHI_PHOTON, ListingsStub, stubListings, stubPhoton } from './suppor
 const KARACHI_LAT = 24.8607;
 const LAHORE_SEARCH = '/en/search/lahore?place=Lahore&lat=31.5204&lng=74.3587&zoom=11';
 const LAHORE_WORLD_SEARCH = '/en/search?place=Lahore&lat=31.5204&lng=74.3587&zoom=11';
-
-/** The `data-seo` id of every JSON-LD block currently in the document, in document order. */
-async function jsonLdIds(page: Page): Promise<string[]> {
-  return page.evaluate(() =>
-    [...document.querySelectorAll('script[type="application/ld+json"]')].map(
-      (s) => s.getAttribute('data-seo') ?? '',
-    ),
-  );
-}
 
 const countOf = async (page: Page, id: string) =>
   (await jsonLdIds(page)).filter((x) => x === id).length;
@@ -78,8 +70,9 @@ test.describe('picking another place on the phone search', () => {
     await expect.poll(() => urlHasViewport(page), { timeout: 10_000 }).toBe(true);
 
     await expect.poll(() => page.title()).toContain('Karachi');
-    const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
-    expect(canonical ?? '').not.toContain('/hostels/lahore');
+    // An uncurated place is a noindex search, so it names no canonical at all.
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
 
     await expect
       .poll(() =>
@@ -197,6 +190,9 @@ test.describe('structured data of a landing page', () => {
     await page.goto('/en/hostels/lahore');
     await expect.poll(() => countOf(page, 'place-breadcrumb')).toBe(1);
     await expect.poll(() => countOf(page, 'place-faq')).toBe(1);
+    // The server HTML already carries both blocks, so the counts above prove nothing about the
+    // client page; leaving before it has booted would strand the server's copies in the head.
+    await waitForClient(page);
 
     await page.locator('header a[href="/en"]').first().click();
     await expect(page).toHaveURL(/\/en\/?$/);

@@ -6,6 +6,7 @@ import {
   ElementRef,
   computed,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -48,12 +49,22 @@ export class NotificationBell {
   private readonly refetchDelay = inject(RefetchDelay);
   private readonly push = inject(PushNotificationsService);
 
+  // Its own computed: a same-user setSession writes a new user object, and this still
+  // returns an equal id, so the fetch key holds and nothing refetches or resets.
+  private readonly userId = computed(() => this.session.user()?.id ?? null);
+
   protected readonly open = signal(false);
-  protected readonly actionLoading = signal<string | null>(null);
+  protected readonly actionLoading = linkedSignal<string | null, string | null>({
+    source: this.userId,
+    computation: () => null,
+  });
   private readonly dismissing = signal(false);
 
   private readonly refresh = signal(0);
-  private readonly locallyMarkedIds = signal(new Set<string>());
+  private readonly locallyMarkedIds = linkedSignal<string | null, Set<string>>({
+    source: this.userId,
+    computation: () => new Set<string>(),
+  });
   private observer: IntersectionObserver | null = null;
 
   constructor() {
@@ -77,7 +88,9 @@ export class NotificationBell {
   }
 
   private readonly fetchKey = computed(() => ({
-    auth: this.session.isAuthenticated(),
+    // Keyed on who is signed in, not whether anyone is: an account replaced without a
+    // sign-out (the account-confirmation link) stays signed in, yet needs its own list.
+    user: this.userId(),
     r: this.refresh(),
     // A push landing while the app is open raises no tray notification on Android, so
     // the bell is the only cue the user gets — refetch so the badge reflects it.
@@ -86,8 +99,8 @@ export class NotificationBell {
 
   private readonly state = toSignal(
     toObservable(this.fetchKey).pipe(
-      switchMap(({ auth }) => {
-        if (!auth) return of<ListState>({ loading: false, items: [], unread: 0 });
+      switchMap(({ user }) => {
+        if (!user) return of<ListState>({ loading: false, items: [], unread: 0 });
         return this.studentApi.listInvites().pipe(
           map((r): ListState => ({ loading: false, items: r.items, unread: r.unread })),
           startWith<ListState>({ loading: true, items: [], unread: 0 }),

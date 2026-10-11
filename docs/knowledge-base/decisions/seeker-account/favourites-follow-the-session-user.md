@@ -25,7 +25,7 @@ Trello #105: favourite hearts read `FavoritesStore`, a localStorage list (`hh:fa
 ## Consequences
 
 - A reload with a token but no cached user starts with no user until validation finishes. The cache is then dropped, and the hearts fill only when the load lands: correct, but not instant.
-- The same per-user-cache shape was fixed in two more places: `hh:onboarding:draft`, with eager creation added — see [the become-a-host draft belongs to the signed-in user](../public-content/onboarding-draft-belongs-to-the-session-user.md) — and `HostPropertyStore`'s direct A→B switch, with owner-gated public signals — see [the host's hostel list and selection follow the signed-in user](../host-console/host-property-follows-the-session-user.md). The notification bell is still keyed on the signed-in flag (Trello #123).
+- The same per-user-cache shape was fixed in two more places: `hh:onboarding:draft`, with eager creation added — see [the become-a-host draft belongs to the signed-in user](../public-content/onboarding-draft-belongs-to-the-session-user.md) — and `HostPropertyStore`'s direct A→B switch, with owner-gated public signals — see [the host's hostel list and selection follow the signed-in user](../host-console/host-property-follows-the-session-user.md). The header notification bell now refetches when the user id changes, not the signed-in flag, and resets its read marks and Accept/Decline spinner on a switch; it persists nothing, so it needs no owner field (`apps/web/src/app/layout/components/notification-bell/notification-bell.ts`, Trello #123, PR #93).
 
 ## Evidence
 

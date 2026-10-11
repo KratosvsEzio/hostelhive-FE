@@ -116,8 +116,8 @@ export interface ListingQuery {
   near?: { lat: number; lng: number; radiusKm?: number }; // proximity search (from a picked place)
   bounds?: { north: number; south: number; east: number; west: number }; // exact map viewport
   amenities?: string[];
-  /** Resolved offer IDs — sent as `f[offers.id][]=` to the public search endpoint. */
-  offerIds?: number[];
+  /** Resolved offer IDs (obfuscated strings) — sent as `f[offers.id][]=` to the public search endpoint. */
+  offerIds?: string[];
   sort?: 'recommended' | 'newest' | 'oldest' | 'price-asc' | 'price-desc';
   page?: number;
   pageSize?: number;

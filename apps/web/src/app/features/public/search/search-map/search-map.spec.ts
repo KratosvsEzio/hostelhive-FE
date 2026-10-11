@@ -73,6 +73,7 @@ interface SearchMapInternals {
 interface ListQuery {
   near?: { lat: number; lng: number };
   bounds?: unknown;
+  offerIds?: unknown[];
 }
 
 /** A page for the router to land on; the search component under test is mounted directly. */
@@ -93,6 +94,8 @@ interface SearchMapConfig {
   acquire?: ReturnType<typeof vi.fn>;
   seo?: { apply: ReturnType<typeof vi.fn>; setJsonLd: ReturnType<typeof vi.fn> };
   favorites?: object;
+  /** The amenity catalogue (`OffersApi.categories`); empty by default. */
+  offerCategories?: { offers: { id: string; name: string; slug: string }[] }[];
 }
 
 const guestFavorites = {
@@ -122,7 +125,7 @@ function configureSearchMap(config: SearchMapConfig = {}): void {
         provide: ListingsApi,
         useValue: { list: config.list ?? (() => of<Paginated<Listing>>(ONE_PAGE)) },
       },
-      { provide: OffersApi, useValue: { categories: () => of([]) } },
+      { provide: OffersApi, useValue: { categories: () => of(config.offerCategories ?? []) } },
       {
         provide: CountryBounds,
         useValue: { forVisitor: config.forVisitor ?? (() => Promise.resolve(null)) },
@@ -742,6 +745,37 @@ describe('SearchMap on a landing page', () => {
       sharing: null,
       frequency: null,
     });
+  });
+});
+
+/**
+ * The amenity filter's ids.
+ *
+ * Offer ids are obfuscated strings (azeem-hamza/hostelhive#32). The filter used to coerce them
+ * with `+o.id`, which turns "bCGPAU" into NaN, and every amenity search sent
+ * `f[offers.id][]=NaN`.
+ */
+describe('SearchMap amenity filter', () => {
+  afterEach(cleanupSearchMap);
+
+  it('sends the offer ids as the strings the catalogue gave', async () => {
+    const list = listSpy();
+    configureSearchMap({
+      platform: 'browser',
+      list,
+      offerCategories: [
+        {
+          offers: [
+            { id: 'bCGPAU', name: 'Ceiling Fan', slug: 'ceiling-fan' },
+            { id: 'UcYqvk', name: 'Heater', slug: 'heater' },
+          ],
+        },
+      ],
+    });
+    await mount('/en/search?everywhere=1&amenities=ceiling-fan,heater');
+    await firstSearch(list);
+
+    expect(lastQuery(list).offerIds).toEqual(['bCGPAU', 'UcYqvk']);
   });
 });
 

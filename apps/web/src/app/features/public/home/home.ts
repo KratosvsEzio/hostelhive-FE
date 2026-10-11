@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ViewEncapsulation,
   computed,
   effect,
@@ -117,6 +118,9 @@ export class Home {
         'query-input': 'required name=search_term_string',
       },
     });
+
+    // Both describe the brand from its home page only — see `Seo.clearOnDestroy`.
+    this.seo.clearOnDestroy(inject(DestroyRef), ['organization', 'website']);
   }
 
 
