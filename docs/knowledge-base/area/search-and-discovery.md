@@ -16,7 +16,7 @@ How a seeker finds hostels: the header search bar, the `/search` list + map page
 - `apps/web/src/app/util/location-slug.ts`, `apps/web/src/app/util/budget-range.ts`, `apps/web/src/app/util/accommodation-type.ts`, `apps/web/src/app/util/occupancy-type.ts`.
 
 ## How it works
-- **URL is the state.** Every control writes query params with `router.navigate([], { queryParamsHandling: 'merge' })`: `place`, `city`, `lat`, `lng`, `zoom`, `gender`, `propertyType`, `roomType`, `minPrice`, `maxPrice`, `amenities` (comma list of slugs), `sort`, and the viewport `ne_lat/ne_lng/sw_lat/sw_lng`. `SearchMap.query()` derives the request from them and compares by `JSON.stringify`, so writing the viewport back into the URL does not refetch.
+- **URL is the state.** Every control writes query params with `router.navigate([], { queryParamsHandling: 'merge' })`: `place`, `city`, `lat`, `lng`, `zoom`, `gender`, `propertyType`, `roomType`, `minPrice`, `maxPrice`, `amenities` (comma list of slugs), `sort`, `everywhere` (worldwide search, below), and the viewport `ne_lat/ne_lng/sw_lat/sw_lng`. `SearchMap.query()` derives the request from them and compares by `JSON.stringify`, so writing the viewport back into the URL does not refetch.
 - **Request pipeline** (`SearchMap.result`): `debounceTime(600)` → `ListingsApi.list` via `switchMap`; page 1 replaces, later pages append (deduped by id) through an `IntersectionObserver` sentinel. A 429 starts a 60 s cooldown that suppresses new queries; a 5xx/network error shows an inline "Try again".
 - **Geography priority** in `ListingsApi.list`: map `bounds` → `near` (lat/lng ± radius) → whole world. With no place in the URL, `setup()` frames the visitor's country (`CountryBounds.forVisitor`, `apps/web/src/app/core/geo/country-bounds.ts`); "Search everywhere" (`searchEverywhere()`) drops every geographic constraint.
 - **Filter contract sent to `GET /public/hostels`** (as coded in `listings-api.ts`): `f[bounding][north|south|east|west]`, `s[city]` (full-text fallback), `f[gender_type]` (`co-living|boys|girls|backpacker`), `f[property_type]`, `f[room_types.occupancy_type]` (`shared|private`), `f[<shared|private>_occupancy_price_from.currency_price_hash.<CODE>][gte|lte]`, `f[offers.id][]`, `sort[created_at|starting_price]=asc|desc`, `page`, `limit`.
@@ -24,6 +24,11 @@ How a seeker finds hostels: the header search bar, the `/search` list + map page
 - **Landing pages** render `<hh-search-map [seed] [genderRoutes]>`; `seed` sits *under* the query params in `SearchMap.params()` (`mergeSearchParams`, `search-params.ts`), so a visitor's own filter wins. When seeded, `SearchMap` leaves the `<head>` to `PlaceLanding`.
 - **One reader of filter state.** `SearchMap.params()` is the only place the URL and the seed are read; `SearchFilters` gets it through its required `params` input (`search-filters.ts`) and never reads `ActivatedRoute` for filters itself. A query `gender` counts only if `isAccommodationType` accepts it — an unknown or empty value is treated as absent, so a landing page's own type applies.
 - **Changing the type on a gender page changes the page.** `PlaceLanding.genderRoutes` (`genderRoutesFor`, gender pages only) maps every type to its URL: Any type → `/hostels/<place>`, girls/boys/co-living → the sibling page, backpacker → `/hostels/<place>?gender=backpacker`. `SearchFilters.onApply` goes there in one localised navigation (`localiseCommands`, `queryParamsHandling: 'merge'`). City, campus and `/search` pages pass no routes and keep the query merge. See decisions.
+- **On a landing page, any change of geography leaves for `/search`.** A place pick (`onPlaceSelected`), Near me (`locateMe`) and "Search everywhere" (`searchEverywhere`) each call `SearchMap.leaveLanding` when `seed()` is set: one localised push navigation, to `/search/<slug>`, `/search?place=My location` or `/search?everywhere=1`. It merges the visitor's filters plus the page's own filters as explicit params (`seededFilters`), and nulls the viewport, place and retired keys (`search-scope.ts`). On `/search` itself these actions keep their query merge.
+- **Worldwide search is a URL state, `everywhere=1`** (`EVERYWHERE_KEY`). A bare `/search` frames the visitor's own country (`setup()`), so worldwide needs saying.
+  - It is read once at construction (`everywhereInUrl`; `unbounded` is a `linkedSignal`, false whenever there is a seed). Explicit `lat`+`lng` beat it, but a slug-only centre doesn't narrow the request (`query()`).
+  - `syncBoundsToUrl` mirrors it, and it is the only writer. A pan (`leftHomeCountry`), a new place (`recenterTo`) or a header search (`SearchBar.search()`) clears it.
+  - Back within `/search` doesn't re-apply it, like the viewport keys.
 - **SEO**: unfiltered search for a curated place → canonical `/hostels/<slug>`; filtered, uncurated or "everywhere" → `noindex`. See decisions.
 
 ## Reuse, don't rebuild
@@ -32,18 +37,20 @@ How a seeker finds hostels: the header search bar, the `/search` list + map page
 - `BUDGET_MIN/MAX/STEP` — the bar and the modal must share one scale.
 - `ACCOMMODATION_LABELS` / `ACCOMMODATION_LABEL_KEYS` instead of a gender ternary; `isAccommodationType` (`search-params.ts`) to validate a `gender` value; `isOccupancyType`, `DEFAULT_OCCUPANCY_TYPE`.
 - `mergeSearchParams` for any filter reading — never a second `queryParamMap` subscription; `genderRoutesFor` for where a type lives, seen from a gender page.
+- `search-scope.ts` — `VIEWPORT_KEYS_NULLED`, `PLACE_KEYS_NULLED`, `RETIRED_KEYS_NULLED`, `EVERYWHERE_KEY`, `seededFilters` — whenever a navigation changes place or leaves a landing page.
+- `apps/web-e2e/src/support/stubs.ts` (`stubListings`, `stubPhoton`) for e2e: the app sends credentials, so a listings stub must echo the origin; a wildcard puts the page in its error state.
 - `OffersApi.categories()` is cached app-wide; don't fetch `/api/offer_categories` yourself.
 - `hh-listing-card` for any listing tile.
 
 ## Traps
-- **A seeded key can be overridden by the query but never removed by it** — writing `null` falls back to the seed. The type filter is handled by changing page (above); "Search everywhere" (`searchEverywhere()`) and the mobile place field (`onPlaceSelected()`) in `search-map.ts` still merge, and so misbehave on landing pages (Trello #109, #110).
+- **A seeded key can be overridden by the query but never removed by it** — writing `null` falls back to the seed. Every action that changes the type or the geography on a landing page therefore changes page (above). A new action that writes a seeded key must do the same. On `/search`, a mobile place pick still merges on the current path and keeps an old `:location` slug (Trello #120), and the header search carries the old viewport keys (#119).
 - **`SearchCapacity.active` is never set** anywhere — capacity pricing in `listing-card.ts` and the map pins always falls back to `priceFrom` (`apps/web/src/app/services/search-capacity.ts`). `SearchBar` still injects it unused.
 - **Price sort is withdrawn for "All"** in `search-filters.ts` (`sortOptions`), stripped by `SearchBar.search()` and dropped by `SearchFilters.onApply`, but `search-filter-modal.ts` always offers both price sorts, so one chosen there with "Any type" is silently dropped (Trello #112).
 - **`sort[starting_price]`** is still what price sort sends, while `listings-api.ts` documents `starting_price` as dropped from the search document. Verify before trusting price order.
 - **Stale comment**: `search-filters.ts` says room type is "inert server-side until the backend indexes `room_type`"; `listings-api.ts` now sends `f[room_types.occupancy_type]`.
 - **Amenity filter depends on an authed endpoint.** Slugs map to ids via `/api/offer_categories` (`offers-api.ts` notes it is authed); if that fails the map is empty and `offerIds` is silently omitted (`search-map.ts` `_slugToId`).
 - **Zero-area boxes** (`hasArea`) must never be queried or written to the URL — Leaflet returns one before layout.
-- The header bar reads the `:location` slug only, so it shows no place on `/hostels/:place` pages (`search-bar.ts` `routedLocationSlug`). It also reads and re-writes the raw `?gender=`, the one remaining second reader of filter state (Trello #111).
+- The header bar reads the `:location` slug only, so it shows no place on `/hostels/:place` pages (`search-bar.ts` `routedLocationSlug`). It reads `?gender=` itself (validated with `isAccommodationType`) because it sits outside `SearchMap`.
 - `/hostels/:place/:gender` serves both gender segments and campus slugs; gender wins (`place-landing.ts` `segment`). Backpacker has no segment.
 
 ## Decisions
