@@ -23,7 +23,7 @@ const cachedUser: SessionUser = {
 };
 
 const newAccount: CurrentUser = {
-  id: 9,
+  id: '9',
   name: 'Bilal',
   email: 'bilal@h.pk',
   is_active: true,

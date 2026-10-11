@@ -88,7 +88,8 @@ interface Room {
 }
 
 interface OnboardingDraft {
-  draftId: number | null;
+  /** The draft hostel's obfuscated id, e.g. "MjvuEl". */
+  draftId: string | null;
   step: number;
   name: string;
   city: string;
@@ -349,7 +350,7 @@ export class OnboardingWizard {
   private readonly router = inject(Router);
   private readonly propertyStore = inject(HostPropertyStore);
   private readonly draftStore = inject(OnboardingDraftStore);
-  protected readonly draftId = signal<number | null>(null);
+  protected readonly draftId = signal<string | null>(null);
   protected readonly draftSaving = signal(false);
   protected readonly draftSaved = signal(false);
   protected readonly draftError = signal(false);
@@ -798,7 +799,7 @@ export class OnboardingWizard {
    * a host who already had hostels holds one that predates this hostel — the gate would send
    * them back to the hostel they had. Without an id to name, `/host` picks the hostel itself.
    */
-  private landOnBilling(hostelId: number | null): void {
+  private landOnBilling(hostelId: string | null): void {
     this.propertyStore.load();
     void this.router.navigate(hostelId == null ? ['/host'] : ['/host', hostelId, 'subscription']);
   }
@@ -1011,7 +1012,10 @@ export class OnboardingWizard {
     if (!stored) return;
     try {
       const d = stored as Partial<OnboardingDraft>;
-      if (typeof d.draftId === 'number' && d.draftId > 0) this.draftId.set(d.draftId);
+      // Hostel ids are obfuscated strings. A numeric id from an older draft is a raw id the
+      // API now rejects, so it is dropped rather than restored; checking for a number here
+      // used to drop every current draft id too, and the next save created a second hostel.
+      if (typeof d.draftId === 'string' && d.draftId) this.draftId.set(d.draftId);
       if (typeof d.step === 'number')
         this.step.set(Math.max(0, Math.min(this.lastStep, d.step)));
       if (typeof d.name === 'string') this.name.set(d.name);
