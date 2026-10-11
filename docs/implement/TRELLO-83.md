@@ -10,7 +10,8 @@
 | **Parent feature** | none (Trello has no parent; related cards #80, #81, #82) — filed at the root |
 | **Type** | Feature (label `FE`) |
 | **Date** | 2026-10-10 |
-| **Current phase** | 7c — PR open (draft) |
+| **Current phase** | 9 — knowledge base applied (docs PR) |
+| **PR — fix-forward** | https://github.com/KratosvsEzio/hostelhive-FE/pull/131 |
 | **PR** | https://github.com/KratosvsEzio/hostelhive-FE/pull/128 |
 
 ## Preflight
@@ -1294,6 +1295,46 @@ The repo keeps `docs/knowledge-base/` (`README.md`: `area/<area>.md`, `decisions
 | `area/api-and-data.md` | area edit | `ApiRequestOptions` / `requestContextArgs` (per-call toast opt-out, now on `put` too) and the index-vs-DB note |
 
 No pending markers name this branch.
+
+### Knowledge base: applied after merge (Phase 9)
+
+**Prerequisites:** PR #128 merged (3302adc), then fix-forward PR #131 merged (b45a46c). The raw-error guard passes 23/23 on b45a46c. The KB is applied on branch `docs/kb-83-stay-flow` in its own docs-only PR.
+
+**Re-validated against the merged code.** There were no reviews on #128 or #131, so no approach was rejected. Changes folded in:
+- **The cross-pay partial-failure copy** now carries a translated `{{reason}}` (#131), not server text. The decision records the raw-text version as rejected.
+- **Each page pays its own side first:** the bookings page does booking then invoice; the invoices page does invoice then booking.
+- **The invoice-side checkbox** is also offered when the booking can't be read.
+- **The room-detail status** is hidden while the guest count is loading **or failed**.
+- **`ApiClient.get`** already took a context from other work; #83 added `put`.
+- **`HostBookingsApi.create`** gained its toast opt-out (#131).
+
+**Applied, in `docs/knowledge-base/`:**
+- `decisions/api-and-data/search-backed-filters-use-keyword-for-hashids.md`
+- `decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md`
+- `decisions/host-console/invoices-page-follows-billing-mode.md`
+- `decisions/host-console/room-occupancy-counts-per-room-occupancies.md`
+- `decisions/host-console/cross-pay-checkbox-ticked-by-default.md`
+- `area/host-console.md` (deep links, route reuse, stay flow, booking bills, rooms, the index-lag trap, links to the decisions)
+- `area/api-and-data.md` (`ApiRequestOptions` / `requestContextArgs`, the index-vs-DB and `.keyword` notes)
+- `area/app-shell-and-routing.md` (route reuse via `data.drawerHost`; out of the drafted list, but the old text was wrong)
+
+**Existing KB statements found wrong, and fixed:**
+1. `put`/`get` were said to take no context. All five verbs do.
+2. `inlineErrors()` was implied to be shared. It is private to `services/auth-api.ts`.
+3. The guard allowlist was said to include #83's two host-booking lines. #131 removed them.
+4. Six `bookingRefusal` kinds were listed; there are now fourteen.
+5. Host Invoices was described as rent/utility only.
+6. Route reuse was said to cover only Tenants, Rooms and Invoices. It is now `data.drawerHost` and includes Bookings.
+
+**Pending markers cleared:** none existed.
+
+**Fix-forward record:** PR #128's comment warned that #129's guard would fail on #128's `.message` reads. It was not read before the merge, and `main` went red on 3302adc (CI failure). Fixed forward in #131 (`2e245e3`, "stay-flow errors show translated reasons, never server text"):
+- three reads converted, plus the panel's release error;
+- two stale allowlist entries removed;
+- `create` opts out of the toast;
+- leak specs added.
+
+On the fix branch the full suite passed (213 files, 4852 tests). A memory note now makes reading PR threads and checking main drift part of "ready".
 
 ## Notes
 
