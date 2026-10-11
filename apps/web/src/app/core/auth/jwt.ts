@@ -7,10 +7,16 @@
  * on validity; this exists so the app can skip a request it already knows will 401.
  */
 
-/** Claims we read. Anything else in the payload is ignored. */
+/**
+ * Claims we read. Anything else in the payload is ignored. `expiry` is the backend's own
+ * deadline claim, issued instead of the standard `exp`; `name` and `email` are for display only.
+ */
 interface JwtClaims {
   exp?: unknown;
+  expiry?: unknown;
   iat?: unknown;
+  name?: unknown;
+  email?: unknown;
 }
 
 function decodePayload(token: string): JwtClaims | null {
@@ -37,19 +43,71 @@ function decodePayload(token: string): JwtClaims | null {
 }
 
 /**
- * Expiry as epoch milliseconds, or `null` when the token is not a JWT, carries no `exp`, or
- * cannot be parsed. `null` means "unknown", never "expired" — callers must leave the session
- * alone in that case and let the server decide.
+ * Expiry as epoch milliseconds, or `null` when the token is not a JWT, carries no readable
+ * expiry, or cannot be parsed. `null` means "unknown", never "expired" — callers must leave the
+ * session alone in that case and let the server decide.
+ *
+ * The standard `exp` (seconds since epoch) wins. Without it the backend's `expiry` claim is
+ * read: a number is seconds since epoch, a string a timestamp with an explicit zone — the
+ * backend's likely form, Rails' `TimeWithZone#to_s` (`2026-10-11 16:07:00 UTC`), then ISO 8601
+ * (`2026-10-11T21:07:00.000+05:00`) or Ruby's `Time#to_s` (`2026-10-11 21:07:00 +0500`).
  */
 export function jwtExpiresAt(token: string): number | null {
-  const exp = decodePayload(token)?.exp;
-  return typeof exp === 'number' && Number.isFinite(exp) ? exp * 1000 : null;
+  const claims = decodePayload(token);
+  if (!claims) return null;
+  if (claims.exp !== undefined) return secondsToMs(claims.exp);
+  const { expiry } = claims;
+  if (typeof expiry === 'string') return parseTimestamp(expiry);
+  return secondsToMs(expiry);
 }
 
 /** Issued-at as epoch milliseconds, or `null`. Used to sanity-check the device clock. */
 export function jwtIssuedAt(token: string): number | null {
-  const iat = decodePayload(token)?.iat;
-  return typeof iat === 'number' && Number.isFinite(iat) ? iat * 1000 : null;
+  return secondsToMs(decodePayload(token)?.iat);
+}
+
+/**
+ * The account the token was issued to, as its payload claims it — for display only (naming
+ * who is signed in), never for an access decision. `null` when the token is unreadable or names
+ * nobody.
+ */
+export function jwtDisplayIdentity(
+  token: string,
+): { name?: string; email?: string } | null {
+  const claims = decodePayload(token);
+  const name = nonBlank(claims?.name);
+  const email = nonBlank(claims?.email);
+  if (!name && !email) return null;
+  return { ...(name && { name }), ...(email && { email }) };
+}
+
+function secondsToMs(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value * 1000 : null;
+}
+
+/** Date, time, optional fraction, then a zone: `Z`, ` UTC`, ` GMT`, `+05:00` or `+0500`. */
+const TIMESTAMP =
+  /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d+))?(?:(Z)| ?(?:UTC|GMT)| ?([+-]\d{2}:?\d{2}))$/;
+
+/**
+ * A timestamp string as epoch milliseconds, or `null`. A string without a zone is rejected
+ * rather than read as device-local time — an unknown expiry keeps the session, a wrong one ends it.
+ */
+function parseTimestamp(value: string): number | null {
+  const match = TIMESTAMP.exec(value.trim());
+  if (!match) return null;
+  const [, date, time, fraction = '', , numericZone] = match;
+  const millis = fraction.slice(0, 3).padEnd(3, '0');
+  // `Z`, `UTC` and `GMT` all leave the numeric group empty and mean the same instant.
+  const offset = numericZone
+    ? `${numericZone.slice(0, 3)}:${numericZone.slice(-2)}`
+    : 'Z';
+  const ms = Date.parse(`${date}T${time}.${millis}${offset}`);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function nonBlank(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
 /**
@@ -62,9 +120,10 @@ const CLOCK_SKEW_MS = 60_000;
 /**
  * True only when the token is definitively past its own expiry.
  *
- * Returns false for an unreadable token, a token with no `exp`, and — deliberately — for a
- * token whose `iat` is in the future, which means the device clock is wrong rather than the
- * token being old. In every one of those cases the server gets to decide.
+ * Returns false for an unreadable token, a token with no readable expiry (`exp` or `expiry`),
+ * and — deliberately — for a token whose `iat` is in the future, which means the device clock is
+ * wrong rather than the token being old. In every one of those cases the server gets to decide.
+ * A token without `iat` (the backend issues none) skips that clock check.
  */
 export function isJwtExpired(token: string, now: number = Date.now()): boolean {
   const exp = jwtExpiresAt(token);

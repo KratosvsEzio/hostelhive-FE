@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "Inicia sesión para continuar.",
     "cannotReachTheServer": "No se puede conectar con el servidor. Inténtalo de nuevo en un momento.",
     "linkIsInvalidOrExpired": "Este enlace de confirmación no es válido, ha caducado o ya se ha utilizado.",
-    "linkIsMissingItsToken": "A este enlace de confirmación le falta su token. Ábrelo de nuevo desde el botón de tu correo electrónico."
+    "linkIsMissingItsToken": "A este enlace de confirmación le falta su token. Ábrelo de nuevo desde el botón de tu correo electrónico.",
+    "alreadySignedInTitle": "Ya has iniciado sesión",
+    "signedInAsAccount": "Has iniciado sesión como {{account}}. Para activar la cuenta de este enlace, primero se cerrará tu sesión.",
+    "signedInToAnotherAccount": "Has iniciado sesión con otra cuenta. Para activar la cuenta de este enlace, primero se cerrará tu sesión.",
+    "linkStillWorksLater": "Si mantienes la sesión iniciada, este enlace seguirá funcionando más tarde.",
+    "logOutAndContinue": "Cerrar sesión y continuar",
+    "staySignedIn": "Mantener la sesión iniciada"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roles y permisos",

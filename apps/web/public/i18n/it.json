@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "Accedi per continuare.",
     "cannotReachTheServer": "Impossibile raggiungere il server. Riprova tra un momento.",
     "linkIsInvalidOrExpired": "Questo link di conferma non è valido, è scaduto o è già stato utilizzato.",
-    "linkIsMissingItsToken": "A questo link di conferma manca il token. Riaprilo dal pulsante nella tua email."
+    "linkIsMissingItsToken": "A questo link di conferma manca il token. Riaprilo dal pulsante nella tua email.",
+    "alreadySignedInTitle": "Hai già effettuato l'accesso",
+    "signedInAsAccount": "Hai effettuato l'accesso come {{account}}. Per attivare l'account di questo link, verrai prima disconnesso.",
+    "signedInToAnotherAccount": "Hai effettuato l'accesso con un altro account. Per attivare l'account di questo link, verrai prima disconnesso.",
+    "linkStillWorksLater": "Se resti connesso, questo link funzionerà ancora in seguito.",
+    "logOutAndContinue": "Esci e continua",
+    "staySignedIn": "Resta connesso"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Ruoli e autorizzazioni",

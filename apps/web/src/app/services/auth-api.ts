@@ -77,9 +77,15 @@ export class AuthApi {
     return this.api.patch<MessageResponse>('/api/user/reset_password', body);
   }
 
-  /** DELETE /api/user/sign_out → revokes the JWT server-side. */
-  signOut(): Observable<MessageResponse> {
-    return this.api.delete<MessageResponse>('/api/user/sign_out');
+  /**
+   * DELETE /api/user/sign_out → revokes the JWT server-side.
+   *
+   * Pass `inlineErrors: true` when the caller's page explains a failure itself, so the
+   * global error toast stays out of it; every other caller keeps the toast.
+   */
+  signOut(options?: { inlineErrors?: boolean }): Observable<MessageResponse> {
+    const context = options?.inlineErrors ? inlineErrors() : undefined;
+    return this.api.delete<MessageResponse>('/api/user/sign_out', undefined, context);
   }
 
   /** PATCH /api/users/change_password → updates the authenticated user's password. */

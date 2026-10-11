@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "Logga in för att fortsätta.",
     "cannotReachTheServer": "Kan inte nå servern. Försök igen om en stund.",
     "linkIsInvalidOrExpired": "Den här bekräftelselänken är ogiltig, har gått ut eller har redan använts.",
-    "linkIsMissingItsToken": "Den här bekräftelselänken saknar sin token. Öppna den igen via knappen i ditt e-postmeddelande."
+    "linkIsMissingItsToken": "Den här bekräftelselänken saknar sin token. Öppna den igen via knappen i ditt e-postmeddelande.",
+    "alreadySignedInTitle": "Du är redan inloggad",
+    "signedInAsAccount": "Du är inloggad som {{account}}. För att aktivera kontot från den här länken loggas du ut först.",
+    "signedInToAnotherAccount": "Du är inloggad på ett annat konto. För att aktivera kontot från den här länken loggas du ut först.",
+    "linkStillWorksLater": "Om du förblir inloggad fungerar den här länken fortfarande senare.",
+    "logOutAndContinue": "Logga ut och fortsätt",
+    "staySignedIn": "Förbli inloggad"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roller och behörigheter",

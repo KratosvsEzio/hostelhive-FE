@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "Veuillez vous connecter pour continuer.",
     "cannotReachTheServer": "Impossible de joindre le serveur. Veuillez réessayer dans un instant.",
     "linkIsInvalidOrExpired": "Ce lien de confirmation est invalide, a expiré ou a déjà été utilisé.",
-    "linkIsMissingItsToken": "Il manque le jeton de ce lien de confirmation. Veuillez le rouvrir depuis le bouton de votre e-mail."
+    "linkIsMissingItsToken": "Il manque le jeton de ce lien de confirmation. Veuillez le rouvrir depuis le bouton de votre e-mail.",
+    "alreadySignedInTitle": "Vous êtes déjà connecté",
+    "signedInAsAccount": "Vous êtes connecté en tant que {{account}}. Pour activer le compte de ce lien, vous serez d'abord déconnecté.",
+    "signedInToAnotherAccount": "Vous êtes connecté à un autre compte. Pour activer le compte de ce lien, vous serez d'abord déconnecté.",
+    "linkStillWorksLater": "Si vous restez connecté, ce lien fonctionnera toujours plus tard.",
+    "logOutAndContinue": "Se déconnecter et continuer",
+    "staySignedIn": "Rester connecté"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Rôles et autorisations",
