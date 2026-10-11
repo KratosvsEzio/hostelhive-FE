@@ -45,6 +45,7 @@ Backend conventions the mappers rely on:
 - Inject `ApiClient`; never build `baseUrl + path` yourself or call `fetch` (except deliberately for third parties, as `apps/web/src/app/core/geo/geo-preference.ts` does to keep the bearer token off them).
 - Use `pageParams` / `ApiPagination` for paging; `isSubscriptionError` (`apps/web/src/app/util/subscription-error.ts`) and `isNetworkError` (`apps/web/src/app/util/network-error.ts`) for classifying failures.
 - Show success/info with `NotificationService`; do not add per-call error toasts, the interceptor already raises one.
+- Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps
 - **`ApiError.message` comment is stale.** `util/models/api-error.ts` says never show it; since `normalize()` prefers the server text, the auth forms show it on purpose. It still falls back to Angular's URL-bearing message when the body is not an envelope.
