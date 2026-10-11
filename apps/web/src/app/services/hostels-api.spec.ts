@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
+import type { HostelInput } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
 
 class ApiClientStub {
@@ -133,6 +134,56 @@ describe('HostelsApi — which hostel document is read', () => {
 
     let detail: { id?: string | number; name?: string } | undefined;
     api.getForModeration('MjvuEl').subscribe((d) => (detail = d));
+
+    expect(detail?.id).toBe('MjvuEl');
+    expect(detail?.name).toBe('Backpacker');
+  });
+});
+
+describe('HostelsApi — which endpoint a save goes to', () => {
+  function capture() {
+    const puts: { path: string; body: unknown }[] = [];
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ApiClient,
+          useValue: {
+            put: (path: string, body: unknown) => {
+              puts.push({ path, body });
+              return of({ hostel: { id: 'MjvuEl', name: 'Backpacker' } });
+            },
+          },
+        },
+      ],
+    });
+    return { api: TestBed.inject(HostelsApi), puts };
+  }
+
+  const input = { name: 'Backpacker', city: 'Lahore' } as unknown as HostelInput;
+
+  it('saves a review to the moderator endpoint, with the same body', () => {
+    const { api, puts } = capture();
+
+    api.updateForModeration('MjvuEl', input).subscribe();
+
+    expect(puts).toEqual([{ path: '/api/moderator/hostels/MjvuEl', body: { hostel: input } }]);
+  });
+
+  // The host console's save must not follow: the moderator endpoint refuses hosts.
+  it('still saves a host edit to the host endpoint', () => {
+    const { api, puts } = capture();
+
+    api.update('MjvuEl', input).subscribe();
+
+    expect(puts).toEqual([{ path: '/api/hostels/MjvuEl', body: { hostel: input } }]);
+  });
+
+  it('maps the moderator response with the same mapper', () => {
+    const { api } = capture();
+
+    let detail: { id?: string | number; name?: string } | undefined;
+    api.updateForModeration('MjvuEl', input).subscribe((d) => (detail = d));
 
     expect(detail?.id).toBe('MjvuEl');
     expect(detail?.name).toBe('Backpacker');

@@ -103,6 +103,73 @@ describe('SearchBar', () => {
 });
 
 /**
+ * What the bar reads from the URL and writes back on a search.
+ *
+ * It re-submits whatever it holds, so anything read raw from the query string comes back out
+ * of the next search — a bad `?gender=` for good.
+ */
+describe('SearchBar reading the URL', () => {
+  type Internals = {
+    accommodation(): string;
+    search(): void;
+  };
+
+  async function onUrl(url: string) {
+    const bar = (await setupBar()) as unknown as Internals;
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl(url);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    return { bar, navigate };
+  }
+
+  function written(navigate: { mock: { calls: unknown[][] } }): Record<string, unknown> {
+    const extras = navigate.mock.calls[0][1] as { queryParams: Record<string, unknown> };
+    return extras.queryParams;
+  }
+
+  it.each(['/search?gender=bogus', '/search?gender='])(
+    'shows no accommodation and writes no gender for %s',
+    async (url) => {
+      const { bar, navigate } = await onUrl(url);
+      expect(bar.accommodation()).toBe('');
+
+      bar.search();
+
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(written(navigate)['gender']).toBeNull();
+    },
+  );
+
+  it('drops a price sort that a discarded gender can no longer justify', async () => {
+    const { bar, navigate } = await onUrl('/search?gender=bogus&sort=price-asc');
+
+    bar.search();
+
+    expect(written(navigate)['sort']).toBeNull();
+  });
+
+  it('keeps a valid gender, shows it and writes it along with its price sort', async () => {
+    const { bar, navigate } = await onUrl('/search?gender=girls&sort=price-asc');
+    expect(bar.accommodation()).toBe('girls');
+
+    bar.search();
+
+    const query = written(navigate);
+    expect(query['gender']).toBe('girls');
+    expect(query).not.toHaveProperty('sort');
+  });
+
+  it('clears a worldwide marker left by the previous page', async () => {
+    const { bar, navigate } = await onUrl('/search?everywhere=1');
+
+    bar.search();
+
+    const query = written(navigate);
+    expect(query).toHaveProperty('everywhere', null);
+  });
+});
+
+/**
  * The collapsed Budget chip.
  *
  * It used to divide by 1000 and print whatever came out, so a 14,762 bound rendered as

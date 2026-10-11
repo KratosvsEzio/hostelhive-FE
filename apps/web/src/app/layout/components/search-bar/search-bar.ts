@@ -13,6 +13,8 @@ import { ActivatedRoute, NavigationEnd, ParamMap, Router } from '@angular/router
 import { filter } from 'rxjs';
 import { fromLocationSlug, searchRouteFor } from '@util/location-slug';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
+import { isAccommodationType } from '@features/public/search/search-params';
+import { EVERYWHERE_KEY, RETIRED_KEYS_NULLED } from '@features/public/search/search-scope';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
@@ -195,7 +197,10 @@ export class SearchBar {
       const mx = p.get('maxPrice');
       this.budgetLow.set(mn ? +mn : BUDGET_MIN);
       this.budgetHigh.set(mx ? +mx : BUDGET_MAX);
-      this.accommodation.set(p.get('gender') ?? '');
+      // Validated rather than copied: the bar writes this back on every search, so a bad
+      // `?gender=` read raw would be re-submitted for good, and show as a chosen type.
+      const g = p.get('gender');
+      this.accommodation.set(isAccommodationType(g) ? g : '');
       this.activeSort.set(p.get('sort') ?? '');
     });
     // Query params are resolved before the outlet activates, so on a first load the
@@ -286,9 +291,10 @@ export class SearchBar {
         gender: this.accommodation() || null,
         // Retired params, cleared so an old shared URL does not keep filtering by a control
         // that no longer exists on screen.
-        capacity: null,
-        sharing: null,
-        frequency: null,
+        ...RETIRED_KEYS_NULLED,
+        // A new search is somewhere: a worldwide one left over from the last page would
+        // otherwise ignore the place just typed.
+        [EVERYWHERE_KEY]: null,
         // A price sort only means something over a single pricing cycle, and naming an
         // accommodation type is what pins one — only backpacker hostels are nightly.
         // Returning to All would otherwise leave `sort=price-asc` running over mixed units

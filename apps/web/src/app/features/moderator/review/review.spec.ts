@@ -37,7 +37,6 @@ function emptyListing(over: Partial<HostelDetail> = {}): HostelDetail {
     longitude: null,
     primary_phone: '',
     attachments: [],
-    banner: [],
     hostel_offers: [],
     room_types: [],
     rooms: [],
@@ -130,9 +129,12 @@ class ModerationApiStub {
 }
 
 let api: ModerationApiStub;
+/** Each hostel write the screen makes, as `<endpoint>:<id>`. */
+let hostelWrites: string[];
 
 async function render(d: ReviewDetail | null, fail = false): Promise<ComponentFixture<Review>> {
   TestBed.resetTestingModule();
+  hostelWrites = [];
   api = new ModerationApiStub();
   api.detail = d;
   api.fail = fail;
@@ -152,7 +154,14 @@ async function render(d: ReviewDetail | null, fail = false): Promise<ComponentFi
         provide: HostelsApi,
         useValue: {
           formOptions: () => defer(() => Promise.resolve(OPTIONS)),
-          update: () => defer(() => Promise.resolve({})),
+          update: (id: string) => {
+            hostelWrites.push(`host:${id}`);
+            return defer(() => Promise.resolve({}));
+          },
+          updateForModeration: (id: string) => {
+            hostelWrites.push(`moderator:${id}`);
+            return defer(() => Promise.resolve({}));
+          },
         },
       },
       {
@@ -383,6 +392,18 @@ describe('Review · a rejected photo reaches the server', () => {
 
   it('the fixture is approvable, so a refusal below means something', async () => {
     expect((await loop()).validationErrors()).toEqual([]);
+  });
+
+  // The host endpoint admits only the host, the manager or an admin, so a moderator saving
+  // through it gets a 403 and loses the edit.
+  it('saves through the moderator endpoint, never the host one', async () => {
+    const c = await loop();
+    reject(c, 'a2');
+
+    c.save();
+    await settle();
+
+    expect(hostelWrites).toEqual(['moderator:1']);
   });
 
   it('sends the rejection when the moderator saves', async () => {

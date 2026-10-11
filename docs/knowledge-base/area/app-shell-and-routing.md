@@ -22,9 +22,9 @@ host console, admin, moderator) are split and guarded at the route level. Auth i
 - `apps/web/src/app/layout/area.ts`: `areaOf(url)` and `isConsoleArea`.
 - `apps/web/src/app/layout/components/`: `site-header`, `site-footer`, `account-menu`,
   `notification-bell`, `search-bar`, `toast-host`, `console-drawer`, `apps/web/src/app/layout/components/mobile-tab-bar/` (seeker, host,
-  staff), `subscription-gate`, `subscription-loading`.
+  staff), `subscription-gate`.
 - `apps/web/src/app/layout/host-shell/`: `HostLayout` (`apps/web/src/app/layout/host-shell/host-shell.ts`), `hostNav` (`apps/web/src/app/layout/host-shell/host-nav.ts`),
-  `hostPagePath` and `opensWithoutSubscription` (`apps/web/src/app/layout/host-shell/host-route.ts`).
+  `hostPagePath` (`apps/web/src/app/layout/host-shell/host-route.ts`).
 - `apps/web/src/app/layout/staff-shell/staff-shell.ts`: `StaffLayout`, shared by `/admin` and `/moderator`.
 - `apps/web/src/app/layout/dashboard-layout/`: `DashboardLayout`, the per-page chrome inside a console
   (title, actions, back link, breadcrumbs, scroll area).
@@ -38,19 +38,18 @@ prefixed twin, using the active language mid-session or the stored preference (e
 English lives at `/en/...` like every other language. See the decision below.
 
 **Area split** (`app.routes.ts`): public pages have no guard; `/account` and `/notifications` use
-`authGuard`; `/host/listings/new` (the onboarding wizard) and its `/payment` step use only `authGuard`, so
+`authGuard`; `/host/listings/new` (the onboarding wizard) uses only `authGuard`, so
 a seeker can become a host; `/host` uses `roleGuard(...HOST_ROLES)`; `/admin` and `/moderator` both use
 `roleGuard(...STAFF_ROLES)`. Finer checks live in the feature route files: `permissionGuard(...)` per
 page, plus `knownHostelGate`, `bookingsGate` and `monthlyOnlyGate` in
 `apps/web/src/app/features/host/host.routes.ts`. Both guards in `apps/web/src/app/core/auth/guards.ts`
 return `true` on the server; the client re-runs them after the session is restored.
 
-**Chrome.** `App` renders one `SiteHeader` for every route except the onboarding wizard and
-`/mess/confirm`. Footer and `SeekerTabBar` show only in the seeker area; which one depends on
+**Chrome.** `App` renders one `SiteHeader` for every route except the onboarding wizard. Footer and `SeekerTabBar` show only in the seeker area; which one depends on
 `MobileApp.isMobile` (see [mobile-app](./mobile-app.md)). The consoles bring their own shell as the
 parent component of their child routes: `HostLayout` loads the hostel list, syncs the `:hostelId`
-param into `HostPropertyStore` and runs the subscription gate (bouncing to
-`/host/:id/subscription` unless `opensWithoutSubscription`); `StaffLayout` filters its nav by
+param into `HostPropertyStore` (there is no client-side subscription gate; see
+[host-billing-and-subscription](./host-billing-and-subscription.md)); `StaffLayout` filters its nav by
 permission. Both size their sidebar from `ConsoleDrawer` (a 4rem icon rail by default, 16rem expanded,
 remembered in localStorage) and swap to `HostTabBar` / `StaffTabBar` under 768px. `SiteHeader` insets
 itself by the same width.
@@ -78,9 +77,9 @@ on `Tenants`, `Rooms` or `Invoices`, so the list is not torn down and refetched.
 ## Traps
 
 - `App.inSeekerArea` (`app.ts`) is a second, hand-written area check that does not use `areaOf`, and the
-  two lists differ (`app.ts` also excludes `/reset_password`, `/forbidden`, `/mess/confirm`). A new
+  two lists differ (`app.ts` also excludes `/reset_password`, `/forbidden`). A new
   chrome-free route has to be added to `app.ts` as well as to `layout/area.ts` if it matters there.
-- Order in `app.routes.ts` matters: `host/listings/new/payment` and `host/listings/new` must stay before
+- Order in `app.routes.ts` matters: `host/listings/new` must stay before
   `host`, and the `:locale` mount before the bare one.
 - `{ path: '**', redirectTo: '' }` sends unknown URLs to the home page; there is no 404 page.
 - Stale comments: `layout/host-shell/host-shell.ts` ("slide-in drawer on mobile web") and

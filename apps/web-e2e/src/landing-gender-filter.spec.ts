@@ -1,43 +1,10 @@
 import { expect, Page, test } from '@playwright/test';
+import { stubListings } from './support/stubs';
 
 // The type filter on a gender landing page. The path fixes the type there, so changing it
 // has to move to the page for the new type; a query-only change leaves the list unchanged.
 
 const GIRLS_PAGE = '/en/hostels/lahore/girls';
-
-const CORS = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-headers': '*',
-  'access-control-allow-methods': '*',
-};
-
-/**
- * Stubs the listings endpoint with an empty page and records the `f[gender_type]` of every
- * search it receives (null when the request carries none). The API is not the thing under
- * test, and an empty list keeps the page out of any error state.
- */
-async function stubListings(page: Page): Promise<{ genders: (string | null)[]; reset: () => void }> {
-  const genders: (string | null)[] = [];
-  await page.route('**/public/hostels**', async (route) => {
-    const request = route.request();
-    if (request.method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: CORS });
-      return;
-    }
-    // SearchParams decodes the brackets, so the key reads as the API sees it.
-    genders.push(new URL(request.url()).searchParams.get('f[gender_type]'));
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      headers: CORS,
-      body: JSON.stringify({
-        hostels: [],
-        pagination: { current_page: 1, total_pages: 1, total_count: 0 },
-      }),
-    });
-  });
-  return { genders, reset: () => (genders.length = 0) };
-}
 
 async function openFilters(page: Page): Promise<void> {
   // Unanchored: an icon-font glyph precedes the label in the accessible name.
@@ -57,6 +24,9 @@ test.describe('gender landing page type filter', () => {
 
     // The list is seeded from the path, and the control must say the same thing.
     await expect.poll(() => seen.genders).toContain('girls');
+    // A stub the browser rejects on CORS shows the error state instead; the empty state proves the response landed.
+    await expect(page.getByText(/No stays in this area/)).toBeVisible();
+    await expect(page.getByText("We couldn't load listings")).toBeHidden();
     await openFilters(page);
     await expect(typeButton(page, 'Girls')).toHaveAttribute('aria-pressed', 'true');
     await expect(typeButton(page, 'Any type')).toHaveAttribute('aria-pressed', 'false');

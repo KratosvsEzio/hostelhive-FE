@@ -415,6 +415,21 @@ export class HostelsApi {
   }
 
   /**
+   * `PUT /api/moderator/hostels/:id` — the same save, made as a moderator.
+   *
+   * Separate from {@link update} because `PUT /api/hostels/:id` admits only the hostel's host,
+   * its manager or an admin; a moderator is none of those and gets a 403. The moderator
+   * endpoint takes the same body, minus `manager_id` and `logo_id` (moderators don't reassign
+   * a hostel), which the hostel form never sends.
+   */
+  updateForModeration(id: number | string, input: HostelInput): Observable<HostelDetail> {
+    const body: HostelWriteRequest = { hostel: input };
+    return this.api
+      .put<HostelResponse>(`/api/moderator/hostels/${id}`, body)
+      .pipe(map((r) => requireHostel(r, id)));
+  }
+
+  /**
    * `GET /api/hostels/:id/show_phone` — the gated contact reveal.
    *
    * Returns the whole detail rather than the primary number alone. The endpoint has always

@@ -1,6 +1,6 @@
 # A lapsed hostel keeps Subscription, Profile and Bookings open; every other console page bounces to Subscription
 
-**Status:** Accepted
+**Status:** Superseded — by #94 (PR #68), which removed the client-side subscription gate this list tuned. The server alone now decides what a lapsed hostel can do; see the area file.
 **Area:** [host-billing-and-subscription](../../area/host-billing-and-subscription.md)
 
 ## Context
@@ -25,7 +25,7 @@ The Bookings page shows a "lapsed" banner. The new-booking drawer turns the serv
 - The 2026-10-04 plan for the billing rewrite flags this list as conflicting with its "active and grace keep working" rule ([`docs/implement/93.md`](../../../implement/93.md)). Expect it to change when #93 lands.
 - `hostels/new` is outside the shell, so `createHostelGate` repeats the check there. Otherwise an expired host could keep working by creating another hostel.
 
-## Evidence
+## Evidence (before #94; these lines no longer exist on `main`)
 - `apps/web/src/app/layout/host-shell/host-route.ts` — `OPEN_WHILE_LAPSED` and its doc comment.
 - `apps/web/src/app/layout/host-shell/host-shell.ts` — `runSubscriptionGate`, `enforceGate`, `isExemptRoute`.
 - `apps/web/src/app/features/host/host.routes.ts` — `createHostelGate`.

@@ -1,15 +1,14 @@
 # Listing and booking
 
-The public hostel page `/hostel/:slug` and everything a seeker does on it: gallery, rooms, reviews, contact reveal, favouriting, and the guest booking flow (room picker → basket → summary → `POST /api/bookings`). Also the public mess opt-in landing `/mess/confirm`. What happens to a booking afterwards (list, change, cancel) is [seeker-account](./seeker-account.md); the host's side of bookings is [host-console](./host-console.md).
+The public hostel page `/hostel/:slug` and everything a seeker does on it: gallery, rooms, reviews, contact reveal, favouriting, and the guest booking flow (room picker → basket → summary → `POST /api/bookings`). What happens to a booking afterwards (list, change, cancel) is [seeker-account](./seeker-account.md); the host's side of bookings is [host-console](./host-console.md).
 
 ## Where it lives
 - `apps/web/src/app/features/public/listing/listing.routes.ts` — `:slug` → `ListingDetail`.
 - `apps/web/src/app/features/public/listing/listing-detail/listing-detail.ts` — the page: load state, SEO + `LodgingBusiness` JSON-LD (`applySeo`), login gate, contact reveal, reviews, share, booking orchestration. Gallery helpers: `photo-groups.ts`, `filmstrip.ts`.
 - `apps/web/src/app/features/public/listing/booking/` — `room-offer.ts` (pure money/unit rules, `canBookOnline`), `room-picker.ts`, `booking-basket.ts` (`BookingBasket`, provided per page), `booking-rail.ts`, `booking-summary.ts`, `booking-request.ts` (`toBookingRequest`), `booking-api.ts` + `booking-api.contract.ts`, `room-offers.fixture.ts`.
 - `apps/web/src/app/services/listing-detail-api.ts` — `ListingDetailApi.getBySlug`, `toRoomOffers`, `toListingDetail`; view model in `apps/web/src/app/services/listing-detail.fixture.ts`.
-- `apps/web/src/app/services/hostels-api.ts` — `getById` (`GET /public/hostel_detail/:id`), `showPhone` (`GET /api/hostels/:id/show_phone`), `getMealInfo`.
+- `apps/web/src/app/services/hostels-api.ts` — `getById` (`GET /public/hostel_detail/:id`), `showPhone` (`GET /api/hostels/:id/show_phone`).
 - `apps/web/src/app/services/offers-api.ts` — cached `/api/offer_categories`.
-- `apps/web/src/app/features/public/mess-confirm/mess-confirm.ts` — tokened meal opt-in page, chrome-free (`apps/web/src/app/app.ts`).
 - Utils: `apps/web/src/app/util/occupancy-type.ts`, `apps/web/src/app/util/room-types.ts`, `apps/web/src/app/util/primary-photo.ts`, `apps/web/src/app/util/attachment-url.ts`, `apps/web/src/app/util/pricing-period.ts`.
 
 ## How it works
@@ -33,7 +32,6 @@ The public hostel page `/hostel/:slug` and everything a seeker does on it: galle
 - **The contact gate is lead capture, not privacy.** The public detail document already carries `primary_phone`/`secondary_phone` (`publicPhones`, read by the booking page) (`listing-detail.fixture.ts`).
 - **Stale comments**: `ApiCreateBookingRequest` still says dates are "ISO 8601, UTC, 2pm on the hostel's clock" while `toBookingRequest` sends plain days (`booking-request.ts`); `HostelsApi.getById` is documented as `GET /api/hostels/:id` but calls `/public/hostel_detail/:id`; `booking-rail.ts` still describes a "payable now" deposit that no longer exists; `room-offer.ts` says "Stub pending Q-API" though the room types are live.
 - **`is_featured` is not on the detail payload**, so the featured pill never shows on this page (commit `aee277d`).
-- **`/mess/confirm` records nothing server-side.** Token lookup is real (`getMealInfo`), but `confirm()` writes to `MessNotificationsService`'s in-memory list (`apps/web/src/app/features/host/mess/mess-notifications.service.ts`).
 - `attachment-url.ts`: backend variant URLs are malformed (`amazonaws.comhostelhive`); `usableVariant` rejects them rather than repairing.
 
 ## Decisions

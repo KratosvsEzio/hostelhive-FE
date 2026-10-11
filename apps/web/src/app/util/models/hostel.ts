@@ -208,7 +208,6 @@ export interface HostelDetail {
     icon?: string | null;
   }[];
   attachments: HostelAttachment[];
-  banner: HostelAttachment[]; // has_many :banner → array
   room_types: RoomType[];
   rooms: HostelRoom[];
   status?: HostelStatus | null;
@@ -344,7 +343,6 @@ export interface HostelInput {
   nearby_landmarks?: string;
   manager_id?: number | null;
   notes?: string;
-  banner_id?: number | null;
   hostel_offers_attributes?: HostelOfferInput[];
   room_types_attributes?: RoomTypeInput[];
   rooms_attributes?: RoomInput[];

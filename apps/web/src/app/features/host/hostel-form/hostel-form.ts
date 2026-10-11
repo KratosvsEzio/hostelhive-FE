@@ -1435,8 +1435,6 @@ export class HostelForm {
   getPayload(): HostelInput {
     const snap = this.currentSnapshot();
     const attachmentIds = this.pendingAttachmentIds();
-    const primary = this.photos().find((p) => p.primary);
-    const bannerId = primary ? (this.newPhotoMap().get(primary.id) ?? primary.id) : undefined;
     const currentRts = this.roomTypes();
 
     return {
@@ -1478,7 +1476,6 @@ export class HostelForm {
       ...(snap.area ? { area: snap.area } : {}),
       ...(snap.address1 ? { address_1: snap.address1 } : {}),
       ...(attachmentIds.length > 0 ? { attachment_ids: attachmentIds } : {}),
-      ...(bannerId ? { banner_id: bannerId as unknown as number } : {}),
       ...(snap.email ? { email: snap.email } : {}),
       ...(snap.phone ? { primary_phone: snap.phone } : {}),
       ...(snap.secondaryPhone ? { secondary_phone: snap.secondaryPhone } : {}),
