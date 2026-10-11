@@ -27,6 +27,8 @@ import { ApiDate } from '@util/api-date';
 import { isNetworkError } from '@util/network-error';
 import {
   AttemptNotice,
+  billingInvoicePath,
+  billingInvoiceStatusKey,
   invoiceStatusTone,
   latestAttemptNotice,
 } from '@app/shared/billing/billing-labels';
@@ -116,6 +118,10 @@ export class PaymentStep {
     ? `/host/${this.hostelId}/subscription`
     : '/host';
 
+  protected readonly invoiceLink = this.hostelId
+    ? billingInvoicePath(this.hostelId, this.invoiceId)
+    : null;
+
   protected readonly canPay = computed(() =>
     this.session.hasPermission('core:Invoice:create_payment'),
   );
@@ -123,6 +129,11 @@ export class PaymentStep {
   protected readonly slug = computed(() => this.invoice()?.status?.slug ?? '');
 
   protected readonly tone = computed(() => invoiceStatusTone(this.slug()));
+
+  /** Our label key for a known status; an unknown one shows the server's own name. */
+  protected readonly statusKey = computed(() =>
+    billingInvoiceStatusKey(this.slug()),
+  );
 
   protected readonly notice = computed(() => {
     const invoice = this.invoice();

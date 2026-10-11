@@ -4,12 +4,23 @@
  * amount stays the API's decimal string: it is only ever formatted, never used in arithmetic.
  */
 
+import type { PageInfo } from '@util/pagination';
+
+/** A status colour as the search index returns it; the detail payload may send a plain string. */
+export interface BillingStatusColor {
+  id?: string | number | null;
+  primary?: string | null;
+  secondary?: string | null;
+  tertiary?: string | null;
+}
+
 /** A status object as the API returns it. Branch on `slug`; `name` is display text. */
 export interface BillingStatus {
   id: string | number;
   name: string;
   slug: string;
-  color: string | null;
+  /** Not rendered anywhere; the pill tone comes from `slug`. */
+  color?: BillingStatusColor | string | null;
 }
 
 /** What the plan's button does for this hostel, decided by the server. */
@@ -136,6 +147,47 @@ export interface BillingInvoice {
   status: BillingStatus;
   /** Every attempt to pay this invoice, oldest first; the last one is the latest. */
   payments: BillingPayment[];
+}
+
+/** A status the history list can filter by, from `possible_statuses`. */
+export interface BillingInvoiceStatusOption {
+  id: string | number;
+  name: string;
+  slug: string;
+}
+
+/**
+ * One invoice as `GET /api/hostels/:id/invoices` lists it: the search index document, not the
+ * detail serializer. It carries no payments and no plan features; `total_minor` is never read.
+ */
+export interface BillingInvoiceRow {
+  id: string;
+  number: string;
+  hostel_id?: string;
+  /** A {@link BillingInvoiceKind}; typed open, an unknown kind shows a dash. */
+  kind: string;
+  currency: string;
+  /** Decimal string. */
+  total: string;
+  period_start: string | null;
+  period_end: string | null;
+  expires_at: string | null;
+  paid_at: string | null;
+  voided_at: string | null;
+  created_at: string;
+  invoice_pdf_url: string | null;
+  /** Slugs `open`, `paid`, `void`. */
+  status: BillingStatus & { position?: number | null };
+  plan: { id: string; code: string; name: string } | null;
+  hostel?: { id: string; name: string } | null;
+  lines: BillingInvoiceLine[];
+}
+
+/** One page of a hostel's billing history, with the statuses its filter offers. */
+export interface BillingInvoicePage {
+  rows: BillingInvoiceRow[];
+  statuses: BillingInvoiceStatusOption[];
+  page: PageInfo;
 }
 
 /** One attempt to pay an invoice. */

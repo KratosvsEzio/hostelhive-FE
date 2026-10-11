@@ -6,11 +6,13 @@
           {{ 'hostBilling.invoiceNumber' | transloco: { number: inv.number } }}
         </h2>
         @if (slug() !== 'open') {
-          <hh-status-pill [tone]="tone()" data-testid="status-pill">{{
-            slug() === 'paid'
-              ? ('hostPayment.paidPill' | transloco)
-              : inv.status.name
-          }}</hh-status-pill>
+          <hh-status-pill [tone]="tone()" data-testid="status-pill">
+            @if (statusKey(); as key) {
+              {{ key | transloco }}
+            } @else {
+              {{ inv.status.name }}
+            }
+          </hh-status-pill>
         }
       </div>
 
@@ -141,6 +143,7 @@
             data-testid="go-to-billing"
             >{{ 'hostPayment.goToBilling' | transloco }}</a
           >
+          <ng-container [ngTemplateOutlet]="viewInvoice" />
         }
         @case ('void') {
           <div class="rounded-xl bg-ink-50 px-4 py-3" data-testid="void-notice">
@@ -159,6 +162,7 @@
             data-testid="choose-plan-again"
             >{{ 'hostPayment.choosePlanAgain' | transloco }}</a
           >
+          <ng-container [ngTemplateOutlet]="viewInvoice" />
         }
         @default {
           <ng-container [ngTemplateOutlet]="back" />
@@ -214,4 +218,17 @@
     data-testid="back-to-billing"
     >{{ 'hostBilling.backToBilling' | transloco }}</a
   >
+</ng-template>
+
+<ng-template #viewInvoice>
+  @if (invoiceLink; as link) {
+    <a
+      hh-button
+      variant="outlined"
+      size="md"
+      [routerLink]="link"
+      data-testid="view-invoice"
+      >{{ 'hostBillingHistory.viewInvoice' | transloco }}</a
+    >
+  }
 </ng-template>

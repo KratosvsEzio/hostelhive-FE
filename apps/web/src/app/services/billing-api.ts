@@ -3,12 +3,21 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   BillingInvoice,
+  BillingInvoicePage,
+  BillingInvoiceRow,
+  BillingInvoiceStatusOption,
   HostBilling,
   PlansResponse,
   StartedPayment,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
+import {
+  ApiPagination,
+  PAGE_SIZE,
+  pageParams,
+  toPageInfo,
+} from '@util/pagination';
 
 interface PlansEnvelope extends Partial<PlansResponse> {
   success?: boolean;
@@ -21,6 +30,13 @@ interface BillingEnvelope {
 
 interface InvoiceEnvelope {
   invoice: BillingInvoice;
+  success?: boolean;
+}
+
+interface InvoicesEnvelope {
+  invoices?: BillingInvoiceRow[] | null;
+  possible_statuses?: BillingInvoiceStatusOption[] | null;
+  pagination?: ApiPagination | null;
   success?: boolean;
 }
 
@@ -80,6 +96,39 @@ export class BillingApi {
     return this.api
       .get<InvoiceEnvelope>(`/api/invoices/${invoiceId}`, undefined, quiet())
       .pipe(map((res) => res.invoice));
+  }
+
+  /**
+   * One page of the hostel's invoices, newest first as the server sorts them. A `status` of
+   * `'all'`, empty or absent asks for every status.
+   */
+  invoices(
+    hostelId: string,
+    opts: { status?: string | null; page?: number; limit?: number } = {},
+  ): Observable<BillingInvoicePage> {
+    const page = opts.page ?? 1;
+    const params: Record<string, string | number> = {
+      ...pageParams(page, opts.limit ?? PAGE_SIZE),
+    };
+    if (opts.status && opts.status !== 'all') {
+      params['f[status.slug]'] = opts.status;
+    }
+    return this.api
+      .get<InvoicesEnvelope>(
+        `/api/hostels/${hostelId}/invoices`,
+        params,
+        quiet(),
+      )
+      .pipe(
+        map((res) => {
+          const rows = res.invoices ?? [];
+          return {
+            rows,
+            statuses: res.possible_statuses ?? [],
+            page: toPageInfo(res.pagination, page, rows.length),
+          };
+        }),
+      );
   }
 
   /** Starts a Safepay payment for the invoice; the result carries the page to send the payer to. */
