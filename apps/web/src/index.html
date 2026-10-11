@@ -11,17 +11,22 @@
     <meta name="theme-color" content="#F36E21" />
 
     <!--
-      Defaults only. Every public page overwrites these through `Seo` (core/seo.ts) with
-      its own copy, and does so during SSR so a crawler that never runs JavaScript still
-      receives them. They matter for the handful of routes that set nothing of their own,
-      and as the fallback a social scraper reads if it grabs the shell before hydration.
+      Fallbacks only. Every route overwrites these through `Seo` (core/seo.ts) once the app
+      boots — a page that owns its head from its own effect, every other route from the
+      route-level default in core/route-head.ts — and does so during SSR, so a crawler that
+      never runs JavaScript still receives the real ones. What is left here is what a
+      scraper reads from a client-rendered shell before the app has run.
+
+      Deliberately no canonical, no og:url and no og:locale. They name one address and one
+      language, so any static value is wrong on every page but one: a canonical here made
+      each page that never replaced it declare itself a copy of the home page. Robots stays
+      `index`, because a static `noindex` would de-index any page whose own head failed.
     -->
     <meta
       name="description"
       content="Search verified hostels, PGs and co-living. Filter by city, budget, gender and room sharing — no brokers, no surprises."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <link rel="canonical" href="https://hostelhive.com/" />
 
     <meta property="og:site_name" content="HostelHive" />
     <meta property="og:type" content="website" />
@@ -30,9 +35,7 @@
       property="og:description"
       content="Search verified hostels, PGs and co-living. Filter by city, budget, gender and room sharing."
     />
-    <meta property="og:url" content="https://hostelhive.com/" />
     <meta property="og:image" content="https://hostelhive.com/hostelhive-logo.png" />
-    <meta property="og:locale" content="en_PK" />
 
     <!--
       App deep links. Site-wide constants, so they live here rather than being rewritten

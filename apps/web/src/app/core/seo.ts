@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { LocaleStore } from './i18n/locale-store';
-import { localeAlternates, withLocale } from './i18n/locales';
+import { localeAlternates, localeFor, withLocale } from './i18n/locales';
 import { DestroyRef, Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
@@ -36,7 +36,7 @@ export interface SeoConfig {
    * English, which would ask Google to drop every translated page from the index.
    *
    * Leave it out and the page gets **no** canonical and **no** `og:url` — any left by the
-   * previous page, or shipped statically in `index.html`, are removed. There is no default:
+   * previous page are removed. There is no default:
    * one used to be `/`, which made every page without a path declare itself a duplicate of
    * the home page, and made a shared link to it preview as the home page. A scraper with no
    * `og:url` falls back to the URL it fetched, which is the honest answer for a page that
@@ -72,9 +72,13 @@ export interface SeoConfig {
  * alone, for the same reason: "not written" would mean "still the previous page's".
  *
  * Overwriting covers the single slots — title, description, robots, canonical, Open
- * Graph — because every page calls `apply` and rewrites them all. It does not cover
- * JSON-LD, whose ids are per page type: no other page ever writes `listing`, so a page
- * that sets one also has to remove it when it goes, which is what `clearOnDestroy` is for.
+ * Graph — because every navigation ends in exactly one `apply` that rewrites them all.
+ * A page that owns its head (route data `head: 'page'`) calls it from its own effect;
+ * every other route gets it from `RouteHeadStrategy` (core/route-head.ts), which applies
+ * an indexable default for `head: 'index'` and a `noindex` one for everything else. It
+ * does not cover JSON-LD, whose ids are per page type: no other page ever writes
+ * `listing`, so a page that sets one also has to remove it when it goes, which is what
+ * `clearOnDestroy` is for.
  */
 @Injectable({ providedIn: 'root' })
 export class Seo {
@@ -84,7 +88,13 @@ export class Seo {
   private readonly locale = inject(LocaleStore);
   private readonly i18n = inject(TranslocoService);
 
-  /** Applies the full head for a page: title, description, canonical, Open Graph, Twitter. */
+  /**
+   * Applies the full head for a page: title, description, robots, canonical, hreflang,
+   * Open Graph (including `og:locale`) and Twitter.
+   *
+   * Called once per navigation, by whoever owns the head of the route — the page itself
+   * or the route-level default; see the class comment.
+   */
   apply(config: SeoConfig): void {
     // Fallbacks for a page that supplies nothing of its own. Translated like everything
     // else here: a French visitor landing on a page with no copy of its own should still
@@ -124,13 +134,18 @@ export class Seo {
     if (url) {
       this.meta.updateTag({ property: 'og:url', content: url });
     } else {
-      // Removed rather than skipped: the previous page's, or index.html's home URL, would
-      // otherwise stay — and a shared link would preview as that page.
+      // Removed rather than skipped: the previous page's URL would otherwise stay — and a
+      // shared link would preview as that page.
       this.meta.removeTag('property="og:url"');
     }
     this.meta.updateTag({ property: 'og:image', content: image });
     this.meta.updateTag({ property: 'og:type', content: config.type ?? 'website' });
     this.meta.updateTag({ property: 'og:site_name', content: 'HostelHive' });
+    // Exactly one, from the language this page is rendered in — see `Locale.ogLocale`.
+    this.meta.updateTag({
+      property: 'og:locale',
+      content: localeFor(this.locale.active()).ogLocale,
+    });
 
     this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     this.meta.updateTag({ name: 'twitter:title', content: social });
@@ -182,9 +197,10 @@ export class Seo {
    * Every other permutation is `noindex` and gets none — pointing thousands of filter URLs
    * at some other page would claim they duplicate it, which they do not.
    *
-   * Removal, not skipping, is the point of `null`. `index.html` ships a static canonical
-   * to the home page, and a reused component carries the previous page's; leaving either
-   * in place is what made every `noindex` page declare itself a copy of the home page.
+   * Removal, not skipping, is the point of `null`. A reused component, or the previous
+   * page in a client navigation, leaves its canonical behind; keeping it is what made
+   * `noindex` pages declare themselves copies of some other page. (`index.html` used to
+   * ship one to the home page too, which is why it no longer ships any.)
    */
   private setCanonical(url: string | null): void {
     if (!url) {
@@ -221,6 +237,20 @@ export class Seo {
   clearJsonLd(id: string): void {
     this.doc.head
       .querySelectorAll(`script[data-seo="${id}"]`)
+      .forEach((el) => el.remove());
+  }
+
+  /**
+   * Removes every JSON-LD block, whatever its id.
+   *
+   * For a route that no page owns — the route-level default in `route-head.ts` — where any
+   * block in the head was written by a page that has already gone. A page that writes its
+   * own blocks clears them by id instead, through `clearOnDestroy`, because only it knows
+   * which are its own.
+   */
+  clearAllJsonLd(): void {
+    this.doc.head
+      .querySelectorAll('script[type="application/ld+json"][data-seo]')
       .forEach((el) => el.remove());
   }
 
