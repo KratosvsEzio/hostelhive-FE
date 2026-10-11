@@ -9,7 +9,7 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 - `apps/web/src/app/core/tokens.ts` — `ACCESS_TOKEN`, `UNAUTHORIZED_HANDLER`, `API_ERROR_NOTIFIER`, `SUPPRESS_ERROR_TOAST`.
 - `apps/web/src/app/core/interceptors/` — `auth-interceptor.ts`, `push-token-interceptor.ts`, `error-interceptor.ts`, `ssr-timeout-interceptor.ts`.
 - `apps/web/src/app/core/refetch-delay.ts` — `RefetchDelay` + interceptor: delays the next matching GET ~1 s after a mutation so the search index can settle.
-- `apps/web/src/app/core/errors/api-error-message.ts` — `extractServerMessages`, `serverMessageText`, `toToastCopy`.
+- `apps/web/src/app/core/errors/api-error-message.ts` — `extractServerMessages`, `toToastCopy`.
 - `apps/web/src/app/core/notification.service.ts` — toasts (`show/error/info/success`, `muteErrors`).
 - `apps/web/src/app/util/models/` — request/response types, exported as `@hostelhive/data-access` (`tsconfig.base.json`); `api-error.ts` defines `ApiError`, `paginated.ts` `Paginated<T>`.
 - `apps/web/src/app/util/pagination.ts` — `ApiPagination`, `pageParams` (`page` + `limit`).
@@ -19,7 +19,7 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 ## How it works
 Chain order (`apps/web/src/app/app.config.ts`): `authInterceptor` → `pushTokenInterceptor` → `errorInterceptor` → `refetchDelayInterceptor` → `ssrTimeoutInterceptor`. Base URL = `readDevApiBaseUrl() ?? apiEnv.apiUrl`.
 
-`errorInterceptor` turns every failure into `ApiError { status, code, message, serverMessages?, method? }`. `message` is the server's text when the body is a Rails envelope, else Angular's message. 401 from our origin (credential endpoints excepted) goes to `UNAUTHORIZED_HANDLER`; other failures go to `API_ERROR_NOTIFIER` unless the request set `SUPPRESS_ERROR_TOAST`. The error is always re-thrown, so screens can also render it inline. 4xx toasts are pinned, 5xx/network auto-dismiss after 6 s (`app.config.ts`).
+`errorInterceptor` turns every failure into `ApiError { status, code, message, serverMessages?, method? }`. `message` is a developer diagnostic, `<METHOD> <pathname> → <status>` (for example `POST /api/user/sign_in → 401`), built by `requestPath`/`diagnostic` in `error-interceptor.ts`. It has no origin, query, `statusText` or server wording; a non-HTTP error such as the SSR `TimeoutError` gets its name in place of the status. Text for users comes only from `serverMessages`, through `toToastCopy` or a classifier. 401 from our origin (credential endpoints excepted) goes to `UNAUTHORIZED_HANDLER`; other failures go to `API_ERROR_NOTIFIER` unless the request set `SUPPRESS_ERROR_TOAST`. The error is always re-thrown, so screens can also classify it and show their own translated copy. 4xx toasts are pinned, 5xx/network auto-dismiss after 6 s (`app.config.ts`).
 
 Backend conventions the mappers rely on:
 - Envelope: success `{ ...payload, success: true }`; error `{ success: false, errors: [...] }`, though `errors` may be a string, a field map, or a singular `error` (`api-error-message.ts`).
@@ -62,10 +62,11 @@ Backend conventions the mappers rely on:
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps
-- **Never render an error's `message`.** `normalize()` still fills `ApiError.message` with the server's text, and falls back to Angular's URL-bearing message when the body is not an envelope. Plain `Error`s thrown by mappers and services carry developer text too ("booking X not in response", "Upload failed: 403").
+- **Never render an error's `message`.** On an `ApiError` it is a developer diagnostic (since Trello #159, PR #137); plain `Error`s thrown by mappers and services carry developer text too ("booking X not in response", "Upload failed: 403").
   - Classify instead, through `api-error-text.ts`.
-  - The guard `apps/web/src/app/core/errors/no-raw-error-message.spec.ts` fails the build on any `.message` read or `{ message }` destructuring in `features/**/*.ts` and `.html`. Its allowlist is exact: billing's own messages and the inviter's note. #83's two host-booking entries were removed when the stay flow moved to translated keys (PR #131).
-  - Making `message` diagnostic only is Trello #159.
+  - The guard `apps/web/src/app/core/errors/no-raw-error-message.spec.ts` fails the build on any `.message` read or `{ message }` destructuring in the `.ts` and `.html` files of `features/`, `layout/` and `shared/`. Its allowlist is exact: billing's own messages, the inviter's note, the toast host and the notification bell (their own text, not errors).
+  - Spec builders and old fixtures may still give `message` a server-text or URL value. That is harmless in negative tests, but it is not what the interceptor produces.
+- **`isSubscriptionError` reads `serverMessages`** (and a raw `HttpErrorResponse` body), never `message`, so a request URL containing "subscri" cannot trip it.
 - **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.
 - **Writes that 500 after committing** (backend serializer bugs on `/staffs`) surface as "Couldn't save" while the row exists; re-read before retrying.
 - **Probing the API from the console**: `withFetch()` captures `window.fetch` at bootstrap, so console fetch/XHR hooks see nothing.
