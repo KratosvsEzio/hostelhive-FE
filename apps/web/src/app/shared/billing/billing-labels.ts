@@ -260,18 +260,19 @@ export function invoiceKindKey(kind: string | null | undefined): string | null {
  * The one button a plan card shows, as the server's `action` dictates.
  *
  * `kind` is the flow the button belongs to and `disabled` whether it can be pressed, so a
- * disabled `checkout` (Current plan, Unavailable) never starts one. `kind: 'none'` means no
- * button at all. `amount` is the raw decimal string, formatted by the template with
- * `billingMoney`; nothing here formats or compares money.
+ * disabled `checkout` (Current plan, Unavailable) never starts one. `kind: 'scheduled'` is the
+ * cheaper plan already set to take over at renewal. `kind: 'none'` means no button at all.
+ * `amount` is the raw decimal string, formatted by the template with `billingMoney`; nothing
+ * here formats or compares money.
  */
 export interface PlanButton {
   key: string;
   disabled: boolean;
-  kind: 'checkout' | 'downgrade' | 'none';
+  kind: 'checkout' | 'downgrade' | 'scheduled' | 'none';
   /** `amount_due_now`, for `upgradePayNow` and the `payNow` sub-line. */
   amount?: string;
   sublineKey?: string;
-  badgeKey?: string;
+  /** Plain text shown under the button. */
   hintKey?: string;
 }
 
@@ -316,7 +317,11 @@ export function planButton(
           kind: 'checkout',
         };
       }
-      const renews = plan.price && subscription?.current_period_end;
+      // A cancelling plan does not renew, so there is no renewal price to quote.
+      const renews =
+        plan.price &&
+        subscription?.current_period_end &&
+        !subscription.cancel_at_period_end;
       return {
         key: 'hostBilling.upgradePayNow',
         disabled: false,
@@ -327,18 +332,21 @@ export function planButton(
     }
 
     case 'downgrade':
+      // Cancel wins at period end, so no switch, scheduled or not, happens until the plan resumes.
+      if (subscription?.cancel_at_period_end) {
+        return {
+          key: 'hostBilling.switchAtRenewal',
+          disabled: true,
+          kind: 'downgrade',
+          hintKey: 'hostBilling.resumeToSwitch',
+        };
+      }
       return plan.scheduled
-        ? {
-            key: 'hostBilling.switchAtRenewal',
-            disabled: true,
-            kind: 'downgrade',
-            badgeKey: 'hostBilling.scheduledForRenewal',
-          }
+        ? { key: 'hostBilling.scheduled', disabled: true, kind: 'scheduled' }
         : {
             key: 'hostBilling.switchAtRenewal',
-            disabled: true,
+            disabled: false,
             kind: 'downgrade',
-            hintKey: 'hostBilling.switchComingSoon',
           };
 
     case 'unavailable':

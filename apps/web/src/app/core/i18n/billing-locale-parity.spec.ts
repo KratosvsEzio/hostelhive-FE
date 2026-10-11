@@ -35,6 +35,8 @@ const RETIRED_KEYS = [
   'hostBilling.backToDashboard',
   'hostBilling.payStubTitle',
   'hostBilling.payStubMessage',
+  'hostBilling.switchComingSoon',
+  'hostBilling.scheduledForRenewal',
   'common.subscription',
 ];
 

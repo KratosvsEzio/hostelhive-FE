@@ -92,6 +92,48 @@ export class BillingApi {
       .pipe(map((res) => res.invoice));
   }
 
+  /** Switches to the cheaper `planId` at renewal, replacing any switch already scheduled. */
+  scheduleDowngrade(hostelId: string, planId: string): Observable<HostBilling> {
+    return this.api
+      .post<BillingEnvelope>(
+        `/api/hostels/${hostelId}/subscription/schedule_downgrade`,
+        { plan_id: planId },
+        quiet(),
+      )
+      .pipe(map((res) => res.billing));
+  }
+
+  unscheduleDowngrade(hostelId: string): Observable<HostBilling> {
+    return this.api
+      .delete<BillingEnvelope>(
+        `/api/hostels/${hostelId}/subscription/schedule_downgrade`,
+        undefined,
+        quiet(),
+      )
+      .pipe(map((res) => res.billing));
+  }
+
+  /** Ends the subscription at the close of the current period; nothing is refunded. */
+  cancelSubscription(hostelId: string): Observable<HostBilling> {
+    return this.api
+      .post<BillingEnvelope>(
+        `/api/hostels/${hostelId}/subscription/cancel`,
+        {},
+        quiet(),
+      )
+      .pipe(map((res) => res.billing));
+  }
+
+  resumeSubscription(hostelId: string): Observable<HostBilling> {
+    return this.api
+      .delete<BillingEnvelope>(
+        `/api/hostels/${hostelId}/subscription/cancel`,
+        undefined,
+        quiet(),
+      )
+      .pipe(map((res) => res.billing));
+  }
+
   invoice(invoiceId: string): Observable<BillingInvoice> {
     return this.api
       .get<InvoiceEnvelope>(`/api/invoices/${invoiceId}`, undefined, quiet())
