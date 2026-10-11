@@ -47,7 +47,10 @@ host/staff tab bars instead of the sidebar (`layout/host-shell/`, `layout/staff-
 already granted. After a sign-in succeeds, `AuthService` calls `init({ prompt: true })`, which may
 show the Android 13+ permission dialog. Firebase delivers the token asynchronously into `token`; the
 `registrationId` is our own `crypto.randomUUID()`. The interceptor attaches both headers to
-authenticated requests and to the four session calls. On sign-out `AuthService` calls `rotate()`,
+authenticated requests and to the four session calls; the backend links the device to the signed-in
+user on any authenticated request carrying `X-FCM-Token` (`be-hostelhive` `Api::ApiController`
+`before_action :link_device`, since BE PR #39), so a token granted or rotated mid-session reaches it on
+the next request. On sign-out `AuthService` calls `rotate()`,
 which unregisters at Firebase and re-registers under a new id. On Android, `init` creates the
 `hh_default` channel at MAX importance; `android/app/src/main/AndroidManifest.xml` names it as the default. A tap on a
 notification opens `/notifications`. A push that arrives in the foreground bumps `received`, which
@@ -74,12 +77,6 @@ the notification bell reads.
 - A notification tap always opens the list, because the backend sends no `data` block for routing yet
   (`openNotifications` comment).
 - `appId` (`com.hostelhive.app`) cannot practically change after the first store upload.
-- The backend links a device's FCM token **only** when it issues a token (`be-hostelhive`
-  `app/controllers/api/jwt/sessions_controller.rb:113`, `Device.link`). `push-token-interceptor.ts` also
-  attaches it to authenticated requests and its comment says that delivers a first or rotated token —
-  the backend does not read it there. So a user who grants permission after signing in, or whose
-  registration was rotated (sign-out, a confirmation link), gets no push on that device until their next
-  sign-in. Trello #142.
 
 ## Decisions
 
