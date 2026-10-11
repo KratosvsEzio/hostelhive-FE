@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { DestroyRef, EnvironmentInjector, createEnvironmentInjector, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LocaleStore } from './i18n/locale-store';
@@ -10,10 +13,15 @@ const OG_URL = 'meta[property="og:url"]';
 const HREFLANG = 'link[rel="alternate"][data-seo="hreflang"]';
 const ROBOTS = 'meta[name="robots"]';
 const PRELOAD = 'link[data-seo="preload-image"]';
+const OG_LOCALE = 'meta[property="og:locale"]';
+const OG_LOCALE_ALTERNATE = 'meta[property="og:locale:alternate"]';
+
+/** `apps/web/src/index.html`: two levels up from here, core then app. */
+const INDEX_HTML = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'index.html');
 
 const active = signal('en');
 
-/** What `index.html` ships before any page runs: a home canonical and a home `og:url`. */
+/** What a previous page leaves behind in a client navigation: its canonical and its `og:url`. */
 function seedStaticHead(): void {
   document.head.insertAdjacentHTML(
     'beforeend',
@@ -150,6 +158,68 @@ describe('Seo', () => {
       expect(all(CANONICAL)).toHaveLength(0);
       expect(all(OG_URL)).toHaveLength(0);
       expect(all(HREFLANG)).toHaveLength(0);
+    });
+  });
+
+  describe('og:locale', () => {
+    it('writes exactly one og:locale, en_PK for English', () => {
+      seo.apply({ title: 'Blog', path: '/blog' });
+
+      expect(all(OG_LOCALE)).toHaveLength(1);
+      expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+    });
+
+    it('follows the active language and rewrites the same tag in place', () => {
+      active.set('ur');
+      seo.apply({ title: 'Blog', path: '/blog' });
+      expect(all(OG_LOCALE)).toHaveLength(1);
+      expect(attr(OG_LOCALE, 'content')).toBe('ur_PK');
+
+      active.set('ar');
+      seo.apply({ title: 'Blog', path: '/blog' });
+      expect(all(OG_LOCALE)).toHaveLength(1);
+      expect(attr(OG_LOCALE, 'content')).toBe('ar_AR');
+    });
+
+    it('writes og:locale on a noindex page with no path, and never an alternate', () => {
+      active.set('ur');
+
+      seo.apply({ title: 'Search', noindex: true });
+
+      expect(all(OG_LOCALE)).toHaveLength(1);
+      expect(attr(OG_LOCALE, 'content')).toBe('ur_PK');
+      expect(all(OG_LOCALE_ALTERNATE)).toHaveLength(0);
+    });
+  });
+
+  describe('clearAllJsonLd', () => {
+    it('removes every JSON-LD block whatever its id and leaves hreflang and the preload alone', () => {
+      seo.apply({ title: 'Blog', path: '/blog' });
+      seo.setJsonLd('a', { n: 1 });
+      seo.setJsonLd('listing', { n: 2 });
+      seo.preloadImage('https://example.test/hero.webp');
+
+      seo.clearAllJsonLd();
+
+      expect(all('script[type="application/ld+json"]')).toHaveLength(0);
+      expect(all(HREFLANG)).toHaveLength(localeAlternates('/blog').length);
+      expect(all(PRELOAD)).toHaveLength(1);
+    });
+  });
+
+  describe('index.html', () => {
+    const html = readFileSync(INDEX_HTML, 'utf8');
+
+    it('ships no canonical, og:url or og:locale, which would be wrong on every page but one', () => {
+      expect(html).not.toMatch(/<link[^>]+rel="canonical"/);
+      expect(html).not.toContain('property="og:url"');
+      expect(html).not.toContain('property="og:locale"');
+    });
+
+    it('still ships the description, robots index and og:image fallbacks', () => {
+      expect(html).toContain('name="description"');
+      expect(html).toContain('content="index, follow, max-image-preview:large"');
+      expect(html).toContain('property="og:image"');
     });
   });
 

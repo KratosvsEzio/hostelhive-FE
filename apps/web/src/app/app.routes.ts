@@ -15,17 +15,28 @@ const toNotifications: RedirectFunction = ({ params }) =>
     params['locale'] ? ['/', params['locale'], 'notifications'] : ['/notifications'],
   );
 
+/**
+ * `data.head` says who writes a route's `<head>` — see `RouteHeadStrategy` (core/route-head.ts).
+ *
+ * `'page'` routes write their own through `Seo.apply`; `'index'` routes are static pages that
+ * get an indexable default with their own canonical, optionally with a translated
+ * `descriptionKey`; a route with neither is `noindex`. A flag on a parent covers its lazy
+ * children. The `'index'` set is the static half of the sitemap (landing/sitemap-urls.ts),
+ * so add a page to both or to neither.
+ */
 const LOCALISED_ROUTES: Route[] = [
   // â”€â”€â”€ Public seeker (SSR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     path: '',
     component: Home,
     title: 'HostelHive — Find verified hostels',
+    data: { head: 'page' },
   },
   {
     path: 'search',
     loadChildren: () =>
       import('@features/public/search/search.routes').then((m) => m.SEARCH_ROUTES),
+    data: { head: 'page' },
   },
   // ─── SEO landing pages ────────────────────────────────────────────────────
   // `/hostels/lahore`, `/hostels/lahore/girls`. These render the search experience with
@@ -40,11 +51,13 @@ const LOCALISED_ROUTES: Route[] = [
     path: 'hostels/:place',
     loadComponent: () =>
       import('@features/public/landing/place-landing').then((m) => m.PlaceLanding),
+    data: { head: 'page' },
   },
   {
     path: 'hostels/:place/:gender',
     loadComponent: () =>
       import('@features/public/landing/place-landing').then((m) => m.PlaceLanding),
+    data: { head: 'page' },
   },
   {
     path: 'hostel',
@@ -52,6 +65,7 @@ const LOCALISED_ROUTES: Route[] = [
       import('@features/public/listing/listing.routes').then(
         (m) => m.LISTING_ROUTES,
       ),
+    data: { head: 'page' },
   },
   // Students confirm meals from their notifications; no email or message links to a
   // confirm page. These old paths (a mock opt-in page, and the URL the backend builds but
@@ -63,59 +77,69 @@ const LOCALISED_ROUTES: Route[] = [
     loadComponent: () =>
       import('@features/public/legal/privacy-policy').then((m) => m.PrivacyPolicy),
     title: 'Privacy Policy — HostelHive',
+    data: { head: 'index' },
   },
   {
     path: 'terms-of-service',
     loadComponent: () =>
       import('@features/public/legal/terms-of-service').then((m) => m.TermsOfService),
     title: 'Terms of Service — HostelHive',
+    data: { head: 'index' },
   },
   {
     path: 'service-policy',
     loadComponent: () =>
       import('@features/public/legal/service-policy').then((m) => m.ServicePolicy),
     title: 'Service Policy — HostelHive',
+    data: { head: 'index' },
   },
   {
     path: 'credits',
     loadComponent: () =>
       import('@features/public/credits/credits').then((m) => m.Credits),
     title: 'Image credits — HostelHive',
+    data: { head: 'index' },
   },
   {
     path: 'about',
     loadComponent: () =>
       import('@features/public/about/about').then((m) => m.About),
     title: 'About Us — HostelHive',
+    data: { head: 'index', descriptionKey: 'publicAbout.makingStudentAccommodationSaferAnd' },
   },
   {
     path: 'faqs',
     loadComponent: () =>
       import('@features/public/faqs/faqs').then((m) => m.Faqs),
     title: 'FAQs — HostelHive',
+    data: { head: 'index', descriptionKey: 'publicFaqs.everythingYouNeedToKnow' },
   },
   {
     path: 'pricing',
     loadComponent: () =>
       import('@features/public/pricing/pricing').then((m) => m.Pricing),
     title: 'Pricing — HostelHive',
+    data: { head: 'page' },
   },
   {
     path: 'blog',
     loadChildren: () =>
       import('@features/public/blog/blog.routes').then((m) => m.BLOG_ROUTES),
+    data: { head: 'page' },
   },
   {
     path: 'careers',
     loadComponent: () =>
       import('@features/public/careers/careers').then((m) => m.Careers),
     title: 'Careers — HostelHive',
+    data: { head: 'index', descriptionKey: 'publicCareers.hostelhiveIsOnAMission' },
   },
   {
     path: 'contact',
     loadComponent: () =>
       import('@features/public/contact/contact').then((m) => m.Contact),
     title: 'Contact Us — HostelHive',
+    data: { head: 'index', descriptionKey: 'publicContact.weDLoveToHear' },
   },
   {
     path: 'auth',

@@ -882,10 +882,17 @@ export class HostOpsApi {
       );
   }
 
+  /**
+   * `PUT /api/host/hostels/:hostelId/utility_bills/:billId` — re-split a bill across renters.
+   *
+   * The renter bill ids are the obfuscated strings `renter_bills` returns, sent unchanged; the
+   * backend decodes them (azeem-hamza/hostelhive#34). This used to call the singular
+   * `/api/host/hostel/…`, which has no route, and to send `Number(id)`, which is NaN.
+   */
   updateUtilityBill(hostelId: string, billId: string, renterBills: { id: string; amount: number }[]): Observable<unknown> {
-    return this.api.put(`/api/host/hostel/${hostelId}/utility_bills/${billId}`, {
+    return this.api.put(`/api/host/hostels/${hostelId}/utility_bills/${billId}`, {
       utility_bill: {
-        renter_bills_attributes: renterBills.map((r) => ({ id: Number(r.id), amount: r.amount })),
+        renter_bills_attributes: renterBills.map((r) => ({ id: r.id, amount: r.amount })),
       },
     });
   }

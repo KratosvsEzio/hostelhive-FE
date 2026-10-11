@@ -24,7 +24,13 @@ export function provideAuth(): EnvironmentProviders {
       provide: UNAUTHORIZED_HANDLER,
       useFactory: () => {
         const session = inject(SessionStore);
-        return () => session.clear();
+        // Only the token that was rejected ends a session: a late 401 for one that has since
+        // been replaced, or a request sent without one, says nothing about who is signed in now.
+        return (rejectedToken: string | null) => {
+          if (rejectedToken !== null && session.accessToken() === rejectedToken) {
+            session.clear();
+          }
+        };
       },
     },
   ]);

@@ -1334,7 +1334,13 @@
     "pleaseLogInToContinue": "Silakan masuk untuk melanjutkan.",
     "cannotReachTheServer": "Tidak dapat menjangkau server. Silakan coba lagi sebentar lagi.",
     "linkIsInvalidOrExpired": "Tautan konfirmasi ini tidak valid, sudah kedaluwarsa, atau sudah pernah digunakan.",
-    "linkIsMissingItsToken": "Tautan konfirmasi ini tidak memiliki token. Silakan buka kembali dari tombol di email Anda."
+    "linkIsMissingItsToken": "Tautan konfirmasi ini tidak memiliki token. Silakan buka kembali dari tombol di email Anda.",
+    "alreadySignedInTitle": "Anda sudah masuk",
+    "signedInAsAccount": "Anda masuk sebagai {{account}}. Untuk mengaktifkan akun dari tautan ini, Anda akan dikeluarkan terlebih dahulu.",
+    "signedInToAnotherAccount": "Anda masuk ke akun lain. Untuk mengaktifkan akun dari tautan ini, Anda akan dikeluarkan terlebih dahulu.",
+    "linkStillWorksLater": "Jika Anda tetap masuk, tautan ini masih dapat digunakan nanti.",
+    "logOutAndContinue": "Keluar dan lanjutkan",
+    "staySignedIn": "Tetap masuk"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Peran & izin",

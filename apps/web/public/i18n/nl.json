@@ -1329,7 +1329,13 @@
     "pleaseLogInToContinue": "Log in om verder te gaan.",
     "cannotReachTheServer": "Kan de server niet bereiken. Probeer het zo meteen opnieuw.",
     "linkIsInvalidOrExpired": "Deze bevestigingslink is ongeldig, verlopen of al gebruikt.",
-    "linkIsMissingItsToken": "Deze bevestigingslink mist zijn token. Open hem opnieuw via de knop in je e-mail."
+    "linkIsMissingItsToken": "Deze bevestigingslink mist zijn token. Open hem opnieuw via de knop in je e-mail.",
+    "alreadySignedInTitle": "Je bent al ingelogd",
+    "signedInAsAccount": "Je bent ingelogd als {{account}}. Om het account uit deze link te activeren, word je eerst uitgelogd.",
+    "signedInToAnotherAccount": "Je bent ingelogd met een ander account. Om het account uit deze link te activeren, word je eerst uitgelogd.",
+    "linkStillWorksLater": "Als je ingelogd blijft, werkt deze link later nog steeds.",
+    "logOutAndContinue": "Uitloggen en doorgaan",
+    "staySignedIn": "Ingelogd blijven"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Rollen & rechten",

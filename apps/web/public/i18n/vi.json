@@ -1334,7 +1334,13 @@
     "pleaseLogInToContinue": "Vui lòng đăng nhập để tiếp tục.",
     "cannotReachTheServer": "Không thể kết nối đến máy chủ. Vui lòng thử lại sau giây lát.",
     "linkIsInvalidOrExpired": "Liên kết xác nhận này không hợp lệ, đã hết hạn hoặc đã được sử dụng.",
-    "linkIsMissingItsToken": "Liên kết xác nhận này thiếu mã token. Vui lòng mở lại từ nút trong email của bạn."
+    "linkIsMissingItsToken": "Liên kết xác nhận này thiếu mã token. Vui lòng mở lại từ nút trong email của bạn.",
+    "alreadySignedInTitle": "Bạn đã đăng nhập",
+    "signedInAsAccount": "Bạn đang đăng nhập với tên {{account}}. Để kích hoạt tài khoản từ liên kết này, bạn sẽ được đăng xuất trước.",
+    "signedInToAnotherAccount": "Bạn đang đăng nhập vào một tài khoản khác. Để kích hoạt tài khoản từ liên kết này, bạn sẽ được đăng xuất trước.",
+    "linkStillWorksLater": "Nếu bạn vẫn giữ đăng nhập, liên kết này vẫn sẽ dùng được sau.",
+    "logOutAndContinue": "Đăng xuất và tiếp tục",
+    "staySignedIn": "Giữ đăng nhập"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Vai trò & quyền",

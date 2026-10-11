@@ -170,7 +170,7 @@ describe('HostelForm contact details', () => {
   }
 
   it('renders them when editing, not only when creating', () => {
-    const html = setUp('edit', { id: 1, name: 'Ever Care' }).nativeElement.textContent ?? '';
+    const html = setUp('edit', { id: 'MjvuEl', name: 'Ever Care' }).nativeElement.textContent ?? '';
     // The i18n test harness renders keys rather than copy, so assert on the keys.
     expect(html).toContain('common.contactEmail');
     expect(html).toContain('common.primaryPhone');
@@ -187,7 +187,7 @@ describe('HostelForm contact details', () => {
    */
   it('loads the contact address back off the record', () => {
     const form = setUp('edit', {
-      id: 1,
+      id: 'MjvuEl',
       name: 'Ever Care',
       email: 'stay@evercare.pk',
     }).componentInstance as unknown as { email(): string };
@@ -196,7 +196,7 @@ describe('HostelForm contact details', () => {
   });
 
   it('still rejects a malformed address, in any mode', () => {
-    const fixture = setUp('edit', { id: 1, name: 'Ever Care', email: 'not-an-address' });
+    const fixture = setUp('edit', { id: 'MjvuEl', name: 'Ever Care', email: 'not-an-address' });
     expect(fixture.componentInstance.fieldErrors()['email']).toBeTruthy();
   });
 
@@ -208,7 +208,7 @@ describe('HostelForm contact details', () => {
    * would block it on a field its host was never shown.
    */
   it('accepts a phone number alone when approving', () => {
-    const fixture = setUp('edit', { id: 1, name: 'Ever Care' });
+    const fixture = setUp('edit', { id: 'MjvuEl', name: 'Ever Care' });
     // Set through the signal rather than the record: the number arrives via `hh-phone-input`,
     // which does not start up under jsdom. The rule under test is this form's, not the widget's.
     (fixture.componentInstance as unknown as { phone: { set(v: string): void } }).phone.set(
@@ -223,7 +223,7 @@ describe('HostelForm contact details', () => {
   });
 
   it('flags a listing with no way to reach it at all', () => {
-    const fixture = setUp('edit', { id: 1, name: 'Ever Care' });
+    const fixture = setUp('edit', { id: 'MjvuEl', name: 'Ever Care' });
     fixture.componentRef.setInput('requireComplete', true);
     fixture.detectChanges();
 
@@ -530,17 +530,17 @@ describe('HostelForm time zone', () => {
   });
 
   it('sends the zone the hostel was saved in, not the browser one', () => {
-    const form = setUp('edit', { id: 1, name: 'Backpacker', timezone: 'Europe/Lisbon' }).componentInstance;
+    const form = setUp('edit', { id: 'MjvuEl', name: 'Backpacker', timezone: 'Europe/Lisbon' }).componentInstance;
     expect(form.getPayload().timezone).toBe('Europe/Lisbon');
   });
 
   it('does not read as unsaved on an older hostel that has no zone yet', () => {
-    const form = setUp('edit', { id: 1, name: 'Old', timezone: null }).componentInstance;
+    const form = setUp('edit', { id: 'MjvuEl', name: 'Old', timezone: null }).componentInstance;
     expect(form.dirty()).toBe(false);
   });
 
   it('holds the field read-only, says why, and sends nothing while locked', () => {
-    const fixture = setUp('edit', { id: 1, name: 'Backpacker', timezone: 'Asia/Karachi' }, true);
+    const fixture = setUp('edit', { id: 'MjvuEl', name: 'Backpacker', timezone: 'Asia/Karachi' }, true);
     const el = fixture.nativeElement as HTMLElement;
 
     expect(fixture.componentInstance.getPayload()).not.toHaveProperty('timezone');

@@ -30,7 +30,7 @@ interface WizardInternals {
   secondaryPhone: WritableSignal<string>;
   media: WritableSignal<MediaItem[]>;
   locationPinned: WritableSignal<boolean>;
-  draftId: WritableSignal<number | null>;
+  draftId: WritableSignal<number | string | null>;
   draftError: WritableSignal<boolean>;
   showValidationModal: WritableSignal<boolean>;
   showLeaveModal: WritableSignal<boolean>;
@@ -676,6 +676,30 @@ describe('OnboardingWizard', () => {
       expect(vm.capacityFixed()).toBe(true);
       expect(vm.newRoomCapacity()).toBe(4);
     });
+
+    // Hostel ids are obfuscated strings. Restoring only numeric ids dropped every real draft
+    // id, so resuming a draft and saving created a second hostel instead of updating it.
+    it('restores a string draft id and the next save updates that hostel', () => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ owner: 'u1', draftId: 'MjvuEl', rooms: [] }));
+
+      const { vm, hostels } = render();
+      expect(vm.draftId()).toBe('MjvuEl');
+
+      vm.saveAndExit();
+
+      expect(hostels.update).toHaveBeenCalledTimes(1);
+      expect(hostels.update.mock.calls[0][0]).toBe('MjvuEl');
+      expect(hostels.create).not.toHaveBeenCalled();
+    });
+
+    // A numeric id in an older draft is a raw database id, which the API now rejects.
+    it('drops a numeric draft id from an older draft', () => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ owner: 'u1', draftId: 42, rooms: [] }));
+
+      const { vm } = render();
+
+      expect(vm.draftId()).toBeNull();
+    });
   });
 
   describe('save status chip', () => {
@@ -816,7 +840,8 @@ describe('OnboardingWizard', () => {
 
     it('restores linked photos for the same host so they are never sent twice', () => {
       const { vm, hostels, remount } = render();
-      vm.draftId.set(7);
+      // A real (obfuscated, string) hostel id: only those survive a restore.
+      vm.draftId.set('MjvuEl');
       vm.media.set([
         { id: 1, label: 'a.jpg', primary: true, url: 'https://cdn/1', attachmentId: 'att-1' },
       ]);
@@ -824,13 +849,13 @@ describe('OnboardingWizard', () => {
       expect(hostels.update.mock.calls[0][1].attachment_ids).toEqual(['att-1']);
 
       const next = remount();
-      expect(next.vm.draftId()).toBe(7);
+      expect(next.vm.draftId()).toBe('MjvuEl');
       expect(next.vm.media().map((m) => m.attachmentId)).toEqual(['att-1']);
 
       next.vm.saveAndExit();
 
       expect(hostels.update).toHaveBeenCalledTimes(2);
-      expect(hostels.update.mock.calls[1][0]).toBe(7);
+      expect(hostels.update.mock.calls[1][0]).toBe('MjvuEl');
       expect(hostels.update.mock.calls[1][1].attachment_ids).toBeUndefined();
     });
   });

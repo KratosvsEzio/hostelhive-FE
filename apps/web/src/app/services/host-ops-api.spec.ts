@@ -197,6 +197,43 @@ describe('HostOpsApi room writes', () => {
  * list uses. That makes `hostel.rooms` the complete set, not just the rooms added, which is
  * why the caller can replace the grid outright instead of re-reading it.
  */
+/**
+ * Re-splitting a utility bill across renters.
+ *
+ * Both halves were wrong: the path was the singular `/api/host/hostel/…`, which has no route,
+ * and each renter bill id went through `Number(...)`, which turns an obfuscated id into NaN.
+ * The backend decodes the ids as strings since azeem-hamza/hostelhive#34.
+ */
+describe('HostOpsApi.updateUtilityBill', () => {
+  it('puts to the plural hostels route', () => {
+    const { api, http } = setUp();
+
+    api.updateUtilityBill('MjvuEl', 'Xk3pQa', [{ id: 'rB1aaa', amount: 1200 }]).subscribe();
+
+    expect(http.puts[0].path).toBe('/api/host/hostels/MjvuEl/utility_bills/Xk3pQa');
+  });
+
+  it('sends the renter bill ids unchanged, as the obfuscated strings they are', () => {
+    const { api, http } = setUp();
+
+    api
+      .updateUtilityBill('MjvuEl', 'Xk3pQa', [
+        { id: 'rB1aaa', amount: 1200 },
+        { id: 'rB2bbb', amount: 800 },
+      ])
+      .subscribe();
+
+    expect(http.puts[0].body).toEqual({
+      utility_bill: {
+        renter_bills_attributes: [
+          { id: 'rB1aaa', amount: 1200 },
+          { id: 'rB2bbb', amount: 800 },
+        ],
+      },
+    });
+  });
+});
+
 describe('HostOpsApi.bulkCreateRooms', () => {
   function withPut(body: unknown) {
     const calls: { path: string; body: unknown }[] = [];

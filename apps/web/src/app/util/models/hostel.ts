@@ -47,7 +47,7 @@ export interface ColorTokens {
 
 /** StatusSerializer. */
 export interface HostelStatus {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   color?: ColorTokens | null;
@@ -55,7 +55,7 @@ export interface HostelStatus {
 
 /** DispositionSerializer (embeds its status). */
 export interface HostelDisposition {
-  id: number;
+  id: string;
   reference_number?: string | null;
   name: string;
   slug: string;
@@ -66,14 +66,14 @@ export interface HostelDisposition {
 
 /** Embedded offer / category ref inside a HostelOffer. */
 export interface OfferRef {
-  id: number;
+  id: string;
   name: string;
   slug: string;
 }
 
 /** HostelOfferSerializer — the hostel↔offer join with its offer + category. */
 export interface HostelOffer {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
   offer?: OfferRef | null;
@@ -110,7 +110,7 @@ export interface HostelAttachment {
 
 /** RoomTypeSerializer. */
 export interface RoomType {
-  id: number;
+  id: string;
   name: string;
   description?: string | null;
   capacity: number;
@@ -128,7 +128,7 @@ export interface RoomType {
 
 /** RoomSerializer (the nested `room_type` is included; back-ref to hostel omitted to avoid cycles). */
 export interface HostelRoom {
-  id: number;
+  id: string;
   room_number?: string | null;
   capacity: number;
   current_occupancy: number;
@@ -150,7 +150,7 @@ export interface HostelRoom {
 export interface HostelDetail {
   /** IANA zone the property keeps its dates in, e.g. `Asia/Karachi`. Older records may lack it. */
   timezone?: string | null;
-  id: number;
+  id: string;
   name: string;
   description?: string | null;
   gender_type: HostelGenderType;
@@ -225,7 +225,7 @@ export interface HostelDetail {
  * with `host: {id,name}` and a `location` geo-point, plus the relevance `_score`.
  */
 export interface HostelSearchResult {
-  id: number;
+  id: string;
   description?: string | null;
   address_1?: string | null;
   address_2?: string | null;
@@ -263,8 +263,8 @@ export interface HostelPagination {
 
 /** A nested hostel_offers_attributes row (accepts_nested_attributes_for). */
 export interface HostelOfferInput {
-  id?: number;
-  offer_id: number;
+  id?: string;
+  offer_id: string;
   _destroy?: boolean;
 }
 /** A nested room_types_attributes row. */
@@ -275,7 +275,7 @@ export interface HostelOfferInput {
  * Private Ensuite"), and the axis a seeker shops on is `occupancy_type`.
  */
 export interface RoomTypeInput {
-  id?: number;
+  id?: string;
   name: string;
   description?: string;
   capacity: number;

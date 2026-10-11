@@ -5,9 +5,16 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { NavigationEnd, provideRouter, Router, RouteReuseStrategy } from '@angular/router';
+import {
+  NavigationEnd,
+  provideRouter,
+  Router,
+  RouteReuseStrategy,
+  TitleStrategy,
+} from '@angular/router';
 import { filter, take } from 'rxjs';
 import { AppRouteReuseStrategy } from './route-reuse-strategy';
+import { RouteHeadStrategy } from '@core/route-head';
 import {
   provideClientHydration,
   withEventReplay,
@@ -47,6 +54,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
     { provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy },
+    // Every route's head, not only the title: pages without their own SEO get an indexable
+    // or a `noindex` default from route data — see route-head.ts. Inherited by the server
+    // config, so server renders get it too.
+    { provide: TitleStrategy, useClass: RouteHeadStrategy },
     // Open a new page at the top. Deliberately not `withInMemoryScrolling`, which would
     // also fire on the search page's query-param navigations — see scroll-reset.ts.
     provideAppInitializer(() => {
