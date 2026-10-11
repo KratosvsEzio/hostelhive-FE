@@ -23,6 +23,7 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import {
   HostRoom as Room,
   Tenant,
+  TenantBillSplit,
   UtilityBill,
   UtilityType,
   UtilityTypeMeta,
@@ -95,7 +96,8 @@ export class AddBill {
 
   protected readonly billId = signal<string | null>(null);
   protected readonly isEdit = computed(() => !!this.billId());
-  private readonly splitIds = signal<string[]>([]);
+  /** The bill being edited, as saved: its total and its renter bills. */
+  private readonly stored = signal<{ total: number; splits: TenantBillSplit[] } | null>(null);
   protected readonly editLoading = signal(false);
   protected readonly editError = signal(false);
 
@@ -267,15 +269,31 @@ export class AddBill {
     );
   }
 
-  private readonly roomTenants = computed(() => this.tenantsOf(this.roomId()));
+  /**
+   * Who the bill is split across. A new bill goes to the room's active tenants; an edited one
+   * stays with the renters it was issued to, because those are the renter bills the save
+   * updates. A tenant who moved in since has no renter bill, and one who moved out still has.
+   */
+  private readonly participants = computed<{ id: string; name: string; initials: string }[]>(() => {
+    const stored = this.stored();
+    if (!stored) return this.tenantsOf(this.roomId());
+    const tenants = this.state().tenants ?? [];
+    return stored.splits.map((s) => ({
+      id: s.tenantId,
+      name: s.name,
+      initials:
+        tenants.find((t) => t.id === s.tenantId)?.initials ??
+        (s.name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?'),
+    }));
+  });
 
   protected readonly totalDays = computed(() =>
-    this.roomTenants().reduce((n, t) => n + this.effectiveDays(t.id), 0),
+    this.participants().reduce((n, t) => n + this.effectiveDays(t.id), 0),
   );
 
-  protected readonly rows = computed<SplitRow[]>(() =>
-    splitByDays(
-      this.roomTenants().map((t) => ({
+  protected readonly rows = computed<SplitRow[]>(() => {
+    const rows = splitByDays(
+      this.participants().map((t) => ({
         tenantId: t.id,
         name: t.name,
         initials: t.initials,
@@ -283,8 +301,19 @@ export class AddBill {
       })),
       this.total(),
       this.overrides(),
-    ),
-  );
+    );
+    // Until the host changes the total or someone's days, an edited bill shows the shares it
+    // was saved with. Recomputing them could show, and then save, different amounts from the
+    // ones the tenants were billed.
+    const stored = this.stored();
+    if (!stored || this.total() !== stored.total) return rows;
+    const saved = new Map(stored.splits.map((s) => [s.tenantId, s]));
+    const unchanged = rows.every((r) => {
+      const s = saved.get(r.tenantId);
+      return !!s && r.days === (s.days > 0 ? s.days : this.maxDaysInMonth());
+    });
+    return unchanged ? rows.map((r) => ({ ...r, share: saved.get(r.tenantId)!.amount })) : rows;
+  });
 
   protected readonly allocated = computed(() =>
     this.rows().reduce((n, r) => n + r.share, 0),
@@ -395,29 +424,22 @@ export class AddBill {
       const [yearStr, monthStr] = bill.issuedDate.slice(0, 7).split('-');
       this.selectedMonthValue.set(`${yearStr}-${Number(monthStr) - 1}`);
     }
-    // Store renter_bill IDs in order for the update payload
-    this.splitIds.set((bill.splits ?? []).map((s) => s.id));
+    const splits = (bill.splits ?? []).filter((s) => !!s.id && !!s.tenantId);
+    this.daysOverrides.set(
+      Object.fromEntries(splits.filter((s) => s.days > 0).map((s) => [s.tenantId, s.days])),
+    );
+    this.stored.set({ total: bill.total, splits });
   }
 
   protected addToBatch(): void {
     const room = this.currentRoom();
     const hostelId = this.store.selected();
     if (!room || !hostelId || this.total() <= 0) return;
+    // Until the bill has loaded there is nothing to update, and falling through would create one.
+    if (this.isEdit() && !this.stored()) return;
 
     this.submitting.set(true);
     this.submitError.set(false);
-
-    if (this.isEdit()) {
-      const ids = this.splitIds();
-      const renterBills = ids
-        .map((id, i) => ({ id, amount: this.rows()[i]?.share ?? 0 }))
-        .filter((r): r is { id: string; amount: number } => !!r.id);
-      this.api.updateUtilityBill(hostelId, this.billId()!, renterBills).subscribe({
-        next: () => { this.back(); },
-        error: () => { this.submitting.set(false); this.submitError.set(true); },
-      });
-      return;
-    }
 
     const isElec = this.isElectricity();
     const { year, month } = this.selectedMonth();
@@ -429,16 +451,44 @@ export class AddBill {
     const dueDate = dueDateInput ?? localDay(new Date(year, month + 1, 0));
     const rate = isElec ? (Number(this.rateInput()) || 0) : 0;
 
-    const body = {
-      utility_type: this.type(),
+    const figures = {
       total_amount: this.total(),
       consumed_units: isElec ? this.units() : undefined,
       previous_units: isElec ? (Number(this.prevReadingInput()) || undefined) : undefined,
       current_units: isElec ? (Number(this.currReadingInput()) || undefined) : undefined,
-      room_id: this.roomId() || undefined,
       issued_date: issuedDate,
       due_date: dueDate,
       cost_per_unit: rate || undefined,
+    };
+
+    const stored = this.stored();
+    if (this.isEdit() && stored) {
+      // Type and room are locked while editing, so they are not sent; the renter bills are
+      // matched by renter, the same renters `participants` lists.
+      const idOf = new Map(stored.splits.map((s) => [s.tenantId, s.id]));
+      this.api
+        .updateUtilityBill(hostelId, this.billId()!, {
+          ...figures,
+          renter_bills_attributes: this.rows().map((row) => ({
+            id: idOf.get(row.tenantId)!,
+            amount: row.share,
+            bill_days: this.effectiveDays(row.tenantId),
+            due_date: dueDate,
+            issued_date: issuedDate,
+            break_down: { [`${this.type()}_bill`]: row.share },
+          })),
+        })
+        .subscribe({
+          next: () => { this.back(); },
+          error: () => { this.submitting.set(false); this.submitError.set(true); },
+        });
+      return;
+    }
+
+    const body = {
+      ...figures,
+      utility_type: this.type(),
+      room_id: this.roomId() || undefined,
       notes: '',
       renter_bills_attributes: this.rows().map((row) => ({
         renter_id: row.tenantId,
