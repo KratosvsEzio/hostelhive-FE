@@ -25,7 +25,7 @@ Trello #105: favourite hearts read `FavoritesStore`, a localStorage list (`hh:fa
 ## Consequences
 
 - A reload with a token but no cached user starts with no user until validation finishes. The cache is then dropped, and the hearts fill only when the load lands: correct, but not instant.
-- `hh:onboarding:draft` and `HostPropertyStore`'s direct A→B switch still have the same per-user-cache shape (follow-ups).
+- `HostPropertyStore`'s direct A→B switch still has the same per-user-cache shape (Trello #115). `hh:onboarding:draft` was fixed the same way, with eager creation added — see [the become-a-host draft belongs to the signed-in user](../public-content/onboarding-draft-belongs-to-the-session-user.md).
 
 ## Evidence
 
