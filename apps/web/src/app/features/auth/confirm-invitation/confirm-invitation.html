@@ -4,6 +4,14 @@
   >
     <i hhLogo class="mx-auto h-6 w-auto text-ink-900"></i>
 
+    <!-- Always present, so filling it is announced: answering the question removes the focused
+         button, and without this nothing says the confirmation has started. -->
+    <p class="sr-only" role="status">
+      @if (phase() === 'verifying' && answered()) {
+        {{ 'authConfirmInvitation.confirmingYourAccount' | transloco }}
+      }
+    </p>
+
     @switch (phase()) {
       @case ('verifying') {
         <span
@@ -20,6 +28,58 @@
         <p class="mt-1 text-sm text-ink-500">
           {{ 'authConfirmInvitation.hangTightWhileWeVerify' | transloco }}
         </p>
+      }
+      @case ('asking') {
+        <span
+          class="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full bg-tint-sky text-brand-500"
+        >
+          <i class="ti ti-user-circle text-2xl" aria-hidden="true"></i>
+        </span>
+        <h1
+          #askingHeading
+          tabindex="-1"
+          aria-describedby="confirm-asking-account confirm-asking-later"
+          class="mt-4 font-display text-xl font-semibold text-ink-900 focus:outline-none"
+        >
+          {{ 'authConfirmInvitation.alreadySignedInTitle' | transloco }}
+        </h1>
+        <p id="confirm-asking-account" class="mt-1 break-words text-sm text-ink-500">
+          @if (signedInAccount(); as account) {
+            {{
+              'authConfirmInvitation.signedInAsAccount'
+                | transloco: { account: account }
+            }}
+          } @else {
+            {{ 'authConfirmInvitation.signedInToAnotherAccount' | transloco }}
+          }
+        </p>
+        <p id="confirm-asking-later" class="mt-1 break-words text-sm text-ink-500">
+          {{ 'authConfirmInvitation.linkStillWorksLater' | transloco }}
+        </p>
+        <div class="mt-5 space-y-3">
+          <button
+            type="button"
+            hh-button
+            color="primary"
+            size="lg"
+            class="w-full"
+            [disabled]="answered()"
+            (click)="logOutAndContinue()"
+          >
+            {{ 'authConfirmInvitation.logOutAndContinue' | transloco }}
+          </button>
+          <button
+            type="button"
+            hh-button
+            variant="outlined"
+            size="lg"
+            class="w-full"
+            [disabled]="answered()"
+            (click)="staySignedIn()"
+          >
+            {{ 'authConfirmInvitation.staySignedIn' | transloco }}
+          </button>
+        </div>
       }
       @case ('confirmed') {
         <span

@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "Log ind for at fortsætte.",
     "cannotReachTheServer": "Kan ikke nå serveren. Prøv igen om et øjeblik.",
     "linkIsInvalidOrExpired": "Dette bekræftelseslink er ugyldigt, er udløbet eller er allerede blevet brugt.",
-    "linkIsMissingItsToken": "Dette bekræftelseslink mangler sin token. Åbn det igen fra knappen i din e-mail."
+    "linkIsMissingItsToken": "Dette bekræftelseslink mangler sin token. Åbn det igen fra knappen i din e-mail.",
+    "alreadySignedInTitle": "Du er allerede logget ind",
+    "signedInAsAccount": "Du er logget ind som {{account}}. For at aktivere kontoen fra dette link bliver du logget ud først.",
+    "signedInToAnotherAccount": "Du er logget ind på en anden konto. For at aktivere kontoen fra dette link bliver du logget ud først.",
+    "linkStillWorksLater": "Hvis du forbliver logget ind, virker dette link stadig senere.",
+    "logOutAndContinue": "Log ud og fortsæt",
+    "staySignedIn": "Forbliv logget ind"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roller og tilladelser",

@@ -145,6 +145,35 @@ describe('errorInterceptor', () => {
     expect(notify).not.toHaveBeenCalled();
   });
 
+  it('tells the unauthorized handler which bearer the rejected request carried', () => {
+    http
+      .get(`${BASE}/api/x`, { headers: { Authorization: 'Bearer tok-A' } })
+      .subscribe({ error: () => undefined });
+    unauthorized(httpMock.expectOne(`${BASE}/api/x`));
+    expect(onUnauthorized).toHaveBeenCalledExactlyOnceWith('tok-A');
+  });
+
+  it('passes null to the unauthorized handler when the request carried no Authorization', () => {
+    fire(unauthorized);
+    expect(onUnauthorized).toHaveBeenCalledExactlyOnceWith(null);
+  });
+
+  it('passes null when the Authorization header is not a bearer', () => {
+    http
+      .get(`${BASE}/api/x`, { headers: { Authorization: 'Basic abc' } })
+      .subscribe({ error: () => undefined });
+    unauthorized(httpMock.expectOne(`${BASE}/api/x`));
+    expect(onUnauthorized).toHaveBeenCalledExactlyOnceWith(null);
+  });
+
+  it('passes null when the bearer header carries no token after the scheme', () => {
+    http
+      .get(`${BASE}/api/x`, { headers: { Authorization: 'Bearer ' } })
+      .subscribe({ error: () => undefined });
+    unauthorized(httpMock.expectOne(`${BASE}/api/x`));
+    expect(onUnauthorized).toHaveBeenCalledExactlyOnceWith(null);
+  });
+
   // The handler clears the session, so anything that reaches it signs the user out.
   it('ignores a 401 from a third-party host', () => {
     fire(unauthorized, undefined, 'https://ipapi.co/json');

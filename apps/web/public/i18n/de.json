@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "Bitte melden Sie sich an, um fortzufahren.",
     "cannotReachTheServer": "Server nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
     "linkIsInvalidOrExpired": "Dieser Bestätigungslink ist ungültig, abgelaufen oder wurde bereits verwendet.",
-    "linkIsMissingItsToken": "Diesem Bestätigungslink fehlt das Token. Bitte öffnen Sie ihn erneut über die Schaltfläche in Ihrer E-Mail."
+    "linkIsMissingItsToken": "Diesem Bestätigungslink fehlt das Token. Bitte öffnen Sie ihn erneut über die Schaltfläche in Ihrer E-Mail.",
+    "alreadySignedInTitle": "Sie sind bereits angemeldet",
+    "signedInAsAccount": "Sie sind als {{account}} angemeldet. Um das Konto aus diesem Link zu aktivieren, werden Sie zuerst abgemeldet.",
+    "signedInToAnotherAccount": "Sie sind mit einem anderen Konto angemeldet. Um das Konto aus diesem Link zu aktivieren, werden Sie zuerst abgemeldet.",
+    "linkStillWorksLater": "Wenn Sie angemeldet bleiben, funktioniert dieser Link auch später noch.",
+    "logOutAndContinue": "Abmelden und fortfahren",
+    "staySignedIn": "Angemeldet bleiben"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Rollen & Berechtigungen",

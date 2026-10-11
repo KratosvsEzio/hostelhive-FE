@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "请登录以继续。",
     "cannotReachTheServer": "无法连接到服务器。请稍后再试。",
     "linkIsInvalidOrExpired": "此确认链接无效、已过期或已被使用。",
-    "linkIsMissingItsToken": "此确认链接缺少令牌。请通过电子邮件中的按钮重新打开。"
+    "linkIsMissingItsToken": "此确认链接缺少令牌。请通过电子邮件中的按钮重新打开。",
+    "alreadySignedInTitle": "您已登录",
+    "signedInAsAccount": "您当前以 {{account}} 的身份登录。要激活此链接中的账户，将先为您退出登录。",
+    "signedInToAnotherAccount": "您当前已登录另一个账户。要激活此链接中的账户，将先为您退出登录。",
+    "linkStillWorksLater": "如果您保持登录，此链接以后仍可使用。",
+    "logOutAndContinue": "退出登录并继续",
+    "staySignedIn": "保持登录"
   },
   "adminAdminRoles": {
     "rolesPermissions": "角色与权限",

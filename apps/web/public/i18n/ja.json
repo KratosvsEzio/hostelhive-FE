@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "続行するにはログインしてください。",
     "cannotReachTheServer": "サーバーに接続できません。しばらくしてからもう一度お試しください。",
     "linkIsInvalidOrExpired": "この確認リンクは無効か、有効期限が切れているか、すでに使用されています。",
-    "linkIsMissingItsToken": "この確認リンクにはトークンがありません。メールのボタンからもう一度開いてください。"
+    "linkIsMissingItsToken": "この確認リンクにはトークンがありません。メールのボタンからもう一度開いてください。",
+    "alreadySignedInTitle": "すでにサインインしています",
+    "signedInAsAccount": "{{account}} としてサインインしています。このリンクのアカウントを有効にするには、先にログアウトします。",
+    "signedInToAnotherAccount": "別のアカウントでサインインしています。このリンクのアカウントを有効にするには、先にログアウトします。",
+    "linkStillWorksLater": "サインインしたままにしても、このリンクは後で使用できます。",
+    "logOutAndContinue": "ログアウトして続行",
+    "staySignedIn": "サインインしたままにする"
   },
   "adminAdminRoles": {
     "rolesPermissions": "ロールと権限",

@@ -1283,7 +1283,13 @@
     "pleaseLogInToContinue": "Zaloguj się, aby kontynuować.",
     "cannotReachTheServer": "Nie można połączyć się z serwerem. Spróbuj ponownie za chwilę.",
     "linkIsInvalidOrExpired": "Ten link potwierdzający jest nieprawidłowy, wygasł lub został już użyty.",
-    "linkIsMissingItsToken": "W tym linku potwierdzającym brakuje tokenu. Otwórz go ponownie za pomocą przycisku w wiadomości e-mail."
+    "linkIsMissingItsToken": "W tym linku potwierdzającym brakuje tokenu. Otwórz go ponownie za pomocą przycisku w wiadomości e-mail.",
+    "alreadySignedInTitle": "Jesteś już zalogowany",
+    "signedInAsAccount": "Jesteś zalogowany jako {{account}}. Aby aktywować konto z tego linku, najpierw zostaniesz wylogowany.",
+    "signedInToAnotherAccount": "Jesteś zalogowany na inne konto. Aby aktywować konto z tego linku, najpierw zostaniesz wylogowany.",
+    "linkStillWorksLater": "Jeśli pozostaniesz zalogowany, ten link będzie działał również później.",
+    "logOutAndContinue": "Wyloguj się i kontynuuj",
+    "staySignedIn": "Pozostań zalogowany"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Role i uprawnienia",

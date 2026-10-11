@@ -1278,7 +1278,13 @@
     "pleaseLogInToContinue": "A folytatáshoz jelentkezz be.",
     "cannotReachTheServer": "A szerver nem érhető el. Kérjük, próbáld újra egy pillanat múlva.",
     "linkIsInvalidOrExpired": "Ez a megerősítő link érvénytelen, lejárt vagy már felhasználták.",
-    "linkIsMissingItsToken": "Ebből a megerősítő linkből hiányzik a token. Nyisd meg újra az e-mailedben lévő gombbal."
+    "linkIsMissingItsToken": "Ebből a megerősítő linkből hiányzik a token. Nyisd meg újra az e-mailedben lévő gombbal.",
+    "alreadySignedInTitle": "Már be vagy jelentkezve",
+    "signedInAsAccount": "{{account}} néven vagy bejelentkezve. A linkhez tartozó fiók aktiválásához előbb kijelentkeztetünk.",
+    "signedInToAnotherAccount": "Egy másik fiókkal vagy bejelentkezve. A linkhez tartozó fiók aktiválásához előbb kijelentkeztetünk.",
+    "linkStillWorksLater": "Ha bejelentkezve maradsz, ez a link később is működni fog.",
+    "logOutAndContinue": "Kijelentkezés és folytatás",
+    "staySignedIn": "Bejelentkezve maradok"
   },
   "adminAdminRoles": {
     "rolesPermissions": "Szerepkörök és jogosultságok",
