@@ -25,6 +25,8 @@ Searches used to produce `/search?place=Karachi&lat=…&lng=…`. A readable `/s
 - Never resolve a slug when `lat`/`lng` are present; explicit coordinates win (`slugPlace` in `search-map.ts`).
 - `/search/map` must stay declared before `:location`, or "map" is read as a place.
 - The heading falls back through `place` → curated name → unslugified slug → framed country → "Pakistan".
+- **The canonical follows the query's place too** (`canonicalPlace`: `toLocationSlug(place || city)`, then the slug). The slug used to win there, so a pick that kept an old slug (`/search/lahore?place=Karachi…`) canonicalised to `/hostels/lahore`. Links shared before that fix still carry such slugs, which is why the query takes precedence rather than the slug being trusted (PR #86).
+- A new place always gets its own slug (`searchRouteFor` via `SearchMap.startSearch`), so new URLs no longer pair one place's slug with another's query.
 
 ## Evidence
 
