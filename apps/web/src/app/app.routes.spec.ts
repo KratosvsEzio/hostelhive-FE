@@ -261,13 +261,15 @@ async function pageRoutes(
 }
 
 /**
- * First path segments whose pages are deliberately kept out of the index: the client-only
- * areas, the auth screens and the two token links. Read from `DISALLOWED_PATHS`, which
- * robots.txt is generated from, so a new private area is covered once it is added there.
+ * Path prefixes whose pages are deliberately kept out of the index: the client-only areas,
+ * the auth screens, the token links and the payment return pages. Read from
+ * `DISALLOWED_PATHS`, which robots.txt is generated from, so a new private area is covered
+ * once it is added there. An entry can be more than one segment (`billing/payment`).
  */
 const NOINDEX_PUBLIC: readonly string[] = DISALLOWED_PATHS;
 
-const underNoindex = (path: string) => NOINDEX_PUBLIC.includes(path.split('/')[0]);
+const isUnder = (path: string, area: string) => path === area || path.startsWith(`${area}/`);
+const underNoindex = (path: string) => NOINDEX_PUBLIC.some((area) => isUnder(path, area));
 const show = (routes: PageRoute[]) => routes.map((r) => `/:locale/${r.path}`).join(', ');
 
 /** Every page route, so a forgotten head flag is caught whether or not the sitemap lists it. */
@@ -283,7 +285,7 @@ describe('the head owner of every page route', () => {
   });
 
   it.each(NOINDEX_PUBLIC)('finds at least one page under %s, so the walk is not vacuous', (area) => {
-    expect(pages.filter((p) => p.path.split('/')[0] === area).length, area).toBeGreaterThan(0);
+    expect(pages.filter((p) => isUnder(p.path, area)).length, area).toBeGreaterThan(0);
   });
 
   it('gives every page outside the noindex areas a head owner', () => {
@@ -291,7 +293,7 @@ describe('the head owner of every page route', () => {
 
     expect(
       unflagged,
-      `These pages render a component but declare no data.head, so they would ship noindex: ${show(unflagged)}. Set head to 'page' or 'index' on the route or a parent, or add the first path segment to DISALLOWED_PATHS if the page is meant to stay out of the index.`,
+      `These pages render a component but declare no data.head, so they would ship noindex: ${show(unflagged)}. Set head to 'page' or 'index' on the route or a parent, or add its path prefix to DISALLOWED_PATHS if the page is meant to stay out of the index.`,
     ).toEqual([]);
   });
 
