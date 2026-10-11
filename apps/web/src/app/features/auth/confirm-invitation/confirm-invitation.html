@@ -21,6 +21,51 @@
           {{ 'authConfirmInvitation.hangTightWhileWeVerify' | transloco }}
         </p>
       }
+      @case ('confirmed') {
+        <span
+          class="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600"
+        >
+          <i class="ti ti-circle-check text-2xl" aria-hidden="true"></i>
+        </span>
+        <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
+          {{ 'authConfirmInvitation.yourAccountIsConfirmed' | transloco }}
+        </h1>
+        @if (signedInUser(); as user) {
+          <p class="mt-1 text-sm text-ink-500">
+            {{
+              'authConfirmInvitation.stillSignedInAs'
+                | transloco: { name: user.name }
+            }}
+          </p>
+          <div class="mt-5 space-y-3">
+            <a hh-button color="primary" [routerLink]="['/']" class="w-full">{{
+              'common.backToHome' | transloco
+            }}</a>
+          </div>
+        } @else {
+          <p class="mt-1 text-sm text-ink-500">
+            {{ 'authConfirmInvitation.pleaseLogInToContinue' | transloco }}
+          </p>
+          <div class="mt-5 space-y-3">
+            <a
+              hh-button
+              color="primary"
+              [routerLink]="['/auth']"
+              [queryParams]="{ mode: 'login' }"
+              class="w-full"
+              >{{ 'authConfirmInvitation.goToLogIn' | transloco }}</a
+            >
+            <a
+              hh-button
+              variant="text"
+              size="sm"
+              [routerLink]="['/']"
+              class="w-full"
+              >{{ 'common.backToHome' | transloco }}</a
+            >
+          </div>
+        }
+      }
       @case ('error') {
         <span
           class="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full bg-danger/10 text-danger"
@@ -30,7 +75,7 @@
         <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
           {{ 'authConfirmInvitation.confirmationFailed' | transloco }}
         </h1>
-        <p class="mt-1 text-sm text-ink-500">{{ message() }}</p>
+        <p class="mt-1 text-sm text-ink-500">{{ messageKey() | transloco }}</p>
         <div class="mt-5 space-y-3">
           <a
             hh-button

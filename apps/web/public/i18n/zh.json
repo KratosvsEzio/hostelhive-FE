@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "正在确认您的账户…",
     "hangTightWhileWeVerify": "请稍候，我们正在验证您的邮箱并为您登录。",
     "confirmationFailed": "确认失败",
-    "goToLogIn": "前往登录"
+    "goToLogIn": "前往登录",
+    "yourAccountIsConfirmed": "您的账户已确认",
+    "stillSignedInAs": "您仍以 {{name}} 的身份登录。",
+    "pleaseLogInToContinue": "请登录以继续。",
+    "cannotReachTheServer": "无法连接到服务器。请稍后再试。",
+    "linkIsInvalidOrExpired": "此确认链接无效、已过期或已被使用。",
+    "linkIsMissingItsToken": "此确认链接缺少令牌。请通过电子邮件中的按钮重新打开。"
   },
   "adminAdminRoles": {
     "rolesPermissions": "角色与权限",

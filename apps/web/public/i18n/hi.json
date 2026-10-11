@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "आपका खाता पुष्ट हो रहा है…",
     "hangTightWhileWeVerify": "थोड़ा रुकें, हम आपका ईमेल सत्यापित कर आपको साइन इन कर रहे हैं।",
     "confirmationFailed": "पुष्टि विफल",
-    "goToLogIn": "लॉग इन पर जाएँ"
+    "goToLogIn": "लॉग इन पर जाएँ",
+    "yourAccountIsConfirmed": "आपका खाता पुष्ट हो गया है",
+    "stillSignedInAs": "आप अभी भी {{name}} के रूप में साइन इन हैं।",
+    "pleaseLogInToContinue": "जारी रखने के लिए कृपया लॉग इन करें।",
+    "cannotReachTheServer": "सर्वर तक नहीं पहुँच पा रहे। कृपया थोड़ी देर में फिर से कोशिश करें।",
+    "linkIsInvalidOrExpired": "यह पुष्टि लिंक अमान्य है, इसकी समय-सीमा समाप्त हो गई है या इसका पहले ही उपयोग हो चुका है।",
+    "linkIsMissingItsToken": "इस पुष्टि लिंक में टोकन नहीं है। कृपया इसे अपने ईमेल के बटन से फिर से खोलें।"
   },
   "adminAdminRoles": {
     "rolesPermissions": "भूमिकाएँ और अनुमतियाँ",

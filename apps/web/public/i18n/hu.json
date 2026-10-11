@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Fiókod megerősítése…",
     "hangTightWhileWeVerify": "Egy pillanat, ellenőrizzük az e-mailed és bejelentkeztetünk.",
     "confirmationFailed": "A megerősítés sikertelen",
-    "goToLogIn": "Ugrás a bejelentkezéshez"
+    "goToLogIn": "Ugrás a bejelentkezéshez",
+    "yourAccountIsConfirmed": "A fiókod meg van erősítve",
+    "stillSignedInAs": "Továbbra is {{name}} néven vagy bejelentkezve.",
+    "pleaseLogInToContinue": "A folytatáshoz jelentkezz be.",
+    "cannotReachTheServer": "A szerver nem érhető el. Kérjük, próbáld újra egy pillanat múlva.",
+    "linkIsInvalidOrExpired": "Ez a megerősítő link érvénytelen, lejárt vagy már felhasználták.",
+    "linkIsMissingItsToken": "Ebből a megerősítő linkből hiányzik a token. Nyisd meg újra az e-mailedben lévő gombbal."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Szerepkörök és jogosultságok",

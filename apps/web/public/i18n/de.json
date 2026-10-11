@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Ihr Konto wird bestätigt…",
     "hangTightWhileWeVerify": "Einen Moment, während wir Ihre E-Mail prüfen und Sie anmelden.",
     "confirmationFailed": "Bestätigung fehlgeschlagen",
-    "goToLogIn": "Zur Anmeldung"
+    "goToLogIn": "Zur Anmeldung",
+    "yourAccountIsConfirmed": "Ihr Konto ist bestätigt",
+    "stillSignedInAs": "Sie sind weiterhin als {{name}} angemeldet.",
+    "pleaseLogInToContinue": "Bitte melden Sie sich an, um fortzufahren.",
+    "cannotReachTheServer": "Server nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
+    "linkIsInvalidOrExpired": "Dieser Bestätigungslink ist ungültig, abgelaufen oder wurde bereits verwendet.",
+    "linkIsMissingItsToken": "Diesem Bestätigungslink fehlt das Token. Bitte öffnen Sie ihn erneut über die Schaltfläche in Ihrer E-Mail."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Rollen & Berechtigungen",

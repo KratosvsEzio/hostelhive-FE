@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "جارٍ تأكيد حسابك…",
     "hangTightWhileWeVerify": "انتظر قليلاً بينما نتحقق من بريدك الإلكتروني ونسجّل دخولك.",
     "confirmationFailed": "فشل التأكيد",
-    "goToLogIn": "الانتقال إلى تسجيل الدخول"
+    "goToLogIn": "الانتقال إلى تسجيل الدخول",
+    "yourAccountIsConfirmed": "تم تأكيد حسابك",
+    "stillSignedInAs": "ما زلت مسجّل الدخول باسم {{name}}.",
+    "pleaseLogInToContinue": "يرجى تسجيل الدخول للمتابعة.",
+    "cannotReachTheServer": "تعذّر الوصول إلى الخادم. يرجى المحاولة مرة أخرى بعد قليل.",
+    "linkIsInvalidOrExpired": "رابط التأكيد هذا غير صالح أو منتهي الصلاحية أو تم استخدامه بالفعل.",
+    "linkIsMissingItsToken": "رابط التأكيد هذا ينقصه الرمز. يرجى فتحه مرة أخرى من الزر الموجود في بريدك الإلكتروني."
   },
   "adminAdminRoles": {
     "rolesPermissions": "الأدوار والأذونات",

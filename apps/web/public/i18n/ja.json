@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "アカウントを確認中…",
     "hangTightWhileWeVerify": "メールを確認してサインインしています。少々お待ちください。",
     "confirmationFailed": "確認に失敗しました",
-    "goToLogIn": "ログインへ"
+    "goToLogIn": "ログインへ",
+    "yourAccountIsConfirmed": "アカウントが確認されました",
+    "stillSignedInAs": "引き続き {{name}} としてサインインしています。",
+    "pleaseLogInToContinue": "続行するにはログインしてください。",
+    "cannotReachTheServer": "サーバーに接続できません。しばらくしてからもう一度お試しください。",
+    "linkIsInvalidOrExpired": "この確認リンクは無効か、有効期限が切れているか、すでに使用されています。",
+    "linkIsMissingItsToken": "この確認リンクにはトークンがありません。メールのボタンからもう一度開いてください。"
   },
   "adminAdminRoles": {
     "rolesPermissions": "ロールと権限",

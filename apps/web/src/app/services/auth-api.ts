@@ -98,9 +98,13 @@ export class AuthApi {
    * Fire-and-forget on purpose. The country lookup talks to third-party hosts that may be
    * slow or blocked outright, and none of that may delay or fail an auth response: the user
    * is resolved from this call either way.
+   *
+   * Pass `inlineErrors: true` when the caller's page explains a failure itself, so the
+   * global error toast stays out of it; every other caller keeps the toast.
    */
-  currentUser(): Observable<CurrentUser> {
-    return this.api.get<CurrentUserResponse>('/api/users/current').pipe(
+  currentUser(options?: { inlineErrors?: boolean }): Observable<CurrentUser> {
+    const context = options?.inlineErrors ? inlineErrors() : undefined;
+    return this.api.get<CurrentUserResponse>('/api/users/current', undefined, context).pipe(
       map((r) => r.user),
       tap(() => void this.geo.refresh()),
     );
