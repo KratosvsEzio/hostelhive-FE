@@ -46,3 +46,51 @@ describe('AuthApi.currentUser — the error toast', () => {
     req.flush({ success: true, user: { id: 1 } });
   });
 });
+
+describe('AuthApi.signOut — the error toast', () => {
+  const SIGN_OUT = `${BASE}/api/user/sign_out`;
+  let api: AuthApi;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: BASE } },
+        { provide: GeoPreference, useValue: { refresh: vi.fn() } },
+      ],
+    });
+    api = TestBed.inject(AuthApi);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('suppresses the global error toast when the caller handles failures inline', () => {
+    api.signOut({ inlineErrors: true }).subscribe();
+
+    const req = httpMock.expectOne(SIGN_OUT);
+    expect(req.request.method).toBe('DELETE');
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+    req.flush({ success: true });
+  });
+
+  it('keeps the global error toast when called with no options', () => {
+    api.signOut().subscribe();
+
+    const req = httpMock.expectOne(SIGN_OUT);
+    expect(req.request.method).toBe('DELETE');
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(false);
+    req.flush({ success: true });
+  });
+
+  it('keeps the global error toast when inlineErrors is false', () => {
+    api.signOut({ inlineErrors: false }).subscribe();
+
+    const req = httpMock.expectOne(SIGN_OUT);
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(false);
+    req.flush({ success: true });
+  });
+});
