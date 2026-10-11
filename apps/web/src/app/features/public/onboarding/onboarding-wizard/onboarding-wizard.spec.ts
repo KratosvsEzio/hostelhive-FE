@@ -1,10 +1,11 @@
 import { Signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { ApiError, HostelInput } from '@hostelhive/data-access';
 import { HostPropertyStore, HostelsApi, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
+import { SessionStore, SessionUser } from '@app/core/auth/session-store';
 import { provideDataAccess } from '@core/provide-data-access';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { OnboardingWizard } from './onboarding-wizard';
@@ -26,6 +27,7 @@ interface WizardInternals {
   description: WritableSignal<string>;
   email: WritableSignal<string>;
   phone: WritableSignal<string>;
+  secondaryPhone: WritableSignal<string>;
   media: WritableSignal<MediaItem[]>;
   locationPinned: WritableSignal<boolean>;
   draftId: WritableSignal<number | null>;
@@ -85,7 +87,38 @@ function stubHostelsApi() {
   };
 }
 
-function render() {
+function user(id: string): SessionUser {
+  return {
+    id,
+    name: id.toUpperCase(),
+    email: `${id}@h.pk`,
+    role: 'seeker',
+    allRoles: ['seeker'],
+    permissions: [],
+  };
+}
+
+/** The draft as it sits on disk, or null when the key is absent. */
+function storedDraft(): Record<string, unknown> | null {
+  const raw = localStorage.getItem(DRAFT_KEY);
+  return raw === null ? null : (JSON.parse(raw) as Record<string, unknown>);
+}
+
+/** What the error interceptor turns a 422 with a Rails `errors[]` envelope into. */
+function rejectedSave(method: string): Observable<never> {
+  return throwError(
+    (): ApiError => ({
+      status: 422,
+      code: 'unknown_error',
+      message: 'City is invalid',
+      serverMessages: ['City is invalid'],
+      method,
+    }),
+  );
+}
+
+/** `signedIn: null` mounts the wizard with nobody signed in. */
+function render(signedIn: SessionUser | null = user('u1')) {
   const hostels = stubHostelsApi();
   const refreshSession = vi.fn(() => of({ id: '1' }));
   const loadHostels = vi.fn();
@@ -103,13 +136,39 @@ function render() {
       { provide: HostPropertyStore, useValue: { load: loadHostels } },
     ],
   });
+  // The draft is kept per user, so the wizard needs someone signed in to restore or save it.
+  const session = TestBed.inject(SessionStore);
+  if (signedIn) session.setSession(signedIn, 'tok');
   const router = TestBed.inject(Router);
   const navigate = vi
     .spyOn(router, 'navigate')
     .mockImplementation(() => Promise.resolve(true));
-  const fixture = TestBed.createComponent(OnboardingWizard);
+  let fixture = TestBed.createComponent(OnboardingWizard);
   fixture.detectChanges();
-  return { fixture, vm: internals(fixture), hostels, navigate, refreshSession, loadHostels };
+
+  /**
+   * Tears the wizard down and mounts a fresh one in the same TestBed, so the session and
+   * localStorage carry over as they do between two visits. `between` runs while no wizard is
+   * mounted — the place to sign someone else in.
+   */
+  function remount(between?: () => void) {
+    fixture.destroy();
+    between?.();
+    fixture = TestBed.createComponent(OnboardingWizard);
+    fixture.detectChanges();
+    return { fixture, vm: internals(fixture) };
+  }
+
+  return {
+    fixture,
+    vm: internals(fixture),
+    hostels,
+    navigate,
+    refreshSession,
+    loadHostels,
+    session,
+    remount,
+  };
 }
 
 /** Fills every field `fieldErrors` guards, so `isFormValid()` becomes true. */
@@ -499,7 +558,12 @@ describe('OnboardingWizard', () => {
     it('does not resurrect a persisted capacity for a fixed-capacity type', () => {
       localStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ newRoomType: 'Quad sharing', newRoomCapacity: 1, rooms: [] }),
+        JSON.stringify({
+          owner: 'u1',
+          newRoomType: 'Quad sharing',
+          newRoomCapacity: 1,
+          rooms: [],
+        }),
       );
 
       const { vm } = render();
@@ -529,6 +593,307 @@ describe('OnboardingWizard', () => {
       expect(fixture.nativeElement.querySelector('header')?.textContent).toContain(
         'publicOnboarding.savedOnThisDevice',
       );
+    });
+  });
+
+  describe('draft ownership', () => {
+    function fillContactDetails(vm: WizardInternals): void {
+      fillValidForm(vm);
+      vm.email.set('first-host@example.com');
+      vm.phone.set('+923001111111');
+      vm.secondaryPhone.set('+923002222222');
+    }
+
+    it('opens empty for the next user after the previous host signs out', () => {
+      const { vm, hostels, session, remount } = render(user('host-a'));
+      fillContactDetails(vm);
+      vm.saveAndExit();
+      expect(hostels.create).toHaveBeenCalledTimes(1);
+      expect(storedDraft()?.['draftId']).toBe(42);
+
+      session.clear();
+      TestBed.tick();
+      const next = remount(() => session.setSession(user('host-b'), 'tok-b'));
+
+      expect(next.vm.name()).toBe('');
+      expect(next.vm.email()).toBe('');
+      expect(next.vm.phone()).toBe('');
+      expect(next.vm.secondaryPhone()).toBe('');
+      expect(next.vm.draftId()).toBeNull();
+
+      fillValidForm(next.vm);
+      next.vm.saveAndContinue();
+
+      expect(hostels.create).toHaveBeenCalledTimes(2);
+      expect(hostels.update).not.toHaveBeenCalled();
+    });
+
+    it('never shows a draft stored by another user, and leaves none of it on disk', () => {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          owner: 'someone-else',
+          draftId: 9,
+          name: 'Other Hostel',
+          email: 'other@example.com',
+          phone: '+923009999999',
+          secondaryPhone: '+923008888888',
+        }),
+      );
+
+      const { vm } = render();
+      TestBed.tick();
+
+      expect(vm.name()).toBe('');
+      expect(vm.email()).toBe('');
+      expect(vm.phone()).toBe('');
+      expect(vm.secondaryPhone()).toBe('');
+      expect(vm.draftId()).toBeNull();
+      const raw = localStorage.getItem(DRAFT_KEY) ?? '';
+      expect(raw).not.toContain('Other Hostel');
+      expect(raw).not.toContain('other@example.com');
+      expect(raw).not.toContain('+923009999999');
+      expect(storedDraft()?.['draftId'] ?? null).toBeNull();
+    });
+
+    it('does not bring the draft back when the same host signs out and in again', () => {
+      const { vm, session, remount } = render();
+      fillContactDetails(vm);
+      vm.saveAndExit();
+      expect(storedDraft()?.['draftId']).toBe(42);
+
+      session.clear();
+      TestBed.tick();
+      const next = remount(() => session.setSession(user('u1'), 'tok'));
+
+      expect(next.vm.name()).toBe('');
+      expect(next.vm.email()).toBe('');
+      expect(next.vm.draftId()).toBeNull();
+    });
+
+    it('discards a draft saved before drafts had an owner', () => {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ draftId: 9, name: 'Legacy Hostel', email: 'legacy@example.com' }),
+      );
+
+      const { vm } = render();
+      TestBed.tick();
+
+      expect(vm.name()).toBe('');
+      expect(vm.email()).toBe('');
+      expect(vm.draftId()).toBeNull();
+      const raw = localStorage.getItem(DRAFT_KEY) ?? '';
+      expect(raw).not.toContain('Legacy Hostel');
+      expect(raw).not.toContain('legacy@example.com');
+      expect(storedDraft()?.['draftId'] ?? null).toBeNull();
+    });
+
+    it('removes the draft when the session ends mid-wizard and writes nothing afterwards', () => {
+      const { vm, session } = render();
+      vm.name.set('Half-typed hostel');
+      TestBed.tick();
+      expect(storedDraft()?.['name']).toBe('Half-typed hostel');
+
+      session.clear();
+      TestBed.tick();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      vm.name.set('Typed after the session ended');
+      TestBed.tick();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      vm.saveAndExit();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      vm.confirmLeave();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('restores linked photos for the same host so they are never sent twice', () => {
+      const { vm, hostels, remount } = render();
+      vm.draftId.set(7);
+      vm.media.set([
+        { id: 1, label: 'a.jpg', primary: true, url: 'https://cdn/1', attachmentId: 'att-1' },
+      ]);
+      vm.saveAndExit();
+      expect(hostels.update.mock.calls[0][1].attachment_ids).toEqual(['att-1']);
+
+      const next = remount();
+      expect(next.vm.draftId()).toBe(7);
+      expect(next.vm.media().map((m) => m.attachmentId)).toEqual(['att-1']);
+
+      next.vm.saveAndExit();
+
+      expect(hostels.update).toHaveBeenCalledTimes(2);
+      expect(hostels.update.mock.calls[1][0]).toBe(7);
+      expect(hostels.update.mock.calls[1][1].attachment_ids).toBeUndefined();
+    });
+  });
+
+  describe('draft after save & continue', () => {
+    it('removes the draft as soon as the hostel is created and never writes it back', () => {
+      const { vm, navigate, refreshSession } = render();
+      const refreshed = new Subject<{ id: string }>();
+      refreshSession.mockReturnValue(refreshed);
+      fillValidForm(vm);
+      TestBed.tick();
+      expect(storedDraft()?.['name']).toBe('Sunrise Boys Hostel');
+
+      vm.saveAndContinue();
+
+      // The session refresh is still pending here, so nothing has navigated yet.
+      expect(navigate).not.toHaveBeenCalled();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      TestBed.tick();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      vm.name.set('Edited after saving');
+      TestBed.tick();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      vm.saveAndExit();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      vm.confirmLeave();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      refreshed.next({ id: 'u1' });
+      refreshed.complete();
+      TestBed.tick();
+
+      expect(navigate).toHaveBeenCalledWith(['/host', 42, 'subscription']);
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('removes the draft once an existing hostel is updated', () => {
+      const { vm, navigate } = render();
+      fillValidForm(vm);
+      vm.draftId.set(7);
+      TestBed.tick();
+      expect(storedDraft()?.['draftId']).toBe(7);
+
+      vm.saveAndContinue();
+
+      expect(navigate).toHaveBeenCalledWith(['/host', 7, 'subscription']);
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+      TestBed.tick();
+      vm.name.set('Edited after saving');
+      TestBed.tick();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('removes the draft even when the session refresh fails', () => {
+      const { vm, navigate, refreshSession } = render();
+      refreshSession.mockReturnValue(throwError(() => new Error('offline')));
+      fillValidForm(vm);
+      TestBed.tick();
+      expect(storedDraft()).not.toBeNull();
+
+      vm.saveAndContinue();
+      TestBed.tick();
+
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+      expect(navigate).toHaveBeenCalledWith(['/host', 42, 'subscription']);
+    });
+
+    it('keeps the draft and keeps saving it when creating the hostel is rejected', () => {
+      const { vm, hostels } = render();
+      hostels.create.mockReturnValue(rejectedSave('POST'));
+      fillValidForm(vm);
+      TestBed.tick();
+
+      vm.saveAndContinue();
+      TestBed.tick();
+
+      expect(vm.draftError()).toBe(true);
+      expect(storedDraft()?.['name']).toBe('Sunrise Boys Hostel');
+      expect(storedDraft()?.['email']).toBe('host@example.com');
+
+      vm.name.set('Renamed after the error');
+      TestBed.tick();
+      expect(storedDraft()?.['name']).toBe('Renamed after the error');
+    });
+
+    it('keeps the draft and its id when updating the hostel is rejected', () => {
+      const { vm, hostels } = render();
+      hostels.update.mockReturnValue(rejectedSave('PATCH'));
+      fillValidForm(vm);
+      vm.draftId.set(7);
+      TestBed.tick();
+
+      vm.saveAndContinue();
+      TestBed.tick();
+
+      expect(vm.draftError()).toBe(true);
+      expect(storedDraft()?.['draftId']).toBe(7);
+      expect(storedDraft()?.['name']).toBe('Sunrise Boys Hostel');
+
+      vm.name.set('Renamed after the error');
+      TestBed.tick();
+      expect(storedDraft()?.['name']).toBe('Renamed after the error');
+    });
+
+    it('starts a new listing for the same host after the previous one was saved', () => {
+      const { vm, hostels, remount } = render();
+      fillValidForm(vm);
+      vm.saveAndContinue();
+      expect(hostels.create).toHaveBeenCalledTimes(1);
+      // Lets the wizard's persist effect run before it goes, as it would ahead of navigation.
+      TestBed.tick();
+
+      const next = remount();
+
+      expect(next.vm.draftId()).toBeNull();
+      expect(next.vm.name()).toBe('');
+
+      fillValidForm(next.vm);
+      next.vm.saveAndContinue();
+
+      expect(hostels.create).toHaveBeenCalledTimes(2);
+      expect(hostels.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('draft after save & exit', () => {
+    it('keeps the draft with the new id when the exit creates the hostel', () => {
+      const { vm } = render();
+      fillValidForm(vm);
+
+      vm.saveAndExit();
+      TestBed.tick();
+
+      expect(storedDraft()?.['draftId']).toBe(42);
+      expect(storedDraft()?.['name']).toBe('Sunrise Boys Hostel');
+    });
+
+    it('keeps the draft when the exit updates the hostel', () => {
+      const { vm, hostels } = render();
+      vm.draftId.set(7);
+      vm.name.set('Only a name so far');
+
+      vm.saveAndExit();
+      TestBed.tick();
+
+      expect(hostels.update).toHaveBeenCalledTimes(1);
+      expect(storedDraft()?.['draftId']).toBe(7);
+      expect(storedDraft()?.['name']).toBe('Only a name so far');
+    });
+
+    it('keeps the draft when the exit save is rejected', () => {
+      const { vm, hostels } = render();
+      hostels.update.mockReturnValue(rejectedSave('PATCH'));
+      vm.draftId.set(7);
+      vm.name.set('Only a name so far');
+
+      vm.saveAndExit();
+      TestBed.tick();
+
+      expect(vm.draftError()).toBe(true);
+      expect(storedDraft()?.['draftId']).toBe(7);
+      expect(storedDraft()?.['name']).toBe('Only a name so far');
     });
   });
 });
