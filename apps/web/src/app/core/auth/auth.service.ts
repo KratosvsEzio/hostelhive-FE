@@ -21,6 +21,18 @@ import { StartupGate } from '@core/startup-gate';
 import { isUnauthorized } from '@core/errors/is-unauthorized';
 
 /**
+ * Thrown by {@link AuthService.confirmInvitation} when the one-time token was accepted (the
+ * account is confirmed and the link is spent) but signing in afterwards did not finish. Lets
+ * the page tell this apart from the link itself failing. The original error is on `cause`.
+ */
+export class AccountConfirmedNotSignedIn extends Error {
+  constructor(readonly cause: unknown) {
+    super('Account confirmed, but signing in did not finish');
+    this.name = 'AccountConfirmedNotSignedIn';
+  }
+}
+
+/**
  * Orchestrates authentication: calls the API (`AuthApi`), then hydrates the
  * `SessionStore`. Lives in the auth lib — not `data-access` — so the token
  * bridge stays one-directional (auth → data-access, never the reverse).
@@ -75,11 +87,21 @@ export class AuthService {
    * Confirm an emailed invitation/registration link: exchange the one-time `token` for a JWT,
    * then hydrate the session so the user lands logged in. `establishSession` persists the JWT,
    * so the login survives a reload.
+   *
+   * A failure of the exchange itself is re-thrown as is. A failure after it succeeded is
+   * re-thrown as {@link AccountConfirmedNotSignedIn}: the account is confirmed and the link
+   * spent either way, so the page must not tell the user the link failed.
    */
   confirmInvitation(token: string): Observable<SessionUser> {
-    return this.api
-      .confirmInvitation(token)
-      .pipe(switchMap((jwt) => this.establishSession(jwt)));
+    return this.api.confirmInvitation(token).pipe(
+      switchMap((jwt) =>
+        this.establishSession(jwt).pipe(
+          catchError((err: unknown) =>
+            throwError(() => new AccountConfirmedNotSignedIn(err)),
+          ),
+        ),
+      ),
+    );
   }
 
   /**
@@ -224,17 +246,32 @@ export class AuthService {
 
   /**
    * Stores the token (so the interceptor can authorize the follow-up request),
-   * fetches the current user, and writes the full session. If the user fetch
-   * fails, the dangling token is cleared so we never sit in a half-authed state.
+   * fetches the current user, and writes the full session.
+   *
+   * Same rule as restoreSession: only a **401** ends the session. Any other failure says
+   * nothing about the new token, so whatever session was there before is put back — the
+   * previous user, cookie and cache were never touched, only the in-memory token was
+   * replaced — and with nobody signed in this returns to the tokenless state. The error is
+   * always re-thrown so the caller can show it.
    */
   private establishSession(token: string): Observable<SessionUser> {
+    const previousToken = this.session.accessToken();
     this.session.setAccessToken(token);
     this.promptForPush();
-    return this.api.currentUser().pipe(
+    // The confirmation page explains this failure itself, so no global toast on top of it.
+    return this.api.currentUser({ inlineErrors: true }).pipe(
       map(toSessionUser),
       tap((user) => this.session.setSession(user, token)),
-      catchError((err) => {
-        this.session.clear();
+      catchError((err: unknown) => {
+        if (isUnauthorized(err)) {
+          this.session.clear();
+        } else if (this.session.accessToken() === token) {
+          // Leave the session alone if something else replaced the token meanwhile.
+          this.session.setAccessToken(previousToken);
+          // Issuing the new token re-linked this device's push registration to the new
+          // account, so the restored account would otherwise receive its notifications.
+          if (previousToken !== null) void this.push.rotate();
+        }
         return throwError(() => err);
       }),
     );

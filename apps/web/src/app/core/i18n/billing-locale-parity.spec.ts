@@ -15,7 +15,7 @@ const I18N = join(
 
 type Tree = { [key: string]: string | Tree };
 
-const GROUPS = ['hostBilling', 'sharedBilling', 'publicPricing'];
+const GROUPS = ['hostBilling', 'hostPayment', 'sharedBilling', 'publicPricing'];
 const SINGLE_KEYS = [
   'hostNav.billing',
   'footer.pricing',
@@ -27,6 +27,8 @@ const RETIRED_KEYS = [
   'hostBilling.comingSoonTitle',
   'hostBilling.comingSoonMessage',
   'hostBilling.backToDashboard',
+  'hostBilling.payStubTitle',
+  'hostBilling.payStubMessage',
   'common.subscription',
 ];
 

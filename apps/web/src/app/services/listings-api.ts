@@ -308,7 +308,7 @@ export class ListingsApi {
     } = query;
 
     // Build Rails-style nested filter params
-    const params: Record<string, string | number | number[]> = {};
+    const params: Record<string, string | number | number[] | string[]> = {};
 
     // Bounding box — exact viewport bounds take priority, then center+radius, then global
     if (bounds) {
@@ -350,7 +350,7 @@ export class ListingsApi {
     // Room type — private or shared, the axis that replaced capacity.
     //
     // Occupancy is a property of a room type, not of the hostel, so the key has to name the
-    // association path the way `f[offers.id][]` does. It was previously sent as a flat
+    // association path the way `f[offers.slug][]` does. It was previously sent as a flat
     // `f[room_type]`, which named a field the search document does not have — and a term on a
     // missing field matches nothing, so the filter silently narrowed to zero.
     //
@@ -387,9 +387,14 @@ export class ListingsApi {
     else if (sort === 'price-asc') params['sort[starting_price]'] = 'asc';
     else if (sort === 'price-desc') params['sort[starting_price]'] = 'desc';
 
-    // Offer (amenity) filter — repeated f[offers.id][] keys, one per selected offer.
-    if (query.offerIds?.length) {
-      params['f[offers.id][]'] = query.offerIds;
+    // Amenity filter — repeated f[offers.slug][] keys, one per selected amenity.
+    //
+    // By slug, not id. The hostel index stores `offers.id` as lowercased text, so an exact-case
+    // obfuscated id never matches; the BE treats offers.id as not filterable on hostel search
+    // (agreed with the BE dev, 2026-10-11). The path ends in "slug", so parse_key appends
+    // `.keyword` and this is an exact term match. The amenity choices are already slugs.
+    if (query.amenities?.length) {
+      params['f[offers.slug][]'] = query.amenities;
     }
 
     params['page'] = page;

@@ -9,6 +9,8 @@ On startup `AuthService.restoreSession()` validates the persisted JWT with `GET 
 ## Decision
 Only an HTTP 401 from that validation clears the session. Every other failure keeps the token and the cached user. `isUnauthorized()` reads `.status` structurally so it works on both `ApiError` and a raw `HttpErrorResponse`; status 0 (network) is deliberately not a rejection. The one case the client ends a session by itself is a JWT whose own `exp` has passed (`isJwtExpired`), and that check returns false for anything it cannot read with certainty.
 
+The account-confirmation link (`establishSession`) follows the same rule, with one addition: it seats the new token over whatever session was there, so on any non-401 failure it **puts the previous token back** (only if the session still holds the new one). The persisted cookie and cached user were never replaced, so a signed-in user is fully restored and a signed-out visitor returns to tokenless. On native it also rotates push when a previous session is restored, because the backend re-linked the device to the new account when it issued the token.
+
 ## Alternatives rejected
 - **Clear on any failure** ("a token we can't verify must not keep a session"): the original behaviour, removed because it signed mobile users out on every flaky cold start.
 - **Time out the validation with RxJS `timeout()`**: cancels the HTTP request on teardown; `Promise.race` caps the wait while letting the request finish and still update the session.
@@ -16,11 +18,12 @@ Only an HTTP 401 from that validation clears the session. Every other failure ke
 ## Consequences
 - A user whose token was revoked server-side stays "signed in" offline until the first authed request returns 401; the global `UNAUTHORIZED_HANDLER` then clears the session with no message (`docs/RISKS.md` R15).
 - Code that adds a new validation path must apply the same rule, or reintroduce the logout bug.
+- A confirmation that fails after the one-time token was exchanged reaches the page as `AccountConfirmedNotSignedIn`: the account is confirmed and the link spent either way, so the page says so and offers log in (or home, if the previous account was put back) rather than "Confirmation failed".
 
 ## Evidence
-- `apps/web/src/app/core/auth/auth.service.ts` (`restoreSession`, `hydrateInBackground`)
+- `apps/web/src/app/core/auth/auth.service.ts` (`restoreSession`, `hydrateInBackground`, `establishSession`, `AccountConfirmedNotSignedIn`); `apps/web/src/app/features/auth/confirm-invitation/confirm-invitation.ts`
 - `apps/web/src/app/core/errors/is-unauthorized.ts` (`isUnauthorized`, shared with `apps/web/src/app/util/favorites-store.ts` since Trello #116)
-- `apps/web/src/app/core/auth/auth.service.spec.ts` pins the rule at both call sites: a 401 clears the session; status 0 and 500 keep it
+- `apps/web/src/app/core/auth/auth.service.spec.ts` pins the rule at all three call sites — `restoreSession`, `signIn` → `hydrateInBackground`, and `confirmInvitation` → `establishSession` (Trello #124, PR #100): a 401 clears the session; status 0 and 500 keep it, or put the previous one back
 - `apps/web/src/app/core/auth/jwt.ts`
 - c079248 feat(brand,mobile): swap the logo raster for SVGs and add a native photo picker (the diff to `auth.service.ts` that replaced clear-on-any-failure)
 - a45cd84 feat(auth): retire an expired JWT without a round trip; refresh app icons

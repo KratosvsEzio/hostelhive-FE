@@ -226,6 +226,15 @@ const LOCALISED_ROUTES: Route[] = [
       ),
     title: 'Notifications — HostelHive',
   },
+  // Safepay's return pages: signed-in only, not role-gated, since the invoice request decides access.
+  {
+    path: 'billing/payment',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('@features/host/subscription/payment-return.routes').then(
+        (m) => m.PAYMENT_RETURN_ROUTES,
+      ),
+  },
 
   // â”€â”€â”€ Console (client-rendered, role-guarded) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Full-screen onboarding wizard — own chrome, no host sidebar — must precede 'host'.

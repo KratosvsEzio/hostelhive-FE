@@ -9,7 +9,7 @@ import { CLIENT_ONLY } from './app.routes.server';
 import { sitemapPaths } from '@features/public/landing/sitemap-urls';
 import { BLOG_POSTS } from '@features/public/blog/blog-posts';
 import { BillingPage } from '@features/host/subscription/billing-page';
-import { PayPlaceholder } from '@features/host/subscription/pay-placeholder';
+import { PaymentStep } from '@features/host/subscription/payment-step';
 import { Pricing } from '@features/public/pricing/pricing';
 
 @Component({ selector: 'hh-route-stub', template: '' })
@@ -113,7 +113,7 @@ describe('the removed billing and contract URLs', () => {
     const settled = await settleOn('/host/nHelLt/subscription/pay/inv1');
 
     expect(settled.url).toBe('/host/nHelLt/subscription/pay/inv1');
-    expect(settled.original).toBe(PayPlaceholder);
+    expect(settled.original).toBe(PaymentStep);
   });
 });
 

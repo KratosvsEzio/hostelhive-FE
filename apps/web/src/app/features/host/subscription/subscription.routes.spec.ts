@@ -1,6 +1,6 @@
 import { SUBSCRIPTION_ROUTES } from './subscription.routes';
 import { BillingPage } from './billing-page';
-import { PayPlaceholder } from './pay-placeholder';
+import { PaymentStep } from './payment-step';
 
 describe('feature-subscription routes', () => {
   it('serves the billing page at the root', () => {
@@ -14,7 +14,8 @@ describe('feature-subscription routes', () => {
 
   it('serves the payment step for one invoice', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'pay/:invoiceId')).toMatchObject({
-      component: PayPlaceholder,
+      component: PaymentStep,
+      title: 'Pay invoice — HostelHive',
     });
   });
 

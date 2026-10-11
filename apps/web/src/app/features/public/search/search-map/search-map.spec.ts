@@ -73,6 +73,7 @@ interface SearchMapInternals {
 interface ListQuery {
   near?: { lat: number; lng: number };
   bounds?: unknown;
+  amenities?: string[];
 }
 
 /** A page for the router to land on; the search component under test is mounted directly. */
@@ -742,6 +743,26 @@ describe('SearchMap on a landing page', () => {
       sharing: null,
       frequency: null,
     });
+  });
+});
+
+/**
+ * The amenity filter.
+ *
+ * The URL carries amenity slugs, and the search filters by slug (`f[offers.slug][]`), so they
+ * go to the query unchanged. There is no id lookup any more: it used to coerce the obfuscated
+ * offer ids with `+o.id` (NaN), and the index cannot match an exact-case id anyway.
+ */
+describe('SearchMap amenity filter', () => {
+  afterEach(cleanupSearchMap);
+
+  it('passes the amenity slugs from the URL straight to the search', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list });
+    await mount('/en/search?everywhere=1&amenities=ceiling-fan,heater');
+    await firstSearch(list);
+
+    expect(lastQuery(list).amenities).toEqual(['ceiling-fan', 'heater']);
   });
 });
 

@@ -37,6 +37,25 @@ describe('SessionStore', () => {
     expect(store.hasPermission('anything.goes')).toBe(true);
   });
 
+  describe('a host session with no permission flags', () => {
+    const flag = 'core:Invoice:create_payment';
+
+    it('is not gated when the permission list is empty', () => {
+      store.setSession({ ...host, permissions: [] }, 'tok');
+      expect(store.hasPermission(flag)).toBe(true);
+    });
+
+    it('is not gated when the permission list is absent', () => {
+      store.setSession({ ...host, permissions: undefined }, 'tok');
+      expect(store.hasPermission(flag)).toBe(true);
+    });
+
+    it('denies a flag it was not granted once any flag is present', () => {
+      store.setSession({ ...host, permissions: ['team.manage'] }, 'tok');
+      expect(store.hasPermission(flag)).toBe(false);
+    });
+  });
+
   it('clears on sign-out', () => {
     store.setSession(host, 'tok');
     store.clear();

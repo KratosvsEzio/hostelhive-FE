@@ -29,7 +29,8 @@ export interface HostelEnumOption {
 
 /** UserSerializer. */
 export interface HostelUser {
-  id: number;
+  /** Obfuscated id, e.g. "tDzjiS". */
+  id: string;
   name: string;
   email: string;
   phone?: string | null;
@@ -132,7 +133,7 @@ export interface HostelRoom {
   capacity: number;
   current_occupancy: number;
   hostel_id: number;
-  room_type_id?: number | null;
+  room_type_id?: string | null;
   created_at: string;
   updated_at: string;
   room_type?: RoomType | null;
@@ -294,11 +295,11 @@ export interface RoomTypeInput {
   attachment_ids?: (number | string)[];
   _destroy?: boolean;
 }
-/** A nested rooms_attributes row. */
+/** A nested rooms_attributes row. Ids are obfuscated strings; the backend decodes both. */
 export interface RoomInput {
-  id?: number;
+  id?: string;
   room_number?: string;
-  room_type_id?: number;
+  room_type_id?: string;
   capacity?: number;
   current_occupancy?: number;
   _destroy?: boolean;

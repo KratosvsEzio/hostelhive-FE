@@ -35,12 +35,16 @@ pages' UI belongs to [search-and-discovery](./search-and-discovery.md); deployme
 `appConfig` turns on `provideClientHydration(withEventReplay())`, so the browser reuses the server DOM
 and replays early clicks.
 
-**Head tags.** A page calls `Seo.apply({ title, description, path, image, noindex, type })`. `path` is
-written without a locale; `Seo` adds the active one for the canonical and `og:url`, emits the full
-`hreflang` set (`localeAlternates`, `x-default` = English) unless `noindex`, and overwrites every tag
-because components are reused across navigations. `setJsonLd(id, data)` replaces structured data by
-id. `preloadImage(url)` puts the LCP hero in the server-rendered head. Absolute URLs always use
-`SITE_ORIGIN`, never `location.origin`.
+**Head tags.** A page calls `Seo.apply({ title, description, path, image, noindex, type })`.
+- **`path`** is written without a locale. `Seo` adds the active locale for the canonical and `og:url`. Every tag is overwritten, because components are reused across navigations.
+- **Canonical:** only an indexable page that has a path gets one. A `noindex` page never has a canonical, even when it has a path, and it gets no `hreflang`.
+- **`og:url`:** written whenever there is a path. With no path, `Seo` writes no canonical, `og:url` or `hreflang` at all; there is no `'/'` default.
+- **Removal:** a tag `Seo` does not write is **removed**, not just skipped. `index.html` ships a static canonical and `og:url` for the home page, so skipping would leave them pointing at home.
+- **Indexable pages** also get the full `hreflang` set (`localeAlternates`, `x-default` = English).
+- **`setJsonLd(id, data)`** replaces structured data by id.
+- **`preloadImage(url)`** puts the LCP hero in the server-rendered head.
+- **`clearOnDestroy(destroyRef, ids, { preloadImage })`** removes a page's JSON-LD ids, and optionally its preload, when the page is destroyed. Every page that writes JSON-LD calls it: home, blog, blog article, listing and PlaceLanding. It is SSR-safe, because `@angular/ssr` serialises the document before it destroys the platform.
+- **Absolute URLs** always use `SITE_ORIGIN`, never `location.origin`.
 
 **Sitemap.** `server.ts` answers `/sitemap.xml` before `express.static`. URLs come from the static page
 list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is prefixed with every
@@ -77,6 +81,7 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 ## Reuse, don't rebuild
 
 - `Seo` for every head tag. Do not call `Meta` or `Title` directly.
+- `Seo.clearOnDestroy` for any new page that calls `setJsonLd` or `preloadImage`, instead of its own `DestroyRef` block.
 - `placeSocialImage` / `DEFAULT_SOCIAL_IMAGE` for `image`.
 - `localeAlternates` for anything that states `hreflang`.
 - `sitemapPaths()`: add a new indexable page here, or derive it from the list its route reads.
@@ -102,6 +107,12 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   the `*/` forms.
 - `ssrTimeoutInterceptor` must stay last in the interceptor list in `app.config.ts`. A timed-out request
   is not cached for transfer, so the browser fetches it again.
+- **A click before the app boots strands the server page's JSON-LD.** The router replaces the first
+  navigation before the page component exists in the browser, so `clearOnDestroy` never runs (Trello
+  #138). In e2e, wait for `waitForClient` (`apps/web-e2e/src/support/seo.ts`) before clicking. Without
+  that wait, a head check after the click can pass using only the server HTML.
+- **`Blog` calls `apply` once, in its constructor.** A client language switch keeps the old canonical
+  (Trello #132). `og:locale` is fixed at `en_PK` (#133).
 - The sitemap leaves out `/search` and `/hostel/:id` on purpose (see the comment in `apps/web/src/app/features/public/landing/sitemap-urls.ts`).
 
 ## Decisions

@@ -14,7 +14,8 @@ export interface UserRoleRef {
  * come back; the rest are optional so the model also tolerates richer serializers.
  */
 export interface User {
-  id: number;
+  /** Obfuscated id, e.g. "eRAcpb"; raw numeric ids are rejected by the API. */
+  id: string;
   name: string;
   email: string;
   phone?: string | null;
