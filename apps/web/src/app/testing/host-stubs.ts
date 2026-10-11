@@ -135,23 +135,16 @@ export class HostShellApiStub {
  * `'night'` and `'month'` are the two known cycles; `''` is a hostel whose cycle did not arrive,
  * which the store treats as neither. Call after `TestBed.configureTestingModule` (with a
  * `HostShellApi` provided — {@link HostShellApiStub} or the page harness does it) and before
- * creating the component. Writes the signals directly, so nothing touches `localStorage`.
+ * creating the component. Goes through the store's own `load()` with the shell API answering the
+ * one listing, so the store ends up exactly as the app would leave it; with nobody signed in
+ * nothing is written to `localStorage`.
  */
 export function seedHostPropertyStore(billing: BillingMode, hostelId = HOSTEL_ID): HostPropertyStore {
   const store = TestBed.inject(HostPropertyStore);
   const listing = hostListing(billing, { id: hostelId });
-  store.hostels.set([listing]);
-  store.properties.set([
-    {
-      id: listing.id,
-      name: listing.name,
-      status: listing.status,
-      area: listing.area,
-      city: listing.city,
-      accommodationType: listing.accommodationType,
-    },
-  ]);
-  store.selected.set(hostelId);
-  store.loaded.set(true);
+  const data: HostListingsData = { listings: [listing], draft: null, stats: {} as never };
+  vi.spyOn(TestBed.inject(HostShellApi), 'listings').mockReturnValue(of(data));
+  store.load();
+  store.setProperty(hostelId);
   return store;
 }

@@ -847,9 +847,10 @@ describe('Invoices page', () => {
         booking: { id: 'bk-1', ref: 'BK<9>', guestName: HOSTILE, phone: '' },
       });
       const page = await open({ url: viewUrl('rb-1'), deps: depsWith(invoicesReply([bill])) });
-      TestBed.inject(HostPropertyStore).properties.update((ps) =>
-        ps.map((p) => ({ ...p, name: HOSTILE, area: 'Gulberg & <Co>' })),
-      );
+      const store = TestBed.inject(HostPropertyStore);
+      const hostile = store.hostels().map((h) => ({ ...h, name: HOSTILE, area: 'Gulberg & <Co>' }));
+      vi.spyOn(page.deps.shell, 'listings').mockReturnValue(of({ listings: hostile, draft: null, stats: {} as never }));
+      store.load();
       await flush(page);
       return page;
     }
