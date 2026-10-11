@@ -24,6 +24,7 @@ import { ssrTimeoutInterceptor } from '@core/interceptors/ssr-timeout-intercepto
 import { refetchDelayInterceptor } from '@core/refetch-delay';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuthService } from '@services';
+import { provideOnboardingDraftCleanup } from '@services/onboarding-draft-store';
 import { googleOAuthEnv } from './google-oauth.env';
 import { apiEnv } from './api.env';
 import { mapsEnv } from './maps.env';
@@ -156,6 +157,8 @@ export const appConfig: ApplicationConfig = {
       if (typeof window === 'undefined') return; // SSR: nothing persisted to restore
       return inject(AuthService).restoreSession();
     }),
+    // Removes the become-a-host draft at sign-out, wherever that happens.
+    provideOnboardingDraftCleanup(),
     // GA4 (public marketplace only). Reads the stored consent choice and, if it was
     // "granted", loads gtag. A visitor who has not answered — or who declined — gets no
     // script, no cookie and no request: the banner is a gate, not a notice.

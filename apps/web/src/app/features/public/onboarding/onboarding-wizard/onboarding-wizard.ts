@@ -20,6 +20,7 @@ import { TimezoneSelect } from '@app/shared/timezone/timezone-select';
 import { browserTimeZone } from '@util/time-zones';
 import { HostPropertyStore, HostelsApi, ImageUploadService, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
+import { OnboardingDraftStore } from '@services/onboarding-draft-store';
 import {
   ACCEPT_ATTR,
   BadgeVariant,
@@ -117,8 +118,6 @@ interface OnboardingDraft {
   secondaryPhone: string;
 }
 
-const DRAFT_KEY = 'hh:onboarding:draft';
-
 /** A saved photo is only worth restoring when it has a live url and the id that links it. */
 function isRestorableMedia(m: Partial<PersistedMediaItem>): m is PersistedMediaItem {
   return (
@@ -151,8 +150,8 @@ const CATEGORY_ICONS: Record<string, string> = {
 /**
  * Host onboarding wizard (mockup 11). A 5-step wizard driven by `hh-stepper`
  * and a `step` signal: Basic info, Location, Media, Rooms, Payment & review.
- * All form state lives in signals; a best-effort draft is persisted to
- * localStorage on every change (SSR-guarded).
+ * All form state lives in signals; a best-effort draft, kept for the signed-in
+ * user only, is persisted through `OnboardingDraftStore` on every change.
  */
 @Component({
   selector: 'hh-onboarding-wizard',
@@ -347,10 +346,13 @@ export class OnboardingWizard {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly propertyStore = inject(HostPropertyStore);
+  private readonly draftStore = inject(OnboardingDraftStore);
   protected readonly draftId = signal<number | null>(null);
   protected readonly draftSaving = signal(false);
   protected readonly draftSaved = signal(false);
   protected readonly draftError = signal(false);
+  /** Set once the listing is created; the device draft is gone and must never be written again. */
+  private draftEnded = false;
 
   protected readonly exitLabel = computed(() =>
     this.draftSaving()
@@ -474,7 +476,7 @@ export class OnboardingWizard {
       this.loadAmenities();
     });
 
-    // Best-effort localStorage draft on any state change (SSR-guarded).
+    // Persist the draft on any state change; OnboardingDraftStore handles SSR and the owner.
     effect(() => {
       this.persistDraft();
     });
@@ -484,11 +486,12 @@ export class OnboardingWizard {
   /**
    * Mirrors the whole form to localStorage. Driven by an effect, but also callable
    * directly: effects are scheduled, so a write that must land before the component
-   * is destroyed cannot be left to the next flush.
+   * is destroyed cannot be left to the next flush. The store drops the write when signed out,
+   * so a wizard still open after the session ends cannot put the draft back.
    */
   private persistDraft(): void {
-    if (typeof localStorage === 'undefined') return;
-    const draft: OnboardingDraft = {
+    if (this.draftEnded) return;
+    const draft = {
       draftId: this.draftId(),
       step: this.step(),
       name: this.name(),
@@ -516,12 +519,8 @@ export class OnboardingWizard {
       email: this.email(),
       phone: this.phone(),
       secondaryPhone: this.secondaryPhone(),
-    };
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    } catch {
-      /* best-effort: ignore quota / privacy-mode failures */
-    }
+    } satisfies OnboardingDraft;
+    this.draftStore.write(draft);
   }
 
   // --- Navigation ---
@@ -751,6 +750,8 @@ export class OnboardingWizard {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (hostel) => {
+          // Ended before any signal below changes, so the next effect flush cannot write it back.
+          this.endDraft();
           const isNew = hostel.id != null && !this.draftId();
           if (isNew) this.draftId.set(hostel.id);
           this.markAttachmentsLinked(flushedIds);
@@ -774,6 +775,17 @@ export class OnboardingWizard {
           this.apiErrors.set(err?.serverMessages ? [...err.serverMessages] : []);
         },
       });
+  }
+
+  /**
+   * Deletes the device draft for good once the hostel is on the server, so the next
+   * "List your hostel" starts a new listing instead of updating this one. Persisting
+   * stops first: the wizard stays mounted until navigation completes, and its effect
+   * would otherwise put the draft straight back.
+   */
+  private endDraft(): void {
+    this.draftEnded = true;
+    this.draftStore.clear();
   }
 
   /**
@@ -978,16 +990,10 @@ export class OnboardingWizard {
   }
 
   private restoreDraft(): void {
-    if (typeof localStorage === 'undefined') return;
-    let raw: string | null;
+    const stored = this.draftStore.read();
+    if (!stored) return;
     try {
-      raw = localStorage.getItem(DRAFT_KEY);
-    } catch {
-      return;
-    }
-    if (!raw) return;
-    try {
-      const d = JSON.parse(raw) as Partial<OnboardingDraft>;
+      const d = stored as Partial<OnboardingDraft>;
       if (typeof d.draftId === 'number' && d.draftId > 0) this.draftId.set(d.draftId);
       if (typeof d.step === 'number')
         this.step.set(Math.max(0, Math.min(this.lastStep, d.step)));
