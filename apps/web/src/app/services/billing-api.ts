@@ -5,6 +5,7 @@ import {
   BillingInvoice,
   HostBilling,
   PlansResponse,
+  StartedPayment,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
 import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
@@ -23,12 +24,16 @@ interface InvoiceEnvelope {
   success?: boolean;
 }
 
+interface PaymentEnvelope extends StartedPayment {
+  success?: boolean;
+}
+
 function quiet(): HttpContext {
   return new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
 }
 
 /**
- * HostelHive's own billing: public plans, a hostel's billing summary, checkout and invoices.
+ * HostelHive's own billing: public plans, a hostel's billing summary, checkout, invoices and payments.
  *
  * The server owns every price, proration and action, so this service only unwraps envelopes.
  * Every call skips the global toast because each screen renders its failures inline,
@@ -75,5 +80,22 @@ export class BillingApi {
     return this.api
       .get<InvoiceEnvelope>(`/api/invoices/${invoiceId}`, undefined, quiet())
       .pipe(map((res) => res.invoice));
+  }
+
+  /** Starts a Safepay payment for the invoice; the result carries the page to send the payer to. */
+  pay(invoiceId: string): Observable<StartedPayment> {
+    return this.api
+      .post<PaymentEnvelope>(
+        `/api/invoices/${invoiceId}/payments`,
+        { payment_method: 'safepay' },
+        quiet(),
+      )
+      .pipe(
+        map((res) => ({
+          payment: res.payment,
+          checkout_url: res.checkout_url ?? null,
+          invoice: res.invoice,
+        })),
+      );
   }
 }
