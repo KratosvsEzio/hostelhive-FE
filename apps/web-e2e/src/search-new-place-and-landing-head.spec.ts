@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { dragMap, urlHasViewport, waitForMap } from './support/map';
 import { jsonLdIds, waitForClient } from './support/seo';
 import { KARACHI_PHOTON, ListingsStub, stubListings, stubPhoton } from './support/stubs';
 
@@ -12,32 +13,6 @@ const LAHORE_WORLD_SEARCH = '/en/search?place=Lahore&lat=31.5204&lng=74.3587&zoo
 
 const countOf = async (page: Page, id: string) =>
   (await jsonLdIds(page)).filter((x) => x === id).length;
-
-const urlHasViewport = (page: Page) => new URL(page.url()).searchParams.has('ne_lat');
-
-/**
- * Waits until the map is interactive: it has searched once, its pane exists and its tiles and
- * zoom control are drawn. Dragging before that moves nothing, so the URL never changes.
- */
-async function waitForMap(page: Page, seen: ListingsStub): Promise<void> {
-  await expect.poll(() => seen.requests.length, { timeout: 15_000 }).toBeGreaterThan(0);
-  await expect(page.locator('.leaflet-container .leaflet-map-pane')).toBeAttached();
-  await expect(page.locator('.leaflet-container .leaflet-control-zoom').first()).toBeVisible();
-}
-
-/** Drags the map sideways; the camera settling writes the viewport into the URL. */
-async function dragMap(page: Page): Promise<void> {
-  const box = await page.locator('.leaflet-container').first().boundingBox();
-  if (!box) {
-    throw new Error('the map has no box to drag');
-  }
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x - 300, y - 100, { steps: 10 });
-  await page.mouse.up();
-}
 
 /** Types into a place field and picks the Karachi suggestion. */
 async function pickKarachi(page: Page, scope: string): Promise<void> {
@@ -105,40 +80,35 @@ test.describe('searching a new place from the header after the map has moved', (
       expect(urlHasViewport(page)).toBe(true);
     }).toPass({ timeout: 20_000, intervals: [1_000, 2_000, 3_000] });
 
-    // A late camera write after the pick re-reads the bar's place from the URL and undoes the
-    // pick, so let the URL and the searches go quiet first.
-    let previous = '';
-    let quietReads = 0;
-    await expect
-      .poll(
-        () => {
-          const now = `${page.url()}|${seen.requests.length}`;
-          quietReads = now === previous ? quietReads + 1 : 0;
-          previous = now;
-          return quietReads;
-        },
-        { intervals: [500], timeout: 15_000 },
-      )
-      .toBeGreaterThanOrEqual(3);
     return seen;
   }
 
   /**
-   * Picks Karachi in the header bar and returns once the pick has stuck. The bar re-reads its
-   * place from the URL while the map is still settling, which can undo a pick made too early, so
-   * only the pick is retried here; Search is never pressed until the field holds Karachi steadily.
+   * Picks Karachi in the header bar once, then pans the map again. The pick has to survive the
+   * camera settling that follows: the field is read only once the URL shows the map's own
+   * viewport write has landed, so a field still reading Karachi then is one that write left alone.
    */
-  async function pickKarachiInHeader(page: Page): Promise<void> {
-    const field = page.locator('app-search-bar hh-place-search input');
+  async function pickKarachiThenPan(page: Page, seen: ListingsStub): Promise<void> {
+    const before = urlNorthEdge(page);
+    await pickKarachi(page, 'app-search-bar');
+    // Only the drag is retried, because it can land before the map's move handler is listening.
     await expect(async () => {
-      await pickKarachi(page, 'app-search-bar');
-      await expect(field).toHaveValue(/Karachi/, { timeout: 2_000 });
-      const reads: string[] = [];
-      for (let i = 0; i < 5; i++) {
-        reads.push(await field.inputValue());
-      }
-      expect(reads.every((value) => /Karachi/.test(value))).toBe(true);
-    }).toPass({ timeout: 20_000, intervals: [500, 1_000, 2_000] });
+      await dragMap(page);
+      expect(urlNorthEdge(page)).not.toBe(before);
+    }).toPass({ timeout: 20_000, intervals: [1_000, 2_000, 3_000] });
+
+    await expect(page.locator('app-search-bar hh-place-search input')).toHaveValue(/Karachi/);
+    // The panned viewport's search is debounced; let it land so it cannot arrive after a reset.
+    const pannedNorth = urlNorthEdge(page);
+    await expect
+      .poll(
+        () =>
+          seen.bounds.some(({ north }) => north !== null && Math.abs(north - pannedNorth) < 0.001),
+        {
+          timeout: 10_000,
+        },
+      )
+      .toBe(true);
   }
 
   /** Lahore's box is only ever the one the map was panned to; Karachi's search must not use it. */
@@ -151,7 +121,7 @@ test.describe('searching a new place from the header after the map has moved', (
     page,
   }) => {
     const seen = await openPannedSearch(page, LAHORE_WORLD_SEARCH);
-    await pickKarachiInHeader(page);
+    await pickKarachiThenPan(page, seen);
     // Still the bare search, so the Search click below crosses to a different route config and
     // builds a new map, which is the case that used to restore the old box.
     await expect(page).toHaveURL(/\/en\/search\?/);
@@ -168,7 +138,7 @@ test.describe('searching a new place from the header after the map has moved', (
 
   test('from a place search, the reused map frames the new place too', async ({ page }) => {
     const seen = await openPannedSearch(page, LAHORE_SEARCH);
-    await pickKarachiInHeader(page);
+    await pickKarachiThenPan(page, seen);
     await expect(page).toHaveURL(/\/en\/search\/lahore\?/);
 
     seen.reset();

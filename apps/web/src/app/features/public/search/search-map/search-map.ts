@@ -1546,13 +1546,25 @@ export class SearchMap {
    * to the results, so the map follows the answer instead of staying over an empty sea.
    *
    * The URL records it as `everywhere=1`, so a refresh or a shared link stays worldwide
-   * instead of reopening on the visitor's country. A landing page cannot widen in place —
-   * its seed refills the place this clears and keeps the search local — so there it leaves
-   * for a worldwide `/search` (see {@link startSearch}), which reads the key at
-   * construction.
+   * instead of reopening on the visitor's country.
+   *
+   * Only a bare `/search` can widen in place, because only there does the query alone say
+   * where the search is. Any other path names a place of its own, which a query merge can
+   * null nothing out of:
+   *
+   * - a landing page's seed refills the place this clears and keeps the search local;
+   * - a `/search/<slug>` path keeps naming the place just discarded. It is held off only
+   *   while `everywhere` is set, and the first pan clears that (see `syncBoundsToUrl`) —
+   *   from then on the slug is back as the heading, the canonical (an indexable one, over
+   *   whatever area the visitor has panned to), the mobile field and the header's Where.
+   *
+   * So both leave for a worldwide bare `/search` (see {@link startSearch}). That is a
+   * different route config from `/search/<slug>`, so it builds a new search page, which
+   * reads `everywhere` at construction exactly as it does for a landing page — nothing
+   * here needs setting on the way out, as this page is about to be replaced.
    */
   protected searchEverywhere(): void {
-    if (this.seed()) {
+    if (this.seed() || this.locationSlug()) {
       if (this.isBrowser) void this.startSearch(['/search'], { [EVERYWHERE_KEY]: 1 });
       return;
     }
@@ -1582,11 +1594,12 @@ export class SearchMap {
   /**
    * Start a new search somewhere else, in one navigation.
    *
-   * How every action that changes the place begins: a picked place, "Near me", and a
-   * landing page's "Search everywhere". A change of geography cannot be a query merge into
-   * the current URL, because the path names a place too — a landing page's path supplies
-   * its place (and, on a gender page, its type) as the seed, which refills anything a merge
-   * removes, and a `/search/<slug>` path names its place to the canonical and the heading.
+   * How every action that changes the place begins: a picked place, "Near me", a landing
+   * page's "Search everywhere", and "Search everywhere" from a place's search path. A
+   * change of geography cannot be a query merge into the current URL, because the path
+   * names a place too — a landing page's path supplies its place (and, on a gender page,
+   * its type) as the seed, which refills anything a merge removes, and a `/search/<slug>`
+   * path names its place to the canonical and the heading.
    * So it goes to `commands` (a `/search` path) instead, which states everything in its
    * query:
    *

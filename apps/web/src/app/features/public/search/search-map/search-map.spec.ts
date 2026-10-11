@@ -777,10 +777,10 @@ describe('SearchMap worldwide search', () => {
     expect(firstNavigation(navigate).extras.queryParams).toHaveProperty('everywhere', null);
   });
 
-  it('widens a search in place and the next request carries no place or box', async () => {
+  it('widens a bare search in place and the next request carries no place or box', async () => {
     const list = listSpy();
     configureSearchMap({ platform: 'browser', list });
-    const { map } = await mount('/en/search/lahore?lat=31.5204&lng=74.3587', null, true);
+    const { map } = await mount('/en/search?lat=31.5204&lng=74.3587', null, true);
     const route = TestBed.inject(Router).routerState.root.firstChild;
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
     await firstSearch(list);
@@ -934,18 +934,86 @@ describe('SearchMap worldwide search', () => {
     expect(lastQuery(list).near).toBeUndefined();
   });
 
-  it('widens a slug search in place and the next request carries no place or box', async () => {
+  it('sends Search everywhere from a place path to a worldwide bare search without searching again', async () => {
     const list = listSpy();
-    configureSearchMap({ platform: 'browser', list });
-    const { map } = await mount('/en/search/lahore', null, true);
+    const { map, navigate } = await mountSearch('/en/search/lahore', {
+      platform: 'browser',
+      list,
+    });
     await firstSearch(list);
     expect(queryAt(list, 0).near).toBeDefined();
+    const searches = list.mock.calls.length;
+
+    map.searchEverywhere();
+    // Wait out more than twice the 600ms results debounce to confirm no search follows.
+    await new Promise<void>((r) => setTimeout(r, 1500));
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, gender: null, everywhere: 1 });
+    expect(map.unbounded()).toBe(false);
+    expect(list).toHaveBeenCalledTimes(searches);
+  });
+
+  it('clears the place, zoom, viewport and retired keys when widening from a place path', async () => {
+    const { map, navigate } = await mountSearch(
+      '/en/search/lahore?place=Lahore&lat=31.5204&lng=74.3587&zoom=11&capacity=2',
+      { platform: 'browser' },
+    );
 
     map.searchEverywhere();
 
-    await vi.waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(1), { timeout: 3000 });
-    expect(lastQuery(list).near).toBeUndefined();
-    expect(lastQuery(list).bounds).toBeUndefined();
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, gender: null, everywhere: 1 });
+    for (const key of ['place', 'city', 'lat', 'lng', 'zoom', 'ne_lat', 'sw_lng', 'capacity']) {
+      expect(extras.queryParams[key]).toBeNull();
+    }
+  });
+
+  it('keeps the visitor filters when widening from a place path', async () => {
+    const { map, navigate } = await mountSearch(
+      '/en/search/lahore?minPrice=5000&maxPrice=9000&gender=girls&amenities=heater',
+      { platform: 'browser' },
+    );
+
+    map.searchEverywhere();
+
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, gender: 'girls', everywhere: 1 });
+    for (const key of ['minPrice', 'maxPrice', 'amenities']) {
+      expect(extras.queryParams).not.toHaveProperty(key);
+    }
+  });
+
+  it.each([
+    ['drops a price sort when no type is in force', '?sort=price-asc', { gender: null, sort: null }],
+    ['keeps a price sort when a type is in force', '?gender=girls&sort=price-asc', { gender: 'girls' }],
+  ])('%s when widening from a place path', async (_name, query, expected) => {
+    const { map, navigate } = await mountSearch(`/en/search/lahore${query}`, {
+      platform: 'browser',
+    });
+
+    map.searchEverywhere();
+
+    const { extras } = firstNavigation(navigate);
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, ...expected, everywhere: 1 });
+    if (!('sort' in expected)) expect(extras.queryParams).not.toHaveProperty('sort');
+  });
+
+  it('does not navigate when widening from a place path on the server', async () => {
+    const { map, navigate } = await mountSearch('/en/search/lahore');
+
+    map.searchEverywhere();
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(map.unbounded()).toBe(false);
   });
 
   it('titles a server-rendered worldwide link as a worldwide search and keeps it out of the index', async () => {
