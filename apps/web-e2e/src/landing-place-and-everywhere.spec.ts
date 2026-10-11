@@ -1,22 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { stubListings, stubPhoton } from './support/stubs';
+import { KARACHI_PHOTON as KARACHI, stubListings, stubPhoton } from './support/stubs';
 
 // Leaving a landing page for somewhere else. Picking another place from a gender landing page
 // has to carry the landing's type into a real search of that place, and "Search everywhere"
 // has to survive the map settling rather than being rewritten by it.
-
-const KARACHI = {
-  geometry: { type: 'Point', coordinates: [67.0011, 24.8607] },
-  properties: {
-    osm_id: 1,
-    name: 'Karachi',
-    type: 'city',
-    state: 'Sindh',
-    country: 'Pakistan',
-    countrycode: 'PK',
-    extent: [66.8, 25.1, 67.3, 24.7],
-  },
-};
 
 test.describe('picking another place from a gender landing page', () => {
   test.use({ viewport: { width: 400, height: 860 } });

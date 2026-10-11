@@ -167,6 +167,42 @@ describe('SearchBar reading the URL', () => {
     const query = written(navigate);
     expect(query).toHaveProperty('everywhere', null);
   });
+
+  // A header search is a new search: the map box of the page being left must not ride along
+  // into a search page that is built fresh and would restore it over the new place.
+  it('clears all four viewport keys left by the page being searched from', async () => {
+    const { bar, navigate } = await onUrl(
+      '/search/lahore?place=Lahore&lat=31.5&lng=74.3&zoom=11&ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.1',
+    );
+
+    bar.search();
+
+    const query = written(navigate);
+    for (const key of ['ne_lat', 'ne_lng', 'sw_lat', 'sw_lng']) {
+      expect(query).toHaveProperty(key, null);
+    }
+  });
+
+  it('navigates to the place’s own search route with a merge and the retired and worldwide keys cleared', async () => {
+    const { bar, navigate } = await onUrl(
+      '/search/lahore?place=Lahore&lat=31.5&lng=74.3&zoom=11&capacity=2&everywhere=1',
+    );
+
+    bar.search();
+
+    const [commands, extras] = navigate.mock.calls[0] as [
+      string[],
+      { queryParams: Record<string, unknown>; queryParamsHandling: string },
+    ];
+    expect(commands).toEqual(['/search', 'lahore']);
+    expect(extras.queryParamsHandling).toBe('merge');
+    expect(extras.queryParams).toMatchObject({
+      capacity: null,
+      sharing: null,
+      frequency: null,
+      everywhere: null,
+    });
+  });
 });
 
 /**

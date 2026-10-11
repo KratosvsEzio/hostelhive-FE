@@ -85,6 +85,20 @@ export async function stubListings(
   };
 }
 
+/** A geocoder suggestion for Karachi, for specs that pick a place other than the one on screen. */
+export const KARACHI_PHOTON = {
+  geometry: { type: 'Point', coordinates: [67.0011, 24.8607] },
+  properties: {
+    osm_id: 1,
+    name: 'Karachi',
+    type: 'city',
+    state: 'Sindh',
+    country: 'Pakistan',
+    countrycode: 'PK',
+    extent: [66.8, 25.1, 67.3, 24.7],
+  },
+};
+
 /** Stubs the place-search geocoder so the suggestion list is exactly `features`. */
 export async function stubPhoton(page: Page, features: unknown[]): Promise<void> {
   await page.route('**/photon.komoot.io/**', async (route) => {
