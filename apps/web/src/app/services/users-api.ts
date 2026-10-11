@@ -1,7 +1,9 @@
+import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { User, UserResponse } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 
 /**
  * Authenticated user lookups — `GET /api/users/:id` (app/controllers/api/users_controller.rb,
@@ -13,10 +15,17 @@ import { ApiClient } from '@core/api-resource';
 export class UsersApi {
   private readonly api = inject(ApiClient);
 
-  /** GET /api/users/:id → the user (UserSerializer). */
-  getById(id: number | string): Observable<User> {
+  /**
+   * GET /api/users/:id → the user (UserSerializer).
+   *
+   * `quiet` skips the app-wide error toast, for callers that handle a failure themselves and
+   * expect one. The moderator review's host lookup is the case: a moderator can't read users
+   * (403), and the screen falls back to the host embedded on the hostel.
+   */
+  getById(id: number | string, options: { quiet?: boolean } = {}): Observable<User> {
+    const context = options.quiet ? new HttpContext().set(SUPPRESS_ERROR_TOAST, true) : undefined;
     return this.api
-      .get<UserResponse>(`/api/users/${id}`)
+      .get<UserResponse>(`/api/users/${id}`, undefined, context)
       .pipe(map((r) => requireUser(r, id)));
   }
 
