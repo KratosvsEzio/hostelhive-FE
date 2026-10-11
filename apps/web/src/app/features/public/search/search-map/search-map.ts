@@ -259,11 +259,17 @@ export class SearchMap {
    * URLs for one intent compete with each other and split whatever authority either
    * earns. The landing page is the one built to rank — server-rendered, with copy of its
    * own — so search points at it rather than the other way round.
+   *
+   * The `place` (or `city`) query param wins over the path slug, as it does for the
+   * heading: the slug is cosmetic, and a link shared while a place pick still kept the old
+   * path reads `/search/lahore?place=Karachi…` — a Karachi search that must not hand its
+   * signal to Lahore's page. The slug only answers when the query names no place, as on a
+   * pasted `/search/lahore`, which still canonicalises to `/hostels/lahore`.
    */
   private readonly canonicalPlace = computed(() => {
     const slug =
-      this.locationSlug() ||
-      toLocationSlug(this.params()?.get('place') || this.params()?.get('city') || '');
+      toLocationSlug(this.params()?.get('place') || this.params()?.get('city') || '') ||
+      this.locationSlug();
     return slug ? (PLACES.find((p) => p.slug === slug) ?? null) : null;
   });
 
@@ -1490,32 +1496,25 @@ export class SearchMap {
   }
 
   /**
-   * A Place was picked from the autocomplete dropdown → recenter the map and refetch.
+   * A Place was picked from the autocomplete dropdown → a new search for that place.
    *
-   * On a landing page it leaves for the picked place's search page instead (see
-   * {@link leaveLanding}): the page's path names its own place, which a query merge can
-   * override in the request but not in the heading, the breadcrumb or the canonical.
+   * Always a navigation to the picked place's own search URL (see {@link startSearch}),
+   * never a query merge into the current one — on a landing page and on `/search` alike. A
+   * path names a place: a landing page's seeds the search, and a `/search/<slug>` feeds the
+   * canonical and the heading whenever the query is silent. Merging the new place into the
+   * old path kept that old name, so a Karachi search could carry Lahore's canonical. A new
+   * place is a new search, so its slug becomes the URL's.
+   *
+   * Same-config moves (`/search/lahore` → `/search/karachi`) reuse this component and
+   * recenter through the `center()` effect; cross-config ones build a new one, which reads
+   * the now-nulled viewport at construction.
    */
   protected onPlaceSelected(r: PlaceResult): void {
-    if (this.seed()) {
-      void this.leaveLanding(searchRouteFor(r.label), {
-        place: r.label,
-        lat: r.lat,
-        lng: r.lng,
-        zoom: r.zoom ?? null,
-      });
-      return;
-    }
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        place: r.label,
-        city: null,
-        lat: r.lat,
-        lng: r.lng,
-        zoom: r.zoom ?? null,
-      },
-      queryParamsHandling: 'merge',
+    void this.startSearch(searchRouteFor(r.label), {
+      place: r.label,
+      lat: r.lat,
+      lng: r.lng,
+      zoom: r.zoom ?? null,
     });
   }
 
@@ -1562,12 +1561,12 @@ export class SearchMap {
    * The URL records it as `everywhere=1`, so a refresh or a shared link stays worldwide
    * instead of reopening on the visitor's country. A landing page cannot widen in place —
    * its seed refills the place this clears and keeps the search local — so there it leaves
-   * for a worldwide `/search` (see {@link leaveLanding}), which reads the key at
+   * for a worldwide `/search` (see {@link startSearch}), which reads the key at
    * construction.
    */
   protected searchEverywhere(): void {
     if (this.seed()) {
-      if (this.isBrowser) void this.leaveLanding(['/search'], { [EVERYWHERE_KEY]: 1 });
+      if (this.isBrowser) void this.startSearch(['/search'], { [EVERYWHERE_KEY]: 1 });
       return;
     }
     this.unbounded.set(true);
@@ -1594,25 +1593,32 @@ export class SearchMap {
   }
 
   /**
-   * Leave a landing page for a search, in one navigation.
+   * Start a new search somewhere else, in one navigation.
    *
-   * A landing page's path supplies its place (and, on a gender page, its type) as the
-   * seed, and the seed refills any of those a query merge removes — so on a landing page a
-   * change of geography cannot happen in place. It goes to `commands` (a `/search` path)
-   * instead, which states everything in its query:
+   * How every action that changes the place begins: a picked place, "Near me", and a
+   * landing page's "Search everywhere". A change of geography cannot be a query merge into
+   * the current URL, because the path names a place too — a landing page's path supplies
+   * its place (and, on a gender page, its type) as the seed, which refills anything a merge
+   * removes, and a `/search/<slug>` path names its place to the canonical and the heading.
+   * So it goes to `commands` (a `/search` path) instead, which states everything in its
+   * query:
    *
-   * - the viewport and the page's place are nulled, or the new search would restore the
-   *   old box or name the old place, and `geo` then says where the search is now;
-   * - the visitor's own filters carry over through the merge, and the ones the page's path
-   *   applied are written out (see `seededFilters`), so the list does not quietly widen;
+   * - the viewport and the old place are nulled, or the new search would restore the old
+   *   box or name the old place, and `geo` then says where the search is now;
+   * - a worldwide `everywhere` is cleared, since the new search is somewhere (`geo` can set
+   *   it again);
+   * - the visitor's own filters carry over through the merge, and the ones a landing page's
+   *   path applied are written out (see `seededFilters`; nothing on `/search`, which has no
+   *   seed), so the list does not quietly widen;
    * - retired params are cleared, as any new search clears them (see `RETIRED_KEYS_NULLED`);
    * - `gender` is the effective type, which also scrubs an invalid `?gender=`;
    * - a price sort is dropped when no type is in force, as the filter row and the header
    *   bar do: nightly and monthly prices cannot be sorted against each other.
    *
-   * A push rather than a replace: the landing page is a page, and Back should return to it.
+   * A push rather than a replace: a new place is a new destination, and Back should return
+   * to the page — landing or search — the visitor left.
    */
-  private leaveLanding(
+  private startSearch(
     commands: string[],
     geo: Record<string, string | number | null>,
   ): Promise<boolean> {
@@ -1665,23 +1671,17 @@ export class SearchMap {
   /**
    * "Near me" — native geolocation (Capacitor) or the browser API → recenter + proximity search.
    *
-   * On a landing page it leaves for `/search` around the visitor, for the same reason a
-   * picked place does (see {@link onPlaceSelected}).
+   * Always a new search on a bare `/search` around the visitor, from a landing page and
+   * from `/search/<slug>` alike, for the same reason a picked place is (see
+   * {@link onPlaceSelected}): the visitor's position has no slug, and keeping the old one
+   * would name the old place in the canonical under a "My location" heading.
    */
   protected async locateMe(): Promise<void> {
     if (this.locating()) return;
     this.locating.set(true);
     try {
       const { lat, lng } = await this.geo.getCurrent();
-      if (this.seed()) {
-        await this.leaveLanding(['/search'], { place: 'My location', lat, lng });
-        return;
-      }
-      await this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { lat, lng, place: 'My location', city: null },
-        queryParamsHandling: 'merge',
-      });
+      await this.startSearch(['/search'], { place: 'My location', lat, lng });
     } catch {
       // Permission denied or unavailable — leave the map as-is.
     } finally {

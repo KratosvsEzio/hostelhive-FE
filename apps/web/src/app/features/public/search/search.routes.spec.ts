@@ -12,6 +12,16 @@ describe('feature-search routes', () => {
     expect(location?.component).toBe(SEARCH_ROUTES[0].component);
   });
 
+  // A static route title is re-applied by the title strategy after every navigation, viewport
+  // writes included, which would overwrite the place-specific title the page sets itself.
+  it('leaves the tab title to the search page on every route that serves it', () => {
+    const searchRoutes = SEARCH_ROUTES.filter((r) => r.component === SEARCH_ROUTES[0].component);
+    expect(searchRoutes.length).toBeGreaterThan(0);
+    for (const route of searchRoutes) {
+      expect(route.title).toBeUndefined();
+    }
+  });
+
   // The router matches in order, so a literal segment declared after ':location' would
   // never be reached — /search/map would load the search page for a place called "map"
   // instead of redirecting.

@@ -14,7 +14,11 @@ import { filter } from 'rxjs';
 import { fromLocationSlug, searchRouteFor } from '@util/location-slug';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { isAccommodationType } from '@features/public/search/search-params';
-import { EVERYWHERE_KEY, RETIRED_KEYS_NULLED } from '@features/public/search/search-scope';
+import {
+  EVERYWHERE_KEY,
+  RETIRED_KEYS_NULLED,
+  VIEWPORT_KEYS_NULLED,
+} from '@features/public/search/search-scope';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlaceResult, PlaceSearchField } from '@hostelhive/maps';
 import { RangeSlider } from '@hostelhive/ui';
@@ -292,6 +296,8 @@ export class SearchBar {
         // Retired params, cleared so an old shared URL does not keep filtering by a control
         // that no longer exists on screen.
         ...RETIRED_KEYS_NULLED,
+        // The old map box, or a newly built search page would restore it over the new place.
+        ...VIEWPORT_KEYS_NULLED,
         // A new search is somewhere: a worldwide one left over from the last page would
         // otherwise ignore the place just typed.
         [EVERYWHERE_KEY]: null,

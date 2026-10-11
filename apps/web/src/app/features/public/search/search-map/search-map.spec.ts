@@ -62,6 +62,7 @@ interface SearchMapInternals {
   searchEverywhere(): void;
   locateMe(): Promise<void>;
   ensureMap(): Promise<void>;
+  locating(): boolean;
   syncBoundsToUrl(b: { north: number; south: number; east: number; west: number }): void;
   leftHomeCountry(): void;
   captureMapBounds(): void;
@@ -309,6 +310,252 @@ function firstNavigation(navigate: ReturnType<typeof vi.spyOn>) {
   return { commands, extras };
 }
 
+/**
+ * A routed search mount, so the `:location` slug is visible, with `navigate` spied and
+ * stopped from going anywhere.
+ */
+async function mountSearch(url: string, config: SearchMapConfig = {}) {
+  configureSearchMap(config);
+  const mounted = await mount(url, null, true);
+  const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+  return { ...mounted, navigate };
+}
+
+/** A Seo stand-in that records each `apply`. */
+const seoSpy = () => ({ apply: vi.fn(), setJsonLd: vi.fn() });
+
+/** The head the page last asked for. */
+const lastApply = (seo: ReturnType<typeof seoSpy>) =>
+  seo.apply.mock.lastCall?.[0] as Record<string, unknown>;
+
+describe('SearchMap place pick on a search page', () => {
+  afterEach(cleanupSearchMap);
+
+  const LAHORE_SEARCH = '/en/search/lahore';
+  const KARACHI_QUERY = {
+    place: 'Karachi, Sindh, Pakistan',
+    lat: 24.8607,
+    lng: 67.0011,
+    zoom: 10,
+  };
+
+  it('starts a new search for the picked place in one push, dropping the old place, viewport and retired filters', async () => {
+    const { map, navigate } = await mountSearch(
+      `${LAHORE_SEARCH}?place=Lahore&city=Lahore&lat=31.5204&lng=74.3587&zoom=11` +
+        '&ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.2&capacity=2&everywhere=1',
+    );
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search', 'karachi-sindh-pakistan']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras['queryParamsHandling']).toBe('merge');
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, gender: null, ...KARACHI_QUERY });
+  });
+
+  it('lands on the picked place keeping only the visitor filters', async () => {
+    configureSearchMap();
+    const viewport = 'ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.2';
+    const { map } = await mount(`${LAHORE_SEARCH}?minPrice=5000&${viewport}`);
+    const router = TestBed.inject(Router);
+
+    map.onPlaceSelected(KARACHI);
+    await vi.waitFor(() => expect(router.url).toContain('/en/search/karachi-sindh-pakistan'));
+
+    expect(router.parseUrl(router.url).queryParams).toEqual({
+      minPrice: '5000',
+      place: 'Karachi, Sindh, Pakistan',
+      lat: '24.8607',
+      lng: '67.0011',
+      zoom: '10',
+    });
+  });
+
+  it('writes the picked place to a bare worldwide search under its own slug', async () => {
+    const { map, navigate } = await mountSearch(
+      '/en/search?everywhere=1&ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.2',
+    );
+
+    map.onPlaceSelected(KARACHI);
+
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search', 'karachi-sindh-pakistan']);
+    expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, gender: null, ...KARACHI_QUERY });
+  });
+
+  it('routes a label with no Latin letters to the bare search, keeping the label as the place', async () => {
+    const { map, navigate } = await mountSearch(LAHORE_SEARCH);
+
+    map.onPlaceSelected({ label: 'کراچی', lat: 24.8607, lng: 67.0011, zoom: 10 });
+
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras.queryParams).toMatchObject({ place: 'کراچی', lat: 24.8607, lng: 67.0011 });
+  });
+
+  it('prefixes the search route with the active locale', async () => {
+    const { map, navigate } = await mountSearch('/ur/search/lahore', { locale: 'ur' });
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).commands).toEqual(['/ur/search', 'karachi-sindh-pakistan']);
+  });
+
+  it('scrubs an invalid gender rather than carrying it', async () => {
+    const { map, navigate } = await mountSearch('/en/search?gender=bogus');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams['gender']).toBeNull();
+  });
+
+  it('carries a valid gender to the new place', async () => {
+    const { map, navigate } = await mountSearch('/en/search?gender=girls');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams['gender']).toBe('girls');
+  });
+
+  it('drops a price sort when no type is in force', async () => {
+    const { map, navigate } = await mountSearch('/en/search?sort=price-asc');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).toHaveProperty('sort', null);
+  });
+
+  it('keeps a price sort when a type is in force', async () => {
+    const { map, navigate } = await mountSearch('/en/search?gender=girls&sort=price-asc');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).not.toHaveProperty('sort');
+  });
+
+  it('leaves a non-price sort alone when no type is in force', async () => {
+    const { map, navigate } = await mountSearch('/en/search?sort=newest');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).not.toHaveProperty('sort');
+  });
+});
+
+describe('SearchMap Near me on a search page', () => {
+  afterEach(cleanupSearchMap);
+
+  const located = { getCurrent: () => Promise.resolve({ lat: 24.9, lng: 67.1 }) };
+
+  it('starts a new search around the visitor on the bare search, keeping the type', async () => {
+    const { map, navigate } = await mountSearch(
+      '/en/search/lahore?gender=girls&ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.2',
+      { geolocation: located },
+    );
+
+    await map.locateMe();
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    const { commands, extras } = firstNavigation(navigate);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras.queryParams).toEqual({
+      ...LEFT_BEHIND,
+      gender: 'girls',
+      place: 'My location',
+      lat: 24.9,
+      lng: 67.1,
+    });
+  });
+
+  it('stays put and stops locating when the position is refused', async () => {
+    const { map, navigate } = await mountSearch('/en/search/lahore', {
+      geolocation: { getCurrent: () => Promise.reject(new Error('denied')) },
+    });
+
+    await map.locateMe();
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(map.locating()).toBe(false);
+  });
+
+  it('is locating while the lookup is pending and ignores a second tap', async () => {
+    let resolve!: (v: { lat: number; lng: number }) => void;
+    const getCurrent = vi.fn(
+      () => new Promise<{ lat: number; lng: number }>((r) => (resolve = r)),
+    );
+    const { map, navigate } = await mountSearch('/en/search/lahore', {
+      geolocation: { getCurrent },
+    });
+
+    const first = map.locateMe();
+    expect(map.locating()).toBe(true);
+    await map.locateMe();
+    expect(getCurrent).toHaveBeenCalledTimes(1);
+
+    resolve({ lat: 24.9, lng: 67.1 });
+    await first;
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(map.locating()).toBe(false);
+  });
+});
+
+describe('SearchMap search page head', () => {
+  afterEach(cleanupSearchMap);
+
+  const head = async (url: string, locale?: string) => {
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo, locale });
+    await mount(url, null, true);
+    return lastApply(seo);
+  };
+
+  it('keeps a search for another place out of the index and off the old place canonical', async () => {
+    const place = encodeURIComponent('Karachi, Sindh, Pakistan');
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+    // The test i18n returns the bare key, so the place can only be seen in the params.
+    const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+    await mount(
+      `/en/search/lahore?place=${place}&lat=24.8607&lng=67.0011&zoom=10`,
+      null,
+      true,
+    );
+    const applied = lastApply(seo);
+
+    expect(applied['noindex']).toBe(true);
+    expect(applied).not.toHaveProperty('path');
+    expect(applied['title']).toBe('seo.searchTitle');
+    const titleCall = translate.mock.calls.filter((c) => c[0] === 'seo.searchTitle').at(-1);
+    expect(titleCall?.[1]).toEqual({ place: 'Karachi, Sindh, Pakistan' });
+  });
+
+  it('canonicalises a pasted slug with no query to its landing page', async () => {
+    const applied = await head('/en/search/lahore');
+
+    expect(applied['path']).toBe('/hostels/lahore');
+    expect(applied['noindex']).toBeUndefined();
+  });
+
+  it('follows the place in the query over the path slug', async () => {
+    const applied = await head('/en/search/foo?place=Lahore');
+
+    expect(applied['path']).toBe('/hostels/lahore');
+    expect(applied['noindex']).toBeUndefined();
+  });
+
+  it('falls back to the path slug when the place has no Latin letters', async () => {
+    const applied = await head(`/en/search/lahore?place=${encodeURIComponent('لاہور')}`);
+
+    expect(applied['path']).toBe('/hostels/lahore');
+  });
+});
+
 describe('SearchMap on a landing page', () => {
   const GIRLS_URL = '/en/hostels/lahore/girls';
   const CITY_URL = '/en/hostels/lahore';
@@ -501,33 +748,19 @@ describe('SearchMap on a landing page', () => {
 describe('SearchMap worldwide search', () => {
   afterEach(cleanupSearchMap);
 
-  it('merges a picked place into the current search without leaving it', async () => {
-    configureSearchMap();
-    const { map } = await mount('/en/search/lahore');
-    const router = TestBed.inject(Router);
-    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+  it('ends a worldwide search with a place pick, whatever the page', async () => {
+    const { map, navigate } = await mountSearch('/en/search?everywhere=1');
 
     map.onPlaceSelected(KARACHI);
 
-    expect(navigate).toHaveBeenCalledTimes(1);
-    const { commands, extras } = firstNavigation(navigate);
-    expect(commands).toEqual([]);
-    expect(extras['relativeTo']).toBe(TestBed.inject(ActivatedRoute));
-    expect(extras['queryParamsHandling']).toBe('merge');
-    expect(extras).not.toHaveProperty('replaceUrl');
-    expect(extras.queryParams).toEqual({
-      place: 'Karachi, Sindh, Pakistan',
-      city: null,
-      lat: 24.8607,
-      lng: 67.0011,
-      zoom: 10,
-    });
+    expect(firstNavigation(navigate).extras.queryParams).toHaveProperty('everywhere', null);
   });
 
   it('widens a search in place and the next request carries no place or box', async () => {
     const list = listSpy();
     configureSearchMap({ platform: 'browser', list });
-    const { map } = await mount('/en/search/lahore?lat=31.5204&lng=74.3587');
+    const { map } = await mount('/en/search/lahore?lat=31.5204&lng=74.3587', null, true);
+    const route = TestBed.inject(Router).routerState.root.firstChild;
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
     await firstSearch(list);
     expect(queryAt(list, 0).near).toEqual({ lat: 31.5204, lng: 74.3587 });
@@ -537,7 +770,7 @@ describe('SearchMap worldwide search', () => {
     expect(navigate).toHaveBeenCalledTimes(1);
     const { commands, extras } = firstNavigation(navigate);
     expect(commands).toEqual([]);
-    expect(extras['relativeTo']).toBe(TestBed.inject(ActivatedRoute));
+    expect(extras['relativeTo']).toBe(route);
     expect(extras['replaceUrl']).toBe(true);
     expect(extras['queryParamsHandling']).toBe('merge');
     expect(extras.queryParams).toEqual({
@@ -637,13 +870,17 @@ describe('SearchMap worldwide search', () => {
   it('ends the worldwide search when the camera recentres on a new place', async () => {
     const list = listSpy();
     configureSearchMap({ platform: 'browser', list });
-    const { map } = await mount('/en/search?everywhere=1');
+    const { map } = await mount('/en/search/lahore?everywhere=1', null, true);
     const router = TestBed.inject(Router);
     await firstSearch(list);
     expect(map.unbounded()).toBe(true);
 
+    // A slug-to-slug pick stays on the same route config, so a live instance survives it and
+    // receives the recentre; a pick across configs would destroy and rebuild the component.
     map.onPlaceSelected(KARACHI);
-    await vi.waitFor(() => expect(router.url).toContain('lat=24.8607'));
+    await vi.waitFor(() => expect(router.url).toContain('/en/search/karachi-sindh-pakistan'));
+    expect(router.url).toContain('lat=24.8607');
+    expect(router.url).not.toContain('everywhere');
     const setView = vi.fn();
     const viewport = { north: 25.0, south: 24.7, east: 67.2, west: 66.8 };
     map.map = {
