@@ -28,6 +28,14 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
   - `classifyResetFailure` (`apps/web/src/app/features/auth/reset-password/reset-failure.ts`) sorts the reply. A 404 with a backend message means the link is used or invalid. A 403 means either an expired link or an admin/moderator account; the account panel offers Contact us and Back to login, but no new link.
   - Those three cases replace the form with a panel and move focus to its heading. A 422, a network failure or anything else shows inline.
   - Per-attempt state is a `linkedSignal` on the token, so a new link starts over and a late reply for the old one is ignored (`reset-password.ts`).
+- **Confirmation link failures**: `classifyConfirmFailure` (`apps/web/src/app/features/auth/confirm-invitation/confirm-failure.ts`) sorts the `confirm_invitation` reply into four kinds, each with its own card (`ERROR_COPY` in `confirm-invitation.ts`):
+  - a 404 with a backend message → "This link no longer works", with a neutral badge and "just log in" copy;
+  - a 403 whose text says "expired" as a whole word → "This link has expired", which also offers Contact us. There is no resend endpoint, and signing up again fails because the email is taken;
+  - no connection → "Can't reach the server";
+  - anything else → the generic "Confirmation failed".
+  
+  `AccountConfirmedNotSignedIn` is checked before classifying. Focus moves to the error heading after a server or network failure, but not for a missing token.
+- Both classifiers read errors through `apps/web/src/app/core/errors/api-error-text.ts` (`errorStatus`, `serverText`, `isBareNotFound`), never through `err.message`.
 
 ## Reuse, don't rebuild
 - Gate routes with `roleGuard(...HOST_ROLES)` / `permissionGuard('host:Room:index')`, buttons with `*hhHasPermission` — never compare `session.role()` by hand (it is only the primary role).
@@ -41,7 +49,8 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **Post-login destination reads unhydrated roles.** `LeadWall.destination()` runs before `/api/users/current` returns, so with no `returnUrl` staff can land on `/` instead of their console.
 - **`propertyId` is always `null`** — `/users/current` does not expose it (`auth.service.ts`).
 - **`jwt.ts` reads `exp`**, but `docs/api/hostelhive-api.md` documents the payload as `{…, jti, expiry}`. If the backend really sends `expiry`, local expiry never triggers and the server decides (safe, just a wasted request).
-- **Only the English text tells the two reset 403s apart**: an exact match first, then keywords. If the backend rewords both messages, users get the generic inline message. The backend has been asked for machine codes. A bare Rails `"Not Found"` 404 is classed `unknown`, not a used link (`reset-failure.ts`).
+- **Only the English text tells the 403s apart**: the two reset 403s, and the expired confirmation 403. If the backend rewords them, users get the generic message. The backend has been asked for machine codes. On both pages a bare Rails `"Not Found"` 404 is classed `unknown`, not a used link (`reset-failure.ts`, `confirm-failure.ts`).
+- **The "no roles" 403 from `issue_token` reaches the page with no text**: the backend nests the `errors` array and `extractServerMessages` drops nested arrays. On the confirmation page it arrives after the account is already activated and the link spent, but it shows the generic card.
 - **Forgot-password still shows raw server text** (`forgot-password.ts`, Trello #150). That includes the 422 "Otp already has been shared…" on a repeat request.
 - **Stale layering comments**: `auth.service.ts`, `provide-auth.ts` and `tokens.ts` speak of separate `@hostelhive/auth` / `data-access` libraries; everything now lives in `apps/web/src/app/core/` and `lib/src/data-access/index.ts` is an empty stub.
 - **`docs/HostelHive-Frontend-Build-Plan.md` (Q-AUTH)** plans memory token + httpOnly refresh cookie + 401-refresh-retry. None of that exists (the plan now marks it *Superseded*); see the cookie decision below. A 401 silently signs the user out (RISKS R15).
