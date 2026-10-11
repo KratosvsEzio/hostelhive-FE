@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, SessionStore } from '@core/auth';
-import { HostPropertyStore, PropertyEntry } from '@services';
+import { HostBillingStore, HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NavEntry, hostNav, splitNav, tabBarSuffixes } from '@layout/host-shell/host-nav';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
@@ -71,6 +71,7 @@ export class HostMore {
   protected readonly canCreateHostel = computed(
     () => this.session.hasPermission('core:Hostel:create'),
   );
+  private readonly billingStore = inject(HostBillingStore);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -88,6 +89,7 @@ export class HostMore {
     hostNav(this.base(), {
       monthlyBilled: this.propertyStore.isMonthlyBilled(),
       nightlyBilled: this.propertyStore.isNightlyBilled(),
+      crmLocked: this.billingStore.crmLocked(),
       can: (permission) => this.session.hasPermission(permission),
     }).filter((e) => {
       const link = e.link;

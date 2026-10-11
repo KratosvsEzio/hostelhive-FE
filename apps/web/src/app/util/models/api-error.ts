@@ -1,13 +1,16 @@
 /**
  * Normalised API error produced by the error interceptor — the FE-facing contract.
- * This backend sends neither a machine `code` nor a structured `details` map: `code` is
- * derived from the HTTP status, and the only human-readable text lives in `serverMessages`,
- * populated solely when the response body parsed as the Rails error envelope.
+ * The backend sends a machine code only on some refusals (e.g. `crm_required`); `code` carries
+ * it when present. There is no structured `details` map, and the only human-readable text lives
+ * in `serverMessages`, populated solely when the response body parsed as the Rails error envelope.
  */
 export interface ApiError {
   /** HTTP status (0 for network/timeout failures). */
   status: number;
-  /** Machine code derived from the status (e.g. `network_error`, `unknown_error`). */
+  /**
+   * Machine code: the backend's own `code` when the error envelope has one (e.g.
+   * `crm_required`), otherwise derived from the status (`network_error`, `unknown_error`).
+   */
   code: string;
   /**
    * Diagnostic message. May be Angular's synthetic `HttpErrorResponse.message`, which leaks

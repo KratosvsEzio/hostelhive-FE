@@ -21,7 +21,7 @@
 
 ## Consequences
 - After Continue, the confirm POST carries no FCM token (`rotate()` has just cleared it); the backend links the fresh token to the new account on its next authenticated request (BE PR #39, Trello #142 — before that it linked devices only in `issue_token`). The page is effectively web-only anyway — the Android app declares no app links.
-- Since BE PR #39 the backend answers an unknown or used confirmation token with 404 and an expired one with 403 (each with a message); the page still shows one combined translated message — Trello #149.
+- Since BE PR #39 the backend answers an unknown or used confirmation token with 404 and an expired one with 403 (each with a message). Since Trello #149 (PR #119) the page shows a card for each, sorted by `classifyConfirmFailure`. An unknown 404 is usually a re-click after confirming; after "Log out and continue" that signs the user out, so the 404 card says "just log in".
 - A revoked-but-unexpired previous token rejected during startup validation still sends the visitor home with the link unspent.
 
 ## Evidence

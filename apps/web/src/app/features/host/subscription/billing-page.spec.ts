@@ -13,7 +13,7 @@ import type {
   HostBilling,
   OpenInvoice,
 } from '@hostelhive/data-access';
-import { BillingApi, HostPropertyStore } from '@services';
+import { BillingApi, HostBillingStore, HostPropertyStore } from '@services';
 import { SessionStore } from '@core/auth/session-store';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
@@ -226,6 +226,7 @@ describe('BillingPage', () => {
     cancelSubscription: ReturnType<typeof vi.fn>;
     resumeSubscription: ReturnType<typeof vi.fn>;
   };
+  let store: { accept: ReturnType<typeof vi.fn> };
 
   /** A mock call that answers only when the test pushes into the Subject it records. */
   function pending<T>(into: Subject<T>[]): ReturnType<typeof vi.fn> {
@@ -254,6 +255,7 @@ describe('BillingPage', () => {
       cancelSubscription: pending(cancels),
       resumeSubscription: pending(resumes),
     };
+    store = { accept: vi.fn() };
     const granted = new Set(permissions);
     TestBed.configureTestingModule({
       providers: [
@@ -275,6 +277,7 @@ describe('BillingPage', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: BillingApi, useValue: api },
+        { provide: HostBillingStore, useValue: store },
         {
           provide: SessionStore,
           // Like the real store, no flags at all means nothing is withheld.
@@ -1859,6 +1862,109 @@ describe('BillingPage', () => {
       expect(now.querySelector('[role="alert"]')).toBeNull();
       expect(api.billing).toHaveBeenCalledTimes(3);
       expect(statusText(now)).toBe('Renews on 3 Dec 2026');
+    });
+  });
+
+  describe('sharing billing with the console', () => {
+    async function go(hostelId: string): Promise<HTMLElement> {
+      await TestBed.inject(Router).navigateByUrl(
+        `/host/${hostelId}/subscription`,
+      );
+      harness.detectChanges();
+      return harness.routeNativeElement as HTMLElement;
+    }
+
+    function cancelPlan(el: HTMLElement): void {
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+    }
+
+    it('hands over each summary it loads, for the hostel it was loaded for', async () => {
+      await open();
+      expect(store.accept).not.toHaveBeenCalled();
+
+      const loaded = billing();
+      loads[0].next(loaded);
+      harness.detectChanges();
+
+      expect(store.accept).toHaveBeenCalledTimes(1);
+      expect(store.accept).toHaveBeenCalledWith('nHelLt', loaded);
+    });
+
+    it('hands over nothing when the load fails', async () => {
+      await open();
+      loads[0].error({ status: 403, code: 'unknown_error', message: 'x' });
+      harness.detectChanges();
+
+      expect(store.accept).not.toHaveBeenCalled();
+    });
+
+    it('hands over nothing from a load the hostel switch abandoned', async () => {
+      await open();
+      await go('other1');
+
+      loads[0].next(billing());
+      harness.detectChanges();
+      expect(store.accept).not.toHaveBeenCalled();
+
+      const other = billing({ country_code: null });
+      loads[1].next(other);
+      harness.detectChanges();
+      expect(store.accept).toHaveBeenCalledTimes(1);
+      expect(store.accept).toHaveBeenCalledWith('other1', other);
+    });
+
+    it('hands over the summary a plan change answers with', async () => {
+      const el = await openWith(changeable());
+      cancelPlan(el);
+
+      const answered = changeable({ cancelling: true });
+      answer(cancels[0], answered);
+
+      expect(store.accept).toHaveBeenCalledTimes(2);
+      expect(store.accept).toHaveBeenLastCalledWith('nHelLt', answered);
+    });
+
+    it('hands over nothing when a plan change is refused', async () => {
+      const el = await openWith(changeable());
+      cancelPlan(el);
+
+      refuse(cancels[0], { status: 500 });
+
+      expect(store.accept).toHaveBeenCalledTimes(1);
+    });
+
+    it('hands over nothing from a plan change answered after a hostel switch', async () => {
+      const el = await openWith(changeable());
+      cancelPlan(el);
+      await go('other1');
+      const other = changeable();
+      loads[1].next(other);
+      harness.detectChanges();
+
+      const stale = changeable({ cancelling: true });
+      answer(cancels[0], stale);
+
+      expect(store.accept).toHaveBeenCalledTimes(2);
+      expect(store.accept).toHaveBeenLastCalledWith('other1', other);
+      expect(store.accept).not.toHaveBeenCalledWith('nHelLt', stale);
+    });
+
+    it('hands over nothing from a plan change asked on an earlier visit to the same hostel', async () => {
+      const el = await openWith(changeable());
+      cancelPlan(el);
+      await go('other1');
+      await go('nHelLt');
+      const reloaded = changeable({ scheduled: 'pGrowth' });
+      loads[2].next(reloaded);
+      harness.detectChanges();
+
+      const stale = changeable({ cancelling: true });
+      answer(cancels[0], stale);
+
+      expect(store.accept).toHaveBeenCalledTimes(2);
+      expect(store.accept).toHaveBeenLastCalledWith('nHelLt', reloaded);
+      expect(store.accept).not.toHaveBeenCalledWith('nHelLt', stale);
     });
   });
 });

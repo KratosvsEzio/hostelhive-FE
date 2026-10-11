@@ -246,6 +246,36 @@ describe('RoomPicker', () => {
     });
   });
 
+  // A nightly hostel that is not accepting bookings: the rooms stay, the controls go.
+  describe('on a hostel not accepting bookings', () => {
+    function renderUnbookable(offers: RoomOffer[]): void {
+      fixture = TestBed.createComponent(RoomPicker);
+      fixture.componentRef.setInput('offers', offers);
+      fixture.componentRef.setInput('bookable', false);
+      basket = fixture.debugElement.injector.get(BookingBasket);
+      fixture.detectChanges();
+    }
+
+    it('lists every room with its price', () => {
+      renderUnbookable([DORM, PRIVATE]);
+
+      expect(titles()).toEqual(['Deluxe 6 Bed Private Ensuite', 'Deluxe 12 Bed Mixed Dorm']);
+      expect(text()).toContain('36,137.86');
+    });
+
+    it('offers nothing to add, even on rooms open to booking', () => {
+      renderUnbookable([DORM, PRIVATE]);
+
+      expect(addControls().length).toBe(0);
+    });
+
+    it('drops the scarcity chip', () => {
+      renderUnbookable([PRIVATE]);
+
+      expect(text()).not.toContain('common.nLeft');
+    });
+  });
+
   // Scoped to the group: the cheapest bed always undercuts the cheapest private room, so a
   // hostel-wide badge would only ever land on a dorm.
   it('awards the best-price badge within each group', () => {

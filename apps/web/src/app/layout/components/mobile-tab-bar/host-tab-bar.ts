@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { HostPropertyStore } from '@services';
+import { HostBillingStore, HostPropertyStore } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { hostTabBar } from '@layout/host-shell/host-nav';
 
@@ -44,6 +44,13 @@ import { hostTabBar } from '@layout/host-shell/host-nav';
       text-decoration: none;
     }
     .tab.on { color: #f36e21; }
+    .tab-lock {
+      position: absolute;
+      top: -2px;
+      inset-inline-end: -6px;
+      font-size: 10px;
+      line-height: 1;
+    }
   `,
   template: `
     <nav
@@ -53,7 +60,15 @@ import { hostTabBar } from '@layout/host-shell/host-nav';
       <div class="flex px-1 pt-1.5">
         @for (t of tabs(); track t.suffix) {
           <a [routerLink]="base() + t.suffix" routerLinkActive="on" class="tab">
-            <i class="ti text-xl" [class]="t.icon" aria-hidden="true"></i>{{ t.label | transloco }}
+            <span class="relative">
+              <i class="ti text-xl" [class]="t.icon" aria-hidden="true"></i>
+              @if (t.locked) {
+                <i class="ti ti-lock tab-lock" aria-hidden="true"></i>
+              }
+            </span>{{ t.label | transloco }}
+            @if (t.locked) {
+              <span class="sr-only">, {{ 'hostAccess.lockedLabel' | transloco }}</span>
+            }
           </a>
         }
         <a [routerLink]="base() + '/more'" routerLinkActive="on" class="tab">
@@ -69,7 +84,12 @@ export class HostTabBar {
     () => `/host/${this.propertyStore.selected()}`,
   );
 
+  private readonly billingStore = inject(HostBillingStore);
+
   protected readonly tabs = computed(() =>
-    hostTabBar({ monthlyBilled: this.propertyStore.isMonthlyBilled() }),
+    hostTabBar({
+      monthlyBilled: this.propertyStore.isMonthlyBilled(),
+      crmLocked: this.billingStore.crmLocked(),
+    }),
   );
 }

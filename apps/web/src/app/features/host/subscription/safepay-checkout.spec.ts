@@ -14,6 +14,7 @@ import {
   SafepayCheckout,
   isSafepayCheckoutUrl,
   payErrorOutcome,
+  returnInvoiceId,
 } from './safepay-checkout';
 
 const CHECKOUT =
@@ -101,6 +102,26 @@ describe('isSafepayCheckoutUrl', () => {
     expect(isSafepayCheckoutUrl(undefined)).toBe(false);
     expect(isSafepayCheckoutUrl('')).toBe(false);
     expect(isSafepayCheckoutUrl('getsafepay.com/embedded')).toBe(false);
+  });
+});
+
+describe('returnInvoiceId', () => {
+  it('keeps a plain id, trimmed', () => {
+    expect(returnInvoiceId('CQcLFP')).toBe('CQcLFP');
+    expect(returnInvoiceId(' CQcLFP ')).toBe('CQcLFP');
+  });
+
+  it('drops the tracker query Safepay appends after the id', () => {
+    expect(
+      returnInvoiceId('CQcLFP?tracker=track_c4156217-d42a-4772-8b71'),
+    ).toBe('CQcLFP');
+  });
+
+  it('reads a missing or empty id as null', () => {
+    expect(returnInvoiceId(null)).toBeNull();
+    expect(returnInvoiceId('')).toBeNull();
+    expect(returnInvoiceId('  ')).toBeNull();
+    expect(returnInvoiceId('?tracker=track_1')).toBeNull();
   });
 });
 

@@ -292,6 +292,16 @@ export class ListingDetail {
   protected readonly bookingEnabled = computed(() => canBookOnline(this.bookingPeriod()));
 
   /**
+   * Whether a guest can actually book here: the hostel bills nightly and the server says it
+   * accepts bookings. A payload without `accepts_bookings` is treated as not accepting, so
+   * the page never offers a checkout the server would refuse. The price label still follows
+   * {@link bookingEnabled}, because what a hostel charges per does not depend on its plan.
+   */
+  protected readonly canBook = computed(
+    () => this.bookingEnabled() && this.state().data?.acceptsBookings === true,
+  );
+
+  /**
    * The hostel's rooms, from `hostel_detail.room_types`.
    *
    * This used to be a five-room fixture, so every listing in the app offered the same Deluxe

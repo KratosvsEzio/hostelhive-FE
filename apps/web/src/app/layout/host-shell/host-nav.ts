@@ -1,5 +1,37 @@
 import { Permission } from '@core/auth';
 
+/** The sections a plan without CRM cannot open. Profile and Billing are deliberately absent. */
+export const CRM_SECTIONS = ['overview', 'rooms', 'bookings', 'tenants', 'team', 'utilities', 'mess', 'expenses', 'invoices'] as const;
+export type CrmSection = (typeof CRM_SECTIONS)[number];
+
+/** Each CRM section's nav label, as a translation key — the same keys {@link hostNav} uses. */
+export const CRM_SECTION_LABELS: Record<CrmSection, string> = {
+  overview: 'common.overview',
+  rooms: 'common.rooms',
+  bookings: 'common.bookings',
+  tenants: 'common.tenants',
+  team: 'hostNav.teamStaff',
+  utilities: 'common.utilities',
+  mess: 'common.mess',
+  expenses: 'common.expenses',
+  invoices: 'common.invoices',
+};
+
+function firstSegment(pagePath: string): string {
+  return pagePath.split('/').find(Boolean) ?? '';
+}
+
+/** The CRM section a host page belongs to, from `hostPagePath()` output; null for any other page. */
+export function crmSectionOf(pagePath: string): CrmSection | null {
+  const segment = firstSegment(pagePath);
+  return (CRM_SECTIONS as readonly string[]).includes(segment) ? (segment as CrmSection) : null;
+}
+
+/** Whether a host page, from `hostPagePath()` output, is the billing page or one below it. */
+export function isBillingPage(pagePath: string): boolean {
+  return firstSegment(pagePath) === 'subscription';
+}
+
 export interface NavEntry {
   /** A translation key, not display text — resolved by the pipe so it follows a language change. */
   label?: string;
@@ -15,6 +47,8 @@ export interface NavEntry {
   divider?: boolean;
   /** Hidden unless the session holds this flag. Omit for entries everyone may see. */
   permission?: Permission;
+  /** Shown with a lock: the plan lacks CRM. Still a link. */
+  locked?: boolean;
 }
 
 /**
@@ -37,6 +71,7 @@ export function hostNav(
     monthlyBilled: boolean;
     nightlyBilled: boolean;
     can: (permission: Permission) => boolean;
+    crmLocked?: boolean;
   },
 ): NavEntry[] {
   const b = base;
@@ -87,8 +122,12 @@ export function hostNav(
 
   const visible = entries.filter((e) => !e.permission || opts.can(e.permission));
   // Drop a divider that lost everything below it, so the list never ends on a stray rule.
-  return visible.filter(
+  const shown = visible.filter(
     (e, i) => !e.divider || visible.slice(i + 1).some((n) => !n.divider),
+  );
+  if (!opts.crmLocked) return shown;
+  return shown.map((e) =>
+    e.link && crmSectionOf(e.link.slice(b.length)) ? { ...e, locked: true } : e,
   );
 }
 
@@ -97,6 +136,8 @@ export interface TabBarEntry {
   label: string;
   icon: string;
   suffix: string;
+  /** Shown with a lock: the plan lacks CRM. Still a link. */
+  locked?: boolean;
 }
 
 /**
@@ -112,8 +153,8 @@ export interface TabBarEntry {
  * `bookingsGate` lets an unknown hostel through, and whichever page loses the slot is still
  * one tap away under More — see {@link tabBarSuffixes}.
  */
-export function hostTabBar(opts: { monthlyBilled: boolean }): TabBarEntry[] {
-  return [
+export function hostTabBar(opts: { monthlyBilled: boolean; crmLocked?: boolean }): TabBarEntry[] {
+  const bar: TabBarEntry[] = [
     { label: 'common.overview', icon: 'ti-layout-dashboard', suffix: '/overview' },
     { label: 'common.rooms', icon: 'ti-bed', suffix: '/rooms' },
     opts.monthlyBilled
@@ -121,6 +162,8 @@ export function hostTabBar(opts: { monthlyBilled: boolean }): TabBarEntry[] {
       : { label: 'common.bookings', icon: 'ti-calendar', suffix: '/bookings' },
     { label: 'common.invoices', icon: 'ti-file-invoice', suffix: '/invoices' },
   ];
+  if (!opts.crmLocked) return bar;
+  return bar.map((t) => (crmSectionOf(t.suffix) ? { ...t, locked: true } : t));
 }
 
 /**

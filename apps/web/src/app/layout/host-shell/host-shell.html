@@ -32,19 +32,29 @@
       @if (item.divider) {
         <div class="my-2 border-t border-ink-100"></div>
       } @else {
+        @let railLabel = (item.label || '' | transloco) + (item.locked ? ', ' + ('hostAccess.lockedLabel' | transloco) : '');
         <a
           [routerLink]="item.link"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: !!item.exact }"
-          class="nav-link"
+          class="nav-link relative"
           [class.nav-link--rail]="drawer.railVisual()"
-          [hhTooltip]="drawer.railVisual() ? (item.label || '' | transloco) : ''"
+          [hhTooltip]="drawer.railVisual() ? railLabel : ''"
           hhTooltipPlacement="right"
-          [attr.aria-label]="drawer.railVisual() ? (item.label || '' | transloco) : null"
+          [attr.aria-label]="drawer.railVisual() ? railLabel : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
           @if (!drawer.railVisual()) {
             <span class="nav-link__label">{{ item.label || "" | transloco }}</span>
+          }
+          @if (item.locked) {
+            <i
+              class="ti ti-lock text-ink-400"
+              [class]="drawer.railVisual() ? 'absolute end-2 top-1 text-[10px]' : 'ms-auto text-sm'"
+              aria-hidden="true"
+              data-testid="nav-lock"
+            ></i>
+            <span class="sr-only">, {{ 'hostAccess.lockedLabel' | transloco }}</span>
           }
         </a>
       }
@@ -170,11 +180,34 @@
   ></button>
 }
 
+<!-- Pages size themselves with `h-full`, so the outlet sits in a definite-height flex item
+     below the banner rather than being a flex child itself. -->
 <div
-  class="hh-viewport-below-header overflow-hidden transition-[padding-left] duration-200 ease-in-out"
+  class="hh-viewport-below-header flex flex-col overflow-hidden transition-[padding-left] duration-200 ease-in-out"
   [style.paddingLeft]="contentPadding()"
 >
-  <router-outlet />
+  @if (showBanner()) {
+    <!-- `empty:hidden`: with no banner to show, the host would still hold its margin. -->
+    <hh-billing-banner
+      class="mx-5 mt-3 shrink-0 empty:hidden sm:mx-8"
+      [state]="billingStore.bannerInput()"
+      [hostelId]="billingStore.hostelId()"
+      [owner]="ownerId()"
+      (graceElapsed)="billingStore.refresh()"
+    />
+  }
+  <div class="relative min-h-0 flex-1">
+    @if (lock(); as l) {
+      <hh-access-lock
+        [variant]="l.variant"
+        [sectionLabel]="l.sectionLabel"
+        [hostelId]="billingStore.hostelId()"
+        [canManageBilling]="billingStore.canManageBilling()"
+      />
+    } @else {
+      <router-outlet />
+    }
+  </div>
 </div>
 
 <!-- Mobile app: bottom tab navigation replaces the sidebar. -->

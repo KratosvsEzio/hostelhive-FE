@@ -24,6 +24,24 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **Token attach**: `authInterceptor` adds `Authorization: Bearer` and `withCredentials` only to URLs under `API_CONFIG.baseUrl` (`apps/web/src/app/core/interceptors/auth-interceptor.ts`). Any 401 from our API, except the four credential endpoints, calls `UNAUTHORIZED_HANDLER` with the bearer the request carried, and `provideAuth()` clears the session only if that is still the signed-in token (`apps/web/src/app/core/interceptors/error-interceptor.ts`, `apps/web/src/app/core/auth/provide-auth.ts`).
 - **SSR**: there is no token on the server. Every guard returns `true` when `window` is undefined; console and account routes are `RenderMode.Client` (`apps/web/src/app/app.routes.server.ts`).
 - **Sign-out**: best-effort `DELETE /api/user/sign_out`, always clears, and rotates the push registration.
+- **Password reset**: the emailed link lands on `/reset_password?token=…`, which sends `PATCH /api/user/reset_password` without the global toast.
+  - `classifyResetFailure` (`apps/web/src/app/features/auth/reset-password/reset-failure.ts`) sorts the reply. A 404 with a backend message means the link is used or invalid. A 403 means either an expired link or an admin/moderator account; the account panel offers Contact us and Back to login, but no new link.
+  - Those three cases replace the form with a panel and move focus to its heading. A 422, a network failure or anything else shows inline.
+  - Per-attempt state is a `linkedSignal` on the token, so a new link starts over and a late reply for the old one is ignored (`reset-password.ts`).
+- **Confirmation link failures**: `classifyConfirmFailure` (`apps/web/src/app/features/auth/confirm-invitation/confirm-failure.ts`) sorts the `confirm_invitation` reply into four kinds, each with its own card (`ERROR_COPY` in `confirm-invitation.ts`):
+  - a 404 with a backend message → "This link no longer works", with a neutral badge and "just log in" copy;
+  - a 403 whose text says "expired" as a whole word → "This link has expired", which also offers Contact us. There is no resend endpoint, and signing up again fails because the email is taken;
+  - no connection → "Can't reach the server";
+  - anything else → the generic "Confirmation failed".
+  
+  `AccountConfirmedNotSignedIn` is checked before classifying. Focus moves to the error heading after a server or network failure, but not for a missing token.
+- **Forgot password**: `classifyForgotFailure` (`apps/web/src/app/features/auth/forgot-password/forgot-failure.ts`) sorts the `forgot_password` reply.
+  - A 201, or a 404 with backend text, shows the same neutral sent screen ("If an account exists for {{email}}…").
+  - A 422 (a link is already out) shows the sent screen with an "already sent" notice.
+  - A 429 and a network failure each get their own message.
+  - A 500 (today's unknown-email crash) and anything else stay on the form with "couldn't send, check the address".
+  - The sent screen and Resend use `sentEmail`, the address captured when Send started, never the live field.
+- All three classifiers read errors through `apps/web/src/app/core/errors/api-error-text.ts` (`errorStatus`, `serverText`, `isBareNotFound`), never through `err.message`.
 
 ## Reuse, don't rebuild
 - Gate routes with `roleGuard(...HOST_ROLES)` / `permissionGuard('host:Room:index')`, buttons with `*hhHasPermission` — never compare `session.role()` by hand (it is only the primary role).
@@ -37,7 +55,9 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **Post-login destination reads unhydrated roles.** `LeadWall.destination()` runs before `/api/users/current` returns, so with no `returnUrl` staff can land on `/` instead of their console.
 - **`propertyId` is always `null`** — `/users/current` does not expose it (`auth.service.ts`).
 - **`jwt.ts` reads `exp`**, but `docs/api/hostelhive-api.md` documents the payload as `{…, jti, expiry}`. If the backend really sends `expiry`, local expiry never triggers and the server decides (safe, just a wasted request).
-- **`resetPassword` has no `SUPPRESS_ERROR_TOAST`**, so a failure shows both a toast and the inline error (`apps/web/src/app/services/auth-api.ts`).
+- **Only the English text tells the 403s apart**: the two reset 403s, and the expired confirmation 403. If the backend rewords them, users get the generic message. The backend has been asked for machine codes. On both pages a bare Rails `"Not Found"` 404 is classed `unknown`, not a used link (`reset-failure.ts`, `confirm-failure.ts`).
+- **The "no roles" 403 from `issue_token` reaches the page with no text**: the backend nests the `errors` array and `extractServerMessages` drops nested arrays. On the confirmation page it arrives after the account is already activated and the link spent, but it shows the generic card.
+- **The forgot-password page is neutral, but the API is not.** Today the backend answers an unknown email with a 500 (`sessions_controller.rb:87`, confirmed live 2026-10-11) and a known one with 201 or 422. The "already sent" notice therefore only ever appears for a real account. Sign-in ("User not found", shown raw by `lead-wall.ts`, Trello #151) and sign-up ("already registered") reveal accounts too.
 - **Stale layering comments**: `auth.service.ts`, `provide-auth.ts` and `tokens.ts` speak of separate `@hostelhive/auth` / `data-access` libraries; everything now lives in `apps/web/src/app/core/` and `lib/src/data-access/index.ts` is an empty stub.
 - **`docs/HostelHive-Frontend-Build-Plan.md` (Q-AUTH)** plans memory token + httpOnly refresh cookie + 401-refresh-retry. None of that exists (the plan now marks it *Superseded*); see the cookie decision below. A 401 silently signs the user out (RISKS R15).
 - `ConfirmInvitation` runs its one-time POST in `afterNextRender`; `lib/src/ui/lib/dialog-focus/dialog-focus.ts` documents that hook silently never firing in some zoneless renders. Check here first if the link "hangs on verifying".
@@ -45,6 +65,8 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 ## Decisions
 - [Only a 401 ends a session](../decisions/auth-and-session/only-a-401-ends-a-session.md)
 - [A confirmation link asks before it replaces a signed-in session](../decisions/auth-and-session/confirmation-link-asks-before-replacing-a-session.md)
+- [An unrecognised reset failure fails closed](../decisions/auth-and-session/unrecognised-reset-failure-fails-closed.md)
+- [Forgot password answers an unknown email neutrally](../decisions/auth-and-session/forgot-password-answers-unknown-email-neutrally.md)
 - [The JWT lives in a JS-readable first-party cookie, with no refresh token](../decisions/auth-and-session/jwt-in-readable-first-party-cookie.md)
 - [Permission children are the grant, and an empty set is not gated](../decisions/auth-and-session/permission-children-are-the-grant.md)
 - [Web Google sign-in uses the GIS token client](../decisions/auth-and-session/web-google-sign-in-uses-gis-token-client.md)

@@ -1,5 +1,15 @@
 import { Permission } from '@core/auth';
-import { NavEntry, hostNav, hostTabBar, splitNav, tabBarSuffixes } from './host-nav';
+import {
+  CRM_SECTIONS,
+  CRM_SECTION_LABELS,
+  NavEntry,
+  crmSectionOf,
+  hostNav,
+  hostTabBar,
+  isBillingPage,
+  splitNav,
+  tabBarSuffixes,
+} from './host-nav';
 
 const ALL = () => true;
 const NONE = () => false;
@@ -272,5 +282,88 @@ describe('tabBarSuffixes', () => {
 
     expect(entries.some((e) => e.link?.endsWith('/bookings'))).toBe(false);
     expect(tabBarSuffixes({ monthlyBilled: true })).not.toContain('/bookings');
+  });
+});
+
+describe('CRM lock', () => {
+  const lockedNav = (monthlyBilled: boolean, nightlyBilled: boolean) =>
+    hostNav('/host/nHelLt', { monthlyBilled, nightlyBilled, can: ALL, crmLocked: true });
+
+  it('locks exactly the CRM sections, never Profile, Billing or the divider', () => {
+    // Unknown billing cycle, so every section is present at once.
+    const entries = lockedNav(false, false);
+    const locked = entries.filter((e) => e.locked).map((e) => e.link);
+    const expected = CRM_SECTIONS.map((s) => `/host/nHelLt/${s}`);
+
+    expect([...locked].sort()).toEqual([...expected].sort());
+    expect(entries.find((e) => e.label === 'common.hostelProfile')?.locked).toBeFalsy();
+    expect(entries.find((e) => e.label === 'hostNav.billing')?.locked).toBeFalsy();
+    expect(entries.find((e) => e.divider)?.locked).toBeFalsy();
+  });
+
+  // Locked rows stay links: following one is what shows the lock screen.
+  it('keeps every locked entry a link', () => {
+    for (const e of lockedNav(true, false).filter((n) => n.locked)) {
+      expect(e.link).toMatch(/^\/host\/nHelLt\//);
+    }
+  });
+
+  it('locks nothing when the flag is omitted or false', () => {
+    expect(nav().some((e) => 'locked' in e)).toBe(false);
+    expect(
+      hostNav('/host/nHelLt', { monthlyBilled: false, nightlyBilled: false, can: ALL, crmLocked: false }).some(
+        (e) => e.locked,
+      ),
+    ).toBe(false);
+  });
+
+  it('does not change which entries are shown', () => {
+    for (const [monthlyBilled, nightlyBilled] of [
+      [true, false],
+      [false, true],
+      [false, false],
+    ] as const) {
+      expect(labels(lockedNav(monthlyBilled, nightlyBilled))).toEqual(labels(nav({ monthlyBilled, nightlyBilled })));
+    }
+  });
+
+  it('locks every tab-bar slot when CRM is locked, and none otherwise', () => {
+    for (const monthlyBilled of [true, false]) {
+      expect(hostTabBar({ monthlyBilled, crmLocked: true }).every((t) => t.locked === true)).toBe(true);
+      expect(hostTabBar({ monthlyBilled }).some((t) => 'locked' in t)).toBe(false);
+      expect(hostTabBar({ monthlyBilled, crmLocked: false }).some((t) => t.locked)).toBe(false);
+    }
+  });
+
+  it('labels each section with the key its nav entry uses', () => {
+    const entries = lockedNav(false, false);
+    for (const section of CRM_SECTIONS) {
+      const entry = entries.find((e) => e.link === `/host/nHelLt/${section}`);
+      expect({ section, label: CRM_SECTION_LABELS[section] }).toEqual({ section, label: entry?.label });
+    }
+  });
+});
+
+describe('crmSectionOf', () => {
+  it('reads the first segment of a host page path', () => {
+    expect(crmSectionOf('')).toBeNull();
+    expect(crmSectionOf('rooms/edit/x')).toBe('rooms');
+    expect(crmSectionOf('subscription/pay/i')).toBeNull();
+    expect(crmSectionOf('more')).toBeNull();
+    expect(crmSectionOf('profile')).toBeNull();
+  });
+
+  it('knows every CRM section', () => {
+    for (const section of CRM_SECTIONS) expect(crmSectionOf(section)).toBe(section);
+  });
+});
+
+describe('isBillingPage', () => {
+  it('matches the subscription page and anything below it', () => {
+    expect(isBillingPage('')).toBe(false);
+    expect(isBillingPage('rooms/edit/x')).toBe(false);
+    expect(isBillingPage('subscription/pay/i')).toBe(true);
+    expect(isBillingPage('subscription')).toBe(true);
+    expect(isBillingPage('more')).toBe(false);
   });
 });

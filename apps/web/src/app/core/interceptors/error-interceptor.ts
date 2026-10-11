@@ -7,6 +7,7 @@ import {
   serverMessageText,
 } from '@core/errors/api-error-message';
 import { API_CONFIG } from '@core/api-config';
+import { classifyHostAccess } from '@core/host-access/host-access';
 import {
   API_ERROR_NOTIFIER,
   SUPPRESS_ERROR_TOAST,
@@ -48,7 +49,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         if (ours && !isCredentialCheck) {
           onUnauthorized?.(sentBearer(req.headers.get('Authorization')));
         }
-      } else if (!suppressToast && shouldNotify(apiError.status)) {
+      } else if (
+        !suppressToast &&
+        shouldNotify(apiError.status) &&
+        !isHostAccessRead(req.method, req.url, apiError)
+      ) {
         notify?.(apiError);
       }
       return throwError(() => apiError);
@@ -71,11 +76,33 @@ function shouldNotify(status: number): boolean {
   return status >= 500 || status === 0 || (status >= 400 && status !== 401);
 }
 
+/**
+ * A read the host API refused for want of a live plan or of CRM. The console shows that refusal as
+ * a banner or a locked screen, so a toast would repeat it; a refused write still toasts, because
+ * that is the user's own action failing.
+ */
+function isHostAccessRead(method: string, url: string, e: ApiError): boolean {
+  return method.toUpperCase() === 'GET' && classifyHostAccess(url, e) !== null;
+}
+
+/**
+ * The machine code the backend put on the error envelope, e.g. `crm_required` on the host
+ * area's 403 (`{ code, errors, success: false }`). Null when the body carries none.
+ */
+function serverCode(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return null;
+  const code = (body as { code?: unknown }).code;
+  return typeof code === 'string' && code ? code : null;
+}
+
 function normalize(err: HttpErrorResponse, method: string): ApiError {
   const serverMessages = extractServerMessages(err.error);
   return {
     status: err.status,
-    code: err.status === 0 ? 'network_error' : 'unknown_error',
+    // The server's code wins: it is the only thing that tells a "your plan has no CRM" 403
+    // apart from any other refusal. Overwriting it here is why `crm_required` never reached
+    // a screen. Without one, fall back to a code derived from the status.
+    code: serverCode(err.error) ?? (err.status === 0 ? 'network_error' : 'unknown_error'),
     // The server's wording wins over Angular's. `err.message` is
     // "Http failure response for http://…/api/user/sign_in: 401 Unauthorized" — a URL
     // and a status code — and several screens render `err.message` inline, so that

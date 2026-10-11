@@ -20,6 +20,17 @@ export const SAFEPAY_RETURN_KEY = 'hh.billing.return';
 const SAFEPAY_HOST = 'getsafepay.com';
 
 /**
+ * The invoice id from a return page's `?invoice=` value, or null when there is none.
+ *
+ * Safepay appends `?tracker=…` to our return URLs even though they already carry a query, so
+ * the page arrives as `?invoice=CQcLFP?tracker=track_…` and the whole tail reads as part of the
+ * id. Ids never contain `?`, so everything from the first one is Safepay's and is dropped.
+ */
+export function returnInvoiceId(param: string | null): string | null {
+  return param?.split('?', 1)[0].trim() || null;
+}
+
+/**
  * True only for an https page on Safepay's own domain or one of its sub-domains.
  * Anything else in a checkout response is refused rather than navigated to.
  */

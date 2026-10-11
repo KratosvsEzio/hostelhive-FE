@@ -127,15 +127,24 @@
         }
       }
       @case ('error') {
+        @let copy = errorCopy();
         <span
-          class="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full bg-danger/10 text-danger"
+          class="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full"
+          [class]="copy.badge.tone"
         >
-          <i class="ti ti-alert-triangle text-2xl" aria-hidden="true"></i>
+          <i class="ti text-2xl" [class]="copy.badge.icon" aria-hidden="true"></i>
         </span>
-        <h1 class="mt-4 font-display text-xl font-semibold text-ink-900">
-          {{ 'authConfirmInvitation.confirmationFailed' | transloco }}
+        <h1
+          #errorHeading
+          tabindex="-1"
+          aria-describedby="confirm-error-message"
+          class="mt-4 font-display text-xl font-semibold text-ink-900 focus:outline-none"
+        >
+          {{ copy.titleKey | transloco }}
         </h1>
-        <p class="mt-1 text-sm text-ink-500">{{ messageKey() | transloco }}</p>
+        <p id="confirm-error-message" class="mt-1 text-sm text-ink-500">
+          {{ copy.messageKey | transloco }}
+        </p>
         <div class="mt-5 space-y-3">
           <a
             hh-button
@@ -145,6 +154,15 @@
             class="w-full"
             >{{ 'authConfirmInvitation.goToLogIn' | transloco }}</a
           >
+          @if (copy.offersContactUs) {
+            <a
+              hh-button
+              variant="outlined"
+              routerLink="/contact"
+              class="w-full"
+              >{{ 'common.contactUs' | transloco }}</a
+            >
+          }
           <a
             hh-button
             variant="text"

@@ -42,7 +42,48 @@ const KEY = {
   stillWorksLater: 'authConfirmInvitation.linkStillWorksLater',
   logOutAndContinue: 'authConfirmInvitation.logOutAndContinue',
   staySignedIn: 'authConfirmInvitation.staySignedIn',
+  usedTitle: 'authConfirmInvitation.linkInvalidOrUsedTitle',
+  used: 'authConfirmInvitation.linkIsInvalidOrUsed',
+  expiredTitle: 'authConfirmInvitation.linkExpiredTitle',
+  expired: 'authConfirmInvitation.linkHasExpired',
+  contactUs: 'common.contactUs',
 };
+
+/** What the backend says for a used or unknown token, and for an expired one. */
+const USED_TEXT = 'This confirmation link is invalid or has already been used';
+const EXPIRED_TEXT = 'This confirmation link has expired';
+
+/** An error shaped the way the error interceptor rethrows it, with the backend's own messages. */
+function apiError(status: number, serverMessages?: readonly string[]) {
+  return {
+    status,
+    code: 'unknown_error',
+    message: serverMessages?.join(' ') ?? `Http failure response for ${API_URL}: ${status}`,
+    serverMessages,
+    method: 'POST',
+  };
+}
+
+const FAILURES = [
+  {
+    case: 'a used or unknown link (404)',
+    rejection: apiError(404, [USED_TEXT]),
+    serverText: USED_TEXT,
+    title: KEY.usedTitle,
+    message: KEY.used,
+    badge: { tone: 'bg-tint-sky', icon: 'ti-link-off' },
+    contactUs: false,
+  },
+  {
+    case: 'an expired link (403)',
+    rejection: apiError(403, [EXPIRED_TEXT]),
+    serverText: EXPIRED_TEXT,
+    title: KEY.expiredTitle,
+    message: KEY.expired,
+    badge: { tone: 'bg-danger/10', icon: 'ti-link-off' },
+    contactUs: true,
+  },
+];
 
 /** Unicode isolates the page wraps around the signed-in account's label. */
 const FSI = '⁨';
@@ -133,6 +174,73 @@ function button(
   return buttons.find((b) => b.textContent?.includes(label));
 }
 
+/** The labels of every link on the page, in document order. */
+function linkLabels(fixture: ReturnType<typeof render>['fixture']): string[] {
+  return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a')).map(
+    (a) => a.textContent?.trim() ?? '',
+  );
+}
+
+/** The error card's round badge and the icon inside it. */
+function badge(fixture: ReturnType<typeof render>['fixture']) {
+  const span = (fixture.nativeElement as HTMLElement).querySelector('h1')?.previousElementSibling;
+  return { span, icon: span?.querySelector('i') };
+}
+
+/** Puts the fixture in the document, so focus can land on it. */
+function attach(fixture: ReturnType<typeof render>['fixture']): HTMLElement {
+  const root = fixture.nativeElement as HTMLElement;
+  if (!root.isConnected) document.body.appendChild(root);
+  return root;
+}
+
+/** Asserts the error card for one failure: heading, message, badge and links. */
+function expectFailureCard(
+  fixture: ReturnType<typeof render>['fixture'],
+  failure: (typeof FAILURES)[number],
+): void {
+  const shown = text(fixture);
+  expect(shown).toContain(failure.title);
+  expect(shown).toContain(failure.message);
+  expect(shown).not.toContain(KEY.failed);
+  expect(shown).not.toContain(KEY.invalid);
+  expect(shown).not.toContain(KEY.confirmed);
+
+  const { span, icon } = badge(fixture);
+  expect(span?.classList).toContain(failure.badge.tone);
+  expect(icon?.classList).toContain(failure.badge.icon);
+
+  const expected = failure.contactUs
+    ? [KEY.goToLogIn, KEY.contactUs, KEY.backToHome]
+    : [KEY.goToLogIn, KEY.backToHome];
+  expect(linkLabels(fixture)).toEqual(expected);
+  expect(link(fixture, KEY.goToLogIn)?.getAttribute('href')).toContain('/auth?mode=login');
+  if (failure.contactUs) {
+    const contact = link(fixture, KEY.contactUs);
+    // The locale link prefixes the active language, so this renders as "/contact" or "/en/contact".
+    expect(new URL(contact?.href ?? '', 'http://localhost').pathname).toMatch(
+      /^(\/[a-z]{2})?\/contact$/,
+    );
+  }
+}
+
+/** Asserts the warning badge and only Go to log in and Back to home, as for any generic failure. */
+function expectGenericCard(fixture: ReturnType<typeof render>['fixture']): void {
+  const { span, icon } = badge(fixture);
+  expect(span?.classList).toContain('bg-danger/10');
+  expect(icon?.classList).toContain('ti-alert-triangle');
+  expect(linkLabels(fixture)).toEqual([KEY.goToLogIn, KEY.backToHome]);
+}
+
+/** Asserts nothing the server or the HTTP client wrote reached the page. */
+function expectNoServerText(fixture: ReturnType<typeof render>['fixture'], serverText?: string): void {
+  const shown = text(fixture);
+  if (serverText) expect(shown).not.toContain(serverText);
+  expect(shown).not.toContain(API_URL);
+  expect(shown).not.toContain('/api/');
+  expect(shown).not.toContain('Http failure');
+}
+
 /** What the visually hidden live region currently says. */
 function statusText(fixture: ReturnType<typeof render>['fixture']): string {
   const region = (fixture.nativeElement as HTMLElement).querySelector('[role="status"]');
@@ -192,10 +300,12 @@ describe('ConfirmInvitation', () => {
       await settle(fixture);
 
       const shown = text(fixture);
+      expect(shown).toContain(KEY.failed);
       expect(shown).toContain(KEY.invalid);
-      expect(shown).not.toContain(API_URL);
-      expect(shown).not.toContain('/api/');
-      expect(shown).not.toContain('Http failure');
+      expect(shown).not.toContain(KEY.usedTitle);
+      expect(shown).not.toContain(KEY.expiredTitle);
+      expect(link(fixture, KEY.contactUs)).toBeUndefined();
+      expectNoServerText(fixture);
     },
   );
 
@@ -586,6 +696,187 @@ describe('ConfirmInvitation', () => {
       expect(heading).not.toBeNull();
       expect(document.activeElement).toBe(heading);
       expect(document.activeElement?.tagName).not.toBe('BUTTON');
+    });
+  });
+
+  describe('when the server turns the link down', () => {
+    it.each(FAILURES)('says so for $case on first load', async (failure) => {
+      const { fixture, confirm } = render(() => throwError(() => failure.rejection));
+      await settle(fixture);
+
+      expect(confirm).toHaveBeenCalledExactlyOnceWith('abc123');
+      expectFailureCard(fixture, failure);
+      expectNoServerText(fixture, failure.serverText);
+    });
+
+    it.each(FAILURES)('says so for $case after Log out and continue', async (failure) => {
+      const { fixture, signOutThen } = render(
+        () => of(userA),
+        'abc123',
+        () => throwError(() => failure.rejection),
+      );
+      TestBed.inject(SessionStore).setSession(userA, 'a-token');
+      await settle(fixture);
+
+      button(fixture, KEY.logOutAndContinue)?.click();
+      await flush(fixture);
+
+      expect(signOutThen).toHaveBeenCalledExactlyOnceWith('abc123');
+      expectFailureCard(fixture, failure);
+      expectNoServerText(fixture, failure.serverText);
+    });
+
+    it.each([
+      { case: 'a bare Rails "Not Found" 404', serverText: 'Not Found' },
+      { case: 'a 404 without an envelope', status: 404 },
+      {
+        case: 'a 403 that refuses sign-in rather than the link',
+        status: 403,
+        serverText: 'User have no roles and not allowed to sign in',
+      },
+      { case: 'a 500 that mentions expiry', status: 500, serverText: EXPIRED_TEXT },
+    ])('keeps the generic message for $case', async ({ status = 404, serverText }) => {
+      const rejection = apiError(status, serverText ? [serverText] : undefined);
+      const { fixture } = render(() => throwError(() => rejection));
+      await settle(fixture);
+
+      const shown = text(fixture);
+      expect(shown).toContain(KEY.failed);
+      expect(shown).toContain(KEY.invalid);
+      expect(shown).not.toContain(KEY.usedTitle);
+      expect(shown).not.toContain(KEY.expiredTitle);
+      expectGenericCard(fixture);
+      expectNoServerText(fixture, serverText);
+    });
+
+    it.each(FAILURES)(
+      'says so for $case when the session ends by itself while asking',
+      async (failure) => {
+        const { fixture, confirm, signOutThen } = render(() => throwError(() => failure.rejection));
+        attached = attach(fixture);
+        const session = TestBed.inject(SessionStore);
+        session.setSession(userA, 'a-token');
+        await settle(fixture);
+        expect(text(fixture)).toContain(KEY.askTitle);
+
+        session.clear();
+        await flush(fixture);
+        await flush(fixture);
+
+        expect(confirm).toHaveBeenCalledExactlyOnceWith('abc123');
+        expect(signOutThen).not.toHaveBeenCalled();
+        expectFailureCard(fixture, failure);
+        expectNoServerText(fixture, failure.serverText);
+        expect(document.activeElement).toBe(attached.querySelector('h1'));
+      },
+    );
+
+    it('says the account is confirmed, not that the link expired, when signing in fails with an expired 403', async () => {
+      const { fixture } = render(() =>
+        throwError(() => new AccountConfirmedNotSignedIn(apiError(403, [EXPIRED_TEXT]))),
+      );
+      await settle(fixture);
+
+      const shown = text(fixture);
+      expect(shown).toContain(KEY.confirmed);
+      expect(shown).toContain(KEY.logIn);
+      expect(shown).not.toContain(KEY.expiredTitle);
+      expect(shown).not.toContain(KEY.expired);
+      expect(shown).not.toContain(KEY.failed);
+    });
+
+    it('describes the error heading by the message under it', async () => {
+      const { fixture } = render(() => throwError(() => apiError(404, [USED_TEXT])));
+      await settle(fixture);
+
+      const root = fixture.nativeElement as HTMLElement;
+      const id = root.querySelector('h1')?.getAttribute('aria-describedby');
+      expect(id).toBe('confirm-error-message');
+      expect(root.querySelector(`p#${id}`)?.textContent).toContain(KEY.used);
+    });
+
+    it('moves focus to the error heading when a used link fails on first load', async () => {
+      const { fixture } = render(() => throwError(() => apiError(404, [USED_TEXT])));
+      attached = attach(fixture);
+      await settle(fixture);
+      await flush(fixture);
+
+      const heading = attached.querySelector('h1');
+      expect(heading?.textContent).toContain(KEY.usedTitle);
+      expect(document.activeElement).toBe(heading);
+    });
+
+    it('does not pull focus back to the error heading on a later re-render', async () => {
+      const { fixture } = render(() => throwError(() => apiError(404, [USED_TEXT])));
+      const transloco = TestBed.inject(TranslocoService);
+      // As the app is configured: a language switch re-renders every translated string.
+      transloco.config.reRenderOnLangChange = true;
+      attached = attach(fixture);
+      await settle(fixture);
+      await flush(fixture);
+      expect(document.activeElement).toBe(attached.querySelector('h1'));
+
+      const goToLogIn = link(fixture, KEY.goToLogIn);
+      goToLogIn?.focus();
+      expect(document.activeElement).toBe(goToLogIn);
+
+      transloco.setTranslation(
+        { authConfirmInvitation: { linkInvalidOrUsedTitle: 'Dieser Link funktioniert nicht mehr' } },
+        'de',
+      );
+      transloco.setActiveLang('de');
+      await flush(fixture);
+      await flush(fixture);
+
+      // The heading's text changed, so the page did render again.
+      expect(attached.querySelector('h1')?.textContent).toContain('Dieser Link funktioniert nicht mehr');
+      expect(document.activeElement).toBe(goToLogIn);
+    });
+
+    it('moves focus from the question to the error heading when Continue hits an expired link', async () => {
+      const { fixture } = render(
+        () => of(userA),
+        'abc123',
+        () => throwError(() => apiError(403, [EXPIRED_TEXT])),
+      );
+      attached = attach(fixture);
+      TestBed.inject(SessionStore).setSession(userA, 'a-token');
+      await settle(fixture);
+      await flush(fixture);
+
+      button(fixture, KEY.logOutAndContinue)?.click();
+      await flush(fixture);
+
+      const heading = attached.querySelector('h1');
+      expect(heading?.textContent).toContain(KEY.expiredTitle);
+      expect(document.activeElement).toBe(heading);
+    });
+
+    it('moves focus to the error heading when the server cannot be reached', async () => {
+      const { fixture } = render(() => throwError(() => apiError(0)));
+      attached = attach(fixture);
+      await settle(fixture);
+      await flush(fixture);
+
+      const heading = attached.querySelector('h1');
+      expect(text(fixture)).toContain(KEY.cannotReach);
+      expect(text(fixture)).toContain(KEY.failed);
+      expectGenericCard(fixture);
+      expect(document.activeElement).toBe(heading);
+    });
+
+    it('leaves focus alone when the link has no token', async () => {
+      const { fixture } = render(() => of(userA), null);
+      attached = attach(fixture);
+      await settle(fixture);
+      await flush(fixture);
+
+      const heading = attached.querySelector('h1');
+      expect(text(fixture)).toContain(KEY.missingToken);
+      expect(text(fixture)).toContain(KEY.failed);
+      expectGenericCard(fixture);
+      expect(heading).not.toBeNull();
+      expect(document.activeElement).not.toBe(heading);
     });
   });
 });

@@ -45,6 +45,13 @@ Backend conventions the mappers rely on:
 - Inject `ApiClient`; never build `baseUrl + path` yourself or call `fetch` (except deliberately for third parties, as `apps/web/src/app/core/geo/geo-preference.ts` does to keep the bearer token off them).
 - Use `pageParams` / `ApiPagination` for paging; `isSubscriptionError` (`apps/web/src/app/util/subscription-error.ts`) and `isNetworkError` (`apps/web/src/app/util/network-error.ts`) for classifying failures.
 - Show success/info with `NotificationService`; do not add per-call error toasts, the interceptor already raises one.
+- To classify a failure for the screen, read the `ApiError` with `apps/web/src/app/core/errors/api-error-text.ts`, never by echoing `message`:
+  - `errorStatus` gives the numeric status, or `null`;
+  - `serverText` gives the joined, normalised `serverMessages`;
+  - `isBareNotFound` detects Rails' own "Not Found".
+  
+  `reset-failure.ts` and `confirm-failure.ts` are the examples.
+- To keep the toast off one call, pass `inlineErrors()` as its `HttpContext`. `ApiClient.post`, `patch` and `delete` accept an optional context (`patch` since Trello #148, `delete` since #125); `put` and `get` do not yet.
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps
