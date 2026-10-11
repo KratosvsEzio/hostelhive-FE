@@ -2,8 +2,9 @@
  * Reads what a failed request said, for classifiers that pick a translated message.
  *
  * Works on anything a request can reject with: the `ApiError` the error interceptor rethrows,
- * or a stray value that is not an API error at all. `message` is never read — it can carry the
- * API URL or a developer string — so only the status and the server's own messages count.
+ * or a stray value that is not an API error at all. `message` is never read — on an `ApiError`
+ * it is a developer diagnostic, and on anything else it can be a developer string — so only the
+ * status and the server's own messages count.
  */
 
 /** What Rails' own 404 handlers send (`{"status":404,"error":"Not Found"}`), normalised. */

@@ -290,7 +290,7 @@ export function apiError(status: number, serverMessages: readonly string[] = [],
   return {
     status,
     code: status === 0 ? 'network_error' : 'unknown_error',
-    message: `Http failure response: ${status}`,
+    message: `${method} /api/test → ${status}`,
     serverMessages,
     method,
   };
