@@ -73,7 +73,7 @@ interface SearchMapInternals {
 interface ListQuery {
   near?: { lat: number; lng: number };
   bounds?: unknown;
-  offerIds?: unknown[];
+  amenities?: string[];
 }
 
 /** A page for the router to land on; the search component under test is mounted directly. */
@@ -94,8 +94,6 @@ interface SearchMapConfig {
   acquire?: ReturnType<typeof vi.fn>;
   seo?: { apply: ReturnType<typeof vi.fn>; setJsonLd: ReturnType<typeof vi.fn> };
   favorites?: object;
-  /** The amenity catalogue (`OffersApi.categories`); empty by default. */
-  offerCategories?: { offers: { id: string; name: string; slug: string }[] }[];
 }
 
 const guestFavorites = {
@@ -125,7 +123,7 @@ function configureSearchMap(config: SearchMapConfig = {}): void {
         provide: ListingsApi,
         useValue: { list: config.list ?? (() => of<Paginated<Listing>>(ONE_PAGE)) },
       },
-      { provide: OffersApi, useValue: { categories: () => of(config.offerCategories ?? []) } },
+      { provide: OffersApi, useValue: { categories: () => of([]) } },
       {
         provide: CountryBounds,
         useValue: { forVisitor: config.forVisitor ?? (() => Promise.resolve(null)) },
@@ -749,33 +747,22 @@ describe('SearchMap on a landing page', () => {
 });
 
 /**
- * The amenity filter's ids.
+ * The amenity filter.
  *
- * Offer ids are obfuscated strings (azeem-hamza/hostelhive#32). The filter used to coerce them
- * with `+o.id`, which turns "bCGPAU" into NaN, and every amenity search sent
- * `f[offers.id][]=NaN`.
+ * The URL carries amenity slugs, and the search filters by slug (`f[offers.slug][]`), so they
+ * go to the query unchanged. There is no id lookup any more: it used to coerce the obfuscated
+ * offer ids with `+o.id` (NaN), and the index cannot match an exact-case id anyway.
  */
 describe('SearchMap amenity filter', () => {
   afterEach(cleanupSearchMap);
 
-  it('sends the offer ids as the strings the catalogue gave', async () => {
+  it('passes the amenity slugs from the URL straight to the search', async () => {
     const list = listSpy();
-    configureSearchMap({
-      platform: 'browser',
-      list,
-      offerCategories: [
-        {
-          offers: [
-            { id: 'bCGPAU', name: 'Ceiling Fan', slug: 'ceiling-fan' },
-            { id: 'UcYqvk', name: 'Heater', slug: 'heater' },
-          ],
-        },
-      ],
-    });
+    configureSearchMap({ platform: 'browser', list });
     await mount('/en/search?everywhere=1&amenities=ceiling-fan,heater');
     await firstSearch(list);
 
-    expect(lastQuery(list).offerIds).toEqual(['bCGPAU', 'UcYqvk']);
+    expect(lastQuery(list).amenities).toEqual(['ceiling-fan', 'heater']);
   });
 });
 

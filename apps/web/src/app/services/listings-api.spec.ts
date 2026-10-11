@@ -98,6 +98,45 @@ describe('ListingsApi budget filter', () => {
  * not have, and a term on a missing field matches nothing — the request still returns 200,
  * just with zero hostels, which is indistinguishable from an honest "nothing matched".
  */
+/**
+ * The amenity filter's query key.
+ *
+ * By slug. The hostel index stores `offers.id` as lowercased text, so filtering by the
+ * obfuscated id returned 0 hostels for every offer (live, 2026-10-11), while
+ * `f[offers.slug][]` matched; the BE dev confirmed slug is the supported key.
+ */
+describe('ListingsApi amenity filter', () => {
+  let api: ApiClientStub;
+
+  function setUp(): ListingsApi {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    api = new ApiClientStub();
+    TestBed.configureTestingModule({
+      providers: [{ provide: ApiClient, useValue: api }, CurrencyPreference],
+    });
+    return TestBed.inject(ListingsApi);
+  }
+
+  it('sends the chosen amenities as slugs', () => {
+    setUp().list({ amenities: ['ceiling-fan', 'heater'] }).subscribe();
+
+    expect(api.lastParams['f[offers.slug][]']).toEqual(['ceiling-fan', 'heater']);
+  });
+
+  it('never filters by offer id, which the index cannot match', () => {
+    setUp().list({ amenities: ['ceiling-fan'] }).subscribe();
+
+    expect(api.lastParams['f[offers.id][]']).toBeUndefined();
+  });
+
+  it('omits the filter when no amenity is chosen', () => {
+    setUp().list({}).subscribe();
+
+    expect(api.lastParams['f[offers.slug][]']).toBeUndefined();
+  });
+});
+
 describe('ListingsApi room type filter', () => {
   let api: ApiClientStub;
 
