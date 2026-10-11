@@ -13,7 +13,9 @@ import { HostelsApi, ListingDetailApi } from '@services';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 import { StudentApi } from '@services/student-api';
 import { FavoritesStore } from '@util/favorites-store';
+import { By } from '@angular/platform-browser';
 import { BookingApi } from '../booking/booking-api';
+import { RoomPicker } from '../booking/room-picker';
 import { LISTING_ROUTES } from '../listing.routes';
 import { ListingDetail } from './listing-detail';
 
@@ -200,5 +202,120 @@ describe('ListingDetail head', () => {
       expect(attr('meta[property="og:title"]', 'content')).not.toBe(LOADING_TITLE);
       expect(getBySlug).toHaveBeenCalledTimes(1);
     });
+  });
+
+  describe('canBook', () => {
+    const canBook = () => (page as unknown as { canBook(): boolean }).canBook();
+
+    // The accommodation type contradicts the billing frequency on purpose, so the cycle can only come from the latter.
+    it.each([
+      { billingFrequency: 'night', accommodationType: 'boys', acceptsBookings: true, expected: true },
+      { billingFrequency: 'night', accommodationType: 'boys', acceptsBookings: false, expected: false },
+      { billingFrequency: 'night', accommodationType: 'boys', acceptsBookings: undefined, expected: false },
+      { billingFrequency: 'month', accommodationType: 'backpacker', acceptsBookings: true, expected: false },
+    ])(
+      'is $expected for $billingFrequency billing when acceptsBookings is $acceptsBookings',
+      ({ expected, ...overrides }) => {
+        load({ ...LISTING, ...overrides } as unknown as ListingDetailModel);
+
+        expect(canBook()).toBe(expected);
+      },
+    );
+
+    it('is false before the listing has loaded', () => {
+      expect(canBook()).toBe(false);
+    });
+  });
+});
+
+describe('ListingDetail booking wiring', () => {
+  const FULL = {
+    ...LISTING,
+    billingFrequency: 'night',
+    currency: 'PKR',
+    address: '12 Canal Road',
+    photoCount: 0,
+    photos: [],
+    amenityCount: 0,
+    nearby: [],
+    sharing: [],
+    rooms: [],
+  };
+
+  let harness: RouterTestingHarness;
+
+  async function open(acceptsBookings: boolean | undefined, overrides: object = {}): Promise<void> {
+    const listing = { ...FULL, acceptsBookings, ...overrides } as unknown as ListingDetailModel;
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: 'en/hostel', children: LISTING_ROUTES }]),
+        provideI18nTesting(),
+        { provide: LocaleStore, useValue: { ready: signal(true), active: signal('en') } },
+        { provide: ListingDetailApi, useValue: { getBySlug: () => of(listing) } },
+        { provide: StudentApi, useValue: { getReviews: () => of([]) } },
+        { provide: HostelsApi, useValue: {} },
+        { provide: FavoritesStore, useValue: { isFavorite: () => false } },
+        { provide: BookingApi, useValue: { setCatalogue: vi.fn() } },
+        { provide: MobileApp, useValue: { isMobile: signal(false) } },
+        { provide: GoogleAnalyticsService, useValue: { track: vi.fn() } },
+      ],
+    });
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(LISTING_URL, ListingDetail);
+    harness.detectChanges();
+    TestBed.tick();
+    harness.detectChanges();
+  }
+
+  const el = () => harness.routeNativeElement as HTMLElement;
+  const picker = () => el().querySelector('hh-room-picker');
+  const rail = () => el().querySelector('hh-booking-rail');
+  const pickerBookable = () =>
+    harness.fixture.debugElement.query(By.directive(RoomPicker)).componentInstance.bookable();
+
+  it('shows the booking rail and passes bookable=true to the room picker when the hostel accepts bookings', async () => {
+    await open(true);
+
+    expect(rail()).not.toBeNull();
+    expect(picker()).not.toBeNull();
+    expect(pickerBookable()).toBe(true);
+  });
+
+  it('hides the booking rail and passes bookable=false to the room picker when the hostel does not accept bookings', async () => {
+    await open(false);
+
+    expect(rail()).toBeNull();
+    expect(picker()).not.toBeNull();
+    expect(pickerBookable()).toBe(false);
+  });
+
+  it('hides the booking rail when the payload does not say whether bookings are accepted', async () => {
+    await open(undefined);
+
+    expect(rail()).toBeNull();
+    expect(pickerBookable()).toBe(false);
+  });
+
+  it('keeps the per-night label for a nightly hostel that does not accept bookings', async () => {
+    await open(false);
+
+    expect(el().textContent).toContain('listing.perNight');
+    expect(el().textContent).not.toContain('listing.month');
+  });
+
+  it('opens the booking summary only when the hostel accepts bookings', async () => {
+    await open(true);
+    const page = harness.routeDebugElement?.componentInstance as { summaryOpen: { set(v: boolean): void } };
+    page.summaryOpen.set(true);
+    harness.detectChanges();
+    expect(el().querySelector('hh-booking-summary')).not.toBeNull();
+  });
+
+  it('never renders the booking summary when the hostel does not accept bookings, even if it was opened', async () => {
+    await open(false);
+    const page = harness.routeDebugElement?.componentInstance as { summaryOpen: { set(v: boolean): void } };
+    page.summaryOpen.set(true);
+    harness.detectChanges();
+    expect(el().querySelector('hh-booking-summary')).toBeNull();
   });
 });

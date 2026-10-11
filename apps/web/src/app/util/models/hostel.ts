@@ -184,6 +184,13 @@ export interface HostelDetail {
    * accommodation type instead.
    */
   billing_frequency?: string | null;
+  /** Whether the hostel's plan includes the CRM. */
+  has_crm?: boolean | null;
+  /**
+   * Whether a guest can book this hostel online right now. The server folds the plan in, so
+   * a hostel whose plan has lapsed or lacks the CRM reads false even if it bills nightly.
+   */
+  accepts_bookings?: boolean | null;
   /**
    * Promoted listing. Declared here, but **`/public/hostel_detail/:id` does not send it** —
    * checked on the wire, that payload carries no key matching /feature/i, while the index

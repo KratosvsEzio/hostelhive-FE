@@ -1,8 +1,8 @@
 /**
  * Normalised API error produced by the error interceptor — the FE-facing contract.
- * This backend sends neither a machine `code` nor a structured `details` map: `code` is
- * derived from the HTTP status, and the only human-readable text lives in `serverMessages`,
- * populated solely when the response body parsed as the Rails error envelope.
+ * The backend sends a machine code only on some refusals (e.g. `crm_required`); `code` carries
+ * it when present. There is no structured `details` map, and the only human-readable text lives
+ * in `serverMessages`, populated solely when the response body parsed as the Rails error envelope.
  */
 export interface ApiError {
   /** HTTP status (0 for network/timeout failures). */

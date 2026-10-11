@@ -40,4 +40,6 @@ export interface ListingDetail extends Listing {
    * the same five rooms on every listing in the app.
    */
   roomOffers: RoomOffer[];
+  /** Whether the hostel takes online bookings; undefined when the payload does not say. */
+  acceptsBookings?: boolean;
 }

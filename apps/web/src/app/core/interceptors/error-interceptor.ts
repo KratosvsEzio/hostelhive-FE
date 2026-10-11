@@ -7,6 +7,7 @@ import {
   serverMessageText,
 } from '@core/errors/api-error-message';
 import { API_CONFIG } from '@core/api-config';
+import { classifyHostAccess } from '@core/host-access/host-access';
 import {
   API_ERROR_NOTIFIER,
   SUPPRESS_ERROR_TOAST,
@@ -48,7 +49,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         if (ours && !isCredentialCheck) {
           onUnauthorized?.(sentBearer(req.headers.get('Authorization')));
         }
-      } else if (!suppressToast && shouldNotify(apiError.status)) {
+      } else if (
+        !suppressToast &&
+        shouldNotify(apiError.status) &&
+        !isHostAccessRead(req.method, req.url, apiError)
+      ) {
         notify?.(apiError);
       }
       return throwError(() => apiError);
@@ -69,6 +74,15 @@ function sentBearer(header: string | null): string | null {
 /** Every failure except an unset status and 401 warrants a notification. */
 function shouldNotify(status: number): boolean {
   return status >= 500 || status === 0 || (status >= 400 && status !== 401);
+}
+
+/**
+ * A read the host API refused for want of a live plan or of CRM. The console shows that refusal as
+ * a banner or a locked screen, so a toast would repeat it; a refused write still toasts, because
+ * that is the user's own action failing.
+ */
+function isHostAccessRead(method: string, url: string, e: ApiError): boolean {
+  return method.toUpperCase() === 'GET' && classifyHostAccess(url, e) !== null;
 }
 
 /**

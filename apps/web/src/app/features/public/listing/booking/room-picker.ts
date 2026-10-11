@@ -72,6 +72,8 @@ export class RoomPicker {
   /** Monthly or nightly — a hostel-level property, so one value for every row. */
   readonly period = input<PricingPeriod>('nightly');
   readonly currency = input<string | null | undefined>('PKR');
+  /** False when the hostel takes no online bookings at all; every row then drops its controls. */
+  readonly bookable = input(true);
 
   protected readonly basket = inject(BookingBasket);
 
@@ -160,8 +162,9 @@ export class RoomPicker {
   /**
    * Whether this particular room can go in a basket.
    *
-   * Per room, not per hostel, because the two reasons it can fail are different in kind:
-   * the hostel may have no checkout at all (a monthly tenancy), or the host may have left
+   * Per room, not per hostel, because the reasons it can fail are different in kind:
+   * the hostel may have no checkout at all (a monthly tenancy, or one not accepting bookings,
+   * see {@link bookable}), or the host may have left
    * this one room closed to online booking while its neighbours are open. Both end in the
    * same place — the card shows the room and its price and simply offers no control.
    *
@@ -169,7 +172,7 @@ export class RoomPicker {
    * hurry, and there is nothing to hurry toward on a room that cannot be reserved.
    */
   protected canAdd(offer: RoomOffer): boolean {
-    return this.nightly() && offer.bookable;
+    return this.bookable() && this.nightly() && offer.bookable;
   }
 
   /** "Private" / "Shared" — what the group headings used to say, per card. */

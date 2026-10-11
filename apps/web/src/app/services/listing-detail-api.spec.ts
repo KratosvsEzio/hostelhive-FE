@@ -68,6 +68,25 @@ describe('ListingDetailApi — public phones', () => {
   });
 });
 
+// Absent stays undefined rather than false, so the page can tell "not sent" from "refused".
+describe('ListingDetailApi — accepts bookings', () => {
+  const accepts = (extra: Record<string, unknown>) =>
+    (listing([DORM], extra) as { acceptsBookings?: boolean }).acceptsBookings;
+
+  it('carries true', () => {
+    expect(accepts({ accepts_bookings: true })).toBe(true);
+  });
+
+  it('carries false', () => {
+    expect(accepts({ accepts_bookings: false })).toBe(false);
+  });
+
+  it('leaves it undefined when the payload does not say', () => {
+    expect(accepts({})).toBeUndefined();
+    expect(accepts({ accepts_bookings: null })).toBeUndefined();
+  });
+});
+
 describe('ListingDetailApi — From price', () => {
   it('takes the cheapest room when nothing is discounted', () => {
     expect(listing([DORM, KING]).priceFrom).toBe(2000);
