@@ -31,7 +31,7 @@ const INACTIVE_MESSAGE = /need to subscribe/i;
  */
 export function classifyHostAccess(
   url: string,
-  err: Pick<ApiError, 'status' | 'serverCode' | 'serverMessages'>,
+  err: Pick<ApiError, 'status' | 'serverMessages'> & { code?: string },
 ): HostAccessRefusal | null {
   const hostelId = HOST_HOSTEL_URL.exec(url)?.[1];
   if (!hostelId) return null;
@@ -41,7 +41,7 @@ export function classifyHostAccess(
   }
   if (
     err.status === 403 &&
-    (err.serverCode === CRM_REQUIRED_CODE || messages.includes(CRM_REQUIRED_MESSAGE))
+    (err.code === CRM_REQUIRED_CODE || messages.includes(CRM_REQUIRED_MESSAGE))
   ) {
     return { hostelId, kind: 'crmRequired' };
   }

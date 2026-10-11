@@ -24,6 +24,10 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **Token attach**: `authInterceptor` adds `Authorization: Bearer` and `withCredentials` only to URLs under `API_CONFIG.baseUrl` (`apps/web/src/app/core/interceptors/auth-interceptor.ts`). Any 401 from our API, except the four credential endpoints, calls `UNAUTHORIZED_HANDLER` with the bearer the request carried, and `provideAuth()` clears the session only if that is still the signed-in token (`apps/web/src/app/core/interceptors/error-interceptor.ts`, `apps/web/src/app/core/auth/provide-auth.ts`).
 - **SSR**: there is no token on the server. Every guard returns `true` when `window` is undefined; console and account routes are `RenderMode.Client` (`apps/web/src/app/app.routes.server.ts`).
 - **Sign-out**: best-effort `DELETE /api/user/sign_out`, always clears, and rotates the push registration.
+- **Password reset**: the emailed link lands on `/reset_password?token=…`, which sends `PATCH /api/user/reset_password` without the global toast.
+  - `classifyResetFailure` (`apps/web/src/app/features/auth/reset-password/reset-failure.ts`) sorts the reply. A 404 with a backend message means the link is used or invalid. A 403 means either an expired link or an admin/moderator account; the account panel offers Contact us and Back to login, but no new link.
+  - Those three cases replace the form with a panel and move focus to its heading. A 422, a network failure or anything else shows inline.
+  - Per-attempt state is a `linkedSignal` on the token, so a new link starts over and a late reply for the old one is ignored (`reset-password.ts`).
 
 ## Reuse, don't rebuild
 - Gate routes with `roleGuard(...HOST_ROLES)` / `permissionGuard('host:Room:index')`, buttons with `*hhHasPermission` — never compare `session.role()` by hand (it is only the primary role).
@@ -37,7 +41,8 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **Post-login destination reads unhydrated roles.** `LeadWall.destination()` runs before `/api/users/current` returns, so with no `returnUrl` staff can land on `/` instead of their console.
 - **`propertyId` is always `null`** — `/users/current` does not expose it (`auth.service.ts`).
 - **`jwt.ts` reads `exp`**, but `docs/api/hostelhive-api.md` documents the payload as `{…, jti, expiry}`. If the backend really sends `expiry`, local expiry never triggers and the server decides (safe, just a wasted request).
-- **`resetPassword` has no `SUPPRESS_ERROR_TOAST`**, so a failure shows both a toast and the inline error (`apps/web/src/app/services/auth-api.ts`).
+- **Only the English text tells the two reset 403s apart**: an exact match first, then keywords. If the backend rewords both messages, users get the generic inline message. The backend has been asked for machine codes. A bare Rails `"Not Found"` 404 is classed `unknown`, not a used link (`reset-failure.ts`).
+- **Forgot-password still shows raw server text** (`forgot-password.ts`, Trello #150). That includes the 422 "Otp already has been shared…" on a repeat request.
 - **Stale layering comments**: `auth.service.ts`, `provide-auth.ts` and `tokens.ts` speak of separate `@hostelhive/auth` / `data-access` libraries; everything now lives in `apps/web/src/app/core/` and `lib/src/data-access/index.ts` is an empty stub.
 - **`docs/HostelHive-Frontend-Build-Plan.md` (Q-AUTH)** plans memory token + httpOnly refresh cookie + 401-refresh-retry. None of that exists (the plan now marks it *Superseded*); see the cookie decision below. A 401 silently signs the user out (RISKS R15).
 - `ConfirmInvitation` runs its one-time POST in `afterNextRender`; `lib/src/ui/lib/dialog-focus/dialog-focus.ts` documents that hook silently never firing in some zoneless renders. Check here first if the link "hangs on verifying".
@@ -45,6 +50,7 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 ## Decisions
 - [Only a 401 ends a session](../decisions/auth-and-session/only-a-401-ends-a-session.md)
 - [A confirmation link asks before it replaces a signed-in session](../decisions/auth-and-session/confirmation-link-asks-before-replacing-a-session.md)
+- [An unrecognised reset failure fails closed](../decisions/auth-and-session/unrecognised-reset-failure-fails-closed.md)
 - [The JWT lives in a JS-readable first-party cookie, with no refresh token](../decisions/auth-and-session/jwt-in-readable-first-party-cookie.md)
 - [Permission children are the grant, and an empty set is not gated](../decisions/auth-and-session/permission-children-are-the-grant.md)
 - [Web Google sign-in uses the GIS token client](../decisions/auth-and-session/web-google-sign-in-uses-gis-token-client.md)

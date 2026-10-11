@@ -42,8 +42,9 @@ export class ApiClient {
   put<T>(path: string, body: unknown): Observable<T> {
     return this.http.put<T>(this.base + path, body);
   }
-  patch<T>(path: string, body: unknown): Observable<T> {
-    return this.http.patch<T>(this.base + path, body);
+  patch<T>(path: string, body: unknown, context?: HttpContext): Observable<T> {
+    if (!context) return this.http.patch<T>(this.base + path, body);
+    return this.http.patch<T>(this.base + path, body, { context });
   }
   delete<T>(path: string, body?: unknown, context?: HttpContext): Observable<T> {
     if (!context) {

@@ -138,6 +138,20 @@ describe('PaymentSuccess', () => {
     expect(fetch).toHaveBeenCalledWith('inv1');
   });
 
+  it.each([
+    ['as Safepay sends it', '?invoice=inv1?tracker=track_1'],
+    ['once the router has encoded it', '?invoice=inv1%3Ftracker%3Dtrack_1'],
+  ])(
+    'drops the tracker Safepay appends to the return link, %s',
+    async (_, query) => {
+      await open(`/billing/payment/success${query}`);
+      settle(0);
+
+      expect(fetch).toHaveBeenCalledWith('inv1');
+      expect(checkout.billingCommands).toHaveBeenCalledWith('inv1');
+    },
+  );
+
   describe('while the invoice is open', () => {
     it('confirms, shows the invoice once loaded and polls every 2.5 s', async () => {
       const el = await open('/billing/payment/success?invoice=inv1');

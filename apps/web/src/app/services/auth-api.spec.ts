@@ -94,3 +94,35 @@ describe('AuthApi.signOut — the error toast', () => {
     req.flush({ success: true });
   });
 });
+
+describe('AuthApi.resetPassword — the error toast', () => {
+  const RESET = `${BASE}/api/user/reset_password`;
+  let api: AuthApi;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: BASE } },
+        { provide: GeoPreference, useValue: { refresh: vi.fn() } },
+      ],
+    });
+    api = TestBed.inject(AuthApi);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('suppresses the global error toast, because the page explains every failure itself', () => {
+    api.resetPassword({ token: 'abc123', new_password: 'Secret123' }).subscribe();
+
+    const req = httpMock.expectOne(RESET);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ token: 'abc123', new_password: 'Secret123' });
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+    req.flush({ success: true });
+  });
+});

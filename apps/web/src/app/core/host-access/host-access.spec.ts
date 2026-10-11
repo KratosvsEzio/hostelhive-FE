@@ -35,7 +35,7 @@ describe('classifyHostAccess', () => {
     expect(
       classifyHostAccess(`${hostel}/bookings?page=2`, {
         status: 403,
-        serverCode: CRM_REQUIRED_CODE,
+        code: CRM_REQUIRED_CODE,
         serverMessages: [CRM_REQUIRED_MESSAGE],
       }),
     ).toEqual({ hostelId: 'Xk9pQ', kind: 'crmRequired' });
@@ -52,7 +52,7 @@ describe('classifyHostAccess', () => {
 
   it('reads the code alone when the 403 body has no messages', () => {
     expect(
-      classifyHostAccess(hostel, { status: 403, serverCode: CRM_REQUIRED_CODE }),
+      classifyHostAccess(hostel, { status: 403, code: CRM_REQUIRED_CODE }),
     ).toEqual({ hostelId: 'Xk9pQ', kind: 'crmRequired' });
   });
 
@@ -73,7 +73,7 @@ describe('classifyHostAccess', () => {
 
   it('ignores the CRM code on a status other than 403', () => {
     expect(
-      classifyHostAccess(hostel, { status: 400, serverCode: CRM_REQUIRED_CODE }),
+      classifyHostAccess(hostel, { status: 400, code: CRM_REQUIRED_CODE }),
     ).toBeNull();
   });
 

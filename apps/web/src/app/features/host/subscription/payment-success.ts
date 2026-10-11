@@ -15,7 +15,7 @@ import { latestAttemptNotice } from '@app/shared/billing/billing-labels';
 import { PollTick, pollInvoice } from './invoice-poll';
 import { PaymentReturnRetry } from './payment-return-retry';
 import { PaymentReturnStates, ReturnView } from './payment-return-states';
-import { SafepayCheckout } from './safepay-checkout';
+import { SafepayCheckout, returnInvoiceId } from './safepay-checkout';
 
 /** The latest attempt on this invoice is a Safepay payment that failed. */
 function lastSafepayFailed(invoice: BillingInvoice): boolean {
@@ -78,9 +78,9 @@ export class PaymentSuccess {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly retry = inject(PaymentReturnRetry);
 
-  private readonly invoiceId =
-    inject(ActivatedRoute).snapshot.queryParamMap.get('invoice')?.trim() ||
-    null;
+  private readonly invoiceId = returnInvoiceId(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('invoice'),
+  );
 
   // Read before a settled invoice clears the stash it is derived from.
   protected readonly billingLink = this.checkout.billingCommands(

@@ -12,7 +12,7 @@ import type { ApiError, BillingInvoice } from '@hostelhive/data-access';
 import { BillingApi } from '@services';
 import { PaymentReturnRetry } from './payment-return-retry';
 import { PaymentReturnStates, ReturnView } from './payment-return-states';
-import { SafepayCheckout } from './safepay-checkout';
+import { SafepayCheckout, returnInvoiceId } from './safepay-checkout';
 
 function viewFor(invoice: BillingInvoice): ReturnView {
   switch (invoice.status?.slug) {
@@ -55,9 +55,9 @@ export class PaymentCancelled {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly retry = inject(PaymentReturnRetry);
 
-  private readonly invoiceId =
-    inject(ActivatedRoute).snapshot.queryParamMap.get('invoice')?.trim() ||
-    null;
+  private readonly invoiceId = returnInvoiceId(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('invoice'),
+  );
 
   // Read before a settled invoice clears the stash it is derived from.
   protected readonly billingLink = this.checkout.billingCommands(

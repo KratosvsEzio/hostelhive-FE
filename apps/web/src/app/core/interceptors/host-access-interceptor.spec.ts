@@ -91,7 +91,7 @@ describe('hostAccessInterceptor', () => {
     const err = send('GET', ROOMS, NO_CRM, 403);
     expect(events.observations().map((o) => o.kind)).toEqual(['crmRequired']);
     expect(notify).not.toHaveBeenCalled();
-    expect(err?.serverCode).toBe('crm_required');
+    expect(err?.code).toBe('crm_required');
   });
 
   it('records a POST refusal and still toasts it', () => {
@@ -113,7 +113,7 @@ describe('hostAccessInterceptor', () => {
   });
 
   it.each([
-    ['a matching refusal', { status: 403, code: 'unknown_error', message: '', serverCode: 'crm_required' }],
+    ['a matching refusal', { status: 403, code: 'crm_required', message: '' }],
     ['any other failure', { status: 500, code: 'unknown_error', message: '' }],
   ])('rethrows the very error object it received for %s', (_, thrown: ApiError) => {
     let caught: unknown;
