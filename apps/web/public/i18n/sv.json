@@ -799,7 +799,7 @@
     "voidTitle": "Den här fakturan kan inte längre betalas",
     "voidMessage": "Den har ersatts eller har gått ut. Välj ditt abonnemang igen för att få en ny faktura.",
     "notFoundTitle": "Vi kunde inte hitta den här fakturan",
-    "notFoundMessage": "Den kan tillhöra ett annat konto. Logga in med kontot du betalade med eller gå tillbaka till fakturering.",
+    "notFoundMessage": "Den kanske inte finns eller är inte längre tillgänglig. Gå tillbaka till fakturering för att se dina fakturor.",
     "missingInvoiceTitle": "Vi kunde inte avgöra vilken betalning det gällde",
     "missingInvoiceMessage": "Öppna fakturering för att se hur det står till med din betalning.",
     "confirmingTitle": "Bekräftar din betalning…",

@@ -799,7 +799,7 @@
     "voidTitle": "Deze factuur kan niet meer worden betaald",
     "voidMessage": "Ze is vervangen of verlopen. Kies je abonnement opnieuw om een nieuwe factuur te krijgen.",
     "notFoundTitle": "We konden deze factuur niet vinden",
-    "notFoundMessage": "Mogelijk hoort ze bij een ander account. Log in met het account waarmee je hebt betaald, of ga terug naar facturering.",
+    "notFoundMessage": "Mogelijk bestaat ze niet of is ze niet meer beschikbaar. Ga terug naar facturering om je facturen te bekijken.",
     "missingInvoiceTitle": "We konden niet achterhalen om welke betaling het ging",
     "missingInvoiceMessage": "Open facturering om te zien hoe het met je betaling staat.",
     "confirmingTitle": "Je betaling wordt bevestigd…",

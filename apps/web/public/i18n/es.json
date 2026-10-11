@@ -799,7 +799,7 @@
     "voidTitle": "Esta factura ya no se puede pagar",
     "voidMessage": "Se reemplazó o venció. Vuelve a elegir tu plan para obtener una factura nueva.",
     "notFoundTitle": "No encontramos esta factura",
-    "notFoundMessage": "Puede que pertenezca a otra cuenta. Inicia sesión con la cuenta que usaste para pagar o vuelve a facturación.",
+    "notFoundMessage": "Puede que no exista o que ya no esté disponible. Vuelve a facturación para ver tus facturas.",
     "missingInvoiceTitle": "No pudimos saber de qué pago se trataba",
     "missingInvoiceMessage": "Abre facturación para ver en qué estado está tu pago.",
     "confirmingTitle": "Confirmando tu pago…",

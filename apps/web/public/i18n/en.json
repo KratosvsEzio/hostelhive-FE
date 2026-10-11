@@ -903,7 +903,7 @@
     "voidTitle": "This invoice can no longer be paid",
     "voidMessage": "It was replaced or has expired. Choose your plan again to get a new invoice.",
     "notFoundTitle": "We couldn't find this invoice",
-    "notFoundMessage": "It may belong to another account. Sign in with the account you used to pay, or go back to billing.",
+    "notFoundMessage": "It may not exist or may no longer be available. Go back to billing to see your invoices.",
     "missingInvoiceTitle": "We couldn't tell which payment this was",
     "missingInvoiceMessage": "Open billing to see where your payment stands.",
     "confirmingTitle": "Confirming your payment…",

@@ -799,7 +799,7 @@
     "voidTitle": "Cette facture ne peut plus être payée",
     "voidMessage": "Elle a été remplacée ou a expiré. Choisissez à nouveau votre forfait pour obtenir une nouvelle facture.",
     "notFoundTitle": "Facture introuvable",
-    "notFoundMessage": "Elle appartient peut-être à un autre compte. Connectez-vous avec le compte utilisé pour payer, ou revenez à la facturation.",
+    "notFoundMessage": "Elle n’existe peut-être pas ou n’est plus disponible. Revenez à la facturation pour voir vos factures.",
     "missingInvoiceTitle": "Impossible de savoir de quel paiement il s’agit",
     "missingInvoiceMessage": "Ouvrez la facturation pour voir où en est votre paiement.",
     "confirmingTitle": "Confirmation de votre paiement…",

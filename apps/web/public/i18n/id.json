@@ -804,7 +804,7 @@
     "voidTitle": "Faktur ini tidak dapat dibayar lagi",
     "voidMessage": "Faktur ini telah diganti atau kedaluwarsa. Pilih paket Anda lagi untuk mendapatkan faktur baru.",
     "notFoundTitle": "Kami tidak dapat menemukan faktur ini",
-    "notFoundMessage": "Faktur ini mungkin milik akun lain. Masuk dengan akun yang Anda gunakan untuk membayar, atau kembali ke penagihan.",
+    "notFoundMessage": "Faktur ini mungkin tidak ada atau sudah tidak tersedia. Kembali ke penagihan untuk melihat faktur Anda.",
     "missingInvoiceTitle": "Kami tidak dapat mengetahui pembayaran yang dimaksud",
     "missingInvoiceMessage": "Buka penagihan untuk melihat status pembayaran Anda.",
     "confirmingTitle": "Mengonfirmasi pembayaran Anda…",
