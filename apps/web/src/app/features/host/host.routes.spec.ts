@@ -2,11 +2,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
-import { Observable, isObservable, of } from 'rxjs';
+import { Observable, Subject, defer, isObservable, of } from 'rxjs';
 import { HostListing, HostListingsData } from '@hostelhive/data-access';
 import { HostPropertyStore } from '@services';
 import { HostShellApi } from '@services/host-shell-api';
-import { SessionStore } from '@core/auth';
+import { SessionStore, SessionUser } from '@core/auth';
+import { NotificationService } from '@core/notification.service';
 import { HOST_ROUTES, bookingsGate, knownHostelGate, monthlyOnlyGate } from './host.routes';
 import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
@@ -359,5 +360,226 @@ describe('the gate on hostels/new', () => {
     expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/host');
     expect(load).not.toHaveBeenCalled();
     http.verify();
+  });
+});
+
+const hostRootRedirect = HOST_ROUTES.find((r) => r.path === '')?.canActivate?.[0] as CanActivateFn;
+
+function sessionUser(id: string, permissions: string[] = []): SessionUser {
+  return {
+    id,
+    name: `User ${id}`,
+    email: `${id.toLowerCase()}@example.test`,
+    role: 'host',
+    allRoles: ['host'],
+    permissions,
+  };
+}
+
+/**
+ * Answers with the hostels of whoever is signed in when the request is subscribed, and logs who
+ * asked. In manual mode each request stays pending until {@link respond} answers it.
+ */
+class PerUserListingsStub {
+  readonly calls: (string | null)[] = [];
+  manual = false;
+  private readonly pending: { user: string | null; response: Subject<HostListingsData> }[] = [];
+
+  constructor(private readonly byUser: Record<string, HostListing[]>) {}
+
+  listings(): Observable<HostListingsData> {
+    return defer(() => {
+      const user = TestBed.inject(SessionStore).user()?.id ?? null;
+      this.calls.push(user);
+      if (!this.manual) return of(this.dataFor(user));
+      const response = new Subject<HostListingsData>();
+      this.pending.push({ user, response });
+      return response;
+    });
+  }
+
+  /** Answers the latest pending request made for `user`; does nothing when there is none. */
+  respond(user: string): void {
+    const index = this.pending.map((p) => p.user).lastIndexOf(user);
+    if (index < 0) return;
+    const [{ response }] = this.pending.splice(index, 1);
+    response.next(this.dataFor(user));
+    response.complete();
+  }
+
+  private dataFor(user: string | null): HostListingsData {
+    return { listings: (user && this.byUser[user]) || [], draft: null, stats: {} as never };
+  }
+}
+
+interface GuardRun {
+  async: boolean;
+  resolved: boolean;
+  value?: boolean | UrlTree;
+}
+
+/** Starts a guard and records its answer whenever it arrives, so a guard that never answers cannot hang the test. */
+function startGuard(guard: CanActivateFn, route: ActivatedRouteSnapshot): GuardRun {
+  const result = TestBed.runInInjectionContext(() => guard(route, {} as RouterStateSnapshot));
+  if (!isObservable(result)) return { async: false, resolved: true, value: result as boolean | UrlTree };
+  const run: GuardRun = { async: true, resolved: false };
+  result.subscribe((value) => {
+    run.resolved = true;
+    run.value = value as boolean | UrlTree;
+  });
+  return run;
+}
+
+/** Flushes the effects a waiting guard listens through, then hands the run back to read. */
+function settle(run: GuardRun): GuardRun {
+  TestBed.tick();
+  TestBed.tick();
+  return run;
+}
+
+function answerOf(run: GuardRun): boolean | string | undefined {
+  return run.value instanceof UrlTree ? TestBed.inject(Router).serializeUrl(run.value) : run.value;
+}
+
+/**
+ * The guards when one account replaces another without signing out in between.
+ *
+ * Accepting an invitation while someone else is signed in sets the new session in place, so
+ * nothing ever passes through "signed out". A guard that trusts the list already loaded would
+ * then route the new account into the previous one's hostel, or judge a page by its billing.
+ */
+describe('the host guards after the account changes without a sign-out', () => {
+  const aHostels = [
+    listing({ id: 'a-1', billingFrequency: 'night' }),
+    listing({ id: 'a-2', billingFrequency: 'night' }),
+  ];
+
+  function signInFirstAccount(bHostels: HostListing[], options: { manual?: boolean } = {}) {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    const api = new PerUserListingsStub({ A: aHostels, B: bHostels });
+    api.manual = options.manual ?? false;
+    const notifications = { info: vi.fn() };
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: HostShellApi, useValue: api },
+        { provide: NotificationService, useValue: notifications },
+      ],
+    });
+    const session = TestBed.inject(SessionStore);
+    session.setSession(sessionUser('A'), 'token-a');
+    return { api, session, notifications };
+  }
+
+  /** A has loaded both hostels and is working in the second one. */
+  function firstAccountWorkingInSecondHostel(bHostels: HostListing[]) {
+    const context = signInFirstAccount(bHostels);
+    const store = TestBed.inject(HostPropertyStore);
+    store.load();
+    TestBed.tick();
+    store.setProperty('a-2');
+    expect(store.properties().map((p) => p.id)).toEqual(['a-1', 'a-2']);
+    return { ...context, store };
+  }
+
+  afterEach(() => {
+    TestBed.inject(SessionStore).clear();
+    localStorage.clear();
+  });
+
+  it("sends the new account at /host to its own hostel after fetching its list, not to the previous account's", () => {
+    const { api, session } = firstAccountWorkingInSecondHostel([listing({ id: 'b-1' })]);
+
+    session.setSession(sessionUser('B'), 'token-b');
+    const run = settle(startGuard(hostRootRedirect, {} as ActivatedRouteSnapshot));
+
+    expect(run.async).toBe(true);
+    expect(run.resolved).toBe(true);
+    expect(answerOf(run)).toBe('/host/b-1');
+    expect(api.calls).toEqual(['A', 'B']);
+  });
+
+  it("refuses the previous account's hostel to the new account", () => {
+    const { session } = firstAccountWorkingInSecondHostel([listing({ id: 'b-1' })]);
+
+    session.setSession(sessionUser('B'), 'token-b');
+    const run = settle(startGuard(knownHostelGate, ownSnapshotFor('a-2')));
+
+    expect(run.resolved).toBe(true);
+    expect(answerOf(run)).toBe('/host');
+  });
+
+  it("opens the new account's own hostel", () => {
+    const { session } = firstAccountWorkingInSecondHostel([listing({ id: 'b-1' })]);
+
+    session.setSession(sessionUser('B'), 'token-b');
+    const run = settle(startGuard(knownHostelGate, ownSnapshotFor('b-1')));
+
+    expect(run.resolved).toBe(true);
+    expect(run.value).toBe(true);
+  });
+
+  it("judges Bookings by the new account's hostel, sending a monthly one to its overview", () => {
+    const { session } = firstAccountWorkingInSecondHostel([
+      listing({ id: 'b-1', billingFrequency: 'month' }),
+    ]);
+
+    session.setSession(sessionUser('B'), 'token-b');
+    const run = settle(startGuard(bookingsGate, snapshotFor('b-1')));
+
+    expect(run.resolved).toBe(true);
+    expect(answerOf(run)).toBe('/host/b-1/overview');
+  });
+
+  it("judges the monthly-only pages by the new account's hostel, sending a nightly one to its overview", () => {
+    const { session } = firstAccountWorkingInSecondHostel([
+      listing({ id: 'b-1', billingFrequency: 'night' }),
+    ]);
+
+    session.setSession(sessionUser('B'), 'token-b');
+    const run = settle(startGuard(monthlyOnlyGate, snapshotFor('b-1')));
+
+    expect(run.resolved).toBe(true);
+    expect(answerOf(run)).toBe('/host/b-1/overview');
+  });
+
+  it('tells a new account with no hostel and no right to create one that none is assigned', () => {
+    const { session, notifications } = firstAccountWorkingInSecondHostel([]);
+
+    // A non-empty list is what makes the permission check real: an empty one is not gated.
+    session.setSession(sessionUser('B', ['host:Room:index']), 'token-b');
+    const run = settle(startGuard(hostRootRedirect, {} as ActivatedRouteSnapshot));
+
+    expect(run.resolved).toBe(true);
+    expect(answerOf(run)).toBe('/');
+    expect(notifications.info).toHaveBeenCalledWith('No hostel assigned', expect.any(String));
+  });
+
+  it("answers a guard that was waiting on the previous account's request once the new account's list arrives", () => {
+    const { api, session } = signInFirstAccount([listing({ id: 'b-1' })], { manual: true });
+
+    const run = settle(startGuard(knownHostelGate, ownSnapshotFor('b-1')));
+    expect(run.resolved).toBe(false);
+
+    session.setSession(sessionUser('B'), 'token-b');
+    TestBed.tick();
+    api.respond('B');
+    settle(run);
+
+    expect(run.resolved).toBe(true);
+    expect(run.value).toBe(true);
+  });
+
+  it('keeps the same account on its selected hostel without fetching again when its session is re-set', () => {
+    const { api, session } = firstAccountWorkingInSecondHostel([listing({ id: 'b-1' })]);
+
+    session.setSession(sessionUser('A'), 'token-a-refreshed');
+    TestBed.tick();
+    const run = startGuard(hostRootRedirect, {} as ActivatedRouteSnapshot);
+
+    expect(run.async).toBe(false);
+    expect(answerOf(run)).toBe('/host/a-2');
+    expect(api.calls).toEqual(['A']);
   });
 });
