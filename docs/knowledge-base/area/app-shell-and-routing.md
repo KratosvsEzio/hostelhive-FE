@@ -45,8 +45,7 @@ page, plus `knownHostelGate`, `bookingsGate` and `monthlyOnlyGate` in
 `apps/web/src/app/features/host/host.routes.ts`. Both guards in `apps/web/src/app/core/auth/guards.ts`
 return `true` on the server; the client re-runs them after the session is restored.
 
-**Chrome.** `App` renders one `SiteHeader` for every route except the onboarding wizard and
-`/mess/confirm`. Footer and `SeekerTabBar` show only in the seeker area; which one depends on
+**Chrome.** `App` renders one `SiteHeader` for every route except the onboarding wizard. Footer and `SeekerTabBar` show only in the seeker area; which one depends on
 `MobileApp.isMobile` (see [mobile-app](./mobile-app.md)). The consoles bring their own shell as the
 parent component of their child routes: `HostLayout` loads the hostel list, syncs the `:hostelId`
 param into `HostPropertyStore` and runs the subscription gate (bouncing to
@@ -78,7 +77,7 @@ on `Tenants`, `Rooms` or `Invoices`, so the list is not torn down and refetched.
 ## Traps
 
 - `App.inSeekerArea` (`app.ts`) is a second, hand-written area check that does not use `areaOf`, and the
-  two lists differ (`app.ts` also excludes `/reset_password`, `/forbidden`, `/mess/confirm`). A new
+  two lists differ (`app.ts` also excludes `/reset_password`, `/forbidden`). A new
   chrome-free route has to be added to `app.ts` as well as to `layout/area.ts` if it matters there.
 - Order in `app.routes.ts` matters: `host/listings/new/payment` and `host/listings/new` must stay before
   `host`, and the `:locale` mount before the bare one.
