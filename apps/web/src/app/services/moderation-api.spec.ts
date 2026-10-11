@@ -1,6 +1,11 @@
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
+import { API_CONFIG } from '@core/api-config';
+import { errorInterceptor } from '@core/interceptors/error-interceptor';
+import { API_ERROR_NOTIFIER, UNAUTHORIZED_HANDLER } from '@core/tokens';
 import { ModerationApi, UNLABELLED } from './moderation-api';
 
 /** Records what the last read put on the wire. Every test here makes exactly one. */
@@ -216,5 +221,44 @@ describe('ModerationApi.getById — the host\'s "Member since"', () => {
 
   it('stays empty when neither source has a date', () => {
     expect(memberSince(setUpRoutes(null, 'forbidden'))).toBeNull();
+  });
+});
+
+/**
+ * A moderator opening a review must not see an error.
+ *
+ * The host lookup is refused for moderators (403) and the screen copes without it, so the
+ * app-wide "Not allowed" toast it used to raise was noise on every review. Runs through the
+ * real `errorInterceptor`, where the toast is decided.
+ */
+describe('ModerationApi.getById — no error toast for a moderator', () => {
+  it('loads the review without a toast when the host lookup is refused', () => {
+    const notify = vi.fn();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: 'https://api.test' } },
+        { provide: API_ERROR_NOTIFIER, useValue: notify },
+        { provide: UNAUTHORIZED_HANDLER, useValue: vi.fn() },
+      ],
+    });
+    const api = TestBed.inject(ModerationApi);
+    const httpMock = TestBed.inject(HttpTestingController);
+
+    let memberSince: string | null | undefined;
+    api.getById('MjvuEl').subscribe((d) => (memberSince = d.hostMemberSince));
+
+    httpMock.expectOne('https://api.test/api/moderator/hostels/MjvuEl').flush({
+      hostel: { id: 'MjvuEl', name: 'Backpacker', host: { id: 'tDzjiS', name: 'Mia Amir', created_at: '2026-07-16T17:00:09.624Z' } },
+    });
+    httpMock
+      .expectOne('https://api.test/api/users/tDzjiS')
+      .flush({ errors: ['You are not authorized to access this page.'] }, { status: 403, statusText: 'Forbidden' });
+    httpMock.match(() => true).forEach((req) => req.flush({}));
+
+    expect(notify).not.toHaveBeenCalled();
+    expect(memberSince).toBe('Member since Jul 2026');
   });
 });

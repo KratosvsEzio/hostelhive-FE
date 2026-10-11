@@ -100,7 +100,8 @@ export class ModerationApi {
    * The moderator payload embeds the host's name, email, phone and `created_at`, and
    * `toReviewDetail` falls back to each. The lookup is kept for `is_active`, which the embed
    * lacks. It answers admins; a moderator gets a 403, so for them "Member since" comes from
-   * the embed.
+   * the embed. The lookup is made quietly: the 403 is expected, and the global "Not allowed"
+   * toast it would otherwise raise showed on every moderator review.
    */
   getById(id: string): Observable<ReviewDetail> {
     return this.hostels.getForModeration(id).pipe(
@@ -109,7 +110,7 @@ export class ModerationApi {
           host:
             hostel.host?.id != null
               ? this.users
-                  .getById(hostel.host.id)
+                  .getById(hostel.host.id, { quiet: true })
                   .pipe(catchError(() => of<User | null>(null)))
               : of<User | null>(null),
           catalog: this.offers
