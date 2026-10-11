@@ -2,6 +2,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   PLATFORM_ID,
   computed,
   effect,
@@ -254,6 +255,12 @@ export class BlogArticle {
       ],
     });
   });
+
+  constructor() {
+    // The effect above replaces both between articles; this removes them when the reader
+    // leaves the blog for any other page — see `Seo.clearOnDestroy`.
+    this.seo.clearOnDestroy(inject(DestroyRef), ['article', 'breadcrumb']);
+  }
 
   private ticking = false;
 
