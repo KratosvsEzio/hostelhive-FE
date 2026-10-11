@@ -23,6 +23,8 @@ const ALL_PERMISSIONS = [
   'core:Invoice:create',
   'core:Invoice:create_payment',
   'host:Hostel:show',
+  'core:Invoice:index',
+  'core:Subscription:update',
 ];
 
 // Only the keys whose parameters a test reads carry copy; the rest resolve to their key.
@@ -31,6 +33,18 @@ const COPY = {
     upgradePayNow: 'Upgrade: pay {{amount}} now',
     renewsAtOn: 'Renews at {{price}} on {{date}}',
     payNow: 'Pay {{amount}} now',
+    renewsOn: 'Renews on {{date}}',
+    endsOn: 'Ends on {{date}}',
+    switchesTo: 'Switches to {{plan}} on {{date}}',
+    undoSwitchLabel: 'Undo the switch to {{plan}}',
+    downgradeTitle: 'Switch to {{plan}} at renewal?',
+    downgradeMessage:
+      'You keep {{current}} until {{date}}, then switch to {{plan}}.',
+    downgradeOpenRenewal:
+      'Renewal invoice {{number}} is already out for {{current}}.',
+    cancelMessage: 'Your plan stays active until {{date}}.',
+    cancelDropsSwitch: 'Your scheduled switch to {{plan}} won’t happen.',
+    cancelOpenRenewal: 'Renewal invoice {{number}} stays open.',
   },
 };
 
@@ -121,6 +135,76 @@ const INVOICE: BillingInvoice = {
   payments: [],
 };
 
+const PREMIUM = {
+  id: 'pPremium',
+  code: 'premium',
+  name: 'Premium',
+  features: ['boost', 'crm'],
+};
+
+/** Downgrade targets on a Premium subscription, so the current and target plans never share a name. */
+const TARGETS = { pBasic: 'Basic', pGrowth: 'Growth' } as const;
+
+/**
+ * Billing for an active Premium plan ending 3 Dec 2026, with Basic and Growth one switch away
+ * and Max one upgrade away.
+ */
+function changeable(
+  opts: {
+    scheduled?: keyof typeof TARGETS | null;
+    cancelling?: boolean;
+    status?: BillingSubscription['status'];
+  } & Partial<HostBilling> = {},
+): HostBilling {
+  const { scheduled = null, cancelling = false, status, ...over } = opts;
+  return billing({
+    subscription: subscription({
+      plan: PREMIUM,
+      current_period_end: '2026-12-03T10:00:00+05:00',
+      scheduled_plan: scheduled
+        ? { id: scheduled, code: scheduled, name: TARGETS[scheduled] }
+        : null,
+      cancel_at_period_end: cancelling,
+      ...(status ? { status } : {}),
+    }),
+    features: ['listing', 'boost', 'crm'],
+    plans: [
+      plan({
+        id: 'pBasic',
+        name: 'Basic',
+        action: 'downgrade',
+        scheduled: scheduled === 'pBasic',
+        amount_due_now: null,
+      }),
+      plan({
+        id: 'pGrowth',
+        name: 'Growth',
+        price: '8000.00',
+        action: 'downgrade',
+        scheduled: scheduled === 'pGrowth',
+        amount_due_now: null,
+      }),
+      plan({
+        id: 'pPremium',
+        name: 'Premium',
+        price: '12000.00',
+        action: 'current',
+        amount_due_now: null,
+      }),
+      plan({
+        id: 'pMax',
+        name: 'Max',
+        price: '20000.00',
+        action: 'upgrade',
+        amount_due_now: '6000.00',
+      }),
+    ],
+    ...over,
+  });
+}
+
+const PAST_DUE = { id: 3, name: 'Past due', slug: 'past-due', color: null };
+
 /** Drops the Unicode isolates the page wraps amounts in, so assertions read as plain text. */
 function plain(text: string | null | undefined): string {
   return (text ?? '').replace(/[⁨⁩]/g, '').replace(/\s+/g, ' ').trim();
@@ -130,10 +214,27 @@ describe('BillingPage', () => {
   let harness: RouterTestingHarness;
   let loads: Subject<HostBilling>[];
   let checkouts: Subject<BillingInvoice>[];
+  let schedules: Subject<HostBilling>[];
+  let unschedules: Subject<HostBilling>[];
+  let cancels: Subject<HostBilling>[];
+  let resumes: Subject<HostBilling>[];
   let api: {
     billing: ReturnType<typeof vi.fn>;
     checkout: ReturnType<typeof vi.fn>;
+    scheduleDowngrade: ReturnType<typeof vi.fn>;
+    unscheduleDowngrade: ReturnType<typeof vi.fn>;
+    cancelSubscription: ReturnType<typeof vi.fn>;
+    resumeSubscription: ReturnType<typeof vi.fn>;
   };
+
+  /** A mock call that answers only when the test pushes into the Subject it records. */
+  function pending<T>(into: Subject<T>[]): ReturnType<typeof vi.fn> {
+    return vi.fn(() => {
+      const s = new Subject<T>();
+      into.push(s);
+      return s.asObservable();
+    });
+  }
   let navigate: ReturnType<typeof vi.spyOn>;
 
   async function open(
@@ -141,17 +242,17 @@ describe('BillingPage', () => {
   ): Promise<HTMLElement> {
     loads = [];
     checkouts = [];
+    schedules = [];
+    unschedules = [];
+    cancels = [];
+    resumes = [];
     api = {
-      billing: vi.fn(() => {
-        const s = new Subject<HostBilling>();
-        loads.push(s);
-        return s.asObservable();
-      }),
-      checkout: vi.fn(() => {
-        const s = new Subject<BillingInvoice>();
-        checkouts.push(s);
-        return s.asObservable();
-      }),
+      billing: pending(loads),
+      checkout: pending(checkouts),
+      scheduleDowngrade: pending(schedules),
+      unscheduleDowngrade: pending(unschedules),
+      cancelSubscription: pending(cancels),
+      resumeSubscription: pending(resumes),
     };
     const granted = new Set(permissions);
     TestBed.configureTestingModule({
@@ -176,7 +277,10 @@ describe('BillingPage', () => {
         { provide: BillingApi, useValue: api },
         {
           provide: SessionStore,
-          useValue: { hasPermission: (f: string) => granted.has(f) },
+          // Like the real store, no flags at all means nothing is withheld.
+          useValue: {
+            hasPermission: (f: string) => granted.size === 0 || granted.has(f),
+          },
         },
         {
           provide: HostPropertyStore,
@@ -251,6 +355,47 @@ describe('BillingPage', () => {
     index = 0,
   ): void {
     checkouts[index].error({ code: 'unknown_error', message: 'x', ...err });
+    harness.detectChanges();
+  }
+
+  function byTestId(root: ParentNode, id: string): HTMLElement | null {
+    return root.querySelector(`[data-testid="${id}"]`);
+  }
+
+  function click(target: Element | null | undefined): void {
+    (target as HTMLElement | null)?.click();
+    harness.detectChanges();
+  }
+
+  function modal(el: HTMLElement): HTMLElement | null {
+    return el.querySelector('hh-confirm-modal');
+  }
+
+  function modalTitle(el: HTMLElement): string {
+    return plain(modal(el)?.querySelector('h2')?.textContent);
+  }
+
+  function statusText(el: HTMLElement): string {
+    return plain(byTestId(el, 'plan-status')?.textContent);
+  }
+
+  function planChangeErrorOf(el: HTMLElement, planId: string): Element | null {
+    return el.querySelector(
+      `hh-plan-card[data-plan="${planId}"] [data-testid="plan-change-error"]`,
+    );
+  }
+
+  function answer(subject: Subject<HostBilling>, data: HostBilling): void {
+    subject.next(data);
+    subject.complete();
+    harness.detectChanges();
+  }
+
+  function refuse(
+    subject: Subject<HostBilling>,
+    err: { status: number; serverMessages?: string[] },
+  ): void {
+    subject.error({ code: 'unknown_error', message: 'x', ...err });
     harness.detectChanges();
   }
 
@@ -379,6 +524,61 @@ describe('BillingPage', () => {
     });
   });
 
+  describe('billing history link', () => {
+    function historyOf(el: HTMLElement): HTMLElement | null {
+      return el.querySelector('[data-testid="billing-history"]');
+    }
+
+    it('links to the history after the payment-due box and before the plans', async () => {
+      const el = await openWith(billing({ open_invoice: openInvoice() }));
+
+      const row = historyOf(el);
+      expect(row?.textContent).toContain('hostBillingHistory.title');
+      expect(row?.textContent).toContain('hostBillingHistory.linkHint');
+      const link = row?.querySelector('a');
+      expect(link?.textContent).toContain('hostBillingHistory.viewHistory');
+      expect(link?.getAttribute('href')).toMatch(
+        /\/host\/nHelLt\/subscription\/invoices$/,
+      );
+      const due = el.querySelector('hh-payment-due') as Element;
+      const plans = el.querySelector('#billing-plans-title') as Element;
+      const after = Node.DOCUMENT_POSITION_FOLLOWING;
+      expect(due.compareDocumentPosition(row as Node) & after).toBeTruthy();
+      expect((row as Node).compareDocumentPosition(plans) & after).toBeTruthy();
+    });
+
+    it('follows the current plan when no invoice is due', async () => {
+      const el = await openWith(billing());
+
+      const plan = el.querySelector('hh-current-plan-card') as Element;
+      expect(
+        plan.compareDocumentPosition(historyOf(el) as Node) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('is hidden for someone without invoice access', async () => {
+      const el = await openWith(billing(), [
+        'core:Invoice:create',
+        'host:Hostel:show',
+      ]);
+
+      expect(historyOf(el)).toBeNull();
+    });
+
+    it('is shown when the session carries no permission flags', async () => {
+      const el = await openWith(billing(), []);
+
+      expect(historyOf(el)).not.toBeNull();
+    });
+
+    it('is not shown while loading', async () => {
+      const el = await open();
+
+      expect(historyOf(el)).toBeNull();
+    });
+  });
+
   describe('plan buttons', () => {
     const plans = [
       plan({ id: 'pBuy', action: 'buy' }),
@@ -416,8 +616,8 @@ describe('BillingPage', () => {
       ['pCurrent', 'hostBilling.currentPlanButton', true],
       ['pRenew', 'hostBilling.renew', false],
       ['pUp', 'Upgrade: pay', false],
-      ['pDown', 'hostBilling.switchAtRenewal', true],
-      ['pSched', 'hostBilling.switchAtRenewal', true],
+      ['pDown', 'hostBilling.switchAtRenewal', false],
+      ['pSched', 'hostBilling.scheduled', true],
       ['pNone', 'hostBilling.unavailable', true],
     ])('gives %s the label %s, disabled: %s', async (id, label, disabled) => {
       const el = await openWith(
@@ -461,27 +661,44 @@ describe('BillingPage', () => {
       );
     });
 
-    it('disables a downgrade with a coming-soon hint and a Contact us link', async () => {
+    it('offers a downgrade with no hint, and no Contact link anywhere', async () => {
       const el = await openWith(
         billing({ subscription: subscription(), plans }),
+      );
+
+      expect(field(el, 'pDown', 'hint')).toBeNull();
+      expect(el.querySelector('a[href$="/contact"]')).toBeNull();
+    });
+
+    it('explains a downgrade held back by a cancellation in plain text, with no link', async () => {
+      const el = await openWith(
+        billing({
+          subscription: subscription({ cancel_at_period_end: true }),
+          plans,
+        }),
       );
 
       const hint = field(el, 'pDown', 'hint');
-      expect(hint?.textContent).toContain('hostBilling.switchComingSoon');
-      expect(hint?.querySelector('a')?.getAttribute('href')).toMatch(
-        /\/contact$/,
-      );
+      expect(hint?.textContent?.trim()).toBe('hostBilling.resumeToSwitch');
+      expect(hint?.querySelector('a')).toBeNull();
+      expect(planButtonOf(el, 'pDown')?.disabled).toBe(true);
     });
 
-    it('badges a downgrade already scheduled for renewal', async () => {
+    it('shows a scheduled downgrade as a disabled Scheduled button with Undo under it, and no badge', async () => {
       const el = await openWith(
         billing({ subscription: subscription(), plans }),
       );
 
-      expect(
-        el.querySelector('hh-plan-card[data-plan="pSched"] hh-status-pill')
-          ?.textContent,
-      ).toContain('hostBilling.scheduledForRenewal');
+      const card = el.querySelector('hh-plan-card[data-plan="pSched"]');
+      expect(card?.querySelector('hh-status-pill')).toBeNull();
+      const buttons = Array.from(card?.querySelectorAll('button') ?? []);
+      expect(buttons).toHaveLength(2);
+      expect(buttons[0].textContent).toContain('hostBilling.scheduled');
+      expect(buttons[0].disabled).toBe(true);
+      expect(buttons[1]).toBe(byTestId(card as Element, 'plan-undo'));
+      expect(buttons[1].textContent?.trim()).toBe('hostBilling.undo');
+      expect(buttons[1].disabled).toBe(false);
+      expect(el.querySelectorAll('[data-testid="plan-undo"]')).toHaveLength(1);
     });
 
     it('shows an unavailable plan’s reason exactly as returned', async () => {
@@ -812,9 +1029,9 @@ describe('BillingPage', () => {
       planButtonOf(el, 'pGrowth')?.click();
       harness.detectChanges();
 
-      expect(plain(el.querySelector('hh-confirm-modal')?.textContent)).toContain(
-        'This replaces unpaid invoice HH-2026-0007.',
-      );
+      expect(
+        plain(el.querySelector('hh-confirm-modal')?.textContent),
+      ).toContain('This replaces unpaid invoice HH-2026-0007.');
     });
 
     it('checks out the chosen plan once confirmed', async () => {
@@ -855,6 +1072,657 @@ describe('BillingPage', () => {
     });
   });
 
+  describe('scheduling a downgrade', () => {
+    it('asks first, naming both plans and the period end, and dismissing sends nothing', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+
+      expect(el.querySelectorAll('hh-confirm-modal')).toHaveLength(1);
+      expect(modalTitle(el)).toBe('Switch to Growth at renewal?');
+      expect(plain(byTestId(el, 'downgrade-message')?.textContent)).toBe(
+        'You keep Premium until 3 Dec 2026, then switch to Growth.',
+      );
+      expect(byTestId(el, 'downgrade-open-renewal')).toBeNull();
+      expect(
+        buttonByText(modal(el), 'hostBilling.downgradeConfirm'),
+      ).toBeDefined();
+
+      click(buttonByText(modal(el), 'common.cancel'));
+      expect(modal(el)).toBeNull();
+
+      click(planButtonOf(el, 'pBasic'));
+      expect(modalTitle(el)).toBe('Switch to Basic at renewal?');
+      click(modal(el)?.querySelector('button[aria-label="a11y.close"]'));
+      expect(modal(el)).toBeNull();
+
+      expect(api.scheduleDowngrade).not.toHaveBeenCalled();
+      expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(false);
+    });
+
+    it('never asks about the unpaid invoice, which a switch leaves alone', async () => {
+      const el = await openWith(changeable({ open_invoice: openInvoice() }));
+
+      click(planButtonOf(el, 'pGrowth'));
+
+      expect(el.querySelectorAll('hh-confirm-modal')).toHaveLength(1);
+      expect(modalTitle(el)).toBe('Switch to Growth at renewal?');
+      expect(byTestId(el, 'downgrade-open-renewal')).toBeNull();
+    });
+
+    it('warns that an open renewal invoice still bills the current plan', async () => {
+      const el = await openWith(
+        changeable({
+          open_invoice: openInvoice({
+            kind: 'renewal',
+            number: 'HH-2026-0042',
+          }),
+        }),
+      );
+
+      click(planButtonOf(el, 'pGrowth'));
+
+      expect(plain(byTestId(el, 'downgrade-open-renewal')?.textContent)).toBe(
+        'Renewal invoice HH-2026-0042 is already out for Premium.',
+      );
+    });
+
+    it('schedules the plan as returned once confirmed, spinning its button and locking the rest', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+      click(buttonByText(modal(el), 'hostBilling.downgradeConfirm'));
+
+      expect(modal(el)).toBeNull();
+      expect(api.scheduleDowngrade).toHaveBeenCalledTimes(1);
+      expect(api.scheduleDowngrade).toHaveBeenCalledWith('nHelLt', 'pGrowth');
+      expect(planButtonOf(el, 'pGrowth')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
+      expect(planButtonOf(el, 'pBasic')?.getAttribute('aria-busy')).toBeNull();
+      for (const id of ['pBasic', 'pGrowth', 'pMax']) {
+        expect(planButtonOf(el, id)?.disabled).toBe(true);
+      }
+      expect((byTestId(el, 'card-cancel') as HTMLButtonElement).disabled).toBe(
+        true,
+      );
+    });
+
+    it('renders the scheduled switch from the answer alone, with no second load', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+      click(buttonByText(modal(el), 'hostBilling.downgradeConfirm'));
+      answer(
+        schedules[0],
+        changeable({ scheduled: 'pGrowth', features: ['listing'] }),
+      );
+
+      expect(api.billing).toHaveBeenCalledTimes(1);
+      expect(statusText(el)).toContain('Switches to Growth on 3 Dec 2026');
+      expect(byTestId(el, 'card-undo')?.getAttribute('aria-label')).toBe(
+        'Undo the switch to Growth',
+      );
+      const growth = planButtonOf(el, 'pGrowth');
+      expect(growth?.textContent).toContain('hostBilling.scheduled');
+      expect(growth?.disabled).toBe(true);
+      expect(growth?.getAttribute('aria-busy')).toBeNull();
+      expect(
+        el
+          .querySelector(
+            'hh-plan-card[data-plan="pGrowth"] [data-testid="plan-undo"]',
+          )
+          ?.getAttribute('aria-label'),
+      ).toBe('Undo the switch to Growth');
+      expect(planButtonOf(el, 'pBasic')?.textContent).toContain(
+        'hostBilling.switchAtRenewal',
+      );
+      expect(planButtonOf(el, 'pBasic')?.disabled).toBe(false);
+      expect(planButtonOf(el, 'pMax')?.disabled).toBe(false);
+      // The whole summary is replaced, so the features come from the answer too.
+      const listed = Array.from(
+        el.querySelectorAll('hh-current-plan-card li'),
+      ).map((li) => li.textContent?.trim());
+      expect(listed).toEqual(['sharedBilling.featureListing']);
+    });
+  });
+
+  describe('undoing a switch', () => {
+    it.each([
+      ['the current plan card', 'card'],
+      ['the scheduled plan card', 'plan'],
+    ] as const)(
+      'undoes from %s without asking, and renders the answer',
+      async (_, origin) => {
+        const el = await openWith(changeable({ scheduled: 'pGrowth' }));
+        const onCard = byTestId(el, 'card-undo') as HTMLButtonElement;
+        const onPlan = byTestId(el, 'plan-undo') as HTMLButtonElement;
+        const [clicked, other] =
+          origin === 'card' ? [onCard, onPlan] : [onPlan, onCard];
+
+        click(clicked);
+
+        expect(modal(el)).toBeNull();
+        expect(api.unscheduleDowngrade).toHaveBeenCalledTimes(1);
+        expect(api.unscheduleDowngrade).toHaveBeenCalledWith('nHelLt');
+        expect(clicked.getAttribute('aria-busy')).toBe('true');
+        expect(other.getAttribute('aria-busy')).toBeNull();
+        expect(other.disabled).toBe(true);
+
+        answer(unschedules[0], changeable());
+
+        expect(api.billing).toHaveBeenCalledTimes(1);
+        expect(statusText(el)).toBe('Renews on 3 Dec 2026');
+        expect(byTestId(el, 'card-undo')).toBeNull();
+        expect(byTestId(el, 'plan-undo')).toBeNull();
+        expect(planButtonOf(el, 'pGrowth')?.textContent).toContain(
+          'hostBilling.switchAtRenewal',
+        );
+        expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(false);
+      },
+    );
+  });
+
+  describe('cancelling and resuming', () => {
+    it('asks first with Keep my plan as the way out, and keeping it sends nothing', async () => {
+      const el = await openWith(changeable());
+
+      click(byTestId(el, 'card-cancel'));
+
+      expect(modalTitle(el)).toBe('hostBilling.cancelTitle');
+      expect(plain(byTestId(el, 'cancel-message')?.textContent)).toBe(
+        'Your plan stays active until 3 Dec 2026.',
+      );
+      expect(byTestId(el, 'cancel-drops-switch')).toBeNull();
+      expect(byTestId(el, 'cancel-open-renewal')).toBeNull();
+      const labels = Array.from(modal(el)?.querySelectorAll('button') ?? [])
+        .map((b) => b.textContent?.trim())
+        .filter(Boolean);
+      expect(labels).toEqual([
+        'hostBilling.keepPlan',
+        'hostBilling.cancelPlan',
+      ]);
+      expect(
+        buttonByText(modal(el), 'hostBilling.cancelPlan')?.className,
+      ).toContain('bg-danger');
+      expect(modal(el)?.querySelector('.ti-alert-triangle')).not.toBeNull();
+
+      click(buttonByText(modal(el), 'hostBilling.keepPlan'));
+
+      expect(modal(el)).toBeNull();
+      expect(api.cancelSubscription).not.toHaveBeenCalled();
+      expect(byTestId(el, 'card-cancel')).not.toBeNull();
+    });
+
+    it('says a scheduled switch will not happen and an open renewal stays open', async () => {
+      const el = await openWith(
+        changeable({
+          scheduled: 'pBasic',
+          open_invoice: openInvoice({
+            kind: 'renewal',
+            number: 'HH-2026-0042',
+          }),
+        }),
+      );
+
+      click(byTestId(el, 'card-cancel'));
+
+      expect(plain(byTestId(el, 'cancel-drops-switch')?.textContent)).toBe(
+        'Your scheduled switch to Basic won’t happen.',
+      );
+      expect(plain(byTestId(el, 'cancel-open-renewal')?.textContent)).toBe(
+        'Renewal invoice HH-2026-0042 stays open.',
+      );
+    });
+
+    it('cancels once confirmed and renders Ends on with Resume plan from the answer', async () => {
+      const el = await openWith(changeable({ scheduled: 'pGrowth' }));
+      expect(field(el, 'pMax', 'subline')).not.toBeNull();
+
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+
+      expect(modal(el)).toBeNull();
+      expect(api.cancelSubscription).toHaveBeenCalledTimes(1);
+      expect(api.cancelSubscription).toHaveBeenCalledWith('nHelLt');
+      expect(byTestId(el, 'card-cancel')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
+
+      answer(
+        cancels[0],
+        changeable({ scheduled: 'pGrowth', cancelling: true }),
+      );
+
+      expect(api.billing).toHaveBeenCalledTimes(1);
+      expect(statusText(el)).toBe('Ends on 3 Dec 2026 hostBilling.resumePlan');
+      expect(byTestId(el, 'card-cancel')).toBeNull();
+      expect(byTestId(el, 'card-undo')).toBeNull();
+      expect(byTestId(el, 'plan-undo')).toBeNull();
+      for (const id of ['pBasic', 'pGrowth']) {
+        expect(planButtonOf(el, id)?.textContent).toContain(
+          'hostBilling.switchAtRenewal',
+        );
+        expect(planButtonOf(el, id)?.disabled).toBe(true);
+        expect(field(el, id, 'hint')?.textContent?.trim()).toBe(
+          'hostBilling.resumeToSwitch',
+        );
+      }
+      expect(field(el, 'pMax', 'subline')).toBeNull();
+    });
+
+    it('resumes without asking and renders Renews on again', async () => {
+      const el = await openWith(changeable({ cancelling: true }));
+
+      click(byTestId(el, 'card-resume'));
+
+      expect(modal(el)).toBeNull();
+      expect(api.resumeSubscription).toHaveBeenCalledTimes(1);
+      expect(api.resumeSubscription).toHaveBeenCalledWith('nHelLt');
+      expect(byTestId(el, 'card-resume')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
+
+      answer(resumes[0], changeable());
+
+      expect(api.billing).toHaveBeenCalledTimes(1);
+      expect(statusText(el)).toBe('Renews on 3 Dec 2026');
+      expect(byTestId(el, 'card-resume')).toBeNull();
+      expect(byTestId(el, 'card-cancel')).not.toBeNull();
+      expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(false);
+    });
+
+    it('shows the open invoice from the answer in the payment-due box', async () => {
+      const el = await openWith(
+        changeable({
+          open_invoice: openInvoice({
+            id: 'invOld',
+            kind: 'renewal',
+            total: '12000.00',
+          }),
+        }),
+      );
+      const hrefs = (): (string | null)[] =>
+        Array.from(el.querySelectorAll('hh-payment-due a')).map((a) =>
+          a.getAttribute('href'),
+        );
+      expect(plain(el.querySelector('hh-payment-due')?.textContent)).toContain(
+        'PKR 12,000',
+      );
+      expect(hrefs().some((h) => h?.endsWith('/pay/invOld'))).toBe(true);
+
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+      answer(
+        cancels[0],
+        changeable({
+          cancelling: true,
+          open_invoice: openInvoice({
+            id: 'invNew',
+            kind: 'renewal',
+            total: '7500.00',
+          }),
+        }),
+      );
+
+      expect(api.billing).toHaveBeenCalledTimes(1);
+      const due = plain(el.querySelector('hh-payment-due')?.textContent);
+      expect(due).toContain('PKR 7,500');
+      expect(due).not.toContain('PKR 12,000');
+      expect(hrefs().some((h) => h?.endsWith('/pay/invNew'))).toBe(true);
+      expect(hrefs().some((h) => h?.endsWith('/pay/invOld'))).toBe(false);
+    });
+  });
+
+  describe('plan change errors', () => {
+    function scheduleGrowth(el: HTMLElement): void {
+      click(planButtonOf(el, 'pGrowth'));
+      click(buttonByText(modal(el), 'hostBilling.downgradeConfirm'));
+    }
+
+    function cancelPlan(el: HTMLElement): void {
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+    }
+
+    it('shows a refused switch word for word under that plan, refreshes, and keeps it after the refresh', async () => {
+      const el = await openWith(changeable());
+
+      scheduleGrowth(el);
+      refuse(schedules[0], {
+        status: 422,
+        serverMessages: [
+          'Only a cheaper plan can be scheduled; upgrade through checkout',
+        ],
+      });
+
+      expect(modal(el)).toBeNull();
+      expect(api.billing).toHaveBeenCalledTimes(2);
+      loads[1].next(changeable({ features: ['listing'] }));
+      harness.detectChanges();
+
+      expect(el.querySelectorAll('hh-current-plan-card li')).toHaveLength(1);
+      const alerts = el.querySelectorAll('[role="alert"]');
+      expect(alerts).toHaveLength(1);
+      expect(alerts[0]).toBe(planChangeErrorOf(el, 'pGrowth'));
+      expect(alerts[0].textContent?.trim()).toBe(
+        'Only a cheaper plan can be scheduled; upgrade through checkout',
+      );
+      expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(false);
+    });
+
+    it('refreshes after a 404 from the card and keeps the message once the plan is no longer active', async () => {
+      const el = await openWith(changeable({ scheduled: 'pGrowth' }));
+
+      click(byTestId(el, 'card-undo'));
+      refuse(unschedules[0], {
+        status: 404,
+        serverMessages: ['Requested resource not found.'],
+      });
+
+      expect(api.billing).toHaveBeenCalledTimes(2);
+      loads[1].next(changeable({ scheduled: 'pGrowth', status: PAST_DUE }));
+      harness.detectChanges();
+
+      expect(byTestId(el, 'card-undo')).toBeNull();
+      const alert = byTestId(el, 'card-change-error');
+      expect(alert?.closest('hh-current-plan-card')).not.toBeNull();
+      expect(alert?.getAttribute('role')).toBe('alert');
+      expect(alert?.textContent?.trim()).toBe('Requested resource not found.');
+      expect(el.querySelector('[data-testid="plan-change-error"]')).toBeNull();
+    });
+
+    it.each([422, 404])(
+      'falls back to its own words and still refreshes on a %i with no message',
+      async (status) => {
+        const el = await openWith(changeable());
+
+        cancelPlan(el);
+        refuse(cancels[0], { status });
+
+        expect(api.billing).toHaveBeenCalledTimes(2);
+        loads[1].next(changeable({ cancelling: true }));
+        harness.detectChanges();
+
+        const alerts = el.querySelectorAll('[role="alert"]');
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0]).toBe(byTestId(el, 'card-change-error'));
+        expect(alerts[0].textContent?.trim()).toBe('hostBilling.cancelFailed');
+        expect(statusText(el)).toContain('Ends on 3 Dec 2026');
+      },
+    );
+
+    it('shows a cancel refused for having no active subscription word for word, refreshes, and keeps it after the refresh', async () => {
+      const el = await openWith(changeable());
+
+      cancelPlan(el);
+      refuse(cancels[0], {
+        status: 422,
+        serverMessages: ['There is no active subscription'],
+      });
+
+      expect(api.billing).toHaveBeenCalledTimes(2);
+      loads[1].next(changeable({ status: PAST_DUE }));
+      harness.detectChanges();
+
+      const alert = byTestId(el, 'card-change-error');
+      expect(alert?.closest('hh-current-plan-card')).not.toBeNull();
+      expect(alert?.getAttribute('role')).toBe('alert');
+      expect(alert?.textContent?.trim()).toBe(
+        'There is no active subscription',
+      );
+      expect(byTestId(el, 'card-cancel')).toBeNull();
+    });
+
+    it('shows its own words for a 403, never the server’s, and does not refresh', async () => {
+      const el = await openWith(changeable());
+
+      cancelPlan(el);
+      refuse(cancels[0], {
+        status: 403,
+        serverMessages: ['You are not authorized to access this page.'],
+      });
+
+      expect(byTestId(el, 'card-change-error')?.textContent?.trim()).toBe(
+        'hostBilling.planChangeForbidden',
+      );
+      expect(api.billing).toHaveBeenCalledTimes(1);
+      const cancel = byTestId(el, 'card-cancel') as HTMLButtonElement;
+      expect(cancel.getAttribute('aria-busy')).toBeNull();
+      expect(cancel.disabled).toBe(false);
+    });
+
+    it.each([
+      [
+        'a switch',
+        () => changeable(),
+        scheduleGrowth,
+        (i: number) => schedules[i],
+        'hostBilling.scheduleFailed',
+        'pGrowth',
+      ],
+      [
+        'an Undo on the plan',
+        () => changeable({ scheduled: 'pGrowth' }),
+        (el: HTMLElement) => click(byTestId(el, 'plan-undo')),
+        (i: number) => unschedules[i],
+        'hostBilling.undoFailed',
+        'pGrowth',
+      ],
+      [
+        'an Undo on the current plan',
+        () => changeable({ scheduled: 'pGrowth' }),
+        (el: HTMLElement) => click(byTestId(el, 'card-undo')),
+        (i: number) => unschedules[i],
+        'hostBilling.undoFailed',
+        null,
+      ],
+      [
+        'a cancellation',
+        () => changeable(),
+        cancelPlan,
+        (i: number) => cancels[i],
+        'hostBilling.cancelFailed',
+        null,
+      ],
+      [
+        'a resume',
+        () => changeable({ cancelling: true }),
+        (el: HTMLElement) => click(byTestId(el, 'card-resume')),
+        (i: number) => resumes[i],
+        'hostBilling.resumeFailed',
+        null,
+      ],
+    ] as const)(
+      'falls back to its own words when %s fails with no usable message',
+      async (_, data, start, call, key, planId) => {
+        const el = await openWith(data());
+        const failures = [
+          { status: 0 },
+          { status: 500, serverMessages: ['Internal server error'] },
+        ];
+
+        for (const [i, err] of failures.entries()) {
+          start(el);
+          refuse(call(i), err);
+
+          const alerts = el.querySelectorAll('[role="alert"]');
+          expect(alerts).toHaveLength(1);
+          expect(alerts[0]).toBe(
+            planId
+              ? planChangeErrorOf(el, planId)
+              : byTestId(el, 'card-change-error'),
+          );
+          expect(alerts[0].textContent?.trim()).toBe(key);
+        }
+        expect(api.billing).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it('clears a plan-change refusal when the next action starts', async () => {
+      const el = await openWith(changeable());
+
+      scheduleGrowth(el);
+      refuse(schedules[0], { status: 500 });
+      expect(planChangeErrorOf(el, 'pGrowth')).not.toBeNull();
+
+      cancelPlan(el);
+      expect(el.querySelector('[role="alert"]')).toBeNull();
+    });
+
+    it('clears a checkout refusal on a plan change, and a plan-change refusal on a checkout', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pMax'));
+      failCheckout({ status: 500 });
+      expect(checkoutErrorOf(el, 'pMax')).not.toBeNull();
+
+      scheduleGrowth(el);
+      expect(checkoutErrorOf(el, 'pMax')).toBeNull();
+      refuse(schedules[0], { status: 500 });
+      expect(planChangeErrorOf(el, 'pGrowth')).not.toBeNull();
+
+      click(planButtonOf(el, 'pMax'));
+      expect(planChangeErrorOf(el, 'pGrowth')).toBeNull();
+      expect(api.checkout).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('one billing action at a time', () => {
+    function disabled(el: HTMLElement, testId: string): boolean | undefined {
+      return (byTestId(el, testId) as HTMLButtonElement | null)?.disabled;
+    }
+
+    it('locks every checkout and plan change while a plan change is in flight', async () => {
+      const el = await openWith(changeable({ scheduled: 'pBasic' }));
+
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+
+      expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(true);
+      expect(planButtonOf(el, 'pMax')?.disabled).toBe(true);
+      for (const id of ['card-undo', 'plan-undo', 'card-cancel']) {
+        expect(disabled(el, id)).toBe(true);
+      }
+
+      answer(cancels[0], changeable({ scheduled: 'pBasic' }));
+
+      expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(false);
+      expect(planButtonOf(el, 'pMax')?.disabled).toBe(false);
+      for (const id of ['card-undo', 'plan-undo', 'card-cancel']) {
+        expect(disabled(el, id)).toBe(false);
+      }
+    });
+
+    it('locks every plan change while a checkout is in flight', async () => {
+      const el = await openWith(changeable({ scheduled: 'pBasic' }));
+
+      click(planButtonOf(el, 'pMax'));
+
+      expect(api.checkout).toHaveBeenCalledWith('nHelLt', 'pMax');
+      expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(true);
+      for (const id of ['card-undo', 'plan-undo', 'card-cancel']) {
+        expect(disabled(el, id)).toBe(true);
+      }
+      click(planButtonOf(el, 'pGrowth'));
+      click(byTestId(el, 'card-cancel'));
+      expect(modal(el)).toBeNull();
+      expect(api.scheduleDowngrade).not.toHaveBeenCalled();
+      expect(api.unscheduleDowngrade).not.toHaveBeenCalled();
+      expect(api.cancelSubscription).not.toHaveBeenCalled();
+    });
+
+    it('does not send a replacing checkout confirmed after a plan change started', async () => {
+      const el = await openWith(
+        changeable({ scheduled: 'pGrowth', open_invoice: openInvoice() }),
+      );
+
+      click(planButtonOf(el, 'pMax'));
+      expect(modalTitle(el)).toBe('hostBilling.replaceInvoiceTitle');
+      // The Undo behind the open dialog, reached without the dialog closing first.
+      byTestId(el, 'card-undo')?.click();
+      click(buttonByText(modal(el), 'hostBilling.replaceInvoiceConfirm'));
+
+      expect(api.unscheduleDowngrade).toHaveBeenCalledTimes(1);
+      expect(api.checkout).not.toHaveBeenCalled();
+      expect(modal(el)).toBeNull();
+    });
+
+    it('sends one request for a double click before the page re-renders', async () => {
+      const el = await openWith(changeable({ scheduled: 'pGrowth' }));
+
+      // No change detection between the clicks, so only the page's own guard stops the second.
+      const undo = byTestId(el, 'card-undo');
+      undo?.click();
+      undo?.click();
+      expect(api.unscheduleDowngrade).toHaveBeenCalledTimes(1);
+      answer(unschedules[0], changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+      const confirm = buttonByText(modal(el), 'hostBilling.downgradeConfirm');
+      confirm?.click();
+      confirm?.click();
+      harness.detectChanges();
+      expect(api.scheduleDowngrade).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('plan change permission', () => {
+    const WITHOUT_UPDATE = ALL_PERMISSIONS.filter(
+      (p) => p !== 'core:Subscription:update',
+    );
+
+    it('hides Undo and Cancel plan, disables switching and says only the owner can', async () => {
+      const el = await openWith(
+        changeable({ scheduled: 'pGrowth' }),
+        WITHOUT_UPDATE,
+      );
+
+      expect(byTestId(el, 'card-undo')).toBeNull();
+      expect(byTestId(el, 'plan-undo')).toBeNull();
+      expect(byTestId(el, 'card-cancel')).toBeNull();
+      expect(statusText(el)).toBe(
+        'Renews on 3 Dec 2026 Switches to Growth on 3 Dec 2026',
+      );
+      expect(planButtonOf(el, 'pGrowth')?.textContent).toContain(
+        'hostBilling.scheduled',
+      );
+      expect(planButtonOf(el, 'pBasic')?.disabled).toBe(true);
+      expect(planButtonOf(el, 'pMax')?.disabled).toBe(false);
+      expect(byTestId(el, 'owner-only')?.textContent).toContain(
+        'hostBilling.ownerOnly',
+      );
+    });
+
+    it('hides Resume plan', async () => {
+      const el = await openWith(
+        changeable({ cancelling: true }),
+        WITHOUT_UPDATE,
+      );
+
+      expect(statusText(el)).toBe('Ends on 3 Dec 2026');
+      expect(byTestId(el, 'card-resume')).toBeNull();
+    });
+
+    it('offers every control when the session carries no flags, and a 403 then gets its own words', async () => {
+      const el = await openWith(changeable({ scheduled: 'pGrowth' }), []);
+
+      expect(byTestId(el, 'card-undo')).not.toBeNull();
+      expect(byTestId(el, 'card-cancel')).not.toBeNull();
+      expect(byTestId(el, 'owner-only')).toBeNull();
+
+      click(byTestId(el, 'plan-undo'));
+      refuse(unschedules[0], {
+        status: 403,
+        serverMessages: ['You are not authorized to access this page.'],
+      });
+
+      expect(planChangeErrorOf(el, 'pGrowth')?.textContent?.trim()).toBe(
+        'hostBilling.planChangeForbidden',
+      );
+    });
+  });
+
   describe('switching hostel', () => {
     it('loads the new hostel and drops a checkout that answers for the old one', async () => {
       const el = await openWith(billing());
@@ -874,6 +1742,123 @@ describe('BillingPage', () => {
       const now = harness.routeNativeElement as HTMLElement;
       expect(planButtonOf(now, 'pBasic')?.disabled).toBe(false);
       expect(now.querySelector('[data-testid="checkout-error"]')).toBeNull();
+    });
+
+    async function go(hostelId: string): Promise<HTMLElement> {
+      await TestBed.inject(Router).navigateByUrl(
+        `/host/${hostelId}/subscription`,
+      );
+      harness.detectChanges();
+      return harness.routeNativeElement as HTMLElement;
+    }
+
+    it('drops a plan change that answers for the old hostel and unlocks the new one', async () => {
+      const el = await openWith(changeable());
+
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+      const now = await go('other1');
+
+      expect(api.billing).toHaveBeenLastCalledWith('other1');
+      loads[1].next(changeable());
+      harness.detectChanges();
+      answer(cancels[0], changeable({ cancelling: true }));
+
+      expect(statusText(now)).toBe('Renews on 3 Dec 2026');
+      const cancel = byTestId(now, 'card-cancel') as HTMLButtonElement;
+      expect(cancel.disabled).toBe(false);
+      expect(cancel.getAttribute('aria-busy')).toBeNull();
+      expect(now.querySelector('[role="alert"]')).toBeNull();
+    });
+
+    it('closes an open confirm and sends nothing', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+      expect(modal(el)).not.toBeNull();
+      let now = await go('other1');
+      expect(modal(now)).toBeNull();
+
+      loads[1].next(changeable());
+      harness.detectChanges();
+      click(byTestId(now, 'card-cancel'));
+      expect(modal(now)).not.toBeNull();
+      now = await go('nHelLt');
+      expect(modal(now)).toBeNull();
+
+      expect(api.scheduleDowngrade).not.toHaveBeenCalled();
+      expect(api.cancelSubscription).not.toHaveBeenCalled();
+    });
+
+    it('drops an answer from an earlier visit to the same hostel, without unlocking a newer change', async () => {
+      const el = await openWith(changeable());
+
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+      await go('other1');
+      const now = await go('nHelLt');
+
+      expect(api.billing).toHaveBeenCalledTimes(3);
+      expect(api.billing).toHaveBeenLastCalledWith('nHelLt');
+      loads[2].next(changeable({ scheduled: 'pGrowth' }));
+      harness.detectChanges();
+      click(byTestId(now, 'card-undo'));
+      expect(api.unscheduleDowngrade).toHaveBeenCalledTimes(1);
+
+      answer(cancels[0], changeable({ cancelling: true }));
+
+      expect(statusText(now)).not.toContain('Ends on');
+      expect(statusText(now)).toContain('Switches to Growth on 3 Dec 2026');
+      expect(byTestId(now, 'card-undo')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
+
+      answer(unschedules[0], changeable());
+      expect(statusText(now)).toBe('Renews on 3 Dec 2026');
+    });
+
+    it('clears a plan-change refusal shown for the old hostel, and leaves the new one usable', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+      click(buttonByText(modal(el), 'hostBilling.downgradeConfirm'));
+      refuse(schedules[0], { status: 500 });
+      expect(planChangeErrorOf(el, 'pGrowth')?.textContent?.trim()).toBe(
+        'hostBilling.scheduleFailed',
+      );
+
+      const now = await go('other1');
+      loads[1].next(changeable());
+      harness.detectChanges();
+
+      expect(now.querySelector('[role="alert"]')).toBeNull();
+      expect(planChangeErrorOf(now, 'pGrowth')).toBeNull();
+      expect(planButtonOf(now, 'pGrowth')?.disabled).toBe(false);
+      expect((byTestId(now, 'card-cancel') as HTMLButtonElement).disabled).toBe(
+        false,
+      );
+      click(planButtonOf(now, 'pGrowth'));
+      expect(modalTitle(now)).toBe('Switch to Growth at renewal?');
+    });
+
+    it('drops a refusal from an earlier visit to the same hostel', async () => {
+      const el = await openWith(changeable());
+
+      click(byTestId(el, 'card-cancel'));
+      click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+      await go('other1');
+      const now = await go('nHelLt');
+      loads[2].next(changeable());
+      harness.detectChanges();
+
+      refuse(cancels[0], {
+        status: 422,
+        serverMessages: ['There is no active subscription'],
+      });
+
+      expect(now.querySelector('[role="alert"]')).toBeNull();
+      expect(api.billing).toHaveBeenCalledTimes(3);
+      expect(statusText(now)).toBe('Renews on 3 Dec 2026');
     });
   });
 });

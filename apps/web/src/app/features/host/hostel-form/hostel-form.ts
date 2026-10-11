@@ -128,7 +128,7 @@ interface EditPhoto {
  * absent value — a room never becomes bookable because a field was missing.
  */
 function toEditRoomType(r: {
-  id: number;
+  id: string;
   name: string;
   capacity: number;
   price: number;
@@ -181,7 +181,7 @@ interface RoomMoveRow {
 
 export interface EditRoomType {
   _key: string;
-  id?: number;
+  id?: string;
   name: string;
   capacity: number;
   price: number;

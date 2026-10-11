@@ -1,9 +1,12 @@
 import { Route } from '@angular/router';
+import { BillingInvoiceDetail } from './billing-invoice-detail';
+import { BillingInvoices } from './billing-invoices';
 import { BillingPage } from './billing-page';
 import { PaymentStep } from './payment-step';
 
 /**
- * The hostel's billing pages: the billing screen itself and the payment step for one invoice.
+ * The hostel's billing pages: the billing screen itself, the invoice history and one invoice's
+ * detail, and the payment step for one invoice.
  * Anything not listed — including the old plan, checkout and payment-history URLs — falls
  * through to the app's catch-all.
  *
@@ -21,5 +24,15 @@ export const SUBSCRIPTION_ROUTES: Route[] = [
     path: 'pay/:invoiceId',
     component: PaymentStep,
     title: 'routeTitle.payInvoice',
+  },
+  {
+    path: 'invoices',
+    component: BillingInvoices,
+    title: 'Billing history — HostelHive',
+  },
+  {
+    path: 'invoices/:invoiceId',
+    component: BillingInvoiceDetail,
+    title: 'Invoice — HostelHive',
   },
 ];

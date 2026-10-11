@@ -16,6 +16,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
+  Observable,
   catchError,
   combineLatest,
   distinctUntilChanged,
@@ -36,7 +37,6 @@ import {
   ErrorState,
   HhLink,
   Skeleton,
-  StatusPill,
 } from '@hostelhive/ui';
 import { BillingApi } from '@services';
 import { SessionStore } from '@core/auth/session-store';
@@ -46,10 +46,14 @@ import { localiseCommands } from '@core/i18n/locale-commands';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { ApiDate } from '@util/api-date';
 import { isNetworkError } from '@util/network-error';
-import { PlanButton, planButton } from '@app/shared/billing/billing-labels';
+import {
+  PlanButton,
+  billingHistoryPath,
+  planButton,
+} from '@app/shared/billing/billing-labels';
 import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
 import { PlanCard } from '@app/shared/billing/plan-card';
-import { CurrentPlanCard } from './current-plan-card';
+import { CurrentPlanAction, CurrentPlanCard } from './current-plan-card';
 import { PaymentDue } from './payment-due';
 
 type BillingView =
@@ -67,21 +71,47 @@ interface CheckoutError {
   countryRequired: boolean;
 }
 
+/** A plan change in flight. An Undo's `planId` is the plan card it came from, or null for the current plan card. */
+type PlanChange =
+  | { kind: 'schedule'; planId: string }
+  | { kind: 'undo'; planId: string | null }
+  | { kind: 'cancel' }
+  | { kind: 'resume' };
+
+/** A refused plan change, shown where it was asked for: that plan card, or the current plan card when `planId` is null. */
+interface PlanChangeError {
+  planId: string | null;
+  message: string | null;
+  messageKey: string;
+}
+
 interface PlanView {
   plan: BillingPlan;
   button: PlanButton;
   disabled: boolean;
   loading: boolean;
+  /** A scheduled switch to this plan that the session may undo from its card. */
+  canUndo: boolean;
+  undoLoading: boolean;
   /** The server's own explanation for an unavailable plan, or null when it is not shown. */
   reason: string | null;
   /** The refusal from this card's own checkout, shown under its button. */
   error: CheckoutError | null;
+  /** The refusal from a plan change asked for on this card. */
+  changeError: PlanChangeError | null;
 }
 
 /** The checkout refusal that a hostel without a country gets, matched exactly as the server words it. */
 const COUNTRY_REQUIRED = "Set the hostel's country first";
 
 const SKELETON_PLANS = [0, 1, 2, 3] as const;
+
+const CHANGE_FAILED: Record<PlanChange['kind'], string> = {
+  schedule: 'hostBilling.scheduleFailed',
+  undo: 'hostBilling.undoFailed',
+  cancel: 'hostBilling.cancelFailed',
+  resume: 'hostBilling.resumeFailed',
+};
 
 /**
  * A hostel's HostelHive billing: the current plan, any unpaid invoice, and one card per plan
@@ -104,7 +134,6 @@ const SKELETON_PLANS = [0, 1, 2, 3] as const;
     ErrorState,
     HhLink,
     Skeleton,
-    StatusPill,
     RouterLink,
     LocaleLink,
     NgTemplateOutlet,
@@ -141,7 +170,8 @@ export class BillingPage {
 
   private readonly refresh = signal(0);
 
-  protected readonly state = toSignal(
+  // A new object on every load, so an action's response is applied only to the load it started on.
+  private readonly loaded = toSignal(
     toObservable(
       computed(() => ({ id: this.hostelId(), r: this.refresh() })),
     ).pipe(
@@ -162,6 +192,9 @@ export class BillingPage {
     ),
     { initialValue: { kind: 'loading' } as BillingView },
   );
+
+  // A plan change answers with the whole summary, which stands in for the loaded one until the next load.
+  protected readonly state = linkedSignal<BillingView>(() => this.loaded());
 
   protected readonly billing = computed(() => {
     const s = this.state();
@@ -188,15 +221,68 @@ export class BillingPage {
     source: this.hostelId,
     computation: () => null,
   });
+  protected readonly pendingChange = linkedSignal<string, PlanChange | null>({
+    source: this.hostelId,
+    computation: () => null,
+  });
+  protected readonly planChangeError = linkedSignal<
+    string,
+    PlanChangeError | null
+  >({
+    source: this.hostelId,
+    computation: () => null,
+  });
+  protected readonly downgrading = linkedSignal<string, BillingPlan | null>({
+    source: this.hostelId,
+    computation: () => null,
+  });
+  protected readonly cancelling = linkedSignal<string, boolean>({
+    source: this.hostelId,
+    computation: () => false,
+  });
+
+  /** One billing write at a time: a checkout or any plan change locks every other action. */
+  protected readonly busy = computed(
+    () => this.pendingPlanId() !== null || this.pendingChange() !== null,
+  );
+
+  protected readonly cardBusy = computed<CurrentPlanAction | null>(() => {
+    const change = this.pendingChange();
+    switch (change?.kind) {
+      case 'undo':
+        return change.planId === null ? 'undo' : null;
+      case 'cancel':
+      case 'resume':
+        return change.kind;
+      default:
+        return null;
+    }
+  });
+
+  protected readonly cardChangeError = computed(() => {
+    const error = this.planChangeError();
+    return error?.planId === null ? error : null;
+  });
 
   protected readonly canCheckout = computed(() =>
     this.session.hasPermission('core:Invoice:create'),
+  );
+  protected readonly canChangePlan = computed(() =>
+    this.session.hasPermission('core:Subscription:update'),
   );
   protected readonly canPay = computed(() =>
     this.session.hasPermission('core:Invoice:create_payment'),
   );
   protected readonly canEditHostel = computed(() =>
     this.session.hasPermission('host:Hostel:show'),
+  );
+
+  protected readonly canViewHistory = computed(() =>
+    this.session.hasPermission('core:Invoice:index'),
+  );
+
+  protected readonly historyLink = computed(() =>
+    billingHistoryPath(this.hostelId()),
   );
 
   protected readonly profileLink = computed(
@@ -211,6 +297,16 @@ export class BillingPage {
   });
 
   /** No country means no prices: said once above the plans instead of on every card. */
+  protected readonly subscription = computed(
+    () => this.billing()?.subscription ?? null,
+  );
+
+  /** A renewal invoice already out, which a plan change leaves open. */
+  protected readonly openRenewal = computed(() => {
+    const invoice = this.billing()?.open_invoice;
+    return invoice?.kind === 'renewal' ? invoice : null;
+  });
+
   protected readonly countryMissing = computed(() => {
     const b = this.billing();
     return (
@@ -224,21 +320,33 @@ export class BillingPage {
     const b = this.billing();
     if (!b) return [];
     const pending = this.pendingPlanId();
-    const blocked = !this.canCheckout() || pending !== null;
+    const change = this.pendingChange();
+    const busy = this.busy();
+    const canChange = this.canChangePlan();
+    const blocked = !this.canCheckout() || busy;
     const hideReason = this.countryMissing();
     const error = this.checkoutError();
+    const changeError = this.planChangeError();
     return b.plans.map((plan) => {
       const button = planButton(plan, b.subscription);
       return {
         plan,
         button,
-        disabled: button.disabled || (button.kind === 'checkout' && blocked),
-        loading: pending === plan.id,
+        disabled:
+          button.disabled ||
+          (button.kind === 'checkout' && blocked) ||
+          (button.kind === 'downgrade' && (busy || !canChange)),
+        loading:
+          pending === plan.id ||
+          (change?.kind === 'schedule' && change.planId === plan.id),
+        canUndo: button.kind === 'scheduled' && canChange,
+        undoLoading: change?.kind === 'undo' && change.planId === plan.id,
         reason:
           plan.action === 'unavailable' && !hideReason && plan.reason
             ? plan.reason
             : null,
         error: error?.planId === plan.id ? error : null,
+        changeError: changeError?.planId === plan.id ? changeError : null,
       };
     });
   });
@@ -254,7 +362,12 @@ export class BillingPage {
 
   /** The one entry point for a plan card's button. */
   protected onPlanAction(view: PlanView): void {
-    if (view.disabled || view.button.kind !== 'checkout') return;
+    if (view.disabled || this.busy()) return;
+    if (view.button.kind === 'downgrade') {
+      this.downgrading.set(view.plan);
+      return;
+    }
+    if (view.button.kind !== 'checkout') return;
     const open = this.billing()?.open_invoice;
     // Checkout may void the unpaid invoice, and only the server knows whether it will.
     if (open && !open.awaiting_verification) {
@@ -274,11 +387,101 @@ export class BillingPage {
     this.replacing.set(null);
   }
 
+  protected confirmDowngrade(): void {
+    const plan = this.downgrading();
+    this.downgrading.set(null);
+    if (!plan) return;
+    this.runChange({ kind: 'schedule', planId: plan.id }, (id) =>
+      this.api.scheduleDowngrade(id, plan.id),
+    );
+  }
+
+  protected dismissDowngrade(): void {
+    this.downgrading.set(null);
+  }
+
+  /** `planId` is the plan card the Undo was clicked on, or null for the current plan card. */
+  protected undoSwitch(planId: string | null): void {
+    this.runChange({ kind: 'undo', planId }, (id) =>
+      this.api.unscheduleDowngrade(id),
+    );
+  }
+
+  protected openCancel(): void {
+    if (this.busy()) return;
+    this.cancelling.set(true);
+  }
+
+  protected confirmCancel(): void {
+    const open = this.cancelling();
+    this.cancelling.set(false);
+    if (!open) return;
+    this.runChange({ kind: 'cancel' }, (id) => this.api.cancelSubscription(id));
+  }
+
+  protected dismissCancel(): void {
+    this.cancelling.set(false);
+  }
+
+  protected resumePlan(): void {
+    this.runChange({ kind: 'resume' }, (id) => this.api.resumeSubscription(id));
+  }
+
+  private runChange(
+    change: PlanChange,
+    request: (hostelId: string) => Observable<HostBilling>,
+  ): void {
+    const id = this.hostelId();
+    if (!id || this.busy()) return;
+    const epoch = this.loaded();
+    this.pendingChange.set(change);
+    this.checkoutError.set(null);
+    this.planChangeError.set(null);
+    // Only the hostel and load it was asked on take the answer; A to B and back to A is a new load.
+    const current = (): boolean =>
+      this.hostelId() === id && this.loaded() === epoch;
+    // Identity, not null: after a hostel round trip a newer change may already be pending.
+    const settle = (): void => {
+      if (this.pendingChange() === change) this.pendingChange.set(null);
+    };
+    request(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (billing) => {
+          settle();
+          if (current()) this.state.set({ kind: 'ready', billing });
+        },
+        error: (err: ApiError) => {
+          settle();
+          if (current()) this.showChangeError(change, err);
+        },
+      });
+  }
+
+  private showChangeError(change: PlanChange, err: ApiError): void {
+    const status = err?.status;
+    // Only actions the summary offered can be asked for, so a 422 or 404 means it is out of date.
+    const stale = status === 422 || status === 404;
+    this.planChangeError.set({
+      planId:
+        change.kind === 'schedule' || change.kind === 'undo'
+          ? change.planId
+          : null,
+      message: stale ? (err?.serverMessages?.[0] ?? null) : null,
+      messageKey:
+        status === 403
+          ? 'hostBilling.planChangeForbidden'
+          : CHANGE_FAILED[change.kind],
+    });
+    if (stale) this.retry();
+  }
+
   private checkout(plan: BillingPlan): void {
     const id = this.hostelId();
-    if (!id || this.pendingPlanId() !== null) return;
+    if (!id || this.busy()) return;
     this.pendingPlanId.set(plan.id);
     this.checkoutError.set(null);
+    this.planChangeError.set(null);
     this.api
       .checkout(id, plan.id)
       .pipe(takeUntilDestroyed(this.destroyRef))

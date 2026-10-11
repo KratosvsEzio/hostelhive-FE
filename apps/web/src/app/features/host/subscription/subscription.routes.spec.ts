@@ -1,4 +1,6 @@
 import { SUBSCRIPTION_ROUTES } from './subscription.routes';
+import { BillingInvoiceDetail } from './billing-invoice-detail';
+import { BillingInvoices } from './billing-invoices';
 import { BillingPage } from './billing-page';
 import { PaymentStep } from './payment-step';
 
@@ -19,8 +21,27 @@ describe('feature-subscription routes', () => {
     });
   });
 
+  it('serves the invoice history', () => {
+    expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'invoices')).toMatchObject({
+      component: BillingInvoices,
+      title: 'Billing history — HostelHive',
+    });
+  });
+
+  it('serves the detail of one invoice', () => {
+    expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'invoices/:invoiceId')).toMatchObject({
+      component: BillingInvoiceDetail,
+      title: 'Invoice — HostelHive',
+    });
+  });
+
   it('serves nothing else', () => {
-    expect(SUBSCRIPTION_ROUTES.map((r) => r.path)).toEqual(['', 'pay/:invoiceId']);
+    expect(SUBSCRIPTION_ROUTES.map((r) => r.path)).toEqual([
+      '',
+      'pay/:invoiceId',
+      'invoices',
+      'invoices/:invoiceId',
+    ]);
   });
 
   // The old plan, checkout and payment-history URLs must match nothing here and fall to the catch-all.

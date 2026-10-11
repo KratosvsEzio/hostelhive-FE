@@ -45,7 +45,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         // phone input) sign the user out of HostelHive.
         const ours = req.url.startsWith(base);
         const isCredentialCheck = CREDENTIAL_PATHS.some((p) => req.url.includes(p));
-        if (ours && !isCredentialCheck) onUnauthorized?.();
+        if (ours && !isCredentialCheck) {
+          onUnauthorized?.(sentBearer(req.headers.get('Authorization')));
+        }
       } else if (!suppressToast && shouldNotify(apiError.status)) {
         notify?.(apiError);
       }
@@ -53,6 +55,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+
+/**
+ * The token a request was sent with, read from the header `authInterceptor` (which runs before
+ * this one) set — so a 401 names the token it rejected, not whoever is signed in by the time it
+ * arrives. `null` when the request carried no bearer.
+ */
+function sentBearer(header: string | null): string | null {
+  if (!header?.startsWith('Bearer ')) return null;
+  return header.slice('Bearer '.length) || null;
+}
 
 /** Every failure except an unset status and 401 warrants a notification. */
 function shouldNotify(status: number): boolean {

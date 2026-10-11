@@ -28,11 +28,18 @@ const COPY = {
   },
   hostPayment: {
     payAmount: 'Pay {{amount}}',
-    paidPill: 'Paid',
     paidOn: 'Paid on {{date}}',
     chargedNotApplied: 'Contact us and quote invoice {{number}}.',
   },
+  hostBillingHistory: {
+    statusOpen: 'Unpaid',
+    statusPaid: 'Paid',
+    statusVoid: 'Closed',
+    viewInvoice: 'View invoice',
+  },
 };
+
+const INVOICE_HREF = /\/host\/nHelLt\/subscription\/invoices\/inv0Ab$/;
 
 const REFUND_WORDING =
   'Charged at Safepay but invoice was void; refund it from the Safepay dashboard';
@@ -106,6 +113,7 @@ describe('PaymentStep', () => {
     opts: {
       permissions?: readonly string[];
       state?: Record<string, unknown>;
+      withoutHostel?: boolean;
     } = {},
   ): Promise<HTMLElement> {
     loads = [];
@@ -130,17 +138,23 @@ describe('PaymentStep', () => {
     TestBed.configureTestingModule({
       providers: [
         // The hostel id lives two routes above the page, as in the real tree.
-        provideRouter([
-          {
-            path: 'host/:hostelId',
-            children: [
-              {
-                path: 'subscription',
-                children: [{ path: 'pay/:invoiceId', component: PaymentStep }],
-              },
-            ],
-          },
-        ]),
+        provideRouter(
+          opts.withoutHostel
+            ? [{ path: 'pay/:invoiceId', component: PaymentStep }]
+            : [
+                {
+                  path: 'host/:hostelId',
+                  children: [
+                    {
+                      path: 'subscription',
+                      children: [
+                        { path: 'pay/:invoiceId', component: PaymentStep },
+                      ],
+                    },
+                  ],
+                },
+              ],
+        ),
         provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -163,7 +177,9 @@ describe('PaymentStep', () => {
     window.history.replaceState(opts.state ?? null, '');
     harness = await RouterTestingHarness.create();
     await TestBed.inject(Router).navigateByUrl(
-      '/host/nHelLt/subscription/pay/inv0Ab',
+      opts.withoutHostel
+        ? '/pay/inv0Ab'
+        : '/host/nHelLt/subscription/pay/inv0Ab',
       { state: opts.state },
     );
     harness.detectChanges();
@@ -656,6 +672,24 @@ describe('PaymentStep', () => {
       expect(el.querySelector('[data-field="pay-by"]')).toBeNull();
     });
 
+    it('paid: links to the invoice in the billing history', async () => {
+      const el = await openWith(
+        invoice({
+          status: status('paid', 'Paid'),
+          paid_at: '2026-10-11T10:00:00+05:00',
+        }),
+      );
+
+      const link = byTestId(el, 'view-invoice');
+      expect(link?.tagName).toBe('A');
+      expect(link?.textContent?.trim()).toBe('View invoice');
+      expect(link?.getAttribute('href')).toMatch(INVOICE_HREF);
+      // Go to billing stays the main action.
+      expect(byTestId(el, 'go-to-billing')?.getAttribute('color')).toBe(
+        'primary',
+      );
+    });
+
     it('void: explains it can no longer be paid and offers a new plan choice', async () => {
       const el = await openWith(
         invoice({
@@ -664,7 +698,7 @@ describe('PaymentStep', () => {
         }),
       );
 
-      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Void');
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Closed');
       const notice = byTestId(el, 'void-notice')?.textContent ?? '';
       expect(notice).toContain('hostPayment.voidTitle');
       expect(notice).toContain('hostPayment.voidMessage');
@@ -674,6 +708,70 @@ describe('PaymentStep', () => {
       expect(payButton(el)).toBeNull();
     });
 
+    it('void: offers the invoice as a secondary link after the new plan choice', async () => {
+      const el = await openWith(
+        invoice({
+          status: status('void', 'Void'),
+          voided_at: '2026-10-12T10:00:00+05:00',
+        }),
+      );
+
+      const link = byTestId(el, 'view-invoice');
+      const choose = byTestId(el, 'choose-plan-again');
+      expect(link?.textContent?.trim()).toBe('View invoice');
+      expect(link?.getAttribute('href')).toMatch(INVOICE_HREF);
+      expect(link?.getAttribute('variant')).toBe('outlined');
+      expect(choose?.getAttribute('color')).toBe('primary');
+      expect(
+        choose &&
+          link &&
+          choose.compareDocumentPosition(link) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('keeps the View invoice link inside the active language', async () => {
+      const el = await openWith(
+        invoice({
+          status: status('paid', 'Paid'),
+          paid_at: '2026-10-11T10:00:00+05:00',
+        }),
+      );
+      TestBed.inject(LocaleStore).apply('ur');
+
+      try {
+        harness.detectChanges();
+        expect(byTestId(el, 'view-invoice')?.getAttribute('href')).toBe(
+          '/ur/host/nHelLt/subscription/invoices/inv0Ab',
+        );
+      } finally {
+        TestBed.inject(LocaleStore).apply('en');
+      }
+    });
+
+    it.each([
+      ['an open', invoice()],
+      ['an unknown', invoice({ status: status('draft', 'Draft') })],
+    ])('offers no View invoice link on %s invoice', async (_label, inv) => {
+      const el = await openWith(inv);
+
+      expect(byTestId(el, 'view-invoice')).toBeNull();
+    });
+
+    it.each([
+      ['paid', status('paid', 'Paid')],
+      ['void', status('void', 'Void')],
+    ])(
+      'offers no View invoice link on a %s invoice when no hostel id is in the path',
+      async (_label, st) => {
+        const el = await open({ withoutHostel: true });
+        respond(invoice({ status: st }));
+
+        expect(byTestId(el, 'status-pill')).not.toBeNull();
+        expect(byTestId(el, 'view-invoice')).toBeNull();
+      },
+    );
+
     it('an unknown status: shows its name in a neutral pill and no Pay', async () => {
       const el = await openWith(invoice({ status: status('draft', 'Draft') }));
 
@@ -682,6 +780,30 @@ describe('PaymentStep', () => {
       expect(pill?.className).toContain('bg-ink-100');
       expect(payButton(el)).toBeNull();
       expect(byTestId(el, 'back-to-billing')).not.toBeNull();
+    });
+  });
+
+  describe('the status pill', () => {
+    it.each([
+      ['paid', 'Settled', 'Paid', 'bg-ok'],
+      ['void', 'Voided', 'Closed', 'bg-ink-100'],
+      ['draft', 'Draft', 'Draft', 'bg-ink-100'],
+    ])(
+      '%s (server name "%s") reads "%s"',
+      async (slug, name, label, toneClass) => {
+        const el = await openWith(invoice({ status: status(slug, name) }));
+
+        const pill = byTestId(el, 'status-pill');
+        expect(pill?.textContent?.trim()).toBe(label);
+        expect(pill?.className).toContain(toneClass);
+      },
+    );
+
+    it('is not shown for an open invoice, whose Pay button says it all', async () => {
+      const el = await openWith(invoice({ status: status('open', 'Open') }));
+
+      expect(byTestId(el, 'status-pill')).toBeNull();
+      expect(el.textContent).not.toContain('Unpaid');
     });
   });
 });

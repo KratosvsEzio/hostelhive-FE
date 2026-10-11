@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { Route, Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { appRoutes } from './app.routes';
+import { BillingInvoiceDetail } from '@features/host/subscription/billing-invoice-detail';
+import { BillingInvoices } from '@features/host/subscription/billing-invoices';
 import { RouteHead, routeHeadFor } from '@core/route-head';
 import { PageRoute, pageRoutes } from '@core/route-walk-testing';
 import { at, loadLocale } from '@core/i18n/locale-files-testing';
@@ -116,6 +118,18 @@ describe('the removed billing and contract URLs', () => {
 
     expect(settled.url).toBe('/host/nHelLt/subscription/pay/inv1');
     expect(settled.original).toBe(PaymentStep);
+  });
+
+  it.each([
+    ['/host/nHelLt/subscription/invoices', BillingInvoices],
+    ['/host/nHelLt/subscription/invoices/inv1', BillingInvoiceDetail],
+    ['/ur/host/nHelLt/subscription/invoices', BillingInvoices],
+    ['/ur/host/nHelLt/subscription/invoices/inv1', BillingInvoiceDetail],
+  ])('serves the invoice pages at %s', async (path, component) => {
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe(path);
+    expect(settled.original).toBe(component);
   });
 });
 

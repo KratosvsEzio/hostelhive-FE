@@ -48,7 +48,7 @@ export interface MessageResponse {
 
 /** User shape returned by sign_up (UserSerializer). */
 export interface SignedUpUser {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone?: string | null;
@@ -68,7 +68,7 @@ export interface CurrentUserResponse {
 }
 
 export interface CurrentUser {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone?: string | null;

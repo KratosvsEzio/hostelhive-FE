@@ -3,9 +3,11 @@ import {
   Component,
   computed,
   input,
+  output,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Card, StatusPill } from '@hostelhive/ui';
+import { Button, Card, StatusPill } from '@hostelhive/ui';
 import type { BillingSubscription } from '@hostelhive/data-access';
 import { ApiDate } from '@util/api-date';
 import {
@@ -19,19 +21,31 @@ interface CurrentPlanLine {
   date?: string;
 }
 
+/** A plan change the card offers; the page runs it and reports which one is in flight. */
+export type CurrentPlanAction = 'undo' | 'resume' | 'cancel';
+
+/** The pending switch: the scheduled plan's name and the raw API date it takes effect. */
+interface ScheduledSwitch {
+  plan: string;
+  date: string;
+}
+
 /**
  * The hostel's current plan: name, status badge, the date that matters for its status, a
  * pending plan switch, and what is switched on right now.
  *
  * `features` is the billing payload's own list rather than the plan's, so a past-due plan
- * correctly shows Boost off. Plan-change actions are projected into the bottom of the card.
+ * correctly shows Boost off. With `canChange`, an active plan offers Undo beside a pending
+ * switch, Resume plan beside its end date while cancelling, and Cancel plan otherwise. The
+ * page runs each action and reports back through `busy` and `locked`; a card-level error is
+ * projected into the bottom of the card.
  *
  * `<hh-current-plan-card [subscription]="billing.subscription" [features]="billing.features" />`
  */
 @Component({
   selector: 'hh-current-plan-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Card, StatusPill, TranslocoPipe, ApiDate],
+  imports: [Button, Card, NgTemplateOutlet, StatusPill, TranslocoPipe, ApiDate],
   host: { class: 'block' },
   template: `
     <hh-card variant="bordered">
@@ -45,22 +59,76 @@ interface CurrentPlanLine {
           </h2>
           <hh-status-pill [tone]="tone()">{{ sub.status.name }}</hh-status-pill>
         </div>
-        @for (line of lines(); track line.key) {
-          <p class="mt-1 text-sm text-ink-600" [attr.data-line]="line.key">
-            {{
-              line.key
-                | transloco: { date: (line.date | apiDate: 'd MMM yyyy') }
-            }}
-          </p>
-        }
-        @if (sub.scheduled_plan; as next) {
-          <p
-            class="mt-1 text-sm text-ink-600"
-            data-line="hostBilling.switchesTo"
+        <div aria-live="polite" data-testid="plan-status">
+          @for (line of lines(); track line.key) {
+            <div class="mt-1 flex flex-wrap items-center gap-x-2">
+              <p class="text-sm text-ink-600" [attr.data-line]="line.key">
+                {{
+                  line.key
+                    | transloco: { date: (line.date | apiDate: 'd MMM yyyy') }
+                }}
+              </p>
+              @if (line.key === 'hostBilling.endsOn' && canResume()) {
+                <ng-container [ngTemplateOutlet]="resumeButton" />
+              }
+            </div>
+          }
+          @if (canResume() && !sub.current_period_end) {
+            <div class="mt-1">
+              <ng-container [ngTemplateOutlet]="resumeButton" />
+            </div>
+          }
+          @if (switchTo(); as next) {
+            <div class="mt-1 flex flex-wrap items-center gap-x-2">
+              <p
+                class="text-sm text-ink-600"
+                data-line="hostBilling.switchesTo"
+              >
+                {{
+                  'hostBilling.switchesTo'
+                    | transloco
+                      : {
+                          plan: next.plan,
+                          date: (next.date | apiDate: 'd MMM yyyy'),
+                        }
+                }}
+              </p>
+              @if (canChange()) {
+                <button
+                  hh-button
+                  type="button"
+                  variant="text"
+                  size="sm"
+                  data-testid="card-undo"
+                  [attr.aria-label]="
+                    'hostBilling.undoSwitchLabel'
+                      | transloco: { plan: next.plan }
+                  "
+                  [disabled]="locked()"
+                  [loading]="busy() === 'undo'"
+                  (click)="undo.emit()"
+                >
+                  {{ 'hostBilling.undo' | transloco }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <ng-template #resumeButton>
+          <button
+            hh-button
+            type="button"
+            variant="text"
+            color="primary"
+            size="sm"
+            data-testid="card-resume"
+            [disabled]="locked()"
+            [loading]="busy() === 'resume'"
+            (click)="resume.emit()"
           >
-            {{ 'hostBilling.switchesTo' | transloco: { plan: next.name } }}
-          </p>
-        }
+            {{ 'hostBilling.resumePlan' | transloco }}
+          </button>
+        </ng-template>
       } @else {
         <h2 class="mt-2 font-display text-xl font-bold text-ink-900">
           {{ 'hostBilling.noPlanTitle' | transloco }}
@@ -87,6 +155,23 @@ interface CurrentPlanLine {
           </ul>
         </div>
       }
+      @if (canCancel()) {
+        <div class="mt-4 flex justify-end">
+          <button
+            hh-button
+            type="button"
+            variant="text"
+            color="default"
+            size="sm"
+            data-testid="card-cancel"
+            [disabled]="locked()"
+            [loading]="busy() === 'cancel'"
+            (click)="cancelPlan.emit()"
+          >
+            {{ 'hostBilling.cancelPlan' | transloco }}
+          </button>
+        </div>
+      }
       <ng-content />
     </hh-card>
   `,
@@ -94,6 +179,14 @@ interface CurrentPlanLine {
 export class CurrentPlanCard {
   readonly subscription = input.required<BillingSubscription | null>();
   readonly features = input.required<readonly string[]>();
+  readonly canChange = input(false);
+  readonly busy = input<CurrentPlanAction | null>(null);
+  readonly locked = input(false);
+  readonly undo = output<void>();
+  // Resuming the plan, not the native "resume" event.
+  // eslint-disable-next-line @angular-eslint/no-output-native
+  readonly resume = output<void>();
+  readonly cancelPlan = output<void>();
 
   protected readonly tone = computed(() =>
     statusTone(this.subscription()?.status.slug),
@@ -104,6 +197,31 @@ export class CurrentPlanCard {
     return sub ? statusLines(sub) : [];
   });
 
+  // A cancel wins at period end, so a switch is only shown on an active plan that renews.
+  protected readonly switchTo = computed<ScheduledSwitch | null>(() => {
+    const sub = this.subscription();
+    const next = sub?.scheduled_plan;
+    const date = sub?.current_period_end;
+    if (!sub || !isActive(sub) || sub.cancel_at_period_end || !next || !date) {
+      return null;
+    }
+    return { plan: next.name, date };
+  });
+
+  protected readonly canResume = computed(() => {
+    const sub = this.subscription();
+    return (
+      !!sub && isActive(sub) && sub.cancel_at_period_end && this.canChange()
+    );
+  });
+
+  protected readonly canCancel = computed(() => {
+    const sub = this.subscription();
+    return (
+      !!sub && isActive(sub) && !sub.cancel_at_period_end && this.canChange()
+    );
+  });
+
   // Fixed order regardless of the payload's; a feature this app has no label for is skipped.
   protected readonly featureKeys = computed<readonly string[]>(() => {
     const on = this.features();
@@ -111,6 +229,10 @@ export class CurrentPlanCard {
       (f) => f.labelKey,
     );
   });
+}
+
+function isActive(sub: BillingSubscription): boolean {
+  return sub.status.slug === 'active';
 }
 
 /** The date lines a status calls for; a line whose date the API left null is dropped. */

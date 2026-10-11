@@ -119,9 +119,27 @@ export class AuthService {
     );
   }
 
+  /**
+   * Sign out of whichever account is signed in, then confirm an emailed invitation link — for a
+   * confirmation link opened while someone else is signed in. Strictly in that order: the
+   * previous account's token is revoked and push rotated before the one-time token is spent.
+   * Errors are those of {@link confirmInvitation}; the sign-out itself never fails.
+   */
+  signOutThenConfirmInvitation(token: string): Observable<SessionUser> {
+    // The confirmation page explains any failure itself, so a failed revoke gets no toast.
+    return this.endSession({ inlineErrors: true }).pipe(
+      switchMap(() => this.confirmInvitation(token)),
+    );
+  }
+
   /** Revoke the JWT server-side, then clear the local session — always, even if the call fails. */
   signOut(): Observable<void> {
-    return this.api.signOut().pipe(
+    return this.endSession();
+  }
+
+  /** {@link signOut}'s work; `inlineErrors` keeps a failed revoke out of the global toast. */
+  private endSession(options?: { inlineErrors?: boolean }): Observable<void> {
+    return this.api.signOut(options).pipe(
       catchError(() => of(null)), // best-effort revoke — we clear locally regardless
       tap(() => {
         this.session.clear();
@@ -183,11 +201,22 @@ export class AuthService {
     const release = this.gate.hold();
     const validate = firstValueFrom(this.api.currentUser())
       .finally(release)
-      .then((u) => this.session.setSession(toSessionUser(u), token))
+      .then((u) => {
+        // The answer is only about this token: if the visitor signed out or another account
+        // was seated while it was in flight, writing it back would revive a revoked session.
+        if (this.session.accessToken() === token) {
+          this.session.setSession(toSessionUser(u), token);
+        }
+      })
       .catch((err: unknown) => {
         // Unverified is not the same as invalid. Keep the session on anything that is not an
         // outright rejection, so a returning user stays signed in until they say otherwise.
         if (!isUnauthorized(err)) return;
+        // If this token was still the signed-in one, the global 401 handler has already cleared
+        // it, so `null` still means this token's session; another token means another account
+        // was seated meanwhile, and the handler left that one alone too.
+        const current = this.session.accessToken();
+        if (current !== null && current !== token) return;
         // The server rejected the token → drop the session (which also deletes the
         // `hh_auth_token` cookie) and send them to the landing page.
         this.session.clear();
