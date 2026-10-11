@@ -1776,6 +1776,7 @@
     "whatGendered": "{{gender}}宿舍",
     "whatAll": "宿舍、寄宿公寓与共居空间",
     "listingNotFoundTitle": "未找到该房源 — HostelHive",
+    "postNotFoundTitle": "未找到该文章 — HostelHive",
     "listingNotFoundDescription": "该宿舍房源不可用，或链接有误。",
     "listingTitle": "{{name}} — {{location}}的{{gender}}宿舍 | HostelHive",
     "listingLead": "{{name}} — {{location}}的{{gender}}宿舍。",

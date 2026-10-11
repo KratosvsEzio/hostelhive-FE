@@ -9,6 +9,7 @@ const SEO_KEYS = [
   'seo.blogTitle',
   'seo.blogDescription',
   'seo.listingLoadingTitle',
+  'seo.postNotFoundTitle',
 ];
 const TEMPLATE_KEYS = ['seo.pageTitle', 'seo.adminPageTitle'];
 const BRANDED_KEYS = [
@@ -16,6 +17,7 @@ const BRANDED_KEYS = [
   'seo.adminPageTitle',
   'seo.blogTitle',
   'seo.listingLoadingTitle',
+  'seo.postNotFoundTitle',
 ];
 
 /** The English blog copy as it was written in `blog.ts` before it moved into the locale files. */
@@ -86,6 +88,7 @@ describe('the route title and head copy in every language', () => {
       expect(at(en, 'seo.pageTitle')).toBe('{{page}} — HostelHive');
       expect(at(en, 'seo.adminPageTitle')).toBe('{{page}} — HostelHive Admin');
       expect(at(en, 'seo.listingLoadingTitle')).toBe('Hostel details — HostelHive');
+      expect(at(en, 'seo.postNotFoundTitle')).toBe('Post not found — HostelHive');
     });
   });
 });

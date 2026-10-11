@@ -1776,6 +1776,7 @@
     "whatGendered": "{{gender}}-hostel",
     "whatAll": "hostel, pensionat och kollektivboenden",
     "listingNotFoundTitle": "Annonsen hittades inte — HostelHive",
+    "postNotFoundTitle": "Inlägget hittades inte — HostelHive",
     "listingNotFoundDescription": "Den här hostelannonsen är inte tillgänglig eller så är länken felaktig.",
     "listingTitle": "{{name}} — {{gender}}-hostel i {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-hostel i {{location}}.",

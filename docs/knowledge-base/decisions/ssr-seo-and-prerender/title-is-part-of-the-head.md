@@ -67,9 +67,11 @@ already read *after* the page effects. The early write never served it.
   - its `page_title` is now the translated title the visitor saw.
 - **Renaming a reused label renames the tab title.** That is intended: the tab says what the page says.
 - **`stop()` (consent withdrawn) drops a pending view.**
-- **Not fixed here:**
-  - duplicate page views from `replaceUrl` navigations, such as map pans (Trello #144);
-  - the English "Post not found" title on blog articles (Trello #152).
+- **Not fixed here, both since fixed by PR #126** (run notes `docs/implement/Bugs/152.md`):
+  - duplicate page views from `replaceUrl` navigations, such as map pans (Trello #144). GA now skips
+    same-page refinements; see the area file's "Google Analytics page views";
+  - the English "Post not found" title on blog articles (Trello #152). It is now
+    `seo.postNotFoundTitle` in all 18 languages, behind a `ready()`-gated head effect.
 
 ## Evidence
 

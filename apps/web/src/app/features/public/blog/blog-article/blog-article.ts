@@ -1,4 +1,4 @@
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,6 +15,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { Button } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { LocaleStore } from '@core/i18n/locale-store';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { heroFor } from '../blog-figures';
 import {
@@ -70,6 +71,8 @@ export class BlogArticle {
 
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(Seo);
+  private readonly locale = inject(LocaleStore);
+  private readonly i18n = inject(TranslocoService);
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -190,11 +193,23 @@ export class BlogArticle {
    * The related links at the foot navigate from this component to itself, and Angular reuses
    * the instance — so a head applied once in a constructor would leave the previous
    * article's title, description and JSON-LD describing the new one.
+   *
+   * Waits for the active language's strings, like the home and blog pages: the not-found
+   * title is translated, and `apply` builds the canonical, hreflang and og:locale from the
+   * active language, so a head written before `ready()` would carry a raw key or describe
+   * the previous language. The articles themselves stay English (see `inLanguage` below).
    */
   private readonly _head = effect(() => {
+    if (!this.locale.ready()) return;
+    // The component is reused across a language switch and ready() may stay true, so track the language itself.
+    this.locale.active();
     const p = this.post();
     if (!p) {
-      this.seo.apply({ title: 'Post not found — HostelHive', noindex: true });
+      // No description: `Seo` falls back to the translated default.
+      this.seo.apply({
+        title: this.i18n.translate<string>('seo.postNotFoundTitle'),
+        noindex: true,
+      });
       this.seo.clearJsonLd('article');
       this.seo.clearJsonLd('breadcrumb');
       return;

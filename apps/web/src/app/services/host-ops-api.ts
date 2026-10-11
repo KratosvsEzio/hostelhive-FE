@@ -306,7 +306,7 @@ function toUtilityBill(b: ApiUtilityBillItem): UtilityBill {
   const type = (b.utility_type ?? 'other') as UtilityType;
   const splits: TenantBillSplit[] = (b.renter_bills ?? []).map((r) => ({
     id: String(r.id ?? ''),
-    tenantId: String(r.renter_id ?? r.renter?.id ?? ''),
+    tenantId: String(r.renter?.id ?? r.renter_id ?? ''),
     name: r.renter?.full_name ?? r.renter?.name ?? r.full_name ?? '—',
     amount: Number(r.amount ?? 0),
     days: r.bill_days ?? 0,
@@ -314,7 +314,9 @@ function toUtilityBill(b: ApiUtilityBillItem): UtilityBill {
   }));
   return {
     id: String(b.id ?? `u-${Date.now()}`),
-    roomId: String(b.room_id ?? b.room?.id ?? ''),
+    // The list (from the search index) also carries `room_id` as the raw number; `room.id` is
+    // the obfuscated id the rooms endpoint uses.
+    roomId: String(b.room?.id ?? b.room_id ?? ''),
     roomNumber: b.room?.room_number ?? b.room_number ?? '—',
     tenantName: splits.map((s) => s.name).filter(Boolean).join(', ') || '—',
     type,
@@ -460,6 +462,25 @@ export interface InvoiceBody {
  * gets missed.
  */
 export const ALL_ROOMS_LIMIT = 9999;
+
+/** An edited utility bill: its figures, and each existing renter bill's new share. */
+export interface UtilityBillUpdate {
+  total_amount: number;
+  issued_date: string;
+  due_date: string;
+  consumed_units?: number;
+  previous_units?: number;
+  current_units?: number;
+  cost_per_unit?: number;
+  renter_bills_attributes: {
+    id: string;
+    amount: number;
+    bill_days: number;
+    due_date: string;
+    issued_date: string;
+    break_down: Record<string, number>;
+  }[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class HostOpsApi {
@@ -883,18 +904,18 @@ export class HostOpsApi {
   }
 
   /**
-   * `PUT /api/host/hostels/:hostelId/utility_bills/:billId` — re-split a bill across renters.
+   * `PUT /api/host/hostels/:hostelId/utility_bills/:billId` — save an edited bill.
+   *
+   * The bill's own figures go with the shares. Updating only the renter bills leaves the bill's
+   * `total_amount`, rate and readings as they were: the backend recalculates nothing but the
+   * unallocated `amount` from them, so the tenants and the bill disagree.
    *
    * The renter bill ids are the obfuscated strings `renter_bills` returns, sent unchanged; the
    * backend decodes them (azeem-hamza/hostelhive#34). This used to call the singular
    * `/api/host/hostel/…`, which has no route, and to send `Number(id)`, which is NaN.
    */
-  updateUtilityBill(hostelId: string, billId: string, renterBills: { id: string; amount: number }[]): Observable<unknown> {
-    return this.api.put(`/api/host/hostels/${hostelId}/utility_bills/${billId}`, {
-      utility_bill: {
-        renter_bills_attributes: renterBills.map((r) => ({ id: r.id, amount: r.amount })),
-      },
-    });
+  updateUtilityBill(hostelId: string, billId: string, body: UtilityBillUpdate): Observable<unknown> {
+    return this.api.put(`/api/host/hostels/${hostelId}/utility_bills/${billId}`, { utility_bill: body });
   }
 
   /** The current billing batch (utility line items). */

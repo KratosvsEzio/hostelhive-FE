@@ -1781,6 +1781,7 @@
     "whatGendered": "hostel {{gender}}",
     "whatAll": "hostel, rumah kos, dan co-living",
     "listingNotFoundTitle": "Iklan tidak ditemukan — HostelHive",
+    "postNotFoundTitle": "Pos tidak ditemukan — HostelHive",
     "listingNotFoundDescription": "Iklan hostel ini tidak tersedia atau tautannya salah.",
     "listingTitle": "{{name}} — hostel {{gender}} di {{location}} | HostelHive",
     "listingLead": "{{name}} — hostel {{gender}} di {{location}}.",

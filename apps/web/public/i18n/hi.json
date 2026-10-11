@@ -1776,6 +1776,7 @@
     "whatGendered": "{{gender}} हॉस्टल",
     "whatAll": "हॉस्टल, पीजी और को-लिविंग",
     "listingNotFoundTitle": "लिस्टिंग नहीं मिली — HostelHive",
+    "postNotFoundTitle": "पोस्ट नहीं मिली — HostelHive",
     "listingNotFoundDescription": "यह हॉस्टल लिस्टिंग उपलब्ध नहीं है या लिंक ग़लत है।",
     "listingTitle": "{{name}} — {{location}} में {{gender}} हॉस्टल | HostelHive",
     "listingLead": "{{name}} — {{location}} में {{gender}} हॉस्टल।",

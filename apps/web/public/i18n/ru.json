@@ -1781,6 +1781,7 @@
     "whatGendered": "хостелы «{{gender}}»",
     "whatAll": "хостелы, пансионы и совместное жильё",
     "listingNotFoundTitle": "Объявление не найдено — HostelHive",
+    "postNotFoundTitle": "Запись не найдена — HostelHive",
     "listingNotFoundDescription": "Это объявление недоступно или ссылка неверна.",
     "listingTitle": "{{name}} — хостел «{{gender}}» в {{location}} | HostelHive",
     "listingLead": "{{name}} — хостел «{{gender}}» в {{location}}.",
