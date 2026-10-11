@@ -10,7 +10,8 @@
 | **Parent feature** | none (Trello has no parent; related cards #80, #81, #82) — filed at the root |
 | **Type** | Feature (label `FE`) |
 | **Date** | 2026-10-10 |
-| **Current phase** | 6 — delivery gate |
+| **Current phase** | 7c — PR open (draft) |
+| **PR** | https://github.com/KratosvsEzio/hostelhive-FE/pull/128 |
 
 ## Preflight
 
@@ -1311,4 +1312,52 @@ At 1.5× DPR the Chrome extension's simulated clicks sometimes missed `hh-tabs` 
 ### Search-index lag is the root of three of the five live defects
 
 D-1 (occupancies), D-2 (an analysed `billable_id`) and D18 (a stale disposition) all come from the backend serving lists from its search index. The FE now handles all three; the backend follow-ups are listed under **Summary**.
+
+### C: ran out of disk during the post-rebase suite
+
+During the final full-suite run (2026-10-12), drive **C: reached 100% (0 bytes free of 419 GB)**, and shell commands could no longer write output. The run had passed 192 spec files, but five bookings-page tests showed ×, and the summary could not be written. This session's own temp files total 0.7 MB, so the space went elsewhere on the machine. The suite result after the rebase is therefore **not established locally**; CI on the PR is the check of record until space is freed and the suite is re-run.
+
+## Delivery
+
+**Commits** (rebased onto `origin/main` 73008bf; three conflicts resolved, all mechanical):
+- `2108b5e` feat(host): the stay flow — booking bills, a booking's invoice, paying both, beds per room (Trello #83)
+- `ffa433c` test(host): cover the stay flow end to end (Trello #83)
+- `7df384d` docs(implement): run record for Trello #83
+
+**Rebase conflicts:**
+- **`host.routes.ts`:** main moved route titles to i18n keys. Resolved to main's keys plus this branch's `data: DRAWER_HOST`. The new routes use `common.bookings` (`bookings/:bookingId`) and `hostInvoices.invoice` (`invoices/view/:billId`).
+- **`core/api-resource.spec.ts`:** added on both sides. Main's file tests `delete`/`patch` contexts; this branch's tests `requestContextArgs` and `put`. Merged into one file with all four blocks, and `TestBed.resetTestingModule()` added to the `put` block for isolation.
+- **`host.routes.spec.ts`:** union of imports, and main's billing and root-redirect blocks kept beside this branch's route-table blocks.
+
+**Gates after the rebase:**
+- typecheck: 0
+- `ngc --noEmit`: 0
+- lint: 0 errors, 193 warnings
+- `i18n:check`: no missing keys
+- no focus markers
+- full suite: **inconclusive**, because C: filled mid-run (see Notes).
+
+**Branch:** `feat/stay-flow-invoices-rooms`, pushed to `origin` (new branch, tracking set).
+
+**PR:** https://github.com/KratosvsEzio/hostelhive-FE/pull/128, **draft**, base `main`, title as the feat commit. The body covers what changed, tests, browser verification including what was not checked, and follow-ups. It links the Trello card and this run file. At creation CI had 1 check pending and the PR was mergeable.
+
+**Not done by design:** no merge, no approval, no auto-merge. The PR stays a draft until the user promotes it.
+
+### Post-rebase suite (after the user freed C:, 60 GB free)
+
+`npx nx test web -- --run --maxWorkers=3` gave **174 failures**, and the disk had nothing to do with them. There are two causes, both test-side integration with main's 170 new commits:
+1. **169 × `TypeError: store.hostels.set is not a function`** (bookings.spec 87, invoices.spec 63, room-detail.spec 18, rooms.spec 4). Main changed `HostPropertyStore` so `hostels` is no longer writable. The shared helper `seedHostPropertyStore` (`testing/host-stubs.ts`) wrote it directly.
+2. **2 × `app.routes.spec.ts` "the title of every page route":** main added a pinned table of every titled route and its English title. This branch adds two titled routes (`bookings/:bookingId`, `invoices/view/:billId`).
+
+The **PR's CI will be red until the fix is pushed.** The fix went to `senior-qa`: re-seed the store through its current seam, and add the two table rows. No app code is involved.
+
+**Fix:**
+- **`testing/host-stubs.ts` `seedHostPropertyStore` (`~:132-153`):** it now spies `HostShellApi.listings()` to return one `hostListing(billing, {id})`, then calls `store.load()` and `store.setProperty(id)`. The signature is unchanged and no call site moved. The shell stub is synchronous, so the store is loaded on return.
+- **`invoices.spec.ts` `openHostile` (`~:850-853`):** the same issue: a third direct write (`store.properties.update`) is now a re-stubbed `listings` plus `store.load()`. Assertions untouched.
+- **`app.routes.spec.ts` `EXPECTED_TITLES`:** adds `host/:hostelId/bookings/:bookingId` → "Bookings — HostelHive" and `host/:hostelId/invoices/view/:billId` → "Invoice — HostelHive", checked against `en.json`.
+
+**Result:**
+- Focused: 6 files, 285 tests, all passed.
+- **Full suite: 203 files, 4461 tests, all passed** (`--maxWorkers=3`, no memory errors).
+- Lint: 0 errors (193 warnings); no focus markers.
 
