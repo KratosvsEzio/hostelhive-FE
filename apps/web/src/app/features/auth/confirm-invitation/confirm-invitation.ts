@@ -24,8 +24,56 @@ import { jwtDisplayIdentity } from '@core/auth/jwt';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
+import { classifyConfirmFailure, ConfirmFailureKind } from './confirm-failure';
 
 type Phase = 'verifying' | 'asking' | 'confirmed' | 'error';
+
+/** Why the page is showing its error card: a link without a token, or a failed confirmation. */
+type ErrorKind = 'missingToken' | ConfirmFailureKind;
+
+interface ErrorCopy {
+  titleKey: string;
+  messageKey: string;
+  /** Classes for the round badge above the heading, and the icon inside it. */
+  badge: { tone: string; icon: string };
+  /** Only an expired link points to support: there is no way to send a fresh one. */
+  offersContactUs: boolean;
+}
+
+const WARNING_BADGE = { tone: 'bg-danger/10 text-danger', icon: 'ti-alert-triangle' };
+
+const ERROR_COPY: Record<ErrorKind, ErrorCopy> = {
+  missingToken: {
+    titleKey: 'authConfirmInvitation.confirmationFailed',
+    messageKey: 'authConfirmInvitation.linkIsMissingItsToken',
+    badge: WARNING_BADGE,
+    offersContactUs: false,
+  },
+  linkInvalidOrUsed: {
+    titleKey: 'authConfirmInvitation.linkInvalidOrUsedTitle',
+    messageKey: 'authConfirmInvitation.linkIsInvalidOrUsed',
+    badge: { tone: 'bg-tint-sky text-brand-500', icon: 'ti-link-off' },
+    offersContactUs: false,
+  },
+  linkExpired: {
+    titleKey: 'authConfirmInvitation.linkExpiredTitle',
+    messageKey: 'authConfirmInvitation.linkHasExpired',
+    badge: { tone: 'bg-danger/10 text-danger', icon: 'ti-link-off' },
+    offersContactUs: true,
+  },
+  network: {
+    titleKey: 'authConfirmInvitation.confirmationFailed',
+    messageKey: 'authConfirmInvitation.cannotReachTheServer',
+    badge: WARNING_BADGE,
+    offersContactUs: false,
+  },
+  unknown: {
+    titleKey: 'authConfirmInvitation.confirmationFailed',
+    messageKey: 'authConfirmInvitation.linkIsInvalidOrExpired',
+    badge: WARNING_BADGE,
+    offersContactUs: false,
+  },
+};
 
 /** Unicode isolates, so a name in another script cannot reorder the sentence around it. */
 const FIRST_STRONG_ISOLATE = '\u2068';
@@ -45,6 +93,8 @@ const POP_DIRECTIONAL_ISOLATE = '\u2069';
  * Two failures are told apart: the link itself failing (a recoverable error), and the account
  * being confirmed but signing in not finishing — then the link is spent, so the page says the
  * account is confirmed and points to log in, or home if the previous account was put back.
+ * A failed link says whether it was already used or has expired when the server says so, and
+ * falls back to one generic message otherwise; the server's own wording is never shown.
  *
  * The decision runs inside `afterNextRender` (browser only) so the one-time token is not
  * spent during SSR and then re-submitted on hydration.
@@ -62,10 +112,14 @@ export class ConfirmInvitation {
   private readonly router = inject(Router);
 
   private readonly askingHeading = viewChild<ElementRef<HTMLElement>>('askingHeading');
+  private readonly errorHeading = viewChild<ElementRef<HTMLElement>>('errorHeading');
 
   protected readonly phase = signal<Phase>('verifying');
-  /** Transloco key of the error message shown in the `error` phase. */
-  protected readonly messageKey = signal('');
+  /** Why the `error` phase is showing; it picks the card's heading, message, badge and actions. */
+  private readonly errorKind = signal<ErrorKind>('unknown');
+  protected readonly errorCopy = computed(() => ERROR_COPY[this.errorKind()]);
+  /** Set when a failed request shows the error card, and cleared once its heading has focus. */
+  private readonly focusErrorHeading = signal(false);
   /** Set when a failed sign-in put the previously signed-in account back. */
   protected readonly signedInUser = this.session.user;
   /** Latches the question: set by the first choice, so a second click or event does nothing. */
@@ -90,6 +144,13 @@ export class ConfirmInvitation {
     });
     // Moves focus to the question when it appears; after-render effects never run on the server.
     afterRenderEffect(() => this.askingHeading()?.nativeElement.focus());
+    // A failed request swaps the page under the user, so its heading takes focus once.
+    afterRenderEffect(() => {
+      const heading = this.errorHeading();
+      if (!heading || !this.focusErrorHeading()) return;
+      heading.nativeElement.focus();
+      this.focusErrorHeading.set(false);
+    });
   }
 
   /** Signs out of the current account, then confirms the link. */
@@ -107,7 +168,7 @@ export class ConfirmInvitation {
   private decide(): void {
     const token = this.token();
     if (!token) {
-      this.fail('authConfirmInvitation.linkIsMissingItsToken');
+      this.fail('missingToken');
       return;
     }
     if (this.session.accessToken() === null) {
@@ -149,16 +210,12 @@ export class ConfirmInvitation {
       return;
     }
     // Never show the raw message: it can carry the API URL or a developer string.
-    const status = (err as { status?: unknown } | null)?.status;
-    this.fail(
-      status === 0
-        ? 'authConfirmInvitation.cannotReachTheServer'
-        : 'authConfirmInvitation.linkIsInvalidOrExpired',
-    );
+    this.fail(classifyConfirmFailure(err));
+    this.focusErrorHeading.set(true);
   }
 
-  private fail(messageKey: string): void {
-    this.messageKey.set(messageKey);
+  private fail(kind: ErrorKind): void {
+    this.errorKind.set(kind);
     this.phase.set('error');
   }
 }
