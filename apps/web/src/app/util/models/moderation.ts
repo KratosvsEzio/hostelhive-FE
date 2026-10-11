@@ -93,8 +93,8 @@ export interface ReviewDetail {
   audit: ReviewAuditItem[];
 
   // ── host (GET /api/users/:hostId, falls back to the embedded hostel.host) ──
-  /** The embedded host's id is an obfuscated string; `User.id` is still typed as a number. */
-  hostId: number | string | null;
+  /** Obfuscated id, from the user lookup or the host embedded on the hostel. */
+  hostId: string | null;
   hostEmail: string | null;
   hostPhone: string | null;
   hostActive: boolean | null;
