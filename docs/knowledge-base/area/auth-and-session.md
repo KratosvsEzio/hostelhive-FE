@@ -18,10 +18,10 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 
 ## How it works
 - **Sign-in**: `AuthApi.signIn` returns only a JWT; `AuthService.hydrateInBackground` seats it in memory, then `GET /api/users/current` resolves roles and permissions and `setSession` persists both. The Lead Wall navigates as soon as the token arrives, before roles are known (`apps/web/src/app/features/auth/lead-wall/lead-wall.ts`).
-- **Sign-up** returns no token; the account is activated from the emailed link, which lands on `/confirm_invitation` and exchanges the one-time token for a JWT (`AuthService.confirmInvitation`).
+- **Sign-up** returns no token; the account is activated from the emailed link, which lands on `/confirm_invitation` and exchanges the one-time token for a JWT (`AuthService.confirmInvitation`). If someone is already signed in, the page asks first and Continue signs them out before the exchange (`signOutThenConfirmInvitation`).
 - **Primary role** = first match in `ROLES` order (most privileged first); `allRoles` keeps every held role (`toSessionUser` in `auth.service.ts`).
-- **Restore on load** (`app.config.ts` initializer → `restoreSession`): an expired `exp` clears locally; otherwise a cached user is restored optimistically and validated in the background, holding `StartupGate` (`apps/web/src/app/core/startup-gate.ts`). Without a cached user, bootstrap waits up to 8 s via `Promise.race`.
-- **Token attach**: `authInterceptor` adds `Authorization: Bearer` and `withCredentials` only to URLs under `API_CONFIG.baseUrl` (`apps/web/src/app/core/interceptors/auth-interceptor.ts`). Any 401 from our API, except the four credential endpoints, calls `UNAUTHORIZED_HANDLER` → `session.clear()` (`apps/web/src/app/core/interceptors/error-interceptor.ts`).
+- **Restore on load** (`app.config.ts` initializer → `restoreSession`): an expired token (`exp`, or the backend's own `expiry` claim) clears locally; otherwise a cached user is restored optimistically and validated in the background, holding `StartupGate` (`apps/web/src/app/core/startup-gate.ts`). Without a cached user, bootstrap waits up to 8 s via `Promise.race`.
+- **Token attach**: `authInterceptor` adds `Authorization: Bearer` and `withCredentials` only to URLs under `API_CONFIG.baseUrl` (`apps/web/src/app/core/interceptors/auth-interceptor.ts`). Any 401 from our API, except the four credential endpoints, calls `UNAUTHORIZED_HANDLER` with the bearer the request carried, and `provideAuth()` clears the session only if that is still the signed-in token (`apps/web/src/app/core/interceptors/error-interceptor.ts`, `apps/web/src/app/core/auth/provide-auth.ts`).
 - **SSR**: there is no token on the server. Every guard returns `true` when `window` is undefined; console and account routes are `RenderMode.Client` (`apps/web/src/app/app.routes.server.ts`).
 - **Sign-out**: best-effort `DELETE /api/user/sign_out`, always clears, and rotates the push registration.
 
@@ -44,6 +44,7 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 
 ## Decisions
 - [Only a 401 ends a session](../decisions/auth-and-session/only-a-401-ends-a-session.md)
+- [A confirmation link asks before it replaces a signed-in session](../decisions/auth-and-session/confirmation-link-asks-before-replacing-a-session.md)
 - [The JWT lives in a JS-readable first-party cookie, with no refresh token](../decisions/auth-and-session/jwt-in-readable-first-party-cookie.md)
 - [Permission children are the grant, and an empty set is not gated](../decisions/auth-and-session/permission-children-are-the-grant.md)
 - [Web Google sign-in uses the GIS token client](../decisions/auth-and-session/web-google-sign-in-uses-gis-token-client.md)
