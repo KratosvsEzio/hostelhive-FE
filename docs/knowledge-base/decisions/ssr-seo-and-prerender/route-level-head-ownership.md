@@ -20,7 +20,10 @@ The route `title:` kept each tab looking right, which hid that nothing else was 
     from `descriptionKey`;
   - nothing: `noindex`, with no canonical.
 - `RouteHeadStrategy`, the app's `TitleStrategy`, applies the default:
-  - the title is set synchronously, because GA reads it;
+  - ~~the title is set synchronously, because GA reads it~~ **Superseded by PR #113:** the premise
+    was false, because GA reads after the first change-detection tick. The title is now part of the
+    head and written only by `Seo.apply`; see
+    [the title is part of the head](./title-is-part-of-the-head.md);
   - the rest is set from a root effect gated on `LocaleStore.ready()`, which re-runs on a language
     switch;
   - the canonical is built from the matched segments, never the URL string.
@@ -50,8 +53,9 @@ The route `title:` kept each tab looking right, which hid that nothing else was 
 
 - A forgotten flag fails the build rather than silently shipping `noindex`. A private area must be
   added to `DISALLOWED_PATHS`, which also blocks it in robots.txt.
-- A route `title:` on a `'page'` route is re-set on every navigation and only a re-running page effect
-  overwrites it (Trello #143).
+- ~~A route `title:` on a `'page'` route is re-set on every navigation and only a re-running page effect
+  overwrites it (Trello #143).~~ Fixed by PR #113: `'page'` routes declare no title, and the strategy
+  writes none.
 - Default routes clear every JSON-LD block and the preload image, which partly covers the case of a
   click made before boot (Trello #138) when it lands on a default route.
 
