@@ -257,7 +257,7 @@ export class TenantFormDrawer {
             // Editing: the tenant already in this room must not be counted against
             // themselves, or saving an untouched form would report the room full.
             const residents = detail.renters.filter((r: RoomRenter) => r.id !== q.tenantId);
-            const { days } = toRoomMonth(bookings, detail.room.capacity, q.from, q.to, residents);
+            const { days } = toRoomMonth(bookings, detail.room.capacity, q.from, q.to, residents, q.roomId);
             return {
               loading: false,
               verdict: { ...assessAvailability(days, detail.room.capacity), openEnded: q.openEnded },

@@ -182,6 +182,9 @@ export const monthlyOnlyGate: CanActivateFn = (route) => {
   return toObservable(store.loaded).pipe(filter(Boolean), take(1), map(decide));
 };
 
+/** Marks a route whose component hosts route-driven drawers; see AppRouteReuseStrategy. */
+const DRAWER_HOST = { drawerHost: true };
+
 export const HOST_ROUTES: Route[] = [
   {
     path: 'hostels/new',
@@ -216,18 +219,28 @@ export const HOST_ROUTES: Route[] = [
         component: HostBookings,
         title: 'common.bookings',
         canActivate: [bookingsGate],
+        data: DRAWER_HOST,
+      },
+      // A sibling rather than a child of `bookings`: bookingsGate and HostBookings read
+      // `hostelId` from `route.parent`, which a child route would shift down a level.
+      {
+        path: 'bookings/:bookingId',
+        component: HostBookings,
+        title: 'common.bookings',
+        canActivate: [bookingsGate],
+        data: DRAWER_HOST,
       },
       {
         path: 'rooms',
         canActivate: [permissionGuard('host:Room:index')],
         children: [
-          { path: '', pathMatch: 'full', component: Rooms, title: 'common.rooms' },
+          { path: '', pathMatch: 'full', component: Rooms, title: 'common.rooms', data: DRAWER_HOST },
           // Drawer routes reuse `Rooms` so the hardware/browser back button closes the
           // drawer instead of leaving the page. They must precede `:roomId`, which would
           // otherwise swallow these literal segments.
-          { path: 'create', component: Rooms, title: 'hostRooms.addRoom' },
-          { path: 'bulk', component: Rooms, title: 'hostRooms.bulkAddRooms' },
-          { path: 'edit/:roomId', component: Rooms, title: 'hostRooms.editRoom' },
+          { path: 'create', component: Rooms, title: 'hostRooms.addRoom', data: DRAWER_HOST },
+          { path: 'bulk', component: Rooms, title: 'hostRooms.bulkAddRooms', data: DRAWER_HOST },
+          { path: 'edit/:roomId', component: Rooms, title: 'hostRooms.editRoom', data: DRAWER_HOST },
           { path: ':roomId', component: RoomDetail, title: 'routeTitle.roomDetails' },
         ],
       },
@@ -235,9 +248,9 @@ export const HOST_ROUTES: Route[] = [
         path: 'tenants',
         canActivate: [permissionGuard('host:Renter:index'), monthlyOnlyGate],
         children: [
-          { path: '', pathMatch: 'full', component: Tenants, title: 'common.tenants' },
-          { path: 'create', component: Tenants, title: 'hostTenants.registerTenant' },
-          { path: 'edit/:tenantId', component: Tenants, title: 'hostTenants.editTenant' },
+          { path: '', pathMatch: 'full', component: Tenants, title: 'common.tenants', data: DRAWER_HOST },
+          { path: 'create', component: Tenants, title: 'hostTenants.registerTenant', data: DRAWER_HOST },
+          { path: 'edit/:tenantId', component: Tenants, title: 'hostTenants.editTenant', data: DRAWER_HOST },
           { path: 'profile/:tenantId', component: TenantProfile, title: 'routeTitle.tenantProfile' },
         ],
       },
@@ -254,11 +267,12 @@ export const HOST_ROUTES: Route[] = [
         path: 'invoices',
         canActivate: [permissionGuard('host:RenterBill:index')],
         children: [
-          { path: '', pathMatch: 'full', component: Invoices, title: 'common.invoices' },
-          { path: 'create', component: Invoices, title: 'routeTitle.newInvoice' },
+          { path: '', pathMatch: 'full', component: Invoices, title: 'common.invoices', data: DRAWER_HOST },
+          { path: 'create', component: Invoices, title: 'routeTitle.newInvoice', data: DRAWER_HOST },
           // Same component as the list: the drawer is URL-driven so the hardware back
           // button closes it and lands on the list, matching 'create'.
-          { path: 'edit/:billId', component: Invoices, title: 'routeTitle.editInvoice' },
+          { path: 'edit/:billId', component: Invoices, title: 'routeTitle.editInvoice', data: DRAWER_HOST },
+          { path: 'view/:billId', component: Invoices, title: 'hostInvoices.invoice', data: DRAWER_HOST },
         ],
       },
       {

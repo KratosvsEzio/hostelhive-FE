@@ -1,6 +1,13 @@
-import { Invoice } from '@hostelhive/data-access';
+import { Invoice, InvoiceKind } from '@hostelhive/data-access';
 
-/** The rent/utility money the list summarises, as the API reports it. */
+/**
+ * The money the list summarises: rent and utility as the API reports them, and booking
+ * bills when the page has a figure for them.
+ *
+ * The booking fields are optional because the API has no booking bucket (its rent figures
+ * count `rental` bills only); a page that derives one supplies them, and one that does not
+ * leaves them absent rather than showing a total built from local edits alone.
+ */
 export interface InvoiceAggs {
   utilityTotal: number;
   utilityPaid: number;
@@ -8,6 +15,9 @@ export interface InvoiceAggs {
   rentTotal: number;
   rentPaid: number;
   rentBalance: number;
+  bookingTotal?: number;
+  bookingPaid?: number;
+  bookingBalance?: number;
 }
 
 /** Everything on the page that counts invoices rather than listing them. */
@@ -38,6 +48,18 @@ function contribution(inv: Invoice): { total: number; paid: number; balance: num
   return { total: inv.amount, paid: paid ? inv.amount : 0, balance: paid ? 0 : inv.amount };
 }
 
+/** The booking figures moved by `delta`, each only where the base has it to move. */
+function shiftedBooking(
+  base: InvoiceAggs,
+  delta: { total: number; paid: number; balance: number },
+): Pick<InvoiceAggs, 'bookingTotal' | 'bookingPaid' | 'bookingBalance'> {
+  return {
+    ...(base.bookingTotal != null ? { bookingTotal: base.bookingTotal + delta.total } : {}),
+    ...(base.bookingPaid != null ? { bookingPaid: base.bookingPaid + delta.paid } : {}),
+    ...(base.bookingBalance != null ? { bookingBalance: base.bookingBalance + delta.balance } : {}),
+  };
+}
+
 /**
  * The page's counts, moved to match rows that were changed without refetching.
  *
@@ -62,7 +84,11 @@ export function shiftInvoiceCounts(
 
   let total = base.total;
   const byStatus = new Map<string, number>();
-  const money = { rental: { total: 0, paid: 0, balance: 0 }, utility: { total: 0, paid: 0, balance: 0 } };
+  const money: Record<InvoiceKind, { total: number; paid: number; balance: number }> = {
+    rental: { total: 0, paid: 0, balance: 0 },
+    utility: { total: 0, paid: 0, balance: 0 },
+    booking: { total: 0, paid: 0, balance: 0 },
+  };
 
   for (const { before, after } of changes) {
     if (!before && after) total += 1;
@@ -101,6 +127,7 @@ export function shiftInvoiceCounts(
         utilityTotal: base.aggs.utilityTotal + money.utility.total,
         utilityPaid: base.aggs.utilityPaid + money.utility.paid,
         utilityBalance: base.aggs.utilityBalance + money.utility.balance,
+        ...shiftedBooking(base.aggs, money.booking),
       }
     : base.aggs;
 

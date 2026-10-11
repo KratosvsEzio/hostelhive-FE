@@ -578,7 +578,19 @@
     "checkInCheckOut": "Check in — check out",
     "aNightRuns12": "A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.",
     "discount": "Discount",
-    "saveBooking": "Save booking"
+    "saveBooking": "Save booking",
+    "invoice": "Invoice",
+    "checkingForInvoice": "Checking for an invoice…",
+    "noInvoiceYet": "No invoice yet.",
+    "couldNotCheckInvoice": "Could not check for an invoice.",
+    "viewInvoice": "View invoice",
+    "alsoMarkInvoicePaid": "Also mark invoice {{invoice}} as paid",
+    "bookingAndInvoicePaid": "Booking and invoice marked paid",
+    "invoiceNotPaid": "Booking marked paid. The invoice was not: {{message}}",
+    "stayedIn": "Stayed in",
+    "checkedOut": "Checked out",
+    "cancelOpenInvoiceWarning": "This booking has an unpaid invoice ({{invoice}}). Cancelling does not delete it.",
+    "bookingNotFound": "We couldn't find that booking."
   },
   "hostExpenses": {
     "allTypes": "All types",
@@ -639,7 +651,18 @@
     "due": "Due",
     "thisWillPermanentlyDeleteInvoice": "This will permanently delete invoice",
     "invoicesAppearHereOnceYou": "Invoices appear here once you issue rent or utility bills.",
-    "tryAdjustingYourFilters": "Try adjusting your filters."
+    "invoicesAppearHereNightly": "Invoices appear here once you generate them from checked-in bookings.",
+    "tryAdjustingYourFilters": "Try adjusting your filters.",
+    "bookingInvoices": "Booking invoices",
+    "bookingRef": "Booking {{ref}}",
+    "viewBooking": "View booking",
+    "guestName": "Guest name",
+    "markPaidConfirmTitle": "Mark {{invoice}} as paid?",
+    "markPaidConfirmBody": "This records the full amount as received.",
+    "alsoMarkBookingPaid": "Also mark booking {{ref}} as paid",
+    "invoiceAndBookingPaid": "Invoice and booking marked paid",
+    "bookingNotPaid": "Invoice marked paid. The booking was not: {{message}}",
+    "invoiceNotFound": "We couldn't find that invoice."
   },
   "hostMess": {
     "pickADate": "Pick a date",
@@ -820,7 +843,14 @@
     "nobodyInThisRoomThat": "Nobody in this room that day.",
     "thisRoomCurrentlyHasNo": "This room currently has no active tenants.",
     "addYourFirstRoomTo": "Add your first room to start tracking occupancy.",
-    "bedNumbersAreNotAssigned": "Bed numbers are not assigned yet — the calendar reports how many beds are taken, not which one each guest is in."
+    "bedNumbersAreNotAssigned": "Bed numbers are not assigned yet — the calendar reports how many beds are taken, not which one each guest is in.",
+    "nFree": "{{count}} free",
+    "full": "Full",
+    "guestsOnBookings": "Guests on bookings",
+    "noBookingGuests": "No booking guests in this room right now.",
+    "guestCount": "Guests: {{count}}",
+    "untilDate": "Until {{date}}",
+    "couldNotLoadBookingGuests": "Couldn't load booking guests."
   },
   "hostBilling": {
     "title": "Billing",

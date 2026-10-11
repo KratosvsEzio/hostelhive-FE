@@ -1,16 +1,51 @@
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  output,
+  signal,
+} from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
-import { Button } from '@hostelhive/ui';
+import { Button, StatusPill, StatusTone } from '@hostelhive/ui';
+import { Invoice } from '@hostelhive/data-access';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
-import { LaneKey, laneFor, laneKeyFor } from './booking-month';
+import { MoneyPipe } from '@app/shared/currency/money.pipe';
+import { LocaleLink } from '@core/i18n/locale-link';
+import { invoicePath } from '@util/host-links';
+import {
+  buildInvoiceId,
+  invoiceStatusLabel,
+  invoiceStatusTone,
+} from '@util/table-configs/invoice-table-cols';
+import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from './booking-month';
 import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
 import { isPrivateOccupancy } from '@util/occupancy-type';
 
 /** What a host can do to a booking, as the lifecycle (Trello #80) allows it. */
-export type BookingAction = 'confirm' | 'checkIn' | 'checkOut' | 'invoice' | 'cancel' | 'noShow' | 'markPaid';
+export type BookingAction =
+  | 'confirm'
+  | 'checkIn'
+  | 'checkOut'
+  | 'invoice'
+  | 'viewInvoice'
+  | 'cancel'
+  | 'noShow'
+  | 'markPaid';
+
+/**
+ * Where the page is in finding out whether a booking has an invoice.
+ *
+ * `done` covers both answers — the invoice itself travels separately, and its absence after
+ * `done` means the booking has none yet.
+ */
+export type InvoiceLookup = 'loading' | 'error' | 'done';
 
 /**
  * Which actions each stage offers, primary last.
@@ -18,36 +53,32 @@ export type BookingAction = 'confirm' | 'checkIn' | 'checkOut' | 'invoice' | 'ca
  * Offered only from the state the lifecycle allows, because the server does not guard two of
  * them: it would confirm a cancelled booking, and check in one nobody confirmed. Cancel is
  * open until the stay ends; a no-show only from confirmed; an invoice once there is a stay to
- * bill — checked in, checked out, or a no-show, which stays invoiceable.
+ * bill — checked in or checked out. A no-show is closed: the server refuses to invoice it.
  */
 export const ACTIONS_BY_LANE: Readonly<Record<LaneKey, readonly BookingAction[]>> = {
   pending: ['cancel', 'confirm'],
   confirmed: ['cancel', 'noShow', 'checkIn'],
   'checked-in': ['cancel', 'invoice', 'checkOut'],
   'checked-out': ['invoice'],
-  'no-show': ['invoice'],
+  'no-show': [],
   cancelled: [],
 };
-
-/**
- * Stages a booking can be marked paid from.
- *
- * Narrower than the server's `PAYABLE_STATUSES`, which also takes `no-show`: a booking that
- * ended as a no-show or was cancelled is closed, and the host does not record payment on it.
- */
-const PAYABLE: readonly LaneKey[] = ['confirmed', 'checked-in', 'checked-out'];
 
 /**
  * The moves a booking offers now: its stage's, plus "Mark as paid" while money is still owed on
  * a stage that can be paid (Trello #81). Placed before the stage's primary move, so the move
  * that finishes the stage stays last and filled.
+ *
+ * A booking is invoiced once, so when its invoice is known "Generate invoice" becomes
+ * "View invoice" in the same place.
  */
-export function actionsFor(b: HostBooking): readonly BookingAction[] {
+export function actionsFor(b: HostBooking, invoice: Invoice | null = null): readonly BookingAction[] {
   const lane = laneKeyFor(b.disposition.slug);
   if (!lane) return [];
-  const base = ACTIONS_BY_LANE[lane];
+  const stage = ACTIONS_BY_LANE[lane];
+  const base = invoice ? stage.map((a) => (a === 'invoice' ? 'viewInvoice' : a)) : stage;
   const owed = b.paid < b.total;
-  if (!owed || !PAYABLE.includes(lane)) return base;
+  if (!owed || !PAYABLE_LANES.includes(lane)) return base;
   return [...base.slice(0, -1), 'markPaid', ...base.slice(-1)];
 }
 
@@ -67,7 +98,17 @@ interface OccupancyState {
 @Component({
   selector: 'hh-booking-details-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Button, CurrencySymbolPipe, TranslocoPipe],
+  imports: [
+    DatePipe,
+    DecimalPipe,
+    RouterLink,
+    LocaleLink,
+    Button,
+    StatusPill,
+    CurrencySymbolPipe,
+    MoneyPipe,
+    TranslocoPipe,
+  ],
   templateUrl: './booking-details-panel.html',
 })
 export class BookingDetailsPanel {
@@ -78,9 +119,15 @@ export class BookingDetailsPanel {
   readonly actionError = input('');
   /** An action is in flight; every button waits for it. */
   readonly busy = input(false);
+  /** The booking's invoice, once the page has found one. */
+  readonly invoice = input<Invoice | null>(null);
+  /** Whether the page is still asking for {@link invoice}, or could not. */
+  readonly invoiceLookup = input<InvoiceLookup>('done');
 
   readonly closed = output<void>();
   readonly act = output<{ action: BookingAction; booking: HostBooking }>();
+  /** A room was released, so the booking the page holds no longer matches the server's. */
+  readonly released = output<HostBooking>();
 
   private readonly api = inject(HostBookingsApi);
 
@@ -92,13 +139,48 @@ export class BookingDetailsPanel {
 
   protected readonly actions = computed<readonly BookingAction[]>(() => {
     const b = this.booking();
-    return b ? actionsFor(b) : [];
+    return b ? actionsFor(b, this.invoice()) : [];
   });
   /** The move that finishes this stage — drawn filled, the rest outlined. */
   protected readonly primary = computed(() => {
     const a = this.actions();
     const last = a[a.length - 1];
-    return last && last !== 'cancel' && last !== 'invoice' && last !== 'markPaid' ? last : null;
+    return last && !SECONDARY_ACTIONS.includes(last) ? last : null;
+  });
+
+  // ── the invoice ──────────────────────────────────────────────────────────────────
+  /** Only a stay that happened can be invoiced, so only those stages say whether it has been. */
+  protected readonly showInvoice = computed(() => {
+    const lane = this.lane();
+    return !!lane && INVOICEABLE_LANES.includes(lane);
+  });
+  protected readonly invoiceNumber = computed(() => {
+    const inv = this.invoice();
+    return inv ? buildInvoiceId(inv) : '';
+  });
+  protected readonly invoiceStatusText = computed(() => {
+    const inv = this.invoice();
+    return inv ? invoiceStatusLabel(inv.status) : '';
+  });
+  protected readonly invoiceTone = computed<StatusTone>(() => {
+    const inv = this.invoice();
+    return inv ? invoiceStatusTone(inv.status) : 'neutral';
+  });
+  protected readonly invoiceLink = computed(() => {
+    const inv = this.invoice();
+    return inv ? invoicePath(this.hostelId(), inv.id) : '';
+  });
+
+  /**
+   * The rooms a finished stay used, read-only.
+   *
+   * From the rooms the booking carries: once it is checked out or cancelled nothing can be
+   * released, so there is nothing to re-read either.
+   */
+  protected readonly stayHistory = computed<readonly BookingOccupancy[]>(() => {
+    const b = this.booking();
+    const lane = this.lane();
+    return b && (lane === 'checked-out' || lane === 'cancelled') ? b.occupancies : [];
   });
 
   protected readonly isShared = computed(
@@ -164,27 +246,36 @@ export class BookingDetailsPanel {
   });
 
   // ── who is in which room ─────────────────────────────────────────────────────────
-  /** Bumped after a release, so the list re-reads what the server now holds. */
-  private readonly occupancyTick = signal(0);
   protected readonly releasing = signal<string | null>(null);
   protected readonly releaseError = signal('');
 
+  /**
+   * Rooms released from this panel, by occupancy id, for the booking it is showing.
+   *
+   * The occupancies endpoint answers from the search index, which lags a release by up to a
+   * second — so re-reading it straight after one returns the room still active. The server's
+   * "released" is final, so the panel records it here instead of asking again.
+   */
+  private readonly releasedIds = linkedSignal<string, ReadonlySet<string>>({
+    source: () => this.booking()?.id ?? '',
+    computation: () => new Set<string>(),
+  });
+
   private readonly occupancyState = toSignal(
     toObservable(
+      // The page swaps in the server's copy after every action (marked paid, a release). Same
+      // booking, same rooms — so only a different booking reads them again.
       computed(() => {
         const b = this.booking();
         const checkedIn = b && laneKeyFor(b.disposition.slug) === 'checked-in';
-        return { key: checkedIn ? `${this.hostelId()}|${b.id}` : '', tick: this.occupancyTick() };
-      },
-      // The page swaps in the server's copy after every action (marked paid, say). Same
-      // booking, same rooms — so only a different booking or a release re-reads them.
-      { equal: (a, b) => a.key === b.key && a.tick === b.tick }),
+        return checkedIn ? `${this.hostelId()}|${b.id}` : '';
+      }),
     ).pipe(
-      switchMap(({ key }) => {
+      switchMap((key) => {
         if (!key) return of<OccupancyState>({ loading: false, error: false, rows: [] });
         const [hostelId, bookingId] = key.split('|');
         // The booking carries its rooms now (Trello #81): shown at once, then refreshed from
-        // the endpoint — which is also what a release re-reads.
+        // the endpoint.
         const carried = this.booking()?.occupancies ?? [];
         return this.api.occupancies(hostelId, bookingId).pipe(
           map((rows) => ({ loading: false, error: false, rows })),
@@ -199,17 +290,40 @@ export class BookingDetailsPanel {
   );
 
   protected readonly showOccupancies = computed(() => this.lane() === 'checked-in');
-  protected readonly occupancies = computed(() => this.occupancyState());
+  /**
+   * The rows to draw: the endpoint's, plus any room the booking carries that it does not list,
+   * with every room known to be released marked so.
+   *
+   * The endpoint reads a search index that can lag the database by minutes, so a booking the page
+   * re-read from the database may hold rooms it has not heard of yet. A room is never removed, only
+   * released, so a room any source lists is kept. Released is final too, so any source saying so
+   * wins over the index: this panel's own release, or the booking's copy.
+   */
+  protected readonly occupancies = computed<OccupancyState>(() => {
+    const state = this.occupancyState();
+    const carried = this.booking()?.occupancies ?? [];
+    const listed = new Set(state.rows.map((o) => o.id));
+    const unlisted = carried.filter((o) => !listed.has(o.id));
+    const merged: OccupancyState = unlisted.length
+      ? { loading: false, error: false, rows: [...state.rows, ...unlisted] }
+      : state;
+    const released = new Set(this.releasedIds());
+    for (const o of carried) if (!o.active) released.add(o.id);
+    if (!merged.rows.some((o) => o.active && released.has(o.id))) return merged;
+    return { ...merged, rows: merged.rows.map((o) => (o.active && released.has(o.id) ? { ...o, active: false } : o)) };
+  });
 
   protected release(o: BookingOccupancy): void {
     const b = this.booking();
     if (!b || this.releasing()) return;
     this.releasing.set(o.id);
     this.releaseError.set('');
-    this.api.releaseOccupancy(this.hostelId(), b.id, o.id).subscribe({
+    // The failure is shown under the rooms, so the global toast would only repeat it.
+    this.api.releaseOccupancy(this.hostelId(), b.id, o.id, { suppressErrorToast: true }).subscribe({
       next: () => {
         this.releasing.set(null);
-        this.occupancyTick.update((n) => n + 1);
+        this.releasedIds.update((ids) => new Set(ids).add(o.id));
+        this.released.emit(b);
       },
       error: (err: { message?: string } | null) => {
         this.releasing.set(null);
@@ -238,8 +352,9 @@ export class BookingDetailsPanel {
       case 'checked-in':
         return 'Checking out releases every bed this booking holds.';
       case 'checked-out':
+        return this.invoice() ? 'This stay has been invoiced.' : 'An invoice can be raised once per booking.';
       case 'no-show':
-        return 'An invoice can be raised once per booking.';
+        return 'The guest never arrived, so this booking is closed.';
       case 'cancelled':
         return 'This booking was cancelled.';
       default:
@@ -263,11 +378,15 @@ export class BookingDetailsPanel {
   }
 }
 
+/** Moves that never finish a stage, so they are never drawn as its filled primary. */
+const SECONDARY_ACTIONS: readonly BookingAction[] = ['cancel', 'invoice', 'viewInvoice', 'markPaid'];
+
 const ACTION_LABEL: Record<BookingAction, string> = {
   confirm: 'Confirm',
   checkIn: 'Check in',
   checkOut: 'Check out',
   invoice: 'Generate invoice',
+  viewInvoice: 'View invoice',
   cancel: 'Cancel booking',
   noShow: 'Mark no show',
   markPaid: 'Mark as paid',

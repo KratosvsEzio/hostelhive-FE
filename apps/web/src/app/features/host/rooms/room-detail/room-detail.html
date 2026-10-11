@@ -30,7 +30,9 @@
             <p class="mt-0.5 text-sm text-ink-500">{{ room.type }}</p>
           </div>
         </div>
-        <hh-status-pill [tone]="statusTone()">{{ statusLabel() }}</hh-status-pill>
+        @if (guestCountKnown()) {
+          <hh-status-pill [tone]="statusTone()">{{ statusLabel() }}</hh-status-pill>
+        }
       </div>
     </div>
 
@@ -67,7 +69,7 @@
           </div>
           <div>
             <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.occupied' | transloco }}</p>
-            <p class="mt-1 text-sm font-semibold text-ink-900">{{ room.occupied }} / {{ room.capacity }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">@if (guestCountKnown()) { {{ occupied() }} / {{ room.capacity }} } @else { — }</p>
           </div>
           <div>
             <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostRooms.rentPerBed' | transloco }}</p>
@@ -82,15 +84,18 @@
       <div class="rounded-2xl bg-white shadow-card">
         <div class="border-b border-ink-100 px-5 py-4">
           <p class="font-semibold text-ink-900">{{ 'hostRooms.currentTenants' | transloco }}</p>
-          <!-- Counted from the active tenants, which is what the header above reports too.
-               Counting every returned row put "4 of 4 beds occupied" under a header reading
+          <!-- Active tenants plus booking guests, the same figure the header reports. Counting
+               every returned row put "4 of 4 beds occupied" under a header reading
                "Occupied 0 / 4". The inactive ones are still listed — this is the only place
                their stay in this room shows — so their number is said separately rather than
                folded into occupancy. -->
           <p class="mt-0.5 text-xs text-ink-400">
-            {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: activeRenters().length, total: room.capacity } }}
+            @if (guestCountKnown()) {
+              {{ 'hostRooms.bedsOccupiedOf' | transloco: { filled: occupied(), total: room.capacity } }}
+              @if (pastRenters().length) { · }
+            }
             @if (pastRenters().length) {
-              · {{ 'hostRooms.nNoLongerActive' | transloco: { count: pastRenters().length } }}
+              {{ 'hostRooms.nNoLongerActive' | transloco: { count: pastRenters().length } }}
             }
           </p>
         </div>
@@ -141,6 +146,48 @@
           </ul>
         }
       </div>
+
+      @if (!monthlyBilling()) {
+        @let bg = bookingGuests();
+        <div class="mt-5 rounded-2xl bg-white shadow-card">
+          <div class="border-b border-ink-100 px-5 py-4">
+            <p class="font-semibold text-ink-900">{{ 'hostRooms.guestsOnBookings' | transloco }}</p>
+          </div>
+
+          @if (bg.loading) {
+            <div class="px-5 py-4">
+              <hh-skeleton class="h-12" radius="lg" />
+            </div>
+          } @else if (bg.error) {
+            <p class="flex items-center gap-1.5 px-5 py-4 text-sm text-danger">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'hostRooms.couldNotLoadBookingGuests' | transloco }}
+            </p>
+          } @else if (bg.guests.length === 0) {
+            <p class="px-5 py-6 text-center text-sm text-ink-500">{{ 'hostRooms.noBookingGuests' | transloco }}</p>
+          } @else {
+            <ul class="divide-y divide-ink-100">
+              @for (guest of bg.guests; track guest.bookingId) {
+                <li class="flex items-center gap-3 px-5 py-4 sm:gap-4">
+                  <hh-avatar [initials]="guest.initials" size="md" />
+
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate font-medium text-ink-900">{{ guest.guestName }}</p>
+                    <a
+                      class="mt-0.5 inline-block truncate text-xs font-medium text-brand-500 hover:underline"
+                      [routerLink]="guest.link"
+                    >{{ guest.ref || '—' }}</a>
+                  </div>
+
+                  <div class="shrink-0 text-end">
+                    <p class="text-sm font-semibold text-ink-900">{{ 'hostRooms.guestCount' | transloco: { count: guest.guests } }}</p>
+                    <p class="mt-0.5 text-xs text-ink-500">{{ 'hostRooms.untilDate' | transloco: { date: (guest.checkOut | apiDate: 'mediumDate') } }}</p>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
 
     }
 
