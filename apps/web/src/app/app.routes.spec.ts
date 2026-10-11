@@ -350,6 +350,8 @@ const EXPECTED_TITLES: Record<string, string> = {
   'host/:hostelId/overview/occupancy': 'Occupancy trend — HostelHive',
   'host/:hostelId/subscription': 'Billing — HostelHive',
   'host/:hostelId/subscription/pay/:invoiceId': 'Pay invoice — HostelHive',
+  'host/:hostelId/subscription/invoices': 'Billing history — HostelHive',
+  'host/:hostelId/subscription/invoices/:invoiceId': 'Invoice — HostelHive',
   'admin/roles': 'Roles & permissions — HostelHive Admin',
   'admin/payments': 'Payments — HostelHive Admin',
   'admin/listings': 'All listings — HostelHive Admin',

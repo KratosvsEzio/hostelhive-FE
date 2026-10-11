@@ -115,7 +115,7 @@ describe('the new-plan invoice kind label', () => {
   });
 
   describe.each(files)('%s', (file) => {
-    const label = at(load(file), 'hostBilling.kindNew');
+    const label = at(loadLocale(file), 'hostBilling.kindNew');
 
     it('is no longer worded as the first payment', () => {
       expect(label).not.toBe(OLD_KIND_NEW[file]);

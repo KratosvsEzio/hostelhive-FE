@@ -28,11 +28,11 @@ export const SUBSCRIPTION_ROUTES: Route[] = [
   {
     path: 'invoices',
     component: BillingInvoices,
-    title: 'Billing history — HostelHive',
+    title: 'hostBillingHistory.title',
   },
   {
     path: 'invoices/:invoiceId',
     component: BillingInvoiceDetail,
-    title: 'Invoice — HostelHive',
+    title: 'hostInvoices.invoice',
   },
 ];

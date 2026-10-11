@@ -24,14 +24,14 @@ describe('feature-subscription routes', () => {
   it('serves the invoice history', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'invoices')).toMatchObject({
       component: BillingInvoices,
-      title: 'Billing history — HostelHive',
+      title: 'hostBillingHistory.title',
     });
   });
 
   it('serves the detail of one invoice', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'invoices/:invoiceId')).toMatchObject({
       component: BillingInvoiceDetail,
-      title: 'Invoice — HostelHive',
+      title: 'hostInvoices.invoice',
     });
   });
 
