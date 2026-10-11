@@ -58,8 +58,10 @@ itself by the same width.
 veil in `app.html` stays up until both release, capped at 6s. This stops a language redirect from
 moving the page under a reader.
 
-**Route reuse.** `AppRouteReuseStrategy` reuses the component when only a route-driven drawer opens
-on `Tenants`, `Rooms` or `Invoices`, so the list is not torn down and refetched.
+**Route reuse.** `AppRouteReuseStrategy` reuses the component when both routes carry
+`data: { drawerHost: true }` and share it (Bookings, Rooms, Tenants and Invoices and their drawer
+or deep-link routes in `features/host/host.routes.ts`), so the list is not torn down and refetched.
+It reads route data rather than component classes, so it imports no page.
 
 ## Reuse, don't rebuild
 
