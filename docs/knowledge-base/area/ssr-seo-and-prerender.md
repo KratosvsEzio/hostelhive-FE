@@ -47,12 +47,39 @@ deepest-wins down the matched tree (`routeHeadFor`):
 - **No flag:** `noindex`, with no canonical and no `og:url`. Auth, account, the consoles,
   notifications, forbidden and the payment return pages.
 
-`RouteHeadStrategy.updateTitle` sets the route `title:` **synchronously** on every navigation, because
-GA reads `document.title` a tick after `NavigationEnd`. The rest of a default head waits for a root
-effect gated on `ready()` that also tracks the active locale, so a language switch re-applies it. A
-default route also clears every JSON-LD block and the preload image. Its canonical is built from the
-matched route segments, never the URL string, so a matrix parameter (`/en/about;utm=x`) cannot mint a
-duplicate.
+**The title is part of the head.** Only `Seo.apply` writes `<title>`.
+- **`RouteHeadStrategy.updateTitle` writes nothing itself.**
+- **On a `'page'` route** the component owns the title, and the route declares no `title:`.
+- **On every other route** `title:` holds a translation **key** for the page's label, e.g.
+  `publicAbout.aboutUs` or `routeTitle.payInvoice`. A root effect gated on `ready()` (and tracking the
+  active locale) composes it into `seo.pageTitle` ("{{page}} — HostelHive"), or `seo.adminPageTitle`
+  under `/<locale>/admin`, and applies it with the rest of the default head. A language switch therefore
+  re-translates it.
+- **A route with no title** gets the translated `seo.defaultTitle`.
+- **A default route also clears** every JSON-LD block and the preload image.
+- **Its canonical** is built from the matched route segments, never the URL string, so a matrix
+  parameter (`/en/about;utm=x`) cannot create a duplicate.
+
+**Provisional heads and `Seo.settled`.**
+- A page whose head waits on data applies an interim head with `provisional: true`. The listing does:
+  "Hostel details — HostelHive", noindex, while loading.
+- `Seo.settled` is true once the active language's strings are loaded and the last `apply` was not
+  provisional.
+- An API error or outage gives the listing the same neutral head as **final**. "Listing not found" is
+  only for a genuine 404 (`listing-detail-api.ts` maps only a 404 to "missing").
+
+**Google Analytics page views** (`core/google-analytics/google-analytics.service.ts`):
+- **When a view is sent:** after `NavigationEnd` the service waits one macrotask, then for
+  `Seo.settled`, then one more macrotask, and only then reads `document.title`.
+  - **The wait is capped at 5 s.**
+  - **A pending view is flushed** at the next `NavigationEnd` and on `pagehide`, with the location
+    captured when it was queued.
+  - **Each navigation sends exactly one view.**
+- **Why the timing holds:** within a tick, root effects re-run after page effects, so a provisional
+  head written in the settling tick cancels the send.
+- **Console and token URLs** are judged on their locale-free path (`isMarketplacePath(routePath(url))`)
+  and send nothing.
+- **`stop()`** (consent withdrawn) drops a pending view, and nothing is sent until `start()` runs again.
 
 **Head tags.** A page calls `Seo.apply({ title, description, path, image, noindex, type })`.
 - **`path`** is written without a locale. `Seo` adds the active locale for the canonical and `og:url`. Every tag is overwritten, because components are reused across navigations.
@@ -109,6 +136,16 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   which case its path prefix goes in `DISALLOWED_PATHS`. `app.routes.spec.ts` walks every route and
   fails on a page that does none of these, on a flagged page under a private area, and when the
   `'index'` routes and the sitemap disagree.
+- A route title is a **label key**, never English text.
+  - **Prefer a label the page already uses** and that is translated in all 18 locale files. Otherwise
+    add a `routeTitle.*` key to all 18.
+  - **`app.routes.spec.ts` rejects** a literal title, or a title on a `'page'` route.
+  - **`core/i18n/route-title-locale-parity.spec.ts` fails** on a title key that is missing or empty in
+    any locale.
+  - **The English titles are pinned** in `app.routes.spec.ts`, so a new titled route needs an entry
+    there.
+- `Seo.settled` / `provisional` for a page whose head waits on data, so analytics records the real
+  title rather than the interim one.
 - `placeSocialImage` / `DEFAULT_SOCIAL_IMAGE` for `image`.
 - `localeAlternates` for anything that states `hreflang`.
 - `sitemapPaths()`: add a new indexable page here, or derive it from the list its route reads.
@@ -140,11 +177,19 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   that wait, a head check after the click can pass using only the server HTML.
 - **Call `apply` from a `ready()`-gated effect, never once in a constructor.** A language switch reuses
   the component, so a constructor `apply` keeps the old language's canonical (how Blog broke, Trello
-  #132). An effect also runs after `updateTitle`, so the page's own title beats the route's.
-- **A route `title:` on a `'page'` route can outlive the page's title.** `updateTitle` re-sets it on
-  every navigation, and only a page effect that re-runs overwrites it. A query-only navigation on the
-  listing (`review: null`) leaves "Hostel details — HostelHive"; the search routes have no title, so GA
-  reads the previous page's (Trello #143).
+  #132).
+- **Never give a `'page'` route a `title:`, and never set `<title>` outside `Seo.apply`.**
+  - **What went wrong:** until PR #113 the strategy wrote the route title on every navigation. A
+    query-only navigation on the listing, pricing or blog then left the generic route title, because
+    no page effect re-ran (Trello #143).
+  - **The premise was false:** writing it early was meant to serve GA, but GA reads after the first
+    change-detection tick.
+- **A page whose head depends on async data must mark its interim head `provisional`.** Otherwise GA
+  records the interim title, as the listing did with "Listing not found" while loading.
+- **Translated text read once in TypeScript waits for `ready()`.** A label translated before the
+  language file loads comes back as the key itself.
+- **`window.ng` exists only in dev builds.** The e2e helpers `titleAtNavigationEnd` and `gaTitles`
+  hook the router through it, so the specs using them can't run against a production build.
 - **The legal pages are English text at 18 language URLs**, each self-canonical with `hreflang` to
   match the sitemap, which claims translations that do not exist (Trello #139).
 - **The e2e `waitForClient` also waits for the startup veil and the boot splash.** Both are full-screen
@@ -156,6 +201,7 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 - [Authenticated areas render client-only, in every locale shape](../decisions/ssr-seo-and-prerender/authenticated-areas-render-client-only.md)
 - [The sitemap is generated by the SSR server from route data](../decisions/ssr-seo-and-prerender/sitemap-served-by-the-ssr-server.md)
 - [Every route declares who owns its head; undeclared means noindex](../decisions/ssr-seo-and-prerender/route-level-head-ownership.md)
+- [The title is part of the head; analytics waits for it to settle](../decisions/ssr-seo-and-prerender/title-is-part-of-the-head.md)
 
 ## See also
 
