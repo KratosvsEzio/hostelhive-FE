@@ -70,6 +70,8 @@ import { MoneyPipe } from '@app/shared/currency/money.pipe';
 import { currencySymbol } from '@util/currencies';
 import { bookingPath, invoicePath } from '@util/host-links';
 import { buildInvoiceId } from '@util/table-configs/invoice-table-cols';
+import { bookingRefusal } from '@util/booking-refusal';
+import { bookingMoveFailureKey, crossPayInvoiceFailureKey } from './booking-move-failure';
 
 interface ViewState {
   loading: boolean;
@@ -249,6 +251,7 @@ export class HostBookings {
 
   /** The booking open in the details panel. */
   protected readonly viewing = signal<HostBooking | null>(null);
+  /** A translation key, or `''` while there is nothing to report. */
   protected readonly viewError = signal('');
   /** One lifecycle request at a time; every control holds while it is out. */
   protected readonly busy = signal(false);
@@ -524,7 +527,8 @@ export class HostBookings {
    *
    * The details panel, if open on it, redraws from that copy — the next moves follow from
    * where the booking now is — and the list re-reads, since the move may take the row out of
-   * whatever the filter is narrowing to. A refusal is shown where the host pressed the button.
+   * whatever the filter is narrowing to. A refusal is shown where the host pressed the button,
+   * as translated copy picked from the failure, never its own text.
    * An empty `title` leaves the success toast to `onSuccess`, for moves whose outcome has parts.
    */
   private send(
@@ -532,7 +536,7 @@ export class HostBookings {
     request: (id: string) => Observable<HostBooking>,
     title: string,
     message = '',
-    onError: (text: string) => void = (text) => this.viewError.set(text),
+    onError: (err: unknown) => void = (err) => this.viewError.set(bookingMoveFailureKey(err)),
     onSuccess: () => void = () => undefined,
   ): void {
     if (this.busy()) return;
@@ -555,10 +559,10 @@ export class HostBookings {
         this.listData.update((d) => d && { ...d, items: d.items.map((b) => (b.id === updated.id ? updated : b)) });
         if (title) this.notifications.success(title, message);
       },
-      error: (err: { message?: string } | null) => {
+      error: (err: unknown) => {
         this.busy.set(false);
         this.epoch++;
-        onError(err?.message || 'The server did not accept that. Please try again.');
+        onError(err);
       },
     });
   }
@@ -567,6 +571,7 @@ export class HostBookings {
 
   protected readonly dialog = signal<{ action: BookingAction; booking: HostBooking } | null>(null);
   protected readonly dialogReason = signal('');
+  /** A translation key, or `''` while there is nothing to report. */
   protected readonly dialogError = signal('');
   /** The server refuses a cancellation without one; a no-show's is kept on the record too. */
   protected readonly reasonRequired = computed(() => this.dialog()?.action === 'cancel');
@@ -588,11 +593,11 @@ export class HostBookings {
     if (!d) return;
     const reason = this.dialogReason().trim();
     if (this.reasonRequired() && !reason) {
-      this.dialogError.set('Give the guest a reason — it is sent to them and kept on the booking.');
+      this.dialogError.set('hostBookings.giveTheGuestAReason');
       return;
     }
     const hostelId = this.hostelId();
-    const fail = (text: string) => this.dialogError.set(text);
+    const fail = (err: unknown) => this.dialogError.set(bookingMoveFailureKey(err));
     // Every refusal here is written into the dialog, so the global toast would repeat it.
     const quiet = { suppressErrorToast: true };
     const roomsMoved = () => this.refetchDelay.track('/rooms');
@@ -620,7 +625,7 @@ export class HostBookings {
             ),
           '',
           '',
-          (text) => this.onGenerateRefused(d.booking, text),
+          (err) => this.onGenerateRefused(d.booking, err),
           () => this.announceInvoice(d.booking),
         );
         return;
@@ -637,11 +642,11 @@ export class HostBookings {
    * refusal stops both and shows in the dialog; the invoice's arrives after the booking is
    * already paid, so it is reported on its own rather than undoing anything.
    */
-  private markPaid(booking: HostBooking, fail: (text: string) => void): void {
+  private markPaid(booking: HostBooking, fail: (err: unknown) => void): void {
     const hostelId = this.hostelId();
     const inv = this.payInvoiceToo() ? this.unpaidInvoice(booking) : null;
     let settled: Invoice | null = null;
-    let invoiceError = '';
+    let invoiceFailureKey = '';
     this.send(
       booking,
       (id) =>
@@ -649,14 +654,14 @@ export class HostBookings {
           switchMap((updated) =>
             !inv
               ? of(updated)
-              : // Its refusal is reported as `invoiceNotPaid` below, quoting the server.
+              : // Its refusal is reported as `invoiceNotPaid` below, with a translated reason.
                 this.hostOps.markInvoicePaid(hostelId, inv.id, { suppressErrorToast: true }).pipe(
                   map((paid) => {
                     settled = paid;
                     return updated;
                   }),
-                  catchError((err: { message?: string } | null) => {
-                    invoiceError = err?.message || 'The server did not accept that.';
+                  catchError((err: unknown) => {
+                    invoiceFailureKey = crossPayInvoiceFailureKey(err);
                     return of(updated);
                   }),
                 ),
@@ -672,9 +677,8 @@ export class HostBookings {
           this.recordInvoice(booking.id, settled);
           this.notifications.success(this.i18n.translate<string>('hostBookings.bookingAndInvoicePaid'));
         } else {
-          this.notifications.error(
-            this.i18n.translate<string>('hostBookings.invoiceNotPaid', { message: invoiceError }),
-          );
+          const reason = this.i18n.translate<string>(invoiceFailureKey);
+          this.notifications.error(this.i18n.translate<string>('hostBookings.invoiceNotPaid', { reason }));
         }
       },
     );
@@ -694,13 +698,13 @@ export class HostBookings {
    * A second invoice is refused because one already exists — which means this page missed it,
    * so it asks again and offers that one instead of a dead end.
    */
-  private onGenerateRefused(booking: HostBooking, text: string): void {
-    if (!/already exists/i.test(text)) {
-      this.dialogError.set(text);
+  private onGenerateRefused(booking: HostBooking, err: unknown): void {
+    if (bookingRefusal(err) !== 'invoiceExists') {
+      this.dialogError.set(bookingMoveFailureKey(err));
       return;
     }
     this.closeDialog();
-    this.notifications.info(text);
+    this.notifications.info(this.i18n.translate<string>('hostBookings.invoiceAlreadyExists'));
     // Quiet only when the panel is back on this booking to say so itself.
     this.lookupInvoices([booking.id], this.viewing()?.id === booking.id ? PANEL_LOOKUP : undefined);
   }
@@ -708,6 +712,7 @@ export class HostBookings {
   // ── checking in: placing guests in rooms ───────────────────────────────────────
 
   protected readonly assigning = signal<HostBooking | null>(null);
+  /** A translation key, or `''` while there is nothing to report. */
   protected readonly assignError = signal('');
 
   protected openAssign(booking: HostBooking | null | undefined): void {
@@ -739,7 +744,7 @@ export class HostBookings {
       (id) => this.bookingsApi.checkIn(this.hostelId(), id, allocations, { suppressErrorToast: true }),
       'Checked in',
       sel.rooms.map((r) => `Room ${r.roomNumber} × ${r.guests}`).join(', '),
-      (text) => this.assignError.set(text),
+      (err) => this.assignError.set(bookingMoveFailureKey(err)),
       () => {
         this.assigning.set(null);
         this.refetchDelay.track('/rooms');

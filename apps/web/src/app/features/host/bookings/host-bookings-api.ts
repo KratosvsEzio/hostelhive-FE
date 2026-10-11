@@ -210,25 +210,32 @@ export class HostBookingsApi {
    *
    * The same body the guest endpoint takes: room types and how many, not rooms — rooms are
    * placed at check-in. Dates go as plain days, which the server reads in the hostel's zone.
+   *
+   * Opted out of the global error toast: the booking drawer says why the save failed in its own
+   * translated words, and a toast on top would repeat it in the server's.
    */
   create(hostelId: string, input: HostBookingInput): Observable<HostBooking> {
     return this.api
-      .post<{ booking?: ApiHostBooking | null }>(`/api/host/hostels/${hostelId}/bookings`, {
-        booking: {
-          checkin_date: input.checkIn,
-          checkout_date: input.checkOut,
-          guest_name: input.guestName.trim(),
-          guest_phone: input.guestPhone.replace(/\D/g, ''),
-          ...(input.guestEmail.trim() ? { guest_email: input.guestEmail.trim() } : {}),
-          line_items: input.lines.map((l) => ({
-            room_type_id: l.roomTypeId,
-            guests: l.guests,
-            occupancy_type: l.shared ? 'shared' : 'private_room',
-            // A shared line's bed count is its guests; only a private line says how many rooms.
-            ...(l.shared ? {} : { quantity: l.quantity }),
-          })),
+      .post<{ booking?: ApiHostBooking | null }>(
+        `/api/host/hostels/${hostelId}/bookings`,
+        {
+          booking: {
+            checkin_date: input.checkIn,
+            checkout_date: input.checkOut,
+            guest_name: input.guestName.trim(),
+            guest_phone: input.guestPhone.replace(/\D/g, ''),
+            ...(input.guestEmail.trim() ? { guest_email: input.guestEmail.trim() } : {}),
+            line_items: input.lines.map((l) => ({
+              room_type_id: l.roomTypeId,
+              guests: l.guests,
+              occupancy_type: l.shared ? 'shared' : 'private_room',
+              // A shared line's bed count is its guests; only a private line says how many rooms.
+              ...(l.shared ? {} : { quantity: l.quantity }),
+            })),
+          },
         },
-      })
+        ...contextArgs({ suppressErrorToast: true }),
+      )
       .pipe(
         map((res) => {
           if (!res?.booking?.id) throw new Error('booking not in response');

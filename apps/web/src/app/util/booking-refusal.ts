@@ -1,13 +1,40 @@
 import { errorStatus, serverText } from '@core/errors/api-error-text';
 
-/** Why the backend refused to create, change or cancel a booking, as far as a screen needs to know. */
+/**
+ * Why the backend refused to create, change or cancel a booking, or to move it through a stay
+ * (check in, release a room, invoice, mark paid), as far as a screen needs to know.
+ */
 export type BookingRefusal =
   | 'bookingsClosed'
   | 'noLongerChangeable'
   | 'withinCutoff'
   | 'checkInPast'
   | 'datesOutOfOrder'
-  | 'roomNotBookable';
+  | 'roomNotBookable'
+  | 'notEnoughBeds'
+  | 'alreadyCheckedIn'
+  | 'wrongStage'
+  | 'alreadyPaid'
+  | 'invoiceExists'
+  | 'roomAlreadyReleased'
+  | 'reasonRequired'
+  | 'allocationInvalid';
+
+/** The host stay moves' "only … bookings can be …" refusals: the booking is not where the move starts. */
+const WRONG_STAGE_TEXTS: readonly string[] = [
+  'only confirmed bookings can be checked in',
+  'only confirmed bookings can be marked a no show',
+  'only checked-in bookings can be checked out',
+  'only checked-in bookings can be invoiced',
+  'only confirmed, checked-in, checked-out or no-show bookings can be marked paid',
+];
+
+/** Check-in allocations the server could not place at all. */
+const ALLOCATION_TEXTS: readonly string[] = [
+  'at least one room allocation is required',
+  'invalid room id',
+  'guests must be greater than zero',
+];
 
 interface RefusalMatcher {
   readonly kind: BookingRefusal;
@@ -55,10 +82,51 @@ const MATCHERS: readonly RefusalMatcher[] = [
     exact: (text) => /^.+ is not available for booking$/.test(text),
     keyword: /\bnot available for booking\b/,
   },
+  {
+    kind: 'notEnoughBeds',
+    exact: (text) => /^room .+ has only \d+ bed\(s\) available$/.test(text),
+    keyword: /\bonly \d+ beds?(\(s\))? (available|free)\b/,
+  },
+  {
+    kind: 'alreadyCheckedIn',
+    exact: (text) => text === 'booking is already checked in',
+    keyword: /\balready checked[- ]?in\b/,
+  },
+  {
+    kind: 'wrongStage',
+    exact: (text) => WRONG_STAGE_TEXTS.includes(text),
+    keyword: /^only\b.*\bbookings can be\b/,
+  },
+  {
+    kind: 'alreadyPaid',
+    exact: (text) => text === 'this booking is already paid',
+    keyword: /\balready paid\b/,
+  },
+  {
+    kind: 'invoiceExists',
+    exact: (text) => text === 'an invoice already exists for this booking',
+    keyword: /\binvoice already exists\b/,
+  },
+  {
+    kind: 'roomAlreadyReleased',
+    exact: (text) => text === 'occupancy is already inactive',
+    keyword: /\balready (inactive|released)\b/,
+  },
+  {
+    kind: 'reasonRequired',
+    exact: (text) => text === 'a cancellation reason is required',
+    keyword: /\breason is required\b/,
+  },
+  {
+    kind: 'allocationInvalid',
+    exact: (text) => ALLOCATION_TEXTS.includes(text),
+    keyword: /\broom allocation\b|\binvalid room\b|\bguests must be greater than\b/,
+  },
 ];
 
 /**
- * Recognises the 422 refusals the backend's `Booking` model and booking controllers send.
+ * Recognises the 422 refusals the backend's `Booking` model, its booking and occupancy
+ * controllers, and its check-in and invoice services send.
  *
  * Only a 422 counts. Each server message is normalised on its own; every message is first
  * compared with the backend's exact wording, in priority order, and only when none matches

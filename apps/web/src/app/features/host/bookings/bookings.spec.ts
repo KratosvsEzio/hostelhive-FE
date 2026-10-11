@@ -54,6 +54,27 @@ const QUIET = { suppressErrorToast: true };
 /** The interceptor's shape: `message` carries the server's own wording. */
 const refusal = (message: string, status = 422) => ({ ...apiError(status, [message]), message });
 
+const MOVE_URL = `http://localhost/api/host/hostels/${HOSTEL_ID}/bookings/bk-i`;
+
+/** A refusal whose `message` is Angular's, carrying the API URL — neither may reach the screen. */
+const urlRefusal = (text: string, status = 422) => ({
+  ...apiError(status, [text]),
+  message: `Http failure response for ${MOVE_URL}: ${status} Unprocessable Entity`,
+});
+
+/** Everything the host could read: the page's text and every toast raised. */
+function shownText(page: Page, deps: HostPageDeps): string {
+  const toasts = deps.notifications.raised.map((t) => `${t.title} ${t.message ?? ''}`);
+  return [page.el.textContent ?? '', ...toasts].join(' ');
+}
+
+function expectNoLeak(page: Page, deps: HostPageDeps, ...leaks: string[]): void {
+  const shown = shownText(page, deps);
+  expect(shown).not.toContain('Http failure');
+  expect(shown).not.toContain('http://');
+  for (const leak of leaks) expect(shown).not.toContain(leak);
+}
+
 /** Owes its whole total unless said. */
 const checkedIn = (over: Partial<HostBooking> = {}) =>
   hostBooking('checked-in', { id: 'bk-i', ref: 'BK-I', ...over });
@@ -367,7 +388,10 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       expect(modal(page)).toBeNull();
-      expect(deps.notifications.raised).toEqual([{ kind: 'info', title: text, message: undefined }]);
+      // Recognised from the server's text, but announced in translated copy rather than quoted.
+      expect(deps.notifications.raised).toEqual([
+        { kind: 'info', title: 'hostBookings.invoiceAlreadyExists', message: undefined },
+      ]);
       expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(2);
       expect(deps.ops.bookingInvoices.mock.calls[1][1]).toEqual(['bk-i']);
       expect(api(page).invoices().get('bk-i')).toEqual(inv());
@@ -395,7 +419,7 @@ describe('HostBookings', () => {
 
     it('keeps the dialog open for any other refusal, and does not look again', async () => {
       const deps = hostPageDeps();
-      const text = 'The booking is not in a state that can be invoiced.';
+      const text = 'Only checked-in bookings can be invoiced';
       deps.bookings.generateInvoice.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [settledOf(checkedIn())] });
 
@@ -403,8 +427,9 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe(text);
-      expect(api(page).dialogError()).toBe(text);
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.bookingHasMovedOn');
+      expect(api(page).dialogError()).toBe('hostBookings.bookingHasMovedOn');
+      expectNoLeak(page, deps, text);
       expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(1);
       expect(deps.notifications.raised).toEqual([]);
       expect(api(page).busy()).toBe(false);
@@ -512,7 +537,7 @@ describe('HostBookings', () => {
       expect(textOf(invoicePill)).not.toBe(invoiceStatusLabel('due'));
     });
 
-    it('still updates the booking row when the invoice is refused, and quotes the server', async () => {
+    it('still updates the booking row when the invoice is refused, and gives a translated reason', async () => {
       const deps = hostPageDeps();
       const booking = checkedIn();
       deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
@@ -529,12 +554,28 @@ describe('HostBookings', () => {
       expect(deps.notifications.raised).toEqual([
         { kind: 'error', title: 'hostBookings.invoiceNotPaid', message: undefined },
       ]);
+      // The reason is translated copy (keys resolve to themselves here), never the server's text.
       expect(translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1])).toContainEqual({
-        message: 'The invoice is locked.',
+        reason: 'hostBookings.payTheInvoiceOnItsOwn',
       });
     });
 
-    it('falls back to a generic reason when the invoice refusal carries no message', async () => {
+    it('says the invoice is gone when its request answers 404', async () => {
+      const deps = hostPageDeps();
+      const booking = checkedIn();
+      deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
+      deps.ops.markInvoicePaid.mockReturnValue(throwError(() => apiError(404, ['Not Found'])));
+      const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
+      const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+
+      await startFromMenu(page, 'Mark as paid');
+      await confirmViaButton(page);
+
+      const [params] = translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]);
+      expect(params).toEqual({ reason: 'hostBookings.invoiceNoLongerExists' });
+    });
+
+    it('falls back to a generic translated reason when the invoice refusal carries no message', async () => {
       const deps = hostPageDeps();
       const booking = checkedIn();
       deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
@@ -546,14 +587,33 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       const [params] = translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]);
-      expect(params).toEqual({ message: 'The server did not accept that.' });
+      expect(params).toEqual({ reason: 'hostBookings.payTheInvoiceOnItsOwn' });
       expect(deps.notifications.raised).toHaveLength(1);
       expect(deps.notifications.raised[0].kind).toBe('error');
     });
 
+    it('lets no invoice server text or API URL reach the screen or the toast', async () => {
+      const deps = hostPageDeps();
+      const booking = checkedIn();
+      const text = 'Status is invalid';
+      deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
+      deps.ops.markInvoicePaid.mockReturnValue(throwError(() => urlRefusal(text)));
+      const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
+      const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+
+      await startFromMenu(page, 'Mark as paid');
+      await confirmViaButton(page);
+
+      expect(deps.notifications.raised).toHaveLength(1);
+      expectNoLeak(page, deps, text);
+      const params = JSON.stringify(translations(translate, 'hostBookings.invoiceNotPaid'));
+      expect(params).not.toContain(text);
+      expect(params).not.toContain('http');
+    });
+
     it('never sends the invoice request when the booking is refused, and shows why in the dialog', async () => {
       const deps = hostPageDeps();
-      const text = 'This booking cannot be marked as paid.';
+      const text = 'This booking is already paid';
       deps.bookings.markPaid.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
@@ -562,7 +622,8 @@ describe('HostBookings', () => {
 
       expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe(text);
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.bookingAlreadyPaid');
+      expectNoLeak(page, deps, text);
       expect(deps.notifications.raised).toEqual([]);
       expect(api(page).busy()).toBe(false);
       expect(api(page).rows()[0].balanceDue).toBe(24000);
@@ -780,11 +841,49 @@ describe('HostBookings', () => {
       api(page).onAssign({ bookingId: 'bk-c', rooms: [{ roomId: 'r-101', roomNumber: '101', guests: 2 }] });
       await settle(page);
 
-      expect(api(page).assignError()).toBe(text);
-      expect(textOf(page.el.querySelector('hh-assign-rooms-panel [role="alert"]'))).toBe(text);
+      // The server's capacity refusal is classified and shown as translated copy, not quoted.
+      expect(api(page).assignError()).toBe('hostBookings.notEnoughBedsFree');
+      expect(textOf(page.el.querySelector('hh-assign-rooms-panel [role="alert"]'))).toBe(
+        'hostBookings.notEnoughBedsFree',
+      );
       expect(api(page).assigning()?.id).toBe('bk-c');
       expect(api(page).busy()).toBe(false);
       expect(deps.notifications.raised).toEqual([]);
+    });
+
+    it.each([
+      { text: 'Booking is already checked in', key: 'hostBookings.alreadyCheckedIn' },
+      { text: 'Only confirmed bookings can be checked in', key: 'hostBookings.bookingHasMovedOn' },
+      { text: 'Room 101 has only 1 bed(s) available', key: 'hostBookings.notEnoughBedsFree' },
+      { text: 'Invalid room ID', key: 'hostBookings.checkTheRoomsPicked' },
+      { text: 'Something the page has never seen', key: 'hostBookings.moveNotAccepted' },
+    ])('lets no server text or API URL reach the screen on "$text"', async ({ text, key }) => {
+      const deps = hostPageDeps();
+      deps.bookings.checkIn.mockReturnValue(throwError(() => urlRefusal(text)));
+      const booking = hostBooking('confirmed', { id: 'bk-c' });
+      const page = await open({ deps, items: [booking] });
+
+      api(page).onAct({ action: 'checkIn', booking });
+      await settle(page);
+      api(page).onAssign({ bookingId: 'bk-c', rooms: [{ roomId: 'r-101', roomNumber: '101', guests: 2 }] });
+      await settle(page);
+
+      expect(textOf(page.el.querySelector('hh-assign-rooms-panel [role="alert"]'))).toBe(key);
+      expectNoLeak(page, deps, text);
+    });
+
+    it('says the server cannot be reached when the check-in never got there', async () => {
+      const deps = hostPageDeps();
+      deps.bookings.checkIn.mockReturnValue(throwError(() => apiError(0)));
+      const booking = hostBooking('confirmed', { id: 'bk-c' });
+      const page = await open({ deps, items: [booking] });
+
+      api(page).onAct({ action: 'checkIn', booking });
+      await settle(page);
+      api(page).onAssign({ bookingId: 'bk-c', rooms: [{ roomId: 'r-101', roomNumber: '101', guests: 2 }] });
+      await settle(page);
+
+      expect(api(page).assignError()).toBe('common.cannotReachTheServer');
     });
 
     it('closes the allocation and returns to the list URL on success', async () => {
@@ -1462,6 +1561,54 @@ describe('HostBookings', () => {
 
       expect(modal(page)).not.toBeNull();
       expect(textOf(modal(page))).not.toMatch(/invoice/i);
+    });
+  });
+
+  describe('a refused move in its dialog', () => {
+    it('asks for a reason in translated copy before sending a cancellation', async () => {
+      const deps = hostPageDeps();
+      const page = await open({ deps, items: [checkedIn()] });
+
+      await startFromMenu(page, 'Cancel booking');
+      api(page).confirmDialog();
+      await settle(page);
+
+      expect(deps.bookings.cancel).not.toHaveBeenCalled();
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.giveTheGuestAReason');
+    });
+
+    it.each([
+      { text: 'Only checked-in bookings can be checked out', key: 'hostBookings.bookingHasMovedOn' },
+      { text: 'Disposition is invalid', key: 'hostBookings.moveNotAccepted' },
+    ])('lets no server text or API URL reach the screen on "$text"', async ({ text, key }) => {
+      const deps = hostPageDeps();
+      deps.bookings.checkOut.mockReturnValue(throwError(() => urlRefusal(text)));
+      const page = await open({ deps, items: [checkedIn()] });
+
+      await startFromMenu(page, 'Check out');
+      await confirmViaButton(page);
+
+      expect(modal(page)).not.toBeNull();
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe(key);
+      expectNoLeak(page, deps, text);
+    });
+
+    it('shows a refused row-menu move in the open panel as translated copy', async () => {
+      const deps = hostPageDeps();
+      const booking = hostBooking('pending', { id: 'bk-p' });
+      deps.bookings.confirm.mockReturnValue(throwError(() => urlRefusal('Disposition is invalid')));
+      const page = await open({ deps, items: [booking] });
+
+      api(page).openDetails(booking);
+      await settle(page);
+      api(page).onAct({ action: 'confirm', booking });
+      await settle(page);
+
+      expect(api(page).viewError()).toBe('hostBookings.moveNotAccepted');
+      expect(textOf(page.el.querySelector('hh-booking-details-panel footer [role="alert"]'))).toBe(
+        'hostBookings.moveNotAccepted',
+      );
+      expectNoLeak(page, deps, 'Disposition is invalid');
     });
   });
 });
