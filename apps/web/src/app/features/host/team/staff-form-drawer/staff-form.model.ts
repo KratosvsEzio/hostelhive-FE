@@ -25,9 +25,8 @@ export interface StaffForm {
    * Grants this staff member a manager login for the hostel.
    *
    * Carried on the ordinary staff payload as `is_manager` — see {@link managerFields} — not
-   * by a second request. `HostShellApi` does expose an `add_manager` endpoint and this said
-   * the toggle posts to it, which was true of an earlier design and has not been for a while;
-   * nothing in this drawer calls it.
+   * by a second request. An earlier design posted to a separate `add_manager` endpoint; the
+   * backend has since removed it.
    *
    * Worth knowing rather than buried: because the grant rides the staff write, whoever may
    * save a staff record may also hand out manager access. It is not separately gated on
