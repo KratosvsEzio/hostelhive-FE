@@ -18,6 +18,7 @@ import { ROLES, Role } from './roles';
 import { flattenPermissions } from './permissions';
 import { SessionStore, SessionUser } from './session-store';
 import { StartupGate } from '@core/startup-gate';
+import { isUnauthorized } from '@core/errors/is-unauthorized';
 
 /**
  * Orchestrates authentication: calls the API (`AuthApi`), then hydrates the
@@ -238,21 +239,6 @@ export class AuthService {
       }),
     );
   }
-}
-
-/**
- * True only when the server actually rejected the credentials.
- *
- * Reads `.status` structurally so it holds for both the normalised `ApiError` the error
- * interceptor produces and a raw `HttpErrorResponse` if one ever reaches here. A network
- * failure surfaces as status 0, which is deliberately NOT a rejection.
- */
-function isUnauthorized(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    (err as { status?: unknown }).status === 401
-  );
 }
 
 /** Maps the API's current-user payload onto the FE `SessionUser`. */
