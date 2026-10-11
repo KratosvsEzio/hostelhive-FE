@@ -56,6 +56,8 @@ export interface HostListing {
   address?: string;
   state?: string;
   country?: string;
+  /** ISO 3166-1 alpha-2 as the index carries it; absent when the hostel has none set. */
+  countryCode?: string;
   landmarks?: string;
   lat?: number;
   lng?: number;

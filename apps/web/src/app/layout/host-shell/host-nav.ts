@@ -79,6 +79,10 @@ export function hostNav(
         ]),
     { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
     { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
+    { divider: true },
+    // Not `exact`: the plan page is the parent of the checkout at `/subscription/pay/:id`, and
+    // the entry should stay lit there.
+    { label: 'hostNav.billing',       icon: 'ti-receipt',          link: `${b}/subscription`, permission: 'core:Subscription:show' },
   ];
 
   const visible = entries.filter((e) => !e.permission || opts.can(e.permission));

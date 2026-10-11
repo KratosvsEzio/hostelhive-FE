@@ -1,0 +1,200 @@
+<app-dashboard-layout [label]="'hostBilling.title' | transloco">
+  @if (billing(); as b) {
+    <div class="flex flex-col gap-6">
+      <hh-current-plan-card
+        [subscription]="b.subscription"
+        [features]="b.features"
+      />
+
+      @if (b.open_invoice; as invoice) {
+        <hh-payment-due
+          [invoice]="invoice"
+          [payLink]="payLink()"
+          [canPay]="canPay()"
+        />
+      }
+
+      <section
+        class="flex flex-col gap-4"
+        aria-labelledby="billing-plans-title"
+      >
+        <h2
+          id="billing-plans-title"
+          class="font-display text-lg font-bold text-ink-900"
+        >
+          {{ 'hostBilling.plansTitle' | transloco }}
+        </h2>
+
+        @if (countryMissing()) {
+          <p
+            class="rounded-xl bg-warn/10 px-4 py-3 text-sm text-ink-800"
+            data-testid="country-notice"
+          >
+            {{ 'hostBilling.setCountryNotice' | transloco }}
+            <ng-container [ngTemplateOutlet]="countryAction" />
+          </p>
+        }
+
+        @if (!canCheckout()) {
+          <p
+            class="flex items-center gap-2 text-sm text-ink-600"
+            data-testid="owner-only"
+          >
+            <i class="ti ti-lock text-base text-ink-400" aria-hidden="true"></i>
+            {{ 'hostBilling.ownerOnly' | transloco }}
+          </p>
+        }
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          @for (view of planViews(); track view.plan.id) {
+            <hh-plan-card [plan]="view.plan" [attr.data-plan]="view.plan.id">
+              @if (view.button.kind !== 'none') {
+                @if (view.button.badgeKey; as badgeKey) {
+                  <hh-status-pill class="mb-3" tone="neutral">{{
+                    badgeKey | transloco
+                  }}</hh-status-pill>
+                }
+                <button
+                  hh-button
+                  type="button"
+                  class="w-full"
+                  [color]="view.disabled ? 'default' : 'primary'"
+                  size="md"
+                  [disabled]="view.disabled"
+                  [loading]="view.loading"
+                  (click)="onPlanAction(view)"
+                >
+                  {{
+                    view.button.key
+                      | transloco
+                        : {
+                            amount: isolate(
+                              view.button.amount
+                                | billingMoney: view.plan.currency
+                            ),
+                          }
+                  }}
+                </button>
+                @if (view.error; as e) {
+                  <p
+                    class="mt-2 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                    role="alert"
+                    data-testid="checkout-error"
+                  >
+                    {{ e.message ?? (e.messageKey | transloco) }}
+                    @if (e.countryRequired) {
+                      <ng-container [ngTemplateOutlet]="countryAction" />
+                    }
+                  </p>
+                }
+                @switch (view.button.sublineKey) {
+                  @case ('hostBilling.renewsAtOn') {
+                    <p class="mt-2 text-xs text-ink-500" data-field="subline">
+                      {{
+                        'hostBilling.renewsAtOn'
+                          | transloco
+                            : {
+                                price: isolate(
+                                  view.plan.price
+                                    | billingMoney: view.plan.currency
+                                ),
+                                date:
+                                  (b.subscription?.current_period_end
+                                  | apiDate: 'd MMM yyyy'),
+                              }
+                      }}
+                    </p>
+                  }
+                  @case ('hostBilling.payNow') {
+                    <p class="mt-2 text-xs text-ink-500" data-field="subline">
+                      {{
+                        'hostBilling.payNow'
+                          | transloco
+                            : {
+                                amount: isolate(
+                                  view.button.amount
+                                    | billingMoney: view.plan.currency
+                                ),
+                              }
+                      }}
+                    </p>
+                  }
+                }
+                @if (view.button.hintKey; as hintKey) {
+                  <p class="mt-2 text-xs text-ink-500" data-field="hint">
+                    {{ hintKey | transloco }}
+                    <a hhLink routerLink="/contact">{{
+                      'common.contactUs' | transloco
+                    }}</a>
+                  </p>
+                }
+                @if (view.reason; as reason) {
+                  <p class="mt-2 text-xs text-ink-500" data-field="reason">
+                    {{ reason }}
+                  </p>
+                }
+              }
+            </hh-plan-card>
+          }
+        </div>
+      </section>
+    </div>
+  } @else if (state().kind === 'loading') {
+    <div
+      class="flex flex-col gap-6"
+      data-testid="billing-loading"
+      aria-busy="true"
+    >
+      <hh-skeleton class="h-40 w-full" radius="lg" />
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @for (i of skeletonPlans; track i) {
+          <hh-skeleton class="h-80 w-full" radius="lg" />
+        }
+      </div>
+    </div>
+  } @else if (state().kind === 'forbidden') {
+    <hh-error-state
+      [title]="'hostBilling.noAccessTitle' | transloco"
+      [message]="'hostBilling.noAccessMessage' | transloco"
+      [showRetry]="false"
+      data-testid="billing-forbidden"
+    />
+  } @else if (state().kind === 'error') {
+    <hh-error-state
+      [message]="'hostBilling.loadError' | transloco"
+      [retryLabel]="'common.tryAgain' | transloco"
+      [networkError]="networkError()"
+      (retry)="retry()"
+      data-testid="billing-error"
+    />
+  }
+</app-dashboard-layout>
+
+<ng-template #countryAction>
+  @if (canEditHostel()) {
+    <a hhLink [routerLink]="profileLink()" data-testid="add-country">{{
+      'hostBilling.addCountry' | transloco
+    }}</a>
+  } @else {
+    <span data-testid="ask-owner-country">{{
+      'hostBilling.askOwnerCountry' | transloco
+    }}</span>
+  }
+</ng-template>
+
+@if (replacing()) {
+  <hh-confirm-modal
+    icon="ti-receipt"
+    tone="warn"
+    [title]="'hostBilling.replaceInvoiceTitle' | transloco"
+    [confirmLabel]="'hostBilling.replaceInvoiceConfirm' | transloco"
+    [cancelLabel]="'common.cancel' | transloco"
+    (confirm)="confirmReplace()"
+    (cancel)="cancelReplace()"
+  >
+    {{
+      'hostBilling.replaceInvoiceMessage'
+        | transloco: { number: billing()?.open_invoice?.number }
+    }}
+  </hh-confirm-modal>
+}

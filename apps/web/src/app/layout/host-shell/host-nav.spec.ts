@@ -108,21 +108,49 @@ describe('hostNav', () => {
     expect(nightly).not.toContain('common.utilities');
   });
 
-  // The plan and payment-history pages are gone; a menu row leading to them would be a dead end.
-  it('offers no billing destination', () => {
-    for (const e of nav()) {
-      expect(e.link ?? '').not.toContain('/subscription');
-    }
+  // The old plan and payment-history pages are gone; the only billing destination is the
+  // subscription page itself.
+  it('links to the subscription page and to no other billing page', () => {
+    const billing = nav().filter((e) => e.link?.includes('/subscription'));
+
+    expect(billing.map((e) => e.link)).toEqual(['/host/nHelLt/subscription']);
     expect(labels(nav())).not.toContain('common.subscription');
     expect(labels(nav())).not.toContain('hostSubscription.paymentHistory');
   });
 
+  it('shows Billing only to a session holding the subscription permission', () => {
+    const entry = nav().find((e) => e.label === 'hostNav.billing');
+
+    expect(entry?.permission).toBe('core:Subscription:show');
+    expect(entry?.icon).toBe('ti-receipt');
+    expect(labels(nav({ can: (p) => p !== 'core:Subscription:show' }))).not.toContain('hostNav.billing');
+    expect(labels(nav({ can: (p) => p === 'core:Subscription:show' }))).toContain('hostNav.billing');
+  });
+
+  // Exact matching would un-light the entry on the checkout page beneath it.
+  it('keeps Billing active on pages below it', () => {
+    const entry = nav().find((e) => e.label === 'hostNav.billing');
+
+    expect(entry?.exact).toBeFalsy();
+  });
+
+  it('places Billing after a divider, as the last entry', () => {
+    const entries = nav();
+    const at = entries.findIndex((e) => e.label === 'hostNav.billing');
+
+    expect(at).toBeGreaterThan(0);
+    expect(entries[at - 1].divider).toBe(true);
+    expect(at).toBe(entries.length - 1);
+  });
+
   // A divider with nothing under it would render as a rule at the end of the list.
   it('never ends on a stray divider', () => {
-    for (const can of [ALL, NONE]) {
+    const withoutBilling = (p: Permission) => p !== 'core:Subscription:show';
+    for (const can of [ALL, NONE, withoutBilling]) {
       const entries = nav({ can });
-      expect(entries.some((e) => e.divider)).toBe(false);
+      expect(entries[entries.length - 1].divider).toBeFalsy();
     }
+    expect(nav({ can: withoutBilling }).some((e) => e.divider)).toBe(false);
   });
 });
 
@@ -141,11 +169,18 @@ describe('splitNav', () => {
   });
 
   it('puts everything in the first half when there is no divider', () => {
-    const entries = nav();
+    const entries = nav({ can: (p) => p !== 'core:Subscription:show' });
     const { hostel, account } = splitNav(entries);
 
     expect(account).toEqual([]);
     expect(hostel.length).toBe(entries.length);
+  });
+
+  it('puts Billing in the account half', () => {
+    const { hostel, account } = splitNav(nav());
+
+    expect(labels(account)).toEqual(['hostNav.billing']);
+    expect(labels(hostel)).not.toContain('hostNav.billing');
   });
 });
 

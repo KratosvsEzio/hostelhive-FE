@@ -10,3 +10,4 @@ export * from './overview';
 export * from './host';
 export * from './host-ops';
 export * from './moderation';
+export * from './billing';

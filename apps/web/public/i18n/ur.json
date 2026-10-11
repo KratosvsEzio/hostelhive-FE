@@ -171,7 +171,6 @@
     "mess": "میس",
     "expenses": "اخراجات",
     "invoices": "انوائسز",
-    "subscription": "سبسکرپشن",
     "more": "مزید",
     "listingDetails": "لسٹنگ کی تفصیلات",
     "photos": "تصاویر",
@@ -394,7 +393,8 @@
     "heroTitleTail": "یہاں",
     "statVerifiedBeds": "تصدیق شدہ بستر",
     "statCities": "شہر",
-    "statSeekerRating": "صارفین کی درجہ بندی"
+    "statSeekerRating": "صارفین کی درجہ بندی",
+    "seePricing": "قیمتیں دیکھیں"
   },
   "card": {
     "previousPhoto": "پچھلی تصویر",
@@ -487,7 +487,8 @@
     "privacyPolicy": "پرائیویسی پالیسی",
     "termsOfService": "شرائطِ استعمال",
     "servicePolicy": "سروس پالیسی",
-    "copy2026HostelhiveAllRights": "© ۲۰۲۶ HostelHive۔ جملہ حقوق محفوظ ہیں۔"
+    "copy2026HostelhiveAllRights": "© ۲۰۲۶ HostelHive۔ جملہ حقوق محفوظ ہیں۔",
+    "pricing": "قیمتیں"
   },
   "searchBar": {
     "search": "تلاش کریں",
@@ -519,7 +520,8 @@
     "more": "مزید",
     "property": "جائیداد",
     "selectAProperty": "جائیداد منتخب کریں",
-    "createNewHostel": "نیا ہاسٹل بنائیں"
+    "createNewHostel": "نیا ہاسٹل بنائیں",
+    "billing": "بلنگ"
   },
   "hostelForm": {
     "listingDetails": "لسٹنگ کی تفصیلات",
@@ -716,9 +718,55 @@
     "checkInYourFirstTenant": "کرایہ ٹریک کرنا شروع کرنے کے لیے اپنے پہلے کرایہ دار کو چیک اِن کریں۔"
   },
   "hostBilling": {
-    "comingSoonTitle": "بلنگ ایک نئے نظام پر منتقل ہو رہی ہے",
-    "comingSoonMessage": "اس ہاسٹل کے پلانز، انوائسز اور ادائیگیاں جلد یہاں نظر آئیں گی۔ ابھی تجدید کرنی ہے؟ ہم سے رابطہ کریں۔",
-    "backToDashboard": "ڈیش بورڈ پر واپس جائیں"
+    "title": "بلنگ",
+    "currentPlan": "موجودہ پلان",
+    "noPlanTitle": "ابھی کوئی پلان نہیں",
+    "noPlanMessage": "HostelHive پر اپنا ہاسٹل لسٹ کرنے کے لیے نیچے سے پلان منتخب کریں۔",
+    "renewsOn": "{{date}} کو تجدید ہوگی",
+    "endsOn": "{{date}} کو ختم ہوگا",
+    "endedOn": "{{date}} کو ختم ہو گیا",
+    "wasDueOn": "ادائیگی کی آخری تاریخ {{date}} تھی",
+    "graceUntil": "اپنی لسٹنگ برقرار رکھنے کے لیے {{date}} تک ادائیگی کریں",
+    "awaitingFirstPayment": "آپ کی پہلی ادائیگی کا انتظار ہے",
+    "switchesTo": "تجدید پر {{plan}} میں بدل جائے گا",
+    "activeFeatures": "ابھی فعال",
+    "plansTitle": "پلانز",
+    "choosePlan": "پلان منتخب کریں",
+    "currentPlanButton": "موجودہ پلان",
+    "renew": "تجدید کریں",
+    "payNow": "ابھی {{amount}} ادا کریں",
+    "upgradePayNow": "اپ گریڈ: ابھی {{amount}} ادا کریں",
+    "renewsAtOn": "{{date}} کو {{price}} پر تجدید ہوگی",
+    "switchAtRenewal": "تجدید پر تبدیل کریں",
+    "scheduledForRenewal": "تجدید کے لیے طے شدہ",
+    "switchComingSoon": "پلان بدلنے کی سہولت جلد آ رہی ہے — ابھی بدلنے کے لیے ہم سے رابطہ کریں۔",
+    "unavailable": "دستیاب نہیں",
+    "ownerOnly": "صرف ہاسٹل کا مالک پلان تبدیل کر سکتا ہے۔",
+    "setCountryNotice": "قیمتیں دیکھنے کے لیے اپنے ہاسٹل کا ملک درج کریں۔",
+    "addCountry": "ہاسٹل کا ملک شامل کریں",
+    "askOwnerCountry": "ہاسٹل کے مالک سے ہاسٹل کا ملک شامل کرنے کو کہیں۔",
+    "checkoutFailed": "ہم چیک آؤٹ شروع نہیں کر سکے۔ دوبارہ کوشش کریں۔",
+    "checkoutForbidden": "آپ کو اس ہاسٹل کے لیے پلان خریدنے کی اجازت نہیں ہے۔",
+    "replaceInvoiceTitle": "غیر ادا شدہ انوائس تبدیل کریں؟",
+    "replaceInvoiceMessage": "یہ غیر ادا شدہ انوائس {{number}} کی جگہ لے گا۔",
+    "replaceInvoiceConfirm": "تبدیل کریں اور جاری رکھیں",
+    "paymentDueTitle": "ادائیگی واجب الادا",
+    "invoiceNumber": "انوائس {{number}}",
+    "kindNew": "پہلی ادائیگی · {{start}} – {{end}}",
+    "kindRenewal": "تجدید · {{start}} – {{end}}",
+    "kindUpgrade": "اپ گریڈ چارج · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "{{date}} تک ادا کریں",
+    "pay": "ادا کریں",
+    "underReview": "بینک ٹرانسفر کا جائزہ لیا جا رہا ہے",
+    "underReviewHint": "ہماری ٹیم آپ کے ٹرانسفر کی تصدیق کرتے ہی ہم یہ صفحہ اپ ڈیٹ کر دیں گے۔",
+    "noAccessTitle": "بلنگ آپ کے لیے دستیاب نہیں",
+    "noAccessMessage": "اس ہاسٹل کی بلنگ صرف بلنگ رسائی والے افراد دیکھ سکتے ہیں۔ ہاسٹل کے مالک سے پوچھیں۔",
+    "loadError": "ہم اس ہاسٹل کی بلنگ لوڈ نہیں کر سکے۔",
+    "backToBilling": "بلنگ پر واپس جائیں",
+    "payStubTitle": "آن لائن ادائیگی کا انتظام کیا جا رہا ہے",
+    "payStubMessage": "انوائس {{number}} ابھی ادا کرنے کے لیے ہم سے رابطہ کریں اور انوائس نمبر بتائیں۔",
+    "invoiceLoadError": "ہم یہ انوائس لوڈ نہیں کر سکے۔"
   },
   "hostMess": {
     "pickADate": "تاریخ منتخب کریں",
@@ -1137,6 +1185,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "آپ کے ہاسٹل کے دعوت نامے، کھانے کی تصدیقات اور زیر التوا رسیدیں۔"
   },
+  "sharedBilling": {
+    "perMonth": "/ ماہ",
+    "featureListing": "HostelHive پر لسٹنگ",
+    "featureBoost": "سرچ میں نمایاں جگہ",
+    "featureCrm": "ہوسٹ CRM — کمرے، بکنگز، کرایہ دار، بلز اور عملہ",
+    "included": "شامل",
+    "notIncluded": "شامل نہیں",
+    "notAvailableIn": "{{currency}} میں دستیاب نہیں"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "ڈریگ اینڈ ڈراپ کریں، اپ لوڈ کریں، یا تصویر لیں",
     "replaceAdd": "تبدیل کریں / شامل کریں"
@@ -1372,6 +1429,20 @@
     "savedOnThisDevice": "اس ڈیوائس پر محفوظ",
     "sleepsNPerMonth": "{{capacity}} افراد · Rs {{price}} / ماہ"
   },
+  "publicPricing": {
+    "title": "ہاسٹلز کے لیے آسان قیمتیں",
+    "subtitle": "ہر ہاسٹل کے لیے ایک ماہانہ پلان۔ ہر پلان آپ کے ہاسٹل کو HostelHive پر لسٹ کرتا ہے۔",
+    "currencyUsd": "قیمتیں امریکی ڈالر میں ہیں۔ پاکستان کے ہاسٹلز کو PKR میں بل کیا جاتا ہے۔",
+    "currencyPkr": "قیمتیں پاکستانی روپے میں ہیں۔",
+    "featuresTitle": "ہر پلان میں کیا شامل ہے",
+    "listingBlurb": "آپ کا ہاسٹل HostelHive سرچ میں اور اپنے لسٹنگ صفحے پر نظر آتا ہے۔",
+    "boostBlurb": "آپ کی لسٹنگ سرچ نتائج میں اوپر دکھائی جاتی ہے۔",
+    "crmBlurb": "کمرے، بکنگز، کرایہ دار، بلز اور عملہ ایک ہی جگہ سنبھالیں۔",
+    "startHosting": "ہوسٹنگ شروع کریں",
+    "goToBilling": "بلنگ پر جائیں",
+    "loadError": "ہم پلانز لوڈ نہیں کر سکے۔",
+    "noPlans": "اس وقت کوئی پلان دستیاب نہیں۔"
+  },
   "publicAbout": {
     "aboutUs": "ہمارے بارے میں",
     "makingStudentAccommodationSaferAnd": "طلبہ کی رہائش کو محفوظ اور تلاش کرنے میں آسان بنانا",
@@ -1525,6 +1596,8 @@
     "searchDescription": "{{place}} میں تصدیق شدہ ہاسٹل، پی جی اور کو-لِوِنگ تلاش کریں۔ بجٹ، کمرہ شیئرنگ اور سہولیات کے حساب سے فلٹر کریں۔",
     "searchPlaceDescription": "{{place}} میں تصدیق شدہ ہاسٹل، پی جی اور کو-لِوِنگ تلاش کریں۔ قیمتوں، کمرہ شیئرنگ اور سہولیات کا موازنہ کریں۔",
     "worldwideTitle": "دنیا بھر کے ہاسٹل — تلاش | HostelHive",
-    "worldwideDescription": "دنیا بھر میں تصدیق شدہ ہاسٹل، پی جی اور کو-لِوِنگ تلاش کریں۔ بجٹ، کمرہ شیئرنگ اور سہولیات کے حساب سے فلٹر کریں۔"
+    "worldwideDescription": "دنیا بھر میں تصدیق شدہ ہاسٹل، پی جی اور کو-لِوِنگ تلاش کریں۔ بجٹ، کمرہ شیئرنگ اور سہولیات کے حساب سے فلٹر کریں۔",
+    "pricingTitle": "ہاسٹلز کے لیے قیمتیں | HostelHive",
+    "pricingDescription": "ہاسٹلز کے لیے HostelHive کے ماہانہ پلانز: لسٹ ہوں، سرچ میں نمایاں ہوں، اور ہوسٹ CRM سے کمرے، بکنگز اور بلز سنبھالیں۔"
   }
 }

@@ -218,7 +218,6 @@
     "mess": "Mess",
     "expenses": "Expenses",
     "invoices": "Invoices",
-    "subscription": "Subscription",
     "more": "More",
     "listingDetails": "Listing details",
     "photos": "Photos",
@@ -424,7 +423,8 @@
     "legal": "Legal",
     "privacyPolicy": "Privacy policy",
     "termsOfService": "Terms of service",
-    "servicePolicy": "Service policy"
+    "servicePolicy": "Service policy",
+    "pricing": "Pricing"
   },
   "home": {
     "loftLivingSpace": "Loft living space",
@@ -503,7 +503,8 @@
     "mock2Seater": "2-seater",
     "fromSearchToMoveIn": "From search to move-in, without a broker in between.",
     "closerTitle": "Your verified bed is one search away.",
-    "closerSub": "Filter by location, budget, gender and room sharing. No brokers, no surprises."
+    "closerSub": "Filter by location, budget, gender and room sharing. No brokers, no surprises.",
+    "seePricing": "See pricing"
   },
   "hostBookings": {
     "calendarTab": "Calendar",
@@ -681,7 +682,8 @@
     "teamStaff": "Team & staff",
     "property": "Property",
     "selectAProperty": "Select a property",
-    "createNewHostel": "Create new hostel"
+    "createNewHostel": "Create new hostel",
+    "billing": "Billing"
   },
   "hostNewHostel": {
     "newHostel": "New hostel",
@@ -788,9 +790,55 @@
     "bedNumbersAreNotAssigned": "Bed numbers are not assigned yet — the calendar reports how many beds are taken, not which one each guest is in."
   },
   "hostBilling": {
-    "comingSoonTitle": "Billing is moving to a new system",
-    "comingSoonMessage": "Plans, invoices and payments for this hostel will appear here soon. Need to renew now? Contact us.",
-    "backToDashboard": "Back to dashboard"
+    "title": "Billing",
+    "currentPlan": "Current plan",
+    "noPlanTitle": "No plan yet",
+    "noPlanMessage": "Choose a plan below to list your hostel on HostelHive.",
+    "renewsOn": "Renews on {{date}}",
+    "endsOn": "Ends on {{date}}",
+    "endedOn": "Ended on {{date}}",
+    "wasDueOn": "Payment was due on {{date}}",
+    "graceUntil": "Pay by {{date}} to keep your listing",
+    "awaitingFirstPayment": "Waiting for your first payment",
+    "switchesTo": "Switches to {{plan}} at renewal",
+    "activeFeatures": "Active now",
+    "plansTitle": "Plans",
+    "choosePlan": "Choose plan",
+    "currentPlanButton": "Current plan",
+    "renew": "Renew",
+    "payNow": "Pay {{amount}} now",
+    "upgradePayNow": "Upgrade: pay {{amount}} now",
+    "renewsAtOn": "Renews at {{price}} on {{date}}",
+    "switchAtRenewal": "Switch at renewal",
+    "scheduledForRenewal": "Scheduled for renewal",
+    "switchComingSoon": "Plan switching is coming soon — contact us to switch now.",
+    "unavailable": "Unavailable",
+    "ownerOnly": "Only the hostel owner can change the plan.",
+    "setCountryNotice": "Set your hostel's country to see prices.",
+    "addCountry": "Add the hostel's country",
+    "askOwnerCountry": "Ask the hostel owner to add the hostel's country.",
+    "checkoutFailed": "We couldn't start the checkout. Try again.",
+    "checkoutForbidden": "You don't have permission to buy plans for this hostel.",
+    "replaceInvoiceTitle": "Replace the unpaid invoice?",
+    "replaceInvoiceMessage": "This replaces unpaid invoice {{number}}.",
+    "replaceInvoiceConfirm": "Replace and continue",
+    "paymentDueTitle": "Payment due",
+    "invoiceNumber": "Invoice {{number}}",
+    "kindNew": "First payment · {{start}} – {{end}}",
+    "kindRenewal": "Renewal · {{start}} – {{end}}",
+    "kindUpgrade": "Upgrade charge · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Pay by {{date}}",
+    "pay": "Pay",
+    "underReview": "Bank transfer under review",
+    "underReviewHint": "We'll update this page once our team confirms your transfer.",
+    "noAccessTitle": "Billing isn't available to you",
+    "noAccessMessage": "Only people with billing access can see this hostel's billing. Ask the hostel owner.",
+    "loadError": "We couldn't load billing for this hostel.",
+    "backToBilling": "Back to billing",
+    "payStubTitle": "Online payment is being set up",
+    "payStubMessage": "To pay invoice {{number}} now, contact us and quote the invoice number.",
+    "invoiceLoadError": "We couldn't load this invoice."
   },
   "hostTeam": {
     "staffPhoto": "Staff photo",
@@ -1300,6 +1348,20 @@
     "savedOnThisDevice": "Saved on this device",
     "sleepsNPerMonth": "Sleeps {{capacity}} · Rs {{price}} / month"
   },
+  "publicPricing": {
+    "title": "Simple pricing for hostels",
+    "subtitle": "One monthly plan per hostel. Every plan lists your hostel on HostelHive.",
+    "currencyUsd": "Prices in US dollars. Hostels in Pakistan are billed in PKR.",
+    "currencyPkr": "Prices in Pakistani rupees.",
+    "featuresTitle": "What each plan includes",
+    "listingBlurb": "Your hostel appears in HostelHive search and on its own listing page.",
+    "boostBlurb": "Your listing is placed higher in search results.",
+    "crmBlurb": "Manage rooms, bookings, renters, bills and staff in one place.",
+    "startHosting": "Start hosting",
+    "goToBilling": "Go to billing",
+    "loadError": "We couldn't load plans.",
+    "noPlans": "No plans are available right now."
+  },
   "search": {
     "where": "Where",
     "budget": "Budget",
@@ -1343,6 +1405,15 @@
     "retryInNSeconds": "We'll retry automatically in {{seconds}}s.",
     "nearMe": "Near me",
     "locating": "Locating…"
+  },
+  "sharedBilling": {
+    "perMonth": "/ month",
+    "featureListing": "Listing on HostelHive",
+    "featureBoost": "Boosted placement in search",
+    "featureCrm": "Host CRM — rooms, bookings, renters, bills and staff",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "notAvailableIn": "Not available in {{currency}}"
   },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Drag & drop, upload, or take a photo",
@@ -1522,6 +1593,8 @@
     "searchDescription": "Search verified hostels, PGs and co-living in {{place}}. Filter by budget, room sharing and amenities.",
     "searchPlaceDescription": "Search verified hostels, PGs and co-living in {{place}}. Compare prices, room sharing and amenities.",
     "worldwideTitle": "Hostels worldwide — search | HostelHive",
-    "worldwideDescription": "Search verified hostels, PGs and co-living worldwide. Filter by budget, room sharing and amenities."
+    "worldwideDescription": "Search verified hostels, PGs and co-living worldwide. Filter by budget, room sharing and amenities.",
+    "pricingTitle": "Pricing for hostels | HostelHive",
+    "pricingDescription": "Monthly HostelHive plans for hostels: get listed, get boosted in search, and run rooms, bookings and bills with the host CRM."
   }
 }

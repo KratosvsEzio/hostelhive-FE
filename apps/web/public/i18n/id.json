@@ -171,7 +171,6 @@
     "mess": "Kantin",
     "expenses": "Pengeluaran",
     "invoices": "Faktur",
-    "subscription": "Langganan",
     "more": "Lainnya",
     "listingDetails": "Detail listing",
     "photos": "Foto",
@@ -394,7 +393,8 @@
     "heroTitleTail": "di",
     "statVerifiedBeds": "tempat tidur terverifikasi",
     "statCities": "kota",
-    "statSeekerRating": "penilaian pencari"
+    "statSeekerRating": "penilaian pencari",
+    "seePricing": "Lihat harga"
   },
   "card": {
     "previousPhoto": "Foto sebelumnya",
@@ -487,7 +487,8 @@
     "privacyPolicy": "Kebijakan privasi",
     "termsOfService": "Ketentuan layanan",
     "servicePolicy": "Kebijakan layanan",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Seluruh hak cipta dilindungi."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Seluruh hak cipta dilindungi.",
+    "pricing": "Harga"
   },
   "searchBar": {
     "search": "Cari",
@@ -519,7 +520,8 @@
     "more": "Lainnya",
     "property": "Properti",
     "selectAProperty": "Pilih properti",
-    "createNewHostel": "Buat hostel baru"
+    "createNewHostel": "Buat hostel baru",
+    "billing": "Penagihan"
   },
   "hostelForm": {
     "listingDetails": "Detail listing",
@@ -716,9 +718,55 @@
     "checkInYourFirstTenant": "Check-in penghuni pertama Anda untuk mulai memantau sewa."
   },
   "hostBilling": {
-    "comingSoonTitle": "Penagihan sedang dipindahkan ke sistem baru",
-    "comingSoonMessage": "Paket, faktur, dan pembayaran untuk hostel ini akan segera muncul di sini. Perlu memperpanjang sekarang? Hubungi kami.",
-    "backToDashboard": "Kembali ke dasbor"
+    "title": "Penagihan",
+    "currentPlan": "Paket saat ini",
+    "noPlanTitle": "Belum ada paket",
+    "noPlanMessage": "Pilih paket di bawah untuk menampilkan hostel Anda di HostelHive.",
+    "renewsOn": "Diperpanjang pada {{date}}",
+    "endsOn": "Berakhir pada {{date}}",
+    "endedOn": "Telah berakhir pada {{date}}",
+    "wasDueOn": "Pembayaran jatuh tempo pada {{date}}",
+    "graceUntil": "Bayar sebelum {{date}} agar listing Anda tetap tampil",
+    "awaitingFirstPayment": "Menunggu pembayaran pertama Anda",
+    "switchesTo": "Beralih ke {{plan}} saat perpanjangan",
+    "activeFeatures": "Aktif sekarang",
+    "plansTitle": "Paket",
+    "choosePlan": "Pilih paket",
+    "currentPlanButton": "Paket saat ini",
+    "renew": "Perpanjang",
+    "payNow": "Bayar {{amount}} sekarang",
+    "upgradePayNow": "Upgrade: bayar {{amount}} sekarang",
+    "renewsAtOn": "Diperpanjang seharga {{price}} pada {{date}}",
+    "switchAtRenewal": "Beralih saat perpanjangan",
+    "scheduledForRenewal": "Dijadwalkan saat perpanjangan",
+    "switchComingSoon": "Penggantian paket segera hadir — hubungi kami untuk beralih sekarang.",
+    "unavailable": "Tidak tersedia",
+    "ownerOnly": "Hanya pemilik hostel yang dapat mengubah paket.",
+    "setCountryNotice": "Atur negara hostel Anda untuk melihat harga.",
+    "addCountry": "Tambahkan negara hostel",
+    "askOwnerCountry": "Minta pemilik hostel untuk menambahkan negara hostel.",
+    "checkoutFailed": "Kami tidak dapat memulai pembayaran. Coba lagi.",
+    "checkoutForbidden": "Anda tidak memiliki izin untuk membeli paket bagi hostel ini.",
+    "replaceInvoiceTitle": "Ganti faktur yang belum dibayar?",
+    "replaceInvoiceMessage": "Ini akan mengganti faktur yang belum dibayar {{number}}.",
+    "replaceInvoiceConfirm": "Ganti dan lanjutkan",
+    "paymentDueTitle": "Pembayaran jatuh tempo",
+    "invoiceNumber": "Faktur {{number}}",
+    "kindNew": "Pembayaran pertama · {{start}} – {{end}}",
+    "kindRenewal": "Perpanjangan · {{start}} – {{end}}",
+    "kindUpgrade": "Biaya upgrade · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Bayar sebelum {{date}}",
+    "pay": "Bayar",
+    "underReview": "Transfer bank sedang ditinjau",
+    "underReviewHint": "Kami akan memperbarui halaman ini setelah tim kami mengonfirmasi transfer Anda.",
+    "noAccessTitle": "Penagihan tidak tersedia untuk Anda",
+    "noAccessMessage": "Hanya orang dengan akses penagihan yang dapat melihat penagihan hostel ini. Tanyakan kepada pemilik hostel.",
+    "loadError": "Kami tidak dapat memuat penagihan untuk hostel ini.",
+    "backToBilling": "Kembali ke penagihan",
+    "payStubTitle": "Pembayaran online sedang disiapkan",
+    "payStubMessage": "Untuk membayar faktur {{number}} sekarang, hubungi kami dan sebutkan nomor faktur.",
+    "invoiceLoadError": "Kami tidak dapat memuat faktur ini."
   },
   "hostMess": {
     "pickADate": "Pilih tanggal",
@@ -1137,6 +1185,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Undangan hostel, konfirmasi makan, dan struk tertunda Anda."
   },
+  "sharedBilling": {
+    "perMonth": "/ bulan",
+    "featureListing": "Tampil di HostelHive",
+    "featureBoost": "Penempatan unggulan di pencarian",
+    "featureCrm": "CRM host — kamar, pemesanan, penyewa, tagihan, dan staf",
+    "included": "Termasuk",
+    "notIncluded": "Tidak termasuk",
+    "notAvailableIn": "Tidak tersedia dalam {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Seret & lepas, unggah, atau ambil foto",
     "replaceAdd": "Ganti / tambah"
@@ -1372,6 +1429,20 @@
     "savedOnThisDevice": "Tersimpan di perangkat ini",
     "sleepsNPerMonth": "Untuk {{capacity}} orang · Rs {{price}} / bulan"
   },
+  "publicPricing": {
+    "title": "Harga sederhana untuk hostel",
+    "subtitle": "Satu paket bulanan per hostel. Setiap paket menampilkan hostel Anda di HostelHive.",
+    "currencyUsd": "Harga dalam dolar AS. Hostel di Pakistan ditagih dalam PKR.",
+    "currencyPkr": "Harga dalam rupee Pakistan.",
+    "featuresTitle": "Isi setiap paket",
+    "listingBlurb": "Hostel Anda muncul di pencarian HostelHive dan di halaman listing-nya sendiri.",
+    "boostBlurb": "Listing Anda ditempatkan lebih tinggi di hasil pencarian.",
+    "crmBlurb": "Kelola kamar, pemesanan, penyewa, tagihan, dan staf di satu tempat.",
+    "startHosting": "Mulai menjadi host",
+    "goToBilling": "Buka penagihan",
+    "loadError": "Kami tidak dapat memuat paket.",
+    "noPlans": "Belum ada paket yang tersedia saat ini."
+  },
   "publicAbout": {
     "aboutUs": "Tentang kami",
     "makingStudentAccommodationSaferAnd": "Membuat akomodasi mahasiswa lebih aman dan mudah ditemukan",
@@ -1525,6 +1596,8 @@
     "searchDescription": "Cari hostel, rumah kos, dan co-living terverifikasi di {{place}}. Saring menurut anggaran, berbagi kamar, dan fasilitas.",
     "searchPlaceDescription": "Cari hostel, rumah kos, dan co-living terverifikasi di {{place}}. Bandingkan harga, berbagi kamar, dan fasilitas.",
     "worldwideTitle": "Hostel di seluruh dunia — pencarian | HostelHive",
-    "worldwideDescription": "Cari hostel, rumah kos, dan co-living terverifikasi di seluruh dunia. Saring menurut anggaran, berbagi kamar, dan fasilitas."
+    "worldwideDescription": "Cari hostel, rumah kos, dan co-living terverifikasi di seluruh dunia. Saring menurut anggaran, berbagi kamar, dan fasilitas.",
+    "pricingTitle": "Harga untuk hostel | HostelHive",
+    "pricingDescription": "Paket bulanan HostelHive untuk hostel: tampil di daftar, dapatkan dorongan di pencarian, serta kelola kamar, pemesanan, dan tagihan dengan CRM host."
   }
 }

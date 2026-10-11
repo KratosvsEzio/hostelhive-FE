@@ -171,7 +171,6 @@
     "mess": "Mensa",
     "expenses": "Spese",
     "invoices": "Fatture",
-    "subscription": "Abbonamento",
     "more": "Altro",
     "listingDetails": "Dettagli annuncio",
     "photos": "Foto",
@@ -394,7 +393,8 @@
     "heroTitleTail": "in",
     "statVerifiedBeds": "posti letto verificati",
     "statCities": "città",
-    "statSeekerRating": "voto degli utenti"
+    "statSeekerRating": "voto degli utenti",
+    "seePricing": "Vedi i prezzi"
   },
   "card": {
     "previousPhoto": "Foto precedente",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Informativa sulla privacy",
     "termsOfService": "Termini di servizio",
     "servicePolicy": "Politica di servizio",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Tutti i diritti riservati."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Tutti i diritti riservati.",
+    "pricing": "Prezzi"
   },
   "searchBar": {
     "search": "Cerca",
@@ -514,7 +515,8 @@
     "more": "Altro",
     "property": "Struttura",
     "selectAProperty": "Seleziona struttura",
-    "createNewHostel": "Crea nuovo ostello"
+    "createNewHostel": "Crea nuovo ostello",
+    "billing": "Fatturazione"
   },
   "hostelForm": {
     "listingDetails": "Dettagli annuncio",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Registra il primo inquilino per iniziare a monitorare gli affitti."
   },
   "hostBilling": {
-    "comingSoonTitle": "La fatturazione si sta spostando su un nuovo sistema",
-    "comingSoonMessage": "Piani, fatture e pagamenti di questo ostello appariranno presto qui. Devi rinnovare ora? Contattaci.",
-    "backToDashboard": "Torna alla dashboard"
+    "title": "Fatturazione",
+    "currentPlan": "Piano attuale",
+    "noPlanTitle": "Ancora nessun piano",
+    "noPlanMessage": "Scegli un piano qui sotto per pubblicare il tuo ostello su HostelHive.",
+    "renewsOn": "Si rinnova il {{date}}",
+    "endsOn": "Termina il {{date}}",
+    "endedOn": "Terminato il {{date}}",
+    "wasDueOn": "Il pagamento era dovuto il {{date}}",
+    "graceUntil": "Paga entro il {{date}} per mantenere il tuo annuncio",
+    "awaitingFirstPayment": "In attesa del tuo primo pagamento",
+    "switchesTo": "Passa a {{plan}} al rinnovo",
+    "activeFeatures": "Attivo ora",
+    "plansTitle": "Piani",
+    "choosePlan": "Scegli piano",
+    "currentPlanButton": "Piano attuale",
+    "renew": "Rinnova",
+    "payNow": "Paga {{amount}} ora",
+    "upgradePayNow": "Upgrade: paga {{amount}} ora",
+    "renewsAtOn": "Si rinnova a {{price}} il {{date}}",
+    "switchAtRenewal": "Cambia al rinnovo",
+    "scheduledForRenewal": "Programmato per il rinnovo",
+    "switchComingSoon": "Il cambio di piano arriverà presto — contattaci per cambiare subito.",
+    "unavailable": "Non disponibile",
+    "ownerOnly": "Solo il proprietario dell’ostello può cambiare il piano.",
+    "setCountryNotice": "Imposta il paese del tuo ostello per vedere i prezzi.",
+    "addCountry": "Aggiungi il paese dell’ostello",
+    "askOwnerCountry": "Chiedi al proprietario dell’ostello di aggiungere il paese dell’ostello.",
+    "checkoutFailed": "Non è stato possibile avviare il pagamento. Riprova.",
+    "checkoutForbidden": "Non hai l’autorizzazione per acquistare piani per questo ostello.",
+    "replaceInvoiceTitle": "Sostituire la fattura non pagata?",
+    "replaceInvoiceMessage": "Questa operazione sostituisce la fattura non pagata {{number}}.",
+    "replaceInvoiceConfirm": "Sostituisci e continua",
+    "paymentDueTitle": "Pagamento dovuto",
+    "invoiceNumber": "Fattura {{number}}",
+    "kindNew": "Primo pagamento · {{start}} – {{end}}",
+    "kindRenewal": "Rinnovo · {{start}} – {{end}}",
+    "kindUpgrade": "Addebito per upgrade · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Paga entro il {{date}}",
+    "pay": "Paga",
+    "underReview": "Bonifico bancario in verifica",
+    "underReviewHint": "Aggiorneremo questa pagina appena il nostro team confermerà il tuo bonifico.",
+    "noAccessTitle": "La fatturazione non è disponibile per te",
+    "noAccessMessage": "Solo chi ha accesso alla fatturazione può vedere la fatturazione di questo ostello. Chiedi al proprietario dell’ostello.",
+    "loadError": "Non è stato possibile caricare la fatturazione di questo ostello.",
+    "backToBilling": "Torna alla fatturazione",
+    "payStubTitle": "Il pagamento online è in fase di attivazione",
+    "payStubMessage": "Per pagare ora la fattura {{number}}, contattaci indicando il numero della fattura.",
+    "invoiceLoadError": "Non è stato possibile caricare questa fattura."
   },
   "hostMess": {
     "pickADate": "Scegli una data",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "I tuoi inviti dell’ostello, le conferme dei pasti e le ricevute in sospeso."
   },
+  "sharedBilling": {
+    "perMonth": "/ mese",
+    "featureListing": "Annuncio su HostelHive",
+    "featureBoost": "Posizionamento in evidenza nella ricerca",
+    "featureCrm": "CRM per host — camere, prenotazioni, inquilini, fatture e personale",
+    "included": "Incluso",
+    "notIncluded": "Non incluso",
+    "notAvailableIn": "Non disponibile in {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Trascina, carica o scatta una foto",
     "replaceAdd": "Sostituisci / aggiungi"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Salvato su questo dispositivo",
     "sleepsNPerMonth": "Posti letto {{capacity}} · Rs {{price}} / mese"
   },
+  "publicPricing": {
+    "title": "Prezzi semplici per ostelli",
+    "subtitle": "Un piano mensile per ostello. Ogni piano pubblica il tuo ostello su HostelHive.",
+    "currencyUsd": "Prezzi in dollari statunitensi. Gli ostelli in Pakistan vengono fatturati in PKR.",
+    "currencyPkr": "Prezzi in rupie pakistane.",
+    "featuresTitle": "Cosa include ogni piano",
+    "listingBlurb": "Il tuo ostello compare nella ricerca di HostelHive e su una propria pagina annuncio.",
+    "boostBlurb": "Il tuo annuncio viene posizionato più in alto nei risultati di ricerca.",
+    "crmBlurb": "Gestisci camere, prenotazioni, inquilini, fatture e personale in un unico posto.",
+    "startHosting": "Inizia a ospitare",
+    "goToBilling": "Vai alla fatturazione",
+    "loadError": "Non è stato possibile caricare i piani.",
+    "noPlans": "Al momento non ci sono piani disponibili."
+  },
   "publicAbout": {
     "aboutUs": "Chi siamo",
     "makingStudentAccommodationSaferAnd": "Rendere l’alloggio per studenti più sicuro e facile da trovare",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Cerca ostelli, pensioni e co-living verificati a {{place}}. Filtra per budget, condivisione della stanza e servizi.",
     "searchPlaceDescription": "Cerca ostelli, pensioni e co-living verificati a {{place}}. Confronta prezzi, condivisione della stanza e servizi.",
     "worldwideTitle": "Ostelli in tutto il mondo — ricerca | HostelHive",
-    "worldwideDescription": "Cerca ostelli, pensioni e co-living verificati in tutto il mondo. Filtra per budget, condivisione della stanza e servizi."
+    "worldwideDescription": "Cerca ostelli, pensioni e co-living verificati in tutto il mondo. Filtra per budget, condivisione della stanza e servizi.",
+    "pricingTitle": "Prezzi per ostelli | HostelHive",
+    "pricingDescription": "Piani mensili HostelHive per ostelli: fatti trovare, ottieni più visibilità nella ricerca e gestisci camere, prenotazioni e fatture con il CRM per host."
   }
 }

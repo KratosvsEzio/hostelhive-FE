@@ -1,15 +1,25 @@
 import { SUBSCRIPTION_ROUTES } from './subscription.routes';
-import { SubscriptionPlaceholder } from './subscription-placeholder';
+import { BillingPage } from './billing-page';
+import { PayPlaceholder } from './pay-placeholder';
 
 describe('feature-subscription routes', () => {
-  it('serves exactly one page, the billing placeholder', () => {
-    expect(SUBSCRIPTION_ROUTES).toHaveLength(1);
-    expect(SUBSCRIPTION_ROUTES[0]).toMatchObject({
+  it('serves the billing page at the root', () => {
+    expect(SUBSCRIPTION_ROUTES.find((r) => r.path === '')).toMatchObject({
       path: '',
       pathMatch: 'full',
-      component: SubscriptionPlaceholder,
+      component: BillingPage,
       title: 'Billing — HostelHive',
     });
+  });
+
+  it('serves the payment step for one invoice', () => {
+    expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'pay/:invoiceId')).toMatchObject({
+      component: PayPlaceholder,
+    });
+  });
+
+  it('serves nothing else', () => {
+    expect(SUBSCRIPTION_ROUTES.map((r) => r.path)).toEqual(['', 'pay/:invoiceId']);
   });
 
   // The old plan, checkout and payment-history URLs must match nothing here and fall to the catch-all.
@@ -22,6 +32,9 @@ describe('feature-subscription routes', () => {
 
   // A permission guard would turn the paywall's link into /forbidden for staff without it.
   it('is not permission-guarded', () => {
-    expect(SUBSCRIPTION_ROUTES[0].canActivate).toBeUndefined();
+    for (const route of SUBSCRIPTION_ROUTES) {
+      expect(route.canActivate).toBeUndefined();
+      expect(route.canMatch).toBeUndefined();
+    }
   });
 });

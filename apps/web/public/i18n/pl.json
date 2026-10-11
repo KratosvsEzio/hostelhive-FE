@@ -171,7 +171,6 @@
     "mess": "Stołówka",
     "expenses": "Wydatki",
     "invoices": "Faktury",
-    "subscription": "Subskrypcja",
     "more": "Więcej",
     "listingDetails": "Szczegóły ogłoszenia",
     "photos": "Zdjęcia",
@@ -394,7 +393,8 @@
     "heroTitleTail": "w",
     "statVerifiedBeds": "zweryfikowanych miejsc",
     "statCities": "miast",
-    "statSeekerRating": "ocena najemców"
+    "statSeekerRating": "ocena najemców",
+    "seePricing": "Zobacz cennik"
   },
   "card": {
     "previousPhoto": "Poprzednie zdjęcie",
@@ -487,7 +487,8 @@
     "privacyPolicy": "Polityka prywatności",
     "termsOfService": "Regulamin",
     "servicePolicy": "Zasady świadczenia usług",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Wszelkie prawa zastrzeżone."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Wszelkie prawa zastrzeżone.",
+    "pricing": "Cennik"
   },
   "searchBar": {
     "search": "Szukaj",
@@ -519,7 +520,8 @@
     "more": "Więcej",
     "property": "Obiekt",
     "selectAProperty": "Wybierz obiekt",
-    "createNewHostel": "Utwórz nowy hostel"
+    "createNewHostel": "Utwórz nowy hostel",
+    "billing": "Rozliczenia"
   },
   "hostelForm": {
     "listingDetails": "Szczegóły ogłoszenia",
@@ -716,9 +718,55 @@
     "checkInYourFirstTenant": "Zamelduj pierwszego najemcę, aby zacząć śledzić czynsz."
   },
   "hostBilling": {
-    "comingSoonTitle": "Rozliczenia przenoszą się do nowego systemu",
-    "comingSoonMessage": "Plany, faktury i płatności tego hostelu wkrótce pojawią się tutaj. Chcesz odnowić teraz? Skontaktuj się z nami.",
-    "backToDashboard": "Powrót do panelu"
+    "title": "Rozliczenia",
+    "currentPlan": "Obecny plan",
+    "noPlanTitle": "Brak planu",
+    "noPlanMessage": "Wybierz plan poniżej, aby dodać swój hostel do HostelHive.",
+    "renewsOn": "Odnawia się {{date}}",
+    "endsOn": "Kończy się {{date}}",
+    "endedOn": "Zakończył się {{date}}",
+    "wasDueOn": "Termin płatności upłynął {{date}}",
+    "graceUntil": "Zapłać do {{date}}, aby zachować ogłoszenie",
+    "awaitingFirstPayment": "Oczekiwanie na pierwszą płatność",
+    "switchesTo": "Przy odnowieniu zmieni się na {{plan}}",
+    "activeFeatures": "Aktywne teraz",
+    "plansTitle": "Plany",
+    "choosePlan": "Wybierz plan",
+    "currentPlanButton": "Obecny plan",
+    "renew": "Odnów",
+    "payNow": "Zapłać teraz {{amount}}",
+    "upgradePayNow": "Ulepsz: zapłać teraz {{amount}}",
+    "renewsAtOn": "Odnowienie za {{price}} dnia {{date}}",
+    "switchAtRenewal": "Zmień przy odnowieniu",
+    "scheduledForRenewal": "Zaplanowano na odnowienie",
+    "switchComingSoon": "Zmiana planu będzie wkrótce dostępna — skontaktuj się z nami, aby zmienić go teraz.",
+    "unavailable": "Niedostępny",
+    "ownerOnly": "Tylko właściciel hostelu może zmienić plan.",
+    "setCountryNotice": "Ustaw kraj swojego hostelu, aby zobaczyć ceny.",
+    "addCountry": "Dodaj kraj hostelu",
+    "askOwnerCountry": "Poproś właściciela hostelu o dodanie kraju hostelu.",
+    "checkoutFailed": "Nie udało się rozpocząć płatności. Spróbuj ponownie.",
+    "checkoutForbidden": "Nie masz uprawnień do kupowania planów dla tego hostelu.",
+    "replaceInvoiceTitle": "Zastąpić nieopłaconą fakturę?",
+    "replaceInvoiceMessage": "To zastąpi nieopłaconą fakturę {{number}}.",
+    "replaceInvoiceConfirm": "Zastąp i kontynuuj",
+    "paymentDueTitle": "Płatność do uregulowania",
+    "invoiceNumber": "Faktura {{number}}",
+    "kindNew": "Pierwsza płatność · {{start}} – {{end}}",
+    "kindRenewal": "Odnowienie · {{start}} – {{end}}",
+    "kindUpgrade": "Opłata za ulepszenie · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Zapłać do {{date}}",
+    "pay": "Zapłać",
+    "underReview": "Przelew bankowy w weryfikacji",
+    "underReviewHint": "Zaktualizujemy tę stronę, gdy nasz zespół potwierdzi Twój przelew.",
+    "noAccessTitle": "Rozliczenia nie są dla Ciebie dostępne",
+    "noAccessMessage": "Rozliczenia tego hostelu widzą tylko osoby z dostępem do rozliczeń. Zapytaj właściciela hostelu.",
+    "loadError": "Nie udało się wczytać rozliczeń tego hostelu.",
+    "backToBilling": "Wróć do rozliczeń",
+    "payStubTitle": "Płatności online są w przygotowaniu",
+    "payStubMessage": "Aby zapłacić teraz fakturę {{number}}, skontaktuj się z nami i podaj numer faktury.",
+    "invoiceLoadError": "Nie udało się wczytać tej faktury."
   },
   "hostMess": {
     "pickADate": "Wybierz datę",
@@ -1137,6 +1185,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Twoje zaproszenia z hostelu, potwierdzenia posiłków i oczekujące paragony."
   },
+  "sharedBilling": {
+    "perMonth": "/ miesiąc",
+    "featureListing": "Ogłoszenie na HostelHive",
+    "featureBoost": "Wyróżnione miejsce w wyszukiwaniu",
+    "featureCrm": "CRM dla gospodarzy — pokoje, rezerwacje, najemcy, rachunki i personel",
+    "included": "W cenie",
+    "notIncluded": "Nie w cenie",
+    "notAvailableIn": "Niedostępne w {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Przeciągnij i upuść, prześlij lub zrób zdjęcie",
     "replaceAdd": "Zamień / dodaj"
@@ -1372,6 +1429,20 @@
     "savedOnThisDevice": "Zapisano na tym urządzeniu",
     "sleepsNPerMonth": "Dla {{capacity}} osób · Rs {{price}} / mies."
   },
+  "publicPricing": {
+    "title": "Prosty cennik dla hosteli",
+    "subtitle": "Jeden miesięczny plan na hostel. Każdy plan umieszcza Twój hostel na HostelHive.",
+    "currencyUsd": "Ceny w dolarach amerykańskich. Hostele w Pakistanie są rozliczane w PKR.",
+    "currencyPkr": "Ceny w rupiach pakistańskich.",
+    "featuresTitle": "Co zawiera każdy plan",
+    "listingBlurb": "Twój hostel pojawia się w wyszukiwarce HostelHive i na własnej stronie ogłoszenia.",
+    "boostBlurb": "Twoje ogłoszenie jest wyżej w wynikach wyszukiwania.",
+    "crmBlurb": "Zarządzaj pokojami, rezerwacjami, najemcami, rachunkami i personelem w jednym miejscu.",
+    "startHosting": "Zacznij przyjmować gości",
+    "goToBilling": "Przejdź do rozliczeń",
+    "loadError": "Nie udało się wczytać planów.",
+    "noPlans": "Obecnie nie ma dostępnych planów."
+  },
   "publicAbout": {
     "aboutUs": "O nas",
     "makingStudentAccommodationSaferAnd": "Sprawiamy, że zakwaterowanie studenckie jest bezpieczniejsze i łatwiejsze do znalezienia",
@@ -1525,6 +1596,8 @@
     "searchDescription": "Przeszukaj zweryfikowane hostele, pensjonaty i co-living w {{place}}. Filtruj według budżetu, współdzielenia pokoju i udogodnień.",
     "searchPlaceDescription": "Przeszukaj zweryfikowane hostele, pensjonaty i co-living w {{place}}. Porównaj ceny, współdzielenie pokoju i udogodnienia.",
     "worldwideTitle": "Hostele na całym świecie — wyszukiwanie | HostelHive",
-    "worldwideDescription": "Przeszukaj zweryfikowane hostele, pensjonaty i co-living na całym świecie. Filtruj według budżetu, współdzielenia pokoju i udogodnień."
+    "worldwideDescription": "Przeszukaj zweryfikowane hostele, pensjonaty i co-living na całym świecie. Filtruj według budżetu, współdzielenia pokoju i udogodnień.",
+    "pricingTitle": "Cennik dla hosteli | HostelHive",
+    "pricingDescription": "Miesięczne plany HostelHive dla hosteli: pojaw się w wynikach, zyskaj wyróżnienie w wyszukiwaniu i zarządzaj pokojami, rezerwacjami i rachunkami w CRM dla gospodarzy."
   }
 }

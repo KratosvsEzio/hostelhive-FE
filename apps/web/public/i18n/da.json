@@ -171,7 +171,6 @@
     "mess": "Kantine",
     "expenses": "Udgifter",
     "invoices": "Fakturaer",
-    "subscription": "Abonnement",
     "more": "Mere",
     "listingDetails": "Annoncedetaljer",
     "photos": "Billeder",
@@ -394,7 +393,8 @@
     "heroTitleTail": "i",
     "statVerifiedBeds": "verificerede senge",
     "statCities": "byer",
-    "statSeekerRating": "brugerbedømmelse"
+    "statSeekerRating": "brugerbedømmelse",
+    "seePricing": "Se priser"
   },
   "card": {
     "previousPhoto": "Forrige billede",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Privatlivspolitik",
     "termsOfService": "Servicevilkår",
     "servicePolicy": "Servicepolitik",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alle rettigheder forbeholdes."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alle rettigheder forbeholdes.",
+    "pricing": "Priser"
   },
   "searchBar": {
     "search": "Søg",
@@ -514,7 +515,8 @@
     "more": "Mere",
     "property": "Ejendom",
     "selectAProperty": "Vælg ejendom",
-    "createNewHostel": "Opret nyt hostel"
+    "createNewHostel": "Opret nyt hostel",
+    "billing": "Fakturering"
   },
   "hostelForm": {
     "listingDetails": "Annoncedetaljer",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Tjek din første lejer ind for at begynde at følge huslejen."
   },
   "hostBilling": {
-    "comingSoonTitle": "Fakturering flytter til et nyt system",
-    "comingSoonMessage": "Planer, fakturaer og betalinger for dette hostel vises her snart. Skal du forny nu? Kontakt os.",
-    "backToDashboard": "Tilbage til dashboard"
+    "title": "Fakturering",
+    "currentPlan": "Nuværende plan",
+    "noPlanTitle": "Ingen plan endnu",
+    "noPlanMessage": "Vælg en plan nedenfor for at vise dit hostel på HostelHive.",
+    "renewsOn": "Fornyes den {{date}}",
+    "endsOn": "Slutter den {{date}}",
+    "endedOn": "Sluttede den {{date}}",
+    "wasDueOn": "Betalingen forfaldt den {{date}}",
+    "graceUntil": "Betal senest den {{date}} for at beholde dit opslag",
+    "awaitingFirstPayment": "Venter på din første betaling",
+    "switchesTo": "Skifter til {{plan}} ved fornyelse",
+    "activeFeatures": "Aktiv nu",
+    "plansTitle": "Planer",
+    "choosePlan": "Vælg plan",
+    "currentPlanButton": "Nuværende plan",
+    "renew": "Forny",
+    "payNow": "Betal {{amount}} nu",
+    "upgradePayNow": "Opgrader: betal {{amount}} nu",
+    "renewsAtOn": "Fornyes til {{price}} den {{date}}",
+    "switchAtRenewal": "Skift ved fornyelse",
+    "scheduledForRenewal": "Planlagt til fornyelse",
+    "switchComingSoon": "Skift af plan kommer snart — kontakt os for at skifte nu.",
+    "unavailable": "Ikke tilgængelig",
+    "ownerOnly": "Kun ejeren af hostellet kan ændre planen.",
+    "setCountryNotice": "Angiv dit hostels land for at se priser.",
+    "addCountry": "Tilføj hostellets land",
+    "askOwnerCountry": "Bed ejeren af hostellet om at tilføje hostellets land.",
+    "checkoutFailed": "Vi kunne ikke starte betalingen. Prøv igen.",
+    "checkoutForbidden": "Du har ikke tilladelse til at købe planer til dette hostel.",
+    "replaceInvoiceTitle": "Erstat den ubetalte faktura?",
+    "replaceInvoiceMessage": "Dette erstatter den ubetalte faktura {{number}}.",
+    "replaceInvoiceConfirm": "Erstat og fortsæt",
+    "paymentDueTitle": "Betaling forfalden",
+    "invoiceNumber": "Faktura {{number}}",
+    "kindNew": "Første betaling · {{start}} – {{end}}",
+    "kindRenewal": "Fornyelse · {{start}} – {{end}}",
+    "kindUpgrade": "Opgraderingsgebyr · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Betal senest den {{date}}",
+    "pay": "Betal",
+    "underReview": "Bankoverførsel under gennemgang",
+    "underReviewHint": "Vi opdaterer denne side, så snart vores team har bekræftet din overførsel.",
+    "noAccessTitle": "Fakturering er ikke tilgængelig for dig",
+    "noAccessMessage": "Kun personer med adgang til fakturering kan se dette hostels fakturering. Spørg ejeren af hostellet.",
+    "loadError": "Vi kunne ikke indlæse faktureringen for dette hostel.",
+    "backToBilling": "Tilbage til fakturering",
+    "payStubTitle": "Onlinebetaling er ved at blive sat op",
+    "payStubMessage": "For at betale faktura {{number}} nu skal du kontakte os og oplyse fakturanummeret.",
+    "invoiceLoadError": "Vi kunne ikke indlæse denne faktura."
   },
   "hostMess": {
     "pickADate": "Vælg en dato",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Dine hostelinvitationer, måltidsbekræftelser og udestående kvitteringer."
   },
+  "sharedBilling": {
+    "perMonth": "/ måned",
+    "featureListing": "Opslag på HostelHive",
+    "featureBoost": "Fremhævet placering i søgningen",
+    "featureCrm": "CRM til værter — værelser, bookinger, lejere, regninger og personale",
+    "included": "Inkluderet",
+    "notIncluded": "Ikke inkluderet",
+    "notAvailableIn": "Ikke tilgængelig i {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Træk & slip, upload eller tag et billede",
     "replaceAdd": "Erstat / tilføj"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Gemt på denne enhed",
     "sleepsNPerMonth": "Plads til {{capacity}} · Rs {{price}} / måned"
   },
+  "publicPricing": {
+    "title": "Enkle priser for hostels",
+    "subtitle": "Én månedlig plan pr. hostel. Alle planer viser dit hostel på HostelHive.",
+    "currencyUsd": "Priser i amerikanske dollars. Hostels i Pakistan faktureres i PKR.",
+    "currencyPkr": "Priser i pakistanske rupees.",
+    "featuresTitle": "Hvad hver plan indeholder",
+    "listingBlurb": "Dit hostel vises i HostelHives søgning og på sin egen opslagsside.",
+    "boostBlurb": "Dit opslag placeres højere i søgeresultaterne.",
+    "crmBlurb": "Styr værelser, bookinger, lejere, regninger og personale ét sted.",
+    "startHosting": "Bliv vært",
+    "goToBilling": "Gå til fakturering",
+    "loadError": "Vi kunne ikke indlæse planerne.",
+    "noPlans": "Der er ingen tilgængelige planer lige nu."
+  },
   "publicAbout": {
     "aboutUs": "Om os",
     "makingStudentAccommodationSaferAnd": "Gøre studieboliger sikrere og lettere at finde",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Søg verificerede hosteller, pensionater og bofællesskaber i {{place}}. Filtrér efter budget, værelsesdeling og faciliteter.",
     "searchPlaceDescription": "Søg verificerede hosteller, pensionater og bofællesskaber i {{place}}. Sammenlign priser, værelsesdeling og faciliteter.",
     "worldwideTitle": "Hosteller i hele verden — søg | HostelHive",
-    "worldwideDescription": "Søg verificerede hosteller, pensionater og bofællesskaber i hele verden. Filtrér efter budget, værelsesdeling og faciliteter."
+    "worldwideDescription": "Søg verificerede hosteller, pensionater og bofællesskaber i hele verden. Filtrér efter budget, værelsesdeling og faciliteter.",
+    "pricingTitle": "Priser for hostels | HostelHive",
+    "pricingDescription": "Månedlige HostelHive-planer for hostels: bliv vist, få et boost i søgningen, og styr værelser, bookinger og regninger med CRM til værter."
   }
 }
