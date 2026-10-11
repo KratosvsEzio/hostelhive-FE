@@ -34,6 +34,8 @@ export interface HostelUser {
   email: string;
   phone?: string | null;
   is_active: boolean;
+  /** Embedded on a hostel's `host` for moderators, admins and the host themselves. */
+  created_at?: string | null;
 }
 
 export interface ColorTokens {
