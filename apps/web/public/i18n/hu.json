@@ -171,7 +171,6 @@
     "mess": "Étkezde",
     "expenses": "Kiadások",
     "invoices": "Számlák",
-    "subscription": "Előfizetés",
     "more": "Több",
     "listingDetails": "Hirdetés részletei",
     "photos": "Fotók",
@@ -394,7 +393,8 @@
     "heroTitleTail": "itt:",
     "statVerifiedBeds": "ellenőrzött ágy",
     "statCities": "város",
-    "statSeekerRating": "felhasználói értékelés"
+    "statSeekerRating": "felhasználói értékelés",
+    "seePricing": "Árak megtekintése"
   },
   "card": {
     "previousPhoto": "Előző kép",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Adatvédelmi tájékoztató",
     "termsOfService": "Általános Szerződési Feltételek",
     "servicePolicy": "Szolgáltatási szabályzat",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Minden jog fenntartva."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Minden jog fenntartva.",
+    "pricing": "Árak"
   },
   "searchBar": {
     "search": "Keresés",
@@ -514,7 +515,8 @@
     "more": "Több",
     "property": "Ingatlan",
     "selectAProperty": "Válassz ingatlant",
-    "createNewHostel": "Új szálláshely létrehozása"
+    "createNewHostel": "Új szálláshely létrehozása",
+    "billing": "Számlázás"
   },
   "hostelForm": {
     "listingDetails": "Hirdetés részletei",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Jelentkeztesse be az első bérlőt a bérleti díj követéséhez."
   },
   "hostBilling": {
-    "comingSoonTitle": "A számlázás új rendszerre költözik",
-    "comingSoonMessage": "A szálláshely csomagjai, számlái és fizetései hamarosan itt jelennek meg. Most szeretnél megújítani? Lépj kapcsolatba velünk.",
-    "backToDashboard": "Vissza a kezelőfelületre"
+    "title": "Számlázás",
+    "currentPlan": "Jelenlegi csomag",
+    "noPlanTitle": "Még nincs csomagod",
+    "noPlanMessage": "Válassz lent egy csomagot, hogy a szálláshelyed megjelenjen a HostelHive-on.",
+    "renewsOn": "Megújul: {{date}}",
+    "endsOn": "Lejár: {{date}}",
+    "endedOn": "Lejárt: {{date}}",
+    "wasDueOn": "Fizetési határidő volt: {{date}}",
+    "graceUntil": "Fizess eddig: {{date}}, hogy megmaradjon a hirdetésed",
+    "awaitingFirstPayment": "Várakozás az első fizetésedre",
+    "switchesTo": "Megújításkor erre vált: {{plan}}",
+    "activeFeatures": "Most aktív",
+    "plansTitle": "Csomagok",
+    "choosePlan": "Csomag kiválasztása",
+    "currentPlanButton": "Jelenlegi csomag",
+    "renew": "Megújítás",
+    "payNow": "Fizess most: {{amount}}",
+    "upgradePayNow": "Bővítés: fizess most {{amount}} összeget",
+    "renewsAtOn": "Megújul: {{date}}, {{price}} áron",
+    "switchAtRenewal": "Váltás megújításkor",
+    "scheduledForRenewal": "Megújításra ütemezve",
+    "switchComingSoon": "A csomagváltás hamarosan elérhető — lépj kapcsolatba velünk, ha most váltanál.",
+    "unavailable": "Nem elérhető",
+    "ownerOnly": "Csak a szálláshely tulajdonosa módosíthatja a csomagot.",
+    "setCountryNotice": "Add meg a szálláshelyed országát az árak megtekintéséhez.",
+    "addCountry": "Szálláshely országának megadása",
+    "askOwnerCountry": "Kérd meg a szálláshely tulajdonosát, hogy adja meg a szálláshely országát.",
+    "checkoutFailed": "Nem sikerült elindítani a fizetést. Próbáld újra.",
+    "checkoutForbidden": "Nincs jogosultságod csomagot vásárolni ehhez a szálláshelyhez.",
+    "replaceInvoiceTitle": "Lecseréled a kifizetetlen számlát?",
+    "replaceInvoiceMessage": "Ez lecseréli a(z) {{number}} számú kifizetetlen számlát.",
+    "replaceInvoiceConfirm": "Csere és folytatás",
+    "paymentDueTitle": "Esedékes fizetés",
+    "invoiceNumber": "Számla: {{number}}",
+    "kindNew": "Első fizetés · {{start}} – {{end}}",
+    "kindRenewal": "Megújítás · {{start}} – {{end}}",
+    "kindUpgrade": "Bővítési díj · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Fizetési határidő: {{date}}",
+    "pay": "Fizetés",
+    "underReview": "Banki átutalás ellenőrzés alatt",
+    "underReviewHint": "Frissítjük ezt az oldalt, amint csapatunk megerősíti az átutalásodat.",
+    "noAccessTitle": "A számlázás nem érhető el számodra",
+    "noAccessMessage": "A szálláshely számlázását csak számlázási hozzáféréssel rendelkezők láthatják. Kérdezd meg a szálláshely tulajdonosát.",
+    "loadError": "Nem sikerült betölteni a szálláshely számlázását.",
+    "backToBilling": "Vissza a számlázáshoz",
+    "payStubTitle": "Az online fizetés beállítása folyamatban van",
+    "payStubMessage": "Ha most fizetnéd ki a(z) {{number}} számú számlát, lépj kapcsolatba velünk, és add meg a számlaszámot.",
+    "invoiceLoadError": "Nem sikerült betölteni ezt a számlát."
   },
   "hostMess": {
     "pickADate": "Válassz dátumot",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "A szálláshelyi meghívóid, étkezési visszaigazolásaid és függőben lévő nyugtáid."
   },
+  "sharedBilling": {
+    "perMonth": "/ hó",
+    "featureListing": "Megjelenés a HostelHive-on",
+    "featureBoost": "Kiemelt helyezés a keresésben",
+    "featureCrm": "Szállásadói CRM — szobák, foglalások, bérlők, számlák és személyzet",
+    "included": "Benne van",
+    "notIncluded": "Nincs benne",
+    "notAvailableIn": "Nem érhető el {{currency}} pénznemben"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Húzd ide, tölts fel vagy készíts fényképet",
     "replaceAdd": "Csere / hozzáadás"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Elmentve ezen az eszközön",
     "sleepsNPerMonth": "{{capacity}} fő · Rs {{price}} / hó"
   },
+  "publicPricing": {
+    "title": "Egyszerű árak szálláshelyeknek",
+    "subtitle": "Szálláshelyenként egy havi csomag. Minden csomaggal megjelenik a szálláshelyed a HostelHive-on.",
+    "currencyUsd": "Az árak amerikai dollárban értendők. A pakisztáni szálláshelyek számlázása PKR-ben történik.",
+    "currencyPkr": "Az árak pakisztáni rúpiában értendők.",
+    "featuresTitle": "Mit tartalmaznak a csomagok",
+    "listingBlurb": "A szálláshelyed megjelenik a HostelHive keresésében és saját hirdetési oldalon.",
+    "boostBlurb": "A hirdetésed előrébb kerül a találatok között.",
+    "crmBlurb": "Kezeld a szobákat, foglalásokat, bérlőket, számlákat és a személyzetet egy helyen.",
+    "startHosting": "Kezdj el szállást kiadni",
+    "goToBilling": "Ugrás a számlázáshoz",
+    "loadError": "Nem sikerült betölteni a csomagokat.",
+    "noPlans": "Jelenleg nincs elérhető csomag."
+  },
   "publicAbout": {
     "aboutUs": "Rólunk",
     "makingStudentAccommodationSaferAnd": "Biztonságosabbá és könnyebben megtalálhatóvá tenni a diákszállásokat",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Keressen ellenőrzött szállásokat, panziókat és közösségi lakhatást itt: {{place}}. Szűrjön költségkeret, szobamegosztás és felszereltség szerint.",
     "searchPlaceDescription": "Keressen ellenőrzött szállásokat, panziókat és közösségi lakhatást itt: {{place}}. Hasonlítsa össze az árakat, a szobamegosztást és a felszereltséget.",
     "worldwideTitle": "Szállások világszerte — keresés | HostelHive",
-    "worldwideDescription": "Keressen ellenőrzött szállásokat, panziókat és közösségi lakhatást világszerte. Szűrjön költségkeret, szobamegosztás és felszereltség szerint."
+    "worldwideDescription": "Keressen ellenőrzött szállásokat, panziókat és közösségi lakhatást világszerte. Szűrjön költségkeret, szobamegosztás és felszereltség szerint.",
+    "pricingTitle": "Árak szálláshelyeknek | HostelHive",
+    "pricingDescription": "Havi HostelHive-csomagok szálláshelyeknek: kerülj fel a listára, emelkedj ki a keresésben, és kezeld a szobákat, foglalásokat és számlákat a szállásadói CRM-mel."
   }
 }

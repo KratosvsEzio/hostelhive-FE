@@ -29,6 +29,7 @@ const TINT: Record<string, string> = {
   'common.utilities': 'bg-tint-mint text-ink-600',
   'common.mess': 'bg-tint-purple text-ink-600',
   'common.expenses': 'bg-tint-sky text-ink-600',
+  'hostNav.billing': 'bg-tint-purple text-ink-600',
 };
 
 const NEUTRAL_TINT = 'bg-ink-100 text-ink-600';

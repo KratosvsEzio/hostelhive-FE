@@ -2,6 +2,7 @@
 // They live in the app (not the shared lib) since they model app-specific endpoints;
 // the shared HTTP plumbing (ApiClient, config, tokens, models) stays in @hostelhive/data-access.
 export * from './auth-api';
+export * from './billing-api';
 export * from './documents-api';
 export * from './hostels-api';
 export * from './listings-api';

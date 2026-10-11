@@ -171,7 +171,6 @@
     "mess": "Nhà ăn",
     "expenses": "Chi phí",
     "invoices": "Hóa đơn",
-    "subscription": "Đăng ký",
     "more": "Thêm",
     "listingDetails": "Chi tiết tin đăng",
     "photos": "Ảnh",
@@ -394,7 +393,8 @@
     "heroTitleTail": "trong",
     "statVerifiedBeds": "giường đã xác minh",
     "statCities": "thành phố",
-    "statSeekerRating": "điểm đánh giá"
+    "statSeekerRating": "điểm đánh giá",
+    "seePricing": "Xem bảng giá"
   },
   "card": {
     "previousPhoto": "Ảnh trước",
@@ -487,7 +487,8 @@
     "privacyPolicy": "Chính sách bảo mật",
     "termsOfService": "Điều khoản dịch vụ",
     "servicePolicy": "Chính sách dịch vụ",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Bảo lưu mọi quyền."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Bảo lưu mọi quyền.",
+    "pricing": "Bảng giá"
   },
   "searchBar": {
     "search": "Tìm kiếm",
@@ -519,7 +520,8 @@
     "more": "Thêm",
     "property": "Cơ sở",
     "selectAProperty": "Chọn cơ sở",
-    "createNewHostel": "Tạo nhà nghỉ mới"
+    "createNewHostel": "Tạo nhà nghỉ mới",
+    "billing": "Thanh toán"
   },
   "hostelForm": {
     "listingDetails": "Chi tiết tin đăng",
@@ -716,9 +718,55 @@
     "checkInYourFirstTenant": "Nhận phòng cho khách thuê đầu tiên để bắt đầu theo dõi tiền thuê."
   },
   "hostBilling": {
-    "comingSoonTitle": "Thanh toán đang chuyển sang hệ thống mới",
-    "comingSoonMessage": "Gói, hóa đơn và thanh toán của nhà nghỉ này sẽ sớm xuất hiện tại đây. Cần gia hạn ngay? Liên hệ với chúng tôi.",
-    "backToDashboard": "Quay lại bảng điều khiển"
+    "title": "Thanh toán",
+    "currentPlan": "Gói hiện tại",
+    "noPlanTitle": "Chưa có gói",
+    "noPlanMessage": "Chọn một gói bên dưới để đăng nhà nghỉ của bạn trên HostelHive.",
+    "renewsOn": "Gia hạn vào {{date}}",
+    "endsOn": "Kết thúc vào {{date}}",
+    "endedOn": "Đã kết thúc vào {{date}}",
+    "wasDueOn": "Hạn thanh toán là {{date}}",
+    "graceUntil": "Thanh toán trước {{date}} để giữ tin đăng của bạn",
+    "awaitingFirstPayment": "Đang chờ khoản thanh toán đầu tiên của bạn",
+    "switchesTo": "Chuyển sang {{plan}} khi gia hạn",
+    "activeFeatures": "Đang hoạt động",
+    "plansTitle": "Các gói",
+    "choosePlan": "Chọn gói",
+    "currentPlanButton": "Gói hiện tại",
+    "renew": "Gia hạn",
+    "payNow": "Thanh toán {{amount}} ngay",
+    "upgradePayNow": "Nâng cấp: thanh toán {{amount}} ngay",
+    "renewsAtOn": "Gia hạn với giá {{price}} vào {{date}}",
+    "switchAtRenewal": "Chuyển khi gia hạn",
+    "scheduledForRenewal": "Đã lên lịch khi gia hạn",
+    "switchComingSoon": "Tính năng đổi gói sắp ra mắt — liên hệ với chúng tôi để đổi ngay.",
+    "unavailable": "Không khả dụng",
+    "ownerOnly": "Chỉ chủ nhà nghỉ mới có thể thay đổi gói.",
+    "setCountryNotice": "Đặt quốc gia cho nhà nghỉ của bạn để xem giá.",
+    "addCountry": "Thêm quốc gia của nhà nghỉ",
+    "askOwnerCountry": "Hãy nhờ chủ nhà nghỉ thêm quốc gia của nhà nghỉ.",
+    "checkoutFailed": "Chúng tôi không thể bắt đầu thanh toán. Hãy thử lại.",
+    "checkoutForbidden": "Bạn không có quyền mua gói cho nhà nghỉ này.",
+    "replaceInvoiceTitle": "Thay thế hóa đơn chưa thanh toán?",
+    "replaceInvoiceMessage": "Thao tác này sẽ thay thế hóa đơn chưa thanh toán {{number}}.",
+    "replaceInvoiceConfirm": "Thay thế và tiếp tục",
+    "paymentDueTitle": "Đến hạn thanh toán",
+    "invoiceNumber": "Hóa đơn {{number}}",
+    "kindNew": "Thanh toán lần đầu · {{start}} – {{end}}",
+    "kindRenewal": "Gia hạn · {{start}} – {{end}}",
+    "kindUpgrade": "Phí nâng cấp · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Thanh toán trước {{date}}",
+    "pay": "Thanh toán",
+    "underReview": "Chuyển khoản ngân hàng đang được xem xét",
+    "underReviewHint": "Chúng tôi sẽ cập nhật trang này ngay khi đội ngũ của chúng tôi xác nhận chuyển khoản của bạn.",
+    "noAccessTitle": "Bạn không có quyền xem thanh toán",
+    "noAccessMessage": "Chỉ những người có quyền truy cập thanh toán mới xem được thanh toán của nhà nghỉ này. Hãy hỏi chủ nhà nghỉ.",
+    "loadError": "Chúng tôi không thể tải thông tin thanh toán của nhà nghỉ này.",
+    "backToBilling": "Quay lại thanh toán",
+    "payStubTitle": "Thanh toán trực tuyến đang được thiết lập",
+    "payStubMessage": "Để thanh toán hóa đơn {{number}} ngay, hãy liên hệ với chúng tôi và cung cấp số hóa đơn.",
+    "invoiceLoadError": "Chúng tôi không thể tải hóa đơn này."
   },
   "hostMess": {
     "pickADate": "Chọn ngày",
@@ -1137,6 +1185,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Lời mời từ nhà nghỉ, xác nhận bữa ăn và biên lai đang chờ của bạn."
   },
+  "sharedBilling": {
+    "perMonth": "/ tháng",
+    "featureListing": "Hiển thị trên HostelHive",
+    "featureBoost": "Vị trí nổi bật trong tìm kiếm",
+    "featureCrm": "CRM cho chủ nhà — phòng, đặt phòng, người thuê, hóa đơn và nhân viên",
+    "included": "Đã bao gồm",
+    "notIncluded": "Không bao gồm",
+    "notAvailableIn": "Không khả dụng bằng {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Kéo thả, tải lên hoặc chụp ảnh",
     "replaceAdd": "Thay / thêm"
@@ -1372,6 +1429,20 @@
     "savedOnThisDevice": "Đã lưu trên thiết bị này",
     "sleepsNPerMonth": "Ngủ {{capacity}} người · Rs {{price}} / tháng"
   },
+  "publicPricing": {
+    "title": "Bảng giá đơn giản cho nhà nghỉ",
+    "subtitle": "Mỗi nhà nghỉ một gói hằng tháng. Gói nào cũng đưa nhà nghỉ của bạn lên HostelHive.",
+    "currencyUsd": "Giá tính bằng đô la Mỹ. Nhà nghỉ tại Pakistan được tính phí bằng PKR.",
+    "currencyPkr": "Giá tính bằng rupee Pakistan.",
+    "featuresTitle": "Mỗi gói bao gồm những gì",
+    "listingBlurb": "Nhà nghỉ của bạn xuất hiện trong tìm kiếm của HostelHive và có trang tin đăng riêng.",
+    "boostBlurb": "Tin đăng của bạn được xếp cao hơn trong kết quả tìm kiếm.",
+    "crmBlurb": "Quản lý phòng, đặt phòng, người thuê, hóa đơn và nhân viên ở một nơi.",
+    "startHosting": "Bắt đầu cho thuê",
+    "goToBilling": "Đến trang thanh toán",
+    "loadError": "Chúng tôi không thể tải các gói.",
+    "noPlans": "Hiện chưa có gói nào."
+  },
   "publicAbout": {
     "aboutUs": "Về chúng tôi",
     "makingStudentAccommodationSaferAnd": "Giúp chỗ ở sinh viên an toàn hơn và dễ tìm hơn",
@@ -1525,6 +1596,8 @@
     "searchDescription": "Tìm hostel, nhà trọ và co-living đã xác minh tại {{place}}. Lọc theo ngân sách, số người ở chung và tiện nghi.",
     "searchPlaceDescription": "Tìm hostel, nhà trọ và co-living đã xác minh tại {{place}}. So sánh giá, số người ở chung và tiện nghi.",
     "worldwideTitle": "Hostel trên toàn thế giới — tìm kiếm | HostelHive",
-    "worldwideDescription": "Tìm hostel, nhà trọ và co-living đã xác minh trên toàn thế giới. Lọc theo ngân sách, số người ở chung và tiện nghi."
+    "worldwideDescription": "Tìm hostel, nhà trọ và co-living đã xác minh trên toàn thế giới. Lọc theo ngân sách, số người ở chung và tiện nghi.",
+    "pricingTitle": "Bảng giá cho nhà nghỉ | HostelHive",
+    "pricingDescription": "Các gói HostelHive hằng tháng cho nhà nghỉ: được hiển thị, được đẩy lên trong tìm kiếm và quản lý phòng, đặt phòng, hóa đơn bằng CRM dành cho chủ nhà."
   }
 }

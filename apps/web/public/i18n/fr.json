@@ -171,7 +171,6 @@
     "mess": "Cantine",
     "expenses": "Dépenses",
     "invoices": "Factures",
-    "subscription": "Abonnement",
     "more": "Plus",
     "listingDetails": "Détails de l’annonce",
     "photos": "Photos",
@@ -394,7 +393,8 @@
     "heroTitleTail": "sur",
     "statVerifiedBeds": "lits vérifiés",
     "statCities": "villes",
-    "statSeekerRating": "note des utilisateurs"
+    "statSeekerRating": "note des utilisateurs",
+    "seePricing": "Voir les tarifs"
   },
   "card": {
     "previousPhoto": "Photo précédente",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Politique de confidentialité",
     "termsOfService": "Conditions d’utilisation",
     "servicePolicy": "Politique de service",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Tous droits réservés."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Tous droits réservés.",
+    "pricing": "Tarifs"
   },
   "searchBar": {
     "search": "Rechercher",
@@ -514,7 +515,8 @@
     "more": "Plus",
     "property": "Établissement",
     "selectAProperty": "Choisir un établissement",
-    "createNewHostel": "Créer une nouvelle auberge"
+    "createNewHostel": "Créer une nouvelle auberge",
+    "billing": "Facturation"
   },
   "hostelForm": {
     "listingDetails": "Détails de l’annonce",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Enregistrez l'arrivée de votre premier locataire pour suivre les loyers."
   },
   "hostBilling": {
-    "comingSoonTitle": "La facturation passe à un nouveau système",
-    "comingSoonMessage": "Les forfaits, factures et paiements de cette auberge apparaîtront bientôt ici. Besoin de renouveler maintenant ? Contactez-nous.",
-    "backToDashboard": "Retour au tableau de bord"
+    "title": "Facturation",
+    "currentPlan": "Forfait actuel",
+    "noPlanTitle": "Pas encore de forfait",
+    "noPlanMessage": "Choisissez un forfait ci-dessous pour publier votre auberge sur HostelHive.",
+    "renewsOn": "Renouvellement le {{date}}",
+    "endsOn": "Se termine le {{date}}",
+    "endedOn": "Terminé le {{date}}",
+    "wasDueOn": "Le paiement était dû le {{date}}",
+    "graceUntil": "Payez avant le {{date}} pour conserver votre annonce",
+    "awaitingFirstPayment": "En attente de votre premier paiement",
+    "switchesTo": "Passe à {{plan}} au renouvellement",
+    "activeFeatures": "Actif maintenant",
+    "plansTitle": "Forfaits",
+    "choosePlan": "Choisir ce forfait",
+    "currentPlanButton": "Forfait actuel",
+    "renew": "Renouveler",
+    "payNow": "Payer {{amount}} maintenant",
+    "upgradePayNow": "Passer au forfait supérieur : payer {{amount}} maintenant",
+    "renewsAtOn": "Renouvellement à {{price}} le {{date}}",
+    "switchAtRenewal": "Changer au renouvellement",
+    "scheduledForRenewal": "Prévu au renouvellement",
+    "switchComingSoon": "Le changement de forfait arrive bientôt — contactez-nous pour changer dès maintenant.",
+    "unavailable": "Indisponible",
+    "ownerOnly": "Seul le propriétaire de l’auberge peut changer de forfait.",
+    "setCountryNotice": "Indiquez le pays de votre auberge pour voir les prix.",
+    "addCountry": "Ajouter le pays de l’auberge",
+    "askOwnerCountry": "Demandez au propriétaire de l’auberge d’ajouter le pays de l’auberge.",
+    "checkoutFailed": "Impossible de lancer le paiement. Réessayez.",
+    "checkoutForbidden": "Vous n’êtes pas autorisé à acheter des forfaits pour cette auberge.",
+    "replaceInvoiceTitle": "Remplacer la facture impayée ?",
+    "replaceInvoiceMessage": "Cela remplace la facture impayée {{number}}.",
+    "replaceInvoiceConfirm": "Remplacer et continuer",
+    "paymentDueTitle": "Paiement dû",
+    "invoiceNumber": "Facture {{number}}",
+    "kindNew": "Premier paiement · {{start}} – {{end}}",
+    "kindRenewal": "Renouvellement · {{start}} – {{end}}",
+    "kindUpgrade": "Frais de passage au forfait supérieur · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "À payer avant le {{date}}",
+    "pay": "Payer",
+    "underReview": "Virement bancaire en cours de vérification",
+    "underReviewHint": "Nous mettrons cette page à jour dès que notre équipe aura confirmé votre virement.",
+    "noAccessTitle": "La facturation ne vous est pas accessible",
+    "noAccessMessage": "Seules les personnes ayant accès à la facturation peuvent voir celle de cette auberge. Demandez au propriétaire de l’auberge.",
+    "loadError": "Impossible de charger la facturation de cette auberge.",
+    "backToBilling": "Retour à la facturation",
+    "payStubTitle": "Le paiement en ligne est en cours de mise en place",
+    "payStubMessage": "Pour payer la facture {{number}} maintenant, contactez-nous en indiquant le numéro de facture.",
+    "invoiceLoadError": "Impossible de charger cette facture."
   },
   "hostMess": {
     "pickADate": "Choisir une date",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Vos invitations d’auberge, confirmations de repas et reçus en attente."
   },
+  "sharedBilling": {
+    "perMonth": "/ mois",
+    "featureListing": "Annonce sur HostelHive",
+    "featureBoost": "Mise en avant dans la recherche",
+    "featureCrm": "CRM hôte — chambres, réservations, locataires, factures et personnel",
+    "included": "Inclus",
+    "notIncluded": "Non inclus",
+    "notAvailableIn": "Non disponible en {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Glissez-déposez, téléversez ou prenez une photo",
     "replaceAdd": "Remplacer / ajouter"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Enregistré sur cet appareil",
     "sleepsNPerMonth": "Couchage {{capacity}} · Rs {{price}} / mois"
   },
+  "publicPricing": {
+    "title": "Des tarifs simples pour les auberges",
+    "subtitle": "Un forfait mensuel par auberge. Chaque forfait publie votre auberge sur HostelHive.",
+    "currencyUsd": "Prix en dollars américains. Les auberges au Pakistan sont facturées en PKR.",
+    "currencyPkr": "Prix en roupies pakistanaises.",
+    "featuresTitle": "Ce que comprend chaque forfait",
+    "listingBlurb": "Votre auberge apparaît dans la recherche HostelHive et sur sa propre page d’annonce.",
+    "boostBlurb": "Votre annonce est placée plus haut dans les résultats de recherche.",
+    "crmBlurb": "Gérez chambres, réservations, locataires, factures et personnel au même endroit.",
+    "startHosting": "Devenir hôte",
+    "goToBilling": "Aller à la facturation",
+    "loadError": "Impossible de charger les forfaits.",
+    "noPlans": "Aucun forfait n’est disponible pour le moment."
+  },
   "publicAbout": {
     "aboutUs": "À propos",
     "makingStudentAccommodationSaferAnd": "Rendre le logement étudiant plus sûr et plus facile à trouver",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Cherchez des auberges, pensions et logements partagés vérifiés à {{place}}. Filtrez par budget, partage de chambre et équipements.",
     "searchPlaceDescription": "Cherchez des auberges, pensions et logements partagés vérifiés à {{place}}. Comparez les prix, le partage de chambre et les équipements.",
     "worldwideTitle": "Auberges dans le monde entier — recherche | HostelHive",
-    "worldwideDescription": "Cherchez des auberges, pensions et logements partagés vérifiés dans le monde entier. Filtrez par budget, partage de chambre et équipements."
+    "worldwideDescription": "Cherchez des auberges, pensions et logements partagés vérifiés dans le monde entier. Filtrez par budget, partage de chambre et équipements.",
+    "pricingTitle": "Tarifs pour les auberges | HostelHive",
+    "pricingDescription": "Forfaits mensuels HostelHive pour les auberges : soyez référencé, mis en avant dans la recherche, et gérez chambres, réservations et factures avec le CRM hôte."
   }
 }

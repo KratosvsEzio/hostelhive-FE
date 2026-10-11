@@ -37,6 +37,7 @@ interface ApiHostHostel {
   address_1?: string | null;
   state?: string | null;
   country?: string | null;
+  country_code?: string | null;
   nearby_landmarks?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -182,6 +183,7 @@ function toHostListing(h: ApiHostHostel): HostListing {
     address: h.address_1 ?? undefined,
     state: h.state ?? undefined,
     country: h.country ?? undefined,
+    countryCode: h.country_code || undefined,
     landmarks: h.nearby_landmarks ?? undefined,
     lat: h.latitude ?? undefined,
     lng: h.longitude ?? undefined,

@@ -171,7 +171,6 @@
     "mess": "Comedor",
     "expenses": "Gastos",
     "invoices": "Facturas",
-    "subscription": "Suscripción",
     "more": "Más",
     "listingDetails": "Detalles del anuncio",
     "photos": "Fotos",
@@ -394,7 +393,8 @@
     "heroTitleTail": "en",
     "statVerifiedBeds": "camas verificadas",
     "statCities": "ciudades",
-    "statSeekerRating": "valoración de usuarios"
+    "statSeekerRating": "valoración de usuarios",
+    "seePricing": "Ver precios"
   },
   "card": {
     "previousPhoto": "Foto anterior",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Política de privacidad",
     "termsOfService": "Términos del servicio",
     "servicePolicy": "Política de servicio",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Todos los derechos reservados."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Todos los derechos reservados.",
+    "pricing": "Precios"
   },
   "searchBar": {
     "search": "Buscar",
@@ -514,7 +515,8 @@
     "more": "Más",
     "property": "Propiedad",
     "selectAProperty": "Seleccionar propiedad",
-    "createNewHostel": "Crear hostal nuevo"
+    "createNewHostel": "Crear hostal nuevo",
+    "billing": "Facturación"
   },
   "hostelForm": {
     "listingDetails": "Detalles del anuncio",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Registra la entrada de tu primer inquilino para empezar a controlar el alquiler."
   },
   "hostBilling": {
-    "comingSoonTitle": "La facturación se está trasladando a un nuevo sistema",
-    "comingSoonMessage": "Los planes, las facturas y los pagos de este hostal aparecerán aquí pronto. ¿Necesitas renovar ahora? Contáctanos.",
-    "backToDashboard": "Volver al panel"
+    "title": "Facturación",
+    "currentPlan": "Plan actual",
+    "noPlanTitle": "Aún no tienes plan",
+    "noPlanMessage": "Elige un plan a continuación para publicar tu hostal en HostelHive.",
+    "renewsOn": "Se renueva el {{date}}",
+    "endsOn": "Termina el {{date}}",
+    "endedOn": "Terminó el {{date}}",
+    "wasDueOn": "El pago vencía el {{date}}",
+    "graceUntil": "Paga antes del {{date}} para conservar tu anuncio",
+    "awaitingFirstPayment": "Esperando tu primer pago",
+    "switchesTo": "Cambia a {{plan}} en la renovación",
+    "activeFeatures": "Activo ahora",
+    "plansTitle": "Planes",
+    "choosePlan": "Elegir plan",
+    "currentPlanButton": "Plan actual",
+    "renew": "Renovar",
+    "payNow": "Pagar {{amount}} ahora",
+    "upgradePayNow": "Mejorar: pagar {{amount}} ahora",
+    "renewsAtOn": "Se renueva a {{price}} el {{date}}",
+    "switchAtRenewal": "Cambiar en la renovación",
+    "scheduledForRenewal": "Programado para la renovación",
+    "switchComingSoon": "El cambio de plan llegará pronto — contáctanos para cambiar ahora.",
+    "unavailable": "No disponible",
+    "ownerOnly": "Solo el propietario del hostal puede cambiar el plan.",
+    "setCountryNotice": "Indica el país de tu hostal para ver los precios.",
+    "addCountry": "Añadir el país del hostal",
+    "askOwnerCountry": "Pide al propietario del hostal que añada el país del hostal.",
+    "checkoutFailed": "No pudimos iniciar el pago. Inténtalo de nuevo.",
+    "checkoutForbidden": "No tienes permiso para comprar planes para este hostal.",
+    "replaceInvoiceTitle": "¿Reemplazar la factura pendiente?",
+    "replaceInvoiceMessage": "Esto reemplaza la factura pendiente {{number}}.",
+    "replaceInvoiceConfirm": "Reemplazar y continuar",
+    "paymentDueTitle": "Pago pendiente",
+    "invoiceNumber": "Factura {{number}}",
+    "kindNew": "Primer pago · {{start}} – {{end}}",
+    "kindRenewal": "Renovación · {{start}} – {{end}}",
+    "kindUpgrade": "Cargo por mejora · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Paga antes del {{date}}",
+    "pay": "Pagar",
+    "underReview": "Transferencia bancaria en revisión",
+    "underReviewHint": "Actualizaremos esta página cuando nuestro equipo confirme tu transferencia.",
+    "noAccessTitle": "La facturación no está disponible para ti",
+    "noAccessMessage": "Solo las personas con acceso a la facturación pueden ver la facturación de este hostal. Pregunta al propietario del hostal.",
+    "loadError": "No pudimos cargar la facturación de este hostal.",
+    "backToBilling": "Volver a facturación",
+    "payStubTitle": "Estamos configurando el pago en línea",
+    "payStubMessage": "Para pagar la factura {{number}} ahora, contáctanos e indica el número de factura.",
+    "invoiceLoadError": "No pudimos cargar esta factura."
   },
   "hostMess": {
     "pickADate": "Elige una fecha",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Tus invitaciones de hostal, confirmaciones de comidas y recibos pendientes."
   },
+  "sharedBilling": {
+    "perMonth": "/ mes",
+    "featureListing": "Anuncio en HostelHive",
+    "featureBoost": "Posición destacada en las búsquedas",
+    "featureCrm": "CRM para anfitriones — habitaciones, reservas, inquilinos, facturas y personal",
+    "included": "Incluido",
+    "notIncluded": "No incluido",
+    "notAvailableIn": "No disponible en {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Arrastra y suelta, sube o toma una foto",
     "replaceAdd": "Reemplazar / añadir"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Guardado en este dispositivo",
     "sleepsNPerMonth": "Para {{capacity}} · Rs {{price}} / mes"
   },
+  "publicPricing": {
+    "title": "Precios sencillos para hostales",
+    "subtitle": "Un plan mensual por hostal. Todos los planes publican tu hostal en HostelHive.",
+    "currencyUsd": "Precios en dólares estadounidenses. Los hostales en Pakistán se facturan en PKR.",
+    "currencyPkr": "Precios en rupias pakistaníes.",
+    "featuresTitle": "Qué incluye cada plan",
+    "listingBlurb": "Tu hostal aparece en las búsquedas de HostelHive y en su propia página de anuncio.",
+    "boostBlurb": "Tu anuncio aparece más arriba en los resultados de búsqueda.",
+    "crmBlurb": "Gestiona habitaciones, reservas, inquilinos, facturas y personal en un solo lugar.",
+    "startHosting": "Empieza como anfitrión",
+    "goToBilling": "Ir a facturación",
+    "loadError": "No pudimos cargar los planes.",
+    "noPlans": "No hay planes disponibles en este momento."
+  },
   "publicAbout": {
     "aboutUs": "Sobre nosotros",
     "makingStudentAccommodationSaferAnd": "Hacer que el alojamiento estudiantil sea más seguro y fácil de encontrar",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Busca hostales, pensiones y co-living verificados en {{place}}. Filtra por presupuesto, habitación compartida y servicios.",
     "searchPlaceDescription": "Busca hostales, pensiones y co-living verificados en {{place}}. Compara precios, habitación compartida y servicios.",
     "worldwideTitle": "Hostales en todo el mundo — búsqueda | HostelHive",
-    "worldwideDescription": "Busca hostales, pensiones y co-living verificados en todo el mundo. Filtra por presupuesto, habitación compartida y servicios."
+    "worldwideDescription": "Busca hostales, pensiones y co-living verificados en todo el mundo. Filtra por presupuesto, habitación compartida y servicios.",
+    "pricingTitle": "Precios para hostales | HostelHive",
+    "pricingDescription": "Planes mensuales de HostelHive para hostales: aparece en el listado, destaca en las búsquedas y gestiona habitaciones, reservas y facturas con el CRM para anfitriones."
   }
 }

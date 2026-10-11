@@ -171,7 +171,6 @@
     "mess": "Столовая",
     "expenses": "Расходы",
     "invoices": "Счета",
-    "subscription": "Подписка",
     "more": "Ещё",
     "listingDetails": "Детали объявления",
     "photos": "Фотографии",
@@ -394,7 +393,8 @@
     "heroTitleTail": "в",
     "statVerifiedBeds": "проверенных мест",
     "statCities": "городов",
-    "statSeekerRating": "оценка жильцов"
+    "statSeekerRating": "оценка жильцов",
+    "seePricing": "Посмотреть цены"
   },
   "card": {
     "previousPhoto": "Предыдущее фото",
@@ -487,7 +487,8 @@
     "privacyPolicy": "Политика конфиденциальности",
     "termsOfService": "Условия использования",
     "servicePolicy": "Правила сервиса",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Все права защищены."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Все права защищены.",
+    "pricing": "Цены"
   },
   "searchBar": {
     "search": "Найти",
@@ -519,7 +520,8 @@
     "more": "Ещё",
     "property": "Объект",
     "selectAProperty": "Выберите объект",
-    "createNewHostel": "Создать новый хостел"
+    "createNewHostel": "Создать новый хостел",
+    "billing": "Оплата"
   },
   "hostelForm": {
     "listingDetails": "Детали объявления",
@@ -716,9 +718,55 @@
     "checkInYourFirstTenant": "Заселите первого жильца, чтобы отслеживать аренду."
   },
   "hostBilling": {
-    "comingSoonTitle": "Биллинг переходит на новую систему",
-    "comingSoonMessage": "Тарифы, счета и платежи этого хостела скоро появятся здесь. Нужно продлить сейчас? Свяжитесь с нами.",
-    "backToDashboard": "Вернуться на панель управления"
+    "title": "Оплата",
+    "currentPlan": "Текущий тариф",
+    "noPlanTitle": "Тариф пока не выбран",
+    "noPlanMessage": "Выберите тариф ниже, чтобы разместить свой хостел на HostelHive.",
+    "renewsOn": "Продление {{date}}",
+    "endsOn": "Заканчивается {{date}}",
+    "endedOn": "Закончился {{date}}",
+    "wasDueOn": "Срок оплаты истёк {{date}}",
+    "graceUntil": "Оплатите до {{date}}, чтобы сохранить объявление",
+    "awaitingFirstPayment": "Ожидается ваш первый платёж",
+    "switchesTo": "При продлении перейдёт на {{plan}}",
+    "activeFeatures": "Активно сейчас",
+    "plansTitle": "Тарифы",
+    "choosePlan": "Выбрать тариф",
+    "currentPlanButton": "Текущий тариф",
+    "renew": "Продлить",
+    "payNow": "Оплатить {{amount}} сейчас",
+    "upgradePayNow": "Повысить тариф: оплатить {{amount}} сейчас",
+    "renewsAtOn": "Продление за {{price}} {{date}}",
+    "switchAtRenewal": "Сменить при продлении",
+    "scheduledForRenewal": "Запланировано на продление",
+    "switchComingSoon": "Смена тарифа скоро появится — свяжитесь с нами, чтобы сменить его сейчас.",
+    "unavailable": "Недоступно",
+    "ownerOnly": "Только владелец хостела может изменить тариф.",
+    "setCountryNotice": "Укажите страну вашего хостела, чтобы увидеть цены.",
+    "addCountry": "Указать страну хостела",
+    "askOwnerCountry": "Попросите владельца хостела указать страну хостела.",
+    "checkoutFailed": "Не удалось начать оплату. Попробуйте снова.",
+    "checkoutForbidden": "У вас нет прав на покупку тарифов для этого хостела.",
+    "replaceInvoiceTitle": "Заменить неоплаченный счёт?",
+    "replaceInvoiceMessage": "Это заменит неоплаченный счёт {{number}}.",
+    "replaceInvoiceConfirm": "Заменить и продолжить",
+    "paymentDueTitle": "Требуется оплата",
+    "invoiceNumber": "Счёт {{number}}",
+    "kindNew": "Первый платёж · {{start}} – {{end}}",
+    "kindRenewal": "Продление · {{start}} – {{end}}",
+    "kindUpgrade": "Доплата за повышение тарифа · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Оплатить до {{date}}",
+    "pay": "Оплатить",
+    "underReview": "Банковский перевод на проверке",
+    "underReviewHint": "Мы обновим эту страницу, как только наша команда подтвердит ваш перевод.",
+    "noAccessTitle": "Раздел оплаты вам недоступен",
+    "noAccessMessage": "Раздел оплаты этого хостела видят только пользователи с доступом к оплате. Обратитесь к владельцу хостела.",
+    "loadError": "Не удалось загрузить данные об оплате этого хостела.",
+    "backToBilling": "Назад к оплате",
+    "payStubTitle": "Онлайн-оплата настраивается",
+    "payStubMessage": "Чтобы оплатить счёт {{number}} сейчас, свяжитесь с нами и укажите номер счёта.",
+    "invoiceLoadError": "Не удалось загрузить этот счёт."
   },
   "hostMess": {
     "pickADate": "Выберите дату",
@@ -1137,6 +1185,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Ваши приглашения от хостела, подтверждения питания и ожидающие чеки."
   },
+  "sharedBilling": {
+    "perMonth": "/ мес.",
+    "featureListing": "Размещение на HostelHive",
+    "featureBoost": "Продвижение в поиске",
+    "featureCrm": "CRM для хозяев — комнаты, бронирования, жильцы, счета и персонал",
+    "included": "Включено",
+    "notIncluded": "Не включено",
+    "notAvailableIn": "Недоступно в {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Перетащите, загрузите или сделайте фото",
     "replaceAdd": "Заменить / добавить"
@@ -1372,6 +1429,20 @@
     "savedOnThisDevice": "Сохранено на этом устройстве",
     "sleepsNPerMonth": "Спальных мест: {{capacity}} · Rs {{price}} / мес."
   },
+  "publicPricing": {
+    "title": "Простые цены для хостелов",
+    "subtitle": "Один ежемесячный тариф на хостел. Любой тариф размещает ваш хостел на HostelHive.",
+    "currencyUsd": "Цены в долларах США. Хостелам в Пакистане счета выставляются в PKR.",
+    "currencyPkr": "Цены в пакистанских рупиях.",
+    "featuresTitle": "Что входит в каждый тариф",
+    "listingBlurb": "Ваш хостел появляется в поиске HostelHive и на собственной странице объявления.",
+    "boostBlurb": "Ваше объявление показывается выше в результатах поиска.",
+    "crmBlurb": "Управляйте комнатами, бронированиями, жильцами, счетами и персоналом в одном месте.",
+    "startHosting": "Начать принимать гостей",
+    "goToBilling": "Перейти к оплате",
+    "loadError": "Не удалось загрузить тарифы.",
+    "noPlans": "Сейчас нет доступных тарифов."
+  },
   "publicAbout": {
     "aboutUs": "О нас",
     "makingStudentAccommodationSaferAnd": "Делаем студенческое жильё безопаснее и доступнее для поиска",
@@ -1525,6 +1596,8 @@
     "searchDescription": "Ищите проверенные хостелы, пансионы и совместное жильё в {{place}}. Фильтруйте по бюджету, числу мест в комнате и удобствам.",
     "searchPlaceDescription": "Ищите проверенные хостелы, пансионы и совместное жильё в {{place}}. Сравните цены, число мест в комнате и удобства.",
     "worldwideTitle": "Хостелы по всему миру — поиск | HostelHive",
-    "worldwideDescription": "Ищите проверенные хостелы, пансионы и совместное жильё по всему миру. Фильтруйте по бюджету, числу мест в комнате и удобствам."
+    "worldwideDescription": "Ищите проверенные хостелы, пансионы и совместное жильё по всему миру. Фильтруйте по бюджету, числу мест в комнате и удобствам.",
+    "pricingTitle": "Цены для хостелов | HostelHive",
+    "pricingDescription": "Ежемесячные тарифы HostelHive для хостелов: размещение на сайте, продвижение в поиске и управление комнатами, бронированиями и счетами в CRM для хозяев."
   }
 }

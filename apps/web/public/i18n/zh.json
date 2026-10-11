@@ -171,7 +171,6 @@
     "mess": "餐厅",
     "expenses": "支出",
     "invoices": "发票",
-    "subscription": "订阅",
     "more": "更多",
     "listingDetails": "房源详情",
     "photos": "照片",
@@ -394,7 +393,8 @@
     "heroTitleTail": "就在",
     "statVerifiedBeds": "已验证床位",
     "statCities": "座城市",
-    "statSeekerRating": "用户评分"
+    "statSeekerRating": "用户评分",
+    "seePricing": "查看价格"
   },
   "card": {
     "previousPhoto": "上一张",
@@ -486,7 +486,8 @@
     "privacyPolicy": "隐私政策",
     "termsOfService": "服务条款",
     "servicePolicy": "服务政策",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. 保留所有权利。"
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. 保留所有权利。",
+    "pricing": "价格"
   },
   "searchBar": {
     "search": "搜索",
@@ -514,7 +515,8 @@
     "more": "更多",
     "property": "房源",
     "selectAProperty": "选择房源",
-    "createNewHostel": "创建新旅舍"
+    "createNewHostel": "创建新旅舍",
+    "billing": "账单"
   },
   "hostelForm": {
     "listingDetails": "房源详情",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "为第一位租客办理入住，开始追踪租金。"
   },
   "hostBilling": {
-    "comingSoonTitle": "账单正在迁移到新系统",
-    "comingSoonMessage": "此旅舍的套餐、发票和付款信息将很快显示在这里。需要立即续订？请联系我们。",
-    "backToDashboard": "返回控制台"
+    "title": "账单",
+    "currentPlan": "当前套餐",
+    "noPlanTitle": "尚无套餐",
+    "noPlanMessage": "在下方选择一个套餐，即可在 HostelHive 上展示你的旅舍。",
+    "renewsOn": "将于 {{date}} 续订",
+    "endsOn": "将于 {{date}} 结束",
+    "endedOn": "已于 {{date}} 结束",
+    "wasDueOn": "付款截止日期为 {{date}}",
+    "graceUntil": "请在 {{date}} 前付款以保留你的房源",
+    "awaitingFirstPayment": "等待你的首次付款",
+    "switchesTo": "续订时将切换为 {{plan}}",
+    "activeFeatures": "当前生效",
+    "plansTitle": "套餐",
+    "choosePlan": "选择套餐",
+    "currentPlanButton": "当前套餐",
+    "renew": "续订",
+    "payNow": "立即支付 {{amount}}",
+    "upgradePayNow": "升级：立即支付 {{amount}}",
+    "renewsAtOn": "将于 {{date}} 以 {{price}} 续订",
+    "switchAtRenewal": "续订时切换",
+    "scheduledForRenewal": "已安排在续订时切换",
+    "switchComingSoon": "套餐切换功能即将上线 — 如需立即切换，请联系我们。",
+    "unavailable": "不可用",
+    "ownerOnly": "只有旅舍所有者可以更改套餐。",
+    "setCountryNotice": "设置旅舍所在国家后即可查看价格。",
+    "addCountry": "添加旅舍所在国家",
+    "askOwnerCountry": "请让旅舍所有者添加旅舍所在国家。",
+    "checkoutFailed": "无法开始结账，请重试。",
+    "checkoutForbidden": "你无权为此旅舍购买套餐。",
+    "replaceInvoiceTitle": "替换未付发票？",
+    "replaceInvoiceMessage": "此操作将替换未付发票 {{number}}。",
+    "replaceInvoiceConfirm": "替换并继续",
+    "paymentDueTitle": "待付款",
+    "invoiceNumber": "发票 {{number}}",
+    "kindNew": "首次付款 · {{start}} – {{end}}",
+    "kindRenewal": "续订 · {{start}} – {{end}}",
+    "kindUpgrade": "升级费用 · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "请在 {{date}} 前付款",
+    "pay": "支付",
+    "underReview": "银行转账审核中",
+    "underReviewHint": "我们的团队确认你的转账后，此页面将会更新。",
+    "noAccessTitle": "你无法查看账单",
+    "noAccessMessage": "只有拥有账单权限的人员才能查看此旅舍的账单。请联系旅舍所有者。",
+    "loadError": "无法加载此旅舍的账单。",
+    "backToBilling": "返回账单",
+    "payStubTitle": "在线支付正在设置中",
+    "payStubMessage": "如需立即支付发票 {{number}}，请联系我们并提供发票号码。",
+    "invoiceLoadError": "无法加载此发票。"
   },
   "hostMess": {
     "pickADate": "选择日期",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "您的旅舍邀请、用餐确认和待处理收据。"
   },
+  "sharedBilling": {
+    "perMonth": "/ 月",
+    "featureListing": "在 HostelHive 上展示",
+    "featureBoost": "搜索结果优先展示",
+    "featureCrm": "房东 CRM — 房间、预订、租客、账单和员工",
+    "included": "包含",
+    "notIncluded": "不包含",
+    "notAvailableIn": "不支持 {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "拖放、上传或拍照",
     "replaceAdd": "替换 / 添加"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "已保存在此设备",
     "sleepsNPerMonth": "可住 {{capacity}} 人 · Rs {{price}} / 月"
   },
+  "publicPricing": {
+    "title": "简单明了的旅舍价格",
+    "subtitle": "每家旅舍一个月度套餐。每个套餐都会在 HostelHive 上展示你的旅舍。",
+    "currencyUsd": "价格以美元计。位于巴基斯坦的旅舍以 PKR 计费。",
+    "currencyPkr": "价格以巴基斯坦卢比计。",
+    "featuresTitle": "各套餐包含的内容",
+    "listingBlurb": "你的旅舍会出现在 HostelHive 搜索结果中，并拥有独立的房源页面。",
+    "boostBlurb": "你的房源在搜索结果中排名更靠前。",
+    "crmBlurb": "在一个地方管理房间、预订、租客、账单和员工。",
+    "startHosting": "开始出租",
+    "goToBilling": "前往账单",
+    "loadError": "无法加载套餐。",
+    "noPlans": "目前没有可用的套餐。"
+  },
   "publicAbout": {
     "aboutUs": "关于我们",
     "makingStudentAccommodationSaferAnd": "让学生住宿更安全、更易寻找",
@@ -1520,6 +1591,8 @@
     "searchDescription": "搜索{{place}}的认证宿舍、寄宿公寓和共居空间。按预算、合住人数和设施筛选。",
     "searchPlaceDescription": "搜索{{place}}的认证宿舍、寄宿公寓和共居空间。比较价格、合住人数和设施。",
     "worldwideTitle": "全球宿舍 — 搜索 | HostelHive",
-    "worldwideDescription": "搜索全球的认证宿舍、寄宿公寓和共居空间。按预算、合住人数和设施筛选。"
+    "worldwideDescription": "搜索全球的认证宿舍、寄宿公寓和共居空间。按预算、合住人数和设施筛选。",
+    "pricingTitle": "旅舍价格方案 | HostelHive",
+    "pricingDescription": "面向旅舍的 HostelHive 月度套餐：上架展示、提升搜索排名，并通过房东 CRM 管理房间、预订和账单。"
   }
 }

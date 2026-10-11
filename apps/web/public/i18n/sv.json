@@ -171,7 +171,6 @@
     "mess": "Matsal",
     "expenses": "Utgifter",
     "invoices": "Fakturor",
-    "subscription": "Prenumeration",
     "more": "Mer",
     "listingDetails": "Annonsdetaljer",
     "photos": "Bilder",
@@ -394,7 +393,8 @@
     "heroTitleTail": "i",
     "statVerifiedBeds": "verifierade sängar",
     "statCities": "städer",
-    "statSeekerRating": "användarbetyg"
+    "statSeekerRating": "användarbetyg",
+    "seePricing": "Se priser"
   },
   "card": {
     "previousPhoto": "Föregående bild",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Integritetspolicy",
     "termsOfService": "Användarvillkor",
     "servicePolicy": "Servicepolicy",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alla rättigheter förbehållna."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alla rättigheter förbehållna.",
+    "pricing": "Priser"
   },
   "searchBar": {
     "search": "Sök",
@@ -514,7 +515,8 @@
     "more": "Mer",
     "property": "Fastighet",
     "selectAProperty": "Välj fastighet",
-    "createNewHostel": "Skapa nytt vandrarhem"
+    "createNewHostel": "Skapa nytt vandrarhem",
+    "billing": "Fakturering"
   },
   "hostelForm": {
     "listingDetails": "Annonsdetaljer",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Checka in din första hyresgäst för att börja följa hyran."
   },
   "hostBilling": {
-    "comingSoonTitle": "Faktureringen flyttar till ett nytt system",
-    "comingSoonMessage": "Abonnemang, fakturor och betalningar för det här vandrarhemmet visas här snart. Behöver du förnya nu? Kontakta oss.",
-    "backToDashboard": "Tillbaka till instrumentpanelen"
+    "title": "Fakturering",
+    "currentPlan": "Nuvarande abonnemang",
+    "noPlanTitle": "Inget abonnemang ännu",
+    "noPlanMessage": "Välj ett abonnemang nedan för att lista ditt vandrarhem på HostelHive.",
+    "renewsOn": "Förnyas den {{date}}",
+    "endsOn": "Upphör den {{date}}",
+    "endedOn": "Upphörde den {{date}}",
+    "wasDueOn": "Betalningen förföll den {{date}}",
+    "graceUntil": "Betala senast den {{date}} för att behålla din annons",
+    "awaitingFirstPayment": "Väntar på din första betalning",
+    "switchesTo": "Byter till {{plan}} vid förnyelse",
+    "activeFeatures": "Aktivt nu",
+    "plansTitle": "Abonnemang",
+    "choosePlan": "Välj abonnemang",
+    "currentPlanButton": "Nuvarande abonnemang",
+    "renew": "Förnya",
+    "payNow": "Betala {{amount}} nu",
+    "upgradePayNow": "Uppgradera: betala {{amount}} nu",
+    "renewsAtOn": "Förnyas för {{price}} den {{date}}",
+    "switchAtRenewal": "Byt vid förnyelse",
+    "scheduledForRenewal": "Schemalagt till förnyelse",
+    "switchComingSoon": "Byte av abonnemang kommer snart — kontakta oss för att byta nu.",
+    "unavailable": "Inte tillgängligt",
+    "ownerOnly": "Endast vandrarhemmets ägare kan ändra abonnemanget.",
+    "setCountryNotice": "Ange ditt vandrarhems land för att se priser.",
+    "addCountry": "Lägg till vandrarhemmets land",
+    "askOwnerCountry": "Be vandrarhemmets ägare att lägga till vandrarhemmets land.",
+    "checkoutFailed": "Vi kunde inte starta betalningen. Försök igen.",
+    "checkoutForbidden": "Du har inte behörighet att köpa abonnemang för det här vandrarhemmet.",
+    "replaceInvoiceTitle": "Ersätta den obetalda fakturan?",
+    "replaceInvoiceMessage": "Detta ersätter den obetalda fakturan {{number}}.",
+    "replaceInvoiceConfirm": "Ersätt och fortsätt",
+    "paymentDueTitle": "Betalning förfaller",
+    "invoiceNumber": "Faktura {{number}}",
+    "kindNew": "Första betalning · {{start}} – {{end}}",
+    "kindRenewal": "Förnyelse · {{start}} – {{end}}",
+    "kindUpgrade": "Uppgraderingsavgift · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Betala senast den {{date}}",
+    "pay": "Betala",
+    "underReview": "Banköverföring granskas",
+    "underReviewHint": "Vi uppdaterar den här sidan så snart vårt team har bekräftat din överföring.",
+    "noAccessTitle": "Fakturering är inte tillgänglig för dig",
+    "noAccessMessage": "Endast personer med åtkomst till fakturering kan se det här vandrarhemmets fakturering. Fråga vandrarhemmets ägare.",
+    "loadError": "Vi kunde inte läsa in faktureringen för det här vandrarhemmet.",
+    "backToBilling": "Tillbaka till fakturering",
+    "payStubTitle": "Onlinebetalning håller på att konfigureras",
+    "payStubMessage": "Om du vill betala faktura {{number}} nu, kontakta oss och ange fakturanumret.",
+    "invoiceLoadError": "Vi kunde inte läsa in den här fakturan."
   },
   "hostMess": {
     "pickADate": "Välj ett datum",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Dina vandrarhemsinbjudningar, måltidsbekräftelser och väntande kvitton."
   },
+  "sharedBilling": {
+    "perMonth": "/ månad",
+    "featureListing": "Annons på HostelHive",
+    "featureBoost": "Framhävd placering i sökningen",
+    "featureCrm": "CRM för värdar — rum, bokningar, hyresgäster, räkningar och personal",
+    "included": "Ingår",
+    "notIncluded": "Ingår inte",
+    "notAvailableIn": "Inte tillgängligt i {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Dra & släpp, ladda upp eller ta ett foto",
     "replaceAdd": "Ersätt / lägg till"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Sparat på den här enheten",
     "sleepsNPerMonth": "Plats för {{capacity}} · Rs {{price}} / månad"
   },
+  "publicPricing": {
+    "title": "Enkla priser för vandrarhem",
+    "subtitle": "Ett månadsabonnemang per vandrarhem. Varje abonnemang listar ditt vandrarhem på HostelHive.",
+    "currencyUsd": "Priser i amerikanska dollar. Vandrarhem i Pakistan faktureras i PKR.",
+    "currencyPkr": "Priser i pakistanska rupier.",
+    "featuresTitle": "Vad varje abonnemang innehåller",
+    "listingBlurb": "Ditt vandrarhem visas i HostelHives sökning och på en egen annonssida.",
+    "boostBlurb": "Din annons placeras högre upp i sökresultaten.",
+    "crmBlurb": "Hantera rum, bokningar, hyresgäster, räkningar och personal på ett ställe.",
+    "startHosting": "Bli värd",
+    "goToBilling": "Gå till fakturering",
+    "loadError": "Vi kunde inte läsa in abonnemangen.",
+    "noPlans": "Det finns inga tillgängliga abonnemang just nu."
+  },
   "publicAbout": {
     "aboutUs": "Om oss",
     "makingStudentAccommodationSaferAnd": "Göra studentboende säkrare och lättare att hitta",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Sök verifierade hostel, pensionat och kollektivboenden i {{place}}. Filtrera på budget, rumsdelning och bekvämligheter.",
     "searchPlaceDescription": "Sök verifierade hostel, pensionat och kollektivboenden i {{place}}. Jämför priser, rumsdelning och bekvämligheter.",
     "worldwideTitle": "Hostel i hela världen — sök | HostelHive",
-    "worldwideDescription": "Sök verifierade hostel, pensionat och kollektivboenden i hela världen. Filtrera på budget, rumsdelning och bekvämligheter."
+    "worldwideDescription": "Sök verifierade hostel, pensionat och kollektivboenden i hela världen. Filtrera på budget, rumsdelning och bekvämligheter.",
+    "pricingTitle": "Priser för vandrarhem | HostelHive",
+    "pricingDescription": "Månatliga HostelHive-abonnemang för vandrarhem: bli listad, få ett lyft i sökningen och hantera rum, bokningar och räkningar med CRM för värdar."
   }
 }

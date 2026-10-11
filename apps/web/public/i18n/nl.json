@@ -171,7 +171,6 @@
     "mess": "Kantine",
     "expenses": "Uitgaven",
     "invoices": "Facturen",
-    "subscription": "Abonnement",
     "more": "Meer",
     "listingDetails": "Advertentiegegevens",
     "photos": "Foto’s",
@@ -394,7 +393,8 @@
     "heroTitleTail": "op",
     "statVerifiedBeds": "geverifieerde bedden",
     "statCities": "steden",
-    "statSeekerRating": "gebruikersscore"
+    "statSeekerRating": "gebruikersscore",
+    "seePricing": "Bekijk prijzen"
   },
   "card": {
     "previousPhoto": "Vorige foto",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Privacybeleid",
     "termsOfService": "Servicevoorwaarden",
     "servicePolicy": "Servicebeleid",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alle rechten voorbehouden."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alle rechten voorbehouden.",
+    "pricing": "Prijzen"
   },
   "searchBar": {
     "search": "Zoeken",
@@ -514,7 +515,8 @@
     "more": "Meer",
     "property": "Pand",
     "selectAProperty": "Pand kiezen",
-    "createNewHostel": "Nieuw hostel aanmaken"
+    "createNewHostel": "Nieuw hostel aanmaken",
+    "billing": "Facturering"
   },
   "hostelForm": {
     "listingDetails": "Advertentiegegevens",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Check uw eerste huurder in om de huur bij te houden."
   },
   "hostBilling": {
-    "comingSoonTitle": "Facturering verhuist naar een nieuw systeem",
-    "comingSoonMessage": "Abonnementen, facturen en betalingen voor dit hostel verschijnen hier binnenkort. Wil je nu verlengen? Neem contact met ons op.",
-    "backToDashboard": "Terug naar dashboard"
+    "title": "Facturering",
+    "currentPlan": "Huidig abonnement",
+    "noPlanTitle": "Nog geen abonnement",
+    "noPlanMessage": "Kies hieronder een abonnement om je hostel op HostelHive te vermelden.",
+    "renewsOn": "Wordt verlengd op {{date}}",
+    "endsOn": "Eindigt op {{date}}",
+    "endedOn": "Geëindigd op {{date}}",
+    "wasDueOn": "Betaling was verschuldigd op {{date}}",
+    "graceUntil": "Betaal vóór {{date}} om je vermelding te behouden",
+    "awaitingFirstPayment": "Wacht op je eerste betaling",
+    "switchesTo": "Gaat bij verlenging over naar {{plan}}",
+    "activeFeatures": "Nu actief",
+    "plansTitle": "Abonnementen",
+    "choosePlan": "Kies abonnement",
+    "currentPlanButton": "Huidig abonnement",
+    "renew": "Verlengen",
+    "payNow": "Betaal nu {{amount}}",
+    "upgradePayNow": "Upgrade: betaal nu {{amount}}",
+    "renewsAtOn": "Wordt op {{date}} verlengd voor {{price}}",
+    "switchAtRenewal": "Overstappen bij verlenging",
+    "scheduledForRenewal": "Gepland voor verlenging",
+    "switchComingSoon": "Van abonnement wisselen kan binnenkort — neem contact met ons op om nu over te stappen.",
+    "unavailable": "Niet beschikbaar",
+    "ownerOnly": "Alleen de eigenaar van het hostel kan het abonnement wijzigen.",
+    "setCountryNotice": "Stel het land van je hostel in om prijzen te zien.",
+    "addCountry": "Land van het hostel toevoegen",
+    "askOwnerCountry": "Vraag de eigenaar van het hostel om het land van het hostel toe te voegen.",
+    "checkoutFailed": "We konden het afrekenen niet starten. Probeer het opnieuw.",
+    "checkoutForbidden": "Je hebt geen toestemming om abonnementen voor dit hostel te kopen.",
+    "replaceInvoiceTitle": "Onbetaalde factuur vervangen?",
+    "replaceInvoiceMessage": "Dit vervangt onbetaalde factuur {{number}}.",
+    "replaceInvoiceConfirm": "Vervangen en doorgaan",
+    "paymentDueTitle": "Betaling verschuldigd",
+    "invoiceNumber": "Factuur {{number}}",
+    "kindNew": "Eerste betaling · {{start}} – {{end}}",
+    "kindRenewal": "Verlenging · {{start}} – {{end}}",
+    "kindUpgrade": "Upgradekosten · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Betaal vóór {{date}}",
+    "pay": "Betalen",
+    "underReview": "Bankoverschrijving wordt gecontroleerd",
+    "underReviewHint": "We werken deze pagina bij zodra ons team je overschrijving heeft bevestigd.",
+    "noAccessTitle": "Facturering is niet beschikbaar voor jou",
+    "noAccessMessage": "Alleen mensen met toegang tot facturering kunnen de facturering van dit hostel zien. Vraag het de eigenaar van het hostel.",
+    "loadError": "We konden de facturering voor dit hostel niet laden.",
+    "backToBilling": "Terug naar facturering",
+    "payStubTitle": "Online betalen wordt ingesteld",
+    "payStubMessage": "Wil je factuur {{number}} nu betalen? Neem contact met ons op en vermeld het factuurnummer.",
+    "invoiceLoadError": "We konden deze factuur niet laden."
   },
   "hostMess": {
     "pickADate": "Kies een datum",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Je hosteluitnodigingen, maaltijdbevestigingen en openstaande bonnen."
   },
+  "sharedBilling": {
+    "perMonth": "/ maand",
+    "featureListing": "Vermelding op HostelHive",
+    "featureBoost": "Uitgelichte plaatsing in zoekresultaten",
+    "featureCrm": "Host-CRM — kamers, boekingen, huurders, rekeningen en personeel",
+    "included": "Inbegrepen",
+    "notIncluded": "Niet inbegrepen",
+    "notAvailableIn": "Niet beschikbaar in {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Slepen & neerzetten, uploaden of een foto maken",
     "replaceAdd": "Vervangen / toevoegen"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Opgeslagen op dit apparaat",
     "sleepsNPerMonth": "Slaapplaats voor {{capacity}} · Rs {{price}} / maand"
   },
+  "publicPricing": {
+    "title": "Eenvoudige prijzen voor hostels",
+    "subtitle": "Eén maandabonnement per hostel. Met elk abonnement wordt je hostel op HostelHive vermeld.",
+    "currencyUsd": "Prijzen in Amerikaanse dollars. Hostels in Pakistan worden in PKR gefactureerd.",
+    "currencyPkr": "Prijzen in Pakistaanse roepies.",
+    "featuresTitle": "Wat elk abonnement omvat",
+    "listingBlurb": "Je hostel verschijnt in de zoekresultaten van HostelHive en op een eigen vermeldingspagina.",
+    "boostBlurb": "Je vermelding staat hoger in de zoekresultaten.",
+    "crmBlurb": "Beheer kamers, boekingen, huurders, rekeningen en personeel op één plek.",
+    "startHosting": "Begin met verhuren",
+    "goToBilling": "Naar facturering",
+    "loadError": "We konden de abonnementen niet laden.",
+    "noPlans": "Er zijn momenteel geen abonnementen beschikbaar."
+  },
   "publicAbout": {
     "aboutUs": "Over ons",
     "makingStudentAccommodationSaferAnd": "Studentenhuisvesting veiliger en makkelijker vindbaar maken",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Zoek geverifieerde hostels, pensions en co-living in {{place}}. Filter op budget, kamerdeling en voorzieningen.",
     "searchPlaceDescription": "Zoek geverifieerde hostels, pensions en co-living in {{place}}. Vergelijk prijzen, kamerdeling en voorzieningen.",
     "worldwideTitle": "Hostels wereldwijd — zoeken | HostelHive",
-    "worldwideDescription": "Zoek geverifieerde hostels, pensions en co-living wereldwijd. Filter op budget, kamerdeling en voorzieningen."
+    "worldwideDescription": "Zoek geverifieerde hostels, pensions en co-living wereldwijd. Filter op budget, kamerdeling en voorzieningen.",
+    "pricingTitle": "Prijzen voor hostels | HostelHive",
+    "pricingDescription": "Maandelijkse HostelHive-abonnementen voor hostels: word vermeld, krijg een boost in de zoekresultaten en beheer kamers, boekingen en rekeningen met het host-CRM."
   }
 }

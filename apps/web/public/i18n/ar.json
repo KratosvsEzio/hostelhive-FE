@@ -171,7 +171,6 @@
     "mess": "المطعم",
     "expenses": "المصروفات",
     "invoices": "الفواتير",
-    "subscription": "الاشتراك",
     "more": "المزيد",
     "listingDetails": "تفاصيل الإعلان",
     "photos": "الصور",
@@ -394,7 +393,8 @@
     "heroTitleTail": "في",
     "statVerifiedBeds": "سرير موثّق",
     "statCities": "مدينة",
-    "statSeekerRating": "تقييم المستخدمين"
+    "statSeekerRating": "تقييم المستخدمين",
+    "seePricing": "اطّلع على الأسعار"
   },
   "card": {
     "previousPhoto": "الصورة السابقة",
@@ -486,7 +486,8 @@
     "privacyPolicy": "سياسة الخصوصية",
     "termsOfService": "شروط الخدمة",
     "servicePolicy": "سياسة الخدمة",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. جميع الحقوق محفوظة."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. جميع الحقوق محفوظة.",
+    "pricing": "الأسعار"
   },
   "searchBar": {
     "search": "بحث",
@@ -514,7 +515,8 @@
     "more": "المزيد",
     "property": "العقار",
     "selectAProperty": "اختر عقاراً",
-    "createNewHostel": "إنشاء نزل جديد"
+    "createNewHostel": "إنشاء نزل جديد",
+    "billing": "الفوترة"
   },
   "hostelForm": {
     "listingDetails": "تفاصيل الإعلان",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "سجّل وصول أول مستأجر لبدء تتبّع الإيجار."
   },
   "hostBilling": {
-    "comingSoonTitle": "تنتقل الفوترة إلى نظام جديد",
-    "comingSoonMessage": "ستظهر هنا قريبًا الخطط والفواتير والمدفوعات الخاصة بهذا النزل. هل تحتاج إلى التجديد الآن؟ تواصل معنا.",
-    "backToDashboard": "العودة إلى لوحة التحكم"
+    "title": "الفوترة",
+    "currentPlan": "الخطة الحالية",
+    "noPlanTitle": "لا توجد خطة بعد",
+    "noPlanMessage": "اختر خطة أدناه لإدراج نزلك على HostelHive.",
+    "renewsOn": "يتجدد في {{date}}",
+    "endsOn": "ينتهي في {{date}}",
+    "endedOn": "انتهى في {{date}}",
+    "wasDueOn": "كان موعد الدفع في {{date}}",
+    "graceUntil": "ادفع قبل {{date}} للحفاظ على إدراج نزلك",
+    "awaitingFirstPayment": "في انتظار دفعتك الأولى",
+    "switchesTo": "سينتقل إلى {{plan}} عند التجديد",
+    "activeFeatures": "مفعّل الآن",
+    "plansTitle": "الخطط",
+    "choosePlan": "اختر الخطة",
+    "currentPlanButton": "الخطة الحالية",
+    "renew": "تجديد",
+    "payNow": "ادفع {{amount}} الآن",
+    "upgradePayNow": "ترقية: ادفع {{amount}} الآن",
+    "renewsAtOn": "يتجدد بسعر {{price}} في {{date}}",
+    "switchAtRenewal": "التبديل عند التجديد",
+    "scheduledForRenewal": "مُجدول عند التجديد",
+    "switchComingSoon": "تبديل الخطط متاح قريبًا — تواصل معنا للتبديل الآن.",
+    "unavailable": "غير متاح",
+    "ownerOnly": "يمكن لمالك النزل فقط تغيير الخطة.",
+    "setCountryNotice": "حدّد بلد نزلك لعرض الأسعار.",
+    "addCountry": "أضف بلد النزل",
+    "askOwnerCountry": "اطلب من مالك النزل إضافة بلد النزل.",
+    "checkoutFailed": "تعذّر بدء عملية الدفع. حاول مرة أخرى.",
+    "checkoutForbidden": "ليس لديك إذن بشراء خطط لهذا النزل.",
+    "replaceInvoiceTitle": "استبدال الفاتورة غير المدفوعة؟",
+    "replaceInvoiceMessage": "سيؤدي هذا إلى استبدال الفاتورة غير المدفوعة {{number}}.",
+    "replaceInvoiceConfirm": "استبدال ومتابعة",
+    "paymentDueTitle": "دفعة مستحقة",
+    "invoiceNumber": "الفاتورة {{number}}",
+    "kindNew": "الدفعة الأولى · {{start}} – {{end}}",
+    "kindRenewal": "تجديد · {{start}} – {{end}}",
+    "kindUpgrade": "رسوم الترقية · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "ادفع قبل {{date}}",
+    "pay": "ادفع",
+    "underReview": "التحويل البنكي قيد المراجعة",
+    "underReviewHint": "سنحدّث هذه الصفحة فور تأكيد فريقنا لتحويلك.",
+    "noAccessTitle": "الفوترة غير متاحة لك",
+    "noAccessMessage": "لا يمكن عرض فوترة هذا النزل إلا لمن لديهم صلاحية الوصول إلى الفوترة. اسأل مالك النزل.",
+    "loadError": "تعذّر تحميل فوترة هذا النزل.",
+    "backToBilling": "العودة إلى الفوترة",
+    "payStubTitle": "يجري إعداد الدفع الإلكتروني",
+    "payStubMessage": "لدفع الفاتورة {{number}} الآن، تواصل معنا واذكر رقم الفاتورة.",
+    "invoiceLoadError": "تعذّر تحميل هذه الفاتورة."
   },
   "hostMess": {
     "pickADate": "اختر تاريخاً",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "دعوات النزل وتأكيدات الوجبات والإيصالات المعلقة الخاصة بك."
   },
+  "sharedBilling": {
+    "perMonth": "/ شهر",
+    "featureListing": "الإدراج على HostelHive",
+    "featureBoost": "ظهور مميز في البحث",
+    "featureCrm": "نظام CRM للمضيفين — الغرف والحجوزات والمستأجرون والفواتير والموظفون",
+    "included": "مشمول",
+    "notIncluded": "غير مشمول",
+    "notAvailableIn": "غير متاح بعملة {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "اسحب وأفلت، أو ارفع، أو التقط صورة",
     "replaceAdd": "استبدال / إضافة"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "محفوظ على هذا الجهاز",
     "sleepsNPerMonth": "تتسع لـ{{capacity}} · Rs {{price}} / شهر"
   },
+  "publicPricing": {
+    "title": "أسعار بسيطة للنُزل",
+    "subtitle": "خطة شهرية واحدة لكل نزل. كل خطة تُدرج نزلك على HostelHive.",
+    "currencyUsd": "الأسعار بالدولار الأمريكي. تُصدر فواتير النُزل في باكستان بعملة PKR.",
+    "currencyPkr": "الأسعار بالروبية الباكستانية.",
+    "featuresTitle": "ما تتضمنه كل خطة",
+    "listingBlurb": "يظهر نزلك في بحث HostelHive وفي صفحة إدراج خاصة به.",
+    "boostBlurb": "يظهر إدراجك في مرتبة أعلى في نتائج البحث.",
+    "crmBlurb": "أدِر الغرف والحجوزات والمستأجرين والفواتير والموظفين في مكان واحد.",
+    "startHosting": "ابدأ الاستضافة",
+    "goToBilling": "الانتقال إلى الفوترة",
+    "loadError": "تعذّر تحميل الخطط.",
+    "noPlans": "لا توجد خطط متاحة حاليًا."
+  },
   "publicAbout": {
     "aboutUs": "من نحن",
     "makingStudentAccommodationSaferAnd": "جعل سكن الطلاب أكثر أماناً وأسهل في العثور عليه",
@@ -1520,6 +1591,8 @@
     "searchDescription": "ابحث عن نزل وسكنات ومساكن مشتركة موثوقة في {{place}}. صفِّ حسب الميزانية ومشاركة الغرفة والمرافق.",
     "searchPlaceDescription": "ابحث عن نزل وسكنات ومساكن مشتركة موثوقة في {{place}}. قارن الأسعار ومشاركة الغرفة والمرافق.",
     "worldwideTitle": "نزل حول العالم — بحث | HostelHive",
-    "worldwideDescription": "ابحث عن نزل وسكنات ومساكن مشتركة موثوقة حول العالم. صفِّ حسب الميزانية ومشاركة الغرفة والمرافق."
+    "worldwideDescription": "ابحث عن نزل وسكنات ومساكن مشتركة موثوقة حول العالم. صفِّ حسب الميزانية ومشاركة الغرفة والمرافق.",
+    "pricingTitle": "أسعار النُزل | HostelHive",
+    "pricingDescription": "خطط HostelHive الشهرية للنُزل: اعرض نزلك، واحصل على ظهور مميز في البحث، وأدِر الغرف والحجوزات والفواتير عبر نظام CRM للمضيفين."
   }
 }

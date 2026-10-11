@@ -171,7 +171,6 @@
     "mess": "Kantine",
     "expenses": "Ausgaben",
     "invoices": "Rechnungen",
-    "subscription": "Abonnement",
     "more": "Mehr",
     "listingDetails": "Angebotsdetails",
     "photos": "Fotos",
@@ -394,7 +393,8 @@
     "heroTitleTail": "im",
     "statVerifiedBeds": "verifizierte Betten",
     "statCities": "Städte",
-    "statSeekerRating": "Nutzerbewertung"
+    "statSeekerRating": "Nutzerbewertung",
+    "seePricing": "Preise ansehen"
   },
   "card": {
     "previousPhoto": "Vorheriges Foto",
@@ -486,7 +486,8 @@
     "privacyPolicy": "Datenschutzerklärung",
     "termsOfService": "Nutzungsbedingungen",
     "servicePolicy": "Servicerichtlinie",
-    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alle Rechte vorbehalten."
+    "copy2026HostelhiveAllRights": "© 2026 HostelHive. Alle Rechte vorbehalten.",
+    "pricing": "Preise"
   },
   "searchBar": {
     "search": "Suchen",
@@ -514,7 +515,8 @@
     "more": "Mehr",
     "property": "Objekt",
     "selectAProperty": "Objekt wählen",
-    "createNewHostel": "Neues Hostel anlegen"
+    "createNewHostel": "Neues Hostel anlegen",
+    "billing": "Abrechnung"
   },
   "hostelForm": {
     "listingDetails": "Angebotsdetails",
@@ -711,9 +713,55 @@
     "checkInYourFirstTenant": "Checken Sie Ihren ersten Mieter ein, um die Miete zu verfolgen."
   },
   "hostBilling": {
-    "comingSoonTitle": "Die Abrechnung zieht in ein neues System um",
-    "comingSoonMessage": "Tarife, Rechnungen und Zahlungen für dieses Hostel erscheinen hier in Kürze. Müssen Sie jetzt verlängern? Kontaktieren Sie uns.",
-    "backToDashboard": "Zurück zum Dashboard"
+    "title": "Abrechnung",
+    "currentPlan": "Aktueller Tarif",
+    "noPlanTitle": "Noch kein Tarif",
+    "noPlanMessage": "Wählen Sie unten einen Tarif, um Ihr Hostel auf HostelHive zu listen.",
+    "renewsOn": "Verlängert sich am {{date}}",
+    "endsOn": "Endet am {{date}}",
+    "endedOn": "Endete am {{date}}",
+    "wasDueOn": "Zahlung war am {{date}} fällig",
+    "graceUntil": "Zahlen Sie bis {{date}}, um Ihren Eintrag zu behalten",
+    "awaitingFirstPayment": "Warten auf Ihre erste Zahlung",
+    "switchesTo": "Wechselt bei Verlängerung zu {{plan}}",
+    "activeFeatures": "Jetzt aktiv",
+    "plansTitle": "Tarife",
+    "choosePlan": "Tarif wählen",
+    "currentPlanButton": "Aktueller Tarif",
+    "renew": "Verlängern",
+    "payNow": "Jetzt {{amount}} zahlen",
+    "upgradePayNow": "Upgrade: jetzt {{amount}} zahlen",
+    "renewsAtOn": "Verlängert sich am {{date}} zu {{price}}",
+    "switchAtRenewal": "Bei Verlängerung wechseln",
+    "scheduledForRenewal": "Für die Verlängerung geplant",
+    "switchComingSoon": "Tarifwechsel sind bald möglich — kontaktieren Sie uns, um jetzt zu wechseln.",
+    "unavailable": "Nicht verfügbar",
+    "ownerOnly": "Nur der Eigentümer des Hostels kann den Tarif ändern.",
+    "setCountryNotice": "Legen Sie das Land Ihres Hostels fest, um Preise zu sehen.",
+    "addCountry": "Land des Hostels hinzufügen",
+    "askOwnerCountry": "Bitten Sie den Eigentümer des Hostels, das Land des Hostels hinzuzufügen.",
+    "checkoutFailed": "Der Bezahlvorgang konnte nicht gestartet werden. Versuchen Sie es erneut.",
+    "checkoutForbidden": "Sie sind nicht berechtigt, Tarife für dieses Hostel zu kaufen.",
+    "replaceInvoiceTitle": "Unbezahlte Rechnung ersetzen?",
+    "replaceInvoiceMessage": "Dadurch wird die unbezahlte Rechnung {{number}} ersetzt.",
+    "replaceInvoiceConfirm": "Ersetzen und fortfahren",
+    "paymentDueTitle": "Zahlung fällig",
+    "invoiceNumber": "Rechnung {{number}}",
+    "kindNew": "Erste Zahlung · {{start}} – {{end}}",
+    "kindRenewal": "Verlängerung · {{start}} – {{end}}",
+    "kindUpgrade": "Upgrade-Gebühr · {{start}} – {{end}}",
+    "forPeriod": "{{start}} – {{end}}",
+    "payBy": "Zahlbar bis {{date}}",
+    "pay": "Bezahlen",
+    "underReview": "Banküberweisung wird geprüft",
+    "underReviewHint": "Wir aktualisieren diese Seite, sobald unser Team Ihre Überweisung bestätigt hat.",
+    "noAccessTitle": "Die Abrechnung ist für Sie nicht verfügbar",
+    "noAccessMessage": "Nur Personen mit Zugriff auf die Abrechnung können die Abrechnung dieses Hostels sehen. Fragen Sie den Eigentümer des Hostels.",
+    "loadError": "Die Abrechnung für dieses Hostel konnte nicht geladen werden.",
+    "backToBilling": "Zurück zur Abrechnung",
+    "payStubTitle": "Die Online-Zahlung wird gerade eingerichtet",
+    "payStubMessage": "Um die Rechnung {{number}} jetzt zu bezahlen, kontaktieren Sie uns und nennen Sie die Rechnungsnummer.",
+    "invoiceLoadError": "Diese Rechnung konnte nicht geladen werden."
   },
   "hostMess": {
     "pickADate": "Datum wählen",
@@ -1132,6 +1180,15 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Ihre Hostel-Einladungen, Essensbestätigungen und offenen Belege."
   },
+  "sharedBilling": {
+    "perMonth": "/ Monat",
+    "featureListing": "Eintrag auf HostelHive",
+    "featureBoost": "Hervorgehobene Platzierung in der Suche",
+    "featureCrm": "Gastgeber-CRM — Zimmer, Buchungen, Mieter, Rechnungen und Personal",
+    "included": "Inklusive",
+    "notIncluded": "Nicht inklusive",
+    "notAvailableIn": "Nicht verfügbar in {{currency}}"
+  },
   "sharedPhotoPicker": {
     "dragAmpDropUploadOr": "Ziehen & ablegen, hochladen oder Foto aufnehmen",
     "replaceAdd": "Ersetzen / hinzufügen"
@@ -1367,6 +1424,20 @@
     "savedOnThisDevice": "Auf diesem Gerät gespeichert",
     "sleepsNPerMonth": "Platz für {{capacity}} · Rs {{price}} / Monat"
   },
+  "publicPricing": {
+    "title": "Einfache Preise für Hostels",
+    "subtitle": "Ein Monatstarif pro Hostel. Mit jedem Tarif wird Ihr Hostel auf HostelHive gelistet.",
+    "currencyUsd": "Preise in US-Dollar. Hostels in Pakistan werden in PKR abgerechnet.",
+    "currencyPkr": "Preise in pakistanischen Rupien.",
+    "featuresTitle": "Was jeder Tarif enthält",
+    "listingBlurb": "Ihr Hostel erscheint in der HostelHive-Suche und auf einer eigenen Eintragsseite.",
+    "boostBlurb": "Ihr Eintrag wird in den Suchergebnissen weiter oben platziert.",
+    "crmBlurb": "Verwalten Sie Zimmer, Buchungen, Mieter, Rechnungen und Personal an einem Ort.",
+    "startHosting": "Als Gastgeber starten",
+    "goToBilling": "Zur Abrechnung",
+    "loadError": "Die Tarife konnten nicht geladen werden.",
+    "noPlans": "Derzeit sind keine Tarife verfügbar."
+  },
   "publicAbout": {
     "aboutUs": "Über uns",
     "makingStudentAccommodationSaferAnd": "Studentenunterkünfte sicherer und leichter auffindbar machen",
@@ -1520,6 +1591,8 @@
     "searchDescription": "Geprüfte Hostels, Pensionen und Co-Living in {{place}} durchsuchen. Nach Budget, Zimmerbelegung und Ausstattung filtern.",
     "searchPlaceDescription": "Geprüfte Hostels, Pensionen und Co-Living in {{place}} durchsuchen. Preise, Zimmerbelegung und Ausstattung vergleichen.",
     "worldwideTitle": "Hostels weltweit — Suche | HostelHive",
-    "worldwideDescription": "Geprüfte Hostels, Pensionen und Co-Living weltweit durchsuchen. Nach Budget, Zimmerbelegung und Ausstattung filtern."
+    "worldwideDescription": "Geprüfte Hostels, Pensionen und Co-Living weltweit durchsuchen. Nach Budget, Zimmerbelegung und Ausstattung filtern.",
+    "pricingTitle": "Preise für Hostels | HostelHive",
+    "pricingDescription": "Monatliche HostelHive-Tarife für Hostels: gelistet werden, in der Suche hervorgehoben werden und Zimmer, Buchungen und Rechnungen mit dem Gastgeber-CRM verwalten."
   }
 }
