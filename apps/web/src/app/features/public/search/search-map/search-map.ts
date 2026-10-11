@@ -59,7 +59,7 @@ import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { PLACES } from '@features/public/landing/places';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
-import { ListingsApi, OffersApi, SearchCapacity } from '@services';
+import { ListingsApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import {
   GenderRoutes,
@@ -146,15 +146,6 @@ export class SearchMap {
   private readonly session = inject(SessionStore);
   private readonly capacityStore = inject(SearchCapacity);
 
-  /** Slug → offer ID map, populated once the offer-categories API resolves. */
-  private readonly _offerCategories = toSignal(
-    inject(OffersApi).categories().pipe(catchError(() => of([]))),
-  );
-  private readonly _slugToId = computed(() =>
-    new Map(
-      (this._offerCategories() ?? []).flatMap((c) => c.offers).map((o) => [o.slug, o.id]),
-    ),
-  );
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly countryBounds = inject(CountryBounds);
@@ -421,10 +412,6 @@ export class SearchMap {
     const c = unbounded && this.slugPlace() ? null : this.center();
     const amenities = this.amenities();
     const mb = unbounded ? null : this.mapBounds();
-    const slugToId = this._slugToId();
-    const offerIds = amenities
-      .map((slug) => slugToId.get(slug))
-      .filter((id): id is string => id != null);
     return {
       accommodationType: this.accommodationType(),
       propertyType: p?.get('propertyType') || undefined,
@@ -435,8 +422,8 @@ export class SearchMap {
       bounds: mb ?? undefined,
       minPrice: min ? +min : undefined,
       maxPrice: max ? +max : undefined,
+      // Sent as f[offers.slug][]; the URL already carries slugs, so no lookup is needed.
       amenities: amenities.length ? amenities : undefined,
-      offerIds: offerIds.length ? offerIds : undefined,
       sort:
         (this.sort() as
           | 'recommended'
