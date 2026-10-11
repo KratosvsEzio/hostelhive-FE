@@ -12,8 +12,8 @@ describe('feature-search routes', () => {
     expect(location?.component).toBe(SEARCH_ROUTES[0].component);
   });
 
-  // A static route title is re-applied by the title strategy after every navigation, viewport
-  // writes included, which would overwrite the place-specific title the page sets itself.
+  // Search owns its head (`head: 'page'`), so the title strategy ignores any route title here;
+  // one declared anyway would only be a second, competing owner of the tab title.
   it('leaves the tab title to the search page on every route that serves it', () => {
     const searchRoutes = SEARCH_ROUTES.filter((r) => r.component === SEARCH_ROUTES[0].component);
     expect(searchRoutes.length).toBeGreaterThan(0);

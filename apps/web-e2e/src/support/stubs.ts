@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Page, Route } from '@playwright/test';
 
 /** The bounding box a listings search carried, or null for a side the request omitted. */
 export interface SentBounds {
@@ -113,4 +113,135 @@ export async function stubPhoton(page: Page, features: unknown[]): Promise<void>
       body: JSON.stringify({ features }),
     });
   });
+}
+
+/** What a stubbed endpoint should do: wait, answer with a status, and carry a body. */
+export interface StubOptions {
+  /** Hold the response back this long, to keep the page in its loading state. */
+  delayMs?: number;
+  /** HTTP status to answer with. Defaults to 200. */
+  status?: number;
+  /** Replaces the default body. Sent as JSON. */
+  body?: unknown;
+}
+
+/**
+ * A minimal raw `/public/hostel_detail/:id` document the listing page's mapper accepts: a name,
+ * area and city, a gender type, one photo, one shared room type with a price, and a host.
+ */
+export function hostelDetailFixture(overrides: Record<string, unknown> = {}): {
+  hostel: Record<string, unknown>;
+  success: boolean;
+} {
+  return {
+    success: true,
+    hostel: {
+      id: 1,
+      name: 'Stub Hostel',
+      description: 'A stubbed hostel for head and title checks.',
+      gender_type: 'co-living',
+      property_type: 'building',
+      total_rooms: 4,
+      total_floors: 2,
+      address_1: '12 Test Street',
+      address_2: null,
+      city: 'Lahore',
+      state: 'Punjab',
+      country: 'Pakistan',
+      area: 'Gulberg',
+      latitude: 31.5204,
+      longitude: 74.3587,
+      min_price: 15000,
+      max_price: 15000,
+      currency: 'PKR',
+      billing_frequency: 'month',
+      primary_phone: '+923001234567',
+      secondary_phone: null,
+      nearby_landmarks: 'Liberty Market',
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      host: { id: 'hOsT01', name: 'Stub Host', email: 'host@example.test', is_active: true },
+      hostel_offers: [],
+      offers: [{ id: 1, name: 'WiFi', slug: 'wifi', icon: null }],
+      attachments: [
+        {
+          id: 'att1',
+          content_type: 'image/png',
+          attachment_type: 'photo',
+          is_primary: true,
+          // A data URI, so the gallery never reaches for the network.
+          url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+          attachment_label: null,
+        },
+      ],
+      room_types: [
+        {
+          id: 1,
+          name: 'Shared Dorm',
+          description: 'Four beds',
+          capacity: 4,
+          price: 15000,
+          discounted_price: null,
+          is_discountable: false,
+          is_bookable: true,
+          occupancy_type: 'shared',
+          attachments: [],
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z',
+        },
+      ],
+      rooms: [],
+      status: { id: 1, slug: 'active', name: 'Active' },
+      ...overrides,
+    },
+  };
+}
+
+/** Answers a credentialed cross-origin API call: echoes the request's Origin, since `*` is rejected. */
+async function fulfillApi(
+  page: Page,
+  route: Route,
+  options: StubOptions,
+  fallbackBody: unknown,
+): Promise<void> {
+  const request = route.request();
+  const origin = request.headers()['origin'] ?? new URL(page.url()).origin;
+  const cors = {
+    'access-control-allow-origin': origin,
+    'access-control-allow-credentials': 'true',
+    'access-control-allow-headers': '*',
+    'access-control-allow-methods': '*',
+  };
+  if (request.method() === 'OPTIONS') {
+    await route.fulfill({ status: 204, headers: cors });
+    return;
+  }
+  if (options.delayMs) await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+  await route.fulfill({
+    status: options.status ?? 200,
+    contentType: 'application/json',
+    headers: cors,
+    body: JSON.stringify(options.body ?? fallbackBody),
+  });
+}
+
+/**
+ * Stubs `GET /public/hostel_detail/:id` for every id with {@link hostelDetailFixture} (or `body`).
+ * Use `delayMs` to hold the listing in its loading state and `status: 404` or `500` for the
+ * removed and failed states.
+ */
+export async function stubHostelDetail(page: Page, options: StubOptions = {}): Promise<void> {
+  await page.route('**/public/hostel_detail/**', (route) =>
+    fulfillApi(page, route, options, hostelDetailFixture()),
+  );
+}
+
+/**
+ * Stubs `GET /api/nps_ratings`, which the listing page calls on load and on `?review=`. Answers an
+ * empty list by default; `body` should be `{ ratings: [...] }`.
+ */
+export async function stubReviews(page: Page, options: StubOptions = {}): Promise<void> {
+  await page.route('**/api/nps_ratings**', (route) =>
+    fulfillApi(page, route, options, { ratings: [] }),
+  );
 }

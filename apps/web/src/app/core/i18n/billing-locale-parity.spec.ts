@@ -1,19 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-/** `apps/web/public/i18n` — four levels up from here: i18n, core, app, src. */
-const I18N = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '..',
-  '..',
-  '..',
-  '..',
-  'public',
-  'i18n',
-);
-
-type Tree = { [key: string]: string | Tree };
+import { LocaleTree, at, leaves, loadLocale, localeFiles, params } from './locale-files-testing';
 
 const GROUPS = ['hostBilling', 'hostPayment', 'sharedBilling', 'publicPricing'];
 const SINGLE_KEYS = [
@@ -32,48 +17,15 @@ const RETIRED_KEYS = [
   'common.subscription',
 ];
 
-function load(file: string): Tree {
-  return JSON.parse(readFileSync(join(I18N, file), 'utf8')) as Tree;
-}
-
-function at(tree: Tree, path: string): string | Tree | undefined {
-  let node: string | Tree | undefined = tree;
-  for (const part of path.split('.')) {
-    if (typeof node !== 'object' || node === null) return undefined;
-    node = node[part];
-  }
-  return node;
-}
-
-/** Every leaf under `node`, keyed by its dotted path. */
-function leaves(
-  node: string | Tree | undefined,
-  prefix: string,
-  out: Record<string, string> = {},
-): Record<string, string> {
-  if (typeof node === 'string') {
-    out[prefix] = node;
-  } else if (node) {
-    for (const [k, v] of Object.entries(node)) leaves(v, `${prefix}.${k}`, out);
-  }
-  return out;
-}
-
-function params(text: string): string[] {
-  const names = new Set<string>();
-  for (const m of text.matchAll(/\{\{\s*([\w.]+)\s*\}\}/g)) names.add(m[1]);
-  return [...names].sort();
-}
-
 /** The billing-related keys of one locale, as path -> text. */
-function billingKeys(tree: Tree): Record<string, string> {
+function billingKeys(tree: LocaleTree): Record<string, string> {
   const out: Record<string, string> = {};
   for (const path of [...GROUPS, ...SINGLE_KEYS]) leaves(at(tree, path), path, out);
   return out;
 }
 
-const files = readdirSync(I18N).filter((f) => f.endsWith('.json'));
-const en = load('en.json');
+const files = localeFiles();
+const en = loadLocale('en.json');
 const enKeys = billingKeys(en);
 
 describe('the billing and pricing copy in every language', () => {
@@ -89,7 +41,7 @@ describe('the billing and pricing copy in every language', () => {
   });
 
   describe.each(files.filter((f) => f !== 'en.json'))('%s', (file) => {
-    const tree = load(file);
+    const tree = loadLocale(file);
     const keys = billingKeys(tree);
 
     it('has exactly the English key set for the billing groups and keys', () => {

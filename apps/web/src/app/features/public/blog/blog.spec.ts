@@ -1,7 +1,9 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import { TitleStrategy, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { LocaleTree, at, loadLocale } from '@core/i18n/locale-files-testing';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { localeAlternates } from '@core/i18n/locales';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
@@ -94,11 +96,12 @@ describe('Blog structured data', () => {
     expect(count(BLOG)).toBe(1);
   });
 
-  it('ends a navigation to /en/blog with the blog title, not the route title', async () => {
+  it('ends a navigation to /en/blog with its own translated title and description, not a route title', async () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
+          // A stray route title on a page that owns its head must still lose to the page's.
           { path: 'en/blog', title: 'Blog — HostelHive', component: Blog, data: { head: 'page' } },
         ]),
         { provide: TitleStrategy, useClass: RouteHeadStrategy },
@@ -112,7 +115,11 @@ describe('Blog structured data', () => {
     harness.detectChanges();
     TestBed.tick();
 
-    expect(document.title).toBe('Blog — guides to hostels, campuses and the north | HostelHive');
+    // The test loader echoes keys, so these prove both strings go through translation.
+    expect(document.title).toBe('seo.blogTitle');
+    expect(attr('meta[name="description"]', 'content')).toBe('seo.blogDescription');
+    expect(attr('meta[property="og:title"]', 'content')).toBe('seo.blogTitle');
+    expect(attr('meta[name="twitter:title"]', 'content')).toBe('seo.blogTitle');
   });
 
   it('canonicalises to the blog index while it lives', () => {
@@ -122,5 +129,70 @@ describe('Blog structured data', () => {
     const canonical = document.head.querySelectorAll('link[rel="canonical"]');
     expect(canonical).toHaveLength(1);
     expect(canonical[0].getAttribute('href')).toBe('https://hostelhive.com/en/blog');
+  });
+});
+
+describe('Blog head copy in the active language', () => {
+  const ready = signal(true);
+  const en = loadLocale('en.json');
+  const ur = loadLocale('ur.json');
+  const text = (tree: LocaleTree, key: string) => at(tree, key) as string;
+
+  beforeEach(() => {
+    active.set('en');
+    ready.set(true);
+    TestBed.configureTestingModule({
+      imports: [Blog],
+      providers: [
+        provideRouter([]),
+        provideI18nTesting(),
+        { provide: LocaleStore, useValue: { ready, active } },
+      ],
+    });
+    const i18n = TestBed.inject(TranslocoService);
+    i18n.setTranslation(en, 'en');
+    i18n.setTranslation(ur, 'ur');
+  });
+
+  afterEach(() => {
+    document.head.querySelectorAll(SEO_TAGS).forEach((el) => el.remove());
+    document.title = '';
+  });
+
+  it('switches the title and description from English to Urdu on a live page, and back', () => {
+    const fixture = TestBed.createComponent(Blog);
+    fixture.detectChanges();
+    TestBed.tick();
+
+    expect(document.title).toBe(text(en, 'seo.blogTitle'));
+    expect(attr('meta[name="description"]', 'content')).toBe(text(en, 'seo.blogDescription'));
+
+    // Mirrors LocaleStore.switchTo: strings are not ready until the new language has loaded.
+    ready.set(false);
+    active.set('ur');
+    TestBed.inject(TranslocoService).setActiveLang('ur');
+    TestBed.tick();
+
+    expect(document.title).toBe(text(en, 'seo.blogTitle'));
+
+    ready.set(true);
+    TestBed.tick();
+
+    expect(text(ur, 'seo.blogTitle')).not.toBe(text(en, 'seo.blogTitle'));
+    expect(document.title).toBe(text(ur, 'seo.blogTitle'));
+    expect(attr('meta[property="og:title"]', 'content')).toBe(text(ur, 'seo.blogTitle'));
+    expect(attr('meta[name="description"]', 'content')).toBe(text(ur, 'seo.blogDescription'));
+    expect(attr('meta[property="og:description"]', 'content')).toBe(
+      text(ur, 'seo.blogDescription'),
+    );
+
+    ready.set(false);
+    active.set('en');
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    ready.set(true);
+    TestBed.tick();
+
+    expect(document.title).toBe(text(en, 'seo.blogTitle'));
+    expect(attr('meta[name="description"]', 'content')).toBe(text(en, 'seo.blogDescription'));
   });
 });

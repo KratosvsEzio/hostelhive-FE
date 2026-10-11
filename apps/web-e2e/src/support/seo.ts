@@ -54,6 +54,10 @@ export interface RawHead {
   ogLocales: string[];
   /** The text of the `<title>`, or null when there is none. */
   title: string | null;
+  /** The `content` of every `og:title` meta tag. */
+  ogTitles: string[];
+  /** The `content` of every `twitter:title` meta tag. */
+  twitterTitles: string[];
   /** The `content` of the description meta tag, or null when there is none. */
   description: string | null;
 }
@@ -103,6 +107,14 @@ export function headOf(html: string): RawHead {
       .filter((t) => attrOf(t, 'property') === 'og:locale')
       .map((t) => attrOf(t, 'content') ?? ''),
     title: titleMatch ? decodeEntities(titleMatch[1]) : null,
+    ogTitles: metas
+      .filter((t) => attrOf(t, 'property') === 'og:title')
+      .map((t) => attrOf(t, 'content') ?? ''),
+    twitterTitles: metas
+      .filter(
+        (t) => attrOf(t, 'name') === 'twitter:title' || attrOf(t, 'property') === 'twitter:title',
+      )
+      .map((t) => attrOf(t, 'content') ?? ''),
     description:
       metas.filter((t) => attrOf(t, 'name') === 'description').map((t) => attrOf(t, 'content'))[0] ??
       null,
@@ -126,10 +138,94 @@ export async function liveHead(page: Page): Promise<RawHead> {
       ),
       ogLocales: metaContent('meta[property="og:locale"]'),
       title: document.title || null,
+      ogTitles: metaContent('meta[property="og:title"]'),
+      twitterTitles: metaContent('meta[name="twitter:title"], meta[property="twitter:title"]'),
       description:
         document.querySelector('meta[name="description"]')?.getAttribute('content') ?? null,
     };
   });
+}
+
+type TitleLog = { __titles?: string[]; __gaTitles?: string[]; __gaHooked?: boolean };
+
+/**
+ * Starts logging every `document.title` change, from before the first script runs.
+ *
+ * Call it before `page.goto`: it is an init script, so it is installed in every document the page
+ * loads, and a MutationObserver on the whole document appends the new title to `window.__titles`
+ * each time it differs from the last one. The first entry is the title the page started with, so
+ * a flash of the wrong title is visible even when it was corrected a frame later. Read with
+ * `recordedTitles`.
+ */
+export async function recordTitles(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const w = window as unknown as TitleLog;
+    w.__titles = [];
+    let last: string | null = null;
+    const note = () => {
+      if (document.title === last) return;
+      last = document.title;
+      w.__titles?.push(last);
+    };
+    note();
+    new MutationObserver(note).observe(document, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+    });
+    document.addEventListener('DOMContentLoaded', note);
+  });
+}
+
+/** Every distinct consecutive `document.title` seen since `recordTitles`, oldest first. */
+export async function recordedTitles(page: Page): Promise<string[]> {
+  return page.evaluate(() => (window as unknown as TitleLog).__titles ?? []);
+}
+
+/**
+ * Logs `document.title` at `NavigationEnd` plus one `setTimeout(0)`, the moment the analytics
+ * service used to read it. Each reading is appended to `window.__gaTitles`.
+ *
+ * The service no longer reads then: it waits for the head to settle (and for one more macrotask),
+ * so these readings are an early snapshot of the title, not what analytics sends. Use them to check
+ * what the tab shows right after a navigation, never to claim analytics timing.
+ *
+ * It hooks the router through the root component (`ng.getComponent(app-root).router`), which
+ * exists on the dev server only, so run it after `waitForClient` against `nx serve`, not against
+ * a production build. Only navigations after the call are logged, which makes it a client
+ * navigation tool; a full load has already finished its `NavigationEnd`. Idempotent. Read with
+ * `gaTitles`.
+ */
+export async function titleAtNavigationEnd(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as TitleLog;
+    if (w.__gaHooked) return;
+    const ng = (
+      window as unknown as { ng?: { getComponent: (el: Element) => Record<string, unknown> } }
+    ).ng;
+    const root = document.querySelector('app-root');
+    if (!ng || !root) throw new Error('titleAtNavigationEnd needs the Angular dev server (window.ng)');
+    const host = ng.getComponent(root);
+    type Evented = { events: { subscribe: (fn: (e: unknown) => void) => void } };
+    const isRouter = (v: unknown): v is Evented =>
+      typeof v === 'object' &&
+      v !== null &&
+      typeof (v as { events?: { subscribe?: unknown } }).events?.subscribe === 'function';
+    const router = isRouter(host['router']) ? host['router'] : Object.values(host).find(isRouter);
+    if (!router) throw new Error('titleAtNavigationEnd could not find the Router on app-root');
+    w.__gaTitles = [];
+    w.__gaHooked = true;
+    router.events.subscribe((e) => {
+      // NavigationEnd is EventType 1; matching the number avoids importing the class here.
+      if ((e as { type?: number }).type !== 1) return;
+      setTimeout(() => w.__gaTitles?.push(document.title), 0);
+    });
+  });
+}
+
+/** The `document.title` read at each `NavigationEnd` plus one timeout since `titleAtNavigationEnd`, oldest first. */
+export async function gaTitles(page: Page): Promise<string[]> {
+  return page.evaluate(() => (window as unknown as TitleLog).__gaTitles ?? []);
 }
 
 /** Switches the interface language through the header's language picker. */

@@ -95,12 +95,12 @@ describe('the payment return routes', () => {
       {
         path: 'success',
         component: PaymentSuccess,
-        title: 'Payment — HostelHive',
+        title: 'common.payment',
       },
       {
         path: 'cancel',
         component: PaymentCancelled,
-        title: 'Payment — HostelHive',
+        title: 'common.payment',
       },
     ]);
   });

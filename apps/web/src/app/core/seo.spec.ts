@@ -20,6 +20,7 @@ const OG_LOCALE_ALTERNATE = 'meta[property="og:locale:alternate"]';
 const INDEX_HTML = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'index.html');
 
 const active = signal('en');
+const ready = signal(true);
 
 /** What a previous page leaves behind in a client navigation: its canonical and its `og:url`. */
 function seedStaticHead(): void {
@@ -53,10 +54,11 @@ describe('Seo', () => {
 
   beforeEach(() => {
     active.set('en');
+    ready.set(true);
     TestBed.configureTestingModule({
       providers: [
         provideI18nTesting(),
-        { provide: LocaleStore, useValue: { ready: signal(true), active } },
+        { provide: LocaleStore, useValue: { ready, active } },
       ],
     });
     seo = TestBed.inject(Seo);
@@ -189,6 +191,59 @@ describe('Seo', () => {
       expect(all(OG_LOCALE)).toHaveLength(1);
       expect(attr(OG_LOCALE, 'content')).toBe('ur_PK');
       expect(all(OG_LOCALE_ALTERNATE)).toHaveLength(0);
+    });
+  });
+
+  describe('settled', () => {
+    it('is true before any apply, once strings are ready', () => {
+      expect(seo.settled()).toBe(true);
+    });
+
+    it('stays true after an apply that is not provisional', () => {
+      seo.apply({ title: 'Final', path: '/blog' });
+
+      expect(seo.settled()).toBe(true);
+    });
+
+    it('writes the whole head for a provisional apply but is not settled until the next apply', () => {
+      seo.apply({
+        title: 'Loading',
+        description: 'Wait for it',
+        noindex: true,
+        provisional: true,
+      });
+
+      expect(seo.settled()).toBe(false);
+      expect(document.title).toBe('Loading');
+      expect(attr('meta[name="description"]', 'content')).toBe('Wait for it');
+      expect(attr(ROBOTS, 'content')).toBe('noindex, nofollow');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('Loading');
+      expect(attr('meta[name="twitter:title"]', 'content')).toBe('Loading');
+      expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+
+      seo.apply({ title: 'Loaded', path: '/hostel/x' });
+
+      expect(seo.settled()).toBe(true);
+      expect(document.title).toBe('Loaded');
+    });
+
+    it('is not settled while strings are loading, and settles when they are ready without a new apply', () => {
+      ready.set(false);
+      seo.apply({ title: 'Final' });
+
+      expect(seo.settled()).toBe(false);
+
+      ready.set(true);
+
+      expect(seo.settled()).toBe(true);
+    });
+
+    it('stays unsettled after strings are ready while the head is still provisional', () => {
+      ready.set(false);
+      seo.apply({ title: 'Loading', provisional: true });
+      ready.set(true);
+
+      expect(seo.settled()).toBe(false);
     });
   });
 

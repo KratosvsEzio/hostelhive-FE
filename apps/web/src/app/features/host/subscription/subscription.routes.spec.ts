@@ -8,14 +8,14 @@ describe('feature-subscription routes', () => {
       path: '',
       pathMatch: 'full',
       component: BillingPage,
-      title: 'Billing — HostelHive',
+      title: 'hostBilling.title',
     });
   });
 
   it('serves the payment step for one invoice', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'pay/:invoiceId')).toMatchObject({
       component: PaymentStep,
-      title: 'Pay invoice — HostelHive',
+      title: 'routeTitle.payInvoice',
     });
   });
 
