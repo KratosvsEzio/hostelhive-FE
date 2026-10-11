@@ -11,11 +11,14 @@ export const ACCESS_TOKEN = new InjectionToken<() => string | null>(
 );
 
 /**
- * Invoked by the auth interceptor on a 401 from the API — e.g. clear the session and
+ * Invoked by the error interceptor on a 401 from the API — e.g. clear the session and
  * open the Lead Wall, or (post Q-AUTH) trigger a silent refresh + retry.
  * Provided by `@hostelhive/auth`.
+ *
+ * Receives the bearer token the rejected request was sent with (`null` when it carried none),
+ * so a late 401 for a token that has since been replaced can leave the current session alone.
  */
-export const UNAUTHORIZED_HANDLER = new InjectionToken<() => void>(
+export const UNAUTHORIZED_HANDLER = new InjectionToken<(rejectedToken: string | null) => void>(
   'hh.unauthorizedHandler',
 );
 
