@@ -7,7 +7,10 @@
 export interface ApiError {
   /** HTTP status (0 for network/timeout failures). */
   status: number;
-  /** Machine code derived from the status (e.g. `network_error`, `unknown_error`). */
+  /**
+   * Machine code: the backend's own `code` when the error envelope has one (e.g.
+   * `crm_required`), otherwise derived from the status (`network_error`, `unknown_error`).
+   */
   code: string;
   /**
    * Diagnostic message. May be Angular's synthetic `HttpErrorResponse.message`, which leaks

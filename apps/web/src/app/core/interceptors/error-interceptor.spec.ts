@@ -190,6 +190,47 @@ describe('errorInterceptor', () => {
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 
+  // The host area's billing gate answers `{ code: 'crm_required', errors, success: false }`.
+  // The code is the only thing that tells it apart from any other 403, so it must survive.
+  it('keeps the server\'s machine code', () => {
+    const err = fire((req) =>
+      req.flush(
+        { success: false, errors: ['Your plan does not include CRM'], code: 'crm_required' },
+        { status: 403, statusText: 'Forbidden' },
+      ),
+    );
+
+    expect(err.code).toBe('crm_required');
+    expect(err.serverMessages).toEqual(['Your plan does not include CRM']);
+  });
+
+  it('falls back to unknown_error when the envelope has no code', () => {
+    const err = fire((req) =>
+      req.flush({ success: false, errors: ['Nope'] }, { status: 422, statusText: 'Unprocessable' }),
+    );
+
+    expect(err.code).toBe('unknown_error');
+  });
+
+  it('keeps network_error for a failure with no response', () => {
+    const err = fire((req) => req.error(new ProgressEvent('error')));
+
+    expect(err.status).toBe(0);
+    expect(err.code).toBe('network_error');
+  });
+
+  it('ignores an empty or non-string code', () => {
+    const empty = fire((req) =>
+      req.flush({ success: false, code: '' }, { status: 400, statusText: 'Bad Request' }),
+    );
+    const numeric = fire((req) =>
+      req.flush({ success: false, code: 42 }, { status: 400, statusText: 'Bad Request' }),
+    );
+
+    expect(empty.code).toBe('unknown_error');
+    expect(numeric.code).toBe('unknown_error');
+  });
+
   it('does not notify when the request suppresses the toast', () => {
     fire(
       (req) =>
