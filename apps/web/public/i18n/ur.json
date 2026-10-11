@@ -1711,6 +1711,7 @@
     "whatGendered": "{{gender}} ہاسٹل",
     "whatAll": "ہاسٹل، پی جی اور کو-لِوِنگ",
     "listingNotFoundTitle": "لسٹنگ نہیں ملی — HostelHive",
+    "postNotFoundTitle": "پوسٹ نہیں ملی — HostelHive",
     "listingNotFoundDescription": "یہ ہاسٹل لسٹنگ دستیاب نہیں ہے یا لنک غلط ہے۔",
     "listingTitle": "{{name}} — {{location}} میں {{gender}} ہاسٹل | HostelHive",
     "listingLead": "{{name}} — {{location}} میں {{gender}} ہاسٹل۔",

@@ -1711,6 +1711,7 @@
     "whatGendered": "hostel {{gender}}",
     "whatAll": "hostel, nhà trọ và co-living",
     "listingNotFoundTitle": "Không tìm thấy tin đăng — HostelHive",
+    "postNotFoundTitle": "Không tìm thấy bài đăng — HostelHive",
     "listingNotFoundDescription": "Tin đăng hostel này không khả dụng hoặc liên kết không đúng.",
     "listingTitle": "{{name}} — hostel {{gender}} tại {{location}} | HostelHive",
     "listingLead": "{{name}} — hostel {{gender}} tại {{location}}.",

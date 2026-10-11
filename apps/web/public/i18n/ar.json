@@ -1706,6 +1706,7 @@
     "whatGendered": "نزل {{gender}}",
     "whatAll": "نزل وسكنات ومساكن مشتركة",
     "listingNotFoundTitle": "الإعلان غير موجود — HostelHive",
+    "postNotFoundTitle": "المقالة غير موجودة — HostelHive",
     "listingNotFoundDescription": "هذا الإعلان غير متاح أو الرابط غير صحيح.",
     "listingTitle": "{{name}} — نزل {{gender}} في {{location}} | HostelHive",
     "listingLead": "{{name}} — نزل {{gender}} في {{location}}.",

@@ -1706,6 +1706,7 @@
     "whatGendered": "{{gender}}-hostels",
     "whatAll": "hostels, pensions en co-living",
     "listingNotFoundTitle": "Advertentie niet gevonden — HostelHive",
+    "postNotFoundTitle": "Bericht niet gevonden — HostelHive",
     "listingNotFoundDescription": "Deze hosteladvertentie is niet beschikbaar of de link klopt niet.",
     "listingTitle": "{{name}} — {{gender}}-hostel in {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-hostel in {{location}}.",

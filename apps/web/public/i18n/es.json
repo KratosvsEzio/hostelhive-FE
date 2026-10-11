@@ -1706,6 +1706,7 @@
     "whatGendered": "hostales {{gender}}",
     "whatAll": "hostales, pensiones y co-living",
     "listingNotFoundTitle": "Anuncio no encontrado — HostelHive",
+    "postNotFoundTitle": "Entrada no encontrada — HostelHive",
     "listingNotFoundDescription": "Este anuncio de hostal no está disponible o el enlace es incorrecto.",
     "listingTitle": "{{name}} — hostal {{gender}} en {{location}} | HostelHive",
     "listingLead": "{{name}} — hostal {{gender}} en {{location}}.",
