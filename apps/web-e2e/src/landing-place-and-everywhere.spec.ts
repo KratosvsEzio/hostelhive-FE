@@ -84,9 +84,11 @@ test.describe('search everywhere from an empty campus page', () => {
     // Worldwide is the whole globe, so the northern edge sits at the pole.
     await expect.poll(() => seen.bounds.some((b) => b.north === 90)).toBe(true);
 
-    // The map fits and reports its own bounds after load; that must not rewrite the URL.
-    await page.waitForLoadState('networkidle');
-    await expect.poll(() => page.url()).toContain('everywhere=1');
+    // The map mounts and settles its camera after load; that must not rewrite the URL. Leaflet
+    // adds its container class and a populated pane only once the map has initialised.
+    await expect(page.locator('.leaflet-container .leaflet-map-pane')).toBeAttached();
+    await expect(page.locator('.leaflet-container')).toBeVisible();
+    expect(new URL(page.url()).searchParams.get('everywhere')).toBe('1');
 
     await page.goBack();
     await expect(page).toHaveURL(/\/en\/hostels\/lahore\/punjab-university(\?.*)?$/);

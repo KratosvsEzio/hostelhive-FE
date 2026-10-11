@@ -26,7 +26,7 @@ test.describe('gender landing page type filter', () => {
     await expect.poll(() => seen.genders).toContain('girls');
     // A stub the browser rejects on CORS shows the error state instead; the empty state proves the response landed.
     await expect(page.getByText(/No stays in this area/)).toBeVisible();
-    await expect(page.getByText("We couldn't load listings")).not.toBeVisible();
+    await expect(page.getByText("We couldn't load listings")).toBeHidden();
     await openFilters(page);
     await expect(typeButton(page, 'Girls')).toHaveAttribute('aria-pressed', 'true');
     await expect(typeButton(page, 'Any type')).toHaveAttribute('aria-pressed', 'false');
