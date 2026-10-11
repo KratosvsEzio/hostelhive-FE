@@ -877,6 +877,9 @@ export class ListingDetail {
       if (!this.locale.ready()) return;
       this.applySeo(state);
     });
+    // The effect replaces both between listings; these go when the visitor leaves for
+    // any other page, which never writes either — see `Seo.clearOnDestroy`.
+    this.seo.clearOnDestroy(this.destroyRef, ['listing'], { preloadImage: true });
 
     // Deep-link from a "review request" notification: /hostel/:slug?review=<notificationId>
     // opens the review modal once the listing has loaded, carrying the notification id the

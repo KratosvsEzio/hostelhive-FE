@@ -1,5 +1,12 @@
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Button } from '@hostelhive/ui';
@@ -194,6 +201,9 @@ export class Blog {
         };
       }),
     });
+
+    // Describes the index, not an article or any page after it — see `Seo.clearOnDestroy`.
+    this.seo.clearOnDestroy(inject(DestroyRef), ['blog']);
   }
 
   protected select(slug: BlogCategorySlug | 'all'): void {

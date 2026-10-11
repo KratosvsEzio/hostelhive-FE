@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { LocaleStore } from './i18n/locale-store';
 import { localeAlternates, withLocale } from './i18n/locales';
-import { Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -34,10 +34,25 @@ export interface SeoConfig {
    * Write it without a language prefix — the active one is added when the canonical is
    * built, so each language canonicalises to itself rather than all of them pointing at
    * English, which would ask Google to drop every translated page from the index.
+   *
+   * Leave it out and the page gets **no** canonical and **no** `og:url` — any left by the
+   * previous page, or shipped statically in `index.html`, are removed. There is no default:
+   * one used to be `/`, which made every page without a path declare itself a duplicate of
+   * the home page, and made a shared link to it preview as the home page. A scraper with no
+   * `og:url` falls back to the URL it fetched, which is the honest answer for a page that
+   * has no address of its own (a filtered search, a not-found slug).
+   *
+   * A `noindex` page never gets a canonical, even with a path. A canonical names the URL to
+   * index in place of this one, which contradicts asking for it to be left out — the same
+   * reason it gets no alternates. Its `og:url` is still written from the path, since a share
+   * card has nothing to do with the index.
    */
   path?: string;
   image?: string;
-  /** `noindex` for anything private or thin — auth screens, the consoles, tokened links. */
+  /**
+   * `noindex` for anything private or thin — auth screens, the consoles, tokened links,
+   * filtered searches, not-found pages. Also suppresses the canonical and alternates.
+   */
   noindex?: boolean;
   /** og:type — `website` for listings pages, `article` for editorial. */
   type?: 'website' | 'article';
@@ -53,7 +68,13 @@ export interface SeoConfig {
  *
  * Every setter overwrites rather than appends — Angular reuses components across
  * navigations, so appending would leave the previous page's description and JSON-LD
- * attached to the next one.
+ * attached to the next one. A tag a page has no value for is removed rather than left
+ * alone, for the same reason: "not written" would mean "still the previous page's".
+ *
+ * Overwriting covers the single slots — title, description, robots, canonical, Open
+ * Graph — because every page calls `apply` and rewrites them all. It does not cover
+ * JSON-LD, whose ids are per page type: no other page ever writes `listing`, so a page
+ * that sets one also has to remove it when it goes, which is what `clearOnDestroy` is for.
  */
 @Injectable({ providedIn: 'root' })
 export class Seo {
@@ -73,9 +94,9 @@ export class Seo {
       config.description?.trim() || this.i18n.translate<string>('seo.defaultDescription');
     const image = config.image || DEFAULT_IMAGE;
     // The language-free path is what the alternates are built from; the active language
-    // is what this page canonicalises to.
-    const basePath = config.path ?? '/';
-    const url = `${SITE_ORIGIN}${withLocale(this.locale.active(), basePath)}`;
+    // is what this page canonicalises to. No path, no address — see `SeoConfig.path`.
+    const basePath = config.path || null;
+    const url = basePath ? `${SITE_ORIGIN}${withLocale(this.locale.active(), basePath)}` : null;
 
     this.titleService.setTitle(title);
     this.meta.updateTag({ name: 'description', content: description });
@@ -92,13 +113,21 @@ export class Seo {
       });
     }
 
-    this.setCanonical(url);
-    this.setAlternates(basePath, !!config.noindex);
+    // `noindex` wins over a path: a canonical asks for some URL to be indexed in this
+    // page's place, which is exactly what `noindex` declines.
+    this.setCanonical(config.noindex ? null : url);
+    this.setAlternates(config.noindex ? null : basePath);
 
     const social = config.socialTitle?.trim() || title;
     this.meta.updateTag({ property: 'og:title', content: social });
     this.meta.updateTag({ property: 'og:description', content: description });
-    this.meta.updateTag({ property: 'og:url', content: url });
+    if (url) {
+      this.meta.updateTag({ property: 'og:url', content: url });
+    } else {
+      // Removed rather than skipped: the previous page's, or index.html's home URL, would
+      // otherwise stay — and a shared link would preview as that page.
+      this.meta.removeTag('property="og:url"');
+    }
     this.meta.updateTag({ property: 'og:image', content: image });
     this.meta.updateTag({ property: 'og:type', content: config.type ?? 'website' });
     this.meta.updateTag({ property: 'og:site_name', content: 'HostelHive' });
@@ -125,14 +154,15 @@ export class Seo {
    * `x-default` names what to serve a reader whose language is not in the set, which is
    * most of the world; it points at English.
    *
-   * A `noindex` page emits none. Alternates advertise a page for indexing, which directly
-   * contradicts asking for it to be left out.
+   * A `noindex` page emits none — `apply` passes `null` for it. Alternates advertise a page
+   * for indexing, which directly contradicts asking for it to be left out. Nor does a page
+   * without a path: there is no address to declare in other languages.
    */
-  private setAlternates(basePath: string, noindex: boolean): void {
+  private setAlternates(basePath: string | null): void {
     this.doc.head
       .querySelectorAll('link[rel="alternate"][data-seo="hreflang"]')
       .forEach((el) => el.remove());
-    if (noindex) return;
+    if (!basePath) return;
 
     for (const { hreflang, path } of localeAlternates(basePath)) {
       const link = this.doc.createElement('link');
@@ -145,13 +175,24 @@ export class Seo {
   }
 
   /**
-   * Rewrites `<link rel="canonical">`, creating it on first use.
+   * Rewrites `<link rel="canonical">`, creating it on first use, or removes it for `null`.
    *
-   * Matters most on `/search`, where every filter permutation is a distinct URL serving
-   * near-identical content; without a canonical those compete with each other and split
-   * whatever authority the page earns.
+   * Matters most on `/search`: the one unfiltered view of a curated place canonicalises to
+   * its landing page, so the two do not compete and split whatever authority they earn.
+   * Every other permutation is `noindex` and gets none — pointing thousands of filter URLs
+   * at some other page would claim they duplicate it, which they do not.
+   *
+   * Removal, not skipping, is the point of `null`. `index.html` ships a static canonical
+   * to the home page, and a reused component carries the previous page's; leaving either
+   * in place is what made every `noindex` page declare itself a copy of the home page.
    */
-  private setCanonical(url: string): void {
+  private setCanonical(url: string | null): void {
+    if (!url) {
+      this.doc.head
+        .querySelectorAll('link[rel="canonical"]')
+        .forEach((el) => el.remove());
+      return;
+    }
     let link = this.doc.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!link) {
       link = this.doc.createElement('link');
@@ -184,6 +225,41 @@ export class Seo {
   }
 
   /**
+   * Removes a page's JSON-LD blocks (and, if asked, its preload) when the page is destroyed.
+   *
+   * Call it once, from the constructor of every page component that calls `setJsonLd`.
+   * Structured data is keyed per page type — `organization`, `blog`, `listing` — and no
+   * other page ever writes those ids, so "overwrite by id" only protects a component that
+   * is reused. Left alone, a client navigation from the home page to the blog carries the
+   * home page's `Organization` and `WebSite` into a document that is not the home page, and
+   * the blog's `Blog` back again. The title, description and canonical need none of this:
+   * they are single slots, rewritten by the next page's `apply`.
+   *
+   * On destroy rather than on `NavigationStart`: a navigation that keeps the same component
+   * — another article, another listing, a query-only change, a language switch — must not
+   * lose its blocks, and only the component knows whether it is going. Its own effect
+   * replaces them by id while it lives.
+   *
+   * Safe on the server: `@angular/ssr` serialises the document before it destroys the
+   * platform, so the rendered HTML keeps every block, and no page is destroyed mid-render —
+   * a navigation during a server render becomes a redirect rather than a second page.
+   *
+   * Safe from one page to the next: when the route config changes the router destroys the
+   * old component before it creates the new one, so the new page's blocks are written after
+   * this has cleared the old — even where both pages use the same id.
+   */
+  clearOnDestroy(
+    destroyRef: DestroyRef,
+    jsonLdIds: readonly string[],
+    opts: { preloadImage?: boolean } = {},
+  ): void {
+    destroyRef.onDestroy(() => {
+      for (const id of jsonLdIds) this.clearJsonLd(id);
+      if (opts.preloadImage) this.preloadImage(null);
+    });
+  }
+
+  /**
    * Asks the browser to start fetching the page's headline image immediately.
    *
    * Written from the server, which is the whole point: the hero is the LCP element on a
@@ -197,7 +273,9 @@ export class Seo {
    * the previous listing's photograph would cost bandwidth for an image nobody will see,
    * and this audience pays for it.
    *
-   * Pass `null` to clear, which every page without a hero should do.
+   * Pass `null` to clear. A page that preloads also clears it when it goes, through
+   * `clearOnDestroy(…, { preloadImage: true })` — the next page has no reason to touch it,
+   * so otherwise the listing's photograph would stay preloaded on every page after it.
    */
   preloadImage(url: string | null): void {
     this.doc.head

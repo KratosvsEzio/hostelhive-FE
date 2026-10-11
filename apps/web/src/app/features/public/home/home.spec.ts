@@ -94,7 +94,8 @@ let geo: GeoStub;
 let listings: ListingsStub;
 let popularCities: PopularCitiesStub;
 
-function render(): ComponentFixture<Home> {
+/** `realSeo` swaps the stub for the real service, to check what lands in the document head. */
+function render(realSeo = false): ComponentFixture<Home> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [Home],
@@ -110,10 +111,18 @@ function render(): ComponentFixture<Home> {
         provide: LocaleStore,
         useValue: { ready: signal(false), active: signal('en') },
       },
-      {
-        provide: Seo,
-        useValue: { apply: () => undefined, setJsonLd: () => undefined },
-      },
+      ...(realSeo
+        ? []
+        : [
+            {
+              provide: Seo,
+              useValue: {
+                apply: () => undefined,
+                setJsonLd: () => undefined,
+                clearOnDestroy: vi.fn(),
+              },
+            },
+          ]),
     ],
   });
   // Only the sections under test are real; the hero, search bar, mascot and the rest are
@@ -377,5 +386,49 @@ describe('Home country sections', () => {
     expect(popularCities.asked).toEqual(['DE']);
     expect(el.querySelectorAll('.hl-regs button')).toHaveLength(2);
     expect(globeNames(el)).toHaveLength(DE_CITIES.length);
+  });
+});
+
+describe('Home structured data', () => {
+  beforeAll(() => {
+    vi.stubGlobal('IntersectionObserver', IntersectionObserverStub);
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
+  beforeEach(() => {
+    geo = new GeoStub();
+    listings = new ListingsStub();
+    popularCities = new PopularCitiesStub();
+  });
+
+  afterEach(() => {
+    document.head
+      .querySelectorAll(
+        'link[rel="canonical"], link[rel="alternate"][hreflang], meta[name="robots"], meta[property^="og:"], meta[name^="twitter:"], [data-seo]',
+      )
+      .forEach((el) => el.remove());
+  });
+
+  const ids = () =>
+    Array.from(document.head.querySelectorAll('script[data-seo]')).map((s) =>
+      s.getAttribute('data-seo'),
+    );
+
+  it('writes the organization and website blocks, and removes both on destroy', () => {
+    document.head.insertAdjacentHTML(
+      'beforeend',
+      '<script type="application/ld+json" data-seo="blog">{}</script>',
+    );
+    const fixture = render(true);
+
+    expect(ids().filter((id) => id === 'organization')).toHaveLength(1);
+    expect(ids().filter((id) => id === 'website')).toHaveLength(1);
+
+    fixture.destroy();
+
+    expect(ids()).toEqual(['blog']);
   });
 });

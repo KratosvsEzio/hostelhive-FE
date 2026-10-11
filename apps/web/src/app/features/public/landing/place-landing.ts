@@ -291,19 +291,7 @@ export class PlaceLanding {
       this.seo.setJsonLd('place-faq', faqJsonLd(this.faqs()));
     });
 
-    // Structured data is keyed per page type, so no next page ever writes these two ids —
-    // left alone, a client navigation to the home page or a search would carry this page's
-    // breadcrumb and FAQ into a document that is not this page. The title, description and
-    // canonical differ: they are single slots, overwritten by the next page's `seo.apply`.
-    //
-    // Safe on the server: the document is serialised before the platform is destroyed, so
-    // the rendered HTML keeps both blocks. And safe from one landing page to another: the
-    // router deactivates the old component before it activates the new one, so the new
-    // page's effect sets its blocks after this has cleared the old ones. (A move between
-    // two places on the same route shape reuses this component and never gets here.)
-    inject(DestroyRef).onDestroy(() => {
-      this.seo.clearJsonLd('place-breadcrumb');
-      this.seo.clearJsonLd('place-faq');
-    });
+    // No next page writes these ids, so they go with this page — see `Seo.clearOnDestroy`.
+    this.seo.clearOnDestroy(inject(DestroyRef), ['place-breadcrumb', 'place-faq']);
   }
 }
