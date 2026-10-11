@@ -833,7 +833,7 @@
     "voidTitle": "Hóa đơn này không thể thanh toán được nữa",
     "voidMessage": "Hóa đơn đã được thay thế hoặc đã hết hạn. Hãy chọn lại gói của bạn để nhận hóa đơn mới.",
     "notFoundTitle": "Chúng tôi không tìm thấy hóa đơn này",
-    "notFoundMessage": "Hóa đơn có thể thuộc về tài khoản khác. Hãy đăng nhập bằng tài khoản bạn đã dùng để thanh toán, hoặc quay lại trang thanh toán.",
+    "notFoundMessage": "Hóa đơn có thể không tồn tại hoặc không còn khả dụng. Hãy quay lại trang thanh toán để xem các hóa đơn của bạn.",
     "missingInvoiceTitle": "Chúng tôi không xác định được đây là khoản thanh toán nào",
     "missingInvoiceMessage": "Mở trang thanh toán để xem tình trạng khoản thanh toán của bạn.",
     "confirmingTitle": "Đang xác nhận thanh toán của bạn…",

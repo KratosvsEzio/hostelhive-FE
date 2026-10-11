@@ -828,7 +828,7 @@
     "voidTitle": "此发票已无法支付",
     "voidMessage": "它已被替换或已过期。请重新选择套餐以获取新发票。",
     "notFoundTitle": "找不到此发票",
-    "notFoundMessage": "它可能属于其他账户。请使用你付款时的账户登录，或返回账单。",
+    "notFoundMessage": "它可能不存在或已不可用。请返回账单查看你的发票。",
     "missingInvoiceTitle": "无法确定这是哪一笔付款",
     "missingInvoiceMessage": "打开账单查看你的付款状态。",
     "confirmingTitle": "正在确认你的付款…",

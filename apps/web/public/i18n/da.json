@@ -828,7 +828,7 @@
     "voidTitle": "Denne faktura kan ikke længere betales",
     "voidMessage": "Den er blevet erstattet eller er udløbet. Vælg din plan igen for at få en ny faktura.",
     "notFoundTitle": "Vi kunne ikke finde denne faktura",
-    "notFoundMessage": "Den tilhører måske en anden konto. Log ind med den konto, du betalte med, eller gå tilbage til fakturering.",
+    "notFoundMessage": "Den findes måske ikke, eller den er ikke længere tilgængelig. Gå tilbage til fakturering for at se dine fakturaer.",
     "missingInvoiceTitle": "Vi kunne ikke se, hvilken betaling det drejede sig om",
     "missingInvoiceMessage": "Åbn fakturering for at se, hvordan det står til med din betaling.",
     "confirmingTitle": "Bekræfter din betaling…",

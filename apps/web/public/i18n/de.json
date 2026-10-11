@@ -828,7 +828,7 @@
     "voidTitle": "Diese Rechnung kann nicht mehr bezahlt werden",
     "voidMessage": "Sie wurde ersetzt oder ist abgelaufen. Wählen Sie Ihren Tarif erneut, um eine neue Rechnung zu erhalten.",
     "notFoundTitle": "Diese Rechnung wurde nicht gefunden",
-    "notFoundMessage": "Sie gehört möglicherweise zu einem anderen Konto. Melden Sie sich mit dem Konto an, mit dem Sie bezahlt haben, oder kehren Sie zur Abrechnung zurück.",
+    "notFoundMessage": "Sie existiert möglicherweise nicht oder ist nicht mehr verfügbar. Kehren Sie zur Abrechnung zurück, um Ihre Rechnungen zu sehen.",
     "missingInvoiceTitle": "Wir konnten nicht erkennen, um welche Zahlung es sich handelt",
     "missingInvoiceMessage": "Öffnen Sie die Abrechnung, um den Stand Ihrer Zahlung zu sehen.",
     "confirmingTitle": "Ihre Zahlung wird bestätigt…",

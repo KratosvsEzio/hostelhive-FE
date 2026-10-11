@@ -833,7 +833,7 @@
     "voidTitle": "Tej faktury nie można już opłacić",
     "voidMessage": "Została zastąpiona lub wygasła. Wybierz plan ponownie, aby otrzymać nową fakturę.",
     "notFoundTitle": "Nie znaleźliśmy tej faktury",
-    "notFoundMessage": "Może należeć do innego konta. Zaloguj się na konto, z którego płacono, lub wróć do rozliczeń.",
+    "notFoundMessage": "Może nie istnieć lub nie jest już dostępna. Wróć do rozliczeń, aby zobaczyć swoje faktury.",
     "missingInvoiceTitle": "Nie udało się ustalić, której płatności to dotyczy",
     "missingInvoiceMessage": "Otwórz rozliczenia, aby sprawdzić stan płatności.",
     "confirmingTitle": "Potwierdzamy płatność…",

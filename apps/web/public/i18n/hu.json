@@ -828,7 +828,7 @@
     "voidTitle": "Ez a számla már nem fizethető ki",
     "voidMessage": "Lecserélték, vagy lejárt. Válaszd ki újra a csomagodat, hogy új számlát kapj.",
     "notFoundTitle": "Nem találjuk ezt a számlát",
-    "notFoundMessage": "Lehet, hogy egy másik fiókhoz tartozik. Jelentkezz be azzal a fiókkal, amellyel fizettél, vagy térj vissza a számlázáshoz.",
+    "notFoundMessage": "Lehet, hogy nem létezik, vagy már nem érhető el. Térj vissza a számlázáshoz a számláid megtekintéséhez.",
     "missingInvoiceTitle": "Nem tudtuk megállapítani, melyik fizetésről van szó",
     "missingInvoiceMessage": "Nyisd meg a számlázást, hogy lásd, hol tart a fizetésed.",
     "confirmingTitle": "Fizetés megerősítése…",
