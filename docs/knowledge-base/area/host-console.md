@@ -7,7 +7,7 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 - `apps/web/src/app/layout/host-shell/host-shell.ts` — the shell: sidebar, property switcher flyout, URL→store sync.
 - `apps/web/src/app/layout/host-shell/host-nav.ts` — `hostNav`, `hostTabBar`, `tabBarSuffixes`, `splitNav`: the single source for sidebar, bottom tab bar and the mobile More page (`apps/web/src/app/features/host/more/more.ts`).
 - `apps/web/src/app/layout/host-shell/host-route.ts` — `hostPagePath` (URL → page below the hostel).
-- `apps/web/src/app/services/host-property-store.ts` — `HostPropertyStore`: the host's hostels, the selected id (persisted in localStorage `hh_property`), `activeHostel`, `isMonthlyBilled` / `isNightlyBilled`.
+- `apps/web/src/app/services/host-property-store.ts` — `HostPropertyStore`: the signed-in user's hostels, the selected id (persisted per user in localStorage `hh:host-property` as `{ owner, id }`), `activeHostel`, `isMonthlyBilled` / `isNightlyBilled`.
 - `apps/web/src/app/services/host-shell-api.ts` — `GET /api/host/hostels` (`listings()`) and the manager-login endpoints.
 - `apps/web/src/app/services/host-ops-api.ts` — rooms, renters, renter bills, utility bills.
 - `apps/web/src/app/services/staff-api.ts` — staff employment records (`/api/host/hostels/:id/staffs`).
@@ -19,6 +19,7 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 
 ## How it works
 - **Entering.** `/host` runs `hostRootRedirect`, which waits for `HostPropertyStore.load()` and lands on the selected (or first) hostel, or on `/host/hostels/new` when the user holds `core:Hostel:create` (`apps/web/src/app/features/host/host.routes.ts`).
+- **The store belongs to the signed-in user.** `HostPropertyStore` keys on `SessionStore.user()?.id`: its `properties`, `hostels` and `loaded` read as nothing loaded the moment the user changes (same tick, so the guards refetch instead of trusting the previous user's list); an effect clears on sign-out, cancels the previous user's request on an account switch and reloads only if one was in flight; a token-only restore and a same-user refresh change nothing. A bare id saved by older builds under `hh_property` is adopted once by whoever is signed in (`apps/web/src/app/services/host-property-store.ts`). See the decision below.
 - **Multi-property switching.** The URL's `:hostelId` is authoritative. `knownHostelGate` refuses an id the host does not own; `HostLayout._syncStore` copies the route id into the store; `onPropertySelect` keeps the current page and swaps the hostel segment through `hostPagePath` (`apps/web/src/app/layout/host-shell/host-shell.ts`). See the decision below.
 - **Permissions per page.** Nav entries carry a `group:Subject:action` flag and are filtered by `SessionStore.hasPermission`; routes repeat the flag with `permissionGuard` (`apps/web/src/app/core/auth/guards.ts`). Map: profile `host:Hostel:show`, rooms `host:Room:index`, tenants `host:Renter:index`, team `host:Staff:index`, utilities `host:UtilityBill:index`, mess `host:WeeklyMenu:index`, expenses `host:Expense:index`, invoices `host:RenterBill:index`, subscription `core:Hostel:subscription`. Overview is ungated by design.
 - **Billing-cycle split.** A hostel's `billing_frequency` (`month` / `night`) decides which half of the console exists: Bookings for nightly hostels, Tenants / Utilities / Mess for monthly ones, enforced in `hostNav`, `hostTabBar` and the two gates.
@@ -41,10 +42,13 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 - **A wrong doc comment.** `HostelsApi.getById` says `GET /api/hostels/:id` but calls `/public/hostel_detail/:id` (`apps/web/src/app/services/hostels-api.ts`).
 - **Two staff resources.** `StaffApi` covers employment records; `HostShellApi.addManager` / `removeManager` cover login accounts. Neither replaces the other (doc comment in `apps/web/src/app/services/staff-api.ts`).
 - **`loaded` flips true on failure too**, so an empty list can mean "fetch failed". Guards let such hosts through rather than bouncing them (`apps/web/src/app/services/host-property-store.ts`).
+- **`properties`, `hostels` and `loaded` are read-only computeds**, gated on the owner. Write through `load()`, `setProperty()` and `clear()` only; anything new that caches per-user host data should read through the store or follow the same owner gating.
+- **The shell loads only in its constructor.** An account switch while the host shell stays mounted would leave it loading until the next guard runs; no path does that today (`/confirm_invitation` lands on `/`), but a future in-console account switch must make the shell call `load()` when `loaded()` goes false (`apps/web/src/app/layout/host-shell/host-shell.ts`).
 
 ## Decisions
 - [The URL's hostel id decides the active hostel](../decisions/host-console/url-hostel-id-is-the-active-hostel.md)
 - [Billing-cycle gates fail toward showing the page](../decisions/host-console/billing-cycle-gates-fail-open.md)
+- [The host's hostel list and selection follow the signed-in user](../decisions/host-console/host-property-follows-the-session-user.md)
 
 ## See also
 - [host-billing-and-subscription](./host-billing-and-subscription.md), [auth-and-session](./auth-and-session.md) (permission flags), [app-shell-and-routing](./app-shell-and-routing.md), [listing-and-booking](./listing-and-booking.md), [dates-money-and-time-zones](./dates-money-and-time-zones.md), [ui-library](./ui-library.md)
