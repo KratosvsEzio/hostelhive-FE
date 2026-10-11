@@ -1745,6 +1745,7 @@
     "whatGendered": "{{gender}}ホステル",
     "whatAll": "ホステル・下宿・コリビング",
     "listingNotFoundTitle": "掲載が見つかりません — HostelHive",
+    "postNotFoundTitle": "投稿が見つかりません — HostelHive",
     "listingNotFoundDescription": "この掲載は利用できないか、リンクが正しくありません。",
     "listingTitle": "{{name}} — {{location}}の{{gender}}ホステル | HostelHive",
     "listingLead": "{{name}} — {{location}}の{{gender}}ホステル。",

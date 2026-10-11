@@ -83,6 +83,7 @@
                 <a
                   [routerLink]="[]"
                   [fragment]="s.id"
+                  queryParamsHandling="preserve"
                   (click)="jumpTo(s.id)"
                   [attr.aria-current]="activeSection() === s.id ? 'location' : null"
                   class="-ms-5 block rounded-e border-s-2 ps-[1.125rem] text-[0.8125rem] leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
@@ -165,6 +166,7 @@
                 <a
                   [routerLink]="[]"
                   [fragment]="s.id"
+                  queryParamsHandling="preserve"
                   (click)="jumpTo(s.id)"
                   class="block rounded text-[0.8125rem] leading-snug text-ink-600 transition-colors hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
                   lang="en"

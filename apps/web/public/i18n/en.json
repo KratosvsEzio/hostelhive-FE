@@ -1747,6 +1747,7 @@
     "whatGendered": "{{gender}} hostels",
     "whatAll": "hostels, PGs and co-living",
     "listingNotFoundTitle": "Listing not found — HostelHive",
+    "postNotFoundTitle": "Post not found — HostelHive",
     "listingNotFoundDescription": "This hostel listing is unavailable or the link is incorrect.",
     "listingTitle": "{{name}} — {{gender}} hostel in {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}} hostel in {{location}}.",

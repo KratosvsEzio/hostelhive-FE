@@ -1745,6 +1745,7 @@
     "whatGendered": "{{gender}} szállások",
     "whatAll": "szállások, panziók és közösségi lakhatás",
     "listingNotFoundTitle": "A hirdetés nem található — HostelHive",
+    "postNotFoundTitle": "A bejegyzés nem található — HostelHive",
     "listingNotFoundDescription": "Ez a szálláshirdetés nem érhető el, vagy a hivatkozás hibás.",
     "listingTitle": "{{name}} — {{gender}} szállás itt: {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}} szállás itt: {{location}}.",

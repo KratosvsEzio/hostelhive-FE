@@ -1745,6 +1745,7 @@
     "whatGendered": "auberges {{gender}}",
     "whatAll": "auberges, pensions et logements partagés",
     "listingNotFoundTitle": "Annonce introuvable — HostelHive",
+    "postNotFoundTitle": "Article introuvable — HostelHive",
     "listingNotFoundDescription": "Cette annonce n’est pas disponible ou le lien est incorrect.",
     "listingTitle": "{{name}} — auberge {{gender}} à {{location}} | HostelHive",
     "listingLead": "{{name}} — auberge {{gender}} à {{location}}.",

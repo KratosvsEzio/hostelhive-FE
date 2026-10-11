@@ -1745,6 +1745,7 @@
     "whatGendered": "{{gender}}-hosteller",
     "whatAll": "hosteller, pensionater og bofællesskaber",
     "listingNotFoundTitle": "Annoncen blev ikke fundet — HostelHive",
+    "postNotFoundTitle": "Indlægget blev ikke fundet — HostelHive",
     "listingNotFoundDescription": "Denne hostelannonce er ikke tilgængelig, eller linket er forkert.",
     "listingTitle": "{{name}} — {{gender}}-hostel i {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-hostel i {{location}}.",

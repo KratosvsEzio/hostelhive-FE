@@ -2,9 +2,12 @@ import { expect, Page, test } from '@playwright/test';
 import {
   documentSurvived,
   gaTitles,
+  headOf,
+  liveHead,
   markDocument,
   recordedTitles,
   recordTitles,
+  switchLanguage,
   titleAtNavigationEnd,
   waitForClient,
 } from './support/seo';
@@ -146,5 +149,74 @@ test.describe('titles through client navigation', () => {
     for (const title of await gaTitles(page)) {
       expect(title).toMatch(SEARCH_TITLE);
     }
+  });
+});
+
+// An unknown blog slug is titled in the visitor's language, in the HTML a crawler receives and in
+// the tab after a client switch. The description is the translated default, never a raw key.
+
+const MISSING_POST = 'no-such-post';
+const POST_NOT_FOUND = {
+  en: 'Post not found — HostelHive',
+  ur: 'پوسٹ نہیں ملی — HostelHive',
+  ar: 'المقالة غير موجودة — HostelHive',
+};
+const DEFAULT_DESCRIPTION = {
+  en: 'Search verified hostels, PGs and co-living. Filter by city, budget, gender and room sharing — no brokers, no surprises.',
+  ur: 'تصدیق شدہ ہاسٹل، پی جی اور کو-لِوِنگ تلاش کریں۔ شہر، بجٹ، جنس اور کمرہ شیئرنگ کے حساب سے فلٹر کریں — نہ دلال، نہ کوئی حیرت۔',
+};
+
+test.describe('blog post not found', () => {
+  test.setTimeout(120_000);
+
+  test('/ur/blog/no-such-post carries the Urdu title, share title, noindex and the Urdu default description', async ({
+    request,
+  }) => {
+    const res = await request.get(`/ur/blog/${MISSING_POST}`, { timeout: 100_000 });
+    expect(res.ok()).toBe(true);
+
+    const head = headOf(await res.text());
+
+    expect(head.title).toBe(POST_NOT_FOUND.ur);
+    expect(head.ogTitles).toEqual([POST_NOT_FOUND.ur]);
+    expect(head.robots).toContain('noindex');
+    expect(head.description).toBe(DEFAULT_DESCRIPTION.ur);
+    expect(head.description).not.toMatch(/^seo\./);
+  });
+
+  test('/ar/blog/no-such-post carries the Arabic title and no raw description key', async ({
+    request,
+  }) => {
+    const res = await request.get(`/ar/blog/${MISSING_POST}`, { timeout: 100_000 });
+    expect(res.ok()).toBe(true);
+
+    const head = headOf(await res.text());
+
+    expect(head.title).toBe(POST_NOT_FOUND.ar);
+    expect(head.description).not.toMatch(/^seo\./);
+  });
+
+  test('/en/blog/no-such-post keeps its English title and English description', async ({
+    request,
+  }) => {
+    const res = await request.get(`/en/blog/${MISSING_POST}`, { timeout: 100_000 });
+    expect(res.ok()).toBe(true);
+
+    const head = headOf(await res.text());
+
+    expect(head.title).toBe(POST_NOT_FOUND.en);
+    expect(head.description).toBe(DEFAULT_DESCRIPTION.en);
+  });
+
+  test('switching a missing post to Urdu retitles the tab and the share card', async ({ page }) => {
+    await page.goto(`/en/blog/${MISSING_POST}`);
+    await expect.poll(async () => (await liveHead(page)).title).toBe(POST_NOT_FOUND.en);
+    await waitForClient(page);
+
+    await switchLanguage(page, 'ur');
+    await expect(page).toHaveURL(new RegExp(`/ur/blog/${MISSING_POST}/?$`));
+
+    await expect.poll(async () => (await liveHead(page)).title).toBe(POST_NOT_FOUND.ur);
+    await expect.poll(async () => (await liveHead(page)).ogTitles).toEqual([POST_NOT_FOUND.ur]);
   });
 });
