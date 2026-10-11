@@ -68,12 +68,17 @@ function stubHostelsApi() {
   const update = vi.fn<(id: number | string, input: HostelInput) => Observable<unknown>>(
     () => of({ id: 42 }),
   );
+  const markAttachmentAsPrimary = vi.fn<(attachmentId: string) => Observable<void>>(() =>
+    of(undefined),
+  );
   return {
     create,
     update,
+    markAttachmentAsPrimary,
     api: {
       create,
       update,
+      markAttachmentAsPrimary,
       formOptions: () =>
         of({
           genderTypes: [],
@@ -409,6 +414,96 @@ describe('OnboardingWizard', () => {
       expect(hostels.create).not.toHaveBeenCalled();
       expect(navigate).not.toHaveBeenCalled();
       expect(vm.showValidationModal()).toBe(true);
+    });
+  });
+
+  // The hostel payload has no field for the lead photo; it is its own PUT once the photo is linked.
+  describe('lead photo', () => {
+    it('marks the starred photo after the save that links it, before leaving', () => {
+      const { vm, hostels, navigate } = render();
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledTimes(1);
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledWith('att-1');
+      expect(hostels.create.mock.invocationCallOrder[0]).toBeLessThan(
+        hostels.markAttachmentAsPrimary.mock.invocationCallOrder[0],
+      );
+      expect(hostels.markAttachmentAsPrimary.mock.invocationCallOrder[0]).toBeLessThan(
+        navigate.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('marks the starred photo, not the first one, on save & exit', () => {
+      const { vm, hostels, navigate } = render();
+      vm.draftId.set(7);
+      vm.media.set([
+        { id: 1, label: 'a.jpg', primary: false, url: 'https://cdn/1', attachmentId: 'att-1' },
+        { id: 2, label: 'b.jpg', primary: true, url: 'https://cdn/2', attachmentId: 'att-2' },
+      ]);
+
+      vm.saveAndExit();
+
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledTimes(1);
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledWith('att-2');
+      expect(navigate).toHaveBeenCalledWith(['/']);
+    });
+
+    it('does not re-send an unchanged star, but sends a moved one', () => {
+      const { vm, hostels } = render();
+      vm.draftId.set(7);
+      vm.media.set([
+        { id: 1, label: 'a.jpg', primary: true, url: 'https://cdn/1', attachmentId: 'att-1' },
+        { id: 2, label: 'b.jpg', primary: false, url: 'https://cdn/2', attachmentId: 'att-2' },
+      ]);
+
+      vm.saveAndExit();
+      vm.saveAndExit();
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledTimes(1);
+
+      vm.media.update((items) => items.map((m) => ({ ...m, primary: m.id === 2 })));
+      vm.saveAndExit();
+
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledTimes(2);
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenLastCalledWith('att-2');
+    });
+
+    it('skips the call when the starred photo has no attachment yet', () => {
+      const { vm, hostels, navigate } = render();
+      vm.draftId.set(7);
+      vm.media.set([{ id: 1, label: 'a.jpg', primary: true, url: 'https://cdn/1' }]);
+
+      vm.saveAndExit();
+
+      expect(hostels.markAttachmentAsPrimary).not.toHaveBeenCalled();
+      expect(navigate).toHaveBeenCalledWith(['/']);
+    });
+
+    it('skips the call when the hostel save is rejected, since the photo is not linked', () => {
+      const { vm, hostels } = render();
+      hostels.create.mockReturnValue(rejectedSave('POST'));
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(hostels.markAttachmentAsPrimary).not.toHaveBeenCalled();
+    });
+
+    it('still leaves when marking fails, and retries on the next save', () => {
+      const { vm, hostels, navigate } = render();
+      hostels.markAttachmentAsPrimary.mockReturnValueOnce(throwError(() => new Error('403')));
+      vm.draftId.set(7);
+      vm.media.set([
+        { id: 1, label: 'a.jpg', primary: true, url: 'https://cdn/1', attachmentId: 'att-1' },
+      ]);
+
+      vm.saveAndExit();
+      expect(navigate).toHaveBeenCalledWith(['/']);
+      expect(vm.draftError()).toBe(false);
+
+      vm.saveAndExit();
+      expect(hostels.markAttachmentAsPrimary).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -26,12 +26,12 @@ export function loadDetail<T>(
   );
 }
 
-/** Resolve a hostel's display images — banner first, then any image attachments (de-duped). */
+/** Resolve a hostel's display images — its image attachments (de-duped). */
 export function resolveHostelImages(h: HostelDetail): string[] {
-  const urls = [
-    ...(h.banner ?? []).map(attachmentUrl),
-    ...(h.attachments ?? []).filter(isImageAttachment).map(attachmentUrl),
-  ].filter((u): u is string => !!u);
+  const urls = (h.attachments ?? [])
+    .filter(isImageAttachment)
+    .map(attachmentUrl)
+    .filter((u): u is string => !!u);
   return [...new Set(urls)];
 }
 

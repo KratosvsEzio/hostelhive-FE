@@ -37,7 +37,6 @@ function emptyListing(over: Partial<HostelDetail> = {}): HostelDetail {
     longitude: null,
     primary_phone: '',
     attachments: [],
-    banner: [],
     hostel_offers: [],
     room_types: [],
     rooms: [],

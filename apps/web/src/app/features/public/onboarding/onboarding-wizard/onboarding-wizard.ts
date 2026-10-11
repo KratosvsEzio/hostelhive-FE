@@ -14,7 +14,7 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { Observable, catchError, of, switchMap, tap } from 'rxjs';
 import { ApiError, AttachmentLabel, HostelInput, iconForSlug, OfferCategory } from '@hostelhive/data-access';
 import { TimezoneSelect } from '@app/shared/timezone/timezone-select';
 import { browserTimeZone } from '@util/time-zones';
@@ -240,6 +240,8 @@ export class OnboardingWizard {
   protected readonly atPhotoLimit = computed(() => this.media().length >= MAX_PHOTOS);
   /** Attachment ids the backend has already linked — the API appends, so they must not be resent. */
   private readonly linkedAttachmentIds = signal<Set<string>>(new Set());
+  /** The attachment last marked primary on the server, so a save does not re-send an unchanged star. */
+  private markedPrimaryId: string | null = null;
   private readonly imageUpload = inject(ImageUploadService);
 
   private readonly hostFormOptions = toSignal(
@@ -757,16 +759,17 @@ export class OnboardingWizard {
           this.markAttachmentsLinked(flushedIds);
           this.draftSaving.set(false);
           this.draftSaved.set(true);
+          // The star lands before navigating: leaving tears the wizard down and cancels it.
           // After creating a hostel (not updating), the backend grants the host role.
           // Refresh the session so the host console's role guard sees it immediately.
-          if (isNew) {
-            this.authService
-              .refreshSession()
-              .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-              .subscribe(() => this.landOnBilling(this.draftId()));
-          } else {
-            this.landOnBilling(this.draftId());
-          }
+          this.markPrimary()
+            .pipe(
+              switchMap(() =>
+                isNew ? this.authService.refreshSession().pipe(catchError(() => of(null))) : of(null),
+              ),
+              takeUntilDestroyed(this.destroyRef),
+            )
+            .subscribe(() => this.landOnBilling(this.draftId()));
         },
         // Interceptor-normalised: the Rails errors[] envelope is on serverMessages.
         error: (err: ApiError) => {
@@ -830,14 +833,14 @@ export class OnboardingWizard {
         this.draftSaved.set(true);
         this.persistDraft();
         // A first create grants the host role, so the session must catch up before leaving.
-        if (!id) {
-          this.authService
-            .refreshSession()
-            .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-            .subscribe(() => this.goHome());
-        } else {
-          this.goHome();
-        }
+        this.markPrimary()
+          .pipe(
+            switchMap(() =>
+              !id ? this.authService.refreshSession().pipe(catchError(() => of(null))) : of(null),
+            ),
+            takeUntilDestroyed(this.destroyRef),
+          )
+          .subscribe(() => this.goHome());
       },
       // Staying put loses nothing — the device draft is intact and the logo is the way out.
       // Interceptor-normalised: the Rails errors[] envelope is on serverMessages.
@@ -944,6 +947,23 @@ export class OnboardingWizard {
       for (const id of ids) next.add(id);
       return next;
     });
+  }
+
+  /**
+   * Stars the host's lead photo on the server — the hostel payload has no field for it.
+   *
+   * Only once the photo is linked: `mark_as_primary` 403s for an attachment not yet on a
+   * hostel, so it runs after the save that carried its id in `attachment_ids`. Best effort:
+   * the hostel is already saved, so a failure must not strand the host here; the id is not
+   * recorded, so the next save tries again.
+   */
+  private markPrimary(): Observable<unknown> {
+    const id = this.media().find((m) => m.primary)?.attachmentId;
+    if (!id || id === this.markedPrimaryId || !this.linkedAttachmentIds().has(id)) return of(null);
+    return this.hostelsApi.markAttachmentAsPrimary(id).pipe(
+      tap(() => (this.markedPrimaryId = id)),
+      catchError(() => of(null)),
+    );
   }
 
   private buildDraftInput(): HostelInput {
