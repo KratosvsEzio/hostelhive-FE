@@ -32,7 +32,10 @@ for the head.
 ## Consequences
 
 - Adding to `PLACES`, `UNIVERSITIES` or `BLOG_POSTS` adds sitemap entries automatically. A new static
-  page has to be added to `STATIC_PATHS` by hand.
+  page has to be added to `STATIC_PATHS` by hand, and its route needs `data: { head: 'index' }`.
+  `app.routes.spec.ts` fails when the two disagree (see
+  [route-level head ownership](./route-level-head-ownership.md)). `/pricing` and `/credits` were
+  missing until PR #104.
 - A new place needs a social card, or `apps/web/src/app/core/social-image.spec.ts` fails.
 - `/sitemap.xml` exists only on the SSR server, not in the `build-mobile` output or `serve-static`.
 

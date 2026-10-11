@@ -16,7 +16,9 @@ pages' UI belongs to [search-and-discovery](./search-and-discovery.md); deployme
   and swaps in `FsTranslationLoader`.
 - `apps/web/src/app/app.routes.server.ts`: render mode per path (`serverRoutes`, `clientOnly`).
 - `apps/web/src/app/core/seo.ts`: `SITE_ORIGIN` and the `Seo` service (`apply`, `setJsonLd`,
-  `clearJsonLd`, `preloadImage`).
+  `clearJsonLd`, `clearAllJsonLd`, `clearOnDestroy`, `preloadImage`).
+- `apps/web/src/app/core/route-head.ts`: `RouteHeadStrategy` (the app's `TitleStrategy`, provided in
+  `app.config.ts`) and `routeHeadFor`. Owns the head of every route whose page does not.
 - `apps/web/src/app/core/social-image.ts`: `placeSocialImage(slug)` and `DEFAULT_SOCIAL_IMAGE` (1200x630
   cards under `apps/web/public/cities/social/` and `apps/web/public/hero/social/`).
 - `apps/web/src/app/features/public/landing/sitemap-urls.ts`: `sitemapPaths()` and `renderSitemap()`.
@@ -35,11 +37,30 @@ pages' UI belongs to [search-and-discovery](./search-and-discovery.md); deployme
 `appConfig` turns on `provideClientHydration(withEventReplay())`, so the browser reuses the server DOM
 and replays early clicks.
 
+**Who owns the head.** Every route declares it as route data `head` in `app.routes.ts`, read
+deepest-wins down the matched tree (`routeHeadFor`):
+- **`'page'`:** the component calls `Seo.apply` itself, from an effect gated on `LocaleStore.ready()`.
+  Home, search, both landing routes, hostel (listing), pricing and blog (with its articles).
+- **`'index'`:** a static page with no head of its own. `RouteHeadStrategy` applies its own canonical,
+  `og:url` and `hreflang`, plus a translated description from `data.descriptionKey` (or the site
+  default). About, FAQs, careers, contact, the three legal pages and credits.
+- **No flag:** `noindex`, with no canonical and no `og:url`. Auth, account, the consoles,
+  notifications, forbidden and the payment return pages.
+
+`RouteHeadStrategy.updateTitle` sets the route `title:` **synchronously** on every navigation, because
+GA reads `document.title` a tick after `NavigationEnd`. The rest of a default head waits for a root
+effect gated on `ready()` that also tracks the active locale, so a language switch re-applies it. A
+default route also clears every JSON-LD block and the preload image. Its canonical is built from the
+matched route segments, never the URL string, so a matrix parameter (`/en/about;utm=x`) cannot mint a
+duplicate.
+
 **Head tags.** A page calls `Seo.apply({ title, description, path, image, noindex, type })`.
 - **`path`** is written without a locale. `Seo` adds the active locale for the canonical and `og:url`. Every tag is overwritten, because components are reused across navigations.
 - **Canonical:** only an indexable page that has a path gets one. A `noindex` page never has a canonical, even when it has a path, and it gets no `hreflang`.
 - **`og:url`:** written whenever there is a path. With no path, `Seo` writes no canonical, `og:url` or `hreflang` at all; there is no `'/'` default.
-- **Removal:** a tag `Seo` does not write is **removed**, not just skipped. `index.html` ships a static canonical and `og:url` for the home page, so skipping would leave them pointing at home.
+- **Removal:** a tag `Seo` does not write is **removed**, not just skipped, so nothing from the previous page survives a navigation.
+- **`og:locale`:** exactly one, from the active locale's `ogLocale` (`core/i18n/locales.ts`; `en_PK`, `ur_PK`, `ar_AR` …). No `og:locale:alternate`: Facebook re-scrapes the same URL with `fb_locale`, and this site localises by path.
+- **`index.html`** ships no canonical, `og:url` or `og:locale`. It keeps only neutral fallbacks (description, robots `index`, og/twitter title, description and image, the app links) for the client-only shells and for scrapers that read the HTML before boot.
 - **Indexable pages** also get the full `hreflang` set (`localeAlternates`, `x-default` = English).
 - **`setJsonLd(id, data)`** replaces structured data by id.
 - **`preloadImage(url)`** puts the LCP hero in the server-rendered head.
@@ -82,6 +103,12 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 
 - `Seo` for every head tag. Do not call `Meta` or `Title` directly.
 - `Seo.clearOnDestroy` for any new page that calls `setJsonLd` or `preloadImage`, instead of its own `DestroyRef` block.
+- A new route declares its head: `data: { head: 'page' }` if its component calls `Seo.apply` (from a
+  `ready()`-gated effect, like `home.ts`), `data: { head: 'index', descriptionKey }` for a static page
+  worth indexing (also add it to `STATIC_PATHS` in `sitemap-urls.ts`), or nothing if it is private, in
+  which case its path prefix goes in `DISALLOWED_PATHS`. `app.routes.spec.ts` walks every route and
+  fails on a page that does none of these, on a flagged page under a private area, and when the
+  `'index'` routes and the sitemap disagree.
 - `placeSocialImage` / `DEFAULT_SOCIAL_IMAGE` for `image`.
 - `localeAlternates` for anything that states `hreflang`.
 - `sitemapPaths()`: add a new indexable page here, or derive it from the list its route reads.
@@ -111,14 +138,24 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   navigation before the page component exists in the browser, so `clearOnDestroy` never runs (Trello
   #138). In e2e, wait for `waitForClient` (`apps/web-e2e/src/support/seo.ts`) before clicking. Without
   that wait, a head check after the click can pass using only the server HTML.
-- **`Blog` calls `apply` once, in its constructor.** A client language switch keeps the old canonical
-  (Trello #132). `og:locale` is fixed at `en_PK` (#133).
+- **Call `apply` from a `ready()`-gated effect, never once in a constructor.** A language switch reuses
+  the component, so a constructor `apply` keeps the old language's canonical (how Blog broke, Trello
+  #132). An effect also runs after `updateTitle`, so the page's own title beats the route's.
+- **A route `title:` on a `'page'` route can outlive the page's title.** `updateTitle` re-sets it on
+  every navigation, and only a page effect that re-runs overwrites it. A query-only navigation on the
+  listing (`review: null`) leaves "Hostel details — HostelHive"; the search routes have no title, so GA
+  reads the previous page's (Trello #143).
+- **The legal pages are English text at 18 language URLs**, each self-canonical with `hreflang` to
+  match the sitemap, which claims translations that do not exist (Trello #139).
+- **The e2e `waitForClient` also waits for the startup veil and the boot splash.** Both are full-screen
+  and swallow clicks; the veil can legitimately stay up to six seconds (`StartupGate`).
 - The sitemap leaves out `/search` and `/hostel/:id` on purpose (see the comment in `apps/web/src/app/features/public/landing/sitemap-urls.ts`).
 
 ## Decisions
 
 - [Authenticated areas render client-only, in every locale shape](../decisions/ssr-seo-and-prerender/authenticated-areas-render-client-only.md)
 - [The sitemap is generated by the SSR server from route data](../decisions/ssr-seo-and-prerender/sitemap-served-by-the-ssr-server.md)
+- [Every route declares who owns its head; undeclared means noindex](../decisions/ssr-seo-and-prerender/route-level-head-ownership.md)
 
 ## See also
 
