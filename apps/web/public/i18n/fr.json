@@ -333,7 +333,8 @@
     "allow": "Autoriser",
     "noPhotosYet": "Pas encore de photos",
     "guests": "Voyageurs",
-    "copy": "Copier"
+    "copy": "Copier",
+    "cannotReachTheServer": "Impossible de joindre le serveur. Veuillez réessayer dans un instant."
   },
   "leadWall": {
     "close": "Fermer",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". En cliquant dessus, vous activez votre compte et le numéro s’affiche.",
     "iVeVerifiedContinue": "C'est vérifié — continuer",
     "back": "Retour",
-    "confirmPassword": "Confirmer le mot de passe"
+    "confirmPassword": "Confirmer le mot de passe",
+    "emailOrPasswordIncorrect": "L’adresse e-mail ou le mot de passe est incorrect.",
+    "emailAlreadyRegistered": "Un compte existe déjà avec cette adresse e-mail. Connectez-vous plutôt, ou réinitialisez votre mot de passe si vous l’avez oublié.",
+    "couldNotCreateAccount": "Nous n’avons pas pu créer votre compte. Vérifiez vos informations et réessayez.",
+    "accountCannotSignIn": "Ce compte ne peut pas se connecter pour le moment. Contactez-nous, nous vous aiderons.",
+    "googleDidNotFinish": "La connexion avec Google n’a pas abouti. Réessayez, ou utilisez votre adresse e-mail et votre mot de passe.",
+    "tooManyAttempts": "Trop de tentatives. Veuillez patienter quelques minutes, puis réessayer.",
+    "somethingWentWrong": "Une erreur s’est produite. Veuillez réessayer."
   },
   "home": {
     "searchCityOrArea": "Rechercher une ville ou un quartier",
@@ -1094,7 +1102,10 @@
     "existingAccountKeepsPassword": "Si cette adresse a déjà un compte, son mot de passe actuel est conservé — le vôtre ne sert qu'à créer un nouveau compte.",
     "storedEmailBecomesLogin": "Leur e-mail enregistré servira d'identifiant. Si cette adresse a déjà un compte, ils en conservent le mot de passe.",
     "pickADifferentStatusTo": "Choisissez un autre statut pour voir le reste de votre équipe.",
-    "addAWardenCookOr": "Ajoutez un gardien, un cuisinier ou un agent pour conserver salaire et documents."
+    "addAWardenCookOr": "Ajoutez un gardien, un cuisinier ou un agent pour conserver salaire et documents.",
+    "couldNotUploadImage": "Impossible de téléverser l'image",
+    "fileTypeNotSupported": "Ce type de fichier n'est pas pris en charge. Choisissez une autre image.",
+    "uploadTryAgain": "Veuillez réessayer, ou choisissez une autre image."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Échec de l’approbation — réessayez.",
@@ -1237,6 +1248,12 @@
     "toCollectAtTheDesk": "À encaisser à la réception",
     "createBooking": "Créer une réservation",
     "theRoomsForThisProperty": "Les chambres de cet établissement n'ont pas pu être chargées.",
+    "notSetUpForBookings": "Cet établissement n'est pas configuré pour accepter des réservations.",
+    "crmRequired": "Votre forfait n'inclut pas les réservations. Passez à un forfait supérieur pour ajouter des réservations.",
+    "checkInCannotBeInPast": "L'arrivée ne peut pas être antérieure à aujourd'hui. Choisissez aujourd'hui ou une date ultérieure.",
+    "roomTypeNotBookable": "L'un de ces types de chambre est désactivé pour les réservations. Retirez-le et réessayez.",
+    "checkOutAfterCheckIn": "Le départ doit être postérieur à l'arrivée.",
+    "couldNotSaveBooking": "Nous n'avons pas pu enregistrer cette réservation. Vérifiez les informations et réessayez.",
     "everyRoomEveryState": "Chaque chambre, chaque état — appuyez sur un jour pour son journal",
     "thisMonthSCalendarCould": "Le calendrier de ce mois n'a pas pu être chargé.",
     "nothingIsWaitingOnYou": "Rien ne vous attend pour cette journée.",
@@ -1346,7 +1363,15 @@
     "pkrPaid": "PKR {{amount}} payés",
     "cancelledSummary": "Annulé le {{date}} · PKR {{refund}} remboursés · PKR {{charge}} de frais d’annulation",
     "cancelRefundExplainer": "Vous serez remboursé de <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> sont retenus comme frais d’annulation, car vous annulez à {{pct}} % de la période.",
-    "whenYouBookAHostel": "Lorsque vous réservez une auberge, elle apparaîtra ici avec vos dates et le montant payé."
+    "whenYouBookAHostel": "Lorsque vous réservez une auberge, elle apparaîtra ici avec vos dates et le montant payé.",
+    "noLongerCancellable": "Cette réservation ne peut plus être annulée ici. Appelez l'auberge et indiquez votre référence de réservation.",
+    "roomNoLongerBookable": "L'une des chambres choisies ne peut plus être réservée. Choisissez une autre chambre.",
+    "checkOutAfterCheckIn": "Le départ doit être postérieur à l'arrivée.",
+    "bookingNotFound": "Nous n'avons pas trouvé cette réservation. Elle a peut-être été supprimée.",
+    "changeFailed": "Nous n'avons pas pu modifier cette réservation. Veuillez réessayer.",
+    "cancelFailed": "Nous n'avons pas pu annuler cette réservation. Veuillez réessayer.",
+    "withinCutoff": "Les modifications et annulations sont fermées 3 jours avant l'arrivée. Pour modifier quoi que ce soit maintenant, appelez l'auberge et indiquez votre référence de réservation.",
+    "noLongerEditable": "Cette réservation ne peut plus être modifiée ici. Appelez l'auberge et indiquez votre référence de réservation."
   },
   "userFavorites": {
     "removeFromFavorites": "Retirer des favoris ?",
@@ -1682,7 +1707,13 @@
     "enterAValidPhone": "Saisissez un numéro de téléphone valide",
     "enterAValidEmail": "Saisissez une adresse e-mail valide",
     "ofNSeats": "sur {{count}}",
-    "bookingReference": "Référence de réservation"
+    "bookingReference": "Référence de réservation",
+    "hostelNotTakingBookings": "Cette auberge n'accepte pas de réservations en ligne pour le moment.",
+    "roomNoLongerBookable": "L'une des chambres choisies ne peut plus être réservée. Retirez-la et choisissez-en une autre.",
+    "checkInHasPassed": "Votre date d'arrivée est passée. Choisissez de nouvelles dates et réessayez.",
+    "checkOutAfterCheckIn": "Le départ doit être postérieur à l'arrivée.",
+    "logInAgainToBook": "Votre session a expiré. Reconnectez-vous pour réserver.",
+    "tryAgain": "Veuillez réessayer."
   },
   "states": {
     "nothingHereYet": "Rien pour l’instant",

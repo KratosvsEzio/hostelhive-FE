@@ -333,7 +333,8 @@
     "allow": "Zezwól",
     "noPhotosYet": "Brak zdjęć",
     "guests": "Goście",
-    "copy": "Kopiuj"
+    "copy": "Kopiuj",
+    "cannotReachTheServer": "Nie można połączyć się z serwerem. Spróbuj ponownie za chwilę."
   },
   "leadWall": {
     "close": "Zamknij",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Kliknięcie go aktywuje konto i odsłoni numer.",
     "iVeVerifiedContinue": "Zweryfikowano — kontynuuj",
     "back": "Wstecz",
-    "confirmPassword": "Potwierdź hasło"
+    "confirmPassword": "Potwierdź hasło",
+    "emailOrPasswordIncorrect": "Nieprawidłowy adres e-mail lub hasło.",
+    "emailAlreadyRegistered": "Konto z tym adresem e-mail już istnieje. Zaloguj się albo zresetuj hasło, jeśli go nie pamiętasz.",
+    "couldNotCreateAccount": "Nie udało się utworzyć konta. Sprawdź swoje dane i spróbuj ponownie.",
+    "accountCannotSignIn": "To konto nie może się teraz zalogować. Skontaktuj się z nami, a pomożemy.",
+    "googleDidNotFinish": "Logowanie przez Google nie zostało dokończone. Spróbuj ponownie albo użyj adresu e-mail i hasła.",
+    "tooManyAttempts": "Zbyt wiele prób. Odczekaj kilka minut i spróbuj ponownie.",
+    "somethingWentWrong": "Coś poszło nie tak. Spróbuj ponownie."
   },
   "home": {
     "searchCityOrArea": "Wpisz miasto lub dzielnicę",
@@ -1099,7 +1107,10 @@
     "existingAccountKeepsPassword": "Jeśli ten e-mail ma już konto, zachowane zostanie obecne hasło — Twoje zostanie użyte tylko przy tworzeniu nowego konta.",
     "storedEmailBecomesLogin": "Zapisany e-mail będzie loginem. Jeśli ten adres ma już konto, zachowa ono swoje hasło.",
     "pickADifferentStatusTo": "Wybierz inny status, aby zobaczyć resztę zespołu.",
-    "addAWardenCookOr": "Dodaj opiekuna, kucharza lub ochroniarza, aby zapisać pensję i dokumenty."
+    "addAWardenCookOr": "Dodaj opiekuna, kucharza lub ochroniarza, aby zapisać pensję i dokumenty.",
+    "couldNotUploadImage": "Nie udało się przesłać obrazu",
+    "fileTypeNotSupported": "Ten typ pliku nie jest obsługiwany. Wybierz inny obraz.",
+    "uploadTryAgain": "Spróbuj ponownie albo wybierz inny obraz."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Zatwierdzenie nie powiodło się — spróbuj ponownie.",
@@ -1242,6 +1253,12 @@
     "toCollectAtTheDesk": "Do pobrania w recepcji",
     "createBooking": "Utwórz rezerwację",
     "theRoomsForThisProperty": "Nie udało się wczytać pokoi tego obiektu.",
+    "notSetUpForBookings": "Ten obiekt nie jest skonfigurowany do przyjmowania rezerwacji.",
+    "crmRequired": "Twój plan nie obejmuje rezerwacji. Przejdź na wyższy plan, aby dodawać rezerwacje.",
+    "checkInCannotBeInPast": "Zameldowanie nie może być wcześniejsze niż dziś. Wybierz dzisiejszą lub późniejszą datę.",
+    "roomTypeNotBookable": "Jeden z tych typów pokoi ma wyłączone rezerwacje. Usuń go i spróbuj ponownie.",
+    "checkOutAfterCheckIn": "Wymeldowanie musi nastąpić po zameldowaniu.",
+    "couldNotSaveBooking": "Nie udało się zapisać tej rezerwacji. Sprawdź dane i spróbuj ponownie.",
     "everyRoomEveryState": "Każdy pokój, każdy status — dotknij dnia, aby zobaczyć rejestr",
     "thisMonthSCalendarCould": "Nie udało się wczytać kalendarza na ten miesiąc.",
     "nothingIsWaitingOnYou": "Nic nie czeka na Ciebie w tym dniu.",
@@ -1351,7 +1368,15 @@
     "pkrPaid": "PKR {{amount}} zapłacone",
     "cancelledSummary": "Anulowane {{date}} · PKR {{refund}} zwrócone · PKR {{charge}} opłaty za anulowanie",
     "cancelRefundExplainer": "Otrzymasz zwrot <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> zostaje pobrane jako opłata za anulowanie, ponieważ anulujesz po {{pct}}% okresu.",
-    "whenYouBookAHostel": "Gdy zarezerwujesz hostel, pojawi się tutaj z datami i zapłaconą kwotą."
+    "whenYouBookAHostel": "Gdy zarezerwujesz hostel, pojawi się tutaj z datami i zapłaconą kwotą.",
+    "noLongerCancellable": "Tej rezerwacji nie można już tutaj anulować. Zadzwoń do hostelu i podaj numer rezerwacji.",
+    "roomNoLongerBookable": "Jednego z wybranych pokoi nie można już zarezerwować. Wybierz inny pokój.",
+    "checkOutAfterCheckIn": "Wymeldowanie musi nastąpić po zameldowaniu.",
+    "bookingNotFound": "Nie znaleźliśmy tej rezerwacji. Mogła zostać usunięta.",
+    "changeFailed": "Nie udało się zaktualizować tej rezerwacji. Spróbuj ponownie.",
+    "cancelFailed": "Nie udało się anulować tej rezerwacji. Spróbuj ponownie.",
+    "withinCutoff": "Zmiany i anulowanie są możliwe najpóźniej 3 dni przed zameldowaniem. Aby coś teraz zmienić, zadzwoń do hostelu i podaj numer rezerwacji.",
+    "noLongerEditable": "Tej rezerwacji nie można już tutaj zmienić. Zadzwoń do hostelu i podaj numer rezerwacji."
   },
   "userFavorites": {
     "removeFromFavorites": "Usunąć z ulubionych?",
@@ -1687,7 +1712,13 @@
     "enterAValidPhone": "Podaj prawidłowy numer telefonu",
     "enterAValidEmail": "Podaj prawidłowy adres e-mail",
     "ofNSeats": "z {{count}}",
-    "bookingReference": "Numer rezerwacji"
+    "bookingReference": "Numer rezerwacji",
+    "hostelNotTakingBookings": "Ten hostel nie przyjmuje teraz rezerwacji online.",
+    "roomNoLongerBookable": "Jednego z wybranych pokoi nie można już zarezerwować. Usuń go i wybierz inny.",
+    "checkInHasPassed": "Data zameldowania już minęła. Wybierz nowe daty i spróbuj ponownie.",
+    "checkOutAfterCheckIn": "Wymeldowanie musi nastąpić po zameldowaniu.",
+    "logInAgainToBook": "Twoja sesja wygasła. Zaloguj się ponownie, aby zarezerwować.",
+    "tryAgain": "Spróbuj ponownie."
   },
   "states": {
     "nothingHereYet": "Jeszcze nic tu nie ma",

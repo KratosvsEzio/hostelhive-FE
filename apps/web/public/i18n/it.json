@@ -333,7 +333,8 @@
     "allow": "Consenti",
     "noPhotosYet": "Ancora nessuna foto",
     "guests": "Ospiti",
-    "copy": "Copia"
+    "copy": "Copia",
+    "cannotReachTheServer": "Impossibile raggiungere il server. Riprova tra un momento."
   },
   "leadWall": {
     "close": "Chiudi",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Cliccandolo attivi il tuo account e il numero diventa visibile.",
     "iVeVerifiedContinue": "Ho verificato — continua",
     "back": "Indietro",
-    "confirmPassword": "Conferma password"
+    "confirmPassword": "Conferma password",
+    "emailOrPasswordIncorrect": "Email o password non corretti.",
+    "emailAlreadyRegistered": "Esiste già un account con questa email. Accedi oppure reimposta la password se l’hai dimenticata.",
+    "couldNotCreateAccount": "Non siamo riusciti a creare il tuo account. Controlla i tuoi dati e riprova.",
+    "accountCannotSignIn": "Al momento questo account non può accedere. Contattaci e ti aiuteremo.",
+    "googleDidNotFinish": "L’accesso con Google non è stato completato. Riprova oppure usa email e password.",
+    "tooManyAttempts": "Troppi tentativi. Attendi qualche minuto e riprova.",
+    "somethingWentWrong": "Qualcosa è andato storto. Riprova."
   },
   "home": {
     "searchCityOrArea": "Cerca città o zona",
@@ -1094,7 +1102,10 @@
     "existingAccountKeepsPassword": "Se questa email ha già un account, la password attuale resta invariata: la tua serve solo per creare un nuovo account.",
     "storedEmailBecomesLogin": "L'email salvata sarà il login. Se quell'indirizzo ha già un account, ne mantiene la password.",
     "pickADifferentStatusTo": "Scegli un altro stato per vedere il resto del team.",
-    "addAWardenCookOr": "Aggiungi un custode, un cuoco o una guardia per registrarne stipendio e documenti."
+    "addAWardenCookOr": "Aggiungi un custode, un cuoco o una guardia per registrarne stipendio e documenti.",
+    "couldNotUploadImage": "Impossibile caricare l’immagine",
+    "fileTypeNotSupported": "Questo tipo di file non è supportato. Scegli un’altra immagine.",
+    "uploadTryAgain": "Riprova oppure scegli un’altra immagine."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Approvazione non riuscita — riprova.",
@@ -1237,6 +1248,12 @@
     "toCollectAtTheDesk": "Da incassare alla reception",
     "createBooking": "Crea prenotazione",
     "theRoomsForThisProperty": "Non è stato possibile caricare le camere di questa struttura.",
+    "notSetUpForBookings": "Questa struttura non è configurata per accettare prenotazioni.",
+    "crmRequired": "Il tuo piano non include le prenotazioni. Passa a un piano superiore per aggiungere prenotazioni.",
+    "checkInCannotBeInPast": "Il check-in non può essere prima di oggi. Scegli oggi o una data successiva.",
+    "roomTypeNotBookable": "Uno di questi tipi di camera è disattivato per le prenotazioni. Rimuovilo e riprova.",
+    "checkOutAfterCheckIn": "Il check-out deve essere successivo al check-in.",
+    "couldNotSaveBooking": "Non siamo riusciti a salvare questa prenotazione. Controlla i dati e riprova.",
     "everyRoomEveryState": "Ogni camera, ogni stato: tocca un giorno per vederne il registro",
     "thisMonthSCalendarCould": "Non è stato possibile caricare il calendario di questo mese.",
     "nothingIsWaitingOnYou": "Non c'è nulla in sospeso per questo giorno.",
@@ -1346,7 +1363,15 @@
     "pkrPaid": "PKR {{amount}} pagati",
     "cancelledSummary": "Annullato il {{date}} · PKR {{refund}} rimborsati · PKR {{charge}} di penale",
     "cancelRefundExplainer": "Riceverai indietro <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> vengono trattenuti come penale, perché stai annullando al {{pct}}% del periodo.",
-    "whenYouBookAHostel": "Quando prenoti un ostello, comparirà qui con le tue date e l'importo pagato."
+    "whenYouBookAHostel": "Quando prenoti un ostello, comparirà qui con le tue date e l'importo pagato.",
+    "noLongerCancellable": "Questa prenotazione non può più essere annullata qui. Chiama l’ostello e indica il riferimento della prenotazione.",
+    "roomNoLongerBookable": "Una delle camere che hai scelto non è più prenotabile. Scegli un’altra camera.",
+    "checkOutAfterCheckIn": "Il check-out deve essere successivo al check-in.",
+    "bookingNotFound": "Non abbiamo trovato questa prenotazione. Potrebbe essere stata rimossa.",
+    "changeFailed": "Non siamo riusciti ad aggiornare questa prenotazione. Riprova.",
+    "cancelFailed": "Non siamo riusciti ad annullare questa prenotazione. Riprova.",
+    "withinCutoff": "Modifiche e cancellazioni si chiudono 3 giorni prima del check-in. Per modificare qualcosa ora, chiama l’ostello e indica il riferimento della prenotazione.",
+    "noLongerEditable": "Questa prenotazione non può più essere modificata qui. Chiama l’ostello e indica il riferimento della prenotazione."
   },
   "userFavorites": {
     "removeFromFavorites": "Rimuovere dai preferiti?",
@@ -1682,7 +1707,13 @@
     "enterAValidPhone": "Inserisci un numero di telefono valido",
     "enterAValidEmail": "Inserisci un indirizzo email valido",
     "ofNSeats": "su {{count}}",
-    "bookingReference": "Riferimento prenotazione"
+    "bookingReference": "Riferimento prenotazione",
+    "hostelNotTakingBookings": "Questo ostello al momento non accetta prenotazioni online.",
+    "roomNoLongerBookable": "Una delle camere che hai scelto non è più prenotabile. Rimuovila e scegline un’altra.",
+    "checkInHasPassed": "La data del check-in è già passata. Scegli nuove date e riprova.",
+    "checkOutAfterCheckIn": "Il check-out deve essere successivo al check-in.",
+    "logInAgainToBook": "La tua sessione è scaduta. Accedi di nuovo per prenotare.",
+    "tryAgain": "Riprova."
   },
   "states": {
     "nothingHereYet": "Ancora nulla qui",

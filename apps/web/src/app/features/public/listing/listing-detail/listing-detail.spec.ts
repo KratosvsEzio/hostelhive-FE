@@ -2,7 +2,8 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, TitleStrategy, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
+import { SessionStore } from '@core/auth';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
@@ -243,6 +244,15 @@ describe('ListingDetail booking wiring', () => {
   };
 
   let harness: RouterTestingHarness;
+  let bookingFailure: unknown;
+
+  beforeEach(() => {
+    bookingFailure = new Error('booking reference missing from response');
+  });
+
+  afterEach(() => {
+    TestBed.inject(SessionStore).clear();
+  });
 
   async function open(acceptsBookings: boolean | undefined, overrides: object = {}): Promise<void> {
     const listing = { ...FULL, acceptsBookings, ...overrides } as unknown as ListingDetailModel;
@@ -255,7 +265,10 @@ describe('ListingDetail booking wiring', () => {
         { provide: StudentApi, useValue: { getReviews: () => of([]) } },
         { provide: HostelsApi, useValue: {} },
         { provide: FavoritesStore, useValue: { isFavorite: () => false } },
-        { provide: BookingApi, useValue: { setCatalogue: vi.fn() } },
+        {
+          provide: BookingApi,
+          useValue: { setCatalogue: vi.fn(), createBooking: () => throwError(() => bookingFailure) },
+        },
         { provide: MobileApp, useValue: { isMobile: signal(false) } },
         { provide: GoogleAnalyticsService, useValue: { track: vi.fn() } },
       ],
@@ -317,5 +330,88 @@ describe('ListingDetail booking wiring', () => {
     page.summaryOpen.set(true);
     harness.detectChanges();
     expect(el().querySelector('hh-booking-summary')).toBeNull();
+  });
+
+  describe('when the booking fails', () => {
+    const API_URL = 'http://localhost/api/bookings';
+    const MAPPER_TEXT = 'booking reference missing from response';
+
+    /** An error shaped the way the error interceptor rethrows it. */
+    function apiError(status: number, serverMessages?: readonly string[]) {
+      return {
+        status,
+        code: 'unknown_error',
+        message: serverMessages?.join(' ') ?? `Http failure response for ${API_URL}: ${status} Forbidden`,
+        serverMessages,
+        method: 'POST',
+      };
+    }
+
+    interface BookingPage {
+      basket: { checkIn: { set(d: Date): void }; checkOut: { set(d: Date): void } };
+      startBooking(): void;
+      confirmBooking(guest: { name: string; phone: string; email: string }): void;
+    }
+
+    /** Signs in, opens the summary, confirms, and returns the summary's alert text. */
+    async function confirmWith(failure: unknown): Promise<string> {
+      bookingFailure = failure;
+      await open(true);
+      TestBed.inject(SessionStore).setSession(
+        { id: '7', name: 'Ali', email: 'ali@example.com', role: 'seeker', allRoles: ['seeker'], permissions: [] },
+        'tok',
+      );
+      const page = harness.routeDebugElement?.componentInstance as BookingPage;
+      page.basket.checkIn.set(new Date(2030, 8, 20));
+      page.basket.checkOut.set(new Date(2030, 8, 23));
+      page.startBooking();
+      page.confirmBooking({ name: 'Ali Raza', phone: '923001234567', email: 'ali@example.com' });
+      harness.detectChanges();
+      const alert = el().querySelector('hh-booking-summary [role="alert"]');
+      expect(alert).not.toBeNull();
+      return alert?.textContent ?? '';
+    }
+
+    function expectNoLeak(...leaks: string[]): void {
+      const shown = document.body.textContent ?? '';
+      expect(shown).not.toContain('Http failure');
+      expect(shown).not.toContain('http://');
+      for (const leak of leaks) expect(shown).not.toContain(leak);
+    }
+
+    it.each([
+      { case: 'a URL-bearing 403', failure: apiError(403) },
+      { case: 'a 500 with no envelope', failure: apiError(500) },
+      { case: 'a plain error from a mapper', failure: new Error(MAPPER_TEXT) },
+    ])('asks the guest to try again and leaks nothing on $case', async ({ failure }) => {
+      const shown = await confirmWith(failure);
+      expect(shown).toContain('publicBooking.couldnTBook');
+      expect(shown).toContain('publicBooking.tryAgain');
+      expectNoLeak(MAPPER_TEXT, API_URL);
+    });
+
+    it.each([
+      { text: 'This hostel is not taking bookings right now', key: 'publicBooking.hostelNotTakingBookings' },
+      { text: 'Checkin date cannot be in the past', key: 'publicBooking.checkInHasPassed' },
+      { text: 'Mixed Dorm is not available for booking', key: 'publicBooking.roomNoLongerBookable' },
+      { text: 'Checkout date must be after check-in date', key: 'publicBooking.checkOutAfterCheckIn' },
+    ])('shows $key, not the server text, for "$text"', async ({ text, key }) => {
+      const shown = await confirmWith(apiError(422, [text]));
+      expect(shown).toContain(key);
+      expectNoLeak(text);
+    });
+
+    it('says the hostel is not taking bookings on a 404', async () => {
+      expect(await confirmWith(apiError(404))).toContain('publicBooking.hostelNotTakingBookings');
+      expectNoLeak(API_URL);
+    });
+
+    it('asks the guest to log in again on a 401', async () => {
+      expect(await confirmWith(apiError(401))).toContain('publicBooking.logInAgainToBook');
+    });
+
+    it('says the server cannot be reached on a network failure', async () => {
+      expect(await confirmWith(apiError(0))).toContain('common.cannotReachTheServer');
+    });
   });
 });
