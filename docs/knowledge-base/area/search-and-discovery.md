@@ -28,12 +28,12 @@ How a seeker finds hostels: the header search bar, the `/search` list + map page
 - **A new place is a new search, on every page.** The place pick and Near me always use `startSearch`. On `/search` too, they go to `searchRouteFor(label)` rather than merging on the current path. The header bar's `search()` also nulls the viewport keys. Old `ne_*/sw_*` would otherwise be restored by a newly built `SearchMap` (the viewport is read once, at construction) over the new place. Only "Search everywhere" on `/search` itself still merges, with `replaceUrl`.
 - **The canonical follows the query's place.** `canonicalPlace` prefers `toLocationSlug(place || city)` over the path slug, so links shared with a stale slug canonicalise correctly. A pasted `/search/lahore` with no query still maps to `/hostels/lahore`.
 - **`/search` has no static route `title`.** The SEO effect owns the tab title; Angular's title strategy would otherwise re-apply the static one after every navigation, including viewport writes (`search.routes.ts`).
-- **Landing pages clear their JSON-LD on destroy.** `PlaceLanding` removes `place-breadcrumb` / `place-faq` through `DestroyRef`. This is safe for SSR because the server serialises the document before destroying the platform. `apps/web-e2e/src/search-new-place-and-landing-head.spec.ts` checks the raw HTML.
+- **Landing pages clear their JSON-LD on destroy.** `PlaceLanding` removes `place-breadcrumb` / `place-faq` through `Seo.clearOnDestroy` (the same helper home, blog, blog article and listing use). This is safe for SSR because the server serialises the document before destroying the platform. `apps/web-e2e/src/search-new-place-and-landing-head.spec.ts` checks the raw HTML.
 - **Worldwide search is a URL state, `everywhere=1`** (`EVERYWHERE_KEY`). A bare `/search` frames the visitor's own country (`setup()`), so worldwide needs saying.
   - It is read once at construction (`everywhereInUrl`; `unbounded` is a `linkedSignal`, false whenever there is a seed). Explicit `lat`+`lng` beat it, but a slug-only centre doesn't narrow the request (`query()`).
   - `syncBoundsToUrl` mirrors it, and it is the only writer. A pan (`leftHomeCountry`), a new place (`recenterTo`) or a header search (`SearchBar.search()`) clears it.
   - Back within `/search` doesn't re-apply it, like the viewport keys.
-- **SEO**: unfiltered search for a curated place → canonical `/hostels/<slug>`; filtered, uncurated or "everywhere" → `noindex`. See decisions.
+- **SEO**: unfiltered search for a curated place → canonical `/hostels/<slug>`; filtered, uncurated or "everywhere" → `noindex` with no canonical, `og:url` only when a path is set (`Seo.apply`; before Trello #131 it canonicalised to home). See decisions.
 
 ## Reuse, don't rebuild
 - `toListing()` for any `/public/hostels`-shaped payload (`favourites-api.ts` already does).
