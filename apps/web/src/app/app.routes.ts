@@ -23,13 +23,16 @@ const toNotifications: RedirectFunction = ({ params }) =>
  * `descriptionKey`; a route with neither is `noindex`. A flag on a parent covers its lazy
  * children. The `'index'` set is the static half of the sitemap (landing/sitemap-urls.ts),
  * so add a page to both or to neither.
+ *
+ * `title:` is a Transloco key for the page's label, never display text: the strategy
+ * translates it into the site's title template. A `'page'` route declares none — its
+ * component writes its own title, and a route title would only compete with it.
  */
 const LOCALISED_ROUTES: Route[] = [
   // â”€â”€â”€ Public seeker (SSR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     path: '',
     component: Home,
-    title: 'HostelHive — Find verified hostels',
     data: { head: 'page' },
   },
   {
@@ -76,49 +79,48 @@ const LOCALISED_ROUTES: Route[] = [
     path: 'privacy-policy',
     loadComponent: () =>
       import('@features/public/legal/privacy-policy').then((m) => m.PrivacyPolicy),
-    title: 'Privacy Policy — HostelHive',
+    title: 'common.privacyPolicy',
     data: { head: 'index' },
   },
   {
     path: 'terms-of-service',
     loadComponent: () =>
       import('@features/public/legal/terms-of-service').then((m) => m.TermsOfService),
-    title: 'Terms of Service — HostelHive',
+    title: 'leadWall.termsOfService',
     data: { head: 'index' },
   },
   {
     path: 'service-policy',
     loadComponent: () =>
       import('@features/public/legal/service-policy').then((m) => m.ServicePolicy),
-    title: 'Service Policy — HostelHive',
+    title: 'footer.servicePolicy',
     data: { head: 'index' },
   },
   {
     path: 'credits',
     loadComponent: () =>
       import('@features/public/credits/credits').then((m) => m.Credits),
-    title: 'Image credits — HostelHive',
+    title: 'routeTitle.imageCredits',
     data: { head: 'index' },
   },
   {
     path: 'about',
     loadComponent: () =>
       import('@features/public/about/about').then((m) => m.About),
-    title: 'About Us — HostelHive',
+    title: 'publicAbout.aboutUs',
     data: { head: 'index', descriptionKey: 'publicAbout.makingStudentAccommodationSaferAnd' },
   },
   {
     path: 'faqs',
     loadComponent: () =>
       import('@features/public/faqs/faqs').then((m) => m.Faqs),
-    title: 'FAQs — HostelHive',
+    title: 'common.faqs',
     data: { head: 'index', descriptionKey: 'publicFaqs.everythingYouNeedToKnow' },
   },
   {
     path: 'pricing',
     loadComponent: () =>
       import('@features/public/pricing/pricing').then((m) => m.Pricing),
-    title: 'Pricing — HostelHive',
     data: { head: 'page' },
   },
   {
@@ -131,14 +133,14 @@ const LOCALISED_ROUTES: Route[] = [
     path: 'careers',
     loadComponent: () =>
       import('@features/public/careers/careers').then((m) => m.Careers),
-    title: 'Careers — HostelHive',
+    title: 'common.careers',
     data: { head: 'index', descriptionKey: 'publicCareers.hostelhiveIsOnAMission' },
   },
   {
     path: 'contact',
     loadComponent: () =>
       import('@features/public/contact/contact').then((m) => m.Contact),
-    title: 'Contact Us — HostelHive',
+    title: 'publicContact.contactUs',
     data: { head: 'index', descriptionKey: 'publicContact.weDLoveToHear' },
   },
   {
@@ -154,7 +156,7 @@ const LOCALISED_ROUTES: Route[] = [
       import('@features/auth/confirm-invitation/confirm-invitation').then(
         (m) => m.ConfirmInvitation,
       ),
-    title: 'Confirm your account — HostelHive',
+    title: 'routeTitle.confirmAccount',
   },
   {
     path: 'reset_password',
@@ -162,7 +164,7 @@ const LOCALISED_ROUTES: Route[] = [
       import('@features/auth/reset-password/reset-password').then(
         (m) => m.ResetPassword,
       ),
-    title: 'Reset password — HostelHive',
+    title: 'authResetPassword.resetPassword',
   },
   {
     path: 'account',
@@ -176,19 +178,19 @@ const LOCALISED_ROUTES: Route[] = [
         path: 'bookings',
         loadComponent: () =>
           import('@features/user/bookings/bookings').then((m) => m.AccountBookings),
-        title: 'Your bookings — HostelHive',
+        title: 'userBookings.yourBookings',
       },
       {
         path: 'bookings/:id',
         loadComponent: () =>
           import('@features/user/bookings/booking-detail').then((m) => m.AccountBookingDetail),
-        title: 'Booking — HostelHive',
+        title: 'routeTitle.booking',
       },
       {
         path: 'bookings/:id/edit',
         loadComponent: () =>
           import('@features/user/bookings/booking-edit').then((m) => m.AccountBookingEdit),
-        title: 'Change booking — HostelHive',
+        title: 'routeTitle.changeBooking',
       },
       {
         path: 'favorites',
@@ -196,19 +198,19 @@ const LOCALISED_ROUTES: Route[] = [
           import('@features/user/favorites/favorites').then(
             (m) => m.AccountFavorites,
           ),
-        title: 'Favorites — HostelHive',
+        title: 'common.favorites',
       },
       {
         path: 'settings',
         loadComponent: () =>
           import('@features/user/settings/settings').then((m) => m.AccountSettings),
-        title: 'Account settings — HostelHive',
+        title: 'common.accountSettings',
       },
       {
         path: 'security',
         loadComponent: () =>
           import('@features/user/security/security').then((m) => m.AccountSecurity),
-        title: 'Password & security — HostelHive',
+        title: 'common.passwordAmpSecurity',
       },
       // Retired in favour of the public /faqs page. Kept as a redirect so old links
       // and bookmarks land somewhere useful instead of 404ing.
@@ -224,7 +226,7 @@ const LOCALISED_ROUTES: Route[] = [
       import('@features/notifications/notifications').then(
         (m) => m.NotificationsPage,
       ),
-    title: 'Notifications — HostelHive',
+    title: 'common.notifications',
   },
   // Safepay's return pages: signed-in only, not role-gated, since the invoice request decides access.
   {
@@ -267,7 +269,7 @@ const LOCALISED_ROUTES: Route[] = [
     loadChildren: () =>
       import('@features/moderator/moderator.routes').then((m) => m.MODERATOR_ROUTES),
   },
-  { path: 'forbidden', component: Forbidden, title: 'Access blocked' },
+  { path: 'forbidden', component: Forbidden, title: 'coreForbidden.accessBlocked' },
 
   { path: '**', redirectTo: '' },
 ];

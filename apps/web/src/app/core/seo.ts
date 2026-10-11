@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { LocaleStore } from './i18n/locale-store';
 import { localeAlternates, localeFor, withLocale } from './i18n/locales';
-import { DestroyRef, Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -56,6 +56,14 @@ export interface SeoConfig {
   noindex?: boolean;
   /** og:type — `website` for listings pages, `article` for editorial. */
   type?: 'website' | 'article';
+  /**
+   * A head the page will replace once its data arrives — a listing still loading, say.
+   *
+   * It is written like any other, so crawlers and the tab still get a sensible title in
+   * the meantime, but `Seo.settled` stays false until an `apply` without the flag
+   * replaces it: analytics waits for the settled head rather than recording a placeholder.
+   */
+  provisional?: boolean;
 }
 
 /**
@@ -79,6 +87,11 @@ export interface SeoConfig {
  * does not cover JSON-LD, whose ids are per page type: no other page ever writes
  * `listing`, so a page that sets one also has to remove it when it goes, which is what
  * `clearOnDestroy` is for.
+ *
+ * The title is part of the head, and only `apply` writes `<title>` — nothing else sets
+ * it, so it is always in the same language as the rest of the head. Routes without a
+ * page of their own get theirs from `RouteHeadStrategy`, which composes the default
+ * title and passes it through `apply` like any page would.
  */
 @Injectable({ providedIn: 'root' })
 export class Seo {
@@ -88,14 +101,30 @@ export class Seo {
   private readonly locale = inject(LocaleStore);
   private readonly i18n = inject(TranslocoService);
 
+  /** Whether the last `apply` was a placeholder — see `SeoConfig.provisional`. */
+  private readonly _provisional = signal(false);
+
+  /**
+   * The head describes the page in the active language — analytics reads the title once
+   * this holds.
+   *
+   * False while the active language's strings are still loading, and while the last
+   * `apply` was provisional. Any later `apply` without the flag settles it.
+   */
+  readonly settled = computed(() => this.locale.ready() && !this._provisional());
+
   /**
    * Applies the full head for a page: title, description, robots, canonical, hreflang,
    * Open Graph (including `og:locale`) and Twitter.
    *
-   * Called once per navigation, by whoever owns the head of the route — the page itself
-   * or the route-level default; see the class comment.
+   * The only writer of `<title>`. Called once per navigation, by whoever owns the head of
+   * the route — the page itself or the route-level default; see the class comment — and
+   * again by a page that replaces a provisional head once its data arrives.
    */
   apply(config: SeoConfig): void {
+    // Set from every call, so the flag describes the head currently written.
+    this._provisional.set(config.provisional ?? false);
+
     // Fallbacks for a page that supplies nothing of its own. Translated like everything
     // else here: a French visitor landing on a page with no copy of its own should still
     // get a French title, not the English one by default.

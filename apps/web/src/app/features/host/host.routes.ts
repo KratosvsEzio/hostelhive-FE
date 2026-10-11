@@ -186,7 +186,7 @@ export const HOST_ROUTES: Route[] = [
   {
     path: 'hostels/new',
     component: NewHostel,
-    title: 'New hostel — HostelHive',
+    title: 'hostNewHostel.newHostel',
     canActivate: [createHostelGate],
   },
   {
@@ -200,102 +200,102 @@ export const HOST_ROUTES: Route[] = [
     component: HostLayout,
     canActivate: [knownHostelGate],
     children: [
-      { path: 'profile', component: HostelProfile, title: 'Hostel profile — HostelHive', canActivate: [permissionGuard('host:Hostel:show')] },
+      { path: 'profile', component: HostelProfile, title: 'common.hostelProfile', canActivate: [permissionGuard('host:Hostel:show')] },
       // Mobile-app "More" tab (bottom tab bar) — the destinations that don't fit in the tabs.
-      { path: 'more', component: HostMore, title: 'More — HostelHive' },
+      { path: 'more', component: HostMore, title: 'common.more' },
       {
         path: 'team',
         canActivate: [permissionGuard('host:Staff:index')],
         children: [
-          { path: '', pathMatch: 'full', component: HostTeam, title: 'Team & staff — HostelHive' },
-          { path: 'edit/:staffId', component: HostTeam, title: 'Edit staff — HostelHive' },
+          { path: '', pathMatch: 'full', component: HostTeam, title: 'common.teamAmpStaff' },
+          { path: 'edit/:staffId', component: HostTeam, title: 'routeTitle.editStaff' },
         ],
       },
       {
         path: 'bookings',
         component: HostBookings,
-        title: 'Bookings — HostelHive',
+        title: 'common.bookings',
         canActivate: [bookingsGate],
       },
       {
         path: 'rooms',
         canActivate: [permissionGuard('host:Room:index')],
         children: [
-          { path: '', pathMatch: 'full', component: Rooms, title: 'Rooms — HostelHive' },
+          { path: '', pathMatch: 'full', component: Rooms, title: 'common.rooms' },
           // Drawer routes reuse `Rooms` so the hardware/browser back button closes the
           // drawer instead of leaving the page. They must precede `:roomId`, which would
           // otherwise swallow these literal segments.
-          { path: 'create', component: Rooms, title: 'Add room — HostelHive' },
-          { path: 'bulk', component: Rooms, title: 'Bulk add rooms — HostelHive' },
-          { path: 'edit/:roomId', component: Rooms, title: 'Edit room — HostelHive' },
-          { path: ':roomId', component: RoomDetail, title: 'Room details — HostelHive' },
+          { path: 'create', component: Rooms, title: 'hostRooms.addRoom' },
+          { path: 'bulk', component: Rooms, title: 'hostRooms.bulkAddRooms' },
+          { path: 'edit/:roomId', component: Rooms, title: 'hostRooms.editRoom' },
+          { path: ':roomId', component: RoomDetail, title: 'routeTitle.roomDetails' },
         ],
       },
       {
         path: 'tenants',
         canActivate: [permissionGuard('host:Renter:index'), monthlyOnlyGate],
         children: [
-          { path: '', pathMatch: 'full', component: Tenants, title: 'Tenants — HostelHive' },
-          { path: 'create', component: Tenants, title: 'Register Tenant — HostelHive' },
-          { path: 'edit/:tenantId', component: Tenants, title: 'Edit tenant — HostelHive' },
-          { path: 'profile/:tenantId', component: TenantProfile, title: 'Tenant Profile — HostelHive' },
+          { path: '', pathMatch: 'full', component: Tenants, title: 'common.tenants' },
+          { path: 'create', component: Tenants, title: 'hostTenants.registerTenant' },
+          { path: 'edit/:tenantId', component: Tenants, title: 'hostTenants.editTenant' },
+          { path: 'profile/:tenantId', component: TenantProfile, title: 'routeTitle.tenantProfile' },
         ],
       },
       {
         path: 'utilities',
         canActivate: [permissionGuard('host:UtilityBill:index'), monthlyOnlyGate],
         children: [
-          { path: '', pathMatch: 'full', component: Utilities, title: 'Utilities — HostelHive' },
-          { path: 'add', component: AddBill, title: 'Add utility bill — HostelHive' },
-          { path: 'edit/:billId', component: AddBill, title: 'Edit utility bill — HostelHive' },
+          { path: '', pathMatch: 'full', component: Utilities, title: 'common.utilities' },
+          { path: 'add', component: AddBill, title: 'hostUtilities.addUtilityBill' },
+          { path: 'edit/:billId', component: AddBill, title: 'routeTitle.editUtilityBill' },
         ],
       },
       {
         path: 'invoices',
         canActivate: [permissionGuard('host:RenterBill:index')],
         children: [
-          { path: '', pathMatch: 'full', component: Invoices, title: 'Invoices — HostelHive' },
-          { path: 'create', component: Invoices, title: 'New invoice — HostelHive' },
+          { path: '', pathMatch: 'full', component: Invoices, title: 'common.invoices' },
+          { path: 'create', component: Invoices, title: 'routeTitle.newInvoice' },
           // Same component as the list: the drawer is URL-driven so the hardware back
           // button closes it and lands on the list, matching 'create'.
-          { path: 'edit/:billId', component: Invoices, title: 'Edit invoice — HostelHive' },
+          { path: 'edit/:billId', component: Invoices, title: 'routeTitle.editInvoice' },
         ],
       },
       {
         path: 'expenses',
         canActivate: [permissionGuard('host:Expense:index')],
         children: [
-          { path: '', pathMatch: 'full', component: ExpensesList, title: 'Expenses — HostelHive' },
-          { path: 'new', component: AddGrocery, title: 'New expense — HostelHive' },
-          { path: ':expenseId', component: ExpenseDetailPage, title: 'Expense — HostelHive' },
-          { path: ':expenseId/edit', component: AddGrocery, title: 'Edit expense — HostelHive' },
+          { path: '', pathMatch: 'full', component: ExpensesList, title: 'common.expenses' },
+          { path: 'new', component: AddGrocery, title: 'hostExpenses.newExpense' },
+          { path: ':expenseId', component: ExpenseDetailPage, title: 'hostExpenses.expense' },
+          { path: ':expenseId/edit', component: AddGrocery, title: 'routeTitle.editExpense' },
         ],
       },
       {
         path: 'mess',
         canActivate: [permissionGuard('host:WeeklyMenu:index'), monthlyOnlyGate],
         children: [
-          { path: '', pathMatch: 'full', component: MessList, title: 'Mess — HostelHive' },
+          { path: '', pathMatch: 'full', component: MessList, title: 'common.mess' },
           {
             // Reached from the mess page, where the type is a given — the form locks its
             // expense-type picker to this rather than offering a choice that would file the
             // entry away from the mess.
             path: 'add',
             component: AddGrocery,
-            title: 'Add grocery — HostelHive',
+            title: 'hostMess.addGrocery',
             data: { lockedExpenseType: 'groceries' },
           },
-          { path: 'confirmations', component: MessConfirmations, title: 'Meal confirmations — HostelHive' },
-          { path: 'notifications', component: MessNotifications, title: 'Meal notifications — HostelHive' },
+          { path: 'confirmations', component: MessConfirmations, title: 'hostMess.mealConfirmations' },
+          { path: 'notifications', component: MessNotifications, title: 'hostMess.mealNotifications' },
         ],
       },
       {
         path: 'overview',
         children: [
-          { path: '', pathMatch: 'full', component: HostOverview, title: 'Host · Overview' },
-          { path: 'revenue',   component: RevenueDetail,   title: 'Revenue detail — HostelHive' },
-          { path: 'movement',  component: MovementDetail,  title: 'Tenant movement — HostelHive' },
-          { path: 'occupancy', component: OccupancyDetail, title: 'Occupancy trend — HostelHive' },
+          { path: '', pathMatch: 'full', component: HostOverview, title: 'common.overview' },
+          { path: 'revenue',   component: RevenueDetail,   title: 'routeTitle.revenueDetail' },
+          { path: 'movement',  component: MovementDetail,  title: 'common.tenantMovement' },
+          { path: 'occupancy', component: OccupancyDetail, title: 'hostOverview.occupancyTrend' },
         ],
       },
       { path: 'subscription', children: SUBSCRIPTION_ROUTES },

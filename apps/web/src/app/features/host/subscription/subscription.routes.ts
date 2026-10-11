@@ -15,11 +15,11 @@ export const SUBSCRIPTION_ROUTES: Route[] = [
     path: '',
     pathMatch: 'full',
     component: BillingPage,
-    title: 'Billing — HostelHive',
+    title: 'hostBilling.title',
   },
   {
     path: 'pay/:invoiceId',
     component: PaymentStep,
-    title: 'Pay invoice — HostelHive',
+    title: 'routeTitle.payInvoice',
   },
 ];

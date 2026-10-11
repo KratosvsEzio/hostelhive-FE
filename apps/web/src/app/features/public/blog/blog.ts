@@ -1,4 +1,4 @@
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -70,6 +70,7 @@ const FIELD_VARIANTS = dealFieldVariants();
 export class Blog {
   private readonly seo = inject(Seo);
   private readonly locale = inject(LocaleStore);
+  private readonly i18n = inject(TranslocoService);
 
   protected readonly categories = BLOG_CATEGORIES;
   protected readonly active = signal<BlogCategorySlug | 'all'>('all');
@@ -178,14 +179,13 @@ export class Blog {
     // language switch reuses this component, and `apply` builds the canonical, og:url,
     // hreflang and og:locale from the active language — so a call made once would keep
     // describing the language the page was first opened in. Reading `ready()` re-runs it
-    // on the switch, once the new language's strings are in memory. Running after the
-    // router's title update is also what lets this title, not the route's, win.
+    // on the switch, once the new language's strings are in memory — which the title and
+    // description now need too, since they are translated rather than English everywhere.
     effect(() => {
       if (!this.locale.ready()) return;
       this.seo.apply({
-        title: 'Blog — guides to hostels, campuses and the north | HostelHive',
-        description:
-          'Practical guides to student hostels and backpacker stays in Pakistan: what rooms cost city by city, hostels near the major universities, and where to sleep in the northern areas.',
+        title: this.i18n.translate<string>('seo.blogTitle'),
+        description: this.i18n.translate<string>('seo.blogDescription'),
         path: '/blog',
         type: 'website',
         // The featured post's photograph, so a share of the section looks like the section

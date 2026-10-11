@@ -996,8 +996,22 @@ export class ListingDetail {
     // Cleared when there is no listing, so a not-found page preloads nothing.
     this.seo.preloadImage(l?.images?.[0] ?? null);
 
+    // No listing to describe: every one of these heads is noindex, so none reaches the index.
+    // Still loading, or failed (5xx, offline, the server render's request timeout), the
+    // listing may well exist, so the tab and analytics get a neutral title rather than a
+    // claim that it was removed. Loading is marked provisional so analytics waits for the
+    // answer; a failure is the final word for this attempt.
+    if (s.loading || s.error) {
+      this.seo.apply({
+        title: this.i18n.translate<string>('seo.listingLoadingTitle'),
+        noindex: true,
+        provisional: s.loading,
+      });
+      return;
+    }
+
     if (!l) {
-      // Missing or failed: never let a not-found page into the index.
+      // The API answered and there is no such listing (`getBySlug` maps only a 404 to null).
       this.seo.apply({
         title: this.i18n.translate<string>('seo.listingNotFoundTitle'),
         description: this.i18n.translate<string>('seo.listingNotFoundDescription'),
