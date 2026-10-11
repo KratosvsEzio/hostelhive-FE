@@ -8,7 +8,7 @@ import { InvoiceSummary } from './invoice-summary';
 // Only the keys that take a parameter carry copy, so the spec can see what was passed in.
 const COPY = {
   hostBilling: {
-    kindNew: 'First payment · {{start}} – {{end}}',
+    kindNew: 'New plan · {{start}} – {{end}}',
     kindRenewal: 'Renewal · {{start}} – {{end}}',
     kindUpgrade: 'Upgrade charge · {{start}} – {{end}}',
     forPeriod: '{{start}} – {{end}}',
@@ -153,7 +153,7 @@ describe('InvoiceSummary', () => {
       const el = render(invoice({ kind: 'new' }));
 
       expect(field(el, 'purpose')).toBe(
-        'First payment · 12 Oct 2026 – 12 Nov 2026',
+        'New plan · 12 Oct 2026 – 12 Nov 2026',
       );
     });
 

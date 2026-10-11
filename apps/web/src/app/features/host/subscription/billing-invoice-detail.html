@@ -1,0 +1,233 @@
+<app-dashboard-layout [label]="'hostBilling.title' | transloco">
+  <div class="mx-auto flex w-full max-w-xl flex-col gap-4">
+    @if (invoice(); as inv) {
+      <div class="flex flex-col gap-1" data-field="header">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="font-display text-lg font-bold text-ink-900">
+            {{
+              'hostBilling.invoiceNumber' | transloco: { number: inv.number }
+            }}
+          </h2>
+          <hh-status-pill [tone]="tone()" data-testid="status-pill">{{
+            statusKey() ? (statusKey()! | transloco) : inv.status.name
+          }}</hh-status-pill>
+        </div>
+        <p class="text-sm text-ink-600" data-field="issued-on">
+          {{
+            'hostBillingHistory.issuedOn'
+              | transloco: { date: (inv.created_at | apiDate: 'd MMM yyyy') }
+          }}
+        </p>
+        @switch (slug()) {
+          @case ('paid') {
+            @if (inv.paid_at) {
+              <p class="text-sm text-ink-600" data-field="paid-on">
+                {{
+                  'hostPayment.paidOn'
+                    | transloco: { date: (inv.paid_at | apiDate: 'd MMM yyyy') }
+                }}
+              </p>
+            }
+          }
+          @case ('open') {
+            @if (inv.expires_at) {
+              <p class="text-sm font-medium text-ink-700" data-field="pay-by">
+                {{
+                  'hostBilling.payBy'
+                    | transloco
+                      : {
+                          date:
+                            (inv.expires_at | apiDate: 'd MMM yyyy, h:mm a'),
+                        }
+                }}
+              </p>
+            }
+          }
+          @case ('void') {
+            @if (inv.voided_at) {
+              <p class="text-sm text-ink-600" data-field="closed-on">
+                {{
+                  'hostBillingHistory.closedOn'
+                    | transloco
+                      : { date: (inv.voided_at | apiDate: 'd MMM yyyy') }
+                }}
+              </p>
+            }
+          }
+        }
+      </div>
+
+      @if (charged()) {
+        <p
+          class="rounded-xl bg-danger/10 px-4 py-3 text-sm font-medium text-danger"
+          role="alert"
+          data-testid="charged-notice"
+        >
+          {{
+            'hostPayment.chargedNotApplied' | transloco: { number: inv.number }
+          }}
+          <a hhLink routerLink="/contact" data-testid="charged-contact-us">{{
+            'common.contactUs' | transloco
+          }}</a>
+        </p>
+      }
+
+      <hh-invoice-summary [invoice]="inv" />
+
+      @switch (slug()) {
+        @case ('open') {
+          @if (notice(); as n) {
+            <p
+              class="rounded-xl px-4 py-3 text-sm"
+              [class]="noticeClass()"
+              [attr.data-tone]="n.tone"
+              data-testid="attempt-notice"
+            >
+              {{ n.key | transloco: { number: inv.number } }}
+              @if (n.contactUs) {
+                <a hhLink routerLink="/contact" data-testid="contact-us">{{
+                  'common.contactUs' | transloco
+                }}</a>
+              }
+            </p>
+          }
+          @if (canPay()) {
+            <a
+              hh-button
+              color="primary"
+              size="md"
+              class="w-full"
+              [routerLink]="payLink()"
+              data-testid="pay"
+              >{{ 'hostBilling.pay' | transloco }}</a
+            >
+          } @else {
+            <p
+              class="flex items-center gap-2 text-sm text-ink-600"
+              data-testid="pay-forbidden"
+            >
+              <i
+                class="ti ti-lock text-base text-ink-400"
+                aria-hidden="true"
+              ></i>
+              {{ 'hostPayment.payForbidden' | transloco }}
+            </p>
+          }
+        }
+        @case ('paid') {
+          <hh-card variant="bordered" data-testid="receipt">
+            <div class="flex flex-col gap-3">
+              <h2 class="font-display text-lg font-bold text-ink-900">
+                {{ 'hostBillingHistory.receiptTitle' | transloco }}
+              </h2>
+              @if (inv.invoice_pdf_url; as url) {
+                <a
+                  hh-button
+                  color="primary"
+                  size="md"
+                  class="self-start"
+                  [href]="url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="download-pdf"
+                  ><i class="ti ti-download" aria-hidden="true"></i
+                  >{{ 'hostBillingHistory.downloadPdf' | transloco }}</a
+                >
+              } @else if (receiptWait() === 'slow') {
+                <p class="text-sm text-ink-600" data-testid="receipt-slow">
+                  {{ 'hostBillingHistory.receiptSlow' | transloco }}
+                </p>
+                <button
+                  hh-button
+                  type="button"
+                  variant="outlined"
+                  size="sm"
+                  class="self-start"
+                  (click)="checkAgain()"
+                  data-testid="check-again"
+                >
+                  {{ 'hostPayment.checkAgain' | transloco }}
+                </button>
+              } @else {
+                <p
+                  class="flex items-center gap-2 text-sm text-ink-600"
+                  role="status"
+                  aria-live="polite"
+                  data-testid="receipt-preparing"
+                >
+                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
+                  {{ 'hostBillingHistory.preparingReceipt' | transloco }}
+                </p>
+              }
+            </div>
+          </hh-card>
+        }
+        @case ('void') {
+          <p
+            class="rounded-xl bg-ink-50 px-4 py-3 text-sm text-ink-700"
+            data-testid="void-note"
+          >
+            {{ 'hostBillingHistory.voidNote' | transloco }}
+          </p>
+        }
+      }
+
+      <hh-payment-attempts
+        [payments]="inv.payments"
+        [invoiceNumber]="inv.number"
+      />
+
+      <ng-container [ngTemplateOutlet]="back" />
+    } @else if (view().kind === 'forbidden') {
+      <hh-error-state
+        [title]="'hostBilling.noAccessTitle' | transloco"
+        [message]="'hostBilling.noAccessMessage' | transloco"
+        [showRetry]="false"
+        data-testid="detail-forbidden"
+      />
+      <ng-container [ngTemplateOutlet]="back" />
+    } @else if (view().kind === 'notFound') {
+      <hh-error-state
+        [title]="'hostPayment.notFoundTitle' | transloco"
+        [message]="'hostPayment.notFoundMessage' | transloco"
+        [showRetry]="false"
+        data-testid="detail-not-found"
+      />
+      <ng-container [ngTemplateOutlet]="back" />
+    } @else if (view().kind === 'error') {
+      <hh-error-state
+        [message]="'hostBilling.invoiceLoadError' | transloco"
+        [retryLabel]="'common.tryAgain' | transloco"
+        [networkError]="networkError()"
+        (retry)="load()"
+        data-testid="detail-load-error"
+      />
+      <ng-container [ngTemplateOutlet]="back" />
+    } @else {
+      <div
+        class="flex flex-col gap-3"
+        data-testid="detail-loading"
+        aria-busy="true"
+      >
+        <hh-skeleton class="h-6 w-1/3" />
+        <hh-skeleton class="h-4 w-1/4" />
+        <hh-skeleton class="h-56 w-full" radius="lg" />
+        <hh-skeleton class="h-32 w-full" radius="lg" />
+      </div>
+      <ng-container [ngTemplateOutlet]="back" />
+    }
+  </div>
+</app-dashboard-layout>
+
+<ng-template #back>
+  <a
+    hh-button
+    variant="text"
+    size="sm"
+    class="self-center"
+    [routerLink]="historyLink()"
+    [queryParams]="historyQuery()"
+    data-testid="back-to-history"
+    >{{ 'hostBillingHistory.backToHistory' | transloco }}</a
+  >
+</ng-template>

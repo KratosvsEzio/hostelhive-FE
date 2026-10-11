@@ -15,7 +15,13 @@ const I18N = join(
 
 type Tree = { [key: string]: string | Tree };
 
-const GROUPS = ['hostBilling', 'hostPayment', 'sharedBilling', 'publicPricing'];
+const GROUPS = [
+  'hostBilling',
+  'hostPayment',
+  'sharedBilling',
+  'publicPricing',
+  'hostBillingHistory',
+];
 const SINGLE_KEYS = [
   'hostNav.billing',
   'footer.pricing',
@@ -120,5 +126,50 @@ describe('the billing and pricing copy in every language', () => {
 
   it.each(RETIRED_KEYS)('English no longer carries the retired key %s', (path) => {
     expect(at(en, path)).toBeUndefined();
+  });
+});
+
+/** What `hostBilling.kindNew` said before it was reworded from "first payment" to "new plan". */
+const OLD_KIND_NEW: Record<string, string> = {
+  'ar.json': 'الدفعة الأولى · {{start}} – {{end}}',
+  'da.json': 'Første betaling · {{start}} – {{end}}',
+  'de.json': 'Erste Zahlung · {{start}} – {{end}}',
+  'en.json': 'First payment · {{start}} – {{end}}',
+  'es.json': 'Primer pago · {{start}} – {{end}}',
+  'fr.json': 'Premier paiement · {{start}} – {{end}}',
+  'hi.json': 'पहला भुगतान · {{start}} – {{end}}',
+  'hu.json': 'Első fizetés · {{start}} – {{end}}',
+  'id.json': 'Pembayaran pertama · {{start}} – {{end}}',
+  'it.json': 'Primo pagamento · {{start}} – {{end}}',
+  'ja.json': '初回のお支払い · {{start}} – {{end}}',
+  'nl.json': 'Eerste betaling · {{start}} – {{end}}',
+  'pl.json': 'Pierwsza płatność · {{start}} – {{end}}',
+  'ru.json': 'Первый платёж · {{start}} – {{end}}',
+  'sv.json': 'Första betalning · {{start}} – {{end}}',
+  'ur.json': 'پہلی ادائیگی · {{start}} – {{end}}',
+  'vi.json': 'Thanh toán lần đầu · {{start}} – {{end}}',
+  'zh.json': '首次付款 · {{start}} – {{end}}',
+};
+
+describe('the new-plan invoice kind label', () => {
+  it('reads "New plan" with its period in English', () => {
+    expect(at(en, 'hostBilling.kindNew')).toBe('New plan · {{start}} – {{end}}');
+  });
+
+  it('has a recorded old wording for every language', () => {
+    expect(Object.keys(OLD_KIND_NEW).sort()).toEqual([...files].sort());
+  });
+
+  describe.each(files)('%s', (file) => {
+    const label = at(load(file), 'hostBilling.kindNew');
+
+    it('is no longer worded as the first payment', () => {
+      expect(label).not.toBe(OLD_KIND_NEW[file]);
+    });
+
+    it('still shows the period start and end', () => {
+      expect(label).toContain('{{start}}');
+      expect(label).toContain('{{end}}');
+    });
   });
 });

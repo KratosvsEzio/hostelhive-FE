@@ -46,7 +46,11 @@ import { localiseCommands } from '@core/i18n/locale-commands';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { ApiDate } from '@util/api-date';
 import { isNetworkError } from '@util/network-error';
-import { PlanButton, planButton } from '@app/shared/billing/billing-labels';
+import {
+  PlanButton,
+  billingHistoryPath,
+  planButton,
+} from '@app/shared/billing/billing-labels';
 import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
 import { PlanCard } from '@app/shared/billing/plan-card';
 import { CurrentPlanCard } from './current-plan-card';
@@ -197,6 +201,14 @@ export class BillingPage {
   );
   protected readonly canEditHostel = computed(() =>
     this.session.hasPermission('host:Hostel:show'),
+  );
+
+  protected readonly canViewHistory = computed(() =>
+    this.session.hasPermission('core:Invoice:index'),
+  );
+
+  protected readonly historyLink = computed(() =>
+    billingHistoryPath(this.hostelId()),
   );
 
   protected readonly profileLink = computed(

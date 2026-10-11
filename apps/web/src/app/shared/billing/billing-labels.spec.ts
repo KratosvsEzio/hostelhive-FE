@@ -5,6 +5,16 @@ import type {
   BillingSubscription,
 } from '@hostelhive/data-access';
 import {
+  billingAttemptNote,
+  billingHistoryPath,
+  billingInvoiceCharged,
+  billingInvoiceKindLabelKey,
+  billingInvoicePath,
+  billingInvoiceStatusKey,
+  billingPaymentCharged,
+  billingPaymentMethodKey,
+  billingPaymentStatusKey,
+  billingPaymentStatusTone,
   invoiceKindKey,
   invoiceStatusTone,
   latestAttemptNotice,
@@ -223,6 +233,208 @@ describe('latestAttemptNotice', () => {
     );
 
     expect(notice?.key).toBe('hostPayment.pendingNotice');
+  });
+});
+
+describe('billingInvoiceStatusKey', () => {
+  it.each([
+    ['open', 'hostBillingHistory.statusOpen'],
+    ['paid', 'hostBillingHistory.statusPaid'],
+    ['void', 'hostBillingHistory.statusVoid'],
+  ])('%s → %s', (slug, key) => {
+    expect(billingInvoiceStatusKey(slug)).toBe(key);
+  });
+
+  it.each(['refunded', '', null, undefined])(
+    'an unknown status %j has no key, so the caller shows status.name',
+    (slug) => {
+      expect(billingInvoiceStatusKey(slug)).toBeNull();
+    },
+  );
+});
+
+describe('billingInvoiceKindLabelKey', () => {
+  it.each([
+    ['new', 'hostBillingHistory.kindNew'],
+    ['renewal', 'hostBillingHistory.kindRenewal'],
+    ['upgrade', 'hostBillingHistory.kindUpgrade'],
+  ])('%s → %s', (kind, key) => {
+    expect(billingInvoiceKindLabelKey(kind)).toBe(key);
+  });
+
+  it.each(['downgrade', '', null, undefined])(
+    'an unknown kind %j has no key, so the caller shows a dash',
+    (kind) => {
+      expect(billingInvoiceKindLabelKey(kind)).toBeNull();
+    },
+  );
+});
+
+describe('billingPaymentStatusTone', () => {
+  it.each([
+    ['succeeded', 'ok'],
+    ['failed', 'danger'],
+    ['pending', 'warn'],
+    ['awaiting-verification', 'warn'],
+    ['refunded', 'neutral'],
+    [null, 'neutral'],
+    [undefined, 'neutral'],
+  ])('%j → %s', (slug, tone) => {
+    expect(billingPaymentStatusTone(slug)).toBe(tone);
+  });
+});
+
+describe('billingPaymentStatusKey', () => {
+  it.each([
+    ['pending', 'hostBillingHistory.paymentPending'],
+    ['awaiting-verification', 'hostBillingHistory.paymentReview'],
+    ['succeeded', 'hostBillingHistory.paymentSucceeded'],
+    ['failed', 'hostBillingHistory.paymentFailed'],
+  ])('%s → %s', (slug, key) => {
+    expect(billingPaymentStatusKey(slug)).toBe(key);
+  });
+
+  it.each(['refunded', '', null, undefined])(
+    'an unknown status %j has no key, so the caller shows status.name',
+    (slug) => {
+      expect(billingPaymentStatusKey(slug)).toBeNull();
+    },
+  );
+});
+
+describe('billingPaymentMethodKey', () => {
+  it.each([
+    ['safepay', 'hostBillingHistory.methodSafepay'],
+    ['bank_transfer', 'hostBillingHistory.methodBankTransfer'],
+    ['cash', 'hostBillingHistory.methodCash'],
+    ['admin_grant', 'hostBillingHistory.methodAdminGrant'],
+  ])('%s → %s', (method, key) => {
+    expect(billingPaymentMethodKey(method)).toBe(key);
+  });
+
+  it.each(['jazzcash', '', null, undefined])(
+    'an unknown method %j reads Other, never the raw value',
+    (method) => {
+      expect(billingPaymentMethodKey(method)).toBe(
+        'hostBillingHistory.methodOther',
+      );
+    },
+  );
+});
+
+describe('charged attempts and attempt notes', () => {
+  const CHARGED_REASON =
+    'Invoice voided. Charged at Safepay (track_9); refund it from the Safepay dashboard';
+  const PLAIN_REASON = 'Safepay declined the payment';
+
+  function attempt(
+    slug: string,
+    failure_reason: string | null = null,
+  ): Pick<BillingPayment, 'status' | 'failure_reason'> {
+    return {
+      status: { id: 1, name: slug, slug, color: null },
+      failure_reason,
+    };
+  }
+
+  describe('billingPaymentCharged', () => {
+    it('is true for a failed attempt the backend marked as charged at Safepay', () => {
+      expect(billingPaymentCharged(attempt('failed', CHARGED_REASON))).toBe(
+        true,
+      );
+    });
+
+    it('is false for a failed attempt with any other reason, or none', () => {
+      expect(billingPaymentCharged(attempt('failed', PLAIN_REASON))).toBe(false);
+      expect(billingPaymentCharged(attempt('failed', null))).toBe(false);
+    });
+
+    it('is false for an attempt that did not fail, whatever its reason says', () => {
+      expect(billingPaymentCharged(attempt('succeeded', CHARGED_REASON))).toBe(
+        false,
+      );
+      expect(billingPaymentCharged(attempt('pending', CHARGED_REASON))).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('billingInvoiceCharged', () => {
+    it('is true when any attempt was charged but not applied', () => {
+      expect(
+        billingInvoiceCharged({
+          payments: [
+            attempt('failed', CHARGED_REASON),
+            attempt('succeeded'),
+          ] as BillingPayment[],
+        }),
+      ).toBe(true);
+    });
+
+    it('is false when no attempt was charged, or there are none', () => {
+      expect(
+        billingInvoiceCharged({
+          payments: [
+            attempt('failed', PLAIN_REASON),
+            attempt('pending'),
+          ] as BillingPayment[],
+        }),
+      ).toBe(false);
+      expect(billingInvoiceCharged({ payments: [] })).toBe(false);
+    });
+  });
+
+  describe('billingAttemptNote', () => {
+    it('a charged attempt: the charged-not-applied note, danger, with Contact us', () => {
+      expect(billingAttemptNote(attempt('failed', CHARGED_REASON))).toEqual({
+        key: 'hostPayment.chargedNotApplied',
+        tone: 'danger',
+        contactUs: true,
+      });
+    });
+
+    it('any other failed attempt: our own failed note, neutral, no Contact us', () => {
+      expect(billingAttemptNote(attempt('failed', PLAIN_REASON))).toEqual({
+        key: 'hostBillingHistory.attemptFailed',
+        tone: 'neutral',
+        contactUs: false,
+      });
+      expect(billingAttemptNote(attempt('failed', null))).toEqual({
+        key: 'hostBillingHistory.attemptFailed',
+        tone: 'neutral',
+        contactUs: false,
+      });
+    });
+
+    it.each(['pending', 'awaiting-verification', 'succeeded', 'refunded'])(
+      'a %s attempt has no note',
+      (slug) => {
+        expect(billingAttemptNote(attempt(slug, PLAIN_REASON))).toBeNull();
+      },
+    );
+
+    it('never carries the failure reason text', () => {
+      for (const reason of [CHARGED_REASON, PLAIN_REASON]) {
+        const note = JSON.stringify(billingAttemptNote(attempt('failed', reason)));
+        expect(note).not.toContain(reason);
+        expect(note).not.toContain('track_9');
+        expect(note).not.toContain('Safepay');
+      }
+    });
+  });
+});
+
+describe('billing history paths', () => {
+  it('billingHistoryPath points at the subscription invoices list, not the renter bills', () => {
+    expect(billingHistoryPath('nHelLt')).toBe(
+      '/host/nHelLt/subscription/invoices',
+    );
+  });
+
+  it('billingInvoicePath points at one invoice under it, ids as given', () => {
+    expect(billingInvoicePath('nHelLt', 'inv1')).toBe(
+      '/host/nHelLt/subscription/invoices/inv1',
+    );
   });
 });
 

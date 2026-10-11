@@ -1,0 +1,145 @@
+<app-dashboard-layout [label]="'hostBilling.title' | transloco">
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex flex-col gap-1">
+        <h2 class="font-display text-lg font-bold text-ink-900">
+          {{ 'hostBillingHistory.title' | transloco }}
+        </h2>
+        <p class="text-sm text-ink-600">
+          {{ 'hostBillingHistory.subtitle' | transloco }}
+        </p>
+      </div>
+      <a
+        hh-button
+        variant="text"
+        size="sm"
+        [routerLink]="billingLink()"
+        data-testid="back-to-billing"
+        >{{ 'hostBilling.backToBilling' | transloco }}</a
+      >
+    </div>
+
+    @if (showChips()) {
+      <hh-filter-chips
+        [tabs]="chips()"
+        [active]="status()"
+        (activeChange)="selectStatus($event)"
+        data-testid="status-filter"
+      />
+    }
+
+    <div #listTop class="flex flex-col gap-4 scroll-mt-6">
+      @switch (view().kind) {
+        @case ('loading') {
+          <div
+            class="flex flex-col gap-3"
+            data-testid="history-loading"
+            aria-busy="true"
+          >
+            <hh-skeleton class="h-10 w-full" radius="md" />
+            @for (i of skeletonRows; track i) {
+              <hh-skeleton class="h-12 w-full" radius="md" />
+            }
+          </div>
+        }
+        @case ('forbidden') {
+          <hh-error-state
+            [title]="'hostBilling.noAccessTitle' | transloco"
+            [message]="'hostBilling.noAccessMessage' | transloco"
+            [showRetry]="false"
+            data-testid="history-forbidden"
+          />
+        }
+        @case ('error') {
+          <hh-error-state
+            [message]="'hostBillingHistory.loadError' | transloco"
+            [retryLabel]="'common.tryAgain' | transloco"
+            [networkError]="networkError()"
+            (retry)="retry()"
+            data-testid="history-error"
+          />
+        }
+        @case ('ready') {
+          @switch (emptyKind()) {
+            @case ('empty') {
+              <hh-empty-state
+                icon="ti-receipt"
+                [title]="'hostBillingHistory.emptyTitle' | transloco"
+                [message]="'hostBillingHistory.emptyMessage' | transloco"
+                data-testid="history-empty"
+              >
+                <a
+                  hh-button
+                  color="primary"
+                  size="sm"
+                  [routerLink]="billingLink()"
+                  data-testid="go-to-billing"
+                  >{{ 'hostPayment.goToBilling' | transloco }}</a
+                >
+              </hh-empty-state>
+            }
+            @case ('noMatch') {
+              <hh-empty-state
+                icon="ti-filter-off"
+                [title]="'hostBillingHistory.noMatchTitle' | transloco"
+                data-testid="history-no-match"
+              >
+                <button
+                  hh-button
+                  type="button"
+                  size="sm"
+                  (click)="showAll()"
+                  data-testid="show-all"
+                >
+                  {{ 'common.showAll' | transloco }}
+                </button>
+              </hh-empty-state>
+            }
+            @case ('pastLast') {
+              <hh-empty-state
+                icon="ti-filter-off"
+                [title]="'hostBillingHistory.noMatchTitle' | transloco"
+                data-testid="history-past-last"
+              >
+                <button
+                  hh-button
+                  type="button"
+                  size="sm"
+                  (click)="firstPage()"
+                  data-testid="first-page"
+                >
+                  {{ 'hostBillingHistory.firstPage' | transloco }}
+                </button>
+              </hh-empty-state>
+            }
+            @default {
+              <hh-billing-invoice-table
+                [rows]="result()?.rows ?? []"
+                [hostelId]="hostelId()"
+                [historyQuery]="historyQuery()"
+              />
+              @if (pageInfo(); as info) {
+                <div
+                  class="flex flex-wrap items-center justify-between gap-3"
+                  data-testid="history-pagination"
+                >
+                  <p class="text-sm text-ink-500" data-field="page-of">
+                    {{
+                      'common.pageOf'
+                        | transloco: { page: info.page, total: info.totalPages }
+                    }}
+                  </p>
+                  <hh-pagination
+                    [pageCount]="info.totalPages"
+                    [page]="info.page"
+                    (pageChange)="goToPage($event)"
+                  />
+                </div>
+              }
+            }
+          }
+        }
+      }
+    </div>
+  </div>
+</app-dashboard-layout>

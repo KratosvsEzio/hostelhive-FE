@@ -1,6 +1,7 @@
 import type { StatusTone } from '@hostelhive/ui';
 import type {
   BillingInvoice,
+  BillingPayment,
   BillingPlan,
   BillingSubscription,
 } from '@hostelhive/data-access';
@@ -21,7 +22,7 @@ export function statusTone(slug: string | null | undefined): StatusTone {
   }
 }
 
-/** Pill tone for an invoice status. The pill's label is the server's `status.name`. */
+/** Pill tone for an invoice status. The pill's label comes from {@link billingInvoiceStatusKey}. */
 export function invoiceStatusTone(slug: string | null | undefined): StatusTone {
   switch (slug) {
     case 'paid':
@@ -83,6 +84,152 @@ export function latestAttemptNotice(
     };
   }
   return null;
+}
+
+/** Our label for a known invoice status, or null so the caller shows the server's `status.name`. */
+export function billingInvoiceStatusKey(
+  slug: string | null | undefined,
+): string | null {
+  switch (slug) {
+    case 'open':
+      return 'hostBillingHistory.statusOpen';
+    case 'paid':
+      return 'hostBillingHistory.statusPaid';
+    case 'void':
+      return 'hostBillingHistory.statusVoid';
+    default:
+      return null;
+  }
+}
+
+/** The short kind label for the history table, or null so the caller shows a dash. */
+export function billingInvoiceKindLabelKey(
+  kind: string | null | undefined,
+): string | null {
+  switch (kind) {
+    case 'new':
+      return 'hostBillingHistory.kindNew';
+    case 'renewal':
+      return 'hostBillingHistory.kindRenewal';
+    case 'upgrade':
+      return 'hostBillingHistory.kindUpgrade';
+    default:
+      return null;
+  }
+}
+
+/** Pill tone for a payment attempt's status. */
+export function billingPaymentStatusTone(
+  slug: string | null | undefined,
+): StatusTone {
+  switch (slug) {
+    case 'succeeded':
+      return 'ok';
+    case 'failed':
+      return 'danger';
+    case 'pending':
+    case 'awaiting-verification':
+      return 'warn';
+    default:
+      return 'neutral';
+  }
+}
+
+/** Our label for a known payment status, or null so the caller shows the server's `status.name`. */
+export function billingPaymentStatusKey(
+  slug: string | null | undefined,
+): string | null {
+  switch (slug) {
+    case 'pending':
+      return 'hostBillingHistory.paymentPending';
+    case 'awaiting-verification':
+      return 'hostBillingHistory.paymentReview';
+    case 'succeeded':
+      return 'hostBillingHistory.paymentSucceeded';
+    case 'failed':
+      return 'hostBillingHistory.paymentFailed';
+    default:
+      return null;
+  }
+}
+
+/** The label for a payment method; an unknown method reads "Other", never the raw value. */
+export function billingPaymentMethodKey(
+  method: string | null | undefined,
+): string {
+  switch (method) {
+    case 'safepay':
+      return 'hostBillingHistory.methodSafepay';
+    case 'bank_transfer':
+      return 'hostBillingHistory.methodBankTransfer';
+    case 'cash':
+      return 'hostBillingHistory.methodCash';
+    case 'admin_grant':
+      return 'hostBillingHistory.methodAdminGrant';
+    default:
+      return 'hostBillingHistory.methodOther';
+  }
+}
+
+/** Whether a failed attempt was charged at Safepay but never applied to the invoice. */
+export function billingPaymentCharged(
+  payment: Pick<BillingPayment, 'status' | 'failure_reason'>,
+): boolean {
+  return (
+    payment.status?.slug === 'failed' &&
+    CHARGED_AT_SAFEPAY.test(payment.failure_reason ?? '')
+  );
+}
+
+/** Whether any attempt on the invoice was charged but not applied. */
+export function billingInvoiceCharged(
+  invoice: Pick<BillingInvoice, 'payments'>,
+): boolean {
+  return (invoice.payments ?? []).some(billingPaymentCharged);
+}
+
+/**
+ * Our own note under one payment attempt. `key` takes `{ number }` for the charged case;
+ * `contactUs` asks for a link to the contact page beside it.
+ */
+export interface BillingAttemptNote {
+  key: 'hostPayment.chargedNotApplied' | 'hostBillingHistory.attemptFailed';
+  tone: 'danger' | 'neutral';
+  contactUs: boolean;
+}
+
+/**
+ * The note for one payment attempt, or null when it needs none. `failure_reason` only picks
+ * the note and is never part of it.
+ */
+export function billingAttemptNote(
+  payment: Pick<BillingPayment, 'status' | 'failure_reason'>,
+): BillingAttemptNote | null {
+  if (billingPaymentCharged(payment)) {
+    return {
+      key: 'hostPayment.chargedNotApplied',
+      tone: 'danger',
+      contactUs: true,
+    };
+  }
+  if (payment.status?.slug === 'failed') {
+    return {
+      key: 'hostBillingHistory.attemptFailed',
+      tone: 'neutral',
+      contactUs: false,
+    };
+  }
+  return null;
+}
+
+/** The hostel's billing history page. */
+export function billingHistoryPath(hostelId: string): string {
+  return `/host/${hostelId}/subscription/invoices`;
+}
+
+/** One invoice's page in the hostel's billing history. */
+export function billingInvoicePath(hostelId: string, invoiceId: string): string {
+  return `/host/${hostelId}/subscription/invoices/${invoiceId}`;
 }
 
 /**

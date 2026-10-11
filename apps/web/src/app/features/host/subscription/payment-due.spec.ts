@@ -10,7 +10,7 @@ import { PaymentDue } from './payment-due';
 const COPY = {
   hostBilling: {
     invoiceNumber: 'Invoice {{number}}',
-    kindNew: 'First payment · {{start}} – {{end}}',
+    kindNew: 'New plan · {{start}} – {{end}}',
     kindRenewal: 'Renewal · {{start}} – {{end}}',
     kindUpgrade: 'Upgrade charge · {{start}} – {{end}}',
     forPeriod: '{{start}} – {{end}}',
@@ -95,7 +95,7 @@ describe('PaymentDue', () => {
       const el = render(invoice({ kind: 'new' }));
 
       expect(field(el, 'purpose')).toBe(
-        'First payment · 12 Oct 2026 – 12 Nov 2026',
+        'New plan · 12 Oct 2026 – 12 Nov 2026',
       );
     });
 
