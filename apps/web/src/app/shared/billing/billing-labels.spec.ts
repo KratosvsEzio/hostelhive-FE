@@ -521,7 +521,27 @@ describe('planButton', () => {
     expect(button.sublineKey).toBeUndefined();
   });
 
-  it('downgrade not yet scheduled: a disabled Switch at renewal with the coming-soon hint', () => {
+  it('upgrade while cancelling: no renews-at line, because the plan will not renew', () => {
+    const cancelling = { ...SUBSCRIPTION, cancel_at_period_end: true };
+
+    expect(
+      planButton(
+        plan({
+          action: 'upgrade',
+          amount_due_now: '3000.00',
+          price: '8000.00',
+        }),
+        cancelling,
+      ),
+    ).toEqual({
+      key: 'hostBilling.upgradePayNow',
+      disabled: false,
+      kind: 'checkout',
+      amount: '3000.00',
+    });
+  });
+
+  it('downgrade not yet scheduled: an enabled Switch at renewal with no hint', () => {
     expect(
       planButton(
         plan({ action: 'downgrade', amount_due_now: null, scheduled: false }),
@@ -529,25 +549,43 @@ describe('planButton', () => {
       ),
     ).toEqual({
       key: 'hostBilling.switchAtRenewal',
-      disabled: true,
+      disabled: false,
       kind: 'downgrade',
-      hintKey: 'hostBilling.switchComingSoon',
     });
   });
 
-  it('downgrade already scheduled: disabled, with the Scheduled for renewal badge', () => {
+  it('downgrade already scheduled: a disabled Scheduled of its own kind', () => {
     expect(
       planButton(
         plan({ action: 'downgrade', amount_due_now: null, scheduled: true }),
         SUBSCRIPTION,
       ),
     ).toEqual({
-      key: 'hostBilling.switchAtRenewal',
+      key: 'hostBilling.scheduled',
       disabled: true,
-      kind: 'downgrade',
-      badgeKey: 'hostBilling.scheduledForRenewal',
+      kind: 'scheduled',
     });
   });
+
+  // Cancel wins at period end, so even the scheduled plan reads as an ordinary blocked downgrade.
+  it.each([false, true])(
+    'downgrade while cancelling (scheduled: %s): disabled, with the resume-to-switch hint',
+    (scheduled) => {
+      const cancelling = { ...SUBSCRIPTION, cancel_at_period_end: true };
+
+      expect(
+        planButton(
+          plan({ action: 'downgrade', amount_due_now: null, scheduled }),
+          cancelling,
+        ),
+      ).toEqual({
+        key: 'hostBilling.switchAtRenewal',
+        disabled: true,
+        kind: 'downgrade',
+        hintKey: 'hostBilling.resumeToSwitch',
+      });
+    },
+  );
 
   it('unavailable: a disabled Unavailable; the caller shows the reason as returned', () => {
     expect(

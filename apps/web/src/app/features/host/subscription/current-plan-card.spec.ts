@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import type { BillingSubscription } from '@hostelhive/data-access';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
-import { CurrentPlanCard } from './current-plan-card';
+import { CurrentPlanCard, type CurrentPlanAction } from './current-plan-card';
 
 // Only the keys that take a parameter carry copy, so the spec can see what was passed in.
 const COPY = {
@@ -13,7 +13,8 @@ const COPY = {
     endedOn: 'Ended on {{date}}',
     wasDueOn: 'Payment was due on {{date}}',
     graceUntil: 'Pay by {{date}} to keep your listing',
-    switchesTo: 'Switches to {{plan}} at renewal',
+    switchesTo: 'Switches to {{plan}} on {{date}}',
+    undoSwitchLabel: 'Undo the switch to {{plan}}',
   },
 };
 
@@ -38,7 +39,16 @@ function subscription(
 @Component({
   imports: [CurrentPlanCard],
   template: `
-    <hh-current-plan-card [subscription]="subscription" [features]="features">
+    <hh-current-plan-card
+      [subscription]="subscription"
+      [features]="features"
+      [canChange]="canChange"
+      [busy]="busy"
+      [locked]="locked"
+      (undo)="emitted.push('undo')"
+      (resume)="emitted.push('resume')"
+      (cancelPlan)="emitted.push('cancel')"
+    >
       <span data-test="projected">actions</span>
     </hh-current-plan-card>
   `,
@@ -46,6 +56,16 @@ function subscription(
 class Host {
   subscription: BillingSubscription | null = null;
   features: readonly string[] = [];
+  canChange = false;
+  busy: CurrentPlanAction | null = null;
+  locked = false;
+  emitted: CurrentPlanAction[] = [];
+}
+
+interface Controls {
+  canChange?: boolean;
+  busy?: CurrentPlanAction | null;
+  locked?: boolean;
 }
 
 describe('CurrentPlanCard', () => {
@@ -54,15 +74,20 @@ describe('CurrentPlanCard', () => {
   function render(
     sub: BillingSubscription | null,
     features: readonly string[] = [],
+    controls: Controls = {},
   ): HTMLElement {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       imports: [Host],
       providers: [provideI18nTesting()],
     });
     TestBed.inject(TranslocoService).setTranslation(COPY, 'en');
     fixture = TestBed.createComponent(Host);
-    fixture.componentInstance.subscription = sub;
-    fixture.componentInstance.features = features;
+    Object.assign(fixture.componentInstance, {
+      subscription: sub,
+      features,
+      ...controls,
+    });
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
@@ -187,16 +212,14 @@ describe('CurrentPlanCard', () => {
   });
 
   describe('scheduled plan', () => {
-    it('adds the switch at renewal, naming the scheduled plan', () => {
-      const el = render(
-        subscription('active', {
-          scheduled_plan: { id: 'plStart', code: 'starter', name: 'Starter' },
-        }),
-      );
+    const starter = { id: 'plStart', code: 'starter', name: 'Starter' };
+
+    it('adds the switch on the period end, naming the scheduled plan', () => {
+      const el = render(subscription('active', { scheduled_plan: starter }));
 
       expect(lines(el)).toEqual([
         'Renews on 12 Nov 2026',
-        'Switches to Starter at renewal',
+        'Switches to Starter on 12 Nov 2026',
       ]);
     });
 
@@ -204,6 +227,305 @@ describe('CurrentPlanCard', () => {
       const el = render(subscription('active'));
 
       expect(text(el)).not.toContain('Switches to');
+    });
+
+    // Cancel wins at period end, so the switch will not happen.
+    it('has no switch line while cancelling', () => {
+      const el = render(
+        subscription('active', {
+          scheduled_plan: starter,
+          cancel_at_period_end: true,
+        }),
+      );
+
+      expect(lines(el)).toEqual(['Ends on 12 Nov 2026']);
+    });
+
+    it.each(['past-due', 'incomplete', 'expired', 'canceled'])(
+      'has no switch line on %s',
+      (slug) => {
+        const el = render(subscription(slug, { scheduled_plan: starter }));
+
+        expect(text(el)).not.toContain('Switches to');
+      },
+    );
+
+    it('has no switch line without a period end to name', () => {
+      const el = render(
+        subscription('active', {
+          scheduled_plan: starter,
+          current_period_end: null,
+        }),
+      );
+
+      expect(text(el)).not.toContain('Switches to');
+    });
+  });
+
+  describe('plan-change controls', () => {
+    const starter = { id: 'plStart', code: 'starter', name: 'Starter' };
+    const undo = (el: HTMLElement) =>
+      el.querySelector<HTMLButtonElement>('[data-testid="card-undo"]');
+    const resume = (el: HTMLElement) =>
+      el.querySelector<HTMLButtonElement>('[data-testid="card-resume"]');
+    const cancel = (el: HTMLElement) =>
+      el.querySelector<HTMLButtonElement>('[data-testid="card-cancel"]');
+    const shown = (el: HTMLElement) => ({
+      undo: !!undo(el),
+      resume: !!resume(el),
+      cancel: !!cancel(el),
+    });
+    const none = { undo: false, resume: false, cancel: false };
+
+    describe('with permission to change the plan', () => {
+      const can = { canChange: true };
+
+      it('active: offers Cancel plan only', () => {
+        const el = render(subscription('active'), [], can);
+
+        expect(shown(el)).toEqual({ undo: false, resume: false, cancel: true });
+        expect(cancel(el)?.textContent?.trim()).toBe('hostBilling.cancelPlan');
+      });
+
+      it('active with a switch: offers Undo and Cancel plan', () => {
+        const el = render(
+          subscription('active', { scheduled_plan: starter }),
+          [],
+          can,
+        );
+
+        expect(shown(el)).toEqual({ undo: true, resume: false, cancel: true });
+        expect(undo(el)?.textContent?.trim()).toBe('hostBilling.undo');
+      });
+
+      it('active and cancelling: offers Resume plan only', () => {
+        const el = render(
+          subscription('active', { cancel_at_period_end: true }),
+          [],
+          can,
+        );
+
+        expect(shown(el)).toEqual({ undo: false, resume: true, cancel: false });
+        expect(resume(el)?.textContent?.trim()).toBe('hostBilling.resumePlan');
+      });
+
+      it('active, cancelling and with a switch: Resume plan only, no Undo', () => {
+        const el = render(
+          subscription('active', {
+            scheduled_plan: starter,
+            cancel_at_period_end: true,
+          }),
+          [],
+          can,
+        );
+
+        expect(shown(el)).toEqual({ undo: false, resume: true, cancel: false });
+      });
+
+      it('places Resume plan on the Ends on line', () => {
+        const el = render(
+          subscription('active', { cancel_at_period_end: true }),
+          [],
+          can,
+        );
+
+        expect(
+          resume(el)?.parentElement?.querySelector(
+            '[data-line="hostBilling.endsOn"]',
+          ),
+        ).not.toBeNull();
+      });
+
+      it('still offers Resume plan when the API left the end date null', () => {
+        const el = render(
+          subscription('active', {
+            cancel_at_period_end: true,
+            current_period_end: null,
+          }),
+          [],
+          can,
+        );
+
+        expect(shown(el)).toEqual({ undo: false, resume: true, cancel: false });
+      });
+
+      it('places Undo on the Switches to line', () => {
+        const el = render(
+          subscription('active', { scheduled_plan: starter }),
+          [],
+          can,
+        );
+
+        expect(
+          undo(el)?.parentElement?.querySelector(
+            '[data-line="hostBilling.switchesTo"]',
+          ),
+        ).not.toBeNull();
+      });
+
+      it('places Cancel plan after the features and before the projected content', () => {
+        const el = render(subscription('active'), ['listing'], can);
+        const card = el.querySelector('hh-card') as HTMLElement;
+        const order = Array.from(
+          card.querySelectorAll(
+            'li, [data-testid="card-cancel"], [data-test="projected"]',
+          ),
+        ).map((n) => n.tagName.toLowerCase());
+
+        expect(order).toEqual(['li', 'button', 'span']);
+      });
+
+      it.each(['past-due', 'incomplete', 'expired', 'canceled', 'paused'])(
+        '%s: offers nothing, even with a switch or a cancel set',
+        (slug) => {
+          const el = render(
+            subscription(slug, {
+              scheduled_plan: starter,
+              cancel_at_period_end: true,
+            }),
+            [],
+            can,
+          );
+          const el2 = render(subscription(slug), [], can);
+
+          expect(shown(el)).toEqual(none);
+          expect(shown(el2)).toEqual(none);
+        },
+      );
+
+      it('without a subscription: offers nothing', () => {
+        const el = render(null, [], can);
+
+        expect(shown(el)).toEqual(none);
+      });
+    });
+
+    describe('without permission to change the plan', () => {
+      it.each([
+        ['active', {}],
+        ['active with a switch', { scheduled_plan: starter }],
+        ['active and cancelling', { cancel_at_period_end: true }],
+      ] as const)('%s: offers nothing', (_, over) => {
+        const el = render(subscription('active', over), [], {
+          canChange: false,
+        });
+
+        expect(shown(el)).toEqual(none);
+      });
+
+      it('is the default, so the switch line still shows without Undo', () => {
+        const el = render(subscription('active', { scheduled_plan: starter }));
+
+        expect(lines(el)).toContain('Switches to Starter on 12 Nov 2026');
+        expect(shown(el)).toEqual(none);
+      });
+    });
+
+    it('names the plan in Undo’s accessible label', () => {
+      const el = render(
+        subscription('active', { scheduled_plan: starter }),
+        [],
+        { canChange: true },
+      );
+
+      expect(undo(el)?.getAttribute('aria-label')).toBe(
+        'Undo the switch to Starter',
+      );
+    });
+
+    it('keeps the status lines in a polite live region', () => {
+      const el = render(
+        subscription('active', { scheduled_plan: starter }),
+        [],
+        { canChange: true },
+      );
+      const region = el.querySelector('[data-testid="plan-status"]');
+
+      expect(region?.getAttribute('aria-live')).toBe('polite');
+      expect(
+        Array.from(region?.querySelectorAll('[data-line]') ?? []).map((p) =>
+          p.getAttribute('data-line'),
+        ),
+      ).toEqual(['hostBilling.renewsOn', 'hostBilling.switchesTo']);
+    });
+
+    it('has no live region without a subscription', () => {
+      const el = render(null);
+
+      expect(el.querySelector('[data-testid="plan-status"]')).toBeNull();
+    });
+
+    describe('locked and busy', () => {
+      const withSwitch = subscription('active', { scheduled_plan: starter });
+      const cancelling = subscription('active', { cancel_at_period_end: true });
+
+      it('enables every control by default', () => {
+        const a = render(withSwitch, [], { canChange: true });
+        const b = render(cancelling, [], { canChange: true });
+
+        expect(undo(a)?.disabled).toBe(false);
+        expect(cancel(a)?.disabled).toBe(false);
+        expect(resume(b)?.disabled).toBe(false);
+      });
+
+      it('locked disables all three', () => {
+        const a = render(withSwitch, [], { canChange: true, locked: true });
+        const b = render(cancelling, [], { canChange: true, locked: true });
+
+        expect(undo(a)?.disabled).toBe(true);
+        expect(cancel(a)?.disabled).toBe(true);
+        expect(resume(b)?.disabled).toBe(true);
+      });
+
+      it.each([
+        ['undo', 'card-undo', withSwitch],
+        ['cancel', 'card-cancel', withSwitch],
+        ['resume', 'card-resume', cancelling],
+      ] as const)(
+        'busy %s puts the spinner on that control only',
+        (action, testId, sub) => {
+          const el = render(sub, [], { canChange: true, busy: action });
+          const spinning = Array.from(
+            el.querySelectorAll('[data-testid^="card-"]'),
+          ).filter((b) => b.getAttribute('aria-busy') === 'true');
+
+          expect(spinning.map((b) => b.getAttribute('data-testid'))).toEqual([
+            testId,
+          ]);
+          expect(
+            el.querySelector(`[data-testid="${testId}"] .ti-loader-2`),
+          ).not.toBeNull();
+        },
+      );
+    });
+
+    describe('outputs', () => {
+      it.each([
+        ['undo', 'card-undo', { scheduled_plan: starter }],
+        ['cancel', 'card-cancel', {}],
+        ['resume', 'card-resume', { cancel_at_period_end: true }],
+      ] as const)('%s emits on click', (action, testId, over) => {
+        const el = render(subscription('active', over), [], {
+          canChange: true,
+        });
+
+        el.querySelector<HTMLButtonElement>(
+          `[data-testid="${testId}"]`,
+        )?.click();
+
+        expect(fixture.componentInstance.emitted).toEqual([action]);
+      });
+
+      it('emits nothing from a locked control', () => {
+        const el = render(subscription('active'), [], {
+          canChange: true,
+          locked: true,
+        });
+
+        cancel(el)?.click();
+
+        expect(fixture.componentInstance.emitted).toEqual([]);
+      });
     });
   });
 

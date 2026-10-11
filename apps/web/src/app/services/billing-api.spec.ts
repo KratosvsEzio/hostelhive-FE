@@ -206,6 +206,104 @@ describe('BillingApi', () => {
     });
   });
 
+  describe('plan changes', () => {
+    const SUB_URL = `${BASE}/api/hostels/nHelLt/subscription`;
+    const CHANGED: HostBilling = {
+      ...BILLING,
+      plans: [
+        { ...PLAN, action: 'downgrade', amount_due_now: null, scheduled: true },
+      ],
+    };
+
+    it('scheduleDowngrade posts the plan id as returned and unwraps the billing, toast suppressed', () => {
+      let out: HostBilling | undefined;
+      api.scheduleDowngrade('nHelLt', 'qTFruf').subscribe((b) => (out = b));
+
+      const req = http.expectOne(`${SUB_URL}/schedule_downgrade`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ plan_id: 'qTFruf' });
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, billing: CHANGED });
+
+      expect(out).toEqual(CHANGED);
+    });
+
+    it('unscheduleDowngrade sends a bodiless DELETE and unwraps the billing, toast suppressed', () => {
+      let out: HostBilling | undefined;
+      api.unscheduleDowngrade('nHelLt').subscribe((b) => (out = b));
+
+      const req = http.expectOne(`${SUB_URL}/schedule_downgrade`);
+      expect(req.request.method).toBe('DELETE');
+      expect(req.request.body).toBeNull();
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, billing: BILLING });
+
+      expect(out).toEqual(BILLING);
+    });
+
+    it('cancelSubscription posts an empty body and unwraps the billing, toast suppressed', () => {
+      let out: HostBilling | undefined;
+      api.cancelSubscription('nHelLt').subscribe((b) => (out = b));
+
+      const req = http.expectOne(`${SUB_URL}/cancel`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, billing: CHANGED });
+
+      expect(out).toEqual(CHANGED);
+    });
+
+    it('resumeSubscription sends a bodiless DELETE and unwraps the billing, toast suppressed', () => {
+      let out: HostBilling | undefined;
+      api.resumeSubscription('nHelLt').subscribe((b) => (out = b));
+
+      const req = http.expectOne(`${SUB_URL}/cancel`);
+      expect(req.request.method).toBe('DELETE');
+      expect(req.request.body).toBeNull();
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, billing: BILLING });
+
+      expect(out).toEqual(BILLING);
+    });
+
+    it('hands a 422 message to the caller word for word, without a toast', () => {
+      let err: ApiError | undefined;
+      api
+        .scheduleDowngrade('nHelLt', 'qTFruf')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(`${SUB_URL}/schedule_downgrade`)
+        .flush(
+          { success: false, errors: ['There is no active subscription'] },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+
+      expect(err?.status).toBe(422);
+      expect(err?.serverMessages?.[0]).toBe('There is no active subscription');
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('passes a 403 to the caller without a toast', () => {
+      let err: ApiError | undefined;
+      api
+        .cancelSubscription('nHelLt')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http.expectOne(`${SUB_URL}/cancel`).flush(
+        {
+          success: false,
+          error: 'You are not authorized to access this page.',
+        },
+        { status: 403, statusText: 'Forbidden' },
+      );
+
+      expect(err?.status).toBe(403);
+      expect(notify).not.toHaveBeenCalled();
+    });
+  });
+
   describe('invoice', () => {
     it('reads one invoice out of its envelope', () => {
       let out: BillingInvoice | undefined;

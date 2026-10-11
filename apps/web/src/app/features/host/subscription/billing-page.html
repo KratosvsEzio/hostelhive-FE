@@ -4,7 +4,23 @@
       <hh-current-plan-card
         [subscription]="b.subscription"
         [features]="b.features"
-      />
+        [canChange]="canChangePlan()"
+        [busy]="cardBusy()"
+        [locked]="busy()"
+        (undo)="undoSwitch(null)"
+        (resume)="resumePlan()"
+        (cancelPlan)="openCancel()"
+      >
+        @if (cardChangeError(); as e) {
+          <p
+            class="mt-4 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+            role="alert"
+            data-testid="card-change-error"
+          >
+            {{ e.message ?? (e.messageKey | transloco) }}
+          </p>
+        }
+      </hh-current-plan-card>
 
       @if (b.open_invoice; as invoice) {
         <hh-payment-due
@@ -31,9 +47,12 @@
               {{ 'hostBillingHistory.linkHint' | transloco }}
             </p>
           </div>
-          <a hhLink [routerLink]="historyLink()" data-testid="billing-history-link">{{
-            'hostBillingHistory.viewHistory' | transloco
-          }}</a>
+          <a
+            hhLink
+            [routerLink]="historyLink()"
+            data-testid="billing-history-link"
+            >{{ 'hostBillingHistory.viewHistory' | transloco }}</a
+          >
         </section>
       }
 
@@ -58,7 +77,7 @@
           </p>
         }
 
-        @if (!canCheckout()) {
+        @if (!canCheckout() || !canChangePlan()) {
           <p
             class="flex items-center gap-2 text-sm text-ink-600"
             data-testid="owner-only"
@@ -72,11 +91,6 @@
           @for (view of planViews(); track view.plan.id) {
             <hh-plan-card [plan]="view.plan" [attr.data-plan]="view.plan.id">
               @if (view.button.kind !== 'none') {
-                @if (view.button.badgeKey; as badgeKey) {
-                  <hh-status-pill class="mb-3" tone="neutral">{{
-                    badgeKey | transloco
-                  }}</hh-status-pill>
-                }
                 <button
                   hh-button
                   type="button"
@@ -98,6 +112,34 @@
                           }
                   }}
                 </button>
+                @if (view.canUndo) {
+                  <button
+                    hh-button
+                    type="button"
+                    class="mt-2 w-full"
+                    variant="text"
+                    size="sm"
+                    data-testid="plan-undo"
+                    [attr.aria-label]="
+                      'hostBilling.undoSwitchLabel'
+                        | transloco: { plan: view.plan.name }
+                    "
+                    [disabled]="busy()"
+                    [loading]="view.undoLoading"
+                    (click)="undoSwitch(view.plan.id)"
+                  >
+                    {{ 'hostBilling.undo' | transloco }}
+                  </button>
+                }
+                @if (view.changeError; as e) {
+                  <p
+                    class="mt-2 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                    role="alert"
+                    data-testid="plan-change-error"
+                  >
+                    {{ e.message ?? (e.messageKey | transloco) }}
+                  </p>
+                }
                 @if (view.error; as e) {
                   <p
                     class="mt-2 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
@@ -146,9 +188,6 @@
                 @if (view.button.hintKey; as hintKey) {
                   <p class="mt-2 text-xs text-ink-500" data-field="hint">
                     {{ hintKey | transloco }}
-                    <a hhLink routerLink="/contact">{{
-                      'common.contactUs' | transloco
-                    }}</a>
                   </p>
                 }
                 @if (view.reason; as reason) {
@@ -219,5 +258,76 @@
       'hostBilling.replaceInvoiceMessage'
         | transloco: { number: billing()?.open_invoice?.number }
     }}
+  </hh-confirm-modal>
+}
+
+@if (downgrading(); as target) {
+  <hh-confirm-modal
+    icon="ti-calendar-event"
+    tone="warn"
+    [title]="'hostBilling.downgradeTitle' | transloco: { plan: target.name }"
+    [confirmLabel]="'hostBilling.downgradeConfirm' | transloco"
+    [cancelLabel]="'common.cancel' | transloco"
+    (confirm)="confirmDowngrade()"
+    (cancel)="dismissDowngrade()"
+  >
+    <p data-testid="downgrade-message">
+      {{
+        'hostBilling.downgradeMessage'
+          | transloco
+            : {
+                current: subscription()?.plan?.name,
+                date:
+                  (subscription()?.current_period_end | apiDate: 'd MMM yyyy'),
+                plan: target.name,
+              }
+      }}
+    </p>
+    @if (openRenewal(); as invoice) {
+      <p class="mt-2" data-testid="downgrade-open-renewal">
+        {{
+          'hostBilling.downgradeOpenRenewal'
+            | transloco
+              : { number: invoice.number, current: subscription()?.plan?.name }
+        }}
+      </p>
+    }
+  </hh-confirm-modal>
+}
+
+@if (cancelling()) {
+  <hh-confirm-modal
+    icon="ti-alert-triangle"
+    tone="danger"
+    confirmColor="danger"
+    [title]="'hostBilling.cancelTitle' | transloco"
+    [confirmLabel]="'hostBilling.cancelPlan' | transloco"
+    [cancelLabel]="'hostBilling.keepPlan' | transloco"
+    (confirm)="confirmCancel()"
+    (cancel)="dismissCancel()"
+  >
+    <p data-testid="cancel-message">
+      {{
+        'hostBilling.cancelMessage'
+          | transloco
+            : {
+                date:
+                  (subscription()?.current_period_end | apiDate: 'd MMM yyyy'),
+              }
+      }}
+    </p>
+    @if (subscription()?.scheduled_plan; as next) {
+      <p class="mt-2" data-testid="cancel-drops-switch">
+        {{ 'hostBilling.cancelDropsSwitch' | transloco: { plan: next.name } }}
+      </p>
+    }
+    @if (openRenewal(); as invoice) {
+      <p class="mt-2" data-testid="cancel-open-renewal">
+        {{
+          'hostBilling.cancelOpenRenewal'
+            | transloco: { number: invoice.number }
+        }}
+      </p>
+    }
   </hh-confirm-modal>
 }
