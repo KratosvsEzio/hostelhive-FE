@@ -30,6 +30,10 @@ The two 403s share a status and the envelope carries no machine code. The page u
 
 ## Consequences
 - **Rewording breaks classification quietly.** If the backend rewords both 403 messages, users see "Something went wrong" until the classifier is updated. Machine codes were requested from the backend developer.
+- **The confirmation page follows the same rule** (Trello #149, PR #119):
+  - `classifyConfirmFailure` sends a bare 404, an unmatched 403 and every other status to the generic card;
+  - its 403 matches "expired" only as a whole word and rejects "not expired" or "unexpired";
+  - both classifiers read errors through `core/errors/api-error-text.ts`.
 - **Forgot-password is the next screen to fix.** "Request new link" leads there, and it still shows raw text (Trello #150).
 
 ## Evidence
