@@ -187,7 +187,7 @@ export class Review {
 
   // ── room types ──
 
-  // ── page-level save (core fields + amenities → PUT /api/hostels/:id) ──
+  // ── page-level save (core fields + amenities → PUT /api/moderator/hostels/:id) ──
   /** Last in-session save — overlays the loaded baseline so the dirty check + Update button reset after saving. */
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
@@ -453,7 +453,7 @@ export class Review {
     this.showAll.set(false);
   }
   /** Persist all edits — core fields + amenities + rooms — to the hostel in one request
-   *  (`PUT /api/hostels/:id`). Enabled only when something changed. */
+   *  (`PUT /api/moderator/hostels/:id`). Enabled only when something changed. */
   protected save(): void {
     this.saveAttempted.set(true);
     const id = this.id();
@@ -464,13 +464,14 @@ export class Review {
     this.saving.set(true);
     this.saveError.set(false);
     this.saved.set(false);
-    // The same PUT the host console makes, with the same body — the form builds it. This
-    // screen used to assemble its own, which is how it came to send four of a room type's
-    // ten columns and none of the contact or billing fields.
+    // The same body the host console sends — the form builds it — but to the moderator
+    // endpoint: the host one answers a moderator with a 403. This screen used to assemble its
+    // own body, which is how it came to send four of a room type's ten columns and none of the
+    // contact or billing fields.
     const rejected = this.pendingRejections().length;
     this.flushRejections()
       .pipe(
-        switchMap(() => this.hostels.update(id, form.getPayload())),
+        switchMap(() => this.hostels.updateForModeration(id, form.getPayload())),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
