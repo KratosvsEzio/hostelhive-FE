@@ -20,6 +20,12 @@ describe('sitemapPaths', () => {
     }
   });
 
+  it('lists pricing and credits in both English and Urdu', () => {
+    for (const p of ['/en/pricing', '/ur/pricing', '/en/credits', '/ur/credits']) {
+      expect(paths).toContain(p);
+    }
+  });
+
   // The bare form only redirects. A sitemap full of redirects spends crawl budget on 302s
   // and names the wrong address for every page in it.
   it('gives every entry a language, so none of them redirect', () => {
