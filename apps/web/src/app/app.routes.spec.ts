@@ -3,7 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { Route, Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { appRoutes } from './app.routes';
-import { SubscriptionPlaceholder } from '@features/host/subscription/subscription-placeholder';
+import { BillingPage } from '@features/host/subscription/billing-page';
+import { PayPlaceholder } from '@features/host/subscription/pay-placeholder';
+import { Pricing } from '@features/public/pricing/pricing';
 
 @Component({ selector: 'hh-route-stub', template: '' })
 class RouteStub {}
@@ -30,6 +32,7 @@ function recognitionOnly(routes: Route[]): Route[] {
     }
     if (route.loadComponent) {
       lite.loadComponent = () => RouteStub;
+      lite.data = { ...route.data, originalLoader: route.loadComponent };
     }
     if (route.children) {
       lite.children = recognitionOnly(route.children);
@@ -42,14 +45,22 @@ function recognitionOnly(routes: Route[]): Route[] {
   });
 }
 
-async function settleOn(url: string): Promise<{ url: string; original: unknown }> {
+async function settleOn(
+  url: string,
+): Promise<{ url: string; original: unknown; loaded: () => Promise<unknown> }> {
   TestBed.configureTestingModule({ providers: [provideRouter(recognitionOnly(appRoutes))] });
   const harness = await RouterTestingHarness.create();
   await harness.navigateByUrl(url);
   const router = TestBed.inject(Router);
   let leaf = router.routerState.snapshot.root;
   while (leaf.firstChild) leaf = leaf.firstChild;
-  return { url: router.url, original: leaf.data['original'] };
+  const loader = leaf.data['originalLoader'] as (() => unknown) | undefined;
+  return {
+    url: router.url,
+    original: leaf.data['original'],
+    // A lazy route's component is only known by running its loader.
+    loaded: async () => (loader ? await loader() : undefined),
+  };
 }
 
 describe('the removed billing and contract URLs', () => {
@@ -79,14 +90,32 @@ describe('the removed billing and contract URLs', () => {
     const settled = await settleOn('/host/nHelLt/subscription');
 
     expect(settled.url).toBe('/host/nHelLt/subscription');
-    expect(settled.original).toBe(SubscriptionPlaceholder);
+    expect(settled.original).toBe(BillingPage);
   });
 
   it('still serves the billing page under a language prefix', async () => {
     const settled = await settleOn('/ur/host/nHelLt/subscription');
 
     expect(settled.url).toBe('/ur/host/nHelLt/subscription');
-    expect(settled.original).toBe(SubscriptionPlaceholder);
+    expect(settled.original).toBe(BillingPage);
+  });
+
+  it('serves the payment step for an invoice', async () => {
+    const settled = await settleOn('/host/nHelLt/subscription/pay/inv1');
+
+    expect(settled.url).toBe('/host/nHelLt/subscription/pay/inv1');
+    expect(settled.original).toBe(PayPlaceholder);
+  });
+});
+
+describe('the public pricing page', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it.each(['/pricing', '/ur/pricing'])('serves the pricing page at %s', async (path) => {
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe(path);
+    expect(await settled.loaded()).toBe(Pricing);
   });
 });
 
