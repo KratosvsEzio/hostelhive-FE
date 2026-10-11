@@ -1241,7 +1241,13 @@
     "confirmingYourAccount": "Potwierdzanie konta…",
     "hangTightWhileWeVerify": "Chwileczkę, weryfikujemy Twój e-mail i logujemy Cię.",
     "confirmationFailed": "Potwierdzenie nie powiodło się",
-    "goToLogIn": "Przejdź do logowania"
+    "goToLogIn": "Przejdź do logowania",
+    "yourAccountIsConfirmed": "Twoje konto zostało potwierdzone",
+    "stillSignedInAs": "Nadal jesteś zalogowany jako {{name}}.",
+    "pleaseLogInToContinue": "Zaloguj się, aby kontynuować.",
+    "cannotReachTheServer": "Nie można połączyć się z serwerem. Spróbuj ponownie za chwilę.",
+    "linkIsInvalidOrExpired": "Ten link potwierdzający jest nieprawidłowy, wygasł lub został już użyty.",
+    "linkIsMissingItsToken": "W tym linku potwierdzającym brakuje tokenu. Otwórz go ponownie za pomocą przycisku w wiadomości e-mail."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Role i uprawnienia",

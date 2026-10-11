@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Bekræfter din konto…",
     "hangTightWhileWeVerify": "Vent lidt, mens vi verificerer din e-mail og logger dig ind.",
     "confirmationFailed": "Bekræftelse mislykkedes",
-    "goToLogIn": "Gå til log ind"
+    "goToLogIn": "Gå til log ind",
+    "yourAccountIsConfirmed": "Din konto er bekræftet",
+    "stillSignedInAs": "Du er stadig logget ind som {{name}}.",
+    "pleaseLogInToContinue": "Log ind for at fortsætte.",
+    "cannotReachTheServer": "Kan ikke nå serveren. Prøv igen om et øjeblik.",
+    "linkIsInvalidOrExpired": "Dette bekræftelseslink er ugyldigt, er udløbet eller er allerede blevet brugt.",
+    "linkIsMissingItsToken": "Dette bekræftelseslink mangler sin token. Åbn det igen fra knappen i din e-mail."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roller og tilladelser",

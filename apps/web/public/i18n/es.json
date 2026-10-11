@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Confirmando tu cuenta…",
     "hangTightWhileWeVerify": "Un momento mientras verificamos tu correo y te iniciamos sesión.",
     "confirmationFailed": "Falló la confirmación",
-    "goToLogIn": "Ir a iniciar sesión"
+    "goToLogIn": "Ir a iniciar sesión",
+    "yourAccountIsConfirmed": "Tu cuenta está confirmada",
+    "stillSignedInAs": "Sigues con la sesión iniciada como {{name}}.",
+    "pleaseLogInToContinue": "Inicia sesión para continuar.",
+    "cannotReachTheServer": "No se puede conectar con el servidor. Inténtalo de nuevo en un momento.",
+    "linkIsInvalidOrExpired": "Este enlace de confirmación no es válido, ha caducado o ya se ha utilizado.",
+    "linkIsMissingItsToken": "A este enlace de confirmación le falta su token. Ábrelo de nuevo desde el botón de tu correo electrónico."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roles y permisos",

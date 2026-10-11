@@ -1241,7 +1241,13 @@
     "confirmingYourAccount": "Mengonfirmasi akun Anda…",
     "hangTightWhileWeVerify": "Mohon tunggu, kami memverifikasi email Anda dan memasukkan Anda.",
     "confirmationFailed": "Konfirmasi gagal",
-    "goToLogIn": "Ke halaman masuk"
+    "goToLogIn": "Ke halaman masuk",
+    "yourAccountIsConfirmed": "Akun Anda telah dikonfirmasi",
+    "stillSignedInAs": "Anda masih masuk sebagai {{name}}.",
+    "pleaseLogInToContinue": "Silakan masuk untuk melanjutkan.",
+    "cannotReachTheServer": "Tidak dapat menjangkau server. Silakan coba lagi sebentar lagi.",
+    "linkIsInvalidOrExpired": "Tautan konfirmasi ini tidak valid, sudah kedaluwarsa, atau sudah pernah digunakan.",
+    "linkIsMissingItsToken": "Tautan konfirmasi ini tidak memiliki token. Silakan buka kembali dari tombol di email Anda."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Peran & izin",

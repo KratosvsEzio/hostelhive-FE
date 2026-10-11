@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Je account wordt bevestigd…",
     "hangTightWhileWeVerify": "Even geduld terwijl we je e-mail verifiëren en je inloggen.",
     "confirmationFailed": "Bevestiging mislukt",
-    "goToLogIn": "Naar inloggen"
+    "goToLogIn": "Naar inloggen",
+    "yourAccountIsConfirmed": "Je account is bevestigd",
+    "stillSignedInAs": "Je bent nog steeds ingelogd als {{name}}.",
+    "pleaseLogInToContinue": "Log in om verder te gaan.",
+    "cannotReachTheServer": "Kan de server niet bereiken. Probeer het zo meteen opnieuw.",
+    "linkIsInvalidOrExpired": "Deze bevestigingslink is ongeldig, verlopen of al gebruikt.",
+    "linkIsMissingItsToken": "Deze bevestigingslink mist zijn token. Open hem opnieuw via de knop in je e-mail."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Rollen & rechten",

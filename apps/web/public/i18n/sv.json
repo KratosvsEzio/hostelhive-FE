@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Bekräftar ditt konto…",
     "hangTightWhileWeVerify": "Ett ögonblick medan vi verifierar din e-post och loggar in dig.",
     "confirmationFailed": "Bekräftelsen misslyckades",
-    "goToLogIn": "Gå till inloggning"
+    "goToLogIn": "Gå till inloggning",
+    "yourAccountIsConfirmed": "Ditt konto är bekräftat",
+    "stillSignedInAs": "Du är fortfarande inloggad som {{name}}.",
+    "pleaseLogInToContinue": "Logga in för att fortsätta.",
+    "cannotReachTheServer": "Kan inte nå servern. Försök igen om en stund.",
+    "linkIsInvalidOrExpired": "Den här bekräftelselänken är ogiltig, har gått ut eller har redan använts.",
+    "linkIsMissingItsToken": "Den här bekräftelselänken saknar sin token. Öppna den igen via knappen i ditt e-postmeddelande."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Roller och behörigheter",

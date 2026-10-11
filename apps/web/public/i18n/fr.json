@@ -1236,7 +1236,13 @@
     "confirmingYourAccount": "Confirmation de votre compte…",
     "hangTightWhileWeVerify": "Un instant, nous vérifions votre e-mail et vous connectons.",
     "confirmationFailed": "Échec de la confirmation",
-    "goToLogIn": "Aller à la connexion"
+    "goToLogIn": "Aller à la connexion",
+    "yourAccountIsConfirmed": "Votre compte est confirmé",
+    "stillSignedInAs": "Vous êtes toujours connecté en tant que {{name}}.",
+    "pleaseLogInToContinue": "Veuillez vous connecter pour continuer.",
+    "cannotReachTheServer": "Impossible de joindre le serveur. Veuillez réessayer dans un instant.",
+    "linkIsInvalidOrExpired": "Ce lien de confirmation est invalide, a expiré ou a déjà été utilisé.",
+    "linkIsMissingItsToken": "Il manque le jeton de ce lien de confirmation. Veuillez le rouvrir depuis le bouton de votre e-mail."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Rôles et autorisations",

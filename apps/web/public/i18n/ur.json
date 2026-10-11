@@ -1241,7 +1241,13 @@
     "confirmingYourAccount": "آپ کا اکاؤنٹ تصدیق ہو رہا ہے…",
     "hangTightWhileWeVerify": "ہم آپ کا ای میل تصدیق کر کے سائن ان کر رہے ہیں، ذرا انتظار کریں۔",
     "confirmationFailed": "تصدیق ناکام",
-    "goToLogIn": "لاگ ان پر جائیں"
+    "goToLogIn": "لاگ ان پر جائیں",
+    "yourAccountIsConfirmed": "آپ کا اکاؤنٹ تصدیق ہو گیا ہے",
+    "stillSignedInAs": "آپ اب بھی {{name}} کے طور پر سائن ان ہیں۔",
+    "pleaseLogInToContinue": "جاری رکھنے کے لیے براہ کرم لاگ ان کریں۔",
+    "cannotReachTheServer": "سرور تک رسائی نہیں ہو رہی۔ براہ کرم کچھ دیر بعد دوبارہ کوشش کریں۔",
+    "linkIsInvalidOrExpired": "یہ تصدیقی لنک غلط ہے، اس کی میعاد ختم ہو چکی ہے یا یہ پہلے ہی استعمال ہو چکا ہے۔",
+    "linkIsMissingItsToken": "اس تصدیقی لنک میں ٹوکن موجود نہیں۔ براہ کرم اسے اپنی ای میل کے بٹن سے دوبارہ کھولیں۔"
   },
   "adminAdminRoles": {
     "rolesPermissions": "کردار اور اجازتیں",

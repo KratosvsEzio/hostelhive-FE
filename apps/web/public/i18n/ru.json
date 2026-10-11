@@ -1241,7 +1241,13 @@
     "confirmingYourAccount": "Подтверждение вашего аккаунта…",
     "hangTightWhileWeVerify": "Подождите, мы проверяем вашу почту и выполняем вход.",
     "confirmationFailed": "Подтверждение не удалось",
-    "goToLogIn": "Перейти ко входу"
+    "goToLogIn": "Перейти ко входу",
+    "yourAccountIsConfirmed": "Ваш аккаунт подтверждён",
+    "stillSignedInAs": "Вы по-прежнему вошли как {{name}}.",
+    "pleaseLogInToContinue": "Войдите, чтобы продолжить.",
+    "cannotReachTheServer": "Не удаётся связаться с сервером. Попробуйте ещё раз чуть позже.",
+    "linkIsInvalidOrExpired": "Эта ссылка для подтверждения недействительна, истекла или уже была использована.",
+    "linkIsMissingItsToken": "В этой ссылке для подтверждения нет токена. Откройте её снова с помощью кнопки в письме."
   },
   "adminAdminRoles": {
     "rolesPermissions": "Роли и разрешения",

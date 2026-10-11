@@ -135,7 +135,13 @@
     "confirmingYourAccount": "Confirming your account…",
     "hangTightWhileWeVerify": "Hang tight while we verify your email and sign you in.",
     "confirmationFailed": "Confirmation failed",
-    "goToLogIn": "Go to log in"
+    "goToLogIn": "Go to log in",
+    "yourAccountIsConfirmed": "Your account is confirmed",
+    "stillSignedInAs": "You're still signed in as {{name}}.",
+    "pleaseLogInToContinue": "Please log in to continue.",
+    "cannotReachTheServer": "Can't reach the server. Please try again in a moment.",
+    "linkIsInvalidOrExpired": "This confirmation link is invalid, has expired or has already been used.",
+    "linkIsMissingItsToken": "This confirmation link is missing its token. Please open it again from the button in your email."
   },
   "authForgotPassword": {
     "forgotYourPassword": "Forgot your password?",
