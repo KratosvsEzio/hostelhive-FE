@@ -1,9 +1,19 @@
-import { Route } from '@angular/router';
+import { RedirectFunction, Route, Router } from '@angular/router';
+import { inject } from '@angular/core';
 import { HOST_ROLES, STAFF_ROLES, authGuard, roleGuard } from '@core/auth';
 import { Home } from '@features/public/home/home';
 import { Forbidden } from '@core/forbidden/forbidden';
 import { localePrefixMatcher } from '@core/i18n/locale-prefix-matcher';
 import { keepLocale } from '@core/i18n/keep-locale';
+
+/**
+ * To the notifications list, in the visitor's language, without the old query string — a
+ * string redirect would carry `?token=…` along and into the login page's returnUrl.
+ */
+const toNotifications: RedirectFunction = ({ params }) =>
+  inject(Router).createUrlTree(
+    params['locale'] ? ['/', params['locale'], 'notifications'] : ['/notifications'],
+  );
 
 const LOCALISED_ROUTES: Route[] = [
   // â”€â”€â”€ Public seeker (SSR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -43,14 +53,11 @@ const LOCALISED_ROUTES: Route[] = [
         (m) => m.LISTING_ROUTES,
       ),
   },
-  {
-    // Public mess opt-in landing — students reach this from the WhatsApp/SMS/email link.
-    // Token in the query (?token=…); no auth (the token is the credential). Chrome-free.
-    path: 'mess/confirm',
-    loadComponent: () =>
-      import('@features/public/mess-confirm/mess-confirm').then((m) => m.MessConfirm),
-    title: 'Confirm your meal — HostelHive',
-  },
+  // Students confirm meals from their notifications; no email or message links to a
+  // confirm page. These old paths (a mock opt-in page, and the URL the backend builds but
+  // never sends) land on the notifications list instead of a 404.
+  { path: 'mess/confirm', redirectTo: toNotifications, pathMatch: 'full' },
+  { path: 'meal_confirmation', redirectTo: toNotifications, pathMatch: 'full' },
   {
     path: 'privacy-policy',
     loadComponent: () =>

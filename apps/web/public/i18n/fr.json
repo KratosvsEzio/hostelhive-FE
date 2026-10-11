@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "L'annonce a peut-être été supprimée ou le lien est incorrect.",
     "chooseYourRoom": "Choisissez votre chambre"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Vérification de votre lien…",
-    "onTheMenu": "Au menu",
-    "confirmMyPortion": "Confirmer ma portion",
-    "youReConfirmed": "C’est confirmé ! 🎉",
-    "pleaseCollectYourMealAt": "Récupérez votre repas à la cantine pendant le service. Vous pouvez fermer cette page.",
-    "alreadyConfirmed": "Déjà confirmé",
-    "thisLinkHasExpired": "Ce lien a expiré",
-    "invalidLink": "Lien invalide",
-    "thisConfirmationLinkIsMissing": "Ce lien de confirmation est absent ou incomplet. Utilisez exactement le lien de votre dernier rappel.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Inscription cantine",
-    "reserveYourMealPortion": "Réservez votre portion de {{meal}}",
-    "todaysMealAtMess": "Le {{meal}} du jour à la cantine de l’auberge",
-    "reserveBeforeTapOnce": "Réservez avant {{time}} · appuyez une fois pour confirmer",
-    "portionReservedWithMenu": "Votre portion pour le {{meal}} d’aujourd’hui est réservée — {{menu}}.",
-    "portionReserved": "Votre portion pour le {{meal}} d’aujourd’hui est réservée.",
-    "alreadyReservedMealToday": "Vous avez déjà réservé votre portion de {{meal}} pour aujourd’hui.",
-    "optInWindowClosedAt": "La fenêtre d’inscription pour {{meal}} a fermé à {{time}}.",
-    "optInWindowClosed": "La fenêtre d’inscription pour {{meal}} est fermée.",
-    "reachOutToMessManager": "Contactez le responsable de la cantine si vous avez encore besoin d’une portion."
-  },
   "moderatorMedia": {
     "mediaQueue": "File d’attente des médias",
     "allClear": "Tout est traité",

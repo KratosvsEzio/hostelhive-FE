@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "ربما تمت إزالة القائمة أو أن الرابط غير صحيح.",
     "chooseYourRoom": "اختر غرفتك"
   },
-  "featuresPublic": {
-    "checkingYourLink": "جارٍ التحقق من الرابط…",
-    "onTheMenu": "في القائمة",
-    "confirmMyPortion": "أؤكد حصتي",
-    "youReConfirmed": "تم تأكيدك! 🎉",
-    "pleaseCollectYourMealAt": "يرجى استلام وجبتك من المطعم في وقت التقديم. يمكنك إغلاق هذه الصفحة.",
-    "alreadyConfirmed": "تم التأكيد مسبقاً",
-    "thisLinkHasExpired": "انتهت صلاحية هذا الرابط",
-    "invalidLink": "رابط غير صالح",
-    "thisConfirmationLinkIsMissing": "رابط التأكيد مفقود أو غير مكتمل. يرجى استخدام الرابط نفسه من آخر تذكير وصلك.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · الاشتراك في المطعم",
-    "reserveYourMealPortion": "احجز حصتك من {{meal}}",
-    "todaysMealAtMess": "{{meal}} اليوم في مطعم النزل",
-    "reserveBeforeTapOnce": "احجز قبل {{time}} · اضغط مرة واحدة للتأكيد",
-    "portionReservedWithMenu": "حصتك من {{meal}} اليوم محجوزة — {{menu}}.",
-    "portionReserved": "حصتك من {{meal}} اليوم محجوزة.",
-    "alreadyReservedMealToday": "لقد حجزت بالفعل حصتك من {{meal}} اليوم.",
-    "optInWindowClosedAt": "أُغلقت نافذة الاشتراك لوجبة {{meal}} في {{time}}.",
-    "optInWindowClosed": "أُغلقت نافذة الاشتراك لوجبة {{meal}}.",
-    "reachOutToMessManager": "يرجى التواصل مع مسؤول المطعم إذا كنت لا تزال بحاجة إلى حصة."
-  },
   "moderatorMedia": {
     "mediaQueue": "قائمة انتظار الوسائط",
     "allClear": "لا يوجد شيء معلق",

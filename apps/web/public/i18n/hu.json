@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "Lehet, hogy a hirdetést eltávolították, vagy a hivatkozás hibás.",
     "chooseYourRoom": "Válaszd ki a szobád"
   },
-  "featuresPublic": {
-    "checkingYourLink": "A linked ellenőrzése…",
-    "onTheMenu": "A menün",
-    "confirmMyPortion": "Adagom megerősítése",
-    "youReConfirmed": "Megerősítve! 🎉",
-    "pleaseCollectYourMealAt": "Vedd át az ételed az étkezdében a kiosztás idején. Bezárhatod ezt az oldalt.",
-    "alreadyConfirmed": "Már megerősítve",
-    "thisLinkHasExpired": "Ez a link lejárt",
-    "invalidLink": "Érvénytelen link",
-    "thisConfirmationLinkIsMissing": "Ez a megerősítő link hiányzik vagy hiányos. Használd pontosan a legutóbbi emlékeztetőd linkjét.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Étkezdei jelentkezés",
-    "reserveYourMealPortion": "Foglald le a(z) {{meal}} adagodat",
-    "todaysMealAtMess": "A mai {{meal}} a szálláshely étkezdéjében",
-    "reserveBeforeTapOnce": "Foglalj {{time}} előtt · egy koppintás a megerősítéshez",
-    "portionReservedWithMenu": "A mai {{meal}} adagod le van foglalva — {{menu}}.",
-    "portionReserved": "A mai {{meal}} adagod le van foglalva.",
-    "alreadyReservedMealToday": "Ma már lefoglaltad a(z) {{meal}} adagodat.",
-    "optInWindowClosedAt": "A(z) {{meal}} jelentkezési ideje {{time}}-kor lezárult.",
-    "optInWindowClosed": "A(z) {{meal}} jelentkezési ideje lezárult.",
-    "reachOutToMessManager": "Kérjük, keresd az étkezde vezetőjét, ha még szükséged van adagra."
-  },
   "moderatorMedia": {
     "mediaQueue": "Médiasor",
     "allClear": "Minden rendben",

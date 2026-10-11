@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "Das Inserat wurde möglicherweise entfernt oder der Link ist falsch.",
     "chooseYourRoom": "Wählen Sie Ihr Zimmer"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Ihr Link wird geprüft…",
-    "onTheMenu": "Auf dem Speiseplan",
-    "confirmMyPortion": "Meine Portion bestätigen",
-    "youReConfirmed": "Sie sind bestätigt! 🎉",
-    "pleaseCollectYourMealAt": "Bitte holen Sie Ihr Essen zur Ausgabezeit in der Kantine ab. Sie können diese Seite schließen.",
-    "alreadyConfirmed": "Bereits bestätigt",
-    "thisLinkHasExpired": "Dieser Link ist abgelaufen",
-    "invalidLink": "Ungültiger Link",
-    "thisConfirmationLinkIsMissing": "Dieser Bestätigungslink fehlt oder ist unvollständig. Bitte verwenden Sie genau den Link aus Ihrer letzten Erinnerung.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Kantinen-Anmeldung",
-    "reserveYourMealPortion": "Ihre Portion {{meal}} reservieren",
-    "todaysMealAtMess": "Heutiges {{meal}} in der Hostel-Mensa",
-    "reserveBeforeTapOnce": "Bis {{time}} reservieren · einmal tippen zum Bestätigen",
-    "portionReservedWithMenu": "Ihre Portion für das heutige {{meal}} ist reserviert — {{menu}}.",
-    "portionReserved": "Ihre Portion für das heutige {{meal}} ist reserviert.",
-    "alreadyReservedMealToday": "Sie haben Ihre Portion {{meal}} für heute bereits reserviert.",
-    "optInWindowClosedAt": "Das Anmeldefenster für {{meal}} wurde um {{time}} geschlossen.",
-    "optInWindowClosed": "Das Anmeldefenster für {{meal}} ist geschlossen.",
-    "reachOutToMessManager": "Bitte wenden Sie sich an die Mensaleitung, wenn Sie noch eine Portion brauchen."
-  },
   "moderatorMedia": {
     "mediaQueue": "Medien-Warteschlange",
     "allClear": "Alles erledigt",

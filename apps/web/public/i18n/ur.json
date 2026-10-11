@@ -1284,27 +1284,6 @@
     "theListingMayHaveBeen": "ممکن ہے فہرست ہٹا دی گئی ہو یا لنک غلط ہو۔",
     "chooseYourRoom": "اپنا کمرہ منتخب کریں"
   },
-  "featuresPublic": {
-    "checkingYourLink": "آپ کا لنک چیک کیا جا رہا ہے…",
-    "onTheMenu": "مینو میں",
-    "confirmMyPortion": "میرا حصہ تصدیق کریں",
-    "youReConfirmed": "آپ کی تصدیق ہو گئی! 🎉",
-    "pleaseCollectYourMealAt": "براہ کرم سرو کے وقت میس سے اپنا کھانا لے لیں۔ آپ یہ صفحہ بند کر سکتے ہیں۔",
-    "alreadyConfirmed": "پہلے ہی تصدیق شدہ",
-    "thisLinkHasExpired": "یہ لنک ختم ہو چکا ہے",
-    "invalidLink": "غلط لنک",
-    "thisConfirmationLinkIsMissing": "یہ تصدیقی لنک موجود نہیں یا نامکمل ہے۔ براہ کرم اپنی تازہ ترین یاد دہانی میں موجود بالکل وہی لنک استعمال کریں۔",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · میس آپٹ-ان",
-    "reserveYourMealPortion": "اپنا {{meal}} کا حصہ محفوظ کریں",
-    "todaysMealAtMess": "ہاسٹل میس میں آج کا {{meal}}",
-    "reserveBeforeTapOnce": "{{time}} سے پہلے محفوظ کریں · تصدیق کے لیے ایک بار ٹیپ کریں",
-    "portionReservedWithMenu": "آج کے {{meal}} کے لیے آپ کا حصہ محفوظ ہے — {{menu}}۔",
-    "portionReserved": "آج کے {{meal}} کے لیے آپ کا حصہ محفوظ ہے۔",
-    "alreadyReservedMealToday": "آپ آج کے لیے اپنا {{meal}} کا حصہ پہلے ہی محفوظ کر چکے ہیں۔",
-    "optInWindowClosedAt": "{{meal}} کے لیے شمولیت کی مدت {{time}} پر ختم ہو گئی۔",
-    "optInWindowClosed": "{{meal}} کے لیے شمولیت کی مدت ختم ہو چکی ہے۔",
-    "reachOutToMessManager": "اگر آپ کو اب بھی ایک حصہ درکار ہے تو براہِ کرم میس منیجر سے رابطہ کریں۔"
-  },
   "moderatorMedia": {
     "mediaQueue": "میڈیا قطار",
     "allClear": "سب صاف",

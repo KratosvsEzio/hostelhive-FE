@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "掲載が削除されたか、リンクが正しくない可能性があります。",
     "chooseYourRoom": "部屋を選ぶ"
   },
-  "featuresPublic": {
-    "checkingYourLink": "リンクを確認中…",
-    "onTheMenu": "本日のメニュー",
-    "confirmMyPortion": "自分の分を確定する",
-    "youReConfirmed": "確定しました！🎉",
-    "pleaseCollectYourMealAt": "配食時間に食堂でお食事をお受け取りください。このページは閉じて構いません。",
-    "alreadyConfirmed": "確定済みです",
-    "thisLinkHasExpired": "このリンクは有効期限が切れています",
-    "invalidLink": "無効なリンク",
-    "thisConfirmationLinkIsMissing": "この確認リンクは存在しないか不完全です。最新のリマインダーに記載されたリンクをそのままご利用ください。",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · 食堂の利用申込",
-    "reserveYourMealPortion": "{{meal}} の分を予約する",
-    "todaysMealAtMess": "ホステル食堂の本日の{{meal}}",
-    "reserveBeforeTapOnce": "{{time}} までに予約 · 1回タップで確定",
-    "portionReservedWithMenu": "本日の{{meal}}の分を確保しました — {{menu}}。",
-    "portionReserved": "本日の{{meal}}の分を確保しました。",
-    "alreadyReservedMealToday": "本日の{{meal}}はすでに予約済みです。",
-    "optInWindowClosedAt": "{{meal}} の受付は {{time}} に締め切られました。",
-    "optInWindowClosed": "{{meal}} の受付は締め切られました。",
-    "reachOutToMessManager": "まだ食事が必要な場合は食堂責任者にご連絡ください。"
-  },
   "moderatorMedia": {
     "mediaQueue": "メディアキュー",
     "allClear": "すべて完了",

@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "L'annuncio potrebbe essere stato rimosso o il link non è corretto.",
     "chooseYourRoom": "Scegli la tua camera"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Verifica del link…",
-    "onTheMenu": "Nel menu",
-    "confirmMyPortion": "Conferma la mia porzione",
-    "youReConfirmed": "Sei confermato! 🎉",
-    "pleaseCollectYourMealAt": "Ritira il pasto in mensa durante l’orario di servizio. Puoi chiudere questa pagina.",
-    "alreadyConfirmed": "Già confermato",
-    "thisLinkHasExpired": "Questo link è scaduto",
-    "invalidLink": "Link non valido",
-    "thisConfirmationLinkIsMissing": "Questo link di conferma è mancante o incompleto. Usa esattamente il link del tuo ultimo promemoria.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Adesione mensa",
-    "reserveYourMealPortion": "Prenota la tua porzione di {{meal}}",
-    "todaysMealAtMess": "Il {{meal}} di oggi alla mensa dell’ostello",
-    "reserveBeforeTapOnce": "Prenota entro le {{time}} · tocca una volta per confermare",
-    "portionReservedWithMenu": "La tua porzione per il {{meal}} di oggi è prenotata — {{menu}}.",
-    "portionReserved": "La tua porzione per il {{meal}} di oggi è prenotata.",
-    "alreadyReservedMealToday": "Hai già prenotato la tua porzione di {{meal}} per oggi.",
-    "optInWindowClosedAt": "La finestra di adesione per {{meal}} si è chiusa alle {{time}}.",
-    "optInWindowClosed": "La finestra di adesione per {{meal}} è chiusa.",
-    "reachOutToMessManager": "Contatta il responsabile della mensa se ti serve ancora una porzione."
-  },
   "moderatorMedia": {
     "mediaQueue": "Coda media",
     "allClear": "Tutto a posto",

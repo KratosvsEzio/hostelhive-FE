@@ -25,7 +25,6 @@ export const DISALLOWED_PATHS = [
   // otherwise generate an unbounded set of near-identical URLs.
   'auth',
   // The token in the query string *is* the credential for these links.
-  'mess/confirm',
   'confirm_invitation',
   'reset_password',
 ] as const;

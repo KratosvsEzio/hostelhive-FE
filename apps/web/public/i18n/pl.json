@@ -1284,27 +1284,6 @@
     "theListingMayHaveBeen": "Ogłoszenie mogło zostać usunięte lub link jest nieprawidłowy.",
     "chooseYourRoom": "Wybierz swój pokój"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Sprawdzanie linku…",
-    "onTheMenu": "W menu",
-    "confirmMyPortion": "Potwierdzam swoją porcję",
-    "youReConfirmed": "Potwierdzone! 🎉",
-    "pleaseCollectYourMealAt": "Odbierz posiłek w stołówce w porze wydawania. Możesz zamknąć tę stronę.",
-    "alreadyConfirmed": "Już potwierdzone",
-    "thisLinkHasExpired": "Ten link wygasł",
-    "invalidLink": "Nieprawidłowy link",
-    "thisConfirmationLinkIsMissing": "Ten link potwierdzający nie istnieje lub jest niepełny. Użyj dokładnie linku z ostatniego przypomnienia.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Zapis na stołówkę",
-    "reserveYourMealPortion": "Zarezerwuj swoją porcję {{meal}}",
-    "todaysMealAtMess": "Dzisiejszy {{meal}} w stołówce hostelu",
-    "reserveBeforeTapOnce": "Zarezerwuj przed {{time}} · dotknij raz, aby potwierdzić",
-    "portionReservedWithMenu": "Twoja porcja na dzisiejszy {{meal}} jest zarezerwowana — {{menu}}.",
-    "portionReserved": "Twoja porcja na dzisiejszy {{meal}} jest zarezerwowana.",
-    "alreadyReservedMealToday": "Zarezerwowałeś już swoją porcję {{meal}} na dziś.",
-    "optInWindowClosedAt": "Okno zapisów na {{meal}} zamknęło się o {{time}}.",
-    "optInWindowClosed": "Okno zapisów na {{meal}} zostało zamknięte.",
-    "reachOutToMessManager": "Skontaktuj się z kierownikiem stołówki, jeśli nadal potrzebujesz porcji."
-  },
   "moderatorMedia": {
     "mediaQueue": "Kolejka multimediów",
     "allClear": "Wszystko czyste",

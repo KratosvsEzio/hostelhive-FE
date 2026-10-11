@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "Puede que el anuncio se haya eliminado o que el enlace sea incorrecto.",
     "chooseYourRoom": "Elige tu habitación"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Comprobando tu enlace…",
-    "onTheMenu": "En el menú",
-    "confirmMyPortion": "Confirmar mi ración",
-    "youReConfirmed": "¡Confirmado! 🎉",
-    "pleaseCollectYourMealAt": "Recoge tu comida en el comedor durante el horario de servicio. Puedes cerrar esta página.",
-    "alreadyConfirmed": "Ya confirmado",
-    "thisLinkHasExpired": "Este enlace ha caducado",
-    "invalidLink": "Enlace no válido",
-    "thisConfirmationLinkIsMissing": "Este enlace de confirmación falta o está incompleto. Usa exactamente el enlace de tu último recordatorio.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Alta en comedor",
-    "reserveYourMealPortion": "Reserva tu ración de {{meal}}",
-    "todaysMealAtMess": "El {{meal}} de hoy en el comedor del hostal",
-    "reserveBeforeTapOnce": "Reserva antes de las {{time}} · toca una vez para confirmar",
-    "portionReservedWithMenu": "Tu ración para el {{meal}} de hoy está reservada — {{menu}}.",
-    "portionReserved": "Tu ración para el {{meal}} de hoy está reservada.",
-    "alreadyReservedMealToday": "Ya has reservado tu ración de {{meal}} para hoy.",
-    "optInWindowClosedAt": "La ventana de inscripción para {{meal}} cerró a las {{time}}.",
-    "optInWindowClosed": "La ventana de inscripción para {{meal}} está cerrada.",
-    "reachOutToMessManager": "Ponte en contacto con el responsable del comedor si aún necesitas una ración."
-  },
   "moderatorMedia": {
     "mediaQueue": "Cola de medios",
     "allClear": "Todo en orden",

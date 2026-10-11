@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "该房源可能已被下架，或链接有误。",
     "chooseYourRoom": "选择您的房间"
   },
-  "featuresPublic": {
-    "checkingYourLink": "正在检查您的链接…",
-    "onTheMenu": "今日菜单",
-    "confirmMyPortion": "确认我的份额",
-    "youReConfirmed": "已确认！🎉",
-    "pleaseCollectYourMealAt": "请在供餐时间到餐厅领取您的餐食。您可以关闭此页面。",
-    "alreadyConfirmed": "已确认过",
-    "thisLinkHasExpired": "此链接已过期",
-    "invalidLink": "链接无效",
-    "thisConfirmationLinkIsMissing": "此确认链接缺失或不完整。请使用最近一次提醒中的完整链接。",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · 餐厅报名",
-    "reserveYourMealPortion": "预订你的{{meal}}餐份",
-    "todaysMealAtMess": "旅舍食堂今日的{{meal}}",
-    "reserveBeforeTapOnce": "请在 {{time}} 前预订 · 轻点一次即可确认",
-    "portionReservedWithMenu": "已为你保留今天的{{meal}} — {{menu}}。",
-    "portionReserved": "已为你保留今天的{{meal}}。",
-    "alreadyReservedMealToday": "你今天已经预订过{{meal}}了。",
-    "optInWindowClosedAt": "{{meal}} 的报名已于 {{time}} 截止。",
-    "optInWindowClosed": "{{meal}} 的报名已截止。",
-    "reachOutToMessManager": "如果你仍需要餐份，请联系食堂管理员。"
-  },
   "moderatorMedia": {
     "mediaQueue": "媒体队列",
     "allClear": "全部处理完毕",

@@ -12,7 +12,6 @@ describe('renderRobotsTxt', () => {
     for (const url of [
       '/en/account',
       '/de/auth',
-      '/en/mess/confirm?token=x',
       '/en/host/abc/overview',
     ]) {
       expect(allows(url), url).toBe(false);
@@ -56,7 +55,6 @@ describe('renderRobotsTxt', () => {
       '/ur/confirm_invitation?token=x',
       '/fr/reset_password?token=x',
       '/confirm_invitation?token=x',
-      '/mess/confirm?token=x',
     ]) {
       expect(allows(url), url).toBe(false);
     }

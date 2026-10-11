@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "Annonsen kan ha tagits bort eller så är länken felaktig.",
     "chooseYourRoom": "Välj ditt rum"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Kontrollerar din länk…",
-    "onTheMenu": "På menyn",
-    "confirmMyPortion": "Bekräfta min portion",
-    "youReConfirmed": "Du är bekräftad! 🎉",
-    "pleaseCollectYourMealAt": "Hämta din måltid i matsalen under serveringstiden. Du kan stänga den här sidan.",
-    "alreadyConfirmed": "Redan bekräftad",
-    "thisLinkHasExpired": "Den här länken har gått ut",
-    "invalidLink": "Ogiltig länk",
-    "thisConfirmationLinkIsMissing": "Den här bekräftelselänken saknas eller är ofullständig. Använd exakt länken från din senaste påminnelse.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Matsalsanmälan",
-    "reserveYourMealPortion": "Reservera din portion {{meal}}",
-    "todaysMealAtMess": "Dagens {{meal}} i vandrarhemmets matsal",
-    "reserveBeforeTapOnce": "Reservera före {{time}} · tryck en gång för att bekräfta",
-    "portionReservedWithMenu": "Din portion till dagens {{meal}} är reserverad — {{menu}}.",
-    "portionReserved": "Din portion till dagens {{meal}} är reserverad.",
-    "alreadyReservedMealToday": "Du har redan reserverat din portion {{meal}} för i dag.",
-    "optInWindowClosedAt": "Anmälningsfönstret för {{meal}} stängde {{time}}.",
-    "optInWindowClosed": "Anmälningsfönstret för {{meal}} är stängt.",
-    "reachOutToMessManager": "Kontakta matsalsansvarig om du fortfarande behöver en portion."
-  },
   "moderatorMedia": {
     "mediaQueue": "Mediekö",
     "allClear": "Allt klart",

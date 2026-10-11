@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "Annoncen er måske fjernet, eller linket er forkert.",
     "chooseYourRoom": "Vælg dit værelse"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Kontrollerer dit link…",
-    "onTheMenu": "På menuen",
-    "confirmMyPortion": "Bekræft min portion",
-    "youReConfirmed": "Du er bekræftet! 🎉",
-    "pleaseCollectYourMealAt": "Hent dit måltid i kantinen i serveringstiden. Du kan lukke denne side.",
-    "alreadyConfirmed": "Allerede bekræftet",
-    "thisLinkHasExpired": "Dette link er udløbet",
-    "invalidLink": "Ugyldigt link",
-    "thisConfirmationLinkIsMissing": "Dette bekræftelseslink mangler eller er ufuldstændigt. Brug præcis linket fra din seneste påmindelse.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Kantinetilmelding",
-    "reserveYourMealPortion": "Reservér din portion {{meal}}",
-    "todaysMealAtMess": "Dagens {{meal}} i hostellets kantine",
-    "reserveBeforeTapOnce": "Reservér inden {{time}} · tryk én gang for at bekræfte",
-    "portionReservedWithMenu": "Din portion til dagens {{meal}} er reserveret — {{menu}}.",
-    "portionReserved": "Din portion til dagens {{meal}} er reserveret.",
-    "alreadyReservedMealToday": "Du har allerede reserveret din portion {{meal}} i dag.",
-    "optInWindowClosedAt": "Tilmeldingsvinduet til {{meal}} lukkede kl. {{time}}.",
-    "optInWindowClosed": "Tilmeldingsvinduet til {{meal}} er lukket.",
-    "reachOutToMessManager": "Kontakt kantinelederen, hvis du stadig har brug for en portion."
-  },
   "moderatorMedia": {
     "mediaQueue": "Mediekø",
     "allClear": "Alt er klaret",
