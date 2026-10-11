@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Indtast den e-mail, du registrerede dig med, så sender vi dig et nulstillingslink.",
     "sendResetLink": "Send nulstillingslink",
     "backToLogin": "Tilbage til log ind",
-    "weSentAPasswordReset": "Vi har sendt et nulstillingslink til",
-    "clickTheLinkInThe": ". Klik på linket i e-mailen for at vælge en ny adgangskode.",
-    "didnTReceiveItResend": "Ikke modtaget? Send igen"
+    "didnTReceiveItResend": "Ikke modtaget? Send igen",
+    "enterAValidEmail": "Indtast en gyldig e-mailadresse.",
+    "sentIfAccountExists": "Hvis der findes en konto for {{email}}, har vi sendt et link til at nulstille din adgangskode. Tjek din indbakke og spammappe.",
+    "alreadySent": "Der er allerede sendt et nulstillingslink til denne e-mail. Tjek din indbakke og spammappe; du kan bede om et nyt om et par minutter.",
+    "sentAnother": "Vi har sendt endnu et link.",
+    "tooManyRequests": "For mange forsøg. Vent et par minutter, og prøv igen.",
+    "cannotReachTheServer": "Kan ikke nå serveren. Prøv igen om et øjeblik.",
+    "couldNotSend": "Vi kunne ikke sende et nulstillingslink. Tjek e-mailadressen, og prøv igen.",
+    "useADifferentEmail": "Brug en anden e-mail"
   },
   "authResetPassword": {
     "invalidResetLink": "Ugyldigt nulstillingslink",

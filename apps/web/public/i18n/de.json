@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Geben Sie die E-Mail-Adresse ein, mit der Sie sich registriert haben, und wir senden Ihnen einen Link zum Zurücksetzen.",
     "sendResetLink": "Link zum Zurücksetzen senden",
     "backToLogin": "Zurück zur Anmeldung",
-    "weSentAPasswordReset": "Wir haben einen Link zum Zurücksetzen gesendet an",
-    "clickTheLinkInThe": ". Klicken Sie auf den Link in der E-Mail, um ein neues Passwort festzulegen.",
-    "didnTReceiveItResend": "Nicht erhalten? Erneut senden"
+    "didnTReceiveItResend": "Nicht erhalten? Erneut senden",
+    "enterAValidEmail": "Geben Sie eine gültige E-Mail-Adresse ein.",
+    "sentIfAccountExists": "Falls ein Konto für {{email}} existiert, haben wir einen Link zum Zurücksetzen Ihres Passworts gesendet. Prüfen Sie Ihren Posteingang und Spam-Ordner.",
+    "alreadySent": "Ein Link zum Zurücksetzen wurde bereits an diese E-Mail-Adresse gesendet. Prüfen Sie Ihren Posteingang und Spam-Ordner; in ein paar Minuten können Sie einen neuen anfordern.",
+    "sentAnother": "Wir haben einen weiteren Link gesendet.",
+    "tooManyRequests": "Zu viele Versuche. Bitte warten Sie ein paar Minuten und versuchen Sie es dann erneut.",
+    "cannotReachTheServer": "Server nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
+    "couldNotSend": "Wir konnten keinen Link zum Zurücksetzen senden. Prüfen Sie die E-Mail-Adresse und versuchen Sie es erneut.",
+    "useADifferentEmail": "Andere E-Mail-Adresse verwenden"
   },
   "authResetPassword": {
     "invalidResetLink": "Ungültiger Link",

@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Saisissez l’adresse e-mail utilisée à l’inscription et nous vous enverrons un lien de réinitialisation.",
     "sendResetLink": "Envoyer le lien",
     "backToLogin": "Retour à la connexion",
-    "weSentAPasswordReset": "Nous avons envoyé un lien de réinitialisation à",
-    "clickTheLinkInThe": ". Cliquez sur le lien dans l’e-mail pour définir un nouveau mot de passe.",
-    "didnTReceiveItResend": "Pas reçu ? Renvoyer"
+    "didnTReceiveItResend": "Pas reçu ? Renvoyer",
+    "enterAValidEmail": "Saisissez une adresse e-mail valide.",
+    "sentIfAccountExists": "Si un compte existe pour {{email}}, nous vous avons envoyé un lien pour réinitialiser votre mot de passe. Consultez votre boîte de réception et vos courriers indésirables.",
+    "alreadySent": "Un lien de réinitialisation a déjà été envoyé à cette adresse. Consultez votre boîte de réception et vos courriers indésirables. Vous pourrez en demander un autre dans quelques minutes.",
+    "sentAnother": "Nous vous avons envoyé un autre lien.",
+    "tooManyRequests": "Trop de tentatives. Veuillez patienter quelques minutes, puis réessayer.",
+    "cannotReachTheServer": "Impossible de joindre le serveur. Veuillez réessayer dans un instant.",
+    "couldNotSend": "Nous n’avons pas pu envoyer de lien de réinitialisation. Vérifiez l’adresse e-mail et réessayez.",
+    "useADifferentEmail": "Utiliser une autre adresse e-mail"
   },
   "authResetPassword": {
     "invalidResetLink": "Lien de réinitialisation invalide",

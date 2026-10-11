@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Introduce el correo con el que te registraste y te enviaremos un enlace de restablecimiento.",
     "sendResetLink": "Enviar enlace",
     "backToLogin": "Volver a iniciar sesión",
-    "weSentAPasswordReset": "Enviamos un enlace de restablecimiento a",
-    "clickTheLinkInThe": ". Haz clic en el enlace del correo para establecer una nueva contraseña.",
-    "didnTReceiveItResend": "¿No lo recibiste? Reenviar"
+    "didnTReceiveItResend": "¿No lo recibiste? Reenviar",
+    "enterAValidEmail": "Introduce un correo electrónico válido.",
+    "sentIfAccountExists": "Si existe una cuenta para {{email}}, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.",
+    "alreadySent": "Ya se envió un enlace de restablecimiento a este correo. Revisa tu bandeja de entrada y la carpeta de spam; podrás pedir otro en unos minutos.",
+    "sentAnother": "Te hemos enviado otro enlace.",
+    "tooManyRequests": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+    "cannotReachTheServer": "No se puede conectar con el servidor. Inténtalo de nuevo en un momento.",
+    "couldNotSend": "No pudimos enviar el enlace de restablecimiento. Comprueba el correo e inténtalo de nuevo.",
+    "useADifferentEmail": "Usar otro correo"
   },
   "authResetPassword": {
     "invalidResetLink": "Enlace de restablecimiento no válido",

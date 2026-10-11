@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Add meg az e-mail címet, amivel regisztráltál, és küldünk egy visszaállító linket.",
     "sendResetLink": "Visszaállító link küldése",
     "backToLogin": "Vissza a bejelentkezéshez",
-    "weSentAPasswordReset": "Küldtünk egy jelszó-visszaállító linket ide:",
-    "clickTheLinkInThe": ". Kattints az e-mailben lévő linkre az új jelszó beállításához.",
-    "didnTReceiveItResend": "Nem kaptad meg? Küldés újra"
+    "didnTReceiveItResend": "Nem kaptad meg? Küldés újra",
+    "enterAValidEmail": "Adj meg egy érvényes e-mail címet.",
+    "sentIfAccountExists": "Ha létezik fiók ehhez a címhez: {{email}}, küldtünk egy linket a jelszavad visszaállításához. Nézd meg a beérkező leveleidet és a spam mappát.",
+    "alreadySent": "Erre az e-mail címre már küldtünk visszaállító linket. Nézd meg a beérkező leveleidet és a spam mappát; néhány perc múlva kérhetsz újat.",
+    "sentAnother": "Küldtünk egy újabb linket.",
+    "tooManyRequests": "Túl sok próbálkozás. Várj néhány percet, majd próbáld újra.",
+    "cannotReachTheServer": "A szerver nem érhető el. Kérjük, próbáld újra egy pillanat múlva.",
+    "couldNotSend": "Nem sikerült elküldeni a visszaállító linket. Ellenőrizd az e-mail címet, és próbáld újra.",
+    "useADifferentEmail": "Másik e-mail cím használata"
   },
   "authResetPassword": {
     "invalidResetLink": "Érvénytelen visszaállító link",

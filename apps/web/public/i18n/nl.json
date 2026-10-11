@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Voer het e-mailadres in waarmee je je hebt geregistreerd, dan sturen we je een resetlink.",
     "sendResetLink": "Resetlink verzenden",
     "backToLogin": "Terug naar inloggen",
-    "weSentAPasswordReset": "We hebben een resetlink gestuurd naar",
-    "clickTheLinkInThe": ". Klik op de link in de e-mail om een nieuw wachtwoord in te stellen.",
-    "didnTReceiveItResend": "Niet ontvangen? Opnieuw verzenden"
+    "didnTReceiveItResend": "Niet ontvangen? Opnieuw verzenden",
+    "enterAValidEmail": "Voer een geldig e-mailadres in.",
+    "sentIfAccountExists": "Als er een account bestaat voor {{email}}, hebben we een link gestuurd om je wachtwoord te resetten. Controleer je inbox en spammap.",
+    "alreadySent": "Er is al een resetlink naar dit e-mailadres gestuurd. Controleer je inbox en spammap; over een paar minuten kun je een nieuwe aanvragen.",
+    "sentAnother": "We hebben nog een link gestuurd.",
+    "tooManyRequests": "Te veel pogingen. Wacht een paar minuten en probeer het opnieuw.",
+    "cannotReachTheServer": "Kan de server niet bereiken. Probeer het zo meteen opnieuw.",
+    "couldNotSend": "We konden geen resetlink versturen. Controleer het e-mailadres en probeer het opnieuw.",
+    "useADifferentEmail": "Een ander e-mailadres gebruiken"
   },
   "authResetPassword": {
     "invalidResetLink": "Ongeldige resetlink",

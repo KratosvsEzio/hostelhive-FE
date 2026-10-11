@@ -1406,9 +1406,15 @@
     "enterTheEmailAddressYou": "Inserisci l’email con cui ti sei registrato e ti invieremo un link per il reset.",
     "sendResetLink": "Invia link di reset",
     "backToLogin": "Torna al login",
-    "weSentAPasswordReset": "Abbiamo inviato un link di reset a",
-    "clickTheLinkInThe": ". Clicca sul link nell’email per impostare una nuova password.",
-    "didnTReceiveItResend": "Non ricevuto? Invia di nuovo"
+    "didnTReceiveItResend": "Non ricevuto? Invia di nuovo",
+    "enterAValidEmail": "Inserisci un indirizzo email valido.",
+    "sentIfAccountExists": "Se esiste un account per {{email}}, ti abbiamo inviato un link per reimpostare la password. Controlla la posta in arrivo e la cartella spam.",
+    "alreadySent": "Un link di reset è già stato inviato a questa email. Controlla la posta in arrivo e la cartella spam; potrai richiederne un altro tra qualche minuto.",
+    "sentAnother": "Ti abbiamo inviato un altro link.",
+    "tooManyRequests": "Troppi tentativi. Attendi qualche minuto e riprova.",
+    "cannotReachTheServer": "Impossibile raggiungere il server. Riprova tra un momento.",
+    "couldNotSend": "Non siamo riusciti a inviare il link di reset. Controlla l’indirizzo email e riprova.",
+    "useADifferentEmail": "Usa un’altra email"
   },
   "authResetPassword": {
     "invalidResetLink": "Link di reset non valido",

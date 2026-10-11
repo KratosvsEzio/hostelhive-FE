@@ -158,9 +158,15 @@
     "enterTheEmailAddressYou": "Enter the email address you registered with and we'll send you a reset link.",
     "sendResetLink": "Send reset link",
     "backToLogin": "Back to login",
-    "weSentAPasswordReset": "We sent a password reset link to",
-    "clickTheLinkInThe": ". Click the link in the email to set a new password.",
-    "didnTReceiveItResend": "Didn't receive it? Resend"
+    "didnTReceiveItResend": "Didn't receive it? Resend",
+    "enterAValidEmail": "Enter a valid email address.",
+    "sentIfAccountExists": "If an account exists for {{email}}, we've sent a link to reset your password. Check your inbox and spam folder.",
+    "alreadySent": "A reset link was already sent to this email. Check your inbox and spam folder; you can ask for another one in a few minutes.",
+    "sentAnother": "We've sent another link.",
+    "tooManyRequests": "Too many attempts. Please wait a few minutes and try again.",
+    "cannotReachTheServer": "Can't reach the server. Please try again in a moment.",
+    "couldNotSend": "We couldn't send a reset link. Check the email address and try again.",
+    "useADifferentEmail": "Use a different email"
   },
   "authResetPassword": {
     "invalidResetLink": "Invalid reset link",
