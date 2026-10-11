@@ -3,10 +3,10 @@ import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Keeps an error's `message` off the screen in feature code.
+ * Keeps an error's `message` off the screen in feature, layout and shared code.
  *
- * `ApiError.message` can be Angular's "Http failure response for <url>", and a plain `Error`
- * carries developer text, so neither is display copy. Screens classify by status and show a
+ * `ApiError.message` is a diagnostic ("GET /api/x → 404"), and a plain `Error` carries developer
+ * text, so neither is display copy. Screens classify by status and show a
  * translated key instead (see `api-error-text.ts`). This scans the source rather than the
  * screens, so a new read fails here before anybody has to find it on a page.
  *
@@ -15,8 +15,11 @@ import { fileURLToPath } from 'node:url';
  * genuinely not an error's text are listed in `ALLOWED`, with exactly how many each file holds.
  */
 
-/** `apps/web/src/app/features` — two levels up from here: errors, core. */
-const FEATURES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'features');
+/** `apps/web/src/app` — two levels up from here: errors, core. */
+const APP_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/** The trees that render to a screen; `core/`, `services/` and `util/` hold no templates. */
+const SCANNED_DIRS: readonly string[] = ['features', 'layout', 'shared'].map((dir) => join(APP_DIR, dir));
 
 const MESSAGE_READS: readonly RegExp[] = [
   /[\w$)\]][?!]?\.message\b/g,
@@ -29,16 +32,19 @@ function messageReads(line: string): string[] {
   return MESSAGE_READS.flatMap((pattern) => [...line.matchAll(pattern)].map((m) => m[0]));
 }
 
-/** Known reads, by path under `features/`, with exactly how many each holds. */
+/** Known reads, by path under `apps/web/src/app/`, with exactly how many each holds. */
 const ALLOWED: Readonly<Record<string, number>> = {
   // Billing shows a 422's own `serverMessages[0]` by product rule; `e` is the page's error view.
-  'host/subscription/billing-page.html': 3,
+  'features/host/subscription/billing-page.html': 3,
   // `outcome.message` / `note.message` / `view.message` are copy the billing code builds itself.
-  'host/subscription/payment-return-retry.ts': 3,
-  'host/subscription/payment-return-states.ts': 2,
-  'host/subscription/payment-step.ts': 1,
+  'features/host/subscription/payment-return-retry.ts': 3,
+  'features/host/subscription/payment-return-states.ts': 2,
+  'features/host/subscription/payment-step.ts': 1,
   // `invite.message` is the note an inviter wrote, not an error.
-  'notifications/notifications.html': 1,
+  'features/notifications/notifications.html': 1,
+  'layout/components/notification-bell/notification-bell.html': 1,
+  // `t.message` is the toast's own body: display copy its caller built, not an error's text.
+  'layout/components/toast-host/toast-host.html': 2,
 };
 
 /** Every non-spec TypeScript file and template under `dir`, as absolute paths. */
@@ -53,11 +59,11 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
-/** Every read in the features tree, as `path:line: text`, grouped by path under `features/`. */
+/** Every read in the scanned trees, as `path:line: text`, grouped by path under `app/`. */
 function rawMessageReads(): Map<string, string[]> {
   const found = new Map<string, string[]>();
-  for (const file of sourceFiles(FEATURES_DIR)) {
-    const path = relative(FEATURES_DIR, file).split(sep).join('/');
+  for (const file of SCANNED_DIRS.flatMap((dir) => sourceFiles(dir))) {
+    const path = relative(APP_DIR, file).split(sep).join('/');
     readFileSync(file, 'utf8')
       .split(/\r?\n/)
       .forEach((line, index) => {
@@ -101,11 +107,11 @@ describe('the message-read matcher', () => {
   });
 });
 
-describe('feature code never reads a message for display', () => {
+describe('screen code never reads a message for display', () => {
   const found = rawMessageReads();
 
-  it('finds the feature source to scan', () => {
-    expect(sourceFiles(FEATURES_DIR).length).toBeGreaterThan(0);
+  it.each(SCANNED_DIRS)('finds source to scan in %s', (dir) => {
+    expect(sourceFiles(dir).length).toBeGreaterThan(0);
   });
 
   it('has no message read beyond what the allowlist names', () => {

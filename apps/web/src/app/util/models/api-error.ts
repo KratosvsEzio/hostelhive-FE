@@ -13,8 +13,9 @@ export interface ApiError {
    */
   code: string;
   /**
-   * Diagnostic message. May be Angular's synthetic `HttpErrorResponse.message`, which leaks
-   * the internal API origin and path — never surface it to a user; use `serverMessages` instead.
+   * Diagnostic only, shaped `<METHOD> <path> → <status>` (e.g. `GET /api/hostels/1 → 404`), with
+   * no origin or query; a failure without a status names the error instead (`→ TimeoutError`).
+   * Never server text and never shown to a user: display copy comes from `serverMessages`.
    */
   message: string;
   /**
