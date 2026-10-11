@@ -34,7 +34,7 @@ The two 403s share a status and the envelope carries no machine code. The page u
   - `classifyConfirmFailure` sends a bare 404, an unmatched 403 and every other status to the generic card;
   - its 403 matches "expired" only as a whole word and rejects "not expired" or "unexpired";
   - both classifiers read errors through `core/errors/api-error-text.ts`.
-- **Forgot-password is the next screen to fix.** "Request new link" leads there, and it still shows raw text (Trello #150).
+- **Forgot-password follows it too** (Trello #150, PR #123). `classifyForgotFailure` never shows the sent screen for a 500, a bare 404 or 422, or an unknown status; those stay on the form with "couldn't send". See [Forgot password answers an unknown email neutrally](forgot-password-answers-unknown-email-neutrally.md).
 
 ## Evidence
 - `apps/web/src/app/features/auth/reset-password/reset-failure.ts`, `reset-password.ts` and `.html`
