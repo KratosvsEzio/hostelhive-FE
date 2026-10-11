@@ -450,6 +450,15 @@ describe('OnboardingWizard', () => {
       expect(navigate).toHaveBeenCalledWith(['/']);
     });
 
+    it('sends no banner_id in the hostel payload', () => {
+      const { vm, hostels } = render();
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(hostels.create.mock.calls[0][0]).not.toHaveProperty('banner_id');
+    });
+
     it('does not re-send an unchanged star, but sends a moved one', () => {
       const { vm, hostels } = render();
       vm.draftId.set(7);
