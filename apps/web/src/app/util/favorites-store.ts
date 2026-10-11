@@ -11,6 +11,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { AsyncSubject, Observable, Subscription, throwError } from 'rxjs';
 import { Listing } from '@hostelhive/data-access';
 import { SessionStore } from '@core/auth/session-store';
+import { isUnauthorized } from '@core/errors/is-unauthorized';
 import { FavouritesApi } from '@services/favourites-api';
 
 const STORAGE_KEY = 'hh:favorites';
@@ -216,7 +217,6 @@ export class FavoritesStore {
   /**
    * Replaces the list with the server's. Quiet: a failed background read keeps the cached
    * hearts and shows no toast, though a 401 still ends the session through the interceptor.
-   * The dev `?role=` seed carries a fake token, so this load 401s there (dev only).
    */
   private load(owner: string): void {
     this.loadedFor = owner;
@@ -279,15 +279,6 @@ export class FavoritesStore {
     }
     return { owner, items: [] };
   }
-}
-
-/** Reads `.status` structurally: the error interceptor rethrows a plain `ApiError` object. */
-function isUnauthorized(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    (err as { status?: unknown }).status === 401
-  );
 }
 
 function isOwnedCache(value: unknown): value is FavoritesState {
