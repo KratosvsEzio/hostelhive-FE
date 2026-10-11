@@ -12,7 +12,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Skeleton } from '@hostelhive/ui';
 import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
-import { RoomDay, RoomResident, RoomStay, toRoomMonth } from './room-stays';
+import { RoomDay, RoomResident, RoomStay, sleepsOn, toRoomMonth } from './room-stays';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { buildWeeks } from './month-grid';
@@ -84,6 +84,15 @@ export interface RosterEntry {
 function iso(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * The date this calendar calls today: highlighted in the grid, opened on by the roster, and
+ * where a checked-out stay stops holding beds. The device's own date — the client has no
+ * hostel clock to read.
+ */
+function today(): string {
+  return iso(new Date());
 }
 
 /**
@@ -225,7 +234,15 @@ export class RoomCalendar {
       switchMap((q) =>
         this.api.bookingsInRoom(q.hostel, q.room, q.from, q.to).pipe(
           map((bookings) => {
-            const { days, stays } = toRoomMonth(bookings, q.capacity, q.from, q.to, q.residents);
+            const { days, stays } = toRoomMonth(
+              bookings,
+              q.capacity,
+              q.from,
+              q.to,
+              q.residents,
+              q.room,
+              today(),
+            );
             return { loading: false, error: false, days, bookings: stays };
           }),
           catchError(() =>
@@ -334,7 +351,7 @@ export class RoomCalendar {
    * where the month starts and stops — and each cell is then filled with its own pips.
    */
   protected readonly weeks = computed<WeekRow[]>(() => {
-    const today = iso(new Date());
+    const todayIso = today();
     const colours = this.colours();
 
     return buildWeeks(this.state().days, this.state().bookings, this.month()).map((week) => {
@@ -357,7 +374,10 @@ export class RoomCalendar {
 
         const on = this.bookingsOn(day.date);
         const pips: Pip[] = [];
-        for (const booking of on) {
+        // Only the stays asleep here tonight, the same set `day.booked` sums. Filling pips for
+        // the guests leaving this morning too drew a turnover day as oversold, and the label
+        // below — worked out from `booked` — then read "over -3".
+        for (const booking of on.filter((b) => sleepsOn(b, day.date))) {
           const label = booking.guest?.name || 'Guest';
           for (let i = 0; i < this.unitsIn(booking); i++) {
             pips.push({
@@ -370,7 +390,8 @@ export class RoomCalendar {
             });
           }
         }
-        const oversold = pips.length > day.capacity;
+        // From `booked`, the number every label beside it is worked out from.
+        const oversold = day.booked > day.capacity;
         while (pips.length < day.capacity) {
           pips.push({ bookingId: null, colour: '', clash: false, label: '' });
         }
@@ -385,7 +406,7 @@ export class RoomCalendar {
           arrivals: on.filter((b) => b.check_in === day.date).length,
           // `check_out` is exclusive: a guest leaving on the 5th does not occupy the 5th.
           departures: on.filter((b) => b.check_out === day.date).length,
-          isToday: day.date === today,
+          isToday: day.date === todayIso,
           oversold,
         };
       });
@@ -425,8 +446,8 @@ export class RoomCalendar {
     const chosen = this.picked();
     if (chosen) return chosen;
     const days = this.state().days;
-    const today = iso(new Date());
-    if (days.some((d) => d.date === today)) return today;
+    const todayIso = today();
+    if (days.some((d) => d.date === todayIso)) return todayIso;
     return days.find((d) => d.booked > 0)?.date ?? days[0]?.date ?? null;
   });
 

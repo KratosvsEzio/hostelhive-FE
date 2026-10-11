@@ -16,8 +16,11 @@
     [hostelId]="hostelIdForForm()"
     [actionError]="viewError()"
     [busy]="busy()"
+    [invoice]="viewingInvoice()"
+    [invoiceLookup]="viewingInvoiceLookup()"
     (closed)="closeDetails()"
     (act)="onAct($event)"
+    (released)="onReleased($event)"
   />
 
   <hh-assign-rooms-panel
@@ -237,19 +240,48 @@
             The guest, you and the manager are told. Any beds it holds are released.
           }
           @case ('noShow') {
-            For a guest who never arrived. They, you and the manager are told; the booking can still be invoiced.
+            For a guest who never arrived. They, you and the manager are told, and the booking is closed.
           }
           @case ('checkOut') {
             Every bed this booking holds is released.
           }
           @case ('markPaid') {
-            Records {{ d.booking.currency | currencySym }} {{ (d.booking.total - d.booking.paid) | number: '1.0-0' }} as settled at the property, so nothing is left due. The invoice, if there is one, is marked paid separately.
+            Records {{ d.booking.currency | currencySym }} {{ (d.booking.total - d.booking.paid) | number: '1.0-0' }} as settled at the property, so nothing is left due.
           }
           @case ('invoice') {
             Raised once per booking, for {{ d.booking.currency | currencySym }} {{ d.booking.total | number: '1.0-0' }}. It appears under Invoices.
           }
         }
       </p>
+      @let openInvoice = unpaidInvoice(d.booking);
+      @if (openInvoice && d.action === 'cancel') {
+        <p class="mt-2 rounded-lg bg-warn/10 px-3 py-2 text-xs font-medium text-warn" role="note">
+          {{ 'hostBookings.cancelOpenInvoiceWarning' | transloco: { invoice: invoiceNumber(openInvoice) } }}
+        </p>
+      }
+      @if (openInvoice && d.action === 'markPaid') {
+        <!-- Paying the booking and its invoice are separate records on the server; the box is
+             what keeps a host from settling one and leaving the other owed. -->
+        <label class="mt-4 flex cursor-pointer items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            class="peer sr-only"
+            [checked]="payInvoiceToo()"
+            [disabled]="busy()"
+            (change)="payInvoiceToo.set(!payInvoiceToo())"
+          />
+          <span
+            class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2"
+            [class]="payInvoiceToo() ? 'border-brand-500 bg-brand-500 text-white' : 'border-ink-300 bg-white'"
+            aria-hidden="true"
+          >
+            @if (payInvoiceToo()) {
+              <i class="ti ti-check text-xs leading-none"></i>
+            }
+          </span>
+          <span class="text-ink-700">{{ 'hostBookings.alsoMarkInvoicePaid' | transloco: { invoice: invoiceNumber(openInvoice) } }}</span>
+        </label>
+      }
       @if (asksReason()) {
         <label for="hh-booking-reason" class="mb-1 mt-4 block text-xs font-medium text-ink-600">
           Reason{{ reasonRequired() ? ' *' : ' (optional)' }}

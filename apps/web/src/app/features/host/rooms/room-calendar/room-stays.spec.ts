@@ -1,4 +1,4 @@
-import { HostBooking } from '@features/host/bookings/host-bookings-api';
+import { BookingOccupancy, HostBooking } from '@features/host/bookings/host-bookings-api';
 import { RoomResident, toRoomMonth } from './room-stays';
 
 function booking(over: Partial<HostBooking> = {}): HostBooking {
@@ -221,5 +221,166 @@ describe('toRoomMonth — residents', () => {
     expect(m.stays[0].open).toBe(true);
     expect(m.stays[0].check_in).toBe('2026-08-10');
     expect(day(m, '2026-08-10').booked).toBe(1);
+  });
+});
+
+function occupancy(roomId: string, guests: number, active = true): BookingOccupancy {
+  return { id: `o-${roomId}`, roomId, roomNumber: roomId, guests, active };
+}
+
+/**
+ * A party checked into more than one room.
+ *
+ * The whole party used to be charged to every room that drew the booking, so a 3-guest
+ * booking split 2 + 1 read 101 as three beds full and left 102 looking empty. Once rooms are
+ * allocated, the occupancies are the truth: each room carries only the guests placed in it.
+ */
+describe('toRoomMonth — occupancies', () => {
+  const split = (over: Partial<HostBooking> = {}) =>
+    booking({
+      guests: 3,
+      occupancies: [occupancy('101', 2), occupancy('102', 1)],
+      ...over,
+    });
+  const booked = (r: ReturnType<typeof toRoomMonth>, d = '2026-08-10') => day(r.days, d)?.booked;
+
+  it('charges each room only the guests placed in it', () => {
+    const in101 = toRoomMonth([split()], 3, AUG.from, AUG.to, [], '101');
+    const in102 = toRoomMonth([split()], 3, AUG.from, AUG.to, [], '102');
+
+    expect(booked(in101)).toBe(2);
+    expect(booked(in102)).toBe(1);
+    expect(in102.stays.map((s) => s.beds)).toEqual([1]);
+  });
+
+  it('does not draw a checked-in booking on a room its party is not in', () => {
+    const m = toRoomMonth([split()], 3, AUG.from, AUG.to, [], '103');
+
+    expect(m.stays).toEqual([]);
+    expect(booked(m)).toBe(0);
+  });
+
+  // Released early: the beds are back on sale, so a live stay no longer holds them.
+  it('frees a room whose occupancy was released while the booking is checked in', () => {
+    const released = split({ occupancies: [occupancy('101', 2, false), occupancy('102', 1)] });
+    const in101 = toRoomMonth([released], 3, AUG.from, AUG.to, [], '101');
+    const in102 = toRoomMonth([released], 3, AUG.from, AUG.to, [], '102');
+
+    expect(in101.stays).toEqual([]);
+    expect(booked(in101)).toBe(0);
+    expect(booked(in102)).toBe(1);
+  });
+
+  // Check-out makes every occupancy inactive; the month looking back still has to show them.
+  it('keeps every occupancy of a checked-out booking as history', () => {
+    const done = split({
+      disposition: { slug: 'checked-out', name: 'Checked out' },
+      occupancies: [occupancy('101', 2, false), occupancy('102', 1, false)],
+    });
+
+    expect(booked(toRoomMonth([done], 3, AUG.from, AUG.to, [], '101'))).toBe(2);
+    expect(booked(toRoomMonth([done], 3, AUG.from, AUG.to, [], '102'))).toBe(1);
+  });
+
+  it('sums two occupancies of one booking in the same room', () => {
+    const twice = split({ occupancies: [occupancy('101', 2), { ...occupancy('101', 1), id: 'o-2' }] });
+
+    expect(booked(toRoomMonth([twice], 4, AUG.from, AUG.to, [], '101'))).toBe(3);
+  });
+
+  it('counts a room sold whole as one unit, but only where the party is', () => {
+    const inRoom = toRoomMonth([split()], 1, AUG.from, AUG.to, [], '101');
+    const elsewhere = toRoomMonth([split()], 1, AUG.from, AUG.to, [], '103');
+
+    expect(booked(inRoom)).toBe(1);
+    expect(elsewhere.stays).toEqual([]);
+  });
+
+  // Never checked in: no rooms are allocated yet, so the party is what the booking holds.
+  it('leaves a booking without occupancies exactly as before', () => {
+    const pending = booking({
+      guests: 3,
+      occupancies: [],
+      disposition: { slug: 'pending', name: 'Pending' },
+    });
+
+    expect(booked(toRoomMonth([pending], 8, AUG.from, AUG.to, [], '101'))).toBe(3);
+    expect(booked(toRoomMonth([pending], 1, AUG.from, AUG.to, [], '101'))).toBe(1);
+  });
+});
+
+/**
+ * A stay checked out before the nights it booked have run.
+ *
+ * Its guests have gone, so tonight and every night after are back on sale; the nights before
+ * today were slept in and stay on the month as history. Charging every booked night read a
+ * three-bed room as four beds full the evening its first party left.
+ */
+describe('toRoomMonth — checked out early', () => {
+  const TODAY = '2026-08-11';
+  const left = (over: Partial<HostBooking> = {}) =>
+    booking({
+      guests: 2,
+      disposition: { slug: 'checked-out', name: 'Checked out' },
+      occupancies: [occupancy('101', 2, false)],
+      ...over,
+    });
+  const booked = (r: ReturnType<typeof toRoomMonth>, d: string) => day(r.days, d)?.booked;
+
+  it('frees tonight and later, but still counts last night', () => {
+    const m = toRoomMonth([left()], 3, AUG.from, AUG.to, [], '101', TODAY);
+
+    expect(booked(m, '2026-08-10')).toBe(2);
+    expect(booked(m, '2026-08-11')).toBe(0);
+    expect(booked(m, '2026-08-12')).toBe(0);
+  });
+
+  // They were still there this morning, so the roster says they left today, and not after.
+  it('lists them as leaving today rather than on the booked date', () => {
+    const m = toRoomMonth([left()], 3, AUG.from, AUG.to, [], '101', TODAY);
+
+    expect(day(m.days, '2026-08-11')?.booking_ids).toEqual(['b1']);
+    expect(day(m.days, '2026-08-12')?.booking_ids).toEqual([]);
+    expect(m.stays[0].check_out).toBe(TODAY);
+  });
+
+  it('holds no night at all when it left the morning of its first one', () => {
+    const m = toRoomMonth([left({ checkIn: TODAY })], 3, AUG.from, AUG.to, [], '101', TODAY);
+
+    expect(booked(m, TODAY)).toBe(0);
+    expect(booked(m, '2026-08-12')).toBe(0);
+  });
+
+  // The room that read "4 of 3 beds · over 1": the party that left and the party asleep.
+  it('charges only the party still in the room tonight', () => {
+    const asleep = booking({
+      id: 'b2',
+      guests: 2,
+      checkIn: TODAY,
+      occupancies: [occupancy('101', 2)],
+    });
+    const m = toRoomMonth([left({ checkIn: TODAY }), asleep], 3, AUG.from, AUG.to, [], '101', TODAY);
+
+    expect(booked(m, TODAY)).toBe(2);
+  });
+
+  it('leaves a stay that ended as booked exactly as it was', () => {
+    const m = toRoomMonth([left({ checkOut: '2026-08-11' })], 3, AUG.from, AUG.to, [], '101', '2026-08-20');
+
+    expect(booked(m, '2026-08-10')).toBe(2);
+    expect(m.stays[0].check_out).toBe('2026-08-11');
+  });
+
+  it('does not touch a stay that has not checked out', () => {
+    for (const slug of ['pending', 'confirmed', 'checked-in']) {
+      const live = booking({
+        guests: 2,
+        disposition: { slug, name: slug },
+        occupancies: slug === 'checked-in' ? [occupancy('101', 2)] : [],
+      });
+      const m = toRoomMonth([live], 3, AUG.from, AUG.to, [], '101', TODAY);
+
+      expect({ slug, tonight: booked(m, '2026-08-12') }).toEqual({ slug, tonight: 2 });
+    }
   });
 });

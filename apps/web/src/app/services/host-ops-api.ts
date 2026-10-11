@@ -9,6 +9,7 @@ import {
 } from './host-ops.fixtures';
 import {
   Invoice,
+  InvoiceBooking,
   InvoiceKind,
   InvoiceLine,
   InvoiceStatus,
@@ -20,7 +21,7 @@ import {
   UtilityType,
   UtilityTypeMeta,
 } from '@hostelhive/data-access';
-import { ApiClient } from '@core/api-resource';
+import { ApiClient, ApiRequestOptions, requestContextArgs } from '@core/api-resource';
 import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
 
 interface ApiRoomType {
@@ -335,7 +336,7 @@ function toUtilityBill(b: ApiUtilityBillItem): UtilityBill {
   };
 }
 
-interface ApiRenterBillTop {
+export interface ApiRenterBillTop {
   id?: number | string;
   renter_id?: number | string;
   renter?: {
@@ -356,6 +357,20 @@ interface ApiRenterBillTop {
   paid_at?: string | null;
   status?: { id?: number; name?: string; slug?: string } | null;
   bill_type?: string | null;
+  billable_type?: string | null;
+  billable_id?: number | string | null;
+  /**
+   * Set only on `booking` bills. The two shapes differ on the phone key: list (search)
+   * documents send `phone`, while the serializer replies (show, create, update,
+   * mark_as_paid, generate_invoice) send `guest_phone`.
+   */
+  booking?: {
+    id?: number | string | null;
+    booking_ref?: string | null;
+    guest_name?: string | null;
+    phone?: string | null;
+    guest_phone?: string | null;
+  } | null;
   notes?: string | null;
   pay_note?: string | null;
   line_items?: { label?: string; amount?: number | string | null }[] | null;
@@ -382,9 +397,64 @@ function formatBreakdownKey(key: string): string {
   return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function toInvoice(rb: ApiRenterBillTop): Invoice {
+function toInvoiceKind(billType: string | null | undefined): InvoiceKind {
+  if (billType === 'utility') return 'utility';
+  if (billType === 'booking') return 'booking';
+  return 'rental';
+}
+
+/**
+ * Breakdown keys a booking bill always carries at zero.
+ *
+ * The backend writes booking bills with the monthly job's key set so the search mapping
+ * stays uniform, which leaves mess and transport at 0 on every stay; shown, they read as
+ * charges the guest was never offered.
+ */
+const BOOKING_ZERO_KEYS: ReadonlySet<string> = new Set(['mess_charges', 'transportation_charges']);
+
+function toBreakdownLines(breakDown: Record<string, number>, kind: InvoiceKind): InvoiceLine[] {
+  const entries = Object.entries(breakDown);
+  if (kind !== 'booking') {
+    return entries.map(([key, amt]) => ({ label: formatBreakdownKey(key), amount: amt }));
+  }
+  // Decimal columns can arrive as strings ("0.0"), so compare numerically.
+  return entries
+    .filter(([key, amt]) => !(BOOKING_ZERO_KEYS.has(key) && Number(amt) === 0))
+    .map(([key, amt]) => ({ label: formatBreakdownKey(key), amount: Number(amt) }));
+}
+
+function toInvoiceBooking(rb: ApiRenterBillTop): InvoiceBooking | undefined {
+  const b = rb.booking;
+  if (!b) return undefined;
+  return {
+    id: String(b.id ?? rb.billable_id ?? ''),
+    ref: b.booking_ref ?? '',
+    guestName: b.guest_name ?? '',
+    phone: b.phone ?? b.guest_phone ?? '',
+  };
+}
+
+const FALLBACK_LINE_LABEL: Record<InvoiceKind, string> = {
+  rental: 'Monthly rent',
+  utility: 'Utility charge',
+  booking: 'Stay charges',
+};
+
+/**
+ * Maps one renter bill, from either wire shape: the list's search documents or a
+ * serializer reply (`{ renter_bill }` from show, create, update, mark_as_paid and the
+ * booking's generate_invoice).
+ *
+ * Booking bills (`bill_type: 'booking'`) have no renter: `renterId` stays '' and
+ * `tenantName` carries the guest's name, so name-only consumers (search, CSV, print)
+ * keep working without a kind check.
+ */
+export function toInvoice(rb: ApiRenterBillTop): Invoice {
   const id = String(rb.id ?? '');
-  const renterName = rb.renter?.full_name ?? rb.renter?.name ?? rb.full_name ?? '—';
+  const kind = toInvoiceKind(rb.bill_type);
+  const booking = kind === 'booking' ? toInvoiceBooking(rb) : undefined;
+  const renterName =
+    rb.renter?.full_name ?? rb.renter?.name ?? rb.full_name ?? (booking?.guestName || '—');
   const room = rb.renter?.room ?? rb.room ?? null;
   const roomNumber = room?.room_number ?? rb.room_number ?? '—';
   const floor = room?.floor ?? '—';
@@ -392,17 +462,17 @@ function toInvoice(rb: ApiRenterBillTop): Invoice {
   const rawStatus = rb.status?.slug ?? 'due';
   const status: InvoiceStatus =
     rawStatus === 'paid' ? 'paid' : rawStatus === 'over-due' ? 'over-due' : 'due';
-  const kind: InvoiceKind = rb.bill_type === 'utility' ? 'utility' : 'rental';
   const lines: InvoiceLine[] = rb.line_items?.length
     ? rb.line_items.map((l) => ({ label: l.label ?? '—', amount: Number(l.amount ?? 0) }))
     : rb.break_down
-      ? Object.entries(rb.break_down).map(([key, amt]) => ({ label: formatBreakdownKey(key), amount: amt }))
-      : [{ label: kind === 'rental' ? 'Monthly rent' : 'Utility charge', amount }];
+      ? toBreakdownLines(rb.break_down, kind)
+      : [{ label: FALLBACK_LINE_LABEL[kind], amount }];
   return {
     id,
     renterId: String(rb.renter_id ?? rb.renter?.id ?? ''),
     roomId: String(rb.room_id ?? rb.renter?.room?.id ?? rb.room?.id ?? ''),
     tenantName: renterName,
+    ...(booking ? { booking } : {}),
     roomNumber,
     floor,
     kind,
@@ -777,6 +847,56 @@ export class HostOpsApi {
       );
   }
 
+  /** `GET …/renter_bills/:billId` — one bill, for a deep link to a bill that is off-page. */
+  invoice(hostelId: string, billId: string, opts?: ApiRequestOptions): Observable<Invoice> {
+    return this.api
+      .get<{ renter_bill?: ApiRenterBillTop }>(
+        `/api/host/hostels/${hostelId}/renter_bills/${billId}`,
+        undefined,
+        ...requestContextArgs(opts),
+      )
+      .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
+  }
+
+  /**
+   * The invoices of a set of bookings, keyed by booking id, in one request.
+   *
+   * The booking serializer carries no invoice reference, so this asks the bills list,
+   * which indexes `billable_type` and `billable_id`. A booking holds at most one bill, so
+   * `limit` equal to the id count is enough for a single page. Bookings without a bill are
+   * simply absent from the map. An empty id list answers immediately without a request.
+   *
+   * The ids go to `billable_id.keyword`: the bills index maps `billable_id` dynamically, as
+   * analysed (lowercased) text, so a mixed-case id sent to the plain field never matches.
+   */
+  bookingInvoices(
+    hostelId: string,
+    bookingIds: readonly string[],
+    opts?: ApiRequestOptions,
+  ): Observable<Map<string, Invoice>> {
+    if (!bookingIds.length) return of(new Map<string, Invoice>());
+    return this.api
+      .get<ApiRenterBillsResponse>(
+        `/api/host/hostels/${hostelId}/renter_bills`,
+        {
+          ...pageParams(1, bookingIds.length),
+          'f[billable_type]': 'Booking',
+          'f[bill_type]': 'booking',
+          'f[billable_id.keyword][]': bookingIds,
+        },
+        ...requestContextArgs(opts),
+      )
+      .pipe(
+        map((res) => {
+          const byBooking = new Map<string, Invoice>();
+          for (const bill of (res.renter_bills ?? res.data ?? []).map(toInvoice)) {
+            if (bill.booking?.id) byBooking.set(bill.booking.id, bill);
+          }
+          return byBooking;
+        }),
+      );
+  }
+
   utilityBills(
     hostelId: string,
     page = 1,
@@ -872,11 +992,12 @@ export class HostOpsApi {
    * `paid_at`. Without it {@link toInvoice} would default the row to `due`, and settling a
    * bill would leave it on screen still saying it was owed.
    */
-  markInvoicePaid(hostelId: string, billId: string): Observable<Invoice> {
+  markInvoicePaid(hostelId: string, billId: string, opts?: ApiRequestOptions): Observable<Invoice> {
     return this.api
       .put<{ renter_bill?: ApiRenterBillTop }>(
         `/api/host/hostels/${hostelId}/renter_bills/${billId}/mark_as_paid`,
         {},
+        ...requestContextArgs(opts),
       )
       .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
