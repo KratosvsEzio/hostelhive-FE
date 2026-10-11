@@ -5,13 +5,18 @@ import { FilterGroup, FilterOption } from '@hostelhive/ui';
  *
  * @param hostelId   - Active hostel ID used to scope API URLs.
  * @param statusOptions - Status options loaded from the invoices API response.
+ * @param renterBills - Whether the hostel bills renters (anything but nightly). Off, the
+ *                      rental/utility type group and the tenant group are left out: a nightly
+ *                      hostel bills bookings only, which have no type to choose between and no
+ *                      `renter.id` for the tenant filter to match.
  */
 export function invoiceFilterGroups(
   hostelId: string,
   statusOptions: FilterOption[],
   baseUrl: string,
+  renterBills = true,
 ): FilterGroup[] {
-  return [
+  const groups: FilterGroup[] = [
     {
       key: 'status',
       label: 'Status',
@@ -96,4 +101,5 @@ export function invoiceFilterGroups(
       ],
     },
   ];
+  return renterBills ? groups : groups.filter((g) => g.key !== 'kind' && g.key !== 'tenant');
 }

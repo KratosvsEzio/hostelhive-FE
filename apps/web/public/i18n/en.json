@@ -413,7 +413,8 @@
     "allow": "Allow",
     "noPhotosYet": "No photos yet",
     "guests": "Guests",
-    "copy": "Copy"
+    "copy": "Copy",
+    "cannotReachTheServer": "Can't reach the server. Please try again in a moment."
   },
   "coreForbidden": {
     "accessBlocked": "Access blocked",
@@ -566,6 +567,12 @@
     "toCollectAtTheDesk": "To collect at the desk",
     "createBooking": "Create booking",
     "theRoomsForThisProperty": "The rooms for this property could not be loaded.",
+    "notSetUpForBookings": "This property isn't set up to take bookings.",
+    "crmRequired": "Your plan doesn't include bookings. Upgrade your plan to add bookings.",
+    "checkInCannotBeInPast": "Check-in can't be before today. Pick today or a later date.",
+    "roomTypeNotBookable": "One of these room types is switched off for bookings. Remove it and try again.",
+    "checkOutAfterCheckIn": "Check-out must be after check-in.",
+    "couldNotSaveBooking": "We couldn't save this booking. Check the details and try again.",
     "everyRoomEveryState": "Every room, every state — tap a day for its ledger",
     "thisMonthSCalendarCould": "This month's calendar could not be loaded.",
     "nothingIsWaitingOnYou": "Nothing is waiting on you for this day.",
@@ -578,7 +585,19 @@
     "checkInCheckOut": "Check in — check out",
     "aNightRuns12": "A night runs 12:00pm to 12:00pm — check in from midday, check out by midday the next day.",
     "discount": "Discount",
-    "saveBooking": "Save booking"
+    "saveBooking": "Save booking",
+    "invoice": "Invoice",
+    "checkingForInvoice": "Checking for an invoice…",
+    "noInvoiceYet": "No invoice yet.",
+    "couldNotCheckInvoice": "Could not check for an invoice.",
+    "viewInvoice": "View invoice",
+    "alsoMarkInvoicePaid": "Also mark invoice {{invoice}} as paid",
+    "bookingAndInvoicePaid": "Booking and invoice marked paid",
+    "invoiceNotPaid": "Booking marked paid. The invoice was not: {{message}}",
+    "stayedIn": "Stayed in",
+    "checkedOut": "Checked out",
+    "cancelOpenInvoiceWarning": "This booking has an unpaid invoice ({{invoice}}). Cancelling does not delete it.",
+    "bookingNotFound": "We couldn't find that booking."
   },
   "hostExpenses": {
     "allTypes": "All types",
@@ -639,7 +658,18 @@
     "due": "Due",
     "thisWillPermanentlyDeleteInvoice": "This will permanently delete invoice",
     "invoicesAppearHereOnceYou": "Invoices appear here once you issue rent or utility bills.",
-    "tryAdjustingYourFilters": "Try adjusting your filters."
+    "invoicesAppearHereNightly": "Invoices appear here once you generate them from checked-in bookings.",
+    "tryAdjustingYourFilters": "Try adjusting your filters.",
+    "bookingInvoices": "Booking invoices",
+    "bookingRef": "Booking {{ref}}",
+    "viewBooking": "View booking",
+    "guestName": "Guest name",
+    "markPaidConfirmTitle": "Mark {{invoice}} as paid?",
+    "markPaidConfirmBody": "This records the full amount as received.",
+    "alsoMarkBookingPaid": "Also mark booking {{ref}} as paid",
+    "invoiceAndBookingPaid": "Invoice and booking marked paid",
+    "bookingNotPaid": "Invoice marked paid. The booking was not: {{message}}",
+    "invoiceNotFound": "We couldn't find that invoice."
   },
   "hostMess": {
     "pickADate": "Pick a date",
@@ -820,7 +850,14 @@
     "nobodyInThisRoomThat": "Nobody in this room that day.",
     "thisRoomCurrentlyHasNo": "This room currently has no active tenants.",
     "addYourFirstRoomTo": "Add your first room to start tracking occupancy.",
-    "bedNumbersAreNotAssigned": "Bed numbers are not assigned yet — the calendar reports how many beds are taken, not which one each guest is in."
+    "bedNumbersAreNotAssigned": "Bed numbers are not assigned yet — the calendar reports how many beds are taken, not which one each guest is in.",
+    "nFree": "{{count}} free",
+    "full": "Full",
+    "guestsOnBookings": "Guests on bookings",
+    "noBookingGuests": "No booking guests in this room right now.",
+    "guestCount": "Guests: {{count}}",
+    "untilDate": "Until {{date}}",
+    "couldNotLoadBookingGuests": "Couldn't load booking guests."
   },
   "hostBilling": {
     "title": "Billing",
@@ -1039,7 +1076,10 @@
     "existingAccountKeepsPassword": "If this email already has an account, its current password is kept — yours is only used if a new account is created.",
     "storedEmailBecomesLogin": "Their stored email will be the login. If that address already has an account, they keep its password.",
     "pickADifferentStatusTo": "Pick a different status to see the rest of your team.",
-    "addAWardenCookOr": "Add a warden, cook or guard to keep their salary and documents on file."
+    "addAWardenCookOr": "Add a warden, cook or guard to keep their salary and documents on file.",
+    "couldNotUploadImage": "Couldn't upload image",
+    "fileTypeNotSupported": "That file type isn't supported. Choose a different image.",
+    "uploadTryAgain": "Please try again, or choose a different image."
   },
   "hostTenants": {
     "tenantPhoto": "Tenant photo",
@@ -1181,7 +1221,14 @@
     "weSentASigned24": "We sent a signed 24-hour verification link to",
     "clickingItActivatesYourAccount": ". Clicking it activates your account and reveals the number.",
     "iVeVerifiedContinue": "I've verified — continue",
-    "confirmPassword": "Confirm password"
+    "confirmPassword": "Confirm password",
+    "emailOrPasswordIncorrect": "Email or password is incorrect.",
+    "emailAlreadyRegistered": "An account with this email already exists. Log in instead, or reset your password if you've forgotten it.",
+    "couldNotCreateAccount": "We couldn't create your account. Check your details and try again.",
+    "accountCannotSignIn": "This account can't sign in right now. Contact us and we'll help.",
+    "googleDidNotFinish": "Google sign-in didn't finish. Try again, or use your email and password.",
+    "tooManyAttempts": "Too many attempts. Please wait a few minutes and try again.",
+    "somethingWentWrong": "Something went wrong. Please try again."
   },
   "listing": {
     "verified": "Verified",
@@ -1431,7 +1478,13 @@
     "enterAValidPhone": "Enter a valid phone number",
     "enterAValidEmail": "Enter a valid email address",
     "ofNSeats": "of {{count}}",
-    "bookingReference": "Booking reference"
+    "bookingReference": "Booking reference",
+    "hostelNotTakingBookings": "This hostel isn't taking online bookings right now.",
+    "roomNoLongerBookable": "One of the rooms you picked can no longer be booked. Remove it and choose another.",
+    "checkInHasPassed": "Your check-in date has passed. Choose new dates and try again.",
+    "checkOutAfterCheckIn": "Check-out must be after check-in.",
+    "logInAgainToBook": "Your session has ended. Log in again to book.",
+    "tryAgain": "Please try again."
   },
   "publicCareers": {
     "joinUsInBuildingTheTopHostelPlatform": "Join us in building the #1 hostel platform",
@@ -1668,6 +1721,7 @@
     "editDetailsHint": "Change who the booking is for and your note to the hostel.",
     "bookingCancelled": "Booking cancelled",
     "changeFailed": "We couldn't update this booking. Please try again.",
+    "cancelFailed": "We couldn't cancel this booking. Please try again.",
     "contactToChange": "To change the details now, call the hostel and quote your booking reference.",
     "cancelling": "Cancelling…",
     "keepBooking": "Keep booking",
@@ -1685,7 +1739,11 @@
     "noShowNote": "The hostel marked this booking as a no show — the guest did not arrive.",
     "withinCutoff": "Changes and cancellations close 3 days before check-in. To change anything now, call the hostel and quote your booking reference.",
     "changeNeedsReconfirm": "Changing a confirmed booking sends it back to the hostel, which will need to confirm it again. Changes close 3 days before check-in.",
-    "timesInZone": "Times are the hostel's local time ({{zone}})."
+    "timesInZone": "Times are the hostel's local time ({{zone}}).",
+    "noLongerCancellable": "This booking can no longer be cancelled here. Call the hostel and quote your booking reference.",
+    "roomNoLongerBookable": "One of the rooms you picked can no longer be booked. Choose another room.",
+    "checkOutAfterCheckIn": "Check-out must be after check-in.",
+    "bookingNotFound": "We couldn't find this booking. It may have been removed."
   },
   "userFavorites": {
     "removeFromFavorites": "Remove from favorites?",

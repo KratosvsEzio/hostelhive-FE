@@ -51,11 +51,19 @@ Backend conventions the mappers rely on:
   - `isBareNotFound` detects Rails' own "Not Found".
   
   `reset-failure.ts` and `confirm-failure.ts` are the examples.
+- For a `Booking` model 422 (any booking write, guest or host), use `bookingRefusal` (`apps/web/src/app/util/booking-refusal.ts`).
+  - It returns `bookingsClosed`, `noLongerChangeable`, `withinCutoff`, `checkInPast`, `datesOutOfOrder`, `roomNotBookable`, or `null`.
+  - It matches the backend's exact wording, then keywords, in that priority.
+  - Each screen maps the kind to its own key.
+- An image upload that never reached storage rejects with `UploadNetworkError` (`apps/web/src/app/services/image-upload.service.ts`); test with `instanceof`, not its text.
 - To keep the toast off one call, pass `inlineErrors()` as its `HttpContext`. `ApiClient.post`, `patch` and `delete` accept an optional context (`patch` since Trello #148, `delete` since #125); `put` and `get` do not yet.
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps
-- **`ApiError.message` comment is stale.** `util/models/api-error.ts` says never show it; since `normalize()` prefers the server text, the auth forms show it on purpose. It still falls back to Angular's URL-bearing message when the body is not an envelope.
+- **Never render an error's `message`.** `normalize()` still fills `ApiError.message` with the server's text, and falls back to Angular's URL-bearing message when the body is not an envelope. Plain `Error`s thrown by mappers and services carry developer text too ("booking X not in response", "Upload failed: 403").
+  - Classify instead, through `api-error-text.ts`.
+  - The guard `apps/web/src/app/core/errors/no-raw-error-message.spec.ts` fails the build on any `.message` read or `{ message }` destructuring in `features/**/*.ts` and `.html`. Its allowlist is exact: #83's two host-booking lines, billing's own messages, and the inviter's note.
+  - Making `message` diagnostic only is Trello #159.
 - **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.
 - **Writes that 500 after committing** (backend serializer bugs on `/staffs`) surface as "Couldn't save" while the row exists; re-read before retrying.
 - **Probing the API from the console**: `withFetch()` captures `window.fetch` at bootstrap, so console fetch/XHR hooks see nothing.

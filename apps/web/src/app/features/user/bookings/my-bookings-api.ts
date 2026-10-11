@@ -1,6 +1,8 @@
+import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import { ApiPagination, PageInfo, pageParams, toPageInfo } from '@util/pagination';
 import { toBookingRequest } from '@features/public/listing/booking/booking-request';
 import { BasketLine } from '@features/public/listing/booking/room-offer';
@@ -399,14 +401,24 @@ export class MyBookingsApi {
       Object.assign(booking, { checkin_date, checkout_date, line_items });
     }
     return this.api
-      .patch<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`, { booking })
+      .patch<ApiMyBookingResponse>(
+        `/api/bookings/${encodeURIComponent(id)}`,
+        { booking },
+        // No global toast: the edit dialog says why it failed, and a toast would repeat it untranslated.
+        new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
+      )
       .pipe(map((res) => readBooking(res, id)));
   }
 
   /** `POST /api/bookings/:id/mark_as_cancelled` — from pending or confirmed; 422 after that. */
   cancel(id: string): Observable<GuestBooking> {
     return this.api
-      .post<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}/mark_as_cancelled`, {})
+      .post<ApiMyBookingResponse>(
+        `/api/bookings/${encodeURIComponent(id)}/mark_as_cancelled`,
+        {},
+        // No global toast: the cancel dialog says why it failed, and a toast would repeat it untranslated.
+        new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
+      )
       .pipe(map((res) => readBooking(res, id)));
   }
 }

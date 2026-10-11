@@ -1,6 +1,8 @@
 import { CalendarDayCounts } from './host-bookings-api';
 import {
+  INVOICEABLE_LANES,
   LANES,
+  PAYABLE_LANES,
   barSegments,
   buildBookingMonth,
   isoDate,
@@ -181,6 +183,16 @@ describe('barSegments', () => {
   it('uses the lane palette', () => {
     const [seg] = barSegments(counts({ 'confirmed': 1 }));
     expect(seg.dot).toBe(LANES.find((l) => l.key === 'confirmed')!.dot);
+  });
+});
+
+describe('payable and invoiceable lanes', () => {
+  it('invoices only a stay that happened', () => {
+    expect([...INVOICEABLE_LANES]).toEqual(['checked-in', 'checked-out']);
+  });
+
+  it('takes payment from confirmed through checked out', () => {
+    expect([...PAYABLE_LANES]).toEqual(['confirmed', 'checked-in', 'checked-out']);
   });
 });
 

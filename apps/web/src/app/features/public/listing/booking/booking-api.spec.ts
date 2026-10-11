@@ -1,6 +1,10 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Observable, firstValueFrom, of } from 'rxjs';
+import { API_CONFIG } from '@core/api-config';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import { BasketLine } from './room-offer';
 import { BookingApi, chargePercentFor } from './booking-api';
 import { ApiHostBookingRequest } from './booking-api.contract';
@@ -265,5 +269,33 @@ describe('BookingApi.createBooking', () => {
     expect(body.booking.line_items).toEqual([
       { room_type_id: 'KGJwMC', guests: 4, quantity: 2, occupancy_type: 'private_room' },
     ]);
+  });
+
+  // The listing page explains a refusal inline; a global toast on top would repeat it untranslated.
+  it('opts the request out of the global error toast', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: 'https://api.test' } },
+      ],
+    });
+    const httpMock = TestBed.inject(HttpTestingController);
+    TestBed.inject(BookingApi)
+      .createBooking({
+        hostelId: 'MjvuEl',
+        checkIn: new Date(2026, 8, 20),
+        checkOut: new Date(2026, 8, 23),
+        lines: [LINE],
+        guest: { name: 'Ali Raza', phone: '923001234567', email: 'ali@example.com' },
+      })
+      .subscribe({ error: () => undefined });
+
+    const req = httpMock.expectOne('https://api.test/api/bookings');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+    req.flush({});
+    httpMock.verify();
   });
 });

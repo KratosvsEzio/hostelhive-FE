@@ -41,6 +41,18 @@ export function laneKeyFor(slug: string): LaneKey | undefined {
   return (LANE_KEYS as readonly string[]).includes(slug) ? (slug as LaneKey) : undefined;
 }
 
+/**
+ * Stages a booking can be marked paid from — the one list the bookings page and the invoices
+ * page's cross-pay both read.
+ *
+ * Narrower than the server's `PAYABLE_STATUSES`, which also takes `no-show`: a booking that
+ * ended as a no-show or was cancelled is closed, and the host does not record payment on it.
+ */
+export const PAYABLE_LANES: readonly LaneKey[] = ['confirmed', 'checked-in', 'checked-out'];
+
+/** Stages the server will invoice (`BookingInvoiceService::INVOICEABLE_STATUSES`): a stay that happened. */
+export const INVOICEABLE_LANES: readonly LaneKey[] = ['checked-in', 'checked-out'];
+
 /** Every slug that means this lane — what a filter on it has to ask the server for. */
 export function slugsFor(key: string): string[] {
   return [key, ...Object.keys(LEGACY_SLUGS).filter((s) => LEGACY_SLUGS[s] === key)];

@@ -154,12 +154,12 @@
                 </div>
               }
 
-              @if (error()) {
+              @if (error(); as errorKey) {
                 <p
                   class="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
                   role="alert"
                 >
-                  {{ error() }}
+                  {{ errorKey | transloco }}
                 </p>
               }
 
@@ -246,12 +246,12 @@
               >{{ 'leadWall.clickingItActivatesYourAccount' | transloco }}
             </p>
 
-            @if (error()) {
+            @if (error(); as errorKey) {
               <p
                 class="mt-4 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
                 role="alert"
               >
-                {{ error() }}
+                {{ errorKey | transloco }}
               </p>
             }
 

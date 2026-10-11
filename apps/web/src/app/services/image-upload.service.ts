@@ -21,6 +21,18 @@ export interface ImageUploadResult {
 }
 
 /**
+ * The storage PUT never reached S3: offline, DNS, CORS or a dropped connection.
+ *
+ * Raw XHR gives no status for this, so callers tell it apart from a refused upload by type.
+ */
+export class UploadNetworkError extends Error {
+  constructor() {
+    super('Upload network error');
+    this.name = 'UploadNetworkError';
+  }
+}
+
+/**
  * Unified image upload service. Obtains a presigned S3 URL from
  * `GET /api/documents/presigned_url` then PUTs the file directly to S3 via XHR.
  * Supports optional upload-progress callback for display in upload UI.
@@ -83,7 +95,7 @@ export class ImageUploadService {
       });
 
       xhr.addEventListener('error', () =>
-        observer.error(new Error('Upload network error')),
+        observer.error(new UploadNetworkError()),
       );
       xhr.addEventListener('abort', () =>
         observer.error(new Error('Upload aborted')),

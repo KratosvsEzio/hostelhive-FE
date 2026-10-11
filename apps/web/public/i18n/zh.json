@@ -333,7 +333,8 @@
     "allow": "允许",
     "noPhotosYet": "暂无照片",
     "guests": "入住人",
-    "copy": "复制"
+    "copy": "复制",
+    "cannotReachTheServer": "无法连接到服务器。请稍后再试。"
   },
   "leadWall": {
     "close": "关闭",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": "。点击即可激活账户并显示号码。",
     "iVeVerifiedContinue": "已验证 — 继续",
     "back": "返回",
-    "confirmPassword": "确认密码"
+    "confirmPassword": "确认密码",
+    "emailOrPasswordIncorrect": "邮箱或密码不正确。",
+    "emailAlreadyRegistered": "该邮箱已注册账户。请直接登录；如果忘记了密码，请重置密码。",
+    "couldNotCreateAccount": "无法创建您的账户。请检查您的信息后重试。",
+    "accountCannotSignIn": "该账户目前无法登录。请联系我们，我们会为您提供帮助。",
+    "googleDidNotFinish": "Google 登录未完成。请重试，或使用邮箱和密码登录。",
+    "tooManyAttempts": "尝试次数过多。请等待几分钟后再试。",
+    "somethingWentWrong": "出了点问题。请重试。"
   },
   "home": {
     "searchCityOrArea": "搜索城市或区域",
@@ -1094,7 +1102,10 @@
     "existingAccountKeepsPassword": "若该邮箱已有账号，将保留其现有密码；你设置的密码仅在需要新建账号时使用。",
     "storedEmailBecomesLogin": "其已保存的邮箱将作为登录账号。若该邮箱已有账号，则保留该账号的密码。",
     "pickADifferentStatusTo": "选择其他状态以查看团队其他成员。",
-    "addAWardenCookOr": "添加宿管、厨师或保安，以便存档其薪资与证件。"
+    "addAWardenCookOr": "添加宿管、厨师或保安，以便存档其薪资与证件。",
+    "couldNotUploadImage": "无法上传图片",
+    "fileTypeNotSupported": "不支持该文件类型。请选择其他图片。",
+    "uploadTryAgain": "请重试，或选择其他图片。"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "审批失败 — 请重试。",
@@ -1237,6 +1248,12 @@
     "toCollectAtTheDesk": "在前台收取",
     "createBooking": "创建预订",
     "theRoomsForThisProperty": "无法加载该房源的房间。",
+    "notSetUpForBookings": "该房源尚未设置为接受预订。",
+    "crmRequired": "您的套餐不包含预订功能。请升级套餐以添加预订。",
+    "checkInCannotBeInPast": "入住日期不能早于今天。请选择今天或之后的日期。",
+    "roomTypeNotBookable": "其中一种房型已关闭预订。请将其移除后重试。",
+    "checkOutAfterCheckIn": "退房日期必须晚于入住日期。",
+    "couldNotSaveBooking": "无法保存此预订。请检查信息后重试。",
     "everyRoomEveryState": "所有房间与状态 — 点按某一天查看当日记录",
     "thisMonthSCalendarCould": "无法加载本月日历。",
     "nothingIsWaitingOnYou": "这一天没有待办事项。",
@@ -1346,7 +1363,15 @@
     "pkrPaid": "已付 PKR {{amount}}",
     "cancelledSummary": "{{date}} 取消 · 退款 PKR {{refund}} · 取消费 PKR {{charge}}",
     "cancelRefundExplainer": "你将获得 <strong class=\"tabular-nums\">PKR {{refund}}</strong> 退款。由于你在周期的 {{pct}}% 处取消，<strong class=\"tabular-nums\">PKR {{charge}}</strong> 将作为取消费用扣留。",
-    "whenYouBookAHostel": "预订旅舍后，将在此显示您的日期和付款金额。"
+    "whenYouBookAHostel": "预订旅舍后，将在此显示您的日期和付款金额。",
+    "noLongerCancellable": "此预订已无法在此取消。请致电旅舍并提供您的预订编号。",
+    "roomNoLongerBookable": "您选择的其中一间房已无法预订。请选择其他房间。",
+    "checkOutAfterCheckIn": "退房日期必须晚于入住日期。",
+    "bookingNotFound": "找不到此预订。它可能已被删除。",
+    "changeFailed": "无法更新此预订。请重试。",
+    "cancelFailed": "无法取消此预订。请重试。",
+    "withinCutoff": "入住前 3 天将停止更改和取消。如需现在更改，请致电旅舍并提供您的预订编号。",
+    "noLongerEditable": "此预订已无法在此更改。请致电旅舍并提供您的预订编号。"
   },
   "userFavorites": {
     "removeFromFavorites": "从收藏中移除？",
@@ -1682,7 +1707,13 @@
     "enterAValidPhone": "请输入有效的电话号码",
     "enterAValidEmail": "请输入有效的电子邮箱",
     "ofNSeats": "/ {{count}}",
-    "bookingReference": "预订编号"
+    "bookingReference": "预订编号",
+    "hostelNotTakingBookings": "该旅舍目前不接受在线预订。",
+    "roomNoLongerBookable": "您选择的其中一间房已无法预订。请将其移除并选择其他房间。",
+    "checkInHasPassed": "您的入住日期已过。请选择新的日期后重试。",
+    "checkOutAfterCheckIn": "退房日期必须晚于入住日期。",
+    "logInAgainToBook": "您的会话已结束。请重新登录以完成预订。",
+    "tryAgain": "请重试。"
   },
   "states": {
     "nothingHereYet": "这里还没有内容",

@@ -10,12 +10,13 @@ import {
   convertToParamMap,
   provideRouter,
 } from '@angular/router';
-import { BehaviorSubject, map } from 'rxjs';
+import { BehaviorSubject, map, throwError } from 'rxjs';
 import { provideDataAccess } from '@core/provide-data-access';
 import { LeadWall } from './lead-wall';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { NotificationService } from '@core/notification.service';
 import { AuthService, Role, SessionStore } from '@core/auth';
+import { GoogleAuthService } from '@services';
 import { Observable } from 'rxjs';
 
 /** The component's members are `protected`; the spec asserts on them through this shape. */
@@ -389,5 +390,209 @@ describe('LeadWall console landing', () => {
 
   it('lets a real returnUrl win over the console home', () => {
     expect(landing('admin', { returnUrl: '/moderator/queue' })).toEqual(['/moderator/queue']);
+  });
+});
+
+/**
+ * What the wall says when a request fails.
+ *
+ * Every failure shows translated copy chosen by status; neither the error's `message` (which
+ * can be Angular's "Http failure response for <url>") nor the server's own wording may reach
+ * the page. Keys render as themselves under `provideI18nTesting`.
+ */
+describe('LeadWall failures', () => {
+  const SIGN_IN_URL = 'http://localhost/api/user/sign_in';
+
+  afterEach(() => TestBed.resetTestingModule());
+
+  /** An error shaped the way the error interceptor rethrows it. */
+  function apiError(status: number, serverMessages?: readonly string[]) {
+    return {
+      status,
+      code: status === 0 ? 'network_error' : 'unknown_error',
+      message:
+        serverMessages?.join(' ') ??
+        `Http failure response for ${SIGN_IN_URL}: ${status} ${status === 403 ? 'Forbidden' : 'Error'}`,
+      serverMessages,
+      method: 'POST',
+    };
+  }
+
+  interface FormInternals {
+    name: WritableSignal<string>;
+    email: WritableSignal<string>;
+    password: WritableSignal<string>;
+    confirmPassword: WritableSignal<string>;
+    phone: WritableSignal<string>;
+    acceptedTerms: WritableSignal<boolean>;
+    phase: WritableSignal<'form' | 'verify'>;
+    submit(e: Event): void;
+    googleSignIn(): void;
+    verify(): void;
+  }
+
+  /** Mounts the wall with every auth call and the Google popup rejecting with `rejection`. */
+  function mountFailing(mode: 'login' | 'register', rejection: unknown) {
+    const fails = () => throwError(() => rejection);
+    const route = stubRoute({ mode });
+    TestBed.configureTestingModule({
+      imports: [LeadWall],
+      providers: [
+        provideRouter([]),
+        provideDataAccess({ baseUrl: 'https://api.test' }),
+        provideI18nTesting(),
+        route.provider,
+        { provide: AuthService, useValue: { signIn: fails, signUp: fails, googleLogin: fails } },
+        { provide: GoogleAuthService, useValue: { getAccessToken: fails } },
+      ],
+    });
+    const fixture = TestBed.createComponent(LeadWall);
+    fixture.detectChanges();
+    const vm = fixture.componentInstance as unknown as FormInternals;
+    return { fixture, vm };
+  }
+
+  function signIn(rejection: unknown) {
+    const { fixture, vm } = mountFailing('login', rejection);
+    vm.email.set('ayesha@h.pk');
+    vm.password.set('Secret123');
+    vm.submit(new Event('submit'));
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  function signUp(rejection: unknown) {
+    const { fixture, vm } = mountFailing('register', rejection);
+    vm.name.set('Ayesha Khan');
+    vm.email.set('ayesha@h.pk');
+    vm.password.set('Secret123');
+    vm.confirmPassword.set('Secret123');
+    vm.phone.set('+923001234567');
+    vm.acceptedTerms.set(true);
+    vm.submit(new Event('submit'));
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  function google(rejection: unknown) {
+    const { fixture, vm } = mountFailing('login', rejection);
+    vm.googleSignIn();
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  function verify(rejection: unknown) {
+    const { fixture, vm } = mountFailing('register', rejection);
+    vm.email.set('ayesha@h.pk');
+    vm.password.set('Secret123');
+    vm.phase.set('verify');
+    fixture.detectChanges();
+    vm.verify();
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  /** The text of the alert the wall shows for a failed request. */
+  function alertText(fixture: ComponentFixture<LeadWall>): string {
+    const alerts = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('[role="alert"]'),
+    );
+    return alerts.map((el) => el.textContent?.trim() ?? '').join(' ');
+  }
+
+  /** Asserts nothing from the error object, and no API address, reached the page. */
+  function expectNoLeak(fixture: ComponentFixture<LeadWall>, ...leaked: string[]): void {
+    const shown = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    for (const text of leaked) expect(shown).not.toContain(text);
+    expect(shown).not.toContain('/api/');
+    expect(shown).not.toContain('http');
+    expect(shown).not.toContain('Cannot reach the server');
+  }
+
+  it.each([
+    { case: 'a wrong password', err: apiError(401, ['Invalid email or password']), key: 'leadWall.emailOrPasswordIncorrect' },
+    { case: 'an unknown email', err: apiError(404, ['User not found']), key: 'leadWall.emailOrPasswordIncorrect' },
+    { case: 'an account with no roles', err: apiError(403), key: 'leadWall.accountCannotSignIn' },
+    { case: 'a bare 404', err: apiError(404, ['Not Found']), key: 'leadWall.somethingWentWrong' },
+    { case: 'too many attempts', err: apiError(429, ['Too many requests']), key: 'leadWall.tooManyAttempts' },
+    { case: 'an unreachable server', err: apiError(0), key: 'common.cannotReachTheServer' },
+    { case: 'a server error', err: apiError(500), key: 'leadWall.somethingWentWrong' },
+  ])('sign-in shows $key for $case', ({ err, key }) => {
+    const fixture = signIn(err);
+    expect(alertText(fixture)).toBe(key);
+    expectNoLeak(fixture, err.message, ...(err.serverMessages ?? []));
+  });
+
+  it('shows the same message for an unknown email and a wrong password', () => {
+    const unknown = alertText(signIn(apiError(404, ['User not found'])));
+    TestBed.resetTestingModule();
+    const wrong = alertText(signIn(apiError(401, ['Invalid email or password'])));
+    expect(unknown).toBe(wrong);
+    expect(unknown).not.toBe('');
+  });
+
+  it.each([
+    { case: 'an email that is taken', err: apiError(422, ['Email is already registered']), key: 'leadWall.emailAlreadyRegistered' },
+    { case: 'another invalid field', err: apiError(422, ['Phone is invalid']), key: 'leadWall.couldNotCreateAccount' },
+    { case: 'too many attempts', err: apiError(429), key: 'leadWall.tooManyAttempts' },
+    { case: 'an unreachable server', err: apiError(0), key: 'common.cannotReachTheServer' },
+    { case: 'a server error', err: apiError(500), key: 'leadWall.somethingWentWrong' },
+  ])('sign-up shows $key for $case', ({ err, key }) => {
+    const fixture = signUp(err);
+    expect(alertText(fixture)).toBe(key);
+    expectNoLeak(fixture, err.message, ...(err.serverMessages ?? []));
+  });
+
+  it.each([
+    { case: 'a closed popup', err: new Error('popup_closed'), key: 'leadWall.googleDidNotFinish' },
+    { case: 'a rejected token', err: apiError(404, ['User does not exist']), key: 'leadWall.googleDidNotFinish' },
+    { case: 'an account with no roles', err: apiError(403), key: 'leadWall.accountCannotSignIn' },
+    { case: 'an unreachable server', err: apiError(0), key: 'common.cannotReachTheServer' },
+  ])('Google shows $key for $case', ({ err, key }) => {
+    const fixture = google(err);
+    expect(alertText(fixture)).toBe(key);
+    expectNoLeak(fixture, err.message, 'User does not exist');
+  });
+
+  it.each([
+    { case: 'a wrong password', err: apiError(401, ['Invalid email or password']), key: 'leadWall.emailOrPasswordIncorrect' },
+    { case: 'an account with no roles', err: apiError(403), key: 'leadWall.accountCannotSignIn' },
+    { case: 'an unreachable server', err: apiError(0), key: 'common.cannotReachTheServer' },
+  ])('the verify step shows $key for $case', ({ err, key }) => {
+    const fixture = verify(err);
+    expect(alertText(fixture)).toBe(key);
+    expectNoLeak(fixture, err.message);
+  });
+
+  describe('never shows what the error object says', () => {
+    const URL_ERROR = {
+      status: 403,
+      code: 'unknown_error',
+      message: `Http failure response for ${SIGN_IN_URL}: 403 Forbidden`,
+      method: 'POST',
+    };
+    const DEV_ERROR = new Error('Auth response did not include a token.');
+
+    it.each([
+      { case: 'sign-in', run: signIn },
+      { case: 'sign-up', run: signUp },
+      { case: 'Google', run: google },
+      { case: 'the verify step', run: verify },
+    ])('keeps the API address out of $case', ({ run }) => {
+      const fixture = run(URL_ERROR);
+      expect(alertText(fixture)).not.toBe('');
+      expectNoLeak(fixture, URL_ERROR.message, 'Forbidden');
+    });
+
+    it.each([
+      { case: 'sign-in', run: signIn },
+      { case: 'sign-up', run: signUp },
+      { case: 'Google', run: google },
+      { case: 'the verify step', run: verify },
+    ])('keeps a developer string out of $case', ({ run }) => {
+      const fixture = run(DEV_ERROR);
+      expect(alertText(fixture)).not.toBe('');
+      expectNoLeak(fixture, DEV_ERROR.message, 'did not include a token');
+    });
   });
 });

@@ -331,19 +331,68 @@ describe('AccountBookingDetail', () => {
       expect(el.textContent).not.toContain('userBookings.contactToChange');
     });
 
-    it("keeps the cancel dialog open with the server's reason when it is refused", () => {
-      const refused = () => throwError(() => ({ message: 'This booking can no longer be cancelled' }));
-      const { fixture, el } = render(() => of(pending()), undefined, { cancel: refused });
+    describe('when cancelling is refused', () => {
+      const API_URL = 'http://localhost/api/bookings/RbNKwO/mark_as_cancelled';
 
-      click(el, 'common.cancelBooking');
-      fixture.detectChanges();
-      modal(fixture, ConfirmModal)?.confirm.emit();
-      fixture.detectChanges();
+      /** An error shaped the way the error interceptor rethrows it. */
+      function apiError(status: number, serverMessages?: readonly string[]) {
+        return {
+          status,
+          code: 'unknown_error',
+          message: serverMessages?.join(' ') ?? `Http failure response for ${API_URL}: ${status} Forbidden`,
+          serverMessages,
+          method: 'POST',
+        };
+      }
 
-      expect(modal(fixture, ConfirmModal)).toBeDefined();
-      expect(el.querySelector('hh-confirm-modal [role="alert"]')?.textContent).toContain(
-        'This booking can no longer be cancelled',
-      );
+      /** Opens the cancel dialog, confirms it against the given failure, and returns the alert. */
+      function refuseWith(failure: unknown) {
+        const { fixture, el } = render(() => of(pending()), undefined, {
+          cancel: () => throwError(() => failure),
+        });
+        click(el, 'common.cancelBooking');
+        fixture.detectChanges();
+        modal(fixture, ConfirmModal)?.confirm.emit();
+        fixture.detectChanges();
+        return { fixture, el, alert: el.querySelector('hh-confirm-modal [role="alert"]')?.textContent ?? '' };
+      }
+
+      function expectNoLeak(el: HTMLElement, ...leaks: string[]): void {
+        const shown = el.textContent ?? '';
+        expect(shown).not.toContain('Http failure');
+        expect(shown).not.toContain('http://');
+        for (const leak of leaks) expect(shown).not.toContain(leak);
+      }
+
+      it('keeps the cancel dialog open with the reason in the guest’s language, not the server’s', () => {
+        const text = 'This booking can no longer be cancelled';
+        const { fixture, el, alert } = refuseWith(apiError(422, [text]));
+
+        expect(modal(fixture, ConfirmModal)).toBeDefined();
+        expect(alert).toContain('userBookings.noLongerCancellable');
+        expectNoLeak(el, text);
+      });
+
+      it.each([
+        { text: 'Bookings cannot be cancelled within 3 days of check-in', key: 'userBookings.withinCutoff' },
+      ])('shows $key for "$text"', ({ text, key }) => {
+        const { el, alert } = refuseWith(apiError(422, [text]));
+        expect(alert).toContain(key);
+        expectNoLeak(el, text);
+      });
+
+      it.each([
+        { case: 'a URL-bearing 403', failure: apiError(403), key: 'userBookings.cancelFailed' },
+        { case: 'a 500 with no envelope', failure: apiError(500), key: 'userBookings.cancelFailed' },
+        { case: 'a bare 404', failure: apiError(404), key: 'userBookings.bookingNotFound' },
+        { case: 'a network failure', failure: apiError(0), key: 'common.cannotReachTheServer' },
+        { case: 'a plain error from a mapper', failure: new Error('booking RbNKwO not in response'), key: 'userBookings.cancelFailed' },
+      ])('shows $key and leaks nothing on $case', ({ failure, key }) => {
+        const { fixture, el, alert } = refuseWith(failure);
+        expect(modal(fixture, ConfirmModal)).toBeDefined();
+        expect(alert).toContain(key);
+        expectNoLeak(el, 'booking RbNKwO not in response', API_URL);
+      });
     });
 
     it('cancels after asking, then shows the booking as cancelled', () => {

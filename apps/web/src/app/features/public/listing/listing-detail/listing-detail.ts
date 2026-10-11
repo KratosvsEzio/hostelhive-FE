@@ -37,6 +37,7 @@ import { BookingRail } from '../booking/booking-rail';
 import { BookingSummary } from '../booking/booking-summary';
 import { BookingGuest } from '../booking/booking-request';
 import { BookingApi } from '../booking/booking-api';
+import { bookingFailureKey } from '../booking/booking-failure';
 import { RoomPicker } from '../booking/room-picker';
 import { canBookOnline } from '../booking/room-offer';
 import { FavoritesStore } from '@util/favorites-store';
@@ -332,6 +333,7 @@ export class ListingDetail {
   /** The summary modal, shown between pressing Book and the booking existing. */
   protected readonly summaryOpen = signal(false);
   protected readonly booking = signal(false);
+  /** A translation key saying why the booking failed, or `''`. */
   protected readonly bookingError = signal('');
   /** Set once the booking exists — turns the summary modal into its receipt. */
   protected readonly bookingRef = signal<string | null>(null);
@@ -421,12 +423,12 @@ export class ListingDetail {
             translate('publicBooking.weLlEmailYouWhenConfirmed'),
           );
         },
-        error: (err: Error) => {
+        error: (err: unknown) => {
           this.booking.set(false);
           // Shown in the modal rather than as a toast: the guest is standing in front of the
-          // thing that failed, and "only 2 left of that room" is an instruction about the
+          // thing that failed, and "a room you picked can no longer be booked" is about the
           // basket they are looking at.
-          this.bookingError.set(err?.message || translate('publicBooking.couldnTBook'));
+          this.bookingError.set(bookingFailureKey(err));
         },
       });
   }

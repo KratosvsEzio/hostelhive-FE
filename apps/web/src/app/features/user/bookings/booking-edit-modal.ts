@@ -35,7 +35,7 @@ export interface StayChangeSummary {
 export class BookingEditModal implements OnInit {
   readonly booking = input.required<GuestBooking>();
   readonly saving = input(false);
-  /** The server's reason, shown in the dialog the guest is looking at. */
+  /** The translation key for why saving failed, shown in the dialog the guest is looking at. */
   readonly error = input('');
   /** Set when the dates or rooms changed; the dialog then reviews them above the details. */
   readonly stay = input<StayChangeSummary | null>(null);

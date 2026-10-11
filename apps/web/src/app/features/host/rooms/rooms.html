@@ -132,7 +132,16 @@
                   <p class="min-w-0 truncate text-xs text-ink-500">
                     {{ typeLabel(c.room.type) }} · Rs {{ c.room.rentPerBed | number }}
                   </p>
-                  <span class="shrink-0 rounded-lg bg-white/70 px-2 py-0.5 text-xs font-semibold text-ink-700">{{ c.room.occupied }}/{{ c.room.capacity }}</span>
+                  <div class="flex shrink-0 items-center gap-1.5">
+                    <span class="text-xs text-ink-500">
+                      @if (c.free > 0) {
+                        {{ 'hostRooms.nFree' | transloco: { count: c.free } }}
+                      } @else {
+                        {{ 'hostRooms.full' | transloco }}
+                      }
+                    </span>
+                    <span class="rounded-lg bg-white/70 px-2 py-0.5 text-xs font-semibold text-ink-700">{{ c.room.occupied }}/{{ c.room.capacity }}</span>
+                  </div>
                 </div>
               </div>
             }
