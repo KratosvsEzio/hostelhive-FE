@@ -1,6 +1,6 @@
 # Build the billing rewrite against the unmerged backend PR #26, host billing core (parts 0–6) first
 
-**Status:** Pending — plan only ([`docs/implement/93.md`](../../../implement/93.md)); not implemented on any branch yet.
+**Status:** Accepted — backend PR #26 merged on 2026-10-04 (Safepay, PR #27, on 2026-10-10). Frontend part 1 (#94, PR #68) is on `main`; parts 2–8 are not yet.
 **Area:** [host-billing-and-subscription](../../area/host-billing-and-subscription.md)
 
 ## Context
@@ -39,12 +39,12 @@ The plan records open blockers, each still to be decided as stub, ask the backen
 - The CanCan permission names for the new `Subscription` / `Invoice` abilities are unverified. The nav still uses `core:Hostel:subscription`.
 - The card's 400 "You need to subscribe…" has no producer on that branch, but `isSubscriptionError` still matches it.
 
-Until this lands, everything in the area file describes the legacy model.
+Part 1 (#94) removed the legacy model from `main`; the area file describes what is there now.
 
 ## Evidence
 - [`docs/implement/93.md`](../../../implement/93.md), the run notes for Trello #93 (2026-10-04).
-- Backend PR: `azeem-hamza/hostelhive` #26, open at the time of writing.
-- Legacy code it replaces:
+- Backend PR: `azeem-hamza/hostelhive` #26, open at the time of writing; merged 2026-10-04.
+- Legacy code it replaces (deleted by #94 except `subscription.routes.ts`, now a placeholder):
   - `apps/web/src/app/services/subscription-api.ts`
   - `apps/web/src/app/services/subscription-store.ts`
   - `apps/web/src/app/services/products-api.ts`

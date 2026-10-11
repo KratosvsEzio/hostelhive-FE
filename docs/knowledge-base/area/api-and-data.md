@@ -37,10 +37,9 @@ Backend conventions the mappers rely on:
 - `host-ops-api.ts` — rooms, renters, bills, expenses; utility batch/meta still from `host-ops.fixtures.ts`.
 - `staff-api.ts` — staff employment records (not logins).
 - `overview-api.ts` — host dashboard cards and charts.
-- `subscription-api.ts` / `subscription-store.ts` — plans, contracts, orders; plans and the current contract come from `subscription.fixtures.ts`.
-- `admin-api.ts` — roles, permissions, contracts, payments; falls back to `admin.fixtures.ts` permission groups.
+- `admin-api.ts` — roles, permissions, listings, payments; falls back to `admin.fixtures.ts` permission groups.
 - `moderation-api.ts` — moderator hostels and attachments live; delta media, dispositions, audit, profile from `moderation.fixtures.ts`.
-- `users-api.ts`, `student-api.ts`, `favourites-api.ts`, `offers-api.ts`, `products-api.ts`, `documents-api.ts`, `image-upload.service.ts` (presigned S3 upload), `search-capacity.ts` (shared signal), `google-auth.service.ts`.
+- `users-api.ts`, `student-api.ts`, `favourites-api.ts`, `offers-api.ts`, `documents-api.ts`, `image-upload.service.ts` (presigned S3 upload), `search-capacity.ts` (shared signal), `google-auth.service.ts`.
 
 ## Reuse, don't rebuild
 - Inject `ApiClient`; never build `baseUrl + path` yourself or call `fetch` (except deliberately for third parties, as `apps/web/src/app/core/geo/geo-preference.ts` does to keep the bearer token off them).
@@ -49,7 +48,7 @@ Backend conventions the mappers rely on:
 
 ## Traps
 - **`ApiError.message` comment is stale.** `util/models/api-error.ts` says never show it; since `normalize()` prefers the server text, the auth forms show it on purpose. It still falls back to Angular's URL-bearing message when the body is not an envelope.
-- **Comments claiming "stub pending Q-API"** in `moderation-api.ts` and `subscription-api.ts` are only partly true; check each method.
+- **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.
 - **Writes that 500 after committing** (backend serializer bugs on `/staffs`) surface as "Couldn't save" while the row exists; re-read before retrying.
 - **Probing the API from the console**: `withFetch()` captures `window.fetch` at bootstrap, so console fetch/XHR hooks see nothing.
 - The base-URL gate is still on `main` (`apps/web/src/app/app.html`), marked for removal before go-live.
