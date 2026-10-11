@@ -129,6 +129,13 @@ describe('PaymentCancelled', () => {
     },
   );
 
+  it('drops the tracker Safepay appends to the return link', async () => {
+    await open('/billing/payment/cancel?invoice=inv1?tracker=track_1');
+
+    expect(fetch).toHaveBeenCalledWith('inv1');
+    expect(checkout.billingCommands).toHaveBeenCalledWith('inv1');
+  });
+
   it('offers an open invoice again, reading it once', async () => {
     const el = await open();
 
