@@ -4,9 +4,9 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 
 ## Where it lives
 - `apps/web/src/app/features/host/host.routes.ts` — the route table and its guards (`hostRootRedirect`, `createHostelGate`, `knownHostelGate`, `bookingsGate`, `monthlyOnlyGate`).
-- `apps/web/src/app/layout/host-shell/host-shell.ts` — the shell: sidebar, property switcher flyout, subscription gate, URL→store sync.
+- `apps/web/src/app/layout/host-shell/host-shell.ts` — the shell: sidebar, property switcher flyout, URL→store sync.
 - `apps/web/src/app/layout/host-shell/host-nav.ts` — `hostNav`, `hostTabBar`, `tabBarSuffixes`, `splitNav`: the single source for sidebar, bottom tab bar and the mobile More page (`apps/web/src/app/features/host/more/more.ts`).
-- `apps/web/src/app/layout/host-shell/host-route.ts` — `hostPagePath` (URL → page below the hostel) and `opensWithoutSubscription`.
+- `apps/web/src/app/layout/host-shell/host-route.ts` — `hostPagePath` (URL → page below the hostel).
 - `apps/web/src/app/services/host-property-store.ts` — `HostPropertyStore`: the host's hostels, the selected id (persisted in localStorage `hh_property`), `activeHostel`, `isMonthlyBilled` / `isNightlyBilled`.
 - `apps/web/src/app/services/host-shell-api.ts` — `GET /api/host/hostels` (`listings()`) and the manager-login endpoints.
 - `apps/web/src/app/services/host-ops-api.ts` — rooms, renters, renter bills, utility bills.

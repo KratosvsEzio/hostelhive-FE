@@ -1,33 +1,31 @@
 # Admin and moderation
 
-The internal staff console: moderators review new or changed listings and their photos, and super-admins manage roles and permissions and read the legacy subscription contracts, payments and the full listing index. Both consoles share one shell. This area does not cover how a host pays; see [host-billing-and-subscription](./host-billing-and-subscription.md).
+The internal staff console: moderators review new or changed listings and their photos, and super-admins manage roles and permissions and read payments and the full listing index. Both consoles share one shell. This area does not cover how a host pays; see [host-billing-and-subscription](./host-billing-and-subscription.md).
 
 ## Where it lives
 - `apps/web/src/app/features/admin/admin.routes.ts` — `/admin` children:
-  - `contracts` (the default)
-  - `payments`
+  - `payments` (the default)
   - `roles`
   - `listings`
   - `queue` and `review/:id`, which reuse the moderator components
 - `apps/web/src/app/features/moderator/moderator.routes.ts` — `/moderator` children: `queue` (the default), `review/:id`, `media`, `audit`.
 - `apps/web/src/app/layout/staff-shell/staff-shell.ts` — `StaffLayout`: sidebar plus `StaffTabBar` on phones. It picks `MOD_NAV` or `ADMIN_NAV` by URL prefix and filters entries by permission.
 - `apps/web/src/app/features/admin/admin-shell/admin-shell.ts` — `AdminShell`, the per-page header wrapper around `DashboardLayout`.
-- `apps/web/src/app/features/admin/data/drawer-detail.ts` — `loadDetail` / `resolveHostelImages` for the contract and payment detail drawers.
+- `apps/web/src/app/features/admin/data/drawer-detail.ts` — `loadDetail` / `resolveHostelImages` for the payment detail drawer.
 - `apps/web/src/app/services/admin-api.ts` — `AdminApi`:
   - `roles`, `roleFlags`, `updateRolePermissions`, `permissionsGrouped`
-  - `contracts`, `getContract`
   - `listings` (`/api/admin/hostels`)
   - `payments`
 - `apps/web/src/app/services/moderation-api.ts` — `ModerationApi`:
   - live: `queue`, `getById` (enriched with host and amenity catalogue), `attachments`, `attachmentLabels`, `updateAttachmentLabel`, `markAsActive`, `markAttachmentAsActive`, `markAttachmentAsRejected`, `formOptions`
   - fixtures: `deltaMedia`, `dispositions`, `listings`, `audit`, `profile`
-- `apps/web/src/app/services/users-api.ts` — `GET` / `PATCH /api/users/:id`, used to resolve a contract's or payment's host.
+- `apps/web/src/app/services/users-api.ts` — `GET` / `PATCH /api/users/:id`, used to resolve a payment's host.
 - Fixtures: `apps/web/src/app/services/admin.fixtures.ts` (`PERMISSION_GROUPS`, `ROLES`) and `apps/web/src/app/services/moderation.fixtures.ts`.
-- Tables: `apps/web/src/app/util/table-configs/admin-contracts-table-cols.ts`, `apps/web/src/app/util/table-configs/admin-payments-table-cols.ts`, `apps/web/src/app/util/table-configs/admin-listings-table-cols.ts`, `apps/web/src/app/util/table-configs/queue-table-cols.ts`.
+- Tables: `apps/web/src/app/util/table-configs/admin-payments-table-cols.ts`, `apps/web/src/app/util/table-configs/admin-listings-table-cols.ts`, `apps/web/src/app/util/table-configs/queue-table-cols.ts`.
 
 ## How it works
 - **Access.** Both trees sit behind `roleGuard(...STAFF_ROLES)` in `apps/web/src/app/app.routes.ts`, then per-page `permissionGuard`:
-  - `admin:Contract:index`, `admin:Payment:index`, `admin:Role:index`, `admin:Hostel:index`
+  - `admin:Payment:index`, `admin:Role:index`, `admin:Hostel:index`
   - `moderator:Hostel:index`, `moderator:Attachment:index`
 
   Nav entries carry the same flags.
@@ -42,7 +40,7 @@ The internal staff console: moderators review new or changed listings and their 
   - `AdminRoles` lists roles and lazily loads a role's flags.
   - Saving replaces the role's permission set: `PUT /api/admin/roles/:id` with `permission_ids`.
   - The permission catalogue falls back to `PERMISSION_GROUPS` when the API fails or returns nothing.
-- **Contracts, payments, listings.** These are read-only, Searchkick-backed tables. They are server-paged and filter on `f[status.slug]`, with sorting through `sort[<field>]` and detail drawers. The contracts end-date filter uses `dayRangeStart` / `dayRangeEnd` (`apps/web/src/app/services/admin-api.ts`).
+- **Payments, listings.** These are read-only, Searchkick-backed tables. They are server-paged and filter on `f[status.slug]`, with sorting through `sort[<field>]` and detail drawers.
 
 ## Reuse, don't rebuild
 - `HostelForm` (`apps/web/src/app/features/host/hostel-form/hostel-form.ts`) for any listing edit. Do not fork a staff copy; see the decision.
@@ -57,8 +55,8 @@ The internal staff console: moderators review new or changed listings and their 
 - **Stale doc comments.** `ModerationApi`'s class comment still says "Stub pending Q-API", though most methods are live. `AdminApi`'s says "all live", though `permissionsGrouped` silently falls back to fixtures.
 - **"New role" is session-only.** It adds to an in-memory `customRoles` signal and is gone on reload (`apps/web/src/app/features/admin/admin-roles/admin-roles.ts`).
 - **Every photo rejection gets the same note.** It is sent as `'Rejected during listing review.'` because the confirm dialog collects no reason (`REJECTION_NOTE` in `apps/web/src/app/features/moderator/review/review.ts`).
-- **`review/:id` has no `permissionGuard`** in either route table, and `/admin` lands on `contracts`. An admin without `admin:Contract:index` lands on `/forbidden`.
-- **Contracts and payments are the legacy billing model.** Trello #93 part 8 plans to replace them with verification queues and subscription and invoice lists. See [host-billing-and-subscription](./host-billing-and-subscription.md).
+- **`review/:id` has no `permissionGuard`** in either route table, and `/admin` lands on `payments`. An admin without `admin:Payment:index` lands on `/forbidden`.
+- **Payments is the last screen of the legacy billing model.** The admin Contracts screen was removed by #94 (PR #68); Trello #93 part 8 plans to replace Payments with verification queues and subscription and invoice lists. See [host-billing-and-subscription](./host-billing-and-subscription.md).
 
 ## Decisions
 - [Moderators edit listings through the host's hostel form](../decisions/admin-and-moderation/moderators-use-the-host-hostel-form.md)

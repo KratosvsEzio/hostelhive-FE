@@ -60,11 +60,11 @@ docs/knowledge-base/
 ### Hosts and staff
 - [Host console](area/host-console.md): the host workspace at `/host/:hostelId`, shell and nav,
   multi-property switching, per-page permissions, host data services, hostel time zones.
-- [Host billing and subscription](area/host-billing-and-subscription.md): the legacy contract and
-  product model on main, the shell paywall and inline paywall card, and the Trello #93 rewrite (plan
-  only, pending).
+- [Host billing and subscription](area/host-billing-and-subscription.md): the placeholder billing
+  page, the server-side paywall and inline paywall card, and where the Trello #93 rewrite stands
+  (part 1 of 8 on main).
 - [Admin and moderation](area/admin-and-moderation.md): the staff shell, the moderator review and
-  media queues, and the admin roles matrix and read-only contracts, payments and listings, with what is
+  media queues, and the admin roles matrix and read-only payments and listings, with what is
   live and what is still fixture data.
 
 ### Foundations
