@@ -38,7 +38,7 @@ function mount(items: UserInvite[], unread: number) {
           markAsRead: () => of(null),
         },
       },
-      { provide: SessionStore, useValue: { isAuthenticated: () => true } },
+      { provide: SessionStore, useValue: { isAuthenticated: () => true, user: () => ({ id: 'u1' }) } },
       { provide: NotificationService, useValue: { show: () => undefined } },
       { provide: RefetchDelay, useValue: { track: () => undefined } },
       // `received` is a signal the fetch key reads, not a method — a plain stub throws.
