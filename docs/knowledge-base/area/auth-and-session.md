@@ -35,7 +35,13 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
   - anything else → the generic "Confirmation failed".
   
   `AccountConfirmedNotSignedIn` is checked before classifying. Focus moves to the error heading after a server or network failure, but not for a missing token.
-- Both classifiers read errors through `apps/web/src/app/core/errors/api-error-text.ts` (`errorStatus`, `serverText`, `isBareNotFound`), never through `err.message`.
+- **Forgot password**: `classifyForgotFailure` (`apps/web/src/app/features/auth/forgot-password/forgot-failure.ts`) sorts the `forgot_password` reply.
+  - A 201, or a 404 with backend text, shows the same neutral sent screen ("If an account exists for {{email}}…").
+  - A 422 (a link is already out) shows the sent screen with an "already sent" notice.
+  - A 429 and a network failure each get their own message.
+  - A 500 (today's unknown-email crash) and anything else stay on the form with "couldn't send, check the address".
+  - The sent screen and Resend use `sentEmail`, the address captured when Send started, never the live field.
+- All three classifiers read errors through `apps/web/src/app/core/errors/api-error-text.ts` (`errorStatus`, `serverText`, `isBareNotFound`), never through `err.message`.
 
 ## Reuse, don't rebuild
 - Gate routes with `roleGuard(...HOST_ROLES)` / `permissionGuard('host:Room:index')`, buttons with `*hhHasPermission` — never compare `session.role()` by hand (it is only the primary role).
@@ -51,7 +57,7 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - **`jwt.ts` reads `exp`**, but `docs/api/hostelhive-api.md` documents the payload as `{…, jti, expiry}`. If the backend really sends `expiry`, local expiry never triggers and the server decides (safe, just a wasted request).
 - **Only the English text tells the 403s apart**: the two reset 403s, and the expired confirmation 403. If the backend rewords them, users get the generic message. The backend has been asked for machine codes. On both pages a bare Rails `"Not Found"` 404 is classed `unknown`, not a used link (`reset-failure.ts`, `confirm-failure.ts`).
 - **The "no roles" 403 from `issue_token` reaches the page with no text**: the backend nests the `errors` array and `extractServerMessages` drops nested arrays. On the confirmation page it arrives after the account is already activated and the link spent, but it shows the generic card.
-- **Forgot-password still shows raw server text** (`forgot-password.ts`, Trello #150). That includes the 422 "Otp already has been shared…" on a repeat request.
+- **The forgot-password page is neutral, but the API is not.** Today the backend answers an unknown email with a 500 (`sessions_controller.rb:87`, confirmed live 2026-10-11) and a known one with 201 or 422. The "already sent" notice therefore only ever appears for a real account. Sign-in ("User not found", shown raw by `lead-wall.ts`, Trello #151) and sign-up ("already registered") reveal accounts too.
 - **Stale layering comments**: `auth.service.ts`, `provide-auth.ts` and `tokens.ts` speak of separate `@hostelhive/auth` / `data-access` libraries; everything now lives in `apps/web/src/app/core/` and `lib/src/data-access/index.ts` is an empty stub.
 - **`docs/HostelHive-Frontend-Build-Plan.md` (Q-AUTH)** plans memory token + httpOnly refresh cookie + 401-refresh-retry. None of that exists (the plan now marks it *Superseded*); see the cookie decision below. A 401 silently signs the user out (RISKS R15).
 - `ConfirmInvitation` runs its one-time POST in `afterNextRender`; `lib/src/ui/lib/dialog-focus/dialog-focus.ts` documents that hook silently never firing in some zoneless renders. Check here first if the link "hangs on verifying".
@@ -60,6 +66,7 @@ Who the visitor is, what they may do, and how that survives a reload. Covers the
 - [Only a 401 ends a session](../decisions/auth-and-session/only-a-401-ends-a-session.md)
 - [A confirmation link asks before it replaces a signed-in session](../decisions/auth-and-session/confirmation-link-asks-before-replacing-a-session.md)
 - [An unrecognised reset failure fails closed](../decisions/auth-and-session/unrecognised-reset-failure-fails-closed.md)
+- [Forgot password answers an unknown email neutrally](../decisions/auth-and-session/forgot-password-answers-unknown-email-neutrally.md)
 - [The JWT lives in a JS-readable first-party cookie, with no refresh token](../decisions/auth-and-session/jwt-in-readable-first-party-cookie.md)
 - [Permission children are the grant, and an empty set is not gated](../decisions/auth-and-session/permission-children-are-the-grant.md)
 - [Web Google sign-in uses the GIS token client](../decisions/auth-and-session/web-google-sign-in-uses-gis-token-client.md)
