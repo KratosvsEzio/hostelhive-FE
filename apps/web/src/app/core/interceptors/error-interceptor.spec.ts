@@ -190,7 +190,6 @@ describe('errorInterceptor', () => {
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 
-
   // The host area's billing gate answers `{ code: 'crm_required', errors, success: false }`.
   // The code is the only thing that tells it apart from any other 403, so it must survive.
   it('keeps the server\'s machine code', () => {

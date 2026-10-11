@@ -13,7 +13,7 @@ import { throwError } from 'rxjs';
 import { ApiError } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
 import { API_ERROR_NOTIFIER } from '@core/tokens';
-import { SessionStore } from '@app/core/auth/session-store';
+import { SessionStore, SessionUser } from '@app/core/auth/session-store';
 import { HostAccessEvents } from '@core/host-access/host-access';
 import { errorInterceptor } from './error-interceptor';
 import { hostAccessInterceptor } from './host-access-interceptor';
@@ -25,6 +25,14 @@ const NO_CRM = {
   success: false,
   code: 'crm_required',
   errors: ['Your plan does not include CRM'],
+};
+const USER: SessionUser = {
+  id: 'uA',
+  name: 'Imran',
+  email: 'i@h.pk',
+  role: 'host',
+  allRoles: ['host'],
+  permissions: [],
 };
 
 describe('hostAccessInterceptor', () => {
@@ -47,17 +55,7 @@ describe('hostAccessInterceptor', () => {
     http = TestBed.inject(HttpClient);
     httpMock = TestBed.inject(HttpTestingController);
     events = TestBed.inject(HostAccessEvents);
-    TestBed.inject(SessionStore).setSession(
-      {
-        id: 'uA',
-        name: 'Imran',
-        email: 'i@h.pk',
-        role: 'host',
-        allRoles: ['host'],
-        permissions: [],
-      },
-      'tok',
-    );
+    TestBed.inject(SessionStore).setSession(USER, 'tok');
   });
 
   afterEach(() => {
@@ -129,5 +127,72 @@ describe('hostAccessInterceptor', () => {
     httpMock.expectOne(ROOMS).flush({ ok: true });
     expect(body).toEqual({ ok: true });
     expect(events.observations()).toEqual([]);
+  });
+
+  describe('on success', () => {
+    function succeed(method: 'GET' | 'POST', url: string): void {
+      (method === 'GET' ? http.get(url) : http.post(url, {})).subscribe();
+      httpMock.expectOne(url).flush({ success: true });
+    }
+
+    function refuse(hostel: string, kind: 'inactive' | 'crmRequired'): void {
+      const url = `${BASE}/api/host/hostels/${hostel}/rooms`;
+      if (kind === 'inactive') send('GET', url, SUBSCRIBE, 400);
+      else send('GET', url, NO_CRM, 403);
+    }
+
+    const kinds = () => events.observations().map((o) => [o.hostelId, o.kind]);
+
+    it.each([
+      ['a GET', 'GET', `${BASE}/api/host/hostels/Xk9pQ/bookings?page=1`],
+      ['a write', 'POST', `${BASE}/api/host/hostels/Xk9pQ/renters`],
+    ] as const)('clears both refusals of that hostel after %s', (_, method, url) => {
+      refuse('Xk9pQ', 'inactive');
+      refuse('Xk9pQ', 'crmRequired');
+      succeed(method, url);
+      expect(events.observations()).toEqual([]);
+    });
+
+    it('clears only the inactive refusal after the hostel record, which skips the CRM check', () => {
+      refuse('Xk9pQ', 'inactive');
+      refuse('Xk9pQ', 'crmRequired');
+      succeed('GET', `${BASE}/api/host/hostels/Xk9pQ`);
+      expect(kinds()).toEqual([['Xk9pQ', 'crmRequired']]);
+    });
+
+    it.each([
+      ['another hostel', `${BASE}/api/host/hostels/Other/rooms`],
+      ['the hostel index', `${BASE}/api/host/hostels`],
+      ['a non-host route', `${BASE}/api/hostels/Xk9pQ/billing`],
+    ])('keeps the refusals after a success on %s', (_, url) => {
+      refuse('Xk9pQ', 'crmRequired');
+      succeed('GET', url);
+      expect(kinds()).toEqual([['Xk9pQ', 'crmRequired']]);
+    });
+
+    it('keeps a refusal recorded while the successful request was in flight', () => {
+      http.get(`${BASE}/api/host/hostels/Xk9pQ/expenses`).subscribe();
+      refuse('Xk9pQ', 'crmRequired');
+      httpMock.expectOne(`${BASE}/api/host/hostels/Xk9pQ/expenses`).flush({ success: true });
+      expect(kinds()).toEqual([['Xk9pQ', 'crmRequired']]);
+    });
+
+    it('keeps another user\'s refusals', () => {
+      const session = TestBed.inject(SessionStore);
+      refuse('Xk9pQ', 'crmRequired');
+      session.setSession({ ...USER, id: 'uB' }, 'tok2');
+      succeed('GET', ROOMS);
+      session.setSession(USER, 'tok');
+      expect(kinds()).toEqual([['Xk9pQ', 'crmRequired']]);
+    });
+
+    it('clears nothing while signed out', () => {
+      const session = TestBed.inject(SessionStore);
+      refuse('Xk9pQ', 'crmRequired');
+      session.clear();
+      succeed('GET', ROOMS);
+      session.setSession(USER, 'tok');
+      expect(kinds()).toEqual([['Xk9pQ', 'crmRequired']]);
+    });
   });
 });

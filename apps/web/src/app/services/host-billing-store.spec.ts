@@ -480,6 +480,20 @@ describe('HostBillingStore', () => {
       expect(store.crmLocked()).toBe(false);
       expect(store.bodyLock()).toBeNull();
     });
+
+    it('does not exempt a moderator from the CRM or offline locks', () => {
+      setUp({ signedIn: user('M', { role: 'moderator' }) });
+      store.track('h1');
+      api.respond(0, billing({ features: ['listing'] }));
+
+      expect(store.isAdmin()).toBe(false);
+      expect(store.crmLocked()).toBe(true);
+      expect(store.bodyLock()).toBe('crm');
+
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+
+      expect(store.bodyLock()).toBe('offline');
+    });
   });
 
   describe('server render', () => {

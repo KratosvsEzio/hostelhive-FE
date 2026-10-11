@@ -1,10 +1,13 @@
+import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SessionStore, SessionUser } from '@app/core/auth/session-store';
 import {
   CRM_REQUIRED_CODE,
   CRM_REQUIRED_MESSAGE,
+  HOST_ACCESS_TTL_MS,
   HostAccessEvents,
   classifyHostAccess,
+  hostAccessTarget,
 } from './host-access';
 
 const BASE = 'https://api.test';
@@ -100,6 +103,27 @@ describe('classifyHostAccess', () => {
   });
 });
 
+describe('hostAccessTarget', () => {
+  it.each([
+    [`${BASE}/api/host/hostels/Ab12`, { hostelId: 'Ab12', nested: false }],
+    [`${BASE}/api/host/hostels/Ab12/`, { hostelId: 'Ab12', nested: false }],
+    [`${BASE}/api/host/hostels/Ab12?x=1`, { hostelId: 'Ab12', nested: false }],
+    [`${BASE}/api/host/hostels/Ab12/rooms`, { hostelId: 'Ab12', nested: true }],
+    [`${BASE}/api/host/hostels/Ab12/rooms/9?page=2`, { hostelId: 'Ab12', nested: true }],
+  ])('reads %s', (url, target) => {
+    expect(hostAccessTarget(url)).toEqual(target);
+  });
+
+  it.each([
+    `${BASE}/api/host/hostels`,
+    `${BASE}/api/host/hostels/`,
+    `${BASE}/api/host/hostels?page=1`,
+    `${BASE}/api/moderator/hostels/Ab12/rooms`,
+  ])('returns null for %s', (url) => {
+    expect(hostAccessTarget(url)).toBeNull();
+  });
+});
+
 describe('HostAccessEvents', () => {
   const owner: SessionUser = {
     id: 'uA',
@@ -181,5 +205,132 @@ describe('HostAccessEvents', () => {
     const before = events.observations();
     events.clear('h2', events.mark());
     expect(events.observations()).toBe(before);
+  });
+
+  describe('expiry', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      session.setSession(owner, 'tok');
+    });
+
+    afterEach(() => vi.useRealTimers());
+
+    it('drops a refusal two minutes after it was recorded', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      vi.advanceTimersByTime(HOST_ACCESS_TTL_MS - 1000);
+      expect(events.observations()).toHaveLength(1);
+      vi.advanceTimersByTime(1000);
+      expect(events.observations()).toEqual([]);
+    });
+
+    it('expires each refusal on its own clock', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      vi.advanceTimersByTime(60_000);
+      events.record({ hostelId: 'h2', kind: 'crmRequired' });
+      vi.advanceTimersByTime(60_000);
+      expect(events.observations().map((o) => o.hostelId)).toEqual(['h2']);
+      vi.advanceTimersByTime(60_000);
+      expect(events.observations()).toEqual([]);
+    });
+
+    it('re-arms the clock when the same refusal is seen again', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      vi.advanceTimersByTime(90_000);
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      vi.advanceTimersByTime(HOST_ACCESS_TTL_MS - 1000);
+      expect(events.observations().map((o) => o.seq)).toEqual([1]);
+      vi.advanceTimersByTime(1000);
+      expect(events.observations()).toEqual([]);
+    });
+
+    it('expires a refusal while its owner is signed out', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      session.clear();
+      vi.advanceTimersByTime(HOST_ACCESS_TTL_MS);
+      session.setSession(owner, 'tok');
+      expect(events.observations()).toEqual([]);
+    });
+
+    it('cancels the clock of a refusal that is cleared first', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      events.clear('h1', events.mark());
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('cancels pending clocks when destroyed', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      expect(vi.getTimerCount()).toBe(1);
+      TestBed.resetTestingModule();
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  describe('settle', () => {
+    beforeEach(() => session.setSession(owner, 'tok'));
+
+    it('drops the session user\'s refusals of that hostel seen before the mark', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      events.record({ hostelId: 'h1', kind: 'crmRequired' });
+      events.record({ hostelId: 'h2', kind: 'inactive' });
+      const mark = events.mark();
+      events.record({ hostelId: 'h1', kind: 'crmRequired' });
+      events.settle('h1', mark);
+      expect(events.observations().map((o) => [o.hostelId, o.kind, o.seq])).toEqual([
+        ['h2', 'inactive', 2],
+        ['h1', 'crmRequired', 3],
+      ]);
+    });
+
+    it('drops only the kinds it is given', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      events.record({ hostelId: 'h1', kind: 'crmRequired' });
+      events.settle('h1', events.mark(), ['inactive']);
+      expect(events.observations().map((o) => o.kind)).toEqual(['crmRequired']);
+    });
+
+    it('leaves another user\'s refusals alone', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      session.setSession({ ...owner, id: 'uB' }, 'tok2');
+      events.settle('h1', events.mark());
+      session.setSession(owner, 'tok');
+      expect(events.observations().map((o) => o.kind)).toEqual(['inactive']);
+    });
+
+    it('does nothing when signed out', () => {
+      events.record({ hostelId: 'h1', kind: 'inactive' });
+      session.clear();
+      events.settle('h1', events.mark());
+      session.setSession(owner, 'tok');
+      expect(events.observations().map((o) => o.kind)).toEqual(['inactive']);
+    });
+  });
+});
+
+describe('HostAccessEvents during a server render', () => {
+  afterEach(() => {
+    TestBed.inject(SessionStore).clear();
+    vi.useRealTimers();
+  });
+
+  it('records without starting an expiry clock', () => {
+    vi.useFakeTimers();
+    TestBed.configureTestingModule({ providers: [{ provide: PLATFORM_ID, useValue: 'server' }] });
+    const events = TestBed.inject(HostAccessEvents);
+    TestBed.inject(SessionStore).setSession(
+      {
+        id: 'uA',
+        name: 'Imran',
+        email: 'i@h.pk',
+        role: 'host',
+        allRoles: ['host'],
+        permissions: [],
+      },
+      'tok',
+    );
+    events.record({ hostelId: 'h1', kind: 'inactive' });
+    expect(events.observations()).toHaveLength(1);
+    expect(vi.getTimerCount()).toBe(0);
+    vi.advanceTimersByTime(HOST_ACCESS_TTL_MS * 2);
+    expect(events.observations()).toHaveLength(1);
   });
 });
