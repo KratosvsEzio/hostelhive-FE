@@ -1284,27 +1284,6 @@
     "theListingMayHaveBeen": "Tin đăng có thể đã bị gỡ hoặc liên kết không đúng.",
     "chooseYourRoom": "Chọn phòng của bạn"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Đang kiểm tra liên kết của bạn…",
-    "onTheMenu": "Trong thực đơn",
-    "confirmMyPortion": "Xác nhận suất của tôi",
-    "youReConfirmed": "Đã xác nhận! 🎉",
-    "pleaseCollectYourMealAt": "Vui lòng nhận suất ăn tại nhà ăn trong giờ phục vụ. Bạn có thể đóng trang này.",
-    "alreadyConfirmed": "Đã xác nhận trước đó",
-    "thisLinkHasExpired": "Liên kết này đã hết hạn",
-    "invalidLink": "Liên kết không hợp lệ",
-    "thisConfirmationLinkIsMissing": "Liên kết xác nhận này bị thiếu hoặc không đầy đủ. Vui lòng dùng đúng liên kết trong lời nhắc gần nhất.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Đăng ký nhà ăn",
-    "reserveYourMealPortion": "Đặt suất {{meal}} của bạn",
-    "todaysMealAtMess": "{{meal}} hôm nay tại nhà ăn",
-    "reserveBeforeTapOnce": "Đặt trước {{time}} · chạm một lần để xác nhận",
-    "portionReservedWithMenu": "Suất {{meal}} hôm nay của bạn đã được giữ — {{menu}}.",
-    "portionReserved": "Suất {{meal}} hôm nay của bạn đã được giữ.",
-    "alreadyReservedMealToday": "Bạn đã đặt suất {{meal}} cho hôm nay rồi.",
-    "optInWindowClosedAt": "Cửa sổ đăng ký {{meal}} đã đóng lúc {{time}}.",
-    "optInWindowClosed": "Cửa sổ đăng ký {{meal}} đã đóng.",
-    "reachOutToMessManager": "Vui lòng liên hệ quản lý nhà ăn nếu bạn vẫn cần một suất."
-  },
   "moderatorMedia": {
     "mediaQueue": "Hàng đợi phương tiện",
     "allClear": "Đã xử lý hết",

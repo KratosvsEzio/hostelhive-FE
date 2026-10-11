@@ -1284,27 +1284,6 @@
     "theListingMayHaveBeen": "Объявление могло быть удалено, или ссылка неверна.",
     "chooseYourRoom": "Выберите комнату"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Проверяем вашу ссылку…",
-    "onTheMenu": "В меню",
-    "confirmMyPortion": "Подтвердить порцию",
-    "youReConfirmed": "Вы подтверждены! 🎉",
-    "pleaseCollectYourMealAt": "Заберите еду в столовой во время раздачи. Эту страницу можно закрыть.",
-    "alreadyConfirmed": "Уже подтверждено",
-    "thisLinkHasExpired": "Срок действия ссылки истёк",
-    "invalidLink": "Недействительная ссылка",
-    "thisConfirmationLinkIsMissing": "Эта ссылка подтверждения отсутствует или неполна. Используйте точную ссылку из последнего напоминания.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Запись в столовую",
-    "reserveYourMealPortion": "Забронируйте свою порцию: {{meal}}",
-    "todaysMealAtMess": "Сегодняшний {{meal}} в столовой хостела",
-    "reserveBeforeTapOnce": "Забронируйте до {{time}} · нажмите один раз для подтверждения",
-    "portionReservedWithMenu": "Ваша порция на сегодняшний {{meal}} забронирована — {{menu}}.",
-    "portionReserved": "Ваша порция на сегодняшний {{meal}} забронирована.",
-    "alreadyReservedMealToday": "Вы уже забронировали свою порцию: {{meal}} на сегодня.",
-    "optInWindowClosedAt": "Окно записи на {{meal}} закрылось в {{time}}.",
-    "optInWindowClosed": "Окно записи на {{meal}} закрыто.",
-    "reachOutToMessManager": "Свяжитесь с менеджером столовой, если порция всё ещё нужна."
-  },
   "moderatorMedia": {
     "mediaQueue": "Очередь медиа",
     "allClear": "Всё чисто",

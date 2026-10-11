@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "हो सकता है लिस्टिंग हटा दी गई हो या लिंक ग़लत हो।",
     "chooseYourRoom": "अपना कमरा चुनें"
   },
-  "featuresPublic": {
-    "checkingYourLink": "आपका लिंक जाँचा जा रहा है…",
-    "onTheMenu": "मेनू में",
-    "confirmMyPortion": "मेरा हिस्सा पक्का करें",
-    "youReConfirmed": "आपकी पुष्टि हो गई! 🎉",
-    "pleaseCollectYourMealAt": "कृपया परोसने के समय मेस से अपना भोजन लें। आप यह पृष्ठ बंद कर सकते हैं।",
-    "alreadyConfirmed": "पहले ही पुष्ट",
-    "thisLinkHasExpired": "यह लिंक समाप्त हो चुका है",
-    "invalidLink": "अमान्य लिंक",
-    "thisConfirmationLinkIsMissing": "यह पुष्टि लिंक अनुपस्थित या अधूरा है। कृपया अपने नवीनतम अनुस्मारक का ठीक वही लिंक उपयोग करें।",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · मेस ऑप्ट-इन",
-    "reserveYourMealPortion": "अपना {{meal}} हिस्सा आरक्षित करें",
-    "todaysMealAtMess": "हॉस्टल मेस में आज का {{meal}}",
-    "reserveBeforeTapOnce": "{{time}} से पहले आरक्षित करें · पुष्टि के लिए एक बार टैप करें",
-    "portionReservedWithMenu": "आज के {{meal}} के लिए आपका हिस्सा आरक्षित है — {{menu}}।",
-    "portionReserved": "आज के {{meal}} के लिए आपका हिस्सा आरक्षित है।",
-    "alreadyReservedMealToday": "आप आज के लिए अपना {{meal}} हिस्सा पहले ही आरक्षित कर चुके हैं।",
-    "optInWindowClosedAt": "{{meal}} के लिए ऑप्ट-इन विंडो {{time}} पर बंद हो गई।",
-    "optInWindowClosed": "{{meal}} के लिए ऑप्ट-इन विंडो बंद हो चुकी है।",
-    "reachOutToMessManager": "यदि आपको अब भी एक हिस्सा चाहिए तो कृपया मेस मैनेजर से संपर्क करें।"
-  },
   "moderatorMedia": {
     "mediaQueue": "मीडिया कतार",
     "allClear": "सब साफ़",

@@ -89,3 +89,26 @@ describe('the removed billing and contract URLs', () => {
     expect(settled.original).toBe(SubscriptionPlaceholder);
   });
 });
+
+/**
+ * Meal confirmations are accepted only from notifications; no email or message links to a
+ * confirm page. `/mess/confirm` was a mock opt-in page and `/meal_confirmation` is the URL the
+ * backend builds but never sends. Both land on the notifications list rather than a 404.
+ */
+describe('the retired meal-confirmation URLs', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  const retired = ['/mess/confirm?token=x', '/meal_confirmation?token=x'];
+
+  it.each(retired)('sends %s to the notifications list', async (path) => {
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe('/notifications');
+  });
+
+  it.each(retired)('sends the /ur/ copy of %s to the notifications list in Urdu', async (path) => {
+    const settled = await settleOn(`/ur${path}`);
+
+    expect(settled.url).toBe('/ur/notifications');
+  });
+});

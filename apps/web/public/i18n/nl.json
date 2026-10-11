@@ -1279,27 +1279,6 @@
     "theListingMayHaveBeen": "De advertentie is mogelijk verwijderd of de link klopt niet.",
     "chooseYourRoom": "Kies je kamer"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Je link wordt gecontroleerd…",
-    "onTheMenu": "Op het menu",
-    "confirmMyPortion": "Mijn portie bevestigen",
-    "youReConfirmed": "Je bent bevestigd! 🎉",
-    "pleaseCollectYourMealAt": "Haal je maaltijd tijdens de serveertijd op in de kantine. Je kunt deze pagina sluiten.",
-    "alreadyConfirmed": "Al bevestigd",
-    "thisLinkHasExpired": "Deze link is verlopen",
-    "invalidLink": "Ongeldige link",
-    "thisConfirmationLinkIsMissing": "Deze bevestigingslink ontbreekt of is onvolledig. Gebruik precies de link uit je laatste herinnering.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Kantine-aanmelding",
-    "reserveYourMealPortion": "Reserveer je portie {{meal}}",
-    "todaysMealAtMess": "Vandaag {{meal}} in de hostelmess",
-    "reserveBeforeTapOnce": "Reserveer vóór {{time}} · tik één keer om te bevestigen",
-    "portionReservedWithMenu": "Je portie voor het {{meal}} van vandaag is gereserveerd — {{menu}}.",
-    "portionReserved": "Je portie voor het {{meal}} van vandaag is gereserveerd.",
-    "alreadyReservedMealToday": "Je hebt je portie {{meal}} voor vandaag al gereserveerd.",
-    "optInWindowClosedAt": "Het aanmeldvenster voor {{meal}} sloot om {{time}}.",
-    "optInWindowClosed": "Het aanmeldvenster voor {{meal}} is gesloten.",
-    "reachOutToMessManager": "Neem contact op met de messbeheerder als je toch nog een portie nodig hebt."
-  },
   "moderatorMedia": {
     "mediaQueue": "Mediawachtrij",
     "allClear": "Alles verwerkt",

@@ -1284,27 +1284,6 @@
     "theListingMayHaveBeen": "Listing mungkin telah dihapus atau tautannya salah.",
     "chooseYourRoom": "Pilih kamar Anda"
   },
-  "featuresPublic": {
-    "checkingYourLink": "Memeriksa tautan Anda…",
-    "onTheMenu": "Menu hari ini",
-    "confirmMyPortion": "Konfirmasi porsi saya",
-    "youReConfirmed": "Anda telah dikonfirmasi! 🎉",
-    "pleaseCollectYourMealAt": "Silakan ambil makanan Anda di kantin pada jam penyajian. Anda dapat menutup halaman ini.",
-    "alreadyConfirmed": "Sudah dikonfirmasi",
-    "thisLinkHasExpired": "Tautan ini telah kedaluwarsa",
-    "invalidLink": "Tautan tidak valid",
-    "thisConfirmationLinkIsMissing": "Tautan konfirmasi ini hilang atau tidak lengkap. Gunakan tautan persis dari pengingat terakhir Anda.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Ikut serta kantin",
-    "reserveYourMealPortion": "Pesan porsi {{meal}} Anda",
-    "todaysMealAtMess": "{{meal}} hari ini di kantin hostel",
-    "reserveBeforeTapOnce": "Pesan sebelum {{time}} · ketuk sekali untuk konfirmasi",
-    "portionReservedWithMenu": "Porsi Anda untuk {{meal}} hari ini sudah dipesan — {{menu}}.",
-    "portionReserved": "Porsi Anda untuk {{meal}} hari ini sudah dipesan.",
-    "alreadyReservedMealToday": "Anda sudah memesan porsi {{meal}} untuk hari ini.",
-    "optInWindowClosedAt": "Jendela pendaftaran {{meal}} ditutup pukul {{time}}.",
-    "optInWindowClosed": "Jendela pendaftaran {{meal}} sudah ditutup.",
-    "reachOutToMessManager": "Silakan hubungi pengelola kantin jika Anda masih membutuhkan porsi."
-  },
   "moderatorMedia": {
     "mediaQueue": "Antrean media",
     "allClear": "Semua beres",

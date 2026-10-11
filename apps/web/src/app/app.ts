@@ -74,11 +74,10 @@ export class App {
   );
 
   // The one shared SiteHeader renders on every route (its action buttons vary by area) — except
-  // the full-screen onboarding wizard and the public mess opt-in landing, which carry their own
-  // chrome.
+  // the full-screen onboarding wizard, which carries its own chrome.
   protected readonly showHeader = computed(() => {
     const u = this.path();
-    return !u.startsWith('/host/listings/new') && !u.startsWith('/mess/confirm');
+    return !u.startsWith('/host/listings/new');
   });
 
   // Seeker area = everything outside the consoles, the Lead Wall and the utility landings.
@@ -98,9 +97,7 @@ export class App {
       // scroller, so the tab bar overlapped the submit button and no amount of padding
       // on <main> could reach inside to fix it.
       !u.startsWith('/reset_password') &&
-      !u.startsWith('/forbidden') &&
-      // Public mess opt-in landing carries its own chrome (no site header/footer/tabs).
-      !u.startsWith('/mess/confirm')
+      !u.startsWith('/forbidden')
     );
   });
 

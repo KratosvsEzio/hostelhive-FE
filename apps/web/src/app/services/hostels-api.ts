@@ -50,12 +50,6 @@ export interface MealTypePayload {
   notify_before_meal_time: number;
 }
 
-export interface MealInfoRaw {
-  meal_type: string;      // 'breakfast' | 'lunch' | 'dinner'
-  meal_date: string;      // 'yyyy-MM-dd'
-  expired_time: string;   // ISO datetime — confirmation window close
-}
-
 export interface MealConfirmationRaw {
   id: string;
   renter_id: string;
@@ -476,13 +470,6 @@ export class HostelsApi {
     return this.api.put<void>(`/api/host/hostels/${hostelId}/weekly_menus`, {
       weekly_menus: menus,
     });
-  }
-
-  /** GET /public/meal_confirmations/meal_info/:token — resolve a tenant opt-in token (no auth required). */
-  getMealInfo(token: string): Observable<MealInfoRaw> {
-    return this.api
-      .get<{ meal_info: MealInfoRaw; success: boolean }>(`/public/meal_confirmations/meal_info/${token}`)
-      .pipe(map((r) => r.meal_info));
   }
 
   /** GET /api/host/hostels/:id/meal_confirmations — tenant meal opt-ins, filterable by date and meal type. */

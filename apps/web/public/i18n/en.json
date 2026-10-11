@@ -394,27 +394,6 @@
   "featuresNotifications": {
     "yourHostelInvitesMealConfirmations": "Your hostel invites, meal confirmations and pending receipts."
   },
-  "featuresPublic": {
-    "checkingYourLink": "Checking your link…",
-    "onTheMenu": "On the menu",
-    "confirmMyPortion": "Confirm my portion",
-    "youReConfirmed": "You're confirmed! 🎉",
-    "pleaseCollectYourMealAt": "Please collect your meal at the mess during serving time. You can close this page.",
-    "alreadyConfirmed": "Already confirmed",
-    "thisLinkHasExpired": "This link has expired",
-    "invalidLink": "Invalid link",
-    "thisConfirmationLinkIsMissing": "This confirmation link is missing or incomplete. Please use the exact link from your latest reminder.",
-    "n2026HostelhiveMessOptIn": "© 2026 HostelHive · Mess opt-in",
-    "reserveYourMealPortion": "Reserve your {{meal}} portion",
-    "todaysMealAtMess": "Today's {{meal}} at the hostel mess",
-    "reserveBeforeTapOnce": "Reserve before {{time}} · tap once to confirm",
-    "portionReservedWithMenu": "Your portion for today's {{meal}} is reserved — {{menu}}.",
-    "portionReserved": "Your portion for today's {{meal}} is reserved.",
-    "alreadyReservedMealToday": "You've already reserved your {{meal}} portion for today.",
-    "optInWindowClosedAt": "The opt-in window for {{meal}} closed at {{time}}.",
-    "optInWindowClosed": "The opt-in window for {{meal}} has closed.",
-    "reachOutToMessManager": "Please reach out to the mess manager if you still need a portion."
-  },
   "filters": {
     "selectAmenities": "Select amenities",
     "anyPropertyType": "Any property type",

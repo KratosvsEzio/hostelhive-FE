@@ -26,7 +26,6 @@ import {
  *   URLs are opaque ids, and they churn constantly. Category pages are what rank; see
  *   the note in `places.ts` about faceted bloat.
  * - The consoles, auth screens and per-user areas — all `Disallow`ed in robots.txt.
- * - `/mess/confirm` — reached with a token in the query; nothing to index.
  */
 
 /** Static public pages, in rough order of importance. */
