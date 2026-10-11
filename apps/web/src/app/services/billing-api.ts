@@ -141,6 +141,21 @@ export class BillingApi {
   }
 
   /**
+   * The invoice after the server has asked Safepay about its pending payment, for a payer
+   * waiting on a late webhook. The server checks Safepay at most every few seconds and answers
+   * with the invoice unchanged when Safepay can't be reached, so it is safe to poll.
+   */
+  refreshInvoicePayments(invoiceId: string): Observable<BillingInvoice> {
+    return this.api
+      .post<InvoiceEnvelope>(
+        `/api/invoices/${invoiceId}/payments/refresh`,
+        {},
+        quiet(),
+      )
+      .pipe(map((res) => res.invoice));
+  }
+
+  /**
    * One page of the hostel's invoices, newest first as the server sorts them. A `status` of
    * `'all'`, empty or absent asks for every status.
    */

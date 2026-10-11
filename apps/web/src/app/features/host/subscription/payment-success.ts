@@ -113,7 +113,7 @@ export class PaymentSuccess {
 
     let last: PollTick | null = null;
     let settled = false;
-    this.poll = pollInvoice(() => this.api.invoice(id), {
+    this.poll = pollInvoice(() => this.api.refreshInvoicePayments(id), {
       until: (tick) => settledView(tick) !== null,
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
