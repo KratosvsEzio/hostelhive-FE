@@ -74,7 +74,7 @@ export class AuthApi {
 
   /** PATCH /api/user/reset_password → sets a new password using the emailed token. */
   resetPassword(body: ResetPasswordRequest): Observable<MessageResponse> {
-    return this.api.patch<MessageResponse>('/api/user/reset_password', body);
+    return this.api.patch<MessageResponse>('/api/user/reset_password', body, inlineErrors());
   }
 
   /**
