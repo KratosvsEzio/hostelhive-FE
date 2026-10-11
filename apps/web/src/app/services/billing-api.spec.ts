@@ -7,6 +7,8 @@ import { TestBed } from '@angular/core/testing';
 import {
   ApiError,
   BillingInvoice,
+  BillingInvoicePage,
+  BillingInvoiceRow,
   BillingPayment,
   HostBilling,
   PlansResponse,
@@ -228,6 +230,135 @@ describe('BillingApi', () => {
       );
 
       expect(err?.status).toBe(500);
+      expect(notify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('invoices', () => {
+    const URL = `${BASE}/api/hostels/nHelLt/invoices`;
+    const ROW: BillingInvoiceRow = {
+      id: 'inv1',
+      number: 'HH-0001',
+      hostel_id: 'nHelLt',
+      kind: 'new',
+      currency: 'PKR',
+      total: '5000.00',
+      period_start: '2026-10-11T00:00:00Z',
+      period_end: '2026-11-11T00:00:00Z',
+      expires_at: null,
+      paid_at: '2026-10-11T00:00:00Z',
+      voided_at: null,
+      created_at: '2026-10-11T00:00:00Z',
+      invoice_pdf_url: 'https://cdn.test/inv1.pdf',
+      status: {
+        id: 2,
+        name: 'Paid',
+        slug: 'paid',
+        position: 2,
+        color: { id: 7, primary: '#0a0', secondary: null, tertiary: null },
+      },
+      plan: { id: 'qTFruf', code: 'listing', name: 'Listing' },
+      hostel: { id: 'nHelLt', name: 'Blue Hostel' },
+      lines: [{ description: 'Listing', amount: '5000.00' }],
+    };
+    const STATUSES = [
+      { id: 1, name: 'Open', slug: 'open' },
+      { id: 2, name: 'Paid', slug: 'paid' },
+      { id: 3, name: 'Void', slug: 'void' },
+    ];
+
+    it('asks for the first page of ten with no status filter by default, toast suppressed', () => {
+      api.invoices('nHelLt').subscribe();
+
+      const req = http.expectOne((r) => r.url === URL);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('page')).toBe('1');
+      expect(req.request.params.get('limit')).toBe('10');
+      expect(req.request.params.has('f[status.slug]')).toBe(false);
+      expect(req.request.params.has('sort')).toBe(false);
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, invoices: [], possible_statuses: [] });
+    });
+
+    it('sends the page, limit and a real status as f[status.slug]', () => {
+      api.invoices('nHelLt', { status: 'paid', page: 3, limit: 25 }).subscribe();
+
+      const req = http.expectOne((r) => r.url === URL);
+      expect(req.request.params.get('page')).toBe('3');
+      expect(req.request.params.get('limit')).toBe('25');
+      expect(req.request.params.get('f[status.slug]')).toBe('paid');
+      expect(req.request.params.keys().sort()).toEqual([
+        'f[status.slug]',
+        'limit',
+        'page',
+      ]);
+      req.flush({ success: true, invoices: [], possible_statuses: [] });
+    });
+
+    it.each([undefined, null, '', 'all'])(
+      'sends no status filter for %j',
+      (status) => {
+        api.invoices('nHelLt', { status, page: 2 }).subscribe();
+
+        const req = http.expectOne((r) => r.url === URL);
+        expect(req.request.params.has('f[status.slug]')).toBe(false);
+        expect(req.request.params.get('page')).toBe('2');
+        expect(req.request.params.get('limit')).toBe('10');
+        req.flush({ success: true, invoices: [], possible_statuses: [] });
+      },
+    );
+
+    it('unwraps the rows, the filterable statuses and the page info', () => {
+      let out: BillingInvoicePage | undefined;
+      api.invoices('nHelLt', { page: 2 }).subscribe((r) => (out = r));
+
+      http.expectOne((r) => r.url === URL).flush({
+        success: true,
+        invoices: [ROW],
+        possible_statuses: STATUSES,
+        pagination: {
+          current_page: 2,
+          next_page: 3,
+          prev_page: 1,
+          total_pages: 3,
+          total_count: 21,
+        },
+      });
+
+      expect(out).toEqual({
+        rows: [ROW],
+        statuses: STATUSES,
+        page: { page: 2, total: 21, totalPages: 3, hasNextPage: true },
+      });
+    });
+
+    it('reads missing arrays as empty and falls back to the requested page', () => {
+      let out: BillingInvoicePage | undefined;
+      api.invoices('nHelLt', { page: 4 }).subscribe((r) => (out = r));
+
+      http.expectOne((r) => r.url === URL).flush({ success: true });
+
+      expect(out).toEqual({
+        rows: [],
+        statuses: [],
+        page: { page: 4, total: 0, totalPages: 1, hasNextPage: false },
+      });
+    });
+
+    it('passes a 403 to the caller without a toast', () => {
+      let err: ApiError | undefined;
+      api
+        .invoices('nHelLt')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne((r) => r.url === URL)
+        .flush(
+          { success: false, error: 'You are not authorized to access this page.' },
+          { status: 403, statusText: 'Forbidden' },
+        );
+
+      expect(err?.status).toBe(403);
       expect(notify).not.toHaveBeenCalled();
     });
   });

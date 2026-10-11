@@ -23,6 +23,7 @@ const ALL_PERMISSIONS = [
   'core:Invoice:create',
   'core:Invoice:create_payment',
   'host:Hostel:show',
+  'core:Invoice:index',
 ];
 
 // Only the keys whose parameters a test reads carry copy; the rest resolve to their key.
@@ -176,7 +177,10 @@ describe('BillingPage', () => {
         { provide: BillingApi, useValue: api },
         {
           provide: SessionStore,
-          useValue: { hasPermission: (f: string) => granted.has(f) },
+          // Like the real store, no flags at all means nothing is withheld.
+          useValue: {
+            hasPermission: (f: string) => granted.size === 0 || granted.has(f),
+          },
         },
         {
           provide: HostPropertyStore,
@@ -376,6 +380,61 @@ describe('BillingPage', () => {
       const el = await openWith(billing());
 
       expect(el.querySelector('hh-payment-due')).toBeNull();
+    });
+  });
+
+  describe('billing history link', () => {
+    function historyOf(el: HTMLElement): HTMLElement | null {
+      return el.querySelector('[data-testid="billing-history"]');
+    }
+
+    it('links to the history after the payment-due box and before the plans', async () => {
+      const el = await openWith(billing({ open_invoice: openInvoice() }));
+
+      const row = historyOf(el);
+      expect(row?.textContent).toContain('hostBillingHistory.title');
+      expect(row?.textContent).toContain('hostBillingHistory.linkHint');
+      const link = row?.querySelector('a');
+      expect(link?.textContent).toContain('hostBillingHistory.viewHistory');
+      expect(link?.getAttribute('href')).toMatch(
+        /\/host\/nHelLt\/subscription\/invoices$/,
+      );
+      const due = el.querySelector('hh-payment-due') as Element;
+      const plans = el.querySelector('#billing-plans-title') as Element;
+      const after = Node.DOCUMENT_POSITION_FOLLOWING;
+      expect(due.compareDocumentPosition(row as Node) & after).toBeTruthy();
+      expect((row as Node).compareDocumentPosition(plans) & after).toBeTruthy();
+    });
+
+    it('follows the current plan when no invoice is due', async () => {
+      const el = await openWith(billing());
+
+      const plan = el.querySelector('hh-current-plan-card') as Element;
+      expect(
+        plan.compareDocumentPosition(historyOf(el) as Node) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('is hidden for someone without invoice access', async () => {
+      const el = await openWith(billing(), [
+        'core:Invoice:create',
+        'host:Hostel:show',
+      ]);
+
+      expect(historyOf(el)).toBeNull();
+    });
+
+    it('is shown when the session carries no permission flags', async () => {
+      const el = await openWith(billing(), []);
+
+      expect(historyOf(el)).not.toBeNull();
+    });
+
+    it('is not shown while loading', async () => {
+      const el = await open();
+
+      expect(historyOf(el)).toBeNull();
     });
   });
 
