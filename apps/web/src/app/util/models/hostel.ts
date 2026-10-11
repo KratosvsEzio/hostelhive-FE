@@ -208,7 +208,6 @@ export interface HostelDetail {
     icon?: string | null;
   }[];
   attachments: HostelAttachment[];
-  banner: HostelAttachment[]; // has_many :banner → array
   room_types: RoomType[];
   rooms: HostelRoom[];
   status?: HostelStatus | null;

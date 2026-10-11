@@ -275,7 +275,7 @@ export class AdminPayments {
     },
   );
 
-  /** Image URLs for the open hostel (banner + image attachments) — drives the drawer carousel. */
+  /** Image URLs for the open hostel (image attachments) — drives the drawer carousel. */
   protected readonly hostelImages = computed<string[]>(() => {
     const h = this.hostelState().data;
     return h ? resolveHostelImages(h) : [];
