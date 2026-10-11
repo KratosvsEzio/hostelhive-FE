@@ -1382,9 +1382,15 @@
     "enterTheEmailAddressYou": "Masukkan email yang Anda daftarkan dan kami akan mengirim tautan reset.",
     "sendResetLink": "Kirim tautan reset",
     "backToLogin": "Kembali ke masuk",
-    "weSentAPasswordReset": "Kami mengirim tautan reset kata sandi ke",
-    "clickTheLinkInThe": ". Klik tautan di email untuk menyetel kata sandi baru.",
-    "didnTReceiveItResend": "Tidak menerima? Kirim ulang"
+    "didnTReceiveItResend": "Tidak menerima? Kirim ulang",
+    "enterAValidEmail": "Masukkan alamat email yang valid.",
+    "sentIfAccountExists": "Jika ada akun untuk {{email}}, kami telah mengirim tautan untuk mereset kata sandi Anda. Periksa kotak masuk dan folder spam Anda.",
+    "alreadySent": "Tautan reset sudah dikirim ke email ini. Periksa kotak masuk dan folder spam Anda; Anda dapat meminta tautan lain dalam beberapa menit.",
+    "sentAnother": "Kami telah mengirim tautan lain.",
+    "tooManyRequests": "Terlalu banyak percobaan. Harap tunggu beberapa menit lalu coba lagi.",
+    "cannotReachTheServer": "Tidak dapat menjangkau server. Silakan coba lagi sebentar lagi.",
+    "couldNotSend": "Kami tidak dapat mengirim tautan reset. Periksa alamat email lalu coba lagi.",
+    "useADifferentEmail": "Gunakan email lain"
   },
   "authResetPassword": {
     "invalidResetLink": "Tautan reset tidak valid",

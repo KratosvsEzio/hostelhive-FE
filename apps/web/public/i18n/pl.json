@@ -1382,9 +1382,15 @@
     "enterTheEmailAddressYou": "Podaj adres e-mail, którym się rejestrowałeś, a wyślemy link do resetu.",
     "sendResetLink": "Wyślij link resetujący",
     "backToLogin": "Powrót do logowania",
-    "weSentAPasswordReset": "Wysłaliśmy link resetujący hasło na",
-    "clickTheLinkInThe": ". Kliknij link w wiadomości, aby ustawić nowe hasło.",
-    "didnTReceiveItResend": "Nie otrzymałeś? Wyślij ponownie"
+    "didnTReceiveItResend": "Nie otrzymałeś? Wyślij ponownie",
+    "enterAValidEmail": "Podaj prawidłowy adres e-mail.",
+    "sentIfAccountExists": "Jeśli istnieje konto dla {{email}}, wysłaliśmy link do zresetowania hasła. Sprawdź skrzynkę odbiorczą i folder spam.",
+    "alreadySent": "Link resetujący został już wysłany na ten adres. Sprawdź skrzynkę odbiorczą i folder spam; o kolejny możesz poprosić za kilka minut.",
+    "sentAnother": "Wysłaliśmy kolejny link.",
+    "tooManyRequests": "Zbyt wiele prób. Odczekaj kilka minut i spróbuj ponownie.",
+    "cannotReachTheServer": "Nie można połączyć się z serwerem. Spróbuj ponownie za chwilę.",
+    "couldNotSend": "Nie udało się wysłać linku resetującego. Sprawdź adres e-mail i spróbuj ponownie.",
+    "useADifferentEmail": "Użyj innego adresu e-mail"
   },
   "authResetPassword": {
     "invalidResetLink": "Nieprawidłowy link resetujący",
