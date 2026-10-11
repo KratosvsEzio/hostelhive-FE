@@ -120,8 +120,7 @@ export interface HostTeamData {
 /**
  * A staff record scoped to one hostel — `GET /api/host/hostels/:id/staffs`.
  *
- * Distinct from `StaffMember` above, which models a *manager account* created through
- * `add_manager` and can log in. A `Staff` is an employment record: salary, CNIC, joining
+ * Distinct from `StaffMember` above, which models a *manager account* that can log in. A `Staff` is an employment record: salary, CNIC, joining
  * date. It carries no email, no password and no account, so the two are not interchangeable
  * and neither replaces the other.
  */

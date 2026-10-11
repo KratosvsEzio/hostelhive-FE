@@ -97,26 +97,9 @@ export class HostShellApi {
       );
   }
 
-  /** Add a manager/warden to the hostel. */
-  addManager(
-    hostelId: string,
-    user: { name: string; email: string; password: string; phone: string },
-  ): Observable<unknown> {
-    return this.api.post(`/api/hostels/${hostelId}/add_manager`, { user });
-  }
-
   /** Remove a manager from the hostel. */
   removeManager(hostelId: string, managerId: string): Observable<unknown> {
     return this.api.put(`/api/host/hostels/${hostelId}/remove_manager`, { manager_id: managerId });
-  }
-
-  /** Update a manager's name and phone. */
-  updateManager(
-    hostelId: string,
-    managerId: string,
-    user: { name?: string; phone?: string },
-  ): Observable<unknown> {
-    return this.api.patch(`/api/hostels/${hostelId}/managers/${managerId}`, { user });
   }
 }
 
