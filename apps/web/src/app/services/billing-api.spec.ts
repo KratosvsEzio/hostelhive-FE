@@ -332,6 +332,41 @@ describe('BillingApi', () => {
     });
   });
 
+  describe('refreshInvoicePayments', () => {
+    const URL = `${BASE}/api/invoices/inv1/payments/refresh`;
+
+    it('posts with no fields and reads the invoice out of its envelope, toast suppressed', () => {
+      let out: BillingInvoice | undefined;
+      api.refreshInvoicePayments('inv1').subscribe((i) => (out = i));
+
+      const req = http.expectOne(URL);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      expect(req.request.urlWithParams).toBe(URL);
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, invoice: INVOICE });
+
+      expect(out).toEqual(INVOICE);
+    });
+
+    it('lets a server failure reach the caller without a toast', () => {
+      let err: ApiError | undefined;
+      api
+        .refreshInvoicePayments('inv1')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(URL)
+        .flush(
+          { success: false, error: 'Not found' },
+          { status: 404, statusText: 'Not Found' },
+        );
+
+      expect(err?.status).toBe(404);
+      expect(notify).not.toHaveBeenCalled();
+    });
+  });
+
   describe('invoices', () => {
     const URL = `${BASE}/api/hostels/nHelLt/invoices`;
     const ROW: BillingInvoiceRow = {

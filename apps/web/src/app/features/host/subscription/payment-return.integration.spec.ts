@@ -47,7 +47,10 @@ describe('PaymentSuccess with the real Safepay checkout', () => {
       providers: [
         provideRouter([{ path: '**', children: [] }]),
         provideI18nTesting(),
-        { provide: BillingApi, useValue: { invoice: invoiceReads } },
+        {
+          provide: BillingApi,
+          useValue: { refreshInvoicePayments: invoiceReads },
+        },
         {
           provide: HostPropertyStore,
           useValue: { selected: signal(selected) },

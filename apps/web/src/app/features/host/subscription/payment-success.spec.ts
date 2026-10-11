@@ -89,7 +89,7 @@ describe('PaymentSuccess', () => {
       providers: [
         provideRouter([{ path: '**', children: [] }]),
         provideI18nTesting(),
-        { provide: BillingApi, useValue: { invoice: fetch } },
+        { provide: BillingApi, useValue: { refreshInvoicePayments: fetch } },
         { provide: SafepayCheckout, useValue: checkout },
       ],
     });
