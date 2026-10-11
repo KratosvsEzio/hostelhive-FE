@@ -7,8 +7,10 @@ import { TestBed } from '@angular/core/testing';
 import {
   ApiError,
   BillingInvoice,
+  BillingPayment,
   HostBilling,
   PlansResponse,
+  StartedPayment,
 } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
@@ -224,6 +226,92 @@ describe('BillingApi', () => {
         { success: false, error: 'boom' },
         { status: 500, statusText: 'Server Error' },
       );
+
+      expect(err?.status).toBe(500);
+      expect(notify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pay', () => {
+    const PAYMENT: BillingPayment = {
+      id: 'pay1',
+      status: { id: 1, name: 'Pending', slug: 'pending', color: null },
+      payment_method: 'safepay',
+      amount: '5000.00',
+      currency: 'PKR',
+      reference: null,
+      gateway_reference: 'track_1',
+      failure_reason: null,
+      proof_url: null,
+      verified_at: null,
+      succeeded_at: null,
+      created_at: '2026-10-11T00:00:00Z',
+      invoice_id: 'inv1',
+    };
+    const CHECKOUT = 'https://sandbox.api.getsafepay.com/embedded/?tracker=track_1';
+
+    it('starts a Safepay payment and unwraps the payment, checkout page and invoice, toast suppressed', () => {
+      let out: StartedPayment | undefined;
+      api.pay('inv1').subscribe((r) => (out = r));
+
+      const req = http.expectOne(`${BASE}/api/invoices/inv1/payments`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ payment_method: 'safepay' });
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush(
+        {
+          success: true,
+          payment: PAYMENT,
+          checkout_url: CHECKOUT,
+          invoice: { ...INVOICE, payments: [PAYMENT] },
+        },
+        { status: 201, statusText: 'Created' },
+      );
+
+      expect(out).toEqual({
+        payment: PAYMENT,
+        checkout_url: CHECKOUT,
+        invoice: { ...INVOICE, payments: [PAYMENT] },
+      });
+    });
+
+    it('reads a missing checkout page as null', () => {
+      let out: StartedPayment | undefined;
+      api.pay('inv1').subscribe((r) => (out = r));
+
+      http
+        .expectOne(`${BASE}/api/invoices/inv1/payments`)
+        .flush({ success: true, payment: PAYMENT, invoice: INVOICE });
+
+      expect(out?.checkout_url).toBeNull();
+    });
+
+    it('hands a 422 message to the caller word for word, without a toast', () => {
+      let err: ApiError | undefined;
+      api.pay('inv1').subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(`${BASE}/api/invoices/inv1/payments`)
+        .flush(
+          { success: false, errors: ['This invoice has expired'] },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+
+      expect(err?.status).toBe(422);
+      expect(err?.serverMessages?.[0]).toBe('This invoice has expired');
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('passes a server failure to the caller without a toast', () => {
+      let err: ApiError | undefined;
+      api.pay('inv1').subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(`${BASE}/api/invoices/inv1/payments`)
+        .flush(
+          { success: false, error: 'boom' },
+          { status: 500, statusText: 'Server Error' },
+        );
 
       expect(err?.status).toBe(500);
       expect(notify).not.toHaveBeenCalled();

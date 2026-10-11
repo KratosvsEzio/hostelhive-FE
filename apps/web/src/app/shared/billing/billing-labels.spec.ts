@@ -1,5 +1,16 @@
-import type { BillingPlan, BillingSubscription } from '@hostelhive/data-access';
-import { invoiceKindKey, planButton, statusTone } from './billing-labels';
+import type {
+  BillingInvoice,
+  BillingPayment,
+  BillingPlan,
+  BillingSubscription,
+} from '@hostelhive/data-access';
+import {
+  invoiceKindKey,
+  invoiceStatusTone,
+  latestAttemptNotice,
+  planButton,
+  statusTone,
+} from './billing-labels';
 
 function plan(overrides: Partial<BillingPlan>): BillingPlan {
   return {
@@ -62,6 +73,159 @@ describe('invoiceKindKey', () => {
  * One button per plan, chosen only by the server's action. The amount travels as the server's
  * own string so the button can quote it, never one derived from the plan's prices.
  */
+describe('invoiceStatusTone', () => {
+  it('tones the known invoice statuses by slug', () => {
+    expect(invoiceStatusTone('paid')).toBe('ok');
+    expect(invoiceStatusTone('open')).toBe('warn');
+    expect(invoiceStatusTone('void')).toBe('neutral');
+  });
+
+  it('leaves every other status neutral', () => {
+    expect(invoiceStatusTone('refunded')).toBe('neutral');
+    expect(invoiceStatusTone(null)).toBe('neutral');
+    expect(invoiceStatusTone(undefined)).toBe('neutral');
+  });
+});
+
+describe('latestAttemptNotice', () => {
+  const CHARGED_REASON =
+    'Invoice voided. Charged at Safepay (track_9); refund it from the Safepay dashboard';
+
+  function payment(overrides: Partial<BillingPayment>): BillingPayment {
+    return {
+      id: 'pay1',
+      status: { id: 1, name: 'Pending', slug: 'pending', color: null },
+      payment_method: 'safepay',
+      amount: '5000.00',
+      currency: 'PKR',
+      reference: null,
+      gateway_reference: 'track_1',
+      failure_reason: null,
+      proof_url: null,
+      verified_at: null,
+      succeeded_at: null,
+      created_at: '2026-10-11T00:00:00Z',
+      invoice_id: 'inv1',
+      ...overrides,
+    };
+  }
+
+  const FAILED = { id: 4, name: 'Failed', slug: 'failed', color: null };
+  const SUCCEEDED = { id: 3, name: 'Succeeded', slug: 'succeeded', color: null };
+
+  function invoice(
+    payments: BillingPayment[],
+    slug = 'open',
+  ): BillingInvoice {
+    return {
+      id: 'inv1',
+      number: 'HH-0001',
+      kind: 'new',
+      currency: 'PKR',
+      total: '5000.00',
+      period_start: null,
+      period_end: null,
+      expires_at: null,
+      paid_at: null,
+      voided_at: null,
+      created_at: '2026-10-11T00:00:00Z',
+      invoice_pdf_url: null,
+      plan: null,
+      lines: [],
+      status: { id: 1, name: slug, slug, color: null },
+      payments,
+    };
+  }
+
+  it('says nothing about an invoice nobody has tried to pay', () => {
+    expect(latestAttemptNotice(invoice([]))).toBeNull();
+  });
+
+  it('says nothing once the invoice is no longer open', () => {
+    const failed = [payment({ status: FAILED })];
+    expect(latestAttemptNotice(invoice(failed, 'paid'))).toBeNull();
+    expect(latestAttemptNotice(invoice(failed, 'void'))).toBeNull();
+  });
+
+  it('asks the payer to make contact when a payment was taken but not applied', () => {
+    const notice = latestAttemptNotice(
+      invoice([payment({ status: FAILED, failure_reason: CHARGED_REASON })]),
+    );
+
+    expect(notice).toEqual({
+      key: 'hostPayment.chargedNotApplied',
+      tone: 'danger',
+      contactUs: true,
+    });
+  });
+
+  it('matches the charged wording whatever its case', () => {
+    const notice = latestAttemptNotice(
+      invoice([
+        payment({ status: FAILED, failure_reason: 'Expired. charged at safepay (t)' }),
+      ]),
+    );
+
+    expect(notice?.key).toBe('hostPayment.chargedNotApplied');
+  });
+
+  it('reports a plain failed attempt', () => {
+    const notice = latestAttemptNotice(
+      invoice([
+        payment({ status: FAILED, failure_reason: 'Safepay declined the payment' }),
+      ]),
+    );
+
+    expect(notice).toEqual({
+      key: 'hostPayment.lastAttemptFailed',
+      tone: 'warn',
+      contactUs: false,
+    });
+  });
+
+  it('reports a failed attempt that gave no reason', () => {
+    const notice = latestAttemptNotice(
+      invoice([payment({ status: FAILED, failure_reason: null })]),
+    );
+
+    expect(notice?.key).toBe('hostPayment.lastAttemptFailed');
+  });
+
+  it('warns against paying twice while a Safepay attempt is pending', () => {
+    expect(latestAttemptNotice(invoice([payment({})]))).toEqual({
+      key: 'hostPayment.pendingNotice',
+      tone: 'neutral',
+      contactUs: false,
+    });
+  });
+
+  it('says nothing about a pending attempt made some other way', () => {
+    expect(
+      latestAttemptNotice(
+        invoice([payment({ payment_method: 'bank_transfer' })]),
+      ),
+    ).toBeNull();
+  });
+
+  it('says nothing for any other attempt status', () => {
+    expect(
+      latestAttemptNotice(invoice([payment({ status: SUCCEEDED })])),
+    ).toBeNull();
+  });
+
+  // An earlier failure is history once the payer has tried again.
+  it('looks at the latest attempt only', () => {
+    const notice = latestAttemptNotice(
+      invoice([
+        payment({ id: 'pay1', status: FAILED, failure_reason: CHARGED_REASON }),
+        payment({ id: 'pay2' }),
+      ]),
+    );
+
+    expect(notice?.key).toBe('hostPayment.pendingNotice');
+  });
+});
+
 describe('planButton', () => {
   it('buy: an enabled Choose plan that starts checkout', () => {
     expect(planButton(plan({ action: 'buy' }), null)).toEqual({
