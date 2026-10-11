@@ -51,7 +51,7 @@ docs/knowledge-base/
   the URL), filters, listing cards, the `/hostels/:place` landing pages and sitemap, and the public
   hostels filter contract as the code sends it.
 - [Listing and booking](area/listing-and-booking.md): the `/hostel/:slug` page, the sign-in gate
-  before contact details, the nightly-only booking flow, and `/mess/confirm`.
+  before contact details, and the nightly-only booking flow.
 - [Seeker account](area/seeker-account.md): `/account/*` (bookings, change and cancel, favourites,
   settings, password) and `/notifications`.
 - [Public content](area/public-content.md): About, Blog, Careers, Contact, FAQs, Credits, legal pages,
