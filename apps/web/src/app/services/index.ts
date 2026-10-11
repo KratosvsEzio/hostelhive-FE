@@ -11,6 +11,7 @@ export * from './users-api';
 export * from './admin-api';
 export * from './overview-api';
 export * from './host-property-store';
+export * from './host-billing-store';
 export * from './host-ops-api';
 export * from './host-shell-api';
 export * from './listing-detail-api';

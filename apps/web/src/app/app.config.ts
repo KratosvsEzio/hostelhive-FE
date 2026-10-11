@@ -27,6 +27,7 @@ import { AuthService, provideAuth } from '@core/auth';
 import { pushTokenInterceptor } from '@core/interceptors/push-token-interceptor';
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
+import { hostAccessInterceptor } from '@core/interceptors/host-access-interceptor';
 import { ssrTimeoutInterceptor } from '@core/interceptors/ssr-timeout-interceptor';
 import { refetchDelayInterceptor } from '@core/refetch-delay';
 import { Capacitor } from '@capacitor/core';
@@ -69,6 +70,8 @@ export const appConfig: ApplicationConfig = {
     provideDataAccess({ baseUrl: apiEnv.apiUrl }, [
       authInterceptor,
       pushTokenInterceptor,
+      // Outside errorInterceptor, so it classifies the normalised ApiError on the way out.
+      hostAccessInterceptor,
       errorInterceptor,
       refetchDelayInterceptor,
       // Last, closest to the backend: it measures the network wait rather than what the

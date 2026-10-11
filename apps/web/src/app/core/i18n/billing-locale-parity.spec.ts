@@ -6,6 +6,7 @@ const GROUPS = [
   'sharedBilling',
   'publicPricing',
   'hostBillingHistory',
+  'hostAccess',
 ];
 const SINGLE_KEYS = [
   'hostNav.billing',

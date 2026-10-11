@@ -24,6 +24,7 @@ import {
   of,
   startWith,
   switchMap,
+  tap,
 } from 'rxjs';
 import type {
   ApiError,
@@ -38,7 +39,7 @@ import {
   HhLink,
   Skeleton,
 } from '@hostelhive/ui';
-import { BillingApi } from '@services';
+import { BillingApi, HostBillingStore } from '@services';
 import { SessionStore } from '@core/auth/session-store';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { LocaleStore } from '@core/i18n/locale-store';
@@ -147,6 +148,7 @@ export class BillingPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(BillingApi);
+  private readonly billingStore = inject(HostBillingStore);
   private readonly session = inject(SessionStore);
   private readonly locale = inject(LocaleStore);
   private readonly destroyRef = inject(DestroyRef);
@@ -178,6 +180,7 @@ export class BillingPage {
       switchMap(({ id }) => {
         if (!id) return of<BillingView>({ kind: 'none' });
         return this.api.billing(id).pipe(
+          tap((b) => this.billingStore.accept(id, b)),
           map((billing): BillingView => ({ kind: 'ready', billing })),
           startWith<BillingView>({ kind: 'loading' }),
           catchError((err: ApiError) =>
@@ -449,7 +452,10 @@ export class BillingPage {
       .subscribe({
         next: (billing) => {
           settle();
-          if (current()) this.state.set({ kind: 'ready', billing });
+          if (current()) {
+            this.state.set({ kind: 'ready', billing });
+            this.billingStore.accept(id, billing);
+          }
         },
         error: (err: ApiError) => {
           settle();

@@ -190,6 +190,57 @@ describe('errorInterceptor', () => {
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 
+  describe('serverCode', () => {
+    it('carries a string `code` from the body, leaving `code` status-derived', () => {
+      const err = fire((req) =>
+        req.flush(
+          { success: false, code: 'crm_required', errors: ['Your plan does not include CRM'] },
+          { status: 403, statusText: 'Forbidden' },
+        ),
+      );
+      expect(err.serverCode).toBe('crm_required');
+      expect(err.code).toBe('unknown_error');
+    });
+
+    it.each([
+      ['no code', { success: false, errors: ['nope'] }],
+      ['a non-string code', { success: false, code: 42, errors: ['nope'] }],
+      ['a null body', null],
+      ['an HTML body', '<html>500</html>'],
+    ])('is undefined for %s', (_, body) => {
+      const err = fire((req) => req.flush(body, { status: 422, statusText: 'Unprocessable' }));
+      expect(err.serverCode).toBeUndefined();
+    });
+  });
+
+  describe('host plan refusals', () => {
+    const rooms = `${BASE}/api/host/hostels/Xk9pQ/rooms`;
+    const subscribe = { success: false, errors: ['You need to subscribe to avail the services'] };
+    const noCrm = { success: false, code: 'crm_required', errors: ['Your plan does not include CRM'] };
+
+    it('does not toast a GET refused for want of a plan', () => {
+      fire((req) => req.flush(subscribe, { status: 400, statusText: 'Bad Request' }), undefined, rooms);
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('does not toast a GET refused for want of CRM, and still rethrows', () => {
+      const err = fire((req) => req.flush(noCrm, { status: 403, statusText: 'Forbidden' }), undefined, rooms);
+      expect(notify).not.toHaveBeenCalled();
+      expect(err.status).toBe(403);
+    });
+
+    it('still toasts a write the plan refused', () => {
+      http.post(rooms, {}).subscribe({ error: () => undefined });
+      httpMock.expectOne(rooms).flush(noCrm, { status: 403, statusText: 'Forbidden' });
+      expect(notify).toHaveBeenCalledOnce();
+    });
+
+    it('still toasts the same refusal from outside a host hostel', () => {
+      fire((req) => req.flush(subscribe, { status: 400, statusText: 'Bad Request' }));
+      expect(notify).toHaveBeenCalledOnce();
+    });
+  });
+
   it('does not notify when the request suppresses the toast', () => {
     fire(
       (req) =>

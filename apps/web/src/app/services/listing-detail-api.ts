@@ -167,6 +167,7 @@ function toListingDetail(d: HostelDetail): ListingDetail {
     country: d.country ?? '',
     accommodationType: GENDER_MAP[d.gender_type] ?? 'coliving',
     billingFrequency: d.billing_frequency ?? undefined,
+    acceptsBookings: d.accepts_bookings ?? undefined,
     verified: d.status?.slug === 'active',
     // `/public/hostel_detail/:id` does not send `is_featured` today — only the index does —
     // so this reads undefined and the badge stays hidden. Mapped anyway rather than left

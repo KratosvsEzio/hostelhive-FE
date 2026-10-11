@@ -281,6 +281,7 @@
           [offers]="roomOffers()"
           [period]="bookingPeriod()"
           [currency]="l.currency"
+          [bookable]="canBook()"
         />
 
         <!-- Reviews (in-page section) -->
@@ -435,7 +436,7 @@
           <!-- The booking rail sits above the contact card rather than replacing it: the
                gated phone is still how a seeker asks a question before committing. It does
                not repeat the "From" price, which the card below already carries. -->
-          @if (bookingEnabled()) {
+          @if (canBook()) {
             <hh-booking-rail
               [period]="bookingPeriod()"
               [currency]="l.currency"
@@ -535,7 +536,7 @@
              never out-rank the site header however high its own z-index — the header stayed
              bright above the dimmed page. It still shares the basket, which this page
              provides to its whole template, not only to the rail. -->
-        @if (bookingEnabled() && summaryOpen()) {
+        @if (canBook() && summaryOpen()) {
           <hh-booking-summary
             [currency]="l.currency"
             [hostelName]="l.name"
