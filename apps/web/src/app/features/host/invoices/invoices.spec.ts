@@ -566,11 +566,11 @@ describe('Invoices page', () => {
       expect(dialog(page)).toBeNull();
     });
 
-    it('keeps the invoice paid and shows a sticky error quoting the server when only the booking fails', async () => {
+    it('keeps the invoice paid and shows a sticky error with a translated reason when only the booking fails', async () => {
       const deps = depsWith(invoicesReply(dueBookingBills()));
       deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
       deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));
-      deps.bookings.markPaid.mockReturnValue(throwError(() => apiError(422, ['Booking is closed.', 'Try later.'])));
+      deps.bookings.markPaid.mockReturnValue(throwError(() => apiError(422, ['This booking is already paid'])));
       const page = await open({ deps });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
       await startPay(page);
@@ -581,12 +581,13 @@ describe('Invoices page', () => {
       expect(deps.notifications.raised).toEqual([
         { kind: 'error', title: 'hostInvoices.bookingNotPaid', message: undefined, ttlMs: 0 },
       ]);
-      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { message: 'Booking is closed. Try later.' });
+      // The known refusal is classified and translated (keys resolve to themselves here), not quoted.
+      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { reason: 'hostBookings.bookingAlreadyPaid' });
       expect(dialog(page)).toBeNull();
       expect(internals(page).paying()).toBe(false);
     });
 
-    it('falls back to the generic error copy when the booking failure carries no server message', async () => {
+    it('falls back to a generic translated reason when the booking failure is not recognised', async () => {
       const failure = apiError(500);
       const deps = depsWith(invoicesReply(dueBookingBills()));
       deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
@@ -598,7 +599,36 @@ describe('Invoices page', () => {
 
       await click(page, confirmButton(page));
 
-      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { message: toToastCopy(failure).message });
+      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { reason: 'hostBookings.moveNotAccepted' });
+    });
+
+    it.each([
+      { text: 'Booking is closed.', reason: 'hostBookings.moveNotAccepted' },
+      {
+        text: 'Only confirmed, checked-in, checked-out or no-show bookings can be marked paid',
+        reason: 'hostBookings.bookingHasMovedOn',
+      },
+    ])('lets no booking server text or API URL reach the screen or the toast on "$text"', async ({ text, reason }) => {
+      const failure = {
+        ...apiError(422, [text]),
+        message: `Http failure response for http://localhost/api/host/hostels/${HOSTEL_ID}/bookings/bk-1/mark_as_paid: 422 Unprocessable Entity`,
+      };
+      const deps = depsWith(invoicesReply(dueBookingBills()));
+      deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
+      deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));
+      deps.bookings.markPaid.mockReturnValue(throwError(() => failure));
+      const page = await open({ deps });
+      const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+      await startPay(page);
+
+      await click(page, confirmButton(page));
+
+      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { reason });
+      const toasts = deps.notifications.raised.map((t) => `${t.title} ${t.message ?? ''}`);
+      const shown = [page.el.textContent ?? '', ...toasts, JSON.stringify(translate.mock.calls)].join(' ');
+      expect(shown).not.toContain(text);
+      expect(shown).not.toContain('Http failure');
+      expect(shown).not.toContain('http://');
     });
 
     it('sends no booking request, shows an error and closes the prompt when the invoice fails', async () => {

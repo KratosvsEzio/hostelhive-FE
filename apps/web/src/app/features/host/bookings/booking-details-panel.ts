@@ -26,6 +26,7 @@ import {
 } from '@util/table-configs/invoice-table-cols';
 import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from './booking-month';
 import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
+import { releaseFailureKey } from './booking-move-failure';
 import { isPrivateOccupancy } from '@util/occupancy-type';
 
 /** What a host can do to a booking, as the lifecycle (Trello #80) allows it. */
@@ -115,7 +116,7 @@ export class BookingDetailsPanel {
   readonly booking = input<HostBooking | null>(null);
   /** The hostel, for reading the booking's rooms once it is checked in. */
   readonly hostelId = input('');
-  /** Set by the page when an action could not be sent, so the footer can say why. */
+  /** Set by the page when an action could not be sent: a translation key for why, shown in the footer. */
   readonly actionError = input('');
   /** An action is in flight; every button waits for it. */
   readonly busy = input(false);
@@ -247,7 +248,8 @@ export class BookingDetailsPanel {
 
   // ── who is in which room ─────────────────────────────────────────────────────────
   protected readonly releasing = signal<string | null>(null);
-  protected readonly releaseError = signal('');
+  /** Why the last release failed: a translation key, and the room it names. */
+  protected readonly releaseError = signal<{ key: string; room: string } | null>(null);
 
   /**
    * Rooms released from this panel, by occupancy id, for the booking it is showing.
@@ -317,7 +319,7 @@ export class BookingDetailsPanel {
     const b = this.booking();
     if (!b || this.releasing()) return;
     this.releasing.set(o.id);
-    this.releaseError.set('');
+    this.releaseError.set(null);
     // The failure is shown under the rooms, so the global toast would only repeat it.
     this.api.releaseOccupancy(this.hostelId(), b.id, o.id, { suppressErrorToast: true }).subscribe({
       next: () => {
@@ -325,9 +327,9 @@ export class BookingDetailsPanel {
         this.releasedIds.update((ids) => new Set(ids).add(o.id));
         this.released.emit(b);
       },
-      error: (err: { message?: string } | null) => {
+      error: (err: unknown) => {
         this.releasing.set(null);
-        this.releaseError.set(err?.message || `Could not release room ${o.roomNumber}.`);
+        this.releaseError.set({ key: releaseFailureKey(err), room: o.roomNumber });
       },
     });
   }

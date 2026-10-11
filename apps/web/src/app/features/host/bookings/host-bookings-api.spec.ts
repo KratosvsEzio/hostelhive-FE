@@ -1,3 +1,4 @@
+import { HttpContext } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { Invoice } from '@hostelhive/data-access';
@@ -579,7 +580,7 @@ describe('HostBookingsApi — the lifecycle', () => {
           { room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' },
         ],
       },
-    });
+    }, expect.any(HttpContext));
   });
 });
 
@@ -692,6 +693,28 @@ describe('HostBookingsApi — per-call request options', () => {
       expect(call.body).toEqual(body);
       expect(call.argCount).toBe(2);
       expect(suppressesErrorToast(call)).toBe(false);
+    });
+  });
+
+  describe('create', () => {
+    // The booking drawer says why a save failed in translated copy; a toast would repeat it untranslated.
+    it('always opts out of the global error toast', () => {
+      rec.replyWith({ booking: raw() });
+      api
+        .create('MjvuEl', {
+          checkIn: '2026-10-10',
+          checkOut: '2026-10-12',
+          guestName: 'Walk In',
+          guestPhone: '923005556666',
+          guestEmail: '',
+          lines: [{ roomTypeId: 'KGJwMC', shared: true, quantity: 1, guests: 1 }],
+        })
+        .subscribe();
+
+      const call = rec.last('post');
+      expect(call.path).toBe('/api/host/hostels/MjvuEl/bookings');
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
     });
   });
 

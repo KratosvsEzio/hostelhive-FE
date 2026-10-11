@@ -593,11 +593,23 @@
     "viewInvoice": "View invoice",
     "alsoMarkInvoicePaid": "Also mark invoice {{invoice}} as paid",
     "bookingAndInvoicePaid": "Booking and invoice marked paid",
-    "invoiceNotPaid": "Booking marked paid. The invoice was not: {{message}}",
+    "invoiceNotPaid": "Booking marked paid, but the invoice was not. {{reason}}",
     "stayedIn": "Stayed in",
     "checkedOut": "Checked out",
     "cancelOpenInvoiceWarning": "This booking has an unpaid invoice ({{invoice}}). Cancelling does not delete it.",
-    "bookingNotFound": "We couldn't find that booking."
+    "bookingNotFound": "We couldn't find that booking.",
+    "notEnoughBedsFree": "One of these rooms no longer has that many beds free. Place fewer guests there or pick another room.",
+    "checkTheRoomsPicked": "Those rooms could not be used. Check the rooms and guests, then try again.",
+    "alreadyCheckedIn": "This booking is already checked in. Refresh to see its rooms.",
+    "bookingHasMovedOn": "This booking has changed since you opened it. Refresh to see where it stands.",
+    "bookingAlreadyPaid": "This booking is already paid.",
+    "invoiceAlreadyExists": "This booking already has an invoice.",
+    "giveTheGuestAReason": "Give the guest a reason — it is sent to them and kept on the booking.",
+    "moveNotAccepted": "The server did not accept that. Please try again.",
+    "roomAlreadyReleased": "This room was already released. Refresh to see the booking's rooms.",
+    "couldNotReleaseRoom": "Could not release room {{room}}. Please try again.",
+    "invoiceNoLongerExists": "The invoice could not be found. It may have been deleted.",
+    "payTheInvoiceOnItsOwn": "Open the invoice and mark it paid there."
   },
   "hostExpenses": {
     "allTypes": "All types",
@@ -668,7 +680,7 @@
     "markPaidConfirmBody": "This records the full amount as received.",
     "alsoMarkBookingPaid": "Also mark booking {{ref}} as paid",
     "invoiceAndBookingPaid": "Invoice and booking marked paid",
-    "bookingNotPaid": "Invoice marked paid. The booking was not: {{message}}",
+    "bookingNotPaid": "Invoice marked paid, but the booking was not. {{reason}}",
     "invoiceNotFound": "We couldn't find that invoice."
   },
   "hostMess": {

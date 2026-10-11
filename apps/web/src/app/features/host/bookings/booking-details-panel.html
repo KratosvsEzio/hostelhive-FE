@@ -136,8 +136,8 @@
                 }
               </ul>
             }
-            @if (releaseError()) {
-              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ releaseError() }}</p>
+            @if (releaseError(); as e) {
+              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ e.key | transloco: { room: e.room } }}</p>
             }
           </div>
         }
@@ -239,7 +239,7 @@
       <footer class="border-t border-ink-100 bg-surface px-4 py-3 sm:px-5">
         @if (actionError()) {
           <p class="mb-2 rounded-lg bg-danger/10 px-3 py-2 text-xs font-medium text-danger" role="alert">
-            {{ actionError() }}
+            {{ actionError() | transloco }}
           </p>
         }
         <!-- The next moves this stage allows, the one that finishes it filled. Everything is

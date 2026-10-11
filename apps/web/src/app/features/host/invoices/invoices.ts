@@ -51,6 +51,7 @@ import { LocaleLink } from '@core/i18n/locale-link';
 import { bookingPath } from '@util/host-links';
 import { HostBooking, HostBookingsApi } from '../bookings/host-bookings-api';
 import { PAYABLE_LANES, laneKeyFor } from '../bookings/booking-month';
+import { bookingMoveFailureKey } from '../bookings/booking-move-failure';
 import {
   InvoiceAggs,
   InvoiceChange,
@@ -1162,11 +1163,11 @@ export class Invoices {
             this.finishPay();
             this.notifications.success(this.i18n.translate<string>('hostInvoices.invoiceAndBookingPaid'));
           },
-          error: (err: ApiError) => {
+          error: (err: unknown) => {
             this.finishPay();
-            const message = err.serverMessages?.join(' ') || toToastCopy(err).message;
+            const reason = this.i18n.translate<string>(bookingMoveFailureKey(err));
             this.notifications.show(
-              { kind: 'error', title: this.i18n.translate<string>('hostInvoices.bookingNotPaid', { message }) },
+              { kind: 'error', title: this.i18n.translate<string>('hostInvoices.bookingNotPaid', { reason }) },
               0,
             );
           },

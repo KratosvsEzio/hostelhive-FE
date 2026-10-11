@@ -24,6 +24,23 @@ describe('bookingRefusal', () => {
     { text: 'Checkin date cannot be in the past', kind: 'checkInPast' },
     { text: 'Checkout date must be after check-in date', kind: 'datesOutOfOrder' },
     { text: 'Deluxe Dorm is not available for booking', kind: 'roomNotBookable' },
+    { text: 'Room 101 has only 1 bed(s) available', kind: 'notEnoughBeds' },
+    { text: 'Booking is already checked in', kind: 'alreadyCheckedIn' },
+    { text: 'Only confirmed bookings can be checked in', kind: 'wrongStage' },
+    { text: 'Only confirmed bookings can be marked a no show', kind: 'wrongStage' },
+    { text: 'Only checked-in bookings can be checked out', kind: 'wrongStage' },
+    { text: 'Only checked-in bookings can be invoiced', kind: 'wrongStage' },
+    {
+      text: 'Only confirmed, checked-in, checked-out or no-show bookings can be marked paid',
+      kind: 'wrongStage',
+    },
+    { text: 'This booking is already paid', kind: 'alreadyPaid' },
+    { text: 'An invoice already exists for this booking', kind: 'invoiceExists' },
+    { text: 'Occupancy is already inactive', kind: 'roomAlreadyReleased' },
+    { text: 'A cancellation reason is required', kind: 'reasonRequired' },
+    { text: 'At least one room allocation is required', kind: 'allocationInvalid' },
+    { text: 'Invalid room ID', kind: 'allocationInvalid' },
+    { text: 'Guests must be greater than zero', kind: 'allocationInvalid' },
   ])('recognises the backend text "$text" as $kind', ({ text, kind }) => {
     expect(bookingRefusal(apiError(422, [text]))).toBe(kind);
   });
@@ -44,6 +61,14 @@ describe('bookingRefusal', () => {
     { text: 'Check-in date is in the past', kind: 'checkInPast' },
     { text: 'Check-out must be after check-in', kind: 'datesOutOfOrder' },
     { text: 'Room is currently not available for booking online', kind: 'roomNotBookable' },
+    { text: 'Room 12B now has only 2 beds free', kind: 'notEnoughBeds' },
+    { text: 'This party is already checked-in', kind: 'alreadyCheckedIn' },
+    { text: 'Only pending bookings can be confirmed', kind: 'wrongStage' },
+    { text: 'The booking was already paid', kind: 'alreadyPaid' },
+    { text: 'An invoice already exists', kind: 'invoiceExists' },
+    { text: 'That room was already released', kind: 'roomAlreadyReleased' },
+    { text: 'A reason is required to cancel', kind: 'reasonRequired' },
+    { text: 'Guests must be greater than 0', kind: 'allocationInvalid' },
   ])('recognises the reworded "$text" as $kind by keyword', ({ text, kind }) => {
     expect(bookingRefusal(apiError(422, [text]))).toBe(kind);
   });
@@ -85,6 +110,16 @@ describe('bookingRefusal', () => {
       why: 'an unrelated message does not hide a recognised one',
       messages: ['Line items must include at least one room', 'Single is not available for booking'],
       kind: 'roomNotBookable',
+    },
+    {
+      why: 'a closed hostel beats a stay refusal',
+      messages: ['Room 101 has only 1 bed(s) available', 'This hostel does not accept bookings'],
+      kind: 'bookingsClosed',
+    },
+    {
+      why: 'too few beds beats an allocation the server could not read',
+      messages: ['Invalid room ID', 'Room 101 has only 1 bed(s) available'],
+      kind: 'notEnoughBeds',
     },
   ])('picks by priority when several messages come back: $why', ({ messages, kind }) => {
     expect(bookingRefusal(apiError(422, messages))).toBe(kind);

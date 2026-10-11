@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { HostOpsApi } from '@services';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostRoom } from '@util/models/host-ops';
 import { AssignGroup, AssignRoomsPanel, AssignRow, AssignSelection } from './assign-rooms-panel';
 import { HostBooking } from './host-bookings-api';
@@ -84,7 +85,7 @@ describe('AssignRoomsPanel — checking in', () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [Host],
-      providers: [{ provide: HostOpsApi, useValue: api }],
+      providers: [provideI18nTesting(), { provide: HostOpsApi, useValue: api }],
     }).compileComponents();
     fixture = TestBed.createComponent(Host);
     fixture.componentInstance.booking.set(b);

@@ -31,9 +31,6 @@ function messageReads(line: string): string[] {
 
 /** Known reads, by path under `features/`, with exactly how many each holds. */
 const ALLOWED: Readonly<Record<string, number>> = {
-  // Raw `err?.message`, left to the stay-flow work that owns these files; still to be fixed.
-  'host/bookings/booking-details-panel.ts': 1,
-  'host/bookings/bookings.ts': 1,
   // Billing shows a 422's own `serverMessages[0]` by product rule; `e` is the page's error view.
   'host/subscription/billing-page.html': 3,
   // `outcome.message` / `note.message` / `view.message` are copy the billing code builds itself.

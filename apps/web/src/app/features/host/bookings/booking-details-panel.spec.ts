@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { Observable, of, throwError } from 'rxjs';
 import { Invoice } from '@hostelhive/data-access';
 import { bookingInvoice } from '@app/testing/host-builders';
@@ -13,6 +14,26 @@ import {
   actionsFor,
 } from './booking-details-panel';
 import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
+
+const RELEASE_URL = 'http://localhost/api/host/hostels/MjvuEl/bookings/b1/occupancies/o1/mark_as_inactive';
+
+/** A refused release the way the error interceptor rethrows it, with Angular's URL-bearing message. */
+function releaseRefusal(text: string) {
+  return {
+    status: 422,
+    code: 'unknown_error',
+    message: `Http failure response for ${RELEASE_URL}: 422 Unprocessable Entity`,
+    serverMessages: [text],
+    method: 'PUT',
+  };
+}
+
+function expectNoLeak(el: HTMLElement, ...leaks: string[]): void {
+  const shown = el.textContent ?? '';
+  expect(shown).not.toContain('Http failure');
+  expect(shown).not.toContain('http://');
+  for (const leak of leaks) expect(shown).not.toContain(leak);
+}
 
 function booking(slug: string, over: Partial<HostBooking> = {}): HostBooking {
   return {
@@ -494,26 +515,47 @@ describe('BookingDetailsPanel', () => {
       expect(el.querySelector('[role="alert"]')).toBeNull();
     });
 
-    it('announces nothing and shows the server message when a release fails', () => {
+    it('announces nothing and shows translated copy, not the server text, when a release is refused', () => {
       const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
-      api.releaseOccupancy.mockReturnValue(throwError(() => ({ message: 'Room 101 is locked.' })));
+      api.releaseOccupancy.mockReturnValue(throwError(() => releaseRefusal('Occupancy is already inactive')));
 
       [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('Room 101 is locked.');
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased');
+      expectNoLeak(el, 'Occupancy is already inactive');
     });
 
-    it('falls back to a generic message when a failed release carries none', () => {
+    it.each([
+      { case: 'an unrecognised refusal', rejection: releaseRefusal('Room 101 is locked.') },
+      { case: 'a rejection with nothing in it', rejection: null },
+      { case: 'a plain error', rejection: new Error('Room 101 is locked.') },
+    ])('falls back to the generic message naming the room on $case', ({ rejection }) => {
       const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
-      api.releaseOccupancy.mockReturnValue(throwError(() => null));
+      api.releaseOccupancy.mockReturnValue(throwError(() => rejection));
+      const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
       [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('Could not release room 101.');
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom');
+      expect(translate.mock.calls.filter((c) => c[0] === 'hostBookings.couldNotReleaseRoom').map((c) => c[1])).toContainEqual({
+        room: '101',
+      });
+      expectNoLeak(el, 'Room 101 is locked');
+    });
+
+    it('says the server cannot be reached when the release never got there', () => {
+      const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
+      api.releaseOccupancy.mockReturnValue(throwError(() => ({ status: 0, serverMessages: [], message: 'Http failure response for (unknown url): 0 Unknown Error' })));
+
+      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+      fixture.detectChanges();
+
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('common.cannotReachTheServer');
+      expectNoLeak(el);
     });
 
     it('says a checked-out stay has been invoiced once it has an invoice, and that one can be raised otherwise', () => {
