@@ -746,7 +746,8 @@ interface ShowPhoneResponse {
 function requireHostel(r: HostelResponse, id?: number | string): HostelDetail {
   const h = r.hostel;
   if (!h) throw new Error('Hostel response did not include a hostel.');
-  return id != null && h.id == null ? { ...h, id: Number(id) } : h;
+  // Ids are obfuscated strings; `Number(id)` would turn "MjvuEl" into NaN.
+  return id != null && h.id == null ? { ...h, id: String(id) } : h;
 }
 
 /** Map the typed query to the Rails search params (`f[...]`, `sort[...]`, `page`, `limit`). */
