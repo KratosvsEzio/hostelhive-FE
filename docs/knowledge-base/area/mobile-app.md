@@ -74,6 +74,12 @@ the notification bell reads.
 - A notification tap always opens the list, because the backend sends no `data` block for routing yet
   (`openNotifications` comment).
 - `appId` (`com.hostelhive.app`) cannot practically change after the first store upload.
+- The backend links a device's FCM token **only** when it issues a token (`be-hostelhive`
+  `app/controllers/api/jwt/sessions_controller.rb:113`, `Device.link`). `push-token-interceptor.ts` also
+  attaches it to authenticated requests and its comment says that delivers a first or rotated token —
+  the backend does not read it there. So a user who grants permission after signing in, or whose
+  registration was rotated (sign-out, a confirmation link), gets no push on that device until their next
+  sign-in. Trello #142.
 
 ## Decisions
 
