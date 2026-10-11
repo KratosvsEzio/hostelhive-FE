@@ -136,8 +136,8 @@
                 }
               </ul>
             }
-            @if (releaseError()) {
-              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ releaseError() }}</p>
+            @if (releaseError(); as failure) {
+              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ failure.key | transloco: failure.params }}</p>
             }
           </div>
         }

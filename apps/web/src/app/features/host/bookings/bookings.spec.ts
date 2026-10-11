@@ -51,8 +51,18 @@ type Page = HostPage<HostBookings>;
 const LIST_URL = `/host/${HOSTEL_ID}/bookings`;
 const QUIET = { suppressErrorToast: true };
 
-/** The interceptor's shape: `message` carries the server's own wording. */
-const refusal = (message: string, status = 422) => ({ ...apiError(status, [message]), message });
+/** The interceptor's shape; `message` is a URL-bearing diagnostic, so a spec proves nothing shows it. */
+const LEAKY_MESSAGE = 'Http failure response for http://localhost/api/host/hostels/MjvuEl/bookings/bk-i: 422';
+const refusal = (text: string, status = 422) => ({ ...apiError(status, [text]), message: LEAKY_MESSAGE });
+
+/** Neither the diagnostic nor a developer's Error text reached the page or a toast. */
+function expectNoLeak(page: Page, deps: HostPageDeps): void {
+  const toasts = JSON.stringify(deps.notifications.raised);
+  for (const leak of ['Http failure response', 'localhost', 'not in response']) {
+    expect(page.el.textContent).not.toContain(leak);
+    expect(toasts).not.toContain(leak);
+  }
+}
 
 /** Owes its whole total unless said. */
 const checkedIn = (over: Partial<HostBooking> = {}) =>
@@ -367,7 +377,10 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       expect(modal(page)).toBeNull();
-      expect(deps.notifications.raised).toEqual([{ kind: 'info', title: text, message: undefined }]);
+      expect(deps.notifications.raised).toEqual([
+        { kind: 'info', title: 'hostBookings.invoiceAlreadyExists', message: undefined },
+      ]);
+      expectNoLeak(page, deps);
       expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(2);
       expect(deps.ops.bookingInvoices.mock.calls[1][1]).toEqual(['bk-i']);
       expect(api(page).invoices().get('bk-i')).toEqual(inv());
@@ -403,8 +416,10 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe(text);
-      expect(api(page).dialogError()).toBe(text);
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.actionNotAccepted');
+      expect(api(page).dialogError()).toBe('hostBookings.actionNotAccepted');
+      expect(page.el.textContent).not.toContain(text);
+      expectNoLeak(page, deps);
       expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(1);
       expect(deps.notifications.raised).toEqual([]);
       expect(api(page).busy()).toBe(false);
@@ -512,7 +527,7 @@ describe('HostBookings', () => {
       expect(textOf(invoicePill)).not.toBe(invoiceStatusLabel('due'));
     });
 
-    it('still updates the booking row when the invoice is refused, and quotes the server', async () => {
+    it('still updates the booking row when the invoice is refused, and points at the invoice', async () => {
       const deps = hostPageDeps();
       const booking = checkedIn();
       deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
@@ -529,26 +544,27 @@ describe('HostBookings', () => {
       expect(deps.notifications.raised).toEqual([
         { kind: 'error', title: 'hostBookings.invoiceNotPaid', message: undefined },
       ]);
-      expect(translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1])).toContainEqual({
-        message: 'The invoice is locked.',
-      });
+      const calls = translations(translate, 'hostBookings.invoiceNotPaid');
+      expect(calls.length).toBeGreaterThan(0);
+      expect(calls.every((c) => c[1] === undefined)).toBe(true);
+      expect(JSON.stringify(deps.notifications.raised)).not.toContain('The invoice is locked.');
+      expectNoLeak(page, deps);
     });
 
-    it('falls back to a generic reason when the invoice refusal carries no message', async () => {
+    it('shows the same message when the invoice fails with a plain Error', async () => {
       const deps = hostPageDeps();
       const booking = checkedIn();
       deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
-      deps.ops.markInvoicePaid.mockReturnValue(throwError(() => ({})));
+      deps.ops.markInvoicePaid.mockReturnValue(throwError(() => new Error('booking X not in response')));
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
-      const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
       await startFromMenu(page, 'Mark as paid');
       await confirmViaButton(page);
 
-      const [params] = translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]);
-      expect(params).toEqual({ message: 'The server did not accept that.' });
-      expect(deps.notifications.raised).toHaveLength(1);
-      expect(deps.notifications.raised[0].kind).toBe('error');
+      expect(deps.notifications.raised).toEqual([
+        { kind: 'error', title: 'hostBookings.invoiceNotPaid', message: undefined },
+      ]);
+      expectNoLeak(page, deps);
     });
 
     it('never sends the invoice request when the booking is refused, and shows why in the dialog', async () => {
@@ -562,7 +578,9 @@ describe('HostBookings', () => {
 
       expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe(text);
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.actionNotAccepted');
+      expect(page.el.textContent).not.toContain(text);
+      expectNoLeak(page, deps);
       expect(deps.notifications.raised).toEqual([]);
       expect(api(page).busy()).toBe(false);
       expect(api(page).rows()[0].balanceDue).toBe(24000);
@@ -767,6 +785,46 @@ describe('HostBookings', () => {
     });
   });
 
+  describe('a move refused from the details panel', () => {
+    async function confirmFailing(err: unknown) {
+      const deps = hostPageDeps();
+      const pending = hostBooking('pending', { id: 'bk-p' });
+      deps.bookings.confirm.mockReturnValue(throwError(() => err));
+      const page = await open({ deps, items: [pending] });
+      api(page).openDetails(pending);
+      await settle(page);
+      api(page).onAct({ action: 'confirm', booking: pending });
+      await settle(page);
+      return { page, deps };
+    }
+
+    it('shows the generic message for a plain Error, never its text', async () => {
+      const { page, deps } = await confirmFailing(new Error('booking X not in response'));
+
+      expect(api(page).viewError()).toBe('hostBookings.actionNotAccepted');
+      expect(api(page).busy()).toBe(false);
+      expect(deps.notifications.raised).toEqual([]);
+      expectNoLeak(page, deps);
+    });
+
+    it('shows the generic message for a refusal whose message is the request URL', async () => {
+      const { page, deps } = await confirmFailing({ ...apiError(422), message: LEAKY_MESSAGE });
+
+      expect(api(page).viewError()).toBe('hostBookings.actionNotAccepted');
+      expectNoLeak(page, deps);
+    });
+
+    it('says the booking moved on when the server says so', async () => {
+      const { page } = await confirmFailing(refusal('This booking can no longer be updated'));
+      expect(api(page).viewError()).toBe('hostBookings.bookingMovedOn');
+    });
+
+    it('says the server cannot be reached on status 0', async () => {
+      const { page } = await confirmFailing({ ...apiError(0), message: LEAKY_MESSAGE });
+      expect(api(page).viewError()).toBe('common.cannotReachTheServer');
+    });
+  });
+
   describe('checking in', () => {
     it('shows a refusal in the assign footer and stays open', async () => {
       const deps = hostPageDeps();
@@ -780,8 +838,9 @@ describe('HostBookings', () => {
       api(page).onAssign({ bookingId: 'bk-c', rooms: [{ roomId: 'r-101', roomNumber: '101', guests: 2 }] });
       await settle(page);
 
-      expect(api(page).assignError()).toBe(text);
-      expect(textOf(page.el.querySelector('hh-assign-rooms-panel [role="alert"]'))).toBe(text);
+      expect(api(page).assignError()).toBe('hostBookings.notEnoughFreeBeds');
+      expect(textOf(page.el.querySelector('hh-assign-rooms-panel [role="alert"]'))).toBe('hostBookings.notEnoughFreeBeds');
+      expectNoLeak(page, deps);
       expect(api(page).assigning()?.id).toBe('bk-c');
       expect(api(page).busy()).toBe(false);
       expect(deps.notifications.raised).toEqual([]);

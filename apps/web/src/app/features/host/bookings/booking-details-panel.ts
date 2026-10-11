@@ -24,6 +24,7 @@ import {
   invoiceStatusLabel,
   invoiceStatusTone,
 } from '@util/table-configs/invoice-table-cols';
+import { ReleaseFailure, releaseFailure } from './booking-action-failure';
 import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from './booking-month';
 import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
 import { isPrivateOccupancy } from '@util/occupancy-type';
@@ -247,7 +248,7 @@ export class BookingDetailsPanel {
 
   // ── who is in which room ─────────────────────────────────────────────────────────
   protected readonly releasing = signal<string | null>(null);
-  protected readonly releaseError = signal('');
+  protected readonly releaseError = signal<ReleaseFailure | null>(null);
 
   /**
    * Rooms released from this panel, by occupancy id, for the booking it is showing.
@@ -317,7 +318,7 @@ export class BookingDetailsPanel {
     const b = this.booking();
     if (!b || this.releasing()) return;
     this.releasing.set(o.id);
-    this.releaseError.set('');
+    this.releaseError.set(null);
     // The failure is shown under the rooms, so the global toast would only repeat it.
     this.api.releaseOccupancy(this.hostelId(), b.id, o.id, { suppressErrorToast: true }).subscribe({
       next: () => {
@@ -325,9 +326,9 @@ export class BookingDetailsPanel {
         this.releasedIds.update((ids) => new Set(ids).add(o.id));
         this.released.emit(b);
       },
-      error: (err: { message?: string } | null) => {
+      error: (err: unknown) => {
         this.releasing.set(null);
-        this.releaseError.set(err?.message || `Could not release room ${o.roomNumber}.`);
+        this.releaseError.set(releaseFailure(err, o.roomNumber));
       },
     });
   }

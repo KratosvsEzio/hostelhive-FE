@@ -19,6 +19,12 @@ const NEW_KEYS = [
     'roomTypeNotBookable',
     'checkOutAfterCheckIn',
     'couldNotSaveBooking',
+    'notEnoughFreeBeds',
+    'bookingMovedOn',
+    'invoiceAlreadyExists',
+    'actionNotAccepted',
+    'couldNotReleaseRoom',
+    'invoiceNotPaid',
   ].map((key) => `hostBookings.${key}`),
   ...['couldNotUploadImage', 'fileTypeNotSupported', 'uploadTryAgain'].map(
     (key) => `hostTeam.${key}`,

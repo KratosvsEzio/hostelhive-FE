@@ -566,11 +566,12 @@ describe('Invoices page', () => {
       expect(dialog(page)).toBeNull();
     });
 
-    it('keeps the invoice paid and shows a sticky error quoting the server when only the booking fails', async () => {
+    it('keeps the invoice paid and shows a sticky error quoting the 4xx reason when only the booking fails', async () => {
       const deps = depsWith(invoicesReply(dueBookingBills()));
       deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
       deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));
-      deps.bookings.markPaid.mockReturnValue(throwError(() => apiError(422, ['Booking is closed.', 'Try later.'])));
+      const failure = apiError(422, ['Booking is closed.', 'Try later.']);
+      deps.bookings.markPaid.mockReturnValue(throwError(() => failure));
       const page = await open({ deps });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
       await startPay(page);
@@ -581,7 +582,7 @@ describe('Invoices page', () => {
       expect(deps.notifications.raised).toEqual([
         { kind: 'error', title: 'hostInvoices.bookingNotPaid', message: undefined, ttlMs: 0 },
       ]);
-      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { message: 'Booking is closed. Try later.' });
+      expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { message: toToastCopy(failure).message });
       expect(dialog(page)).toBeNull();
       expect(internals(page).paying()).toBe(false);
     });
@@ -599,6 +600,26 @@ describe('Invoices page', () => {
       await click(page, confirmButton(page));
 
       expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { message: toToastCopy(failure).message });
+    });
+
+    it('never quotes a server error or the request URL when the booking fails with a 500', async () => {
+      const failure = {
+        ...apiError(500, ['PG::UndefinedColumn: column bookings.x does not exist']),
+        message: 'Http failure response for http://localhost/api/host/hostels/h1/bookings/b1/mark_as_paid: 500',
+      };
+      const deps = depsWith(invoicesReply(dueBookingBills()));
+      deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
+      deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));
+      deps.bookings.markPaid.mockReturnValue(throwError(() => failure));
+      const page = await open({ deps });
+      const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+      await startPay(page);
+
+      await click(page, confirmButton(page));
+
+      const params = translate.mock.calls.filter((c) => c[0] === 'hostInvoices.bookingNotPaid').map((c) => c[1]);
+      expect(params).toEqual([{ message: toToastCopy(failure).message }]);
+      expect(JSON.stringify(params)).not.toMatch(/PG::|localhost|Http failure/);
     });
 
     it('sends no booking request, shows an error and closes the prompt when the invoice fails', async () => {

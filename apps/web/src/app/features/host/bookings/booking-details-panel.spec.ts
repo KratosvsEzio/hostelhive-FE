@@ -494,26 +494,46 @@ describe('BookingDetailsPanel', () => {
       expect(el.querySelector('[role="alert"]')).toBeNull();
     });
 
-    it('announces nothing and shows the server message when a release fails', () => {
+    it('announces nothing and names the room when a release fails, never the error text', () => {
       const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
-      api.releaseOccupancy.mockReturnValue(throwError(() => ({ message: 'Room 101 is locked.' })));
+      api.releaseOccupancy.mockReturnValue(
+        throwError(() => ({
+          status: 422,
+          code: 'unknown_error',
+          message: 'Http failure response for http://localhost/api/host/hostels/MjvuEl/bookings/b1/occupancies/o1/release: 422',
+        })),
+      );
 
       [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('Room 101 is locked.');
+      const alert = el.querySelector('[role="alert"]')?.textContent?.trim();
+      expect(alert).toBe('hostBookings.couldNotReleaseRoom');
+      expect(el.textContent).not.toContain('Http failure response');
+      expect(el.textContent).not.toContain('localhost');
     });
 
-    it('falls back to a generic message when a failed release carries none', () => {
+    it('keeps a plain Error off the screen too', () => {
       const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
-      api.releaseOccupancy.mockReturnValue(throwError(() => null));
+      api.releaseOccupancy.mockReturnValue(throwError(() => new Error('booking X not in response')));
 
       [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('Could not release room 101.');
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom');
+      expect(el.textContent).not.toContain('not in response');
+    });
+
+    it('says the server cannot be reached when a release never arrives', () => {
+      const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
+      api.releaseOccupancy.mockReturnValue(throwError(() => ({ status: 0, code: 'network_error', message: 'Http failure response for (unknown url): 0' })));
+
+      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+      fixture.detectChanges();
+
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('common.cannotReachTheServer');
     });
 
     it('says a checked-out stay has been invoiced once it has an invoice, and that one can be raised otherwise', () => {

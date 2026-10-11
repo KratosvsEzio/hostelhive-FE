@@ -41,6 +41,7 @@ import {
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { BookingFormDrawer } from './booking-form-drawer/booking-form-drawer';
 import { HOST_BOOKINGS_TABLE_COLS } from '@util/table-configs/host-bookings-table-cols';
+import { INVOICE_ALREADY_EXISTS_KEY, bookingActionFailureKey } from './booking-action-failure';
 import { BookingCalendar } from './booking-calendar';
 import { INVOICEABLE_LANES, LaneKey, laneFor, laneKeyFor } from './booking-month';
 import {
@@ -532,7 +533,7 @@ export class HostBookings {
     request: (id: string) => Observable<HostBooking>,
     title: string,
     message = '',
-    onError: (text: string) => void = (text) => this.viewError.set(text),
+    onError: (key: string) => void = (key) => this.viewError.set(this.i18n.translate<string>(key)),
     onSuccess: () => void = () => undefined,
   ): void {
     if (this.busy()) return;
@@ -555,10 +556,10 @@ export class HostBookings {
         this.listData.update((d) => d && { ...d, items: d.items.map((b) => (b.id === updated.id ? updated : b)) });
         if (title) this.notifications.success(title, message);
       },
-      error: (err: { message?: string } | null) => {
+      error: (err: unknown) => {
         this.busy.set(false);
         this.epoch++;
-        onError(err?.message || 'The server did not accept that. Please try again.');
+        onError(bookingActionFailureKey(err));
       },
     });
   }
@@ -592,7 +593,7 @@ export class HostBookings {
       return;
     }
     const hostelId = this.hostelId();
-    const fail = (text: string) => this.dialogError.set(text);
+    const fail = (key: string) => this.dialogError.set(this.i18n.translate<string>(key));
     // Every refusal here is written into the dialog, so the global toast would repeat it.
     const quiet = { suppressErrorToast: true };
     const roomsMoved = () => this.refetchDelay.track('/rooms');
@@ -620,7 +621,7 @@ export class HostBookings {
             ),
           '',
           '',
-          (text) => this.onGenerateRefused(d.booking, text),
+          (key) => this.onGenerateRefused(d.booking, key),
           () => this.announceInvoice(d.booking),
         );
         return;
@@ -637,11 +638,10 @@ export class HostBookings {
    * refusal stops both and shows in the dialog; the invoice's arrives after the booking is
    * already paid, so it is reported on its own rather than undoing anything.
    */
-  private markPaid(booking: HostBooking, fail: (text: string) => void): void {
+  private markPaid(booking: HostBooking, fail: (key: string) => void): void {
     const hostelId = this.hostelId();
     const inv = this.payInvoiceToo() ? this.unpaidInvoice(booking) : null;
     let settled: Invoice | null = null;
-    let invoiceError = '';
     this.send(
       booking,
       (id) =>
@@ -649,16 +649,13 @@ export class HostBookings {
           switchMap((updated) =>
             !inv
               ? of(updated)
-              : // Its refusal is reported as `invoiceNotPaid` below, quoting the server.
+              : // Its refusal is reported as `invoiceNotPaid` below.
                 this.hostOps.markInvoicePaid(hostelId, inv.id, { suppressErrorToast: true }).pipe(
                   map((paid) => {
                     settled = paid;
                     return updated;
                   }),
-                  catchError((err: { message?: string } | null) => {
-                    invoiceError = err?.message || 'The server did not accept that.';
-                    return of(updated);
-                  }),
+                  catchError(() => of(updated)),
                 ),
           ),
         ),
@@ -673,7 +670,7 @@ export class HostBookings {
           this.notifications.success(this.i18n.translate<string>('hostBookings.bookingAndInvoicePaid'));
         } else {
           this.notifications.error(
-            this.i18n.translate<string>('hostBookings.invoiceNotPaid', { message: invoiceError }),
+            this.i18n.translate<string>('hostBookings.invoiceNotPaid'),
           );
         }
       },
@@ -694,13 +691,13 @@ export class HostBookings {
    * A second invoice is refused because one already exists — which means this page missed it,
    * so it asks again and offers that one instead of a dead end.
    */
-  private onGenerateRefused(booking: HostBooking, text: string): void {
-    if (!/already exists/i.test(text)) {
-      this.dialogError.set(text);
+  private onGenerateRefused(booking: HostBooking, key: string): void {
+    if (key !== INVOICE_ALREADY_EXISTS_KEY) {
+      this.dialogError.set(this.i18n.translate<string>(key));
       return;
     }
     this.closeDialog();
-    this.notifications.info(text);
+    this.notifications.info(this.i18n.translate<string>(key));
     // Quiet only when the panel is back on this booking to say so itself.
     this.lookupInvoices([booking.id], this.viewing()?.id === booking.id ? PANEL_LOOKUP : undefined);
   }
@@ -739,7 +736,7 @@ export class HostBookings {
       (id) => this.bookingsApi.checkIn(this.hostelId(), id, allocations, { suppressErrorToast: true }),
       'Checked in',
       sel.rooms.map((r) => `Room ${r.roomNumber} × ${r.guests}`).join(', '),
-      (text) => this.assignError.set(text),
+      (key) => this.assignError.set(this.i18n.translate<string>(key)),
       () => {
         this.assigning.set(null);
         this.refetchDelay.track('/rooms');

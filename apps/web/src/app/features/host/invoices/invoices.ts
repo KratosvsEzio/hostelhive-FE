@@ -1164,7 +1164,8 @@ export class Invoices {
           },
           error: (err: ApiError) => {
             this.finishPay();
-            const message = err.serverMessages?.join(' ') || toToastCopy(err).message;
+            // A 4xx says why in the server's own words; a 5xx or a dropped connection gets generic copy.
+            const { message } = toToastCopy(err);
             this.notifications.show(
               { kind: 'error', title: this.i18n.translate<string>('hostInvoices.bookingNotPaid', { message }) },
               0,
