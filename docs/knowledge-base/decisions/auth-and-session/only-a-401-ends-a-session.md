@@ -18,7 +18,9 @@ Only an HTTP 401 from that validation clears the session. Every other failure ke
 - Code that adds a new validation path must apply the same rule, or reintroduce the logout bug.
 
 ## Evidence
-- `apps/web/src/app/core/auth/auth.service.ts` (`restoreSession`, `hydrateInBackground`, `isUnauthorized`)
+- `apps/web/src/app/core/auth/auth.service.ts` (`restoreSession`, `hydrateInBackground`)
+- `apps/web/src/app/core/errors/is-unauthorized.ts` (`isUnauthorized`, shared with `apps/web/src/app/util/favorites-store.ts` since Trello #116)
+- `apps/web/src/app/core/auth/auth.service.spec.ts` pins the rule at both call sites: a 401 clears the session; status 0 and 500 keep it
 - `apps/web/src/app/core/auth/jwt.ts`
 - c079248 feat(brand,mobile): swap the logo raster for SVGs and add a native photo picker (the diff to `auth.service.ts` that replaced clear-on-any-failure)
 - a45cd84 feat(auth): retire an expired JWT without a round trip; refresh app icons
