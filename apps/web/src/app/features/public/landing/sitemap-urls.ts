@@ -34,11 +34,13 @@ const STATIC_PATHS = [
   '/about',
   '/faqs',
   '/blog',
+  '/pricing',
   '/contact',
   '/careers',
   '/privacy-policy',
   '/terms-of-service',
   '/service-policy',
+  '/credits',
 ] as const;
 
 /**

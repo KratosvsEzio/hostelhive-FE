@@ -33,6 +33,16 @@ export interface Locale {
    */
   flag: string;
   /**
+   * The Open Graph `og:locale` for pages in this language, as `language_TERRITORY`.
+   *
+   * Required, not derived from `code` and `flag`: Facebook only accepts the pairs on its
+   * own list, and that list is not "language plus the picker's flag" — Arabic is `ar_AR`,
+   * not `ar_SA`. English stays `en_PK` because the audience this site writes for is there.
+   * One value per page and no `og:locale:alternate`: a scraper that wants another language
+   * re-fetches the same URL with `fb_locale`, and this site localises by path instead.
+   */
+  ogLocale: string;
+  /**
    * Whether the strings are actually translated, as opposed to falling back to English.
    *
    * Only this set gets `hreflang` alternates and sitemap entries. A locale whose pages are
@@ -59,24 +69,24 @@ export interface Locale {
 export const DEFAULT_LOCALE = 'en';
 
 export const LOCALES: readonly Locale[] = [
-  { code: 'en', name: 'English', englishName: 'English', dir: 'ltr', flag: 'gb', translated: true },
-  { code: 'ur', name: 'اردو', englishName: 'Urdu', dir: 'rtl', flag: 'pk', translated: true },
-  { code: 'ar', name: 'العربية', englishName: 'Arabic', dir: 'rtl', flag: 'sa', translated: true },
-  { code: 'hi', name: 'हिन्दी', englishName: 'Hindi', dir: 'ltr', flag: 'in', translated: true },
-  { code: 'zh', name: '中文', englishName: 'Chinese', dir: 'ltr', flag: 'cn', translated: true },
-  { code: 'ja', name: '日本語', englishName: 'Japanese', dir: 'ltr', flag: 'jp', translated: true },
-  { code: 'fr', name: 'Français', englishName: 'French', dir: 'ltr', flag: 'fr', translated: true },
-  { code: 'de', name: 'Deutsch', englishName: 'German', dir: 'ltr', flag: 'de', translated: true },
-  { code: 'es', name: 'Español', englishName: 'Spanish', dir: 'ltr', flag: 'es', translated: true },
-  { code: 'it', name: 'Italiano', englishName: 'Italian', dir: 'ltr', flag: 'it', translated: true },
-  { code: 'nl', name: 'Nederlands', englishName: 'Dutch', dir: 'ltr', flag: 'nl', translated: true },
-  { code: 'sv', name: 'Svenska', englishName: 'Swedish', dir: 'ltr', flag: 'se', translated: true },
-  { code: 'da', name: 'Dansk', englishName: 'Danish', dir: 'ltr', flag: 'dk', translated: true },
-  { code: 'hu', name: 'Magyar', englishName: 'Hungarian', dir: 'ltr', flag: 'hu', translated: true },
-  { code: 'ru', name: 'Русский', englishName: 'Russian', dir: 'ltr', flag: 'ru', translated: true },
-  { code: 'id', name: 'Bahasa Indonesia', englishName: 'Indonesian', dir: 'ltr', flag: 'id', translated: true },
-  { code: 'vi', name: 'Tiếng Việt', englishName: 'Vietnamese', dir: 'ltr', flag: 'vn', translated: true },
-  { code: 'pl', name: 'Polski', englishName: 'Polish', dir: 'ltr', flag: 'pl', translated: true },
+  { code: 'en', name: 'English', englishName: 'English', dir: 'ltr', flag: 'gb', ogLocale: 'en_PK', translated: true },
+  { code: 'ur', name: 'اردو', englishName: 'Urdu', dir: 'rtl', flag: 'pk', ogLocale: 'ur_PK', translated: true },
+  { code: 'ar', name: 'العربية', englishName: 'Arabic', dir: 'rtl', flag: 'sa', ogLocale: 'ar_AR', translated: true },
+  { code: 'hi', name: 'हिन्दी', englishName: 'Hindi', dir: 'ltr', flag: 'in', ogLocale: 'hi_IN', translated: true },
+  { code: 'zh', name: '中文', englishName: 'Chinese', dir: 'ltr', flag: 'cn', ogLocale: 'zh_CN', translated: true },
+  { code: 'ja', name: '日本語', englishName: 'Japanese', dir: 'ltr', flag: 'jp', ogLocale: 'ja_JP', translated: true },
+  { code: 'fr', name: 'Français', englishName: 'French', dir: 'ltr', flag: 'fr', ogLocale: 'fr_FR', translated: true },
+  { code: 'de', name: 'Deutsch', englishName: 'German', dir: 'ltr', flag: 'de', ogLocale: 'de_DE', translated: true },
+  { code: 'es', name: 'Español', englishName: 'Spanish', dir: 'ltr', flag: 'es', ogLocale: 'es_ES', translated: true },
+  { code: 'it', name: 'Italiano', englishName: 'Italian', dir: 'ltr', flag: 'it', ogLocale: 'it_IT', translated: true },
+  { code: 'nl', name: 'Nederlands', englishName: 'Dutch', dir: 'ltr', flag: 'nl', ogLocale: 'nl_NL', translated: true },
+  { code: 'sv', name: 'Svenska', englishName: 'Swedish', dir: 'ltr', flag: 'se', ogLocale: 'sv_SE', translated: true },
+  { code: 'da', name: 'Dansk', englishName: 'Danish', dir: 'ltr', flag: 'dk', ogLocale: 'da_DK', translated: true },
+  { code: 'hu', name: 'Magyar', englishName: 'Hungarian', dir: 'ltr', flag: 'hu', ogLocale: 'hu_HU', translated: true },
+  { code: 'ru', name: 'Русский', englishName: 'Russian', dir: 'ltr', flag: 'ru', ogLocale: 'ru_RU', translated: true },
+  { code: 'id', name: 'Bahasa Indonesia', englishName: 'Indonesian', dir: 'ltr', flag: 'id', ogLocale: 'id_ID', translated: true },
+  { code: 'vi', name: 'Tiếng Việt', englishName: 'Vietnamese', dir: 'ltr', flag: 'vn', ogLocale: 'vi_VN', translated: true },
+  { code: 'pl', name: 'Polski', englishName: 'Polish', dir: 'ltr', flag: 'pl', ogLocale: 'pl_PL', translated: true },
 ] as const;
 
 /**

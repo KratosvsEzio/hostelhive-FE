@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -11,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Button } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { LocaleStore } from '@core/i18n/locale-store';
 import { SITE_ORIGIN, Seo } from '@core/seo';
 import { BLOG_CATEGORIES, BlogCategorySlug } from './blog-post.model';
 import { BLOG_POSTS } from './blog-posts';
@@ -67,6 +69,7 @@ const FIELD_VARIANTS = dealFieldVariants();
 })
 export class Blog {
   private readonly seo = inject(Seo);
+  private readonly locale = inject(LocaleStore);
 
   protected readonly categories = BLOG_CATEGORIES;
   protected readonly active = signal<BlogCategorySlug | 'all'>('all');
@@ -171,15 +174,24 @@ export class Blog {
   }
 
   constructor() {
-    this.seo.apply({
-      title: 'Blog — guides to hostels, campuses and the north | HostelHive',
-      description:
-        'Practical guides to student hostels and backpacker stays in Pakistan: what rooms cost city by city, hostels near the major universities, and where to sleep in the northern areas.',
-      path: '/blog',
-      type: 'website',
-      // The featured post's photograph, so a share of the section looks like the section
-      // rather than like every other page on the site — all of which fall back to the logo.
-      image: this.socialImage(),
+    // An effect rather than a plain call, for the same reason as the home page's: a
+    // language switch reuses this component, and `apply` builds the canonical, og:url,
+    // hreflang and og:locale from the active language — so a call made once would keep
+    // describing the language the page was first opened in. Reading `ready()` re-runs it
+    // on the switch, once the new language's strings are in memory. Running after the
+    // router's title update is also what lets this title, not the route's, win.
+    effect(() => {
+      if (!this.locale.ready()) return;
+      this.seo.apply({
+        title: 'Blog — guides to hostels, campuses and the north | HostelHive',
+        description:
+          'Practical guides to student hostels and backpacker stays in Pakistan: what rooms cost city by city, hostels near the major universities, and where to sleep in the northern areas.',
+        path: '/blog',
+        type: 'website',
+        // The featured post's photograph, so a share of the section looks like the section
+        // rather than like every other page on the site — all of which fall back to the logo.
+        image: this.socialImage(),
+      });
     });
 
     // A `Blog` with its posts listed, so the section can be understood as a set rather than

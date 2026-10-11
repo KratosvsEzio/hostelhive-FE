@@ -59,6 +59,44 @@ describe('locale registry', () => {
   });
 });
 
+describe('Open Graph locale', () => {
+  it('gives every locale a language_TERRITORY ogLocale whose language is its own code, and no two share one', () => {
+    for (const l of LOCALES) {
+      expect(l.ogLocale, l.code).toMatch(/^[a-z]{2}_[A-Z]{2}$/);
+      expect(l.ogLocale.split('_')[0], l.code).toBe(l.code);
+    }
+    const values = LOCALES.map((l) => l.ogLocale);
+    expect(new Set(values).size).toBe(values.length);
+  });
+
+  it.each([
+    ['en', 'en_PK'],
+    ['ur', 'ur_PK'],
+    ['ar', 'ar_AR'],
+    ['hi', 'hi_IN'],
+    ['zh', 'zh_CN'],
+    ['ja', 'ja_JP'],
+    ['fr', 'fr_FR'],
+    ['de', 'de_DE'],
+    ['es', 'es_ES'],
+    ['it', 'it_IT'],
+    ['nl', 'nl_NL'],
+    ['sv', 'sv_SE'],
+    ['da', 'da_DK'],
+    ['hu', 'hu_HU'],
+    ['ru', 'ru_RU'],
+    ['id', 'id_ID'],
+    ['vi', 'vi_VN'],
+    ['pl', 'pl_PL'],
+  ])('maps %s to %s', (code, expected) => {
+    expect(LOCALES.find((l) => l.code === code)?.ogLocale).toBe(expected);
+  });
+
+  it('pins the table to exactly these 18 languages', () => {
+    expect(LOCALES).toHaveLength(18);
+  });
+});
+
 describe('splitLocale', () => {
   it('reads a prefixed locale off the path', () => {
     expect(splitLocale('/ur/hostels/lahore')).toEqual({
