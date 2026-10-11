@@ -1,5 +1,9 @@
 import type { StatusTone } from '@hostelhive/ui';
-import type { BillingPlan, BillingSubscription } from '@hostelhive/data-access';
+import type {
+  BillingInvoice,
+  BillingPlan,
+  BillingSubscription,
+} from '@hostelhive/data-access';
 
 // Every i18n key below is written out as a literal so the i18n check can find it.
 
@@ -15,6 +19,70 @@ export function statusTone(slug: string | null | undefined): StatusTone {
     default:
       return 'neutral';
   }
+}
+
+/** Pill tone for an invoice status. The pill's label is the server's `status.name`. */
+export function invoiceStatusTone(slug: string | null | undefined): StatusTone {
+  switch (slug) {
+    case 'paid':
+      return 'ok';
+    case 'open':
+      return 'warn';
+    default:
+      return 'neutral';
+  }
+}
+
+/**
+ * What an open invoice's latest payment attempt asks the payer to know before paying again.
+ * `key` takes `{ number }`; `contactUs` asks for a link to the contact page beside it.
+ */
+export interface AttemptNotice {
+  key:
+    | 'hostPayment.chargedNotApplied'
+    | 'hostPayment.lastAttemptFailed'
+    | 'hostPayment.pendingNotice';
+  tone: 'danger' | 'warn' | 'neutral';
+  contactUs: boolean;
+}
+
+// The backend appends this to a payment it took but could not apply to the invoice.
+const CHARGED_AT_SAFEPAY = /Charged at Safepay/i;
+
+/**
+ * The notice for an open invoice's latest payment attempt, or null when there is nothing to say.
+ * `failure_reason` is internal wording: it only picks the notice and is never shown.
+ */
+export function latestAttemptNotice(
+  invoice: BillingInvoice,
+): AttemptNotice | null {
+  if (invoice.status?.slug !== 'open') return null;
+  const payments = invoice.payments ?? [];
+  const latest = payments[payments.length - 1];
+  if (!latest) return null;
+
+  const status = latest.status?.slug;
+  if (status === 'failed') {
+    return CHARGED_AT_SAFEPAY.test(latest.failure_reason ?? '')
+      ? {
+          key: 'hostPayment.chargedNotApplied',
+          tone: 'danger',
+          contactUs: true,
+        }
+      : {
+          key: 'hostPayment.lastAttemptFailed',
+          tone: 'warn',
+          contactUs: false,
+        };
+  }
+  if (status === 'pending' && latest.payment_method === 'safepay') {
+    return {
+      key: 'hostPayment.pendingNotice',
+      tone: 'neutral',
+      contactUs: false,
+    };
+  }
+  return null;
 }
 
 /**

@@ -16,6 +16,8 @@ export const CLIENT_ONLY = [
   // token-less 401 state into the HTML for signed-in users too.
   'notifications',
   'account',
+  // Payment return pages: they poll a signed-in user's invoice.
+  'billing/payment',
 ];
 
 /**

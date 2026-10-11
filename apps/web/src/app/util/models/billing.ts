@@ -134,6 +134,36 @@ export interface BillingInvoice {
   lines: BillingInvoiceLine[];
   /** Slugs `open`, `paid`, `void`. */
   status: BillingStatus;
-  /** Shape owned by the payment step; not read on the billing screen. */
-  payments: unknown[];
+  /** Every attempt to pay this invoice, oldest first; the last one is the latest. */
+  payments: BillingPayment[];
+}
+
+/** One attempt to pay an invoice. */
+export interface BillingPayment {
+  id: string;
+  /** Slugs `pending`, `awaiting-verification`, `succeeded`, `failed`. */
+  status: BillingStatus;
+  /** `safepay` or `bank_transfer`, as returned. */
+  payment_method: string;
+  /** Decimal string. */
+  amount: string;
+  currency: string;
+  reference: string | null;
+  /** The provider's own reference; never shown. */
+  gateway_reference: string | null;
+  /** Internal wording; never shown, only matched to pick a notice. */
+  failure_reason: string | null;
+  proof_url: string | null;
+  verified_at: string | null;
+  succeeded_at: string | null;
+  created_at: string;
+  invoice_id: string;
+}
+
+/** `POST /api/invoices/:id/payments`, unwrapped from its envelope. */
+export interface StartedPayment {
+  payment: BillingPayment;
+  /** Where to send the payer; null when the provider gave no page to send them to. */
+  checkout_url: string | null;
+  invoice: BillingInvoice;
 }

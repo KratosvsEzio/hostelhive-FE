@@ -21,6 +21,7 @@ export const DISALLOWED_PATHS = [
   // Per-user areas — nothing here is the same for two visitors.
   'account',
   'notifications',
+  'billing/payment',
   // Auth screens. Thin, duplicated, and /auth carries returnUrl variants that would
   // otherwise generate an unbounded set of near-identical URLs.
   'auth',

@@ -1,6 +1,6 @@
 import { Route } from '@angular/router';
 import { BillingPage } from './billing-page';
-import { PayPlaceholder } from './pay-placeholder';
+import { PaymentStep } from './payment-step';
 
 /**
  * The hostel's billing pages: the billing screen itself and the payment step for one invoice.
@@ -19,7 +19,7 @@ export const SUBSCRIPTION_ROUTES: Route[] = [
   },
   {
     path: 'pay/:invoiceId',
-    component: PayPlaceholder,
-    title: 'Billing — HostelHive',
+    component: PaymentStep,
+    title: 'Pay invoice — HostelHive',
   },
 ];
