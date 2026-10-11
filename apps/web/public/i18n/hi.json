@@ -1635,6 +1635,28 @@
     "worldwideTitle": "दुनिया भर के हॉस्टल — खोज | HostelHive",
     "worldwideDescription": "दुनिया भर में सत्यापित हॉस्टल, पीजी और को-लिविंग खोजें। बजट, रूम शेयरिंग और सुविधाओं से फ़िल्टर करें।",
     "pricingTitle": "हॉस्टल के लिए कीमतें | HostelHive",
-    "pricingDescription": "हॉस्टल के लिए HostelHive के मासिक प्लान: लिस्ट हों, खोज में बूस्ट पाएँ, और होस्ट CRM से कमरे, बुकिंग और बिल संभालें।"
+    "pricingDescription": "हॉस्टल के लिए HostelHive के मासिक प्लान: लिस्ट हों, खोज में बूस्ट पाएँ, और होस्ट CRM से कमरे, बुकिंग और बिल संभालें।",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive एडमिन",
+    "blogTitle": "ब्लॉग — हॉस्टल, कैंपस और उत्तरी इलाक़ों की गाइड | HostelHive",
+    "blogDescription": "पाकिस्तान में छात्र हॉस्टल और बैकपैकर ठहराव की व्यावहारिक गाइड: शहर-दर-शहर कमरों की कीमत कितनी है, बड़े विश्वविद्यालयों के पास हॉस्टल, और उत्तरी इलाक़ों में कहाँ ठहरें।",
+    "listingLoadingTitle": "हॉस्टल विवरण — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "तस्वीरों का श्रेय",
+    "confirmAccount": "अपने खाते की पुष्टि करें",
+    "booking": "बुकिंग",
+    "changeBooking": "बुकिंग बदलें",
+    "listingReview": "लिस्टिंग समीक्षा",
+    "logInOrSignUp": "लॉग इन या साइन अप",
+    "editStaff": "स्टाफ़ संपादित करें",
+    "roomDetails": "कमरे का विवरण",
+    "tenantProfile": "किरायेदार प्रोफ़ाइल",
+    "editUtilityBill": "उपयोगिता बिल संपादित करें",
+    "newInvoice": "नया चालान",
+    "editInvoice": "चालान संपादित करें",
+    "editExpense": "खर्च संपादित करें",
+    "revenueDetail": "राजस्व विवरण",
+    "payInvoice": "चालान का भुगतान"
   }
 }

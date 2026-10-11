@@ -1640,6 +1640,28 @@
     "worldwideTitle": "دنیا بھر کے ہاسٹل — تلاش | HostelHive",
     "worldwideDescription": "دنیا بھر میں تصدیق شدہ ہاسٹل، پی جی اور کو-لِوِنگ تلاش کریں۔ بجٹ، کمرہ شیئرنگ اور سہولیات کے حساب سے فلٹر کریں۔",
     "pricingTitle": "ہاسٹلز کے لیے قیمتیں | HostelHive",
-    "pricingDescription": "ہاسٹلز کے لیے HostelHive کے ماہانہ پلانز: لسٹ ہوں، سرچ میں نمایاں ہوں، اور ہوسٹ CRM سے کمرے، بکنگز اور بلز سنبھالیں۔"
+    "pricingDescription": "ہاسٹلز کے لیے HostelHive کے ماہانہ پلانز: لسٹ ہوں، سرچ میں نمایاں ہوں، اور ہوسٹ CRM سے کمرے، بکنگز اور بلز سنبھالیں۔",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive ایڈمن",
+    "blogTitle": "بلاگ — ہاسٹلز، کیمپس اور شمالی علاقوں کی گائیڈز | HostelHive",
+    "blogDescription": "پاکستان میں طلبہ ہاسٹلز اور بیک پیکرز کے قیام کی عملی گائیڈز: شہر بہ شہر کمروں کی قیمت کتنی ہے، بڑی یونیورسٹیوں کے قریب ہاسٹل، اور شمالی علاقوں میں کہاں ٹھہریں۔",
+    "listingLoadingTitle": "ہاسٹل کی تفصیلات — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "تصاویر کے کریڈٹس",
+    "confirmAccount": "اپنے اکاؤنٹ کی تصدیق کریں",
+    "booking": "بکنگ",
+    "changeBooking": "بکنگ میں تبدیلی",
+    "listingReview": "لسٹنگ کا جائزہ",
+    "logInOrSignUp": "لاگ ان یا اکاؤنٹ بنائیں",
+    "editStaff": "عملے میں ترمیم",
+    "roomDetails": "کمرے کی تفصیلات",
+    "tenantProfile": "کرایہ دار کا پروفائل",
+    "editUtilityBill": "یوٹیلیٹی بل میں ترمیم",
+    "newInvoice": "نئی انوائس",
+    "editInvoice": "انوائس میں ترمیم",
+    "editExpense": "خرچ میں ترمیم",
+    "revenueDetail": "آمدنی کی تفصیل",
+    "payInvoice": "انوائس کی ادائیگی"
   }
 }

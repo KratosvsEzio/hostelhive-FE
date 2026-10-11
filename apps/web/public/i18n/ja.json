@@ -1635,6 +1635,28 @@
     "worldwideTitle": "世界中のホステル — 検索 | HostelHive",
     "worldwideDescription": "世界中の認証済みホステル・下宿・コリビングを検索。予算、相部屋、設備で絞り込み。",
     "pricingTitle": "ホステル向け料金プラン | HostelHive",
-    "pricingDescription": "ホステル向けの HostelHive 月額プラン：掲載、検索での上位表示、ホスト向け CRM による客室・予約・請求の管理。"
+    "pricingDescription": "ホステル向けの HostelHive 月額プラン：掲載、検索での上位表示、ホスト向け CRM による客室・予約・請求の管理。",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive 管理者",
+    "blogTitle": "ブログ — ホステル、キャンパス、北部エリアのガイド | HostelHive",
+    "blogDescription": "パキスタンの学生ホステルとバックパッカー向け宿泊の実用ガイド：都市ごとの部屋の料金、主要大学周辺のホステル、北部エリアでの宿泊先。",
+    "listingLoadingTitle": "ホステルの詳細 — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "画像クレジット",
+    "confirmAccount": "アカウントの確認",
+    "booking": "予約",
+    "changeBooking": "予約の変更",
+    "listingReview": "掲載の審査",
+    "logInOrSignUp": "ログインまたは新規登録",
+    "editStaff": "スタッフを編集",
+    "roomDetails": "部屋の詳細",
+    "tenantProfile": "入居者プロフィール",
+    "editUtilityBill": "光熱費の請求を編集",
+    "newInvoice": "新しい請求書",
+    "editInvoice": "請求書を編集",
+    "editExpense": "経費を編集",
+    "revenueDetail": "売上の詳細",
+    "payInvoice": "請求書を支払う"
   }
 }

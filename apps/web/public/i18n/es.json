@@ -1635,6 +1635,28 @@
     "worldwideTitle": "Hostales en todo el mundo — búsqueda | HostelHive",
     "worldwideDescription": "Busca hostales, pensiones y co-living verificados en todo el mundo. Filtra por presupuesto, habitación compartida y servicios.",
     "pricingTitle": "Precios para hostales | HostelHive",
-    "pricingDescription": "Planes mensuales de HostelHive para hostales: aparece en el listado, destaca en las búsquedas y gestiona habitaciones, reservas y facturas con el CRM para anfitriones."
+    "pricingDescription": "Planes mensuales de HostelHive para hostales: aparece en el listado, destaca en las búsquedas y gestiona habitaciones, reservas y facturas con el CRM para anfitriones.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — guías de hostales, campus y el norte | HostelHive",
+    "blogDescription": "Guías prácticas sobre hostales para estudiantes y alojamientos para mochileros en Pakistán: cuánto cuestan las habitaciones ciudad por ciudad, hostales cerca de las principales universidades y dónde dormir en las áreas del norte.",
+    "listingLoadingTitle": "Detalles del hostal — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Créditos de imágenes",
+    "confirmAccount": "Confirma tu cuenta",
+    "booking": "Reserva",
+    "changeBooking": "Cambiar reserva",
+    "listingReview": "Revisión del anuncio",
+    "logInOrSignUp": "Iniciar sesión o registrarse",
+    "editStaff": "Editar empleado",
+    "roomDetails": "Detalles de la habitación",
+    "tenantProfile": "Perfil del inquilino",
+    "editUtilityBill": "Editar factura de servicios",
+    "newInvoice": "Nueva factura",
+    "editInvoice": "Editar factura",
+    "editExpense": "Editar gasto",
+    "revenueDetail": "Detalle de ingresos",
+    "payInvoice": "Pagar factura"
   }
 }

@@ -1635,6 +1635,28 @@
     "worldwideTitle": "全球宿舍 — 搜索 | HostelHive",
     "worldwideDescription": "搜索全球的认证宿舍、寄宿公寓和共居空间。按预算、合住人数和设施筛选。",
     "pricingTitle": "旅舍价格方案 | HostelHive",
-    "pricingDescription": "面向旅舍的 HostelHive 月度套餐：上架展示、提升搜索排名，并通过房东 CRM 管理房间、预订和账单。"
+    "pricingDescription": "面向旅舍的 HostelHive 月度套餐：上架展示、提升搜索排名，并通过房东 CRM 管理房间、预订和账单。",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive 管理后台",
+    "blogTitle": "博客 — 宿舍、校园与北部地区指南 | HostelHive",
+    "blogDescription": "巴基斯坦学生宿舍与背包客住宿实用指南：各城市房间价格、主要大学附近的宿舍，以及北部地区的住宿去处。",
+    "listingLoadingTitle": "宿舍详情 — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "图片来源",
+    "confirmAccount": "确认您的账户",
+    "booking": "预订",
+    "changeBooking": "更改预订",
+    "listingReview": "房源审核",
+    "logInOrSignUp": "登录或注册",
+    "editStaff": "编辑员工",
+    "roomDetails": "房间详情",
+    "tenantProfile": "租客资料",
+    "editUtilityBill": "编辑水电账单",
+    "newInvoice": "新建发票",
+    "editInvoice": "编辑发票",
+    "editExpense": "编辑支出",
+    "revenueDetail": "收入明细",
+    "payInvoice": "支付发票"
   }
 }

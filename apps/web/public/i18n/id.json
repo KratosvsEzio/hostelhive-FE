@@ -1640,6 +1640,28 @@
     "worldwideTitle": "Hostel di seluruh dunia — pencarian | HostelHive",
     "worldwideDescription": "Cari hostel, rumah kos, dan co-living terverifikasi di seluruh dunia. Saring menurut anggaran, berbagi kamar, dan fasilitas.",
     "pricingTitle": "Harga untuk hostel | HostelHive",
-    "pricingDescription": "Paket bulanan HostelHive untuk hostel: tampil di daftar, dapatkan dorongan di pencarian, serta kelola kamar, pemesanan, dan tagihan dengan CRM host."
+    "pricingDescription": "Paket bulanan HostelHive untuk hostel: tampil di daftar, dapatkan dorongan di pencarian, serta kelola kamar, pemesanan, dan tagihan dengan CRM host.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — Admin HostelHive",
+    "blogTitle": "Blog — panduan hostel, kampus, dan wilayah utara | HostelHive",
+    "blogDescription": "Panduan praktis hostel mahasiswa dan penginapan backpacker di Pakistan: biaya kamar di tiap kota, hostel dekat universitas besar, dan tempat menginap di wilayah utara.",
+    "listingLoadingTitle": "Detail hostel — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Kredit gambar",
+    "confirmAccount": "Konfirmasi akun Anda",
+    "booking": "Pemesanan",
+    "changeBooking": "Ubah pemesanan",
+    "listingReview": "Tinjauan iklan",
+    "logInOrSignUp": "Masuk atau daftar",
+    "editStaff": "Edit staf",
+    "roomDetails": "Detail kamar",
+    "tenantProfile": "Profil penyewa",
+    "editUtilityBill": "Edit tagihan utilitas",
+    "newInvoice": "Faktur baru",
+    "editInvoice": "Edit faktur",
+    "editExpense": "Edit pengeluaran",
+    "revenueDetail": "Rincian pendapatan",
+    "payInvoice": "Bayar faktur"
   }
 }

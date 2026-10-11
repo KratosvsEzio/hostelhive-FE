@@ -1635,6 +1635,28 @@
     "worldwideTitle": "نزل حول العالم — بحث | HostelHive",
     "worldwideDescription": "ابحث عن نزل وسكنات ومساكن مشتركة موثوقة حول العالم. صفِّ حسب الميزانية ومشاركة الغرفة والمرافق.",
     "pricingTitle": "أسعار النُزل | HostelHive",
-    "pricingDescription": "خطط HostelHive الشهرية للنُزل: اعرض نزلك، واحصل على ظهور مميز في البحث، وأدِر الغرف والحجوزات والفواتير عبر نظام CRM للمضيفين."
+    "pricingDescription": "خطط HostelHive الشهرية للنُزل: اعرض نزلك، واحصل على ظهور مميز في البحث، وأدِر الغرف والحجوزات والفواتير عبر نظام CRM للمضيفين.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — إدارة HostelHive",
+    "blogTitle": "المدونة — أدلة النزل والحرم الجامعية والشمال | HostelHive",
+    "blogDescription": "أدلة عملية للنزل الطلابية وإقامات الرحّالة في باكستان: كم تكلّف الغرف في كل مدينة، والنزل القريبة من الجامعات الكبرى، وأين تبيت في المناطق الشمالية.",
+    "listingLoadingTitle": "تفاصيل النزل — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "حقوق الصور",
+    "confirmAccount": "تأكيد حسابك",
+    "booking": "الحجز",
+    "changeBooking": "تغيير الحجز",
+    "listingReview": "مراجعة الإعلان",
+    "logInOrSignUp": "تسجيل الدخول أو إنشاء حساب",
+    "editStaff": "تعديل الموظف",
+    "roomDetails": "تفاصيل الغرفة",
+    "tenantProfile": "ملف المستأجر",
+    "editUtilityBill": "تعديل فاتورة المرافق",
+    "newInvoice": "فاتورة جديدة",
+    "editInvoice": "تعديل الفاتورة",
+    "editExpense": "تعديل المصروف",
+    "revenueDetail": "تفاصيل الإيرادات",
+    "payInvoice": "دفع الفاتورة"
   }
 }

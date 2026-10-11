@@ -1635,6 +1635,28 @@
     "worldwideTitle": "Hostel i hela världen — sök | HostelHive",
     "worldwideDescription": "Sök verifierade hostel, pensionat och kollektivboenden i hela världen. Filtrera på budget, rumsdelning och bekvämligheter.",
     "pricingTitle": "Priser för vandrarhem | HostelHive",
-    "pricingDescription": "Månatliga HostelHive-abonnemang för vandrarhem: bli listad, få ett lyft i sökningen och hantera rum, bokningar och räkningar med CRM för värdar."
+    "pricingDescription": "Månatliga HostelHive-abonnemang för vandrarhem: bli listad, få ett lyft i sökningen och hantera rum, bokningar och räkningar med CRM för värdar.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blogg — guider om hostel, campus och norra områdena | HostelHive",
+    "blogDescription": "Praktiska guider om studenthostel och backpackerboenden i Pakistan: vad rummen kostar stad för stad, hostel nära de stora universiteten och var man kan sova i de norra områdena.",
+    "listingLoadingTitle": "Vandrarhemsuppgifter — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Bildkällor",
+    "confirmAccount": "Bekräfta ditt konto",
+    "booking": "Bokning",
+    "changeBooking": "Ändra bokning",
+    "listingReview": "Granskning av annons",
+    "logInOrSignUp": "Logga in eller registrera dig",
+    "editStaff": "Redigera medarbetare",
+    "roomDetails": "Rumsdetaljer",
+    "tenantProfile": "Hyresgästprofil",
+    "editUtilityBill": "Redigera förbrukningsfaktura",
+    "newInvoice": "Ny faktura",
+    "editInvoice": "Redigera faktura",
+    "editExpense": "Redigera utgift",
+    "revenueDetail": "Intäktsdetaljer",
+    "payInvoice": "Betala faktura"
   }
 }

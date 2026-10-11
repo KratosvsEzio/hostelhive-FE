@@ -1635,6 +1635,28 @@
     "worldwideTitle": "Auberges dans le monde entier — recherche | HostelHive",
     "worldwideDescription": "Cherchez des auberges, pensions et logements partagés vérifiés dans le monde entier. Filtrez par budget, partage de chambre et équipements.",
     "pricingTitle": "Tarifs pour les auberges | HostelHive",
-    "pricingDescription": "Forfaits mensuels HostelHive pour les auberges : soyez référencé, mis en avant dans la recherche, et gérez chambres, réservations et factures avec le CRM hôte."
+    "pricingDescription": "Forfaits mensuels HostelHive pour les auberges : soyez référencé, mis en avant dans la recherche, et gérez chambres, réservations et factures avec le CRM hôte.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — guides des auberges, des campus et du Nord | HostelHive",
+    "blogDescription": "Des guides pratiques sur les auberges étudiantes et les hébergements pour routards au Pakistan : le prix des chambres ville par ville, les auberges près des grandes universités et où dormir dans les régions du Nord.",
+    "listingLoadingTitle": "Détails de l’auberge — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Crédits des images",
+    "confirmAccount": "Confirmez votre compte",
+    "booking": "Réservation",
+    "changeBooking": "Modifier la réservation",
+    "listingReview": "Validation de l’annonce",
+    "logInOrSignUp": "Se connecter ou s'inscrire",
+    "editStaff": "Modifier le membre du personnel",
+    "roomDetails": "Détails de la chambre",
+    "tenantProfile": "Profil du locataire",
+    "editUtilityBill": "Modifier la facture de charges",
+    "newInvoice": "Nouvelle facture",
+    "editInvoice": "Modifier la facture",
+    "editExpense": "Modifier la dépense",
+    "revenueDetail": "Détail des revenus",
+    "payInvoice": "Payer la facture"
   }
 }

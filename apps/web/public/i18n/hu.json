@@ -1635,6 +1635,28 @@
     "worldwideTitle": "Szállások világszerte — keresés | HostelHive",
     "worldwideDescription": "Keressen ellenőrzött szállásokat, panziókat és közösségi lakhatást világszerte. Szűrjön költségkeret, szobamegosztás és felszereltség szerint.",
     "pricingTitle": "Árak szálláshelyeknek | HostelHive",
-    "pricingDescription": "Havi HostelHive-csomagok szálláshelyeknek: kerülj fel a listára, emelkedj ki a keresésben, és kezeld a szobákat, foglalásokat és számlákat a szállásadói CRM-mel."
+    "pricingDescription": "Havi HostelHive-csomagok szálláshelyeknek: kerülj fel a listára, emelkedj ki a keresésben, és kezeld a szobákat, foglalásokat és számlákat a szállásadói CRM-mel.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — útmutatók szállásokról, egyetemi campusokról és az északi területekről | HostelHive",
+    "blogDescription": "Gyakorlati útmutatók diákszállásokhoz és hátizsákos szálláshelyekhez Pakisztánban: mennyibe kerülnek a szobák városról városra, szállások a nagy egyetemek közelében, és hol lehet megszállni az északi területeken.",
+    "listingLoadingTitle": "Szálláshely adatai — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Képforrások",
+    "confirmAccount": "Fiókod megerősítése",
+    "booking": "Foglalás",
+    "changeBooking": "Foglalás módosítása",
+    "listingReview": "Hirdetés ellenőrzése",
+    "logInOrSignUp": "Bejelentkezés vagy regisztráció",
+    "editStaff": "Munkatárs szerkesztése",
+    "roomDetails": "Szoba részletei",
+    "tenantProfile": "Bérlő profilja",
+    "editUtilityBill": "Rezsiszámla szerkesztése",
+    "newInvoice": "Új számla",
+    "editInvoice": "Számla szerkesztése",
+    "editExpense": "Kiadás szerkesztése",
+    "revenueDetail": "Bevétel részletei",
+    "payInvoice": "Számla kifizetése"
   }
 }
