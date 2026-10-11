@@ -30,7 +30,7 @@ export class DocumentsApi {
    */
   presignedUrl(
     contentType: string,
-    labelId?: number | null,
+    labelId?: string | null,
     key = 'attachments',
   ): Observable<PresignedUrlResponse> {
     return this.api.get<PresignedUrlResponse>('/api/documents/presigned_url', {

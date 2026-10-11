@@ -39,7 +39,7 @@ interface ApiRoom {
   occupied_count?: number | null;
   renters_count?: number | null;
   room_type?: ApiRoomType | null;
-  room_type_id?: number | null;
+  room_type_id?: string | null;
   created_at?: string | null;
   floor?: string | number | null;
   status?: { slug?: string | null } | null;

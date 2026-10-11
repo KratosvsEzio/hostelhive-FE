@@ -308,7 +308,7 @@ export class ListingsApi {
     } = query;
 
     // Build Rails-style nested filter params
-    const params: Record<string, string | number | number[]> = {};
+    const params: Record<string, string | number | number[] | string[]> = {};
 
     // Bounding box — exact viewport bounds take priority, then center+radius, then global
     if (bounds) {

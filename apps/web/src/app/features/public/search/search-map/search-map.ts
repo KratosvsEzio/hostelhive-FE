@@ -152,7 +152,7 @@ export class SearchMap {
   );
   private readonly _slugToId = computed(() =>
     new Map(
-      (this._offerCategories() ?? []).flatMap((c) => c.offers).map((o) => [o.slug, +o.id]),
+      (this._offerCategories() ?? []).flatMap((c) => c.offers).map((o) => [o.slug, o.id]),
     ),
   );
   private readonly route = inject(ActivatedRoute);
@@ -424,7 +424,7 @@ export class SearchMap {
     const slugToId = this._slugToId();
     const offerIds = amenities
       .map((slug) => slugToId.get(slug))
-      .filter((id): id is number => id != null);
+      .filter((id): id is string => id != null);
     return {
       accommodationType: this.accommodationType(),
       propertyType: p?.get('propertyType') || undefined,
