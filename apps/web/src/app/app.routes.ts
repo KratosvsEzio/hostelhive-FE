@@ -191,17 +191,6 @@ const LOCALISED_ROUTES: Route[] = [
   },
 
   // â”€â”€â”€ Console (client-rendered, role-guarded) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Payment confirmation page — must precede 'host/listings/new' so the router
-  // doesn't match the shorter prefix first.
-  {
-    path: 'host/listings/new/payment',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        '@features/public/onboarding/onboarding-payment/onboarding-payment'
-      ).then((m) => m.OnboardingPayment),
-    title: 'Payment — HostelHive',
-  },
   // Full-screen onboarding wizard — own chrome, no host sidebar — must precede 'host'.
   {
     path: 'host/listings/new',

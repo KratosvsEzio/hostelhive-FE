@@ -1,4 +1,4 @@
-// Shared helpers for the admin detail drawers (contracts, payments): a loading/error/data state
+// Shared helpers for the admin detail drawers (payments): a loading/error/data state
 // wrapper for an on-demand sub-detail fetch, and a hostel image resolver for the carousel.
 import { Observable, catchError, map, of, startWith } from 'rxjs';
 import { HostelAttachment, HostelDetail } from '@hostelhive/data-access';

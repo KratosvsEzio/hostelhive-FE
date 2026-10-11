@@ -79,13 +79,6 @@ export function hostNav(
         ]),
     { label: 'common.expenses',       icon: 'ti-report-money',     link: `${b}/expenses`,     permission: 'host:Expense:index' },
     { label: 'common.invoices',       icon: 'ti-file-invoice',     link: `${b}/invoices`,     permission: 'host:RenterBill:index' },
-    { divider: true },
-    // `exact` so it does not stay lit while Payment history below it is the page you are
-    // on — two highlighted rows read as a bug. The cost is that checkout, which lives at
-    // `/subscription/checkout/:id`, now highlights nothing; it is a flow you pass through
-    // from a plan card rather than a place you navigate to.
-    { label: 'common.subscription',   icon: 'ti-rosette',          link: `${b}/subscription`, exact: true, permission: 'core:Hostel:subscription' },
-    { label: 'hostSubscription.paymentHistory', icon: 'ti-receipt', link: `${b}/subscription/payments`, permission: 'core:Hostel:subscription' },
   ];
 
   const visible = entries.filter((e) => !e.permission || opts.can(e.permission));
@@ -138,7 +131,7 @@ export function tabBarSuffixes(opts: { monthlyBilled: boolean }): readonly strin
   return hostTabBar(opts).map((t) => t.suffix);
 }
 
-/** Splits the nav at its divider: hostel sections, then the billing ones below it. */
+/** Splits the nav at its divider: hostel sections, then the account ones below it. */
 export function splitNav(entries: NavEntry[]): { hostel: NavEntry[]; account: NavEntry[] } {
   const at = entries.findIndex((e) => e.divider);
   if (at < 0) return { hostel: entries.filter((e) => !e.divider), account: [] };

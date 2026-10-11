@@ -81,6 +81,18 @@ describe('AccountMenu blog link', () => {
     expect(links().some((h) => h.endsWith('/blog'))).toBe(true);
   });
 
+  it('sends an admin to the console front door, with no contracts link', async () => {
+    await mount(
+      { id: 'u2', name: 'Aashir Azeem', email: 'admin@hostelhive.pk' },
+      ['admin'],
+    );
+    const hrefs = links();
+
+    // Links carry the active language prefix, so the console root is `/<lang>/admin`.
+    expect(hrefs.some((h) => /^(\/[a-z]{2})?\/admin$/.test(h))).toBe(true);
+    expect(hrefs.some((h) => h.includes('contracts'))).toBe(false);
+  });
+
   /**
    * These four rows used to be English string literals rendered verbatim, so they stayed
    * English in the other seventeen languages while every row around them translated.

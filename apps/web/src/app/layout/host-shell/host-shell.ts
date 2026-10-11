@@ -7,18 +7,16 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { filter, map, take } from 'rxjs';
-import { HostPropertyStore, SubscriptionStore } from '@services';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { map } from 'rxjs';
+import { HostPropertyStore } from '@services';
 import { ConsoleDrawer } from '../components/console-drawer/console-drawer';
-import { hostPagePath, opensWithoutSubscription } from './host-route';
+import { hostPagePath } from './host-route';
 import { NavEntry, hostNav } from './host-nav';
-import { SubscriptionLoading } from '../components/subscription-loading/subscription-loading';
 import { HostTabBar } from '../components/mobile-tab-bar/host-tab-bar';
 import { MobileApp } from '@core/mobile-app';
 import { SessionStore } from '@core/auth';
-import { NotificationService } from '@core/notification.service';
 import { Button, Dropdown, DropdownOption, StatusTone, TooltipFixed } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
 import { accommodationLabel } from '@util/accommodation-type';
@@ -48,7 +46,7 @@ const PILL_LABEL: Record<ListingStatus, string> = {
 @Component({
   selector: 'app-host-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Logo, RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, SubscriptionLoading, TooltipFixed, TranslocoPipe],
+  imports: [Logo, RouterLink, LocaleLink, RouterLinkActive, RouterOutlet, Dropdown, Button, HostTabBar, TooltipFixed, TranslocoPipe],
   templateUrl: './host-shell.html',
   // Escape closes the property flyout wherever focus happens to be -- it is a popover, and
   // one that can only be dismissed by finding its backdrop is a trap for the keyboard.
@@ -62,13 +60,10 @@ export class HostLayout {
     () => this.session.hasPermission('core:Hostel:create'),
   );
   protected readonly propertyStore = inject(HostPropertyStore);
-  private readonly subStore = inject(SubscriptionStore);
-  private readonly notifications = inject(NotificationService);
   protected readonly mobile = inject(MobileApp);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly gateState = signal<'loading' | 'leaving' | 'none'>('none');
   /** Follows the sidebar's own width, so the rail does not leave 192px of empty gutter. */
   protected readonly contentPadding = computed(() =>
     !this.mobile.isMobile() ? this.drawer.width_() : '0',
@@ -77,22 +72,8 @@ export class HostLayout {
   constructor() {
     if (typeof window !== 'undefined') {
       this.propertyStore.load();
-
-      this.router.events.pipe(
-        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-        takeUntilDestroyed(),
-      ).subscribe(() => {
-        if (this.gateState() !== 'none') return;
-        // The route is the source of truth, matching the gate effect below. Reading the persisted
-        // selection here instead let the two disagree — the gate would check one hostel's
-        // subscription and redirect using it while the URL pointed at another.
-        const hostelId = this.routeHostelId();
-        if (!hostelId || this.isExemptRoute()) return;
-        this.enforceGate(hostelId);
-      });
     }
   }
-
 
   private readonly routeHostelId = toSignal(
     this.route.paramMap.pipe(map((pm) => pm.get('hostelId') ?? '')),
@@ -105,88 +86,6 @@ export class HostLayout {
       this.propertyStore.setProperty(id);
     }
   });
-
-  private readonly _subscriptionGate = effect(() => {
-    const hostelId = this.routeHostelId();
-    if (hostelId) {
-      untracked(() => this.runSubscriptionGate(hostelId));
-    }
-  });
-
-  /**
-   * Pages the gate must not bounce: the subscription page and the hostel profile.
-   *
-   * The decision itself lives in {@link opensWithoutSubscription}, beside its tests. It is
-   * segment arithmetic over a URL, and this file has already had it wrong once — the check
-   * read the third segment, which stopped being the page when English moved to `/en/…`.
-   */
-  private isExemptRoute(): boolean {
-    return opensWithoutSubscription(this.router.url);
-  }
-
-  /**
-   * Bounce the host to the subscription page. The page being left has usually already fired its
-   * own requests, which the API rejects with "You need to subscribe" — so error toasts stay muted
-   * across the redirect: the subscription page states the problem far better than a toast can.
-   */
-  private bounceToSubscription(hostelId: string): void {
-    const unmute = this.notifications.muteErrors();
-    void this.router
-      .navigate(['/host', hostelId, 'subscription'])
-      .catch(() => undefined)
-      .finally(unmute);
-  }
-
-  private runSubscriptionGate(hostelId: string): void {
-    if (this.isExemptRoute()) {
-      this.gateState.set('none');
-      return;
-    }
-    if (this.subStore.isLoadedFor(hostelId)) {
-      if (!this.subStore.isActive()) {
-        this.bounceToSubscription(hostelId);
-      }
-      return;
-    }
-    this.gateState.set('loading');
-    // Mute for the whole undecided window, not just the redirect. The routed page mounts behind
-    // the overlay and fires its requests immediately — seconds before the verdict — so a mute
-    // taken only at redirect time would arrive after the rejection toast is already pinned up.
-    // No grace: on a passing verdict the mute must lift at once, or a genuine error on the page
-    // the host is allowed to see would be swallowed too. A bounce adds its own graced hold below,
-    // and the count never reaches zero in between, so the trailing cover is kept where it matters.
-    const unmute = this.notifications.muteErrors(0);
-    const start = Date.now();
-    this.subStore.load(hostelId).pipe(take(1)).subscribe(() => {
-      const elapsed = Date.now() - start;
-      setTimeout(() => {
-        this.gateState.set('leaving');
-        setTimeout(() => {
-          this.gateState.set('none');
-          if (!this.subStore.isActive() && !this.isExemptRoute()) {
-            this.bounceToSubscription(hostelId);
-          }
-          unmute();
-        }, 300);
-      }, Math.max(0, 2000 - elapsed));
-    });
-  }
-
-  private enforceGate(hostelId: string): void {
-    if (this.subStore.isLoadedFor(hostelId)) {
-      if (!this.subStore.isActive()) {
-        this.bounceToSubscription(hostelId);
-      }
-      return;
-    }
-    const unmute = this.notifications.muteErrors(0);
-    this.subStore.load(hostelId).pipe(take(1)).subscribe(() => {
-      if (!this.subStore.isActive() && !this.isExemptRoute()) {
-        this.bounceToSubscription(hostelId);
-      }
-      unmute();
-    });
-  }
 
   protected readonly nav = computed<NavEntry[]>(() =>
     hostNav(`/host/${this.propertyStore.selected()}`, {

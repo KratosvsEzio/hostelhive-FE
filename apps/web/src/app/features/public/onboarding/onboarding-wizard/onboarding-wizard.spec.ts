@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { ApiError, HostelInput } from '@hostelhive/data-access';
-import { HostelsApi, OffersApi } from '@services';
+import { HostPropertyStore, HostelsApi, OffersApi } from '@services';
 import { AuthService } from '@app/core/auth/auth.service';
 import { provideDataAccess } from '@core/provide-data-access';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
@@ -49,6 +49,7 @@ interface WizardInternals {
   setNewRoomCapacity(raw: string): void;
   addRoom(): void;
   saveAndExit(): void;
+  saveAndContinue(): void;
   onLogoClick(event: MouseEvent): void;
   confirmLeave(): void;
 }
@@ -87,6 +88,7 @@ function stubHostelsApi() {
 function render() {
   const hostels = stubHostelsApi();
   const refreshSession = vi.fn(() => of({ id: '1' }));
+  const loadHostels = vi.fn();
   TestBed.configureTestingModule({
     imports: [OnboardingWizard],
     providers: [
@@ -98,6 +100,7 @@ function render() {
       { provide: HostelsApi, useValue: hostels.api },
       { provide: OffersApi, useValue: { categories: () => of([]) } },
       { provide: AuthService, useValue: { refreshSession } },
+      { provide: HostPropertyStore, useValue: { load: loadHostels } },
     ],
   });
   const router = TestBed.inject(Router);
@@ -106,7 +109,7 @@ function render() {
     .mockImplementation(() => Promise.resolve(true));
   const fixture = TestBed.createComponent(OnboardingWizard);
   fixture.detectChanges();
-  return { fixture, vm: internals(fixture), hostels, navigate, refreshSession };
+  return { fixture, vm: internals(fixture), hostels, navigate, refreshSession, loadHostels };
 }
 
 /** Fills every field `fieldErrors` guards, so `isFormValid()` becomes true. */
@@ -248,6 +251,105 @@ describe('OnboardingWizard', () => {
       startUpload(fixture);
 
       expect(vm.exitLabel()).toBe('Uploading photos…');
+    });
+  });
+
+  describe('save & continue', () => {
+    it('creates the hostel, refreshes the session, then opens its billing page', () => {
+      const { vm, hostels, navigate, refreshSession } = render();
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(hostels.create).toHaveBeenCalledTimes(1);
+      expect(navigate).toHaveBeenCalledWith(['/host', 42, 'subscription']);
+      // The new host role has to be on the session before the console's role guard runs.
+      expect(refreshSession.mock.invocationCallOrder[0]).toBeLessThan(
+        navigate.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('updates an existing draft and opens its billing page without a session refresh', () => {
+      const { vm, hostels, navigate, refreshSession } = render();
+      fillValidForm(vm);
+      vm.draftId.set(7);
+
+      vm.saveAndContinue();
+
+      expect(hostels.update).toHaveBeenCalledTimes(1);
+      expect(refreshSession).not.toHaveBeenCalled();
+      expect(navigate).toHaveBeenCalledWith(['/host', 7, 'subscription']);
+    });
+
+    // The console's hostel-id gate trusts a loaded list, which predates the hostel just saved.
+    it('refetches the hostel list before navigating', () => {
+      const { vm, navigate, loadHostels } = render();
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(loadHostels).toHaveBeenCalledTimes(1);
+      expect(loadHostels.mock.invocationCallOrder[0]).toBeLessThan(
+        navigate.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('still opens the billing page when the session refresh fails', () => {
+      const { vm, navigate, refreshSession } = render();
+      refreshSession.mockReturnValue(throwError(() => new Error('offline')));
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(navigate).toHaveBeenCalledWith(['/host', 42, 'subscription']);
+    });
+
+    // Without an id to name, the console's root picks the hostel itself.
+    it('falls back to the console root when the saved hostel comes back without an id', () => {
+      const { vm, hostels, navigate, refreshSession, loadHostels } = render();
+      hostels.create.mockReturnValue(of({ id: null }));
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(navigate).toHaveBeenCalledWith(['/host']);
+      expect(loadHostels).toHaveBeenCalledTimes(1);
+      expect(refreshSession).not.toHaveBeenCalled();
+    });
+
+    it('stays on the page and surfaces the errors when the save is rejected', () => {
+      const { vm, hostels, navigate, loadHostels, refreshSession } = render();
+      hostels.create.mockReturnValue(
+        throwError(
+          (): ApiError => ({
+            status: 422,
+            code: 'unknown_error',
+            message: 'City is invalid',
+            serverMessages: ['City is invalid'],
+            method: 'POST',
+          }),
+        ),
+      );
+      fillValidForm(vm);
+
+      vm.saveAndContinue();
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(loadHostels).not.toHaveBeenCalled();
+      expect(refreshSession).not.toHaveBeenCalled();
+      expect(vm.draftError()).toBe(true);
+      expect(vm.apiErrors()).toEqual(['City is invalid']);
+    });
+
+    it('stays on the form when it is incomplete', () => {
+      const { vm, hostels, navigate } = render();
+
+      vm.saveAndContinue();
+
+      expect(hostels.create).not.toHaveBeenCalled();
+      expect(navigate).not.toHaveBeenCalled();
+      expect(vm.showValidationModal()).toBe(true);
     });
   });
 

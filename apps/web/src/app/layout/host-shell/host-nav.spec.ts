@@ -108,49 +108,40 @@ describe('hostNav', () => {
     expect(nightly).not.toContain('common.utilities');
   });
 
-  it('marks Subscription exact, since Payment history sits underneath it', () => {
-    const entries = nav();
-    const sub = entries.find((e) => e.label === 'common.subscription');
-    const pay = entries.find((e) => e.label === 'hostSubscription.paymentHistory');
-
-    expect(sub?.exact).toBe(true);
-    expect(pay?.link).toBe('/host/nHelLt/subscription/payments');
-    // The reason `exact` is needed at all.
-    expect(pay?.link?.startsWith(sub?.link ?? '\0')).toBe(true);
+  // The plan and payment-history pages are gone; a menu row leading to them would be a dead end.
+  it('offers no billing destination', () => {
+    for (const e of nav()) {
+      expect(e.link ?? '').not.toContain('/subscription');
+    }
+    expect(labels(nav())).not.toContain('common.subscription');
+    expect(labels(nav())).not.toContain('hostSubscription.paymentHistory');
   });
 
   // A divider with nothing under it would render as a rule at the end of the list.
-  it('drops a divider that lost everything below it', () => {
-    const entries = hostNav('/host/nHelLt', {
-      monthlyBilled: false,
-      can: (p) => p !== 'core:Hostel:subscription',
-    });
-    expect(entries.some((e) => e.divider)).toBe(false);
-  });
-
-  it('keeps the divider while something remains below it', () => {
-    expect(nav().some((e) => e.divider)).toBe(true);
+  it('never ends on a stray divider', () => {
+    for (const can of [ALL, NONE]) {
+      const entries = nav({ can });
+      expect(entries.some((e) => e.divider)).toBe(false);
+    }
   });
 });
 
 describe('splitNav', () => {
   it('splits at the divider, dropping it from both halves', () => {
-    const { hostel, account } = splitNav(nav());
+    const entries: NavEntry[] = [
+      { label: 'common.overview', link: '/host/nHelLt/overview' },
+      { divider: true },
+      { label: 'common.accountSettings', link: '/account/settings' },
+    ];
+    const { hostel, account } = splitNav(entries);
 
-    expect(labels(hostel)).toContain('common.overview');
-    expect(labels(hostel)).not.toContain('common.subscription');
-    expect(labels(account)).toEqual([
-      'common.subscription',
-      'hostSubscription.paymentHistory',
-    ]);
+    expect(labels(hostel)).toEqual(['common.overview']);
+    expect(labels(account)).toEqual(['common.accountSettings']);
     expect([...hostel, ...account].some((e) => e.divider)).toBe(false);
   });
 
   it('puts everything in the first half when there is no divider', () => {
-    const entries = hostNav('/host/nHelLt', {
-      monthlyBilled: false,
-      can: (p) => p !== 'core:Hostel:subscription',
-    });
+    const entries = nav();
     const { hostel, account } = splitNav(entries);
 
     expect(account).toEqual([]);

@@ -15,7 +15,6 @@ describe('feature-admin routes', () => {
   it('exposes the admin screens', () => {
     const screens = children.map((r) => r.path).filter((p) => p !== '');
     expect([...screens].sort()).toEqual([
-      'contracts',
       'listings',
       'payments',
       'queue',
@@ -24,7 +23,7 @@ describe('feature-admin routes', () => {
     ]);
   });
 
-  it('lands on contracts by default', () => {
-    expect(children[0]).toMatchObject({ path: '', redirectTo: 'contracts' });
+  it('lands on payments by default', () => {
+    expect(children[0]).toMatchObject({ path: '', redirectTo: 'payments' });
   });
 });

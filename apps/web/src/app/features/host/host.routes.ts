@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CanActivateFn, Route, Router, UrlTree } from '@angular/router';
-import { Observable, filter, map, of, switchMap, take } from 'rxjs';
+import { filter, map, take } from 'rxjs';
 
 import { HostLayout } from '@layout/host-shell/host-shell';
 
@@ -28,7 +28,7 @@ import { RevenueDetail } from './overview/revenue-detail/revenue-detail';
 import { MovementDetail } from './overview/movement-detail/movement-detail';
 import { OccupancyDetail } from './overview/occupancy-detail/occupancy-detail';
 
-import { HostPropertyStore, SubscriptionStore } from '@services';
+import { HostPropertyStore } from '@services';
 import { SessionStore, permissionGuard } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
 
@@ -73,36 +73,14 @@ const hostRootRedirect: CanActivateFn = () => {
 };
 
 /**
- * `hostels/new` sits outside the host shell, so the shell's subscription gate never runs for it —
- * without this an expired host could keep working simply by creating another hostel. A host with no
- * hostels at all always passes: there is no subscription to check, and blocking them would leave
- * them nowhere to go.
+ * `hostels/new` is only for an account the API lets create a hostel. Whether the hostel may then
+ * be used is the server's call, made on the requests themselves — this gate checks nothing else.
+ *
+ * Without the permission the user is routed via `/host`, so the "no hostel assigned" message
+ * lives in exactly one place. The parent `roleGuard` has already established the session.
  */
-const createHostelGate: CanActivateFn = () => {
-  const store = inject(HostPropertyStore);
-  const subs = inject(SubscriptionStore);
-  const session = inject(SessionStore);
-  const router = inject(Router);
-
-  const check = (): Observable<boolean | UrlTree> => {
-    // Without the create permission there is nothing to do here. Routed via `/host` so
-    // the "no hostel assigned" message lives in exactly one place.
-    if (!session.hasPermission('core:Hostel:create')) return of(router.parseUrl('/host'));
-    const props = store.properties();
-    if (!props.length) return of(true);
-    const sel = store.selected();
-    const id = sel && props.some((p) => p.id === sel) ? sel : props[0].id;
-    // A failed load leaves `isActive()` false, so a flaky network sends the host to the
-    // subscription page — the same fallback the shell gate takes.
-    const decide = (): boolean | UrlTree =>
-      subs.isActive() ? true : router.parseUrl(`/host/${id}/subscription`);
-    return subs.isLoadedFor(id) ? of(decide()) : subs.load(id).pipe(map(decide));
-  };
-
-  if (store.loaded() && store.properties().length) return check();
-  store.load();
-  return toObservable(store.loaded).pipe(filter(Boolean), take(1), switchMap(check));
-};
+const createHostelGate: CanActivateFn = () =>
+  inject(SessionStore).hasPermission('core:Hostel:create') ? true : inject(Router).parseUrl('/host');
 
 /**
  * `:hostelId` must name a hostel this host actually has.

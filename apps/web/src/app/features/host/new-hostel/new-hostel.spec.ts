@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { ApiError, HostelDetail, HostelInput } from '@hostelhive/data-access';
-import { HostelsApi } from '@services';
+import { HostPropertyStore, HostelsApi } from '@services';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostelForm } from '../hostel-form/hostel-form';
 import { NewHostel } from './new-hostel';
@@ -40,11 +40,13 @@ interface NewHostelInternals {
 describe('NewHostel', () => {
   let fixture: ComponentFixture<NewHostel>;
   let navigated: unknown[][];
+  let steps: string[];
   let created: HostelInput[];
   let response: () => Observable<HostelDetail>;
 
   beforeEach(async () => {
     navigated = [];
+    steps = [];
     created = [];
     response = () => of({ id: 'nHelLt', name: 'Test Hostel' } as unknown as HostelDetail);
 
@@ -53,6 +55,7 @@ describe('NewHostel', () => {
       providers: [
         provideRouter([]),
         provideI18nTesting(),
+        { provide: HostPropertyStore, useValue: { load: () => steps.push('load') } },
         {
           provide: HostelsApi,
           useValue: {
@@ -74,6 +77,7 @@ describe('NewHostel', () => {
     const router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockImplementation((commands: unknown[]) => {
       navigated.push(commands);
+      steps.push('navigate');
       return Promise.resolve(true);
     });
 
@@ -89,12 +93,17 @@ describe('NewHostel', () => {
     return TestBed.inject(Router) && fixture.debugElement.children[0].componentInstance;
   }
 
-  it('lands the host on the new hostel’s plans, not its profile', () => {
+  it('lands the host on the new hostel’s billing page', () => {
     internals().create();
 
-    // A hostel is created without a subscription, and every console page but two bounces back
-    // here until it has one — so the plans page is the only useful place to arrive.
     expect(navigated).toEqual([['/host', 'nHelLt', 'subscription']]);
+  });
+
+  // The console's hostel-id gate trusts a loaded list; the cached one predates this hostel.
+  it('refetches the hostel list before navigating', () => {
+    internals().create();
+
+    expect(steps).toEqual(['load', 'navigate']);
   });
 
   it('does not navigate when the form is incomplete', () => {

@@ -1,10 +1,11 @@
-import { WritableSignal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import {
   ActivatedRoute,
   Params,
   Route,
+  Router,
   RouterLink,
   convertToParamMap,
   provideRouter,
@@ -14,7 +15,7 @@ import { provideDataAccess } from '@core/provide-data-access';
 import { LeadWall } from './lead-wall';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { NotificationService } from '@core/notification.service';
-import { AuthService } from '@core/auth';
+import { AuthService, Role, SessionStore } from '@core/auth';
 import { Observable } from 'rxjs';
 
 /** The component's members are `protected`; the spec asserts on them through this shape. */
@@ -335,5 +336,58 @@ describe('LeadWall cancelling a request in flight', () => {
 
     fixture.destroy();
     expect(toasts).toEqual([]);
+  });
+});
+
+/**
+ * Where a signed-in visitor is sent when the wall has no `returnUrl` to honour.
+ *
+ * The session is already established, so the wall redirects on construction; the role alone
+ * decides the console, and a real `returnUrl` always beats it.
+ */
+describe('LeadWall console landing', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.restoreAllMocks();
+  });
+
+  function landing(role: Role, query: Params = {}): string[] {
+    const route = stubRoute(query);
+    TestBed.configureTestingModule({
+      imports: [LeadWall],
+      providers: [
+        provideRouter([]),
+        provideDataAccess({ baseUrl: 'https://api.test' }),
+        provideI18nTesting(),
+        route.provider,
+        {
+          provide: SessionStore,
+          useValue: {
+            isAuthenticated: signal(true),
+            hasRole: (...wanted: Role[]) => wanted.includes(role),
+          },
+        },
+      ],
+    });
+    const navigate = vi
+      .spyOn(TestBed.inject(Router), 'navigateByUrl')
+      .mockImplementation(() => Promise.resolve(true));
+    TestBed.createComponent(LeadWall).detectChanges();
+    return navigate.mock.calls.map(([url]) => String(url));
+  }
+
+  it.each<Role>(['super-admin', 'admin', 'support'])(
+    'sends %s to the admin console front door',
+    (role) => {
+      expect(landing(role)).toEqual(['/admin']);
+    },
+  );
+
+  it('still sends a moderator to the review queue', () => {
+    expect(landing('moderator')).toEqual(['/moderator/queue']);
+  });
+
+  it('lets a real returnUrl win over the console home', () => {
+    expect(landing('admin', { returnUrl: '/moderator/queue' })).toEqual(['/moderator/queue']);
   });
 });

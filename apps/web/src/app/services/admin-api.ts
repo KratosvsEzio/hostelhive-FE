@@ -1,5 +1,5 @@
 import { ApiPagination, toPageInfo } from '@util/pagination';
-import { format, getYear, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
@@ -9,16 +9,9 @@ import {
   AdminListingFilter,
   AdminListingStatusOption,
   AdminListingsPage,
-  Contract,
-  ContractAgg,
-  ContractFilter,
-  ContractStatus,
-  ContractStatusOption,
-  ContractsPage,
   Payment,
   PaymentAgg,
   PaymentFilter,
-  PaymentState,
   PaymentStatusOption,
   PaymentsPage,
   PermissionFlag,
@@ -31,8 +24,8 @@ import { usableVariant } from '@util/attachment-url';
 import { PERMISSION_GROUPS } from './admin.fixtures';
 
 /**
- * Super-Admin (Feature 6) API — all live: `roles()` + `permissionsGrouped()`,
- * `contracts()` / `getContract()` (`GET /api/admin/contracts[/:id]`), and `payments()`.
+ * Super-Admin (Feature 6) API — all live: `roles()` + `permissionsGrouped()`, `listings()`,
+ * and `payments()`.
  * The `authInterceptor` attaches the admin's bearer token to every call.
  */
 @Injectable({ providedIn: 'root' })
@@ -100,67 +93,6 @@ export class AdminApi {
         map(toPermissionGroups),
         map((groups) => (groups.length ? groups : PERMISSION_GROUPS)),
         catchError(() => of(PERMISSION_GROUPS)),
-      );
-  }
-
-  /* ------------------------------------------------------------- contracts (27) */
-
-  /**
-   * Contracts table — `GET /api/admin/contracts` (index, Searchkick-backed). Paginated server-side
-   * (`page` + `limit`); the response carries a `pagination` envelope (total_count / total_pages). A
-   * status filter is pushed to the server as `f[status.slug]=<slug>`. The list has no payment
-   * object, so the payment state is derived from the disposition; the detail (`getContract`) has
-   * the real one.
-   */
-  contracts(
-    filter: ContractFilter = 'all',
-    page = 1,
-    search?: { hostelName?: string; hostelId?: string },
-    dateRange?: { endFrom?: string; endTo?: string },
-    sort?: { field: string; dir: 'asc' | 'desc' },
-  ): Observable<ContractsPage> {
-    const params: Record<string, string | number> = {
-      page,
-      limit: CONTRACTS_PAGE_SIZE,
-    };
-    if (filter !== 'all') params['f[status.slug]'] = filter;
-    // Sort by an API property — `sort[price]` (Amount).
-    if (sort) params[`sort[${sort.field}]`] = sort.dir;
-    // Hostel search: full-text `s[hostel.name]` for the name, exact `f[hostel_id]` for the id.
-    if (search?.hostelName) params['s[hostel.name]'] = search.hostelName;
-    if (search?.hostelId) params['f[hostel_id]'] = search.hostelId;
-    // End-date range (inclusive). Bounds span the whole day (00:00:00 → 23:59:59).
-    if (dateRange?.endFrom) params['f[end_date][gte]'] = dayRangeStart(dateRange.endFrom);
-    if (dateRange?.endTo) params['f[end_date][lte]'] = dayRangeEnd(dateRange.endTo);
-    return this.api
-      .get<AdminContractsResponse>('/api/admin/contracts', params)
-      .pipe(
-        map((res) => {
-          const rows = res.contracts ?? [];
-          const info = toPageInfo(res.pagination, page, rows.length);
-          return {
-            items: rows.map((c) => toContract(c)),
-            total: info.total,
-            page: info.page,
-            pageSize: CONTRACTS_PAGE_SIZE,
-            totalPages: info.totalPages,
-            aggs: res.aggs ?? [],
-            statuses: res.possible_statuses ?? [],
-          };
-        }),
-      );
-  }
-
-  /** Full contract detail — `GET /api/admin/contracts/:id` (show, AMS ContractSerializer). */
-  getContract(id: string | number): Observable<Contract> {
-    return this.api
-      .get<AdminContractResponse>(`/api/admin/contracts/${id}`)
-      .pipe(
-        map((res) => {
-          const c = res.contract;
-          if (!c) throw new Error(`Contract ${id} not found`);
-          return toContract(c);
-        }),
       );
   }
 
@@ -299,12 +231,6 @@ interface AdminPaymentsResponse {
   pagination?: ApiPagination;
 }
 
-const PAYMENT_STATES: readonly PaymentState[] = [
-  'paid',
-  'pending',
-  'failed',
-  'refunded',
-];
 const PAYMENTS_PAGE_SIZE = 10;
 
 /** Map a backend payment onto the FE `Payment` model. The status stays a dynamic slug (+ its
@@ -330,6 +256,21 @@ function toPayment(p: ApiPayment): Payment {
     createdAt: p.created_at ?? null,
     paidAt: p.paid_at ?? null,
   };
+}
+
+function fmtDay(iso?: string | null): string | null {
+  if (!iso) return null;
+  try { return format(parseISO(iso), "MMM d"); } catch { return null; }
+}
+
+/** ‘Jan 12 → Jan 12 ‘27’; null when either bound is missing (renders as ‘— pending —‘). */
+function termLabel(start?: string | null, end?: string | null): string | null {
+  const s = fmtDay(start);
+  const e = fmtDay(end);
+  if (!s || !e) return null;
+  let endYr: string;
+  try { endYr = format(parseISO(end as string), "yy"); } catch { return null; }
+  return `${s} → ${e} ‘${endYr}`;
 }
 
 /** A role record from `GET /api/admin/roles` (the fields the endpoint returns). */
@@ -478,182 +419,6 @@ function toPermissionGroups(
     }
   }
   return out;
-}
-
-/* ----------------------------------------------------- contracts (admin API) */
-
-/** Shared nested ref in the contract payloads (status / disposition). */
-interface ApiContractRef {
-  id?: string | number;
-  name?: string;
-  slug?: string | null;
-}
-
-/** Embedded product in a contract payload. */
-interface ApiContractProduct {
-  id?: string | number;
-  name?: string | null;
-  product_type?: string | null;
-  price?: number | null;
-  currency?: string | null;
-  duration?: number | null;
-}
-
-/**
- * Embedded payment in a contract payload — now present on the list too, not just the detail.
- * The status slug is nested under `status.name.slug` (the serializer puts the whole status object
- * in `status.name`); some payloads expose it directly as `status.slug`, so we tolerate both.
- */
-interface ApiContractPayment {
-  id?: string | number;
-  payment_method?: string | null;
-  amount?: number | string | null;
-  paid_at?: string | null;
-  status?: {
-    id?: number;
-    slug?: string | null;
-    name?: { slug?: string | null } | string | null;
-  } | null;
-}
-
-/** ES `_source` item from `GET /api/admin/contracts` (ContractIndex search_data). */
-interface ApiContractListItem {
-  id: string | number;
-  hostel_id?: string | number | null;
-  contract_type?: string | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  price?: number | string | null;
-  created_at?: string | null;
-  host?: { id?: string | number; name?: string } | null;
-  hostel?: { id?: string | number; name?: string } | null;
-  status?: ApiContractRef | null;
-  disposition?: ApiContractRef | null;
-  product?: ApiContractProduct | null;
-  payment?: ApiContractPayment | null;
-  _score?: number | null;
-}
-
-/** AMS `ContractSerializer` item from `GET /api/admin/contracts/:id` (adds `updated_at`). */
-interface ApiContractDetail extends ApiContractListItem {
-  updated_at?: string | null;
-}
-
-interface AdminContractsResponse {
-  success?: boolean;
-  contracts?: ApiContractListItem[];
-  aggs?: ContractAgg[];
-  possible_statuses?: ContractStatusOption[];
-  pagination?: ApiPagination;
-}
-interface AdminContractResponse {
-  success?: boolean;
-  contract?: ApiContractDetail;
-}
-
-const CONTRACTS_PAGE_SIZE = 10;
-
-/** Map a backend contract (list or detail) onto the FE `Contract`. Both shapes now carry a
- *  `payment` object, so the payment state comes from the real record (see `paymentState`). */
-function toContract(c: ApiContractListItem): Contract {
-  return {
-    id: contractRef(c.id, c.created_at),
-    contractId: c.id,
-    host: c.host?.name ?? '—',
-    plan: planLabel(c.product, c.contract_type),
-    term: termLabel(c.start_date, c.end_date),
-    status: mapContractStatus(c.status?.slug),
-    payment: paymentState(c),
-    amount: Number(c.price ?? c.product?.price ?? 0),
-    endsSoon: endsSoon(c.end_date),
-    hostelId: c.hostel_id ?? c.hostel?.id ?? undefined,
-    hostelName: c.hostel?.name ?? null,
-    hostId: c.host?.id ?? undefined,
-  };
-}
-
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-/** True when the contract's end date is within the next 7 days (drives the red Term highlight). */
-function endsSoon(endIso?: string | null): boolean {
-  if (!endIso) return false;
-  const end = new Date(endIso).getTime();
-  if (Number.isNaN(end)) return false;
-  const diff = end - Date.now();
-  return diff >= 0 && diff < SEVEN_DAYS_MS;
-}
-
-/** Payment state — prefer the real payment record's status slug (now on the list); when it's
- *  absent or unrecognised, fall back to deriving it from the contract disposition. */
-function paymentState(c: ApiContractListItem): PaymentState {
-  const slug = paymentSlugOf(c.payment)?.toLowerCase();
-  if (slug && (PAYMENT_STATES as readonly string[]).includes(slug))
-    return slug as PaymentState;
-  return derivePayment(c.disposition?.slug);
-}
-
-/** Extract a payment's status slug, tolerating the `status.name.slug` nesting (the serializer
- *  nests the whole status object under `name`) as well as a direct `status.slug`. */
-function paymentSlugOf(p?: ApiContractPayment | null): string | undefined {
-  const st = p?.status;
-  if (!st) return undefined;
-  if (st.slug) return st.slug;
-  if (st.name && typeof st.name === 'object' && st.name.slug)
-    return st.name.slug;
-  return undefined;
-}
-
-/** Display ref — 'CT-2026-0016' for numeric ids (zero-padded), 'CT-2026-zhErLb' for hashids. */
-function contractRef(id: string | number, createdAt?: string | null): string {
-  let year: number;
-  try { year = createdAt ? getYear(parseISO(createdAt)) : new Date().getFullYear(); }
-  catch { year = new Date().getFullYear(); }
-  const idStr = String(id);
-  const tail = /^\d+$/.test(idStr) ? idStr.padStart(4, '0') : idStr;
-  return `CT-${year}-${tail}`;
-}
-
-/** Plan label — the product name already encodes the cadence (e.g. 'Monthly'); falls back to
- *  the contract_type slug. (`product.duration` is in days, so it isn't used here.) */
-function planLabel(
-  product?: ApiContractProduct | null,
-  contractType?: string | null,
-): string {
-  return product?.name || (contractType ? titleCase(contractType) : '—');
-}
-
-function fmtDay(iso?: string | null): string | null {
-  if (!iso) return null;
-  try { return format(parseISO(iso), "MMM d"); } catch { return null; }
-}
-
-/** ‘Jan 12 → Jan 12 ‘27’; null when either bound is missing (renders as ‘— pending —‘). */
-function termLabel(start?: string | null, end?: string | null): string | null {
-  const s = fmtDay(start);
-  const e = fmtDay(end);
-  if (!s || !e) return null;
-  let endYr: string;
-  try { endYr = format(parseISO(end as string), "yy"); } catch { return null; }
-  return `${s} → ${e} ‘${endYr}`;
-}
-
-/** The view `ContractStatus` is just the backend status slug (draft / active / expired / …),
- *  matching `possible_statuses`. The "awaiting payment" nuance lives in the disposition (derivePayment). */
-function mapContractStatus(statusSlug?: string | null): ContractStatus {
-  return (statusSlug ?? 'draft').toLowerCase();
-}
-
-/** The list endpoint carries no payment object — derive the state from the contract's disposition. */
-function derivePayment(dispositionSlug?: string | null): PaymentState {
-  switch ((dispositionSlug ?? '').toLowerCase()) {
-    case 'payment-confirmed':
-    case 'completed':
-      return 'paid';
-    case 'full-refund':
-    case 'partial-refund':
-      return 'refunded';
-    default:
-      return 'pending'; // 'awaiting-payment' (draft) and anything unknown
-  }
 }
 
 /* ------------------------------------------------- listings (admin hostels API) */
