@@ -7,10 +7,10 @@ import { PaymentSuccess } from './payment-success';
  * environment, so these paths are a contract with it rather than a choice made here.
  */
 export const PAYMENT_RETURN_ROUTES: Routes = [
-  { path: 'success', component: PaymentSuccess, title: 'Payment — HostelHive' },
+  { path: 'success', component: PaymentSuccess, title: 'common.payment' },
   {
     path: 'cancel',
     component: PaymentCancelled,
-    title: 'Payment — HostelHive',
+    title: 'common.payment',
   },
 ];

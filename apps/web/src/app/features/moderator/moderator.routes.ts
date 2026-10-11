@@ -12,10 +12,10 @@ export const MODERATOR_ROUTES: Route[] = [
     component: StaffLayout,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'queue' },
-      { path: 'queue', component: Queue, title: 'Review queue — HostelHive', canActivate: [permissionGuard('moderator:Hostel:index')] },
-      { path: 'review/:id', component: Review, title: 'Listing review — HostelHive' },
-      { path: 'media', component: Media, title: 'Media queue — HostelHive', canActivate: [permissionGuard('moderator:Attachment:index')] },
-      { path: 'audit', component: Audit, title: 'Audit log — HostelHive' },
+      { path: 'queue', component: Queue, title: 'moderatorQueue.reviewQueue', canActivate: [permissionGuard('moderator:Hostel:index')] },
+      { path: 'review/:id', component: Review, title: 'routeTitle.listingReview' },
+      { path: 'media', component: Media, title: 'moderatorMedia.mediaQueue', canActivate: [permissionGuard('moderator:Attachment:index')] },
+      { path: 'audit', component: Audit, title: 'moderatorAudit.auditLog' },
     ],
   },
 ];

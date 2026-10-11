@@ -1715,6 +1715,28 @@
     "worldwideTitle": "Hostele na całym świecie — wyszukiwanie | HostelHive",
     "worldwideDescription": "Przeszukaj zweryfikowane hostele, pensjonaty i co-living na całym świecie. Filtruj według budżetu, współdzielenia pokoju i udogodnień.",
     "pricingTitle": "Cennik dla hosteli | HostelHive",
-    "pricingDescription": "Miesięczne plany HostelHive dla hosteli: pojaw się w wynikach, zyskaj wyróżnienie w wyszukiwaniu i zarządzaj pokojami, rezerwacjami i rachunkami w CRM dla gospodarzy."
+    "pricingDescription": "Miesięczne plany HostelHive dla hosteli: pojaw się w wynikach, zyskaj wyróżnienie w wyszukiwaniu i zarządzaj pokojami, rezerwacjami i rachunkami w CRM dla gospodarzy.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — przewodniki po hostelach, kampusach i północy | HostelHive",
+    "blogDescription": "Praktyczne przewodniki po hostelach studenckich i noclegach dla backpackerów w Pakistanie: ile kosztują pokoje w poszczególnych miastach, hostele w pobliżu największych uczelni i gdzie nocować w regionach północnych.",
+    "listingLoadingTitle": "Szczegóły hostelu — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Źródła zdjęć",
+    "confirmAccount": "Potwierdź konto",
+    "booking": "Rezerwacja",
+    "changeBooking": "Zmień rezerwację",
+    "listingReview": "Przegląd ogłoszenia",
+    "logInOrSignUp": "Zaloguj się lub zarejestruj",
+    "editStaff": "Edytuj pracownika",
+    "roomDetails": "Szczegóły pokoju",
+    "tenantProfile": "Profil najemcy",
+    "editUtilityBill": "Edytuj rachunek za media",
+    "newInvoice": "Nowa faktura",
+    "editInvoice": "Edytuj fakturę",
+    "editExpense": "Edytuj wydatek",
+    "revenueDetail": "Szczegóły przychodu",
+    "payInvoice": "Zapłać fakturę"
   }
 }

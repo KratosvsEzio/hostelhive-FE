@@ -3,6 +3,6 @@ import { LeadWall } from './lead-wall/lead-wall';
 import { ForgotPassword } from './forgot-password/forgot-password';
 
 export const AUTH_ROUTES: Route[] = [
-  { path: '', component: LeadWall, title: 'Log in or sign up — HostelHive' },
-  { path: 'forgot-password', component: ForgotPassword, title: 'Reset password — HostelHive' },
+  { path: '', component: LeadWall, title: 'routeTitle.logInOrSignUp' },
+  { path: 'forgot-password', component: ForgotPassword, title: 'authResetPassword.resetPassword' },
 ];

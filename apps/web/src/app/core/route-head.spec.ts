@@ -43,20 +43,31 @@ class PageStub {
   }
 }
 
+// Route titles are label keys, as in the app; the strategy composes them into the template.
 const ROUTES: Routes = [
   {
     path: ':locale',
     children: [
       {
         path: 'about',
-        title: 'About Us — Test',
+        title: 'labels.about',
         component: PlainStub,
         data: { head: 'index', descriptionKey: 'pages.about' },
       },
-      { path: 'plain', title: 'Plain — Test', component: PlainStub, data: { head: 'index' } },
-      { path: 'private', title: 'Private — Test', component: PlainStub },
+      { path: 'plain', title: 'labels.plain', component: PlainStub, data: { head: 'index' } },
+      { path: 'private', title: 'labels.private', component: PlainStub },
       { path: 'untitled', component: PlainStub },
-      { path: 'page', title: 'Page route title', component: PageStub, data: { head: 'page' } },
+      { path: 'blank', title: '', component: PlainStub },
+      {
+        path: 'admin',
+        children: [
+          { path: '', title: 'labels.adminHome', component: PlainStub },
+          { path: 'payments', title: 'labels.payments', component: PlainStub },
+        ],
+      },
+      { path: 'administrators', title: 'labels.administrators', component: PlainStub },
+      // The app declares no title on a 'page' route; this one does, to prove it is ignored.
+      { path: 'page', title: 'labels.pageRoute', component: PageStub, data: { head: 'page' } },
       {
         path: 'lazy',
         data: { head: 'index', descriptionKey: 'pages.about' },
@@ -112,8 +123,22 @@ describe('RouteHeadStrategy', () => {
     });
     TestBed.inject(TranslocoService).setTranslation(
       {
-        seo: { defaultTitle: 'Default site title', defaultDescription: 'Default site description' },
+        seo: {
+          defaultTitle: 'Default site title',
+          defaultDescription: 'Default site description',
+          pageTitle: '{{page}} — Test',
+          adminPageTitle: '{{page}} — Test Admin',
+        },
         pages: { about: 'About description' },
+        labels: {
+          about: 'About Us',
+          plain: 'Plain',
+          private: 'Private',
+          payments: 'Payments',
+          adminHome: 'Overview',
+          administrators: 'Administrators',
+          pageRoute: 'Page route title',
+        },
       },
       'en',
     );
@@ -165,7 +190,7 @@ describe('RouteHeadStrategy', () => {
   });
 
   describe('a static index route', () => {
-    it('gets robots index, one canonical and og:url, the full hreflang set, og:locale, its description and its route title', async () => {
+    it('gets robots index, one canonical and og:url, the full hreflang set, og:locale, its description and its route label in the title template', async () => {
       await go('/en/about');
 
       expect(attr(ROBOTS, 'content')).toBe(INDEXABLE);
@@ -179,6 +204,14 @@ describe('RouteHeadStrategy', () => {
       expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
       expect(attr(DESCRIPTION, 'content')).toBe('About description');
       expect(document.title).toBe('About Us — Test');
+    });
+
+    it('writes the same composed title to the tab, og:title and twitter:title', async () => {
+      await go('/en/about');
+
+      expect(document.title).toBe('About Us — Test');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('About Us — Test');
+      expect(attr('meta[name="twitter:title"]', 'content')).toBe('About Us — Test');
     });
 
     it('falls back to the translated default description when it names no key', async () => {
@@ -253,29 +286,70 @@ describe('RouteHeadStrategy', () => {
       expect(all(OG_URL)).toHaveLength(0);
       expect(all(HREFLANG)).toHaveLength(0);
       expect(document.title).toBe('Private — Test');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('Private — Test');
+      expect(attr('meta[name="twitter:title"]', 'content')).toBe('Private — Test');
     });
 
-    it('uses the translated site title when the route has no title, never an empty one', async () => {
-      await go('/en/untitled');
+    it.each(['/en/untitled', '/en/blank'])(
+      'uses the translated site title at %s, never an empty one or a key',
+      async (url) => {
+        await go(url);
 
-      expect(document.title).toBe('Default site title');
+        expect(document.title).toBe('Default site title');
+        expect(attr('meta[property="og:title"]', 'content')).toBe('Default site title');
+      },
+    );
+
+    it('puts an admin console route label in the admin title template', async () => {
+      await go('/en/admin/payments');
+
+      expect(document.title).toBe('Payments — Test Admin');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('Payments — Test Admin');
+      expect(attr(ROBOTS, 'content')).toBe(NOINDEX);
+    });
+
+    it('uses the admin template on the bare admin path too', async () => {
+      await go('/en/admin');
+
+      expect(document.title).toBe('Overview — Test Admin');
+    });
+
+    it('uses the standard template on a path that only starts with admin', async () => {
+      await go('/en/administrators');
+
+      expect(document.title).toBe('Administrators — Test');
+    });
+
+    it('drops the admin template when navigating from the admin console to a public route', async () => {
+      await go('/en/admin/payments');
+
+      await go('/en/plain');
+
+      expect(document.title).toBe('Plain — Test');
     });
   });
 
   describe('a page-owned route', () => {
-    it('sets the route title synchronously and leaves the page head untouched afterwards', async () => {
+    it('never has its title written by the strategy, even when the route declares one', async () => {
       await go('/en/page');
       expect(document.title).toBe('Page own title');
       expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/page`);
+
+      // A query-only navigation does not re-run the page's effect, so whatever the strategy
+      // wrote here would stay in the tab.
+      await go('/en/page?x=1');
+
+      expect(document.title).toBe('Page own title');
 
       document.title = 'x';
       const strategy = TestBed.inject(TitleStrategy) as RouteHeadStrategy;
       strategy.updateTitle(router.routerState.snapshot);
 
-      expect(document.title).toBe('Page route title');
+      expect(document.title).toBe('x');
 
       TestBed.tick();
 
+      expect(document.title).toBe('x');
       expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/page`);
       expect(attr(DESCRIPTION, 'content')).toBe('Page own description');
       expect(attr(ROBOTS, 'content')).toBe(INDEXABLE);
@@ -313,11 +387,15 @@ describe('RouteHeadStrategy', () => {
   });
 
   describe('the document title', () => {
-    it('is set synchronously by updateTitle, because analytics reads it straight after the navigation event', async () => {
+    it('is not set by updateTitle itself, but with the rest of the head once the effect runs', async () => {
       await go('/en/about');
       document.title = 'zzz';
 
       (TestBed.inject(TitleStrategy) as RouteHeadStrategy).updateTitle(router.routerState.snapshot);
+
+      expect(document.title).toBe('zzz');
+
+      TestBed.tick();
 
       expect(document.title).toBe('About Us — Test');
     });
@@ -337,17 +415,27 @@ describe('RouteHeadStrategy', () => {
       expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/about`);
       expect(attr(DESCRIPTION, 'content')).toBe('About description');
       expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+      expect(document.title).toBe('About Us — Test');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('About Us — Test');
 
       TestBed.inject(TranslocoService).setTranslation(
         {
-          seo: { defaultTitle: 'Urdu title', defaultDescription: 'Urdu default' },
+          seo: {
+            defaultTitle: 'Urdu title',
+            defaultDescription: 'Urdu default',
+            pageTitle: '{{page}} — Urdu test',
+          },
           pages: { about: 'Urdu about description' },
+          labels: { about: 'Urdu about' },
         },
         'ur',
       );
       ready.set(true);
       TestBed.tick();
 
+      expect(document.title).toBe('Urdu about — Urdu test');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('Urdu about — Urdu test');
+      expect(attr('meta[name="twitter:title"]', 'content')).toBe('Urdu about — Urdu test');
       expect(all(CANONICAL)).toHaveLength(1);
       expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/ur/about`);
       expect(attr(OG_URL, 'content')).toBe(`${SITE_ORIGIN}/ur/about`);

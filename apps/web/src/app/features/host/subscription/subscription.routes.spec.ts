@@ -10,28 +10,28 @@ describe('feature-subscription routes', () => {
       path: '',
       pathMatch: 'full',
       component: BillingPage,
-      title: 'Billing — HostelHive',
+      title: 'hostBilling.title',
     });
   });
 
   it('serves the payment step for one invoice', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'pay/:invoiceId')).toMatchObject({
       component: PaymentStep,
-      title: 'Pay invoice — HostelHive',
+      title: 'routeTitle.payInvoice',
     });
   });
 
   it('serves the invoice history', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'invoices')).toMatchObject({
       component: BillingInvoices,
-      title: 'Billing history — HostelHive',
+      title: 'hostBillingHistory.title',
     });
   });
 
   it('serves the detail of one invoice', () => {
     expect(SUBSCRIPTION_ROUTES.find((r) => r.path === 'invoices/:invoiceId')).toMatchObject({
       component: BillingInvoiceDetail,
-      title: 'Invoice — HostelHive',
+      title: 'hostInvoices.invoice',
     });
   });
 

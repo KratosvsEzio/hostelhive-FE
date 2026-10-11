@@ -1,10 +1,12 @@
-import { DestroyRef, Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { DestroyRef, Injectable, Injector, PLATFORM_ID, effect, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
 import { googleAnalyticsEnv } from '@app/google-analytics.env';
+import { routePath } from '@core/i18n/locales';
+import { Seo } from '@core/seo';
 import { googleAnalyticsConsent } from './google-analytics-consent';
 import { GoogleAnalyticsEventName, GoogleAnalyticsEvents } from './google-analytics.events';
 
@@ -37,9 +39,33 @@ const NON_MARKETPLACE = [
   '/forbidden',
 ];
 
-/** Exported for tests — the boundary is the whole point of this file. */
+/**
+ * The longest a page view waits for its page to settle — see `queuePageView`. A listing
+ * whose API hangs still gets counted, under whatever title the tab shows by then.
+ */
+const SETTLE_CAP_MS = 5000;
+
+/** A page view waiting for its head to settle, and what to tear down once it is sent. */
+interface PendingPageView {
+  url: string;
+  /**
+   * The address bar when the view was queued. Read then, not at send: a view flushed by the
+   * next navigation is sent after the router has already moved the address bar on, and GA4
+   * builds its page reports from `page_location`.
+   */
+  location: string;
+  teardown: (() => void)[];
+}
+
+/**
+ * Exported for tests — the boundary is the whole point of this file.
+ *
+ * Takes a full router URL and compares its language-free path: the list above is written
+ * the way the route table declares paths, and every real URL carries a language prefix,
+ * so `/en/admin` must be judged as `/admin`.
+ */
 export function isMarketplacePath(url: string): boolean {
-  const path = url.split('?')[0];
+  const path = routePath(url);
   if (path === '/host') return false; // exact, so /hostel/:id still counts
   return !NON_MARKETPLACE.some((p) => path.startsWith(p));
 }
@@ -61,16 +87,21 @@ export function isMarketplacePath(url: string): boolean {
  *
  * Page views are sent by hand. GA4's automatic `page_view` fires once on script load and
  * never again in a single-page app, so `send_page_view: false` turns it off and the router
- * drives it instead.
+ * drives it instead — once the page's head has settled, so the title recorded is the one
+ * the visitor saw; see `queuePageView`.
  */
 @Injectable({ providedIn: 'root' })
 export class GoogleAnalyticsService {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private started = false;
   private routerBound = false;
+
+  /** At most one: a newer navigation sends the older view before queueing its own. */
+  private pending: PendingPageView | null = null;
 
   /** False when there is no measurement id, on the server, or in the native app. */
   private get enabled(): boolean {
@@ -128,17 +159,28 @@ export class GoogleAnalyticsService {
     // Only when a navigation has already finished — i.e. consent was granted mid-session.
     // On boot the router has not navigated yet, and the NavigationEnd that follows would
     // send a second page_view for the same page.
-    if (this.router.navigated) this.sendPageView(this.router.url);
+    if (this.router.navigated) this.queuePageView(this.router.url);
   }
 
   /**
    * Stops sending. The already-loaded script cannot be unloaded, so consent is withdrawn
    * through Consent Mode, which is what actually governs whether GA may store anything.
+   *
+   * Consent Mode stops storage, not requests, so nothing is sent after this either: a page
+   * view still waiting for its page to settle is dropped, and later navigations and events
+   * send nothing until `start` runs again.
    */
   stop(): void {
+    // Before the `enabled` check: dropping local state is safe everywhere.
+    this.cancelPageView();
+    this.started = false;
     if (!this.enabled) return;
     window.gtag?.('consent', 'update', { analytics_storage: 'denied' });
-    this.started = false;
+  }
+
+  /** Started and still consented — the condition for sending anything at all. */
+  private get sending(): boolean {
+    return this.started && googleAnalyticsConsent() === 'granted';
   }
 
   /**
@@ -148,7 +190,7 @@ export class GoogleAnalyticsService {
    * is a compile error rather than a column of nulls discovered in GA four weeks later.
    */
   track<K extends GoogleAnalyticsEventName>(name: K, params: GoogleAnalyticsEvents[K]): void {
-    if (!this.started || googleAnalyticsConsent() !== 'granted') return;
+    if (!this.sending) return;
     if (!isMarketplacePath(this.router.url)) return;
     window.gtag?.('event', name, params);
   }
@@ -161,17 +203,86 @@ export class GoogleAnalyticsService {
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed(this.destroyRef),
       )
-      // Deferred a tick: Angular's TitleStrategy also runs off NavigationEnd, and reading
-      // document.title in the same task gets the *previous* route's title — every page
-      // would be attributed to whatever the visitor landed on first.
-      .subscribe((e) => setTimeout(() => this.sendPageView(e.urlAfterRedirects)));
+      .subscribe((e) => this.queuePageView(e.urlAfterRedirects));
+
+    // The tab closing or the visitor leaving the site must not lose a view still waiting
+    // for its page to settle — a listing abandoned while loading is exactly that case.
+    const onPageHide = () => this.flushPageView();
+    window.addEventListener('pagehide', onPageHide);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('pagehide', onPageHide);
+      this.cancelPageView();
+    });
   }
 
-  private sendPageView(url: string): void {
-    if (!isMarketplacePath(url)) return;
+  /**
+   * Sends a `page_view` for `url` once its head has settled, so `page_title` is the title
+   * the visitor actually saw.
+   *
+   * Reading the title at a fixed moment is wrong: the route's head is written by
+   * an effect in the navigation's first change detection, which runs after NavigationEnd,
+   * and that effect itself waits for the active language's strings — so a language switch
+   * still loading, or a listing still fetching, would record a placeholder or the previous
+   * page's title. Instead this waits:
+   *
+   * 1. one macrotask, so the navigation's first tick (and the head effects in it) has run;
+   * 2. until `Seo.settled` — strings loaded and no provisional head;
+   * 3. one more macrotask, so effects in the tick that settled it have written the head too.
+   *
+   * Never longer than {@link SETTLE_CAP_MS}: at the cap it sends with whatever title is
+   * there. A view still waiting is sent at once when the next navigation lands or the page
+   * is hidden, so every landed navigation is counted exactly once.
+   */
+  private queuePageView(url: string): void {
+    this.flushPageView();
+    // Nothing to wait for after `stop`, or on a console route: it would never be sent.
+    if (!this.sending || !isMarketplacePath(url)) return;
+
+    const view: PendingPageView = { url, location: window.location.href, teardown: [] };
+    this.pending = view;
+
+    const cap = setTimeout(() => this.flushPageView(), SETTLE_CAP_MS);
+    const firstTick = setTimeout(() => {
+      // Resolved on use rather than injected: several components inject this service only
+      // to call `track`, and need not construct the head service and its translations too.
+      const seo = this.injector.get(Seo);
+      const watcher = effect(
+        (onCleanup) => {
+          if (!seo.settled()) return;
+          // Cleared if the head goes back to unsettled first — a provisional head written
+          // in the same tick — so the view waits for the next settled one instead.
+          const settledTick = setTimeout(() => this.flushPageView());
+          onCleanup(() => clearTimeout(settledTick));
+        },
+        { injector: this.injector },
+      );
+      view.teardown.push(() => watcher.destroy());
+    });
+    view.teardown.push(() => clearTimeout(cap), () => clearTimeout(firstTick));
+  }
+
+  /** Sends the waiting page view now, if there is one. Safe to call from every exit. */
+  private flushPageView(): void {
+    const view = this.cancelPageView();
+    if (view) this.sendPageView(view);
+  }
+
+  /** Drops the waiting page view without sending it, and returns it. */
+  private cancelPageView(): PendingPageView | null {
+    const view = this.pending;
+    if (!view) return null;
+    // Cleared before tearing down, so nothing torn down can reach this view again.
+    this.pending = null;
+    for (const fn of view.teardown) fn();
+    return view;
+  }
+
+  private sendPageView({ url, location }: PendingPageView): void {
+    if (!this.sending || !isMarketplacePath(url)) return;
     window.gtag?.('event', 'page_view', {
       page_path: url.split('?')[0],
-      page_location: window.location.href,
+      page_location: location,
+      // Read at send, unlike the location: waiting for this is the point of the queue.
       page_title: document.title,
     });
   }

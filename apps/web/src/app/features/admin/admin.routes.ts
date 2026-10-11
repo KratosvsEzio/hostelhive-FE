@@ -13,11 +13,11 @@ export const ADMIN_ROUTES: Route[] = [
     component: StaffLayout,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'payments' },
-      { path: 'roles', component: AdminRoles, title: 'Roles & permissions — HostelHive Admin', canActivate: [permissionGuard('admin:Role:index')] },
-      { path: 'payments', component: AdminPayments, title: 'Payments — HostelHive Admin', canActivate: [permissionGuard('admin:Payment:index')] },
-      { path: 'listings', component: AdminListings, title: 'All listings — HostelHive Admin', canActivate: [permissionGuard('admin:Hostel:index')] },
-      { path: 'queue', component: Queue, title: 'Review queue — HostelHive Admin', canActivate: [permissionGuard('moderator:Hostel:index')] },
-      { path: 'review/:id', component: Review, title: 'Listing review — HostelHive Admin' },
+      { path: 'roles', component: AdminRoles, title: 'adminAdminRoles.rolesPermissions', canActivate: [permissionGuard('admin:Role:index')] },
+      { path: 'payments', component: AdminPayments, title: 'adminAdminPayments.payments', canActivate: [permissionGuard('admin:Payment:index')] },
+      { path: 'listings', component: AdminListings, title: 'adminAdminListings.allListings', canActivate: [permissionGuard('admin:Hostel:index')] },
+      { path: 'queue', component: Queue, title: 'moderatorQueue.reviewQueue', canActivate: [permissionGuard('moderator:Hostel:index')] },
+      { path: 'review/:id', component: Review, title: 'routeTitle.listingReview' },
     ],
   },
 ];

@@ -1,9 +1,8 @@
 import { Route } from '@angular/router';
 import { SearchMap } from './search-map/search-map';
 
-// No `title` on either route: SearchMap's SEO effect owns the tab title. Angular's title
-// strategy re-applies a route's static title after every navigation — viewport writes and
-// filter merges included — and would overwrite the place-specific title the page just set.
+// No `title` on either route: SearchMap's SEO effect owns the whole head, tab title included
+// (`head: 'page'` on the parent). A `'page'` route declares no title — see app.routes.ts.
 export const SEARCH_ROUTES: Route[] = [
   // Unified Airbnb-style split: card list (left) + live map (right). One canonical URL.
   { path: '', component: SearchMap },

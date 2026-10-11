@@ -20,6 +20,31 @@ const INDEX = 'index, follow, max-image-preview:large';
 const NOINDEX = 'noindex, nofollow';
 const HREFLANGS = 19;
 const BLOG_TITLE = 'Blog — guides to hostels, campuses and the north | HostelHive';
+const BLOG_TITLE_UR = 'بلاگ — ہاسٹلز، کیمپس اور شمالی علاقوں کی گائیڈز | HostelHive';
+const BLOG_DESCRIPTION_UR =
+  'پاکستان میں طلبہ ہاسٹلز اور بیک پیکرز کے قیام کی عملی گائیڈز: شہر بہ شہر کمروں کی قیمت کتنی ہے، بڑی یونیورسٹیوں کے قریب ہاسٹل، اور شمالی علاقوں میں کہاں ٹھہریں۔';
+const ABOUT_TITLE_UR = 'ہمارے بارے میں — HostelHive';
+
+/** The tab and share title of each page in English, exactly as it read before titles were translated. */
+const ENGLISH_TITLES: [string, string][] = [
+  ['about', 'About Us — HostelHive'],
+  ['faqs', 'FAQs — HostelHive'],
+  ['contact', 'Contact Us — HostelHive'],
+  ['careers', 'Careers — HostelHive'],
+  ['privacy-policy', 'Privacy Policy — HostelHive'],
+  ['terms-of-service', 'Terms of Service — HostelHive'],
+  ['credits', 'Image credits — HostelHive'],
+  ['blog', BLOG_TITLE],
+  ['service-policy', 'Service policy — HostelHive'],
+];
+
+/** Pages whose title must come out in the visitor's language, with the exact title that language gives. */
+const TRANSLATED_TITLES: [string, string][] = [
+  ['/ur/about', ABOUT_TITLE_UR],
+  ['/ur/faqs', 'عمومی سوالات — HostelHive'],
+  ['/de/contact', 'Kontakt — HostelHive'],
+  ['/ar/about', 'من نحن — HostelHive'],
+];
 
 /** The default description every static page without a key of its own carries. */
 const DEFAULT_DESCRIPTION = {
@@ -144,6 +169,40 @@ test.describe('server-rendered head of a route without its own SEO', () => {
 
     expect(head.title).toBe(BLOG_TITLE);
   });
+
+  for (const [path, title] of TRANSLATED_TITLES) {
+    test(`${path} carries its title and og:title in its own language`, async ({ request }) => {
+      const res = await request.get(path, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const head = headOf(await res.text());
+
+      expect(head.title).toBe(title);
+      expect(head.ogTitles).toEqual([title]);
+      expect(head.twitterTitles).toEqual([title]);
+    });
+  }
+
+  test('/ur/blog carries its title and description in Urdu', async ({ request }) => {
+    const res = await request.get('/ur/blog', { timeout: 100_000 });
+    expect(res.ok()).toBe(true);
+
+    const head = headOf(await res.text());
+
+    expect(head.title).toBe(BLOG_TITLE_UR);
+    expect(head.description).toBe(BLOG_DESCRIPTION_UR);
+  });
+
+  for (const [path, title] of ENGLISH_TITLES) {
+    test(`/en/${path} keeps its English title`, async ({ request }) => {
+      const res = await request.get(`/en/${path}`, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const head = headOf(await res.text());
+
+      expect(head.title).toBe(title);
+    });
+  }
 });
 
 test.describe('client navigation between pages with and without their own SEO', () => {
@@ -203,6 +262,21 @@ test.describe('client navigation between pages with and without their own SEO', 
     expect(head.ogLocales).toEqual(['ur_PK']);
     expect(head.description).toBe(ABOUT_DESCRIPTION.ur);
     expect(head.hreflangs).toBe(HREFLANGS);
+  });
+
+  test('switching a static page to Urdu retitles the tab and the share card', async ({ page }) => {
+    await page.goto('/en/about');
+    await expect.poll(async () => (await liveHead(page)).title).toBe('About Us — HostelHive');
+    await waitForClient(page);
+    await markDocument(page);
+
+    await switchLanguage(page, 'ur');
+    await expect(page).toHaveURL(/\/ur\/about\/?$/);
+    expect(await documentSurvived(page)).toBe(true);
+
+    await expect.poll(async () => (await liveHead(page)).title).toBe(ABOUT_TITLE_UR);
+    await expect.poll(async () => (await liveHead(page)).ogTitles).toEqual([ABOUT_TITLE_UR]);
+    expect((await liveHead(page)).twitterTitles).toEqual([ABOUT_TITLE_UR]);
   });
 
   test('a noindex page leaves no canonical, and each page after it brings its own', async ({
@@ -321,7 +395,7 @@ test.describe('client navigation between pages with and without their own SEO', 
     expect(head.ogLocales).toEqual(['ur_PK']);
     expect(head.hreflangs).toBe(HREFLANGS);
     expect(head.jsonLd).toEqual(['blog']);
-    expect(head.title).toBe(BLOG_TITLE);
+    await expect.poll(async () => (await liveHead(page)).title).toBe(BLOG_TITLE_UR);
     await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute(
       'href',
       `${SITE}/en/blog`,

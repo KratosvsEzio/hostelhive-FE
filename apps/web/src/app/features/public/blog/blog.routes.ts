@@ -11,7 +11,6 @@ export const BLOG_ROUTES: Route[] = [
   {
     path: '',
     loadComponent: () => import('./blog').then((m) => m.Blog),
-    title: 'Blog — HostelHive',
   },
   {
     path: ':slug',

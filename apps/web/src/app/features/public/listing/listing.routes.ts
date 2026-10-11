@@ -5,6 +5,5 @@ export const LISTING_ROUTES: Route[] = [
   {
     path: ':slug',
     component: ListingDetail,
-    title: 'Hostel details — HostelHive',
   },
 ];

@@ -52,6 +52,38 @@ describe('isMarketplacePath', () => {
     expect(isMarketplacePath('/host/x?from=/search')).toBe(false);
     expect(isMarketplacePath('/search?returnUrl=/host')).toBe(true);
   });
+
+  // Every real URL carries a language prefix, while the list compares route-table paths;
+  // judged with the prefix on, every console and tokened link counted as marketplace.
+  it('judges a language-prefixed URL by its path', () => {
+    for (const url of [
+      '/en/host',
+      '/en/host/1/rooms',
+      '/ur/admin',
+      '/de/moderator/hostels',
+      '/en/account/settings',
+      '/en/reset_password?token=x',
+      '/en/confirm_invitation?t=1',
+    ]) {
+      expect(isMarketplacePath(url)).toBe(false);
+    }
+    for (const url of [
+      '/en',
+      '/ur',
+      '/en/hostel/abc',
+      '/ur/search',
+      '/en/search?place=Karachi',
+      '/fr/blog',
+    ]) {
+      expect(isMarketplacePath(url)).toBe(true);
+    }
+  });
+
+  it('keeps the exact /host rule behind a prefix', () => {
+    expect(isMarketplacePath('/en/host/')).toBe(false);
+    expect(isMarketplacePath('/en/hostel/abc')).toBe(true);
+    expect(isMarketplacePath('/en/hostels')).toBe(true);
+  });
 });
 
 describe('analytics consent', () => {

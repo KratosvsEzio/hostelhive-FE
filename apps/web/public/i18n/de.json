@@ -1710,6 +1710,28 @@
     "worldwideTitle": "Hostels weltweit — Suche | HostelHive",
     "worldwideDescription": "Geprüfte Hostels, Pensionen und Co-Living weltweit durchsuchen. Nach Budget, Zimmerbelegung und Ausstattung filtern.",
     "pricingTitle": "Preise für Hostels | HostelHive",
-    "pricingDescription": "Monatliche HostelHive-Tarife für Hostels: gelistet werden, in der Suche hervorgehoben werden und Zimmer, Buchungen und Rechnungen mit dem Gastgeber-CRM verwalten."
+    "pricingDescription": "Monatliche HostelHive-Tarife für Hostels: gelistet werden, in der Suche hervorgehoben werden und Zimmer, Buchungen und Rechnungen mit dem Gastgeber-CRM verwalten.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — Ratgeber zu Hostels, Campus und dem Norden | HostelHive",
+    "blogDescription": "Praktische Ratgeber zu Studentenhostels und Backpacker-Unterkünften in Pakistan: was Zimmer in jeder Stadt kosten, Hostels nahe den großen Universitäten und wo man in den nördlichen Gebieten übernachtet.",
+    "listingLoadingTitle": "Hosteldetails — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Bildnachweise",
+    "confirmAccount": "Bestätigen Sie Ihr Konto",
+    "booking": "Buchung",
+    "changeBooking": "Buchung ändern",
+    "listingReview": "Inseratsprüfung",
+    "logInOrSignUp": "Anmelden oder registrieren",
+    "editStaff": "Mitarbeiter bearbeiten",
+    "roomDetails": "Zimmerdetails",
+    "tenantProfile": "Mieterprofil",
+    "editUtilityBill": "Nebenkostenabrechnung bearbeiten",
+    "newInvoice": "Neue Rechnung",
+    "editInvoice": "Rechnung bearbeiten",
+    "editExpense": "Ausgabe bearbeiten",
+    "revenueDetail": "Umsatzdetails",
+    "payInvoice": "Rechnung bezahlen"
   }
 }

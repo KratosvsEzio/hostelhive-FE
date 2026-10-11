@@ -1710,6 +1710,28 @@
     "worldwideTitle": "Hosteller i hele verden — søg | HostelHive",
     "worldwideDescription": "Søg verificerede hosteller, pensionater og bofællesskaber i hele verden. Filtrér efter budget, værelsesdeling og faciliteter.",
     "pricingTitle": "Priser for hostels | HostelHive",
-    "pricingDescription": "Månedlige HostelHive-planer for hostels: bliv vist, få et boost i søgningen, og styr værelser, bookinger og regninger med CRM til værter."
+    "pricingDescription": "Månedlige HostelHive-planer for hostels: bliv vist, få et boost i søgningen, og styr værelser, bookinger og regninger med CRM til værter.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — guides til hosteller, campusser og de nordlige områder | HostelHive",
+    "blogDescription": "Praktiske guides til studenterhosteller og backpackerophold i Pakistan: hvad værelserne koster by for by, hosteller nær de store universiteter, og hvor man kan overnatte i de nordlige områder.",
+    "listingLoadingTitle": "Hosteldetaljer — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Billedkreditering",
+    "confirmAccount": "Bekræft din konto",
+    "booking": "Booking",
+    "changeBooking": "Ændr booking",
+    "listingReview": "Gennemgang af annonce",
+    "logInOrSignUp": "Log ind eller opret konto",
+    "editStaff": "Rediger medarbejder",
+    "roomDetails": "Værelsesdetaljer",
+    "tenantProfile": "Lejerprofil",
+    "editUtilityBill": "Rediger forsyningsregning",
+    "newInvoice": "Ny faktura",
+    "editInvoice": "Rediger faktura",
+    "editExpense": "Rediger udgift",
+    "revenueDetail": "Omsætningsdetaljer",
+    "payInvoice": "Betal faktura"
   }
 }

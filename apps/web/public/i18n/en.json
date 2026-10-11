@@ -1712,6 +1712,28 @@
     "worldwideTitle": "Hostels worldwide — search | HostelHive",
     "worldwideDescription": "Search verified hostels, PGs and co-living worldwide. Filter by budget, room sharing and amenities.",
     "pricingTitle": "Pricing for hostels | HostelHive",
-    "pricingDescription": "Monthly HostelHive plans for hostels: get listed, get boosted in search, and run rooms, bookings and bills with the host CRM."
+    "pricingDescription": "Monthly HostelHive plans for hostels: get listed, get boosted in search, and run rooms, bookings and bills with the host CRM.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — guides to hostels, campuses and the north | HostelHive",
+    "blogDescription": "Practical guides to student hostels and backpacker stays in Pakistan: what rooms cost city by city, hostels near the major universities, and where to sleep in the northern areas.",
+    "listingLoadingTitle": "Hostel details — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Image credits",
+    "confirmAccount": "Confirm your account",
+    "booking": "Booking",
+    "changeBooking": "Change booking",
+    "listingReview": "Listing review",
+    "logInOrSignUp": "Log in or sign up",
+    "editStaff": "Edit staff",
+    "roomDetails": "Room details",
+    "tenantProfile": "Tenant Profile",
+    "editUtilityBill": "Edit utility bill",
+    "newInvoice": "New invoice",
+    "editInvoice": "Edit invoice",
+    "editExpense": "Edit expense",
+    "revenueDetail": "Revenue detail",
+    "payInvoice": "Pay invoice"
   }
 }

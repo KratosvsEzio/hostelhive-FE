@@ -1715,6 +1715,28 @@
     "worldwideTitle": "Hostel trên toàn thế giới — tìm kiếm | HostelHive",
     "worldwideDescription": "Tìm hostel, nhà trọ và co-living đã xác minh trên toàn thế giới. Lọc theo ngân sách, số người ở chung và tiện nghi.",
     "pricingTitle": "Bảng giá cho nhà nghỉ | HostelHive",
-    "pricingDescription": "Các gói HostelHive hằng tháng cho nhà nghỉ: được hiển thị, được đẩy lên trong tìm kiếm và quản lý phòng, đặt phòng, hóa đơn bằng CRM dành cho chủ nhà."
+    "pricingDescription": "Các gói HostelHive hằng tháng cho nhà nghỉ: được hiển thị, được đẩy lên trong tìm kiếm và quản lý phòng, đặt phòng, hóa đơn bằng CRM dành cho chủ nhà.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — Quản trị HostelHive",
+    "blogTitle": "Blog — cẩm nang về hostel, trường đại học và vùng phía bắc | HostelHive",
+    "blogDescription": "Cẩm nang thực tế về hostel sinh viên và chỗ ở cho phượt thủ tại Pakistan: giá phòng ở từng thành phố, hostel gần các trường đại học lớn và nơi nghỉ lại ở vùng phía bắc.",
+    "listingLoadingTitle": "Chi tiết hostel — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Nguồn hình ảnh",
+    "confirmAccount": "Xác nhận tài khoản của bạn",
+    "booking": "Đặt phòng",
+    "changeBooking": "Thay đổi đặt phòng",
+    "listingReview": "Duyệt tin đăng",
+    "logInOrSignUp": "Đăng nhập hoặc đăng ký",
+    "editStaff": "Sửa nhân viên",
+    "roomDetails": "Chi tiết phòng",
+    "tenantProfile": "Hồ sơ người thuê",
+    "editUtilityBill": "Sửa hóa đơn tiện ích",
+    "newInvoice": "Hóa đơn mới",
+    "editInvoice": "Sửa hóa đơn",
+    "editExpense": "Sửa khoản chi",
+    "revenueDetail": "Chi tiết doanh thu",
+    "payInvoice": "Thanh toán hóa đơn"
   }
 }

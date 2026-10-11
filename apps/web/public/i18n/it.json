@@ -1710,6 +1710,28 @@
     "worldwideTitle": "Ostelli in tutto il mondo — ricerca | HostelHive",
     "worldwideDescription": "Cerca ostelli, pensioni e co-living verificati in tutto il mondo. Filtra per budget, condivisione della stanza e servizi.",
     "pricingTitle": "Prezzi per ostelli | HostelHive",
-    "pricingDescription": "Piani mensili HostelHive per ostelli: fatti trovare, ottieni più visibilità nella ricerca e gestisci camere, prenotazioni e fatture con il CRM per host."
+    "pricingDescription": "Piani mensili HostelHive per ostelli: fatti trovare, ottieni più visibilità nella ricerca e gestisci camere, prenotazioni e fatture con il CRM per host.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — guide su ostelli, campus e il Nord | HostelHive",
+    "blogDescription": "Guide pratiche sugli ostelli per studenti e sugli alloggi per backpacker in Pakistan: quanto costano le camere città per città, gli ostelli vicino alle principali università e dove dormire nelle aree settentrionali.",
+    "listingLoadingTitle": "Dettagli ostello — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Crediti delle immagini",
+    "confirmAccount": "Conferma il tuo account",
+    "booking": "Prenotazione",
+    "changeBooking": "Modifica prenotazione",
+    "listingReview": "Revisione annuncio",
+    "logInOrSignUp": "Accedi o registrati",
+    "editStaff": "Modifica dipendente",
+    "roomDetails": "Dettagli camera",
+    "tenantProfile": "Profilo inquilino",
+    "editUtilityBill": "Modifica bolletta",
+    "newInvoice": "Nuova fattura",
+    "editInvoice": "Modifica fattura",
+    "editExpense": "Modifica spesa",
+    "revenueDetail": "Dettaglio ricavi",
+    "payInvoice": "Paga fattura"
   }
 }

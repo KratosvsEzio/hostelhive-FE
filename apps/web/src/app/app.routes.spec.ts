@@ -6,6 +6,8 @@ import { appRoutes } from './app.routes';
 import { BillingInvoiceDetail } from '@features/host/subscription/billing-invoice-detail';
 import { BillingInvoices } from '@features/host/subscription/billing-invoices';
 import { RouteHead, routeHeadFor } from '@core/route-head';
+import { PageRoute, pageRoutes } from '@core/route-walk-testing';
+import { at, loadLocale } from '@core/i18n/locale-files-testing';
 import { DISALLOWED_PATHS } from '@core/robots';
 import { CLIENT_ONLY } from './app.routes.server';
 import { sitemapPaths } from '@features/public/landing/sitemap-urls';
@@ -233,47 +235,6 @@ describe('who owns each route head', () => {
   });
 });
 
-/** A route that renders a page, with where it sits and which head owner it ends up with. */
-interface PageRoute {
-  /** The path under the language prefix, e.g. `account/settings`. */
-  path: string;
-  head: RouteHead['head'];
-}
-
-/** Resolves a `loadChildren` result to its routes, whichever shape the loader returned. */
-async function lazyRoutes(route: Route, where: string): Promise<Route[]> {
-  const loaded: unknown = await (route.loadChildren as () => unknown)();
-  if (Array.isArray(loaded)) return loaded as Route[];
-  const fromDefault = (loaded as { default?: unknown } | null)?.default;
-  if (Array.isArray(fromDefault)) return fromDefault as Route[];
-  throw new Error(`The lazy children of "${where}" are not a route array, so they cannot be read`);
-}
-
-/**
- * Every route under the language prefix that renders a component, lazy children included.
- *
- * `head` is the deepest `data.head` on the way down, the same rule `routeHeadFor` applies at
- * runtime. Redirects render nothing and are skipped.
- */
-async function pageRoutes(
-  routes: Route[],
-  prefix = '',
-  inherited?: RouteHead['head'],
-): Promise<PageRoute[]> {
-  const found: PageRoute[] = [];
-  for (const route of routes) {
-    if (route.redirectTo !== undefined) continue;
-    const path = [prefix, route.path].filter(Boolean).join('/');
-    const head = (route.data?.['head'] as RouteHead['head']) ?? inherited;
-    if (route.component || route.loadComponent) found.push({ path, head });
-    if (route.children) found.push(...(await pageRoutes(route.children, path, head)));
-    if (typeof route.loadChildren === 'function') {
-      found.push(...(await pageRoutes(await lazyRoutes(route, path), path, head)));
-    }
-  }
-  return found;
-}
-
 /**
  * Path prefixes whose pages are deliberately kept out of the index: the client-only areas,
  * the auth screens, the token links and the payment return pages. Read from
@@ -318,5 +279,154 @@ describe('the head owner of every page route', () => {
       leaking,
       `These pages sit under a noindex area but resolve to an indexable head: ${show(leaking)}. Remove data.head from them or from a parent.`,
     ).toEqual([]);
+  });
+});
+
+/**
+ * The English title every titled page ends up with, by path under the language prefix.
+ *
+ * Pinned as plain text so a changed label key, a changed wording in `en.json` or a changed
+ * title template shows up here: Google Analytics history is keyed on these strings. The
+ * public indexable titles are also covered against the server render in the e2e lane; this
+ * table is the only check on the client-only and console ones. Wording that changed on
+ * purpose: "Service policy", "Access blocked" and "Overview" now follow the standard template.
+ */
+const EXPECTED_TITLES: Record<string, string> = {
+  'privacy-policy': 'Privacy Policy — HostelHive',
+  'terms-of-service': 'Terms of Service — HostelHive',
+  'service-policy': 'Service policy — HostelHive',
+  credits: 'Image credits — HostelHive',
+  about: 'About Us — HostelHive',
+  faqs: 'FAQs — HostelHive',
+  careers: 'Careers — HostelHive',
+  contact: 'Contact Us — HostelHive',
+  auth: 'Log in or sign up — HostelHive',
+  'auth/forgot-password': 'Reset password — HostelHive',
+  confirm_invitation: 'Confirm your account — HostelHive',
+  reset_password: 'Reset password — HostelHive',
+  'account/bookings': 'Your bookings — HostelHive',
+  'account/bookings/:id': 'Booking — HostelHive',
+  'account/bookings/:id/edit': 'Change booking — HostelHive',
+  'account/favorites': 'Favorites — HostelHive',
+  'account/settings': 'Account settings — HostelHive',
+  'account/security': 'Password & security — HostelHive',
+  notifications: 'Notifications — HostelHive',
+  'billing/payment/success': 'Payment — HostelHive',
+  'billing/payment/cancel': 'Payment — HostelHive',
+  'host/listings/new': 'List your hostel — HostelHive',
+  forbidden: 'Access blocked — HostelHive',
+  'host/hostels/new': 'New hostel — HostelHive',
+  'host/:hostelId/profile': 'Hostel profile — HostelHive',
+  'host/:hostelId/more': 'More — HostelHive',
+  'host/:hostelId/team': 'Team & staff — HostelHive',
+  'host/:hostelId/team/edit/:staffId': 'Edit staff — HostelHive',
+  'host/:hostelId/bookings': 'Bookings — HostelHive',
+  'host/:hostelId/rooms': 'Rooms — HostelHive',
+  'host/:hostelId/rooms/create': 'Add room — HostelHive',
+  'host/:hostelId/rooms/bulk': 'Bulk add rooms — HostelHive',
+  'host/:hostelId/rooms/edit/:roomId': 'Edit room — HostelHive',
+  'host/:hostelId/rooms/:roomId': 'Room details — HostelHive',
+  'host/:hostelId/tenants': 'Tenants — HostelHive',
+  'host/:hostelId/tenants/create': 'Register Tenant — HostelHive',
+  'host/:hostelId/tenants/edit/:tenantId': 'Edit tenant — HostelHive',
+  'host/:hostelId/tenants/profile/:tenantId': 'Tenant Profile — HostelHive',
+  'host/:hostelId/utilities': 'Utilities — HostelHive',
+  'host/:hostelId/utilities/add': 'Add utility bill — HostelHive',
+  'host/:hostelId/utilities/edit/:billId': 'Edit utility bill — HostelHive',
+  'host/:hostelId/invoices': 'Invoices — HostelHive',
+  'host/:hostelId/invoices/create': 'New invoice — HostelHive',
+  'host/:hostelId/invoices/edit/:billId': 'Edit invoice — HostelHive',
+  'host/:hostelId/expenses': 'Expenses — HostelHive',
+  'host/:hostelId/expenses/new': 'New expense — HostelHive',
+  'host/:hostelId/expenses/:expenseId': 'Expense — HostelHive',
+  'host/:hostelId/expenses/:expenseId/edit': 'Edit expense — HostelHive',
+  'host/:hostelId/mess': 'Mess — HostelHive',
+  'host/:hostelId/mess/add': 'Add grocery — HostelHive',
+  'host/:hostelId/mess/confirmations': 'Meal confirmations — HostelHive',
+  'host/:hostelId/mess/notifications': 'Meal notifications — HostelHive',
+  'host/:hostelId/overview': 'Overview — HostelHive',
+  'host/:hostelId/overview/revenue': 'Revenue detail — HostelHive',
+  'host/:hostelId/overview/movement': 'Tenant movement — HostelHive',
+  'host/:hostelId/overview/occupancy': 'Occupancy trend — HostelHive',
+  'host/:hostelId/subscription': 'Billing — HostelHive',
+  'host/:hostelId/subscription/pay/:invoiceId': 'Pay invoice — HostelHive',
+  'host/:hostelId/subscription/invoices': 'Billing history — HostelHive',
+  'host/:hostelId/subscription/invoices/:invoiceId': 'Invoice — HostelHive',
+  'admin/roles': 'Roles & permissions — HostelHive Admin',
+  'admin/payments': 'Payments — HostelHive Admin',
+  'admin/listings': 'All listings — HostelHive Admin',
+  'admin/queue': 'Review queue — HostelHive Admin',
+  'admin/review/:id': 'Listing review — HostelHive Admin',
+  'moderator/queue': 'Review queue — HostelHive',
+  'moderator/review/:id': 'Listing review — HostelHive',
+  'moderator/media': 'Media queue — HostelHive',
+  'moderator/audit': 'Audit log — HostelHive',
+};
+
+/** The title a route ends up with in English: its label key in the admin or the standard template. */
+function englishTitle(en: ReturnType<typeof loadLocale>, path: string, key: string): string {
+  const admin = path === 'admin' || path.startsWith('admin/');
+  const template = at(en, admin ? 'seo.adminPageTitle' : 'seo.pageTitle') as string;
+  return template.replace('{{page}}', at(en, key) as string);
+}
+
+/** What the route titles are: label keys, on routes that own no head of their own. */
+describe('the title of every page route', () => {
+  let pages: PageRoute[];
+  const en = loadLocale('en.json');
+
+  beforeAll(async () => {
+    pages = await pageRoutes(appRoutes[0].children ?? []);
+  });
+
+  it('declares no title on any route that owns its head, which writes its own', () => {
+    const owners = pages.filter((p) => p.head === 'page');
+    const titled = owners.filter((p) => p.resolvedTitle !== undefined);
+
+    // Vacuity: the walk reaches the four page-owned routes that used to carry a title.
+    for (const path of ['', 'pricing', 'blog', 'hostel/:slug']) {
+      expect(
+        owners.map((p) => p.path),
+        path,
+      ).toContain(path);
+    }
+    expect(
+      titled,
+      `These routes own their head but still declare a title, which would compete with the page's own: ${show(titled)}.`,
+    ).toEqual([]);
+  });
+
+  it('declares only dotted label keys that hold text in English', () => {
+    const titled = pages.filter((p) => p.title !== undefined);
+
+    expect(titled.length).toBeGreaterThan(60);
+    const bad = titled
+      .filter((p) => {
+        const key = p.title as string;
+        const text = /^[A-Za-z]\w*(\.\w+)+$/.test(key) ? at(en, key) : undefined;
+        return typeof text !== 'string' || text.trim() === '';
+      })
+      .map((p) => `/:locale/${p.path} -> ${p.title}`);
+
+    expect(
+      bad,
+      'A route title must be a Transloco key with English text, not display text.',
+    ).toEqual([]);
+  });
+
+  it('pins the set of titled pages to the table below', () => {
+    const titled = pages.filter((p) => p.resolvedTitle !== undefined).map((p) => p.path);
+
+    expect([...new Set(titled)].sort()).toEqual(Object.keys(EXPECTED_TITLES).sort());
+  });
+
+  it('gives every titled page the same English title it had before titles were translated', () => {
+    const actual = Object.fromEntries(
+      pages
+        .filter((p) => p.resolvedTitle !== undefined)
+        .map((p) => [p.path, englishTitle(en, p.path, p.resolvedTitle as string)]),
+    );
+
+    expect(actual).toEqual(EXPECTED_TITLES);
   });
 });

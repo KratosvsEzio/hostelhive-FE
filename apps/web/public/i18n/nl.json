@@ -1710,6 +1710,28 @@
     "worldwideTitle": "Hostels wereldwijd — zoeken | HostelHive",
     "worldwideDescription": "Zoek geverifieerde hostels, pensions en co-living wereldwijd. Filter op budget, kamerdeling en voorzieningen.",
     "pricingTitle": "Prijzen voor hostels | HostelHive",
-    "pricingDescription": "Maandelijkse HostelHive-abonnementen voor hostels: word vermeld, krijg een boost in de zoekresultaten en beheer kamers, boekingen en rekeningen met het host-CRM."
+    "pricingDescription": "Maandelijkse HostelHive-abonnementen voor hostels: word vermeld, krijg een boost in de zoekresultaten en beheer kamers, boekingen en rekeningen met het host-CRM.",
+    "pageTitle": "{{page}} — HostelHive",
+    "adminPageTitle": "{{page}} — HostelHive Admin",
+    "blogTitle": "Blog — gidsen over hostels, campussen en het noorden | HostelHive",
+    "blogDescription": "Praktische gidsen over studentenhostels en backpackersverblijven in Pakistan: wat kamers per stad kosten, hostels bij de grote universiteiten en waar je slaapt in de noordelijke gebieden.",
+    "listingLoadingTitle": "Hostelgegevens — HostelHive"
+  },
+  "routeTitle": {
+    "imageCredits": "Beeldverantwoording",
+    "confirmAccount": "Bevestig je account",
+    "booking": "Boeking",
+    "changeBooking": "Boeking wijzigen",
+    "listingReview": "Advertentiebeoordeling",
+    "logInOrSignUp": "Inloggen of registreren",
+    "editStaff": "Medewerker bewerken",
+    "roomDetails": "Kamergegevens",
+    "tenantProfile": "Huurdersprofiel",
+    "editUtilityBill": "Nutsrekening bewerken",
+    "newInvoice": "Nieuwe factuur",
+    "editInvoice": "Factuur bewerken",
+    "editExpense": "Uitgave bewerken",
+    "revenueDetail": "Omzetdetails",
+    "payInvoice": "Factuur betalen"
   }
 }
