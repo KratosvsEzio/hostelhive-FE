@@ -948,7 +948,6 @@ export class OnboardingWizard {
 
   private buildDraftInput(): HostelInput {
     const attachmentIds = this.unlinkedAttachmentIds();
-    const bannerId = this.media().find((m) => m.primary)?.attachmentId;
     return {
       name: this.name() || undefined,
       description: this.description() || undefined,
@@ -970,8 +969,6 @@ export class OnboardingWizard {
       total_rooms: this.rooms().length || 1,
       total_floors: 1,
       ...(attachmentIds.length ? { attachment_ids: attachmentIds } : {}),
-      // Attachment ids can be UUID strings while the field is typed as a number.
-      ...(bannerId ? { banner_id: bannerId as unknown as number } : {}),
     };
   }
 

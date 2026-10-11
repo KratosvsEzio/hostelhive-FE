@@ -344,7 +344,6 @@ export interface HostelInput {
   nearby_landmarks?: string;
   manager_id?: number | null;
   notes?: string;
-  banner_id?: number | null;
   hostel_offers_attributes?: HostelOfferInput[];
   room_types_attributes?: RoomTypeInput[];
   rooms_attributes?: RoomInput[];
