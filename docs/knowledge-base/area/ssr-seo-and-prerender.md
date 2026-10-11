@@ -80,8 +80,10 @@ deepest-wins down the matched tree (`routeHeadFor`):
   **skipped** when:
   - **A:** the app replaced the URL on the same page: `trigger === 'imperative'`, `extras.replaceUrl`,
     and the same `pagePath` (from `core/scroll-reset.ts`, locale kept) as the previous successful
-    navigation. This covers map pans, zooms and recenters, "Search everywhere" on `/search`, and the
-    listing's `?review` clean-up.
+    navigation. This covers map pans, zooms and recenters, "Search everywhere" on a bare `/search`, and
+    the listing's `?review` clean-up. "Search everywhere" from `/search/<place>` or a landing page is a
+    push to a new path, so it counts one view of `/search`. That started for `/search/<place>` with
+    PR #133 (GA is live; annotate the deploy).
   - **B:** only the `#fragment` changed (blog contents links), whatever the trigger.
 
   Pushes (filter Apply, a place pick, the language switch), Back/Forward and the first load all count.

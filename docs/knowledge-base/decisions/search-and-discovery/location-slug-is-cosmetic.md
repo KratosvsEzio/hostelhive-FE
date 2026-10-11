@@ -27,9 +27,12 @@ Searches used to produce `/search?place=Karachi&lat=…&lng=…`. A readable `/s
 - The heading falls back through `place` → curated name → unslugified slug → framed country → "Pakistan".
 - **The canonical follows the query's place too** (`canonicalPlace`: `toLocationSlug(place || city)`, then the slug). The slug used to win there, so a pick that kept an old slug (`/search/lahore?place=Karachi…`) canonicalised to `/hostels/lahore`. Links shared before that fix still carry such slugs, which is why the query takes precedence rather than the slug being trusted (PR #86).
 - A new place always gets its own slug (`searchRouteFor` via `SearchMap.startSearch`), so new URLs no longer pair one place's slug with another's query.
+- **No in-place navigation may remove a place the path still names; leave the path instead.** A query merge can null `place`/`lat`/`lng`, but the slug answers whenever the query is silent. "Search everywhere" on `/search/<slug>` used to merge in place, so a pan after it brought the slug back as the heading and an indexable canonical. It now leaves for `/search?everywhere=1` (Trello #128, PR #133). This is the fifth instance of the shape, after #106, #109, #110 and #120. Patching the slug's readers one by one was rejected: there are at least five (`slugPlace`, `canonicalPlace`, `locationName`, `placeText`, `SearchBar`'s `placeName`), and a component flag would not survive a refresh or a shared link.
 
 ## Evidence
 
 - `apps/web/src/app/util/location-slug.ts`, `apps/web/src/app/features/public/landing/search-slug.ts`, `apps/web/src/app/features/public/search/search.routes.ts`
-- `apps/web/src/app/layout/components/search-bar/search-bar.ts` (`search()`, `syncPlace()`)
+- `apps/web/src/app/layout/components/search-bar/search-bar.ts` (`search()`, `placeName`)
+- `apps/web/src/app/features/public/search/search-map/search-map.ts` (`searchEverywhere`)
 - PR #29; commit `2e6c9c3` fix(search): scope a pasted /search/<slug> to the place it names
+- PR #133 (`docs/implement/Bugs/128.md`; `apps/web-e2e/src/search-everywhere-from-slug.spec.ts`)
