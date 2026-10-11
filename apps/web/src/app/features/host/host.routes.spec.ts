@@ -1,13 +1,23 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  CanActivateFn,
+  Route,
+  Router,
+  RouterStateSnapshot,
+  UrlTree,
+  provideRouter,
+} from '@angular/router';
 import { Observable, Subject, defer, isObservable, of } from 'rxjs';
 import { HostListing, HostListingsData } from '@hostelhive/data-access';
 import { HostPropertyStore } from '@services';
 import { HostShellApi } from '@services/host-shell-api';
 import { SessionStore, SessionUser } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
+import { HostBookings } from './bookings/bookings';
+import { Invoices } from './invoices/invoices';
 import { HOST_ROUTES, bookingsGate, knownHostelGate, monthlyOnlyGate } from './host.routes';
 import { SUBSCRIPTION_ROUTES } from './subscription/subscription.routes';
 
@@ -581,5 +591,180 @@ describe('the host guards after the account changes without a sign-out', () => {
     expect(run.async).toBe(false);
     expect(answerOf(run)).toBe('/host/a-2');
     expect(api.calls).toEqual(['A']);
+  });
+});
+
+/** Flattens the route tree into `full/path -> Route`, an index route is keyed with a trailing slash so it cannot overwrite its parent. */
+function flatten(routes: Route[], prefix = ''): Map<string, Route> {
+  const out = new Map<string, Route>();
+  for (const r of routes) {
+    const path = r.path ? [prefix, r.path].filter(Boolean).join('/') : `${prefix}/`;
+    out.set(path, r);
+    for (const [p, child] of flatten(r.children ?? [], path)) out.set(p, child);
+  }
+  return out;
+}
+
+const ROUTE_TABLE = flatten(HOST_ROUTES);
+const routeAt = (path: string): Route | undefined => ROUTE_TABLE.get(path);
+
+/**
+ * The booking detail is its own URL so the back button closes it.
+ *
+ * It is a sibling of `bookings`, not a child: `bookingsGate` and the page read `hostelId` from
+ * `route.parent`, which a child route would push down a level.
+ */
+describe('the bookings/:bookingId route', () => {
+  afterEach(() => localStorage.clear());
+
+  it('sits beside bookings under :hostelId, hosting HostBookings behind the same gate', () => {
+    const hostel = routeAt(':hostelId');
+    const detail = hostel?.children?.find((c) => c.path === 'bookings/:bookingId');
+    const list = hostel?.children?.find((c) => c.path === 'bookings');
+
+    expect(detail).toBeDefined();
+    expect(detail?.component).toBe(HostBookings);
+    expect(detail?.component).toBe(list?.component);
+    expect(detail?.canActivate).toEqual([bookingsGate]);
+    expect(detail?.data?.['drawerHost']).toBe(true);
+    expect(list?.children).toBeUndefined();
+  });
+
+  it('sends a monthly hostel to its overview', async () => {
+    setUp([listing({ id: 'monthly-1', billingFrequency: 'month' })]);
+    const gate = routeAt(':hostelId/bookings/:bookingId')?.canActivate?.[0] as CanActivateFn;
+
+    const result = TestBed.runInInjectionContext(() =>
+      gate(snapshotFor('monthly-1'), {} as RouterStateSnapshot),
+    );
+    const settled = isObservable(result)
+      ? await new Promise((r) => (result as Observable<unknown>).subscribe(r))
+      : result;
+
+    expect(settled).toBeInstanceOf(UrlTree);
+    expect(TestBed.inject(Router).serializeUrl(settled as UrlTree)).toBe('/host/monthly-1/overview');
+  });
+
+  it('lets a nightly hostel through', async () => {
+    setUp([listing({ id: 'nightly-1', billingFrequency: 'night' })]);
+    const gate = routeAt(':hostelId/bookings/:bookingId')?.canActivate?.[0] as CanActivateFn;
+
+    const result = TestBed.runInInjectionContext(() =>
+      gate(snapshotFor('nightly-1'), {} as RouterStateSnapshot),
+    );
+    const settled = isObservable(result)
+      ? await new Promise((r) => (result as Observable<unknown>).subscribe(r))
+      : result;
+
+    expect(settled).toBe(true);
+  });
+});
+
+/** Runs the permission guard on a route against a session stub; returns what was asked. */
+function askPermissionGuard(route: Route | undefined, granted: boolean) {
+  const asked: string[] = [];
+  TestBed.resetTestingModule();
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      {
+        provide: SessionStore,
+        useValue: {
+          isAuthenticated: () => true,
+          hasPermission: (flag: string) => {
+            asked.push(flag);
+            return granted;
+          },
+        },
+      },
+    ],
+  });
+  const guard = route?.canActivate?.[0] as CanActivateFn;
+  const result = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, { url: '/x' } as RouterStateSnapshot));
+  return { asked, result };
+}
+
+describe('the invoices/view/:billId route', () => {
+  it('is a child of invoices hosting Invoices as a drawer', () => {
+    const invoices = routeAt(':hostelId/invoices');
+    const view = invoices?.children?.find((c) => c.path === 'view/:billId');
+
+    expect(view).toBeDefined();
+    expect(view?.component).toBe(Invoices);
+    expect(view?.data?.['drawerHost']).toBe(true);
+    expect(routeAt(':hostelId/invoices/view/:billId')).toBe(view);
+  });
+
+  it('inherits the invoices permission guard rather than declaring its own', () => {
+    const invoices = routeAt(':hostelId/invoices');
+    const view = routeAt(':hostelId/invoices/view/:billId');
+
+    expect(view?.canActivate).toBeUndefined();
+    expect(invoices?.canActivate).toHaveLength(1);
+  });
+
+  it('guards invoices behind host:RenterBill:index', () => {
+    const denied = askPermissionGuard(routeAt(':hostelId/invoices'), false);
+    expect(denied.asked).toEqual(['host:RenterBill:index']);
+    expect(denied.result).toBeInstanceOf(UrlTree);
+
+    const allowed = askPermissionGuard(routeAt(':hostelId/invoices'), true);
+    expect(allowed.result).toBe(true);
+  });
+});
+
+/**
+ * Which routes opt in to being reused across their own drawers.
+ *
+ * `AppRouteReuseStrategy` reads this flag, so a route that lacks it reloads its whole page each
+ * time a drawer opens, and a route that wrongly has it never re-initialises. The detail pages
+ * (`rooms/:roomId`, `tenants/profile/:id`) are separate screens and must stay unflagged.
+ */
+describe('drawerHost route data', () => {
+  const expected = [
+    ':hostelId/bookings',
+    ':hostelId/bookings/:bookingId',
+    ':hostelId/rooms/',
+    ':hostelId/rooms/create',
+    ':hostelId/rooms/bulk',
+    ':hostelId/rooms/edit/:roomId',
+    ':hostelId/tenants/',
+    ':hostelId/tenants/create',
+    ':hostelId/tenants/edit/:tenantId',
+    ':hostelId/invoices/',
+    ':hostelId/invoices/create',
+    ':hostelId/invoices/edit/:billId',
+    ':hostelId/invoices/view/:billId',
+  ];
+
+  it('is set on exactly the drawer routes', () => {
+    const flagged = [...ROUTE_TABLE.entries()]
+      .filter(([, r]) => r.data?.['drawerHost'])
+      .map(([path]) => path);
+
+    expect(flagged.sort()).toEqual([...expected].sort());
+  });
+
+  it('is absent on the detail pages that are separate screens', () => {
+    for (const path of [
+      ':hostelId/rooms/:roomId',
+      ':hostelId/tenants/profile/:tenantId',
+      ':hostelId/profile',
+      ':hostelId/team/',
+      ':hostelId/team/edit/:staffId',
+      ':hostelId/utilities/',
+      ':hostelId/expenses/new',
+    ]) {
+      expect({ path, flagged: routeAt(path)?.data?.['drawerHost'] ?? false }).toEqual({
+        path,
+        flagged: false,
+      });
+    }
+  });
+
+  it('shares one component across the rooms drawer routes but not the detail page', () => {
+    const rooms = ['/', '/create', '/bulk', '/edit/:roomId'].map((s) => routeAt(`:hostelId/rooms${s}`)?.component);
+    expect(new Set(rooms).size).toBe(1);
+    expect(routeAt(':hostelId/rooms/:roomId')?.component).not.toBe(rooms[0]);
   });
 });
