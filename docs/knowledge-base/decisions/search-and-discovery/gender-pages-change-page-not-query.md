@@ -34,10 +34,18 @@
 
 - Changing between gender pages reuses `PlaceLanding` (same route config), so the seed updates live. Moving to the city page rebuilds it and the map loads again, as the existing sibling links already do.
 - Each type change pushes a history entry; Back returns to the previous page (`apps/web-e2e/src/landing-gender-filter.spec.ts`).
-- Other actions that write seeded keys through a query merge still cannot undo the seed: "Search everywhere" and the mobile place field (Trello #109, #110). They need the same treatment.
+- **Extended to geography (Trello #110, #109, PR #73).** The same flaw hit every action that changes place on a landing page: the mobile place field showed Karachi under "Girls hostels in Lahore", "Near me" did the same, and "Search everywhere" never widened. The rule is now general: **on a landing page, any change of geography leaves for `/search`** (`SearchMap.leaveLanding`), carrying the page's own filters as explicit params (`seededFilters`) and dropping the old viewport. Rejected there:
+  - **curated landing pages as the destination** (`/hostels/karachi/girls`): geocoder labels don't map reliably onto curated places;
+  - **staying on the landing page with the geography dropped**: the heading would contradict the list.
+- **"Everywhere" became a URL key (`everywhere=1`)**, because a bare `/search` frames the visitor's own country. Rejected:
+  - navigation `state`: not shareable, not seen by SSR;
+  - a world `ne/sw` box: Leaflet clamps it, and the heading is wrong;
+  - navigating to bare `/search`: country framing.
+- Back within `/search` doesn't re-apply `everywhere=1`, because the key is read once at construction, as the viewport keys are. Accepted by the user.
 
 ## Evidence
 
 - `apps/web/src/app/features/public/search/search-params.ts`, `apps/web/src/app/features/public/landing/gender-routes.ts`, `apps/web/src/app/features/public/search/search-filters/search-filters.ts` (`params`, `genderRoutes`, `onApply`), `apps/web/src/app/features/public/search/search-map/search-map.ts` (`params`), `apps/web/src/app/features/public/landing/place-landing.ts` (`genderRoutes`)
 - Tests: `search-params.spec.ts`, `gender-routes.spec.ts`, `search-filters.spec.ts`, `apps/web-e2e/src/landing-gender-filter.spec.ts`
 - PR #58 (KratosvsEzio/hostelhive-FE); run notes `docs/implement/Bugs/106.md` (decisions D2–D11)
+- Geography extension: `apps/web/src/app/features/public/search/search-scope.ts`, `search-map.ts` (`leaveLanding`, `everywhereInUrl`, `query()`, `syncBoundsToUrl`), `apps/web/src/app/layout/components/search-bar/search-bar.ts`; tests `search-scope.spec.ts`, `search-map.spec.ts`, `apps/web-e2e/src/landing-place-and-everywhere.spec.ts`; PR #73; run notes `docs/implement/Bugs/110.md` (decisions D1–D10)
