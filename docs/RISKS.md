@@ -15,10 +15,10 @@ repo) · **Product** (a decision, not code) · **Deploy** (deployment config).
 
 | # | Risk | Owner | Status |
 |---|---|---|---|
-| R1 | **~20 mutation sites fail silently.** `setActive`/`setInactive` have no error handler at all; room/invoice deletes optimistically remove a row then silently revert; favourite writes are `catchError(() => of(null))`. The user believes the action worked when it didn't. | FE-now | **B8 closes the class** |
-| R2 | **Stale `draftId` → silent overwrite of an existing hostel.** `hh:onboarding:draft` never clears `draftId`, so returning to `/host/listings/new` `PUT`s over a published hostel instead of creating a new one. B4 widened the reach. Real data corruption. | Product | F24 — needs a draft-lifecycle decision |
+| R1 | **~20 mutation sites fail silently.** `setActive`/`setInactive` have no error handler at all; room/invoice deletes optimistically remove a row then silently revert; ~~favourite writes are `catchError(() => of(null))`~~ *(favourites resolved by Trello #105, PR #64: the swallow is gone and a failed save/unsave rolls the heart back with one toast)*. The user believes the action worked when it didn't. | FE-now | **B8 closes the class** |
+| R2 | **Stale `draftId` → silent overwrite of an existing hostel.** `hh:onboarding:draft` never clears `draftId`, so returning to `/host/listings/new` `PUT`s over a published hostel instead of creating a new one. B4 widened the reach. Real data corruption. | Product | **Resolved** by Trello #114 (PR #70): the draft is owner-scoped (`OnboardingDraftStore`), deleted at sign-out and once "Save and continue" succeeds; "Save and exit" keeps it on purpose |
 | R3 | **`NG_ALLOWED_HOSTS` misconfig = total outage.** Since the F16 fix, unset → refuses to boot; *wrong* (e.g. `localhost` behind a proxy) → hard 400 on every request. | Deploy | F28 — documented in [DEPLOY.md](DEPLOY.md) |
-| R4 | **Two backend routes do not exist — CONFIRMED.** `config/routes.rb:55` is `resources :renters, only: [:index, :show, :create, :update, :new, :edit]` (no `:destroy`), and there is no `favourites`/`favorites` match at all. Delete-renter always 404s; favourite writes are swallowed. Filed as backend tickets (BE-1, BE-2 below). **B3 (favourites) is now blocked on backend, not just on the uncommitted changeset.** | Backend | **confirmed real** — B8 makes them loud |
+| R4 | **A backend route does not exist — CONFIRMED.** `config/routes.rb:55` is `resources :renters, only: [:index, :show, :create, :update, :new, :edit]` (no `:destroy`), so delete-renter always 404s (BE-1 below). ~~There is no `favourites`/`favorites` match at all; favourite writes are swallowed (BE-2). B3 (favourites) is blocked on backend.~~ *Favourites part stale: checked live 2026-10-10, `GET /api/favourites`, `POST /api/favourites/mark_as_favourite` and `DELETE /api/favourites/mark_as_unfavourite` all answer 401 unauthenticated (an unknown path answers 404), so the routes exist; writes stopped being swallowed with Trello #105 (PR #64); B3 is resolved in [trello-tickets.md](trello-tickets.md).* | Backend | renter part **confirmed real** — B8 makes it loud; favourites part closed |
 
 ## HIGH — feature broken or a real exposure
 
@@ -56,7 +56,7 @@ repo) · **Product** (a decision, not code) · **Deploy** (deployment config).
 ## Blocked, and on whom
 
 - **On the in-flight maps/search changeset** (uncommitted, ~19 files): B1, T3, T4, B3, T8, R14. Committing or stashing it unblocks five tickets.
-- **On a product decision**: T1, T2, T7 (underspecified), R2 (draft lifecycle).
+- **On a product decision**: T1, T2, T7 (underspecified). (R2, the draft lifecycle, was decided and fixed in Trello #114.)
 - **On the backend / an API probe**: R4, R5, R6.
 
 ## What this pass closes
@@ -77,9 +77,13 @@ API (`D:\be-hostelhive`).
   console's "remove tenant" action always 404s. Either add the route + a
   `renters#destroy` (soft-delete or hard, product's call) or the FE should hide the action.
   Until then B8 shows the host a pinned "couldn't remove" toast.
-- **BE-2 — Add the favourites endpoints.** No `favourites`/`favorites` route exists, yet the
+- ~~**BE-2 — Add the favourites endpoints.** No `favourites`/`favorites` route exists, yet the
   FE calls `POST`/`DELETE /api/favourites/*` (`favourites-api.ts`). Every write 404s and is
-  currently swallowed. Blocks **B3** and the seeker favourite feature entirely.
+  currently swallowed. Blocks **B3** and the seeker favourite feature entirely.~~
+  **Closed — the endpoints exist.** Checked live 2026-10-10: `GET /api/favourites`,
+  `POST /api/favourites/mark_as_favourite` and `DELETE /api/favourites/mark_as_unfavourite`
+  answer 401 unauthenticated (an unknown path under `/api/favourites/` answers 404). The FE
+  stopped swallowing write failures in Trello #105 (PR #64).
 - **BE-3 — Tenant status change ignores the payload (R5/B9).** The FE sends
   `renter[disposition_id]`; `renter_params` permits only `:status_id` and Rails silently
   drops the rest → `update({})` → 200 OK, no change. Either accept `disposition_id` and sync
