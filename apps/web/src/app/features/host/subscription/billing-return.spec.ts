@@ -739,6 +739,34 @@ describe('BillingReturn', () => {
       ).toContain('hostPayment.cardStartForbidden');
     });
 
+    it.each<[string, unknown, string[]]>([
+      [
+        'a server error',
+        apiError(500, ['Internal server error']),
+        ['Internal server error'],
+      ],
+      ['a missing record', apiError(404, ['Not found']), ['Not found']],
+      ['a network failure', apiError(0), []],
+      ['a plain error', new Error('boom'), ['boom']],
+    ])(
+      'shows our own copy, never the failure text, on %s',
+      async (_label, failure, rawTexts) => {
+        const el = await open(
+          '/billing/payment/cancel?card=canceled',
+          'cancel',
+        );
+        settle(0);
+        checkout.startCardSave.mockReturnValue(throwError(() => failure));
+
+        action(el, 'try-again')?.click();
+        settle(0);
+
+        const note = el.querySelector('[data-field="start-note"]')?.textContent;
+        expect(note).toContain('hostPayment.cardStartFailed');
+        for (const raw of rawTexts) expect(note).not.toContain(raw);
+      },
+    );
+
     it('offers a retry when billing fails to load', async () => {
       const el = await open('/billing/payment/cancel?card=canceled', 'cancel', {
         reads: [apiError(500), billing()],
