@@ -39,3 +39,11 @@ export function sortsFor(
     ? SORT_OPTIONS.filter((o) => !isPriceSort(o.value))
     : SORT_OPTIONS;
 }
+
+/** Whether `type` offers `sort` (see `sortsFor`); an empty, unknown or miscased value never is. */
+export function isSortOffered(
+  sort: string | null | undefined,
+  type: AccommodationType | 'all',
+): boolean {
+  return sortsFor(type).some((o) => o.value === sort);
+}

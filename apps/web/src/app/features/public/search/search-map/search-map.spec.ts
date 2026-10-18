@@ -74,6 +74,8 @@ interface ListQuery {
   near?: { lat: number; lng: number };
   bounds?: unknown;
   amenities?: string[];
+  sort?: string;
+  accommodationType?: string;
 }
 
 /** A page for the router to land on; the search component under test is mounted directly. */
@@ -302,13 +304,18 @@ const LEFT_BEHIND = {
   everywhere: null,
 };
 
-/** The first `router.navigate` call, split into its commands and its extras. */
-function firstNavigation(navigate: ReturnType<typeof vi.spyOn>) {
-  const [commands, extras] = navigate.mock.calls[0] as [
+/** The `i`th `router.navigate` call, split into its commands and its extras. */
+function navigationAt(navigate: ReturnType<typeof vi.spyOn>, i: number) {
+  const [commands, extras] = navigate.mock.calls[i] as [
     unknown[],
     Record<string, unknown> & { queryParams: Record<string, unknown> },
   ];
   return { commands, extras };
+}
+
+/** The first `router.navigate` call, split into its commands and its extras. */
+function firstNavigation(navigate: ReturnType<typeof vi.spyOn>) {
+  return navigationAt(navigate, 0);
 }
 
 /**
@@ -321,6 +328,52 @@ async function mountSearch(url: string, config: SearchMapConfig = {}) {
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   return { ...mounted, navigate };
 }
+
+interface WatchedMount {
+  /** A landing page's seed; null mounts a search page. */
+  seed?: Record<string, string> | null;
+  /** Mount on the matched route, so the `:location` slug is visible. */
+  routed?: boolean;
+  /** False stops `navigate` from going anywhere, so what it was asked to do never lands. */
+  land?: boolean;
+}
+
+/**
+ * Mounts on a browser with `navigate` spied before the component exists, so the navigation a
+ * page makes of its own accord is seen. It really navigates unless `land` is false. Pass
+ * `platform: 'server'` to see that a server render makes none.
+ */
+async function mountWatched(
+  url: string,
+  options: WatchedMount & SearchMapConfig = {},
+) {
+  const { seed = null, routed = !seed, land = true, ...config } = options;
+  configureSearchMap({ platform: 'browser', ...config });
+  const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+  if (!land) navigate.mockResolvedValue(true);
+  const mounted = await mount(url, seed, routed);
+  return { ...mounted, navigate };
+}
+
+/** Call `i` is the clean-up of a discarded sort: a replace of this page nulling only `sort`. */
+function expectSortStripAt(navigate: ReturnType<typeof vi.spyOn>, i: number): void {
+  const { commands, extras } = navigationAt(navigate, i);
+  const { relativeTo, ...rest } = extras;
+  expect(commands).toEqual([]);
+  // The route the component was given, which is the root route for an unrouted mount.
+  expect(relativeTo).toBe(routedRoute ?? TestBed.inject(Router).routerState.root);
+  expect(rest).toEqual({
+    queryParams: { sort: null },
+    queryParamsHandling: 'merge',
+    replaceUrl: true,
+  });
+}
+
+/** The query string the router is on now. */
+const urlQuery = () => {
+  const router = TestBed.inject(Router);
+  return router.parseUrl(router.url).queryParams;
+};
 
 /** A Seo stand-in that records each `apply`. */
 const seoSpy = () => ({ apply: vi.fn(), setJsonLd: vi.fn() });
@@ -993,7 +1046,6 @@ describe('SearchMap worldwide search', () => {
   });
 
   it.each([
-    ['drops a price sort when no type is in force', '?sort=price-asc', { gender: null, sort: null }],
     ['keeps a price sort when a type is in force', '?gender=girls&sort=price-asc', { gender: 'girls' }],
   ])('%s when widening from a place path', async (_name, query, expected) => {
     const { map, navigate } = await mountSearch(`/en/search/lahore${query}`, {
@@ -1005,6 +1057,29 @@ describe('SearchMap worldwide search', () => {
     const { extras } = firstNavigation(navigate);
     expect(extras.queryParams).toEqual({ ...LEFT_BEHIND, ...expected, everywhere: 1 });
     if (!('sort' in expected)) expect(extras.queryParams).not.toHaveProperty('sort');
+  });
+
+  // The page's own clean-up of the sort never lands here, as when it loses a race.
+  it('drops a price sort when no type is in force when widening from a place path', async () => {
+    const { map, navigate } = await mountWatched('/en/search/lahore?sort=price-asc', {
+      land: false,
+    });
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+    expectSortStripAt(navigate, 0);
+
+    map.searchEverywhere();
+
+    expect(navigate).toHaveBeenCalledTimes(2);
+    const { commands, extras } = navigationAt(navigate, 1);
+    expect(commands).toEqual(['/en/search']);
+    expect(extras).not.toHaveProperty('relativeTo');
+    expect(extras).not.toHaveProperty('replaceUrl');
+    expect(extras.queryParams).toEqual({
+      ...LEFT_BEHIND,
+      gender: null,
+      sort: null,
+      everywhere: 1,
+    });
   });
 
   it('does not navigate when widening from a place path on the server', async () => {
@@ -1027,5 +1102,191 @@ describe('SearchMap worldwide search', () => {
         noindex: true,
       }),
     );
+  });
+});
+
+/** A URL to open, and the landing page seed it opens with, if any. */
+type Arrival = [name: string, url: string, seed: Record<string, string> | null];
+
+/** An `Arrival` that is left alone, with the sort it asks for. */
+type Unchanged = [name: string, url: string, seed: Record<string, string> | null, sort: string];
+
+/**
+ * A sort in the URL that the type in force does not offer: a shared link, a bookmark or an
+ * address typed by hand. The request reads it as absent, and the browser takes it out of the
+ * address bar; a sort the type does offer is sent and left where it is.
+ */
+describe('SearchMap on a URL carrying a sort the type does not offer', () => {
+  const GIRLS_URL = '/en/hostels/lahore/girls';
+  const CITY_URL = '/en/hostels/lahore';
+  const CAMPUS_URL = '/en/hostels/lahore/punjab-university';
+
+  /** Price sorts that no type in force can justify. */
+  const STALE: Arrival[] = [
+    ['a bare search', '/en/search?sort=price-asc', null],
+    ['a place search', '/en/search/lahore?sort=price-asc', null],
+    ['a city page', `${CITY_URL}?sort=price-asc`, CITY_SEED],
+    ['a campus page', `${CAMPUS_URL}?sort=price-desc`, CAMPUS_SEED],
+    ['an unknown type', '/en/search?gender=bogus&sort=price-asc', null],
+  ];
+
+  /** Price sorts that a type in force justifies. */
+  const KEPT: Arrival[] = [
+    ['a type in the query', '/en/search?gender=girls&sort=price-asc', null],
+    ['the girls page', `${GIRLS_URL}?sort=price-asc`, GIRLS_SEED],
+    [
+      'the girls page with an unknown type',
+      `${GIRLS_URL}?gender=bogus&sort=price-asc`,
+      GIRLS_SEED,
+    ],
+  ];
+
+  /** Every URL the page leaves as it found it, and the sort it asks for. */
+  const UNTOUCHED: Unchanged[] = [
+    ['a recommended sort', '/en/search?sort=recommended', null, 'recommended'],
+    ['a newest sort', '/en/search?sort=newest', null, 'newest'],
+    ['an oldest sort', '/en/search?sort=oldest', null, 'oldest'],
+    ...KEPT.map(
+      ([name, url, seed]): Unchanged => [`a price sort on ${name}`, url, seed, 'price-asc'],
+    ),
+  ];
+
+  afterEach(cleanupSearchMap);
+
+  it.each(STALE)('requests Recommended over any type for %s', async (_name, url, seed) => {
+    const list = listSpy();
+    configureSearchMap({ list });
+    await mount(url, seed, !seed);
+    await firstSearch(list);
+
+    expect(queryAt(list, 0).sort).toBe('recommended');
+    expect(queryAt(list, 0).accommodationType).toBe('all');
+  });
+
+  it.each(KEPT)('requests the price sort over the type for %s', async (_name, url, seed) => {
+    const list = listSpy();
+    configureSearchMap({ list });
+    await mount(url, seed, !seed);
+    await firstSearch(list);
+
+    expect(queryAt(list, 0).sort).toBe('price-asc');
+    expect(queryAt(list, 0).accommodationType).toBe('girls');
+  });
+
+  it.each(STALE)('replaces the address without the sort for %s', async (_name, url, seed) => {
+    const { navigate } = await mountWatched(url, { seed });
+    await vi.waitFor(() => expect(urlQuery()).not.toHaveProperty('sort'));
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expectSortStripAt(navigate, 0);
+  });
+
+  it('keeps the path and every other param when it takes the sort out', async () => {
+    const viewport = 'ne_lat=31.6&ne_lng=74.5&sw_lat=31.4&sw_lng=74.2';
+    await mountWatched(
+      `/en/search/lahore?everywhere=1&gender=bogus&sort=price-asc&minPrice=5000&${viewport}`,
+    );
+    await vi.waitFor(() => expect(urlQuery()).not.toHaveProperty('sort'));
+
+    expect(TestBed.inject(Router).url.split('?')[0]).toBe('/en/search/lahore');
+    expect(urlQuery()).toEqual({
+      everywhere: '1',
+      gender: 'bogus',
+      minPrice: '5000',
+      ne_lat: '31.6',
+      ne_lng: '74.5',
+      sw_lat: '31.4',
+      sw_lng: '74.2',
+    });
+  });
+
+  it('cleans the address once and searches once, with no loop between them', async () => {
+    const list = listSpy();
+    const { navigate } = await mountWatched('/en/search/lahore?sort=price-asc', { list });
+    await firstSearch(list);
+    // Wait out more than twice the 600ms results debounce to confirm no second search follows.
+    await new Promise<void>((r) => setTimeout(r, 1500));
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(list).toHaveBeenCalledTimes(1);
+    expect(queryAt(list, 0).sort).toBe('recommended');
+    expect(urlQuery()).not.toHaveProperty('sort');
+  });
+
+  it.each(UNTOUCHED)('leaves the address alone for %s', async (_name, url, seed, sort) => {
+    const list = listSpy();
+    const { navigate } = await mountWatched(url, { seed, list });
+    await firstSearch(list);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(urlQuery()['sort']).toBe(sort);
+    expect(queryAt(list, 0).sort).toBe(sort);
+  });
+
+  it('leaves the address alone on the server, which only reads the sort as absent', async () => {
+    const list = listSpy();
+    const { navigate } = await mountWatched('/en/search/lahore?sort=price-asc', {
+      platform: 'server',
+      list,
+    });
+    await firstSearch(list);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(urlQuery()['sort']).toBe('price-asc');
+    expect(queryAt(list, 0).sort).toBe('recommended');
+  });
+
+  it('cleans a stale entry the visitor navigates into once the page is up', async () => {
+    const { fixture, navigate } = await mountWatched('/en/search/lahore');
+    const router = TestBed.inject(Router);
+    expect(navigate).not.toHaveBeenCalled();
+
+    // What Back or Forward does to a page that is already showing.
+    await router.navigateByUrl('/en/search/lahore?sort=price-asc');
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(router.url).toBe('/en/search/lahore');
+    });
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expectSortStripAt(navigate, 0);
+  });
+
+  it('cleans the address again while a discarded sort stays in it, and stops once it is gone', async () => {
+    // The clean-up never lands, so the sort is still in the URL when the URL changes again.
+    const { fixture, navigate } = await mountWatched(
+      '/en/search/lahore?sort=price-asc',
+      { land: false },
+    );
+    const router = TestBed.inject(Router);
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+    expectSortStripAt(navigate, 0);
+
+    // `navigateByUrl` does not go through the stubbed `navigate`, so it really lands.
+    await router.navigateByUrl('/en/search/lahore?sort=price-asc&minPrice=5000');
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(navigate).toHaveBeenCalledTimes(2);
+    });
+    expectSortStripAt(navigate, 1);
+
+    await router.navigateByUrl('/en/search/lahore?minPrice=5000');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(urlQuery()).toEqual({ minPrice: '5000' });
+    expect(navigate).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ['an empty sort', '/en/search?sort='],
+    ['an unknown sort', '/en/search?sort=bogus'],
+  ])('clears %s from the URL when a new search starts', async (_name, url) => {
+    const { map, navigate } = await mountSearch(url);
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).toHaveProperty('sort', null);
   });
 });

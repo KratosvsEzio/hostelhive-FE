@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, DebugElement, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { ParamMap, Router, NavigationStart, convertToParamMap, provideRouter } from '@angular/router';
@@ -12,6 +12,7 @@ import {
   FilterState,
   SearchFilterModal,
 } from '@features/public/search/search-filter-modal/search-filter-modal';
+import { mergeSearchParams } from '@features/public/search/search-params';
 import { GenderRoutes, SearchFilters } from './search-filters';
 
 /**
@@ -25,6 +26,9 @@ const LAHORE_ROUTES: GenderRoutes = {
   coliving: { path: '/hostels/lahore/co-living', gender: null },
   backpacker: { path: '/hostels/lahore', gender: 'backpacker' },
 };
+
+// A gender page's seed as its path supplies it: the place, plus the type the path fixes.
+const GIRLS_SEED = { place: 'Lahore', lat: '31.5', lng: '74.3', zoom: '11', gender: 'girls' };
 
 /**
  * Stands in for the search page. The filter row never reads the route's query itself: its
@@ -137,6 +141,21 @@ async function mount(opts: {
 }
 
 /**
+ * Loads the filter row at `url` with the filters the search page would hand it: that URL's
+ * query merged with the page's `seed` by the real reader, so a correction made there shows.
+ */
+async function mountFromUrl(
+  url: string,
+  opts: { seed?: Record<string, string> | null; routes?: GenderRoutes | null } = {},
+): Promise<Mounted> {
+  const m = await mount({ url, routes: opts.routes });
+  const query = convertToParamMap(m.router.parseUrl(url).queryParams);
+  m.host.params.set(mergeSearchParams(query, opts.seed ?? null));
+  await m.settle();
+  return m;
+}
+
+/**
  * The pressed state of the modal's toggle buttons (type of stay, room type and sort), by label.
  * A label no button carries reads as null.
  */
@@ -185,10 +204,28 @@ function filtersButton(m: Mounted): HTMLElement | null {
   return m.harness.routeNativeElement?.querySelector('hh-search-filters button') ?? null;
 }
 
-/** The sort dropdown's option values — the second dropdown in the row, after room type. */
+/** The inline sort dropdown — the second dropdown in the row, after room type. */
+function sortDropdown(m: Mounted): DebugElement {
+  return m.harness.fixture.debugElement.queryAll(By.directive(Dropdown))[1];
+}
+
+/** The sort dropdown's option values. */
 function sortValues(m: Mounted): string[] {
-  const dropdowns = m.harness.fixture.debugElement.queryAll(By.directive(Dropdown));
-  return (dropdowns[1].componentInstance as Dropdown).options().map((o) => String(o.value));
+  return (sortDropdown(m).componentInstance as Dropdown).options().map((o) => String(o.value));
+}
+
+/** The button that opens a dropdown, and carries its tint. */
+function triggerOf(dropdown: DebugElement): HTMLElement {
+  return dropdown.nativeElement.querySelector('button[aria-haspopup]');
+}
+
+/** The aria-selected value of the open sort panel's Recommended entry, which is its clear label. */
+function recommendedSelected(): string | null {
+  const option = Array.from(
+    document.querySelectorAll('[role="listbox"] [role="option"]'),
+  ).find((o) => o.textContent?.trim() === 'search.recommended');
+  if (!option) throw new Error('No open dropdown panel offers "search.recommended"');
+  return option.getAttribute('aria-selected');
 }
 
 describe('SearchFilters', () => {
@@ -260,6 +297,58 @@ describe('SearchFilters', () => {
         'common.girls': 'true',
         'common.boys': 'false',
       });
+    });
+  });
+
+  // Filters come through the real merge here, so a sort the reader stops correcting shows up.
+  describe('showing a sort carried by the URL', () => {
+    it.each(['price-asc', 'price-desc', '', 'bogus'])(
+      'shows no badge and no highlight for ?sort=%j when no type is chosen',
+      async (sort) => {
+        const m = await mountFromUrl(`/en/search/lahore?sort=${sort}`);
+
+        expect(badge(m)).toBeNull();
+        expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(false);
+      },
+    );
+
+    it('counts only the other filters beside a price sort no type allows', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc&amenities=wifi');
+
+      expect(badge(m)).toBe('1');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+    });
+
+    it('leaves the inline sort empty and untinted for a price sort no type allows', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc');
+      const sort = sortDropdown(m);
+
+      expect((sort.componentInstance as Dropdown).value()).toBeNull();
+      expect(triggerOf(sort).classList.contains('bg-brand-50')).toBe(false);
+      expect(triggerOf(sort).textContent?.trim()).toBe('common.sort');
+      expect(sortValues(m)).toEqual(['newest', 'oldest']);
+    });
+
+    // The pill never reads "Recommended", so the open panel is the only place it shows as chosen.
+    it('marks Recommended as chosen in the open sort panel for a price sort no type allows', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc');
+      triggerOf(sortDropdown(m)).click();
+      await m.settle();
+
+      expect(recommendedSelected()).toBe('true');
+    });
+
+    it('still counts and shows a price sort that the page type allows', async () => {
+      const m = await mountFromUrl('/en/hostels/lahore/girls?sort=price-asc', {
+        seed: GIRLS_SEED,
+        routes: LAHORE_ROUTES,
+      });
+      const sort = sortDropdown(m);
+
+      expect(badge(m)).toBe('2');
+      expect((sort.componentInstance as Dropdown).value()).toBe('price-asc');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+      expect(triggerOf(sort).classList.contains('bg-brand-50')).toBe(true);
     });
   });
 
@@ -616,6 +705,29 @@ describe('SearchFilters', () => {
 
       await m.apply();
       expect(m.current()).toEqual({ path: '/en/search/lahore', query: {} });
+    });
+
+    // Fed through the real merge, the stale sort never reaches the draft for a type to bring back.
+    it('keeps Recommended pressed when a type is chosen on a stale price-sort URL', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc');
+      await m.openFilters();
+
+      expect(sortOffered()).toEqual(NO_PRICE_SORTS);
+      expect(sortPressed()['search.recommended']).toBe('true');
+
+      await m.choose('common.girls');
+
+      expect(sortOffered()).toEqual(ALL_SORTS);
+      expect(sortPressed()).toEqual({
+        'search.recommended': 'true',
+        'search.recentFirst': 'false',
+        'search.oldestFirst': 'false',
+        'search.priceHighToLow': 'false',
+        'search.priceLowToHigh': 'false',
+      });
+
+      await m.apply();
+      expect(m.current()).toEqual({ path: '/en/search/lahore', query: { gender: 'girls' } });
     });
 
     it('opens a gender page with its price sort pressed and applies it unchanged', async () => {
