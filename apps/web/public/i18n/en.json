@@ -433,7 +433,22 @@
     "pickCategory": "Select a filter category on the left.",
     "reset": "Reset",
     "cancel": "Cancel",
-    "apply": "Apply"
+    "apply": "Apply",
+    "propertyTypeApartment": "Apartment",
+    "propertyTypeRoom": "Room",
+    "propertyTypeBuilding": "Building",
+    "propertyTypeHouse": "House",
+    "amenityWifi": "Wi-Fi",
+    "amenityAirConditioning": "Air conditioning",
+    "amenityAc": "AC",
+    "amenityKitchen": "Kitchen",
+    "amenitySecurityGuard": "Security guard",
+    "amenitySecurity": "Security",
+    "amenityParking": "Parking",
+    "amenityGenerator": "Generator",
+    "amenityCctv": "CCTV",
+    "amenityLaundry": "Laundry",
+    "amenityAttachedBath": "Attached Bath"
   },
   "footer": {
     "instagram": "Instagram",
