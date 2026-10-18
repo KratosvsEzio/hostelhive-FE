@@ -129,11 +129,6 @@ export class SearchFilters {
     () => this.params()?.get('propertyType') ?? '',
   );
   /**
-   * Private or shared. **Inert server-side until the backend indexes `room_type`** — the
-   * param travels and the UI reflects it, but results do not narrow yet. Same position the
-   * amenity filter was in before `offers` reached the search document.
-   */
-  /**
    * Always one of the two -- there is no "Any" any more.
    *
    * Shared is the floor rather than a chosen filter, so it does not count towards the
