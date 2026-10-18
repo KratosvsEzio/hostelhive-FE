@@ -8,9 +8,10 @@ import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/paginati
 /**
  * Per-call request options for the lifecycle moves and reads.
  *
- * Set `suppressErrorToast` only where the caller renders the failure inline itself (the
- * check-in dialog, the lifecycle dialogs, release), so a row-menu action still gets its toast.
- * The same shape `HostOpsApi` takes; see {@link ApiRequestOptions}.
+ * Set `suppressErrorToast` only where the caller reports the failure itself, in its own
+ * translated words. Every stay move does: the check-in dialog, the lifecycle dialogs and release
+ * inline, and confirm in the details panel's footer or, with no panel on the booking, a toast of
+ * the page's own. The same shape `HostOpsApi` takes; see {@link ApiRequestOptions}.
  */
 export type HostBookingRequestOptions = ApiRequestOptions;
 
@@ -245,8 +246,8 @@ export class HostBookingsApi {
   }
 
   /** `POST …/mark_as_confirmed` — pending → confirmed. The guest is emailed the PDF. */
-  confirm(hostelId: string, bookingId: string): Observable<HostBooking> {
-    return this.post(hostelId, bookingId, 'mark_as_confirmed', {});
+  confirm(hostelId: string, bookingId: string, opts?: HostBookingRequestOptions): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_confirmed', {}, opts);
   }
 
   /**

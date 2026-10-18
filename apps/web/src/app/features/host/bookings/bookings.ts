@@ -65,6 +65,7 @@ import {
 import { NotificationService } from '@core/notification.service';
 import { RefetchDelay } from '@core/refetch-delay';
 import { errorStatus } from '@core/errors/api-error-text';
+import { isUnauthorized } from '@core/errors/is-unauthorized';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
@@ -92,8 +93,11 @@ interface ViewState {
 const IDLE: ViewState = { loading: false, error: false, data: null };
 const LOADING: ViewState = { loading: true, error: false, data: null };
 
-/** Where a stay move's refusal is shown: the room allocation, its dialog, or the details panel's footer. */
-type MoveSurface = 'assign' | 'dialog' | 'panel';
+/**
+ * Where a stay move's refusal is shown: the room allocation, its dialog, the details panel's footer,
+ * or, with none of them open on the booking, a toast.
+ */
+type MoveSurface = 'assign' | 'dialog' | 'panel' | 'toast';
 
 /**
  * Every booking across the property, which the room calendar cannot answer.
@@ -508,7 +512,13 @@ export class HostBookings {
     this.closeMenu();
     switch (e.action) {
       case 'confirm':
-        this.send(e.booking, (id) => this.bookingsApi.confirm(this.hostelId(), id), 'Booking confirmed', 'The guest has been emailed their confirmation.');
+        // Its refusal is reported by the page, in the panel's footer or its own toast, so the global toast would repeat it.
+        this.send(
+          e.booking,
+          (id) => this.bookingsApi.confirm(this.hostelId(), id, { suppressErrorToast: true }),
+          'Booking confirmed',
+          'The guest has been emailed their confirmation.',
+        );
         return;
       case 'checkIn':
         this.openAssign(e.booking);
@@ -540,7 +550,8 @@ export class HostBookings {
    * The details panel, if open on it, redraws from that copy — the next moves follow from
    * where the booking now is — and the list re-reads, since the move may take the row out of
    * whatever the filter is narrowing to. A refusal is shown where the host pressed the button,
-   * as translated copy picked from the failure, never its own text; one saying the booking is not
+   * as translated copy picked from the failure, never its own text; a move with no surface of its
+   * own reports it through {@link reportRefusal}, as the reply lands. One saying the booking is not
    * where the screen shows it goes on to {@link onMovedOn}.
    * An empty `title` leaves the success toast to `onSuccess`, for moves whose outcome has parts.
    */
@@ -549,7 +560,7 @@ export class HostBookings {
     request: (id: string) => Observable<HostBooking>,
     title: string,
     message = '',
-    onError: (err: unknown) => void = (err) => this.viewError.set(bookingMoveFailureKey(err)),
+    onError: (err: unknown) => void = (err) => this.reportRefusal(booking.id, err),
     onSuccess: () => void = () => undefined,
   ): void {
     if (this.busy()) return;
@@ -576,9 +587,10 @@ export class HostBookings {
         this.epoch++;
         const kind = movedOnKind(err);
         if (kind) {
-          // The refusal shows while the booking is read back, and `busy` holds until then.
-          onError(err);
-          this.onMovedOn(booking, err, kind);
+          const surface = this.refusalSurface(booking.id);
+          // The refusal shows while the booking is read back, and `busy` holds until then; a toast waits for the read, to be raised once.
+          if (surface !== 'toast') onError(err);
+          this.onMovedOn(booking, err, kind, surface);
           return;
         }
         this.busy.set(false);
@@ -596,12 +608,15 @@ export class HostBookings {
    * does not leaves it open with the generic message. A host who opened something else while the
    * read was out keeps it. A failed read refreshes the list instead, and a booking that is gone
    * takes every surface on it with it.
+   *
+   * A refusal reported by toast raises exactly one, whatever the read finds: nothing else on screen
+   * holds the booking, so a 404 is not allowed to close what the host has open meanwhile.
    */
-  private onMovedOn(shown: HostBooking, err: unknown, kind: MovedOnKind): void {
+  private onMovedOn(shown: HostBooking, err: unknown, kind: MovedOnKind, surface: MoveSurface): void {
     const hostelId = this.hostelId();
     const epoch = this.epoch;
     const url = this.urlBookingId;
-    const surface = this.refusalSurface(shown.id);
+    const key = bookingMoveFailureKey(err);
     const action = surface === 'assign' ? 'checkIn' : this.dialog()?.action;
     const roomsMove = action === 'checkIn' || action === 'checkOut' || action === 'cancel';
     const stillHere = () => this.epoch === epoch && this.urlBookingId === url && this.hostelId() === hostelId;
@@ -612,23 +627,48 @@ export class HostBookings {
         this.replaceBooking(fresh);
         if (this.panelBehindDialog?.id === fresh.id) this.panelBehindDialog = fresh;
         if (roomsMove && stageChanged(shown, fresh)) this.refetchDelay.track('/rooms');
-        if (!stillHere()) return;
-        if (refusalBorneOut(err, shown, fresh)) this.closeMovedOn(fresh, surface, kind, bookingMoveFailureKey(err));
+        if (!stillHere()) {
+          if (surface === 'toast') this.refusalToast(key, err);
+          return;
+        }
+        if (refusalBorneOut(err, shown, fresh)) this.closeMovedOn(fresh, surface, kind, key);
         else this.keepMoveOpen(fresh, surface);
       },
       error: (readErr: unknown) => {
         this.busy.set(false);
-        if (stillHere() && errorStatus(readErr) === 404) this.dropMissing();
+        const missing = errorStatus(readErr) === 404;
+        if (surface === 'toast') {
+          this.refusalToast(missing ? 'hostBookings.bookingNotFound' : key, readErr);
+        } else if (stillHere() && missing) {
+          this.dropMissing();
+        }
         this.refresh.update((n) => n + 1);
       },
     });
   }
 
-  /** Where a refused move on this booking is being reported. */
+  /**
+   * Where a refused move on this booking is being reported, asked as the reply lands.
+   *
+   * The details panel's footer only while the panel shows this booking: one opened on another while
+   * the move was out is left as it is, and the refusal goes to a toast.
+   */
   private refusalSurface(id: string): MoveSurface {
     if (this.assigning()?.id === id) return 'assign';
     if (this.dialog()?.booking.id === id) return 'dialog';
-    return 'panel';
+    return this.viewing()?.id === id ? 'panel' : 'toast';
+  }
+
+  /** A refusal for a move with no surface of its own: the details panel's footer, or a toast. */
+  private reportRefusal(id: string, err: unknown): void {
+    const key = bookingMoveFailureKey(err);
+    if (this.refusalSurface(id) === 'panel') this.viewError.set(key);
+    else this.refusalToast(key, err);
+  }
+
+  /** A refused move's toast, unless the session was rejected: the sign-out takes over from there. */
+  private refusalToast(key: string, err: unknown): void {
+    if (!isUnauthorized(err)) this.notifications.error(this.i18n.translate<string>(key));
   }
 
   /**
@@ -662,7 +702,7 @@ export class HostBookings {
     else this.notifications.error(this.i18n.translate<string>(key));
   }
 
-  /** The server's copy does not bear the refusal out: the move stays open on it, with the generic message. */
+  /** The server's copy does not bear the refusal out: the move stays open on it with the generic message, or that message is the toast. */
   private keepMoveOpen(fresh: HostBooking, surface: MoveSurface): void {
     const key = 'hostBookings.moveNotAccepted';
     switch (surface) {
@@ -674,8 +714,11 @@ export class HostBookings {
         this.dialog.update((d) => d && { ...d, booking: fresh });
         this.dialogError.set(key);
         return;
-      default:
+      case 'panel':
         this.viewError.set(key);
+        return;
+      case 'toast':
+        this.notifications.error(this.i18n.translate<string>(key));
     }
   }
 

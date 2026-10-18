@@ -667,6 +667,7 @@ describe('HostBookingsApi — per-call request options', () => {
 
   describe('lifecycle writes', () => {
     const moves: [string, string, (a: HostBookingsApi, o?: typeof optOut) => unknown, unknown][] = [
+      ['confirm', 'mark_as_confirmed', (a, o) => a.confirm('MjvuEl', 'vKkMIE', o), {}],
       ['checkIn', 'mark_as_checked_in', (a, o) => a.checkIn('MjvuEl', 'vKkMIE', [{ roomId: 'r1', guests: 2 }], o), { allocations: [{ room_id: 'r1', guests: 2 }] }],
       ['markPaid', 'mark_as_paid', (a, o) => a.markPaid('MjvuEl', 'vKkMIE', o), {}],
       ['checkOut', 'mark_as_checked_out', (a, o) => a.checkOut('MjvuEl', 'vKkMIE', o), {}],

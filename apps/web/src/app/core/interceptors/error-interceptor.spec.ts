@@ -325,4 +325,18 @@ describe('errorInterceptor', () => {
     );
     expect(notify).not.toHaveBeenCalled();
   });
+
+  // The opt-out silences the toast only; an expired session must still sign the user out.
+  it('still routes a 401 to the unauthorized handler when the request suppresses the toast', () => {
+    const url = `${BASE}/api/host/hostels/Xk9pQ/bookings/bk-1/mark_as_confirmed`;
+    let caught: ApiError | undefined;
+    http
+      .post(url, {}, { context: new HttpContext().set(SUPPRESS_ERROR_TOAST, true) })
+      .subscribe({ error: (e: ApiError) => (caught = e) });
+    unauthorized(httpMock.expectOne(url));
+
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+    expect(notify).not.toHaveBeenCalled();
+    expect(caught?.status).toBe(401);
+  });
 });

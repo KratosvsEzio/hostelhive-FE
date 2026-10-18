@@ -1,5 +1,6 @@
 import {
   HttpClient,
+  HttpContext,
   HttpRequest,
   provideHttpClient,
   withInterceptors,
@@ -12,7 +13,7 @@ import { TestBed } from '@angular/core/testing';
 import { throwError } from 'rxjs';
 import { ApiError } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
-import { API_ERROR_NOTIFIER } from '@core/tokens';
+import { API_ERROR_NOTIFIER, SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import { SessionStore, SessionUser } from '@app/core/auth/session-store';
 import { HostAccessEvents } from '@core/host-access/host-access';
 import { errorInterceptor } from './error-interceptor';
@@ -20,6 +21,7 @@ import { hostAccessInterceptor } from './host-access-interceptor';
 
 const BASE = 'https://api.test';
 const ROOMS = `${BASE}/api/host/hostels/Xk9pQ/rooms`;
+const CONFIRM = `${BASE}/api/host/hostels/Xk9pQ/bookings/bk-1/mark_as_confirmed`;
 const SUBSCRIBE = { success: false, errors: ['You need to subscribe to avail the services'] };
 const NO_CRM = {
   success: false,
@@ -68,9 +70,11 @@ describe('hostAccessInterceptor', () => {
     url: string,
     body: object,
     status: number,
+    context?: HttpContext,
   ): ApiError | undefined {
     let caught: ApiError | undefined;
-    const call = method === 'GET' ? http.get(url) : http.post(url, {});
+    const options = context ? { context } : undefined;
+    const call = method === 'GET' ? http.get(url, options) : http.post(url, {}, options);
     call.subscribe({ error: (e: ApiError) => (caught = e) });
     httpMock.expectOne(url).flush(body, { status, statusText: 'Refused' });
     return caught;
@@ -96,6 +100,17 @@ describe('hostAccessInterceptor', () => {
     send('POST', ROOMS, NO_CRM, 403);
     expect(events.observations().map((o) => o.kind)).toEqual(['crmRequired']);
     expect(notify).toHaveBeenCalledOnce();
+  });
+
+  // The page that sends a quiet write reports the failure itself, but the console still has to learn the plan refusal.
+  it.each([
+    ['400 subscribe', SUBSCRIBE, 400, 'inactive'],
+    ['403 crm_required', NO_CRM, 403, 'crmRequired'],
+  ] as const)('records a quiet POST %s refusal the same as a loud one and does not toast it', (_, body, status, kind) => {
+    const err = send('POST', CONFIRM, body, status, new HttpContext().set(SUPPRESS_ERROR_TOAST, true));
+    expect(events.observations()).toEqual([{ hostelId: 'Xk9pQ', kind, owner: 'uA', seq: 0 }]);
+    expect(notify).not.toHaveBeenCalled();
+    expect(err?.status).toBe(status);
   });
 
   it('ignores any other 403, which still toasts', () => {
