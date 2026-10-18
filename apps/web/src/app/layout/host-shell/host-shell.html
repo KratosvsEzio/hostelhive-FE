@@ -40,7 +40,7 @@
           class="nav-link relative"
           [class.nav-link--rail]="drawer.railVisual()"
           [hhTooltip]="drawer.railVisual() ? railLabel : ''"
-          hhTooltipPlacement="right"
+          hhTooltipPlacement="end"
           [attr.aria-label]="drawer.railVisual() ? railLabel : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
@@ -71,7 +71,7 @@
         class="nav-link nav-link--rail w-full"
         [class.bg-ink-100]="propertyFlyout()"
         [hhTooltip]="propertyFlyout() ? '' : ('hostNav.property' | transloco)"
-        hhTooltipPlacement="right"
+        hhTooltipPlacement="end"
         [attr.aria-label]="'hostNav.property' | transloco"
         aria-haspopup="dialog"
         [attr.aria-expanded]="propertyFlyout()"

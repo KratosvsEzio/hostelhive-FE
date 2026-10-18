@@ -45,8 +45,13 @@ export class TooltipFixed implements OnDestroy {
    *
    * Above suits a label under an icon in a row. Beside suits a vertical rail, where "above"
    * lands on the previous item and reads as belonging to that one instead.
+   *
+   * `end` is logical: the side after the anchor in reading order, so right in LTR and left in
+   * RTL, where the console rail sits against the right edge and a right-hand bubble would land
+   * off-screen. Direction is read from `<html dir>` (set by LocaleStore) at show time, so a
+   * language switch needs no re-render.
    */
-  readonly hhTooltipPlacement = input<'top' | 'right'>('top');
+  readonly hhTooltipPlacement = input<'top' | 'end'>('top');
 
 
   private readonly el = inject(ElementRef<HTMLElement>);
@@ -68,10 +73,16 @@ export class TooltipFixed implements OnDestroy {
     const div = document.createElement('div');
     div.textContent = text;
 
+    // In RTL the bubble is pinned by `right`, not by `left` plus translateX(-100%). A `left`
+    // near the viewport's right edge leaves the box only the remaining sliver to shrink-fit
+    // into, so the label wraps one word per line before the translate moves it.
+    const rtl = document.documentElement.dir === 'rtl';
     const place =
-      this.hhTooltipPlacement() === 'right'
+      this.hhTooltipPlacement() === 'end'
         ? {
-            left: `${rect.right + 8}px`,
+            ...(rtl
+              ? { right: `${document.documentElement.clientWidth - rect.left + 8}px` }
+              : { left: `${rect.right + 8}px` }),
             top: `${rect.top + rect.height / 2}px`,
             transform: 'translateY(-50%)',
           }
