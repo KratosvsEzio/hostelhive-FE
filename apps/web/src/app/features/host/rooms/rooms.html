@@ -380,7 +380,7 @@
           <button hh-button variant="outlined" class="flex-1" [disabled]="bulkSaving()" (click)="closeBulk()">{{ 'common.cancel' | transloco }}</button>
           <button hh-button color="primary" class="flex-1" [disabled]="bulkRoomNumbers().length === 0 || (bf.mode !== 'manual' && !bf.roomType) || bulkSaving()" [loading]="bulkSaving()" (click)="bulkCreate()">
             @if (bulkRoomNumbers().length > 0) {
-              {{ 'hostRooms.createNRooms' | transloco: { count: bulkRoomNumbers().length } }}
+              {{ (bulkRoomNumbers().length === 1 ? 'hostRooms.createNRoomsOne' : 'hostRooms.createNRooms') | transloco: { count: bulkRoomNumbers().length } }}
             } @else {
               {{ 'hostRooms.createRooms' | transloco }}
             }

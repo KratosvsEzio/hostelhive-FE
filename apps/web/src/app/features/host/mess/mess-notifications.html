@@ -212,7 +212,7 @@
                 (valueChange)="setWindow(meal, $event)"
               />
               <p class="mt-1 text-xs text-ink-400">
-                {{ 'hostMess.maxNHoursWindow' | transloco: { count: cfg.notifyBefore } }}
+                {{ (cfg.notifyBefore === 1 ? 'hostMess.maxNHoursWindowOne' : 'hostMess.maxNHoursWindow') | transloco: { count: cfg.notifyBefore } }}
               </p>
             </div>
 

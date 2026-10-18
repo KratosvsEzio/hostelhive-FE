@@ -143,3 +143,28 @@ describe('Rooms save failures', () => {
     expect(rooms.bulkError()).toBe('hostRooms.couldNotCreateRooms');
   });
 });
+
+/** The app has no plural rules, so a count of one asks for its own singular key. */
+describe('Rooms bulk create button count', () => {
+  it.each([
+    [1, 'hostRooms.createNRoomsOne'],
+    [2, 'hostRooms.createNRooms'],
+  ])('labels %i new room(s) with %s', async (count, key) => {
+    const page = await openRooms([]);
+    const rooms = page.component as unknown as RoomsInternals;
+
+    rooms.bulkForm.set({
+      mode: 'range',
+      prefix: '',
+      start: '201',
+      count: String(count),
+      custom: '',
+      rows: [],
+      roomType: '',
+      capacity: '2',
+    });
+    await page.settle();
+
+    expect(page.el.textContent?.match(/hostRooms\.createNRooms(?:One)?/g)).toEqual([key]);
+  });
+});

@@ -72,7 +72,7 @@
                   </span>
                   <span class="text-ink-500">
                     {{ (b.nights === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: b.nights } }}
-                    · {{ 'common.nGuests' | transloco: { count: b.guests } }}
+                    · {{ (b.guests === 1 ? 'common.nGuestsOne' : 'common.nGuests') | transloco: { count: b.guests } }}
                   </span>
                 </span>
               </span>

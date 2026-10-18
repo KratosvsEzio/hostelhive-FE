@@ -72,7 +72,7 @@
           </div>
           <div>
             <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.capacity' | transloco }}</p>
-            <p class="mt-1 text-sm font-semibold text-ink-900">{{ 'common.nBeds' | transloco: { count: room.capacity } }}</p>
+            <p class="mt-1 text-sm font-semibold text-ink-900">{{ (room.capacity === 1 ? 'common.nBedsOne' : 'common.nBeds') | transloco: { count: room.capacity } }}</p>
           </div>
           <div>
             <p class="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.occupied' | transloco }}</p>
