@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Mock } from 'vitest';
 import { Router, convertToParamMap, provideRouter } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import type {
   ApiError,
@@ -103,6 +104,18 @@ describe('returnIntent', () => {
       { subscription: 'canceled?tracker=track_1' },
       { subject: 'subscription', outcome: 'canceled' },
     ],
+    // A link naming both is a card return, even when the card outcome is the unreadable one.
+    [
+      'success',
+      { card: 'saved', subscription: 'started' },
+      { subject: 'card', outcome: 'saved' },
+    ],
+    [
+      'cancel',
+      { card: 'canceled', subscription: 'canceled' },
+      { subject: 'card', outcome: 'canceled' },
+    ],
+    ['success', { card: 'foo', subscription: 'started' }, null],
     ['success', { card: 'foo' }, null],
     ['success', { card: '' }, null],
     ['success', { card: 'canceled' }, null],
@@ -417,6 +430,30 @@ describe('BillingReturn', () => {
 
       expect(live(el)).toContain('hostPayment.cardSavedTitle');
     });
+
+    it.each([
+      ['renews', false, 'cardSavedMessage'],
+      ['is set to end', true, 'cardSavedCancellingMessage'],
+    ])(
+      'isolates the card label for right-to-left text when the plan %s',
+      async (_label, cancelling, key) => {
+        const el = await open('/billing/payment/success?card=saved', 'success', {
+          reads: [
+            billing({
+              saved_card: NEW_CARD,
+              subscription: sub({ cancel_at_period_end: cancelling }),
+            }),
+          ],
+        });
+        TestBed.inject(TranslocoService).setTranslation(
+          { hostPayment: { [key]: 'Card: {{card}}.' } },
+          'en',
+        );
+        settle(0);
+
+        expect(live(el)).toContain('Card: ⁨Visa •••• 1111⁩.');
+      },
+    );
 
     it('says the card will not renew a plan that is set to end', async () => {
       const el = await open('/billing/payment/success?card=saved', 'success', {
@@ -810,6 +847,21 @@ describe('BillingReturn', () => {
         expect(checkout.clearReturn).not.toHaveBeenCalled();
       },
     );
+  });
+
+  it('reads a link naming both a card and a subscription as the card return', async () => {
+    const el = await open(
+      '/billing/payment/success?card=saved&subscription=started',
+      'success',
+      { reads: [billing({ saved_card: NEW_CARD, subscription: sub() })] },
+    );
+    settle(0);
+
+    expect(checkout.returnHostelFor).toHaveBeenCalledWith('card');
+    expect(checkout.returnHostelFor).not.toHaveBeenCalledWith('subscription');
+    // The plan is not Safepay-billed, so a subscription reading would still be confirming.
+    expect(live(el)).toContain('hostPayment.cardSavedTitle');
+    expect(live(el)).not.toContain('hostPayment.subscribedTitle');
   });
 
   it('sends the host to their hostels when there is no hostel to read', async () => {

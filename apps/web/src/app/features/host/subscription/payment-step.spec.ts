@@ -1372,6 +1372,53 @@ describe('PaymentStep', () => {
       expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
     });
 
+    it('pending: a 403 while waiting shows our permission copy and ends the wait', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      vi.useFakeTimers();
+      refreshes = [apiError(403, ['You are not authorized to perform this action'])];
+
+      answerCharge(
+        started(invoice({ payments: [pendingPayment()] }), pendingPayment()),
+      );
+      wait(0);
+
+      expect(byTestId(el, 'pay-forbidden')?.textContent).toContain(
+        'hostPayment.payForbidden',
+      );
+      expect(el.textContent).not.toContain('not authorized');
+      expect(payButton(el)).toBeNull();
+      expect(byTestId(el, 'charge-slow')).toBeNull();
+      expect(store.refresh).not.toHaveBeenCalled();
+
+      const calls = api.refreshInvoicePayments.mock.calls.length;
+      wait(60_000);
+      expect(api.refreshInvoicePayments.mock.calls.length).toBe(calls);
+    });
+
+    it('pending: a 404 while waiting shows the not-found state and ends the wait', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      vi.useFakeTimers();
+      refreshes = [apiError(404)];
+
+      answerCharge(
+        started(invoice({ payments: [pendingPayment()] }), pendingPayment()),
+      );
+      wait(0);
+
+      const state = byTestId(el, 'pay-not-found');
+      expect(state?.textContent).toContain('hostPayment.notFoundTitle');
+      expect(payButton(el)).toBeNull();
+      expect(savedCardButton(el)).toBeNull();
+      expect(byTestId(el, 'charge-slow')).toBeNull();
+      expect(store.refresh).not.toHaveBeenCalled();
+
+      const calls = api.refreshInvoicePayments.mock.calls.length;
+      wait(60_000);
+      expect(api.refreshInvoicePayments.mock.calls.length).toBe(calls);
+    });
+
     it('a server failure shows our generic copy and lets the payer try again', async () => {
       const el = await openBilled(withCard());
       chargeCard(el);

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { SITE_ORIGIN, Seo } from '@core/seo';
+import { Seo } from '@core/seo';
 import { placeSocialImage } from '@core/social-image';
 import { Faq, faqJsonLd, placeFaqs } from './place-faqs';
 import { findUniversity, universitiesIn } from './universities';
@@ -255,17 +255,24 @@ export class PlaceLanding {
       );
 
       // A breadcrumb trail is what turns the URL shown under a result into
-      // "hostelhive.com › Hostels › Lahore" instead of a raw path.
+      // "hostelhive.com › Hostels › Lahore" instead of a raw path. It names the pages in
+      // the language this page's canonical lives in, so each name is translated and each
+      // address carries the same prefix as that canonical.
       this.seo.setJsonLd('place-breadcrumb', {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: this.i18n.translate<string>('publicLanding.home'),
+            item: this.seo.pageUrl('/'),
+          },
           {
             '@type': 'ListItem',
             position: 2,
-            name: `Hostels in ${p.name}`,
-            item: `${SITE_ORIGIN}/hostels/${p.slug}`,
+            name: this.i18n.translate<string>('publicLanding.hostelsIn', { place: p.name }),
+            item: this.seo.pageUrl(`/hostels/${p.slug}`),
           },
           ...(g || u
             ? [
@@ -279,7 +286,7 @@ export class PlaceLanding {
                     : g
                       ? this.segmentLabel(g)
                       : '',
-                  item: `${SITE_ORIGIN}${path}`,
+                  item: this.seo.pageUrl(path),
                 },
               ]
             : []),

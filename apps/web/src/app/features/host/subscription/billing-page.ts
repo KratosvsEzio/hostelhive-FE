@@ -52,8 +52,10 @@ import { ApiDate } from '@util/api-date';
 import { isNetworkError } from '@util/network-error';
 import {
   PlanButton,
+  PlanSubscribe,
   billingHistoryPath,
   isSafepayBilled,
+  isSafepayTrial,
   planButton,
 } from '@app/shared/billing/billing-labels';
 import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
@@ -116,6 +118,10 @@ interface PlanView {
   error: CheckoutError | null;
   /** The refusal from a plan change asked for on this card. */
   changeError: PlanChangeError | null;
+  /** Subscribing through Safepay instead, offered only beside Choose plan. */
+  subscribe: PlanSubscribe | null;
+  subscribeDisabled: boolean;
+  subscribeLoading: boolean;
 }
 
 /** The checkout refusal that a hostel without a country gets, matched exactly as the server words it. */
@@ -135,7 +141,8 @@ const CHANGE_FAILED: Record<PlanChange['kind'], string> = {
 
 /**
  * A hostel's HostelHive billing: the current plan, any unpaid invoice, the card saved for
- * automatic renewal, and one card per plan with the single action the server allows.
+ * automatic renewal, and one card per plan with the single action the server allows. A plan the
+ * hostel can buy also offers subscribing through Safepay, with a free trial when the server has one.
  *
  * Every price, proration and action comes from the server. A checkout creates (or reuses) an
  * invoice and hands it to the payment step; nothing here is cached, so returning to the page
@@ -264,10 +271,26 @@ export class BillingPage {
     source: this.hostelId,
     computation: () => false,
   });
+  /** The plan a Safepay subscription is starting for, until the browser leaves for Safepay. */
+  protected readonly subscribingPlanId = linkedSignal<string, string | null>({
+    source: this.hostelId,
+    computation: () => null,
+  });
+  /** The plan waiting on the host to confirm that subscribing leaves the unpaid invoice open. */
+  protected readonly confirmingSubscribe = linkedSignal<
+    string,
+    BillingPlan | null
+  >({
+    source: this.hostelId,
+    computation: () => null,
+  });
 
-  /** One billing write at a time: a checkout, plan change or card action locks every other one. */
+  /** One billing write at a time: a checkout, subscription start, plan change or card action locks every other one. */
   protected readonly busy = computed(
-    () => this.pendingPlanId() !== null || this.pendingChange() !== null,
+    () =>
+      this.pendingPlanId() !== null ||
+      this.subscribingPlanId() !== null ||
+      this.pendingChange() !== null,
   );
 
   protected readonly cardBusy = computed<CurrentPlanAction | null>(() => {
@@ -375,6 +398,21 @@ export class BillingPage {
     LIVE_STATUSES.includes(this.subscription()?.status.slug ?? ''),
   );
 
+  protected readonly safepayTrial = computed(() =>
+    isSafepayTrial(this.subscription()),
+  );
+
+  /** Why no plan can be changed while Safepay bills this one: the server's words, said once above the plans. */
+  protected readonly safepayReason = computed(() => {
+    if (!isSafepayBilled(this.subscription())) return null;
+    return this.billing()?.plans.find((p) => p.reason)?.reason ?? null;
+  });
+
+  /** Safepay is not started while a bank transfer for the unpaid invoice is being checked. */
+  protected readonly transferUnderReview = computed(
+    () => !!this.billing()?.open_invoice?.awaiting_verification,
+  );
+
   protected readonly cancellingAtPeriodEnd = computed(
     () => !!this.subscription()?.cancel_at_period_end,
   );
@@ -382,7 +420,9 @@ export class BillingPage {
   /** The renewal date the saved card is charged on, while it renews the plan. */
   protected readonly autoChargeOn = computed(() => {
     const sub = this.subscription();
-    return this.billing()?.auto_renew && sub?.status.slug === 'active'
+    return this.billing()?.auto_renew &&
+      sub?.status.slug === 'active' &&
+      !isSafepayBilled(sub)
       ? sub.current_period_end
       : null;
   });
@@ -404,11 +444,14 @@ export class BillingPage {
     const busy = this.busy();
     const canChange = this.canChangePlan();
     const blocked = !this.canCheckout() || busy;
-    const hideReason = this.countryMissing();
+    const hideReason = this.countryMissing() || this.safepayReason() !== null;
     const error = this.checkoutError();
     const changeError = this.planChangeError();
+    const subscribing = this.subscribingPlanId();
+    const subscribeBlocked = blocked || this.transferUnderReview();
     return b.plans.map((plan) => {
       const button = planButton(plan, b.subscription);
+      const subscribe = button.subscribe ?? null;
       return {
         plan,
         button,
@@ -427,6 +470,9 @@ export class BillingPage {
             : null,
         error: error?.planId === plan.id ? error : null,
         changeError: changeError?.planId === plan.id ? changeError : null,
+        subscribe,
+        subscribeDisabled: !!subscribe && subscribeBlocked,
+        subscribeLoading: subscribing === plan.id,
       };
     });
   });
@@ -442,6 +488,7 @@ export class BillingPage {
       if (this.pendingChange()?.kind === 'saveCard') {
         this.pendingChange.set(null);
       }
+      this.subscribingPlanId.set(null);
     });
 
     // The router does no anchor scrolling (see core/scroll-reset), so a link to the block, such
@@ -494,6 +541,26 @@ export class BillingPage {
 
   protected cancelReplace(): void {
     this.replacing.set(null);
+  }
+
+  /** A plan card's Safepay subscribe button. An unpaid invoice stays open, so the host confirms that first. */
+  protected onSubscribe(view: PlanView): void {
+    if (!view.subscribe || view.subscribeDisabled || this.busy()) return;
+    if (this.billing()?.open_invoice) {
+      this.confirmingSubscribe.set(view.plan);
+      return;
+    }
+    this.subscribe(view.plan);
+  }
+
+  protected confirmSubscribe(): void {
+    const plan = this.confirmingSubscribe();
+    this.confirmingSubscribe.set(null);
+    if (plan) this.subscribe(plan);
+  }
+
+  protected dismissSubscribe(): void {
+    this.confirmingSubscribe.set(null);
   }
 
   protected confirmDowngrade(): void {
@@ -660,6 +727,26 @@ export class BillingPage {
         error: (err: ApiError) => {
           if (this.hostelId() !== id) return;
           this.pendingPlanId.set(null);
+          this.showCheckoutError(plan.id, err);
+        },
+      });
+  }
+
+  /** Leaves for Safepay to subscribe to `plan`; the page is unloading once it answers. */
+  private subscribe(plan: BillingPlan): void {
+    const id = this.hostelId();
+    if (!id || this.busy()) return;
+    this.subscribingPlanId.set(plan.id);
+    this.checkoutError.set(null);
+    this.planChangeError.set(null);
+    this.safepay
+      .startSubscribe(id, plan.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        // The browser is leaving for Safepay, so the button keeps its spinner until it does.
+        error: (err: ApiError) => {
+          if (this.hostelId() !== id) return;
+          this.subscribingPlanId.set(null);
           this.showCheckoutError(plan.id, err);
         },
       });

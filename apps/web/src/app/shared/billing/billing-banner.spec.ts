@@ -538,6 +538,109 @@ describe('bannerFor', () => {
       });
       expect(bannerFor(owner(autoRenewing(sub)), NOW)).toMatchObject({
         messageKey: 'hostAccess.renewsSoon',
+        action: 'goToBilling',
+      });
+    });
+  });
+
+  describe('on a plan Safepay bills', () => {
+    const safepay = (sub: BillingSubscription, overrides: Partial<HostBilling> = {}) =>
+      billing({
+        subscription: { ...sub, billed_by: 'safepay_subscription', safepay_status: 'ACTIVE' },
+        ...overrides,
+      });
+
+    it('says Safepay could not charge the card while past due, with Go to billing and no Renew or Pay', () => {
+      const end = iso(NOW - 2 * DAY);
+      const grace = iso(NOW + 3 * DAY);
+      const sub = withSlug('past-due', { current_period_end: end, grace_until: grace });
+      expect(bannerFor(owner(safepay(sub, { open_invoice: OPEN_INVOICE })), NOW)).toEqual({
+        kind: 'past-due',
+        tone: 'warn',
+        messageKey: 'hostAccess.pastDueSafepay',
+        dates: { endDate: end, graceDate: grace },
+        params: {},
+        boostPaused: false,
+        countdownMs: 3 * DAY,
+        action: 'goToBilling',
+        secondaryAction: null,
+        dismissible: false,
+        periodEnd: end,
+      });
+    });
+
+    it('ignores a stale auto-renew flag while past due', () => {
+      const sub = withSlug('past-due', {
+        current_period_end: iso(NOW - DAY),
+        grace_until: iso(NOW + DAY),
+      });
+      expect(bannerFor(owner(safepay(sub, { auto_renew: true })), NOW)).toMatchObject({
+        messageKey: 'hostAccess.pastDueSafepay',
+        action: 'goToBilling',
+        secondaryAction: null,
+      });
+    });
+
+    it('notes the paused boost while past due when the plan has one', () => {
+      const sub = withSlug('past-due', {
+        current_period_end: iso(NOW - DAY),
+        grace_until: iso(NOW + DAY),
+        plan: { id: 'p', code: 'all', name: 'All', features: ['boost', 'crm'] },
+      });
+      expect(bannerFor(owner(safepay(sub)), NOW)).toMatchObject({
+        messageKey: 'hostAccess.pastDueSafepay',
+        boostPaused: true,
+      });
+    });
+
+    it.each([
+      ['renewing', subscription({ current_period_end: iso(NOW + DAY) }), 'hostAccess.renewsSoon'],
+      ['renew-due', subscription({ current_period_end: iso(NOW - DAY) }), 'hostAccess.renewDue'],
+    ])('ignores a stale auto-renew flag while %s', (kind, sub, key) => {
+      const state = bannerFor(owner(safepay(sub, { auto_renew: true })), NOW);
+      expect(state).toMatchObject({ kind, messageKey: key, action: 'goToBilling' });
+      expect(state?.messageKey).not.toMatch(/Card$/);
+    });
+
+    it.each([
+      ['renewing', subscription({ current_period_end: iso(NOW + DAY) }), 'hostAccess.renewsSoon'],
+      ['renew-due', subscription({ current_period_end: iso(NOW - DAY) }), 'hostAccess.renewDue'],
+      [
+        'grace-over',
+        withSlug('past-due', { current_period_end: iso(NOW - 2 * DAY), grace_until: iso(NOW - HOUR) }),
+        'hostAccess.graceOverSafepay',
+      ],
+    ])('shows the %s banner with Go to billing instead of Renew', (kind, sub, key) => {
+      expect(bannerFor(owner(safepay(sub, { open_invoice: OPEN_INVOICE })), NOW)).toMatchObject({
+        kind,
+        messageKey: key,
+        action: 'goToBilling',
+        secondaryAction: null,
+      });
+    });
+
+    it('keeps Resume on a cancelling plan', () => {
+      const sub = subscription({ current_period_end: iso(NOW + DAY), cancel_at_period_end: true });
+      expect(bannerFor(owner(safepay(sub)), NOW)).toMatchObject({
+        kind: 'cancel-pending',
+        action: 'resume',
+      });
+    });
+
+    it('goes back to the invoice banners once the plan has expired', () => {
+      expect(bannerFor(owner(safepay(withSlug('expired'))), NOW)).toMatchObject({
+        kind: 'expired',
+        action: 'renew',
+      });
+    });
+
+    it('leaves an invoice-billed past-due plan as it was', () => {
+      const sub = withSlug('past-due', {
+        current_period_end: iso(NOW - DAY),
+        grace_until: iso(NOW + DAY),
+      });
+      expect(bannerFor(owner(billing({ subscription: sub })), NOW)).toMatchObject({
+        messageKey: 'hostAccess.pastDue',
         action: 'renew',
       });
     });
