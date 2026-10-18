@@ -191,15 +191,18 @@
          request left the column with no context at all. -->
     <div class="mb-4 max-[949px]:hidden">
       <!-- Falls back to Pakistan, which is what an unscoped search actually covers — a
-           blank heading would read as a bug.
+           blank heading would read as a bug. Once the visitor has chosen the area on a
+           search that names no place, "This map area" instead (Trello #161).
            Suppressed when embedded: a landing page already has its own h1, and two on one
            page is both a ranking signal split in half and a mess for a screen reader. -->
       @if (!seed()) {
         <h1 class="font-display text-xl font-semibold text-ink-900">
           @if (unbounded()) {
             {{ 'searchUi.everywhere' | transloco }}
+          } @else if (locationName(); as name) {
+            {{ name }}
           } @else {
-            {{ locationName() }}
+            {{ 'searchUi.mapArea' | transloco }}
           }
         </h1>
       }

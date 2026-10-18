@@ -1676,3 +1676,214 @@ describe('SearchMap on a URL carrying a room or property type the search does no
     expect(queryAt(list, 0)).toMatchObject({ roomType: 'shared', sort: 'recommended' });
   });
 });
+
+/**
+ * Every fresh search is reported as `search_performed`, with what the seeker did to run it
+ * (Trello #157), so GA can count searches without the pans.
+ */
+describe('SearchMap search_performed trigger', () => {
+  afterEach(cleanupSearchMap);
+
+  /** A camera that reports one fixed viewport, standing in for Leaflet. */
+  const cameraAt = (b: { north: number; south: number; east: number; west: number }) => ({
+    getBounds: () => ({
+      getNorth: () => b.north,
+      getSouth: () => b.south,
+      getEast: () => b.east,
+      getWest: () => b.west,
+    }),
+  });
+
+  /** Mounts a routed browser search page with `track` spied before it exists. */
+  async function mountTracked(url: string) {
+    configureSearchMap({ platform: 'browser' });
+    const track = vi.spyOn(TestBed.inject(GoogleAnalyticsService), 'track');
+    const mounted = await mount(url, null, true);
+    return { ...mounted, track };
+  }
+
+  /** The `trigger` of each `search_performed` sent so far, in order. */
+  const triggers = (track: ReturnType<typeof vi.spyOn>) =>
+    (track.mock.calls as [string, Record<string, unknown>][])
+      .filter(([name]) => name === 'search_performed')
+      .map(([, params]) => params['trigger']);
+
+  /** Waits for the `n`th report and returns every trigger so far. */
+  async function reported(track: ReturnType<typeof vi.spyOn>, n: number) {
+    await vi.waitFor(() => expect(triggers(track).length).toBeGreaterThanOrEqual(n), {
+      timeout: 3000,
+    });
+    return triggers(track);
+  }
+
+  it('reports the first search on a page as the arrival', async () => {
+    const { track } = await mountTracked('/en/search/lahore');
+
+    expect(await reported(track, 1)).toEqual(['arrival']);
+  });
+
+  it('reports a settled pan as the map', async () => {
+    const { fixture, map, track } = await mountTracked('/en/search/lahore');
+    await reported(track, 1);
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    map.map = cameraAt({ north: 31.6, south: 31.2, east: 74.8, west: 74.4 });
+    map.captureMapBounds();
+    fixture.detectChanges();
+
+    expect(await reported(track, 2)).toEqual(['arrival', 'map']);
+  });
+
+  it('reports a filter change as a filter', async () => {
+    const { track } = await mountTracked('/en/search/lahore');
+    await reported(track, 1);
+
+    await TestBed.inject(Router).navigateByUrl('/en/search/lahore?gender=boys');
+
+    expect(await reported(track, 2)).toEqual(['arrival', 'filter']);
+  });
+
+  it('reports a new place on the same page as a place', async () => {
+    const { track } = await mountTracked('/en/search');
+    await reported(track, 1);
+
+    await TestBed.inject(Router).navigateByUrl(
+      '/en/search?place=My%20location&lat=24.8607&lng=67.0011',
+    );
+
+    expect(await reported(track, 2)).toEqual(['arrival', 'place']);
+  });
+
+  it('names a place and the camera settling on it once, as the place', async () => {
+    const { fixture, map, track } = await mountTracked('/en/search');
+    await reported(track, 1);
+
+    // Both inside one debounce window: the place lands, then the camera settles on it.
+    await TestBed.inject(Router).navigateByUrl('/en/search?lat=24.8607&lng=67.0011');
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    map.map = cameraAt({ north: 25, south: 24.7, east: 67.2, west: 66.8 });
+    map.captureMapBounds();
+    fixture.detectChanges();
+    await new Promise<void>((r) => setTimeout(r, 1200));
+
+    expect(triggers(track)).toEqual(['arrival', 'place']);
+  });
+
+  it('reports widening a bare search in place as everywhere', async () => {
+    const { map, track } = await mountTracked('/en/search?lat=31.5204&lng=74.3587');
+    await reported(track, 1);
+
+    map.searchEverywhere();
+
+    expect(await reported(track, 2)).toEqual(['arrival', 'everywhere']);
+  });
+
+  it('reports a retry of the same search as a retry', async () => {
+    const { map, track } = await mountTracked('/en/search/lahore');
+    await reported(track, 1);
+
+    (map as unknown as { retryNow(): void }).retryNow();
+
+    expect(await reported(track, 2)).toEqual(['arrival', 'retry']);
+  });
+
+  /** Mounts after a navigation that, while it was current, carried `state`. */
+  async function mountAfter(state: Record<string, unknown>) {
+    configureSearchMap({ platform: 'browser' });
+    const router = TestBed.inject(Router);
+    const track = vi.spyOn(TestBed.inject(GoogleAnalyticsService), 'track');
+    await router.navigateByUrl('/en/search/karachi');
+    // The app builds the page while its navigation is still current; this mount comes after.
+    vi.spyOn(router, 'currentNavigation').mockReturnValue({
+      extras: { state },
+    } as unknown as ReturnType<Router['currentNavigation']>);
+    await mount(undefined, null, true);
+    return track;
+  }
+
+  it('takes the first trigger from the navigation that built the page', async () => {
+    const track = await mountAfter({ searchTrigger: 'place' });
+
+    expect(await reported(track, 1)).toEqual(['place']);
+  });
+
+  it('ignores a navigation state that is not a trigger', async () => {
+    const track = await mountAfter({ searchTrigger: 'bogus' });
+
+    expect(await reported(track, 1)).toEqual(['arrival']);
+  });
+
+  it('tells the page a place pick builds that it was a place', async () => {
+    const { map, navigate } = await mountSearch('/en/search');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras['state']).toEqual({ searchTrigger: 'place' });
+  });
+
+  it('tells the page Search everywhere builds from a place path that it was everywhere', async () => {
+    const { map, navigate } = await mountSearch('/en/search/lahore', { platform: 'browser' });
+
+    map.searchEverywhere();
+
+    expect(firstNavigation(navigate).extras['state']).toEqual({ searchTrigger: 'everywhere' });
+  });
+});
+
+/**
+ * Bare `/search` names no place, so the heading reads the country the map opened on, or
+ * Pakistan. Once the visitor has chosen the area, neither describes it (Trello #161).
+ */
+describe('SearchMap heading over an area the visitor chose', () => {
+  afterEach(cleanupSearchMap);
+
+  const VIEWPORT = 'ne_lat=53.5&ne_lng=7.2&sw_lat=50.8&sw_lng=3.4';
+
+  const heading = (fixture: ComponentFixture<SearchMap>) =>
+    (fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent?.trim();
+
+  async function pannedOn(url: string) {
+    configureSearchMap();
+    const { fixture, map } = await mount(url, null, true);
+    map.leftHomeCountry();
+    fixture.detectChanges();
+    return heading(fixture);
+  }
+
+  it('reads Pakistan on a bare search the visitor has not moved', async () => {
+    configureSearchMap();
+    const { fixture } = await mount('/en/search', null, true);
+
+    expect(heading(fixture)).toBe('Pakistan');
+  });
+
+  it('reads This map area once the visitor pans a bare search', async () => {
+    expect(await pannedOn('/en/search')).toBe('searchUi.mapArea');
+  });
+
+  it('reads This map area on a bare search link carrying a viewport', async () => {
+    configureSearchMap();
+    const { fixture } = await mount(`/en/search?${VIEWPORT}`, null, true);
+
+    expect(heading(fixture)).toBe('searchUi.mapArea');
+  });
+
+  it('keeps naming a place the query names after a pan', async () => {
+    expect(await pannedOn('/en/search?place=Lahore')).toBe('Lahore');
+  });
+
+  it('keeps naming the place path after a pan (Trello #160 is a separate decision)', async () => {
+    expect(await pannedOn('/en/search/lahore')).toBe('Lahore');
+  });
+
+  it('titles a bare search link carrying a viewport for the map area, not a country', async () => {
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+    await mount(`/en/search?${VIEWPORT}`, null, true);
+    const applied = lastApply(seo);
+
+    expect(applied['title']).toBe('seo.mapAreaTitle');
+    expect(applied['description']).toBe('seo.mapAreaDescription');
+    expect(applied['noindex']).toBe(true);
+  });
+});

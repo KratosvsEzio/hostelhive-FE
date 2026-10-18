@@ -72,6 +72,14 @@ import {
 } from '@features/public/search/search-params';
 import { isSortOffered } from '@features/public/search/search-sort';
 import {
+  isSearchTrigger,
+  SEARCH_TRIGGER_STATE_KEY,
+  SearchTrigger,
+  SearchTriggerInputs,
+  strongerTrigger,
+  triggerForChange,
+} from '@features/public/search/search-trigger';
+import {
   EVERYWHERE_KEY,
   PLACE_KEYS_NULLED,
   RETIRED_KEYS_NULLED,
@@ -267,16 +275,21 @@ export class SearchMap {
    * The `place` query param is the real name and wins whenever it is present; the slug is
    * only unslugified when it is not — a pasted `/search/gulberg-lahore` carries no place.
    * Neither means the search is country-wide, which reads as Pakistan rather than as blank.
+   *
+   * Null once the visitor has picked the area themselves on a search that names no place
+   * (see {@link areaChosen}): the heading then reads "This map area" (`searchUi.mapArea`).
    */
-  protected readonly locationName = computed(() => {
+  protected readonly locationName = computed((): string | null => {
     const place = this.params()?.get('place') || this.params()?.get('city');
     if (place) return place;
     const known = this.slugPlace();
     if (known) return known.name;
     const slug = this.locationSlug();
     if (slug) return fromLocationSlug(slug);
-    // Whatever the map was framed on. A heading reading "Pakistan" over a map of the
-    // Netherlands describes neither the view nor the results.
+    // No country names an area the visitor panned to: "Pakistan" over a map of the
+    // Netherlands describes neither the view nor the results (Trello #161).
+    if (this.areaChosen()) return null;
+    // Whatever the map was framed on.
     return this.homeCountryName() ?? DEFAULT_LOCATION;
   });
 
@@ -421,6 +434,13 @@ export class SearchMap {
   private readonly homeCountry = signal<string | null>(null);
 
   /**
+   * The area on screen is one the visitor chose: they panned or zoomed the map, or opened a
+   * link carrying a viewport (which is where some visitor took it). Only consulted when
+   * the search names no place, so a pan on `/search/<slug>` still reads as the place.
+   */
+  private readonly areaChosen = signal(this.urlBounds() !== null);
+
+  /**
    * The country's name in the language being read — "Netherlands", "Pays-Bas", "ہالینڈ".
    *
    * `Intl.DisplayNames` already knows every region in every locale the app ships, so this
@@ -500,6 +520,16 @@ export class SearchMap {
   /** Bumped to re-fire the search once the cooldown elapses (or via "Retry now"). */
   private readonly retryTick = signal(0);
   private cooldownTimer?: ReturnType<typeof setInterval>;
+  /**
+   * What the next search request is for, for `search_performed` (see `search-trigger.ts`).
+   * Starts as the arrival, or as what a search started elsewhere said in its navigation
+   * state; each change of the request inputs then raises it, and a request takes it.
+   */
+  private pendingTrigger: SearchTrigger | null = this.arrivalTrigger();
+  /** The trigger of the page-1 request in flight, reported when it answers. */
+  private inFlightTrigger: SearchTrigger = 'arrival';
+  /** The last request inputs seen, to tell what the next ones changed. */
+  private lastInputs?: SearchTriggerInputs;
   private readonly result = toSignal(
     toObservable(
       // The two cache-busters have to be *in* the emitted object, not merely read here.
@@ -520,6 +550,9 @@ export class SearchMap {
         currency: this.currencyCode(),
       })),
     ).pipe(
+      // Before the debounce, which collapses a place pick and the camera settling on it
+      // into one request: every change is seen, and the strongest names the request.
+      tap((inputs) => this.noteSearchInputs(inputs)),
       // A debounce that drops, rather than sends, what is still pending when the page goes.
       // `toObservable` completes on destroy, and `debounceTime` flushes its pending value on
       // completion — so leaving the page within the window after a pan fired one last search
@@ -531,7 +564,12 @@ export class SearchMap {
       tap(({ q }) => {
         // Page 1 = fresh search (skeletons); page > 1 = append (keep the list, show the spinner row).
         if (q.page && q.page > 1) this.loadingMore.set(true);
-        else this.loading.set(true);
+        else {
+          this.loading.set(true);
+          // Nothing pending is a refetch of the same search with the same inputs.
+          this.inFlightTrigger = this.pendingTrigger ?? 'retry';
+          this.pendingTrigger = null;
+        }
         this.loadError.set(false); // a fresh attempt clears any prior error
       }),
       switchMap(({ q }) => {
@@ -643,7 +681,33 @@ export class SearchMap {
       budget_min: q.minPrice,
       budget_max: q.maxPrice,
       result_count: total,
+      trigger: this.inFlightTrigger,
     });
+  }
+
+  /**
+   * What started the page's first search: what the navigation that built it said (a place
+   * pick or "Search everywhere" that left for a new route config, the header bar), or else
+   * the visitor arriving.
+   */
+  private arrivalTrigger(): SearchTrigger {
+    const said = this.router.currentNavigation()?.extras.state?.[SEARCH_TRIGGER_STATE_KEY];
+    return isSearchTrigger(said) ? said : 'arrival';
+  }
+
+  /** Raise the pending trigger by whatever these request inputs changed. */
+  private noteSearchInputs(emitted: SearchTriggerInputs): void {
+    // Read at the emission rather than carried in it: in the request it would refetch.
+    const p = this.params();
+    const where = JSON.stringify(
+      ['place', 'city', 'lat', 'lng'].map((k) => p?.get(k) ?? null).concat(this.locationSlug()),
+    );
+    const inputs = { ...emitted, where };
+    const prev = this.lastInputs;
+    this.lastInputs = inputs;
+    if (prev) {
+      this.pendingTrigger = strongerTrigger(this.pendingTrigger, triggerForChange(prev, inputs));
+    }
   }
 
   private applyResult(res: Paginated<Listing>): void {
@@ -902,10 +966,14 @@ export class SearchMap {
       // claiming they are the landing page would be a lie about their content.
       if (filtered || !place) {
         this.seo.apply({
-          title: this.i18n.translate<string>('seo.searchTitle', { place: name }),
-          description: this.i18n.translate<string>('seo.searchDescription', {
-            place: name,
-          }),
+          title:
+            name === null
+              ? this.i18n.translate<string>('seo.mapAreaTitle')
+              : this.i18n.translate<string>('seo.searchTitle', { place: name }),
+          description:
+            name === null
+              ? this.i18n.translate<string>('seo.mapAreaDescription')
+              : this.i18n.translate<string>('seo.searchDescription', { place: name }),
           noindex: true,
           image: DEFAULT_SOCIAL_IMAGE,
         });
@@ -1570,13 +1638,15 @@ export class SearchMap {
    * The visitor has taken the map somewhere of their own choosing.
    *
    * Retires both things that were only true of the opening view: the worldwide search,
-   * and the claim that what is on screen is their country. The heading falls back to what
-   * it said before any of this existed — a pan to Lahore under a heading reading
-   * "Netherlands" describes nothing the visitor can see.
+   * and the claim that what is on screen is their country. Where the search names no place,
+   * the heading becomes "This map area" — a pan to Lahore under a heading reading
+   * "Netherlands" describes nothing the visitor can see, and nor does "Pakistan" over
+   * Amsterdam (Trello #161).
    */
   private leftHomeCountry(): void {
     this.unbounded.set(false);
     this.homeCountry.set(null);
+    this.areaChosen.set(true);
   }
 
   /**
@@ -1617,9 +1687,13 @@ export class SearchMap {
    */
   protected searchEverywhere(): void {
     if (this.seed() || this.locationSlug()) {
-      if (this.isBrowser) void this.startSearch(['/search'], { [EVERYWHERE_KEY]: 1 });
+      if (this.isBrowser) {
+        void this.startSearch(['/search'], { [EVERYWHERE_KEY]: 1 }, 'everywhere');
+      }
       return;
     }
+    // Dropping the place and the viewport reads like a pan to `triggerForChange`.
+    this.pendingTrigger = strongerTrigger(this.pendingTrigger, 'everywhere');
     this.unbounded.set(true);
     this.page.set(1);
     this.mapBounds.set(null);
@@ -1676,6 +1750,7 @@ export class SearchMap {
   private startSearch(
     commands: string[],
     geo: Record<string, string | number | null>,
+    trigger: SearchTrigger = 'place',
   ): Promise<boolean> {
     const p = this.params();
     const gender = p?.get('gender') || null;
@@ -1696,6 +1771,8 @@ export class SearchMap {
           ...geo,
         },
         queryParamsHandling: 'merge',
+        // Read by the search page this builds, if it builds one (`arrivalTrigger`).
+        state: { [SEARCH_TRIGGER_STATE_KEY]: trigger },
       },
     );
   }
