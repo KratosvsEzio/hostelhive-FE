@@ -518,6 +518,19 @@ describe('AccountBookingDetail', () => {
   });
 });
 
+/** The app has no plural rules, so a count of one asks for its own singular key. */
+describe('AccountBookingDetail guest counts', () => {
+  it.each([
+    [1, 'common.nGuestsOne'],
+    [2, 'common.nGuests'],
+  ])('shows %i guest(s) on the stay and on its room line as %s', (guests, key) => {
+    const b = booking();
+    const { el } = render(() => of({ ...b, guests, lines: [{ ...b.lines[0], guests }] }));
+
+    expect(el.textContent?.match(/common\.nGuests(?:One)?/g)).toEqual([key, key]);
+  });
+});
+
 describe('asE164', () => {
   it('adds the plus the stored digits-only number is missing', () => {
     expect(asE164('923030491909')).toBe('+923030491909');

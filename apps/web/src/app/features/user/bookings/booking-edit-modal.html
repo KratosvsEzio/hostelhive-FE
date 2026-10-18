@@ -31,7 +31,7 @@
                   | transloco: { count: line.units }
               }}
               · {{ line.title }}
-              <span class="text-ink-400">· {{ 'common.nGuests' | transloco: { count: line.guests } }}</span>
+              <span class="text-ink-400">· {{ (line.guests === 1 ? 'common.nGuestsOne' : 'common.nGuests') | transloco: { count: line.guests } }}</span>
             </span>
             <span class="shrink-0 whitespace-nowrap tabular-nums">{{ s.currency | currencySym }} {{ line.total | number }}</span>
           </li>

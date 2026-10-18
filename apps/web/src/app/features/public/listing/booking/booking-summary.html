@@ -59,9 +59,9 @@
         {{ basket.checkIn() | date: 'd MMM' }} – {{ basket.checkOut() | date: 'd MMM yyyy' }}
       </p>
       <p>
-        {{ 'common.nNights' | transloco: { count: basket.nights() } }}
+        {{ (basket.nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: basket.nights() } }}
         <span class="mx-1 text-ink-300">·</span>
-        {{ 'common.nGuests' | transloco: { count: basket.guests() } }}
+        {{ (basket.guests() === 1 ? 'common.nGuestsOne' : 'common.nGuests') | transloco: { count: basket.guests() } }}
       </p>
     </div>
   </div>
@@ -79,7 +79,7 @@
           <p class="tabular-nums">
             {{ units(row.line) }} × {{ row.unit }}
             <span class="mx-1 text-ink-300">·</span>
-            {{ 'common.nNights' | transloco: { count: basket.nights() } }}
+            {{ (basket.nights() === 1 ? 'common.nNightsOne' : 'common.nNights') | transloco: { count: basket.nights() } }}
           </p>
         </div>
         <p class="shrink-0 font-semibold text-ink-900 tabular-nums">

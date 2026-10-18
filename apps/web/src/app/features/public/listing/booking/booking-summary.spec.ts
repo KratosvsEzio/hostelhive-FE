@@ -248,3 +248,34 @@ describe('BookingSummary — once the booking exists', () => {
     expect(text).toContain('publicBooking.confirmBooking');
   });
 });
+
+/** The app has no plural rules, so a count of one asks for its own singular key. */
+describe('BookingSummary counts', () => {
+  /** A stay of `nights` in `beds` dorm beds, one guest per bed; returns the summary's text. */
+  function textFor(nights: number, beds: number): string {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [Host], providers: [provideI18nTesting()] });
+    const fixture = TestBed.createComponent(Host);
+    const basket = fixture.debugElement.injector.get(BookingBasket);
+    basket.checkIn.set(new Date(2026, 8, 1));
+    basket.checkOut.set(new Date(2026, 8, 1 + nights));
+    basket.setQuantity(ROOM_OFFERS[2]!, beds);
+    fixture.detectChanges();
+    expect(basket.guests()).toBe(beds);
+    return fixture.nativeElement.textContent ?? '';
+  }
+
+  it.each([
+    [1, 'common.nNightsOne'],
+    [2, 'common.nNights'],
+  ])('shows %i night(s) on the stay and on the room line as %s', (nights, key) => {
+    expect(textFor(nights, 2).match(/common\.nNights(?:One)?/g)).toEqual([key, key]);
+  });
+
+  it.each([
+    [1, 'common.nGuestsOne'],
+    [2, 'common.nGuests'],
+  ])('shows %i guest(s) as %s', (guests, key) => {
+    expect(textFor(2, guests).match(/common\.nGuests(?:One)?/g)).toEqual([key]);
+  });
+});
