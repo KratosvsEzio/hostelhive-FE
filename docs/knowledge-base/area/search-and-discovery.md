@@ -43,7 +43,7 @@ How a seeker finds hostels: the header search bar, the `/search` list + map page
   - **The URL strip:** in the browser, `SearchMap` removes the discarded sort with a same-path `replaceUrl` (`stripDiscardedSort`; no history entry, and GA skips it as a same-page refinement). It re-runs on each URL change while a discarded sort remains, so a strip another navigation superseded is retried.
   - **Why strip and not just read:** the header bar reads the raw URL, not the reader (`SearchBar.activeSort`). A dormant `sort` would come back once a type was picked there, and the bar cannot see a landing page's seed to know better.
   - **`startSearch`:** writes `sort: null` when `discardedSort()` is true (the raw query carries a sort the reader dropped), so a new search never carries it along.
-  - Trello #171, PR #(to follow).
+  - Trello #171, PR #145.
 - **Modal labels are translation keys.** Type of stay (`searchBar.anyAccommodation` plus `ACCOMMODATION_LABEL_KEYS`, the same names as the header bar), Room type (`search.sharedRoom`/`privateRoom`) and Sort (`SORT_OPTIONS[].key`) render through the Transloco pipe. Property type and the amenity chips are still English (Trello #172).
 - **SEO**: unfiltered search for a curated place → canonical `/hostels/<slug>`; filtered, uncurated or "everywhere" → `noindex` with no canonical, `og:url` only when a path is set (`Seo.apply`; before Trello #131 it canonicalised to home). See decisions.
 
