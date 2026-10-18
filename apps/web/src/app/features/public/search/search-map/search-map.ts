@@ -16,8 +16,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationEnd, ParamMap, Router } from '@angular/router';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
   EMPTY,
@@ -54,6 +54,7 @@ import {
   toLocationSlug,
 } from '@util/location-slug';
 import { localiseCommands } from '@core/i18n/locale-commands';
+import { isSamePageRefinement } from '@core/navigation/same-page-refinement';
 import { Seo } from '@core/seo';
 import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { PLACES } from '@features/public/landing/places';
@@ -70,6 +71,7 @@ import {
   searchUrlCorrections,
   SearchVocabulary,
 } from '@features/public/search/search-params';
+import { Bounds, framesPlace } from '@features/public/search/search-framing';
 import { isSortOffered } from '@features/public/search/search-sort';
 import {
   isSearchTrigger,
@@ -90,14 +92,6 @@ import { ListingCard } from '@features/public/search/listing-card/listing-card';
 import { accommodationLabelKey } from '@util/accommodation-type';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
 import { TranslocoPipe, TranslocoService, translate } from '@jsverse/transloco';
-
-/** Map viewport as the backend wants it — `f[bounding][…]` is a geo_bounding_box on `location`. */
-interface Bounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-}
 
 /** URL keys carrying the viewport. Named after the corners (Airbnb uses the same shape) so a
  *  shared link is self-describing; `zoom` is deliberately NOT one of them — it already means
@@ -270,24 +264,31 @@ export class SearchMap {
   });
 
   /**
-   * What the results are scoped to, for the page heading.
+   * What the map is showing, for the page heading and title.
    *
    * The `place` query param is the real name and wins whenever it is present; the slug is
    * only unslugified when it is not — a pasted `/search/gulberg-lahore` carries no place.
    * Neither means the search is country-wide, which reads as Pakistan rather than as blank.
    *
-   * Null once the visitor has picked the area themselves on a search that names no place
-   * (see {@link areaChosen}): the heading then reads "This map area" (`searchUi.mapArea`).
+   * A named place holds only while the map still frames it (see {@link placeFramed}): pan
+   * Lahore off the screen, or zoom out to the whole country, and "Lahore" describes neither
+   * the view nor the results, which follow the view. A place with no known centre never
+   * leaves the frame, as there is nothing to measure it against.
+   *
+   * Null when the map is off the named place, or once the visitor has picked the area
+   * themselves on a search that names none (see {@link areaChosen}): the heading then reads
+   * "This map area" (`searchUi.mapArea`).
    */
   protected readonly locationName = computed((): string | null => {
-    const place = this.params()?.get('place') || this.params()?.get('city');
-    if (place) return place;
-    const known = this.slugPlace();
-    if (known) return known.name;
     const slug = this.locationSlug();
-    if (slug) return fromLocationSlug(slug);
+    const named =
+      this.params()?.get('place') ||
+      this.params()?.get('city') ||
+      this.slugPlace()?.name ||
+      (slug ? fromLocationSlug(slug) : null);
+    if (named !== null) return this.placeFramed() ? named : null;
     // No country names an area the visitor panned to: "Pakistan" over a map of the
-    // Netherlands describes neither the view nor the results (Trello #161).
+    // Netherlands describes neither the view nor the results.
     if (this.areaChosen()) return null;
     // Whatever the map was framed on.
     return this.homeCountryName() ?? DEFAULT_LOCATION;
@@ -306,6 +307,13 @@ export class SearchMap {
    * path reads `/search/lahore?place=Karachi…` — a Karachi search that must not hand its
    * signal to Lahore's page. The slug only answers when the query names no place, as on a
    * pasted `/search/lahore`, which still canonicalises to `/hostels/lahore`.
+   *
+   * Only a place page answers that question; a view does not. The head canonicalises to the
+   * landing page only when the link arrived without a viewport of its own (see
+   * {@link arrivedWithViewport}) and the map still frames the place (see
+   * {@link locationName}). Otherwise it is `noindex` with no canonical: a link carrying a
+   * viewport is one visitor's view of the map, which may not even be on the place, and the
+   * landing page is not that view.
    */
   private readonly canonicalPlace = computed(() => {
     const slug =
@@ -375,6 +383,10 @@ export class SearchMap {
    * — NOT a live dependency of `query()`, which tracks the real map via `mapBounds`.
    * Keeping it seed-only is what lets `recenterTo()` drop the viewport by nulling
    * `mapBounds`; a standing fallback here would resurrect the stale box.
+   *
+   * Read again on each arrival, for {@link arrivedWithViewport}, and never for the heading:
+   * it lags the map between settles, and after Back on a reused page it describes an entry
+   * the camera was never moved to. The heading follows `mapBounds` (see {@link placeFramed}).
    */
   private readonly urlBounds = computed<Bounds | null>(() => {
     const p = this.params();
@@ -389,6 +401,19 @@ export class SearchMap {
 
   /** Map viewport bounds — updated on every idle event (zoom/pan), seeded from the URL. */
   private readonly mapBounds = signal<Bounds | null>(this.urlBounds());
+
+  /**
+   * Whether the map still frames the place the search names (see `framesPlace`), judged
+   * against the live view, so the heading follows every settle and never a drag in progress.
+   *
+   * True whenever there is nothing to judge: before the map reports a view of its own (a place
+   * search's camera has not moved yet), after a recentre drops the view for a new place, and
+   * for a place with no known centre. A place search therefore reads as the place until the
+   * map has actually been taken somewhere else.
+   */
+  private readonly placeFramed = computed(() =>
+    framesPlace(this.mapBounds(), this.center(), this.placeZoom()),
+  );
 
   /**
    * Whether the URL this search opened on asked for the whole world. Read once, at
@@ -436,9 +461,28 @@ export class SearchMap {
   /**
    * The area on screen is one the visitor chose: they panned or zoomed the map, or opened a
    * link carrying a viewport (which is where some visitor took it). Only consulted when
-   * the search names no place, so a pan on `/search/<slug>` still reads as the place.
+   * the search names no place. A named place is judged by whether the map still frames it
+   * (see {@link placeFramed}) instead, so a pan around Lahore still reads as Lahore. That
+   * includes a place with no known centre: this never resets on a page reused for a new
+   * search, and would carry the last search's pan into it.
    */
   private readonly areaChosen = signal(this.urlBounds() !== null);
+
+  /**
+   * The link this page was arrived by carried a viewport (all four keys, valid: see
+   * {@link urlBounds}), which makes it a view rather than a place page. The head keeps it
+   * out of the index with no canonical, however well the view frames the place.
+   *
+   * The arrival, not the live URL. The map mirrors its own viewport into the address once its
+   * camera moves after load — fitting the results, a resize, the visitor (see
+   * `syncBoundsToUrl`) — so judged live, a place search would turn `noindex` as soon as its
+   * results were fitted, in a crawler that runs the page's JavaScript as well. Read at
+   * construction, and again on every navigation that lands here except the page's own
+   * same-path replaces (see `isSamePageRefinement`): a link, a refresh, Back or Forward, a
+   * language switch, a new place or filter. One URL gets one verdict, which is also the only
+   * one a server render can give.
+   */
+  private readonly arrivedWithViewport = signal(this.urlBounds() !== null);
 
   /**
    * The country's name in the language being read — "Netherlands", "Pays-Bas", "ہالینڈ".
@@ -935,7 +979,10 @@ export class SearchMap {
   constructor() {
     // Runs during SSR too — a crawler that executes no JavaScript only ever sees the
     // server-rendered head, so a canonical added after hydration is a canonical nobody
-    // authoritative reads.
+    // authoritative reads, and the same goes for a `noindex`. Both halves of the verdict
+    // are there to read: the request URL is the arrival (`arrivedWithViewport`), and
+    // `mapBounds` is seeded from its viewport, so a link far from its place renders as the
+    // map area from the first byte.
     effect(() => {
       // Embedded in a landing page, which owns the head: it has already set a title,
       // description and canonical describing itself. Writing ours over the top made
@@ -962,37 +1009,68 @@ export class SearchMap {
         return;
       }
 
-      // Filtered searches are facets, not pages: noindex, and no canonical, since
-      // claiming they are the landing page would be a lie about their content.
-      if (filtered || !place) {
+      // The map is off the place the search names, or the visitor chose the area on a
+      // search that names none: a view of somewhere unnamed, so it is titled as the map
+      // area and kept out of the index, filtered or not. The place's picture would preview
+      // somewhere the link does not show.
+      if (name === null) {
         this.seo.apply({
-          title:
-            name === null
-              ? this.i18n.translate<string>('seo.mapAreaTitle')
-              : this.i18n.translate<string>('seo.searchTitle', { place: name }),
-          description:
-            name === null
-              ? this.i18n.translate<string>('seo.mapAreaDescription')
-              : this.i18n.translate<string>('seo.searchDescription', { place: name }),
+          title: this.i18n.translate<string>('seo.mapAreaTitle'),
+          description: this.i18n.translate<string>('seo.mapAreaDescription'),
           noindex: true,
           image: DEFAULT_SOCIAL_IMAGE,
         });
         return;
       }
 
-      // An unfiltered search for a place we have a landing page for: let it stay
-      // indexable but hand its signal to the page built to rank.
+      // An unfiltered search for a place we have a landing page for, with the map still on
+      // it. Arrived at as a place page, it stays indexable but hands its signal to the page
+      // built to rank. Arrived at by a link carrying a viewport, it is a view: noindex, and
+      // no `path` either, so no canonical and no `og:url`, which Facebook takes for one.
+      if (place && !filtered) {
+        this.seo.apply({
+          title: this.i18n.translate<string>('seo.searchTitle', { place: place.name }),
+          description: this.i18n.translate<string>('seo.searchPlaceDescription', {
+            place: place.name,
+          }),
+          // Shares the city landing page's picture rather than the generic one, view or not:
+          // the map is on the same place, and a chat preview has nothing to do with the index.
+          image: placeSocialImage(place.slug),
+          ...(this.arrivedWithViewport() ? { noindex: true } : { path: `/hostels/${place.slug}` }),
+        });
+        return;
+      }
+
+      // Filtered searches are facets, not pages, and an uncurated place has no page to
+      // hand its signal to: noindex, and no canonical, since claiming they are the landing
+      // page would be a lie about their content.
       this.seo.apply({
-        title: this.i18n.translate<string>('seo.searchTitle', { place: place.name }),
-        description: this.i18n.translate<string>('seo.searchPlaceDescription', {
-          place: place.name,
-        }),
-        path: `/hostels/${place.slug}`,
-        // Canonicalised to the city landing page, so it shares that page's picture rather
-        // than the generic one — the two links are the same place.
-        image: placeSocialImage(place.slug),
+        title: this.i18n.translate<string>('seo.searchTitle', { place: name }),
+        description: this.i18n.translate<string>('seo.searchDescription', { place: name }),
+        noindex: true,
+        image: DEFAULT_SOCIAL_IMAGE,
       });
     });
+    // Judges each arrival for `arrivedWithViewport`, and leaves the verdict alone across the
+    // page's own replaces: the map writing its viewport, a recentre, a correction stripped.
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((e) => {
+        // The router records a navigation as its last successful one immediately before
+        // emitting its NavigationEnd, so this is the one that just ended. A record that is
+        // not this navigation's is ignored, and the navigation judged as an arrival.
+        const nav = this.router.lastSuccessfulNavigation();
+        const refinement =
+          nav?.id === e.id &&
+          isSamePageRefinement(nav, e.urlAfterRedirects, (t) => this.router.serializeUrl(t));
+        if (refinement) return;
+        // Already the new URL's: the route's query moves on as the routes activate, which
+        // is before NavigationEnd.
+        this.arrivedWithViewport.set(this.urlBounds() !== null);
+      });
 
     afterNextRender(() => {
       this.measureStickyOffsets();
@@ -1677,8 +1755,9 @@ export class SearchMap {
    * - a landing page's seed refills the place this clears and keeps the search local;
    * - a `/search/<slug>` path keeps naming the place just discarded. It is held off only
    *   while `everywhere` is set, and the first pan clears that (see `syncBoundsToUrl`) —
-   *   from then on the slug is back as the heading, the canonical (an indexable one, over
-   *   whatever area the visitor has panned to), the mobile field and the header's Where.
+   *   from then on the slug is back in the mobile field and the header's Where, and as the
+   *   heading (with an indexable canonical, if the page arrived without a viewport) whenever
+   *   the map passes over the place, on a search that was meant to be about everywhere.
    *
    * So both leave for a worldwide bare `/search` (see {@link startSearch}). That is a
    * different route config from `/search/<slug>`, so it builds a new search page, which
@@ -1883,6 +1962,12 @@ export class SearchMap {
    * `replaceUrl` because a pan is a refinement of the current search, not a new destination —
    * one history entry per pan would make Back unusable. The write re-emits the ParamMap, which
    * `query()`'s value comparator absorbs (see there); the round-trip does not refetch.
+   *
+   * Nor does it change what the page is. A same-path replace is not an arrival, so a place
+   * search opened without a viewport stays indexable after the map writes one here, for as
+   * long as the map frames the place (see {@link arrivedWithViewport}); only a link that
+   * already carries one, opened, refreshed or stepped back to, is a view. The heading reads
+   * the map itself, not this.
    *
    * The worldwide flag rides along, and this is the only place that writes it after
    * "Search everywhere": the pan or zoom that ends a worldwide search also settles the

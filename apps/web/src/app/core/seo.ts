@@ -250,10 +250,12 @@ export class Seo {
   /**
    * Rewrites `<link rel="canonical">`, creating it on first use, or removes it for `null`.
    *
-   * Matters most on `/search`: the one unfiltered view of a curated place canonicalises to
-   * its landing page, so the two do not compete and split whatever authority they earn.
-   * Every other permutation is `noindex` and gets none — pointing thousands of filter URLs
-   * at some other page would claim they duplicate it, which they do not.
+   * Matters most on `/search`: the one unfiltered arrival at a curated place with no viewport
+   * in its link canonicalises to its landing page, and only while the map frames the place,
+   * so the two do not compete and split whatever authority they earn. Every other
+   * permutation is `noindex` and gets none — a filter, a link carrying a viewport, a map moved
+   * off the place. Pointing thousands of such URLs at some other page would claim they
+   * duplicate it, which they do not.
    *
    * Removal, not skipping, is the point of `null`. A reused component, or the previous
    * page in a client navigation, leaves its canonical behind; keeping it is what made

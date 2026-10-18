@@ -16,7 +16,8 @@ import { pageAlternates, pageLocales } from '@core/i18n/content-locale';
  *
  * **Deliberately excluded:**
  * - `/search` and `/search/:location` — canonicalised onto their landing page, or
- *   `noindex` when filtered. Listing a URL here that tells crawlers not to index it is
+ *   `noindex` when filtered or when the link arrives carrying a viewport (all four
+ *   `ne_*`/`sw_*` keys valid). Listing a URL here that tells crawlers not to index it is
  *   contradictory guidance.
  * - `/hostel/:id` listing pages — the public search payload carries no slug, so their
  *   URLs are opaque ids, and they churn constantly. Category pages are what rank; see
