@@ -85,9 +85,9 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
   - **A pending view is flushed** at the next `NavigationEnd` and on `pagehide`, with the location
     captured when it was queued.
   - **Each navigation to a new page sends exactly one view.**
-- **Which navigations are a new page** (`isSamePageRefinement`, checked in `bindRouter` *before*
-  `queuePageView`, so a skip never flushes, replaces or re-locates the pending view). A navigation is
-  **skipped** when:
+- **Which navigations are a new page** (`isSamePageRefinement`, in
+  `core/navigation/same-page-refinement.ts`, checked in `bindRouter` *before* `queuePageView`, so a
+  skip never flushes, replaces or re-locates the pending view). A navigation is **skipped** when:
   - **A:** the app replaced the URL on the same page: `trigger === 'imperative'`, `extras.replaceUrl`,
     and the same `pagePath` (from `core/scroll-reset.ts`, locale kept) as the previous successful
     navigation. This covers map pans, zooms and recenters, "Search everywhere" on a bare `/search`, and
@@ -100,6 +100,12 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
   `page_path` never carries a `#fragment`. **GA counts changed from the PR #126 deploy** (2026-10-11
   merge): fewer search views, lower views per session and engagement on search landings. GA is live in
   production.
+- **The predicate has a second user.** It moved unchanged out of the GA service so that analytics and
+  SEO share one definition of the page refining itself. `SearchMap` re-reads whether the search link
+  arrived carrying a viewport (`arrivedWithViewport`) on every `NavigationEnd` it does not skip, with
+  the same `lastSuccessfulNavigation()` id check. So a page view and a head verdict change on the same
+  navigations: Back/Forward and a language switch are arrivals for both. See
+  [viewport links are views](../decisions/search-and-discovery/viewport-links-are-views-not-pages.md).
 - **Why the timing holds:** within a tick, root effects re-run after page effects, so a provisional
   head written in the settling tick cancels the send.
 - **Console and token URLs** are judged on their locale-free path (`isMarketplacePath(routePath(url))`)
@@ -130,6 +136,10 @@ language, with no `hreflang` block.
 of `DISALLOWED_PATHS` is disallowed bare and under every `LOCALE_CODES` prefix (all routable languages,
 not only the indexed ones). `host` is anchored (`$`, `/`, `?`) so `/xx/hostel/…` and `/xx/hostels/…`
 stay crawlable. Search is deliberately not blocked; its pages carry their own canonical or `noindex`.
+Only an unfiltered search for a curated place, arriving with no viewport and with the map on the place,
+canonicalises (to its landing page). A search link that arrives carrying a viewport (all four
+`ne_*`/`sw_*` keys valid) is a view: `noindex`, no canonical, in the server HTML too; see
+[search-and-discovery](./search-and-discovery.md).
 
 **Translations on the server.** `FsTranslationLoader` reads `public/i18n/<lang>.json` from disk, trying
 `../browser/i18n` and then `apps/web/public/i18n` for `ng serve`. It registers the read with
