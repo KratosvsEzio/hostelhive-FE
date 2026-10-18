@@ -125,12 +125,13 @@ describe('TenantFormDrawer availability when the lookup cannot be trusted', () =
 });
 
 describe('TenantFormDrawer availability on a month-billed hostel', () => {
-  it('asks for neither the zone, the room nor its bookings', async () => {
+  it('asks for neither the room nor its bookings, and the zone only for the joining default', async () => {
     const { ops, bookings, timeZoneOf, askForRoom } = setUp({ monthly: true });
 
     await askForRoom();
 
-    expect(timeZoneOf).not.toHaveBeenCalled();
+    // The one zone read is the check-in's joining default (Trello #190), not availability.
+    expect(timeZoneOf).toHaveBeenCalledTimes(1);
     expect(ops.roomShow).not.toHaveBeenCalled();
     expect(bookings.bookingsInRoom).not.toHaveBeenCalled();
   });
