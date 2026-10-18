@@ -6,7 +6,7 @@ How the app sends and renders calendar days, timestamps, time zones, prices and 
 - `apps/web/src/app/util/api-date.ts` — `apiDate` pipe (renders an API timestamp in the offset it carries), `offsetOf`, `localDay` (a `Date` → `YYYY-MM-DD` from local parts).
 - `apps/web/src/app/util/date-range-filter.ts` — `dayRangeStart` / `dayRangeEnd` for `f[col][gte|lte]` filters.
 - `apps/web/src/app/util/time-zones.ts` — IANA list, `browserTimeZone`, `zoneOffsetLabel`, `isKnownTimeZone`.
-- `apps/web/src/app/util/zoned-time.ts` — `zonedWallTimeToUtc`, `localDateAtWallTime` (Intl-based, no library).
+- `apps/web/src/app/util/zoned-time.ts` — `todayIn` (the `yyyy-MM-dd` in an IANA zone, device date when the zone is missing or unknown), `zonedWallTimeToUtc`, `localDateAtWallTime` (Intl-based, no library).
 - `apps/web/src/app/core/geo/country-time-zones.ts` — country name/code → IANA zone, fallback `UTC`.
 - `apps/web/src/app/shared/timezone/timezone-select.ts` — `<hh-timezone-select>`, two-way bound to an IANA name.
 - `apps/web/src/app/util/currencies.ts` — `CURRENCIES`, `currencySymbol`, `currencyName`, `isCurrencyCode`, `DEFAULT_CURRENCY_CODE` (`PKR`).
@@ -33,7 +33,8 @@ How the app sends and renders calendar days, timestamps, time zones, prices and 
 - Carry a `Price` (amount + period), not a bare number; derive the period from `billing_frequency` first (`periodFromBillingFrequency`), then `periodForAccommodation`.
 
 ## Traps
-- **Dead code**: since PR #42, `zoned-time.ts` and `country-time-zones.ts` have no importers outside their specs. Plain-day booking replaced them; don't revive them for bookings.
+- **Dead code**: since PR #42, `zonedWallTimeToUtc`, `localDateAtWallTime` and `country-time-zones.ts` have no importers outside their specs. Plain-day booking replaced them; don't revive them for bookings. `todayIn` in the same file is live: the host room calendar and the tenant availability check use it ([decision](../decisions/host-console/console-today-is-the-hostels-date.md)).
+- **"Today" in the host console is the hostel's date only on the room calendar and the tenant availability check.** The bookings calendar, the booking form's default check-in, the overview strip and the tenant "days until leave" count still read the device's date; reuse `todayIn` there rather than `new Date()`.
 - **Backend caveat**: `search_helper.rb`'s `gte/lte` branch ignores `time_zone`, so plain-day booking *filters* are read as UTC and day-edge bookings in non-UTC hostels can be off by one (noted in PR #42's description).
 - **`formatPrice` ignores currency** — it always uses the default symbol (`Rs`) and has no callers today; `formatAmount` and `formatPriceCompact` take one. Both group with `en-PK`, not the active language, unlike `money`.
 - **`<hh-money-input>` always groups with `,`** regardless of language.

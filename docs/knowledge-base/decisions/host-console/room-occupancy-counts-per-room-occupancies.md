@@ -27,13 +27,13 @@ After that fix, live testing found two more faults. A party that checked out on 
 - **Only fix the negative label.** Checked-out guests would still hold beds they had left.
 
 ## Consequences and limits
-- "Today" is the device's date (`localToday`, the same day the calendar highlights). The calendar has no hostel time zone, so a host in another zone sees the cut-over at their own midnight.
+- "Today" is the hostel's date, the same day the calendar highlights, read once when the calendar opens ([decision](./console-today-is-the-hostels-date.md)). With no usable hostel zone it falls back to the device's date.
 - The API has no release or actual check-out timestamp. A room released mid-stay reads free for the whole stay while the booking is checked in, and held for the whole stay once it is not.
 - `occupied_room_ids` holds active occupancies only. After check-out, a split party is found through its first room alone, so a past stay shows nothing in its second room.
 - Two requests per room-month. The calendar shares the index lag in [index-backed reads](../api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md).
 
 ## Evidence
-- `apps/web/src/app/features/host/rooms/room-calendar/room-stays.ts` — `occupanciesOf`, `toRoomStay`, `nightsHeldUntil`, `sleepsOn`, `localToday`; `room-calendar.ts`.
+- `apps/web/src/app/features/host/rooms/room-calendar/room-stays.ts` — `occupanciesOf`, `toRoomStay`, `nightsHeldUntil`, `sleepsOn` (`today` is a required option); `room-calendar.ts`.
 - `apps/web/src/app/features/host/bookings/host-bookings-api.ts` — `bookingsInRoom` and its doc comment (the known limit and the `or` reasoning).
 - `apps/web/src/app/features/host/tenants/tenant-form-drawer/tenant-form-drawer.ts` — the availability check.
 - `room-stays.spec.ts`, `room-calendar.pips.spec.ts`, `host-bookings-api.spec.ts`.

@@ -17,7 +17,7 @@ Guest booking create and edit, host booking create, and the host booking-list da
 ## Consequences
 - Reading bookings back is the mirror image: `GET /api/bookings` returns timestamps with the hostel's offset, and `wallTime()` reads the wall clock from the string rather than converting (`apps/web/src/app/features/user/bookings/my-bookings-api.ts`).
 - The comments on `ApiCreateBookingRequest` still describe UTC instants and are stale; PR #40's description also predates this change.
-- `zoned-time.ts` and `country-time-zones.ts` no longer have importers outside their specs.
+- `zoned-time.ts`'s wall-time conversion and `country-time-zones.ts` no longer have importers outside their specs. (`todayIn`, added later to `zoned-time.ts`, is unrelated to bookings and is used by the host room calendar.)
 - Backend caveat (PR #42 description): `search_helper.rb`'s `gte/lte` branch omits `time_zone`, so plain-day **filters** are read as UTC; day-edge bookings in non-UTC hostels can be off by one until the backend fixes it.
 - Release coupling: the hostel form must send `timezone` before backend PR #10 is deployed, or hostel creation fails.
 
