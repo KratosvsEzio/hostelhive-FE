@@ -11,6 +11,7 @@ import {
   MyBookingsApi,
   canCancel,
   canEdit,
+  confirmationLink,
   withinChangeCutoff,
   mapsUrl,
   stageFor,
@@ -564,5 +565,55 @@ describe('MyBookingsApi — error toasts', () => {
     const req = httpMock.expectOne(`${BASE}/api/bookings/RbNKwO`);
     expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(false);
     req.flush({});
+  });
+});
+
+describe('the confirmation PDF', () => {
+  const FULL = 'https://img.example.test/unprocessed/ns-4/documents/7f3c9a52-confirmation.pdf';
+  const SLIM = 'https://img.example.test/unprocessed/ns-4/documents/b81e04d6-list-confirmation.pdf';
+
+  it('reads the url off the full attachment a single booking carries', () => {
+    const pdf = { id: 'AtT1', file_name: 'booking-confirmation.pdf', content_type: 'application/pdf', url: FULL, byte_size: 2048 };
+    expect(toGuestBooking(raw({ confirmation_pdf: pdf })).confirmationPdfUrl).toBe(FULL);
+  });
+
+  it('reads the url off the slim attachment a list row carries', () => {
+    const pdf = { id: 'AtT2', file_name: 'booking-confirmation.pdf', content_type: 'application/pdf', url: SLIM };
+    expect(toGuestBooking(raw({ confirmation_pdf: pdf })).confirmationPdfUrl).toBe(SLIM);
+  });
+
+  it('is empty while the booking has no attachment, null or missing', () => {
+    expect(toGuestBooking(raw({ confirmation_pdf: null })).confirmationPdfUrl).toBe('');
+    expect(toGuestBooking(raw()).confirmationPdfUrl).toBe('');
+  });
+
+  it('is empty for a blank or whitespace url, and trims a padded one', () => {
+    expect(toGuestBooking(raw({ confirmation_pdf: { url: '' } })).confirmationPdfUrl).toBe('');
+    expect(toGuestBooking(raw({ confirmation_pdf: { url: '   ' } })).confirmationPdfUrl).toBe('');
+    expect(toGuestBooking(raw({ confirmation_pdf: { url: null } })).confirmationPdfUrl).toBe('');
+    expect(toGuestBooking(raw({ confirmation_pdf: { url: `  ${FULL} ` } })).confirmationPdfUrl).toBe(FULL);
+  });
+
+  it('ignores the removed string field on its own', () => {
+    const legacy = { ...raw(), confirmation_pdf_url: 'https://old.example.test/legacy-confirmation.pdf' };
+    expect(toGuestBooking(legacy as ApiMyBooking).confirmationPdfUrl).toBe('');
+  });
+});
+
+describe('confirmationLink', () => {
+  const URL = 'https://img.example.test/unprocessed/ns-9/documents/c2d77e10-guest.pdf';
+  const bookingAt = (slug: string, url = URL) =>
+    toGuestBooking(raw({ disposition: { id: 'd1', name: slug, slug }, confirmation_pdf: { url } }));
+
+  it.each(['confirmed', 'room-assigned', 'checked-in', 'checked-out'])('offers the link once the booking is %s', (slug) => {
+    expect(confirmationLink(bookingAt(slug))).toBe(URL);
+  });
+
+  it.each(['pending', 'pending-allotment', 'cancelled', 'no-show', 'something-new'])('offers nothing while the booking is %s', (slug) => {
+    expect(confirmationLink(bookingAt(slug))).toBe('');
+  });
+
+  it('offers nothing for a confirmed booking whose PDF is not stored', () => {
+    expect(confirmationLink(bookingAt('confirmed', ''))).toBe('');
   });
 });
