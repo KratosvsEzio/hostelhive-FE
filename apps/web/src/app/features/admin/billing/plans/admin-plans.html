@@ -1,0 +1,233 @@
+<hh-admin-shell [heading]="'adminBilling.titles.plans' | transloco">
+  <div class="flex flex-col gap-6">
+    <hh-admin-billing-tabs />
+
+    <p
+      class="flex items-start gap-2 rounded-xl bg-brand-50 px-4 py-3 text-sm text-ink-800"
+      data-testid="plans-notice"
+    >
+      <i
+        class="ti ti-info-circle mt-0.5 text-base text-brand-500"
+        aria-hidden="true"
+      ></i>
+      {{ 'adminBilling.plans.notice' | transloco }}
+    </p>
+
+    @if (savedName(); as name) {
+      <p
+        class="rounded-xl bg-ok/10 px-4 py-3 text-sm font-medium text-ok"
+        role="status"
+        data-testid="plans-saved"
+      >
+        {{ 'adminBilling.plans.saved' | transloco: { plan: name } }}
+      </p>
+    }
+
+    @if (pageError(); as e) {
+      <p
+        class="rounded-xl bg-danger/10 px-4 py-3 text-sm font-medium text-danger"
+        role="alert"
+        data-testid="plans-page-error"
+      >
+        {{ e.message ?? (e.key | transloco) }}
+      </p>
+    }
+
+    @switch (loadState()) {
+      @case ('loading') {
+        <div
+          class="flex flex-col gap-3"
+          aria-busy="true"
+          data-testid="plans-loading"
+        >
+          @for (i of skeletonRows; track i) {
+            <hh-skeleton class="h-32 w-full" radius="md" />
+          }
+        </div>
+      }
+      @case ('forbidden') {
+        <hh-error-state
+          [message]="'adminBilling.errors.forbidden' | transloco"
+          [showRetry]="false"
+          data-testid="plans-forbidden"
+        />
+      }
+      @case ('error') {
+        <hh-error-state
+          [message]="'adminBilling.common.loadError' | transloco"
+          [retryLabel]="'adminBilling.common.retry' | transloco"
+          [networkError]="networkError()"
+          (retry)="load()"
+          data-testid="plans-error"
+        />
+      }
+      @case ('ready') {
+        @if (rows().length === 0) {
+          <hh-empty-state
+            icon="ti-receipt"
+            [title]="'adminBilling.plans.empty' | transloco"
+            data-testid="plans-empty"
+          />
+        } @else {
+          <ol class="flex flex-col gap-4" data-testid="plans-list">
+            @for (row of rows(); track row.plan.id) {
+              <li
+                class="rounded-2xl border border-ink-200 bg-white p-4 sm:p-5"
+                [attr.data-plan]="row.plan.id"
+              >
+                <div
+                  class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start"
+                >
+                  <div class="flex flex-col gap-2">
+                    <div>
+                      <p class="text-xs font-medium text-ink-600">
+                        {{ 'adminBilling.plans.code' | transloco }}
+                      </p>
+                      <p
+                        class="mt-1 font-mono text-sm text-ink-900"
+                        [id]="'plan-code-' + row.plan.id"
+                        data-field="code"
+                      >
+                        {{ row.plan.code }}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-ink-600">
+                        {{ 'adminBilling.plans.features' | transloco }}
+                      </p>
+                      @if (row.featureKeys.length) {
+                        <ul
+                          class="mt-1 flex flex-wrap gap-1"
+                          data-field="features"
+                        >
+                          @for (key of row.featureKeys; track key) {
+                            <li
+                              class="rounded-md bg-ink-100 px-2 py-0.5 text-xs text-ink-700"
+                            >
+                              {{ key | transloco }}
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <p
+                          class="mt-1 text-sm text-ink-400"
+                          data-field="features"
+                        >
+                          —
+                        </p>
+                      }
+                    </div>
+                  </div>
+
+                  <hh-input
+                    size="sm"
+                    [label]="'adminBilling.plans.name' | transloco"
+                    [value]="row.draft.name"
+                    (valueChange)="setName(row.plan.id, $event)"
+                    [disabled]="row.saving"
+                    [error]="row.nameError ? (row.nameError | transloco) : ''"
+                    data-field="name"
+                  />
+
+                  <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- hh-toggle renders a switch button, which this label names -->
+                  <label
+                    class="flex items-center gap-2 text-xs font-medium text-ink-600 lg:flex-col lg:items-start lg:gap-1"
+                    data-field="active"
+                  >
+                    {{ 'adminBilling.plans.active' | transloco }}
+                    <hh-toggle
+                      [checked]="row.draft.active"
+                      (checkedChange)="setActive(row.plan.id, $event)"
+                      [disabled]="row.saving"
+                    />
+                  </label>
+
+                  @for (price of row.prices; track price.currency) {
+                    <div [attr.data-price]="price.currency">
+                      <hh-input
+                        size="sm"
+                        [label]="price.labelKey | transloco"
+                        [value]="price.value"
+                        (valueChange)="
+                          setPrice(row.plan.id, price.currency, $event)
+                        "
+                        [placeholder]="
+                          price.missing
+                            ? ('adminBilling.plans.notSet' | transloco)
+                            : ''
+                        "
+                        [disabled]="row.saving"
+                        [error]="price.error ? (price.error | transloco) : ''"
+                      />
+                      @if (price.missing) {
+                        <p
+                          class="mt-1 flex items-start gap-1 text-xs text-warn"
+                          data-testid="missing-price"
+                        >
+                          <i
+                            class="ti ti-alert-triangle mt-0.5"
+                            aria-hidden="true"
+                          ></i>
+                          {{
+                            'adminBilling.plans.missingPriceWarn'
+                              | transloco: { currency: price.currency }
+                          }}
+                        </p>
+                      }
+                    </div>
+                  }
+
+                  <div class="flex lg:pt-5">
+                    <button
+                      hh-button
+                      type="button"
+                      color="primary"
+                      size="sm"
+                      [disabled]="!row.dirty"
+                      [loading]="row.saving"
+                      [attr.aria-describedby]="'plan-code-' + row.plan.id"
+                      (click)="save(row.plan.id)"
+                      data-testid="plan-save"
+                    >
+                      {{ 'adminBilling.plans.save' | transloco }}
+                    </button>
+                  </div>
+                </div>
+
+                @if (row.error; as e) {
+                  <p
+                    class="mt-3 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                    role="alert"
+                    data-testid="plan-error"
+                  >
+                    {{ e.message ?? (e.key | transloco) }}
+                  </p>
+                }
+              </li>
+            }
+          </ol>
+        }
+      }
+    }
+  </div>
+
+  @if (confirming(); as plan) {
+    <hh-confirm-modal
+      [title]="
+        'adminBilling.plans.deactivateTitle' | transloco: { plan: plan.name }
+      "
+      icon="ti-alert-triangle"
+      tone="danger"
+      confirmColor="danger"
+      [confirmLabel]="'adminBilling.plans.deactivateConfirm' | transloco"
+      [cancelLabel]="'adminBilling.common.cancel' | transloco"
+      (confirm)="confirmDeactivate()"
+      (cancel)="cancelDeactivate()"
+      data-testid="deactivate-confirm"
+    >
+      {{
+        'adminBilling.plans.deactivateMessage' | transloco: { plan: plan.name }
+      }}
+    </hh-confirm-modal>
+  }
+</hh-admin-shell>

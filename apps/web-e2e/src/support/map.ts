@@ -14,7 +14,14 @@ export async function waitForMap(page: Page, seen: ListingsStub): Promise<void> 
   await expect(page.locator('.leaflet-container .leaflet-control-zoom').first()).toBeVisible();
 }
 
-/** Drags the map sideways; the camera settling writes the viewport into the URL. */
+/**
+ * Drags the map sideways; the camera settling writes the viewport into the URL.
+ *
+ * Holds still before letting go, so the drag ends where the mouse stops. A release mid-swipe
+ * makes Leaflet glide on for about a second, and the camera settles only when the glide ends
+ * or the next mousedown cuts it short. The URL change a caller waits on after a drag could
+ * then be the previous drag's, with this drag's own viewport write still to come.
+ */
 export async function dragMap(page: Page): Promise<void> {
   const box = await page.locator('.leaflet-container').first().boundingBox();
   if (!box) {
@@ -25,5 +32,8 @@ export async function dragMap(page: Page): Promise<void> {
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x - 300, y - 100, { steps: 10 });
+  // Leaflet throws a glide only from the pointer positions of the last 50 ms before release.
+  // eslint-disable-next-line playwright/no-wait-for-timeout -- the pause is the gesture itself
+  await page.waitForTimeout(100);
   await page.mouse.up();
 }

@@ -1,7 +1,8 @@
 import { WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
-import { Subject, of, throwError } from 'rxjs';
+import { Observable, Subject, defer, of, throwError } from 'rxjs';
 import { Invoice } from '@hostelhive/data-access';
 import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing/host-page';
 import {
@@ -17,6 +18,7 @@ import { currencySymbol } from '@util/currencies';
 import { bookingPath, invoicePath } from '@util/host-links';
 import { buildInvoiceId, invoiceStatusLabel } from '@util/table-configs/invoice-table-cols';
 import { AssignSelection } from './assign-rooms-panel';
+import { BookingCalendar } from './booking-calendar';
 import { BookingAction } from './booking-details-panel';
 import { HostBookings } from './bookings';
 import { HostBooking } from './host-bookings-api';
@@ -151,6 +153,191 @@ async function confirmViaButton(page: Page): Promise<void> {
 function translations(spy: { mock: { calls: unknown[][] } }, key: string): unknown[][] {
   return spy.mock.calls.filter((c) => c[0] === key);
 }
+
+/** Queues what `get` answers, call by call; once the queue runs out it is the stub's `NEVER` again. */
+function queueReads(deps: HostPageDeps, ...replies: Observable<HostBooking>[]): void {
+  for (const reply of replies) deps.bookings.get.mockReturnValueOnce(reply);
+}
+
+/** The calendar the page mounts while its calendar tab is showing, which is the page's default. */
+function calendarOf(page: Page): BookingCalendar {
+  const found = page.harness.fixture.debugElement.query(By.directive(BookingCalendar));
+  return found.componentInstance as BookingCalendar;
+}
+
+const panelFooterButtons = (page: Page) =>
+  Array.from(page.el.querySelectorAll('hh-booking-details-panel footer button')).map((b) => textOf(b));
+const panelFooterAlert = (page: Page) =>
+  textOf(page.el.querySelector('hh-booking-details-panel footer [role="alert"]'));
+const assignAlert = (page: Page) => textOf(page.el.querySelector('hh-assign-rooms-panel [role="alert"]'));
+const dialogAlert = (page: Page) => textOf(modal(page)?.querySelector('[role="alert"]'));
+
+/** The row menu's entry for each move that has one. */
+const MENU_LABEL: Readonly<Partial<Record<BookingAction, string>>> = {
+  checkIn: 'Check in',
+  checkOut: 'Check out',
+  cancel: 'Cancel booking',
+  noShow: 'Mark no show',
+  markPaid: 'Mark as paid',
+  invoice: 'Generate invoice',
+};
+
+const ROOM_PICK = [{ roomId: 'r-101', roomNumber: '101', guests: 2 }];
+
+/** Makes the server refuse the move with `err`. */
+function refuseMove(deps: HostPageDeps, action: BookingAction, err: unknown): void {
+  const refused = throwError(() => err);
+  switch (action) {
+    case 'confirm':
+      deps.bookings.confirm.mockReturnValue(refused);
+      return;
+    case 'checkIn':
+      deps.bookings.checkIn.mockReturnValue(refused);
+      return;
+    case 'checkOut':
+      deps.bookings.checkOut.mockReturnValue(refused);
+      return;
+    case 'cancel':
+      deps.bookings.cancel.mockReturnValue(refused);
+      return;
+    case 'noShow':
+      deps.bookings.markNoShow.mockReturnValue(refused);
+      return;
+    case 'markPaid':
+      deps.bookings.markPaid.mockReturnValue(refused);
+      return;
+    case 'invoice':
+      deps.bookings.generateInvoice.mockReturnValue(refused);
+      return;
+    default:
+      throw new Error(`${action} is not a move the server can refuse`);
+  }
+}
+
+/** Row menu, then the move's entry: its dialog, or the room allocation for a check-in. */
+const startMove = (page: Page, action: BookingAction) => startFromMenu(page, MENU_LABEL[action]!);
+
+/** Sends the move that is open, as the allocation's or the dialog's button would. */
+function submitMove(page: Page, action: BookingAction, booking: HostBooking): void {
+  if (action === 'checkIn') {
+    api(page).onAssign({ bookingId: booking.id, rooms: ROOM_PICK });
+    return;
+  }
+  if (action === 'cancel') api(page).dialogReason.set('Guest asked to cancel');
+  api(page).confirmDialog();
+}
+
+/** Opens the booking's details the way a click does, so the page reads it from the database once. */
+async function openPanel(page: Page, booking: HostBooking): Promise<void> {
+  api(page).openDetails(booking);
+  await settle(page);
+}
+
+const arriving = (over: Partial<HostBooking> = {}) => hostBooking('confirmed', { id: 'bk-c', ...over });
+const BOTH_ROOMS = [occupancy(), occupancy({ id: 'oc-2', roomId: 'r-102', roomNumber: '102', guests: 1 })];
+
+/**
+ * A stay move the server refused because the booking is not where the page shows it: `shown` is
+ * the copy on screen and `fresh` the one the database holds. `done` means the move was already
+ * made; `movedOn` that the booking left the stage the move starts from.
+ */
+interface MovedOnPair {
+  name: string;
+  action: BookingAction;
+  kind: 'done' | 'movedOn';
+  text: string;
+  /** The translation key the host is shown. */
+  key: string;
+  shown: HostBooking;
+  fresh: HostBooking;
+  /** The details panel's buttons once it shows `fresh`; set for the dialog moves. */
+  footer?: readonly string[];
+}
+
+const MOVED_ON: readonly MovedOnPair[] = [
+  {
+    name: 'a check-in of a booking already checked in',
+    action: 'checkIn',
+    kind: 'done',
+    text: 'Booking is already checked in',
+    key: 'hostBookings.alreadyCheckedIn',
+    shown: arriving(),
+    fresh: hostBooking('checked-in', { id: 'bk-c', occupancies: BOTH_ROOMS }),
+  },
+  {
+    name: 'a check-in of a booking that was cancelled',
+    action: 'checkIn',
+    kind: 'movedOn',
+    text: 'Only confirmed bookings can be checked in',
+    key: 'hostBookings.bookingHasMovedOn',
+    shown: arriving(),
+    fresh: hostBooking('cancelled', { id: 'bk-c' }),
+  },
+  {
+    name: 'a cancellation of a booking that can no longer be cancelled',
+    action: 'cancel',
+    kind: 'movedOn',
+    text: 'This booking can no longer be cancelled',
+    key: 'hostBookings.bookingHasMovedOn',
+    shown: checkedIn(),
+    fresh: hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' }),
+    footer: ['Close'],
+  },
+  {
+    name: 'a no-show of a booking that has checked in',
+    action: 'noShow',
+    kind: 'movedOn',
+    text: 'Only confirmed bookings can be marked a no show',
+    key: 'hostBookings.bookingHasMovedOn',
+    shown: arriving(),
+    fresh: hostBooking('checked-in', { id: 'bk-c' }),
+    footer: ['Cancel booking', 'Generate invoice', 'Mark as paid', 'Check out'],
+  },
+  {
+    name: 'a check-out of a booking that has checked out',
+    action: 'checkOut',
+    kind: 'movedOn',
+    text: 'Only checked-in bookings can be checked out',
+    key: 'hostBookings.bookingHasMovedOn',
+    shown: checkedIn(),
+    fresh: hostBooking('checked-out', { id: 'bk-i', ref: 'BK-I' }),
+    footer: ['Mark as paid', 'Generate invoice'],
+  },
+  {
+    name: 'a payment on a booking that was cancelled',
+    action: 'markPaid',
+    kind: 'movedOn',
+    text: 'Only confirmed, checked-in, checked-out or no-show bookings can be marked paid',
+    key: 'hostBookings.bookingHasMovedOn',
+    shown: checkedIn(),
+    fresh: hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' }),
+    footer: ['Close'],
+  },
+  {
+    name: 'an invoice for a booking that was cancelled',
+    action: 'invoice',
+    kind: 'movedOn',
+    text: 'Only checked-in bookings can be invoiced',
+    key: 'hostBookings.bookingHasMovedOn',
+    shown: settledOf(checkedIn()),
+    fresh: hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' }),
+    footer: ['Close'],
+  },
+  {
+    name: 'a payment on a booking already paid',
+    action: 'markPaid',
+    kind: 'done',
+    text: 'This booking is already paid',
+    key: 'hostBookings.bookingAlreadyPaid',
+    shown: checkedIn(),
+    fresh: settledOf(checkedIn()),
+  },
+];
+
+/** The moves that free beds, so the rooms page is told when one of them is found already made. */
+const ROOM_MOVES: readonly BookingAction[] = ['checkIn', 'checkOut', 'cancel'];
+/** Every pair above uses current slugs, so a raw comparison tells the stage apart. */
+const slugChanged = (m: MovedOnPair) => m.fresh.disposition.slug !== m.shown.disposition.slug;
 
 describe('HostBookings', () => {
   describe('looking up invoices for the page', () => {
@@ -395,6 +582,8 @@ describe('HostBookings', () => {
       expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(2);
       expect(deps.ops.bookingInvoices.mock.calls[1][1]).toEqual(['bk-i']);
       expect(api(page).invoices().get('bk-i')).toEqual(inv());
+      // An invoice that exists is not a booking that moved, so the booking is not read again.
+      expect(deps.bookings.get).not.toHaveBeenCalled();
     });
 
     it('looks again quietly when the panel is back on that booking to say so itself', async () => {
@@ -419,7 +608,7 @@ describe('HostBookings', () => {
 
     it('keeps the dialog open for any other refusal, and does not look again', async () => {
       const deps = hostPageDeps();
-      const text = 'Only checked-in bookings can be invoiced';
+      const text = 'Disposition is invalid';
       deps.bookings.generateInvoice.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [settledOf(checkedIn())] });
 
@@ -427,10 +616,11 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.bookingHasMovedOn');
-      expect(api(page).dialogError()).toBe('hostBookings.bookingHasMovedOn');
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.moveNotAccepted');
+      expect(api(page).dialogError()).toBe('hostBookings.moveNotAccepted');
       expectNoLeak(page, deps, text);
       expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(1);
+      expect(deps.bookings.get).not.toHaveBeenCalled();
       expect(deps.notifications.raised).toEqual([]);
       expect(api(page).busy()).toBe(false);
     });
@@ -613,7 +803,7 @@ describe('HostBookings', () => {
 
     it('never sends the invoice request when the booking is refused, and shows why in the dialog', async () => {
       const deps = hostPageDeps();
-      const text = 'This booking is already paid';
+      const text = 'Disposition is invalid';
       deps.bookings.markPaid.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
@@ -622,8 +812,9 @@ describe('HostBookings', () => {
 
       expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.bookingAlreadyPaid');
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.moveNotAccepted');
       expectNoLeak(page, deps, text);
+      expect(deps.bookings.get).not.toHaveBeenCalled();
       expect(deps.notifications.raised).toEqual([]);
       expect(api(page).busy()).toBe(false);
       expect(api(page).rows()[0].balanceDue).toBe(24000);
@@ -852,8 +1043,6 @@ describe('HostBookings', () => {
     });
 
     it.each([
-      { text: 'Booking is already checked in', key: 'hostBookings.alreadyCheckedIn' },
-      { text: 'Only confirmed bookings can be checked in', key: 'hostBookings.bookingHasMovedOn' },
       { text: 'Room 101 has only 1 bed(s) available', key: 'hostBookings.notEnoughBedsFree' },
       { text: 'Invalid room ID', key: 'hostBookings.checkTheRoomsPicked' },
       { text: 'Something the page has never seen', key: 'hostBookings.moveNotAccepted' },
@@ -1612,10 +1801,8 @@ describe('HostBookings', () => {
       expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.giveTheGuestAReason');
     });
 
-    it.each([
-      { text: 'Only checked-in bookings can be checked out', key: 'hostBookings.bookingHasMovedOn' },
-      { text: 'Disposition is invalid', key: 'hostBookings.moveNotAccepted' },
-    ])('lets no server text or API URL reach the screen on "$text"', async ({ text, key }) => {
+    it('lets no server text or API URL reach the screen on a refusal it does not recognise', async () => {
+      const text = 'Disposition is invalid';
       const deps = hostPageDeps();
       deps.bookings.checkOut.mockReturnValue(throwError(() => urlRefusal(text)));
       const page = await open({ deps, items: [checkedIn()] });
@@ -1624,7 +1811,7 @@ describe('HostBookings', () => {
       await confirmViaButton(page);
 
       expect(modal(page)).not.toBeNull();
-      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe(key);
+      expect(textOf(modal(page)!.querySelector('[role="alert"]'))).toBe('hostBookings.moveNotAccepted');
       expectNoLeak(page, deps, text);
     });
 
@@ -1644,6 +1831,1267 @@ describe('HostBookings', () => {
         'hostBookings.moveNotAccepted',
       );
       expectNoLeak(page, deps, 'Disposition is invalid');
+    });
+  });
+
+  // A move is refused as already made, or as impossible now, when another tab or the search index's
+  // lag left the page on a stage the booking has left. The database's copy is read back and shown.
+  describe('a stay move refused because the booking is not where the page shows it', () => {
+    const info = (key: string) => ({ kind: 'info', title: key, message: undefined });
+    const errorToast = (key: string) => ({ kind: 'error', title: key, message: undefined });
+    const dialogMoves = MOVED_ON.filter((m) => m.kind === 'movedOn' && m.action !== 'checkIn');
+
+    describe('a check-in', () => {
+      const alreadyIn = hostBooking('checked-in', { id: 'bk-c', occupancies: BOTH_ROOMS });
+      const cancelled = hostBooking('cancelled', { id: 'bk-c' });
+
+      it('closes the allocation and opens the booking checked in with its rooms, from the row menu', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, of(alreadyIn));
+        const page = await open({ deps, items: [arriving()] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await settle(page);
+
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, 'bk-c', QUIET]]);
+        expect(api(page).assigning()).toBeNull();
+        expect(api(page).assignError()).toBe('');
+        expect(api(page).viewing()).toBe(alreadyIn);
+        expect(panelText(page)).toContain('Room 101 · 2 guests');
+        expect(panelText(page)).toContain('Room 102 · 1 guest');
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-c'));
+        expect(deps.notifications.raised).toEqual([info('hostBookings.alreadyCheckedIn')]);
+        expect(api(page).viewError()).toBe('');
+        expect(api(page).rows()[0].disposition.slug).toBe('checked-in');
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('does the same from the open panel, reading the booking twice and not navigating again', async () => {
+        const deps = hostPageDeps();
+        const booking = arriving();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, of(booking), of(alreadyIn));
+        const page = await open({ deps, items: [booking] });
+        await openPanel(page, booking);
+        const navigate = vi.spyOn(page.router, 'navigateByUrl');
+
+        api(page).onAct({ action: 'checkIn', booking });
+        await settle(page);
+        submitMove(page, 'checkIn', booking);
+        await settle(page);
+
+        expect(deps.bookings.get.mock.calls).toEqual([
+          [HOSTEL_ID, 'bk-c', QUIET],
+          [HOSTEL_ID, 'bk-c', QUIET],
+        ]);
+        expect(api(page).assigning()).toBeNull();
+        expect(api(page).viewing()).toBe(alreadyIn);
+        expect(panelText(page)).toContain('Room 101 · 2 guests');
+        expect(navigate).not.toHaveBeenCalled();
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-c'));
+        expect(deps.notifications.raised).toEqual([info('hostBookings.alreadyCheckedIn')]);
+        expect(api(page).viewError()).toBe('');
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('shows the booking as it now is with a red footer and no toast when it moved on, from the row menu', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkIn', refusal('Only confirmed bookings can be checked in'));
+        queueReads(deps, of(cancelled));
+        const page = await open({ deps, items: [arriving()] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await settle(page);
+
+        expect(api(page).assigning()).toBeNull();
+        expect(api(page).viewing()).toBe(cancelled);
+        expect(api(page).viewError()).toBe('hostBookings.bookingHasMovedOn');
+        expect(panelFooterAlert(page)).toBe('hostBookings.bookingHasMovedOn');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-c'));
+      });
+
+      it('does the same from the open panel, without navigating again', async () => {
+        const deps = hostPageDeps();
+        const booking = arriving();
+        refuseMove(deps, 'checkIn', refusal('Only confirmed bookings can be checked in'));
+        queueReads(deps, of(booking), of(cancelled));
+        const page = await open({ deps, items: [booking] });
+        await openPanel(page, booking);
+        const navigate = vi.spyOn(page.router, 'navigateByUrl');
+
+        api(page).onAct({ action: 'checkIn', booking });
+        await settle(page);
+        submitMove(page, 'checkIn', booking);
+        await settle(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(2);
+        expect(api(page).assigning()).toBeNull();
+        expect(api(page).viewing()).toBe(cancelled);
+        expect(panelFooterAlert(page)).toBe('hostBookings.bookingHasMovedOn');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(navigate).not.toHaveBeenCalled();
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-c'));
+      });
+    });
+
+    describe('a move in a dialog', () => {
+      it.each(dialogMoves)('closes the dialog from the row menu and raises one error toast for $name', async (m) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, m.action, refusal(m.text));
+        queueReads(deps, of(m.fresh));
+        const page = await open({ deps, items: [m.shown] });
+
+        await startMove(page, m.action);
+        submitMove(page, m.action, m.shown);
+        await settle(page);
+
+        expect(modal(page)).toBeNull();
+        expect(api(page).dialog()).toBeNull();
+        expect(api(page).dialogError()).toBe('');
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.bookingHasMovedOn')]);
+        expect(api(page).viewing()).toBeNull();
+        expect(panelText(page)).toBe('');
+        expect(page.url()).toBe(LIST_URL);
+        expect(api(page).rows()[0]).toBe(m.fresh);
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, m.shown.id, QUIET]]);
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, m.text);
+      });
+
+      it.each(dialogMoves)(
+        'closes the dialog and brings the panel back on the booking as it now is, with a red footer, for $name',
+        async (m) => {
+          const deps = hostPageDeps();
+          refuseMove(deps, m.action, refusal(m.text));
+          queueReads(deps, of(m.shown), of(m.fresh));
+          const page = await open({ deps, items: [m.shown] });
+          await openPanel(page, m.shown);
+
+          api(page).onAct({ action: m.action, booking: m.shown });
+          await settle(page);
+          submitMove(page, m.action, m.shown);
+          await settle(page);
+
+          expect(modal(page)).toBeNull();
+          expect(api(page).dialog()).toBeNull();
+          expect(api(page).viewing()).toBe(m.fresh);
+          expect(api(page).viewError()).toBe('hostBookings.bookingHasMovedOn');
+          expect(panelFooterAlert(page)).toBe('hostBookings.bookingHasMovedOn');
+          expect(panelFooterButtons(page)).toEqual(m.footer);
+          expect(deps.notifications.raised).toEqual([]);
+          expect(api(page).rows()[0]).toBe(m.fresh);
+          expect(page.url()).toBe(bookingPath(HOSTEL_ID, m.shown.id));
+          expect(deps.bookings.get.mock.calls).toEqual([
+            [HOSTEL_ID, m.shown.id, QUIET],
+            [HOSTEL_ID, m.shown.id, QUIET],
+          ]);
+          expect(api(page).busy()).toBe(false);
+        },
+      );
+    });
+
+    describe('a payment on a booking already paid', () => {
+      const text = 'This booking is already paid';
+      const paid = settledOf(checkedIn());
+
+      it('closes the dialog with an info toast and opens no panel, from the row menu', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'markPaid', refusal(text));
+        queueReads(deps, of(paid));
+        const page = await open({ deps, items: [checkedIn()] });
+
+        await startMove(page, 'markPaid');
+        submitMove(page, 'markPaid', checkedIn());
+        await settle(page);
+
+        expect(modal(page)).toBeNull();
+        expect(deps.notifications.raised).toEqual([info('hostBookings.bookingAlreadyPaid')]);
+        expect(api(page).viewing()).toBeNull();
+        expect(page.url()).toBe(LIST_URL);
+        expect(api(page).rows()[0]).toBe(paid);
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, 'bk-i', QUIET]]);
+      });
+
+      it('brings the panel back on the settled booking, with no red footer, from the open panel', async () => {
+        const deps = hostPageDeps();
+        const booking = checkedIn();
+        refuseMove(deps, 'markPaid', refusal(text));
+        queueReads(deps, of(booking), of(paid));
+        const page = await open({ deps, items: [booking] });
+        await openPanel(page, booking);
+
+        api(page).onAct({ action: 'markPaid', booking });
+        await settle(page);
+        submitMove(page, 'markPaid', booking);
+        await settle(page);
+
+        expect(modal(page)).toBeNull();
+        expect(api(page).viewing()).toBe(paid);
+        expect(api(page).viewError()).toBe('');
+        expect(page.el.querySelector('hh-booking-details-panel footer [role="alert"]')).toBeNull();
+        expect(panelText(page)).toContain('Nothing outstanding');
+        expect(deps.notifications.raised).toEqual([info('hostBookings.bookingAlreadyPaid')]);
+      });
+
+      it('leaves the invoice alone when the host unticked its box', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'markPaid', refusal(text));
+        queueReads(deps, of(paid));
+        const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
+
+        await startMove(page, 'markPaid');
+        checkbox(page)!.click();
+        await settle(page);
+        submitMove(page, 'markPaid', checkedIn());
+        await settle(page);
+
+        expect(modal(page)).toBeNull();
+        expect(deps.notifications.raised).toEqual([info('hostBookings.bookingAlreadyPaid')]);
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, 'bk-i', QUIET]]);
+        expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+      });
+    });
+
+    describe('while the booking is read back', () => {
+      it('holds the dialog and every other move until the read answers', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        const other = hostBooking('pending', { id: 'bk-p' });
+        refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
+        queueReads(deps, read);
+        const page = await open({ deps, items: [checkedIn(), other] });
+
+        await startMove(page, 'checkOut');
+        await confirmViaButton(page);
+
+        expect(api(page).busy()).toBe(true);
+        expect(api(page).dialogError()).toBe('hostBookings.bookingHasMovedOn');
+        expect(dialogAlert(page)).toBe('hostBookings.bookingHasMovedOn');
+        expect(confirmButton(page).disabled).toBe(true);
+
+        api(page).closeDialog();
+        api(page).confirmDialog();
+        api(page).onAct({ action: 'confirm', booking: other });
+        expect(api(page).dialog()).not.toBeNull();
+        expect(deps.bookings.checkOut).toHaveBeenCalledTimes(1);
+        expect(deps.bookings.confirm).not.toHaveBeenCalled();
+
+        read.next(hostBooking('checked-out', { id: 'bk-i', ref: 'BK-I' }));
+        read.complete();
+        await settle(page);
+
+        expect(api(page).busy()).toBe(false);
+        expect(modal(page)).toBeNull();
+      });
+
+      it('holds the allocation until the read answers, then opens the booking', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, read);
+        const page = await open({ deps, items: [arriving()] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await settle(page);
+
+        expect(api(page).busy()).toBe(true);
+        expect(assignAlert(page)).toBe('hostBookings.alreadyCheckedIn');
+        api(page).closeAssign();
+        expect(api(page).assigning()).not.toBeNull();
+
+        read.next(hostBooking('checked-in', { id: 'bk-c' }));
+        read.complete();
+        await settle(page);
+
+        expect(api(page).busy()).toBe(false);
+        expect(api(page).assigning()).toBeNull();
+        expect(api(page).viewing()?.id).toBe('bk-c');
+      });
+    });
+
+    describe('telling the rooms page its numbers moved', () => {
+      const roomMoves = MOVED_ON.filter((m) => ROOM_MOVES.includes(m.action) && slugChanged(m));
+      const otherMoves = MOVED_ON.filter((m) => !ROOM_MOVES.includes(m.action) && slugChanged(m));
+
+      it.each(roomMoves)('tracks /rooms once when $name changed the stage', async (m) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, m.action, refusal(m.text));
+        queueReads(deps, of(m.fresh));
+        const page = await open({ deps, items: [m.shown] });
+
+        api(page).onAct({ action: m.action, booking: m.shown });
+        submitMove(page, m.action, m.shown);
+        await settle(page);
+
+        expect(deps.refetch.track).toHaveBeenCalledTimes(1);
+        expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
+      });
+
+      it.each(otherMoves)('does not track /rooms for $name, even though the stage changed', async (m) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, m.action, refusal(m.text));
+        queueReads(deps, of(m.fresh));
+        const page = await open({ deps, items: [m.shown] });
+
+        api(page).onAct({ action: m.action, booking: m.shown });
+        submitMove(page, m.action, m.shown);
+        await settle(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.refetch.track).not.toHaveBeenCalled();
+      });
+
+      it.each([
+        { name: 'the read shows no change', reply: () => of(checkedIn({ guests: 3 })) },
+        { name: 'the read fails', reply: () => throwError(() => apiError(500, [], 'GET')) },
+      ])('does not track /rooms for a refused check-out when $name', async ({ reply }) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
+        queueReads(deps, reply());
+        const page = await open({ deps, items: [checkedIn()] });
+
+        api(page).onAct({ action: 'checkOut', booking: checkedIn() });
+        api(page).confirmDialog();
+        await settle(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.refetch.track).not.toHaveBeenCalled();
+      });
+
+      // Only a booking in a confirmed or pending lane carries a legacy slug, so no check-out can reach this.
+      it.each([
+        {
+          name: 'a check-in of a booking shown as room-assigned',
+          action: 'checkIn' as const,
+          shown: hostBooking('room-assigned', { id: 'bk-c' }),
+          fresh: arriving({ guests: 3 }),
+          text: 'Only confirmed bookings can be checked in',
+        },
+        {
+          name: 'a cancellation of a booking shown as pending-allotment',
+          action: 'cancel' as const,
+          shown: hostBooking('pending-allotment', { id: 'bk-p' }),
+          fresh: hostBooking('pending', { id: 'bk-p', guests: 3 }),
+          text: 'This booking can no longer be cancelled',
+        },
+      ])('does not track /rooms for $name when the copy is that stage under its current name', async (c) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, c.action, refusal(c.text));
+        queueReads(deps, of(c.fresh));
+        const page = await open({ deps, items: [c.shown] });
+
+        api(page).onAct({ action: c.action, booking: c.shown });
+        submitMove(page, c.action, c.shown);
+        await settle(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.refetch.track).not.toHaveBeenCalled();
+        // The booking has not moved on, so the refused move stays open on the copy with the generic message.
+        expect(c.action === 'checkIn' ? assignAlert(page) : dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(api(page).rows()[0]).toBe(c.fresh);
+        expect(deps.notifications.raised).toEqual([]);
+      });
+
+      it('tracks /rooms once for a check-in of a booking shown as room-assigned that is now checked in', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, of(hostBooking('checked-in', { id: 'bk-c' })));
+        const page = await open({ deps, items: [hostBooking('room-assigned', { id: 'bk-c' })] });
+
+        api(page).onAct({ action: 'checkIn', booking: hostBooking('room-assigned', { id: 'bk-c' }) });
+        submitMove(page, 'checkIn', hostBooking('room-assigned', { id: 'bk-c' }));
+        await settle(page);
+
+        expect(deps.refetch.track).toHaveBeenCalledTimes(1);
+        expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
+      });
+    });
+
+    describe('the calendar and the invoice lookup', () => {
+      it('swaps the database copy into the calendar once', async () => {
+        const deps = hostPageDeps();
+        const shown = checkedIn();
+        const fresh = hostBooking('checked-out', { id: 'bk-i', ref: 'BK-I' });
+        refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
+        queueReads(deps, of(fresh));
+        const page = await open({ deps, items: [shown] });
+        const applyChange = vi.spyOn(calendarOf(page), 'applyChange');
+
+        api(page).onAct({ action: 'checkOut', booking: shown });
+        api(page).confirmDialog();
+        await settle(page);
+
+        expect(applyChange).toHaveBeenCalledTimes(1);
+        expect(applyChange.mock.calls[0][0]).toBe(shown);
+        expect(applyChange.mock.calls[0][1]).toBe(fresh);
+      });
+
+      it('looks up the invoice of a booking found checked in, so the row menu offers to generate one', async () => {
+        const deps = hostPageDeps();
+        const fresh = hostBooking('checked-in', { id: 'bk-c' });
+        refuseMove(deps, 'noShow', refusal('Only confirmed bookings can be marked a no show'));
+        queueReads(deps, of(fresh));
+        const page = await open({ deps, items: [arriving()] });
+        expect(deps.ops.bookingInvoices).not.toHaveBeenCalled();
+
+        await startMove(page, 'noShow');
+        submitMove(page, 'noShow', arriving());
+        await settle(page);
+
+        expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(1);
+        expect(deps.ops.bookingInvoices).toHaveBeenCalledWith(HOSTEL_ID, ['bk-c'], QUIET);
+        await openMenu(page);
+        expect(menuLabels(page)).toContain('Generate invoice');
+      });
+    });
+
+    describe('when the database shows the booking unchanged', () => {
+      it('keeps an invoice dialog open on the database copy with the generic message', async () => {
+        const deps = hostPageDeps();
+        const shown = hostBooking('checked-out', { id: 'bk-o', ref: 'BK-O', paid: 24000, balanceDue: 0 });
+        const fresh = { ...shown, guests: 3 };
+        refuseMove(deps, 'invoice', refusal('Only checked-in bookings can be invoiced'));
+        queueReads(deps, of(fresh));
+        const page = await open({ deps, items: [shown] });
+
+        await startMove(page, 'invoice');
+        expect(textOf(modal(page))).toContain('3 nights · 2 guests');
+        submitMove(page, 'invoice', shown);
+        await settle(page);
+
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(textOf(modal(page))).toContain('3 nights · 3 guests');
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.refetch.track).not.toHaveBeenCalled();
+      });
+
+      it('keeps the allocation open on the database copy with the generic message', async () => {
+        const deps = hostPageDeps();
+        const fresh = arriving({ guests: 3 });
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, of(fresh));
+        const page = await open({ deps, items: [arriving()] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await settle(page);
+
+        expect(api(page).assigning()).toBe(fresh);
+        expect(api(page).assignError()).toBe('hostBookings.moveNotAccepted');
+        expect(assignAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(api(page).viewing()).toBeNull();
+        expect(page.url()).toBe(LIST_URL);
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(deps.notifications.raised).toEqual([]);
+      });
+
+      it('keeps a payment dialog open on the database copy when the booking still owes', async () => {
+        const deps = hostPageDeps();
+        const fresh = checkedIn({ guests: 3 });
+        refuseMove(deps, 'markPaid', refusal('This booking is already paid'));
+        queueReads(deps, of(fresh));
+        const page = await open({ deps, items: [checkedIn()] });
+
+        await startMove(page, 'markPaid');
+        submitMove(page, 'markPaid', checkedIn());
+        await settle(page);
+
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(api(page).dialog()?.booking).toBe(fresh);
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(deps.notifications.raised).toEqual([]);
+      });
+
+      it('brings the panel back on the database copy when the dialog is closed', async () => {
+        const deps = hostPageDeps();
+        const shown = checkedIn();
+        const fresh = checkedIn({ guests: 3 });
+        refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
+        queueReads(deps, of(shown), of(fresh));
+        const page = await open({ deps, items: [shown] });
+        await openPanel(page, shown);
+
+        api(page).onAct({ action: 'checkOut', booking: shown });
+        await settle(page);
+        submitMove(page, 'checkOut', shown);
+        await settle(page);
+        expect(dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
+
+        api(page).closeDialog();
+        await settle(page);
+
+        expect(modal(page)).toBeNull();
+        expect(api(page).viewing()).toBe(fresh);
+        expect(panelText(page)).toContain('3 guests · Dormitory');
+        expect(api(page).rows()[0]).toBe(fresh);
+      });
+    });
+
+    describe('when the booking cannot be read back', () => {
+      const gone = () => throwError(() => apiError(404, [], 'GET'));
+
+      it('closes every surface, leaves the booking URL and tells the host when it is gone, from the panel', async () => {
+        const deps = hostPageDeps();
+        const booking = arriving();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, of(booking), gone());
+        const page = await open({ deps, items: [booking] });
+        await openPanel(page, booking);
+        api(page).onAct({ action: 'checkIn', booking });
+        await settle(page);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        submitMove(page, 'checkIn', booking);
+        await settle(page);
+
+        expect(api(page).assigning()).toBeNull();
+        expect(api(page).assignError()).toBe('');
+        expect(api(page).dialog()).toBeNull();
+        expect(api(page).viewing()).toBeNull();
+        expect(api(page).viewError()).toBe('');
+        expect(page.url()).toBe(LIST_URL);
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.bookingNotFound')]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists + 1);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('closes the dialog and tells the host when a cancelled booking is gone, from the row menu', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'cancel', refusal('This booking can no longer be cancelled'));
+        queueReads(deps, gone());
+        const page = await open({ deps, items: [checkedIn()] });
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, 'cancel');
+        submitMove(page, 'cancel', checkedIn());
+        await settle(page);
+
+        expect(modal(page)).toBeNull();
+        expect(api(page).dialog()).toBeNull();
+        expect(page.url()).toBe(LIST_URL);
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.bookingNotFound')]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists + 1);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it.each([{ status: 500 }, { status: 0 }])(
+        'keeps the dialog and its message, and refreshes the list, when the read fails with $status',
+        async ({ status }) => {
+          const deps = hostPageDeps();
+          const shown = checkedIn();
+          refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
+          queueReads(deps, throwError(() => apiError(status, [], 'GET')));
+          const page = await open({ deps, items: [shown] });
+          const lists = deps.bookings.list.mock.calls.length;
+
+          await startMove(page, 'checkOut');
+          submitMove(page, 'checkOut', shown);
+          await settle(page);
+
+          expect(modal(page)).not.toBeNull();
+          expect(dialogAlert(page)).toBe('hostBookings.bookingHasMovedOn');
+          expect(deps.notifications.raised).toEqual([]);
+          expect(deps.bookings.list.mock.calls.length).toBe(lists + 1);
+          expect(api(page).rows()[0]).toBe(shown);
+          expect(api(page).busy()).toBe(false);
+        },
+      );
+
+      it('keeps the allocation and its message, with no panel, and refreshes the list when the read fails', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, throwError(() => apiError(500, [], 'GET')));
+        const page = await open({ deps, items: [arriving()] });
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await settle(page);
+
+        expect(api(page).assigning()?.id).toBe('bk-c');
+        expect(assignAlert(page)).toBe('hostBookings.alreadyCheckedIn');
+        expect(api(page).viewing()).toBeNull();
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists + 1);
+        expect(api(page).busy()).toBe(false);
+      });
+    });
+
+    // The refused surface stays open beside whatever the host opened meanwhile; that is not asserted.
+    describe('when the host moved on while the booking was read back', () => {
+      const bkB = hostBooking('confirmed', { id: 'bk-b', ref: 'BK-B' });
+
+      it('keeps the panel and URL the host went to, and still swaps the row and tracks /rooms', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        const fresh = hostBooking('checked-out', { id: 'bk-i', ref: 'BK-I' });
+        refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
+        queueReads(deps, read, of(bkB));
+        const page = await open({ deps, items: [checkedIn(), bkB] });
+
+        await startMove(page, 'checkOut');
+        submitMove(page, 'checkOut', checkedIn());
+        await page.navigate(bookingPath(HOSTEL_ID, 'bk-b'));
+        read.next(fresh);
+        read.complete();
+        await settle(page);
+
+        expect(api(page).viewing()?.id).toBe('bk-b');
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-b'));
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(deps.refetch.track).toHaveBeenCalledTimes(1);
+        expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('opens no panel and navigates nowhere for a check-in when the host opened another booking', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        const fresh = hostBooking('checked-in', { id: 'bk-c' });
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, read, of(bkB));
+        const page = await open({ deps, items: [arriving(), bkB] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        const navigate = vi.spyOn(page.router, 'navigateByUrl');
+        api(page).openDetails(bkB);
+        await settle(page);
+        read.next(fresh);
+        read.complete();
+        await settle(page);
+
+        expect(navigate.mock.calls.map((c) => c[0])).not.toContain(bookingPath(HOSTEL_ID, 'bk-c'));
+        expect(api(page).viewing()?.id).toBe('bk-b');
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-b'));
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('raises no toast and closes nothing when the read then reports the booking gone', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, read, of(bkB));
+        const page = await open({ deps, items: [arriving(), bkB] });
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        api(page).openDetails(bkB);
+        await settle(page);
+        read.error(apiError(404, [], 'GET'));
+        await settle(page);
+
+        expect(api(page).viewing()?.id).toBe('bk-b');
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-b'));
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists + 1);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('opens nothing and raises no toast when the host switched hostel', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, read);
+        const page = await open({ deps, items: [arriving()] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await page.navigate('/host/h2/bookings');
+        read.next(hostBooking('checked-in', { id: 'bk-c' }));
+        read.complete();
+        await settle(page);
+
+        expect(api(page).viewing()).toBeNull();
+        expect(page.url()).toBe('/host/h2/bookings');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('stays on the list, with no panel and no toast, when the host went back during a panel check-in', async () => {
+        const deps = hostPageDeps();
+        const booking = arriving();
+        const read = new Subject<HostBooking>();
+        const fresh = hostBooking('checked-in', { id: 'bk-c', occupancies: BOTH_ROOMS });
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, of(booking), read);
+        const page = await open({ deps, items: [booking] });
+        await openPanel(page, booking);
+        api(page).onAct({ action: 'checkIn', booking });
+        await settle(page);
+        submitMove(page, 'checkIn', booking);
+        await settle(page);
+
+        await page.navigate(LIST_URL);
+        const navigate = vi.spyOn(page.router, 'navigateByUrl');
+        read.next(fresh);
+        read.complete();
+        await settle(page);
+
+        expect(page.url()).toBe(LIST_URL);
+        expect(api(page).viewing()).toBeNull();
+        expect(navigate.mock.calls.map((c) => c[0])).not.toContain(bookingPath(HOSTEL_ID, 'bk-c'));
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('opens nothing and raises no toast when the host opens another booking just as the read answers', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        const fresh = hostBooking('checked-in', { id: 'bk-c' });
+        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
+        queueReads(deps, read, of(bkB));
+        const page = await open({ deps, items: [arriving(), bkB] });
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', arriving());
+        await settle(page);
+        const navigate = vi.spyOn(page.router, 'navigateByUrl');
+        // No settle between the two: the URL has not moved yet, so only the open itself marks the read stale.
+        api(page).openDetails(bkB);
+        read.next(fresh);
+        read.complete();
+        await settle(page);
+
+        expect(deps.notifications.raised).toEqual([]);
+        expect(navigate.mock.calls.map((c) => c[0])).not.toContain(bookingPath(HOSTEL_ID, 'bk-c'));
+        expect(api(page).viewing()?.id).toBe('bk-b');
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-b'));
+        expect(api(page).rows()[0]).toBe(fresh);
+        expect(api(page).busy()).toBe(false);
+      });
+    });
+
+    describe('paying the invoice of a booking already paid', () => {
+      const text = 'This booking is already paid';
+      const paid = () => settledOf(checkedIn());
+      const callOrder = (fn: { mock: { invocationCallOrder: number[] } }) => fn.mock.invocationCallOrder[0];
+      const paidToast = { kind: 'info', title: 'hostBookings.bookingAlreadyPaid', message: undefined };
+      const crossPaidToast = { kind: 'success', title: 'hostBookings.alreadyPaidInvoicePaid', message: undefined };
+
+      /** The open panel's status pill for the booking's invoice. */
+      const invoicePill = (page: Page) =>
+        Array.from(page.el.querySelectorAll('hh-booking-details-panel hh-status-pill')).find((p) =>
+          p.closest('span.flex')?.textContent?.includes(buildInvoiceId(inv())),
+        );
+
+      interface SentPayment {
+        args: unknown[];
+        /** How many times the bill had been read on its own when the payment went out. */
+        billReads: number;
+      }
+
+      /** `rb-1` paid quietly, once the bill's own read was made. */
+      const PAID_AFTER_CHECK: SentPayment = { args: [HOSTEL_ID, 'rb-1', QUIET], billReads: 1 };
+
+      /**
+       * Answers the invoice payment with `reply` and returns every payment the page actually sent.
+       * Building the request sends nothing, as with `HttpClient`; only subscribing to it does.
+       */
+      function sentPayments(
+        deps: HostPageDeps,
+        reply: () => Observable<Invoice> = () => of(inv({ status: 'paid' })),
+      ): SentPayment[] {
+        const sent: SentPayment[] = [];
+        deps.ops.markInvoicePaid.mockImplementation((hostelId, billId, opts) =>
+          defer(() => {
+            sent.push({ args: [hostelId, billId, opts], billReads: deps.ops.invoice.mock.calls.length });
+            return reply();
+          }),
+        );
+        return sent;
+      }
+
+      /**
+       * Row menu, Mark as paid on `bk-i`, whose invoice is due and whose box is ticked; the server says it is paid.
+       * `invoiceRead` is what the bill's own read answers, still due unless said.
+       */
+      async function openRefusedPayment(deps: HostPageDeps, invoiceRead: Observable<Invoice> = of(inv())): Promise<Page> {
+        refuseMove(deps, 'markPaid', urlRefusal(text));
+        deps.ops.invoice.mockReturnValue(invoiceRead);
+        const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
+        await startMove(page, 'markPaid');
+        return page;
+      }
+
+      it('pays the invoice once the database confirms the booking is settled, and names it in the toast', async () => {
+        const deps = hostPageDeps();
+        const sent = sentPayments(deps);
+        queueReads(deps, of(paid()));
+        const page = await openRefusedPayment(deps);
+        const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+
+        await confirmViaButton(page);
+
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, 'bk-i', QUIET]]);
+        expect(deps.ops.invoice.mock.calls).toEqual([[HOSTEL_ID, 'rb-1', QUIET]]);
+        expect(sent).toEqual([PAID_AFTER_CHECK]);
+        expect(callOrder(deps.bookings.markPaid)).toBeLessThan(callOrder(deps.bookings.get));
+        expect(callOrder(deps.bookings.get)).toBeLessThan(callOrder(deps.ops.invoice));
+        expect(deps.notifications.raised).toEqual([
+          { kind: 'success', title: 'hostBookings.alreadyPaidInvoicePaid', message: undefined },
+        ]);
+        expect(translations(translate, 'hostBookings.alreadyPaidInvoicePaid').map((c) => c[1])).toContainEqual({
+          invoice: buildInvoiceId(inv()),
+        });
+        expect(api(page).invoices().get('bk-i')?.status).toBe('paid');
+        expect(modal(page)).toBeNull();
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expectNoLeak(page, deps, text);
+      });
+
+      it('reports the invoice on its own when it refuses, with the booking shown settled', async () => {
+        const deps = hostPageDeps();
+        deps.ops.markInvoicePaid.mockReturnValue(throwError(() => refusal('The invoice is locked.')));
+        queueReads(deps, of(paid()));
+        const page = await openRefusedPayment(deps);
+        const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+
+        await confirmViaButton(page);
+
+        expect(deps.notifications.raised).toEqual([
+          { kind: 'error', title: 'hostBookings.invoiceNotPaid', message: undefined },
+        ]);
+        expect(translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1])).toContainEqual({
+          reason: 'hostBookings.payTheInvoiceOnItsOwn',
+        });
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+        expect(modal(page)).toBeNull();
+      });
+
+      it('does not pay the invoice when the database still shows the booking owing', async () => {
+        const deps = hostPageDeps();
+        const owing = checkedIn({ guests: 3 });
+        queueReads(deps, of(owing), of(owing));
+        const page = await openRefusedPayment(deps);
+
+        await confirmViaButton(page);
+
+        expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+        expect(deps.bookings.get).toHaveBeenCalledTimes(2);
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(deps.notifications.raised).toEqual([]);
+      });
+
+      it('does not pay the invoice when the booking cannot be read, and refreshes the list', async () => {
+        const deps = hostPageDeps();
+        queueReads(deps, throwError(() => apiError(500, [], 'GET')), throwError(() => apiError(500, [], 'GET')));
+        const page = await openRefusedPayment(deps);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await confirmViaButton(page);
+
+        expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+        expect(deps.bookings.get).toHaveBeenCalledTimes(2);
+        expect(dialogAlert(page)).toBe('hostBookings.bookingAlreadyPaid');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists + 1);
+      });
+
+      it('leaves the invoice due when only the second read shows the booking settled', async () => {
+        const deps = hostPageDeps();
+        queueReads(deps, throwError(() => apiError(500, [], 'GET')), of(paid()));
+        const page = await openRefusedPayment(deps);
+
+        await confirmViaButton(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(2);
+        expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+        expect(deps.notifications.raised).toEqual([
+          { kind: 'info', title: 'hostBookings.bookingAlreadyPaid', message: undefined },
+        ]);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+        expect(modal(page)).toBeNull();
+      });
+
+      it('never pays the invoice for a booking that moved on, and tells the host so', async () => {
+        const deps = hostPageDeps();
+        const wrongStage = 'Only confirmed, checked-in, checked-out or no-show bookings can be marked paid';
+        refuseMove(deps, 'markPaid', urlRefusal(wrongStage));
+        queueReads(deps, of(hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' })));
+        const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
+
+        await startMove(page, 'markPaid');
+        await confirmViaButton(page);
+
+        expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.bookingHasMovedOn')]);
+        expect(modal(page)).toBeNull();
+      });
+
+      it('settles the open panel and shows its invoice paid', async () => {
+        const deps = hostPageDeps();
+        const booking = checkedIn();
+        const settledCopy = paid();
+        refuseMove(deps, 'markPaid', urlRefusal(text));
+        deps.ops.invoice.mockReturnValue(of(inv()));
+        const sent = sentPayments(deps);
+        queueReads(deps, of(booking), of(settledCopy));
+        const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
+        await openPanel(page, booking);
+
+        api(page).onAct({ action: 'markPaid', booking });
+        await settle(page);
+        await confirmViaButton(page);
+
+        expect(deps.ops.invoice.mock.calls).toEqual([[HOSTEL_ID, 'rb-1', QUIET]]);
+        expect(sent).toEqual([PAID_AFTER_CHECK]);
+        expect(api(page).viewing()).toBe(settledCopy);
+        expect(panelText(page)).toContain('Nothing outstanding');
+        expect(invoicePill(page)).toBeDefined();
+        expect(textOf(invoicePill(page))).toBe(invoiceStatusLabel('paid'));
+        expect(deps.notifications.raised).toEqual([
+          { kind: 'success', title: 'hostBookings.alreadyPaidInvoicePaid', message: undefined },
+        ]);
+      });
+
+      it('holds busy across the read, the invoice check and the invoice request, so nothing else sends', async () => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        const check = new Subject<Invoice>();
+        const payment = new Subject<Invoice>();
+        const other = hostBooking('pending', { id: 'bk-p' });
+        refuseMove(deps, 'markPaid', urlRefusal(text));
+        deps.ops.invoice.mockReturnValue(check);
+        const sent = sentPayments(deps, () => payment);
+        queueReads(deps, read);
+        const page = await open({ deps, items: [checkedIn(), other], invoices: [['bk-i', inv()]] });
+        await startMove(page, 'markPaid');
+        await confirmViaButton(page);
+        const tryAnotherMove = () => {
+          api(page).confirmDialog();
+          api(page).onAct({ action: 'confirm', booking: other });
+        };
+
+        expect(api(page).busy()).toBe(true);
+        expect(confirmButton(page).disabled).toBe(true);
+        tryAnotherMove();
+        expect(deps.bookings.markPaid).toHaveBeenCalledTimes(1);
+        expect(deps.bookings.confirm).not.toHaveBeenCalled();
+        expect(deps.ops.invoice).not.toHaveBeenCalled();
+        expect(sent).toEqual([]);
+
+        read.next(paid());
+        read.complete();
+        await settle(page);
+
+        expect(api(page).busy()).toBe(true);
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(sent).toEqual([]);
+        tryAnotherMove();
+        expect(deps.bookings.markPaid).toHaveBeenCalledTimes(1);
+        expect(deps.bookings.confirm).not.toHaveBeenCalled();
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(sent).toEqual([]);
+
+        check.next(inv());
+        check.complete();
+        await settle(page);
+
+        expect(api(page).busy()).toBe(true);
+        expect(sent).toEqual([PAID_AFTER_CHECK]);
+        tryAnotherMove();
+        expect(deps.bookings.markPaid).toHaveBeenCalledTimes(1);
+        expect(deps.bookings.confirm).not.toHaveBeenCalled();
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(sent).toEqual([PAID_AFTER_CHECK]);
+
+        payment.next(inv({ status: 'paid' }));
+        payment.complete();
+        await settle(page);
+
+        expect(api(page).busy()).toBe(false);
+        expect(modal(page)).toBeNull();
+      });
+
+      it('records the invoice paid without paying it again when it was paid elsewhere too, from the row menu', async () => {
+        const deps = hostPageDeps();
+        const sent = sentPayments(deps);
+        queueReads(deps, of(paid()));
+        const page = await openRefusedPayment(deps, of(inv({ status: 'paid' })));
+        const lookups = deps.ops.bookingInvoices.mock.calls.length;
+
+        await confirmViaButton(page);
+
+        expect(sent).toEqual([]);
+        expect(deps.ops.invoice.mock.calls).toEqual([[HOSTEL_ID, 'rb-1', QUIET]]);
+        expect(deps.notifications.raised).toEqual([paidToast]);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('paid');
+        expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(lookups);
+        expect(modal(page)).toBeNull();
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, text);
+      });
+
+      it('records the invoice paid without paying it again when it was paid elsewhere too, from the open panel', async () => {
+        const deps = hostPageDeps();
+        const booking = checkedIn();
+        const settledCopy = paid();
+        refuseMove(deps, 'markPaid', urlRefusal(text));
+        deps.ops.invoice.mockReturnValue(of(inv({ status: 'paid' })));
+        const sent = sentPayments(deps);
+        queueReads(deps, of(booking), of(settledCopy));
+        const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
+        await openPanel(page, booking);
+
+        api(page).onAct({ action: 'markPaid', booking });
+        await settle(page);
+        await confirmViaButton(page);
+
+        expect(sent).toEqual([]);
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(deps.notifications.raised).toEqual([paidToast]);
+        expect(modal(page)).toBeNull();
+        expect(api(page).viewing()).toBe(settledCopy);
+        expect(invoicePill(page)).toBeDefined();
+        expect(textOf(invoicePill(page))).toBe(invoiceStatusLabel('paid'));
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expectNoLeak(page, deps, text);
+      });
+
+      it.each([
+        { name: 'answers 500', reply: () => throwError(() => apiError(500, [], 'GET')) },
+        { name: 'answers 404', reply: () => throwError(() => apiError(404, [], 'GET')) },
+        { name: 'never reaches the server', reply: () => throwError(() => apiError(0, [], 'GET')) },
+        { name: 'answers with no bill', reply: () => of(inv({ id: '' })) },
+      ])('never pays the invoice blind when its own read $name, and looks it up again', async ({ reply }) => {
+        const deps = hostPageDeps();
+        const sent = sentPayments(deps);
+        queueReads(deps, of(paid()));
+        const page = await openRefusedPayment(deps, reply());
+        const lookups = deps.ops.bookingInvoices.mock.calls.length;
+
+        await confirmViaButton(page);
+
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(sent).toEqual([]);
+        expect(deps.notifications.raised).toEqual([paidToast]);
+        expect(deps.ops.bookingInvoices.mock.calls.slice(lookups)).toEqual([[HOSTEL_ID, ['bk-i'], QUIET]]);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+        expect(modal(page)).toBeNull();
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it.each(['cancelled', 'no-show', 'pending'])(
+        'leaves the invoice alone when the settled booking is now %s, and says it was already paid',
+        async (slug) => {
+          const deps = hostPageDeps();
+          const gone = settledOf(hostBooking(slug, { id: 'bk-i', ref: 'BK-I' }));
+          queueReads(deps, of(gone), of(gone));
+          const page = await openRefusedPayment(deps);
+
+          await confirmViaButton(page);
+
+          expect(deps.ops.invoice).not.toHaveBeenCalled();
+          expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+          expect(deps.bookings.get.mock.calls).toEqual([
+            [HOSTEL_ID, 'bk-i', QUIET],
+            [HOSTEL_ID, 'bk-i', QUIET],
+          ]);
+          expect(deps.notifications.raised).toEqual([paidToast]);
+          expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+          expect(modal(page)).toBeNull();
+          expect(api(page).rows()[0]).toBe(gone);
+          expect(api(page).busy()).toBe(false);
+        },
+      );
+
+      it.each(['checked-out', 'confirmed'])('pays the invoice when the settled booking is now %s', async (slug) => {
+        const deps = hostPageDeps();
+        const sent = sentPayments(deps);
+        queueReads(deps, of(settledOf(hostBooking(slug, { id: 'bk-i', ref: 'BK-I' }))));
+        const page = await openRefusedPayment(deps);
+
+        await confirmViaButton(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(sent).toEqual([PAID_AFTER_CHECK]);
+        expect(deps.notifications.raised).toEqual([crossPaidToast]);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('paid');
+      });
+
+      it('still pays an invoice the re-check finds overdue', async () => {
+        const deps = hostPageDeps();
+        const sent = sentPayments(deps);
+        queueReads(deps, of(paid()));
+        const page = await openRefusedPayment(deps, of(inv({ status: 'over-due' })));
+
+        await confirmViaButton(page);
+
+        expect(deps.ops.invoice).toHaveBeenCalledTimes(1);
+        expect(sent).toEqual([PAID_AFTER_CHECK]);
+        expect(deps.notifications.raised).toEqual([crossPaidToast]);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('paid');
+        expect(modal(page)).toBeNull();
+      });
+    });
+
+    describe('every other refusal', () => {
+      const cases = [
+        {
+          name: 'too few beds in a room on check-in',
+          action: 'checkIn' as const,
+          shown: arriving(),
+          err: refusal('Room 101 has only 1 bed(s) available'),
+          key: 'hostBookings.notEnoughBedsFree',
+        },
+        {
+          name: 'an unknown room on check-in',
+          action: 'checkIn' as const,
+          shown: arriving(),
+          err: refusal('Invalid room ID'),
+          key: 'hostBookings.checkTheRoomsPicked',
+        },
+        {
+          name: 'a cancellation the server wants a reason for',
+          action: 'cancel' as const,
+          shown: checkedIn(),
+          err: refusal('A cancellation reason is required'),
+          key: 'hostBookings.giveTheGuestAReason',
+        },
+        {
+          name: 'a refusal on check-out the page does not recognise',
+          action: 'checkOut' as const,
+          shown: checkedIn(),
+          err: refusal('Disposition is invalid'),
+          key: 'hostBookings.moveNotAccepted',
+        },
+        {
+          name: 'a check-out that never reached the server',
+          action: 'checkOut' as const,
+          shown: checkedIn(),
+          err: apiError(0),
+          key: 'common.cannotReachTheServer',
+        },
+        {
+          name: 'a check-out of a booking the server does not know',
+          action: 'checkOut' as const,
+          shown: checkedIn(),
+          err: apiError(404, ['Not Found']),
+          key: 'hostBookings.bookingNotFound',
+        },
+      ];
+
+      it.each(cases)('is shown where it was sent and not read back for $name', async (c) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, c.action, c.err);
+        const page = await open({ deps, items: [c.shown] });
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, c.action);
+        submitMove(page, c.action, c.shown);
+        expect(api(page).busy()).toBe(false);
+        await settle(page);
+
+        expect(c.action === 'checkIn' ? assignAlert(page) : dialogAlert(page)).toBe(c.key);
+        expect(deps.bookings.get).not.toHaveBeenCalled();
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists);
+        expect(api(page).busy()).toBe(false);
+      });
+    });
+
+    describe('confirming from the panel', () => {
+      const pending = hostBooking('pending', { id: 'bk-p' });
+
+      async function confirmRefused(deps: HostPageDeps, text: string): Promise<Page> {
+        refuseMove(deps, 'confirm', refusal(text));
+        const page = await open({ deps, items: [pending] });
+        await openPanel(page, pending);
+        api(page).onAct({ action: 'confirm', booking: pending });
+        await settle(page);
+        return page;
+      }
+
+      it('shows the booking as it now is with a red footer when it had already been confirmed', async () => {
+        const deps = hostPageDeps();
+        const moved = hostBooking('confirmed', { id: 'bk-p' });
+        queueReads(deps, of(pending), of(moved));
+
+        const page = await confirmRefused(deps, 'Only pending bookings can be confirmed');
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(2);
+        expect(api(page).viewing()).toBe(moved);
+        expect(api(page).viewError()).toBe('hostBookings.bookingHasMovedOn');
+        expect(panelFooterAlert(page)).toBe('hostBookings.bookingHasMovedOn');
+        expect(panelFooterButtons(page)).toContain('Check in');
+        expect(panelFooterButtons(page)).not.toContain('Confirm');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('keeps the generic message when the database still shows the booking pending', async () => {
+        const deps = hostPageDeps();
+        const same = hostBooking('pending', { id: 'bk-p', guests: 3 });
+        queueReads(deps, of(pending), of(same));
+
+        const page = await confirmRefused(deps, 'Only pending bookings can be confirmed');
+
+        expect(api(page).viewing()).toBe(same);
+        expect(api(page).viewError()).toBe('hostBookings.moveNotAccepted');
+        expect(panelFooterAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(panelFooterButtons(page)).toContain('Confirm');
+        expect(api(page).busy()).toBe(false);
+      });
+
+      it('reads nothing back when the hostel is not set up for bookings', async () => {
+        const deps = hostPageDeps();
+        queueReads(deps, of(pending));
+
+        const page = await confirmRefused(deps, 'This hostel does not accept bookings');
+
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, 'bk-p', QUIET]]);
+        expect(api(page).viewError()).toBe('hostBookings.notSetUpForBookings');
+        expect(panelFooterAlert(page)).toBe('hostBookings.notSetUpForBookings');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).busy()).toBe(false);
+      });
+    });
+
+    describe('what the host can read', () => {
+      it.each(MOVED_ON)('shows no server text or API URL, while reading back or after, for $name', async (m) => {
+        const deps = hostPageDeps();
+        const read = new Subject<HostBooking>();
+        refuseMove(deps, m.action, urlRefusal(m.text));
+        queueReads(deps, read);
+        const page = await open({ deps, items: [m.shown] });
+
+        await startMove(page, m.action);
+        submitMove(page, m.action, m.shown);
+        await settle(page);
+        expectNoLeak(page, deps, m.text);
+        expect(shownText(page, deps)).toContain(m.key);
+
+        read.next(m.fresh);
+        read.complete();
+        await settle(page);
+        expectNoLeak(page, deps, m.text);
+        expect(shownText(page, deps)).toContain(m.key);
+      });
     });
   });
 });

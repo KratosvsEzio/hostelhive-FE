@@ -1,4 +1,3 @@
-import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
@@ -11,13 +10,13 @@ import {
   StartedPayment,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
-import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import {
   ApiPagination,
   PAGE_SIZE,
   pageParams,
   toPageInfo,
 } from '@util/pagination';
+import { quiet } from './quiet-request';
 
 interface PlansEnvelope extends Partial<PlansResponse> {
   success?: boolean;
@@ -42,10 +41,6 @@ interface InvoicesEnvelope {
 
 interface PaymentEnvelope extends StartedPayment {
   success?: boolean;
-}
-
-function quiet(): HttpContext {
-  return new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
 }
 
 /**

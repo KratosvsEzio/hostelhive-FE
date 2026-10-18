@@ -132,18 +132,11 @@ export class Utilities {
 
   private readonly fetched = toSignal(
     toObservable(this.fetchKey).pipe(
-      switchMap(({ hostelId, page, statusFilter, roomFilter, tenantFilter, dateFrom, dateTo, sort }) => {
-        if (!hostelId) {
+      switchMap((key) => {
+        if (!key.hostelId) {
           return of<ViewState>({ loading: false, error: false, subscriptionError: false, networkError: false, bills: [], total: 0 });
         }
-        const filters: Record<string, string> = {};
-        if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
-        if (roomFilter) filters['f[room_id]'] = roomFilter;
-        if (tenantFilter) filters['f[renter_id]'] = tenantFilter;
-        if (dateFrom) filters['f[issue_date][gte]'] = dayRangeStart(dateFrom);
-        if (dateTo) filters['f[issue_date][lte]'] = dayRangeEnd(dateTo);
-        if (sort) filters[`sort[${sort.key}]`] = sort.dir;
-        return this.api.utilityBills(hostelId, page, PAGE_SIZE, filters).pipe(
+        return this.api.utilityBills(key.hostelId, key.page, PAGE_SIZE, this.listFilters(key)).pipe(
           map((res): ViewState => ({
             loading: false,
             error: false,
@@ -412,7 +405,10 @@ export class Utilities {
     this.deletePending.set(null);
     this.deleting.set(true);
     this.api.deleteUtilityBill(hostelId, b.id).subscribe({
-      next: () => { this.deleting.set(false); },
+      next: () => {
+        this.deleting.set(false);
+        this.reloadTotals();
+      },
       error: () => {
         this.deletedIds.update((s) => { const n = new Set(s); n.delete(b.id); return n; });
         this.deleting.set(false);
@@ -439,5 +435,40 @@ export class Utilities {
 
   protected retry(): void {
     this.refresh.update((n) => n + 1);
+  }
+
+  private listFilters(key: {
+    statusFilter: string;
+    roomFilter: string;
+    tenantFilter: string;
+    dateFrom: string;
+    dateTo: string;
+    sort: SortState;
+  }): Record<string, string> {
+    const filters: Record<string, string> = {};
+    if (key.statusFilter !== 'all') filters['f[status.slug]'] = key.statusFilter;
+    if (key.roomFilter) filters['f[room_id]'] = key.roomFilter;
+    if (key.tenantFilter) filters['f[renter_id]'] = key.tenantFilter;
+    if (key.dateFrom) filters['f[issue_date][gte]'] = dayRangeStart(key.dateFrom);
+    if (key.dateTo) filters['f[issue_date][lte]'] = dayRangeEnd(key.dateTo);
+    if (key.sort) filters[`sort[${key.sort.key}]`] = key.sort.dir;
+    return filters;
+  }
+
+  /**
+   * The summary cards and status counts come from the list response, and a delete only hides
+   * the row locally. Re-read them quietly so the table keeps its rows instead of flashing
+   * back to a skeleton.
+   */
+  private reloadTotals(): void {
+    const key = this.fetchKey();
+    if (!key.hostelId) return;
+    this.api.utilityBills(key.hostelId, key.page, PAGE_SIZE, this.listFilters(key)).subscribe({
+      next: (res) => {
+        if (res.aggs) this.aggs.set(res.aggs);
+        if (res.statuses?.length) this.statuses.set(res.statuses);
+      },
+      error: () => undefined,
+    });
   }
 }

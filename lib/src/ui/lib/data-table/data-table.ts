@@ -285,12 +285,15 @@ export interface PaginationConfig {
                 @let exp = expandable();
                 @let subRows = exp ? exp.childRows(row) : [];
                 @let expanded = isExpanded(rid);
+                @let clickable = (exp && subRows.length > 0) || hasRowClick();
 
                 <!-- Main row -->
                 <tr
-                  class="group hover:bg-surface"
-                  [class.cursor-pointer]="(exp && subRows.length > 0) || hasRowClick()"
+                  class="group hover:bg-surface focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-300"
+                  [class.cursor-pointer]="clickable"
+                  [attr.tabindex]="clickable ? 0 : null"
                   (click)="onRowClick(row, rid, subRows.length > 0)"
+                  (keydown)="onRowKeydown($event, row, rid, subRows.length > 0, clickable)"
                 >
                   @for (col of columns(); track col.key; let first = $first) {
                     @let cell = col.cell(row);
@@ -757,6 +760,26 @@ export class DataTable implements AfterViewInit, OnDestroy {
 
   protected childId(sub: unknown): string {
     return this.expandable()?.childId(sub) ?? '';
+  }
+
+  /**
+   * Enter and Space on a focused clickable row do what a click does.
+   *
+   * Only keys aimed at the row itself count: Enter on a link or button inside the row already
+   * activates that control, and acting on the row as well would fire twice.
+   */
+  protected onRowKeydown(
+    event: KeyboardEvent,
+    row: unknown,
+    id: string,
+    hasChildren: boolean,
+    clickable: boolean,
+  ): void {
+    if (!clickable || event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    // Space would otherwise scroll the page.
+    event.preventDefault();
+    this.onRowClick(row, id, hasChildren);
   }
 
   protected onRowClick(row: unknown, id: string, hasChildren: boolean): void {

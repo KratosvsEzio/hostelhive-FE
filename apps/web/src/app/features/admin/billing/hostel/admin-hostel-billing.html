@@ -1,0 +1,272 @@
+<app-dashboard-layout
+  [label]="
+    hostelName()
+      ? ('adminBilling.hostel.title' | transloco: { hostel: hostelName() })
+      : ('adminBilling.hostel.titleFallback' | transloco)
+  "
+>
+  <div class="flex flex-col gap-6">
+    <hh-admin-billing-tabs />
+
+    <div aria-live="polite">
+      @if (notice(); as key) {
+        <p
+          class="rounded-xl bg-ok/10 px-4 py-3 text-sm font-medium text-ok"
+          data-testid="hostel-billing-notice"
+        >
+          {{ key | transloco }}
+        </p>
+      }
+    </div>
+
+    @if (data(); as d) {
+      @let b = d.billing;
+      <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <section
+          class="flex flex-col gap-4"
+          aria-labelledby="hostel-billing-summary-title"
+        >
+          <h2
+            id="hostel-billing-summary-title"
+            class="font-display text-lg font-bold text-ink-900"
+          >
+            {{ 'adminBilling.hostel.summaryTitle' | transloco }}
+          </h2>
+
+          @if (b.subscription) {
+            <hh-current-plan-card
+              [subscription]="b.subscription"
+              [features]="b.features"
+            />
+          } @else {
+            <p
+              class="rounded-xl border border-ink-200 bg-white px-5 py-4 text-sm text-ink-600"
+              data-testid="no-subscription"
+            >
+              {{ 'adminBilling.hostel.noSubscription' | transloco }}
+            </p>
+          }
+
+          @if (b.open_invoice; as invoice) {
+            <div
+              class="flex flex-col gap-2 rounded-xl border border-ink-200 bg-white px-5 py-4 text-sm text-ink-700"
+              data-testid="open-invoice"
+            >
+              <p>
+                @if (invoice.expires_at; as expires) {
+                  {{
+                    'adminBilling.hostel.openInvoice'
+                      | transloco
+                        : {
+                            number: invoice.number,
+                            amount: isolate(
+                              invoice.total | billingMoney: invoice.currency
+                            ),
+                            date: (expires | adminUtcDate: dateTime),
+                          }
+                  }}
+                } @else {
+                  {{
+                    'adminBilling.hostel.openInvoiceNoExpiry'
+                      | transloco
+                        : {
+                            number: invoice.number,
+                            amount: isolate(
+                              invoice.total | billingMoney: invoice.currency
+                            ),
+                          }
+                  }}
+                }
+              </p>
+              @if (invoice.awaiting_verification) {
+                <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span
+                    class="inline-flex items-center rounded-full bg-warn/10 px-2.5 py-0.5 text-xs font-medium text-warn"
+                    data-testid="awaiting-verification"
+                    >{{
+                      'adminBilling.hostel.awaitingVerification' | transloco
+                    }}</span
+                  >
+                  <a
+                    hhLink
+                    [routerLink]="queuePath"
+                    data-testid="open-invoice-queue"
+                    >{{ 'adminBilling.hostel.openQueue' | transloco }}</a
+                  >
+                </p>
+              }
+            </div>
+          }
+
+          <div
+            class="flex flex-col gap-3 rounded-xl border border-ink-200 bg-white px-5 py-4"
+            data-testid="grant-section"
+          >
+            <div>
+              <button
+                hh-button
+                type="button"
+                color="primary"
+                size="md"
+                data-testid="grant-open"
+                [disabled]="!canGrant()"
+                [loading]="grantBusy()"
+                (click)="openGrant()"
+              >
+                {{ 'adminBilling.grant.open' | transloco }}
+              </button>
+            </div>
+            @if (blockingInvoice(); as invoice) {
+              <p class="text-sm text-ink-700" data-testid="grant-blocked">
+                {{
+                  'adminBilling.grant.blockedTransfer'
+                    | transloco: { number: invoice.number }
+                }}
+                <a hhLink [routerLink]="queuePath" data-testid="grant-queue">{{
+                  'adminBilling.hostel.openQueue' | transloco
+                }}</a>
+              </p>
+            }
+          </div>
+
+          <section
+            class="flex flex-col gap-3 rounded-xl border border-ink-200 bg-white px-5 py-4"
+            aria-labelledby="hostel-billing-currency-title"
+            data-testid="currency-section"
+          >
+            <h3
+              id="hostel-billing-currency-title"
+              class="font-display text-base font-bold text-ink-900"
+            >
+              {{ 'adminBilling.currency.title' | transloco }}
+            </h3>
+            <p class="text-sm text-ink-600" data-testid="currency-state">
+              @if (d.billing_currency_override; as override) {
+                {{
+                  'adminBilling.currency.overridden'
+                    | transloco: { currency: override }
+                }}
+              } @else {
+                {{
+                  'adminBilling.currency.auto'
+                    | transloco: { currency: b.currency }
+                }}
+              }
+            </p>
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="w-full sm:w-64">
+                <label class="sr-only" for="admin-billing-currency">{{
+                  'adminBilling.currency.title' | transloco
+                }}</label>
+                <hh-dropdown
+                  variant="field"
+                  controlId="admin-billing-currency"
+                  data-testid="currency-select"
+                  [options]="currencyOptions()"
+                  [value]="currencyChoice()"
+                  [disabled]="busy()"
+                  (valueChange)="pickCurrency($event)"
+                />
+              </div>
+              <button
+                hh-button
+                type="button"
+                variant="outlined"
+                size="md"
+                data-testid="currency-save"
+                [disabled]="busy() || !currencyChanged()"
+                [loading]="currencyBusy()"
+                (click)="askCurrency()"
+              >
+                {{ 'adminBilling.currency.save' | transloco }}
+              </button>
+            </div>
+            @if (currencyError(); as e) {
+              <p
+                class="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+                role="alert"
+                data-testid="currency-error"
+              >
+                {{ e.message ?? (e.key | transloco) }}
+              </p>
+            }
+          </section>
+        </section>
+
+        <hh-admin-billing-events [events]="d.events" [planName]="planName()" />
+      </div>
+    } @else if (loadError(); as error) {
+      @if (error.kind === 'forbidden') {
+        <hh-error-state
+          [message]="error.key | transloco"
+          [showRetry]="false"
+          data-testid="hostel-billing-forbidden"
+        />
+      } @else if (error.kind === 'notFound') {
+        <hh-error-state
+          [message]="'adminBilling.hostel.notFound' | transloco"
+          [showRetry]="false"
+          data-testid="hostel-billing-not-found"
+        />
+      } @else {
+        <hh-error-state
+          [message]="'adminBilling.common.loadError' | transloco"
+          [retryLabel]="'adminBilling.common.retry' | transloco"
+          [networkError]="error.kind === 'network'"
+          (retry)="retry()"
+          data-testid="hostel-billing-error"
+        />
+      }
+    } @else if (state().kind === 'loading') {
+      <div
+        class="grid gap-6 lg:grid-cols-2"
+        data-testid="hostel-billing-loading"
+        aria-busy="true"
+      >
+        <hh-skeleton class="h-64 w-full" radius="lg" />
+        <hh-skeleton class="h-64 w-full" radius="lg" />
+      </div>
+    }
+  </div>
+</app-dashboard-layout>
+
+@if (grantOpen() && data(); as d) {
+  <hh-admin-grant-dialog
+    [subscription]="d.billing.subscription"
+    [openInvoice]="d.billing.open_invoice"
+    [plans]="grantPlans()"
+    [busy]="grantBusy()"
+    [error]="grantError()"
+    (confirmed)="grant($event)"
+    (cancelled)="closeGrant()"
+  />
+}
+
+@if (currencyConfirming() && data(); as d) {
+  <hh-confirm-modal
+    icon="ti-currency-dollar"
+    tone="warn"
+    [title]="'adminBilling.currency.confirmTitle' | transloco"
+    [confirmLabel]="'adminBilling.currency.save' | transloco"
+    [cancelLabel]="'adminBilling.common.cancel' | transloco"
+    (confirm)="saveCurrency()"
+    (cancel)="dismissCurrency()"
+  >
+    <p data-testid="currency-next-renewal">
+      {{ 'adminBilling.currency.nextRenewal' | transloco }}
+    </p>
+    @if (d.billing.open_invoice; as invoice) {
+      <p class="mt-2" data-testid="currency-open-invoice">
+        {{
+          'adminBilling.currency.openInvoice'
+            | transloco: { number: invoice.number, currency: invoice.currency }
+        }}
+      </p>
+    }
+    @if (currencyMissingPrice(); as missing) {
+      <p class="mt-2 text-warn" data-testid="currency-plan-no-price">
+        {{ 'adminBilling.currency.planNoPrice' | transloco: missing }}
+      </p>
+    }
+  </hh-confirm-modal>
+}

@@ -1,5 +1,5 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription, shareReplay } from 'rxjs';
 import { HostShellApi } from './host-shell-api';
 // Imported by its direct path, NOT the `@core/auth` barrel: that barrel also exports AuthService,
 // which imports AuthApi from `@services` — routing this through it would form a @services↔@core/auth
@@ -165,6 +165,30 @@ export class HostPropertyStore {
     return hostel?.billingFrequency === 'night';
   }
 
+  /** One request per hostel per session — see {@link timeZoneOf}. */
+  private readonly timeZones = new Map<string, Observable<string | null>>();
+
+  /**
+   * The hostel's time zone, or null when it has none or it could not be read.
+   *
+   * Not on {@link hostels}: the list endpoint is index-backed and does not carry it, so this
+   * asks the hostel record once and keeps the answer for the rest of the session. A zone is
+   * locked once a hostel has bookings, so a cached one can only be stale for a hostel with
+   * nothing on its calendar. Never errors — a null (no zone, or the read was refused or failed)
+   * sends the caller to the device's clock and is kept like any other answer, until
+   * {@link clear} or a change of owner. A refused manager therefore costs one request, not one
+   * per screen.
+   */
+  timeZoneOf(hostelId: string): Observable<string | null> {
+    const cached = this.timeZones.get(hostelId);
+    if (cached) return cached;
+    const zone: Observable<string | null> = this.api
+      .hostelTimeZone(hostelId)
+      .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    this.timeZones.set(hostelId, zone);
+    return zone;
+  }
+
   private loadSub?: Subscription;
   /** Whether a `load()` is still waiting on its response — a guard may be waiting on {@link loaded}
    *  for it, so a switch to another user, which cancels it, has to fetch again. */
@@ -246,6 +270,7 @@ export class HostPropertyStore {
     this.loadSub?.unsubscribe();
     this.loadSub = undefined;
     this.inFlight = false;
+    this.timeZones.clear();
     this.state.set({ owner: untracked(() => this.userId()), ...NOTHING_LOADED });
     this.selected.set('');
     try {
@@ -285,6 +310,7 @@ export class HostPropertyStore {
     this.loadSub?.unsubscribe();
     this.loadSub = undefined;
     this.inFlight = false;
+    this.timeZones.clear();
     this.state.set({ owner: id, ...NOTHING_LOADED });
     this.selected.set(this.restore(id) ?? '');
   }
