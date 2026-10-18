@@ -1,13 +1,21 @@
 import { Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, ParamMap, convertToParamMap, provideRouter } from '@angular/router';
+import {
+  ActivatedRoute,
+  ParamMap,
+  Router,
+  convertToParamMap,
+  provideRouter,
+} from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { BehaviorSubject } from 'rxjs';
 import { LocaleTree, at, loadLocale } from '@core/i18n/locale-files-testing';
 import { LocaleStore } from '@core/i18n/locale-store';
+import { localeAlternates } from '@core/i18n/locales';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { Seo } from '@core/seo';
 import { assetUrlsIn, pageAddressesIn } from '@core/seo-testing';
+import { placeSocialImage } from '@core/social-image';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { PlaceLanding } from './place-landing';
 
@@ -41,20 +49,30 @@ const ready = signal(true);
 const active = signal('en');
 let params$: BehaviorSubject<ParamMap>;
 
-/** `beforeCreate` runs against the real Seo before the page exists, to seed other pages' blocks. */
-function mount(
-  params: Record<string, string>,
-  beforeCreate?: (seo: Seo) => void,
-  lang = 'en',
-) {
+const FAR = { ne_lat: '20', ne_lng: '100', sw_lat: '10', sw_lng: '90' };
+const FRAMING = { ne_lat: '31.75', ne_lng: '74.70', sw_lat: '31.30', sw_lng: '74.00' };
+
+/** The page's route, with `query` readable from every place a page could look for it. */
+function routeStub(query: Record<string, string>) {
+  const queryParamMap = convertToParamMap(query);
+  return {
+    paramMap: params$.asObservable(),
+    queryParamMap: new BehaviorSubject(queryParamMap),
+    queryParams: new BehaviorSubject(query),
+    snapshot: { paramMap: params$.value, queryParamMap, queryParams: query },
+  };
+}
+
+function configure(params: Record<string, string>, query: Record<string, string>, lang: string) {
   params$ = new BehaviorSubject(convertToParamMap(params));
   active.set(lang);
   TestBed.configureTestingModule({
     imports: [PlaceLanding],
     providers: [
-      provideRouter([]),
+      // Matches any address, so a test can put the router on the one it stands in for.
+      provideRouter([{ path: '**', children: [] }]),
       provideI18nTesting(),
-      { provide: ActivatedRoute, useValue: { paramMap: params$.asObservable() } },
+      { provide: ActivatedRoute, useValue: routeStub(query) },
       // The real Seo only reads the active language from the store.
       { provide: LocaleStore, useValue: { ready, active } },
     ],
@@ -65,7 +83,32 @@ function mount(
   const i18n = TestBed.inject(TranslocoService);
   for (const [code, tree] of Object.entries(LOCALES)) i18n.setTranslation(tree, code);
   i18n.setActiveLang(lang);
+}
+
+/** `beforeCreate` runs against the real Seo before the page exists, to seed other pages' blocks. */
+function mount(
+  params: Record<string, string>,
+  beforeCreate?: (seo: Seo) => void,
+  lang = 'en',
+) {
+  configure(params, {}, lang);
   beforeCreate?.(TestBed.inject(Seo));
+  const fixture = TestBed.createComponent(PlaceLanding);
+  fixture.detectChanges();
+  return fixture;
+}
+
+/**
+ * Mounts the English page as a link carrying `query` opens it. The stubbed route and the real
+ * router both hold the keys, so a page reading its address from either would see them. Async
+ * because the router has to land on the address before the page exists.
+ */
+async function mountWithQuery(params: Record<string, string>, query: Record<string, string>) {
+  configure(params, query, 'en');
+  const segments = ['en', 'hostels', params['place'], params['gender']].filter(Boolean);
+  await TestBed.inject(Router).navigateByUrl(
+    `/${segments.join('/')}?${new URLSearchParams(query).toString()}`,
+  );
   const fixture = TestBed.createComponent(PlaceLanding);
   fixture.detectChanges();
   return fixture;
@@ -73,6 +116,62 @@ function mount(
 
 function head(selector: string): NodeListOf<Element> {
   return document.head.querySelectorAll(selector);
+}
+
+const values = (selector: string, attribute: string): (string | null)[] =>
+  Array.from(head(selector), (el) => el.getAttribute(attribute));
+
+/** Everything the page writes into the head that a crawler or a share card reads. */
+function headState() {
+  return {
+    title: document.title,
+    description: values('meta[name="description"]', 'content'),
+    robots: values('meta[name="robots"]', 'content'),
+    canonical: values('link[rel="canonical"]', 'href'),
+    ogUrl: values('meta[property="og:url"]', 'content'),
+    ogTitle: values('meta[property="og:title"]', 'content'),
+    ogImage: values('meta[property="og:image"]', 'content'),
+    twitterImage: values('meta[name="twitter:image"]', 'content'),
+    alternates: Array.from(
+      head('link[rel="alternate"][data-seo="hreflang"]'),
+      (el) => `${el.getAttribute('hreflang')} ${el.getAttribute('href')}`,
+    ),
+    breadcrumb: Array.from(head(BREADCRUMB), (el) => el.textContent),
+    faq: Array.from(head(FAQ), (el) => el.textContent),
+  };
+}
+
+/** Removes everything a page wrote to the head, the description and title included. */
+function clearHead(): void {
+  document.head
+    .querySelectorAll(`${SEO_TAGS}, meta[name="description"]`)
+    .forEach((el) => el.remove());
+  document.title = '';
+}
+
+/** The head of the same page opened with no query, read from a mount that is then torn down. */
+function cleanHeadOf(params: Record<string, string>) {
+  const fixture = mount(params);
+  const state = headState();
+  fixture.destroy();
+  TestBed.resetTestingModule();
+  clearHead();
+  return state;
+}
+
+/** What an indexable place page writes: its own address, and the same page in every language. */
+function expectIndexablePage(path: string, place: string): void {
+  const own = `${SITE}/en${path}`;
+  const alternates = localeAlternates(path).map((a) => `${a.hreflang} ${SITE}${a.path}`);
+  const state = headState();
+
+  expect(state.robots).toEqual(['index, follow, max-image-preview:large']);
+  expect(state.canonical).toEqual([own]);
+  expect(state.ogUrl).toEqual([own]);
+  expect(alternates.length).toBeGreaterThan(1);
+  expect(state.alternates).toEqual(alternates);
+  expect(state.ogImage).toEqual([placeSocialImage(place)]);
+  expect(state.twitterImage).toEqual([placeSocialImage(place)]);
 }
 
 function attr(selector: string, name: string): string | null {
@@ -107,8 +206,50 @@ beforeEach(() => {
   active.set('en');
 });
 
-afterEach(() => {
-  document.head.querySelectorAll(SEO_TAGS).forEach((el) => el.remove());
+afterEach(clearHead);
+
+describe('PlaceLanding head', () => {
+  it('claims a link with no viewport as its own indexable page, in every language', () => {
+    mount({ place: 'lahore' });
+
+    expectIndexablePage('/hostels/lahore', 'lahore');
+  });
+
+  it.each([
+    ['a city link carrying a far viewport', { place: 'lahore' }, '/hostels/lahore', FAR],
+    ['a city link carrying a framing viewport', { place: 'lahore' }, '/hostels/lahore', FRAMING],
+    [
+      'a gender link carrying a far viewport',
+      { place: 'lahore', gender: 'girls' },
+      '/hostels/lahore/girls',
+      FAR,
+    ],
+    [
+      'a campus link carrying a far viewport',
+      { place: 'lahore', gender: 'punjab-university' },
+      '/hostels/lahore/punjab-university',
+      FAR,
+    ],
+  ] as const)('keeps the clean page head for %s', async (_, params, path, query) => {
+    const clean = cleanHeadOf(params);
+
+    await mountWithQuery(params, query);
+
+    // The keys really are on offer to the page, from the route and from the router.
+    const route = TestBed.inject(ActivatedRoute);
+    expect(route.snapshot.queryParamMap.get('ne_lat')).toBe(query.ne_lat);
+    expect(TestBed.inject(Router).url).toContain(`ne_lat=${query.ne_lat}`);
+
+    expect(headState()).toEqual(clean);
+    expectIndexablePage(path, params.place);
+  });
+
+  it('keeps the breadcrumb and FAQ blocks for a place link carrying a viewport', async () => {
+    await mountWithQuery({ place: 'lahore' }, FAR);
+
+    expect(head(BREADCRUMB)).toHaveLength(1);
+    expect(head(FAQ)).toHaveLength(1);
+  });
 });
 
 describe('PlaceLanding structured data', () => {

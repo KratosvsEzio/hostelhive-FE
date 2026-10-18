@@ -32,12 +32,21 @@ const NOINDEX_PAGES = [
 /** A place search whose link carries a viewport nowhere near Lahore (31.5, 74.4). */
 const FAR_VIEWPORT_SEARCH = '/en/search/lahore?ne_lat=20&ne_lng=100&sw_lat=10&sw_lng=90';
 
-/** Indexable pages, and the canonical each one must keep. */
+/** A landing page link carrying a viewport nowhere near Lahore (31.5, 74.4). */
+const FAR_VIEWPORT_LANDING = '/en/hostels/lahore?ne_lat=20&ne_lng=100&sw_lat=10&sw_lng=90';
+
+/**
+ * Indexable pages, and the canonical each one must keep. A landing page link carrying a viewport
+ * is a copy of the clean page, so it keeps that page's head; a place search carrying one is a view
+ * of that area, and is `noindex` (see NOINDEX_PAGES).
+ */
 const INDEXABLE_PAGES: [string, string][] = [
   ['/en', '/en'],
   ['/en/blog', '/en/blog'],
   ['/en/pricing', '/en/pricing'],
   ['/en/search/lahore', '/en/hostels/lahore'],
+  ['/en/hostels/lahore', '/en/hostels/lahore'],
+  [FAR_VIEWPORT_LANDING, '/en/hostels/lahore'],
   ['/ur/blog', '/ur/blog'],
 ];
 
@@ -110,6 +119,33 @@ test.describe('server-rendered head', () => {
       expect(head.hreflangs).toBeGreaterThan(0);
     });
   }
+
+  test(`${FAR_VIEWPORT_LANDING} is titled, described and headed as the clean landing page`, async ({
+    request,
+  }) => {
+    const cleanRes = await request.get('/en/hostels/lahore', { timeout: 100_000 });
+    expect(cleanRes.ok()).toBe(true);
+    const farRes = await request.get(FAR_VIEWPORT_LANDING, { timeout: 100_000 });
+    expect(farRes.ok()).toBe(true);
+
+    const cleanHtml = await cleanRes.text();
+    const farHtml = await farRes.text();
+    const clean = headOf(cleanHtml);
+    const far = headOf(farHtml);
+
+    expect(clean.title).toContain('Lahore');
+    expect(clean.description).not.toBeNull();
+    expect(clean.ogTitles).toHaveLength(1);
+    expect(clean.twitterTitles).toHaveLength(1);
+    expect(far.title).toBe(clean.title);
+    expect(far.description).toBe(clean.description);
+    expect(far.ogTitles).toEqual(clean.ogTitles);
+    expect(far.twitterTitles).toEqual(clean.twitterTitles);
+    expect(h1Of(cleanHtml)).toBe('Hostels in Lahore');
+    expect(h1Of(farHtml)).toBe('Hostels in Lahore');
+    expect(far.jsonLd).toEqual(expect.arrayContaining(['place-breadcrumb', 'place-faq']));
+    expect([...far.jsonLd].sort()).toEqual([...clean.jsonLd].sort());
+  });
 
   for (const [path, ids] of JSON_LD_PAGES) {
     test(`${path} ships its structured data in the raw HTML`, async ({ request }) => {

@@ -24,11 +24,12 @@
   </section>
 }
 
-<!-- The real search, with this page's filters pre-applied. Anything the visitor changes
+<!-- The real search, with this page's filters pre-applied. A filter the visitor changes
      goes to the query string and overrides the seed, so filtering behaves as it does on
      /search — the path only supplies the starting point. The one exception is the type on
      a gender page: the path fixes it, so changing it moves to the page for the new type
-     (genderRoutes). -->
+     (genderRoutes). Moving the map is not a filter: its viewport stays in memory and never
+     goes into the query string, since the path is the place this page's link opens on. -->
 <hh-search-map
   [seed]="seed()"
   [genderRoutes]="genderRoutes()"

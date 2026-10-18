@@ -186,6 +186,12 @@ export class SearchMap {
   readonly seed = input<Record<string, string> | null>(null);
 
   /**
+   * A landing page hosts this map. Known on the first pass, like the seed itself, and not at
+   * construction: inputs are set after it.
+   */
+  private readonly seeded = computed(() => this.seed() !== null);
+
+  /**
    * Where each accommodation type lives when the host page's path fixes one — set only by
    * the gender landing pages. Passed through to the filter row untouched: the landing
    * feature owns its URLs, and search only follows them.
@@ -378,17 +384,21 @@ export class SearchMap {
   );
 
   /**
-   * Viewport carried in the URL, if any. Read at construction to seed `mapBounds` and to
+   * Viewport carried in the URL, if any. Read on the first pass to seed `mapBounds` and to
    * point the initial camera, so a refresh or a pasted link reproduces the same map area
    * — NOT a live dependency of `query()`, which tracks the real map via `mapBounds`.
    * Keeping it seed-only is what lets `recenterTo()` drop the viewport by nulling
    * `mapBounds`; a standing fallback here would resurrect the stale box.
+   *
+   * None on a landing page, whatever its link carries: the path is its place, so the camera
+   * opens on the place and the list searches near it (see `syncBoundsToUrl`).
    *
    * Read again on each arrival, for {@link arrivedWithViewport}, and never for the heading:
    * it lags the map between settles, and after Back on a reused page it describes an entry
    * the camera was never moved to. The heading follows `mapBounds` (see {@link placeFramed}).
    */
   private readonly urlBounds = computed<Bounds | null>(() => {
+    if (this.seeded()) return null;
     const p = this.params();
     const raw = [p?.get(NE_LAT), p?.get(NE_LNG), p?.get(SW_LAT), p?.get(SW_LNG)];
     if (raw.some((v) => !v)) return null;
@@ -399,8 +409,19 @@ export class SearchMap {
     return box;
   });
 
-  /** Map viewport bounds — updated on every idle event (zoom/pan), seeded from the URL. */
-  private readonly mapBounds = signal<Bounds | null>(this.urlBounds());
+  /**
+   * Map viewport bounds — updated on every idle event (zoom/pan), seeded from the URL.
+   *
+   * Linked to `seeded`, not set in a field initialiser, which runs before a landing page's
+   * seed arrives. Not to `seed`: a gender page reused for another type changes the seed and
+   * must keep the visitor's view. The URL is read `untracked` because the computation runs as
+   * this signal's consumer: tracked, every URL change would reset the box — the map's own
+   * rounded write, firing the search again, and Back onto a reused page.
+   */
+  private readonly mapBounds = linkedSignal({
+    source: this.seeded,
+    computation: () => untracked(() => this.urlBounds()),
+  });
 
   /**
    * Whether the map still frames the place the search names (see `framesPlace`), judged
@@ -417,8 +438,8 @@ export class SearchMap {
 
   /**
    * Whether the URL this search opened on asked for the whole world. Read once, at
-   * construction, like {@link urlBounds}: afterwards `unbounded` is the live state and the
-   * URL only mirrors it (see `syncBoundsToUrl`).
+   * construction: afterwards `unbounded` is the live state, which a search page's URL only
+   * mirrors (see `syncBoundsToUrl`).
    *
    * Explicit coordinates win. A place picked after "Search everywhere" writes `lat`/`lng`
    * before the next camera settle clears the key, and a refresh in that gap should open
@@ -465,24 +486,34 @@ export class SearchMap {
    * (see {@link placeFramed}) instead, so a pan around Lahore still reads as Lahore. That
    * includes a place with no known centre: this never resets on a page reused for a new
    * search, and would carry the last search's pan into it.
+   *
+   * Linked to `seeded`, with the URL read `untracked`, for the reasons {@link mapBounds} gives.
    */
-  private readonly areaChosen = signal(this.urlBounds() !== null);
+  private readonly areaChosen = linkedSignal({
+    source: this.seeded,
+    computation: () => untracked(() => this.urlBounds() !== null),
+  });
 
   /**
    * The link this page was arrived by carried a viewport (all four keys, valid: see
    * {@link urlBounds}), which makes it a view rather than a place page. The head keeps it
    * out of the index with no canonical, however well the view frames the place.
    *
-   * The arrival, not the live URL. The map mirrors its own viewport into the address once its
-   * camera moves after load — fitting the results, a resize, the visitor (see
+   * The arrival, not the live URL. On a search page the map mirrors its own viewport into the
+   * address once its camera moves after load — fitting the results, a resize, the visitor (see
    * `syncBoundsToUrl`) — so judged live, a place search would turn `noindex` as soon as its
-   * results were fitted, in a crawler that runs the page's JavaScript as well. Read at
-   * construction, and again on every navigation that lands here except the page's own
+   * results were fitted, in a crawler that runs the page's JavaScript as well. Read on the
+   * first pass, and again on every navigation that lands here except the page's own
    * same-path replaces (see `isSamePageRefinement`): a link, a refresh, Back or Forward, a
    * language switch, a new place or filter. One URL gets one verdict, which is also the only
-   * one a server render can give.
+   * one a server render can give. Never true on a landing page, which owns its head.
+   *
+   * Linked to `seeded`, with the URL read `untracked`, for the reasons {@link mapBounds} gives.
    */
-  private readonly arrivedWithViewport = signal(this.urlBounds() !== null);
+  private readonly arrivedWithViewport = linkedSignal({
+    source: this.seeded,
+    computation: () => untracked(() => this.urlBounds() !== null),
+  });
 
   /**
    * The country's name in the language being read — "Netherlands", "Pays-Bas", "ہالینڈ".
@@ -1271,9 +1302,9 @@ export class SearchMap {
     const home =
       c || restored || this.unbounded() ? null : await this.countryBounds.forVisitor();
     if (home) {
-      // Scope the search too, not just the camera. `mapBounds` seeds itself from the URL
-      // synchronously at construction, which this answer is far too late for, and the
-      // `moveend` that `fitBounds` raises is not yet listened for at this point. Setting it
+      // Scope the search too, not just the camera. `mapBounds` seeds itself from the URL on
+      // the first pass, which this answer is far too late for, and the `moveend` that
+      // `fitBounds` raises is not yet listened for at this point. Setting it
       // here is what makes the first request ask about this country rather than the world;
       // the capture that follows the camera settling agrees with it, and the pipeline's
       // debounce collapses the pair into one call.
@@ -1692,7 +1723,7 @@ export class SearchMap {
    *
    * Same-config moves (`/search/lahore` → `/search/karachi`) reuse this component and
    * recenter through the `center()` effect; cross-config ones build a new one, which reads
-   * the now-nulled viewport at construction.
+   * the now-nulled viewport on its first pass.
    */
   protected onPlaceSelected(r: PlaceResult): void {
     void this.startSearch(searchRouteFor(r.label), {
@@ -1870,7 +1901,7 @@ export class SearchMap {
     // A new place ends a worldwide search; the next moveend clears its key from the URL.
     this.unbounded.set(false);
     // Drop the old viewport from the URL as well, or a refresh would restore the area the
-    // user just navigated away from. The next moveend writes the new one.
+    // user just navigated away from. On a search page the next moveend writes the new one.
     if (this.isBrowser) {
       void this.router.navigate([], {
         relativeTo: this.route,
@@ -1973,9 +2004,15 @@ export class SearchMap {
    * "Search everywhere": the pan or zoom that ends a worldwide search also settles the
    * camera, so the key is cleared by the same write that records the new viewport, with no
    * second navigation to race it.
+   *
+   * Browser only, as there is no address bar to sync during SSR, and never on a landing page,
+   * which keeps its viewport in memory and writes nothing: the path is its place, and its link
+   * stays clean, so a copied landing link is the place page, canonical to itself. Guarded here
+   * rather than in `captureMapBounds`, which still sets `mapBounds` on a landing page, so a pan
+   * there still searches the box on screen.
    */
   private syncBoundsToUrl(b: Bounds): void {
-    if (!this.isBrowser) return; // no address bar to sync during SSR
+    if (!this.isBrowser || this.seeded()) return;
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {

@@ -18,7 +18,7 @@
   | girls / boys / co-living | `/hostels/<place>/<segment>` |
   | backpacker (no page of its own) | `/hostels/<place>?gender=backpacker` |
 
-- **One localised navigation per apply.** It is built with `localiseCommands` and `queryParamsHandling: 'merge'`, so the other filters, the viewport and the language prefix carry over (`SearchFilters.onApply`). A price sort is dropped when the result is "Any type".
+- **One localised navigation per apply.** It is built with `localiseCommands` and `queryParamsHandling: 'merge'`, so the other filters and the language prefix carry over (`SearchFilters.onApply`). A price sort is dropped when the result is "Any type". The map's viewport is not in a landing page's URL; it stays in memory ([landing pages are their place](./landing-pages-are-their-place-not-a-view.md)). A move to a sibling gender page reuses the page (same route config) and keeps the visitor's view; "Any type" and backpacker go to `/hostels/<place>`, a different route config, which rebuilds the page and reopens it on the place.
 - **An unknown or empty `?gender=` is treated as absent** (`isAccommodationType`), so a malformed link falls back to the page's own type rather than contradicting it. As a result, `?gender=all` on a gender page now means that page's type.
 - **The rule behind all of it:** the H1 may be broader than the list ("Hostels in Lahore" over girls-only results is true), but must never contradict it.
 

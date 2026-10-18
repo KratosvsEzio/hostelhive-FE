@@ -85,3 +85,37 @@ export async function dragMapOnce(page: Page, seen: ListingsStub): Promise<void>
     .toBe(true);
   await waitForQuiet(seen);
 }
+
+/**
+ * Drags the map until a search for the moved viewport has gone out, then waits for the page to go
+ * quiet. For a page that never writes its viewport into the URL, such as a landing page, where
+ * `dragMapOnce` would wait on a URL change that never comes.
+ *
+ * The pan is read from the searches instead. It has landed once a search that arrived after the
+ * drag began has a west edge more than 0.001 degrees from the west edge of the latest search
+ * before it, so the caller must have the page quiet first (`waitForMap`, then `waitForQuiet`):
+ * a search still on its way from the load would pass for the drag's.
+ *
+ * Unlike `dragMapOnce`, a drag that is lost is made again. That is safe only because such a page
+ * writes no URL: a repeated drag cannot leave a viewport write behind to race what the caller
+ * asserts next. It does move the map twice as far, so callers should compare the moved viewport
+ * with a tolerance, not with an exact distance.
+ */
+export async function dragMapUntilSearched(page: Page, seen: ListingsStub): Promise<void> {
+  const latest = seen.bounds[seen.bounds.length - 1];
+  if (!latest || latest.west === null) {
+    throw new Error('no search has gone out yet, so there is no viewport to move from');
+  }
+  const westBefore = latest.west;
+  const sentBefore = seen.requests.length;
+  const searchedMoved = () => {
+    const sent = seen.bounds.slice(sentBefore);
+    return sent.some((b) => b.west !== null && Math.abs(b.west - westBefore) > 0.001);
+  };
+
+  await expect(async () => {
+    await dragMap(page);
+    await expect.poll(searchedMoved, { timeout: 6_000 }).toBe(true);
+  }).toPass({ timeout: 30_000 });
+  await waitForQuiet(seen);
+}
