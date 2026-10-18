@@ -3,7 +3,7 @@
   [breadcrumbs]="[{label: 'Overview', url: '/host/' + propertyStore.selected()}, {label: 'Tenant movement'}]"
 >
   <div hhActions class="flex items-center gap-2">
-    <hh-date-range-picker [(value)]="dateRange" />
+    <hh-date-range-picker [(value)]="dateRange" [today]="today()" />
   </div>
 
     @let s = state();

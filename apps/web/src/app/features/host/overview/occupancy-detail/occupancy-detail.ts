@@ -3,15 +3,22 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Card, ErrorState, Skeleton } from '@hostelhive/ui';
-import { HostPropertyStore, OccupancySummaryPoint, OverviewApi } from '@services';
+import {
+  HostPropertyStore,
+  OccupancySummaryPoint,
+  OverviewApi,
+  selectedHostelToday,
+  selectedHostelZone,
+} from '@services';
 import { occupancyLine } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
+import { DateRange, DateRangePicker, presetRange } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
 import { localDay } from '@util/api-date';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -36,8 +43,12 @@ export class OccupancyDetail {
   private readonly api = inject(OverviewApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
-  protected readonly dateRange = signal<DateRange | null>(
-    DATE_RANGE_PRESETS.find((p) => p.label === 'Last 12 months')!.fn(),
+  private readonly zone = selectedHostelZone();
+  /** The hostel's date, which the default range and the picker's presets count from. */
+  protected readonly today = selectedHostelToday(new Date(), this.zone);
+
+  protected readonly dateRange = linkedSignal<DateRange | null>(() =>
+    presetRange('Last 12 months', this.today()),
   );
   protected readonly hoveredIdx = signal(-1);
 
@@ -47,13 +58,16 @@ export class OccupancyDetail {
     this.refresh();
     const slug = this.propertyStore.selected();
     const range = this.dateRange();
-    return { slug, range };
+    // Held until the zone is known, so the default range isn't fetched twice.
+    return { slug, range, pending: this.zone() === undefined };
   });
 
   protected readonly state = toSignal(
     toObservable(this.query).pipe(
-      switchMap(({ slug, range }) =>
-        slug
+      switchMap(({ slug, range, pending }) =>
+        pending
+          ? of<ViewState>({ loading: true, error: false, networkError: false, data: [] })
+          : slug
           ? this.api.occupancySummaries(slug, toISO(range?.start), toISO(range?.end)).pipe(
               map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
               startWith<ViewState>({ loading: true, error: false, networkError: false, data: [] }),

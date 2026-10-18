@@ -40,7 +40,7 @@ function setup(deleteResult: () => ReturnType<HostOpsApi['deleteUtilityBill']>) 
     providers: [
       provideRouter([]),
       { provide: HostOpsApi, useValue: { utilityBills, deleteUtilityBill } },
-      { provide: HostPropertyStore, useValue: { selected: signal('zppsla') } },
+      { provide: HostPropertyStore, useValue: { selected: signal('zppsla'), timeZoneOf: () => of(null) } },
       { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
       { provide: API_CONFIG, useValue: { baseUrl: 'http://api.test' } },
     ],

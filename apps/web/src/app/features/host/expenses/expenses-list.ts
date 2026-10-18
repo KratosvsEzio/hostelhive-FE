@@ -38,6 +38,7 @@ import {
   ExpenseListItem,
   HostelsApi,
   HostPropertyStore,
+  selectedHostelToday,
 } from '@services';
 import { HasPermission } from '@core/auth';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -84,7 +85,11 @@ export class ExpensesList {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly todayIso = format(new Date(), 'yyyy-MM-dd');
+  /**
+   * The hostel's date: the date filter's last pickable day and its today ring. Not the
+   * device's, which a device behind the hostel would leave unable to pick the hostel's today.
+   */
+  protected readonly today = selectedHostelToday();
 
   /** Absolute base for navigation, matching the app convention (`/host/:id/expenses`). */
   protected readonly base = computed(() => `/host/${this.propertyStore.selected()}/expenses`);
