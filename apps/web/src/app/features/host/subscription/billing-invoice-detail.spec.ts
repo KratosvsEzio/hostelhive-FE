@@ -70,6 +70,7 @@ function payment(over: Partial<BillingPayment> = {}): BillingPayment {
     succeeded_at: null,
     created_at: '2026-10-11T09:05:00+05:00',
     invoice_id: 'inv0Ab',
+    initiated_by: 'customer',
     ...over,
   };
 }

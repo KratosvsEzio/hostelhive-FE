@@ -76,6 +76,8 @@ export class PaymentReturnRetry {
         this.patch({ available: false, note: { message: outcome.message } });
         return;
       case 'retry':
+      case 'declined':
+      case 'inProgress':
         this.patch({ note: { message: outcome.message } });
         return;
       case 'forbidden':

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import type { OpenInvoice } from '@hostelhive/data-access';
+import type { OpenInvoice, SavedCard } from '@hostelhive/data-access';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { PaymentDue } from './payment-due';
 
@@ -15,8 +15,11 @@ const COPY = {
     kindUpgrade: 'Upgrade charge · {{start}} – {{end}}',
     forPeriod: '{{start}} – {{end}}',
     payBy: 'Pay by {{date}}',
+    autoChargeNotice: "We'll charge {{card}} on {{date}}. You can also pay now.",
   },
 };
+
+const CARD: SavedCard = { label: 'Visa •••• 4242', expires_on: '2028-04-30' };
 
 const PAY_LINK = '/host/nHelLt/subscription/pay/inv1';
 
@@ -41,18 +44,30 @@ function invoice(over: Partial<OpenInvoice> = {}): OpenInvoice {
     [invoice]="invoice"
     [payLink]="payLink"
     [canPay]="canPay"
+    [autoRenew]="autoRenew"
+    [card]="card"
+    [chargeOn]="chargeOn"
   />`,
 })
 class Host {
   invoice: OpenInvoice = invoice();
   payLink = PAY_LINK;
   canPay = true;
+  autoRenew = false;
+  card: SavedCard | null = null;
+  chargeOn: string | null = null;
 }
+
+type Renewal = Partial<Pick<Host, 'autoRenew' | 'card' | 'chargeOn'>>;
 
 describe('PaymentDue', () => {
   let fixture: ComponentFixture<Host>;
 
-  function render(inv: OpenInvoice, canPay = true): HTMLElement {
+  function render(
+    inv: OpenInvoice,
+    canPay = true,
+    renewal: Renewal = {},
+  ): HTMLElement {
     TestBed.configureTestingModule({
       imports: [Host],
       providers: [provideRouter([]), provideI18nTesting()],
@@ -61,6 +76,7 @@ describe('PaymentDue', () => {
     fixture = TestBed.createComponent(Host);
     fixture.componentInstance.invoice = inv;
     fixture.componentInstance.canPay = canPay;
+    Object.assign(fixture.componentInstance, renewal);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
@@ -182,6 +198,85 @@ describe('PaymentDue', () => {
       const el = render(invoice({ awaiting_verification: true }), false);
 
       expect(el.querySelector('hh-status-pill')).not.toBeNull();
+    });
+  });
+
+  describe('automatic renewal charge', () => {
+    const AUTO: Renewal = {
+      autoRenew: true,
+      card: CARD,
+      chargeOn: '2026-11-12T10:00:00.000+05:00',
+    };
+    const plain = (s: string | null) => (s ?? '').replace(/[⁨⁩]/g, '');
+
+    it('says which card is charged on the renewal date, and keeps Pay', () => {
+      const el = render(invoice({ kind: 'renewal' }), true, AUTO);
+
+      expect(plain(field(el, 'auto-charge'))).toBe(
+        "We'll charge Visa •••• 4242 on 12 Nov 2026. You can also pay now.",
+      );
+      expect(payButton(el)?.textContent?.trim()).toBe('hostBilling.pay');
+    });
+
+    it('isolates the card label for RTL', () => {
+      const el = render(invoice({ kind: 'renewal' }), true, AUTO);
+
+      expect(field(el, 'auto-charge')).toContain('⁨Visa •••• 4242⁩');
+    });
+
+    it('falls back to the invoice period start without a charge date', () => {
+      const el = render(invoice({ kind: 'renewal' }), true, {
+        ...AUTO,
+        chargeOn: null,
+      });
+
+      expect(plain(field(el, 'auto-charge'))).toBe(
+        "We'll charge Visa •••• 4242 on 12 Oct 2026. You can also pay now.",
+      );
+    });
+
+    it('says nothing without automatic renewal', () => {
+      const el = render(invoice({ kind: 'renewal' }), true, {
+        ...AUTO,
+        autoRenew: false,
+      });
+
+      expect(field(el, 'auto-charge')).toBeNull();
+    });
+
+    it('says nothing without a saved card', () => {
+      const el = render(invoice({ kind: 'renewal' }), true, {
+        ...AUTO,
+        card: null,
+      });
+
+      expect(field(el, 'auto-charge')).toBeNull();
+    });
+
+    it('says nothing for an invoice that is not a renewal', () => {
+      for (const kind of ['new', 'upgrade']) {
+        TestBed.resetTestingModule();
+        const el = render(invoice({ kind }), true, AUTO);
+
+        expect(field(el, 'auto-charge')).toBeNull();
+      }
+    });
+
+    it('says nothing while a bank transfer for it is under review', () => {
+      const el = render(
+        invoice({ kind: 'renewal', awaiting_verification: true }),
+        true,
+        AUTO,
+      );
+
+      expect(field(el, 'auto-charge')).toBeNull();
+    });
+
+    it('still says it for someone who cannot pay', () => {
+      const el = render(invoice({ kind: 'renewal' }), false, AUTO);
+
+      expect(field(el, 'auto-charge')).not.toBeNull();
+      expect(payButton(el)).toBeNull();
     });
   });
 

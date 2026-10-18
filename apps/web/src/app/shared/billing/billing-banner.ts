@@ -1,4 +1,5 @@
 import type { HostBilling } from '@hostelhive/data-access';
+import { isSafepayBilled } from './billing-labels';
 
 // Every i18n key below is written out as a literal so the i18n check can find it.
 
@@ -22,7 +23,13 @@ export type BannerKind =
 
 export type BannerTone = 'info' | 'warn' | 'danger';
 
-export type BannerAction = 'renew' | 'choosePlan' | 'pay' | 'resume' | 'goToBilling';
+export type BannerAction =
+  | 'renew'
+  | 'choosePlan'
+  | 'pay'
+  | 'resume'
+  | 'goToBilling'
+  | 'updateCard';
 
 export interface BannerInput {
   billing: HostBilling | null;
@@ -46,6 +53,8 @@ export interface BillingBannerState {
   countdownMs: number | null;
   /** Null for staff. */
   action: BannerAction | null;
+  /** A second, quieter action beside `action`. */
+  secondaryAction: BannerAction | null;
   dismissible: boolean;
   /** The period a dismissal belongs to. */
   periodEnd: string | null;
@@ -105,17 +114,21 @@ export function bannerFor(input: BannerInput, nowMs: number): BillingBannerState
   const end = instant(endRaw);
   const slug = sub.status.slug;
 
+  // A saved card is charged on its own, so the owner is not asked to renew by hand.
+  const autoRenew = billing.auto_renew && !isSafepayBilled(sub);
+
   if (slug === 'past-due') {
     const grace = instant(sub.grace_until);
     if (grace !== null && grace > nowMs) {
       return state({
         kind: 'past-due',
         tone: 'warn',
-        messageKey: 'hostAccess.pastDue',
+        messageKey: autoRenew ? 'hostAccess.pastDueCard' : 'hostAccess.pastDue',
         dates: dates({ endDate: endRaw, graceDate: sub.grace_until }),
         boostPaused: sub.plan.features.includes('boost'),
         countdownMs: grace - nowMs,
-        action: 'renew',
+        action: autoRenew ? 'updateCard' : 'renew',
+        secondaryAction: autoRenew && billing.open_invoice ? 'pay' : null,
         periodEnd: endRaw,
       });
     }
@@ -148,21 +161,22 @@ export function bannerFor(input: BannerInput, nowMs: number): BillingBannerState
     return state({
       kind: 'renew-due',
       tone: 'info',
-      messageKey: 'hostAccess.renewDue',
-      action: 'renew',
+      messageKey: autoRenew ? 'hostAccess.renewDueCard' : 'hostAccess.renewDue',
+      action: autoRenew ? 'goToBilling' : 'renew',
       periodEnd: endRaw,
     });
   }
   if (left >= RENEWAL_LEAD_MS) return null;
 
   const scheduled = sub.scheduled_plan;
+  const renewsKey = autoRenew ? 'hostAccess.renewsSoonCard' : 'hostAccess.renewsSoon';
   return state({
     kind: 'renewing',
     tone: 'info',
-    messageKey: scheduled ? 'hostAccess.switchesSoon' : 'hostAccess.renewsSoon',
+    messageKey: scheduled ? 'hostAccess.switchesSoon' : renewsKey,
     dates: dates({ date: endRaw }),
     params: scheduled ? { plan: scheduled.name } : {},
-    action: 'renew',
+    action: autoRenew ? 'goToBilling' : 'renew',
     dismissible: true,
     periodEnd: endRaw,
   });
@@ -253,6 +267,7 @@ function state(fields: StateFields): BillingBannerState {
     boostPaused: false,
     countdownMs: null,
     action: null,
+    secondaryAction: null,
     dismissible: false,
     ...fields,
   };

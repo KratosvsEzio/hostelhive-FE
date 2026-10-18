@@ -139,6 +139,8 @@ function subscription(
     grace_until: null,
     scheduled_plan: null,
     cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
     ...over,
   };
 }
@@ -163,6 +165,8 @@ function billing(over: Partial<HostBilling> = {}): HostBilling {
     currency: 'PKR',
     country_code: 'PK',
     payment_methods: ['safepay'],
+    auto_renew: false,
+    saved_card: null,
     subscription: subscription(),
     features: ['listing', 'boost'],
     open_invoice: null,
@@ -175,6 +179,7 @@ function billing(over: Partial<HostBilling> = {}): HostBilling {
       price: '1.00',
       action: 'renew',
       amount_due_now: '1.00',
+      trial_days: null,
     })),
     ...over,
   };

@@ -37,7 +37,14 @@ const ACTION_KEYS: Record<BannerAction, string> = {
   pay: 'hostBilling.pay',
   resume: 'hostBilling.resumePlan',
   goToBilling: 'hostAccess.goToBilling',
+  updateCard: 'hostAccess.updateCard',
 };
+
+interface ResolvedAction {
+  key: string;
+  link: string;
+  fragment: string | undefined;
+}
 
 const TONE_CLASSES: Record<BannerTone, string> = {
   info: 'border-tint-sky bg-tint-sky/60',
@@ -105,16 +112,30 @@ const TONE_ICONS: Record<BannerTone, string> = {
               </span>
             }
           </p>
-          @if (actionKey(); as key) {
+          @if (primaryAction(); as primary) {
             <a
               hh-button
               variant="outlined"
               size="xs"
               class="shrink-0 bg-white"
-              [routerLink]="billingLink()"
+              [routerLink]="primary.link"
+              [fragment]="primary.fragment"
               data-testid="billing-banner-action"
             >
-              {{ key | transloco }}
+              {{ primary.key | transloco }}
+            </a>
+          }
+          @if (secondaryAction(); as secondary) {
+            <a
+              hh-button
+              variant="text"
+              size="xs"
+              class="shrink-0"
+              [routerLink]="secondary.link"
+              [fragment]="secondary.fragment"
+              data-testid="billing-banner-secondary-action"
+            >
+              {{ secondary.key | transloco }}
             </a>
           }
           @if (b.dismissible) {
@@ -171,12 +192,11 @@ export class BillingBanner {
     return b ? TONE_ICONS[b.tone] : '';
   });
 
-  protected readonly actionKey = computed(() => {
-    const action = this.banner()?.action;
-    return action ? ACTION_KEYS[action] : null;
-  });
+  protected readonly primaryAction = computed(() => this.resolve(this.banner()?.action ?? null));
 
-  protected readonly billingLink = computed(() => `/host/${this.hostelId()}/subscription`);
+  protected readonly secondaryAction = computed(() =>
+    this.resolve(this.banner()?.secondaryAction ?? null),
+  );
 
   protected readonly countdownText = computed(() => {
     const ms = this.banner()?.countdownMs;
@@ -221,6 +241,18 @@ export class BillingBanner {
     const next = [...this.dismissed().filter((k) => k !== key), key].slice(-DISMISSED_CAP);
     this.dismissed.set(next);
     if (this.owner() !== null) writeDismissed(next);
+  }
+
+  private resolve(action: BannerAction | null): ResolvedAction | null {
+    if (!action) return null;
+    const base = `/host/${this.hostelId()}/subscription`;
+    const key = ACTION_KEYS[action];
+    if (action === 'updateCard') return { key, link: base, fragment: 'saved-card' };
+    const invoiceId = this.state().billing?.open_invoice?.id;
+    if (action === 'pay' && invoiceId && this.banner()?.secondaryAction === 'pay') {
+      return { key, link: `${base}/pay/${invoiceId}`, fragment: undefined };
+    }
+    return { key, link: base, fragment: undefined };
   }
 
   private dismissKey(b: BillingBannerState): string {

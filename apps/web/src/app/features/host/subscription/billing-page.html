@@ -5,6 +5,7 @@
         [subscription]="b.subscription"
         [features]="b.features"
         [canChange]="canChangePlan()"
+        [autoRenew]="b.auto_renew"
         [busy]="cardBusy()"
         [locked]="busy()"
         (undo)="undoSwitch(null)"
@@ -27,7 +28,36 @@
           [invoice]="invoice"
           [payLink]="payLink()"
           [canPay]="canPay()"
+          [autoRenew]="!!autoChargeOn()"
+          [card]="b.saved_card"
+          [chargeOn]="autoChargeOn()"
         />
+      }
+
+      @if (showSavedCard()) {
+        <hh-saved-card
+          id="saved-card"
+          [card]="b.saved_card"
+          [autoRenew]="autoRenewSwitch()"
+          [showAutoRenew]="planLive()"
+          [autoRenewBlocked]="cancellingAtPeriodEnd()"
+          [canManage]="canChangePlan()"
+          [busy]="savedCardBusy()"
+          [locked]="busy()"
+          (saveCard)="saveCard()"
+          (removeCard)="openRemoveCard()"
+          (autoRenewChange)="setAutoRenew($event)"
+        >
+          @if (savedCardError(); as e) {
+            <p
+              class="mt-4 rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger"
+              role="alert"
+              data-testid="saved-card-error"
+            >
+              {{ e.message ?? (e.messageKey | transloco) }}
+            </p>
+          }
+        </hh-saved-card>
       }
 
       @if (canViewHistory()) {
@@ -292,6 +322,23 @@
         }}
       </p>
     }
+  </hh-confirm-modal>
+}
+
+@if (removingCard()) {
+  <hh-confirm-modal
+    icon="ti-credit-card"
+    tone="danger"
+    confirmColor="danger"
+    [title]="'hostBilling.removeCardTitle' | transloco"
+    [confirmLabel]="'hostBilling.removeCard' | transloco"
+    [cancelLabel]="'hostBilling.keepCard' | transloco"
+    (confirm)="confirmRemoveCard()"
+    (cancel)="dismissRemoveCard()"
+  >
+    <p data-testid="remove-card-message">
+      {{ 'hostBilling.removeCardMessage' | transloco }}
+    </p>
   </hh-confirm-modal>
 }
 

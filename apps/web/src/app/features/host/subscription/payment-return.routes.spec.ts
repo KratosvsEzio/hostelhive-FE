@@ -8,7 +8,11 @@ import { CLIENT_ONLY, serverRoutes } from '@app/app.routes.server';
 import { SessionStore, authGuard } from '@core/auth';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { DISALLOWED_PATHS } from '@core/robots';
-import { PAYMENT_RETURN_ROUTES } from './payment-return.routes';
+import { BILLING_RETURN_MODE, BillingReturn } from './billing-return';
+import {
+  PAYMENT_RETURN_ROUTES,
+  cardOrSubscriptionReturn,
+} from './payment-return.routes';
 import { PaymentCancelled } from './payment-cancelled';
 import { PaymentSuccess } from './payment-success';
 
@@ -94,7 +98,21 @@ describe('the payment return routes', () => {
     expect(PAYMENT_RETURN_ROUTES).toEqual([
       {
         path: 'success',
+        canMatch: [cardOrSubscriptionReturn],
+        component: BillingReturn,
+        providers: [{ provide: BILLING_RETURN_MODE, useValue: 'success' }],
+        title: 'common.payment',
+      },
+      {
+        path: 'success',
         component: PaymentSuccess,
+        title: 'common.payment',
+      },
+      {
+        path: 'cancel',
+        canMatch: [cardOrSubscriptionReturn],
+        component: BillingReturn,
+        providers: [{ provide: BILLING_RETURN_MODE, useValue: 'cancel' }],
         title: 'common.payment',
       },
       {
@@ -103,6 +121,45 @@ describe('the payment return routes', () => {
         title: 'common.payment',
       },
     ]);
+  });
+
+  describe('dispatch on the return param', () => {
+    it.each([
+      ['/billing/payment/success?card=saved', BillingReturn],
+      ['/billing/payment/success?card=saved?tracker=track_1', BillingReturn],
+      ['/billing/payment/success?subscription=started', BillingReturn],
+      [
+        '/billing/payment/success?subscription=started?tracker=track_1',
+        BillingReturn,
+      ],
+      ['/billing/payment/cancel?card=canceled', BillingReturn],
+      ['/billing/payment/cancel?subscription=canceled', BillingReturn],
+      // An outcome the page does not know still belongs to it, to say it couldn't tell.
+      ['/billing/payment/success?card=foo', BillingReturn],
+      ['/billing/payment/cancel?card=saved', BillingReturn],
+      ['/billing/payment/success?card=', BillingReturn],
+      ['/ur/billing/payment/success?card=saved', BillingReturn],
+      ['/billing/payment/success?invoice=x', PaymentSuccess],
+      ['/billing/payment/success?invoice=x?tracker=track_1', PaymentSuccess],
+      ['/billing/payment/success?invoice=x&card=saved', PaymentSuccess],
+      ['/billing/payment/success', PaymentSuccess],
+      ['/billing/payment/cancel?invoice=x', PaymentCancelled],
+      ['/billing/payment/cancel?invoice=x&subscription=canceled', PaymentCancelled],
+      ['/billing/payment/cancel', PaymentCancelled],
+    ])('serves %s with the right page', async (url, page) => {
+      const settled = await settleOn(url, { keepGuards: false });
+
+      expect(settled.original).toBe(page);
+    });
+
+    it('keeps the card outcome, tracker and all, for the page to read', async () => {
+      const settled = await settleOn(
+        '/billing/payment/success?card=saved?tracker=track_1',
+        { keepGuards: false },
+      );
+
+      expect(settled.query['card']).toBe('saved?tracker=track_1');
+    });
   });
 
   it('sits behind the sign-in guard alone, in both trees', () => {
@@ -150,6 +207,30 @@ describe('the payment return routes', () => {
       expect(settled.url).toBe('/ur/billing/payment/success?invoice=x');
       expect(settled.original).toBe(PaymentSuccess);
       expect(settled.query['invoice']).toBe('x');
+    });
+
+    it('gives a bare card return link the remembered language, still on the card page', async () => {
+      const settled = await settleOn('/billing/payment/success?card=saved', {
+        keepGuards: true,
+        signedIn: true,
+      });
+
+      expect(settled.url).toBe('/en/billing/payment/success?card=saved');
+      expect(settled.original).toBe(BillingReturn);
+      expect(settled.query['card']).toBe('saved');
+    });
+
+    it('sends a signed-out subscription return to sign in, coming back with the outcome', async () => {
+      const settled = await settleOn(
+        '/billing/payment/cancel?subscription=canceled',
+        { keepGuards: true },
+      );
+      const landed = new URL(settled.url, 'https://hostelhive.test');
+
+      expect(landed.pathname).toMatch(/\/auth$/);
+      expect(landed.searchParams.get('returnUrl')).toBe(
+        '/en/billing/payment/cancel?subscription=canceled',
+      );
     });
 
     it('serves a prefixed return link as it is', async () => {

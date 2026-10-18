@@ -7,11 +7,17 @@ import {
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Button, Card, StatusPill } from '@hostelhive/ui';
-import type { OpenInvoice } from '@hostelhive/data-access';
+import type { OpenInvoice, SavedCard } from '@hostelhive/data-access';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { ApiDate } from '@util/api-date';
 import { invoiceKindKey } from '@app/shared/billing/billing-labels';
 import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
+
+/** The automatic renewal charge: the saved card's label and the raw API date it is charged on. */
+interface AutoCharge {
+  card: string;
+  date: string;
+}
 
 /**
  * The hostel's unpaid HostelHive invoice: number, amount, what it is for, its deadline and a
@@ -19,7 +25,7 @@ import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
  *
  * While a bank transfer against it awaits confirmation, Pay gives way to an "under review"
  * pill, since paying again would double-pay. `canPay` hides Pay for people who may see billing
- * but not pay it.
+ * but not pay it. A renewal that the saved card will be charged for says so, with Pay kept.
  *
  * `<hh-payment-due [invoice]="billing.open_invoice" [payLink]="payLink" />`
  */
@@ -65,6 +71,21 @@ import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
               }}
             </p>
           }
+          @if (autoCharge(); as charge) {
+            <p
+              class="mt-1 text-sm text-ink-700"
+              data-field="auto-charge"
+            >
+              {{
+                'hostBilling.autoChargeNotice'
+                  | transloco
+                    : {
+                        card: isolate(charge.card),
+                        date: (charge.date | apiDate: 'd MMM yyyy'),
+                      }
+              }}
+            </p>
+          }
           @if (!underReview() && invoice().expires_at) {
             <p
               class="mt-1 text-sm font-medium text-ink-700"
@@ -105,6 +126,21 @@ export class PaymentDue {
   /** Absolute path of the payment step for this invoice. */
   readonly payLink = input.required<string>();
   readonly canPay = input(true);
+  /** Whether the saved card renews the plan, as the billing payload says. */
+  readonly autoRenew = input(false);
+  readonly card = input<SavedCard | null>(null);
+  /** The raw API date the renewal is charged on: the subscription's period end. */
+  readonly chargeOn = input<string | null>(null);
+
+  // Only a renewal is charged automatically; Pay stays, since paying first is still allowed.
+  protected readonly autoCharge = computed<AutoCharge | null>(() => {
+    const card = this.card();
+    const invoice = this.invoice();
+    const date = this.chargeOn() ?? invoice.period_start;
+    if (!this.autoRenew() || !card || invoice.kind !== 'renewal') return null;
+    if (this.underReview() || !date) return null;
+    return { card: card.label, date };
+  });
 
   protected readonly underReview = computed(
     () => this.invoice().awaiting_verification,
@@ -118,4 +154,9 @@ export class PaymentDue {
   protected readonly hasPeriod = computed(
     () => !!this.invoice().period_start && !!this.invoice().period_end,
   );
+
+  /** Unicode isolates around an interpolated card label, the plain-text form of `<bdi>`. */
+  protected isolate(text: string): string {
+    return `⁨${text}⁩`;
+  }
 }
