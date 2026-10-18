@@ -1,4 +1,6 @@
 import { WritableSignal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Subject, of, throwError } from 'rxjs';
 import { TRANSLOCO_LOADER } from '@jsverse/transloco';
 import {
@@ -14,7 +16,8 @@ import {
 } from '@app/testing/host-builders';
 import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing/host-page';
 import { HostBooking, HostBookingPage } from '@features/host/bookings/host-bookings-api';
-import { RoomRenter } from '@services';
+import { HostPropertyStore, RoomRenter } from '@services';
+import { RoomCalendar } from '../room-calendar/room-calendar';
 import { RoomDetail } from './room-detail';
 
 const ROOM_ID = 'r-101';
@@ -344,6 +347,92 @@ describe('RoomDetail when the billing cycle is unknown', () => {
 
     expect(deps.bookings.list).toHaveBeenCalledTimes(1);
     expect(deps.bookings.list.mock.calls[0][3]).toEqual({ 'f[occupied_room_ids]': ROOM_ID });
+  });
+});
+
+/** The page left on its calendar tab, which `openDetail` moves off. */
+async function openCalendar(deps: HostPageDeps, billing: BillingMode = 'night'): Promise<HostPage<RoomDetail>> {
+  deps.ops.roomShow.mockReturnValue(of(roomShow({ room: room({ id: ROOM_ID }) })));
+  const page = await openHostPage(
+    `/host/${HOSTEL_ID}/rooms/${ROOM_ID}`,
+    RoomDetail,
+    { roomDetail: RoomDetail },
+    { deps, billing, providers: [LOADER] },
+  );
+  await page.settle();
+  return page;
+}
+
+const calendarEl = (page: HostPage<RoomDetail>) => page.el.querySelector('hh-room-calendar');
+const calendarSkeleton = (page: HostPage<RoomDetail>) => page.el.querySelector('hh-skeleton.h-64');
+
+/** The zone the room calendar was handed, read off the mounted component. */
+function calendarZone(page: HostPage<RoomDetail>): string | null | undefined {
+  const node = page.harness.fixture.debugElement.query(By.directive(RoomCalendar));
+  return (node?.componentInstance as RoomCalendar | undefined)?.timeZone();
+}
+
+describe('RoomDetail calendar zone', () => {
+  it('shows a skeleton and no calendar while the hostel zone is still being read', async () => {
+    const deps = hostPageDeps();
+    const pending = new Subject<string | null>();
+    deps.shell.hostelTimeZone.mockReturnValue(pending);
+
+    const page = await openCalendar(deps);
+
+    expect(calendarEl(page)).toBeNull();
+    expect(calendarSkeleton(page)).not.toBeNull();
+
+    pending.next('Asia/Karachi');
+    await page.settle();
+    expect(calendarSkeleton(page)).toBeNull();
+    expect(calendarEl(page)).not.toBeNull();
+    expect(calendarZone(page)).toBe('Asia/Karachi');
+  });
+
+  it.each<[string, string | null]>([
+    ['the hostel zone', 'Asia/Karachi'],
+    ['null when the hostel has none', null],
+  ])('renders the calendar with %s', async (_label, zone) => {
+    const deps = hostPageDeps();
+    deps.shell.timeZone = zone;
+
+    const page = await openCalendar(deps);
+
+    expect(calendarSkeleton(page)).toBeNull();
+    expect(calendarEl(page)).not.toBeNull();
+    expect(calendarZone(page)).toBe(zone);
+    expect(deps.shell.hostelTimeZone).toHaveBeenCalledWith(HOSTEL_ID);
+  });
+
+  it('does not ask for a zone on a month-billed hostel, which has no calendar', async () => {
+    const deps = hostPageDeps();
+
+    const page = await openDetail({ deps, billing: 'month' });
+
+    expect(deps.shell.hostelTimeZone).not.toHaveBeenCalled();
+    expect(calendarEl(page)).toBeNull();
+  });
+
+  it('reads the zone of the hostel the host switches to', async () => {
+    const deps = hostPageDeps();
+    const second = new Subject<string | null>();
+    deps.shell.hostelTimeZone.mockImplementation((id) =>
+      id === HOSTEL_ID ? of('Asia/Karachi') : second,
+    );
+    const page = await openCalendar(deps);
+    expect(calendarZone(page)).toBe('Asia/Karachi');
+
+    TestBed.inject(HostPropertyStore).selected.set('h2');
+    await page.settle();
+
+    expect(deps.shell.hostelTimeZone).toHaveBeenCalledWith('h2');
+    expect(calendarEl(page)).toBeNull();
+    expect(calendarSkeleton(page)).not.toBeNull();
+
+    second.next('Pacific/Kiritimati');
+    await page.settle();
+    expect(calendarZone(page)).toBe('Pacific/Kiritimati');
   });
 });
 
