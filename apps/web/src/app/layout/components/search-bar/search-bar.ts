@@ -29,6 +29,8 @@ import { SearchCapacity } from '@services';
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
 import { currencySymbol } from '@util/currencies';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
+import { LocaleStore } from '@core/i18n/locale-store';
+import { localiseCommands } from '@core/i18n/locale-commands';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 type Seg = 'where' | 'budget' | 'accommodation';
@@ -116,6 +118,7 @@ export class SearchBar {
   protected readonly whereInputId = `hhsb-where-input-${nextWhereId++}`;
 
   private readonly router = inject(Router);
+  private readonly locale = inject(LocaleStore);
   private readonly route = inject(ActivatedRoute);
   private readonly capacityStore = inject(SearchCapacity);
   private readonly el = inject(ElementRef);
@@ -364,7 +367,12 @@ export class SearchBar {
     this.open.set(null);
     // The place becomes a URL segment (/search/karachi) purely for readability. Coordinates
     // still travel in the query, so this changes nothing about how the map is driven.
-    this.router.navigate(searchRouteFor(this.place()), {
+    //
+    // Prefixed with the language here, not by `keepLocale`: that guard's redirect is a new
+    // navigation, and Angular carries no `state` across it, so the trigger below was lost
+    // and every header search from bare /search reported itself as an arrival.
+    const commands = localiseCommands(searchRouteFor(this.place()), this.locale.active());
+    this.router.navigate(commands as unknown[], {
       queryParams: {
         place: this.place() || null,
         city: hasGeo ? null : this.place() || null,

@@ -6,6 +6,7 @@ import { NavigationEnd, Router, provideRouter } from '@angular/router';
 import { filter, firstValueFrom } from 'rxjs';
 import { provideDataAccess } from '@core/provide-data-access';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { keepLocale } from '@core/i18n/keep-locale';
 import { SearchBar } from './search-bar';
 
 @Component({ template: '' })
@@ -205,7 +206,8 @@ describe('SearchBar reading the URL', () => {
       string[],
       { queryParams: Record<string, unknown>; queryParamsHandling: string },
     ];
-    expect(commands).toEqual(['/search', 'lahore']);
+    // In the active language already: `keepLocale`'s redirect would drop the trigger's state.
+    expect(commands).toEqual(['/en/search', 'lahore']);
     expect(extras.queryParamsHandling).toBe('merge');
     expect(extras.queryParams).toMatchObject({
       capacity: null,
@@ -269,6 +271,51 @@ describe('SearchBar budget label', () => {
  * each time as a navigation. A real router drives these, because the bug lives in what the
  * bar does with successive emissions — a single navigation followed by a read cannot show it.
  */
+/**
+ * The trigger the bar hands the search page has to arrive with the navigation that builds it.
+ *
+ * Under the app's real routing, an unprefixed path is redirected by `keepLocale`, and Angular
+ * starts that redirect as a new navigation without the old one's `state`. The bar used to
+ * navigate to `/search/<slug>`, so every header search from bare /search reported itself as an
+ * arrival (found by the e2e `search-trigger-and-map-area-heading.spec.ts`).
+ */
+describe('SearchBar under the locale-prefixed routes', () => {
+  type Internals = {
+    onSelected(r: { label: string; lat: number; lng: number; zoom?: number }): void;
+    search(): void;
+  };
+
+  it('lands on the place search in one navigation that still carries the trigger', async () => {
+    const pages = [
+      { path: 'search', component: Blank },
+      { path: 'search/:location', component: Blank },
+    ];
+    await TestBed.configureTestingModule({
+      imports: [SearchBar],
+      providers: [
+        provideRouter([
+          { path: 'en', children: pages },
+          { path: '', canActivateChild: [keepLocale], children: pages },
+        ]),
+        provideDataAccess(),
+        provideI18nTesting(),
+      ],
+    }).compileComponents();
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/en/search');
+    const fixture = createBar();
+    await fixture.whenStable();
+    const bar = fixture.componentInstance as unknown as Internals;
+
+    bar.onSelected({ label: 'Karachi', lat: 24.8607, lng: 67.0011, zoom: 10 });
+    bar.search();
+    await fixture.whenStable();
+
+    expect(router.url).toMatch(/^\/en\/search\/karachi\?/);
+    expect(router.lastSuccessfulNavigation()?.extras.state).toEqual({ searchTrigger: 'place' });
+  });
+});
+
 describe('SearchBar edits against URL writes', () => {
   type Internals = {
     place(): string;
@@ -344,7 +391,7 @@ describe('SearchBar edits against URL writes', () => {
 
     expect(bar.place()).toBe(KARACHI.label);
     const { commands, query } = searched(bar, router);
-    expect(commands[0]).toBe('/search');
+    expect(commands[0]).toBe('/en/search');
     expect(commands[1]).toMatch(/^karachi/);
     expect(query).toMatchObject({ lat: KARACHI.lat, lng: KARACHI.lng, zoom: KARACHI.zoom });
   });
