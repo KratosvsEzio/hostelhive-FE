@@ -822,14 +822,14 @@ export class HostOpsApi {
     return this.api.post(`/api/host/hostels/${hostelId}/renters/${renterId}/invite_tenant`, {});
   }
 
-  invoices(hostelId: string, page = 1, limit = PAGE_SIZE, filters: Record<string, string> = {}): Observable<{
+  invoices(hostelId: string, page = 1, limit = PAGE_SIZE, filters: Record<string, string | readonly string[]> = {}): Observable<{
     bills: Invoice[];
     total: number;
     totalPages: number;
     statuses: { name: string; slug: string; count: number; totalAmount: number }[];
     aggs: { utilityTotal: number; utilityPaid: number; utilityBalance: number; rentTotal: number; rentPaid: number; rentBalance: number };
   }> {
-    const params: Record<string, string | number | boolean> = { ...pageParams(page, limit), ...filters };
+    const params: Record<string, string | number | boolean | readonly string[]> = { ...pageParams(page, limit), ...filters };
     return this.api
       .get<ApiRenterBillsResponse>(`/api/host/hostels/${hostelId}/renter_bills`, params)
       .pipe(
