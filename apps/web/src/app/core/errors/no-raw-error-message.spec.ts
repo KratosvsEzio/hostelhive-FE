@@ -34,6 +34,16 @@ function messageReads(line: string): string[] {
 
 /** Known reads, by path under `apps/web/src/app/`, with exactly how many each holds. */
 const ALLOWED: Readonly<Record<string, number>> = {
+  // Admin billing shows a 4xx's own `serverMessages[0]` by product rule (#100): the
+  // `.message` read is `AdminBillingError.message`, which `adminBillingError()` sets only
+  // then, never on a 403, 404, 5xx or network failure, and never from `ApiError.message`.
+  'features/admin/billing/hostel/admin-hostel-billing.html': 1,
+  'features/admin/billing/hostel/admin-hostel-billing.ts': 1,
+  'features/admin/billing/hostel/grant-dialog.ts': 1,
+  'features/admin/billing/invoices/admin-billing-invoices.html': 1,
+  'features/admin/billing/invoices/admin-invoice-drawer.ts': 1,
+  'features/admin/billing/payments/admin-payment-drawer.ts': 1,
+  'features/admin/billing/plans/admin-plans.html': 2,
   // Billing shows a 422's own `serverMessages[0]` by product rule; `e` is the page's error view.
   'features/host/subscription/billing-page.html': 3,
   // `outcome.message` / `note.message` / `view.message` are copy the billing code builds itself.
