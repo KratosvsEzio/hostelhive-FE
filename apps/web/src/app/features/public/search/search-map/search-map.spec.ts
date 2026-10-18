@@ -1105,6 +1105,47 @@ describe('SearchMap worldwide search', () => {
   });
 });
 
+/**
+ * Leaving the page while a search is still being debounced.
+ *
+ * Every pan restarts the 600ms results debounce. A visitor who pans and then, inside that
+ * window, searches somewhere else or opens a listing has left the box behind: the page is
+ * destroyed, and nothing is left to show that box's results.
+ */
+describe('SearchMap leaving with a search pending', () => {
+  afterEach(cleanupSearchMap);
+
+  /** A camera that reports one fixed viewport, standing in for Leaflet. */
+  const cameraAt = (b: { north: number; south: number; east: number; west: number }) => ({
+    getBounds: () => ({
+      getNorth: () => b.north,
+      getSouth: () => b.south,
+      getEast: () => b.east,
+      getWest: () => b.west,
+    }),
+  });
+
+  it('does not send the pending search for the viewport being left', async () => {
+    const list = listSpy();
+    const { fixture, map } = await mountSearch('/en/search/lahore', {
+      platform: 'browser',
+      list,
+    });
+    await firstSearch(list);
+    const searches = list.mock.calls.length;
+
+    // A pan: the camera settles on a new box, which the page queues as its next search.
+    map.map = cameraAt({ north: 31.6, south: 31.2, east: 74.8, west: 74.4 });
+    map.captureMapBounds();
+    fixture.detectChanges();
+    // The page goes before the debounce is up.
+    fixture.destroy();
+    await new Promise<void>((r) => setTimeout(r, 1500));
+
+    expect(list).toHaveBeenCalledTimes(searches);
+  });
+});
+
 /** A URL to open, and the landing page seed it opens with, if any. */
 type Arrival = [name: string, url: string, seed: Record<string, string> | null];
 
