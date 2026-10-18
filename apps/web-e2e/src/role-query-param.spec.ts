@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext } from '@playwright/test';
+import { stubListings, stubNotifications } from './support/stubs';
 
 // A `?role=` query param once seeded a fake console session in every build. These pin that
 // it is now an ordinary, ignored query param: it grants nothing, and it cannot replace or
@@ -23,7 +24,10 @@ test('?role= neither skips nor replaces a signed-in visitor\'s session', async (
   const token = 'e2e-session-token';
   await context.addCookies([{ name: TOKEN_COOKIE, value: token, url: baseURL ?? 'http://localhost:4200' }]);
 
-  // Answer the restore check here so the spec does not depend on a running backend.
+  // Answer the restore check, and every authed call the signed-in home page makes, here so the
+  // spec does not depend on a running backend. Any 401 for this token ends the session.
+  await stubNotifications(page);
+  await stubListings(page);
   const restore = page.waitForResponse('**/api/users/current');
   await page.route('**/api/users/current', (route) =>
     route.fulfill({

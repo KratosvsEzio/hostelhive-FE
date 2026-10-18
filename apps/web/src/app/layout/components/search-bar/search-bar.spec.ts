@@ -157,6 +157,19 @@ describe('SearchBar reading the URL', () => {
     expect(query).not.toHaveProperty('sort');
   });
 
+  // A search page the bar builds reads it for `search_performed` (Trello #157).
+  it.each([
+    ['/search/lahore?place=Lahore', 'place'],
+    ['/search?minPrice=10000', 'filter'],
+  ])('tells the search page it builds from %s that it was a %s search', async (url, trigger) => {
+    const { bar, navigate } = await onUrl(url);
+
+    bar.search();
+
+    const extras = navigate.mock.calls[0][1] as { state?: Record<string, unknown> };
+    expect(extras.state).toEqual({ searchTrigger: trigger });
+  });
+
   it('clears a worldwide marker left by the previous page', async () => {
     const { bar, navigate } = await onUrl('/search?everywhere=1');
 

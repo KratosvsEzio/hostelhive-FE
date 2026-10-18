@@ -16,6 +16,7 @@ import { fromLocationSlug, searchRouteFor } from '@util/location-slug';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { isAccommodationType } from '@features/public/search/search-params';
 import { isPriceSort } from '@features/public/search/search-sort';
+import { SEARCH_TRIGGER_STATE_KEY } from '@features/public/search/search-trigger';
 import {
   EVERYWHERE_KEY,
   RETIRED_KEYS_NULLED,
@@ -392,6 +393,8 @@ export class SearchBar {
           : {}),
       },
       queryParamsHandling: 'merge',
+      // For `search_performed`, when this builds a new search page (`SearchMap.arrivalTrigger`).
+      state: { [SEARCH_TRIGGER_STATE_KEY]: this.place() ? 'place' : 'filter' },
     });
   }
 }

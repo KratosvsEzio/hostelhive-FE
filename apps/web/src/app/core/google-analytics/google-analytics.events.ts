@@ -24,6 +24,12 @@ export interface GoogleAnalyticsEvents {
     budget_max?: number;
     /** Rows the API reported, so zero-result searches are visible. */
     result_count: number;
+    /**
+     * What the seeker did to run it (`SearchTrigger`, `search-trigger.ts`). Every settled
+     * map pan refetches too, so `trigger != map` is the count of real searches. Added
+     * 2026-10-18 (Trello #157); events before the deploy carry none.
+     */
+    trigger: 'arrival' | 'place' | 'everywhere' | 'filter' | 'map' | 'retry';
   };
 
   /** A listing detail page was opened, from wherever. */

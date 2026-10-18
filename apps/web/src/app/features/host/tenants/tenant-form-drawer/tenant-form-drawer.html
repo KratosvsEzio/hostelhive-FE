@@ -608,11 +608,11 @@
                 <p class="text-sm font-medium text-ink-900">{{ info.date }}</p>
                 <p class="text-xs text-ink-400">
                   @if (info.days > 0) {
-                    {{ 'hostTenants.nDaysFromToday' | transloco: { count: info.days } }}
+                    {{ (info.days === 1 ? 'hostTenants.nDaysFromTodayOne' : 'hostTenants.nDaysFromToday') | transloco: { count: info.days } }}
                   } @else if (info.days === 0) {
                     {{ 'common.today' | transloco }}
                   } @else {
-                    {{ 'hostTenants.nDaysAgo' | transloco: { count: -info.days } }}
+                    {{ (info.days === -1 ? 'hostTenants.nDaysAgoOne' : 'hostTenants.nDaysAgo') | transloco: { count: -info.days } }}
                   }
                 </p>
               </div>
