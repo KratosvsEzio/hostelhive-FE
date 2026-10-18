@@ -20,7 +20,6 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
-  debounceTime,
   EMPTY,
   filter,
   map,
@@ -28,6 +27,7 @@ import {
   startWith,
   switchMap,
   tap,
+  timer,
 } from 'rxjs';
 import { AccommodationType, Listing, Paginated } from '@hostelhive/data-access';
 import { Button, PhotoPlaceholder, TooltipFixed } from '@hostelhive/ui';
@@ -481,7 +481,11 @@ export class SearchMap {
         currency: this.currencyCode(),
       })),
     ).pipe(
-      debounceTime(600),
+      // A debounce that drops, rather than sends, what is still pending when the page goes.
+      // `toObservable` completes on destroy, and `debounceTime` flushes its pending value on
+      // completion — so leaving the page within the window after a pan fired one last search
+      // for the box being left, on the way out. The timer here is cancelled instead.
+      switchMap((v) => timer(600).pipe(map(() => v))),
       // While rate-limited, ignore query changes (map pans, filter edits) so we don't keep
       // hammering the throttled endpoint — only the post-cooldown retry re-fires the call.
       filter(() => this.cooldown() === 0),
