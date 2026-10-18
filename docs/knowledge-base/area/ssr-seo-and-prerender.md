@@ -140,7 +140,10 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 Only an unfiltered search for a curated place, arriving with no viewport and with the map on the place,
 canonicalises (to its landing page). A search link that arrives carrying a viewport (all four
 `ne_*`/`sw_*` keys valid) is a view: `noindex`, no canonical, in the server HTML too; see
-[search-and-discovery](./search-and-discovery.md).
+[search-and-discovery](./search-and-discovery.md). A landing page link carrying one is not: a
+landing page neither restores nor writes a viewport, so it shows exactly the clean page and keeps
+its indexable self-canonical, raw and rendered
+([landing pages are their place](../decisions/search-and-discovery/landing-pages-are-their-place-not-a-view.md)).
 
 **Translations on the server.** `FsTranslationLoader` reads `public/i18n/<lang>.json` from disk, trying
 `../browser/i18n` and then `apps/web/public/i18n` for `ng serve`. It registers the read with

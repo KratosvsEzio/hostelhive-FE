@@ -12,7 +12,7 @@ Searches used to produce `/search?place=Karachi&lat=…&lng=…`. A readable `/s
 - The slug is decoration. `SearchBar.search()` navigates to `searchRouteFor(place)` and still sends `place`, `lat`, `lng`, `zoom` as query params; those drive the query and camera.
 - Only when the URL carries a slug and **no** coordinates (a pasted link) does `resolveSearchSlug` look it up in `PLACES` and `UNIVERSITIES` (city zoom 11, campus zoom 13). An uncurated slug searches country-wide.
 - `toLocationSlug` folds diacritics (`Multān` → `multan`); a name with no Latin letters yields no slug and falls back to bare `/search`.
-- The viewport is mirrored as `ne_lat/ne_lng/sw_lat/sw_lng` with `replaceUrl`, so refresh and shared links reproduce the view without adding history entries. A search link that arrives carrying a viewport (all four keys valid) is a view: `noindex`, no canonical, even when it frames the place ([viewport links are views](./viewport-links-are-views-not-pages.md)).
+- On `/search` the viewport is mirrored as `ne_lat/ne_lng/sw_lat/sw_lng` with `replaceUrl`, so refresh and shared links reproduce the view without adding history entries. A landing page restores and writes none: its path is its place ([landing pages are their place](./landing-pages-are-their-place-not-a-view.md)). A search link that arrives carrying a viewport (all four keys valid) is a view: `noindex`, no canonical, even when it frames the place ([viewport links are views](./viewport-links-are-views-not-pages.md)).
 
 ## Alternatives rejected
 
