@@ -59,13 +59,17 @@ import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { PLACES } from '@features/public/landing/places';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
-import { ListingsApi, SearchCapacity } from '@services';
+import { ListingsApi, OffersApi, SearchCapacity } from '@services';
 import { GeolocationService, PlaceResult, PlaceSearchField, SharedMap } from '@hostelhive/maps';
 import {
   GenderRoutes,
   SearchFilters,
 } from '@features/public/search/search-filters/search-filters';
-import { mergeSearchParams } from '@features/public/search/search-params';
+import {
+  mergeSearchParams,
+  searchUrlCorrections,
+  SearchVocabulary,
+} from '@features/public/search/search-params';
 import { isSortOffered } from '@features/public/search/search-sort';
 import {
   EVERYWHERE_KEY,
@@ -191,34 +195,53 @@ export class SearchMap {
   });
 
   /**
-   * `queryParams` with `seed` beneath it, and an unknown `gender` read as absent (see
-   * `mergeSearchParams`). Everything downstream reads filters through `params()?.get(…)` —
-   * this component directly, and `hh-search-filters` through its `params` input — so
-   * merging here means the landing pages need no changes anywhere else in the search.
+   * The amenity catalogue, once it has loaded. Until then, or if it fails, there is no
+   * set, and amenities are taken as the URL gives them (see `SearchVocabulary`).
+   */
+  private readonly vocabulary = toSignal(
+    inject(OffersApi)
+      .categories()
+      .pipe(
+        map((cats): SearchVocabulary => ({
+          amenities: new Set(cats.flatMap((c) => c.offers.map((o) => o.slug))),
+        })),
+        catchError(() => of<SearchVocabulary>({})),
+      ),
+    { initialValue: {} as SearchVocabulary },
+  );
+
+  /**
+   * `queryParams` with `seed` beneath it, and every filter value the search cannot use read
+   * as absent (see `mergeSearchParams`). Everything downstream reads filters through
+   * `params()?.get(…)` — this component directly, and `hh-search-filters` through its
+   * `params` input — so merging here means the landing pages need no changes anywhere else
+   * in the search.
    *
    * The filter row must not read the route itself: it would see the query without the
    * seed, and on `/hostels/lahore/girls` show "Any type" above a list of girls' hostels.
    * One merged reader is what keeps every control describing the list beneath it, and is
-   * why a bad `gender` is decided here rather than separately by each control and the
+   * why a bad value is decided here rather than separately by each control and the
    * request.
    */
   protected readonly params = computed<ParamMap | null>(() =>
-    mergeSearchParams(this.queryParams(), this.seed()),
+    mergeSearchParams(this.queryParams(), this.seed(), this.vocabulary()),
   );
 
   /**
-   * True while the URL carries a `sort` that `params` reads as absent, because the type in
-   * force does not offer it (see `mergeSearchParams`).
+   * The query-param patch that takes out of the URL what `params` reads as absent or
+   * corrects (see `searchUrlCorrections`): a `sort` the type does not offer, an unknown
+   * `roomType` or `propertyType`, a bad budget, coordinate or zoom, and amenity slugs the
+   * catalogue lacks. Empty when the URL is clean.
    *
-   * Only the comparison with the raw query can tell: `params` alone cannot say whether a
-   * sort it lacks was never there or was discarded. Both writes that act on it need to
-   * know, since each merges into the raw URL and would otherwise carry the sort along (see
-   * `stripDiscardedSort` and `startSearch`).
+   * Only the raw query can tell: `params` alone cannot say whether a value it lacks was
+   * never there or was discarded. Both writes that act on it need to know, since each
+   * merges into the raw URL and would otherwise carry the value along (see
+   * `stripCorrections` and `startSearch`).
    */
-  private readonly discardedSort = computed(() => {
-    const raw = this.queryParams();
-    return !!raw?.has('sort') && raw.get('sort') !== this.params()?.get('sort');
-  });
+  private readonly urlCorrections = computed(
+    () => searchUrlCorrections(this.queryParams(), this.seed(), this.vocabulary()),
+    { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+  );
 
   /** The `:location` slug, when the URL carries one. */
   private readonly locationSlug = toSignal(
@@ -289,7 +312,10 @@ export class SearchMap {
    */
   private readonly hasFilters = computed(() => {
     const p = this.params();
-    return ['gender', 'propertyType', 'roomType', 'minPrice', 'maxPrice', 'amenities'].some(
+    // An explicit `roomType=shared` is the default, not a filter; the badge does not count it either.
+    const roomType = p?.get('roomType');
+    if (roomType && roomType !== DEFAULT_OCCUPANCY_TYPE) return true;
+    return ['gender', 'propertyType', 'minPrice', 'maxPrice', 'amenities'].some(
       (k) => !!p?.get(k),
     );
   });
@@ -1026,12 +1052,13 @@ export class SearchMap {
       this.params();
       untracked(() => this.page.set(1));
     });
-    // Clean a discarded sort out of the URL; once written, `discardedSort()` is false again.
+    // Clean discarded values out of the URL; once written, `urlCorrections()` is empty again.
     // The raw query is tracked too: a strip another navigation superseded is retried on the next
     // URL change.
     effect(() => {
       this.queryParams();
-      if (this.discardedSort()) untracked(() => this.stripDiscardedSort());
+      const patch = this.urlCorrections();
+      if (Object.keys(patch).length) untracked(() => this.stripCorrections(patch));
     });
     // Infinite scroll: watch the tail sentinel (it mounts/unmounts with @if) and
     // fetch the next page as it approaches the viewport.
@@ -1639,9 +1666,10 @@ export class SearchMap {
    * - retired params are cleared, as any new search clears them (see `RETIRED_KEYS_NULLED`);
    * - `gender` is the effective type, which also scrubs an invalid `?gender=`;
    * - a sort that type does not offer is dropped, as the filter row and the header bar do:
-   *   nightly and monthly prices cannot be sorted against each other. So is a sort the URL
-   *   still carries after `params` discarded it, which the merge would otherwise bring along
-   *   (see `discardedSort`).
+   *   nightly and monthly prices cannot be sorted against each other;
+   * - anything the URL still carries after `params` discarded or corrected it (a sort, an
+   *   unknown room or property type, a bad budget, unknown amenities) is cleaned the same
+   *   way, or the merge would bring it along (see `urlCorrections`).
    *
    * A push rather than a replace: a new place is a new destination, and Back should return
    * to the page — landing or search — the visitor left.
@@ -1653,8 +1681,7 @@ export class SearchMap {
     const p = this.params();
     const gender = p?.get('gender') || null;
     const sort = p?.get('sort');
-    const dropSort =
-      this.discardedSort() || (!!sort && !isSortOffered(sort, this.accommodationType()));
+    const dropSort = !!sort && !isSortOffered(sort, this.accommodationType());
     return this.router.navigate(
       localiseCommands(commands, this.locale.active()) as unknown[],
       {
@@ -1663,6 +1690,7 @@ export class SearchMap {
           ...PLACE_KEYS_NULLED,
           ...RETIRED_KEYS_NULLED,
           [EVERYWHERE_KEY]: null,
+          ...this.urlCorrections(),
           gender,
           ...(dropSort ? { sort: null } : {}),
           ...seededFilters(this.seed(), p),
@@ -1802,19 +1830,20 @@ export class SearchMap {
   }
 
   /**
-   * Take a sort `params` discarded out of the URL as well (see `discardedSort`).
+   * Take what `params` discarded or corrected out of the URL as well (see `urlCorrections`).
    *
    * Reading it as absent is not enough on its own: the header bar merges into the URL
-   * rather than reading `params`, so picking a type there would bring the dormant sort
-   * back to life. `replaceUrl` on the same path leaves no history entry, and analytics
-   * skips such a replace, so the arrival is still the one page view. Browser only: the
-   * server render already reads the sort as absent and has no address bar to clean.
+   * rather than reading `params`, and reads `sort`, `minPrice` and `maxPrice` raw, so a
+   * dormant value would come back to life through it. `replaceUrl` on the same path leaves
+   * no history entry, and analytics skips such a replace, so the arrival is still the one
+   * page view. Browser only: the server render already reads the values as absent and has
+   * no address bar to clean.
    */
-  private stripDiscardedSort(): void {
+  private stripCorrections(patch: Record<string, string | null>): void {
     if (!this.isBrowser) return;
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { sort: null },
+      queryParams: patch,
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
