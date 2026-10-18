@@ -84,6 +84,12 @@ interface UpcomingState {
   today: string | null;
 }
 
+/**
+ * One page big enough for every unpaid rent bill a hostel realistically carries; the list
+ * has no distinct-renter aggregate, so the tenants are counted from the bills themselves.
+ */
+const UNPAID_RENT_LIMIT = 500;
+
 const UPCOMING_LOADING: UpcomingState = { loading: true, error: false, days: [], today: null };
 const UPCOMING_IDLE: UpcomingState = { loading: false, error: false, days: [], today: null };
 
@@ -267,7 +273,33 @@ export class HostOverview {
 
   protected readonly pendingUtilityTotal = computed(() => this.pendingUtilityResp().total);
 
-  protected readonly unpaidRentTenants = computed(() => 0);
+  /**
+   * Every rent bill still owed, due and over-due together, for the pending-rent tile.
+   *
+   * Not read off the ledger, which holds only the tab on show, so its tenant count would
+   * change as the host flips between Due and Over-due.
+   */
+  private readonly unpaidRentBills = toSignal(
+    toObservable(this.propertyStore.selected).pipe(
+      switchMap((hostelId) =>
+        hostelId
+          ? this.opsApi.invoices(hostelId, 1, UNPAID_RENT_LIMIT, {
+              'f[bill_type]': 'rental',
+              'f[status.slug][]': ['due', 'over-due'],
+            }).pipe(
+              map((res) => res.bills),
+              catchError(() => of([] as Invoice[])),
+            )
+          : of([] as Invoice[]),
+      ),
+    ),
+    { initialValue: [] as Invoice[] },
+  );
+
+  /** Counted by renter id: tenants can share a name. */
+  protected readonly unpaidRentTenants = computed(() =>
+    new Set(this.unpaidRentBills().map((i) => i.renterId)).size,
+  );
 
   protected readonly unpaidUtilityTenants = computed(() =>
     new Set(this.pendingUtility().map((i) => i.tenantName)).size,
