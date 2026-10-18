@@ -19,7 +19,7 @@ import { StaticMap } from '@hostelhive/maps';
 import { HostelPhoneDetail, HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
-import { SITE_ORIGIN, Seo } from '@core/seo';
+import { Seo } from '@core/seo';
 import { SsrResponse, isApiOutage } from '@core/ssr-response';
 import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
 import { MobileApp } from '@core/mobile-app';
@@ -1090,6 +1090,8 @@ export class ListingDetail {
       .filter(Boolean)
       .join(' · ');
 
+    // One path for both, so the structured data names the same address as the canonical.
+    const path = `/hostel/${l.slug}`;
     this.seo.apply({
       title: this.i18n.translate<string>('seo.listingTitle', {
         name: l.name,
@@ -1098,7 +1100,7 @@ export class ListingDetail {
       }),
       socialTitle,
       description,
-      path: `/hostel/${l.slug ?? ''}`,
+      path,
       // A listing with no photos yet falls back to a dormitory rather than to the logo,
       // which is what `Seo` would otherwise reach for. Shared into a chat, a room is at
       // least the right kind of thing; a logo says nothing about the listing at all.
@@ -1109,7 +1111,7 @@ export class ListingDetail {
       '@context': 'https://schema.org',
       '@type': 'LodgingBusiness',
       name: l.name,
-      url: `${SITE_ORIGIN}/hostel/${l.slug ?? ''}`,
+      url: this.seo.pageUrl(path),
       address: {
         '@type': 'PostalAddress',
         addressLocality: l.city,

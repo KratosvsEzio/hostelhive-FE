@@ -77,7 +77,8 @@ export class Home {
     //
     // An effect rather than a plain call: the copy is translated now, and `translate`
     // answers from whatever Transloco has loaded at the moment it is asked. Reading
-    // `ready()` both waits for the strings and re-runs this when the language changes.
+    // `ready()` waits for the strings; the re-run on a language switch comes from `apply`,
+    // which reads the active language to build the canonical.
     effect(() => {
       if (!this.locale.ready()) return;
       this.seo.apply({
@@ -104,19 +105,25 @@ export class Home {
 
     // WebSite + SearchAction is the markup behind a sitelinks search box — it lets
     // results for the brand carry a search field that queries this site directly.
-    this.seo.setJsonLd('website', {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'HostelHive',
-      url: SITE_ORIGIN,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${SITE_ORIGIN}/search?place={search_term_string}`,
+    //
+    // No `ready()` gate: nothing in it is translated. It is an effect only because the
+    // search target carries the active language, and `pageUrl` re-runs it on a switch.
+    effect(() => {
+      this.seo.setJsonLd('website', {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'HostelHive',
+        // Identity URLs are the bare domain: site names don't work at a language subdirectory.
+        url: SITE_ORIGIN,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${this.seo.pageUrl('/search')}?place={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
         },
-        'query-input': 'required name=search_term_string',
-      },
+      });
     });
 
     // Both describe the brand from its home page only — see `Seo.clearOnDestroy`.
