@@ -857,6 +857,8 @@
     "offlineTitle": "Questa pagina si apre quando il tuo ostello è online",
     "offlineBody": "Camere, prenotazioni, inquilini, fatture e personale richiedono un piano attivo. I tuoi dati vengono conservati.",
     "offlineBodyStaff": "Chiedi al proprietario dell’ostello di rinnovare il piano di questo ostello.",
+    "pageNotAllowed": "Non hai l’autorizzazione per visualizzare questo contenuto. Chiedi al proprietario dell’ostello.",
+    "pageNotAllowedOwner": "Il tuo account non ha l’autorizzazione per visualizzare questo contenuto. Contatta l’assistenza HostelHive.",
     "renewsSoonCard": "Il tuo piano si rinnova il {{date}}. Addebiteremo la tua carta salvata.",
     "renewDueCard": "Stiamo addebitando la tua carta salvata per il rinnovo.",
     "pastDueCard": "Il tuo piano è terminato il {{endDate}} e l'addebito automatico non è andato a buon fine. Il tuo ostello resta online fino al {{graceDate}}.",

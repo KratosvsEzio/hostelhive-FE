@@ -1,10 +1,17 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { UtilityBill } from '@hostelhive/data-access';
+import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-refusals';
+import { HOSTEL_ID, sessionUser } from '@app/testing/host-builders';
+import { hostPageDeps, hostPageProviders } from '@app/testing/host-page';
+import { seedHostPropertyStore } from '@app/testing/host-stubs';
+import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { API_CONFIG } from '@core/api-config';
+import type { Role } from '@core/auth/roles';
+import { SessionStore } from '@core/auth/session-store';
 import { Utilities } from './utilities';
 
 type Aggs = { billToPay: number; received: number; balance: number };
@@ -146,5 +153,112 @@ describe('Utilities — delete refreshes the summary cards', () => {
     expect(utilityBills).toHaveBeenCalledTimes(2);
     expect(cmp.aggs()?.balance).toBe(1055);
     expect(cmp.bills().map((b) => b.id)).toEqual(['bCGPAU']);
+  });
+});
+
+const UTILITY_BILLS_URL = `https://api.test/api/host/hostels/${HOSTEL_ID}/utility_bills`;
+
+const ROLE_SENTENCES = [
+  { role: 'host', sentence: 'hostAccess.pageNotAllowedOwner' },
+  { role: 'manager', sentence: 'hostAccess.pageNotAllowed' },
+] as const satisfies readonly { role: Role; sentence: string }[];
+
+/** Mounts the real page, signed in as `role`, its list read answering with `read`. */
+async function openRead(read: () => Observable<unknown>, role: Role = 'host') {
+  const deps = hostPageDeps();
+  Object.assign(deps.ops, { utilityBills: vi.fn(read) });
+  TestBed.configureTestingModule({ providers: hostPageProviders({}, deps) });
+  // The host store keeps its hostel list per user, so the session has to exist before it is seeded.
+  TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+  seedHostPropertyStore('month');
+  const fixture = TestBed.createComponent(Utilities);
+  for (let round = 0; round < 2; round++) {
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+  fixture.detectChanges();
+  const el = fixture.nativeElement as HTMLElement;
+  return { el, shown: loadSurface(el) };
+}
+
+/** The page's list read refused the way the backend refuses `kind`. */
+const openRefused = (kind: RefusalKind, role: Role = 'host') =>
+  openRead(() => throwError(() => refusalError(kind, { url: UTILITY_BILLS_URL })), role);
+
+describe('Utilities — a refused list load', () => {
+  // A signed-in host persists its hostel choice and the session persists itself; neither may reach the next test.
+  afterEach(() => {
+    TestBed.inject(HostPropertyStore).clear();
+    TestBed.inject(SessionStore).clear();
+  });
+
+  it('renders the empty state, and no error surface, when the load succeeds with no bills', async () => {
+    const { shown } = await openRead(() => of({ bills: [], total: 0, statuses: [], aggs: { billToPay: 0, received: 0, balance: 0 } }));
+
+    expect(shown.surfaces).toEqual([]);
+    expect(shown.text).toContain('hostUtilities.noUtilityBillsYet');
+  });
+
+  describe('for a permission the role lacks', () => {
+    const cases = kindsShowing('permission').flatMap((kind) => ROLE_SENTENCES.map((r) => ({ kind, ...r })));
+
+    it.each(cases)('says a $role account may not see this, and offers no retry, after a $kind refusal', async ({ kind, role, sentence }) => {
+      const { el, shown } = await openRefused(kind, role);
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.heading).toBe('coreForbidden.accessBlocked');
+      expect(shown.body).toBe(sentence);
+      expect(shown.retry).toBe(false);
+      expect(shown.text).not.toContain('common.retry');
+      expect(shown.text).not.toContain(CANCAN_MESSAGE);
+      expect(shown.text).not.toContain('hostUtilities.noUtilityBillsYet');
+      expect(el.querySelector('hh-data-table')).toBeNull();
+    });
+  });
+
+  describe('for a plan without CRM', () => {
+    it.each<RefusalKind>(['crmRequired', 'crmMessageOnly'])('shows the generic error with Retry, not the panel or the paywall, after a %s refusal', async (kind) => {
+      const { shown } = await openRefused(kind);
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.heading).toBe('states.somethingWentWrong');
+      expect(shown.retry).toBe(true);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
+  });
+
+  describe('for a hostel with no live plan', () => {
+    it.each(kindsShowing('paywall'))('shows the paywall, not the panel or a retry, after a %s refusal', async (kind) => {
+      const { shown } = await openRefused(kind);
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.retry).toBe(false);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
+  });
+
+  describe('for a failure that is not a permission or plan refusal', () => {
+    it.each<RefusalKind>(['rateLimited', 'notFound', 'unprocessable', 'serverError'])(
+      'shows the generic error with Retry after a %s refusal',
+      async (kind) => {
+        const { shown } = await openRefused(kind);
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.heading).toBe('states.somethingWentWrong');
+        expect(shown.retry).toBe(true);
+        expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+      },
+    );
+  });
+
+  describe('when the server never answers', () => {
+    it.each(kindsShowing('network'))('shows the connection error with Retry after a %s failure', async (kind) => {
+      const { shown } = await openRefused(kind);
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.heading).toBe('states.cantConnect');
+      expect(shown.retry).toBe(true);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
   });
 });

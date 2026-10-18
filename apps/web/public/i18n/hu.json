@@ -857,6 +857,8 @@
     "offlineTitle": "Ez az oldal akkor nyílik meg, amikor a szálláshelyed elérhető",
     "offlineBody": "A szobákhoz, foglalásokhoz, bérlőkhöz, számlákhoz és a személyzethez aktív csomag kell. Az adataid megmaradnak.",
     "offlineBodyStaff": "Kérd meg a szálláshely tulajdonosát, hogy újítsa meg a szálláshely csomagját.",
+    "pageNotAllowed": "Nincs jogosultsága ezt megtekinteni. Kérdezze meg a szálláshely tulajdonosát.",
+    "pageNotAllowedOwner": "A fiókjának nincs jogosultsága ezt megtekinteni. Vegye fel a kapcsolatot a HostelHive ügyfélszolgálatával.",
     "renewsSoonCard": "A csomagod {{date}} napján megújul. A mentett kártyádat terheljük.",
     "renewDueCard": "A megújításhoz most terheljük a mentett kártyádat.",
     "pastDueCard": "A csomagod {{endDate}} napján lejárt, és az automatikus terhelés nem sikerült. A hostelod {{graceDate}} napjáig elérhető marad.",

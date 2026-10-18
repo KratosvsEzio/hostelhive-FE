@@ -16,7 +16,9 @@ import {
   invoicesReply,
   sessionUser,
 } from '@app/testing/host-builders';
+import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing/host-page';
+import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { PrintWindowRecord, fakePrintWindow } from '@app/testing/print-window';
 import type { Role } from '@core/auth/roles';
 import { SessionStore } from '@core/auth/session-store';
@@ -1079,6 +1081,117 @@ describe('Invoices page', () => {
         ['ID', 'Tenant', 'Room', 'Floor', 'Type', 'Status', 'Issued', 'Due', 'Amount (PKR)'],
         [['rb-2', 'Saad Ali', '101', 'Ground', 'rental', 'due', '2026-10-01', '2026-10-10', 15000]],
       );
+    });
+  });
+
+  describe('when the list load is refused', () => {
+    const INVOICES_URL = `https://api.test/api/host/hostels/${HOSTEL_ID}/renter_bills`;
+    const ROLE_SENTENCES = [
+      { role: 'host', sentence: 'hostAccess.pageNotAllowedOwner' },
+      { role: 'manager', sentence: 'hostAccess.pageNotAllowed' },
+    ] as const satisfies readonly { role: Role; sentence: string }[];
+
+    // A signed-in host persists its hostel choice; the session persists itself. Neither may reach the next test.
+    afterEach(() => {
+      TestBed.inject(HostPropertyStore).clear();
+      TestBed.inject(SessionStore).clear();
+    });
+
+    /** Opens the page signed in as `role`, its list read refused the way the backend refuses `kind`. */
+    async function openRefused(kind: RefusalKind, role: Role = 'host', billing?: BillingMode) {
+      const deps = hostPageDeps();
+      deps.ops.invoices.mockReturnValue(throwError(() => refusalError(kind, { url: INVOICES_URL })));
+      const page = await open({ deps, signedInAs: role, billing });
+      return { page, shown: loadSurface(page.el) };
+    }
+
+    const addInvoiceButton = (page: Page): HTMLButtonElement | null =>
+      page.el.querySelector<HTMLButtonElement>('button[aria-label="a11y.addInvoice"]');
+
+    describe('for a permission the role lacks', () => {
+      const cases = kindsShowing('permission').flatMap((kind) => ROLE_SENTENCES.map((r) => ({ kind, ...r })));
+
+      it.each(cases)('says a $role account may not see this, and offers no retry, after a $kind refusal', async ({ kind, role, sentence }) => {
+        const { page, shown } = await openRefused(kind, role);
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.heading).toBe('coreForbidden.accessBlocked');
+        expect(shown.body).toBe(sentence);
+        expect(shown.retry).toBe(false);
+        expect(shown.text).not.toContain('common.retry');
+        expect(shown.text).not.toContain(CANCAN_MESSAGE);
+        expect(shown.text).not.toContain('hostInvoices.noInvoicesYet');
+        expect(figures(page)).toEqual([]);
+        expect(bodyRows(page)).toEqual([]);
+      });
+
+      it.each(kindsShowing('permission').flatMap((kind) => ROLE_SENTENCES.map(({ role }) => ({ kind, role }))))(
+        'leaves Add invoice enabled on a monthly hostel for a $role after a $kind refusal',
+        async ({ kind, role }) => {
+          const { page } = await openRefused(kind, role, 'month');
+
+          expect(addInvoiceButton(page)?.disabled).toBe(false);
+        },
+      );
+
+      it('stays on the page, still reading as failed rather than loaded', async () => {
+        const { page } = await openRefused('permissionCanCan', 'manager');
+
+        expect(page.url()).toBe(LIST);
+        expect((page.component as unknown as { state(): { error: boolean } }).state().error).toBe(true);
+      });
+    });
+
+    describe('for a hostel with no live plan', () => {
+      it.each(kindsShowing('paywall'))('shows the paywall, not the panel or a retry, after a %s refusal', async (kind) => {
+        const { shown } = await openRefused(kind);
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.retry).toBe(false);
+        expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+      });
+
+      it('disables Add invoice on a monthly hostel, which is what a permission refusal must not do', async () => {
+        const { page } = await openRefused('inactive', 'host', 'month');
+
+        expect(addInvoiceButton(page)?.disabled).toBe(true);
+      });
+    });
+
+    describe('for a plan without CRM', () => {
+      it.each<RefusalKind>(['crmRequired', 'crmMessageOnly'])('shows the generic error with Retry, not the panel or the paywall, after a %s refusal', async (kind) => {
+        const { shown } = await openRefused(kind);
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.heading).toBe('states.somethingWentWrong');
+        expect(shown.retry).toBe(true);
+        expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+      });
+    });
+
+    describe('for a failure that is not a permission or plan refusal', () => {
+      it.each<RefusalKind>(['rateLimited', 'notFound', 'unprocessable', 'serverError'])(
+        'shows the generic error with Retry after a %s refusal',
+        async (kind) => {
+          const { shown } = await openRefused(kind);
+
+          expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+          expect(shown.heading).toBe('states.somethingWentWrong');
+          expect(shown.retry).toBe(true);
+          expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+        },
+      );
+    });
+
+    describe('when the server never answers', () => {
+      it.each(kindsShowing('network'))('shows the connection error with Retry after a %s failure', async (kind) => {
+        const { shown } = await openRefused(kind);
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.heading).toBe('states.cantConnect');
+        expect(shown.retry).toBe(true);
+        expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+      });
     });
   });
 });

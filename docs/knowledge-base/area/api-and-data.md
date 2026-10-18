@@ -45,7 +45,7 @@ Backend conventions the mappers rely on:
 
 ## Reuse, don't rebuild
 - Inject `ApiClient`; never build `baseUrl + path` yourself or call `fetch` (except deliberately for third parties, as `apps/web/src/app/core/geo/geo-preference.ts` does to keep the bearer token off them).
-- Use `pageParams` / `ApiPagination` for paging; `isSubscriptionError` (`apps/web/src/app/util/subscription-error.ts`) and `isNetworkError` (`apps/web/src/app/util/network-error.ts`) for classifying failures.
+- Use `pageParams` / `ApiPagination` for paging; `isSubscriptionError` (`apps/web/src/app/util/subscription-error.ts`), `isNetworkError` (`apps/web/src/app/util/network-error.ts`) and, for a 403, `isCrmRequired` / `isPermissionRefusal` (`apps/web/src/app/core/host-access/host-access.ts`) for classifying failures. A 403 with no server code reaches the FE as `code: 'unknown_error'`. It is a permission refusal unless its message is the CRM one (the backend sometimes sends that without its code), and it is never a subscription error. Call `isPermissionRefusal`; never compare `code` yourself.
 - Show success/info with `NotificationService`; do not add per-call error toasts, the interceptor already raises one.
 - To classify a failure for the screen, read the `ApiError` with `apps/web/src/app/core/errors/api-error-text.ts`, never by echoing `message`:
   - `errorStatus` gives the numeric status, or `null`;

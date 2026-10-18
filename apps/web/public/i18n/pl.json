@@ -862,6 +862,8 @@
     "offlineTitle": "Ta strona będzie dostępna, gdy hostel będzie online",
     "offlineBody": "Pokoje, rezerwacje, najemcy, rachunki i personel wymagają aktywnego planu. Twoje dane są zachowane.",
     "offlineBodyStaff": "Poproś właściciela hostelu o odnowienie planu tego hostelu.",
+    "pageNotAllowed": "Nie masz uprawnień, aby to wyświetlić. Zapytaj właściciela hostelu.",
+    "pageNotAllowedOwner": "Twoje konto nie ma uprawnień, aby to wyświetlić. Skontaktuj się z pomocą techniczną HostelHive.",
     "renewsSoonCard": "Twój plan odnowi się {{date}}. Obciążymy zapisaną kartę.",
     "renewDueCard": "Obciążamy zapisaną kartę opłatą za odnowienie.",
     "pastDueCard": "Twój plan zakończył się {{endDate}}, a automatyczna płatność nie powiodła się. Twój hostel pozostaje aktywny do {{graceDate}}.",

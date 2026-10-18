@@ -857,6 +857,8 @@
     "offlineTitle": "旅舍上线后即可打开此页面",
     "offlineBody": "房间、预订、租客、账单和员工需要有效的套餐。你的记录都会保留。",
     "offlineBodyStaff": "请让旅舍所有者为此旅舍续订套餐。",
+    "pageNotAllowed": "您无权查看此内容。请联系旅舍所有者。",
+    "pageNotAllowedOwner": "您的账户无权查看此内容。请联系 HostelHive 支持团队。",
     "renewsSoonCard": "您的套餐将于{{date}}续订。我们会从您已保存的银行卡扣款。",
     "renewDueCard": "我们正在从您已保存的银行卡扣取续订费用。",
     "pastDueCard": "您的套餐已于{{endDate}}到期，自动扣款未成功。您的旅舍将保持上线至{{graceDate}}。",

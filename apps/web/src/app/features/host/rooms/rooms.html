@@ -19,6 +19,8 @@
     <hh-skeleton class="mt-5 h-72 w-full" radius="lg" />
   } @else if (s.subscriptionError) {
     <hh-subscription-gate [feature]="'subscriptionGate.roomManagement' | transloco" [showProfileLink]="true" />
+  } @else if (s.permissionError) {
+    <hh-permission-refused />
   } @else if (s.error) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
   } @else if (!s.data || (s.data.length === 0 && !searchQuery() && statusFilter() === 'all')) {

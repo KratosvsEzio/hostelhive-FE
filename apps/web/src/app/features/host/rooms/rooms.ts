@@ -36,7 +36,9 @@ import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isSubscriptionError } from '@util/subscription-error';
+import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
@@ -53,6 +55,7 @@ interface ViewState {
   loading: boolean;
   error: boolean;
   subscriptionError: boolean;
+  permissionError?: boolean;
   networkError: boolean;
   data: Room[] | null;
   total: number;
@@ -179,6 +182,7 @@ function floorOrder(floor: string): number {
     DecimalPipe,
     DashboardLayout,
     SubscriptionGate,
+    PermissionRefused,
     Button,
     ConfirmModal,
     Dropdown,
@@ -471,6 +475,7 @@ export class Rooms {
               loading: false,
               error: !sub,
               subscriptionError: sub,
+              permissionError: isPermissionRefusal(err),
               networkError: net,
               data: null,
               total: 0,

@@ -39,7 +39,9 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isSubscriptionError } from '@util/subscription-error';
+import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
 import { TENANTS_TABLE_COLS } from '@app/util/table-configs/tenants-table-cols';
@@ -51,6 +53,7 @@ interface ViewState {
   loading: boolean;
   error: boolean;
   subscriptionError: boolean;
+  permissionError?: boolean;
   networkError: boolean;
   data: Tenant[] | null;
   total: number;
@@ -73,6 +76,7 @@ const TONES = ['sky', 'cream', 'mint'] as const;
     HasPermission,
     DashboardLayout,
     SubscriptionGate,
+    PermissionRefused,
     Button,
     Card,
     DataTable,
@@ -151,7 +155,15 @@ export class Tenants {
             this.fetching.set(false);
             const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
-            return of<ViewState>({ loading: false, error: !sub, subscriptionError: sub, networkError: net, data: null, total: 0 });
+            return of<ViewState>({
+              loading: false,
+              error: !sub,
+              subscriptionError: sub,
+              permissionError: isPermissionRefusal(err),
+              networkError: net,
+              data: null,
+              total: 0,
+            });
           }),
         );
       }),

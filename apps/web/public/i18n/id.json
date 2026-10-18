@@ -862,6 +862,8 @@
     "offlineTitle": "Halaman ini terbuka saat hostel Anda tampil",
     "offlineBody": "Kamar, pemesanan, penyewa, tagihan, dan staf memerlukan paket aktif. Data Anda tetap tersimpan.",
     "offlineBodyStaff": "Minta pemilik hostel untuk memperpanjang paket hostel ini.",
+    "pageNotAllowed": "Anda tidak memiliki izin untuk melihat ini. Tanyakan kepada pemilik hostel.",
+    "pageNotAllowedOwner": "Akun Anda tidak memiliki izin untuk melihat ini. Hubungi dukungan HostelHive.",
     "renewsSoonCard": "Paket Anda diperpanjang pada {{date}}. Kami akan menagih kartu tersimpan Anda.",
     "renewDueCard": "Kami sedang menagih kartu tersimpan Anda untuk perpanjangan.",
     "pastDueCard": "Paket Anda berakhir pada {{endDate}} dan penagihan otomatis belum berhasil. Hostel Anda tetap aktif hingga {{graceDate}}.",

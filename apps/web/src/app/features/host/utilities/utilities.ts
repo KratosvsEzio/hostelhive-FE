@@ -42,7 +42,9 @@ import { dayToLocalDate } from '@util/plain-day';
 import { TenantBillSplit, UtilityBill, UtilityType, UtilityTypeMeta } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isSubscriptionError } from '@util/subscription-error';
+import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
@@ -62,6 +64,7 @@ interface ViewState {
   loading: boolean;
   error: boolean;
   subscriptionError: boolean;
+  permissionError?: boolean;
   networkError: boolean;
   bills: UtilityBill[] | null;
   total: number;
@@ -78,6 +81,7 @@ interface ViewState {
     DashboardLayout,
     DecimalPipe,
     SubscriptionGate,
+    PermissionRefused,
     Button,
     Card,
     ConfirmModal,
@@ -157,7 +161,15 @@ export class Utilities {
           catchError((err) => {
             const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
-            return of<ViewState>({ loading: false, error: !sub, subscriptionError: sub, networkError: net, bills: null, total: 0 });
+            return of<ViewState>({
+              loading: false,
+              error: !sub,
+              subscriptionError: sub,
+              permissionError: isPermissionRefusal(err),
+              networkError: net,
+              bills: null,
+              total: 0,
+            });
           }),
         );
       }),
