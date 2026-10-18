@@ -90,22 +90,16 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('TenantFormDrawer leave zone request', () => {
-  it('asks for no zone while a new tenant has no leave date', async () => {
-    const { timeZoneOf, edit } = setUp({ monthly: true });
+  // A new check-in reads the zone when it opens, for its joining default (Trello #190); the
+  // leave countdown shares that one request rather than making its own.
+  it('asks for the zone once when a new check-in opens and not again for a leave date or other edits', async () => {
+    const { timeZoneOf, edit, settle } = setUp({ monthly: true, zone: EAST });
 
-    await edit({ fullName: 'Sana' });
-    await edit({ phone: '0300 1234567' });
-
-    expect(timeZoneOf).not.toHaveBeenCalled();
-  });
-
-  it('asks for the zone once when a leave date is entered and not again for other edits', async () => {
-    const { timeZoneOf, edit } = setUp({ monthly: true, zone: EAST });
-
-    await edit({ leaveDate: '2026-03-20' });
+    await settle();
     expect(timeZoneOf).toHaveBeenCalledTimes(1);
     expect(timeZoneOf).toHaveBeenCalledWith(HOSTEL_ID);
 
+    await edit({ leaveDate: '2026-03-20' });
     await edit({ fullName: 'Sana' });
     await edit({ leaveDate: '2026-03-25' });
 

@@ -123,3 +123,29 @@ export function todayIn(timeZone: string | null | undefined, now: Date = new Dat
     parts.find((p) => p.type === type)?.value ?? '';
   return `${at('year')}-${at('month')}-${at('day')}`;
 }
+
+/**
+ * The wall clock in `timeZone` at `now`, to the minute, as `yyyy-MM-ddTHH:mm` — {@link todayIn}
+ * with the time of day.
+ *
+ * For a form default that the API takes as a naive wall time, such as a tenant's joining date:
+ * the value has to be what the clock on the hostel's wall says, since nothing downstream knows
+ * which zone it was read in. Without a zone, or with one the runtime does not know, this is the
+ * device's own clock.
+ */
+export function wallClockIn(timeZone: string | null | undefined, now: Date = new Date()): string {
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  if (!timeZone || !isKnownTimeZone(timeZone)) {
+    return `${localDay(now)}T${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  }
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(now);
+  const at = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+  // `hour12: false` reports midnight as 24 in some engines (see `zoneOffsetMs`).
+  return `${todayIn(timeZone, now)}T${pad2(at('hour') % 24)}:${pad2(at('minute'))}`;
+}
