@@ -51,7 +51,7 @@ async function render(invoices: InvoicesFn) {
   });
   // Every other key renders as itself; this one shows the count so the tile can be read.
   TestBed.inject(TranslocoService).setTranslation(
-    { hostOverview: { nTenantsUnpaid: '{{count}} tenants unpaid' } },
+    { hostOverview: { nTenantsUnpaid: '{{count}} tenants unpaid', nTenantsUnpaidOne: '{{count}} tenant unpaid' } },
     DEFAULT_LOCALE,
   );
   const fixture = TestBed.createComponent(HostOverview);
@@ -99,7 +99,7 @@ describe('HostOverview unpaid rent tenant count', () => {
       invoice({ id: 'ub-1', renterId: 't-3', kind: 'utility', status: 'due' }),
     ]));
 
-    expect(tileText()).toContain('1 tenants unpaid');
+    expect(tileText()).toContain('1 tenant unpaid');
   });
 
   it('asks for rental bills in both unpaid statuses', async () => {

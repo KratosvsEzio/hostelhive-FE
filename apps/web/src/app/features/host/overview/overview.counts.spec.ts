@@ -21,7 +21,7 @@ const KPIS = [
  */
 async function utilityTileText(tenants: number): Promise<string> {
   const bills = Array.from({ length: tenants }, (_, i) =>
-    invoice({ id: `ub-${i}`, kind: 'utility', tenantName: `Tenant ${i}` }),
+    invoice({ id: `ub-${i}`, renterId: `t-${i}`, kind: 'utility', tenantName: `Tenant ${i}` }),
   );
   TestBed.configureTestingModule({
     providers: [
