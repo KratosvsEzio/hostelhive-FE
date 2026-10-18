@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
  *
  * The scan is deliberately wide: any `.message` read, any `['message']`, and any `{ message }`
  * destructured from a value rather than from a call such as `toToastCopy(err)`. Reads that are
- * genuinely not an error's text are listed in `ALLOWED`, with exactly how many each file holds.
+ * not an `ApiError`'s or an `Error`'s own `message` are listed in `ALLOWED`, with exactly how
+ * many each file holds.
  */
 
 /** `apps/web/src/app` — two levels up from here: errors, core. */
@@ -44,9 +45,17 @@ const ALLOWED: Readonly<Record<string, number>> = {
   'features/admin/billing/invoices/admin-invoice-drawer.ts': 1,
   'features/admin/billing/payments/admin-payment-drawer.ts': 1,
   'features/admin/billing/plans/admin-plans.html': 2,
-  // Billing shows a 422's own `serverMessages[0]` by product rule; `e` is the page's error view.
-  'features/host/subscription/billing-page.html': 3,
-  // `outcome.message` / `note.message` / `view.message` are copy the billing code builds itself.
+  // Host billing shows the server's own refusal text; the agreed rule covers a 422 or 404. In
+  // the page, `e` is a plan-change error, filled by `showChangeError()` from `serverMessages[0]`
+  // on a 422 or 404 only, or a checkout error, filled by `showCheckoutError()` from it on any
+  // refusal but a 403, so checkout passes other statuses through too. Otherwise its `message`
+  // is null and our key shows; it is never `ApiError.message`.
+  'features/host/subscription/billing-page.html': 4,
+  // The payment and return pages read a `message` whose text only `payErrorOutcome()` produces:
+  // a 422's `serverMessages[0]`, copied on as `outcome`, `note`, `n`, `o` and the expired `view`.
+  // Any other failure, a plain `Error` included, gets our own copy, never its `message`.
+  'features/host/subscription/billing-return-states.ts': 1,
+  'features/host/subscription/billing-return.ts': 1,
   'features/host/subscription/payment-return-retry.ts': 3,
   'features/host/subscription/payment-return-states.ts': 2,
   'features/host/subscription/payment-step.ts': 1,
