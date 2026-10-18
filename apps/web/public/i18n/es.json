@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "Aún no hay factura.",
     "couldNotCheckInvoice": "No se pudo comprobar si hay factura.",
     "viewInvoice": "Ver factura",
+    "confirmation": "Confirmación",
+    "downloadConfirmation": "Descargar confirmación",
     "alsoMarkInvoicePaid": "Marcar también la factura {{invoice}} como pagada",
     "bookingAndInvoicePaid": "Reserva y factura marcadas como pagadas",
     "invoiceNotPaid": "La reserva se marcó como pagada, pero la factura no. {{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "No pudimos actualizar esta reserva. Inténtalo de nuevo.",
     "cancelFailed": "No pudimos cancelar esta reserva. Inténtalo de nuevo.",
     "withinCutoff": "Los cambios y cancelaciones se cierran 3 días antes de la entrada. Para cambiar algo ahora, llama al hostal e indica la referencia de tu reserva.",
-    "noLongerEditable": "Esta reserva ya no se puede cambiar aquí. Llama al hostal e indica la referencia de tu reserva."
+    "noLongerEditable": "Esta reserva ya no se puede cambiar aquí. Llama al hostal e indica la referencia de tu reserva.",
+    "opensInNewTab": "(se abre en una pestaña nueva)",
+    "downloadConfirmation": "Descargar confirmación"
   },
   "userFavorites": {
     "removeFromFavorites": "¿Quitar de favoritos?",

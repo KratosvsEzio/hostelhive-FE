@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "Ancora nessuna fattura.",
     "couldNotCheckInvoice": "Impossibile verificare la fattura.",
     "viewInvoice": "Vedi fattura",
+    "confirmation": "Conferma",
+    "downloadConfirmation": "Scarica la conferma",
     "alsoMarkInvoicePaid": "Segna anche la fattura {{invoice}} come pagata",
     "bookingAndInvoicePaid": "Prenotazione e fattura segnate come pagate",
     "invoiceNotPaid": "La prenotazione è stata segnata come pagata, ma la fattura no. {{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "Non siamo riusciti ad aggiornare questa prenotazione. Riprova.",
     "cancelFailed": "Non siamo riusciti ad annullare questa prenotazione. Riprova.",
     "withinCutoff": "Modifiche e cancellazioni si chiudono 3 giorni prima del check-in. Per modificare qualcosa ora, chiama l’ostello e indica il riferimento della prenotazione.",
-    "noLongerEditable": "Questa prenotazione non può più essere modificata qui. Chiama l’ostello e indica il riferimento della prenotazione."
+    "noLongerEditable": "Questa prenotazione non può più essere modificata qui. Chiama l’ostello e indica il riferimento della prenotazione.",
+    "opensInNewTab": "(si apre in una nuova scheda)",
+    "downloadConfirmation": "Scarica la conferma"
   },
   "userFavorites": {
     "removeFromFavorites": "Rimuovere dai preferiti?",

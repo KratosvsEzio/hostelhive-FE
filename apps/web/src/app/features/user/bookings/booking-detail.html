@@ -109,6 +109,18 @@
           {{ 'userBookings.bookedOn' | transloco: { date: (day(b.bookedOn) | date: 'd MMM yyyy') } }}
         </span>
       }
+      @if (confirmationUrl()) {
+        <a
+          class="inline-flex items-center gap-1 rounded-lg font-medium text-brand-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+          data-testid="download-confirmation"
+          [href]="confirmationUrl()"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <i class="ti ti-download" aria-hidden="true"></i>{{ 'userBookings.downloadConfirmation' | transloco }}
+          <span class="sr-only">{{ 'userBookings.opensInNewTab' | transloco }}</span>
+        </a>
+      }
     </div>
 
     <!-- What the guest can still do, offered only while the server allows it: a pending

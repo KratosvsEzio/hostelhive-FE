@@ -1511,6 +1511,8 @@
     "noInvoiceYet": "Chưa có hóa đơn.",
     "couldNotCheckInvoice": "Không thể kiểm tra hóa đơn.",
     "viewInvoice": "Xem hóa đơn",
+    "confirmation": "Xác nhận",
+    "downloadConfirmation": "Tải xuống xác nhận",
     "alsoMarkInvoicePaid": "Đồng thời đánh dấu hóa đơn {{invoice}} là đã thanh toán",
     "bookingAndInvoicePaid": "Đã đánh dấu đặt phòng và hóa đơn là đã thanh toán",
     "invoiceNotPaid": "Đặt phòng đã được đánh dấu là đã thanh toán, nhưng hóa đơn thì chưa. {{reason}}",
@@ -1625,7 +1627,9 @@
     "changeFailed": "Chúng tôi không thể cập nhật đặt phòng này. Vui lòng thử lại.",
     "cancelFailed": "Chúng tôi không thể hủy đặt phòng này. Vui lòng thử lại.",
     "withinCutoff": "Việc thay đổi và hủy sẽ đóng 3 ngày trước ngày nhận phòng. Để thay đổi bất cứ điều gì lúc này, hãy gọi cho nhà nghỉ và cung cấp mã đặt phòng của bạn.",
-    "noLongerEditable": "Không thể thay đổi đặt phòng này ở đây nữa. Hãy gọi cho nhà nghỉ và cung cấp mã đặt phòng của bạn."
+    "noLongerEditable": "Không thể thay đổi đặt phòng này ở đây nữa. Hãy gọi cho nhà nghỉ và cung cấp mã đặt phòng của bạn.",
+    "opensInNewTab": "(mở trong tab mới)",
+    "downloadConfirmation": "Tải xuống xác nhận"
   },
   "userFavorites": {
     "removeFromFavorites": "Xóa khỏi yêu thích?",

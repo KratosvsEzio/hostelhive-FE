@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "暂无发票。",
     "couldNotCheckInvoice": "无法查询发票。",
     "viewInvoice": "查看发票",
+    "confirmation": "预订确认",
+    "downloadConfirmation": "下载预订确认书",
     "alsoMarkInvoicePaid": "同时将发票 {{invoice}} 标记为已付",
     "bookingAndInvoicePaid": "预订和发票已标记为已付",
     "invoiceNotPaid": "预订已标记为已付，但发票未能标记。{{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "无法更新此预订。请重试。",
     "cancelFailed": "无法取消此预订。请重试。",
     "withinCutoff": "入住前 3 天将停止更改和取消。如需现在更改，请致电旅舍并提供您的预订编号。",
-    "noLongerEditable": "此预订已无法在此更改。请致电旅舍并提供您的预订编号。"
+    "noLongerEditable": "此预订已无法在此更改。请致电旅舍并提供您的预订编号。",
+    "opensInNewTab": "(在新标签页中打开)",
+    "downloadConfirmation": "下载预订确认书"
   },
   "userFavorites": {
     "removeFromFavorites": "从收藏中移除？",

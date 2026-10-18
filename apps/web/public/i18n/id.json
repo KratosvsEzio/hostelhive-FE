@@ -1511,6 +1511,8 @@
     "noInvoiceYet": "Belum ada faktur.",
     "couldNotCheckInvoice": "Tidak dapat memeriksa faktur.",
     "viewInvoice": "Lihat faktur",
+    "confirmation": "Konfirmasi",
+    "downloadConfirmation": "Unduh konfirmasi",
     "alsoMarkInvoicePaid": "Tandai juga faktur {{invoice}} lunas",
     "bookingAndInvoicePaid": "Pemesanan dan faktur ditandai lunas",
     "invoiceNotPaid": "Pemesanan ditandai lunas, tetapi fakturnya tidak. {{reason}}",
@@ -1625,7 +1627,9 @@
     "changeFailed": "Kami tidak dapat memperbarui pemesanan ini. Silakan coba lagi.",
     "cancelFailed": "Kami tidak dapat membatalkan pemesanan ini. Silakan coba lagi.",
     "withinCutoff": "Perubahan dan pembatalan ditutup 3 hari sebelum check-in. Untuk mengubah sesuatu sekarang, hubungi hostel dan sebutkan referensi pemesanan Anda.",
-    "noLongerEditable": "Pemesanan ini tidak dapat diubah lagi di sini. Hubungi hostel dan sebutkan referensi pemesanan Anda."
+    "noLongerEditable": "Pemesanan ini tidak dapat diubah lagi di sini. Hubungi hostel dan sebutkan referensi pemesanan Anda.",
+    "opensInNewTab": "(dibuka di tab baru)",
+    "downloadConfirmation": "Unduh konfirmasi"
   },
   "userFavorites": {
     "removeFromFavorites": "Hapus dari favorit?",

@@ -31,6 +31,7 @@ function booking(slug: string, over: Partial<HostBooking> = {}): HostBooking {
     occupancies: [],
     source: '',
     createdAt: TODAY,
+    confirmationPdfUrl: '',
     ...over,
   };
 }

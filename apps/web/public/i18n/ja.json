@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "請求書はまだありません。",
     "couldNotCheckInvoice": "請求書を確認できませんでした。",
     "viewInvoice": "請求書を表示",
+    "confirmation": "予約確認書",
+    "downloadConfirmation": "予約確認書をダウンロード",
     "alsoMarkInvoicePaid": "請求書 {{invoice}} も支払済みにする",
     "bookingAndInvoicePaid": "予約と請求書を支払済みにしました",
     "invoiceNotPaid": "予約は支払済みにしましたが、請求書は支払済みになりませんでした。{{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "この予約を更新できませんでした。もう一度お試しください。",
     "cancelFailed": "この予約をキャンセルできませんでした。もう一度お試しください。",
     "withinCutoff": "変更とキャンセルはチェックインの3日前に締め切られます。今から変更する場合は、宿泊施設に電話して予約番号をお伝えください。",
-    "noLongerEditable": "この予約はここでは変更できなくなりました。宿泊施設に電話して予約番号をお伝えください。"
+    "noLongerEditable": "この予約はここでは変更できなくなりました。宿泊施設に電話して予約番号をお伝えください。",
+    "opensInNewTab": "(新しいタブで開きます)",
+    "downloadConfirmation": "予約確認書をダウンロード"
   },
   "userFavorites": {
     "removeFromFavorites": "お気に入りから削除しますか？",

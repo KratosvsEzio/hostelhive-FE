@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "Ingen faktura endnu.",
     "couldNotCheckInvoice": "Kunne ikke søge efter en faktura.",
     "viewInvoice": "Se faktura",
+    "confirmation": "Bekræftelse",
+    "downloadConfirmation": "Download bekræftelse",
     "alsoMarkInvoicePaid": "Markér også faktura {{invoice}} som betalt",
     "bookingAndInvoicePaid": "Booking og faktura markeret som betalt",
     "invoiceNotPaid": "Bookingen er markeret som betalt, men fakturaen er ikke. {{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "Vi kunne ikke opdatere denne booking. Prøv igen.",
     "cancelFailed": "Vi kunne ikke annullere denne booking. Prøv igen.",
     "withinCutoff": "Ændringer og annulleringer lukker 3 dage før ankomst. Vil du ændre noget nu, så ring til vandrerhjemmet, og oplys din bookingreference.",
-    "noLongerEditable": "Denne booking kan ikke længere ændres her. Ring til vandrerhjemmet, og oplys din bookingreference."
+    "noLongerEditable": "Denne booking kan ikke længere ændres her. Ring til vandrerhjemmet, og oplys din bookingreference.",
+    "opensInNewTab": "(åbner i en ny fane)",
+    "downloadConfirmation": "Download bekræftelse"
   },
   "userFavorites": {
     "removeFromFavorites": "Fjern fra favoritter?",

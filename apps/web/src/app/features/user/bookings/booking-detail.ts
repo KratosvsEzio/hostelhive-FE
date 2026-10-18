@@ -22,6 +22,7 @@ import {
   STAGE_ORDER,
   canCancel,
   canEdit,
+  confirmationLink,
   withinChangeCutoff,
   mapsUrl,
   timingOf,
@@ -138,6 +139,12 @@ export class AccountBookingDetail {
     // `address()` falls back to the place, so the two can be the same string.
     const query = [...new Set([b.hostel.name, this.address(), b.hostel.place])].filter(Boolean).join(', ');
     return mapsUrl({ ...pin, query });
+  });
+
+  /** The confirmation PDF, once the hostel has confirmed and the server has stored it. */
+  protected readonly confirmationUrl = computed(() => {
+    const b = this.booking();
+    return b ? confirmationLink(b) : '';
   });
 
   constructor() {

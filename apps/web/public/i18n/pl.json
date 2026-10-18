@@ -1511,6 +1511,8 @@
     "noInvoiceYet": "Brak faktury.",
     "couldNotCheckInvoice": "Nie udało się sprawdzić faktury.",
     "viewInvoice": "Zobacz fakturę",
+    "confirmation": "Potwierdzenie",
+    "downloadConfirmation": "Pobierz potwierdzenie",
     "alsoMarkInvoicePaid": "Oznacz też fakturę {{invoice}} jako opłaconą",
     "bookingAndInvoicePaid": "Rezerwacja i faktura oznaczone jako opłacone",
     "invoiceNotPaid": "Rezerwację oznaczono jako opłaconą, ale faktury nie. {{reason}}",
@@ -1625,7 +1627,9 @@
     "changeFailed": "Nie udało się zaktualizować tej rezerwacji. Spróbuj ponownie.",
     "cancelFailed": "Nie udało się anulować tej rezerwacji. Spróbuj ponownie.",
     "withinCutoff": "Zmiany i anulowanie są możliwe najpóźniej 3 dni przed zameldowaniem. Aby coś teraz zmienić, zadzwoń do hostelu i podaj numer rezerwacji.",
-    "noLongerEditable": "Tej rezerwacji nie można już tutaj zmienić. Zadzwoń do hostelu i podaj numer rezerwacji."
+    "noLongerEditable": "Tej rezerwacji nie można już tutaj zmienić. Zadzwoń do hostelu i podaj numer rezerwacji.",
+    "opensInNewTab": "(otwiera się w nowej karcie)",
+    "downloadConfirmation": "Pobierz potwierdzenie"
   },
   "userFavorites": {
     "removeFromFavorites": "Usunąć z ulubionych?",

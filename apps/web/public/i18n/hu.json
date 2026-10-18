@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "Még nincs számla.",
     "couldNotCheckInvoice": "Nem sikerült ellenőrizni a számlát.",
     "viewInvoice": "Számla megtekintése",
+    "confirmation": "Visszaigazolás",
+    "downloadConfirmation": "Visszaigazolás letöltése",
     "alsoMarkInvoicePaid": "A(z) {{invoice}} számla megjelölése fizetettként is",
     "bookingAndInvoicePaid": "A foglalás és a számla fizetettként megjelölve",
     "invoiceNotPaid": "A foglalás fizetettként megjelölve, a számla azonban nem. {{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "Nem sikerült módosítani ezt a foglalást. Kérjük, próbálja újra.",
     "cancelFailed": "Nem sikerült lemondani ezt a foglalást. Kérjük, próbálja újra.",
     "withinCutoff": "Módosítani és lemondani legkésőbb 3 nappal az érkezés előtt lehet. Ha most módosítana valamit, hívja fel a szállást, és adja meg a foglalási azonosítót.",
-    "noLongerEditable": "Ez a foglalás itt már nem módosítható. Hívja fel a szállást, és adja meg a foglalási azonosítót."
+    "noLongerEditable": "Ez a foglalás itt már nem módosítható. Hívja fel a szállást, és adja meg a foglalási azonosítót.",
+    "opensInNewTab": "(új lapon nyílik meg)",
+    "downloadConfirmation": "Visszaigazolás letöltése"
   },
   "userFavorites": {
     "removeFromFavorites": "Eltávolítod a kedvencekből?",

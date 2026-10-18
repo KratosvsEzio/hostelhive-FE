@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "Nog geen factuur.",
     "couldNotCheckInvoice": "Kon niet controleren of er een factuur is.",
     "viewInvoice": "Factuur bekijken",
+    "confirmation": "Bevestiging",
+    "downloadConfirmation": "Bevestiging downloaden",
     "alsoMarkInvoicePaid": "Factuur {{invoice}} ook als betaald markeren",
     "bookingAndInvoicePaid": "Boeking en factuur als betaald gemarkeerd",
     "invoiceNotPaid": "De boeking is als betaald gemarkeerd, maar de factuur niet. {{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "We konden deze boeking niet bijwerken. Probeer het opnieuw.",
     "cancelFailed": "We konden deze boeking niet annuleren. Probeer het opnieuw.",
     "withinCutoff": "Wijzigingen en annuleringen sluiten 3 dagen voor het inchecken. Wil je nu nog iets wijzigen, bel dan het hostel en noem je boekingsreferentie.",
-    "noLongerEditable": "Deze boeking kan hier niet meer worden gewijzigd. Bel het hostel en noem je boekingsreferentie."
+    "noLongerEditable": "Deze boeking kan hier niet meer worden gewijzigd. Bel het hostel en noem je boekingsreferentie.",
+    "opensInNewTab": "(opent in een nieuw tabblad)",
+    "downloadConfirmation": "Bevestiging downloaden"
   },
   "userFavorites": {
     "removeFromFavorites": "Uit favorieten verwijderen?",

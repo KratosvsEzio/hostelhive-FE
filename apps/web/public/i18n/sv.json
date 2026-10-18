@@ -1506,6 +1506,8 @@
     "noInvoiceYet": "Ingen faktura ännu.",
     "couldNotCheckInvoice": "Det gick inte att söka efter en faktura.",
     "viewInvoice": "Visa faktura",
+    "confirmation": "Bekräftelse",
+    "downloadConfirmation": "Ladda ner bekräftelse",
     "alsoMarkInvoicePaid": "Markera även faktura {{invoice}} som betald",
     "bookingAndInvoicePaid": "Bokning och faktura markerade som betalda",
     "invoiceNotPaid": "Bokningen markerades som betald, men inte fakturan. {{reason}}",
@@ -1620,7 +1622,9 @@
     "changeFailed": "Vi kunde inte uppdatera bokningen. Försök igen.",
     "cancelFailed": "Vi kunde inte avboka bokningen. Försök igen.",
     "withinCutoff": "Ändringar och avbokningar stänger 3 dagar före incheckning. Om du vill ändra något nu, ring vandrarhemmet och uppge din bokningsreferens.",
-    "noLongerEditable": "Den här bokningen kan inte längre ändras här. Ring vandrarhemmet och uppge din bokningsreferens."
+    "noLongerEditable": "Den här bokningen kan inte längre ändras här. Ring vandrarhemmet och uppge din bokningsreferens.",
+    "opensInNewTab": "(öppnas i en ny flik)",
+    "downloadConfirmation": "Ladda ner bekräftelse"
   },
   "userFavorites": {
     "removeFromFavorites": "Ta bort från favoriter?",
