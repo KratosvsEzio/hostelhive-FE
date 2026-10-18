@@ -10,7 +10,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { AccommodationType, Listing } from '@hostelhive/data-access';
+import { Listing } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
 import { SessionStore } from '@core/auth';
 import { SearchCapacity } from '@services';
@@ -18,7 +18,7 @@ import { Badge, PhotoPlaceholder, TooltipFixed } from '@hostelhive/ui';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { periodForAccommodation, periodSuffix } from '@util/pricing-period';
-import { accommodationLabel } from '@util/accommodation-type';
+import { accommodationLabelKey } from '@util/accommodation-type';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
 
@@ -134,8 +134,9 @@ export class ListingCard {
     return dots;
   });
 
-  protected readonly genderLabel = computed(() =>
-    this.label(this.listing().accommodationType),
+  /** Translation key for the accommodation-type pill; the template pipes it through transloco. */
+  protected readonly genderLabelKey = computed(() =>
+    accommodationLabelKey(this.listing().accommodationType),
   );
   /** Property type pill ('Building', 'Apartment', …) — hidden when the BE sends none. */
   protected readonly propertyType = computed(() => this.listing().propertyType ?? '');
@@ -230,8 +231,4 @@ export class ListingCard {
     this.favorites.toggle(this.listing());
   }
 
-
-  private label(g: AccommodationType): string {
-    return accommodationLabel(g);
-  }
 }

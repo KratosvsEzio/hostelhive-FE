@@ -58,7 +58,7 @@
         [bordered]="false"
         class="shadow-sm"
       >
-        {{ genderLabel() }}
+        {{ genderLabelKey() | transloco }}
       </hh-badge>
       @if (propertyType()) {
         <hh-badge variant="neutral" [bordered]="false" class="shadow-sm">
