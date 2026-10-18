@@ -252,6 +252,35 @@ function eventLabel(
           }
         : plain('adminBilling.events.currencyChangedPlain');
     }
+    case 'currency_override_changed': {
+      // A null side means no override (Automatic). The admin is named, never shown by id.
+      const from = text(data, 'from');
+      const to = text(data, 'to');
+      const admin = text(data, 'admin_name');
+      if (!admin) return plain('adminBilling.events.currencyOverridePlain');
+      if (from && to) {
+        return {
+          key: 'adminBilling.events.currencyOverrideChanged',
+          params: { from, to, admin },
+          date: null,
+        };
+      }
+      if (to) {
+        return {
+          key: 'adminBilling.events.currencyOverrideSet',
+          params: { to, admin },
+          date: null,
+        };
+      }
+      if (from) {
+        return {
+          key: 'adminBilling.events.currencyOverrideCleared',
+          params: { admin },
+          date: null,
+        };
+      }
+      return plain('adminBilling.events.currencyOverridePlain');
+    }
     default:
       return {
         key: 'adminBilling.events.other',

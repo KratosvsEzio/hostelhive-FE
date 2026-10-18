@@ -68,7 +68,7 @@ const COPY = {
       verifiedNotice: 'Payment verified. Invoice {{number}} is paid.',
       rejectedNotice: 'Payment rejected. The host has been emailed.',
       verifyNotApplied: "This payment wasn't applied: {{reason}}",
-      verifyNotAppliedNext: "The host hasn't been told.",
+      verifyNotAppliedNext: 'The host has been emailed the reason.',
       rejectTitle: 'Reject this bank transfer?',
       rejectConfirm: 'Reject payment',
       emptyTitle: 'Nothing to verify',

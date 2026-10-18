@@ -357,6 +357,70 @@ describe('admin billing labels', () => {
         },
       ],
       [
+        'currency_override_changed set',
+        event('currency_override_changed', {
+          from: null,
+          to: 'USD',
+          admin_id: 77,
+          admin_name: 'Sara Khan',
+        }),
+        {
+          key: 'adminBilling.events.currencyOverrideSet',
+          params: { to: 'USD', admin: 'Sara Khan' },
+          date: null,
+        },
+      ],
+      [
+        'currency_override_changed changed',
+        event('currency_override_changed', {
+          from: 'PKR',
+          to: 'USD',
+          admin_id: 77,
+          admin_name: 'Sara Khan',
+        }),
+        {
+          key: 'adminBilling.events.currencyOverrideChanged',
+          params: { from: 'PKR', to: 'USD', admin: 'Sara Khan' },
+          date: null,
+        },
+      ],
+      [
+        'currency_override_changed cleared',
+        event('currency_override_changed', {
+          from: 'USD',
+          to: null,
+          admin_id: 77,
+          admin_name: 'Sara Khan',
+        }),
+        {
+          key: 'adminBilling.events.currencyOverrideCleared',
+          params: { admin: 'Sara Khan' },
+          date: null,
+        },
+      ],
+      [
+        'currency_override_changed without an admin name',
+        event('currency_override_changed', {
+          from: 'PKR',
+          to: 'USD',
+          admin_id: 77,
+        }),
+        {
+          key: 'adminBilling.events.currencyOverridePlain',
+          params: {},
+          date: null,
+        },
+      ],
+      [
+        'currency_override_changed with no data',
+        event('currency_override_changed', null),
+        {
+          key: 'adminBilling.events.currencyOverridePlain',
+          params: {},
+          date: null,
+        },
+      ],
+      [
         'an unknown kind',
         event('refunded', { amount: '5000.00' }),
         {

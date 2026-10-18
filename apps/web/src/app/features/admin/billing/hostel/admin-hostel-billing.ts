@@ -259,9 +259,6 @@ export class AdminHostelBilling {
     computation: () => null,
   });
 
-  // Counts writes started, so a read begun before one can tell that its answer is older.
-  private writes = 0;
-
   /** One write at a time across the page. */
   protected readonly busy = computed(() => this.pending() !== null);
 
@@ -343,7 +340,6 @@ export class AdminHostelBilling {
       () => {
         this.grantOpen.set(false);
         this.notice.set('adminBilling.grant.granted');
-        this.reread();
       },
       (error) => {
         // A 404 here is the plan: deactivated since the list was read.
@@ -398,7 +394,6 @@ export class AdminHostelBilling {
     const id = this.hostelId();
     if (!id || this.busy()) return;
     const epoch = this.loaded();
-    this.writes++;
     this.pending.set(write);
     this.notice.set(null);
     // Only the hostel and load it was asked on take the answer; A to B and back to A is a new load.
@@ -420,35 +415,6 @@ export class AdminHostelBilling {
           settle();
           if (current()) failed(adminBillingError(err));
         },
-      });
-  }
-
-  /**
-   * Reads the billing again in place, after a grant. The grant's answer carries the new events
-   * but the subscription as it was before the grant (the server renders a copy it loaded first),
-   * so the plan card would keep the old renewal date. The answer stays on screen meanwhile, and
-   * a failed read leaves it there. A write started after the read began, even one already
-   * finished, makes the read's answer stale, so it is dropped.
-   */
-  private reread(): void {
-    const id = this.hostelId();
-    if (!id) return;
-    const epoch = this.loaded();
-    const writes = this.writes;
-    this.api
-      .hostelBilling(id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => {
-          if (
-            this.hostelId() !== id ||
-            this.loaded() !== epoch ||
-            this.writes !== writes
-          )
-            return;
-          this.state.set({ kind: 'ready', data });
-        },
-        error: () => undefined,
       });
   }
 
