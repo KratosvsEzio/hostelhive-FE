@@ -579,7 +579,8 @@
     "findingTheRoomsBuiltOn": "Finder værelser baseret på {{name}}…",
     "moveAllRoomsTo": "Flyt alle værelser til",
     "selectARoomType": "Vælg en værelsestype",
-    "noRoomsAreBuiltOn": "Ingen værelser er baseret på {{name}}, så intet andet ændres. Den fjernes, når du gemmer."
+    "noRoomsAreBuiltOn": "Ingen værelser er baseret på {{name}}, så intet andet ændres. Den fjernes, når du gemmer.",
+    "couldNotMoveRoom": "Kunne ikke flytte dette værelse. Prøv igen."
   },
   "a11y": {
     "close": "Luk",
@@ -1264,7 +1265,10 @@
     "nobodyInThisRoomThat": "Ingen på dette værelse den dag.",
     "thisRoomCurrentlyHasNo": "Dette værelse har i øjeblikket ingen aktive lejere.",
     "addYourFirstRoomTo": "Tilføj dit første værelse for at begynde at følge belægningen.",
-    "bedNumbersAreNotAssigned": "Sengenumre er endnu ikke tildelt — kalenderen viser, hvor mange senge der er optaget, ikke hvilken seng hver gæst har."
+    "bedNumbersAreNotAssigned": "Sengenumre er endnu ikke tildelt — kalenderen viser, hvor mange senge der er optaget, ikke hvilken seng hver gæst har.",
+    "couldNotUpdateRoom": "Kunne ikke opdatere dette værelse. Prøv igen.",
+    "couldNotCreateRoom": "Kunne ikke oprette dette værelse. Prøv igen.",
+    "couldNotCreateRooms": "Kunne ikke oprette disse værelser. Prøv igen."
   },
   "hostUtilities": {
     "ratePerUnit": "Pris pr. enhed",
@@ -1568,7 +1572,7 @@
     "uploadingPhotos": "Uploader billeder…",
     "create": "Opret",
     "createHostel": "Opret hostel",
-    "couldnTCreateHostelPlease": "Kunne ikke oprette hostel — ret venligst følgende:"
+    "couldNotCreateHostel": "Kunne ikke oprette hostellet. Tjek oplysningerne, og prøv igen."
   },
   "adminAdminListings": {
     "allListings": "Alle annoncer",

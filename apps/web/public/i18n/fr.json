@@ -579,7 +579,8 @@
     "findingTheRoomsBuiltOn": "Recherche des chambres basées sur {{name}}…",
     "moveAllRoomsTo": "Déplacer toutes les chambres vers",
     "selectARoomType": "Sélectionnez un type de chambre",
-    "noRoomsAreBuiltOn": "Aucune chambre n'est basée sur {{name}}, rien d'autre ne change. Il est supprimé à l'enregistrement."
+    "noRoomsAreBuiltOn": "Aucune chambre n'est basée sur {{name}}, rien d'autre ne change. Il est supprimé à l'enregistrement.",
+    "couldNotMoveRoom": "Impossible de déplacer cette chambre. Réessayez."
   },
   "a11y": {
     "close": "Fermer",
@@ -1264,7 +1265,10 @@
     "nobodyInThisRoomThat": "Personne dans cette chambre ce jour-là.",
     "thisRoomCurrentlyHasNo": "Cette chambre n'a aucun locataire actif pour le moment.",
     "addYourFirstRoomTo": "Ajoutez votre première chambre pour suivre l'occupation.",
-    "bedNumbersAreNotAssigned": "Les numéros de lit ne sont pas encore attribués — le calendrier indique combien de lits sont occupés, pas lequel revient à chaque client."
+    "bedNumbersAreNotAssigned": "Les numéros de lit ne sont pas encore attribués — le calendrier indique combien de lits sont occupés, pas lequel revient à chaque client.",
+    "couldNotUpdateRoom": "Impossible de mettre à jour cette chambre. Veuillez réessayer.",
+    "couldNotCreateRoom": "Impossible de créer cette chambre. Veuillez réessayer.",
+    "couldNotCreateRooms": "Impossible de créer ces chambres. Veuillez réessayer."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarif par unité",
@@ -1568,7 +1572,7 @@
     "uploadingPhotos": "Téléversement des photos…",
     "create": "Créer",
     "createHostel": "Créer l’auberge",
-    "couldnTCreateHostelPlease": "Impossible de créer l’auberge — corrigez ce qui suit :"
+    "couldNotCreateHostel": "Impossible de créer l'auberge. Vérifiez les informations et réessayez."
   },
   "adminAdminListings": {
     "allListings": "Toutes les annonces",

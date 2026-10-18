@@ -771,7 +771,7 @@
     "uploadingPhotos": "Uploading photos…",
     "create": "Create",
     "createHostel": "Create hostel",
-    "couldnTCreateHostelPlease": "Couldn't create hostel — please fix the following:"
+    "couldNotCreateHostel": "Couldn't create the hostel. Check the details and try again."
   },
   "hostOverview": {
     "moveInsVsMoveOuts": "Move-ins vs move-outs",
@@ -875,7 +875,10 @@
     "noBookingGuests": "No booking guests in this room right now.",
     "guestCount": "Guests: {{count}}",
     "untilDate": "Until {{date}}",
-    "couldNotLoadBookingGuests": "Couldn't load booking guests."
+    "couldNotLoadBookingGuests": "Couldn't load booking guests.",
+    "couldNotUpdateRoom": "Couldn't update this room. Please try again.",
+    "couldNotCreateRoom": "Couldn't create this room. Please try again.",
+    "couldNotCreateRooms": "Couldn't create these rooms. Please try again."
   },
   "hostBilling": {
     "title": "Billing",
@@ -1446,7 +1449,8 @@
     "findingTheRoomsBuiltOn": "Finding the rooms built on {{name}}…",
     "moveAllRoomsTo": "Move all rooms to",
     "selectARoomType": "Select a room type",
-    "noRoomsAreBuiltOn": "No rooms are built on {{name}}, so nothing else changes. It is removed when you save."
+    "noRoomsAreBuiltOn": "No rooms are built on {{name}}, so nothing else changes. It is removed when you save.",
+    "couldNotMoveRoom": "Couldn't move this room. Try again."
   },
   "layoutComponents": {
     "nowClickAnEndDate": "Now click an end date",

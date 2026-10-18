@@ -584,7 +584,8 @@
     "findingTheRoomsBuiltOn": "Wyszukiwanie pokoi opartych na {{name}}…",
     "moveAllRoomsTo": "Przenieś wszystkie pokoje do",
     "selectARoomType": "Wybierz typ pokoju",
-    "noRoomsAreBuiltOn": "Żaden pokój nie korzysta z {{name}}, więc nic więcej się nie zmieni. Zostanie usunięty przy zapisie."
+    "noRoomsAreBuiltOn": "Żaden pokój nie korzysta z {{name}}, więc nic więcej się nie zmieni. Zostanie usunięty przy zapisie.",
+    "couldNotMoveRoom": "Nie udało się przenieść tego pokoju. Spróbuj ponownie."
   },
   "a11y": {
     "close": "Zamknij",
@@ -1269,7 +1270,10 @@
     "nobodyInThisRoomThat": "Tego dnia nikogo nie było w tym pokoju.",
     "thisRoomCurrentlyHasNo": "W tym pokoju nie ma obecnie aktywnych najemców.",
     "addYourFirstRoomTo": "Dodaj pierwszy pokój, aby zacząć śledzić obłożenie.",
-    "bedNumbersAreNotAssigned": "Numery łóżek nie są jeszcze przypisane — kalendarz pokazuje, ile łóżek jest zajętych, a nie kto śpi w którym."
+    "bedNumbersAreNotAssigned": "Numery łóżek nie są jeszcze przypisane — kalendarz pokazuje, ile łóżek jest zajętych, a nie kto śpi w którym.",
+    "couldNotUpdateRoom": "Nie udało się zaktualizować tego pokoju. Spróbuj ponownie.",
+    "couldNotCreateRoom": "Nie udało się utworzyć tego pokoju. Spróbuj ponownie.",
+    "couldNotCreateRooms": "Nie udało się utworzyć tych pokoi. Spróbuj ponownie."
   },
   "hostUtilities": {
     "ratePerUnit": "Stawka za jednostkę",
@@ -1573,7 +1577,7 @@
     "uploadingPhotos": "Przesyłanie zdjęć…",
     "create": "Utwórz",
     "createHostel": "Utwórz hostel",
-    "couldnTCreateHostelPlease": "Nie udało się utworzyć hostelu — popraw poniższe:"
+    "couldNotCreateHostel": "Nie udało się utworzyć hostelu. Sprawdź dane i spróbuj ponownie."
   },
   "adminAdminListings": {
     "allListings": "Wszystkie ogłoszenia",

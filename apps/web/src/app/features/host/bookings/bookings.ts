@@ -376,14 +376,16 @@ export class HostBookings {
       return;
     }
     // Already the database's copy, so the panel does not read it again. A failure is reported
-    // as `bookingNotFound` below, so the global toast stays quiet.
+    // below, so the global toast stays quiet: a request that never reached the server says so,
+    // anything else says the booking was not found.
     this.bookingsApi.get(this.hostelId(), id, { suppressErrorToast: true }).subscribe({
       next: (booking) => {
         if (this.urlBookingId === booking.id) this.showDetails(booking);
       },
-      error: () => {
+      error: (err: unknown) => {
         if (this.urlBookingId !== id) return;
-        this.notifications.error(this.i18n.translate<string>('hostBookings.bookingNotFound'));
+        const key = errorStatus(err) === 0 ? 'common.cannotReachTheServer' : 'hostBookings.bookingNotFound';
+        this.notifications.error(this.i18n.translate<string>(key));
         this.leaveBookingUrl();
       },
     });

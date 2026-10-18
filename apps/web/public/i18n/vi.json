@@ -584,7 +584,8 @@
     "findingTheRoomsBuiltOn": "Đang tìm các phòng dựa trên {{name}}…",
     "moveAllRoomsTo": "Chuyển tất cả phòng sang",
     "selectARoomType": "Chọn loại phòng",
-    "noRoomsAreBuiltOn": "Không có phòng nào dùng {{name}}, nên không có gì khác thay đổi. Loại này sẽ bị xóa khi bạn lưu."
+    "noRoomsAreBuiltOn": "Không có phòng nào dùng {{name}}, nên không có gì khác thay đổi. Loại này sẽ bị xóa khi bạn lưu.",
+    "couldNotMoveRoom": "Không thể chuyển phòng này. Hãy thử lại."
   },
   "a11y": {
     "close": "Đóng",
@@ -1269,7 +1270,10 @@
     "nobodyInThisRoomThat": "Không có ai trong phòng này vào ngày đó.",
     "thisRoomCurrentlyHasNo": "Phòng này hiện chưa có khách thuê nào.",
     "addYourFirstRoomTo": "Thêm phòng đầu tiên để bắt đầu theo dõi tỷ lệ lấp đầy.",
-    "bedNumbersAreNotAssigned": "Số giường chưa được gán — lịch cho biết có bao nhiêu giường đã kín, không phải ai nằm giường nào."
+    "bedNumbersAreNotAssigned": "Số giường chưa được gán — lịch cho biết có bao nhiêu giường đã kín, không phải ai nằm giường nào.",
+    "couldNotUpdateRoom": "Không thể cập nhật phòng này. Vui lòng thử lại.",
+    "couldNotCreateRoom": "Không thể tạo phòng này. Vui lòng thử lại.",
+    "couldNotCreateRooms": "Không thể tạo các phòng này. Vui lòng thử lại."
   },
   "hostUtilities": {
     "ratePerUnit": "Đơn giá",
@@ -1573,7 +1577,7 @@
     "uploadingPhotos": "Đang tải ảnh lên…",
     "create": "Tạo",
     "createHostel": "Tạo nhà nghỉ",
-    "couldnTCreateHostelPlease": "Không thể tạo nhà nghỉ — vui lòng sửa các mục sau:"
+    "couldNotCreateHostel": "Không thể tạo nhà trọ. Hãy kiểm tra thông tin và thử lại."
   },
   "adminAdminListings": {
     "allListings": "Tất cả tin đăng",

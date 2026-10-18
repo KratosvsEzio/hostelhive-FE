@@ -579,7 +579,8 @@
     "findingTheRoomsBuiltOn": "Zimmer werden gesucht, die auf {{name}} basieren…",
     "moveAllRoomsTo": "Alle Zimmer verschieben nach",
     "selectARoomType": "Zimmertyp auswählen",
-    "noRoomsAreBuiltOn": "Keine Zimmer basieren auf {{name}}, es ändert sich sonst nichts. Der Typ wird beim Speichern entfernt."
+    "noRoomsAreBuiltOn": "Keine Zimmer basieren auf {{name}}, es ändert sich sonst nichts. Der Typ wird beim Speichern entfernt.",
+    "couldNotMoveRoom": "Dieses Zimmer konnte nicht verschoben werden. Versuche es erneut."
   },
   "a11y": {
     "close": "Schließen",
@@ -1264,7 +1265,10 @@
     "nobodyInThisRoomThat": "An diesem Tag war niemand in diesem Zimmer.",
     "thisRoomCurrentlyHasNo": "In diesem Zimmer wohnen derzeit keine aktiven Mieter.",
     "addYourFirstRoomTo": "Fügen Sie Ihr erstes Zimmer hinzu, um die Belegung zu verfolgen.",
-    "bedNumbersAreNotAssigned": "Bettnummern sind noch nicht vergeben — der Kalender zeigt, wie viele Betten belegt sind, nicht welches Bett wer hat."
+    "bedNumbersAreNotAssigned": "Bettnummern sind noch nicht vergeben — der Kalender zeigt, wie viele Betten belegt sind, nicht welches Bett wer hat.",
+    "couldNotUpdateRoom": "Dieses Zimmer konnte nicht aktualisiert werden. Bitte versuche es erneut.",
+    "couldNotCreateRoom": "Dieses Zimmer konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "couldNotCreateRooms": "Diese Zimmer konnten nicht erstellt werden. Bitte versuche es erneut."
   },
   "hostUtilities": {
     "ratePerUnit": "Preis pro Einheit",
@@ -1568,7 +1572,7 @@
     "uploadingPhotos": "Fotos werden hochgeladen…",
     "create": "Erstellen",
     "createHostel": "Hostel erstellen",
-    "couldnTCreateHostelPlease": "Hostel konnte nicht erstellt werden — bitte beheben Sie Folgendes:"
+    "couldNotCreateHostel": "Das Hostel konnte nicht erstellt werden. Prüfe die Angaben und versuche es erneut."
   },
   "adminAdminListings": {
     "allListings": "Alle Angebote",

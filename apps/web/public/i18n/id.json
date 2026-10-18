@@ -584,7 +584,8 @@
     "findingTheRoomsBuiltOn": "Mencari kamar yang menggunakan {{name}}…",
     "moveAllRoomsTo": "Pindahkan semua kamar ke",
     "selectARoomType": "Pilih tipe kamar",
-    "noRoomsAreBuiltOn": "Tidak ada kamar yang memakai {{name}}, jadi tidak ada yang berubah. Tipe ini dihapus saat Anda menyimpan."
+    "noRoomsAreBuiltOn": "Tidak ada kamar yang memakai {{name}}, jadi tidak ada yang berubah. Tipe ini dihapus saat Anda menyimpan.",
+    "couldNotMoveRoom": "Tidak dapat memindahkan kamar ini. Coba lagi."
   },
   "a11y": {
     "close": "Tutup",
@@ -1269,7 +1270,10 @@
     "nobodyInThisRoomThat": "Tidak ada orang di kamar ini pada hari itu.",
     "thisRoomCurrentlyHasNo": "Kamar ini saat ini tidak memiliki penghuni aktif.",
     "addYourFirstRoomTo": "Tambahkan kamar pertama Anda untuk mulai memantau hunian.",
-    "bedNumbersAreNotAssigned": "Nomor tempat tidur belum ditetapkan — kalender menunjukkan berapa banyak yang terisi, bukan siapa di tempat tidur mana."
+    "bedNumbersAreNotAssigned": "Nomor tempat tidur belum ditetapkan — kalender menunjukkan berapa banyak yang terisi, bukan siapa di tempat tidur mana.",
+    "couldNotUpdateRoom": "Tidak dapat memperbarui kamar ini. Silakan coba lagi.",
+    "couldNotCreateRoom": "Tidak dapat membuat kamar ini. Silakan coba lagi.",
+    "couldNotCreateRooms": "Tidak dapat membuat kamar-kamar ini. Silakan coba lagi."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarif per unit",
@@ -1573,7 +1577,7 @@
     "uploadingPhotos": "Mengunggah foto…",
     "create": "Buat",
     "createHostel": "Buat hostel",
-    "couldnTCreateHostelPlease": "Tidak dapat membuat hostel — perbaiki hal berikut:"
+    "couldNotCreateHostel": "Tidak dapat membuat hostel. Periksa detailnya lalu coba lagi."
   },
   "adminAdminListings": {
     "allListings": "Semua listing",

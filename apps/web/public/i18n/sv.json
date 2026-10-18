@@ -579,7 +579,8 @@
     "findingTheRoomsBuiltOn": "Söker rum som bygger på {{name}}…",
     "moveAllRoomsTo": "Flytta alla rum till",
     "selectARoomType": "Välj en rumstyp",
-    "noRoomsAreBuiltOn": "Inga rum bygger på {{name}}, så inget annat ändras. Den tas bort när du sparar."
+    "noRoomsAreBuiltOn": "Inga rum bygger på {{name}}, så inget annat ändras. Den tas bort när du sparar.",
+    "couldNotMoveRoom": "Det gick inte att flytta rummet. Försök igen."
   },
   "a11y": {
     "close": "Stäng",
@@ -1264,7 +1265,10 @@
     "nobodyInThisRoomThat": "Ingen i det här rummet den dagen.",
     "thisRoomCurrentlyHasNo": "Det här rummet har för närvarande inga aktiva hyresgäster.",
     "addYourFirstRoomTo": "Lägg till ditt första rum för att börja följa beläggningen.",
-    "bedNumbersAreNotAssigned": "Sängnummer är ännu inte tilldelade – kalendern visar hur många sängar som är upptagna, inte vilken varje gäst har."
+    "bedNumbersAreNotAssigned": "Sängnummer är ännu inte tilldelade – kalendern visar hur många sängar som är upptagna, inte vilken varje gäst har.",
+    "couldNotUpdateRoom": "Det gick inte att uppdatera rummet. Försök igen.",
+    "couldNotCreateRoom": "Det gick inte att skapa rummet. Försök igen.",
+    "couldNotCreateRooms": "Det gick inte att skapa rummen. Försök igen."
   },
   "hostUtilities": {
     "ratePerUnit": "Pris per enhet",
@@ -1568,7 +1572,7 @@
     "uploadingPhotos": "Laddar upp bilder…",
     "create": "Skapa",
     "createHostel": "Skapa vandrarhem",
-    "couldnTCreateHostelPlease": "Kunde inte skapa vandrarhem — åtgärda följande:"
+    "couldNotCreateHostel": "Det gick inte att skapa vandrarhemmet. Kontrollera uppgifterna och försök igen."
   },
   "adminAdminListings": {
     "allListings": "Alla annonser",

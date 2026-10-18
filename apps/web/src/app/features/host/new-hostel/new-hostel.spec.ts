@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { ApiError, HostelDetail, HostelInput } from '@hostelhive/data-access';
+import { ApiRequestOptions } from '@core/api-resource';
 import { HostPropertyStore, HostelsApi } from '@services';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostelForm } from '../hostel-form/hostel-form';
@@ -33,7 +34,7 @@ class StubHostelForm {
 interface NewHostelInternals {
   create(): void;
   saving(): boolean;
-  apiErrors(): string[];
+  createFailed(): boolean;
   showValidationModal(): boolean;
 }
 
@@ -42,12 +43,14 @@ describe('NewHostel', () => {
   let navigated: unknown[][];
   let steps: string[];
   let created: HostelInput[];
+  let createOpts: (ApiRequestOptions | undefined)[];
   let response: () => Observable<HostelDetail>;
 
   beforeEach(async () => {
     navigated = [];
     steps = [];
     created = [];
+    createOpts = [];
     response = () => of({ id: 'nHelLt', name: 'Test Hostel' } as unknown as HostelDetail);
 
     await TestBed.configureTestingModule({
@@ -59,8 +62,9 @@ describe('NewHostel', () => {
         {
           provide: HostelsApi,
           useValue: {
-            create: (input: HostelInput) => {
+            create: (input: HostelInput, opts?: ApiRequestOptions) => {
               created.push(input);
+              createOpts.push(opts);
               return response();
             },
           },
@@ -116,14 +120,31 @@ describe('NewHostel', () => {
     expect(internals().showValidationModal()).toBe(true);
   });
 
-  it('stays put and says why when the create fails', () => {
+  it('stays put and says so when the create fails', () => {
     response = () =>
       throwError(() => ({ serverMessages: ['Name has already been taken'] }) as ApiError);
 
     internals().create();
 
     expect(navigated).toEqual([]);
-    expect(internals().apiErrors()).toEqual(['Name has already been taken']);
+    expect(internals().createFailed()).toBe(true);
     expect(internals().saving()).toBe(false);
+  });
+
+  // The page shows the failure itself, translated; the global toast would say it twice.
+  it('creates quietly, so the global toast does not repeat the inline failure', () => {
+    internals().create();
+
+    expect(createOpts).toEqual([{ suppressErrorToast: true }]);
+  });
+
+  it('clears the failure when the host tries again', () => {
+    response = () => throwError(() => ({ status: 0 }) as ApiError);
+    internals().create();
+    response = () => of({ id: 'nHelLt', name: 'Test Hostel' } as unknown as HostelDetail);
+
+    internals().create();
+
+    expect(internals().createFailed()).toBe(false);
   });
 });

@@ -679,6 +679,23 @@ describe('HostOpsApi request options', () => {
       plainArgCount: 2,
     },
     { name: 'markInvoicePaid', run: (api, opts) => api.markInvoicePaid(HOSTEL_ID, 'rb-1', opts).subscribe(), plainArgCount: 2 },
+    {
+      name: 'createRoom',
+      run: (api, opts) =>
+        api.createRoom(HOSTEL_ID, { room_number: '101', room_type_id: 'rt1', capacity: 2 }, opts).subscribe(),
+      plainArgCount: 2,
+    },
+    {
+      name: 'updateRoom',
+      run: (api, opts) => api.updateRoom(HOSTEL_ID, 'rm-1', { capacity: 2 }, opts).subscribe(),
+      plainArgCount: 2,
+    },
+    {
+      name: 'bulkCreateRooms',
+      run: (api, opts) =>
+        api.bulkCreateRooms(HOSTEL_ID, [{ room_number: '101', room_type_id: 'rt1', capacity: 2 }], opts).subscribe(),
+      plainArgCount: 2,
+    },
   ];
 
   function setUpRecorder(): { api: HostOpsApi; http: ApiClientRecorder } {

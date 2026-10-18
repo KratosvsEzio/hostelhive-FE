@@ -579,7 +579,8 @@
     "findingTheRoomsBuiltOn": "{{name}} の部屋を検索しています…",
     "moveAllRoomsTo": "すべての部屋を次に移動",
     "selectARoomType": "部屋タイプを選択",
-    "noRoomsAreBuiltOn": "{{name}} を使用している部屋はないため、他に変更はありません。保存時に削除されます。"
+    "noRoomsAreBuiltOn": "{{name}} を使用している部屋はないため、他に変更はありません。保存時に削除されます。",
+    "couldNotMoveRoom": "この部屋を移動できませんでした。もう一度お試しください。"
   },
   "a11y": {
     "close": "閉じる",
@@ -1264,7 +1265,10 @@
     "nobodyInThisRoomThat": "その日はこの部屋に誰もいません。",
     "thisRoomCurrentlyHasNo": "この部屋には現在、入居中の方はいません。",
     "addYourFirstRoomTo": "最初の部屋を追加して、稼働状況の記録を始めましょう。",
-    "bedNumbersAreNotAssigned": "ベッド番号はまだ割り当てられていません — カレンダーは使用中のベッド数を示すもので、誰がどのベッドかは示しません。"
+    "bedNumbersAreNotAssigned": "ベッド番号はまだ割り当てられていません — カレンダーは使用中のベッド数を示すもので、誰がどのベッドかは示しません。",
+    "couldNotUpdateRoom": "この部屋を更新できませんでした。もう一度お試しください。",
+    "couldNotCreateRoom": "この部屋を作成できませんでした。もう一度お試しください。",
+    "couldNotCreateRooms": "これらの部屋を作成できませんでした。もう一度お試しください。"
   },
   "hostUtilities": {
     "ratePerUnit": "単価",
@@ -1568,7 +1572,7 @@
     "uploadingPhotos": "写真をアップロード中…",
     "create": "作成",
     "createHostel": "ホステルを作成",
-    "couldnTCreateHostelPlease": "ホステルを作成できませんでした — 以下を修正してください："
+    "couldNotCreateHostel": "ホステルを作成できませんでした。内容を確認して、もう一度お試しください。"
   },
   "adminAdminListings": {
     "allListings": "すべての掲載",

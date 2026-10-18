@@ -12,6 +12,7 @@ import { primaryFirst } from '@util/primary-photo';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
 import {
   DEFAULT_OCCUPANCY_TYPE,
+  OCCUPANCY_WIRE_VALUE,
   OccupancyType,
   isOccupancyType,
 } from '@util/occupancy-type';
@@ -355,8 +356,12 @@ export class ListingsApi {
     // missing field matches nothing, so the filter silently narrowed to zero.
     //
     // The path ends in "type", so parse_key appends `.keyword` and this stays an exact term
-    // match on the stored 'shared' / 'private' string.
-    if (roomType) params['f[room_types.occupancy_type]'] = roomType;
+    // match on the stored backend enum string: 'shared' / 'private_room', not the app's
+    // 'private' (see OCCUPANCY_WIRE_VALUE). An unrecognised value falls back to the default,
+    // as the budget field below does, rather than sending a term that matches nothing.
+    if (roomType)
+      params['f[room_types.occupancy_type]'] =
+        OCCUPANCY_WIRE_VALUE[isOccupancyType(roomType) ? roomType : DEFAULT_OCCUPANCY_TYPE];
 
     // Budget band → a range on the "from" price for the occupancy the seeker is shopping for.
     //

@@ -579,7 +579,8 @@
     "findingTheRoomsBuiltOn": "正在查找使用 {{name}} 的房间…",
     "moveAllRoomsTo": "将所有房间移至",
     "selectARoomType": "选择房间类型",
-    "noRoomsAreBuiltOn": "没有房间使用 {{name}}，因此不会有其他变化。保存时将其删除。"
+    "noRoomsAreBuiltOn": "没有房间使用 {{name}}，因此不会有其他变化。保存时将其删除。",
+    "couldNotMoveRoom": "无法移动此房间，请重试。"
   },
   "a11y": {
     "close": "关闭",
@@ -1264,7 +1265,10 @@
     "nobodyInThisRoomThat": "当天此房间无人入住。",
     "thisRoomCurrentlyHasNo": "此房间目前没有在住租客。",
     "addYourFirstRoomTo": "添加第一个房间，开始追踪入住率。",
-    "bedNumbersAreNotAssigned": "尚未分配床位号 — 日历显示已占用的床位数量，而非每位客人具体在哪张床。"
+    "bedNumbersAreNotAssigned": "尚未分配床位号 — 日历显示已占用的床位数量，而非每位客人具体在哪张床。",
+    "couldNotUpdateRoom": "无法更新此房间，请重试。",
+    "couldNotCreateRoom": "无法创建此房间，请重试。",
+    "couldNotCreateRooms": "无法创建这些房间，请重试。"
   },
   "hostUtilities": {
     "ratePerUnit": "单价",
@@ -1568,7 +1572,7 @@
     "uploadingPhotos": "正在上传照片…",
     "create": "创建",
     "createHostel": "创建旅舍",
-    "couldnTCreateHostelPlease": "无法创建旅舍 — 请修正以下问题："
+    "couldNotCreateHostel": "无法创建旅舍，请检查信息后重试。"
   },
   "adminAdminListings": {
     "allListings": "全部房源",

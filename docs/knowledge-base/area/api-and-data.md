@@ -58,7 +58,7 @@ Backend conventions the mappers rely on:
   - It matches the backend's exact wording, then keywords, in that priority.
   - Each screen maps the kind to its own key; the host stay moves do it in `apps/web/src/app/features/host/bookings/booking-move-failure.ts`.
 - An image upload that never reached storage rejects with `UploadNetworkError` (`apps/web/src/app/services/image-upload.service.ts`); test with `instanceof`, not its text.
-- To keep the toast off one call whose screen shows the error inline, give the service method a trailing `opts?: ApiRequestOptions` and spread `...requestContextArgs(opts)` into the `ApiClient` call; callers pass `{ suppressErrorToast: true }` (`host-ops-api.ts`, `host-bookings-api.ts`). Without the flag the call is unchanged. All five `ApiClient` verbs accept the context; `auth-api.ts` builds its own with a private `inlineErrors()`.
+- To keep the toast off one call whose screen shows the error inline, give the service method a trailing `opts?: ApiRequestOptions` and spread `...requestContextArgs(opts)` into the `ApiClient` call; callers pass `{ suppressErrorToast: true }` (`host-ops-api.ts`, `host-bookings-api.ts`, `hostels-api.ts`). Without the flag the call is unchanged. All five `ApiClient` verbs accept the context; `auth-api.ts` builds its own with a private `inlineErrors()`.
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps

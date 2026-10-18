@@ -605,9 +605,10 @@ export class HostOpsApi {
   createRoom(
     hostelId: string,
     room: { room_number: string; room_type_id: string; capacity: number; floor?: string | null },
+    opts?: ApiRequestOptions,
   ): Observable<Room> {
     return this.api
-      .post<{ room?: ApiRoom }>(`/api/host/hostels/${hostelId}/rooms`, { room })
+      .post<{ room?: ApiRoom }>(`/api/host/hostels/${hostelId}/rooms`, { room }, ...requestContextArgs(opts))
       .pipe(map((r) => toRoom(r?.room ?? ({} as ApiRoom))));
   }
 
@@ -616,9 +617,10 @@ export class HostOpsApi {
     hostelId: string,
     roomId: string,
     room: { room_type_id?: string; capacity?: number; renter_ids?: number[]; floor?: string | null },
+    opts?: ApiRequestOptions,
   ): Observable<Room> {
     return this.api
-      .put<{ room?: ApiRoom }>(`/api/host/hostels/${hostelId}/rooms/${roomId}`, { room })
+      .put<{ room?: ApiRoom }>(`/api/host/hostels/${hostelId}/rooms/${roomId}`, { room }, ...requestContextArgs(opts))
       .pipe(map((r) => toRoom(r?.room ?? ({} as ApiRoom))));
   }
 
@@ -672,11 +674,14 @@ export class HostOpsApi {
   bulkCreateRooms(
     hostelId: string,
     rooms: { room_number: string; room_type_id: string; capacity: number }[],
+    opts?: ApiRequestOptions,
   ): Observable<Room[]> {
     return this.api
-      .put<{ hostel?: { rooms?: ApiRoom[] | null } }>(`/api/hostels/${hostelId}`, {
-        hostel: { rooms_attributes: rooms },
-      })
+      .put<{ hostel?: { rooms?: ApiRoom[] | null } }>(
+        `/api/hostels/${hostelId}`,
+        { hostel: { rooms_attributes: rooms } },
+        ...requestContextArgs(opts),
+      )
       .pipe(map((r) => (r?.hostel?.rooms ?? []).map(toRoom)));
   }
 

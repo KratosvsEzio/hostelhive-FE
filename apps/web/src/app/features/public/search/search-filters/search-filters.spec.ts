@@ -5,6 +5,7 @@ import { ParamMap, Router, NavigationStart, convertToParamMap, provideRouter } f
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { Dropdown } from '@hostelhive/ui';
+import { TranslocoService } from '@jsverse/transloco';
 import { OffersApi } from '@services';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
@@ -156,6 +157,22 @@ async function mountFromUrl(
 }
 
 /**
+ * Puts the two room labels in memory, so the room pill can read as one of them.
+ *
+ * The filter row labels its options only once a language has strings, and the test loader
+ * supplies none, so without this a pill that shows a chosen option reads as blank.
+ */
+async function loadRoomLabels(m: Mounted): Promise<void> {
+  TestBed.inject(TranslocoService).setTranslation(
+    { search: { sharedRoom: 'search.sharedRoom', privateRoom: 'search.privateRoom' } },
+    TestBed.inject(LocaleStore).active(),
+  );
+  // The store hears of new strings a tick later.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await m.settle();
+}
+
+/**
  * The pressed state of the modal's toggle buttons (type of stay, room type and sort), by label.
  * A label no button carries reads as null.
  */
@@ -207,6 +224,21 @@ function filtersButton(m: Mounted): HTMLElement | null {
 /** The inline sort dropdown — the second dropdown in the row, after room type. */
 function sortDropdown(m: Mounted): DebugElement {
   return m.harness.fixture.debugElement.queryAll(By.directive(Dropdown))[1];
+}
+
+/** The inline room type pill — the first dropdown in the row, before sort. */
+function roomPill(m: Mounted): DebugElement {
+  return m.harness.fixture.debugElement.queryAll(By.directive(Dropdown))[0];
+}
+
+/** The property type field inside the open filters modal, which only exists while it is open. */
+function modalPropertyType(m: Mounted): DebugElement {
+  const modal = m.harness.fixture.debugElement.query(By.directive(SearchFilterModal));
+  const field = modal
+    .queryAll(By.directive(Dropdown))
+    .find((d) => (d.componentInstance as Dropdown).placeholder() === 'filters.anyPropertyType');
+  if (!field) throw new Error('The open modal has no property type dropdown');
+  return field;
 }
 
 /** The sort dropdown's option values. */
@@ -349,6 +381,110 @@ describe('SearchFilters', () => {
       expect((sort.componentInstance as Dropdown).value()).toBe('price-asc');
       expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
       expect(triggerOf(sort).classList.contains('bg-brand-50')).toBe(true);
+    });
+  });
+
+  // Filters come through the real merge here, so a value the reader stops correcting shows up.
+  describe('showing a room or property type carried by the URL', () => {
+    it.each(['?roomType=bogus', '?propertyType=bogus', '?roomType=bogus&propertyType=bogus'])(
+      'shows no badge and no highlight for an unknown value in %s',
+      async (query) => {
+        const m = await mountFromUrl(`/en/search/lahore${query}`);
+
+        expect(badge(m)).toBeNull();
+        expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(false);
+      },
+    );
+
+    it('counts only the other filters beside an unknown room type and property type', async () => {
+      const m = await mountFromUrl(
+        '/en/search/lahore?roomType=bogus&propertyType=bogus&amenities=wifi',
+      );
+
+      expect(badge(m)).toBe('1');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+    });
+
+    it('counts only the page type beside an unknown room type and property type', async () => {
+      const m = await mountFromUrl('/en/hostels/lahore/girls?roomType=bogus&propertyType=bogus', {
+        seed: GIRLS_SEED,
+        routes: LAHORE_ROUTES,
+      });
+
+      expect(badge(m)).toBe('1');
+    });
+
+    it('shows the room pill on Shared for an unknown room type', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=bogus');
+      await loadRoomLabels(m);
+      const pill = roomPill(m);
+
+      expect((pill.componentInstance as Dropdown).value()).toBe('shared');
+      expect(triggerOf(pill).textContent?.trim()).toBe('search.sharedRoom');
+    });
+
+    it('opens the modal on Shared for an unknown room type', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=bogus');
+      await m.openFilters();
+
+      expect(pressed(['search.sharedRoom', 'search.privateRoom'])).toEqual({
+        'search.sharedRoom': 'true',
+        'search.privateRoom': 'false',
+      });
+    });
+
+    it('opens the modal on Any property type for an unknown property type', async () => {
+      const m = await mountFromUrl('/en/search/lahore?propertyType=bogus');
+      await m.openFilters();
+      const field = modalPropertyType(m);
+
+      expect((field.componentInstance as Dropdown).value()).toBeNull();
+      expect(triggerOf(field).textContent?.trim()).toBe('filters.anyPropertyType');
+    });
+
+    // The backend's own slug for a private room, which the filters read as Private.
+    it('counts a private_room link as one filter', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private_room');
+
+      expect(badge(m)).toBe('1');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+    });
+
+    it('shows the room pill on Private for a private_room link', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private_room');
+      await loadRoomLabels(m);
+      const pill = roomPill(m);
+
+      expect((pill.componentInstance as Dropdown).value()).toBe('private');
+      expect(triggerOf(pill).textContent?.trim()).toBe('search.privateRoom');
+    });
+
+    it('opens the modal on Private for a private_room link', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private_room');
+      await m.openFilters();
+
+      expect(pressed(['search.sharedRoom', 'search.privateRoom'])).toEqual({
+        'search.sharedRoom': 'false',
+        'search.privateRoom': 'true',
+      });
+    });
+
+    it('counts a valid room type and property type as two filters', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private&propertyType=house');
+
+      expect(badge(m)).toBe('2');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+    });
+
+    it('opens the modal on a valid room type and property type', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private&propertyType=house');
+      await m.openFilters();
+
+      expect(pressed(['search.sharedRoom', 'search.privateRoom'])).toEqual({
+        'search.sharedRoom': 'false',
+        'search.privateRoom': 'true',
+      });
+      expect((modalPropertyType(m).componentInstance as Dropdown).value()).toBe('house');
     });
   });
 
@@ -562,6 +698,49 @@ describe('SearchFilters', () => {
       await m.apply();
 
       expect(m.current()).toEqual({ path: '/en/search/lahore', query: { roomType: 'private' } });
+    });
+  });
+
+  // The modal writes back what it was seeded with, so a value the seed kept would be saved again.
+  describe('applying over a room or property type carried by the URL', () => {
+    // The budget slider cannot be dragged here, so a price already in the URL stands in for it.
+    it('writes neither unknown value back when applied unchanged', async () => {
+      const m = await mountFromUrl(
+        '/en/search/lahore?roomType=bogus&propertyType=bogus&minPrice=5000',
+      );
+      await m.openFilters();
+      await m.apply();
+
+      expect(m.current()).toEqual({ path: '/en/search/lahore', query: { minPrice: '5000' } });
+    });
+
+    it('writes only the chosen room type over unknown values', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=bogus&propertyType=bogus');
+      await m.openFilters();
+      await m.choose('search.privateRoom');
+      await m.apply();
+
+      expect(m.current()).toEqual({ path: '/en/search/lahore', query: { roomType: 'private' } });
+    });
+
+    // The one write that rewrites the backend's slug: the modal is seeded with the filters' word.
+    it('rewrites a private_room link to private when applied unchanged', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private_room');
+      await m.openFilters();
+      await m.apply();
+
+      expect(m.current()).toEqual({ path: '/en/search/lahore', query: { roomType: 'private' } });
+    });
+
+    it('keeps a valid room type and property type when applied unchanged', async () => {
+      const m = await mountFromUrl('/en/search/lahore?roomType=private&propertyType=house');
+      await m.openFilters();
+      await m.apply();
+
+      expect(m.current()).toEqual({
+        path: '/en/search/lahore',
+        query: { roomType: 'private', propertyType: 'house' },
+      });
     });
   });
 
