@@ -564,7 +564,8 @@
     "findingTheRoomsBuiltOn": "جارٍ البحث عن الغرف المبنية على {{name}}…",
     "moveAllRoomsTo": "نقل جميع الغرف إلى",
     "selectARoomType": "اختر نوع الغرفة",
-    "noRoomsAreBuiltOn": "لا توجد غرف مبنية على {{name}}، لذا لن يتغيّر شيء آخر. ستتم إزالته عند الحفظ."
+    "noRoomsAreBuiltOn": "لا توجد غرف مبنية على {{name}}، لذا لن يتغيّر شيء آخر. ستتم إزالته عند الحفظ.",
+    "couldNotMoveRoom": "تعذّر نقل هذه الغرفة. حاول مرة أخرى."
   },
   "a11y": {
     "close": "إغلاق",
@@ -1249,7 +1250,10 @@
     "nobodyInThisRoomThat": "لا أحد في هذه الغرفة في ذلك اليوم.",
     "thisRoomCurrentlyHasNo": "لا يوجد حاليًا مستأجرون نشطون في هذه الغرفة.",
     "addYourFirstRoomTo": "أضف غرفتك الأولى لبدء تتبّع الإشغال.",
-    "bedNumbersAreNotAssigned": "لم تُخصَّص أرقام الأسرّة بعد — يوضّح التقويم عدد الأسرّة المشغولة، لا السرير الذي يشغله كل نزيل."
+    "bedNumbersAreNotAssigned": "لم تُخصَّص أرقام الأسرّة بعد — يوضّح التقويم عدد الأسرّة المشغولة، لا السرير الذي يشغله كل نزيل.",
+    "couldNotUpdateRoom": "تعذّر تحديث هذه الغرفة. يُرجى المحاولة مرة أخرى.",
+    "couldNotCreateRoom": "تعذّر إنشاء هذه الغرفة. يُرجى المحاولة مرة أخرى.",
+    "couldNotCreateRooms": "تعذّر إنشاء هذه الغرف. يُرجى المحاولة مرة أخرى."
   },
   "hostUtilities": {
     "ratePerUnit": "السعر لكل وحدة",
@@ -1553,7 +1557,7 @@
     "uploadingPhotos": "جارٍ رفع الصور…",
     "create": "إنشاء",
     "createHostel": "إنشاء نزل",
-    "couldnTCreateHostelPlease": "تعذر إنشاء النزل — يرجى تصحيح ما يلي:"
+    "couldNotCreateHostel": "تعذّر إنشاء النُزل. تحقّق من التفاصيل وحاول مرة أخرى."
   },
   "adminAdminListings": {
     "allListings": "جميع الإعلانات",

@@ -176,6 +176,7 @@ interface RoomMoveRow {
   /** Chosen replacement room type, as its server id. */
   targetId: string | null;
   status: 'idle' | 'saving' | 'done' | 'error';
+  /** An i18n key, translated in the template; `''` when the row has no error. */
   error: string;
 }
 
@@ -1217,14 +1218,15 @@ export class HostelForm {
 
     this.patchRoom(row.id, { status: 'saving', error: '' });
     this.hostOps
-      .updateRoom(hostelId, row.id, { room_type_id: row.targetId })
+      // Quiet: the row shows the failure itself, so the global toast would say it twice.
+      .updateRoom(hostelId, row.id, { room_type_id: row.targetId }, { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.patchRoom(row.id, { status: 'done', error: '' }),
         error: () =>
           this.patchRoom(row.id, {
             status: 'error',
-            error: "Couldn't move this room. Try again.",
+            error: 'hostelForm.couldNotMoveRoom',
           }),
       });
   }
