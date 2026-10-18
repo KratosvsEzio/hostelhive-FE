@@ -220,7 +220,8 @@ export class MessNotifications {
     clearTimeout(this.menuSaveTimer);
     this.menuSaveState.set('saving');
 
-    this.hostelApi.saveWeeklyMenus(hostelId, this.svc.buildWeeklyMenuPayload())
+    // Quiet: the save button shows the failure itself, so the global toast would say it twice.
+    this.hostelApi.saveWeeklyMenus(hostelId, this.svc.buildWeeklyMenuPayload(), { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -251,7 +252,8 @@ export class MessNotifications {
       };
     });
 
-    this.hostelApi.saveMealTypes(hostelId, payloads)
+    // Quiet for the same reason as the menu save.
+    this.hostelApi.saveMealTypes(hostelId, payloads, { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (records) => {

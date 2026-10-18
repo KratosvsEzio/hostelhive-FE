@@ -24,7 +24,8 @@ import { currencySymbol } from '@util/currencies';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
 import { ACCOMMODATION_LABEL_KEYS } from '@util/accommodation-type';
 import { isPriceSort, sortsFor } from '@features/public/search/search-sort';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
 export interface FilterState {
@@ -128,6 +129,19 @@ export class SearchFilterModal {
   /** Only the sorts the drafted type can honour; see `sortsFor`. */
   protected readonly sortOptions = computed(() => sortsFor(this.draftGender()));
 
+  private readonly i18n = inject(TranslocoService);
+  private readonly locale = inject(LocaleStore);
+
+  /**
+   * An option label, once the language file has landed -- the same gate as `SearchFilters`.
+   *
+   * The dropdown takes labels as data, so they cannot use the pipe, and `translate()` called
+   * before the file arrives finds nothing and logs "Missing translation".
+   */
+  private t(key: string): string {
+    return this.locale.ready() ? this.i18n.translate(key) : '';
+  }
+
   private readonly _offersApi = inject(OffersApi);
   private readonly _offerCategories = toSignal(
     this._offersApi.categories().pipe(catchError(() => of([]))),
@@ -141,7 +155,7 @@ export class SearchFilterModal {
         cat.offers.map((o): DropdownOption => ({ value: o.slug, label: o.name, group: cat.name })),
       );
     }
-    return Object.entries(AMENITIES).map(([slug, v]): DropdownOption => ({ value: slug, label: v.label }));
+    return Object.entries(AMENITIES).map(([slug, v]): DropdownOption => ({ value: slug, label: this.t(v.key) }));
   });
 
   protected readonly amenityValue = computed(() => this.draftAmenities());
@@ -150,7 +164,9 @@ export class SearchFilterModal {
     this.draftAmenities.set(Array.isArray(v) ? v : v ? [v] : []);
   }
 
-  protected readonly propertyTypes = PROPERTY_TYPES;
+  protected readonly propertyTypes = computed<DropdownOption[]>(() =>
+    PROPERTY_TYPES.map((p) => ({ value: p.value, label: this.t(p.key) })),
+  );
 
   // Same scale as the search bar's Budget popover — both edit minPrice/maxPrice.
   protected readonly BUDGET_MIN = BUDGET_MIN;

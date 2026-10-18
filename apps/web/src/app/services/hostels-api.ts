@@ -16,7 +16,7 @@ import {
   HostelWriteRequest,
   RoomType,
 } from '@hostelhive/data-access';
-import { ApiClient } from '@core/api-resource';
+import { ApiClient, ApiRequestOptions, requestContextArgs } from '@core/api-resource';
 import { ApiPagination, toPageInfo } from '@util/pagination';
 
 export interface WeeklyMenuPayload {
@@ -361,10 +361,10 @@ export class HostelsApi {
   }
 
   /** POST /api/hostels — create. Body is nested under `hostel`. */
-  create(input: HostelInput): Observable<HostelDetail> {
+  create(input: HostelInput, opts?: ApiRequestOptions): Observable<HostelDetail> {
     const body: HostelWriteRequest = { hostel: input };
     return this.api
-      .post<HostelResponse>('/api/hostels', body)
+      .post<HostelResponse>('/api/hostels', body, ...requestContextArgs(opts))
       .pipe(map((r) => requireHostel(r)));
   }
 
@@ -382,10 +382,13 @@ export class HostelsApi {
   updateAttachmentLabel(
     attachmentId: string,
     labelId: string | null,
+    opts?: ApiRequestOptions,
   ): Observable<void> {
-    return this.api.put<void>(`/api/attachments/${attachmentId}/update_label`, {
-      attachment: { attachment_label_id: labelId },
-    });
+    return this.api.put<void>(
+      `/api/attachments/${attachmentId}/update_label`,
+      { attachment: { attachment_label_id: labelId } },
+      ...requestContextArgs(opts),
+    );
   }
 
   /**
@@ -403,14 +406,14 @@ export class HostelsApi {
    * Host-only: the moderator attachment controller has `update_label`, `mark_as_active` and
    * `mark_as_rejected`, and no equivalent of this.
    */
-  markAttachmentAsPrimary(attachmentId: string): Observable<void> {
-    return this.api.put<void>(`/api/attachments/${attachmentId}/mark_as_primary`, {});
+  markAttachmentAsPrimary(attachmentId: string, opts?: ApiRequestOptions): Observable<void> {
+    return this.api.put<void>(`/api/attachments/${attachmentId}/mark_as_primary`, {}, ...requestContextArgs(opts));
   }
 
-  update(id: number | string, input: HostelInput): Observable<HostelDetail> {
+  update(id: number | string, input: HostelInput, opts?: ApiRequestOptions): Observable<HostelDetail> {
     const body: HostelWriteRequest = { hostel: input };
     return this.api
-      .put<HostelResponse>(`/api/hostels/${id}`, body)
+      .put<HostelResponse>(`/api/hostels/${id}`, body, ...requestContextArgs(opts))
       .pipe(map((r) => requireHostel(r, id)));
   }
 
@@ -460,9 +463,17 @@ export class HostelsApi {
   }
 
   /** POST /api/host/hostels/:id/meal_types — bulk upsert notification settings for all meals. */
-  saveMealTypes(hostelId: string, payloads: MealTypePayload[]): Observable<MealTypeRecord[]> {
+  saveMealTypes(
+    hostelId: string,
+    payloads: MealTypePayload[],
+    opts?: ApiRequestOptions,
+  ): Observable<MealTypeRecord[]> {
     return this.api
-      .post<{ meal_types: MealTypeRecord[] }>(`/api/host/hostels/${hostelId}/meal_types`, { meal_types: payloads })
+      .post<{ meal_types: MealTypeRecord[] }>(
+        `/api/host/hostels/${hostelId}/meal_types`,
+        { meal_types: payloads },
+        ...requestContextArgs(opts),
+      )
       .pipe(map((r) => r.meal_types ?? []));
   }
 
@@ -481,10 +492,12 @@ export class HostelsApi {
   }
 
   /** PUT /api/host/hostels/:id/weekly_menus — upsert the full week's menu (id present = update, absent = create). */
-  saveWeeklyMenus(hostelId: string, menus: WeeklyMenuPayload[]): Observable<void> {
-    return this.api.put<void>(`/api/host/hostels/${hostelId}/weekly_menus`, {
-      weekly_menus: menus,
-    });
+  saveWeeklyMenus(hostelId: string, menus: WeeklyMenuPayload[], opts?: ApiRequestOptions): Observable<void> {
+    return this.api.put<void>(
+      `/api/host/hostels/${hostelId}/weekly_menus`,
+      { weekly_menus: menus },
+      ...requestContextArgs(opts),
+    );
   }
 
   /** GET /api/host/hostels/:id/meal_confirmations — tenant meal opt-ins, filterable by date and meal type. */

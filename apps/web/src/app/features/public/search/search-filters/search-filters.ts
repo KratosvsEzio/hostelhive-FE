@@ -129,11 +129,6 @@ export class SearchFilters {
     () => this.params()?.get('propertyType') ?? '',
   );
   /**
-   * Private or shared. **Inert server-side until the backend indexes `room_type`** — the
-   * param travels and the UI reflects it, but results do not narrow yet. Same position the
-   * amenity filter was in before `offers` reached the search document.
-   */
-  /**
    * Always one of the two -- there is no "Any" any more.
    *
    * Shared is the floor rather than a chosen filter, so it does not count towards the
@@ -176,13 +171,14 @@ export class SearchFilters {
     return n;
   });
 
+  /** Rendered in the template, so the labels go through the pipe rather than `t()`. */
   readonly popularAmenities = [
-    { slug: 'wifi', label: 'Wi-Fi', icon: 'wifi' },
-    { slug: 'air-conditioning', label: 'AC', icon: 'air-conditioning' },
-    { slug: 'kitchen', label: 'Kitchen', icon: 'tools-kitchen-2' },
-    { slug: 'security-cameras', label: 'Security', icon: 'device-cctv' },
-    { slug: 'parking-on-premises', label: 'Parking', icon: 'car' },
-    { slug: 'attached', label: 'Attached Bath', icon: 'bath' },
+    { slug: 'wifi', key: 'filters.amenityWifi', icon: 'wifi' },
+    { slug: 'air-conditioning', key: 'filters.amenityAc', icon: 'air-conditioning' },
+    { slug: 'kitchen', key: 'filters.amenityKitchen', icon: 'tools-kitchen-2' },
+    { slug: 'security-cameras', key: 'filters.amenitySecurity', icon: 'device-cctv' },
+    { slug: 'parking-on-premises', key: 'filters.amenityParking', icon: 'car' },
+    { slug: 'attached', key: 'filters.amenityAttachedBath', icon: 'bath' },
   ];
 
   private asValue(v: string | string[] | null): string | null {

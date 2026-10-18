@@ -111,7 +111,7 @@ export interface ListingQuery {
   maxPrice?: number;
   sharing?: string; // e.g. '2-sharing'
   propertyType?: string; // slug, e.g. 'apartment' — see PROPERTY_TYPES
-  /** 'private' | 'shared'. Inert server-side until the backend indexes `room_type`. */
+  /** 'private' | 'shared'; `ListingsApi.list` sends it under the index's name (`OCCUPANCY_WIRE_VALUE`). */
   roomType?: string;
   near?: { lat: number; lng: number; radiusKm?: number }; // proximity search (from a picked place)
   bounds?: { north: number; south: number; east: number; west: number }; // exact map viewport
@@ -121,22 +121,27 @@ export interface ListingQuery {
   pageSize?: number;
 }
 
-/** Amenity key → display label + Tabler icon. `short` is the phone-width variant for tight tiles. */
-export const AMENITIES: Record<string, { label: string; icon: string; short?: string }> = {
-  wifi: { label: 'Wi-Fi', icon: 'ti-wifi' },
-  ac: { label: 'Air conditioning', short: 'AC', icon: 'ti-air-conditioning' },
-  kitchen: { label: 'Kitchen', icon: 'ti-tools-kitchen-2' },
-  security: { label: 'Security guard', short: 'Security', icon: 'ti-shield-check' },
-  parking: { label: 'Parking', icon: 'ti-car' },
-  generator: { label: 'Generator', icon: 'ti-bolt' },
-  cctv: { label: 'CCTV', icon: 'ti-device-cctv' },
-  laundry: { label: 'Laundry', icon: 'ti-wash-machine' },
+/**
+ * Amenity key → display label + Tabler icon. `short` is the phone-width variant for tight tiles.
+ *
+ * `key` is the translated name, for surfaces that show it in the seeker's language; `label` is
+ * the English name the listing page still renders directly.
+ */
+export const AMENITIES: Record<string, { label: string; key: string; icon: string; short?: string }> = {
+  wifi: { label: 'Wi-Fi', key: 'filters.amenityWifi', icon: 'ti-wifi' },
+  ac: { label: 'Air conditioning', key: 'filters.amenityAirConditioning', short: 'AC', icon: 'ti-air-conditioning' },
+  kitchen: { label: 'Kitchen', key: 'filters.amenityKitchen', icon: 'ti-tools-kitchen-2' },
+  security: { label: 'Security guard', key: 'filters.amenitySecurityGuard', short: 'Security', icon: 'ti-shield-check' },
+  parking: { label: 'Parking', key: 'filters.amenityParking', icon: 'ti-car' },
+  generator: { label: 'Generator', key: 'filters.amenityGenerator', icon: 'ti-bolt' },
+  cctv: { label: 'CCTV', key: 'filters.amenityCctv', icon: 'ti-device-cctv' },
+  laundry: { label: 'Laundry', key: 'filters.amenityLaundry', icon: 'ti-wash-machine' },
 };
 
-/** Property type slug → display label + backend enum id (GET /public/hostels → property_type). */
-export const PROPERTY_TYPES: { value: string; label: string; id: number }[] = [
-  { value: 'apartment', label: 'Apartment', id: 0 },
-  { value: 'room', label: 'Room', id: 1 },
-  { value: 'building', label: 'Building', id: 2 },
-  { value: 'house', label: 'House', id: 3 },
+/** Property type slug → translation key + backend enum id (GET /public/hostels → property_type). */
+export const PROPERTY_TYPES: { value: string; key: string; id: number }[] = [
+  { value: 'apartment', key: 'filters.propertyTypeApartment', id: 0 },
+  { value: 'room', key: 'filters.propertyTypeRoom', id: 1 },
+  { value: 'building', key: 'filters.propertyTypeBuilding', id: 2 },
+  { value: 'house', key: 'filters.propertyTypeHouse', id: 3 },
 ];
