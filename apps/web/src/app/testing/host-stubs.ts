@@ -37,6 +37,9 @@ export class HostOpsApiStub {
   roomDetail = vi.fn<HostOpsApi['roomDetail']>(() => of([]));
   roomFormOptions = vi.fn<HostOpsApi['roomFormOptions']>(() => of([]));
   deleteRoom = vi.fn<HostOpsApi['deleteRoom']>(() => NEVER);
+  createRoom = vi.fn<HostOpsApi['createRoom']>(() => NEVER);
+  updateRoom = vi.fn<HostOpsApi['updateRoom']>(() => NEVER);
+  bulkCreateRooms = vi.fn<HostOpsApi['bulkCreateRooms']>(() => NEVER);
   deleteRenter = vi.fn<HostOpsApi['deleteRenter']>(() => NEVER);
 
   provider(): Provider {

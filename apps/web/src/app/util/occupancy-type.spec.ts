@@ -1,5 +1,6 @@
 import {
   DEFAULT_OCCUPANCY_TYPE,
+  OCCUPANCY_WIRE_VALUE,
   OCCUPANCY_TYPES,
   discountError,
   OCCUPANCY_OPTIONS,
@@ -108,8 +109,8 @@ describe('discountError', () => {
  *
  * `GET /api/hostels/new` publishes `private_room`; the seeker filters and the older host code
  * say `private`. A `=== 'private'` that meets `private_room` answers *shared* — which prices a
- * whole room per bed, draws it as a row of pips and sells it a bed at a time. Nothing has hit
- * that yet only because no live hostel has a private room; these keep it that way.
+ * whole room per bed, draws it as a row of pips and sells it a bed at a time. The search index
+ * already carries `private_room`, so these keep every reader of it answering *private*.
  */
 describe('isPrivateOccupancy', () => {
   it('accepts either spelling the API might send', () => {
@@ -131,6 +132,26 @@ describe('isPrivateOccupancy', () => {
     expect(occupancyLabel('private_room')).toBe('Private room');
     expect(priceUnitNote('private_room')).toBe('Prices are per room');
   });
+});
+
+/**
+ * What the search index calls each occupancy type.
+ *
+ * The room-type filter is an exact term match on the index's string, so a wrong entry here does
+ * not fail: it answers zero hostels, which reads as an honest "nothing matched".
+ */
+describe('OCCUPANCY_WIRE_VALUE', () => {
+  it('names each type the way the index stores it', () => {
+    expect(OCCUPANCY_WIRE_VALUE).toEqual({ private: 'private_room', shared: 'shared' });
+  });
+
+  // A translated value must be classed the same as the one it came from.
+  it.each([...OCCUPANCY_TYPES])(
+    'agrees with the app about whether %s is a private room',
+    (type) => {
+      expect(isPrivateOccupancy(OCCUPANCY_WIRE_VALUE[type])).toBe(isPrivateOccupancy(type));
+    },
+  );
 });
 
 /**

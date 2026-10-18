@@ -548,3 +548,50 @@ describe('HostelForm time zone', () => {
     expect(el.querySelector('#hf-timezone')?.hasAttribute('disabled') || el.querySelector('#hf-timezone')?.getAttribute('aria-disabled') === 'true').toBe(true);
   });
 });
+
+/**
+ * Moving a room to another type, from the delete-room-type dialog.
+ *
+ * A failed move is shown on its own row, translated; the call opts out of the global toast,
+ * which would otherwise say it a second time.
+ */
+describe('HostelForm room move', () => {
+  interface MoveRow {
+    id: string;
+    number: string;
+    floor: string;
+    targetId: string | null;
+    status: 'idle' | 'saving' | 'done' | 'error';
+    error: string;
+  }
+  interface Internals {
+    rtRooms: { set(rows: MoveRow[] | null): void; (): MoveRow[] | null };
+    updateRoomRow(row: MoveRow): void;
+  }
+
+  it('moves quietly and puts the translated failure on the row', () => {
+    TestBed.resetTestingModule();
+    const updateRoom = vi.fn(() => throwError(() => ({ status: 422, serverMessages: ['Room type is invalid'] })));
+    TestBed.configureTestingModule({
+      imports: [HostelForm],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostelsApi, useValue: new HostelsApiStub() },
+        { provide: OffersApi, useValue: new OffersApiStub() },
+        { provide: ImageUploadService, useValue: { upload: () => throwError(() => new Error('x')) } },
+        { provide: HostOpsApi, useValue: { updateRoom } },
+      ],
+    });
+    const fixture = TestBed.createComponent(HostelForm);
+    fixture.componentRef.setInput('mode', 'edit');
+    fixture.componentRef.setInput('initialData', { id: 'MjvuEl', name: 'Backpacker' } as unknown as HostelDetail);
+    const form = fixture.componentInstance as unknown as Internals;
+    const row: MoveRow = { id: 'r-1', number: '101', floor: 'Ground', targetId: 'rt-2', status: 'idle', error: '' };
+    form.rtRooms.set([row]);
+
+    form.updateRoomRow(row);
+
+    expect(updateRoom).toHaveBeenCalledWith('MjvuEl', 'r-1', { room_type_id: 'rt-2' }, { suppressErrorToast: true });
+    expect(form.rtRooms()?.[0]).toMatchObject({ status: 'error', error: 'hostelForm.couldNotMoveRoom' });
+  });
+});
