@@ -20,7 +20,8 @@
       <hh-date-range-picker
         [from]="fromDate()"
         [to]="toDate()"
-        [max]="todayIso"
+        [max]="today()"
+        [today]="today()"
         [placeholder]="'hostExpenses.allDates' | transloco"
         (rangeChange)="onDateRange($event)"
       />

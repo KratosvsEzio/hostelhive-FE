@@ -26,6 +26,7 @@ The hostel has an IANA `timezone` (required on create since #81), but the consol
 - One extra record read per hostel per session (the full hostel serializer), until the backend indexes `timezone`.
 - Same-zone hosts see no change. The specs pin instants with `Date.UTC` and hostel zones on both sides of the date line (`Pacific/Kiritimati`, `Pacific/Pago_Pago`), so they fail on the old code on any machine — a Karachi dev machine can't show the bug by default.
 - The bookings calendar, the booking form's default check-in, the overview strip and the tenant "days until leave" count still use the device date (follow-up card); they should reuse `todayIn`.
+- Trello #190 extended this to the rest of the console through one helper, `services/hostel-today.ts`: `selectedHostelZone` / `hostelZone(id)` (the cached zone read as a signal), `selectedHostelToday(openedAt, zone)` (clock read once) and `followToday` (moves an untouched form default when the zone lands after the form was seeded; an edited value, or a record being edited, is kept). Screens that fetch on a date (the overview detail charts, mess confirmations) hold the fetch until the zone settles, so the default isn't fetched twice. The shared pickers take an optional `today` input (`yyyy-MM-dd`, device date when unset) for the ring, the opening month and the presets; the layout picker's presets take the day as a parameter (`presetRange(label, today)`).
 - Node on Windows ignores an IANA `TZ` set at startup; a spec run "as" another device zone needs `process.env.TZ` set at runtime (a `--require` preload).
 
 ## Evidence
@@ -35,3 +36,4 @@ The hostel has an IANA `timezone` (required on create since #81), but the consol
 - `apps/web/src/app/features/host/rooms/room-detail/room-detail.ts`, `.html` — the zone gate.
 - `apps/web/src/app/features/host/tenants/tenant-form-drawer/tenant-form-drawer.ts` — the availability check; `tenant-form-drawer.availability.spec.ts`.
 - `docs/implement/Bugs/166.md` — decisions D1–D10, the regression proof.
+- `apps/web/src/app/services/hostel-today.ts`; `hostel-today.spec.ts`, `features/host/host-today-defaults.spec.ts` (every #190 default, east and west), the pickers' `*.today.spec.ts`.

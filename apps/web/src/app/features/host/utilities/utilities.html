@@ -10,12 +10,12 @@
     <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <hh-card padding="sm">
         <p class="text-xs text-ink-400">{{ 'hostUtilities.billToCollect' | transloco }}</p>
-        <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
+        <p class="text-[10px] text-ink-300">{{ currentMonthLabel() }}</p>
         <p class="mt-1 text-2xl font-semibold text-ink-900">Rs {{ a.billToPay | number }}</p>
       </hh-card>
       <hh-card padding="sm">
         <p class="text-xs text-ink-400">{{ 'hostUtilities.received' | transloco }}</p>
-        <p class="text-[10px] text-ink-300">{{ currentMonthLabel }}</p>
+        <p class="text-[10px] text-ink-300">{{ currentMonthLabel() }}</p>
         <p class="mt-1 text-2xl font-semibold text-ok">Rs {{ a.received | number }}</p>
       </hh-card>
       <hh-card padding="sm">

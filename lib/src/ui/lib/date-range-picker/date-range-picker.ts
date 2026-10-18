@@ -79,8 +79,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
 function d2iso(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
-function buildPresets(): DateRangePreset[] {
-  const t = new Date();
+/** The default presets, counted from `t` (a local midnight naming today's calendar square). */
+export function buildPresets(t: Date): DateRangePreset[] {
   const y = t.getFullYear(), m = t.getMonth(), day = t.getDate();
   const todayIso = d2iso(t);
   const dow = t.getDay();
@@ -109,12 +109,17 @@ function parseMs(iso?: string | null): number | null {
   if (!y || !m || !d) return null;
   return new Date(y, m - 1, d).getTime();
 }
-function shortLabel(iso: string | null): string {
+/** Local midnight of the device's own date. */
+function deviceToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+function shortLabel(iso: string | null, thisYear: number): string {
   const ms = parseMs(iso);
   if (ms == null) return '';
   const d = new Date(ms);
   const base = `${MONTHS_ABBR[d.getMonth()]} ${d.getDate()}`;
-  return d.getFullYear() === new Date().getFullYear()
+  return d.getFullYear() === thisYear
     ? base
     : `${base} ’${pad(d.getFullYear() % 100)}`;
 }
@@ -195,9 +200,9 @@ function shortLabel(iso: string | null): string {
             [style.left.px]="pos()?.left"
           >
             <div class="flex gap-5">
-              @if (presets().length) {
+              @if (presetList().length) {
                 <div class="flex max-h-[300px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-ink-100 pe-5 pt-1">
-                  @for (p of presets(); track p.label) {
+                  @for (p of presetList(); track p.label) {
                     <button
                       type="button"
                       (click)="applyPreset(p)"
@@ -343,7 +348,16 @@ export class DateRangePicker {
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
   readonly months = input(2);
-  readonly presets = input<DateRangePreset[]>(buildPresets());
+  /** Shortcuts beside the calendar. Left unset, the standard list counted from {@link today}. */
+  readonly presets = input<DateRangePreset[] | undefined>(undefined);
+  /**
+   * Today's date (`yyyy-MM-dd`): the ringed day, the month the calendar opens on when nothing
+   * is picked, and the day the default presets count from. Unset, the device's date.
+   *
+   * The picker has no idea whose calendar it sits on. A console screen passes the hostel's
+   * date, which a device in another zone would otherwise put a day off around midnight.
+   */
+  readonly today = input<string | null>(null);
   readonly showTime = input(false);
   readonly rangeChange = output<DateRange>();
 
@@ -380,6 +394,15 @@ export class DateRangePicker {
   protected readonly hover = signal<string | null>(null);
   protected readonly fromTime = signal('00:00');
   protected readonly toTime = signal('23:59');
+
+  /** {@link today} as a local midnight, or the device's date when it is unset or not a date. */
+  private readonly todayDate = computed(() => {
+    const ms = parseMs(this.today());
+    return ms == null ? deviceToday() : new Date(ms);
+  });
+  protected readonly presetList = computed(
+    () => this.presets() ?? buildPresets(this.todayDate()),
+  );
 
   private readonly minMs = computed(() => parseMs(this.min()));
   private readonly maxMs = computed(() => parseMs(this.max()));
@@ -434,19 +457,17 @@ export class DateRangePicker {
     const f = this.selFrom();
     if (!f) return this.placeholder() ?? this.t('common.addDates');
     const t = this.selTo();
-    return t ? `${shortLabel(f)} – ${shortLabel(t)}` : `${shortLabel(f)} – …`;
+    const year = this.todayDate().getFullYear();
+    return t
+      ? `${shortLabel(f, year)} – ${shortLabel(t, year)}`
+      : `${shortLabel(f, year)} – …`;
   });
 
   /** The visible months, derived from `viewMonth` + `months` count + min/max bounds. */
   protected readonly monthViews = computed<MonthView[]>(() => {
     const base = this.viewMonth();
     const count = Math.max(1, this.months());
-    const now = new Date();
-    const todayMs = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    ).getTime();
+    const todayMs = this.todayDate().getTime();
     const lo = this.minMs();
     const hi = this.maxMs();
     return Array.from({ length: count }, (_, i) =>
@@ -461,7 +482,7 @@ export class DateRangePicker {
       this.close();
       return;
     }
-    const anchor = parseMs(this.selFrom()) ?? parseMs(this.to()) ?? Date.now();
+    const anchor = parseMs(this.selFrom()) ?? parseMs(this.to()) ?? this.todayDate().getTime();
     this.viewMonth.set(startOfMonth(new Date(anchor)));
     this.reposition();
     this.open.set(true);

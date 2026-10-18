@@ -22,3 +22,4 @@ export * from './search-capacity';
 export * from './student-api';
 export * from './staff-api';
 export * from './admin-billing-api';
+export * from './hostel-today';
