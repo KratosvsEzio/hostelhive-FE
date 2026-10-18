@@ -343,10 +343,14 @@ describe('AdminHostelBilling', () => {
 
     it('leaves the expiry out of the open invoice line when it has none', async () => {
       await open(
-        envelope({ billing: billing({ open_invoice: openInvoice({ expires_at: null }) }) }),
+        envelope({
+          billing: billing({ open_invoice: openInvoice({ expires_at: null }) }),
+        }),
       );
 
-      expect(text('open-invoice')).toBe('Open invoice HH-2026-000123 · ⁨PKR 7,500⁩');
+      expect(text('open-invoice')).toBe(
+        'Open invoice HH-2026-000123 · ⁨PKR 7,500⁩',
+      );
     });
 
     it('says the hostel has no plan instead of the host card', async () => {
@@ -551,14 +555,13 @@ describe('AdminHostelBilling', () => {
         '2026-10-11T12:00:00Z',
         'HH-2026-000124',
       );
-      // As the server answers a grant: the new events, but the subscription from before it.
       req.flush({
         success: true,
         ...envelope({
           billing: billing({
             subscription: subscription({
               plan: { ...CRM, features: ['crm'] },
-              current_period_end: '2026-11-12T00:00:00Z',
+              current_period_end: '2027-02-12T00:00:00Z',
               cancel_at_period_end: true,
             }),
           }),
@@ -578,92 +581,8 @@ describe('AdminHostelBilling', () => {
           .querySelector('[data-testid="billing-event"] [data-field="label"]')
           ?.textContent?.trim(),
       ).toBe('Listing + CRM renewed until 12 Feb 2027');
-      expect(text('plan-status')).toBe('Ends on 12 Nov 2026');
-
-      // The billing is read again in place, and the plan card takes the new period end from it.
-      http
-        .expectOne(`${BASE}/api/admin/hostels/${HOSTEL}/billing`)
-        .flush({
-          success: true,
-          ...envelope({
-            billing: billing({
-              subscription: subscription({
-                plan: { ...CRM, features: ['crm'] },
-                current_period_end: '2027-02-12T00:00:00Z',
-                cancel_at_period_end: true,
-              }),
-            }),
-            events: [...EVENTS, renewed],
-          }),
-        });
-      await settle();
-
       expect(text('plan-status')).toBe('Ends on 12 Feb 2027');
-      expect(text('hostel-billing-notice')).toBe('Plan granted.');
-    });
-
-    it('keeps the grant answer on screen when the read after it fails', async () => {
-      await open();
-      (q('grant-open') as HTMLButtonElement).click();
-      await settle();
-      confirmButton('hh-admin-grant-dialog').click();
-      await settle();
-
-      http
-        .expectOne(`${BASE}/api/admin/hostels/${HOSTEL}/grant`)
-        .flush({
-          success: true,
-          ...envelope({
-            billing: billing({
-              subscription: subscription({ cancel_at_period_end: true }),
-            }),
-          }),
-        });
-      await settle();
-      http
-        .expectOne(`${BASE}/api/admin/hostels/${HOSTEL}/billing`)
-        .flush(
-          { success: false, errors: ['down'] },
-          { status: 500, statusText: 'Server Error' },
-        );
-      await settle();
-
-      expect(text('plan-status')).toBe('Ends on 12 Nov 2026');
-      expect(text('hostel-billing-notice')).toBe('Plan granted.');
-      expect(q('hostel-billing-error')).toBeNull();
-    });
-
-    it('drops the read after a grant when a currency save finished while it was in flight', async () => {
-      await open();
-      (q('grant-open') as HTMLButtonElement).click();
-      await settle();
-      confirmButton('hh-admin-grant-dialog').click();
-      await settle();
-      http
-        .expectOne(`${BASE}/api/admin/hostels/${HOSTEL}/grant`)
-        .flush({ success: true, ...envelope() });
-      await settle();
-      const reread = billingReq();
-
-      await pick('currency-select', 'USD');
-      (q('currency-save') as HTMLButtonElement).click();
-      await settle();
-      confirmButton('hh-confirm-modal').click();
-      http
-        .expectOne(`${BASE}/api/admin/hostels/${HOSTEL}/billing_currency`)
-        .flush({
-          success: true,
-          ...envelope({ billing_currency_override: 'USD' }),
-        });
-      await settle();
-      expect(text('currency-state')).toBe('Set by an admin: USD');
-
-      // Read before the save, so it still carries no override.
-      reread.flush({ success: true, ...envelope() });
-      await settle();
-
-      expect(text('currency-state')).toBe('Set by an admin: USD');
-      expect(dropdown('currency-select').value()).toBe('USD');
+      http.expectNone(`${BASE}/api/admin/hostels/${HOSTEL}/billing`);
     });
 
     it('starts the plan today when nothing is live, with no live-only warnings', async () => {
@@ -700,8 +619,6 @@ describe('AdminHostelBilling', () => {
       http
         .expectOne(`${BASE}/api/admin/hostels/${HOSTEL}/grant`)
         .flush({ success: true, ...envelope() });
-      await settle();
-      billingReq().flush({ success: true, ...envelope() });
       await settle();
     });
 
