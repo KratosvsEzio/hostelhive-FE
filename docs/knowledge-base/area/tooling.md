@@ -30,7 +30,7 @@ How the workspace is put together and run: the Nx projects and their targets, th
 **`tools/` scripts:**
 - `tools/generate-api-env.mjs` — `API_URL` → api.env.ts (`--watch` supported).
 - `tools/generate-google-oauth-env.mjs` — `GOOGLE_OAUTH_CLIENT_ID` → google-oauth.env.ts.
-- `tools/generate-google-analytics-env.mjs` — `GA_MEASUREMENT_ID` → google-analytics.env.ts (empty is a valid state).
+- `tools/generate-google-analytics-env.mjs` — `GA_MEASUREMENT_ID` → google-analytics.env.ts (empty is a valid state). A `GA_MEASUREMENT_ID` in the process environment wins over `.env`; the e2e webServer sets the fake `G-E2ETEST000` that way, so analytics specs can read `window.dataLayer`.
 - `tools/generate-maps-env.mjs` — `CARTO_BASEMAP_KEY` → maps.env.ts (empty draws watermarked tiles).
 - `tools/i18n-check.mjs` — build gate: keys used but missing from en.json. `tools/i18n-coverage.mjs` — per-locale completeness report, not gated. See [i18n](./i18n.md).
 - `tools/build-icon-font.mjs` (`npm run icons:font`) and `tools/icon-check.mjs` (`npm run icons:check`) — Tabler subset and its guard. See [ui-library](./ui-library.md).
@@ -51,7 +51,7 @@ How the workspace is put together and run: the Nx projects and their targets, th
 - **Module boundaries are off.** `@nx/enforce-module-boundaries` is `'off'` in `eslint.config.mjs`, but the CI comment says "Lint enforces module boundaries".
 - **Template a11y lint rules are downgraded to `warn`** ("for M1") in `eslint.config.mjs`.
 - **Unguarded checks.** `icons:check` and `i18n-coverage` are not in CI; `i18n-check` runs only through `build`.
-- **e2e is a single smoke test** (`apps/web-e2e/src/example.spec.ts`) against `nx run web:serve` on port 4200.
+- **e2e** (`apps/web-e2e/src/*.spec.ts`) runs against `nx run web:serve` on `E2E_PORT` (default 4200). The dev server is built with a fake GA id, so every spec starts with analytics consent `denied` (`use.storageState` in `playwright.config.ts`), which keeps the consent banner off the page. A spec that checks GA events calls `captureAnalytics` and `gaEvents` (`support/analytics.ts`): they grant consent, abort Google's hosts, and read `window.dataLayer`.
 - **`tools/gen-brand-logos.js` hard-codes absolute paths** under D:/GitHub/HostelHive, so it breaks in any other checkout or worktree.
 - **`serve.log` is committed** at the repo root.
 - **`docs/HostelHive-Frontend-Build-Plan.md` describes two apps** (`web` + `console`); the workspace is one app. The plan marks it *Superseded* inline, but the milestone rows (M0 "2 app shells") still read as written.

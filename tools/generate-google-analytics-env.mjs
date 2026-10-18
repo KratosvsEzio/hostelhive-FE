@@ -24,7 +24,10 @@ if (existsSync(envPath)) {
   }
 }
 
-const measurementId = env.GA_MEASUREMENT_ID ?? '';
+// The process environment wins over `.env`, as dotenv's does. The e2e dev server sets a fake
+// id this way (apps/web-e2e/playwright.config.ts), so the suite can read `search_performed`
+// and friends off `dataLayer`, and a real id in someone's `.env` never reaches an e2e build.
+const measurementId = process.env.GA_MEASUREMENT_ID ?? env.GA_MEASUREMENT_ID ?? '';
 
 const out = `// AUTO-GENERATED from .env by tools/generate-google-analytics-env.mjs — do not edit by hand.
 export const googleAnalyticsEnv = {
