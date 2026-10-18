@@ -1,4 +1,5 @@
-import { localDateAtWallTime, zonedWallTimeToUtc } from './zoned-time';
+import { localDay } from './api-date';
+import { localDateAtWallTime, todayIn, zonedWallTimeToUtc } from './zoned-time';
 
 /** `2026-09-20T09:00:00.000Z` reads more clearly than a millisecond count. */
 function iso(d: Date): string {
@@ -99,5 +100,59 @@ describe('localDateAtWallTime', () => {
     const evening = localDateAtWallTime(new Date(2026, 8, 20, 23, 59), 14, 0, 'Asia/Karachi');
 
     expect(iso(morning)).toBe(iso(evening));
+  });
+});
+
+// Instants are built with Date.UTC so the result never depends on the machine's own zone.
+const MONTH_END = new Date(Date.UTC(2026, 2, 31, 12, 0)); // 31 March, 12:00Z
+const SEASON_END = new Date(Date.UTC(2026, 7, 31, 10, 30)); // 31 August, 10:30Z
+const EAST = 'Pacific/Kiritimati'; // UTC+14
+const WEST = 'Pacific/Pago_Pago'; // UTC-11
+
+describe('todayIn', () => {
+  // The two zones sit a day apart at the same instant, so a device clock cannot match both.
+  it('reads the calendar in a zone ahead of and behind UTC at a month end', () => {
+    expect(todayIn(EAST, MONTH_END)).toBe('2026-04-01');
+    expect(todayIn(WEST, MONTH_END)).toBe('2026-03-31');
+  });
+
+  it('puts the two edges of the date line two calendar days apart', () => {
+    expect(todayIn(EAST, SEASON_END)).toBe('2026-09-01');
+    expect(todayIn(WEST, SEASON_END)).toBe('2026-08-30');
+  });
+
+  it('turns over at the hostel midnight, not the device one', () => {
+    // Karachi is UTC+5, so its midnight is 19:00Z the evening before.
+    expect(todayIn('Asia/Karachi', new Date(Date.UTC(2026, 7, 31, 18, 59, 59)))).toBe('2026-08-31');
+    expect(todayIn('Asia/Karachi', new Date(Date.UTC(2026, 7, 31, 19, 0, 0)))).toBe('2026-09-01');
+  });
+
+  it('reads UTC as UTC', () => {
+    expect(todayIn('UTC', MONTH_END)).toBe('2026-03-31');
+  });
+
+  // Callers hand over whatever the hostel record said; none of it may throw on a screen that
+  // only wanted a date.
+  it.each([
+    ['null', null],
+    ['undefined', undefined],
+    ['an empty string', ''],
+    ['an unknown name', 'Mars/Olympus'],
+    ['whitespace', '   '],
+  ])('falls back to the device date for %s', (_label, zone) => {
+    expect(() => todayIn(zone, MONTH_END)).not.toThrow();
+    expect(todayIn(zone, MONTH_END)).toBe(localDay(MONTH_END));
+  });
+
+  describe('with the clock frozen', () => {
+    beforeEach(() => vi.useFakeTimers({ toFake: ['Date'] }));
+    afterEach(() => vi.useRealTimers());
+
+    it('reads the current instant when none is passed', () => {
+      vi.setSystemTime(MONTH_END);
+
+      expect(todayIn(EAST)).toBe('2026-04-01');
+      expect(todayIn(WEST)).toBe('2026-03-31');
+    });
   });
 });

@@ -66,7 +66,7 @@ import {
   SearchFilters,
 } from '@features/public/search/search-filters/search-filters';
 import { mergeSearchParams } from '@features/public/search/search-params';
-import { isPriceSort } from '@features/public/search/search-sort';
+import { isSortOffered } from '@features/public/search/search-sort';
 import {
   EVERYWHERE_KEY,
   PLACE_KEYS_NULLED,
@@ -205,6 +205,20 @@ export class SearchMap {
   protected readonly params = computed<ParamMap | null>(() =>
     mergeSearchParams(this.queryParams(), this.seed()),
   );
+
+  /**
+   * True while the URL carries a `sort` that `params` reads as absent, because the type in
+   * force does not offer it (see `mergeSearchParams`).
+   *
+   * Only the comparison with the raw query can tell: `params` alone cannot say whether a
+   * sort it lacks was never there or was discarded. Both writes that act on it need to
+   * know, since each merges into the raw URL and would otherwise carry the sort along (see
+   * `stripDiscardedSort` and `startSearch`).
+   */
+  private readonly discardedSort = computed(() => {
+    const raw = this.queryParams();
+    return !!raw?.has('sort') && raw.get('sort') !== this.params()?.get('sort');
+  });
 
   /** The `:location` slug, when the URL carries one. */
   private readonly locationSlug = toSignal(
@@ -1012,6 +1026,13 @@ export class SearchMap {
       this.params();
       untracked(() => this.page.set(1));
     });
+    // Clean a discarded sort out of the URL; once written, `discardedSort()` is false again.
+    // The raw query is tracked too: a strip another navigation superseded is retried on the next
+    // URL change.
+    effect(() => {
+      this.queryParams();
+      if (this.discardedSort()) untracked(() => this.stripDiscardedSort());
+    });
     // Infinite scroll: watch the tail sentinel (it mounts/unmounts with @if) and
     // fetch the next page as it approaches the viewport.
     effect(() => {
@@ -1617,8 +1638,10 @@ export class SearchMap {
    *   seed), so the list does not quietly widen;
    * - retired params are cleared, as any new search clears them (see `RETIRED_KEYS_NULLED`);
    * - `gender` is the effective type, which also scrubs an invalid `?gender=`;
-   * - a price sort is dropped when no type is in force, as the filter row and the header
-   *   bar do: nightly and monthly prices cannot be sorted against each other.
+   * - a sort that type does not offer is dropped, as the filter row and the header bar do:
+   *   nightly and monthly prices cannot be sorted against each other. So is a sort the URL
+   *   still carries after `params` discarded it, which the merge would otherwise bring along
+   *   (see `discardedSort`).
    *
    * A push rather than a replace: a new place is a new destination, and Back should return
    * to the page — landing or search — the visitor left.
@@ -1629,6 +1652,9 @@ export class SearchMap {
   ): Promise<boolean> {
     const p = this.params();
     const gender = p?.get('gender') || null;
+    const sort = p?.get('sort');
+    const dropSort =
+      this.discardedSort() || (!!sort && !isSortOffered(sort, this.accommodationType()));
     return this.router.navigate(
       localiseCommands(commands, this.locale.active()) as unknown[],
       {
@@ -1638,7 +1664,7 @@ export class SearchMap {
           ...RETIRED_KEYS_NULLED,
           [EVERYWHERE_KEY]: null,
           gender,
-          ...(!gender && isPriceSort(p?.get('sort')) ? { sort: null } : {}),
+          ...(dropSort ? { sort: null } : {}),
           ...seededFilters(this.seed(), p),
           ...geo,
         },
@@ -1770,6 +1796,25 @@ export class SearchMap {
         [SW_LNG]: roundCoord(b.west),
         [EVERYWHERE_KEY]: this.unbounded() ? 1 : null,
       },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /**
+   * Take a sort `params` discarded out of the URL as well (see `discardedSort`).
+   *
+   * Reading it as absent is not enough on its own: the header bar merges into the URL
+   * rather than reading `params`, so picking a type there would bring the dormant sort
+   * back to life. `replaceUrl` on the same path leaves no history entry, and analytics
+   * skips such a replace, so the arrival is still the one page view. Browser only: the
+   * server render already reads the sort as absent and has no address bar to clean.
+   */
+  private stripDiscardedSort(): void {
+    if (!this.isBrowser) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

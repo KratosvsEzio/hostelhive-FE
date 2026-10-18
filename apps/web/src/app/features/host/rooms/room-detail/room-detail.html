@@ -39,14 +39,21 @@
     <hh-tabs class="mb-5 max-w-xs" [tabs]="tabs()" [(active)]="view" />
 
     @if (view() === 'calendar') {
-      <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist. -->
+      <!-- What is sold in this room, by date. Needs both ids, so it renders once they exist,
+           and the hostel's zone, so its "today" is right on the first paint. -->
       @if (hostelId() && roomId()) {
-        <hh-room-calendar
-          [hostelId]="hostelId()!"
-          [roomId]="roomId()"
-          [capacity]="room.capacity"
-          [residents]="s.renters"
-        />
+        @let zone = timeZone();
+        @if (zone !== undefined) {
+          <hh-room-calendar
+            [hostelId]="hostelId()!"
+            [roomId]="roomId()"
+            [capacity]="room.capacity"
+            [residents]="s.renters"
+            [timeZone]="zone"
+          />
+        } @else {
+          <hh-skeleton class="h-64" radius="lg" />
+        }
       }
 
     } @else {

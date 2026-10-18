@@ -21,6 +21,7 @@ import {
   startWith,
   switchMap,
   tap,
+  throwError,
 } from 'rxjs';
 import { Invoice } from '@hostelhive/data-access';
 import {
@@ -42,7 +43,7 @@ import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { BookingFormDrawer } from './booking-form-drawer/booking-form-drawer';
 import { HOST_BOOKINGS_TABLE_COLS } from '@util/table-configs/host-bookings-table-cols';
 import { BookingCalendar } from './booking-calendar';
-import { INVOICEABLE_LANES, LaneKey, laneFor, laneKeyFor } from './booking-month';
+import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from './booking-month';
 import {
   bookingFilterGroups,
   bookingFilterParams,
@@ -63,6 +64,7 @@ import {
 } from './booking-details-panel';
 import { NotificationService } from '@core/notification.service';
 import { RefetchDelay } from '@core/refetch-delay';
+import { errorStatus } from '@core/errors/api-error-text';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
@@ -71,7 +73,14 @@ import { currencySymbol } from '@util/currencies';
 import { bookingPath, invoicePath } from '@util/host-links';
 import { buildInvoiceId } from '@util/table-configs/invoice-table-cols';
 import { bookingRefusal } from '@util/booking-refusal';
-import { bookingMoveFailureKey, crossPayInvoiceFailureKey } from './booking-move-failure';
+import {
+  MovedOnKind,
+  bookingMoveFailureKey,
+  crossPayInvoiceFailureKey,
+  movedOnKind,
+  refusalBorneOut,
+  stageChanged,
+} from './booking-move-failure';
 
 interface ViewState {
   loading: boolean;
@@ -82,6 +91,9 @@ interface ViewState {
 /** Before a hostel is known there is nothing to wait for — not the same as loading. */
 const IDLE: ViewState = { loading: false, error: false, data: null };
 const LOADING: ViewState = { loading: true, error: false, data: null };
+
+/** Where a stay move's refusal is shown: the room allocation, its dialog, or the details panel's footer. */
+type MoveSurface = 'assign' | 'dialog' | 'panel';
 
 /**
  * Every booking across the property, which the room calendar cannot answer.
@@ -429,7 +441,7 @@ export class HostBookings {
   /** The booking's invoice while money is still owed on it — what cross-pay and cancel warn about. */
   protected unpaidInvoice(b: HostBooking): Invoice | null {
     const inv = this.invoices().get(b.id);
-    return inv && inv.status !== 'paid' ? inv : null;
+    return inv && invoiceOwing(inv) ? inv : null;
   }
 
   protected invoiceNumber(inv: Invoice): string {
@@ -528,7 +540,8 @@ export class HostBookings {
    * The details panel, if open on it, redraws from that copy — the next moves follow from
    * where the booking now is — and the list re-reads, since the move may take the row out of
    * whatever the filter is narrowing to. A refusal is shown where the host pressed the button,
-   * as translated copy picked from the failure, never its own text.
+   * as translated copy picked from the failure, never its own text; one saying the booking is not
+   * where the screen shows it goes on to {@link onMovedOn}.
    * An empty `title` leaves the success toast to `onSuccess`, for moves whose outcome has parts.
    */
   private send(
@@ -560,11 +573,123 @@ export class HostBookings {
         if (title) this.notifications.success(title, message);
       },
       error: (err: unknown) => {
-        this.busy.set(false);
         this.epoch++;
+        const kind = movedOnKind(err);
+        if (kind) {
+          // The refusal shows while the booking is read back, and `busy` holds until then.
+          onError(err);
+          this.onMovedOn(booking, err, kind);
+          return;
+        }
+        this.busy.set(false);
         onError(err);
       },
     });
+  }
+
+  /**
+   * A move refused because the booking is not where the screen shows it: the move was already
+   * made, or the booking has moved on to another stage.
+   *
+   * The database's copy is read back quietly and replaces the shown one in the row and the
+   * calendar. A copy that bears the refusal out closes the move ({@link closeMovedOn}); one that
+   * does not leaves it open with the generic message. A host who opened something else while the
+   * read was out keeps it. A failed read refreshes the list instead, and a booking that is gone
+   * takes every surface on it with it.
+   */
+  private onMovedOn(shown: HostBooking, err: unknown, kind: MovedOnKind): void {
+    const hostelId = this.hostelId();
+    const epoch = this.epoch;
+    const url = this.urlBookingId;
+    const surface = this.refusalSurface(shown.id);
+    const action = surface === 'assign' ? 'checkIn' : this.dialog()?.action;
+    const roomsMove = action === 'checkIn' || action === 'checkOut' || action === 'cancel';
+    const stillHere = () => this.epoch === epoch && this.urlBookingId === url && this.hostelId() === hostelId;
+    this.bookingsApi.get(hostelId, shown.id, { suppressErrorToast: true }).subscribe({
+      next: (fresh) => {
+        this.busy.set(false);
+        this.calendar()?.applyChange(shown, fresh);
+        this.replaceBooking(fresh);
+        if (this.panelBehindDialog?.id === fresh.id) this.panelBehindDialog = fresh;
+        if (roomsMove && stageChanged(shown, fresh)) this.refetchDelay.track('/rooms');
+        if (!stillHere()) return;
+        if (refusalBorneOut(err, shown, fresh)) this.closeMovedOn(fresh, surface, kind, bookingMoveFailureKey(err));
+        else this.keepMoveOpen(fresh, surface);
+      },
+      error: (readErr: unknown) => {
+        this.busy.set(false);
+        if (stillHere() && errorStatus(readErr) === 404) this.dropMissing();
+        this.refresh.update((n) => n + 1);
+      },
+    });
+  }
+
+  /** Where a refused move on this booking is being reported. */
+  private refusalSurface(id: string): MoveSurface {
+    if (this.assigning()?.id === id) return 'assign';
+    if (this.dialog()?.booking.id === id) return 'dialog';
+    return 'panel';
+  }
+
+  /**
+   * The move no longer applies, so its dialog or room allocation closes.
+   *
+   * The details panel shows the server's copy when the host had it open, or it stepped aside for
+   * the dialog, and always after a check-in, which lands on the booking's URL so the rooms a
+   * colleague picked are in front of the host. A move already made is news; one the booking has
+   * moved on from is an error, in the panel's footer or, with no panel, a toast.
+   */
+  private closeMovedOn(fresh: HostBooking, surface: MoveSurface, kind: MovedOnKind, key: string): void {
+    const panel =
+      surface === 'assign' || this.viewing()?.id === fresh.id || this.panelBehindDialog?.id === fresh.id;
+    if (surface === 'assign') {
+      this.assigning.set(null);
+      this.assignError.set('');
+    }
+    if (surface === 'dialog') {
+      this.dialog.set(null);
+      this.dialogError.set('');
+    }
+    this.panelBehindDialog = null;
+    if (panel) {
+      this.showDetails(fresh);
+      if (this.urlBookingId !== fresh.id) void this.router.navigateByUrl(bookingPath(this.hostelId(), fresh.id));
+    } else {
+      this.ensureInvoice(fresh);
+    }
+    if (kind === 'done') this.notifications.info(this.i18n.translate<string>(key));
+    else if (panel) this.viewError.set(key);
+    else this.notifications.error(this.i18n.translate<string>(key));
+  }
+
+  /** The server's copy does not bear the refusal out: the move stays open on it, with the generic message. */
+  private keepMoveOpen(fresh: HostBooking, surface: MoveSurface): void {
+    const key = 'hostBookings.moveNotAccepted';
+    switch (surface) {
+      case 'assign':
+        this.assigning.set(fresh);
+        this.assignError.set(key);
+        return;
+      case 'dialog':
+        this.dialog.update((d) => d && { ...d, booking: fresh });
+        this.dialogError.set(key);
+        return;
+      default:
+        this.viewError.set(key);
+    }
+  }
+
+  /** The booking is gone: everything open on it closes and the host is told. */
+  private dropMissing(): void {
+    this.assigning.set(null);
+    this.assignError.set('');
+    this.dialog.set(null);
+    this.dialogError.set('');
+    this.panelBehindDialog = null;
+    this.viewing.set(null);
+    this.viewError.set('');
+    this.leaveBookingUrl();
+    this.notifications.error(this.i18n.translate<string>('hostBookings.bookingNotFound'));
   }
 
   // ── asking first: cancel, no-show, check-out, invoice ──────────────────────────
@@ -641,31 +766,64 @@ export class HostBookings {
    * Two requests under one `busy`, so nothing else can start between them. The booking's
    * refusal stops both and shows in the dialog; the invoice's arrives after the booking is
    * already paid, so it is reported on its own rather than undoing anything.
+   *
+   * A booking already paid elsewhere has the ticked invoice paid only when the database agrees
+   * on both: the booking's copy shows it settled and still in a stage that takes payment, and
+   * the invoice's own copy shows it still owing. A booking copy that says otherwise, or none,
+   * lets the refusal stand. An invoice found already paid is recorded as paid; one that cannot
+   * be read is left alone, never paid blind, and the page's own lookup is asked again.
    */
   private markPaid(booking: HostBooking, fail: (err: unknown) => void): void {
     const hostelId = this.hostelId();
+    const quiet = { suppressErrorToast: true };
     const inv = this.payInvoiceToo() ? this.unpaidInvoice(booking) : null;
     let settled: Invoice | null = null;
     let invoiceFailureKey = '';
+    let paidElsewhere = false;
+    // The invoice's own copy when whoever paid the booking had paid it too; null when it could not be read.
+    let foundPaid: Invoice | null = null;
     this.send(
       booking,
       (id) =>
-        this.bookingsApi.markPaid(hostelId, id, { suppressErrorToast: true }).pipe(
-          switchMap((updated) =>
-            !inv
-              ? of(updated)
-              : // Its refusal is reported as `invoiceNotPaid` below, with a translated reason.
-                this.hostOps.markInvoicePaid(hostelId, inv.id, { suppressErrorToast: true }).pipe(
-                  map((paid) => {
-                    settled = paid;
-                    return updated;
-                  }),
-                  catchError((err: unknown) => {
-                    invoiceFailureKey = crossPayInvoiceFailureKey(err);
-                    return of(updated);
-                  }),
-                ),
+        this.bookingsApi.markPaid(hostelId, id, quiet).pipe(
+          catchError((err: unknown) =>
+            inv && bookingRefusal(err) === 'alreadyPaid'
+              ? this.bookingsApi.get(hostelId, id, quiet).pipe(
+                  switchMap((fresh) =>
+                    refusalBorneOut(err, booking, fresh) && isPayable(fresh) ? of(fresh) : throwError(() => err),
+                  ),
+                  // An unread, unsettled or no longer payable copy hands the refusal itself on, so `send` deals with it.
+                  catchError(() => throwError(() => err)),
+                  tap(() => (paidElsewhere = true)),
+                )
+              : throwError(() => err),
           ),
+          switchMap((updated) => {
+            if (!inv) return of(updated);
+            // Built only by a branch that pays; its refusal is reported as `invoiceNotPaid` below, with a translated reason.
+            const payInvoice = (): Observable<HostBooking> =>
+              this.hostOps.markInvoicePaid(hostelId, inv.id, quiet).pipe(
+                map((paid) => {
+                  settled = paid;
+                  return updated;
+                }),
+                catchError((err: unknown) => {
+                  invoiceFailureKey = crossPayInvoiceFailureKey(err);
+                  return of(updated);
+                }),
+              );
+            if (!paidElsewhere) return payInvoice();
+            // The bill's own read, not the bills list, which is a search index and lags a payment.
+            return this.hostOps.invoice(hostelId, inv.id, quiet).pipe(
+              map((current): Invoice | null => (current.id ? current : null)),
+              catchError(() => of(null)),
+              switchMap((current) => {
+                if (current && invoiceOwing(current)) return payInvoice();
+                foundPaid = current;
+                return of(updated);
+              }),
+            );
+          }),
         ),
       '',
       '',
@@ -675,10 +833,19 @@ export class HostBookings {
           this.notifications.success('Marked as paid', 'Nothing is left due on this booking.');
         } else if (settled) {
           this.recordInvoice(booking.id, settled);
-          this.notifications.success(this.i18n.translate<string>('hostBookings.bookingAndInvoicePaid'));
-        } else {
+          this.notifications.success(
+            paidElsewhere
+              ? this.i18n.translate<string>('hostBookings.alreadyPaidInvoicePaid', { invoice: buildInvoiceId(inv) })
+              : this.i18n.translate<string>('hostBookings.bookingAndInvoicePaid'),
+          );
+        } else if (invoiceFailureKey) {
           const reason = this.i18n.translate<string>(invoiceFailureKey);
           this.notifications.error(this.i18n.translate<string>('hostBookings.invoiceNotPaid', { reason }));
+        } else {
+          // Paid elsewhere and the invoice left alone. A known invoice outlives a failed lookup, so it stays quiet.
+          if (foundPaid) this.recordInvoice(booking.id, foundPaid);
+          else this.lookupInvoices([booking.id], PANEL_LOOKUP);
+          this.notifications.info(this.i18n.translate<string>('hostBookings.bookingAlreadyPaid'));
         }
       },
     );
@@ -919,6 +1086,17 @@ const PANEL_LOOKUP: HostBookingRequestOptions = { suppressErrorToast: true };
 function isInvoiceable(b: HostBooking): boolean {
   const lane = laneKeyFor(b.disposition.slug);
   return !!lane && INVOICEABLE_LANES.includes(lane);
+}
+
+/** The stages a booking still takes a payment in: confirmed, checked in or checked out. */
+function isPayable(b: HostBooking): boolean {
+  const lane = laneKeyFor(b.disposition.slug);
+  return !!lane && PAYABLE_LANES.includes(lane);
+}
+
+/** Whether money is still owed on a bill: anything short of paid, overdue included. */
+function invoiceOwing(inv: Invoice): boolean {
+  return inv.status !== 'paid';
 }
 
 /**

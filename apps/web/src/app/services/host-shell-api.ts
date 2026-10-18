@@ -4,7 +4,7 @@ import { catchError, map } from 'rxjs/operators';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { primaryFirst } from '@util/primary-photo';
 import { usableVariant } from '@util/attachment-url';
-import { ApiClient } from '@core/api-resource';
+import { ApiClient, requestContextArgs } from '@core/api-resource';
 import {
   HostListing,
   HostListingsData,
@@ -95,6 +95,27 @@ export class HostShellApi {
             : throwError(() => err),
         ),
         map((res) => toHostTeamData(res, hostelId)),
+      );
+  }
+
+  /**
+   * The hostel's IANA time zone, or null when it has none or the request fails.
+   *
+   * Read off the hostel record (`GET /api/host/hostels/:id`) because the list behind
+   * {@link listings} is index-backed and does not carry `timezone`. Callers fall back to the
+   * device's clock on null, so a failure here costs a highlight, not a page — which is why it
+   * neither errors nor raises the global toast.
+   */
+  hostelTimeZone(hostelId: string): Observable<string | null> {
+    return this.api
+      .get<{ hostel?: { timezone?: string | null } }>(
+        `/api/host/hostels/${hostelId}`,
+        undefined,
+        ...requestContextArgs({ suppressErrorToast: true }),
+      )
+      .pipe(
+        map((res) => res?.hostel?.timezone?.trim() || null),
+        catchError(() => of(null)),
       );
   }
 

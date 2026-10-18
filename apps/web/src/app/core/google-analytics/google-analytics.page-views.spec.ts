@@ -484,6 +484,30 @@ describe('page views', () => {
       });
     });
 
+    it('does not count the replace that strips a discarded sort, and keeps the arrival location', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search/lahore?sort=price-asc');
+      // The navigation the search page issues to clean a sort it cannot honour out of the address.
+      await router.navigate([], {
+        queryParams: { sort: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      expect(router.url).toBe('/en/search/lahore');
+      await settle();
+      await vi.advanceTimersByTimeAsync(CAP_MS * 2);
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual(
+        expect.objectContaining({
+          page_path: '/en/search/lahore',
+          page_location: `${origin()}/en/search/lahore?sort=price-asc`,
+        }),
+      );
+    });
+
     it('counts a pushed query change on the same path as its own view', async () => {
       configure();
       startAndSpy();
