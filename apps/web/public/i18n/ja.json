@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "予約は支払済みにしましたが、請求書は支払済みになりませんでした。{{reason}}",
     "stayedIn": "滞在した部屋",
     "checkedOut": "チェックアウト済み",
+    "released": "解放済み",
     "cancelOpenInvoiceWarning": "この予約には未払いの請求書（{{invoice}}）があります。キャンセルしても請求書は削除されません。",
     "bookingNotFound": "その予約が見つかりませんでした。",
     "notEnoughBedsFree": "いずれかの部屋で空きベッドが足りなくなりました。その部屋のゲストを減らすか、別の部屋を選んでください。",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "この予約にはすでに請求書があります。",
     "giveTheGuestAReason": "ゲストへの理由を入力してください — 理由はゲストに送信され、予約に保存されます。",
     "moveNotAccepted": "サーバーに受け付けられませんでした。もう一度お試しください。",
-    "roomAlreadyReleased": "この部屋はすでに解放されています。更新して予約の部屋を確認してください。",
+    "roomAlreadyReleased": "部屋 {{room}} はすでに解放されています。",
     "couldNotReleaseRoom": "部屋 {{room}} を解放できませんでした。もう一度お試しください。",
     "invoiceNoLongerExists": "請求書が見つかりませんでした。削除された可能性があります。",
     "payTheInvoiceOnItsOwn": "請求書を開き、そこで支払済みにしてください。"

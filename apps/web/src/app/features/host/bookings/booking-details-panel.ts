@@ -28,6 +28,7 @@ import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from '
 import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
 import { releaseFailureKey } from './booking-move-failure';
 import { isPrivateOccupancy } from '@util/occupancy-type';
+import { bookingRefusal } from '@util/booking-refusal';
 
 /** What a host can do to a booking, as the lifecycle (Trello #80) allows it. */
 export type BookingAction =
@@ -183,6 +184,10 @@ export class BookingDetailsPanel {
     const lane = this.lane();
     return b && (lane === 'checked-out' || lane === 'cancelled') ? b.occupancies : [];
   });
+  /** What became of each {@link stayHistory} room: a cancelled stay released it, nobody checked out. */
+  protected readonly stayRowLabel = computed(() =>
+    this.lane() === 'cancelled' ? 'hostBookings.released' : 'hostBookings.checkedOut',
+  );
 
   protected readonly isShared = computed(
     () => !isPrivateOccupancy(this.booking()?.roomType.occupancyType),
@@ -248,18 +253,30 @@ export class BookingDetailsPanel {
 
   // ── who is in which room ─────────────────────────────────────────────────────────
   protected readonly releasing = signal<string | null>(null);
-  /** Why the last release failed: a translation key, and the room it names. */
-  protected readonly releaseError = signal<{ key: string; room: string } | null>(null);
+
+  // A computed only notifies when the id changes, so a same-booking re-read resets nothing below.
+  private readonly bookingId = computed(() => this.booking()?.id ?? '');
 
   /**
-   * Rooms released from this panel, by occupancy id, for the booking it is showing.
+   * Why the last release failed: a translation key, and the room it names.
+   *
+   * Keyed on the booking id, so it does not follow the host to the next booking; the page's
+   * re-read of the same booking keeps it.
+   */
+  protected readonly releaseError = linkedSignal<string, { key: string; room: string } | null>({
+    source: this.bookingId,
+    computation: () => null,
+  });
+
+  /**
+   * Rooms released from this panel, by occupancy id, keyed on the booking id it is showing.
    *
    * The occupancies endpoint answers from the search index, which lags a release by up to a
    * second — so re-reading it straight after one returns the room still active. The server's
    * "released" is final, so the panel records it here instead of asking again.
    */
   private readonly releasedIds = linkedSignal<string, ReadonlySet<string>>({
-    source: () => this.booking()?.id ?? '',
+    source: this.bookingId,
     computation: () => new Set<string>(),
   });
 
@@ -330,6 +347,11 @@ export class BookingDetailsPanel {
       error: (err: unknown) => {
         this.releasing.set(null);
         this.releaseError.set({ key: releaseFailureKey(err), room: o.roomNumber });
+        // "Already released" is as final as a release that succeeded, so it is recorded the same way.
+        if (bookingRefusal(err) === 'roomAlreadyReleased') {
+          this.releasedIds.update((ids) => new Set(ids).add(o.id));
+          this.released.emit(b);
+        }
       },
     });
   }

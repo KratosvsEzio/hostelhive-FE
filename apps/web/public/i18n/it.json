@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "La prenotazione è stata segnata come pagata, ma la fattura no. {{reason}}",
     "stayedIn": "Ha soggiornato in",
     "checkedOut": "Check-out effettuato",
+    "released": "Liberata",
     "cancelOpenInvoiceWarning": "Questa prenotazione ha una fattura non pagata ({{invoice}}). L'annullamento non la elimina.",
     "bookingNotFound": "Non abbiamo trovato quella prenotazione.",
     "notEnoughBedsFree": "Una di queste camere non ha più così tanti letti liberi. Sistema meno ospiti lì o scegli un'altra camera.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Questa prenotazione ha già una fattura.",
     "giveTheGuestAReason": "Indica un motivo all'ospite — gli viene inviato e resta salvato nella prenotazione.",
     "moveNotAccepted": "Il server non l'ha accettato. Riprova.",
-    "roomAlreadyReleased": "Questa camera è già stata liberata. Aggiorna per vedere le camere della prenotazione.",
+    "roomAlreadyReleased": "La camera {{room}} è già stata liberata.",
     "couldNotReleaseRoom": "Impossibile liberare la camera {{room}}. Riprova.",
     "invoiceNoLongerExists": "Impossibile trovare la fattura. Potrebbe essere stata eliminata.",
     "payTheInvoiceOnItsOwn": "Apri la fattura e segnala lì come pagata."

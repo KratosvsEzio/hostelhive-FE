@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "De boeking is als betaald gemarkeerd, maar de factuur niet. {{reason}}",
     "stayedIn": "Verbleef in",
     "checkedOut": "Uitgecheckt",
+    "released": "Vrijgegeven",
     "cancelOpenInvoiceWarning": "Deze boeking heeft een onbetaalde factuur ({{invoice}}). Annuleren verwijdert die niet.",
     "bookingNotFound": "We konden die boeking niet vinden.",
     "notEnoughBedsFree": "Een van deze kamers heeft niet meer zoveel vrije bedden. Plaats daar minder gasten of kies een andere kamer.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Deze boeking heeft al een factuur.",
     "giveTheGuestAReason": "Geef de gast een reden — die wordt naar de gast gestuurd en bij de boeking bewaard.",
     "moveNotAccepted": "De server heeft dat niet geaccepteerd. Probeer het opnieuw.",
-    "roomAlreadyReleased": "Deze kamer is al vrijgegeven. Vernieuw om de kamers van de boeking te zien.",
+    "roomAlreadyReleased": "Kamer {{room}} is al vrijgegeven.",
     "couldNotReleaseRoom": "Kamer {{room}} kon niet worden vrijgegeven. Probeer het opnieuw.",
     "invoiceNoLongerExists": "De factuur is niet gevonden. Mogelijk is deze verwijderd.",
     "payTheInvoiceOnItsOwn": "Open de factuur en markeer hem daar als betaald."
