@@ -1,5 +1,5 @@
 import { localDay } from './api-date';
-import { localDateAtWallTime, todayIn, zonedWallTimeToUtc } from './zoned-time';
+import { localDateAtWallTime, todayIn, wallClockIn, zonedWallTimeToUtc } from './zoned-time';
 
 /** `2026-09-20T09:00:00.000Z` reads more clearly than a millisecond count. */
 function iso(d: Date): string {
@@ -154,5 +154,40 @@ describe('todayIn', () => {
       expect(todayIn(EAST)).toBe('2026-04-01');
       expect(todayIn(WEST)).toBe('2026-03-31');
     });
+  });
+});
+
+describe('wallClockIn', () => {
+  /** 31 March, 12:37:45Z: 02:37 on 1 April at Kiritimati, 01:37 on 31 March at Pago Pago. */
+  const AT = new Date(Date.UTC(2026, 2, 31, 12, 37, 45));
+
+  it('reads the date and the time on the clock in a zone ahead of and behind UTC', () => {
+    expect(wallClockIn(EAST, AT)).toBe('2026-04-01T02:37');
+    expect(wallClockIn(WEST, AT)).toBe('2026-03-31T01:37');
+  });
+
+  it('drops the seconds rather than rounding the minute up', () => {
+    expect(wallClockIn('UTC', new Date(Date.UTC(2026, 2, 31, 23, 59, 59)))).toBe('2026-03-31T23:59');
+  });
+
+  it('reads the hostel midnight as 00, on the new day', () => {
+    // 19:00Z is midnight in Karachi (UTC+5); some engines report that hour as 24.
+    expect(wallClockIn('Asia/Karachi', new Date(Date.UTC(2026, 7, 31, 19, 0)))).toBe('2026-09-01T00:00');
+  });
+
+  it('follows a daylight-saving change', () => {
+    // London is on BST (UTC+1) until 01:00Z on 25 October 2026, and on GMT after.
+    expect(wallClockIn('Europe/London', new Date(Date.UTC(2026, 9, 25, 0, 30)))).toBe('2026-10-25T01:30');
+    expect(wallClockIn('Europe/London', new Date(Date.UTC(2026, 9, 25, 1, 30)))).toBe('2026-10-25T01:30');
+    expect(wallClockIn('Europe/London', new Date(Date.UTC(2026, 9, 25, 2, 30)))).toBe('2026-10-25T02:30');
+  });
+
+  it.each([
+    ['null', null],
+    ['undefined', undefined],
+    ['an unknown name', 'Mars/Olympus'],
+  ])('falls back to the device clock for %s', (_label, zone) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    expect(wallClockIn(zone, AT)).toBe(`${localDay(AT)}T${pad(AT.getHours())}:${pad(AT.getMinutes())}`);
   });
 });
