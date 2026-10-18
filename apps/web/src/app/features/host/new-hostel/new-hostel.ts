@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ApiError } from '@hostelhive/data-access';
 import { HostPropertyStore, HostelsApi } from '@services';
 import { Button, ConfirmModal } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
@@ -41,7 +40,14 @@ export class NewHostel {
   protected readonly form = viewChild.required(HostelForm);
 
   protected readonly saving = signal(false);
-  protected readonly apiErrors = signal<string[]>([]);
+  /**
+   * Whether the last create failed, shown as one translated line by the button.
+   *
+   * Not the server's `serverMessages`: those are untranslated English, and the global toast
+   * is switched off for this call, so there is exactly one message and it is in the
+   * reader's language.
+   */
+  protected readonly createFailed = signal(false);
   protected readonly showValidation = signal(false);
   protected readonly showValidationModal = signal(false);
 
@@ -58,10 +64,10 @@ export class NewHostel {
     }
     if (this.saving() || f.uploading()) return;
     this.saving.set(true);
-    this.apiErrors.set([]);
+    this.createFailed.set(false);
     const payload = f.getPayload();
     this.hostels
-      .create(payload)
+      .create(payload, { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (hostel) => {
@@ -71,15 +77,9 @@ export class NewHostel {
           this.propertyStore.load();
           this.router.navigate(['/host', hostel.id, 'subscription']);
         },
-        // The error interceptor normalises failures to ApiError, so the Rails `errors[]`
-        // envelope is on `serverMessages` — NOT `err.error.errors`, which is undefined here.
-        error: (err: ApiError) => {
+        error: () => {
           this.saving.set(false);
-          this.apiErrors.set(
-            err?.serverMessages?.length
-              ? [...err.serverMessages]
-              : ["Couldn't create hostel — please try again."],
-          );
+          this.createFailed.set(true);
         },
       });
   }

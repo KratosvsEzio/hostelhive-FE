@@ -10,7 +10,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Button, Dropdown, DropdownOption, Input, TimePicker, Toggle } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { HostelsApi, HostPropertyStore, MealTypePayload } from '@services';
+import {
+  HostelsApi,
+  HostPropertyStore,
+  MealTypePayload,
+  followToday,
+  selectedHostelToday,
+} from '@services';
+import { dayToLocalDate } from '@util/plain-day';
 import {
   CHANNEL_META,
   CHANNEL_ORDER,
@@ -73,7 +80,12 @@ const DAYS = [
   { short: 'Sun', full: 'Sunday' },
 ];
 
-const MEAL_PLACEHOLDERS: Record<MealType, string> = {
+/** A `yyyy-MM-dd`'s weekday as an index into {@link DAYS}: Monday 0 … Sunday 6. */
+export function mondayFirstWeekday(day: string): number {
+  return (dayToLocalDate(day).getDay() + 6) % 7;
+}
+
+const MEAL_PLACEHOLDERS:Record<MealType, string> = {
   breakfast: 'e.g. Halwa Puri & Chai',
   lunch: 'e.g. Chicken Biryani',
   dinner: 'e.g. Daal Chawal',
@@ -92,6 +104,14 @@ export class MessNotifications {
   private readonly store = inject(HostPropertyStore);
 
   constructor() {
+    // The zone lands after the page opened on the device's weekday: follow it unless the
+    // host has already picked another day.
+    followToday(this.today, (from, to) => {
+      if (this.selectedDay() === mondayFirstWeekday(from)) {
+        this.selectedDay.set(mondayFirstWeekday(to));
+      }
+    });
+
     effect(() => {
       const hostelId = this.store.selected();
       if (!hostelId) return;
@@ -112,8 +132,10 @@ export class MessNotifications {
   protected readonly days = DAYS;
   protected readonly mealPlaceholders = MEAL_PLACEHOLDERS;
 
-  protected readonly todayIndex = (new Date().getDay() + 6) % 7;
-  protected readonly selectedDay = signal(this.todayIndex);
+  private readonly today = selectedHostelToday();
+  /** The hostel's weekday, Monday first: whose menu is "today's". */
+  protected readonly todayIndex = computed(() => mondayFirstWeekday(this.today()));
+  protected readonly selectedDay = signal(this.todayIndex());
 
   protected readonly deadlines = computed<Record<MealType, string>>(() => {
     const meals = this.svc.settings().meals;
@@ -184,7 +206,7 @@ export class MessNotifications {
   }
 
   protected todayMenu(meal: MealType): string {
-    return this.svc.settings().meals[meal].weeklyMenu[this.todayIndex] ?? '';
+    return this.svc.settings().meals[meal].weeklyMenu[this.todayIndex()] ?? '';
   }
 
   protected readonly menuSaveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -198,7 +220,8 @@ export class MessNotifications {
     clearTimeout(this.menuSaveTimer);
     this.menuSaveState.set('saving');
 
-    this.hostelApi.saveWeeklyMenus(hostelId, this.svc.buildWeeklyMenuPayload())
+    // Quiet: the save button shows the failure itself, so the global toast would say it twice.
+    this.hostelApi.saveWeeklyMenus(hostelId, this.svc.buildWeeklyMenuPayload(), { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -229,7 +252,8 @@ export class MessNotifications {
       };
     });
 
-    this.hostelApi.saveMealTypes(hostelId, payloads)
+    // Quiet for the same reason as the menu save.
+    this.hostelApi.saveMealTypes(hostelId, payloads, { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (records) => {

@@ -36,7 +36,8 @@ import {
   Skeleton,
   SortState,
 } from '@hostelhive/ui';
-import { HostOpsApi, HostPropertyStore } from '@services';
+import { HostOpsApi, HostPropertyStore, selectedHostelToday } from '@services';
+import { dayToLocalDate } from '@util/plain-day';
 import { TenantBillSplit, UtilityBill, UtilityType, UtilityTypeMeta } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -116,7 +117,11 @@ export class Utilities {
   protected readonly dateFrom = signal('');
   protected readonly dateTo = signal('');
   protected readonly aggs = signal<{ billToPay: number; received: number; balance: number } | null>(null);
-  protected readonly currentMonthLabel = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  private readonly today = selectedHostelToday();
+  /** The hostel's current month, under the summary cards. */
+  protected readonly currentMonthLabel = computed(() =>
+    dayToLocalDate(this.today()).toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+  );
 
   private readonly fetchKey = computed(() => ({
     hostelId: this.store.selected(),

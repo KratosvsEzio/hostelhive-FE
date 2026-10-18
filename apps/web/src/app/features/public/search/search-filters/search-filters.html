@@ -40,7 +40,7 @@
       type="button"
       [active]="amenities().includes(a.slug)"
       (click)="toggleQuickAmenity(a.slug)"
-    ><i class="ti ti-{{ a.icon }} text-[13px]"></i>{{ a.label }}</button>
+    ><i class="ti ti-{{ a.icon }} text-[13px]"></i>{{ a.key | transloco }}</button>
   }
 
   <!-- Sort — quick-access inline; maps to sort[created_at] / sort[starting_price] in the API layer.

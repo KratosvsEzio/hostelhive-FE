@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { throwError } from 'rxjs';
-import { ImageUploadService, StaffApi, UploadNetworkError } from '@services';
+import { of, throwError } from 'rxjs';
+import { HostPropertyStore, ImageUploadService, StaffApi, UploadNetworkError } from '@services';
 import { NotificationService } from '@core/notification.service';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { StaffFormDrawer } from './staff-form-drawer';
@@ -32,6 +32,7 @@ function uploadFailingWith(rejection: unknown): string[][] {
       provideRouter([]),
       provideI18nTesting(),
       { provide: StaffApi, useValue: {} },
+      { provide: HostPropertyStore, useValue: { timeZoneOf: () => of(null) } },
       { provide: ImageUploadService, useValue: { upload: () => throwError(() => rejection) } },
       {
         provide: NotificationService,

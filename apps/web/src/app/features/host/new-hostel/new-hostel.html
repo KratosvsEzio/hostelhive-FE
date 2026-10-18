@@ -22,19 +22,6 @@
     </button>
   </ng-container>
 
-  @if (apiErrors().length) {
-    <div class="mb-5 rounded-2xl border border-danger/30 bg-danger/5 px-5 py-4">
-      <p class="flex items-center gap-2 font-medium text-danger">
-        <i class="ti ti-alert-circle text-base" aria-hidden="true"></i>{{ 'hostNewHostel.couldnTCreateHostelPlease' | transloco }}
-      </p>
-      <ul class="mt-2 space-y-1 ps-6">
-        @for (e of apiErrors(); track e) {
-          <li class="list-disc text-sm text-danger/90">{{ e }}</li>
-        }
-      </ul>
-    </div>
-  }
-
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.7fr_1fr]">
     <!-- LEFT: form -->
     <hh-hostel-form
@@ -102,9 +89,9 @@
             }
           </button>
 
-          @if (apiErrors().length) {
-            <p class="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-danger">
-              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'common.nErrorsAbove' | transloco: { count: apiErrors().length } }}
+          @if (createFailed()) {
+            <p class="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-danger" role="alert">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>{{ 'hostNewHostel.couldNotCreateHostel' | transloco }}
             </p>
           }
         </div>

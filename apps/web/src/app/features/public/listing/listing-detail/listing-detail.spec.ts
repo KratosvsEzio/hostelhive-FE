@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { RESPONSE_INIT, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, TitleStrategy, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -77,13 +77,18 @@ describe('ListingDetail head', () => {
     settle();
   }
 
-  function fail(status: number): void {
-    requests[requests.length - 1].error({ status });
+  /** A status, or none at all: the server render's timeout arrives with no status. */
+  function fail(status?: number): void {
+    requests[requests.length - 1].error(status === undefined ? {} : { status });
     settle();
   }
 
+  /** The server render's response, as `@angular/ssr` hands it to the app. */
+  let responseInit: ResponseInit;
+
   beforeEach(async () => {
     requests = [];
+    responseInit = { status: 200, headers: new Headers({ 'Content-Type': 'text/html' }) };
     getBySlug = vi.fn(() => {
       const request = new Subject<ListingDetailModel | undefined>();
       requests.push(request);
@@ -102,6 +107,7 @@ describe('ListingDetail head', () => {
         { provide: BookingApi, useValue: { setCatalogue: vi.fn() } },
         { provide: MobileApp, useValue: { isMobile: signal(false) } },
         { provide: GoogleAnalyticsService, useValue: { track: vi.fn() } },
+        { provide: RESPONSE_INIT, useFactory: () => responseInit },
       ],
     }).overrideComponent(ListingDetail, { set: { template: '', imports: [] } });
     harness = await RouterTestingHarness.create();
@@ -147,6 +153,43 @@ describe('ListingDetail head', () => {
         expect(TestBed.inject(Seo).settled()).toBe(false);
       },
     );
+  });
+
+  describe('the server response (Trello #154)', () => {
+    it.each([
+      ['a 500', 500],
+      ['a 503', 503],
+      ['an unreachable API (status 0)', 0],
+      ['a timeout (no status)', undefined],
+    ])('is a 503 with Retry-After and no-store after %s', (_label, status) => {
+      fail(status);
+
+      expect(responseInit.status).toBe(503);
+      const headers = new Headers(responseInit.headers);
+      expect(headers.get('Retry-After')).toBe('120');
+      expect(headers.get('Cache-Control')).toBe('no-store');
+      expect(headers.get('Content-Type')).toBe('text/html');
+    });
+
+    it.each([403, 422])('stays a 200 after a %i, which a retry will not change', (status) => {
+      fail(status);
+
+      expect(responseInit.status).toBe(200);
+      expect(new Headers(responseInit.headers).has('Retry-After')).toBe(false);
+    });
+
+    it('stays a 200 for a missing listing, which keeps its not-found page', () => {
+      load(undefined);
+
+      expect(responseInit.status).toBe(200);
+      expect(document.title).toBe(NOT_FOUND_TITLE);
+    });
+
+    it('stays a 200 when the listing loads', () => {
+      load();
+
+      expect(responseInit.status).toBe(200);
+    });
   });
 
   describe('when the listing does not exist', () => {

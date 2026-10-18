@@ -228,10 +228,9 @@ export class SearchMap {
   );
 
   /**
-   * The query-param patch that takes out of the URL what `params` reads as absent or
-   * corrects (see `searchUrlCorrections`): a `sort` the type does not offer, an unknown
-   * `roomType` or `propertyType`, a bad budget, coordinate or zoom, and amenity slugs the
-   * catalogue lacks. Empty when the URL is clean.
+   * The query-param patch that takes out of the URL the values `params` discards and a
+   * writer would bring back to life (see `searchUrlCorrections`): a `sort` the type does not
+   * offer, a bad budget, and bad coordinates or zoom. Empty when there is nothing to take out.
    *
    * Only the raw query can tell: `params` alone cannot say whether a value it lacks was
    * never there or was discarded. Both writes that act on it need to know, since each
@@ -239,7 +238,7 @@ export class SearchMap {
    * `stripCorrections` and `startSearch`).
    */
   private readonly urlCorrections = computed(
-    () => searchUrlCorrections(this.queryParams(), this.seed(), this.vocabulary()),
+    () => searchUrlCorrections(this.queryParams(), this.seed()),
     { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
 
@@ -1667,9 +1666,9 @@ export class SearchMap {
    * - `gender` is the effective type, which also scrubs an invalid `?gender=`;
    * - a sort that type does not offer is dropped, as the filter row and the header bar do:
    *   nightly and monthly prices cannot be sorted against each other;
-   * - anything the URL still carries after `params` discarded or corrected it (a sort, an
-   *   unknown room or property type, a bad budget, unknown amenities) is cleaned the same
-   *   way, or the merge would bring it along (see `urlCorrections`).
+   * - a sort, budget or coordinate the URL still carries after `params` discarded it is
+   *   cleaned the same way, or the merge would bring it along (see `urlCorrections`). The
+   *   rest of what `params` discards travels on harmlessly: the new page reads it as absent too.
    *
    * A push rather than a replace: a new place is a new destination, and Back should return
    * to the page — landing or search — the visitor left.
@@ -1830,10 +1829,10 @@ export class SearchMap {
   }
 
   /**
-   * Take what `params` discarded or corrected out of the URL as well (see `urlCorrections`).
+   * Take a discarded value a writer reads raw out of the URL as well (see `urlCorrections`).
    *
    * Reading it as absent is not enough on its own: the header bar merges into the URL
-   * rather than reading `params`, and reads `sort`, `minPrice` and `maxPrice` raw, so a
+   * rather than reading `params`, and reads `sort`, the budget and the coordinates raw, so a
    * dormant value would come back to life through it. `replaceUrl` on the same path leaves
    * no history entry, and analytics skips such a replace, so the arrival is still the one
    * page view. Browser only: the server render already reads the values as absent and has

@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
-import { ApiClient } from '@core/api-resource';
+import { ApiClient, ApiRequestOptions } from '@core/api-resource';
 import type { HostelInput } from '@hostelhive/data-access';
+import { ApiClientRecorder, suppressesErrorToast } from '@app/testing/api-client-recorder';
 import { HostelsApi } from './hostels-api';
 
 class ApiClientStub {
@@ -297,5 +298,48 @@ describe('HostelsApi.markAttachmentAsPrimary', () => {
     hostels.markAttachmentAsPrimary('a1').subscribe();
     expect(api.calls[0].body).toEqual({ attachment: { attachment_label_id: '7' } });
     expect(api.calls[1].body).toEqual({});
+  });
+});
+
+/**
+ * The toast opt-out on the saves whose screens show the failure inline (new hostel, hostel
+ * profile, mess). It travels as a trailing `HttpContext`, and only when asked for, so every
+ * other caller's request is exactly the request it always was.
+ */
+describe('HostelsApi request options', () => {
+  const input = { name: 'Backpacker' } as unknown as HostelInput;
+  const calls: { name: string; run: (api: HostelsApi, opts?: ApiRequestOptions) => void }[] = [
+    { name: 'create', run: (api, opts) => api.create(input, opts).subscribe() },
+    { name: 'update', run: (api, opts) => api.update('MjvuEl', input, opts).subscribe() },
+    { name: 'updateAttachmentLabel', run: (api, opts) => api.updateAttachmentLabel('a1', '7', opts).subscribe() },
+    { name: 'markAttachmentAsPrimary', run: (api, opts) => api.markAttachmentAsPrimary('a1', opts).subscribe() },
+    { name: 'saveMealTypes', run: (api, opts) => api.saveMealTypes('MjvuEl', [], opts).subscribe() },
+    { name: 'saveWeeklyMenus', run: (api, opts) => api.saveWeeklyMenus('MjvuEl', [], opts).subscribe() },
+  ];
+
+  function setUpRecorder(): { api: HostelsApi; http: ApiClientRecorder } {
+    const http = new ApiClientRecorder();
+    http.replyWith({ hostel: { id: 'MjvuEl', name: 'Backpacker' }, meal_types: [] });
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [http.provider()] });
+    return { api: TestBed.inject(HostelsApi), http };
+  }
+
+  it.each(calls)('$name carries the error-toast opt-out context when asked', ({ run }) => {
+    const { api, http } = setUpRecorder();
+
+    run(api, { suppressErrorToast: true });
+
+    expect(suppressesErrorToast(http.calls[0])).toBe(true);
+    expect(http.calls[0].argCount).toBe(3);
+  });
+
+  it.each(calls)('$name sends no trailing argument without options', ({ run }) => {
+    const { api, http } = setUpRecorder();
+
+    run(api);
+
+    expect(http.calls[0].context).toBeUndefined();
+    expect(http.calls[0].argCount).toBe(2);
   });
 });

@@ -1382,23 +1382,25 @@ describe('SearchMap bad filter values in a link', () => {
     });
   });
 
-  it('takes the bad values out of the address, and keeps the known amenities', async () => {
+  // The header bar reads the budget raw, so a bad one would come back through it; nothing
+  // reads the room or property type or the amenities raw, so those stay, read as absent.
+  it('takes only the bad budget out of the address', async () => {
     const { navigate } = await mountWatched(`/en/search?everywhere=1&${BAD_FILTERS}`, {
       amenitySlugs: ['wifi'],
     });
-    await vi.waitFor(() => expect(urlQuery()).toEqual({ everywhere: '1', amenities: 'wifi' }));
+    await vi.waitFor(() => expect(urlQuery()).not.toHaveProperty('minPrice'));
 
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigationAt(navigate, 0).extras).toMatchObject({
-      queryParams: {
-        roomType: null,
-        propertyType: null,
-        minPrice: null,
-        maxPrice: null,
-        amenities: 'wifi',
-      },
+      queryParams: { minPrice: null, maxPrice: null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
+    });
+    expect(urlQuery()).toEqual({
+      everywhere: '1',
+      roomType: 'bogus',
+      propertyType: 'bogus',
+      amenities: 'wifi,bogus',
     });
   });
 
@@ -1420,23 +1422,19 @@ describe('SearchMap bad filter values in a link', () => {
     expect(lastQuery(list).amenities).toEqual(['bogus']);
   });
 
-  it('does not carry the bad values into a new search', async () => {
-    const { map, navigate } = await mountSearch(
-      '/en/search?roomType=bogus&propertyType=bogus&minPrice=abc',
-    );
+  it('does not carry a bad budget into a new search', async () => {
+    const { map, navigate } = await mountSearch('/en/search?minPrice=abc&maxPrice=-1');
 
     map.onPlaceSelected(KARACHI);
 
     expect(firstNavigation(navigate).extras.queryParams).toMatchObject({
-      roomType: null,
-      propertyType: null,
       minPrice: null,
+      maxPrice: null,
     });
   });
 
   it.each([
     ['an explicit shared room type', 'roomType=shared', undefined],
-    ['an unknown room type', 'roomType=bogus', undefined],
     ['a private room type', 'roomType=private', true],
   ])('indexes a curated place with %s accordingly', async (_name, filter, noindex) => {
     const seo = seoSpy();
@@ -1444,5 +1442,237 @@ describe('SearchMap bad filter values in a link', () => {
     await mount(`/en/search/lahore?${filter}`, null, true);
 
     expect(lastApply(seo)['noindex']).toBe(noindex);
+  });
+});
+
+/**
+ * A `roomType` or `propertyType` outside the vocabulary: a shared link, a bookmark or an
+ * address typed by hand. The request reads it as absent, which for a room type is the shared
+ * default, so the list is not narrowed to a term no hostel carries. The address is left as
+ * written, because nothing else reads these two keys raw and so nothing can bring them back.
+ */
+describe('SearchMap on a URL carrying a room or property type the search does not know', () => {
+  const PLACE = '/en/search/lahore';
+  const CITY_URL = '/en/hostels/lahore';
+  const GIRLS_URL = '/en/hostels/lahore/girls';
+  /** One unknown value for each key. */
+  const BOGUS = 'roomType=bogus&propertyType=villa';
+
+  afterEach(cleanupSearchMap);
+
+  /** The first listings request a server-rendered page makes on `url`. */
+  async function firstRequest(
+    url: string,
+    seed: Record<string, string> | null = null,
+  ): Promise<ListQuery> {
+    const list = listSpy();
+    configureSearchMap({ list });
+    await mount(url, seed, !seed);
+    await firstSearch(list);
+    return queryAt(list, 0);
+  }
+
+  /** The head a server-rendered search page asks for. */
+  async function head(url: string) {
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+    await mount(url, null, true);
+    return lastApply(seo);
+  }
+
+  /** What the page's first search reports to analytics, with `track` spied before it mounts. */
+  async function searchReported(url: string): Promise<Record<string, unknown>> {
+    configureSearchMap();
+    const track: ReturnType<typeof vi.spyOn> = vi.spyOn(
+      TestBed.inject(GoogleAnalyticsService),
+      'track',
+    );
+    await mount(url, null, true);
+    const [, params] = await vi.waitFor(
+      () => {
+        const call = (track.mock.calls as [string, Record<string, unknown>][]).find(
+          ([name]) => name === 'search_performed',
+        );
+        if (!call) throw new Error('the search has not been reported yet');
+        return call;
+      },
+      { timeout: 3000 },
+    );
+    return params;
+  }
+
+  it.each(['bogus', 'deluxe', 'Private', 'private-room'])(
+    'requests a shared room for the unknown room type %s',
+    async (roomType) => {
+      const request = await firstRequest(`${PLACE}?roomType=${roomType}`);
+
+      expect(request.roomType).toBe('shared');
+    },
+  );
+
+  it.each(['bogus', 'villa', 'Apartment'])(
+    'requests no property type for the unknown property type %s',
+    async (propertyType) => {
+      const request = await firstRequest(`${PLACE}?propertyType=${propertyType}`);
+
+      expect(request.propertyType).toBeUndefined();
+    },
+  );
+
+  it('requests a private room for the backend spelling of one', async () => {
+    const request = await firstRequest(`${PLACE}?roomType=private_room`);
+
+    expect(request.roomType).toBe('private');
+  });
+
+  const KNOWN: [key: 'roomType' | 'propertyType', value: string][] = [
+    ['roomType', 'private'],
+    ['roomType', 'shared'],
+    ['propertyType', 'apartment'],
+    ['propertyType', 'room'],
+    ['propertyType', 'building'],
+    ['propertyType', 'house'],
+  ];
+
+  it.each(KNOWN)('sends the known %s %s as it was given', async (key, value) => {
+    const request = await firstRequest(`${PLACE}?${key}=${value}`);
+
+    expect(request[key]).toBe(value);
+  });
+
+  type Opening = [name: string, url: string, seed: Record<string, string> | null, type: string];
+
+  /** Where the unknown pair is opened, and the accommodation type that page then searches. */
+  const OPENED: Opening[] = [
+    ['a bare search', `/en/search?${BOGUS}`, null, 'all'],
+    ['a place search', `${PLACE}?${BOGUS}`, null, 'all'],
+    ['a worldwide search', `/en/search?everywhere=1&${BOGUS}`, null, 'all'],
+    ['a city page', `${CITY_URL}?${BOGUS}`, CITY_SEED, 'all'],
+    ['the girls page', `${GIRLS_URL}?${BOGUS}`, GIRLS_SEED, 'girls'],
+  ];
+
+  it.each(OPENED)(
+    'requests a shared room and no property type for %s, keeping its type',
+    async (_name, url, seed, type) => {
+      const request = await firstRequest(url, seed);
+
+      expect(request.roomType).toBe('shared');
+      expect(request.propertyType).toBeUndefined();
+      expect(request.accommodationType).toBe(type);
+    },
+  );
+
+  it('corrects only the room type beside a type, a known property type, amenities and a sort', async () => {
+    const request = await firstRequest(
+      `${PLACE}?gender=girls&roomType=bogus&propertyType=house&amenities=ceiling-fan,heater&sort=price-asc`,
+    );
+
+    expect(request).toMatchObject({
+      roomType: 'shared',
+      propertyType: 'house',
+      accommodationType: 'girls',
+      amenities: ['ceiling-fan', 'heater'],
+      sort: 'price-asc',
+    });
+  });
+
+  type OpeningWithSort = [
+    name: string,
+    url: string,
+    seed: Record<string, string> | null,
+    type: string,
+    sort: string,
+  ];
+
+  /** The unknown pair beside an unknown gender and a price sort, and what is then requested. */
+  const WITH_BAD_COMPANY: OpeningWithSort[] = [
+    ['a search page', `${PLACE}?gender=bogus&sort=price-asc&${BOGUS}`, null, 'all', 'recommended'],
+    [
+      'the girls page',
+      `${GIRLS_URL}?gender=bogus&sort=price-asc&${BOGUS}`,
+      GIRLS_SEED,
+      'girls',
+      'price-asc',
+    ],
+  ];
+
+  it.each(WITH_BAD_COMPANY)(
+    'reads the unknown pair as absent beside an unknown gender and a price sort on %s',
+    async (_name, url, seed, type, sort) => {
+      const request = await firstRequest(url, seed);
+
+      expect(request).toMatchObject({
+        roomType: 'shared',
+        accommodationType: type,
+        sort,
+      });
+      expect(request.propertyType).toBeUndefined();
+    },
+  );
+
+  it.each([
+    ['an unknown room type', `${PLACE}?roomType=bogus`],
+    ['an unknown property type', `${PLACE}?propertyType=bogus`],
+    ['an unknown room type and property type', `${PLACE}?${BOGUS}`],
+  ])(
+    'canonicalises a place search whose only filter is %s to its landing page',
+    async (_name, url) => {
+      const applied = await head(url);
+
+      expect(applied['path']).toBe('/hostels/lahore');
+      expect(applied['noindex']).toBeUndefined();
+    },
+  );
+
+  it.each([
+    ['a private room', `${PLACE}?roomType=private`],
+    ['the backend spelling of a private room', `${PLACE}?roomType=private_room`],
+    ['a house', `${PLACE}?propertyType=house`],
+    ['an unknown room type beside an amenity', `${PLACE}?roomType=bogus&amenities=ceiling-fan`],
+    ['an unknown room type with no place', '/en/search?roomType=bogus'],
+  ])('keeps a search for %s out of the index', async (_name, url) => {
+    const applied = await head(url);
+
+    expect(applied['noindex']).toBe(true);
+    expect(applied).not.toHaveProperty('path');
+  });
+
+  it('reports no property type to analytics for an unknown one', async () => {
+    const reported = await searchReported(`${PLACE}?propertyType=bogus`);
+
+    expect(reported).toHaveProperty('result_count', 1);
+    expect(reported['property_type']).toBeUndefined();
+  });
+
+  it('reports a known property type to analytics', async () => {
+    const reported = await searchReported(`${PLACE}?propertyType=house`);
+
+    expect(reported).toHaveProperty('result_count', 1);
+    expect(reported['property_type']).toBe('house');
+  });
+
+  it.each([
+    ['unknown values only', `${PLACE}?${BOGUS}`],
+    ['the backend spelling of a private room', `${PLACE}?roomType=private_room`],
+    ['an unknown room type beside a sort the type offers', `${PLACE}?roomType=bogus&sort=newest`],
+  ])('leaves the address as it was for %s', async (_name, url) => {
+    const list = listSpy();
+    const { navigate } = await mountWatched(url, { list });
+    await firstSearch(list);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).url).toBe(url);
+  });
+
+  it('takes only the stale sort out of the address, once, and leaves an unknown room type in it', async () => {
+    const list = listSpy();
+    const { navigate } = await mountWatched(`${PLACE}?roomType=bogus&sort=price-asc`, { list });
+    await vi.waitFor(() => expect(urlQuery()).not.toHaveProperty('sort'));
+    await firstSearch(list);
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expectSortStripAt(navigate, 0);
+    expect(urlQuery()).toEqual({ roomType: 'bogus' });
+    expect(queryAt(list, 0)).toMatchObject({ roomType: 'shared', sort: 'recommended' });
   });
 });

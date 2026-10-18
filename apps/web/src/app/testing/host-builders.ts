@@ -167,6 +167,7 @@ export function hostBooking(slug = 'confirmed', over: Partial<HostBooking> = {})
     occupancies: [],
     source: '',
     createdAt: '2026-09-27',
+    confirmationPdfUrl: '',
     ...over,
   };
 }

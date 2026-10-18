@@ -145,12 +145,14 @@
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <hh-date-picker
+        [today]="today()"
         [label]="'hostTeam.joiningDate' | transloco"
         [value]="f.joiningDate"
         [error]="fieldError('joiningDate')"
         (valueChange)="patch('joiningDate', $event ?? '')"
       />
       <hh-date-picker
+        [today]="today()"
         [label]="'hostTeam.leavingDate' | transloco"
         [value]="f.leavingDate"
         [error]="leavingError()"
@@ -167,6 +169,7 @@
         (valueChange)="patch('salary', $event ? $any($event).toString() : '')"
       />
       <hh-date-picker
+        [today]="today()"
         [label]="'hostTeam.salaryIssueDate' | transloco"
         [value]="f.salaryIssueDate"
         (valueChange)="patch('salaryIssueDate', $event ?? '')"

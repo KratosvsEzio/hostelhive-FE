@@ -11,11 +11,13 @@ import { ApiHostel, ListingsApi, toListing } from './listings-api';
 class ApiClientStub {
   lastPath = '';
   lastParams: Record<string, unknown> = {};
+  /** What the next call answers with; an empty list unless a row needs a real payload. */
+  reply: unknown = [];
 
   get<T>(path: string, params?: Record<string, unknown>): Observable<T> {
     this.lastPath = path;
     this.lastParams = params ?? {};
-    return of([] as unknown as T);
+    return of(this.reply as T);
   }
 }
 
@@ -174,6 +176,35 @@ describe('ListingsApi room type filter', () => {
     const keys = Object.keys(api.lastParams).filter((k) => k.includes('occupancy_price_from'));
     expect(keys).toHaveLength(1);
     expect(keys[0].startsWith('f[private_occupancy_price_from.')).toBe(true);
+  });
+
+  // The translation is for the request alone; the listing is still priced with the app's word.
+  it('still prices a private-room search from the private rate', () => {
+    const rate = (price: number) => ({
+      price,
+      discounted_price: 0,
+      currency_price_hash: { PKR: price },
+      currency_discounted_price_hash: { PKR: 0 },
+    });
+    const service = setUp();
+    api.reply = {
+      hostels: [
+        {
+          id: 'h1',
+          name: 'Test',
+          currency: 'PKR',
+          shared_occupancy_price_from: rate(15000),
+          private_occupancy_price_from: rate(45000),
+        },
+      ],
+    };
+
+    let priceFrom: number | undefined;
+    service.list({ roomType: 'private' }).subscribe((page) => {
+      priceFrom = page.items[0]?.priceFrom;
+    });
+
+    expect(priceFrom).toBe(45000);
   });
 
   it('no longer sends the flat room_type key', () => {

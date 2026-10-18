@@ -62,6 +62,7 @@ function booking(slug: string, over: Partial<HostBooking> = {}): HostBooking {
     occupancies: [],
     source: '',
     createdAt: '2026-09-27',
+    confirmationPdfUrl: '',
     ...over,
   };
 }
@@ -362,6 +363,66 @@ describe('BookingDetailsPanel', () => {
   it("shows the host's reason on a cancelled booking when the server sends one", () => {
     const text = render(booking('cancelled', { cancellationReason: 'Water leak in dorm' })).textContent ?? '';
     expect(text).toContain('Water leak in dorm');
+  });
+
+  describe('the confirmation download', () => {
+    const URL = 'https://img.example.test/unprocessed/ns-2/documents/3ec81f07-host-stay.pdf';
+    const link = (el: HTMLElement) => el.querySelector<HTMLAnchorElement>('[data-testid="download-confirmation"]');
+
+    it('links to the stored PDF in a new tab once the booking is confirmed', () => {
+      const el = render(booking('confirmed', { confirmationPdfUrl: URL }));
+
+      const a = link(el);
+      expect(a?.getAttribute('href')).toBe(URL);
+      expect(a?.getAttribute('target')).toBe('_blank');
+      expect(a?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(a?.textContent).toContain('hostBookings.downloadConfirmation');
+      expect(a?.textContent).toContain('userBookings.opensInNewTab');
+      expect(a?.querySelector('i')?.getAttribute('aria-hidden')).toBe('true');
+      expect(el.textContent).toContain('hostBookings.confirmation');
+    });
+
+    it.each(['checked-in', 'checked-out', 'room-assigned'])('keeps the link while the booking is %s', (slug) => {
+      expect(link(render(booking(slug, { confirmationPdfUrl: URL })))?.getAttribute('href')).toBe(URL);
+    });
+
+    it('shows no section at all while the PDF is not stored', () => {
+      const el = render(booking('confirmed', { confirmationPdfUrl: '' }));
+
+      expect(link(el)).toBeNull();
+      expect(el.textContent).not.toContain('hostBookings.confirmation');
+    });
+
+    it.each(['pending', 'pending-allotment', 'cancelled', 'no-show'])('hides a PDF the booking still carries while it is %s', (slug) => {
+      const el = render(booking(slug, { confirmationPdfUrl: URL }));
+
+      expect(link(el)).toBeNull();
+      expect(el.textContent).not.toContain('hostBookings.confirmation');
+    });
+
+    it('shows the section when a re-read of the same booking brings a PDF', () => {
+      const FRESH = 'https://img.example.test/unprocessed/ns-2/documents/d2b6f4a9-fresh-host.pdf';
+      const el = render(booking('confirmed', { confirmationPdfUrl: '' }));
+      expect(link(el)).toBeNull();
+
+      fixture.componentInstance.booking.set(booking('confirmed', { confirmationPdfUrl: FRESH }));
+      fixture.detectChanges();
+
+      expect(link(el)?.getAttribute('href')).toBe(FRESH);
+      expect(el.textContent).toContain('hostBookings.confirmation');
+    });
+
+    it('removes the section when the same booking moves to cancelled with its PDF kept', () => {
+      const KEPT = 'https://img.example.test/unprocessed/ns-2/documents/e8c1a7b3-kept-host.pdf';
+      const el = render(booking('confirmed', { confirmationPdfUrl: KEPT }));
+      expect(link(el)?.getAttribute('href')).toBe(KEPT);
+
+      fixture.componentInstance.booking.set(booking('cancelled', { confirmationPdfUrl: KEPT }));
+      fixture.detectChanges();
+
+      expect(link(el)).toBeNull();
+      expect(el.textContent).not.toContain('hostBookings.confirmation');
+    });
   });
 
   describe('the booking invoice', () => {

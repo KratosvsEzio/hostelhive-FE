@@ -1,7 +1,7 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { LocaleStore } from './i18n/locale-store';
 import { localeAlternates, localeFor, withLocale } from './i18n/locales';
-import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -100,6 +100,14 @@ export class Seo {
   private readonly doc = inject(DOCUMENT);
   private readonly locale = inject(LocaleStore);
   private readonly i18n = inject(TranslocoService);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  /**
+   * The JSON-LD ids, and the preload, that a live page has claimed through `clearOnDestroy`,
+   * counted per registration. Read by `clearUnclaimed`.
+   */
+  private readonly claimedIds = new Map<string, number>();
+  private claimedPreloads = 0;
 
   /** Whether the last `apply` was a placeholder — see `SeoConfig.provisional`. */
   private readonly _provisional = signal(false);
@@ -312,10 +320,46 @@ export class Seo {
     jsonLdIds: readonly string[],
     opts: { preloadImage?: boolean } = {},
   ): void {
+    for (const id of jsonLdIds) this.claimedIds.set(id, (this.claimedIds.get(id) ?? 0) + 1);
+    if (opts.preloadImage) this.claimedPreloads++;
     destroyRef.onDestroy(() => {
-      for (const id of jsonLdIds) this.clearJsonLd(id);
-      if (opts.preloadImage) this.preloadImage(null);
+      for (const id of jsonLdIds) {
+        const left = (this.claimedIds.get(id) ?? 1) - 1;
+        if (left > 0) this.claimedIds.set(id, left);
+        else this.claimedIds.delete(id);
+        this.clearJsonLd(id);
+      }
+      if (opts.preloadImage) {
+        this.claimedPreloads--;
+        this.preloadImage(null);
+      }
     });
+  }
+
+  /**
+   * Removes every JSON-LD block, and the preload, that no live page has claimed through
+   * `clearOnDestroy`. Browser only; `RouteHeadStrategy` calls it when a navigation lands on a
+   * page-owned route.
+   *
+   * For the server-rendered blocks `clearOnDestroy` never gets to clear. A visitor who clicks
+   * a link before the app has booted replaces the first navigation before the server page's
+   * component is ever created in the browser, so nothing registered its ids: a blog article's
+   * `article` and `breadcrumb` stayed in the head of the home page they clicked through to
+   * (Trello #138).
+   *
+   * Safe at that point because the router has already destroyed the old page and created the
+   * new one, so every page still showing has claimed its ids — its blocks stay, even before
+   * its effect has written them. A no-op on the server, where nothing is stale and the
+   * rendered HTML must keep every block.
+   */
+  clearUnclaimed(): void {
+    if (!this.isBrowser) return;
+    this.doc.head
+      .querySelectorAll('script[type="application/ld+json"][data-seo]')
+      .forEach((el) => {
+        if (!this.claimedIds.has(el.getAttribute('data-seo') ?? '')) el.remove();
+      });
+    if (this.claimedPreloads === 0) this.preloadImage(null);
   }
 
   /**

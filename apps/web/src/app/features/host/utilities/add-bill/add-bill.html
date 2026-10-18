@@ -66,7 +66,7 @@
           </p>
           <hh-dropdown
             variant="field"
-            [options]="monthOptions"
+            [options]="monthOptions()"
             [value]="selectedMonthValue()"
             (valueChange)="setMonth($event)"
           />
@@ -195,6 +195,7 @@
             {{ 'hostUtilities.n5DueDate' | transloco }}
           </p>
           <hh-date-picker
+            [today]="today()"
             [placeholder]="'hostUtilities.pickADueDate' | transloco"
             [value]="dueDateInput()"
             [min]="dueDateMin()"

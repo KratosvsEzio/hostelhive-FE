@@ -17,6 +17,8 @@ const TRANSLATED_KEYS = [
     'noInvoiceYet',
     'couldNotCheckInvoice',
     'viewInvoice',
+    'confirmation',
+    'downloadConfirmation',
     'alsoMarkInvoicePaid',
     'bookingAndInvoicePaid',
     'invoiceNotPaid',
@@ -58,6 +60,8 @@ const TRANSLATED_KEYS = [
 const SAME_AS_ENGLISH: Record<string, string[]> = {
   // Danish uses the loanword "booking" throughout, so "Booking {{ref}}" is the native label.
   'da.json': ['hostInvoices.bookingRef'],
+  // French spells the booking-confirmation document the same way English does.
+  'fr.json': ['hostBookings.confirmation'],
 };
 
 const files = localeFiles();

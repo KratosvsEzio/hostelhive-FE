@@ -13,7 +13,7 @@ import {
 
 function validForm(overrides: Partial<StaffForm> = {}): StaffForm {
   return {
-    ...emptyStaffForm(),
+    ...emptyStaffForm('2026-03-15'),
     name: 'Ali Khan',
     title: 'Warden',
     phone: '0300 1234567',
@@ -40,22 +40,16 @@ function staff(overrides: Partial<Staff> = {}): Staff {
 }
 
 describe('emptyStaffForm', () => {
-  it('defaults the joining date to the local calendar day', () => {
-    const d = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    // Local parts, not toISOString(): the latter is UTC and returns the previous day
-    // for the first five hours of every day in PKT.
-    expect(emptyStaffForm().joiningDate).toBe(
-      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    );
+  it('joins on the day it is given — the hostel’s today, chosen by the caller', () => {
+    expect(emptyStaffForm('2026-03-16').joiningDate).toBe('2026-03-16');
   });
 
   it('carries no id, so it maps to a create', () => {
-    expect(emptyStaffForm().id).toBeUndefined();
+    expect(emptyStaffForm('2026-03-15').id).toBeUndefined();
   });
 
   it('leaves the leaving date blank — it is optional and has no sensible default', () => {
-    expect(emptyStaffForm().leavingDate).toBe('');
+    expect(emptyStaffForm('2026-03-15').leavingDate).toBe('');
   });
 });
 

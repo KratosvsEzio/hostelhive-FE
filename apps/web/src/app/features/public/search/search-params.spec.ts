@@ -1,7 +1,6 @@
 import { convertToParamMap, ParamMap } from '@angular/router';
 import {
   isAccommodationType,
-  isPropertyType,
   mergeSearchParams,
   searchUrlCorrections,
 } from './search-params';
@@ -41,6 +40,21 @@ function expectSortKept(merged: ParamMap, sort: string): void {
   expect(merged.has('sort')).toBe(true);
   expect(merged.getAll('sort')).toEqual([sort]);
   expect(merged.keys).toContain('sort');
+}
+
+// The same all-four-readers check for any key, so a discarded value cannot linger in one of them.
+function expectKeyAbsent(merged: ParamMap, key: string): void {
+  expect(merged.get(key)).toBeNull();
+  expect(merged.has(key)).toBe(false);
+  expect(merged.getAll(key)).toEqual([]);
+  expect(merged.keys).not.toContain(key);
+}
+
+function expectKeyReads(merged: ParamMap, key: string, values: string[]): void {
+  expect(merged.get(key)).toBe(values[0]);
+  expect(merged.has(key)).toBe(true);
+  expect(merged.getAll(key)).toEqual(values);
+  expect(merged.keys).toContain(key);
 }
 
 describe('mergeSearchParams', () => {
@@ -281,19 +295,194 @@ describe('mergeSearchParams', () => {
     });
   });
 
-  // Trello #176 and #184: the same reading as `gender` and `sort`, for the other filter keys.
-  describe('a filter value the search cannot use', () => {
-    function expectAbsent(merged: ParamMap, key: string): void {
-      expect(merged.get(key)).toBeNull();
-      expect(merged.has(key)).toBe(false);
-      expect(merged.getAll(key)).toEqual([]);
-      expect(merged.keys).not.toContain(key);
-    }
+  describe('a roomType or propertyType outside its vocabulary', () => {
+    it.each(['bogus', 'deluxe', 'Private', 'SHARED', 'private-room', ''])(
+      'reads the roomType %j as absent and keeps the place',
+      (roomType) => {
+        const merged = mergeOrFail(convertToParamMap({ place: 'lahore', roomType }), null);
+
+        expectKeyAbsent(merged, 'roomType');
+        expect(merged.get('place')).toBe('lahore');
+        expect([...merged.keys]).toEqual(['place']);
+      },
+    );
+
+    it.each(['bogus', 'villa', 'Apartment', 'HOUSE', ''])(
+      'reads the propertyType %j as absent and keeps the place',
+      (propertyType) => {
+        const merged = mergeOrFail(convertToParamMap({ place: 'lahore', propertyType }), null);
+
+        expectKeyAbsent(merged, 'propertyType');
+        expect(merged.get('place')).toBe('lahore');
+        expect([...merged.keys]).toEqual(['place']);
+      },
+    );
+
+    // The backend's own name for a private room reads as the word the filters use.
+    it('reads the backend spelling private_room as private', () => {
+      const merged = mergeOrFail(convertToParamMap({ roomType: 'private_room' }), null);
+
+      expectKeyReads(merged, 'roomType', ['private']);
+      expect([...merged.keys]).toEqual(['roomType']);
+    });
+
+    // A repeated key is judged as a whole, so the valid value does not outlive the bad one.
+    it.each([
+      { key: 'roomType', values: ['private', 'bogus'] },
+      { key: 'roomType', values: ['bogus', 'shared'] },
+      { key: 'propertyType', values: ['house', 'villa'] },
+    ])('reads $key as absent when one of $values is unknown', ({ key, values }) => {
+      expectKeyAbsent(mergeOrFail(convertToParamMap({ [key]: values }), null), key);
+    });
+
+    it('reads every value of a repeated roomType through the backend spelling', () => {
+      const merged = mergeOrFail(
+        convertToParamMap({ roomType: ['private_room', 'private'] }),
+        null,
+      );
+
+      expectKeyReads(merged, 'roomType', ['private', 'private']);
+    });
+
+    it.each([
+      { when: 'a private roomType', query: { roomType: 'private' } },
+      { when: 'a shared roomType', query: { roomType: 'shared' } },
+      { when: 'an apartment', query: { propertyType: 'apartment' } },
+      { when: 'a room', query: { propertyType: 'room' } },
+      { when: 'a building', query: { propertyType: 'building' } },
+      { when: 'a house', query: { propertyType: 'house' } },
+      { when: 'both together', query: { roomType: 'shared', propertyType: 'house' } },
+      {
+        when: 'a gender and a price sort',
+        query: { gender: 'girls', sort: 'price-asc', roomType: 'private', propertyType: 'house' },
+      },
+    ])('returns the query untouched for $when and no seed', ({ query }) => {
+      const asked = convertToParamMap(query);
+
+      expect(mergeSearchParams(asked, null)).toBe(asked);
+    });
+
+    it('keeps a valid roomType and propertyType in the query over a seed', () => {
+      const merged = mergeOrFail(
+        convertToParamMap({ roomType: 'private', propertyType: 'house' }),
+        { place: 'lahore' },
+      );
+
+      expectKeyReads(merged, 'roomType', ['private']);
+      expectKeyReads(merged, 'propertyType', ['house']);
+      expect(merged.get('place')).toBe('lahore');
+      expect([...merged.keys].sort()).toEqual(['place', 'propertyType', 'roomType']);
+    });
 
     it.each([
       ['roomType', 'bogus'],
+      ['roomType', ''],
+      ['propertyType', 'villa'],
+      ['propertyType', 'Apartment'],
+    ])('drops the seed %s %j', (key, value) => {
+      const merged = mergeOrFail(null, { place: 'lahore', [key]: value });
+
+      expectKeyAbsent(merged, key);
+      expect([...merged.keys]).toEqual(['place']);
+    });
+
+    it('reads a bad query value over a bad seed value as absent', () => {
+      const merged = mergeOrFail(convertToParamMap({ roomType: 'bogus', propertyType: 'villa' }), {
+        place: 'lahore',
+        roomType: 'deluxe',
+        propertyType: 'cottage',
+      });
+
+      expectKeyAbsent(merged, 'roomType');
+      expectKeyAbsent(merged, 'propertyType');
+      expect([...merged.keys]).toEqual(['place']);
+    });
+
+    it('reads the seed spelling private_room as private', () => {
+      const merged = mergeOrFail(null, { place: 'lahore', roomType: 'private_room' });
+
+      expectKeyReads(merged, 'roomType', ['private']);
+      expect([...merged.keys].sort()).toEqual(['place', 'roomType']);
+    });
+
+    it.each([
+      ['roomType', 'bogus', 'private'],
+      ['roomType', '', 'shared'],
+      ['propertyType', 'villa', 'house'],
+      ['propertyType', 'Apartment', 'apartment'],
+    ])('lets a valid seed %s show through the dropped query value %j', (key, dropped, seeded) => {
+      const merged = mergeOrFail(convertToParamMap({ [key]: dropped }), { [key]: seeded });
+
+      expectKeyReads(merged, key, [seeded]);
+      expect([...merged.keys]).toEqual([key]);
+    });
+
+    describe('next to a bad gender and a stale sort', () => {
+      const query = {
+        gender: 'bogus',
+        sort: 'price-asc',
+        roomType: 'bogus',
+        propertyType: 'villa',
+        place: 'lahore',
+      };
+
+      it('keeps the seed type and its sort while dropping both values', () => {
+        const merged = mergeOrFail(convertToParamMap(query), { gender: 'girls' });
+
+        expectKeyAbsent(merged, 'roomType');
+        expectKeyAbsent(merged, 'propertyType');
+        expect(merged.get('gender')).toBe('girls');
+        expectSortKept(merged, 'price-asc');
+        expect([...merged.keys].sort()).toEqual(['gender', 'place', 'sort']);
+      });
+
+      it('drops the sort along with both values when no type is in force', () => {
+        const merged = mergeOrFail(convertToParamMap(query), null);
+
+        expectKeyAbsent(merged, 'roomType');
+        expectKeyAbsent(merged, 'propertyType');
+        expectSortAbsent(merged);
+        expect(merged.get('gender')).toBeNull();
+        expect([...merged.keys]).toEqual(['place']);
+      });
+    });
+
+    it.each([
+      ['roomType', 'bogus'],
+      ['propertyType', 'villa'],
+    ])('leaves the other keys alone next to a dropped %s', (key, value) => {
+      const merged = mergeOrFail(
+        convertToParamMap({ [key]: value, amenities: ['wifi', 'ac'], minPrice: '5000', place: '' }),
+        { place: 'lahore', budget: '5000' },
+      );
+
+      expectKeyAbsent(merged, key);
+      expect(merged.getAll('amenities')).toEqual(['wifi', 'ac']);
+      expect(merged.get('minPrice')).toBe('5000');
+      expect(merged.get('place')).toBe('');
+      expect(merged.get('budget')).toBe('5000');
+      expect([...merged.keys].sort()).toEqual(['amenities', 'budget', 'minPrice', 'place']);
+    });
+
+    // The keys judged on their own live in a Map, so an inherited member name is never one of them.
+    it('reads seed keys named after inherited members as they are', () => {
+      const merged = mergeOrFail(null, { place: 'lahore', toString: 'x', constructor: 'y' });
+
+      expect(merged.get('toString')).toBe('x');
+      expect(merged.get('constructor')).toBe('y');
+      expect([...merged.keys].sort()).toEqual(['constructor', 'place', 'toString']);
+    });
+
+    it('reads the inherited member toString as an unknown roomType', () => {
+      expectKeyAbsent(mergeOrFail(convertToParamMap({ roomType: 'toString' }), null), 'roomType');
+    });
+  });
+
+  // Trello #176 and #184: the same reading as `gender` and `sort`, for the other filter keys.
+  describe('a filter value the search cannot use', () => {
+    it.each([
+      ['roomType', 'bogus'],
       ['roomType', 'Private'],
-      ['roomType', 'private_room'],
       ['roomType', ''],
       ['propertyType', 'bogus'],
       ['propertyType', 'Apartment'],
@@ -309,7 +498,7 @@ describe('mergeSearchParams', () => {
     ])('reads %s=%j as absent and keeps the rest of the query', (key, value) => {
       const merged = mergeOrFail(convertToParamMap({ [key]: value, place: 'lahore' }), null);
 
-      expectAbsent(merged, key);
+      expectKeyAbsent(merged, key);
       expect(merged.get('place')).toBe('lahore');
     });
 
@@ -332,7 +521,7 @@ describe('mergeSearchParams', () => {
     it('reads a repeated key as absent when one value is bad', () => {
       const merged = mergeOrFail(convertToParamMap({ roomType: ['private', 'bogus'] }), null);
 
-      expectAbsent(merged, 'roomType');
+      expectKeyAbsent(merged, 'roomType');
     });
 
     it.each([
@@ -343,8 +532,8 @@ describe('mergeSearchParams', () => {
     ])('drops both coordinates for %s', (_name, coords) => {
       const merged = mergeOrFail(convertToParamMap({ ...coords, zoom: '10' }), null);
 
-      expectAbsent(merged, 'lat');
-      expectAbsent(merged, 'lng');
+      expectKeyAbsent(merged, 'lat');
+      expectKeyAbsent(merged, 'lng');
       expect(merged.get('zoom')).toBe('10');
     });
 
@@ -357,7 +546,7 @@ describe('mergeSearchParams', () => {
 
       expect(merged.get('lat')).toBe('31.5');
       expect(merged.get('lng')).toBe('74.3');
-      expectAbsent(merged, 'minPrice');
+      expectKeyAbsent(merged, 'minPrice');
     });
 
     describe('amenities', () => {
@@ -378,7 +567,7 @@ describe('mergeSearchParams', () => {
           vocabulary,
         );
 
-        expectAbsent(merged as ParamMap, 'amenities');
+        expectKeyAbsent(merged as ParamMap, 'amenities');
       });
 
       it('returns the query untouched when every slug is offered', () => {
@@ -401,16 +590,6 @@ describe('mergeSearchParams', () => {
   });
 });
 
-describe('isPropertyType', () => {
-  it.each(['apartment', 'room', 'building', 'house'])('accepts %j', (value) => {
-    expect(isPropertyType(value)).toBe(true);
-  });
-
-  it.each(['', null, undefined, 'bogus', 'Apartment'])('rejects %j', (value) => {
-    expect(isPropertyType(value)).toBe(false);
-  });
-});
-
 describe('searchUrlCorrections', () => {
   it('is empty for a clean query', () => {
     const query = convertToParamMap({ roomType: 'private', minPrice: '5000', sort: 'newest' });
@@ -418,7 +597,8 @@ describe('searchUrlCorrections', () => {
     expect(searchUrlCorrections(query, null)).toEqual({});
   });
 
-  it('nulls every dropped key and writes the cleaned amenity list', () => {
+  // Only what a writer reads raw (the header bar: sort, budget, coordinates) would come back.
+  it('nulls the discarded keys a writer would bring back, and only those', () => {
     const query = convertToParamMap({
       roomType: 'bogus',
       propertyType: 'bogus',
@@ -429,25 +609,24 @@ describe('searchUrlCorrections', () => {
       zoom: 'x',
       sort: 'price-asc',
       amenities: 'wifi,bogus',
+      gender: 'bogus',
       place: 'Lahore',
     });
 
-    expect(searchUrlCorrections(query, null, { amenities: new Set(['wifi']) })).toEqual({
-      roomType: null,
-      propertyType: null,
+    expect(searchUrlCorrections(query, null)).toEqual({
       minPrice: null,
       maxPrice: null,
       lat: null,
       lng: null,
       zoom: null,
       sort: null,
-      amenities: 'wifi',
     });
   });
 
-  // `startSearch` writes the type in force instead, and the header bar validates it itself.
-  it('leaves an unknown gender to the page', () => {
-    expect(searchUrlCorrections(convertToParamMap({ gender: 'bogus' }), null)).toEqual({});
+  it('leaves the backend spelling of a private room in place', () => {
+    expect(searchUrlCorrections(convertToParamMap({ roomType: 'private_room' }), null)).toEqual(
+      {},
+    );
   });
 
   it('cleans only the query, never a seed', () => {

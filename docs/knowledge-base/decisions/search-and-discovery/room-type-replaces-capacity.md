@@ -22,6 +22,7 @@ Search used to filter by bed capacity (1–5+ sharing) from the header bar and t
 
 ## Consequences
 
+- **An unknown `roomType` reads as the default, shared.** `mergeSearchParams` discards a value outside `OCCUPANCY_TYPES`, rather than sending it as a filter that matches nothing. The backend's own `private_room` is read as `private`. The index stores `private_room`, so `ListingsApi.list` translates `private` at the boundary (`OCCUPANCY_WIRE_VALUE`). Before that, the Private room filter matched nothing live (Trello #176, #183).
 - **The rule now has one home and holds on every way in.** `sortsFor`/`isSortOffered` (`search-sort.ts`) decide what is offered. The Filters modal follows them (PR #141). A link that carries a sort the type doesn't offer is read as absent by `mergeSearchParams` and taken out of the URL (Trello #171). See the area file.
 - `SearchCapacity` survives but nothing sets its `active` signal, so per-capacity card pricing is dormant.
 

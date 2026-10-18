@@ -32,7 +32,7 @@
           <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400" for="ag-date">
             {{ 'hostMess.expenseDate' | transloco }} <span class="text-danger">*</span>
           </label>
-          <hh-date-picker controlId="ag-date" [(value)]="date" [max]="todayIso" [placeholder]="'hostMess.pickADate' | transloco" />
+          <hh-date-picker controlId="ag-date" [(value)]="date" [max]="today()" [today]="today()" [placeholder]="'hostMess.pickADate' | transloco" />
           @if (dateError()) {
             <p class="mt-1 text-xs font-medium text-danger">{{ dateError() }}</p>
           }

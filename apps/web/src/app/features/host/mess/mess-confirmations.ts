@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
@@ -20,7 +21,13 @@ import {
   Tabs,
 } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { HostelsApi, HostPropertyStore, MealConfirmationRaw } from '@services';
+import {
+  HostelsApi,
+  HostPropertyStore,
+  MealConfirmationRaw,
+  selectedHostelToday,
+  selectedHostelZone,
+} from '@services';
 import {
   MEAL_META,
   MEAL_ORDER,
@@ -28,8 +35,6 @@ import {
   MessNotificationsService,
 } from './mess-notifications.service';
 import { TranslocoPipe } from '@jsverse/transloco';
-
-const todayIso = () => format(new Date(), 'yyyy-MM-dd');
 
 const PAGE_SIZE = 25;
 
@@ -91,11 +96,22 @@ export class MessConfirmations {
     return MEAL_ORDER.includes(meal as MealType) ? (meal as MealType) : 'breakfast';
   });
   protected readonly page = signal(1);
-  protected readonly selectedDate = signal<string | null>(todayIso());
+  private readonly zone = selectedHostelZone();
+  /** The hostel's date: the day shown by default and the one labelled "today". */
+  protected readonly today = selectedHostelToday(new Date(), this.zone);
+  /**
+   * The day shown. Follows the hostel's today — which moves once, when the zone lands — until
+   * the host picks another day. Derived rather than moved by an effect, so the zone landing
+   * changes the day in the same step as it releases the fetch, and the list loads once.
+   */
+  protected readonly selectedDate = linkedSignal<string, string | null>({
+    source: this.today,
+    computation: (today, prev) => (prev && prev.value !== prev.source ? prev.value : today),
+  });
 
-  private readonly effectiveDate = computed(() => this.selectedDate() ?? todayIso());
+  private readonly effectiveDate = computed(() => this.selectedDate() ?? this.today());
 
-  protected readonly isToday = computed(() => this.effectiveDate() === todayIso());
+  protected readonly isToday = computed(() => this.effectiveDate() === this.today());
 
   protected readonly dateLabel = computed(() =>
     this.isToday()
@@ -110,12 +126,15 @@ export class MessConfirmations {
       hostelId: ready ? hostelId : '',
       date: this.effectiveDate(),
       meal: this.activeMeal(),
+      // Held until the zone is known, so the default day isn't fetched twice.
+      pending: this.zone() === undefined,
     };
   });
 
   private readonly loaded = toSignal(
     toObservable(this.fetchKey).pipe(
-      switchMap(({ hostelId, date, meal }) => {
+      switchMap(({ hostelId, date, meal, pending }) => {
+        if (pending) return of<LoadState>({ loading: true, items: [], total: 0 });
         if (!hostelId) return of<LoadState>(EMPTY);
         return this.api.mealConfirmations(hostelId, { date, mealType: meal }).pipe(
           map((r) => ({ loading: false, items: r.items, total: r.total }) satisfies LoadState),

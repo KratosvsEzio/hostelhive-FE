@@ -1,53 +1,54 @@
 import { ParamMap } from '@angular/router';
-import { AccommodationType, PROPERTY_TYPES } from '@hostelhive/data-access';
+import { AccommodationType } from '@hostelhive/data-access';
 import { isSortOffered } from '@features/public/search/search-sort';
 import { ACCOMMODATION_LABELS } from '@util/accommodation-type';
-import { isOccupancyType } from '@util/occupancy-type';
+import { isOccupancyType, isPrivateOccupancy } from '@util/occupancy-type';
+import { isPropertyType } from '@util/property-type';
 
 function hasOwn(record: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(record, key);
 }
 
-/** True for the four accommodation types the search knows; false for anything else, empty included. */
-export function isAccommodationType(value: string | null | undefined): value is AccommodationType {
-  return !!value && hasOwn(ACCOMMODATION_LABELS, value);
+/** The value to read for one value of a key judged on its own, or null to discard it. */
+type Normaliser = (value: string) => string | null;
+
+function normaliseRoomType(value: string): string | null {
+  if (isOccupancyType(value)) return value;
+  // Past the check above, the only private spelling left is the backend's own, `private_room`.
+  return isPrivateOccupancy(value) ? 'private' : null;
 }
 
-/** True for a `PROPERTY_TYPES` slug; false for anything else, empty included. */
-export function isPropertyType(value: string | null | undefined): boolean {
-  return !!value && PROPERTY_TYPES.some((t) => t.value === value);
-}
-
-/** A number written out in full, so a blank, `abc` or `Infinity` is not one. */
-function finite(value: string): number | null {
-  if (!value.trim()) return null;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function inRange(value: string, min: number, max: number): boolean {
-  const n = finite(value);
-  return n !== null && n >= min && n <= max;
-}
-
-/**
- * What a query value has to be for its key to count. A key not listed here is not checked.
- * Every value of a repeated key has to pass, so a repeat cannot hide a bad one.
- */
-function checksFor(type: AccommodationType | 'all'): Record<string, (v: string) => boolean> {
-  return {
-    gender: isAccommodationType,
-    sort: (s) => isSortOffered(s, type),
-    roomType: isOccupancyType,
-    propertyType: isPropertyType,
-    // A budget bound is a number, and not below zero.
-    minPrice: (v) => inRange(v, 0, Number.MAX_SAFE_INTEGER),
-    maxPrice: (v) => inRange(v, 0, Number.MAX_SAFE_INTEGER),
-    lat: (v) => inRange(v, -90, 90),
-    lng: (v) => inRange(v, -180, 180),
-    zoom: (v) => inRange(v, 0, 22),
+/** A number written out in full, within `[min, max]`; so a blank, `abc` or `Infinity` is not one. */
+function numberIn(min: number, max: number): Normaliser {
+  return (value) => {
+    if (!value.trim()) return null;
+    const n = Number(value);
+    return Number.isFinite(n) && n >= min && n <= max ? value : null;
   };
 }
+
+/** The keys with a fixed vocabulary or range, each judged on its own — see {@link mergeSearchParams}. */
+const CHECKED_ALONE = new Map<string, Normaliser>([
+  ['roomType', normaliseRoomType],
+  ['propertyType', (value) => (isPropertyType(value) ? value : null)],
+  // A budget bound is a number, and not below zero.
+  ['minPrice', numberIn(0, Number.MAX_SAFE_INTEGER)],
+  ['maxPrice', numberIn(0, Number.MAX_SAFE_INTEGER)],
+  ['lat', numberIn(-90, 90)],
+  ['lng', numberIn(-180, 180)],
+  ['zoom', numberIn(0, 22)],
+]);
+
+/** A coordinate means nothing without the other half, so one bad half discards both. */
+const PAIRED = ['lat', 'lng'];
+
+/**
+ * The keys `SearchMap` takes out of the URL when the reader discards them: those a writer reads
+ * raw and would bring back to life. The header bar reads `sort`, the budget and the coordinates
+ * straight from the URL and writes them back on a search. Nothing reads `roomType`,
+ * `propertyType`, `amenities` or `gender` raw, so those stay in the URL, read as absent.
+ */
+const STRIPPED = new Set(['sort', 'minPrice', 'maxPrice', 'lat', 'lng', 'zoom']);
 
 /** The part of the search's vocabulary only the API can supply. */
 export interface SearchVocabulary {
@@ -57,6 +58,62 @@ export interface SearchVocabulary {
    * nothing to check them against.
    */
   amenities?: ReadonlySet<string> | null;
+}
+
+/**
+ * The checked keys the query carries wrongly, and what each should read as.
+ *
+ * That is its values with any alias applied, or null when one of them is outside the vocabulary
+ * and the whole key is discarded. A key that reads as it stands is left out. Amenities are
+ * filtered rather than discarded whole: only the slugs the catalogue lacks go, and the key only
+ * when none is left.
+ */
+function correctedAlone(
+  query: ParamMap | null,
+  vocabulary: SearchVocabulary,
+): Map<string, string[] | null> {
+  const corrected = new Map<string, string[] | null>();
+  for (const [key, normalise] of CHECKED_ALONE) {
+    if (!query?.has(key)) continue;
+    const asked = query.getAll(key);
+    const read = asked.map(normalise);
+    const kept = read.filter((value): value is string => value !== null);
+    if (kept.length < read.length) corrected.set(key, null);
+    else if (kept.some((value, i) => value !== asked[i])) corrected.set(key, kept);
+  }
+  if (PAIRED.some((key) => corrected.get(key) === null)) {
+    for (const key of PAIRED) if (query?.has(key)) corrected.set(key, null);
+  }
+
+  const known = vocabulary.amenities;
+  if (known?.size && query?.has('amenities')) {
+    const asked = query.getAll('amenities');
+    const kept = [...new Set(asked.join(',').split(',').filter((slug) => known.has(slug)))];
+    if (!kept.length) corrected.set('amenities', null);
+    else if (asked.length > 1 || kept.join(',') !== asked[0]) {
+      corrected.set('amenities', [kept.join(',')]);
+    }
+  }
+  return corrected;
+}
+
+/** The seed with each key judged on its own corrected the same way: aliased, or dropped. */
+function correctedSeed(seed: Record<string, string>): Record<string, string> {
+  const entries = Object.entries(seed).flatMap(([key, value]): [string, string][] => {
+    const read = CHECKED_ALONE.get(key)?.(value);
+    if (read === null) return [];
+    return [[key, read ?? value]];
+  });
+  const corrected = Object.fromEntries(entries);
+  if (PAIRED.some((key) => hasOwn(seed, key) && !hasOwn(corrected, key))) {
+    for (const key of PAIRED) delete corrected[key];
+  }
+  return corrected;
+}
+
+/** True for the four accommodation types the search knows; false for anything else, empty included. */
+export function isAccommodationType(value: string | null | undefined): value is AccommodationType {
+  return !!value && hasOwn(ACCOMMODATION_LABELS, value);
 }
 
 /** The type the search is narrowed to: a valid query `gender`, else a valid seed one, else none. */
@@ -70,40 +127,10 @@ function typeInForce(
   return isAccommodationType(seeded) ? seeded : 'all';
 }
 
-/** What in the query the search cannot use: keys read as absent, and values corrected. */
-interface Review {
-  dropped: Set<string>;
-  /** `amenities` with the slugs the catalogue lacks taken out. Never empty: that is dropped. */
-  corrected: Map<string, string>;
-  badSeedSort: boolean;
-}
-
-function review(
-  query: ParamMap | null,
-  seed: Record<string, string> | null,
-  vocabulary: SearchVocabulary,
-): Review {
-  const type = typeInForce(query, seed);
-  const dropped = new Set<string>();
-  for (const [key, ok] of Object.entries(checksFor(type))) {
-    if (query?.has(key) && !query.getAll(key).every(ok)) dropped.add(key);
-  }
-  // A coordinate means nothing without the other half, so one bad half drops both.
-  if (dropped.has('lat') || dropped.has('lng')) {
-    for (const key of ['lat', 'lng']) if (query?.has(key)) dropped.add(key);
-  }
-
-  const corrected = new Map<string, string>();
-  const known = vocabulary.amenities;
-  if (known?.size && query?.has('amenities')) {
-    const raw = query.getAll('amenities');
-    const kept = [...new Set(raw.join(',').split(',').filter((s) => known.has(s)))];
-    if (!kept.length) dropped.add('amenities');
-    else if (raw.length > 1 || kept.join(',') !== raw[0]) corrected.set('amenities', kept.join(','));
-  }
-
-  const badSeedSort = !!seed && hasOwn(seed, 'sort') && !isSortOffered(seed['sort'], type);
-  return { dropped, corrected, badSeedSort };
+/** True when the query carries a `sort` the type in force does not offer. */
+function hasBadSort(query: ParamMap | null, type: AccommodationType | 'all'): boolean {
+  // Every value is checked, so a repeated `sort` cannot hide one the type does not offer.
+  return !!query?.has('sort') && !query.getAll('sort').every((s) => isSortOffered(s, type));
 }
 
 /**
@@ -112,18 +139,27 @@ function review(
  * Query wins over seed key by key, so a visitor on `/hostels/lahore` who changes the
  * budget gets what they picked, and the seed only fills what the URL does not say.
  *
- * Every filter value is checked on the way in (`checksFor`), and one the search cannot use
- * is read as absent: an unknown `gender`, `roomType` or `propertyType`; a budget that is not
- * a number or is below zero; a coordinate or zoom that is not a number or is out of range
- * (a bad half of `lat`/`lng` drops both); and a `sort` the type in force does not offer
- * (see `sortsFor`), from the query and the seed alike. Once `vocabulary` supplies the
- * catalogue, amenity slugs it does not offer are taken out of the list.
+ * `gender` and `sort` are checked on the way in. An unknown or empty `?gender=` is read as
+ * absent: on a landing page the page's own type applies, and elsewhere there is no type.
+ * Left as it was, the request sent it to the API as a filter that matches nothing, while
+ * anything that validated it showed "Any type" above that empty list. Deciding it here,
+ * in the one reader both of them use, is what keeps the filter row and the request from
+ * disagreeing.
  *
- * Left as they were, the request sent them to the API as filters that match nothing (or as
- * `NaN`), while the Filters badge counted them and the controls showed their neutral state.
- * A shared link, a bookmark or a hand-edited URL can carry any of them, so they are decided
- * here, in the one reader the request, the badge and every control use. On a landing page,
- * a bad query value falls back to the page's own.
+ * A `sort` the type in force does not offer (see `sortsFor`) is read as absent too, from
+ * the query and the seed alike: a price sort with no type would rank nightly and monthly
+ * prices against each other. A shared link or a bookmark can still carry one, so it is
+ * decided here, where the request, the badge and the sort control all read it.
+ *
+ * `roomType`, `propertyType`, the budget and the coordinates have a fixed vocabulary or range,
+ * so each is judged on its own (see `CHECKED_ALONE`), in the query and the seed alike. A value
+ * outside it, or any one of a repeated key's values, makes the whole key read as absent, and an
+ * absent `roomType` is the default, shared. One bad half of `lat`/`lng` discards both. Left as
+ * they were, the request sent the stranger as a term no hostel carries (or as `NaN`), so the
+ * list went empty or widened while the badge counted it. The one value not simply dropped is
+ * the backend's own `private_room`, read as `private`, the word the filters use, rather than as
+ * its opposite. Once `vocabulary` supplies the catalogue, amenity slugs it does not offer are
+ * taken out of the list.
  *
  * Returns the query untouched when there is nothing to merge or correct.
  */
@@ -132,25 +168,31 @@ export function mergeSearchParams(
   seed: Record<string, string> | null,
   vocabulary: SearchVocabulary = {},
 ): ParamMap | null {
-  const { dropped, corrected, badSeedSort } = review(query, seed, vocabulary);
-  if (!seed && !dropped.size && !corrected.size) return query;
+  const type = typeInForce(query, seed);
+  const badGender = !!query?.has('gender') && !isAccommodationType(query.get('gender'));
+  const badSort = hasBadSort(query, type);
+  const alone = correctedAlone(query, vocabulary);
+  if (!seed && !badGender && !badSort && !alone.size) return query;
 
-  const base = seed ?? {};
-  const inQuery = (key: string): boolean => !!query?.has(key) && !dropped.has(key);
+  const base = seed ? correctedSeed(seed) : {};
+  const badSeedSort = hasOwn(base, 'sort') && !isSortOffered(base['sort'], type);
+  const inQuery = (key: string): boolean =>
+    !!query?.has(key) &&
+    !(key === 'gender' && badGender) &&
+    !(key === 'sort' && badSort) &&
+    alone.get(key) !== null;
   const inSeed = (key: string): boolean =>
     hasOwn(base, key) && !(key === 'sort' && badSeedSort);
-  const fromQuery = (key: string): string[] => {
-    if (!inQuery(key)) return [];
-    const fixed = corrected.get(key);
-    return fixed != null ? [fixed] : (query?.getAll(key) ?? []);
-  };
+  const queryAll = (key: string): string[] => alone.get(key) ?? query?.getAll(key) ?? [];
 
   return {
-    get: (key: string) => fromQuery(key)[0] ?? (inSeed(key) ? base[key] : null),
+    get: (key: string) =>
+      (inQuery(key) ? (alone.get(key)?.[0] ?? query?.get(key)) : null) ??
+      (inSeed(key) ? base[key] : null),
     has: (key: string) => inQuery(key) || inSeed(key),
     getAll: (key: string) => {
-      const fromUrl = fromQuery(key);
-      if (fromUrl.length) return fromUrl;
+      const fromQuery = inQuery(key) ? queryAll(key) : [];
+      if (fromQuery.length) return fromQuery;
       return inSeed(key) && base[key] ? [base[key]] : [];
     },
     get keys() {
@@ -162,21 +204,20 @@ export function mergeSearchParams(
 }
 
 /**
- * The query-param patch (for a `merge`) that takes out of the URL what `mergeSearchParams`
- * reads as absent or corrects: `null` for a dropped key, the cleaned list for `amenities`.
- * Empty when the URL needs no cleaning.
+ * The query-param patch (for a `merge`) that takes out of the URL the discarded values a writer
+ * would bring back to life (see `STRIPPED`): a `sort` the type does not offer, a bad budget, and
+ * bad coordinates or zoom, each as `null`. Empty when there is nothing to take out.
  *
- * `gender` is left out: wherever it is written back, the type in force is written
- * (`startSearch`), and the header bar validates it itself.
+ * Everything else `mergeSearchParams` discards stays in the URL, read as absent.
  */
 export function searchUrlCorrections(
   query: ParamMap | null,
   seed: Record<string, string> | null,
-  vocabulary: SearchVocabulary = {},
-): Record<string, string | null> {
-  const { dropped, corrected } = review(query, seed, vocabulary);
-  const patch: Record<string, string | null> = {};
-  for (const key of dropped) if (key !== 'gender') patch[key] = null;
-  for (const [key, value] of corrected) patch[key] = value;
+): Record<string, null> {
+  const patch: Record<string, null> = {};
+  if (hasBadSort(query, typeInForce(query, seed))) patch['sort'] = null;
+  for (const [key, read] of correctedAlone(query, {})) {
+    if (read === null && STRIPPED.has(key)) patch[key] = null;
+  }
   return patch;
 }
