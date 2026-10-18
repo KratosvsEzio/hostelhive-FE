@@ -54,7 +54,7 @@ What the code does not explain on its own:
 - **GA `page_title`** is the map-area title for arrivals on far or wide viewport links, a refresh after a far pan, and Back/Forward onto such entries. No event parameter changes, and a pan is still not a page view. GA is live in production: annotate the deploy date.
 - **The Where inputs keep the search made.** The mobile field (`placeText`) and the header bar (`SearchBar`'s `placeName`) are inputs, and `SearchBar.search()` would submit "This map area" as a place (`search-bar.ts`). Phones hide the h1 below 950 px, so there the change shows only in the tab title.
 - After a 360° pan the place is framed again on the next copy of the world: longitudes are unwrapped, and the map does show it there.
-- **Not fixed here: `/hostels/<slug>` has the same shape.** `syncBoundsToUrl` has no seed guard, so a landing page gains viewport keys too, and a shared far link server-renders the landing copy with an indexable self-canonical over a far list. Filed as a follow-up.
+- **Not fixed here: `/hostels/<slug>` has the same shape.** `syncBoundsToUrl` has no seed guard, so a landing page gains viewport keys too, and a shared far link server-renders the landing copy with an indexable self-canonical over a far list. Filed as Trello #201.
 
 ## Evidence
 
@@ -69,4 +69,4 @@ What the code does not explain on its own:
   - `apps/web-e2e/src/search-viewport-head.spec.ts` (the live head after a short pan, a zoom out and back, a far link)
   - `apps/web-e2e/src/head-canonical-and-structured-data.spec.ts` (the framing viewport link in `NOINDEX_PAGES`, and the far link's raw HTML)
   - `apps/web-e2e/src/search-trigger-and-map-area-heading.spec.ts`
-- Trello #160; this PR (KratosvsEzio/hostelhive-FE), run notes `docs/implement/Bugs/160.md` (decisions D1–D12); PR #172 (Trello #157, #161) for the map-area heading and `areaChosen`
+- Trello #160; PR #184 (KratosvsEzio/hostelhive-FE), run notes `docs/implement/Bugs/160.md` (decisions D1–D12); PR #172 (Trello #157, #161) for the map-area heading and `areaChosen`

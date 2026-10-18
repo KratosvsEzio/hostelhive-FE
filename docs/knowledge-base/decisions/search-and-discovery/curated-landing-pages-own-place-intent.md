@@ -18,7 +18,7 @@ Search can be scoped to any coordinate, so any place × gender × budget × amen
 
 - **Generate a page per place/area/filter.** Thousands of near-empty faceted URLs; crawlers spend the budget on them and rank the good pages lower (`places.ts`, `universities.ts` doc comments).
 - **Canonicalise filtered searches to the landing page.** That claims a facet *is* the landing page; `noindex` describes it truthfully (`search-map.ts`, PR #29 body).
-- **Canonicalise viewport links to the landing page.** The same reasoning as facets: once a box exists the request searches the box, not the place (`query()` drops `near` and `city`), so even a link that frames the place lists a sub-area or a wider one. Claiming it *is* the landing page misdescribes it, and a far link would hand the landing page's signal to unrelated hostels, as it did before (Trello #160, this PR).
+- **Canonicalise viewport links to the landing page.** The same reasoning as facets: once a box exists the request searches the box, not the place (`query()` drops `near` and `city`), so even a link that frames the place lists a sub-area or a wider one. Claiming it *is* the landing page misdescribes it, and a far link would hand the landing page's signal to unrelated hostels, as it did before (Trello #160, PR #184). The landing page itself has the same shape, filed as Trello #201.
 - **Ship readable search URLs and landing pages separately.** They had to land together or the two URL families would compete (PR #29 "Supersedes #24").
 - **List `/search` URLs in the sitemap.** Contradicts their own `noindex`/canonical (`sitemap-urls.ts`).
 
