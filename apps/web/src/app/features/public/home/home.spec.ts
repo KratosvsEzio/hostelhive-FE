@@ -13,7 +13,8 @@ import { Container, Skeleton } from '@hostelhive/ui';
 import { GeoPreference } from '@core/geo/geo-preference';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
-import { Seo } from '@core/seo';
+import { SITE_ORIGIN, Seo } from '@core/seo';
+import { assetUrlsIn, pageAddressesIn } from '@core/seo-testing';
 import { ListingsApi } from '@services';
 import { Home } from './home';
 import { HomeCities } from './home-cities/home-cities';
@@ -94,8 +95,14 @@ let geo: GeoStub;
 let listings: ListingsStub;
 let popularCities: PopularCitiesStub;
 
-/** `realSeo` swaps the stub for the real service, to check what lands in the document head. */
-function render(realSeo = false): ComponentFixture<Home> {
+/**
+ * `realSeo` swaps the stub for the real service, to check what lands in the document head;
+ * `locale` is the store the page and the real Seo read the language from.
+ */
+function render(
+  realSeo = false,
+  locale = { ready: signal(false), active: signal('en') },
+): ComponentFixture<Home> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [Home],
@@ -107,10 +114,7 @@ function render(realSeo = false): ComponentFixture<Home> {
       { provide: GeoPreference, useValue: geo },
       { provide: ListingsApi, useValue: listings },
       { provide: PopularCities, useValue: popularCities },
-      {
-        provide: LocaleStore,
-        useValue: { ready: signal(false), active: signal('en') },
-      },
+      { provide: LocaleStore, useValue: locale },
       ...(realSeo
         ? []
         : [
@@ -119,6 +123,7 @@ function render(realSeo = false): ComponentFixture<Home> {
               useValue: {
                 apply: () => undefined,
                 setJsonLd: () => undefined,
+                pageUrl: (path: string) => `${SITE_ORIGIN}/en${path}`,
                 clearOnDestroy: vi.fn(),
               },
             },
@@ -430,5 +435,84 @@ describe('Home structured data', () => {
     fixture.destroy();
 
     expect(ids()).toEqual(['blog']);
+  });
+
+  const SEARCH_TEMPLATE = (code: string) =>
+    `${SITE_ORIGIN}/${code}/search?place={search_term_string}`;
+
+  function block(id: string): Record<string, unknown> {
+    const el = document.head.querySelector(`script[data-seo="${id}"]`);
+    return JSON.parse(el?.textContent ?? 'null') as Record<string, unknown>;
+  }
+
+  function urlTemplate(): string {
+    const action = block('website')['potentialAction'] as { target: { urlTemplate: string } };
+    return action.target.urlTemplate;
+  }
+
+  function mount(code: string, ready = true) {
+    const locale = { ready: signal(ready), active: signal(code) };
+    const fixture = render(true, locale);
+    TestBed.tick();
+    return { fixture, locale };
+  }
+
+  it.each(['en', 'ur'])('names the brand by the bare domain when %s is active', (code) => {
+    mount(code);
+
+    expect(block('organization')['url']).toBe(SITE_ORIGIN);
+    expect(block('website')['url']).toBe(SITE_ORIGIN);
+    expect(block('organization')['logo']).toBe(`${SITE_ORIGIN}/hostelhive-logo.png`);
+  });
+
+  it('sends the English search box to the English search page', () => {
+    mount('en');
+
+    expect(urlTemplate()).toBe(`${TestBed.inject(Seo).pageUrl('/search')}?place={search_term_string}`);
+    expect(urlTemplate()).toBe(SEARCH_TEMPLATE('en'));
+    expect((block('website')['potentialAction'] as Record<string, unknown>)['query-input']).toBe(
+      'required name=search_term_string',
+    );
+  });
+
+  it('sends the search box to the search page of the language the home page opened in', () => {
+    mount('ur');
+
+    expect(urlTemplate()).toBe(SEARCH_TEMPLATE('ur'));
+  });
+
+  it('follows a language switch with one block of each, leaving the organization as it was', () => {
+    const { locale } = mount('en');
+    const organization = block('organization');
+
+    for (const code of ['ur', 'en']) {
+      locale.ready.set(false);
+      locale.active.set(code);
+      TestBed.tick();
+      locale.ready.set(true);
+      TestBed.tick();
+
+      expect(urlTemplate()).toBe(SEARCH_TEMPLATE(code));
+      expect(ids().filter((id) => id === 'website')).toHaveLength(1);
+      expect(ids().filter((id) => id === 'organization')).toHaveLength(1);
+      expect(block('organization')).toEqual(organization);
+    }
+  });
+
+  it('names no unprefixed page address beyond the two brand identities', () => {
+    mount('ur');
+    const blocks = [block('organization'), block('website')];
+
+    expect([...pageAddressesIn(blocks)].sort()).toEqual(
+      [SITE_ORIGIN, SITE_ORIGIN, SEARCH_TEMPLATE('ur')].sort(),
+    );
+    expect(assetUrlsIn(blocks)).toEqual([`${SITE_ORIGIN}/hostelhive-logo.png`]);
+  });
+
+  it('writes the search box with its language before the strings are ready', () => {
+    mount('en', false);
+
+    expect(ids().filter((id) => id === 'website')).toHaveLength(1);
+    expect(urlTemplate()).toBe(SEARCH_TEMPLATE('en'));
   });
 });

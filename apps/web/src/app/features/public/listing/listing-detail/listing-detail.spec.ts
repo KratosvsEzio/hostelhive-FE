@@ -10,6 +10,7 @@ import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.
 import { MobileApp } from '@core/mobile-app';
 import { RouteHeadStrategy } from '@core/route-head';
 import { Seo } from '@core/seo';
+import { pageAddressesIn } from '@core/seo-testing';
 import { HostelsApi, ListingDetailApi } from '@services';
 import { ListingDetail as ListingDetailModel } from '@services/listing-detail.fixture';
 import { StudentApi } from '@services/student-api';
@@ -60,6 +61,8 @@ describe('ListingDetail head', () => {
   let getBySlug: ReturnType<typeof vi.fn>;
   let harness: RouterTestingHarness;
   let page: { reload(): void };
+  const ready = signal(true);
+  const active = signal('en');
 
   /** Lets the page's effect and the strategy's effect run. */
   function settle(): void {
@@ -88,6 +91,8 @@ describe('ListingDetail head', () => {
 
   beforeEach(async () => {
     requests = [];
+    ready.set(true);
+    active.set('en');
     responseInit = { status: 200, headers: new Headers({ 'Content-Type': 'text/html' }) };
     getBySlug = vi.fn(() => {
       const request = new Subject<ListingDetailModel | undefined>();
@@ -99,7 +104,7 @@ describe('ListingDetail head', () => {
         provideRouter([{ path: 'en/hostel', data: { head: 'page' }, children: LISTING_ROUTES }]),
         { provide: TitleStrategy, useClass: RouteHeadStrategy },
         provideI18nTesting(),
-        { provide: LocaleStore, useValue: { ready: signal(true), active: signal('en') } },
+        { provide: LocaleStore, useValue: { ready, active } },
         { provide: ListingDetailApi, useValue: { getBySlug } },
         { provide: StudentApi, useValue: { getReviews: () => of([]) } },
         { provide: HostelsApi, useValue: {} },
@@ -245,6 +250,165 @@ describe('ListingDetail head', () => {
       expect(document.title).toBe(LISTING_TITLE);
       expect(attr('meta[property="og:title"]', 'content')).not.toBe(LOADING_TITLE);
       expect(getBySlug).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('structured data', () => {
+    const SITE = 'https://hostelhive.com';
+    const BLOCK = 'script[data-seo="listing"]';
+    const block = () =>
+      JSON.parse(document.head.querySelector(BLOCK)?.textContent ?? 'null') as Record<
+        string,
+        unknown
+      >;
+
+    /** Mirrors LocaleStore.switchTo: the strings are not ready until the new language has loaded. */
+    function switchTo(code: string): void {
+      ready.set(false);
+      active.set(code);
+      settle();
+      ready.set(true);
+      settle();
+    }
+
+    it.each(['en', 'ur'])(
+      'names the same prefixed address as the canonical and og:url when %s is active',
+      (code) => {
+        active.set(code);
+        load();
+
+        const url = `${SITE}/${code}/hostel/al-madina`;
+        expect(block()['url']).toBe(url);
+        expect(attr('link[rel="canonical"]', 'href')).toBe(url);
+        expect(attr('meta[property="og:url"]', 'content')).toBe(url);
+        expect(pageAddressesIn(block())).toEqual([url]);
+      },
+    );
+
+    it('follows a language switch with one block, without fetching the listing again', () => {
+      load();
+
+      switchTo('ur');
+
+      expect(block()['url']).toBe(`${SITE}/ur/hostel/al-madina`);
+      expect(block()['url']).toBe(attr('link[rel="canonical"]', 'href'));
+      expect(count(BLOCK)).toBe(1);
+
+      switchTo('en');
+
+      expect(block()['url']).toBe(`${SITE}/en/hostel/al-madina`);
+      expect(block()['url']).toBe(attr('link[rel="canonical"]', 'href'));
+      expect(count(BLOCK)).toBe(1);
+      expect(getBySlug).toHaveBeenCalledTimes(1);
+    });
+
+    it('follows a switch to a loaded language with ready() never changing', () => {
+      load();
+      // ready() stays true, as it does when switching back to a language already loaded.
+      active.set('ur');
+      settle();
+
+      expect(block()['url']).toBe(`${SITE}/ur/hostel/al-madina`);
+      expect(block()['url']).toBe(attr('link[rel="canonical"]', 'href'));
+      expect(count(BLOCK)).toBe(1);
+    });
+
+    it('writes no block while the listing loads', () => {
+      expect(count(BLOCK)).toBe(0);
+    });
+
+    it.each([500, 0])(
+      'writes no block after a status %i, nor on Try again until the listing arrives',
+      (status) => {
+        fail(status);
+        expect(count(BLOCK)).toBe(0);
+
+        page.reload();
+        settle();
+        expect(count(BLOCK)).toBe(0);
+
+        load();
+        expect(count(BLOCK)).toBe(1);
+      },
+    );
+
+    it('writes no block for a listing that does not exist', () => {
+      load(undefined);
+
+      expect(count(BLOCK)).toBe(0);
+    });
+
+    it('drops the previous listing’s block when the next one does not exist', async () => {
+      load();
+      expect(count(BLOCK)).toBe(1);
+      const before = harness.routeDebugElement?.componentInstance;
+
+      await harness.navigateByUrl('/en/hostel/no-such-hostel');
+      settle();
+
+      // The page is reused across slugs; a fresh instance would not test the clearing at all.
+      expect(harness.routeDebugElement?.componentInstance).toBe(before);
+      expect(getBySlug).toHaveBeenCalledTimes(2);
+      expect(count(BLOCK)).toBe(0);
+
+      load(undefined);
+
+      expect(count(BLOCK)).toBe(0);
+    });
+
+    it('describes a full listing exactly, naming its prefixed address', () => {
+      load({
+        ...LISTING,
+        images: ['https://cdn.example.test/a.jpg', 'https://cdn.example.test/b.jpg'],
+        amenities: ['wifi', 'ac'],
+        offerNames: ['Mess'],
+        lat: 31.5,
+        lng: 74.3,
+        rating: 4.6,
+        reviews: 12,
+        currency: 'PKR',
+      } as unknown as ListingDetailModel);
+
+      expect(block()).toEqual({
+        '@context': 'https://schema.org',
+        '@type': 'LodgingBusiness',
+        name: 'Al Madina Hostel',
+        url: `${SITE}/en/hostel/al-madina`,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Lahore',
+          addressRegion: 'Gulberg',
+          addressCountry: 'PK',
+        },
+        description: attr('meta[name="description"]', 'content'),
+        image: ['https://cdn.example.test/a.jpg', 'https://cdn.example.test/b.jpg'],
+        priceRange: 'From PKR 12000',
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: 12000,
+          priceCurrency: 'PKR',
+          unitCode: 'MON',
+          unitText: 'per bed per month',
+        },
+        geo: { '@type': 'GeoCoordinates', latitude: 31.5, longitude: 74.3 },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: 4.6,
+          reviewCount: 12,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        amenityFeature: [
+          { '@type': 'LocationFeatureSpecification', name: 'Wi-Fi', value: true },
+          { '@type': 'LocationFeatureSpecification', name: 'Air conditioning', value: true },
+          {
+            '@type': 'LocationFeatureSpecification',
+            name: 'Mess (meals included)',
+            value: true,
+          },
+          { '@type': 'LocationFeatureSpecification', name: 'Gender', value: 'common.boys' },
+        ],
+      });
     });
   });
 

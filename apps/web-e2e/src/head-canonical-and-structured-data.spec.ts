@@ -3,11 +3,12 @@ import {
   documentSurvived,
   headOf,
   jsonLdIds,
+  liveHead,
   markDocument,
   pageAddressesIn,
   waitForClient,
 } from './support/seo';
-import { stubListings } from './support/stubs';
+import { stubHostelDetail, stubListings, stubReviews } from './support/stubs';
 
 // A page that asks to stay out of the index must not name another URL as its canonical, and a
 // page's structured data must go with the page. Both are visible twice: in the HTML a crawler
@@ -279,5 +280,119 @@ test.describe('server-rendered structured data of the blog', () => {
     expect(blog.blogPost.map((p) => p.url)).toContain(articleCanonical);
     expect(articleCanonical).toBe(`${SITE}/en/blog/${POST}`);
     for (const url of pageAddressesIn(blog)) expect(url).toMatch(PREFIXED);
+  });
+});
+
+const URDU = /^https:\/\/hostelhive\.com\/ur(\/|$)/;
+const URDU_CITY = '/ur/hostels/lahore';
+
+/** Urdu landing pages and the names their breadcrumb must carry, as `ur.json` words them. */
+const URDU_LANDINGS: { path: string; names: string[] }[] = [
+  { path: URDU_CITY, names: ['ہوم', 'Lahore میں ہاسٹل'] },
+  { path: `${URDU_CITY}/girls`, names: ['ہوم', 'Lahore میں ہاسٹل', 'گرلز ہاسٹل'] },
+  {
+    path: `${URDU_CITY}/punjab-university`,
+    names: ['ہوم', 'Lahore میں ہاسٹل', 'Punjab University کے قریب ہاسٹل'],
+  },
+];
+
+type WebSite = { url: string; potentialAction: { target: { urlTemplate: string } } };
+
+test.describe('server-rendered structured data of the landing pages and home', () => {
+  test.setTimeout(120_000);
+
+  for (const { path, names } of URDU_LANDINGS) {
+    test(`${path} names its own canonical, in Urdu, under /ur`, async ({ request }) => {
+      const res = await request.get(path, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const head = headOf(await res.text());
+      const breadcrumb = head.jsonLdBodies['place-breadcrumb'] as { itemListElement: ListItem[] };
+      const items = breadcrumb.itemListElement;
+
+      expect([...head.jsonLd].sort()).toEqual(['place-breadcrumb', 'place-faq']);
+      expect(head.canonicals).toEqual([`${SITE}${path}`]);
+      expect(head.ogUrls).toEqual(head.canonicals);
+      expect(items.map((i) => i.name)).toEqual(names);
+      expect(items[0].item).toBe(`${SITE}/ur`);
+      expect(items.at(-1)?.item).toBe(head.canonicals[0]);
+      const pages = pageAddressesIn([breadcrumb, head.jsonLdBodies['place-faq']]);
+      expect(pages).toHaveLength(items.length);
+      for (const url of pages) expect(url).toMatch(URDU);
+    });
+  }
+
+  test('an Urdu gender or campus page steps back to the canonical of its Urdu city page', async ({
+    request,
+  }) => {
+    const city = await request.get(URDU_CITY, { timeout: 100_000 });
+    expect(city.ok()).toBe(true);
+    const [cityCanonical] = headOf(await city.text()).canonicals;
+
+    for (const { path } of URDU_LANDINGS.slice(1)) {
+      const res = await request.get(path, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+      const breadcrumb = headOf(await res.text()).jsonLdBodies['place-breadcrumb'] as {
+        itemListElement: ListItem[];
+      };
+      expect(breadcrumb.itemListElement[1].item).toBe(cityCanonical);
+    }
+  });
+
+  test('/ur names the brand by the bare domain and searches in Urdu', async ({ request }) => {
+    const res = await request.get('/ur', { timeout: 100_000 });
+    expect(res.ok()).toBe(true);
+
+    const head = headOf(await res.text());
+    const organization = head.jsonLdBodies['organization'] as { url: string };
+    const website = head.jsonLdBodies['website'] as WebSite;
+
+    expect([...head.jsonLd].sort()).toEqual(['organization', 'website']);
+    expect(organization.url).toBe(SITE);
+    expect(website.url).toBe(SITE);
+    expect(website.potentialAction.target.urlTemplate).toBe(
+      `${SITE}/ur/search?place={search_term_string}`,
+    );
+  });
+
+  test('the Urdu search box target answers without a redirect', async ({ request }) => {
+    const home = await request.get('/ur', { timeout: 100_000 });
+    expect(home.ok()).toBe(true);
+    const website = headOf(await home.text()).jsonLdBodies['website'] as WebSite;
+    const target = website.potentialAction.target.urlTemplate
+      .replace('{search_term_string}', 'lahore')
+      .slice(SITE.length);
+
+    const res = await request.get(target, { timeout: 100_000, maxRedirects: 0 });
+
+    expect(res.status()).toBe(200);
+    expect(res.headers()['location']).toBeUndefined();
+  });
+});
+
+test.describe('client-rendered structured data of a listing', () => {
+  test.setTimeout(120_000);
+
+  test('an Urdu listing names its canonical and og:url as its address', async ({ page }) => {
+    await stubListings(page);
+    await stubReviews(page);
+    await stubHostelDetail(page);
+
+    await page.goto('/ur/hostel/stub-hostel', { timeout: 100_000 });
+    await waitForClient(page);
+
+    const canonical = `${SITE}/ur/hostel/1`;
+    await expect
+      .poll(
+        async () => {
+          const head = await liveHead(page);
+          const listing = head.jsonLdBodies['listing'] as
+            | { name?: string; url?: string }
+            | undefined;
+          return [listing?.name, listing?.url, head.canonicals, head.ogUrls];
+        },
+        { timeout: 30_000 },
+      )
+      .toEqual(['Stub Hostel', canonical, [canonical], [canonical]]);
   });
 });
