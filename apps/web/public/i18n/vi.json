@@ -1293,6 +1293,7 @@
     "invoiceNotPaid": "Đặt phòng đã được đánh dấu là đã thanh toán, nhưng hóa đơn thì chưa. {{reason}}",
     "stayedIn": "Đã ở tại",
     "checkedOut": "Đã trả phòng",
+    "released": "Đã giải phóng",
     "cancelOpenInvoiceWarning": "Đặt phòng này có một hóa đơn chưa thanh toán ({{invoice}}). Hủy đặt phòng sẽ không xóa hóa đơn đó.",
     "bookingNotFound": "Chúng tôi không tìm thấy đặt phòng đó.",
     "notEnoughBedsFree": "Một trong các phòng này không còn đủ số giường trống đó. Hãy xếp ít khách hơn vào phòng đó hoặc chọn phòng khác.",
@@ -1303,7 +1304,7 @@
     "invoiceAlreadyExists": "Đặt phòng này đã có hóa đơn.",
     "giveTheGuestAReason": "Hãy cho khách biết lý do — lý do sẽ được gửi cho khách và lưu trong đặt phòng.",
     "moveNotAccepted": "Máy chủ không chấp nhận thao tác đó. Vui lòng thử lại.",
-    "roomAlreadyReleased": "Phòng này đã được giải phóng. Hãy tải lại để xem các phòng của đặt phòng.",
+    "roomAlreadyReleased": "Phòng {{room}} đã được giải phóng.",
     "couldNotReleaseRoom": "Không thể giải phóng phòng {{room}}. Vui lòng thử lại.",
     "invoiceNoLongerExists": "Không tìm thấy hóa đơn. Có thể hóa đơn đã bị xóa.",
     "payTheInvoiceOnItsOwn": "Hãy mở hóa đơn và đánh dấu đã thanh toán ở đó."

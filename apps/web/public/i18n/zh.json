@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "预订已标记为已付，但发票未能标记。{{reason}}",
     "stayedIn": "曾入住",
     "checkedOut": "已退房",
+    "released": "已释放",
     "cancelOpenInvoiceWarning": "此预订有一张未付发票（{{invoice}}）。取消预订不会删除该发票。",
     "bookingNotFound": "找不到该预订。",
     "notEnoughBedsFree": "其中一个房间已没有那么多空床位。请减少该房间的客人数量，或选择其他房间。",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "此预订已有发票。",
     "giveTheGuestAReason": "请向客人说明原因 — 该原因会发送给客人并保存在预订中。",
     "moveNotAccepted": "服务器未接受该操作。请重试。",
-    "roomAlreadyReleased": "此房间已释放。请刷新以查看该预订的房间。",
+    "roomAlreadyReleased": "房间 {{room}} 已释放。",
     "couldNotReleaseRoom": "无法释放房间 {{room}}。请重试。",
     "invoiceNoLongerExists": "找不到该发票，可能已被删除。",
     "payTheInvoiceOnItsOwn": "请打开该发票并在那里标记为已付。"

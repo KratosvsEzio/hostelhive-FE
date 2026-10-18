@@ -596,6 +596,7 @@
     "invoiceNotPaid": "Booking marked paid, but the invoice was not. {{reason}}",
     "stayedIn": "Stayed in",
     "checkedOut": "Checked out",
+    "released": "Released",
     "cancelOpenInvoiceWarning": "This booking has an unpaid invoice ({{invoice}}). Cancelling does not delete it.",
     "bookingNotFound": "We couldn't find that booking.",
     "notEnoughBedsFree": "One of these rooms no longer has that many beds free. Place fewer guests there or pick another room.",
@@ -606,7 +607,7 @@
     "invoiceAlreadyExists": "This booking already has an invoice.",
     "giveTheGuestAReason": "Give the guest a reason — it is sent to them and kept on the booking.",
     "moveNotAccepted": "The server did not accept that. Please try again.",
-    "roomAlreadyReleased": "This room was already released. Refresh to see the booking's rooms.",
+    "roomAlreadyReleased": "Room {{room}} was already released.",
     "couldNotReleaseRoom": "Could not release room {{room}}. Please try again.",
     "invoiceNoLongerExists": "The invoice could not be found. It may have been deleted.",
     "payTheInvoiceOnItsOwn": "Open the invoice and mark it paid there."

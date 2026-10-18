@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "La reserva se marcó como pagada, pero la factura no. {{reason}}",
     "stayedIn": "Se alojó en",
     "checkedOut": "Salida registrada",
+    "released": "Liberada",
     "cancelOpenInvoiceWarning": "Esta reserva tiene una factura sin pagar ({{invoice}}). Cancelarla no la elimina.",
     "bookingNotFound": "No encontramos esa reserva.",
     "notEnoughBedsFree": "Una de estas habitaciones ya no tiene tantas camas libres. Asigna menos huéspedes ahí o elige otra habitación.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Esta reserva ya tiene una factura.",
     "giveTheGuestAReason": "Indica un motivo al huésped — se le envía y se guarda en la reserva.",
     "moveNotAccepted": "El servidor no lo aceptó. Inténtalo de nuevo.",
-    "roomAlreadyReleased": "Esta habitación ya se liberó. Actualiza para ver las habitaciones de la reserva.",
+    "roomAlreadyReleased": "La habitación {{room}} ya se liberó.",
     "couldNotReleaseRoom": "No se pudo liberar la habitación {{room}}. Inténtalo de nuevo.",
     "invoiceNoLongerExists": "No se encontró la factura. Puede que se haya eliminado.",
     "payTheInvoiceOnItsOwn": "Abre la factura y márcala como pagada allí."

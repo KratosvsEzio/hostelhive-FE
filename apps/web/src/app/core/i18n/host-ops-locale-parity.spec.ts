@@ -22,6 +22,7 @@ const TRANSLATED_KEYS = [
     'invoiceNotPaid',
     'stayedIn',
     'checkedOut',
+    'released',
     'cancelOpenInvoiceWarning',
     'bookingNotFound',
     'notEnoughBedsFree',

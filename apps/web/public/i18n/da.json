@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "Bookingen er markeret som betalt, men fakturaen er ikke. {{reason}}",
     "stayedIn": "Boede i",
     "checkedOut": "Tjekket ud",
+    "released": "Frigivet",
     "cancelOpenInvoiceWarning": "Denne booking har en ubetalt faktura ({{invoice}}). Annullering sletter den ikke.",
     "bookingNotFound": "Vi kunne ikke finde den booking.",
     "notEnoughBedsFree": "Et af disse værelser har ikke længere så mange ledige senge. Placér færre gæster der, eller vælg et andet værelse.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Denne booking har allerede en faktura.",
     "giveTheGuestAReason": "Giv gæsten en begrundelse — den sendes til gæsten og gemmes på bookingen.",
     "moveNotAccepted": "Serveren accepterede det ikke. Prøv igen.",
-    "roomAlreadyReleased": "Dette værelse er allerede frigivet. Opdater for at se bookingens værelser.",
+    "roomAlreadyReleased": "Værelse {{room}} er allerede frigivet.",
     "couldNotReleaseRoom": "Kunne ikke frigive værelse {{room}}. Prøv igen.",
     "invoiceNoLongerExists": "Fakturaen kunne ikke findes. Den er muligvis slettet.",
     "payTheInvoiceOnItsOwn": "Åbn fakturaen, og markér den som betalt der."

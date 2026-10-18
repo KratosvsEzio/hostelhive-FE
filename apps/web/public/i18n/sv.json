@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "Bokningen markerades som betald, men inte fakturan. {{reason}}",
     "stayedIn": "Bodde i",
     "checkedOut": "Utcheckad",
+    "released": "Frigjort",
     "cancelOpenInvoiceWarning": "Den här bokningen har en obetald faktura ({{invoice}}). Den tas inte bort när bokningen avbokas.",
     "bookingNotFound": "Vi kunde inte hitta den bokningen.",
     "notEnoughBedsFree": "Ett av rummen har inte längre så många lediga sängar. Placera färre gäster där eller välj ett annat rum.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Den här bokningen har redan en faktura.",
     "giveTheGuestAReason": "Ge gästen en anledning — den skickas till gästen och sparas på bokningen.",
     "moveNotAccepted": "Servern godtog inte det. Försök igen.",
-    "roomAlreadyReleased": "Rummet har redan frigjorts. Uppdatera för att se bokningens rum.",
+    "roomAlreadyReleased": "Rum {{room}} har redan frigjorts.",
     "couldNotReleaseRoom": "Det gick inte att frigöra rum {{room}}. Försök igen.",
     "invoiceNoLongerExists": "Fakturan hittades inte. Den kan ha tagits bort.",
     "payTheInvoiceOnItsOwn": "Öppna fakturan och markera den som betald där."

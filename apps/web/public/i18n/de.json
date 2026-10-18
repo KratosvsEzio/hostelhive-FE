@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "Die Buchung wurde als bezahlt markiert, die Rechnung jedoch nicht. {{reason}}",
     "stayedIn": "Übernachtet in",
     "checkedOut": "Ausgecheckt",
+    "released": "Freigegeben",
     "cancelOpenInvoiceWarning": "Diese Buchung hat eine unbezahlte Rechnung ({{invoice}}). Durch die Stornierung wird sie nicht gelöscht.",
     "bookingNotFound": "Wir konnten diese Buchung nicht finden.",
     "notEnoughBedsFree": "In einem dieser Zimmer sind nicht mehr so viele Betten frei. Bringen Sie dort weniger Gäste unter oder wählen Sie ein anderes Zimmer.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Für diese Buchung gibt es bereits eine Rechnung.",
     "giveTheGuestAReason": "Nennen Sie dem Gast einen Grund — er wird ihm zugeschickt und bei der Buchung gespeichert.",
     "moveNotAccepted": "Der Server hat das nicht angenommen. Bitte versuchen Sie es erneut.",
-    "roomAlreadyReleased": "Dieses Zimmer wurde bereits freigegeben. Aktualisieren Sie, um die Zimmer der Buchung zu sehen.",
+    "roomAlreadyReleased": "Zimmer {{room}} wurde bereits freigegeben.",
     "couldNotReleaseRoom": "Zimmer {{room}} konnte nicht freigegeben werden. Bitte versuchen Sie es erneut.",
     "invoiceNoLongerExists": "Die Rechnung wurde nicht gefunden. Möglicherweise wurde sie gelöscht.",
     "payTheInvoiceOnItsOwn": "Öffnen Sie die Rechnung und markieren Sie sie dort als bezahlt."
