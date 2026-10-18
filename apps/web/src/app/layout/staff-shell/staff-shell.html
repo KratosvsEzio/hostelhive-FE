@@ -43,7 +43,7 @@
           class="nav-link"
           [class.nav-link--rail]="drawer.railVisual()"
           [hhTooltip]="drawer.railVisual() ? (item.label ?? '') : ''"
-          hhTooltipPlacement="right"
+          hhTooltipPlacement="end"
           [attr.aria-label]="drawer.railVisual() ? item.label : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
@@ -66,7 +66,7 @@
       <span
         class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white"
         [hhTooltip]="drawer.railVisual() ? (user()?.name ?? '') : ''"
-        hhTooltipPlacement="right"
+        hhTooltipPlacement="end"
         >{{ initials() }}</span
       >
       @if (!drawer.railVisual()) {
