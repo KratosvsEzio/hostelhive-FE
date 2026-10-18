@@ -78,6 +78,8 @@ interface ListQuery {
   accommodationType?: string;
   roomType?: string;
   propertyType?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 /** A page for the router to land on; the search component under test is mounted directly. */
@@ -98,6 +100,8 @@ interface SearchMapConfig {
   acquire?: ReturnType<typeof vi.fn>;
   seo?: { apply: ReturnType<typeof vi.fn>; setJsonLd: ReturnType<typeof vi.fn> };
   favorites?: object;
+  /** The amenity catalogue `OffersApi` answers with; none (an empty catalogue) by default. */
+  amenitySlugs?: string[];
 }
 
 const guestFavorites = {
@@ -127,7 +131,13 @@ function configureSearchMap(config: SearchMapConfig = {}): void {
         provide: ListingsApi,
         useValue: { list: config.list ?? (() => of<Paginated<Listing>>(ONE_PAGE)) },
       },
-      { provide: OffersApi, useValue: { categories: () => of([]) } },
+      {
+        provide: OffersApi,
+        useValue: {
+          categories: () =>
+            of(config.amenitySlugs ? [{ offers: config.amenitySlugs.map((slug) => ({ slug })) }] : []),
+        },
+      },
       {
         provide: CountryBounds,
         useValue: { forVisitor: config.forVisitor ?? (() => Promise.resolve(null)) },
@@ -1331,6 +1341,107 @@ describe('SearchMap on a URL carrying a sort the type does not offer', () => {
     map.onPlaceSelected(KARACHI);
 
     expect(firstNavigation(navigate).extras.queryParams).toHaveProperty('sort', null);
+  });
+});
+
+// Trello #176 and #184: a hand-made or stale link with a value the search cannot use.
+describe('SearchMap bad filter values in a link', () => {
+  afterEach(cleanupSearchMap);
+
+  const BAD_FILTERS =
+    'roomType=bogus&propertyType=bogus&minPrice=abc&maxPrice=-5&amenities=wifi,bogus';
+
+  it('searches as if the bad values were absent', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list, amenitySlugs: ['wifi', 'kitchen'] });
+    await mount(`/en/search?everywhere=1&${BAD_FILTERS}`);
+    await firstSearch(list);
+
+    const q = lastQuery(list);
+    expect(q.roomType).toBe('shared');
+    expect(q.propertyType).toBeUndefined();
+    expect(q.minPrice).toBeUndefined();
+    expect(q.maxPrice).toBeUndefined();
+    expect(q.amenities).toEqual(['wifi']);
+  });
+
+  it('keeps valid values as they are', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'browser', list, amenitySlugs: ['wifi', 'kitchen'] });
+    await mount(
+      '/en/search?everywhere=1&roomType=private&propertyType=house&minPrice=5000&maxPrice=20000&amenities=wifi,kitchen',
+    );
+    await firstSearch(list);
+
+    expect(lastQuery(list)).toMatchObject({
+      roomType: 'private',
+      propertyType: 'house',
+      minPrice: 5000,
+      maxPrice: 20000,
+      amenities: ['wifi', 'kitchen'],
+    });
+  });
+
+  // The header bar reads the budget raw, so a bad one would come back through it; nothing
+  // reads the room or property type or the amenities raw, so those stay, read as absent.
+  it('takes only the bad budget out of the address', async () => {
+    const { navigate } = await mountWatched(`/en/search?everywhere=1&${BAD_FILTERS}`, {
+      amenitySlugs: ['wifi'],
+    });
+    await vi.waitFor(() => expect(urlQuery()).not.toHaveProperty('minPrice'));
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigationAt(navigate, 0).extras).toMatchObject({
+      queryParams: { minPrice: null, maxPrice: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    expect(urlQuery()).toEqual({
+      everywhere: '1',
+      roomType: 'bogus',
+      propertyType: 'bogus',
+      amenities: 'wifi,bogus',
+    });
+  });
+
+  it('takes garbage coordinates and zoom out of the address and searches without them', async () => {
+    const list = listSpy();
+    await mountWatched('/en/search?lat=abc&lng=74.3&zoom=x&minPrice=5000', { list });
+    await firstSearch(list);
+    await vi.waitFor(() => expect(urlQuery()).toEqual({ minPrice: '5000' }));
+
+    expect(lastQuery(list).near).toBeUndefined();
+  });
+
+  it('leaves the amenities alone while there is no catalogue to check them against', async () => {
+    const list = listSpy();
+    const { navigate } = await mountWatched('/en/search?everywhere=1&amenities=bogus', { list });
+    await firstSearch(list);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(lastQuery(list).amenities).toEqual(['bogus']);
+  });
+
+  it('does not carry a bad budget into a new search', async () => {
+    const { map, navigate } = await mountSearch('/en/search?minPrice=abc&maxPrice=-1');
+
+    map.onPlaceSelected(KARACHI);
+
+    expect(firstNavigation(navigate).extras.queryParams).toMatchObject({
+      minPrice: null,
+      maxPrice: null,
+    });
+  });
+
+  it.each([
+    ['an explicit shared room type', 'roomType=shared', undefined],
+    ['a private room type', 'roomType=private', true],
+  ])('indexes a curated place with %s accordingly', async (_name, filter, noindex) => {
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+    await mount(`/en/search/lahore?${filter}`, null, true);
+
+    expect(lastApply(seo)['noindex']).toBe(noindex);
   });
 });
 

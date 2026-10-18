@@ -1,5 +1,9 @@
 import { convertToParamMap, ParamMap } from '@angular/router';
-import { isAccommodationType, mergeSearchParams } from './search-params';
+import {
+  isAccommodationType,
+  mergeSearchParams,
+  searchUrlCorrections,
+} from './search-params';
 
 describe('isAccommodationType', () => {
   it.each(['boys', 'girls', 'coliving', 'backpacker'])('accepts the known type %j', (value) => {
@@ -118,7 +122,7 @@ describe('mergeSearchParams', () => {
       expect([...merged.keys].sort()).toEqual(['budget', 'gender', 'place']);
     });
 
-    // Only gender and sort are checked, so an empty place still replaces the seed's.
+    // `place` is not checked, so an empty one still replaces the seed's.
     it('lets an empty value for a non-gender key override the seed', () => {
       const merged = mergeOrFail(convertToParamMap({ place: '' }), seed);
 
@@ -472,5 +476,160 @@ describe('mergeSearchParams', () => {
     it('reads the inherited member toString as an unknown roomType', () => {
       expectKeyAbsent(mergeOrFail(convertToParamMap({ roomType: 'toString' }), null), 'roomType');
     });
+  });
+
+  // Trello #176 and #184: the same reading as `gender` and `sort`, for the other filter keys.
+  describe('a filter value the search cannot use', () => {
+    it.each([
+      ['roomType', 'bogus'],
+      ['roomType', 'Private'],
+      ['roomType', ''],
+      ['propertyType', 'bogus'],
+      ['propertyType', 'Apartment'],
+      ['propertyType', ''],
+      ['minPrice', 'abc'],
+      ['minPrice', '-5'],
+      ['minPrice', ''],
+      ['minPrice', 'Infinity'],
+      ['maxPrice', '12abc'],
+      ['maxPrice', ' '],
+      ['zoom', 'abc'],
+      ['zoom', '99'],
+    ])('reads %s=%j as absent and keeps the rest of the query', (key, value) => {
+      const merged = mergeOrFail(convertToParamMap({ [key]: value, place: 'lahore' }), null);
+
+      expectKeyAbsent(merged, key);
+      expect(merged.get('place')).toBe('lahore');
+    });
+
+    it.each([
+      ['roomType', 'private'],
+      ['roomType', 'shared'],
+      ['propertyType', 'apartment'],
+      ['propertyType', 'house'],
+      ['minPrice', '0'],
+      ['minPrice', '5000'],
+      ['maxPrice', '12500.5'],
+      ['lat', '31.52'],
+      ['zoom', '10'],
+    ])('keeps the valid %s=%j and returns the query untouched', (key, value) => {
+      const query = convertToParamMap({ [key]: value });
+
+      expect(mergeSearchParams(query, null)).toBe(query);
+    });
+
+    it('reads a repeated key as absent when one value is bad', () => {
+      const merged = mergeOrFail(convertToParamMap({ roomType: ['private', 'bogus'] }), null);
+
+      expectKeyAbsent(merged, 'roomType');
+    });
+
+    it.each([
+      ['a bad latitude', { lat: 'abc', lng: '74.3' }],
+      ['a bad longitude', { lat: '31.5', lng: 'abc' }],
+      ['a latitude out of range', { lat: '91', lng: '74.3' }],
+      ['a longitude out of range', { lat: '31.5', lng: '-181' }],
+    ])('drops both coordinates for %s', (_name, coords) => {
+      const merged = mergeOrFail(convertToParamMap({ ...coords, zoom: '10' }), null);
+
+      expectKeyAbsent(merged, 'lat');
+      expectKeyAbsent(merged, 'lng');
+      expect(merged.get('zoom')).toBe('10');
+    });
+
+    it('falls back to the seed when the query value is bad', () => {
+      const merged = mergeOrFail(convertToParamMap({ lat: 'abc', lng: '1', minPrice: 'x' }), {
+        place: 'lahore',
+        lat: '31.5',
+        lng: '74.3',
+      });
+
+      expect(merged.get('lat')).toBe('31.5');
+      expect(merged.get('lng')).toBe('74.3');
+      expectKeyAbsent(merged, 'minPrice');
+    });
+
+    describe('amenities', () => {
+      const vocabulary = { amenities: new Set(['wifi', 'kitchen']) };
+
+      it('keeps only the slugs the catalogue offers', () => {
+        const query = convertToParamMap({ amenities: 'wifi,bogus,kitchen' });
+        const merged = mergeSearchParams(query, null, vocabulary);
+
+        expect(merged?.get('amenities')).toBe('wifi,kitchen');
+        expect(merged?.getAll('amenities')).toEqual(['wifi,kitchen']);
+      });
+
+      it('reads a list of unknown slugs only as absent', () => {
+        const merged = mergeSearchParams(
+          convertToParamMap({ amenities: 'bogus,nope' }),
+          null,
+          vocabulary,
+        );
+
+        expectKeyAbsent(merged as ParamMap, 'amenities');
+      });
+
+      it('returns the query untouched when every slug is offered', () => {
+        const query = convertToParamMap({ amenities: 'wifi,kitchen' });
+
+        expect(mergeSearchParams(query, null, vocabulary)).toBe(query);
+      });
+
+      // Nothing to check against while the catalogue loads, or after it failed.
+      it.each([
+        ['no catalogue', {}],
+        ['a null catalogue', { amenities: null }],
+        ['an empty catalogue', { amenities: new Set<string>() }],
+      ])('takes the slugs as they come with %s', (_name, vocab) => {
+        const query = convertToParamMap({ amenities: 'bogus' });
+
+        expect(mergeSearchParams(query, null, vocab)).toBe(query);
+      });
+    });
+  });
+});
+
+describe('searchUrlCorrections', () => {
+  it('is empty for a clean query', () => {
+    const query = convertToParamMap({ roomType: 'private', minPrice: '5000', sort: 'newest' });
+
+    expect(searchUrlCorrections(query, null)).toEqual({});
+  });
+
+  // Only what a writer reads raw (the header bar: sort, budget, coordinates) would come back.
+  it('nulls the discarded keys a writer would bring back, and only those', () => {
+    const query = convertToParamMap({
+      roomType: 'bogus',
+      propertyType: 'bogus',
+      minPrice: 'abc',
+      maxPrice: '-1',
+      lat: 'abc',
+      lng: '74.3',
+      zoom: 'x',
+      sort: 'price-asc',
+      amenities: 'wifi,bogus',
+      gender: 'bogus',
+      place: 'Lahore',
+    });
+
+    expect(searchUrlCorrections(query, null)).toEqual({
+      minPrice: null,
+      maxPrice: null,
+      lat: null,
+      lng: null,
+      zoom: null,
+      sort: null,
+    });
+  });
+
+  it('leaves the backend spelling of a private room in place', () => {
+    expect(searchUrlCorrections(convertToParamMap({ roomType: 'private_room' }), null)).toEqual(
+      {},
+    );
+  });
+
+  it('cleans only the query, never a seed', () => {
+    expect(searchUrlCorrections(null, { roomType: 'bogus', sort: 'price-asc' })).toEqual({});
   });
 });

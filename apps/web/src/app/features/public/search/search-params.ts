@@ -18,19 +18,60 @@ function normaliseRoomType(value: string): string | null {
   return isPrivateOccupancy(value) ? 'private' : null;
 }
 
-/** The keys with a fixed vocabulary, each judged on its own — see {@link mergeSearchParams}. */
+/** A number written out in full, within `[min, max]`; so a blank, `abc` or `Infinity` is not one. */
+function numberIn(min: number, max: number): Normaliser {
+  return (value) => {
+    if (!value.trim()) return null;
+    const n = Number(value);
+    return Number.isFinite(n) && n >= min && n <= max ? value : null;
+  };
+}
+
+/** The keys with a fixed vocabulary or range, each judged on its own — see {@link mergeSearchParams}. */
 const CHECKED_ALONE = new Map<string, Normaliser>([
   ['roomType', normaliseRoomType],
   ['propertyType', (value) => (isPropertyType(value) ? value : null)],
+  // A budget bound is a number, and not below zero.
+  ['minPrice', numberIn(0, Number.MAX_SAFE_INTEGER)],
+  ['maxPrice', numberIn(0, Number.MAX_SAFE_INTEGER)],
+  ['lat', numberIn(-90, 90)],
+  ['lng', numberIn(-180, 180)],
+  ['zoom', numberIn(0, 22)],
 ]);
 
+/** A coordinate means nothing without the other half, so one bad half discards both. */
+const PAIRED = ['lat', 'lng'];
+
 /**
- * The keys judged on their own that the query carries wrongly, and what each should read as.
+ * The keys `SearchMap` takes out of the URL when the reader discards them: those a writer reads
+ * raw and would bring back to life. The header bar reads `sort`, the budget and the coordinates
+ * straight from the URL and writes them back on a search. Nothing reads `roomType`,
+ * `propertyType`, `amenities` or `gender` raw, so those stay in the URL, read as absent.
+ */
+const STRIPPED = new Set(['sort', 'minPrice', 'maxPrice', 'lat', 'lng', 'zoom']);
+
+/** The part of the search's vocabulary only the API can supply. */
+export interface SearchVocabulary {
+  /**
+   * Every amenity slug the catalogue offers (`OffersApi.categories`). `null` or empty while
+   * it loads, or after it failed: the amenities are then taken as they come, since there is
+   * nothing to check them against.
+   */
+  amenities?: ReadonlySet<string> | null;
+}
+
+/**
+ * The checked keys the query carries wrongly, and what each should read as.
  *
  * That is its values with any alias applied, or null when one of them is outside the vocabulary
- * and the whole key is discarded. A key that reads as it stands is left out.
+ * and the whole key is discarded. A key that reads as it stands is left out. Amenities are
+ * filtered rather than discarded whole: only the slugs the catalogue lacks go, and the key only
+ * when none is left.
  */
-function correctedAlone(query: ParamMap | null): Map<string, string[] | null> {
+function correctedAlone(
+  query: ParamMap | null,
+  vocabulary: SearchVocabulary,
+): Map<string, string[] | null> {
   const corrected = new Map<string, string[] | null>();
   for (const [key, normalise] of CHECKED_ALONE) {
     if (!query?.has(key)) continue;
@@ -39,6 +80,19 @@ function correctedAlone(query: ParamMap | null): Map<string, string[] | null> {
     const kept = read.filter((value): value is string => value !== null);
     if (kept.length < read.length) corrected.set(key, null);
     else if (kept.some((value, i) => value !== asked[i])) corrected.set(key, kept);
+  }
+  if (PAIRED.some((key) => corrected.get(key) === null)) {
+    for (const key of PAIRED) if (query?.has(key)) corrected.set(key, null);
+  }
+
+  const known = vocabulary.amenities;
+  if (known?.size && query?.has('amenities')) {
+    const asked = query.getAll('amenities');
+    const kept = [...new Set(asked.join(',').split(',').filter((slug) => known.has(slug)))];
+    if (!kept.length) corrected.set('amenities', null);
+    else if (asked.length > 1 || kept.join(',') !== asked[0]) {
+      corrected.set('amenities', [kept.join(',')]);
+    }
   }
   return corrected;
 }
@@ -50,7 +104,11 @@ function correctedSeed(seed: Record<string, string>): Record<string, string> {
     if (read === null) return [];
     return [[key, read ?? value]];
   });
-  return Object.fromEntries(entries);
+  const corrected = Object.fromEntries(entries);
+  if (PAIRED.some((key) => hasOwn(seed, key) && !hasOwn(corrected, key))) {
+    for (const key of PAIRED) delete corrected[key];
+  }
+  return corrected;
 }
 
 /** True for the four accommodation types the search knows; false for anything else, empty included. */
@@ -67,6 +125,12 @@ function typeInForce(
   if (isAccommodationType(asked)) return asked;
   const seeded = seed?.['gender'];
   return isAccommodationType(seeded) ? seeded : 'all';
+}
+
+/** True when the query carries a `sort` the type in force does not offer. */
+function hasBadSort(query: ParamMap | null, type: AccommodationType | 'all'): boolean {
+  // Every value is checked, so a repeated `sort` cannot hide one the type does not offer.
+  return !!query?.has('sort') && !query.getAll('sort').every((s) => isSortOffered(s, type));
 }
 
 /**
@@ -87,25 +151,27 @@ function typeInForce(
  * prices against each other. A shared link or a bookmark can still carry one, so it is
  * decided here, where the request, the badge and the sort control all read it.
  *
- * `roomType` and `propertyType` have a fixed vocabulary too, so each is judged on its own (see
- * `CHECKED_ALONE`), in the query and the seed alike. A value outside it, or any one of a repeated
- * key's values, makes the whole key read as absent, and an absent `roomType` is the default,
- * shared. Left as it was, the request sent the stranger as a term no hostel carries, so the list
- * went empty while the badge counted it. The one value not simply dropped is the backend's own
- * `private_room`, read as `private`, the word the filters use, rather than as its opposite.
+ * `roomType`, `propertyType`, the budget and the coordinates have a fixed vocabulary or range,
+ * so each is judged on its own (see `CHECKED_ALONE`), in the query and the seed alike. A value
+ * outside it, or any one of a repeated key's values, makes the whole key read as absent, and an
+ * absent `roomType` is the default, shared. One bad half of `lat`/`lng` discards both. Left as
+ * they were, the request sent the stranger as a term no hostel carries (or as `NaN`), so the
+ * list went empty or widened while the badge counted it. The one value not simply dropped is
+ * the backend's own `private_room`, read as `private`, the word the filters use, rather than as
+ * its opposite. Once `vocabulary` supplies the catalogue, amenity slugs it does not offer are
+ * taken out of the list.
  *
  * Returns the query untouched when there is nothing to merge or correct.
  */
 export function mergeSearchParams(
   query: ParamMap | null,
   seed: Record<string, string> | null,
+  vocabulary: SearchVocabulary = {},
 ): ParamMap | null {
   const type = typeInForce(query, seed);
   const badGender = !!query?.has('gender') && !isAccommodationType(query.get('gender'));
-  // Every value is checked, so a repeated `sort` cannot hide one the type does not offer.
-  const badSort =
-    !!query?.has('sort') && !query.getAll('sort').every((s) => isSortOffered(s, type));
-  const alone = correctedAlone(query);
+  const badSort = hasBadSort(query, type);
+  const alone = correctedAlone(query, vocabulary);
   if (!seed && !badGender && !badSort && !alone.size) return query;
 
   const base = seed ? correctedSeed(seed) : {};
@@ -135,4 +201,23 @@ export function mergeSearchParams(
       ];
     },
   } as ParamMap;
+}
+
+/**
+ * The query-param patch (for a `merge`) that takes out of the URL the discarded values a writer
+ * would bring back to life (see `STRIPPED`): a `sort` the type does not offer, a bad budget, and
+ * bad coordinates or zoom, each as `null`. Empty when there is nothing to take out.
+ *
+ * Everything else `mergeSearchParams` discards stays in the URL, read as absent.
+ */
+export function searchUrlCorrections(
+  query: ParamMap | null,
+  seed: Record<string, string> | null,
+): Record<string, null> {
+  const patch: Record<string, null> = {};
+  if (hasBadSort(query, typeInForce(query, seed))) patch['sort'] = null;
+  for (const [key, read] of correctedAlone(query, {})) {
+    if (read === null && STRIPPED.has(key)) patch[key] = null;
+  }
+  return patch;
 }
