@@ -111,7 +111,7 @@ export interface ListingQuery {
   maxPrice?: number;
   sharing?: string; // e.g. '2-sharing'
   propertyType?: string; // slug, e.g. 'apartment' — see PROPERTY_TYPES
-  /** 'private' | 'shared'. Inert server-side until the backend indexes `room_type`. */
+  /** 'private' | 'shared'; `ListingsApi.list` sends it under the index's name (`OCCUPANCY_WIRE_VALUE`). */
   roomType?: string;
   near?: { lat: number; lng: number; radiusKm?: number }; // proximity search (from a picked place)
   bounds?: { north: number; south: number; east: number; west: number }; // exact map viewport
