@@ -15,6 +15,7 @@ import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { RoomDay, RoomResident, RoomStay, sleepsOn, toRoomMonth } from './room-stays';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
+import { todayIn } from '@util/zoned-time';
 import { buildWeeks } from './month-grid';
 
 /** Most pips a single line holds before the row wraps. Eight keeps a pip about 5px wide. */
@@ -87,15 +88,6 @@ function iso(d: Date): string {
 }
 
 /**
- * The date this calendar calls today: highlighted in the grid, opened on by the roster, and
- * where a checked-out stay stops holding beds. The device's own date — the client has no
- * hostel clock to read.
- */
-function today(): string {
-  return iso(new Date());
-}
-
-/**
  * What is sold in one room, by date — and who has it.
  *
  * A row of **pips**, one per bed, rather than a bar per stay. The question a host opens this
@@ -142,6 +134,14 @@ export class RoomCalendar {
    */
   readonly residents = input<readonly RoomResident[]>([]);
 
+  /**
+   * The hostel's IANA time zone, which decides what {@link today} is.
+   *
+   * Null or unknown reads the device's date instead — right whenever the host is in the
+   * hostel's own zone, and the only date there is when the hostel has none.
+   */
+  readonly timeZone = input<string | null>(null);
+
   private readonly api = inject(HostBookingsApi);
   private readonly locale = inject(LocaleStore);
 
@@ -149,7 +149,7 @@ export class RoomCalendar {
   protected readonly offset = signal(0);
 
   /**
-   * The month this calendar opened on — read from the clock **once**.
+   * The instant this calendar opened — read from the clock **once**.
    *
    * It used to be read inside {@link month} itself. A computed re-evaluates only when a
    * signal it read has changed, and wall-clock time is not one, so the "now" the grid was
@@ -163,14 +163,34 @@ export class RoomCalendar {
    *
    * Fixed at construction, an arrow moves exactly one month and the same calendar is on
    * screen from one press to the next. A page left open past midnight keeps calling the
-   * month it opened on "this month", which is the lesser of the two surprises and the one
-   * a host can see the cause of.
+   * day it opened on "today", which is the lesser of the two surprises and the one a host
+   * can see the cause of; a reload moves it on.
    */
-  private readonly openedOn = new Date();
+  private readonly openedAt = new Date();
 
+  /**
+   * The date this calendar calls today, on the hostel's calendar: highlighted in the grid,
+   * opened on by the roster, where a checked-out stay stops holding beds, and the month the
+   * calendar opens on. One value for all four, so they cannot land on different days.
+   *
+   * Recomputes only when the zone changes — never with the clock — for the reason given on
+   * {@link openedAt}.
+   */
+  private readonly today = computed(() => todayIn(this.timeZone(), this.openedAt));
+
+  /**
+   * The first of the month on screen, as a local-midnight `Date` for `Intl` and the grid.
+   *
+   * Built from the hostel's year and month rather than the device's, so near a month end the
+   * calendar opens on the hostel's month. Compared by value: a zone that moves today within
+   * the same month must not count as a new month and drop the day a host picked.
+   */
   protected readonly month = computed(
-    () =>
-      new Date(this.openedOn.getFullYear(), this.openedOn.getMonth() + this.offset(), 1),
+    () => {
+      const [y, m] = this.today().split('-').map(Number);
+      return new Date(y, m - 1 + this.offset(), 1);
+    },
+    { equal: (a, b) => a.getTime() === b.getTime() },
   );
 
   /**
@@ -229,20 +249,19 @@ export class RoomCalendar {
         hostel: this.hostelId(),
         capacity: this.capacity(),
         residents: this.residents(),
+        // Part of the query, so a zone that arrives late redraws the cut-off as well as the
+        // highlight rather than leaving free beds counted against yesterday.
+        today: this.today(),
       })),
     ).pipe(
       switchMap((q) =>
         this.api.bookingsInRoom(q.hostel, q.room, q.from, q.to).pipe(
           map((bookings) => {
-            const { days, stays } = toRoomMonth(
-              bookings,
-              q.capacity,
-              q.from,
-              q.to,
-              q.residents,
-              q.room,
-              today(),
-            );
+            const { days, stays } = toRoomMonth(bookings, q.capacity, q.from, q.to, {
+              today: q.today,
+              roomId: q.room,
+              residents: q.residents,
+            });
             return { loading: false, error: false, days, bookings: stays };
           }),
           catchError(() =>
@@ -351,7 +370,7 @@ export class RoomCalendar {
    * where the month starts and stops — and each cell is then filled with its own pips.
    */
   protected readonly weeks = computed<WeekRow[]>(() => {
-    const todayIso = today();
+    const todayIso = this.today();
     const colours = this.colours();
 
     return buildWeeks(this.state().days, this.state().bookings, this.month()).map((week) => {
@@ -446,7 +465,7 @@ export class RoomCalendar {
     const chosen = this.picked();
     if (chosen) return chosen;
     const days = this.state().days;
-    const todayIso = today();
+    const todayIso = this.today();
     if (days.some((d) => d.date === todayIso)) return todayIso;
     return days.find((d) => d.booked > 0)?.date ?? days[0]?.date ?? null;
   });

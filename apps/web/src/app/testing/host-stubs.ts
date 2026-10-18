@@ -118,12 +118,19 @@ export class RefetchDelaySpy {
   }
 }
 
-/** `HostShellApi` answering with fixed listings; `HostPropertyStore` cannot be built without one. */
+/**
+ * `HostShellApi` answering with fixed listings; `HostPropertyStore` cannot be built without one.
+ *
+ * `hostelTimeZone` answers with {@link timeZone} — null (no zone, the device's clock) unless a
+ * test sets it, so a page that waits on the zone still renders.
+ */
 export class HostShellApiStub {
   data: HostListingsData = { listings: [], draft: null, stats: {} as never };
+  timeZone: string | null = null;
   listings(): Observable<HostListingsData> {
     return of(this.data);
   }
+  hostelTimeZone = vi.fn<HostShellApi['hostelTimeZone']>(() => of(this.timeZone));
   provider(): Provider {
     return { provide: HostShellApi, useValue: this };
   }
