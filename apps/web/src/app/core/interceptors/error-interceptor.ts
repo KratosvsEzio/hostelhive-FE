@@ -2,10 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { ApiError } from '@hostelhive/data-access';
-import {
-  extractServerMessages,
-  serverMessageText,
-} from '@core/errors/api-error-message';
+import { extractServerMessages } from '@core/errors/api-error-message';
 import { API_CONFIG } from '@core/api-config';
 import { classifyHostAccess } from '@core/host-access/host-access';
 import {
@@ -39,7 +36,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const suppressToast = req.context.get(SUPPRESS_ERROR_TOAST);
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
-      const apiError = normalize(err, req.method);
+      const apiError = normalize(err, req.method, req.url);
       if (apiError.status === 401) {
         // Scoped deliberately, matching authInterceptor. This handler clears the session,
         // so an unscoped version let a 401 from a third-party host (ipapi.co, behind the
@@ -95,22 +92,44 @@ function serverCode(body: unknown): string | null {
   return typeof code === 'string' && code ? code : null;
 }
 
-function normalize(err: HttpErrorResponse, method: string): ApiError {
+/**
+ * The request's path alone, without the origin or the query string: the origin is the internal
+ * API host and a query can carry tokens, so neither belongs in a diagnostic.
+ */
+function requestPath(url: string): string {
+  try {
+    return new URL(url, 'http://x').pathname;
+  } catch {
+    return url.split(/[?#]/)[0].replace(/^[a-z][a-z\d+.-]*:\/\/[^/]*/i, '') || '/';
+  }
+}
+
+/**
+ * What failed, for a developer: `GET /api/hostels/1 → 404`. A failure that never produced a
+ * response (the server-side `TimeoutError`) has no status, so its name stands in.
+ */
+function diagnostic(err: unknown, method: string, url: string): string {
+  const status = (err as { status?: unknown } | null)?.status;
+  const name = (err as { name?: unknown } | null)?.name;
+  const outcome =
+    typeof status === 'number' ? String(status) : typeof name === 'string' && name ? name : 'error';
+  return `${method} ${requestPath(url)} → ${outcome}`;
+}
+
+function normalize(err: HttpErrorResponse, method: string, url: string): ApiError {
   const serverMessages = extractServerMessages(err.error);
+  const verb = method.toUpperCase();
   return {
     status: err.status,
     // The server's code wins: it is the only thing that tells a "your plan has no CRM" 403
     // apart from any other refusal. Overwriting it here is why `crm_required` never reached
     // a screen. Without one, fall back to a code derived from the status.
     code: serverCode(err.error) ?? (err.status === 0 ? 'network_error' : 'unknown_error'),
-    // The server's wording wins over Angular's. `err.message` is
-    // "Http failure response for http://…/api/user/sign_in: 401 Unauthorized" — a URL
-    // and a status code — and several screens render `err.message` inline, so that
-    // string was reaching users verbatim while the response carried a perfectly good
-    // "Invalid email or password" alongside it. Falling back to `err.message` keeps
-    // network failures (status 0, empty body) describable.
-    message: serverMessageText(err.error) ?? err.message,
+    // Diagnostic only, and never shown: display copy comes from `serverMessages` through the
+    // classifiers and `toToastCopy`. Angular's own message is avoided because it carries the
+    // API origin and the full query, and the server's text because it would look renderable.
+    message: diagnostic(err, verb, url),
     serverMessages: serverMessages.length ? serverMessages : undefined,
-    method: method.toUpperCase(),
+    method: verb,
   };
 }

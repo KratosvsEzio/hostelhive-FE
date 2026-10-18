@@ -1,6 +1,10 @@
+import { HttpContext, provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { API_CONFIG } from '@core/api-config';
 import { ApiClient } from '@core/api-resource';
+import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import {
   ApiMyBooking,
   MY_BOOKINGS_LIMIT,
@@ -449,9 +453,11 @@ describe('MyBookingsApi — changing a booking', () => {
     let result: unknown;
     svc.update('RbNKwO', DETAILS).subscribe((r) => (result = r));
 
-    expect(patch).toHaveBeenCalledWith('/api/bookings/RbNKwO', {
-      booking: { guest_name: 'Hassan', guest_phone: '923001234567', guest_email: 'a@b.co', notes: 'late' },
-    });
+    expect(patch).toHaveBeenCalledWith(
+      '/api/bookings/RbNKwO',
+      { booking: { guest_name: 'Hassan', guest_phone: '923001234567', guest_email: 'a@b.co', notes: 'late' } },
+      expect.any(HttpContext),
+    );
     const body = patch.mock.calls[0][1] as { booking: Record<string, unknown> };
     for (const key of ['checkin_date', 'checkout_date', 'guests', 'line_items']) {
       expect(body.booking).not.toHaveProperty(key);
@@ -500,7 +506,7 @@ describe('MyBookingsApi — changing a booking', () => {
     let result: { stage?: string | null } | undefined;
     svc.cancel('RbNKwO').subscribe((r) => (result = r));
 
-    expect(post).toHaveBeenCalledWith('/api/bookings/RbNKwO/mark_as_cancelled', {});
+    expect(post).toHaveBeenCalledWith('/api/bookings/RbNKwO/mark_as_cancelled', {}, expect.any(HttpContext));
     expect(result?.stage).toBe('cancelled');
   });
 
@@ -509,5 +515,54 @@ describe('MyBookingsApi — changing a booking', () => {
     let failed = false;
     svc.cancel('RbNKwO').subscribe({ error: () => (failed = true) });
     expect(failed).toBe(true);
+  });
+});
+
+// The dialogs explain a refusal inline; a global toast on top would repeat it untranslated.
+describe('MyBookingsApi — error toasts', () => {
+  const BASE = 'https://api.test';
+  let httpMock: HttpTestingController;
+  let svc: MyBookingsApi;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: BASE } },
+      ],
+    });
+    httpMock = TestBed.inject(HttpTestingController);
+    svc = TestBed.inject(MyBookingsApi);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('opts an update out of the global error toast', () => {
+    svc
+      .update('RbNKwO', { guestName: 'Hassan', guestPhone: '923001234567', guestEmail: '', notes: '' })
+      .subscribe({ error: () => undefined });
+
+    const req = httpMock.expectOne(`${BASE}/api/bookings/RbNKwO`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+    req.flush({});
+  });
+
+  it('opts a cancellation out of the global error toast', () => {
+    svc.cancel('RbNKwO').subscribe({ error: () => undefined });
+
+    const req = httpMock.expectOne(`${BASE}/api/bookings/RbNKwO/mark_as_cancelled`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+    req.flush({});
+  });
+
+  it('leaves reading a booking with the global error toast', () => {
+    svc.get('RbNKwO').subscribe({ error: () => undefined });
+
+    const req = httpMock.expectOne(`${BASE}/api/bookings/RbNKwO`);
+    expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(false);
+    req.flush({});
   });
 });

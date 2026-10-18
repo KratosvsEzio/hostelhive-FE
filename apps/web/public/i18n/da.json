@@ -333,7 +333,8 @@
     "allow": "Tillad",
     "noPhotosYet": "Ingen billeder endnu",
     "guests": "Gæster",
-    "copy": "Kopiér"
+    "copy": "Kopiér",
+    "cannotReachTheServer": "Kan ikke nå serveren. Prøv igen om et øjeblik."
   },
   "leadWall": {
     "close": "Luk",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Når du klikker på det, aktiveres din konto, og nummeret vises.",
     "iVeVerifiedContinue": "Verificeret — fortsæt",
     "back": "Tilbage",
-    "confirmPassword": "Bekræft adgangskode"
+    "confirmPassword": "Bekræft adgangskode",
+    "emailOrPasswordIncorrect": "E-mail eller adgangskode er forkert.",
+    "emailAlreadyRegistered": "Der findes allerede en konto med denne e-mail. Log ind i stedet, eller nulstil din adgangskode, hvis du har glemt den.",
+    "couldNotCreateAccount": "Vi kunne ikke oprette din konto. Tjek dine oplysninger, og prøv igen.",
+    "accountCannotSignIn": "Denne konto kan ikke logge ind lige nu. Kontakt os, så hjælper vi.",
+    "googleDidNotFinish": "Login med Google blev ikke gennemført. Prøv igen, eller brug din e-mail og adgangskode.",
+    "tooManyAttempts": "For mange forsøg. Vent et par minutter, og prøv igen.",
+    "somethingWentWrong": "Noget gik galt. Prøv igen."
   },
   "home": {
     "searchCityOrArea": "Søg by eller område",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "Hvis denne e-mail allerede har en konto, beholdes den nuværende adgangskode — din bruges kun, hvis der oprettes en ny konto.",
     "storedEmailBecomesLogin": "Deres gemte e-mail bliver loginnet. Har adressen allerede en konto, beholder de dens adgangskode.",
     "pickADifferentStatusTo": "Vælg en anden status for at se resten af dit team.",
-    "addAWardenCookOr": "Tilføj en inspektør, kok eller vagt for at gemme løn og dokumenter."
+    "addAWardenCookOr": "Tilføj en inspektør, kok eller vagt for at gemme løn og dokumenter.",
+    "couldNotUploadImage": "Billedet kunne ikke uploades",
+    "fileTypeNotSupported": "Den filtype understøttes ikke. Vælg et andet billede.",
+    "uploadTryAgain": "Prøv igen, eller vælg et andet billede."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Godkendelse mislykkedes — prøv igen.",
@@ -1374,7 +1385,18 @@
     "due": "Forfalder",
     "thisWillPermanentlyDeleteInvoice": "Dette sletter fakturaen permanent",
     "invoicesAppearHereOnceYou": "Fakturaer vises her, når du udsteder husleje- eller forbrugsregninger.",
-    "tryAdjustingYourFilters": "Prøv at justere dine filtre."
+    "invoicesAppearHereNightly": "Fakturaer vises her, når du opretter dem fra indtjekkede bookinger.",
+    "tryAdjustingYourFilters": "Prøv at justere dine filtre.",
+    "bookingInvoices": "Bookingfakturaer",
+    "bookingRef": "Booking {{ref}}",
+    "viewBooking": "Se booking",
+    "guestName": "Gæstens navn",
+    "markPaidConfirmTitle": "Markér {{invoice}} som betalt?",
+    "markPaidConfirmBody": "Det fulde beløb registreres som modtaget.",
+    "alsoMarkBookingPaid": "Markér også booking {{ref}} som betalt",
+    "invoiceAndBookingPaid": "Faktura og booking markeret som betalt",
+    "bookingNotPaid": "Fakturaen er markeret som betalt, men bookingen er ikke. {{reason}}",
+    "invoiceNotFound": "Vi kunne ikke finde den faktura."
   },
   "hostExpenses": {
     "allTypes": "Alle typer",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "Opkræves i receptionen",
     "createBooking": "Opret booking",
     "theRoomsForThisProperty": "Værelserne for denne ejendom kunne ikke indlæses.",
+    "notSetUpForBookings": "Denne ejendom er ikke sat op til at modtage bookinger.",
+    "crmRequired": "Din plan omfatter ikke bookinger. Opgrader din plan for at tilføje bookinger.",
+    "checkInCannotBeInPast": "Ankomst kan ikke være før i dag. Vælg i dag eller en senere dato.",
+    "roomTypeNotBookable": "En af disse værelsestyper er slået fra for bookinger. Fjern den, og prøv igen.",
+    "checkOutAfterCheckIn": "Afrejse skal være efter ankomst.",
+    "couldNotSaveBooking": "Vi kunne ikke gemme denne booking. Tjek oplysningerne, og prøv igen.",
     "everyRoomEveryState": "Alle værelser, alle tilstande — tryk på en dag for dens oversigt",
     "thisMonthSCalendarCould": "Denne måneds kalender kunne ikke indlæses.",
     "nothingIsWaitingOnYou": "Der er intet, der venter på dig denne dag.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "Ankomst — afrejse",
     "aNightRuns12": "En overnatning løber fra kl. 12.00 til kl. 12.00 — ankomst fra middag, afrejse senest middag dagen efter.",
     "discount": "Rabat",
-    "saveBooking": "Gem booking"
+    "saveBooking": "Gem booking",
+    "invoice": "Faktura",
+    "checkingForInvoice": "Søger efter en faktura…",
+    "noInvoiceYet": "Ingen faktura endnu.",
+    "couldNotCheckInvoice": "Kunne ikke søge efter en faktura.",
+    "viewInvoice": "Se faktura",
+    "alsoMarkInvoicePaid": "Markér også faktura {{invoice}} som betalt",
+    "bookingAndInvoicePaid": "Booking og faktura markeret som betalt",
+    "invoiceNotPaid": "Bookingen er markeret som betalt, men fakturaen er ikke. {{reason}}",
+    "stayedIn": "Boede i",
+    "checkedOut": "Tjekket ud",
+    "released": "Frigivet",
+    "cancelOpenInvoiceWarning": "Denne booking har en ubetalt faktura ({{invoice}}). Annullering sletter den ikke.",
+    "bookingNotFound": "Vi kunne ikke finde den booking.",
+    "notEnoughBedsFree": "Et af disse værelser har ikke længere så mange ledige senge. Placér færre gæster der, eller vælg et andet værelse.",
+    "checkTheRoomsPicked": "Disse værelser kunne ikke bruges. Tjek værelser og gæster, og prøv igen.",
+    "alreadyCheckedIn": "Denne booking var allerede tjekket ind, så intet blev ændret.",
+    "bookingHasMovedOn": "Denne booking er ændret, siden du åbnede den, så det trin blev ikke gennemført.",
+    "bookingAlreadyPaid": "Denne booking var allerede betalt, så der blev ikke registreret en ny betaling.",
+    "alreadyPaidInvoicePaid": "Denne booking var allerede betalt. Faktura {{invoice}} er nu markeret som betalt.",
+    "invoiceAlreadyExists": "Denne booking har allerede en faktura.",
+    "giveTheGuestAReason": "Giv gæsten en begrundelse — den sendes til gæsten og gemmes på bookingen.",
+    "moveNotAccepted": "Serveren accepterede det ikke. Prøv igen.",
+    "roomAlreadyReleased": "Værelse {{room}} er allerede frigivet.",
+    "couldNotReleaseRoom": "Kunne ikke frigive værelse {{room}}. Prøv igen.",
+    "invoiceNoLongerExists": "Fakturaen kunne ikke findes. Den er muligvis slettet.",
+    "payTheInvoiceOnItsOwn": "Åbn fakturaen, og markér den som betalt der."
   },
   "hostHostelProfile": {
     "failed": "Mislykkedes",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} betalt",
     "cancelledSummary": "Annulleret {{date}} · PKR {{refund}} refunderet · PKR {{charge}} i afbestillingsgebyr",
     "cancelRefundExplainer": "Du får <strong class=\"tabular-nums\">PKR {{refund}}</strong> tilbage. <strong class=\"tabular-nums\">PKR {{charge}}</strong> beholdes som afbestillingsgebyr, fordi du afbestiller {{pct}} % inde i perioden.",
-    "whenYouBookAHostel": "Når du booker et hostel, vises det her med dine datoer og det, du betalte."
+    "whenYouBookAHostel": "Når du booker et hostel, vises det her med dine datoer og det, du betalte.",
+    "noLongerCancellable": "Denne booking kan ikke længere annulleres her. Ring til vandrerhjemmet, og oplys din bookingreference.",
+    "roomNoLongerBookable": "Et af de værelser, du valgte, kan ikke længere bookes. Vælg et andet værelse.",
+    "checkOutAfterCheckIn": "Afrejse skal være efter ankomst.",
+    "bookingNotFound": "Vi kunne ikke finde denne booking. Den er muligvis blevet fjernet.",
+    "changeFailed": "Vi kunne ikke opdatere denne booking. Prøv igen.",
+    "cancelFailed": "Vi kunne ikke annullere denne booking. Prøv igen.",
+    "withinCutoff": "Ændringer og annulleringer lukker 3 dage før ankomst. Vil du ændre noget nu, så ring til vandrerhjemmet, og oplys din bookingreference.",
+    "noLongerEditable": "Denne booking kan ikke længere ændres her. Ring til vandrerhjemmet, og oplys din bookingreference."
   },
   "userFavorites": {
     "removeFromFavorites": "Fjern fra favoritter?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "Indtast et gyldigt telefonnummer",
     "enterAValidEmail": "Indtast en gyldig e-mailadresse",
     "ofNSeats": "af {{count}}",
-    "bookingReference": "Bookingreference"
+    "bookingReference": "Bookingreference",
+    "hostelNotTakingBookings": "Dette vandrerhjem tager ikke imod onlinebookinger lige nu.",
+    "roomNoLongerBookable": "Et af de værelser, du valgte, kan ikke længere bookes. Fjern det, og vælg et andet.",
+    "checkInHasPassed": "Din ankomstdato er passeret. Vælg nye datoer, og prøv igen.",
+    "checkOutAfterCheckIn": "Afrejse skal være efter ankomst.",
+    "logInAgainToBook": "Din session er udløbet. Log ind igen for at booke.",
+    "tryAgain": "Prøv igen."
   },
   "states": {
     "nothingHereYet": "Der er intet her endnu",
@@ -1957,6 +2025,7 @@
     "whatGendered": "{{gender}}-hosteller",
     "whatAll": "hosteller, pensionater og bofællesskaber",
     "listingNotFoundTitle": "Annoncen blev ikke fundet — HostelHive",
+    "postNotFoundTitle": "Indlægget blev ikke fundet — HostelHive",
     "listingNotFoundDescription": "Denne hostelannonce er ikke tilgængelig, eller linket er forkert.",
     "listingTitle": "{{name}} — {{gender}}-hostel i {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-hostel i {{location}}.",

@@ -1,7 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, of } from 'rxjs';
-import { ApiClient } from '@core/api-resource';
+import { Observable, forkJoin, map, of } from 'rxjs';
+import { Invoice } from '@hostelhive/data-access';
+import { ApiClient, ApiRequestOptions, requestContextArgs as contextArgs } from '@core/api-resource';
+import { ApiRenterBillTop, toInvoice } from '@services/host-ops-api';
 import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
+
+/**
+ * Per-call request options for the lifecycle moves and reads.
+ *
+ * Set `suppressErrorToast` only where the caller renders the failure inline itself (the
+ * check-in dialog, the lifecycle dialogs, release), so a row-menu action still gets its toast.
+ * The same shape `HostOpsApi` takes; see {@link ApiRequestOptions}.
+ */
+export type HostBookingRequestOptions = ApiRequestOptions;
 
 /**
  * One page big enough to hold a whole day's arrivals.
@@ -69,20 +80,25 @@ export class HostBookingsApi {
     page = 1,
     limit = PAGE_SIZE,
     filters: BookingListParams = {},
+    opts?: HostBookingRequestOptions,
   ): Observable<HostBookingPage> {
     return this.api
-      .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
-        ...pageParams(page, limit),
-        // Soonest arrival first, and it has to be asked of the server: sorting a page in
-        // the browser orders ten rows against each other and says nothing about the ninety
-        // behind them, so page 2 could open on earlier dates than page 1 ended on.
-        //
-        // `sort[field]=order` is the hash the backend reads — a bare `sort=` is dropped by
-        // the strong-params permit, which is silent: the rows come back in the default
-        // order looking perfectly plausible.
-        'sort[checkin_date]': 'asc',
-        ...filters,
-      })
+      .get<ApiHostBookingListResponse>(
+        `/api/host/hostels/${hostelId}/bookings`,
+        {
+          ...pageParams(page, limit),
+          // Soonest arrival first, and it has to be asked of the server: sorting a page in
+          // the browser orders ten rows against each other and says nothing about the ninety
+          // behind them, so page 2 could open on earlier dates than page 1 ended on.
+          //
+          // `sort[field]=order` is the hash the backend reads — a bare `sort=` is dropped by
+          // the strong-params permit, which is silent: the rows come back in the default
+          // order looking perfectly plausible.
+          'sort[checkin_date]': 'asc',
+          ...filters,
+        },
+        ...contextArgs(opts),
+      )
       .pipe(
         map((res) => {
           const items = (res.bookings ?? []).map(toHostBooking);
@@ -142,6 +158,20 @@ export class HostBookingsApi {
    * be a fixture: a room the seeker-side offers had never heard of was given invented stays,
    * on the reasoning that an empty calendar might be mistaken for a broken one. That trade is
    * only worth making while the endpoint does not exist.
+   *
+   * **Two questions, one answer.** `room.id` is the *first* room a party was checked into, so
+   * a party split across rooms is invisible to its second room through it. `occupied_room_ids`
+   * finds that room, so both are asked and merged, each booking once — a party whose first
+   * room is this one comes back from both, and drawn twice it would double its beds. Which of
+   * the booking's guests are *in* this room is the caller's to work out from its occupancies.
+   *
+   * Known limit: `occupied_room_ids` holds **active** occupancies only. A checked-out party is
+   * found by its first room alone, so a past stay's second room shows nothing for it.
+   *
+   * Two requests rather than the endpoint's `or[]` group, which the server's search helper
+   * does build a `should` from: both `f[…]` keys are already in use against this endpoint
+   * (room detail reads `occupied_room_ids`), while an `or` it silently ignored would return
+   * the whole hostel's bookings and draw every unallotted one on every room.
    */
   bookingsInRoom(
     hostelId: string,
@@ -150,14 +180,21 @@ export class HostBookingsApi {
     to: string,
   ): Observable<HostBooking[]> {
     if (!hostelId || !roomId) return of([]);
-    return this.api
-      .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
-        ...pageParams(1, ROOM_MONTH_LIMIT),
-        'f[room.id]': roomId,
-        'f[checkin_date][lte]': to,
-        'f[checkout_date][gte]': from,
-      })
-      .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
+    const ask = (filter: string) =>
+      this.api
+        .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
+          ...pageParams(1, ROOM_MONTH_LIMIT),
+          [filter]: roomId,
+          'f[checkin_date][lte]': to,
+          'f[checkout_date][gte]': from,
+        })
+        .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
+    return forkJoin([ask('f[room.id]'), ask('f[occupied_room_ids]')]).pipe(
+      map(([byRoom, byOccupancy]) => {
+        const seen = new Set(byRoom.map((b) => b.id));
+        return [...byRoom, ...byOccupancy.filter((b) => !seen.has(b.id))];
+      }),
+    );
   }
 
   /* ── the lifecycle (Trello #80) ────────────────────────────────────────────────
@@ -173,25 +210,32 @@ export class HostBookingsApi {
    *
    * The same body the guest endpoint takes: room types and how many, not rooms — rooms are
    * placed at check-in. Dates go as plain days, which the server reads in the hostel's zone.
+   *
+   * Opted out of the global error toast: the booking drawer says why the save failed in its own
+   * translated words, and a toast on top would repeat it in the server's.
    */
   create(hostelId: string, input: HostBookingInput): Observable<HostBooking> {
     return this.api
-      .post<{ booking?: ApiHostBooking | null }>(`/api/host/hostels/${hostelId}/bookings`, {
-        booking: {
-          checkin_date: input.checkIn,
-          checkout_date: input.checkOut,
-          guest_name: input.guestName.trim(),
-          guest_phone: input.guestPhone.replace(/\D/g, ''),
-          ...(input.guestEmail.trim() ? { guest_email: input.guestEmail.trim() } : {}),
-          line_items: input.lines.map((l) => ({
-            room_type_id: l.roomTypeId,
-            guests: l.guests,
-            occupancy_type: l.shared ? 'shared' : 'private_room',
-            // A shared line's bed count is its guests; only a private line says how many rooms.
-            ...(l.shared ? {} : { quantity: l.quantity }),
-          })),
+      .post<{ booking?: ApiHostBooking | null }>(
+        `/api/host/hostels/${hostelId}/bookings`,
+        {
+          booking: {
+            checkin_date: input.checkIn,
+            checkout_date: input.checkOut,
+            guest_name: input.guestName.trim(),
+            guest_phone: input.guestPhone.replace(/\D/g, ''),
+            ...(input.guestEmail.trim() ? { guest_email: input.guestEmail.trim() } : {}),
+            line_items: input.lines.map((l) => ({
+              room_type_id: l.roomTypeId,
+              guests: l.guests,
+              occupancy_type: l.shared ? 'shared' : 'private_room',
+              // A shared line's bed count is its guests; only a private line says how many rooms.
+              ...(l.shared ? {} : { quantity: l.quantity }),
+            })),
+          },
         },
-      })
+        ...contextArgs({ suppressErrorToast: true }),
+      )
       .pipe(
         map((res) => {
           if (!res?.booking?.id) throw new Error('booking not in response');
@@ -211,10 +255,19 @@ export class HostBookingsApi {
    * One allocation per room, any room type; the server refuses a room without that many free
    * beds, and the booking's headcount becomes the sum of what was placed.
    */
-  checkIn(hostelId: string, bookingId: string, allocations: readonly CheckInAllocation[]): Observable<HostBooking> {
-    return this.post(hostelId, bookingId, 'mark_as_checked_in', {
-      allocations: allocations.map((a) => ({ room_id: a.roomId, guests: a.guests })),
-    });
+  checkIn(
+    hostelId: string,
+    bookingId: string,
+    allocations: readonly CheckInAllocation[],
+    opts?: HostBookingRequestOptions,
+  ): Observable<HostBooking> {
+    return this.post(
+      hostelId,
+      bookingId,
+      'mark_as_checked_in',
+      { allocations: allocations.map((a) => ({ room_id: a.roomId, guests: a.guests })) },
+      opts,
+    );
   }
 
   /**
@@ -223,33 +276,56 @@ export class HostBookingsApi {
    * 422 on anything else, and on a booking already paid. It does not touch the invoice, which
    * is marked paid on its own.
    */
-  markPaid(hostelId: string, bookingId: string): Observable<HostBooking> {
-    return this.post(hostelId, bookingId, 'mark_as_paid', {});
+  markPaid(hostelId: string, bookingId: string, opts?: HostBookingRequestOptions): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_paid', {}, opts);
   }
 
   /** `POST …/mark_as_checked_out` — checked-in → checked-out, releasing every bed. */
-  checkOut(hostelId: string, bookingId: string): Observable<HostBooking> {
-    return this.post(hostelId, bookingId, 'mark_as_checked_out', {});
+  checkOut(hostelId: string, bookingId: string, opts?: HostBookingRequestOptions): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_checked_out', {}, opts);
   }
 
   /** `POST …/mark_as_cancelled` — any time, with a reason the server requires. */
-  cancel(hostelId: string, bookingId: string, reason: string): Observable<HostBooking> {
-    return this.post(hostelId, bookingId, 'mark_as_cancelled', { reason: reason.trim() });
+  cancel(
+    hostelId: string,
+    bookingId: string,
+    reason: string,
+    opts?: HostBookingRequestOptions,
+  ): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_cancelled', { reason: reason.trim() }, opts);
   }
 
   /** `POST …/mark_as_no_show` — confirmed only: the guest never arrived. */
-  markNoShow(hostelId: string, bookingId: string, reason: string): Observable<HostBooking> {
-    return this.post(hostelId, bookingId, 'mark_as_no_show', { reason: reason.trim() });
+  markNoShow(
+    hostelId: string,
+    bookingId: string,
+    reason: string,
+    opts?: HostBookingRequestOptions,
+  ): Observable<HostBooking> {
+    return this.post(hostelId, bookingId, 'mark_as_no_show', { reason: reason.trim() }, opts);
   }
 
   /**
-   * `POST …/generate_invoice` — after check-in, once per booking; the server says 422 to a
-   * second. Answers with the bill, not the booking, so this reports only that it worked.
+   * `POST …/generate_invoice` — checked-in or checked-out only, once per booking; the server
+   * says 422 to anything else and to a second.
+   *
+   * Answers `201 { renter_bill, message }` with the bill, not the booking, in the serializer
+   * shape (`booking.guest_phone`, not the list's `phone`), mapped by the same `toInvoice`
+   * the bills list uses so the caller can link to it without a re-read.
    */
-  generateInvoice(hostelId: string, bookingId: string): Observable<void> {
+  generateInvoice(hostelId: string, bookingId: string, opts?: HostBookingRequestOptions): Observable<Invoice> {
     return this.api
-      .post<unknown>(`${this.base(hostelId, bookingId)}/generate_invoice`, {})
-      .pipe(map(() => undefined));
+      .post<{ renter_bill?: ApiRenterBillTop | null }>(
+        `${this.base(hostelId, bookingId)}/generate_invoice`,
+        {},
+        ...contextArgs(opts),
+      )
+      .pipe(
+        map((res) => {
+          if (!res?.renter_bill?.id) throw new Error(`invoice for booking ${bookingId} not in response`);
+          return toInvoice(res.renter_bill);
+        }),
+      );
   }
 
   /** `GET …/occupancies` — who is in which room, for a checked-in booking. */
@@ -260,22 +336,53 @@ export class HostBookingsApi {
   }
 
   /** `PUT …/occupancies/:id/mark_as_inactive` — releases one room's beds before check-out. */
-  releaseOccupancy(hostelId: string, bookingId: string, occupancyId: string): Observable<void> {
+  releaseOccupancy(
+    hostelId: string,
+    bookingId: string,
+    occupancyId: string,
+    opts?: HostBookingRequestOptions,
+  ): Observable<void> {
     return this.api
       .put<unknown>(
         `${this.base(hostelId, bookingId)}/occupancies/${encodeURIComponent(occupancyId)}/mark_as_inactive`,
         {},
+        ...contextArgs(opts),
       )
       .pipe(map(() => undefined));
+  }
+
+  /**
+   * `GET …/bookings/:id` — one booking in the serializer shape, which carries `occupancies`
+   * too; used to refresh a single row and to open a deep-linked booking that is off-page.
+   */
+  get(hostelId: string, bookingId: string, opts?: HostBookingRequestOptions): Observable<HostBooking> {
+    return this.api
+      .get<{ booking?: ApiHostBooking | null }>(this.base(hostelId, bookingId), undefined, ...contextArgs(opts))
+      .pipe(
+        map((res) => {
+          if (!res?.booking?.id) throw new Error(`booking ${bookingId} not in response`);
+          return toHostBooking(res.booking);
+        }),
+      );
   }
 
   private base(hostelId: string, bookingId: string): string {
     return `/api/host/hostels/${hostelId}/bookings/${encodeURIComponent(bookingId)}`;
   }
 
-  private post(hostelId: string, bookingId: string, action: string, body: object): Observable<HostBooking> {
+  private post(
+    hostelId: string,
+    bookingId: string,
+    action: string,
+    body: object,
+    opts?: HostBookingRequestOptions,
+  ): Observable<HostBooking> {
     return this.api
-      .post<{ booking?: ApiHostBooking | null }>(`${this.base(hostelId, bookingId)}/${action}`, body)
+      .post<{ booking?: ApiHostBooking | null }>(
+        `${this.base(hostelId, bookingId)}/${action}`,
+        body,
+        ...contextArgs(opts),
+      )
       .pipe(
         map((res) => {
           if (!res?.booking?.id) throw new Error(`booking ${bookingId} not in response`);

@@ -64,7 +64,7 @@
                 "
                 (click)="draftGender.set(g.value)"
               >
-                {{ g.label }}
+                {{ g.key | transloco }}
               </button>
             }
           </div>
@@ -100,6 +100,7 @@
                 hh-button size="sm" color="dark"
                 type="button"
                 [variant]="draftRoomType() === c.value ? 'filled' : 'outlined'"
+                [attr.aria-pressed]="draftRoomType() === c.value"
                 [class]="
                   draftRoomType() === c.value
                     ? 'border border-ink-900'
@@ -107,7 +108,7 @@
                 "
                 (click)="draftRoomType.set(c.value)"
               >
-                {{ c.label }}
+                {{ c.key | transloco }}
               </button>
             }
           </div>
@@ -136,19 +137,20 @@
         <section>
           <h3 class="mb-3 text-base font-semibold text-ink-900">{{ 'filters.sortBy' | transloco }}</h3>
           <div class="flex flex-wrap gap-2">
-            @for (s of sortOptions; track s.value) {
+            @for (s of sortOptions(); track s.value) {
               <button
                 hh-button size="sm" color="dark"
                 type="button"
-                [variant]="draftSort() === s.value ? 'filled' : 'outlined'"
+                [variant]="effectiveSort() === s.value ? 'filled' : 'outlined'"
+                [attr.aria-pressed]="effectiveSort() === s.value"
                 [class]="
-                  draftSort() === s.value
+                  effectiveSort() === s.value
                     ? 'border border-ink-900'
                     : 'border-ink-200 text-ink-700 hover:border-ink-400'
                 "
                 (click)="draftSort.set(s.value)"
               >
-                {{ s.label }}
+                {{ s.key | transloco }}
               </button>
             }
           </div>

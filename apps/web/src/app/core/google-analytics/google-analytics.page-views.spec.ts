@@ -1,6 +1,8 @@
 import { Component, Type, WritableSignal, effect, inject, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
-import { NavigationEnd, Router, RouterOutlet, provideRouter } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet, Routes, provideRouter } from '@angular/router';
+import { filter, firstValueFrom } from 'rxjs';
 import { LocaleStore } from '../i18n/locale-store';
 import { provideI18nTesting } from '../i18n/provide-i18n-testing';
 import { Seo } from '../seo';
@@ -45,15 +47,17 @@ describe('page views', () => {
   /**
    * Configures the module; `realSeo` swaps the stubbed head service for the real one, with
    * `ready` standing in for the locale's strings being loaded and `page` as the routed component.
+   * `routes` replaces the catch-all route, for a test that needs a guard in the way.
    */
   function configure(
     realSeo = false,
     ready: WritableSignal<boolean> = signal(true),
     page: Type<unknown> = Stub,
+    routes: Routes = [{ path: '**', component: page }],
   ): void {
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: '**', component: page }]),
+        provideRouter(routes),
         realSeo
           ? [
               provideI18nTesting(),
@@ -99,6 +103,21 @@ describe('page views', () => {
     await vi.advanceTimersByTimeAsync(0);
     TestBed.tick();
     await vi.advanceTimersByTimeAsync(0);
+  }
+
+  /**
+   * Presses Back and waits for the navigation it triggers. The router only listens to the
+   * location once bootstrapped, which a test module never is, so the listener is attached here;
+   * it defers the navigation by a macrotask, hence the timer advance.
+   */
+  async function back(): Promise<void> {
+    router.setUpLocationChangeListener();
+    const ended = firstValueFrom(router.events.pipe(filter((e) => e instanceof NavigationEnd)));
+    TestBed.inject(Location).back();
+    await vi.advanceTimersByTimeAsync(0);
+    await ended;
+    // The view was queued mid-tick, where a 0 ms timer is due 1 ms later; let it come due.
+    await vi.advanceTimersByTimeAsync(1);
   }
 
   const origin = () => window.location.origin;
@@ -391,6 +410,369 @@ describe('page views', () => {
       await vi.advanceTimersByTimeAsync(CAP_MS * 2);
 
       expect(views()).toHaveLength(1);
+    });
+  });
+
+  describe('same-page refinements', () => {
+    const replace = (url: string) => router.navigateByUrl(url, { replaceUrl: true });
+
+    it('sends one view with the arrival location and settled title when the map writes its viewport', async () => {
+      configure(true);
+      const seo = TestBed.inject(Seo);
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search');
+      seo.apply({ title: 'Loading search', provisional: true });
+      TestBed.tick();
+      await replace('/en/search?lat=24.8&lng=67');
+      TestBed.tick();
+      await settle();
+      expect(views()).toHaveLength(0);
+
+      seo.apply({ title: 'Hostels | HostelHive' });
+      TestBed.tick();
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual({
+        page_path: '/en/search',
+        page_location: `${origin()}/en/search`,
+        page_title: 'Hostels | HostelHive',
+      });
+    });
+
+    it('sends nothing more for pans after the arrival view, on a timer, or on pagehide', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search');
+      await settle();
+      expect(views()).toHaveLength(1);
+
+      for (const lat of [1, 2, 3]) await replace(`/en/search?lat=${lat}&lng=${lat}`);
+      await settle();
+      await vi.advanceTimersByTimeAsync(CAP_MS * 2);
+      window.dispatchEvent(new Event('pagehide'));
+
+      expect(views()).toHaveLength(1);
+    });
+
+    // The skip has to leave the waiting view alone: flushing it first would send the arrival
+    // before its head settled, and the title recorded would be the previous page's.
+    it('does not flush the waiting view when a replace follows the arrival', async () => {
+      settled.set(false);
+      configure();
+      startAndSpy();
+
+      document.title = 'Previous page title';
+      await router.navigateByUrl('/en/search');
+      await replace('/en/search?lat=1&lng=1');
+      await vi.advanceTimersByTimeAsync(CAP_MS - 100);
+      TestBed.tick();
+      expect(views()).toHaveLength(0);
+
+      document.title = 'Hostels | HostelHive';
+      settled.set(true);
+      TestBed.tick();
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual({
+        page_path: '/en/search',
+        page_location: `${origin()}/en/search`,
+        page_title: 'Hostels | HostelHive',
+      });
+    });
+
+    it('does not count the replace that strips a discarded sort, and keeps the arrival location', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search/lahore?sort=price-asc');
+      // The navigation the search page issues to clean a sort it cannot honour out of the address.
+      await router.navigate([], {
+        queryParams: { sort: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      expect(router.url).toBe('/en/search/lahore');
+      await settle();
+      await vi.advanceTimersByTimeAsync(CAP_MS * 2);
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual(
+        expect.objectContaining({
+          page_path: '/en/search/lahore',
+          page_location: `${origin()}/en/search/lahore?sort=price-asc`,
+        }),
+      );
+    });
+
+    it('counts a pushed query change on the same path as its own view', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search');
+      await settle();
+      await router.navigateByUrl('/en/search?gender=girls');
+      await settle();
+
+      expect(views()).toHaveLength(2);
+      expect(viewAt(1)).toEqual(
+        expect.objectContaining({
+          page_path: '/en/search',
+          page_location: `${origin()}/en/search?gender=girls`,
+        }),
+      );
+    });
+
+    it('counts a replace that moves to a different path', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search');
+      await settle();
+      await replace('/en/about');
+      await settle();
+
+      expect(views()).toHaveLength(2);
+      expect(viewAt(1)['page_path']).toBe('/en/about');
+    });
+
+    it('counts a first navigation that is a replace', async () => {
+      configure();
+      startAndSpy();
+
+      await replace('/en/search');
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)['page_path']).toBe('/en/search');
+    });
+
+    it('keeps the location a mid-session start queued when a replace follows it', async () => {
+      settled.set(false);
+      configure();
+      await router.navigateByUrl('/en/search');
+      startAndSpy();
+
+      await replace('/en/search?lat=1&lng=1');
+      expect(views()).toHaveLength(0);
+
+      document.title = 'Hostels | HostelHive';
+      settled.set(true);
+      TestBed.tick();
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual({
+        page_path: '/en/search',
+        page_location: `${origin()}/en/search`,
+        page_title: 'Hostels | HostelHive',
+      });
+    });
+
+    it('sends one view for a listing opened with a review query, with the loaded title', async () => {
+      configure(true);
+      const seo = TestBed.inject(Seo);
+      startAndSpy();
+
+      await router.navigateByUrl('/en/hostel/abc?review=5');
+      seo.apply({ title: 'Loading listing', provisional: true });
+      TestBed.tick();
+      await replace('/en/hostel/abc');
+      TestBed.tick();
+      await settle();
+      expect(views()).toHaveLength(0);
+
+      seo.apply({ title: 'Cozy Hostel | HostelHive' });
+      TestBed.tick();
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual({
+        page_path: '/en/hostel/abc',
+        page_location: `${origin()}/en/hostel/abc?review=5`,
+        page_title: 'Cozy Hostel | HostelHive',
+      });
+    });
+
+    it('does not count a move to a fragment of the same page', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/blog/x');
+      await settle();
+      await router.navigateByUrl('/en/blog/x#costs');
+      await settle();
+      await vi.advanceTimersByTimeAsync(CAP_MS * 2);
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)['page_path']).toBe('/en/blog/x');
+    });
+
+    it('does not count a fragment jump on a page opened with a query, and keeps the query in its location', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/blog/x?utm_source=fb');
+      await settle();
+      expect(views()).toHaveLength(1);
+      await router.navigateByUrl('/en/blog/x?utm_source=fb#costs');
+      await settle();
+      await vi.advanceTimersByTimeAsync(CAP_MS * 2);
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual(
+        expect.objectContaining({
+          page_path: '/en/blog/x',
+          page_location: `${origin()}/en/blog/x?utm_source=fb`,
+        }),
+      );
+    });
+
+    it('records a page path without the fragment while keeping it in the location', async () => {
+      configure();
+      startAndSpy();
+
+      document.title = 'Blog post';
+      await router.navigateByUrl('/en/blog/x#costs');
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual({
+        page_path: '/en/blog/x',
+        page_location: `${origin()}/en/blog/x#costs`,
+        page_title: 'Blog post',
+      });
+    });
+
+    // A console URL never queues a view, so only a pending marketplace view can show whether a
+    // console navigation, or a skipped replace inside one, sends or flushes anything.
+    it('sends a waiting marketplace view once, at the first console push, and nothing for a replace inside the console', async () => {
+      settled.set(false);
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search');
+      expect(views()).toHaveLength(0);
+
+      await router.navigateByUrl('/en/host/1/rooms');
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)['page_path']).toBe('/en/search');
+
+      await replace('/en/host/1/rooms?tab=2');
+      await settle();
+      await vi.advanceTimersByTimeAsync(CAP_MS * 2);
+
+      expect(views()).toHaveLength(1);
+      expect(gtag.mock.calls.filter((c) => c[0] === 'event')).toHaveLength(1);
+    });
+
+    it('records the title a page writes once its strings load, across a replace', async () => {
+      const ready = signal(false);
+      configure(true, ready, PageWithHead);
+      TestBed.createComponent(Host);
+      startAndSpy();
+
+      document.title = 'Previous page title';
+      await router.navigateByUrl('/ur/about');
+      await vi.advanceTimersByTimeAsync(0);
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(CAP_MS - 100);
+      TestBed.tick();
+      await replace('/ur/about?x=1');
+      TestBed.tick();
+      expect(document.title).toBe('Previous page title');
+      expect(views()).toHaveLength(0);
+
+      ready.set(true);
+      TestBed.tick();
+      expect(document.title).toBe('Page own title');
+      await settle();
+
+      expect(views()).toHaveLength(1);
+      expect(viewAt(0)).toEqual({
+        page_path: '/ur/about',
+        page_location: `${origin()}/ur/about`,
+        page_title: 'Page own title',
+      });
+    });
+  });
+
+  describe('history', () => {
+    it('counts Back between two entries of the same path at its own location', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search?place=A');
+      await settle();
+      await router.navigateByUrl('/en/search?place=B');
+      await settle();
+      expect(views()).toHaveLength(2);
+
+      await back();
+      await settle();
+
+      expect(views()).toHaveLength(3);
+      expect(viewAt(2)).toEqual(
+        expect.objectContaining({
+          page_path: '/en/search',
+          page_location: `${origin()}/en/search?place=A`,
+        }),
+      );
+    });
+
+    it('counts Back across paths', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en/hostel/abc');
+      await settle();
+      await router.navigateByUrl('/en/search');
+      await settle();
+
+      await back();
+      await settle();
+
+      expect(views()).toHaveLength(3);
+      expect(viewAt(2)['page_path']).toBe('/en/hostel/abc');
+    });
+
+    it('counts a language switch pushed to the same page in another language', async () => {
+      configure();
+      startAndSpy();
+
+      await router.navigateByUrl('/en');
+      await settle();
+      await router.navigateByUrl('/ur');
+      await settle();
+
+      expect(views()).toHaveLength(2);
+      expect(viewAt(0)['page_path']).toBe('/en');
+      expect(viewAt(1)['page_path']).toBe('/ur');
+    });
+
+    it('counts a guard redirect once, at the page it lands on', async () => {
+      const redirect = () => inject(Router).createUrlTree(['/en/new']);
+      configure(false, signal(true), Stub, [
+        { path: 'en/old', component: Stub, canActivate: [redirect] },
+        { path: '**', component: Stub },
+      ]);
+      startAndSpy();
+
+      await router.navigateByUrl('/en/search');
+      await settle();
+      await router.navigateByUrl('/en/old');
+      await settle();
+
+      expect(views()).toHaveLength(2);
+      expect(viewAt(1)).toEqual(
+        expect.objectContaining({
+          page_path: '/en/new',
+          page_location: `${origin()}/en/new`,
+        }),
+      );
     });
   });
 

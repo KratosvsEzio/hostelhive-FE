@@ -83,7 +83,7 @@
           }
         </div>
       } @else if (s.error) {
-        <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">{{ s.error }}</p>
+        <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger" role="alert">{{ s.error | transloco }}</p>
       } @else if (!s.rooms.length) {
         <p class="rounded-xl border border-dashed border-ink-200 px-3 py-4 text-center text-sm text-ink-400">
           {{ 'hostBookings.noRoomsOnThisProperty' | transloco }}
@@ -181,7 +181,7 @@
     }
 
     @if (saveError()) {
-      <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger">{{ saveError() }}</p>
+      <p class="rounded-xl bg-danger/5 px-3 py-2.5 text-sm text-danger" role="alert">{{ saveError() | transloco }}</p>
     }
   </div>
 

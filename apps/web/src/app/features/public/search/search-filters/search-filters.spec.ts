@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, DebugElement, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { ParamMap, Router, NavigationStart, convertToParamMap, provideRouter } from '@angular/router';
@@ -8,6 +8,11 @@ import { Dropdown } from '@hostelhive/ui';
 import { OffersApi } from '@services';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import {
+  FilterState,
+  SearchFilterModal,
+} from '@features/public/search/search-filter-modal/search-filter-modal';
+import { mergeSearchParams } from '@features/public/search/search-params';
 import { GenderRoutes, SearchFilters } from './search-filters';
 
 /**
@@ -21,6 +26,9 @@ const LAHORE_ROUTES: GenderRoutes = {
   coliving: { path: '/hostels/lahore/co-living', gender: null },
   backpacker: { path: '/hostels/lahore', gender: 'backpacker' },
 };
+
+// A gender page's seed as its path supplies it: the place, plus the type the path fixes.
+const GIRLS_SEED = { place: 'Lahore', lat: '31.5', lng: '74.3', zoom: '11', gender: 'girls' };
 
 /**
  * Stands in for the search page. The filter row never reads the route's query itself: its
@@ -117,9 +125,9 @@ async function mount(opts: {
       await settle();
     },
     async choose(label) {
-      modalButtons()
-        .find((b) => b.textContent?.trim() === label)
-        ?.click();
+      const button = modalButtons().find((b) => b.textContent?.trim() === label);
+      if (!button) throw new Error(`No modal button reads "${label}"`);
+      button.click();
       await settle();
     },
     async apply() {
@@ -132,7 +140,25 @@ async function mount(opts: {
   };
 }
 
-/** The pressed state of every "Type of stay" button, by label. */
+/**
+ * Loads the filter row at `url` with the filters the search page would hand it: that URL's
+ * query merged with the page's `seed` by the real reader, so a correction made there shows.
+ */
+async function mountFromUrl(
+  url: string,
+  opts: { seed?: Record<string, string> | null; routes?: GenderRoutes | null } = {},
+): Promise<Mounted> {
+  const m = await mount({ url, routes: opts.routes });
+  const query = convertToParamMap(m.router.parseUrl(url).queryParams);
+  m.host.params.set(mergeSearchParams(query, opts.seed ?? null));
+  await m.settle();
+  return m;
+}
+
+/**
+ * The pressed state of the modal's toggle buttons (type of stay, room type and sort), by label.
+ * A label no button carries reads as null.
+ */
 function pressed(labels: string[]): Record<string, string | null> {
   const buttons = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.hh-modal-root button[aria-pressed]'),
@@ -141,6 +167,30 @@ function pressed(labels: string[]): Record<string, string | null> {
     labels.map((l) => [
       l,
       buttons.find((b) => b.textContent?.trim() === l)?.getAttribute('aria-pressed') ?? null,
+    ]),
+  );
+}
+
+/** The buttons inside the modal section whose heading reads `titleKey`, in document order. */
+function sectionButtons(titleKey: string): HTMLButtonElement[] {
+  const heading = Array.from(document.querySelectorAll('.hh-modal-root h3')).find(
+    (h) => h.textContent?.trim() === titleKey,
+  );
+  if (!heading) throw new Error(`No modal section titled "${titleKey}"`);
+  return Array.from(heading.closest('section')?.querySelectorAll('button') ?? []);
+}
+
+/** The labels offered in the modal's Sort section, in order. */
+function sortOffered(): string[] {
+  return sectionButtons('filters.sortBy').map((b) => b.textContent?.trim() ?? '');
+}
+
+/** The aria-pressed value of each Sort button, by label. */
+function sortPressed(): Record<string, string | null> {
+  return Object.fromEntries(
+    sectionButtons('filters.sortBy').map((b) => [
+      b.textContent?.trim() ?? '',
+      b.getAttribute('aria-pressed'),
     ]),
   );
 }
@@ -154,10 +204,28 @@ function filtersButton(m: Mounted): HTMLElement | null {
   return m.harness.routeNativeElement?.querySelector('hh-search-filters button') ?? null;
 }
 
-/** The sort dropdown's option values — the second dropdown in the row, after room type. */
+/** The inline sort dropdown — the second dropdown in the row, after room type. */
+function sortDropdown(m: Mounted): DebugElement {
+  return m.harness.fixture.debugElement.queryAll(By.directive(Dropdown))[1];
+}
+
+/** The sort dropdown's option values. */
 function sortValues(m: Mounted): string[] {
-  const dropdowns = m.harness.fixture.debugElement.queryAll(By.directive(Dropdown));
-  return (dropdowns[1].componentInstance as Dropdown).options().map((o) => String(o.value));
+  return (sortDropdown(m).componentInstance as Dropdown).options().map((o) => String(o.value));
+}
+
+/** The button that opens a dropdown, and carries its tint. */
+function triggerOf(dropdown: DebugElement): HTMLElement {
+  return dropdown.nativeElement.querySelector('button[aria-haspopup]');
+}
+
+/** The aria-selected value of the open sort panel's Recommended entry, which is its clear label. */
+function recommendedSelected(): string | null {
+  const option = Array.from(
+    document.querySelectorAll('[role="listbox"] [role="option"]'),
+  ).find((o) => o.textContent?.trim() === 'search.recommended');
+  if (!option) throw new Error('No open dropdown panel offers "search.recommended"');
+  return option.getAttribute('aria-selected');
 }
 
 describe('SearchFilters', () => {
@@ -178,7 +246,10 @@ describe('SearchFilters', () => {
       });
       await m.openFilters();
 
-      expect(pressed(['Girls', 'Any type'])).toEqual({ Girls: 'true', 'Any type': 'false' });
+      expect(pressed(['common.girls', 'searchBar.anyAccommodation'])).toEqual({
+        'common.girls': 'true',
+        'searchBar.anyAccommodation': 'false',
+      });
     });
 
     it('counts the supplied type in the badge and highlights the button', async () => {
@@ -222,7 +293,62 @@ describe('SearchFilters', () => {
       await m.openFilters();
 
       expect(badge(m)).toBe('1');
-      expect(pressed(['Girls', 'Boys'])).toEqual({ Girls: 'true', Boys: 'false' });
+      expect(pressed(['common.girls', 'common.boys'])).toEqual({
+        'common.girls': 'true',
+        'common.boys': 'false',
+      });
+    });
+  });
+
+  // Filters come through the real merge here, so a sort the reader stops correcting shows up.
+  describe('showing a sort carried by the URL', () => {
+    it.each(['price-asc', 'price-desc', '', 'bogus'])(
+      'shows no badge and no highlight for ?sort=%j when no type is chosen',
+      async (sort) => {
+        const m = await mountFromUrl(`/en/search/lahore?sort=${sort}`);
+
+        expect(badge(m)).toBeNull();
+        expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(false);
+      },
+    );
+
+    it('counts only the other filters beside a price sort no type allows', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc&amenities=wifi');
+
+      expect(badge(m)).toBe('1');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+    });
+
+    it('leaves the inline sort empty and untinted for a price sort no type allows', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc');
+      const sort = sortDropdown(m);
+
+      expect((sort.componentInstance as Dropdown).value()).toBeNull();
+      expect(triggerOf(sort).classList.contains('bg-brand-50')).toBe(false);
+      expect(triggerOf(sort).textContent?.trim()).toBe('common.sort');
+      expect(sortValues(m)).toEqual(['newest', 'oldest']);
+    });
+
+    // The pill never reads "Recommended", so the open panel is the only place it shows as chosen.
+    it('marks Recommended as chosen in the open sort panel for a price sort no type allows', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc');
+      triggerOf(sortDropdown(m)).click();
+      await m.settle();
+
+      expect(recommendedSelected()).toBe('true');
+    });
+
+    it('still counts and shows a price sort that the page type allows', async () => {
+      const m = await mountFromUrl('/en/hostels/lahore/girls?sort=price-asc', {
+        seed: GIRLS_SEED,
+        routes: LAHORE_ROUTES,
+      });
+      const sort = sortDropdown(m);
+
+      expect(badge(m)).toBe('2');
+      expect((sort.componentInstance as Dropdown).value()).toBe('price-asc');
+      expect(filtersButton(m)?.classList.contains('bg-brand-50')).toBe(true);
+      expect(triggerOf(sort).classList.contains('bg-brand-50')).toBe(true);
     });
   });
 
@@ -234,7 +360,7 @@ describe('SearchFilters', () => {
         routes: LAHORE_ROUTES,
       });
       await m.openFilters();
-      await m.choose('Any type');
+      await m.choose('searchBar.anyAccommodation');
       await m.apply();
 
       expect(m.current()).toEqual({
@@ -245,8 +371,8 @@ describe('SearchFilters', () => {
     });
 
     it.each([
-      ['Boys', '/en/hostels/lahore/boys'],
-      ['Co-living', '/en/hostels/lahore/co-living'],
+      ['common.boys', '/en/hostels/lahore/boys'],
+      ['common.coLiving', '/en/hostels/lahore/co-living'],
     ])('moves to the sibling page for %s with no gender in the query', async (label, path) => {
       const m = await mount({
         url: '/en/hostels/lahore/girls?lat=31.5',
@@ -267,7 +393,7 @@ describe('SearchFilters', () => {
         routes: LAHORE_ROUTES,
       });
       await m.openFilters();
-      await m.choose('Girls');
+      await m.choose('common.girls');
       await m.apply();
 
       expect(m.current()).toEqual({ path: '/en/hostels/lahore/girls', query: { lat: '31.5' } });
@@ -281,7 +407,7 @@ describe('SearchFilters', () => {
         routes: LAHORE_ROUTES,
       });
       await m.openFilters();
-      await m.choose('Backpacker');
+      await m.choose('common.backpacker');
       await m.apply();
 
       expect(m.current()).toEqual({
@@ -299,7 +425,10 @@ describe('SearchFilters', () => {
         routes: LAHORE_ROUTES,
       });
       await m.openFilters();
-      expect(pressed(['Boys', 'Girls'])).toEqual({ Boys: 'true', Girls: 'false' });
+      expect(pressed(['common.boys', 'common.girls'])).toEqual({
+        'common.boys': 'true',
+        'common.girls': 'false',
+      });
       await m.apply();
 
       expect(m.current()).toEqual({ path: '/en/hostels/lahore/boys', query: {} });
@@ -334,7 +463,10 @@ describe('SearchFilters', () => {
       it('pre-selects Any type and does not count it', async () => {
         const m = await open();
 
-        expect(pressed(['Any type', 'Girls'])).toEqual({ 'Any type': 'true', Girls: 'false' });
+        expect(pressed(['searchBar.anyAccommodation', 'common.girls'])).toEqual({
+          'searchBar.anyAccommodation': 'true',
+          'common.girls': 'false',
+        });
         expect(badge(m)).toBeNull();
       });
 
@@ -347,7 +479,7 @@ describe('SearchFilters', () => {
 
       it('goes to the Boys page when Boys is applied', async () => {
         const m = await open();
-        await m.choose('Boys');
+        await m.choose('common.boys');
         await m.apply();
 
         expect(m.current()).toEqual({ path: '/en/hostels/lahore/boys', query: {} });
@@ -362,7 +494,7 @@ describe('SearchFilters', () => {
         locale: 'ur',
       });
       await m.openFilters();
-      await m.choose('Any type');
+      await m.choose('searchBar.anyAccommodation');
       await m.apply();
 
       expect(m.current().path).toBe('/ur/hostels/lahore');
@@ -377,7 +509,7 @@ describe('SearchFilters', () => {
         routes: LAHORE_ROUTES,
       });
       await m.openFilters();
-      await m.choose('Any type');
+      await m.choose('searchBar.anyAccommodation');
       await m.apply();
 
       expect(m.current()).toEqual({ path: '/en/hostels/lahore', query: {} });
@@ -389,7 +521,7 @@ describe('SearchFilters', () => {
         params: { gender: 'girls', sort: 'price-asc' },
       });
       await m.openFilters();
-      await m.choose('Any type');
+      await m.choose('searchBar.anyAccommodation');
       await m.apply();
 
       expect(m.current()).toEqual({ path: '/en/search/lahore', query: {} });
@@ -402,7 +534,7 @@ describe('SearchFilters', () => {
         routes: LAHORE_ROUTES,
       });
       await m.openFilters();
-      await m.choose('Boys');
+      await m.choose('common.boys');
       await m.apply();
 
       expect(m.current()).toEqual({
@@ -426,7 +558,7 @@ describe('SearchFilters', () => {
     it('writes a non-default room type', async () => {
       const m = await mount({ url: '/en/search/lahore' });
       await m.openFilters();
-      await m.choose('Private room');
+      await m.choose('search.privateRoom');
       await m.apply();
 
       expect(m.current()).toEqual({ path: '/en/search/lahore', query: { roomType: 'private' } });
@@ -439,7 +571,7 @@ describe('SearchFilters', () => {
       async (url) => {
         const m = await mount({ url });
         await m.openFilters();
-        await m.choose('Boys');
+        await m.choose('common.boys');
         await m.apply();
 
         expect(m.current()).toEqual({ path: url, query: { gender: 'boys' } });
@@ -448,11 +580,255 @@ describe('SearchFilters', () => {
         m.host.params.set(convertToParamMap({ gender: 'boys' }));
         m.harness.detectChanges();
         await m.openFilters();
-        await m.choose('Any type');
+        await m.choose('searchBar.anyAccommodation');
         await m.apply();
 
         expect(m.current()).toEqual({ path: url, query: {} });
       },
     );
+  });
+
+  describe('what the filters modal offers', () => {
+    const ALL_SORTS = [
+      'search.recommended',
+      'search.recentFirst',
+      'search.oldestFirst',
+      'search.priceHighToLow',
+      'search.priceLowToHigh',
+    ];
+    const NO_PRICE_SORTS = ['search.recommended', 'search.recentFirst', 'search.oldestFirst'];
+
+    /** The modal the filter row owns, so a spec can listen to or drive its output. */
+    const modalOf = (m: Mounted) =>
+      m.harness.fixture.debugElement.query(By.directive(SearchFilterModal))
+        .componentInstance as SearchFilterModal;
+
+    it('offers no price sort while no type is chosen', async () => {
+      const m = await mount({ url: '/en/hostels/lahore' });
+      await m.openFilters();
+
+      expect(sortOffered()).toEqual(NO_PRICE_SORTS);
+    });
+
+    it('offers every sort once a type is chosen, in display order', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls',
+        params: { gender: 'girls' },
+        routes: LAHORE_ROUTES,
+      });
+      await m.openFilters();
+
+      expect(sortOffered()).toEqual(ALL_SORTS);
+    });
+
+    it('withdraws the price sorts and selects Recommended when the type changes to Any', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls?sort=price-asc',
+        params: { gender: 'girls', sort: 'price-asc' },
+        routes: LAHORE_ROUTES,
+      });
+      await m.openFilters();
+      await m.choose('searchBar.anyAccommodation');
+
+      expect(sortOffered()).toEqual(NO_PRICE_SORTS);
+      expect(sortPressed()).toEqual({
+        'search.recommended': 'true',
+        'search.recentFirst': 'false',
+        'search.oldestFirst': 'false',
+      });
+    });
+
+    it('brings the price sorts back, with the drafted one pressed, when a type is chosen again', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls?sort=price-asc',
+        params: { gender: 'girls', sort: 'price-asc' },
+        routes: LAHORE_ROUTES,
+      });
+      await m.openFilters();
+      await m.choose('searchBar.anyAccommodation');
+      await m.choose('common.boys');
+
+      expect(sortOffered()).toEqual(ALL_SORTS);
+      expect(sortPressed()['search.priceLowToHigh']).toBe('true');
+      expect(sortPressed()['search.recommended']).toBe('false');
+    });
+
+    // Guards against resetting the draft imperatively when the type changes: the sort must survive.
+    it('keeps the drafted price sort through Any and back to a type, all the way to the URL', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls?sort=price-asc',
+        params: { gender: 'girls', sort: 'price-asc' },
+        routes: LAHORE_ROUTES,
+      });
+      await m.openFilters();
+      await m.choose('searchBar.anyAccommodation');
+      await m.choose('common.boys');
+      await m.apply();
+
+      expect(m.current()).toEqual({
+        path: '/en/hostels/lahore/boys',
+        query: { sort: 'price-asc' },
+      });
+    });
+
+    it('emits Recommended, not the hidden price sort, when applied on Any', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls?sort=price-asc&amenities=wifi',
+        params: { gender: 'girls', sort: 'price-asc', amenities: 'wifi' },
+        routes: LAHORE_ROUTES,
+      });
+      const emitted: FilterState[] = [];
+      modalOf(m).applied.subscribe((state) => emitted.push(state));
+      await m.openFilters();
+      await m.choose('searchBar.anyAccommodation');
+      await m.apply();
+
+      expect(emitted).toHaveLength(1);
+      expect(emitted[0].accommodationType).toBe('all');
+      expect(emitted[0].sort).toBe('recommended');
+      expect(emitted[0].amenities).toEqual(['wifi']);
+      expect(m.current()).toEqual({ path: '/en/hostels/lahore', query: { amenities: 'wifi' } });
+    });
+
+    it('opens a stale price-sort URL with no type on Any and Recommended', async () => {
+      const m = await mount({
+        url: '/en/search/lahore?sort=price-asc',
+        params: { sort: 'price-asc' },
+      });
+      await m.openFilters();
+
+      expect(sortOffered()).toEqual(NO_PRICE_SORTS);
+      expect(sortPressed()['search.recommended']).toBe('true');
+      expect(pressed(['searchBar.anyAccommodation'])).toEqual({
+        'searchBar.anyAccommodation': 'true',
+      });
+
+      await m.apply();
+      expect(m.current()).toEqual({ path: '/en/search/lahore', query: {} });
+    });
+
+    // Fed through the real merge, the stale sort never reaches the draft for a type to bring back.
+    it('keeps Recommended pressed when a type is chosen on a stale price-sort URL', async () => {
+      const m = await mountFromUrl('/en/search/lahore?sort=price-asc');
+      await m.openFilters();
+
+      expect(sortOffered()).toEqual(NO_PRICE_SORTS);
+      expect(sortPressed()['search.recommended']).toBe('true');
+
+      await m.choose('common.girls');
+
+      expect(sortOffered()).toEqual(ALL_SORTS);
+      expect(sortPressed()).toEqual({
+        'search.recommended': 'true',
+        'search.recentFirst': 'false',
+        'search.oldestFirst': 'false',
+        'search.priceHighToLow': 'false',
+        'search.priceLowToHigh': 'false',
+      });
+
+      await m.apply();
+      expect(m.current()).toEqual({ path: '/en/search/lahore', query: { gender: 'girls' } });
+    });
+
+    it('opens a gender page with its price sort pressed and applies it unchanged', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls?sort=price-asc',
+        params: { gender: 'girls', sort: 'price-asc' },
+        routes: LAHORE_ROUTES,
+      });
+      await m.openFilters();
+
+      expect(sortOffered()).toHaveLength(5);
+      expect(sortPressed()['search.priceLowToHigh']).toBe('true');
+
+      await m.apply();
+      expect(m.current()).toEqual({
+        path: '/en/hostels/lahore/girls',
+        query: { sort: 'price-asc' },
+      });
+    });
+
+    it('returns to Any and Recommended with only the free sorts after Clear all', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls?sort=price-asc&amenities=wifi',
+        params: { gender: 'girls', sort: 'price-asc', amenities: 'wifi' },
+        routes: LAHORE_ROUTES,
+      });
+      await m.openFilters();
+      await m.choose('filters.clearAll');
+
+      expect(pressed(['searchBar.anyAccommodation', 'common.girls'])).toEqual({
+        'searchBar.anyAccommodation': 'true',
+        'common.girls': 'false',
+      });
+      expect(sortPressed()['search.recommended']).toBe('true');
+      expect(sortOffered()).toHaveLength(3);
+    });
+
+    it('renders every type, room and sort label as its translation key', async () => {
+      const m = await mount({ url: '/en/search/lahore' });
+      await m.openFilters();
+
+      expect(sectionButtons('filters.typeOfStay').map((b) => b.textContent?.trim())).toEqual([
+        'searchBar.anyAccommodation',
+        'common.boys',
+        'common.girls',
+        'common.coLiving',
+        'common.backpacker',
+      ]);
+      expect(sectionButtons('common.roomType').map((b) => b.textContent?.trim())).toEqual([
+        'search.sharedRoom',
+        'search.privateRoom',
+      ]);
+
+      const texts = Array.from(
+        document.querySelectorAll<HTMLButtonElement>('.hh-modal-root button'),
+      ).map((b) => b.textContent?.trim());
+      for (const english of ['Any type', 'Shared room', 'Price: low to high']) {
+        expect(texts).not.toContain(english);
+      }
+    });
+
+    it('marks the chosen room type and sort with aria-pressed', async () => {
+      const m = await mount({ url: '/en/search/lahore' });
+      await m.openFilters();
+
+      expect(pressed(['search.sharedRoom', 'search.privateRoom'])).toEqual({
+        'search.sharedRoom': 'true',
+        'search.privateRoom': 'false',
+      });
+
+      await m.choose('search.privateRoom');
+      expect(pressed(['search.sharedRoom', 'search.privateRoom'])).toEqual({
+        'search.sharedRoom': 'false',
+        'search.privateRoom': 'true',
+      });
+      expect(sortPressed()).toEqual({
+        'search.recommended': 'true',
+        'search.recentFirst': 'false',
+        'search.oldestFirst': 'false',
+      });
+    });
+
+    // The modal never emits this pair itself, so it is driven directly to prove the backstop.
+    it('still drops a price sort that arrives with Any type', async () => {
+      const m = await mount({
+        url: '/en/hostels/lahore/girls',
+        params: { gender: 'girls' },
+        routes: LAHORE_ROUTES,
+      });
+      modalOf(m).applied.emit({
+        accommodationType: 'all',
+        propertyType: '',
+        minPrice: null,
+        maxPrice: null,
+        roomType: 'shared',
+        amenities: [],
+        sort: 'price-asc',
+      });
+      await m.settle();
+
+      expect(m.current()).toEqual({ path: '/en/hostels/lahore', query: {} });
+    });
   });
 });

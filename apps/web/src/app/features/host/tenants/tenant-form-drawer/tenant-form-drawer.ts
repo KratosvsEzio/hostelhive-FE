@@ -33,6 +33,7 @@ import { Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
 import { PAGE_SIZE } from '@util/pagination';
 import { BILLING_DAY_OPTIONS } from '@util/billing-day';
+import { todayIn } from '@util/zoned-time';
 import {
   CheckInForm,
   RoomOption,
@@ -252,12 +253,19 @@ export class TenantFormDrawer {
         return forkJoin({
           detail: this.api.roomShow(q.hostelId, q.roomId),
           bookings: this.bookingsApi.bookingsInRoom(q.hostelId, q.roomId, q.from, q.to),
+          // The hostel's today, so a stay checked out this morning frees its beds here exactly
+          // when the room calendar says it does. Never errors: no zone is the device's date.
+          zone: this.store.timeZoneOf(q.hostelId),
         }).pipe(
-          map(({ detail, bookings }): AvailabilityState => {
+          map(({ detail, bookings, zone }): AvailabilityState => {
             // Editing: the tenant already in this room must not be counted against
             // themselves, or saving an untouched form would report the room full.
             const residents = detail.renters.filter((r: RoomRenter) => r.id !== q.tenantId);
-            const { days } = toRoomMonth(bookings, detail.room.capacity, q.from, q.to, residents);
+            const { days } = toRoomMonth(bookings, detail.room.capacity, q.from, q.to, {
+              today: todayIn(zone),
+              roomId: q.roomId,
+              residents,
+            });
             return {
               loading: false,
               verdict: { ...assessAvailability(days, detail.room.capacity), openEnded: q.openEnded },

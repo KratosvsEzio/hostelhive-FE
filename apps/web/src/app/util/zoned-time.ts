@@ -1,3 +1,6 @@
+import { localDay } from './api-date';
+import { isKnownTimeZone } from './time-zones';
+
 /**
  * Reading a wall clock in another part of the world.
  *
@@ -95,4 +98,28 @@ export function localDateAtWallTime(
     minute,
     timeZone,
   );
+}
+
+/**
+ * The date on the calendar in `timeZone` at `now`, as `yyyy-MM-dd`.
+ *
+ * "Today" at a hostel is the hostel's today. A host checking the console from a device five
+ * hours behind would otherwise be shown yesterday until their own midnight — and the console
+ * decides things on that date, not just highlights it: a stay that checked out stops holding
+ * beds from it.
+ *
+ * Without a zone, or with one the runtime does not know, this is the device's own date: the
+ * best guess there is, and never an error on a screen that only wanted a date.
+ */
+export function todayIn(timeZone: string | null | undefined, now: Date = new Date()): string {
+  if (!timeZone || !isKnownTimeZone(timeZone)) return localDay(now);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const at = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((p) => p.type === type)?.value ?? '';
+  return `${at('year')}-${at('month')}-${at('day')}`;
 }

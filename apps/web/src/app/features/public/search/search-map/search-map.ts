@@ -66,6 +66,7 @@ import {
   SearchFilters,
 } from '@features/public/search/search-filters/search-filters';
 import { mergeSearchParams } from '@features/public/search/search-params';
+import { isSortOffered } from '@features/public/search/search-sort';
 import {
   EVERYWHERE_KEY,
   PLACE_KEYS_NULLED,
@@ -204,6 +205,20 @@ export class SearchMap {
   protected readonly params = computed<ParamMap | null>(() =>
     mergeSearchParams(this.queryParams(), this.seed()),
   );
+
+  /**
+   * True while the URL carries a `sort` that `params` reads as absent, because the type in
+   * force does not offer it (see `mergeSearchParams`).
+   *
+   * Only the comparison with the raw query can tell: `params` alone cannot say whether a
+   * sort it lacks was never there or was discarded. Both writes that act on it need to
+   * know, since each merges into the raw URL and would otherwise carry the sort along (see
+   * `stripDiscardedSort` and `startSearch`).
+   */
+  private readonly discardedSort = computed(() => {
+    const raw = this.queryParams();
+    return !!raw?.has('sort') && raw.get('sort') !== this.params()?.get('sort');
+  });
 
   /** The `:location` slug, when the URL carries one. */
   private readonly locationSlug = toSignal(
@@ -1007,6 +1022,13 @@ export class SearchMap {
       this.params();
       untracked(() => this.page.set(1));
     });
+    // Clean a discarded sort out of the URL; once written, `discardedSort()` is false again.
+    // The raw query is tracked too: a strip another navigation superseded is retried on the next
+    // URL change.
+    effect(() => {
+      this.queryParams();
+      if (this.discardedSort()) untracked(() => this.stripDiscardedSort());
+    });
     // Infinite scroll: watch the tail sentinel (it mounts/unmounts with @if) and
     // fetch the next page as it approaches the viewport.
     effect(() => {
@@ -1546,13 +1568,25 @@ export class SearchMap {
    * to the results, so the map follows the answer instead of staying over an empty sea.
    *
    * The URL records it as `everywhere=1`, so a refresh or a shared link stays worldwide
-   * instead of reopening on the visitor's country. A landing page cannot widen in place —
-   * its seed refills the place this clears and keeps the search local — so there it leaves
-   * for a worldwide `/search` (see {@link startSearch}), which reads the key at
-   * construction.
+   * instead of reopening on the visitor's country.
+   *
+   * Only a bare `/search` can widen in place, because only there does the query alone say
+   * where the search is. Any other path names a place of its own, which a query merge can
+   * null nothing out of:
+   *
+   * - a landing page's seed refills the place this clears and keeps the search local;
+   * - a `/search/<slug>` path keeps naming the place just discarded. It is held off only
+   *   while `everywhere` is set, and the first pan clears that (see `syncBoundsToUrl`) —
+   *   from then on the slug is back as the heading, the canonical (an indexable one, over
+   *   whatever area the visitor has panned to), the mobile field and the header's Where.
+   *
+   * So both leave for a worldwide bare `/search` (see {@link startSearch}). That is a
+   * different route config from `/search/<slug>`, so it builds a new search page, which
+   * reads `everywhere` at construction exactly as it does for a landing page — nothing
+   * here needs setting on the way out, as this page is about to be replaced.
    */
   protected searchEverywhere(): void {
-    if (this.seed()) {
+    if (this.seed() || this.locationSlug()) {
       if (this.isBrowser) void this.startSearch(['/search'], { [EVERYWHERE_KEY]: 1 });
       return;
     }
@@ -1582,11 +1616,12 @@ export class SearchMap {
   /**
    * Start a new search somewhere else, in one navigation.
    *
-   * How every action that changes the place begins: a picked place, "Near me", and a
-   * landing page's "Search everywhere". A change of geography cannot be a query merge into
-   * the current URL, because the path names a place too — a landing page's path supplies
-   * its place (and, on a gender page, its type) as the seed, which refills anything a merge
-   * removes, and a `/search/<slug>` path names its place to the canonical and the heading.
+   * How every action that changes the place begins: a picked place, "Near me", a landing
+   * page's "Search everywhere", and "Search everywhere" from a place's search path. A
+   * change of geography cannot be a query merge into the current URL, because the path
+   * names a place too — a landing page's path supplies its place (and, on a gender page,
+   * its type) as the seed, which refills anything a merge removes, and a `/search/<slug>`
+   * path names its place to the canonical and the heading.
    * So it goes to `commands` (a `/search` path) instead, which states everything in its
    * query:
    *
@@ -1599,8 +1634,10 @@ export class SearchMap {
    *   seed), so the list does not quietly widen;
    * - retired params are cleared, as any new search clears them (see `RETIRED_KEYS_NULLED`);
    * - `gender` is the effective type, which also scrubs an invalid `?gender=`;
-   * - a price sort is dropped when no type is in force, as the filter row and the header
-   *   bar do: nightly and monthly prices cannot be sorted against each other.
+   * - a sort that type does not offer is dropped, as the filter row and the header bar do:
+   *   nightly and monthly prices cannot be sorted against each other. So is a sort the URL
+   *   still carries after `params` discarded it, which the merge would otherwise bring along
+   *   (see `discardedSort`).
    *
    * A push rather than a replace: a new place is a new destination, and Back should return
    * to the page — landing or search — the visitor left.
@@ -1611,6 +1648,9 @@ export class SearchMap {
   ): Promise<boolean> {
     const p = this.params();
     const gender = p?.get('gender') || null;
+    const sort = p?.get('sort');
+    const dropSort =
+      this.discardedSort() || (!!sort && !isSortOffered(sort, this.accommodationType()));
     return this.router.navigate(
       localiseCommands(commands, this.locale.active()) as unknown[],
       {
@@ -1620,7 +1660,7 @@ export class SearchMap {
           ...RETIRED_KEYS_NULLED,
           [EVERYWHERE_KEY]: null,
           gender,
-          ...(!gender && p?.get('sort')?.startsWith('price-') ? { sort: null } : {}),
+          ...(dropSort ? { sort: null } : {}),
           ...seededFilters(this.seed(), p),
           ...geo,
         },
@@ -1752,6 +1792,25 @@ export class SearchMap {
         [SW_LNG]: roundCoord(b.west),
         [EVERYWHERE_KEY]: this.unbounded() ? 1 : null,
       },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /**
+   * Take a sort `params` discarded out of the URL as well (see `discardedSort`).
+   *
+   * Reading it as absent is not enough on its own: the header bar merges into the URL
+   * rather than reading `params`, so picking a type there would bring the dormant sort
+   * back to life. `replaceUrl` on the same path leaves no history entry, and analytics
+   * skips such a replace, so the arrival is still the one page view. Browser only: the
+   * server render already reads the sort as absent and has no address bar to clean.
+   */
+  private stripDiscardedSort(): void {
+    if (!this.isBrowser) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

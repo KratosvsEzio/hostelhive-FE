@@ -333,7 +333,8 @@
     "allow": "Toestaan",
     "noPhotosYet": "Nog geen foto's",
     "guests": "Gasten",
-    "copy": "Kopiëren"
+    "copy": "Kopiëren",
+    "cannotReachTheServer": "Kan de server niet bereiken. Probeer het zo meteen opnieuw."
   },
   "leadWall": {
     "close": "Sluiten",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Als je erop klikt, wordt je account geactiveerd en verschijnt het nummer.",
     "iVeVerifiedContinue": "Geverifieerd — doorgaan",
     "back": "Terug",
-    "confirmPassword": "Wachtwoord bevestigen"
+    "confirmPassword": "Wachtwoord bevestigen",
+    "emailOrPasswordIncorrect": "E-mailadres of wachtwoord is onjuist.",
+    "emailAlreadyRegistered": "Er bestaat al een account met dit e-mailadres. Log in, of stel je wachtwoord opnieuw in als je het bent vergeten.",
+    "couldNotCreateAccount": "We konden je account niet aanmaken. Controleer je gegevens en probeer het opnieuw.",
+    "accountCannotSignIn": "Met dit account kun je nu niet inloggen. Neem contact met ons op, dan helpen we je.",
+    "googleDidNotFinish": "Inloggen met Google is niet voltooid. Probeer het opnieuw, of gebruik je e-mailadres en wachtwoord.",
+    "tooManyAttempts": "Te veel pogingen. Wacht een paar minuten en probeer het opnieuw.",
+    "somethingWentWrong": "Er ging iets mis. Probeer het opnieuw."
   },
   "home": {
     "searchCityOrArea": "Zoek stad of wijk",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "Heeft dit e-mailadres al een account, dan blijft het huidige wachtwoord staan — dat van jou geldt alleen bij een nieuw account.",
     "storedEmailBecomesLogin": "Hun opgeslagen e-mail wordt de login. Heeft dat adres al een account, dan behouden ze het wachtwoord daarvan.",
     "pickADifferentStatusTo": "Kies een andere status om de rest van uw team te zien.",
-    "addAWardenCookOr": "Voeg een beheerder, kok of bewaker toe om salaris en documenten vast te leggen."
+    "addAWardenCookOr": "Voeg een beheerder, kok of bewaker toe om salaris en documenten vast te leggen.",
+    "couldNotUploadImage": "Afbeelding kon niet worden geüpload",
+    "fileTypeNotSupported": "Dat bestandstype wordt niet ondersteund. Kies een andere afbeelding.",
+    "uploadTryAgain": "Probeer het opnieuw, of kies een andere afbeelding."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Goedkeuring mislukt — probeer opnieuw.",
@@ -1374,7 +1385,18 @@
     "due": "Verschuldigd",
     "thisWillPermanentlyDeleteInvoice": "Hiermee wordt de factuur definitief verwijderd",
     "invoicesAppearHereOnceYou": "Facturen verschijnen hier zodra u huur- of nutsrekeningen uitgeeft.",
-    "tryAdjustingYourFilters": "Probeer uw filters aan te passen."
+    "invoicesAppearHereNightly": "Facturen verschijnen hier zodra u ze aanmaakt vanuit ingecheckte boekingen.",
+    "tryAdjustingYourFilters": "Probeer uw filters aan te passen.",
+    "bookingInvoices": "Boekingsfacturen",
+    "bookingRef": "Boeking {{ref}}",
+    "viewBooking": "Boeking bekijken",
+    "guestName": "Naam van de gast",
+    "markPaidConfirmTitle": "{{invoice}} als betaald markeren?",
+    "markPaidConfirmBody": "Hiermee wordt het volledige bedrag als ontvangen geregistreerd.",
+    "alsoMarkBookingPaid": "Boeking {{ref}} ook als betaald markeren",
+    "invoiceAndBookingPaid": "Factuur en boeking als betaald gemarkeerd",
+    "bookingNotPaid": "De factuur is als betaald gemarkeerd, maar de boeking niet. {{reason}}",
+    "invoiceNotFound": "We konden die factuur niet vinden."
   },
   "hostExpenses": {
     "allTypes": "Alle types",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "Te innen bij de balie",
     "createBooking": "Boeking aanmaken",
     "theRoomsForThisProperty": "De kamers van deze accommodatie konden niet worden geladen.",
+    "notSetUpForBookings": "Deze accommodatie is niet ingesteld om boekingen aan te nemen.",
+    "crmRequired": "Je abonnement bevat geen boekingen. Upgrade je abonnement om boekingen toe te voegen.",
+    "checkInCannotBeInPast": "Inchecken kan niet vóór vandaag. Kies vandaag of een latere datum.",
+    "roomTypeNotBookable": "Een van deze kamertypes is uitgeschakeld voor boekingen. Verwijder het en probeer het opnieuw.",
+    "checkOutAfterCheckIn": "Uitchecken moet na inchecken zijn.",
+    "couldNotSaveBooking": "We konden deze boeking niet opslaan. Controleer de gegevens en probeer het opnieuw.",
     "everyRoomEveryState": "Elke kamer, elke status — tik op een dag voor het overzicht",
     "thisMonthSCalendarCould": "De kalender van deze maand kon niet worden geladen.",
     "nothingIsWaitingOnYou": "Er wacht niets op u voor deze dag.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "Inchecken — uitchecken",
     "aNightRuns12": "Een nacht loopt van 12:00 tot 12:00 uur — inchecken vanaf het middaguur, uitchecken vóór het middaguur de volgende dag.",
     "discount": "Korting",
-    "saveBooking": "Boeking opslaan"
+    "saveBooking": "Boeking opslaan",
+    "invoice": "Factuur",
+    "checkingForInvoice": "Zoeken naar een factuur…",
+    "noInvoiceYet": "Nog geen factuur.",
+    "couldNotCheckInvoice": "Kon niet controleren of er een factuur is.",
+    "viewInvoice": "Factuur bekijken",
+    "alsoMarkInvoicePaid": "Factuur {{invoice}} ook als betaald markeren",
+    "bookingAndInvoicePaid": "Boeking en factuur als betaald gemarkeerd",
+    "invoiceNotPaid": "De boeking is als betaald gemarkeerd, maar de factuur niet. {{reason}}",
+    "stayedIn": "Verbleef in",
+    "checkedOut": "Uitgecheckt",
+    "released": "Vrijgegeven",
+    "cancelOpenInvoiceWarning": "Deze boeking heeft een onbetaalde factuur ({{invoice}}). Annuleren verwijdert die niet.",
+    "bookingNotFound": "We konden die boeking niet vinden.",
+    "notEnoughBedsFree": "Een van deze kamers heeft niet meer zoveel vrije bedden. Plaats daar minder gasten of kies een andere kamer.",
+    "checkTheRoomsPicked": "Die kamers konden niet worden gebruikt. Controleer de kamers en gasten en probeer het opnieuw.",
+    "alreadyCheckedIn": "Deze boeking was al ingecheckt, dus er is niets gewijzigd.",
+    "bookingHasMovedOn": "Deze boeking is gewijzigd sinds u hem opende, dus die stap is niet uitgevoerd.",
+    "bookingAlreadyPaid": "Deze boeking was al betaald, dus er is geen nieuwe betaling geregistreerd.",
+    "alreadyPaidInvoicePaid": "Deze boeking was al betaald. Factuur {{invoice}} is nu als betaald gemarkeerd.",
+    "invoiceAlreadyExists": "Deze boeking heeft al een factuur.",
+    "giveTheGuestAReason": "Geef de gast een reden — die wordt naar de gast gestuurd en bij de boeking bewaard.",
+    "moveNotAccepted": "De server heeft dat niet geaccepteerd. Probeer het opnieuw.",
+    "roomAlreadyReleased": "Kamer {{room}} is al vrijgegeven.",
+    "couldNotReleaseRoom": "Kamer {{room}} kon niet worden vrijgegeven. Probeer het opnieuw.",
+    "invoiceNoLongerExists": "De factuur is niet gevonden. Mogelijk is deze verwijderd.",
+    "payTheInvoiceOnItsOwn": "Open de factuur en markeer hem daar als betaald."
   },
   "hostHostelProfile": {
     "failed": "Mislukt",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} betaald",
     "cancelledSummary": "Geannuleerd {{date}} · PKR {{refund}} terugbetaald · PKR {{charge}} annuleringskosten",
     "cancelRefundExplainer": "Je krijgt <strong class=\"tabular-nums\">PKR {{refund}}</strong> terug. <strong class=\"tabular-nums\">PKR {{charge}}</strong> wordt ingehouden als annuleringskosten, omdat je op {{pct}}% van de periode annuleert.",
-    "whenYouBookAHostel": "Als u een hostel boekt, verschijnt het hier met uw data en het betaalde bedrag."
+    "whenYouBookAHostel": "Als u een hostel boekt, verschijnt het hier met uw data en het betaalde bedrag.",
+    "noLongerCancellable": "Deze boeking kan hier niet meer worden geannuleerd. Bel het hostel en noem je boekingsreferentie.",
+    "roomNoLongerBookable": "Een van de gekozen kamers kan niet meer worden geboekt. Kies een andere kamer.",
+    "checkOutAfterCheckIn": "Uitchecken moet na inchecken zijn.",
+    "bookingNotFound": "We konden deze boeking niet vinden. Mogelijk is hij verwijderd.",
+    "changeFailed": "We konden deze boeking niet bijwerken. Probeer het opnieuw.",
+    "cancelFailed": "We konden deze boeking niet annuleren. Probeer het opnieuw.",
+    "withinCutoff": "Wijzigingen en annuleringen sluiten 3 dagen voor het inchecken. Wil je nu nog iets wijzigen, bel dan het hostel en noem je boekingsreferentie.",
+    "noLongerEditable": "Deze boeking kan hier niet meer worden gewijzigd. Bel het hostel en noem je boekingsreferentie."
   },
   "userFavorites": {
     "removeFromFavorites": "Uit favorieten verwijderen?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "Voer een geldig telefoonnummer in",
     "enterAValidEmail": "Voer een geldig e-mailadres in",
     "ofNSeats": "van {{count}}",
-    "bookingReference": "Boekingsreferentie"
+    "bookingReference": "Boekingsreferentie",
+    "hostelNotTakingBookings": "Dit hostel neemt op dit moment geen online boekingen aan.",
+    "roomNoLongerBookable": "Een van de gekozen kamers kan niet meer worden geboekt. Verwijder deze en kies een andere.",
+    "checkInHasPassed": "Je incheckdatum is al voorbij. Kies nieuwe data en probeer het opnieuw.",
+    "checkOutAfterCheckIn": "Uitchecken moet na inchecken zijn.",
+    "logInAgainToBook": "Je sessie is verlopen. Log opnieuw in om te boeken.",
+    "tryAgain": "Probeer het opnieuw."
   },
   "states": {
     "nothingHereYet": "Hier is nog niets",
@@ -1957,6 +2025,7 @@
     "whatGendered": "{{gender}}-hostels",
     "whatAll": "hostels, pensions en co-living",
     "listingNotFoundTitle": "Advertentie niet gevonden — HostelHive",
+    "postNotFoundTitle": "Bericht niet gevonden — HostelHive",
     "listingNotFoundDescription": "Deze hosteladvertentie is niet beschikbaar of de link klopt niet.",
     "listingTitle": "{{name}} — {{gender}}-hostel in {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-hostel in {{location}}.",

@@ -1,6 +1,9 @@
+import { HttpContext } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { Invoice } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
+import { ApiClientRecorder, RecordedApiCall, suppressesErrorToast } from '@app/testing/api-client-recorder';
 import {
   ApiHostBooking,
   HostBooking,
@@ -176,6 +179,71 @@ describe('HostBookingsApi.bookingsOn', () => {
 
     expect(calls[0].path).toBe('/api/host/hostels/nHelLt/bookings');
     expect(calls[0].path).not.toContain('booking_calender');
+  });
+});
+
+/**
+ * One room's month, asked of the server two ways.
+ *
+ * `room.id` is the first room a party was checked into, so a booking whose second room is
+ * this one is only reachable through `occupied_room_ids`. The two answers overlap whenever a
+ * party's first room is this one, and a booking drawn twice would double its beds.
+ */
+describe('HostBookingsApi.bookingsInRoom', () => {
+  function capture(byRoom: ApiHostBooking[], byOccupancy: ApiHostBooking[]) {
+    const calls: { path: string; params: Record<string, unknown> }[] = [];
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ApiClient,
+          useValue: {
+            get: (path: string, params: Record<string, unknown>) => {
+              calls.push({ path, params });
+              const bookings = 'f[occupied_room_ids]' in params ? byOccupancy : byRoom;
+              return of({ bookings, success: true });
+            },
+          },
+        },
+      ],
+    });
+    return { api: TestBed.inject(HostBookingsApi), calls };
+  }
+
+  it('asks by first room and by occupied room, over the same window', () => {
+    const { api, calls } = capture([], []);
+    api.bookingsInRoom('nHelLt', 'R101', '2026-10-01', '2026-10-31').subscribe();
+
+    expect(calls).toHaveLength(2);
+    const window = { 'f[checkin_date][lte]': '2026-10-31', 'f[checkout_date][gte]': '2026-10-01' };
+    expect(calls.map((c) => c.path)).toEqual([
+      '/api/host/hostels/nHelLt/bookings',
+      '/api/host/hostels/nHelLt/bookings',
+    ]);
+    expect(calls[0].params).toMatchObject({ 'f[room.id]': 'R101', ...window });
+    expect(calls[0].params).not.toHaveProperty('f[occupied_room_ids]');
+    expect(calls[1].params).toMatchObject({ 'f[occupied_room_ids]': 'R101', ...window });
+    expect(calls[1].params).not.toHaveProperty('f[room.id]');
+  });
+
+  it('returns the union, each booking once', () => {
+    const { api } = capture(
+      [raw({ id: 'first' }), raw({ id: 'both' })],
+      [raw({ id: 'both' }), raw({ id: 'second' })],
+    );
+    let ids: string[] = [];
+    api.bookingsInRoom('nHelLt', 'R101', '2026-10-01', '2026-10-31').subscribe((b) => (ids = b.map((x) => x.id)));
+
+    expect(ids).toEqual(['first', 'both', 'second']);
+  });
+
+  it('asks nothing without a hostel or a room', () => {
+    const { api, calls } = capture([], []);
+    let out: HostBooking[] | undefined;
+    api.bookingsInRoom('nHelLt', '', '2026-10-01', '2026-10-31').subscribe((b) => (out = b));
+
+    expect(calls).toHaveLength(0);
+    expect(out).toEqual([]);
   });
 });
 
@@ -425,14 +493,44 @@ describe('HostBookingsApi — the lifecycle', () => {
     expect(post).toHaveBeenCalledWith(`${base}/mark_as_no_show`, { reason: 'Guest did not arrive' });
   });
 
-  it('generates the invoice, which answers with a bill rather than the booking', () => {
+  it('generates the invoice, and returns the bill the server answers with, mapped', () => {
     post = vi.fn();
     const api = svc();
-    post.mockReturnValue(of({ renter_bill: { id: 'x' }, success: true }));
-    let done = false;
-    api.generateInvoice('MjvuEl', 'vKkMIE').subscribe(() => (done = true));
+    post.mockReturnValue(
+      of({
+        renter_bill: {
+          id: 'x',
+          bill_type: 'booking',
+          billable_type: 'Booking',
+          amount: '616000.0',
+          issued_date: '2026-09-02T10:00:00.000+05:00',
+          due_date: '2026-09-02T22:44:01.867+05:00',
+          status: { name: 'Due', slug: 'due' },
+          break_down: { room_rent: '616000.0', mess_charges: '0.0', transportation_charges: '0.0' },
+          booking: { id: 'vKkMIE', booking_ref: 'HH-2026-00009', guest_name: 'Andy', guest_phone: '+13449434559' },
+        },
+        message: 'Invoice generated',
+        success: true,
+      }),
+    );
+    let out: Invoice | undefined;
+    api.generateInvoice('MjvuEl', 'vKkMIE').subscribe((b) => (out = b));
     expect(post).toHaveBeenCalledWith(`${base}/generate_invoice`, {});
-    expect(done).toBe(true);
+    expect(out?.id).toBe('x');
+    expect(out?.kind).toBe('booking');
+    expect(out?.amount).toBe(616000);
+    expect(out?.due).toBe('2026-09-02');
+    expect(out?.booking).toEqual({ id: 'vKkMIE', ref: 'HH-2026-00009', guestName: 'Andy', phone: '+13449434559' });
+    expect(out?.lines).toEqual([{ label: 'Room Rent', amount: 616000 }]);
+  });
+
+  it('errors on a generate reply with no bill in it', () => {
+    post = vi.fn();
+    const api = svc();
+    post.mockReturnValue(of({ success: true }));
+    let failed = false;
+    api.generateInvoice('MjvuEl', 'vKkMIE').subscribe({ error: () => (failed = true) });
+    expect(failed).toBe(true);
   });
 
   it('errors on a reply with no booking in it', () => {
@@ -482,7 +580,7 @@ describe('HostBookingsApi — the lifecycle', () => {
           { room_type_id: 'MqVuEl', guests: 2, occupancy_type: 'shared' },
         ],
       },
-    });
+    }, expect.any(HttpContext));
   });
 });
 
@@ -496,6 +594,171 @@ describe('HostBookingsApi — mark as paid (Trello #81)', () => {
     expect(post).toHaveBeenCalledWith('/api/host/hostels/MjvuEl/bookings/vKkMIE/mark_as_paid', {});
     expect(out?.paid).toBe(616000);
     expect(out?.balanceDue).toBe(0);
+  });
+});
+
+describe('HostBookingsApi — per-call request options', () => {
+  const base = '/api/host/hostels/MjvuEl/bookings/vKkMIE';
+  const optOut = { suppressErrorToast: true } as const;
+  let rec: ApiClientRecorder;
+  let api: HostBookingsApi;
+
+  const billReply = {
+    renter_bill: {
+      id: 'x',
+      bill_type: 'booking',
+      amount: '1.0',
+      status: { name: 'Due', slug: 'due' },
+      break_down: { room_rent: '1.0' },
+    },
+  };
+
+  beforeEach(() => {
+    rec = new ApiClientRecorder();
+    rec.reply = (call: RecordedApiCall) =>
+      of(call.path.endsWith('/generate_invoice') ? billReply : { booking: raw() });
+    TestBed.configureTestingModule({ providers: [rec.provider()] });
+    api = TestBed.inject(HostBookingsApi);
+  });
+
+  describe('get', () => {
+    it('sends a GET to the booking and maps its occupancies', () => {
+      rec.replyWith({
+        booking: raw({
+          occupancies: [{ id: 'o1', room_id: 'r1', room_number: '101', guests: 2, status: 'active' }],
+        }),
+      });
+      let out: HostBooking | undefined;
+      api.get('MjvuEl', 'vKkMIE').subscribe((b) => (out = b));
+
+      expect(rec.last().verb).toBe('get');
+      expect(rec.last().path).toBe(base);
+      expect(out?.id).toBe('vKkMIE');
+      expect(out?.occupancies).toEqual([
+        { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true },
+      ]);
+    });
+
+    it('errors on a reply with no booking in it', () => {
+      rec.replyWith({ success: true });
+      let failed = false;
+      api.get('MjvuEl', 'vKkMIE').subscribe({ error: () => (failed = true) });
+
+      expect(failed).toBe(true);
+    });
+
+    it('sends the toast opt-out as the third argument when asked', () => {
+      api.get('MjvuEl', 'vKkMIE', optOut).subscribe();
+
+      const call = rec.last('get');
+      expect(call.argCount).toBe(3);
+      expect(call.params).toBeUndefined();
+      expect(suppressesErrorToast(call)).toBe(true);
+    });
+
+    it('passes no extra argument without options', () => {
+      api.get('MjvuEl', 'vKkMIE').subscribe();
+
+      const call = rec.last('get');
+      expect(call.argCount).toBe(2);
+      expect(suppressesErrorToast(call)).toBe(false);
+    });
+  });
+
+  describe('lifecycle writes', () => {
+    const moves: [string, string, (a: HostBookingsApi, o?: typeof optOut) => unknown, unknown][] = [
+      ['checkIn', 'mark_as_checked_in', (a, o) => a.checkIn('MjvuEl', 'vKkMIE', [{ roomId: 'r1', guests: 2 }], o), { allocations: [{ room_id: 'r1', guests: 2 }] }],
+      ['markPaid', 'mark_as_paid', (a, o) => a.markPaid('MjvuEl', 'vKkMIE', o), {}],
+      ['checkOut', 'mark_as_checked_out', (a, o) => a.checkOut('MjvuEl', 'vKkMIE', o), {}],
+      ['cancel', 'mark_as_cancelled', (a, o) => a.cancel('MjvuEl', 'vKkMIE', ' why ', o), { reason: 'why' }],
+      ['markNoShow', 'mark_as_no_show', (a, o) => a.markNoShow('MjvuEl', 'vKkMIE', ' why ', o), { reason: 'why' }],
+      ['generateInvoice', 'generate_invoice', (a, o) => a.generateInvoice('MjvuEl', 'vKkMIE', o), {}],
+    ];
+
+    it.each(moves)('%s sends the toast opt-out as the third argument when asked', (_n, action, run, body) => {
+      (run(api, optOut) as { subscribe: () => void }).subscribe();
+
+      const call = rec.last('post');
+      expect(call.path).toBe(`${base}/${action}`);
+      expect(call.body).toEqual(body);
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
+    });
+
+    it.each(moves)('%s passes no extra argument without options', (_n, action, run, body) => {
+      (run(api) as { subscribe: () => void }).subscribe();
+
+      const call = rec.last('post');
+      expect(call.path).toBe(`${base}/${action}`);
+      expect(call.body).toEqual(body);
+      expect(call.argCount).toBe(2);
+      expect(suppressesErrorToast(call)).toBe(false);
+    });
+  });
+
+  describe('create', () => {
+    // The booking drawer says why a save failed in translated copy; a toast would repeat it untranslated.
+    it('always opts out of the global error toast', () => {
+      rec.replyWith({ booking: raw() });
+      api
+        .create('MjvuEl', {
+          checkIn: '2026-10-10',
+          checkOut: '2026-10-12',
+          guestName: 'Walk In',
+          guestPhone: '923005556666',
+          guestEmail: '',
+          lines: [{ roomTypeId: 'KGJwMC', shared: true, quantity: 1, guests: 1 }],
+        })
+        .subscribe();
+
+      const call = rec.last('post');
+      expect(call.path).toBe('/api/host/hostels/MjvuEl/bookings');
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
+    });
+  });
+
+  describe('releaseOccupancy', () => {
+    it('puts an empty body and the toast opt-out, with the occupancy id encoded', () => {
+      api.releaseOccupancy('MjvuEl', 'vKkMIE', 'o/1 x', optOut).subscribe();
+
+      const call = rec.last('put');
+      expect(call.path).toBe(`${base}/occupancies/o%2F1%20x/mark_as_inactive`);
+      expect(call.body).toEqual({});
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
+    });
+
+    it('passes no extra argument without options', () => {
+      api.releaseOccupancy('MjvuEl', 'vKkMIE', 'o1').subscribe();
+
+      const call = rec.last('put');
+      expect(call.argCount).toBe(2);
+      expect(suppressesErrorToast(call)).toBe(false);
+    });
+  });
+
+  describe('list', () => {
+    const filters = { 'f[disposition.slug][]': ['confirmed'], 'f[checkin_date][gte]': '2026-08-01' };
+
+    it('passes the opt-out as the third GET argument and leaves sort and filters unchanged', () => {
+      api.list('MjvuEl', 2, 10, filters, optOut).subscribe();
+
+      const call = rec.last('get');
+      expect(call.path).toBe('/api/host/hostels/MjvuEl/bookings');
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
+      expect(call.params).toMatchObject({ page: 2, limit: 10, 'sort[checkin_date]': 'asc', ...filters });
+    });
+
+    it('passes no extra argument without options', () => {
+      api.list('MjvuEl', 2, 10, filters).subscribe();
+
+      const call = rec.last('get');
+      expect(call.argCount).toBe(2);
+      expect(suppressesErrorToast(call)).toBe(false);
+      expect(call.params).toMatchObject({ page: 2, limit: 10, 'sort[checkin_date]': 'asc', ...filters });
+    });
   });
 });
 

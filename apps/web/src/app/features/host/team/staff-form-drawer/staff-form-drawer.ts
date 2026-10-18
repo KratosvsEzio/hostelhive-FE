@@ -12,10 +12,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
 import { Button, DatePicker, Drawer, Input, PhoneInput, Toggle } from '@hostelhive/ui';
 import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
-import { ApiError, Staff } from '@hostelhive/data-access';
-import { ImageUploadKey, ImageUploadService, StaffApi } from '@services';
+import { Staff } from '@hostelhive/data-access';
+import { ImageUploadKey, ImageUploadService, StaffApi, UploadNetworkError } from '@services';
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { NotificationService } from '@core/notification.service';
+import { errorStatus } from '@core/errors/api-error-text';
 import {
   StaffForm,
   emptyStaffForm,
@@ -27,7 +28,7 @@ import {
   toCreateStaffPayload,
   toUpdateStaffPayload,
 } from './staff-form.model';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 /** The three attachments, so the upload handler stays one method instead of three. */
 type ImageSlot = 'avatar' | 'cnicFront' | 'cnicBack';
@@ -37,6 +38,20 @@ const UPLOAD_KEY: Record<ImageSlot, ImageUploadKey> = {
   cnicFront: 'cnic_front',
   cnicBack: 'cnic_back',
 };
+
+/**
+ * The toast body for a failed image upload.
+ *
+ * A 422 is the presign step refusing the file's type. Status 0 is the presign call never
+ * connecting, and `UploadNetworkError` is the storage PUT never connecting. Everything else
+ * asks the host to try again.
+ */
+function uploadFailureKey(failure: unknown): string {
+  const status = errorStatus(failure);
+  if (status === 422) return 'hostTeam.fileTypeNotSupported';
+  if (status === 0 || failure instanceof UploadNetworkError) return 'common.cannotReachTheServer';
+  return 'hostTeam.uploadTryAgain';
+}
 
 /**
  * Create / edit a staff member against `/api/host/hostels/:id/staffs`.
@@ -70,6 +85,7 @@ export class StaffFormDrawer {
   private readonly api = inject(StaffApi);
   private readonly uploads = inject(ImageUploadService);
   private readonly notifications = inject(NotificationService);
+  private readonly i18n = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly form = signal<StaffForm>(emptyStaffForm());
@@ -162,9 +178,12 @@ export class StaffFormDrawer {
             this.form.update((f) => ({ ...f, cnicBackUploadId: id, cnicBackUrl: url }));
           }
         },
-        error: (err: ApiError) => {
+        error: (failure: unknown) => {
           this.uploading.set(null);
-          this.notifications.error("Couldn't upload image", err.message);
+          this.notifications.error(
+            this.i18n.translate('hostTeam.couldNotUploadImage'),
+            this.i18n.translate(uploadFailureKey(failure)),
+          );
         },
       });
   }

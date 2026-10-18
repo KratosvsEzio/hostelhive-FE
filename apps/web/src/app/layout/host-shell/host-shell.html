@@ -1,6 +1,6 @@
 @if (!mobile.isMobile()) {
 <aside
-  class="group safe-pt fixed inset-y-0 start-0 z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
+  class="group safe-pt fixed inset-y-0 start-0 z-40 flex flex-col border-e border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
   [style.width]="drawer.width_()"
 >
   <!-- The brand row, the same height as the site header beside it.
@@ -40,7 +40,7 @@
           class="nav-link relative"
           [class.nav-link--rail]="drawer.railVisual()"
           [hhTooltip]="drawer.railVisual() ? railLabel : ''"
-          hhTooltipPlacement="right"
+          hhTooltipPlacement="end"
           [attr.aria-label]="drawer.railVisual() ? railLabel : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
@@ -71,7 +71,7 @@
         class="nav-link nav-link--rail w-full"
         [class.bg-ink-100]="propertyFlyout()"
         [hhTooltip]="propertyFlyout() ? '' : ('hostNav.property' | transloco)"
-        hhTooltipPlacement="right"
+        hhTooltipPlacement="end"
         [attr.aria-label]="'hostNav.property' | transloco"
         aria-haspopup="dialog"
         [attr.aria-expanded]="propertyFlyout()"
@@ -154,14 +154,14 @@
     (click)="onToggleRail()"
   >
     <i
-      class="ti text-sm"
+      class="ti text-sm rtl:rotate-180"
       [class.ti-chevron-right]="drawer.railed()"
       [class.ti-chevron-left]="!drawer.railed()"
     ></i>
   </button>
 
   <!-- The brand edge, on hover.
-       An overlay strip rather than thickening `border-r`: going from 1px to 2px would move
+       An overlay strip rather than thickening `border-e`: going from 1px to 2px would move
        every child one pixel left, so the whole sidebar would twitch as the pointer crossed
        it. -->
   <span
@@ -183,8 +183,8 @@
 <!-- Pages size themselves with `h-full`, so the outlet sits in a definite-height flex item
      below the banner rather than being a flex child itself. -->
 <div
-  class="hh-viewport-below-header flex flex-col overflow-hidden transition-[padding-left] duration-200 ease-in-out"
-  [style.paddingLeft]="contentPadding()"
+  class="hh-viewport-below-header flex flex-col overflow-hidden transition-[padding-inline-start] duration-200 ease-in-out"
+  [style.paddingInlineStart]="contentPadding()"
 >
   @if (showBanner()) {
     <!-- `empty:hidden`: with no banner to show, the host would still hold its margin. -->

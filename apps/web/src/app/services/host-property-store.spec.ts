@@ -534,3 +534,144 @@ describe('HostPropertyStore saved selection', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });
+
+/** `hostelTimeZone` answered by the test, one pending request per call, so in-flight sharing is visible. */
+class ZoneApiStub {
+  readonly asked: string[] = [];
+  /** Subscriptions actually made to the returned observables; a shared request subscribes once. */
+  subscribed = 0;
+  private readonly pending: Subject<string | null>[] = [];
+
+  listings(): Observable<HostListingsData> {
+    return of({ listings: [], draft: null, stats: {} as never });
+  }
+
+  hostelTimeZone(hostelId: string): Observable<string | null> {
+    this.asked.push(hostelId);
+    const response = new Subject<string | null>();
+    this.pending.push(response);
+    return defer(() => {
+      this.subscribed++;
+      return response;
+    });
+  }
+
+  /** Answers the `index`-th request the way the real call does: one value, then complete. */
+  answer(index: number, zone: string | null): void {
+    this.pending[index].next(zone);
+    this.pending[index].complete();
+  }
+}
+
+/**
+ * The hostel's zone is not on the list the store loads, so it is asked for once per hostel and
+ * kept for the session. A null answer is kept too: a refused or failed read costs one request,
+ * not one per screen, until the store is cleared or the owner changes.
+ */
+describe('HostPropertyStore.timeZoneOf', () => {
+  let zoneApi: ZoneApiStub;
+  let zoneStore: HostPropertyStore;
+
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    zoneApi = new ZoneApiStub();
+    TestBed.configureTestingModule({ providers: [{ provide: HostShellApi, useValue: zoneApi }] });
+    zoneStore = TestBed.inject(HostPropertyStore);
+  });
+
+  afterEach(() => localStorage.clear());
+
+  /** Subscribes and returns what the observable emitted so far. */
+  function read(hostelId: string): (string | null)[] {
+    const seen: (string | null)[] = [];
+    zoneStore.timeZoneOf(hostelId).subscribe((z) => seen.push(z));
+    return seen;
+  }
+
+  it('asks once for a hostel however often it is read', () => {
+    const first = read('h1');
+    zoneApi.answer(0, 'Asia/Karachi');
+    const second = read('h1');
+
+    expect(zoneApi.asked).toEqual(['h1']);
+    expect(first).toEqual(['Asia/Karachi']);
+    expect(second).toEqual(['Asia/Karachi']);
+  });
+
+  it('shares one request between readers that arrive while it is in flight', () => {
+    const early = read('h1');
+    const late = read('h1');
+    expect(zoneApi.asked).toEqual(['h1']);
+    expect(zoneApi.subscribed).toBe(1);
+
+    zoneApi.answer(0, 'Asia/Karachi');
+
+    expect(zoneApi.subscribed).toBe(1);
+    expect(early).toEqual(['Asia/Karachi']);
+    expect(late).toEqual(['Asia/Karachi']);
+  });
+
+  it('keeps a null answer and replays it without asking again', () => {
+    const first = read('h1');
+    zoneApi.answer(0, null);
+    const second = read('h1');
+
+    expect(first).toEqual([null]);
+    expect(second).toEqual([null]);
+    expect(zoneApi.asked).toEqual(['h1']);
+    expect(zoneApi.subscribed).toBe(1);
+  });
+
+  it('asks once per hostel', () => {
+    read('h1');
+    read('h2');
+    read('h1');
+    read('h2');
+
+    expect(zoneApi.asked).toEqual(['h1', 'h2']);
+  });
+
+  it('forgets every zone on sign-out', () => {
+    read('h1');
+    zoneApi.answer(0, 'Asia/Karachi');
+
+    zoneStore.clear();
+    read('h1');
+
+    expect(zoneApi.asked).toEqual(['h1', 'h1']);
+  });
+
+  it('asks anew after a clear while a request is in flight, and ignores the old one answering late', () => {
+    const stale = read('h1');
+    zoneStore.clear();
+    const fresh = read('h1');
+    expect(zoneApi.asked).toEqual(['h1', 'h1']);
+
+    zoneApi.answer(0, null);
+    const after = read('h1');
+    expect(zoneApi.asked).toEqual(['h1', 'h1']);
+    expect(fresh).toEqual([]);
+    expect(after).toEqual([]);
+
+    zoneApi.answer(1, 'Asia/Karachi');
+    expect(stale).toEqual([null]);
+    expect(fresh).toEqual(['Asia/Karachi']);
+    expect(after).toEqual(['Asia/Karachi']);
+  });
+
+  it('forgets every zone when another user replaces the signed-in one', () => {
+    const session = TestBed.inject(SessionStore);
+    session.setSession(user('A'), 'tok-A');
+    TestBed.tick();
+    read('h1');
+    zoneApi.answer(0, 'Asia/Karachi');
+
+    session.setSession(user('B'), 'tok-B');
+    TestBed.tick();
+    read('h1');
+
+    expect(zoneApi.asked).toEqual(['h1', 'h1']);
+    session.clear();
+  });
+});

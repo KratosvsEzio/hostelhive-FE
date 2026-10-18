@@ -9,8 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
-import { catchError, debounceTime, filter, map, of, startWith, switchMap, tap } from 'rxjs';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
+import { catchError, debounceTime, filter, map, of, startWith, switchMap, take, tap } from 'rxjs';
 import {
   Button,
   ConfirmModal,
@@ -31,7 +31,7 @@ import {
 } from '@hostelhive/ui';
 import { downloadCsv } from '@util/csv';
 import { HostOpsApi, HostPropertyStore } from '@services';
-import { ApiError, Invoice, InvoiceStatus } from '@hostelhive/data-access';
+import { ApiError, Invoice, InvoiceKind, InvoiceStatus } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
 import { NotificationService } from '@core/notification.service';
 import { RefetchDelay } from '@core/refetch-delay';
@@ -45,8 +45,13 @@ import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/t
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
 import { HasPermission } from '@core/auth';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
+import { LocaleLink } from '@core/i18n/locale-link';
+import { bookingPath } from '@util/host-links';
+import { HostBooking, HostBookingsApi } from '../bookings/host-bookings-api';
+import { PAYABLE_LANES, laneKeyFor } from '../bookings/booking-month';
+import { bookingMoveFailureKey } from '../bookings/booking-move-failure';
 import {
   InvoiceAggs,
   InvoiceChange,
@@ -110,6 +115,67 @@ async function rasterise(
   return { dataUrl: canvas.toDataURL('image/png'), widthMm };
 }
 
+const HTML_ESCAPES: Readonly<Record<string, string>> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+/**
+ * Makes a value safe to interpolate into the print window's markup.
+ *
+ * The window is filled with `document.write`, so nothing Angular sanitises reaches it — and
+ * a guest's name arrives from a public booking form.
+ */
+function escapeHtml(value: string | number): string {
+  return String(value).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+}
+
+/** Line-item pill colours per bill kind, for the preview, the print window and the PDF. */
+const LINE_TAG: Record<InvoiceKind, { preview: string; print: string; rgbBg: [number, number, number]; rgbFg: [number, number, number] }> = {
+  rental: { preview: 'bg-tint-sky text-ink-600', print: 'rent', rgbBg: [232, 244, 253], rgbFg: [55, 65, 81] },
+  utility: { preview: 'bg-tint-cream text-brand-500', print: 'utility', rgbBg: [254, 243, 226], rgbFg: [180, 83, 9] },
+  booking: { preview: 'bg-tint-purple text-backpacker', print: 'booking', rgbBg: [249, 245, 255], rgbFg: [107, 70, 193] },
+};
+
+/** The line under the billed-to name in the PDF and the print window. */
+function billedToDetail(inv: Invoice): string {
+  return inv.kind === 'booking' && inv.booking?.ref ? `Booking ${inv.booking.ref}` : `Room ${inv.roomNumber}`;
+}
+
+/**
+ * The booking card's figures, from the per-status totals.
+ *
+ * The API's rent and utility buckets count only those bill types, so a nightly hostel's money
+ * appears nowhere but in `statuses[].totalAmount`. Every bill a nightly hostel raises is a
+ * booking bill, which makes those totals the booking figures exactly.
+ */
+function withBookingTotals(
+  aggs: InvoiceAggs,
+  statuses: readonly { slug: string; totalAmount: number }[],
+): InvoiceAggs {
+  const total = statuses.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+  const paid = Number(statuses.find((s) => s.slug === 'paid')?.totalAmount || 0);
+  return { ...aggs, bookingTotal: total, bookingPaid: paid, bookingBalance: total - paid };
+}
+
+/** Whether the booking still owes on a stage it can be marked paid from, as the bookings page decides it. */
+function bookingStillOwes(b: HostBooking): boolean {
+  const lane = laneKeyFor(b.disposition.slug);
+  return !!lane && PAYABLE_LANES.includes(lane) && b.paid < b.total;
+}
+
+/** A booking bill waiting on the host before it is marked paid. */
+interface PayPrompt {
+  inv: Invoice;
+  /** Still asking the server where the booking stands. */
+  checking: boolean;
+  /** Whether to offer settling the booking as well. */
+  offerBooking: boolean;
+}
+
 
 @Component({
   selector: 'hh-invoices',
@@ -132,14 +198,18 @@ async function rasterise(
     Skeleton,
     InvoiceFormDrawer,
     TranslocoPipe,
+    RouterLink,
+    LocaleLink,
   ],
   templateUrl: './invoices.html',
 })
 export class Invoices {
   private readonly api = inject(HostOpsApi);
+  private readonly bookingsApi = inject(HostBookingsApi);
   private readonly apiBaseUrl = inject(API_CONFIG).baseUrl;
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
+  private readonly i18n = inject(TranslocoService);
   private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
@@ -148,31 +218,57 @@ export class Invoices {
   /**
    * Back to the property's overview.
    *
-   * Absolute rather than `..`, because this component answers to three routes — the list,
-   * `create` and `edit/:billId` — and a relative hop would land somewhere different on each.
+   * Absolute rather than `..`, because this component answers to four routes — the list,
+   * `create`, `edit/:billId` and `view/:billId` — and a relative hop would land somewhere
+   * different on each.
    */
   protected readonly backUrl = computed(() => `/host/${this.store.selected()}`);
+
+  /**
+   * Whether the hostel bills by the night. Such a hostel raises booking bills only, so the
+   * page drops the rent/utility cards, the type filter and the manual "Add invoice".
+   *
+   * Strictly nightly: an unknown billing cycle keeps the monthly page, which still renders
+   * any booking bill correctly.
+   */
+  protected readonly nightly = computed(() => this.store.isNightlyBilled(this.store.selected() ?? undefined));
 
   protected readonly invoiceRowId = (row: unknown) => (row as Invoice).id;
   protected readonly menuInv = signal<Invoice | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
   protected readonly deletePending = signal<Invoice | null>(null);
   protected readonly deleting = signal(false);
-  protected readonly addOpen = signal(false);
+  /** Whether the URL is on `create`. */
+  private readonly createRequested = signal(false);
+  /** A nightly hostel has no manual bills, so its `create` URL shows the list alone. */
+  protected readonly addOpen = computed(() => this.createRequested() && !this.nightly());
   /** Bill id from the `edit/:billId` route segment, or null when not editing. */
   private readonly editingId = signal<string | null>(null);
   /**
    * The invoice the drawer should amend. Resolved from the loaded rows, so it stays
    * null until they arrive — the drawer only opens once there is something to seed it
    * with, rather than flashing an empty form.
+   *
+   * Never a booking bill: the form always saves the bill as a renter's, so editing one would
+   * detach it from its booking.
    */
   protected readonly editingInvoice = computed(() => {
     const id = this.editingId();
     if (!id) return null;
     // Unfiltered: resolving against `filtered()` would make the drawer refuse to open
     // whenever the active status filter happened to hide the row being edited.
-    return (this.state().data ?? []).find((i) => i.id === id) ?? null;
+    const inv = (this.state().data ?? []).find((i) => i.id === id);
+    return inv && inv.kind !== 'booking' ? inv : null;
   });
+  /** Bill id from the `view/:billId` route segment, or null when not deep-linked. */
+  private readonly viewingId = signal<string | null>(null);
+  /** The deep-linked bill, once fetched by id because it was not on the loaded page. */
+  private readonly viewed = signal<Invoice | null>(null);
+
+  protected readonly payPrompt = signal<PayPrompt | null>(null);
+  protected readonly alsoPayBooking = signal(true);
+  /** Held across both requests of a cross-pay, so a second confirm cannot start another. */
+  protected readonly paying = signal(false);
   private readonly deletedIds = signal(new Set<string>());
 
   protected readonly hostelName = computed(() => this.store.activeProperty()?.name ?? '');
@@ -194,18 +290,29 @@ export class Invoices {
   protected readonly dateTo = signal('');
   protected readonly page = signal(1);
   protected readonly selectedId = signal<string | null>(null);
+  /** The type filter as it applies: a nightly hostel has no type to filter by. */
+  private readonly activeKind = computed(() => (this.nightly() ? 'all' : this.kindFilter()));
+  /** `tenant` searches whoever the bill is for: the tenant, or the guest on a nightly hostel. */
   protected readonly searchField = signal<'room' | 'tenant'>('room');
   protected readonly searchTerm = signal('');
-  protected readonly searchFieldOptions: DropdownOption[] = [
+  private readonly guestNameLabel = toSignal(
+    this.i18n.selectTranslate<string>('hostInvoices.guestName'),
+    { initialValue: '' },
+  );
+  protected readonly searchFieldOptions = computed<DropdownOption[]>(() => [
     { value: 'room', label: 'Room' },
-    { value: 'tenant', label: 'Tenant' },
-  ];
+    { value: 'tenant', label: this.nightly() ? this.guestNameLabel() : 'Tenant' },
+  ]);
+  protected readonly searchPlaceholder = computed(() => {
+    if (this.searchField() === 'room') return 'Room number…';
+    return this.nightly() ? `${this.guestNameLabel()}…` : 'Tenant name…';
+  });
   private readonly debouncedTerm = toSignal(
     toObservable(this.searchTerm).pipe(debounceTime(300)),
     { initialValue: '' },
   );
   protected readonly hasActiveFilters = computed(() =>
-    this.kindFilter() !== 'all' ||
+    this.activeKind() !== 'all' ||
     this.roomFilter() !== '' ||
     this.tenantFilter() !== '' ||
     this.dateFrom() !== '' ||
@@ -218,7 +325,8 @@ export class Invoices {
     refresh: this.refresh(),
     page: this.page(),
     status: this.filter(),
-    kind: this.kindFilter(),
+    kind: this.activeKind(),
+    nightly: this.nightly(),
     room: this.roomFilter(),
     tenant: this.tenantFilter(),
     dateFrom: this.dateFrom(),
@@ -228,7 +336,7 @@ export class Invoices {
 
   private readonly fetched = toSignal(
     toObservable(this.fetchKey).pipe(
-      switchMap(({ hostelId, page, status, kind, room, tenant, dateFrom, dateTo, searchTerm }) => {
+      switchMap(({ hostelId, page, status, kind, nightly, room, tenant, dateFrom, dateTo, searchTerm }) => {
         if (!hostelId) { this.fetching.set(false); return of(EMPTY_STATE); }
         this.fetching.set(true);
         // Every query change funnels through here, whichever setter caused it — so this is
@@ -246,6 +354,7 @@ export class Invoices {
         if (dateTo) filters['f[issue_date][lte]'] = dayRangeEnd(dateTo);
         if (searchTerm) {
           if (this.searchField() === 'room') filters['s[room.room_number]'] = searchTerm;
+          else if (nightly) filters['s[booking.guest_name]'] = searchTerm;
           else filters['s[renter.full_name]'] = searchTerm;
         }
         return this.api.invoices(hostelId, page, this.PAGE_SIZE, filters).pipe(
@@ -259,7 +368,8 @@ export class Invoices {
             total: res.total,
             totalPages: res.totalPages,
             statuses: res.statuses,
-            aggs: res.aggs,
+            // Seeded into the counts rather than derived in the card, so local edits shift it.
+            aggs: nightly ? withBookingTotals(res.aggs, res.statuses) : res.aggs,
           })),
           catchError((err) => {
             this.fetching.set(false);
@@ -331,7 +441,7 @@ export class Invoices {
   );
 
   protected readonly filterGroups = computed(() =>
-    invoiceFilterGroups(this.store.selected() ?? '', this.statusOptions(), this.apiBaseUrl),
+    invoiceFilterGroups(this.store.selected() ?? '', this.statusOptions(), this.apiBaseUrl, !this.nightly()),
   );
 
   /** Maps current signal state → FilterValues so the panel shows current selections on open. */
@@ -359,10 +469,19 @@ export class Invoices {
     return f === 'all' ? visible : visible.filter((i) => i.status === f);
   });
 
+  /**
+   * The bill in the preview drawer.
+   *
+   * A deep-linked bill opens even when the status filter hides it or it is on another page:
+   * the link names one bill, whatever the list around it is showing.
+   */
   protected readonly selected = computed<Invoice | undefined>(() => {
-    const list = this.filtered();
     const id = this.selectedId();
-    return list.find((i) => i.id === id);
+    if (!id) return undefined;
+    const hit = this.filtered().find((i) => i.id === id);
+    if (hit || id !== this.viewingId() || this.deletedIds().has(id)) return hit;
+    const viewed = this.viewed();
+    return (this.state().data ?? []).find((i) => i.id === id) ?? (viewed?.id === id ? viewed : undefined);
   });
 
   protected readonly rentSummary = computed(() => {
@@ -387,6 +506,23 @@ export class Invoices {
     };
   });
 
+  /** Read only on a nightly hostel, whose fetch always seeds these (see `withBookingTotals`). */
+  protected readonly bookingSummary = computed(() => {
+    const aggs = this.state().aggs;
+    return {
+      total: aggs?.bookingTotal ?? 0,
+      paid: aggs?.bookingPaid ?? 0,
+      balance: aggs?.bookingBalance ?? 0,
+    };
+  });
+
+  protected readonly lineTagClass = (kind: InvoiceKind): string => LINE_TAG[kind].preview;
+
+  protected readonly bookingLink = (inv: Invoice): string | null => {
+    const hostelId = this.store.selected();
+    return hostelId && inv.booking?.id ? bookingPath(hostelId, inv.booking.id) : null;
+  };
+
   protected readonly tableCols = computed(() => invoiceTableCols(this.store.selected() ?? ''));
 
   protected readonly paginationConf = computed<PaginationConfig | null>(() => {
@@ -408,9 +544,47 @@ export class Invoices {
     effect(() => {
       const list = this.filtered();
       const id = this.selectedId();
-      if (id && !list.some((i) => i.id === id)) {
+      // The deep-linked bill is exempt: it may be off-page by design, see `selected`.
+      if (id && id !== this.viewingId() && !list.some((i) => i.id === id)) {
         this.selectedId.set(null);
       }
+    });
+
+    // `view/:billId`: once the list has settled, a bill it does not hold is fetched by id.
+    const state$ = toObservable(this.state);
+    toObservable(this.viewingId).pipe(
+      switchMap((id) => {
+        this.viewed.set(null);
+        const hostelId = this.store.selected();
+        if (!id || !hostelId) return of(null);
+        return state$.pipe(
+          filter((s) => !s.loading),
+          take(1),
+          switchMap((s) => {
+            if (s.data?.some((i) => i.id === id)) return of(null);
+            // Every outcome is reported below, so the interceptor's toast would be a second one.
+            return this.api.invoice(hostelId, id, { suppressErrorToast: true }).pipe(
+              map((inv): Invoice | 'missing' => (inv.id ? inv : 'missing')),
+              catchError((err: ApiError) => of(err.status === 404 ? ('missing' as const) : { failed: err })),
+            );
+          }),
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((found) => {
+      if (!found) return;
+      if (found === 'missing') {
+        this.notifications.show({ kind: 'error', title: this.i18n.translate<string>('hostInvoices.invoiceNotFound') });
+        this.closePreview();
+        return;
+      }
+      if ('failed' in found) {
+        const { title, message } = toToastCopy(found.failed);
+        this.notifications.show({ kind: 'error', title, message });
+        this.closePreview();
+        return;
+      }
+      this.viewed.set(found);
     });
 
     this.router.events.pipe(
@@ -426,7 +600,11 @@ export class Invoices {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => {
       const segments = this.route.snapshot.url;
-      this.addOpen.set(segments[0]?.path === 'create');
+      this.createRequested.set(segments[0]?.path === 'create');
+      // 'view/:billId' opens that bill's preview; the NavigationStart above has just cleared it.
+      const viewing = segments[0]?.path === 'view' ? (segments[1]?.path ?? null) : null;
+      this.viewingId.set(viewing);
+      if (viewing) this.selectedId.set(viewing);
       // 'edit/:billId' — the id is resolved against the loaded list rather than
       // refetched, so a deep link that arrives before the list does simply shows
       // nothing until the rows land, at which point the drawer opens.
@@ -575,7 +753,7 @@ export class Invoices {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(102, 102, 102);
-    doc.text(`Room ${inv.roomNumber}`, ml, y);
+    doc.text(billedToDetail(inv), ml, y);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
@@ -607,9 +785,7 @@ export class Invoices {
     y += 7;
 
     // ── line items ────────────────────────────────────────────────────
-    const isUtility = inv.kind === 'utility';
-    const tagBg  = isUtility ? [254, 243, 226] : [232, 244, 253];
-    const tagFg  = isUtility ? [180, 83, 9]    : [55, 65, 81];
+    const { rgbBg: tagBg, rgbFg: tagFg } = LINE_TAG[inv.kind];
 
     for (const line of inv.lines) {
       // pill background
@@ -685,17 +861,26 @@ export class Invoices {
   }
 
   private openInvoicePrintWindow(inv: Invoice, autoClose: boolean): void {
-    const id     = buildInvoiceId(inv);
-    const name   = this.hostelName();
-    const addr   = this.hostelAddress();
-    const origin = window.location.origin;
+    // Every value below is escaped once here and only the escaped copies are interpolated.
+    const rawId  = buildInvoiceId(inv);
+    const id     = escapeHtml(rawId);
+    const name   = escapeHtml(this.hostelName());
+    const addr   = escapeHtml(this.hostelAddress());
+    const origin = escapeHtml(window.location.origin);
+    const billedTo = escapeHtml(inv.tenantName);
+    const detail   = escapeHtml(billedToDetail(inv));
+    const issued   = escapeHtml(formatInvoiceDate(inv.issued));
+    const due      = escapeHtml(formatInvoiceDate(inv.due));
+    const amount   = escapeHtml(inv.amount.toLocaleString());
+    const payNote  = inv.payNote ? escapeHtml(inv.payNote) : '';
+    const tag      = LINE_TAG[inv.kind].print;
 
     const rows = inv.lines.map((l) => `
       <tr>
         <td class="desc">
-          <span class="tag ${inv.kind === 'utility' ? 'utility' : 'rent'}">${l.label}</span>
+          <span class="tag ${tag}">${escapeHtml(l.label)}</span>
         </td>
-        <td class="amt">Rs ${l.amount.toLocaleString()}</td>
+        <td class="amt">Rs ${escapeHtml(l.amount.toLocaleString())}</td>
       </tr>`).join('');
 
     const html = `<!DOCTYPE html>
@@ -728,6 +913,7 @@ export class Invoices {
     .tag { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
     .tag.utility { background: #fef3e2; color: #b45309; }
     .tag.rent    { background: #e8f4fd; color: #374151; }
+    .tag.booking { background: #f9f5ff; color: #6b46c1; }
     .total-row { display: flex; justify-content: space-between; align-items: center; background: #fef9f0; border-radius: 10px; padding: 14px 18px; margin-top: 12px; }
     .total-label { font-weight: 600; font-size: 13px; color: #374151; }
     .total-amt { font-size: 20px; font-weight: 700; color: #c2490a; }
@@ -752,14 +938,14 @@ export class Invoices {
   <div class="meta">
     <div>
       <div class="meta-key">Billed to</div>
-      <div class="meta-val">${inv.tenantName}</div>
-      <div class="meta-sub">Room ${inv.roomNumber}</div>
+      <div class="meta-val">${billedTo}</div>
+      <div class="meta-sub">${detail}</div>
     </div>
     <div class="meta-right">
       <div class="meta-key">Issued</div>
-      <div class="meta-sub">${formatInvoiceDate(inv.issued)}</div>
+      <div class="meta-sub">${issued}</div>
       <div class="meta-key">Due</div>
-      <div class="meta-sub">${formatInvoiceDate(inv.due)}</div>
+      <div class="meta-sub">${due}</div>
     </div>
   </div>
   <hr />
@@ -771,9 +957,9 @@ export class Invoices {
   </table>
   <div class="total-row">
     <span class="total-label">Total due</span>
-    <span class="total-amt">Rs ${inv.amount.toLocaleString()}</span>
+    <span class="total-amt">Rs ${amount}</span>
   </div>
-  ${inv.payNote ? `<p class="pay-note">${inv.payNote}</p>` : ''}
+  ${payNote ? `<p class="pay-note">${payNote}</p>` : ''}
   <div class="footer">
     <img src="${origin}/hostelhive-logo.svg" alt="HostelHive" />
     <a href="mailto:support@hostelhive.com">support@hostelhive.com</a>
@@ -785,7 +971,7 @@ export class Invoices {
     if (!w) return;
     w.document.write(html);
     w.document.close();
-    w.document.title = `${id}.pdf`;
+    w.document.title = `${rawId}.pdf`;
     w.onload = () => {
       w.focus();
       w.print();
@@ -907,25 +1093,121 @@ export class Invoices {
     });
   }
 
+  /**
+   * Rental and utility bills settle in one click. A booking bill asks first, because the
+   * booking keeps its own payment state and the host is offered to settle it too.
+   */
   protected markPaid(inv: Invoice, event: MouseEvent): void {
     event.stopPropagation();
     this.closeMenu();
     const hostelId = this.store.selected();
     if (!inv || !hostelId || inv.status === 'paid') return;
+    if (inv.kind === 'booking') {
+      this.promptBookingPay(hostelId, inv);
+      return;
+    }
 
     this.api.markInvoicePaid(hostelId, inv.id).subscribe({
       next: (settled) => {
         this.notifications.success('Invoice marked paid', `${buildInvoiceId(inv)} is now settled.`);
-        // The endpoint echoes the settled bill, so the row moves to paid in place.
-        // `applyEdited` records what the bill was as well as what it is, which is what lets
-        // the summary take its amount out of the balance and put it into paid.
-        this.applyEdited(settled);
+        this.applySettled(settled);
       },
       error: (err: ApiError) => {
         const { title, message } = toToastCopy(err);
         this.notifications.show({ kind: 'error', title, message }, 0);
       },
     });
+  }
+
+  /**
+   * Opens the confirm at once and asks where the booking stands meanwhile.
+   *
+   * The checkbox is offered while the booking still owes on a payable stage — and also when
+   * that cannot be found out, since a booking already paid answers with a harmless 422.
+   */
+  private promptBookingPay(hostelId: string, inv: Invoice): void {
+    if (this.paying()) return;
+    const bookingId = inv.booking?.id;
+    this.alsoPayBooking.set(true);
+    this.payPrompt.set({ inv, checking: !!bookingId, offerBooking: false });
+    if (!bookingId) return;
+
+    const settle = (offerBooking: boolean): void =>
+      this.payPrompt.update((p) => (p?.inv.id === inv.id ? { ...p, checking: false, offerBooking } : p));
+    // A failed read is absorbed by the dialog (it offers the box anyway), so it gets no toast.
+    this.bookingsApi.get(hostelId, bookingId, { suppressErrorToast: true }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (booking) => settle(bookingStillOwes(booking)),
+      error: () => settle(true),
+    });
+  }
+
+  /** Invoice first, then — when ticked — the booking; each outcome reported on its own. */
+  protected confirmPay(): void {
+    const prompt = this.payPrompt();
+    const hostelId = this.store.selected();
+    if (!prompt || prompt.checking || !hostelId || this.paying()) return;
+    const { inv } = prompt;
+    const bookingId = prompt.offerBooking && this.alsoPayBooking() ? inv.booking?.id : undefined;
+
+    this.paying.set(true);
+    this.api.markInvoicePaid(hostelId, inv.id).subscribe({
+      next: (settled) => {
+        this.applySettled(settled);
+        if (!bookingId) {
+          this.finishPay();
+          this.notifications.success('Invoice marked paid', `${buildInvoiceId(inv)} is now settled.`);
+          return;
+        }
+        this.bookingsApi.markPaid(hostelId, bookingId, { suppressErrorToast: true }).subscribe({
+          next: () => {
+            this.finishPay();
+            this.notifications.success(this.i18n.translate<string>('hostInvoices.invoiceAndBookingPaid'));
+          },
+          error: (err: unknown) => {
+            this.finishPay();
+            const reason = this.i18n.translate<string>(bookingMoveFailureKey(err));
+            this.notifications.show(
+              { kind: 'error', title: this.i18n.translate<string>('hostInvoices.bookingNotPaid', { reason }) },
+              0,
+            );
+          },
+        });
+      },
+      error: (err: ApiError) => {
+        this.finishPay();
+        const { title, message } = toToastCopy(err);
+        this.notifications.show({ kind: 'error', title, message }, 0);
+      },
+    });
+  }
+
+  protected cancelPay(): void {
+    if (!this.paying()) this.payPrompt.set(null);
+  }
+
+  private finishPay(): void {
+    this.paying.set(false);
+    this.payPrompt.set(null);
+  }
+
+  /**
+   * The endpoint echoes the settled bill, so the row moves to paid in place. `applyEdited`
+   * records what the bill was as well as what it is, which is what lets the summary take its
+   * amount out of the balance and put it into paid.
+   */
+  private applySettled(settled: Invoice): void {
+    this.applyEdited(settled);
+    if (this.viewed()?.id === settled.id) this.viewed.set(settled);
+  }
+
+  /** Closes the preview; one opened by a `view/:billId` link returns to the list's URL. */
+  protected closePreview(): void {
+    const base = this.invoicesBase();
+    if (this.viewingId() && base) {
+      void this.router.navigate(base, { queryParamsHandling: 'preserve' });
+      return;
+    }
+    this.selectedId.set(null);
   }
 
   protected retry(): void { this.refresh.update((n) => n + 1); }
@@ -982,6 +1264,14 @@ export class Invoices {
   protected exportCsv(): void {
     const rows = this.filtered();
     if (!rows.length) return;
+    if (this.nightly()) {
+      downloadCsv(
+        `hostelhive-invoices-${this.filter()}`,
+        ['ID', 'Billed to', 'Booking', 'Room', 'Floor', 'Type', 'Status', 'Issued', 'Due', 'Amount (PKR)'],
+        rows.map((inv) => [inv.id, inv.tenantName, inv.booking?.ref ?? '', inv.roomNumber, inv.floor, inv.kind, inv.status, inv.issued, inv.due, inv.amount]),
+      );
+      return;
+    }
     downloadCsv(
       `hostelhive-invoices-${this.filter()}`,
       ['ID', 'Tenant', 'Room', 'Floor', 'Type', 'Status', 'Issued', 'Due', 'Amount (PKR)'],

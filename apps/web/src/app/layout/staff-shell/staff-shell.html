@@ -1,6 +1,6 @@
 @if (!mobile.isMobile()) {
 <aside
-  class="group safe-pt fixed inset-y-0 start-0 z-40 flex flex-col border-r border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
+  class="group safe-pt fixed inset-y-0 start-0 z-40 flex flex-col border-e border-ink-100 bg-white transition-[transform,width] duration-200 ease-in-out"
   [style.width]="drawer.width_()"
 >
   <!-- The brand row, the same height as the site header beside it.
@@ -43,7 +43,7 @@
           class="nav-link"
           [class.nav-link--rail]="drawer.railVisual()"
           [hhTooltip]="drawer.railVisual() ? (item.label ?? '') : ''"
-          hhTooltipPlacement="right"
+          hhTooltipPlacement="end"
           [attr.aria-label]="drawer.railVisual() ? item.label : null"
         >
           <i class="ti text-lg" [class]="item.icon"></i>
@@ -66,7 +66,7 @@
       <span
         class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-800 text-sm font-semibold text-white"
         [hhTooltip]="drawer.railVisual() ? (user()?.name ?? '') : ''"
-        hhTooltipPlacement="right"
+        hhTooltipPlacement="end"
         >{{ initials() }}</span
       >
       @if (!drawer.railVisual()) {
@@ -103,14 +103,14 @@
     (click)="drawer.toggleRail()"
   >
     <i
-      class="ti text-sm"
+      class="ti text-sm rtl:rotate-180"
       [class.ti-chevron-right]="drawer.railed()"
       [class.ti-chevron-left]="!drawer.railed()"
     ></i>
   </button>
 
   <!-- The brand edge, on hover.
-       An overlay strip rather than thickening `border-r`: going from 1px to 2px would move
+       An overlay strip rather than thickening `border-e`: going from 1px to 2px would move
        every child one pixel left, so the whole sidebar would twitch as the pointer crossed
        it. -->
   <span
@@ -121,8 +121,8 @@
 }
 
 <div
-  class="hh-viewport-below-header overflow-hidden transition-[padding-left] duration-200 ease-in-out"
-  [style.paddingLeft]="contentPadding()"
+  class="hh-viewport-below-header overflow-hidden transition-[padding-inline-start] duration-200 ease-in-out"
+  [style.paddingInlineStart]="contentPadding()"
 >
   <router-outlet />
 </div>

@@ -333,7 +333,8 @@
     "allow": "Engedélyezés",
     "noPhotosYet": "Még nincsenek fotók",
     "guests": "Vendégek",
-    "copy": "Másolás"
+    "copy": "Másolás",
+    "cannotReachTheServer": "A szerver nem érhető el. Kérjük, próbáld újra egy pillanat múlva."
   },
   "leadWall": {
     "close": "Bezárás",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Rákattintva aktiválódik a fiókja, és megjelenik a telefonszám.",
     "iVeVerifiedContinue": "Megerősítettem — tovább",
     "back": "Vissza",
-    "confirmPassword": "Jelszó megerősítése"
+    "confirmPassword": "Jelszó megerősítése",
+    "emailOrPasswordIncorrect": "Az e-mail cím vagy a jelszó helytelen.",
+    "emailAlreadyRegistered": "Ezzel az e-mail címmel már létezik fiók. Jelentkezzen be, vagy állítsa vissza a jelszavát, ha elfelejtette.",
+    "couldNotCreateAccount": "Nem sikerült létrehozni a fiókját. Ellenőrizze az adatait, és próbálja újra.",
+    "accountCannotSignIn": "Ezzel a fiókkal most nem lehet bejelentkezni. Vegye fel velünk a kapcsolatot, és segítünk.",
+    "googleDidNotFinish": "A Google-bejelentkezés nem fejeződött be. Próbálja újra, vagy használja az e-mail címét és jelszavát.",
+    "tooManyAttempts": "Túl sok próbálkozás. Kérjük, várjon néhány percet, majd próbálja újra.",
+    "somethingWentWrong": "Valami hiba történt. Kérjük, próbálja újra."
   },
   "home": {
     "searchCityOrArea": "Város vagy környék keresése",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "Ha ehhez az e-mailhez már tartozik fiók, a jelenlegi jelszó marad — az Öné csak új fiók létrehozásakor lesz használva.",
     "storedEmailBecomesLogin": "A tárolt e-mail lesz a belépési azonosító. Ha ehhez a címhez már tartozik fiók, annak jelszava marad érvényben.",
     "pickADifferentStatusTo": "Válasszon másik státuszt a csapat többi tagjának megtekintéséhez.",
-    "addAWardenCookOr": "Adjon hozzá gondnokot, szakácsot vagy őrt a fizetés és iratok nyilvántartásához."
+    "addAWardenCookOr": "Adjon hozzá gondnokot, szakácsot vagy őrt a fizetés és iratok nyilvántartásához.",
+    "couldNotUploadImage": "Nem sikerült feltölteni a képet",
+    "fileTypeNotSupported": "Ez a fájltípus nem támogatott. Válassz másik képet.",
+    "uploadTryAgain": "Próbáld újra, vagy válassz másik képet."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "A jóváhagyás sikertelen — próbáld újra.",
@@ -1374,7 +1385,18 @@
     "due": "Esedékes",
     "thisWillPermanentlyDeleteInvoice": "Ez véglegesen törli a számlát",
     "invoicesAppearHereOnceYou": "A számlák itt jelennek meg, amint bérleti vagy rezsiszámlát állít ki.",
-    "tryAdjustingYourFilters": "Próbálja módosítani a szűrőket."
+    "invoicesAppearHereNightly": "A számlák itt jelennek meg, amint létrehozza őket a megérkezett foglalásokból.",
+    "tryAdjustingYourFilters": "Próbálja módosítani a szűrőket.",
+    "bookingInvoices": "Foglalási számlák",
+    "bookingRef": "Foglalás: {{ref}}",
+    "viewBooking": "Foglalás megtekintése",
+    "guestName": "Vendég neve",
+    "markPaidConfirmTitle": "Megjelöli a(z) {{invoice}} számlát fizetettként?",
+    "markPaidConfirmBody": "Ezzel a teljes összeget beérkezettként rögzíti.",
+    "alsoMarkBookingPaid": "A(z) {{ref}} foglalás megjelölése fizetettként is",
+    "invoiceAndBookingPaid": "A számla és a foglalás fizetettként megjelölve",
+    "bookingNotPaid": "A számla fizetettként megjelölve, a foglalás azonban nem. {{reason}}",
+    "invoiceNotFound": "Nem találjuk ezt a számlát."
   },
   "hostExpenses": {
     "allTypes": "Minden típus",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "A recepción beszedendő",
     "createBooking": "Foglalás létrehozása",
     "theRoomsForThisProperty": "Az ingatlan szobái nem tölthetők be.",
+    "notSetUpForBookings": "Ez az ingatlan nincs beállítva foglalások fogadására.",
+    "crmRequired": "A csomagja nem tartalmaz foglalásokat. Váltson nagyobb csomagra a foglalások hozzáadásához.",
+    "checkInCannotBeInPast": "Az érkezés nem lehet a mai napnál korábbi. Válassza a mai vagy egy későbbi dátumot.",
+    "roomTypeNotBookable": "Az egyik szobatípusnál ki van kapcsolva a foglalás. Távolítsa el, és próbálja újra.",
+    "checkOutAfterCheckIn": "A távozásnak az érkezés után kell lennie.",
+    "couldNotSaveBooking": "Nem sikerült menteni ezt a foglalást. Ellenőrizze az adatokat, és próbálja újra.",
     "everyRoomEveryState": "Minden szoba, minden állapot – koppintson egy napra a naplójáért",
     "thisMonthSCalendarCould": "A havi naptár nem tölthető be.",
     "nothingIsWaitingOnYou": "Ezen a napon semmi sem vár Önre.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "Érkezés — távozás",
     "aNightRuns12": "Egy éjszaka 12:00-tól 12:00-ig tart — érkezés déltől, távozás másnap délig.",
     "discount": "Kedvezmény",
-    "saveBooking": "Foglalás mentése"
+    "saveBooking": "Foglalás mentése",
+    "invoice": "Számla",
+    "checkingForInvoice": "Számla keresése…",
+    "noInvoiceYet": "Még nincs számla.",
+    "couldNotCheckInvoice": "Nem sikerült ellenőrizni a számlát.",
+    "viewInvoice": "Számla megtekintése",
+    "alsoMarkInvoicePaid": "A(z) {{invoice}} számla megjelölése fizetettként is",
+    "bookingAndInvoicePaid": "A foglalás és a számla fizetettként megjelölve",
+    "invoiceNotPaid": "A foglalás fizetettként megjelölve, a számla azonban nem. {{reason}}",
+    "stayedIn": "Itt szállt meg",
+    "checkedOut": "Távozott",
+    "released": "Felszabadítva",
+    "cancelOpenInvoiceWarning": "Ehhez a foglaláshoz kifizetetlen számla tartozik ({{invoice}}). A lemondás nem törli.",
+    "bookingNotFound": "Nem találjuk ezt a foglalást.",
+    "notEnoughBedsFree": "Az egyik szobában már nincs ennyi szabad ágy. Helyezzen el ott kevesebb vendéget, vagy válasszon másik szobát.",
+    "checkTheRoomsPicked": "Ezeket a szobákat nem lehetett használni. Ellenőrizze a szobákat és a vendégeket, majd próbálja újra.",
+    "alreadyCheckedIn": "Ennél a foglalásnál az érkezés már rögzítve volt, így semmi sem változott.",
+    "bookingHasMovedOn": "Ez a foglalás megváltozott, mióta megnyitotta, így ez a lépés nem lett végrehajtva.",
+    "bookingAlreadyPaid": "Ez a foglalás már ki volt fizetve, így új fizetés nem lett rögzítve.",
+    "alreadyPaidInvoicePaid": "Ez a foglalás már ki volt fizetve. A(z) {{invoice}} számla most fizetettként van megjelölve.",
+    "invoiceAlreadyExists": "Ehhez a foglaláshoz már tartozik számla.",
+    "giveTheGuestAReason": "Adjon meg indoklást a vendégnek — elküldjük neki, és a foglalásnál is megmarad.",
+    "moveNotAccepted": "A szerver ezt nem fogadta el. Kérjük, próbálja újra.",
+    "roomAlreadyReleased": "A(z) {{room}} szoba már fel lett szabadítva.",
+    "couldNotReleaseRoom": "Nem sikerült felszabadítani a(z) {{room}} szobát. Kérjük, próbálja újra.",
+    "invoiceNoLongerExists": "A számla nem található. Lehet, hogy törölték.",
+    "payTheInvoiceOnItsOwn": "Nyissa meg a számlát, és ott jelölje meg fizetettként."
   },
   "hostHostelProfile": {
     "failed": "Sikertelen",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} kifizetve",
     "cancelledSummary": "Lemondva: {{date}} · PKR {{refund}} visszatérítve · PKR {{charge}} lemondási díj",
     "cancelRefundExplainer": "Visszakapsz <strong class=\"tabular-nums\">PKR {{refund}}</strong> összeget. <strong class=\"tabular-nums\">PKR {{charge}}</strong> lemondási díjként marad, mert az időszak {{pct}}%-ánál mondasz le.",
-    "whenYouBookAHostel": "Ha lefoglal egy hostelt, itt jelenik meg a dátumokkal és a fizetett összeggel."
+    "whenYouBookAHostel": "Ha lefoglal egy hostelt, itt jelenik meg a dátumokkal és a fizetett összeggel.",
+    "noLongerCancellable": "Ez a foglalás itt már nem mondható le. Hívja fel a szállást, és adja meg a foglalási azonosítót.",
+    "roomNoLongerBookable": "Az egyik kiválasztott szoba már nem foglalható. Válasszon másik szobát.",
+    "checkOutAfterCheckIn": "A távozásnak az érkezés után kell lennie.",
+    "bookingNotFound": "Nem találjuk ezt a foglalást. Lehet, hogy eltávolították.",
+    "changeFailed": "Nem sikerült módosítani ezt a foglalást. Kérjük, próbálja újra.",
+    "cancelFailed": "Nem sikerült lemondani ezt a foglalást. Kérjük, próbálja újra.",
+    "withinCutoff": "Módosítani és lemondani legkésőbb 3 nappal az érkezés előtt lehet. Ha most módosítana valamit, hívja fel a szállást, és adja meg a foglalási azonosítót.",
+    "noLongerEditable": "Ez a foglalás itt már nem módosítható. Hívja fel a szállást, és adja meg a foglalási azonosítót."
   },
   "userFavorites": {
     "removeFromFavorites": "Eltávolítod a kedvencekből?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "Adjon meg érvényes telefonszámot",
     "enterAValidEmail": "Adjon meg érvényes e-mail-címet",
     "ofNSeats": "ennyiből: {{count}}",
-    "bookingReference": "Foglalási azonosító"
+    "bookingReference": "Foglalási azonosító",
+    "hostelNotTakingBookings": "Ez a szállás jelenleg nem fogad online foglalást.",
+    "roomNoLongerBookable": "Az egyik kiválasztott szoba már nem foglalható. Távolítsa el, és válasszon másikat.",
+    "checkInHasPassed": "Az érkezés dátuma már elmúlt. Válasszon új dátumokat, és próbálja újra.",
+    "checkOutAfterCheckIn": "A távozásnak az érkezés után kell lennie.",
+    "logInAgainToBook": "A munkamenete lejárt. Jelentkezzen be újra a foglaláshoz.",
+    "tryAgain": "Kérjük, próbálja újra."
   },
   "states": {
     "nothingHereYet": "Itt még nincs semmi",
@@ -1957,6 +2025,7 @@
     "whatGendered": "{{gender}} szállások",
     "whatAll": "szállások, panziók és közösségi lakhatás",
     "listingNotFoundTitle": "A hirdetés nem található — HostelHive",
+    "postNotFoundTitle": "A bejegyzés nem található — HostelHive",
     "listingNotFoundDescription": "Ez a szálláshirdetés nem érhető el, vagy a hivatkozás hibás.",
     "listingTitle": "{{name}} — {{gender}} szállás itt: {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}} szállás itt: {{location}}.",

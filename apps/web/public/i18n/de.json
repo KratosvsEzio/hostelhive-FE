@@ -333,7 +333,8 @@
     "allow": "Zulassen",
     "noPhotosYet": "Noch keine Fotos",
     "guests": "Gäste",
-    "copy": "Kopieren"
+    "copy": "Kopieren",
+    "cannotReachTheServer": "Server nicht erreichbar. Bitte versuchen Sie es gleich noch einmal."
   },
   "leadWall": {
     "close": "Schließen",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Ein Klick darauf aktiviert dein Konto und gibt die Nummer frei.",
     "iVeVerifiedContinue": "Bestätigt — weiter",
     "back": "Zurück",
-    "confirmPassword": "Passwort bestätigen"
+    "confirmPassword": "Passwort bestätigen",
+    "emailOrPasswordIncorrect": "E-Mail-Adresse oder Passwort ist falsch.",
+    "emailAlreadyRegistered": "Zu dieser E-Mail-Adresse gibt es bereits ein Konto. Melden Sie sich stattdessen an oder setzen Sie Ihr Passwort zurück, falls Sie es vergessen haben.",
+    "couldNotCreateAccount": "Wir konnten Ihr Konto nicht erstellen. Prüfen Sie Ihre Angaben und versuchen Sie es erneut.",
+    "accountCannotSignIn": "Mit diesem Konto ist eine Anmeldung derzeit nicht möglich. Kontaktieren Sie uns, wir helfen Ihnen weiter.",
+    "googleDidNotFinish": "Die Anmeldung mit Google wurde nicht abgeschlossen. Versuchen Sie es erneut oder verwenden Sie Ihre E-Mail-Adresse und Ihr Passwort.",
+    "tooManyAttempts": "Zu viele Versuche. Bitte warten Sie ein paar Minuten und versuchen Sie es dann erneut.",
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
   },
   "home": {
     "searchCityOrArea": "Stadt oder Gegend suchen",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "Wenn diese E-Mail bereits ein Konto hat, bleibt das aktuelle Passwort bestehen — Ihres wird nur bei einem neuen Konto verwendet.",
     "storedEmailBecomesLogin": "Die gespeicherte E-Mail wird zum Login. Hat diese Adresse bereits ein Konto, bleibt dessen Passwort bestehen.",
     "pickADifferentStatusTo": "Wählen Sie einen anderen Status, um Ihr übriges Team zu sehen.",
-    "addAWardenCookOr": "Fügen Sie einen Aufseher, Koch oder Wachmann hinzu, um Gehalt und Dokumente zu hinterlegen."
+    "addAWardenCookOr": "Fügen Sie einen Aufseher, Koch oder Wachmann hinzu, um Gehalt und Dokumente zu hinterlegen.",
+    "couldNotUploadImage": "Bild konnte nicht hochgeladen werden",
+    "fileTypeNotSupported": "Dieser Dateityp wird nicht unterstützt. Wählen Sie ein anderes Bild.",
+    "uploadTryAgain": "Bitte versuchen Sie es erneut oder wählen Sie ein anderes Bild."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Genehmigung fehlgeschlagen — erneut versuchen.",
@@ -1374,7 +1385,18 @@
     "due": "Fällig",
     "thisWillPermanentlyDeleteInvoice": "Damit wird die Rechnung dauerhaft gelöscht",
     "invoicesAppearHereOnceYou": "Rechnungen erscheinen hier, sobald Sie Miet- oder Nebenkostenrechnungen ausstellen.",
-    "tryAdjustingYourFilters": "Passen Sie Ihre Filter an."
+    "invoicesAppearHereNightly": "Rechnungen erscheinen hier, sobald Sie sie aus eingecheckten Buchungen erstellen.",
+    "tryAdjustingYourFilters": "Passen Sie Ihre Filter an.",
+    "bookingInvoices": "Buchungsrechnungen",
+    "bookingRef": "Buchung {{ref}}",
+    "viewBooking": "Buchung ansehen",
+    "guestName": "Name des Gastes",
+    "markPaidConfirmTitle": "{{invoice}} als bezahlt markieren?",
+    "markPaidConfirmBody": "Damit wird der volle Betrag als erhalten erfasst.",
+    "alsoMarkBookingPaid": "Buchung {{ref}} ebenfalls als bezahlt markieren",
+    "invoiceAndBookingPaid": "Rechnung und Buchung als bezahlt markiert",
+    "bookingNotPaid": "Die Rechnung wurde als bezahlt markiert, die Buchung jedoch nicht. {{reason}}",
+    "invoiceNotFound": "Wir konnten diese Rechnung nicht finden."
   },
   "hostExpenses": {
     "allTypes": "Alle Arten",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "An der Rezeption zu kassieren",
     "createBooking": "Buchung erstellen",
     "theRoomsForThisProperty": "Die Zimmer dieses Objekts konnten nicht geladen werden.",
+    "notSetUpForBookings": "Dieses Objekt ist nicht für Buchungen eingerichtet.",
+    "crmRequired": "Ihr Tarif umfasst keine Buchungen. Wechseln Sie zu einem höheren Tarif, um Buchungen hinzuzufügen.",
+    "checkInCannotBeInPast": "Die Anreise kann nicht vor heute liegen. Wählen Sie heute oder ein späteres Datum.",
+    "roomTypeNotBookable": "Einer dieser Zimmertypen ist für Buchungen deaktiviert. Entfernen Sie ihn und versuchen Sie es erneut.",
+    "checkOutAfterCheckIn": "Die Abreise muss nach der Anreise liegen.",
+    "couldNotSaveBooking": "Wir konnten diese Buchung nicht speichern. Prüfen Sie die Angaben und versuchen Sie es erneut.",
     "everyRoomEveryState": "Jedes Zimmer, jeder Status — tippen Sie auf einen Tag für sein Journal",
     "thisMonthSCalendarCould": "Der Kalender für diesen Monat konnte nicht geladen werden.",
     "nothingIsWaitingOnYou": "An diesem Tag wartet nichts auf Sie.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "Anreise — Abreise",
     "aNightRuns12": "Eine Nacht läuft von 12:00 bis 12:00 Uhr — Anreise ab Mittag, Abreise bis Mittag am Folgetag.",
     "discount": "Rabatt",
-    "saveBooking": "Buchung speichern"
+    "saveBooking": "Buchung speichern",
+    "invoice": "Rechnung",
+    "checkingForInvoice": "Suche nach einer Rechnung…",
+    "noInvoiceYet": "Noch keine Rechnung.",
+    "couldNotCheckInvoice": "Die Rechnung konnte nicht abgefragt werden.",
+    "viewInvoice": "Rechnung ansehen",
+    "alsoMarkInvoicePaid": "Rechnung {{invoice}} ebenfalls als bezahlt markieren",
+    "bookingAndInvoicePaid": "Buchung und Rechnung als bezahlt markiert",
+    "invoiceNotPaid": "Die Buchung wurde als bezahlt markiert, die Rechnung jedoch nicht. {{reason}}",
+    "stayedIn": "Übernachtet in",
+    "checkedOut": "Ausgecheckt",
+    "released": "Freigegeben",
+    "cancelOpenInvoiceWarning": "Diese Buchung hat eine unbezahlte Rechnung ({{invoice}}). Durch die Stornierung wird sie nicht gelöscht.",
+    "bookingNotFound": "Wir konnten diese Buchung nicht finden.",
+    "notEnoughBedsFree": "In einem dieser Zimmer sind nicht mehr so viele Betten frei. Bringen Sie dort weniger Gäste unter oder wählen Sie ein anderes Zimmer.",
+    "checkTheRoomsPicked": "Diese Zimmer konnten nicht verwendet werden. Prüfen Sie Zimmer und Gäste und versuchen Sie es erneut.",
+    "alreadyCheckedIn": "Diese Buchung war bereits eingecheckt, daher wurde nichts geändert.",
+    "bookingHasMovedOn": "Diese Buchung hat sich geändert, seit Sie sie geöffnet haben, daher wurde dieser Schritt nicht ausgeführt.",
+    "bookingAlreadyPaid": "Diese Buchung war bereits bezahlt, daher wurde keine neue Zahlung erfasst.",
+    "alreadyPaidInvoicePaid": "Diese Buchung war bereits bezahlt. Die Rechnung {{invoice}} ist jetzt als bezahlt markiert.",
+    "invoiceAlreadyExists": "Für diese Buchung gibt es bereits eine Rechnung.",
+    "giveTheGuestAReason": "Nennen Sie dem Gast einen Grund — er wird ihm zugeschickt und bei der Buchung gespeichert.",
+    "moveNotAccepted": "Der Server hat das nicht angenommen. Bitte versuchen Sie es erneut.",
+    "roomAlreadyReleased": "Zimmer {{room}} wurde bereits freigegeben.",
+    "couldNotReleaseRoom": "Zimmer {{room}} konnte nicht freigegeben werden. Bitte versuchen Sie es erneut.",
+    "invoiceNoLongerExists": "Die Rechnung wurde nicht gefunden. Möglicherweise wurde sie gelöscht.",
+    "payTheInvoiceOnItsOwn": "Öffnen Sie die Rechnung und markieren Sie sie dort als bezahlt."
   },
   "hostHostelProfile": {
     "failed": "Fehlgeschlagen",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} bezahlt",
     "cancelledSummary": "Storniert {{date}} · PKR {{refund}} erstattet · PKR {{charge}} Stornogebühr",
     "cancelRefundExplainer": "Sie erhalten <strong class=\"tabular-nums\">PKR {{refund}}</strong> zurück. <strong class=\"tabular-nums\">PKR {{charge}}</strong> werden als Stornogebühr einbehalten, da Sie bei {{pct}} % des Zeitraums stornieren.",
-    "whenYouBookAHostel": "Wenn Sie ein Hostel buchen, erscheint es hier mit Ihren Daten und dem bezahlten Betrag."
+    "whenYouBookAHostel": "Wenn Sie ein Hostel buchen, erscheint es hier mit Ihren Daten und dem bezahlten Betrag.",
+    "noLongerCancellable": "Diese Buchung kann hier nicht mehr storniert werden. Rufen Sie das Hostel an und nennen Sie Ihre Buchungsnummer.",
+    "roomNoLongerBookable": "Eines der gewählten Zimmer kann nicht mehr gebucht werden. Wählen Sie ein anderes Zimmer.",
+    "checkOutAfterCheckIn": "Die Abreise muss nach der Anreise liegen.",
+    "bookingNotFound": "Wir konnten diese Buchung nicht finden. Möglicherweise wurde sie entfernt.",
+    "changeFailed": "Wir konnten diese Buchung nicht ändern. Bitte versuchen Sie es erneut.",
+    "cancelFailed": "Wir konnten diese Buchung nicht stornieren. Bitte versuchen Sie es erneut.",
+    "withinCutoff": "Änderungen und Stornierungen sind bis 3 Tage vor der Anreise möglich. Wenn Sie jetzt etwas ändern möchten, rufen Sie das Hostel an und nennen Sie Ihre Buchungsnummer.",
+    "noLongerEditable": "Diese Buchung kann hier nicht mehr geändert werden. Rufen Sie das Hostel an und nennen Sie Ihre Buchungsnummer."
   },
   "userFavorites": {
     "removeFromFavorites": "Aus Favoriten entfernen?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "Gültige Telefonnummer eingeben",
     "enterAValidEmail": "Gültige E-Mail-Adresse eingeben",
     "ofNSeats": "von {{count}}",
-    "bookingReference": "Buchungsnummer"
+    "bookingReference": "Buchungsnummer",
+    "hostelNotTakingBookings": "Dieses Hostel nimmt derzeit keine Online-Buchungen an.",
+    "roomNoLongerBookable": "Eines der gewählten Zimmer kann nicht mehr gebucht werden. Entfernen Sie es und wählen Sie ein anderes.",
+    "checkInHasPassed": "Ihr Anreisedatum ist bereits vorbei. Wählen Sie neue Daten und versuchen Sie es erneut.",
+    "checkOutAfterCheckIn": "Die Abreise muss nach der Anreise liegen.",
+    "logInAgainToBook": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um zu buchen.",
+    "tryAgain": "Bitte versuchen Sie es erneut."
   },
   "states": {
     "nothingHereYet": "Hier ist noch nichts",
@@ -1957,6 +2025,7 @@
     "whatGendered": "{{gender}}-Hostels",
     "whatAll": "Hostels, Pensionen und Co-Living",
     "listingNotFoundTitle": "Inserat nicht gefunden — HostelHive",
+    "postNotFoundTitle": "Beitrag nicht gefunden — HostelHive",
     "listingNotFoundDescription": "Dieses Hostel-Inserat ist nicht verfügbar oder der Link ist falsch.",
     "listingTitle": "{{name}} — {{gender}}-Hostel in {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-Hostel in {{location}}.",

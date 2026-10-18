@@ -108,18 +108,28 @@ export interface UtilityBill {
 }
 
 export type InvoiceStatus = 'paid' | 'due' | 'over-due';
-export type InvoiceKind = 'rental' | 'utility';
+export type InvoiceKind = 'rental' | 'utility' | 'booking';
 
 export interface InvoiceLine {
   label: string;
   amount: number; // PKR
 }
 
+/** The guest stay a `booking` bill is raised against; renter bills carry none. */
+export interface InvoiceBooking {
+  id: string;
+  ref: string; // booking_ref, e.g. 'BK-…'
+  guestName: string;
+  phone: string;
+}
+
 export interface Invoice {
   id: string; // 'INV-2026-0142'
-  renterId: string;
+  renterId: string; // '' on booking bills
   roomId: string;
-  tenantName: string;
+  tenantName: string; // the guest's name on booking bills
+  /** Present only on `kind === 'booking'` bills. */
+  booking?: InvoiceBooking;
   roomNumber: string;
   floor: string;
   kind: InvoiceKind;

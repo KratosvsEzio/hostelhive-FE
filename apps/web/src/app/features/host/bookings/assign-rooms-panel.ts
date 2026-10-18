@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { catchError, of, startWith, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
@@ -57,14 +58,14 @@ interface RoomsState {
 @Component({
   selector: 'hh-assign-rooms-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button, Skeleton],
+  imports: [DatePipe, Button, Skeleton, TranslocoPipe],
   templateUrl: './assign-rooms-panel.html',
 })
 export class AssignRoomsPanel {
   readonly hostelId = input('');
   /** The booking being checked in. `null` closes the panel. */
   readonly booking = input<HostBooking | null>(null);
-  /** The server's refusal, shown in the footer — "Room 101 has only 1 bed(s) available". */
+  /** Why the server refused the check-in, as a translation key shown in the footer. */
   readonly submitError = input('');
   /** The check-in is being sent; the button waits for it. */
   readonly busy = input(false);

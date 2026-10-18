@@ -74,7 +74,22 @@ deepest-wins down the matched tree (`routeHeadFor`):
   - **The wait is capped at 5 s.**
   - **A pending view is flushed** at the next `NavigationEnd` and on `pagehide`, with the location
     captured when it was queued.
-  - **Each navigation sends exactly one view.**
+  - **Each navigation to a new page sends exactly one view.**
+- **Which navigations are a new page** (`isSamePageRefinement`, checked in `bindRouter` *before*
+  `queuePageView`, so a skip never flushes, replaces or re-locates the pending view). A navigation is
+  **skipped** when:
+  - **A:** the app replaced the URL on the same page: `trigger === 'imperative'`, `extras.replaceUrl`,
+    and the same `pagePath` (from `core/scroll-reset.ts`, locale kept) as the previous successful
+    navigation. This covers map pans, zooms and recenters, "Search everywhere" on a bare `/search`, and
+    the listing's `?review` clean-up. "Search everywhere" from `/search/<place>` or a landing page is a
+    push to a new path, so it counts one view of `/search`. That started for `/search/<place>` with
+    PR #133 (GA is live; annotate the deploy).
+  - **B:** only the `#fragment` changed (blog contents links), whatever the trigger.
+
+  Pushes (filter Apply, a place pick, the language switch), Back/Forward and the first load all count.
+  `page_path` never carries a `#fragment`. **GA counts changed from the PR #126 deploy** (2026-10-11
+  merge): fewer search views, lower views per session and engagement on search landings. GA is live in
+  production.
 - **Why the timing holds:** within a tick, root effects re-run after page effects, so a provisional
   head written in the settling tick cancels the send.
 - **Console and token URLs** are judged on their locale-free path (`isMarketplacePath(routePath(url))`)
@@ -190,6 +205,14 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   language file loads comes back as the key itself.
 - **`window.ng` exists only in dev builds.** The e2e helpers `titleAtNavigationEnd` and `gaTitles`
   hook the router through it, so the specs using them can't run against a production build.
+- **Never skip a page view on `replaceUrl` alone.** In `@angular/router` 21, Back/Forward
+  (`popstate`) and the first navigation are `replaceUrl` too (`_router-chunk.mjs:4237-4243`,
+  `:4466-4470`). The trigger and the previous navigation decide whether it is a refinement.
+- **A `[routerLink]="[]" [fragment]` link drops the query** unless it sets
+  `queryParamsHandling="preserve"` (as the blog contents links now do). Without it, a jump on a
+  `?utm_source=` link becomes a new page and loses the campaign tag.
+- **The `search_performed` event still fires on every map pan** (Trello #157), so it can't separate
+  pans from searches.
 - **The legal pages are English text at 18 language URLs**, each self-canonical with `hreflang` to
   match the sitemap, which claims translations that do not exist (Trello #139).
 - **The e2e `waitForClient` also waits for the startup veil and the boot splash.** Both are full-screen

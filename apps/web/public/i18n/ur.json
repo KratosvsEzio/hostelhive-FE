@@ -333,7 +333,8 @@
     "allow": "اجازت دیں",
     "noPhotosYet": "ابھی کوئی تصویر نہیں",
     "guests": "مہمان",
-    "copy": "کاپی کریں"
+    "copy": "کاپی کریں",
+    "cannotReachTheServer": "سرور تک رسائی نہیں ہو رہی۔ براہ کرم کچھ دیر بعد دوبارہ کوشش کریں۔"
   },
   "leadWall": {
     "close": "بند کریں",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": "۔ اس پر کلک کرنے سے آپ کا اکاؤنٹ فعال ہو جائے گا اور نمبر ظاہر ہو گا۔",
     "iVeVerifiedContinue": "تصدیق ہو گئی — جاری رکھیں",
     "back": "واپس",
-    "confirmPassword": "پاس ورڈ کی تصدیق کریں"
+    "confirmPassword": "پاس ورڈ کی تصدیق کریں",
+    "emailOrPasswordIncorrect": "ای میل یا پاس ورڈ غلط ہے۔",
+    "emailAlreadyRegistered": "اس ای میل سے ایک اکاؤنٹ پہلے سے موجود ہے۔ اس کے بجائے لاگ ان کریں، یا پاس ورڈ بھول گئے ہوں تو اسے ری سیٹ کریں۔",
+    "couldNotCreateAccount": "ہم آپ کا اکاؤنٹ نہیں بنا سکے۔ اپنی تفصیلات چیک کریں اور دوبارہ کوشش کریں۔",
+    "accountCannotSignIn": "یہ اکاؤنٹ ابھی سائن اِن نہیں کر سکتا۔ ہم سے رابطہ کریں، ہم مدد کریں گے۔",
+    "googleDidNotFinish": "Google سائن اِن مکمل نہیں ہوا۔ دوبارہ کوشش کریں، یا اپنا ای میل اور پاس ورڈ استعمال کریں۔",
+    "tooManyAttempts": "بہت زیادہ کوششیں۔ براہ کرم چند منٹ انتظار کریں اور دوبارہ کوشش کریں۔",
+    "somethingWentWrong": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔"
   },
   "home": {
     "searchCityOrArea": "شہر یا علاقہ تلاش کریں",
@@ -1322,7 +1330,10 @@
     "existingAccountKeepsPassword": "اگر اس ای میل کا پہلے سے اکاؤنٹ ہے تو اس کا موجودہ پاس ورڈ ہی رہے گا — آپ کا صرف نیا اکاؤنٹ بناتے وقت استعمال ہوگا۔",
     "storedEmailBecomesLogin": "ان کا محفوظ ای میل ہی لاگ اِن ہوگا۔ اگر اس پتے کا پہلے سے اکاؤنٹ ہے تو وہی پاس ورڈ برقرار رہے گا۔",
     "pickADifferentStatusTo": "اپنی باقی ٹیم دیکھنے کے لیے مختلف اسٹیٹس منتخب کریں۔",
-    "addAWardenCookOr": "تنخواہ اور دستاویزات محفوظ رکھنے کے لیے وارڈن، باورچی یا گارڈ شامل کریں۔"
+    "addAWardenCookOr": "تنخواہ اور دستاویزات محفوظ رکھنے کے لیے وارڈن، باورچی یا گارڈ شامل کریں۔",
+    "couldNotUploadImage": "تصویر اپ لوڈ نہیں ہو سکی",
+    "fileTypeNotSupported": "یہ فائل کی قسم سپورٹ نہیں ہوتی۔ کوئی دوسری تصویر منتخب کریں۔",
+    "uploadTryAgain": "براہ کرم دوبارہ کوشش کریں، یا کوئی دوسری تصویر منتخب کریں۔"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "منظوری ناکام — دوبارہ کوشش کریں۔",
@@ -1379,7 +1390,18 @@
     "due": "واجب الادا",
     "thisWillPermanentlyDeleteInvoice": "یہ مستقل طور پر انوائس حذف کر دے گا",
     "invoicesAppearHereOnceYou": "جیسے ہی آپ کرایہ یا یوٹیلیٹی بل جاری کریں گے، انوائسز یہاں ظاہر ہوں گی۔",
-    "tryAdjustingYourFilters": "اپنے فلٹرز تبدیل کر کے دیکھیں۔"
+    "invoicesAppearHereNightly": "جیسے ہی آپ چیک اِن شدہ بکنگز سے انوائسز بنائیں گے، وہ یہاں ظاہر ہوں گی۔",
+    "tryAdjustingYourFilters": "اپنے فلٹرز تبدیل کر کے دیکھیں۔",
+    "bookingInvoices": "بکنگ انوائسز",
+    "bookingRef": "بکنگ {{ref}}",
+    "viewBooking": "بکنگ دیکھیں",
+    "guestName": "مہمان کا نام",
+    "markPaidConfirmTitle": "{{invoice}} کو ادا شدہ کے طور پر نشان زد کریں؟",
+    "markPaidConfirmBody": "اس سے پوری رقم وصول شدہ کے طور پر درج ہو جاتی ہے۔",
+    "alsoMarkBookingPaid": "بکنگ {{ref}} کو بھی ادا شدہ کے طور پر نشان زد کریں",
+    "invoiceAndBookingPaid": "انوائس اور بکنگ ادا شدہ کے طور پر نشان زد ہو گئیں",
+    "bookingNotPaid": "انوائس ادا شدہ کے طور پر نشان زد ہو گئی، لیکن بکنگ نہیں ہوئی۔ {{reason}}",
+    "invoiceNotFound": "ہمیں وہ انوائس نہیں ملی۔"
   },
   "hostExpenses": {
     "allTypes": "تمام اقسام",
@@ -1465,6 +1487,12 @@
     "toCollectAtTheDesk": "استقبالیہ پر وصول کرنا ہے",
     "createBooking": "بکنگ بنائیں",
     "theRoomsForThisProperty": "اس پراپرٹی کے کمرے لوڈ نہیں ہو سکے۔",
+    "notSetUpForBookings": "یہ پراپرٹی بکنگ لینے کے لیے سیٹ اپ نہیں ہے۔",
+    "crmRequired": "آپ کے پلان میں بکنگ شامل نہیں ہے۔ بکنگ شامل کرنے کے لیے اپنا پلان اپ گریڈ کریں۔",
+    "checkInCannotBeInPast": "چیک اِن آج سے پہلے نہیں ہو سکتا۔ آج یا بعد کی کوئی تاریخ منتخب کریں۔",
+    "roomTypeNotBookable": "ان میں سے ایک کمرے کی قسم بکنگ کے لیے بند ہے۔ اسے ہٹائیں اور دوبارہ کوشش کریں۔",
+    "checkOutAfterCheckIn": "چیک آؤٹ، چیک اِن کے بعد ہونا چاہیے۔",
+    "couldNotSaveBooking": "ہم یہ بکنگ محفوظ نہیں کر سکے۔ تفصیلات چیک کریں اور دوبارہ کوشش کریں۔",
     "everyRoomEveryState": "ہر کمرہ، ہر حالت — کسی دن کا کھاتہ دیکھنے کے لیے اس پر ٹیپ کریں",
     "thisMonthSCalendarCould": "اس مہینے کا کیلنڈر لوڈ نہیں ہو سکا۔",
     "nothingIsWaitingOnYou": "اس دن کے لیے آپ کا کوئی کام باقی نہیں ہے۔",
@@ -1477,7 +1505,33 @@
     "checkInCheckOut": "چیک اِن — چیک آؤٹ",
     "aNightRuns12": "ایک رات دوپہر 12:00 سے اگلے دن دوپہر 12:00 تک ہوتی ہے — دوپہر سے چیک اِن، اگلے دن دوپہر تک چیک آؤٹ۔",
     "discount": "رعایت",
-    "saveBooking": "بکنگ محفوظ کریں"
+    "saveBooking": "بکنگ محفوظ کریں",
+    "invoice": "انوائس",
+    "checkingForInvoice": "انوائس چیک کی جا رہی ہے…",
+    "noInvoiceYet": "ابھی کوئی انوائس نہیں۔",
+    "couldNotCheckInvoice": "انوائس چیک نہیں ہو سکی۔",
+    "viewInvoice": "انوائس دیکھیں",
+    "alsoMarkInvoicePaid": "انوائس {{invoice}} کو بھی ادا شدہ کے طور پر نشان زد کریں",
+    "bookingAndInvoicePaid": "بکنگ اور انوائس ادا شدہ کے طور پر نشان زد ہو گئیں",
+    "invoiceNotPaid": "بکنگ ادا شدہ کے طور پر نشان زد ہو گئی، لیکن انوائس نہیں ہوئی۔ {{reason}}",
+    "stayedIn": "قیام کی جگہ",
+    "checkedOut": "چیک آؤٹ ہو گیا",
+    "released": "خالی کیا گیا",
+    "cancelOpenInvoiceWarning": "اس بکنگ کی ایک غیر ادا شدہ انوائس ({{invoice}}) ہے۔ منسوخ کرنے سے وہ حذف نہیں ہوتی۔",
+    "bookingNotFound": "ہمیں وہ بکنگ نہیں ملی۔",
+    "notEnoughBedsFree": "ان میں سے ایک کمرے میں اب اتنے بستر خالی نہیں ہیں۔ وہاں کم مہمان رکھیں یا کوئی دوسرا کمرہ منتخب کریں۔",
+    "checkTheRoomsPicked": "وہ کمرے استعمال نہیں ہو سکے۔ کمرے اور مہمان چیک کریں، پھر دوبارہ کوشش کریں۔",
+    "alreadyCheckedIn": "اس بکنگ کا چیک اِن پہلے ہی ہو چکا تھا، اس لیے کچھ بھی تبدیل نہیں کیا گیا۔",
+    "bookingHasMovedOn": "آپ کے کھولنے کے بعد یہ بکنگ بدل چکی ہے، اس لیے وہ مرحلہ لاگو نہیں کیا گیا۔",
+    "bookingAlreadyPaid": "اس بکنگ کی ادائیگی پہلے ہی ہو چکی تھی، اس لیے کوئی نئی ادائیگی ریکارڈ نہیں کی گئی۔",
+    "alreadyPaidInvoicePaid": "اس بکنگ کی ادائیگی پہلے ہی ہو چکی تھی۔ انوائس {{invoice}} اب ادا شدہ کے طور پر نشان زد ہو گئی ہے۔",
+    "invoiceAlreadyExists": "اس بکنگ کی انوائس پہلے سے موجود ہے۔",
+    "giveTheGuestAReason": "مہمان کو کوئی وجہ بتائیں — یہ انہیں بھیجی جاتی ہے اور بکنگ پر محفوظ رہتی ہے۔",
+    "moveNotAccepted": "سرور نے اسے قبول نہیں کیا۔ براہ کرم دوبارہ کوشش کریں۔",
+    "roomAlreadyReleased": "کمرہ {{room}} پہلے ہی خالی کیا جا چکا ہے۔",
+    "couldNotReleaseRoom": "کمرہ {{room}} خالی نہیں کیا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔",
+    "invoiceNoLongerExists": "انوائس نہیں ملی۔ ہو سکتا ہے اسے حذف کر دیا گیا ہو۔",
+    "payTheInvoiceOnItsOwn": "انوائس کھولیں اور وہیں اسے ادا شدہ کے طور پر نشان زد کریں۔"
   },
   "hostHostelProfile": {
     "failed": "ناکام",
@@ -1563,7 +1617,15 @@
     "pkrPaid": "PKR {{amount}} ادا شدہ",
     "cancelledSummary": "منسوخ {{date}} · PKR {{refund}} واپس · PKR {{charge}} منسوخی فیس",
     "cancelRefundExplainer": "آپ کو <strong class=\"tabular-nums\">PKR {{refund}}</strong> واپس ملیں گے۔ <strong class=\"tabular-nums\">PKR {{charge}}</strong> منسوخی فیس کے طور پر رکھے جاتے ہیں، کیونکہ آپ شیڈول کے {{pct}}% پر منسوخ کر رہے ہیں۔",
-    "whenYouBookAHostel": "جب آپ کوئی ہاسٹل بک کریں گے، وہ آپ کی تاریخوں اور ادائیگی کے ساتھ یہاں دکھائی دے گا۔"
+    "whenYouBookAHostel": "جب آپ کوئی ہاسٹل بک کریں گے، وہ آپ کی تاریخوں اور ادائیگی کے ساتھ یہاں دکھائی دے گا۔",
+    "noLongerCancellable": "یہ بکنگ اب یہاں منسوخ نہیں کی جا سکتی۔ ہاسٹل کو کال کریں اور اپنا بکنگ ریفرنس بتائیں۔",
+    "roomNoLongerBookable": "آپ کے منتخب کردہ کمروں میں سے ایک اب بک نہیں ہو سکتا۔ کوئی دوسرا کمرہ منتخب کریں۔",
+    "checkOutAfterCheckIn": "چیک آؤٹ، چیک اِن کے بعد ہونا چاہیے۔",
+    "bookingNotFound": "ہمیں یہ بکنگ نہیں ملی۔ ہو سکتا ہے اسے ہٹا دیا گیا ہو۔",
+    "changeFailed": "ہم یہ بکنگ اپ ڈیٹ نہیں کر سکے۔ براہ کرم دوبارہ کوشش کریں۔",
+    "cancelFailed": "ہم یہ بکنگ منسوخ نہیں کر سکے۔ براہ کرم دوبارہ کوشش کریں۔",
+    "withinCutoff": "تبدیلیاں اور منسوخیاں چیک اِن سے 3 دن پہلے بند ہو جاتی ہیں۔ ابھی کچھ تبدیل کرنے کے لیے ہاسٹل کو کال کریں اور اپنا بکنگ ریفرنس بتائیں۔",
+    "noLongerEditable": "یہ بکنگ اب یہاں تبدیل نہیں کی جا سکتی۔ ہاسٹل کو کال کریں اور اپنا بکنگ ریفرنس بتائیں۔"
   },
   "userFavorites": {
     "removeFromFavorites": "پسندیدہ سے ہٹائیں؟",
@@ -1899,7 +1961,13 @@
     "enterAValidPhone": "درست فون نمبر درج کریں",
     "enterAValidEmail": "درست ای میل ایڈریس درج کریں",
     "ofNSeats": "{{count}} میں سے",
-    "bookingReference": "بکنگ ریفرنس"
+    "bookingReference": "بکنگ ریفرنس",
+    "hostelNotTakingBookings": "یہ ہاسٹل ابھی آن لائن بکنگ نہیں لے رہا۔",
+    "roomNoLongerBookable": "آپ کے منتخب کردہ کمروں میں سے ایک اب بک نہیں ہو سکتا۔ اسے ہٹائیں اور کوئی دوسرا منتخب کریں۔",
+    "checkInHasPassed": "آپ کی چیک اِن کی تاریخ گزر چکی ہے۔ نئی تاریخیں منتخب کریں اور دوبارہ کوشش کریں۔",
+    "checkOutAfterCheckIn": "چیک آؤٹ، چیک اِن کے بعد ہونا چاہیے۔",
+    "logInAgainToBook": "آپ کا سیشن ختم ہو گیا ہے۔ بکنگ کے لیے دوبارہ لاگ ان کریں۔",
+    "tryAgain": "براہ کرم دوبارہ کوشش کریں۔"
   },
   "states": {
     "nothingHereYet": "ابھی یہاں کچھ نہیں",
@@ -1962,6 +2030,7 @@
     "whatGendered": "{{gender}} ہاسٹل",
     "whatAll": "ہاسٹل، پی جی اور کو-لِوِنگ",
     "listingNotFoundTitle": "لسٹنگ نہیں ملی — HostelHive",
+    "postNotFoundTitle": "پوسٹ نہیں ملی — HostelHive",
     "listingNotFoundDescription": "یہ ہاسٹل لسٹنگ دستیاب نہیں ہے یا لنک غلط ہے۔",
     "listingTitle": "{{name}} — {{location}} میں {{gender}} ہاسٹل | HostelHive",
     "listingLead": "{{name}} — {{location}} میں {{gender}} ہاسٹل۔",

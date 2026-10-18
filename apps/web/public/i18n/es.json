@@ -333,7 +333,8 @@
     "allow": "Permitir",
     "noPhotosYet": "Aún no hay fotos",
     "guests": "Huéspedes",
-    "copy": "Copiar"
+    "copy": "Copiar",
+    "cannotReachTheServer": "No se puede conectar con el servidor. Inténtalo de nuevo en un momento."
   },
   "leadWall": {
     "close": "Cerrar",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Al hacer clic se activa tu cuenta y se muestra el número.",
     "iVeVerifiedContinue": "Ya lo verifiqué — continuar",
     "back": "Atrás",
-    "confirmPassword": "Confirmar contraseña"
+    "confirmPassword": "Confirmar contraseña",
+    "emailOrPasswordIncorrect": "El correo o la contraseña son incorrectos.",
+    "emailAlreadyRegistered": "Ya existe una cuenta con este correo. Inicia sesión o restablece tu contraseña si la has olvidado.",
+    "couldNotCreateAccount": "No pudimos crear tu cuenta. Revisa tus datos e inténtalo de nuevo.",
+    "accountCannotSignIn": "Esta cuenta no puede iniciar sesión ahora mismo. Contáctanos y te ayudaremos.",
+    "googleDidNotFinish": "El inicio de sesión con Google no se completó. Inténtalo de nuevo o usa tu correo y contraseña.",
+    "tooManyAttempts": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+    "somethingWentWrong": "Algo salió mal. Inténtalo de nuevo."
   },
   "home": {
     "searchCityOrArea": "Busca una ciudad o zona",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "Si este correo ya tiene una cuenta, se conserva su contraseña actual; la tuya solo se usa si se crea una cuenta nueva.",
     "storedEmailBecomesLogin": "Su correo guardado será el acceso. Si esa dirección ya tiene una cuenta, conservan su contraseña.",
     "pickADifferentStatusTo": "Elige otro estado para ver al resto de tu equipo.",
-    "addAWardenCookOr": "Añade un encargado, cocinero o guardia para guardar su salario y documentos."
+    "addAWardenCookOr": "Añade un encargado, cocinero o guardia para guardar su salario y documentos.",
+    "couldNotUploadImage": "No se pudo subir la imagen",
+    "fileTypeNotSupported": "Ese tipo de archivo no es compatible. Elige otra imagen.",
+    "uploadTryAgain": "Inténtalo de nuevo o elige otra imagen."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Falló la aprobación — inténtalo de nuevo.",
@@ -1374,7 +1385,18 @@
     "due": "Vence",
     "thisWillPermanentlyDeleteInvoice": "Esto eliminará permanentemente la factura",
     "invoicesAppearHereOnceYou": "Las facturas aparecen aquí cuando emites recibos de alquiler o servicios.",
-    "tryAdjustingYourFilters": "Prueba a ajustar los filtros."
+    "invoicesAppearHereNightly": "Las facturas aparecen aquí cuando las generas a partir de reservas con entrada registrada.",
+    "tryAdjustingYourFilters": "Prueba a ajustar los filtros.",
+    "bookingInvoices": "Facturas de reservas",
+    "bookingRef": "Reserva {{ref}}",
+    "viewBooking": "Ver reserva",
+    "guestName": "Nombre del huésped",
+    "markPaidConfirmTitle": "¿Marcar {{invoice}} como pagada?",
+    "markPaidConfirmBody": "Se registra el importe completo como recibido.",
+    "alsoMarkBookingPaid": "Marcar también la reserva {{ref}} como pagada",
+    "invoiceAndBookingPaid": "Factura y reserva marcadas como pagadas",
+    "bookingNotPaid": "La factura se marcó como pagada, pero la reserva no. {{reason}}",
+    "invoiceNotFound": "No encontramos esa factura."
   },
   "hostExpenses": {
     "allTypes": "Todos los tipos",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "A cobrar en recepción",
     "createBooking": "Crear reserva",
     "theRoomsForThisProperty": "No se pudieron cargar las habitaciones de esta propiedad.",
+    "notSetUpForBookings": "Esta propiedad no está configurada para aceptar reservas.",
+    "crmRequired": "Tu plan no incluye reservas. Mejora tu plan para añadir reservas.",
+    "checkInCannotBeInPast": "La entrada no puede ser anterior a hoy. Elige hoy o una fecha posterior.",
+    "roomTypeNotBookable": "Uno de estos tipos de habitación tiene las reservas desactivadas. Quítalo e inténtalo de nuevo.",
+    "checkOutAfterCheckIn": "La salida debe ser posterior a la entrada.",
+    "couldNotSaveBooking": "No pudimos guardar esta reserva. Revisa los datos e inténtalo de nuevo.",
     "everyRoomEveryState": "Cada habitación y cada estado: toca un día para ver su registro",
     "thisMonthSCalendarCould": "No se pudo cargar el calendario de este mes.",
     "nothingIsWaitingOnYou": "No hay nada pendiente para este día.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "Entrada — salida",
     "aNightRuns12": "Una noche va de las 12:00 a las 12:00 — entrada desde el mediodía, salida antes del mediodía siguiente.",
     "discount": "Descuento",
-    "saveBooking": "Guardar reserva"
+    "saveBooking": "Guardar reserva",
+    "invoice": "Factura",
+    "checkingForInvoice": "Buscando una factura…",
+    "noInvoiceYet": "Aún no hay factura.",
+    "couldNotCheckInvoice": "No se pudo comprobar si hay factura.",
+    "viewInvoice": "Ver factura",
+    "alsoMarkInvoicePaid": "Marcar también la factura {{invoice}} como pagada",
+    "bookingAndInvoicePaid": "Reserva y factura marcadas como pagadas",
+    "invoiceNotPaid": "La reserva se marcó como pagada, pero la factura no. {{reason}}",
+    "stayedIn": "Se alojó en",
+    "checkedOut": "Salida registrada",
+    "released": "Liberada",
+    "cancelOpenInvoiceWarning": "Esta reserva tiene una factura sin pagar ({{invoice}}). Cancelarla no la elimina.",
+    "bookingNotFound": "No encontramos esa reserva.",
+    "notEnoughBedsFree": "Una de estas habitaciones ya no tiene tantas camas libres. Asigna menos huéspedes ahí o elige otra habitación.",
+    "checkTheRoomsPicked": "No se pudieron usar esas habitaciones. Revisa las habitaciones y los huéspedes e inténtalo de nuevo.",
+    "alreadyCheckedIn": "Esta reserva ya tenía la entrada registrada, así que no se cambió nada.",
+    "bookingHasMovedOn": "Esta reserva cambió desde que la abriste, así que ese paso no se aplicó.",
+    "bookingAlreadyPaid": "Esta reserva ya estaba pagada, así que no se registró ningún pago nuevo.",
+    "alreadyPaidInvoicePaid": "Esta reserva ya estaba pagada. La factura {{invoice}} ahora está marcada como pagada.",
+    "invoiceAlreadyExists": "Esta reserva ya tiene una factura.",
+    "giveTheGuestAReason": "Indica un motivo al huésped — se le envía y se guarda en la reserva.",
+    "moveNotAccepted": "El servidor no lo aceptó. Inténtalo de nuevo.",
+    "roomAlreadyReleased": "La habitación {{room}} ya se liberó.",
+    "couldNotReleaseRoom": "No se pudo liberar la habitación {{room}}. Inténtalo de nuevo.",
+    "invoiceNoLongerExists": "No se encontró la factura. Puede que se haya eliminado.",
+    "payTheInvoiceOnItsOwn": "Abre la factura y márcala como pagada allí."
   },
   "hostHostelProfile": {
     "failed": "Fallido",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} pagados",
     "cancelledSummary": "Cancelado el {{date}} · PKR {{refund}} reembolsados · PKR {{charge}} de cargo por cancelación",
     "cancelRefundExplainer": "Recibirás <strong class=\"tabular-nums\">PKR {{refund}}</strong> de vuelta. Se retienen <strong class=\"tabular-nums\">PKR {{charge}}</strong> como cargo por cancelación, porque cancelas al {{pct}} % del periodo.",
-    "whenYouBookAHostel": "Cuando reserves un hostal, aparecerá aquí con tus fechas y lo que pagaste."
+    "whenYouBookAHostel": "Cuando reserves un hostal, aparecerá aquí con tus fechas y lo que pagaste.",
+    "noLongerCancellable": "Esta reserva ya no se puede cancelar aquí. Llama al hostal e indica la referencia de tu reserva.",
+    "roomNoLongerBookable": "Una de las habitaciones que elegiste ya no se puede reservar. Elige otra habitación.",
+    "checkOutAfterCheckIn": "La salida debe ser posterior a la entrada.",
+    "bookingNotFound": "No encontramos esta reserva. Es posible que se haya eliminado.",
+    "changeFailed": "No pudimos actualizar esta reserva. Inténtalo de nuevo.",
+    "cancelFailed": "No pudimos cancelar esta reserva. Inténtalo de nuevo.",
+    "withinCutoff": "Los cambios y cancelaciones se cierran 3 días antes de la entrada. Para cambiar algo ahora, llama al hostal e indica la referencia de tu reserva.",
+    "noLongerEditable": "Esta reserva ya no se puede cambiar aquí. Llama al hostal e indica la referencia de tu reserva."
   },
   "userFavorites": {
     "removeFromFavorites": "¿Quitar de favoritos?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "Introduce un teléfono válido",
     "enterAValidEmail": "Introduce un correo electrónico válido",
     "ofNSeats": "de {{count}}",
-    "bookingReference": "Referencia de la reserva"
+    "bookingReference": "Referencia de la reserva",
+    "hostelNotTakingBookings": "Este hostal no acepta reservas en línea en este momento.",
+    "roomNoLongerBookable": "Una de las habitaciones que elegiste ya no se puede reservar. Quítala y elige otra.",
+    "checkInHasPassed": "Tu fecha de entrada ya pasó. Elige nuevas fechas e inténtalo de nuevo.",
+    "checkOutAfterCheckIn": "La salida debe ser posterior a la entrada.",
+    "logInAgainToBook": "Tu sesión ha terminado. Vuelve a iniciar sesión para reservar.",
+    "tryAgain": "Inténtalo de nuevo."
   },
   "states": {
     "nothingHereYet": "Aún no hay nada aquí",
@@ -1957,6 +2025,7 @@
     "whatGendered": "hostales {{gender}}",
     "whatAll": "hostales, pensiones y co-living",
     "listingNotFoundTitle": "Anuncio no encontrado — HostelHive",
+    "postNotFoundTitle": "Entrada no encontrada — HostelHive",
     "listingNotFoundDescription": "Este anuncio de hostal no está disponible o el enlace es incorrecto.",
     "listingTitle": "{{name}} — hostal {{gender}} en {{location}} | HostelHive",
     "listingLead": "{{name}} — hostal {{gender}} en {{location}}.",

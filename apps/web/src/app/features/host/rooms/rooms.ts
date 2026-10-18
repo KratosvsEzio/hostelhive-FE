@@ -124,6 +124,8 @@ interface RoomCard {
   label: string;
   /** Count of additional occupants beyond the first two — rendered as a "+N" chip. */
   extra: number;
+  /** Beds still free, never below zero when the server reports more occupants than beds. */
+  free: number;
   bg: string;
 }
 
@@ -529,7 +531,8 @@ export class Rooms {
             : names.slice(0, 2).map(titleCase).join(', ');
       const extra = names.length > 2 ? names.length - 2 : 0;
       const code = raw ? `${titleCase(raw)} - ${room.number}` : room.number;
-      g.cards.push({ room, status, code, label, extra, bg: CARD_BG[status] });
+      const free = Math.max(0, room.capacity - room.occupied);
+      g.cards.push({ room, status, code, label, extra, free, bg: CARD_BG[status] });
     }
     return [...groups.values()].sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
   });

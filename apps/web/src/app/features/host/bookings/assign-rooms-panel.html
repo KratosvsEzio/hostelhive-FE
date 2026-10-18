@@ -124,7 +124,7 @@
       <footer class="border-t border-ink-100 bg-surface px-4 py-3 sm:px-5">
         @if (submitError()) {
           <p class="mb-2 rounded-lg bg-danger/10 px-3 py-2 text-xs font-medium text-danger" role="alert">
-            {{ submitError() }}
+            {{ submitError() | transloco }}
           </p>
         }
         <div class="flex flex-wrap items-center justify-between gap-3">

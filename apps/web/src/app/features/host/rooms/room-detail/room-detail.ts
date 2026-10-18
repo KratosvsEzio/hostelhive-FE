@@ -8,8 +8,8 @@ import {
   signal,
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import {
   Avatar,
   Button,
@@ -27,9 +27,54 @@ import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
 import { RoomCalendar } from '../room-calendar/room-calendar';
 import { tenantStatusLabel, tenantStatusTone } from '@util/tenant-status';
+import { bookingPath } from '@util/host-links';
+import { LocaleLink } from '@core/i18n/locale-link';
+import { HostBooking, HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 type RoomStatus = 'available' | 'partial' | 'full';
+
+/** One checked-in booking with beds in this room. */
+interface RoomBookingGuest {
+  bookingId: string;
+  ref: string;
+  guestName: string;
+  initials: string;
+  /** Guests the booking has in this room, not across all its rooms. */
+  guests: number;
+  /** `yyyy-MM-dd`. */
+  checkOut: string;
+  link: string;
+}
+
+interface BookingGuestsState {
+  loading: boolean;
+  error: boolean;
+  guests: RoomBookingGuest[];
+}
+
+const NO_BOOKING_GUESTS: BookingGuestsState = { loading: false, error: false, guests: [] };
+
+/** Enough for any one room: a booking only appears here while it holds beds in it. */
+const BOOKING_GUESTS_LIMIT = 100;
+
+/** The booking as this room sees it, or null when it holds no active beds here. */
+function toRoomBookingGuest(booking: HostBooking, roomId: string, hostelId: string): RoomBookingGuest | null {
+  const guests = booking.occupancies
+    .filter((o) => o.active && o.roomId === roomId)
+    .reduce((n, o) => n + o.guests, 0);
+  if (guests <= 0) return null;
+  const name = booking.guest.name.trim();
+  return {
+    bookingId: booking.id,
+    ref: booking.ref,
+    guestName: name || '—',
+    initials: name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?',
+    guests,
+    checkOut: booking.checkOut,
+    link: bookingPath(hostelId, booking.id),
+  };
+}
 
 interface DetailState {
   loading: boolean;
@@ -44,11 +89,12 @@ const LOADING: DetailState = { loading: true, error: false, networkError: false,
 @Component({
   selector: 'hh-room-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ApiDate, DecimalPipe, TitleCasePipe, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill, Tabs, RoomCalendar, TranslocoPipe],
+  imports: [ApiDate, DecimalPipe, TitleCasePipe, RouterLink, LocaleLink, DashboardLayout, Avatar, Button, EmptyState, ErrorState, Skeleton, StatusPill, Tabs, RoomCalendar, TranslocoPipe],
   templateUrl: './room-detail.html',
 })
 export class RoomDetail {
   private readonly api    = inject(HostOpsApi);
+  private readonly bookingsApi = inject(HostBookingsApi);
   private readonly store  = inject(HostPropertyStore);
   private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -104,6 +150,29 @@ export class RoomDetail {
     { initialValue: '' },
   );
 
+  /**
+   * The hostel's time zone for the calendar's "today": `undefined` while it is being read,
+   * `null` when there is none (the calendar then uses the device's date).
+   *
+   * The calendar waits for it rather than drawing first and correcting: a device a day behind
+   * the hostel would show the today cell, the roster's day and the free beds jump a day once
+   * the zone landed. A month-billed hostel has no calendar, so it is not asked.
+   */
+  protected readonly timeZone = toSignal(
+    toObservable(
+      computed(() => ({ hostelId: this.store.selected(), skip: this.monthlyBilling() }), {
+        equal: (a, b) => a.hostelId === b.hostelId && a.skip === b.skip,
+      }),
+    ).pipe(
+      switchMap(({ hostelId, skip }) =>
+        !hostelId || skip
+          ? of(null)
+          : this.store.timeZoneOf(hostelId).pipe(startWith<string | null | undefined>(undefined)),
+      ),
+    ),
+    { initialValue: undefined },
+  );
+
   protected readonly state = toSignal(
     toObservable(this.store.selected).pipe(
       switchMap((hostelId) =>
@@ -147,10 +216,67 @@ export class RoomDetail {
     this.state().renters.filter((r) => r.status !== 'active'),
   );
 
+  private readonly bookingGuestsKey = computed(
+    () => ({ hostelId: this.store.selected(), roomId: this.roomId(), skip: this.monthlyBilling() }),
+    { equal: (a, b) => a.hostelId === b.hostelId && a.roomId === b.roomId && a.skip === b.skip },
+  );
+
+  /**
+   * Checked-in bookings with beds in this room, read from the bookings index's active
+   * occupancies. Its own stream, so a failure here leaves the renters on screen.
+   *
+   * The server filter is kept in step with a client check: the index can lag a release, and
+   * a booking whose occupancy here has just gone inactive must not still count a bed.
+   * Month-billed hostels take no bookings, so they are not asked.
+   */
+  protected readonly bookingGuests = toSignal(
+    toObservable(this.bookingGuestsKey).pipe(
+      switchMap(({ hostelId, roomId, skip }) => {
+        if (!hostelId || !roomId || skip) return of(NO_BOOKING_GUESTS);
+        return this.bookingsApi
+          // The failure is written in the card itself, so the global toast stays quiet.
+          .list(hostelId, 1, BOOKING_GUESTS_LIMIT, { 'f[occupied_room_ids]': roomId }, { suppressErrorToast: true })
+          .pipe(
+            map((page): BookingGuestsState => ({
+              loading: false,
+              error: false,
+              guests: page.items
+                .map((b) => toRoomBookingGuest(b, roomId, hostelId))
+                .filter((g): g is RoomBookingGuest => g !== null),
+            })),
+            startWith<BookingGuestsState>({ loading: true, error: false, guests: [] }),
+            catchError(() => of<BookingGuestsState>({ loading: false, error: true, guests: [] })),
+          );
+      }),
+    ),
+    { initialValue: { loading: true, error: false, guests: [] } as BookingGuestsState },
+  );
+
+  /**
+   * Beds taken in this room: active tenants plus booking guests checked into it.
+   *
+   * `room.occupied` is active renters only, so on its own it called a room full of guests
+   * empty. Every occupancy figure on the page reads this one number so they cannot disagree.
+   */
+  protected readonly occupied = computed(
+    () => this.activeRenters().length + this.bookingGuests().guests.reduce((n, g) => n + g.guests, 0),
+  );
+
+  /**
+   * False while the booking guests are loading or failed to load: the bed count is then a lower
+   * bound, and a room holding only guests would read "Available". Month-billed hostels ask
+   * nothing, so theirs is known at once.
+   */
+  protected readonly guestCountKnown = computed(() => {
+    const g = this.bookingGuests();
+    return !g.loading && !g.error;
+  });
+
   protected readonly roomStatus = computed<RoomStatus>(() => {
     const r = this.state().room;
-    if (!r || r.occupied <= 0) return 'available';
-    return r.occupied >= r.capacity ? 'full' : 'partial';
+    const occupied = this.occupied();
+    if (!r || occupied <= 0) return 'available';
+    return occupied >= r.capacity ? 'full' : 'partial';
   });
 
   protected readonly statusTone = computed(() => {

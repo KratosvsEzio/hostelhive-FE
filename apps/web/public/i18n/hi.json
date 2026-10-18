@@ -333,7 +333,8 @@
     "allow": "अनुमति दें",
     "noPhotosYet": "अभी कोई फ़ोटो नहीं",
     "guests": "मेहमान",
-    "copy": "कॉपी करें"
+    "copy": "कॉपी करें",
+    "cannotReachTheServer": "सर्वर तक नहीं पहुँच पा रहे। कृपया थोड़ी देर में फिर से कोशिश करें।"
   },
   "leadWall": {
     "close": "बंद करें",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": "। उस पर क्लिक करते ही आपका अकाउंट चालू हो जाएगा और नंबर दिख जाएगा।",
     "iVeVerifiedContinue": "वेरिफाई हो गया — आगे बढ़ें",
     "back": "वापस",
-    "confirmPassword": "पासवर्ड की पुष्टि करें"
+    "confirmPassword": "पासवर्ड की पुष्टि करें",
+    "emailOrPasswordIncorrect": "ईमेल या पासवर्ड गलत है।",
+    "emailAlreadyRegistered": "इस ईमेल से एक खाता पहले से मौजूद है। इसके बजाय लॉग इन करें, या पासवर्ड भूल गए हों तो उसे रीसेट करें।",
+    "couldNotCreateAccount": "हम आपका खाता नहीं बना सके। अपनी जानकारी जाँचें और फिर से कोशिश करें।",
+    "accountCannotSignIn": "यह खाता अभी साइन इन नहीं कर सकता। हमसे संपर्क करें, हम मदद करेंगे।",
+    "googleDidNotFinish": "Google साइन-इन पूरा नहीं हुआ। फिर से कोशिश करें, या अपना ईमेल और पासवर्ड इस्तेमाल करें।",
+    "tooManyAttempts": "बहुत अधिक प्रयास। कृपया कुछ मिनट रुकें और फिर से कोशिश करें।",
+    "somethingWentWrong": "कुछ गलत हो गया। कृपया फिर से कोशिश करें।"
   },
   "home": {
     "searchCityOrArea": "शहर या इलाका खोजें",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "यदि इस ईमेल का पहले से खाता है, तो उसका मौजूदा पासवर्ड ही रहेगा — आपका केवल नया खाता बनाने पर उपयोग होगा।",
     "storedEmailBecomesLogin": "उनका सहेजा गया ईमेल ही लॉगिन होगा। यदि उस पते का पहले से खाता है, तो वही पासवर्ड बना रहेगा।",
     "pickADifferentStatusTo": "अपनी बाकी टीम देखने के लिए दूसरी स्थिति चुनें।",
-    "addAWardenCookOr": "वेतन और दस्तावेज़ सहेजने के लिए वार्डन, रसोइया या गार्ड जोड़ें।"
+    "addAWardenCookOr": "वेतन और दस्तावेज़ सहेजने के लिए वार्डन, रसोइया या गार्ड जोड़ें।",
+    "couldNotUploadImage": "छवि अपलोड नहीं हो सकी",
+    "fileTypeNotSupported": "यह फ़ाइल प्रकार समर्थित नहीं है। कोई दूसरी छवि चुनें।",
+    "uploadTryAgain": "कृपया फिर से कोशिश करें, या कोई दूसरी छवि चुनें।"
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "अनुमोदन विफल — पुनः प्रयास करें।",
@@ -1374,7 +1385,18 @@
     "due": "देय",
     "thisWillPermanentlyDeleteInvoice": "यह स्थायी रूप से चालान हटा देगा",
     "invoicesAppearHereOnceYou": "जैसे ही आप किराया या यूटिलिटी बिल जारी करेंगे, चालान यहाँ दिखाई देंगे।",
-    "tryAdjustingYourFilters": "अपने फ़िल्टर बदलकर देखें।"
+    "invoicesAppearHereNightly": "जैसे ही आप चेक-इन की गई बुकिंग से चालान बनाएँगे, वे यहाँ दिखाई देंगे।",
+    "tryAdjustingYourFilters": "अपने फ़िल्टर बदलकर देखें।",
+    "bookingInvoices": "बुकिंग के चालान",
+    "bookingRef": "बुकिंग {{ref}}",
+    "viewBooking": "बुकिंग देखें",
+    "guestName": "मेहमान का नाम",
+    "markPaidConfirmTitle": "{{invoice}} को भुगतान किया चिह्नित करें?",
+    "markPaidConfirmBody": "इससे पूरी राशि प्राप्त के रूप में दर्ज हो जाती है।",
+    "alsoMarkBookingPaid": "बुकिंग {{ref}} को भी भुगतान किया चिह्नित करें",
+    "invoiceAndBookingPaid": "चालान और बुकिंग को भुगतान किया चिह्नित किया गया",
+    "bookingNotPaid": "चालान को भुगतान किया चिह्नित किया गया, लेकिन बुकिंग को नहीं। {{reason}}",
+    "invoiceNotFound": "हमें वह चालान नहीं मिला।"
   },
   "hostExpenses": {
     "allTypes": "सभी प्रकार",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "रिसेप्शन पर लिया जाना है",
     "createBooking": "बुकिंग बनाएं",
     "theRoomsForThisProperty": "इस प्रॉपर्टी के कमरे लोड नहीं हो सके।",
+    "notSetUpForBookings": "यह प्रॉपर्टी बुकिंग लेने के लिए सेट नहीं है।",
+    "crmRequired": "आपके प्लान में बुकिंग शामिल नहीं है। बुकिंग जोड़ने के लिए अपना प्लान अपग्रेड करें।",
+    "checkInCannotBeInPast": "चेक-इन आज से पहले नहीं हो सकता। आज या बाद की कोई तारीख़ चुनें।",
+    "roomTypeNotBookable": "इनमें से एक कमरे का प्रकार बुकिंग के लिए बंद है। उसे हटाएँ और फिर से कोशिश करें।",
+    "checkOutAfterCheckIn": "चेक-आउट, चेक-इन के बाद होना चाहिए।",
+    "couldNotSaveBooking": "हम यह बुकिंग सहेज नहीं सके। विवरण जाँचें और फिर से कोशिश करें।",
     "everyRoomEveryState": "हर कमरा, हर स्थिति — किसी दिन का लेखा देखने के लिए उस पर टैप करें",
     "thisMonthSCalendarCould": "इस माह का कैलेंडर लोड नहीं हो सका।",
     "nothingIsWaitingOnYou": "इस दिन के लिए आपके पास कुछ भी लंबित नहीं है।",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "चेक-इन — चेक-आउट",
     "aNightRuns12": "एक रात दोपहर 12:00 से अगले दिन दोपहर 12:00 तक होती है — दोपहर से चेक-इन, अगले दिन दोपहर तक चेक-आउट।",
     "discount": "छूट",
-    "saveBooking": "बुकिंग सहेजें"
+    "saveBooking": "बुकिंग सहेजें",
+    "invoice": "चालान",
+    "checkingForInvoice": "चालान की जाँच हो रही है…",
+    "noInvoiceYet": "अभी कोई चालान नहीं।",
+    "couldNotCheckInvoice": "चालान की जाँच नहीं हो सकी।",
+    "viewInvoice": "चालान देखें",
+    "alsoMarkInvoicePaid": "चालान {{invoice}} को भी भुगतान किया चिह्नित करें",
+    "bookingAndInvoicePaid": "बुकिंग और चालान को भुगतान किया चिह्नित किया गया",
+    "invoiceNotPaid": "बुकिंग को भुगतान किया चिह्नित किया गया, लेकिन चालान को नहीं। {{reason}}",
+    "stayedIn": "ठहरने की जगह",
+    "checkedOut": "चेक-आउट हो गया",
+    "released": "खाली किया गया",
+    "cancelOpenInvoiceWarning": "इस बुकिंग पर एक बकाया चालान ({{invoice}}) है। रद्द करने से वह नहीं हटता।",
+    "bookingNotFound": "हमें वह बुकिंग नहीं मिली।",
+    "notEnoughBedsFree": "इनमें से एक कमरे में अब उतने बिस्तर खाली नहीं हैं। वहाँ कम मेहमान रखें या कोई दूसरा कमरा चुनें।",
+    "checkTheRoomsPicked": "उन कमरों का उपयोग नहीं हो सका। कमरे और मेहमान जाँचें, फिर से कोशिश करें।",
+    "alreadyCheckedIn": "इस बुकिंग का चेक-इन पहले ही हो चुका था, इसलिए कुछ भी नहीं बदला गया।",
+    "bookingHasMovedOn": "आपके खोलने के बाद से यह बुकिंग बदल गई है, इसलिए वह चरण लागू नहीं किया गया।",
+    "bookingAlreadyPaid": "इस बुकिंग का भुगतान पहले ही हो चुका था, इसलिए कोई नया भुगतान दर्ज नहीं किया गया।",
+    "alreadyPaidInvoicePaid": "इस बुकिंग का भुगतान पहले ही हो चुका था। चालान {{invoice}} को अब भुगतान किया चिह्नित कर दिया गया है।",
+    "invoiceAlreadyExists": "इस बुकिंग का चालान पहले से मौजूद है।",
+    "giveTheGuestAReason": "मेहमान को कोई कारण बताएँ — यह उन्हें भेजा जाता है और बुकिंग पर सहेजा जाता है।",
+    "moveNotAccepted": "सर्वर ने इसे स्वीकार नहीं किया। कृपया फिर से कोशिश करें।",
+    "roomAlreadyReleased": "कमरा {{room}} पहले ही खाली किया जा चुका है।",
+    "couldNotReleaseRoom": "कमरा {{room}} खाली नहीं किया जा सका। कृपया फिर से कोशिश करें।",
+    "invoiceNoLongerExists": "चालान नहीं मिला। हो सकता है उसे हटा दिया गया हो।",
+    "payTheInvoiceOnItsOwn": "चालान खोलें और वहीं उसे भुगतान किया चिह्नित करें।"
   },
   "hostHostelProfile": {
     "failed": "विफल",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} भुगतान",
     "cancelledSummary": "रद्द {{date}} · PKR {{refund}} वापस · PKR {{charge}} रद्दीकरण शुल्क",
     "cancelRefundExplainer": "आपको <strong class=\"tabular-nums\">PKR {{refund}}</strong> वापस मिलेंगे। <strong class=\"tabular-nums\">PKR {{charge}}</strong> रद्दीकरण शुल्क के रूप में रखा जाता है, क्योंकि आप शेड्यूल के {{pct}}% पर रद्द कर रहे हैं।",
-    "whenYouBookAHostel": "जब आप कोई हॉस्टल बुक करेंगे, वह आपकी तारीख़ों और भुगतान के साथ यहाँ दिखेगा।"
+    "whenYouBookAHostel": "जब आप कोई हॉस्टल बुक करेंगे, वह आपकी तारीख़ों और भुगतान के साथ यहाँ दिखेगा।",
+    "noLongerCancellable": "यह बुकिंग अब यहाँ रद्द नहीं की जा सकती। हॉस्टल को कॉल करें और अपना बुकिंग संदर्भ बताएँ।",
+    "roomNoLongerBookable": "आपके चुने गए कमरों में से एक अब बुक नहीं हो सकता। कोई दूसरा कमरा चुनें।",
+    "checkOutAfterCheckIn": "चेक-आउट, चेक-इन के बाद होना चाहिए।",
+    "bookingNotFound": "हमें यह बुकिंग नहीं मिली। हो सकता है इसे हटा दिया गया हो।",
+    "changeFailed": "हम यह बुकिंग अपडेट नहीं कर सके। कृपया फिर से कोशिश करें।",
+    "cancelFailed": "हम यह बुकिंग रद्द नहीं कर सके। कृपया फिर से कोशिश करें।",
+    "withinCutoff": "बदलाव और रद्दीकरण चेक-इन से 3 दिन पहले बंद हो जाते हैं। अभी कुछ बदलने के लिए, हॉस्टल को कॉल करें और अपना बुकिंग संदर्भ बताएँ।",
+    "noLongerEditable": "यह बुकिंग अब यहाँ बदली नहीं जा सकती। हॉस्टल को कॉल करें और अपना बुकिंग संदर्भ बताएँ।"
   },
   "userFavorites": {
     "removeFromFavorites": "पसंदीदा से हटाएँ?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "मान्य फ़ोन नंबर दर्ज करें",
     "enterAValidEmail": "मान्य ईमेल पता दर्ज करें",
     "ofNSeats": "{{count}} में से",
-    "bookingReference": "बुकिंग संदर्भ"
+    "bookingReference": "बुकिंग संदर्भ",
+    "hostelNotTakingBookings": "यह हॉस्टल अभी ऑनलाइन बुकिंग नहीं ले रहा है।",
+    "roomNoLongerBookable": "आपके चुने गए कमरों में से एक अब बुक नहीं हो सकता। उसे हटाएँ और कोई दूसरा चुनें।",
+    "checkInHasPassed": "आपकी चेक-इन तारीख़ निकल चुकी है। नई तारीख़ें चुनें और फिर से कोशिश करें।",
+    "checkOutAfterCheckIn": "चेक-आउट, चेक-इन के बाद होना चाहिए।",
+    "logInAgainToBook": "आपका सत्र समाप्त हो गया है। बुक करने के लिए फिर से लॉग इन करें।",
+    "tryAgain": "कृपया फिर से कोशिश करें।"
   },
   "states": {
     "nothingHereYet": "अभी यहाँ कुछ नहीं",
@@ -1957,6 +2025,7 @@
     "whatGendered": "{{gender}} हॉस्टल",
     "whatAll": "हॉस्टल, पीजी और को-लिविंग",
     "listingNotFoundTitle": "लिस्टिंग नहीं मिली — HostelHive",
+    "postNotFoundTitle": "पोस्ट नहीं मिली — HostelHive",
     "listingNotFoundDescription": "यह हॉस्टल लिस्टिंग उपलब्ध नहीं है या लिंक ग़लत है।",
     "listingTitle": "{{name}} — {{location}} में {{gender}} हॉस्टल | HostelHive",
     "listingLead": "{{name}} — {{location}} में {{gender}} हॉस्टल।",

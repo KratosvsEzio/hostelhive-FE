@@ -333,7 +333,8 @@
     "allow": "Izinkan",
     "noPhotosYet": "Belum ada foto",
     "guests": "Tamu",
-    "copy": "Salin"
+    "copy": "Salin",
+    "cannotReachTheServer": "Tidak dapat menjangkau server. Silakan coba lagi sebentar lagi."
   },
   "leadWall": {
     "close": "Tutup",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Mengekliknya akan mengaktifkan akun Anda dan menampilkan nomornya.",
     "iVeVerifiedContinue": "Saya sudah verifikasi — lanjutkan",
     "back": "Kembali",
-    "confirmPassword": "Konfirmasi kata sandi"
+    "confirmPassword": "Konfirmasi kata sandi",
+    "emailOrPasswordIncorrect": "Email atau kata sandi salah.",
+    "emailAlreadyRegistered": "Akun dengan email ini sudah ada. Masuk saja, atau reset kata sandi Anda jika lupa.",
+    "couldNotCreateAccount": "Kami tidak dapat membuat akun Anda. Periksa data Anda lalu coba lagi.",
+    "accountCannotSignIn": "Akun ini tidak dapat masuk saat ini. Hubungi kami dan kami akan membantu.",
+    "googleDidNotFinish": "Masuk dengan Google tidak selesai. Coba lagi, atau gunakan email dan kata sandi Anda.",
+    "tooManyAttempts": "Terlalu banyak percobaan. Harap tunggu beberapa menit lalu coba lagi.",
+    "somethingWentWrong": "Terjadi kesalahan. Silakan coba lagi."
   },
   "home": {
     "searchCityOrArea": "Cari kota atau area",
@@ -1322,7 +1330,10 @@
     "existingAccountKeepsPassword": "Jika email ini sudah punya akun, kata sandinya saat ini tetap dipakai — milik Anda hanya dipakai bila akun baru dibuat.",
     "storedEmailBecomesLogin": "Email tersimpan akan menjadi login. Jika alamat itu sudah punya akun, kata sandinya tetap dipakai.",
     "pickADifferentStatusTo": "Pilih status lain untuk melihat anggota tim lainnya.",
-    "addAWardenCookOr": "Tambahkan penjaga, juru masak, atau satpam untuk menyimpan gaji dan dokumennya."
+    "addAWardenCookOr": "Tambahkan penjaga, juru masak, atau satpam untuk menyimpan gaji dan dokumennya.",
+    "couldNotUploadImage": "Gambar tidak dapat diunggah",
+    "fileTypeNotSupported": "Jenis file itu tidak didukung. Pilih gambar lain.",
+    "uploadTryAgain": "Silakan coba lagi, atau pilih gambar lain."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Persetujuan gagal — coba lagi.",
@@ -1379,7 +1390,18 @@
     "due": "Jatuh tempo",
     "thisWillPermanentlyDeleteInvoice": "Ini akan menghapus faktur secara permanen",
     "invoicesAppearHereOnceYou": "Tagihan muncul di sini setelah Anda menerbitkan tagihan sewa atau utilitas.",
-    "tryAdjustingYourFilters": "Coba sesuaikan filter Anda."
+    "invoicesAppearHereNightly": "Faktur muncul di sini setelah Anda membuatnya dari pemesanan yang sudah check-in.",
+    "tryAdjustingYourFilters": "Coba sesuaikan filter Anda.",
+    "bookingInvoices": "Faktur pemesanan",
+    "bookingRef": "Pemesanan {{ref}}",
+    "viewBooking": "Lihat pemesanan",
+    "guestName": "Nama tamu",
+    "markPaidConfirmTitle": "Tandai {{invoice}} lunas?",
+    "markPaidConfirmBody": "Ini mencatat jumlah penuh sebagai sudah diterima.",
+    "alsoMarkBookingPaid": "Tandai juga pemesanan {{ref}} lunas",
+    "invoiceAndBookingPaid": "Faktur dan pemesanan ditandai lunas",
+    "bookingNotPaid": "Faktur ditandai lunas, tetapi pemesanannya tidak. {{reason}}",
+    "invoiceNotFound": "Kami tidak dapat menemukan faktur itu."
   },
   "hostExpenses": {
     "allTypes": "Semua jenis",
@@ -1465,6 +1487,12 @@
     "toCollectAtTheDesk": "Ditagih di meja resepsionis",
     "createBooking": "Buat pemesanan",
     "theRoomsForThisProperty": "Kamar untuk properti ini tidak dapat dimuat.",
+    "notSetUpForBookings": "Properti ini belum diatur untuk menerima pemesanan.",
+    "crmRequired": "Paket Anda tidak mencakup pemesanan. Upgrade paket Anda untuk menambahkan pemesanan.",
+    "checkInCannotBeInPast": "Check-in tidak boleh sebelum hari ini. Pilih hari ini atau tanggal setelahnya.",
+    "roomTypeNotBookable": "Salah satu tipe kamar ini dinonaktifkan untuk pemesanan. Hapus lalu coba lagi.",
+    "checkOutAfterCheckIn": "Check-out harus setelah check-in.",
+    "couldNotSaveBooking": "Kami tidak dapat menyimpan pemesanan ini. Periksa detailnya lalu coba lagi.",
     "everyRoomEveryState": "Setiap kamar, setiap status — ketuk satu hari untuk melihat catatannya",
     "thisMonthSCalendarCould": "Kalender bulan ini tidak dapat dimuat.",
     "nothingIsWaitingOnYou": "Tidak ada yang menunggu tindakan Anda pada hari ini.",
@@ -1477,7 +1505,33 @@
     "checkInCheckOut": "Check-in — check-out",
     "aNightRuns12": "Satu malam berlaku pukul 12.00 sampai 12.00 — check-in mulai tengah hari, check-out sebelum tengah hari besoknya.",
     "discount": "Diskon",
-    "saveBooking": "Simpan pemesanan"
+    "saveBooking": "Simpan pemesanan",
+    "invoice": "Faktur",
+    "checkingForInvoice": "Memeriksa faktur…",
+    "noInvoiceYet": "Belum ada faktur.",
+    "couldNotCheckInvoice": "Tidak dapat memeriksa faktur.",
+    "viewInvoice": "Lihat faktur",
+    "alsoMarkInvoicePaid": "Tandai juga faktur {{invoice}} lunas",
+    "bookingAndInvoicePaid": "Pemesanan dan faktur ditandai lunas",
+    "invoiceNotPaid": "Pemesanan ditandai lunas, tetapi fakturnya tidak. {{reason}}",
+    "stayedIn": "Menginap di",
+    "checkedOut": "Sudah check-out",
+    "released": "Dilepas",
+    "cancelOpenInvoiceWarning": "Pemesanan ini memiliki faktur yang belum dibayar ({{invoice}}). Membatalkan pemesanan tidak menghapusnya.",
+    "bookingNotFound": "Kami tidak dapat menemukan pemesanan itu.",
+    "notEnoughBedsFree": "Salah satu kamar ini tidak lagi memiliki tempat tidur kosong sebanyak itu. Tempatkan lebih sedikit tamu di sana atau pilih kamar lain.",
+    "checkTheRoomsPicked": "Kamar-kamar itu tidak dapat digunakan. Periksa kamar dan tamu, lalu coba lagi.",
+    "alreadyCheckedIn": "Pemesanan ini sudah check-in, jadi tidak ada yang diubah.",
+    "bookingHasMovedOn": "Pemesanan ini telah berubah sejak Anda membukanya, jadi langkah tersebut tidak diterapkan.",
+    "bookingAlreadyPaid": "Pemesanan ini sudah lunas, jadi tidak ada pembayaran baru yang dicatat.",
+    "alreadyPaidInvoicePaid": "Pemesanan ini sudah lunas. Faktur {{invoice}} kini ditandai lunas.",
+    "invoiceAlreadyExists": "Pemesanan ini sudah memiliki faktur.",
+    "giveTheGuestAReason": "Berikan alasan kepada tamu — alasan ini dikirim kepadanya dan disimpan di pemesanan.",
+    "moveNotAccepted": "Server tidak menerimanya. Silakan coba lagi.",
+    "roomAlreadyReleased": "Kamar {{room}} sudah dilepas.",
+    "couldNotReleaseRoom": "Tidak dapat melepas kamar {{room}}. Silakan coba lagi.",
+    "invoiceNoLongerExists": "Faktur tidak ditemukan. Mungkin sudah dihapus.",
+    "payTheInvoiceOnItsOwn": "Buka fakturnya dan tandai lunas di sana."
   },
   "hostHostelProfile": {
     "failed": "Gagal",
@@ -1563,7 +1617,15 @@
     "pkrPaid": "PKR {{amount}} dibayar",
     "cancelledSummary": "Dibatalkan {{date}} · PKR {{refund}} dikembalikan · PKR {{charge}} biaya pembatalan",
     "cancelRefundExplainer": "Anda akan menerima kembali <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> ditahan sebagai biaya pembatalan, karena Anda membatalkan pada {{pct}}% masa berlaku.",
-    "whenYouBookAHostel": "Saat Anda memesan hostel, pesanan akan muncul di sini beserta tanggal dan biayanya."
+    "whenYouBookAHostel": "Saat Anda memesan hostel, pesanan akan muncul di sini beserta tanggal dan biayanya.",
+    "noLongerCancellable": "Pemesanan ini tidak dapat dibatalkan lagi di sini. Hubungi hostel dan sebutkan referensi pemesanan Anda.",
+    "roomNoLongerBookable": "Salah satu kamar yang Anda pilih tidak dapat dipesan lagi. Pilih kamar lain.",
+    "checkOutAfterCheckIn": "Check-out harus setelah check-in.",
+    "bookingNotFound": "Kami tidak dapat menemukan pemesanan ini. Mungkin sudah dihapus.",
+    "changeFailed": "Kami tidak dapat memperbarui pemesanan ini. Silakan coba lagi.",
+    "cancelFailed": "Kami tidak dapat membatalkan pemesanan ini. Silakan coba lagi.",
+    "withinCutoff": "Perubahan dan pembatalan ditutup 3 hari sebelum check-in. Untuk mengubah sesuatu sekarang, hubungi hostel dan sebutkan referensi pemesanan Anda.",
+    "noLongerEditable": "Pemesanan ini tidak dapat diubah lagi di sini. Hubungi hostel dan sebutkan referensi pemesanan Anda."
   },
   "userFavorites": {
     "removeFromFavorites": "Hapus dari favorit?",
@@ -1899,7 +1961,13 @@
     "enterAValidPhone": "Masukkan nomor telepon yang valid",
     "enterAValidEmail": "Masukkan alamat email yang valid",
     "ofNSeats": "dari {{count}}",
-    "bookingReference": "Referensi pemesanan"
+    "bookingReference": "Referensi pemesanan",
+    "hostelNotTakingBookings": "Hostel ini sedang tidak menerima pemesanan online.",
+    "roomNoLongerBookable": "Salah satu kamar yang Anda pilih tidak dapat dipesan lagi. Hapus lalu pilih kamar lain.",
+    "checkInHasPassed": "Tanggal check-in Anda sudah lewat. Pilih tanggal baru lalu coba lagi.",
+    "checkOutAfterCheckIn": "Check-out harus setelah check-in.",
+    "logInAgainToBook": "Sesi Anda telah berakhir. Masuk lagi untuk memesan.",
+    "tryAgain": "Silakan coba lagi."
   },
   "states": {
     "nothingHereYet": "Belum ada apa-apa di sini",
@@ -1962,6 +2030,7 @@
     "whatGendered": "hostel {{gender}}",
     "whatAll": "hostel, rumah kos, dan co-living",
     "listingNotFoundTitle": "Iklan tidak ditemukan — HostelHive",
+    "postNotFoundTitle": "Pos tidak ditemukan — HostelHive",
     "listingNotFoundDescription": "Iklan hostel ini tidak tersedia atau tautannya salah.",
     "listingTitle": "{{name}} — hostel {{gender}} di {{location}} | HostelHive",
     "listingLead": "{{name}} — hostel {{gender}} di {{location}}.",

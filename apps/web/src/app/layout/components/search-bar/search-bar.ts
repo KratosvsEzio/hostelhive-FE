@@ -6,6 +6,7 @@ import {
   ViewEncapsulation,
   computed,
   inject,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -14,6 +15,7 @@ import { filter } from 'rxjs';
 import { fromLocationSlug, searchRouteFor } from '@util/location-slug';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { isAccommodationType } from '@features/public/search/search-params';
+import { isPriceSort } from '@features/public/search/search-sort';
 import {
   EVERYWHERE_KEY,
   RETIRED_KEYS_NULLED,
@@ -56,6 +58,30 @@ const fmtK = (n: number): string =>
   n >= 1000 ? `${round2(n / 1000)}k` : `${round2(n)}`;
 
 let nextWhereId = 0;
+
+/**
+ * Structural equality for the URL keys the bar's fields are linked to — flat records of
+ * strings and nulls, built field by field in a fixed order, so their JSON is a faithful
+ * comparison.
+ */
+const sameKeys = (a: object, b: object): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/** A numeric query value, or `null` when the URL carries none (or an empty one). */
+const toNumber = (v: string | null): number | null => (v ? +v : null);
+
+/**
+ * The place name the URL implies: its own `place`/`city` param when it has one, and the
+ * routed slug when it does not.
+ *
+ * A pasted `/search/lahore` carries no `place`, so without the slug the bar goes blank on
+ * exactly the page whose whole subject is that place. Curated names come from the same
+ * table the map centres on, so the bar, the heading and the results agree.
+ */
+const placeName = (k: { place: string | null; city: string | null; slug: string }): string =>
+  k.place ??
+  k.city ??
+  resolveSearchSlug(k.slug)?.name ??
+  (k.slug ? fromLocationSlug(k.slug) : '');
 
 /** A translation key with whatever it interpolates, for the template to resolve. */
 type Label = { key: string; params?: Record<string, string> };
@@ -109,20 +135,98 @@ export class SearchBar {
   protected readonly BUDGET_STEP = BUDGET_STEP;
 
   protected readonly open = signal<Seg | null>(null);
-  protected readonly place = signal('');
-  private readonly lat = signal<number | null>(null);
-  private readonly lng = signal<number | null>(null);
-  private readonly zoom = signal<number | null>(null);
-  protected readonly budgetLow = signal(BUDGET_MIN);
-  protected readonly budgetHigh = signal(BUDGET_MAX);
+
+  /**
+   * The URL as the bar last read it: the query, and the routed `:location` slug read at the
+   * same moment. `null` until the first read.
+   *
+   * Both subscriptions in the constructor write it, and nothing else does. Every field the
+   * bar edits is derived from it below, through a key per group of fields.
+   */
+  private readonly url = signal<{ params: ParamMap; slug: string } | null>(null);
+
+  /**
+   * The URL inputs the Where field presents: `place`, `city`, the coordinates, the zoom, and
+   * the routed slug.
+   *
+   * The slug is part of the key, not read on the side, for two reasons. A pasted
+   * `/search/lahore` is first read while the route tree is still a stub and the slug reads
+   * `''`; only the `NavigationEnd` read sees `lahore`, and it is the slug changing in the key
+   * that lets that later read fill the field. And leaving `/search/lahore` for
+   * `/search?everywhere=1` changes nothing else the field presents — the query already
+   * carried no place — so without the slug the field would go on reading "Lahore" over a
+   * worldwide search.
+   */
+  private readonly placeKey = computed(
+    () => {
+      const p = this.url()?.params;
+      return {
+        place: p?.get('place') ?? null,
+        city: p?.get('city') ?? null,
+        lat: p?.get('lat') ?? null,
+        lng: p?.get('lng') ?? null,
+        zoom: p?.get('zoom') ?? null,
+        slug: this.url()?.slug ?? '',
+      };
+    },
+    { equal: sameKeys },
+  );
+
+  /** The URL inputs the Budget segment presents. */
+  private readonly budgetKey = computed(
+    () => {
+      const p = this.url()?.params;
+      return { min: p?.get('minPrice') ?? null, max: p?.get('maxPrice') ?? null };
+    },
+    { equal: sameKeys },
+  );
+
+  /**
+   * The URL input the Accommodation segment presents — a single string, so the default
+   * equality is already the structural one.
+   */
+  private readonly typeKey = computed(() => this.url()?.params.get('gender') ?? null);
+
+  /**
+   * The bar's own edit state: each field shows its URL value, and keeps whatever the visitor
+   * has picked since, until its group's key changes.
+   *
+   * Linked to the keys rather than to {@link url} itself because the URL changes far more
+   * often than the search does. The map mirrors its viewport into the same query string as
+   * it settles, and after every drag, and each of those writes is a navigation. Were these
+   * reset by every one, a place picked in the Where field but not yet searched would be
+   * swapped back for the URL's place while the map was still settling, and Search would then
+   * go to the old one. Budget and accommodation edits went the same way.
+   *
+   * The `equal` on each key is what holds this together: a key computed afresh on every read
+   * is a new object every time, and without it every viewport write would count as a change.
+   */
+  protected readonly place = linkedSignal(() => placeName(this.placeKey()));
+  private readonly lat = linkedSignal(() => toNumber(this.placeKey().lat));
+  private readonly lng = linkedSignal(() => toNumber(this.placeKey().lng));
+  private readonly zoom = linkedSignal(() => toNumber(this.placeKey().zoom));
+  protected readonly budgetLow = linkedSignal(
+    () => toNumber(this.budgetKey().min) ?? BUDGET_MIN,
+  );
+  protected readonly budgetHigh = linkedSignal(
+    () => toNumber(this.budgetKey().max) ?? BUDGET_MAX,
+  );
+  /**
+   * Validated rather than copied: the bar writes this back on every search, so a bad
+   * `?gender=` read raw would be re-submitted for good, and show as a chosen type.
+   */
+  protected readonly accommodation = linkedSignal<string>(() => {
+    const g = this.typeKey();
+    return isAccommodationType(g) ? g : '';
+  });
   /**
    * The active sort, read but never set here — see the price-sort clause in {@link search}.
    *
    * The bar has no sort control of its own; it needs this only because the accommodation
-   * type it *does* own is what decides whether a price sort means anything.
+   * type it *does* own is what decides whether a price sort means anything. With no edit of
+   * its own to protect, it simply follows the URL on every read.
    */
-  private readonly activeSort = signal('');
-  protected readonly accommodation = signal('');
+  private readonly activeSort = computed(() => this.url()?.params.get('sort') ?? '');
 
   protected readonly budgetActive = computed(
     () => this.budgetLow() > BUDGET_MIN || this.budgetHigh() < BUDGET_MAX,
@@ -186,56 +290,32 @@ export class SearchBar {
   }
 
   constructor() {
-    // Reflect the active search (query params) into the bar reactively — so after a
-    // search it keeps showing the searched place instead of going blank. Typing doesn't
-    // navigate, so in-progress edits are preserved (this only fires on real navigation).
-    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((p) => {
-      this.syncPlace(p);
-      const la = p.get('lat');
-      const ln = p.get('lng');
-      this.lat.set(la ? +la : null);
-      this.lng.set(ln ? +ln : null);
-      const z = p.get('zoom');
-      this.zoom.set(z ? +z : null);
-      const mn = p.get('minPrice');
-      const mx = p.get('maxPrice');
-      this.budgetLow.set(mn ? +mn : BUDGET_MIN);
-      this.budgetHigh.set(mx ? +mx : BUDGET_MAX);
-      // Validated rather than copied: the bar writes this back on every search, so a bad
-      // `?gender=` read raw would be re-submitted for good, and show as a chosen type.
-      const g = p.get('gender');
-      this.accommodation.set(isAccommodationType(g) ? g : '');
-      this.activeSort.set(p.get('sort') ?? '');
-    });
+    // Reflect the active search into the bar, so after a search it keeps showing the
+    // searched place instead of going blank. This fires on far more than a new search: the
+    // map mirrors its viewport into the same query string as it settles and after every
+    // drag. So the URL is only recorded here, and each group of fields decides for itself
+    // whether it changed — only a change of the keys a group presents may overwrite what
+    // the visitor has edited there (see `placeKey` and the fields derived from it).
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed())
+      .subscribe((p) => this.url.set({ params: p, slug: this.routedLocationSlug() }));
     // Query params are resolved before the outlet activates, so on a first load the
     // subscription above runs while the route tree is still a stub and the `:location`
     // slug is not readable yet. NavigationEnd is the point at which the tree is final —
-    // re-deriving there is what makes a *pasted* /search/lahore fill the bar, rather than
-    // only a search the visitor performed in this tab.
+    // re-reading there is what makes a *pasted* /search/lahore fill the bar, rather than
+    // only a search the visitor performed in this tab. Whichever of the two reads comes
+    // last is the one the fields end up reflecting.
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.syncPlace(this.route.snapshot.queryParamMap));
-  }
-
-  /**
-   * The place name the URL implies: its own `place`/`city` param when it has one, and the
-   * routed slug when it does not.
-   *
-   * A pasted `/search/lahore` carries no `place`, so without the slug the bar goes blank on
-   * exactly the page whose whole subject is that place. Curated names come from the same
-   * table the map centres on, so the bar, the heading and the results agree.
-   */
-  private syncPlace(p: ParamMap): void {
-    const slug = this.routedLocationSlug();
-    this.place.set(
-      p.get('place') ??
-        p.get('city') ??
-        resolveSearchSlug(slug)?.name ??
-        (slug ? fromLocationSlug(slug) : ''),
-    );
+      .subscribe(() =>
+        this.url.set({
+          params: this.route.snapshot.queryParamMap,
+          slug: this.routedLocationSlug(),
+        }),
+      );
   }
 
   protected toggle(seg: Seg): void {
@@ -307,7 +387,7 @@ export class SearchBar {
         // while the Sort dropdown no longer offers it, so the URL and the visible control
         // would disagree about what the list is doing. The Frequency filter used to carry
         // this guard; the accommodation type inherits it along with the job.
-        ...(!this.accommodation() && this.activeSort().startsWith('price-')
+        ...(!this.accommodation() && isPriceSort(this.activeSort())
           ? { sort: null }
           : {}),
       },

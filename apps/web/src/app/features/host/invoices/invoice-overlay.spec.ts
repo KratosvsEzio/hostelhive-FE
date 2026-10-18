@@ -200,3 +200,107 @@ describe('shiftInvoiceCounts — deletions', () => {
     expect(out.total).toBe(0);
   });
 });
+
+/**
+ * Booking bills.
+ *
+ * The API has no booking bucket, so the page supplies one; the shift moves it only where the
+ * base carries it, and never lets rent or utility absorb a booking bill.
+ */
+describe('shiftInvoiceCounts — booking bills', () => {
+  const WITH_BOOKING: InvoiceCounts = {
+    ...BASE,
+    aggs: { ...BASE.aggs!, bookingTotal: 24_000, bookingPaid: 6_000, bookingBalance: 18_000 },
+  };
+
+  it('moves a settled booking bill from balance into paid', () => {
+    const out = shiftInvoiceCounts(WITH_BOOKING, [
+      {
+        before: bill({ kind: 'booking', amount: 4000, status: 'due' }),
+        after: bill({ kind: 'booking', amount: 4000, status: 'paid' }),
+      },
+    ]);
+
+    expect(out.aggs!.bookingTotal).toBe(24_000);
+    expect(out.aggs!.bookingPaid).toBe(10_000);
+    expect(out.aggs!.bookingBalance).toBe(14_000);
+  });
+
+  it('adds a created booking bill to the total and balance only', () => {
+    const out = shiftInvoiceCounts(WITH_BOOKING, [
+      { before: null, after: bill({ kind: 'booking', amount: 3000 }) },
+    ]);
+
+    expect(out.aggs!.bookingTotal).toBe(27_000);
+    expect(out.aggs!.bookingBalance).toBe(21_000);
+    expect(out.aggs!.bookingPaid).toBe(6_000);
+  });
+
+  it('takes a deleted booking bill out of the total and balance', () => {
+    const out = shiftInvoiceCounts(WITH_BOOKING, [
+      { before: bill({ kind: 'booking', amount: 3000, status: 'due' }), after: null },
+    ]);
+
+    expect(out.aggs!.bookingTotal).toBe(21_000);
+    expect(out.aggs!.bookingBalance).toBe(15_000);
+    expect(out.aggs!.bookingPaid).toBe(6_000);
+  });
+
+  // The fields are optional because the page may have no figure to move; inventing one
+  // would show a total built from local edits alone.
+  it('leaves booking figures absent, not NaN, when the base has none', () => {
+    const out = shiftInvoiceCounts(BASE, [
+      { before: null, after: bill({ kind: 'booking', amount: 3000 }) },
+    ]);
+
+    expect('bookingTotal' in out.aggs!).toBe(false);
+    expect('bookingPaid' in out.aggs!).toBe(false);
+    expect('bookingBalance' in out.aggs!).toBe(false);
+  });
+
+  it('moves only the booking figures the base has', () => {
+    const partial: InvoiceCounts = { ...BASE, aggs: { ...BASE.aggs!, bookingTotal: 1000 } };
+    const out = shiftInvoiceCounts(partial, [
+      { before: null, after: bill({ kind: 'booking', amount: 500 }) },
+    ]);
+
+    expect(out.aggs!.bookingTotal).toBe(1500);
+    expect('bookingPaid' in out.aggs!).toBe(false);
+    expect('bookingBalance' in out.aggs!).toBe(false);
+  });
+
+  it('leaves rent and utility alone for a booking change', () => {
+    const out = shiftInvoiceCounts(WITH_BOOKING, [
+      { before: bill({ kind: 'booking', amount: 2000, status: 'due' }), after: bill({ kind: 'booking', amount: 2000, status: 'paid' }) },
+      { before: null, after: bill({ kind: 'booking', amount: 1000 }) },
+    ]);
+
+    expect(out.aggs).toMatchObject({
+      rentTotal: 50_000, rentPaid: 20_000, rentBalance: 30_000,
+      utilityTotal: 8_000, utilityPaid: 3_000, utilityBalance: 5_000,
+    });
+  });
+
+  it('leaves the booking figures alone for a rent or utility change', () => {
+    const out = shiftInvoiceCounts(WITH_BOOKING, [
+      { before: null, after: bill({ kind: 'rental', amount: 1000 }) },
+      { before: null, after: bill({ kind: 'utility', amount: 700 }) },
+    ]);
+
+    expect(out.aggs).toMatchObject({
+      bookingTotal: 24_000, bookingPaid: 6_000, bookingBalance: 18_000,
+      rentTotal: 51_000, utilityTotal: 8_700,
+    });
+  });
+
+  it('counts a booking bill in the total and its status like any other', () => {
+    const out = shiftInvoiceCounts(WITH_BOOKING, [
+      { before: null, after: bill({ kind: 'booking', status: 'due' }) },
+      { before: bill({ kind: 'booking', status: 'paid' }), after: null },
+    ]);
+
+    expect(out.total).toBe(10);
+    expect(out.statuses.find((s) => s.slug === 'due')!.count).toBe(7);
+    expect(out.statuses.find((s) => s.slug === 'paid')!.count).toBe(3);
+  });
+});

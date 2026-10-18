@@ -333,7 +333,8 @@
     "allow": "Cho phép",
     "noPhotosYet": "Chưa có ảnh",
     "guests": "Khách",
-    "copy": "Sao chép"
+    "copy": "Sao chép",
+    "cannotReachTheServer": "Không thể kết nối đến máy chủ. Vui lòng thử lại sau giây lát."
   },
   "leadWall": {
     "close": "Đóng",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". Nhấp vào đó sẽ kích hoạt tài khoản và hiển thị số điện thoại.",
     "iVeVerifiedContinue": "Tôi đã xác minh — tiếp tục",
     "back": "Quay lại",
-    "confirmPassword": "Xác nhận mật khẩu"
+    "confirmPassword": "Xác nhận mật khẩu",
+    "emailOrPasswordIncorrect": "Email hoặc mật khẩu không đúng.",
+    "emailAlreadyRegistered": "Đã có tài khoản dùng email này. Hãy đăng nhập, hoặc đặt lại mật khẩu nếu bạn đã quên.",
+    "couldNotCreateAccount": "Chúng tôi không thể tạo tài khoản của bạn. Hãy kiểm tra thông tin và thử lại.",
+    "accountCannotSignIn": "Tài khoản này hiện không thể đăng nhập. Hãy liên hệ với chúng tôi để được hỗ trợ.",
+    "googleDidNotFinish": "Đăng nhập bằng Google chưa hoàn tất. Hãy thử lại, hoặc dùng email và mật khẩu của bạn.",
+    "tooManyAttempts": "Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.",
+    "somethingWentWrong": "Đã xảy ra lỗi. Vui lòng thử lại."
   },
   "home": {
     "searchCityOrArea": "Tìm thành phố hoặc khu vực",
@@ -1322,7 +1330,10 @@
     "existingAccountKeepsPassword": "Nếu email này đã có tài khoản, mật khẩu hiện tại sẽ được giữ nguyên — mật khẩu bạn đặt chỉ dùng khi tạo tài khoản mới.",
     "storedEmailBecomesLogin": "Email đã lưu sẽ là thông tin đăng nhập. Nếu địa chỉ đó đã có tài khoản, họ giữ nguyên mật khẩu của tài khoản đó.",
     "pickADifferentStatusTo": "Chọn trạng thái khác để xem những người còn lại.",
-    "addAWardenCookOr": "Thêm quản sinh, đầu bếp hoặc bảo vệ để lưu lương và giấy tờ của họ."
+    "addAWardenCookOr": "Thêm quản sinh, đầu bếp hoặc bảo vệ để lưu lương và giấy tờ của họ.",
+    "couldNotUploadImage": "Không thể tải ảnh lên",
+    "fileTypeNotSupported": "Loại tệp đó không được hỗ trợ. Hãy chọn ảnh khác.",
+    "uploadTryAgain": "Vui lòng thử lại, hoặc chọn ảnh khác."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Phê duyệt thất bại — hãy thử lại.",
@@ -1379,7 +1390,18 @@
     "due": "Đến hạn",
     "thisWillPermanentlyDeleteInvoice": "Thao tác này sẽ xóa vĩnh viễn hóa đơn",
     "invoicesAppearHereOnceYou": "Hóa đơn sẽ xuất hiện ở đây khi bạn phát hành tiền thuê hoặc tiện ích.",
-    "tryAdjustingYourFilters": "Hãy thử điều chỉnh bộ lọc."
+    "invoicesAppearHereNightly": "Hóa đơn sẽ xuất hiện ở đây khi bạn tạo chúng từ các đặt phòng đã nhận phòng.",
+    "tryAdjustingYourFilters": "Hãy thử điều chỉnh bộ lọc.",
+    "bookingInvoices": "Hóa đơn đặt phòng",
+    "bookingRef": "Đặt phòng {{ref}}",
+    "viewBooking": "Xem đặt phòng",
+    "guestName": "Tên khách",
+    "markPaidConfirmTitle": "Đánh dấu {{invoice}} là đã thanh toán?",
+    "markPaidConfirmBody": "Toàn bộ số tiền sẽ được ghi nhận là đã nhận.",
+    "alsoMarkBookingPaid": "Đồng thời đánh dấu đặt phòng {{ref}} là đã thanh toán",
+    "invoiceAndBookingPaid": "Đã đánh dấu hóa đơn và đặt phòng là đã thanh toán",
+    "bookingNotPaid": "Hóa đơn đã được đánh dấu là đã thanh toán, nhưng đặt phòng thì chưa. {{reason}}",
+    "invoiceNotFound": "Chúng tôi không tìm thấy hóa đơn đó."
   },
   "hostExpenses": {
     "allTypes": "Tất cả loại",
@@ -1465,6 +1487,12 @@
     "toCollectAtTheDesk": "Thu tại quầy lễ tân",
     "createBooking": "Tạo đặt phòng",
     "theRoomsForThisProperty": "Không thể tải các phòng của cơ sở này.",
+    "notSetUpForBookings": "Cơ sở này chưa được thiết lập để nhận đặt phòng.",
+    "crmRequired": "Gói của bạn không bao gồm đặt phòng. Nâng cấp gói để thêm đặt phòng.",
+    "checkInCannotBeInPast": "Ngày nhận phòng không thể trước hôm nay. Hãy chọn hôm nay hoặc một ngày sau đó.",
+    "roomTypeNotBookable": "Một trong các loại phòng này đã tắt nhận đặt phòng. Hãy xóa nó và thử lại.",
+    "checkOutAfterCheckIn": "Ngày trả phòng phải sau ngày nhận phòng.",
+    "couldNotSaveBooking": "Chúng tôi không thể lưu đặt phòng này. Hãy kiểm tra thông tin và thử lại.",
     "everyRoomEveryState": "Mọi phòng, mọi trạng thái — chạm vào một ngày để xem sổ",
     "thisMonthSCalendarCould": "Không thể tải lịch của tháng này.",
     "nothingIsWaitingOnYou": "Không có việc gì chờ bạn trong ngày này.",
@@ -1477,7 +1505,33 @@
     "checkInCheckOut": "Nhận phòng — trả phòng",
     "aNightRuns12": "Một đêm tính từ 12:00 trưa đến 12:00 trưa — nhận phòng từ giữa trưa, trả phòng trước giữa trưa hôm sau.",
     "discount": "Giảm giá",
-    "saveBooking": "Lưu đặt phòng"
+    "saveBooking": "Lưu đặt phòng",
+    "invoice": "Hóa đơn",
+    "checkingForInvoice": "Đang kiểm tra hóa đơn…",
+    "noInvoiceYet": "Chưa có hóa đơn.",
+    "couldNotCheckInvoice": "Không thể kiểm tra hóa đơn.",
+    "viewInvoice": "Xem hóa đơn",
+    "alsoMarkInvoicePaid": "Đồng thời đánh dấu hóa đơn {{invoice}} là đã thanh toán",
+    "bookingAndInvoicePaid": "Đã đánh dấu đặt phòng và hóa đơn là đã thanh toán",
+    "invoiceNotPaid": "Đặt phòng đã được đánh dấu là đã thanh toán, nhưng hóa đơn thì chưa. {{reason}}",
+    "stayedIn": "Đã ở tại",
+    "checkedOut": "Đã trả phòng",
+    "released": "Đã giải phóng",
+    "cancelOpenInvoiceWarning": "Đặt phòng này có một hóa đơn chưa thanh toán ({{invoice}}). Hủy đặt phòng sẽ không xóa hóa đơn đó.",
+    "bookingNotFound": "Chúng tôi không tìm thấy đặt phòng đó.",
+    "notEnoughBedsFree": "Một trong các phòng này không còn đủ số giường trống đó. Hãy xếp ít khách hơn vào phòng đó hoặc chọn phòng khác.",
+    "checkTheRoomsPicked": "Không thể sử dụng các phòng đó. Hãy kiểm tra phòng và khách, rồi thử lại.",
+    "alreadyCheckedIn": "Đặt phòng này đã nhận phòng từ trước, nên không có gì được thay đổi.",
+    "bookingHasMovedOn": "Đặt phòng này đã thay đổi kể từ khi bạn mở, nên bước đó không được áp dụng.",
+    "bookingAlreadyPaid": "Đặt phòng này đã được thanh toán từ trước, nên không có khoản thanh toán mới nào được ghi nhận.",
+    "alreadyPaidInvoicePaid": "Đặt phòng này đã được thanh toán từ trước. Hóa đơn {{invoice}} giờ đã được đánh dấu là đã thanh toán.",
+    "invoiceAlreadyExists": "Đặt phòng này đã có hóa đơn.",
+    "giveTheGuestAReason": "Hãy cho khách biết lý do — lý do sẽ được gửi cho khách và lưu trong đặt phòng.",
+    "moveNotAccepted": "Máy chủ không chấp nhận thao tác đó. Vui lòng thử lại.",
+    "roomAlreadyReleased": "Phòng {{room}} đã được giải phóng.",
+    "couldNotReleaseRoom": "Không thể giải phóng phòng {{room}}. Vui lòng thử lại.",
+    "invoiceNoLongerExists": "Không tìm thấy hóa đơn. Có thể hóa đơn đã bị xóa.",
+    "payTheInvoiceOnItsOwn": "Hãy mở hóa đơn và đánh dấu đã thanh toán ở đó."
   },
   "hostHostelProfile": {
     "failed": "Thất bại",
@@ -1563,7 +1617,15 @@
     "pkrPaid": "Đã trả PKR {{amount}}",
     "cancelledSummary": "Đã hủy {{date}} · hoàn PKR {{refund}} · phí hủy PKR {{charge}}",
     "cancelRefundExplainer": "Bạn sẽ được hoàn <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> được giữ lại làm phí hủy, vì bạn hủy khi đã qua {{pct}}% thời hạn.",
-    "whenYouBookAHostel": "Khi bạn đặt một nhà nghỉ, nó sẽ hiện ở đây kèm ngày ở và số tiền đã trả."
+    "whenYouBookAHostel": "Khi bạn đặt một nhà nghỉ, nó sẽ hiện ở đây kèm ngày ở và số tiền đã trả.",
+    "noLongerCancellable": "Không thể hủy đặt phòng này ở đây nữa. Hãy gọi cho nhà nghỉ và cung cấp mã đặt phòng của bạn.",
+    "roomNoLongerBookable": "Một trong các phòng bạn chọn không còn đặt được. Hãy chọn phòng khác.",
+    "checkOutAfterCheckIn": "Ngày trả phòng phải sau ngày nhận phòng.",
+    "bookingNotFound": "Chúng tôi không tìm thấy đặt phòng này. Có thể nó đã bị xóa.",
+    "changeFailed": "Chúng tôi không thể cập nhật đặt phòng này. Vui lòng thử lại.",
+    "cancelFailed": "Chúng tôi không thể hủy đặt phòng này. Vui lòng thử lại.",
+    "withinCutoff": "Việc thay đổi và hủy sẽ đóng 3 ngày trước ngày nhận phòng. Để thay đổi bất cứ điều gì lúc này, hãy gọi cho nhà nghỉ và cung cấp mã đặt phòng của bạn.",
+    "noLongerEditable": "Không thể thay đổi đặt phòng này ở đây nữa. Hãy gọi cho nhà nghỉ và cung cấp mã đặt phòng của bạn."
   },
   "userFavorites": {
     "removeFromFavorites": "Xóa khỏi yêu thích?",
@@ -1899,7 +1961,13 @@
     "enterAValidPhone": "Nhập số điện thoại hợp lệ",
     "enterAValidEmail": "Nhập địa chỉ email hợp lệ",
     "ofNSeats": "trên {{count}}",
-    "bookingReference": "Mã đặt phòng"
+    "bookingReference": "Mã đặt phòng",
+    "hostelNotTakingBookings": "Nhà nghỉ này hiện không nhận đặt phòng trực tuyến.",
+    "roomNoLongerBookable": "Một trong các phòng bạn chọn không còn đặt được. Hãy xóa phòng đó và chọn phòng khác.",
+    "checkInHasPassed": "Ngày nhận phòng của bạn đã qua. Hãy chọn ngày mới và thử lại.",
+    "checkOutAfterCheckIn": "Ngày trả phòng phải sau ngày nhận phòng.",
+    "logInAgainToBook": "Phiên đăng nhập của bạn đã kết thúc. Hãy đăng nhập lại để đặt phòng.",
+    "tryAgain": "Vui lòng thử lại."
   },
   "states": {
     "nothingHereYet": "Chưa có gì ở đây",
@@ -1962,6 +2030,7 @@
     "whatGendered": "hostel {{gender}}",
     "whatAll": "hostel, nhà trọ và co-living",
     "listingNotFoundTitle": "Không tìm thấy tin đăng — HostelHive",
+    "postNotFoundTitle": "Không tìm thấy bài đăng — HostelHive",
     "listingNotFoundDescription": "Tin đăng hostel này không khả dụng hoặc liên kết không đúng.",
     "listingTitle": "{{name}} — hostel {{gender}} tại {{location}} | HostelHive",
     "listingLead": "{{name}} — hostel {{gender}} tại {{location}}.",

@@ -139,6 +139,23 @@ describe('RoomCalendar pips', () => {
     expect(filled.length).toBe(3);
   });
 
+  // A party split across rooms fills only the beds it was placed in here.
+  it('fills only the guests a checked-in party has in this room', () => {
+    const split = {
+      ...booking('b1', '2026-03-10', '2026-03-12', 'Ayesha', 3),
+      occupancies: [
+        { id: 'o1', roomId: ROOM, roomNumber: '101', guests: 2, active: true },
+        { id: 'o2', roomId: 'r2', roomNumber: '102', guests: 1, active: true },
+      ],
+    };
+    const c = setUp(8, [split]);
+
+    const filled = (dayOf(c, '2026-03-10')?.pips as { bookingId: string | null }[]).filter(
+      (p) => p.bookingId,
+    );
+    expect(filled.length).toBe(2);
+  });
+
   it('gives every guest their own colour', () => {
     const c = setUp(8, [
       booking('b1', '2026-03-09', '2026-03-12', 'Ayesha', 2),
@@ -162,6 +179,81 @@ describe('RoomCalendar pips', () => {
     expect(pips.length).toBe(4);
     expect(pips.filter((p) => p.clash).length).toBe(2);
     expect(day?.oversold).toBe(true);
+  });
+
+  /**
+   * The departure day, with more guests leaving than the room has beds.
+   *
+   * The pips used to be filled from everybody *present* — the leavers included — while the
+   * count beside them was beds held *overnight*. A three-bed room two parties of two were
+   * leaving read four pips, the fourth hatched as oversold, and the phone label worked out
+   * "over" from the overnight count: 0 - 3, so "over -3", on a night the room stood empty.
+   */
+  it('neither oversells nor goes negative on a day everyone leaves', () => {
+    const c = setUp(3, [
+      booking('b1', '2026-03-10', '2026-03-12', 'Ayesha', 2),
+      booking('b2', '2026-03-10', '2026-03-12', 'Bilal', 2),
+    ]);
+    const freeShort = (d: unknown) =>
+      (c as unknown as { freeShort(d: unknown): string }).freeShort(d);
+
+    // The night they were all in is a real oversell, and reads as one.
+    const both = dayOf(c, '2026-03-10');
+    expect(both?.oversold).toBe(true);
+    expect(freeShort(both)).toBe('over 1');
+
+    const leaving = dayOf(c, '2026-03-12');
+    const pips = leaving?.pips as { bookingId: string | null; clash: boolean }[];
+    expect(leaving?.departures).toBe(2);
+    expect(leaving?.oversold).toBe(false);
+    expect(pips.filter((p) => p.clash)).toEqual([]);
+    expect(pips.filter((p) => p.bookingId)).toEqual([]);
+    expect(freeShort(leaving)).toBe('3 free');
+  });
+
+  /**
+   * A party that checked out the morning of its first night, beside the party asleep there.
+   *
+   * The clock is pinned to the 15th, so the 15th is tonight: the one that left holds nothing
+   * from tonight on, and the room is two of three, not four of three.
+   */
+  it('charges a room tonight only for the guests still in it', () => {
+    const left = {
+      ...booking('b1', '2026-03-15', '2026-03-16', 'Left', 2),
+      disposition: { slug: 'checked-out', name: 'Checked out' },
+      occupancies: [{ id: 'o1', roomId: ROOM, roomNumber: '101', guests: 2, active: false }],
+    } as HostBooking;
+    const asleep = {
+      ...booking('b2', '2026-03-15', '2026-03-16', 'Asleep', 2),
+      occupancies: [{ id: 'o2', roomId: ROOM, roomNumber: '101', guests: 2, active: true }],
+    } as HostBooking;
+    const c = setUp(3, [left, asleep]);
+    c.select('2026-03-15');
+
+    const tonight = dayOf(c, '2026-03-15');
+    const filled = (tonight?.pips as { bookingId: string | null }[]).filter((p) => p.bookingId);
+    expect(filled.map((p) => p.bookingId)).toEqual(['b2', 'b2']);
+    expect(tonight?.oversold).toBe(false);
+    expect(tonight?.free).toBe(1);
+    expect(c.selectedRatio()).toBe('2 of 3 beds');
+
+    const tomorrow = dayOf(c, '2026-03-16');
+    expect(tomorrow?.oversold).toBe(false);
+    expect(tomorrow?.departures).toBe(1);
+  });
+
+  // A checked-out stay's past nights are what the month looking back is for.
+  it('still draws a checked-out stay on the nights before today', () => {
+    const left = {
+      ...booking('b1', '2026-03-12', '2026-03-18', 'Left', 2),
+      disposition: { slug: 'checked-out', name: 'Checked out' },
+    } as HostBooking;
+    const c = setUp(3, [left]);
+
+    expect(dayOf(c, '2026-03-14')?.free).toBe(1);
+    expect(dayOf(c, '2026-03-15')?.free).toBe(3);
+    expect(dayOf(c, '2026-03-15')?.departures).toBe(1);
+    expect(dayOf(c, '2026-03-17')?.free).toBe(3);
   });
 
   it('counts arrivals and departures separately, with check-out exclusive', () => {

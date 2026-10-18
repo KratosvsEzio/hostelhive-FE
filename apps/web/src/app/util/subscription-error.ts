@@ -4,10 +4,9 @@ import { HttpErrorResponse } from '@angular/common/http';
  * Returns true when an API error indicates the hostel needs an active subscription.
  *
  * Reads **both** error shapes. Every request goes through the error interceptor, which rethrows
- * a plain `ApiError` (`status`, `message`, `serverMessages`) rather than the
- * `HttpErrorResponse` — and this used to accept only the latter, so it answered `false` for
- * every real failure and no subscription gate in the host console ever showed. A lapsed hostel
- * got a generic error instead (Trello #81: now that expiry runs on a schedule, that is common).
+ * a plain `ApiError` rather than the `HttpErrorResponse`; from it only `status` and
+ * `serverMessages` are read, never the diagnostic `message`. A raw `HttpErrorResponse` is still
+ * accepted, classified from its body's `errors`, `error` and `message` fields.
  *
  * Matches:
  *   - HTTP 402 Payment Required
@@ -32,13 +31,13 @@ function readError(err: unknown): { status: number; messages: string[] } | null 
         : [];
     return { status: err.status, messages: messages.filter((v): v is string => typeof v === 'string') };
   }
-  // The interceptor's `ApiError`.
+  // The interceptor's `ApiError`: only `serverMessages` is the server's text; `message` is a
+  // diagnostic whose path alone ("…/subscription/cancel → 404") would otherwise match.
   if (err && typeof err === 'object' && typeof (err as { status?: unknown }).status === 'number') {
-    const e = err as { status: number; message?: unknown; serverMessages?: unknown };
-    const messages = [
-      ...(Array.isArray(e.serverMessages) ? e.serverMessages : []),
-      e.message,
-    ].filter((v): v is string => typeof v === 'string');
+    const e = err as { status: number; serverMessages?: unknown };
+    const messages = (Array.isArray(e.serverMessages) ? e.serverMessages : []).filter(
+      (v): v is string => typeof v === 'string',
+    );
     return { status: e.status, messages };
   }
   return null;

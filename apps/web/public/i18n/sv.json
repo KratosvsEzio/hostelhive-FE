@@ -333,7 +333,8 @@
     "allow": "Tillåt",
     "noPhotosYet": "Inga foton ännu",
     "guests": "Gäster",
-    "copy": "Kopiera"
+    "copy": "Kopiera",
+    "cannotReachTheServer": "Kan inte nå servern. Försök igen om en stund."
   },
   "leadWall": {
     "close": "Stäng",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". När du klickar på den aktiveras kontot och numret visas.",
     "iVeVerifiedContinue": "Verifierat — fortsätt",
     "back": "Tillbaka",
-    "confirmPassword": "Bekräfta lösenord"
+    "confirmPassword": "Bekräfta lösenord",
+    "emailOrPasswordIncorrect": "E-postadressen eller lösenordet är fel.",
+    "emailAlreadyRegistered": "Det finns redan ett konto med den här e-postadressen. Logga in i stället, eller återställ lösenordet om du har glömt det.",
+    "couldNotCreateAccount": "Vi kunde inte skapa ditt konto. Kontrollera dina uppgifter och försök igen.",
+    "accountCannotSignIn": "Det här kontot kan inte logga in just nu. Kontakta oss så hjälper vi dig.",
+    "googleDidNotFinish": "Inloggningen med Google slutfördes inte. Försök igen, eller använd din e-postadress och ditt lösenord.",
+    "tooManyAttempts": "För många försök. Vänta några minuter och försök igen.",
+    "somethingWentWrong": "Något gick fel. Försök igen."
   },
   "home": {
     "searchCityOrArea": "Sök stad eller område",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "Om e-postadressen redan har ett konto behålls det nuvarande lösenordet — ditt används bara om ett nytt konto skapas.",
     "storedEmailBecomesLogin": "Deras sparade e-post blir inloggningen. Har adressen redan ett konto behåller de dess lösenord.",
     "pickADifferentStatusTo": "Välj en annan status för att se resten av teamet.",
-    "addAWardenCookOr": "Lägg till en föreståndare, kock eller vakt för att spara lön och dokument."
+    "addAWardenCookOr": "Lägg till en föreståndare, kock eller vakt för att spara lön och dokument.",
+    "couldNotUploadImage": "Det gick inte att ladda upp bilden",
+    "fileTypeNotSupported": "Den filtypen stöds inte. Välj en annan bild.",
+    "uploadTryAgain": "Försök igen, eller välj en annan bild."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "Godkännandet misslyckades — försök igen.",
@@ -1374,7 +1385,18 @@
     "due": "Förfaller",
     "thisWillPermanentlyDeleteInvoice": "Detta tar bort fakturan permanent",
     "invoicesAppearHereOnceYou": "Fakturor visas här när du utfärdar hyres- eller förbrukningsräkningar.",
-    "tryAdjustingYourFilters": "Prova att justera dina filter."
+    "invoicesAppearHereNightly": "Fakturor visas här när du skapar dem från incheckade bokningar.",
+    "tryAdjustingYourFilters": "Prova att justera dina filter.",
+    "bookingInvoices": "Bokningsfakturor",
+    "bookingRef": "Bokning {{ref}}",
+    "viewBooking": "Visa bokning",
+    "guestName": "Gästens namn",
+    "markPaidConfirmTitle": "Markera {{invoice}} som betald?",
+    "markPaidConfirmBody": "Hela beloppet registreras som mottaget.",
+    "alsoMarkBookingPaid": "Markera även bokning {{ref}} som betald",
+    "invoiceAndBookingPaid": "Faktura och bokning markerade som betalda",
+    "bookingNotPaid": "Fakturan markerades som betald, men inte bokningen. {{reason}}",
+    "invoiceNotFound": "Vi kunde inte hitta den fakturan."
   },
   "hostExpenses": {
     "allTypes": "Alla typer",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "Att ta betalt i receptionen",
     "createBooking": "Skapa bokning",
     "theRoomsForThisProperty": "Rummen för den här fastigheten kunde inte laddas.",
+    "notSetUpForBookings": "Den här fastigheten är inte inställd för att ta emot bokningar.",
+    "crmRequired": "Ditt abonnemang omfattar inte bokningar. Uppgradera ditt abonnemang för att lägga till bokningar.",
+    "checkInCannotBeInPast": "Incheckningen kan inte vara före i dag. Välj i dag eller ett senare datum.",
+    "roomTypeNotBookable": "En av de här rumstyperna är avstängd för bokningar. Ta bort den och försök igen.",
+    "checkOutAfterCheckIn": "Utcheckningen måste vara efter incheckningen.",
+    "couldNotSaveBooking": "Vi kunde inte spara bokningen. Kontrollera uppgifterna och försök igen.",
     "everyRoomEveryState": "Varje rum, varje status – tryck på en dag för dess journal",
     "thisMonthSCalendarCould": "Månadens kalender kunde inte laddas.",
     "nothingIsWaitingOnYou": "Inget väntar på dig den här dagen.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "Incheckning — utcheckning",
     "aNightRuns12": "Ett dygn löper från kl. 12.00 till kl. 12.00 — incheckning från lunchtid, utcheckning senast lunchtid dagen efter.",
     "discount": "Rabatt",
-    "saveBooking": "Spara bokning"
+    "saveBooking": "Spara bokning",
+    "invoice": "Faktura",
+    "checkingForInvoice": "Söker efter en faktura…",
+    "noInvoiceYet": "Ingen faktura ännu.",
+    "couldNotCheckInvoice": "Det gick inte att söka efter en faktura.",
+    "viewInvoice": "Visa faktura",
+    "alsoMarkInvoicePaid": "Markera även faktura {{invoice}} som betald",
+    "bookingAndInvoicePaid": "Bokning och faktura markerade som betalda",
+    "invoiceNotPaid": "Bokningen markerades som betald, men inte fakturan. {{reason}}",
+    "stayedIn": "Bodde i",
+    "checkedOut": "Utcheckad",
+    "released": "Frigjort",
+    "cancelOpenInvoiceWarning": "Den här bokningen har en obetald faktura ({{invoice}}). Den tas inte bort när bokningen avbokas.",
+    "bookingNotFound": "Vi kunde inte hitta den bokningen.",
+    "notEnoughBedsFree": "Ett av rummen har inte längre så många lediga sängar. Placera färre gäster där eller välj ett annat rum.",
+    "checkTheRoomsPicked": "Rummen kunde inte användas. Kontrollera rum och gäster och försök igen.",
+    "alreadyCheckedIn": "Den här bokningen var redan incheckad, så inget ändrades.",
+    "bookingHasMovedOn": "Den här bokningen har ändrats sedan du öppnade den, så det steget genomfördes inte.",
+    "bookingAlreadyPaid": "Den här bokningen var redan betald, så ingen ny betalning registrerades.",
+    "alreadyPaidInvoicePaid": "Den här bokningen var redan betald. Faktura {{invoice}} är nu markerad som betald.",
+    "invoiceAlreadyExists": "Den här bokningen har redan en faktura.",
+    "giveTheGuestAReason": "Ge gästen en anledning — den skickas till gästen och sparas på bokningen.",
+    "moveNotAccepted": "Servern godtog inte det. Försök igen.",
+    "roomAlreadyReleased": "Rum {{room}} har redan frigjorts.",
+    "couldNotReleaseRoom": "Det gick inte att frigöra rum {{room}}. Försök igen.",
+    "invoiceNoLongerExists": "Fakturan hittades inte. Den kan ha tagits bort.",
+    "payTheInvoiceOnItsOwn": "Öppna fakturan och markera den som betald där."
   },
   "hostHostelProfile": {
     "failed": "Misslyckades",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} betalt",
     "cancelledSummary": "Avbokad {{date}} · PKR {{refund}} återbetalt · PKR {{charge}} i avbokningsavgift",
     "cancelRefundExplainer": "Du får tillbaka <strong class=\"tabular-nums\">PKR {{refund}}</strong>. <strong class=\"tabular-nums\">PKR {{charge}}</strong> behålls som avbokningsavgift, eftersom du avbokar {{pct}} % in i perioden.",
-    "whenYouBookAHostel": "När du bokar ett vandrarhem visas det här med dina datum och vad du betalade."
+    "whenYouBookAHostel": "När du bokar ett vandrarhem visas det här med dina datum och vad du betalade.",
+    "noLongerCancellable": "Den här bokningen kan inte längre avbokas här. Ring vandrarhemmet och uppge din bokningsreferens.",
+    "roomNoLongerBookable": "Ett av rummen du valde kan inte längre bokas. Välj ett annat rum.",
+    "checkOutAfterCheckIn": "Utcheckningen måste vara efter incheckningen.",
+    "bookingNotFound": "Vi hittade inte den här bokningen. Den kan ha tagits bort.",
+    "changeFailed": "Vi kunde inte uppdatera bokningen. Försök igen.",
+    "cancelFailed": "Vi kunde inte avboka bokningen. Försök igen.",
+    "withinCutoff": "Ändringar och avbokningar stänger 3 dagar före incheckning. Om du vill ändra något nu, ring vandrarhemmet och uppge din bokningsreferens.",
+    "noLongerEditable": "Den här bokningen kan inte längre ändras här. Ring vandrarhemmet och uppge din bokningsreferens."
   },
   "userFavorites": {
     "removeFromFavorites": "Ta bort från favoriter?",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "Ange ett giltigt telefonnummer",
     "enterAValidEmail": "Ange en giltig e-postadress",
     "ofNSeats": "av {{count}}",
-    "bookingReference": "Bokningsreferens"
+    "bookingReference": "Bokningsreferens",
+    "hostelNotTakingBookings": "Det här vandrarhemmet tar inte emot onlinebokningar just nu.",
+    "roomNoLongerBookable": "Ett av rummen du valde kan inte längre bokas. Ta bort det och välj ett annat.",
+    "checkInHasPassed": "Ditt incheckningsdatum har passerat. Välj nya datum och försök igen.",
+    "checkOutAfterCheckIn": "Utcheckningen måste vara efter incheckningen.",
+    "logInAgainToBook": "Din session har avslutats. Logga in igen för att boka.",
+    "tryAgain": "Försök igen."
   },
   "states": {
     "nothingHereYet": "Inget här ännu",
@@ -1957,6 +2025,7 @@
     "whatGendered": "{{gender}}-hostel",
     "whatAll": "hostel, pensionat och kollektivboenden",
     "listingNotFoundTitle": "Annonsen hittades inte — HostelHive",
+    "postNotFoundTitle": "Inlägget hittades inte — HostelHive",
     "listingNotFoundDescription": "Den här hostelannonsen är inte tillgänglig eller så är länken felaktig.",
     "listingTitle": "{{name}} — {{gender}}-hostel i {{location}} | HostelHive",
     "listingLead": "{{name}} — {{gender}}-hostel i {{location}}.",

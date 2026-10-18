@@ -130,14 +130,54 @@
                         {{ releasing() === o.id ? 'Releasing…' : 'Release' }}
                       </button>
                     } @else {
-                      <span class="text-xs text-ink-400">Released</span>
+                      <span class="text-xs text-ink-400">{{ 'hostBookings.released' | transloco }}</span>
                     }
                   </li>
                 }
               </ul>
             }
-            @if (releaseError()) {
-              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ releaseError() }}</p>
+            @if (releaseError(); as e) {
+              <p class="mt-2 text-xs font-medium text-danger" role="alert">{{ e.key | transloco: { room: e.room } }}</p>
+            }
+          </div>
+        }
+
+        @if (stayHistory().length) {
+          <!-- Where a finished stay was, as history: nothing here can be released any more. -->
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.stayedIn' | transloco }}</p>
+            <ul class="mt-1.5 space-y-1.5 text-sm">
+              @for (o of stayHistory(); track o.id) {
+                <li class="flex items-center justify-between gap-3">
+                  <span class="text-ink-700">Room {{ o.roomNumber }} · {{ o.guests }} guest{{ o.guests === 1 ? '' : 's' }}</span>
+                  <span class="text-xs text-ink-400">{{ stayRowLabel() | transloco }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (showInvoice()) {
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.invoice' | transloco }}</p>
+            @if (invoice(); as inv) {
+              <div class="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-sm">
+                <span class="flex min-w-0 flex-wrap items-center gap-2">
+                  <span class="font-medium tabular-nums text-ink-900">
+                    {{ invoiceNumber() }} · {{ b.currency | currencySym }} {{ inv.amount | money }}
+                  </span>
+                  <hh-status-pill size="xs" [tone]="invoiceTone()">{{ invoiceStatusText() }}</hh-status-pill>
+                </span>
+                <a class="shrink-0 text-sm font-medium text-brand-500 hover:underline" [routerLink]="invoiceLink()">
+                  {{ 'hostBookings.viewInvoice' | transloco }}
+                </a>
+              </div>
+            } @else if (invoiceLookup() === 'loading') {
+              <p class="mt-1.5 text-sm text-ink-400">{{ 'hostBookings.checkingForInvoice' | transloco }}</p>
+            } @else if (invoiceLookup() === 'error') {
+              <p class="mt-1.5 text-sm text-danger">{{ 'hostBookings.couldNotCheckInvoice' | transloco }}</p>
+            } @else {
+              <p class="mt-1.5 text-sm text-ink-500">{{ 'hostBookings.noInvoiceYet' | transloco }}</p>
             }
           </div>
         }
@@ -199,7 +239,7 @@
       <footer class="border-t border-ink-100 bg-surface px-4 py-3 sm:px-5">
         @if (actionError()) {
           <p class="mb-2 rounded-lg bg-danger/10 px-3 py-2 text-xs font-medium text-danger" role="alert">
-            {{ actionError() }}
+            {{ actionError() | transloco }}
           </p>
         }
         <!-- The next moves this stage allows, the one that finishes it filled. Everything is

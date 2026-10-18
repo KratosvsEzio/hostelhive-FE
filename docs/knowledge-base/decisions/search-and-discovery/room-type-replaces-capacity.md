@@ -22,7 +22,7 @@ Search used to filter by bed capacity (1–5+ sharing) from the header bar and t
 
 ## Consequences
 
-- The filter modal still lists both price sorts regardless of type — an inconsistency with this decision (`search-filter-modal.ts` `sortOptions`).
+- **The rule now has one home and holds on every way in.** `sortsFor`/`isSortOffered` (`search-sort.ts`) decide what is offered. The Filters modal follows them (PR #141). A link that carries a sort the type doesn't offer is read as absent by `mergeSearchParams` and taken out of the URL (Trello #171). See the area file.
 - `SearchCapacity` survives but nothing sets its `active` signal, so per-capacity card pricing is dormant.
 
 ## Evidence

@@ -183,3 +183,78 @@ describe('TooltipFixed cleanup', () => {
     expect(tips().length).toBe(1);
   });
 });
+
+@Component({
+  imports: [TooltipFixed],
+  template: `<button type="button" hhTooltip="Listings" hhTooltipPlacement="end">L</button>`,
+})
+class RailHost {}
+
+/**
+ * `end` placement, for the collapsed console rail.
+ *
+ * In RTL the rail sits against the right edge of the screen, so a bubble placed physically to
+ * the right of the icon is drawn off-screen. `end` has to follow `<html dir>`.
+ */
+describe('TooltipFixed end placement', () => {
+  let fixture: ComponentFixture<RailHost>;
+  let btn: HTMLElement;
+
+  function tip(): HTMLElement {
+    return [...document.body.children].find(
+      (n) => n.tagName === 'DIV' && (n.getAttribute('style') ?? '').includes('position: fixed'),
+    ) as HTMLElement;
+  }
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [RailHost] });
+    fixture = TestBed.createComponent(RailHost);
+    fixture.detectChanges();
+    btn = (fixture.nativeElement as HTMLElement).querySelector('button') as HTMLElement;
+    vi.spyOn(btn, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(1000, 100, 40, 40), // left 1000, right 1040, middle 120
+    );
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1280);
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    document.documentElement.removeAttribute('dir');
+    vi.restoreAllMocks();
+  });
+
+  it('sits to the right of the anchor in LTR', () => {
+    document.documentElement.setAttribute('dir', 'ltr');
+    btn.dispatchEvent(new MouseEvent('mouseenter'));
+
+    expect(tip().style.left).toBe('1048px');
+    expect(tip().style.top).toBe('120px');
+    expect(tip().style.transform).toBe('translateY(-50%)');
+  });
+
+  // Pinned by `right` (1280 - 1000 + 8), not `left` + translateX(-100%): a `left` near the
+  // right edge squeezed the label into the remaining sliver and wrapped it a word per line.
+  it('sits to the left of the anchor in RTL, pinned by its right edge', () => {
+    document.documentElement.setAttribute('dir', 'rtl');
+    btn.dispatchEvent(new MouseEvent('mouseenter'));
+
+    expect(tip().style.right).toBe('288px');
+    expect(tip().style.left).toBe('');
+    expect(tip().style.top).toBe('120px');
+    expect(tip().style.transform).toBe('translateY(-50%)');
+  });
+
+  // LocaleStore flips `<html dir>` on a language switch without re-rendering the shell, so the
+  // direction must be read when the bubble opens, not when the directive is created.
+  it('follows a direction change made after the directive was created', () => {
+    document.documentElement.setAttribute('dir', 'ltr');
+    btn.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(tip().style.left).toBe('1048px');
+
+    document.documentElement.setAttribute('dir', 'rtl');
+    btn.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(tip().style.right).toBe('288px');
+    expect(tip().style.left).toBe('');
+  });
+});

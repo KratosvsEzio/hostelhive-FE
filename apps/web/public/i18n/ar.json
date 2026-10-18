@@ -333,7 +333,8 @@
     "allow": "السماح",
     "noPhotosYet": "لا توجد صور بعد",
     "guests": "الضيوف",
-    "copy": "نسخ"
+    "copy": "نسخ",
+    "cannotReachTheServer": "تعذّر الوصول إلى الخادم. يرجى المحاولة مرة أخرى بعد قليل."
   },
   "leadWall": {
     "close": "إغلاق",
@@ -350,7 +351,14 @@
     "clickingItActivatesYourAccount": ". النقر عليه يفعّل حسابك ويكشف الرقم.",
     "iVeVerifiedContinue": "تم التحقق — متابعة",
     "back": "رجوع",
-    "confirmPassword": "تأكيد كلمة المرور"
+    "confirmPassword": "تأكيد كلمة المرور",
+    "emailOrPasswordIncorrect": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "emailAlreadyRegistered": "يوجد حساب بهذا البريد الإلكتروني بالفعل. سجّل الدخول بدلًا من ذلك، أو أعد تعيين كلمة المرور إن كنت قد نسيتها.",
+    "couldNotCreateAccount": "تعذّر إنشاء حسابك. تحقق من بياناتك وحاول مرة أخرى.",
+    "accountCannotSignIn": "لا يمكن لهذا الحساب تسجيل الدخول حاليًا. تواصل معنا وسنساعدك.",
+    "googleDidNotFinish": "لم يكتمل تسجيل الدخول عبر Google. حاول مرة أخرى، أو استخدم بريدك الإلكتروني وكلمة المرور.",
+    "tooManyAttempts": "محاولات كثيرة جدًا. يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى.",
+    "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
   },
   "home": {
     "searchCityOrArea": "ابحث عن مدينة أو منطقة",
@@ -1317,7 +1325,10 @@
     "existingAccountKeepsPassword": "إذا كان هذا البريد مرتبطًا بحساب بالفعل، فسيُحتفظ بكلمة المرور الحالية — ولن تُستخدم كلمتك إلا عند إنشاء حساب جديد.",
     "storedEmailBecomesLogin": "سيكون بريدهم المحفوظ هو بيانات الدخول. وإذا كان لهذا العنوان حساب بالفعل، فسيحتفظون بكلمة المرور الخاصة به.",
     "pickADifferentStatusTo": "اختر حالة مختلفة لعرض بقية فريقك.",
-    "addAWardenCookOr": "أضف مشرفًا أو طاهيًا أو حارسًا لحفظ راتبه ومستنداته."
+    "addAWardenCookOr": "أضف مشرفًا أو طاهيًا أو حارسًا لحفظ راتبه ومستنداته.",
+    "couldNotUploadImage": "تعذّر رفع الصورة",
+    "fileTypeNotSupported": "نوع الملف هذا غير مدعوم. اختر صورة أخرى.",
+    "uploadTryAgain": "يرجى المحاولة مرة أخرى، أو اختيار صورة أخرى."
   },
   "moderatorReview": {
     "approvalFailedTryAgain": "فشلت الموافقة — حاول مرة أخرى.",
@@ -1374,7 +1385,18 @@
     "due": "مستحقة",
     "thisWillPermanentlyDeleteInvoice": "سيؤدي هذا إلى حذف الفاتورة نهائياً",
     "invoicesAppearHereOnceYou": "تظهر الفواتير هنا بمجرد إصدار فواتير الإيجار أو المرافق.",
-    "tryAdjustingYourFilters": "جرّب تعديل عوامل التصفية."
+    "invoicesAppearHereNightly": "تظهر الفواتير هنا بمجرد إنشائها من الحجوزات التي سُجّل وصولها.",
+    "tryAdjustingYourFilters": "جرّب تعديل عوامل التصفية.",
+    "bookingInvoices": "فواتير الحجوزات",
+    "bookingRef": "الحجز {{ref}}",
+    "viewBooking": "عرض الحجز",
+    "guestName": "اسم النزيل",
+    "markPaidConfirmTitle": "وضع علامة مدفوع على {{invoice}}؟",
+    "markPaidConfirmBody": "سيُسجَّل المبلغ كاملًا على أنه مستلم.",
+    "alsoMarkBookingPaid": "وضع علامة مدفوع على الحجز {{ref}} أيضًا",
+    "invoiceAndBookingPaid": "تم وضع علامة مدفوع على الفاتورة والحجز",
+    "bookingNotPaid": "تم وضع علامة مدفوع على الفاتورة، لكن ليس على الحجز. {{reason}}",
+    "invoiceNotFound": "تعذّر العثور على هذه الفاتورة."
   },
   "hostExpenses": {
     "allTypes": "جميع الأنواع",
@@ -1460,6 +1482,12 @@
     "toCollectAtTheDesk": "يُحصَّل عند الاستقبال",
     "createBooking": "إنشاء حجز",
     "theRoomsForThisProperty": "تعذّر تحميل غرف هذا العقار.",
+    "notSetUpForBookings": "هذا العقار غير مُعدّ لاستقبال الحجوزات.",
+    "crmRequired": "لا تتضمن خطتك الحجوزات. قم بترقية خطتك لإضافة الحجوزات.",
+    "checkInCannotBeInPast": "لا يمكن أن يكون تسجيل الوصول قبل اليوم. اختر اليوم أو تاريخًا لاحقًا.",
+    "roomTypeNotBookable": "أحد أنواع الغرف هذه موقوف عن الحجز. أزله وحاول مرة أخرى.",
+    "checkOutAfterCheckIn": "يجب أن يكون تسجيل المغادرة بعد تسجيل الوصول.",
+    "couldNotSaveBooking": "تعذّر حفظ هذا الحجز. تحقق من التفاصيل وحاول مرة أخرى.",
     "everyRoomEveryState": "كل غرفة وكل حالة — اضغط على يوم لعرض سجله",
     "thisMonthSCalendarCould": "تعذّر تحميل تقويم هذا الشهر.",
     "nothingIsWaitingOnYou": "لا شيء ينتظر إجراءً منك في هذا اليوم.",
@@ -1472,7 +1500,33 @@
     "checkInCheckOut": "تسجيل الوصول — تسجيل المغادرة",
     "aNightRuns12": "تمتد الليلة من الساعة 12:00 ظهرًا حتى 12:00 ظهرًا — سجّل الوصول من الظهيرة وغادر بحلول ظهر اليوم التالي.",
     "discount": "الخصم",
-    "saveBooking": "حفظ الحجز"
+    "saveBooking": "حفظ الحجز",
+    "invoice": "الفاتورة",
+    "checkingForInvoice": "جارٍ البحث عن فاتورة…",
+    "noInvoiceYet": "لا توجد فاتورة بعد.",
+    "couldNotCheckInvoice": "تعذّر التحقق من وجود فاتورة.",
+    "viewInvoice": "عرض الفاتورة",
+    "alsoMarkInvoicePaid": "وضع علامة مدفوع على الفاتورة {{invoice}} أيضًا",
+    "bookingAndInvoicePaid": "تم وضع علامة مدفوع على الحجز والفاتورة",
+    "invoiceNotPaid": "تم وضع علامة مدفوع على الحجز، لكن ليس على الفاتورة. {{reason}}",
+    "stayedIn": "مكان الإقامة",
+    "checkedOut": "تم تسجيل المغادرة",
+    "released": "تم التحرير",
+    "cancelOpenInvoiceWarning": "لهذا الحجز فاتورة غير مدفوعة ({{invoice}}). الإلغاء لا يحذفها.",
+    "bookingNotFound": "تعذّر العثور على هذا الحجز.",
+    "notEnoughBedsFree": "لم تعد إحدى هذه الغرف تحتوي على هذا العدد من الأسرّة الشاغرة. ضع عددًا أقل من النزلاء فيها أو اختر غرفة أخرى.",
+    "checkTheRoomsPicked": "تعذّر استخدام هذه الغرف. تحقق من الغرف والنزلاء، ثم حاول مرة أخرى.",
+    "alreadyCheckedIn": "تم تسجيل وصول هذا الحجز بالفعل، لذا لم يتغيّر شيء.",
+    "bookingHasMovedOn": "تغيّر هذا الحجز منذ أن فتحته، لذا لم تُطبَّق تلك الخطوة.",
+    "bookingAlreadyPaid": "هذا الحجز مدفوع بالفعل، لذا لم تُسجَّل دفعة جديدة.",
+    "alreadyPaidInvoicePaid": "هذا الحجز مدفوع بالفعل. تم الآن وضع علامة مدفوع على الفاتورة {{invoice}}.",
+    "invoiceAlreadyExists": "لهذا الحجز فاتورة بالفعل.",
+    "giveTheGuestAReason": "اذكر سببًا للنزيل — سيُرسل إليه ويُحفظ في الحجز.",
+    "moveNotAccepted": "لم يقبل الخادم ذلك. يرجى المحاولة مرة أخرى.",
+    "roomAlreadyReleased": "تم تحرير الغرفة {{room}} بالفعل.",
+    "couldNotReleaseRoom": "تعذّر تحرير الغرفة {{room}}. يرجى المحاولة مرة أخرى.",
+    "invoiceNoLongerExists": "تعذّر العثور على الفاتورة. ربما تم حذفها.",
+    "payTheInvoiceOnItsOwn": "افتح الفاتورة وضع علامة مدفوع عليها هناك."
   },
   "hostHostelProfile": {
     "failed": "فشل",
@@ -1558,7 +1612,15 @@
     "pkrPaid": "PKR {{amount}} مدفوعة",
     "cancelledSummary": "أُلغي في {{date}} · PKR {{refund}} مسترد · PKR {{charge}} رسوم إلغاء",
     "cancelRefundExplainer": "ستسترد <strong class=\"tabular-nums\">PKR {{refund}}</strong>. ويُحتفظ بمبلغ <strong class=\"tabular-nums\">PKR {{charge}}</strong> كرسوم إلغاء، لأنك تلغي بعد {{pct}}% من المدة.",
-    "whenYouBookAHostel": "عند حجز نُزل، سيظهر هنا مع تواريخك والمبلغ المدفوع."
+    "whenYouBookAHostel": "عند حجز نُزل، سيظهر هنا مع تواريخك والمبلغ المدفوع.",
+    "noLongerCancellable": "لم يعد بالإمكان إلغاء هذا الحجز من هنا. اتصل بالنزل واذكر رقم الحجز.",
+    "roomNoLongerBookable": "لم يعد بالإمكان حجز إحدى الغرف التي اخترتها. اختر غرفة أخرى.",
+    "checkOutAfterCheckIn": "يجب أن يكون تسجيل المغادرة بعد تسجيل الوصول.",
+    "bookingNotFound": "تعذّر العثور على هذا الحجز. ربما تمت إزالته.",
+    "changeFailed": "تعذّر تحديث هذا الحجز. يرجى المحاولة مرة أخرى.",
+    "cancelFailed": "تعذّر إلغاء هذا الحجز. يرجى المحاولة مرة أخرى.",
+    "withinCutoff": "تُغلق التعديلات والإلغاءات قبل 3 أيام من تسجيل الوصول. لتغيير أي شيء الآن، اتصل بالنزل واذكر رقم الحجز.",
+    "noLongerEditable": "لم يعد بالإمكان تعديل هذا الحجز من هنا. اتصل بالنزل واذكر رقم الحجز."
   },
   "userFavorites": {
     "removeFromFavorites": "إزالة من المفضلة؟",
@@ -1894,7 +1956,13 @@
     "enterAValidPhone": "أدخل رقم هاتف صالح",
     "enterAValidEmail": "أدخل بريدًا إلكترونيًا صالحًا",
     "ofNSeats": "من {{count}}",
-    "bookingReference": "رقم الحجز"
+    "bookingReference": "رقم الحجز",
+    "hostelNotTakingBookings": "لا يستقبل هذا النزل الحجوزات عبر الإنترنت حاليًا.",
+    "roomNoLongerBookable": "لم يعد بالإمكان حجز إحدى الغرف التي اخترتها. أزلها واختر غرفة أخرى.",
+    "checkInHasPassed": "لقد مضى تاريخ تسجيل الوصول. اختر تواريخ جديدة وحاول مرة أخرى.",
+    "checkOutAfterCheckIn": "يجب أن يكون تسجيل المغادرة بعد تسجيل الوصول.",
+    "logInAgainToBook": "انتهت جلستك. سجّل الدخول مرة أخرى لإتمام الحجز.",
+    "tryAgain": "يرجى المحاولة مرة أخرى."
   },
   "states": {
     "nothingHereYet": "لا شيء هنا بعد",
@@ -1957,6 +2025,7 @@
     "whatGendered": "نزل {{gender}}",
     "whatAll": "نزل وسكنات ومساكن مشتركة",
     "listingNotFoundTitle": "الإعلان غير موجود — HostelHive",
+    "postNotFoundTitle": "المقالة غير موجودة — HostelHive",
     "listingNotFoundDescription": "هذا الإعلان غير متاح أو الرابط غير صحيح.",
     "listingTitle": "{{name}} — نزل {{gender}} في {{location}} | HostelHive",
     "listingLead": "{{name}} — نزل {{gender}} في {{location}}.",

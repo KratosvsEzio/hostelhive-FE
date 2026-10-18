@@ -155,10 +155,13 @@
   </p>
 
   @if (error()) {
-    <p class="mt-2 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger">
+    <div class="mt-2 flex items-start gap-2 rounded-xl bg-danger/5 px-3 py-2.5 text-xs text-danger" role="alert">
       <span class="ti ti-alert-circle mt-px shrink-0 text-sm" aria-hidden="true"></span>
-      {{ error() }}
-    </p>
+      <p>
+        <span class="block font-semibold">{{ 'publicBooking.couldnTBook' | transloco }}</span>
+        <span class="block font-medium">{{ error() | transloco }}</span>
+      </p>
+    </div>
   }
   }
 </hh-confirm-modal>

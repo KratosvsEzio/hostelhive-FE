@@ -20,12 +20,12 @@ import {
   isGuardedUrl,
   safeInternalUrl,
 } from '@core/auth';
-import { ApiError } from '@hostelhive/data-access';
 import { GoogleAuthService } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { NotificationService } from '@core/notification.service';
 import { Logo } from '@core/brand/logo';
+import { AuthAction, AuthFailureKey, classifyAuthFailure } from './auth-failure';
 
 type AuthTab = 'register' | 'login';
 type Phase = 'form' | 'verify';
@@ -123,7 +123,8 @@ export class LeadWall {
   });
 
   protected readonly showErrors = signal(false);
-  protected readonly error = signal('');
+  /** The translation key of the last failure, or null when there is nothing to show. */
+  protected readonly error = signal<AuthFailureKey | null>(null);
 
   protected readonly name = signal('');
   protected readonly email = signal('');
@@ -222,7 +223,7 @@ export class LeadWall {
   protected submit(event: Event): void {
     event.preventDefault();
     this.showErrors.set(true);
-    this.error.set('');
+    this.error.set(null);
     if (!this.isValid()) return;
 
     const email = this.email().trim();
@@ -245,7 +246,7 @@ export class LeadWall {
             // confirmation link, so route to the "check your email" step.
             this.phase.set('verify');
           },
-          error: (err: ApiError) => this.fail(err),
+          error: (err: unknown) => this.fail(err, 'signUp'),
         });
     } else {
       this.auth
@@ -256,7 +257,7 @@ export class LeadWall {
           this.busy.set(false);
           this.afterLogin();
         },
-        error: (err: ApiError) => this.fail(err),
+        error: (err: unknown) => this.fail(err, 'signIn'),
       });
     }
   }
@@ -271,20 +272,20 @@ export class LeadWall {
       return;
     }
     this.busy.set(true);
-    this.error.set('');
+    this.error.set(null);
     this.googleAuth.getAccessToken().pipe(
       switchMap((token) => this.auth.googleLogin(token)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: () => { this.busy.set(false); this.afterLogin(); },
-      error: (err: ApiError) => this.fail(err),
+      error: (err: unknown) => this.fail(err, 'google'),
     });
   }
 
   /** After verifying their email, signing in succeeds and mints the real session. */
   protected verify(): void {
     this.busy.set(true);
-    this.error.set('');
+    this.error.set(null);
     this.auth
       .signIn(this.email().trim(), this.password())
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -293,18 +294,13 @@ export class LeadWall {
         this.busy.set(false);
         this.afterLogin();
       },
-      error: (err: ApiError) => this.fail(err),
+      error: (err: unknown) => this.fail(err, 'verify'),
     });
   }
 
-  private fail(err: ApiError): void {
+  private fail(err: unknown, action: AuthAction): void {
     this.busy.set(false);
-    this.error.set(
-      err?.status === 0
-        ? 'Cannot reach the server — is the API running?'
-        : err?.message ||
-            'Something went wrong. Check your details and try again.',
-    );
+    this.error.set(classifyAuthFailure(err, action));
   }
 
   /**

@@ -42,7 +42,7 @@ export class BookingSummary {
   /** True while the request is in flight — the confirm button is the only thing that changes. */
   readonly submitting = input(false);
 
-  /** Whatever the API said went wrong, verbatim. Empty when nothing has failed. */
+  /** The translation key saying why the booking failed. Empty when nothing has failed. */
   readonly error = input('');
 
   /**

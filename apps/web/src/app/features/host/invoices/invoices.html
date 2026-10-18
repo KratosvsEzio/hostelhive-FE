@@ -10,15 +10,18 @@
     >
       <i class="ti ti-download" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'common.exportCsv' | transloco }}</span>
     </button>
-    <button
-      hh-button color="primary"
-      size="sm"
-      [attr.aria-label]="'a11y.addInvoice' | transloco"
-      [disabled]="state().subscriptionError"
-      (click)="openAdd()"
-    >
-      <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostInvoices.addInvoice' | transloco }}</span>
-    </button>
+    <!-- A nightly hostel's bills are raised from its bookings, never by hand. -->
+    @if (!nightly()) {
+      <button
+        hh-button color="primary"
+        size="sm"
+        [attr.aria-label]="'a11y.addInvoice' | transloco"
+        [disabled]="state().subscriptionError"
+        (click)="openAdd()"
+      >
+        <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostInvoices.addInvoice' | transloco }}</span>
+      </button>
+    }
   </div>
 
   @let s = state();
@@ -37,20 +40,20 @@
     <hh-empty-state
       icon="ti-file-invoice"
       [title]="'hostInvoices.noInvoicesYet' | transloco"
-      [message]="'hostInvoices.invoicesAppearHereOnceYou' | transloco"
+      [message]="(nightly() ? 'hostInvoices.invoicesAppearHereNightly' : 'hostInvoices.invoicesAppearHereOnceYou') | transloco"
     />
   } @else {
     <!-- Filters + scope search -->
     <div class="mb-4 flex flex-wrap items-center gap-3">
       <hh-search
         class="w-full sm:w-72"
-        [fieldOptions]="searchFieldOptions"
+        [fieldOptions]="searchFieldOptions()"
         [field]="searchField()"
         (fieldChange)="onSearchFieldChange($any($event))"
         [term]="searchTerm()"
         (termChange)="onSearchTerm($event)"
         [loading]="fetching()"
-        [placeholder]="searchField() === 'room' ? 'Room number…' : 'Tenant name…'"
+        [placeholder]="searchPlaceholder()"
       />
       <hh-divider orientation="vertical" />
       <hh-global-filter
@@ -61,7 +64,34 @@
     </div>
 
     <!-- Summary cards -->
-    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="mb-6 grid grid-cols-1 gap-4" [class.sm:grid-cols-2]="!nightly()">
+      @if (nightly()) {
+      <!-- Booking invoices card -->
+      <div class="rounded-2xl bg-white p-5 shadow-card">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint-purple">
+              <i class="ti ti-calendar-event text-sm text-backpacker"></i>
+            </span>
+            <p class="text-sm font-semibold text-ink-700">{{ 'hostInvoices.bookingInvoices' | transloco }}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 divide-y divide-ink-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div class="py-3 sm:py-0 sm:pe-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.total' | transloco }}</p>
+            <p class="mt-1.5 text-lg font-bold text-ink-900">Rs {{ bookingSummary().total | number }}</p>
+          </div>
+          <div class="py-3 sm:py-0 sm:px-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'common.paid' | transloco }}</p>
+            <p class="mt-1.5 text-lg font-bold text-ok">Rs {{ bookingSummary().paid | number }}</p>
+          </div>
+          <div class="py-3 sm:py-0 sm:ps-4">
+            <p class="text-[11px] font-medium uppercase tracking-wide text-ink-400">{{ 'hostInvoices.balance' | transloco }}</p>
+            <p class="mt-1.5 text-lg font-bold text-danger">Rs {{ bookingSummary().balance | number }}</p>
+          </div>
+        </div>
+      </div>
+      } @else {
       <!-- Renter bills card -->
       <div class="rounded-2xl bg-white p-5 shadow-card">
         <div class="mb-4 flex items-center justify-between">
@@ -113,6 +143,7 @@
           </div>
         </div>
       </div>
+      }
     </div>
 
     @if (filtered().length === 0) {
@@ -139,10 +170,13 @@
     @if (menuInv(); as inv) {
       @if (menuPos(); as pos) {
         <hh-context-menu [top]="pos.top" [right]="pos.right" (closed)="closeMenu()">
-          <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:update'">
-            <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
-            {{ 'common.edit' | transloco }}
-          </button>
+          <!-- Booking bills are not editable: the form would re-save them as a renter's bill. -->
+          @if (inv.kind !== 'booking') {
+            <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="editInvoice(inv, $event)" *hhHasPermission="'host:RenterBill:update'">
+              <i class="ti ti-pencil text-sm text-ink-400" aria-hidden="true"></i>
+              {{ 'common.edit' | transloco }}
+            </button>
+          }
           @if (inv.status !== 'paid') {
             <button type="button" hh-button variant="text" role="menuitem" class="w-full !justify-start" (click)="markPaid(inv, $event)" *hhHasPermission="'host:RenterBill:mark_as_paid'">
               <i class="ti ti-circle-check text-sm text-ok" aria-hidden="true"></i>
@@ -164,7 +198,7 @@
     type="button"
     class="fixed inset-0 z-40 cursor-default bg-black/25"
     [attr.aria-label]="'a11y.closeInvoice' | transloco"
-    (click)="selectedId.set(null)"
+    (click)="closePreview()"
   ></button>
 
   <!-- hh-below-header, not top-[65px]: the header is `4rem + env(safe-area-inset-top)`,
@@ -179,7 +213,7 @@
         <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.download' | transloco" (click)="downloadInvoice(inv)">
           <i class="ti ti-download"></i>
         </button>
-        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.close' | transloco" (click)="selectedId.set(null)">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.close' | transloco" (click)="closePreview()">
           <i class="ti ti-x"></i>
         </button>
       </div>
@@ -207,7 +241,20 @@
         <div>
           <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostInvoices.billedTo' | transloco }}</p>
           <p class="font-semibold text-ink-900">{{ inv.tenantName }}</p>
-          <p class="text-xs text-ink-500">{{ 'common.roomNumber' | transloco: { number: inv.roomNumber } }}</p>
+          @if (inv.kind === 'booking' && inv.booking?.ref) {
+            @let refLabel = 'hostInvoices.bookingRef' | transloco: { ref: inv.booking?.ref };
+            @if (bookingLink(inv); as link) {
+              <a
+                class="text-xs text-ink-500 hover:text-brand-500"
+                [routerLink]="link"
+                [attr.title]="'hostInvoices.viewBooking' | transloco"
+              >{{ refLabel }}</a>
+            } @else {
+              <p class="text-xs text-ink-500">{{ refLabel }}</p>
+            }
+          } @else {
+            <p class="text-xs text-ink-500">{{ 'common.roomNumber' | transloco: { number: inv.roomNumber } }}</p>
+          }
         </div>
         <div class="text-end">
           <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostInvoices.issued' | transloco }}</p>
@@ -233,7 +280,7 @@
                 <td class="py-3">
                   <span
                     class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-                    [class]="inv.kind === 'utility' ? 'bg-tint-cream text-brand-500' : 'bg-tint-sky text-ink-600'"
+                    [class]="lineTagClass(inv.kind)"
                   >{{ line.label }}</span>
                 </td>
                 <td class="py-3 text-end font-medium text-ink-800">Rs {{ line.amount | number }}</td>
@@ -273,6 +320,42 @@
     {{ 'hostInvoices.thisWillPermanentlyDeleteInvoice' | transloco }}
     <strong>{{ invoiceId(inv) }}</strong> {{ 'common.for' | transloco }}
     <strong>{{ inv.tenantName }}</strong>{{ 'common.thisActionCannotBe' | transloco }}
+  </hh-confirm-modal>
+}
+
+@if (payPrompt(); as prompt) {
+  <hh-confirm-modal
+    [title]="'hostInvoices.markPaidConfirmTitle' | transloco: { invoice: invoiceId(prompt.inv) }"
+    icon="ti-circle-check"
+    tone="ok"
+    [confirmLabel]="'hostInvoices.markAsPaid' | transloco"
+    confirmColor="success"
+    [confirmDisabled]="prompt.checking || paying()"
+    (confirm)="confirmPay()"
+    (cancel)="cancelPay()"
+  >
+    <p>{{ 'hostInvoices.markPaidConfirmBody' | transloco }}</p>
+    @if (prompt.offerBooking) {
+      <label class="mt-4 flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          class="peer sr-only"
+          [checked]="alsoPayBooking()"
+          [disabled]="paying()"
+          (change)="alsoPayBooking.set(!alsoPayBooking())"
+        />
+        <span
+          class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2"
+          [class]="alsoPayBooking() ? 'border-brand-500 bg-brand-500 text-white' : 'border-ink-300 bg-white'"
+          aria-hidden="true"
+        >
+          @if (alsoPayBooking()) {
+            <i class="ti ti-check text-xs leading-none"></i>
+          }
+        </span>
+        <span class="text-ink-700">{{ 'hostInvoices.alsoMarkBookingPaid' | transloco: { ref: prompt.inv.booking?.ref ?? '' } }}</span>
+      </label>
+    }
   </hh-confirm-modal>
 }
 
