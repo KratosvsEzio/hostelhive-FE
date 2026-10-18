@@ -39,12 +39,18 @@
       <div class="grid gap-3 sm:grid-cols-3">
         <div class="sm:col-span-2">
           <p class="mb-1 text-xs font-medium text-ink-600">{{ 'hostBookings.checkInCheckOut' | transloco }}</p>
-          <hh-date-range-picker
-            variant="field"
-            [from]="checkIn()"
-            [to]="checkOut()"
-            (rangeChange)="onRangePicked($event)"
-          />
+          <!-- A skeleton until the hostel's date is known, so the default never visibly jumps a day. -->
+          @if (datesPending()) {
+            <hh-skeleton class="h-[42px] w-full" radius="md" />
+          } @else {
+            <hh-date-range-picker
+              variant="field"
+              [from]="checkIn()"
+              [to]="checkOut()"
+              [today]="defaultIn()"
+              (rangeChange)="onRangePicked($event)"
+            />
+          }
         </div>
         <hh-input
           label="Guests"

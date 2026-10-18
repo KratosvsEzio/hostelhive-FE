@@ -18,13 +18,16 @@
       </div>
       <!-- Full width on a phone so the arrows sit at the thumbs and the month reads centred. -->
       <div class="flex w-full shrink-0 items-center justify-between gap-1 sm:w-auto sm:justify-start">
-        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.previousMonth' | transloco" (click)="step(-1)">
+        <button hh-button variant="icon" size="sm" type="button" [disabled]="!ready()" [attr.aria-label]="'a11y.previousMonth' | transloco" (click)="step(-1)">
           <i class="ti ti-chevron-left text-base" aria-hidden="true"></i>
         </button>
+        <!-- Blank until the hostel's date is known, so the label never flips to another month. -->
         <span class="text-sm font-semibold text-ink-900 sm:min-w-[7.5rem] sm:text-center">
-          {{ monthStart() | date: 'MMMM y' }}
+          @if (ready()) {
+            {{ monthStart() | date: 'MMMM y' }}
+          }
         </span>
-        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'a11y.nextMonth' | transloco" (click)="step(1)">
+        <button hh-button variant="icon" size="sm" type="button" [disabled]="!ready()" [attr.aria-label]="'a11y.nextMonth' | transloco" (click)="step(1)">
           <i class="ti ti-chevron-right text-base" aria-hidden="true"></i>
         </button>
       </div>
@@ -83,7 +86,7 @@
         <button
           type="button"
           class="font-semibold text-brand-500 underline-offset-2 hover:underline"
-          (click)="step(0)"
+          (click)="retry()"
         >{{ 'common.tryAgain' | transloco }}</button>
       </p>
     } @else {
@@ -162,15 +165,21 @@
       <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-400">{{ 'hostBookings.dayLedger' | transloco }}</p>
       <div class="mt-1.5 flex items-center justify-between gap-3">
         <h3 class="truncate font-display text-base font-semibold text-ink-900">
-          {{ selected() | date: 'EEE d MMMM' }}
+          @if (ready()) {
+            {{ selected() | date: 'EEE d MMMM' }}
+          } @else {
+            <hh-skeleton class="block h-5 w-32" />
+          }
         </h3>
-        @let pending = sel?.counts?.['pending'] ?? 0;
-        <span
-          class="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
-          [class]="pending ? 'bg-warn/10 text-warn' : 'bg-ok/10 text-ok'"
-        >
-          {{ pending ? pending + ' to confirm' : 'Nothing pending' }}
-        </span>
+        @if (ready()) {
+          @let pending = sel?.counts?.['pending'] ?? 0;
+          <span
+            class="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
+            [class]="pending ? 'bg-warn/10 text-warn' : 'bg-ok/10 text-ok'"
+          >
+            {{ pending ? pending + ' to confirm' : 'Nothing pending' }}
+          </span>
+        }
       </div>
 
       <!-- The same wrapping chips as the month strip above, so the two read as one vocabulary
@@ -184,7 +193,7 @@
       <!-- Two per row on a phone, then reflowing chips again — the same treatment as the
            month legend above, for the same reason. -->
       <div class="mt-3 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
-        @for (lane of lanes; track lane.key) {
+        @for (lane of ready() ? lanes : []; track lane.key) {
           @let n = sel?.counts?.[lane.key] ?? 0;
           <!-- A lane keeps its colour at zero. It briefly did the opposite — tinted when it
                held something, outlined and grey when it did not — which made the empty ones
@@ -211,62 +220,68 @@
             <span class="text-xs font-medium text-ink-700">{{ lane.label }}</span>
             <span class="text-sm font-semibold tabular-nums" [class]="lane.value">{{ n }}</span>
           </button>
+        } @empty {
+          <hh-skeleton class="col-span-2 block h-[5.5rem] w-full sm:w-full" />
         }
       </div>
     </div>
 
-    <!-- The only lane with something to do about it. Everything else on this day is a number
-         the host reads; these are decisions waiting on them. -->
-    <div class="flex items-center justify-between gap-2 px-4 pb-1 pt-3 sm:px-5">
-      <span class="flex items-center gap-2">
-        <span class="h-2 w-2 rounded-full bg-warn"></span>
-        <span class="text-sm font-semibold text-ink-900">Awaiting confirmation</span>
-      </span>
-      <span class="text-xs font-semibold tabular-nums text-warn">{{ needsAction().length }}</span>
-    </div>
-
-    @if (needsAction().length) {
-      <ul class="space-y-2 px-4 py-2 sm:px-5">
-        @for (b of needsAction(); track b.id) {
-          <li class="rounded-xl border border-warn/25 bg-warn/5 p-3">
-            <div class="flex items-center gap-2.5">
-              <span
-                class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-warn/15 text-[11px] font-semibold text-warn"
-                >{{ initials(b.guest.name) }}</span
-              >
-              <span class="min-w-0 flex-1">
-                <span class="block truncate text-sm font-semibold text-ink-900">
-                  {{ b.guest.name }}
-                </span>
-                <span class="mt-0.5 block truncate text-xs text-ink-500">{{ summary(b) }}</span>
-              </span>
-            </div>
-            <div class="mt-2.5 flex gap-2">
-              <button
-                hh-button
-                color="primary"
-                size="sm"
-                type="button"
-                class="flex-1"
-                (click)="confirmRequested.emit(b)"
-              >Confirm</button>
-              <button
-                hh-button
-                variant="outlined"
-                size="sm"
-                type="button"
-                (click)="detailsRequested.emit(b)"
-              >
-                Details
-              </button>
-            </div>
-          </li>
-        }
-      </ul>
+    @if (!ready()) {
+      <div class="px-4 py-4 sm:px-5"><hh-skeleton class="block h-16 w-full" /></div>
     } @else {
-      <p class="px-4 py-4 text-sm text-ink-500 sm:px-5">
-        {{ 'hostBookings.nothingIsWaitingOnYou' | transloco }}
-      </p>
+      <!-- The only lane with something to do about it. Everything else on this day is a number
+           the host reads; these are decisions waiting on them. -->
+      <div class="flex items-center justify-between gap-2 px-4 pb-1 pt-3 sm:px-5">
+        <span class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-warn"></span>
+          <span class="text-sm font-semibold text-ink-900">Awaiting confirmation</span>
+        </span>
+        <span class="text-xs font-semibold tabular-nums text-warn">{{ needsAction().length }}</span>
+      </div>
+
+      @if (needsAction().length) {
+        <ul class="space-y-2 px-4 py-2 sm:px-5">
+          @for (b of needsAction(); track b.id) {
+            <li class="rounded-xl border border-warn/25 bg-warn/5 p-3">
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-warn/15 text-[11px] font-semibold text-warn"
+                  >{{ initials(b.guest.name) }}</span
+                >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm font-semibold text-ink-900">
+                    {{ b.guest.name }}
+                  </span>
+                  <span class="mt-0.5 block truncate text-xs text-ink-500">{{ summary(b) }}</span>
+                </span>
+              </div>
+              <div class="mt-2.5 flex gap-2">
+                <button
+                  hh-button
+                  color="primary"
+                  size="sm"
+                  type="button"
+                  class="flex-1"
+                  (click)="confirmRequested.emit(b)"
+                >Confirm</button>
+                <button
+                  hh-button
+                  variant="outlined"
+                  size="sm"
+                  type="button"
+                  (click)="detailsRequested.emit(b)"
+                >
+                  Details
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="px-4 py-4 text-sm text-ink-500 sm:px-5">
+          {{ 'hostBookings.nothingIsWaitingOnYou' | transloco }}
+        </p>
+      }
     }
   </aside>
 </section>

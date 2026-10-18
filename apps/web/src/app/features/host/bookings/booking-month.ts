@@ -201,18 +201,20 @@ export function monthRange(d: Date): { start: string; end: string } {
  * Days the response does not mention read as zero rather than as missing: the endpoint sends
  * `by_status: {}` for an empty day, and a month it has not indexed yet should look empty, not
  * broken.
+ *
+ * `today` is the hostel's date as `yyyy-MM-dd`, and required: a default would read the
+ * device's clock, which is a day off for a host in another zone around midnight.
  */
 export function buildBookingMonth(
   days: readonly CalendarDayCounts[],
   monthStart: Date,
-  today: Date = new Date(),
+  today: string,
 ): BookingMonth {
   const year = monthStart.getFullYear();
   const month = monthStart.getMonth();
   // getDay() is Sunday-first; shift so Monday is 0, matching the room calendar and the rest
   // of the host console.
   const lead = (new Date(year, month, 1).getDay() + 6) % 7;
-  const todayIso = isoDate(today);
   const byDate = new Map(days.map((d) => [d.date, d]));
 
   const cells: DayCell[] = [];
@@ -250,7 +252,7 @@ export function buildBookingMonth(
       date,
       n: String(cellDate.getDate()),
       inMonth: true,
-      isToday: date === todayIso,
+      isToday: date === today,
       counts,
       checkins: src?.checkins ?? 0,
       checkouts: src?.checkouts ?? 0,

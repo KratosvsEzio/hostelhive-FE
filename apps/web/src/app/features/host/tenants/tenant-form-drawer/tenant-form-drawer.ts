@@ -41,6 +41,7 @@ import {
   emptyCheckInForm,
   fieldErrorFor,
   isCheckInFormValid,
+  leaveCountdown,
   RenterFormContext,
   pendingEditForm,
   toCreateRenterPayload,
@@ -153,15 +154,38 @@ export class TenantFormDrawer {
   protected readonly leaveConfirmEnabled = computed(() =>
     this.leaveConfirmInput().trim() === 'I Confirm',
   );
+
+  /**
+   * Whether the leave confirmation could be shown — a new tenant with a leave date — and for
+   * which hostel. Compared by value, so typing elsewhere in the form does not re-ask.
+   */
+  private readonly leaveZoneQuery = computed(
+    () => {
+      const f = this.form();
+      return { hostelId: this.store.selected(), need: !!f?.leaveDate && !f.id };
+    },
+    { equal: (a, b) => a.hostelId === b.hostelId && a.need === b.need },
+  );
+
+  /**
+   * The hostel's zone, asked for only once the confirmation could be shown, so a monthly
+   * hostel spends its one cached request only when a leave date is entered. Null while that
+   * is pending, which counts from the device's date rather than holding the dialog back.
+   */
+  private readonly leaveZone = toSignal(
+    toObservable(this.leaveZoneQuery).pipe(
+      switchMap(({ hostelId, need }) =>
+        need && hostelId ? this.store.timeZoneOf(hostelId) : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
+
+  /** Days from the hostel's today to the leave date — see {@link leaveCountdown}. */
   protected readonly leaveInfo = computed(() => {
     const f = this.form();
     if (!f?.leaveDate) return null;
-    const leave = new Date(f.leaveDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    leave.setHours(0, 0, 0, 0);
-    const diff = Math.ceil((leave.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return { date: f.leaveDate, days: diff };
+    return leaveCountdown(f.leaveDate, todayIn(this.leaveZone()));
   });
 
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panel');

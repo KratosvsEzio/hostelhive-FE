@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
-import { HostelsApi } from '@services';
+import { HostelsApi, HostPropertyStore } from '@services';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostBookingsApi } from '../host-bookings-api';
 import { BookingFormDrawer } from './booking-form-drawer';
@@ -61,6 +61,7 @@ describe('BookingFormDrawer', () => {
         provideI18nTesting(),
         { provide: HostelsApi, useValue: hostels },
         { provide: HostBookingsApi, useValue: bookings },
+        { provide: HostPropertyStore, useValue: { timeZoneOf: () => of(null) } },
       ],
     });
     fixture = TestBed.createComponent(BookingFormDrawer);

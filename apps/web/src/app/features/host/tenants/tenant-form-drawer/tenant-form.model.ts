@@ -1,6 +1,7 @@
 import type { Tenant } from '@hostelhive/data-access';
 import type { HostOpsApi } from '@services/host-ops-api';
 import { normalizeBillingDay } from '@util/billing-day';
+import { calendarDaysBetween, dayPart } from '@util/plain-day';
 
 /** Every field the tenant check-in / edit drawer binds to, all held as form-shaped strings. */
 export interface CheckInForm {
@@ -265,6 +266,26 @@ export function leaveBeforeJoin(f: CheckInForm): boolean {
   if (!f.joiningDate || !f.leaveDate) return false;
   const at = (v: string) => (v.includes('T') ? v : `${v}T00:00`);
   return at(f.leaveDate) < at(f.joiningDate);
+}
+
+/**
+ * How many calendar days from `today` to the leave date, for the confirmation shown before a
+ * tenant is registered with one. Null when the value is not a date.
+ *
+ * Counted on the day parts, not through `Date`: `new Date('yyyy-MM-dd')` is UTC midnight, the
+ * previous evening anywhere west of Greenwich, and a daylight-saving change makes one day 23 or
+ * 25 hours long — each counted one off. A time on the leave date does not change its day.
+ *
+ * @param leaveDate - `yyyy-MM-dd`, or `yyyy-MM-ddTHH:mm`; returned as-is for display.
+ * @param today - The hostel's `yyyy-MM-dd`, from `todayIn`.
+ */
+export function leaveCountdown(
+  leaveDate: string,
+  today: string,
+): { date: string; days: number } | null {
+  const day = dayPart(leaveDate);
+  if (!day) return null;
+  return { date: leaveDate, days: calendarDaysBetween(today, day) };
 }
 
 /**

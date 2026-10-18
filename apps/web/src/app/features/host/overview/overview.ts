@@ -39,6 +39,8 @@ import { SubscriptionGate } from '@layout/components/subscription-gate/subscript
 import { isSubscriptionError } from '@util/subscription-error';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
+import { todayIn } from '@util/zoned-time';
+import { dayToLocalDate } from '@util/plain-day';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -73,6 +75,20 @@ interface ViewState {
   networkError: boolean;
   data: OverviewData | null;
 }
+
+/** The strip's fetch, carrying the hostel's `yyyy-MM-dd` it was asked for; null until that is known. */
+interface UpcomingState {
+  loading: boolean;
+  error: boolean;
+  days: CalendarDayCounts[];
+  today: string | null;
+}
+
+const UPCOMING_LOADING: UpcomingState = { loading: true, error: false, days: [], today: null };
+const UPCOMING_IDLE: UpcomingState = { loading: false, error: false, days: [], today: null };
+
+/** Nothing to draw yet: no cells, and no range label naming a fortnight nobody has asked for. */
+const NO_STRIP: UpcomingStrip = { days: [], totalIn: 0, totalOut: 0, busiest: 0, rangeLabel: '' };
 
 @Component({
   selector: 'app-host-overview',
@@ -134,28 +150,46 @@ export class HostOverview {
     hostelId: this.monthlyBilled() ? '' : this.propertyStore.selected(),
   }));
 
+  /** The clock, read once when the page opens; each fetch turns it into the hostel's date. */
+  private readonly openedAt = new Date();
+
+  /**
+   * The fetch starts from the hostel's today, not the device's: a host five hours behind would
+   * otherwise see the strip open on yesterday until their own midnight. The zone is one cached
+   * request per hostel and never errors — without one, this is the device's date.
+   */
   private readonly upcomingResp = toSignal(
     toObservable(this.upcomingQuery).pipe(
       switchMap(({ hostelId }) => {
-        if (!hostelId) return of({ loading: false, error: false, days: [] as CalendarDayCounts[] });
-        const { from, to } = stripRange(new Date());
-        return this.bookingsApi.calendar(hostelId, from, to).pipe(
-          map((cal) => ({ loading: false, error: false, days: cal.days })),
-          startWith({ loading: true, error: false, days: [] as CalendarDayCounts[] }),
-          catchError(() => of({ loading: false, error: true, days: [] as CalendarDayCounts[] })),
+        if (!hostelId) return of(UPCOMING_IDLE);
+        return this.propertyStore.timeZoneOf(hostelId).pipe(
+          switchMap((zone) => {
+            const today = todayIn(zone, this.openedAt);
+            const { from, to } = stripRange(dayToLocalDate(today));
+            return this.bookingsApi.calendar(hostelId, from, to).pipe(
+              map((cal): UpcomingState => ({ loading: false, error: false, days: cal.days, today })),
+              catchError(() => of<UpcomingState>({ loading: false, error: true, days: [], today })),
+            );
+          }),
+          startWith(UPCOMING_LOADING),
         );
       }),
     ),
-    { initialValue: { loading: true, error: false, days: [] as CalendarDayCounts[] } },
+    { initialValue: UPCOMING_LOADING },
   );
 
   protected readonly upcomingLoading = computed(() => this.upcomingResp().loading);
   protected readonly upcomingError = computed(() => this.upcomingResp().error);
 
-  /** Rebuilt from `new Date()` on every read so the strip cannot outlive midnight. */
-  protected readonly strip = computed<UpcomingStrip>(() =>
-    upcomingStrip(this.upcomingResp().days, new Date()),
-  );
+  /**
+   * Drawn from the same `today` the range was requested with, so the cells and the window the
+   * counts came from cannot disagree. It does not roll over at midnight on its own: a computed
+   * only re-runs when the response changes, and the clock behind it was read when the page opened.
+   */
+  protected readonly strip = computed<UpcomingStrip>(() => {
+    const { days, today } = this.upcomingResp();
+    return today ? upcomingStrip(days, dayToLocalDate(today)) : NO_STRIP;
+  });
 
   protected inTint(level: StripLevel): string {
     return IN_TINTS[level];
