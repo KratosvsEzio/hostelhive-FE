@@ -40,6 +40,8 @@ export const HOST_ACCESS_TTL_MS = 2 * 60 * 1000;
 
 const HOST_HOSTEL_URL = /\/api\/host\/hostels\/([^/?#]+)(?:\/([^?#]*))?(?:[?#]|$)/;
 const INACTIVE_MESSAGE = /need to subscribe/i;
+/** The code `core/interceptors/error-interceptor.ts` falls back to for a body that carried none. */
+const NO_SERVER_CODE = 'unknown_error';
 
 /**
  * Reads `/api/host/hostels/:id[/…]`. Returns null for any other URL, including the hostel index.
@@ -63,6 +65,24 @@ export function isCrmRequired(err: unknown): boolean {
     code === CRM_REQUIRED_CODE ||
     (Array.isArray(serverMessages) && serverMessages.includes(CRM_REQUIRED_MESSAGE))
   );
+}
+
+/**
+ * Whether a failure is the host API's 403 for a permission the signed-in user's role lacks: one
+ * carrying no code of the server's, and not a plan without CRM ({@link isCrmRequired}). A 403 with
+ * any other code, such as the rate limiter's `forbidden`, is not. Reads the interceptor's
+ * `ApiError` (`code`) and a raw `HttpErrorResponse` (its body's `code`); `message` is never read.
+ */
+export function isPermissionRefusal(err: unknown): boolean {
+  if (errorStatus(err) !== 403 || isCrmRequired(err)) return false;
+  const { code, error: body } = err as { code?: unknown; error?: unknown };
+  const bodyCode = body && typeof body === 'object' ? (body as { code?: unknown }).code : undefined;
+  return !isServerCode(code) && !isServerCode(bodyCode);
+}
+
+/** A code the server sent, rather than none or the interceptor's fallback. */
+function isServerCode(code: unknown): boolean {
+  return typeof code === 'string' && code !== '' && code !== NO_SERVER_CODE;
 }
 
 /**

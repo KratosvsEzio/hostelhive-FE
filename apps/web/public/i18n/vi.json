@@ -875,6 +875,8 @@
     "offlineTitle": "Trang này sẽ mở khi nhà nghỉ của bạn được hiển thị",
     "offlineBody": "Phòng, đặt phòng, người thuê, hóa đơn và nhân viên cần một gói đang hoạt động. Dữ liệu của bạn vẫn được giữ lại.",
     "offlineBodyStaff": "Hãy nhờ chủ nhà nghỉ gia hạn gói của nhà nghỉ này.",
+    "pageNotAllowed": "Bạn không có quyền xem nội dung này. Hãy hỏi chủ nhà nghỉ.",
+    "pageNotAllowedOwner": "Tài khoản của bạn không có quyền xem nội dung này. Hãy liên hệ bộ phận hỗ trợ của HostelHive.",
     "renewsSoonCard": "Gói của bạn sẽ được gia hạn vào {{date}}. Chúng tôi sẽ tính phí vào thẻ đã lưu của bạn.",
     "renewDueCard": "Chúng tôi đang tính phí gia hạn vào thẻ đã lưu của bạn.",
     "pastDueCard": "Gói của bạn đã kết thúc vào {{endDate}} và khoản tự động thanh toán chưa thành công. Nhà trọ của bạn vẫn hoạt động đến {{graceDate}}.",

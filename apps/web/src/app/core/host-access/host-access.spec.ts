@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SessionStore, SessionUser } from '@app/core/auth/session-store';
@@ -9,6 +10,7 @@ import {
   classifyHostAccess,
   hostAccessTarget,
   isCrmRequired,
+  isPermissionRefusal,
 } from './host-access';
 
 const BASE = 'https://api.test';
@@ -193,6 +195,125 @@ describe('isCrmRequired', () => {
 
   it('never reads the message', () => {
     expect(isCrmRequired({ status: 403, message: CRM_REQUIRED_MESSAGE })).toBe(false);
+  });
+});
+
+describe('isPermissionRefusal', () => {
+  const CANCAN = 'You are not authorized to access this page.';
+
+  it.each<{ why: string; err: unknown }>([
+    {
+      why: 'it carries the fallback code, as the interceptor sends a refusal of the user',
+      err: { status: 403, code: 'unknown_error', serverMessages: [CANCAN] },
+    },
+    { why: 'it has no code', err: { status: 403, serverMessages: [CANCAN] } },
+    { why: 'its code is empty', err: { status: 403, code: '', serverMessages: [CANCAN] } },
+    { why: 'its code is not a string', err: { status: 403, code: 42 } },
+    { why: 'its code is null', err: { status: 403, code: null } },
+    { why: 'it is a bare status', err: { status: 403 } },
+    { why: 'it has an empty list of messages', err: { status: 403, serverMessages: [] } },
+  ])('is true for a 403 when $why', ({ err }) => {
+    expect(isPermissionRefusal(err)).toBe(true);
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    {
+      why: "it carries the rate limiter's code",
+      err: { status: 403, code: 'forbidden', serverMessages: ['Forbidden'] },
+    },
+    {
+      why: 'it carries that code beside the unauthorized text',
+      err: { status: 403, code: 'forbidden', serverMessages: [CANCAN] },
+    },
+    { why: 'it carries that code and no message', err: { status: 403, code: 'forbidden' } },
+    {
+      why: 'it carries another code of the server',
+      err: { status: 403, code: 'ip_blocked', serverMessages: ['Forbidden'] },
+    },
+    {
+      why: 'it carries that other code beside the unauthorized text',
+      err: { status: 403, code: 'ip_blocked', serverMessages: [CANCAN] },
+    },
+    { why: 'it carries that other code and no message', err: { status: 403, code: 'ip_blocked' } },
+  ])('is false for a 403 when $why', ({ err }) => {
+    expect(isPermissionRefusal(err)).toBe(false);
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    {
+      why: 'the code and the message both come back',
+      err: { status: 403, code: CRM_REQUIRED_CODE, serverMessages: [CRM_REQUIRED_MESSAGE] },
+    },
+    { why: 'only the code comes back', err: { status: 403, code: CRM_REQUIRED_CODE } },
+    {
+      why: 'the code comes back beside the unauthorized text',
+      err: { status: 403, code: CRM_REQUIRED_CODE, serverMessages: [CANCAN] },
+    },
+    { why: 'only the message comes back', err: { status: 403, serverMessages: [CRM_REQUIRED_MESSAGE] } },
+    {
+      why: 'the message comes back under the fallback code',
+      err: { status: 403, code: 'unknown_error', serverMessages: [CRM_REQUIRED_MESSAGE] },
+    },
+    {
+      why: 'the message comes first among others',
+      err: { status: 403, serverMessages: [CRM_REQUIRED_MESSAGE, CANCAN] },
+    },
+    {
+      why: 'the message comes last among others',
+      err: { status: 403, serverMessages: [CANCAN, CRM_REQUIRED_MESSAGE] },
+    },
+  ])('is false for a 403 when the plan lacks CRM and $why', ({ err }) => {
+    expect(isPermissionRefusal(err)).toBe(false);
+  });
+
+  it.each<{ why: string; body: unknown }>([
+    { why: 'the singular error', body: { success: false, error: CANCAN } },
+    { why: 'an errors list', body: { success: false, errors: [CANCAN] } },
+    { why: 'no body', body: null },
+    { why: 'a body that is text', body: 'Forbidden' },
+    { why: 'a body carrying the fallback code', body: { code: 'unknown_error' } },
+  ])('is true for a raw 403 response with $why', ({ body }) => {
+    expect(isPermissionRefusal(new HttpErrorResponse({ status: 403, error: body }))).toBe(true);
+  });
+
+  it.each<{ why: string; body: unknown }>([
+    { why: "the rate limiter's code", body: { code: 'forbidden', errors: ['Forbidden'] } },
+    { why: 'the plan code', body: { code: CRM_REQUIRED_CODE, errors: [CRM_REQUIRED_MESSAGE] } },
+  ])('is false for a raw 403 response carrying $why', ({ body }) => {
+    expect(isPermissionRefusal(new HttpErrorResponse({ status: 403, error: body }))).toBe(false);
+  });
+
+  describe.each([0, 400, 401, 402, 404, 422, 500])('on a %i', (status) => {
+    it.each<{ why: string; err: unknown }>([
+      { why: 'it is a bare status', err: { status } },
+      {
+        why: 'it carries the fallback code and the unauthorized text',
+        err: { status, code: 'unknown_error', serverMessages: [CANCAN] },
+      },
+      {
+        why: 'a raw response carries the unauthorized body',
+        err: new HttpErrorResponse({ status, error: { success: false, error: CANCAN } }),
+      },
+    ])('is false even when $why', ({ err }) => {
+      expect(isPermissionRefusal(err)).toBe(false);
+    });
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    { why: 'the rejection is null', err: null },
+    { why: 'the rejection is undefined', err: undefined },
+    { why: 'the rejection is a string', err: CANCAN },
+    { why: 'the rejection is a number', err: 403 },
+    { why: 'the rejection is a plain error', err: new Error(CANCAN) },
+    { why: 'the rejection is empty', err: {} },
+    { why: 'the status is a string', err: { status: '403', code: 'unknown_error' } },
+  ])('is false and does not throw when $why', ({ err }) => {
+    expect(() => isPermissionRefusal(err)).not.toThrow();
+    expect(isPermissionRefusal(err)).toBe(false);
+  });
+
+  it('never reads the message', () => {
+    expect(isPermissionRefusal({ status: 403, message: CRM_REQUIRED_MESSAGE })).toBe(true);
   });
 });
 

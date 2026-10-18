@@ -870,6 +870,8 @@
     "offlineTitle": "Denne side åbner, når dit hostel er online",
     "offlineBody": "Værelser, bookinger, lejere, regninger og personale kræver en aktiv plan. Dine data bliver gemt.",
     "offlineBodyStaff": "Bed ejeren af hostellet om at forny dette hostels plan.",
+    "pageNotAllowed": "Du har ikke tilladelse til at se dette. Spørg ejeren af hostellet.",
+    "pageNotAllowedOwner": "Din konto har ikke tilladelse til at se dette. Kontakt HostelHives support.",
     "renewsSoonCard": "Din plan fornyes den {{date}}. Vi trækker beløbet på dit gemte kort.",
     "renewDueCard": "Vi trækker fornyelsen på dit gemte kort nu.",
     "pastDueCard": "Din plan udløb den {{endDate}}, og den automatiske betaling gik ikke igennem. Dit hostel forbliver live til {{graceDate}}.",

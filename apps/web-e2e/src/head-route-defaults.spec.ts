@@ -102,6 +102,11 @@ const LANGUAGES = [
   ['ur', 'ur_PK'],
 ] as const;
 
+/** A blog article: written in English, so every prefix names the English address as canonical. */
+const POST = 'student-hostels-in-lahore-a-practical-guide';
+const POST_TITLE = 'Student hostels in Lahore: a practical area-by-area guide | HostelHive';
+const POST_ENGLISH = `${SITE}/en/blog/${POST}`;
+
 const descriptionOf = (page: string, lang: 'en' | 'ur') =>
   KEYED_DESCRIPTION[page]?.[lang] ?? DEFAULT_DESCRIPTION[lang];
 
@@ -260,6 +265,39 @@ test.describe('server-rendered head of a route without its own SEO', () => {
       const head = headOf(await res.text());
 
       expect(head.title).toBe(title);
+    });
+  }
+
+  for (const [lang] of ENGLISH_ONLY_PREFIXES) {
+    test(`/${lang}/blog/${POST} names the English article as canonical and og:url, with no hreflang`, async ({
+      request,
+    }) => {
+      const res = await request.get(`/${lang}/blog/${POST}`, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const head = headOf(await res.text());
+
+      expect(head.canonicals).toEqual([POST_ENGLISH]);
+      expect(head.ogUrls).toEqual([POST_ENGLISH]);
+      expect(head.hreflangs).toBe(0);
+      expect(head.robots).toBe(INDEX);
+      expect(head.ogLocales).toEqual(['en_PK']);
+      expect(head.title).toBe(POST_TITLE);
+    });
+  }
+
+  for (const [lang, dir] of ENGLISH_ONLY_PREFIXES) {
+    test(`/${lang}/blog/${POST} keeps the ${dir} page language and marks the article English`, async ({
+      request,
+    }) => {
+      const res = await request.get(`/${lang}/blog/${POST}`, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const languages = languagesOf(await res.text());
+
+      expect(languages.html).toEqual({ lang, dir });
+      expect(languages.blocks.length).toBeGreaterThan(0);
+      for (const block of languages.blocks) expect(block).toEqual({ lang: 'en', dir: 'ltr' });
     });
   }
 });
@@ -512,5 +550,60 @@ test.describe('client navigation between pages with and without their own SEO', 
       'href',
       `${SITE}/en/blog`,
     );
+  });
+
+  test('a language switch on an article keeps its English canonical and structured data', async ({
+    page,
+  }) => {
+    await stubListings(page);
+
+    await page.goto(`/en/blog/${POST}`);
+    await expect.poll(async () => (await liveHead(page)).canonicals).toEqual([POST_ENGLISH]);
+    await waitForClient(page);
+    await markDocument(page);
+
+    await switchLanguage(page, 'ur');
+    await expect(page).toHaveURL(new RegExp(`/ur/blog/${POST}/?$`));
+    expect(await documentSurvived(page)).toBe(true);
+
+    await expect
+      .poll(async () => (await liveLanguages(page)).html)
+      .toEqual({ lang: 'ur', dir: 'rtl' });
+    const head = await liveHead(page);
+    expect(head.canonicals).toEqual([POST_ENGLISH]);
+    expect(head.ogUrls).toEqual([POST_ENGLISH]);
+    expect(head.ogLocales).toEqual(['en_PK']);
+    expect(head.hreflangs).toBe(0);
+    expect([...head.jsonLd].sort()).toEqual(['article', 'breadcrumb']);
+    expect((head.jsonLdBodies['article'] as Record<string, unknown>)['url']).toBe(POST_ENGLISH);
+  });
+
+  test('a translated blog index on either side of an article keeps its own hreflang set', async ({
+    page,
+  }) => {
+    await stubListings(page);
+
+    await page.goto('/ur/blog');
+    await expect.poll(async () => (await liveHead(page)).hreflangs).toBe(HREFLANGS);
+    await waitForClient(page);
+    await markDocument(page);
+
+    await page.locator(`a[href="/ur/blog/${POST}"]`).first().click();
+    await expect(page).toHaveURL(new RegExp(`/ur/blog/${POST}/?$`));
+    expect(await documentSurvived(page)).toBe(true);
+    await expect.poll(async () => (await liveHead(page)).canonicals).toEqual([POST_ENGLISH]);
+    expect((await liveHead(page)).hreflangs).toBe(0);
+
+    await waitForClient(page);
+    await page.locator('article a[href="/ur/blog"]').first().click();
+    await expect(page).toHaveURL(/\/ur\/blog\/?$/);
+    expect(await documentSurvived(page)).toBe(true);
+    await expect
+      .poll(async () => (await liveHead(page)).canonicals)
+      .toEqual([`${SITE}/ur/blog`]);
+    const back = await liveHead(page);
+    expect(back.hreflangs).toBe(HREFLANGS);
+    expect(back.ogLocales).toEqual(['ur_PK']);
+    expect(back.jsonLd).toEqual(['blog']);
   });
 });

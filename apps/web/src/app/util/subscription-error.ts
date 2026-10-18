@@ -12,14 +12,16 @@ import { HttpErrorResponse } from '@angular/common/http';
  *   - HTTP 402 Payment Required
  *   - the server's wording — "You need to subscribe to avail the services" (400), or any
  *     message about a subscription, an upgrade or a required plan
- *   - Pundit 403s on subscription-gated endpoints ("not authorized to access this page")
+ *
+ * Never matches a 403, whatever it says. A plan refusal (`crm_required`) is owned by the host
+ * access lock, and a 403 with no code of the server's is a permission the signed-in user's role
+ * lacks (`isPermissionRefusal`), which no subscription would grant.
  */
 export function isSubscriptionError(err: unknown): boolean {
   const read = readError(err);
-  if (!read) return false;
+  if (!read || read.status === 403) return false;
   if (read.status === 402) return true;
-  if (read.messages.some((m) => /subscri|upgrade.*plan|plan.?required/i.test(m))) return true;
-  return read.status === 403 && read.messages.some((m) => /not authorized/i.test(m));
+  return read.messages.some((m) => /subscri|upgrade.*plan|plan.?required/i.test(m));
 }
 
 function readError(err: unknown): { status: number; messages: string[] } | null {

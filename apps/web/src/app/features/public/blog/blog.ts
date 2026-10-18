@@ -14,7 +14,7 @@ import { Button } from '@hostelhive/ui';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { SITE_ORIGIN, Seo } from '@core/seo';
-import { BLOG_CATEGORIES, BlogCategorySlug } from './blog-post.model';
+import { BLOG_CATEGORIES, BLOG_CONTENT_LOCALE, BlogCategorySlug } from './blog-post.model';
 import { BLOG_POSTS } from './blog-posts';
 import { heroFor, heroSrcset } from './blog-figures';
 
@@ -192,26 +192,28 @@ export class Blog {
         // rather than like every other page on the site — all of which fall back to the logo.
         image: this.socialImage(),
       });
-    });
 
-    // A `Blog` with its posts listed, so the section can be understood as a set rather than
-    // as fifteen unrelated pages that happen to share a path prefix.
-    this.seo.setJsonLd('blog', {
-      '@context': 'https://schema.org',
-      '@type': 'Blog',
-      name: 'The HostelHive Blog',
-      url: `${SITE_ORIGIN}/blog`,
-      blogPost: BLOG_POSTS.map((p) => {
-        const img = heroFor(p.slug);
-        return {
-          '@type': 'BlogPosting',
-          headline: p.title,
-          description: p.excerpt,
-          datePublished: p.publishedAt,
-          url: `${SITE_ORIGIN}/blog/${p.slug}`,
-          ...(img ? { image: [`${SITE_ORIGIN}${img.src}`] } : {}),
-        };
-      }),
+      // A `Blog` with its posts listed, so the section can be understood as a set rather
+      // than as a run of unrelated pages that happen to share a path prefix. Written here
+      // rather than once, because its own `url` is this language's index, like the canonical
+      // beside it; each post's `url` is that article's canonical, which is always English.
+      this.seo.setJsonLd('blog', {
+        '@context': 'https://schema.org',
+        '@type': 'Blog',
+        name: 'The HostelHive Blog',
+        url: this.seo.pageUrl('/blog'),
+        blogPost: BLOG_POSTS.map((p) => {
+          const img = heroFor(p.slug);
+          return {
+            '@type': 'BlogPosting',
+            headline: p.title,
+            description: p.excerpt,
+            datePublished: p.publishedAt,
+            url: this.seo.pageUrl(`/blog/${p.slug}`, BLOG_CONTENT_LOCALE),
+            ...(img ? { image: [`${SITE_ORIGIN}${img.src}`] } : {}),
+          };
+        }),
+      });
     });
 
     // Describes the index, not an article or any page after it — see `Seo.clearOnDestroy`.

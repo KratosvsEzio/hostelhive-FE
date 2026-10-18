@@ -1018,6 +1018,8 @@
     "offlineTitle": "This page opens when your hostel is live",
     "offlineBody": "Rooms, bookings, tenants, bills and staff need an active plan. Your records are kept.",
     "offlineBodyStaff": "Ask the hostel owner to renew this hostel's plan.",
+    "pageNotAllowed": "You don't have permission to see this. Ask the hostel owner.",
+    "pageNotAllowedOwner": "Your account doesn't have permission to see this. Contact HostelHive support.",
     "renewsSoonCard": "Your plan renews on {{date}}. We'll charge your saved card.",
     "renewDueCard": "We're charging your saved card for the renewal.",
     "pastDueCard": "Your plan ended on {{endDate}} and the automatic charge hasn't gone through. Your hostel stays live until {{graceDate}}.",

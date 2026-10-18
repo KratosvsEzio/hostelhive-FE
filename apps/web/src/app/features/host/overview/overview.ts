@@ -36,7 +36,9 @@ import {
 import { CalendarDayCounts, HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isSubscriptionError } from '@util/subscription-error';
+import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
 import { todayIn } from '@util/zoned-time';
@@ -72,6 +74,7 @@ interface ViewState {
   loading: boolean;
   error: boolean;
   subscriptionError: boolean;
+  permissionError?: boolean;
   networkError: boolean;
   data: OverviewData | null;
 }
@@ -103,6 +106,7 @@ const NO_STRIP: UpcomingStrip = { days: [], totalIn: 0, totalOut: 0, busiest: 0,
     DashboardLayout,
     RouterLink, LocaleLink,
     SubscriptionGate,
+    PermissionRefused,
     ApiDate,
     DecimalPipe,
     Avatar,
@@ -321,7 +325,14 @@ export class HostOverview {
           catchError((err) => {
             const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
-            return of<ViewState>({ loading: false, error: !sub, subscriptionError: sub, networkError: net, data: null });
+            return of<ViewState>({
+              loading: false,
+              error: !sub,
+              subscriptionError: sub,
+              permissionError: isPermissionRefusal(err),
+              networkError: net,
+              data: null,
+            });
           }),
         ),
       ),

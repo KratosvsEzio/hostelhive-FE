@@ -870,6 +870,8 @@
     "offlineTitle": "Esta página se abre cuando tu hostal está en línea",
     "offlineBody": "Habitaciones, reservas, inquilinos, facturas y personal requieren un plan activo. Tus registros se conservan.",
     "offlineBodyStaff": "Pide al propietario del hostal que renueve el plan de este hostal.",
+    "pageNotAllowed": "No tienes permiso para ver esto. Pregunta al propietario del hostal.",
+    "pageNotAllowedOwner": "Tu cuenta no tiene permiso para ver esto. Contacta con el soporte de HostelHive.",
     "renewsSoonCard": "Tu plan se renueva el {{date}}. Cobraremos a tu tarjeta guardada.",
     "renewDueCard": "Estamos cobrando la renovación a tu tarjeta guardada.",
     "pastDueCard": "Tu plan terminó el {{endDate}} y el cobro automático no se realizó. Tu hostal sigue activo hasta el {{graceDate}}.",

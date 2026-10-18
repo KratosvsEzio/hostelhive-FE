@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { documentSurvived, headOf, jsonLdIds, markDocument, waitForClient } from './support/seo';
+import {
+  documentSurvived,
+  headOf,
+  jsonLdIds,
+  markDocument,
+  pageAddressesIn,
+  waitForClient,
+} from './support/seo';
 import { stubListings } from './support/stubs';
 
 // A page that asks to stay out of the index must not name another URL as its canonical, and a
@@ -28,7 +35,6 @@ const FAR_VIEWPORT_SEARCH = '/en/search/lahore?ne_lat=20&ne_lng=100&sw_lat=10&sw
 const INDEXABLE_PAGES: [string, string][] = [
   ['/en', '/en'],
   ['/en/blog', '/en/blog'],
-  [`/en/blog/${POST}`, `/en/blog/${POST}`],
   ['/en/pricing', '/en/pricing'],
   ['/en/search/lahore', '/en/hostels/lahore'],
   ['/ur/blog', '/ur/blog'],
@@ -213,5 +219,65 @@ test.describe('client navigation', () => {
     await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', `${SITE}/en`);
     await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute('content', /noindex/);
+  });
+});
+
+// The structured data names the same address as the canonical beside it, with a language: an
+// unprefixed URL only redirects, and disagrees with the page it describes.
+const PREFIXED = /^https:\/\/hostelhive\.com\/[a-z]{2}(\/|$)/;
+
+type ListItem = { position: number; name: string; item: string };
+
+test.describe('server-rendered structured data of the blog', () => {
+  test.setTimeout(120_000);
+
+  for (const lang of ['en', 'ur', 'ar']) {
+    test(`/${lang}/blog/${POST} names its English canonical in the article and breadcrumb`, async ({
+      request,
+    }) => {
+      const res = await request.get(`/${lang}/blog/${POST}`, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const head = headOf(await res.text());
+      const canonical = `${SITE}/en/blog/${POST}`;
+      const article = head.jsonLdBodies['article'] as Record<string, unknown>;
+      const breadcrumb = head.jsonLdBodies['breadcrumb'] as { itemListElement: ListItem[] };
+
+      expect(head.canonicals).toEqual([canonical]);
+      expect(article['url']).toBe(canonical);
+      expect(article['mainEntityOfPage']).toBe(canonical);
+      expect(article['inLanguage']).toBe('en');
+      const trail = breadcrumb.itemListElement.map(({ position, name, item }) => [
+        position,
+        name,
+        item,
+      ]);
+      expect(trail).toEqual([
+        [1, 'Blog', `${SITE}/en/blog`],
+        [2, article['headline'], canonical],
+      ]);
+      const pages = pageAddressesIn([article, breadcrumb]);
+      expect(pages.length).toBeGreaterThan(0);
+      for (const url of pages) expect(url).toMatch(PREFIXED);
+    });
+  }
+
+  test('/ur/blog names its own canonical as the blog url and each article by its canonical', async ({
+    request,
+  }) => {
+    const index = await request.get('/ur/blog', { timeout: 100_000 });
+    expect(index.ok()).toBe(true);
+    const article = await request.get(`/ur/blog/${POST}`, { timeout: 100_000 });
+    expect(article.ok()).toBe(true);
+
+    const head = headOf(await index.text());
+    const blog = head.jsonLdBodies['blog'] as { url: string; blogPost: { url: string }[] };
+    const [articleCanonical] = headOf(await article.text()).canonicals;
+
+    expect(head.canonicals).toEqual([`${SITE}/ur/blog`]);
+    expect(blog.url).toBe(`${SITE}/ur/blog`);
+    expect(blog.blogPost.map((p) => p.url)).toContain(articleCanonical);
+    expect(articleCanonical).toBe(`${SITE}/en/blog/${POST}`);
+    for (const url of pageAddressesIn(blog)) expect(url).toMatch(PREFIXED);
   });
 });

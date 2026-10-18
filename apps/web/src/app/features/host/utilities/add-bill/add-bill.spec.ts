@@ -1,9 +1,16 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { HostOpsApi, HostPropertyStore, UtilityBillUpdate } from '@services';
 import { HostRoom, Tenant, UtilityBill, UtilityType } from '@hostelhive/data-access';
+import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-refusals';
+import { HOSTEL_ID, roomsReply, sessionUser } from '@app/testing/host-builders';
+import { hostPageDeps, hostPageProviders } from '@app/testing/host-page';
+import { seedHostPropertyStore } from '@app/testing/host-stubs';
+import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import type { Role } from '@core/auth/roles';
+import { SessionStore } from '@core/auth/session-store';
 import { AddBill } from './add-bill';
 
 const ROOM: HostRoom = {
@@ -205,5 +212,133 @@ describe('AddBill — editing a bill', () => {
     form.addToBatch();
 
     expect(updates[0].body.renter_bills_attributes.map((r) => r.amount)).toEqual([18900, 9000]);
+  });
+});
+
+const HOSTEL_API = `https://api.test/api/host/hostels/${HOSTEL_ID}`;
+
+/** The three reads the form waits on, each with the endpoint it hits. */
+const LOAD_URLS = {
+  rooms: `${HOSTEL_API}/rooms`,
+  renters: `${HOSTEL_API}/renters`,
+  utilityBillFormOptions: `${HOSTEL_API}/utility_bills/new`,
+} as const;
+
+type Load = keyof typeof LOAD_URLS;
+
+const LOADS = Object.keys(LOAD_URLS) as Load[];
+
+const ROLE_SENTENCES = [
+  { role: 'host', sentence: 'hostAccess.pageNotAllowedOwner' },
+  { role: 'manager', sentence: 'hostAccess.pageNotAllowed' },
+] as const satisfies readonly { role: Role; sentence: string }[];
+
+/** Mounts the real page in add mode, signed in as `role`; each read in `refusals` is refused, the rest succeed. */
+async function openRefused(refusals: Partial<Record<Load, RefusalKind>>, role: Role = 'host') {
+  const answer = <T>(load: Load, reply: T) =>
+    vi.fn(() => {
+      const kind = refusals[load];
+      return kind ? throwError(() => refusalError(kind, { url: LOAD_URLS[load] })) : of(reply);
+    });
+  const deps = hostPageDeps();
+  Object.assign(deps.ops, {
+    rooms: answer('rooms', roomsReply()),
+    renters: answer('renters', { renters: [], total: 0 }),
+    utilityBillFormOptions: answer('utilityBillFormOptions', []),
+    utilityMeta: (type: UtilityType) => ({ type, label: type, icon: '', metered: true, unit: 'kWh', split: 'prorata' }),
+  });
+  TestBed.configureTestingModule({ providers: hostPageProviders({}, deps) });
+  // The host store keeps its hostel list per user, so the session has to exist before it is seeded.
+  TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+  seedHostPropertyStore('month');
+  const fixture = TestBed.createComponent(AddBill);
+  for (let round = 0; round < 2; round++) {
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+  fixture.detectChanges();
+  const el = fixture.nativeElement as HTMLElement;
+  return { el, shown: loadSurface(el) };
+}
+
+describe('AddBill — a refused load in add mode', () => {
+  // A signed-in host persists its hostel choice and the session persists itself; neither may reach the next test.
+  afterEach(() => {
+    TestBed.inject(HostPropertyStore).clear();
+    TestBed.inject(SessionStore).clear();
+  });
+
+  it('renders the form, and no error surface, when every read succeeds', async () => {
+    const { shown } = await openRefused({});
+
+    expect(shown.surfaces).toEqual([]);
+    expect(shown.text).toContain('hostUtilities.billDetails');
+  });
+
+  describe('for a permission the role lacks', () => {
+    const cases = LOADS.flatMap((load) =>
+      kindsShowing('permission').flatMap((kind) => ROLE_SENTENCES.map((r) => ({ load, kind, ...r }))),
+    );
+
+    it.each(cases)(
+      'says a $role account may not see this, and offers no retry, when $load answers a $kind refusal and the other reads succeed',
+      async ({ load, kind, role, sentence }) => {
+        const { shown } = await openRefused({ [load]: kind }, role);
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.heading).toBe('coreForbidden.accessBlocked');
+        expect(shown.body).toBe(sentence);
+        expect(shown.retry).toBe(false);
+        expect(shown.text).not.toContain('common.retry');
+        expect(shown.text).not.toContain(CANCAN_MESSAGE);
+        expect(shown.text).not.toContain('hostUtilities.billDetails');
+      },
+    );
+  });
+
+  describe('for a plan without CRM on the rooms read', () => {
+    it.each<RefusalKind>(['crmRequired', 'crmMessageOnly'])('shows the generic error with Retry, not the panel or the paywall, after a %s refusal', async (kind) => {
+      const { shown } = await openRefused({ rooms: kind });
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.heading).toBe('states.somethingWentWrong');
+      expect(shown.retry).toBe(true);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
+  });
+
+  describe('for a hostel with no live plan on the rooms read', () => {
+    it.each(kindsShowing('paywall'))('shows the paywall, not the panel or a retry, after a %s refusal', async (kind) => {
+      const { shown } = await openRefused({ rooms: kind });
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.retry).toBe(false);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
+  });
+
+  describe('for a failure on the rooms read that is not a permission or plan refusal', () => {
+    it.each<RefusalKind>(['rateLimited', 'notFound', 'unprocessable', 'serverError'])(
+      'shows the generic error with Retry after a %s refusal',
+      async (kind) => {
+        const { shown } = await openRefused({ rooms: kind });
+
+        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+        expect(shown.heading).toBe('states.somethingWentWrong');
+        expect(shown.retry).toBe(true);
+        expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+      },
+    );
+  });
+
+  describe('when the server never answers the rooms read', () => {
+    it.each(kindsShowing('network'))('shows the connection error with Retry after a %s failure', async (kind) => {
+      const { shown } = await openRefused({ rooms: kind });
+
+      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
+      expect(shown.heading).toBe('states.cantConnect');
+      expect(shown.retry).toBe(true);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
   });
 });

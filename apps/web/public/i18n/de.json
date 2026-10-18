@@ -870,6 +870,8 @@
     "offlineTitle": "Diese Seite ist verfügbar, sobald Ihr Hostel online ist",
     "offlineBody": "Für Zimmer, Buchungen, Mieter, Rechnungen und Personal ist ein aktiver Tarif nötig. Ihre Daten bleiben erhalten.",
     "offlineBodyStaff": "Bitten Sie den Eigentümer des Hostels, den Tarif dieses Hostels zu verlängern.",
+    "pageNotAllowed": "Sie sind nicht berechtigt, dies zu sehen. Fragen Sie den Eigentümer des Hostels.",
+    "pageNotAllowedOwner": "Ihr Konto ist nicht berechtigt, dies zu sehen. Wenden Sie sich an den HostelHive-Support.",
     "renewsSoonCard": "Ihr Tarif verlängert sich am {{date}}. Wir belasten Ihre gespeicherte Karte.",
     "renewDueCard": "Wir belasten Ihre gespeicherte Karte für die Verlängerung.",
     "pastDueCard": "Ihr Tarif endete am {{endDate}} und die automatische Abbuchung ist fehlgeschlagen. Ihr Hostel bleibt bis {{graceDate}} online.",

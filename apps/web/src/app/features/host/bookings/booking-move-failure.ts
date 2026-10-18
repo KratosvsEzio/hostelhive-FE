@@ -1,5 +1,5 @@
 import { errorStatus } from '@core/errors/api-error-text';
-import { isCrmRequired } from '@core/host-access/host-access';
+import { isCrmRequired, isPermissionRefusal } from '@core/host-access/host-access';
 import { bookingRefusal } from '@util/booking-refusal';
 import { LaneKey, laneKeyFor } from './booking-month';
 import { HostBooking } from './host-bookings-api';
@@ -19,9 +19,6 @@ export interface MoveFailureOptions {
    */
   owner?: boolean;
 }
-
-/** The `code` the error interceptor gives a failure whose body carried no code of the server's. */
-const NO_SERVER_CODE = 'unknown_error';
 
 /**
  * The translation key for a stay move the server refused: confirm, check in, check out,
@@ -149,19 +146,11 @@ export function crossPayInvoiceFailureKey(err: unknown, opts: MoveFailureOptions
  * The key for a 403 worth telling the host about, or `null` to leave the caller's own reading.
  *
  * A plan without CRM has its own key. A 403 carrying no code of the server's is a permission the
- * signed-in user's role lacks, worded for the owner or for staff. Any other coded 403, such as
- * the rate limiter's `forbidden`, and every other status give `null`.
+ * signed-in user's role lacks ({@link isPermissionRefusal}), worded for the owner or for staff.
+ * Any other coded 403, such as the rate limiter's `forbidden`, and every other status give `null`.
  */
 function forbiddenKey(err: unknown, opts: MoveFailureOptions): string | null {
-  if (errorStatus(err) !== 403) return null;
   if (isCrmRequired(err)) return 'hostBookings.planHasNoCrm';
-  if (hasServerCode(err)) return null;
+  if (!isPermissionRefusal(err)) return null;
   return opts.owner ? 'hostBookings.notAllowedOwner' : 'hostBookings.notAllowed';
-}
-
-/** Whether a failure carries the server's own code, rather than none or the interceptor's fallback. */
-function hasServerCode(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) return false;
-  const { code } = err as { code?: unknown };
-  return typeof code === 'string' && code !== '' && code !== NO_SERVER_CODE;
 }

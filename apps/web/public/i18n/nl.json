@@ -870,6 +870,8 @@
     "offlineTitle": "Deze pagina opent zodra je hostel online is",
     "offlineBody": "Voor kamers, boekingen, huurders, rekeningen en personeel is een actief abonnement nodig. Je gegevens blijven bewaard.",
     "offlineBodyStaff": "Vraag de eigenaar van het hostel om het abonnement van dit hostel te verlengen.",
+    "pageNotAllowed": "U hebt geen toestemming om dit te bekijken. Vraag het de eigenaar van het hostel.",
+    "pageNotAllowedOwner": "Uw account heeft geen toestemming om dit te bekijken. Neem contact op met HostelHive-support.",
     "renewsSoonCard": "Je abonnement wordt verlengd op {{date}}. We belasten je opgeslagen kaart.",
     "renewDueCard": "We belasten je opgeslagen kaart voor de verlenging.",
     "pastDueCard": "Je abonnement liep af op {{endDate}} en de automatische incasso is niet gelukt. Je hostel blijft online tot {{graceDate}}.",

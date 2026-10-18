@@ -35,6 +35,15 @@ export type BlogText = string | BlogSpan[];
 export const FIGURE_WIDTH = 1200;
 export const FIGURE_HEIGHT = 800;
 
+/**
+ * The language the archive is written in.
+ *
+ * Every post is English, whatever language the site around it is browsed in, so an article
+ * canonicalises to its English address, claims no translations, and is listed once in the
+ * sitemap. The one statement of it: the head, the JSON-LD and the sitemap all read this.
+ */
+export const BLOG_CONTENT_LOCALE = 'en';
+
 /** The words in a run of prose with the markup thrown away — for counting and for metadata. */
 export function plainText(value: BlogText): string {
   if (typeof value === 'string') return value;

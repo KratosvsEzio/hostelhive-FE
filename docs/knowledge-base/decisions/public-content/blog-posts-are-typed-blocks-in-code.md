@@ -25,7 +25,7 @@ The blog exists to be found in search, so it must render fully on the server. Th
 
 - Publishing a post is a code change and a deploy; the sitemap picks it up from `BLOG_POSTS`.
 - Links inside prose can only be the closed `{ to, text }` span; anything richer needs a new span type, deliberately.
-- Article text is English; only the blog chrome is translated (`blog.ts`).
+- Article text is English; only the blog chrome is translated (`blog.ts`). So each article canonicalises to `/en/blog/<slug>` with no `hreflang` (`BLOG_CONTENT_LOCALE`; see [single-language pages](../ssr-seo-and-prerender/single-language-pages-canonicalise-to-their-language.md)).
 
 ## Evidence
 

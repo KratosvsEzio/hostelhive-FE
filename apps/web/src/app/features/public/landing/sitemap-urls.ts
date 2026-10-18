@@ -1,6 +1,7 @@
 import { GENDER_SEGMENTS, PLACES } from './places';
 import { UNIVERSITIES } from './universities';
 import { BLOG_POSTS } from '@features/public/blog/blog-posts';
+import { BLOG_CONTENT_LOCALE } from '@features/public/blog/blog-post.model';
 import { splitLocale, withLocale } from '@core/i18n/locales';
 import { pageAlternates, pageLocales } from '@core/i18n/content-locale';
 
@@ -40,6 +41,20 @@ const STATIC_PATHS = [
   '/credits',
 ] as const;
 
+/** The article paths, each a page in the archive's one language. */
+const ARTICLE_PATHS: ReadonlySet<string> = new Set(BLOG_POSTS.map((p) => `/blog/${p.slug}`));
+
+/**
+ * The language a page's content is written in, where the sitemap must say so itself.
+ *
+ * Articles are `'page'` routes, so they are not in `SINGLE_LANGUAGE_PAGES` and their language
+ * comes from the archive instead. `undefined` leaves `pageLocales` and `pageAlternates` to
+ * their own default.
+ */
+function contentLocaleOf(basePath: string): string | undefined {
+  return ARTICLE_PATHS.has(basePath) ? BLOG_CONTENT_LOCALE : undefined;
+}
+
 /**
  * The paths worth indexing, each carrying a language.
  *
@@ -51,8 +66,9 @@ const STATIC_PATHS = [
  * `INDEXED_LOCALE_CODES`. A locale that still falls back to English is left out on
  * purpose: listing it would offer a search engine the same page a second time under a
  * different address, which is the definition of a duplicate. A page written in one
- * language only — the legal pages, the credits — gets that one entry, for the same reason:
- * see `SINGLE_LANGUAGE_PAGES` (core/i18n/content-locale.ts).
+ * language only — the legal pages, the credits, every blog article — gets that one entry,
+ * for the same reason: see `SINGLE_LANGUAGE_PAGES` (core/i18n/content-locale.ts) and
+ * `BLOG_CONTENT_LOCALE`.
  */
 export function sitemapPaths(): string[] {
   const landing = PLACES.flatMap((p) => [
@@ -64,9 +80,8 @@ export function sitemapPaths(): string[] {
   const campuses = UNIVERSITIES.map((u) => `/hostels/${u.placeSlug}/${u.slug}`);
   // Articles, derived from the archive for the same reason the landing pages are: a post
   // added without its sitemap entry is a post nobody finds.
-  const articles = BLOG_POSTS.map((p) => `/blog/${p.slug}`);
-  return [...STATIC_PATHS, ...landing, ...campuses, ...articles].flatMap((p) =>
-    pageLocales(p).map((code) => withLocale(code, p)),
+  return [...STATIC_PATHS, ...landing, ...campuses, ...ARTICLE_PATHS].flatMap((p) =>
+    pageLocales(p, contentLocaleOf(p)).map((code) => withLocale(code, p)),
   );
 }
 
@@ -87,7 +102,7 @@ export function renderSitemap(origin: string, paths: string[]): string {
   const urls = paths
     .map((path) => {
       const { path: basePath } = splitLocale(path);
-      const alternates = pageAlternates(basePath).map(
+      const alternates = pageAlternates(basePath, contentLocaleOf(basePath)).map(
         (a) =>
           `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${origin}${a.path}"/>`,
       );

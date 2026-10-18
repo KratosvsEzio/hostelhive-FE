@@ -32,7 +32,9 @@ import {
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isSubscriptionError } from '@util/subscription-error';
+import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { splitByDays, SplitRow } from '../split';
 import { localDay } from '@util/api-date';
@@ -42,6 +44,7 @@ interface ViewState {
   loading: boolean;
   error: boolean;
   subscriptionError: boolean;
+  permissionError?: boolean;
   networkError: boolean;
   rooms: Room[] | null;
   tenants: Tenant[] | null;
@@ -63,6 +66,7 @@ const monthValue = (d: Date): string => `${d.getFullYear()}-${d.getMonth()}`;
     DecimalPipe,
     DashboardLayout,
     SubscriptionGate,
+    PermissionRefused,
     Avatar,
     Button,
     DatePicker,
@@ -163,6 +167,7 @@ export class AddBill {
               loading: false,
               error: !sub,
               subscriptionError: sub,
+              permissionError: isPermissionRefusal(err),
               networkError: net,
               rooms: null,
               tenants: null,
