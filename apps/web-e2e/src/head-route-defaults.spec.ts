@@ -2,7 +2,9 @@ import { expect, Page, test } from '@playwright/test';
 import {
   documentSurvived,
   headOf,
+  languagesOf,
   liveHead,
+  liveLanguages,
   markDocument,
   openSignIn,
   switchLanguage,
@@ -74,17 +76,26 @@ const KEYED_DESCRIPTION: Record<string, Record<'en' | 'ur', string>> = {
   },
 };
 
-/** The static pages that are indexed, which are also the ones the sitemap lists. */
-const INDEX_PAGES = [
-  'about',
-  'faqs',
-  'careers',
-  'contact',
-  'privacy-policy',
-  'terms-of-service',
-  'service-policy',
-  'credits',
+/** The translated static pages that are indexed in every language the sitemap lists. */
+const INDEX_PAGES = ['about', 'faqs', 'careers', 'contact'];
+
+/**
+ * The indexed pages written in English only, with their Urdu tab title. Every prefix serves
+ * them, but each names the English address as canonical and declares no other language.
+ */
+const ENGLISH_ONLY_PAGES: [string, string][] = [
+  ['privacy-policy', 'پرائیویسی پالیسی — HostelHive'],
+  ['terms-of-service', 'شرائطِ استعمال — HostelHive'],
+  ['service-policy', 'سروس پالیسی — HostelHive'],
+  ['credits', 'تصاویر کے کریڈٹس — HostelHive'],
 ];
+
+/** One left-to-right and two right-to-left prefixes. */
+const ENGLISH_ONLY_PREFIXES = [
+  ['en', 'ltr'],
+  ['ur', 'rtl'],
+  ['ar', 'rtl'],
+] as const;
 
 const LANGUAGES = [
   ['en', 'en_PK'],
@@ -117,6 +128,54 @@ test.describe('server-rendered head of a route without its own SEO', () => {
         expect(head.robots).toBe(INDEX);
         expect(head.ogLocales).toEqual([ogLocale]);
         expect(head.description).toBe(descriptionOf(path, lang));
+      });
+    }
+  }
+
+  for (const [path] of ENGLISH_ONLY_PAGES) {
+    for (const [lang] of ENGLISH_ONLY_PREFIXES) {
+      test(`/${lang}/${path} names the English page as canonical and og:url, with no hreflang`, async ({
+        request,
+      }) => {
+        const res = await request.get(`/${lang}/${path}`, { timeout: 100_000 });
+        expect(res.ok()).toBe(true);
+
+        const head = headOf(await res.text());
+        const english = `${SITE}/en/${path}`;
+
+        expect(head.canonicals).toEqual([english]);
+        expect(head.ogUrls).toEqual([english]);
+        expect(head.hreflangs).toBe(0);
+        expect(head.robots).toBe(INDEX);
+        expect(head.ogLocales).toEqual(['en_PK']);
+      });
+    }
+  }
+
+  for (const [path, urduTitle] of ENGLISH_ONLY_PAGES) {
+    test(`/ur/${path} keeps its tab title and description in Urdu`, async ({ request }) => {
+      const res = await request.get(`/ur/${path}`, { timeout: 100_000 });
+      expect(res.ok()).toBe(true);
+
+      const head = headOf(await res.text());
+
+      expect(head.title).toBe(urduTitle);
+      expect(head.description).toBe(DEFAULT_DESCRIPTION.ur);
+    });
+  }
+
+  for (const [path] of ENGLISH_ONLY_PAGES) {
+    for (const [lang, dir] of ENGLISH_ONLY_PREFIXES) {
+      test(`/${lang}/${path} keeps the ${dir} page language and marks its content English`, async ({
+        request,
+      }) => {
+        const res = await request.get(`/${lang}/${path}`, { timeout: 100_000 });
+        expect(res.ok()).toBe(true);
+
+        const languages = languagesOf(await res.text());
+
+        expect(languages.html).toEqual({ lang, dir });
+        expect(languages.blocks).toEqual([{ lang: 'en', dir: 'ltr' }]);
       });
     }
   }
@@ -262,6 +321,59 @@ test.describe('client navigation between pages with and without their own SEO', 
     expect(head.ogLocales).toEqual(['ur_PK']);
     expect(head.description).toBe(ABOUT_DESCRIPTION.ur);
     expect(head.hreflangs).toBe(HREFLANGS);
+  });
+
+  test('a language switch on an English-only page keeps its English canonical and retitles the tab', async ({
+    page,
+  }) => {
+    await page.goto('/en/privacy-policy');
+    await expect
+      .poll(async () => (await liveHead(page)).canonicals)
+      .toEqual([`${SITE}/en/privacy-policy`]);
+    await waitForClient(page);
+    await markDocument(page);
+
+    await switchLanguage(page, 'ur');
+    await expect(page).toHaveURL(/\/ur\/privacy-policy\/?$/);
+    expect(await documentSurvived(page)).toBe(true);
+
+    await expect.poll(async () => (await liveHead(page)).title).toBe(ENGLISH_ONLY_PAGES[0][1]);
+    const head = await liveHead(page);
+    expect(head.canonicals).toEqual([`${SITE}/en/privacy-policy`]);
+    expect(head.ogUrls).toEqual([`${SITE}/en/privacy-policy`]);
+    expect(head.ogLocales).toEqual(['en_PK']);
+    expect(head.hreflangs).toBe(0);
+    expect(await liveLanguages(page)).toEqual({
+      html: { lang: 'ur', dir: 'rtl' },
+      blocks: [{ lang: 'en', dir: 'ltr' }],
+    });
+  });
+
+  test('a translated page on either side of an English-only one keeps its own hreflang set', async ({
+    page,
+  }) => {
+    await page.goto('/ur/about');
+    await expect.poll(async () => (await liveHead(page)).hreflangs).toBe(HREFLANGS);
+    await waitForClient(page);
+    await markDocument(page);
+
+    await page.locator('footer a[href="/ur/privacy-policy"]').first().click();
+    await expect(page).toHaveURL(/\/ur\/privacy-policy\/?$/);
+    expect(await documentSurvived(page)).toBe(true);
+    await expect
+      .poll(async () => (await liveHead(page)).canonicals)
+      .toEqual([`${SITE}/en/privacy-policy`]);
+    expect((await liveHead(page)).hreflangs).toBe(0);
+
+    await page.locator('footer a[href="/ur/about"]').first().click();
+    await expect(page).toHaveURL(/\/ur\/about\/?$/);
+    expect(await documentSurvived(page)).toBe(true);
+    await expect
+      .poll(async () => (await liveHead(page)).canonicals)
+      .toEqual([`${SITE}/ur/about`]);
+    const back = await liveHead(page);
+    expect(back.hreflangs).toBe(HREFLANGS);
+    expect(back.ogLocales).toEqual(['ur_PK']);
   });
 
   test('switching a static page to Urdu retitles the tab and the share card', async ({ page }) => {

@@ -1,6 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { LocaleStore } from './i18n/locale-store';
-import { localeAlternates, localeFor, withLocale } from './i18n/locales';
+import { isLocaleCode, localeAlternates, localeFor, withLocale } from './i18n/locales';
 import { DestroyRef, Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
@@ -64,6 +64,21 @@ export interface SeoConfig {
    * replaces it: analytics waits for the settled head rather than recording a placeholder.
    */
   provisional?: boolean;
+  /**
+   * The language the page's content is written in, for a page that exists in one only —
+   * see `SINGLE_LANGUAGE_PAGES` (core/i18n/content-locale.ts).
+   *
+   * The canonical and `og:url` then name that language's address from every prefix, so
+   * `/ur/privacy-policy` points at `/en/privacy-policy` rather than at itself; no `hreflang`
+   * is written, since there is no other language to name; and `og:locale` follows the
+   * content rather than the URL. The title and description stay in the active language —
+   * they label the reader's tab, and a search engine takes its own from the canonical.
+   *
+   * `noindex` still wins: no canonical and no alternates. A code that is not a language the
+   * site serves is ignored and the page canonicalises to the active one — this runs during
+   * a server render, where a thrown error costs the whole page.
+   */
+  contentLocale?: string;
 }
 
 /**
@@ -143,7 +158,11 @@ export class Seo {
     // The language-free path is what the alternates are built from; the active language
     // is what this page canonicalises to. No path, no address — see `SeoConfig.path`.
     const basePath = config.path || null;
-    const url = basePath ? `${SITE_ORIGIN}${withLocale(this.locale.active(), basePath)}` : null;
+    // A single-language page canonicalises to its content language instead, and declares
+    // no other — see `SeoConfig.contentLocale`. An unknown code is ignored, never thrown.
+    const contentLocale = isLocaleCode(config.contentLocale) ? config.contentLocale : null;
+    const urlLocale = contentLocale ?? this.locale.active();
+    const url = basePath ? `${SITE_ORIGIN}${withLocale(urlLocale, basePath)}` : null;
 
     this.titleService.setTitle(title);
     this.meta.updateTag({ name: 'description', content: description });
@@ -163,7 +182,7 @@ export class Seo {
     // `noindex` wins over a path: a canonical asks for some URL to be indexed in this
     // page's place, which is exactly what `noindex` declines.
     this.setCanonical(config.noindex ? null : url);
-    this.setAlternates(config.noindex ? null : basePath);
+    this.setAlternates(config.noindex || contentLocale ? null : basePath);
 
     const social = config.socialTitle?.trim() || title;
     this.meta.updateTag({ property: 'og:title', content: social });
@@ -178,10 +197,11 @@ export class Seo {
     this.meta.updateTag({ property: 'og:image', content: image });
     this.meta.updateTag({ property: 'og:type', content: config.type ?? 'website' });
     this.meta.updateTag({ property: 'og:site_name', content: 'HostelHive' });
-    // Exactly one, from the language this page is rendered in — see `Locale.ogLocale`.
+    // Exactly one, from the language this page is rendered in — see `Locale.ogLocale`. For a
+    // single-language page that is its content's, matching the `og:url` beside it.
     this.meta.updateTag({
       property: 'og:locale',
-      content: localeFor(this.locale.active()).ogLocale,
+      content: localeFor(urlLocale).ogLocale,
     });
 
     this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
@@ -208,7 +228,8 @@ export class Seo {
    *
    * A `noindex` page emits none — `apply` passes `null` for it. Alternates advertise a page
    * for indexing, which directly contradicts asking for it to be left out. Nor does a page
-   * without a path: there is no address to declare in other languages.
+   * without a path: there is no address to declare in other languages. Nor a page with a
+   * `contentLocale`, which exists in no other language to declare.
    */
   private setAlternates(basePath: string | null): void {
     this.doc.head

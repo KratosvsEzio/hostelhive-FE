@@ -121,6 +121,42 @@ export function headOf(html: string): RawHead {
   };
 }
 
+/** The language a page declares for itself, and for any block of content in another one. */
+export interface PageLanguages {
+  /** `lang` and `dir` of the `<html>` element. */
+  html: { lang: string | null; dir: string | null };
+  /** `lang` and `dir` of every `<div lang>` in the body, in document order. */
+  blocks: { lang: string | null; dir: string | null }[];
+}
+
+/**
+ * Reads `PageLanguages` out of raw HTML. Only `<div>` blocks count: the language picker's
+ * options carry a `lang` of their own, and they say nothing about the page.
+ */
+export function languagesOf(html: string): PageLanguages {
+  const root = /<html\b[^>]*>/.exec(html)?.[0] ?? '';
+  const body = html.slice(html.search(/<body\b/));
+  const blocks = (body.match(/<div\b[^>]*>/g) ?? []).filter((t) => attrOf(t, 'lang') !== null);
+  return {
+    html: { lang: attrOf(root, 'lang'), dir: attrOf(root, 'dir') },
+    blocks: blocks.map((t) => ({ lang: attrOf(t, 'lang'), dir: attrOf(t, 'dir') })),
+  };
+}
+
+/** The same shape as `languagesOf`, read from the live document. */
+export async function liveLanguages(page: Page): Promise<PageLanguages> {
+  return page.evaluate(() => ({
+    html: {
+      lang: document.documentElement.getAttribute('lang'),
+      dir: document.documentElement.getAttribute('dir'),
+    },
+    blocks: Array.from(document.body.querySelectorAll('div[lang]')).map((d) => ({
+      lang: d.getAttribute('lang'),
+      dir: d.getAttribute('dir'),
+    })),
+  }));
+}
+
 /** The same shape as `headOf`, read from the live document of a page the client app has taken over. */
 export async function liveHead(page: Page): Promise<RawHead> {
   return page.evaluate(() => {

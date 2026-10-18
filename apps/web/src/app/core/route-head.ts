@@ -17,7 +17,9 @@ import { Seo } from './seo';
  *   head, its title included. The route-level default stays out of its way entirely, so a
  *   `'page'` route declares no `title:`.
  * - `'index'` — a static page worth indexing that has no head of its own (about, FAQs, the
- *   legal pages). It gets its own canonical, `og:url` and hreflang from its path.
+ *   legal pages). It gets its own canonical, `og:url` and hreflang from its path — unless
+ *   it also declares `contentLocale`, as the legal pages and the credits do: their text
+ *   exists in that language only, so every prefix canonicalises to it and none gets hreflang.
  * - absent — everything else: auth, account, consoles, notifications. `noindex`, with no
  *   canonical and no `og:url`. Leaving a route out is the safe direction to be wrong in: a
  *   forgotten flag costs a page its ranking, never leaks a private one into the index.
@@ -32,6 +34,11 @@ export interface RouteHead {
    * translated site default.
    */
   descriptionKey?: string;
+  /**
+   * The one language an `'index'` route's content is written in — see
+   * `SeoConfig.contentLocale`. Kept equal to `SINGLE_LANGUAGE_PAGES`, which the sitemap reads.
+   */
+  contentLocale?: string;
 }
 
 /** The head the route-level default will apply once the strings are in memory. */
@@ -46,11 +53,13 @@ interface PendingHead {
   noindex: boolean;
   path?: string;
   descriptionKey?: string;
+  contentLocale?: string;
 }
 
 /**
- * Reads `head` and `descriptionKey` from the matched routes, the way `buildTitle` reads
- * `title`: down the primary outlet, the deepest route that declares a key wins.
+ * Reads `head`, `descriptionKey` and `contentLocale` from the matched routes, the way
+ * `buildTitle` reads `title`: down the primary outlet, the deepest route that declares a
+ * key wins.
  *
  * Read off `routeConfig.data` rather than the snapshot's merged `data`, so a value comes
  * from the route that wrote it and not from Angular's inheritance rules — which differ for
@@ -65,6 +74,9 @@ export function routeHeadFor(snapshot: RouterStateSnapshot): RouteHead {
     if (data?.['head'] !== undefined) found.head = data['head'] as RouteHeadKind;
     if (data?.['descriptionKey'] !== undefined) {
       found.descriptionKey = data['descriptionKey'] as string;
+    }
+    if (data?.['contentLocale'] !== undefined) {
+      found.contentLocale = data['contentLocale'] as string;
     }
     route = route.children.find((child) => child.outlet === PRIMARY_OUTLET);
   }
@@ -149,7 +161,7 @@ export class RouteHeadStrategy extends TitleStrategy {
    * comment for why not even the title.
    */
   override updateTitle(snapshot: RouterStateSnapshot): void {
-    const { head, descriptionKey } = routeHeadFor(snapshot);
+    const { head, descriptionKey, contentLocale } = routeHeadFor(snapshot);
     if (head === 'page') {
       // The page owns its title too: a route title here would only ever compete with it.
       this.pending.set(null);
@@ -167,6 +179,7 @@ export class RouteHeadStrategy extends TitleStrategy {
       noindex: head !== 'index',
       path: head === 'index' ? url : undefined,
       descriptionKey,
+      contentLocale,
     });
   }
 
@@ -183,6 +196,7 @@ export class RouteHeadStrategy extends TitleStrategy {
       description: head.descriptionKey ? i18n.translate<string>(head.descriptionKey) : undefined,
       path: head.path,
       noindex: head.noindex,
+      contentLocale: head.contentLocale,
     });
     // No page owns this route, so nothing on it wrote structured data or a preload. Whatever
     // is there belongs to a page that has gone.

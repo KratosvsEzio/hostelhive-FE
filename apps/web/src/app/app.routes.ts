@@ -24,6 +24,11 @@ const toNotifications: RedirectFunction = ({ params }) =>
  * children. The `'index'` set is the static half of the sitemap (landing/sitemap-urls.ts),
  * so add a page to both or to neither.
  *
+ * `data.contentLocale` marks an `'index'` page whose text exists in one language only — the
+ * legal pages and the credits, in English. Every prefix still serves it with the visitor's
+ * chrome, but canonicalises to that language, with no hreflang, and the sitemap lists it
+ * once. The set must equal `SINGLE_LANGUAGE_PAGES` (core/i18n/content-locale.ts).
+ *
  * `title:` is a Transloco key for the page's label, never display text: the strategy
  * translates it into the site's title template. A `'page'` route declares none — its
  * component writes its own title, and a route title would only compete with it.
@@ -80,28 +85,28 @@ const LOCALISED_ROUTES: Route[] = [
     loadComponent: () =>
       import('@features/public/legal/privacy-policy').then((m) => m.PrivacyPolicy),
     title: 'common.privacyPolicy',
-    data: { head: 'index' },
+    data: { head: 'index', contentLocale: 'en' },
   },
   {
     path: 'terms-of-service',
     loadComponent: () =>
       import('@features/public/legal/terms-of-service').then((m) => m.TermsOfService),
     title: 'leadWall.termsOfService',
-    data: { head: 'index' },
+    data: { head: 'index', contentLocale: 'en' },
   },
   {
     path: 'service-policy',
     loadComponent: () =>
       import('@features/public/legal/service-policy').then((m) => m.ServicePolicy),
     title: 'footer.servicePolicy',
-    data: { head: 'index' },
+    data: { head: 'index', contentLocale: 'en' },
   },
   {
     path: 'credits',
     loadComponent: () =>
       import('@features/public/credits/credits').then((m) => m.Credits),
     title: 'routeTitle.imageCredits',
-    data: { head: 'index' },
+    data: { head: 'index', contentLocale: 'en' },
   },
   {
     path: 'about',
