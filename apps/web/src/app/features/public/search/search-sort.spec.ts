@@ -1,4 +1,4 @@
-import { isPriceSort, sortsFor } from './search-sort';
+import { isPriceSort, isSortOffered, sortsFor } from './search-sort';
 
 const values = (type: Parameters<typeof sortsFor>[0]): string[] =>
   sortsFor(type).map((o) => o.value);
@@ -38,4 +38,31 @@ describe('sortsFor', () => {
       ]);
     },
   );
+});
+
+describe('isSortOffered', () => {
+  describe('for the mixed "all" list', () => {
+    it.each(['recommended', 'newest', 'oldest'])('offers %s', (sort) => {
+      expect(isSortOffered(sort, 'all')).toBe(true);
+    });
+
+    it.each(['price-asc', 'price-desc'])('does not offer %s', (sort) => {
+      expect(isSortOffered(sort, 'all')).toBe(false);
+    });
+  });
+
+  describe.each(['boys', 'girls', 'coliving', 'backpacker'] as const)('for %s', (type) => {
+    it.each(['recommended', 'newest', 'oldest', 'price-desc', 'price-asc'])(
+      'offers %s',
+      (sort) => {
+        expect(isSortOffered(sort, type)).toBe(true);
+      },
+    );
+  });
+
+  // Anything outside the five known values is never offered, whichever type is in force.
+  it.each(['', null, undefined, 'bogus', 'PRICE-ASC'])('never offers %j', (sort) => {
+    expect(isSortOffered(sort, 'all')).toBe(false);
+    expect(isSortOffered(sort, 'girls')).toBe(false);
+  });
 });
