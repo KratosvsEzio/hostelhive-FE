@@ -23,8 +23,10 @@ import {
 } from '@hostelhive/ui';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
-import { HostelsApi } from '@services';
+import { HostelsApi, hostelZone } from '@services';
 import { RoomType } from '@hostelhive/data-access';
+import { todayIn } from '@util/zoned-time';
+import { addDays, calendarDaysBetween } from '@util/plain-day';
 import { HostBookingsApi } from '../host-bookings-api';
 import { RouterLink } from '@angular/router';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -62,11 +64,6 @@ function roomsFailureKey(err: unknown): string {
   return errorStatus(err) === 0 ? 'common.cannotReachTheServer' : 'hostBookings.theRoomsForThisProperty';
 }
 
-/** Local midnight as `yyyy-mm-dd`, which is what the API takes. */
-function isoDay(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 /**
  * The booking a host writes down for someone standing at the desk.
  *
@@ -97,11 +94,38 @@ export class BookingFormDrawer {
   protected readonly guestEmail = signal('');
   protected readonly guests = signal(1);
 
-  /** Tonight to tomorrow: the shortest real stay, and the one a walk-in usually wants. */
-  protected readonly checkIn = signal<string | null>(isoDay(new Date()));
-  protected readonly checkOut = signal<string | null>(
-    isoDay(new Date(Date.now() + 24 * 60 * 60 * 1000)),
-  );
+  /**
+   * The hostel's IANA time zone: `undefined` while it is being read, `null` when there is
+   * none (the defaults then use the device's date). One cached request per hostel per session.
+   */
+  private readonly zone = hostelZone(this.hostelId);
+
+  /** The zone is still being read: the date field is a skeleton and the form cannot be saved. */
+  protected readonly datesPending = computed(() => this.zone() === undefined);
+
+  /** Read from the clock once, so the defaults cannot move under a host filling the form in. */
+  private readonly openedAt = new Date();
+
+  /**
+   * Tonight to tomorrow on the hostel's calendar: the shortest real stay, and the one a
+   * walk-in usually wants. The server refuses a check-in before the hostel's today, so a
+   * device behind the hostel must not default to its own yesterday.
+   */
+  protected readonly defaultIn = computed(() => todayIn(this.zone() ?? null, this.openedAt));
+  private readonly defaultOut = computed(() => addDays(this.defaultIn(), 1));
+
+  /** The range the host picked, or `undefined` while they have not touched the dates. */
+  private readonly userRange = signal<{ from: string | null; to: string | null } | undefined>(undefined);
+
+  // A zone that lands late moves an untouched default; a picked range is never overwritten.
+  protected readonly checkIn = computed(() => {
+    const range = this.userRange();
+    return range ? range.from : this.defaultIn();
+  });
+  protected readonly checkOut = computed(() => {
+    const range = this.userRange();
+    return range ? range.to : this.defaultOut();
+  });
 
   /**
    * Both ends move together, because a stay is one thing.
@@ -111,8 +135,7 @@ export class BookingFormDrawer {
    * is the better way to prevent it.
    */
   protected onRangePicked(range: DateRange): void {
-    this.checkIn.set(range.from);
-    this.checkOut.set(range.to);
+    this.userRange.set({ from: range.from, to: range.to });
   }
 
   /** How many units of each room, keyed by room id. Absent means none. */
@@ -183,9 +206,7 @@ export class BookingFormDrawer {
     const from = this.checkIn();
     const to = this.checkOut();
     if (!from || !to || to <= from) return 0;
-    return Math.round(
-      (new Date(to).getTime() - new Date(from).getTime()) / (24 * 60 * 60 * 1000),
-    );
+    return calendarDaysBetween(from, to) || 0;
   });
 
   /** What the host has typed into the picker. Filtering is local — the list is small. */
@@ -305,6 +326,7 @@ export class BookingFormDrawer {
     () =>
       !!this.guestName().trim() &&
       !this.phoneMissing() &&
+      !this.datesPending() &&
       this.datesValid() &&
       this.lines().length > 0 &&
       !this.saving(),
