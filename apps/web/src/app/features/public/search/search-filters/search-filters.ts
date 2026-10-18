@@ -13,6 +13,7 @@ import { Button, Chip, Dropdown, DropdownOption } from '@hostelhive/ui';
 import { FilterState, SearchFilterModal } from '@features/public/search/search-filter-modal/search-filter-modal';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
 import { isAccommodationType } from '@features/public/search/search-params';
+import { SORT_OPTIONS, isPriceSort, sortsFor } from '@features/public/search/search-sort';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { localiseCommands } from '@core/i18n/locale-commands';
@@ -88,32 +89,25 @@ export class SearchFilters {
     return this.locale.ready() ? this.i18n.translate(key) : '';
   }
 
-  private readonly allSortOptions = computed<DropdownOption[]>(() => [
-    { value: 'newest', label: this.t('search.recentFirst') },
-    { value: 'oldest', label: this.t('search.oldestFirst') },
-    { value: 'price-desc', label: this.t('search.priceHighToLow') },
-    { value: 'price-asc', label: this.t('search.priceLowToHigh') },
-  ]);
+  /** Recommended is not listed: the dropdown offers it as its clear label instead. */
+  private readonly allSortOptions = computed<DropdownOption[]>(() =>
+    SORT_OPTIONS.filter((o) => o.value !== 'recommended').map((o) => ({
+      value: o.value,
+      label: this.t(o.key),
+    })),
+  );
 
   /**
-   * Price sort is withdrawn while the list mixes pricing cycles.
+   * Price sort is withdrawn while the list mixes pricing cycles; the rule lives in `sortsFor`.
    *
-   * `starting_price` is one unit-less number, so a nightly bed at PKR 1,200 sorts above a
-   * monthly room at PKR 15,000 as though it were cheaper — page one fills with backpacker
-   * dorms a student cannot rent by the month. The other three sorts are unit-agnostic and
-   * always stay.
-   *
-   * The unit now comes from the accommodation type rather than a filter of its own: only
-   * backpacker hostels are nightly (see `periodForAccommodation`), so naming any one type
-   * pins the list to a single cycle, and "All" is the only mix. That was the whole job of
-   * the Frequency dropdown that used to sit here, which asked the seeker to state something
-   * their accommodation choice had already decided.
+   * The unit comes from the accommodation type rather than a filter of its own. That was the
+   * whole job of the Frequency dropdown that used to sit here, which asked the seeker to state
+   * something their accommodation choice had already decided.
    */
-  protected readonly sortOptions = computed(() =>
-    this.accommodationType() === 'all'
-      ? this.allSortOptions().filter((o) => !String(o.value).startsWith('price-'))
-      : this.allSortOptions(),
-  );
+  protected readonly sortOptions = computed(() => {
+    const offered = sortsFor(this.accommodationType());
+    return this.allSortOptions().filter((o) => offered.some((s) => s.value === o.value));
+  });
 
   /**
    * Replaces the 1–5+ sharing filter.
@@ -249,7 +243,7 @@ export class SearchFilters {
         state.roomType && state.roomType !== DEFAULT_OCCUPANCY_TYPE ? state.roomType : null,
       amenities: state.amenities.join(',') || null,
       sort:
-        state.sort === 'recommended' || (type === 'all' && state.sort.startsWith('price-'))
+        state.sort === 'recommended' || (type === 'all' && isPriceSort(state.sort))
           ? null
           : state.sort,
     };

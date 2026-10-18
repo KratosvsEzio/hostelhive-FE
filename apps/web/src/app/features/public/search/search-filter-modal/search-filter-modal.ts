@@ -22,6 +22,8 @@ import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP } from '@util/budget-range';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
 import { currencySymbol } from '@util/currencies';
 import { CurrencyPreference } from '@core/preferences/currency-preference';
+import { ACCOMMODATION_LABEL_KEYS } from '@util/accommodation-type';
+import { isPriceSort, sortsFor } from '@features/public/search/search-sort';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 /** Filter state emitted from the modal when the user hits "Show results". */
@@ -47,9 +49,9 @@ export interface FilterState {
  * An "Any" that mixed them produced a list sorted by numbers that did not mean the same
  * thing, so the filter now always names one.
  */
-const ROOM_TYPES: { value: string; label: string }[] = [
-  { value: 'shared', label: 'Shared room' },
-  { value: 'private', label: 'Private room' },
+const ROOM_TYPES: { value: string; key: string }[] = [
+  { value: 'shared', key: 'search.sharedRoom' },
+  { value: 'private', key: 'search.privateRoom' },
 ];
 
 /**
@@ -114,21 +116,17 @@ export class SearchFilterModal {
     });
   }
 
-  protected readonly genders: { label: string; value: AccommodationType | 'all' }[] = [
-    { label: 'Any type', value: 'all' },
-    { label: 'Boys', value: 'boys' },
-    { label: 'Girls', value: 'girls' },
-    { label: 'Co-living', value: 'coliving' },
-    { label: 'Backpacker', value: 'backpacker' },
+  /** "Any" carries the header bar's name for the same `gender` setting, so the two read alike. */
+  protected readonly genders: { key: string; value: AccommodationType | 'all' }[] = [
+    { key: 'searchBar.anyAccommodation', value: 'all' },
+    { key: ACCOMMODATION_LABEL_KEYS.boys, value: 'boys' },
+    { key: ACCOMMODATION_LABEL_KEYS.girls, value: 'girls' },
+    { key: ACCOMMODATION_LABEL_KEYS.coliving, value: 'coliving' },
+    { key: ACCOMMODATION_LABEL_KEYS.backpacker, value: 'backpacker' },
   ];
   protected readonly roomTypes = ROOM_TYPES;
-  protected readonly sortOptions = [
-    { label: 'Recommended', value: 'recommended' },
-    { label: 'Recent first', value: 'newest' },
-    { label: 'Oldest first', value: 'oldest' },
-    { label: 'Price: high to low', value: 'price-desc' },
-    { label: 'Price: low to high', value: 'price-asc' },
-  ];
+  /** Only the sorts the drafted type can honour; see `sortsFor`. */
+  protected readonly sortOptions = computed(() => sortsFor(this.draftGender()));
 
   private readonly _offersApi = inject(OffersApi);
   private readonly _offerCategories = toSignal(
@@ -172,6 +170,17 @@ export class SearchFilterModal {
   protected readonly draftAmenities = signal<string[]>([]);
   protected readonly draftSort = signal('recommended');
 
+  /**
+   * The sort the modal shows and applies: Recommended while "Any type" hides a drafted price sort.
+   *
+   * Derived rather than written back into `draftSort`, so the draft survives a detour through
+   * "Any type" (choosing a type again brings the price sort back), and a seed or a clear that
+   * lands on "Any type" with a price sort needs no reset of its own.
+   */
+  protected readonly effectiveSort = computed(() =>
+    this.draftGender() === 'all' && isPriceSort(this.draftSort()) ? 'recommended' : this.draftSort(),
+  );
+
   /** Seed the draft from the current URL-driven values before opening. */
   seed(state: FilterState): void {
     this.draftGender.set(state.accommodationType);
@@ -208,7 +217,7 @@ export class SearchFilterModal {
       maxPrice: max < BUDGET_MAX ? max : null,
       roomType: this.draftRoomType(),
       amenities: this.draftAmenities(),
-      sort: this.draftSort(),
+      sort: this.effectiveSort(),
     });
     this.open.set(false);
   }

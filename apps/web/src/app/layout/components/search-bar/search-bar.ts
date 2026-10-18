@@ -15,6 +15,7 @@ import { filter } from 'rxjs';
 import { fromLocationSlug, searchRouteFor } from '@util/location-slug';
 import { resolveSearchSlug } from '@features/public/landing/search-slug';
 import { isAccommodationType } from '@features/public/search/search-params';
+import { isPriceSort } from '@features/public/search/search-sort';
 import {
   EVERYWHERE_KEY,
   RETIRED_KEYS_NULLED,
@@ -386,7 +387,7 @@ export class SearchBar {
         // while the Sort dropdown no longer offers it, so the URL and the visible control
         // would disagree about what the list is doing. The Frequency filter used to carry
         // this guard; the accommodation type inherits it along with the job.
-        ...(!this.accommodation() && this.activeSort().startsWith('price-')
+        ...(!this.accommodation() && isPriceSort(this.activeSort())
           ? { sort: null }
           : {}),
       },

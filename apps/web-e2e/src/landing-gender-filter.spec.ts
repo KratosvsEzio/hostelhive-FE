@@ -16,7 +16,7 @@ const typeButton = (page: Page, name: string) =>
   page.getByRole('button', { name, exact: true });
 
 test.describe('gender landing page type filter', () => {
-  test('choosing "Any type" on the girls page moves to the city page and lifts the filter', async ({
+  test('choosing "Any accommodation" on the girls page moves to the city page and lifts the filter', async ({
     page,
   }) => {
     const seen = await stubListings(page);
@@ -29,10 +29,10 @@ test.describe('gender landing page type filter', () => {
     await expect(page.getByText("We couldn't load listings")).toBeHidden();
     await openFilters(page);
     await expect(typeButton(page, 'Girls')).toHaveAttribute('aria-pressed', 'true');
-    await expect(typeButton(page, 'Any type')).toHaveAttribute('aria-pressed', 'false');
+    await expect(typeButton(page, 'Any accommodation')).toHaveAttribute('aria-pressed', 'false');
 
     seen.reset();
-    await typeButton(page, 'Any type').click();
+    await typeButton(page, 'Any accommodation').click();
     await page.getByRole('button', { name: 'Show results' }).click();
 
     await expect(page).toHaveURL(/\/en\/hostels\/lahore(\?.*)?$/);
@@ -41,7 +41,7 @@ test.describe('gender landing page type filter', () => {
     expect(seen.genders.every((g) => g === null)).toBe(true);
 
     await openFilters(page);
-    await expect(typeButton(page, 'Any type')).toHaveAttribute('aria-pressed', 'true');
+    await expect(typeButton(page, 'Any accommodation')).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('choosing "Boys" on the girls page moves to the boys page and searches boys', async ({
@@ -73,7 +73,7 @@ test.describe('gender landing page type filter', () => {
     await expect.poll(() => seen.genders).toContain('girls');
 
     await openFilters(page);
-    await typeButton(page, 'Any type').click();
+    await typeButton(page, 'Any accommodation').click();
     await page.getByRole('button', { name: 'Show results' }).click();
     await expect(page).toHaveURL(/\/en\/hostels\/lahore(\?.*)?$/);
     await expect.poll(() => seen.genders.length).toBeGreaterThan(0);
