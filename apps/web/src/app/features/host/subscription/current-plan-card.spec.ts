@@ -9,6 +9,7 @@ import { CurrentPlanCard, type CurrentPlanAction } from './current-plan-card';
 const COPY = {
   hostBilling: {
     renewsOn: 'Renews on {{date}}',
+    renewsAutomaticallyOn: 'Renews automatically on {{date}}',
     endsOn: 'Ends on {{date}}',
     endedOn: 'Ended on {{date}}',
     wasDueOn: 'Payment was due on {{date}}',
@@ -32,6 +33,8 @@ function subscription(
     grace_until: null,
     scheduled_plan: null,
     cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
     ...over,
   };
 }
@@ -43,6 +46,7 @@ function subscription(
       [subscription]="subscription"
       [features]="features"
       [canChange]="canChange"
+      [autoRenew]="autoRenew"
       [busy]="busy"
       [locked]="locked"
       (undo)="emitted.push('undo')"
@@ -57,6 +61,7 @@ class Host {
   subscription: BillingSubscription | null = null;
   features: readonly string[] = [];
   canChange = false;
+  autoRenew = false;
   busy: CurrentPlanAction | null = null;
   locked = false;
   emitted: CurrentPlanAction[] = [];
@@ -64,6 +69,7 @@ class Host {
 
 interface Controls {
   canChange?: boolean;
+  autoRenew?: boolean;
   busy?: CurrentPlanAction | null;
   locked?: boolean;
 }
@@ -208,6 +214,57 @@ describe('CurrentPlanCard', () => {
       );
 
       expect(lines(el)).toEqual(['Renews on 12 Nov 2026']);
+    });
+  });
+
+  describe('automatic renewal', () => {
+    it('renews automatically on the period end when the saved card renews the plan', () => {
+      const el = render(subscription('active'), [], { autoRenew: true });
+
+      expect(lines(el)).toEqual(['Renews automatically on 12 Nov 2026']);
+      expect(text(el)).not.toContain('Renews on');
+    });
+
+    it('keeps the plain renewal line without automatic renewal', () => {
+      const el = render(subscription('active'), [], { autoRenew: false });
+
+      expect(lines(el)).toEqual(['Renews on 12 Nov 2026']);
+    });
+
+    it('ends on the period end while cancelling, whatever the flag says', () => {
+      const el = render(
+        subscription('active', { cancel_at_period_end: true }),
+        [],
+        { autoRenew: true },
+      );
+
+      expect(lines(el)).toEqual(['Ends on 12 Nov 2026']);
+    });
+
+    it('never says so on a plan Safepay bills', () => {
+      const el = render(
+        subscription('active', { billed_by: 'safepay_subscription' }),
+        [],
+        { autoRenew: true },
+      );
+
+      expect(lines(el)).toEqual(['Renews on 12 Nov 2026']);
+    });
+
+    it('leaves a past-due plan’s lines alone', () => {
+      const el = render(subscription('past-due'), [], { autoRenew: true });
+
+      expect(lines(el)).toEqual(['Payment was due on 12 Nov 2026']);
+    });
+
+    it('drops the line when the API left the period end null', () => {
+      const el = render(
+        subscription('active', { current_period_end: null }),
+        [],
+        { autoRenew: true },
+      );
+
+      expect(lines(el)).toEqual([]);
     });
   });
 

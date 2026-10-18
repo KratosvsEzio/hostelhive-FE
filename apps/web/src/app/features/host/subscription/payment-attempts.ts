@@ -32,7 +32,14 @@ interface AttemptView {
   tone: StatusTone;
   date: string;
   note: BillingAttemptNote | null;
+  /** Our label for who started the charge, or null for a customer-made or unrecognised one. */
+  initiatorKey: string | null;
 }
+
+const INITIATOR_KEYS: Record<string, string> = {
+  schedule: 'hostBillingHistory.initiatedSchedule',
+  upgrade: 'hostBillingHistory.initiatedUpgrade',
+};
 
 const NOTE_CLASSES: Record<BillingAttemptNote['tone'], string> = {
   danger: 'bg-danger/10 font-medium text-danger',
@@ -54,6 +61,12 @@ function attemptView(payment: BillingPayment): AttemptView {
     tone: charged ? 'danger' : billingPaymentStatusTone(slug),
     date: payment.succeeded_at ?? payment.created_at,
     note: billingAttemptNote(payment),
+    initiatorKey: Object.prototype.hasOwnProperty.call(
+      INITIATOR_KEYS,
+      payment.initiated_by ?? '',
+    )
+      ? INITIATOR_KEYS[payment.initiated_by]
+      : null,
   };
 }
 
@@ -89,11 +102,20 @@ function attemptView(payment: BillingPayment): AttemptView {
           @for (attempt of attempts(); track attempt.id) {
             <li class="flex flex-col gap-2 py-3" data-testid="attempt">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <span
-                  class="text-sm font-medium text-ink-900"
-                  data-field="method"
-                  >{{ attempt.methodKey | transloco }}</span
-                >
+                <span class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="text-sm font-medium text-ink-900"
+                    data-field="method"
+                    >{{ attempt.methodKey | transloco }}</span
+                  >
+                  @if (attempt.initiatorKey; as initiatorKey) {
+                    <span
+                      class="rounded-full bg-ink-50 px-2 py-0.5 text-xs font-medium text-ink-700"
+                      data-field="initiator"
+                      >{{ initiatorKey | transloco }}</span
+                    >
+                  }
+                </span>
                 <span
                   class="text-sm font-semibold text-ink-900"
                   data-field="amount"

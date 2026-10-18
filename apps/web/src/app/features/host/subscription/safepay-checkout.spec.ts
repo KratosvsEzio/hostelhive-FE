@@ -5,6 +5,8 @@ import type { Mock } from 'vitest';
 import type {
   ApiError,
   BillingInvoice,
+  SafepayStart,
+  SavedCard,
   StartedPayment,
 } from '@hostelhive/data-access';
 import { BillingApi, HostPropertyStore } from '@services';
@@ -15,10 +17,24 @@ import {
   isSafepayCheckoutUrl,
   payErrorOutcome,
   returnInvoiceId,
+  returnParam,
 } from './safepay-checkout';
 
 const CHECKOUT =
   'https://sandbox.api.getsafepay.com/embedded/?tracker=track_1&tbt=x';
+const CARD_PAGE =
+  'https://sandbox.api.getsafepay.com/checkout/pay?tracker=track_2';
+const SUBSCRIBE_PAGE =
+  'https://sandbox.api.getsafepay.com/subscribe/?plan_id=plan_1';
+
+const CARD: SavedCard = { label: 'Visa ending 1111', expires_on: '2028-12-31' };
+
+/** A query map as the router hands one over, for the given params. */
+function query(params: Record<string, string>): {
+  get(name: string): string | null;
+} {
+  return { get: (name) => params[name] ?? null };
+}
 
 const INVOICE: BillingInvoice = {
   id: 'inv1',
@@ -55,6 +71,7 @@ function started(checkoutUrl: string | null): StartedPayment {
       succeeded_at: null,
       created_at: '2026-10-11T00:00:00Z',
       invoice_id: 'inv1',
+      initiated_by: 'customer',
     },
     checkout_url: checkoutUrl,
     invoice: INVOICE,
@@ -125,8 +142,46 @@ describe('returnInvoiceId', () => {
   });
 });
 
+describe('returnParam', () => {
+  it.each(['invoice', 'card', 'subscription'] as const)(
+    'drops the tracker query Safepay appends to ?%s=',
+    (name) => {
+      expect(
+        returnParam(query({ [name]: 'saved?tracker=track_c4156217' }), name),
+      ).toBe('saved');
+    },
+  );
+
+  it('reads only the param it is asked for', () => {
+    const params = query({ card: 'saved', invoice: 'CQcLFP' });
+
+    expect(returnParam(params, 'card')).toBe('saved');
+    expect(returnParam(params, 'invoice')).toBe('CQcLFP');
+    expect(returnParam(params, 'subscription')).toBeNull();
+  });
+
+  it('reads a missing, empty or tracker-only value as null', () => {
+    expect(returnParam(query({}), 'card')).toBeNull();
+    expect(returnParam(query({ card: ' ' }), 'card')).toBeNull();
+    expect(
+      returnParam(query({ subscription: '?tracker=track_1' }), 'subscription'),
+    ).toBeNull();
+  });
+});
+
 describe('SafepayCheckout', () => {
-  let pay: Mock<(invoiceId: string) => Observable<StartedPayment>>;
+  let pay: Mock<
+    (
+      invoiceId: string,
+      opts?: { saveCard?: boolean },
+    ) => Observable<StartedPayment>
+  >;
+  let saveCard: Mock<
+    (hostelId: string) => Observable<{ checkout_url: string | null }>
+  >;
+  let subscribeWithSafepay: Mock<
+    (hostelId: string, planId: string) => Observable<SafepayStart>
+  >;
   let assign: Mock<(url: string) => void>;
   let selected: WritableSignal<string>;
 
@@ -134,7 +189,10 @@ describe('SafepayCheckout', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PLATFORM_ID, useValue: platform },
-        { provide: BillingApi, useValue: { pay } },
+        {
+          provide: BillingApi,
+          useValue: { pay, saveCard, subscribeWithSafepay },
+        },
         { provide: ExternalNavigation, useValue: { assign } },
         { provide: HostPropertyStore, useValue: { selected } },
       ],
@@ -150,6 +208,10 @@ describe('SafepayCheckout', () => {
   beforeEach(() => {
     sessionStorage.clear();
     pay = vi.fn(() => of(started(CHECKOUT)));
+    saveCard = vi.fn(() => of({ checkout_url: CARD_PAGE }));
+    subscribeWithSafepay = vi.fn(() =>
+      of({ checkout_url: SUBSCRIBE_PAGE, trial_days: 14 }),
+    );
     assign = vi.fn();
     selected = signal('');
   });
@@ -166,7 +228,7 @@ describe('SafepayCheckout', () => {
         .start('inv1', 'nHelLt')
         .subscribe({ next: emitted, complete: completed });
 
-      expect(pay).toHaveBeenCalledWith('inv1');
+      expect(pay).toHaveBeenCalledWith('inv1', {});
       expect(assign).toHaveBeenCalledOnce();
       expect(assign).toHaveBeenCalledWith(CHECKOUT);
       expect(emitted).toHaveBeenCalledOnce();
@@ -181,6 +243,7 @@ describe('SafepayCheckout', () => {
       checkout.start('inv1', 'nHelLt').subscribe();
 
       expect(stashedAtLeaving).toEqual({
+        kind: 'invoice',
         invoiceId: 'inv1',
         hostelId: 'nHelLt',
       });
@@ -191,7 +254,11 @@ describe('SafepayCheckout', () => {
 
       checkout.start('inv1', null).subscribe();
 
-      expect(stash()).toEqual({ invoiceId: 'inv1', hostelId: null });
+      expect(stash()).toEqual({
+        kind: 'invoice',
+        invoiceId: 'inv1',
+        hostelId: null,
+      });
     });
 
     it('never leaves for a page that is not Safepay, and fails with status -1', () => {
@@ -257,6 +324,250 @@ describe('SafepayCheckout', () => {
       }
 
       expect(assign).toHaveBeenCalledWith(CHECKOUT);
+    });
+  });
+
+  describe('start with saveCard', () => {
+    it('hands the save-card choice to the payment and stashes the invoice as usual', () => {
+      const checkout = setUp();
+
+      checkout.start('inv1', 'nHelLt', { saveCard: true }).subscribe();
+
+      expect(pay).toHaveBeenCalledWith('inv1', { saveCard: true });
+      expect(assign).toHaveBeenCalledWith(CHECKOUT);
+      expect(stash()).toEqual({
+        kind: 'invoice',
+        invoiceId: 'inv1',
+        hostelId: 'nHelLt',
+      });
+    });
+  });
+
+  describe('startCardSave', () => {
+    it('asks for the card page, stashes the card on file, then leaves and completes', () => {
+      const checkout = setUp();
+      let stashedAtLeaving: unknown = 'not read';
+      assign.mockImplementation(() => (stashedAtLeaving = stash()));
+      const emitted = vi.fn();
+      const completed = vi.fn();
+
+      checkout
+        .startCardSave('nHelLt', CARD)
+        .subscribe({ next: emitted, complete: completed });
+
+      expect(saveCard).toHaveBeenCalledWith('nHelLt');
+      expect(pay).not.toHaveBeenCalled();
+      expect(assign).toHaveBeenCalledWith(CARD_PAGE);
+      expect(stashedAtLeaving).toStrictEqual({
+        kind: 'card',
+        hostelId: 'nHelLt',
+        previous: CARD,
+      });
+      expect(emitted).toHaveBeenCalledOnce();
+      expect(completed).toHaveBeenCalledOnce();
+    });
+
+    it('stashes no card on file as null, and the invoice it came from', () => {
+      const checkout = setUp();
+
+      checkout.startCardSave('nHelLt', null, 'inv1').subscribe();
+
+      expect(stash()).toStrictEqual({
+        kind: 'card',
+        hostelId: 'nHelLt',
+        previous: null,
+        invoiceId: 'inv1',
+      });
+    });
+
+    it('never leaves for a page that is not Safepay, and fails with status -1', () => {
+      saveCard.mockReturnValue(of({ checkout_url: 'https://evil.test/' }));
+      const checkout = setUp();
+      let err: ApiError | undefined;
+
+      checkout
+        .startCardSave('nHelLt', null)
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      expect(assign).not.toHaveBeenCalled();
+      expect(err?.code).toBe('bad_checkout_url');
+      expect(stash()).toBeNull();
+    });
+
+    it('passes the request failure on untouched, without leaving or stashing', () => {
+      const failure = apiError(422, ['Choose a plan first']);
+      saveCard.mockReturnValue(throwError(() => failure));
+      const checkout = setUp();
+      let err: unknown;
+
+      checkout
+        .startCardSave('nHelLt', null)
+        .subscribe({ error: (e) => (err = e) });
+
+      expect(err).toBe(failure);
+      expect(assign).not.toHaveBeenCalled();
+      expect(stash()).toBeNull();
+    });
+  });
+
+  describe('startSubscribe', () => {
+    it('asks for the subscribe page, stashes the plan, then leaves', () => {
+      const checkout = setUp();
+      let stashedAtLeaving: unknown = 'not read';
+      assign.mockImplementation(() => (stashedAtLeaving = stash()));
+
+      checkout.startSubscribe('nHelLt', 'qTFruf').subscribe();
+
+      expect(subscribeWithSafepay).toHaveBeenCalledWith('nHelLt', 'qTFruf');
+      expect(assign).toHaveBeenCalledWith(SUBSCRIBE_PAGE);
+      expect(stashedAtLeaving).toStrictEqual({
+        kind: 'subscription',
+        hostelId: 'nHelLt',
+        planId: 'qTFruf',
+      });
+    });
+
+    it('never leaves when the server gave no page', () => {
+      subscribeWithSafepay.mockReturnValue(
+        of({ checkout_url: null, trial_days: null }),
+      );
+      const checkout = setUp();
+      let err: ApiError | undefined;
+
+      checkout
+        .startSubscribe('nHelLt', 'qTFruf')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      expect(assign).not.toHaveBeenCalled();
+      expect(err?.status).toBe(-1);
+      expect(stash()).toBeNull();
+    });
+  });
+
+  describe('returnStash', () => {
+    function stored(value: unknown): void {
+      sessionStorage.setItem(SAFEPAY_RETURN_KEY, JSON.stringify(value));
+    }
+
+    // A tab that left for Safepay before kinds existed still finds its way back.
+    it('reads a stash with no kind as an invoice', () => {
+      stored({ invoiceId: 'inv1', hostelId: 'nHelLt' });
+      const checkout = setUp();
+
+      expect(checkout.returnStash()).toStrictEqual({
+        kind: 'invoice',
+        invoiceId: 'inv1',
+        hostelId: 'nHelLt',
+      });
+      expect(checkout.returnHostel('inv1')).toBe('nHelLt');
+    });
+
+    it('reads back each kind it writes', () => {
+      const checkout = setUp();
+
+      checkout.start('inv1', null).subscribe();
+      expect(checkout.returnStash()).toStrictEqual({
+        kind: 'invoice',
+        invoiceId: 'inv1',
+        hostelId: null,
+      });
+
+      checkout.startCardSave('nHelLt', CARD, 'inv1').subscribe();
+      expect(checkout.returnStash()).toStrictEqual({
+        kind: 'card',
+        hostelId: 'nHelLt',
+        previous: CARD,
+        invoiceId: 'inv1',
+      });
+
+      checkout.startSubscribe('nHelLt', 'qTFruf').subscribe();
+      expect(checkout.returnStash()).toStrictEqual({
+        kind: 'subscription',
+        hostelId: 'nHelLt',
+        planId: 'qTFruf',
+      });
+    });
+
+    it.each([
+      ['an invoice with no id', { kind: 'invoice', hostelId: 'nHelLt' }],
+      ['a legacy stash with no id', { hostelId: 'nHelLt' }],
+      ['a card with no hostel', { kind: 'card', previous: null }],
+      ['a subscription with no plan', { kind: 'subscription', hostelId: 'h' }],
+      ['a subscription with no hostel', { kind: 'subscription', planId: 'p' }],
+      ['an unknown kind', { kind: 'refund', hostelId: 'h', invoiceId: 'i' }],
+      ['a bare value', 'inv1'],
+      ['null', null],
+    ])('ignores %s', (_label, value) => {
+      stored(value);
+      const checkout = setUp();
+
+      expect(checkout.returnStash()).toBeNull();
+    });
+
+    it('reads an unreadable card on file as none, keeping the rest', () => {
+      stored({ kind: 'card', hostelId: 'nHelLt', previous: { label: 7 } });
+      const checkout = setUp();
+
+      expect(checkout.returnStash()).toStrictEqual({
+        kind: 'card',
+        hostelId: 'nHelLt',
+        previous: null,
+      });
+    });
+
+    it('reads a card with no expiry', () => {
+      stored({ kind: 'card', hostelId: 'nHelLt', previous: { label: 'Visa' } });
+      const checkout = setUp();
+
+      expect(checkout.returnStash()).toStrictEqual({
+        kind: 'card',
+        hostelId: 'nHelLt',
+        previous: { label: 'Visa', expires_on: null },
+      });
+    });
+
+    it('is null with nothing stashed, or on the server', () => {
+      expect(setUp().returnStash()).toBeNull();
+
+      TestBed.resetTestingModule();
+      stored({ kind: 'subscription', hostelId: 'nHelLt', planId: 'qTFruf' });
+      expect(setUp('server').returnStash()).toBeNull();
+    });
+  });
+
+  describe('returnHostelFor', () => {
+    it('returns the hostel stashed for a start of that kind', () => {
+      selected.set('other');
+      const checkout = setUp();
+
+      checkout.startCardSave('nHelLt', null).subscribe();
+      expect(checkout.returnHostelFor('card')).toBe('nHelLt');
+
+      checkout.startSubscribe('subHostel', 'qTFruf').subscribe();
+      expect(checkout.returnHostelFor('subscription')).toBe('subHostel');
+    });
+
+    it('falls back to the selected hostel for another kind, or nothing stashed', () => {
+      selected.set('other');
+      const checkout = setUp();
+
+      expect(checkout.returnHostelFor('card')).toBe('other');
+
+      checkout.startSubscribe('nHelLt', 'qTFruf').subscribe();
+      expect(checkout.returnHostelFor('card')).toBe('other');
+    });
+
+    it('is null with no stash and no selected hostel', () => {
+      expect(setUp().returnHostelFor('subscription')).toBeNull();
+    });
+
+    // A card saved from an invoice returns to ?card=, so the invoice pages never claim it.
+    it('keeps returnHostel to invoice stashes only', () => {
+      selected.set('other');
+      const checkout = setUp();
+      checkout.startCardSave('nHelLt', null, 'inv1').subscribe();
+
+      expect(checkout.returnHostel('inv1')).toBe('other');
     });
   });
 
@@ -431,6 +742,34 @@ describe('payErrorOutcome', () => {
     const message = "Safepay isn't available for USD invoices";
     expect(payErrorOutcome(apiError(422, [message]))).toEqual({
       kind: 'unpayable',
+      message,
+    });
+  });
+
+  it.each([
+    "Card payments aren't available for USD invoices",
+    'Card payments aren’t available for USD invoices',
+    'Safepay isn’t available for USD invoices',
+  ])('treats %j as unpayable', (message) => {
+    expect(payErrorOutcome(apiError(422, [message]))).toEqual({
+      kind: 'unpayable',
+      message,
+    });
+  });
+
+  it("treats a declined saved card as declined, the bank's reason verbatim", () => {
+    const message = 'Your card was declined: Insufficient funds';
+    expect(payErrorOutcome(apiError(422, [message]))).toEqual({
+      kind: 'declined',
+      message,
+    });
+  });
+
+  it('treats a card payment already being processed as in progress', () => {
+    const message =
+      'A card payment for invoice HH-2026-000012 is already in progress';
+    expect(payErrorOutcome(apiError(422, [message]))).toEqual({
+      kind: 'inProgress',
       message,
     });
   });

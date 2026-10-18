@@ -15,7 +15,7 @@ The host bookings list, which the bookings calendar and the room calendar also r
 - **Opening a booking re-reads it from the database.** `openDetails` and the `bookings/:bookingId` URL show the list's copy at once, then `reread` makes one quiet `get()`. The answer replaces the panel, the row and the calendar entry. A failure keeps the list copy without a message.
 - **A move's reply beats an overlapping re-read.** An `epoch` counter is bumped on open, when a move starts, and when it lands or is refused. A re-read answering under a later epoch, or for a booking no longer open, is dropped.
 - **A known invoice is never replaced by "none"** from a later lookup (`lookupInvoices`, `keepSettled`).
-- **The rooms page waits briefly after a stay move.** Check-in, check-out, cancel and release call `RefetchDelay.track('/rooms')`, which holds the next rooms GET until 1 s after the write if it starts within 2 s.
+- **The rooms page waits briefly after a stay move.** Check-in, check-out, cancel and release call `RefetchDelay.track('/rooms')`, which holds the next rooms GET until 1 s after the write if it starts within 2 s. **Being retired:** don't add new `RefetchDelay` calls. The rooms, staff and notifications indexes still lag (proven live 2026-10-18), so the remaining calls stay until the backend adds `RefreshOnReindex` to them (Trello #198). The Invoices page dropped its call once the renter-bill index refreshed on write.
 
 ## Alternatives rejected
 - **Re-fetch the list after a write.** The list is the lagging copy. It redraws the state from before the write, which is what D-1 was.

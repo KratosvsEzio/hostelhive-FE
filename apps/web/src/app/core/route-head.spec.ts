@@ -86,6 +86,21 @@ const ROUTES: Routes = [
         children: [{ path: 'child', component: PlainStub, data: { head: 'page' } }],
       },
       {
+        path: 'legal',
+        title: 'labels.legal',
+        component: PlainStub,
+        data: { head: 'index', contentLocale: 'en' },
+      },
+      {
+        path: 'single',
+        data: { head: 'index', contentLocale: 'en' },
+        children: [
+          { path: '', component: PlainStub },
+          { path: 'french', component: PlainStub, data: { contentLocale: 'fr' } },
+        ],
+      },
+      { path: 'unflagged', title: 'labels.private', component: PlainStub, data: { contentLocale: 'en' } },
+      {
         path: 'guarded',
         canActivate: [() => inject(Router).parseUrl('/en/about')],
         component: PlainStub,
@@ -142,6 +157,7 @@ describe('RouteHeadStrategy', () => {
           adminHome: 'Overview',
           administrators: 'Administrators',
           pageRoute: 'Page route title',
+          legal: 'Legal',
         },
       },
       'en',
@@ -191,6 +207,103 @@ describe('RouteHeadStrategy', () => {
         });
       },
     );
+  });
+
+  describe('a single-language index route', () => {
+    it('reads its content language with its flag', async () => {
+      await go('/en/legal');
+
+      expect(routeHeadFor(router.routerState.snapshot)).toEqual({
+        head: 'index',
+        contentLocale: 'en',
+      });
+    });
+
+    it.each([
+      ['/en/single', 'en'],
+      ['/en/single/french', 'fr'],
+    ])('gives %s the content language of the deepest route that declares one', async (url, code) => {
+      await go(url);
+
+      expect(routeHeadFor(router.routerState.snapshot)).toEqual({
+        head: 'index',
+        contentLocale: code,
+      });
+    });
+
+    it('canonicalises another prefix to the content language, with no hreflang and a translated title', async () => {
+      active.set('ur');
+      TestBed.inject(TranslocoService).setTranslation(
+        { seo: { pageTitle: '{{page}} — Urdu test' }, labels: { legal: 'Urdu legal' } },
+        'ur',
+      );
+      TestBed.inject(TranslocoService).setActiveLang('ur');
+
+      await go('/ur/legal');
+
+      expect(attr(ROBOTS, 'content')).toBe(INDEXABLE);
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/legal`);
+      expect(attr(OG_URL, 'content')).toBe(`${SITE_ORIGIN}/en/legal`);
+      expect(all(HREFLANG)).toHaveLength(0);
+      expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+      expect(document.title).toBe('Urdu legal — Urdu test');
+    });
+
+    it('drops the hreflang set on the way in and restores it on the way out', async () => {
+      active.set('ur');
+      TestBed.inject(TranslocoService).setActiveLang('ur');
+
+      await go('/ur/about');
+      expect(all(HREFLANG)).toHaveLength(localeAlternates('/about').length);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/ur/about`);
+
+      await go('/ur/legal');
+      expect(all(HREFLANG)).toHaveLength(0);
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/legal`);
+
+      await go('/ur/about');
+      expect(all(HREFLANG)).toHaveLength(localeAlternates('/about').length);
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/ur/about`);
+    });
+
+    it('keeps the content-language canonical through a language switch while the title follows it', async () => {
+      await go('/en/legal');
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/legal`);
+
+      active.set('ur');
+      ready.set(false);
+      TestBed.inject(TranslocoService).setActiveLang('ur');
+      await go('/ur/legal');
+
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/legal`);
+      expect(document.title).toBe('Legal — Test');
+
+      TestBed.inject(TranslocoService).setTranslation(
+        { seo: { pageTitle: '{{page}} — Urdu test' }, labels: { legal: 'Urdu legal' } },
+        'ur',
+      );
+      ready.set(true);
+      TestBed.tick();
+
+      expect(document.title).toBe('Urdu legal — Urdu test');
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/legal`);
+      expect(attr(OG_URL, 'content')).toBe(`${SITE_ORIGIN}/en/legal`);
+      expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+      expect(all(HREFLANG)).toHaveLength(0);
+    });
+
+    it('stays noindex with no address on a route that is not an index route', async () => {
+      await go('/en/unflagged');
+
+      expect(attr(ROBOTS, 'content')).toBe(NOINDEX);
+      expect(all(CANONICAL)).toHaveLength(0);
+      expect(all(OG_URL)).toHaveLength(0);
+      expect(all(HREFLANG)).toHaveLength(0);
+    });
   });
 
   describe('a static index route', () => {

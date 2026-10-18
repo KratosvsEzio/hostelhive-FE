@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import {
   Component,
   NO_ERRORS_SCHEMA,
@@ -7,9 +8,16 @@ import {
   signal,
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router, UrlSegment, provideRouter } from '@angular/router';
+import {
+  ActivatedRoute,
+  NavigationEnd,
+  NavigationSkipped,
+  Router,
+  UrlSegment,
+  provideRouter,
+} from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { filter, firstValueFrom, of } from 'rxjs';
 import { Listing, Paginated } from '@hostelhive/data-access';
 import { GeolocationService, PlaceResult, SharedMap } from '@hostelhive/maps';
 import { SessionStore } from '@core/auth';
@@ -19,6 +27,7 @@ import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { MobileApp } from '@core/mobile-app';
 import { Seo } from '@core/seo';
+import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { ListingsApi, OffersApi } from '@services';
 import { FavoritesStore } from '@util/favorites-store';
@@ -393,6 +402,16 @@ const seoSpy = () => ({ apply: vi.fn(), setJsonLd: vi.fn() });
 /** The head the page last asked for. */
 const lastApply = (seo: ReturnType<typeof seoSpy>) =>
   seo.apply.mock.lastCall?.[0] as Record<string, unknown>;
+
+/** A camera that reports one fixed viewport, standing in for Leaflet. */
+const cameraAt = (b: { north: number; south: number; east: number; west: number }) => ({
+  getBounds: () => ({
+    getNorth: () => b.north,
+    getSouth: () => b.south,
+    getEast: () => b.east,
+    getWest: () => b.west,
+  }),
+});
 
 describe('SearchMap place pick on a search page', () => {
   afterEach(cleanupSearchMap);
@@ -1127,16 +1146,6 @@ describe('SearchMap worldwide search', () => {
 describe('SearchMap leaving with a search pending', () => {
   afterEach(cleanupSearchMap);
 
-  /** A camera that reports one fixed viewport, standing in for Leaflet. */
-  const cameraAt = (b: { north: number; south: number; east: number; west: number }) => ({
-    getBounds: () => ({
-      getNorth: () => b.north,
-      getSouth: () => b.south,
-      getEast: () => b.east,
-      getWest: () => b.west,
-    }),
-  });
-
   it('does not send the pending search for the viewport being left', async () => {
     const list = listSpy();
     const { fixture, map } = await mountSearch('/en/search/lahore', {
@@ -1684,16 +1693,6 @@ describe('SearchMap on a URL carrying a room or property type the search does no
 describe('SearchMap search_performed trigger', () => {
   afterEach(cleanupSearchMap);
 
-  /** A camera that reports one fixed viewport, standing in for Leaflet. */
-  const cameraAt = (b: { north: number; south: number; east: number; west: number }) => ({
-    getBounds: () => ({
-      getNorth: () => b.north,
-      getSouth: () => b.south,
-      getEast: () => b.east,
-      getWest: () => b.west,
-    }),
-  });
-
   /** Mounts a routed browser search page with `track` spied before it exists. */
   async function mountTracked(url: string) {
     configureSearchMap({ platform: 'browser' });
@@ -1868,11 +1867,11 @@ describe('SearchMap heading over an area the visitor chose', () => {
     expect(heading(fixture)).toBe('searchUi.mapArea');
   });
 
-  it('keeps naming a place the query names after a pan', async () => {
+  it('keeps naming a place the query names with no known position after a pan', async () => {
     expect(await pannedOn('/en/search?place=Lahore')).toBe('Lahore');
   });
 
-  it('keeps naming the place path after a pan (Trello #160 is a separate decision)', async () => {
+  it('keeps naming the place path after a pan with no settled view, which counts as framed', async () => {
     expect(await pannedOn('/en/search/lahore')).toBe('Lahore');
   });
 
@@ -1885,5 +1884,371 @@ describe('SearchMap heading over an area the visitor chose', () => {
     expect(applied['title']).toBe('seo.mapAreaTitle');
     expect(applied['description']).toBe('seo.mapAreaDescription');
     expect(applied['noindex']).toBe(true);
+  });
+});
+
+/** The text of the page heading. */
+const h1Text = (fixture: ComponentFixture<SearchMap>) =>
+  (fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent?.trim();
+
+/** `url` with more query keys joined on, whether or not it already has a query. */
+const withQuery = (url: string, ...keys: string[]): string =>
+  `${url}${url.includes('?') ? '&' : '?'}${keys.join('&')}`;
+
+/** What the page last asked `key` to be translated with. */
+const lastParams = (translate: ReturnType<typeof vi.spyOn>, key: string) =>
+  (translate.mock.calls as [string, Record<string, unknown>?][])
+    .filter(([name]) => name === key)
+    .at(-1)?.[1];
+
+/** A pasted place path and a place the visitor picked: neither carries a viewport. */
+const PRISTINE = '/en/search/lahore';
+const PICKED = '/en/search?place=Lahore&lat=31.5204&lng=74.3587&zoom=11';
+
+/** Viewports as the four corner keys: one nowhere near Lahore, one around it. */
+const FAR = 'ne_lat=20&ne_lng=100&sw_lat=10&sw_lng=90';
+const FRAMING = 'ne_lat=31.75&ne_lng=74.70&sw_lat=31.30&sw_lng=74.00';
+
+/** The camera settled on the viewport around Lahore, and on one far to the east of it. */
+const LAHORE_CAM = cameraAt({ north: 31.75, south: 31.3, east: 74.7, west: 74.0 });
+const FAR_EAST_CAM = cameraAt({ north: 32, south: 31, east: 97.5, west: 96.5 });
+
+/** A place search that is a page of its own: indexable, canonical to the landing page. */
+function expectPlacePageHead(applied: Record<string, unknown>, slug: string): void {
+  expect(applied['title']).toBe('seo.searchTitle');
+  expect(applied['path']).toBe(`/hostels/${slug}`);
+  expect(applied['noindex']).toBeUndefined();
+  expect(applied['image']).toBe(placeSocialImage(slug));
+}
+
+/** A view of the place: out of the index, with no canonical, and the place's own picture. */
+function expectPlaceViewHead(applied: Record<string, unknown>, slug: string): void {
+  expect(applied['title']).toBe('seo.searchTitle');
+  expect(applied['noindex']).toBe(true);
+  expect(applied).not.toHaveProperty('path');
+  expect(applied['image']).toBe(placeSocialImage(slug));
+}
+
+/** A view the map has taken off the place: titled as the map area, and out of the index. */
+function expectMapAreaHead(applied: Record<string, unknown>): void {
+  expect(applied['title']).toBe('seo.mapAreaTitle');
+  expect(applied['description']).toBe('seo.mapAreaDescription');
+  expect(applied['noindex']).toBe(true);
+  expect(applied).not.toHaveProperty('path');
+  expect(applied['image']).toBe(DEFAULT_SOCIAL_IMAGE);
+}
+
+/**
+ * A search link that arrives carrying a viewport is a view of the map, not a place page: it
+ * stays out of the index with no canonical, and its heading follows whether the map still
+ * frames the place. A server render is the arrival itself, so it is where that is read.
+ */
+describe('SearchMap head and heading on a place search link carrying a viewport', () => {
+  afterEach(cleanupSearchMap);
+
+  /** A server render of `url`: the head it asked for, the heading it drew and its translations. */
+  async function render(url: string) {
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+    // The test i18n returns the bare key, so the place can only be seen in what it was asked.
+    const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+    const { fixture } = await mount(url, null, true);
+    return { applied: lastApply(seo), heading: h1Text(fixture), translate };
+  }
+
+  /** A search that names a place with no page of its own to canonicalise to. */
+  function expectNamedFacetHead(
+    applied: Record<string, unknown>,
+    translate: ReturnType<typeof vi.spyOn>,
+    place: string,
+  ): void {
+    expect(applied['title']).toBe('seo.searchTitle');
+    expect(applied['description']).toBe('seo.searchDescription');
+    expect(applied['noindex']).toBe(true);
+    expect(applied).not.toHaveProperty('path');
+    expect(applied['image']).toBe(DEFAULT_SOCIAL_IMAGE);
+    expect(lastParams(translate, 'seo.searchTitle')).toEqual({ place });
+    expect(lastParams(translate, 'seo.searchDescription')).toEqual({ place });
+  }
+
+  it('names the place but keeps a link that frames it out of the index, with no canonical', async () => {
+    const { applied, heading, translate } = await render(withQuery(PRISTINE, FRAMING));
+
+    expect(heading).toBe('Lahore');
+    expectPlaceViewHead(applied, 'lahore');
+    expect(applied['description']).toBe('seo.searchPlaceDescription');
+    expect(lastParams(translate, 'seo.searchTitle')).toEqual({ place: 'Lahore' });
+    expect(lastParams(translate, 'seo.searchPlaceDescription')).toEqual({ place: 'Lahore' });
+  });
+
+  it.each([
+    ['a place path', withQuery(PRISTINE, FAR)],
+    ['a picked place', withQuery(PICKED, FAR)],
+  ])('titles %s with a viewport far from the place as the map area', async (_name, url) => {
+    const { applied, heading } = await render(url);
+
+    expect(heading).toBe('searchUi.mapArea');
+    expectMapAreaHead(applied);
+  });
+
+  it.each([
+    ['a corner missing', 'ne_lat=31.75&ne_lng=74.70&sw_lat=31.30'],
+    ['a corner that is not a number', 'ne_lat=31.75&ne_lng=74.70&sw_lat=31.30&sw_lng=abc'],
+    ['no area', 'ne_lat=31.5&ne_lng=74.4&sw_lat=31.5&sw_lng=74.4'],
+  ])('reads a viewport with %s as none', async (_name, viewport) => {
+    const { applied, heading } = await render(withQuery(PRISTINE, viewport));
+
+    expect(heading).toBe('Lahore');
+    expectPlacePageHead(applied, 'lahore');
+  });
+
+  it('titles a filtered link far from the place as the map area', async () => {
+    const { applied, heading } = await render(withQuery(PRISTINE, 'gender=girls', FAR));
+
+    expect(heading).toBe('searchUi.mapArea');
+    expectMapAreaHead(applied);
+  });
+
+  it('names the place on a filtered link that frames it, out of the index with the default picture', async () => {
+    const { applied, heading, translate } = await render(
+      withQuery(PRISTINE, 'gender=girls', FRAMING),
+    );
+
+    expect(heading).toBe('Lahore');
+    expectNamedFacetHead(applied, translate, 'Lahore');
+  });
+
+  it('keeps naming a place with no known centre whatever viewport the link carries', async () => {
+    const { applied, heading, translate } = await render(withQuery('/en/search/dha-phase-5', FAR));
+
+    expect(heading).toBe('Dha Phase 5');
+    expectNamedFacetHead(applied, translate, 'Dha Phase 5');
+  });
+
+  it('titles a link whose picked place is far from its viewport as the map area, not the path slug', async () => {
+    const karachi = 'place=Karachi&lat=24.8607&lng=67.0011&zoom=11';
+    const { applied, heading } = await render(withQuery(PRISTINE, karachi, FRAMING));
+
+    expect(heading).toBe('searchUi.mapArea');
+    expectMapAreaHead(applied);
+  });
+
+  it('reads Everywhere on a worldwide link whatever viewport it carries', async () => {
+    const { applied, heading } = await render(withQuery('/en/search', 'everywhere=1', FAR));
+
+    expect(heading).toBe('searchUi.everywhere');
+    expect(applied['title']).toBe('seo.worldwideTitle');
+    expect(applied['noindex']).toBe(true);
+    expect(applied).not.toHaveProperty('path');
+  });
+
+  it('leaves the head to a landing page whatever viewport its link carries', async () => {
+    const seo = seoSpy();
+    configureSearchMap({ platform: 'server', localeReady: true, seo });
+
+    await mount(withQuery('/en/hostels/lahore', FAR), CITY_SEED);
+
+    expect(seo.apply).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The verdict belongs to the link the page arrived by. The map writes its own viewport into
+ * the address once its camera moves after load (fitting the results, a resize, the visitor),
+ * and that must not turn a place page into a view, while the heading and head still follow
+ * where the map is.
+ */
+describe('SearchMap place search head as the map moves', () => {
+  afterEach(cleanupSearchMap);
+
+  async function openInBrowser(url: string) {
+    const seo = seoSpy();
+    const mounted = await mountWatched(url, { localeReady: true, seo });
+    return { ...mounted, seo };
+  }
+
+  /** Lets change detection run the effects and the router finish what it was doing. */
+  async function flushPage(fixture: ComponentFixture<SearchMap>): Promise<void> {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  /** Runs `act`, waits for the navigation it starts to end (or be skipped), then flushes. */
+  async function settleAfter(fixture: ComponentFixture<SearchMap>, act: () => unknown) {
+    const ended = firstValueFrom(
+      TestBed.inject(Router).events.pipe(
+        filter((e) => e instanceof NavigationEnd || e instanceof NavigationSkipped),
+      ),
+    );
+    await Promise.all([ended, act()]);
+    await flushPage(fixture);
+  }
+
+  it.each([
+    ['a place path', PRISTINE],
+    ['a picked place', PICKED],
+  ])('keeps %s indexable after the map writes its own viewport', async (_name, url) => {
+    const { fixture, map, seo } = await openInBrowser(url);
+    map.map = LAHORE_CAM;
+
+    await settleAfter(fixture, () => map.captureMapBounds());
+
+    // The write has landed, so a verdict read from the live address would now see a viewport.
+    expect(urlQuery()).toHaveProperty('ne_lat', '31.75');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlacePageHead(lastApply(seo), 'lahore');
+  });
+
+  it('reads the map area and leaves the index when the map settles away from the place', async () => {
+    const { fixture, map, seo } = await openInBrowser(PRISTINE);
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlacePageHead(lastApply(seo), 'lahore');
+    map.map = FAR_EAST_CAM;
+
+    await settleAfter(fixture, () => map.captureMapBounds());
+
+    expect(urlQuery()).toHaveProperty('ne_lat', '32');
+    expect(h1Text(fixture)).toBe('searchUi.mapArea');
+    expectMapAreaHead(lastApply(seo));
+  });
+
+  it('returns to the place, its canonical and the index when the map settles back on it', async () => {
+    const { fixture, map, seo } = await openInBrowser(PRISTINE);
+    map.map = FAR_EAST_CAM;
+    await settleAfter(fixture, () => map.captureMapBounds());
+    expect(urlQuery()).toHaveProperty('ne_lat', '32');
+    expect(h1Text(fixture)).toBe('searchUi.mapArea');
+    map.map = LAHORE_CAM;
+
+    await settleAfter(fixture, () => map.captureMapBounds());
+
+    expect(urlQuery()).toHaveProperty('ne_lat', '31.75');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlacePageHead(lastApply(seo), 'lahore');
+  });
+
+  it('leaves the index when a pushed navigation brings a viewport that frames the place', async () => {
+    const { fixture, seo } = await openInBrowser(PRISTINE);
+    const router = TestBed.inject(Router);
+    expectPlacePageHead(lastApply(seo), 'lahore');
+
+    await settleAfter(fixture, () => router.navigateByUrl(withQuery(PRISTINE, FRAMING)));
+
+    expect(router.url).toContain('ne_lat=31.75');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlaceViewHead(lastApply(seo), 'lahore');
+  });
+
+  it('returns to the index when a pushed navigation drops the viewport', async () => {
+    const { fixture, seo } = await openInBrowser(withQuery(PRISTINE, FRAMING));
+    const router = TestBed.inject(Router);
+    expectPlaceViewHead(lastApply(seo), 'lahore');
+
+    await settleAfter(fixture, () => router.navigateByUrl(PRISTINE));
+
+    expect(router.url).not.toContain('ne_lat');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlacePageHead(lastApply(seo), 'lahore');
+  });
+
+  it('treats Back onto an entry the map wrote its viewport to as an arrival with a viewport', async () => {
+    const { fixture, map, seo } = await openInBrowser(PRISTINE);
+    const router = TestBed.inject(Router);
+    // A test module is never bootstrapped, so the router is not listening for Back until told to.
+    router.setUpLocationChangeListener();
+    map.map = LAHORE_CAM;
+    await settleAfter(fixture, () => map.captureMapBounds());
+    expect(urlQuery()).toHaveProperty('ne_lat', '31.75');
+    expectPlacePageHead(lastApply(seo), 'lahore');
+    await settleAfter(fixture, () => router.navigateByUrl('/en/search/karachi'));
+    expect(router.url).not.toContain('ne_lat');
+
+    await settleAfter(fixture, () => TestBed.inject(Location).back());
+
+    expect(router.url).toContain('/en/search/lahore');
+    expect(router.url).toContain('ne_lat=31.75');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlaceViewHead(lastApply(seo), 'lahore');
+  });
+
+  it('keeps a link carrying a viewport out of the index when the map recentres and drops it', async () => {
+    const { fixture, map, seo } = await openInBrowser(withQuery(PRISTINE, FRAMING));
+    expectPlaceViewHead(lastApply(seo), 'lahore');
+    map.map = { setView: vi.fn() };
+
+    await settleAfter(fixture, () => map.recenterTo({ lat: 31.5204, lng: 74.3587 }));
+
+    // The address no longer carries the viewport the link arrived with.
+    expect(urlQuery()).not.toHaveProperty('ne_lat');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlaceViewHead(lastApply(seo), 'lahore');
+  });
+
+  it('names a newly searched place and canonicalises it after the map was away from the last', async () => {
+    const { fixture, map, seo } = await openInBrowser(PRISTINE);
+    const router = TestBed.inject(Router);
+    map.map = FAR_EAST_CAM;
+    await settleAfter(fixture, () => map.captureMapBounds());
+    expect(h1Text(fixture)).toBe('searchUi.mapArea');
+    await settleAfter(fixture, () => router.navigateByUrl('/en/search/karachi'));
+    map.map = { setView: vi.fn() };
+
+    await settleAfter(fixture, () => map.recenterTo({ lat: KARACHI.lat, lng: KARACHI.lng }));
+
+    expect(h1Text(fixture)).toBe('Karachi');
+    expectPlacePageHead(lastApply(seo), 'karachi');
+  });
+
+  it('keeps the place field on the searched place while the heading reads the map area', async () => {
+    const { fixture, map } = await openInBrowser(PRISTINE);
+    const placeField = () =>
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLElement & { value: string }>(
+        'hh-place-search',
+      );
+    expect(placeField()?.value).toBe('Lahore');
+    map.map = FAR_EAST_CAM;
+
+    await settleAfter(fixture, () => map.captureMapBounds());
+
+    expect(h1Text(fixture)).toBe('searchUi.mapArea');
+    expect(placeField()?.value).toBe('Lahore');
+  });
+
+  it('reads the map area once a place with no zoom is off screen after the map settles', async () => {
+    const { fixture, map, seo } = await openInBrowser(
+      '/en/search?place=My%20location&lat=31.5204&lng=74.3587',
+    );
+    expect(h1Text(fixture)).toBe('My location');
+    // The fit to the results lands east of the place, so its point is no longer on screen.
+    map.map = cameraAt({ north: 31.56, south: 31.5, east: 74.5, west: 74.4 });
+
+    await settleAfter(fixture, () => map.captureMapBounds());
+
+    expect(urlQuery()).toHaveProperty('ne_lat', '31.56');
+    expect(h1Text(fixture)).toBe('searchUi.mapArea');
+    expectMapAreaHead(lastApply(seo));
+  });
+
+  it('judges a navigation as an arrival when the router last recorded a different one', async () => {
+    const { fixture, map, seo } = await openInBrowser(PRISTINE);
+    const router = TestBed.inject(Router);
+    // A same-path replace of this page, which would read as a refinement if it were this one's.
+    const stale = {
+      id: -1,
+      trigger: 'imperative',
+      extras: { replaceUrl: true },
+      previousNavigation: { finalUrl: router.parseUrl(PRISTINE) },
+    };
+    // The spy's getter overload rejects function-typed keys, so view the signal as a plain value.
+    const recorded = router as unknown as { lastSuccessfulNavigation: object };
+    vi.spyOn(recorded, 'lastSuccessfulNavigation', 'get').mockReturnValue(() => stale);
+    map.map = LAHORE_CAM;
+
+    await settleAfter(fixture, () => map.captureMapBounds());
+
+    expect(urlQuery()).toHaveProperty('ne_lat', '31.75');
+    expect(h1Text(fixture)).toBe('Lahore');
+    expectPlaceViewHead(lastApply(seo), 'lahore');
   });
 });

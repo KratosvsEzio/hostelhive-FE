@@ -67,6 +67,8 @@ export interface BillingPlan extends PublicPlan {
   reason?: string;
   /** Only on `downgrade`: whether this plan is already scheduled for the next renewal. */
   scheduled?: boolean;
+  /** Free-trial days for subscribing through Safepay; null when this hostel would get no trial. */
+  trial_days: number | null;
 }
 
 /** The plan a subscription or invoice refers to. */
@@ -88,6 +90,17 @@ export interface BillingSubscription {
   grace_until: string | null;
   scheduled_plan: Pick<BillingPlanRef, 'id' | 'code' | 'name'> | null;
   cancel_at_period_end: boolean;
+  /** `invoice` or `safepay_subscription`, as returned. It outlives the plan, so pair it with a live status. */
+  billed_by: string;
+  /** Safepay's own status for a Safepay-billed plan (`TRAILING` during a free trial), else null. */
+  safepay_status: string | null;
+}
+
+/** The card kept at Safepay for automatic renewal. Display text only; the token stays on the server. */
+export interface SavedCard {
+  label: string;
+  /** Date-only string; null when Safepay gave no expiry. */
+  expires_on: string | null;
 }
 
 /** The unpaid invoice summarised on the billing payload. It carries no plan or lines. */
@@ -111,6 +124,9 @@ export interface HostBilling {
   currency: string;
   country_code: string | null;
   payment_methods: string[];
+  /** Whether the saved card renews the plan. Derived by the server; never inferred from `saved_card`. */
+  auto_renew: boolean;
+  saved_card: SavedCard | null;
   /** Null when the hostel has no subscription, or one with no plan yet. */
   subscription: BillingSubscription | null;
   /** What is switched on right now (`listing`, `boost`, `crm`); past due drops `boost`. */
@@ -210,6 +226,8 @@ export interface BillingPayment {
   succeeded_at: string | null;
   created_at: string;
   invoice_id: string;
+  /** `customer`, `schedule` (an automatic renewal charge) or `upgrade`, as returned. */
+  initiated_by: string;
 }
 
 /** `POST /api/invoices/:id/payments`, unwrapped from its envelope. */
@@ -218,4 +236,12 @@ export interface StartedPayment {
   /** Where to send the payer; null when the provider gave no page to send them to. */
   checkout_url: string | null;
   invoice: BillingInvoice;
+}
+
+/** `POST /api/hostels/:id/subscription/safepay`, unwrapped from its envelope. */
+export interface SafepayStart {
+  /** Safepay's subscribe page; null when the server gave none. */
+  checkout_url: string | null;
+  /** The free trial the subscription starts with, or null for none. */
+  trial_days: number | null;
 }

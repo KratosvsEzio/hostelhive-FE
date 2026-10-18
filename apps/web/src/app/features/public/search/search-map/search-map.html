@@ -186,13 +186,14 @@
       </div>
     }
     <!-- Hidden on mobile — the sheet's drag header already carries the count. -->
-    <!-- The heading sits OUTSIDE the loading/error branches: it names what was searched
-         for, which is true whether or not the results came back. Inside them, a failed
+    <!-- The heading sits OUTSIDE the loading/error branches: it names where the search is,
+         which is true whether or not the results came back. Inside them, a failed
          request left the column with no context at all. -->
     <div class="mb-4 max-[949px]:hidden">
       <!-- Falls back to Pakistan, which is what an unscoped search actually covers — a
-           blank heading would read as a bug. Once the visitor has chosen the area on a
-           search that names no place, "This map area" instead (Trello #161).
+           blank heading would read as a bug. "This map area" instead once the map no longer
+           frames the place the search names, or once the visitor has chosen the area on a
+           search that names none.
            Suppressed when embedded: a landing page already has its own h1, and two on one
            page is both a ranking signal split in half and a mess for a screen reader. -->
       @if (!seed()) {

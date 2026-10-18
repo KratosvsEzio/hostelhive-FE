@@ -28,6 +28,41 @@
         </p>
       }
 
+      @if (declined() && showPay()) {
+        <div class="flex flex-wrap gap-2" data-testid="declined-actions">
+          @if (hostelId) {
+            <button
+              hh-button
+              type="button"
+              variant="outlined"
+              size="md"
+              [loading]="leaving() === 'card'"
+              [disabled]="busy()"
+              (click)="updateCard()"
+              data-testid="update-card"
+            >
+              {{ 'hostPayment.updateCard' | transloco }}
+            </button>
+          }
+          <button
+            hh-button
+            type="button"
+            variant="text"
+            size="md"
+            [loading]="leaving() === 'pay'"
+            [disabled]="busy()"
+            (click)="pay()"
+            data-testid="pay-another-card"
+          >
+            {{
+              leaving() === 'pay'
+                ? ('hostPayment.redirecting' | transloco)
+                : ('hostPayment.payAnotherCard' | transloco)
+            }}
+          </button>
+        </div>
+      }
+
       @switch (slug()) {
         @case ('open') {
           @if (expired()) {
@@ -73,33 +108,159 @@
               class="flex flex-col gap-1 text-sm text-ink-600"
               data-testid="provider-notice"
             >
-              <p>{{ 'hostPayment.providerNotice' | transloco }}</p>
-              <p>{{ 'hostPayment.providerAmountOnly' | transloco }}</p>
+              @if (offerSavedCard()) {
+                <p>{{ 'hostPayment.savedCardNotice' | transloco }}</p>
+              } @else {
+                <p>{{ 'hostPayment.providerNotice' | transloco }}</p>
+                <p>{{ 'hostPayment.providerAmountOnly' | transloco }}</p>
+              }
             </div>
 
-            @if (showPay()) {
-              <button
-                hh-button
-                type="button"
-                class="w-full"
-                color="primary"
-                size="md"
-                [loading]="starting()"
-                (click)="pay()"
-                data-testid="pay"
+            @if (chargeSlow()) {
+              <div
+                class="flex flex-col items-start gap-2 rounded-xl bg-ink-50 px-4 py-3 text-sm text-ink-700"
+                role="status"
+                data-testid="charge-slow"
               >
-                {{
-                  starting()
-                    ? ('hostPayment.redirecting' | transloco)
-                    : ('hostPayment.payAmount'
-                      | transloco
-                        : {
-                            amount: isolate(
-                              inv.total | billingMoney: inv.currency
-                            ),
-                          })
-                }}
-              </button>
+                <p>{{ 'hostPayment.savedCardSlow' | transloco }}</p>
+                <button
+                  hh-button
+                  type="button"
+                  variant="outlined"
+                  size="sm"
+                  [disabled]="busy()"
+                  (click)="checkCharge()"
+                  data-testid="check-charge"
+                >
+                  {{ 'hostPayment.checkAgain' | transloco }}
+                </button>
+              </div>
+            }
+
+            @if (showPay()) {
+              @if (offerSaveCard()) {
+                <div>
+                  <label class="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      class="peer sr-only"
+                      [checked]="saveCard()"
+                      [disabled]="busy()"
+                      [attr.aria-describedby]="saveCardHintId"
+                      (change)="saveCard.set(!saveCard())"
+                      data-testid="save-card"
+                    />
+                    <span
+                      class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2"
+                      [class]="
+                        saveCard()
+                          ? 'border-brand-500 bg-brand-500 text-white'
+                          : 'border-ink-300 bg-white'
+                      "
+                      aria-hidden="true"
+                    >
+                      @if (saveCard()) {
+                        <i class="ti ti-check text-xs leading-none"></i>
+                      }
+                    </span>
+                    <span class="text-sm text-ink-700" data-testid="save-card-label">
+                      @if (savedCard(); as card) {
+                        {{
+                          'hostPayment.saveCardReplace'
+                            | transloco: { card: isolate(card.label) }
+                        }}
+                      } @else {
+                        {{ 'hostPayment.saveCard' | transloco }}
+                      }
+                    </span>
+                  </label>
+                  <p
+                    class="mt-1 pl-8 text-xs text-ink-500"
+                    [id]="saveCardHintId"
+                  >
+                    {{ 'hostPayment.saveCardHint' | transloco }}
+                  </p>
+                </div>
+              } @else if (saveCardLocked()) {
+                <p
+                  class="text-sm text-ink-600"
+                  data-testid="save-card-locked"
+                >
+                  {{ 'hostPayment.saveCardLocked' | transloco }}
+                </p>
+              }
+
+              @if (offerSavedCard()) {
+                @if (savedCard(); as card) {
+                  <button
+                    hh-button
+                    type="button"
+                    class="w-full"
+                    color="primary"
+                    size="md"
+                    [loading]="charging()"
+                    [disabled]="busy()"
+                    (click)="askCharge()"
+                    data-testid="pay-saved-card"
+                  >
+                    {{
+                      charging()
+                        ? ('hostPayment.charging' | transloco)
+                        : ('hostPayment.payWithCard'
+                          | transloco
+                            : {
+                                amount: isolate(
+                                  inv.total | billingMoney: inv.currency
+                                ),
+                                card: isolate(card.label),
+                              })
+                    }}
+                  </button>
+                }
+                @if (!declined()) {
+                  <button
+                    hh-button
+                    type="button"
+                    variant="text"
+                    size="md"
+                    class="self-center"
+                    [loading]="starting()"
+                    [disabled]="busy()"
+                    (click)="pay()"
+                    data-testid="pay"
+                  >
+                    {{
+                      starting()
+                        ? ('hostPayment.redirecting' | transloco)
+                        : ('hostPayment.payAnotherCard' | transloco)
+                    }}
+                  </button>
+                }
+              } @else {
+                <button
+                  hh-button
+                  type="button"
+                  class="w-full"
+                  color="primary"
+                  size="md"
+                  [loading]="starting()"
+                  [disabled]="charging()"
+                  (click)="pay()"
+                  data-testid="pay"
+                >
+                  {{
+                    starting()
+                      ? ('hostPayment.redirecting' | transloco)
+                      : ('hostPayment.payAmount'
+                        | transloco
+                          : {
+                              amount: isolate(
+                                inv.total | billingMoney: inv.currency
+                              ),
+                            })
+                  }}
+                </button>
+              }
             } @else if (payForbidden()) {
               <p
                 class="flex items-center gap-2 text-sm text-ink-600"
@@ -207,6 +368,32 @@
     }
   </div>
 </app-dashboard-layout>
+
+@if (confirmingCharge()) {
+  @if (invoice(); as inv) {
+    @if (savedCard(); as card) {
+      <hh-confirm-modal
+        icon="ti-credit-card"
+        tone="info"
+        [title]="
+          'hostPayment.chargeConfirmTitle'
+            | transloco
+              : {
+                  amount: isolate(inv.total | billingMoney: inv.currency),
+                  card: isolate(card.label),
+                }
+        "
+        [confirmLabel]="'hostPayment.chargeConfirm' | transloco"
+        [cancelLabel]="'common.cancel' | transloco"
+        (confirm)="confirmCharge()"
+        (cancel)="dismissCharge()"
+        data-testid="charge-confirm"
+      >
+        {{ 'hostPayment.chargeConfirmMessage' | transloco: { number: inv.number } }}
+      </hh-confirm-modal>
+    }
+  }
+}
 
 <ng-template #back>
   <a

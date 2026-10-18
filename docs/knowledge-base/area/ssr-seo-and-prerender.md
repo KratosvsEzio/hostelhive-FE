@@ -85,9 +85,9 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
   - **A pending view is flushed** at the next `NavigationEnd` and on `pagehide`, with the location
     captured when it was queued.
   - **Each navigation to a new page sends exactly one view.**
-- **Which navigations are a new page** (`isSamePageRefinement`, checked in `bindRouter` *before*
-  `queuePageView`, so a skip never flushes, replaces or re-locates the pending view). A navigation is
-  **skipped** when:
+- **Which navigations are a new page** (`isSamePageRefinement`, in
+  `core/navigation/same-page-refinement.ts`, checked in `bindRouter` *before* `queuePageView`, so a
+  skip never flushes, replaces or re-locates the pending view). A navigation is **skipped** when:
   - **A:** the app replaced the URL on the same page: `trigger === 'imperative'`, `extras.replaceUrl`,
     and the same `pagePath` (from `core/scroll-reset.ts`, locale kept) as the previous successful
     navigation. This covers map pans, zooms and recenters, "Search everywhere" on a bare `/search`, and
@@ -100,6 +100,12 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
   `page_path` never carries a `#fragment`. **GA counts changed from the PR #126 deploy** (2026-10-11
   merge): fewer search views, lower views per session and engagement on search landings. GA is live in
   production.
+- **The predicate has a second user.** It moved unchanged out of the GA service so that analytics and
+  SEO share one definition of the page refining itself. `SearchMap` re-reads whether the search link
+  arrived carrying a viewport (`arrivedWithViewport`) on every `NavigationEnd` it does not skip, with
+  the same `lastSuccessfulNavigation()` id check. So a page view and a head verdict change on the same
+  navigations: Back/Forward and a language switch are arrivals for both. See
+  [viewport links are views](../decisions/search-and-discovery/viewport-links-are-views-not-pages.md).
 - **Why the timing holds:** within a tick, root effects re-run after page effects, so a provisional
   head written in the settling tick cancels the send.
 - **Console and token URLs** are judged on their locale-free path (`isMarketplacePath(routePath(url))`)
@@ -114,6 +120,7 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
 - **`og:locale`:** exactly one, from the active locale's `ogLocale` (`core/i18n/locales.ts`; `en_PK`, `ur_PK`, `ar_AR` …). No `og:locale:alternate`: Facebook re-scrapes the same URL with `fb_locale`, and this site localises by path.
 - **`index.html`** ships no canonical, `og:url` or `og:locale`. It keeps only neutral fallbacks (description, robots `index`, og/twitter title, description and image, the app links) for the client-only shells and for scrapers that read the HTML before boot.
 - **Indexable pages** also get the full `hreflang` set (`localeAlternates`, `x-default` = English).
+- **`contentLocale`** (route data, or `SeoConfig.contentLocale`) marks a page whose content exists in one language. On every language URL, canonical and `og:url` point at that language (`/en/privacy-policy`), `og:locale` follows it (`en_PK`), and no `hreflang` is written. The title and description stay translated, and `noindex` still wins. An unknown code falls back to the active locale. The pages are listed in `SINGLE_LANGUAGE_PAGES` (`core/i18n/content-locale.ts`): the three legal pages and `/credits`. See [single-language pages canonicalise to their language](../decisions/ssr-seo-and-prerender/single-language-pages-canonicalise-to-their-language.md).
 - **`setJsonLd(id, data)`** replaces structured data by id.
 - **`preloadImage(url)`** puts the LCP hero in the server-rendered head.
 - **`clearOnDestroy(destroyRef, ids, { preloadImage })`** removes a page's JSON-LD ids, and optionally its preload, when the page is destroyed. Every page that writes JSON-LD calls it: home, blog, blog article, listing and PlaceLanding. It is SSR-safe, because `@angular/ssr` serialises the document before it destroys the platform.
@@ -121,12 +128,18 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
 
 **Sitemap.** `server.ts` answers `/sitemap.xml` before `express.static`. URLs come from the static page
 list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is prefixed with every
-`INDEXED_LOCALE_CODES` language and carries its own `hreflang` block.
+`INDEXED_LOCALE_CODES` language and carries its own `hreflang` block. The exception is a
+`SINGLE_LANGUAGE_PAGES` entry (`pageLocales`/`pageAlternates`): it is listed once, at its
+language, with no `hreflang` block.
 
 **robots.txt.** `server.ts` answers `/robots.txt` before `express.static`, from `renderRobotsTxt`. Each
 of `DISALLOWED_PATHS` is disallowed bare and under every `LOCALE_CODES` prefix (all routable languages,
 not only the indexed ones). `host` is anchored (`$`, `/`, `?`) so `/xx/hostel/…` and `/xx/hostels/…`
 stay crawlable. Search is deliberately not blocked; its pages carry their own canonical or `noindex`.
+Only an unfiltered search for a curated place, arriving with no viewport and with the map on the place,
+canonicalises (to its landing page). A search link that arrives carrying a viewport (all four
+`ne_*`/`sw_*` keys valid) is a view: `noindex`, no canonical, in the server HTML too; see
+[search-and-discovery](./search-and-discovery.md).
 
 **Translations on the server.** `FsTranslationLoader` reads `public/i18n/<lang>.json` from disk, trying
 `../browser/i18n` and then `apps/web/public/i18n` for `ng serve`. It registers the read with
@@ -231,8 +244,12 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   (`arrival | place | everywhere | filter | map | retry`, `search-trigger.ts`) tells pans from
   searches; filter on `trigger != map` for searches. Added 2026-10-18 (Trello #157); earlier events
   carry none, and GA reports it only once it is registered as an event-scoped custom dimension.
-- **The legal pages are English text at 18 language URLs**, each self-canonical with `hreflang` to
-  match the sitemap, which claims translations that do not exist (Trello #139).
+- **The legal pages and `/credits` are English text at 18 language URLs.** Since Trello #139, every
+  language version canonicalises to `/en/…` with no `hreflang`, and the sitemap lists only the
+  English URL. A new English-only page needs `contentLocale: 'en'` on its route **and** a
+  `SINGLE_LANGUAGE_PAGES` entry; `app.routes.spec.ts` fails if the two disagree. Search Console will
+  show the old `/xx/` copies as "Alternate page with proper canonical tag"; that is expected. Blog
+  articles are English bodies with full `hreflang` too (Trello #197, open).
 - **The e2e `waitForClient` also waits for the startup veil and the boot splash.** Both are full-screen
   and swallow clicks; the veil can legitimately stay up to six seconds (`StartupGate`).
 - The sitemap leaves out `/search` and `/hostel/:id` on purpose (see the comment in `apps/web/src/app/features/public/landing/sitemap-urls.ts`).
@@ -243,6 +260,7 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 - [The sitemap is generated by the SSR server from route data](../decisions/ssr-seo-and-prerender/sitemap-served-by-the-ssr-server.md)
 - [Every route declares who owns its head; undeclared means noindex](../decisions/ssr-seo-and-prerender/route-level-head-ownership.md)
 - [The title is part of the head; analytics waits for it to settle](../decisions/ssr-seo-and-prerender/title-is-part-of-the-head.md)
+- [Single-language pages canonicalise to their language, with no hreflang](../decisions/ssr-seo-and-prerender/single-language-pages-canonicalise-to-their-language.md)
 
 ## See also
 

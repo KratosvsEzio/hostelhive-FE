@@ -26,6 +26,8 @@ function subscription(overrides: Partial<BillingSubscription> = {}): BillingSubs
     grace_until: null,
     scheduled_plan: null,
     cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
     ...overrides,
   };
 }
@@ -39,6 +41,8 @@ function billing(overrides: Partial<HostBilling> = {}): HostBilling {
     currency: 'PKR',
     country_code: 'PK',
     payment_methods: ['safepay'],
+    auto_renew: false,
+    saved_card: null,
     subscription: subscription(),
     features: ['listing', 'crm'],
     open_invoice: null,
@@ -200,6 +204,69 @@ describe('BillingBanner', () => {
 
       expect(dismissible).toEqual(['cancel-pending', 'renewing']);
     });
+  });
+
+  describe('with auto-renew on', () => {
+    const secondary = (el: HTMLElement) =>
+      el.querySelector('[data-testid="billing-banner-secondary-action"]');
+    const primary = (el: HTMLElement) => el.querySelector('[data-testid="billing-banner-action"]');
+
+    function autoPastDue(withInvoice = false): BannerInput {
+      return owner(
+        billing({
+          auto_renew: true,
+          open_invoice: withInvoice ? OPEN_INVOICE : null,
+          subscription: withSlug('past-due', {
+            current_period_end: iso(NOW - DAY),
+            grace_until: iso(NOW + 3 * DAY),
+          }),
+        }),
+      );
+    }
+
+    it('shows Go to billing instead of Renew on a renewing plan, still dismissible', () => {
+      const el = mount(owner(billing({ auto_renew: true })));
+
+      expect(section(el)?.getAttribute('data-kind')).toBe('renewing');
+      expect(primary(el)?.textContent?.trim()).toBe('hostAccess.goToBilling');
+      expect(primary(el)?.getAttribute('href')).toMatch(/\/host\/nHelLt\/subscription$/);
+      expect(secondary(el)).toBeNull();
+      expect(el.querySelector('[data-testid="billing-banner-dismiss"]')).not.toBeNull();
+    });
+
+    it('shows Go to billing on a renew-due plan', () => {
+      const sub = subscription({ current_period_end: iso(NOW - HOUR) });
+      const el = mount(owner(billing({ auto_renew: true, subscription: sub })));
+
+      expect(section(el)?.getAttribute('data-kind')).toBe('renew-due');
+      expect(primary(el)?.textContent?.trim()).toBe('hostAccess.goToBilling');
+    });
+
+    it('renders two actions while past due: update the card, and pay the open invoice', () => {
+      const el = mount(autoPastDue(true));
+
+      expect(primary(el)?.textContent?.trim()).toBe('hostAccess.updateCard');
+      expect(primary(el)?.getAttribute('href')).toMatch(/\/host\/nHelLt\/subscription#saved-card$/);
+      expect(secondary(el)?.textContent?.trim()).toBe('hostBilling.pay');
+      expect(secondary(el)?.getAttribute('href')).toMatch(/\/host\/nHelLt\/subscription\/pay\/inv1$/);
+      expect(countdown(el)).toBe('hostAccess.timeLeft');
+    });
+
+    it('renders only the card action while past due with no open invoice', () => {
+      const el = mount(autoPastDue());
+
+      expect(primary(el)?.textContent?.trim()).toBe('hostAccess.updateCard');
+      expect(secondary(el)).toBeNull();
+    });
+  });
+
+  it('renders no secondary action and the usual links when auto-renew is off', () => {
+    const el = mount(pastDue(3 * DAY));
+
+    expect(el.querySelector('[data-testid="billing-banner-secondary-action"]')).toBeNull();
+    const link = el.querySelector('[data-testid="billing-banner-action"]');
+    expect(link?.textContent?.trim()).toBe('hostBilling.renew');
+    expect(link?.getAttribute('href')).toMatch(/\/host\/nHelLt\/subscription$/);
   });
 
   it('renders nothing when no banner applies', () => {

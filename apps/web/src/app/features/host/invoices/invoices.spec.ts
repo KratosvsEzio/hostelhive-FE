@@ -53,6 +53,8 @@ interface Internals {
   markPaid(inv: Invoice, event: MouseEvent): void;
   editingInvoice(): Invoice | null;
   selected(): Invoice | undefined;
+  onInvoiceUpdated(saved: Invoice | null): void;
+  onInvoiceCreated(saved: Invoice | null): void;
 }
 
 type Page = HostPage<Invoices>;
@@ -451,6 +453,33 @@ describe('Invoices page', () => {
 
       expect(internals(page).editingInvoice()?.id).toBe('rb-2');
       expect(page.el.querySelector('hh-invoice-form-drawer')).not.toBeNull();
+    });
+  });
+
+  // The renter-bills index refreshes before the backend answers a write (BE #65), so a
+  // fallback re-read gets the saved bill on the very next request, with no delay.
+  describe('saving without the bill in the reply', () => {
+    it('re-reads the list straight away after an edit', async () => {
+      const deps = depsWith(invoicesReply([invoice()], { aggs: RENT_AGGS }));
+      const page = await open({ billing: 'month', deps });
+      expect(deps.ops.invoices).toHaveBeenCalledTimes(1);
+
+      internals(page).onInvoiceUpdated(null);
+      await flush(page);
+
+      expect(deps.ops.invoices).toHaveBeenCalledTimes(2);
+      expect(deps.refetch.track).not.toHaveBeenCalled();
+    });
+
+    it('re-reads the list straight away after a create', async () => {
+      const deps = depsWith(invoicesReply([invoice()], { aggs: RENT_AGGS }));
+      const page = await open({ billing: 'month', deps });
+
+      internals(page).onInvoiceCreated(null);
+      await flush(page);
+
+      expect(deps.ops.invoices).toHaveBeenCalledTimes(2);
+      expect(deps.refetch.track).not.toHaveBeenCalled();
     });
   });
 

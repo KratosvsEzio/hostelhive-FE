@@ -1,17 +1,21 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { signal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { TranslocoService } from '@jsverse/transloco';
-import { Subject } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import type {
   ApiError,
   BillingInvoice,
   BillingPayment,
+  BillingSubscription,
+  HostBilling,
+  SavedCard,
+  StartedPayment,
 } from '@hostelhive/data-access';
-import { BillingApi, HostPropertyStore } from '@services';
+import { BillingApi, HostBillingStore, HostPropertyStore } from '@services';
 import { API_CONFIG } from '@core/api-config';
 import { SessionStore } from '@core/auth/session-store';
 import { LocaleStore } from '@core/i18n/locale-store';
@@ -28,6 +32,9 @@ const COPY = {
   },
   hostPayment: {
     payAmount: 'Pay {{amount}}',
+    payWithCard: 'Pay {{amount}} with {{card}}',
+    saveCardReplace: 'Save this card instead of {{card}}',
+    chargeConfirmTitle: 'Charge {{amount}} to {{card}}?',
     paidOn: 'Paid on {{date}}',
     chargedNotApplied: 'Contact us and quote invoice {{number}}.',
   },
@@ -63,6 +70,7 @@ function payment(over: Partial<BillingPayment> = {}): BillingPayment {
     succeeded_at: null,
     created_at: '2026-10-11T09:05:00+05:00',
     invoice_id: 'inv0Ab',
+    initiated_by: 'customer',
     ...over,
   };
 }
@@ -89,6 +97,71 @@ function invoice(over: Partial<BillingInvoice> = {}): BillingInvoice {
   };
 }
 
+const CARD: SavedCard = { label: 'Visa •••• 4242', expires_on: '2027-12-31' };
+
+const DECLINE = 'Your card was declined: Insufficient funds';
+
+function paidInvoice(over: Partial<BillingInvoice> = {}): BillingInvoice {
+  return invoice({
+    status: status('paid', 'Paid'),
+    paid_at: '2026-10-11T10:00:00+05:00',
+    payments: [payment({ status: status('succeeded'), failure_reason: null })],
+    ...over,
+  });
+}
+
+function pendingPayment(over: Partial<BillingPayment> = {}): BillingPayment {
+  return payment({ status: status('pending'), failure_reason: null, ...over });
+}
+
+function subscription(
+  over: Partial<BillingSubscription> = {},
+): BillingSubscription {
+  return {
+    id: 'sub1',
+    status: status('active', 'Active'),
+    currency: 'PKR',
+    plan: { id: 'pBasic', code: 'basic', name: 'Basic', features: [] },
+    current_period_start: '2026-10-11T09:00:00+05:00',
+    current_period_end: '2026-11-11T09:00:00+05:00',
+    grace_until: null,
+    scheduled_plan: null,
+    cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
+    ...over,
+  };
+}
+
+function billing(over: Partial<HostBilling> = {}): HostBilling {
+  return {
+    currency: 'PKR',
+    country_code: 'PK',
+    payment_methods: ['safepay'],
+    auto_renew: false,
+    saved_card: null,
+    subscription: subscription(),
+    features: [],
+    open_invoice: null,
+    plans: [],
+    ...over,
+  };
+}
+
+/** Billing for a hostel with a card on file, which the server then offers to charge. */
+function withCard(over: Partial<HostBilling> = {}): HostBilling {
+  return billing({
+    payment_methods: ['safepay', 'saved_card'],
+    saved_card: CARD,
+    auto_renew: true,
+    ...over,
+  });
+}
+
+function started(inv: BillingInvoice, pay: BillingPayment): StartedPayment {
+  return { payment: pay, checkout_url: null, invoice: inv };
+}
+
 function apiError(status: number, serverMessages?: string[]): ApiError {
   return { status, code: 'error', message: 'internal', serverMessages };
 }
@@ -103,10 +176,24 @@ describe('PaymentStep', () => {
   let loads: Subject<BillingInvoice>[];
   let starts: Subject<void>[];
   let restored: Subject<void>;
-  let api: { invoice: ReturnType<typeof vi.fn> };
+  let charges: Subject<StartedPayment>[];
+  let cardSaves: Subject<void>[];
+  // What each refresh of the invoice's payments answers, in turn; the last one repeats.
+  let refreshes: (BillingInvoice | ApiError)[];
+  let api: {
+    invoice: ReturnType<typeof vi.fn>;
+    payWithSavedCard: ReturnType<typeof vi.fn>;
+    refreshInvoicePayments: ReturnType<typeof vi.fn>;
+  };
   let checkout: {
     start: ReturnType<typeof vi.fn>;
+    startCardSave: ReturnType<typeof vi.fn>;
     restored$: Subject<void>;
+  };
+  let store: {
+    hostelId: WritableSignal<string>;
+    billing: WritableSignal<HostBilling | null>;
+    refresh: ReturnType<typeof vi.fn>;
   };
 
   async function open(
@@ -114,16 +201,34 @@ describe('PaymentStep', () => {
       permissions?: readonly string[];
       state?: Record<string, unknown>;
       withoutHostel?: boolean;
+      billing?: HostBilling | null;
+      billingHostel?: string;
     } = {},
   ): Promise<HTMLElement> {
     loads = [];
     starts = [];
+    charges = [];
+    cardSaves = [];
+    refreshes = [];
     restored = new Subject<void>();
     api = {
       invoice: vi.fn(() => {
         const s = new Subject<BillingInvoice>();
         loads.push(s);
         return s.asObservable();
+      }),
+      payWithSavedCard: vi.fn(() => {
+        const s = new Subject<StartedPayment>();
+        charges.push(s);
+        return s.asObservable();
+      }),
+      refreshInvoicePayments: vi.fn(() => {
+        const next =
+          refreshes.length > 1 ? refreshes.shift() : refreshes[0];
+        if (!next) return of(invoice({ payments: [pendingPayment()] }));
+        return 'status' in next && typeof next.status === 'number'
+          ? throwError(() => next)
+          : of(next as BillingInvoice);
       }),
     };
     checkout = {
@@ -132,7 +237,17 @@ describe('PaymentStep', () => {
         starts.push(s);
         return s.asObservable();
       }),
+      startCardSave: vi.fn(() => {
+        const s = new Subject<void>();
+        cardSaves.push(s);
+        return s.asObservable();
+      }),
       restored$: restored,
+    };
+    store = {
+      hostelId: signal(opts.billingHostel ?? 'nHelLt'),
+      billing: signal(opts.billing ?? null),
+      refresh: vi.fn(),
     };
     const granted = new Set(opts.permissions ?? [PAY_PERMISSION]);
     TestBed.configureTestingModule({
@@ -161,6 +276,7 @@ describe('PaymentStep', () => {
         { provide: API_CONFIG, useValue: { baseUrl: '' } },
         { provide: BillingApi, useValue: api },
         { provide: SafepayCheckout, useValue: checkout },
+        { provide: HostBillingStore, useValue: store },
         {
           provide: SessionStore,
           useValue: { hasPermission: (f: string) => granted.has(f) },
@@ -195,6 +311,32 @@ describe('PaymentStep', () => {
     return el;
   }
 
+  async function openBilled(
+    hostBilling: HostBilling | null,
+    inv: BillingInvoice = invoice(),
+    billingHostel?: string,
+  ): Promise<HTMLElement> {
+    const el = await open({ billing: hostBilling, billingHostel });
+    respond(inv);
+    return el;
+  }
+
+  function wait(ms: number): void {
+    vi.advanceTimersByTime(ms);
+    harness.detectChanges();
+  }
+
+  function answerCharge(value: StartedPayment, index = charges.length - 1): void {
+    charges[index].next(value);
+    charges[index].complete();
+    harness.detectChanges();
+  }
+
+  function refuseCharge(err: unknown, index = charges.length - 1): void {
+    charges[index].error(err);
+    harness.detectChanges();
+  }
+
   function respond(inv: BillingInvoice, index = loads.length - 1): void {
     loads[index].next(inv);
     loads[index].complete();
@@ -225,7 +367,31 @@ describe('PaymentStep', () => {
     );
   }
 
+  function savedCardButton(el: HTMLElement): HTMLButtonElement | null {
+    return el.querySelector('button[data-testid="pay-saved-card"]');
+  }
+
+  function saveCardBox(el: HTMLElement): HTMLInputElement | null {
+    return el.querySelector('input[data-testid="save-card"]');
+  }
+
+  function confirmButtons(el: HTMLElement): HTMLButtonElement[] {
+    const modal = byTestId(el, 'charge-confirm');
+    return Array.from(
+      modal?.querySelectorAll<HTMLButtonElement>('div.flex.gap-3 button') ?? [],
+    );
+  }
+
+  /** Clicks the saved-card button and confirms the dialog it opens. */
+  function chargeCard(el: HTMLElement): void {
+    savedCardButton(el)?.click();
+    harness.detectChanges();
+    confirmButtons(el).at(-1)?.click();
+    harness.detectChanges();
+  }
+
   afterEach(() => {
+    vi.useRealTimers();
     window.history.replaceState(null, '');
     TestBed.resetTestingModule();
   });
@@ -452,7 +618,9 @@ describe('PaymentStep', () => {
       payButton(el)?.click();
       harness.detectChanges();
 
-      expect(checkout.start).toHaveBeenCalledWith('inv0Ab', 'nHelLt');
+      expect(checkout.start).toHaveBeenCalledWith('inv0Ab', 'nHelLt', {
+        saveCard: false,
+      });
       expect(payButton(el)?.textContent).toContain('hostPayment.redirecting');
       expect(payButton(el)?.hasAttribute('disabled')).toBe(true);
       expect(payButton(el)?.getAttribute('aria-busy')).toBe('true');
@@ -804,6 +972,442 @@ describe('PaymentStep', () => {
 
       expect(byTestId(el, 'status-pill')).toBeNull();
       expect(el.textContent).not.toContain('Unpaid');
+    });
+  });
+
+  describe('saving the card at checkout', () => {
+    it('is not offered before the hostel billing is known, so the step reads as before', async () => {
+      const el = await openBilled(null);
+
+      expect(saveCardBox(el)).toBeNull();
+      expect(byTestId(el, 'save-card-locked')).toBeNull();
+      expect(savedCardButton(el)).toBeNull();
+      expect(plain(payButton(el)?.textContent)).toBe('Pay PKR 5,000');
+      expect(byTestId(el, 'provider-notice')?.textContent).toContain(
+        'hostPayment.providerNotice',
+      );
+    });
+
+    it('is not offered from billing that belongs to another hostel', async () => {
+      const el = await openBilled(billing(), invoice(), 'other');
+
+      expect(saveCardBox(el)).toBeNull();
+    });
+
+    it('offers an unticked box, with its hint, beside the usual Pay when there is no card', async () => {
+      const el = await openBilled(billing());
+
+      const box = saveCardBox(el);
+      expect(box).not.toBeNull();
+      expect(box?.checked).toBe(false);
+      expect(byTestId(el, 'save-card-label')?.textContent).toContain(
+        'hostPayment.saveCard',
+      );
+      const hintId = box?.getAttribute('aria-describedby') ?? '';
+      expect(hintId).not.toBe('');
+      expect(el.querySelector(`[id="${hintId}"]`)?.textContent).toContain(
+        'hostPayment.saveCardHint',
+      );
+      expect(plain(payButton(el)?.textContent)).toBe('Pay PKR 5,000');
+      expect(savedCardButton(el)).toBeNull();
+      expect(byTestId(el, 'provider-notice')?.textContent).toContain(
+        'hostPayment.providerNotice',
+      );
+    });
+
+    it('names the card it would replace when one is saved', async () => {
+      const el = await openBilled(withCard());
+
+      expect(plain(byTestId(el, 'save-card-label')?.textContent)).toBe(
+        'Save this card instead of Visa •••• 4242',
+      );
+    });
+
+    it('is not offered when Safepay is not a way to pay this hostel', async () => {
+      const el = await openBilled(billing({ payment_methods: ['bank_transfer'] }));
+
+      expect(saveCardBox(el)).toBeNull();
+      expect(byTestId(el, 'save-card-locked')).toBeNull();
+    });
+
+    it('is not offered while Safepay Subscriptions bills the plan', async () => {
+      const el = await openBilled(
+        withCard({
+          subscription: subscription({ billed_by: 'safepay_subscription' }),
+        }),
+      );
+
+      expect(saveCardBox(el)).toBeNull();
+      expect(savedCardButton(el)).toBeNull();
+      expect(plain(payButton(el)?.textContent)).toBe('Pay PKR 5,000');
+    });
+
+    it('is offered again once a Safepay-billed plan is no longer live', async () => {
+      const el = await openBilled(
+        billing({
+          subscription: subscription({
+            billed_by: 'safepay_subscription',
+            status: status('expired', 'Expired'),
+          }),
+        }),
+      );
+
+      expect(saveCardBox(el)).not.toBeNull();
+    });
+
+    it('is replaced by a note when a Safepay checkout for this invoice is already open', async () => {
+      const el = await openBilled(
+        billing(),
+        invoice({ payments: [pendingPayment()] }),
+      );
+
+      expect(saveCardBox(el)).toBeNull();
+      expect(byTestId(el, 'save-card-locked')?.textContent).toContain(
+        'hostPayment.saveCardLocked',
+      );
+      expect(payButton(el)).not.toBeNull();
+    });
+
+    it('sends the tick to the checkout start', async () => {
+      const el = await openBilled(billing());
+
+      saveCardBox(el)?.click();
+      harness.detectChanges();
+      expect(saveCardBox(el)?.checked).toBe(true);
+
+      payButton(el)?.click();
+      harness.detectChanges();
+
+      expect(checkout.start).toHaveBeenCalledWith('inv0Ab', 'nHelLt', {
+        saveCard: true,
+      });
+      expect(saveCardBox(el)?.disabled).toBe(true);
+    });
+
+    it('sends no tick once the invoice turns out to have an open checkout', async () => {
+      const el = await openBilled(billing());
+      saveCardBox(el)?.click();
+      harness.detectChanges();
+
+      restored.next();
+      harness.detectChanges();
+      respond(invoice({ payments: [pendingPayment()] }));
+      payButton(el)?.click();
+
+      expect(checkout.start).toHaveBeenCalledWith('inv0Ab', 'nHelLt', {
+        saveCard: false,
+      });
+    });
+  });
+
+  describe('paying with the saved card', () => {
+    it('offers the card by name with the amount, and another card as the secondary way', async () => {
+      const el = await openBilled(withCard());
+
+      const button = savedCardButton(el);
+      expect(button?.textContent).toContain('⁨PKR 5,000⁩');
+      expect(button?.textContent).toContain('⁨Visa •••• 4242⁩');
+      expect(plain(button?.textContent)).toBe(
+        'Pay PKR 5,000 with Visa •••• 4242',
+      );
+      expect(button?.getAttribute('color')).toBe('primary');
+      expect(payButton(el)?.textContent).toContain('hostPayment.payAnotherCard');
+      expect(payButton(el)?.getAttribute('variant')).toBe('text');
+
+      const provider = byTestId(el, 'provider-notice')?.textContent ?? '';
+      expect(provider).toContain('hostPayment.savedCardNotice');
+      expect(provider).not.toContain('hostPayment.providerNotice');
+    });
+
+    it('is not offered when the server does not list the saved card as a way to pay', async () => {
+      const el = await openBilled(
+        withCard({ payment_methods: ['safepay'] }),
+      );
+
+      expect(savedCardButton(el)).toBeNull();
+      expect(plain(payButton(el)?.textContent)).toBe('Pay PKR 5,000');
+    });
+
+    it('is not offered without the payment permission', async () => {
+      const el = await open({
+        billing: withCard(),
+        permissions: ['core:Invoice:create'],
+      });
+      respond(invoice());
+
+      expect(savedCardButton(el)).toBeNull();
+      expect(byTestId(el, 'pay-forbidden')).not.toBeNull();
+    });
+
+    it('asks first, quoting the amount and the card, and charges nothing on cancel', async () => {
+      const el = await openBilled(withCard());
+
+      savedCardButton(el)?.click();
+      harness.detectChanges();
+
+      const modal = byTestId(el, 'charge-confirm');
+      expect(plain(modal?.querySelector('h2')?.textContent)).toBe(
+        'Charge PKR 5,000 to Visa •••• 4242?',
+      );
+      expect(api.payWithSavedCard).not.toHaveBeenCalled();
+
+      confirmButtons(el)[0].click();
+      harness.detectChanges();
+
+      expect(byTestId(el, 'charge-confirm')).toBeNull();
+      expect(api.payWithSavedCard).not.toHaveBeenCalled();
+    });
+
+    it('charges once on confirm and holds every button while the charge is in flight', async () => {
+      const el = await openBilled(withCard());
+
+      chargeCard(el);
+
+      expect(byTestId(el, 'charge-confirm')).toBeNull();
+      expect(api.payWithSavedCard).toHaveBeenCalledWith('inv0Ab');
+      const button = savedCardButton(el);
+      expect(button?.textContent).toContain('hostPayment.charging');
+      expect(button?.hasAttribute('disabled')).toBe(true);
+      expect(button?.getAttribute('aria-busy')).toBe('true');
+      expect(payButton(el)?.hasAttribute('disabled')).toBe(true);
+      expect(saveCardBox(el)?.disabled).toBe(true);
+
+      savedCardButton(el)?.click();
+      payButton(el)?.click();
+      harness.detectChanges();
+
+      expect(byTestId(el, 'charge-confirm')).toBeNull();
+      expect(api.payWithSavedCard).toHaveBeenCalledTimes(1);
+      expect(checkout.start).not.toHaveBeenCalled();
+    });
+
+    it('succeeded: shows the returned invoice as paid and refreshes the billing', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+
+      answerCharge(
+        started(
+          paidInvoice(),
+          payment({ status: status('succeeded'), failure_reason: null }),
+        ),
+      );
+
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
+      expect(byTestId(el, 'go-to-billing')).not.toBeNull();
+      expect(savedCardButton(el)).toBeNull();
+      expect(store.refresh).toHaveBeenCalledTimes(1);
+      expect(api.refreshInvoicePayments).not.toHaveBeenCalled();
+    });
+
+    it('pending: keeps charging while it polls, and shows paid only once the invoice reads paid', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      vi.useFakeTimers();
+      refreshes = [invoice({ payments: [pendingPayment()] }), paidInvoice()];
+
+      answerCharge(
+        started(invoice({ payments: [pendingPayment()] }), pendingPayment()),
+      );
+      wait(0);
+
+      expect(api.refreshInvoicePayments).toHaveBeenCalledWith('inv0Ab');
+      expect(savedCardButton(el)?.textContent).toContain('hostPayment.charging');
+      expect(byTestId(el, 'status-pill')).toBeNull();
+      expect(store.refresh).not.toHaveBeenCalled();
+
+      wait(2500);
+
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
+      expect(store.refresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('pending: says it is still confirming when the wait runs out, never paid, and checks again', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      vi.useFakeTimers();
+      refreshes = [invoice({ payments: [pendingPayment()] })];
+
+      answerCharge(
+        started(invoice({ payments: [pendingPayment()] }), pendingPayment()),
+      );
+      wait(60_000);
+
+      expect(byTestId(el, 'charge-slow')?.textContent).toContain(
+        'hostPayment.savedCardSlow',
+      );
+      expect(byTestId(el, 'status-pill')).toBeNull();
+      expect(store.refresh).not.toHaveBeenCalled();
+      expect(savedCardButton(el)?.hasAttribute('disabled')).toBe(false);
+
+      const calls = api.refreshInvoicePayments.mock.calls.length;
+      refreshes = [paidInvoice()];
+      byTestId(el, 'check-charge')?.click();
+      wait(0);
+
+      expect(api.refreshInvoicePayments.mock.calls.length).toBe(calls + 1);
+      expect(byTestId(el, 'charge-slow')).toBeNull();
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
+    });
+
+    it('pending: a charge that then fails is told by the attempt notice, not as paid', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      vi.useFakeTimers();
+      refreshes = [invoice({ payments: [payment()] })];
+
+      answerCharge(
+        started(invoice({ payments: [pendingPayment()] }), pendingPayment()),
+      );
+      wait(0);
+
+      expect(byTestId(el, 'attempt-notice')?.textContent).toContain(
+        'hostPayment.lastAttemptFailed',
+      );
+      expect(byTestId(el, 'status-pill')).toBeNull();
+      expect(savedCardButton(el)?.hasAttribute('disabled')).toBe(false);
+      expect(store.refresh).not.toHaveBeenCalled();
+    });
+
+    it('declined: shows the bank reason verbatim with Update card and Pay with another card', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+
+      refuseCharge(apiError(422, [DECLINE]));
+
+      expect(byTestId(el, 'pay-message')?.textContent?.trim()).toBe(DECLINE);
+      expect(byTestId(el, 'update-card')?.textContent).toContain(
+        'hostPayment.updateCard',
+      );
+      expect(byTestId(el, 'pay-another-card')?.textContent).toContain(
+        'hostPayment.payAnotherCard',
+      );
+      // The alert carries the other-card action, so it is not offered twice.
+      expect(payButton(el)).toBeNull();
+      expect(savedCardButton(el)?.hasAttribute('disabled')).toBe(false);
+    });
+
+    it('declined: Update card saves a new card at Safepay and remembers this invoice', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      refuseCharge(apiError(422, [DECLINE]));
+
+      byTestId(el, 'update-card')?.click();
+      harness.detectChanges();
+
+      expect(checkout.startCardSave).toHaveBeenCalledWith(
+        'nHelLt',
+        CARD,
+        'inv0Ab',
+      );
+      expect(byTestId(el, 'update-card')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
+      expect(byTestId(el, 'pay-message')?.textContent?.trim()).toBe(DECLINE);
+    });
+
+    it('declined: a refused card save is explained as any refused start', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      refuseCharge(apiError(422, [DECLINE]));
+      byTestId(el, 'update-card')?.click();
+      harness.detectChanges();
+
+      cardSaves[0].error(apiError(500));
+      harness.detectChanges();
+
+      expect(byTestId(el, 'start-failed')).not.toBeNull();
+      expect(byTestId(el, 'update-card')).toBeNull();
+    });
+
+    it('declined: Pay with another card leaves for Safepay as usual', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      refuseCharge(apiError(422, [DECLINE]));
+
+      byTestId(el, 'pay-another-card')?.click();
+      harness.detectChanges();
+
+      expect(checkout.start).toHaveBeenCalledWith('inv0Ab', 'nHelLt', {
+        saveCard: false,
+      });
+      expect(byTestId(el, 'pay-another-card')?.textContent).toContain(
+        'hostPayment.redirecting',
+      );
+    });
+
+    it('in progress: shows the server words and waits for the running charge', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+      vi.useFakeTimers();
+      refreshes = [paidInvoice()];
+      const message =
+        'A card payment for invoice HH-2026-0007 is already in progress';
+
+      refuseCharge(apiError(422, [message]));
+
+      expect(byTestId(el, 'pay-message')?.textContent?.trim()).toBe(message);
+      expect(savedCardButton(el)?.textContent).toContain('hostPayment.charging');
+
+      wait(0);
+
+      expect(api.refreshInvoicePayments).toHaveBeenCalledWith('inv0Ab');
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
+      expect(byTestId(el, 'pay-message')).toBeNull();
+    });
+
+    it('in progress from the Safepay button waits for the running charge too', async () => {
+      const el = await openWith(invoice());
+      vi.useFakeTimers();
+      refreshes = [paidInvoice()];
+
+      payButton(el)?.click();
+      failStart(
+        apiError(422, [
+          'A card payment for invoice HH-2026-0007 is already in progress',
+        ]),
+      );
+      wait(0);
+
+      expect(api.refreshInvoicePayments).toHaveBeenCalledTimes(1);
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
+    });
+
+    it('a server failure shows our generic copy and lets the payer try again', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+
+      refuseCharge(apiError(500));
+
+      expect(byTestId(el, 'start-failed')?.textContent).toContain(
+        'hostPayment.startFailed',
+      );
+      expect(savedCardButton(el)?.hasAttribute('disabled')).toBe(false);
+
+      chargeCard(el);
+      expect(api.payWithSavedCard).toHaveBeenCalledTimes(2);
+      expect(byTestId(el, 'start-failed')).toBeNull();
+    });
+
+    it('an expired invoice hides both ways to pay and offers a new plan choice', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+
+      refuseCharge(apiError(422, ['This invoice has expired']));
+
+      expect(savedCardButton(el)).toBeNull();
+      expect(payButton(el)).toBeNull();
+      expect(byTestId(el, 'choose-plan-again')).not.toBeNull();
+    });
+
+    it('a settled invoice reads the invoice again', async () => {
+      const el = await openBilled(withCard());
+      chargeCard(el);
+
+      refuseCharge(apiError(422, ['Invoice HH-2026-0007 is paid']));
+
+      expect(api.invoice).toHaveBeenCalledTimes(2);
+      respond(paidInvoice());
+      expect(byTestId(el, 'status-pill')?.textContent?.trim()).toBe('Paid');
     });
   });
 });

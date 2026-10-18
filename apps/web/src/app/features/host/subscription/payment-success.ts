@@ -26,7 +26,7 @@ function lastSafepayFailed(invoice: BillingInvoice): boolean {
 }
 
 /** The state a poll tick settles the page in, or null while it is still confirming. */
-function settledView(tick: PollTick): ReturnView | null {
+export function settledView(tick: PollTick): ReturnView | null {
   if ('error' in tick) {
     if (tick.error?.status === 403) return { kind: 'forbidden' };
     if (tick.error?.status === 404) return { kind: 'notFound' };

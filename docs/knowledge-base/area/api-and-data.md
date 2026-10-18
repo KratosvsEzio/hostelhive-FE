@@ -8,7 +8,7 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 - `apps/web/src/app/core/api-resource.ts` — `ApiClient` (`get/post/put/patch/delete`, prefixes `baseUrl`, each with an optional trailing `HttpContext`), `ApiRequestOptions` / `requestContextArgs` (a service method's per-call toast opt-out), and `apiGet()` (an `httpResource` wrapper, currently unused).
 - `apps/web/src/app/core/tokens.ts` — `ACCESS_TOKEN`, `UNAUTHORIZED_HANDLER`, `API_ERROR_NOTIFIER`, `SUPPRESS_ERROR_TOAST`.
 - `apps/web/src/app/core/interceptors/` — `auth-interceptor.ts`, `push-token-interceptor.ts`, `error-interceptor.ts`, `ssr-timeout-interceptor.ts`.
-- `apps/web/src/app/core/refetch-delay.ts` — `RefetchDelay` + interceptor: delays the next matching GET ~1 s after a mutation so the search index can settle.
+- `apps/web/src/app/core/refetch-delay.ts` — `RefetchDelay` + interceptor: delays the next matching GET ~1 s after a mutation so the search index can settle. **Being retired; don't add new calls.** Ask the backend to `prepend RefreshOnReindex` on the lagging index instead. It's still used by Rooms, Bookings (`/rooms`), Team (`/staffs`) and notifications (page and bell) until Trello #198 lands; Invoices no longer uses it ([decision](../decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md)).
 - `apps/web/src/app/core/errors/api-error-message.ts` — `extractServerMessages`, `toToastCopy`.
 - `apps/web/src/app/core/notification.service.ts` — toasts (`show/error/info/success`, `muteErrors`).
 - `apps/web/src/app/util/models/` — request/response types, exported as `@hostelhive/data-access` (`tsconfig.base.json`); `api-error.ts` defines `ApiError`, `paginated.ts` `Paginated<T>`.

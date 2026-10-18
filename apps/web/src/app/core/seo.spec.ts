@@ -200,6 +200,115 @@ describe('Seo', () => {
     });
   });
 
+  describe('a page whose content exists in one language', () => {
+    const LEGAL = { title: 'Urdu tab title', description: 'Urdu description', path: '/privacy-policy' };
+
+    it('canonicalises every prefix to the content language, with no hreflang, and stays indexable', () => {
+      active.set('ur');
+
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/privacy-policy`);
+      expect(all(OG_URL)).toHaveLength(1);
+      expect(attr(OG_URL, 'content')).toBe(`${SITE_ORIGIN}/en/privacy-policy`);
+      expect(all(HREFLANG)).toHaveLength(0);
+      expect(attr(ROBOTS, 'content')).toBe('index, follow, max-image-preview:large');
+    });
+
+    it('takes og:locale from the content language, matching og:url', () => {
+      active.set('ur');
+
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      expect(all(OG_LOCALE)).toHaveLength(1);
+      expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+      expect(all(OG_LOCALE_ALTERNATE)).toHaveLength(0);
+    });
+
+    it('keeps the title and description it was given, in the reader language', () => {
+      active.set('ur');
+
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      expect(document.title).toBe('Urdu tab title');
+      expect(attr('meta[property="og:title"]', 'content')).toBe('Urdu tab title');
+      expect(attr('meta[name="twitter:title"]', 'content')).toBe('Urdu tab title');
+      expect(attr('meta[name="description"]', 'content')).toBe('Urdu description');
+    });
+
+    it('declares no hreflang at the address of the content language either', () => {
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/privacy-policy`);
+      expect(all(HREFLANG)).toHaveLength(0);
+    });
+
+    it('lets noindex win: no canonical and no hreflang, with og:url in the content language', () => {
+      active.set('ur');
+
+      seo.apply({ ...LEGAL, noindex: true, contentLocale: 'en' });
+
+      expect(all(CANONICAL)).toHaveLength(0);
+      expect(all(HREFLANG)).toHaveLength(0);
+      expect(attr(ROBOTS, 'content')).toBe('noindex, nofollow');
+      expect(attr(OG_URL, 'content')).toBe(`${SITE_ORIGIN}/en/privacy-policy`);
+    });
+
+    it.each(['xx', ''])(
+      'ignores the unknown content language %j and treats the page as translated',
+      (code) => {
+        active.set('ur');
+
+        expect(() => seo.apply({ ...LEGAL, contentLocale: code })).not.toThrow();
+
+        expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/ur/privacy-policy`);
+        expect(all(HREFLANG)).toHaveLength(localeAlternates('/privacy-policy').length);
+        expect(attr(OG_LOCALE, 'content')).toBe('ur_PK');
+      },
+    );
+
+    it('writes no address without a path, but still og:locale from the content language', () => {
+      active.set('ur');
+
+      expect(() => seo.apply({ title: 'T', contentLocale: 'en' })).not.toThrow();
+
+      expect(all(CANONICAL)).toHaveLength(0);
+      expect(all(OG_URL)).toHaveLength(0);
+      expect(all(HREFLANG)).toHaveLength(0);
+      expect(attr(OG_LOCALE, 'content')).toBe('en_PK');
+    });
+
+    it('removes the hreflang set a previous page left and rewrites its canonical in place', () => {
+      active.set('ur');
+      seo.apply({ title: 'About', path: '/about' });
+      expect(all(HREFLANG)).toHaveLength(localeAlternates('/about').length);
+
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      expect(all(HREFLANG)).toHaveLength(0);
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/en/privacy-policy`);
+    });
+
+    it('gives the next translated page its own address and full hreflang set back', () => {
+      active.set('ur');
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      seo.apply({ title: 'About', path: '/about' });
+
+      expect(attr(CANONICAL, 'href')).toBe(`${SITE_ORIGIN}/ur/about`);
+      expect(all(HREFLANG)).toHaveLength(localeAlternates('/about').length);
+      expect(attr(OG_LOCALE, 'content')).toBe('ur_PK');
+    });
+
+    it('settles on a non-provisional apply, so analytics records the page once', () => {
+      seo.apply({ ...LEGAL, contentLocale: 'en' });
+
+      expect(seo.settled()).toBe(true);
+    });
+  });
+
   describe('settled', () => {
     it('is true before any apply, once strings are ready', () => {
       expect(seo.settled()).toBe(true);

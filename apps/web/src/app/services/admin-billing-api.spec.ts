@@ -44,6 +44,7 @@ const PAYMENT: BillingPayment = {
   succeeded_at: null,
   created_at: '2026-10-11T09:00:00Z',
   invoice_id: 'iNv7Q',
+  initiated_by: 'customer',
 };
 
 const INVOICE: BillingInvoice = {
@@ -119,6 +120,8 @@ const BILLING: HostBilling = {
   currency: 'PKR',
   country_code: 'PK',
   payment_methods: ['safepay'],
+  auto_renew: false,
+  saved_card: null,
   subscription: null,
   features: [],
   open_invoice: null,

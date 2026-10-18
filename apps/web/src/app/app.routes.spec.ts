@@ -11,6 +11,7 @@ import { at, loadLocale } from '@core/i18n/locale-files-testing';
 import { DISALLOWED_PATHS } from '@core/robots';
 import { CLIENT_ONLY } from './app.routes.server';
 import { sitemapPaths } from '@features/public/landing/sitemap-urls';
+import { SINGLE_LANGUAGE_PAGES, pageLocales } from '@core/i18n/content-locale';
 import { BLOG_POSTS } from '@features/public/blog/blog-posts';
 import { BillingPage } from '@features/host/subscription/billing-page';
 import { PaymentStep } from '@features/host/subscription/payment-step';
@@ -270,8 +271,13 @@ describe('who owns each route head', () => {
     const shallow = sitemapPaths().filter(
       (p) => p.split('/').length <= 3 && ['en', 'ur'].includes(p.split('/')[1]),
     );
+    // A single-language page still answers at /ur/…, but is listed in its own language only.
+    const listed = ['en', 'ur'].flatMap((code) =>
+      STATIC.filter((p) => pageLocales(p || '/').includes(code)).map((p) => `/${code}${p}`),
+    );
 
-    expect([...shallow].sort()).toEqual([...staticUrls].sort());
+    expect([...shallow].sort()).toEqual([...listed].sort());
+    expect(shallow).not.toContain('/ur/privacy-policy');
   });
 
   it('puts exactly the 8 index routes in the sitemap', () => {
@@ -282,9 +288,40 @@ describe('who owns each route head', () => {
     const paths = sitemapPaths();
     for (const path of indexPaths) {
       expect(paths, path).toContain(`/en/${path}`);
-      expect(paths, path).toContain(`/ur/${path}`);
+      if (SINGLE_LANGUAGE_PAGES[`/${path}`]) {
+        expect(paths, path).not.toContain(`/ur/${path}`);
+      } else {
+        expect(paths, path).toContain(`/ur/${path}`);
+      }
     }
   });
+
+  // The head reads the route data and the sitemap reads the table; two lists of one fact
+  // drift the first time somebody adds a page to only one of them.
+  it('marks exactly the single-language pages with their content language', () => {
+    const localised = appRoutes[0].children ?? [];
+    const marked = Object.fromEntries(
+      localised
+        .filter((r) => r.data?.['contentLocale'] !== undefined)
+        .map((r) => [`/${r.path}`, r.data?.['contentLocale']]),
+    );
+
+    expect(marked).toEqual(SINGLE_LANGUAGE_PAGES);
+    for (const r of localised.filter((x) => x.data?.['contentLocale'] !== undefined)) {
+      expect(r.data?.['head'], r.path).toBe('index');
+    }
+  });
+
+  // Unlisted is not unserved: a visitor browsing in Arabic still reads the page at /ar/.
+  it.each(['/ar/privacy-policy', '/de/terms-of-service', '/ar/service-policy', '/de/credits'])(
+    'settles %s on its own address as an English-content index page',
+    async (url) => {
+      const settled = await settleOn(url);
+
+      expect(settled.url).toBe(url);
+      expect(settled.head).toEqual({ head: 'index', contentLocale: 'en' });
+    },
+  );
 
   it.each([
     [`/en/blog/${BLOG_POSTS[0].slug}`],

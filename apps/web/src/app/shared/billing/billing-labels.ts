@@ -22,6 +22,16 @@ export function statusTone(slug: string | null | undefined): StatusTone {
   }
 }
 
+/**
+ * Whether Safepay Subscriptions bills this plan right now. `billed_by` outlives the plan, so
+ * it counts only while the plan is live.
+ */
+export function isSafepayBilled(sub: BillingSubscription | null): boolean {
+  if (sub?.billed_by !== 'safepay_subscription') return false;
+  const slug = sub.status?.slug;
+  return slug === 'active' || slug === 'past-due';
+}
+
 /** Pill tone for an invoice status. The pill's label comes from {@link billingInvoiceStatusKey}. */
 export function invoiceStatusTone(slug: string | null | undefined): StatusTone {
   switch (slug) {

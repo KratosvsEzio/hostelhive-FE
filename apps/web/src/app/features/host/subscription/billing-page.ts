@@ -3,10 +3,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   computed,
+  effect,
   inject,
   linkedSignal,
   signal,
+  viewChild,
 } from '@angular/core';
 import {
   takeUntilDestroyed,
@@ -50,12 +53,15 @@ import { isNetworkError } from '@util/network-error';
 import {
   PlanButton,
   billingHistoryPath,
+  isSafepayBilled,
   planButton,
 } from '@app/shared/billing/billing-labels';
 import { BillingMoneyPipe } from '@app/shared/billing/billing-money.pipe';
 import { PlanCard } from '@app/shared/billing/plan-card';
 import { CurrentPlanAction, CurrentPlanCard } from './current-plan-card';
 import { PaymentDue } from './payment-due';
+import { SafepayCheckout } from './safepay-checkout';
+import { SavedCard, SavedCardAction } from './saved-card';
 
 type BillingView =
   | { kind: 'none' }
@@ -77,14 +83,24 @@ type PlanChange =
   | { kind: 'schedule'; planId: string }
   | { kind: 'undo'; planId: string | null }
   | { kind: 'cancel' }
-  | { kind: 'resume' };
+  | { kind: 'resume' }
+  | { kind: 'saveCard' }
+  | { kind: 'removeCard' }
+  | { kind: 'autoRenew'; enabled: boolean };
 
-/** A refused plan change, shown where it was asked for: that plan card, or the current plan card when `planId` is null. */
+/**
+ * A refused plan change, shown where it was asked for: that plan card, the current plan card
+ * when `planId` is null, or the saved-card block when `onCard` is set.
+ */
 interface PlanChangeError {
   planId: string | null;
+  onCard: boolean;
   message: string | null;
   messageKey: string;
 }
+
+/** Plan states that renew, and so the only ones the auto-renew switch is offered on. */
+const LIVE_STATUSES: readonly string[] = ['active', 'past-due'];
 
 interface PlanView {
   plan: BillingPlan;
@@ -112,11 +128,14 @@ const CHANGE_FAILED: Record<PlanChange['kind'], string> = {
   undo: 'hostBilling.undoFailed',
   cancel: 'hostBilling.cancelFailed',
   resume: 'hostBilling.resumeFailed',
+  saveCard: 'hostBilling.saveCardFailed',
+  removeCard: 'hostBilling.removeCardFailed',
+  autoRenew: 'hostBilling.autoRenewFailed',
 };
 
 /**
- * A hostel's HostelHive billing: the current plan, any unpaid invoice, and one card per plan
- * with the single action the server allows.
+ * A hostel's HostelHive billing: the current plan, any unpaid invoice, the card saved for
+ * automatic renewal, and one card per plan with the single action the server allows.
  *
  * Every price, proration and action comes from the server. A checkout creates (or reuses) an
  * invoice and hands it to the payment step; nothing here is cached, so returning to the page
@@ -129,6 +148,7 @@ const CHANGE_FAILED: Record<PlanChange['kind'], string> = {
     DashboardLayout,
     CurrentPlanCard,
     PaymentDue,
+    SavedCard,
     PlanCard,
     Button,
     ConfirmModal,
@@ -148,6 +168,7 @@ export class BillingPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(BillingApi);
+  private readonly safepay = inject(SafepayCheckout);
   private readonly billingStore = inject(HostBillingStore);
   private readonly session = inject(SessionStore);
   private readonly locale = inject(LocaleStore);
@@ -244,7 +265,7 @@ export class BillingPage {
     computation: () => false,
   });
 
-  /** One billing write at a time: a checkout or any plan change locks every other action. */
+  /** One billing write at a time: a checkout, plan change or card action locks every other one. */
   protected readonly busy = computed(
     () => this.pendingPlanId() !== null || this.pendingChange() !== null,
   );
@@ -264,8 +285,42 @@ export class BillingPage {
 
   protected readonly cardChangeError = computed(() => {
     const error = this.planChangeError();
-    return error?.planId === null ? error : null;
+    return error && !error.onCard && error.planId === null ? error : null;
   });
+
+  protected readonly removingCard = linkedSignal<string, boolean>({
+    source: this.hostelId,
+    computation: () => false,
+  });
+
+  protected readonly savedCardBusy = computed<SavedCardAction | null>(() => {
+    switch (this.pendingChange()?.kind) {
+      case 'saveCard':
+        return 'save';
+      case 'removeCard':
+        return 'remove';
+      case 'autoRenew':
+        return 'autoRenew';
+      default:
+        return null;
+    }
+  });
+
+  protected readonly savedCardError = computed(() => {
+    const error = this.planChangeError();
+    return error?.onCard ? error : null;
+  });
+
+  /**
+   * What the auto-renew switch shows. `hh-toggle` flips itself on click, so this mirrors each
+   * flip, and a refused change writes the server's value back; every new summary resets it.
+   */
+  protected readonly autoRenewSwitch = linkedSignal<HostBilling | null, boolean>(
+    {
+      source: this.billing,
+      computation: (b) => b?.auto_renew ?? false,
+    },
+  );
 
   protected readonly canCheckout = computed(() =>
     this.session.hasPermission('core:Invoice:create'),
@@ -308,6 +363,28 @@ export class BillingPage {
   protected readonly openRenewal = computed(() => {
     const invoice = this.billing()?.open_invoice;
     return invoice?.kind === 'renewal' ? invoice : null;
+  });
+
+  /** Safepay keeps its own card for a plan it bills, so the block is for invoice-billed plans. */
+  protected readonly showSavedCard = computed(() => {
+    const sub = this.subscription();
+    return !!sub && !isSafepayBilled(sub);
+  });
+
+  protected readonly planLive = computed(() =>
+    LIVE_STATUSES.includes(this.subscription()?.status.slug ?? ''),
+  );
+
+  protected readonly cancellingAtPeriodEnd = computed(
+    () => !!this.subscription()?.cancel_at_period_end,
+  );
+
+  /** The renewal date the saved card is charged on, while it renews the plan. */
+  protected readonly autoChargeOn = computed(() => {
+    const sub = this.subscription();
+    return this.billing()?.auto_renew && sub?.status.slug === 'active'
+      ? sub.current_period_end
+      : null;
   });
 
   protected readonly countryMissing = computed(() => {
@@ -353,6 +430,35 @@ export class BillingPage {
       };
     });
   });
+
+  private readonly savedCardBlock = viewChild(SavedCard, { read: ElementRef });
+
+  /** A link to `#saved-card` is waiting for the block to render so it can be scrolled to. */
+  private readonly savedCardScrollPending = signal(false);
+
+  constructor() {
+    // A page restored from the back-forward cache still shows the spinner it left for Safepay with.
+    this.safepay.restored$.pipe(takeUntilDestroyed()).subscribe(() => {
+      if (this.pendingChange()?.kind === 'saveCard') {
+        this.pendingChange.set(null);
+      }
+    });
+
+    // The router does no anchor scrolling (see core/scroll-reset), so a link to the block, such
+    // as the banner's Update card, is scrolled to here, once per navigation, when it renders.
+    this.route.fragment.pipe(takeUntilDestroyed()).subscribe((fragment) => {
+      this.savedCardScrollPending.set(fragment === 'saved-card');
+    });
+    effect(() => {
+      if (!this.savedCardScrollPending()) return;
+      const block = this.savedCardBlock()?.nativeElement as
+        | HTMLElement
+        | undefined;
+      if (!block) return;
+      this.savedCardScrollPending.set(false);
+      block.scrollIntoView?.({ block: 'start' });
+    });
+  }
 
   /** Unicode isolates around an interpolated amount, the plain-text form of `<bdi>`. */
   protected isolate(text: string): string {
@@ -430,6 +536,52 @@ export class BillingPage {
     this.runChange({ kind: 'resume' }, (id) => this.api.resumeSubscription(id));
   }
 
+  /** Leaves for Safepay to save or replace the card; the page is unloading once it answers. */
+  protected saveCard(): void {
+    const id = this.hostelId();
+    if (!id || this.busy()) return;
+    const change: PlanChange = { kind: 'saveCard' };
+    const epoch = this.loaded();
+    this.pendingChange.set(change);
+    this.checkoutError.set(null);
+    this.planChangeError.set(null);
+    this.safepay
+      .startCardSave(id, this.billing()?.saved_card ?? null)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        // The browser is leaving for Safepay, so the button keeps its spinner until it does.
+        error: (err: ApiError) => {
+          if (this.pendingChange() === change) this.pendingChange.set(null);
+          if (this.hostelId() === id && this.loaded() === epoch) {
+            this.showChangeError(change, err);
+          }
+        },
+      });
+  }
+
+  protected openRemoveCard(): void {
+    if (this.busy()) return;
+    this.removingCard.set(true);
+  }
+
+  protected confirmRemoveCard(): void {
+    const open = this.removingCard();
+    this.removingCard.set(false);
+    if (!open) return;
+    this.runChange({ kind: 'removeCard' }, (id) => this.api.removeCard(id));
+  }
+
+  protected dismissRemoveCard(): void {
+    this.removingCard.set(false);
+  }
+
+  protected setAutoRenew(enabled: boolean): void {
+    this.autoRenewSwitch.set(enabled);
+    this.runChange({ kind: 'autoRenew', enabled }, (id) =>
+      this.api.setAutoRenew(id, enabled),
+    );
+  }
+
   private runChange(
     change: PlanChange,
     request: (hostelId: string) => Observable<HostBilling>,
@@ -459,6 +611,10 @@ export class BillingPage {
         },
         error: (err: ApiError) => {
           settle();
+          // The switch flipped itself on click; put it back to what the server last said.
+          if (change.kind === 'autoRenew') {
+            this.autoRenewSwitch.set(this.billing()?.auto_renew ?? false);
+          }
           if (current()) this.showChangeError(change, err);
         },
       });
@@ -473,6 +629,10 @@ export class BillingPage {
         change.kind === 'schedule' || change.kind === 'undo'
           ? change.planId
           : null,
+      onCard:
+        change.kind === 'saveCard' ||
+        change.kind === 'removeCard' ||
+        change.kind === 'autoRenew',
       message: stale ? (err?.serverMessages?.[0] ?? null) : null,
       messageKey:
         status === 403

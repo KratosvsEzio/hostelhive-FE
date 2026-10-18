@@ -1,47 +1,50 @@
 # Host billing and subscription
 
-How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off. Billing is midway through a rewrite (Trello #93, in eight frontend parts). Part 1 (#94, PR #68) removed the legacy order, contract and product flow. What is on `main` now is a placeholder billing page and the server's own refusals; the new plans, checkout and invoices are not built yet. Renter rent and utility bills belong to the [host console](./host-console.md), not to this area.
+How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off. The billing rewrite (Trello #93, parts #94–#101) is on `main`: plans, one subscription per hostel, invoices and payment attempts, paid through Safepay. Trello #174 adds a saved card with automatic renewal (PR A); Safepay Subscriptions with a free trial (PR B) is still to come. Renter rent and utility bills belong to the [host console](./host-console.md), not to this area.
 
 ## Where it lives
-- `apps/web/src/app/features/host/subscription/subscription.routes.ts` — one route, `''`, the billing page at `/host/:id/subscription`. The old plan, checkout and payment-history URLs are gone and fall through to the app's catch-all.
-- `apps/web/src/app/features/host/subscription/subscription-placeholder.ts` — `SubscriptionPlaceholder`: an empty state saying billing is moving, with "Contact us" and a link back to the hostel's overview. It loads no data.
-- `apps/web/src/app/layout/components/subscription-gate/subscription-gate.ts` — `<hh-subscription-gate>`, the inline paywall card. Its button links to the billing page of the selected hostel.
-- `apps/web/src/app/util/subscription-error.ts` — `isSubscriptionError(err)`: whether an API error means "this hostel needs a plan" (a 402, or the 400 "You need to subscribe…"). It is never true for a 403.
+- `apps/web/src/app/features/host/subscription/subscription.routes.ts` — the billing screen (`/host/:id/subscription`), the payment step (`pay/:invoiceId`), invoice history and invoice detail.
+- `billing-page.ts/.html` — current plan (`current-plan-card.ts`), the unpaid invoice (`payment-due.ts`), the saved card and auto-renew switch (`saved-card.ts`, block `id="saved-card"`) and one card per plan.
+- `payment-step.ts/.html` — pay at Safepay (optionally saving the card), or charge the saved card without leaving.
+- `payment-return.routes.ts` (mounted at `/billing/payment` in `app.routes.ts`) — Safepay's return pages. `?invoice=` goes to `payment-success.ts` / `payment-cancelled.ts`; `?card=` or `?subscription=` with no invoice goes to `billing-return.ts` (states in `billing-return-states.ts`).
+- `safepay-checkout.ts` — every start that leaves for Safepay (`start`, `startCardSave`, `startSubscribe`), the per-tab return stash, `returnParam()` and `payErrorOutcome()`.
+- `invoice-poll.ts` — `pollUntil()` / `pollInvoice()`: fetch now, then every 2.5 s for up to 60 s, never overlapping.
+- `apps/web/src/app/services/billing-api.ts`, `host-billing-store.ts` (the console's billing for the shown hostel), `apps/web/src/app/shared/billing/billing-banner.ts` (banner and access logic) and `layout/components/billing-banner/billing-banner.ts`.
 - `apps/web/src/app/core/interceptors/host-access-interceptor.ts` and `apps/web/src/app/core/host-access/host-access.ts` (`classifyHostAccess`) — record the plan refusals the server sends; `apps/web/src/app/layout/components/access-lock/access-lock.ts` — `<hh-access-lock>`, which the host shell shows instead of a locked section.
-- `apps/web/src/app/features/host/host.routes.ts` — `createHostelGate` on `/host/hostels/new`.
-- `apps/web/src/app/features/host/new-hostel/new-hostel.ts` and `apps/web/src/app/features/public/onboarding/onboarding-wizard/onboarding-wizard.ts` (`landOnBilling`) — where a host lands after creating a hostel.
+- `apps/web/src/app/layout/components/subscription-gate/subscription-gate.ts` and `apps/web/src/app/util/subscription-error.ts` — the inline paywall for a refused request. `isSubscriptionError(err)` means "this hostel needs a plan" (a 402, or the 400 "You need to subscribe…"); it is never true for a 403.
+- `apps/web/src/app/shared/notifications/notification-types.ts` — icon and label per notification type, shared by the notifications page and the bell.
 
 ## How it works
-- **The server decides access.** Nothing checks the plan before a request, and entering a hostel never bounces to the billing page. A hostel without a usable plan gets refusals from the API on the requests themselves:
-  - a 400 "You need to subscribe to avail the services" (no live plan);
-  - a 403 with `code: 'crm_required'` (a plan without CRM);
-  - in principle a 402.
-- **The plan lock owns the first two.** `hostAccessInterceptor` records them per hostel, and the host shell swaps a CRM section's `<router-outlet>` for `<hh-access-lock>` (`lock` in `apps/web/src/app/layout/host-shell/host-shell.ts`), which destroys the page and any open drawer.
+- **The server decides.** Prices, prorations, plan actions, `payment_methods` and `auto_renew` all come from `GET …/billing`; the frontend never calculates money, passes ids through as returned, and shows a 422's `errors[0]` verbatim.
+- **Banners and the access lock** come from `HostBillingStore` through `bannerFor()` / `deriveAccess()`. With auto-renew on, renewal banners say the saved card will be charged instead of asking to renew, and past due offers Update card (`#saved-card`) plus Pay.
+- **How a section gets locked.** `deriveAccess` locks a CRM section for every non-admin when the hostel's billing record is offline or a live plan lacks CRM, and also when a request was refused for those reasons. `hostAccessInterceptor` records those refusals per hostel (`classifyHostAccess`): a 400 "You need to subscribe to avail the services" (no live plan) and a 403 with `code: 'crm_required'` (no CRM). The host shell then swaps the section's `<router-outlet>` for `<hh-access-lock>` (`lock` in `apps/web/src/app/layout/host-shell/host-shell.ts`), which destroys the page and any open drawer.
 - **A 403 with no server code is a permission refusal, not a plan one, unless its message is the CRM one** (`isPermissionRefusal`; never compare `code` yourself). The backend runs its plan checks before CanCan, so a CanCan "You are not authorized…" arrives only when the plan is live and includes CRM (Trello #193). The lock never records it; the page explains it (see [host-console](./host-console.md)).
-- **Inline paywall, a backstop.** Overview, rooms, tenants, invoices, utilities and add-bill catch a failed load with `isSubscriptionError` and render `<hh-subscription-gate>`; the booking form drawer shows a renew notice (`apps/web/src/app/features/host/bookings/booking-form-drawer/booking-form-drawer.ts`). Since the lock replaces these pages first on the same refusals, both surfaces rarely show; retiring or translating them is Trello #199.
-- **Creating a hostel.** `createHostelGate` checks only the `core:Hostel:create` permission; without it the host goes to `/host`. Whether the new hostel may then be used is again the server's call.
-- **After create.** Both the console's new-hostel form and the become-a-host wizard reload the hostel list, then land on `/host/:id/subscription`. The reload comes first because `knownHostelGate` trusts a loaded list, and a stale one would send the host back to a hostel they already had.
-- **No nav entry.** The host sidebar and "More" page have no billing link; the paywall card, the booking drawer's notice and the post-create landing are the ways in.
-
-## The rewrite (Trello #93)
-- **Backend:** merged. Billing core (`azeem-hamza/hostelhive` PR #26, 2026-10-04) and Safepay (PR #27, 2026-10-10) replace orders, contracts and products with plans → one subscription per hostel → invoices → payment attempts. Amounts arrive as decimal strings with a `currency`, and the frontend never calculates money.
-- **Frontend:** part 1/8 (#94) is on `main`. Parts 2–8 are open Trello cards: the pricing page and billing screen, the payment step (Safepay redirect, bank transfer), invoices and the PDF receipt, plan changes, grace and renewal banners with the CRM lock, admin billing, and the booking confirmation PDF field.
-- The plan and its run records are in [`docs/implement/93.md`](../../implement/93.md) and [`docs/implement/billing-frontend/94.md`](../../implement/billing-frontend/94.md).
+- **Saved card + auto-renew.** `auto_renew` is server-derived: true only with a saved card, no cancel at period end, and a plan Safepay does not bill. It stays false while cancelling even after a successful PUT, so the switch is bound to the server value (`linkedSignal` in `billing-page.ts`), reverted on failure, and disabled while cancelling. The switch shows only on live plans (`active` / `past-due`); the block shows for any subscription Safepay does not bill.
+- **Async confirmations.** A card save and a subscription start finish on Safepay's webhook, so `?card=saved` and `?subscription=started` poll billing (2.5 s / 60 s) until the card differs from the stashed previous one, or `isSafepayBilled()` holds, then say honestly that it can take up to an hour, with Check again.
+- **Paying with the saved card** asks for confirmation, then may come back `pending`; the step polls `refresh` and never shows paid until the invoice is paid. A decline shows the bank's reason with Update card and Pay with another card.
+- **A re-opened checkout keeps its first `save_card` choice** on the server, so the payment step hides the save-card tick while a Safepay payment is pending. It cannot tell a pending saved-card charge from a pending checkout (both are `safepay`), so the note shows for both.
+- **`isSafepayBilled(sub)`** (`billing-labels.ts`) is `billed_by === 'safepay_subscription'` and a live status, because `billed_by` outlives the plan. Card options are hidden on such plans.
+- **Invoice attempts** label `initiated_by` `schedule` ("Charged automatically") and `upgrade` ("Saved card"). Notifications `card_declined` / `card_expiring` show the server's message as is, with no link (the notification carries no hostel id).
+- **Inline paywall, a backstop.** Overview, rooms, tenants, invoices, utilities and add-bill catch a refused load with `isSubscriptionError` and render `<hh-subscription-gate>`; the booking form drawer shows a renew notice (`apps/web/src/app/features/host/bookings/booking-form-drawer/booking-form-drawer.ts`). Since the lock replaces these pages first on the same refusals, both surfaces rarely show; retiring or translating them is Trello #199.
 
 ## Reuse, don't rebuild
+- `SafepayCheckout` for any start that leaves for Safepay; `pollUntil` for any wait on a webhook; `payErrorOutcome` for a refused start.
 - `isSubscriptionError` with `<hh-subscription-gate [feature]>` for a page that can be paywalled. Check `isPermissionRefusal` alongside it (`apps/web/src/app/core/host-access/host-access.ts`).
 - `isCrmRequired` (same file) for "this plan has no CRM"; never match its message yourself.
 
 ## Traps
+- **The router does no anchor scrolling** (`core/scroll-reset.ts`), so `billing-page.ts` scrolls to `#saved-card` itself.
+- **`hh-toggle` flips itself on click** before the server answers; mirror the flip and write the server value back on error.
 - **Two classifiers answer "is this a plan refusal".** `classifyHostAccess` (the lock) and `isSubscriptionError` (the page) drifted once: the page read a CanCan permission 403 as a lapsed plan and showed owners a "subscribe" paywall for a hostel that was paid up (Trello #193). A new plan refusal must be taught to both, and a spec must feed the backend's real body through the real interceptors.
 - **`isSubscriptionError` still matches any non-403 failure whose text matches `subscri`, `upgrade.*plan` or `plan.?required`** (`apps/web/src/app/util/subscription-error.ts`). So a 422 saying "plan required" would open the paywall or the drawer's renew notice. Nothing sends one today.
-- **The billing page has no `permissionGuard`, on purpose.** The paywall card links every host there, and a guard would turn that link into `/forbidden` for staff who lack the permission (comment in `subscription.routes.ts`).
-- **The paywall card and the drawer's renew notice are hard-coded English** (`BENEFITS` in `subscription-gate.ts`; `booking-form-drawer.html`). Trello #199.
+- **The billing page has no `permissionGuard`, on purpose.** The paywall card links every host there (comment in `subscription.routes.ts`).
+- **Hard-coded English:** notification labels (`notification-types.ts`), the paywall card's benefits list (`BENEFITS` in `subscription-gate.ts`) and the drawer's renew notice (`booking-form-drawer.html`). The last two are Trello #199.
 
 ## Decisions
 - [Billing rewrite built against backend PR #26, host billing core first](../decisions/host-billing-and-subscription/billing-rewrite-against-unmerged-backend.md)
-- [A lapsed hostel keeps subscription, profile and bookings open](../decisions/host-billing-and-subscription/lapsed-hostel-keeps-three-pages-open.md) (Superseded by #94: the client-side gate it tuned is removed)
+- [A lapsed hostel keeps subscription, profile and bookings open](../decisions/host-billing-and-subscription/lapsed-hostel-keeps-three-pages-open.md) (Superseded by #94)
+- Run records: [`docs/implement/93.md`](../../implement/93.md) and `docs/implement/billing-frontend/94.md`–`101.md`, `174.md` (D1–D11 for the saved card).
 
 ## See also
-- [host-console](./host-console.md), [admin-and-moderation](./admin-and-moderation.md) (admin billing: verification, payments, invoices, grants, plan prices), [api-and-data](./api-and-data.md) (`ApiError`, the error interceptor), [dates-money-and-time-zones](./dates-money-and-time-zones.md)
+- [host-console](./host-console.md), [admin-and-moderation](./admin-and-moderation.md) (admin billing), [api-and-data](./api-and-data.md) (`ApiError`, the error interceptor), [dates-money-and-time-zones](./dates-money-and-time-zones.md)
 - [Risk register](../../RISKS.md), [Frontend build plan](../../HostelHive-Frontend-Build-Plan.md)

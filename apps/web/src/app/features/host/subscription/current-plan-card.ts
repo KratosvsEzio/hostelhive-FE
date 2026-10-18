@@ -12,6 +12,7 @@ import type { BillingSubscription } from '@hostelhive/data-access';
 import { ApiDate } from '@util/api-date';
 import {
   BILLING_FEATURES,
+  isSafepayBilled,
   statusTone,
 } from '@app/shared/billing/billing-labels';
 
@@ -38,7 +39,8 @@ interface ScheduledSwitch {
  * correctly shows Boost off. With `canChange`, an active plan offers Undo beside a pending
  * switch, Resume plan beside its end date while cancelling, and Cancel plan otherwise. The
  * page runs each action and reports back through `busy` and `locked`; a card-level error is
- * projected into the bottom of the card.
+ * projected into the bottom of the card. `autoRenew` is the billing payload's own flag, and turns
+ * an invoice-billed plan's renewal line into an automatic one.
  *
  * `<hh-current-plan-card [subscription]="billing.subscription" [features]="billing.features" />`
  */
@@ -180,6 +182,7 @@ export class CurrentPlanCard {
   readonly subscription = input.required<BillingSubscription | null>();
   readonly features = input.required<readonly string[]>();
   readonly canChange = input(false);
+  readonly autoRenew = input(false);
   readonly busy = input<CurrentPlanAction | null>(null);
   readonly locked = input(false);
   readonly undo = output<void>();
@@ -194,7 +197,7 @@ export class CurrentPlanCard {
 
   protected readonly lines = computed<readonly CurrentPlanLine[]>(() => {
     const sub = this.subscription();
-    return sub ? statusLines(sub) : [];
+    return sub ? statusLines(sub, this.autoRenew()) : [];
   });
 
   // A cancel wins at period end, so a switch is only shown on an active plan that renews.
@@ -236,16 +239,20 @@ function isActive(sub: BillingSubscription): boolean {
 }
 
 /** The date lines a status calls for; a line whose date the API left null is dropped. */
-function statusLines(sub: BillingSubscription): CurrentPlanLine[] {
+function statusLines(
+  sub: BillingSubscription,
+  autoRenew: boolean,
+): CurrentPlanLine[] {
   const end = sub.current_period_end;
   const dated = (key: string, date: string | null): CurrentPlanLine[] =>
     date ? [{ key, date }] : [];
 
   switch (sub.status.slug) {
     case 'active':
+      if (sub.cancel_at_period_end) return dated('hostBilling.endsOn', end);
       return dated(
-        sub.cancel_at_period_end
-          ? 'hostBilling.endsOn'
+        autoRenew && !isSafepayBilled(sub)
+          ? 'hostBilling.renewsAutomaticallyOn'
           : 'hostBilling.renewsOn',
         end,
       );

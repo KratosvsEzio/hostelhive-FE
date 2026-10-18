@@ -1,12 +1,8 @@
 import { GENDER_SEGMENTS, PLACES } from './places';
 import { UNIVERSITIES } from './universities';
 import { BLOG_POSTS } from '@features/public/blog/blog-posts';
-import {
-  INDEXED_LOCALE_CODES,
-  localeAlternates,
-  splitLocale,
-  withLocale,
-} from '@core/i18n/locales';
+import { splitLocale, withLocale } from '@core/i18n/locales';
+import { pageAlternates, pageLocales } from '@core/i18n/content-locale';
 
 /**
  * Every URL that belongs in `sitemap.xml`.
@@ -20,7 +16,8 @@ import {
  *
  * **Deliberately excluded:**
  * - `/search` and `/search/:location` — canonicalised onto their landing page, or
- *   `noindex` when filtered. Listing a URL here that tells crawlers not to index it is
+ *   `noindex` when filtered or when the link arrives carrying a viewport (all four
+ *   `ne_*`/`sw_*` keys valid). Listing a URL here that tells crawlers not to index it is
  *   contradictory guidance.
  * - `/hostel/:id` listing pages — the public search payload carries no slug, so their
  *   URLs are opaque ids, and they churn constantly. Category pages are what rank; see
@@ -53,7 +50,9 @@ const STATIC_PATHS = [
  * Every language the page genuinely exists in gets its own entry — see
  * `INDEXED_LOCALE_CODES`. A locale that still falls back to English is left out on
  * purpose: listing it would offer a search engine the same page a second time under a
- * different address, which is the definition of a duplicate.
+ * different address, which is the definition of a duplicate. A page written in one
+ * language only — the legal pages, the credits — gets that one entry, for the same reason:
+ * see `SINGLE_LANGUAGE_PAGES` (core/i18n/content-locale.ts).
  */
 export function sitemapPaths(): string[] {
   const landing = PLACES.flatMap((p) => [
@@ -67,7 +66,7 @@ export function sitemapPaths(): string[] {
   // added without its sitemap entry is a post nobody finds.
   const articles = BLOG_POSTS.map((p) => `/blog/${p.slug}`);
   return [...STATIC_PATHS, ...landing, ...campuses, ...articles].flatMap((p) =>
-    INDEXED_LOCALE_CODES.map((code) => withLocale(code, p)),
+    pageLocales(p).map((code) => withLocale(code, p)),
   );
 }
 
@@ -76,7 +75,9 @@ export function sitemapPaths(): string[] {
  *
  * The alternates are repeated inside every `<url>` rather than stated once, because that
  * is what the protocol asks for: a set is only valid if each member names all of the
- * others *and* itself. It makes the file larger and is not optional.
+ * others *and* itself. It makes the file larger and is not optional. A single-language
+ * page has no set, and its entry is the `<loc>` alone — the same as its head, which
+ * carries no `hreflang` either.
  *
  * Duplicating what `Seo` puts in the page head is also deliberate. A crawler that reaches
  * a page by following a link reads the head; one working from the sitemap may not have
@@ -86,13 +87,11 @@ export function renderSitemap(origin: string, paths: string[]): string {
   const urls = paths
     .map((path) => {
       const { path: basePath } = splitLocale(path);
-      const alternates = localeAlternates(basePath)
-        .map(
-          (a) =>
-            `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${origin}${a.path}"/>`,
-        )
-        .join('\n');
-      return `  <url>\n    <loc>${origin}${path}</loc>\n${alternates}\n  </url>`;
+      const alternates = pageAlternates(basePath).map(
+        (a) =>
+          `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${origin}${a.path}"/>`,
+      );
+      return ['  <url>', `    <loc>${origin}${path}</loc>`, ...alternates, '  </url>'].join('\n');
     })
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
