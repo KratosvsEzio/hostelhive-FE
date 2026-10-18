@@ -26,6 +26,7 @@ The host bookings list, which the bookings calendar and the room calendar also r
 - Opening a booking costs one extra `GET bookings/:id`.
 - Reopening a panel within about a second of a release made elsewhere (a check-out) can still show the index's rooms, and a plain list refresh is as stale as the index.
 - New code that writes and then reads must not overwrite local state that came from a successful write with an index read.
+- **Exception: an index the backend refreshes on write.** The utility-bill and renter-bill indexes `prepend RefreshOnReindex` (be `1c53f15`, BE PR #65), so their list answers after a write already include it. The Utilities page re-reads the list after a delete for its totals and bill count (`reloadTotals`, Trello #188, verified live 2026-10-18). For lagging data, ask the backend to add `RefreshOnReindex` to that index; don't add a timed FE re-fetch.
 
 ## Evidence
 - `apps/web/src/app/features/host/bookings/booking-details-panel.ts` — `releasedIds`, `occupancies`.
