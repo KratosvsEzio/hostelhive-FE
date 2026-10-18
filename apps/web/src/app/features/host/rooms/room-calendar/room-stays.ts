@@ -86,16 +86,6 @@ function dayAfter(date: string): string {
 }
 
 /**
- * Today on this device's calendar, as `yyyy-MM-dd` — the same "today" the room calendar
- * highlights. The console has no hostel-local clock to read; see {@link toRoomMonth}.
- */
-function localToday(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
-/**
  * Whether `stay` has somebody asleep in this room on the night of `date`.
  *
  * The one test of occupancy, shared by the day counts and the pips drawn from them: when the
@@ -171,9 +161,20 @@ function occupanciesOf(b: HostBooking, roomId: string): BookingOccupancy[] | nul
 }
 
 /**
+ * What the room's stays are read against, besides the room itself.
+ *
+ * `today` is required. It decides occupancy, not just a highlight, and a default could only be
+ * the device's date — which is the hostel's date only when the two happen to share a zone.
+ */
+export interface RoomStayOptions {
+  /** `yyyy-MM-dd` at the hostel; a checked-out stay ends here — see {@link nightsHeldUntil}. */
+  today: string;
+  /** The room being drawn. Without it a booking is charged its whole party. */
+  roomId?: string;
+}
+
+/**
  * @param capacity beds in the room, which decides what a booking *holds*.
- * @param roomId the room being drawn. Without it a booking is charged its whole party.
- * @param today `yyyy-MM-dd`; a checked-out stay ends here — see {@link nightsHeldUntil}.
  * @returns `null` when the booking's party was placed in other rooms only.
  *
  * A dorm is sold by the bed, so a party of two holds two of them — reading the room's whole
@@ -187,8 +188,7 @@ function occupanciesOf(b: HostBooking, roomId: string): BookingOccupancy[] | nul
 export function toRoomStay(
   b: HostBooking,
   capacity: number,
-  roomId?: string,
-  today: string = localToday(),
+  { today, roomId }: RoomStayOptions,
 ): RoomStay | null {
   const here = roomId ? occupanciesOf(b, roomId) : null;
   if (here && !here.length) return null;
@@ -257,28 +257,32 @@ function eachDate(from: string, to: string): string[] {
   return out;
 }
 
+/** {@link RoomStayOptions}, plus the tenants placed in the room by hand. */
+export interface RoomMonthOptions extends RoomStayOptions {
+  residents?: readonly RoomResident[];
+}
+
 /**
  * The two together: what the calendar binds to for one room and one month.
  *
- * @param roomId the room `bookings` were fetched for. Pass it: without it a party checked
- * into several rooms is charged in full to each, and is drawn on a room it is not in.
- * @param today `yyyy-MM-dd`, where a checked-out stay stops holding beds. This device's date
- * unless given, which is the "today" the calendar already highlights — there is no hostel
- * clock on the client to read. Tests pass it to stay off the wall clock.
+ * `roomId` is the room `bookings` were fetched for. Pass it: without it a party checked into
+ * several rooms is charged in full to each, and is drawn on a room it is not in.
+ *
+ * `today` is the hostel's date (`todayIn` with the hostel's zone), where a checked-out stay
+ * stops holding beds — the same date the calendar highlights, so the free beds and the today
+ * cell cannot disagree. Tests pass a fixed one to stay off the wall clock.
  */
 export function toRoomMonth(
   bookings: readonly HostBooking[],
   capacity: number,
   from: string,
   to: string,
-  residents: readonly RoomResident[] = [],
-  roomId?: string,
-  today: string = localToday(),
+  { today, roomId, residents = [] }: RoomMonthOptions,
 ): { days: RoomDay[]; stays: RoomStay[] } {
   const stays = [
     ...bookings
       .filter(holdsBeds)
-      .map((b) => toRoomStay(b, capacity, roomId, today))
+      .map((b) => toRoomStay(b, capacity, { today, roomId }))
       .filter((s): s is RoomStay => s !== null),
     // Residents were missing from this month entirely: the calendar reads the bookings
     // endpoint, and a tenant placed by hand never becomes a booking. The room showed empty

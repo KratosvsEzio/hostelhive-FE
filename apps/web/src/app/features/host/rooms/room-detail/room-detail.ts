@@ -150,6 +150,29 @@ export class RoomDetail {
     { initialValue: '' },
   );
 
+  /**
+   * The hostel's time zone for the calendar's "today": `undefined` while it is being read,
+   * `null` when there is none (the calendar then uses the device's date).
+   *
+   * The calendar waits for it rather than drawing first and correcting: a device a day behind
+   * the hostel would show the today cell, the roster's day and the free beds jump a day once
+   * the zone landed. A month-billed hostel has no calendar, so it is not asked.
+   */
+  protected readonly timeZone = toSignal(
+    toObservable(
+      computed(() => ({ hostelId: this.store.selected(), skip: this.monthlyBilling() }), {
+        equal: (a, b) => a.hostelId === b.hostelId && a.skip === b.skip,
+      }),
+    ).pipe(
+      switchMap(({ hostelId, skip }) =>
+        !hostelId || skip
+          ? of(null)
+          : this.store.timeZoneOf(hostelId).pipe(startWith<string | null | undefined>(undefined)),
+      ),
+    ),
+    { initialValue: undefined },
+  );
+
   protected readonly state = toSignal(
     toObservable(this.store.selected).pipe(
       switchMap((hostelId) =>

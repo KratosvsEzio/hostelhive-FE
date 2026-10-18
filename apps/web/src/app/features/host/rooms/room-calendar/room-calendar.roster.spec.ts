@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { LocaleStore } from '@core/i18n/locale-store';
 import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { RoomCalendar } from './room-calendar';
 import { RoomResident } from './room-stays';
@@ -94,5 +95,72 @@ describe('RoomCalendar roster — residents', () => {
     const [row] = rosterOnLastDay([LONG_AGO]);
 
     expect(row.units).toBe(1);
+  });
+});
+
+/**
+ * The dates printed beside a guest are the booked days, whatever zone the device is in.
+ *
+ * A plain `yyyy-MM-dd` read as UTC prints the day before for anybody west of Greenwich, so the
+ * expected text is built from local-midnight dates and the clock is pinned mid-month, where the
+ * grid and the booking agree on the month.
+ */
+describe('RoomCalendar roster — printed range', () => {
+  afterEach(() => vi.useRealTimers());
+
+  function rosterOn(day: string, bookings: unknown[], residents: RoomResident[] = []) {
+    if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 2, 15, 12, 0, 0));
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [RoomCalendar],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostBookingsApi, useValue: { bookingsInRoom: () => of(bookings) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(RoomCalendar);
+    fixture.componentRef.setInput('hostelId', 'h1');
+    fixture.componentRef.setInput('roomId', 'r1');
+    fixture.componentRef.setInput('capacity', 4);
+    fixture.componentRef.setInput('residents', residents);
+    fixture.detectChanges();
+    const vm = internals(fixture);
+    vm.picked.set(day);
+    fixture.detectChanges();
+    const locale = TestBed.inject(LocaleStore).active();
+    const fmt = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
+    return { rows: vm.roster(), print: (y: number, m: number, d: number) => fmt.format(new Date(y, m, d)) };
+  }
+
+  const stay = {
+    id: 'b1',
+    ref: 'HH-1',
+    guest: { name: 'Ayesha', phone: '', email: '' },
+    checkIn: '2026-03-10',
+    checkOut: '2026-03-12',
+    nights: 2,
+    guests: 1,
+    total: 0,
+    paid: 0,
+    balanceDue: 0,
+    roomType: { name: 'Dorm', occupancyType: 'shared', capacity: 4, price: 0 },
+    status: { slug: 'paid', name: 'Paid' },
+    disposition: { slug: 'checked-in', name: 'Checked in' },
+  };
+
+  it('prints a booking’s own first and last day', () => {
+    const { rows, print } = rosterOn('2026-03-10', [stay]);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].range).toBe(`${print(2026, 2, 10)} – ${print(2026, 2, 12)}`);
+  });
+
+  it('prints the day a resident moved in', () => {
+    const { rows, print } = rosterOn('2026-03-10', [], [
+      { id: 'r1', name: 'Bilal Ahmed', moveIn: '2026-03-10', status: 'active' },
+    ]);
+
+    expect(rows[0].range).toBe(`since ${print(2026, 2, 10)}`);
   });
 });
