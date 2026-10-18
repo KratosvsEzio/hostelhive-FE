@@ -8,7 +8,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { TooltipFixed } from '@hostelhive/ui';
-import { Permission, SessionStore } from '@core/auth';
+import { Permission, Role, SessionStore } from '@core/auth';
 import { routePath } from '@core/i18n/locales';
 import { MobileApp } from '@core/mobile-app';
 import { StaffTabBar } from '../components/mobile-tab-bar/staff-tab-bar';
@@ -23,6 +23,8 @@ interface NavEntry {
   divider?: boolean;
   /** Hidden unless the session holds this flag. */
   permission?: Permission;
+  /** Hidden unless the session holds this role, for a page the backend gates on a role rather than a flag. */
+  role?: Role;
   /**
    * Shorter wording for the bottom tab bar, where five tabs share 375px.
    *
@@ -38,7 +40,7 @@ const MOD_NAV: NavEntry[] = [
 ];
 
 const ADMIN_NAV: NavEntry[] = [
-  { label: 'Payments', icon: 'ti-credit-card', link: '/admin/payments', permission: 'admin:Payment:index' },
+  { label: 'Billing', icon: 'ti-receipt', link: '/admin/billing', role: 'admin' },
   {
     label: 'Roles & permissions',
     tabLabel: 'Roles',
@@ -108,7 +110,9 @@ export class StaffLayout {
     // Same rule as the host shell: a destination is listed only when the session holds the
     // action it needs, so the two consoles never advertise a page that 403s on arrival.
     const visible = entries.filter(
-      (e) => !e.permission || this.session.hasPermission(e.permission),
+      (e) =>
+        (!e.permission || this.session.hasPermission(e.permission)) &&
+        (!e.role || this.session.hasRole(e.role)),
     );
     return visible.filter(
       (e, i) => !e.divider || visible.slice(i + 1).some((n) => !n.divider),

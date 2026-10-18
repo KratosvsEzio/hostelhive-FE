@@ -19,7 +19,7 @@ How the app sends and renders calendar days, timestamps, time zones, prices and 
 - `apps/web/src/app/core/geo/` — `GeoPreference` (IP country → language + currency), `country-preferences.ts` (country → locale/currency, fallback `USD`), `country-bounds.ts` (country bounding boxes for map bias).
 
 ## How it works
-- **Reading API timestamps**: the backend stores UTC but sends its own offset (`2026-09-01T00:00:00.000+05:00`). Render with `| apiDate: 'dd MMM yyyy'`, which formats in that offset, not the viewer's. Some mappers slice the wall-clock string instead of parsing (`apps/web/src/app/services/host-ops-api.ts`, `apps/web/src/app/services/staff-api.ts`).
+- **Reading API timestamps**: the backend stores UTC but sends its own offset (`2026-09-01T00:00:00.000+05:00`). Render with `| apiDate: 'dd MMM yyyy'`, which formats in that offset, not the viewer's. Some mappers slice the wall-clock string instead of parsing (`apps/web/src/app/services/host-ops-api.ts`, `apps/web/src/app/services/staff-api.ts`). Admin billing is the exception: it renders in UTC through `adminUtcDate`, to match its UTC-day filters.
 - **Sending a single day**: build it from local parts (`localDay`, or `calendarDay` in `apps/web/src/app/features/public/listing/booking/booking-request.ts`). Never `toISOString()`, which gives the UTC day.
 - **Sending a date range filter**: `dayRangeStart(d)` → `d T00:00:00`, `dayRangeEnd(d)` → `d T23:59:59`, naive (no `Z`). Used by invoices, utilities, expenses and the admin payments list. **Booking dates are the exception**: create, edit and the host booking filters send plain `YYYY-MM-DD`, which the server reads in the hostel's `timezone` (`apps/web/src/app/features/host/bookings/host-bookings-api.ts`).
 - **Hostel time zone** is a required IANA field on create, pre-filled from `browserTimeZone()`.
@@ -44,6 +44,7 @@ How the app sends and renders calendar days, timestamps, time zones, prices and 
 
 ## Decisions
 - [API timestamps render in the offset the backend sent](../decisions/dates-money-and-time-zones/render-api-timestamps-in-their-own-offset.md)
+- [Admin billing shows dates in UTC](../decisions/dates-money-and-time-zones/admin-billing-dates-in-utc.md)
 - [Date-range filters send naive whole-day bounds](../decisions/dates-money-and-time-zones/date-range-filters-send-naive-day-bounds.md)
 - [Booking dates travel as plain days in the hostel's zone](../decisions/dates-money-and-time-zones/booking-dates-sent-as-plain-days.md)
 - [Money shows decimals only when the amount has them](../decisions/dates-money-and-time-zones/money-decimals-follow-the-amount.md)

@@ -1,0 +1,87 @@
+<app-dashboard-layout [label]="'adminBilling.titles.verification' | transloco">
+  <div class="flex flex-col gap-5">
+    <hh-admin-billing-tabs [verifyCount]="count()" />
+
+    @if (notice(); as n) {
+      <hh-toast
+        tone="success"
+        [dismissible]="true"
+        (dismissed)="dismissNotice()"
+        data-testid="notice"
+        >{{ n.key | transloco: n.params }}</hh-toast
+      >
+    }
+
+    @switch (view().kind) {
+      @case ('loading') {
+        <hh-skeleton
+          class="h-80"
+          radius="lg"
+          aria-busy="true"
+          data-testid="queue-loading"
+        />
+      }
+      @case ('forbidden') {
+        <hh-error-state
+          [message]="'adminBilling.errors.forbidden' | transloco"
+          [showRetry]="false"
+          data-testid="queue-forbidden"
+        />
+      }
+      @case ('error') {
+        <hh-error-state
+          [message]="'adminBilling.common.loadError' | transloco"
+          [retryLabel]="'adminBilling.common.retry' | transloco"
+          [networkError]="networkError()"
+          (retry)="retry()"
+          data-testid="queue-error"
+        />
+      }
+      @case ('ready') {
+        @if (rows().length === 0) {
+          <hh-empty-state
+            icon="ti-building-bank"
+            [title]="'adminBilling.verification.emptyTitle' | transloco"
+            [message]="'adminBilling.verification.emptyBody' | transloco"
+            data-testid="queue-empty"
+          >
+            <a
+              hh-button
+              variant="outlined"
+              size="sm"
+              [routerLink]="paths.payments"
+              data-testid="see-all-payments"
+              >{{ 'adminBilling.verification.seeAllPayments' | transloco }}</a
+            >
+          </hh-empty-state>
+        } @else {
+          <div class="flex flex-col gap-3">
+            <hh-data-table
+              minWidth="960px"
+              [columns]="columns()"
+              [rows]="rows()"
+              [rowId]="rowId"
+              [rowClickable]="true"
+              [pagination]="pagination()"
+              (rowClick)="open($event)"
+              (pageChange)="goToPage($event)"
+              data-testid="queue-table"
+            />
+            <p class="flex items-center gap-1.5 text-xs text-ink-400">
+              <i class="ti ti-clock" aria-hidden="true"></i>
+              {{ 'adminBilling.common.datesUtc' | transloco }}
+            </p>
+          </div>
+        }
+      }
+    }
+  </div>
+
+  @if (selected(); as row) {
+    <hh-admin-payment-drawer
+      [row]="row"
+      (closed)="close()"
+      (handled)="onHandled($event)"
+    />
+  }
+</app-dashboard-layout>

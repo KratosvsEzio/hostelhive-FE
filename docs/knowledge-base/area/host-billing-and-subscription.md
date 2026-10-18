@@ -35,5 +35,5 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - [A lapsed hostel keeps subscription, profile and bookings open](../decisions/host-billing-and-subscription/lapsed-hostel-keeps-three-pages-open.md) (Superseded by #94: the client-side gate it tuned is removed)
 
 ## See also
-- [host-console](./host-console.md), [admin-and-moderation](./admin-and-moderation.md) (admin payments), [api-and-data](./api-and-data.md) (`ApiError`, the error interceptor), [dates-money-and-time-zones](./dates-money-and-time-zones.md)
+- [host-console](./host-console.md), [admin-and-moderation](./admin-and-moderation.md) (admin billing: verification, payments, invoices, grants, plan prices), [api-and-data](./api-and-data.md) (`ApiError`, the error interceptor), [dates-money-and-time-zones](./dates-money-and-time-zones.md)
 - [Risk register](../../RISKS.md), [Frontend build plan](../../HostelHive-Frontend-Build-Plan.md)
