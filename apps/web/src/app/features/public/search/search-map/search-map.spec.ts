@@ -72,6 +72,7 @@ interface SearchMapInternals {
   locateMe(): Promise<void>;
   ensureMap(): Promise<void>;
   locating(): boolean;
+  ready(): boolean;
   syncBoundsToUrl(b: { north: number; south: number; east: number; west: number }): void;
   leftHomeCountry(): void;
   captureMapBounds(): void;
@@ -296,6 +297,7 @@ describe('SearchMap docked card heart', () => {
 const LAHORE = { place: 'Lahore', lat: '31.5204', lng: '74.3587', zoom: '11' };
 const CITY_SEED = LAHORE;
 const GIRLS_SEED = { ...LAHORE, gender: 'girls' };
+const BOYS_SEED = { ...LAHORE, gender: 'boys' };
 const CAMPUS_SEED = { place: 'Punjab University', lat: '31.4979', lng: '74.3035', zoom: '13' };
 
 /** What the country table answers for a visitor, in the shape `CountryBounds.forVisitor` returns. */
@@ -2250,5 +2252,410 @@ describe('SearchMap place search head as the map moves', () => {
     expect(urlQuery()).toHaveProperty('ne_lat', '31.75');
     expect(h1Text(fixture)).toBe('Lahore');
     expectPlaceViewHead(lastApply(seo), 'lahore');
+  });
+});
+
+/** The box a camera reports. */
+type CameraBox = Parameters<typeof cameraAt>[0];
+
+const FAR_BOX: CameraBox = { north: 20, south: 10, east: 100, west: 90 };
+const FRAMING_BOX: CameraBox = { north: 31.75, south: 31.3, east: 74.7, west: 74 };
+/** A box inside Lahore that none of the links in these specs carries. */
+const PANNED: CameraBox = { north: 31.6, south: 31.4, east: 74.5, west: 74.2 };
+const NEAR_LAHORE = { lat: 31.5204, lng: 74.3587 };
+
+const NO_HOSTELS: Paginated<Listing> = {
+  items: [],
+  total: 0,
+  page: 1,
+  pageSize: 20,
+  totalPages: 1,
+};
+
+const CITY_PAGE = '/en/hostels/lahore';
+const GIRLS_PAGE = '/en/hostels/lahore/girls';
+const CAMPUS_PAGE = '/en/hostels/lahore/punjab-university';
+
+type LandingPage = [
+  name: string,
+  url: string,
+  seed: Record<string, string>,
+  centre: { lat: number; lng: number },
+  type: string,
+];
+
+/** The three kinds of landing page, each with the place and type it searches. */
+const LANDING_PAGES: LandingPage[] = [
+  ['a city page', CITY_PAGE, CITY_SEED, NEAR_LAHORE, 'all'],
+  ['the girls page', GIRLS_PAGE, GIRLS_SEED, NEAR_LAHORE, 'girls'],
+  ['a campus page', CAMPUS_PAGE, CAMPUS_SEED, { lat: 31.4979, lng: 74.3035 }, 'all'],
+];
+
+/** What the shared map hands back from `acquire`: a camera and Leaflet, both recording. */
+function fakeLeaflet() {
+  const marker = {
+    addTo: vi.fn().mockReturnThis(),
+    remove: vi.fn(),
+    getElement: vi.fn(() => undefined),
+    setIcon: vi.fn(),
+    setZIndexOffset: vi.fn(),
+  };
+  const camera = { fitBounds: vi.fn(), setView: vi.fn(), invalidateSize: vi.fn() };
+  const leaflet = {
+    // The corners come back as they went in, so a call reads as the box it framed.
+    latLngBounds: vi.fn((...corners: unknown[]) => corners),
+    divIcon: vi.fn((options: unknown) => options),
+    marker: vi.fn(() => marker),
+  };
+  const acquire = vi.fn().mockResolvedValue({ map: camera, leaflet });
+  return { acquire, camera, leaflet };
+}
+
+/** Builds the map as its first reveal does, and waits until the page counts it as up. */
+async function openMap(
+  fixture: ComponentFixture<SearchMap>,
+  map: SearchMapInternals,
+): Promise<void> {
+  await map.ensureMap();
+  await vi.waitFor(
+    () => {
+      fixture.detectChanges();
+      expect(map.ready()).toBe(true);
+    },
+    { timeout: 3000 },
+  );
+}
+
+/** The camera settles on `box`; resolves with the first request the page makes after it. */
+async function settleOn(
+  fixture: ComponentFixture<SearchMap>,
+  map: SearchMapInternals,
+  list: ReturnType<typeof vi.fn>,
+  box: CameraBox,
+): Promise<ListQuery> {
+  const before = list.mock.calls.length;
+  map.map = cameraAt(box);
+  map.captureMapBounds();
+  await vi.waitFor(
+    () => {
+      fixture.detectChanges();
+      expect(list.mock.calls.length).toBeGreaterThan(before);
+    },
+    { timeout: 3000 },
+  );
+  return queryAt(list, before);
+}
+
+/** The `trigger` of each `search_performed` sent so far, in order. */
+const searchTriggers = (track: ReturnType<typeof vi.spyOn>) =>
+  (track.mock.calls as [string, Record<string, unknown>][])
+    .filter(([name]) => name === 'search_performed')
+    .map(([, params]) => params['trigger']);
+
+/**
+ * A landing page's path is its place, so a viewport in its link is ignored: the camera opens
+ * on the place and the list searches near it, in the server render and in the browser alike.
+ */
+describe('SearchMap on a landing page link carrying a viewport', () => {
+  afterEach(cleanupSearchMap);
+
+  it.each([
+    ['a far viewport', FAR],
+    ['a viewport framing the place', FRAMING],
+  ])('searches near the place on a server render of a link with %s', async (_name, viewport) => {
+    const list = listSpy();
+    configureSearchMap({ list });
+    await mount(withQuery(CITY_PAGE, viewport), CITY_SEED);
+    await firstSearch(list);
+
+    expect(queryAt(list, 0).near).toEqual(NEAR_LAHORE);
+    expect(queryAt(list, 0).bounds).toBeUndefined();
+  });
+
+  it.each(LANDING_PAGES)(
+    'searches near the place, not the far viewport, on %s in the browser',
+    async (_name, url, seed, centre, type) => {
+      const list = listSpy();
+      await mountWatched(withQuery(url, FAR), { seed, list });
+      await firstSearch(list);
+
+      const first = queryAt(list, 0);
+      expect(first.near).toEqual(centre);
+      expect(first.bounds).toBeUndefined();
+      expect(first.accommodationType).toBe(type);
+    },
+  );
+
+  it.each([
+    ['a corner missing', 'ne_lat=31.75&ne_lng=74.70&sw_lat=31.30'],
+    ['a corner that is not a number', 'ne_lat=31.75&ne_lng=74.70&sw_lat=31.30&sw_lng=abc'],
+    ['no area', 'ne_lat=31.5&ne_lng=74.4&sw_lat=31.5&sw_lng=74.4'],
+  ])('reads a viewport with %s as none and leaves the address alone', async (_name, viewport) => {
+    const list = listSpy();
+    const url = withQuery(CITY_PAGE, viewport);
+    const { navigate } = await mountWatched(url, { seed: CITY_SEED, list });
+    await firstSearch(list);
+
+    expect(queryAt(list, 0).near).toEqual(NEAR_LAHORE);
+    expect(queryAt(list, 0).bounds).toBeUndefined();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).url).toBe(url);
+  });
+
+  it('opens the camera on the place without fitting the viewport or framing the visitor country', async () => {
+    const list = vi.fn(() => of(NO_HOSTELS)) as ReturnType<typeof vi.fn>;
+    const forVisitor = vi.fn().mockResolvedValue(HOME);
+    const { acquire, camera } = fakeLeaflet();
+    const { fixture, map } = await mountWatched(withQuery(CITY_PAGE, FAR), {
+      seed: CITY_SEED,
+      list,
+      acquire,
+      forVisitor,
+    });
+
+    await openMap(fixture, map);
+    await firstSearch(list);
+    fixture.detectChanges();
+
+    expect(acquire).toHaveBeenCalledTimes(1);
+    expect(acquire.mock.calls[0][1]).toEqual({ center: [31.5204, 74.3587], zoom: 11 });
+    expect(camera.fitBounds).not.toHaveBeenCalled();
+    expect(forVisitor).not.toHaveBeenCalled();
+  });
+
+  it('centres the camera on the place once the results arrive, without fitting the viewport', async () => {
+    const list = listSpy();
+    const { acquire, camera, leaflet } = fakeLeaflet();
+    const { fixture, map } = await mountWatched(withQuery(CITY_PAGE, FAR), {
+      seed: CITY_SEED,
+      list,
+      acquire,
+    });
+
+    await openMap(fixture, map);
+    // The pins are drawn once the results are in, and the camera follows them.
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(leaflet.marker).toHaveBeenCalled();
+      },
+      { timeout: 3000 },
+    );
+
+    expect(camera.setView).toHaveBeenCalledTimes(1);
+    expect(camera.setView).toHaveBeenCalledWith([31.5204, 74.3587], 11);
+    expect(camera.fitBounds).not.toHaveBeenCalled();
+  });
+
+  it('drops the viewport the page was searching when it becomes a landing page', async () => {
+    const list = listSpy();
+    const { fixture } = await mountWatched(withQuery('/en/hostels/nowhere', FAR), {
+      list,
+      routed: false,
+    });
+    await firstSearch(list);
+    expect(queryAt(list, 0).bounds).toEqual(FAR_BOX);
+    const before = list.mock.calls.length;
+
+    fixture.componentRef.setInput('seed', CITY_SEED);
+    fixture.detectChanges();
+    await vi.waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(before), {
+      timeout: 3000,
+    });
+
+    expect(lastQuery(list).near).toEqual(NEAR_LAHORE);
+    expect(lastQuery(list).bounds).toBeUndefined();
+  });
+});
+
+/**
+ * Moving the map on a landing page still searches the box on screen, but only in memory: the
+ * address never gains a viewport, and the one its link arrived with is left as it was.
+ */
+describe('SearchMap on a landing page as its map moves', () => {
+  afterEach(cleanupSearchMap);
+
+  it.each(LANDING_PAGES)(
+    'searches the box on screen and keeps the address clean on %s',
+    async (_name, url, seed, _centre, type) => {
+      const list = listSpy();
+      const { fixture, map, navigate } = await mountWatched(url, { seed, list });
+      await firstSearch(list);
+
+      const next = await settleOn(fixture, map, list, PANNED);
+
+      expect(next.bounds).toEqual(PANNED);
+      expect(next.near).toBeUndefined();
+      expect(next.accommodationType).toBe(type);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(urlQuery()).toEqual({});
+    },
+  );
+
+  it('searches the box on screen and keeps the viewport its link arrived with', async () => {
+    const list = listSpy();
+    const { fixture, map, navigate } = await mountWatched(withQuery(CITY_PAGE, FAR), {
+      seed: CITY_SEED,
+      list,
+    });
+    await firstSearch(list);
+
+    const next = await settleOn(fixture, map, list, PANNED);
+
+    expect(next.bounds).toEqual(PANNED);
+    expect(next.near).toBeUndefined();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(urlQuery()).toEqual({
+      ne_lat: '20',
+      ne_lng: '100',
+      sw_lat: '10',
+      sw_lng: '90',
+    });
+  });
+
+  it('keeps the box on screen when the page is reused for another type', async () => {
+    const list = listSpy();
+    const { fixture, map } = await mountWatched(GIRLS_PAGE, {
+      seed: GIRLS_SEED,
+      list,
+      land: false,
+    });
+    await firstSearch(list);
+    const panned = await settleOn(fixture, map, list, PANNED);
+    expect(panned.accommodationType).toBe('girls');
+    expect(panned.bounds).toEqual(PANNED);
+    const before = list.mock.calls.length;
+
+    fixture.componentRef.setInput('seed', BOYS_SEED);
+    fixture.detectChanges();
+    await vi.waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(before), {
+      timeout: 3000,
+    });
+
+    const reused = queryAt(list, before);
+    expect(reused.accommodationType).toBe('boys');
+    expect(reused.bounds).toEqual(PANNED);
+    expect(reused.near).toBeUndefined();
+  });
+
+  it('reports a settled pan as the map', async () => {
+    configureSearchMap({ platform: 'browser' });
+    const track = vi.spyOn(TestBed.inject(GoogleAnalyticsService), 'track');
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const { fixture, map } = await mount(CITY_PAGE, CITY_SEED);
+    await vi.waitFor(() => expect(searchTriggers(track)).toEqual(['arrival']), {
+      timeout: 3000,
+    });
+
+    map.map = cameraAt(PANNED);
+    map.captureMapBounds();
+    fixture.detectChanges();
+
+    await vi.waitFor(() => expect(searchTriggers(track)).toEqual(['arrival', 'map']), {
+      timeout: 3000,
+    });
+  });
+
+  it('searches the box on screen over a worldwide key and leaves the key in the address', async () => {
+    const list = listSpy();
+    const { fixture, map, navigate } = await mountWatched(withQuery(CITY_PAGE, 'everywhere=1'), {
+      seed: CITY_SEED,
+      list,
+    });
+    await firstSearch(list);
+    expect(queryAt(list, 0).near).toEqual(NEAR_LAHORE);
+
+    const next = await settleOn(fixture, map, list, PANNED);
+
+    expect(next.bounds).toEqual(PANNED);
+    expect(next.near).toBeUndefined();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(urlQuery()).toEqual({ everywhere: '1' });
+  });
+});
+
+/**
+ * A search page does the opposite of a landing page: its address is its view, so the box the
+ * map settles on is written to it, rounded, and restored from it on the way back in.
+ */
+describe('SearchMap search page viewport write', () => {
+  afterEach(cleanupSearchMap);
+
+  it('searches once for a box the page then writes to the address rounded', async () => {
+    const list = listSpy();
+    const { fixture, map } = await mountWatched('/en/search/lahore', { list });
+    await firstSearch(list);
+    const before = list.mock.calls.length;
+
+    map.map = cameraAt({
+      north: 31.6000004,
+      south: 31.4000004,
+      east: 74.5000004,
+      west: 74.2000004,
+    });
+    map.captureMapBounds();
+    // The write has landed, so a box read back from the address would now differ from the camera's.
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(urlQuery()).toHaveProperty('ne_lat', '31.6');
+      },
+      { timeout: 3000 },
+    );
+    // Wait out more than twice the 600ms results debounce, which each search restarts.
+    await new Promise<void>((r) => setTimeout(r, 1500));
+
+    expect(list).toHaveBeenCalledTimes(before + 1);
+    expect(lastQuery(list).bounds).toEqual({
+      north: 31.6000004,
+      south: 31.4000004,
+      east: 74.5000004,
+      west: 74.2000004,
+    });
+  });
+
+  it('keeps the country heading of a bare search once the page has written its viewport', async () => {
+    const { fixture, map } = await mountWatched('/en/search');
+    expect(h1Text(fixture)).toBe('Pakistan');
+
+    map.map = cameraAt(PANNED);
+    map.captureMapBounds();
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(urlQuery()).toHaveProperty('ne_lat', '31.6');
+      },
+      { timeout: 3000 },
+    );
+    fixture.detectChanges();
+
+    expect(h1Text(fixture)).toBe('Pakistan');
+  });
+
+  it('restores the viewport in a link by searching it and fitting the camera to it', async () => {
+    const list = listSpy();
+    const { acquire, camera, leaflet } = fakeLeaflet();
+    const { fixture, map } = await mountWatched(withQuery('/en/search/lahore', FRAMING), {
+      list,
+      acquire,
+    });
+
+    await openMap(fixture, map);
+    // With the pins drawn, a refit onto the results would already have happened.
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(leaflet.marker).toHaveBeenCalled();
+      },
+      { timeout: 3000 },
+    );
+
+    expect(queryAt(list, 0).bounds).toEqual(FRAMING_BOX);
+    expect(camera.fitBounds).toHaveBeenCalledTimes(1);
+    expect(leaflet.latLngBounds).toHaveBeenCalledWith([31.3, 74], [31.75, 74.7]);
+    expect(camera.fitBounds).toHaveBeenCalledWith([
+      [31.3, 74],
+      [31.75, 74.7],
+    ]);
   });
 });

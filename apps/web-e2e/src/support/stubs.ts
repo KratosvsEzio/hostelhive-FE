@@ -85,6 +85,59 @@ export async function stubListings(
   };
 }
 
+/**
+ * One hostel as `/public/hostels` serves it: a search-index document, not the detail serializer's.
+ * It carries what the listings mapper reads (`toListing`): a position, an area and city, a gender
+ * and property type, an active status and the legacy flat `starting_price` it falls back to when
+ * a document has no per-occupancy price block.
+ */
+function searchHostel(
+  id: string,
+  name: string,
+  area: string,
+  latitude: number,
+  longitude: number,
+): Record<string, unknown> {
+  return {
+    id,
+    name,
+    description: 'A stubbed hostel inside Lahore.',
+    area,
+    city: 'Lahore',
+    state: 'Punjab',
+    country: 'Pakistan',
+    country_code: 'PK',
+    gender_type: 'co-living',
+    property_type: 'building',
+    total_rooms: 4,
+    starting_price: 15000,
+    currency: 'PKR',
+    latitude,
+    longitude,
+    status: { id: 1, slug: 'active', name: 'Active' },
+    offers: [],
+    attachments: [],
+    created_at: '2024-01-01T00:00:00.000Z',
+  };
+}
+
+/**
+ * A `/public/hostels` body with two active hostels inside Lahore, for `stubListings`.
+ *
+ * The suite's only non-empty results. A map builds its pins, and settles its camera around them,
+ * only when a search returns something; with the default empty list a spec that depends on the
+ * camera moving after load has nothing to observe, and passes for the wrong reason. Both sit well
+ * away from the middle of the city, so a drag that starts at the middle of the map does not start
+ * on a pin.
+ */
+export const LAHORE_RESULTS = {
+  hostels: [
+    searchHostel('hLhr01', 'Stub Hostel Model Town', 'Model Town', 31.56, 74.31),
+    searchHostel('hLhr02', 'Stub Hostel Johar Town', 'Johar Town', 31.47, 74.27),
+  ],
+  pagination: { current_page: 1, next_page: null, prev_page: null, total_pages: 1, total_count: 2 },
+};
+
 /** A geocoder suggestion for Karachi, for specs that pick a place other than the one on screen. */
 export const KARACHI_PHOTON = {
   geometry: { type: 'Point', coordinates: [67.0011, 24.8607] },
