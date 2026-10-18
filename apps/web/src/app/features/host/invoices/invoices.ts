@@ -34,7 +34,6 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { ApiError, Invoice, InvoiceKind, InvoiceStatus } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -210,7 +209,6 @@ export class Invoices {
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
   private readonly i18n = inject(TranslocoService);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -1052,7 +1050,6 @@ export class Invoices {
   protected onInvoiceUpdated(saved: Invoice | null): void {
     this.closeEdit();
     if (!saved) {
-      this.refetchDelay.track('/renter_bills');
       this.refresh.update((n) => n + 1);
       return;
     }
@@ -1248,7 +1245,6 @@ export class Invoices {
   protected onInvoiceCreated(saved: Invoice | null): void {
     this.closeAdd();
     if (!saved) {
-      this.refetchDelay.track('/renter_bills');
       this.refresh.update((n) => n + 1);
       return;
     }
