@@ -11,7 +11,7 @@ import { HostBillingStore, HostPropertyStore, PropertyEntry } from '@services';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NavEntry, hostNav, splitNav, tabBarSuffixes } from '@layout/host-shell/host-nav';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
-import { accommodationLabel } from '@util/accommodation-type';
+import { accommodationLabelKey } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -145,8 +145,8 @@ export class HostMore {
     return STATUS_CLASS[p.status] ?? 'bg-ink-100 text-ink-500';
   }
 
-  protected genderLabel(g: PropertyAccommodationType): string {
-    return accommodationLabel(g);
+  protected genderLabelKey(g: PropertyAccommodationType): string {
+    return accommodationLabelKey(g);
   }
 
   protected genderClass(g: PropertyAccommodationType): string {

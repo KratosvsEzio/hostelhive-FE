@@ -28,10 +28,11 @@ import { MobileApp } from '@core/mobile-app';
 import { SessionStore } from '@core/auth';
 import { Button, Dropdown, DropdownOption, StatusTone, TooltipFixed } from '@hostelhive/ui';
 import { ListingStatus, PropertyAccommodationType } from '@hostelhive/data-access';
-import { accommodationLabel } from '@util/accommodation-type';
+import { accommodationLabel, accommodationLabelKey } from '@util/accommodation-type';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { Logo } from '@core/brand/logo';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LocaleStore } from '@core/i18n/locale-store';
 
 const PILL_TONE: Record<ListingStatus, StatusTone> = {
   published: 'ok',
@@ -86,6 +87,8 @@ export class HostLayout {
   protected readonly billingStore = inject(HostBillingStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly locale = inject(LocaleStore);
+  private readonly i18n = inject(TranslocoService);
 
   /** Follows the sidebar's own width, so the rail does not leave 192px of empty gutter. */
   protected readonly contentPadding = computed(() =>
@@ -149,17 +152,22 @@ export class HostLayout {
     }),
   );
 
-  protected readonly propertyDropdownOptions = computed<DropdownOption[]>(() =>
-    this.propertyStore.properties().map((p) => ({
+  protected readonly propertyDropdownOptions = computed<DropdownOption[]>(() => {
+    // Read as a gate: it re-runs this once the language file lands, and translating before
+    // then would log "Missing translation" for keys every locale file has.
+    const ready = this.locale.ready();
+    return this.propertyStore.properties().map((p) => ({
       value: p.id,
       label: p.name,
       subtitle: `${p.area}, ${p.city}`,
       statusTone: PILL_TONE[p.status],
       statusLabel: PILL_LABEL[p.status],
-      suffixBadge: this.genderLabel(p.accommodationType),
+      suffixBadge: ready
+        ? this.i18n.translate<string>(accommodationLabelKey(p.accommodationType))
+        : accommodationLabel(p.accommodationType),
       suffixBadgeClass: this.genderPillClass(p.accommodationType),
-    }))
-  );
+    }));
+  });
 
   /**
    * Spinner state for the property switcher.
@@ -216,10 +224,6 @@ export class HostLayout {
     // matches no route and drops the host on the public home page.
     const page = hostPagePath(this.router.url);
     void this.router.navigate(['/host', value, ...(page ? page.split('/') : [])]);
-  }
-
-  private genderLabel(gender: PropertyAccommodationType): string {
-    return accommodationLabel(gender);
   }
 
   private genderPillClass(gender: PropertyAccommodationType): string {

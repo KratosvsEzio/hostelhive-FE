@@ -42,3 +42,12 @@ export const ACCOMMODATION_LABEL_KEYS: Record<AccommodationType, string> = {
 export function accommodationLabel(type: string): string {
   return ACCOMMODATION_LABELS[type as AccommodationType] ?? type;
 }
+
+/**
+ * The translation key for an accommodation type, for the `transloco` pipe or `translate()`.
+ * Falls back to the raw value, which Transloco renders as-is for a missing key — the same
+ * answer {@link accommodationLabel} gives for a type it does not know.
+ */
+export function accommodationLabelKey(type: string): string {
+  return ACCOMMODATION_LABEL_KEYS[type as AccommodationType] ?? type;
+}

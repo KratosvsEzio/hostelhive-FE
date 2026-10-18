@@ -75,7 +75,7 @@ import {
   seededFilters,
 } from '@features/public/search/search-scope';
 import { ListingCard } from '@features/public/search/listing-card/listing-card';
-import { accommodationLabel } from '@util/accommodation-type';
+import { accommodationLabelKey } from '@util/accommodation-type';
 import { DEFAULT_OCCUPANCY_TYPE } from '@util/occupancy-type';
 import { TranslocoPipe, TranslocoService, translate } from '@jsverse/transloco';
 
@@ -1477,7 +1477,7 @@ export class SearchMap {
   }
 
   private genderLabel(g: AccommodationType): string {
-    return accommodationLabel(g);
+    return translate(accommodationLabelKey(g));
   }
 
   private esc(s: string): string {
