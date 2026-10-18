@@ -66,6 +66,7 @@ import {
   SearchFilters,
 } from '@features/public/search/search-filters/search-filters';
 import { mergeSearchParams } from '@features/public/search/search-params';
+import { isPriceSort } from '@features/public/search/search-sort';
 import {
   EVERYWHERE_KEY,
   PLACE_KEYS_NULLED,
@@ -1633,7 +1634,7 @@ export class SearchMap {
           ...RETIRED_KEYS_NULLED,
           [EVERYWHERE_KEY]: null,
           gender,
-          ...(!gender && p?.get('sort')?.startsWith('price-') ? { sort: null } : {}),
+          ...(!gender && isPriceSort(p?.get('sort')) ? { sort: null } : {}),
           ...seededFilters(this.seed(), p),
           ...geo,
         },
