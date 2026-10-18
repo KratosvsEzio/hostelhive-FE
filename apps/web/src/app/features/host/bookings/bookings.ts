@@ -64,6 +64,7 @@ import {
 } from './booking-details-panel';
 import { NotificationService } from '@core/notification.service';
 import { RefetchDelay } from '@core/refetch-delay';
+import { SessionStore } from '@core/auth/session-store';
 import { errorStatus } from '@core/errors/api-error-text';
 import { isUnauthorized } from '@core/errors/is-unauthorized';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
@@ -75,6 +76,7 @@ import { bookingPath, invoicePath } from '@util/host-links';
 import { buildInvoiceId } from '@util/table-configs/invoice-table-cols';
 import { bookingRefusal } from '@util/booking-refusal';
 import {
+  MoveFailureOptions,
   MovedOnKind,
   bookingMoveFailureKey,
   crossPayInvoiceFailureKey,
@@ -275,6 +277,7 @@ export class HostBookings {
   private readonly router = inject(Router);
   private readonly i18n = inject(TranslocoService);
   private readonly refetchDelay = inject(RefetchDelay);
+  private readonly session = inject(SessionStore);
   private readonly money = new MoneyPipe();
 
   /** The booking `bookings/:bookingId` names, or null on the list's own URL. */
@@ -618,7 +621,7 @@ export class HostBookings {
     const hostelId = this.hostelId();
     const epoch = this.epoch;
     const url = this.urlBookingId;
-    const key = bookingMoveFailureKey(err);
+    const key = this.failureKey(err);
     const action = surface === 'assign' ? 'checkIn' : this.dialog()?.action;
     const roomsMove = action === 'checkIn' || action === 'checkOut' || action === 'cancel';
     const stillHere = () => this.epoch === epoch && this.urlBookingId === url && this.hostelId() === hostelId;
@@ -663,7 +666,7 @@ export class HostBookings {
 
   /** A refusal for a move with no surface of its own: the details panel's footer, or a toast. */
   private reportRefusal(id: string, err: unknown): void {
-    const key = bookingMoveFailureKey(err);
+    const key = this.failureKey(err);
     if (this.refusalSurface(id) === 'panel') this.viewError.set(key);
     else this.refusalToast(key, err);
   }
@@ -671,6 +674,19 @@ export class HostBookings {
   /** A refused move's toast, unless the session was rejected: the sign-out takes over from there. */
   private refusalToast(key: string, err: unknown): void {
     if (!isUnauthorized(err)) this.notifications.error(this.i18n.translate<string>(key));
+  }
+
+  /**
+   * Who a refusal is worded for, read as it lands: a permission the owner's account lacks is for
+   * HostelHive support to grant, one a manager's lacks is the owner's to ask about.
+   */
+  private failureOptions(): MoveFailureOptions {
+    return { owner: this.session.hasRole('host') };
+  }
+
+  /** A refused stay move's translation key, worded for whoever is signed in. */
+  private failureKey(err: unknown): string {
+    return bookingMoveFailureKey(err, this.failureOptions());
   }
 
   /**
@@ -767,7 +783,7 @@ export class HostBookings {
       return;
     }
     const hostelId = this.hostelId();
-    const fail = (err: unknown) => this.dialogError.set(bookingMoveFailureKey(err));
+    const fail = (err: unknown) => this.dialogError.set(this.failureKey(err));
     // Every refusal here is written into the dialog, so the global toast would repeat it.
     const quiet = { suppressErrorToast: true };
     const roomsMoved = () => this.refetchDelay.track('/rooms');
@@ -853,7 +869,7 @@ export class HostBookings {
                   return updated;
                 }),
                 catchError((err: unknown) => {
-                  invoiceFailureKey = crossPayInvoiceFailureKey(err);
+                  invoiceFailureKey = crossPayInvoiceFailureKey(err, this.failureOptions());
                   return of(updated);
                 }),
               );
@@ -912,7 +928,7 @@ export class HostBookings {
    */
   private onGenerateRefused(booking: HostBooking, err: unknown): void {
     if (bookingRefusal(err) !== 'invoiceExists') {
-      this.dialogError.set(bookingMoveFailureKey(err));
+      this.dialogError.set(this.failureKey(err));
       return;
     }
     this.closeDialog();
@@ -956,7 +972,7 @@ export class HostBookings {
       (id) => this.bookingsApi.checkIn(this.hostelId(), id, allocations, { suppressErrorToast: true }),
       'Checked in',
       sel.rooms.map((r) => `Room ${r.roomNumber} × ${r.guests}`).join(', '),
-      (err) => this.assignError.set(bookingMoveFailureKey(err)),
+      (err) => this.assignError.set(this.failureKey(err)),
       () => {
         this.assigning.set(null);
         this.refetchDelay.track('/rooms');

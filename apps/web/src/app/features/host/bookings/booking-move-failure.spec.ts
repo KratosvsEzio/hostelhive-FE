@@ -1,6 +1,13 @@
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
 import { ApiError } from '@hostelhive/data-access';
-import { hostBooking } from '@app/testing/host-builders';
+import { apiErrorWithCode, hostBooking } from '@app/testing/host-builders';
+import { API_CONFIG } from '@core/api-config';
+import { CRM_REQUIRED_CODE, CRM_REQUIRED_MESSAGE } from '@core/host-access/host-access';
+import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import {
+  MoveFailureOptions,
   MovedOnKind,
   bookingMoveFailureKey,
   crossPayInvoiceFailureKey,
@@ -459,5 +466,286 @@ describe('crossPayInvoiceFailureKey', () => {
     { why: 'the rejection is empty', err: {}, key: 'hostBookings.payTheInvoiceOnItsOwn' },
   ])('returns $key when $why', ({ err, key }) => {
     expect(crossPayInvoiceFailureKey(err)).toBe(key);
+  });
+});
+
+/** The backend's CanCan refusal, and the same text its host and manager check sends. */
+const CANCAN = 'You are not authorized to access this page.';
+const UNREACHABLE = 'common.cannotReachTheServer';
+const PLAN_HAS_NO_CRM = 'hostBookings.planHasNoCrm';
+const OWNER: MoveFailureOptions = { owner: true };
+/** The keys only a 403 may read as. */
+const FORBIDDEN_KEY = /^hostBookings\.(notAllowed|notAllowedOwner|planHasNoCrm)$/;
+
+/** One 422 text of every kind `bookingRefusal` tells apart. */
+const REFUSAL_TEXTS: readonly string[] = [
+  'This hostel does not accept bookings',
+  'This booking can no longer be cancelled',
+  'Bookings cannot be cancelled within 3 days of check-in',
+  'Checkin date cannot be in the past',
+  'Checkout date must be after check-in date',
+  'Room 101 is not available for booking',
+  'Room 101 has only 1 bed(s) available',
+  'Booking is already checked in',
+  'Only confirmed bookings can be checked in',
+  'This booking is already paid',
+  'An invoice already exists for this booking',
+  'Occupancy is already inactive',
+  'A cancellation reason is required',
+  'Invalid room ID',
+];
+
+interface Classifier {
+  name: string;
+  fn: (err: unknown, opts?: MoveFailureOptions) => string;
+  /** What a refusal it does not tell apart reads as. */
+  fallback: string;
+  /** What a 404 reads as. */
+  notFound: string;
+  /** A 422 text, and what it reads as. */
+  refusal: { text: string; key: string };
+}
+
+const CLASSIFIERS: readonly Classifier[] = [
+  {
+    name: 'bookingMoveFailureKey',
+    fn: bookingMoveFailureKey,
+    fallback: 'hostBookings.moveNotAccepted',
+    notFound: 'hostBookings.bookingNotFound',
+    refusal: { text: 'Room 101 has only 1 bed(s) available', key: 'hostBookings.notEnoughBedsFree' },
+  },
+  {
+    name: 'releaseFailureKey',
+    fn: releaseFailureKey,
+    fallback: 'hostBookings.couldNotReleaseRoom',
+    notFound: 'hostBookings.couldNotReleaseRoom',
+    refusal: { text: 'Occupancy is already inactive', key: 'hostBookings.roomAlreadyReleased' },
+  },
+  {
+    name: 'crossPayInvoiceFailureKey',
+    fn: crossPayInvoiceFailureKey,
+    fallback: 'hostBookings.payTheInvoiceOnItsOwn',
+    notFound: 'hostBookings.invoiceNoLongerExists',
+    refusal: { text: 'Status is invalid', key: 'hostBookings.payTheInvoiceOnItsOwn' },
+  },
+];
+
+/** Who is signed in, and the permission sentence a 403 reads as for them. */
+const ROLES: readonly { role: string; opts: MoveFailureOptions; permission: string }[] = [
+  { role: 'staff', opts: { owner: false }, permission: 'hostBookings.notAllowed' },
+  { role: 'owner', opts: { owner: true }, permission: 'hostBookings.notAllowedOwner' },
+];
+
+/** Each case once per role, so a test reads `{ ...the case, role, opts, permission }`. */
+function perRole<T extends object>(cases: readonly T[]) {
+  return cases.flatMap((c) => ROLES.map((r) => ({ ...c, ...r })));
+}
+
+describe.each(CLASSIFIERS)('$name when the server answers 403', ({ fn, fallback, notFound, refusal }) => {
+  it.each<{ why: string; opts: MoveFailureOptions | undefined }>([
+    { why: 'no options are given', opts: undefined },
+    { why: 'the options are empty', opts: {} },
+    { why: 'the owner flag is off', opts: { owner: false } },
+    { why: 'the owner flag is unset', opts: { owner: undefined } },
+  ])('names the staff permission when $why', ({ opts }) => {
+    expect(fn(apiError(403, [CANCAN]), opts)).toBe('hostBookings.notAllowed');
+  });
+
+  it('names the owner permission when the owner flag is on', () => {
+    expect(fn(apiError(403, [CANCAN]), { owner: true })).toBe('hostBookings.notAllowedOwner');
+  });
+
+  it.each(
+    perRole<{ why: string; err: unknown }>([
+      { why: 'the body carried no message', err: apiError(403) },
+      { why: 'the body carried an empty list of messages', err: apiError(403, []) },
+      { why: 'it is a bare status', err: { status: 403 } },
+      { why: 'the code is missing', err: { status: 403, serverMessages: [CANCAN] } },
+      { why: 'the code is empty', err: { ...apiError(403, [CANCAN]), code: '' } },
+      { why: 'the code is a number', err: { ...apiError(403, [CANCAN]), code: 42 } },
+    ]),
+  )('names the $role permission when $why', ({ err, opts, permission }) => {
+    expect(fn(err, opts)).toBe(permission);
+  });
+
+  it.each(
+    perRole<{ why: string; err: unknown }>([
+      {
+        why: 'the code and the message both come back',
+        err: apiErrorWithCode(403, CRM_REQUIRED_CODE, [CRM_REQUIRED_MESSAGE]),
+      },
+      { why: 'only the code comes back', err: apiErrorWithCode(403, CRM_REQUIRED_CODE) },
+      {
+        why: 'the code comes back beside a message that says something else',
+        err: apiErrorWithCode(403, CRM_REQUIRED_CODE, [CANCAN]),
+      },
+    ]),
+  )('names the plan for the $role when $why', ({ err, opts }) => {
+    expect(fn(err, opts)).toBe(PLAN_HAS_NO_CRM);
+  });
+
+  it.each(
+    perRole<{ why: string; err: unknown }>([
+      { why: 'only the message comes back', err: apiError(403, [CRM_REQUIRED_MESSAGE]) },
+      {
+        why: 'only the message comes back and the status has no code',
+        err: { status: 403, serverMessages: [CRM_REQUIRED_MESSAGE] },
+      },
+      {
+        why: 'the message comes beside another',
+        err: apiError(403, [CANCAN, CRM_REQUIRED_MESSAGE]),
+      },
+    ]),
+  )('names the plan for the $role when $why', ({ err, opts }) => {
+    expect(fn(err, opts)).toBe(PLAN_HAS_NO_CRM);
+  });
+
+  it.each(
+    perRole<{ why: string; err: unknown }>([
+      { why: 'the code is forbidden', err: apiErrorWithCode(403, 'forbidden') },
+      { why: 'the code is forbidden beside a message', err: apiErrorWithCode(403, 'forbidden', ['Forbidden']) },
+      {
+        why: 'the code is forbidden beside the CanCan message',
+        err: apiErrorWithCode(403, 'forbidden', [CANCAN]),
+      },
+      { why: 'the code is one nobody has heard of', err: apiErrorWithCode(403, 'ip_blocked', [CANCAN]) },
+      {
+        why: 'the code is forbidden beside the text of a 422 refusal',
+        err: apiErrorWithCode(403, 'forbidden', ['This booking is already paid']),
+      },
+    ]),
+  )('keeps the generic reading for the $role when $why', ({ err, opts }) => {
+    expect(fn(err, opts)).toBe(fallback);
+  });
+
+  it.each(REFUSAL_TEXTS)('names the permission, not the refusal, when the 403 carries "%s"', (text) => {
+    const err = apiError(403, [text]);
+    for (const { role, opts, permission } of ROLES) expect(fn(err, opts), role).toBe(permission);
+  });
+
+  it.each(
+    perRole<{ why: string; err: unknown }>([
+      { why: 'only the message holds the plan text', err: { status: 403, message: CRM_REQUIRED_MESSAGE } },
+      {
+        why: 'only the message holds the text of a 422 refusal',
+        err: { status: 403, message: 'This booking is already paid' },
+      },
+      {
+        why: 'only the message holds the text of a wrong-stage refusal',
+        err: { status: 403, message: 'Only confirmed bookings can be checked in' },
+      },
+      {
+        why: 'the diagnostic message holds the plan text',
+        err: { ...apiError(403), message: CRM_REQUIRED_MESSAGE },
+      },
+    ]),
+  )('names the $role permission when $why', ({ err, opts, permission }) => {
+    expect(fn(err, opts)).toBe(permission);
+  });
+
+  describe('for anything that is not a 403, the owner flag changes nothing', () => {
+    it('reads an unreachable server as unreachable', () => {
+      expect(fn(apiError(0), OWNER)).toBe(UNREACHABLE);
+    });
+
+    it('reads a 404 as it always did', () => {
+      expect(fn(apiError(404, ['Not Found']), OWNER)).toBe(notFound);
+    });
+
+    it('reads a 422 it tells apart as it always did', () => {
+      expect(fn(apiError(422, [refusal.text]), OWNER)).toBe(refusal.key);
+    });
+
+    it.each<{ why: string; err: unknown }>([
+      { why: 'a 401', err: apiError(401, ['Unauthorized']) },
+      { why: 'a 401 carrying the CanCan text', err: apiError(401, [CANCAN]) },
+      { why: 'a 400', err: apiError(400, ['Bad request']) },
+      { why: 'a 500', err: apiError(500) },
+      { why: 'a plain error', err: new Error('booking b1 not in response') },
+      { why: 'a null rejection', err: null },
+      { why: 'an empty rejection', err: {} },
+      { why: 'a 422 nothing recognises', err: apiError(422, ['Disposition is invalid']) },
+      { why: 'a 422 with no message', err: apiError(422) },
+    ])('still falls back to the generic reading for $why', ({ err }) => {
+      expect(fn(err, OWNER)).toBe(fallback);
+    });
+
+    it.each(REFUSAL_TEXTS)('reads a 422 carrying "%s" as it does without the flag', (text) => {
+      const err = apiError(422, [text]);
+      expect(fn(err, OWNER)).toBe(fn(err));
+      expect(fn(err, OWNER)).not.toMatch(FORBIDDEN_KEY);
+    });
+
+    describe.each([0, 404, 422, 500])('on a %i', (status) => {
+      const unchanged: Record<number, string> = {
+        0: UNREACHABLE,
+        404: notFound,
+        422: fallback,
+        500: fallback,
+      };
+
+      it.each<{ why: string; err: unknown }>([
+        {
+          why: 'the plan code and message come back',
+          err: apiErrorWithCode(status, CRM_REQUIRED_CODE, [CRM_REQUIRED_MESSAGE]),
+        },
+        { why: 'only the plan code comes back', err: apiErrorWithCode(status, CRM_REQUIRED_CODE) },
+        { why: 'only the plan message comes back', err: apiError(status, [CRM_REQUIRED_MESSAGE]) },
+        { why: 'the CanCan message comes back', err: apiError(status, [CANCAN]) },
+      ])('reads as it did when $why', ({ err }) => {
+        expect(fn(err, OWNER)).toBe(unchanged[status]);
+      });
+    });
+  });
+});
+
+describe('a 403 as the error interceptor delivers it', () => {
+  const BASE = 'https://api.test';
+  const url = `${BASE}/api/host/hostels/h1/bookings/b1/mark_as_confirmed`;
+  let http: HttpClient;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: BASE } },
+      ],
+    });
+    http = TestBed.inject(HttpClient);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  /** What a move rejects with when the server answers 403 with `body`, after the interceptor normalised it. */
+  function refusedWith(body: unknown): ApiError {
+    let caught: ApiError | undefined;
+    http.post(url, {}).subscribe({ error: (e: ApiError) => (caught = e) });
+    httpMock.expectOne(url).flush(body, { status: 403, statusText: 'Forbidden' });
+    expect(caught?.status).toBe(403);
+    return caught as ApiError;
+  }
+
+  describe.each(CLASSIFIERS)('$name', ({ fn, fallback }) => {
+    it.each(
+      perRole<{ why: string; body: unknown }>([
+        { why: 'a CanCan refusal sent as { error }', body: { success: false, error: CANCAN } },
+        { why: 'a refusal of a user who is neither host nor manager sent as { errors }', body: { errors: [CANCAN] } },
+      ]),
+    )('names the $role permission for $why', ({ body, opts, permission }) => {
+      expect(fn(refusedWith(body), opts)).toBe(permission);
+    });
+
+    it.each(ROLES)('names the plan for the $role when the body carries crm_required', ({ opts }) => {
+      const body = { success: false, code: CRM_REQUIRED_CODE, errors: [CRM_REQUIRED_MESSAGE] };
+      expect(fn(refusedWith(body), opts)).toBe(PLAN_HAS_NO_CRM);
+    });
+
+    it.each(ROLES)('keeps the generic reading for the $role when the body carries forbidden', ({ opts }) => {
+      const body = { success: false, code: 'forbidden', errors: ['Forbidden'] };
+      expect(fn(refusedWith(body), opts)).toBe(fallback);
+    });
   });
 });

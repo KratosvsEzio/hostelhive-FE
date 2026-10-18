@@ -5,6 +5,7 @@ import {
   computed,
   effect,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -181,8 +182,11 @@ export class Utilities {
     return deleted.size ? all.filter((b) => !deleted.has(b.id)) : all;
   });
 
+  /** The footer's bill count: each list read sets it, and `reloadTotals` corrects it after a delete. */
+  private readonly listTotal = linkedSignal(() => this.state().total);
+
   protected readonly totalPages = computed(() => {
-    const total = this.state().total;
+    const total = this.listTotal();
     return total > 0 ? Math.ceil(total / PAGE_SIZE) : null;
   });
 
@@ -348,7 +352,7 @@ export class Utilities {
 
   protected readonly paginationConf = computed<PaginationConfig>(() => ({
     page: this.page(),
-    total: this.state().total,
+    total: this.listTotal(),
     totalPages: this.totalPages(),
     hasNextPage: this.hasNextPage(),
     itemLabel: 'bill',
@@ -461,9 +465,10 @@ export class Utilities {
   }
 
   /**
-   * The summary cards and status counts come from the list response, and a delete only hides
-   * the row locally. Re-read them quietly so the table keeps its rows instead of flashing
-   * back to a skeleton.
+   * The summary cards, status counts and footer bill count come from the list response, and a
+   * delete only hides the row locally. Re-read them quietly so the table keeps its rows instead
+   * of flashing back to a skeleton. The read reflects the delete only because the backend
+   * refreshes the utility-bill index before answering (`RefreshOnReindex`, be `1c53f15`).
    */
   private reloadTotals(): void {
     const key = this.fetchKey();
@@ -472,6 +477,7 @@ export class Utilities {
       next: (res) => {
         if (res.aggs) this.aggs.set(res.aggs);
         if (res.statuses?.length) this.statuses.set(res.statuses);
+        this.listTotal.set(res.total);
       },
       error: () => undefined,
     });

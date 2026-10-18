@@ -34,7 +34,6 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { ApiError, Invoice, InvoiceKind, InvoiceStatus } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -44,7 +43,7 @@ import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-gro
 import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/table-configs/invoice-table-cols';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
-import { HasPermission } from '@core/auth';
+import { HasPermission, SessionStore } from '@core/auth';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -210,10 +209,10 @@ export class Invoices {
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
   private readonly i18n = inject(TranslocoService);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly session = inject(SessionStore);
 
   /**
    * Back to the property's overview.
@@ -1051,7 +1050,6 @@ export class Invoices {
   protected onInvoiceUpdated(saved: Invoice | null): void {
     this.closeEdit();
     if (!saved) {
-      this.refetchDelay.track('/renter_bills');
       this.refresh.update((n) => n + 1);
       return;
     }
@@ -1165,7 +1163,8 @@ export class Invoices {
           },
           error: (err: unknown) => {
             this.finishPay();
-            const reason = this.i18n.translate<string>(bookingMoveFailureKey(err));
+            const key = bookingMoveFailureKey(err, { owner: this.session.hasRole('host') });
+            const reason = this.i18n.translate<string>(key);
             this.notifications.show(
               { kind: 'error', title: this.i18n.translate<string>('hostInvoices.bookingNotPaid', { reason }) },
               0,
@@ -1246,7 +1245,6 @@ export class Invoices {
   protected onInvoiceCreated(saved: Invoice | null): void {
     this.closeAdd();
     if (!saved) {
-      this.refetchDelay.track('/renter_bills');
       this.refresh.update((n) => n + 1);
       return;
     }

@@ -15,6 +15,8 @@ interface UtilitiesShape {
   statuses: () => Status[];
   bills: () => UtilityBill[];
   state: () => { loading: boolean };
+  paginationConf: () => { total: number; totalPages: number | null };
+  goToPage(p: number): void;
   promptDelete(b: UtilityBill, event: MouseEvent): void;
   confirmDelete(): void;
 }
@@ -68,6 +70,48 @@ describe('Utilities — delete refreshes the summary cards', () => {
     expect(cmp.statuses()).toEqual([{ name: 'Due', slug: 'due', count: 1 }]);
     expect(cmp.bills().map((b) => b.id)).toEqual(['bCGPAU']);
     expect(cmp.state().loading).toBe(false);
+  });
+
+  it('updates the footer bill count after a successful delete', () => {
+    const { cmp, fixture, utilityBills } = setup(() => of(undefined));
+    expect(cmp.paginationConf().total).toBe(2);
+
+    utilityBills.mockReturnValueOnce(of({ ...listResponse(65, 1), bills: [BILL_B], total: 1 }));
+    cmp.promptDelete(BILL_A, click);
+    cmp.confirmDelete();
+    fixture.detectChanges();
+
+    expect(cmp.paginationConf().total).toBe(1);
+    expect(cmp.paginationConf().totalPages).toBe(1);
+  });
+
+  it('keeps the footer bill count when the delete or the follow-up read fails', () => {
+    const failedDelete = setup(() => throwError(() => new Error('500')));
+    failedDelete.cmp.promptDelete(BILL_A, click);
+    failedDelete.cmp.confirmDelete();
+    expect(failedDelete.cmp.paginationConf().total).toBe(2);
+
+    TestBed.resetTestingModule();
+    const failedRead = setup(() => of(undefined));
+    failedRead.utilityBills.mockReturnValueOnce(throwError(() => new Error('network')));
+    failedRead.cmp.promptDelete(BILL_A, click);
+    failedRead.cmp.confirmDelete();
+    expect(failedRead.cmp.paginationConf().total).toBe(2);
+  });
+
+  it('takes the footer bill count from the next list read after a delete corrected it', () => {
+    const { cmp, fixture, utilityBills } = setup(() => of(undefined));
+    utilityBills.mockReturnValueOnce(of({ ...listResponse(65, 1), bills: [BILL_B], total: 1 }));
+    cmp.promptDelete(BILL_A, click);
+    cmp.confirmDelete();
+    fixture.detectChanges();
+    expect(cmp.paginationConf().total).toBe(1);
+
+    utilityBills.mockReturnValueOnce(of({ ...listResponse(500, 30), total: 30 }));
+    cmp.goToPage(2);
+    fixture.detectChanges();
+
+    expect(cmp.paginationConf().total).toBe(30);
   });
 
   it('does not re-read the totals while the delete is still in flight', () => {
