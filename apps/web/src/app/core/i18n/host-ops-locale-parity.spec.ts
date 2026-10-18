@@ -30,6 +30,7 @@ const TRANSLATED_KEYS = [
     'alreadyCheckedIn',
     'bookingHasMovedOn',
     'bookingAlreadyPaid',
+    'alreadyPaidInvoicePaid',
     'invoiceAlreadyExists',
     'giveTheGuestAReason',
     'moveNotAccepted',
@@ -110,6 +111,13 @@ describe('the host bookings and invoices copy in every language', () => {
         (path) => keys[path] === en[path] && !allowed.includes(path),
       );
       expect(copied).toEqual([]);
+    },
+  );
+
+  it.each(['alreadyCheckedIn', 'bookingHasMovedOn', 'bookingAlreadyPaid'])(
+    'words hostBookings.%s in English without asking the host to refresh',
+    (key) => {
+      expect(en[`hostBookings.${key}`]).not.toMatch(/refresh/i);
     },
   );
 

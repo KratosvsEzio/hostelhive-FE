@@ -38,6 +38,20 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 - `hostNav()` for any new destination; it feeds the sidebar, the More page and, through `tabBarSuffixes`, the tab bar.
 - `hostPagePath()` for any URL arithmetic below the hostel (it strips the locale prefix); `bookingPath()` / `invoicePath()` for links to one booking or bill (no locale prefix; the link directives add it).
 - `bookingMoveFailureKey` / `releaseFailureKey` / `crossPayInvoiceFailureKey` (`apps/web/src/app/features/host/bookings/booking-move-failure.ts`) for any new stay-move error.
+- **A refusal that says the booking is not where the screen shows it counts as the server's state, not a failed move.** `movedOnKind` (same file) sorts them into `'done'` (already checked in, already paid) and `'movedOn'` (wrong stage, no longer changeable). `send` (`apps/web/src/app/features/host/bookings/bookings.ts`) hands these to `onMovedOn`, which:
+  - keeps `busy` and re-reads the booking quietly;
+  - swaps the fresh copy into the row and the calendar;
+  - closes the dialog or room allocation once `refusalBorneOut` agrees.
+
+  How it lands:
+  - **`'done'`:** an info toast, and the panel on the fresh copy (check-in always opens it).
+  - **`'movedOn'`:** the red panel footer, or an error toast when no panel is open.
+  - **Re-read shows no change:** the move stays open with `moveNotAccepted`.
+  - **Re-read fails:** a 404 closes everything (`bookingNotFound`); any failure refreshes the list.
+  - **The host opened something else meanwhile:** only the row changes.
+
+  Stages compare by lane (`stageChanged`), because older records still carry legacy slugs. Every other refusal is the host's input and stays where it was (Trello #173; #168 is the same rule for Release).
+- **Cross-pay on a booking already paid elsewhere** still pays the ticked invoice, but only when the database agrees on both halves. That means the booking's copy (`GET bookings/:id`) shows it settled and still in `PAYABLE_LANES`, and the invoice's own copy (`HostOpsApi.invoice`, `GET renter_bills/:id`, not the index-backed bills list) shows it still owing. An invoice found already paid is recorded as paid; one that can't be read is never paid blind (`markPaid` in `bookings.ts`, `hostBookings.alreadyPaidInvoicePaid`).
 - `PAYABLE_LANES` / `INVOICEABLE_LANES` (`apps/web/src/app/features/host/bookings/booking-month.ts`) for "can this booking be paid / invoiced".
 - `tenantStatusLabel` / `tenantStatusTone`, and `invoiceStatusLabel` / `invoiceStatusTone` in `apps/web/src/app/util/table-configs/invoice-table-cols.ts`.
 - `dayRangeStart` / `dayRangeEnd` from `apps/web/src/app/util/date-range-filter.ts` for every date-range filter.
