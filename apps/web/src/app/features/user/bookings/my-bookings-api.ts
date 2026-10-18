@@ -88,6 +88,8 @@ export interface ApiMyBooking {
   status?: ApiNamedSlug | null;
   /** Where the stay is in its life — the one a guest tracks. */
   disposition?: ApiNamedSlug | null;
+  /** The stored confirmation PDF, `null` until the job has written it. Only `url` is read. */
+  confirmation_pdf?: { url?: string | null } | null;
 }
 
 /** `GET /api/bookings/:id` — the same row, wrapped. */
@@ -211,6 +213,8 @@ export interface GuestBooking {
    * under the `pending` status and is still editable.
    */
   statusSlug: string;
+  /** The confirmation PDF's address, `''` until the server has stored one. */
+  confirmationPdfUrl: string;
 }
 
 export interface GuestBookingPage {
@@ -321,7 +325,19 @@ export function toGuestBooking(b: ApiMyBooking): GuestBooking {
     stage: stageFor(b.disposition?.slug),
     stageName: b.disposition?.name ?? '',
     statusSlug: b.status?.slug ?? '',
+    confirmationPdfUrl: b.confirmation_pdf?.url?.trim() ?? '',
   };
+}
+
+/**
+ * Where to download the confirmation, or `''` for no link.
+ *
+ * Only a booking the hostel has confirmed and not cancelled: a change sends a confirmed booking
+ * back to pending while it keeps the PDF it had, which no longer describes the stay.
+ */
+export function confirmationLink(b: GuestBooking): string {
+  const live = b.stage === 'confirmed' || b.stage === 'checked-in' || b.stage === 'checked-out';
+  return live ? b.confirmationPdfUrl : '';
 }
 
 /**

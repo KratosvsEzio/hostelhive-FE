@@ -1,6 +1,5 @@
 import type { Invoice, Tenant } from '@hostelhive/data-access';
 import type { HostOpsApi } from '@services/host-ops-api';
-import { localDay } from '@util/api-date';
 
 /** Every field the add-invoice drawer binds to, held as form-shaped strings. */
 export interface InvoiceForm {
@@ -26,18 +25,18 @@ export interface TenantOption {
 /** Request body accepted by the renter-bill create endpoint. */
 export type CreateInvoicePayload = Parameters<HostOpsApi['createInvoice']>[1];
 
-function today(): string {
-  return localDay();
-}
-
-/** Blank form a fresh invoice starts from, defaulting the issue date to today. */
-export function emptyInvoiceForm(): InvoiceForm {
+/**
+ * Blank form a fresh invoice starts from, issued today.
+ *
+ * @param today - The hostel's `yyyy-MM-dd` (`selectedHostelToday`), not the device's.
+ */
+export function emptyInvoiceForm(today: string): InvoiceForm {
   return {
     renterId: '',
     renterName: '',
     roomId: '',
     roomNumber: '',
-    issuedDate: today(),
+    issuedDate: today,
     dueDate: '',
     rent: '',
     messCharges: '',

@@ -10,7 +10,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { Listing } from '@hostelhive/data-access';
+import { Listing, PROPERTY_TYPES } from '@hostelhive/data-access';
 import { FavoritesStore } from '@util/favorites-store';
 import { SessionStore } from '@core/auth';
 import { SearchCapacity } from '@services';
@@ -140,6 +140,14 @@ export class ListingCard {
   );
   /** Property type pill ('Building', 'Apartment', …) — hidden when the BE sends none. */
   protected readonly propertyType = computed(() => this.listing().propertyType ?? '');
+  /**
+   * Translation key for the pill. The mapper capitalises the slug ('Building'), so match it
+   * case-insensitively; a type the FE doesn't know yet keeps the server's text.
+   */
+  protected readonly propertyTypeKey = computed(() => {
+    const slug = this.propertyType().toLowerCase();
+    return PROPERTY_TYPES.find((p) => p.value === slug)?.key ?? null;
+  });
 
   protected readonly featured = computed(() => !!this.listing().isFeatured);
   protected readonly rating = computed(() => this.listing().rating ?? 0);

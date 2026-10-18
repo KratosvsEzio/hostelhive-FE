@@ -94,7 +94,7 @@ function open(opts: { saved?: UtilityBill; tenants?: Tenant[] } = {}) {
     providers: [
       provideRouter([]),
       { provide: HostOpsApi, useValue: api },
-      { provide: HostPropertyStore, useValue: { selected: signal('DZNqAc') } },
+      { provide: HostPropertyStore, useValue: { selected: signal('DZNqAc'), timeZoneOf: () => of(null) } },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ billId: 'aVXGyz' }) } } },
     ],
   });

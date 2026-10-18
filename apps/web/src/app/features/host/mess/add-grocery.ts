@@ -23,6 +23,8 @@ import {
   ExpenseItemInput,
   HostelsApi,
   HostPropertyStore,
+  followToday,
+  selectedHostelToday,
 } from '@services';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -50,8 +52,6 @@ interface DraftImage {
  *  from the backend uses "groceries"; flip this if it should be "mess" instead. */
 const DEFAULT_EXPENSE_TYPE = 'groceries';
 
-const todayIso = (): string => format(new Date(), 'yyyy-MM-dd');
-
 @Component({
   selector: 'hh-add-grocery',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,7 +66,8 @@ export class AddGrocery {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly todayIso = todayIso();
+  /** The hostel's date: the default purchase day and the latest one the picker offers. */
+  protected readonly today = selectedHostelToday();
 
   /** Present when the form is opened as `/expenses/:expenseId/edit` → edit mode. */
   private readonly editId = this.route.snapshot.paramMap.get('expenseId');
@@ -118,7 +119,7 @@ export class AddGrocery {
     this.route.snapshot.data['lockedExpenseType'] ?? '';
 
   protected readonly expenseType = signal(this.lockedExpenseType || DEFAULT_EXPENSE_TYPE);
-  protected readonly date = signal<string | null>(this.todayIso);
+  protected readonly date = signal<string | null>(this.today());
   protected readonly notes = signal('');
   protected readonly images = signal<DraftImage[]>([]);
 
@@ -162,7 +163,13 @@ export class AddGrocery {
 
   constructor() {
     const editId = this.editId;
-    if (!editId) return;
+    if (!editId) {
+      // The zone lands after the form was seeded: move an untouched date onto the hostel's.
+      followToday(this.today, (from, to) => {
+        if (this.date() === from) this.date.set(to);
+      });
+      return;
+    }
     // Edit mode: once the hostel is known, fetch the expense and pre-fill the form.
     toObservable(this.formOptionsKey)
       .pipe(
@@ -177,7 +184,7 @@ export class AddGrocery {
         if (exp) {
           this.loaded.set(exp);
           this.expenseType.set(exp.expenseType || DEFAULT_EXPENSE_TYPE);
-          this.date.set(exp.date ? exp.date.slice(0, 10) : this.todayIso);
+          this.date.set(exp.date ? exp.date.slice(0, 10) : this.today());
           this.billTotal.set(exp.amount ? String(exp.amount) : '');
           this.notes.set(exp.notes ?? '');
           // Seed the grid with the already-attached receipts (removable, and combinable with

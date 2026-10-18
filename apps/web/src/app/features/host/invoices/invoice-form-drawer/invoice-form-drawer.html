@@ -71,12 +71,14 @@
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <hh-date-picker
+              [today]="today()"
               [label]="'hostInvoices.issueDate' | transloco"
               [value]="f.issuedDate"
               (valueChange)="patch('issuedDate', $event ?? '')"
             />
             @if (!nightly()) {
               <hh-date-picker
+                [today]="today()"
                 [label]="'hostInvoices.dueDate' | transloco"
                 [value]="f.dueDate"
                 (valueChange)="patch('dueDate', $event ?? '')"

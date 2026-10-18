@@ -31,7 +31,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Local today as YYYY-MM-DD. Built from local parts, not toISOString(), which is UTC
  *  and lands on the previous day for any positive-offset zone before 05:00. */
-function todayIso(): string {
+function deviceTodayIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
@@ -79,12 +79,12 @@ function parseMs(iso?: string | null): number | null {
   return new Date(y, m - 1, d).getTime();
 }
 
-function shortLabel(iso: string | null): string {
+function shortLabel(iso: string | null, thisYear: number): string {
   const ms = parseMs(iso);
   if (ms == null) return '';
   const d = new Date(ms);
   const base = `${MONTHS_ABBR[d.getMonth()]} ${d.getDate()}`;
-  return d.getFullYear() === new Date().getFullYear()
+  return d.getFullYear() === thisYear
     ? base
     : `${base} '${pad(d.getFullYear() % 100)}`;
 }
@@ -346,6 +346,14 @@ export class DatePicker {
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
   /**
+   * Today's date (`yyyy-MM-dd`): the marked day and month, the month the calendar opens on
+   * when nothing is picked, and the day a time-first pick lands on. Unset, the device's date.
+   *
+   * The picker has no idea whose calendar it sits on. A console form passes the hostel's date,
+   * which a device in another zone would otherwise put a day off around midnight.
+   */
+  readonly today = input<string | null>(null);
+  /**
    * Adds a time row to the panel and widens the emitted value to
    * `YYYY-MM-DDTHH:mm`. Opt-in: every existing consumer is date-only, and two of them
    * bound the calendar with [min]/[max], so widening the default would change what
@@ -377,6 +385,14 @@ export class DatePicker {
   protected readonly pos = signal<{ top: number; left: number } | null>(null);
   private readonly viewMonth = signal(startOfMonth(new Date()));
 
+  /** {@link today}, or the device's date when it is unset or not a date. */
+  private readonly todayIso = computed(() => {
+    const today = this.today();
+    return today && parseMs(today) != null ? today : deviceTodayIso();
+  });
+  /** {@link todayIso} as the local midnight that names its square. */
+  private readonly todayDate = computed(() => new Date(parseMs(this.todayIso()) ?? 0));
+
   private readonly minMs = computed(() => parseMs(this.min()));
   private readonly maxMs = computed(() => parseMs(this.max()));
 
@@ -404,7 +420,7 @@ export class DatePicker {
 
   /** Trigger text. With a time, both halves show — "Aug 19, 4:30 PM". */
   protected readonly displayLabel = computed(() => {
-    const base = shortLabel(this.value());
+    const base = shortLabel(this.value(), this.todayDate().getFullYear());
     const t = this.timeValue();
     if (!this.withTime() || !base || !t) return base;
     const time = timeLabel(t);
@@ -415,9 +431,7 @@ export class DatePicker {
   protected readonly timeValue = computed(() => timePart(this.value()));
 
   protected readonly monthView = computed<MonthView>(() => {
-    const now = new Date();
-    const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    return buildMonth(this.viewMonth(), this.minMs(), this.maxMs(), todayMs);
+    return buildMonth(this.viewMonth(), this.minMs(), this.maxMs(), this.todayDate().getTime());
   });
 
   protected readonly triggerClass = computed(() => {
@@ -457,7 +471,7 @@ export class DatePicker {
         return `${base} bg-ink-900 text-white`;
       }
     }
-    const now = new Date();
+    const now = this.todayDate();
     if (monthIndex === now.getMonth() && this.viewYear() === now.getFullYear()) {
       return `${base} font-semibold text-brand-500 hover:bg-ink-50`;
     }
@@ -470,7 +484,7 @@ export class DatePicker {
     if (selMs != null && new Date(selMs).getFullYear() === year) {
       return `${base} bg-ink-900 font-semibold text-white`;
     }
-    if (year === this._curYear) {
+    if (year === this.todayDate().getFullYear()) {
       return `${base} font-semibold text-brand-500 hover:bg-ink-50`;
     }
     return `${base} text-ink-700 hover:bg-ink-50`;
@@ -478,7 +492,7 @@ export class DatePicker {
 
   protected toggle(): void {
     if (this.open()) { this.close(); return; }
-    const anchor = parseMs(this.value()) ?? Date.now();
+    const anchor = parseMs(this.value()) ?? this.todayDate().getTime();
     this.viewMonth.set(startOfMonth(new Date(anchor)));
     this.mode.set('day');
     this.reposition();
@@ -529,7 +543,7 @@ export class DatePicker {
 
   /** Time row changed. Falls back to today so a time-first pick still yields a value. */
   protected pickTime(time: string | null): void {
-    const day = datePart(this.value()) || todayIso();
+    const day = datePart(this.value()) || this.todayIso();
     this.value.set(time ? `${day}T${time}` : day);
   }
 

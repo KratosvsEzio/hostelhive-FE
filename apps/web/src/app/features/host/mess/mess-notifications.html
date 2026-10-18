@@ -56,7 +56,7 @@
           <button
             type="button"
             (click)="selectedDay.set(i)"
-            [attr.aria-label]="day.full + (todayIndex === i ? ' (today)' : '')"
+            [attr.aria-label]="day.full + (todayIndex() === i ? ' (today)' : '')"
             class="relative flex min-w-[calc(100%/7)] flex-1 flex-col items-center gap-1.5 px-2 py-3 text-xs transition focus-visible:outline-none"
             [class]="selectedDay() === i
               ? 'border-b-2 border-brand-500 font-semibold text-brand-500 -mb-px'
@@ -64,7 +64,7 @@
           >
             <span class="flex items-center gap-1">
               {{ day.short }}
-              @if (todayIndex === i) {
+              @if (todayIndex() === i) {
                 <span class="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true"></span>
               }
             </span>
@@ -82,7 +82,7 @@
 
       <!-- Meal inputs for the selected day -->
       <div class="p-5">
-        @if (todayIndex === selectedDay()) {
+        @if (todayIndex() === selectedDay()) {
           <p class="mb-4 flex items-center gap-1.5 text-xs font-medium text-brand-500">
             <i class="ti ti-calendar-event" aria-hidden="true"></i>
             {{ 'hostMess.todayThisMenuAppearsIn' | transloco }}

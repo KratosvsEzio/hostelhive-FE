@@ -80,17 +80,11 @@ const REQUIRED_FIELDS = [
 type RequiredField = (typeof REQUIRED_FIELDS)[number];
 
 /**
- * Local calendar date, not `toISOString()`. The latter is UTC and returns *yesterday* for
- * the first five hours of every day in PKT — same reasoning as the tenant form.
+ * A blank form for a new staff member, joining today.
+ *
+ * @param today - The hostel's `yyyy-MM-dd` (`todayIn` with the hostel's zone), not the device's.
  */
-function today(): string {
-  const d = new Date();
-  const pad2 = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
-
-/** A blank form for a new staff member, joining today. */
-export function emptyStaffForm(): StaffForm {
+export function emptyStaffForm(today: string): StaffForm {
   return {
     name: '',
     title: '',
@@ -99,7 +93,7 @@ export function emptyStaffForm(): StaffForm {
     address: '',
     salary: '',
     salaryIssueDate: '',
-    joiningDate: today(),
+    joiningDate: today,
     leavingDate: '',
     // Manager access is always off until the host asks for it: the staff payload carries no
     // manager flag, so there is nothing to restore it from on edit.

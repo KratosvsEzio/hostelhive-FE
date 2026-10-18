@@ -266,6 +266,98 @@ describe('AccountBookingDetail', () => {
     });
   });
 
+  describe('the confirmation download', () => {
+    const URL = 'https://img.example.test/unprocessed/ns-2/documents/9d04b6e1-stay.pdf';
+    const link = (el: HTMLElement) => el.querySelector<HTMLAnchorElement>('[data-testid="download-confirmation"]');
+    const at = (slug: string, stage: GuestBooking['stage'], url = URL) =>
+      booking({ stage, stageName: slug, confirmationPdfUrl: url });
+
+    it('links to the stored PDF in a new tab once the booking is confirmed', () => {
+      const { el } = render(() => of(at('Confirmed', 'confirmed')));
+
+      const a = link(el);
+      expect(a?.getAttribute('href')).toBe(URL);
+      expect(a?.getAttribute('target')).toBe('_blank');
+      expect(a?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(a?.textContent).toContain('userBookings.downloadConfirmation');
+      expect(a?.textContent).toContain('userBookings.opensInNewTab');
+      expect(a?.querySelector('i')?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('keeps the link for a guest who has checked out', () => {
+      const { el } = render(() => of(at('Checked out', 'checked-out')));
+
+      expect(link(el)?.getAttribute('href')).toBe(URL);
+    });
+
+    it('keeps the link while checked in', () => {
+      const { el } = render(() => of(at('Checked in', 'checked-in')));
+
+      expect(link(el)?.getAttribute('href')).toBe(URL);
+    });
+
+    it('has no link, and no gap, while the PDF is not stored', () => {
+      const { el } = render(() => of(at('Confirmed', 'confirmed', '')));
+
+      expect(link(el)).toBeNull();
+    });
+
+    it.each(['requested', 'cancelled', 'no-show'] as const)('hides a PDF the booking still carries while it is %s', (stage) => {
+      const { el } = render(() => of(at(stage, stage)));
+
+      expect(link(el)).toBeNull();
+    });
+
+    it('shows the link once the refresh brings a PDF the handed-over copy lacked', () => {
+      const FRESH = 'https://img.example.test/unprocessed/ns-2/documents/a1f3c2d4-fresh.pdf';
+      history.replaceState({ booking: at('Confirmed', 'confirmed', '') }, '');
+      const answer = new Subject<GuestBooking>();
+      const { fixture, el } = render(() => answer);
+      expect(link(el)).toBeNull();
+
+      answer.next(at('Confirmed', 'confirmed', FRESH));
+      fixture.detectChanges();
+
+      expect(link(el)?.getAttribute('href')).toBe(FRESH);
+    });
+
+    it('drops the link when the refresh says the booking went back for confirmation', () => {
+      const HANDED = 'https://img.example.test/unprocessed/ns-2/documents/b7e9d1c0-handed.pdf';
+      history.replaceState({ booking: at('Confirmed', 'confirmed', HANDED) }, '');
+      const answer = new Subject<GuestBooking>();
+      const { fixture, el } = render(() => answer);
+      expect(link(el)?.getAttribute('href')).toBe(HANDED);
+
+      answer.next(at('Requested', 'requested', HANDED));
+      fixture.detectChanges();
+
+      expect(link(el)).toBeNull();
+    });
+
+    it('drops the link when the guest cancels and the reply still carries the PDF', () => {
+      const KEPT = 'https://img.example.test/unprocessed/ns-2/documents/c5a8e3f2-kept.pdf';
+      const confirmed = booking({
+        statusSlug: 'confirmed',
+        stage: 'confirmed',
+        checkInAt: Date.now() + 10 * 24 * 60 * 60 * 1000,
+        confirmationPdfUrl: KEPT,
+      });
+      const cancelled = booking({ statusSlug: 'cancelled', stage: 'cancelled', confirmationPdfUrl: KEPT });
+      const { fixture, el } = render(() => of(confirmed), undefined, { cancel: () => of(cancelled) });
+      expect(link(el)?.getAttribute('href')).toBe(KEPT);
+
+      [...el.querySelectorAll<HTMLButtonElement>('header button')]
+        .find((b) => b.textContent?.includes('common.cancelBooking'))
+        ?.click();
+      fixture.detectChanges();
+      fixture.debugElement.query(By.directive(ConfirmModal)).componentInstance.confirm.emit();
+      fixture.detectChanges();
+
+      expect(TestBed.inject(MyBookingsApi).cancel).toHaveBeenCalledWith('RbNKwO');
+      expect(link(el)).toBeNull();
+    });
+  });
+
   describe('editing and cancelling', () => {
     const pending = () => booking({ statusSlug: 'pending' });
     /** The action controls under the header — a link to change it, a button to cancel it. */

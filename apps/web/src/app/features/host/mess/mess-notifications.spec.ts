@@ -33,7 +33,7 @@ describe('MessNotifications save failures', () => {
           provide: HostelsApi,
           useValue: { getWeeklyMenus: () => of([]), getMealTypes: () => of([]), saveWeeklyMenus, saveMealTypes },
         },
-        { provide: HostPropertyStore, useValue: { selected: () => HOSTEL_ID } },
+        { provide: HostPropertyStore, useValue: { selected: () => HOSTEL_ID, timeZoneOf: () => of(null) } },
       ],
     }).overrideComponent(MessNotifications, { set: { template: '', imports: [] } });
   });

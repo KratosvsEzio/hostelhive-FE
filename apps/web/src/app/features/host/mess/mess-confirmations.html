@@ -4,7 +4,7 @@
   [breadcrumbs]="[{ label: 'Mess', url: '..' }, { label: 'Confirmations' }]"
 >
   <div hhActions>
-    <hh-date-picker variant="pill" [placeholder]="'hostMess.pickDate' | transloco" [(value)]="selectedDate" />
+    <hh-date-picker variant="pill" [placeholder]="'hostMess.pickDate' | transloco" [(value)]="selectedDate" [today]="today()" />
   </div>
 
   <main class="mx-auto max-w-4xl space-y-5">

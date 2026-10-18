@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DestroyRef, EnvironmentInjector, createEnvironmentInjector, signal } from '@angular/core';
+import {
+  DestroyRef,
+  EnvironmentInjector,
+  PLATFORM_ID,
+  createEnvironmentInjector,
+  signal,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LocaleStore } from './i18n/locale-store';
 import { localeAlternates, withLocale } from './i18n/locales';
@@ -345,5 +351,81 @@ describe('Seo', () => {
 
       expect(jsonLd('two')).toHaveLength(0);
     });
+  });
+
+  describe('clearUnclaimed', () => {
+    it('removes blocks and the preload that no live page claimed, and keeps claimed ones', () => {
+      const page = scope();
+      seo.clearOnDestroy(page.ref, ['organization', 'website']);
+      seo.setJsonLd('organization', {});
+      seo.setJsonLd('website', {});
+      seo.setJsonLd('article', {});
+      seo.preloadImage('https://example.test/hero.webp');
+
+      seo.clearUnclaimed();
+
+      expect(jsonLd('organization')).toHaveLength(1);
+      expect(jsonLd('website')).toHaveLength(1);
+      expect(jsonLd('article')).toHaveLength(0);
+      expect(all(PRELOAD)).toHaveLength(0);
+      page.destroy();
+    });
+
+    it('keeps the preload while a live page claims it', () => {
+      const page = scope();
+      seo.clearOnDestroy(page.ref, ['listing'], { preloadImage: true });
+      seo.preloadImage('https://example.test/hero.webp');
+
+      seo.clearUnclaimed();
+
+      expect(all(PRELOAD)).toHaveLength(1);
+      page.destroy();
+    });
+
+    it('releases a claim on destroy, but keeps an id another live page still claims', () => {
+      const one = scope();
+      const two = scope();
+      seo.clearOnDestroy(one.ref, ['shared', 'mine'], { preloadImage: true });
+      seo.clearOnDestroy(two.ref, ['shared'], { preloadImage: true });
+
+      one.destroy();
+      seo.setJsonLd('shared', {});
+      seo.setJsonLd('mine', {});
+      seo.preloadImage('https://example.test/hero.webp');
+      seo.clearUnclaimed();
+
+      expect(jsonLd('shared')).toHaveLength(1);
+      expect(jsonLd('mine')).toHaveLength(0);
+      expect(all(PRELOAD)).toHaveLength(1);
+
+      two.destroy();
+      seo.setJsonLd('shared', {});
+      seo.preloadImage('https://example.test/hero.webp');
+      seo.clearUnclaimed();
+
+      expect(jsonLd('shared')).toHaveLength(0);
+      expect(all(PRELOAD)).toHaveLength(0);
+    });
+  });
+});
+
+describe('Seo.clearUnclaimed on the server', () => {
+  it('removes nothing, so the rendered HTML keeps every block', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideI18nTesting(),
+        { provide: LocaleStore, useValue: { ready, active } },
+        { provide: PLATFORM_ID, useValue: 'server' },
+      ],
+    });
+    const seo = TestBed.inject(Seo);
+    seo.setJsonLd('article', {});
+    seo.preloadImage('https://example.test/hero.webp');
+
+    seo.clearUnclaimed();
+
+    expect(jsonLd('article')).toHaveLength(1);
+    expect(all(PRELOAD)).toHaveLength(1);
+    document.head.querySelectorAll('script[data-seo], link[data-seo]').forEach((el) => el.remove());
   });
 });

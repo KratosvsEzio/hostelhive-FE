@@ -16,7 +16,9 @@ pages' UI belongs to [search-and-discovery](./search-and-discovery.md); deployme
   and swaps in `FsTranslationLoader`.
 - `apps/web/src/app/app.routes.server.ts`: render mode per path (`serverRoutes`, `clientOnly`).
 - `apps/web/src/app/core/seo.ts`: `SITE_ORIGIN` and the `Seo` service (`apply`, `setJsonLd`,
-  `clearJsonLd`, `clearAllJsonLd`, `clearOnDestroy`, `preloadImage`).
+  `clearJsonLd`, `clearAllJsonLd`, `clearOnDestroy`, `clearUnclaimed`, `preloadImage`).
+- `apps/web/src/app/core/ssr-response.ts`: `SsrResponse.serviceUnavailable()` (503 + `Retry-After` on the
+  server render's response, via `RESPONSE_INIT`) and `isApiOutage(e)`.
 - `apps/web/src/app/core/route-head.ts`: `RouteHeadStrategy` (the app's `TitleStrategy`, provided in
   `app.config.ts`) and `routeHeadFor`. Owns the head of every route whose page does not.
 - `apps/web/src/app/core/social-image.ts`: `placeSocialImage(slug)` and `DEFAULT_SOCIAL_IMAGE` (1200x630
@@ -67,6 +69,14 @@ deepest-wins down the matched tree (`routeHeadFor`):
   provisional.
 - An API error or outage gives the listing the same neutral head as **final**. "Listing not found" is
   only for a genuine 404 (`listing-detail-api.ts` maps only a 404 to "missing").
+
+**An API outage answers 503 on the server** (Trello #154). When the listing's fetch fails with status
+0, a 5xx, or no status at all (the `ssrTimeoutInterceptor` timeout), `isApiOutage` is true and the page
+calls `SsrResponse.serviceUnavailable()`: HTTP 503, `Retry-After: 120`, `Cache-Control: no-store`. The
+body is still the neutral noindex page; the status tells a crawler to retry instead of dropping the
+listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In the browser it is a no-op
+(`RESPONSE_INIT` is null). Only the listing does this so far; search and the landing pages also fetch
+`/public/hostels` on the server and still answer 200 in an outage.
 
 **Google Analytics page views** (`core/google-analytics/google-analytics.service.ts`):
 - **When a view is sent:** after `NavigationEnd` the service waits one macrotask, then for
@@ -144,7 +154,8 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 ## Reuse, don't rebuild
 
 - `Seo` for every head tag. Do not call `Meta` or `Title` directly.
-- `Seo.clearOnDestroy` for any new page that calls `setJsonLd` or `preloadImage`, instead of its own `DestroyRef` block.
+- `Seo.clearOnDestroy` for any new page that calls `setJsonLd` or `preloadImage`, instead of its own `DestroyRef` block. It is also the page's claim on those ids: without it `clearUnclaimed` removes them.
+- `SsrResponse.serviceUnavailable()` with `isApiOutage` for a public page whose server-side fetch fails, so an outage answers 503 rather than a 200 noindex page.
 - A new route declares its head: `data: { head: 'page' }` if its component calls `Seo.apply` (from a
   `ready()`-gated effect, like `home.ts`), `data: { head: 'index', descriptionKey }` for a static page
   worth indexing (also add it to `STATIC_PATHS` in `sitemap-urls.ts`), or nothing if it is private, in
@@ -186,10 +197,15 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
   the `*/` forms.
 - `ssrTimeoutInterceptor` must stay last in the interceptor list in `app.config.ts`. A timed-out request
   is not cached for transfer, so the browser fetches it again.
-- **A click before the app boots strands the server page's JSON-LD.** The router replaces the first
-  navigation before the page component exists in the browser, so `clearOnDestroy` never runs (Trello
-  #138). In e2e, wait for `waitForClient` (`apps/web-e2e/src/support/seo.ts`) before clicking. Without
-  that wait, a head check after the click can pass using only the server HTML.
+- **A click before the app boots used to strand the server page's JSON-LD.** The router replaces the
+  first navigation before the page component exists in the browser, so `clearOnDestroy` never runs
+  (Trello #138). Now `clearOnDestroy` also *claims* its ids, and `RouteHeadStrategy` calls
+  `Seo.clearUnclaimed()` whenever a navigation lands on a `'page'` route: in the browser it removes
+  every JSON-LD block, and the preload, that no live page claimed. So a page that writes JSON-LD **must**
+  call `clearOnDestroy` from its constructor, or its blocks are removed on its first navigation. The e2e
+  "left before the app boots" test reproduces the race by holding the article's lazy chunk. Elsewhere in
+  e2e, wait for `waitForClient` (`apps/web-e2e/src/support/seo.ts`) before clicking; without that wait, a
+  head check after the click can pass using only the server HTML.
 - **Call `apply` from a `ready()`-gated effect, never once in a constructor.** A language switch reuses
   the component, so a constructor `apply` keeps the old language's canonical (how Blog broke, Trello
   #132).

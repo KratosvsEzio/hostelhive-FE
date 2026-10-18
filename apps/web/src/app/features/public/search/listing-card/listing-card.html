@@ -62,7 +62,11 @@
       </hh-badge>
       @if (propertyType()) {
         <hh-badge variant="neutral" [bordered]="false" class="shadow-sm">
-          {{ propertyType() }}
+          @if (propertyTypeKey(); as key) {
+            {{ key | transloco }}
+          } @else {
+            {{ propertyType() }}
+          }
         </hh-badge>
       }
     </div>

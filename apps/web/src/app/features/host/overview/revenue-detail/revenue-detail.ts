@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
@@ -14,11 +15,11 @@ import {
   ErrorState,
   Skeleton,
 } from '@hostelhive/ui';
-import { HostPropertyStore, OverviewApi } from '@services';
+import { HostPropertyStore, OverviewApi, selectedHostelToday, selectedHostelZone } from '@services';
 import { RevenuePoint } from '@hostelhive/data-access';
 import { revenueBars } from '@features/host/overview/charts/chart-helpers';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { DATE_RANGE_PRESETS, DateRange, DateRangePicker } from '@layout/components/date-range-picker/date-range-picker';
+import { DateRange, DateRangePicker, presetRange } from '@layout/components/date-range-picker/date-range-picker';
 import { isNetworkError } from '@util/network-error';
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -47,8 +48,12 @@ export class RevenueDetail {
   private readonly api = inject(OverviewApi);
   protected readonly propertyStore = inject(HostPropertyStore);
 
-  protected readonly dateRange = signal<DateRange | null>(
-    DATE_RANGE_PRESETS.find((p) => p.label === 'Last 12 months')!.fn(),
+  private readonly zone = selectedHostelZone();
+  /** The hostel's date, which the default range and the picker's presets count from. */
+  protected readonly today = selectedHostelToday(new Date(), this.zone);
+
+  protected readonly dateRange = linkedSignal<DateRange | null>(() =>
+    presetRange('Last 12 months', this.today()),
   );
 
   private readonly refresh = signal(0);
@@ -57,13 +62,16 @@ export class RevenueDetail {
     this.refresh();
     const slug = this.propertyStore.selected();
     const range = this.dateRange();
-    return { slug, range };
+    // Held until the zone is known, so the default range isn't fetched twice.
+    return { slug, range, pending: this.zone() === undefined };
   });
 
   protected readonly state = toSignal(
     toObservable(this.query).pipe(
-      switchMap(({ slug, range }) =>
-        slug
+      switchMap(({ slug, range, pending }) =>
+        pending
+          ? of<ViewState>({ loading: true, error: false, networkError: false, data: null })
+          : slug
           ? this.api.monthlyRevenue(slug, toISO(range?.start), toISO(range?.end)).pipe(
               map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
               startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),

@@ -20,7 +20,7 @@ import { EMPTY, Subject, catchError, debounceTime, filter, map, switchMap, take 
 import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive/ui';
 import { MoneyInput } from '@app/shared/money-input/money-input';
 
-import { HostOpsApi, HostPropertyStore } from '@services';
+import { HostOpsApi, HostPropertyStore, followToday, selectedHostelToday } from '@services';
 import { Invoice, Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
 import { PAGE_SIZE } from '@util/pagination';
@@ -79,7 +79,9 @@ export class InvoiceFormDrawer {
   private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly form = signal<InvoiceForm>(emptyInvoiceForm());
+  /** The hostel's date, which a new invoice is issued on by default. */
+  protected readonly today = selectedHostelToday();
+  protected readonly form = signal<InvoiceForm>(emptyInvoiceForm(this.today()));
   protected readonly saving = signal(false);
   protected readonly submitAttempted = signal(false);
   protected readonly formValid = computed(() => isInvoiceFormValid(this.form()));
@@ -123,6 +125,13 @@ export class InvoiceFormDrawer {
     effect(() => {
       const inv = this.invoice();
       if (inv) this.form.set(fromInvoice(inv));
+    });
+
+    // The zone lands after the form was seeded: move an untouched issue date onto the
+    // hostel's today. An invoice being edited keeps the date it was issued on.
+    followToday(this.today, (from, to) => {
+      if (this.invoice()) return;
+      this.form.update((f) => (f.issuedDate === from ? { ...f, issuedDate: to } : f));
     });
 
     // Tenant search — waits for hostelId before calling the API.
