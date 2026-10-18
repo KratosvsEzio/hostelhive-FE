@@ -245,3 +245,14 @@ export async function stubReviews(page: Page, options: StubOptions = {}): Promis
     fulfillApi(page, route, options, { ratings: [] }),
   );
 }
+
+/**
+ * Stubs `GET /api/notifications`, which the shell calls as soon as a session is seated. Answers an
+ * empty inbox by default. Left to the live API, a spec's fake token draws a 401 there, and the
+ * app's 401 handler ends the session mid-test.
+ */
+export async function stubNotifications(page: Page, options: StubOptions = {}): Promise<void> {
+  await page.route('**/api/notifications', (route) =>
+    fulfillApi(page, route, options, { success: true, user_invites: [], aggs: { unread: 0 } }),
+  );
+}
