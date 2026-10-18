@@ -313,6 +313,44 @@ describe('BillingBanner', () => {
     expect(section(el)?.textContent).toContain('ended [10 Oct 2026] grace [15 Oct 2026]');
   });
 
+  describe('past due on a plan Safepay bills', () => {
+    function safepayPastDue(): BannerInput {
+      return owner(
+        billing({
+          auto_renew: true,
+          open_invoice: OPEN_INVOICE,
+          subscription: withSlug('past-due', {
+            billed_by: 'safepay_subscription',
+            safepay_status: 'PAST_DUE',
+            current_period_end: '2026-10-10T00:00:00.000+05:00',
+            grace_until: '2026-10-15T00:00:00.000+05:00',
+          }),
+        }),
+      );
+    }
+
+    it('says Safepay could not charge the card with the grace day, and offers only Go to billing', () => {
+      const el = mount(safepayPastDue(), 'nHelLt', 'uA1', {
+        hostAccess: { pastDueSafepay: 'Safepay failed, live until [{{graceDate}}]' },
+      });
+
+      expect(section(el)?.getAttribute('data-kind')).toBe('past-due');
+      expect(section(el)?.textContent).toContain('Safepay failed, live until [15 Oct 2026]');
+      const links = Array.from(el.querySelectorAll('a'));
+      expect(links).toHaveLength(1);
+      const action = el.querySelector('[data-testid="billing-banner-action"]');
+      expect(links[0]).toBe(action);
+      expect(action?.textContent?.trim()).toBe('hostAccess.goToBilling');
+      expect(action?.getAttribute('href')).toMatch(/\/host\/nHelLt\/subscription$/);
+      expect(el.querySelector('[data-testid="billing-banner-secondary-action"]')).toBeNull();
+      expect(el.querySelector('button')).toBeNull();
+      const text = section(el)?.textContent ?? '';
+      for (const key of ['hostBilling.renew', 'hostAccess.updateCard', 'hostBilling.pay']) {
+        expect(text).not.toContain(key);
+      }
+    });
+  });
+
   describe('countdown', () => {
     it('shows whole days left, in the active language, with the boost note when the plan has boost', () => {
       const state = pastDue(3 * DAY + 5 * HOUR);

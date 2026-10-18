@@ -45,7 +45,11 @@ const ALLOWED: Readonly<Record<string, number>> = {
   'features/admin/billing/payments/admin-payment-drawer.ts': 1,
   'features/admin/billing/plans/admin-plans.html': 2,
   // Billing shows a 422's own `serverMessages[0]` by product rule; `e` is the page's error view.
-  'features/host/subscription/billing-page.html': 3,
+  'features/host/subscription/billing-page.html': 4,
+  // The card and subscription return page's Try again note: a 422's own `serverMessages[0]`
+  // (via `payErrorOutcome`) or our key, never `ApiError.message`.
+  'features/host/subscription/billing-return.ts': 1,
+  'features/host/subscription/billing-return-states.ts': 1,
   // `outcome.message` / `note.message` / `view.message` are copy the billing code builds itself.
   'features/host/subscription/payment-return-retry.ts': 3,
   'features/host/subscription/payment-return-states.ts': 2,

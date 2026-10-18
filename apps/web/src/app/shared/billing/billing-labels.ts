@@ -32,6 +32,18 @@ export function isSafepayBilled(sub: BillingSubscription | null): boolean {
   return slug === 'active' || slug === 'past-due';
 }
 
+/**
+ * Whether a Safepay-billed plan is in its free trial, which Safepay reports as `TRAILING`. A trial
+ * charges nothing, so a past-due plan is never treated as one, whatever Safepay's status says.
+ */
+export function isSafepayTrial(sub: BillingSubscription | null): boolean {
+  return (
+    isSafepayBilled(sub) &&
+    sub?.status.slug === 'active' &&
+    sub.safepay_status === 'TRAILING'
+  );
+}
+
 /** Pill tone for an invoice status. The pill's label comes from {@link billingInvoiceStatusKey}. */
 export function invoiceStatusTone(slug: string | null | undefined): StatusTone {
   switch (slug) {
@@ -284,21 +296,49 @@ export interface PlanButton {
   sublineKey?: string;
   /** Plain text shown under the button. */
   hintKey?: string;
+  /** A second, quieter way to buy: subscribing through Safepay, with a free trial when `days` is set. */
+  subscribe?: PlanSubscribe;
 }
 
+/** The Safepay subscribe action on a plan card. `days` is the plan's free trial, for `startTrial`. */
+export interface PlanSubscribe {
+  key: 'hostBilling.startTrial' | 'hostBilling.subscribeWithSafepay';
+  days?: number;
+}
+
+/**
+ * The plan card's button. A plan Safepay bills offers no change at all: its own card reads
+ * Current plan and every other one Unavailable, whatever action the server sent.
+ */
 export function planButton(
   plan: BillingPlan,
   subscription: BillingSubscription | null,
 ): PlanButton {
   const amount = plan.amount_due_now ?? undefined;
 
+  if (isSafepayBilled(subscription)) {
+    return plan.id === subscription?.plan.id
+      ? {
+          key: 'hostBilling.currentPlanButton',
+          disabled: true,
+          kind: 'checkout',
+        }
+      : { key: 'hostBilling.unavailable', disabled: true, kind: 'checkout' };
+  }
+
   switch (plan.action) {
-    case 'buy':
+    case 'buy': {
+      const days = plan.trial_days ?? 0;
       return {
         key: 'hostBilling.choosePlan',
         disabled: false,
         kind: 'checkout',
+        subscribe:
+          days > 0
+            ? { key: 'hostBilling.startTrial', days }
+            : { key: 'hostBilling.subscribeWithSafepay' },
       };
+    }
 
     case 'current':
       return {

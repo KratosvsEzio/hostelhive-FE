@@ -94,6 +94,40 @@ describe('the billing and pricing copy in every language', () => {
   });
 });
 
+const SAFEPAY_SUBSCRIPTION_KEYS = [
+  'hostBilling.billedBySafepay',
+  'hostBilling.freeTrialUntil',
+  'hostBilling.startTrial',
+  'hostBilling.subscribeWithSafepay',
+  'hostBilling.safepayAccountHint',
+  'hostBilling.cancelTrialTitle',
+  'hostBilling.cancelTrialMessage',
+  'hostBilling.cancelTrial',
+  'hostBilling.keepTrial',
+  'hostBilling.subscribeOpenInvoiceTitle',
+  'hostBilling.subscribeOpenInvoiceMessage',
+  'hostBilling.subscribeOpenInvoiceConfirm',
+  'hostAccess.pastDueSafepay',
+  'hostAccess.graceOverSafepay',
+];
+
+describe('the Safepay subscription copy in every language', () => {
+  it.each(SAFEPAY_SUBSCRIPTION_KEYS)('English has %s', (path) => {
+    expect(typeof at(en, path), path).toBe('string');
+  });
+
+  describe.each(files.filter((f) => f !== 'en.json'))('%s', (file) => {
+    const tree = loadLocale(file);
+
+    it.each(SAFEPAY_SUBSCRIPTION_KEYS)('translates %s, with the English {{params}}', (path) => {
+      const text = at(tree, path);
+      expect(typeof text, path).toBe('string');
+      expect(text, path).not.toBe(at(en, path));
+      expect(params(text as string), path).toEqual(params(at(en, path) as string));
+    });
+  });
+});
+
 /** What `hostBilling.kindNew` said before it was reworded from "first payment" to "new plan". */
 const OLD_KIND_NEW: Record<string, string> = {
   'ar.json': 'الدفعة الأولى · {{start}} – {{end}}',

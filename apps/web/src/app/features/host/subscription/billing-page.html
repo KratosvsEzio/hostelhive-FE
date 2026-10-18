@@ -107,6 +107,19 @@
           </p>
         }
 
+        @if (safepayReason(); as reason) {
+          <p
+            class="flex items-start gap-2 rounded-xl bg-ink-50 px-4 py-3 text-sm text-ink-800"
+            data-testid="safepay-notice"
+          >
+            <i
+              class="ti ti-credit-card mt-px text-base text-ink-500"
+              aria-hidden="true"
+            ></i>
+            <span>{{ reason }}</span>
+          </p>
+        }
+
         @if (!canCheckout() || !canChangePlan()) {
           <p
             class="flex items-center gap-2 text-sm text-ink-600"
@@ -142,6 +155,34 @@
                           }
                   }}
                 </button>
+                @if (view.subscribe; as subscribe) {
+                  <button
+                    hh-button
+                    type="button"
+                    class="mt-2 w-full"
+                    variant="outlined"
+                    [color]="view.subscribeDisabled ? 'default' : 'primary'"
+                    size="md"
+                    data-testid="plan-subscribe"
+                    [disabled]="view.subscribeDisabled"
+                    [loading]="view.subscribeLoading"
+                    (click)="onSubscribe(view)"
+                  >
+                    <i
+                      class="ti text-base"
+                      [class.ti-gift]="subscribe.days"
+                      [class.ti-credit-card]="!subscribe.days"
+                      aria-hidden="true"
+                    ></i>
+                    {{ subscribe.key | transloco: { days: subscribe.days } }}
+                  </button>
+                  <p
+                    class="mt-2 text-xs text-ink-500"
+                    data-field="safepay-account"
+                  >
+                    {{ 'hostBilling.safepayAccountHint' | transloco }}
+                  </p>
+                }
                 @if (view.canUndo) {
                   <button
                     hh-button
@@ -342,7 +383,49 @@
   </hh-confirm-modal>
 }
 
-@if (cancelling()) {
+@if (confirmingSubscribe(); as target) {
+  <hh-confirm-modal
+    icon="ti-receipt"
+    tone="warn"
+    [title]="'hostBilling.subscribeOpenInvoiceTitle' | transloco"
+    [confirmLabel]="'hostBilling.subscribeOpenInvoiceConfirm' | transloco"
+    [cancelLabel]="'common.cancel' | transloco"
+    (confirm)="confirmSubscribe()"
+    (cancel)="dismissSubscribe()"
+  >
+    <p data-testid="subscribe-open-invoice">
+      {{
+        'hostBilling.subscribeOpenInvoiceMessage'
+          | transloco
+            : { number: billing()?.open_invoice?.number, plan: target.name }
+      }}
+    </p>
+  </hh-confirm-modal>
+}
+
+@if (cancelling() && safepayTrial()) {
+  <hh-confirm-modal
+    icon="ti-alert-triangle"
+    tone="danger"
+    confirmColor="danger"
+    [title]="'hostBilling.cancelTrialTitle' | transloco"
+    [confirmLabel]="'hostBilling.cancelTrial' | transloco"
+    [cancelLabel]="'hostBilling.keepTrial' | transloco"
+    (confirm)="confirmCancel()"
+    (cancel)="dismissCancel()"
+  >
+    <p data-testid="cancel-message">
+      {{
+        'hostBilling.cancelTrialMessage'
+          | transloco
+            : {
+                date:
+                  (subscription()?.current_period_end | apiDate: 'd MMM yyyy'),
+              }
+      }}
+    </p>
+  </hh-confirm-modal>
+} @else if (cancelling()) {
   <hh-confirm-modal
     icon="ti-alert-triangle"
     tone="danger"

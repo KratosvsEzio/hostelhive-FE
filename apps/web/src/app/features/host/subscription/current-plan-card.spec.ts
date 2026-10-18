@@ -16,6 +16,8 @@ const COPY = {
     graceUntil: 'Pay by {{date}} to keep your listing',
     switchesTo: 'Switches to {{plan}} on {{date}}',
     undoSwitchLabel: 'Undo the switch to {{plan}}',
+    billedBySafepay: 'Billed monthly by Safepay',
+    freeTrialUntil: 'Free trial until {{date}}',
   },
 };
 
@@ -248,7 +250,92 @@ describe('CurrentPlanCard', () => {
         { autoRenew: true },
       );
 
-      expect(lines(el)).toEqual(['Renews on 12 Nov 2026']);
+      expect(lines(el)).toEqual([
+        'Billed monthly by Safepay',
+        'Renews on 12 Nov 2026',
+      ]);
+      expect(text(el)).not.toContain('Renews automatically');
+    });
+
+    describe('on a plan Safepay bills', () => {
+      const safepay = (
+        slug: string,
+        over: Partial<BillingSubscription> = {},
+      ): BillingSubscription =>
+        subscription(slug, {
+          billed_by: 'safepay_subscription',
+          safepay_status: 'ACTIVE',
+          ...over,
+        });
+
+      it('shows the free trial’s end instead of a renewal while Safepay reports one', () => {
+        const el = render(
+          safepay('active', { safepay_status: 'TRAILING' }),
+          [],
+          { autoRenew: true },
+        );
+
+        expect(lines(el)).toEqual([
+          'Billed monthly by Safepay',
+          'Free trial until 12 Nov 2026',
+        ]);
+        expect(text(el)).not.toContain('Renews');
+      });
+
+      it('says it is billed by Safepay while past due, keeping the dates', () => {
+        const el = render(
+          safepay('past-due', { grace_until: '2026-11-15T00:00:00.000+05:00' }),
+        );
+
+        expect(lines(el)).toEqual([
+          'Billed monthly by Safepay',
+          'Payment was due on 12 Nov 2026',
+          'Pay by 15 Nov 2026 to keep your listing',
+        ]);
+      });
+
+      it('shows the past-due lines, not a free trial, when Safepay still says TRAILING', () => {
+        const el = render(
+          safepay('past-due', {
+            safepay_status: 'TRAILING',
+            grace_until: '2026-11-15T00:00:00.000+05:00',
+          }),
+        );
+
+        expect(lines(el)).toEqual([
+          'Billed monthly by Safepay',
+          'Payment was due on 12 Nov 2026',
+          'Pay by 15 Nov 2026 to keep your listing',
+        ]);
+        expect(text(el)).not.toContain('Free trial until');
+      });
+
+      it('only says when it ends while cancelling, trial or not', () => {
+        const el = render(
+          safepay('active', {
+            safepay_status: 'TRAILING',
+            cancel_at_period_end: true,
+          }),
+        );
+
+        expect(lines(el)).toEqual(['Ends on 12 Nov 2026']);
+      });
+
+      it('says nothing about Safepay once the plan has expired', () => {
+        const el = render(safepay('expired', { safepay_status: 'TRAILING' }));
+
+        expect(lines(el)).toEqual(['Ended on 12 Nov 2026']);
+      });
+
+      it('keeps Cancel plan, and Resume plan while cancelling', () => {
+        let el = render(safepay('active'), [], { canChange: true });
+        expect(el.querySelector('[data-testid="card-cancel"]')).not.toBeNull();
+
+        el = render(safepay('active', { cancel_at_period_end: true }), [], {
+          canChange: true,
+        });
+        expect(el.querySelector('[data-testid="card-resume"]')).not.toBeNull();
+      });
     });
 
     it('leaves a past-due plan’s lines alone', () => {
