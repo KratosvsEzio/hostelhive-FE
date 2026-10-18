@@ -166,3 +166,49 @@ describe('ListingCard heart', () => {
     expect(heartFilled(el)).toBe(false);
   });
 });
+
+describe('ListingCard property-type pill', () => {
+  beforeEach(() => {
+    (window as unknown as Record<string, unknown>)['matchMedia'] = () => ({ matches: true });
+    TestBed.configureTestingModule({
+      imports: [ListingCard],
+      providers: [
+        provideRouter([]),
+        provideI18nTesting(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_CONFIG, useValue: { baseUrl: BASE } },
+        { provide: LocaleStore, useValue: { ready: signal(false), active: signal('en') } },
+      ],
+    });
+  });
+
+  afterEach(() => {
+    delete (window as unknown as Record<string, unknown>)['matchMedia'];
+  });
+
+  async function pill(propertyType: string | undefined): Promise<string | null> {
+    const fixture = TestBed.createComponent(ListingCard);
+    fixture.componentRef.setInput('listing', { ...listing('1', 'Hostel'), propertyType });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const badges = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('hh-badge'));
+    const texts = badges.map((b) => b.textContent?.trim() ?? '');
+    return texts.find((t) => t.startsWith('filters.') || t === 'Villa') ?? null;
+  }
+
+  it('translates the capitalised slug the mapper produces', async () => {
+    expect(await pill('Building')).toBe('filters.propertyTypeBuilding');
+    expect(await pill('Apartment')).toBe('filters.propertyTypeApartment');
+    expect(await pill('room')).toBe('filters.propertyTypeRoom');
+    expect(await pill('House')).toBe('filters.propertyTypeHouse');
+  });
+
+  it('keeps the server text for a type the FE does not know', async () => {
+    expect(await pill('Villa')).toBe('Villa');
+  });
+
+  it('renders no pill when the BE sends none', async () => {
+    expect(await pill(undefined)).toBeNull();
+  });
+});

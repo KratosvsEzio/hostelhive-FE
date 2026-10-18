@@ -25,7 +25,7 @@ import {
   invoiceStatusTone,
 } from '@util/table-configs/invoice-table-cols';
 import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from './booking-month';
-import { BookingOccupancy, HostBooking, HostBookingsApi } from './host-bookings-api';
+import { BookingOccupancy, HostBooking, HostBookingsApi, confirmationLink } from './host-bookings-api';
 import { releaseFailureKey } from './booking-move-failure';
 import { isPrivateOccupancy } from '@util/occupancy-type';
 import { bookingRefusal } from '@util/booking-refusal';
@@ -148,6 +148,12 @@ export class BookingDetailsPanel {
     const a = this.actions();
     const last = a[a.length - 1];
     return last && !SECONDARY_ACTIONS.includes(last) ? last : null;
+  });
+
+  /** The confirmation PDF, once the booking is confirmed and the server has stored it. */
+  protected readonly confirmationUrl = computed(() => {
+    const b = this.booking();
+    return b ? confirmationLink(b) : '';
   });
 
   // ── the invoice ──────────────────────────────────────────────────────────────────

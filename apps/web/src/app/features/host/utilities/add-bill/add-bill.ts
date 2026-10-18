@@ -19,7 +19,8 @@ import {
   ErrorState,
   Skeleton,
 } from '@hostelhive/ui';
-import { HostOpsApi, HostPropertyStore } from '@services';
+import { HostOpsApi, HostPropertyStore, followToday, selectedHostelToday } from '@services';
+import { addDays, dayToLocalDate } from '@util/plain-day';
 import {
   HostRoom as Room,
   Tenant,
@@ -48,6 +49,12 @@ interface ViewState {
 }
 
 const TONES = ['sky', 'cream', 'mint', 'brand'] as const;
+
+/** A new bill falls due this many days after the hostel's today. */
+const DUE_IN_DAYS = 5;
+
+/** The month dropdown's value for the month containing `d`: `yyyy-m`, month 0-indexed. */
+const monthValue = (d: Date): string => `${d.getFullYear()}-${d.getMonth()}`;
 
 @Component({
   selector: 'hh-add-bill',
@@ -86,11 +93,9 @@ export class AddBill {
   private readonly overrides = signal<Record<string, number>>({});
   private readonly daysOverrides = signal<Record<string, number>>({});
   private readonly daysErrors = signal<Record<string, boolean>>({});
-  protected readonly dueDateInput = signal<string | null>((() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 5);
-    return localDay(d);
-  })());
+  /** The hostel's date: the due-date default counts from it and the month list ends on its month. */
+  protected readonly today = selectedHostelToday();
+  protected readonly dueDateInput = signal<string | null>(addDays(this.today(), DUE_IN_DAYS));
   protected readonly submitting = signal(false);
   protected readonly submitError = signal(false);
 
@@ -101,16 +106,17 @@ export class AddBill {
   protected readonly editLoading = signal(false);
   protected readonly editError = signal(false);
 
-  protected readonly monthOptions: DropdownOption[] = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(new Date().getFullYear(), new Date().getMonth() - i, 1);
-    return {
-      value: `${d.getFullYear()}-${d.getMonth()}`,
-      label: d.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
-    };
+  protected readonly monthOptions = computed<DropdownOption[]>(() => {
+    const t = dayToLocalDate(this.today());
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(t.getFullYear(), t.getMonth() - i, 1);
+      return {
+        value: monthValue(d),
+        label: d.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+      };
+    });
   });
-  protected readonly selectedMonthValue = signal(
-    `${new Date().getFullYear()}-${new Date().getMonth()}`,
-  );
+  protected readonly selectedMonthValue = signal(monthValue(dayToLocalDate(this.today())));
 
   private readonly fetched = toSignal(
     toObservable(this.refresh).pipe(
@@ -388,6 +394,18 @@ export class AddBill {
   }
 
   constructor() {
+    // The zone lands after the form was seeded from the device's date: move the untouched
+    // defaults onto the hostel's. A bill being edited keeps its own month and due date.
+    followToday(this.today, (from, to) => {
+      if (this.isEdit()) return;
+      if (this.dueDateInput() === addDays(from, DUE_IN_DAYS)) {
+        this.dueDateInput.set(addDays(to, DUE_IN_DAYS));
+      }
+      if (this.selectedMonthValue() === monthValue(dayToLocalDate(from))) {
+        this.selectedMonthValue.set(monthValue(dayToLocalDate(to)));
+      }
+    });
+
     const bid = this.route.snapshot.paramMap.get('billId');
     if (bid) {
       this.billId.set(bid);

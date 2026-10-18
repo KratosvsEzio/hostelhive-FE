@@ -79,7 +79,7 @@
           </h3>
           <hh-dropdown
             variant="field"
-            [options]="propertyTypes"
+            [options]="propertyTypes()"
             [placeholder]="'filters.anyPropertyType' | transloco"
             [clearLabel]="'filters.anyPropertyType' | transloco"
             [value]="draftPropertyType() || null"

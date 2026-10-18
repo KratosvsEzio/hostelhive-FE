@@ -58,13 +58,13 @@ Backend conventions the mappers rely on:
   - It matches the backend's exact wording, then keywords, in that priority.
   - Each screen maps the kind to its own key; the host stay moves do it in `apps/web/src/app/features/host/bookings/booking-move-failure.ts`.
 - An image upload that never reached storage rejects with `UploadNetworkError` (`apps/web/src/app/services/image-upload.service.ts`); test with `instanceof`, not its text.
-- To keep the toast off one call whose screen shows the error inline, give the service method a trailing `opts?: ApiRequestOptions` and spread `...requestContextArgs(opts)` into the `ApiClient` call; callers pass `{ suppressErrorToast: true }` (`host-ops-api.ts`, `host-bookings-api.ts`). Without the flag the call is unchanged. All five `ApiClient` verbs accept the context; `auth-api.ts` builds its own with a private `inlineErrors()`.
+- To keep the toast off one call whose screen shows the error inline, give the service method a trailing `opts?: ApiRequestOptions` and spread `...requestContextArgs(opts)` into the `ApiClient` call; callers pass `{ suppressErrorToast: true }` (`host-ops-api.ts`, `host-bookings-api.ts`, `hostels-api.ts`). Without the flag the call is unchanged. All five `ApiClient` verbs accept the context; `auth-api.ts` builds its own with a private `inlineErrors()`.
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps
 - **Never render an error's `message`.** On an `ApiError` it is a developer diagnostic (since Trello #159, PR #137); plain `Error`s thrown by mappers and services carry developer text too ("booking X not in response", "Upload failed: 403").
   - Classify instead, through `api-error-text.ts`.
-  - The guard `apps/web/src/app/core/errors/no-raw-error-message.spec.ts` fails the build on any `.message` read or `{ message }` destructuring in the `.ts` and `.html` files of `features/`, `layout/` and `shared/`. Its allowlist is exact: billing's own messages, the inviter's note, the toast host and the notification bell (their own text, not errors).
+  - The guard `apps/web/src/app/core/errors/no-raw-error-message.spec.ts` fails the build on any `.message` read or `{ message }` destructuring in the `.ts` and `.html` files of `features/`, `layout/` and `shared/`. Its allowlist is exact: billing's own messages, admin billing's `AdminBillingError.message` (a 4xx's `serverMessages[0]`, set only by `adminBillingError()`), the inviter's note, the toast host and the notification bell (their own text, not errors).
   - Spec builders and old fixtures may still give `message` a server-text or URL value. That is harmless in negative tests, but it is not what the interceptor produces.
 - **`isSubscriptionError` reads `serverMessages`** (and a raw `HttpErrorResponse` body), never `message`, so a request URL containing "subscri" cannot trip it.
 - **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.

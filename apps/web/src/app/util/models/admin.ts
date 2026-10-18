@@ -25,7 +25,7 @@ export interface PermissionDef {
   permissionId?: number;
 }
 
-/** A collapsible group of related flags in the matrix (Contracts, Payments, …). */
+/** A collapsible group of related flags in the matrix (Payments, Listings, …). */
 export interface PermissionGroup {
   key: string;
   label: string;
@@ -61,71 +61,6 @@ export interface RoleDef {
   apiName?: string;
   /** Backend role id (hashid) — the `:id` for GET (fetch permissions) and PUT (update) /api/admin/roles/:id. */
   apiId?: string;
-}
-
-/* --------------------------------------------------------------- Payments (28) */
-
-/** A subscription payment — from `GET /api/admin/payments` (Searchkick `search_data`). */
-export interface Payment {
-  id: string;
-  amount: number; // PKR
-  currency: string; // e.g. 'PKR'
-  /** Payment method, e.g. 'online', 'cash'. */
-  method: string;
-  /** Gateway / transaction reference; null until captured. */
-  transactionId: string | null;
-  /** Host name. */
-  host: string;
-  /** Backend host (user) id — for `GET /api/users/:id` (the drawer's host detail). */
-  hostId?: number | string | null;
-  /** Backend hostel id — for `GET /api/hostels/:id` (the drawer's hostel detail). */
-  hostelId?: number | string | null;
-  /** Hostel name — primary text in the payments table's Hostel cell (id is the secondary). */
-  hostelName: string | null;
-  /** Subscription product / plan name, e.g. 'Monthly'; null when absent. */
-  plan: string | null;
-  /** Product type, e.g. 'subscription'. */
-  productType: string | null;
-  /** Product billing duration in days, e.g. 30. */
-  productDuration: number | null;
-  /** Payment workflow status slug (e.g. pending / verified / rejected). */
-  status: PaymentStatus;
-  /** Display name for the status, from the API. */
-  statusName: string;
-  /** Linked contract id; null when absent. */
-  contractId: string | null;
-  /** Linked contract term, e.g. 'Jun 8 → Jul 8 ’26'; null when absent. */
-  term: string | null;
-  createdAt: string | null;
-  paidAt: string | null;
-}
-
-/** Backend payment status slug — dynamic; the filter tabs come from `possible_statuses`. */
-export type PaymentStatus = string;
-
-/** Filter chip value — a payment status slug from `possible_statuses`, or 'all'. */
-export type PaymentFilter = string;
-
-/** A payment status option for the filter tabs — from `possible_statuses` in the response. */
-export interface PaymentStatusOption {
-  id: number;
-  name: string;
-  slug: string;
-  dispositions?: { id: number; name: string; slug: string }[];
-}
-
-/** Per-status aggregate for the stat cards — from `aggs` in the payments response. */
-export interface PaymentAgg {
-  name: string;
-  slug: string;
-  count: number;
-  total_amount: number;
-}
-
-/** Payments index result — a page of payments plus the dashboard `aggs` and the tab `statuses`. */
-export interface PaymentsPage extends Paginated<Payment> {
-  aggs: PaymentAgg[];
-  statuses: PaymentStatusOption[];
 }
 
 /* -------------------------------------------------------------- Listings (admin) */

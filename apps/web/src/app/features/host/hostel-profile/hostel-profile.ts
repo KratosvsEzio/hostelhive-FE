@@ -174,8 +174,11 @@ export class HostelProfile {
     // The starred photo, when the host moved it. Its own endpoint for the same reason the
     // labels have one, and sent in the same batch.
     const primary = f.changedPrimaryPhoto();
+    // Every write in the save is quiet: the header shows the failure itself, so the global
+    // toast would say it twice.
+    const quiet = { suppressErrorToast: true } as const;
     this.hostels
-      .update(id, payload)
+      .update(id, payload, quiet)
       .pipe(
         // Photo labels are their own endpoint — the hostel payload carries `attachment_ids`
         // and says nothing about what any of them are. Sent after the hostel lands rather
@@ -188,8 +191,8 @@ export class HostelProfile {
         // marking it before that lands would set a second primary rather than move the one.
         switchMap((hostel) => {
           const writes = [
-            ...labels.map((l) => this.hostels.updateAttachmentLabel(l.id, l.labelId)),
-            ...(primary ? [this.hostels.markAttachmentAsPrimary(primary)] : []),
+            ...labels.map((l) => this.hostels.updateAttachmentLabel(l.id, l.labelId, quiet)),
+            ...(primary ? [this.hostels.markAttachmentAsPrimary(primary, quiet)] : []),
           ];
           return writes.length ? forkJoin(writes).pipe(map(() => hostel)) : of(hostel);
         }),

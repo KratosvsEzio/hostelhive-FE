@@ -157,6 +157,22 @@
           </div>
         }
 
+        @if (confirmationUrl()) {
+          <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.confirmation' | transloco }}</p>
+            <a
+              class="mt-1.5 inline-flex items-center gap-1 rounded-lg text-sm font-medium text-brand-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+              data-testid="download-confirmation"
+              [href]="confirmationUrl()"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i class="ti ti-download" aria-hidden="true"></i>{{ 'hostBookings.downloadConfirmation' | transloco }}
+              <span class="sr-only">{{ 'userBookings.opensInNewTab' | transloco }}</span>
+            </a>
+          </div>
+        }
+
         @if (showInvoice()) {
           <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.invoice' | transloco }}</p>

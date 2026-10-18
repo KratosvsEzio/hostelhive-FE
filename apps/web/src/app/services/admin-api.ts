@@ -1,5 +1,5 @@
 import { ApiPagination, toPageInfo } from '@util/pagination';
-import { format, parseISO } from 'date-fns';
+import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 import { ApiClient } from '@core/api-resource';
@@ -9,23 +9,17 @@ import {
   AdminListingFilter,
   AdminListingStatusOption,
   AdminListingsPage,
-  Payment,
-  PaymentAgg,
-  PaymentFilter,
-  PaymentStatusOption,
-  PaymentsPage,
   PermissionFlag,
   PermissionGroup,
   RoleDef,
 } from '@hostelhive/data-access';
-import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { primaryFirst } from '@util/primary-photo';
 import { usableVariant } from '@util/attachment-url';
 import { PERMISSION_GROUPS } from './admin.fixtures';
 
 /**
- * Super-Admin (Feature 6) API — all live: `roles()` + `permissionsGrouped()`, `listings()`,
- * and `payments()`.
+ * Super-Admin (Feature 6) API — all live: `roles()` + `permissionsGrouped()` and `listings()`.
+ * Billing lives in `AdminBillingApi`.
  * The `authInterceptor` attaches the admin's bearer token to every call.
  */
 @Injectable({ providedIn: 'root' })
@@ -110,6 +104,7 @@ export class AdminApi {
     search?: { name?: string; id?: string },
     sort?: { field: string; dir: 'asc' | 'desc' },
     dispositionSlug?: string | null,
+    context?: HttpContext,
   ): Observable<AdminListingsPage> {
     const params: Record<string, string | number> = {
       page,
@@ -124,7 +119,7 @@ export class AdminApi {
     if (search?.id) params['f[id]'] = search.id;
     if (sort) params[`sort[${sort.field}]`] = sort.dir;
     return this.api
-      .get<AdminHostelsResponse>('/api/admin/hostels', params)
+      .get<AdminHostelsResponse>('/api/admin/hostels', params, context)
       .pipe(
         map((res) => {
           const rows = res.hostels ?? [];
@@ -141,136 +136,6 @@ export class AdminApi {
         }),
       );
   }
-
-  /* -------------------------------------------------------------- payments (28) */
-
-  /**
-   * Subscription payments — `GET /api/admin/payments` (Searchkick-backed). Paginated server-side
-   * (`page` + `limit`); the response carries a `pagination` envelope plus per-status `aggs` (stat
-   * cards) and `possible_statuses` (filter tabs). A status filter is pushed as `f[status.slug]`,
-   * the hostel search as `s[hostel.name]` / `f[hostel_id]`, and the created-date range as
-   * `f[created_at][gte]` / `f[created_at][lte]`. The `authInterceptor` attaches the admin token.
-   */
-  payments(
-    filter: PaymentFilter = 'all',
-    page = 1,
-    sort?: { field: string; dir: 'asc' | 'desc' },
-    search?: { hostelName?: string; hostelId?: string },
-    dateRange?: { createdFrom?: string; createdTo?: string },
-  ): Observable<PaymentsPage> {
-    const params: Record<string, string | number> = {
-      page,
-      limit: PAYMENTS_PAGE_SIZE,
-    };
-    if (filter !== 'all') params['f[status.slug]'] = filter;
-    // Sort by an API property — `sort[amount]`, `sort[created_at]`, `sort[paid_at]`.
-    if (sort) params[`sort[${sort.field}]`] = sort.dir;
-    // Hostel search: full-text `s[hostel.name]` for the name, exact `f[hostel_id]` for the id.
-    if (search?.hostelName) params['s[hostel.name]'] = search.hostelName;
-    if (search?.hostelId) params['f[hostel_id]'] = search.hostelId;
-    // Created-date range (inclusive). Bounds span the whole day (00:00:00 → 23:59:59).
-    if (dateRange?.createdFrom)
-      params['f[created_at][gte]'] = dayRangeStart(dateRange.createdFrom);
-    if (dateRange?.createdTo)
-      params['f[created_at][lte]'] = dayRangeEnd(dateRange.createdTo);
-    return this.api
-      .get<AdminPaymentsResponse>('/api/admin/payments', params)
-      .pipe(
-        map((res) => {
-          const rows = res.payments ?? [];
-          const info = toPageInfo(res.pagination, page, rows.length);
-          return {
-            items: rows.map(toPayment),
-            total: info.total,
-            page: info.page,
-            pageSize: PAYMENTS_PAGE_SIZE,
-            totalPages: info.totalPages,
-            aggs: res.aggs ?? [],
-            statuses: res.possible_statuses ?? [],
-          };
-        }),
-      );
-  }
-}
-
-/** A payment record from `GET /api/admin/payments` (ES `search_data`). */
-interface ApiPayment {
-  id: number | string;
-  amount?: number | null;
-  transaction_id?: string | null;
-  hostel_id?: number | string | null;
-  payment_method?: string | null;
-  currency?: string | null;
-  created_at?: string | null;
-  paid_at?: string | null;
-  host?: { id?: number | string; name?: string } | null;
-  hostel?: { id?: number | string; name?: string } | null;
-  status?: { id?: number | string; slug?: string; name?: string } | null;
-  disposition?: { slug?: string; name?: string } | null;
-  product?: {
-    id?: number | string;
-    name?: string;
-    product_type?: string;
-    price?: number;
-    currency?: string;
-    duration?: number;
-  } | null;
-  contract?: {
-    id?: number | string;
-    start_date?: string | null;
-    end_date?: string | null;
-  } | null;
-}
-
-/** `GET /api/admin/payments` → `{ success, payments, aggs, possible_statuses, pagination }`. */
-interface AdminPaymentsResponse {
-  success?: boolean;
-  payments?: ApiPayment[];
-  aggs?: PaymentAgg[];
-  possible_statuses?: PaymentStatusOption[];
-  pagination?: ApiPagination;
-}
-
-const PAYMENTS_PAGE_SIZE = 10;
-
-/** Map a backend payment onto the FE `Payment` model. The status stays a dynamic slug (+ its
- *  display name); product type/name + host + hostel ids power the payment detail drawer. */
-function toPayment(p: ApiPayment): Payment {
-  return {
-    id: String(p.id),
-    amount: p.amount ?? 0,
-    currency: p.currency ?? 'PKR',
-    method: p.payment_method ?? '',
-    transactionId: p.transaction_id ?? null,
-    host: p.host?.name ?? '—',
-    hostId: p.host?.id ?? undefined,
-    hostelId: p.hostel_id ?? p.hostel?.id ?? undefined,
-    hostelName: p.hostel?.name ?? null,
-    plan: p.product?.name ?? null,
-    productType: p.product?.product_type ?? null,
-    productDuration: p.product?.duration ?? null,
-    status: p.status?.slug ?? 'pending',
-    statusName: p.status?.name ?? 'Pending',
-    contractId: p.contract?.id != null ? String(p.contract.id) : null,
-    term: termLabel(p.contract?.start_date, p.contract?.end_date),
-    createdAt: p.created_at ?? null,
-    paidAt: p.paid_at ?? null,
-  };
-}
-
-function fmtDay(iso?: string | null): string | null {
-  if (!iso) return null;
-  try { return format(parseISO(iso), "MMM d"); } catch { return null; }
-}
-
-/** ‘Jan 12 → Jan 12 ‘27’; null when either bound is missing (renders as ‘— pending —‘). */
-function termLabel(start?: string | null, end?: string | null): string | null {
-  const s = fmtDay(start);
-  const e = fmtDay(end);
-  if (!s || !e) return null;
-  let endYr: string;
-  try { endYr = format(parseISO(end as string), "yy"); } catch { return null; }
-  return `${s} → ${e} ‘${endYr}`;
 }
 
 /** A role record from `GET /api/admin/roles` (the fields the endpoint returns). */

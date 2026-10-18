@@ -13,7 +13,15 @@ import { take } from 'rxjs';
 import { Button, DatePicker, Drawer, Input, PhoneInput, Toggle } from '@hostelhive/ui';
 import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
 import { Staff } from '@hostelhive/data-access';
-import { ImageUploadKey, ImageUploadService, StaffApi, UploadNetworkError } from '@services';
+import {
+  ImageUploadKey,
+  ImageUploadService,
+  StaffApi,
+  UploadNetworkError,
+  followToday,
+  hostelZone,
+  selectedHostelToday,
+} from '@services';
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { NotificationService } from '@core/notification.service';
 import { errorStatus } from '@core/errors/api-error-text';
@@ -88,7 +96,9 @@ export class StaffFormDrawer {
   private readonly i18n = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly form = signal<StaffForm>(emptyStaffForm());
+  /** The hostel's date, which a new staff member joins on by default. */
+  protected readonly today = selectedHostelToday(new Date(), hostelZone(this.hostelId));
+  protected readonly form = signal<StaffForm>(emptyStaffForm(this.today()));
   protected readonly saving = signal(false);
   protected readonly showErrors = signal(false);
   protected readonly uploading = signal<ImageSlot | null>(null);
@@ -122,7 +132,14 @@ export class StaffFormDrawer {
       if (this.seeded) return;
       this.seeded = true;
       const existing = this.editing();
-      this.form.set(existing ? staffFormFrom(existing) : emptyStaffForm());
+      this.form.set(existing ? staffFormFrom(existing) : emptyStaffForm(this.today()));
+    });
+
+    // The zone lands after the form was seeded: move an untouched joining date onto the
+    // hostel's today. A record being edited keeps its own.
+    followToday(this.today, (from, to) => {
+      if (this.editing()) return;
+      this.form.update((f) => (f.joiningDate === from ? { ...f, joiningDate: to } : f));
     });
   }
 

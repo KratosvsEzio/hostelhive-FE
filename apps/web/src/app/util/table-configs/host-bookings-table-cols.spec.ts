@@ -27,6 +27,7 @@ function booking(over: Partial<HostBooking> = {}): HostBooking {
     renter: null,
     source: '',
     createdAt: '',
+    confirmationPdfUrl: '',
     ...over,
   };
 }

@@ -129,6 +129,34 @@ test.describe('client navigation', () => {
     await expect.poll(sorted(page)).toEqual(['organization', 'website']);
   });
 
+  test('an article left before the app boots strands none of its structured data (Trello #138)', async ({
+    page,
+  }) => {
+    await stubListings(page);
+    // Holds the article's lazy chunk, so the browser's first navigation cannot finish and the
+    // article component is never created before the click: the race a slow phone loses.
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route('**/*.js', async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      if (body.includes('app-blog-article')) await held;
+      await route.fulfill({ response, body });
+    });
+
+    await page.goto(`/en/blog/${POST}`, { waitUntil: 'domcontentloaded' });
+    expect((await jsonLdIds(page)).sort()).toEqual(['article', 'breadcrumb']);
+    await page.waitForFunction(() => !!document.querySelector('[ng-version]'));
+
+    // Dispatched rather than clicked: the boot splash still covers the page at this point.
+    await page.locator('header a[href="/en"]').first().dispatchEvent('click');
+    release();
+
+    await expect(page).toHaveURL(/\/en\/?$/);
+    await waitForClient(page);
+    await expect.poll(sorted(page)).toEqual(['organization', 'website']);
+  });
+
   test('leaving a noindex search for an indexable page brings back one canonical and og:url', async ({
     page,
   }) => {

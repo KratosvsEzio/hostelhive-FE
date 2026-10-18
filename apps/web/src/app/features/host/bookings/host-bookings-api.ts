@@ -4,6 +4,7 @@ import { Invoice } from '@hostelhive/data-access';
 import { ApiClient, ApiRequestOptions, requestContextArgs as contextArgs } from '@core/api-resource';
 import { ApiRenterBillTop, toInvoice } from '@services/host-ops-api';
 import { ApiPagination, PAGE_SIZE, pageParams, toPageInfo } from '@util/pagination';
+import { laneKeyFor } from './booking-month';
 
 /**
  * Per-call request options for the lifecycle moves and reads.
@@ -607,6 +608,8 @@ export interface ApiHostBooking {
   status?: ApiNamedSlug | null;
   /** Where the stay is in its life. This is what the calendar's `by_status` is keyed by. */
   disposition?: ApiNamedSlug | null;
+  /** The stored confirmation PDF, `null` until the job has written it. Only `url` is read. */
+  confirmation_pdf?: { url?: string | null } | null;
 }
 
 export interface ApiHostBookingListResponse {
@@ -663,6 +666,8 @@ export interface HostBooking {
   /** Channel, when the record names one. */
   source: string;
   createdAt: string;
+  /** The confirmation PDF's address, `''` until the server has stored one. */
+  confirmationPdfUrl: string;
 }
 
 export interface HostBookingLine {
@@ -756,7 +761,20 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     // A number (`0`) on a single booking, a channel name on the list.
     source: typeof b.source === 'string' ? b.source.trim() : '',
     createdAt: b.created_at ?? '',
+    confirmationPdfUrl: b.confirmation_pdf?.url?.trim() ?? '',
   };
+}
+
+/**
+ * Where to download the confirmation, or `''` for no link.
+ *
+ * Only a booking that is confirmed or past it: a change sends a confirmed booking back to
+ * pending while it keeps the PDF it had, and a cancelled or no-show one is not confirmed.
+ */
+export function confirmationLink(b: HostBooking): string {
+  const lane = laneKeyFor(b.disposition.slug);
+  const live = lane === 'confirmed' || lane === 'checked-in' || lane === 'checked-out';
+  return live ? b.confirmationPdfUrl : '';
 }
 
 /** Nights between two `yyyy-MM-dd` days. Check-out is exclusive. */

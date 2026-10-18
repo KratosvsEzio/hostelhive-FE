@@ -49,6 +49,7 @@ function booking(over: Partial<HostBooking> = {}): HostBooking {
     cancellationReason: '',
     source: '',
     createdAt: '2026-09-27',
+    confirmationPdfUrl: '',
     ...over,
   };
 }

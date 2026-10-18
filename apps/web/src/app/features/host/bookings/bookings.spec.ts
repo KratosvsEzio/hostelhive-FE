@@ -1402,6 +1402,22 @@ describe('HostBookings', () => {
       expect(page.url()).toBe(LIST_URL);
     });
 
+    // A dropped connection is not a missing booking; saying "not found" would send the host
+    // looking for a booking that is still there.
+    it('says the server cannot be reached, not that the booking is missing, when the read never got there', async () => {
+      const deps = hostPageDeps();
+      deps.bookings.get.mockReturnValue(throwError(() => apiError(0, [], 'GET')));
+      const page = await open({ deps, items: [checkedIn()] });
+
+      await page.navigate(bookingPath(HOSTEL_ID, 'zz-9'));
+      await settle(page);
+
+      expect(deps.notifications.error).toHaveBeenCalledTimes(1);
+      expect(deps.notifications.error).toHaveBeenCalledWith('common.cannotReachTheServer');
+      expect(api(page).viewing()).toBeNull();
+      expect(page.url()).toBe(LIST_URL);
+    });
+
     it('opens no panel when the URL moved on before the read answered', async () => {
       const deps = hostPageDeps();
       const late = new Subject<HostBooking>();

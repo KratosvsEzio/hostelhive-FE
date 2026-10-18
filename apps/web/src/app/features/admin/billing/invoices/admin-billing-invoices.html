@@ -1,0 +1,136 @@
+<app-dashboard-layout [label]="'adminBilling.titles.invoices' | transloco">
+  <div class="flex flex-col gap-4">
+    <hh-admin-billing-tabs />
+
+    <div
+      class="flex flex-wrap items-center gap-3"
+      data-testid="invoice-filters"
+    >
+      <hh-search
+        class="w-full sm:w-64"
+        [withScope]="false"
+        [term]="filters().hostel"
+        (termChange)="setHostel($event)"
+        [placeholder]="'adminBilling.common.searchHostel' | transloco"
+        [ariaLabel]="'adminBilling.common.searchHostel' | transloco"
+        data-testid="hostel-search"
+      />
+      <hh-search
+        class="w-full sm:w-56"
+        [withScope]="false"
+        [term]="filters().number"
+        (termChange)="setNumber($event)"
+        [placeholder]="'adminBilling.invoices.searchNumber' | transloco"
+        [ariaLabel]="'adminBilling.invoices.searchNumber' | transloco"
+        data-testid="number-search"
+      />
+      <span class="hidden h-5 w-px shrink-0 bg-ink-200 sm:block"></span>
+      <hh-global-filter
+        [groups]="filterGroups()"
+        [value]="filterValues()"
+        (apply)="applyFilters($event)"
+      />
+    </div>
+
+    <p
+      class="flex items-center gap-1.5 text-xs text-ink-400"
+      data-testid="dates-utc"
+    >
+      <i class="ti ti-clock" aria-hidden="true"></i>
+      {{ 'adminBilling.common.datesUtc' | transloco }}
+    </p>
+
+    @let v = view();
+    @switch (v.kind) {
+      @case ('loading') {
+        <div
+          class="flex flex-col gap-3"
+          aria-busy="true"
+          data-testid="invoices-loading"
+        >
+          <hh-skeleton class="h-10 w-full" radius="md" />
+          @for (i of skeletonRows; track i) {
+            <hh-skeleton class="h-12 w-full" radius="md" />
+          }
+        </div>
+      }
+      @case ('error') {
+        @if (v.error.kind === 'forbidden') {
+          <hh-error-state
+            [message]="v.error.key | transloco"
+            [showRetry]="false"
+            data-testid="invoices-forbidden"
+          />
+        } @else {
+          <hh-error-state
+            [message]="
+              v.error.message ?? ('adminBilling.common.loadError' | transloco)
+            "
+            [retryLabel]="'adminBilling.common.retry' | transloco"
+            [networkError]="v.error.kind === 'network'"
+            (retry)="retry()"
+            data-testid="invoices-error"
+          />
+        }
+      }
+      @case ('ready') {
+        @switch (emptyKind()) {
+          @case ('empty') {
+            <hh-empty-state
+              icon="ti-receipt"
+              [title]="'adminBilling.invoices.empty' | transloco"
+              data-testid="invoices-empty"
+            />
+          }
+          @case ('noMatch') {
+            <hh-empty-state
+              icon="ti-filter-off"
+              [title]="'adminBilling.invoices.noMatch' | transloco"
+              data-testid="invoices-no-match"
+            >
+              <button
+                hh-button
+                type="button"
+                variant="outlined"
+                size="sm"
+                (click)="clearFilters()"
+                data-testid="show-all"
+              >
+                {{ 'common.showAll' | transloco }}
+              </button>
+            </hh-empty-state>
+          }
+          @default {
+            <p
+              class="text-sm font-medium text-ink-700"
+              data-testid="invoices-count"
+            >
+              {{
+                'adminBilling.invoices.count' | transloco: { count: total() }
+              }}
+            </p>
+            <hh-data-table
+              minWidth="1180px"
+              [columns]="columns()"
+              [rows]="v.result.rows"
+              [rowId]="rowId"
+              [pagination]="pagination()"
+              [rowClickable]="true"
+              (rowClick)="openRow($event)"
+              (pageChange)="goToPage($event)"
+            />
+          }
+        }
+      }
+    }
+  </div>
+
+  @if (openInvoiceId(); as invoiceId) {
+    <hh-admin-invoice-drawer
+      [invoiceId]="invoiceId"
+      [hostel]="drawerHostel()"
+      (closed)="closeDrawer()"
+      (missing)="retry()"
+    />
+  }
+</app-dashboard-layout>
