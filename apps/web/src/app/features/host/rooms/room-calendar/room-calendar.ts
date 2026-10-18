@@ -10,6 +10,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { parseISO } from 'date-fns';
 import { Skeleton } from '@hostelhive/ui';
 import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { RoomDay, RoomResident, RoomStay, sleepsOn, toRoomMonth } from './room-stays';
@@ -504,9 +505,11 @@ export class RoomCalendar {
         // An open stay has no end to print. Its `check_out` is the edge of the window being
         // drawn, so formatting it as a range would tell a host their tenant leaves on the
         // last of the month — a date that changes every time they page forward.
+        // `parseISO` reads a plain day as local midnight; `new Date` read it as UTC, a day
+        // early for anybody west of Greenwich.
         range: booking.open
-          ? `since ${fmt.format(new Date(booking.check_in))}`
-          : `${fmt.format(new Date(booking.check_in))} – ${fmt.format(new Date(booking.check_out))}`,
+          ? `since ${fmt.format(parseISO(booking.check_in))}`
+          : `${fmt.format(parseISO(booking.check_in))} – ${fmt.format(parseISO(booking.check_out))}`,
         status: booking.status,
         arriving: booking.check_in === date,
         leaving: !booking.open && booking.check_out === date,
