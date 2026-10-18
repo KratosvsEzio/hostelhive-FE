@@ -16,6 +16,12 @@ import { INDEXED_LOCALE_CODES, localeAlternates } from './locales';
  *
  * The routes say the same through route data `contentLocale`; `app.routes.spec.ts` keeps
  * the two equal, so add a page to both or to neither.
+ *
+ * Only `'index'` routes belong here. A `'page'` route owns its head and passes its own
+ * `contentLocale` to `Seo.apply` — a blog article does, since the same route also serves a
+ * translated not-found page — so its sitemap entry passes the language explicitly to
+ * {@link pageLocales} and {@link pageAlternates} instead. Core never imports a feature to
+ * learn it.
  */
 export const SINGLE_LANGUAGE_PAGES: Readonly<Record<string, string>> = {
   '/privacy-policy': 'en',
@@ -25,20 +31,29 @@ export const SINGLE_LANGUAGE_PAGES: Readonly<Record<string, string>> = {
 };
 
 /**
- * The languages a page is worth listing in: its content language alone for a page in
- * {@link SINGLE_LANGUAGE_PAGES}, otherwise every indexed one.
+ * The languages a page is worth listing in: its content language alone for a page in one
+ * language, otherwise every indexed one.
+ *
+ * `contentLocale` defaults to the page's entry in {@link SINGLE_LANGUAGE_PAGES}; a `'page'`
+ * route, such as a blog article, passes its language explicitly.
  */
-export function pageLocales(basePath: string): readonly string[] {
-  const content = SINGLE_LANGUAGE_PAGES[basePath];
-  return content ? [content] : INDEXED_LOCALE_CODES;
+export function pageLocales(
+  basePath: string,
+  contentLocale: string | undefined = SINGLE_LANGUAGE_PAGES[basePath],
+): readonly string[] {
+  return contentLocale ? [contentLocale] : INDEXED_LOCALE_CODES;
 }
 
 /**
- * The `hreflang` set for a page — none for a page in {@link SINGLE_LANGUAGE_PAGES}.
+ * The `hreflang` set for a page — none for a page in one language.
  *
  * Alternates name the same page in other languages, and these have no other language to
  * name. A set of one would be harmless but says nothing; an empty one says what is true.
+ * `contentLocale` defaults and is passed as for {@link pageLocales}.
  */
-export function pageAlternates(basePath: string): { hreflang: string; path: string }[] {
-  return SINGLE_LANGUAGE_PAGES[basePath] ? [] : localeAlternates(basePath);
+export function pageAlternates(
+  basePath: string,
+  contentLocale: string | undefined = SINGLE_LANGUAGE_PAGES[basePath],
+): { hreflang: string; path: string }[] {
+  return contentLocale ? [] : localeAlternates(basePath);
 }

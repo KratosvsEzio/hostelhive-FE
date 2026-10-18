@@ -20,6 +20,7 @@ import { SITE_ORIGIN, Seo } from '@core/seo';
 import { heroFor } from '../blog-figures';
 import {
   BLOG_CATEGORIES,
+  BLOG_CONTENT_LOCALE,
   BlogCategorySlug,
   FIGURE_HEIGHT,
   FIGURE_WIDTH,
@@ -194,14 +195,20 @@ export class BlogArticle {
    * the instance — so a head applied once in a constructor would leave the previous
    * article's title, description and JSON-LD describing the new one.
    *
-   * Waits for the active language's strings, like the home and blog pages: the not-found
-   * title is translated, and `apply` builds the canonical, hreflang and og:locale from the
-   * active language, so a head written before `ready()` would carry a raw key or describe
-   * the previous language. The articles themselves stay English (see `inLanguage` below).
+   * The articles are English (`BLOG_CONTENT_LOCALE`), so a real post's head names the
+   * English address from every prefix: its canonical, `og:url` and `og:locale` are the
+   * English ones, it writes no hreflang, and its JSON-LD URLs come from `Seo.pageUrl` with
+   * the same language, so they match the canonical exactly. The not-found page is not
+   * English, and its head stays in the active language.
+   *
+   * Still waits for the active language's strings, like the home and blog pages: the
+   * not-found title is translated, so a head written before `ready()` would carry a raw key.
    */
   private readonly _head = effect(() => {
     if (!this.locale.ready()) return;
-    // The component is reused across a language switch and ready() may stay true, so track the language itself.
+    // The component is reused across a language switch and ready() may stay true, so track
+    // the language here rather than rely on whatever `apply` happens to read (a real post's
+    // no longer reads it; the not-found head's translated title still depends on it).
     this.locale.active();
     const p = this.post();
     if (!p) {
@@ -215,7 +222,7 @@ export class BlogArticle {
       return;
     }
 
-    const url = `${SITE_ORIGIN}/blog/${p.slug}`;
+    const url = this.seo.pageUrl(`/blog/${p.slug}`, BLOG_CONTENT_LOCALE);
     /**
      * The post's own lead photograph, absolute.
      *
@@ -237,6 +244,7 @@ export class BlogArticle {
       path: `/blog/${p.slug}`,
       type: 'article',
       image,
+      contentLocale: BLOG_CONTENT_LOCALE,
     });
     this.seo.setJsonLd('article', {
       '@context': 'https://schema.org',
@@ -252,7 +260,7 @@ export class BlogArticle {
       url,
       // The prose is written in English and the article element says so; claiming the
       // visitor's language here would describe a translation that does not exist.
-      inLanguage: 'en',
+      inLanguage: BLOG_CONTENT_LOCALE,
       author: { '@type': 'Organization', name: 'HostelHive' },
       publisher: {
         '@type': 'Organization',
@@ -265,7 +273,13 @@ export class BlogArticle {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Blog', item: `${SITE_ORIGIN}/blog` },
+        // English, like the rest of this trail: it describes the English canonical.
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Blog',
+          item: this.seo.pageUrl('/blog', BLOG_CONTENT_LOCALE),
+        },
         { '@type': 'ListItem', position: 2, name: p.title, item: url },
       ],
     });

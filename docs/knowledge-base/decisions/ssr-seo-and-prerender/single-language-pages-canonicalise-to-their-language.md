@@ -43,8 +43,17 @@ calls that misleading for languages; nothing modelled it per page.
 - Search engines see 4 indexable pages instead of 72. Already indexed `/xx/` copies consolidate over
   weeks and appear in Search Console as "Alternate page with proper canonical tag".
 - A new English-only page needs both the route flag and a `SINGLE_LANGUAGE_PAGES` entry.
-- Blog articles have the same shape (English bodies with full `hreflang`) and are not covered here
-  (Trello #197).
+- **Extended to blog articles (Trello #197, 2026-10-19).** An article is a `head: 'page'` route, so it
+  passes `contentLocale: BLOG_CONTENT_LOCALE` (`blog-post.model.ts`) to `Seo.apply` itself instead of
+  route data (the same route serves the translated, noindex not-found page, and `app.routes.spec.ts`
+  keeps route flags equal to `SINGLE_LANGUAGE_PAGES`). The sitemap passes the same constant to
+  `pageLocales`/`pageAlternates`, so `core` does not import the blog. Article titles were already
+  English, so the "titles stay translated" rule changes nothing there. Google sets a page's language
+  from its visible content, and only the chrome of `/xx/blog/<slug>` differed, so the 18 copies were
+  near-duplicates. 288 sitemap entries became 16. The blog index stays per-language: its heading,
+  lede and controls are translated.
+- JSON-LD URLs are built by `Seo.pageUrl`, which gives the same string as the canonical; the blog
+  article and index were the first to use it (Trello #197).
 
 ## Evidence
 
@@ -55,4 +64,5 @@ calls that misleading for languages; nothing modelled it per page.
 - Specs: `core/seo.spec.ts`, `core/route-head.spec.ts`, `core/i18n/content-locale.spec.ts`,
   `app.routes.spec.ts`, `landing/sitemap-urls.spec.ts`, `legal/legal-pages.spec.ts`,
   `credits/credits.spec.ts`, e2e `apps/web-e2e/src/head-route-defaults.spec.ts`
-- Run notes `docs/implement/Bugs/139.md` (decisions D1–D10, test matrix TC-01–37)
+- Run notes `docs/implement/Bugs/139.md` (decisions D1–D10, test matrix TC-01–37) and
+  `docs/implement/Bugs/197.md` (blog articles; decisions D1–D12)

@@ -6,6 +6,7 @@ import {
   EnvironmentInjector,
   PLATFORM_ID,
   createEnvironmentInjector,
+  effect,
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -306,6 +307,62 @@ describe('Seo', () => {
       seo.apply({ ...LEGAL, contentLocale: 'en' });
 
       expect(seo.settled()).toBe(true);
+    });
+  });
+
+  describe('pageUrl', () => {
+    beforeEach(() => active.set('ur'));
+
+    it('addresses a translated page in the active language', () => {
+      expect(seo.pageUrl('/about')).toBe(`${SITE_ORIGIN}/ur/about`);
+    });
+
+    it('addresses a single-language page in its content language, whatever the active one', () => {
+      expect(seo.pageUrl('/blog/x', 'en')).toBe(`${SITE_ORIGIN}/en/blog/x`);
+    });
+
+    it.each(['xx', '', undefined])(
+      'ignores the unknown content language %j and addresses the page in the active one',
+      (code) => {
+        expect(() => seo.pageUrl('/about', code)).not.toThrow();
+        expect(seo.pageUrl('/about', code)).toBe(`${SITE_ORIGIN}/ur/about`);
+      },
+    );
+
+    it('addresses the home page without a trailing slash, as its canonical does', () => {
+      seo.apply({ title: 'Home', path: '/' });
+
+      expect(seo.pageUrl('/')).toBe(`${SITE_ORIGIN}/ur`);
+      expect(attr(CANONICAL, 'href')).toBe(seo.pageUrl('/'));
+    });
+
+    it.each([
+      ['no content language', undefined],
+      ['a content language', 'en'],
+      ['an unknown content language', 'xx'],
+    ])('names the same address as the canonical and og:url apply writes, with %s', (_name, code) => {
+      seo.apply({ title: 'Page', path: '/privacy-policy', contentLocale: code });
+
+      const url = seo.pageUrl('/privacy-policy', code);
+      expect(all(CANONICAL)).toHaveLength(1);
+      expect(attr(CANONICAL, 'href')).toBe(url);
+      expect(attr(OG_URL, 'content')).toBe(url);
+    });
+
+    it('follows a language switch inside an effect, unless a content language fixes it', () => {
+      const translated: string[] = [];
+      const english: string[] = [];
+      TestBed.runInInjectionContext(() => {
+        effect(() => translated.push(seo.pageUrl('/about')));
+        effect(() => english.push(seo.pageUrl('/blog/x', 'en')));
+      });
+      TestBed.tick();
+
+      active.set('ar');
+      TestBed.tick();
+
+      expect(translated.at(-1)).toBe(`${SITE_ORIGIN}/ar/about`);
+      expect(english).toEqual([`${SITE_ORIGIN}/en/blog/x`]);
     });
   });
 
