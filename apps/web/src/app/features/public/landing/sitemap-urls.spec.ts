@@ -9,6 +9,11 @@ import {
 import { SINGLE_LANGUAGE_PAGES } from '@core/i18n/content-locale';
 import { renderRobotsTxt } from '@core/robots';
 import { robotsAllows } from '@core/robots-testing';
+import { BLOG_CONTENT_LOCALE } from '@features/public/blog/blog-post.model';
+import { BLOG_POSTS } from '@features/public/blog/blog-posts';
+
+/** The article paths, from the archive, so a new post is covered with no second list. */
+const ARTICLES = BLOG_POSTS.map((p) => `/blog/${p.slug}`);
 
 describe('sitemapPaths', () => {
   const paths = sitemapPaths();
@@ -40,16 +45,29 @@ describe('sitemapPaths', () => {
     }
   });
 
-  it('lists every other page once in each indexed language', () => {
+  it('lists every article exactly once, at its English address', () => {
+    expect(ARTICLES.length).toBeGreaterThan(0);
+    for (const base of ARTICLES) {
+      const entries = paths.filter((p) => splitLocale(p).path === base);
+      expect(entries, base).toEqual([`/en${base}`]);
+    }
+  });
+
+  it('lists the articles in a language the sitemap indexes', () => {
+    expect(INDEXED_LOCALE_CODES).toContain(BLOG_CONTENT_LOCALE);
+  });
+
+  it('lists every other page once in each indexed language, the blog index included', () => {
     const counts = new Map<string, number>();
     for (const p of paths) {
       const base = splitLocale(p).path;
       counts.set(base, (counts.get(base) ?? 0) + 1);
     }
     for (const [base, count] of counts) {
-      if (SINGLE_LANGUAGE_PAGES[base]) continue;
+      if (SINGLE_LANGUAGE_PAGES[base] || ARTICLES.includes(base)) continue;
       expect(count, base).toBe(INDEXED_LOCALE_CODES.length);
     }
+    expect(counts.get('/blog')).toBe(INDEXED_LOCALE_CODES.length);
   });
 
   // The bare form only redirects. A sitemap full of redirects spends crawl budget on 302s
@@ -138,6 +156,40 @@ describe('renderSitemap', () => {
     );
     expect(xml).toContain('hreflang="ur" href="https://x.test/ur/about"');
     expect(xml).toContain('hreflang="x-default" href="https://x.test/en/about"');
+  });
+
+  describe('over the whole sitemap', () => {
+    const origin = 'https://x.test';
+    const blocks = renderSitemap(origin, sitemapPaths()).match(/ {2}<url>[\s\S]*?<\/url>/g) ?? [];
+    const blockOf = (path: string) =>
+      blocks.find((b) => b.includes(`<loc>${origin}${path}</loc>`));
+
+    it('gives each article an entry with its English location and no alternates', () => {
+      for (const base of ARTICLES) {
+        expect(blockOf(`/en${base}`), base).toBe(
+          ['  <url>', `    <loc>${origin}/en${base}</loc>`, '  </url>'].join('\n'),
+        );
+      }
+    });
+
+    // Built from the rule every other page followed before articles were listed once.
+    it('leaves the entry of every other page exactly as it was', () => {
+      const others = sitemapPaths().filter((p) => !ARTICLES.includes(splitLocale(p).path));
+      expect(others).toContain('/ur/blog');
+      for (const path of others) {
+        const base = splitLocale(path).path;
+        const links = SINGLE_LANGUAGE_PAGES[base]
+          ? []
+          : localeAlternates(base).map(
+              (a) =>
+                `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${origin}${a.path}"/>`,
+            );
+        expect(blockOf(path), path).toBe(
+          ['  <url>', `    <loc>${origin}${path}</loc>`, ...links, '  </url>'].join('\n'),
+        );
+      }
+      expect((blockOf('/ur/blog')?.match(/<xhtml:link/g) ?? []).length).toBe(19);
+    });
   });
 
   it('emits one url element per path', () => {

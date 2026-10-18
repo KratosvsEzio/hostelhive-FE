@@ -120,7 +120,8 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
 - **`og:locale`:** exactly one, from the active locale's `ogLocale` (`core/i18n/locales.ts`; `en_PK`, `ur_PK`, `ar_AR` …). No `og:locale:alternate`: Facebook re-scrapes the same URL with `fb_locale`, and this site localises by path.
 - **`index.html`** ships no canonical, `og:url` or `og:locale`. It keeps only neutral fallbacks (description, robots `index`, og/twitter title, description and image, the app links) for the client-only shells and for scrapers that read the HTML before boot.
 - **Indexable pages** also get the full `hreflang` set (`localeAlternates`, `x-default` = English).
-- **`contentLocale`** (route data, or `SeoConfig.contentLocale`) marks a page whose content exists in one language. On every language URL, canonical and `og:url` point at that language (`/en/privacy-policy`), `og:locale` follows it (`en_PK`), and no `hreflang` is written. The title and description stay translated, and `noindex` still wins. An unknown code falls back to the active locale. The pages are listed in `SINGLE_LANGUAGE_PAGES` (`core/i18n/content-locale.ts`): the three legal pages and `/credits`. See [single-language pages canonicalise to their language](../decisions/ssr-seo-and-prerender/single-language-pages-canonicalise-to-their-language.md).
+- **`contentLocale`** (route data, or `SeoConfig.contentLocale`) marks a page whose content exists in one language. On every language URL, canonical and `og:url` point at that language (`/en/privacy-policy`), `og:locale` follows it (`en_PK`), and no `hreflang` is written. The title and description stay translated, and `noindex` still wins. An unknown code falls back to the active locale. The `'index'` pages are listed in `SINGLE_LANGUAGE_PAGES` (`core/i18n/content-locale.ts`): the three legal pages and `/credits`. Blog articles (`head: 'page'`) pass `contentLocale: BLOG_CONTENT_LOCALE` to `Seo.apply` themselves; their not-found page does not. See [single-language pages canonicalise to their language](../decisions/ssr-seo-and-prerender/single-language-pages-canonicalise-to-their-language.md).
+- **`pageUrl(path, contentLocale?)`** is the page's absolute address with its language prefix: the same string `apply` writes as the canonical and `og:url`. JSON-LD `url`, `mainEntityOfPage` and breadcrumb items use it; a URL built from `SITE_ORIGIN` plus an unprefixed path only redirects (`keepLocale`).
 - **`setJsonLd(id, data)`** replaces structured data by id.
 - **`preloadImage(url)`** puts the LCP hero in the server-rendered head.
 - **`clearOnDestroy(destroyRef, ids, { preloadImage })`** removes a page's JSON-LD ids, and optionally its preload, when the page is destroyed. Every page that writes JSON-LD calls it: home, blog, blog article, listing and PlaceLanding. It is SSR-safe, because `@angular/ssr` serialises the document before it destroys the platform.
@@ -130,7 +131,7 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
 list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is prefixed with every
 `INDEXED_LOCALE_CODES` language and carries its own `hreflang` block. The exception is a
 `SINGLE_LANGUAGE_PAGES` entry (`pageLocales`/`pageAlternates`): it is listed once, at its
-language, with no `hreflang` block.
+language, with no `hreflang` block. Blog articles are listed the same way: `sitemap-urls.ts` passes `BLOG_CONTENT_LOCALE` to `pageLocales`/`pageAlternates` for every `BLOG_POSTS` path, so `core` never imports the blog.
 
 **robots.txt.** `server.ts` answers `/robots.txt` before `express.static`, from `renderRobotsTxt`. Each
 of `DISALLOWED_PATHS` is disallowed bare and under every `LOCALE_CODES` prefix (all routable languages,
@@ -187,6 +188,7 @@ canonicalises (to its landing page). A search link that arrives carrying a viewp
   title rather than the interim one.
 - `placeSocialImage` / `DEFAULT_SOCIAL_IMAGE` for `image`.
 - `localeAlternates` for anything that states `hreflang`.
+- `Seo.pageUrl` for any absolute URL of a page in JSON-LD, never `SITE_ORIGIN` plus a path. `core/seo-testing.ts` (`pageAddressesIn`, `assetUrlsIn`) checks a JSON-LD value has no unprefixed page address.
 - `sitemapPaths()`: add a new indexable page here, or derive it from the list its route reads.
 - `clientOnly([...])` in `app.routes.server.ts` for a new authenticated area. It must also go in
   `DISALLOWED_PATHS` (`core/robots.ts`); `robots.spec.ts` fails if a `CLIENT_ONLY` path is missing.
@@ -249,7 +251,9 @@ canonicalises (to its landing page). A search link that arrives carrying a viewp
   English URL. A new English-only page needs `contentLocale: 'en'` on its route **and** a
   `SINGLE_LANGUAGE_PAGES` entry; `app.routes.spec.ts` fails if the two disagree. Search Console will
   show the old `/xx/` copies as "Alternate page with proper canonical tag"; that is expected. Blog
-  articles are English bodies with full `hreflang` too (Trello #197, open).
+  articles get the same treatment since Trello #197 (canonical `/en/blog/<slug>`, one sitemap entry
+  each); the blog index stays per-language. Place landings, listing detail and home still build some
+  JSON-LD URLs without a prefix (Trello #202).
 - **The e2e `waitForClient` also waits for the startup veil and the boot splash.** Both are full-screen
   and swallow clicks; the veil can legitimately stay up to six seconds (`StartupGate`).
 - The sitemap leaves out `/search` and `/hostel/:id` on purpose (see the comment in `apps/web/src/app/features/public/landing/sitemap-urls.ts`).

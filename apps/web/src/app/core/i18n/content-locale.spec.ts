@@ -32,3 +32,18 @@ describe('single-language pages', () => {
     expect(pageAlternates('/about')).toEqual(localeAlternates('/about'));
   });
 });
+
+describe('a content language passed for a page outside the table', () => {
+  it('lists the page in that language alone, with no hreflang set', () => {
+    expect(pageLocales('/blog/x', 'en')).toEqual(['en']);
+    expect(pageAlternates('/blog/x', 'en')).toEqual([]);
+  });
+
+  // The sitemap passes `undefined` for every page that is not an article.
+  it('keeps the table default when it is passed as undefined', () => {
+    expect(pageLocales('/privacy-policy', undefined)).toEqual(['en']);
+    expect(pageAlternates('/privacy-policy', undefined)).toEqual([]);
+    expect(pageLocales('/about', undefined)).toEqual(INDEXED_LOCALE_CODES);
+    expect(pageAlternates('/about', undefined)).toEqual(localeAlternates('/about'));
+  });
+});

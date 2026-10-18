@@ -46,6 +46,10 @@ export interface SeoConfig {
    * index in place of this one, which contradicts asking for it to be left out — the same
    * reason it gets no alternates. Its `og:url` is still written from the path, since a share
    * card has nothing to do with the index.
+   *
+   * A page whose JSON-LD names its own address builds it with `Seo.pageUrl`, never from
+   * `SITE_ORIGIN` plus this path, so the structured data carries the same prefix as the
+   * canonical beside it.
    */
   path?: string;
   image?: string;
@@ -160,9 +164,9 @@ export class Seo {
     const basePath = config.path || null;
     // A single-language page canonicalises to its content language instead, and declares
     // no other — see `SeoConfig.contentLocale`. An unknown code is ignored, never thrown.
-    const contentLocale = isLocaleCode(config.contentLocale) ? config.contentLocale : null;
+    const contentLocale = this.validContentLocale(config.contentLocale);
     const urlLocale = contentLocale ?? this.locale.active();
-    const url = basePath ? `${SITE_ORIGIN}${withLocale(urlLocale, basePath)}` : null;
+    const url = basePath ? this.pageUrl(basePath, config.contentLocale) : null;
 
     this.titleService.setTitle(title);
     this.meta.updateTag({ name: 'description', content: description });
@@ -208,6 +212,27 @@ export class Seo {
     this.meta.updateTag({ name: 'twitter:title', content: social });
     this.meta.updateTag({ name: 'twitter:description', content: description });
     this.meta.updateTag({ name: 'twitter:image', content: image });
+  }
+
+  /**
+   * The absolute address of a page, as its canonical and `og:url` name it.
+   *
+   * The one builder of that URL: `apply` uses it, and so does any JSON-LD that names a
+   * page's address, so the two cannot disagree about the language prefix. `path` is written
+   * without one, as in `SeoConfig.path`. A `contentLocale` names the language a
+   * single-language page canonicalises to; without one, or with a code the site does not
+   * serve, the page is addressed in the active language — the same rule `apply` follows.
+   *
+   * Reads the active language, so a caller inside an effect re-runs on a language switch.
+   */
+  pageUrl(path: string, contentLocale?: string): string {
+    const locale = this.validContentLocale(contentLocale) ?? this.locale.active();
+    return `${SITE_ORIGIN}${withLocale(locale, path)}`;
+  }
+
+  /** A content language the site serves, or `null` — an unknown code is ignored, never thrown. */
+  private validContentLocale(code: string | undefined): string | null {
+    return code && isLocaleCode(code) ? code : null;
   }
 
   /**

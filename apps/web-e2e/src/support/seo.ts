@@ -50,6 +50,8 @@ export interface RawHead {
   hreflangs: number;
   /** The `data-seo` id of every JSON-LD block, in document order. */
   jsonLd: string[];
+  /** The parsed body of every JSON-LD block, by its `data-seo` id. */
+  jsonLdBodies: Record<string, unknown>;
   /** The `content` of every `og:locale` meta tag. */
   ogLocales: string[];
   /** The text of the `<title>`, or null when there is none. */
@@ -72,6 +74,19 @@ function decodeEntities(value: string): string {
     .replace(/&amp;/g, '&');
 }
 
+/** Parses a JSON-LD body, failing loudly: a block that does not parse is a defect, not an empty one. */
+function parseJsonLd(id: string, body: string): unknown {
+  try {
+    return JSON.parse(body);
+  } catch (error) {
+    throw new Error(`JSON-LD block "${id}" does not parse: ${String(error)}`);
+  }
+}
+
+function jsonLdById(blocks: (readonly [string, string])[]): Record<string, unknown> {
+  return Object.fromEntries(blocks.map(([id, body]) => [id, parseJsonLd(id, body)]));
+}
+
 function attrOf(tag: string, name: string): string | null {
   const match = new RegExp(`\\s${name}="([^"]*)"`).exec(tag);
   return match ? decodeEntities(match[1]) : null;
@@ -88,6 +103,9 @@ export function headOf(html: string): RawHead {
   const metas = html.match(/<meta\b[^>]*>/g) ?? [];
   const scripts = html.match(/<script\b[^>]*application\/ld\+json[^>]*>/g) ?? [];
   const titleMatch = /<title[^>]*>([^<]*)<\/title>/.exec(html);
+  const bodies = [
+    ...html.matchAll(/(<script\b[^>]*application\/ld\+json[^>]*>)([\s\S]*?)<\/script>/g),
+  ].map(([, tag, body]) => [attrOf(tag, 'data-seo') ?? '', body] as const);
 
   return {
     canonicals: links
@@ -103,6 +121,7 @@ export function headOf(html: string): RawHead {
       (t) => attrOf(t, 'rel') === 'alternate' && attrOf(t, 'hreflang') !== null,
     ).length,
     jsonLd: scripts.map((t) => attrOf(t, 'data-seo') ?? ''),
+    jsonLdBodies: jsonLdById(bodies),
     ogLocales: metas
       .filter((t) => attrOf(t, 'property') === 'og:locale')
       .map((t) => attrOf(t, 'content') ?? ''),
@@ -159,7 +178,7 @@ export async function liveLanguages(page: Page): Promise<PageLanguages> {
 
 /** The same shape as `headOf`, read from the live document of a page the client app has taken over. */
 export async function liveHead(page: Page): Promise<RawHead> {
-  return page.evaluate(() => {
+  const { bodies, ...head } = await page.evaluate(() => {
     const metaContent = (selector: string) =>
       [...document.querySelectorAll(selector)].map((m) => m.getAttribute('content') ?? '');
     return {
@@ -172,6 +191,9 @@ export async function liveHead(page: Page): Promise<RawHead> {
       jsonLd: [...document.querySelectorAll('script[type="application/ld+json"]')].map(
         (s) => s.getAttribute('data-seo') ?? '',
       ),
+      bodies: Array.from(document.querySelectorAll('script[type="application/ld+json"]')).map(
+        (s) => [s.getAttribute('data-seo') ?? '', s.textContent ?? ''] as const,
+      ),
       ogLocales: metaContent('meta[property="og:locale"]'),
       title: document.title || null,
       ogTitles: metaContent('meta[property="og:title"]'),
@@ -180,6 +202,25 @@ export async function liveHead(page: Page): Promise<RawHead> {
         document.querySelector('meta[name="description"]')?.getAttribute('content') ?? null,
     };
   });
+  return { ...head, jsonLdBodies: jsonLdById(bodies) };
+}
+
+const SITE_ORIGIN = 'https://hostelhive.com';
+
+/**
+ * The page addresses on this site that a JSON-LD value names, static assets left out.
+ *
+ * An asset — an image, the logo — lives at the site root and is told apart by its path
+ * ending in a file extension; every other address is a page, and must carry a language.
+ */
+export function pageAddressesIn(data: unknown): string[] {
+  if (typeof data === 'string') {
+    const onSite = data === SITE_ORIGIN || data.startsWith(`${SITE_ORIGIN}/`);
+    return onSite && !/\.[a-z0-9]+$/i.test(new URL(data).pathname) ? [data] : [];
+  }
+  if (Array.isArray(data)) return data.flatMap(pageAddressesIn);
+  if (data && typeof data === 'object') return Object.values(data).flatMap(pageAddressesIn);
+  return [];
 }
 
 type TitleLog = { __titles?: string[]; __gaTitles?: string[]; __gaHooked?: boolean };
