@@ -85,10 +85,10 @@ interface UpcomingState {
 }
 
 /**
- * One page big enough for every unpaid rent bill a hostel realistically carries; the list
- * has no distinct-renter aggregate, so the tenants are counted from the bills themselves.
+ * One page big enough for every unpaid bill of one type a hostel realistically carries; the
+ * list has no distinct-renter aggregate, so the tenants are counted from the bills themselves.
  */
-const UNPAID_RENT_LIMIT = 500;
+const UNPAID_BILLS_LIMIT = 500;
 
 const UPCOMING_LOADING: UpcomingState = { loading: true, error: false, days: [], today: null };
 const UPCOMING_IDLE: UpcomingState = { loading: false, error: false, days: [], today: null };
@@ -274,36 +274,34 @@ export class HostOverview {
   protected readonly pendingUtilityTotal = computed(() => this.pendingUtilityResp().total);
 
   /**
-   * Every rent bill still owed, due and over-due together, for the pending-rent tile.
+   * Renters owing rent, and renters owing utilities, for the two pending tiles.
    *
-   * Not read off the ledger, which holds only the tab on show, so its tenant count would
-   * change as the host flips between Due and Over-due.
+   * Not read off the rent ledger or the utility panel, which hold only the tab on show (the
+   * panel only ten rows of it), so their tenant counts would change as the host flips tabs.
    */
-  private readonly unpaidRentBills = toSignal(
-    toObservable(this.propertyStore.selected).pipe(
-      switchMap((hostelId) =>
-        hostelId
-          ? this.opsApi.invoices(hostelId, 1, UNPAID_RENT_LIMIT, {
-              'f[bill_type]': 'rental',
-              'f[status.slug][]': ['due', 'over-due'],
-            }).pipe(
-              map((res) => res.bills),
-              catchError(() => of([] as Invoice[])),
-            )
-          : of([] as Invoice[]),
+  protected readonly unpaidRentTenants = this.unpaidTenants('rental');
+  protected readonly unpaidUtilityTenants = this.unpaidTenants('utility');
+
+  /** Renters with a bill of this type still due or over-due, counted by id: tenants can share a name. */
+  private unpaidTenants(billType: 'rental' | 'utility') {
+    const bills = toSignal(
+      toObservable(this.propertyStore.selected).pipe(
+        switchMap((hostelId) =>
+          hostelId
+            ? this.opsApi.invoices(hostelId, 1, UNPAID_BILLS_LIMIT, {
+                'f[bill_type]': billType,
+                'f[status.slug][]': ['due', 'over-due'],
+              }).pipe(
+                map((res) => res.bills),
+                catchError(() => of([] as Invoice[])),
+              )
+            : of([] as Invoice[]),
+        ),
       ),
-    ),
-    { initialValue: [] as Invoice[] },
-  );
-
-  /** Counted by renter id: tenants can share a name. */
-  protected readonly unpaidRentTenants = computed(() =>
-    new Set(this.unpaidRentBills().map((i) => i.renterId)).size,
-  );
-
-  protected readonly unpaidUtilityTenants = computed(() =>
-    new Set(this.pendingUtility().map((i) => i.tenantName)).size,
-  );
+      { initialValue: [] as Invoice[] },
+    );
+    return computed(() => new Set(bills().map((i) => i.renterId)).size);
+  }
 
   private readonly refresh = signal(0);
 
