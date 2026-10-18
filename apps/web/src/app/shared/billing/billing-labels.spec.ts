@@ -17,6 +17,7 @@ import {
   billingPaymentStatusTone,
   invoiceKindKey,
   invoiceStatusTone,
+  isSafepayBilled,
   latestAttemptNotice,
   planButton,
   statusTone,
@@ -33,6 +34,7 @@ function plan(overrides: Partial<BillingPlan>): BillingPlan {
     price: '8000.00',
     action: 'buy',
     amount_due_now: '8000.00',
+    trial_days: null,
     ...overrides,
   };
 }
@@ -47,6 +49,8 @@ const SUBSCRIPTION: BillingSubscription = {
   grace_until: null,
   scheduled_plan: null,
   cancel_at_period_end: false,
+  billed_by: 'invoice',
+  safepay_status: null,
 };
 
 describe('statusTone', () => {
@@ -116,6 +120,7 @@ describe('latestAttemptNotice', () => {
       succeeded_at: null,
       created_at: '2026-10-11T00:00:00Z',
       invoice_id: 'inv1',
+      initiated_by: 'customer',
       ...overrides,
     };
   }
@@ -610,5 +615,48 @@ describe('planButton', () => {
       disabled: true,
       kind: 'none',
     });
+  });
+});
+
+describe('isSafepayBilled', () => {
+  const billed = (
+    slug: string,
+    billedBy = 'safepay_subscription',
+  ): BillingSubscription => ({
+    ...SUBSCRIPTION,
+    status: { id: 1, name: slug, slug, color: null },
+    billed_by: billedBy,
+    safepay_status: 'ACTIVE',
+  });
+
+  it.each(['active', 'past-due'])(
+    'is true for a live %s plan Safepay bills',
+    (slug) => {
+      expect(isSafepayBilled(billed(slug))).toBe(true);
+    },
+  );
+
+  it('is true during a free trial, which the server reports as active', () => {
+    expect(
+      isSafepayBilled({ ...billed('active'), safepay_status: 'TRAILING' }),
+    ).toBe(true);
+  });
+
+  // billed_by stays safepay_subscription after the plan ends.
+  it.each(['expired', 'canceled', 'incomplete'])(
+    'is false once the plan is %s',
+    (slug) => {
+      expect(isSafepayBilled(billed(slug))).toBe(false);
+    },
+  );
+
+  it('is false for a plan billed by invoice, or an unknown biller', () => {
+    expect(isSafepayBilled(billed('active', 'invoice'))).toBe(false);
+    expect(isSafepayBilled(billed('active', 'other'))).toBe(false);
+    expect(isSafepayBilled(SUBSCRIPTION)).toBe(false);
+  });
+
+  it('is false with no subscription', () => {
+    expect(isSafepayBilled(null)).toBe(false);
   });
 });

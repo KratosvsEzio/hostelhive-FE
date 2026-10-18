@@ -1,6 +1,6 @@
 import { Observable, Subject, Subscription, of, throwError } from 'rxjs';
 import type { ApiError, BillingInvoice } from '@hostelhive/data-access';
-import { PollTick, pollInvoice } from './invoice-poll';
+import { PollResult, PollTick, pollInvoice, pollUntil } from './invoice-poll';
 
 function invoice(slug = 'open'): BillingInvoice {
   return {
@@ -208,5 +208,133 @@ describe('pollInvoice', () => {
     vi.advanceTimersByTime(0);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(completed).toBe(false);
+  });
+});
+
+describe('pollUntil', () => {
+  let results: PollResult<number>[];
+  let completed: boolean;
+  let sub: Subscription | undefined;
+
+  function watch(source: Observable<PollResult<number>>): void {
+    results = [];
+    completed = false;
+    sub = source.subscribe({
+      next: (result) => results.push(result),
+      complete: () => (completed = true),
+    });
+  }
+
+  beforeEach(() => vi.useFakeTimers());
+
+  afterEach(() => {
+    sub?.unsubscribe();
+    sub = undefined;
+    vi.useRealTimers();
+  });
+
+  it('fetches at once, then every 2500 ms, wrapping each value', () => {
+    let n = 0;
+    const fetch = vi.fn(() => of(++n));
+    watch(pollUntil(fetch));
+
+    vi.advanceTimersByTime(0);
+    expect(results).toEqual([{ value: 1 }]);
+
+    vi.advanceTimersByTime(2499);
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(1);
+    expect(results).toEqual([{ value: 1 }, { value: 2 }]);
+    expect(completed).toBe(false);
+  });
+
+  it('never overlaps a fetch still in flight', () => {
+    const pending: Subject<number>[] = [];
+    const fetch = vi.fn(() => {
+      const s = new Subject<number>();
+      pending.push(s);
+      return s.asObservable();
+    });
+    watch(pollUntil(fetch, { everyMs: 1000 }));
+
+    vi.advanceTimersByTime(4000);
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    pending[0].next(7);
+    pending[0].complete();
+    expect(results).toEqual([{ value: 7 }]);
+
+    vi.advanceTimersByTime(1000);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('completes right after emitting the result done() accepts', () => {
+    let n = 0;
+    const fetch = vi.fn(() => of(++n));
+    watch(
+      pollUntil(fetch, {
+        done: (r) => 'value' in r && r.value === 2,
+      }),
+    );
+
+    vi.advanceTimersByTime(2500);
+    expect(results).toEqual([{ value: 1 }, { value: 2 }]);
+    expect(completed).toBe(true);
+
+    vi.advanceTimersByTime(10_000);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives up after 60 seconds by default, without a further result', () => {
+    const fetch = vi.fn(() => of(1));
+    watch(pollUntil(fetch));
+
+    vi.advanceTimersByTime(59_999);
+    expect(completed).toBe(false);
+    const seen = results.length;
+
+    vi.advanceTimersByTime(1);
+    expect(completed).toBe(true);
+    expect(results).toHaveLength(seen);
+
+    vi.advanceTimersByTime(10_000);
+    expect(fetch).toHaveBeenCalledTimes(seen);
+  });
+
+  it('honours its own window and gap', () => {
+    const fetch = vi.fn(() => of(1));
+    watch(pollUntil(fetch, { everyMs: 1000, forMs: 3500 }));
+
+    vi.advanceTimersByTime(3500);
+    expect(completed).toBe(true);
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
+
+  it('turns a failed fetch into an error result and keeps polling', () => {
+    let calls = 0;
+    const fetch = vi.fn(() =>
+      ++calls === 1 ? throwError(() => NETWORK) : of(5),
+    );
+    watch(pollUntil(fetch));
+
+    vi.advanceTimersByTime(2500);
+    expect(results).toEqual([{ error: NETWORK }, { value: 5 }]);
+    expect(completed).toBe(false);
+  });
+});
+
+describe('pollInvoice timing options', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('passes everyMs through to the poll', () => {
+    const fetch = vi.fn(() => of(invoice()));
+    const sub = pollInvoice(fetch, { everyMs: 1000 }).subscribe();
+
+    vi.advanceTimersByTime(3000);
+    sub.unsubscribe();
+
+    expect(fetch).toHaveBeenCalledTimes(4);
   });
 });

@@ -19,6 +19,7 @@ import { ApiError } from '@hostelhive/data-access';
 import { Router } from '@angular/router';
 import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { notificationTypeStyle } from '@app/shared/notifications/notification-types';
 
 type TabKey = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -196,42 +197,19 @@ export class NotificationsPage {
   }
 
   protected typeIcon(type: string): string {
-    switch (type) {
-      case 'meal_confirmation': return 'ti-tools-kitchen-2';
-      case 'rent': return 'ti-cash';
-      case 'receipt': return 'ti-receipt';
-      default: return 'ti-bell';
-    }
+    return notificationTypeStyle(type).icon;
   }
 
   protected typeLabel(type: string): string {
-    switch (type) {
-      case 'meal_confirmation': return 'Meal Confirmation';
-      case 'rent': return 'Rent';
-      case 'receipt': return 'Receipt';
-      default:
-        return type
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (c) => c.toUpperCase());
-    }
+    return notificationTypeStyle(type).label;
   }
 
   protected typeBg(type: string): string {
-    switch (type) {
-      case 'meal_confirmation': return 'bg-emerald-50 text-emerald-600';
-      case 'rent': return 'bg-amber-50 text-amber-600';
-      case 'receipt': return 'bg-blue-50 text-blue-600';
-      default: return 'bg-ink-50 text-ink-600';
-    }
+    return notificationTypeStyle(type).bg;
   }
 
   protected typeTextColor(type: string): string {
-    switch (type) {
-      case 'meal_confirmation': return 'text-emerald-600';
-      case 'rent': return 'text-amber-600';
-      case 'receipt': return 'text-blue-600';
-      default: return 'text-ink-500';
-    }
+    return notificationTypeStyle(type).text;
   }
 
   protected statusClass(status: string): string {

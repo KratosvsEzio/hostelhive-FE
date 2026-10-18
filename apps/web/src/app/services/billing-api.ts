@@ -7,6 +7,7 @@ import {
   BillingInvoiceStatusOption,
   HostBilling,
   PlansResponse,
+  SafepayStart,
   StartedPayment,
 } from '@hostelhive/data-access';
 import { ApiClient } from '@core/api-resource';
@@ -40,6 +41,15 @@ interface InvoicesEnvelope {
 }
 
 interface PaymentEnvelope extends StartedPayment {
+  success?: boolean;
+}
+
+interface CardEnvelope {
+  checkout_url?: string | null;
+  success?: boolean;
+}
+
+interface SafepayStartEnvelope extends Partial<SafepayStart> {
   success?: boolean;
 }
 
@@ -183,12 +193,88 @@ export class BillingApi {
       );
   }
 
-  /** Starts a Safepay payment for the invoice; the result carries the page to send the payer to. */
-  pay(invoiceId: string): Observable<StartedPayment> {
+  /**
+   * Starts a Safepay payment for the invoice; the result carries the page to send the payer to.
+   * With `saveCard`, Safepay also keeps the card for automatic renewal.
+   */
+  pay(
+    invoiceId: string,
+    opts: { saveCard?: boolean } = {},
+  ): Observable<StartedPayment> {
+    return this.startPayment(invoiceId, {
+      payment_method: 'safepay',
+      ...(opts.saveCard ? { save_card: true } : {}),
+    });
+  }
+
+  /**
+   * Charges the saved card for the invoice, with no page to leave for. The payment may come back
+   * still pending; a declined card fails with a 422 that carries the bank's reason.
+   */
+  payWithSavedCard(invoiceId: string): Observable<StartedPayment> {
+    return this.startPayment(invoiceId, { payment_method: 'saved_card' });
+  }
+
+  /** Starts saving or replacing the card at Safepay; the card shows in billing once Safepay confirms it. */
+  saveCard(hostelId: string): Observable<{ checkout_url: string | null }> {
+    return this.api
+      .post<CardEnvelope>(
+        `/api/hostels/${hostelId}/subscription/card`,
+        {},
+        quiet(),
+      )
+      .pipe(map((res) => ({ checkout_url: res.checkout_url ?? null })));
+  }
+
+  /** Forgets the saved card, which also turns automatic renewal off. */
+  removeCard(hostelId: string): Observable<HostBilling> {
+    return this.api
+      .delete<BillingEnvelope>(
+        `/api/hostels/${hostelId}/subscription/card`,
+        undefined,
+        quiet(),
+      )
+      .pipe(map((res) => res.billing));
+  }
+
+  /** Turns automatic renewal on or off; the billing it answers with says what the server decided. */
+  setAutoRenew(hostelId: string, enabled: boolean): Observable<HostBilling> {
+    return this.api
+      .put<BillingEnvelope>(
+        `/api/hostels/${hostelId}/subscription/auto_renew`,
+        { enabled },
+        quiet(),
+      )
+      .pipe(map((res) => res.billing));
+  }
+
+  /** Starts a Safepay Subscription for `planId`; the plan goes live only once Safepay confirms it. */
+  subscribeWithSafepay(
+    hostelId: string,
+    planId: string,
+  ): Observable<SafepayStart> {
+    return this.api
+      .post<SafepayStartEnvelope>(
+        `/api/hostels/${hostelId}/subscription/safepay`,
+        { plan_id: planId },
+        quiet(),
+      )
+      .pipe(
+        map((res) => ({
+          checkout_url: res.checkout_url ?? null,
+          trial_days: res.trial_days ?? null,
+        })),
+      );
+  }
+
+  private startPayment(
+    invoiceId: string,
+    body: Record<string, unknown>,
+  ): Observable<StartedPayment> {
     return this.api
       .post<PaymentEnvelope>(
         `/api/invoices/${invoiceId}/payments`,
-        { payment_method: 'safepay' },
+        body,
         quiet(),
       )
       .pipe(

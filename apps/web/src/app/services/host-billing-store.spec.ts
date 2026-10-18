@@ -22,6 +22,8 @@ function subscription(overrides: Partial<BillingSubscription> = {}): BillingSubs
     grace_until: null,
     scheduled_plan: null,
     cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
     ...overrides,
   };
 }
@@ -31,6 +33,8 @@ function billing(overrides: Partial<HostBilling> = {}): HostBilling {
     currency: 'PKR',
     country_code: 'PK',
     payment_methods: ['safepay'],
+    auto_renew: false,
+    saved_card: null,
     subscription: subscription(),
     features: ['listing', 'crm'],
     open_invoice: null,

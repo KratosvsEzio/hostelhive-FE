@@ -22,6 +22,8 @@ const COPY = {
     methodCash: 'Cash',
     methodAdminGrant: 'Granted by HostelHive',
     methodOther: 'Other',
+    initiatedSchedule: 'Charged automatically',
+    initiatedUpgrade: 'Saved card',
     paymentPending: 'Pending',
     paymentReview: 'Under review',
     paymentSucceeded: 'Successful',
@@ -52,6 +54,7 @@ function payment(over: Partial<BillingPayment> = {}): BillingPayment {
     succeeded_at: null,
     created_at: '2026-10-11T09:05:00+05:00',
     invoice_id: 'inv0Ab',
+    initiated_by: 'customer',
     ...over,
   };
 }
@@ -134,6 +137,36 @@ describe('PaymentAttempts', () => {
       'Safepay',
     ]);
     expect(el.textContent).not.toContain('crypto_wallet');
+  });
+
+  it('tags a scheduled charge and a saved-card charge next to the method', () => {
+    const el = render([
+      payment({ id: '1', initiated_by: 'schedule' }),
+      payment({ id: '2', initiated_by: 'upgrade' }),
+    ]);
+
+    expect(rows(el).map((r) => field(r, 'initiator'))).toEqual([
+      'Saved card',
+      'Charged automatically',
+    ]);
+    expect(rows(el).map((r) => field(r, 'method'))).toEqual([
+      'Safepay',
+      'Safepay',
+    ]);
+  });
+
+  it('adds no tag for a customer, missing or unknown initiator', () => {
+    const missing = payment({ id: '3' });
+    delete (missing as Partial<BillingPayment>).initiated_by;
+    const el = render([
+      payment({ id: '1', initiated_by: 'customer' }),
+      payment({ id: '2', initiated_by: 'robot' }),
+      missing,
+      payment({ id: '4', initiated_by: 'constructor' }),
+    ]);
+
+    expect(rows(el)).toHaveLength(4);
+    expect(el.querySelector('[data-field="initiator"]')).toBeNull();
   });
 
   it('shows each amount in its own currency inside <bdi>', () => {

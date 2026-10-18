@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import type { ParamMap } from '@angular/router';
 import {
   EMPTY,
   Observable,
@@ -10,24 +11,38 @@ import {
   switchMap,
   throwError,
 } from 'rxjs';
-import type { ApiError } from '@hostelhive/data-access';
+import type { ApiError, SavedCard } from '@hostelhive/data-access';
 import { BillingApi, HostPropertyStore } from '@services';
 import { ExternalNavigation } from '@core/browser/external-navigation';
 
-/** sessionStorage key for the invoice and hostel a payer left for Safepay from. */
+/** sessionStorage key for what a payer left for Safepay to do, and the hostel they left from. */
 export const SAFEPAY_RETURN_KEY = 'hh.billing.return';
 
 const SAFEPAY_HOST = 'getsafepay.com';
 
+/** The query params Safepay sends a payer back with: an invoice id, or a card or subscription outcome. */
+export type ReturnParamName = 'invoice' | 'card' | 'subscription';
+
 /**
- * The invoice id from a return page's `?invoice=` value, or null when there is none.
- *
  * Safepay appends `?tracker=…` to our return URLs even though they already carry a query, so
  * the page arrives as `?invoice=CQcLFP?tracker=track_…` and the whole tail reads as part of the
- * id. Ids never contain `?`, so everything from the first one is Safepay's and is dropped.
+ * value. Our values never contain `?`, so everything from the first one is Safepay's and is dropped.
  */
+function stripTracker(value: string | null): string | null {
+  return value?.split('?', 1)[0].trim() || null;
+}
+
+/** A return page's `name` query param without Safepay's tracker suffix, or null when there is none. */
+export function returnParam(
+  params: Pick<ParamMap, 'get'>,
+  name: ReturnParamName,
+): string | null {
+  return stripTracker(params.get(name));
+}
+
+/** The invoice id from a return page's `?invoice=` value, or null when there is none. */
 export function returnInvoiceId(param: string | null): string | null {
-  return param?.split('?', 1)[0].trim() || null;
+  return stripTracker(param);
 }
 
 /**
@@ -51,21 +66,76 @@ export function isSafepayCheckoutUrl(
   );
 }
 
-interface ReturnStash {
-  invoiceId: string;
-  hostelId: string | null;
-}
+/** What the payer left for Safepay to do, kept for the page Safepay sends them back to. */
+export type ReturnStash =
+  | { kind: 'invoice'; invoiceId: string; hostelId: string | null }
+  | {
+      kind: 'card';
+      hostelId: string;
+      /** The card saved before leaving, so the return page can tell when the new one lands. */
+      previous: SavedCard | null;
+      /** The invoice the card is being saved for, when the payer came from one. */
+      invoiceId?: string;
+    }
+  | { kind: 'subscription'; hostelId: string; planId: string };
 
-/** The error `start()` fails with when the server hands back no usable checkout page. */
+export type ReturnKind = ReturnStash['kind'];
+
+/** The error the starts fail with when the server hands back no usable Safepay page. */
 function badCheckoutUrl(): ApiError {
   return { status: -1, code: 'bad_checkout_url', message: '' };
+}
+
+function readSavedCard(value: unknown): SavedCard | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { label, expires_on } = value as Record<string, unknown>;
+  if (typeof label !== 'string') return null;
+  return {
+    label,
+    expires_on: typeof expires_on === 'string' ? expires_on : null,
+  };
+}
+
+/** A stash as read back from storage, or null when it is not one this app wrote. */
+function parseStash(value: unknown): ReturnStash | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { kind, invoiceId, hostelId, previous, planId } = value as Record<
+    string,
+    unknown
+  >;
+  switch (kind) {
+    // A stash written before kinds existed is an invoice's.
+    case undefined:
+    case 'invoice':
+      if (typeof invoiceId !== 'string') return null;
+      return {
+        kind: 'invoice',
+        invoiceId,
+        hostelId: typeof hostelId === 'string' ? hostelId : null,
+      };
+    case 'card':
+      if (typeof hostelId !== 'string') return null;
+      return {
+        kind: 'card',
+        hostelId,
+        previous: readSavedCard(previous),
+        ...(typeof invoiceId === 'string' ? { invoiceId } : {}),
+      };
+    case 'subscription':
+      if (typeof hostelId !== 'string' || typeof planId !== 'string') {
+        return null;
+      }
+      return { kind: 'subscription', hostelId, planId };
+    default:
+      return null;
+  }
 }
 
 /**
  * Sends a payer to Safepay and helps them find their way back.
  *
- * Before leaving, the invoice and the hostel it was paid from are stashed for this tab only,
- * because the invoice does not say which hostel it belongs to and the return pages need to
+ * Before leaving, what they left to do and the hostel they left from are stashed for this tab
+ * only, because an invoice does not say which hostel it belongs to and the return pages need to
  * offer a way back into that hostel's billing.
  */
 @Injectable({ providedIn: 'root' })
@@ -86,23 +156,54 @@ export class SafepayCheckout {
     : EMPTY;
 
   /**
-   * Starts the payment and, once Safepay's page is known, leaves for it.
+   * Starts the payment and, once Safepay's page is known, leaves for it. With `saveCard`,
+   * Safepay also keeps the card for automatic renewal.
    *
    * Emits once and completes after the navigation has been asked for; the page is unloading
    * by then, so the caller keeps its loading state. Fails with the request's `ApiError`, or
    * with status -1 and code `bad_checkout_url` when there is no Safepay page to go to.
    */
-  start(invoiceId: string, hostelId: string | null): Observable<void> {
-    return this.api.pay(invoiceId).pipe(
-      switchMap(({ checkout_url }) => {
-        if (!isSafepayCheckoutUrl(checkout_url)) {
-          return throwError(badCheckoutUrl);
-        }
-        this.writeReturn({ invoiceId, hostelId });
-        this.navigation.assign(checkout_url);
-        return of(undefined);
-      }),
-    );
+  start(
+    invoiceId: string,
+    hostelId: string | null,
+    opts: { saveCard?: boolean } = {},
+  ): Observable<void> {
+    return this.leave(this.api.pay(invoiceId, opts), {
+      kind: 'invoice',
+      invoiceId,
+      hostelId,
+    });
+  }
+
+  /**
+   * Leaves for Safepay to save or replace the hostel's card, as {@link start} does. `previous` is
+   * the card on file now, and `invoiceId` the invoice the payer came from, if any.
+   */
+  startCardSave(
+    hostelId: string,
+    previous: SavedCard | null,
+    invoiceId?: string,
+  ): Observable<void> {
+    return this.leave(this.api.saveCard(hostelId), {
+      kind: 'card',
+      hostelId,
+      previous,
+      ...(invoiceId ? { invoiceId } : {}),
+    });
+  }
+
+  /** Leaves for Safepay to subscribe the hostel to `planId`, as {@link start} does. */
+  startSubscribe(hostelId: string, planId: string): Observable<void> {
+    return this.leave(this.api.subscribeWithSafepay(hostelId, planId), {
+      kind: 'subscription',
+      hostelId,
+      planId,
+    });
+  }
+
+  /** What the payer left for Safepay to do, or null when this tab stashed nothing readable. */
+  returnStash(): ReturnStash | null {
+    return this.readReturn();
   }
 
   /**
@@ -111,10 +212,25 @@ export class SafepayCheckout {
    */
   returnHostel(invoiceId: string | null): string | null {
     const stash = this.readReturn();
-    if (invoiceId && stash?.invoiceId === invoiceId && stash.hostelId) {
+    if (
+      invoiceId &&
+      stash?.kind === 'invoice' &&
+      stash.invoiceId === invoiceId &&
+      stash.hostelId
+    ) {
       return stash.hostelId;
     }
-    return this.properties.selected() || null;
+    return this.selectedHostel();
+  }
+
+  /**
+   * The hostel a card or subscription return belongs to: the one stashed for a start of that
+   * `kind`, else the hostel selected in the console, else null.
+   */
+  returnHostelFor(kind: ReturnKind): string | null {
+    const stash = this.readReturn();
+    if (stash?.kind === kind && stash.hostelId) return stash.hostelId;
+    return this.selectedHostel();
   }
 
   /** Router commands for the billing screen to go back to, before localisation. */
@@ -132,6 +248,27 @@ export class SafepayCheckout {
     }
   }
 
+  /** Waits for the start request, then stashes and leaves for its Safepay page. */
+  private leave(
+    request: Observable<{ checkout_url: string | null }>,
+    stash: ReturnStash,
+  ): Observable<void> {
+    return request.pipe(
+      switchMap(({ checkout_url }) => {
+        if (!isSafepayCheckoutUrl(checkout_url)) {
+          return throwError(badCheckoutUrl);
+        }
+        this.writeReturn(stash);
+        this.navigation.assign(checkout_url);
+        return of(undefined);
+      }),
+    );
+  }
+
+  private selectedHostel(): string | null {
+    return this.properties.selected() || null;
+  }
+
   private writeReturn(stash: ReturnStash): void {
     try {
       this.window?.sessionStorage.setItem(
@@ -147,14 +284,7 @@ export class SafepayCheckout {
     try {
       const raw = this.window?.sessionStorage.getItem(SAFEPAY_RETURN_KEY);
       if (!raw) return null;
-      const parsed: unknown = JSON.parse(raw);
-      if (typeof parsed !== 'object' || parsed === null) return null;
-      const { invoiceId, hostelId } = parsed as Record<string, unknown>;
-      if (typeof invoiceId !== 'string') return null;
-      return {
-        invoiceId,
-        hostelId: typeof hostelId === 'string' ? hostelId : null,
-      };
+      return parseStash(JSON.parse(raw));
     } catch {
       return null;
     }
@@ -169,6 +299,10 @@ export type PayErrorOutcome =
   | { kind: 'settled'; message: string }
   /** This invoice cannot be paid online: show the message and hide Pay. */
   | { kind: 'unpayable'; message: string }
+  /** The saved card was declined: show the bank's reason and offer another card. */
+  | { kind: 'declined'; message: string }
+  /** A saved-card charge for this invoice is still being processed: show the message, pay later. */
+  | { kind: 'inProgress'; message: string }
   /** Any other refusal: show the message and let the payer try again. */
   | { kind: 'retry'; message: string }
   | { kind: 'forbidden' }
@@ -196,9 +330,15 @@ export function payErrorOutcome(err: unknown): PayErrorOutcome {
   if (/^Invoice .+ is (paid|void)/.test(message)) {
     return { kind: 'settled', message };
   }
+  if (/^Your card was declined/.test(message)) {
+    return { kind: 'declined', message };
+  }
+  if (/already in progress/.test(message)) {
+    return { kind: 'inProgress', message };
+  }
   if (
     /^There is nothing to pay/.test(message) ||
-    /isn['’]t available for/.test(message)
+    /(isn|aren)['’]t available for/.test(message)
   ) {
     return { kind: 'unpayable', message };
   }

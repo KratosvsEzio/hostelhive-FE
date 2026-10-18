@@ -163,6 +163,7 @@ function detailOf(r: AdminPaymentRow, over: Partial<BillingPayment> = {}) {
     succeeded_at: null,
     created_at: r.created_at,
     invoice_id: r.invoice_id,
+    initiated_by: 'customer',
     ...over,
   };
   const invoice: BillingInvoice = {

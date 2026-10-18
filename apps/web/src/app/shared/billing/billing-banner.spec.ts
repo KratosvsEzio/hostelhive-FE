@@ -29,6 +29,8 @@ function subscription(overrides: Partial<BillingSubscription> = {}): BillingSubs
     grace_until: null,
     scheduled_plan: null,
     cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
     ...overrides,
   };
 }
@@ -42,6 +44,8 @@ function billing(overrides: Partial<HostBilling> = {}): HostBilling {
     currency: 'PKR',
     country_code: 'PK',
     payment_methods: ['safepay'],
+    auto_renew: false,
+    saved_card: null,
     subscription: subscription(),
     features: ['listing', 'crm'],
     open_invoice: null,
@@ -138,6 +142,7 @@ describe('bannerFor', () => {
         boostPaused: false,
         countdownMs: null,
         action: 'renew',
+        secondaryAction: null,
         dismissible: false,
         periodEnd: end,
       });
@@ -271,6 +276,7 @@ describe('bannerFor', () => {
         boostPaused: true,
         countdownMs: 3 * DAY + 5 * HOUR,
         action: 'renew',
+        secondaryAction: null,
         dismissible: false,
         periodEnd: end,
       });
@@ -308,6 +314,7 @@ describe('bannerFor', () => {
         boostPaused: false,
         countdownMs: null,
         action: 'renew',
+        secondaryAction: null,
         dismissible: false,
         periodEnd: end,
       });
@@ -330,6 +337,7 @@ describe('bannerFor', () => {
         boostPaused: false,
         countdownMs: null,
         action: 'resume',
+        secondaryAction: null,
         dismissible: true,
         periodEnd: end,
       });
@@ -362,6 +370,7 @@ describe('bannerFor', () => {
         boostPaused: false,
         countdownMs: null,
         action: 'renew',
+        secondaryAction: null,
         dismissible: true,
         periodEnd: end,
       });
@@ -406,8 +415,172 @@ describe('bannerFor', () => {
         boostPaused: false,
         countdownMs: null,
         action: 'renew',
+        secondaryAction: null,
         dismissible: false,
         periodEnd: end,
+      });
+    });
+  });
+
+  describe('with auto-renew on', () => {
+    const autoRenewing = (sub: BillingSubscription, overrides: Partial<HostBilling> = {}) =>
+      billing({ auto_renew: true, subscription: sub, ...overrides });
+
+    it('tells a renewing owner the saved card will be charged, with no Renew', () => {
+      const end = iso(NOW + 2 * DAY);
+      const sub = subscription({ current_period_end: end });
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toEqual({
+        kind: 'renewing',
+        tone: 'info',
+        messageKey: 'hostAccess.renewsSoonCard',
+        dates: { date: end },
+        params: {},
+        boostPaused: false,
+        countdownMs: null,
+        action: 'goToBilling',
+        secondaryAction: null,
+        dismissible: true,
+        periodEnd: end,
+      });
+    });
+
+    it('keeps the scheduled-downgrade message but drops Renew', () => {
+      const sub = subscription({
+        current_period_end: iso(NOW + 2 * DAY),
+        scheduled_plan: { id: 'qTFruf', code: 'listing', name: 'Listing' },
+      });
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toMatchObject({
+        messageKey: 'hostAccess.switchesSoon',
+        params: { plan: 'Listing' },
+        action: 'goToBilling',
+      });
+    });
+
+    it('says the card is being charged when renewal is due', () => {
+      const end = iso(NOW - HOUR);
+      const sub = subscription({ current_period_end: end });
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toEqual({
+        kind: 'renew-due',
+        tone: 'info',
+        messageKey: 'hostAccess.renewDueCard',
+        dates: {},
+        params: {},
+        boostPaused: false,
+        countdownMs: null,
+        action: 'goToBilling',
+        secondaryAction: null,
+        dismissible: false,
+        periodEnd: end,
+      });
+    });
+
+    it('asks for a new card while past due, with Pay now when an invoice is open', () => {
+      const end = iso(NOW - 2 * DAY);
+      const grace = iso(NOW + 3 * DAY);
+      const sub = withSlug('past-due', { current_period_end: end, grace_until: grace });
+      expect(bannerFor(owner(autoRenewing(sub, { open_invoice: OPEN_INVOICE })), NOW)).toEqual({
+        kind: 'past-due',
+        tone: 'warn',
+        messageKey: 'hostAccess.pastDueCard',
+        dates: { endDate: end, graceDate: grace },
+        params: {},
+        boostPaused: false,
+        countdownMs: 3 * DAY,
+        action: 'updateCard',
+        secondaryAction: 'pay',
+        dismissible: false,
+        periodEnd: end,
+      });
+    });
+
+    it('offers only the card update while past due with no open invoice', () => {
+      const sub = withSlug('past-due', {
+        current_period_end: iso(NOW - DAY),
+        grace_until: iso(NOW + DAY),
+      });
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toMatchObject({
+        action: 'updateCard',
+        secondaryAction: null,
+      });
+    });
+
+    it('leaves the grace-over banner as it is', () => {
+      const sub = withSlug('past-due', {
+        current_period_end: iso(NOW - 2 * DAY),
+        grace_until: iso(NOW - HOUR),
+      });
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toMatchObject({
+        kind: 'grace-over',
+        messageKey: 'hostAccess.graceOver',
+        action: 'renew',
+        secondaryAction: null,
+      });
+    });
+
+    it('leaves the offline banners as they are', () => {
+      const sub = withSlug('expired');
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toMatchObject({
+        kind: 'expired',
+        messageKey: 'hostAccess.expired',
+        action: 'renew',
+      });
+    });
+
+    it('shows staff nothing', () => {
+      const sub = subscription({ current_period_end: iso(NOW + DAY) });
+      expect(bannerFor(staff(autoRenewing(sub)), NOW)).toBeNull();
+    });
+
+    it('does not use the card variants for a Safepay-billed plan', () => {
+      const sub = subscription({
+        current_period_end: iso(NOW + DAY),
+        billed_by: 'safepay_subscription',
+      });
+      expect(bannerFor(owner(autoRenewing(sub)), NOW)).toMatchObject({
+        messageKey: 'hostAccess.renewsSoon',
+        action: 'renew',
+      });
+    });
+  });
+
+  describe('with auto-renew off', () => {
+    it.each([
+      ['renewing', subscription({ current_period_end: iso(NOW + DAY) }), 'hostAccess.renewsSoon', 'renew'],
+      ['renew-due', subscription({ current_period_end: iso(NOW - DAY) }), 'hostAccess.renewDue', 'renew'],
+      [
+        'past-due',
+        withSlug('past-due', { current_period_end: iso(NOW - DAY), grace_until: iso(NOW + DAY) }),
+        'hostAccess.pastDue',
+        'renew',
+      ],
+    ])('keeps the %s banner unchanged even with an open invoice', (_label, sub, key, action) => {
+      const b = billing({ subscription: sub, open_invoice: OPEN_INVOICE });
+      expect(bannerFor(owner(b), NOW)).toMatchObject({
+        messageKey: key,
+        action,
+        secondaryAction: null,
+      });
+    });
+
+    it.each([
+      ['renewing', subscription({ current_period_end: iso(NOW + DAY) }), 'hostAccess.renewsSoon', 'renew'],
+      ['renew-due', subscription({ current_period_end: iso(NOW - DAY) }), 'hostAccess.renewDue', 'renew'],
+      [
+        'past-due',
+        withSlug('past-due', { current_period_end: iso(NOW - DAY), grace_until: iso(NOW + DAY) }),
+        'hostAccess.pastDue',
+        'renew',
+      ],
+    ])('never infers auto-renew from a saved card on the %s banner', (_label, sub, key, action) => {
+      const b = billing({
+        subscription: sub,
+        open_invoice: OPEN_INVOICE,
+        saved_card: { label: 'Visa •••• 4242', expires_on: '2028-04-30' },
+      });
+      expect(bannerFor(owner(b), NOW)).toMatchObject({
+        messageKey: key,
+        action,
+        secondaryAction: null,
       });
     });
   });

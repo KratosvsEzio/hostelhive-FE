@@ -67,6 +67,7 @@ const FAILED: BillingPayment = {
   succeeded_at: null,
   created_at: '2026-10-09T08:15:00Z',
   invoice_id: 'iNv431',
+  initiated_by: 'customer',
 };
 
 function invoice(over: Partial<BillingInvoice> = {}): BillingInvoice {

@@ -12,6 +12,7 @@ import {
   BillingPayment,
   HostBilling,
   PlansResponse,
+  SafepayStart,
   StartedPayment,
 } from '@hostelhive/data-access';
 import { API_CONFIG } from '@core/api-config';
@@ -35,10 +36,14 @@ const BILLING: HostBilling = {
   currency: 'PKR',
   country_code: 'PK',
   payment_methods: ['safepay', 'bank_transfer'],
+  auto_renew: false,
+  saved_card: null,
   subscription: null,
   features: [],
   open_invoice: null,
-  plans: [{ ...PLAN, action: 'buy', amount_due_now: '5000.00' }],
+  plans: [
+    { ...PLAN, action: 'buy', amount_due_now: '5000.00', trial_days: null },
+  ],
 };
 
 const INVOICE: BillingInvoice = {
@@ -211,7 +216,13 @@ describe('BillingApi', () => {
     const CHANGED: HostBilling = {
       ...BILLING,
       plans: [
-        { ...PLAN, action: 'downgrade', amount_due_now: null, scheduled: true },
+        {
+          ...PLAN,
+          action: 'downgrade',
+          amount_due_now: null,
+          scheduled: true,
+          trial_days: null,
+        },
       ],
     };
 
@@ -511,6 +522,7 @@ describe('BillingApi', () => {
       succeeded_at: null,
       created_at: '2026-10-11T00:00:00Z',
       invoice_id: 'inv1',
+      initiated_by: 'customer',
     };
     const CHECKOUT = 'https://sandbox.api.getsafepay.com/embedded/?tracker=track_1';
 
@@ -578,6 +590,246 @@ describe('BillingApi', () => {
         );
 
       expect(err?.status).toBe(500);
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('asks Safepay to keep the card only when saveCard is ticked', () => {
+      api.pay('inv1', { saveCard: true }).subscribe();
+
+      const req = http.expectOne(`${BASE}/api/invoices/inv1/payments`);
+      expect(req.request.body).toEqual({
+        payment_method: 'safepay',
+        save_card: true,
+      });
+      req.flush({ success: true, payment: PAYMENT, invoice: INVOICE });
+    });
+
+    // An absent key keeps the request the server has always had; save_card: false is never sent.
+    it.each([undefined, {}, { saveCard: false }])(
+      'sends no save_card key for %j',
+      (opts) => {
+        api.pay('inv1', opts).subscribe();
+
+        const req = http.expectOne(`${BASE}/api/invoices/inv1/payments`);
+        expect(req.request.body).toStrictEqual({ payment_method: 'safepay' });
+        expect('save_card' in req.request.body).toBe(false);
+        req.flush({ success: true, payment: PAYMENT, invoice: INVOICE });
+      },
+    );
+  });
+
+  describe('payWithSavedCard', () => {
+    const URL = `${BASE}/api/invoices/inv1/payments`;
+    const CHARGED: BillingPayment = {
+      id: 'pay2',
+      status: { id: 3, name: 'Succeeded', slug: 'succeeded', color: null },
+      payment_method: 'saved_card',
+      amount: '5000.00',
+      currency: 'PKR',
+      reference: null,
+      gateway_reference: null,
+      failure_reason: null,
+      proof_url: null,
+      verified_at: null,
+      succeeded_at: '2026-10-11T00:00:00Z',
+      created_at: '2026-10-11T00:00:00Z',
+      invoice_id: 'inv1',
+      initiated_by: 'customer',
+    };
+
+    it('charges the saved card and unwraps the payment and invoice, toast suppressed', () => {
+      let out: StartedPayment | undefined;
+      api.payWithSavedCard('inv1').subscribe((r) => (out = r));
+
+      const req = http.expectOne(URL);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toStrictEqual({ payment_method: 'saved_card' });
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush(
+        { success: true, payment: CHARGED, invoice: INVOICE },
+        { status: 201, statusText: 'Created' },
+      );
+
+      expect(out).toEqual({
+        payment: CHARGED,
+        checkout_url: null,
+        invoice: INVOICE,
+      });
+    });
+
+    it("hands a decline to the caller with the bank's reason word for word, without a toast", () => {
+      const message = 'Your card was declined: Insufficient funds';
+      let err: ApiError | undefined;
+      api
+        .payWithSavedCard('inv1')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(URL)
+        .flush(
+          { success: false, errors: [message] },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+
+      expect(err?.status).toBe(422);
+      expect(err?.serverMessages?.[0]).toBe(message);
+      expect(notify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('saved card and automatic renewal', () => {
+    const SUB_URL = `${BASE}/api/hostels/nHelLt/subscription`;
+    const CARD_PAGE =
+      'https://sandbox.api.getsafepay.com/checkout/pay?tracker=track_2';
+    const WITH_CARD: HostBilling = {
+      ...BILLING,
+      auto_renew: true,
+      saved_card: { label: 'Visa ending 1111', expires_on: '2028-12-31' },
+    };
+
+    it('saveCard posts an empty body and reads the checkout page, toast suppressed', () => {
+      let out: { checkout_url: string | null } | undefined;
+      api.saveCard('nHelLt').subscribe((r) => (out = r));
+
+      const req = http.expectOne(`${SUB_URL}/card`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush(
+        { success: true, checkout_url: CARD_PAGE },
+        { status: 201, statusText: 'Created' },
+      );
+
+      expect(out).toStrictEqual({ checkout_url: CARD_PAGE });
+    });
+
+    it('saveCard reads a missing checkout page as null', () => {
+      let out: { checkout_url: string | null } | undefined;
+      api.saveCard('nHelLt').subscribe((r) => (out = r));
+
+      http.expectOne(`${SUB_URL}/card`).flush({ success: true });
+
+      expect(out).toStrictEqual({ checkout_url: null });
+    });
+
+    it('saveCard hands a 422 message to the caller word for word, without a toast', () => {
+      let err: ApiError | undefined;
+      api.saveCard('nHelLt').subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(`${SUB_URL}/card`)
+        .flush(
+          { success: false, errors: ['Choose a plan first'] },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+
+      expect(err?.serverMessages?.[0]).toBe('Choose a plan first');
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('removeCard sends a bodiless DELETE and unwraps the billing, toast suppressed', () => {
+      let out: HostBilling | undefined;
+      api.removeCard('nHelLt').subscribe((b) => (out = b));
+
+      const req = http.expectOne(`${SUB_URL}/card`);
+      expect(req.request.method).toBe('DELETE');
+      expect(req.request.body).toBeNull();
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush({ success: true, billing: BILLING });
+
+      expect(out).toEqual(BILLING);
+    });
+
+    it.each([true, false])(
+      'setAutoRenew puts enabled: %s and unwraps the billing, toast suppressed',
+      (enabled) => {
+        let out: HostBilling | undefined;
+        api.setAutoRenew('nHelLt', enabled).subscribe((b) => (out = b));
+
+        const req = http.expectOne(`${SUB_URL}/auto_renew`);
+        expect(req.request.method).toBe('PUT');
+        expect(req.request.body).toStrictEqual({ enabled });
+        expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+        req.flush({ success: true, billing: WITH_CARD });
+
+        expect(out).toEqual(WITH_CARD);
+      },
+    );
+
+    it('setAutoRenew hands a 422 message to the caller word for word, without a toast', () => {
+      let err: ApiError | undefined;
+      api
+        .setAutoRenew('nHelLt', true)
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(`${SUB_URL}/auto_renew`)
+        .flush(
+          {
+            success: false,
+            errors: ['Save a card first to turn on automatic renewal'],
+          },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+
+      expect(err?.status).toBe(422);
+      expect(err?.serverMessages?.[0]).toBe(
+        'Save a card first to turn on automatic renewal',
+      );
+      expect(notify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('subscribeWithSafepay', () => {
+    const URL = `${BASE}/api/hostels/nHelLt/subscription/safepay`;
+    const SUBSCRIBE_PAGE =
+      'https://sandbox.api.getsafepay.com/subscribe/?plan_id=plan_1';
+
+    it('posts the plan id as returned and reads the page and trial, toast suppressed', () => {
+      let out: SafepayStart | undefined;
+      api.subscribeWithSafepay('nHelLt', 'qTFruf').subscribe((r) => (out = r));
+
+      const req = http.expectOne(URL);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toStrictEqual({ plan_id: 'qTFruf' });
+      expect(req.request.context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
+      req.flush(
+        { success: true, checkout_url: SUBSCRIBE_PAGE, trial_days: 14 },
+        { status: 201, statusText: 'Created' },
+      );
+
+      expect(out).toStrictEqual({
+        checkout_url: SUBSCRIBE_PAGE,
+        trial_days: 14,
+      });
+    });
+
+    it('reads a missing page and trial as null', () => {
+      let out: SafepayStart | undefined;
+      api.subscribeWithSafepay('nHelLt', 'qTFruf').subscribe((r) => (out = r));
+
+      http.expectOne(URL).flush({ success: true });
+
+      expect(out).toStrictEqual({ checkout_url: null, trial_days: null });
+    });
+
+    it('hands a 422 message to the caller word for word, without a toast', () => {
+      const message =
+        "Listing can't be subscribed to through Safepay in USD yet";
+      let err: ApiError | undefined;
+      api
+        .subscribeWithSafepay('nHelLt', 'qTFruf')
+        .subscribe({ error: (e: ApiError) => (err = e) });
+
+      http
+        .expectOne(URL)
+        .flush(
+          { success: false, errors: [message] },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+
+      expect(err?.status).toBe(422);
+      expect(err?.serverMessages?.[0]).toBe(message);
       expect(notify).not.toHaveBeenCalled();
     });
   });

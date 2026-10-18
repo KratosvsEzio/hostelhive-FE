@@ -18,6 +18,7 @@ import { SessionStore } from '@core/auth/session-store';
 import { LocaleStore } from '@core/i18n/locale-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { BillingPage } from './billing-page';
+import { SafepayCheckout } from './safepay-checkout';
 
 const ALL_PERMISSIONS = [
   'core:Invoice:create',
@@ -45,8 +46,12 @@ const COPY = {
     cancelMessage: 'Your plan stays active until {{date}}.',
     cancelDropsSwitch: 'Your scheduled switch to {{plan}} won’t happen.',
     cancelOpenRenewal: 'Renewal invoice {{number}} stays open.',
+    renewsAutomaticallyOn: 'Renews automatically on {{date}}',
+    autoChargeNotice: "We'll charge {{card}} on {{date}}. You can also pay now.",
   },
 };
+
+const VISA = { label: 'Visa •••• 4242', expires_on: '2028-04-30' };
 
 function plan(over: Partial<BillingPlan> = {}): BillingPlan {
   return {
@@ -59,6 +64,7 @@ function plan(over: Partial<BillingPlan> = {}): BillingPlan {
     price: '5000.00',
     action: 'buy',
     amount_due_now: '5000.00',
+    trial_days: null,
     ...over,
   };
 }
@@ -76,6 +82,8 @@ function subscription(
     grace_until: null,
     scheduled_plan: null,
     cancel_at_period_end: false,
+    billed_by: 'invoice',
+    safepay_status: null,
     ...over,
   };
 }
@@ -100,6 +108,8 @@ function billing(over: Partial<HostBilling> = {}): HostBilling {
     currency: 'PKR',
     country_code: 'PK',
     payment_methods: ['card', 'bank_transfer'],
+    auto_renew: false,
+    saved_card: null,
     subscription: null,
     features: [],
     open_invoice: null,
@@ -218,6 +228,9 @@ describe('BillingPage', () => {
   let unschedules: Subject<HostBilling>[];
   let cancels: Subject<HostBilling>[];
   let resumes: Subject<HostBilling>[];
+  let cardRemovals: Subject<HostBilling>[];
+  let autoRenews: Subject<HostBilling>[];
+  let cardSaves: Subject<void>[];
   let api: {
     billing: ReturnType<typeof vi.fn>;
     checkout: ReturnType<typeof vi.fn>;
@@ -225,6 +238,12 @@ describe('BillingPage', () => {
     unscheduleDowngrade: ReturnType<typeof vi.fn>;
     cancelSubscription: ReturnType<typeof vi.fn>;
     resumeSubscription: ReturnType<typeof vi.fn>;
+    removeCard: ReturnType<typeof vi.fn>;
+    setAutoRenew: ReturnType<typeof vi.fn>;
+  };
+  let safepay: {
+    startCardSave: ReturnType<typeof vi.fn>;
+    restored$: Subject<void>;
   };
   let store: { accept: ReturnType<typeof vi.fn> };
 
@@ -247,6 +266,9 @@ describe('BillingPage', () => {
     unschedules = [];
     cancels = [];
     resumes = [];
+    cardRemovals = [];
+    autoRenews = [];
+    cardSaves = [];
     api = {
       billing: pending(loads),
       checkout: pending(checkouts),
@@ -254,6 +276,12 @@ describe('BillingPage', () => {
       unscheduleDowngrade: pending(unschedules),
       cancelSubscription: pending(cancels),
       resumeSubscription: pending(resumes),
+      removeCard: pending(cardRemovals),
+      setAutoRenew: pending(autoRenews),
+    };
+    safepay = {
+      startCardSave: pending(cardSaves),
+      restored$: new Subject<void>(),
     };
     store = { accept: vi.fn() };
     const granted = new Set(permissions);
@@ -277,6 +305,7 @@ describe('BillingPage', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: BillingApi, useValue: api },
+        { provide: SafepayCheckout, useValue: safepay },
         { provide: HostBillingStore, useValue: store },
         {
           provide: SessionStore,
@@ -1723,6 +1752,556 @@ describe('BillingPage', () => {
       expect(planChangeErrorOf(el, 'pGrowth')?.textContent?.trim()).toBe(
         'hostBilling.planChangeForbidden',
       );
+    });
+  });
+
+  describe('saved card', () => {
+    /** An active Premium plan ending 3 Dec 2026, renewing on a saved Visa. */
+    function withCard(
+      opts: Parameters<typeof changeable>[0] = {},
+    ): HostBilling {
+      return changeable({ saved_card: VISA, auto_renew: true, ...opts });
+    }
+
+    const block = (el: HTMLElement) => el.querySelector('hh-saved-card');
+    const switchOf = (el: HTMLElement) =>
+      el.querySelector<HTMLButtonElement>(
+        'hh-saved-card button[role="switch"]',
+      );
+    const disabled = (el: HTMLElement, testId: string) =>
+      (byTestId(el, testId) as HTMLButtonElement | null)?.disabled;
+    const cardError = (el: HTMLElement) =>
+      byTestId(el, 'saved-card-error')?.textContent?.trim();
+
+    describe('where it shows', () => {
+      it('is not shown without a subscription', async () => {
+        const el = await openWith(billing());
+
+        expect(block(el)).toBeNull();
+      });
+
+      it('is shown for an invoice-billed plan, with the id the banners link to', async () => {
+        const el = await openWith(withCard());
+
+        expect(block(el)?.id).toBe('saved-card');
+        expect(
+          block(el)?.querySelector('[data-field="label"]')?.textContent?.trim(),
+        ).toBe('Visa •••• 4242');
+      });
+
+      describe('a link to #saved-card', () => {
+        let scrolled: HTMLElement[];
+
+        beforeEach(() => {
+          scrolled = [];
+          // jsdom has no scrollIntoView; record which element was asked to scroll.
+          HTMLElement.prototype.scrollIntoView = function (this: HTMLElement) {
+            scrolled.push(this);
+          };
+        });
+
+        afterEach(() => {
+          delete (HTMLElement.prototype as Partial<HTMLElement>).scrollIntoView;
+        });
+
+        it('scrolls the block into view once it renders', async () => {
+          const el = await openWith(withCard());
+          expect(scrolled).toEqual([]);
+
+          await TestBed.inject(Router).navigateByUrl(
+            '/host/nHelLt/subscription#saved-card',
+          );
+          harness.detectChanges();
+
+          expect(scrolled).toEqual([block(el)]);
+        });
+
+        it('does not scroll again when a reload renders the block anew', async () => {
+          const el = await openWith(withCard({ auto_renew: false }));
+          await TestBed.inject(Router).navigateByUrl(
+            '/host/nHelLt/subscription#saved-card',
+          );
+          harness.detectChanges();
+          const first = block(el);
+
+          // A refused change reloads billing, which renders a new block.
+          click(switchOf(el));
+          refuse(autoRenews[0], {
+            status: 422,
+            serverMessages: ['Save a card first to turn on automatic renewal'],
+          });
+          loads[1].next(withCard({ auto_renew: false }));
+          harness.detectChanges();
+
+          expect(block(el)).not.toBe(first);
+          expect(scrolled).toEqual([first]);
+        });
+      });
+
+      it('is not shown for a live plan Safepay bills', async () => {
+        const el = await openWith(
+          billing({
+            subscription: subscription({ billed_by: 'safepay_subscription' }),
+          }),
+        );
+
+        expect(block(el)).toBeNull();
+      });
+
+      it('is shown once a Safepay-billed plan is no longer live', async () => {
+        const el = await openWith(
+          billing({
+            subscription: subscription({
+              billed_by: 'safepay_subscription',
+              status: { id: 5, name: 'Expired', slug: 'expired', color: null },
+            }),
+          }),
+        );
+
+        expect(block(el)).not.toBeNull();
+        expect(switchOf(el)).toBeNull();
+      });
+
+      it('offers Save a card on a plan that is not live, without the switch', async () => {
+        const el = await openWith(
+          billing({
+            subscription: subscription({
+              status: {
+                id: 2,
+                name: 'Incomplete',
+                slug: 'incomplete',
+                color: null,
+              },
+            }),
+          }),
+        );
+
+        expect(byTestId(el, 'card-save')?.textContent?.trim()).toBe(
+          'hostBilling.saveCard',
+        );
+        expect(switchOf(el)).toBeNull();
+      });
+
+      it('offers the switch on a past-due plan', async () => {
+        const el = await openWith(withCard({ status: PAST_DUE }));
+
+        expect(switchOf(el)).not.toBeNull();
+      });
+    });
+
+    describe('current-plan renewal line', () => {
+      it('says the plan renews automatically when the server has auto-renew on', async () => {
+        const el = await openWith(withCard({ auto_renew: true }));
+
+        expect(statusText(el)).toBe('Renews automatically on 3 Dec 2026');
+      });
+
+      it('keeps the plain renewal line when auto-renew is off, even with a card saved', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        expect(statusText(el)).toBe('Renews on 3 Dec 2026');
+      });
+    });
+
+    describe('auto-renew switch', () => {
+      it('shows the server’s value, never one inferred from the card', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+      });
+
+      it('sends the change, locks every other action, and applies the answer', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        click(switchOf(el));
+
+        expect(api.setAutoRenew).toHaveBeenCalledTimes(1);
+        expect(api.setAutoRenew).toHaveBeenCalledWith('nHelLt', true);
+        expect(
+          byTestId(el, 'auto-renew')?.getAttribute('aria-busy'),
+        ).toBe('true');
+        expect(switchOf(el)?.disabled).toBe(true);
+        expect(disabled(el, 'card-cancel')).toBe(true);
+        expect(disabled(el, 'card-save')).toBe(true);
+        expect(disabled(el, 'card-remove')).toBe(true);
+        expect(planButtonOf(el, 'pMax')?.disabled).toBe(true);
+
+        const answered = withCard({ auto_renew: true });
+        answer(autoRenews[0], answered);
+
+        expect(api.billing).toHaveBeenCalledTimes(1);
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('true');
+        expect(switchOf(el)?.disabled).toBe(false);
+        expect(statusText(el)).toBe('Renews automatically on 3 Dec 2026');
+        expect(store.accept).toHaveBeenLastCalledWith('nHelLt', answered);
+      });
+
+      it('turns renewal off', async () => {
+        const el = await openWith(withCard());
+        expect(statusText(el)).toBe('Renews automatically on 3 Dec 2026');
+
+        click(switchOf(el));
+        expect(api.setAutoRenew).toHaveBeenCalledWith('nHelLt', false);
+        answer(autoRenews[0], withCard({ auto_renew: false }));
+
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+        expect(statusText(el)).toBe('Renews on 3 Dec 2026');
+      });
+
+      it('shows what the server decided, even when it differs from the click', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        click(switchOf(el));
+        answer(autoRenews[0], withCard({ auto_renew: false }));
+
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+      });
+
+      it('puts the switch back and says so in the block when the change fails', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        click(switchOf(el));
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('true');
+        refuse(autoRenews[0], { status: 500 });
+
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+        expect(switchOf(el)?.disabled).toBe(false);
+        expect(cardError(el)).toBe('hostBilling.autoRenewFailed');
+        expect(byTestId(el, 'card-change-error')).toBeNull();
+        expect(api.billing).toHaveBeenCalledTimes(1);
+      });
+
+      it('shows a 422 word for word, reloads, and keeps the switch at the reloaded value', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        click(switchOf(el));
+        refuse(autoRenews[0], {
+          status: 422,
+          serverMessages: ['Save a card first to turn on automatic renewal'],
+        });
+
+        expect(api.billing).toHaveBeenCalledTimes(2);
+        loads[1].next(withCard({ auto_renew: false }));
+        harness.detectChanges();
+
+        expect(cardError(el)).toBe(
+          'Save a card first to turn on automatic renewal',
+        );
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+      });
+
+      it('shows its own words for a 403, never the server’s', async () => {
+        const el = await openWith(withCard({ auto_renew: false }));
+
+        click(switchOf(el));
+        refuse(autoRenews[0], {
+          status: 403,
+          serverMessages: ['You are not authorized to access this page.'],
+        });
+
+        expect(cardError(el)).toBe('hostBilling.planChangeForbidden');
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+      });
+
+      it('is off and disabled while the plan is cancelling, with the hint to resume', async () => {
+        const el = await openWith(
+          withCard({ cancelling: true, auto_renew: false }),
+        );
+
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('false');
+        expect(switchOf(el)?.disabled).toBe(true);
+        expect(
+          el
+            .querySelector('hh-saved-card [data-field="auto-renew-hint"]')
+            ?.textContent?.trim(),
+        ).toBe('hostBilling.autoRenewResumeHint');
+
+        click(switchOf(el));
+        expect(api.setAutoRenew).not.toHaveBeenCalled();
+      });
+
+      it('is not sent while a plan change is in flight', async () => {
+        const el = await openWith(withCard());
+
+        click(byTestId(el, 'card-cancel'));
+        click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+
+        expect(switchOf(el)?.disabled).toBe(true);
+        click(switchOf(el));
+        expect(api.setAutoRenew).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('removing the card', () => {
+      it('asks first, and keeping the card sends nothing', async () => {
+        const el = await openWith(withCard());
+
+        click(byTestId(el, 'card-remove'));
+
+        expect(modalTitle(el)).toBe('hostBilling.removeCardTitle');
+        expect(byTestId(el, 'remove-card-message')?.textContent?.trim()).toBe(
+          'hostBilling.removeCardMessage',
+        );
+        expect(
+          buttonByText(modal(el), 'hostBilling.removeCard')?.className,
+        ).toContain('bg-danger');
+
+        click(buttonByText(modal(el), 'hostBilling.keepCard'));
+
+        expect(modal(el)).toBeNull();
+        expect(api.removeCard).not.toHaveBeenCalled();
+      });
+
+      it('removes it once confirmed and renders the answer with no second load', async () => {
+        const el = await openWith(withCard());
+
+        click(byTestId(el, 'card-remove'));
+        click(buttonByText(modal(el), 'hostBilling.removeCard'));
+
+        expect(modal(el)).toBeNull();
+        expect(api.removeCard).toHaveBeenCalledTimes(1);
+        expect(api.removeCard).toHaveBeenCalledWith('nHelLt');
+        expect(byTestId(el, 'card-remove')?.getAttribute('aria-busy')).toBe(
+          'true',
+        );
+        expect(disabled(el, 'card-cancel')).toBe(true);
+        expect(switchOf(el)?.disabled).toBe(true);
+
+        const answered = withCard({ saved_card: null, auto_renew: false });
+        answer(cardRemovals[0], answered);
+
+        expect(api.billing).toHaveBeenCalledTimes(1);
+        expect(
+          block(el)?.querySelector('[data-field="no-card"]')?.textContent?.trim(),
+        ).toBe('hostBilling.noCardSaved');
+        expect(byTestId(el, 'card-remove')).toBeNull();
+        expect(switchOf(el)).toBeNull();
+        expect(statusText(el)).toBe('Renews on 3 Dec 2026');
+        expect(store.accept).toHaveBeenLastCalledWith('nHelLt', answered);
+      });
+
+      it('shows a 422 word for word in the block and reloads', async () => {
+        const el = await openWith(withCard());
+
+        click(byTestId(el, 'card-remove'));
+        click(buttonByText(modal(el), 'hostBilling.removeCard'));
+        refuse(cardRemovals[0], {
+          status: 422,
+          serverMessages: ['Choose a plan first'],
+        });
+
+        expect(api.billing).toHaveBeenCalledTimes(2);
+        loads[1].next(withCard());
+        harness.detectChanges();
+        expect(cardError(el)).toBe('Choose a plan first');
+      });
+
+      it('falls back to its own copy for any other failure, and unlocks', async () => {
+        const el = await openWith(withCard());
+
+        click(byTestId(el, 'card-remove'));
+        click(buttonByText(modal(el), 'hostBilling.removeCard'));
+        refuse(cardRemovals[0], { status: 500 });
+
+        expect(cardError(el)).toBe('hostBilling.removeCardFailed');
+        expect(disabled(el, 'card-remove')).toBe(false);
+        expect(disabled(el, 'card-cancel')).toBe(false);
+        expect(api.billing).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not open while another action is in flight', async () => {
+        const el = await openWith(withCard());
+
+        click(planButtonOf(el, 'pMax'));
+        byTestId(el, 'card-remove')?.click();
+        harness.detectChanges();
+
+        expect(modal(el)).toBeNull();
+      });
+    });
+
+    describe('saving a card', () => {
+      it('leaves for Safepay with no card on file, keeping its spinner and the lock', async () => {
+        const el = await openWith(changeable());
+
+        click(byTestId(el, 'card-save'));
+
+        expect(safepay.startCardSave).toHaveBeenCalledTimes(1);
+        expect(safepay.startCardSave).toHaveBeenCalledWith('nHelLt', null);
+        cardSaves[0].next();
+        cardSaves[0].complete();
+        harness.detectChanges();
+
+        expect(byTestId(el, 'card-save')?.getAttribute('aria-busy')).toBe(
+          'true',
+        );
+        expect(disabled(el, 'card-cancel')).toBe(true);
+        expect(planButtonOf(el, 'pMax')?.disabled).toBe(true);
+      });
+
+      it('hands over the card on file when replacing it', async () => {
+        const el = await openWith(withCard());
+
+        expect(byTestId(el, 'card-save')?.textContent?.trim()).toBe(
+          'hostBilling.replaceCard',
+        );
+        click(byTestId(el, 'card-save'));
+
+        expect(safepay.startCardSave).toHaveBeenCalledWith('nHelLt', VISA);
+      });
+
+      it('shows a refusal word for word and reloads', async () => {
+        const el = await openWith(changeable());
+
+        click(byTestId(el, 'card-save'));
+        cardSaves[0].error({
+          status: 422,
+          code: 'unknown_error',
+          message: 'x',
+          serverMessages: [
+            'Online payment is unavailable right now, please try again (timeout)',
+          ],
+        });
+        harness.detectChanges();
+
+        expect(api.billing).toHaveBeenCalledTimes(2);
+        loads[1].next(changeable());
+        harness.detectChanges();
+        expect(cardError(el)).toBe(
+          'Online payment is unavailable right now, please try again (timeout)',
+        );
+        expect(disabled(el, 'card-save')).toBe(false);
+      });
+
+      it('falls back to its own copy when there is no Safepay page to go to', async () => {
+        const el = await openWith(changeable());
+
+        click(byTestId(el, 'card-save'));
+        cardSaves[0].error({
+          status: -1,
+          code: 'bad_checkout_url',
+          message: '',
+        });
+        harness.detectChanges();
+
+        expect(cardError(el)).toBe('hostBilling.saveCardFailed');
+        expect(disabled(el, 'card-save')).toBe(false);
+        expect(api.billing).toHaveBeenCalledTimes(1);
+      });
+
+      it('shows its own words for a 403', async () => {
+        const el = await openWith(changeable());
+
+        click(byTestId(el, 'card-save'));
+        cardSaves[0].error({
+          status: 403,
+          code: 'unknown_error',
+          message: 'x',
+          serverMessages: ['You are not authorized to access this page.'],
+        });
+        harness.detectChanges();
+
+        expect(cardError(el)).toBe('hostBilling.planChangeForbidden');
+      });
+
+      it('drops its spinner when the browser restores the page from its cache', async () => {
+        const el = await openWith(changeable());
+
+        click(byTestId(el, 'card-save'));
+        safepay.restored$.next();
+        harness.detectChanges();
+
+        expect(byTestId(el, 'card-save')?.getAttribute('aria-busy')).toBeNull();
+        expect(disabled(el, 'card-save')).toBe(false);
+        expect(disabled(el, 'card-cancel')).toBe(false);
+      });
+
+      it('is not sent while a checkout is in flight', async () => {
+        const el = await openWith(changeable());
+
+        click(planButtonOf(el, 'pMax'));
+        byTestId(el, 'card-save')?.click();
+        harness.detectChanges();
+
+        expect(safepay.startCardSave).not.toHaveBeenCalled();
+      });
+
+      it('clears a card refusal when the next action starts', async () => {
+        const el = await openWith(changeable());
+        click(byTestId(el, 'card-save'));
+        cardSaves[0].error({ status: 500, code: 'unknown_error', message: 'x' });
+        harness.detectChanges();
+        expect(cardError(el)).toBe('hostBilling.saveCardFailed');
+
+        click(byTestId(el, 'card-cancel'));
+        click(buttonByText(modal(el), 'hostBilling.cancelPlan'));
+
+        expect(byTestId(el, 'saved-card-error')).toBeNull();
+      });
+    });
+
+    describe('without permission to change the plan', () => {
+      const WITHOUT_UPDATE = ALL_PERMISSIONS.filter(
+        (p) => p !== 'core:Subscription:update',
+      );
+
+      it('shows the card read-only with the owner-only line', async () => {
+        const el = await openWith(withCard(), WITHOUT_UPDATE);
+
+        expect(byTestId(el, 'card-save')).toBeNull();
+        expect(byTestId(el, 'card-remove')).toBeNull();
+        expect(switchOf(el)?.getAttribute('aria-checked')).toBe('true');
+        expect(switchOf(el)?.disabled).toBe(true);
+        expect(byTestId(el, 'card-owner-only')?.textContent).toContain(
+          'hostBilling.ownerOnly',
+        );
+      });
+    });
+
+    describe('payment due', () => {
+      it('says the open renewal will be charged to the card on the period end, with Pay kept', async () => {
+        const el = await openWith(
+          withCard({ open_invoice: openInvoice({ kind: 'renewal' }) }),
+        );
+        const due = el.querySelector('hh-payment-due');
+
+        expect(
+          plain(due?.querySelector('[data-field="auto-charge"]')?.textContent),
+        ).toBe(
+          "We'll charge Visa •••• 4242 on 3 Dec 2026. You can also pay now.",
+        );
+        expect(
+          Array.from(due?.querySelectorAll('a') ?? []).some((a) =>
+            a.getAttribute('href')?.endsWith('/pay/inv7'),
+          ),
+        ).toBe(true);
+      });
+
+      it('says nothing about a charge without automatic renewal', async () => {
+        const el = await openWith(
+          withCard({
+            auto_renew: false,
+            open_invoice: openInvoice({ kind: 'renewal' }),
+          }),
+        );
+
+        expect(
+          el.querySelector('hh-payment-due [data-field="auto-charge"]'),
+        ).toBeNull();
+      });
+
+      it('says nothing about a charge on a past-due plan', async () => {
+        const el = await openWith(
+          withCard({
+            status: PAST_DUE,
+            open_invoice: openInvoice({ kind: 'renewal' }),
+          }),
+        );
+
+        expect(
+          el.querySelector('hh-payment-due [data-field="auto-charge"]'),
+        ).toBeNull();
+      });
     });
   });
 

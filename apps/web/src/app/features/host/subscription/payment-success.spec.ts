@@ -30,6 +30,7 @@ function payment(slug: string, failure: string | null = null): BillingPayment {
     succeeded_at: null,
     created_at: '2026-10-11T10:00:00.000+05:00',
     invoice_id: 'inv1',
+    initiated_by: 'customer',
   };
 }
 
