@@ -153,6 +153,9 @@ export class RouteHeadStrategy extends TitleStrategy {
     if (head === 'page') {
       // The page owns its title too: a route title here would only ever compete with it.
       this.pending.set(null);
+      // The page clears its own blocks when it goes, but a server page the browser never
+      // created cannot — see `Seo.clearUnclaimed`.
+      this.injector.get(Seo).clearUnclaimed();
       return;
     }
     const url = routePath(matchedUrl(snapshot));

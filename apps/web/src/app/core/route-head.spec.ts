@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import { Router, Routes, TitleStrategy, provideRouter } from '@angular/router';
@@ -27,12 +27,16 @@ const SEO_TAGS =
 @Component({ selector: 'hh-plain-stub', template: '' })
 class PlainStub {}
 
-/** A page that owns its head: applies from an effect and never cleans up after itself. */
+/**
+ * A page that owns its head: applies from an effect and claims its blocks, as every page that
+ * writes them does (`Seo.clearOnDestroy`).
+ */
 @Component({ selector: 'hh-page-stub', template: '' })
 class PageStub {
   constructor() {
     const seo = inject(Seo);
     const locale = inject(LocaleStore);
+    seo.clearOnDestroy(inject(DestroyRef), ['listing', 'faq'], { preloadImage: true });
     effect(() => {
       if (!locale.ready()) return;
       seo.apply({ title: 'Page own title', description: 'Page own description', path: '/page' });
@@ -355,6 +359,40 @@ describe('RouteHeadStrategy', () => {
       expect(attr(ROBOTS, 'content')).toBe(INDEXABLE);
       expect(all(JSON_LD)).toHaveLength(2);
       expect(all(PRELOAD)).toHaveLength(1);
+    });
+
+    it('drops server-rendered blocks no live page claimed, and keeps its own (Trello #138)', async () => {
+      // What a server-rendered article leaves when the visitor clicks away before the app
+      // boots: its component never existed in the browser, so nothing claimed these.
+      document.head.insertAdjacentHTML(
+        'beforeend',
+        '<script type="application/ld+json" data-seo="article">{}</script>' +
+          '<script type="application/ld+json" data-seo="breadcrumb">{}</script>' +
+          '<link rel="preload" as="image" data-seo="preload-image" href="https://example.test/article.webp" />',
+      );
+
+      await go('/en/page');
+
+      expect(all(JSON_LD).map((el) => el.getAttribute('data-seo')).sort()).toEqual([
+        'faq',
+        'listing',
+      ]);
+      expect(all(PRELOAD).map((el) => el.getAttribute('href'))).toEqual([
+        'https://example.test/hero.webp',
+      ]);
+    });
+
+    it('keeps a claimed block that the page has not written yet', async () => {
+      // The server's copy of the page's own block, before the browser effect rewrites it.
+      document.head.insertAdjacentHTML(
+        'beforeend',
+        '<script type="application/ld+json" data-seo="listing">{"server":true}</script>',
+      );
+      ready.set(false);
+
+      await go('/en/page');
+
+      expect(all(JSON_LD).map((el) => el.textContent)).toEqual(['{"server":true}']);
     });
 
     it.each(['/en/about', '/en/private'])(
