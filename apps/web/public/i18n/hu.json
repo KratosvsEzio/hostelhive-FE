@@ -564,7 +564,8 @@
     "findingTheRoomsBuiltOn": "{{name}} típusra épülő szobák keresése…",
     "moveAllRoomsTo": "Összes szoba áthelyezése ide:",
     "selectARoomType": "Válasszon szobatípust",
-    "noRoomsAreBuiltOn": "Egyetlen szoba sem épül a(z) {{name}} típusra, így más nem változik. Mentéskor törlődik."
+    "noRoomsAreBuiltOn": "Egyetlen szoba sem épül a(z) {{name}} típusra, így más nem változik. Mentéskor törlődik.",
+    "couldNotMoveRoom": "Nem sikerült áthelyezni ezt a szobát. Próbáld újra."
   },
   "a11y": {
     "close": "Bezárás",
@@ -1249,7 +1250,10 @@
     "nobodyInThisRoomThat": "Aznap senki sem volt ebben a szobában.",
     "thisRoomCurrentlyHasNo": "Ebben a szobában jelenleg nincs aktív bérlő.",
     "addYourFirstRoomTo": "Adja hozzá az első szobát a kihasználtság követéséhez.",
-    "bedNumbersAreNotAssigned": "Az ágyszámok még nincsenek kiosztva – a naptár azt mutatja, hány ágy foglalt, nem azt, ki melyikben alszik."
+    "bedNumbersAreNotAssigned": "Az ágyszámok még nincsenek kiosztva – a naptár azt mutatja, hány ágy foglalt, nem azt, ki melyikben alszik.",
+    "couldNotUpdateRoom": "Nem sikerült frissíteni ezt a szobát. Próbáld újra.",
+    "couldNotCreateRoom": "Nem sikerült létrehozni ezt a szobát. Próbáld újra.",
+    "couldNotCreateRooms": "Nem sikerült létrehozni ezeket a szobákat. Próbáld újra."
   },
   "hostUtilities": {
     "ratePerUnit": "Egységár",
@@ -1553,7 +1557,7 @@
     "uploadingPhotos": "Fotók feltöltése…",
     "create": "Létrehozás",
     "createHostel": "Szálláshely létrehozása",
-    "couldnTCreateHostelPlease": "Nem sikerült létrehozni a szálláshelyet — javítsd az alábbiakat:"
+    "couldNotCreateHostel": "Nem sikerült létrehozni a hostelt. Ellenőrizd az adatokat, és próbáld újra."
   },
   "adminAdminListings": {
     "allListings": "Összes hirdetés",

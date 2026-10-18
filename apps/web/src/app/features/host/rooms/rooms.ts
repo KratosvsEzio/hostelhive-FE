@@ -46,6 +46,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
 /** The grid renders every room at once, so fetch a large single page instead of paginating. */
 const ROOMS_LIMIT = 1000;
 
+/** For the room saves, whose failure the dialog shows inline: the global toast would repeat it. */
+const QUIET = { suppressErrorToast: true } as const;
+
 interface ViewState {
   loading: boolean;
   error: boolean;
@@ -232,12 +235,14 @@ export class Rooms {
 
   protected readonly form = signal<RoomForm | null>(null);
   protected readonly saving = signal(false);
+  /** An i18n key, translated in the template. */
   protected readonly saveError = signal<string | null>(null);
   protected readonly menuOpenId = signal<string | null>(null);
   protected readonly menuPos = signal<{ top: number; right: number } | null>(null);
 
   protected readonly bulkForm = signal<BulkForm | null>(null);
   protected readonly bulkSaving = signal(false);
+  /** An i18n key, translated in the template. */
   protected readonly bulkError = signal<string | null>(null);
 
   protected readonly expandedId = signal<string | null>(null);
@@ -831,7 +836,7 @@ export class Rooms {
           ...(rtId != null && { room_type_id: rtId }),
           capacity: Math.max(0, Number(f.capacity) || 0),
           floor: f.floor.trim() || null,
-        })
+        }, QUIET)
         .subscribe({
           next: (updated) => {
             this.saving.set(false);
@@ -840,7 +845,7 @@ export class Rooms {
           },
           error: () => {
             this.saving.set(false);
-            this.saveError.set('Failed to update room. Please try again.');
+            this.saveError.set('hostRooms.couldNotUpdateRoom');
           },
         });
       return;
@@ -858,7 +863,7 @@ export class Rooms {
         room_type_id: rtId,
         capacity: Math.max(0, Number(f.capacity) || 0),
         floor: f.floor.trim() || null,
-      })
+      }, QUIET)
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         // The created room, straight onto the grid. This used to bump `refresh`, which
@@ -868,7 +873,7 @@ export class Rooms {
           this.close();
           this.insertRoom(created);
         },
-        error: () => this.saveError.set('Failed to create room. Please try again.'),
+        error: () => this.saveError.set('hostRooms.couldNotCreateRoom'),
       });
   }
 
@@ -1023,14 +1028,14 @@ export class Rooms {
     this.bulkSaving.set(true);
     this.bulkError.set(null);
     this.api
-      .bulkCreateRooms(hostelId, rooms)
+      .bulkCreateRooms(hostelId, rooms, QUIET)
       .pipe(finalize(() => this.bulkSaving.set(false)))
       .subscribe({
         next: (all) => {
           this.closeBulk();
           this.showAllRooms(all);
         },
-        error: () => this.bulkError.set('Failed to create rooms. Please try again.'),
+        error: () => this.bulkError.set('hostRooms.couldNotCreateRooms'),
       });
   }
 

@@ -564,7 +564,8 @@
     "findingTheRoomsBuiltOn": "Kamers zoeken die gebaseerd zijn op {{name}}…",
     "moveAllRoomsTo": "Alle kamers verplaatsen naar",
     "selectARoomType": "Selecteer een kamertype",
-    "noRoomsAreBuiltOn": "Geen kamers zijn gebaseerd op {{name}}, dus er verandert verder niets. Het wordt verwijderd bij opslaan."
+    "noRoomsAreBuiltOn": "Geen kamers zijn gebaseerd op {{name}}, dus er verandert verder niets. Het wordt verwijderd bij opslaan.",
+    "couldNotMoveRoom": "Deze kamer kon niet worden verplaatst. Probeer het opnieuw."
   },
   "a11y": {
     "close": "Sluiten",
@@ -1249,7 +1250,10 @@
     "nobodyInThisRoomThat": "Niemand in deze kamer op die dag.",
     "thisRoomCurrentlyHasNo": "Deze kamer heeft momenteel geen actieve huurders.",
     "addYourFirstRoomTo": "Voeg uw eerste kamer toe om de bezetting bij te houden.",
-    "bedNumbersAreNotAssigned": "Bednummers zijn nog niet toegewezen — de kalender toont hoeveel bedden bezet zijn, niet welk bed elke gast heeft."
+    "bedNumbersAreNotAssigned": "Bednummers zijn nog niet toegewezen — de kalender toont hoeveel bedden bezet zijn, niet welk bed elke gast heeft.",
+    "couldNotUpdateRoom": "Deze kamer kon niet worden bijgewerkt. Probeer het opnieuw.",
+    "couldNotCreateRoom": "Deze kamer kon niet worden aangemaakt. Probeer het opnieuw.",
+    "couldNotCreateRooms": "Deze kamers konden niet worden aangemaakt. Probeer het opnieuw."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarief per eenheid",
@@ -1553,7 +1557,7 @@
     "uploadingPhotos": "Foto’s uploaden…",
     "create": "Maken",
     "createHostel": "Hostel maken",
-    "couldnTCreateHostelPlease": "Hostel kon niet worden gemaakt — los het volgende op:"
+    "couldNotCreateHostel": "Het hostel kon niet worden aangemaakt. Controleer de gegevens en probeer het opnieuw."
   },
   "adminAdminListings": {
     "allListings": "Alle advertenties",
