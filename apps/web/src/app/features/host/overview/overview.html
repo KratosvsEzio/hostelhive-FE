@@ -84,11 +84,11 @@
             }
             @if (k.key === 'pending-rent') {
               <p class="mt-1.5 text-[11px] text-ink-400">
-                {{ 'hostOverview.nTenantsUnpaid' | transloco: { count: unpaidRentTenants() } }}
+                {{ (unpaidRentTenants() === 1 ? 'hostOverview.nTenantsUnpaidOne' : 'hostOverview.nTenantsUnpaid') | transloco: { count: unpaidRentTenants() } }}
               </p>
             } @else if (k.key === 'pending-utility') {
               <p class="mt-1.5 text-[11px] text-ink-400">
-                {{ 'hostOverview.nTenantsUnpaid' | transloco: { count: unpaidUtilityTenants() } }}
+                {{ (unpaidUtilityTenants() === 1 ? 'hostOverview.nTenantsUnpaidOne' : 'hostOverview.nTenantsUnpaid') | transloco: { count: unpaidUtilityTenants() } }}
               </p>
             }
           </div>

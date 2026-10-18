@@ -1,6 +1,8 @@
 import type { Tenant } from '@hostelhive/data-access';
 import type { HostOpsApi } from '@services/host-ops-api';
 import { normalizeBillingDay } from '@util/billing-day';
+import { calendarDaysBetween, dayPart } from '@util/plain-day';
+import { wallClockIn } from '@util/zoned-time';
 
 /** Every field the tenant check-in / edit drawer binds to, all held as form-shaped strings. */
 export interface CheckInForm {
@@ -76,38 +78,22 @@ const REQUIRED_FIELDS = [
   'billingDueDate',
 ] as const satisfies readonly (keyof CheckInForm)[];
 
-const pad2 = (n: number) => String(n).padStart(2, '0');
-
 /**
- * Local now, to the minute, as `YYYY-MM-DDTHH:mm`.
- *
- * Built from local getters rather than `toISOString()`, which is UTC — at UTC+5 that
- * returned yesterday's date for the first five hours of every day, so a tenant checked
- * in before 05:00 defaulted to the wrong day.
- *
- * It used to floor the minutes to the picker's step, because the column only offered
- * 00/15/30/45 and an unrounded 14:37 would preselect a minute that was not in it. The
- * column offers every minute now, so the rounding is pure loss: it filed a check-in up to
- * fourteen minutes before it happened.
- *
- * Losing it also removes the hazard the flooring was carefully arranged to avoid. Rounding
- * to the *nearest* step had pushed 23:53 to 00:00 and carried the date with it, recording a
- * tenant who arrived on the 25th as joining on the 26th. No rounding, no carry.
- */
-function nowLocal(): string {
-  const d = new Date();
-  d.setSeconds(0, 0);
-  const date = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-  return `${date}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
-/**
- * Builds the form a fresh check-in starts from, defaulting the joining date to today
+ * Builds the form a fresh check-in starts from, defaulting the joining date to now
  * and the billing cycle to the 1st / 5th of the month.
  *
  * @param roomId - Room to pre-select, when the drawer was opened from a specific room.
+ * @param joiningDate - The default joining date and time, `YYYY-MM-DDTHH:mm`. The drawer
+ *   passes the hostel's wall clock (`wallClockIn`), since the API files it as a naive wall
+ *   time; the fallback is the device's clock. Never `toISOString()`, which is UTC and gave
+ *   yesterday for the first five hours of every day at UTC+5. Not rounded to the picker's
+ *   step either: the minute column offers every minute, and rounding to the nearest step
+ *   once carried 23:53 into the next day.
  */
-export function emptyCheckInForm(roomId?: string): CheckInForm {
+export function emptyCheckInForm(
+  roomId?: string,
+  joiningDate: string = wallClockIn(null),
+): CheckInForm {
   return {
     fullName: '',
     email: '',
@@ -117,7 +103,7 @@ export function emptyCheckInForm(roomId?: string): CheckInForm {
     address: '',
     roomId: roomId ?? '',
     roomNumber: '',
-    joiningDate: nowLocal(),
+    joiningDate,
     leaveDate: '',
     rent: '',
     advanceDeposit: '',
@@ -265,6 +251,26 @@ export function leaveBeforeJoin(f: CheckInForm): boolean {
   if (!f.joiningDate || !f.leaveDate) return false;
   const at = (v: string) => (v.includes('T') ? v : `${v}T00:00`);
   return at(f.leaveDate) < at(f.joiningDate);
+}
+
+/**
+ * How many calendar days from `today` to the leave date, for the confirmation shown before a
+ * tenant is registered with one. Null when the value is not a date.
+ *
+ * Counted on the day parts, not through `Date`: `new Date('yyyy-MM-dd')` is UTC midnight, the
+ * previous evening anywhere west of Greenwich, and a daylight-saving change makes one day 23 or
+ * 25 hours long — each counted one off. A time on the leave date does not change its day.
+ *
+ * @param leaveDate - `yyyy-MM-dd`, or `yyyy-MM-ddTHH:mm`; returned as-is for display.
+ * @param today - The hostel's `yyyy-MM-dd`, from `todayIn`.
+ */
+export function leaveCountdown(
+  leaveDate: string,
+  today: string,
+): { date: string; days: number } | null {
+  const day = dayPart(leaveDate);
+  if (!day) return null;
+  return { date: leaveDate, days: calendarDaysBetween(today, day) };
 }
 
 /**

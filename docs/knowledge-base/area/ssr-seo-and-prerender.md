@@ -227,8 +227,10 @@ stay crawlable. Search is deliberately not blocked; its pages carry their own ca
 - **A `[routerLink]="[]" [fragment]` link drops the query** unless it sets
   `queryParamsHandling="preserve"` (as the blog contents links now do). Without it, a jump on a
   `?utm_source=` link becomes a new page and loses the campaign tag.
-- **The `search_performed` event still fires on every map pan** (Trello #157), so it can't separate
-  pans from searches.
+- **`search_performed` still fires on every map pan, but says so.** Its `trigger` parameter
+  (`arrival | place | everywhere | filter | map | retry`, `search-trigger.ts`) tells pans from
+  searches; filter on `trigger != map` for searches. Added 2026-10-18 (Trello #157); earlier events
+  carry none, and GA reports it only once it is registered as an event-scoped custom dimension.
 - **The legal pages are English text at 18 language URLs**, each self-canonical with `hreflang` to
   match the sitemap, which claims translations that do not exist (Trello #139).
 - **The e2e `waitForClient` also waits for the startup veil and the boot splash.** Both are full-screen

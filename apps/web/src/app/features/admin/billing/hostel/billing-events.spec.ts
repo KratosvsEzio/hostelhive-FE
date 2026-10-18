@@ -12,6 +12,10 @@ const COPY = {
       cancelScheduled: 'Plan set to end on {{date}}',
       cancelScheduledPlain: 'Plan set to end',
       currencyChanged: 'Billing currency changed from {{from}} to {{to}}',
+      currencyOverrideSet: 'Billing currency set to {{to}} by {{admin}}',
+      currencyOverrideChanged:
+        'Billing currency changed from {{from}} to {{to}} by {{admin}}',
+      currencyOverrideCleared: 'Billing currency set back to Automatic by {{admin}}',
       other: 'Other event ({{kind}})',
       empty: 'No billing history yet.',
     },
@@ -75,6 +79,36 @@ describe('AdminBillingEvents', () => {
     expect(
       el.querySelector('[data-field="created"]')?.getAttribute('datetime'),
     ).toBe('2026-10-11T14:20:00Z');
+  });
+
+  it('names the admin who set, changed or cleared the currency override', () => {
+    const el = render([
+      event('a', 'currency_override_changed', {
+        from: null,
+        to: 'USD',
+        admin_id: 'SwEcOA',
+        admin_name: 'Sana Qureshi',
+      }),
+      event('b', 'currency_override_changed', {
+        from: 'USD',
+        to: 'PKR',
+        admin_id: 'SwEcOA',
+        admin_name: 'Omar Farooq',
+      }),
+      event('c', 'currency_override_changed', {
+        from: 'PKR',
+        to: null,
+        admin_id: 'SwEcOA',
+        admin_name: 'Hina Raza',
+      }),
+    ]);
+
+    expect(labels(el)).toEqual([
+      'Billing currency set back to Automatic by Hina Raza',
+      'Billing currency changed from USD to PKR by Omar Farooq',
+      'Billing currency set to USD by Sana Qureshi',
+    ]);
+    expect(el.textContent).not.toContain('SwEcOA');
   });
 
   it('names plans through the lookup it is given', () => {

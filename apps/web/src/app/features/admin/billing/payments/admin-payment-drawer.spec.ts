@@ -63,7 +63,7 @@ const COPY = {
         'Only verify once {{amount}} has reached us. Invoice {{number}} is marked paid.',
       verifyConfirm: 'Verify payment',
       verifyNotApplied: "This payment wasn't applied: {{reason}}",
-      verifyNotAppliedNext: "The host hasn't been told.",
+      verifyNotAppliedNext: 'The host has been emailed the reason.',
       rejectTitle: 'Reject this bank transfer?',
       rejectReasonLabel: 'Reason',
       rejectHint: 'The host is emailed this reason.',
@@ -393,7 +393,7 @@ describe('AdminPaymentDrawer', () => {
     const alert = q('[data-testid="not-applied"]');
     expect(alert?.getAttribute('role')).toBe('alert');
     expect(text(alert)).toBe(
-      `This payment wasn't applied: ${reason} The host hasn't been told.`,
+      `This payment wasn't applied: ${reason} The host has been emailed the reason.`,
     );
     expect(outcomes.map((o) => o.result)).toEqual(['not-applied']);
     expect(closes).toBe(0);

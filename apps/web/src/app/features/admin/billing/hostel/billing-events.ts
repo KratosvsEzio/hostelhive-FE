@@ -71,6 +71,7 @@ const EVENTS_LIMIT = 100;
                             to: view.params['to'],
                             reason: view.params['reason'],
                             kind: view.params['kind'],
+                            admin: view.params['admin'],
                             date: (view.date | adminUtcDate: 'd MMM yyyy'),
                           }
                   }}

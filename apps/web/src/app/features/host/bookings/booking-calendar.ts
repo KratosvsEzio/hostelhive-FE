@@ -13,6 +13,8 @@ import { DatePipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
+import { hostelZone } from '@services';
+import { todayIn } from '@util/zoned-time';
 import {
   BookingCalendar as CalendarData,
   HostBooking,
@@ -110,22 +112,74 @@ export class BookingCalendar {
   /** 42, matching the grid, so the skeleton occupies exactly the space the month will. */
   protected readonly skeletonCells = Array.from({ length: 42 });
 
-  private readonly today = new Date();
+  /**
+   * The hostel's IANA time zone: `undefined` while it is being read, `null` when there is
+   * none (today is then the device's date).
+   *
+   * Read from the store here rather than passed in, so the page above needs no change. One
+   * request per hostel per session — the store keeps the answer, null included.
+   */
+  private readonly zone = hostelZone(this.hostelId);
 
-  /** First of the displayed month. Stepping months never touches the day-of-month. */
-  protected readonly monthStart = signal(
-    new Date(this.today.getFullYear(), this.today.getMonth(), 1),
+  /**
+   * The instant this calendar opened, read from the clock once.
+   *
+   * A computed does not re-run when the clock moves, so reading it inside one would re-base
+   * the month on whatever moment it last recomputed — and an arrow pressed after midnight on
+   * a month's last night would skip a month. A page left open past midnight keeps the day it
+   * opened on; a reload moves it on.
+   */
+  private readonly openedAt = new Date();
+
+  /**
+   * Today on the hostel's calendar, as `yyyy-MM-dd`: the highlighted cell, the month the
+   * calendar opens on and the ledger's default day. Null until the zone is known, so the
+   * first paint is the right day rather than one that jumps when the zone lands.
+   */
+  private readonly today = computed(() => {
+    // No hostel yet (the route id resolves a tick later): stay pending rather than use the device's date.
+    if (!this.hostelId()) return null;
+    const zone = this.zone();
+    return zone === undefined ? null : todayIn(zone, this.openedAt);
+  });
+
+  /** Whether today is known yet; until it is the month stays a skeleton and unlabelled. */
+  protected readonly ready = computed(() => this.today() !== null);
+
+  /** Months from the current one. 0 is this month; the arrows step it. */
+  private readonly offset = signal(0);
+
+  /** Bumped by "Try again", so the same month can be asked for twice. */
+  private readonly attempt = signal(0);
+
+  /**
+   * First of the displayed month, built from the hostel's year and month.
+   *
+   * The device's month stands in while the zone is pending; nothing is fetched or labelled
+   * from it. Compared by value, so a zone that moves today within the same month does not
+   * count as a new month.
+   */
+  protected readonly monthStart = computed(
+    () => {
+      const [y, m] = (this.today() ?? isoDate(this.openedAt)).split('-').map(Number);
+      return new Date(y, m - 1 + this.offset(), 1);
+    },
+    { equal: (a, b) => a.getTime() === b.getTime() },
   );
 
   private readonly request = computed(() => ({
     hostelId: this.hostelId(),
+    ready: this.ready(),
+    attempt: this.attempt(),
     ...monthRange(this.monthStart()),
   }));
 
   protected readonly state = toSignal(
     toObservable(this.request).pipe(
-      switchMap(({ hostelId, start, end }) =>
-        !hostelId
+      switchMap(({ hostelId, ready, start, end }) =>
+        !ready
+          ? of<CalendarState>({ loading: true, error: false, data: EMPTY })
+          : !hostelId
           ? of<CalendarState>({ loading: false, error: false, data: EMPTY })
           : this.api.calendar(hostelId, start, end).pipe(
               // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -147,8 +201,14 @@ export class BookingCalendar {
   private readonly monthData = linkedSignal(() => this.state().data);
 
   protected readonly month = computed(() =>
-    buildBookingMonth(this.monthData().days, this.monthStart(), this.today),
+    buildBookingMonth(this.monthData().days, this.monthStart(), this.today() ?? ''),
   );
+
+  /** The month on screen and the day called today, which together decide the ledger's default. */
+  private readonly selectionSource = computed(() => ({
+    start: this.monthStart(),
+    today: this.today(),
+  }));
 
   /**
    * The day the ledger is showing.
@@ -156,15 +216,14 @@ export class BookingCalendar {
    * A `linkedSignal` on the month so stepping to another month re-seeds the selection rather
    * than leaving the ledger on a date the grid no longer shows — that would pair March's
    * numbers with April's grid, and nothing on screen would say so. Defaults to today when
-   * today is in view, otherwise the first of the month.
+   * today is in view, otherwise the first of the month; empty while today is not known yet.
    */
-  protected readonly selected = linkedSignal<Date, string>({
-    source: this.monthStart,
-    computation: (start) => {
-      const sameMonth =
-        start.getFullYear() === this.today.getFullYear() &&
-        start.getMonth() === this.today.getMonth();
-      return sameMonth ? isoDate(this.today) : isoDate(new Date(start.getFullYear(), start.getMonth(), 1));
+  protected readonly selected = linkedSignal<{ start: Date; today: string | null }, string>({
+    source: this.selectionSource,
+    computation: ({ start, today }) => {
+      if (!today) return '';
+      const first = isoDate(start);
+      return today.slice(0, 7) === first.slice(0, 7) ? today : first;
     },
   });
 
@@ -184,13 +243,16 @@ export class BookingCalendar {
    */
   private readonly dayRequest = computed(() => ({
     hostelId: this.hostelId(),
+    ready: this.ready(),
     date: this.selected(),
   }));
 
   protected readonly dayState = toSignal(
     toObservable(this.dayRequest).pipe(
-      switchMap(({ hostelId, date }) =>
-        !hostelId || !date
+      switchMap(({ hostelId, ready, date }) =>
+        !ready
+          ? of<DayState>({ loading: true, error: false, data: [] })
+          : !hostelId || !date
           ? of<DayState>({ loading: false, error: false, data: [] })
           : this.api.bookingsOn(hostelId, date).pipe(
               map((data): DayState => ({ loading: false, error: false, data })),
@@ -261,8 +323,13 @@ export class BookingCalendar {
   });
 
   protected step(by: number): void {
-    const m = this.monthStart();
-    this.monthStart.set(new Date(m.getFullYear(), m.getMonth() + by, 1));
+    if (!this.ready()) return;
+    this.offset.update((n) => n + by);
+  }
+
+  /** Asks for the month on screen again after it failed to load. */
+  protected retry(): void {
+    this.attempt.update((n) => n + 1);
   }
 
   protected select(day: DayCell): void {

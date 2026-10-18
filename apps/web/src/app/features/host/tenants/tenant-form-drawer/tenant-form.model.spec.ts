@@ -1,4 +1,5 @@
 import { Tenant } from '@hostelhive/data-access';
+import { todayIn } from '@util/zoned-time';
 import {
   CheckInForm,
   checkInFormFromTenant,
@@ -6,6 +7,7 @@ import {
   fieldErrorFor,
   isCheckInFormValid,
   isFieldRequired,
+  leaveCountdown,
   toCreateRenterPayload,
   toUpdateRenterPayload,
 } from './tenant-form.model';
@@ -472,5 +474,39 @@ describe('fieldErrorFor', () => {
     expect(fieldErrorFor(f, 'billingDate')).toBe('This field is required');
     expect(fieldErrorFor(f, 'billingDate', { nightly: true })).toBe('');
     expect(fieldErrorFor(f, 'billingDueDate', { nightly: true })).toBe('');
+  });
+});
+
+describe('leaveCountdown', () => {
+  const EAST = 'Pacific/Kiritimati';
+  const WEST = 'Pacific/Pago_Pago';
+  const I2 = new Date(Date.UTC(2026, 2, 15, 12));
+
+  it('counts from the hostel day, east and west of the date line', () => {
+    expect(leaveCountdown('2026-03-20', todayIn(EAST, I2))?.days).toBe(4);
+    expect(leaveCountdown('2026-03-20', todayIn(WEST, I2))?.days).toBe(5);
+  });
+
+  it('counts a leave date that carries a time, and returns it as given', () => {
+    expect(leaveCountdown('2026-03-20T10:00', '2026-03-15')).toEqual({
+      date: '2026-03-20T10:00',
+      days: 5,
+    });
+  });
+
+  it('refuses a leave date that is not a real day', () => {
+    expect(leaveCountdown('2026-02-30', '2026-03-15')).toBeNull();
+    expect(leaveCountdown('soon', '2026-03-15')).toBeNull();
+  });
+
+  it('is zero today, positive tomorrow and negative in the past', () => {
+    expect(leaveCountdown('2026-03-15', '2026-03-15')?.days).toBe(0);
+    expect(leaveCountdown('2026-03-16', '2026-03-15')?.days).toBe(1);
+    expect(leaveCountdown('2026-03-12', '2026-03-15')?.days).toBe(-3);
+  });
+
+  // 2026-10-25 is 25 hours long in Europe; a millisecond count rounds it up to a third day.
+  it('counts across a daylight-saving fall-back as whole days', () => {
+    expect(leaveCountdown('2026-10-26', '2026-10-24')?.days).toBe(2);
   });
 });

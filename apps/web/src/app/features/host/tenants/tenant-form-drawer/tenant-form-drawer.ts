@@ -28,12 +28,20 @@ import {
 
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { PhotoPicker } from '@app/shared/photo-picker/photo-picker';
-import { HostOpsApi, HostPropertyStore, ImageUploadKey, ImageUploadService, RoomRenter } from '@services';
+import {
+  HostOpsApi,
+  HostPropertyStore,
+  ImageUploadKey,
+  ImageUploadService,
+  RoomRenter,
+  followToday,
+  hostelZone,
+} from '@services';
 import { Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
 import { PAGE_SIZE } from '@util/pagination';
 import { BILLING_DAY_OPTIONS } from '@util/billing-day';
-import { todayIn } from '@util/zoned-time';
+import { todayIn, wallClockIn } from '@util/zoned-time';
 import {
   CheckInForm,
   RoomOption,
@@ -41,6 +49,7 @@ import {
   emptyCheckInForm,
   fieldErrorFor,
   isCheckInFormValid,
+  leaveCountdown,
   RenterFormContext,
   pendingEditForm,
   toCreateRenterPayload,
@@ -135,6 +144,25 @@ export class TenantFormDrawer {
     this.monthlyBilling() ? 'hostTenants.leavingDate' : 'hostTenants.checkOut',
   );
 
+  /**
+   * The hostel's zone, read only for a new check-in: its joining default and its leave
+   * countdown both need it, and an edit keeps its own dates and shows no countdown. One cached
+   * request per hostel per session. `undefined` while pending, which reads as the device's
+   * clock rather than holding the form back.
+   */
+  private readonly checkInZone = hostelZone(
+    computed(() => (this.mode() === 'create' ? this.store.selected() : null)),
+  );
+
+  /**
+   * The joining date and time a fresh check-in defaults to: the hostel's wall clock (the API
+   * files it as a naive wall time), read once when the drawer opened.
+   */
+  private readonly joiningDefault = (() => {
+    const openedAt = new Date();
+    return computed(() => wallClockIn(this.checkInZone(), openedAt));
+  })();
+
   protected readonly form = signal<CheckInForm | null>(null);
   protected readonly saving = signal(false);
   protected readonly formLoading = signal(false);
@@ -153,15 +181,12 @@ export class TenantFormDrawer {
   protected readonly leaveConfirmEnabled = computed(() =>
     this.leaveConfirmInput().trim() === 'I Confirm',
   );
+
+  /** Days from the hostel's today to the leave date — see {@link leaveCountdown}. */
   protected readonly leaveInfo = computed(() => {
     const f = this.form();
     if (!f?.leaveDate) return null;
-    const leave = new Date(f.leaveDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    leave.setHours(0, 0, 0, 0);
-    const diff = Math.ceil((leave.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return { date: f.leaveDate, days: diff };
+    return leaveCountdown(f.leaveDate, todayIn(this.checkInZone()));
   });
 
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panel');
@@ -394,6 +419,12 @@ export class TenantFormDrawer {
       });
     });
 
+    // The zone lands after the form was seeded: move an untouched joining date and time onto
+    // the hostel's clock. A tenant being edited keeps its own.
+    followToday(this.joiningDefault, (from, to) => {
+      this.form.update((f) => (f && !f.id && f.joiningDate === from ? { ...f, joiningDate: to } : f));
+    });
+
     // Room search subscription — waits for hostelId to be available before calling API
     this.roomLoad$.pipe(
       debounceTime(200),
@@ -460,7 +491,7 @@ export class TenantFormDrawer {
     this.transportEnabled.set(false);
     this.messEnabled.set(false);
     this.roomLoad$.next({ query: '', page: 1, append: false });
-    this.form.set(emptyCheckInForm(preselectedRoomId));
+    this.form.set(emptyCheckInForm(preselectedRoomId, this.joiningDefault()));
   }
 
   private loadForEdit(tenantId: string): void {

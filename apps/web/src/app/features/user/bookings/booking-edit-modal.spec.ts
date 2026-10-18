@@ -71,4 +71,24 @@ describe('BookingEditModal', () => {
     cmp.submit();
     expect(emitted).toEqual([]);
   });
+
+  /** The app has no plural rules, so a count of one asks for its own singular key. */
+  it.each([
+    [1, 'common.nGuestsOne'],
+    [2, 'common.nGuests'],
+  ])('reviews a changed room line of %i guest(s) as %s', (guests, key) => {
+    const { fixture } = render(booking());
+    fixture.componentRef.setInput('stay', {
+      checkIn: new Date(2026, 9, 1),
+      checkOut: new Date(2026, 9, 3),
+      nights: 2,
+      lines: [{ title: 'Dorm', units: 1, shared: true, guests, total: 4000 }],
+      total: 4000,
+      previousTotal: 4000,
+      currency: 'PKR',
+    });
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent?.match(/common\.nGuests(?:One)?/g)).toEqual([key]);
+  });
 });

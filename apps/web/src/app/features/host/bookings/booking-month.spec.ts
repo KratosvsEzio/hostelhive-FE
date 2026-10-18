@@ -14,7 +14,7 @@ import {
 
 /** August 2026 starts on a Saturday, so the grid needs five leading pad cells. */
 const AUG = new Date(2026, 7, 1);
-const TODAY = new Date(2026, 7, 24);
+const TODAY = '2026-08-24';
 
 function day(date: string, over: Partial<CalendarDayCounts> = {}): CalendarDayCounts {
   return { date, checkins: 0, checkouts: 0, byDisposition: {}, ...over };
@@ -62,6 +62,19 @@ describe('buildBookingMonth grid', () => {
   it('marks only the real today', () => {
     const month = buildBookingMonth([], AUG, TODAY);
     expect(month.days.filter((d) => d.isToday).map((d) => d.n)).toEqual(['24']);
+  });
+
+  it('marks no cell as today when today is empty', () => {
+    const month = buildBookingMonth([], AUG, '');
+    expect(month.days.some((d) => d.isToday)).toBe(false);
+  });
+
+  it('marks no cell when today is outside the month or on a pad cell', () => {
+    // A pad cell carries no date, so even a today that falls on its grid slot must not mark it.
+    for (const today of ['2026-09-04', '2026-07-31', '2026-08-00']) {
+      const month = buildBookingMonth([], AUG, today);
+      expect(month.days.some((d) => d.isToday)).toBe(false);
+    }
   });
 
   it('leaves the padding cells empty', () => {

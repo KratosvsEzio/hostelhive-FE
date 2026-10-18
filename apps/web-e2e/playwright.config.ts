@@ -14,6 +14,13 @@ const serverUrl = `http://localhost:${port}`;
 const baseURL = process.env['BASE_URL'] || serverUrl;
 
 /**
+ * The GA4 id the e2e dev server is built with. Fake, so nothing can reach a real property, and
+ * set at all so analytics runs and specs can read the events off `window.dataLayer`. Specs that
+ * read them grant consent and block Google's hosts (`support/analytics.ts`).
+ */
+const E2E_GA_MEASUREMENT_ID = 'G-E2ETEST000';
+
+/**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
@@ -29,6 +36,17 @@ export default defineConfig({
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    // With a measurement id built in, the consent banner opens on every page and sits over
+    // the bottom of it. Every spec starts having declined; analytics specs grant it themselves.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: new URL(baseURL).origin,
+          localStorage: [{ name: 'hh.consent.analytics', value: 'denied' }],
+        },
+      ],
+    },
   },
   /* Run your local dev server before starting the tests */
   webServer: {
@@ -36,6 +54,8 @@ export default defineConfig({
     url: serverUrl,
     reuseExistingServer: process.env['E2E_REUSE_SERVER'] === '1',
     cwd: workspaceRoot,
+    // Read by tools/generate-google-analytics-env.mjs, which `serve` runs first.
+    env: { GA_MEASUREMENT_ID: E2E_GA_MEASUREMENT_ID },
   },
   projects: [
     {

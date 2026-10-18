@@ -447,3 +447,16 @@ describe('RoomDetail guest with no name', () => {
     expect(text(row.querySelector('hh-avatar'))).toBe('?');
   });
 });
+
+/** The app has no plural rules, so a count of one asks for its own singular key. */
+describe('RoomDetail capacity count', () => {
+  it.each([
+    [1, 'common.nBedsOne'],
+    [2, 'common.nBeds'],
+  ])('shows a capacity of %i as %s', async (capacity, key) => {
+    const page = await openDetail({ capacity });
+
+    const label = Array.from(page.el.querySelectorAll('p')).find((p) => text(p) === 'common.capacity');
+    expect(text(label?.nextElementSibling)).toBe(key);
+  });
+});
