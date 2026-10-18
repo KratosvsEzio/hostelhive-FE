@@ -20,6 +20,7 @@ import { HostelPhoneDetail, HostelsApi, ListingDetailApi } from '@services';
 import { Review, StudentApi } from '@services/student-api';
 import { SessionStore } from '@core/auth';
 import { SITE_ORIGIN, Seo } from '@core/seo';
+import { SsrResponse, isApiOutage } from '@core/ssr-response';
 import { DEFAULT_SOCIAL_IMAGE } from '@core/social-image';
 import { MobileApp } from '@core/mobile-app';
 import { GoogleAnalyticsService } from '@core/google-analytics/google-analytics.service';
@@ -154,6 +155,7 @@ export class ListingDetail {
   private readonly notifications = inject(NotificationService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly seo = inject(Seo);
+  private readonly ssrResponse = inject(SsrResponse);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleStore);
   private readonly analytics = inject(GoogleAnalyticsService);
@@ -924,14 +926,17 @@ export class ListingDetail {
             this._state.set({ loading: true, error: false, networkError: false, data: null });
             return this.api.getBySlug(slug).pipe(
               map((data): ViewState => ({ loading: false, error: false, networkError: false, data: data ?? null })),
-              catchError((e: unknown) =>
-                of<ViewState>({
+              catchError((e: unknown) => {
+                // On the server, an outage answers 503 rather than a noindex 200, so a
+                // crawler retries the listing instead of dropping it. A no-op in the browser.
+                if (isApiOutage(e)) this.ssrResponse.serviceUnavailable();
+                return of<ViewState>({
                   loading: false,
                   error: true,
                   networkError: (e as { status?: number } | null)?.status === 0,
                   data: null,
-                }),
-              ),
+                });
+              }),
             );
           }),
         ),
