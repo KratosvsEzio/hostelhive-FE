@@ -18,6 +18,7 @@ import {
   invoiceKindKey,
   invoiceStatusTone,
   isSafepayBilled,
+  isSafepayTrial,
   latestAttemptNotice,
   planButton,
   statusTone,
@@ -444,11 +445,103 @@ describe('billing history paths', () => {
 });
 
 describe('planButton', () => {
-  it('buy: an enabled Choose plan that starts checkout', () => {
+  it('buy: an enabled Choose plan that starts checkout, with Subscribe through Safepay beside it', () => {
     expect(planButton(plan({ action: 'buy' }), null)).toEqual({
       key: 'hostBilling.choosePlan',
       disabled: false,
       kind: 'checkout',
+      subscribe: { key: 'hostBilling.subscribeWithSafepay' },
+    });
+  });
+
+  it('buy with a free trial: offers the trial with its days instead', () => {
+    expect(
+      planButton(plan({ action: 'buy', trial_days: 14 }), null).subscribe,
+    ).toEqual({ key: 'hostBilling.startTrial', days: 14 });
+  });
+
+  it('buy with zero trial days: offers the plain subscribe', () => {
+    expect(
+      planButton(plan({ action: 'buy', trial_days: 0 }), null).subscribe,
+    ).toEqual({ key: 'hostBilling.subscribeWithSafepay' });
+  });
+
+  it.each(['current', 'renew', 'upgrade', 'downgrade', 'unavailable'])(
+    '%s: never offers the Safepay subscribe, even with trial days',
+    (action) => {
+      expect(
+        planButton(plan({ action, trial_days: 14 }), SUBSCRIPTION).subscribe,
+      ).toBeUndefined();
+    },
+  );
+
+  describe('on a plan Safepay bills', () => {
+    const safepayBilled: BillingSubscription = {
+      ...SUBSCRIPTION,
+      billed_by: 'safepay_subscription',
+      safepay_status: 'ACTIVE',
+    };
+
+    it('reads Current plan on its own plan, though the server sent unavailable', () => {
+      expect(
+        planButton(
+          plan({ id: 'qTFruf', action: 'unavailable', reason: 'x' }),
+          safepayBilled,
+        ),
+      ).toEqual({
+        key: 'hostBilling.currentPlanButton',
+        disabled: true,
+        kind: 'checkout',
+      });
+    });
+
+    it.each(['unavailable', 'upgrade', 'downgrade', 'buy'])(
+      'reads Unavailable on every other plan, whatever the action (%s)',
+      (action) => {
+        expect(planButton(plan({ action }), safepayBilled)).toEqual({
+          key: 'hostBilling.unavailable',
+          disabled: true,
+          kind: 'checkout',
+        });
+      },
+    );
+
+    describe('while past due', () => {
+      const pastDue: BillingSubscription = {
+        ...safepayBilled,
+        status: { id: 3, name: 'Past due', slug: 'past-due', color: null },
+      };
+
+      it('reads Current plan on its own plan, even when the server sends renew', () => {
+        expect(
+          planButton(plan({ id: 'qTFruf', action: 'renew' }), pastDue),
+        ).toEqual({
+          key: 'hostBilling.currentPlanButton',
+          disabled: true,
+          kind: 'checkout',
+        });
+      });
+
+      it.each(['renew', 'unavailable', 'upgrade', 'downgrade', 'buy'])(
+        'reads Unavailable on every other plan, whatever the action (%s)',
+        (action) => {
+          expect(planButton(plan({ action }), pastDue)).toEqual({
+            key: 'hostBilling.unavailable',
+            disabled: true,
+            kind: 'checkout',
+          });
+        },
+      );
+    });
+
+    it('follows the server again once the Safepay-billed plan has expired', () => {
+      const expired = {
+        ...safepayBilled,
+        status: { id: 5, name: 'Expired', slug: 'expired', color: null },
+      };
+      expect(planButton(plan({ action: 'renew' }), expired).key).toBe(
+        'hostBilling.renew',
+      );
     });
   });
 
@@ -658,5 +751,39 @@ describe('isSafepayBilled', () => {
 
   it('is false with no subscription', () => {
     expect(isSafepayBilled(null)).toBe(false);
+  });
+});
+
+describe('isSafepayTrial', () => {
+  const trial = (
+    slug: string,
+    over: Partial<BillingSubscription> = {},
+  ): BillingSubscription => ({
+    ...SUBSCRIPTION,
+    status: { id: 1, name: slug, slug, color: null },
+    billed_by: 'safepay_subscription',
+    safepay_status: 'TRAILING',
+    ...over,
+  });
+
+  it('is true while Safepay reports the live plan as TRAILING', () => {
+    expect(isSafepayTrial(trial('active'))).toBe(true);
+  });
+
+  it('is false for any other Safepay status', () => {
+    expect(isSafepayTrial(trial('active', { safepay_status: 'ACTIVE' }))).toBe(
+      false,
+    );
+    expect(isSafepayTrial(trial('active', { safepay_status: null }))).toBe(
+      false,
+    );
+  });
+
+  it('is false once the plan is no longer live, or not billed by Safepay', () => {
+    expect(isSafepayTrial(trial('expired'))).toBe(false);
+    expect(isSafepayTrial(trial('active', { billed_by: 'invoice' }))).toBe(
+      false,
+    );
+    expect(isSafepayTrial(null)).toBe(false);
   });
 });

@@ -13,6 +13,7 @@ import { ApiDate } from '@util/api-date';
 import {
   BILLING_FEATURES,
   isSafepayBilled,
+  isSafepayTrial,
   statusTone,
 } from '@app/shared/billing/billing-labels';
 
@@ -40,7 +41,8 @@ interface ScheduledSwitch {
  * switch, Resume plan beside its end date while cancelling, and Cancel plan otherwise. The
  * page runs each action and reports back through `busy` and `locked`; a card-level error is
  * projected into the bottom of the card. `autoRenew` is the billing payload's own flag, and turns
- * an invoice-billed plan's renewal line into an automatic one.
+ * an invoice-billed plan's renewal line into an automatic one. A plan Safepay bills says so, and
+ * shows the end of its free trial instead of a renewal while Safepay reports one.
  *
  * `<hh-current-plan-card [subscription]="billing.subscription" [features]="billing.features" />`
  */
@@ -247,17 +249,30 @@ function statusLines(
   const dated = (key: string, date: string | null): CurrentPlanLine[] =>
     date ? [{ key, date }] : [];
 
+  // A plan Safepay bills says so, until it is cancelling and no longer billed at all.
+  const billedBy: CurrentPlanLine[] =
+    isSafepayBilled(sub) && !sub.cancel_at_period_end
+      ? [{ key: 'hostBilling.billedBySafepay' }]
+      : [];
+
   switch (sub.status.slug) {
     case 'active':
       if (sub.cancel_at_period_end) return dated('hostBilling.endsOn', end);
+      if (isSafepayTrial(sub)) {
+        return [...billedBy, ...dated('hostBilling.freeTrialUntil', end)];
+      }
+      if (isSafepayBilled(sub)) {
+        return [...billedBy, ...dated('hostBilling.renewsOn', end)];
+      }
       return dated(
-        autoRenew && !isSafepayBilled(sub)
+        autoRenew
           ? 'hostBilling.renewsAutomaticallyOn'
           : 'hostBilling.renewsOn',
         end,
       );
     case 'past-due':
       return [
+        ...billedBy,
         ...dated('hostBilling.wasDueOn', end),
         ...dated('hostBilling.graceUntil', sub.grace_until),
       ];

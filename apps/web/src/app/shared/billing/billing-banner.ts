@@ -114,11 +114,26 @@ export function bannerFor(input: BannerInput, nowMs: number): BillingBannerState
   const end = instant(endRaw);
   const slug = sub.status.slug;
 
+  // Safepay charges the plan it bills, so nothing here asks the owner to renew or pay by hand.
+  const safepay = isSafepayBilled(sub);
   // A saved card is charged on its own, so the owner is not asked to renew by hand.
-  const autoRenew = billing.auto_renew && !isSafepayBilled(sub);
+  const autoRenew = billing.auto_renew && !safepay;
+  const renewAction: BannerAction = safepay || autoRenew ? 'goToBilling' : 'renew';
 
   if (slug === 'past-due') {
     const grace = instant(sub.grace_until);
+    if (grace !== null && grace > nowMs && safepay) {
+      return state({
+        kind: 'past-due',
+        tone: 'warn',
+        messageKey: 'hostAccess.pastDueSafepay',
+        dates: dates({ endDate: endRaw, graceDate: sub.grace_until }),
+        boostPaused: sub.plan.features.includes('boost'),
+        countdownMs: grace - nowMs,
+        action: 'goToBilling',
+        periodEnd: endRaw,
+      });
+    }
     if (grace !== null && grace > nowMs) {
       return state({
         kind: 'past-due',
@@ -135,8 +150,8 @@ export function bannerFor(input: BannerInput, nowMs: number): BillingBannerState
     return state({
       kind: 'grace-over',
       tone: 'warn',
-      messageKey: 'hostAccess.graceOver',
-      action: 'renew',
+      messageKey: safepay ? 'hostAccess.graceOverSafepay' : 'hostAccess.graceOver',
+      action: safepay ? 'goToBilling' : 'renew',
       periodEnd: endRaw,
     });
   }
@@ -162,7 +177,7 @@ export function bannerFor(input: BannerInput, nowMs: number): BillingBannerState
       kind: 'renew-due',
       tone: 'info',
       messageKey: autoRenew ? 'hostAccess.renewDueCard' : 'hostAccess.renewDue',
-      action: autoRenew ? 'goToBilling' : 'renew',
+      action: renewAction,
       periodEnd: endRaw,
     });
   }
@@ -176,7 +191,7 @@ export function bannerFor(input: BannerInput, nowMs: number): BillingBannerState
     messageKey: scheduled ? 'hostAccess.switchesSoon' : renewsKey,
     dates: dates({ date: endRaw }),
     params: scheduled ? { plan: scheduled.name } : {},
-    action: autoRenew ? 'goToBilling' : 'renew',
+    action: renewAction,
     dismissible: true,
     periodEnd: endRaw,
   });
