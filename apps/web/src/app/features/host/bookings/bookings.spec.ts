@@ -8,16 +8,23 @@ import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing
 import {
   HOSTEL_ID,
   apiError,
+  apiErrorWithCode,
   bookingInvoice,
   bookingPage,
   hostBooking,
   occupancy,
+  room as hostRoom,
+  roomsReply,
+  sessionUser,
 } from '@app/testing/host-builders';
 import { MoneyPipe } from '@app/shared/currency/money.pipe';
+import type { Role } from '@core/auth/roles';
+import { SessionStore, SessionUser } from '@core/auth/session-store';
+import { CRM_REQUIRED_CODE, CRM_REQUIRED_MESSAGE } from '@core/host-access/host-access';
 import { currencySymbol } from '@util/currencies';
 import { bookingPath, invoicePath } from '@util/host-links';
 import { buildInvoiceId, invoiceStatusLabel } from '@util/table-configs/invoice-table-cols';
-import { AssignSelection } from './assign-rooms-panel';
+import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
 import { BookingCalendar } from './booking-calendar';
 import { BookingAction } from './booking-details-panel';
 import { HostBookings } from './bookings';
@@ -1946,9 +1953,9 @@ describe('HostBookings', () => {
           leaks: ['Upgrade your plan to confirm bookings'],
         },
         {
-          name: 'a 403',
+          name: 'a 403 for a permission the account lacks',
           err: urlRefusal('You are not authorized to perform this action', 403),
-          key: 'hostBookings.moveNotAccepted',
+          key: 'hostBookings.notAllowed',
           leaks: ['You are not authorized to perform this action'],
         },
         {
@@ -2132,6 +2139,392 @@ describe('HostBookings', () => {
         expect(panelFooterButtons(page)).not.toContain('Confirm');
         expect(panelFooterAlert(page)).toBe('');
         expect(api(page).viewError()).toBe('');
+      });
+    });
+  });
+
+  // A 403 carrying no code of the server's means the signed-in user's role may not make the move, and
+  // one carrying `crm_required` means the hostel's plan has no CRM. Each reads the same wherever it lands.
+  describe('a stay move refused for a permission or a plan', () => {
+    const CANCAN = 'You are not authorized to access this page.';
+    const REASON = 'Guest asked to cancel';
+    const pending = hostBooking('pending', { id: 'bk-p' });
+
+    interface Who {
+      who: string;
+      role: Role;
+      /** The translation key the host is shown. */
+      key: string;
+    }
+
+    /** Staff are told to ask the owner; the owner is told to contact support. */
+    const ROLES: readonly Who[] = [
+      { who: 'a manager', role: 'manager', key: 'hostBookings.notAllowed' },
+      { who: 'an owner', role: 'host', key: 'hostBookings.notAllowedOwner' },
+    ];
+
+    const cancan = () => urlRefusal(CANCAN, 403);
+    const noCrm = () => apiErrorWithCode(403, CRM_REQUIRED_CODE, [CRM_REQUIRED_MESSAGE]);
+
+    /** Signs in on the session the page shares; after `open`, which is what configures the test module. */
+    function signIn(role: Role, over: Partial<SessionUser> = {}): SessionUser {
+      const user = sessionUser(role, over);
+      TestBed.inject(SessionStore).setSession(user, 'tok');
+      return user;
+    }
+
+    afterEach(() => TestBed.inject(SessionStore).clear());
+
+    describe('from the open details panel', () => {
+      it.each(ROLES)('shows it once in the footer and keeps the panel open for $who', async ({ role, key }) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'confirm', cancan());
+        queueReads(deps, of(pending));
+        const page = await open({ deps, items: [pending] });
+        signIn(role);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await confirmFrom(page, 'panel', pending);
+
+        expect(api(page).viewError()).toBe(key);
+        expect(panelFooterAlert(page)).toBe(key);
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.get.mock.calls).toEqual([[HOSTEL_ID, 'bk-p', QUIET]]);
+        expect(deps.bookings.list.mock.calls.length).toBe(lists);
+        expect(api(page).viewing()?.id).toBe('bk-p');
+        expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-p'));
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CANCAN);
+      });
+    });
+
+    describe('from a row menu or a calendar card', () => {
+      it.each(eachPanelless(ROLES))('raises one toast for $who, from the $entry', async (c) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'confirm', cancan());
+        const page = await open({ deps, items: [pending] });
+        signIn(c.role);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await confirmFrom(page, c.entry, pending);
+
+        expect(deps.notifications.raised).toEqual([errorToast(c.key)]);
+        expect(api(page).viewError()).toBe('');
+        expect(api(page).viewing()).toBeNull();
+        expect(panelText(page)).toBe('');
+        expect(page.url()).toBe(LIST_URL);
+        expect(deps.bookings.get).not.toHaveBeenCalled();
+        expect(deps.bookings.list.mock.calls.length).toBe(lists);
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CANCAN);
+      });
+    });
+
+    describe('in a dialog', () => {
+      /** Types into the dialog's reason field the way a host would. */
+      async function typeReason(page: Page, text: string): Promise<void> {
+        const field = modal(page)!.querySelector<HTMLTextAreaElement>('textarea')!;
+        field.value = text;
+        field.dispatchEvent(new Event('input'));
+        await settle(page);
+      }
+
+      const DIALOG_MOVES: readonly { action: BookingAction; shown: HostBooking; reason: string }[] = [
+        { action: 'checkOut', shown: checkedIn(), reason: '' },
+        { action: 'noShow', shown: arriving(), reason: 'Never arrived' },
+        { action: 'markPaid', shown: checkedIn(), reason: '' },
+        { action: 'invoice', shown: checkedIn(), reason: '' },
+      ];
+      const eachRoleAndMove = ROLES.flatMap((r) => DIALOG_MOVES.map((m) => ({ ...r, ...m })));
+
+      it.each(ROLES)('keeps the cancellation dialog open, with the reason typed, for $who', async ({ role, key }) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'cancel', cancan());
+        const page = await open({ deps, items: [checkedIn()] });
+        signIn(role);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, 'cancel');
+        await typeReason(page, REASON);
+        await confirmViaButton(page);
+
+        expect(deps.bookings.cancel).toHaveBeenCalledWith(HOSTEL_ID, 'bk-i', REASON, QUIET);
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe(key);
+        expect(api(page).dialogError()).toBe(key);
+        expect(api(page).dialogReason()).toBe(REASON);
+        expect(modal(page)!.querySelector('textarea')!.value).toBe(REASON);
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.get).not.toHaveBeenCalled();
+        expect(deps.bookings.list.mock.calls.length).toBe(lists);
+        expect(deps.refetch.track).not.toHaveBeenCalled();
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CANCAN);
+      });
+
+      it.each(eachRoleAndMove)('writes the $action refusal into the dialog for $who', async (c) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, c.action, cancan());
+        const page = await open({ deps, items: [c.shown] });
+        signIn(c.role);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, c.action);
+        if (c.reason) await typeReason(page, c.reason);
+        await confirmViaButton(page);
+
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe(c.key);
+        expect(api(page).dialogError()).toBe(c.key);
+        expect(api(page).dialogReason()).toBe(c.reason);
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.bookings.get).not.toHaveBeenCalled();
+        expect(deps.bookings.list.mock.calls.length).toBe(lists);
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CANCAN);
+      });
+
+      it('never sends the invoice request when the booking is refused, and leaves the balance owing', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'markPaid', cancan());
+        const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
+        signIn('manager');
+
+        await startMove(page, 'markPaid');
+        expect(checkbox(page)!.checked).toBe(true);
+        await confirmViaButton(page);
+
+        expect(deps.bookings.markPaid).toHaveBeenCalledTimes(1);
+        expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe('hostBookings.notAllowed');
+        expect(api(page).rows()[0].balanceDue).toBe(24000);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+        expect(deps.notifications.raised).toEqual([]);
+        expectNoLeak(page, deps, CANCAN);
+      });
+    });
+
+    describe('in the room allocation', () => {
+      const booking = arriving();
+
+      interface AssignInternals {
+        allocated(): number;
+        summaryLine(): string;
+      }
+
+      /** The allocation's own state, which its template reads and the page never sees. */
+      const allocation = (page: Page) =>
+        page.harness.fixture.debugElement.query(By.directive(AssignRoomsPanel))
+          .componentInstance as unknown as AssignInternals;
+
+      const checkInButton = (page: Page) =>
+        Array.from(page.el.querySelectorAll<HTMLButtonElement>('hh-assign-rooms-panel footer button')).find((b) =>
+          textOf(b).startsWith('Check in'),
+        )!;
+
+      async function addGuestTo(page: Page, roomNumber: string): Promise<void> {
+        page.el
+          .querySelector<HTMLButtonElement>(
+            `hh-assign-rooms-panel button[aria-label="One more guest in room ${roomNumber}"]`,
+          )!
+          .click();
+        await settle(page);
+      }
+
+      it.each(ROLES)('shows it in the allocation, which stays open, for $who', async ({ role, key }) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkIn', cancan());
+        const page = await open({ deps, items: [booking] });
+        signIn(role);
+        const lists = deps.bookings.list.mock.calls.length;
+
+        await startMove(page, 'checkIn');
+        submitMove(page, 'checkIn', booking);
+        await settle(page);
+
+        expect(assignAlert(page)).toBe(key);
+        expect(api(page).assignError()).toBe(key);
+        expect(api(page).assigning()?.id).toBe('bk-c');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(deps.refetch.track).not.toHaveBeenCalled();
+        expect(deps.bookings.get).not.toHaveBeenCalled();
+        expect(deps.bookings.list.mock.calls.length).toBe(lists);
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CANCAN);
+      });
+
+      it('keeps the guests placed in their rooms, and a second try sends the same allocation', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkIn', cancan());
+        deps.ops.rooms.mockReturnValue(
+          of(
+            roomsReply([
+              hostRoom({ id: 'r-101', number: '101', capacity: 4, occupied: 0 }),
+              hostRoom({ id: 'r-102', number: '102', capacity: 4, occupied: 0 }),
+            ]),
+          ),
+        );
+        const page = await open({ deps, items: [booking] });
+        signIn('manager');
+
+        await startMove(page, 'checkIn');
+        await addGuestTo(page, '101');
+        await addGuestTo(page, '102');
+        expect(allocation(page).allocated()).toBe(2);
+        expect(allocation(page).summaryLine()).toBe('101 × 1 · 102 × 1');
+
+        checkInButton(page).click();
+        await settle(page);
+
+        expect(assignAlert(page)).toBe('hostBookings.notAllowed');
+        expect(allocation(page).allocated()).toBe(2);
+        expect(allocation(page).summaryLine()).toBe('101 × 1 · 102 × 1');
+
+        checkInButton(page).click();
+        await settle(page);
+
+        const placed = [
+          { roomId: 'r-101', guests: 1 },
+          { roomId: 'r-102', guests: 1 },
+        ];
+        expect(deps.bookings.checkIn.mock.calls).toEqual([
+          [HOSTEL_ID, 'bk-c', placed, QUIET],
+          [HOSTEL_ID, 'bk-c', placed, QUIET],
+        ]);
+      });
+    });
+
+    describe('on the invoice half of a payment', () => {
+      /** The booking is paid and the host left the box ticked; the invoice's own request then answers `err`. */
+      async function payWithInvoiceRefused(err: unknown, role: Role) {
+        const deps = hostPageDeps();
+        const booking = checkedIn();
+        deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
+        deps.ops.markInvoicePaid.mockReturnValue(throwError(() => err));
+        const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
+        signIn(role);
+        const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+
+        await startFromMenu(page, 'Mark as paid');
+        await confirmViaButton(page);
+        return { page, deps, reasons: translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]) };
+      }
+
+      it.each(ROLES)('pays the booking and gives $who the permission reason for the invoice', async ({ role, key }) => {
+        const { page, deps, reasons } = await payWithInvoiceRefused(cancan(), role);
+
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.invoiceNotPaid')]);
+        expect(reasons).toContainEqual({ reason: key });
+        expect(reasons).not.toContainEqual({ reason: 'hostBookings.payTheInvoiceOnItsOwn' });
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expect(modal(page)).toBeNull();
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+        expectNoLeak(page, deps, CANCAN);
+      });
+
+      it('gives the plan as the reason when the invoice is refused for a plan without CRM', async () => {
+        const { page, deps, reasons } = await payWithInvoiceRefused(noCrm(), 'manager');
+
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.invoiceNotPaid')]);
+        expect(reasons).toContainEqual({ reason: 'hostBookings.planHasNoCrm' });
+        expect(reasons).not.toContainEqual({ reason: 'hostBookings.payTheInvoiceOnItsOwn' });
+        expect(api(page).rows()[0].balanceDue).toBe(0);
+        expect(api(page).invoices().get('bk-i')?.status).toBe('due');
+        expectNoLeak(page, deps, CRM_REQUIRED_MESSAGE);
+      });
+    });
+
+    describe('that is not a permission', () => {
+      it.each(ROLES)('raises one toast naming the plan for $who when it has no CRM', async ({ role }) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'confirm', noCrm());
+        const page = await open({ deps, items: [pending] });
+        signIn(role);
+
+        await confirmFrom(page, 'row menu', pending);
+
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.planHasNoCrm')]);
+        expect(api(page).viewError()).toBe('');
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CRM_REQUIRED_MESSAGE);
+      });
+
+      it('names the plan in the dialog when only the message says it has no CRM', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkOut', urlRefusal(CRM_REQUIRED_MESSAGE, 403));
+        const page = await open({ deps, items: [checkedIn()] });
+        signIn('manager');
+
+        await startMove(page, 'checkOut');
+        await confirmViaButton(page);
+
+        expect(modal(page)).not.toBeNull();
+        expect(dialogAlert(page)).toBe('hostBookings.planHasNoCrm');
+        expect(deps.notifications.raised).toEqual([]);
+        expect(api(page).busy()).toBe(false);
+        expectNoLeak(page, deps, CRM_REQUIRED_MESSAGE);
+      });
+
+      it('keeps the generic message for a 403 carrying a code of the server, even for an owner', async () => {
+        const deps = hostPageDeps();
+        const text = 'Too many requests';
+        refuseMove(deps, 'confirm', apiErrorWithCode(403, 'forbidden', [text]));
+        const page = await open({ deps, items: [pending] });
+        signIn('host');
+
+        await confirmFrom(page, 'row menu', pending);
+
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.moveNotAccepted')]);
+        expectNoLeak(page, deps, text);
+      });
+    });
+
+    describe('depending on who is signed in', () => {
+      interface Holding {
+        name: string;
+        role: Role;
+        allRoles: Role[];
+        key: string;
+      }
+
+      const HOLDINGS: readonly Holding[] = [
+        {
+          name: 'a manager who also holds the host role',
+          role: 'manager',
+          allRoles: ['manager', 'host'],
+          key: 'hostBookings.notAllowedOwner',
+        },
+        { name: 'an admin', role: 'admin', allRoles: ['admin'], key: 'hostBookings.notAllowed' },
+        { name: 'a support agent', role: 'support', allRoles: ['support'], key: 'hostBookings.notAllowed' },
+      ];
+
+      it.each(HOLDINGS)('words it by the roles held, for $name', async (c) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'confirm', cancan());
+        const page = await open({ deps, items: [pending] });
+        signIn(c.role, { allRoles: c.allRoles });
+
+        await confirmFrom(page, 'row menu', pending);
+
+        expect(deps.notifications.raised).toEqual([errorToast(c.key)]);
+      });
+
+      it('leaves the session and the URL alone when an owner is refused', async () => {
+        const deps = hostPageDeps();
+        refuseMove(deps, 'checkOut', cancan());
+        const page = await open({ deps, items: [checkedIn()] });
+        const user = signIn('host');
+        const session = TestBed.inject(SessionStore);
+
+        await startMove(page, 'checkOut');
+        await confirmViaButton(page);
+
+        expect(dialogAlert(page)).toBe('hostBookings.notAllowedOwner');
+        expect(session.isAuthenticated()).toBe(true);
+        expect(session.user()).toBe(user);
+        expect(session.accessToken()).toBe('tok');
+        expect(page.url()).toBe(LIST_URL);
       });
     });
   });

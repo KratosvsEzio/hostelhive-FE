@@ -44,7 +44,7 @@ import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-gro
 import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/table-configs/invoice-table-cols';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
 import { InvoiceFormDrawer } from './invoice-form-drawer/invoice-form-drawer';
-import { HasPermission } from '@core/auth';
+import { HasPermission, SessionStore } from '@core/auth';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Logo } from '@core/brand/logo';
 import { LocaleLink } from '@core/i18n/locale-link';
@@ -214,6 +214,7 @@ export class Invoices {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly session = inject(SessionStore);
 
   /**
    * Back to the property's overview.
@@ -1165,7 +1166,8 @@ export class Invoices {
           },
           error: (err: unknown) => {
             this.finishPay();
-            const reason = this.i18n.translate<string>(bookingMoveFailureKey(err));
+            const key = bookingMoveFailureKey(err, { owner: this.session.hasRole('host') });
+            const reason = this.i18n.translate<string>(key);
             this.notifications.show(
               { kind: 'error', title: this.i18n.translate<string>('hostInvoices.bookingNotPaid', { reason }) },
               0,

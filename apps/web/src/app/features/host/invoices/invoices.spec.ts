@@ -3,10 +3,22 @@ import { Subject, of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { Injectable } from '@angular/core';
 import { FilterGroup } from '@hostelhive/ui';
-import { Invoice } from '@hostelhive/data-access';
-import { BillingMode, HOSTEL_ID, InvoicesReply, apiError, bookingInvoice, hostBooking, invoice, invoicesReply } from '@app/testing/host-builders';
+import { ApiError, Invoice } from '@hostelhive/data-access';
+import {
+  BillingMode,
+  HOSTEL_ID,
+  InvoicesReply,
+  apiError,
+  apiErrorWithCode,
+  bookingInvoice,
+  hostBooking,
+  invoice,
+  invoicesReply,
+  sessionUser,
+} from '@app/testing/host-builders';
 import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing/host-page';
 import { PrintWindowRecord, fakePrintWindow } from '@app/testing/print-window';
+import type { Role } from '@core/auth/roles';
 import { SessionStore } from '@core/auth/session-store';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { HostPropertyStore } from '@services/host-property-store';
@@ -86,11 +98,22 @@ function withRenters(deps: HostPageDeps): HostPageDeps {
   return deps;
 }
 
-function open(opts: { url?: string; billing?: BillingMode; deps?: HostPageDeps } = {}): Promise<Page> {
+/** The permissive session, signed in as `role` from the start when one is given. */
+function permissiveSession(role?: Role): PermissiveSession {
+  const session = new PermissiveSession();
+  if (role) session.setSession(sessionUser(role), 'tok');
+  return session;
+}
+
+/**
+ * Mounts the page. `signedInAs` signs the session in before the host store is seeded, because the
+ * store holds its hostel list for one user: signing in after the page opened empties the list.
+ */
+function open(opts: { url?: string; billing?: BillingMode; deps?: HostPageDeps; signedInAs?: Role } = {}): Promise<Page> {
   return openHostPage(opts.url ?? LIST, Invoices, { invoices: Invoices }, {
     billing: opts.billing ?? 'night',
     deps: opts.deps,
-    providers: [{ provide: SessionStore, useClass: PermissiveSession }],
+    providers: [{ provide: SessionStore, useFactory: () => permissiveSession(opts.signedInAs) }],
   });
 }
 
@@ -600,6 +623,70 @@ describe('Invoices page', () => {
       await click(page, confirmButton(page));
 
       expect(translate).toHaveBeenCalledWith('hostInvoices.bookingNotPaid', { reason: 'hostBookings.moveNotAccepted' });
+    });
+
+    describe('when the booking is refused for lack of permission', () => {
+      const CANCAN = 'You are not authorized to access this page.';
+      const CRM = 'Your plan does not include CRM';
+      const WITH_URL = `Http failure response for http://localhost/api/host/hostels/${HOSTEL_ID}/bookings/bk-1/mark_as_paid: 403 Forbidden`;
+      const cancan = (): ApiError => ({ ...apiError(403, [CANCAN], 'PUT'), message: WITH_URL });
+      const noCrm = (): ApiError => ({ ...apiErrorWithCode(403, 'crm_required', [CRM]), message: WITH_URL });
+
+      // A signed-in host persists its hostel choice; the session persists itself. Neither may reach the next test.
+      afterEach(() => {
+        TestBed.inject(HostPropertyStore).clear();
+        TestBed.inject(SessionStore).clear();
+      });
+
+      /** Signs in as `role` and pays a booking bill: the invoice settles, then the server refuses the booking with `failure`. */
+      async function payRefusedBooking(role: Role, failure: ApiError) {
+        const deps = depsWith(invoicesReply(dueBookingBills()));
+        deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
+        deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));
+        deps.bookings.markPaid.mockReturnValue(throwError(() => failure));
+        const page = await open({ deps, signedInAs: role });
+        const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+        await startPay(page);
+
+        await click(page, confirmButton(page));
+        return { page, deps, translate };
+      }
+
+      /** The invoice stays paid and the host gets one sticky error whose reason is `reason`, with nothing of the server's on screen. */
+      function expectPaidWithOneStickyError(done: Awaited<ReturnType<typeof payRefusedBooking>>, reason: string, serverText: string): void {
+        const { page, deps, translate } = done;
+        expect(norm(bodyRows(page)[0])).toContain('Paid');
+        expect(deps.notifications.raised).toEqual([
+          { kind: 'error', title: 'hostInvoices.bookingNotPaid', message: undefined, ttlMs: 0 },
+        ]);
+        expect(translate.mock.calls.filter((c) => c[0] === 'hostInvoices.bookingNotPaid').map((c) => c[1])).toEqual([{ reason }]);
+        expect(dialog(page)).toBeNull();
+        expect(internals(page).paying()).toBe(false);
+        const toasts = deps.notifications.raised.map((t) => `${t.title} ${t.message ?? ''}`);
+        const shown = [page.el.textContent ?? '', ...toasts, JSON.stringify(translate.mock.calls)].join(' ');
+        expect(shown).not.toContain(serverText);
+        expect(shown).not.toContain('Http failure');
+        expect(shown).not.toContain('http://');
+      }
+
+      it('keeps the invoice paid and tells staff they lack permission to mark the booking paid', async () => {
+        const done = await payRefusedBooking('manager', cancan());
+
+        expect(done.deps.bookings.markPaid).toHaveBeenCalledTimes(1);
+        expectPaidWithOneStickyError(done, 'hostBookings.notAllowed', CANCAN);
+      });
+
+      it('tells the owner their account lacks permission and to contact support', async () => {
+        const done = await payRefusedBooking('host', cancan());
+
+        expectPaidWithOneStickyError(done, 'hostBookings.notAllowedOwner', CANCAN);
+      });
+
+      it.each<Role>(['manager', 'host'])('says the plan has no CRM, whoever is signed in as %s', async (role) => {
+        const done = await payRefusedBooking(role, noCrm());
+
+        expectPaidWithOneStickyError(done, 'hostBookings.planHasNoCrm', CRM);
+      });
     });
 
     it.each([

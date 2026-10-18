@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { ApiError } from '@hostelhive/data-access';
 import { SessionStore } from '@app/core/auth/session-store';
+import { errorStatus } from '@app/core/errors/api-error-text';
 
 /** Why the host API refused a hostel's request: no live plan, or a plan without CRM. */
 export type HostAccessKind = 'inactive' | 'crmRequired';
@@ -51,10 +52,24 @@ export function hostAccessTarget(url: string): HostAccessTarget | null {
 }
 
 /**
+ * Whether a failure is the host API's 403 for a hostel whose plan lacks CRM: one carrying the
+ * `crm_required` code, or its message when the body carries no code. Works on anything a request
+ * can reject with; `message` is never read.
+ */
+export function isCrmRequired(err: unknown): boolean {
+  if (errorStatus(err) !== 403) return false;
+  const { code, serverMessages } = err as { code?: unknown; serverMessages?: unknown };
+  return (
+    code === CRM_REQUIRED_CODE ||
+    (Array.isArray(serverMessages) && serverMessages.includes(CRM_REQUIRED_MESSAGE))
+  );
+}
+
+/**
  * Recognises the host API's plan refusals for one hostel: a 400 "You need to subscribe…" when the
- * hostel has no live plan, and a 403 `crm_required` when its plan lacks CRM (matched on the message
- * when the body carries no code). Returns null for any other failure or any other URL, including the
- * hostel index. The hostel id is used exactly as captured.
+ * hostel has no live plan, and a 403 `crm_required` when its plan lacks CRM ({@link isCrmRequired}).
+ * Returns null for any other failure or any other URL, including the hostel index. The hostel id is
+ * used exactly as captured.
  */
 export function classifyHostAccess(
   url: string,
@@ -66,10 +81,7 @@ export function classifyHostAccess(
   if (err.status === 400 && messages.some((m) => INACTIVE_MESSAGE.test(m))) {
     return { hostelId, kind: 'inactive' };
   }
-  if (
-    err.status === 403 &&
-    (err.code === CRM_REQUIRED_CODE || messages.includes(CRM_REQUIRED_MESSAGE))
-  ) {
+  if (isCrmRequired(err)) {
     return { hostelId, kind: 'crmRequired' };
   }
   return null;

@@ -1,4 +1,6 @@
 import { ObservedValueOf } from 'rxjs';
+import type { Role } from '@core/auth/roles';
+import type { SessionUser } from '@core/auth/session-store';
 import { ApiError, HostListing, HostRoom, Invoice } from '@hostelhive/data-access';
 import { ApiRenterBillTop, HostOpsApi, RoomRenter, RoomShowData } from '@services/host-ops-api';
 import {
@@ -264,7 +266,20 @@ export function roomShow(over: Partial<RoomShowData> = {}): RoomShowData {
   return { room: room(), renters: [], ...over };
 }
 
-/* ── hostels and errors ─────────────────────────────────────────────────────── */
+/* ── sessions, hostels and errors ───────────────────────────────────────────── */
+
+/** Signs a spec in as an owner (`'host'`) or staff (`'manager'`): `setSession(sessionUser(role), 'tok')`, `clear()` after. */
+export function sessionUser(role: Role = 'host', over: Partial<SessionUser> = {}): SessionUser {
+  return {
+    id: 'u-1',
+    name: 'Test User',
+    email: 'test.user@example.com',
+    role,
+    allRoles: [role],
+    permissions: [],
+    ...over,
+  };
+}
 
 /** A host's hostel as the shell's listings endpoint maps it. */
 export function hostListing(billing: BillingMode = 'night', over: Partial<HostListing> = {}): HostListing {
@@ -295,4 +310,9 @@ export function apiError(status: number, serverMessages: readonly string[] = [],
     serverMessages,
     method,
   };
+}
+
+/** An `apiError` carrying the backend's own `code` (e.g. `forbidden`); `apiError` can only derive one from the status. */
+export function apiErrorWithCode(status: number, code: string, serverMessages: readonly string[] = []): ApiError {
+  return { ...apiError(status, serverMessages), code };
 }

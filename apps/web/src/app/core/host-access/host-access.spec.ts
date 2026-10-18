@@ -8,6 +8,7 @@ import {
   HostAccessEvents,
   classifyHostAccess,
   hostAccessTarget,
+  isCrmRequired,
 } from './host-access';
 
 const BASE = 'https://api.test';
@@ -100,6 +101,98 @@ describe('classifyHostAccess', () => {
     expect(
       classifyHostAccess(url, { status: 400, serverMessages: [SUBSCRIBE] })?.hostelId,
     ).toBe(id);
+  });
+});
+
+describe('isCrmRequired', () => {
+  const CANCAN = 'You are not authorized to access this page.';
+
+  it.each<{ why: string; err: unknown }>([
+    {
+      why: 'the code and the message both come back',
+      err: { status: 403, code: CRM_REQUIRED_CODE, serverMessages: [CRM_REQUIRED_MESSAGE] },
+    },
+    { why: 'only the code comes back', err: { status: 403, code: CRM_REQUIRED_CODE } },
+    {
+      why: 'the code comes back beside a message that says something else',
+      err: { status: 403, code: CRM_REQUIRED_CODE, serverMessages: [CANCAN] },
+    },
+    {
+      why: 'the code comes back with an empty list of messages',
+      err: { status: 403, code: CRM_REQUIRED_CODE, serverMessages: [] },
+    },
+  ])('is true for a 403 when $why', ({ err }) => {
+    expect(isCrmRequired(err)).toBe(true);
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    { why: 'only the message comes back', err: { status: 403, serverMessages: [CRM_REQUIRED_MESSAGE] } },
+    {
+      why: 'the message comes back under the fallback code',
+      err: { status: 403, code: 'unknown_error', serverMessages: [CRM_REQUIRED_MESSAGE] },
+    },
+    {
+      why: 'the message comes first among others',
+      err: { status: 403, serverMessages: [CRM_REQUIRED_MESSAGE, CANCAN] },
+    },
+    {
+      why: 'the message comes last among others',
+      err: { status: 403, serverMessages: [CANCAN, CRM_REQUIRED_MESSAGE] },
+    },
+  ])('is true for a 403 when $why', ({ err }) => {
+    expect(isCrmRequired(err)).toBe(true);
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    {
+      why: 'it is a refusal of the user, under the fallback code',
+      err: { status: 403, code: 'unknown_error', serverMessages: [CANCAN] },
+    },
+    {
+      why: 'it carries a code of the server that is not the plan one',
+      err: { status: 403, code: 'forbidden', serverMessages: ['Forbidden'] },
+    },
+    { why: 'it carries a code of the server and no message', err: { status: 403, code: 'forbidden' } },
+    { why: 'it is a bare status', err: { status: 403 } },
+    { why: 'it has an empty list of messages', err: { status: 403, serverMessages: [] } },
+    { why: 'it has an empty code', err: { status: 403, code: '' } },
+  ])('is false for a 403 when $why', ({ err }) => {
+    expect(isCrmRequired(err)).toBe(false);
+  });
+
+  describe.each([0, 400, 401, 404, 422, 500])('on a %i', (status) => {
+    it.each<{ why: string; extra: object }>([
+      { why: 'the plan code comes back', extra: { code: CRM_REQUIRED_CODE } },
+      { why: 'the plan message comes back', extra: { serverMessages: [CRM_REQUIRED_MESSAGE] } },
+      {
+        why: 'the plan code and message both come back',
+        extra: { code: CRM_REQUIRED_CODE, serverMessages: [CRM_REQUIRED_MESSAGE] },
+      },
+    ])('is false even when $why', ({ extra }) => {
+      expect(isCrmRequired({ status, ...extra })).toBe(false);
+    });
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    { why: 'the rejection is null', err: null },
+    { why: 'the rejection is undefined', err: undefined },
+    { why: 'the rejection is a string', err: CRM_REQUIRED_MESSAGE },
+    { why: 'the rejection is a number', err: 403 },
+    { why: 'the rejection is a plain error', err: new Error(CRM_REQUIRED_MESSAGE) },
+    { why: 'the rejection is empty', err: {} },
+    { why: 'the status is a string', err: { status: '403', code: CRM_REQUIRED_CODE } },
+    {
+      why: 'the messages are one string, not a list',
+      err: { status: 403, serverMessages: CRM_REQUIRED_MESSAGE },
+    },
+    { why: 'the code is not a string', err: { status: 403, code: 42 } },
+  ])('is false and does not throw when $why', ({ err }) => {
+    expect(() => isCrmRequired(err)).not.toThrow();
+    expect(isCrmRequired(err)).toBe(false);
+  });
+
+  it('never reads the message', () => {
+    expect(isCrmRequired({ status: 403, message: CRM_REQUIRED_MESSAGE })).toBe(false);
   });
 });
 
