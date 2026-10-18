@@ -4,7 +4,9 @@ import { provideRouter } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { Observable, of, throwError } from 'rxjs';
 import { Invoice } from '@hostelhive/data-access';
-import { bookingInvoice } from '@app/testing/host-builders';
+import { bookingInvoice, sessionUser } from '@app/testing/host-builders';
+import type { Role } from '@core/auth/roles';
+import { SessionStore } from '@core/auth/session-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import {
   ACTIONS_BY_LANE,
@@ -23,6 +25,17 @@ function releaseRefusal(text: string) {
     status: 422,
     code: 'unknown_error',
     message: `Http failure response for ${RELEASE_URL}: 422 Unprocessable Entity`,
+    serverMessages: [text],
+    method: 'PUT',
+  };
+}
+
+/** A release the server refused with a 403, the way the error interceptor rethrows it; `code` is the server's own, if it sent one. */
+function releaseForbidden(text: string, code = 'unknown_error') {
+  return {
+    status: 403,
+    code,
+    message: `Http failure response for ${RELEASE_URL}: 403 Forbidden`,
     serverMessages: [text],
     method: 'PUT',
   };
@@ -726,6 +739,66 @@ describe('BookingDetailsPanel', () => {
           'Room 101 · 2 guests hostBookings.released',
           'Room 102 · 1 guest hostBookings.released',
         ]);
+      });
+    });
+
+    describe('when a release is refused for lack of permission', () => {
+      const CANCAN = 'You are not authorized to access this page.';
+      const alertText = (el: HTMLElement) => el.querySelector('[role="alert"]')?.textContent?.trim();
+
+      afterEach(() => TestBed.inject(SessionStore).clear());
+
+      /** Signs in as `role`, then presses Release on room 101 of a checked-in stay, which the server refuses with `failure`. */
+      function pressRelease(role: Role, failure: unknown): HTMLElement {
+        const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
+        TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+        api.releaseOccupancy.mockReturnValue(throwError(() => failure));
+
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+        return el;
+      }
+
+      it('tells staff they lack permission and leaves the room active with its Release button', () => {
+        const el = pressRelease('manager', releaseForbidden(CANCAN));
+
+        expect(alertText(el)).toBe('hostBookings.notAllowed');
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
+        expect(releaseButtons(el)[0].disabled).toBe(false);
+        expect(fixture.componentInstance.released).toEqual([]);
+        expect(api.releaseOccupancy).toHaveBeenCalledTimes(1);
+        expect(api.occupancies).toHaveBeenCalledTimes(1);
+        expectNoLeak(el, CANCAN);
+      });
+
+      it('tells the owner their account lacks permission and to contact support', () => {
+        const el = pressRelease('host', releaseForbidden(CANCAN));
+
+        expect(alertText(el)).toBe('hostBookings.notAllowedOwner');
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(fixture.componentInstance.released).toEqual([]);
+        expectNoLeak(el, CANCAN);
+      });
+
+      it.each<Role>(['manager', 'host'])('says the plan has no CRM, whoever is signed in as %s', (role) => {
+        const el = pressRelease(role, releaseForbidden('Your plan does not include CRM', 'crm_required'));
+
+        expect(alertText(el)).toBe('hostBookings.planHasNoCrm');
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(fixture.componentInstance.released).toEqual([]);
+        expectNoLeak(el, 'Your plan does not include CRM');
+      });
+
+      it('never reads a 403 as the room being already released, whatever text it carries', () => {
+        const el = pressRelease('manager', releaseForbidden('Occupancy is already inactive'));
+
+        expect(alertText(el)).toBe('hostBookings.notAllowed');
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
+        expect(releaseButtons(el)).toHaveLength(1);
+        expect(fixture.componentInstance.released).toEqual([]);
+        expectNoLeak(el, 'Occupancy is already inactive');
       });
     });
 

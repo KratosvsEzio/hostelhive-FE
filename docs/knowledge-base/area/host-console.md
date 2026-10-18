@@ -40,7 +40,12 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 - `HostPropertyStore.activeHostel()` for currency, room types and billing cycle, and `isMonthlyBilled(id)` / `isNightlyBilled(id)` in guards (pass the route id).
 - `hostNav()` for any new destination; it feeds the sidebar, the More page and, through `tabBarSuffixes`, the tab bar.
 - `hostPagePath()` for any URL arithmetic below the hostel (it strips the locale prefix); `bookingPath()` / `invoicePath()` for links to one booking or bill (no locale prefix; the link directives add it).
-- `bookingMoveFailureKey` / `releaseFailureKey` / `crossPayInvoiceFailureKey` (`apps/web/src/app/features/host/bookings/booking-move-failure.ts`) for any new stay-move error.
+- `bookingMoveFailureKey` / `releaseFailureKey` / `crossPayInvoiceFailureKey` (`apps/web/src/app/features/host/bookings/booking-move-failure.ts`) for any new stay-move error. Pass `{ owner: session.hasRole('host') }`, read when the refusal arrives. A 403 reads as follows:
+  - a plan without CRM (`isCrmRequired` in `apps/web/src/app/core/host-access/host-access.ts`, shared with `classifyHostAccess`) → `hostBookings.planHasNoCrm`;
+  - a 403 carrying **no** server code (the interceptor's `'unknown_error'` fallback; CanCan's "not authorized" or the not-host-or-manager check) → a permission message: `notAllowed` ("ask the hostel owner") for staff, `notAllowedOwner` ("contact HostelHive support") for an owner;
+  - any other coded 403 (Rack::Attack `forbidden`) keeps the generic message.
+
+  Roles and their permissions are global and edited only by HostelHive admins, so the message never tells anyone to "ask for the role to be changed" (Trello #187).
 - **A refusal that says the booking is not where the screen shows it counts as the server's state, not a failed move.** `movedOnKind` (same file) sorts them into `'done'` (already checked in, already paid) and `'movedOn'` (wrong stage, no longer changeable). `send` (`apps/web/src/app/features/host/bookings/bookings.ts`) hands these to `onMovedOn`, which:
   - keeps `busy` and re-reads the booking quietly;
   - swaps the fresh copy into the row and the calendar;
@@ -61,6 +66,7 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 - `HostelForm` for anything that edits a hostel.
 
 ## Traps
+- **Stay moves aren't hidden by permission yet.** The `host:Booking:*` flags have never been checked live. The backend counts a granted "Manage Bookings" parent and ignores the permission group, and newly added actions only get permission rows after a manual `rake permission:reload`. So hiding moves by flag could hide buttons that work. Moves explain a permission refusal instead (#187); hiding waits on a live payload check (Trello #195). Release must never be gated: the backend has no CanCan check on it.
 - **"Invoices" are renter bills** (rent, utility, or a booking's stay; `/api/host/hostels/:id/renter_bills`, `apps/web/src/app/features/host/invoices/invoices.ts`), not HostelHive billing invoices.
 - **The booking list, calendars and `…/occupancies` read the search index**, which can lag by minutes; `GET bookings/:id` reads the database. Never "refresh" after a write by re-fetching the list ([decision](../decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md)).
 - **`linkedSignal` resets whenever anything its `source` function reads changes, even if the value is the same.** Per-booking panel state (`releaseError`, `releasedIds`) takes its source from the `computed` `bookingId`, so the page's re-read of the same booking keeps it. A `source: () => this.booking()?.id` looks equivalent and silently wipes it (`apps/web/src/app/features/host/bookings/booking-details-panel.ts`; caught by QA in Trello #168).

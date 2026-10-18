@@ -36,6 +36,9 @@ const TRANSLATED_KEYS = [
     'invoiceAlreadyExists',
     'giveTheGuestAReason',
     'moveNotAccepted',
+    'notAllowed',
+    'notAllowedOwner',
+    'planHasNoCrm',
     'roomAlreadyReleased',
     'couldNotReleaseRoom',
     'invoiceNoLongerExists',
@@ -124,6 +127,21 @@ describe('the host bookings and invoices copy in every language', () => {
       expect(en[`hostBookings.${key}`]).not.toMatch(/refresh/i);
     },
   );
+
+  it.each(['notAllowed', 'notAllowedOwner', 'planHasNoCrm'])(
+    'words hostBookings.%s in English without inviting a retry',
+    (key) => {
+      expect(en[`hostBookings.${key}`]).not.toMatch(/try again/i);
+    },
+  );
+
+  it.each(files)('%s keeps the HostelHive name in the owner permission sentence', (file) => {
+    expect(texts(file)['hostBookings.notAllowedOwner']).toContain('HostelHive');
+  });
+
+  it.each(files)('%s keeps the CRM name in the plan sentence', (file) => {
+    expect(texts(file)['hostBookings.planHasNoCrm']).toContain('CRM');
+  });
 
   it('lists only real copies as exceptions', () => {
     const stale = Object.entries(SAME_AS_ENGLISH).flatMap(([file, paths]) => {

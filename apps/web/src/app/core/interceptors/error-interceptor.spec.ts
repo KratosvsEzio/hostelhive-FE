@@ -244,6 +244,39 @@ describe('errorInterceptor', () => {
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 
+  // A 403 refuses one action of a user whose session is fine, so it must never sign them out.
+  describe('a 403 on a stay move', () => {
+    const move = `${BASE}/api/host/hostels/Xk9pQ/bookings/bk-1/mark_as_confirmed`;
+    const cancan = 'You are not authorized to access this page.';
+    const refusals: readonly [string, unknown][] = [
+      ['a CanCan refusal', { success: false, error: cancan }],
+      ['a refusal of a user who is neither host nor manager', { errors: [cancan] }],
+      ['a plan without CRM', { success: false, code: 'crm_required', errors: ['Your plan does not include CRM'] }],
+      ['a rate-limited request', { success: false, code: 'forbidden', errors: ['Forbidden'] }],
+      ['a bare body', null],
+    ];
+    const cases = refusals.flatMap(([label, body]) =>
+      [true, false].map((suppressed) => ({ label, body, suppressed })),
+    );
+
+    it.each(cases)(
+      'never reaches the unauthorized handler: $label, toast suppressed: $suppressed',
+      ({ body, suppressed }) => {
+        let caught: ApiError | undefined;
+        http
+          .post(move, {}, {
+            headers: { Authorization: 'Bearer tok-A' },
+            context: new HttpContext().set(SUPPRESS_ERROR_TOAST, suppressed),
+          })
+          .subscribe({ error: (e: ApiError) => (caught = e) });
+        httpMock.expectOne(move).flush(body, { status: 403, statusText: 'Forbidden' });
+
+        expect(onUnauthorized).not.toHaveBeenCalled();
+        expect(caught?.status).toBe(403);
+      },
+    );
+  });
+
   // The host area's billing gate answers `{ code: 'crm_required', errors, success: false }`.
   // The code is the only thing that tells it apart from any other 403, so it must survive.
   it('keeps the server\'s machine code', () => {

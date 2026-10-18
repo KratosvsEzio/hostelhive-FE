@@ -18,6 +18,7 @@ import { Invoice } from '@hostelhive/data-access';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { MoneyPipe } from '@app/shared/currency/money.pipe';
 import { LocaleLink } from '@core/i18n/locale-link';
+import { SessionStore } from '@core/auth/session-store';
 import { invoicePath } from '@util/host-links';
 import {
   buildInvoiceId,
@@ -132,6 +133,7 @@ export class BookingDetailsPanel {
   readonly released = output<HostBooking>();
 
   private readonly api = inject(HostBookingsApi);
+  private readonly session = inject(SessionStore);
 
   protected readonly lane = computed(() => laneKeyFor(this.booking()?.disposition.slug ?? ''));
 
@@ -352,7 +354,8 @@ export class BookingDetailsPanel {
       },
       error: (err: unknown) => {
         this.releasing.set(null);
-        this.releaseError.set({ key: releaseFailureKey(err), room: o.roomNumber });
+        const key = releaseFailureKey(err, { owner: this.session.hasRole('host') });
+        this.releaseError.set({ key, room: o.roomNumber });
         // "Already released" is as final as a release that succeeded, so it is recorded the same way.
         if (bookingRefusal(err) === 'roomAlreadyReleased') {
           this.releasedIds.update((ids) => new Set(ids).add(o.id));
