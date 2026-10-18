@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { HostPropertyStore } from '@services';
 import { BookingCalendar } from './booking-calendar';
 import { BookingCalendar as CalendarData, HostBooking, HostBookingsApi } from './host-bookings-api';
 import { isoDate } from './booking-month';
@@ -60,7 +61,11 @@ describe('BookingCalendar — applyChange', () => {
     api = new ApiStub();
     TestBed.configureTestingModule({
       imports: [BookingCalendar],
-      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
+      providers: [
+        provideI18nTesting(),
+        { provide: HostBookingsApi, useValue: api },
+        { provide: HostPropertyStore, useValue: { timeZoneOf: () => of(null) } },
+      ],
     });
     const fixture = TestBed.createComponent(BookingCalendar);
     fixture.componentRef.setInput('hostelId', 'MjvuEl');
