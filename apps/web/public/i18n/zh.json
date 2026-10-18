@@ -835,7 +835,9 @@
     "lockedLabel": "需要包含 CRM 的套餐",
     "offlineTitle": "旅舍上线后即可打开此页面",
     "offlineBody": "房间、预订、租客、账单和员工需要有效的套餐。你的记录都会保留。",
-    "offlineBodyStaff": "请让旅舍所有者为此旅舍续订套餐。"
+    "offlineBodyStaff": "请让旅舍所有者为此旅舍续订套餐。",
+    "pageNotAllowed": "您无权查看此内容。请联系旅舍所有者。",
+    "pageNotAllowedOwner": "您的账户无权查看此内容。请联系 HostelHive 支持团队。"
   },
   "hostPayment": {
     "summaryTitle": "你要支付的内容",

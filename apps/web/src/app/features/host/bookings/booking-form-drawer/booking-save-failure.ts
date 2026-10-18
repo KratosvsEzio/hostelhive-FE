@@ -1,17 +1,23 @@
 import { errorStatus } from '@core/errors/api-error-text';
+import { isCrmRequired, isPermissionRefusal } from '@core/host-access/host-access';
 import { bookingRefusal } from '@util/booking-refusal';
+import { MoveFailureOptions } from '../booking-move-failure';
 
 /**
  * The translation key for a booking the host could not record.
  *
  * A lapsed subscription is not handled here: the drawer checks it first and shows the renewal
- * prompt instead. Everything this does not recognise falls back to the generic message.
- * `message` is never read.
+ * prompt instead. A 403 says the hostel's plan lacks CRM, or that the signed-in user may not
+ * record bookings, worded for the owner or staff by `opts.owner`. Everything this does not
+ * recognise falls back to the generic message. `message` is never read.
  */
-export function bookingSaveFailureKey(err: unknown): string {
+export function bookingSaveFailureKey(err: unknown, opts: MoveFailureOptions = {}): string {
   const status = errorStatus(err);
   if (status === 0) return 'common.cannotReachTheServer';
-  if (status === 403 && errorCode(err) === 'crm_required') return 'hostBookings.crmRequired';
+  if (isCrmRequired(err)) return 'hostBookings.crmRequired';
+  if (isPermissionRefusal(err)) {
+    return opts.owner ? 'hostBookings.notAllowedOwner' : 'hostBookings.notAllowed';
+  }
 
   switch (bookingRefusal(err)) {
     case 'bookingsClosed':
@@ -25,10 +31,4 @@ export function bookingSaveFailureKey(err: unknown): string {
     default:
       return 'hostBookings.couldNotSaveBooking';
   }
-}
-
-function errorCode(err: unknown): string | null {
-  if (typeof err !== 'object' || err === null) return null;
-  const { code } = err as { code?: unknown };
-  return typeof code === 'string' ? code : null;
 }

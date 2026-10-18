@@ -835,7 +835,9 @@
     "lockedLabel": "richiede un piano con CRM",
     "offlineTitle": "Questa pagina si apre quando il tuo ostello è online",
     "offlineBody": "Camere, prenotazioni, inquilini, fatture e personale richiedono un piano attivo. I tuoi dati vengono conservati.",
-    "offlineBodyStaff": "Chiedi al proprietario dell’ostello di rinnovare il piano di questo ostello."
+    "offlineBodyStaff": "Chiedi al proprietario dell’ostello di rinnovare il piano di questo ostello.",
+    "pageNotAllowed": "Non hai l’autorizzazione per visualizzare questo contenuto. Chiedi al proprietario dell’ostello.",
+    "pageNotAllowedOwner": "Il tuo account non ha l’autorizzazione per visualizzare questo contenuto. Contatta l’assistenza HostelHive."
   },
   "hostPayment": {
     "summaryTitle": "Cosa stai pagando",

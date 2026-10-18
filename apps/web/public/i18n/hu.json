@@ -835,7 +835,9 @@
     "lockedLabel": "CRM-et tartalmazó csomag szükséges",
     "offlineTitle": "Ez az oldal akkor nyílik meg, amikor a szálláshelyed elérhető",
     "offlineBody": "A szobákhoz, foglalásokhoz, bérlőkhöz, számlákhoz és a személyzethez aktív csomag kell. Az adataid megmaradnak.",
-    "offlineBodyStaff": "Kérd meg a szálláshely tulajdonosát, hogy újítsa meg a szálláshely csomagját."
+    "offlineBodyStaff": "Kérd meg a szálláshely tulajdonosát, hogy újítsa meg a szálláshely csomagját.",
+    "pageNotAllowed": "Nincs jogosultsága ezt megtekinteni. Kérdezze meg a szálláshely tulajdonosát.",
+    "pageNotAllowedOwner": "A fiókjának nincs jogosultsága ezt megtekinteni. Vegye fel a kapcsolatot a HostelHive ügyfélszolgálatával."
   },
   "hostPayment": {
     "summaryTitle": "Amiért fizetsz",

@@ -840,7 +840,9 @@
     "lockedLabel": "cần gói có CRM",
     "offlineTitle": "Trang này sẽ mở khi nhà nghỉ của bạn được hiển thị",
     "offlineBody": "Phòng, đặt phòng, người thuê, hóa đơn và nhân viên cần một gói đang hoạt động. Dữ liệu của bạn vẫn được giữ lại.",
-    "offlineBodyStaff": "Hãy nhờ chủ nhà nghỉ gia hạn gói của nhà nghỉ này."
+    "offlineBodyStaff": "Hãy nhờ chủ nhà nghỉ gia hạn gói của nhà nghỉ này.",
+    "pageNotAllowed": "Bạn không có quyền xem nội dung này. Hãy hỏi chủ nhà nghỉ.",
+    "pageNotAllowedOwner": "Tài khoản của bạn không có quyền xem nội dung này. Hãy liên hệ bộ phận hỗ trợ của HostelHive."
   },
   "hostPayment": {
     "summaryTitle": "Nội dung bạn thanh toán",

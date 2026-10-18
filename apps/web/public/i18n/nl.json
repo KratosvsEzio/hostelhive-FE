@@ -835,7 +835,9 @@
     "lockedLabel": "vereist een abonnement met CRM",
     "offlineTitle": "Deze pagina opent zodra je hostel online is",
     "offlineBody": "Voor kamers, boekingen, huurders, rekeningen en personeel is een actief abonnement nodig. Je gegevens blijven bewaard.",
-    "offlineBodyStaff": "Vraag de eigenaar van het hostel om het abonnement van dit hostel te verlengen."
+    "offlineBodyStaff": "Vraag de eigenaar van het hostel om het abonnement van dit hostel te verlengen.",
+    "pageNotAllowed": "U hebt geen toestemming om dit te bekijken. Vraag het de eigenaar van het hostel.",
+    "pageNotAllowedOwner": "Uw account heeft geen toestemming om dit te bekijken. Neem contact op met HostelHive-support."
   },
   "hostPayment": {
     "summaryTitle": "Waarvoor je betaalt",

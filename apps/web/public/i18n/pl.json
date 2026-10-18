@@ -840,7 +840,9 @@
     "lockedLabel": "wymaga planu z CRM",
     "offlineTitle": "Ta strona będzie dostępna, gdy hostel będzie online",
     "offlineBody": "Pokoje, rezerwacje, najemcy, rachunki i personel wymagają aktywnego planu. Twoje dane są zachowane.",
-    "offlineBodyStaff": "Poproś właściciela hostelu o odnowienie planu tego hostelu."
+    "offlineBodyStaff": "Poproś właściciela hostelu o odnowienie planu tego hostelu.",
+    "pageNotAllowed": "Nie masz uprawnień, aby to wyświetlić. Zapytaj właściciela hostelu.",
+    "pageNotAllowedOwner": "Twoje konto nie ma uprawnień, aby to wyświetlić. Skontaktuj się z pomocą techniczną HostelHive."
   },
   "hostPayment": {
     "summaryTitle": "Za co płacisz",

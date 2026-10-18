@@ -6,13 +6,19 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - `apps/web/src/app/features/host/subscription/subscription.routes.ts` — one route, `''`, the billing page at `/host/:id/subscription`. The old plan, checkout and payment-history URLs are gone and fall through to the app's catch-all.
 - `apps/web/src/app/features/host/subscription/subscription-placeholder.ts` — `SubscriptionPlaceholder`: an empty state saying billing is moving, with "Contact us" and a link back to the hostel's overview. It loads no data.
 - `apps/web/src/app/layout/components/subscription-gate/subscription-gate.ts` — `<hh-subscription-gate>`, the inline paywall card. Its button links to the billing page of the selected hostel.
-- `apps/web/src/app/util/subscription-error.ts` — `isSubscriptionError(err)`: whether an API error means "this hostel needs a plan".
+- `apps/web/src/app/util/subscription-error.ts` — `isSubscriptionError(err)`: whether an API error means "this hostel needs a plan" (a 402, or the 400 "You need to subscribe…"). It is never true for a 403.
+- `apps/web/src/app/core/interceptors/host-access-interceptor.ts` and `apps/web/src/app/core/host-access/host-access.ts` (`classifyHostAccess`) — record the plan refusals the server sends; `apps/web/src/app/layout/components/access-lock/access-lock.ts` — `<hh-access-lock>`, which the host shell shows instead of a locked section.
 - `apps/web/src/app/features/host/host.routes.ts` — `createHostelGate` on `/host/hostels/new`.
 - `apps/web/src/app/features/host/new-hostel/new-hostel.ts` and `apps/web/src/app/features/public/onboarding/onboarding-wizard/onboarding-wizard.ts` (`landOnBilling`) — where a host lands after creating a hostel.
 
 ## How it works
-- **The server decides access.** There is no client-side subscription gate any more: no store, no loading overlay, no bounce to the billing page on entering a hostel. A hostel without a plan gets refusals from the API on the requests themselves (402, 400 "You need to subscribe to avail the services", or a 403 on a plan-gated endpoint).
-- **Inline paywall.** Overview, rooms, tenants, invoices, utilities and add-bill catch a failed load with `isSubscriptionError` and render `<hh-subscription-gate>`. The booking form drawer shows a renew notice instead, because a lapse stops new bookings but not the stays already made (`apps/web/src/app/features/host/bookings/booking-form-drawer/booking-form-drawer.ts`).
+- **The server decides access.** Nothing checks the plan before a request, and entering a hostel never bounces to the billing page. A hostel without a usable plan gets refusals from the API on the requests themselves:
+  - a 400 "You need to subscribe to avail the services" (no live plan);
+  - a 403 with `code: 'crm_required'` (a plan without CRM);
+  - in principle a 402.
+- **The plan lock owns the first two.** `hostAccessInterceptor` records them per hostel, and the host shell swaps a CRM section's `<router-outlet>` for `<hh-access-lock>` (`lock` in `apps/web/src/app/layout/host-shell/host-shell.ts`), which destroys the page and any open drawer.
+- **A 403 with no server code is a permission refusal, not a plan one, unless its message is the CRM one** (`isPermissionRefusal`; never compare `code` yourself). The backend runs its plan checks before CanCan, so a CanCan "You are not authorized…" arrives only when the plan is live and includes CRM (Trello #193). The lock never records it; the page explains it (see [host-console](./host-console.md)).
+- **Inline paywall, a backstop.** Overview, rooms, tenants, invoices, utilities and add-bill catch a failed load with `isSubscriptionError` and render `<hh-subscription-gate>`; the booking form drawer shows a renew notice (`apps/web/src/app/features/host/bookings/booking-form-drawer/booking-form-drawer.ts`). Since the lock replaces these pages first on the same refusals, both surfaces rarely show; retiring or translating them is Trello #199.
 - **Creating a hostel.** `createHostelGate` checks only the `core:Hostel:create` permission; without it the host goes to `/host`. Whether the new hostel may then be used is again the server's call.
 - **After create.** Both the console's new-hostel form and the become-a-host wizard reload the hostel list, then land on `/host/:id/subscription`. The reload comes first because `knownHostelGate` trusts a loaded list, and a stale one would send the host back to a hostel they already had.
 - **No nav entry.** The host sidebar and "More" page have no billing link; the paywall card, the booking drawer's notice and the post-create landing are the ways in.
@@ -23,12 +29,14 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - The plan and its run records are in [`docs/implement/93.md`](../../implement/93.md) and [`docs/implement/billing-frontend/94.md`](../../implement/billing-frontend/94.md).
 
 ## Reuse, don't rebuild
-- `isSubscriptionError` with `<hh-subscription-gate [feature]>` for a page that can be paywalled.
+- `isSubscriptionError` with `<hh-subscription-gate [feature]>` for a page that can be paywalled. Check `isPermissionRefusal` alongside it (`apps/web/src/app/core/host-access/host-access.ts`).
+- `isCrmRequired` (same file) for "this plan has no CRM"; never match its message yourself.
 
 ## Traps
-- **`isSubscriptionError` is broad.** It also matches a 403 "not authorized" and any message containing "subscri". A plain permission refusal can therefore render the paywall (`apps/web/src/app/util/subscription-error.ts`).
+- **Two classifiers answer "is this a plan refusal".** `classifyHostAccess` (the lock) and `isSubscriptionError` (the page) drifted once: the page read a CanCan permission 403 as a lapsed plan and showed owners a "subscribe" paywall for a hostel that was paid up (Trello #193). A new plan refusal must be taught to both, and a spec must feed the backend's real body through the real interceptors.
+- **`isSubscriptionError` still matches any non-403 failure whose text matches `subscri`, `upgrade.*plan` or `plan.?required`** (`apps/web/src/app/util/subscription-error.ts`). So a 422 saying "plan required" would open the paywall or the drawer's renew notice. Nothing sends one today.
 - **The billing page has no `permissionGuard`, on purpose.** The paywall card links every host there, and a guard would turn that link into `/forbidden` for staff who lack the permission (comment in `subscription.routes.ts`).
-- **The paywall card's benefits list is hard-coded English** (`BENEFITS` in `subscription-gate.ts`).
+- **The paywall card and the drawer's renew notice are hard-coded English** (`BENEFITS` in `subscription-gate.ts`; `booking-form-drawer.html`). Trello #199.
 
 ## Decisions
 - [Billing rewrite built against backend PR #26, host billing core first](../decisions/host-billing-and-subscription/billing-rewrite-against-unmerged-backend.md)

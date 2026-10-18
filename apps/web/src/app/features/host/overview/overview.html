@@ -26,6 +26,10 @@
     </div>
   } @else if (s.subscriptionError) {
     <hh-subscription-gate [feature]="'subscriptionGate.dashboardOverview' | transloco" />
+  } @else if (s.permissionError) {
+    <div class="mt-4">
+      <hh-permission-refused />
+    </div>
   } @else if (s.error || !s.data) {
     <div class="mt-4">
       <hh-error-state

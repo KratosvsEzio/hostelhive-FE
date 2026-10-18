@@ -840,7 +840,9 @@
     "lockedLabel": "memerlukan paket dengan CRM",
     "offlineTitle": "Halaman ini terbuka saat hostel Anda tampil",
     "offlineBody": "Kamar, pemesanan, penyewa, tagihan, dan staf memerlukan paket aktif. Data Anda tetap tersimpan.",
-    "offlineBodyStaff": "Minta pemilik hostel untuk memperpanjang paket hostel ini."
+    "offlineBodyStaff": "Minta pemilik hostel untuk memperpanjang paket hostel ini.",
+    "pageNotAllowed": "Anda tidak memiliki izin untuk melihat ini. Tanyakan kepada pemilik hostel.",
+    "pageNotAllowedOwner": "Akun Anda tidak memiliki izin untuk melihat ini. Hubungi dukungan HostelHive."
   },
   "hostPayment": {
     "summaryTitle": "Yang Anda bayar",

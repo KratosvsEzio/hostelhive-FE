@@ -835,7 +835,9 @@
     "lockedLabel": "kräver ett abonnemang med CRM",
     "offlineTitle": "Den här sidan öppnas när ditt vandrarhem är online",
     "offlineBody": "Rum, bokningar, hyresgäster, räkningar och personal kräver ett aktivt abonnemang. Dina uppgifter sparas.",
-    "offlineBodyStaff": "Be vandrarhemmets ägare att förnya det här vandrarhemmets abonnemang."
+    "offlineBodyStaff": "Be vandrarhemmets ägare att förnya det här vandrarhemmets abonnemang.",
+    "pageNotAllowed": "Du har inte behörighet att se det här. Fråga vandrarhemmets ägare.",
+    "pageNotAllowedOwner": "Ditt konto har inte behörighet att se det här. Kontakta HostelHives support."
   },
   "hostPayment": {
     "summaryTitle": "Det här betalar du för",

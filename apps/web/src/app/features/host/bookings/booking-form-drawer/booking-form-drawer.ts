@@ -23,6 +23,7 @@ import {
 } from '@hostelhive/ui';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LocaleStore } from '@core/i18n/locale-store';
+import { SessionStore } from '@core/auth/session-store';
 import { HostelsApi, hostelZone } from '@services';
 import { RoomType } from '@hostelhive/data-access';
 import { todayIn } from '@util/zoned-time';
@@ -88,6 +89,7 @@ export class BookingFormDrawer {
   private readonly hostels = inject(HostelsApi);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleStore);
+  private readonly session = inject(SessionStore);
 
   protected readonly guestName = signal('');
   protected readonly guestPhone = signal('');
@@ -382,7 +384,8 @@ export class BookingFormDrawer {
             this.needsSubscription.set(true);
             return;
           }
-          this.saveError.set(bookingSaveFailureKey(err));
+          // Read as the refusal lands, so the wording follows whoever is signed in by then.
+          this.saveError.set(bookingSaveFailureKey(err, { owner: this.session.hasRole('host') }));
         },
       });
   }

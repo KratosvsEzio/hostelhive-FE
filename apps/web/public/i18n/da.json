@@ -835,7 +835,9 @@
     "lockedLabel": "kræver en plan med CRM",
     "offlineTitle": "Denne side åbner, når dit hostel er online",
     "offlineBody": "Værelser, bookinger, lejere, regninger og personale kræver en aktiv plan. Dine data bliver gemt.",
-    "offlineBodyStaff": "Bed ejeren af hostellet om at forny dette hostels plan."
+    "offlineBodyStaff": "Bed ejeren af hostellet om at forny dette hostels plan.",
+    "pageNotAllowed": "Du har ikke tilladelse til at se dette. Spørg ejeren af hostellet.",
+    "pageNotAllowedOwner": "Din konto har ikke tilladelse til at se dette. Kontakt HostelHives support."
   },
   "hostPayment": {
     "summaryTitle": "Det betaler du for",

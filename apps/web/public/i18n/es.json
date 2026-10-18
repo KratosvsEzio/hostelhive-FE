@@ -835,7 +835,9 @@
     "lockedLabel": "requiere un plan con CRM",
     "offlineTitle": "Esta página se abre cuando tu hostal está en línea",
     "offlineBody": "Habitaciones, reservas, inquilinos, facturas y personal requieren un plan activo. Tus registros se conservan.",
-    "offlineBodyStaff": "Pide al propietario del hostal que renueve el plan de este hostal."
+    "offlineBodyStaff": "Pide al propietario del hostal que renueve el plan de este hostal.",
+    "pageNotAllowed": "No tienes permiso para ver esto. Pregunta al propietario del hostal.",
+    "pageNotAllowedOwner": "Tu cuenta no tiene permiso para ver esto. Contacta con el soporte de HostelHive."
   },
   "hostPayment": {
     "summaryTitle": "Lo que estás pagando",

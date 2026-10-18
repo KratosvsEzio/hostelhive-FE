@@ -835,7 +835,9 @@
     "lockedLabel": "CRM を含むプランが必要です",
     "offlineTitle": "このページはホステルの公開後に利用できます",
     "offlineBody": "客室、予約、入居者、請求、スタッフの管理には有効なプランが必要です。記録は保持されています。",
-    "offlineBodyStaff": "ホステルのオーナーに、このホステルのプランの更新を依頼してください。"
+    "offlineBodyStaff": "ホステルのオーナーに、このホステルのプランの更新を依頼してください。",
+    "pageNotAllowed": "この内容を表示する権限がありません。ホステルのオーナーにお問い合わせください。",
+    "pageNotAllowedOwner": "お使いのアカウントには、この内容を表示する権限がありません。HostelHive サポートにお問い合わせください。"
   },
   "hostPayment": {
     "summaryTitle": "お支払い内容",

@@ -38,7 +38,9 @@ import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isSubscriptionError } from '@util/subscription-error';
+import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-groups';
 import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/table-configs/invoice-table-cols';
@@ -62,6 +64,7 @@ interface ViewState {
   loading: boolean;
   error: boolean;
   subscriptionError: boolean;
+  permissionError?: boolean;
   networkError: boolean;
   data: Invoice[] | null;
   total: number;
@@ -185,6 +188,7 @@ interface PayPrompt {
     DecimalPipe,
     DashboardLayout,
     SubscriptionGate,
+    PermissionRefused,
     Button,
     ConfirmModal,
     DataTable,
@@ -376,7 +380,18 @@ export class Invoices {
             this.fetching.set(false);
             const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
-            return of<ViewState>({ loading: false, error: !sub, subscriptionError: sub, networkError: net, data: null, total: 0, totalPages: 1, statuses: [], aggs: null });
+            return of<ViewState>({
+              loading: false,
+              error: !sub,
+              subscriptionError: sub,
+              permissionError: isPermissionRefusal(err),
+              networkError: net,
+              data: null,
+              total: 0,
+              totalPages: 1,
+              statuses: [],
+              aggs: null,
+            });
           }),
         );
       }),

@@ -20,6 +20,7 @@ const NEW_KEYS = [
     'checkOutAfterCheckIn',
     'couldNotSaveBooking',
   ].map((key) => `hostBookings.${key}`),
+  ...['pageNotAllowed', 'pageNotAllowedOwner'].map((key) => `hostAccess.${key}`),
   ...['couldNotUploadImage', 'fileTypeNotSupported', 'uploadTryAgain'].map(
     (key) => `hostTeam.${key}`,
   ),
@@ -42,6 +43,7 @@ const NEW_KEYS = [
 
 /** Existing messages the same screens fall back to; they must exist everywhere too. */
 const REUSED_KEYS = [
+  'coreForbidden.accessBlocked',
   'hostBookings.theRoomsForThisProperty',
   'publicBooking.couldnTBook',
   'userBookings.changeFailed',

@@ -983,7 +983,9 @@
     "lockedLabel": "needs a plan with CRM",
     "offlineTitle": "This page opens when your hostel is live",
     "offlineBody": "Rooms, bookings, tenants, bills and staff need an active plan. Your records are kept.",
-    "offlineBodyStaff": "Ask the hostel owner to renew this hostel's plan."
+    "offlineBodyStaff": "Ask the hostel owner to renew this hostel's plan.",
+    "pageNotAllowed": "You don't have permission to see this. Ask the hostel owner.",
+    "pageNotAllowedOwner": "Your account doesn't have permission to see this. Contact HostelHive support."
   },
   "hostPayment": {
     "summaryTitle": "What you're paying for",

@@ -835,7 +835,9 @@
     "lockedLabel": "nécessite un forfait avec CRM",
     "offlineTitle": "Cette page s’ouvre quand votre auberge est en ligne",
     "offlineBody": "Les chambres, réservations, locataires, factures et le personnel nécessitent un forfait actif. Vos données sont conservées.",
-    "offlineBodyStaff": "Demandez au propriétaire de l’auberge de renouveler le forfait de cette auberge."
+    "offlineBodyStaff": "Demandez au propriétaire de l’auberge de renouveler le forfait de cette auberge.",
+    "pageNotAllowed": "Vous n’êtes pas autorisé à voir ce contenu. Demandez au propriétaire de l’auberge.",
+    "pageNotAllowedOwner": "Votre compte n’est pas autorisé à voir ce contenu. Contactez l’assistance HostelHive."
   },
   "hostPayment": {
     "summaryTitle": "Ce que vous payez",
