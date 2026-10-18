@@ -1,6 +1,11 @@
 import HERO_CREDITS from '../../../../../public/hero/CREDITS.json';
 import CITY_CREDITS from '../../../../../public/cities/CREDITS.json';
-import { shareAlikeCount, toCredits } from './credits';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { LocaleStore } from '@core/i18n/locale-store';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { Credits, shareAlikeCount, toCredits } from './credits';
 
 /**
  * That every photograph the site serves can actually be credited.
@@ -115,5 +120,44 @@ describe('share-alike declaration', () => {
   it('is a real subset, so the declaration says something', () => {
     expect(shareAlikeCount(all)).toBeGreaterThan(0);
     expect(shareAlikeCount(all)).toBeLessThan(all.length);
+  });
+});
+
+describe('the credits page', () => {
+  function render(): HTMLElement {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideI18nTesting(),
+        { provide: LocaleStore, useValue: { active: signal('ur') } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Credits);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('wraps the heading, the introduction and every credit list in one English, left-to-right block', () => {
+    const el = render();
+    const wrappers = el.querySelectorAll('[lang]');
+
+    expect(wrappers).toHaveLength(1);
+    const content = wrappers[0];
+    expect(content.getAttribute('lang')).toBe('en');
+    expect(content.getAttribute('dir')).toBe('ltr');
+    expect(content.contains(el.querySelector('h1'))).toBe(true);
+    expect(content.contains(el.querySelector('h1 + p'))).toBe(true);
+    const lists = Array.from(el.querySelectorAll('ul'));
+    expect(lists.length).toBeGreaterThan(0);
+    expect(lists.every((ul) => content.contains(ul))).toBe(true);
+  });
+
+  it('keeps the translated back link outside the English block, in the visitor language', () => {
+    const el = render();
+    const back = el.querySelector('a');
+
+    expect(back?.textContent?.trim()).toBe('common.backToHome');
+    expect(back?.getAttribute('href')).toBe('/ur');
+    expect(el.querySelector('[lang="en"]')?.contains(back)).toBe(false);
   });
 });
