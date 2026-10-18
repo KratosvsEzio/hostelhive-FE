@@ -821,6 +821,7 @@
     "removeCardMessage": "Automatisk fornyelse slås fra, og du skal selv betale hver fornyelsesfaktura.",
     "autoRenew": "Forny automatisk",
     "autoRenewHint": "Vi trækker beløbet på dette kort, når din plan fornyes.",
+    "autoRenewOffHint": "Du betaler selv hver fornyelsesfaktura.",
     "autoRenewResumeHint": "Genoptag din plan for at forny automatisk.",
     "saveCardFailed": "Vi kunne ikke åbne Safepay for at gemme dit kort. Prøv igen.",
     "removeCardFailed": "Vi kunne ikke fjerne dit kort. Prøv igen.",

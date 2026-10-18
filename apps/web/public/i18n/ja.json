@@ -821,6 +821,7 @@
     "removeCardMessage": "自動更新がオフになり、更新の請求書はご自身で毎回お支払いいただく必要があります。",
     "autoRenew": "自動更新",
     "autoRenewHint": "プランの更新時にこのカードに請求します。",
+    "autoRenewOffHint": "更新の請求書はご自身で毎回お支払いください。",
     "autoRenewResumeHint": "自動更新するには、プランを再開してください。",
     "saveCardFailed": "カードを保存するための Safepay を開けませんでした。もう一度お試しください。",
     "removeCardFailed": "カードを削除できませんでした。もう一度お試しください。",

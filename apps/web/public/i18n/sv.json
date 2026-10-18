@@ -821,6 +821,7 @@
     "removeCardMessage": "Automatisk förnyelse stängs av och du behöver betala varje förnyelsefaktura själv.",
     "autoRenew": "Förnya automatiskt",
     "autoRenewHint": "Vi debiterar det här kortet när ditt abonnemang förnyas.",
+    "autoRenewOffHint": "Du betalar varje förnyelsefaktura själv.",
     "autoRenewResumeHint": "Återuppta ditt abonnemang för att förnya automatiskt.",
     "saveCardFailed": "Vi kunde inte öppna Safepay för att spara ditt kort. Försök igen.",
     "removeCardFailed": "Vi kunde inte ta bort ditt kort. Försök igen.",

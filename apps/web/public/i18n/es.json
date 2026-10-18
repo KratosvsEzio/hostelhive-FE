@@ -821,6 +821,7 @@
     "removeCardMessage": "La renovación automática se desactiva y tendrás que pagar tú cada factura de renovación.",
     "autoRenew": "Renovar automáticamente",
     "autoRenewHint": "Cargaremos esta tarjeta cuando se renueve tu plan.",
+    "autoRenewOffHint": "Pagarás tú cada factura de renovación.",
     "autoRenewResumeHint": "Reanuda tu plan para renovarlo automáticamente.",
     "saveCardFailed": "No pudimos abrir Safepay para guardar tu tarjeta. Inténtalo de nuevo.",
     "removeCardFailed": "No pudimos eliminar tu tarjeta. Inténtalo de nuevo.",

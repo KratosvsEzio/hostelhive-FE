@@ -826,6 +826,7 @@
     "removeCardMessage": "Automatyczne odnawianie zostanie wyłączone i każdą fakturę za odnowienie będziesz opłacać samodzielnie.",
     "autoRenew": "Odnawiaj automatycznie",
     "autoRenewHint": "Obciążymy tę kartę przy odnowieniu planu.",
+    "autoRenewOffHint": "Każdą fakturę za odnowienie opłacasz samodzielnie.",
     "autoRenewResumeHint": "Wznów plan, aby odnawiać go automatycznie.",
     "saveCardFailed": "Nie udało się otworzyć Safepay, aby zapisać kartę. Spróbuj ponownie.",
     "removeCardFailed": "Nie udało się usunąć karty. Spróbuj ponownie.",

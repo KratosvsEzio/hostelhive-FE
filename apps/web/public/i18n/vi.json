@@ -826,6 +826,7 @@
     "removeCardMessage": "Tự động gia hạn sẽ tắt và bạn sẽ cần tự thanh toán từng hóa đơn gia hạn.",
     "autoRenew": "Tự động gia hạn",
     "autoRenewHint": "Chúng tôi sẽ trừ tiền thẻ này khi gói của bạn được gia hạn.",
+    "autoRenewOffHint": "Bạn sẽ tự thanh toán từng hóa đơn gia hạn.",
     "autoRenewResumeHint": "Tiếp tục gói của bạn để tự động gia hạn.",
     "saveCardFailed": "Chúng tôi không thể mở Safepay để lưu thẻ của bạn. Hãy thử lại.",
     "removeCardFailed": "Chúng tôi không thể xóa thẻ của bạn. Hãy thử lại.",

@@ -225,11 +225,12 @@ export class SavedCard {
     () => this.locked() || !this.canManage() || this.autoRenewBlocked(),
   );
 
-  protected readonly hintKey = computed(() =>
-    this.autoRenewBlocked()
-      ? 'hostBilling.autoRenewResumeHint'
-      : 'hostBilling.autoRenewHint',
-  );
+  protected readonly hintKey = computed(() => {
+    if (this.autoRenewBlocked()) return 'hostBilling.autoRenewResumeHint';
+    return this.autoRenew()
+      ? 'hostBilling.autoRenewHint'
+      : 'hostBilling.autoRenewOffHint';
+  });
 
   constructor() {
     // hh-toggle renders its own switch button, so the hint is tied to that button directly.

@@ -969,6 +969,7 @@
     "removeCardMessage": "Automatic renewal turns off, and you'll need to pay each renewal invoice yourself.",
     "autoRenew": "Renew automatically",
     "autoRenewHint": "We'll charge this card when your plan renews.",
+    "autoRenewOffHint": "You'll pay each renewal invoice yourself.",
     "autoRenewResumeHint": "Resume your plan to renew automatically.",
     "saveCardFailed": "We couldn't open Safepay to save your card. Try again.",
     "removeCardFailed": "We couldn't remove your card. Try again.",

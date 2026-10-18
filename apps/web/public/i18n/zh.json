@@ -821,6 +821,7 @@
     "removeCardMessage": "自动续订将关闭，之后每张续订账单都需要你自行支付。",
     "autoRenew": "自动续订",
     "autoRenewHint": "套餐续订时，我们将从这张卡扣款。",
+    "autoRenewOffHint": "每张续订账单都需要你自行支付。",
     "autoRenewResumeHint": "恢复套餐后才能自动续订。",
     "saveCardFailed": "无法打开 Safepay 保存你的卡，请重试。",
     "removeCardFailed": "无法移除你的卡，请重试。",

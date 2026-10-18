@@ -821,6 +821,7 @@
     "removeCardMessage": "Le renouvellement automatique est désactivé et vous devrez payer vous-même chaque facture de renouvellement.",
     "autoRenew": "Renouveler automatiquement",
     "autoRenewHint": "Nous débiterons cette carte au renouvellement de votre forfait.",
+    "autoRenewOffHint": "Vous payez vous-même chaque facture de renouvellement.",
     "autoRenewResumeHint": "Reprenez votre forfait pour le renouveler automatiquement.",
     "saveCardFailed": "Impossible d'ouvrir Safepay pour enregistrer votre carte. Réessayez.",
     "removeCardFailed": "Impossible de supprimer votre carte. Réessayez.",

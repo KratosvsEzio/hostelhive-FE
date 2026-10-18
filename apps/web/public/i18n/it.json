@@ -821,6 +821,7 @@
     "removeCardMessage": "Il rinnovo automatico si disattiva e dovrai pagare tu ogni fattura di rinnovo.",
     "autoRenew": "Rinnova automaticamente",
     "autoRenewHint": "Addebiteremo questa carta al rinnovo del tuo piano.",
+    "autoRenewOffHint": "Paghi tu ogni fattura di rinnovo.",
     "autoRenewResumeHint": "Riattiva il tuo piano per rinnovarlo automaticamente.",
     "saveCardFailed": "Non è stato possibile aprire Safepay per salvare la tua carta. Riprova.",
     "removeCardFailed": "Non è stato possibile rimuovere la tua carta. Riprova.",

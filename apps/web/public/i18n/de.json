@@ -821,6 +821,7 @@
     "removeCardMessage": "Die automatische Verlängerung wird deaktiviert, und Sie müssen jede Verlängerungsrechnung selbst bezahlen.",
     "autoRenew": "Automatisch verlängern",
     "autoRenewHint": "Wir belasten diese Karte, wenn sich Ihr Tarif verlängert.",
+    "autoRenewOffHint": "Sie bezahlen jede Verlängerungsrechnung selbst.",
     "autoRenewResumeHint": "Setzen Sie Ihren Tarif fort, um automatisch zu verlängern.",
     "saveCardFailed": "Safepay konnte zum Speichern Ihrer Karte nicht geöffnet werden. Versuchen Sie es erneut.",
     "removeCardFailed": "Ihre Karte konnte nicht entfernt werden. Versuchen Sie es erneut.",

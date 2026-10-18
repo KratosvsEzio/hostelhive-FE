@@ -821,6 +821,7 @@
     "removeCardMessage": "Automatisch verlengen gaat uit en je moet elke verlengingsfactuur zelf betalen.",
     "autoRenew": "Automatisch verlengen",
     "autoRenewHint": "We schrijven dit bedrag af van deze kaart wanneer je abonnement wordt verlengd.",
+    "autoRenewOffHint": "Je betaalt elke verlengingsfactuur zelf.",
     "autoRenewResumeHint": "Hervat je abonnement om automatisch te verlengen.",
     "saveCardFailed": "We konden Safepay niet openen om je kaart op te slaan. Probeer het opnieuw.",
     "removeCardFailed": "We konden je kaart niet verwijderen. Probeer het opnieuw.",

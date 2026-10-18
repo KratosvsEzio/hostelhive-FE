@@ -235,6 +235,16 @@ describe('SavedCard', () => {
       );
     });
 
+    it('says renewal invoices are paid by hand while it is off', () => {
+      const el = render({ autoRenew: false });
+
+      expect(field(el, 'auto-renew-hint')).toBe('hostBilling.autoRenewOffHint');
+
+      update({ autoRenew: true });
+
+      expect(field(el, 'auto-renew-hint')).toBe('hostBilling.autoRenewHint');
+    });
+
     it('emits the new value when switched', () => {
       const el = render({ autoRenew: false });
 

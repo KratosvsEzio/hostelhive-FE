@@ -826,6 +826,7 @@
     "removeCardMessage": "Perpanjangan otomatis akan nonaktif, dan Anda perlu membayar sendiri setiap tagihan perpanjangan.",
     "autoRenew": "Perpanjang otomatis",
     "autoRenewHint": "Kami akan menagih kartu ini saat paket Anda diperpanjang.",
+    "autoRenewOffHint": "Anda membayar sendiri setiap tagihan perpanjangan.",
     "autoRenewResumeHint": "Lanjutkan paket Anda untuk memperpanjang secara otomatis.",
     "saveCardFailed": "Kami tidak dapat membuka Safepay untuk menyimpan kartu Anda. Coba lagi.",
     "removeCardFailed": "Kami tidak dapat menghapus kartu Anda. Coba lagi.",

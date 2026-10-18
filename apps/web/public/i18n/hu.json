@@ -821,6 +821,7 @@
     "removeCardMessage": "Az automatikus megújítás kikapcsol, és minden megújítási számlát magadnak kell kifizetned.",
     "autoRenew": "Automatikus megújítás",
     "autoRenewHint": "A csomagod megújításakor ezt a kártyát terheljük.",
+    "autoRenewOffHint": "Minden megújítási számlát magad fizetsz ki.",
     "autoRenewResumeHint": "Folytasd a csomagodat az automatikus megújításhoz.",
     "saveCardFailed": "Nem sikerült megnyitni a Safepayt a kártyád mentéséhez. Próbáld újra.",
     "removeCardFailed": "Nem sikerült eltávolítani a kártyádat. Próbáld újra.",
