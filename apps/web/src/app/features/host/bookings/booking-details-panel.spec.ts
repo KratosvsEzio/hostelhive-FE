@@ -229,7 +229,7 @@ describe('BookingDetailsPanel', () => {
 
     expect(api.occupancies).toHaveBeenCalledWith('MjvuEl', 'b1');
     expect(el.textContent).toContain('Room 101 · 2 guests');
-    expect(el.textContent).toContain('Released');
+    expect(el.textContent).toContain('hostBookings.released');
 
     [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
     expect(api.releaseOccupancy).toHaveBeenCalledWith('MjvuEl', 'b1', 'o1', { suppressErrorToast: true });
@@ -238,7 +238,7 @@ describe('BookingDetailsPanel', () => {
     // release, so the panel shows what the server confirmed rather than reading it again.
     expect(api.occupancies).toHaveBeenCalledTimes(1);
     expect([...el.querySelectorAll('button')].some((x) => x.textContent?.trim() === 'Release')).toBe(false);
-    expect(el.textContent?.split('Released').length).toBe(3);
+    expect(el.textContent?.split('hostBookings.released').length).toBe(3);
   });
 
   it('shows a released room as released at once, though the rooms endpoint still lists it active', () => {
@@ -258,7 +258,7 @@ describe('BookingDetailsPanel', () => {
     const rooms = [...el.querySelectorAll('li')].filter((li) => li.textContent?.trim().startsWith('Room'));
     expect(rooms.map((li) => li.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
       'Room 101 · 2 guests Release',
-      'Room 102 · 1 guest Released',
+      'Room 102 · 1 guest hostBookings.released',
     ]);
     expect(rooms[1].querySelector('span')?.className).toContain('line-through');
     expect(api.occupancies).toHaveBeenCalledTimes(1);
@@ -269,7 +269,7 @@ describe('BookingDetailsPanel', () => {
       occupancies: [{ id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true }],
     });
     const el = render(b, { rows: [{ id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true }] });
-    expect(el.textContent).not.toContain('Released');
+    expect(el.textContent).not.toContain('hostBookings.released');
 
     // The page's get() reads the database: the same booking, with the room now inactive.
     fixture.componentInstance.booking.set({
@@ -278,7 +278,7 @@ describe('BookingDetailsPanel', () => {
     });
     fixture.detectChanges();
 
-    expect(el.textContent).toContain('Released');
+    expect(el.textContent).toContain('hostBookings.released');
     expect([...el.querySelectorAll('button')].some((x) => x.textContent?.trim() === 'Release')).toBe(false);
     expect(api.occupancies).toHaveBeenCalledTimes(1);
   });
@@ -310,13 +310,27 @@ describe('BookingDetailsPanel', () => {
     const el = render(booking('checked-in'), { rows });
     [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
     fixture.detectChanges();
-    expect(el.textContent).toContain('Released');
+    expect(el.textContent).toContain('hostBookings.released');
 
     fixture.componentInstance.booking.set(booking('checked-in', { id: 'b2' }));
     fixture.detectChanges();
 
     expect(api.occupancies).toHaveBeenLastCalledWith('MjvuEl', 'b2');
-    expect(el.textContent).not.toContain('Released');
+    expect(el.textContent).not.toContain('hostBookings.released');
+  });
+
+  it('drops a release error when it moves on to another booking', () => {
+    const rows = [{ id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true }];
+    const el = render(booking('checked-in'), { rows });
+    api.releaseOccupancy.mockReturnValue(throwError(() => releaseRefusal('Room 101 is locked.')));
+    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+    fixture.detectChanges();
+    expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom');
+
+    fixture.componentInstance.booking.set(booking('checked-in', { id: 'b2' }));
+    fixture.detectChanges();
+
+    expect(el.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('does not re-read the rooms when the same booking comes back marked paid', () => {
@@ -362,6 +376,19 @@ describe('BookingDetailsPanel', () => {
       guests,
       active,
     });
+    const releaseButtons = (el: HTMLElement) =>
+      [...el.querySelectorAll<HTMLButtonElement>('button')].filter((x) => x.textContent?.trim() === 'Release');
+    const roomRows = (el: HTMLElement) =>
+      [...el.querySelectorAll('li')]
+        .filter((li) => li.textContent?.trim().startsWith('Room'))
+        .map((li) =>
+          [...li.children]
+            .map((child) => child.textContent?.replace(/\s+/g, ' ').trim())
+            .filter(Boolean)
+            .join(' '),
+        );
+    const roomLi = (el: HTMLElement, room: string) =>
+      [...el.querySelectorAll('li')].find((li) => li.textContent?.trim().startsWith(`Room ${room}`));
 
     it('turns Generate invoice into View invoice in the same slot once the invoice is known', () => {
       const checkedIn = booking('checked-in', settled);
@@ -474,6 +501,7 @@ describe('BookingDetailsPanel', () => {
       expect(text).toContain('Room 101 · 2 guests');
       expect(text).toContain('Room 102 · 1 guest');
       expect(text.split('hostBookings.checkedOut').length - 1).toBe(2);
+      expect(text).not.toContain('hostBookings.released');
       expect(text).not.toContain('Release');
       expect(labels(el)).not.toContain('In rooms');
       expect(api.occupancies).not.toHaveBeenCalled();
@@ -483,9 +511,32 @@ describe('BookingDetailsPanel', () => {
       const el = render(booking('cancelled', { occupancies: [occupancy('o1', '201', 3, true)] }));
 
       expect(labels(el)).toContain('hostBookings.stayedIn');
-      expect(el.textContent).toContain('Room 201 · 3 guests');
-      expect(el.textContent).not.toContain('Release');
+      expect(roomRows(el)).toEqual(['Room 201 · 3 guests hostBookings.released']);
+      expect(el.textContent).not.toContain('hostBookings.checkedOut');
+      expect(releaseButtons(el)).toHaveLength(0);
       expect(api.occupancies).not.toHaveBeenCalled();
+    });
+
+    it('labels every room of a cancelled stay released, never checked out', () => {
+      const rooms = [occupancy('o1', '201', 3, true), occupancy('o2', '202', 1, false)];
+      const el = render(booking('cancelled', { occupancies: rooms }));
+      const text = el.textContent ?? '';
+
+      expect(labels(el)).toContain('hostBookings.stayedIn');
+      expect(roomRows(el)).toEqual([
+        'Room 201 · 3 guests hostBookings.released',
+        'Room 202 · 1 guest hostBookings.released',
+      ]);
+      expect(text.split('hostBookings.released').length - 1).toBe(2);
+      expect(text).not.toContain('hostBookings.checkedOut');
+    });
+
+    it('has no stayed-in section for a cancelled booking with no rooms recorded', () => {
+      const el = render(booking('cancelled', { occupancies: [] }));
+
+      expect(labels(el)).not.toContain('hostBookings.stayedIn');
+      expect(el.textContent).not.toContain('hostBookings.checkedOut');
+      expect(el.textContent).not.toContain('hostBookings.released');
     });
 
     it('shows the live rooms block, not the history, while checked in', () => {
@@ -515,16 +566,106 @@ describe('BookingDetailsPanel', () => {
       expect(el.querySelector('[role="alert"]')).toBeNull();
     });
 
-    it('announces nothing and shows translated copy, not the server text, when a release is refused', () => {
-      const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
-      api.releaseOccupancy.mockReturnValue(throwError(() => releaseRefusal('Occupancy is already inactive')));
+    describe('when a release is refused because the room was already released', () => {
+      const alreadyReleased = () => throwError(() => releaseRefusal('Occupancy is already inactive'));
 
-      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
-      fixture.detectChanges();
+      it('draws the room struck through and released, with no button', () => {
+        const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
+        api.releaseOccupancy.mockReturnValue(alreadyReleased());
 
-      expect(fixture.componentInstance.released).toEqual([]);
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased');
-      expectNoLeak(el, 'Occupancy is already inactive');
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests hostBookings.released']);
+        expect(roomLi(el, '101')?.querySelector('span')?.className).toContain('line-through');
+        expect(releaseButtons(el)).toHaveLength(0);
+      });
+
+      it('shows translated copy naming the room, not the server text', () => {
+        const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
+        api.releaseOccupancy.mockReturnValue(alreadyReleased());
+        const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+
+        expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased');
+        expect(translate.mock.calls.filter((c) => c[0] === 'hostBookings.roomAlreadyReleased').map((c) => c[1])).toContainEqual({
+          room: '101',
+        });
+        expectNoLeak(el, 'Occupancy is already inactive');
+      });
+
+      it('announces the booking once so the page can read it again', () => {
+        const b = booking('checked-in', settled);
+        const el = render(b, { rows: [occupancy('o1', '101', 2, true)] });
+        api.releaseOccupancy.mockReturnValue(alreadyReleased());
+
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.released).toEqual([b]);
+      });
+
+      it('does not read the rooms again', () => {
+        const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
+        api.releaseOccupancy.mockReturnValue(alreadyReleased());
+
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+
+        expect(api.occupancies).toHaveBeenCalledTimes(1);
+      });
+
+      it('leaves the other rooms releasable', () => {
+        const rows = [occupancy('o1', '101', 2, true), occupancy('o2', '102', 1, true)];
+        const el = render(booking('checked-in', settled), { rows });
+        api.releaseOccupancy.mockReturnValue(alreadyReleased());
+
+        releaseButtons(el)[1].click();
+        fixture.detectChanges();
+
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release', 'Room 102 · 1 guest hostBookings.released']);
+        const remaining = releaseButtons(el);
+        expect(remaining).toHaveLength(1);
+        expect(remaining[0].disabled).toBe(false);
+        expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
+      });
+
+      it('keeps the message and the released room when the page swaps in the re-read booking', () => {
+        const b = booking('checked-in', settled);
+        const el = render(b, { rows: [occupancy('o1', '101', 2, true)] });
+        api.releaseOccupancy.mockReturnValue(alreadyReleased());
+
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+        fixture.componentInstance.booking.set({ ...b, occupancies: [occupancy('o1', '101', 2, false)] });
+        fixture.detectChanges();
+
+        expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased');
+        expect(roomRows(el)).toEqual(['Room 101 · 2 guests hostBookings.released']);
+        expect(releaseButtons(el)).toHaveLength(0);
+        expect(api.occupancies).toHaveBeenCalledTimes(1);
+      });
+
+      it('clears the message once another room is released', () => {
+        const rows = [occupancy('o1', '101', 2, true), occupancy('o2', '102', 1, true)];
+        const el = render(booking('checked-in', settled), { rows });
+        api.releaseOccupancy.mockReturnValueOnce(alreadyReleased());
+
+        releaseButtons(el)[1].click();
+        fixture.detectChanges();
+        expect(el.querySelector('[role="alert"]')).not.toBeNull();
+
+        releaseButtons(el)[0].click();
+        fixture.detectChanges();
+
+        expect(el.querySelector('[role="alert"]')).toBeNull();
+        expect(roomRows(el)).toEqual([
+          'Room 101 · 2 guests hostBookings.released',
+          'Room 102 · 1 guest hostBookings.released',
+        ]);
+      });
     });
 
     it.each([
@@ -540,6 +681,8 @@ describe('BookingDetailsPanel', () => {
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
+      expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+      expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
       expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom');
       expect(translate.mock.calls.filter((c) => c[0] === 'hostBookings.couldNotReleaseRoom').map((c) => c[1])).toContainEqual({
         room: '101',
@@ -554,6 +697,8 @@ describe('BookingDetailsPanel', () => {
       [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
       fixture.detectChanges();
 
+      expect(fixture.componentInstance.released).toEqual([]);
+      expect(releaseButtons(el)).toHaveLength(1);
       expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('common.cannotReachTheServer');
       expectNoLeak(el);
     });

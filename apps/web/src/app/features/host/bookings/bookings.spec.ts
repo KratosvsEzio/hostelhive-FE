@@ -1053,11 +1053,11 @@ describe('HostBookings', () => {
       deps.bookings.releaseOccupancy.mockReturnValue(of(undefined));
       deps.bookings.get.mockReturnValue(of(checkedIn({ occupancies: [occupancy({ active: false })] })));
       const page = await openCheckedInPanel(deps);
-      expect(panelText(page)).not.toContain('Released');
+      expect(panelText(page)).not.toContain('hostBookings.released');
 
       await clickRelease(page);
 
-      expect(panelText(page)).toContain('Room 101 · 2 guests Released');
+      expect(panelText(page)).toContain('Room 101 · 2 guests hostBookings.released');
       const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
       expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
       expect(api(page).rows()[0].occupancies.every((o) => !o.active)).toBe(true);
@@ -1080,7 +1080,7 @@ describe('HostBookings', () => {
       await clickRelease(page);
 
       expect(deps.bookings.releaseOccupancy).toHaveBeenCalledWith(HOSTEL_ID, 'zz-9', 'oc-7', QUIET);
-      expect(panelText(page)).toContain('Room 102 · 1 guest Released');
+      expect(panelText(page)).toContain('Room 102 · 1 guest hostBookings.released');
       expect(api(page).viewing()?.occupancies[0].active).toBe(false);
     });
 
@@ -1098,6 +1098,41 @@ describe('HostBookings', () => {
         [HOSTEL_ID, 'bk-i'],
       ]);
       expect(deps.bookings.list.mock.calls.length).toBe(before + 1);
+    });
+
+    it('marks the room released and re-reads the booking when the server says it was already released', async () => {
+      const deps = hostPageDeps();
+      deps.bookings.releaseOccupancy.mockReturnValue(throwError(() => refusal('Occupancy is already inactive')));
+      deps.bookings.get.mockReturnValue(of(checkedIn({ occupancies: [occupancy({ active: false })] })));
+      const page = await openCheckedInPanel(deps);
+
+      await clickRelease(page);
+
+      expect(deps.bookings.get.mock.calls).toEqual([
+        [HOSTEL_ID, 'bk-i', QUIET],
+        [HOSTEL_ID, 'bk-i'],
+      ]);
+      expect(api(page).rows()[0].occupancies.every((o) => !o.active)).toBe(true);
+      expect(panelText(page)).toContain('Room 101 · 2 guests hostBookings.released');
+      const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
+      expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
+      expect(panelText(page)).toContain('hostBookings.roomAlreadyReleased');
+      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
+    });
+
+    it('refetches the list and keeps the room released when the re-read after an already-released refusal fails', async () => {
+      const deps = hostPageDeps();
+      deps.bookings.releaseOccupancy.mockReturnValue(throwError(() => refusal('Occupancy is already inactive')));
+      deps.bookings.get.mockReturnValue(throwError(() => apiError(500, [], 'GET')));
+      const page = await openCheckedInPanel(deps);
+      const before = deps.bookings.list.mock.calls.length;
+
+      await clickRelease(page);
+
+      expect(deps.bookings.list.mock.calls.length).toBe(before + 1);
+      expect(panelText(page)).toContain('Room 101 · 2 guests hostBookings.released');
+      const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
+      expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
     });
   });
 

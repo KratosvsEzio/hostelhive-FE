@@ -1293,6 +1293,7 @@
     "invoiceNotPaid": "Pemesanan ditandai lunas, tetapi fakturnya tidak. {{reason}}",
     "stayedIn": "Menginap di",
     "checkedOut": "Sudah check-out",
+    "released": "Dilepas",
     "cancelOpenInvoiceWarning": "Pemesanan ini memiliki faktur yang belum dibayar ({{invoice}}). Membatalkan pemesanan tidak menghapusnya.",
     "bookingNotFound": "Kami tidak dapat menemukan pemesanan itu.",
     "notEnoughBedsFree": "Salah satu kamar ini tidak lagi memiliki tempat tidur kosong sebanyak itu. Tempatkan lebih sedikit tamu di sana atau pilih kamar lain.",
@@ -1303,7 +1304,7 @@
     "invoiceAlreadyExists": "Pemesanan ini sudah memiliki faktur.",
     "giveTheGuestAReason": "Berikan alasan kepada tamu — alasan ini dikirim kepadanya dan disimpan di pemesanan.",
     "moveNotAccepted": "Server tidak menerimanya. Silakan coba lagi.",
-    "roomAlreadyReleased": "Kamar ini sudah dilepas. Muat ulang untuk melihat kamar pemesanan.",
+    "roomAlreadyReleased": "Kamar {{room}} sudah dilepas.",
     "couldNotReleaseRoom": "Tidak dapat melepas kamar {{room}}. Silakan coba lagi.",
     "invoiceNoLongerExists": "Faktur tidak ditemukan. Mungkin sudah dihapus.",
     "payTheInvoiceOnItsOwn": "Buka fakturnya dan tandai lunas di sana."

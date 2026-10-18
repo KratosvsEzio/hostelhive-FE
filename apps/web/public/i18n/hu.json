@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "A foglalás fizetettként megjelölve, a számla azonban nem. {{reason}}",
     "stayedIn": "Itt szállt meg",
     "checkedOut": "Távozott",
+    "released": "Felszabadítva",
     "cancelOpenInvoiceWarning": "Ehhez a foglaláshoz kifizetetlen számla tartozik ({{invoice}}). A lemondás nem törli.",
     "bookingNotFound": "Nem találjuk ezt a foglalást.",
     "notEnoughBedsFree": "Az egyik szobában már nincs ennyi szabad ágy. Helyezzen el ott kevesebb vendéget, vagy válasszon másik szobát.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Ehhez a foglaláshoz már tartozik számla.",
     "giveTheGuestAReason": "Adjon meg indoklást a vendégnek — elküldjük neki, és a foglalásnál is megmarad.",
     "moveNotAccepted": "A szerver ezt nem fogadta el. Kérjük, próbálja újra.",
-    "roomAlreadyReleased": "Ez a szoba már fel lett szabadítva. Frissítse az oldalt a foglalás szobáinak megtekintéséhez.",
+    "roomAlreadyReleased": "A(z) {{room}} szoba már fel lett szabadítva.",
     "couldNotReleaseRoom": "Nem sikerült felszabadítani a(z) {{room}} szobát. Kérjük, próbálja újra.",
     "invoiceNoLongerExists": "A számla nem található. Lehet, hogy törölték.",
     "payTheInvoiceOnItsOwn": "Nyissa meg a számlát, és ott jelölje meg fizetettként."

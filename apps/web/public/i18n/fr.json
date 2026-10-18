@@ -1288,6 +1288,7 @@
     "invoiceNotPaid": "La réservation a été marquée comme payée, mais pas la facture. {{reason}}",
     "stayedIn": "A séjourné dans",
     "checkedOut": "Départ effectué",
+    "released": "Libérée",
     "cancelOpenInvoiceWarning": "Cette réservation a une facture impayée ({{invoice}}). L'annulation ne la supprime pas.",
     "bookingNotFound": "Nous n'avons pas trouvé cette réservation.",
     "notEnoughBedsFree": "L'une de ces chambres n'a plus autant de lits libres. Placez-y moins de clients ou choisissez une autre chambre.",
@@ -1298,7 +1299,7 @@
     "invoiceAlreadyExists": "Cette réservation a déjà une facture.",
     "giveTheGuestAReason": "Indiquez un motif au client — il lui est envoyé et conservé dans la réservation.",
     "moveNotAccepted": "Le serveur n'a pas accepté cette opération. Veuillez réessayer.",
-    "roomAlreadyReleased": "Cette chambre a déjà été libérée. Actualisez pour voir les chambres de la réservation.",
+    "roomAlreadyReleased": "La chambre {{room}} a déjà été libérée.",
     "couldNotReleaseRoom": "Impossible de libérer la chambre {{room}}. Veuillez réessayer.",
     "invoiceNoLongerExists": "La facture est introuvable. Elle a peut-être été supprimée.",
     "payTheInvoiceOnItsOwn": "Ouvrez la facture et marquez-la comme payée depuis celle-ci."
