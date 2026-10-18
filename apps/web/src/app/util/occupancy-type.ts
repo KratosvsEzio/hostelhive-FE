@@ -23,14 +23,28 @@ export function isOccupancyType(value: unknown): value is OccupancyType {
 }
 
 /**
+ * The string the search index stores for each occupancy type.
+ *
+ * The app (URLs, filters, pickers) says `private`; the backend enum, and so every indexed
+ * `room_types.occupancy_type`, says `private_room`. `f[room_types.occupancy_type]` is an exact
+ * term, so sending `private` matched no hostel at all. Translate here, at the API boundary,
+ * the way `coliving` becomes `co-living`, and keep `private` everywhere else so old links
+ * still resolve. A `Record` so a third type is a compile error rather than a silent miss.
+ */
+export const OCCUPANCY_WIRE_VALUE: Record<OccupancyType, string> = {
+  private: 'private_room',
+  shared: 'shared',
+};
+
+/**
  * Every spelling of "sold whole" this app has to understand.
  *
  * `GET /api/hostels/new` publishes the slug `private_room`; the seeker filters and the older
  * host code say `private`. They mean the same thing, and the difference is invisible until it
  * is not: a `=== 'private'` that meets `private_room` answers *shared*, which prices a whole
- * room per bed, draws it as a row of pips, and offers it a bed at a time. No live hostel has a
- * private room yet, so nothing has hit that — but the check has to survive both spellings
- * rather than depend on which one arrives.
+ * room per bed, draws it as a row of pips, and offers it a bed at a time. Live hostels do
+ * carry `private_room` rooms, so the check has to survive both spellings rather than depend
+ * on which one arrives.
  */
 const PRIVATE_SLUGS: readonly string[] = ['private', 'private_room'];
 

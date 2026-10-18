@@ -156,10 +156,24 @@ describe('ListingsApi room type filter', () => {
     expect(api.lastParams['f[room_types.occupancy_type]']).toBe('shared');
   });
 
-  it('passes private through unchanged', () => {
+  it('translates private to the indexed private_room value', () => {
     setUp().list({ roomType: 'private' }).subscribe();
 
-    expect(api.lastParams['f[room_types.occupancy_type]']).toBe('private');
+    expect(api.lastParams['f[room_types.occupancy_type]']).toBe('private_room');
+  });
+
+  it('falls back to shared for an unrecognised room type instead of sending it raw', () => {
+    setUp().list({ roomType: 'penthouse' }).subscribe();
+
+    expect(api.lastParams['f[room_types.occupancy_type]']).toBe('shared');
+  });
+
+  it('keeps the private price field for a private search', () => {
+    setUp().list({ roomType: 'private', minPrice: 1000 }).subscribe();
+
+    const keys = Object.keys(api.lastParams).filter((k) => k.includes('occupancy_price_from'));
+    expect(keys).toHaveLength(1);
+    expect(keys[0].startsWith('f[private_occupancy_price_from.')).toBe(true);
   });
 
   it('no longer sends the flat room_type key', () => {
