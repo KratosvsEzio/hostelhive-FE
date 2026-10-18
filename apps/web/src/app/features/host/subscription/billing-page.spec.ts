@@ -2106,6 +2106,22 @@ describe('BillingPage', () => {
         expect(cardError(el)).toBe('Choose a plan first');
       });
 
+      it('shows its own words for a 403, never the server’s, and does not reload', async () => {
+        const el = await openWith(withCard());
+
+        click(byTestId(el, 'card-remove'));
+        click(buttonByText(modal(el), 'hostBilling.removeCard'));
+        refuse(cardRemovals[0], {
+          status: 403,
+          serverMessages: ['You are not authorized to access this page.'],
+        });
+
+        expect(cardError(el)).toBe('hostBilling.planChangeForbidden');
+        expect(el.textContent).not.toContain('not authorized');
+        expect(disabled(el, 'card-remove')).toBe(false);
+        expect(api.billing).toHaveBeenCalledTimes(1);
+      });
+
       it('falls back to its own copy for any other failure, and unlocks', async () => {
         const el = await openWith(withCard());
 
@@ -2460,6 +2476,74 @@ describe('BillingPage', () => {
       );
     });
 
+    it('shows the profile link when the refusal is the missing country', async () => {
+      const el = await openWith(billing());
+
+      click(subscribeOf(el, 'pBasic'));
+      failSubscribe({
+        status: 422,
+        serverMessages: ["Set the hostel's country first"],
+      });
+
+      const alert = expectErrorOnlyIn(el, 'pBasic');
+      expect(alert.textContent).toContain("Set the hostel's country first");
+      expect(alert.querySelector('a')?.getAttribute('href')).toMatch(
+        /\/host\/nHelLt\/profile$/,
+      );
+    });
+
+    it('says it could not start when the network fails with no status at all', async () => {
+      const el = await openWith(billing());
+
+      click(subscribeOf(el, 'pBasic'));
+      failSubscribe({ status: 0 });
+
+      expect(expectErrorOnlyIn(el, 'pBasic').textContent?.trim()).toBe(
+        'hostBilling.checkoutFailed',
+      );
+      expect(subscribeOf(el, 'pBasic')?.disabled).toBe(false);
+    });
+
+    it('reloads billing when the plan is gone', async () => {
+      const el = await openWith(billing());
+
+      click(subscribeOf(el, 'pBasic'));
+      failSubscribe({ status: 404 });
+
+      expect(api.billing).toHaveBeenCalledTimes(2);
+    });
+
+    it('reloads billing when a bank transfer is already waiting for verification', async () => {
+      const el = await openWith(billing());
+
+      click(subscribeOf(el, 'pBasic'));
+      failSubscribe({
+        status: 422,
+        serverMessages: [
+          'A bank transfer for invoice HH-2026-0007 is waiting for verification',
+        ],
+      });
+
+      expect(api.billing).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not reload billing for any other refusal', async () => {
+      const el = await openWith(billing());
+
+      click(subscribeOf(el, 'pBasic'));
+      failSubscribe({ status: 422, serverMessages: ['Not in this currency'] });
+
+      expect(api.billing).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays available to someone who may buy but not change the plan', async () => {
+      const el = await openWith(billing(), ['core:Invoice:create']);
+
+      expect(subscribeOf(el, 'pBasic')?.disabled).toBe(false);
+      click(subscribeOf(el, 'pBasic'));
+      expect(safepay.startSubscribe).toHaveBeenCalledWith('nHelLt', 'pBasic');
+    });
+
     it('is disabled for someone who may not buy', async () => {
       const el = await openWith(billing(), ['core:Invoice:index']);
 
@@ -2646,6 +2730,19 @@ describe('BillingPage', () => {
       expect(el.querySelectorAll('[data-field="reason"]').length).toBe(0);
     });
 
+    it('says nothing above the plans when no plan sends a reason', async () => {
+      const base = safepayBilled();
+      const el = await openWith({
+        ...base,
+        plans: base.plans.map((p) => ({ ...p, reason: undefined })),
+      });
+
+      expect(byTestId(el, 'safepay-notice')).toBeNull();
+      expect(planButtonOf(el, 'pPremium')?.textContent?.trim()).toBe(
+        'hostBilling.currentPlanButton',
+      );
+    });
+
     it('hides the saved card and its auto-renew switch', async () => {
       const el = await openWith(safepayBilled());
 
@@ -2676,6 +2773,18 @@ describe('BillingPage', () => {
       expect(plain(byTestId(el, 'cancel-message')?.textContent)).toBe(
         'Your plan stays active until 3 Dec 2026.',
       );
+    });
+
+    it('never reads a past-due plan as a free trial, whatever Safepay still reports', async () => {
+      const el = await openWith(
+        safepayBilled({ safepay_status: 'TRAILING', status: PAST_DUE }),
+      );
+
+      expect(statusText(el)).toContain('hostBilling.wasDueOn');
+      expect(statusText(el)).not.toContain('Free trial until');
+      // Cancel plan is offered only on an active plan, so no trial cancel confirm is reachable.
+      expect(byTestId(el, 'card-cancel')).toBeNull();
+      expect(modal(el)).toBeNull();
     });
 
     describe('in its free trial', () => {
@@ -2719,6 +2828,36 @@ describe('BillingPage', () => {
 
         expect(api.cancelSubscription).toHaveBeenCalledWith('nHelLt');
       });
+    });
+
+    it('offers Subscribe through Safepay again once the plan has expired', async () => {
+      const el = await openWith(
+        billing({
+          subscription: subscription({
+            billed_by: 'safepay_subscription',
+            safepay_status: 'ACTIVE',
+            status: { id: 5, name: 'Expired', slug: 'expired', color: null },
+          }),
+          plans: [plan({ trial_days: 14 }), plan({ id: 'pGrowth' })],
+        }),
+      );
+
+      expect(byTestId(el, 'safepay-notice')).toBeNull();
+      expect(planButtonOf(el, 'pBasic')?.textContent?.trim()).toBe(
+        'hostBilling.choosePlan',
+      );
+      expect(
+        el
+          .querySelector(
+            'hh-plan-card[data-plan="pBasic"] [data-testid="plan-subscribe"]',
+          )
+          ?.textContent?.trim(),
+      ).toBe('Start 14-day free trial');
+      expect(
+        el.querySelector(
+          'hh-plan-card[data-plan="pGrowth"] [data-testid="plan-subscribe"]',
+        ),
+      ).not.toBeNull();
     });
 
     it('follows the server again once the plan is no longer live', async () => {
@@ -2845,6 +2984,24 @@ describe('BillingPage', () => {
 
       expect(api.scheduleDowngrade).not.toHaveBeenCalled();
       expect(api.cancelSubscription).not.toHaveBeenCalled();
+    });
+
+    it('closes the subscribe confirm for an unpaid invoice and sends nothing', async () => {
+      const el = await openWith(billing({ open_invoice: openInvoice() }));
+
+      click(
+        el.querySelector(
+          'hh-plan-card[data-plan="pGrowth"] [data-testid="plan-subscribe"]',
+        ),
+      );
+      expect(modalTitle(el)).toBe('hostBilling.subscribeOpenInvoiceTitle');
+      const now = await go('other1');
+      expect(modal(now)).toBeNull();
+
+      loads[1].next(billing({ open_invoice: openInvoice() }));
+      harness.detectChanges();
+      expect(modal(now)).toBeNull();
+      expect(safepay.startSubscribe).not.toHaveBeenCalled();
     });
 
     it('drops an answer from an earlier visit to the same hostel, without unlocking a newer change', async () => {

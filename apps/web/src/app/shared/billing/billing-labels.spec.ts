@@ -786,4 +786,9 @@ describe('isSafepayTrial', () => {
     );
     expect(isSafepayTrial(null)).toBe(false);
   });
+
+  // A trial charges nothing, so a past-due plan is never one, whatever Safepay still reports.
+  it('is false for a past-due plan, even when Safepay still says TRAILING', () => {
+    expect(isSafepayTrial(trial('past-due'))).toBe(false);
+  });
 });

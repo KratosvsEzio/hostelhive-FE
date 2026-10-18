@@ -581,6 +581,27 @@ describe('bannerFor', () => {
       });
     });
 
+    it('notes the paused boost while past due when the plan has one', () => {
+      const sub = withSlug('past-due', {
+        current_period_end: iso(NOW - DAY),
+        grace_until: iso(NOW + DAY),
+        plan: { id: 'p', code: 'all', name: 'All', features: ['boost', 'crm'] },
+      });
+      expect(bannerFor(owner(safepay(sub)), NOW)).toMatchObject({
+        messageKey: 'hostAccess.pastDueSafepay',
+        boostPaused: true,
+      });
+    });
+
+    it.each([
+      ['renewing', subscription({ current_period_end: iso(NOW + DAY) }), 'hostAccess.renewsSoon'],
+      ['renew-due', subscription({ current_period_end: iso(NOW - DAY) }), 'hostAccess.renewDue'],
+    ])('ignores a stale auto-renew flag while %s', (kind, sub, key) => {
+      const state = bannerFor(owner(safepay(sub, { auto_renew: true })), NOW);
+      expect(state).toMatchObject({ kind, messageKey: key, action: 'goToBilling' });
+      expect(state?.messageKey).not.toMatch(/Card$/);
+    });
+
     it.each([
       ['renewing', subscription({ current_period_end: iso(NOW + DAY) }), 'hostAccess.renewsSoon'],
       ['renew-due', subscription({ current_period_end: iso(NOW - DAY) }), 'hostAccess.renewDue'],

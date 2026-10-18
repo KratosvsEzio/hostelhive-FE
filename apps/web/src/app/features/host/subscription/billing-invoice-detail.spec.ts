@@ -841,6 +841,37 @@ describe('BillingInvoiceDetail', () => {
         'HH-2026-0007',
       );
     });
+
+    it('tags a scheduled and a saved-card charge, and leaves a customer payment untagged', async () => {
+      const el = await open();
+      TestBed.inject(TranslocoService).setTranslation(
+        {
+          hostBillingHistory: {
+            initiatedSchedule: 'Charged automatically',
+            initiatedUpgrade: 'Saved card',
+          },
+        },
+        'en',
+      );
+      respond(
+        invoice({
+          payments: [
+            payment({ id: 'p1', initiated_by: 'schedule' }),
+            payment({ id: 'p2', initiated_by: 'upgrade' }),
+            payment({ id: 'p3', initiated_by: 'customer' }),
+          ],
+        }),
+      );
+      const rows = Array.from(
+        el.querySelectorAll('hh-payment-attempts [data-testid="attempt"]'),
+      );
+
+      // Newest first, so the customer attempt leads.
+      expect(
+        rows.map((r) => text(r.querySelector('[data-field="initiator"]'))),
+      ).toEqual(['', 'Saved card', 'Charged automatically']);
+      expect(rows[0].querySelector('[data-field="initiator"]')).toBeNull();
+    });
   });
 
   describe('back to billing history', () => {

@@ -294,6 +294,22 @@ describe('CurrentPlanCard', () => {
         ]);
       });
 
+      it('shows the past-due lines, not a free trial, when Safepay still says TRAILING', () => {
+        const el = render(
+          safepay('past-due', {
+            safepay_status: 'TRAILING',
+            grace_until: '2026-11-15T00:00:00.000+05:00',
+          }),
+        );
+
+        expect(lines(el)).toEqual([
+          'Billed monthly by Safepay',
+          'Payment was due on 12 Nov 2026',
+          'Pay by 15 Nov 2026 to keep your listing',
+        ]);
+        expect(text(el)).not.toContain('Free trial until');
+      });
+
       it('only says when it ends while cancelling, trial or not', () => {
         const el = render(
           safepay('active', {

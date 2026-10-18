@@ -32,9 +32,16 @@ export function isSafepayBilled(sub: BillingSubscription | null): boolean {
   return slug === 'active' || slug === 'past-due';
 }
 
-/** Whether a Safepay-billed plan is in its free trial, which Safepay reports as `TRAILING`. */
+/**
+ * Whether a Safepay-billed plan is in its free trial, which Safepay reports as `TRAILING`. A trial
+ * charges nothing, so a past-due plan is never treated as one, whatever Safepay's status says.
+ */
 export function isSafepayTrial(sub: BillingSubscription | null): boolean {
-  return isSafepayBilled(sub) && sub?.safepay_status === 'TRAILING';
+  return (
+    isSafepayBilled(sub) &&
+    sub?.status.slug === 'active' &&
+    sub.safepay_status === 'TRAILING'
+  );
 }
 
 /** Pill tone for an invoice status. The pill's label comes from {@link billingInvoiceStatusKey}. */
