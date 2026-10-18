@@ -9,13 +9,20 @@ import { stubListings } from './support/stubs';
 const SITE = 'https://hostelhive.com';
 const POST = 'student-hostels-in-lahore-a-practical-guide';
 
-/** Pages that are `noindex`: a filtered, an "everywhere", an unknown place and an unknown post. */
+/**
+ * Pages that are `noindex`: a filtered search, an "everywhere" search, a place search opened on
+ * a viewport link that frames the place, an unknown place and an unknown post.
+ */
 const NOINDEX_PAGES = [
   '/en/search?gender=girls',
   '/en/search?everywhere=1',
+  '/en/search/lahore?ne_lat=31.75&ne_lng=74.70&sw_lat=31.30&sw_lng=74.00',
   '/en/hostels/nowhere',
   '/en/blog/no-such-post',
 ];
+
+/** A place search whose link carries a viewport nowhere near Lahore (31.5, 74.4). */
+const FAR_VIEWPORT_SEARCH = '/en/search/lahore?ne_lat=20&ne_lng=100&sw_lat=10&sw_lng=90';
 
 /** Indexable pages, and the canonical each one must keep. */
 const INDEXABLE_PAGES: [string, string][] = [
@@ -34,6 +41,17 @@ const JSON_LD_PAGES: [string, string[]][] = [
   [`/en/blog/${POST}`, ['article', 'breadcrumb']],
 ];
 
+/** The text of the first `<h1>` in raw HTML, minus its markup and the server's anchor comments. */
+function h1Of(html: string): string | null {
+  const match = /<h1\b[^>]*>([\s\S]*?)<\/h1>/.exec(html);
+  if (!match) return null;
+  return match[1]
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 test.describe('server-rendered head', () => {
   // Some pages wait on the listings API before the server finishes rendering.
   test.setTimeout(120_000);
@@ -51,6 +69,23 @@ test.describe('server-rendered head', () => {
       expect(head.hreflangs).toBe(0);
     });
   }
+
+  test(`${FAR_VIEWPORT_SEARCH} is titled and headed as the map area, not as the place`, async ({
+    request,
+  }) => {
+    const res = await request.get(FAR_VIEWPORT_SEARCH, { timeout: 100_000 });
+    expect(res.ok()).toBe(true);
+
+    const html = await res.text();
+    const head = headOf(html);
+
+    expect(head.robots).toContain('noindex');
+    expect(head.canonicals).toEqual([]);
+    expect(head.ogUrls).toEqual([]);
+    expect(head.hreflangs).toBe(0);
+    expect(head.title).toBe('Hostels in this map area — search | HostelHive');
+    expect(h1Of(html)).toBe('This map area');
+  });
 
   for (const [path, canonical] of INDEXABLE_PAGES) {
     test(`${path} keeps one canonical, a matching og:url and its hreflang set`, async ({

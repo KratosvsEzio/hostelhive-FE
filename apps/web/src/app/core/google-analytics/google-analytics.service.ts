@@ -1,11 +1,12 @@
 import { DestroyRef, Injectable, Injector, PLATFORM_ID, effect, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Navigation, NavigationEnd, Router, UrlTree } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
 import { googleAnalyticsEnv } from '@app/google-analytics.env';
 import { routePath } from '@core/i18n/locales';
+import { isSamePageRefinement } from '@core/navigation/same-page-refinement';
 import { pagePath } from '@core/scroll-reset';
 import { Seo } from '@core/seo';
 import { googleAnalyticsConsent } from './google-analytics-consent';
@@ -69,47 +70,6 @@ export function isMarketplacePath(url: string): boolean {
   const path = routePath(url);
   if (path === '/host') return false; // exact, so /hostel/:id still counts
   return !NON_MARKETPLACE.some((p) => path.startsWith(p));
-}
-
-/**
- * True when a landed navigation only refines the page already counted, so it is not a new
- * page view. Exported for tests.
- *
- * `nav` is the router's record of the navigation that just ended, and `url` its
- * `urlAfterRedirects`. Two cases, both compared with the locale prefix kept, as `page_path`
- * is, so a replace that only changes the language still counts:
- *
- * 1. **A same-path replace issued by the app** — the search map writing its viewport, a pan,
- *    a zoom, the listing clearing `?review`. Trigger, `replaceUrl` and a previous navigation
- *    are all required because the router marks more than these as `replaceUrl`: the initial
- *    navigation is an imperative replace with nothing before it, and Back/Forward arrive as
- *    `popstate` replaces (`_router-chunk.mjs:4237-4243`, `:4466-4470`). A visitor stepping
- *    back between two search entries is moving to a page, not refining one.
- * 2. **A fragment-only move** — a blog contents link — whatever its trigger: same path, same
- *    query, a different `#fragment`. `scroll-reset` treats it as the same page for the same
- *    reason.
- *
- * Pushed query changes (a filter Apply, an amenity toggle, a place pick) are not refinements
- * and stay page views.
- */
-export function isSamePageRefinement(
-  nav: Pick<Navigation, 'trigger' | 'extras' | 'previousNavigation'>,
-  url: string,
-  serialize: (tree: UrlTree) => string,
-): boolean {
-  const previousTree = nav.previousNavigation?.finalUrl;
-  // No page counted before this one (the first load), so there is nothing to refine.
-  if (!previousTree) return false;
-  const previous = serialize(previousTree);
-
-  const withoutFragment = (u: string) => u.split('#')[0];
-  if (previous !== url && withoutFragment(previous) === withoutFragment(url)) return true;
-
-  return (
-    nav.trigger === 'imperative' &&
-    !!nav.extras.replaceUrl &&
-    pagePath(previous) === pagePath(url)
-  );
 }
 
 /**

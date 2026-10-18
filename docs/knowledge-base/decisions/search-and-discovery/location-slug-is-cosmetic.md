@@ -12,7 +12,7 @@ Searches used to produce `/search?place=Karachi&lat=…&lng=…`. A readable `/s
 - The slug is decoration. `SearchBar.search()` navigates to `searchRouteFor(place)` and still sends `place`, `lat`, `lng`, `zoom` as query params; those drive the query and camera.
 - Only when the URL carries a slug and **no** coordinates (a pasted link) does `resolveSearchSlug` look it up in `PLACES` and `UNIVERSITIES` (city zoom 11, campus zoom 13). An uncurated slug searches country-wide.
 - `toLocationSlug` folds diacritics (`Multān` → `multan`); a name with no Latin letters yields no slug and falls back to bare `/search`.
-- The viewport is mirrored as `ne_lat/ne_lng/sw_lat/sw_lng` with `replaceUrl`, so refresh and shared links reproduce the view without adding history entries.
+- The viewport is mirrored as `ne_lat/ne_lng/sw_lat/sw_lng` with `replaceUrl`, so refresh and shared links reproduce the view without adding history entries. A search link that arrives carrying a viewport (all four keys valid) is a view: `noindex`, no canonical, even when it frames the place ([viewport links are views](./viewport-links-are-views-not-pages.md)).
 
 ## Alternatives rejected
 
@@ -24,7 +24,7 @@ Searches used to produce `/search?place=Karachi&lat=…&lng=…`. A readable `/s
 
 - Never resolve a slug when `lat`/`lng` are present; explicit coordinates win (`slugPlace` in `search-map.ts`).
 - `/search/map` must stay declared before `:location`, or "map" is read as a place.
-- The heading falls back through `place` → curated name → unslugified slug → framed country → "Pakistan".
+- The heading falls back through `place` (or `city`) → curated name → unslugified slug → framed country → "Pakistan". A named place is shown only while the map frames it; once the map no longer frames the place, the heading and title read "This map area", as they do on a bare `/search` once the visitor has chosen the area (`areaChosen`). A place with no known centre (an uncurated slug) always counts as framed ([viewport links are views](./viewport-links-are-views-not-pages.md)).
 - **The canonical follows the query's place too** (`canonicalPlace`: `toLocationSlug(place || city)`, then the slug). The slug used to win there, so a pick that kept an old slug (`/search/lahore?place=Karachi…`) canonicalised to `/hostels/lahore`. Links shared before that fix still carry such slugs, which is why the query takes precedence rather than the slug being trusted (PR #86).
 - A new place always gets its own slug (`searchRouteFor` via `SearchMap.startSearch`), so new URLs no longer pair one place's slug with another's query.
 - **No in-place navigation may remove a place the path still names; leave the path instead.** A query merge can null `place`/`lat`/`lng`, but the slug answers whenever the query is silent. "Search everywhere" on `/search/<slug>` used to merge in place, so a pan after it brought the slug back as the heading and an indexable canonical. It now leaves for `/search?everywhere=1` (Trello #128, PR #133). This is the fifth instance of the shape, after #106, #109, #110 and #120. Patching the slug's readers one by one was rejected: there are at least five (`slugPlace`, `canonicalPlace`, `locationName`, `placeText`, `SearchBar`'s `placeName`), and a component flag would not survive a refresh or a shared link.

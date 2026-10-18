@@ -1,12 +1,13 @@
 import { expect, Page, test } from '@playwright/test';
 import { captureAnalytics, expectAnalyticsOn, gaEvents } from './support/analytics';
-import { dragMap, waitForMap } from './support/map';
-import { KARACHI_PHOTON, ListingsStub, stubListings, stubPhoton } from './support/stubs';
+import { dragMap, dragMapOnce, waitForMap, waitForQuiet } from './support/map';
+import { KARACHI_PHOTON, stubListings, stubPhoton } from './support/stubs';
 
-// Two things PR #172 changed about the bare search page (Trello #157, #161), checked with a real
-// mouse pan and the events the app actually hands to gtag:
+// Two things about the bare search page, checked with a real mouse pan and the events the app
+// actually hands to gtag:
 // - the heading names what is on screen: the framed country until the visitor picks the area,
-//   then "This map area". A search that names a place keeps its name (Trello #160, unchanged);
+//   then "This map area". A search that names a place keeps its name while the map frames the
+//   place, and reads "This map area" once it no longer does;
 // - every `search_performed` says what started it, so map browsing no longer counts as searching.
 
 const LAHORE_SLUG_SEARCH = '/en/search/lahore';
@@ -28,28 +29,6 @@ async function stubVisitorCountry(page: Page): Promise<void> {
 
 /** The desktop results heading (the phone layout hides it). */
 const heading = (page: Page) => page.locator('hh-search-map h1');
-
-/**
- * Waits until no listings search has gone out for `quietMs`. A search is sent 600 ms after its
- * inputs last changed, so this outlasts any camera settling still to come; anything the page
- * was going to report by itself has been sent by then.
- */
-async function waitForQuiet(seen: ListingsStub, quietMs = 2_500): Promise<void> {
-  let count = -1;
-  let since = Date.now();
-  await expect
-    .poll(
-      () => {
-        if (seen.requests.length !== count) {
-          count = seen.requests.length;
-          since = Date.now();
-        }
-        return Date.now() - since;
-      },
-      { timeout: 20_000, intervals: [250] },
-    )
-    .toBeGreaterThanOrEqual(quietMs);
-}
 
 /** The `trigger` of every `search_performed` sent so far. */
 const triggers = async (page: Page) =>
@@ -82,25 +61,16 @@ test.describe('the bare search heading after a pan', () => {
     await expect.poll(() => page.title()).toMatch(/^Hostels in this map area/);
   });
 
-  test('a search that names a place keeps its name after a pan (Trello #160)', async ({ page }) => {
+  test('a short pan that still frames the named place keeps its name', async ({ page }) => {
     const seen = await stubListings(page);
     await stubVisitorCountry(page);
 
     await page.goto(LAHORE_SLUG_SEARCH);
     await waitForMap(page, seen);
     await expect(heading(page)).toHaveText('Lahore');
-    // Let the camera settle on Lahore first, so the URL change below is the drag's own.
     await waitForQuiet(seen);
 
-    const before = page.url();
-    await expect(async () => {
-      await dragMap(page);
-      expect(new URL(page.url()).searchParams.get('ne_lat')).not.toBe(
-        new URL(before).searchParams.get('ne_lat'),
-      );
-    }).toPass({ timeout: 20_000, intervals: [1_000, 2_000, 3_000] });
-
-    await waitForQuiet(seen);
+    await dragMapOnce(page, seen);
     await expect(heading(page)).toHaveText('Lahore');
     await expect.poll(() => page.title()).toContain('Lahore');
   });

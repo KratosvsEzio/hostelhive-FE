@@ -9,8 +9,10 @@ import { LOCALE_CODES } from '@core/i18n/locales';
  *
  * Search is deliberately NOT here. Every search URL carries its own directive — an
  * unfiltered one canonicalises to its `/hostels/:place` landing page, a filtered one is
- * `noindex` — and a crawler has to fetch the page to read either. Blocking it would hide
- * the very instructions that keep filter permutations out of the index.
+ * `noindex`, and so is a search link that arrives carrying a viewport (all four
+ * `ne_*`/`sw_*` keys valid), which is a view rather than a page — and a crawler has to fetch
+ * the page to read any of them. Blocking it would hide the very instructions that keep
+ * filter and viewport permutations out of the index.
  */
 export const DISALLOWED_PATHS = [
   // Authenticated consoles — render client-side only, so a crawler sees an empty shell.
