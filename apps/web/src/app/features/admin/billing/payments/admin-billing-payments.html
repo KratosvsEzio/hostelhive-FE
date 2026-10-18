@@ -1,0 +1,137 @@
+<app-dashboard-layout [label]="'adminBilling.titles.payments' | transloco">
+  <div class="flex flex-col gap-5">
+    <hh-admin-billing-tabs />
+
+    @if (notice(); as n) {
+      <hh-toast
+        tone="success"
+        [dismissible]="true"
+        (dismissed)="dismissNotice()"
+        data-testid="notice"
+        >{{ n.key | transloco: n.params }}</hh-toast
+      >
+    }
+
+    <div class="flex flex-wrap items-center gap-3">
+      <hh-search
+        class="flex-1 sm:w-80 sm:flex-none"
+        [withScope]="false"
+        [term]="query().hostel"
+        (termChange)="onSearch($event)"
+        [placeholder]="'adminBilling.common.searchHostel' | transloco"
+        [ariaLabel]="'adminBilling.common.searchHostel' | transloco"
+        data-testid="hostel-search"
+      />
+      <span class="h-5 w-px shrink-0 bg-ink-200" aria-hidden="true"></span>
+      <hh-global-filter
+        [groups]="filterGroups()"
+        [value]="filterValues()"
+        (apply)="applyFilters($event)"
+      />
+      @if (result(); as r) {
+        <p class="ms-auto text-sm text-ink-500" data-testid="payments-count">
+          {{ 'adminBilling.payments.count' | transloco: { count: r.page.total } }}
+        </p>
+      }
+    </div>
+
+    @switch (view().kind) {
+      @case ('loading') {
+        <hh-skeleton
+          class="h-80"
+          radius="lg"
+          aria-busy="true"
+          data-testid="payments-loading"
+        />
+      }
+      @case ('forbidden') {
+        <hh-error-state
+          [message]="'adminBilling.errors.forbidden' | transloco"
+          [showRetry]="false"
+          data-testid="payments-forbidden"
+        />
+      }
+      @case ('error') {
+        <hh-error-state
+          [message]="'adminBilling.common.loadError' | transloco"
+          [retryLabel]="'adminBilling.common.retry' | transloco"
+          [networkError]="networkError()"
+          (retry)="retry()"
+          data-testid="payments-error"
+        />
+      }
+      @case ('ready') {
+        @switch (emptyKind()) {
+          @case ('empty') {
+            <hh-empty-state
+              icon="ti-credit-card"
+              [title]="'adminBilling.payments.empty' | transloco"
+              data-testid="payments-empty"
+            />
+          }
+          @case ('noMatch') {
+            <hh-empty-state
+              icon="ti-filter-off"
+              [title]="'adminBilling.payments.noMatch' | transloco"
+              data-testid="payments-no-match"
+            >
+              <button
+                hh-button
+                variant="outlined"
+                size="sm"
+                type="button"
+                (click)="clearFilters()"
+                data-testid="clear-filters"
+              >
+                {{ 'common.showAll' | transloco }}
+              </button>
+            </hh-empty-state>
+          }
+          @default {
+            <div class="flex flex-col gap-3">
+              <hh-data-table
+                minWidth="1280px"
+                [columns]="columns()"
+                [rows]="rows()"
+                [rowId]="rowId"
+                [sort]="tableSort()"
+                [canClearSort]="false"
+                [rowClickable]="true"
+                [pagination]="pagination()"
+                (sortChange)="onSort($event)"
+                (rowClick)="open($event)"
+                (pageChange)="goToPage($event)"
+                data-testid="payments-table"
+              />
+              <div
+                class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-400"
+              >
+                <p class="flex items-center gap-1.5">
+                  <i class="ti ti-clock" aria-hidden="true"></i>
+                  {{ 'adminBilling.common.datesUtc' | transloco }}
+                </p>
+                @if (!amountSortable()) {
+                  <p
+                    class="flex items-center gap-1.5"
+                    data-testid="amount-sort-hint"
+                  >
+                    <i class="ti ti-info-circle" aria-hidden="true"></i>
+                    {{ 'adminBilling.payments.amountSortHint' | transloco }}
+                  </p>
+                }
+              </div>
+            </div>
+          }
+        }
+      }
+    }
+  </div>
+
+  @if (selected(); as row) {
+    <hh-admin-payment-drawer
+      [row]="row"
+      (closed)="close()"
+      (handled)="onHandled($event)"
+    />
+  }
+</app-dashboard-layout>

@@ -335,3 +335,86 @@ describe('DataTable composite secondary badges', () => {
     expect(pill.className).not.toContain('bg-brand-50');
   });
 });
+
+/**
+ * A clickable row is often the only way into its detail, so it has to open from the keyboard
+ * as well as the mouse — and a table whose rows do nothing must not add tab stops.
+ */
+describe('DataTable keyboard rows', () => {
+  let fixture: ComponentFixture<DataTable>;
+  let clicked: unknown[];
+
+  async function render(rowClickable: boolean): Promise<HTMLTableRowElement> {
+    globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [DataTable],
+      providers: [provideTranslocoTesting()],
+    }).compileComponents();
+    fixture = TestBed.createComponent(DataTable);
+    fixture.componentRef.setInput('columns', [
+      { key: 'name', label: 'Name', cell: () => ({ kind: 'text', value: 'A' }) },
+    ] satisfies ColumnDef[]);
+    fixture.componentRef.setInput('rows', ROWS);
+    fixture.componentRef.setInput('rowId', (r: { id: string }) => r.id);
+    fixture.componentRef.setInput('rowClickable', rowClickable);
+    fixture.componentRef.setInput('showActions', true);
+    clicked = [];
+    fixture.componentInstance.rowClick.subscribe((r) => clicked.push(r));
+    fixture.detectChanges();
+    return fixture.debugElement.query(By.css('tbody tr'))
+      .nativeElement as HTMLTableRowElement;
+  }
+
+  function press(target: HTMLElement, key: string): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      bubbles: true,
+      cancelable: true,
+    });
+    target.dispatchEvent(event);
+    fixture.detectChanges();
+    return event;
+  }
+
+  it('makes a clickable row a tab stop with a visible focus ring', async () => {
+    const tr = await render(true);
+    expect(tr.getAttribute('tabindex')).toBe('0');
+    expect(tr.className).toContain('focus-visible:ring-2');
+  });
+
+  it('opens the row on Enter', async () => {
+    const tr = await render(true);
+    press(tr, 'Enter');
+    expect(clicked).toEqual([ROWS[0]]);
+  });
+
+  it('opens the row on Space, without scrolling the page', async () => {
+    const tr = await render(true);
+    const event = press(tr, ' ');
+    expect(clicked).toEqual([ROWS[0]]);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('ignores other keys', async () => {
+    const tr = await render(true);
+    press(tr, 'a');
+    expect(clicked).toEqual([]);
+  });
+
+  it('does not act on keys aimed at a control inside the row', async () => {
+    await render(true);
+    const button = fixture.debugElement.query(By.css('tbody button'))
+      .nativeElement as HTMLElement;
+    press(button, 'Enter');
+    expect(clicked).toEqual([]);
+  });
+
+  it('adds no tab stop and no key handling to a row that is not clickable', async () => {
+    const tr = await render(false);
+    expect(tr.hasAttribute('tabindex')).toBe(false);
+    const event = press(tr, ' ');
+    expect(clicked).toEqual([]);
+    expect(event.defaultPrevented).toBe(false);
+  });
+});

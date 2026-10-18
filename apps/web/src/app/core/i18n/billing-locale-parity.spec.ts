@@ -7,6 +7,7 @@ const GROUPS = [
   'publicPricing',
   'hostBillingHistory',
   'hostAccess',
+  'adminBilling',
 ];
 const SINGLE_KEYS = [
   'hostNav.billing',
@@ -24,6 +25,15 @@ const RETIRED_KEYS = [
   'hostBilling.switchComingSoon',
   'hostBilling.scheduledForRenewal',
   'common.subscription',
+  'adminAdminPayments.payments',
+  'adminAdminPayments.noPaymentsMatchThisFilter',
+  'adminAdminPayments.subscriptionPaymentsOnlyDistinctFrom',
+  'adminAdminPayments.method',
+  'adminAdminPayments.transactionId',
+  'adminAdminPayments.created',
+  'adminAdminPayments.contract',
+  'adminAdminPayments.product',
+  'adminAdminPayments.searchPaymentsByHostel',
 ];
 
 /** The billing-related keys of one locale, as path -> text. */

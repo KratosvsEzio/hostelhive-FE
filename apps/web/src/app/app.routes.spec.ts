@@ -15,6 +15,10 @@ import { BLOG_POSTS } from '@features/public/blog/blog-posts';
 import { BillingPage } from '@features/host/subscription/billing-page';
 import { PaymentStep } from '@features/host/subscription/payment-step';
 import { Pricing } from '@features/public/pricing/pricing';
+import { Role, SessionStore } from '@core/auth';
+import { AdminBillingPayments } from '@features/admin/billing/payments/admin-billing-payments';
+import { AdminVerification } from '@features/admin/billing/verification/admin-verification';
+import { AdminHostelBilling } from '@features/admin/billing/hostel/admin-hostel-billing';
 
 @Component({ selector: 'hh-route-stub', template: '' })
 class RouteStub {}
@@ -130,6 +134,74 @@ describe('the removed billing and contract URLs', () => {
 
     expect(settled.url).toBe(path);
     expect(settled.original).toBe(component);
+  });
+});
+
+describe('the admin billing URLs', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  /** Signs in as a session holding these roles and every flag, so only the role decides. */
+  function signInAs(...roles: Role[]): void {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: SessionStore,
+          useValue: {
+            hasRole: (...wanted: Role[]) => roles.some((r) => wanted.includes(r)),
+            hasPermission: () => true,
+          },
+        },
+      ],
+    });
+  }
+
+  it.each([
+    ['/admin/payments', '/admin/billing/payments'],
+    ['/ur/admin/payments', '/ur/admin/billing/payments'],
+  ])('sends the old payments page %s to %s', async (path, target) => {
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe(target);
+    expect(settled.original).toBe(AdminBillingPayments);
+  });
+
+  it.each(['/admin/billing', '/ur/admin/billing'])(
+    'opens the verification queue at %s',
+    async (path) => {
+      const settled = await settleOn(path);
+
+      expect(settled.url).toBe(`${path}/verification`);
+      expect(settled.original).toBe(AdminVerification);
+    },
+  );
+
+  it('serves the billing of one hostel', async () => {
+    const settled = await settleOn('/admin/billing/hostels/nHelLt');
+
+    expect(settled.url).toBe('/admin/billing/hostels/nHelLt');
+    expect(settled.original).toBe(AdminHostelBilling);
+  });
+
+  it.each([
+    ['/admin', '/admin/billing/verification'],
+    ['/ur/admin', '/ur/admin/billing/verification'],
+  ])('lands an admin from %s on the verification queue', async (path, target) => {
+    signInAs('admin');
+
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe(target);
+  });
+
+  it.each([
+    ['/admin', '/admin/roles'],
+    ['/ur/admin', '/ur/admin/roles'],
+  ])('lands a super-admin without the admin role from %s on the first other page', async (path, target) => {
+    signInAs('super-admin');
+
+    const settled = await settleOn(path);
+
+    expect(settled.url).toBe(target);
   });
 });
 
@@ -355,7 +427,11 @@ const EXPECTED_TITLES: Record<string, string> = {
   'host/:hostelId/subscription/invoices': 'Billing history — HostelHive',
   'host/:hostelId/subscription/invoices/:invoiceId': 'Invoice — HostelHive',
   'admin/roles': 'Roles & permissions — HostelHive Admin',
-  'admin/payments': 'Payments — HostelHive Admin',
+  'admin/billing/verification': 'Payments to verify — HostelHive Admin',
+  'admin/billing/payments': 'Payments — HostelHive Admin',
+  'admin/billing/invoices': 'Invoices — HostelHive Admin',
+  'admin/billing/plans': 'Plans & prices — HostelHive Admin',
+  'admin/billing/hostels/:hostelId': 'Hostel billing — HostelHive Admin',
   'admin/listings': 'All listings — HostelHive Admin',
   'admin/queue': 'Review queue — HostelHive Admin',
   'admin/review/:id': 'Listing review — HostelHive Admin',
