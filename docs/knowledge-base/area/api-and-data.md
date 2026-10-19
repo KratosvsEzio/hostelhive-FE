@@ -17,7 +17,11 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 - `tools/generate-api-env.mjs` — writes the git-ignored, generated `api.env.ts` (next to `apps/web/src/app/app.config.ts`) from `.env` `API_URL` (default `http://localhost:3000`); run by `sync-api-env` before build and serve (`apps/web/project.json`).
 
 ## How it works
-Chain order (`apps/web/src/app/app.config.ts`): `authInterceptor` → `pushTokenInterceptor` → `errorInterceptor` → `refetchDelayInterceptor` → `ssrTimeoutInterceptor`. Base URL = `readDevApiBaseUrl() ?? apiEnv.apiUrl`.
+Chain order (`apps/web/src/app/app.config.ts`): `authInterceptor` → `pushTokenInterceptor` → `hostAccessInterceptor` → `errorInterceptor` → `refetchDelayInterceptor` → `ssrTimeoutInterceptor`.
+- `hostAccessInterceptor` sits outside `errorInterceptor`, so it classifies the normalised `ApiError` on the way out.
+- `ssrTimeoutInterceptor` is last, closest to the backend.
+
+Base URL = `apiEnv.apiUrl`, the API origin; paths carry their own `/api` or `/public` prefix. `tools/generate-api-env.mjs` writes it into the git-ignored `apps/web/src/app/api.env.ts` from `API_URL` in the repo-root `.env`, defaulting to `http://localhost:3000`, and the serve and build targets run that script first. It's fixed at build time; nothing reads a URL at runtime. The backend-URL modal and `readDevApiBaseUrl()` were removed in `6b2f13d` (2026-10-10).
 
 `errorInterceptor` turns every failure into `ApiError { status, code, message, serverMessages?, method? }`. `message` is a developer diagnostic, `<METHOD> <pathname> → <status>` (for example `POST /api/user/sign_in → 401`), built by `requestPath`/`diagnostic` in `error-interceptor.ts`. It has no origin, query, `statusText` or server wording; a non-HTTP error such as the SSR `TimeoutError` gets its name in place of the status. Text for users comes only from `serverMessages`, through `toToastCopy` or a classifier. 401 from our origin (credential endpoints excepted) goes to `UNAUTHORIZED_HANDLER`; other failures go to `API_ERROR_NOTIFIER` unless the request set `SUPPRESS_ERROR_TOAST`. The error is always re-thrown, so screens can also classify it and show their own translated copy. 4xx toasts are pinned, 5xx/network auto-dismiss after 6 s (`app.config.ts`).
 
