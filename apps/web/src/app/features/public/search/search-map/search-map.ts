@@ -123,6 +123,15 @@ const roundCoord = (n: number): number => +n.toFixed(6);
  */
 const hasArea = (b: Bounds): boolean => b.north > b.south && b.east > b.west;
 
+/**
+ * The keys Leaflet's keyboard handler moves the camera for: the arrows pan, and the plus
+ * and minus keys zoom (`Map.Keyboard` `keyCodes`, matched on `keyCode` as Leaflet does).
+ * It ignores them under Alt, Ctrl or Meta, so a browser shortcut doesn't count.
+ */
+const MAP_KEYBOARD_CODES = new Set([37, 38, 39, 40, 187, 107, 61, 171, 189, 109, 54, 173]);
+export const isMapKeyboardMove = (e: KeyboardEvent | undefined): boolean =>
+  !!e && !e.altKey && !e.ctrlKey && !e.metaKey && MAP_KEYBOARD_CODES.has(e.keyCode);
+
 /** Resting positions of the mobile results sheet, from just-peeking to covering the map. */
 type SheetSnap = 'peek' | 'half' | 'full';
 
@@ -1359,6 +1368,14 @@ export class SearchMap {
     // would ever re-capture, leaving the search stuck on the unbounded fallback.
     this.sharedMap.listen('resize', () => this.captureMapBounds());
     this.sharedMap.listen('dragstart', () => {
+      this.userInteracted = true;
+      this.leftHomeCountry();
+    });
+    // The keyboard's drag: a focused map pans on the arrow keys and zooms on +/-, and a
+    // keyboard pan raises no `dragstart`. Without this the next results refit the camera
+    // and undo the pan (Trello #212).
+    this.sharedMap.listen('keydown', (e) => {
+      if (!isMapKeyboardMove((e as L.LeafletKeyboardEvent).originalEvent)) return;
       this.userInteracted = true;
       this.leftHomeCountry();
     });

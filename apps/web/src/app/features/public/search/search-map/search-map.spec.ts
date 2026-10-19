@@ -31,7 +31,7 @@ import { DEFAULT_SOCIAL_IMAGE, placeSocialImage } from '@core/social-image';
 import { CurrencyNamePipe } from '@app/shared/currency/currency-name.pipe';
 import { ListingsApi, OffersApi } from '@services';
 import { FavoritesStore } from '@util/favorites-store';
-import { SearchMap } from './search-map';
+import { isMapKeyboardMove, SearchMap } from './search-map';
 
 const SEARCH_URL = '/search/lahore?gender=girls';
 
@@ -158,7 +158,8 @@ function configureSearchMap(config: SearchMapConfig = {}): void {
         useValue: {
           acquire: config.acquire ?? (() => new Promise(() => undefined)),
           release: () => undefined,
-          listen: () => undefined,
+          listen: (event: string, handler: (e: unknown) => void) =>
+            mapListeners.set(event, handler),
         },
       },
       {
@@ -199,7 +200,11 @@ function configureSearchMap(config: SearchMapConfig = {}): void {
 /** The route a routed mount gives the component; null leaves it on the root route. */
 let routedRoute: ActivatedRoute | null = null;
 
+/** The handlers the page registered on the shared map, by Leaflet event name. */
+const mapListeners = new Map<string, (e: unknown) => void>();
+
 function cleanupSearchMap(): void {
+  mapListeners.clear();
   vi.useRealTimers();
   routedRoute = null;
   TestBed.inject(SessionStore).clear();
@@ -2657,5 +2662,128 @@ describe('SearchMap search page viewport write', () => {
       [31.3, 74],
       [31.75, 74.7],
     ]);
+  });
+});
+
+describe('isMapKeyboardMove', () => {
+  const key = (keyCode: number, mods: Partial<KeyboardEvent> = {}) =>
+    ({ keyCode, altKey: false, ctrlKey: false, metaKey: false, ...mods }) as KeyboardEvent;
+
+  it.each([
+    ['left', 37],
+    ['up', 38],
+    ['right', 39],
+    ['down', 40],
+    ['plus', 187],
+    ['numpad plus', 107],
+    ['minus', 189],
+    ['numpad minus', 109],
+  ])('counts the %s key, which Leaflet moves the camera for', (_name, code) => {
+    expect(isMapKeyboardMove(key(code))).toBe(true);
+  });
+
+  it('ignores keys Leaflet does not move the camera for', () => {
+    expect(isMapKeyboardMove(key(13))).toBe(false); // Enter
+    expect(isMapKeyboardMove(key(9))).toBe(false); // Tab
+    expect(isMapKeyboardMove(key(65))).toBe(false); // A
+  });
+
+  it.each([['altKey'], ['ctrlKey'], ['metaKey']])(
+    'ignores an arrow under %s, which Leaflet leaves to the browser',
+    (mod) => {
+      expect(isMapKeyboardMove(key(37, { [mod]: true }))).toBe(false);
+    },
+  );
+
+  it('ignores an event with no key', () => {
+    expect(isMapKeyboardMove(undefined)).toBe(false);
+  });
+});
+
+/**
+ * A focused map pans on the arrow keys, which raise no `dragstart`. The keypress has to
+ * count as the visitor's own move, as a drag does, or the next results refit the camera and
+ * undo the pan (Trello #212).
+ */
+describe('SearchMap keyboard pan', () => {
+  afterEach(cleanupSearchMap);
+
+  const OTHER_PAGE: Paginated<Listing> = { ...ONE_PAGE, items: [{ ...ROSE, id: 'h2' }] };
+
+  /** Opens the map on a place search; resolves once the first results have drawn their pins. */
+  async function openOnPlace() {
+    const list = vi.fn().mockReturnValueOnce(of(ONE_PAGE)).mockReturnValue(of(OTHER_PAGE));
+    const { acquire, camera, leaflet } = fakeLeaflet();
+    Object.assign(camera, cameraAt(PANNED));
+    const { fixture, map } = await mountWatched('/en/search/lahore', { list, acquire });
+    await openMap(fixture, map);
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(leaflet.marker).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 3000 },
+    );
+    const fits = () => camera.fitBounds.mock.calls.length + camera.setView.mock.calls.length;
+    return { fixture, map, list, leaflet, fits };
+  }
+
+  /** The camera settles somewhere new and the differing results draw their pins. */
+  async function nextResults(opened: Awaited<ReturnType<typeof openOnPlace>>) {
+    const { fixture, map, list, leaflet } = opened;
+    const before = list.mock.calls.length;
+    map.captureMapBounds();
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(list.mock.calls.length).toBeGreaterThan(before);
+        expect(leaflet.marker).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 3000 },
+    );
+  }
+
+  const arrowKey = { originalEvent: { keyCode: 37, altKey: false, ctrlKey: false, metaKey: false } };
+
+  it('refits the camera to new results while the visitor has not moved the map', async () => {
+    const opened = await openOnPlace();
+    const fitted = opened.fits();
+
+    await nextResults(opened);
+
+    expect(opened.fits()).toBe(fitted + 1);
+  });
+
+  it('keeps the camera where an arrow-key pan left it when the results change', async () => {
+    const opened = await openOnPlace();
+    const fitted = opened.fits();
+
+    mapListeners.get('keydown')?.(arrowKey);
+    await nextResults(opened);
+
+    expect(opened.fits()).toBe(fitted);
+  });
+
+  it('still refits after a key Leaflet does not move the camera for', async () => {
+    const opened = await openOnPlace();
+    const fitted = opened.fits();
+
+    mapListeners.get('keydown')?.({ originalEvent: { ...arrowKey.originalEvent, keyCode: 13 } });
+    await nextResults(opened);
+
+    expect(opened.fits()).toBe(fitted + 1);
+  });
+
+  it('reads This map area after an arrow-key pan of a bare search', async () => {
+    const { acquire } = fakeLeaflet();
+    const forVisitor = vi.fn().mockResolvedValue(HOME);
+    const { fixture, map } = await mountWatched('/en/search', { acquire, forVisitor });
+    await openMap(fixture, map);
+    expect(h1Text(fixture)).toBe('Pakistan');
+
+    mapListeners.get('keydown')?.(arrowKey);
+    fixture.detectChanges();
+
+    expect(h1Text(fixture)).toBe('searchUi.mapArea');
   });
 });
