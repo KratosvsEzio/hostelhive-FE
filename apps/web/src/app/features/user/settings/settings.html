@@ -102,13 +102,15 @@
     <div class="mt-5 flex items-start justify-between gap-4 border-t border-ink-100 pt-5">
       <div class="min-w-0">
         <p class="text-sm font-medium text-ink-800">{{ 'userSettings.allowAnalytics' | transloco }}</p>
-        <p class="mt-1 text-sm text-ink-400">
+        <p class="mt-1 text-sm text-ink-400" id="analytics-consent-hint">
           {{ 'userSettings.countsPageViewsOnThe' | transloco }}
           <a routerLink="/privacy-policy" class="font-medium text-brand-500 underline">{{ 'common.privacyPolicy' | transloco }}</a>.
         </p>
       </div>
       <hh-toggle
         class="mt-0.5 shrink-0"
+        [label]="'userSettings.allowAnalytics' | transloco"
+        describedBy="analytics-consent-hint"
         [checked]="analyticsAllowed()"
         (checkedChange)="onAnalyticsToggle($event)"
       />

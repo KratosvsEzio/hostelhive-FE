@@ -5,14 +5,23 @@ import { Toggle } from './toggle';
 @Component({
   imports: [Toggle],
   template: `
-    <hh-toggle [(checked)]="on" [disabled]="off()" [describedBy]="hint()" />
+    <hh-toggle
+      [(checked)]="on"
+      [disabled]="off()"
+      [describedBy]="hint()"
+      [label]="name()"
+      [labelledBy]="nameId()"
+    />
     <p id="the-hint">Charged on the renewal date.</p>
+    <p id="the-name">Automatic renewal</p>
   `,
 })
 class Host {
   readonly on = signal(false);
   readonly off = signal(false);
   readonly hint = signal<string | null>(null);
+  readonly name = signal<string | null>(null);
+  readonly nameId = signal<string | null>(null);
 }
 
 async function render() {
@@ -75,5 +84,31 @@ describe('Toggle', () => {
     fixture.detectChanges();
 
     expect(switchEl().hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('has no name of its own until it is given one', async () => {
+    const { switchEl } = await render();
+
+    expect(switchEl().hasAttribute('aria-label')).toBe(false);
+    expect(switchEl().hasAttribute('aria-labelledby')).toBe(false);
+  });
+
+  it('is named by label, set as aria-label on the switch button', async () => {
+    const { fixture, host, switchEl } = await render();
+    host.name.set('Automatic renewal');
+    fixture.detectChanges();
+
+    expect(switchEl().getAttribute('aria-label')).toBe('Automatic renewal');
+  });
+
+  it('is named by labelledBy, pointing the switch button at that text', async () => {
+    const { fixture, host, switchEl } = await render();
+    host.nameId.set('the-name');
+    fixture.detectChanges();
+
+    const id = switchEl().getAttribute('aria-labelledby');
+    expect(id).toBe('the-name');
+    const text = (fixture.nativeElement as HTMLElement).querySelector(`#${id}`)?.textContent;
+    expect(text).toBe('Automatic renewal');
   });
 });

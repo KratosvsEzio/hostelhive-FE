@@ -167,7 +167,7 @@
             </div>
           </div>
           <div class="flex shrink-0 items-center gap-3">
-            <hh-toggle [checked]="cfg.enabled" (checkedChange)="setEnabled(meal, $event)" />
+            <hh-toggle [label]="meta.label" [checked]="cfg.enabled" (checkedChange)="setEnabled(meal, $event)" />
           </div>
         </div>
 

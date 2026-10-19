@@ -397,6 +397,7 @@
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
               <hh-toggle
+                [label]="'hostTenants.transportSection' | transloco"
                 [checked]="transportEnabled()"
                 (checkedChange)="onTransportToggle($event)"
               />
@@ -419,6 +420,7 @@
               </p>
               <div class="flex-1 border-t border-ink-100"></div>
               <hh-toggle
+                [label]="'hostTenants.messSection' | transloco"
                 [checked]="messEnabled()"
                 (checkedChange)="onMessToggle($event)"
               />
@@ -445,6 +447,7 @@
                       {{ 'common.breakfast' | transloco }}
                     </span>
                     <hh-toggle
+                      [label]="'common.breakfast' | transloco"
                       [checked]="f.messBreakfast"
                       (checkedChange)="patchBool('messBreakfast', $event)"
                     />
@@ -460,6 +463,7 @@
                       {{ 'common.lunch' | transloco }}
                     </span>
                     <hh-toggle
+                      [label]="'common.lunch' | transloco"
                       [checked]="f.messLunch"
                       (checkedChange)="patchBool('messLunch', $event)"
                     />
@@ -472,6 +476,7 @@
                       {{ 'common.dinner' | transloco }}
                     </span>
                     <hh-toggle
+                      [label]="'common.dinner' | transloco"
                       [checked]="f.messDinner"
                       (checkedChange)="patchBool('messDinner', $event)"
                     />

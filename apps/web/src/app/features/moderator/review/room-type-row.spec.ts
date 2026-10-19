@@ -68,7 +68,7 @@ describe('RoomTypeRow photos', () => {
     fixture.componentInstance.imageRemoved.subscribe((id) => removed.push(id));
     fixture.componentRef.setInput('images', [image('a')]);
     fixture.detectChanges();
-    fixture.debugElement.query(By.css('button[aria-label]')).nativeElement.click();
+    fixture.debugElement.query(By.css('button[aria-label]:not([role="switch"])')).nativeElement.click();
     fixture.detectChanges();
 
     expect(removed).toEqual(['a']);
