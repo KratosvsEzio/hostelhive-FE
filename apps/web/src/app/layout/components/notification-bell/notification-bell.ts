@@ -24,6 +24,7 @@ import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LocaleLink } from '@core/i18n/locale-link';
 import { notificationTypeStyle } from '@app/shared/notifications/notification-types';
+import { billingPageFor } from '@app/shared/notifications/notification-links';
 
 interface ListState {
   loading: boolean;
@@ -175,6 +176,20 @@ export class NotificationBell {
     void this.router.navigate(['/hostel', invite.associatedId], {
       queryParams: { review: invite.id },
     });
+  }
+
+  protected hasBillingPage(invite: UserInvite): boolean {
+    return billingPageFor(invite) !== null;
+  }
+
+  /** Closes the dropdown and opens the billing page of the hostel a billing notification is
+   *  about (Trello #215). */
+  protected goToBilling(invite: UserInvite, event: Event): void {
+    event.stopPropagation();
+    const page = billingPageFor(invite);
+    if (!page) return;
+    this.close();
+    void this.router.navigate(page);
   }
 
   protected dismiss(invite: UserInvite, event: Event): void {
