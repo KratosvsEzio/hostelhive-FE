@@ -92,6 +92,19 @@
                 <i class="ti ti-star" aria-hidden="true"></i>{{ 'common.review' | transloco }}
               </button>
             </div>
+          } @else if (hasBillingPage(invite)) {
+            <div class="mt-4 flex items-center justify-end">
+              <button
+                hh-button
+                variant="outlined"
+                size="sm"
+                type="button"
+                data-testid="notification-billing"
+                (click)="goToBilling(invite)"
+              >
+                <i class="ti ti-credit-card" aria-hidden="true"></i>{{ 'hostAccess.goToBilling' | transloco }}
+              </button>
+            </div>
           }
         </div>
       }

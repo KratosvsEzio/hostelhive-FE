@@ -59,6 +59,12 @@ export interface UserInvite {
   createdAt: string;
   /** Id of the entity this notification refers to — the hostel id for a review request. */
   associatedId: string;
+  /**
+   * The hostel the notification is about (obfuscated), whatever `associatedId` points at: a
+   * billing notice's invoice, payment or subscription carries its hostel here. `null` for a
+   * notice about the user alone, or when the linked record is gone.
+   */
+  hostelId: string | null;
 }
 
 export interface InvitesResult {
@@ -78,6 +84,7 @@ interface RawNotification {
   expired_at?: string;
   created_at?: string;
   associated_id?: string;
+  hostel_id?: string | null;
 }
 
 interface NotificationsResponse {
@@ -175,5 +182,6 @@ function mapInvite(raw: RawNotification): UserInvite {
     expiredAt: raw.expired_at ?? '',
     createdAt: raw.created_at ?? '',
     associatedId: raw.associated_id ?? '',
+    hostelId: raw.hostel_id || null,
   };
 }

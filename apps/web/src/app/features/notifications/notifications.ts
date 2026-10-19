@@ -20,6 +20,7 @@ import { Router } from '@angular/router';
 import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { notificationTypeStyle } from '@app/shared/notifications/notification-types';
+import { billingPageFor } from '@app/shared/notifications/notification-links';
 
 type TabKey = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -156,6 +157,16 @@ export class NotificationsPage {
     void this.router.navigate(['/hostel', invite.associatedId], {
       queryParams: { review: invite.id },
     });
+  }
+
+  protected hasBillingPage(invite: UserInvite): boolean {
+    return billingPageFor(invite) !== null;
+  }
+
+  /** Opens the billing page of the hostel a billing notification is about (Trello #215). */
+  protected goToBilling(invite: UserInvite): void {
+    const page = billingPageFor(invite);
+    if (page) void this.router.navigate(page);
   }
 
   protected accept(invite: UserInvite): void {
