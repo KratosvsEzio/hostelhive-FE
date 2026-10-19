@@ -54,7 +54,9 @@
                 <span
                   class="text-[11px] font-semibold uppercase tracking-wide"
                   [class]="typeTextColor(invite.inviteType)"
-                >{{ typeLabel(invite.inviteType) }}</span>
+                >@let labelKey = typeLabelKey(invite.inviteType);{{
+                  labelKey ? (labelKey | transloco) : typeFallbackLabel(invite.inviteType)
+                }}</span>
                 @if (invite.status === 'accepted' || invite.status === 'rejected') {
                   <span
                     class="rounded-full px-2 py-0.5 text-[11px] font-medium ring-1"

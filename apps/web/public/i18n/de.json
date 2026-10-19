@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Auswertungen und Umsatzberichte"
   },
   "notifications": {
-    "nUnread": "{{count}} ungelesen"
+    "nUnread": "{{count}} ungelesen",
+    "types": {
+      "mealConfirmation": "Essensbestätigung",
+      "rent": "Miete",
+      "receipt": "Beleg",
+      "cardDeclined": "Karte abgelehnt",
+      "cardExpiring": "Karte läuft bald ab"
+    }
   },
   "currency": {
     "searchNameOrCode": "Name oder Code suchen…",

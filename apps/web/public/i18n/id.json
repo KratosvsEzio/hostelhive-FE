@@ -2176,7 +2176,14 @@
     "analyticsAndRevenueReports": "Analitik dan laporan pendapatan"
   },
   "notifications": {
-    "nUnread": "{{count}} belum dibaca"
+    "nUnread": "{{count}} belum dibaca",
+    "types": {
+      "mealConfirmation": "Konfirmasi makan",
+      "rent": "Sewa",
+      "receipt": "Kuitansi",
+      "cardDeclined": "Kartu ditolak",
+      "cardExpiring": "Kartu segera kedaluwarsa"
+    }
   },
   "currency": {
     "searchNameOrCode": "Cari nama atau kode…",

@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "एनालिटिक्स और राजस्व रिपोर्ट"
   },
   "notifications": {
-    "nUnread": "{{count}} अपठित"
+    "nUnread": "{{count}} अपठित",
+    "types": {
+      "mealConfirmation": "भोजन पुष्टि",
+      "rent": "किराया",
+      "receipt": "रसीद",
+      "cardDeclined": "कार्ड अस्वीकृत",
+      "cardExpiring": "कार्ड जल्द समाप्त होगा"
+    }
   },
   "currency": {
     "searchNameOrCode": "नाम या कोड खोजें…",

@@ -2176,7 +2176,14 @@
     "analyticsAndRevenueReports": "Аналитика и отчёты о доходах"
   },
   "notifications": {
-    "nUnread": "{{count}} непрочитанных"
+    "nUnread": "{{count}} непрочитанных",
+    "types": {
+      "mealConfirmation": "Подтверждение питания",
+      "rent": "Аренда",
+      "receipt": "Квитанция",
+      "cardDeclined": "Карта отклонена",
+      "cardExpiring": "Срок карты скоро истекает"
+    }
   },
   "currency": {
     "searchNameOrCode": "Поиск по названию или коду…",

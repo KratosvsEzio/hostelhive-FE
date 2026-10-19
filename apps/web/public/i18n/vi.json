@@ -2176,7 +2176,14 @@
     "analyticsAndRevenueReports": "Phân tích và báo cáo doanh thu"
   },
   "notifications": {
-    "nUnread": "{{count}} chưa đọc"
+    "nUnread": "{{count}} chưa đọc",
+    "types": {
+      "mealConfirmation": "Xác nhận bữa ăn",
+      "rent": "Tiền thuê",
+      "receipt": "Biên lai",
+      "cardDeclined": "Thẻ bị từ chối",
+      "cardExpiring": "Thẻ sắp hết hạn"
+    }
   },
   "currency": {
     "searchNameOrCode": "Tìm theo tên hoặc mã…",

@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "分析と売上レポート"
   },
   "notifications": {
-    "nUnread": "未読 {{count}} 件"
+    "nUnread": "未読 {{count}} 件",
+    "types": {
+      "mealConfirmation": "食事の確認",
+      "rent": "家賃",
+      "receipt": "領収書",
+      "cardDeclined": "カードが拒否されました",
+      "cardExpiring": "カードの期限が間もなく切れます"
+    }
   },
   "currency": {
     "searchNameOrCode": "名称またはコードで検索…",

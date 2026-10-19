@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Analyser och intäktsrapporter"
   },
   "notifications": {
-    "nUnread": "{{count}} olästa"
+    "nUnread": "{{count}} olästa",
+    "types": {
+      "mealConfirmation": "Måltidsbekräftelse",
+      "rent": "Hyra",
+      "receipt": "Kvitto",
+      "cardDeclined": "Kortet nekades",
+      "cardExpiring": "Kortet går snart ut"
+    }
   },
   "currency": {
     "searchNameOrCode": "Sök på namn eller kod…",

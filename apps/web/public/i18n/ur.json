@@ -2176,7 +2176,14 @@
     "analyticsAndRevenueReports": "تجزیات اور آمدنی کی رپورٹس"
   },
   "notifications": {
-    "nUnread": "{{count}} غیر پڑھے"
+    "nUnread": "{{count}} غیر پڑھے",
+    "types": {
+      "mealConfirmation": "کھانے کی تصدیق",
+      "rent": "کرایہ",
+      "receipt": "رسید",
+      "cardDeclined": "کارڈ مسترد ہو گیا",
+      "cardExpiring": "کارڈ کی میعاد جلد ختم"
+    }
   },
   "currency": {
     "searchNameOrCode": "نام یا کوڈ تلاش کریں…",

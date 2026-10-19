@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Statistiques et rapports de revenus"
   },
   "notifications": {
-    "nUnread": "{{count}} non lus"
+    "nUnread": "{{count}} non lus",
+    "types": {
+      "mealConfirmation": "Confirmation de repas",
+      "rent": "Loyer",
+      "receipt": "Reçu",
+      "cardDeclined": "Carte refusée",
+      "cardExpiring": "Carte expire bientôt"
+    }
   },
   "currency": {
     "searchNameOrCode": "Rechercher par nom ou code…",

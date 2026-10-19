@@ -1735,7 +1735,14 @@
     "viewAllNotifications": "View all notifications"
   },
   "notifications": {
-    "nUnread": "{{count}} unread"
+    "nUnread": "{{count}} unread",
+    "types": {
+      "mealConfirmation": "Meal confirmation",
+      "rent": "Rent",
+      "receipt": "Receipt",
+      "cardDeclined": "Card declined",
+      "cardExpiring": "Card expiring"
+    }
   },
   "publicAbout": {
     "aboutUs": "About Us",

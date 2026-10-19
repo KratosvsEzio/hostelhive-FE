@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "التحليلات وتقارير الإيرادات"
   },
   "notifications": {
-    "nUnread": "{{count}} غير مقروءة"
+    "nUnread": "{{count}} غير مقروءة",
+    "types": {
+      "mealConfirmation": "تأكيد الوجبة",
+      "rent": "الإيجار",
+      "receipt": "إيصال",
+      "cardDeclined": "رُفضت البطاقة",
+      "cardExpiring": "البطاقة تنتهي قريبًا"
+    }
   },
   "currency": {
     "searchNameOrCode": "ابحث بالاسم أو الرمز…",

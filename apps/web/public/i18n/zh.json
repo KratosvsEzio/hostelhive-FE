@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "分析与收入报表"
   },
   "notifications": {
-    "nUnread": "{{count}} 条未读"
+    "nUnread": "{{count}} 条未读",
+    "types": {
+      "mealConfirmation": "用餐确认",
+      "rent": "租金",
+      "receipt": "收据",
+      "cardDeclined": "银行卡被拒",
+      "cardExpiring": "银行卡即将过期"
+    }
   },
   "currency": {
     "searchNameOrCode": "搜索名称或代码…",

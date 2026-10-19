@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Statistiche e report sui ricavi"
   },
   "notifications": {
-    "nUnread": "{{count}} non letti"
+    "nUnread": "{{count}} non letti",
+    "types": {
+      "mealConfirmation": "Conferma pasto",
+      "rent": "Affitto",
+      "receipt": "Ricevuta",
+      "cardDeclined": "Carta rifiutata",
+      "cardExpiring": "Carta in scadenza"
+    }
   },
   "currency": {
     "searchNameOrCode": "Cerca per nome o codice…",

@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Analyser og omsætningsrapporter"
   },
   "notifications": {
-    "nUnread": "{{count}} ulæste"
+    "nUnread": "{{count}} ulæste",
+    "types": {
+      "mealConfirmation": "Måltidsbekræftelse",
+      "rent": "Husleje",
+      "receipt": "Kvittering",
+      "cardDeclined": "Kort afvist",
+      "cardExpiring": "Kort udløber snart"
+    }
   },
   "currency": {
     "searchNameOrCode": "Søg på navn eller kode…",
