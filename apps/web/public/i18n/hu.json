@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Elemzések és bevételi jelentések"
   },
   "notifications": {
-    "nUnread": "{{count}} olvasatlan"
+    "nUnread": "{{count}} olvasatlan",
+    "types": {
+      "mealConfirmation": "Étkezési visszaigazolás",
+      "rent": "Bérleti díj",
+      "receipt": "Nyugta",
+      "cardDeclined": "Kártya elutasítva",
+      "cardExpiring": "Kártya hamarosan lejár"
+    }
   },
   "currency": {
     "searchNameOrCode": "Keresés név vagy kód alapján…",

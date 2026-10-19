@@ -89,7 +89,7 @@ describe('NotificationsPage — type styles', () => {
     const seen = look(await render(), 'd1');
 
     expect(seen.icon).toContain('ti-credit-card');
-    expect(seen.label).toBe('Card declined');
+    expect(seen.label).toBe('notifications.types.cardDeclined');
     expect(seen.tile).toContain('bg-danger/10');
     expect(seen.labelClass).toContain('text-danger');
   });
@@ -98,7 +98,7 @@ describe('NotificationsPage — type styles', () => {
     const seen = look(await render(), 'e1');
 
     expect(seen.icon).toContain('ti-credit-card');
-    expect(seen.label).toBe('Card expiring');
+    expect(seen.label).toBe('notifications.types.cardExpiring');
     expect(seen.tile).toContain('bg-warn/10');
     expect(seen.labelClass).toContain('text-warn');
   });
@@ -107,7 +107,7 @@ describe('NotificationsPage — type styles', () => {
     const el = await render();
 
     expect(look(el, 'r1').icon).toContain('ti-cash');
-    expect(look(el, 'r1').label).toBe('Rent');
+    expect(look(el, 'r1').label).toBe('notifications.types.rent');
     expect(look(el, 'x1').icon).toContain('ti-bell');
     expect(look(el, 'x1').label).toBe('Hostel Invite');
   });

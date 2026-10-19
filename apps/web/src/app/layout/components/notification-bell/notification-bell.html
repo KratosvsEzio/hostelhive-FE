@@ -61,7 +61,9 @@
                   <span
                     class="text-[10px] font-semibold uppercase tracking-wide"
                     [class]="typeTextColor(invite.inviteType)"
-                  >{{ typeLabel(invite.inviteType) }}</span>
+                  >@let labelKey = typeLabelKey(invite.inviteType);{{
+                    labelKey ? (labelKey | transloco) : typeFallbackLabel(invite.inviteType)
+                  }}</span>
                   <p class="mt-0.5 text-sm font-medium text-ink-900">{{ invite.message }}</p>
                   <div class="mt-1 flex items-center gap-2">
                     <span class="text-[11px] text-ink-500">{{ timeAgo(invite.createdAt) }}</span>

@@ -2176,7 +2176,14 @@
     "analyticsAndRevenueReports": "Analizy i raporty przychodów"
   },
   "notifications": {
-    "nUnread": "{{count}} nieprzeczytanych"
+    "nUnread": "{{count}} nieprzeczytanych",
+    "types": {
+      "mealConfirmation": "Potwierdzenie posiłku",
+      "rent": "Czynsz",
+      "receipt": "Paragon",
+      "cardDeclined": "Karta odrzucona",
+      "cardExpiring": "Karta wkrótce wygaśnie"
+    }
   },
   "currency": {
     "searchNameOrCode": "Szukaj nazwy lub kodu…",

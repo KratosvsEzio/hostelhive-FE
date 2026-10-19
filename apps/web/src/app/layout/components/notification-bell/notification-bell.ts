@@ -233,8 +233,12 @@ export class NotificationBell {
     return notificationTypeStyle(type).icon;
   }
 
-  protected typeLabel(type: string): string {
-    return notificationTypeStyle(type).label;
+  protected typeLabelKey(type: string): string | null {
+    return notificationTypeStyle(type).labelKey;
+  }
+
+  protected typeFallbackLabel(type: string): string {
+    return notificationTypeStyle(type).fallbackLabel;
   }
 
   protected typeBg(type: string): string {

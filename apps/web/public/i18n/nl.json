@@ -2171,7 +2171,14 @@
     "analyticsAndRevenueReports": "Statistieken en omzetrapporten"
   },
   "notifications": {
-    "nUnread": "{{count}} ongelezen"
+    "nUnread": "{{count}} ongelezen",
+    "types": {
+      "mealConfirmation": "Maaltijdbevestiging",
+      "rent": "Huur",
+      "receipt": "Bon",
+      "cardDeclined": "Kaart geweigerd",
+      "cardExpiring": "Kaart verloopt binnenkort"
+    }
   },
   "currency": {
     "searchNameOrCode": "Zoek op naam of code…",

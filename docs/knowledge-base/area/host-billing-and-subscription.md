@@ -12,7 +12,7 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - `apps/web/src/app/services/billing-api.ts`, `host-billing-store.ts` (the console's billing for the shown hostel), `apps/web/src/app/shared/billing/billing-banner.ts` (banner and access logic) and `layout/components/billing-banner/billing-banner.ts`.
 - `apps/web/src/app/core/interceptors/host-access-interceptor.ts` and `apps/web/src/app/core/host-access/host-access.ts` (`classifyHostAccess`) — record the plan refusals the server sends; `apps/web/src/app/layout/components/access-lock/access-lock.ts` — `<hh-access-lock>`, which the host shell shows instead of a locked section.
 - `apps/web/src/app/layout/components/subscription-gate/subscription-gate.ts` and `apps/web/src/app/util/subscription-error.ts` — the inline paywall for a refused request. `isSubscriptionError(err)` means "this hostel needs a plan" (a 402, or the 400 "You need to subscribe…"); it is never true for a 403.
-- `apps/web/src/app/shared/notifications/notification-types.ts` — icon and label per notification type, shared by the notifications page and the bell.
+- `apps/web/src/app/shared/notifications/notification-types.ts` — icon, colours and translated name (`labelKey`, `notifications.types.*`) per notification type, shared by the notifications page and the bell. An unknown type gets a bell and its name title-cased (`fallbackLabel`). `notification-types-locale-parity.spec.ts` reads `KNOWN_NOTIFICATION_TYPES`, so a new type fails until all 18 languages name it.
 
 ## How it works
 - **The server decides.** Prices, prorations, plan actions, `payment_methods` and `auto_renew` all come from `GET …/billing`; the frontend never calculates money, passes ids through as returned, and shows a 422's `errors[0]` verbatim.
@@ -45,7 +45,7 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - **The billing page has no `permissionGuard`, on purpose.** The paywall card links every host there (comment in `subscription.routes.ts`).
 - **Never test `billed_by` alone.** It stays `safepay_subscription` after the plan expires, until an invoice is paid; use `isSafepayBilled()`, so an expired Safepay plan gets the invoice flows back.
 - **A past-due Safepay-billed plan is a dead end on the page.** Every plan is unavailable and cancel needs `active`, so the host can only wait for Safepay's retry (code-proven, not seen live).
-- **Hard-coded English:** notification labels (`notification-types.ts`), the paywall card's benefits list (`BENEFITS` in `subscription-gate.ts`) and the drawer's renew notice (`booking-form-drawer.html`). The last two are Trello #199.
+- **Hard-coded English:** the paywall card's benefits list (`BENEFITS` in `subscription-gate.ts`) and the drawer's renew notice (`booking-form-drawer.html`), both Trello #199. Notification type names are translated (`notifications.types.*`, Trello #214).
 
 ## Decisions
 - [Billing rewrite built against backend PR #26, host billing core first](../decisions/host-billing-and-subscription/billing-rewrite-against-unmerged-backend.md)
