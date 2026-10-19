@@ -32,7 +32,7 @@ export class SharedMap {
   /** Registered by the current borrower — detached on release, so handlers never stack
    *  up across navigations. Leaflet's `off` matches on the handler reference, so the
    *  exact pair has to be kept. */
-  private listeners: { event: string; handler: () => void }[] = [];
+  private listeners: { event: string; handler: L.LeafletEventHandlerFn }[] = [];
 
   /**
    * Mounts the shared map inside `parent`, building it on the first call only.
@@ -68,7 +68,7 @@ export class SharedMap {
   }
 
   /** Adds a map listener scoped to the current borrow; detached by `release()`. */
-  listen(event: string, handler: () => void): void {
+  listen(event: string, handler: L.LeafletEventHandlerFn): void {
     if (!this.map) return;
     this.map.on(event, handler);
     this.listeners.push({ event, handler });
