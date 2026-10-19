@@ -1,12 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
-  effect,
   input,
   output,
-  viewChild,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Button, Card, StatusPill, Toggle } from '@hostelhive/ui';
@@ -167,6 +164,7 @@ export function cardExpiry(
             <hh-toggle
               [checked]="autoRenewShown()"
               [disabled]="switchDisabled()"
+              [describedBy]="hintId"
               (checkedChange)="autoRenewChange.emit($event)"
             />
           </label>
@@ -206,8 +204,6 @@ export class SavedCard {
 
   protected readonly hintId = HINT_ID;
 
-  private readonly switchHost = viewChild(Toggle, { read: ElementRef });
-
   protected readonly expiry = computed(() =>
     cardExpiry(this.card()?.expires_on ?? null),
   );
@@ -231,14 +227,4 @@ export class SavedCard {
       ? 'hostBilling.autoRenewHint'
       : 'hostBilling.autoRenewOffHint';
   });
-
-  constructor() {
-    // hh-toggle renders its own switch button, so the hint is tied to that button directly.
-    effect(() => {
-      const host = this.switchHost()?.nativeElement as HTMLElement | undefined;
-      host
-        ?.querySelector('[role="switch"]')
-        ?.setAttribute('aria-describedby', HINT_ID);
-    });
-  }
 }

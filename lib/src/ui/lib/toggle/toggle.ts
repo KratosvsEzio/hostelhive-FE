@@ -6,7 +6,13 @@ import {
   model,
 } from '@angular/core';
 
-/** Switch toggle. `<hh-toggle [(checked)]="notify" />` */
+/**
+ * Switch toggle. `<hh-toggle [(checked)]="notify" />`
+ *
+ * `describedBy` is the id of a hint the switch should announce with its state, set as
+ * `aria-describedby` on the switch button itself, which the host element can't carry for it:
+ * `<hh-toggle [(checked)]="renew" describedBy="renew-hint" />`.
+ */
 @Component({
   selector: 'hh-toggle',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,6 +21,7 @@ import {
       type="button"
       role="switch"
       [attr.aria-checked]="checked()"
+      [attr.aria-describedby]="describedBy()"
       [disabled]="disabled()"
       (click)="toggle()"
       [class]="trackClasses()"
@@ -27,6 +34,7 @@ import {
 export class Toggle {
   readonly checked = model(false);
   readonly disabled = input(false);
+  readonly describedBy = input<string | null>(null);
 
   protected toggle(): void {
     if (!this.disabled()) this.checked.set(!this.checked());
