@@ -1,6 +1,19 @@
 # Build the billing rewrite against the unmerged backend PR #26, host billing core (parts 0–6) first
 
-**Status:** Accepted — backend PR #26 merged on 2026-10-04 (Safepay, PR #27, on 2026-10-10). Frontend part 1 (#94, PR #68) is on `main`; parts 2–8 are not yet.
+**Status:** Done. Every part of Trello #93 has shipped, so this is history: [the area file](../../area/host-billing-and-subscription.md) describes the billing code as it is now. Backend PR #26 merged on 2026-10-04, and Safepay (PR #27) on 2026-10-10. The frontend landed in one PR per part (KratosvsEzio/hostelhive-FE):
+
+| Part | Trello | PR |
+|---|---|---|
+| 1, remove the old order, contract and host-payments flow | #94 | #68 |
+| 2, pricing page, billing screen and checkout | #95 | #85 |
+| 3, Safepay payment step and return pages | #96 | #99 |
+| 4, billing history and invoice detail | #97 | #109 |
+| 5, downgrade, cancel and resume | #98 | #111 |
+| 6, plan banners, CRM lock and the guest Book gate | #99 | #121 |
+| 7, admin billing | #100 | #149 |
+| 8, booking confirmation PDF | #101 | #163 |
+| Section 10, saved card, auto-renewal, Safepay Subscriptions | #174 | #181, #188 |
+
 **Area:** [host-billing-and-subscription](../../area/host-billing-and-subscription.md)
 
 ## Context
@@ -31,7 +44,7 @@ These are the user's answers recorded in the plan:
 - **Do all of #93 in one run.** Not chosen. Part 7 needs an error-interceptor change to keep `{code: "crm_required"}`, which the interceptor drops today, and part 8 is a separate admin surface.
 
 ## Consequences
-The plan records open blockers, each still to be decided as stub, ask the backend, or defer:
+When this was decided (2026-10-04), the plan recorded these open blockers, each to be stubbed, asked of the backend, or deferred. The part runs settled them; their run notes in `docs/implement/billing-frontend/` say how.
 - `country_code` is neither permitted nor serialized by the hostels controller.
 - There are no bank-account details for bank transfer.
 - There is no Safepay `checkout_url` or return contract.

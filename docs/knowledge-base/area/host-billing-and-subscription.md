@@ -48,7 +48,7 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - **Hard-coded English:** the paywall card's benefits list (`BENEFITS` in `subscription-gate.ts`) and the drawer's renew notice (`booking-form-drawer.html`), both Trello #199. Notification type names are translated (`notifications.types.*`, Trello #214).
 
 ## Decisions
-- [Billing rewrite built against backend PR #26, host billing core first](../decisions/host-billing-and-subscription/billing-rewrite-against-unmerged-backend.md)
+- [Billing rewrite built against backend PR #26, host billing core first](../decisions/host-billing-and-subscription/billing-rewrite-against-unmerged-backend.md) (done: every part has shipped)
 - [A lapsed hostel keeps subscription, profile and bookings open](../decisions/host-billing-and-subscription/lapsed-hostel-keeps-three-pages-open.md) (Superseded by #94)
 - Run records: [`docs/implement/93.md`](../../implement/93.md) and `docs/implement/billing-frontend/94.md`–`101.md`, `174.md` (D1–D11 for the saved card).
 
