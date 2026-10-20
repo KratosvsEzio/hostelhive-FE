@@ -570,7 +570,11 @@ export class ListingDetail {
     const l = this.state().data;
     if (!phone || !l) return null;
     const digits = phone.replace(/\D/g, '');
-    const listingUrl = `${this.doc.location.origin}/hostel/${l.slug}`;
+    // The public address in the language the seeker is reading: the site's own domain, never
+    // this build's origin (a staging or LAN build would hand the host its own address), and a
+    // language prefix, so the host lands on the page the seeker saw rather than one chosen
+    // by their own stored language (Trello #210).
+    const listingUrl = this.seo.pageUrl(`/hostel/${l.slug}`);
     const text = encodeURIComponent(
       `Hi, I am interested in renting a room at your hostel ${l.name} for Rs ${l.priceFrom.toLocaleString()} / month in ${l.area}, ${l.city}.\n\nLink: ${listingUrl}`,
     );
