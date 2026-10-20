@@ -78,11 +78,11 @@ describe('mergeSearchParams', () => {
     const seed = { place: 'lahore', gender: 'girls', budget: '5000' };
 
     it('lets the query win key by key for get, has and getAll', () => {
-      const merged = mergeOrFail(convertToParamMap({ place: 'karachi' }), seed);
+      const merged = mergeOrFail(convertToParamMap({ budget: '9000' }), seed);
 
-      expect(merged.get('place')).toBe('karachi');
-      expect(merged.has('place')).toBe(true);
-      expect(merged.getAll('place')).toEqual(['karachi']);
+      expect(merged.get('budget')).toBe('9000');
+      expect(merged.has('budget')).toBe(true);
+      expect(merged.getAll('budget')).toEqual(['9000']);
     });
 
     it('keeps every value of a repeated query key', () => {
@@ -92,7 +92,7 @@ describe('mergeSearchParams', () => {
     });
 
     it('fills the gaps the query leaves from the seed', () => {
-      const merged = mergeOrFail(convertToParamMap({ place: 'karachi' }), seed);
+      const merged = mergeOrFail(convertToParamMap({ amenity: 'wifi' }), seed);
 
       expect(merged.get('budget')).toBe('5000');
       expect(merged.has('budget')).toBe(true);
@@ -100,7 +100,7 @@ describe('mergeSearchParams', () => {
     });
 
     it('reads a key found in neither as absent', () => {
-      const merged = mergeOrFail(convertToParamMap({ place: 'karachi' }), seed);
+      const merged = mergeOrFail(convertToParamMap({ amenity: 'wifi' }), seed);
 
       expect(merged.get('missing')).toBeNull();
       expect(merged.has('missing')).toBe(false);
@@ -122,12 +122,12 @@ describe('mergeSearchParams', () => {
       expect([...merged.keys].sort()).toEqual(['budget', 'gender', 'place']);
     });
 
-    // `place` is not checked, so an empty one still replaces the seed's.
+    // `budget` is not checked, so an empty one still replaces the seed's.
     it('lets an empty value for a non-gender key override the seed', () => {
-      const merged = mergeOrFail(convertToParamMap({ place: '' }), seed);
+      const merged = mergeOrFail(convertToParamMap({ budget: '' }), seed);
 
-      expect(merged.get('place')).toBe('');
-      expect(merged.has('place')).toBe(true);
+      expect(merged.get('budget')).toBe('');
+      expect(merged.has('budget')).toBe(true);
     });
 
     it('lets a valid query gender override the seed gender', () => {
@@ -135,6 +135,56 @@ describe('mergeSearchParams', () => {
 
       expect(merged.get('gender')).toBe('boys');
       expect(merged.getAll('gender')).toEqual(['boys']);
+    });
+  });
+
+  /**
+   * A landing page's place is its path (Trello #204): on a seeded map the query refines the
+   * search but cannot move it.
+   */
+  describe("a seed's geography", () => {
+    const LAHORE = { place: 'Lahore', lat: '31.5204', lng: '74.3587', zoom: '11' };
+    const KARACHI = { place: 'Karachi', lat: '24.8607', lng: '67.0011', zoom: '12' };
+
+    it.each(['place', 'lat', 'lng', 'zoom'])('keeps the seed %s over the query one', (key) => {
+      const merged = mergeOrFail(convertToParamMap(KARACHI), LAHORE);
+
+      expect(merged.get(key)).toBe(LAHORE[key as keyof typeof LAHORE]);
+      expect(merged.getAll(key)).toEqual([LAHORE[key as keyof typeof LAHORE]]);
+      expect(merged.has(key)).toBe(true);
+    });
+
+    it('ignores a query city on a seeded page, which would otherwise name another place', () => {
+      const merged = mergeOrFail(convertToParamMap({ city: 'Karachi' }), LAHORE);
+
+      expect(merged.get('city')).toBeNull();
+      expect(merged.has('city')).toBe(false);
+      expect([...merged.keys]).not.toContain('city');
+    });
+
+    it('lists the seed geography once, and no query geography', () => {
+      const merged = mergeOrFail(convertToParamMap({ ...KARACHI, city: 'Karachi', amenity: 'wifi' }), LAHORE);
+
+      expect([...merged.keys].sort()).toEqual(['amenity', 'lat', 'lng', 'place', 'zoom']);
+    });
+
+    it('still lets the query set the gender, filters and sort on a seeded page', () => {
+      const merged = mergeOrFail(
+        convertToParamMap({ ...KARACHI, gender: 'backpacker', amenity: 'wifi', sort: 'newest' }),
+        LAHORE,
+      );
+
+      expect(merged.get('gender')).toBe('backpacker');
+      expect(merged.getAll('amenity')).toEqual(['wifi']);
+      expect(merged.get('sort')).toBe('newest');
+      expect(merged.get('place')).toBe('Lahore');
+    });
+
+    it('leaves a search page without a seed free to take its place from the query', () => {
+      const merged = mergeSearchParams(convertToParamMap(KARACHI), null);
+
+      expect(merged?.get('place')).toBe('Karachi');
+      expect(merged?.get('lat')).toBe('24.8607');
     });
   });
 
@@ -148,11 +198,11 @@ describe('mergeSearchParams', () => {
     });
 
     it('keeps the rest of the query alongside the seed gender', () => {
-      const merged = mergeOrFail(convertToParamMap({ gender, place: 'karachi' }), {
+      const merged = mergeOrFail(convertToParamMap({ gender, budget: '9000' }), {
         gender: 'girls',
       });
 
-      expect(merged.get('place')).toBe('karachi');
+      expect(merged.get('budget')).toBe('9000');
       expect(merged.get('gender')).toBe('girls');
     });
 
@@ -423,7 +473,7 @@ describe('mergeSearchParams', () => {
         sort: 'price-asc',
         roomType: 'bogus',
         propertyType: 'villa',
-        place: 'lahore',
+        budget: '5000',
       };
 
       it('keeps the seed type and its sort while dropping both values', () => {
@@ -433,7 +483,7 @@ describe('mergeSearchParams', () => {
         expectKeyAbsent(merged, 'propertyType');
         expect(merged.get('gender')).toBe('girls');
         expectSortKept(merged, 'price-asc');
-        expect([...merged.keys].sort()).toEqual(['gender', 'place', 'sort']);
+        expect([...merged.keys].sort()).toEqual(['budget', 'gender', 'sort']);
       });
 
       it('drops the sort along with both values when no type is in force', () => {
@@ -443,7 +493,7 @@ describe('mergeSearchParams', () => {
         expectKeyAbsent(merged, 'propertyType');
         expectSortAbsent(merged);
         expect(merged.get('gender')).toBeNull();
-        expect([...merged.keys]).toEqual(['place']);
+        expect([...merged.keys]).toEqual(['budget']);
       });
     });
 
@@ -452,15 +502,15 @@ describe('mergeSearchParams', () => {
       ['propertyType', 'villa'],
     ])('leaves the other keys alone next to a dropped %s', (key, value) => {
       const merged = mergeOrFail(
-        convertToParamMap({ [key]: value, amenities: ['wifi', 'ac'], minPrice: '5000', place: '' }),
+        convertToParamMap({ [key]: value, amenities: ['wifi', 'ac'], minPrice: '5000', budget: '' }),
         { place: 'lahore', budget: '5000' },
       );
 
       expectKeyAbsent(merged, key);
       expect(merged.getAll('amenities')).toEqual(['wifi', 'ac']);
       expect(merged.get('minPrice')).toBe('5000');
-      expect(merged.get('place')).toBe('');
-      expect(merged.get('budget')).toBe('5000');
+      expect(merged.get('budget')).toBe('');
+      expect(merged.get('place')).toBe('lahore');
       expect([...merged.keys].sort()).toEqual(['amenities', 'budget', 'minPrice', 'place']);
     });
 
