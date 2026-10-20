@@ -2787,3 +2787,45 @@ describe('SearchMap keyboard pan', () => {
     expect(h1Text(fixture)).toBe('searchUi.mapArea');
   });
 });
+
+/**
+ * A landing page's place is its path (Trello #204). A hand-made link that also names another
+ * place in its query (`place`, `city`, `lat`, `lng`, `zoom`) still searches the landing's place;
+ * the query can only refine it, as `?gender=` does.
+ */
+describe('SearchMap on a landing page link naming another place', () => {
+  afterEach(cleanupSearchMap);
+
+  const KARACHI_KEYS = 'place=Karachi&city=Karachi&lat=24.8607&lng=67.0011&zoom=12';
+
+  it('searches near the landing place, not the query one, on a server render', async () => {
+    const list = listSpy();
+    configureSearchMap({ list });
+    await mount(withQuery(CITY_PAGE, KARACHI_KEYS), CITY_SEED);
+    await firstSearch(list);
+
+    expect(queryAt(list, 0).near).toEqual(NEAR_LAHORE);
+  });
+
+  it.each(LANDING_PAGES)(
+    'searches near the landing place, not the query one, on %s in the browser',
+    async (_name, url, seed, centre, type) => {
+      const list = listSpy();
+      await mountWatched(withQuery(url, KARACHI_KEYS), { seed, list });
+      await firstSearch(list);
+
+      const first = queryAt(list, 0);
+      expect(first.near).toEqual(centre);
+      expect(first.accommodationType).toBe(type);
+    },
+  );
+
+  it('still takes the gender from the query on a city page', async () => {
+    const list = listSpy();
+    await mountWatched(withQuery(CITY_PAGE, KARACHI_KEYS, 'gender=girls'), { seed: CITY_SEED, list });
+    await firstSearch(list);
+
+    expect(queryAt(list, 0).near).toEqual(NEAR_LAHORE);
+    expect(queryAt(list, 0).accommodationType).toBe('girls');
+  });
+});

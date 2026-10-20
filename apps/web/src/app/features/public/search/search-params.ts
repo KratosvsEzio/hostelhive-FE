@@ -50,6 +50,14 @@ const PAIRED = ['lat', 'lng'];
  */
 const STRIPPED = new Set(['sort', 'minPrice', 'maxPrice', 'lat', 'lng', 'zoom']);
 
+/**
+ * The keys a landing page's seed owns outright: where the search is. On a seeded map the query
+ * cannot set them, so a hand-made `/hostels/lahore?place=Karachi&lat=…&lng=…` still searches,
+ * frames and heads Lahore (Trello #204). `gender` is not here: `?gender=backpacker` is the only
+ * way to reach backpacker from a city page.
+ */
+const SEED_GEOGRAPHY = new Set(['place', 'city', 'lat', 'lng', 'zoom']);
+
 /** The part of the search's vocabulary only the API can supply. */
 export interface SearchVocabulary {
   /**
@@ -184,20 +192,23 @@ export function mergeSearchParams(
   const inSeed = (key: string): boolean =>
     hasOwn(base, key) && !(key === 'sort' && badSeedSort);
   const queryAll = (key: string): string[] => alone.get(key) ?? query?.getAll(key) ?? [];
+  // A landing page's place is its path. The query still refines it (gender, filters, sort),
+  // but never moves it: `/hostels/lahore?place=Karachi&lat=…&lng=…` searches Lahore.
+  const queryWins = (key: string): boolean => !(seed && SEED_GEOGRAPHY.has(key)) && inQuery(key);
 
   return {
     get: (key: string) =>
-      (inQuery(key) ? (alone.get(key)?.[0] ?? query?.get(key)) : null) ??
+      (queryWins(key) ? (alone.get(key)?.[0] ?? query?.get(key)) : null) ??
       (inSeed(key) ? base[key] : null),
-    has: (key: string) => inQuery(key) || inSeed(key),
+    has: (key: string) => queryWins(key) || inSeed(key),
     getAll: (key: string) => {
-      const fromQuery = inQuery(key) ? queryAll(key) : [];
+      const fromQuery = queryWins(key) ? queryAll(key) : [];
       if (fromQuery.length) return fromQuery;
       return inSeed(key) && base[key] ? [base[key]] : [];
     },
     get keys() {
       return [
-        ...new Set([...(query?.keys ?? []).filter(inQuery), ...Object.keys(base).filter(inSeed)]),
+        ...new Set([...(query?.keys ?? []).filter(queryWins), ...Object.keys(base).filter(inSeed)]),
       ];
     },
   } as ParamMap;
