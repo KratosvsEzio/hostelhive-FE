@@ -10,6 +10,13 @@ How the workspace is put together and run: the Nx projects and their targets, th
   - `apps/web-e2e/project.json` — Playwright.
 - `tsconfig.base.json` — path aliases: `@hostelhive/ui|maps|lib`, `@hostelhive/data-access` (points into `apps/web/src/app/util/models`), `@app/*`, `@core/*`, `@features/*`, `@layout/*`, `@services`, `@util/*`.
 - `apps/web/vite.config.mts`, `lib/vite.config.mts`, `vitest.workspace.ts` — Vitest (jsdom, globals) through `@analogjs/vite-plugin-angular`. Setup files are `apps/web/src/test-setup.ts` (TestBed plus a `ResizeObserver` stub) and `lib/src/test-setup.ts`.
+- **The web suite runs in Vitest's `forks` pool, one process per spec file** (`pool: 'forks'` in `apps/web/vite.config.mts`). Analog defaults to `vmThreads`, which reuses a worker across files.
+  - Component specs hold on to about 30 MB a test (`onboarding-wizard.spec` peaks near 2 GB). In a reused worker, the heap climbed past Node's limit mid-suite and the worker died.
+  - Vitest then waited on that dead worker forever, so every CI run from `f20b6e1` (#177, 2026-10-18) to the fix was cancelled at GitHub's 6-hour limit.
+  - `vmMemoryLimit` didn't recycle the worker, so it is not the fix.
+  - `forks` needs `server.deps.inline: ['ngx-material-intl-tel-input']`, because that package imports named exports from the CommonJS `google-libphonenumber`. Its workers get `--max-old-space-size=4096`.
+- **Fake timers under `forks`** also count jsdom's own timers. `localStorage.setItem` queues the `storage` event on a 0 ms timer, so a spec asserting `vi.getTimerCount()` after saving a session runs `vi.advanceTimersByTime(0)` first (`host-access.spec.ts`).
+- **CI** has `timeout-minutes: 45`, so a hang fails fast instead of holding the runner for six hours.
 - `eslint.config.mjs` (root), `apps/web/eslint.config.mjs` (selector prefixes `app` or `hh`), `lib/eslint.config.mjs` (prefix `hh`).
 - `.github/workflows/ci.yml` — the only workflow.
 - `tools/` — scripts, listed below.

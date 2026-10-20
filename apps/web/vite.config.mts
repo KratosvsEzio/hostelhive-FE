@@ -30,6 +30,21 @@ export default defineConfig(() => ({
     // compiling the component, and the 5s default timed those out intermittently
     // (hostel-form.spec, review.spec) while locally they finish in under a second.
     testTimeout: 15_000,
+    // One process per spec file. Analog defaults to `vmThreads`, which reuses a worker across
+    // files: component specs hold on to ~30 MB a test, the heap climbed past Node's limit
+    // mid-suite, the worker died, and Vitest waited on it forever, so every CI run from
+    // f20b6e1 (#177) on was cancelled at six hours. `forks` starts each file clean.
+    pool: 'forks',
+    // The heaviest file (onboarding-wizard.spec) peaks near 2 GB; pin the heap so that holds on
+    // any machine rather than only where Node's default happens to be ~4 GB.
+    execArgv: ['--max-old-space-size=4096'],
+    server: {
+      deps: {
+        // Imports named exports from the CommonJS google-libphonenumber, which Node's own ESM
+        // loader refuses; inlined, Vite handles the interop as the VM pool did.
+        inline: ['ngx-material-intl-tel-input'],
+      },
+    },
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/web',

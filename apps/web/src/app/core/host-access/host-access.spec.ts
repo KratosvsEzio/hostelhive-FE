@@ -425,6 +425,9 @@ describe('HostAccessEvents', () => {
     beforeEach(() => {
       vi.useFakeTimers();
       session.setSession(owner, 'tok');
+      // Saving the session writes localStorage, and jsdom queues the `storage` event on a 0 ms
+      // timer. Run it, so `getTimerCount()` below counts only the refusals' expiry clocks.
+      vi.advanceTimersByTime(0);
     });
 
     afterEach(() => vi.useRealTimers());
@@ -541,6 +544,7 @@ describe('HostAccessEvents during a server render', () => {
       },
       'tok',
     );
+    vi.advanceTimersByTime(0); // jsdom's queued `storage` event, as in the expiry block above
     events.record({ hostelId: 'h1', kind: 'inactive' });
     expect(events.observations()).toHaveLength(1);
     expect(vi.getTimerCount()).toBe(0);

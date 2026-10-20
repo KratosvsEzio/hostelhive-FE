@@ -39,7 +39,9 @@ beforeAll(async () => {
       pages.flatMap((p) => [p.title, p.resolvedTitle]).filter((t): t is string => t !== undefined),
     ),
   ].sort();
-});
+  // Walking the tree imports every lazy route in the app. Alone that takes a few seconds, but
+  // with the whole suite running in parallel it passed the 10 s default hook timeout.
+}, 60_000);
 
 describe('the route title and head copy in every language', () => {
   it('covers all 18 languages and a route tree with many titles', () => {
