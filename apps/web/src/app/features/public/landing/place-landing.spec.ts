@@ -469,3 +469,52 @@ describe('PlaceLanding breadcrumb addresses and names', () => {
     expect(assetUrlsIn(blocks)).toEqual([]);
   });
 });
+
+/**
+ * The trail on the page, as `[name, linked]` per step. A visitor and Google should read the same
+ * trail, so on every page it names the same steps as the structured data (Trello #209).
+ */
+describe('PlaceLanding visible breadcrumb', () => {
+  function visibleTrail(fixture: { nativeElement: HTMLElement }): [string, boolean][] {
+    const nav = fixture.nativeElement.querySelector('nav[aria-label]');
+    return Array.from(nav?.querySelectorAll(':scope > a, :scope > span') ?? [], (el) => [
+      (el.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      el.tagName === 'A',
+    ]);
+  }
+
+  it.each(['en', 'ur', 'ar'])(
+    'ends a %s campus page on "Hostels near <campus>", with the city linked',
+    (code) => {
+      const fixture = mount({ place: 'lahore', gender: 'punjab-university' }, undefined, code);
+      fixture.detectChanges();
+
+      expect(visibleTrail(fixture)).toEqual([
+        [text(code, 'publicLanding.home'), true],
+        [text(code, 'publicLanding.hostelsIn', { place: 'Lahore' }), true],
+        [text(code, 'seo.headingNearCampus', { campus: 'Punjab University' }), false],
+      ]);
+    },
+  );
+
+  it.each([
+    ['a city page', { place: 'lahore' }],
+    ['a gender page', { place: 'lahore', gender: 'girls' }],
+    ['a campus page', { place: 'lahore', gender: 'punjab-university' }],
+  ])('names the same steps as the structured data on %s', (_name, params) => {
+    const fixture = mount(params);
+    fixture.detectChanges();
+
+    expect(visibleTrail(fixture).map(([name]) => name)).toEqual(trail().map(([, name]) => name));
+  });
+
+  it('keeps the city page as the current, unlinked last step on a city page', () => {
+    const fixture = mount({ place: 'lahore' });
+    fixture.detectChanges();
+
+    expect(visibleTrail(fixture)).toEqual([
+      ['Home', true],
+      ['Hostels in Lahore', false],
+    ]);
+  });
+});
