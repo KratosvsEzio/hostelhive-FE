@@ -2177,7 +2177,13 @@
       "rent": "الإيجار",
       "receipt": "إيصال",
       "cardDeclined": "رُفضت البطاقة",
-      "cardExpiring": "البطاقة تنتهي قريبًا"
+      "cardExpiring": "البطاقة تنتهي قريبًا",
+      "paymentReceived": "تم استلام الدفعة",
+      "paymentRejected": "تم رفض الدفعة",
+      "renewalInvoice": "فاتورة التجديد",
+      "renewalReminder": "تذكير بالتجديد",
+      "subscriptionPastDue": "الخطة متأخرة السداد",
+      "subscriptionEnded": "انتهت الخطة"
     }
   },
   "currency": {

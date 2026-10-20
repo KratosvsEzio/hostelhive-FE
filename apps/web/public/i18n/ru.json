@@ -2182,7 +2182,13 @@
       "rent": "Аренда",
       "receipt": "Квитанция",
       "cardDeclined": "Карта отклонена",
-      "cardExpiring": "Срок карты скоро истекает"
+      "cardExpiring": "Срок карты скоро истекает",
+      "paymentReceived": "Платёж получен",
+      "paymentRejected": "Платёж отклонён",
+      "renewalInvoice": "Счёт на продление",
+      "renewalReminder": "Напоминание о продлении",
+      "subscriptionPastDue": "Тариф просрочен",
+      "subscriptionEnded": "Тариф завершён"
     }
   },
   "currency": {

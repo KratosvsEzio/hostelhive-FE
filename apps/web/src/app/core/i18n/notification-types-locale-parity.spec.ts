@@ -27,6 +27,12 @@ describe('the notification type names in every language', () => {
       'notifications.types.receipt',
       'notifications.types.cardDeclined',
       'notifications.types.cardExpiring',
+      'notifications.types.paymentReceived',
+      'notifications.types.paymentRejected',
+      'notifications.types.renewalInvoice',
+      'notifications.types.renewalReminder',
+      'notifications.types.subscriptionPastDue',
+      'notifications.types.subscriptionEnded',
     ]);
   });
 

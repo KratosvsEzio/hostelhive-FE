@@ -2177,7 +2177,13 @@
       "rent": "Loyer",
       "receipt": "Reçu",
       "cardDeclined": "Carte refusée",
-      "cardExpiring": "Carte expire bientôt"
+      "cardExpiring": "Carte expire bientôt",
+      "paymentReceived": "Paiement reçu",
+      "paymentRejected": "Paiement refusé",
+      "renewalInvoice": "Facture de renouvellement",
+      "renewalReminder": "Rappel de renouvellement",
+      "subscriptionPastDue": "Forfait en retard de paiement",
+      "subscriptionEnded": "Forfait terminé"
     }
   },
   "currency": {

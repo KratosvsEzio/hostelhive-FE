@@ -2177,7 +2177,13 @@
       "rent": "Alquiler",
       "receipt": "Recibo",
       "cardDeclined": "Tarjeta rechazada",
-      "cardExpiring": "Tarjeta vence pronto"
+      "cardExpiring": "Tarjeta vence pronto",
+      "paymentReceived": "Pago recibido",
+      "paymentRejected": "Pago rechazado",
+      "renewalInvoice": "Factura de renovación",
+      "renewalReminder": "Recordatorio de renovación",
+      "subscriptionPastDue": "Plan con pago pendiente",
+      "subscriptionEnded": "Plan terminado"
     }
   },
   "currency": {

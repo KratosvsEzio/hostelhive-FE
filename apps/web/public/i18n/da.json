@@ -2177,7 +2177,13 @@
       "rent": "Husleje",
       "receipt": "Kvittering",
       "cardDeclined": "Kort afvist",
-      "cardExpiring": "Kort udløber snart"
+      "cardExpiring": "Kort udløber snart",
+      "paymentReceived": "Betaling modtaget",
+      "paymentRejected": "Betaling afvist",
+      "renewalInvoice": "Fornyelsesfaktura",
+      "renewalReminder": "Påmindelse om fornyelse",
+      "subscriptionPastDue": "Plan forfalden",
+      "subscriptionEnded": "Plan ophørt"
     }
   },
   "currency": {

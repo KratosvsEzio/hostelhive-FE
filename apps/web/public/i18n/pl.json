@@ -2182,7 +2182,13 @@
       "rent": "Czynsz",
       "receipt": "Paragon",
       "cardDeclined": "Karta odrzucona",
-      "cardExpiring": "Karta wkrótce wygaśnie"
+      "cardExpiring": "Karta wkrótce wygaśnie",
+      "paymentReceived": "Płatność otrzymana",
+      "paymentRejected": "Płatność odrzucona",
+      "renewalInvoice": "Faktura za odnowienie",
+      "renewalReminder": "Przypomnienie o odnowieniu",
+      "subscriptionPastDue": "Zaległa płatność za plan",
+      "subscriptionEnded": "Plan zakończony"
     }
   },
   "currency": {
