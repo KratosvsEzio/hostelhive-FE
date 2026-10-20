@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Cerca de una universidad",
     "hostelsInOtherCities": "Hostales en otras ciudades",
     "commonQuestions": "Preguntas comunes",
-    "hostelsIn": "Hostales en {{place}}"
+    "hostelsIn": "Hostales en {{place}}",
+    "moreInPlace": "Más en {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Preguntas frecuentes",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — guías de hostales, campus y el norte | HostelHive",
     "blogDescription": "Guías prácticas sobre hostales para estudiantes y alojamientos para mochileros en Pakistán: cuánto cuestan las habitaciones ciudad por ciudad, hostales cerca de las principales universidades y dónde dormir en las áreas del norte.",
-    "listingLoadingTitle": "Detalles del hostal — HostelHive"
+    "listingLoadingTitle": "Detalles del hostal — HostelHive",
+    "unitPerBedNight": "por cama y noche",
+    "unitPerBedMonth": "por cama y mes",
+    "featureMess": "Comedor (comidas incluidas)",
+    "featureGender": "Género"
   },
   "routeTitle": {
     "imageCredits": "Créditos de imágenes",

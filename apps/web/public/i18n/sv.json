@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Nära ett universitet",
     "hostelsInOtherCities": "Vandrarhem i andra städer",
     "commonQuestions": "Vanliga frågor",
-    "hostelsIn": "Vandrarhem i {{place}}"
+    "hostelsIn": "Vandrarhem i {{place}}",
+    "moreInPlace": "Mer i {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Vanliga frågor",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blogg — guider om hostel, campus och norra områdena | HostelHive",
     "blogDescription": "Praktiska guider om studenthostel och backpackerboenden i Pakistan: vad rummen kostar stad för stad, hostel nära de stora universiteten och var man kan sova i de norra områdena.",
-    "listingLoadingTitle": "Vandrarhemsuppgifter — HostelHive"
+    "listingLoadingTitle": "Vandrarhemsuppgifter — HostelHive",
+    "unitPerBedNight": "per säng och natt",
+    "unitPerBedMonth": "per säng och månad",
+    "featureMess": "Matsal (måltider ingår)",
+    "featureGender": "Kön"
   },
   "routeTitle": {
     "imageCredits": "Bildkällor",

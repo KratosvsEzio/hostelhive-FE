@@ -1906,7 +1906,8 @@
     "nearAUniversity": "Gần trường đại học",
     "hostelsInOtherCities": "Nhà nghỉ ở các thành phố khác",
     "commonQuestions": "Câu hỏi thường gặp",
-    "hostelsIn": "Nhà nghỉ tại {{place}}"
+    "hostelsIn": "Nhà nghỉ tại {{place}}",
+    "moreInPlace": "Thêm tại {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Câu hỏi thường gặp",
@@ -2241,7 +2242,11 @@
     "adminPageTitle": "{{page}} — Quản trị HostelHive",
     "blogTitle": "Blog — cẩm nang về hostel, trường đại học và vùng phía bắc | HostelHive",
     "blogDescription": "Cẩm nang thực tế về hostel sinh viên và chỗ ở cho phượt thủ tại Pakistan: giá phòng ở từng thành phố, hostel gần các trường đại học lớn và nơi nghỉ lại ở vùng phía bắc.",
-    "listingLoadingTitle": "Chi tiết hostel — HostelHive"
+    "listingLoadingTitle": "Chi tiết hostel — HostelHive",
+    "unitPerBedNight": "mỗi giường mỗi đêm",
+    "unitPerBedMonth": "mỗi giường mỗi tháng",
+    "featureMess": "Nhà ăn (bao gồm bữa ăn)",
+    "featureGender": "Giới tính"
   },
   "routeTitle": {
     "imageCredits": "Nguồn hình ảnh",

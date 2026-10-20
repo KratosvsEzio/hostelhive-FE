@@ -1892,7 +1892,8 @@
     "nearAUniversity": "Near a university",
     "hostelsInOtherCities": "Hostels in other cities",
     "commonQuestions": "Common questions",
-    "hostelsIn": "Hostels in {{place}}"
+    "hostelsIn": "Hostels in {{place}}",
+    "moreInPlace": "More in {{place}}"
   },
   "publicListing": {
     "checkIn": "Check in",
@@ -2184,7 +2185,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — guides to hostels, campuses and the north | HostelHive",
     "blogDescription": "Practical guides to student hostels and backpacker stays in Pakistan: what rooms cost city by city, hostels near the major universities, and where to sleep in the northern areas.",
-    "listingLoadingTitle": "Hostel details — HostelHive"
+    "listingLoadingTitle": "Hostel details — HostelHive",
+    "unitPerBedNight": "per bed per night",
+    "unitPerBedMonth": "per bed per month",
+    "featureMess": "Mess (meals included)",
+    "featureGender": "Gender"
   },
   "routeTitle": {
     "imageCredits": "Image credits",

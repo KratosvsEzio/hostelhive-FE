@@ -382,13 +382,15 @@ describe('ListingDetail head', () => {
         },
         description: attr('meta[name="description"]', 'content'),
         image: ['https://cdn.example.test/a.jpg', 'https://cdn.example.test/b.jpg'],
-        priceRange: 'From PKR 12000',
+        // Every display string goes through the dictionary, so here (where it has no
+        // strings) each one reads as its key (Trello #211).
+        priceRange: 'seo.priceFromMonth',
         priceSpecification: {
           '@type': 'UnitPriceSpecification',
           price: 12000,
           priceCurrency: 'PKR',
           unitCode: 'MON',
-          unitText: 'per bed per month',
+          unitText: 'seo.unitPerBedMonth',
         },
         geo: { '@type': 'GeoCoordinates', latitude: 31.5, longitude: 74.3 },
         aggregateRating: {
@@ -399,16 +401,30 @@ describe('ListingDetail head', () => {
           worstRating: 1,
         },
         amenityFeature: [
-          { '@type': 'LocationFeatureSpecification', name: 'Wi-Fi', value: true },
-          { '@type': 'LocationFeatureSpecification', name: 'Air conditioning', value: true },
+          { '@type': 'LocationFeatureSpecification', name: 'filters.amenityWifi', value: true },
           {
             '@type': 'LocationFeatureSpecification',
-            name: 'Mess (meals included)',
+            name: 'filters.amenityAirConditioning',
             value: true,
           },
-          { '@type': 'LocationFeatureSpecification', name: 'Gender', value: 'common.boys' },
+          { '@type': 'LocationFeatureSpecification', name: 'seo.featureMess', value: true },
+          { '@type': 'LocationFeatureSpecification', name: 'seo.featureGender', value: 'common.boys' },
         ],
       });
+    });
+
+    it('prices a backpacker bed by the night in the dictionary’s words, and keeps an unknown amenity slug', () => {
+      load({
+        ...LISTING,
+        accommodationType: 'backpacker',
+        amenities: ['rooftop'],
+      } as unknown as ListingDetailModel);
+
+      const spec = block()['priceSpecification'] as Record<string, unknown>;
+      expect(block()['priceRange']).toBe('seo.priceFromNight');
+      expect(spec['unitCode']).toBe('DAY');
+      expect(spec['unitText']).toBe('seo.unitPerBedNight');
+      expect((block()['amenityFeature'] as { name: string }[])[0].name).toBe('rooftop');
     });
   });
 

@@ -18,6 +18,7 @@ import { assetUrlsIn, pageAddressesIn } from '@core/seo-testing';
 import { placeSocialImage } from '@core/social-image';
 import { SearchMap } from '@features/public/search/search-map/search-map';
 import { PlaceLanding } from './place-landing';
+import { universitiesIn } from './universities';
 
 @Component({ selector: 'hh-search-map', template: '' })
 class StubSearchMap {
@@ -516,5 +517,29 @@ describe('PlaceLanding visible breadcrumb', () => {
       ['Home', true],
       ['Hostels in Lahore', false],
     ]);
+  });
+});
+
+describe('PlaceLanding internal link sections', () => {
+  const squash = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+  // These were written in English on every language until Trello #211.
+  it.each(['en', 'ur', 'ar'])('labels the campus links and the "More in" heading in %s', (code) => {
+    const fixture = mount({ place: 'lahore' }, undefined, code);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+
+    const campuses = universitiesIn('lahore');
+    expect(campuses.length).toBeGreaterThan(0);
+    const labels = campuses.map((u) => {
+      const link = root.querySelector(`a[href$="/hostels/lahore/${u.slug}"]`);
+      return link ? squash(link) : null;
+    });
+    expect(labels).toEqual(
+      campuses.map((u) => text(code, 'seo.headingNearCampus', { campus: u.shortName })),
+    );
+
+    const headings = Array.from(root.querySelectorAll('h2'), squash);
+    expect(headings).toContain(text(code, 'publicLanding.moreInPlace', { place: 'Lahore' }));
   });
 });

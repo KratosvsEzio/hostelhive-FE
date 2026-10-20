@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Vlak bij een universiteit",
     "hostelsInOtherCities": "Hostels in andere steden",
     "commonQuestions": "Veelgestelde vragen",
-    "hostelsIn": "Hostels in {{place}}"
+    "hostelsIn": "Hostels in {{place}}",
+    "moreInPlace": "Meer in {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Veelgestelde vragen",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — gidsen over hostels, campussen en het noorden | HostelHive",
     "blogDescription": "Praktische gidsen over studentenhostels en backpackersverblijven in Pakistan: wat kamers per stad kosten, hostels bij de grote universiteiten en waar je slaapt in de noordelijke gebieden.",
-    "listingLoadingTitle": "Hostelgegevens — HostelHive"
+    "listingLoadingTitle": "Hostelgegevens — HostelHive",
+    "unitPerBedNight": "per bed per nacht",
+    "unitPerBedMonth": "per bed per maand",
+    "featureMess": "Kantine (maaltijden inbegrepen)",
+    "featureGender": "Geslacht"
   },
   "routeTitle": {
     "imageCredits": "Beeldverantwoording",

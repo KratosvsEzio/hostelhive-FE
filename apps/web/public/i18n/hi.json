@@ -1901,7 +1901,8 @@
     "nearAUniversity": "विश्वविद्यालय के पास",
     "hostelsInOtherCities": "अन्य शहरों में हॉस्टल",
     "commonQuestions": "सामान्य प्रश्न",
-    "hostelsIn": "{{place}} में हॉस्टल"
+    "hostelsIn": "{{place}} में हॉस्टल",
+    "moreInPlace": "{{place}} में और"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "अक्सर पूछे जाने वाले प्रश्न",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive एडमिन",
     "blogTitle": "ब्लॉग — हॉस्टल, कैंपस और उत्तरी इलाक़ों की गाइड | HostelHive",
     "blogDescription": "पाकिस्तान में छात्र हॉस्टल और बैकपैकर ठहराव की व्यावहारिक गाइड: शहर-दर-शहर कमरों की कीमत कितनी है, बड़े विश्वविद्यालयों के पास हॉस्टल, और उत्तरी इलाक़ों में कहाँ ठहरें।",
-    "listingLoadingTitle": "हॉस्टल विवरण — HostelHive"
+    "listingLoadingTitle": "हॉस्टल विवरण — HostelHive",
+    "unitPerBedNight": "प्रति बेड प्रति रात",
+    "unitPerBedMonth": "प्रति बेड प्रति माह",
+    "featureMess": "मेस (भोजन शामिल)",
+    "featureGender": "लिंग"
   },
   "routeTitle": {
     "imageCredits": "तस्वीरों का श्रेय",

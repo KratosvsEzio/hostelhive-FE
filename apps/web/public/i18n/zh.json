@@ -1901,7 +1901,8 @@
     "nearAUniversity": "大学附近",
     "hostelsInOtherCities": "其他城市的旅舍",
     "commonQuestions": "常见问题",
-    "hostelsIn": "{{place}}的旅舍"
+    "hostelsIn": "{{place}}的旅舍",
+    "moreInPlace": "{{place}}的更多内容"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "常见问题",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive 管理后台",
     "blogTitle": "博客 — 宿舍、校园与北部地区指南 | HostelHive",
     "blogDescription": "巴基斯坦学生宿舍与背包客住宿实用指南：各城市房间价格、主要大学附近的宿舍，以及北部地区的住宿去处。",
-    "listingLoadingTitle": "宿舍详情 — HostelHive"
+    "listingLoadingTitle": "宿舍详情 — HostelHive",
+    "unitPerBedNight": "每床每晚",
+    "unitPerBedMonth": "每床每月",
+    "featureMess": "餐厅（含餐）",
+    "featureGender": "性别"
   },
   "routeTitle": {
     "imageCredits": "图片来源",

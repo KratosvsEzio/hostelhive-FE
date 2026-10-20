@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Nær et universitet",
     "hostelsInOtherCities": "Hosteller i andre byer",
     "commonQuestions": "Almindelige spørgsmål",
-    "hostelsIn": "Hosteller i {{place}}"
+    "hostelsIn": "Hosteller i {{place}}",
+    "moreInPlace": "Mere i {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Ofte stillede spørgsmål",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — guides til hosteller, campusser og de nordlige områder | HostelHive",
     "blogDescription": "Praktiske guides til studenterhosteller og backpackerophold i Pakistan: hvad værelserne koster by for by, hosteller nær de store universiteter, og hvor man kan overnatte i de nordlige områder.",
-    "listingLoadingTitle": "Hosteldetaljer — HostelHive"
+    "listingLoadingTitle": "Hosteldetaljer — HostelHive",
+    "unitPerBedNight": "pr. seng pr. nat",
+    "unitPerBedMonth": "pr. seng pr. måned",
+    "featureMess": "Kantine (måltider inkluderet)",
+    "featureGender": "Køn"
   },
   "routeTitle": {
     "imageCredits": "Billedkreditering",

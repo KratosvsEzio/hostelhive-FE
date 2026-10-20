@@ -1901,7 +1901,8 @@
     "nearAUniversity": "大学の近く",
     "hostelsInOtherCities": "他の都市のホステル",
     "commonQuestions": "よくある質問",
-    "hostelsIn": "{{place}} のホステル"
+    "hostelsIn": "{{place}} のホステル",
+    "moreInPlace": "{{place}}のその他"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "よくあるご質問",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive 管理者",
     "blogTitle": "ブログ — ホステル、キャンパス、北部エリアのガイド | HostelHive",
     "blogDescription": "パキスタンの学生ホステルとバックパッカー向け宿泊の実用ガイド：都市ごとの部屋の料金、主要大学周辺のホステル、北部エリアでの宿泊先。",
-    "listingLoadingTitle": "ホステルの詳細 — HostelHive"
+    "listingLoadingTitle": "ホステルの詳細 — HostelHive",
+    "unitPerBedNight": "1ベッド1泊あたり",
+    "unitPerBedMonth": "1ベッド1か月あたり",
+    "featureMess": "食堂（食事込み）",
+    "featureGender": "性別"
   },
   "routeTitle": {
     "imageCredits": "画像クレジット",

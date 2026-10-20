@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Vicino a un’università",
     "hostelsInOtherCities": "Ostelli in altre città",
     "commonQuestions": "Domande comuni",
-    "hostelsIn": "Ostelli a {{place}}"
+    "hostelsIn": "Ostelli a {{place}}",
+    "moreInPlace": "Altro a {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Domande frequenti",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — guide su ostelli, campus e il Nord | HostelHive",
     "blogDescription": "Guide pratiche sugli ostelli per studenti e sugli alloggi per backpacker in Pakistan: quanto costano le camere città per città, gli ostelli vicino alle principali università e dove dormire nelle aree settentrionali.",
-    "listingLoadingTitle": "Dettagli ostello — HostelHive"
+    "listingLoadingTitle": "Dettagli ostello — HostelHive",
+    "unitPerBedNight": "per letto a notte",
+    "unitPerBedMonth": "per letto al mese",
+    "featureMess": "Mensa (pasti inclusi)",
+    "featureGender": "Genere"
   },
   "routeTitle": {
     "imageCredits": "Crediti delle immagini",

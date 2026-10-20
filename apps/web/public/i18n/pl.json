@@ -1906,7 +1906,8 @@
     "nearAUniversity": "W pobliżu uczelni",
     "hostelsInOtherCities": "Hostele w innych miastach",
     "commonQuestions": "Częste pytania",
-    "hostelsIn": "Hostele w {{place}}"
+    "hostelsIn": "Hostele w {{place}}",
+    "moreInPlace": "Więcej: {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Najczęściej zadawane pytania",
@@ -2241,7 +2242,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — przewodniki po hostelach, kampusach i północy | HostelHive",
     "blogDescription": "Praktyczne przewodniki po hostelach studenckich i noclegach dla backpackerów w Pakistanie: ile kosztują pokoje w poszczególnych miastach, hostele w pobliżu największych uczelni i gdzie nocować w regionach północnych.",
-    "listingLoadingTitle": "Szczegóły hostelu — HostelHive"
+    "listingLoadingTitle": "Szczegóły hostelu — HostelHive",
+    "unitPerBedNight": "za łóżko za noc",
+    "unitPerBedMonth": "za łóżko za miesiąc",
+    "featureMess": "Stołówka (posiłki w cenie)",
+    "featureGender": "Płeć"
   },
   "routeTitle": {
     "imageCredits": "Źródła zdjęć",
