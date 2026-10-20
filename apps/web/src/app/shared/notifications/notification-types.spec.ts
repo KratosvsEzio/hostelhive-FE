@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { KNOWN_NOTIFICATION_TYPES, notificationTypeStyle } from './notification-types';
+import { BILLING_NOTIFICATION_TYPES } from './notification-links';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (relative: string) => readFileSync(join(here, relative), 'utf8');
@@ -92,5 +93,26 @@ describe('notificationTypeStyle', () => {
       expect(source).toContain('notificationTypeStyle');
       expect(source).not.toContain("case 'meal_confirmation'");
     }
+  });
+
+  it('names every billing notice, so none of them falls back to English (Trello #219)', () => {
+    const untranslated = [...BILLING_NOTIFICATION_TYPES].filter(
+      (type) => notificationTypeStyle(type).labelKey === null,
+    );
+    expect(untranslated).toEqual([]);
+  });
+
+  it.each([
+    ['payment_received', 'ti-circle-check', 'notifications.types.paymentReceived', 'text-emerald-600'],
+    ['payment_rejected', 'ti-circle-x', 'notifications.types.paymentRejected', 'text-danger'],
+    ['renewal_invoice', 'ti-file-invoice', 'notifications.types.renewalInvoice', 'text-blue-600'],
+    ['renewal_reminder', 'ti-clock', 'notifications.types.renewalReminder', 'text-amber-600'],
+    ['subscription_past_due', 'ti-alert-triangle', 'notifications.types.subscriptionPastDue', 'text-warn'],
+    ['subscription_ended', 'ti-calendar-x', 'notifications.types.subscriptionEnded', 'text-danger'],
+  ])('gives %s its own icon, tint and name', (type, icon, labelKey, text) => {
+    const style = notificationTypeStyle(type);
+    expect(style.icon).toBe(icon);
+    expect(style.labelKey).toBe(labelKey);
+    expect(style.text).toBe(text);
   });
 });

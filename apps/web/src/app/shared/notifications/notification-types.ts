@@ -47,6 +47,44 @@ const NOTIFICATION_TYPES: Record<string, KnownTypeStyle> = {
     bg: 'bg-warn/10 text-warn',
     text: 'text-warn',
   },
+  // The rest of the billing notices (Trello #219). Icons come from the subset font
+  // (`npm run icons:check`), so only glyphs it already ships are used.
+  payment_received: {
+    icon: 'ti-circle-check',
+    labelKey: 'notifications.types.paymentReceived',
+    bg: 'bg-emerald-50 text-emerald-600',
+    text: 'text-emerald-600',
+  },
+  payment_rejected: {
+    icon: 'ti-circle-x',
+    labelKey: 'notifications.types.paymentRejected',
+    bg: 'bg-danger/10 text-danger',
+    text: 'text-danger',
+  },
+  renewal_invoice: {
+    icon: 'ti-file-invoice',
+    labelKey: 'notifications.types.renewalInvoice',
+    bg: 'bg-blue-50 text-blue-600',
+    text: 'text-blue-600',
+  },
+  renewal_reminder: {
+    icon: 'ti-clock',
+    labelKey: 'notifications.types.renewalReminder',
+    bg: 'bg-amber-50 text-amber-600',
+    text: 'text-amber-600',
+  },
+  subscription_past_due: {
+    icon: 'ti-alert-triangle',
+    labelKey: 'notifications.types.subscriptionPastDue',
+    bg: 'bg-warn/10 text-warn',
+    text: 'text-warn',
+  },
+  subscription_ended: {
+    icon: 'ti-calendar-x',
+    labelKey: 'notifications.types.subscriptionEnded',
+    bg: 'bg-danger/10 text-danger',
+    text: 'text-danger',
+  },
 };
 
 /** Every notification type with a look and a translated name of its own. */

@@ -2177,7 +2177,13 @@
       "rent": "किराया",
       "receipt": "रसीद",
       "cardDeclined": "कार्ड अस्वीकृत",
-      "cardExpiring": "कार्ड जल्द समाप्त होगा"
+      "cardExpiring": "कार्ड जल्द समाप्त होगा",
+      "paymentReceived": "भुगतान प्राप्त हुआ",
+      "paymentRejected": "भुगतान अस्वीकृत",
+      "renewalInvoice": "रिन्यूअल चालान",
+      "renewalReminder": "रिन्यूअल रिमाइंडर",
+      "subscriptionPastDue": "प्लान का भुगतान बकाया",
+      "subscriptionEnded": "प्लान खत्म हुआ"
     }
   },
   "currency": {

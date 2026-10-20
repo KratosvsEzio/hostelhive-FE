@@ -2177,7 +2177,13 @@
       "rent": "家賃",
       "receipt": "領収書",
       "cardDeclined": "カードが拒否されました",
-      "cardExpiring": "カードの期限が間もなく切れます"
+      "cardExpiring": "カードの期限が間もなく切れます",
+      "paymentReceived": "お支払いを受け付けました",
+      "paymentRejected": "お支払いが承認されませんでした",
+      "renewalInvoice": "更新の請求書",
+      "renewalReminder": "更新のお知らせ",
+      "subscriptionPastDue": "プランの支払い期限切れ",
+      "subscriptionEnded": "プランが終了"
     }
   },
   "currency": {

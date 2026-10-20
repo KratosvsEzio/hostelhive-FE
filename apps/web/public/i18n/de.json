@@ -2177,7 +2177,13 @@
       "rent": "Miete",
       "receipt": "Beleg",
       "cardDeclined": "Karte abgelehnt",
-      "cardExpiring": "Karte läuft bald ab"
+      "cardExpiring": "Karte läuft bald ab",
+      "paymentReceived": "Zahlung erhalten",
+      "paymentRejected": "Zahlung abgelehnt",
+      "renewalInvoice": "Verlängerungsrechnung",
+      "renewalReminder": "Erinnerung an die Verlängerung",
+      "subscriptionPastDue": "Tarif überfällig",
+      "subscriptionEnded": "Tarif beendet"
     }
   },
   "currency": {

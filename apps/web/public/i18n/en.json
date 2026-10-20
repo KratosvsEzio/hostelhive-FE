@@ -1741,7 +1741,13 @@
       "rent": "Rent",
       "receipt": "Receipt",
       "cardDeclined": "Card declined",
-      "cardExpiring": "Card expiring"
+      "cardExpiring": "Card expiring",
+      "paymentReceived": "Payment received",
+      "paymentRejected": "Payment rejected",
+      "renewalInvoice": "Renewal invoice",
+      "renewalReminder": "Renewal reminder",
+      "subscriptionPastDue": "Plan past due",
+      "subscriptionEnded": "Plan ended"
     }
   },
   "publicAbout": {

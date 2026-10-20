@@ -2182,7 +2182,13 @@
       "rent": "Sewa",
       "receipt": "Kuitansi",
       "cardDeclined": "Kartu ditolak",
-      "cardExpiring": "Kartu segera kedaluwarsa"
+      "cardExpiring": "Kartu segera kedaluwarsa",
+      "paymentReceived": "Pembayaran diterima",
+      "paymentRejected": "Pembayaran ditolak",
+      "renewalInvoice": "Faktur perpanjangan",
+      "renewalReminder": "Pengingat perpanjangan",
+      "subscriptionPastDue": "Paket menunggak",
+      "subscriptionEnded": "Paket berakhir"
     }
   },
   "currency": {

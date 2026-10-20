@@ -2177,7 +2177,13 @@
       "rent": "Bérleti díj",
       "receipt": "Nyugta",
       "cardDeclined": "Kártya elutasítva",
-      "cardExpiring": "Kártya hamarosan lejár"
+      "cardExpiring": "Kártya hamarosan lejár",
+      "paymentReceived": "Fizetés beérkezett",
+      "paymentRejected": "Fizetés elutasítva",
+      "renewalInvoice": "Megújítási számla",
+      "renewalReminder": "Megújítási emlékeztető",
+      "subscriptionPastDue": "Csomag fizetése elmaradt",
+      "subscriptionEnded": "Csomag megszűnt"
     }
   },
   "currency": {

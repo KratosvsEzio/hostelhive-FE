@@ -2177,7 +2177,13 @@
       "rent": "Hyra",
       "receipt": "Kvitto",
       "cardDeclined": "Kortet nekades",
-      "cardExpiring": "Kortet går snart ut"
+      "cardExpiring": "Kortet går snart ut",
+      "paymentReceived": "Betalning mottagen",
+      "paymentRejected": "Betalning avvisad",
+      "renewalInvoice": "Förnyelsefaktura",
+      "renewalReminder": "Påminnelse om förnyelse",
+      "subscriptionPastDue": "Obetalt abonnemang",
+      "subscriptionEnded": "Abonnemang upphört"
     }
   },
   "currency": {

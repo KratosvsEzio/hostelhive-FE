@@ -2177,7 +2177,13 @@
       "rent": "租金",
       "receipt": "收据",
       "cardDeclined": "银行卡被拒",
-      "cardExpiring": "银行卡即将过期"
+      "cardExpiring": "银行卡即将过期",
+      "paymentReceived": "已收到付款",
+      "paymentRejected": "付款被拒",
+      "renewalInvoice": "续订发票",
+      "renewalReminder": "续订提醒",
+      "subscriptionPastDue": "套餐逾期未付",
+      "subscriptionEnded": "套餐已结束"
     }
   },
   "currency": {

@@ -2182,7 +2182,13 @@
       "rent": "Tiền thuê",
       "receipt": "Biên lai",
       "cardDeclined": "Thẻ bị từ chối",
-      "cardExpiring": "Thẻ sắp hết hạn"
+      "cardExpiring": "Thẻ sắp hết hạn",
+      "paymentReceived": "Đã nhận thanh toán",
+      "paymentRejected": "Thanh toán bị từ chối",
+      "renewalInvoice": "Hóa đơn gia hạn",
+      "renewalReminder": "Nhắc nhở gia hạn",
+      "subscriptionPastDue": "Gói quá hạn thanh toán",
+      "subscriptionEnded": "Gói đã kết thúc"
     }
   },
   "currency": {

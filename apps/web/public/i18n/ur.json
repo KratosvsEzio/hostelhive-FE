@@ -2182,7 +2182,13 @@
       "rent": "کرایہ",
       "receipt": "رسید",
       "cardDeclined": "کارڈ مسترد ہو گیا",
-      "cardExpiring": "کارڈ کی میعاد جلد ختم"
+      "cardExpiring": "کارڈ کی میعاد جلد ختم",
+      "paymentReceived": "ادائیگی موصول ہو گئی",
+      "paymentRejected": "ادائیگی مسترد",
+      "renewalInvoice": "تجدید کی انوائس",
+      "renewalReminder": "تجدید کی یاد دہانی",
+      "subscriptionPastDue": "پلان کی ادائیگی واجب الادا",
+      "subscriptionEnded": "پلان ختم ہو گیا"
     }
   },
   "currency": {

@@ -2177,7 +2177,13 @@
       "rent": "Huur",
       "receipt": "Bon",
       "cardDeclined": "Kaart geweigerd",
-      "cardExpiring": "Kaart verloopt binnenkort"
+      "cardExpiring": "Kaart verloopt binnenkort",
+      "paymentReceived": "Betaling ontvangen",
+      "paymentRejected": "Betaling afgewezen",
+      "renewalInvoice": "Verlengingsfactuur",
+      "renewalReminder": "Herinnering voor verlenging",
+      "subscriptionPastDue": "Abonnement achterstallig",
+      "subscriptionEnded": "Abonnement beëindigd"
     }
   },
   "currency": {
