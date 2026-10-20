@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Egyetem közelében",
     "hostelsInOtherCities": "Szállások más városokban",
     "commonQuestions": "Gyakori kérdések",
-    "hostelsIn": "Szálláshelyek itt: {{place}}"
+    "hostelsIn": "Szálláshelyek itt: {{place}}",
+    "moreInPlace": "Továbbiak: {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Gyakran ismételt kérdések",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — útmutatók szállásokról, egyetemi campusokról és az északi területekről | HostelHive",
     "blogDescription": "Gyakorlati útmutatók diákszállásokhoz és hátizsákos szálláshelyekhez Pakisztánban: mennyibe kerülnek a szobák városról városra, szállások a nagy egyetemek közelében, és hol lehet megszállni az északi területeken.",
-    "listingLoadingTitle": "Szálláshely adatai — HostelHive"
+    "listingLoadingTitle": "Szálláshely adatai — HostelHive",
+    "unitPerBedNight": "ágyanként és éjszakánként",
+    "unitPerBedMonth": "ágyanként és havonta",
+    "featureMess": "Étkezde (étkezés az árban)",
+    "featureGender": "Nem"
   },
   "routeTitle": {
     "imageCredits": "Képforrások",

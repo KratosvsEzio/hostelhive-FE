@@ -1130,15 +1130,18 @@ export class ListingDetail {
       // `priceSpecification` can be: it carries the currency and — the part that matters
       // here — the unit. A Pakistani hostel is let by the month (UN/CEFACT `MON`), which
       // no international travel site models, and a backpacker bed by the night (`DAY`).
-      jsonLd['priceRange'] = `From PKR ${l.priceFrom}`;
+      // The display strings are in the page's language like the rest of the block; the
+      // codes beside them (`PKR`, `MON`, `DAY`) are what a crawler compares (Trello #211).
+      jsonLd['priceRange'] = this.i18n.translate<string>(
+        nightly ? 'seo.priceFromNight' : 'seo.priceFromMonth',
+        { price: `PKR ${l.priceFrom}` },
+      );
       jsonLd['priceSpecification'] = {
         '@type': 'UnitPriceSpecification',
         price: l.priceFrom,
         priceCurrency: l.currency || 'PKR',
-        unitCode: periodForAccommodation(l.accommodationType) === 'nightly' ? 'DAY' : 'MON',
-        ...(periodForAccommodation(l.accommodationType) === 'nightly'
-          ? { unitText: 'per bed per night' }
-          : { unitText: 'per bed per month' }),
+        unitCode: nightly ? 'DAY' : 'MON',
+        unitText: this.i18n.translate<string>(nightly ? 'seo.unitPerBedNight' : 'seo.unitPerBedMonth'),
       };
     }
     if (l.lat && l.lng) {
@@ -1160,20 +1163,20 @@ export class ListingDetail {
     // machine-readable rather than something a crawler has to infer from prose.
     const features: Record<string, unknown>[] = (l.amenities ?? []).map((a) => ({
       '@type': 'LocationFeatureSpecification',
-      name: AMENITIES[a]?.label ?? a,
+      name: this.amenityName(a),
       value: true,
     }));
 
     features.push({
       '@type': 'LocationFeatureSpecification',
-      name: 'Mess (meals included)',
+      name: this.i18n.translate<string>('seo.featureMess'),
       value: this.hasMess(l),
     });
 
     if (l.accommodationType !== 'coliving') {
       features.push({
         '@type': 'LocationFeatureSpecification',
-        name: 'Gender',
+        name: this.i18n.translate<string>('seo.featureGender'),
         value: this.genderLabel(l.accommodationType),
       });
     }
@@ -1206,6 +1209,15 @@ export class ListingDetail {
   protected genderLabel(g: AccommodationType): string {
     const key = ACCOMMODATION_LABEL_KEYS[g];
     return key ? this.i18n.translate<string>(key) : accommodationLabel(g);
+  }
+
+  /**
+   * An amenity slug as a name, in the language being read, through the same keys the
+   * search filters use. A slug the catalogue does not know stays as it came.
+   */
+  private amenityName(slug: string): string {
+    const known = AMENITIES[slug];
+    return known ? this.i18n.translate<string>(known.key) : slug;
   }
 
   protected initials(name: string): string {

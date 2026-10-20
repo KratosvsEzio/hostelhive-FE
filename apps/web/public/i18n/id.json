@@ -1906,7 +1906,8 @@
     "nearAUniversity": "Dekat universitas",
     "hostelsInOtherCities": "Hostel di kota lain",
     "commonQuestions": "Pertanyaan umum",
-    "hostelsIn": "Hostel di {{place}}"
+    "hostelsIn": "Hostel di {{place}}",
+    "moreInPlace": "Lainnya di {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Pertanyaan yang Sering Diajukan",
@@ -2241,7 +2242,11 @@
     "adminPageTitle": "{{page}} — Admin HostelHive",
     "blogTitle": "Blog — panduan hostel, kampus, dan wilayah utara | HostelHive",
     "blogDescription": "Panduan praktis hostel mahasiswa dan penginapan backpacker di Pakistan: biaya kamar di tiap kota, hostel dekat universitas besar, dan tempat menginap di wilayah utara.",
-    "listingLoadingTitle": "Detail hostel — HostelHive"
+    "listingLoadingTitle": "Detail hostel — HostelHive",
+    "unitPerBedNight": "per tempat tidur per malam",
+    "unitPerBedMonth": "per tempat tidur per bulan",
+    "featureMess": "Kantin (termasuk makan)",
+    "featureGender": "Jenis kelamin"
   },
   "routeTitle": {
     "imageCredits": "Kredit gambar",

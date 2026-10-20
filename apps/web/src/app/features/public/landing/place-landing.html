@@ -59,14 +59,14 @@
           <a
             [routerLink]="u.path"
             class="rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 transition hover:border-brand-400 hover:text-brand-500"
-            >{{ u.label }}</a
+            >{{ 'seo.headingNearCampus' | transloco: { campus: u.campus } }}</a
           >
         }
       </div>
     }
     @if (genderLinks().length) {
       <h2 class="font-display text-base font-semibold text-ink-900">
-        More in {{ p.name }}
+        {{ 'publicLanding.moreInPlace' | transloco: { place: p.name } }}
       </h2>
       <div class="mt-3 flex flex-wrap gap-2">
         @for (link of genderLinks(); track link.path) {

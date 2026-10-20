@@ -1901,7 +1901,8 @@
     "nearAUniversity": "بالقرب من جامعة",
     "hostelsInOtherCities": "نزل في مدن أخرى",
     "commonQuestions": "أسئلة شائعة",
-    "hostelsIn": "نُزل في {{place}}"
+    "hostelsIn": "نُزل في {{place}}",
+    "moreInPlace": "المزيد في {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "الأسئلة الشائعة",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — إدارة HostelHive",
     "blogTitle": "المدونة — أدلة النزل والحرم الجامعية والشمال | HostelHive",
     "blogDescription": "أدلة عملية للنزل الطلابية وإقامات الرحّالة في باكستان: كم تكلّف الغرف في كل مدينة، والنزل القريبة من الجامعات الكبرى، وأين تبيت في المناطق الشمالية.",
-    "listingLoadingTitle": "تفاصيل النزل — HostelHive"
+    "listingLoadingTitle": "تفاصيل النزل — HostelHive",
+    "unitPerBedNight": "لكل سرير في الليلة",
+    "unitPerBedMonth": "لكل سرير في الشهر",
+    "featureMess": "المطعم (الوجبات مشمولة)",
+    "featureGender": "الجنس"
   },
   "routeTitle": {
     "imageCredits": "حقوق الصور",

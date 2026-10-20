@@ -1906,7 +1906,8 @@
     "nearAUniversity": "Рядом с университетом",
     "hostelsInOtherCities": "Хостелы в других городах",
     "commonQuestions": "Частые вопросы",
-    "hostelsIn": "Хостелы в {{place}}"
+    "hostelsIn": "Хостелы в {{place}}",
+    "moreInPlace": "Ещё: {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Часто задаваемые вопросы",
@@ -2241,7 +2242,11 @@
     "adminPageTitle": "{{page}} — админпанель HostelHive",
     "blogTitle": "Блог — гиды по хостелам, кампусам и северу | HostelHive",
     "blogDescription": "Практические гиды по студенческим хостелам и жилью для бэкпекеров в Пакистане: сколько стоят комнаты в каждом городе, хостелы рядом с крупными университетами и где остановиться в северных районах.",
-    "listingLoadingTitle": "Данные хостела — HostelHive"
+    "listingLoadingTitle": "Данные хостела — HostelHive",
+    "unitPerBedNight": "за койку в сутки",
+    "unitPerBedMonth": "за койку в месяц",
+    "featureMess": "Столовая (питание включено)",
+    "featureGender": "Пол"
   },
   "routeTitle": {
     "imageCredits": "Авторы изображений",

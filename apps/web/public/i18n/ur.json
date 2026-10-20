@@ -1906,7 +1906,8 @@
     "nearAUniversity": "یونیورسٹی کے قریب",
     "hostelsInOtherCities": "دیگر شہروں میں ہاسٹل",
     "commonQuestions": "عام سوالات",
-    "hostelsIn": "{{place}} میں ہاسٹل"
+    "hostelsIn": "{{place}} میں ہاسٹل",
+    "moreInPlace": "{{place}} میں مزید"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "اکثر پوچھے جانے والے سوالات",
@@ -2241,7 +2242,11 @@
     "adminPageTitle": "{{page}} — HostelHive ایڈمن",
     "blogTitle": "بلاگ — ہاسٹلز، کیمپس اور شمالی علاقوں کی گائیڈز | HostelHive",
     "blogDescription": "پاکستان میں طلبہ ہاسٹلز اور بیک پیکرز کے قیام کی عملی گائیڈز: شہر بہ شہر کمروں کی قیمت کتنی ہے، بڑی یونیورسٹیوں کے قریب ہاسٹل، اور شمالی علاقوں میں کہاں ٹھہریں۔",
-    "listingLoadingTitle": "ہاسٹل کی تفصیلات — HostelHive"
+    "listingLoadingTitle": "ہاسٹل کی تفصیلات — HostelHive",
+    "unitPerBedNight": "فی بستر فی رات",
+    "unitPerBedMonth": "فی بستر فی مہینہ",
+    "featureMess": "میس (کھانا شامل)",
+    "featureGender": "جنس"
   },
   "routeTitle": {
     "imageCredits": "تصاویر کے کریڈٹس",

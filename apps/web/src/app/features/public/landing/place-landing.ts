@@ -83,7 +83,7 @@ export class PlaceLanding {
     const current = this.university()?.slug;
     return universitiesIn(p.slug)
       .filter((u) => u.slug !== current)
-      .map((u) => ({ path: `/hostels/${p.slug}/${u.slug}`, label: `Hostels near ${u.shortName}` }));
+      .map((u) => ({ path: `/hostels/${p.slug}/${u.slug}`, campus: u.shortName }));
   });
 
   protected readonly heading = computed(() => {

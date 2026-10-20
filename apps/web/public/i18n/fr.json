@@ -1901,7 +1901,8 @@
     "nearAUniversity": "Près d’une université",
     "hostelsInOtherCities": "Auberges dans d’autres villes",
     "commonQuestions": "Questions fréquentes",
-    "hostelsIn": "Auberges à {{place}}"
+    "hostelsIn": "Auberges à {{place}}",
+    "moreInPlace": "Plus à {{place}}"
   },
   "publicFaqs": {
     "frequentlyAskedQuestions": "Foire aux questions",
@@ -2236,7 +2237,11 @@
     "adminPageTitle": "{{page}} — HostelHive Admin",
     "blogTitle": "Blog — guides des auberges, des campus et du Nord | HostelHive",
     "blogDescription": "Des guides pratiques sur les auberges étudiantes et les hébergements pour routards au Pakistan : le prix des chambres ville par ville, les auberges près des grandes universités et où dormir dans les régions du Nord.",
-    "listingLoadingTitle": "Détails de l’auberge — HostelHive"
+    "listingLoadingTitle": "Détails de l’auberge — HostelHive",
+    "unitPerBedNight": "par lit et par nuit",
+    "unitPerBedMonth": "par lit et par mois",
+    "featureMess": "Cantine (repas inclus)",
+    "featureGender": "Genre"
   },
   "routeTitle": {
     "imageCredits": "Crédits des images",
