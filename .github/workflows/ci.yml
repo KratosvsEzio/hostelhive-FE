@@ -13,6 +13,9 @@ permissions:
 jobs:
   main:
     runs-on: ubuntu-latest
+    # A green run takes about 15 minutes. Without a limit, a hung test worker held the job for
+    # GitHub's 6-hour maximum on every run from f20b6e1 (#177) on; fail fast instead.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
