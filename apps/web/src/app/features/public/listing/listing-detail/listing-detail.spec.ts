@@ -622,3 +622,78 @@ describe('ListingDetail booking wiring', () => {
     });
   });
 });
+
+/**
+ * The link the WhatsApp message hands the host (Trello #210): the public address, in the
+ * language the seeker is reading, never this build's own origin.
+ */
+describe('ListingDetail WhatsApp message link', () => {
+  const active = signal('en');
+  let harness: RouterTestingHarness;
+  // Every field the full page renders, as in the booking wiring block above.
+  const FULL = {
+    ...LISTING,
+    billingFrequency: 'month',
+    currency: 'PKR',
+    address: '12 Canal Road',
+    photoCount: 0,
+    photos: [],
+    amenityCount: 0,
+    nearby: [],
+    sharing: [],
+    rooms: [],
+  } as unknown as ListingDetailModel;
+
+  afterEach(() => active.set('en'));
+
+  async function open(url = LISTING_URL): Promise<void> {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: ':locale/hostel', children: LISTING_ROUTES }]),
+        provideI18nTesting(),
+        { provide: LocaleStore, useValue: { ready: signal(true), active } },
+        { provide: ListingDetailApi, useValue: { getBySlug: () => of(FULL) } },
+        { provide: StudentApi, useValue: { getReviews: () => of([]) } },
+        { provide: HostelsApi, useValue: {} },
+        { provide: FavoritesStore, useValue: { isFavorite: () => false } },
+        { provide: BookingApi, useValue: { setCatalogue: vi.fn() } },
+        { provide: MobileApp, useValue: { isMobile: signal(false) } },
+        { provide: GoogleAnalyticsService, useValue: { track: vi.fn() } },
+      ],
+    });
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(url, ListingDetail);
+    harness.detectChanges();
+  }
+
+  /** The `Link:` the message carries, once the number has been revealed. */
+  function messageLink(): string | undefined {
+    const page = harness.routeDebugElement?.componentInstance as {
+      phoneDetail: { set(v: unknown): void };
+      whatsAppUrl(): string | null;
+    };
+    page.phoneDetail.set({ primaryPhone: '+92 300 1234567', secondaryPhone: null, email: null });
+    const url = page.whatsAppUrl();
+    const text = url ? new URL(url).searchParams.get('text') : null;
+    return text?.split('Link: ')[1];
+  }
+
+  it('links the public address of the listing, with the language prefix', async () => {
+    await open();
+
+    expect(messageLink()).toBe('https://hostelhive.com/en/hostel/al-madina');
+  });
+
+  it('never uses the origin of the build it runs on', async () => {
+    await open();
+
+    expect(messageLink()?.startsWith(window.location.origin)).toBe(false);
+  });
+
+  it('follows the language the seeker is reading', async () => {
+    active.set('ur');
+    await open('/ur/hostel/al-madina');
+
+    expect(messageLink()).toBe('https://hostelhive.com/ur/hostel/al-madina');
+  });
+});

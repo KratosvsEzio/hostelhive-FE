@@ -125,7 +125,8 @@ listing. A 404 keeps its 200 not-found page, and any other 4xx stays a 200. In t
 - **`setJsonLd(id, data)`** replaces structured data by id.
 - **`preloadImage(url)`** puts the LCP hero in the server-rendered head.
 - **`clearOnDestroy(destroyRef, ids, { preloadImage })`** removes a page's JSON-LD ids, and optionally its preload, when the page is destroyed. Every page that writes JSON-LD calls it: home, blog, blog article, listing and PlaceLanding. It is SSR-safe, because `@angular/ssr` serialises the document before it destroys the platform.
-- **Absolute URLs** always use `SITE_ORIGIN`, never `location.origin`.
+- **Absolute URLs** always use `SITE_ORIGIN`, never `location.origin`. That includes links handed to other people: the listing's WhatsApp message to a host carries `Seo.pageUrl('/hostel/<slug>')`, the public address in the seeker's language, so a staging or LAN build never sends its own host (Trello #210).
+  - Page code doesn't name `SITE_ORIGIN` at all, not even in a comment. `core/seo-origin-use.spec.ts` counts every mention outside an import against its allowlist.
 
 **Sitemap.** `server.ts` answers `/sitemap.xml` before `express.static`. URLs come from the static page
 list, `PLACES` x `GENDER_SEGMENTS`, `UNIVERSITIES` and `BLOG_POSTS`. Each is prefixed with every
