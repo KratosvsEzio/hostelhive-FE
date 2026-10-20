@@ -139,14 +139,33 @@ export class HostOverview {
   protected readonly billTab = signal<'due' | 'over-due'>('due');
   protected readonly ledgerTab = signal<'due' | 'over-due'>('due');
 
+  /** Bumped by Retry: every read on the page keys on it, so one press re-requests them all. */
+  private readonly refresh = signal(0);
+
+  /**
+   * The hostel plus the Retry count, as a new object each time either changes.
+   *
+   * Every read below keys on this rather than on the hostel id alone. A computed only notifies
+   * when its value changes (`Object.is`), so one that read `refresh` but returned the same id
+   * never emitted again, and Retry re-requested nothing (Trello #203). The reads beside the
+   * cards fail with them when the server is unreachable and have no Retry of their own, so
+   * Retry brings them back too.
+   */
+  private readonly hostelReload = computed(() => ({
+    hostelId: this.propertyStore.selected(),
+    reload: this.refresh(),
+  }));
+
   private readonly billTabQuery = computed(() => ({
     hostelId: this.propertyStore.selected(),
     tab: this.billTab(),
+    reload: this.refresh(),
   }));
 
   private readonly ledgerQuery = computed(() => ({
     hostelId: this.propertyStore.selected(),
     tab: this.ledgerTab(),
+    reload: this.refresh(),
   }));
 
   /**
@@ -158,6 +177,7 @@ export class HostOverview {
    */
   private readonly upcomingQuery = computed(() => ({
     hostelId: this.monthlyBilled() ? '' : this.propertyStore.selected(),
+    reload: this.refresh(),
   }));
 
   /** The clock, read once when the page opens; each fetch turns it into the hostel's date. */
@@ -289,8 +309,8 @@ export class HostOverview {
   /** Renters with a bill of this type still due or over-due, counted by id: tenants can share a name. */
   private unpaidTenants(billType: 'rental' | 'utility') {
     const bills = toSignal(
-      toObservable(this.propertyStore.selected).pipe(
-        switchMap((hostelId) =>
+      toObservable(this.hostelReload).pipe(
+        switchMap(({ hostelId }) =>
           hostelId
             ? this.opsApi.invoices(hostelId, 1, UNPAID_BILLS_LIMIT, {
                 'f[bill_type]': billType,
@@ -307,19 +327,12 @@ export class HostOverview {
     return computed(() => new Set(bills().map((i) => i.renterId)).size);
   }
 
-  private readonly refresh = signal(0);
-
   protected readonly kpiSkeletons = [1, 2, 3, 4, 5, 6];
 
-  private readonly query = computed(() => {
-    this.refresh();
-    return this.propertyStore.selected();
-  });
-
   protected readonly state = toSignal(
-    toObservable(this.query).pipe(
-      switchMap((id) =>
-        this.api.overviewCards(id).pipe(
+    toObservable(this.hostelReload).pipe(
+      switchMap(({ hostelId }) =>
+        this.api.overviewCards(hostelId).pipe(
           map((data): ViewState => ({ loading: false, error: false, subscriptionError: false, networkError: false, data })),
           startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, data: null }),
           catchError((err) => {
@@ -341,8 +354,8 @@ export class HostOverview {
   );
 
   private readonly monthlyRevenueResp = toSignal(
-    toObservable(this.propertyStore.selected).pipe(
-      switchMap((slug) =>
+    toObservable(this.hostelReload).pipe(
+      switchMap(({ hostelId: slug }) =>
         slug
           ? this.api.monthlyRevenue(slug).pipe(
               map((data) => ({ loading: false, error: false, data })),
@@ -358,8 +371,8 @@ export class HostOverview {
   protected readonly revenueError = computed(() => this.monthlyRevenueResp().error);
 
   private readonly tenantMovementResp = toSignal(
-    toObservable(this.propertyStore.selected).pipe(
-      switchMap((slug) =>
+    toObservable(this.hostelReload).pipe(
+      switchMap(({ hostelId: slug }) =>
         slug
           ? this.api.tenantMovement(slug).pipe(
               map((data) => ({ loading: false, error: false, data })),
