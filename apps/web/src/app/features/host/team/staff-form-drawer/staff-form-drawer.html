@@ -75,7 +75,11 @@
         {{ 'hostTeam.managerAccess' | transloco }}
       </p>
       <div class="flex-1 border-t border-ink-100"></div>
-      <hh-toggle [checked]="f.isManager" (checkedChange)="onManagerToggle($event)" />
+      <hh-toggle
+        [label]="'hostTeam.managerAccess' | transloco"
+        [checked]="f.isManager"
+        (checkedChange)="onManagerToggle($event)"
+      />
     </div>
     @if (f.isManager) {
       <!-- Keyed on the stored email, not on `user.id`: the serializer sends that for every

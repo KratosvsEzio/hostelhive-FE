@@ -134,6 +134,7 @@
               </div>
               <hh-toggle
                 class="shrink-0"
+                [label]="'moderatorReview.discountedPrice' | transloco"
                 [checked]="discountEnabled()"
                 (checkedChange)="discountEnabledChange.emit($event)"
               />
@@ -245,6 +246,7 @@
           </div>
           <hh-toggle
             class="shrink-0"
+            [label]="'moderatorReview.availableToBookOnline' | transloco"
             [checked]="bookable()"
             (checkedChange)="bookableChange.emit($event)"
           />

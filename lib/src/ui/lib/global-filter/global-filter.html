@@ -56,6 +56,7 @@
 
               @if (group.inlineSidebar) {
                 <hh-toggle
+                  [label]="group.label"
                   [checked]="getSwitch(group.key)"
                   (checkedChange)="setSwitch(group.key, $event)"
                   (click)="$event.stopPropagation()"
@@ -147,6 +148,7 @@
                     <p class="text-sm text-ink-700">{{ field.description }}</p>
                   }
                   <hh-toggle
+                    [label]="field.label || field.description || null"
                     [checked]="getSwitch(field.key)"
                     (checkedChange)="setSwitch(field.key, $event)"
                   />
