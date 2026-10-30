@@ -161,16 +161,18 @@ export class HostBookingsApi {
    * on the reasoning that an empty calendar might be mistaken for a broken one. That trade is
    * only worth making while the endpoint does not exist.
    *
-   * **Two questions, one answer.** `room.id` is the *first* room a party was checked into, so
-   * a party split across rooms is invisible to its second room through it. `occupied_room_ids`
-   * finds that room, so both are asked and merged, each booking once — a party whose first
-   * room is this one comes back from both, and drawn twice it would double its beds. Which of
-   * the booking's guests are *in* this room is the caller's to work out from its occupancies.
+   * **Three questions, one answer.** `room.id` is the *first* room a party was checked into,
+   * so a party split across rooms is invisible to its second room through it.
+   * `occupied_room_ids` finds the rooms it is in now, and `stayed_room_ids` every room it ever
+   * used, so a checked-out or moved party still shows on each room it slept in. All are asked
+   * and merged, each booking once: a party comes back from several, and drawn twice it would
+   * double its beds. Which of the booking's guests are *in* this room is the caller's to work
+   * out from its occupancies.
    *
-   * Known limit: `occupied_room_ids` holds **active** occupancies only. A checked-out party is
-   * found by its first room alone, so a past stay's second room shows nothing for it.
+   * `stayed_room_ids` covers `occupied_room_ids`, but only on documents indexed since the
+   * backend added it; `occupied_room_ids` stays asked until the index is known to be rebuilt.
    *
-   * Two requests rather than the endpoint's `or[]` group, which the server's search helper
+   * Separate requests rather than the endpoint's `or[]` group, which the server's search helper
    * does build a `should` from: both `f[…]` keys are already in use against this endpoint
    * (room detail reads `occupied_room_ids`), while an `or` it silently ignored would return
    * the whole hostel's bookings and draw every unallotted one on every room.
@@ -191,10 +193,11 @@ export class HostBookingsApi {
           'f[checkout_date][gte]': from,
         })
         .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
-    return forkJoin([ask('f[room.id]'), ask('f[occupied_room_ids]')]).pipe(
-      map(([byRoom, byOccupancy]) => {
-        const seen = new Set(byRoom.map((b) => b.id));
-        return [...byRoom, ...byOccupancy.filter((b) => !seen.has(b.id))];
+    return forkJoin([ask('f[room.id]'), ask('f[occupied_room_ids]'), ask('f[stayed_room_ids]')]).pipe(
+      map((answers) => {
+        const byId = new Map<string, HostBooking>();
+        for (const b of answers.flat()) if (!byId.has(b.id)) byId.set(b.id, b);
+        return [...byId.values()];
       }),
     );
   }
@@ -416,6 +419,11 @@ export interface BookingOccupancy {
   roomNumber: string;
   guests: number;
   active: boolean;
+  /**
+   * `yyyy-MM-dd` at the hostel: the day this room was given back, `''` while it is held or
+   * when the server sent no release time. The room is free from that night on.
+   */
+  releasedOn?: string;
 }
 
 interface ApiOccupanciesResponse {
@@ -428,6 +436,8 @@ interface ApiOccupanciesResponse {
         guests?: HostApiNumber;
         status?: string | null;
         room?: { id?: string | null; room_number?: string | null } | null;
+        /** When the occupancy went inactive, in the hostel's offset. */
+        released_at?: string | null;
       }[]
     | null;
 }
@@ -439,7 +449,20 @@ function toOccupancy(o: NonNullable<ApiOccupanciesResponse['occupancies']>[numbe
     roomNumber: o.room?.room_number ?? o.room_number ?? '—',
     guests: num(o.guests),
     active: (o.status ?? 'active') === 'active',
+    releasedOn: hostelDay(o.released_at),
   };
+}
+
+/**
+ * The hostel's date of a stay timestamp, or `''`.
+ *
+ * The server sends `released_at`, `checked_in_at` and `checked_out_at` in the hostel's own
+ * offset, so the date part is already the hostel's day. Converting through `Date` would move
+ * it into the device's zone.
+ */
+function hostelDay(v: string | null | undefined): string {
+  const day = (v ?? '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '';
 }
 
 /* ───────────────────────────────────────────────────────────── the month ── */
@@ -572,6 +595,9 @@ export interface ApiHostBooking {
    * or checked out. On both the list and a single booking.
    */
   occupancies?: ApiOccupanciesResponse['occupancies'];
+  /** When the party actually checked in and out, in the hostel's offset; null until then. */
+  checked_in_at?: string | null;
+  checked_out_at?: string | null;
   /** Where the booking came from — `Hostelworld`, `Direct`. Often null. */
   source?: string | number | null;
   created_at?: string | null;
@@ -663,6 +689,8 @@ export interface HostBooking {
   cancellationReason: string;
   /** Which rooms the party is (or was) in, and how many in each. Empty until checked in. */
   occupancies: BookingOccupancy[];
+  /** `yyyy-MM-dd` at the hostel the party actually left, `''` until it has (or if unknown). */
+  checkedOutOn?: string;
   /** Channel, when the record names one. */
   source: string;
   createdAt: string;
@@ -758,6 +786,7 @@ export function toHostBooking(b: ApiHostBooking): HostBooking {
     currency: b.currency?.trim().toUpperCase() ?? '',
     cancellationReason: b.cancellation_reason?.trim() ?? '',
     occupancies: (b.occupancies ?? []).map(toOccupancy),
+    checkedOutOn: hostelDay(b.checked_out_at),
     // A number (`0`) on a single booking, a channel name on the list.
     source: typeof b.source === 'string' ? b.source.trim() : '',
     createdAt: b.created_at ?? '',
