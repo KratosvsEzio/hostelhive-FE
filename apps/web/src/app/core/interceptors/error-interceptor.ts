@@ -93,6 +93,16 @@ function serverCode(body: unknown): string | null {
 }
 
 /**
+ * The wait, in seconds, that the rate limiter put on a 429 body (`retry_after`). Null unless it
+ * is a positive finite number.
+ */
+function retryAfterOf(body: unknown): number | null {
+  if (!body || typeof body !== 'object') return null;
+  const seconds = (body as { retry_after?: unknown }).retry_after;
+  return typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0 ? seconds : null;
+}
+
+/**
  * The request's path alone, without the origin or the query string: the origin is the internal
  * API host and a query can carry tokens, so neither belongs in a diagnostic.
  */
@@ -118,8 +128,10 @@ function diagnostic(err: unknown, method: string, url: string): string {
 
 function normalize(err: HttpErrorResponse, method: string, url: string): ApiError {
   const serverMessages = extractServerMessages(err.error);
+  const retryAfter = retryAfterOf(err.error);
   const verb = method.toUpperCase();
   return {
+    ...(retryAfter === null ? {} : { retryAfter }),
     status: err.status,
     // The server's code wins: it is the only thing that tells a "your plan has no CRM" 403
     // apart from any other refusal. Overwriting it here is why `crm_required` never reached

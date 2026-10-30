@@ -147,11 +147,13 @@
     "sendResetLink": "Send reset link",
     "backToLogin": "Back to login",
     "didnTReceiveItResend": "Didn't receive it? Resend",
+    "resendIn": "Resend in {{time}}",
     "enterAValidEmail": "Enter a valid email address.",
     "sentIfAccountExists": "If an account exists for {{email}}, we've sent a link to reset your password. Check your inbox and spam folder.",
     "alreadySent": "A reset link was already sent to this email. Check your inbox and spam folder; you can ask for another one in a few minutes.",
     "sentAnother": "We've sent another link.",
     "tooManyRequests": "Too many attempts. Please wait a few minutes and try again.",
+    "tooManyRequestsRetry": "Too many attempts. Try again in {{time}}.",
     "cannotReachTheServer": "Can't reach the server. Please try again in a moment.",
     "couldNotSend": "We couldn't send a reset link. Check the email address and try again.",
     "useADifferentEmail": "Use a different email"

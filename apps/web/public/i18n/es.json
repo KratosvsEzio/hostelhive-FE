@@ -1857,11 +1857,13 @@
     "sendResetLink": "Enviar enlace",
     "backToLogin": "Volver a iniciar sesión",
     "didnTReceiveItResend": "¿No lo recibiste? Reenviar",
+    "resendIn": "Reenviar en {{time}}",
     "enterAValidEmail": "Introduce un correo electrónico válido.",
     "sentIfAccountExists": "Si existe una cuenta para {{email}}, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.",
     "alreadySent": "Ya se envió un enlace de restablecimiento a este correo. Revisa tu bandeja de entrada y la carpeta de spam; podrás pedir otro en unos minutos.",
     "sentAnother": "Te hemos enviado otro enlace.",
     "tooManyRequests": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+    "tooManyRequestsRetry": "Demasiados intentos. Vuelve a intentarlo en {{time}}.",
     "cannotReachTheServer": "No se puede conectar con el servidor. Inténtalo de nuevo en un momento.",
     "couldNotSend": "No pudimos enviar el enlace de restablecimiento. Comprueba el correo e inténtalo de nuevo.",
     "useADifferentEmail": "Usar otro correo"
