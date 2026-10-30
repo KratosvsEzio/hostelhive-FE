@@ -28,6 +28,10 @@ pages' UI belongs to [search-and-discovery](./search-and-discovery.md); deployme
   page head and the sitemap.
 - `apps/web/src/app/core/i18n/fs-translation-loader.ts`: reads translations from disk during SSR.
 - `apps/web/src/app/core/interceptors/ssr-timeout-interceptor.ts`: 5s cap on each API call during SSR.
+- `apps/web/src/app/core/interceptors/ssr-api-headers-interceptor.ts`: on the server, adds `X-SSR-Secret`
+  and `X-SSR-Client-IP` to calls to the API's `/public/*`, and turns a 429 into a 503 page. Reads
+  `REQUEST_CONTEXT` (`SsrApiContext`), which `server.ts` fills per request.
+- `apps/web/src/app/core/ssr-client-ip.ts`: `parseTrustProxy` (`SSR_TRUST_PROXY`) and `normaliseClientIp`.
 - `apps/web/src/app/core/robots.ts`: `DISALLOWED_PATHS`, `disallowPatterns()` and `renderRobotsTxt()`,
   served as `/robots.txt` by `server.ts`. There is no static `robots.txt` any more.
 
@@ -217,6 +221,17 @@ its indexable self-canonical, raw and rendered
   the `*/` forms.
 - `ssrTimeoutInterceptor` must stay last in the interceptor list in `app.config.ts`. A timed-out request
   is not cached for transfer, so the browser fetches it again.
+- **`SSR_SHARED_SECRET` is read in `server.ts` only.** It reaches the render through
+  `angularApp.handle(req, context)` and `REQUEST_CONTEXT`, never `process.env` in app code, because
+  anything under `app/` can land in the browser bundle. `core/ssr-secret-boundary.spec.ts` fails if
+  another file names it. `REQUEST_CONTEXT` is `null` in the browser and in the build-time prerender,
+  so `ssrApiHeadersInterceptor` does nothing there.
+- **The visitor IP is `req.ip` under `SSR_TRUST_PROXY` hops, never the leftmost `X-Forwarded-For`**,
+  which the visitor writes. A wrong hop count either lets a scraper name any IP or throttles the whole
+  site as one client (Trello #178).
+- **The API rate-limits `/public/*` per visitor.** A 429 on a server call makes the page answer 503
+  with `no-store` (via `SsrResponse.serviceUnavailable()`), on every public page. The listing's
+  `isApiOutage` still treats a 429 as a 4xx; the interceptor has already set the 503.
 - **A click before the app boots used to strand the server page's JSON-LD.** The router replaces the
   first navigation before the page component exists in the browser, so `clearOnDestroy` never runs
   (Trello #138). Now `clearOnDestroy` also *claims* its ids, and `RouteHeadStrategy` calls
@@ -269,6 +284,7 @@ its indexable self-canonical, raw and rendered
 - [Every route declares who owns its head; undeclared means noindex](../decisions/ssr-seo-and-prerender/route-level-head-ownership.md)
 - [The title is part of the head; analytics waits for it to settle](../decisions/ssr-seo-and-prerender/title-is-part-of-the-head.md)
 - [Single-language pages canonicalise to their language, with no hreflang](../decisions/ssr-seo-and-prerender/single-language-pages-canonicalise-to-their-language.md)
+- [Server renders name the visitor to the API's rate limiter](../decisions/ssr-seo-and-prerender/ssr-names-the-visitor-to-the-rate-limiter.md)
 
 ## See also
 

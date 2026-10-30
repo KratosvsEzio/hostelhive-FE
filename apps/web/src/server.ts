@@ -7,8 +7,10 @@ import {
 import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { SsrApiContext } from './app/core/interceptors/ssr-api-headers-interceptor';
 import { renderRobotsTxt } from './app/core/robots';
 import { SITE_ORIGIN } from './app/core/seo';
+import { normaliseClientIp, parseTrustProxy } from './app/core/ssr-client-ip';
 import {
   renderSitemap,
   sitemapPaths,
@@ -46,12 +48,48 @@ function resolveAllowedHosts(): string[] {
   return DEV_HOSTS;
 }
 
+/**
+ * How many proxies stand in front of this server, from `SSR_TRUST_PROXY` — see
+ * `parseTrustProxy`. A value that is not a whole number is fatal in production: guessing
+ * too many hops lets a visitor forge their IP, too few makes every visitor one client.
+ */
+function resolveTrustProxy(): number {
+  const hops = parseTrustProxy(process.env['SSR_TRUST_PROXY']);
+  if (hops !== null) return hops;
+  console.error(
+    `[SSR] SSR_TRUST_PROXY must be a whole number of proxy hops, got ` +
+      `"${process.env['SSR_TRUST_PROXY']}". Using 0 (the TCP peer address).`,
+  );
+  if (process.env['NODE_ENV'] === 'production') process.exit(1);
+  return 0;
+}
+
+/**
+ * The secret the API checks before it trusts `X-SSR-Client-IP`. Read here, and only here, so
+ * no file the browser bundle is built from ever touches it. Unset is a working state: the
+ * API then counts the renderer as one client, which is how it behaved before.
+ */
+function resolveSsrSecret(): string | null {
+  const secret = process.env['SSR_SHARED_SECRET']?.trim() || null;
+  if (!secret) {
+    console.warn(
+      '[SSR] SSR_SHARED_SECRET not set — server-side /public API calls go out without ' +
+        'X-SSR-Secret, so the API counts every visitor as this server.',
+    );
+  }
+  return secret;
+}
+
 const allowedHosts = resolveAllowedHosts();
+const trustProxy = resolveTrustProxy();
+const ssrSecret = resolveSsrSecret();
 
 const app = express();
+app.set('trust proxy', trustProxy);
 const angularApp = new AngularNodeAppEngine({ allowedHosts });
 
 console.log(`[SSR] allowedHosts: ${allowedHosts.join(', ')}`);
+console.log(`[SSR] trust proxy hops: ${trustProxy}`);
 
 /**
  * `/sitemap.xml` — served here rather than committed as a static file so it cannot drift
@@ -99,10 +137,14 @@ app.use(
 
 /**
  * Handle all other requests by rendering the Angular application.
+ *
+ * Each render gets the shared secret and this visitor's IP through `REQUEST_CONTEXT`, which
+ * `ssrApiHeadersInterceptor` turns into headers on the render's `/public` API calls.
  */
 app.use('/**', (req, res, next) => {
+  const context: SsrApiContext = { ssrSecret, clientIp: normaliseClientIp(req.ip) };
   angularApp
-    .handle(req)
+    .handle(req, context)
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
     )

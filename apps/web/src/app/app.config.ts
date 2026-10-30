@@ -28,6 +28,7 @@ import { pushTokenInterceptor } from '@core/interceptors/push-token-interceptor'
 import { authInterceptor } from '@core/interceptors/auth-interceptor';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import { hostAccessInterceptor } from '@core/interceptors/host-access-interceptor';
+import { ssrApiHeadersInterceptor } from '@core/interceptors/ssr-api-headers-interceptor';
 import { ssrTimeoutInterceptor } from '@core/interceptors/ssr-timeout-interceptor';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuthService } from '@services';
@@ -72,6 +73,9 @@ export const appConfig: ApplicationConfig = {
       // Outside errorInterceptor, so it classifies the normalised ApiError on the way out.
       hostAccessInterceptor,
       errorInterceptor,
+      // Server only: marks /public calls with the SSR secret and visitor IP, and turns a 429
+      // into a 503 page. Inside errorInterceptor so it sees the raw status.
+      ssrApiHeadersInterceptor,
       // Last, closest to the backend: it measures the network wait rather than what the
       // interceptors above add, and its TimeoutError surfaces back through errorInterceptor.
       ssrTimeoutInterceptor,
