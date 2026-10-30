@@ -413,6 +413,14 @@ describe('BillingPage', () => {
     return el.querySelector('hh-confirm-modal');
   }
 
+  /** Escape pressed inside the open confirm, where focus sits while it is up. */
+  function pressEscape(el: HTMLElement): void {
+    modal(el)
+      ?.querySelector('[role="dialog"]')
+      ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    harness.detectChanges();
+  }
+
   function modalTitle(el: HTMLElement): string {
     return plain(modal(el)?.querySelector('h2')?.textContent);
   }
@@ -1142,6 +1150,18 @@ describe('BillingPage', () => {
       expect(planButtonOf(el, 'pGrowth')?.disabled).toBe(false);
     });
 
+    it('dismisses on Escape and sends nothing', async () => {
+      const el = await openWith(changeable());
+
+      click(planButtonOf(el, 'pGrowth'));
+      expect(modal(el)).not.toBeNull();
+
+      pressEscape(el);
+
+      expect(modal(el)).toBeNull();
+      expect(api.scheduleDowngrade).not.toHaveBeenCalled();
+    });
+
     it('never asks about the unpaid invoice, which a switch leaves alone', async () => {
       const el = await openWith(changeable({ open_invoice: openInvoice() }));
 
@@ -1290,6 +1310,19 @@ describe('BillingPage', () => {
       expect(modal(el)?.querySelector('.ti-alert-triangle')).not.toBeNull();
 
       click(buttonByText(modal(el), 'hostBilling.keepPlan'));
+
+      expect(modal(el)).toBeNull();
+      expect(api.cancelSubscription).not.toHaveBeenCalled();
+      expect(byTestId(el, 'card-cancel')).not.toBeNull();
+    });
+
+    it('keeps the plan on Escape and sends nothing', async () => {
+      const el = await openWith(changeable());
+
+      click(byTestId(el, 'card-cancel'));
+      expect(modal(el)).not.toBeNull();
+
+      pressEscape(el);
 
       expect(modal(el)).toBeNull();
       expect(api.cancelSubscription).not.toHaveBeenCalled();

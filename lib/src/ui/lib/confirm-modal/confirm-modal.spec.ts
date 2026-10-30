@@ -16,21 +16,38 @@ import { ConfirmModal } from './confirm-modal';
 @Component({
   imports: [ConfirmModal],
   template: `
-    <hh-confirm-modal
-      title="Delete room 12?"
-      [cancelLabel]="cancelLabel()"
-      confirmLabel="Delete"
-      (confirm)="confirmed.set(confirmed() + 1)"
-      (cancel)="cancelled.set(cancelled() + 1)"
-    >
-      This cannot be undone.
-    </hh-confirm-modal>
+    <button type="button" id="opener" (click)="open.set(true)">Delete</button>
+    <!-- Stands in for a drawer, whose own Escape would close the form behind the dialog. -->
+    <div tabindex="-1" (keydown.escape)="behind.set(behind() + 1)">
+      @if (open()) {
+        <hh-confirm-modal
+          title="Delete room 12?"
+          [cancelLabel]="cancelLabel()"
+          [confirmDisabled]="confirmDisabled()"
+          confirmLabel="Delete"
+          (confirm)="confirmed.set(confirmed() + 1)"
+          (cancel)="onCancel()"
+        >
+          This cannot be undone.
+        </hh-confirm-modal>
+      }
+    </div>
   `,
 })
 class Host {
+  readonly open = signal(true);
   readonly cancelLabel = signal<string | undefined>(undefined);
+  readonly confirmDisabled = signal(false);
+  /** Close on cancel, as every real parent does. Off where a test counts presses. */
+  readonly closeOnCancel = signal(false);
   readonly confirmed = signal(0);
   readonly cancelled = signal(0);
+  readonly behind = signal(0);
+
+  onCancel(): void {
+    this.cancelled.set(this.cancelled() + 1);
+    if (this.closeOnCancel()) this.open.set(false);
+  }
 }
 
 /**
@@ -103,5 +120,67 @@ describe('ConfirmModal — the way out', () => {
     buttons()[1].click();
     fixture.detectChanges();
     expect(host.confirmed()).toBe(1);
+  });
+});
+
+describe('ConfirmModal — Escape', () => {
+  function pressEscape(el: HTMLElement): void {
+    const target =
+      (el.querySelector('[role="dialog"]') as HTMLElement | null) ?? el;
+    target.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
+  }
+
+  it('cancels, and never confirms', async () => {
+    const { fixture, host } = await render();
+
+    pressEscape(fixture.nativeElement);
+
+    expect(host.cancelled()).toBe(1);
+    expect(host.confirmed()).toBe(0);
+  });
+
+  // The dialog is the only thing that answers: a drawer behind it keeps its form.
+  it('does not reach whatever is behind the dialog', async () => {
+    const { fixture, host } = await render();
+
+    pressEscape(fixture.nativeElement);
+
+    expect(host.behind()).toBe(0);
+  });
+
+  // `confirmDisabled` means the parent cannot take an answer yet, mid-request or still
+  // loading -- and "no" is an answer. It still must not fall through to the drawer.
+  it('is ignored while the confirm is disabled', async () => {
+    const { fixture, host } = await render();
+    host.confirmDisabled.set(true);
+    fixture.detectChanges();
+
+    pressEscape(fixture.nativeElement);
+
+    expect(host.cancelled()).toBe(0);
+    expect(host.confirmed()).toBe(0);
+    expect(host.behind()).toBe(0);
+  });
+
+  it('returns focus to the control that opened the dialog', async () => {
+    const { fixture, host } = await render();
+    host.open.set(false);
+    host.closeOnCancel.set(true);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const opener = el.querySelector('#opener') as HTMLButtonElement;
+
+    opener.focus();
+    opener.click();
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(el.querySelector('[role="dialog"]'));
+
+    pressEscape(el);
+    fixture.detectChanges();
+
+    expect(el.querySelector('hh-confirm-modal')).toBeNull();
+    expect(document.activeElement).toBe(opener);
   });
 });
