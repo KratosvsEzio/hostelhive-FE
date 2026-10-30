@@ -184,15 +184,15 @@ describe('HostBookingsApi.bookingsOn', () => {
 });
 
 /**
- * One room's month, asked of the server three ways.
+ * One room's month, asked of the server two ways.
  *
- * `room.id` is the first room a party was checked into, so a booking whose second room is
- * this one is only reachable through `occupied_room_ids` (rooms held now) or
- * `stayed_room_ids` (every room ever used). The answers overlap whenever a party's first room
- * is this one, and a booking drawn twice would double its beds.
+ * `room.id` is the room a booking was made for, so a booking whose second room is this one is
+ * only reachable through `stayed_room_ids` (every room it was ever placed in). The answers
+ * overlap whenever a party's first room is this one, and a booking drawn twice would double
+ * its beds.
  */
 describe('HostBookingsApi.bookingsInRoom', () => {
-  function capture(byRoom: ApiHostBooking[], byOccupancy: ApiHostBooking[], byStay: ApiHostBooking[] = []) {
+  function capture(byRoom: ApiHostBooking[], byStay: ApiHostBooking[]) {
     const calls: { path: string; params: Record<string, unknown> }[] = [];
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -202,8 +202,7 @@ describe('HostBookingsApi.bookingsInRoom', () => {
           useValue: {
             get: (path: string, params: Record<string, unknown>) => {
               calls.push({ path, params });
-              const bookings =
-                'f[occupied_room_ids]' in params ? byOccupancy : 'f[stayed_room_ids]' in params ? byStay : byRoom;
+              const bookings = 'f[stayed_room_ids]' in params ? byStay : byRoom;
               return of({ bookings, success: true });
             },
           },
@@ -213,35 +212,30 @@ describe('HostBookingsApi.bookingsInRoom', () => {
     return { api: TestBed.inject(HostBookingsApi), calls };
   }
 
-  it('asks by first room, occupied room and stayed room, over the same window', () => {
+  it('asks by first room and by every room stayed in, over the same window, and nothing else', () => {
     const { api, calls } = capture([], []);
     api.bookingsInRoom('nHelLt', 'R101', '2026-10-01', '2026-10-31').subscribe();
 
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(2);
     const window = { 'f[checkin_date][lte]': '2026-10-31', 'f[checkout_date][gte]': '2026-10-01' };
     expect(new Set(calls.map((c) => c.path))).toEqual(new Set(['/api/host/hostels/nHelLt/bookings']));
     expect(calls[0].params).toMatchObject({ 'f[room.id]': 'R101', ...window });
-    expect(calls[1].params).toMatchObject({ 'f[occupied_room_ids]': 'R101', ...window });
-    expect(calls[2].params).toMatchObject({ 'f[stayed_room_ids]': 'R101', ...window });
-    for (const [i, key] of ['f[room.id]', 'f[occupied_room_ids]', 'f[stayed_room_ids]'].entries()) {
-      calls.filter((_, j) => j !== i).forEach((c) => expect(c.params).not.toHaveProperty(key));
-    }
+    expect(calls[0].params).not.toHaveProperty('f[stayed_room_ids]');
+    expect(calls[1].params).toMatchObject({ 'f[stayed_room_ids]': 'R101', ...window });
+    expect(calls[1].params).not.toHaveProperty('f[room.id]');
+    calls.forEach((c) => expect(c.params).not.toHaveProperty('f[occupied_room_ids]'));
   });
 
   it('returns the union, each booking once, first-room answers first', () => {
-    const { api } = capture(
-      [raw({ id: 'first' }), raw({ id: 'both' })],
-      [raw({ id: 'both' }), raw({ id: 'second' })],
-      [raw({ id: 'second' }), raw({ id: 'left' })],
-    );
+    const { api } = capture([raw({ id: 'first' }), raw({ id: 'both' })], [raw({ id: 'both' }), raw({ id: 'second' })]);
     let ids: string[] = [];
     api.bookingsInRoom('nHelLt', 'R101', '2026-10-01', '2026-10-31').subscribe((b) => (ids = b.map((x) => x.id)));
 
-    expect(ids).toEqual(['first', 'both', 'second', 'left']);
+    expect(ids).toEqual(['first', 'both', 'second']);
   });
 
   it('finds a checked-out party through a room it left, which only stayed_room_ids still names', () => {
-    const { api } = capture([], [], [raw({ id: 'gone' })]);
+    const { api } = capture([], [raw({ id: 'gone' })]);
     let ids: string[] = [];
     api.bookingsInRoom('nHelLt', 'R102', '2026-10-01', '2026-10-31').subscribe((b) => (ids = b.map((x) => x.id)));
 

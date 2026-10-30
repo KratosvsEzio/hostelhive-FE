@@ -9,7 +9,7 @@ Check-in places a booking's party in one or more rooms (`occupancies`, each with
 After that fix, live testing found two more faults. A party that checked out on the morning of its first night still held its beds for the rest of the booked stay, and the room read "4 of 3 beds · over 1". The departure day read "over -3".
 
 ## Decision
-- **Fetch three ways.** `HostBookingsApi.bookingsInRoom` asks `f[room.id]`, `f[occupied_room_ids]` and `f[stayed_room_ids]` (every room a party ever used, since Trello #165) for the month, and merges them, each booking once, first-room results first. `occupied_room_ids` stays asked until the deployed index is known to carry `stayed_room_ids` on old documents.
+- **Fetch both ways.** `HostBookingsApi.bookingsInRoom` asks `f[room.id]` (all a booking that has not checked in has) and `f[stayed_room_ids]` (every room a party was ever placed in, since Trello #165) for the month, and merges them, each booking once, first-room results first. `stayed_room_ids` covers `occupied_room_ids`, which is no longer asked; every indexed booking was checked to carry it on 2026-10-31.
 - **Charge only this room's guests** (`toRoomStay` with `occupanciesOf`, `room-stays.ts`):
   - a booking with no occupancies (not checked in yet) holds its whole party, as before;
   - a checked-in booking holds the guests of its **active** occupancies in this room, and of released ones until their release day (`releasedOn`); a released one with no release day is left out;
@@ -30,7 +30,7 @@ After that fix, live testing found two more faults. A party that checked out on 
 - "Today" is the hostel's date, the same day the calendar highlights, read once when the calendar opens ([decision](./console-today-is-the-hostels-date.md)). With no usable hostel zone it falls back to the device's date.
 - `released_at`, `checked_in_at` and `checked_out_at` come in the hostel's offset (BE azeem-hamza/hostelhive `fe8224f`), so their date part is the hostel's day and is read without a `Date`.
 - Two occupancies of one booking in the same room that end on different days are drawn together, to the later day.
-- Three requests per room-month, until `occupied_room_ids` can be dropped.
+- Two requests per room-month.
 - The calendar shares the index lag in [index-backed reads](../api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md).
 
 ## Evidence
