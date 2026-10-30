@@ -739,7 +739,9 @@
     "leavingDate": "Fecha de salida",
     "thisTenantHasNoRent": "Este inquilino aún no tiene facturas de alquiler registradas.",
     "noUtilityChargesHaveBeen": "No se han registrado cargos de servicios para la habitación de este inquilino.",
-    "checkInYourFirstTenant": "Registra la entrada de tu primer inquilino para empezar a controlar el alquiler."
+    "checkInYourFirstTenant": "Registra la entrada de tu primer inquilino para empezar a controlar el alquiler.",
+    "notFoundTitle": "No encontramos a este inquilino",
+    "notFoundMessage": "Puede que se haya eliminado o que el enlace esté desactualizado. Vuelve a inquilinos para ver los inquilinos de este hostal."
   },
   "hostBilling": {
     "title": "Facturación",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "Aún no se asignan números de cama: el calendario indica cuántas camas están ocupadas, no cuál tiene cada huésped.",
     "couldNotUpdateRoom": "No se pudo actualizar esta habitación. Inténtalo de nuevo.",
     "couldNotCreateRoom": "No se pudo crear esta habitación. Inténtalo de nuevo.",
-    "couldNotCreateRooms": "No se pudieron crear estas habitaciones. Inténtalo de nuevo."
+    "couldNotCreateRooms": "No se pudieron crear estas habitaciones. Inténtalo de nuevo.",
+    "notFoundTitle": "No encontramos esta habitación",
+    "notFoundMessage": "Puede que se haya eliminado o que el enlace esté desactualizado. Vuelve a habitaciones para ver las habitaciones de este hostal."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarifa por unidad",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "El hostal ya no las ofrece, así que no se han conservado: {{rooms}}. Elige otra habitación.",
     "stageConfirmed": "Confirmada",
     "noShow": "No presentado",
-    "noShowNote": "El hostal marcó esta reserva como no presentada: el huésped no llegó."
+    "noShowNote": "El hostal marcó esta reserva como no presentada: el huésped no llegó.",
+    "bookingNotFoundTitle": "No encontramos esta reserva",
+    "bookingNotFoundMessage": "Puede que se haya eliminado o que el enlace esté desactualizado. Vuelve a todas tus reservas."
   },
   "userFavorites": {
     "removeFromFavorites": "¿Quitar de favoritos?",
@@ -2157,21 +2163,6 @@
     "noMatchingPlaces": "No hay lugares coincidentes",
     "poweredByOpenstreetmap": "Con tecnología de OpenStreetMap",
     "noCoordinatesSetFor": "Este anuncio no tiene coordenadas definidas."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Desbloquear {{feature}}",
-    "thisFeature": "esta función",
-    "dashboardOverview": "Resumen del panel",
-    "roomManagement": "Gestión de habitaciones",
-    "tenantManagement": "Gestión de inquilinos",
-    "utilityBilling": "Facturación de servicios",
-    "thisFeatureIsAvailable": "Esta función está disponible en los planes de pago. Suscríbete para acceder por completo al panel de tu hostal.",
-    "completeHostelProfileFirst": "Completa primero el perfil del hostal",
-    "onceSubscribedAllFeatures": "Al suscribirte, todas las funciones se desbloquean automáticamente.",
-    "roomAmpOccupancyManagement": "Gestión de habitaciones y ocupación",
-    "tenantTrackingAmpPayment": "Seguimiento de inquilinos y registros de pago",
-    "rentAndUtilityInvoice": "Generación de facturas de alquiler y servicios",
-    "analyticsAndRevenueReports": "Analíticas e informes de ingresos"
   },
   "notifications": {
     "nUnread": "{{count}} sin leer",

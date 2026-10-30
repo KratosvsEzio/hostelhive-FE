@@ -744,7 +744,9 @@
     "leavingDate": "Дата выезда",
     "thisTenantHasNoRent": "У этого жильца пока нет счетов за аренду.",
     "noUtilityChargesHaveBeen": "Для комнаты этого жильца не записаны коммунальные начисления.",
-    "checkInYourFirstTenant": "Заселите первого жильца, чтобы отслеживать аренду."
+    "checkInYourFirstTenant": "Заселите первого жильца, чтобы отслеживать аренду.",
+    "notFoundTitle": "Мы не нашли этого жильца",
+    "notFoundMessage": "Возможно, он удалён или ссылка устарела. Вернитесь к жильцам, чтобы увидеть жильцов этого хостела."
   },
   "hostBilling": {
     "title": "Оплата",
@@ -1365,7 +1367,9 @@
     "bedNumbersAreNotAssigned": "Номера кроватей ещё не назначены — календарь показывает, сколько мест занято, а не кто на какой кровати.",
     "couldNotUpdateRoom": "Не удалось обновить эту комнату. Попробуйте ещё раз.",
     "couldNotCreateRoom": "Не удалось создать эту комнату. Попробуйте ещё раз.",
-    "couldNotCreateRooms": "Не удалось создать эти комнаты. Попробуйте ещё раз."
+    "couldNotCreateRooms": "Не удалось создать эти комнаты. Попробуйте ещё раз.",
+    "notFoundTitle": "Мы не нашли эту комнату",
+    "notFoundMessage": "Возможно, она удалена или ссылка устарела. Вернитесь к комнатам, чтобы увидеть комнаты этого хостела."
   },
   "hostUtilities": {
     "ratePerUnit": "Тариф за единицу",
@@ -1801,7 +1805,9 @@
     "roomsNoLongerOffered": "Хостел больше не предлагает, поэтому не перенесено: {{rooms}}. Выберите другую комнату.",
     "stageConfirmed": "Подтверждено",
     "noShow": "Неявка",
-    "noShowNote": "Хостел отметил это бронирование как неявку — гость не приехал."
+    "noShowNote": "Хостел отметил это бронирование как неявку — гость не приехал.",
+    "bookingNotFoundTitle": "Мы не нашли это бронирование",
+    "bookingNotFoundMessage": "Возможно, оно удалено или ссылка устарела. Вернитесь ко всем своим бронированиям."
   },
   "userFavorites": {
     "removeFromFavorites": "Убрать из избранного?",
@@ -2162,21 +2168,6 @@
     "noMatchingPlaces": "Подходящих мест нет",
     "poweredByOpenstreetmap": "На основе OpenStreetMap",
     "noCoordinatesSetFor": "Для этого объявления не заданы координаты."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Открыть {{feature}}",
-    "thisFeature": "эту функцию",
-    "dashboardOverview": "Обзор панели",
-    "roomManagement": "Управление комнатами",
-    "tenantManagement": "Управление жильцами",
-    "utilityBilling": "Начисление коммунальных услуг",
-    "thisFeatureIsAvailable": "Эта возможность доступна в платных тарифах. Оформите подписку для полного доступа к панели хостела.",
-    "completeHostelProfileFirst": "Сначала заполните профиль хостела",
-    "onceSubscribedAllFeatures": "После оформления подписки все возможности открываются автоматически.",
-    "roomAmpOccupancyManagement": "Управление комнатами и заполняемостью",
-    "tenantTrackingAmpPayment": "Учёт жильцов и история платежей",
-    "rentAndUtilityInvoice": "Формирование счетов за аренду и коммунальные услуги",
-    "analyticsAndRevenueReports": "Аналитика и отчёты о доходах"
   },
   "notifications": {
     "nUnread": "{{count}} непрочитанных",

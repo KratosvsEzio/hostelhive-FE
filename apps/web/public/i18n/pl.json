@@ -744,7 +744,9 @@
     "leavingDate": "Data wyprowadzki",
     "thisTenantHasNoRent": "Ten najemca nie ma jeszcze zapisanych faktur czynszowych.",
     "noUtilityChargesHaveBeen": "Dla pokoju tego najemcy nie zapisano opłat za media.",
-    "checkInYourFirstTenant": "Zamelduj pierwszego najemcę, aby zacząć śledzić czynsz."
+    "checkInYourFirstTenant": "Zamelduj pierwszego najemcę, aby zacząć śledzić czynsz.",
+    "notFoundTitle": "Nie znaleźliśmy tego najemcy",
+    "notFoundMessage": "Mógł zostać usunięty albo link jest nieaktualny. Wróć do najemców, aby zobaczyć najemców tego hostelu."
   },
   "hostBilling": {
     "title": "Rozliczenia",
@@ -1365,7 +1367,9 @@
     "bedNumbersAreNotAssigned": "Numery łóżek nie są jeszcze przypisane — kalendarz pokazuje, ile łóżek jest zajętych, a nie kto śpi w którym.",
     "couldNotUpdateRoom": "Nie udało się zaktualizować tego pokoju. Spróbuj ponownie.",
     "couldNotCreateRoom": "Nie udało się utworzyć tego pokoju. Spróbuj ponownie.",
-    "couldNotCreateRooms": "Nie udało się utworzyć tych pokoi. Spróbuj ponownie."
+    "couldNotCreateRooms": "Nie udało się utworzyć tych pokoi. Spróbuj ponownie.",
+    "notFoundTitle": "Nie znaleźliśmy tego pokoju",
+    "notFoundMessage": "Mógł zostać usunięty albo link jest nieaktualny. Wróć do pokoi, aby zobaczyć pokoje tego hostelu."
   },
   "hostUtilities": {
     "ratePerUnit": "Stawka za jednostkę",
@@ -1801,7 +1805,9 @@
     "roomsNoLongerOffered": "Hostel już ich nie oferuje, więc nie zostały przeniesione: {{rooms}}. Wybierz inny pokój.",
     "stageConfirmed": "Potwierdzono",
     "noShow": "Niestawienie się",
-    "noShowNote": "Hostel oznaczył tę rezerwację jako niestawienie się — gość nie przyjechał."
+    "noShowNote": "Hostel oznaczył tę rezerwację jako niestawienie się — gość nie przyjechał.",
+    "bookingNotFoundTitle": "Nie znaleźliśmy tej rezerwacji",
+    "bookingNotFoundMessage": "Mogła zostać usunięta albo link jest nieaktualny. Wróć do wszystkich swoich rezerwacji."
   },
   "userFavorites": {
     "removeFromFavorites": "Usunąć z ulubionych?",
@@ -2162,21 +2168,6 @@
     "noMatchingPlaces": "Brak pasujących miejsc",
     "poweredByOpenstreetmap": "Obsługiwane przez OpenStreetMap",
     "noCoordinatesSetFor": "Brak współrzędnych dla tego ogłoszenia."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Odblokuj {{feature}}",
-    "thisFeature": "tę funkcję",
-    "dashboardOverview": "Przegląd pulpitu",
-    "roomManagement": "Zarządzanie pokojami",
-    "tenantManagement": "Zarządzanie najemcami",
-    "utilityBilling": "Rozliczanie mediów",
-    "thisFeatureIsAvailable": "Ta funkcja jest dostępna w planach płatnych. Wykup subskrypcję, aby uzyskać pełny dostęp do pulpitu hostelu.",
-    "completeHostelProfileFirst": "Najpierw uzupełnij profil hostelu",
-    "onceSubscribedAllFeatures": "Po wykupieniu subskrypcji wszystkie funkcje odblokowują się automatycznie.",
-    "roomAmpOccupancyManagement": "Zarządzanie pokojami i obłożeniem",
-    "tenantTrackingAmpPayment": "Śledzenie najemców i historia płatności",
-    "rentAndUtilityInvoice": "Tworzenie faktur za czynsz i media",
-    "analyticsAndRevenueReports": "Analizy i raporty przychodów"
   },
   "notifications": {
     "nUnread": "{{count}} nieprzeczytanych",

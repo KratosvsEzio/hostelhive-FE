@@ -24,8 +24,6 @@
         <hh-skeleton class="mt-4 h-40 w-full" radius="lg" />
       </hh-card>
     </div>
-  } @else if (s.subscriptionError) {
-    <hh-subscription-gate [feature]="'subscriptionGate.dashboardOverview' | transloco" />
   } @else if (s.permissionError) {
     <div class="mt-4">
       <hh-permission-refused />

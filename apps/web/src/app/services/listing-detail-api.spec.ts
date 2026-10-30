@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 
 import { HostelDetail } from '@hostelhive/data-access';
 import { HostelsApi } from './hostels-api';
@@ -210,5 +211,16 @@ describe('ListingDetailApi.getBySlug — missing versus broken', () => {
     const out = outcome(withError(new Error('Hostel response did not include a hostel.')));
 
     expect(out.failed).toBe(true);
+  });
+
+  // The page draws both outcomes, so a toast on top only repeated them.
+  it('asks with the global error toast suppressed', () => {
+    const getById = vi.fn(() => throwError(() => apiError(404)));
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: HostelsApi, useValue: { getById } }] });
+
+    TestBed.inject(ListingDetailApi).getBySlug('1292').subscribe({ error: () => undefined });
+
+    expect(getById).toHaveBeenCalledWith('1292', { suppressErrorToast: true });
   });
 });

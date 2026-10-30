@@ -12,6 +12,13 @@
       <hh-skeleton class="h-10 w-64" radius="lg" />
       <hh-skeleton class="h-64 w-full" radius="lg" />
     </div>
+  } @else if (s.notFound) {
+    <hh-error-state
+      [title]="'hostTenants.notFoundTitle' | transloco"
+      [message]="'hostTenants.notFoundMessage' | transloco"
+      [showRetry]="false"
+      data-testid="tenant-not-found"
+    />
   } @else if (s.error || !s.tenant) {
     <hh-error-state [networkError]="s.networkError" (retry)="goBack()" />
   } @else {

@@ -739,7 +739,9 @@
     "leavingDate": "Fraflytningsdato",
     "thisTenantHasNoRent": "Denne lejer har endnu ingen registrerede huslejefakturaer.",
     "noUtilityChargesHaveBeen": "Der er ikke registreret forbrugsudgifter for denne lejers værelse.",
-    "checkInYourFirstTenant": "Tjek din første lejer ind for at begynde at følge huslejen."
+    "checkInYourFirstTenant": "Tjek din første lejer ind for at begynde at følge huslejen.",
+    "notFoundTitle": "Vi kunne ikke finde denne lejer",
+    "notFoundMessage": "Lejeren kan være fjernet, eller linket er forældet. Gå tilbage til lejere for at se hostellets lejere."
   },
   "hostBilling": {
     "title": "Fakturering",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "Sengenumre er endnu ikke tildelt — kalenderen viser, hvor mange senge der er optaget, ikke hvilken seng hver gæst har.",
     "couldNotUpdateRoom": "Kunne ikke opdatere dette værelse. Prøv igen.",
     "couldNotCreateRoom": "Kunne ikke oprette dette værelse. Prøv igen.",
-    "couldNotCreateRooms": "Kunne ikke oprette disse værelser. Prøv igen."
+    "couldNotCreateRooms": "Kunne ikke oprette disse værelser. Prøv igen.",
+    "notFoundTitle": "Vi kunne ikke finde dette værelse",
+    "notFoundMessage": "Det kan være slettet, eller linket er forældet. Gå tilbage til værelser for at se hostellets værelser."
   },
   "hostUtilities": {
     "ratePerUnit": "Pris pr. enhed",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "Tilbydes ikke længere af vandrerhjemmet og er derfor ikke overført: {{rooms}}. Vælg et andet værelse.",
     "stageConfirmed": "Bekræftet",
     "noShow": "Udeblevet",
-    "noShowNote": "Vandrerhjemmet har markeret denne booking som udeblevet — gæsten kom ikke."
+    "noShowNote": "Vandrerhjemmet har markeret denne booking som udeblevet — gæsten kom ikke.",
+    "bookingNotFoundTitle": "Vi kunne ikke finde denne booking",
+    "bookingNotFoundMessage": "Den kan være fjernet, eller linket er forældet. Gå tilbage til alle dine bookinger."
   },
   "userFavorites": {
     "removeFromFavorites": "Fjern fra favoritter?",
@@ -2157,21 +2163,6 @@
     "noMatchingPlaces": "Ingen matchende steder",
     "poweredByOpenstreetmap": "Drevet af OpenStreetMap",
     "noCoordinatesSetFor": "Der er ikke angivet koordinater for denne annonce."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Lås {{feature}} op",
-    "thisFeature": "denne funktion",
-    "dashboardOverview": "Oversigt over dashboard",
-    "roomManagement": "Værelsesadministration",
-    "tenantManagement": "Lejeradministration",
-    "utilityBilling": "Forbrugsafregning",
-    "thisFeatureIsAvailable": "Denne funktion findes i betalte planer. Abonnér for at få fuld adgang til dit hosteldashboard.",
-    "completeHostelProfileFirst": "Udfyld hostelprofilen først",
-    "onceSubscribedAllFeatures": "Når du abonnerer, låses alle funktioner op automatisk.",
-    "roomAmpOccupancyManagement": "Værelses- og belægningsstyring",
-    "tenantTrackingAmpPayment": "Lejeroversigt og betalingshistorik",
-    "rentAndUtilityInvoice": "Oprettelse af husleje- og forbrugsfakturaer",
-    "analyticsAndRevenueReports": "Analyser og omsætningsrapporter"
   },
   "notifications": {
     "nUnread": "{{count}} ulæste",

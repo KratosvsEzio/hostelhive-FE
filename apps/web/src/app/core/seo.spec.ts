@@ -448,6 +448,17 @@ describe('Seo', () => {
       expect(html).toContain('content="index, follow, max-image-preview:large"');
       expect(html).toContain('property="og:image"');
     });
+
+    it('preconnects to the API with credentials and to the image bucket anonymously', () => {
+      // authInterceptor sends every API call withCredentials; images load anonymously. A
+      // preconnect in the wrong mode warms a socket the request never reuses.
+      expect(html).toMatch(
+        /<link\s+rel="preconnect"\s+href="https:\/\/api\.hostelhive\.com"\s+crossorigin="use-credentials"/,
+      );
+      expect(html).toMatch(
+        /<link\s+rel="preconnect"\s+href="https:\/\/hostel-hive-images\.s3\.ap-south-1\.amazonaws\.com"\s+crossorigin\s*\/>/,
+      );
+    });
   });
 
   describe('other head tags', () => {

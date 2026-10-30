@@ -739,7 +739,9 @@
     "leavingDate": "Auszugsdatum",
     "thisTenantHasNoRent": "Für diesen Mieter sind noch keine Mietrechnungen erfasst.",
     "noUtilityChargesHaveBeen": "Für das Zimmer dieses Mieters wurden keine Nebenkosten erfasst.",
-    "checkInYourFirstTenant": "Checken Sie Ihren ersten Mieter ein, um die Miete zu verfolgen."
+    "checkInYourFirstTenant": "Checken Sie Ihren ersten Mieter ein, um die Miete zu verfolgen.",
+    "notFoundTitle": "Wir konnten diesen Mieter nicht finden",
+    "notFoundMessage": "Er wurde möglicherweise entfernt, oder der Link ist veraltet. Gehe zurück zu den Mietern, um die Mieter dieses Hostels zu sehen."
   },
   "hostBilling": {
     "title": "Abrechnung",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "Bettnummern sind noch nicht vergeben — der Kalender zeigt, wie viele Betten belegt sind, nicht welches Bett wer hat.",
     "couldNotUpdateRoom": "Dieses Zimmer konnte nicht aktualisiert werden. Bitte versuche es erneut.",
     "couldNotCreateRoom": "Dieses Zimmer konnte nicht erstellt werden. Bitte versuche es erneut.",
-    "couldNotCreateRooms": "Diese Zimmer konnten nicht erstellt werden. Bitte versuche es erneut."
+    "couldNotCreateRooms": "Diese Zimmer konnten nicht erstellt werden. Bitte versuche es erneut.",
+    "notFoundTitle": "Wir konnten dieses Zimmer nicht finden",
+    "notFoundMessage": "Es wurde möglicherweise gelöscht, oder der Link ist veraltet. Gehe zurück zu den Zimmern, um die Zimmer dieses Hostels zu sehen."
   },
   "hostUtilities": {
     "ratePerUnit": "Preis pro Einheit",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "Vom Hostel nicht mehr angeboten und daher nicht übernommen: {{rooms}}. Wählen Sie ein anderes Zimmer.",
     "stageConfirmed": "Bestätigt",
     "noShow": "Nicht erschienen",
-    "noShowNote": "Das Hostel hat diese Buchung als „nicht erschienen“ markiert — der Gast ist nicht angereist."
+    "noShowNote": "Das Hostel hat diese Buchung als „nicht erschienen“ markiert — der Gast ist nicht angereist.",
+    "bookingNotFoundTitle": "Wir konnten diese Buchung nicht finden",
+    "bookingNotFoundMessage": "Sie wurde möglicherweise entfernt, oder der Link ist veraltet. Gehe zurück zu all deinen Buchungen."
   },
   "userFavorites": {
     "removeFromFavorites": "Aus Favoriten entfernen?",
@@ -2157,21 +2163,6 @@
     "noMatchingPlaces": "Keine passenden Orte",
     "poweredByOpenstreetmap": "Ermöglicht durch OpenStreetMap",
     "noCoordinatesSetFor": "Für dieses Inserat sind keine Koordinaten hinterlegt."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} freischalten",
-    "thisFeature": "diese Funktion",
-    "dashboardOverview": "Dashboard-Übersicht",
-    "roomManagement": "Zimmerverwaltung",
-    "tenantManagement": "Mieterverwaltung",
-    "utilityBilling": "Nebenkostenabrechnung",
-    "thisFeatureIsAvailable": "Diese Funktion ist in den kostenpflichtigen Tarifen enthalten. Abonnieren Sie für vollen Zugriff auf Ihr Hostel-Dashboard.",
-    "completeHostelProfileFirst": "Zuerst das Hostel-Profil vervollständigen",
-    "onceSubscribedAllFeatures": "Nach dem Abonnieren werden alle Funktionen automatisch freigeschaltet.",
-    "roomAmpOccupancyManagement": "Zimmer- und Belegungsverwaltung",
-    "tenantTrackingAmpPayment": "Mieterverfolgung und Zahlungsnachweise",
-    "rentAndUtilityInvoice": "Erstellung von Miet- und Nebenkostenrechnungen",
-    "analyticsAndRevenueReports": "Auswertungen und Umsatzberichte"
   },
   "notifications": {
     "nUnread": "{{count}} ungelesen",

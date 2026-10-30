@@ -739,7 +739,9 @@
     "leavingDate": "离开日期",
     "thisTenantHasNoRent": "该租客暂无租金发票记录。",
     "noUtilityChargesHaveBeen": "尚未记录该租客房间的水电费用。",
-    "checkInYourFirstTenant": "为第一位租客办理入住，开始追踪租金。"
+    "checkInYourFirstTenant": "为第一位租客办理入住，开始追踪租金。",
+    "notFoundTitle": "找不到这位租户",
+    "notFoundMessage": "租户可能已被移除，或链接已过期。返回租户列表查看此旅舍的租户。"
   },
   "hostBilling": {
     "title": "账单",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "尚未分配床位号 — 日历显示已占用的床位数量，而非每位客人具体在哪张床。",
     "couldNotUpdateRoom": "无法更新此房间，请重试。",
     "couldNotCreateRoom": "无法创建此房间，请重试。",
-    "couldNotCreateRooms": "无法创建这些房间，请重试。"
+    "couldNotCreateRooms": "无法创建这些房间，请重试。",
+    "notFoundTitle": "找不到这个房间",
+    "notFoundMessage": "它可能已被删除，或链接已过期。返回房间列表查看此旅舍的房间。"
   },
   "hostUtilities": {
     "ratePerUnit": "单价",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "旅舍已不再提供，因此未保留：{{rooms}}。请选择其他房间。",
     "stageConfirmed": "已确认",
     "noShow": "未到店",
-    "noShowNote": "旅舍已将此预订标记为未到店 — 客人未抵达。"
+    "noShowNote": "旅舍已将此预订标记为未到店 — 客人未抵达。",
+    "bookingNotFoundTitle": "找不到这条预订",
+    "bookingNotFoundMessage": "它可能已被移除，或链接已过期。返回查看你的所有预订。"
   },
   "userFavorites": {
     "removeFromFavorites": "从收藏中移除？",
@@ -2157,21 +2163,6 @@
     "noMatchingPlaces": "没有匹配的地点",
     "poweredByOpenstreetmap": "由 OpenStreetMap 提供",
     "noCoordinatesSetFor": "此房源未设置坐标。"
-  },
-  "subscriptionGate": {
-    "unlockFeature": "解锁{{feature}}",
-    "thisFeature": "此功能",
-    "dashboardOverview": "仪表板概览",
-    "roomManagement": "房间管理",
-    "tenantManagement": "租客管理",
-    "utilityBilling": "水电账单",
-    "thisFeatureIsAvailable": "此功能需付费方案。订阅后即可完整使用您的旅舍管理后台。",
-    "completeHostelProfileFirst": "请先完善旅舍资料",
-    "onceSubscribedAllFeatures": "订阅后，所有功能将自动解锁。",
-    "roomAmpOccupancyManagement": "房间与入住率管理",
-    "tenantTrackingAmpPayment": "租客追踪与付款记录",
-    "rentAndUtilityInvoice": "生成租金与水电发票",
-    "analyticsAndRevenueReports": "分析与收入报表"
   },
   "notifications": {
     "nUnread": "{{count}} 条未读",

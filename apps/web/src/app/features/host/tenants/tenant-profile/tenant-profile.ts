@@ -16,6 +16,7 @@ import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant, Invoice } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { errorStatus } from '@core/errors/api-error-text';
 import { ordinal } from '@util/ordinal';
 import { tenantRentCols, tenantUtilityCols } from '@app/util/table-configs/invoice-table-cols';
 import { TenantFormDrawer } from '../tenant-form-drawer/tenant-form-drawer';
@@ -28,6 +29,8 @@ interface ProfileState {
   loading: boolean;
   error: boolean;
   networkError: boolean;
+  /** The API answered 404: an old link, a deleted tenant or a raw numeric id. A retry can't help. */
+  notFound: boolean;
   tenant: Tenant | null;
 }
 
@@ -91,18 +94,22 @@ export class TenantProfile {
   private readonly tenant$ = toObservable(this.fetchKey).pipe(
     switchMap(({ hostelId, tenantId }) =>
       hostelId && tenantId
-        ? this.api.getRenter(hostelId, tenantId).pipe(
-            map((t) => ({ loading: false, error: false, networkError: false, tenant: t })),
-            catchError((err) => of({ loading: false, error: true, networkError: isNetworkError(err), tenant: null })),
+        // Every failure is drawn on the page, so the global toast stays quiet.
+        ? this.api.getRenter(hostelId, tenantId, { suppressErrorToast: true }).pipe(
+            map((t): ProfileState => ({ loading: false, error: false, networkError: false, notFound: false, tenant: t })),
+            catchError((err) => of<ProfileState>({
+              loading: false, error: true, networkError: isNetworkError(err),
+              notFound: errorStatus(err) === 404, tenant: null,
+            })),
           )
-        : of({ loading: false, error: true, networkError: false, tenant: null }),
+        : of<ProfileState>({ loading: false, error: true, networkError: false, notFound: false, tenant: null }),
     ),
   );
 
   // Deliberately no `startWith` — a refresh keeps the current tenant on screen and swaps
   // the fresh one in, so saving an edit never flashes the skeleton.
   protected readonly state = toSignal(this.tenant$, {
-    initialValue: { loading: true, error: false, networkError: false, tenant: null } as ProfileState,
+    initialValue: { loading: true, error: false, networkError: false, notFound: false, tenant: null } as ProfileState,
   });
 
   /** Room the invoice tabs filter on. Tracked, so a saved room change re-runs both queries. */

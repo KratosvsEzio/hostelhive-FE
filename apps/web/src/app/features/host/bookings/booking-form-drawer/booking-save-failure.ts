@@ -6,8 +6,8 @@ import { MoveFailureOptions } from '../booking-move-failure';
 /**
  * The translation key for a booking the host could not record.
  *
- * A lapsed subscription is not handled here: the drawer checks it first and shows the renewal
- * prompt instead. A 403 says the hostel's plan lacks CRM, or that the signed-in user may not
+ * A lapsed subscription gets the generic message: the console's plan lock replaces the bookings
+ * page, drawer included, on that refusal, so this only shows if the lock does not engage. A 403 says the hostel's plan lacks CRM, or that the signed-in user may not
  * record bookings, worded for the owner or staff by `opts.owner`. Everything this does not
  * recognise falls back to the generic message. `message` is never read.
  */
