@@ -1,5 +1,13 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { AfterViewInit, Directive, ElementRef, OnDestroy, PLATFORM_ID, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  OnDestroy,
+  PLATFORM_ID,
+  inject,
+  output,
+} from '@angular/core';
 
 /**
  * What `role="dialog" aria-modal="true"` promises but cannot deliver on its own.
@@ -10,12 +18,15 @@ import { AfterViewInit, Directive, ElementRef, OnDestroy, PLATFORM_ID, inject } 
  * opaque overlay, where a keyboard user is operating controls they cannot see. Closing then
  * drops focus to the top of the document, so the place they were reading is lost.
  *
- * Three things, which are the whole of the contract:
+ * Three things, which are the whole of the contract, and one offer:
  *
  * - **Enter.** Focus moves to the first focusable element inside, or to the dialog itself when
  *   it holds none.
  * - **Stay.** Tab and Shift+Tab cycle within the dialog rather than escaping it.
  * - **Return.** On close, focus goes back to whatever opened it.
+ * - **Escape**, offered rather than acted on: `(escape)` fires for the top-most open dialog
+ *   only, and the dialog decides what closing means. The directive cannot close anything
+ *   itself, because it does not own the `@if` that shows it.
  *
  * Applied to the element that carries `role="dialog"`, and scoped by that element's own
  * lifetime — so a dialog behind `@if` needs no open/close bookkeeping of its own:
@@ -30,6 +41,15 @@ import { AfterViewInit, Directive, ElementRef, OnDestroy, PLATFORM_ID, inject } 
  * rather than in a portal at the body, so inerting the page would inert the dialog with it.
  * A trap plus `aria-modal` covers keyboard and assistive technology both.
  */
+/**
+ * Every dialog currently holding focus, oldest first.
+ *
+ * Escape belongs to the one on top, and DOM nesting does not say which that is: a confirm
+ * opened from a drawer renders inside it, and a dialog opened over a sibling is not inside it
+ * at all. Open order does.
+ */
+const openDialogs: DialogFocus[] = [];
+
 @Directive({
   selector: '[hhDialogFocus]',
   host: {
@@ -50,6 +70,14 @@ export class DialogFocus implements AfterViewInit, OnDestroy {
 
   /** Whether focus was actually taken, and so is ours to give back. */
   private trapped = false;
+
+  /**
+   * Escape was pressed while this was the top-most dialog.
+   *
+   * Carries the event so the dialog can stop it: whatever sits behind (a drawer's own Escape,
+   * a page-level listener) would otherwise close as well, on the same key press.
+   */
+  readonly escape = output<KeyboardEvent>();
 
   /**
    * `ngAfterViewInit`, not `afterNextRender`.
@@ -83,9 +111,13 @@ export class DialogFocus implements AfterViewInit, OnDestroy {
     el.tabIndex = -1;
     el.focus();
     this.trapped = true;
+    openDialogs.push(this);
   }
 
   ngOnDestroy(): void {
+    const index = openDialogs.indexOf(this);
+    if (index !== -1) openDialogs.splice(index, 1);
+
     // Only give back what was taken, and only if there is still something to give it to: the
     // opener is often inside the same `@if` as whatever replaced it, and focusing a detached
     // node silently sends focus to `<body>` — worse than leaving it alone.
@@ -110,6 +142,10 @@ export class DialogFocus implements AfterViewInit, OnDestroy {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      if (openDialogs[openDialogs.length - 1] === this) this.escape.emit(event);
+      return;
+    }
     if (event.key !== 'Tab') return;
 
     const items = this.focusable();
