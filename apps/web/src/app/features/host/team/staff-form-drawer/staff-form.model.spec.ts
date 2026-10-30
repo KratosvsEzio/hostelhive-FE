@@ -3,8 +3,8 @@ import {
   StaffForm,
   emptyStaffForm,
   isStaffFormValid,
+  emailError,
   leavingBeforeJoining,
-  managerEmailError,
   managerPasswordError,
   staffFormFrom,
   toCreateStaffPayload,
@@ -18,6 +18,7 @@ function validForm(overrides: Partial<StaffForm> = {}): StaffForm {
     title: 'Warden',
     phone: '0300 1234567',
     salary: '25000',
+    email: 'ali@evercare.pk',
     ...overrides,
   };
 }
@@ -94,6 +95,23 @@ describe('isStaffFormValid', () => {
   it('keeps CNIC and address optional', () => {
     expect(isStaffFormValid(validForm({ cnicNumber: '', address: '' }))).toBe(true);
   });
+
+  /**
+   * The backend validates an email on every staff record, so a non-manager without one was
+   * refused with a 422 ("Email can't be blank") while the form let it through.
+   */
+  it('rejects a new staff member with no email, manager or not', () => {
+    expect(isStaffFormValid(validForm({ email: '' }))).toBe(false);
+    expect(emailError(validForm({ email: '  ' }))).toBe('Required.');
+  });
+
+  it('asks an older record saved without an email for one before an edit can save', () => {
+    const f = staffFormFrom(staff({ email: undefined }));
+
+    expect(f.hasStoredEmail).toBe(false);
+    expect(isStaffFormValid({ ...f, salary: '25000' })).toBe(false);
+    expect(isStaffFormValid({ ...f, salary: '25000', email: 'ali@evercare.pk' })).toBe(true);
+  });
 });
 
 describe('leavingBeforeJoining', () => {
@@ -140,6 +158,13 @@ describe('toCreateStaffPayload', () => {
   it('sends an image id only once a file has been picked', () => {
     expect(toCreateStaffPayload(validForm({ avatarUploadId: 'up-1' })).avatar_id).toBe('up-1');
   });
+
+  it('sends the email, trimmed, for a staff member who is not a manager', () => {
+    const p = toCreateStaffPayload(validForm({ email: '  ali@evercare.pk ' }));
+
+    expect(p.email).toBe('ali@evercare.pk');
+    expect('is_manager' in p).toBe(false);
+  });
 });
 
 describe('toUpdateStaffPayload', () => {
@@ -169,6 +194,13 @@ describe('toUpdateStaffPayload', () => {
     expect(p.joining_date).toBe('2026-01-15');
     expect(p.salary).toBe(25000);
   });
+
+  it('leaves a stored email off the edit, and sends one typed for a record that had none', () => {
+    expect('email' in toUpdateStaffPayload(staffFormFrom(staff({ email: 'ali@evercare.pk' })))).toBe(false);
+
+    const missing = { ...staffFormFrom(staff({ email: undefined })), email: 'ali@evercare.pk' };
+    expect(toUpdateStaffPayload(missing).email).toBe('ali@evercare.pk');
+  });
 });
 
 /**
@@ -188,17 +220,17 @@ describe('manager access credentials', () => {
   }
 
   it('leaves the email empty when the record has none to seed it with', () => {
-    expect(fromApi({ email: undefined }).managerEmail).toBe('');
+    expect(fromApi({ email: undefined }).email).toBe('');
   });
 
   it('seeds the email from the record when there is one', () => {
-    expect(fromApi({ email: 'warden@evercare.pk' }).managerEmail).toBe('warden@evercare.pk');
+    expect(fromApi({ email: 'warden@evercare.pk' }).email).toBe('warden@evercare.pk');
   });
 
   it('asks for an email once manager access is on', () => {
     const f = { ...fromApi({ email: undefined }), isManager: true };
 
-    expect(managerEmailError(f)).toBe('Required.');
+    expect(emailError(f)).toBe('Required.');
   });
 
   it('asks for a password for someone who was not already a manager', () => {
@@ -208,15 +240,16 @@ describe('manager access credentials', () => {
   });
 
   it('rejects an address that is not one', () => {
-    const f = { ...fromApi(), isManager: true, managerEmail: 'warden@' };
+    const f = { ...fromApi(), isManager: true, email: 'warden@' };
 
-    expect(managerEmailError(f)).toBe('Enter a valid email address.');
+    expect(emailError(f)).toBe('Enter a valid email address.');
   });
 
-  it('asks for neither while manager access is off', () => {
+  // The email is a staff field now; only the password belongs to manager access.
+  it('still asks for the email, but no password, while manager access is off', () => {
     const f = fromApi({ email: undefined });
 
-    expect(managerEmailError(f)).toBe('');
+    expect(emailError(f)).toBe('Required.');
     expect(managerPasswordError(f)).toBe('');
   });
 
@@ -235,7 +268,7 @@ describe('manager access credentials', () => {
     const p = toUpdateStaffPayload({
       ...validForm(),
       isManager: true,
-      managerEmail: '  Warden@EverCare.pk  ',
+      email: '  Warden@EverCare.pk  ',
       managerPassword: 'hunter2',
     });
 
@@ -250,7 +283,7 @@ describe('manager access credentials', () => {
       ...validForm(),
       isManager: true,
       wasManager: true,
-      managerEmail: 'warden@evercare.pk',
+      email: 'warden@evercare.pk',
       managerPassword: '',
     });
 
@@ -263,10 +296,9 @@ describe('manager access credentials', () => {
    * the flag is omitted rather than sent as false.
    */
   it('sends no manager fields at all while the toggle is off', () => {
-    const p = toUpdateStaffPayload(validForm());
+    const p = toUpdateStaffPayload({ ...validForm(), managerPassword: 'hunter2' });
 
     expect('is_manager' in p).toBe(false);
-    expect('email' in p).toBe(false);
     expect('password' in p).toBe(false);
   });
 });
@@ -274,26 +306,29 @@ describe('manager access credentials', () => {
 /**
  * A record that already carries an email.
  *
- * Taken as "this person already has a login": the server looks the address up and reuses the
- * account it finds, so the form shows both credentials filled-and-disabled rather than asking
- * for a password it knows will be ignored.
+ * The address is fixed and never re-sent. Whether it has a login is unknown —
+ * `StaffSerializer#user` returns the staff's own id for every record, so it cannot answer "is
+ * there an account". The server reuses an account it finds and needs a password only when
+ * there is none, so the password is offered but optional.
  *
- * The address is a stand-in for the fact nobody sends us — `StaffSerializer#user` returns the
- * staff's own id for every record, so it cannot answer "is there an account".
+ * It used to be disabled and never sent, which left "stored address, no account" a 422 that
+ * could not be fixed from the form. Now that every staff record carries an email, that would
+ * be every first manager grant.
  */
 describe('manager access on a record that already has an email', () => {
-  const STORED = { ...validForm(), hasStoredEmail: true, managerEmail: 'warden@evercare.pk' };
+  const STORED = { ...validForm(), hasStoredEmail: true, email: 'warden@evercare.pk' };
 
   it('reads the flag off the stored address', () => {
     expect(staffFormFrom(staff({ email: 'warden@evercare.pk' })).hasStoredEmail).toBe(true);
     expect(staffFormFrom(staff({ email: undefined })).hasStoredEmail).toBe(false);
   });
 
-  it('asks for neither credential', () => {
+  it('demands neither credential', () => {
     const f = { ...STORED, isManager: true };
 
-    expect(managerEmailError(f)).toBe('');
+    expect(emailError(f)).toBe('');
     expect(managerPasswordError(f)).toBe('');
+    expect(isStaffFormValid(f)).toBe(true);
   });
 
   /**
@@ -308,31 +343,20 @@ describe('manager access on a record that already has an email', () => {
     expect('password' in p).toBe(false);
   });
 
-  /**
-   * Nothing is collected, so nothing is sent — even if a value somehow sits on the form.
-   *
-   * The field is disabled in this state, so a password here could only be stale state rather
-   * than something the host typed. Sending it would set a password nobody asked for.
-   */
-  it('sends no password even when one is on the form', () => {
+  // For an address with no account yet, the server needs one to create the login.
+  it('sends a password the host typed', () => {
     const p = toUpdateStaffPayload({ ...STORED, isManager: true, managerPassword: 'hunter2' });
 
     expect(p.is_manager).toBe(true);
-    expect('password' in p).toBe(false);
+    expect(p.password).toBe('hunter2');
     expect('email' in p).toBe(false);
   });
 
-  // Disabled, so an empty one must never block the save.
-  it('does not demand a password', () => {
-    expect(managerPasswordError({ ...STORED, isManager: true })).toBe('');
-    expect(isStaffFormValid({ ...STORED, isManager: true })).toBe(true);
-  });
-
   // The other half of the rule, so the two cannot drift into agreeing.
-  it('still collects both when the record has no stored address', () => {
-    const f = { ...validForm(), isManager: true, managerEmail: '', managerPassword: '' };
+  it('still demands both when the record has no stored address', () => {
+    const f = { ...validForm(), isManager: true, email: '', managerPassword: '' };
 
-    expect(managerEmailError(f)).toBe('Required.');
+    expect(emailError(f)).toBe('Required.');
     expect(managerPasswordError(f)).toBe('Required.');
   });
 });

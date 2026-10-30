@@ -20,6 +20,12 @@ export interface StaffForm {
   salaryIssueDate: string;
   joiningDate: string;
   leavingDate: string;
+  /**
+   * Required on every staff record: the backend validates its presence and format
+   * (`Staff` `validates :email`), whether or not the person is a manager. Fixed once stored;
+   * see {@link hasStoredEmail}. It is also the manager login when access is granted.
+   */
+  email: string;
 
   /**
    * Grants this staff member a manager login for the hostel.
@@ -32,25 +38,20 @@ export interface StaffForm {
    * save a staff record may also hand out manager access. It is not separately gated on
    * either side of the wire.
    *
-   * The two fields below are only read while this is on.
+   * The password below is only read while this is on.
    */
   isManager: boolean;
-  managerEmail: string;
   managerPassword: string;
   /** True when the record already had a manager login — the password is then optional. */
   wasManager: boolean;
   /**
-   * The record arrived with an email, so the login is built from that rather than asked for.
+   * The record arrived with an email, so the address is fixed and not sent again.
    *
-   * Both credentials are then fixed: the server looks the address up and reuses whatever
-   * account it finds, so neither field is collected.
-   *
-   * Known limit, by product decision. Having an email is not the same as having an account —
-   * it is a plain column set when the staff is created, while a `User` appears only when
-   * manager access is first granted. For a staff member with an address but no account,
-   * `Staff#validate_and_prepare_manager` finds no user and demands a password that this form
-   * no longer offers, so the save returns 422 and cannot be completed from here. Granting
-   * that person access needs the address cleared first, or a fix on the server.
+   * Having an email is not the same as having an account: it is a plain column, while a
+   * `User` appears only when manager access is first granted. The server looks the address
+   * up (`Staff#validate_and_prepare_manager`) and reuses any account it finds; only when there
+   * is none does it need a password. The form can't tell which, so for a stored address the
+   * password is offered but optional, and sent only when typed.
    *
    * `user.id` would be the honest key for all this, but `StaffSerializer#user` returns
    * `{id: object.obfuscated_id}` — the staff's own id, sent for every record — so it is
@@ -95,13 +96,13 @@ export function emptyStaffForm(today: string): StaffForm {
     salaryIssueDate: '',
     joiningDate: today,
     leavingDate: '',
+    email: '',
     // Manager access is always off until the host asks for it: the staff payload carries no
     // manager flag, so there is nothing to restore it from on edit.
     isManager: false,
-    managerEmail: '',
     managerPassword: '',
     wasManager: false,
-    // A record being created has nothing stored yet, so the fields are always asked for.
+    // A record being created has nothing stored yet, so the email is always asked for.
     hasStoredEmail: false,
     avatarUploadId: '',
     avatarUrl: '',
@@ -126,11 +127,11 @@ export function staffFormFrom(s: Staff): StaffForm {
     salaryIssueDate: s.salaryIssueDate ?? '',
     joiningDate: s.joiningDate ?? '',
     leavingDate: s.leavingDate ?? '',
+    email: s.email ?? '',
     // Seeded from the record, so someone who already holds a login shows as a manager. The
     // API never returns the password, so that field stays blank and is only sent if the host
     // types a new one — `wasManager` is what makes it optional in that case.
     isManager: !!s.isManager,
-    managerEmail: s.email ?? '',
     managerPassword: '',
     wasManager: !!s.isManager,
     hasStoredEmail: !!s.email,
@@ -147,14 +148,16 @@ export function staffFormFrom(s: Staff): StaffForm {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Email problem while manager access is on.
+ * Email problem, manager or not.
  *
+ * The backend rejects a staff record without a valid address ("Email can't be blank"), so it
+ * is asked for on every create, and on an edit of an older record saved without one.
  * Nothing to validate once the record carries an address: the field is disabled and shows
  * what the API returned, so there is no input to be wrong.
  */
-export function managerEmailError(f: StaffForm): string {
-  if (!f.isManager || f.hasStoredEmail) return '';
-  const value = f.managerEmail.trim();
+export function emailError(f: StaffForm): string {
+  if (f.hasStoredEmail) return '';
+  const value = f.email.trim();
   if (!value) return 'Required.';
   return EMAIL_RE.test(value) ? '' : 'Enter a valid email address.';
 }
@@ -162,12 +165,10 @@ export function managerEmailError(f: StaffForm): string {
 /**
  * Password problem while manager access is on.
  *
- * Only demanded when a login is being created. An existing manager keeps their current
- * password unless a new one is typed, and the API never returns it for us to prefill.
- *
- * Demanded only when a login is being created from scratch: no stored address and no manager
- * role already. With a stored address the field is disabled and there is nothing to check;
- * with an existing manager the current password stands unless a new one is typed.
+ * Demanded only when a login is certainly being created from scratch: no stored address and
+ * no manager role already. With a stored address there may or may not be an account (see
+ * {@link StaffForm.hasStoredEmail}), so the password is optional; with an existing manager the
+ * current password stands unless a new one is typed. The API never returns it to prefill.
  *
  * Never trimmed — spaces are legal in a password.
  */
@@ -176,35 +177,35 @@ export function managerPasswordError(f: StaffForm): string {
   return f.managerPassword ? '' : 'Required.';
 }
 
+/** The address for the payload, sent only while it is not yet stored; a stored one is fixed. */
+function emailField(f: StaffForm): Pick<StaffWrite, 'email'> {
+  return f.hasStoredEmail ? {} : { email: f.email.trim() };
+}
+
 /**
- * Manager credentials for the staff payload, or nothing at all.
+ * Manager access for the staff payload, or nothing at all.
  *
  * Omitted entirely while the toggle is off, rather than sent as `is_manager: false`: a host
  * editing an ordinary field should never revoke someone's access as a side effect.
  *
- * When the record already carries an address, only the flag is sent. Both credential fields
- * are disabled in that state, so there is nothing collected to send: the email is on the
- * record for the server to look up, and no password was ever asked for.
- *
- * Otherwise the password rides along only when one was typed. A blank field means leave it
- * alone, so saving an existing manager's record does not disturb their password.
+ * The login is the staff's own email ({@link emailField}). The password rides along only when
+ * one was typed. A blank field means leave it alone, so saving an existing manager's record
+ * does not disturb their password.
  */
-function managerFields(f: StaffForm): Pick<StaffWrite, 'email' | 'password' | 'is_manager'> {
+function managerFields(f: StaffForm): Pick<StaffWrite, 'password' | 'is_manager'> {
   if (!f.isManager) return {};
-  if (f.hasStoredEmail) return { is_manager: true };
   return {
     is_manager: true,
-    email: f.managerEmail.trim(),
     ...(f.managerPassword ? { password: f.managerPassword } : {}),
   };
 }
 
-/** True when every required field carries a non-blank value and the manager fields are sound. */
+/** True when every required field carries a non-blank value and the email and manager fields are sound. */
 export function isStaffFormValid(f: StaffForm): boolean {
   return (
     REQUIRED_FIELDS.every((k: RequiredField) => !!f[k].trim()) &&
     !leavingBeforeJoining(f) &&
-    !managerEmailError(f) &&
+    !emailError(f) &&
     !managerPasswordError(f)
   );
 }
@@ -241,6 +242,7 @@ export function toCreateStaffPayload(f: StaffForm): StaffWrite {
     avatar_id: text(f.avatarUploadId),
     cnic_front_id: text(f.cnicFrontUploadId),
     cnic_back_id: text(f.cnicBackUploadId),
+    ...emailField(f),
     ...managerFields(f),
   };
 }
@@ -271,6 +273,7 @@ export function toUpdateStaffPayload(f: StaffForm): StaffWrite {
     avatar_id: text(f.avatarUploadId),
     cnic_front_id: text(f.cnicFrontUploadId),
     cnic_back_id: text(f.cnicBackUploadId),
+    ...emailField(f),
     ...managerFields(f),
   };
 }

@@ -16,6 +16,7 @@ Admin billing renders every timestamp through `AdminUtcDate` (`adminUtcDate`), w
 ## Consequences
 - A new admin billing template must use `adminUtcDate`, not `apiDate`. Test fixtures should include a `+05:00` timestamp, or the difference cannot show.
 - If the backend ever adds a search `time_zone`, revisit both the filter bounds and this pipe together.
+- **Reviewed for Trello #90 (2026-10-31), kept.** Backend PR #20 made UTC the zone for admin endpoints, and the card proposed offset-aware bounds (`dayRangeStartLocal`) plus viewer-zone display. Admin billing is the only admin or moderator date filter left (#94 removed the contracts list), and the page already says "Dates are in UTC", which the card accepts as an alternative. Payments are paused, so the change was not made. If a later ticket switches billing to the viewer's day, change the bounds, this pipe and the page note in one change.
 
 ## Evidence
 - `apps/web/src/app/features/admin/billing/shared/admin-utc-date.ts` and its spec

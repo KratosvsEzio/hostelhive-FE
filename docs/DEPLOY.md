@@ -23,6 +23,47 @@ NG_ALLOWED_HOSTS=hostelhive.pk,www.hostelhive.pk PORT=4000 \
 | `NG_ALLOWED_HOSTS` | **Yes in production** | loopback hosts in dev | Comma-separated hostnames the SSR engine will render for.              |
 | `PORT`             | No                    | `4000`                | Port Express listens on.                                               |
 | `NODE_ENV`         | No                    | —                     | `production` makes a missing `NG_ALLOWED_HOSTS` a fatal startup error. |
+| `SSR_SHARED_SECRET` | **Yes once the API sets it** | unset          | Sent as `X-SSR-Secret` on server-side `/public` calls. Must equal the API's value. |
+| `SSR_TRUST_PROXY`  | **Yes behind a proxy** | `0`                  | Number of proxies in front of the server; picks the visitor IP sent as `X-SSR-Client-IP`. |
+
+### `SSR_SHARED_SECRET` and `SSR_TRUST_PROXY`: per-visitor API limits
+
+The API limits `/public/*` per visitor IP (60/min, 2,000/day) against scraping. Server renders
+call `/public/*` from this server's IP for every visitor, so on each such call the server sends:
+
+- `X-SSR-Secret`: `SSR_SHARED_SECRET`. The API trusts the next header only when this matches.
+- `X-SSR-Client-IP`: the visitor's IP, from Express's `req.ip` under `SSR_TRUST_PROXY`.
+
+Only `/public/*` on the API gets them, and only from the server. Browser calls are unchanged
+and carry the visitor's own IP. The secret is read in `server.ts` alone and never reaches the
+browser bundle (`ssr-secret-boundary.spec.ts` fails if any other file names it).
+
+**Deploy order.** Set the same `SSR_SHARED_SECRET` on the API and on this server, then ship.
+Unset, the server logs a warning and sends neither header, and the API counts every visitor as
+this server.
+
+**Set `SSR_TRUST_PROXY` to the number of proxies between the internet and Node.** Express then
+reads `X-Forwarded-For` from the **right**, skipping that many entries, which a visitor cannot
+forge. Never take the leftmost entry: the visitor writes it.
+
+| In front of Node                                      | `SSR_TRUST_PROXY` |
+| ----------------------------------------------------- | ----------------- |
+| Nothing (Node faces the internet)                     | `0`               |
+| One reverse proxy or load balancer (e.g. nginx)       | `1`               |
+| A CDN in front of that proxy (e.g. Cloudflare → nginx) | `2`              |
+
+A managed platform (Cloud Run, Firebase, a PaaS router) may add more than one entry. The
+hosting platform is not chosen yet, so confirm its count from its docs or from a logged
+`X-Forwarded-For` before going live.
+
+Too low and every visitor shares the proxy's IP, so the whole site is throttled as one client.
+Too high and a visitor can name any IP. Check it once after deploy: the API's logs should show
+real visitor IPs on `/public` calls, not the proxy's. A value that is not a whole number stops
+the server under `NODE_ENV=production`; the startup log prints `[SSR] trust proxy hops: N`.
+
+**A rate-limited render answers 503.** If the API answers a server-side `/public` call with 429,
+the page goes out as `503` with `Retry-After` and `Cache-Control: no-store`, so no cache keeps
+the error. The browser fetches the data again on hydration.
 
 ### `NG_ALLOWED_HOSTS` is not optional
 
