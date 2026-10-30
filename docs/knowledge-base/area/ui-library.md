@@ -28,6 +28,7 @@ The shared visual layer: the `@hostelhive/ui` component library, the Tailwind br
 - Buttons: `hh-button` attributes, never a hand-styled `<button>`; focus ring is `ink-900` + offset (`lib/src/ui/lib/button/button.ts`).
 - Page width: `hhContainer`, not `mx-auto max-w-7xl …` again.
 - Slide-over forms: `hh-drawer`; modals: `hh-confirm-modal` + `hhDialogFocus`. Escape on a confirm emits `cancel` (ignored while `confirmDisabled`) and is stopped there, so a drawer behind it stays open (Trello #147).
+- Row menus: `hh-context-menu`, items with `role="menuitem"`. Choosing an item moves focus back to the ⋮ trigger before the item's handler runs, so a confirm it opens records the ⋮ (not the soon-removed item) as where to return; closing the menu with focus inside it does the same. Without `role="menuitem"` an item opening a dialog drops focus to `<body>` on close.
 - Loading: `hh-skeleton`; empty/error: the `lib/src/ui/lib/states` components.
 - Images below the fold: `[hhLazySrc]` (`apps/web/src/app/shared/lazy-src/lazy-src.ts`), not `loading="lazy"` alone.
 - "Show more" only when clipped: `[hhOverflows]`.
