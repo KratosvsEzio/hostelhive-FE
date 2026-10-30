@@ -55,6 +55,19 @@
       [error]="fieldError('phone')"
     />
 
+    <!-- Every staff record needs one: the backend refuses a save without it. Fixed once stored,
+         because it is also the login a manager grant resolves to. -->
+    <hh-input
+      [label]="f.hasStoredEmail ? 'Email' : 'Email *'"
+      type="email"
+      autocomplete="off"
+      [placeholder]="'common.enterEmail' | transloco"
+      [disabled]="f.hasStoredEmail"
+      [value]="f.email"
+      [error]="emailError()"
+      (valueChange)="patch('email', $event)"
+    />
+
     <hh-input
       [label]="'hostTeam.cnicNumber' | transloco"
       [placeholder]="'common.enterIdNumber' | transloco"
@@ -97,36 +110,22 @@
           {{ 'hostTeam.createsLoginFor' | transloco: { name: f.name.trim() || ('hostTeam.thisStaffMember' | transloco) } }}
         </p>
       }
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <hh-input
-          [label]="f.hasStoredEmail ? 'Email' : 'Email *'"
-          type="email"
-          autocomplete="off"
-          [placeholder]="'common.enterEmail' | transloco"
-          [disabled]="f.hasStoredEmail"
-          [value]="f.managerEmail"
-          [error]="managerEmailError()"
-          (valueChange)="patch('managerEmail', $event)"
-        />
-        <!-- Disabled alongside the email whenever the record carries one: with the address
-             fixed, the login it resolves to is the server's to decide and there is nothing
-             here to set. A password is only collected for a staff member who has no address
-             yet, where a login has to be created from scratch. -->
-        <hh-input
-          [label]="f.hasStoredEmail || f.wasManager ? 'Password' : 'Password *'"
-          type="password"
-          autocomplete="new-password"
-          [placeholder]="
-            f.hasStoredEmail
-              ? 'Managed by their account'
-              : (f.wasManager ? 'Leave blank to keep current' : 'Set a password')
-          "
-          [disabled]="f.hasStoredEmail"
-          [value]="f.managerPassword"
-          [error]="managerPasswordError()"
-          (valueChange)="patch('managerPassword', $event)"
-        />
-      </div>
+      <!-- The login is the email above. A password is required only when a login is certainly
+           being created; with a stored address an account may already exist (the server
+           reuses it), so it is optional and sent only when typed. -->
+      <hh-input
+        [label]="f.hasStoredEmail || f.wasManager ? 'Password' : 'Password *'"
+        type="password"
+        autocomplete="new-password"
+        [placeholder]="
+          f.wasManager
+            ? 'Leave blank to keep current'
+            : (f.hasStoredEmail ? 'Only if they have no account yet' : 'Set a password')
+        "
+        [value]="f.managerPassword"
+        [error]="managerPasswordError()"
+        (valueChange)="patch('managerPassword', $event)"
+      />
       @if (!f.hasStoredEmail) {
         <!-- The address being typed may already belong to someone. The server reuses that
              account and ignores the password sent with it, so say so before the host
