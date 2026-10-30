@@ -380,6 +380,7 @@ export interface ApiRenterBillTop {
 interface ApiRenterBillsAggs {
   utility?: { total?: number; paid?: number; balance?: number };
   rent?: { total?: number; paid?: number; balance?: number };
+  booking?: { total?: number; paid?: number; balance?: number };
   this_month?: { to_collect?: number; paid?: number };
   statuses?: { name: string; slug: string; count: number; total_amount?: number; color?: unknown }[];
 }
@@ -827,7 +828,17 @@ export class HostOpsApi {
     total: number;
     totalPages: number;
     statuses: { name: string; slug: string; count: number; totalAmount: number }[];
-    aggs: { utilityTotal: number; utilityPaid: number; utilityBalance: number; rentTotal: number; rentPaid: number; rentBalance: number };
+    aggs: {
+      utilityTotal: number;
+      utilityPaid: number;
+      utilityBalance: number;
+      rentTotal: number;
+      rentPaid: number;
+      rentBalance: number;
+      bookingTotal: number;
+      bookingPaid: number;
+      bookingBalance: number;
+    };
   }> {
     const params: Record<string, string | number | boolean | readonly string[]> = { ...pageParams(page, limit), ...filters };
     return this.api
@@ -847,6 +858,9 @@ export class HostOpsApi {
             rentTotal: res.aggs?.rent?.total ?? 0,
             rentPaid: res.aggs?.rent?.paid ?? 0,
             rentBalance: res.aggs?.rent?.balance ?? 0,
+            bookingTotal: res.aggs?.booking?.total ?? 0,
+            bookingPaid: res.aggs?.booking?.paid ?? 0,
+            bookingBalance: res.aggs?.booking?.balance ?? 0,
           },
         })),
       );

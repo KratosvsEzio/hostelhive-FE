@@ -74,7 +74,15 @@ const RENT_AGGS = {
   utilityTotal: 3600,
   utilityPaid: 0,
   utilityBalance: 3600,
+  bookingTotal: 0,
+  bookingPaid: 0,
+  bookingBalance: 0,
 };
+
+/** The aggregates a nightly hostel's reply carries: only the booking bucket has money. */
+function bookingAggs(total: number, paid: number) {
+  return { ...invoicesReply().aggs, bookingTotal: total, bookingPaid: paid, bookingBalance: total - paid };
+}
 
 /** Two unpaid booking bills for two different bookings. */
 function dueBookingBills(): Invoice[] {
@@ -269,21 +277,29 @@ describe('Invoices page', () => {
   });
 
   describe('booking invoices card', () => {
-    it('totals the status totals, takes paid from the paid bucket and the rest as balance', async () => {
-      const statuses = [status('due', 1, 4000), status('over-due', 1, 3000), status('paid', 1, 5000)];
-      const page = await open({ deps: depsWith(invoicesReply([bookingInvoice()], { statuses })) });
+    it("shows the API's booking bucket: total, paid and balance", async () => {
+      const page = await open({ deps: depsWith(invoicesReply([bookingInvoice()], { aggs: bookingAggs(12000, 5000) })) });
 
       expect(figures(page)).toEqual(['Rs 12,000', 'Rs 5,000', 'Rs 7,000']);
     });
 
-    it('shows zeros when the reply carries no statuses', async () => {
-      const page = await open({ deps: depsWith(invoicesReply([bookingInvoice()], { statuses: [] })) });
+    it('reads the booking bucket, not the per-status totals, which also count stray non-booking bills', async () => {
+      const statuses = [status('due', 2, 9000), status('paid', 1, 5000)];
+      const page = await open({
+        deps: depsWith(invoicesReply([bookingInvoice()], { statuses, aggs: bookingAggs(4000, 0) })),
+      });
+
+      expect(figures(page)).toEqual(['Rs 4,000', 'Rs 0', 'Rs 4,000']);
+    });
+
+    it('shows zeros when the booking bucket is empty', async () => {
+      const page = await open({ deps: depsWith(invoicesReply([bookingInvoice()])) });
 
       expect(figures(page)).toEqual(['Rs 0', 'Rs 0', 'Rs 0']);
     });
 
     it('moves money from balance to paid after a local mark-paid, without refetching', async () => {
-      const deps = depsWith(invoicesReply(dueBookingBills(), { statuses: [status('due', 2, 32000), status('paid', 0, 0)] }));
+      const deps = depsWith(invoicesReply(dueBookingBills(), { aggs: bookingAggs(32000, 0) }));
       deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
       deps.bookings.markPaid.mockReturnValue(of(hostBooking('checked-in', { paid: 24000, balanceDue: 0 })));
       deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));

@@ -147,22 +147,6 @@ function billedToDetail(inv: Invoice): string {
   return inv.kind === 'booking' && inv.booking?.ref ? `Booking ${inv.booking.ref}` : `Room ${inv.roomNumber}`;
 }
 
-/**
- * The booking card's figures, from the per-status totals.
- *
- * The API's rent and utility buckets count only those bill types, so a nightly hostel's money
- * appears nowhere but in `statuses[].totalAmount`. Every bill a nightly hostel raises is a
- * booking bill, which makes those totals the booking figures exactly.
- */
-function withBookingTotals(
-  aggs: InvoiceAggs,
-  statuses: readonly { slug: string; totalAmount: number }[],
-): InvoiceAggs {
-  const total = statuses.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
-  const paid = Number(statuses.find((s) => s.slug === 'paid')?.totalAmount || 0);
-  return { ...aggs, bookingTotal: total, bookingPaid: paid, bookingBalance: total - paid };
-}
-
 /** Whether the booking still owes on a stage it can be marked paid from, as the bookings page decides it. */
 function bookingStillOwes(b: HostBooking): boolean {
   const lane = laneKeyFor(b.disposition.slug);
@@ -371,8 +355,7 @@ export class Invoices {
             total: res.total,
             totalPages: res.totalPages,
             statuses: res.statuses,
-            // Seeded into the counts rather than derived in the card, so local edits shift it.
-            aggs: nightly ? withBookingTotals(res.aggs, res.statuses) : res.aggs,
+            aggs: res.aggs,
           })),
           catchError((err) => {
             this.fetching.set(false);
@@ -520,7 +503,7 @@ export class Invoices {
     };
   });
 
-  /** Read only on a nightly hostel, whose fetch always seeds these (see `withBookingTotals`). */
+  /** Read only on a nightly hostel: the API's booking bucket, which counts booking bills alone. */
   protected readonly bookingSummary = computed(() => {
     const aggs = this.state().aggs;
     return {

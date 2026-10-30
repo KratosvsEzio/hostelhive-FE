@@ -216,7 +216,17 @@ export function invoicesReply(bills: Invoice[] = [], over: Partial<InvoicesReply
     total: bills.length,
     totalPages: 1,
     statuses: [],
-    aggs: { utilityTotal: 0, utilityPaid: 0, utilityBalance: 0, rentTotal: 0, rentPaid: 0, rentBalance: 0 },
+    aggs: {
+      utilityTotal: 0,
+      utilityPaid: 0,
+      utilityBalance: 0,
+      rentTotal: 0,
+      rentPaid: 0,
+      rentBalance: 0,
+      bookingTotal: 0,
+      bookingPaid: 0,
+      bookingBalance: 0,
+    },
     ...over,
   };
 }
