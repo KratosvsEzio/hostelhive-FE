@@ -17,7 +17,6 @@ import { Button, Skeleton } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
 import { PushNotificationsService } from '@core/push-notifications';
-import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import { StudentApi, UserInvite, isInteractiveType, isReviewRequestType } from '@services';
@@ -48,7 +47,6 @@ export class NotificationBell {
   private readonly toasts = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly el = inject(ElementRef<HTMLElement>);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly push = inject(PushNotificationsService);
 
   // Its own computed: a same-user setSession writes a new user object, and this still
@@ -197,7 +195,6 @@ export class NotificationBell {
     this.dismissing.set(true);
     this.studentApi.deleteNotification(invite.id).subscribe({
       next: () => {
-        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {
@@ -215,7 +212,6 @@ export class NotificationBell {
       next: () => {
         this.actionLoading.set(null);
         this.toasts.show({ kind: 'success', title: 'Invite accepted' });
-        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {
@@ -233,7 +229,6 @@ export class NotificationBell {
       next: () => {
         this.actionLoading.set(null);
         this.toasts.show({ kind: 'success', title: 'Invite declined' });
-        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {

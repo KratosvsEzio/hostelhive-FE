@@ -5,7 +5,6 @@ import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
 import { StudentApi, UserInvite } from '@services';
-import { RefetchDelay } from '@core/refetch-delay';
 import { PushNotificationsService } from '@core/push-notifications';
 import { NotificationBell } from './notification-bell';
 
@@ -40,7 +39,6 @@ function mount(items: UserInvite[], unread: number) {
       },
       { provide: SessionStore, useValue: { isAuthenticated: () => true, user: () => ({ id: 'u1' }) } },
       { provide: NotificationService, useValue: { show: () => undefined } },
-      { provide: RefetchDelay, useValue: { track: () => undefined } },
       // `received` is a signal the fetch key reads, not a method — a plain stub throws.
       { provide: PushNotificationsService, useValue: { received: () => 0, permission: () => 'default', enable: () => of(null) } },
     ],

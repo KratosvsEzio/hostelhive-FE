@@ -8,7 +8,6 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 - `apps/web/src/app/core/api-resource.ts` — `ApiClient` (`get/post/put/patch/delete`, prefixes `baseUrl`, each with an optional trailing `HttpContext`), `ApiRequestOptions` / `requestContextArgs` (a service method's per-call toast opt-out), and `apiGet()` (an `httpResource` wrapper, currently unused).
 - `apps/web/src/app/core/tokens.ts` — `ACCESS_TOKEN`, `UNAUTHORIZED_HANDLER`, `API_ERROR_NOTIFIER`, `SUPPRESS_ERROR_TOAST`.
 - `apps/web/src/app/core/interceptors/` — `auth-interceptor.ts`, `push-token-interceptor.ts`, `error-interceptor.ts`, `ssr-timeout-interceptor.ts`.
-- `apps/web/src/app/core/refetch-delay.ts` — `RefetchDelay` + interceptor: delays the next matching GET ~1 s after a mutation so the search index can settle. **Being retired; don't add new calls.** Ask the backend to `prepend RefreshOnReindex` on the lagging index instead. It's still used by Rooms, Bookings (`/rooms`), Team (`/staffs`) and notifications (page and bell) until Trello #198 lands; Invoices no longer uses it ([decision](../decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md)).
 - `apps/web/src/app/core/errors/api-error-message.ts` — `extractServerMessages`, `toToastCopy`.
 - `apps/web/src/app/core/notification.service.ts` — toasts (`show/error/info/success`, `muteErrors`).
 - `apps/web/src/app/util/models/` — request/response types, exported as `@hostelhive/data-access` (`tsconfig.base.json`); `api-error.ts` defines `ApiError`, `paginated.ts` `Paginated<T>`.
@@ -17,7 +16,7 @@ How the app talks to the Rails backend: the HTTP client and interceptor chain, t
 - `tools/generate-api-env.mjs` — writes the git-ignored, generated `api.env.ts` (next to `apps/web/src/app/app.config.ts`) from `.env` `API_URL` (default `http://localhost:3000`); run by `sync-api-env` before build and serve (`apps/web/project.json`).
 
 ## How it works
-Chain order (`apps/web/src/app/app.config.ts`): `authInterceptor` → `pushTokenInterceptor` → `hostAccessInterceptor` → `errorInterceptor` → `refetchDelayInterceptor` → `ssrTimeoutInterceptor`.
+Chain order (`apps/web/src/app/app.config.ts`): `authInterceptor` → `pushTokenInterceptor` → `hostAccessInterceptor` → `errorInterceptor` → `ssrTimeoutInterceptor`.
 - `hostAccessInterceptor` sits outside `errorInterceptor`, so it classifies the normalised `ApiError` on the way out.
 - `ssrTimeoutInterceptor` is last, closest to the backend.
 
@@ -31,6 +30,7 @@ Backend conventions the mappers rely on:
 - Status/disposition objects are `{ id, name, slug, color }` (`HostelStatus` in `apps/web/src/app/util/models/hostel.ts`); branch on `slug`.
 - Amounts often arrive as decimal strings (`"2000.0"`); parse at the mapper (`apps/web/src/app/services/listing-detail-api.ts`).
 - Host list endpoints (bookings, renter bills) and `…/bookings/:id/occupancies` answer from a search index that lags the database by seconds to minutes; `GET …/bookings/:id` reads the database. Trust a successful write and the single read over a re-fetched list ([decision](../decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md)).
+- Some indexes refresh before the write answers (`prepend RefreshOnReindex` on the backend): utility bills and renter bills (BE PR #65), and rooms, staff and notifications (`user_invites`; BE PR #75, be `b68a19d`). A list read sent after one of those writes already has it, so Utilities, Rooms, Team, the notifications page and the bell re-read straight away. There is no timed re-fetch: `RefetchDelay`, which held the next GET for up to 1 s, was removed in Trello #198. For an index that still lags, ask the backend to add `RefreshOnReindex`; never add a delay.
 - On those lists, `f[<field>]` is an exact-term filter. A hashid field the backend maps dynamically is analysed text, so filter it as `f[<field>.keyword]` (`bookingInvoices` in `apps/web/src/app/services/host-ops-api.ts`; [decision](../decisions/api-and-data/search-backed-filters-use-keyword-for-hashids.md)).
 
 ### Services map (`apps/web/src/app/services/`)
@@ -73,6 +73,7 @@ Backend conventions the mappers rely on:
 - **`isSubscriptionError` reads `serverMessages`** (and a raw `HttpErrorResponse` body), never `message`, so a request URL containing "subscri" cannot trip it.
 - **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.
 - **Writes that 500 after committing** (backend serializer bugs on `/staffs`) surface as "Couldn't save" while the row exists; re-read before retrying.
+- **Adding a staff member who isn't a manager fails with a 422.** The backend requires `email` on every staff record (`staff.rb`), but the Team form sends it only when manager access is on (`managerFields` in `apps/web/src/app/features/host/team/staff-form-drawer/staff-form.model.ts`). Seen live 2026-10-31: "Email can't be blank Email must be a valid email address".
 - **Probing the API from the console**: `withFetch()` captures `window.fetch` at bootstrap, so console fetch/XHR hooks see nothing.
 - The base-URL gate is still on `main` (`apps/web/src/app/app.html`), marked for removal before go-live.
 

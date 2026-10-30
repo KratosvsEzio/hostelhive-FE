@@ -4,7 +4,6 @@ import { NEVER, Observable, of } from 'rxjs';
 import { vi } from 'vitest';
 import { HostListingsData } from '@hostelhive/data-access';
 import { NotificationService, Toast, ToastKind } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { HostOpsApi } from '@services/host-ops-api';
 import { HostPropertyStore } from '@services/host-property-store';
 import { HostShellApi } from '@services/host-shell-api';
@@ -108,16 +107,6 @@ export class NotificationSpy {
   private push(toast: RaisedToast): number {
     this.raised.push(toast);
     return this.raised.length;
-  }
-}
-
-/** `RefetchDelay` with a spied `track`; `consume` never delays. */
-export class RefetchDelaySpy {
-  track = vi.fn<(listFragment: string) => void>();
-  consume = vi.fn<(url: string) => number>(() => 0);
-
-  provider(): Provider {
-    return { provide: RefetchDelay, useValue: this };
   }
 }
 
