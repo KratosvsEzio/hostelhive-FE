@@ -30,7 +30,7 @@ import {
   emptyStaffForm,
   isStaffFormValid,
   leavingBeforeJoining,
-  managerEmailError as managerEmailErrorFor,
+  emailError as emailErrorFor,
   managerPasswordError as managerPasswordErrorFor,
   staffFormFrom,
   toCreateStaffPayload,
@@ -116,10 +116,10 @@ export class StaffFormDrawer {
     leavingBeforeJoining(this.form()) ? 'Leaving date is before the joining date.' : '',
   );
 
-  // Manager-access problems surface on the same trigger as the rest of the form, so the
-  // drawer never shows a red field before the host has tried to save.
-  protected readonly managerEmailError = computed(() =>
-    this.showErrors() ? managerEmailErrorFor(this.form()) : '',
+  // Email and manager-access problems surface on the same trigger as the rest of the form, so
+  // the drawer never shows a red field before the host has tried to save.
+  protected readonly emailError = computed(() =>
+    this.showErrors() ? emailErrorFor(this.form()) : '',
   );
   protected readonly managerPasswordError = computed(() =>
     this.showErrors() ? managerPasswordErrorFor(this.form()) : '',
@@ -148,15 +148,14 @@ export class StaffFormDrawer {
   }
 
   /**
-   * Turning manager access off clears the credentials rather than keeping them hidden — a
-   * stashed password would otherwise be submitted by a later save the host thought was
-   * staff-only.
+   * Turning manager access off clears the password rather than keeping it hidden — a stashed
+   * password would otherwise be submitted by a later save the host thought was staff-only.
+   * The email stays: every staff record needs one.
    */
   protected onManagerToggle(on: boolean): void {
     this.form.update((f) => ({
       ...f,
       isManager: on,
-      managerEmail: on ? f.managerEmail : '',
       managerPassword: on ? f.managerPassword : '',
     }));
   }

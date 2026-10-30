@@ -73,7 +73,7 @@ Backend conventions the mappers rely on:
 - **`isSubscriptionError` reads `serverMessages`** (and a raw `HttpErrorResponse` body), never `message`, so a request URL containing "subscri" cannot trip it.
 - **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.
 - **Writes that 500 after committing** (backend serializer bugs on `/staffs`) surface as "Couldn't save" while the row exists; re-read before retrying.
-- **Adding a staff member who isn't a manager fails with a 422.** The backend requires `email` on every staff record (`staff.rb`), but the Team form sends it only when manager access is on (`managerFields` in `apps/web/src/app/features/host/team/staff-form-drawer/staff-form.model.ts`). Seen live 2026-10-31: "Email can't be blank Email must be a valid email address".
+- **The backend requires `email` on every staff record** (`staff.rb`), manager or not. A save without one is a 422 "Email can't be blank"; the Team form asks for it ([host-console](./host-console.md), "Every staff record needs an email").
 - **Probing the API from the console**: `withFetch()` captures `window.fetch` at bootstrap, so console fetch/XHR hooks see nothing.
 - The base-URL gate is still on `main` (`apps/web/src/app/app.html`), marked for removal before go-live.
 
