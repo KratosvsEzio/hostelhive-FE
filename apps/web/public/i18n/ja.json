@@ -1857,11 +1857,13 @@
     "sendResetLink": "リセットリンクを送信",
     "backToLogin": "ログインに戻る",
     "didnTReceiveItResend": "届きませんか？再送信",
+    "resendIn": "{{time}}後に再送信",
     "enterAValidEmail": "有効なメールアドレスを入力してください。",
     "sentIfAccountExists": "{{email}} のアカウントが存在する場合は、パスワードをリセットするためのリンクを送信しました。受信トレイと迷惑メールフォルダをご確認ください。",
     "alreadySent": "このメールアドレスにはすでにリセットリンクを送信しています。受信トレイと迷惑メールフォルダをご確認ください。数分後に再度リクエストできます。",
     "sentAnother": "別のリンクを送信しました。",
     "tooManyRequests": "試行回数が多すぎます。数分待ってからもう一度お試しください。",
+    "tooManyRequestsRetry": "試行回数が多すぎます。{{time}}後にもう一度お試しください。",
     "cannotReachTheServer": "サーバーに接続できません。しばらくしてからもう一度お試しください。",
     "couldNotSend": "リセットリンクを送信できませんでした。メールアドレスを確認して、もう一度お試しください。",
     "useADifferentEmail": "別のメールアドレスを使用"

@@ -1862,11 +1862,13 @@
     "sendResetLink": "Kirim tautan reset",
     "backToLogin": "Kembali ke masuk",
     "didnTReceiveItResend": "Tidak menerima? Kirim ulang",
+    "resendIn": "Kirim ulang dalam {{time}}",
     "enterAValidEmail": "Masukkan alamat email yang valid.",
     "sentIfAccountExists": "Jika ada akun untuk {{email}}, kami telah mengirim tautan untuk mereset kata sandi Anda. Periksa kotak masuk dan folder spam Anda.",
     "alreadySent": "Tautan reset sudah dikirim ke email ini. Periksa kotak masuk dan folder spam Anda; Anda dapat meminta tautan lain dalam beberapa menit.",
     "sentAnother": "Kami telah mengirim tautan lain.",
     "tooManyRequests": "Terlalu banyak percobaan. Harap tunggu beberapa menit lalu coba lagi.",
+    "tooManyRequestsRetry": "Terlalu banyak percobaan. Coba lagi dalam {{time}}.",
     "cannotReachTheServer": "Tidak dapat menjangkau server. Silakan coba lagi sebentar lagi.",
     "couldNotSend": "Kami tidak dapat mengirim tautan reset. Periksa alamat email lalu coba lagi.",
     "useADifferentEmail": "Gunakan email lain"

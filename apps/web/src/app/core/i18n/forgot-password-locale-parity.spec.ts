@@ -15,15 +15,20 @@ const PAGE_KEYS = [
   'sendResetLink',
   'backToLogin',
   'didnTReceiveItResend',
+  'resendIn',
   'enterAValidEmail',
   'sentIfAccountExists',
   'alreadySent',
   'sentAnother',
   'tooManyRequests',
+  'tooManyRequestsRetry',
   'cannotReachTheServer',
   'couldNotSend',
   'useADifferentEmail',
 ].map((key) => `${GROUP}.${key}`);
+
+/** Keys that carry a wait, always as a `{{time}}` clock, never as words or digits of their own. */
+const TIME_KEYS = ['resendIn', 'tooManyRequestsRetry'].map((key) => `${GROUP}.${key}`);
 
 /** The page's messages; none of them may name a number or how long a link lasts. */
 const NEW_KEYS = [
@@ -32,6 +37,8 @@ const NEW_KEYS = [
   'alreadySent',
   'sentAnother',
   'tooManyRequests',
+  'resendIn',
+  'tooManyRequestsRetry',
   'cannotReachTheServer',
   'couldNotSend',
   'useADifferentEmail',
@@ -69,6 +76,10 @@ describe('the forgot-password copy in every language', () => {
 
   it('puts the address in the sent sentence as {{email}}', () => {
     expect(params(enKeys[`${GROUP}.sentIfAccountExists`] ?? '')).toEqual(['email']);
+  });
+
+  it.each(TIME_KEYS)('puts the wait in %s as {{time}}', (path) => {
+    expect(params(enKeys[path] ?? '')).toEqual(['time']);
   });
 
   it('names no link lifetime in the English messages, only "a few minutes" to wait', () => {
