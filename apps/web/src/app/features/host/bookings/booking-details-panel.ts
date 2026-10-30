@@ -30,6 +30,15 @@ import { BookingOccupancy, HostBooking, HostBookingsApi, confirmationLink } from
 import { releaseFailureKey } from './booking-move-failure';
 import { isPrivateOccupancy } from '@util/occupancy-type';
 import { bookingRefusal } from '@util/booking-refusal';
+import { LocaleStore } from '@core/i18n/locale-store';
+import {
+  Phrase,
+  guestsPhrase,
+  nightsPhrase,
+  privateRoomsPhrase,
+  sharedBedsPhrase,
+  unitsPhrase,
+} from './booking-copy';
 
 /** What a host can do to a booking, as the lifecycle (Trello #80) allows it. */
 export type BookingAction =
@@ -134,12 +143,18 @@ export class BookingDetailsPanel {
 
   private readonly api = inject(HostBookingsApi);
   private readonly session = inject(SessionStore);
+  private readonly locale = inject(LocaleStore);
 
   protected readonly lane = computed(() => laneKeyFor(this.booking()?.disposition.slug ?? ''));
 
   protected readonly badge = computed(
     () => laneFor(this.booking()?.disposition.slug ?? '')?.badge ?? 'bg-ink-100 text-ink-600',
   );
+  /**
+   * The stage's name as a translation key. The server's `disposition.name` is English, so it is
+   * shown only for a stage the app does not know.
+   */
+  protected readonly stageKey = computed(() => laneFor(this.booking()?.disposition.slug ?? '')?.labelKey ?? '');
 
   protected readonly actions = computed<readonly BookingAction[]>(() => {
     const b = this.booking();
@@ -208,35 +223,35 @@ export class BookingDetailsPanel {
    * line's type is not the booking's. A single-type booking without lines falls back to the
    * old derivation — beds per guest on a dorm, the fewest rooms that seat the party otherwise.
    */
-  protected readonly askedFor = computed(() => {
+  protected readonly askedFor = computed<readonly Phrase[]>(() => {
     const b = this.booking();
-    if (!b) return '';
+    if (!b) return [];
     if (b.lines.length) {
       const rooms = b.lines.filter((l) => !l.shared).reduce((n, l) => n + l.units, 0);
       const beds = b.lines.filter((l) => l.shared).reduce((n, l) => n + l.units, 0);
       return [
-        rooms ? `${rooms} private room${rooms === 1 ? '' : 's'}` : '',
-        beds ? `${beds} shared bed${beds === 1 ? '' : 's'}` : '',
-      ]
-        .filter(Boolean)
-        .join(' + ');
+        ...(rooms ? [privateRoomsPhrase(rooms)] : []),
+        ...(beds ? [sharedBedsPhrase(beds)] : []),
+      ];
     }
-    if (this.isShared()) {
-      const n = Math.max(1, b.guests);
-      return `${n} shared bed${n === 1 ? '' : 's'}`;
-    }
-    const n = Math.max(1, Math.ceil(b.guests / (b.roomType.capacity || 1)));
-    return `${n} private room${n === 1 ? '' : 's'}`;
+    if (this.isShared()) return [sharedBedsPhrase(Math.max(1, b.guests))];
+    return [privateRoomsPhrase(Math.max(1, Math.ceil(b.guests / (b.roomType.capacity || 1))))];
   });
 
   /** "3 guests · King size room" — or "· 2 room types" for a mixed stay. */
-  protected readonly askedForDetail = computed(() => {
+  protected readonly askedForDetail = computed<{ guests: Phrase; types: number; name: string } | null>(() => {
     const b = this.booking();
-    if (!b) return '';
-    const what =
-      b.lines.length > 1 ? `${b.lines.length} room types` : (b.lines[0]?.name ?? b.roomType.name);
-    return `${b.guests} guest${b.guests === 1 ? '' : 's'} · ${what}`;
+    if (!b) return null;
+    return {
+      guests: guestsPhrase(b.guests),
+      types: b.lines.length > 1 ? b.lines.length : 0,
+      name: b.lines[0]?.name ?? b.roomType.name,
+    };
   });
+
+  protected readonly nights = nightsPhrase;
+  protected readonly guestsOf = guestsPhrase;
+  protected readonly units = unitsPhrase;
 
   /** Whether nothing is left to collect at the property. */
   protected readonly settled = computed(() => {
@@ -244,19 +259,28 @@ export class BookingDetailsPanel {
     return !!b && b.total > 0 && b.balanceDue <= 0;
   });
 
-  /** "12 minutes ago" from `created_at`, so the wait is legible without doing the sum. */
-  protected readonly requestedAgo = computed(() => {
+  /**
+   * "Requested 12 minutes ago" from `created_at`, so the wait is legible without doing the sum.
+   *
+   * The browser words the interval (`Intl.RelativeTimeFormat`), which knows every language's
+   * plural forms; the app's own count keys only split one from many.
+   */
+  protected readonly requestedAgo = computed<Phrase | null>(() => {
     const iso = this.booking()?.createdAt;
-    if (!iso) return '';
+    if (!iso) return null;
     const then = new Date(iso).getTime();
-    if (!Number.isFinite(then)) return '';
+    if (!Number.isFinite(then)) return null;
     const mins = Math.max(0, Math.round((Date.now() - then) / 60_000));
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+    if (mins < 1) return { key: 'hostBookings.requestedJustNow' };
+    const rtf = new Intl.RelativeTimeFormat(this.locale.active(), { numeric: 'always' });
     const hours = Math.round(mins / 60);
-    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-    const days = Math.round(hours / 24);
-    return `${days} day${days === 1 ? '' : 's'} ago`;
+    const ago =
+      mins < 60
+        ? rtf.format(-mins, 'minute')
+        : hours < 24
+          ? rtf.format(-hours, 'hour')
+          : rtf.format(-Math.round(hours / 24), 'day');
+    return { key: 'hostBookings.requestedAgo', params: { ago } };
   });
 
   // ── who is in which room ─────────────────────────────────────────────────────────
@@ -366,6 +390,7 @@ export class BookingDetailsPanel {
   }
 
   // ── the next move ────────────────────────────────────────────────────────────────
+  /** The button's translation key. */
   protected label(action: BookingAction): string {
     return ACTION_LABEL[action];
   }
@@ -375,21 +400,24 @@ export class BookingDetailsPanel {
     if (b && !this.busy()) this.act.emit({ action, booking: b });
   }
 
-  /** The line under the buttons: what the primary move does, so pressing it is not a guess. */
+  /**
+   * The line under the buttons: what the primary move does, so pressing it is not a guess.
+   * A translation key, or `''` for a stage the app does not know.
+   */
   protected readonly hint = computed(() => {
     switch (this.lane()) {
       case 'pending':
-        return 'Confirming emails the guest their confirmation, with the booking as a PDF.';
+        return 'hostBookings.hintPending';
       case 'confirmed':
-        return 'Rooms are assigned at check-in. A guest who never arrives is a no show.';
+        return 'hostBookings.hintConfirmed';
       case 'checked-in':
-        return 'Checking out releases every bed this booking holds.';
+        return 'hostBookings.hintCheckedIn';
       case 'checked-out':
-        return this.invoice() ? 'This stay has been invoiced.' : 'An invoice can be raised once per booking.';
+        return this.invoice() ? 'hostBookings.hintInvoiced' : 'hostBookings.hintInvoiceOnce';
       case 'no-show':
-        return 'The guest never arrived, so this booking is closed.';
+        return 'hostBookings.hintNoShow';
       case 'cancelled':
-        return 'This booking was cancelled.';
+        return 'hostBookings.hintCancelled';
       default:
         return '';
     }
@@ -414,13 +442,14 @@ export class BookingDetailsPanel {
 /** Moves that never finish a stage, so they are never drawn as its filled primary. */
 const SECONDARY_ACTIONS: readonly BookingAction[] = ['cancel', 'invoice', 'viewInvoice', 'markPaid'];
 
+/** Each move's button, as a translation key. */
 const ACTION_LABEL: Record<BookingAction, string> = {
-  confirm: 'Confirm',
-  checkIn: 'Check in',
-  checkOut: 'Check out',
-  invoice: 'Generate invoice',
-  viewInvoice: 'View invoice',
-  cancel: 'Cancel booking',
-  noShow: 'Mark no show',
-  markPaid: 'Mark as paid',
+  confirm: 'common.confirm',
+  checkIn: 'hostBookings.actionCheckIn',
+  checkOut: 'hostBookings.actionCheckOut',
+  invoice: 'hostBookings.actionGenerateInvoice',
+  viewInvoice: 'hostBookings.viewInvoice',
+  cancel: 'common.cancelBooking',
+  noShow: 'hostBookings.actionMarkNoShow',
+  markPaid: 'hostBookings.actionMarkPaid',
 };

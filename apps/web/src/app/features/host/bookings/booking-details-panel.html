@@ -3,7 +3,7 @@
     <button
       type="button"
       class="absolute inset-0 -z-10 cursor-default"
-      aria-label="Close"
+      [attr.aria-label]="'common.close' | transloco"
       (click)="close()"
     ></button>
 
@@ -23,22 +23,22 @@
               {{ b.guest.name }}
             </h2>
             <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" [class]="badge()">
-              {{ b.disposition.name || 'Booking' }}
+              {{ stageKey() ? (stageKey() | transloco) : b.disposition.name || ('hostBookings.bookingFallback' | transloco) }}
             </span>
           </div>
           <p class="mt-0.5 truncate text-xs text-ink-500">
-            @if (requestedAgo()) {
-              Requested {{ requestedAgo() }}
+            @if (requestedAgo(); as ago) {
+              {{ ago.key | transloco: ago.params }}
             }
             @if (b.source) {
-              · via {{ b.source }}
+              · {{ 'hostBookings.viaSource' | transloco: { source: b.source } }}
             }
             @if (b.ref) {
               · {{ b.ref }}
             }
           </p>
         </div>
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Close" (click)="close()">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'common.close' | transloco" (click)="close()">
           <i class="ti ti-x text-lg" aria-hidden="true"></i>
         </button>
       </header>
@@ -48,47 +48,64 @@
              phone rather than four: at 402px, four columns wrap mid-figure. -->
         <dl class="grid grid-cols-2 gap-px border-b border-ink-100 bg-ink-100 sm:grid-cols-4">
           <div class="bg-white px-4 py-3">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Stay</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.stay' | transloco }}</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">
               {{ b.checkIn | date: 'EEE d' }} → {{ b.checkOut | date: 'EEE d MMM' }}
             </dd>
-            <dd class="text-xs text-ink-500">{{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</dd>
+            @let n = nights(b.nights);
+            <dd class="text-xs text-ink-500">{{ n.key | transloco: n.params }}</dd>
           </div>
           <div class="bg-white px-4 py-3">
             <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.askedFor' | transloco }}</dt>
-            <dd class="mt-1 text-sm font-semibold text-ink-900">{{ askedFor() }}</dd>
-            <dd class="truncate text-xs text-ink-500">{{ askedForDetail() }}</dd>
+            <dd class="mt-1 text-sm font-semibold text-ink-900">
+              @for (p of askedFor(); track p.key) {
+                @if (!$first) {
+                  +
+                }
+                {{ p.key | transloco: p.params }}
+              }
+            </dd>
+            @if (askedForDetail(); as d) {
+              <dd class="truncate text-xs text-ink-500">
+                {{ d.guests.key | transloco: d.guests.params }} ·
+                {{ d.types ? ('hostBookings.nRoomTypes' | transloco: { count: d.types }) : d.name }}
+              </dd>
+            }
           </div>
           <!-- The total, not one room type's nightly rate: a stay can mix rooms and beds, and
                the first line's rate is not the booking's. The lines below carry each price. -->
           <div class="bg-white px-4 py-3">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Quoted</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.quoted' | transloco }}</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">
               {{ b.currency | currencySym }} {{ b.total | number: '1.0-0' }}
             </dd>
-            <dd class="text-xs text-ink-500">for {{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</dd>
+            <dd class="text-xs text-ink-500">
+              {{ (b.nights === 1 ? 'hostBookings.forNNightsOne' : 'hostBookings.forNNights') | transloco: { count: b.nights } }}
+            </dd>
           </div>
           <!-- Paid at the property, never online: what is still owed is what the desk collects. -->
           <div class="bg-white px-4 py-3">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Due</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.due' | transloco }}</dt>
             <dd class="mt-1 text-sm font-semibold text-ink-900">
               {{ b.currency | currencySym }} {{ b.balanceDue | number: '1.0-0' }}
             </dd>
             <dd class="text-xs" [class]="settled() ? 'text-ok' : 'text-ink-500'">
-              {{ settled() ? 'Paid' : 'At the property' }}
+              {{ (settled() ? 'common.paid' : 'hostBookings.atTheProperty') | transloco }}
             </dd>
           </div>
         </dl>
 
         @if (b.lines.length) {
           <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Booked</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.booked' | transloco }}</p>
             <ul class="mt-1.5 space-y-1 text-sm">
               @for (line of b.lines; track $index) {
+                @let u = units(line);
+                @let g = guestsOf(line.guests);
                 <li class="flex items-baseline justify-between gap-3">
                   <span class="min-w-0 text-ink-700">
-                    {{ line.units }} {{ line.shared ? 'bed' : 'room' }}{{ line.units === 1 ? '' : 's' }} · {{ line.name }}
-                    <span class="text-ink-400">· {{ line.guests }} guest{{ line.guests === 1 ? '' : 's' }}</span>
+                    {{ u.key | transloco: u.params }} · {{ line.name }}
+                    <span class="text-ink-400">· {{ g.key | transloco: g.params }}</span>
                   </span>
                   <span class="shrink-0 whitespace-nowrap tabular-nums text-ink-900">
                     {{ b.currency | currencySym }} {{ line.subtotal | number: '1.0-0' }}
@@ -103,20 +120,21 @@
           <!-- Who is in which room. Checking out releases all of them; a room can be released
                early here, when part of a party leaves first. -->
           <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">In rooms</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.inRooms' | transloco }}</p>
             @let occ = occupancies();
             @if (occ.loading) {
-              <p class="mt-1.5 text-sm text-ink-400">Loading rooms…</p>
+              <p class="mt-1.5 text-sm text-ink-400">{{ 'hostBookings.loadingRooms' | transloco }}</p>
             } @else if (occ.error) {
-              <p class="mt-1.5 text-sm text-danger">Could not load the rooms for this booking.</p>
+              <p class="mt-1.5 text-sm text-danger">{{ 'hostBookings.couldNotLoadBookingRooms' | transloco }}</p>
             } @else if (!occ.rows.length) {
-              <p class="mt-1.5 text-sm text-ink-400">No rooms recorded yet.</p>
+              <p class="mt-1.5 text-sm text-ink-400">{{ 'hostBookings.noRoomsRecordedYet' | transloco }}</p>
             } @else {
               <ul class="mt-1.5 space-y-1.5 text-sm">
                 @for (o of occ.rows; track o.id) {
+                  @let g = guestsOf(o.guests);
                   <li class="flex items-center justify-between gap-3">
                     <span [class]="o.active ? 'text-ink-800' : 'text-ink-400 line-through'">
-                      Room {{ o.roomNumber }} · {{ o.guests }} guest{{ o.guests === 1 ? '' : 's' }}
+                      {{ 'common.roomNumber' | transloco: { number: o.roomNumber } }} · {{ g.key | transloco: g.params }}
                     </span>
                     @if (o.active) {
                       <button
@@ -127,7 +145,7 @@
                         [disabled]="releasing() !== null || busy()"
                         (click)="release(o)"
                       >
-                        {{ releasing() === o.id ? 'Releasing…' : 'Release' }}
+                        {{ (releasing() === o.id ? 'hostBookings.releasing' : 'hostBookings.release') | transloco }}
                       </button>
                     } @else {
                       <span class="text-xs text-ink-400">{{ 'hostBookings.released' | transloco }}</span>
@@ -148,8 +166,9 @@
             <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.stayedIn' | transloco }}</p>
             <ul class="mt-1.5 space-y-1.5 text-sm">
               @for (o of stayHistory(); track o.id) {
+                @let g = guestsOf(o.guests);
                 <li class="flex items-center justify-between gap-3">
-                  <span class="text-ink-700">Room {{ o.roomNumber }} · {{ o.guests }} guest{{ o.guests === 1 ? '' : 's' }}</span>
+                  <span class="text-ink-700">{{ 'common.roomNumber' | transloco: { number: o.roomNumber } }} · {{ g.key | transloco: g.params }}</span>
                   <span class="text-xs text-ink-400">{{ stayRowLabel() | transloco }}</span>
                 </li>
               }
@@ -200,7 +219,7 @@
 
         @if (b.cancellationReason && (lane() === 'cancelled' || lane() === 'no-show')) {
           <div class="border-b border-ink-100 px-4 py-3 sm:px-5">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Reason</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.reason' | transloco }}</p>
             <p class="mt-1 text-sm text-ink-700">{{ b.cancellationReason }}</p>
           </div>
         }
@@ -216,7 +235,7 @@
 
         <div class="grid grid-cols-1 gap-px bg-ink-100 sm:grid-cols-2">
           <div class="bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Contact</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.contact' | transloco }}</p>
             @if (b.guest.phone || b.guest.email) {
               @if (b.guest.phone) {
                 <a
@@ -237,16 +256,16 @@
             }
           </div>
           <div class="bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Payment</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'common.payment' | transloco }}</p>
             <p class="mt-1 text-sm font-semibold text-ink-900">
-              {{ b.currency | currencySym }} {{ b.paid | number: '1.0-0' }} paid
+              {{ 'hostBookings.amountPaid' | transloco: { amount: (b.currency | currencySym) + ' ' + (b.paid | number: '1.0-0') } }}
             </p>
             <p class="text-xs" [class]="b.balanceDue ? 'text-warn' : 'text-ink-500'">
-              {{
-                b.balanceDue
-                  ? (b.currency | currencySym) + ' ' + (b.balanceDue | number: '1.0-0') + ' still due'
-                  : 'Nothing outstanding'
-              }}
+              @if (b.balanceDue) {
+                {{ 'hostBookings.amountStillDue' | transloco: { amount: (b.currency | currencySym) + ' ' + (b.balanceDue | number: '1.0-0') } }}
+              } @else {
+                {{ 'hostBookings.nothingOutstanding' | transloco }}
+              }
             </p>
           </div>
         </div>
@@ -261,7 +280,7 @@
         <!-- The next moves this stage allows, the one that finishes it filled. Everything is
              held while one is in flight, so a double press cannot send two. -->
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <p class="min-w-0 flex-1 basis-56 text-xs text-ink-500">{{ hint() }}</p>
+          <p class="min-w-0 flex-1 basis-56 text-xs text-ink-500">{{ hint() ? (hint() | transloco) : '' }}</p>
           <div class="flex flex-wrap items-center justify-end gap-2">
             @for (action of actions(); track action) {
               <button
@@ -273,10 +292,10 @@
                 [disabled]="busy()"
                 (click)="run(action)"
               >
-                {{ label(action) }}
+                {{ label(action) | transloco }}
               </button>
             } @empty {
-              <button hh-button variant="outlined" size="sm" type="button" (click)="close()">Close</button>
+              <button hh-button variant="outlined" size="sm" type="button" (click)="close()">{{ 'common.close' | transloco }}</button>
             }
           </div>
         </div>

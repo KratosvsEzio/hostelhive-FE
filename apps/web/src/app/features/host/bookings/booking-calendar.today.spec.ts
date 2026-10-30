@@ -251,8 +251,8 @@ describe('BookingCalendar today', () => {
 
       expect(arrow('a11y.previousMonth').disabled).toBe(true);
       expect(arrow('a11y.nextMonth').disabled).toBe(true);
-      expect(ledgerText()).not.toContain('Nothing pending');
-      expect(ledgerText()).not.toContain('Awaiting confirmation');
+      expect(ledgerText()).not.toContain('hostBookings.nothingPending');
+      expect(ledgerText()).not.toContain('hostBookings.awaitingConfirmation');
       expect(ledgerText()).not.toContain('hostBookings.nothingIsWaitingOnYou');
       expect(ledgerText()).not.toContain('Pending');
       expect(laneChips()).toHaveLength(0);
@@ -269,8 +269,8 @@ describe('BookingCalendar today', () => {
       expect(arrow('a11y.previousMonth').disabled).toBe(false);
       expect(arrow('a11y.nextMonth').disabled).toBe(false);
       expect(ledgerSkeletons()).toBe(0);
-      expect(ledgerText()).toContain('Nothing pending');
-      expect(ledgerText()).toContain('Awaiting confirmation');
+      expect(ledgerText()).toContain('hostBookings.nothingPending');
+      expect(ledgerText()).toContain('hostBookings.awaitingConfirmation');
       expect(ledgerText()).toContain('hostBookings.nothingIsWaitingOnYou');
       expect(ledgerText()).toContain('Pending');
       expect(ledger().querySelector('h3')?.textContent?.trim()).toBe('Wed 1 April');

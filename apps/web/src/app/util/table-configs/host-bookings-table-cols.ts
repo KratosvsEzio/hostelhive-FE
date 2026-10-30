@@ -2,6 +2,14 @@ import { format, parseISO } from 'date-fns';
 import { CellDef, ColumnDef } from '@hostelhive/ui';
 import { HostBooking } from '@features/host/bookings/host-bookings-api';
 import { laneFor } from '@features/host/bookings/booking-month';
+import {
+  BookingCopy,
+  Phrase,
+  guestsPhrase,
+  nightsPhrase,
+  unitsPhrase,
+} from '@features/host/bookings/booking-copy';
+import { isPrivateOccupancy } from '@util/occupancy-type';
 
 /**
  * The host's booking table, below the month calendar on the same page.
@@ -38,16 +46,19 @@ function dayYear(iso: string | undefined | null): string {
  * in (Trello #81); before that, what they booked, line by line; and for an older record with
  * neither, its one room type.
  */
-function roomLine(b: HostBooking): string {
+function roomLine(b: HostBooking, t: BookingCopy): string {
   const inRooms = b.occupancies.filter((o) => o.active);
   if (inRooms.length) return inRooms.map((o) => `${o.roomNumber} × ${o.guests}`).join(' · ');
   if (b.lines.length) {
-    return b.lines
-      .map((l) => `${l.units} ${l.shared ? 'bed' : 'room'}${l.units === 1 ? '' : 's'} · ${l.name}`)
-      .join(', ');
+    return b.lines.map((l) => `${say(t, unitsPhrase(l))} · ${l.name}`).join(', ');
   }
   const { name, occupancyType } = b.roomType;
-  return occupancyType ? `${name} · ${occupancyType}` : name;
+  if (!occupancyType) return name;
+  return `${name} · ${t(isPrivateOccupancy(occupancyType) ? 'search.privateRoom' : 'search.sharedRoom')}`;
+}
+
+function say(t: BookingCopy, p: Phrase): string {
+  return t(p.key, p.params);
 }
 
 /** PKR with thousands separators and no decimals — whole rupees is how the app quotes. */
@@ -77,15 +88,23 @@ function pkr(amount: number): string {
  * No dot, unlike the disposition badge: these three labels say what they are in words, so
  * hue is not carrying the distinction on its own.
  */
-function payment(b: HostBooking): { text: string; class: string } {
-  if (b.balanceDue <= 0) return { text: 'Paid', class: 'bg-ok/10 text-ok' };
-  if (b.paid > 0) return { text: 'Partial', class: 'bg-warn/10 text-warn' };
-  return { text: 'Unpaid', class: 'bg-ink-100 text-ink-600' };
+function payment(b: HostBooking, t: BookingCopy): { text: string; class: string } {
+  if (b.balanceDue <= 0) return { text: t('common.paid'), class: 'bg-ok/10 text-ok' };
+  if (b.paid > 0) return { text: t('hostBookings.partial'), class: 'bg-warn/10 text-warn' };
+  return { text: t('hostBookings.unpaid'), class: 'bg-ink-100 text-ink-600' };
 }
 
-const CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
+/**
+ * The columns, worded by `t`. The page supplies it — the translations live in its injection
+ * context — and rebuilds the columns when the language's strings arrive.
+ */
+export function hostBookingsTableCols(t: BookingCopy): ColumnDef[] {
+  return Object.entries(config(t)).map(([key, def]) => ({ key, ...def }));
+}
+
+const config = (t: BookingCopy): Record<string, Omit<ColumnDef, 'key'>> => ({
   guest: {
-    label: 'Guest',
+    label: t('common.guest'),
     cell: (r) => {
       const b = r as HostBooking;
       return {
@@ -99,29 +118,26 @@ const CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
   },
 
   stay: {
-    label: 'Stay',
+    label: t('hostBookings.stay'),
     sortable: true,
     cell: (r) => {
       const b = r as HostBooking;
       return {
         kind: 'composite',
         primary: `${day(b.checkIn)} – ${dayYear(b.checkOut)}`,
-        secondary: b.nights ? `${b.nights} night${b.nights === 1 ? '' : 's'}` : undefined,
+        secondary: b.nights ? say(t, nightsPhrase(b.nights)) : undefined,
       } satisfies CellDef;
     },
   },
 
   room: {
-    label: 'Room',
-    cell: (r) => ({ kind: 'text', value: roomLine(r as HostBooking) }) satisfies CellDef,
+    label: t('common.room'),
+    cell: (r) => ({ kind: 'text', value: roomLine(r as HostBooking, t) }) satisfies CellDef,
   },
 
   guests: {
-    label: 'Guests',
-    cell: (r) => {
-      const n = (r as HostBooking).guests;
-      return { kind: 'text', value: `${n} guest${n === 1 ? '' : 's'}` } satisfies CellDef;
-    },
+    label: t('common.guests'),
+    cell: (r) => ({ kind: 'text', value: say(t, guestsPhrase((r as HostBooking).guests)) }) satisfies CellDef,
   },
 
   /**
@@ -138,13 +154,14 @@ const CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
    * vocabulary for the whole page instead of two.
    */
   status: {
-    label: 'Status',
+    label: t('hostBookings.filterStatus'),
     cell: (r) => {
       const b = r as HostBooking;
       const lane = laneFor(b.disposition.slug);
       return {
         kind: 'badge',
-        text: b.disposition.name || '—',
+        // The lane's own name: the server's is English. Its name only for a stage the app does not know.
+        text: lane ? t(lane.labelKey) : b.disposition.name || '—',
         class: lane?.badge ?? 'bg-ink-100 text-ink-600',
         dot: lane?.dot ?? 'bg-ink-400',
       } satisfies CellDef;
@@ -162,7 +179,7 @@ const CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
    * stands alone there rather than printing "PKR 0 due".
    */
   total: {
-    label: 'Total',
+    label: t('common.total'),
     align: 'right',
     sortable: true,
     cell: (r) => {
@@ -170,13 +187,9 @@ const CONFIG: Record<string, Omit<ColumnDef, 'key'>> = {
       return {
         kind: 'composite',
         primary: pkr(b.total),
-        secondaryBadge: payment(b),
-        secondary: b.balanceDue > 0 ? `${pkr(b.balanceDue)} due` : undefined,
+        secondaryBadge: payment(b, t),
+        secondary: b.balanceDue > 0 ? t('hostBookings.amountDue', { amount: pkr(b.balanceDue) }) : undefined,
       } satisfies CellDef;
     },
   },
-};
-
-export const HOST_BOOKINGS_TABLE_COLS: ColumnDef[] = Object.entries(CONFIG).map(
-  ([key, def]) => ({ key, ...def }),
-);
+});

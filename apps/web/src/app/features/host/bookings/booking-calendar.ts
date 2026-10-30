@@ -15,6 +15,8 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Button, Skeleton } from '@hostelhive/ui';
 import { hostelZone } from '@services';
 import { todayIn } from '@util/zoned-time';
+import { LocaleStore } from '@core/i18n/locale-store';
+import { guestsPhrase, nightsPhrase } from './booking-copy';
 import {
   BookingCalendar as CalendarData,
   HostBooking,
@@ -107,8 +109,10 @@ export class BookingCalendar {
    * sixth lane does not quietly leave a stretched chip in the middle of a full grid.
    */
   protected readonly lastLaneSpansRow = LANES.length % 2 === 1;
-  protected readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  protected readonly weekdaysNarrow = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  private readonly locale = inject(LocaleStore);
+  /** Monday first, worded by the browser in the host's language. */
+  protected readonly weekdays = weekdayNames(this.locale.active(), 'short');
+  protected readonly weekdaysNarrow = weekdayNames(this.locale.active(), 'narrow');
   /** 42, matching the grid, so the skeleton occupies exactly the space the month will. */
   protected readonly skeletonCells = Array.from({ length: 42 });
 
@@ -351,11 +355,13 @@ export class BookingCalendar {
       .toUpperCase();
   }
 
-  /** "Dormitory · 4 guests · 7 nights" — what a host needs before assigning a room. */
-  protected summary(b: HostBooking): string {
-    const n = b.nights;
-    return `${b.roomType.name} · ${b.guests} ${
-      b.guests === 1 ? 'guest' : 'guests'
-    } · ${n} ${n === 1 ? 'night' : 'nights'}`;
-  }
+  // "Dormitory · 4 guests · 7 nights" under each request — what a host needs before confirming.
+  protected readonly guestsOf = guestsPhrase;
+  protected readonly nightsOf = nightsPhrase;
+}
+
+/** The seven day names, Monday first. 2024-01-01 was a Monday; noon UTC keeps it Monday in every zone. */
+function weekdayNames(locale: string, weekday: 'short' | 'narrow'): string[] {
+  const fmt = new Intl.DateTimeFormat(locale, { weekday, timeZone: 'UTC' });
+  return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(Date.UTC(2024, 0, 1 + i, 12))));
 }

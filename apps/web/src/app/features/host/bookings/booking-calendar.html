@@ -54,7 +54,7 @@
           [class.col-span-2]="$last && lastLaneSpansRow"
         >
           <span class="h-2 w-2 shrink-0 rounded-sm" [class]="lane.dot"></span>
-          <span class="text-xs font-medium text-ink-700">{{ lane.label }}</span>
+          <span class="text-xs font-medium text-ink-700">{{ lane.labelKey | transloco }}</span>
           <span class="text-sm font-semibold tabular-nums" [class]="lane.value">
             {{ m.totals[lane.key] }}
           </span>
@@ -107,7 +107,7 @@
             d.inMonth
               ? (d.date | date: 'fullDate') +
                 (d.counts['pending']
-                  ? ', ' + d.counts['pending'] + ' awaiting confirmation'
+                  ? ', ' + ('hostBookings.nAwaitingConfirmation' | transloco: { count: d.counts['pending'] })
                   : '')
               : null
           "
@@ -142,7 +142,7 @@
                   <span
                     class="min-w-0 flex-1 truncate text-[10px]"
                     [class]="n ? 'text-ink-600' : 'text-ink-300'"
-                    >{{ lane.label }}</span
+                    >{{ lane.labelKey | transloco }}</span
                   >
                   <span
                     class="text-[11px] font-semibold tabular-nums"
@@ -177,7 +177,7 @@
             class="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
             [class]="pending ? 'bg-warn/10 text-warn' : 'bg-ok/10 text-ok'"
           >
-            {{ pending ? pending + ' to confirm' : 'Nothing pending' }}
+            {{ pending ? ('hostBookings.nToConfirm' | transloco: { count: pending }) : ('hostBookings.nothingPending' | transloco) }}
           </span>
         }
       </div>
@@ -217,7 +217,7 @@
             (click)="n && laneSelect.emit({ date: selected(), lane: lane.key })"
           >
             <span class="h-2 w-2 shrink-0 rounded-sm" [class]="lane.dot"></span>
-            <span class="text-xs font-medium text-ink-700">{{ lane.label }}</span>
+            <span class="text-xs font-medium text-ink-700">{{ lane.labelKey | transloco }}</span>
             <span class="text-sm font-semibold tabular-nums" [class]="lane.value">{{ n }}</span>
           </button>
         } @empty {
@@ -234,7 +234,7 @@
       <div class="flex items-center justify-between gap-2 px-4 pb-1 pt-3 sm:px-5">
         <span class="flex items-center gap-2">
           <span class="h-2 w-2 rounded-full bg-warn"></span>
-          <span class="text-sm font-semibold text-ink-900">Awaiting confirmation</span>
+          <span class="text-sm font-semibold text-ink-900">{{ 'hostBookings.awaitingConfirmation' | transloco }}</span>
         </span>
         <span class="text-xs font-semibold tabular-nums text-warn">{{ needsAction().length }}</span>
       </div>
@@ -252,7 +252,11 @@
                   <span class="block truncate text-sm font-semibold text-ink-900">
                     {{ b.guest.name }}
                   </span>
-                  <span class="mt-0.5 block truncate text-xs text-ink-500">{{ summary(b) }}</span>
+                  @let g = guestsOf(b.guests);
+                  @let n = nightsOf(b.nights);
+                  <span class="mt-0.5 block truncate text-xs text-ink-500"
+                    >{{ b.roomType.name }} · {{ g.key | transloco: g.params }} · {{ n.key | transloco: n.params }}</span
+                  >
                 </span>
               </div>
               <div class="mt-2.5 flex gap-2">
@@ -263,7 +267,7 @@
                   type="button"
                   class="flex-1"
                   (click)="confirmRequested.emit(b)"
-                >Confirm</button>
+                >{{ 'common.confirm' | transloco }}</button>
                 <button
                   hh-button
                   variant="outlined"
@@ -271,7 +275,7 @@
                   type="button"
                   (click)="detailsRequested.emit(b)"
                 >
-                  Details
+                  {{ 'hostBookings.details' | transloco }}
                 </button>
               </div>
             </li>

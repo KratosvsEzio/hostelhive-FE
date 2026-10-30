@@ -5,7 +5,7 @@
     <button
       type="button"
       class="absolute inset-0 -z-10 cursor-default"
-      aria-label="Close"
+      [attr.aria-label]="'common.close' | transloco"
       (click)="close()"
     ></button>
 
@@ -18,14 +18,15 @@
       <header class="flex items-start justify-between gap-4 border-b border-ink-100 px-4 py-3 sm:px-5 sm:py-4">
         <div class="min-w-0">
           <h2 id="hh-assign-title" class="font-display text-base font-semibold text-ink-900 sm:text-lg">
-            Check in {{ b.guest.name }}
+            {{ 'hostBookings.checkInGuest' | transloco: { name: b.guest.name } }}
           </h2>
+          @let n = nights(b.nights);
           <p class="mt-0.5 truncate text-xs text-ink-500">
-            {{ b.ref || 'Booking' }} · {{ b.checkIn | date: 'EEE d MMM' }} →
-            {{ b.checkOut | date: 'EEE d MMM' }} · {{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}
+            {{ b.ref || ('hostBookings.bookingFallback' | transloco) }} · {{ b.checkIn | date: 'EEE d MMM' }} →
+            {{ b.checkOut | date: 'EEE d MMM' }} · {{ n.key | transloco: n.params }}
           </p>
         </div>
-        <button hh-button variant="icon" size="sm" type="button" aria-label="Close" (click)="close()">
+        <button hh-button variant="icon" size="sm" type="button" [attr.aria-label]="'common.close' | transloco" (click)="close()">
           <i class="ti ti-x text-lg" aria-hidden="true"></i>
         </button>
       </header>
@@ -33,10 +34,11 @@
       <!-- What was booked, and how much of the party is placed. The lines are the guest's
            choice; the host may still seat them anywhere with room. -->
       <div class="flex flex-wrap items-center gap-2 border-b border-ink-100 bg-surface px-4 py-2.5 sm:px-5">
-        <span class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Booked</span>
+        <span class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.booked' | transloco }}</span>
         @for (line of b.lines; track $index) {
+          @let u = units(line);
           <span class="rounded-full bg-white px-2 py-1 text-xs text-ink-700 ring-1 ring-ink-100">
-            {{ line.units }} {{ line.shared ? 'bed' : 'room' }}{{ line.units === 1 ? '' : 's' }} · {{ line.name }}
+            {{ u.key | transloco: u.params }} · {{ line.name }}
           </span>
         } @empty {
           <span class="rounded-full bg-white px-2 py-1 text-xs text-ink-700 ring-1 ring-ink-100">{{ b.roomType.name }}</span>
@@ -45,7 +47,7 @@
           class="ms-auto inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold"
           [class]="complete() ? 'bg-ok/10 text-ok' : 'bg-warn/10 text-warn'"
         >
-          <span class="tabular-nums">{{ allocated() }}/{{ needed() }}</span> guests placed
+          <span class="tabular-nums">{{ allocated() }}/{{ needed() }}</span> {{ 'hostBookings.guestsPlaced' | transloco }}
           @if (complete()) {
             <i class="ti ti-check text-sm" aria-hidden="true"></i>
           }
@@ -60,15 +62,15 @@
             }
           </div>
         } @else if (error()) {
-          <p class="p-6 text-center text-sm text-ink-500">The rooms for this property could not be loaded.</p>
+          <p class="p-6 text-center text-sm text-ink-500">{{ 'hostBookings.theRoomsForThisProperty' | transloco }}</p>
         } @else if (!groups().length) {
-          <p class="p-6 text-center text-sm text-ink-500">This property has no rooms yet, so there is nowhere to check the guests in.</p>
+          <p class="p-6 text-center text-sm text-ink-500">{{ 'hostBookings.noRoomsToCheckInto' | transloco }}</p>
         } @else {
           @for (g of groups(); track g.type) {
             <div class="flex items-baseline justify-between gap-3 px-4 pb-1 pt-4 sm:px-5">
               <span class="text-sm font-semibold text-ink-900">{{ g.type }}</span>
               @if (g.booked) {
-                <span class="text-xs font-medium text-ok">Booked</span>
+                <span class="text-xs font-medium text-ok">{{ 'hostBookings.booked' | transloco }}</span>
               }
             </div>
             <ul class="space-y-2 px-4 py-2 sm:px-5">
@@ -82,12 +84,15 @@
                   [class.opacity-60]="!usable"
                 >
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-sm font-semibold text-ink-900">Room {{ row.room.number }}</span>
+                    <span class="block truncate text-sm font-semibold text-ink-900">{{ 'common.roomNumber' | transloco: { number: row.room.number } }}</span>
                     <span class="block truncate text-xs text-ink-500">
                       @if (usable) {
-                        {{ row.free }} of {{ row.room.capacity }} bed{{ row.room.capacity === 1 ? '' : 's' }} free · floor {{ row.room.floor || '—' }}
+                        {{
+                          (row.room.capacity === 1 ? 'hostBookings.nOfNBedsFreeOne' : 'hostBookings.nOfNBedsFree')
+                            | transloco: { free: row.free, count: row.room.capacity, floor: row.room.floor || '—' }
+                        }}
                       } @else {
-                        Full — {{ row.room.occupied }} of {{ row.room.capacity }} beds taken
+                        {{ 'hostBookings.fullNOfNBedsTaken' | transloco: { taken: row.room.occupied, count: row.room.capacity } }}
                       }
                     </span>
                   </span>
@@ -97,7 +102,7 @@
                         type="button"
                         class="grid h-7 w-7 place-items-center rounded-full text-ink-700 transition hover:bg-ink-50 disabled:cursor-not-allowed disabled:text-ink-300"
                         [disabled]="!row.placed"
-                        [attr.aria-label]="'One fewer guest in room ' + row.room.number"
+                        [attr.aria-label]="'hostBookings.oneFewerGuestInRoom' | transloco: { room: row.room.number }"
                         (click)="step(row, -1)"
                       >
                         <i class="ti ti-minus text-sm" aria-hidden="true"></i>
@@ -107,7 +112,7 @@
                         type="button"
                         class="grid h-7 w-7 place-items-center rounded-full text-ink-700 transition hover:bg-ink-50 disabled:cursor-not-allowed disabled:text-ink-300"
                         [disabled]="!canAdd(row)"
-                        [attr.aria-label]="'One more guest in room ' + row.room.number"
+                        [attr.aria-label]="'hostBookings.oneMoreGuestInRoom' | transloco: { room: row.room.number }"
                         (click)="step(row, 1)"
                       >
                         <i class="ti ti-plus text-sm" aria-hidden="true"></i>
@@ -132,14 +137,16 @@
             @if (complete()) {
               {{ summaryLine() }}
             } @else if (partial()) {
-              {{ summaryLine() }} — {{ remaining() }} of the party not placed. Checking in now records
-              {{ allocated() }} guest{{ allocated() === 1 ? '' : 's' }} on the booking.
+              {{
+                (allocated() === 1 ? 'hostBookings.partialPlacementOne' : 'hostBookings.partialPlacement')
+                  | transloco: { rooms: summaryLine(), remaining: remaining(), count: allocated() }
+              }}
             } @else {
-              Place {{ needed() }} guest{{ needed() === 1 ? '' : 's' }} in rooms with free beds.
+              {{ (needed() === 1 ? 'hostBookings.placeNGuestsOne' : 'hostBookings.placeNGuests') | transloco: { count: needed() } }}
             }
           </p>
           <div class="flex shrink-0 items-center gap-2">
-            <button hh-button variant="outlined" size="sm" type="button" [disabled]="busy()" (click)="close()">Cancel</button>
+            <button hh-button variant="outlined" size="sm" type="button" [disabled]="busy()" (click)="close()">{{ 'common.cancel' | transloco }}</button>
             <button
               hh-button
               color="primary"
@@ -148,7 +155,10 @@
               [disabled]="!allocated() || busy()"
               (click)="submit()"
             >
-              {{ busy() ? 'Checking in…' : 'Check in ' + allocated() + ' guest' + (allocated() === 1 ? '' : 's') }}
+              {{
+                (busy() ? 'hostBookings.checkingIn' : allocated() === 1 ? 'hostBookings.checkInNGuestsOne' : 'hostBookings.checkInNGuests')
+                  | transloco: { count: allocated() }
+              }}
             </button>
           </div>
         </div>

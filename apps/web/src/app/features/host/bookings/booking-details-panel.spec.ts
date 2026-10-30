@@ -8,6 +8,7 @@ import { bookingInvoice, sessionUser } from '@app/testing/host-builders';
 import type { Role } from '@core/auth/roles';
 import { SessionStore } from '@core/auth/session-store';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { provideKeysWithParams } from './booking-copy-testing';
 import {
   ACTIONS_BY_LANE,
   BookingAction,
@@ -122,7 +123,7 @@ describe('BookingDetailsPanel', () => {
     if (opts.rows) api.rows = opts.rows;
     TestBed.configureTestingModule({
       imports: [Host],
-      providers: [provideI18nTesting(), provideRouter([]), { provide: HostBookingsApi, useValue: api }],
+      providers: [provideI18nTesting(), provideKeysWithParams(), provideRouter([]), { provide: HostBookingsApi, useValue: api }],
     });
     fixture = TestBed.createComponent(Host);
     fixture.componentInstance.booking.set(b);
@@ -153,46 +154,46 @@ describe('BookingDetailsPanel', () => {
   });
 
   it('draws the moves for a pending booking, confirm last', () => {
-    expect(buttons(render(booking('pending')))).toEqual(['Cancel booking', 'Confirm']);
+    expect(buttons(render(booking('pending')))).toEqual(['common.cancelBooking', 'common.confirm']);
   });
 
   it('treats an older pending-allotment record as pending', () => {
-    expect(buttons(render(booking('pending-allotment')))).toEqual(['Cancel booking', 'Confirm']);
+    expect(buttons(render(booking('pending-allotment')))).toEqual(['common.cancelBooking', 'common.confirm']);
   });
 
   it('draws check-in and no-show for a confirmed booking', () => {
     expect(buttons(render(booking('confirmed', { paid: 67200, balanceDue: 0 })))).toEqual([
-      'Cancel booking',
-      'Mark no show',
-      'Check in',
+      'common.cancelBooking',
+      'hostBookings.actionMarkNoShow',
+      'hostBookings.actionCheckIn',
     ]);
   });
 
   // Mark as paid (Trello #81): only on a payable stage, only while money is owed, and never
   // displacing the stage's own finishing move from the end.
   it('offers mark as paid on a confirmed booking with a balance, before check-in', () => {
-    expect(buttons(render(booking('confirmed')))).toEqual(['Cancel booking', 'Mark no show', 'Mark as paid', 'Check in']);
+    expect(buttons(render(booking('confirmed')))).toEqual(['common.cancelBooking', 'hostBookings.actionMarkNoShow', 'hostBookings.actionMarkPaid', 'hostBookings.actionCheckIn']);
   });
 
   it('does not offer mark as paid once nothing is owed', () => {
-    expect(buttons(render(booking('checked-out', { paid: 67200, balanceDue: 0 })))).toEqual(['Generate invoice']);
+    expect(buttons(render(booking('checked-out', { paid: 67200, balanceDue: 0 })))).toEqual(['hostBookings.actionGenerateInvoice']);
   });
 
   it('does not offer mark as paid on a booking the hostel has not confirmed', () => {
-    expect(buttons(render(booking('pending')))).not.toContain('Mark as paid');
+    expect(buttons(render(booking('pending')))).not.toContain('hostBookings.actionMarkPaid');
   });
 
   it('offers nothing on a no-show, even one that still owes — it can be neither paid nor invoiced', () => {
-    expect(buttons(render(booking('no-show')))).toEqual(['Close']);
+    expect(buttons(render(booking('no-show')))).toEqual(['common.close']);
   });
 
   it('offers only a Close on a cancelled booking', () => {
-    expect(buttons(render(booking('cancelled')))).toEqual(['Close']);
+    expect(buttons(render(booking('cancelled')))).toEqual(['common.close']);
   });
 
   it('emits the move rather than making it', () => {
     const el = render(booking('pending'));
-    [...el.querySelectorAll<HTMLButtonElement>('footer button')].find((b) => b.textContent?.includes('Confirm'))?.click();
+    [...el.querySelectorAll<HTMLButtonElement>('footer button')].find((b) => b.textContent?.includes('common.confirm'))?.click();
     expect(fixture.componentInstance.acted).toEqual(['confirm']);
   });
 
@@ -206,23 +207,23 @@ describe('BookingDetailsPanel', () => {
 
   it('lists what was booked, line by line, in the booking currency', () => {
     const text = render(booking('pending')).textContent ?? '';
-    expect(text).toContain('2 rooms · King size room');
-    expect(text).toContain('2 beds · Dormitory');
+    expect(text).toContain('hostBookings.nRooms(count=2) · King size room');
+    expect(text).toContain('common.nBeds(count=2) · Dormitory');
     expect(text).toContain('Rs 67,200');
   });
 
   it('shows what is still due at the property, and no deposit', () => {
     const text = render(booking('confirmed', { paid: 20000, balanceDue: 47200 })).textContent ?? '';
     expect(text).toContain('Rs 47,200');
-    expect(text).toContain('At the property');
+    expect(text).toContain('hostBookings.atTheProperty');
     expect(text).not.toContain('Deposit');
     expect(text).not.toContain('Paid online');
   });
 
   it('marks the stay paid once nothing is left due', () => {
     const text = render(booking('checked-out', { paid: 67200, balanceDue: 0 })).textContent ?? '';
-    expect(text).toContain('Paid');
-    expect(text).not.toContain('At the property');
+    expect(text).toContain('common.paid');
+    expect(text).not.toContain('hostBookings.atTheProperty');
   });
 
   it('shows who is in which room once checked in, and releases one', () => {
@@ -230,7 +231,7 @@ describe('BookingDetailsPanel', () => {
     api = new ApiStub();
     TestBed.configureTestingModule({
       imports: [Host],
-      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
+      providers: [provideI18nTesting(), provideKeysWithParams(), { provide: HostBookingsApi, useValue: api }],
     });
     api.rows = [
       { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true },
@@ -242,16 +243,16 @@ describe('BookingDetailsPanel', () => {
     const el = fixture.nativeElement as HTMLElement;
 
     expect(api.occupancies).toHaveBeenCalledWith('MjvuEl', 'b1');
-    expect(el.textContent).toContain('Room 101 · 2 guests');
+    expect(el.textContent).toContain('common.roomNumber(number=101) · common.nGuests(count=2)');
     expect(el.textContent).toContain('hostBookings.released');
 
-    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'hostBookings.release')?.click();
     expect(api.releaseOccupancy).toHaveBeenCalledWith('MjvuEl', 'b1', 'o1', { suppressErrorToast: true });
     fixture.detectChanges();
     // The endpoint reads a search index that still answers "active" for a moment after the
     // release, so the panel shows what the server confirmed rather than reading it again.
     expect(api.occupancies).toHaveBeenCalledTimes(1);
-    expect([...el.querySelectorAll('button')].some((x) => x.textContent?.trim() === 'Release')).toBe(false);
+    expect([...el.querySelectorAll('button')].some((x) => x.textContent?.trim() === 'hostBookings.release')).toBe(false);
     expect(el.textContent?.split('hostBookings.released').length).toBe(3);
   });
 
@@ -263,16 +264,16 @@ describe('BookingDetailsPanel', () => {
     ];
     const el = render(b, { rows: lagging });
     const releaseButtons = () =>
-      [...el.querySelectorAll<HTMLButtonElement>('button')].filter((x) => x.textContent?.trim() === 'Release');
+      [...el.querySelectorAll<HTMLButtonElement>('button')].filter((x) => x.textContent?.trim() === 'hostBookings.release');
     expect(releaseButtons()).toHaveLength(2);
 
     releaseButtons()[1].click();
     fixture.detectChanges();
 
-    const rooms = [...el.querySelectorAll('li')].filter((li) => li.textContent?.trim().startsWith('Room'));
+    const rooms = [...el.querySelectorAll('li')].filter((li) => li.textContent?.trim().startsWith('common.roomNumber'));
     expect(rooms.map((li) => li.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Room 101 · 2 guests Release',
-      'Room 102 · 1 guest hostBookings.released',
+      'common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release',
+      'common.roomNumber(number=102) · common.nGuestsOne(count=1) hostBookings.released',
     ]);
     expect(rooms[1].querySelector('span')?.className).toContain('line-through');
     expect(api.occupancies).toHaveBeenCalledTimes(1);
@@ -293,7 +294,7 @@ describe('BookingDetailsPanel', () => {
     fixture.detectChanges();
 
     expect(el.textContent).toContain('hostBookings.released');
-    expect([...el.querySelectorAll('button')].some((x) => x.textContent?.trim() === 'Release')).toBe(false);
+    expect([...el.querySelectorAll('button')].some((x) => x.textContent?.trim() === 'hostBookings.release')).toBe(false);
     expect(api.occupancies).toHaveBeenCalledTimes(1);
   });
 
@@ -304,10 +305,10 @@ describe('BookingDetailsPanel', () => {
     ];
     const el = render(booking('checked-in', { occupancies: carried }), { rows: [carried[0]] });
 
-    const rooms = [...el.querySelectorAll('li')].filter((li) => li.textContent?.trim().startsWith('Room'));
+    const rooms = [...el.querySelectorAll('li')].filter((li) => li.textContent?.trim().startsWith('common.roomNumber'));
     expect(rooms.map((li) => li.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Room 101 · 2 guests Release',
-      'Room 102 · 1 guest Release',
+      'common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release',
+      'common.roomNumber(number=102) · common.nGuestsOne(count=1) hostBookings.release',
     ]);
   });
 
@@ -315,14 +316,14 @@ describe('BookingDetailsPanel', () => {
     const carried = [{ id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true }];
     const text = render(booking('checked-in', { occupancies: carried }), { rows: [] }).textContent ?? '';
 
-    expect(text).toContain('Room 101 · 2 guests');
-    expect(text).not.toContain('No rooms recorded yet.');
+    expect(text).toContain('common.roomNumber(number=101) · common.nGuests(count=2)');
+    expect(text).not.toContain('hostBookings.noRoomsRecordedYet');
   });
 
   it('forgets a release when it moves on to another booking', () => {
     const rows = [{ id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true }];
     const el = render(booking('checked-in'), { rows });
-    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'hostBookings.release')?.click();
     fixture.detectChanges();
     expect(el.textContent).toContain('hostBookings.released');
 
@@ -337,9 +338,9 @@ describe('BookingDetailsPanel', () => {
     const rows = [{ id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true }];
     const el = render(booking('checked-in'), { rows });
     api.releaseOccupancy.mockReturnValue(throwError(() => releaseRefusal('Room 101 is locked.')));
-    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+    [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'hostBookings.release')?.click();
     fixture.detectChanges();
-    expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom');
+    expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom(room=101)');
 
     fixture.componentInstance.booking.set(booking('checked-in', { id: 'b2' }));
     fixture.detectChanges();
@@ -352,7 +353,7 @@ describe('BookingDetailsPanel', () => {
     api = new ApiStub();
     TestBed.configureTestingModule({
       imports: [Host],
-      providers: [provideI18nTesting(), { provide: HostBookingsApi, useValue: api }],
+      providers: [provideI18nTesting(), provideKeysWithParams(), { provide: HostBookingsApi, useValue: api }],
     });
     fixture = TestBed.createComponent(Host);
     fixture.componentInstance.booking.set(b);
@@ -365,7 +366,7 @@ describe('BookingDetailsPanel', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     expect(api.occupancies).toHaveBeenCalledTimes(1);
-    expect(text).not.toContain('Mark as paid');
+    expect(text).not.toContain('hostBookings.actionMarkPaid');
   });
 
   it('does not ask for rooms on a booking that is not checked in', () => {
@@ -451,10 +452,10 @@ describe('BookingDetailsPanel', () => {
       active,
     });
     const releaseButtons = (el: HTMLElement) =>
-      [...el.querySelectorAll<HTMLButtonElement>('button')].filter((x) => x.textContent?.trim() === 'Release');
+      [...el.querySelectorAll<HTMLButtonElement>('button')].filter((x) => x.textContent?.trim() === 'hostBookings.release');
     const roomRows = (el: HTMLElement) =>
       [...el.querySelectorAll('li')]
-        .filter((li) => li.textContent?.trim().startsWith('Room'))
+        .filter((li) => li.textContent?.trim().startsWith('common.roomNumber'))
         .map((li) =>
           [...li.children]
             .map((child) => child.textContent?.replace(/\s+/g, ' ').trim())
@@ -462,7 +463,7 @@ describe('BookingDetailsPanel', () => {
             .join(' '),
         );
     const roomLi = (el: HTMLElement, room: string) =>
-      [...el.querySelectorAll('li')].find((li) => li.textContent?.trim().startsWith(`Room ${room}`));
+      [...el.querySelectorAll('li')].find((li) => li.textContent?.trim().startsWith(`common.roomNumber(number=${room})`));
 
     it('turns Generate invoice into View invoice in the same slot once the invoice is known', () => {
       const checkedIn = booking('checked-in', settled);
@@ -489,15 +490,15 @@ describe('BookingDetailsPanel', () => {
 
     it('never draws View invoice as the filled primary button', () => {
       const el = render(booking('checked-out', settled), { invoice: bookingInvoice() });
-      const view = footerButton(el, 'View invoice');
+      const view = footerButton(el, 'hostBookings.viewInvoice');
       expect(view).toBeTruthy();
       expect(view?.classList.contains('bg-brand-500')).toBe(false);
       expect(view?.classList.contains('border-ink-300')).toBe(true);
 
       TestBed.resetTestingModule();
       const owing = render(booking('checked-out'), { invoice: bookingInvoice() });
-      expect(footerButton(owing, 'View invoice')?.classList.contains('bg-brand-500')).toBe(false);
-      expect(footerButton(owing, 'Mark as paid')?.classList.contains('bg-brand-500')).toBe(false);
+      expect(footerButton(owing, 'hostBookings.viewInvoice')?.classList.contains('bg-brand-500')).toBe(false);
+      expect(footerButton(owing, 'hostBookings.actionMarkPaid')?.classList.contains('bg-brand-500')).toBe(false);
     });
 
     it('shows the Invoice section only on checked-in and checked-out bookings', () => {
@@ -572,12 +573,12 @@ describe('BookingDetailsPanel', () => {
       const text = el.textContent ?? '';
 
       expect(labels(el)).toContain('hostBookings.stayedIn');
-      expect(text).toContain('Room 101 · 2 guests');
-      expect(text).toContain('Room 102 · 1 guest');
+      expect(text).toContain('common.roomNumber(number=101) · common.nGuests(count=2)');
+      expect(text).toContain('common.roomNumber(number=102) · common.nGuestsOne(count=1)');
       expect(text.split('hostBookings.checkedOut').length - 1).toBe(2);
       expect(text).not.toContain('hostBookings.released');
-      expect(text).not.toContain('Release');
-      expect(labels(el)).not.toContain('In rooms');
+      expect(text).not.toContain('hostBookings.release');
+      expect(labels(el)).not.toContain('hostBookings.inRooms');
       expect(api.occupancies).not.toHaveBeenCalled();
     });
 
@@ -585,7 +586,7 @@ describe('BookingDetailsPanel', () => {
       const el = render(booking('cancelled', { occupancies: [occupancy('o1', '201', 3, true)] }));
 
       expect(labels(el)).toContain('hostBookings.stayedIn');
-      expect(roomRows(el)).toEqual(['Room 201 · 3 guests hostBookings.released']);
+      expect(roomRows(el)).toEqual(['common.roomNumber(number=201) · common.nGuests(count=3) hostBookings.released']);
       expect(el.textContent).not.toContain('hostBookings.checkedOut');
       expect(releaseButtons(el)).toHaveLength(0);
       expect(api.occupancies).not.toHaveBeenCalled();
@@ -598,8 +599,8 @@ describe('BookingDetailsPanel', () => {
 
       expect(labels(el)).toContain('hostBookings.stayedIn');
       expect(roomRows(el)).toEqual([
-        'Room 201 · 3 guests hostBookings.released',
-        'Room 202 · 1 guest hostBookings.released',
+        'common.roomNumber(number=201) · common.nGuests(count=3) hostBookings.released',
+        'common.roomNumber(number=202) · common.nGuestsOne(count=1) hostBookings.released',
       ]);
       expect(text.split('hostBookings.released').length - 1).toBe(2);
       expect(text).not.toContain('hostBookings.checkedOut');
@@ -617,9 +618,9 @@ describe('BookingDetailsPanel', () => {
       const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
 
       expect(api.occupancies).toHaveBeenCalledWith('MjvuEl', 'b1');
-      expect(labels(el)).toContain('In rooms');
+      expect(labels(el)).toContain('hostBookings.inRooms');
       expect(labels(el)).not.toContain('hostBookings.stayedIn');
-      expect([...el.querySelectorAll('button')].some((b) => b.textContent?.trim() === 'Release')).toBe(true);
+      expect([...el.querySelectorAll('button')].some((b) => b.textContent?.trim() === 'hostBookings.release')).toBe(true);
     });
 
     it('has no stayed-in section for a finished stay with no rooms recorded', () => {
@@ -632,7 +633,7 @@ describe('BookingDetailsPanel', () => {
       const b = booking('checked-in', settled);
       const el = render(b, { rows: [occupancy('o1', '101', 2, true)] });
 
-      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'hostBookings.release')?.click();
       fixture.detectChanges();
 
       expect(api.releaseOccupancy).toHaveBeenCalledWith('MjvuEl', 'b1', 'o1', { suppressErrorToast: true });
@@ -650,7 +651,7 @@ describe('BookingDetailsPanel', () => {
         releaseButtons(el)[0].click();
         fixture.detectChanges();
 
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests hostBookings.released']);
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.released']);
         expect(roomLi(el, '101')?.querySelector('span')?.className).toContain('line-through');
         expect(releaseButtons(el)).toHaveLength(0);
       });
@@ -663,7 +664,7 @@ describe('BookingDetailsPanel', () => {
         releaseButtons(el)[0].click();
         fixture.detectChanges();
 
-        expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased');
+        expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased(room=101)');
         expect(translate.mock.calls.filter((c) => c[0] === 'hostBookings.roomAlreadyReleased').map((c) => c[1])).toContainEqual({
           room: '101',
         });
@@ -699,7 +700,7 @@ describe('BookingDetailsPanel', () => {
         releaseButtons(el)[1].click();
         fixture.detectChanges();
 
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release', 'Room 102 · 1 guest hostBookings.released']);
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release', 'common.roomNumber(number=102) · common.nGuestsOne(count=1) hostBookings.released']);
         const remaining = releaseButtons(el);
         expect(remaining).toHaveLength(1);
         expect(remaining[0].disabled).toBe(false);
@@ -716,8 +717,8 @@ describe('BookingDetailsPanel', () => {
         fixture.componentInstance.booking.set({ ...b, occupancies: [occupancy('o1', '101', 2, false)] });
         fixture.detectChanges();
 
-        expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased');
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests hostBookings.released']);
+        expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.roomAlreadyReleased(room=101)');
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.released']);
         expect(releaseButtons(el)).toHaveLength(0);
         expect(api.occupancies).toHaveBeenCalledTimes(1);
       });
@@ -736,8 +737,8 @@ describe('BookingDetailsPanel', () => {
 
         expect(el.querySelector('[role="alert"]')).toBeNull();
         expect(roomRows(el)).toEqual([
-          'Room 101 · 2 guests hostBookings.released',
-          'Room 102 · 1 guest hostBookings.released',
+          'common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.released',
+          'common.roomNumber(number=102) · common.nGuestsOne(count=1) hostBookings.released',
         ]);
       });
     });
@@ -762,8 +763,8 @@ describe('BookingDetailsPanel', () => {
       it('tells staff they lack permission and leaves the room active with its Release button', () => {
         const el = pressRelease('manager', releaseForbidden(CANCAN));
 
-        expect(alertText(el)).toBe('hostBookings.notAllowed');
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(alertText(el)).toBe('hostBookings.notAllowed(room=101)');
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release']);
         expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
         expect(releaseButtons(el)[0].disabled).toBe(false);
         expect(fixture.componentInstance.released).toEqual([]);
@@ -775,8 +776,8 @@ describe('BookingDetailsPanel', () => {
       it('tells the owner their account lacks permission and to contact support', () => {
         const el = pressRelease('host', releaseForbidden(CANCAN));
 
-        expect(alertText(el)).toBe('hostBookings.notAllowedOwner');
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(alertText(el)).toBe('hostBookings.notAllowedOwner(room=101)');
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release']);
         expect(fixture.componentInstance.released).toEqual([]);
         expectNoLeak(el, CANCAN);
       });
@@ -784,8 +785,8 @@ describe('BookingDetailsPanel', () => {
       it.each<Role>(['manager', 'host'])('says the plan has no CRM, whoever is signed in as %s', (role) => {
         const el = pressRelease(role, releaseForbidden('Your plan does not include CRM', 'crm_required'));
 
-        expect(alertText(el)).toBe('hostBookings.planHasNoCrm');
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(alertText(el)).toBe('hostBookings.planHasNoCrm(room=101)');
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release']);
         expect(fixture.componentInstance.released).toEqual([]);
         expectNoLeak(el, 'Your plan does not include CRM');
       });
@@ -793,8 +794,8 @@ describe('BookingDetailsPanel', () => {
       it('never reads a 403 as the room being already released, whatever text it carries', () => {
         const el = pressRelease('manager', releaseForbidden('Occupancy is already inactive'));
 
-        expect(alertText(el)).toBe('hostBookings.notAllowed');
-        expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+        expect(alertText(el)).toBe('hostBookings.notAllowed(room=101)');
+        expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release']);
         expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
         expect(releaseButtons(el)).toHaveLength(1);
         expect(fixture.componentInstance.released).toEqual([]);
@@ -811,13 +812,13 @@ describe('BookingDetailsPanel', () => {
       api.releaseOccupancy.mockReturnValue(throwError(() => rejection));
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'hostBookings.release')?.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
-      expect(roomRows(el)).toEqual(['Room 101 · 2 guests Release']);
+      expect(roomRows(el)).toEqual(['common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.release']);
       expect(roomLi(el, '101')?.querySelector('span')?.className).not.toContain('line-through');
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom');
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('hostBookings.couldNotReleaseRoom(room=101)');
       expect(translate.mock.calls.filter((c) => c[0] === 'hostBookings.couldNotReleaseRoom').map((c) => c[1])).toContainEqual({
         room: '101',
       });
@@ -828,35 +829,35 @@ describe('BookingDetailsPanel', () => {
       const el = render(booking('checked-in', settled), { rows: [occupancy('o1', '101', 2, true)] });
       api.releaseOccupancy.mockReturnValue(throwError(() => ({ status: 0, serverMessages: [], message: 'Http failure response for (unknown url): 0 Unknown Error' })));
 
-      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'Release')?.click();
+      [...el.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent?.trim() === 'hostBookings.release')?.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.released).toEqual([]);
       expect(releaseButtons(el)).toHaveLength(1);
-      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('common.cannotReachTheServer');
+      expect(el.querySelector('[role="alert"]')?.textContent?.trim()).toBe('common.cannotReachTheServer(room=101)');
       expectNoLeak(el);
     });
 
     it('says a checked-out stay has been invoiced once it has an invoice, and that one can be raised otherwise', () => {
       const withInvoice = render(booking('checked-out', settled), { invoice: bookingInvoice() });
-      expect(withInvoice.querySelector('footer')?.textContent).toContain('This stay has been invoiced.');
+      expect(withInvoice.querySelector('footer')?.textContent).toContain('hostBookings.hintInvoiced');
 
       TestBed.resetTestingModule();
       const without = render(booking('checked-out', settled));
-      expect(without.querySelector('footer')?.textContent).toContain('An invoice can be raised once per booking.');
-      expect(without.querySelector('footer')?.textContent).not.toContain('This stay has been invoiced.');
+      expect(without.querySelector('footer')?.textContent).toContain('hostBookings.hintInvoiceOnce');
+      expect(without.querySelector('footer')?.textContent).not.toContain('hostBookings.hintInvoiced');
     });
 
     it('explains a no-show as a closed booking where the guest never arrived', () => {
       const el = render(booking('no-show'));
-      expect(el.querySelector('footer')?.textContent).toContain('The guest never arrived, so this booking is closed.');
+      expect(el.querySelector('footer')?.textContent).toContain('hostBookings.hintNoShow');
     });
 
     it('emits viewInvoice from the footer button rather than navigating itself', () => {
       const b = booking('checked-out', settled);
       const el = render(b, { invoice: bookingInvoice() });
 
-      footerButton(el, 'View invoice')?.click();
+      footerButton(el, 'hostBookings.viewInvoice')?.click();
 
       expect(fixture.componentInstance.acted).toEqual(['viewInvoice']);
     });
