@@ -6,7 +6,6 @@ import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { SessionStore, SessionUser } from '@core/auth/session-store';
 import { NotificationService } from '@core/notification.service';
 import { InvitesResult, StudentApi, UserInvite } from '@services';
-import { RefetchDelay } from '@core/refetch-delay';
 import { PushNotificationsService } from '@core/push-notifications';
 import { NotificationBell } from './notification-bell';
 
@@ -121,7 +120,6 @@ function mountAsA(): void {
       provideI18nTesting(),
       { provide: StudentApi, useValue: api },
       { provide: NotificationService, useValue: { show: () => undefined } },
-      { provide: RefetchDelay, useValue: { track: () => undefined } },
       { provide: PushNotificationsService, useValue: push },
     ],
   });

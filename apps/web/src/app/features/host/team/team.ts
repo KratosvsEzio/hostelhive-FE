@@ -35,17 +35,10 @@ import {
 import { StaffFormDrawer } from './staff-form-drawer/staff-form-drawer';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { HasPermission, SessionStore } from '@core/auth';
 import { STAFF_TABLE_COLS } from '@app/util/table-configs/staff-table-cols';
 import { PAGE_SIZE } from '@util/pagination';
 import { TranslocoPipe } from '@jsverse/transloco';
-
-/** Refetch key for the staff list, matching the tenants convention. */
-// Matched against the request URL with `includes`, so it has to be a fragment that actually
-// appears in it: the list is `/api/host/hostels/{hostelId}/staffs`, and the hostel id in the
-// middle meant the old full-looking path never matched and the post-save delay never applied.
-const STAFF_PATH = '/staffs';
 
 const EMPTY_STAFF = {
   loading: true,
@@ -133,7 +126,6 @@ export class HostTeam {
     canActOnStaffRow(row as Staff, this.viewer(), this.staffPerms());
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly destroyRef = inject(DestroyRef);
   private readonly location = inject(Location);
   private readonly route = inject(ActivatedRoute);
@@ -403,7 +395,6 @@ export class HostTeam {
   }
 
   protected reloadStaff(): void {
-    this.refetchDelay.track(STAFF_PATH);
     // The incoming page is the server's own answer, so every local patch is now redundant at
     // best and contradicted at worst. All four go together: the rows, the demotions, and the
     // two counts that describe them — clearing a subset leaves the list and its totals

@@ -13,7 +13,6 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { format } from 'date-fns';
 import { Button, EmptyState, ErrorState, Skeleton } from '@hostelhive/ui';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { ApiError } from '@hostelhive/data-access';
 import { Router } from '@angular/router';
@@ -39,7 +38,6 @@ interface ListState {
 export class NotificationsPage {
   private readonly studentApi = inject(StudentApi);
   private readonly notifications = inject(NotificationService);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly router = inject(Router);
   private readonly el = inject(ElementRef<HTMLElement>);
 
@@ -175,7 +173,6 @@ export class NotificationsPage {
       next: () => {
         this.actionLoading.set(null);
         this.notifications.show({ kind: 'success', title: 'Invite accepted' });
-        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {
@@ -192,7 +189,6 @@ export class NotificationsPage {
       next: () => {
         this.actionLoading.set(null);
         this.notifications.show({ kind: 'success', title: 'Invite declined' });
-        this.refetchDelay.track('/api/notifications');
         this.refresh.update((n) => n + 1);
       },
       error: (err: ApiError) => {

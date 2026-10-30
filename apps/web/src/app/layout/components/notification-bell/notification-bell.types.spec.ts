@@ -5,7 +5,6 @@ import { of } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { SessionStore } from '@core/auth';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { PushNotificationsService } from '@core/push-notifications';
 import { StudentApi, UserInvite } from '@services';
 import { NotificationBell } from './notification-bell';
@@ -71,7 +70,6 @@ describe('NotificationBell — type styles', () => {
           useValue: { isAuthenticated: () => true, user: () => ({ id: 'u1' }) },
         },
         { provide: NotificationService, useValue: { show: () => undefined } },
-        { provide: RefetchDelay, useValue: { track: () => undefined } },
         {
           provide: PushNotificationsService,
           useValue: {

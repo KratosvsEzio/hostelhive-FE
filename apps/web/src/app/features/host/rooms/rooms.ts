@@ -32,7 +32,6 @@ import {
 import { HostOpsApi, HostPropertyStore, RoomAggs, RoomRenter, RoomStatusOption, RoomTypeOption } from '@services';
 import { ApiError, HostRoom as Room, RoomStatus } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
@@ -205,7 +204,6 @@ export class Rooms {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notifications = inject(NotificationService);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly refresh = signal(0);
 
   /** Locally-mutated copy so create/edit reflect immediately (no write API yet). */
@@ -1059,7 +1057,6 @@ export class Rooms {
   private showAllRooms(all: Room[]): void {
     const narrowed = this.searchQuery().trim() !== '' || this.statusFilter() !== 'all';
     if (narrowed || !all.length) {
-      this.refetchDelay.track('/rooms');
       this.refresh.update((n) => n + 1);
       return;
     }

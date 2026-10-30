@@ -3,7 +3,6 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { StudentApi, UserInvite } from '@services';
 import { NotificationsPage } from './notifications';
 
@@ -64,7 +63,6 @@ describe('NotificationsPage — billing notifications', () => {
           },
         },
         { provide: NotificationService, useValue: { show: () => undefined } },
-        { provide: RefetchDelay, useValue: { track: () => undefined } },
       ],
     });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

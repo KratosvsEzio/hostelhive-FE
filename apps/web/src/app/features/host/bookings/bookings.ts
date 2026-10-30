@@ -63,7 +63,6 @@ import {
   actionsFor,
 } from './booking-details-panel';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { SessionStore } from '@core/auth/session-store';
 import { errorStatus } from '@core/errors/api-error-text';
 import { isUnauthorized } from '@core/errors/is-unauthorized';
@@ -82,7 +81,6 @@ import {
   crossPayInvoiceFailureKey,
   movedOnKind,
   refusalBorneOut,
-  stageChanged,
 } from './booking-move-failure';
 
 interface ViewState {
@@ -276,7 +274,6 @@ export class HostBookings {
 
   private readonly router = inject(Router);
   private readonly i18n = inject(TranslocoService);
-  private readonly refetchDelay = inject(RefetchDelay);
   private readonly session = inject(SessionStore);
   private readonly money = new MoneyPipe();
 
@@ -414,7 +411,6 @@ export class HostBookings {
   /** A release changes the booking's rooms, so the row re-reads it rather than keep stale ones. */
   protected onReleased(booking: HostBooking): void {
     this.epoch++;
-    this.refetchDelay.track('/rooms');
     this.bookingsApi.get(this.hostelId(), booking.id).subscribe({
       next: (updated) => this.replaceBooking(updated),
       error: () => this.refresh.update((n) => n + 1),
@@ -622,8 +618,6 @@ export class HostBookings {
     const epoch = this.epoch;
     const url = this.urlBookingId;
     const key = this.failureKey(err);
-    const action = surface === 'assign' ? 'checkIn' : this.dialog()?.action;
-    const roomsMove = action === 'checkIn' || action === 'checkOut' || action === 'cancel';
     const stillHere = () => this.epoch === epoch && this.urlBookingId === url && this.hostelId() === hostelId;
     this.bookingsApi.get(hostelId, shown.id, { suppressErrorToast: true }).subscribe({
       next: (fresh) => {
@@ -631,7 +625,6 @@ export class HostBookings {
         this.calendar()?.applyChange(shown, fresh);
         this.replaceBooking(fresh);
         if (this.panelBehindDialog?.id === fresh.id) this.panelBehindDialog = fresh;
-        if (roomsMove && stageChanged(shown, fresh)) this.refetchDelay.track('/rooms');
         if (!stillHere()) {
           if (surface === 'toast') this.refusalToast(key, err);
           return;
@@ -786,16 +779,15 @@ export class HostBookings {
     const fail = (err: unknown) => this.dialogError.set(this.failureKey(err));
     // Every refusal here is written into the dialog, so the global toast would repeat it.
     const quiet = { suppressErrorToast: true };
-    const roomsMoved = () => this.refetchDelay.track('/rooms');
     switch (d.action) {
       case 'cancel':
-        this.send(d.booking, (id) => this.bookingsApi.cancel(hostelId, id, reason, quiet), 'Booking cancelled', 'The guest, host and manager have been told.', fail, roomsMoved);
+        this.send(d.booking, (id) => this.bookingsApi.cancel(hostelId, id, reason, quiet), 'Booking cancelled', 'The guest, host and manager have been told.', fail);
         return;
       case 'noShow':
         this.send(d.booking, (id) => this.bookingsApi.markNoShow(hostelId, id, reason, quiet), 'Marked as a no show', '', fail);
         return;
       case 'checkOut':
-        this.send(d.booking, (id) => this.bookingsApi.checkOut(hostelId, id, quiet), 'Checked out', 'Every bed this booking held is free again.', fail, roomsMoved);
+        this.send(d.booking, (id) => this.bookingsApi.checkOut(hostelId, id, quiet), 'Checked out', 'Every bed this booking held is free again.', fail);
         return;
       case 'markPaid':
         this.markPaid(d.booking, fail);
@@ -975,7 +967,6 @@ export class HostBookings {
       (err) => this.assignError.set(this.failureKey(err)),
       () => {
         this.assigning.set(null);
-        this.refetchDelay.track('/rooms');
         this.leaveBookingUrl();
       },
     );

@@ -13,7 +13,6 @@ import {
   HostOpsApiStub,
   HostShellApiStub,
   NotificationSpy,
-  RefetchDelaySpy,
   seedHostPropertyStore,
 } from './host-stubs';
 
@@ -80,7 +79,6 @@ export interface HostPageDeps {
   ops: HostOpsApiStub;
   bookings: HostBookingsApiStub;
   notifications: NotificationSpy;
-  refetch: RefetchDelaySpy;
   shell: HostShellApiStub;
 }
 
@@ -89,7 +87,6 @@ export function hostPageDeps(): HostPageDeps {
     ops: new HostOpsApiStub(),
     bookings: new HostBookingsApiStub(),
     notifications: new NotificationSpy(),
-    refetch: new RefetchDelaySpy(),
     shell: new HostShellApiStub(),
   };
 }
@@ -116,7 +113,6 @@ export function hostPageProviders(
     deps.ops.provider(),
     deps.bookings.provider(),
     deps.notifications.provider(),
-    deps.refetch.provider(),
     deps.shell.provider(),
   ];
 }

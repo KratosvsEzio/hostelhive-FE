@@ -484,7 +484,6 @@ describe('Invoices page', () => {
       await flush(page);
 
       expect(deps.ops.invoices).toHaveBeenCalledTimes(2);
-      expect(deps.refetch.track).not.toHaveBeenCalled();
     });
 
     it('re-reads the list straight away after a create', async () => {
@@ -495,7 +494,6 @@ describe('Invoices page', () => {
       await flush(page);
 
       expect(deps.ops.invoices).toHaveBeenCalledTimes(2);
-      expect(deps.refetch.track).not.toHaveBeenCalled();
     });
   });
 

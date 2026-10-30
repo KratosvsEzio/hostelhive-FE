@@ -3,7 +3,6 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { NotificationService } from '@core/notification.service';
-import { RefetchDelay } from '@core/refetch-delay';
 import { StudentApi, UserInvite } from '@services';
 import { NotificationsPage } from './notifications';
 
@@ -64,7 +63,6 @@ describe('NotificationsPage — type styles', () => {
           },
         },
         { provide: NotificationService, useValue: { show: () => undefined } },
-        { provide: RefetchDelay, useValue: { track: () => undefined } },
       ],
     });
     const fixture = TestBed.createComponent(NotificationsPage);

@@ -371,11 +371,6 @@ const MOVED_ON: readonly MovedOnPair[] = [
   },
 ];
 
-/** The moves that free beds, so the rooms page is told when one of them is found already made. */
-const ROOM_MOVES: readonly BookingAction[] = ['checkIn', 'checkOut', 'cancel'];
-/** Every pair above uses current slugs, so a raw comparison tells the stage apart. */
-const slugChanged = (m: MovedOnPair) => m.fresh.disposition.slug !== m.shown.disposition.slug;
-
 describe('HostBookings', () => {
   describe('looking up invoices for the page', () => {
     it('asks once per page, with the checked-in and checked-out bookings only', async () => {
@@ -1137,104 +1132,6 @@ describe('HostBookings', () => {
     });
   });
 
-  describe('telling the rooms page its numbers moved', () => {
-    const reply = (b: HostBooking) => of({ ...b });
-    const confirmedBk = () => hostBooking('confirmed', { id: 'bk-c' });
-
-    it('tracks /rooms after a check-in', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.checkIn.mockReturnValue(reply(confirmedBk()));
-      const page = await open({ deps, items: [confirmedBk()] });
-
-      api(page).onAct({ action: 'checkIn', booking: confirmedBk() });
-      api(page).onAssign({ bookingId: 'bk-c', rooms: [{ roomId: 'r-101', roomNumber: '101', guests: 2 }] });
-
-      expect(deps.refetch.track).toHaveBeenCalledTimes(1);
-      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
-    });
-
-    it('tracks /rooms after a check-out', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.checkOut.mockReturnValue(reply(checkedIn()));
-      const page = await open({ deps, items: [checkedIn()] });
-
-      api(page).onAct({ action: 'checkOut', booking: checkedIn() });
-      api(page).confirmDialog();
-
-      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
-    });
-
-    it('tracks /rooms after a cancel', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.cancel.mockReturnValue(reply(checkedIn()));
-      const page = await open({ deps, items: [checkedIn()] });
-
-      api(page).onAct({ action: 'cancel', booking: checkedIn() });
-      api(page).dialogReason.set('Guest asked to cancel');
-      api(page).confirmDialog();
-
-      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
-    });
-
-    it('tracks /rooms after a release', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.get.mockReturnValue(reply(checkedIn()));
-      const page = await open({ deps, items: [checkedIn()] });
-
-      api(page).onReleased(checkedIn());
-
-      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
-    });
-
-    it('does not track after a confirm', async () => {
-      const deps = hostPageDeps();
-      const pending = hostBooking('pending', { id: 'bk-p' });
-      deps.bookings.confirm.mockReturnValue(reply(confirmedBk()));
-      const page = await open({ deps, items: [pending] });
-
-      api(page).onAct({ action: 'confirm', booking: pending });
-
-      expect(deps.bookings.confirm).toHaveBeenCalledTimes(1);
-      expect(deps.refetch.track).not.toHaveBeenCalled();
-    });
-
-    it('does not track after a no-show', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.markNoShow.mockReturnValue(reply(confirmedBk()));
-      const page = await open({ deps, items: [confirmedBk()] });
-
-      api(page).onAct({ action: 'noShow', booking: confirmedBk() });
-      api(page).confirmDialog();
-
-      expect(deps.bookings.markNoShow).toHaveBeenCalledTimes(1);
-      expect(deps.refetch.track).not.toHaveBeenCalled();
-    });
-
-    it('does not track after a mark-paid', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.markPaid.mockReturnValue(reply(settledOf(checkedIn())));
-      const page = await open({ deps, items: [checkedIn()] });
-
-      api(page).onAct({ action: 'markPaid', booking: checkedIn() });
-      api(page).confirmDialog();
-
-      expect(deps.bookings.markPaid).toHaveBeenCalledTimes(1);
-      expect(deps.refetch.track).not.toHaveBeenCalled();
-    });
-
-    it('does not track when the move is refused', async () => {
-      const deps = hostPageDeps();
-      deps.bookings.checkOut.mockReturnValue(throwError(() => refusal('Nope')));
-      const page = await open({ deps, items: [checkedIn()] });
-
-      api(page).onAct({ action: 'checkOut', booking: checkedIn() });
-      api(page).confirmDialog();
-
-      expect(deps.bookings.checkOut).toHaveBeenCalledTimes(1);
-      expect(deps.refetch.track).not.toHaveBeenCalled();
-    });
-  });
-
   describe('releasing a room', () => {
     async function openCheckedInPanel(deps: HostPageDeps) {
       const booking = checkedIn({ occupancies: [occupancy()] });
@@ -1269,7 +1166,6 @@ describe('HostBookings', () => {
       ]);
       expect(api(page).rows()[0].guests).toBe(1);
       expect(api(page).viewing()?.guests).toBe(1);
-      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
     });
 
     // The rooms endpoint reads a search index that still says "active" just after a release;
@@ -1343,7 +1239,6 @@ describe('HostBookings', () => {
       const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
       expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
       expect(panelText(page)).toContain('hostBookings.roomAlreadyReleased');
-      expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
     });
 
     it('refetches the list and keeps the room released when the re-read after an already-released refusal fails', async () => {
@@ -2257,7 +2152,6 @@ describe('HostBookings', () => {
         expect(deps.notifications.raised).toEqual([]);
         expect(deps.bookings.get).not.toHaveBeenCalled();
         expect(deps.bookings.list.mock.calls.length).toBe(lists);
-        expect(deps.refetch.track).not.toHaveBeenCalled();
         expect(api(page).busy()).toBe(false);
         expectNoLeak(page, deps, CANCAN);
       });
@@ -2347,7 +2241,6 @@ describe('HostBookings', () => {
         expect(api(page).assignError()).toBe(key);
         expect(api(page).assigning()?.id).toBe('bk-c');
         expect(deps.notifications.raised).toEqual([]);
-        expect(deps.refetch.track).not.toHaveBeenCalled();
         expect(deps.bookings.get).not.toHaveBeenCalled();
         expect(deps.bookings.list.mock.calls.length).toBe(lists);
         expect(api(page).busy()).toBe(false);
@@ -2809,104 +2702,6 @@ describe('HostBookings', () => {
       });
     });
 
-    describe('telling the rooms page its numbers moved', () => {
-      const roomMoves = MOVED_ON.filter((m) => ROOM_MOVES.includes(m.action) && slugChanged(m));
-      const otherMoves = MOVED_ON.filter((m) => !ROOM_MOVES.includes(m.action) && slugChanged(m));
-
-      it.each(roomMoves)('tracks /rooms once when $name changed the stage', async (m) => {
-        const deps = hostPageDeps();
-        refuseMove(deps, m.action, refusal(m.text));
-        queueReads(deps, of(m.fresh));
-        const page = await open({ deps, items: [m.shown] });
-
-        api(page).onAct({ action: m.action, booking: m.shown });
-        submitMove(page, m.action, m.shown);
-        await settle(page);
-
-        expect(deps.refetch.track).toHaveBeenCalledTimes(1);
-        expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
-      });
-
-      it.each(otherMoves)('does not track /rooms for $name, even though the stage changed', async (m) => {
-        const deps = hostPageDeps();
-        refuseMove(deps, m.action, refusal(m.text));
-        queueReads(deps, of(m.fresh));
-        const page = await open({ deps, items: [m.shown] });
-
-        api(page).onAct({ action: m.action, booking: m.shown });
-        submitMove(page, m.action, m.shown);
-        await settle(page);
-
-        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
-        expect(deps.refetch.track).not.toHaveBeenCalled();
-      });
-
-      it.each([
-        { name: 'the read shows no change', reply: () => of(checkedIn({ guests: 3 })) },
-        { name: 'the read fails', reply: () => throwError(() => apiError(500, [], 'GET')) },
-      ])('does not track /rooms for a refused check-out when $name', async ({ reply }) => {
-        const deps = hostPageDeps();
-        refuseMove(deps, 'checkOut', refusal('Only checked-in bookings can be checked out'));
-        queueReads(deps, reply());
-        const page = await open({ deps, items: [checkedIn()] });
-
-        api(page).onAct({ action: 'checkOut', booking: checkedIn() });
-        api(page).confirmDialog();
-        await settle(page);
-
-        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
-        expect(deps.refetch.track).not.toHaveBeenCalled();
-      });
-
-      // Only a booking in a confirmed or pending lane carries a legacy slug, so no check-out can reach this.
-      it.each([
-        {
-          name: 'a check-in of a booking shown as room-assigned',
-          action: 'checkIn' as const,
-          shown: hostBooking('room-assigned', { id: 'bk-c' }),
-          fresh: arriving({ guests: 3 }),
-          text: 'Only confirmed bookings can be checked in',
-        },
-        {
-          name: 'a cancellation of a booking shown as pending-allotment',
-          action: 'cancel' as const,
-          shown: hostBooking('pending-allotment', { id: 'bk-p' }),
-          fresh: hostBooking('pending', { id: 'bk-p', guests: 3 }),
-          text: 'This booking can no longer be cancelled',
-        },
-      ])('does not track /rooms for $name when the copy is that stage under its current name', async (c) => {
-        const deps = hostPageDeps();
-        refuseMove(deps, c.action, refusal(c.text));
-        queueReads(deps, of(c.fresh));
-        const page = await open({ deps, items: [c.shown] });
-
-        api(page).onAct({ action: c.action, booking: c.shown });
-        submitMove(page, c.action, c.shown);
-        await settle(page);
-
-        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
-        expect(deps.refetch.track).not.toHaveBeenCalled();
-        // The booking has not moved on, so the refused move stays open on the copy with the generic message.
-        expect(c.action === 'checkIn' ? assignAlert(page) : dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
-        expect(api(page).rows()[0]).toBe(c.fresh);
-        expect(deps.notifications.raised).toEqual([]);
-      });
-
-      it('tracks /rooms once for a check-in of a booking shown as room-assigned that is now checked in', async () => {
-        const deps = hostPageDeps();
-        refuseMove(deps, 'checkIn', refusal('Booking is already checked in'));
-        queueReads(deps, of(hostBooking('checked-in', { id: 'bk-c' })));
-        const page = await open({ deps, items: [hostBooking('room-assigned', { id: 'bk-c' })] });
-
-        api(page).onAct({ action: 'checkIn', booking: hostBooking('room-assigned', { id: 'bk-c' }) });
-        submitMove(page, 'checkIn', hostBooking('room-assigned', { id: 'bk-c' }));
-        await settle(page);
-
-        expect(deps.refetch.track).toHaveBeenCalledTimes(1);
-        expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
-      });
-    });
-
     describe('the calendar and the invoice lookup', () => {
       it('swaps the database copy into the calendar once', async () => {
         const deps = hostPageDeps();
@@ -2964,7 +2759,38 @@ describe('HostBookings', () => {
         expect(textOf(modal(page))).toContain('3 nights · 3 guests');
         expect(api(page).rows()[0]).toBe(fresh);
         expect(deps.notifications.raised).toEqual([]);
-        expect(deps.refetch.track).not.toHaveBeenCalled();
+      });
+
+      // Only a booking in a confirmed or pending lane carries a legacy slug, so no check-out can reach this.
+      it.each([
+        {
+          name: 'a check-in of a booking shown as room-assigned',
+          action: 'checkIn' as const,
+          shown: hostBooking('room-assigned', { id: 'bk-c' }),
+          fresh: arriving({ guests: 3 }),
+          text: 'Only confirmed bookings can be checked in',
+        },
+        {
+          name: 'a cancellation of a booking shown as pending-allotment',
+          action: 'cancel' as const,
+          shown: hostBooking('pending-allotment', { id: 'bk-p' }),
+          fresh: hostBooking('pending', { id: 'bk-p', guests: 3 }),
+          text: 'This booking can no longer be cancelled',
+        },
+      ])('keeps $name open with the generic message when the copy is that stage under its current name', async (c) => {
+        const deps = hostPageDeps();
+        refuseMove(deps, c.action, refusal(c.text));
+        queueReads(deps, of(c.fresh));
+        const page = await open({ deps, items: [c.shown] });
+
+        api(page).onAct({ action: c.action, booking: c.shown });
+        submitMove(page, c.action, c.shown);
+        await settle(page);
+
+        expect(deps.bookings.get).toHaveBeenCalledTimes(1);
+        expect(c.action === 'checkIn' ? assignAlert(page) : dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
+        expect(api(page).rows()[0]).toBe(c.fresh);
+        expect(deps.notifications.raised).toEqual([]);
       });
 
       it('keeps the allocation open on the database copy with the generic message', async () => {
@@ -3124,7 +2950,7 @@ describe('HostBookings', () => {
     describe('when the host moved on while the booking was read back', () => {
       const bkB = hostBooking('confirmed', { id: 'bk-b', ref: 'BK-B' });
 
-      it('keeps the panel and URL the host went to, and still swaps the row and tracks /rooms', async () => {
+      it('keeps the panel and URL the host went to, and still swaps the row', async () => {
         const deps = hostPageDeps();
         const read = new Subject<HostBooking>();
         const fresh = hostBooking('checked-out', { id: 'bk-i', ref: 'BK-I' });
@@ -3143,8 +2969,6 @@ describe('HostBookings', () => {
         expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-b'));
         expect(deps.notifications.raised).toEqual([]);
         expect(api(page).rows()[0]).toBe(fresh);
-        expect(deps.refetch.track).toHaveBeenCalledTimes(1);
-        expect(deps.refetch.track).toHaveBeenCalledWith('/rooms');
         expect(api(page).busy()).toBe(false);
       });
 
@@ -3822,7 +3646,6 @@ describe('HostBookings', () => {
           expect(api(page).viewing()).toBeNull();
           expect(panelText(page)).toBe('');
           expect(page.url()).toBe(LIST_URL);
-          expect(deps.refetch.track).not.toHaveBeenCalled();
           expect(api(page).busy()).toBe(false);
           expectNoLeak(page, deps, text);
         },
