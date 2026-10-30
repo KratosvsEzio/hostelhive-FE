@@ -2156,21 +2156,6 @@
     "poweredByOpenstreetmap": "Propulsé par OpenStreetMap",
     "noCoordinatesSetFor": "Aucune coordonnée définie pour cette annonce."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Débloquer {{feature}}",
-    "thisFeature": "cette fonctionnalité",
-    "dashboardOverview": "Aperçu du tableau de bord",
-    "roomManagement": "Gestion des chambres",
-    "tenantManagement": "Gestion des locataires",
-    "utilityBilling": "Facturation des charges",
-    "thisFeatureIsAvailable": "Cette fonctionnalité est incluse dans les offres payantes. Abonnez-vous pour accéder pleinement à votre tableau de bord.",
-    "completeHostelProfileFirst": "Complétez d'abord le profil de l'auberge",
-    "onceSubscribedAllFeatures": "Une fois abonné, toutes les fonctionnalités se débloquent automatiquement.",
-    "roomAmpOccupancyManagement": "Gestion des chambres et de l'occupation",
-    "tenantTrackingAmpPayment": "Suivi des locataires et historique des paiements",
-    "rentAndUtilityInvoice": "Génération de factures de loyer et de charges",
-    "analyticsAndRevenueReports": "Statistiques et rapports de revenus"
-  },
   "notifications": {
     "nUnread": "{{count}} non lus",
     "types": {

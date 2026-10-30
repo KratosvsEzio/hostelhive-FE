@@ -5,7 +5,7 @@
       hh-button variant="outlined"
       size="sm"
       [attr.aria-label]="'a11y.exportCsv' | transloco"
-      [disabled]="!filtered().length || state().subscriptionError"
+      [disabled]="!filtered().length"
       (click)="exportCsv()"
     >
       <i class="ti ti-download" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'common.exportCsv' | transloco }}</span>
@@ -16,7 +16,6 @@
         hh-button color="primary"
         size="sm"
         [attr.aria-label]="'a11y.addInvoice' | transloco"
-        [disabled]="state().subscriptionError"
         (click)="openAdd()"
       >
         <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostInvoices.addInvoice' | transloco }}</span>
@@ -32,8 +31,6 @@
         radius="lg"
       />
     </div>
-  } @else if (s.subscriptionError) {
-    <hh-subscription-gate [feature]="'common.invoices' | transloco" />
   } @else if (s.permissionError) {
     <hh-permission-refused />
   } @else if (s.error) {

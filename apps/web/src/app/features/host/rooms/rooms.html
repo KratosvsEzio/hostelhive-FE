@@ -1,10 +1,10 @@
 <app-dashboard-layout [label]="'common.rooms' | transloco">
   <div hhActions class="flex shrink-0 items-center gap-2">
     <!-- Icon-only below sm so the pair fits a 320px header without wrapping; labels appear from sm: up. -->
-    <button *hhHasPermission="'host:Room:create'" hh-button variant="outlined" size="sm" [disabled]="state().subscriptionError" (click)="openBulkCreate()" [attr.aria-label]="'a11y.bulkAddRooms' | transloco">
+    <button *hhHasPermission="'host:Room:create'" hh-button variant="outlined" size="sm" (click)="openBulkCreate()" [attr.aria-label]="'a11y.bulkAddRooms' | transloco">
       <i class="ti ti-table-import" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostRooms.bulkAdd' | transloco }}</span>
     </button>
-    <button *hhHasPermission="'host:Room:create'" hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCreate()" [attr.aria-label]="'a11y.addRoom' | transloco">
+    <button *hhHasPermission="'host:Room:create'" hh-button color="primary" size="sm" (click)="openCreate()" [attr.aria-label]="'a11y.addRoom' | transloco">
       <i class="ti ti-plus" aria-hidden="true"></i><span class="hidden sm:inline">{{ 'hostRooms.addRoom' | transloco }}</span>
     </button>
   </div>
@@ -17,8 +17,6 @@
       }
     </div>
     <hh-skeleton class="mt-5 h-72 w-full" radius="lg" />
-  } @else if (s.subscriptionError) {
-    <hh-subscription-gate [feature]="'subscriptionGate.roomManagement' | transloco" [showProfileLink]="true" />
   } @else if (s.permissionError) {
     <hh-permission-refused />
   } @else if (s.error) {

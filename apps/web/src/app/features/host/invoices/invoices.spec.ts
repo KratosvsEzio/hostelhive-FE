@@ -18,7 +18,7 @@ import {
 } from '@app/testing/host-builders';
 import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing/host-page';
-import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { PrintWindowRecord, fakePrintWindow } from '@app/testing/print-window';
 import type { Role } from '@core/auth/roles';
 import { SessionStore } from '@core/auth/session-store';
@@ -1157,23 +1157,15 @@ describe('Invoices page', () => {
     });
 
     describe('for a hostel with no live plan', () => {
-      it.each(kindsShowing('paywall'))('shows the paywall, not the panel or a retry, after a %s refusal', async (kind) => {
-        const { shown } = await openRefused(kind);
-
-        expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
-        expect(shown.retry).toBe(false);
-        expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
-      });
-
-      it('disables Add invoice on a monthly hostel, which is what a permission refusal must not do', async () => {
+      it('leaves Add invoice enabled on a monthly hostel: the console lock answers the refusal, not the page', async () => {
         const { page } = await openRefused('inactive', 'host', 'month');
 
-        expect(addInvoiceButton(page)?.disabled).toBe(true);
+        expect(addInvoiceButton(page)?.disabled).toBe(false);
       });
     });
 
-    describe('for a plan without CRM', () => {
-      it.each<RefusalKind>(['crmRequired', 'crmMessageOnly'])('shows the generic error with Retry, not the panel or the paywall, after a %s refusal', async (kind) => {
+    describe('for a plan refusal, which the console lock owns', () => {
+      it.each(PLAN_REFUSALS)('shows the generic error with Retry, not the panel, after a %s refusal', async (kind) => {
         const { shown } = await openRefused(kind);
 
         expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);

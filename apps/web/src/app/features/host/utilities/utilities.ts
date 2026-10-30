@@ -41,9 +41,7 @@ import { HostOpsApi, HostPropertyStore, selectedHostelToday } from '@services';
 import { dayToLocalDate } from '@util/plain-day';
 import { TenantBillSplit, UtilityBill, UtilityType, UtilityTypeMeta } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isSubscriptionError } from '@util/subscription-error';
 import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
@@ -63,7 +61,6 @@ function fmtDate(s?: string): string {
 interface ViewState {
   loading: boolean;
   error: boolean;
-  subscriptionError: boolean;
   permissionError?: boolean;
   networkError: boolean;
   bills: UtilityBill[] | null;
@@ -80,7 +77,6 @@ interface ViewState {
     RouterLink, LocaleLink,
     DashboardLayout,
     DecimalPipe,
-    SubscriptionGate,
     PermissionRefused,
     Button,
     Card,
@@ -144,27 +140,24 @@ export class Utilities {
     toObservable(this.fetchKey).pipe(
       switchMap((key) => {
         if (!key.hostelId) {
-          return of<ViewState>({ loading: false, error: false, subscriptionError: false, networkError: false, bills: [], total: 0 });
+          return of<ViewState>({ loading: false, error: false, networkError: false, bills: [], total: 0 });
         }
         return this.api.utilityBills(key.hostelId, key.page, PAGE_SIZE, this.listFilters(key)).pipe(
           map((res): ViewState => ({
             loading: false,
             error: false,
-            subscriptionError: false,
             networkError: false,
             bills: res.bills,
             total: res.total,
             statuses: res.statuses,
             aggs: res.aggs,
           })),
-          startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, bills: null, total: 0 }),
+          startWith<ViewState>({ loading: true, error: false, networkError: false, bills: null, total: 0 }),
           catchError((err) => {
-            const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({
               loading: false,
-              error: !sub,
-              subscriptionError: sub,
+              error: true,
               permissionError: isPermissionRefusal(err),
               networkError: net,
               bills: null,
@@ -174,7 +167,7 @@ export class Utilities {
         );
       }),
     ),
-    { initialValue: { loading: true, error: false, subscriptionError: false, networkError: false, bills: null, total: 0 } as ViewState },
+    { initialValue: { loading: true, error: false, networkError: false, bills: null, total: 0 } as ViewState },
   );
 
   private readonly _persistStatuses = effect(() => {

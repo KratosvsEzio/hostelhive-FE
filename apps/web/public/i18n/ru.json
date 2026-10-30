@@ -2161,21 +2161,6 @@
     "poweredByOpenstreetmap": "На основе OpenStreetMap",
     "noCoordinatesSetFor": "Для этого объявления не заданы координаты."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Открыть {{feature}}",
-    "thisFeature": "эту функцию",
-    "dashboardOverview": "Обзор панели",
-    "roomManagement": "Управление комнатами",
-    "tenantManagement": "Управление жильцами",
-    "utilityBilling": "Начисление коммунальных услуг",
-    "thisFeatureIsAvailable": "Эта возможность доступна в платных тарифах. Оформите подписку для полного доступа к панели хостела.",
-    "completeHostelProfileFirst": "Сначала заполните профиль хостела",
-    "onceSubscribedAllFeatures": "После оформления подписки все возможности открываются автоматически.",
-    "roomAmpOccupancyManagement": "Управление комнатами и заполняемостью",
-    "tenantTrackingAmpPayment": "Учёт жильцов и история платежей",
-    "rentAndUtilityInvoice": "Формирование счетов за аренду и коммунальные услуги",
-    "analyticsAndRevenueReports": "Аналитика и отчёты о доходах"
-  },
   "notifications": {
     "nUnread": "{{count}} непрочитанных",
     "types": {

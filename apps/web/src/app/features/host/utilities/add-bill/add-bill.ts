@@ -31,9 +31,7 @@ import {
 } from '@hostelhive/data-access';
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isSubscriptionError } from '@util/subscription-error';
 import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { splitByDays, SplitRow } from '../split';
@@ -43,7 +41,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
 interface ViewState {
   loading: boolean;
   error: boolean;
-  subscriptionError: boolean;
   permissionError?: boolean;
   networkError: boolean;
   rooms: Room[] | null;
@@ -65,7 +62,6 @@ const monthValue = (d: Date): string => `${d.getFullYear()}-${d.getMonth()}`;
   imports: [
     DecimalPipe,
     DashboardLayout,
-    SubscriptionGate,
     PermissionRefused,
     Avatar,
     Button,
@@ -130,7 +126,6 @@ export class AddBill {
           return of<ViewState>({
             loading: false,
             error: false,
-            subscriptionError: false,
             networkError: false,
             rooms: [],
             tenants: [],
@@ -145,7 +140,6 @@ export class AddBill {
           map(([rooms, tenants, types]): ViewState => ({
             loading: false,
             error: false,
-            subscriptionError: false,
             networkError: false,
             rooms,
             tenants,
@@ -154,19 +148,16 @@ export class AddBill {
           startWith<ViewState>({
             loading: true,
             error: false,
-            subscriptionError: false,
             networkError: false,
             rooms: null,
             tenants: null,
             types: null,
           }),
           catchError((err) => {
-            const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({
               loading: false,
-              error: !sub,
-              subscriptionError: sub,
+              error: true,
               permissionError: isPermissionRefusal(err),
               networkError: net,
               rooms: null,
@@ -181,7 +172,6 @@ export class AddBill {
       initialValue: {
         loading: true,
         error: false,
-        subscriptionError: false,
         networkError: false,
         rooms: null,
         tenants: null,

@@ -2161,21 +2161,6 @@
     "poweredByOpenstreetmap": "Didukung oleh OpenStreetMap",
     "noCoordinatesSetFor": "Belum ada koordinat untuk listing ini."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Buka {{feature}}",
-    "thisFeature": "fitur ini",
-    "dashboardOverview": "Ringkasan dasbor",
-    "roomManagement": "Manajemen kamar",
-    "tenantManagement": "Manajemen penghuni",
-    "utilityBilling": "Penagihan utilitas",
-    "thisFeatureIsAvailable": "Fitur ini tersedia pada paket berbayar. Berlangganan untuk akses penuh ke dasbor hostel Anda.",
-    "completeHostelProfileFirst": "Lengkapi profil hostel dulu",
-    "onceSubscribedAllFeatures": "Setelah berlangganan, semua fitur terbuka otomatis.",
-    "roomAmpOccupancyManagement": "Manajemen kamar dan hunian",
-    "tenantTrackingAmpPayment": "Pelacakan penghuni dan catatan pembayaran",
-    "rentAndUtilityInvoice": "Pembuatan tagihan sewa dan utilitas",
-    "analyticsAndRevenueReports": "Analitik dan laporan pendapatan"
-  },
   "notifications": {
     "nUnread": "{{count}} belum dibaca",
     "types": {

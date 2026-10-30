@@ -2156,21 +2156,6 @@
     "poweredByOpenstreetmap": "OpenStreetMap द्वारा संचालित",
     "noCoordinatesSetFor": "इस लिस्टिंग के लिए कोई निर्देशांक सेट नहीं हैं।"
   },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} अनलॉक करें",
-    "thisFeature": "यह सुविधा",
-    "dashboardOverview": "डैशबोर्ड अवलोकन",
-    "roomManagement": "कमरा प्रबंधन",
-    "tenantManagement": "किरायेदार प्रबंधन",
-    "utilityBilling": "यूटिलिटी बिलिंग",
-    "thisFeatureIsAvailable": "यह सुविधा सशुल्क प्लान में उपलब्ध है। अपने हॉस्टल डैशबोर्ड तक पूरी पहुँच के लिए सदस्यता लें।",
-    "completeHostelProfileFirst": "पहले हॉस्टल प्रोफ़ाइल पूरी करें",
-    "onceSubscribedAllFeatures": "सदस्यता लेते ही सभी सुविधाएँ अपने आप खुल जाती हैं।",
-    "roomAmpOccupancyManagement": "कमरा और अधिभोग प्रबंधन",
-    "tenantTrackingAmpPayment": "किरायेदार ट्रैकिंग और भुगतान रिकॉर्ड",
-    "rentAndUtilityInvoice": "किराया और यूटिलिटी चालान बनाना",
-    "analyticsAndRevenueReports": "एनालिटिक्स और राजस्व रिपोर्ट"
-  },
   "notifications": {
     "nUnread": "{{count}} अपठित",
     "types": {

@@ -82,6 +82,12 @@ describe('bookingSaveFailureKey', () => {
       err: apiError(422, ['This booking can no longer be updated']),
       key: 'hostBookings.couldNotSaveBooking',
     },
+    {
+      why: 'the hostel has no live plan, which the console lock answers',
+      err: apiError(400, ['You need to subscribe to avail the services']),
+      key: 'hostBookings.couldNotSaveBooking',
+    },
+    { why: 'a 402 comes back', err: apiError(402), key: 'hostBookings.couldNotSaveBooking' },
     { why: 'a 500 has no envelope', err: apiError(500), key: 'hostBookings.couldNotSaveBooking' },
     {
       why: 'a mapper throws a plain error',

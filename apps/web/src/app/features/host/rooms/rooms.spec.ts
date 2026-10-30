@@ -5,7 +5,7 @@ import { TRANSLOCO_LOADER } from '@jsverse/transloco';
 import { RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HOSTEL_ID, apiError, room, roomsReply, sessionUser } from '@app/testing/host-builders';
 import { HostPage, hostPageDeps, openHostPage } from '@app/testing/host-page';
-import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { SessionStore, SessionUser } from '@core/auth/session-store';
 import { HostPropertyStore } from '@services/host-property-store';
 import { Rooms } from './rooms';
@@ -240,9 +240,9 @@ describe('Rooms when the list load is refused', () => {
     });
   });
 
-  describe('for a plan without CRM', () => {
-    it.each(['crmRequired', 'crmMessageOnly'] as const)(
-      'a %s refusal shows the generic error with Retry, not the panel or the paywall',
+  describe('for a plan refusal, which the console lock owns', () => {
+    it.each(PLAN_REFUSALS)(
+      'a %s refusal shows the generic error with Retry, not the panel',
       async (kind) => {
         const page = await openRefused(kind);
 
@@ -254,19 +254,8 @@ describe('Rooms when the list load is refused', () => {
     );
   });
 
-  describe('for a hostel with no live plan', () => {
-    it.each(kindsShowing('paywall'))('a %s refusal shows the paywall, not the panel', async (kind) => {
-      const page = await openRefused(kind);
-
-      const reading = loadSurface(page.el);
-      expect(reading.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
-      expect(reading.retry).toBe(false);
-      expect(page.el.querySelector('hh-permission-refused')).toBeNull();
-    });
-  });
-
   describe('for any other reason the server answered', () => {
-    const kinds = kindsShowing('error').filter((kind) => kind !== 'crmRequired' && kind !== 'crmMessageOnly');
+    const kinds = kindsShowing('error').filter((kind) => !PLAN_REFUSALS.includes(kind));
 
     it.each(kinds)('a %s refusal shows the generic error with Retry', async (kind) => {
       const page = await openRefused(kind);
@@ -310,12 +299,14 @@ describe('Rooms when the list load is refused', () => {
       expect(bulk?.disabled).toBe(false);
     });
 
-    it('are disabled on the paywall, which shows the probe can see a disabled button', async () => {
+    it('stay enabled after a no-live-plan refusal, which the console lock answers, not the page', async () => {
       const page = await openRefused('inactive', 'manager');
 
       const { add, bulk } = actions(page.el);
-      expect(add?.disabled).toBe(true);
-      expect(bulk?.disabled).toBe(true);
+      expect(add).not.toBeNull();
+      expect(bulk).not.toBeNull();
+      expect(add?.disabled).toBe(false);
+      expect(bulk?.disabled).toBe(false);
     });
   });
 });

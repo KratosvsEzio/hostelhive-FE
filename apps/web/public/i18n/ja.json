@@ -2156,21 +2156,6 @@
     "poweredByOpenstreetmap": "OpenStreetMap 提供",
     "noCoordinatesSetFor": "この掲載には座標が設定されていません。"
   },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} を利用可能にする",
-    "thisFeature": "この機能",
-    "dashboardOverview": "ダッシュボードの概要",
-    "roomManagement": "部屋管理",
-    "tenantManagement": "入居者管理",
-    "utilityBilling": "光熱費の請求",
-    "thisFeatureIsAvailable": "この機能は有料プランでご利用いただけます。ご契約いただくとホステル管理画面のすべてをお使いになれます。",
-    "completeHostelProfileFirst": "先にホステルのプロフィールを完成させてください",
-    "onceSubscribedAllFeatures": "ご契約後、すべての機能が自動的に使えるようになります。",
-    "roomAmpOccupancyManagement": "部屋と稼働状況の管理",
-    "tenantTrackingAmpPayment": "入居者の管理と支払い記録",
-    "rentAndUtilityInvoice": "家賃・光熱費の請求書作成",
-    "analyticsAndRevenueReports": "分析と売上レポート"
-  },
   "notifications": {
     "nUnread": "未読 {{count}} 件",
     "types": {
