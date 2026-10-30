@@ -3,8 +3,10 @@ import {
   Component,
   NO_ERRORS_SCHEMA,
   PLATFORM_ID,
+  TransferState,
   WritableSignal,
   inject,
+  makeStateKey,
   signal,
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -17,7 +19,7 @@ import {
   provideRouter,
 } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { filter, firstValueFrom, of } from 'rxjs';
+import { Subject, filter, firstValueFrom, of, throwError } from 'rxjs';
 import { Listing, Paginated } from '@hostelhive/data-access';
 import { GeolocationService, PlaceResult, SharedMap } from '@hostelhive/maps';
 import { SessionStore } from '@core/auth';
@@ -2827,5 +2829,180 @@ describe('SearchMap on a landing page link naming another place', () => {
 
     expect(queryAt(list, 0).near).toEqual(NEAR_LAHORE);
     expect(queryAt(list, 0).accommodationType).toBe('girls');
+  });
+});
+
+/**
+ * The server renders the first page of listings and hands it to the browser, so the page
+ * hydrates onto the list it was sent rather than onto skeletons.
+ */
+describe('SearchMap first page handed from the server', () => {
+  const FIRST_PAGE = makeStateKey<{ key: string; res: Paginated<Listing> }>(
+    'search-map:first-page',
+  );
+  const SERVER_HOSTEL = { ...ROSE, id: 'h9', slug: 'server-hostel', name: 'Server Hostel' };
+  const SERVER_PAGE: Paginated<Listing> = {
+    items: [SERVER_HOSTEL],
+    total: 7,
+    page: 1,
+    pageSize: 20,
+    totalPages: 1,
+  };
+  const URL = '/en/search/lahore';
+
+  afterEach(cleanupSearchMap);
+
+  /** A listings stub whose every request stays open until the spec answers it. */
+  function openRequests() {
+    const answers: Subject<Paginated<Listing>>[] = [];
+    const list = vi.fn(() => {
+      const answer = new Subject<Paginated<Listing>>();
+      answers.push(answer);
+      return answer;
+    });
+    return { list, answers };
+  }
+
+  const skeletons = (fixture: ComponentFixture<SearchMap>) =>
+    (fixture.nativeElement as HTMLElement).querySelectorAll('div.aspect-square.shimmer').length;
+  const cards = (fixture: ComponentFixture<SearchMap>) =>
+    (fixture.nativeElement as HTMLElement).querySelectorAll('hh-listing-card').length;
+  const errorShown = (fixture: ComponentFixture<SearchMap>) =>
+    !!(fixture.nativeElement as HTMLElement).querySelector('hh-mascot[mode="oops"]');
+  const ids = (map: SearchMapInternals) => map.listings().map((l) => l.id);
+
+  /** Mounts a routed browser page after the server's first page has been put in the state. */
+  async function mountWithServerPage(list: ReturnType<typeof vi.fn>) {
+    configureSearchMap({ platform: 'browser', list });
+    TestBed.inject(TransferState).set(FIRST_PAGE, { key: 'server-query', res: SERVER_PAGE });
+    return mount(URL, null, true);
+  }
+
+  async function settle(fixture: ComponentFixture<SearchMap>): Promise<void> {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  /** Waits for the `n`th request to go out and returns its answer handle. */
+  async function requested(list: ReturnType<typeof vi.fn>, n: number) {
+    await vi.waitFor(() => expect(list.mock.calls.length).toBeGreaterThanOrEqual(n), {
+      timeout: 3000,
+    });
+  }
+
+  it('asks for the listings on the server without waiting out the debounce', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'server', list });
+
+    await mount(URL, null, true);
+
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('stores the server first page for the browser once it is answered', async () => {
+    const list = listSpy();
+    configureSearchMap({ platform: 'server', list });
+
+    await mount(URL, null, true);
+
+    expect(TestBed.inject(TransferState).get(FIRST_PAGE, null)).toEqual({
+      key: expect.any(String),
+      res: ONE_PAGE,
+    });
+  });
+
+  it('stores nothing when the server first search fails', async () => {
+    const list = vi.fn(() => throwError(() => ({ status: 500 })));
+    configureSearchMap({ platform: 'server', list });
+
+    await mount(URL, null, true);
+
+    expect(list).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(TransferState).hasKey(FIRST_PAGE)).toBe(false);
+  });
+
+  it('starts the browser on the server list, with no skeletons, and takes the state', async () => {
+    const { list } = openRequests();
+
+    const { fixture, map } = await mountWithServerPage(list);
+
+    expect(skeletons(fixture)).toBe(0);
+    expect(cards(fixture)).toBe(1);
+    expect(ids(map)).toEqual(['h9']);
+    expect((map as unknown as { totalResults(): number }).totalResults()).toBe(7);
+    expect(TestBed.inject(TransferState).hasKey(FIRST_PAGE)).toBe(false);
+  });
+
+  it('starts the browser on skeletons when the server sent nothing', async () => {
+    const { list } = openRequests();
+    configureSearchMap({ platform: 'browser', list });
+
+    const { fixture, map } = await mount(URL, null, true);
+
+    expect(skeletons(fixture)).toBeGreaterThan(0);
+    expect(cards(fixture)).toBe(0);
+    expect(ids(map)).toEqual([]);
+  });
+
+  it('keeps the server list up while the first search runs, then replaces it', async () => {
+    const { list, answers } = openRequests();
+    const { fixture, map } = await mountWithServerPage(list);
+
+    await requested(list, 1);
+    await settle(fixture);
+    expect(skeletons(fixture)).toBe(0);
+    expect(ids(map)).toEqual(['h9']);
+
+    answers[0].next(ONE_PAGE);
+    await settle(fixture);
+    expect(skeletons(fixture)).toBe(0);
+    expect(ids(map)).toEqual(['h1']);
+  });
+
+  it('shows skeletons again for the search after the first', async () => {
+    const { list, answers } = openRequests();
+    const { fixture } = await mountWithServerPage(list);
+    await requested(list, 1);
+    answers[0].next(ONE_PAGE);
+    await settle(fixture);
+
+    await TestBed.inject(Router).navigateByUrl(`${URL}?gender=boys`);
+    await requested(list, 2);
+    await settle(fixture);
+
+    expect(skeletons(fixture)).toBeGreaterThan(0);
+  });
+
+  it('shows the error state when the first search fails after the server list', async () => {
+    const list = vi.fn(() => throwError(() => ({ status: 500 })));
+    const { fixture, map } = await mountWithServerPage(list);
+
+    await requested(list, 1);
+    await settle(fixture);
+
+    expect(errorShown(fixture)).toBe(true);
+    expect(ids(map)).toEqual([]);
+    expect(cards(fixture)).toBe(0);
+    expect(skeletons(fixture)).toBe(0);
+  });
+
+  it('reports the browser first search once it answers, not on arrival', async () => {
+    const { list, answers } = openRequests();
+    configureSearchMap({ platform: 'browser', list });
+    const track = vi.spyOn(TestBed.inject(GoogleAnalyticsService), 'track');
+    TestBed.inject(TransferState).set(FIRST_PAGE, { key: 'server-query', res: SERVER_PAGE });
+    const { fixture } = await mount(URL, null, true);
+    const reports = () =>
+      (track.mock.calls as [string][]).filter(([name]) => name === 'search_performed').length;
+
+    expect(reports()).toBe(0);
+    await requested(list, 1);
+    expect(reports()).toBe(0);
+
+    answers[0].next(ONE_PAGE);
+    await settle(fixture);
+
+    expect(reports()).toBe(1);
   });
 });
