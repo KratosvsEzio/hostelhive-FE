@@ -161,21 +161,20 @@ export class HostBookingsApi {
    * on the reasoning that an empty calendar might be mistaken for a broken one. That trade is
    * only worth making while the endpoint does not exist.
    *
-   * **Three questions, one answer.** `room.id` is the *first* room a party was checked into,
-   * so a party split across rooms is invisible to its second room through it.
-   * `occupied_room_ids` finds the rooms it is in now, and `stayed_room_ids` every room it ever
-   * used, so a checked-out or moved party still shows on each room it slept in. All are asked
-   * and merged, each booking once: a party comes back from several, and drawn twice it would
-   * double its beds. Which of the booking's guests are *in* this room is the caller's to work
-   * out from its occupancies.
+   * **Two questions, one answer.** `room.id` is the room a booking was made for, which is all
+   * a booking that has not checked in has. `stayed_room_ids` is every room a party was ever
+   * placed in, active or released, so a party split across rooms, moved, or already checked
+   * out shows on each room it slept in. Both are asked and merged, each booking once: a party
+   * whose first room is this one comes back from both, and drawn twice it would double its
+   * beds. Which of the booking's guests are *in* this room is the caller's to work out from
+   * its occupancies.
    *
-   * `stayed_room_ids` covers `occupied_room_ids`, but only on documents indexed since the
-   * backend added it; `occupied_room_ids` stays asked until the index is known to be rebuilt.
+   * `stayed_room_ids` covers `occupied_room_ids` (rooms held now), which this used to ask as
+   * well; checked live on 2026-10-31 that every indexed booking carries it.
    *
    * Separate requests rather than the endpoint's `or[]` group, which the server's search helper
-   * does build a `should` from: both `f[…]` keys are already in use against this endpoint
-   * (room detail reads `occupied_room_ids`), while an `or` it silently ignored would return
-   * the whole hostel's bookings and draw every unallotted one on every room.
+   * does build a `should` from: an `or` it silently ignored would return the whole hostel's
+   * bookings and draw every unallotted one on every room.
    */
   bookingsInRoom(
     hostelId: string,
@@ -193,7 +192,7 @@ export class HostBookingsApi {
           'f[checkout_date][gte]': from,
         })
         .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
-    return forkJoin([ask('f[room.id]'), ask('f[occupied_room_ids]'), ask('f[stayed_room_ids]')]).pipe(
+    return forkJoin([ask('f[room.id]'), ask('f[stayed_room_ids]')]).pipe(
       map((answers) => {
         const byId = new Map<string, HostBooking>();
         for (const b of answers.flat()) if (!byId.has(b.id)) byId.set(b.id, b);
