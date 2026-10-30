@@ -68,6 +68,16 @@ export class LocaleStore {
    */
   readonly urlNamedLanguage = this._urlNamedLanguage.asReadonly();
 
+  /**
+   * Whether the visitor's country can no longer change the language: they chose one before,
+   * or the URL they arrived on named it. Only then is the page safe to read before startup
+   * resolves, so this is what decides whether the boot splash and the startup veil show.
+   * The inline script in index.html applies the same rule before the first paint.
+   */
+  languageSettled(): boolean {
+    return this.userChoice() !== null || this.urlNamedLanguage();
+  }
+
   /** Called once, by {@link LocaleSync}, with what the entry URL said. */
   noteUrlNamedLanguage(named: boolean): void {
     this._urlNamedLanguage.set(named);

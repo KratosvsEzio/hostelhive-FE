@@ -15,6 +15,7 @@ import { SeekerTabBar } from '@app/layout/components/mobile-tab-bar/seeker-tab-b
 import { MobileApp } from '@core/mobile-app';
 // TEMPORARY (testing): startup gate to pick the BE base URL. Remove before go-live.
 import { routePath } from '@core/i18n/locales';
+import { LocaleStore } from '@core/i18n/locale-store';
 import { ConsentBanner } from '@core/google-analytics/consent-banner';
 import { StartupGate } from '@core/startup-gate';
 import { liftBootSplashWhenReady } from '@core/boot-splash';
@@ -56,11 +57,25 @@ export class App {
     this.doc.getElementById('main-content')?.focus();
   }
 
-  /** True while startup is still resolving the session and the country. */
-  protected readonly startingUp = inject(StartupGate).busy;
+  private readonly gate = inject(StartupGate);
+
+  /**
+   * Whether the language was already settled when the app started (see
+   * {@link LocaleStore.languageSettled}). Read once: it describes how this visit began.
+   */
+  private readonly languageSettled = inject(LocaleStore).languageSettled();
+
+  /**
+   * True while startup is still resolving the session and the country, on a visit whose
+   * language the country may still change. The veil exists to stop a page moving to another
+   * language under someone reading it; with the language settled there is nothing to hide,
+   * and covering the server-rendered page only delays it.
+   */
+  protected readonly startingUp = computed(() => !this.languageSettled && this.gate.busy());
 
   constructor() {
-    // The first full load shows the bee from index.html; take it down once startup resolves.
+    // The bee from index.html shows only when the language may still change (its inline
+    // script removes it otherwise); take it down once startup resolves.
     liftBootSplashWhenReady(this.startingUp);
   }
 

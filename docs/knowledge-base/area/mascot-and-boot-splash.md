@@ -44,6 +44,15 @@ assistive tech. The boot splash is the first thing a full page load paints, befo
   start), then fades out over 250 ms and is removed. A CSS animation hides it after 10 s regardless,
   so a failed boot never covers the server-rendered page forever. With JavaScript off, a `<noscript>`
   style hides it.
+- **The splash and the startup veil show only while the language may still change.** That is the
+  one thing they hide: the country can switch the language, which navigates under someone reading.
+  It cannot when the visitor chose a language before, or the URL names one and was not reached by a
+  redirect to English (`LocaleStore.languageSettled`, mirroring `LocaleSync.wasSentHere`). For those
+  visits, which include every crawler and shared link, an inline script before `#hh-boot` adds
+  `hh-boot-skip` to `<html>` and removes the splash before its bee downloads, and `App.startingUp`
+  ignores the `StartupGate`. Before this change the page was covered for at least 1.6 s, and about
+  10 s on a throttled phone (SEO audit, 2026-10-31). A visitor redirected to `/en` (a URL with no
+  language, such as `/search`) still gets the greeting as before.
 
 ## Reuse, don't rebuild
 
@@ -55,6 +64,10 @@ assistive tech. The boot splash is the first thing a full page load paints, befo
 
 - **Keep `index.html` and `mascot.ts` in step**: the splash's inline script duplicates the
   format and reduced-motion choice, because it runs before the app.
+- **Keep the settled-language script in step with the app**: it restates
+  `LocaleStore.languageSettled` with its own copy of the language codes and the chosen-language
+  key. `core/boot-splash-settled.spec.ts` runs the real script from `index.html` and fails if the
+  codes, the key or the rule drift.
 - **Don't put the magnifying glass on the startup greeting**: nobody is searching yet. See the
   decision below.
 - **An image has no `ended` event**: on the WebP path the greeting is swapped for the loop on a

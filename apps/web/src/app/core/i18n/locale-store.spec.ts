@@ -100,6 +100,33 @@ describe('LocaleStore', () => {
 
     expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('en');
   });
+
+  // What decides whether the boot splash and the startup veil cover the page: only a
+  // language the country may still change is worth hiding the page for.
+  describe('languageSettled', () => {
+    it('is not settled when neither the visitor nor the URL named a language', () => {
+      expect(store().languageSettled()).toBe(false);
+    });
+
+    it('is settled when the URL named the language', () => {
+      const s = store();
+      s.noteUrlNamedLanguage(true);
+
+      expect(s.languageSettled()).toBe(true);
+    });
+
+    it('is settled when the visitor chose a language before', () => {
+      localStorage.setItem(LOCALE_CHOSEN_STORAGE_KEY, 'de');
+
+      expect(store().languageSettled()).toBe(true);
+    });
+
+    it('is not settled by a stored choice this app no longer serves', () => {
+      localStorage.setItem(LOCALE_CHOSEN_STORAGE_KEY, 'xx');
+
+      expect(store().languageSettled()).toBe(false);
+    });
+  });
 });
 
 /**

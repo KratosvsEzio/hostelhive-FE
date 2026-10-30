@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { provideRouter } from '@angular/router';
+import { LocaleStore } from '@core/i18n/locale-store';
+import { StartupGate } from '@core/startup-gate';
 import { App } from './app';
 
 describe('App', () => {
@@ -14,6 +16,46 @@ describe('App', () => {
   it('creates the root app', () => {
     const fixture = TestBed.createComponent(App);
     expect(fixture.componentInstance).toBeTruthy();
+  });
+});
+
+/**
+ * The startup veil covers the page only while the visitor's country may still change its
+ * language. It exists to stop a page moving to another language under someone reading it;
+ * with the language settled it would only hide a server-rendered page that is ready.
+ */
+describe('App startup veil', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App],
+      providers: [provideRouter([]), provideI18nTesting()],
+    }).compileComponents();
+  });
+
+  function startingUp(settled: boolean): { veil: () => boolean; gate: StartupGate } {
+    vi.spyOn(TestBed.inject(LocaleStore), 'languageSettled').mockReturnValue(settled);
+    const gate = TestBed.inject(StartupGate);
+    const app = TestBed.createComponent(App).componentInstance as unknown as {
+      startingUp: () => boolean;
+    };
+    return { veil: () => app.startingUp(), gate };
+  }
+
+  it('covers the page while startup resolves when the language may still change', () => {
+    const { veil, gate } = startingUp(false);
+    const release = gate.hold();
+
+    expect(veil()).toBe(true);
+
+    release();
+    expect(veil()).toBe(false);
+  });
+
+  it('never covers the page when the language is already settled', () => {
+    const { veil, gate } = startingUp(true);
+    gate.hold();
+
+    expect(veil()).toBe(false);
   });
 });
 

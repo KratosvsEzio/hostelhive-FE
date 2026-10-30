@@ -112,6 +112,10 @@
         opacity: 0;
         pointer-events: none;
       }
+      /* The language is settled (see the script before #hh-boot): nothing to hide. */
+      .hh-boot-skip #hh-boot {
+        display: none;
+      }
       @keyframes hh-boot-cap {
         to {
           opacity: 0;
@@ -150,10 +154,36 @@
     </style>
   </head>
   <body>
-    <!-- Boot splash: every full page load shows the bee flying in to wave hello while the app
-         boots and works out who and where the visitor is. No magnifying glass here — nobody
-         is searching yet; the glass belongs to the search states. Static HTML so it paints with the first
-         byte, before any JavaScript; App lifts it once startup has resolved (app.ts). -->
+    <script>
+      // The splash hides the page only while the visitor's country may still change its
+      // language, which navigates under whoever started reading. That cannot happen when they
+      // chose a language before or the URL names one (and, for English, they were not
+      // redirected here), so then the server-rendered page shows from the first paint.
+      // Mirrors LocaleStore.languageSettled and LocaleSync.wasSentHere; the codes are
+      // LOCALES in core/i18n/locales.ts (boot-splash-settled.spec.ts keeps them in step).
+      (function () {
+        var codes = ['en', 'ur', 'ar', 'hi', 'zh', 'ja', 'fr', 'de', 'es', 'it', 'nl', 'sv', 'da', 'hu', 'ru', 'id', 'vi', 'pl'];
+        var first = location.pathname.split('/')[1];
+        var redirected = false;
+        try {
+          var nav = performance.getEntriesByType('navigation')[0];
+          redirected = !!nav && nav.redirectCount > 0;
+        } catch (e) {}
+        var named = codes.indexOf(first) >= 0 && !(first === 'en' && redirected);
+        var chosen = null;
+        try {
+          chosen = localStorage.getItem('hh.locale.chosen');
+        } catch (e) {}
+        if (named || codes.indexOf(chosen) >= 0) {
+          document.documentElement.classList.add('hh-boot-skip');
+        }
+      })();
+    </script>
+    <!-- Boot splash: a full page load whose language is not settled yet shows the bee flying
+         in to wave hello while the app boots and works out who and where the visitor is. No
+         magnifying glass here — nobody is searching yet; the glass belongs to the search states.
+         Static HTML so it paints with the first byte, before any JavaScript; App lifts it once
+         startup has resolved (app.ts). -->
     <div id="hh-boot" role="status" aria-live="polite">
       <img class="hh-boot-logo" src="/hostelhive-wordmark.svg" alt="HostelHive" width="224" height="28" />
       <div class="hh-boot-bee" aria-hidden="true"></div>
@@ -163,6 +193,12 @@
       // Picks the bee for this browser. Mirrors hh-mascot (shared/mascot/mascot.ts):
       // reduced motion gets the still pose; WebKit (which drops VP9's alpha) gets WebP.
       (function () {
+        // A skipped splash is removed outright, so its bee never downloads.
+        if (document.documentElement.classList.contains('hh-boot-skip')) {
+          var boot = document.getElementById('hh-boot');
+          if (boot) boot.remove();
+          return;
+        }
         var box = document.querySelector('#hh-boot .hh-boot-bee');
         if (!box) return;
         var ua = navigator.userAgent;
