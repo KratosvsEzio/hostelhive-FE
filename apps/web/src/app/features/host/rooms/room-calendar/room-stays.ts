@@ -97,23 +97,39 @@ export function sleepsOn(stay: RoomStay, date: string): boolean {
 }
 
 /**
+ * `end` kept inside the booked stay: never past the booked check-out, never before arrival.
+ *
+ * A stay that left the morning it was due to begin holds no night at all, rather than a run
+ * that ends before it starts.
+ */
+function withinStay(b: HostBooking, end: string): string {
+  if (end >= b.checkOut) return b.checkOut;
+  return end > b.checkIn ? end : b.checkIn;
+}
+
+/**
  * The exclusive end of the nights a booking really holds — its booked check-out, unless it
- * has already checked out, in which case today.
+ * has already checked out, in which case the day it actually left.
  *
- * Checked out means the guests have gone. The nights before today were slept in and stay on
- * the month as history; tonight and every night after are back on sale. Charging them to the
- * booking read a three-bed room as "4 of 3 beds" the evening a party left on the morning of
- * its first night, beside the party actually asleep there.
+ * Checked out means the guests have gone. The nights before they left were slept in and stay
+ * on the month as history; the night of the day they left and every night after are back on
+ * sale. Charging them to the booking read a three-bed room as "4 of 3 beds" the evening a
+ * party left on the morning of its first night, beside the party actually asleep there.
  *
- * Never earlier than the arrival: a stay that left the morning it was due to begin holds no
- * night at all, rather than a run that ends before it starts.
- *
- * Known limit: the API carries no check-out timestamp, so a stay that left days early is
- * still charged the nights between leaving and today. Those are past, and read as history.
+ * `checkedOutOn` is the hostel's date of the real check-out. A booking the server sent no
+ * check-out time for ends today instead: everything before it is past, and reads as history.
  */
 function nightsHeldUntil(b: HostBooking, today: string): string {
-  if (laneKeyFor(b.disposition.slug) !== 'checked-out' || b.checkOut <= today) return b.checkOut;
-  return today > b.checkIn ? today : b.checkIn;
+  if (laneKeyFor(b.disposition.slug) !== 'checked-out') return b.checkOut;
+  return withinStay(b, b.checkedOutOn || today);
+}
+
+/**
+ * The exclusive end of the nights an occupancy held this room: the day it was released, or
+ * the booking's own end while it is still held.
+ */
+function occupancyHeldUntil(o: BookingOccupancy, bookingEnd: string): string {
+  return o.releasedOn && o.releasedOn < bookingEnd ? o.releasedOn : bookingEnd;
 }
 
 /**
@@ -146,18 +162,19 @@ function residentStay(r: RoomResident, windowEnd: string): RoomStay {
  * charging it to each room read a 2 + 1 split as three beds full in the first room. Once
  * rooms are allocated, only the guests placed *here* are this room's.
  *
- * Which occupancies count depends on where the stay is. While it is checked in, only the
- * active ones — a released room has its beds back. After that every occupancy is inactive
+ * Which occupancies count depends on where the stay is. While it is checked in, the active
+ * ones, and the released ones that carry their release day: those held the room until then,
+ * and {@link occupancyHeldUntil} ends them there. After check-out every occupancy is inactive
  * (check-out ends them all), so all of them count as the history of the nights they held.
  *
- * Known limit: the API carries no release date, so a room released mid-stay reads as free
- * for the whole stay while it is checked in, and as held for the whole stay once it is not.
+ * A released occupancy with no release day, while checked in, is left out: without the day it
+ * could only be charged the whole stay, which would hold a bed already given back.
  */
 function occupanciesOf(b: HostBooking, roomId: string): BookingOccupancy[] | null {
   const occupancies = b.occupancies ?? [];
   if (!occupancies.length) return null;
   const live = laneKeyFor(b.disposition.slug) === 'checked-in';
-  return occupancies.filter((o) => o.roomId === roomId && (!live || o.active));
+  return occupancies.filter((o) => o.roomId === roomId && (!live || o.active || !!o.releasedOn));
 }
 
 /**
@@ -193,6 +210,12 @@ export function toRoomStay(
   const here = roomId ? occupanciesOf(b, roomId) : null;
   if (here && !here.length) return null;
   const party = here ? here.reduce((n, o) => n + o.guests, 0) : b.guests || 0;
+  const bookingEnd = nightsHeldUntil(b, today);
+  // The room is held until the last of this booking's occupancies here was given back. Two
+  // occupancies in one room that end on different days are drawn together, to the later one.
+  const end = here
+    ? withinStay(b, here.map((o) => occupancyHeldUntil(o, bookingEnd)).reduce((a, c) => (c > a ? c : a)))
+    : bookingEnd;
   return {
     id: b.id,
     // The renter when the booking names one, the booker otherwise. They are usually
@@ -201,8 +224,8 @@ export function toRoomStay(
     guest: { name: b.renter?.name || b.guest.name },
     check_in: b.checkIn,
     // Shortened, not kept as booked, so the bar, the roster's "leaving" and its date range all
-    // say the same thing the night counts do: they left today.
-    check_out: nightsHeldUntil(b, today),
+    // say the same thing the night counts do: the day they left this room.
+    check_out: end,
     status: b.disposition.slug,
     // Floored at one so a stay the server sent without a guest count still draws a pip
     // rather than silently occupying nothing.

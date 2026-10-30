@@ -89,7 +89,7 @@ The signed-in host's workspace at `/host/:hostelId/…`: overview dashboards, ho
 - [Billing-cycle gates fail toward showing the page](../decisions/host-console/billing-cycle-gates-fail-open.md)
 - [The host's hostel list and selection follow the signed-in user](../decisions/host-console/host-property-follows-the-session-user.md)
 - [The Invoices page follows the hostel's billing mode](../decisions/host-console/invoices-page-follows-billing-mode.md)
-- [A room is charged only the guests placed in it, and a checked-out stay frees it from today](../decisions/host-console/room-occupancy-counts-per-room-occupancies.md)
+- [A room is charged only the guests placed in it, until the day it was released or the party left](../decisions/host-console/room-occupancy-counts-per-room-occupancies.md)
 - [The console's "today" is the hostel's date, read once, from a cached hostel lookup](../decisions/host-console/console-today-is-the-hostels-date.md)
 - [Paying a booking or its invoice offers the other, as a ticked checkbox](../decisions/host-console/cross-pay-checkbox-ticked-by-default.md)
 

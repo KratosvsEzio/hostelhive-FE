@@ -465,3 +465,73 @@ describe('toRoomStay — options object', () => {
     expect(toRoomStay(split, 4, { today: TODAY, roomId: '103' })).toBeNull();
   });
 });
+
+/**
+ * The real stay times the API now sends (Trello #165): the day a room was released and the
+ * day a party actually checked out, each the hostel's date. They replace "today" as the end of
+ * a stay that left, and end a released room on the night it was given back.
+ */
+describe('toRoomMonth — real stay times', () => {
+  const booked = (r: ReturnType<typeof toRoomMonth>, d: string) => day(r.days, d)?.booked;
+  const released = (roomId: string, guests: number, releasedOn: string): BookingOccupancy => ({
+    ...occupancy(roomId, guests, false),
+    releasedOn,
+  });
+
+  it('ends a checked-out stay on the day it left, not today', () => {
+    const left = booking({
+      guests: 2,
+      disposition: { slug: 'checked-out', name: 'Checked out' },
+      checkedOutOn: '2026-08-11',
+      occupancies: [released('101', 2, '2026-08-11')],
+    });
+    const m = toRoomMonth([left], 3, AUG.from, AUG.to, { today: TODAY, roomId: '101' });
+
+    expect(booked(m, '2026-08-10')).toBe(2);
+    expect(booked(m, '2026-08-11')).toBe(0);
+    expect(booked(m, '2026-08-12')).toBe(0);
+    expect(m.stays[0].check_out).toBe('2026-08-11');
+  });
+
+  it('never runs a late check-out past the booked stay', () => {
+    const late = booking({ disposition: { slug: 'checked-out', name: 'Checked out' }, checkedOutOn: '2026-08-14' });
+    const m = toRoomMonth([late], 3, AUG.from, AUG.to, { today: TODAY });
+
+    expect(m.stays[0].check_out).toBe('2026-08-13');
+    expect(booked(m, '2026-08-13')).toBe(0);
+  });
+
+  it('holds a room released mid-stay until the night it was given back', () => {
+    const moved = booking({ guests: 3, occupancies: [released('101', 2, '2026-08-12'), occupancy('102', 1)] });
+    const in101 = toRoomMonth([moved], 3, AUG.from, AUG.to, { today: TODAY, roomId: '101' });
+    const in102 = toRoomMonth([moved], 3, AUG.from, AUG.to, { today: TODAY, roomId: '102' });
+
+    expect(booked(in101, '2026-08-10')).toBe(2);
+    expect(booked(in101, '2026-08-11')).toBe(2);
+    expect(booked(in101, '2026-08-12')).toBe(0);
+    expect(in101.stays[0].check_out).toBe('2026-08-12');
+    expect(booked(in102, '2026-08-12')).toBe(1);
+  });
+
+  it('ends each room of a checked-out party on its own day', () => {
+    const left = booking({
+      guests: 3,
+      disposition: { slug: 'checked-out', name: 'Checked out' },
+      checkedOutOn: '2026-08-12',
+      occupancies: [released('101', 2, '2026-08-11'), released('102', 1, '2026-08-12')],
+    });
+    const in101 = toRoomMonth([left], 3, AUG.from, AUG.to, { today: TODAY, roomId: '101' });
+    const in102 = toRoomMonth([left], 3, AUG.from, AUG.to, { today: TODAY, roomId: '102' });
+
+    expect(in101.stays[0].check_out).toBe('2026-08-11');
+    expect(in102.stays[0].check_out).toBe('2026-08-12');
+    expect(booked(in102, '2026-08-11')).toBe(1);
+  });
+
+  it('holds no night for a room released on the day of arrival', () => {
+    const moved = booking({ guests: 2, occupancies: [released('101', 2, '2026-08-10')] });
+    const m = toRoomMonth([moved], 3, AUG.from, AUG.to, { today: TODAY, roomId: '101' });
+
+    expect(booked(m, '2026-08-10')).toBe(0);
+  });
+});

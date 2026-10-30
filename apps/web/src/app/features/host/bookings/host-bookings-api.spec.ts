@@ -184,14 +184,15 @@ describe('HostBookingsApi.bookingsOn', () => {
 });
 
 /**
- * One room's month, asked of the server two ways.
+ * One room's month, asked of the server three ways.
  *
  * `room.id` is the first room a party was checked into, so a booking whose second room is
- * this one is only reachable through `occupied_room_ids`. The two answers overlap whenever a
- * party's first room is this one, and a booking drawn twice would double its beds.
+ * this one is only reachable through `occupied_room_ids` (rooms held now) or
+ * `stayed_room_ids` (every room ever used). The answers overlap whenever a party's first room
+ * is this one, and a booking drawn twice would double its beds.
  */
 describe('HostBookingsApi.bookingsInRoom', () => {
-  function capture(byRoom: ApiHostBooking[], byOccupancy: ApiHostBooking[]) {
+  function capture(byRoom: ApiHostBooking[], byOccupancy: ApiHostBooking[], byStay: ApiHostBooking[] = []) {
     const calls: { path: string; params: Record<string, unknown> }[] = [];
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -201,7 +202,8 @@ describe('HostBookingsApi.bookingsInRoom', () => {
           useValue: {
             get: (path: string, params: Record<string, unknown>) => {
               calls.push({ path, params });
-              const bookings = 'f[occupied_room_ids]' in params ? byOccupancy : byRoom;
+              const bookings =
+                'f[occupied_room_ids]' in params ? byOccupancy : 'f[stayed_room_ids]' in params ? byStay : byRoom;
               return of({ bookings, success: true });
             },
           },
@@ -211,31 +213,39 @@ describe('HostBookingsApi.bookingsInRoom', () => {
     return { api: TestBed.inject(HostBookingsApi), calls };
   }
 
-  it('asks by first room and by occupied room, over the same window', () => {
+  it('asks by first room, occupied room and stayed room, over the same window', () => {
     const { api, calls } = capture([], []);
     api.bookingsInRoom('nHelLt', 'R101', '2026-10-01', '2026-10-31').subscribe();
 
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
     const window = { 'f[checkin_date][lte]': '2026-10-31', 'f[checkout_date][gte]': '2026-10-01' };
-    expect(calls.map((c) => c.path)).toEqual([
-      '/api/host/hostels/nHelLt/bookings',
-      '/api/host/hostels/nHelLt/bookings',
-    ]);
+    expect(new Set(calls.map((c) => c.path))).toEqual(new Set(['/api/host/hostels/nHelLt/bookings']));
     expect(calls[0].params).toMatchObject({ 'f[room.id]': 'R101', ...window });
-    expect(calls[0].params).not.toHaveProperty('f[occupied_room_ids]');
     expect(calls[1].params).toMatchObject({ 'f[occupied_room_ids]': 'R101', ...window });
-    expect(calls[1].params).not.toHaveProperty('f[room.id]');
+    expect(calls[2].params).toMatchObject({ 'f[stayed_room_ids]': 'R101', ...window });
+    for (const [i, key] of ['f[room.id]', 'f[occupied_room_ids]', 'f[stayed_room_ids]'].entries()) {
+      calls.filter((_, j) => j !== i).forEach((c) => expect(c.params).not.toHaveProperty(key));
+    }
   });
 
-  it('returns the union, each booking once', () => {
+  it('returns the union, each booking once, first-room answers first', () => {
     const { api } = capture(
       [raw({ id: 'first' }), raw({ id: 'both' })],
       [raw({ id: 'both' }), raw({ id: 'second' })],
+      [raw({ id: 'second' }), raw({ id: 'left' })],
     );
     let ids: string[] = [];
     api.bookingsInRoom('nHelLt', 'R101', '2026-10-01', '2026-10-31').subscribe((b) => (ids = b.map((x) => x.id)));
 
-    expect(ids).toEqual(['first', 'both', 'second']);
+    expect(ids).toEqual(['first', 'both', 'second', 'left']);
+  });
+
+  it('finds a checked-out party through a room it left, which only stayed_room_ids still names', () => {
+    const { api } = capture([], [], [raw({ id: 'gone' })]);
+    let ids: string[] = [];
+    api.bookingsInRoom('nHelLt', 'R102', '2026-10-01', '2026-10-31').subscribe((b) => (ids = b.map((x) => x.id)));
+
+    expect(ids).toEqual(['gone']);
   });
 
   it('asks nothing without a hostel or a room', () => {
@@ -548,8 +558,8 @@ describe('HostBookingsApi — the lifecycle', () => {
     api.occupancies('MjvuEl', 'vKkMIE').subscribe((r) => (rows = r));
     expect(get).toHaveBeenCalledWith(`${base}/occupancies`, { page: 1, limit: 100 });
     expect(rows).toEqual([
-      { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true },
-      { id: 'o2', roomId: 'r2', roomNumber: '—', guests: 1, active: false },
+      { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true, releasedOn: '' },
+      { id: 'o2', roomId: 'r2', roomNumber: '—', guests: 1, active: false, releasedOn: '' },
     ]);
 
     api.releaseOccupancy('MjvuEl', 'vKkMIE', 'o1').subscribe();
@@ -636,7 +646,7 @@ describe('HostBookingsApi — per-call request options', () => {
       expect(rec.last().path).toBe(base);
       expect(out?.id).toBe('vKkMIE');
       expect(out?.occupancies).toEqual([
-        { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true },
+        { id: 'o1', roomId: 'r1', roomNumber: '101', guests: 2, active: true, releasedOn: '' },
       ]);
     });
 
@@ -764,6 +774,31 @@ describe('HostBookingsApi — per-call request options', () => {
   });
 });
 
+describe('toHostBooking stay times (Trello #165)', () => {
+  it("reads the hostel's day of a release and a check-out, never through the device's zone", () => {
+    const b = toHostBooking(
+      raw({
+        checked_out_at: '2026-10-19T00:30:00.000+05:00',
+        occupancies: [
+          { id: 'o1', room_id: 'r1', guests: 2, status: 'inactive', released_at: '2026-10-17T23:45:00.000+05:00' },
+        ],
+      }),
+    );
+
+    expect(b.checkedOutOn).toBe('2026-10-19');
+    expect(b.occupancies[0].releasedOn).toBe('2026-10-17');
+  });
+
+  it('reads a missing or malformed time as no day', () => {
+    const b = toHostBooking(
+      raw({ checked_out_at: 'soon', occupancies: [{ id: 'o1', room_id: 'r1', guests: 1, status: 'active', released_at: null }] }),
+    );
+
+    expect(b.checkedOutOn).toBe('');
+    expect(b.occupancies[0].releasedOn).toBe('');
+  });
+});
+
 describe('toHostBooking occupancies (Trello #81)', () => {
   it('reads the rooms a party was checked into, flat on the booking payload', () => {
     const b = toHostBooking(
@@ -775,8 +810,8 @@ describe('toHostBooking occupancies (Trello #81)', () => {
       }),
     );
     expect(b.occupancies).toEqual([
-      { id: 'o1', roomId: 'aVXGyz', roomNumber: '101', guests: 2, active: true },
-      { id: 'o2', roomId: 'AmBKhx', roomNumber: '102', guests: 1, active: false },
+      { id: 'o1', roomId: 'aVXGyz', roomNumber: '101', guests: 2, active: true, releasedOn: '' },
+      { id: 'o2', roomId: 'AmBKhx', roomNumber: '102', guests: 1, active: false, releasedOn: '' },
     ]);
   });
 

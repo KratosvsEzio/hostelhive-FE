@@ -1,4 +1,4 @@
-# A room is charged only the guests placed in it, and a checked-out stay frees it from today
+# A room is charged only the guests placed in it, until the day it was released or the party left
 
 **Status:** Accepted
 **Area:** [host-console](../../area/host-console.md)
@@ -9,15 +9,15 @@ Check-in places a booking's party in one or more rooms (`occupancies`, each with
 After that fix, live testing found two more faults. A party that checked out on the morning of its first night still held its beds for the rest of the booked stay, and the room read "4 of 3 beds · over 1". The departure day read "over -3".
 
 ## Decision
-- **Fetch both ways.** `HostBookingsApi.bookingsInRoom` asks `f[room.id]` and `f[occupied_room_ids]` for the month and merges them, each booking once, first-room results first.
+- **Fetch three ways.** `HostBookingsApi.bookingsInRoom` asks `f[room.id]`, `f[occupied_room_ids]` and `f[stayed_room_ids]` (every room a party ever used, since Trello #165) for the month, and merges them, each booking once, first-room results first. `occupied_room_ids` stays asked until the deployed index is known to carry `stayed_room_ids` on old documents.
 - **Charge only this room's guests** (`toRoomStay` with `occupanciesOf`, `room-stays.ts`):
   - a booking with no occupancies (not checked in yet) holds its whole party, as before;
-  - a checked-in booking holds the guests of its **active** occupancies in this room;
+  - a checked-in booking holds the guests of its **active** occupancies in this room, and of released ones until their release day (`releasedOn`); a released one with no release day is left out;
   - a checked-out or cancelled one holds all of its occupancies in this room, as history;
   - a booking with none in this room is not drawn.
 
   A room sold whole (capacity 1) counts as one unit.
-- **A checked-out stay ends today** (`nightsHeldUntil`). Nights before today stay as history; tonight onward is free.
+- **A checked-out stay ends on the day it actually left** (`nightsHeldUntil`, `checkedOutOn`), and a room on the day it was released (`occupancyHeldUntil`), never outside the booked stay. Nights before stay as history. Only a stay the server sent no check-out time for still ends **today**.
 - **One predicate (`sleepsOn`) drives both the night count and the pips.** Oversold means booked > capacity, so the departure-day label cannot go negative.
 - The tenant form's availability check passes the room id too, so it charges the same way.
 
@@ -28,9 +28,10 @@ After that fix, live testing found two more faults. A party that checked out on 
 
 ## Consequences and limits
 - "Today" is the hostel's date, the same day the calendar highlights, read once when the calendar opens ([decision](./console-today-is-the-hostels-date.md)). With no usable hostel zone it falls back to the device's date.
-- The API has no release or actual check-out timestamp. A room released mid-stay reads free for the whole stay while the booking is checked in, and held for the whole stay once it is not.
-- `occupied_room_ids` holds active occupancies only. After check-out, a split party is found through its first room alone, so a past stay shows nothing in its second room.
-- Two requests per room-month. The calendar shares the index lag in [index-backed reads](../api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md).
+- `released_at`, `checked_in_at` and `checked_out_at` come in the hostel's offset (BE azeem-hamza/hostelhive `fe8224f`), so their date part is the hostel's day and is read without a `Date`.
+- Two occupancies of one booking in the same room that end on different days are drawn together, to the later day.
+- Three requests per room-month, until `occupied_room_ids` can be dropped.
+- The calendar shares the index lag in [index-backed reads](../api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md).
 
 ## Evidence
 - `apps/web/src/app/features/host/rooms/room-calendar/room-stays.ts` — `occupanciesOf`, `toRoomStay`, `nightsHeldUntil`, `sleepsOn` (`today` is a required option); `room-calendar.ts`.
