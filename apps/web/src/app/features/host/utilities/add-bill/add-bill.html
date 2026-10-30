@@ -11,8 +11,6 @@
         radius="lg"
       />
     </div>
-  } @else if (s.subscriptionError) {
-    <hh-subscription-gate [feature]="'subscriptionGate.utilityBilling' | transloco" />
   } @else if (s.permissionError) {
     <hh-permission-refused />
   } @else if (s.error || editError()) {

@@ -739,7 +739,9 @@
     "leavingDate": "Data di partenza",
     "thisTenantHasNoRent": "Questo inquilino non ha ancora fatture di affitto registrate.",
     "noUtilityChargesHaveBeen": "Non sono state registrate utenze per la camera di questo inquilino.",
-    "checkInYourFirstTenant": "Registra il primo inquilino per iniziare a monitorare gli affitti."
+    "checkInYourFirstTenant": "Registra il primo inquilino per iniziare a monitorare gli affitti.",
+    "notFoundTitle": "Non abbiamo trovato questo inquilino",
+    "notFoundMessage": "Potrebbe essere stato rimosso, oppure il link non è più valido. Torna agli inquilini per vedere gli inquilini di questo ostello."
   },
   "hostBilling": {
     "title": "Fatturazione",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "Impossibile aggiornare questa camera. Riprova.",
     "couldNotCreateRoom": "Impossibile creare questa camera. Riprova.",
     "couldNotCreateRooms": "Impossibile creare queste camere. Riprova.",
+    "notFoundTitle": "Non abbiamo trovato questa camera",
+    "notFoundMessage": "Potrebbe essere stata eliminata, oppure il link non è più valido. Torna alle camere per vedere le camere di questo ostello.",
     "nFree": "{{count}} liberi",
     "full": "Piena",
     "guestsOnBookings": "Ospiti delle prenotazioni",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "Non più offerte dall'ostello, quindi non riportate: {{rooms}}. Scegli un'altra camera.",
     "stageConfirmed": "Confermata",
     "noShow": "Mancato arrivo",
-    "noShowNote": "L'ostello ha segnato questa prenotazione come mancato arrivo: l'ospite non si è presentato."
+    "noShowNote": "L'ostello ha segnato questa prenotazione come mancato arrivo: l'ospite non si è presentato.",
+    "bookingNotFoundTitle": "Non abbiamo trovato questa prenotazione",
+    "bookingNotFoundMessage": "Potrebbe essere stata rimossa, oppure il link non è più valido. Torna a tutte le tue prenotazioni."
   },
   "userFavorites": {
     "removeFromFavorites": "Rimuovere dai preferiti?",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "Invia link di reset",
     "backToLogin": "Torna al login",
     "didnTReceiveItResend": "Non ricevuto? Invia di nuovo",
+    "resendIn": "Invia di nuovo tra {{time}}",
     "enterAValidEmail": "Inserisci un indirizzo email valido.",
     "sentIfAccountExists": "Se esiste un account per {{email}}, ti abbiamo inviato un link per reimpostare la password. Controlla la posta in arrivo e la cartella spam.",
     "alreadySent": "Un link di reset è già stato inviato a questa email. Controlla la posta in arrivo e la cartella spam; potrai richiederne un altro tra qualche minuto.",
     "sentAnother": "Ti abbiamo inviato un altro link.",
     "tooManyRequests": "Troppi tentativi. Attendi qualche minuto e riprova.",
+    "tooManyRequestsRetry": "Troppi tentativi. Riprova tra {{time}}.",
     "cannotReachTheServer": "Impossibile raggiungere il server. Riprova tra un momento.",
     "couldNotSend": "Non siamo riusciti a inviare il link di reset. Controlla l’indirizzo email e riprova.",
     "useADifferentEmail": "Usa un’altra email"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "Nessun luogo corrispondente",
     "poweredByOpenstreetmap": "Basato su OpenStreetMap",
     "noCoordinatesSetFor": "Nessuna coordinata impostata per questo annuncio."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Sblocca {{feature}}",
-    "thisFeature": "questa funzione",
-    "dashboardOverview": "Panoramica della dashboard",
-    "roomManagement": "Gestione delle camere",
-    "tenantManagement": "Gestione degli inquilini",
-    "utilityBilling": "Fatturazione delle utenze",
-    "thisFeatureIsAvailable": "Questa funzione è disponibile nei piani a pagamento. Abbonati per accedere completamente alla dashboard del tuo ostello.",
-    "completeHostelProfileFirst": "Completa prima il profilo dell'ostello",
-    "onceSubscribedAllFeatures": "Una volta abbonato, tutte le funzioni si sbloccano automaticamente.",
-    "roomAmpOccupancyManagement": "Gestione di camere e occupazione",
-    "tenantTrackingAmpPayment": "Monitoraggio degli inquilini e storico pagamenti",
-    "rentAndUtilityInvoice": "Generazione di fatture per affitto e utenze",
-    "analyticsAndRevenueReports": "Statistiche e report sui ricavi"
   },
   "notifications": {
     "nUnread": "{{count}} non letti",

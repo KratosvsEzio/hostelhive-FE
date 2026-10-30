@@ -739,7 +739,9 @@
     "leavingDate": "离开日期",
     "thisTenantHasNoRent": "该租客暂无租金发票记录。",
     "noUtilityChargesHaveBeen": "尚未记录该租客房间的水电费用。",
-    "checkInYourFirstTenant": "为第一位租客办理入住，开始追踪租金。"
+    "checkInYourFirstTenant": "为第一位租客办理入住，开始追踪租金。",
+    "notFoundTitle": "找不到这位租户",
+    "notFoundMessage": "租户可能已被移除，或链接已过期。返回租户列表查看此旅舍的租户。"
   },
   "hostBilling": {
     "title": "账单",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "无法更新此房间，请重试。",
     "couldNotCreateRoom": "无法创建此房间，请重试。",
     "couldNotCreateRooms": "无法创建这些房间，请重试。",
+    "notFoundTitle": "找不到这个房间",
+    "notFoundMessage": "它可能已被删除，或链接已过期。返回房间列表查看此旅舍的房间。",
     "nFree": "{{count}} 个空闲",
     "full": "已满",
     "guestsOnBookings": "预订客人",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "旅舍已不再提供，因此未保留：{{rooms}}。请选择其他房间。",
     "stageConfirmed": "已确认",
     "noShow": "未到店",
-    "noShowNote": "旅舍已将此预订标记为未到店 — 客人未抵达。"
+    "noShowNote": "旅舍已将此预订标记为未到店 — 客人未抵达。",
+    "bookingNotFoundTitle": "找不到这条预订",
+    "bookingNotFoundMessage": "它可能已被移除，或链接已过期。返回查看你的所有预订。"
   },
   "userFavorites": {
     "removeFromFavorites": "从收藏中移除？",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "发送重置链接",
     "backToLogin": "返回登录",
     "didnTReceiveItResend": "没有收到？重新发送",
+    "resendIn": "{{time}}后重新发送",
     "enterAValidEmail": "请输入有效的邮箱地址。",
     "sentIfAccountExists": "如果 {{email}} 对应的账户存在，我们已发送重置密码的链接。请查看收件箱和垃圾邮件文件夹。",
     "alreadySent": "重置链接已发送至此邮箱。请查看收件箱和垃圾邮件文件夹；几分钟后可以再次申请。",
     "sentAnother": "我们已再发送一个链接。",
     "tooManyRequests": "尝试次数过多。请等待几分钟后再试。",
+    "tooManyRequestsRetry": "尝试次数过多。请在{{time}}后重试。",
     "cannotReachTheServer": "无法连接到服务器。请稍后再试。",
     "couldNotSend": "无法发送重置链接。请检查邮箱地址后重试。",
     "useADifferentEmail": "使用其他邮箱"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "没有匹配的地点",
     "poweredByOpenstreetmap": "由 OpenStreetMap 提供",
     "noCoordinatesSetFor": "此房源未设置坐标。"
-  },
-  "subscriptionGate": {
-    "unlockFeature": "解锁{{feature}}",
-    "thisFeature": "此功能",
-    "dashboardOverview": "仪表板概览",
-    "roomManagement": "房间管理",
-    "tenantManagement": "租客管理",
-    "utilityBilling": "水电账单",
-    "thisFeatureIsAvailable": "此功能需付费方案。订阅后即可完整使用您的旅舍管理后台。",
-    "completeHostelProfileFirst": "请先完善旅舍资料",
-    "onceSubscribedAllFeatures": "订阅后，所有功能将自动解锁。",
-    "roomAmpOccupancyManagement": "房间与入住率管理",
-    "tenantTrackingAmpPayment": "租客追踪与付款记录",
-    "rentAndUtilityInvoice": "生成租金与水电发票",
-    "analyticsAndRevenueReports": "分析与收入报表"
   },
   "notifications": {
     "nUnread": "{{count}} 条未读",

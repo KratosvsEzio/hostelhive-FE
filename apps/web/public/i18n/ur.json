@@ -744,7 +744,9 @@
     "leavingDate": "روانگی کی تاریخ",
     "thisTenantHasNoRent": "اس کرایہ دار کا ابھی کوئی کرایہ انوائس ریکارڈ نہیں ہے۔",
     "noUtilityChargesHaveBeen": "اس کرایہ دار کے کمرے کے لیے کوئی یوٹیلیٹی چارج ریکارڈ نہیں کیا گیا۔",
-    "checkInYourFirstTenant": "کرایہ ٹریک کرنا شروع کرنے کے لیے اپنے پہلے کرایہ دار کو چیک اِن کریں۔"
+    "checkInYourFirstTenant": "کرایہ ٹریک کرنا شروع کرنے کے لیے اپنے پہلے کرایہ دار کو چیک اِن کریں۔",
+    "notFoundTitle": "ہمیں یہ کرایہ دار نہیں ملا",
+    "notFoundMessage": "ہو سکتا ہے انہیں ہٹا دیا گیا ہو، یا لنک پرانا ہو۔ اس ہاسٹل کے کرایہ دار دیکھنے کے لیے کرایہ داروں پر واپس جائیں۔"
   },
   "hostBilling": {
     "title": "بلنگ",
@@ -1366,6 +1368,8 @@
     "couldNotUpdateRoom": "یہ کمرہ اپ ڈیٹ نہیں ہو سکا۔ براہ کرم دوبارہ کوشش کریں۔",
     "couldNotCreateRoom": "یہ کمرہ نہیں بن سکا۔ براہ کرم دوبارہ کوشش کریں۔",
     "couldNotCreateRooms": "یہ کمرے نہیں بن سکے۔ براہ کرم دوبارہ کوشش کریں۔",
+    "notFoundTitle": "ہمیں یہ کمرہ نہیں ملا",
+    "notFoundMessage": "ہو سکتا ہے اسے حذف کر دیا گیا ہو، یا لنک پرانا ہو۔ اس ہاسٹل کے کمرے دیکھنے کے لیے کمروں پر واپس جائیں۔",
     "nFree": "{{count}} خالی",
     "full": "بھرا ہوا",
     "guestsOnBookings": "بکنگز کے مہمان",
@@ -1917,7 +1921,9 @@
     "roomsNoLongerOffered": "ہاسٹل اب یہ پیش نہیں کرتا، اس لیے انہیں منتقل نہیں کیا گیا: {{rooms}}۔ کوئی دوسرا کمرہ منتخب کریں۔",
     "stageConfirmed": "تصدیق شدہ",
     "noShow": "نہیں آئے",
-    "noShowNote": "ہاسٹل نے اس بکنگ کو «نہیں آئے» کے طور پر نشان زد کیا — مہمان نہیں پہنچا۔"
+    "noShowNote": "ہاسٹل نے اس بکنگ کو «نہیں آئے» کے طور پر نشان زد کیا — مہمان نہیں پہنچا۔",
+    "bookingNotFoundTitle": "ہمیں یہ بکنگ نہیں ملی",
+    "bookingNotFoundMessage": "ہو سکتا ہے اسے ہٹا دیا گیا ہو، یا لنک پرانا ہو۔ اپنی تمام بکنگز پر واپس جائیں۔"
   },
   "userFavorites": {
     "removeFromFavorites": "پسندیدہ سے ہٹائیں؟",
@@ -1978,11 +1984,13 @@
     "sendResetLink": "ری سیٹ لنک بھیجیں",
     "backToLogin": "لاگ ان پر واپس",
     "didnTReceiveItResend": "موصول نہیں ہوا؟ دوبارہ بھیجیں",
+    "resendIn": "{{time}} بعد دوبارہ بھیجیں",
     "enterAValidEmail": "درست ای میل پتہ درج کریں۔",
     "sentIfAccountExists": "اگر {{email}} کے لیے کوئی اکاؤنٹ موجود ہے تو ہم نے پاس ورڈ ری سیٹ کرنے کا لنک بھیج دیا ہے۔ اپنا ان باکس اور اسپام فولڈر چیک کریں۔",
     "alreadySent": "اس ای میل پر ری سیٹ لنک پہلے ہی بھیجا جا چکا ہے۔ اپنا ان باکس اور اسپام فولڈر چیک کریں؛ چند منٹ بعد آپ دوسرا لنک منگوا سکتے ہیں۔",
     "sentAnother": "ہم نے ایک اور لنک بھیج دیا ہے۔",
     "tooManyRequests": "بہت زیادہ کوششیں۔ براہ کرم چند منٹ انتظار کریں اور دوبارہ کوشش کریں۔",
+    "tooManyRequestsRetry": "بہت زیادہ کوششیں۔ {{time}} بعد دوبارہ کوشش کریں۔",
     "cannotReachTheServer": "سرور تک رسائی نہیں ہو رہی۔ براہ کرم کچھ دیر بعد دوبارہ کوشش کریں۔",
     "couldNotSend": "ہم ری سیٹ لنک نہیں بھیج سکے۔ ای میل پتہ چیک کریں اور دوبارہ کوشش کریں۔",
     "useADifferentEmail": "دوسرا ای میل استعمال کریں"
@@ -2276,21 +2284,6 @@
     "noMatchingPlaces": "کوئی مماثل جگہ نہیں",
     "poweredByOpenstreetmap": "OpenStreetMap کے ذریعے",
     "noCoordinatesSetFor": "اس فہرست کے لیے کوئی کوآرڈینیٹس مقرر نہیں ہیں۔"
-  },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} کھولیں",
-    "thisFeature": "یہ خصوصیت",
-    "dashboardOverview": "ڈیش بورڈ کا جائزہ",
-    "roomManagement": "کمروں کا انتظام",
-    "tenantManagement": "کرایہ داروں کا انتظام",
-    "utilityBilling": "یوٹیلیٹی بلنگ",
-    "thisFeatureIsAvailable": "یہ سہولت ادائیگی والے پلانز میں دستیاب ہے۔ اپنے ہاسٹل ڈیش بورڈ تک مکمل رسائی کے لیے سبسکرائب کریں۔",
-    "completeHostelProfileFirst": "پہلے ہاسٹل پروفائل مکمل کریں",
-    "onceSubscribedAllFeatures": "سبسکرائب کرتے ہی تمام سہولتیں خود بخود کھل جاتی ہیں۔",
-    "roomAmpOccupancyManagement": "کمروں اور آکوپنسی کا انتظام",
-    "tenantTrackingAmpPayment": "کرایہ داروں کی ٹریکنگ اور ادائیگی کا ریکارڈ",
-    "rentAndUtilityInvoice": "کرایہ اور یوٹیلیٹی انوائس بنانا",
-    "analyticsAndRevenueReports": "تجزیات اور آمدنی کی رپورٹس"
   },
   "notifications": {
     "nUnread": "{{count}} غیر پڑھے",

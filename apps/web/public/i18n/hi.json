@@ -739,7 +739,9 @@
     "leavingDate": "जाने की तारीख़",
     "thisTenantHasNoRent": "इस किरायेदार का अभी कोई किराया चालान दर्ज नहीं है।",
     "noUtilityChargesHaveBeen": "इस किरायेदार के कमरे के लिए कोई यूटिलिटी शुल्क दर्ज नहीं किया गया है।",
-    "checkInYourFirstTenant": "किराया ट्रैक करना शुरू करने के लिए अपने पहले किरायेदार को चेक इन करें।"
+    "checkInYourFirstTenant": "किराया ट्रैक करना शुरू करने के लिए अपने पहले किरायेदार को चेक इन करें।",
+    "notFoundTitle": "हमें यह किरायेदार नहीं मिला",
+    "notFoundMessage": "हो सकता है उन्हें हटा दिया गया हो, या लिंक पुराना हो। इस हॉस्टल के किरायेदार देखने के लिए किरायेदारों पर वापस जाएँ।"
   },
   "hostBilling": {
     "title": "बिलिंग",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "यह कमरा अपडेट नहीं हो सका। कृपया फिर से कोशिश करें।",
     "couldNotCreateRoom": "यह कमरा नहीं बन सका। कृपया फिर से कोशिश करें।",
     "couldNotCreateRooms": "ये कमरे नहीं बन सके। कृपया फिर से कोशिश करें।",
+    "notFoundTitle": "हमें यह कमरा नहीं मिला",
+    "notFoundMessage": "हो सकता है इसे हटा दिया गया हो, या लिंक पुराना हो। इस हॉस्टल के कमरे देखने के लिए कमरों पर वापस जाएँ।",
     "nFree": "{{count}} खाली",
     "full": "भरा हुआ",
     "guestsOnBookings": "बुकिंग के मेहमान",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "हॉस्टल अब इन्हें नहीं देता, इसलिए इन्हें आगे नहीं लिया गया: {{rooms}}। कोई दूसरा कमरा चुनें।",
     "stageConfirmed": "पुष्ट",
     "noShow": "नहीं आए",
-    "noShowNote": "हॉस्टल ने इस बुकिंग को «नहीं आए» चिह्नित किया — मेहमान नहीं पहुँचा।"
+    "noShowNote": "हॉस्टल ने इस बुकिंग को «नहीं आए» चिह्नित किया — मेहमान नहीं पहुँचा।",
+    "bookingNotFoundTitle": "हमें यह बुकिंग नहीं मिली",
+    "bookingNotFoundMessage": "हो सकता है इसे हटा दिया गया हो, या लिंक पुराना हो। अपनी सभी बुकिंग पर वापस जाएँ।"
   },
   "userFavorites": {
     "removeFromFavorites": "पसंदीदा से हटाएँ?",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "रीसेट लिंक भेजें",
     "backToLogin": "लॉगिन पर वापस",
     "didnTReceiveItResend": "नहीं मिला? दोबारा भेजें",
+    "resendIn": "{{time}} में दोबारा भेजें",
     "enterAValidEmail": "मान्य ईमेल पता दर्ज करें।",
     "sentIfAccountExists": "अगर {{email}} के लिए कोई खाता मौजूद है, तो हमने पासवर्ड रीसेट करने का लिंक भेज दिया है। अपना इनबॉक्स और स्पैम फ़ोल्डर देखें।",
     "alreadySent": "इस ईमेल पर रीसेट लिंक पहले ही भेजा जा चुका है। अपना इनबॉक्स और स्पैम फ़ोल्डर देखें; कुछ मिनट बाद आप दूसरा लिंक माँग सकते हैं।",
     "sentAnother": "हमने एक और लिंक भेज दिया है।",
     "tooManyRequests": "बहुत अधिक प्रयास। कृपया कुछ मिनट रुकें और फिर से कोशिश करें।",
+    "tooManyRequestsRetry": "बहुत अधिक प्रयास। {{time}} में फिर से कोशिश करें।",
     "cannotReachTheServer": "सर्वर तक नहीं पहुँच पा रहे। कृपया थोड़ी देर में फिर से कोशिश करें।",
     "couldNotSend": "हम रीसेट लिंक नहीं भेज सके। ईमेल पता जाँचें और फिर से कोशिश करें।",
     "useADifferentEmail": "दूसरा ईमेल इस्तेमाल करें"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "कोई मेल खाता स्थान नहीं",
     "poweredByOpenstreetmap": "OpenStreetMap द्वारा संचालित",
     "noCoordinatesSetFor": "इस लिस्टिंग के लिए कोई निर्देशांक सेट नहीं हैं।"
-  },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} अनलॉक करें",
-    "thisFeature": "यह सुविधा",
-    "dashboardOverview": "डैशबोर्ड अवलोकन",
-    "roomManagement": "कमरा प्रबंधन",
-    "tenantManagement": "किरायेदार प्रबंधन",
-    "utilityBilling": "यूटिलिटी बिलिंग",
-    "thisFeatureIsAvailable": "यह सुविधा सशुल्क प्लान में उपलब्ध है। अपने हॉस्टल डैशबोर्ड तक पूरी पहुँच के लिए सदस्यता लें।",
-    "completeHostelProfileFirst": "पहले हॉस्टल प्रोफ़ाइल पूरी करें",
-    "onceSubscribedAllFeatures": "सदस्यता लेते ही सभी सुविधाएँ अपने आप खुल जाती हैं।",
-    "roomAmpOccupancyManagement": "कमरा और अधिभोग प्रबंधन",
-    "tenantTrackingAmpPayment": "किरायेदार ट्रैकिंग और भुगतान रिकॉर्ड",
-    "rentAndUtilityInvoice": "किराया और यूटिलिटी चालान बनाना",
-    "analyticsAndRevenueReports": "एनालिटिक्स और राजस्व रिपोर्ट"
   },
   "notifications": {
     "nUnread": "{{count}} अपठित",

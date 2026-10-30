@@ -460,3 +460,40 @@ describe('RoomDetail capacity count', () => {
     expect(text(label?.nextElementSibling)).toBe(key);
   });
 });
+
+describe('RoomDetail when the room cannot be read', () => {
+  async function openFailing(status: number): Promise<{ page: HostPage<RoomDetail>; deps: HostPageDeps }> {
+    const deps = hostPageDeps();
+    deps.ops.roomShow.mockReturnValue(throwError(() => apiError(status, [], 'GET')));
+    const page = await openHostPage(
+      `/host/${HOSTEL_ID}/rooms/25`,
+      RoomDetail,
+      { roomDetail: RoomDetail },
+      { deps, billing: 'night', providers: [LOADER] },
+    );
+    await page.settle();
+    return { page, deps };
+  }
+
+  // An old numeric link, or a room that was deleted: a retry can never succeed.
+  it('says the room was not found, with no retry, on a 404', async () => {
+    const { page } = await openFailing(404);
+
+    const state = page.el.querySelector('[data-testid="room-not-found"]');
+    expect(text(state)).toContain('hostRooms.notFoundTitle');
+    expect(state?.querySelector('button')).toBeNull();
+  });
+
+  it('keeps the generic error for any other status', async () => {
+    const { page } = await openFailing(500);
+
+    expect(page.el.querySelector('[data-testid="room-not-found"]')).toBeNull();
+    expect(page.el.querySelector('hh-error-state')).not.toBeNull();
+  });
+
+  it('reads the room with the global error toast suppressed', async () => {
+    const { deps } = await openFailing(404);
+
+    expect(deps.ops.roomShow).toHaveBeenCalledWith(HOSTEL_ID, '25', { suppressErrorToast: true });
+  });
+});

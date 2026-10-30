@@ -22,9 +22,14 @@ const KEY = {
   couldNotSend: 'authForgotPassword.couldNotSend',
   sendResetLink: 'authForgotPassword.sendResetLink',
   resend: 'authForgotPassword.didnTReceiveItResend',
+  resendIn: 'authForgotPassword.resendIn',
+  tooManyRequestsRetry: 'authForgotPassword.tooManyRequestsRetry',
   useDifferentEmail: 'authForgotPassword.useADifferentEmail',
   backToLogin: 'authForgotPassword.backToLogin',
 };
+
+/** The backend's window for a repeat send, which Resend waits out. */
+const RESEND_WAIT_MS = 10 * 60_000;
 
 /** What the backend and its rate limiter say, none of which may reach the page. */
 const ALREADY_SENT_TEXT = 'Otp already has been shared on your email. Retry after 10 minutes';
@@ -45,6 +50,11 @@ function apiError(status: number, serverMessages?: readonly string[]) {
     serverMessages,
     method: 'POST',
   };
+}
+
+/** The rate limiter's 429, with the `retry_after` the interceptor carries over as `retryAfter`. */
+function rateLimited(seconds: number) {
+  return { ...apiError(429, [TOO_MANY_TEXT]), code: 'rate_limited', retryAfter: seconds };
 }
 
 type Reply = () => Observable<unknown>;
@@ -140,6 +150,12 @@ async function flush(fixture: Fixture) {
   await fixture.whenStable();
   TestBed.tick();
   fixture.detectChanges();
+}
+
+/** Moves the faked clock on, firing the page's one-second ticks on the way. */
+async function elapse(fixture: Fixture, ms: number) {
+  vi.advanceTimersByTime(ms);
+  await flush(fixture);
 }
 
 function root(fixture: Fixture): HTMLElement {
@@ -248,10 +264,16 @@ function expectForm(fixture: Fixture): void {
 describe('ForgotPassword', () => {
   let attached: HTMLElement | null = null;
 
+  beforeEach(() => {
+    // Only the clock the waits read is faked; Angular's own scheduling keeps real timers.
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+  });
+
   afterEach(() => {
     attached?.remove();
     attached = null;
     TestBed.resetTestingModule();
+    vi.useRealTimers();
   });
 
   it('opens on the form with an empty status region, no alert and no request', async () => {
@@ -438,6 +460,7 @@ describe('ForgotPassword', () => {
     expect(body?.textContent).toContain(`Sent to ${FSI}${EMAIL}${PDI}.`);
     expect(body?.textContent).not.toContain('someone-else');
 
+    await elapse(fixture, RESEND_WAIT_MS);
     await click(fixture, KEY.resend);
     expect(forgotPassword).toHaveBeenCalledTimes(2);
     expect(forgotPassword).toHaveBeenNthCalledWith(1, { email: EMAIL });
@@ -461,6 +484,7 @@ describe('ForgotPassword', () => {
         'en',
       );
       await sendEmail(fixture, address);
+      await elapse(fixture, RESEND_WAIT_MS);
 
       const body = root(fixture).querySelector('#hh-forgot-sent-body');
       expect(body?.textContent).toContain(
@@ -472,6 +496,7 @@ describe('ForgotPassword', () => {
     it.each(SENT_CASES)('says another link went out when Resend gets $case', async ({ reply }) => {
       const { fixture, forgotPassword } = render(created, reply);
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
       const region = statusRegion(fixture);
       expect(region).not.toBeNull();
       expect(statusText(fixture)).toBe('');
@@ -491,6 +516,7 @@ describe('ForgotPassword', () => {
     it('shows the already-sent notice when Resend gets a 422', async () => {
       const { fixture } = render(created, fails(apiError(422, [ALREADY_SENT_TEXT])));
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
       const region = statusRegion(fixture);
 
       await click(fixture, KEY.resend);
@@ -508,6 +534,7 @@ describe('ForgotPassword', () => {
         const { fixture } = render(created, fails(rejection));
         attached = attach(fixture);
         await sendEmail(fixture);
+        await elapse(fixture, RESEND_WAIT_MS);
         await flush(fixture);
         const resend = button(fixture, KEY.resend);
         resend?.focus();
@@ -534,6 +561,7 @@ describe('ForgotPassword', () => {
         () => pending,
       );
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
       expect(statusText(fixture)).toBe(KEY.alreadySent);
 
       await click(fixture, KEY.resend);
@@ -554,6 +582,7 @@ describe('ForgotPassword', () => {
       const pending = new Subject<unknown>();
       const { fixture } = render(fails(apiError(422, [ALREADY_SENT_TEXT])), () => pending);
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
       const region = statusRegion(fixture);
       expect(statusText(fixture)).toBe(KEY.alreadySent);
 
@@ -572,6 +601,7 @@ describe('ForgotPassword', () => {
       const pending = new Subject<unknown>();
       const { fixture } = render(created, () => pending);
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
 
       await click(fixture, KEY.resend);
       const useDifferent = button(fixture, KEY.useDifferentEmail);
@@ -592,6 +622,7 @@ describe('ForgotPassword', () => {
       const pending = new Subject<unknown>();
       const { fixture, forgotPassword } = render(created, () => pending);
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
 
       const resend = button(fixture, KEY.resend);
       resend?.click();
@@ -605,6 +636,7 @@ describe('ForgotPassword', () => {
       const { fixture } = render(created, created);
       attached = attach(fixture);
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
       await flush(fixture);
       expect(document.activeElement).toBe(heading(fixture));
 
@@ -624,6 +656,7 @@ describe('ForgotPassword', () => {
       );
       attached = attach(fixture);
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
       await click(fixture, KEY.resend);
       expect(alertText(fixture)).toBe(KEY.couldNotSend);
 
@@ -642,6 +675,7 @@ describe('ForgotPassword', () => {
     it('offers Back to login, Resend and Use a different email', async () => {
       const { fixture } = render();
       await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
 
       const backToLogin = Array.from(root(fixture).querySelectorAll('a')).find((a) =>
         a.textContent?.includes(KEY.backToLogin),
@@ -649,6 +683,223 @@ describe('ForgotPassword', () => {
       expect(backToLogin?.getAttribute('href')).toContain('/auth?mode=login');
       expect(button(fixture, KEY.resend)).toBeDefined();
       expect(button(fixture, KEY.useDifferentEmail)).toBeDefined();
+    });
+  });
+
+  describe('the waits', () => {
+    /** Real copy for the two timed keys, so the clock they carry can be read. */
+    function withTimedCopy() {
+      TestBed.inject(TranslocoService).setTranslation(
+        {
+          authForgotPassword: {
+            resendIn: 'Resend in {{time}}',
+            tooManyRequestsRetry: 'Try again in {{time}}.',
+          },
+        },
+        'en',
+        { merge: true },
+      );
+    }
+
+    /** The Resend button, whichever label it carries. */
+    function resendButton(fixture: Fixture): HTMLButtonElement | undefined {
+      return (
+        button(fixture, KEY.resend) ?? button(fixture, KEY.resendIn) ?? button(fixture, 'Resend in')
+      );
+    }
+
+    function rateAlert(fixture: Fixture) {
+      const alert = root(fixture).querySelector('[role="alert"]');
+      return {
+        announced: alert?.querySelector('.sr-only')?.textContent?.trim() ?? '',
+        shown: alert?.querySelector('[aria-hidden="true"]')?.textContent?.trim() ?? '',
+      };
+    }
+
+    it('holds Resend back for ten minutes after a link goes out, counting down', async () => {
+      const { fixture, forgotPassword } = render(created, created);
+      withTimedCopy();
+      await sendEmail(fixture);
+
+      expect(resendButton(fixture)?.disabled).toBe(true);
+      expect(resendButton(fixture)?.textContent).toContain(`Resend in ${FSI}10:00${PDI}`);
+      expect(button(fixture, KEY.resend)).toBeUndefined();
+
+      await elapse(fixture, 1000);
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}9:59${PDI}`);
+
+      resendButton(fixture)?.click();
+      await flush(fixture);
+      expect(forgotPassword).toHaveBeenCalledTimes(1);
+
+      await elapse(fixture, RESEND_WAIT_MS - 1000);
+      expect(button(fixture, KEY.resend)?.disabled).toBe(false);
+      await click(fixture, KEY.resend);
+      expect(forgotPassword).toHaveBeenCalledTimes(2);
+      expect(statusText(fixture)).toBe(KEY.sentAnother);
+      // A resend that went out starts the next ten minutes.
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}10:00${PDI}`);
+    });
+
+    it('waits the whole ten minutes after a 422, as no send of its own is known', async () => {
+      const { fixture } = render(fails(apiError(422, [ALREADY_SENT_TEXT])));
+      withTimedCopy();
+      await sendEmail(fixture);
+
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}10:00${PDI}`);
+    });
+
+    it('waits one more minute when a 422 still comes back after the countdown ends', async () => {
+      const { fixture } = render(created, fails(apiError(422, [ALREADY_SENT_TEXT])));
+      withTimedCopy();
+      await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
+
+      await click(fixture, KEY.resend);
+
+      expect(statusText(fixture)).toBe(KEY.alreadySent);
+      expect(alertText(fixture)).toBe('');
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}1:00${PDI}`);
+    });
+
+    it('does not ask again for an address still inside its ten minutes', async () => {
+      const { fixture, forgotPassword } = render(created, created);
+      await sendEmail(fixture);
+      await elapse(fixture, 60_000);
+
+      await click(fixture, KEY.useDifferentEmail);
+      await typeEmail(fixture, ` ${EMAIL.toUpperCase()} `);
+      await submit(fixture);
+
+      expect(forgotPassword).toHaveBeenCalledTimes(1);
+      expectSentScreen(fixture);
+      expect(statusText(fixture)).toBe(KEY.alreadySent);
+      expect(resendButton(fixture)?.disabled).toBe(true);
+    });
+
+    it('sends straight away to a different address, with its own ten minutes', async () => {
+      const other = 'bilal@h.pk';
+      const { fixture, forgotPassword } = render(created, created);
+      withTimedCopy();
+      await sendEmail(fixture);
+      await elapse(fixture, 60_000);
+
+      await click(fixture, KEY.useDifferentEmail);
+      await typeEmail(fixture, other);
+      await submit(fixture);
+
+      expect(forgotPassword).toHaveBeenLastCalledWith({ email: other });
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}10:00${PDI}`);
+    });
+
+    it('shows the 429 wait on the form, announced once, and holds Send back until it ends', async () => {
+      const { fixture, forgotPassword } = render(fails(rateLimited(31)));
+      withTimedCopy();
+      await sendEmail(fixture);
+
+      expectForm(fixture);
+      expect(rateAlert(fixture)).toEqual({
+        announced: `Try again in ${FSI}0:31${PDI}.`,
+        shown: `Try again in ${FSI}0:31${PDI}.`,
+      });
+      expect(text(fixture)).not.toContain(KEY.tooManyRequests);
+      expect(button(fixture, KEY.sendResetLink)?.disabled).toBe(true);
+      expectNoServerText(fixture);
+
+      await elapse(fixture, 1000);
+      // Only the visual copy ticks; the announced text keeps the wait as it arrived.
+      expect(rateAlert(fixture)).toEqual({
+        announced: `Try again in ${FSI}0:31${PDI}.`,
+        shown: `Try again in ${FSI}0:30${PDI}.`,
+      });
+      await submit(fixture);
+      expect(forgotPassword).toHaveBeenCalledTimes(1);
+
+      await elapse(fixture, 30_000);
+      expect(alertText(fixture)).toBe('');
+      expect(button(fixture, KEY.sendResetLink)?.disabled).toBe(false);
+    });
+
+    it('lets a different address be sent while one is rate-limited', async () => {
+      const { fixture } = render(fails(rateLimited(31)));
+      await sendEmail(fixture);
+      expect(button(fixture, KEY.sendResetLink)?.disabled).toBe(true);
+
+      await typeEmail(fixture, 'bilal@h.pk');
+
+      expect(alertText(fixture)).toBe('');
+      expect(button(fixture, KEY.sendResetLink)?.disabled).toBe(false);
+
+      await typeEmail(fixture, EMAIL);
+      expect(button(fixture, KEY.sendResetLink)?.disabled).toBe(true);
+    });
+
+    it('writes a wait of an hour or more with hours', async () => {
+      const { fixture } = render(fails(rateLimited(3600)));
+      withTimedCopy();
+      await sendEmail(fixture);
+
+      expect(rateAlert(fixture).shown).toBe(`Try again in ${FSI}1:00:00${PDI}.`);
+    });
+
+    it('holds Resend back for as long as a 429 on Resend says', async () => {
+      const { fixture, forgotPassword } = render(created, fails(rateLimited(90)));
+      withTimedCopy();
+      await sendEmail(fixture);
+      await elapse(fixture, RESEND_WAIT_MS);
+
+      await click(fixture, KEY.resend);
+
+      expectSentScreen(fixture);
+      expect(rateAlert(fixture).shown).toBe(`Try again in ${FSI}1:30${PDI}.`);
+      expect(statusText(fixture)).toBe('');
+      expect(resendButton(fixture)?.disabled).toBe(true);
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}1:30${PDI}`);
+
+      await elapse(fixture, 90_000);
+      expect(alertText(fixture)).toBe('');
+      expect(button(fixture, KEY.resend)?.disabled).toBe(false);
+      expect(forgotPassword).toHaveBeenCalledTimes(2);
+    });
+
+    it('catches the countdown up when the tab becomes visible again', async () => {
+      const { fixture } = render(created);
+      withTimedCopy();
+      await sendEmail(fixture);
+
+      // A hidden tab's interval may not fire at all; only the wall clock moves.
+      vi.setSystemTime(Date.now() + 5 * 60_000);
+      document.dispatchEvent(new Event('visibilitychange'));
+      await flush(fixture);
+
+      expect(resendButton(fixture)?.textContent).toContain(`${FSI}5:00${PDI}`);
+    });
+
+    it('stops its clock once nothing is waiting', async () => {
+      const { fixture } = render(created);
+      await sendEmail(fixture);
+      expect(vi.getTimerCount()).toBe(1);
+
+      await elapse(fixture, RESEND_WAIT_MS);
+
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('stops its clock when the page goes away', async () => {
+      const started = vi.spyOn(globalThis, 'setInterval');
+      const stopped = vi.spyOn(globalThis, 'clearInterval');
+      const { fixture } = render(created);
+      await sendEmail(fixture);
+      // Other code runs intervals too; the page's clock is the one that ticks every second.
+      const ticks = started.mock.calls
+        .map((call, i) => ({ delay: call[1], timer: started.mock.results[i]?.value }))
+        .filter(({ delay }) => delay === 1000);
+      expect(ticks).toHaveLength(1);
+      expect(stopped).not.toHaveBeenCalledWith(ticks[0].timer);
+
+      fixture.destroy();
+
+      expect(stopped).toHaveBeenCalledWith(ticks[0].timer);
     });
   });
 });

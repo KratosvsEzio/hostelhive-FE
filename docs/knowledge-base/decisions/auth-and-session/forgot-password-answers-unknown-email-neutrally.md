@@ -22,11 +22,14 @@ The page used to show the server's text for all of these. Trello #150 asked for 
 - **Treat a 500 as sent.** Rejected: an outage would look like success.
 
 ## Consequences
-- **The page alone does not stop enumeration.** The API's status codes, the "already sent" notice (only real accounts get a 422), sign-in's 404 "User not found" and sign-up's "already registered" all still reveal accounts. Since Trello #151 (PR #129), the sign-in page is neutral too: a wrong password and an unknown email show the same message. The real fix is for the backend to return the same 201 for any email; that has been asked of the BE developer.
-- **When the backend returns 201 for unknown emails, the FE needs no change.** The 404 mapping then becomes dead and can be removed.
-- `retry_after` is not shown: the interceptor drops it and CORS doesn't expose `Retry-After`. The copy says "a few minutes".
+- **The backend is neutral now too** (BE PR #61, per Trello #179; not probed live from the FE). Every address gets the same 201, and a repeat within 10 minutes gets a 422 for every address, so the "already sent" notice no longer singles out real accounts. Sign-in answers an unknown email with the same 401 as a wrong password. Sign-up's "already registered" still reveals accounts.
+- **The 404 mapping is dead, and kept on purpose** (user, 2026-10-31, Trello #179). If the backend ever regressed to a 404 for unknown emails, the page would still look "sent" instead of saying "couldn't send".
+- **Resend waits 10 minutes after a send, with a live countdown** (Trello #179). The wait is kept per address (trimmed, lower-cased), in memory only. A 422 with no local send of its own waits the whole 10 minutes. A 422 after the countdown ran out means the clocks drifted, so it waits one more minute. Sending again to an address still inside its window skips the request and shows the sent screen with the "already sent" notice, because the request could only earn a 422 and would spend one of the 3/hour attempts for that email.
+- **A 429 shows "Try again in m:ss"** from `ApiError.retryAfter`, which `errorInterceptor` reads from the body's `retry_after` (CORS hides `Retry-After`). Send or Resend stays disabled for that address until the wait ends; a 429 without `retry_after` keeps the "a few minutes" copy. The alert announces the wait once, as it arrived; the ticking copy beside it is `aria-hidden`.
+- Times are written as a clock (`9:59`, `1:00:00` from an hour up), because the app has no plural rules. The global 429/413 handling is Trello #180. `forgotPassword` sends `inlineErrors()`, so the interceptor does not toast its failures, and #180 must respect `SUPPRESS_ERROR_TOAST` or this page shows its 429 twice.
 
 ## Evidence
 - `apps/web/src/app/features/auth/forgot-password/forgot-failure.ts`, `forgot-password.ts` and `.html`
 - `forgot-failure.spec.ts`, `forgot-password.spec.ts`, `apps/web/src/app/core/i18n/forgot-password-locale-parity.spec.ts`
 - PR #123 (KratosvsEzio/hostelhive-FE); run notes `docs/implement/Bugs/150.md`
+- The waits and the 429: `forgot-password.ts` (`Waits`, `recordAlreadySent`, `clock`), `apps/web/src/app/core/interceptors/error-interceptor.ts` (`retryAfterOf`), `apps/web/src/app/core/errors/api-error-text.ts` (`retryAfterSeconds`); run notes `docs/implement/179.md`

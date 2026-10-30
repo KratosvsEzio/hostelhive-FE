@@ -40,8 +40,9 @@ let _id = 0;
  * Rendered by the parent via `@if (open)` — this component has no internal open state.
  * Body content is projected via `<ng-content>` so parents can use rich template syntax.
  *
- * Outputs: `(confirm)` and `(cancel)`. Both fire when the respective button is clicked or
- * the backdrop is clicked (cancel). The parent is responsible for closing the modal.
+ * Outputs: `(confirm)` and `(cancel)`. Both fire when the respective button is clicked;
+ * `cancel` also fires on a backdrop click and on Escape. The parent is responsible for
+ * closing the modal.
  *
  * @example
  * <hh-confirm-modal
@@ -67,6 +68,7 @@ let _id = 0;
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="titleId"
+      (escape)="onEscape($event)"
     >
       <button
         type="button"
@@ -174,4 +176,18 @@ export class ConfirmModal {
   protected readonly iconClass = () => TONE_ICON_CLASS[this.tone()];
   protected readonly bgClass = () => TONE_BG_CLASS[this.tone()];
   protected readonly sizeClass = () => SIZE_CLASS[this.size()];
+
+  /**
+   * Escape is the backdrop by keyboard, and only ever reaches the top-most dialog.
+   *
+   * Stopped whether or not it cancels. Many of these open inside a drawer, whose own Escape
+   * handler would otherwise close the form underneath on the same key press -- including
+   * while `confirmDisabled` holds the dialog open mid-request, which is when losing the form
+   * would hurt most. `confirmDisabled` keeps the dialog up because the parent is not ready to
+   * hear an answer yet, and "no" is an answer.
+   */
+  protected onEscape(event: KeyboardEvent): void {
+    event.stopPropagation();
+    if (!this.confirmDisabled()) this.cancel.emit();
+  }
 }

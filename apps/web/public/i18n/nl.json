@@ -739,7 +739,9 @@
     "leavingDate": "Vertrekdatum",
     "thisTenantHasNoRent": "Deze huurder heeft nog geen huurfacturen op naam.",
     "noUtilityChargesHaveBeen": "Er zijn geen nutskosten geregistreerd voor de kamer van deze huurder.",
-    "checkInYourFirstTenant": "Check uw eerste huurder in om de huur bij te houden."
+    "checkInYourFirstTenant": "Check uw eerste huurder in om de huur bij te houden.",
+    "notFoundTitle": "We konden deze huurder niet vinden",
+    "notFoundMessage": "Mogelijk is de huurder verwijderd, of de link is verouderd. Ga terug naar huurders om de huurders van dit hostel te zien."
   },
   "hostBilling": {
     "title": "Facturering",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "Deze kamer kon niet worden bijgewerkt. Probeer het opnieuw.",
     "couldNotCreateRoom": "Deze kamer kon niet worden aangemaakt. Probeer het opnieuw.",
     "couldNotCreateRooms": "Deze kamers konden niet worden aangemaakt. Probeer het opnieuw.",
+    "notFoundTitle": "We konden deze kamer niet vinden",
+    "notFoundMessage": "Mogelijk is hij verwijderd, of de link is verouderd. Ga terug naar kamers om de kamers van dit hostel te zien.",
     "nFree": "{{count}} vrij",
     "full": "Vol",
     "guestsOnBookings": "Gasten van boekingen",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "Niet meer aangeboden door het hostel, dus niet overgenomen: {{rooms}}. Kies een andere kamer.",
     "stageConfirmed": "Bevestigd",
     "noShow": "Niet verschenen",
-    "noShowNote": "Het hostel heeft deze boeking gemarkeerd als niet verschenen — de gast is niet gekomen."
+    "noShowNote": "Het hostel heeft deze boeking gemarkeerd als niet verschenen — de gast is niet gekomen.",
+    "bookingNotFoundTitle": "We konden deze boeking niet vinden",
+    "bookingNotFoundMessage": "Mogelijk is hij verwijderd, of de link is verouderd. Ga terug naar al je boekingen."
   },
   "userFavorites": {
     "removeFromFavorites": "Uit favorieten verwijderen?",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "Resetlink verzenden",
     "backToLogin": "Terug naar inloggen",
     "didnTReceiveItResend": "Niet ontvangen? Opnieuw verzenden",
+    "resendIn": "Opnieuw verzenden over {{time}}",
     "enterAValidEmail": "Voer een geldig e-mailadres in.",
     "sentIfAccountExists": "Als er een account bestaat voor {{email}}, hebben we een link gestuurd om je wachtwoord te resetten. Controleer je inbox en spammap.",
     "alreadySent": "Er is al een resetlink naar dit e-mailadres gestuurd. Controleer je inbox en spammap; over een paar minuten kun je een nieuwe aanvragen.",
     "sentAnother": "We hebben nog een link gestuurd.",
     "tooManyRequests": "Te veel pogingen. Wacht een paar minuten en probeer het opnieuw.",
+    "tooManyRequestsRetry": "Te veel pogingen. Probeer het over {{time}} opnieuw.",
     "cannotReachTheServer": "Kan de server niet bereiken. Probeer het zo meteen opnieuw.",
     "couldNotSend": "We konden geen resetlink versturen. Controleer het e-mailadres en probeer het opnieuw.",
     "useADifferentEmail": "Een ander e-mailadres gebruiken"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "Geen overeenkomende plaatsen",
     "poweredByOpenstreetmap": "Mogelijk gemaakt door OpenStreetMap",
     "noCoordinatesSetFor": "Voor deze advertentie zijn geen coördinaten ingesteld."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} ontgrendelen",
-    "thisFeature": "deze functie",
-    "dashboardOverview": "Dashboardoverzicht",
-    "roomManagement": "Kamerbeheer",
-    "tenantManagement": "Huurdersbeheer",
-    "utilityBilling": "Nutsfacturatie",
-    "thisFeatureIsAvailable": "Deze functie is beschikbaar in de betaalde abonnementen. Neem een abonnement voor volledige toegang tot uw hosteldashboard.",
-    "completeHostelProfileFirst": "Vul eerst het hostelprofiel in",
-    "onceSubscribedAllFeatures": "Zodra u een abonnement hebt, worden alle functies automatisch ontgrendeld.",
-    "roomAmpOccupancyManagement": "Kamer- en bezettingsbeheer",
-    "tenantTrackingAmpPayment": "Huurdersopvolging en betalingsgegevens",
-    "rentAndUtilityInvoice": "Huur- en nutsfacturen aanmaken",
-    "analyticsAndRevenueReports": "Statistieken en omzetrapporten"
   },
   "notifications": {
     "nUnread": "{{count}} ongelezen",

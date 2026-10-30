@@ -739,7 +739,9 @@
     "leavingDate": "退去日",
     "thisTenantHasNoRent": "この入居者の家賃請求はまだ記録されていません。",
     "noUtilityChargesHaveBeen": "この入居者の部屋の光熱費は記録されていません。",
-    "checkInYourFirstTenant": "最初の入居者をチェックインして、家賃の記録を始めましょう。"
+    "checkInYourFirstTenant": "最初の入居者をチェックインして、家賃の記録を始めましょう。",
+    "notFoundTitle": "この入居者が見つかりませんでした",
+    "notFoundMessage": "削除されたか、リンクが古くなっている可能性があります。入居者一覧に戻って、このホステルの入居者をご確認ください。"
   },
   "hostBilling": {
     "title": "請求",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "この部屋を更新できませんでした。もう一度お試しください。",
     "couldNotCreateRoom": "この部屋を作成できませんでした。もう一度お試しください。",
     "couldNotCreateRooms": "これらの部屋を作成できませんでした。もう一度お試しください。",
+    "notFoundTitle": "この部屋が見つかりませんでした",
+    "notFoundMessage": "削除されたか、リンクが古くなっている可能性があります。部屋一覧に戻って、このホステルの部屋をご確認ください。",
     "nFree": "{{count}} 台空き",
     "full": "満室",
     "guestsOnBookings": "予約のゲスト",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "ホステルで提供が終了したため引き継がれませんでした：{{rooms}}。別の部屋を選んでください。",
     "stageConfirmed": "確定済み",
     "noShow": "ノーショー",
-    "noShowNote": "ホステルはこの予約をノーショーとして記録しました — ゲストは来館しませんでした。"
+    "noShowNote": "ホステルはこの予約をノーショーとして記録しました — ゲストは来館しませんでした。",
+    "bookingNotFoundTitle": "この予約が見つかりませんでした",
+    "bookingNotFoundMessage": "削除されたか、リンクが古くなっている可能性があります。予約一覧に戻ってください。"
   },
   "userFavorites": {
     "removeFromFavorites": "お気に入りから削除しますか？",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "リセットリンクを送信",
     "backToLogin": "ログインに戻る",
     "didnTReceiveItResend": "届きませんか？再送信",
+    "resendIn": "{{time}}後に再送信",
     "enterAValidEmail": "有効なメールアドレスを入力してください。",
     "sentIfAccountExists": "{{email}} のアカウントが存在する場合は、パスワードをリセットするためのリンクを送信しました。受信トレイと迷惑メールフォルダをご確認ください。",
     "alreadySent": "このメールアドレスにはすでにリセットリンクを送信しています。受信トレイと迷惑メールフォルダをご確認ください。数分後に再度リクエストできます。",
     "sentAnother": "別のリンクを送信しました。",
     "tooManyRequests": "試行回数が多すぎます。数分待ってからもう一度お試しください。",
+    "tooManyRequestsRetry": "試行回数が多すぎます。{{time}}後にもう一度お試しください。",
     "cannotReachTheServer": "サーバーに接続できません。しばらくしてからもう一度お試しください。",
     "couldNotSend": "リセットリンクを送信できませんでした。メールアドレスを確認して、もう一度お試しください。",
     "useADifferentEmail": "別のメールアドレスを使用"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "一致する場所はありません",
     "poweredByOpenstreetmap": "OpenStreetMap 提供",
     "noCoordinatesSetFor": "この掲載には座標が設定されていません。"
-  },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} を利用可能にする",
-    "thisFeature": "この機能",
-    "dashboardOverview": "ダッシュボードの概要",
-    "roomManagement": "部屋管理",
-    "tenantManagement": "入居者管理",
-    "utilityBilling": "光熱費の請求",
-    "thisFeatureIsAvailable": "この機能は有料プランでご利用いただけます。ご契約いただくとホステル管理画面のすべてをお使いになれます。",
-    "completeHostelProfileFirst": "先にホステルのプロフィールを完成させてください",
-    "onceSubscribedAllFeatures": "ご契約後、すべての機能が自動的に使えるようになります。",
-    "roomAmpOccupancyManagement": "部屋と稼働状況の管理",
-    "tenantTrackingAmpPayment": "入居者の管理と支払い記録",
-    "rentAndUtilityInvoice": "家賃・光熱費の請求書作成",
-    "analyticsAndRevenueReports": "分析と売上レポート"
   },
   "notifications": {
     "nUnread": "未読 {{count}} 件",

@@ -49,7 +49,7 @@ Backend conventions the mappers rely on:
 
 ## Reuse, don't rebuild
 - Inject `ApiClient`; never build `baseUrl + path` yourself or call `fetch` (except deliberately for third parties, as `apps/web/src/app/core/geo/geo-preference.ts` does to keep the bearer token off them).
-- Use `pageParams` / `ApiPagination` for paging; `isSubscriptionError` (`apps/web/src/app/util/subscription-error.ts`), `isNetworkError` (`apps/web/src/app/util/network-error.ts`) and, for a 403, `isCrmRequired` / `isPermissionRefusal` (`apps/web/src/app/core/host-access/host-access.ts`) for classifying failures. A 403 with no server code reaches the FE as `code: 'unknown_error'`. It is a permission refusal unless its message is the CRM one (the backend sometimes sends that without its code), and it is never a subscription error. Call `isPermissionRefusal`; never compare `code` yourself.
+- Use `pageParams` / `ApiPagination` for paging; `isNetworkError` (`apps/web/src/app/util/network-error.ts`) and, for a 403, `isCrmRequired` / `isPermissionRefusal` (`apps/web/src/app/core/host-access/host-access.ts`) for classifying failures. A 403 with no server code reaches the FE as `code: 'unknown_error'`. It is a permission refusal unless its message is the CRM one (the backend sometimes sends that without its code), and never a plan refusal. Call `isPermissionRefusal`; never compare `code` yourself.
 - Show success/info with `NotificationService`; do not add per-call error toasts, the interceptor already raises one.
 - To classify a failure for the screen, read the `ApiError` with `apps/web/src/app/core/errors/api-error-text.ts`, never by echoing `message`:
   - `errorStatus` gives the numeric status, or `null`;
@@ -63,6 +63,7 @@ Backend conventions the mappers rely on:
   - Each screen maps the kind to its own key; the host stay moves do it in `apps/web/src/app/features/host/bookings/booking-move-failure.ts`.
 - An image upload that never reached storage rejects with `UploadNetworkError` (`apps/web/src/app/services/image-upload.service.ts`); test with `instanceof`, not its text.
 - To keep the toast off one call whose screen shows the error inline, give the service method a trailing `opts?: ApiRequestOptions` and spread `...requestContextArgs(opts)` into the `ApiClient` call; callers pass `{ suppressErrorToast: true }` (`host-ops-api.ts`, `host-bookings-api.ts`, `hostels-api.ts`). Without the flag the call is unchanged. All five `ApiClient` verbs accept the context; `auth-api.ts` builds its own with a private `inlineErrors()`.
+- A detail page whose record answers 404 shows a "We couldn't find this …" `hh-error-state` with `[showRetry]="false"`, and its read suppresses the toast. A 404 there means an old link, a deleted record or a raw numeric id (rejected since ids were obfuscated), so a retry can never work. Other statuses keep the retryable error. Done in the public hostel page (`listing-detail-api.ts`), room detail, tenant profile and the guest booking page (Trello #89). Branch on `errorStatus(err) === 404`.
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps
@@ -70,7 +71,6 @@ Backend conventions the mappers rely on:
   - Classify instead, through `api-error-text.ts`.
   - The guard `apps/web/src/app/core/errors/no-raw-error-message.spec.ts` fails the build on any `.message` read or `{ message }` destructuring in the `.ts` and `.html` files of `features/`, `layout/` and `shared/`. Its allowlist is exact: host billing's server refusal text (`serverMessages[0]`, taken only by `showChangeError()`, `showCheckoutError()` and `payErrorOutcome()` and copied on from there, never `ApiError.message`), admin billing's `AdminBillingError.message` (a 4xx's `serverMessages[0]`, set only by `adminBillingError()`), the inviter's note, the toast host and the notification bell (their own text, not errors).
   - Spec builders and old fixtures may still give `message` a server-text or URL value. That is harmless in negative tests, but it is not what the interceptor produces.
-- **`isSubscriptionError` reads `serverMessages`** (and a raw `HttpErrorResponse` body), never `message`, so a request URL containing "subscri" cannot trip it.
 - **Comments claiming "stub pending Q-API"** in `moderation-api.ts` are only partly true; check each method.
 - **Writes that 500 after committing** (backend serializer bugs on `/staffs`) surface as "Couldn't save" while the row exists; re-read before retrying.
 - **The backend requires `email` on every staff record** (`staff.rb`), manager or not. A save without one is a 422 "Email can't be blank"; the Team form asks for it ([host-console](./host-console.md), "Every staff record needs an email").
@@ -82,6 +82,7 @@ Backend conventions the mappers rely on:
 - [Server-side requests time out at 5 s; browser requests never do](../decisions/api-and-data/ssr-only-request-timeout.md)
 - [Index-backed reads lag: trust the database read and our own writes, never a re-fetched list](../decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md)
 - [Exact-match filters on a dynamically mapped hashid go to its `.keyword` field](../decisions/api-and-data/search-backed-filters-use-keyword-for-hashids.md)
+- [The API preconnect is static, credentialed, and checked against `API_URL` at build time](../decisions/api-and-data/api-preconnect-uses-credentials.md)
 
 ## See also
 - [auth-and-session](./auth-and-session.md) — token, 401 handling

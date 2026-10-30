@@ -8,7 +8,7 @@ import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-
 import { HOSTEL_ID, roomsReply, sessionUser } from '@app/testing/host-builders';
 import { hostPageDeps, hostPageProviders } from '@app/testing/host-page';
 import { seedHostPropertyStore } from '@app/testing/host-stubs';
-import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import type { Role } from '@core/auth/roles';
 import { SessionStore } from '@core/auth/session-store';
 import { AddBill } from './add-bill';
@@ -296,23 +296,13 @@ describe('AddBill — a refused load in add mode', () => {
     );
   });
 
-  describe('for a plan without CRM on the rooms read', () => {
-    it.each<RefusalKind>(['crmRequired', 'crmMessageOnly'])('shows the generic error with Retry, not the panel or the paywall, after a %s refusal', async (kind) => {
+  describe('for a plan refusal on the rooms read, which the console lock owns', () => {
+    it.each(PLAN_REFUSALS)('shows the generic error with Retry, not the panel, after a %s refusal', async (kind) => {
       const { shown } = await openRefused({ rooms: kind });
 
       expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
       expect(shown.heading).toBe('states.somethingWentWrong');
       expect(shown.retry).toBe(true);
-      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
-    });
-  });
-
-  describe('for a hostel with no live plan on the rooms read', () => {
-    it.each(kindsShowing('paywall'))('shows the paywall, not the panel or a retry, after a %s refusal', async (kind) => {
-      const { shown } = await openRefused({ rooms: kind });
-
-      expect(shown.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
-      expect(shown.retry).toBe(false);
       expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
     });
   });

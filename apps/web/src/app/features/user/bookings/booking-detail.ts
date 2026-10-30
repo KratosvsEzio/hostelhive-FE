@@ -16,6 +16,7 @@ import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { NotificationService } from '@core/notification.service';
 import { ListingDetailApi } from '@services';
+import { errorStatus } from '@core/errors/api-error-text';
 import {
   GuestBooking,
   MyBookingsApi,
@@ -70,6 +71,11 @@ export class AccountBookingDetail {
   protected readonly booking = signal<GuestBooking | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
+  /**
+   * The API answered 404: an old link, a raw numeric id, or someone else's booking (which the
+   * API also answers 404). A retry can't help, so the page offers none.
+   */
+  protected readonly notFound = signal(false);
 
   protected readonly steps = STAGE_ORDER;
   protected readonly day = asDay;
@@ -203,8 +209,10 @@ export class AccountBookingDetail {
   private load(id: string): void {
     this.loading.set(!this.booking());
     this.error.set(false);
+    this.notFound.set(false);
     this.api
-      .get(id)
+      // Every failure is drawn on the page, so the global toast stays quiet.
+      .get(id, { suppressErrorToast: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (b) => {
@@ -212,9 +220,11 @@ export class AccountBookingDetail {
           this.loading.set(false);
           this.loadListing(b.hostel.id);
         },
-        error: () => {
+        error: (err: unknown) => {
           this.loading.set(false);
-          if (!this.booking()) this.error.set(true);
+          if (this.booking()) return;
+          this.error.set(true);
+          this.notFound.set(errorStatus(err) === 404);
         },
       });
   }

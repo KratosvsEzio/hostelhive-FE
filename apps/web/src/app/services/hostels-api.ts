@@ -330,9 +330,9 @@ export class HostelsApi {
   }
 
   /** GET /api/hostels/:id — the full hostel (HostelSerializer). */
-  getById(id: number | string): Observable<HostelDetail> {
+  getById(id: number | string, opts?: ApiRequestOptions): Observable<HostelDetail> {
     return this.api
-      .get<HostelResponse>(`/public/hostel_detail/${id}`)
+      .get<HostelResponse>(`/public/hostel_detail/${id}`, undefined, ...requestContextArgs(opts))
       .pipe(map((r) => requireHostel(r, id)));
   }
 

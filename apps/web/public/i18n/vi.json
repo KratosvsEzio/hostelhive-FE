@@ -744,7 +744,9 @@
     "leavingDate": "Ngày rời đi",
     "thisTenantHasNoRent": "Khách thuê này chưa có hóa đơn tiền thuê nào được ghi nhận.",
     "noUtilityChargesHaveBeen": "Chưa ghi nhận khoản tiện ích nào cho phòng của khách thuê này.",
-    "checkInYourFirstTenant": "Nhận phòng cho khách thuê đầu tiên để bắt đầu theo dõi tiền thuê."
+    "checkInYourFirstTenant": "Nhận phòng cho khách thuê đầu tiên để bắt đầu theo dõi tiền thuê.",
+    "notFoundTitle": "Chúng tôi không tìm thấy người thuê này",
+    "notFoundMessage": "Người thuê có thể đã bị xóa, hoặc liên kết đã cũ. Quay lại danh sách người thuê để xem người thuê của nhà trọ này."
   },
   "hostBilling": {
     "title": "Thanh toán",
@@ -1366,6 +1368,8 @@
     "couldNotUpdateRoom": "Không thể cập nhật phòng này. Vui lòng thử lại.",
     "couldNotCreateRoom": "Không thể tạo phòng này. Vui lòng thử lại.",
     "couldNotCreateRooms": "Không thể tạo các phòng này. Vui lòng thử lại.",
+    "notFoundTitle": "Chúng tôi không tìm thấy phòng này",
+    "notFoundMessage": "Phòng có thể đã bị xóa, hoặc liên kết đã cũ. Quay lại danh sách phòng để xem các phòng của nhà trọ này.",
     "nFree": "{{count}} trống",
     "full": "Đầy",
     "guestsOnBookings": "Khách theo đặt phòng",
@@ -1917,7 +1921,9 @@
     "roomsNoLongerOffered": "Nhà nghỉ không còn cung cấp nên không được giữ lại: {{rooms}}. Hãy chọn phòng khác.",
     "stageConfirmed": "Đã xác nhận",
     "noShow": "Vắng mặt",
-    "noShowNote": "Nhà nghỉ đã đánh dấu đặt phòng này là vắng mặt — khách đã không đến."
+    "noShowNote": "Nhà nghỉ đã đánh dấu đặt phòng này là vắng mặt — khách đã không đến.",
+    "bookingNotFoundTitle": "Chúng tôi không tìm thấy đặt phòng này",
+    "bookingNotFoundMessage": "Đặt phòng có thể đã bị xóa, hoặc liên kết đã cũ. Quay lại tất cả đặt phòng của bạn."
   },
   "userFavorites": {
     "removeFromFavorites": "Xóa khỏi yêu thích?",
@@ -1978,11 +1984,13 @@
     "sendResetLink": "Gửi liên kết đặt lại",
     "backToLogin": "Quay lại đăng nhập",
     "didnTReceiveItResend": "Chưa nhận được? Gửi lại",
+    "resendIn": "Gửi lại sau {{time}}",
     "enterAValidEmail": "Nhập địa chỉ email hợp lệ.",
     "sentIfAccountExists": "Nếu có tài khoản cho {{email}}, chúng tôi đã gửi liên kết để đặt lại mật khẩu của bạn. Hãy kiểm tra hộp thư đến và thư mục thư rác.",
     "alreadySent": "Liên kết đặt lại đã được gửi tới email này. Hãy kiểm tra hộp thư đến và thư mục thư rác; bạn có thể yêu cầu liên kết khác sau vài phút.",
     "sentAnother": "Chúng tôi đã gửi thêm một liên kết.",
     "tooManyRequests": "Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.",
+    "tooManyRequestsRetry": "Quá nhiều lần thử. Vui lòng thử lại sau {{time}}.",
     "cannotReachTheServer": "Không thể kết nối đến máy chủ. Vui lòng thử lại sau giây lát.",
     "couldNotSend": "Chúng tôi không thể gửi liên kết đặt lại. Hãy kiểm tra địa chỉ email và thử lại.",
     "useADifferentEmail": "Dùng email khác"
@@ -2276,21 +2284,6 @@
     "noMatchingPlaces": "Không có địa điểm phù hợp",
     "poweredByOpenstreetmap": "Cung cấp bởi OpenStreetMap",
     "noCoordinatesSetFor": "Tin đăng này chưa có tọa độ."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Mở khóa {{feature}}",
-    "thisFeature": "tính năng này",
-    "dashboardOverview": "Tổng quan bảng điều khiển",
-    "roomManagement": "Quản lý phòng",
-    "tenantManagement": "Quản lý khách thuê",
-    "utilityBilling": "Lập hóa đơn tiện ích",
-    "thisFeatureIsAvailable": "Tính năng này có trong các gói trả phí. Hãy đăng ký để dùng đầy đủ bảng điều khiển nhà nghỉ của bạn.",
-    "completeHostelProfileFirst": "Hoàn tất hồ sơ nhà nghỉ trước",
-    "onceSubscribedAllFeatures": "Sau khi đăng ký, mọi tính năng sẽ mở khóa tự động.",
-    "roomAmpOccupancyManagement": "Quản lý phòng và tỷ lệ lấp đầy",
-    "tenantTrackingAmpPayment": "Theo dõi khách thuê và lịch sử thanh toán",
-    "rentAndUtilityInvoice": "Tạo hóa đơn tiền thuê và tiện ích",
-    "analyticsAndRevenueReports": "Phân tích và báo cáo doanh thu"
   },
   "notifications": {
     "nUnread": "{{count}} chưa đọc",

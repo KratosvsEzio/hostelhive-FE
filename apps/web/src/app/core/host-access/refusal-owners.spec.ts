@@ -6,7 +6,6 @@ import {
   interceptedError,
   refusalError,
 } from '@app/testing/backend-refusals';
-import { isSubscriptionError } from '@app/util/subscription-error';
 import {
   CRM_REQUIRED_CODE,
   CRM_REQUIRED_MESSAGE,
@@ -19,9 +18,8 @@ import {
 const ROOMS_URL = 'https://api.test/api/host/hostels/Xk9pQ/rooms';
 const REQUEST = { method: 'GET', url: ROOMS_URL };
 
-/** What each of the four classifiers makes of one failure. */
+/** What each of the three classifiers makes of one failure. */
 interface Verdicts {
-  subscription: boolean;
   permission: boolean;
   crm: boolean;
   access: HostAccessRefusal | null;
@@ -29,21 +27,16 @@ interface Verdicts {
 
 function verdicts(err: ApiError): Verdicts {
   return {
-    subscription: isSubscriptionError(err),
     permission: isPermissionRefusal(err),
     crm: isCrmRequired(err),
     access: classifyHostAccess(ROOMS_URL, err),
   };
 }
 
-const NO_OWNER: Verdicts = { subscription: false, permission: false, crm: false, access: null };
+const NO_OWNER: Verdicts = { permission: false, crm: false, access: null };
 const PERMISSION: Verdicts = { ...NO_OWNER, permission: true };
 const CRM: Verdicts = { ...NO_OWNER, crm: true, access: { hostelId: 'Xk9pQ', kind: 'crmRequired' } };
-const INACTIVE: Verdicts = {
-  ...NO_OWNER,
-  subscription: true,
-  access: { hostelId: 'Xk9pQ', kind: 'inactive' },
-};
+const INACTIVE: Verdicts = { ...NO_OWNER, access: { hostelId: 'Xk9pQ', kind: 'inactive' } };
 
 /** Typed by kind, so a refusal added to the shared bodies cannot go without an owner here. */
 const EXPECTED: Record<RefusalKind, Verdicts> = {
@@ -52,7 +45,7 @@ const EXPECTED: Record<RefusalKind, Verdicts> = {
   crmRequired: CRM,
   crmMessageOnly: CRM,
   inactive: INACTIVE,
-  paymentRequired: { ...NO_OWNER, subscription: true },
+  paymentRequired: NO_OWNER,
   rateLimited: NO_OWNER,
   notFound: NO_OWNER,
   unprocessable: NO_OWNER,
@@ -72,7 +65,7 @@ describe('who owns each refusal the backend sends', () => {
 
 describe('a failure with more than one reading', () => {
   const owners = (err: ApiError): number =>
-    [isSubscriptionError(err), isPermissionRefusal(err), isCrmRequired(err)].filter(Boolean).length;
+    [isPermissionRefusal(err), isCrmRequired(err)].filter(Boolean).length;
 
   const SUBSCRIBE_403 = { success: false, errors: [SUBSCRIBE_MESSAGE] };
 
@@ -100,7 +93,7 @@ describe('a failure with more than one reading', () => {
     ...ODD_403s,
   ];
 
-  it.each(ALL)('gives %s at most one of the subscription, permission and CRM readings', (_, err) => {
+  it.each(ALL)('gives %s at most one of the permission and CRM readings', (_, err) => {
     expect(owners(err)).toBeLessThanOrEqual(1);
   });
 });

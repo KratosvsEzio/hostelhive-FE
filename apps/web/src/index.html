@@ -76,11 +76,18 @@
       crossorigin
     />
 
-    <!-- TODO: add `<link rel="preconnect" href="https://<api-host>" crossorigin>` once the
-         production API hostname is known. It saves a DNS + TLS round trip on the first
-         data request, which is on the critical path to Largest Contentful Paint — but
-         only if the host is right. Pointing it at a host the app never contacts spends a
-         connection for nothing, so it is left out rather than guessed. -->
+    <!-- The API: `API_URL` in the deploy's `.env`, compiled into `api.env.ts`. The first data
+         request is on the critical path to Largest Contentful Paint on every page, and on the
+         client-only console routes nothing server-rendered has warmed the connection.
+
+         `use-credentials`, not a bare `crossorigin`: `authInterceptor` sends every API call
+         with `withCredentials`, and browsers keep credentialed and anonymous sockets apart. An
+         anonymous preconnect here would warm a socket no API request ever uses.
+
+         Static because `index.html` is not templated. `tools/generate-api-env.mjs` warns at
+         build time when a deployed (https) `API_URL` names a different origin, so a move to
+         another API host cannot leave this pointing at one the app never calls. -->
+    <link rel="preconnect" href="https://api.hostelhive.com" crossorigin="use-credentials" />
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
@@ -111,6 +118,10 @@
       #hh-boot.hh-boot-out {
         opacity: 0;
         pointer-events: none;
+      }
+      /* The language is settled (see the script before #hh-boot): nothing to hide. */
+      .hh-boot-skip #hh-boot {
+        display: none;
       }
       @keyframes hh-boot-cap {
         to {
@@ -150,10 +161,36 @@
     </style>
   </head>
   <body>
-    <!-- Boot splash: every full page load shows the bee flying in to wave hello while the app
-         boots and works out who and where the visitor is. No magnifying glass here — nobody
-         is searching yet; the glass belongs to the search states. Static HTML so it paints with the first
-         byte, before any JavaScript; App lifts it once startup has resolved (app.ts). -->
+    <script>
+      // The splash hides the page only while the visitor's country may still change its
+      // language, which navigates under whoever started reading. That cannot happen when they
+      // chose a language before or the URL names one (and, for English, they were not
+      // redirected here), so then the server-rendered page shows from the first paint.
+      // Mirrors LocaleStore.languageSettled and LocaleSync.wasSentHere; the codes are
+      // LOCALES in core/i18n/locales.ts (boot-splash-settled.spec.ts keeps them in step).
+      (function () {
+        var codes = ['en', 'ur', 'ar', 'hi', 'zh', 'ja', 'fr', 'de', 'es', 'it', 'nl', 'sv', 'da', 'hu', 'ru', 'id', 'vi', 'pl'];
+        var first = location.pathname.split('/')[1];
+        var redirected = false;
+        try {
+          var nav = performance.getEntriesByType('navigation')[0];
+          redirected = !!nav && nav.redirectCount > 0;
+        } catch (e) {}
+        var named = codes.indexOf(first) >= 0 && !(first === 'en' && redirected);
+        var chosen = null;
+        try {
+          chosen = localStorage.getItem('hh.locale.chosen');
+        } catch (e) {}
+        if (named || codes.indexOf(chosen) >= 0) {
+          document.documentElement.classList.add('hh-boot-skip');
+        }
+      })();
+    </script>
+    <!-- Boot splash: a full page load whose language is not settled yet shows the bee flying
+         in to wave hello while the app boots and works out who and where the visitor is. No
+         magnifying glass here — nobody is searching yet; the glass belongs to the search states.
+         Static HTML so it paints with the first byte, before any JavaScript; App lifts it once
+         startup has resolved (app.ts). -->
     <div id="hh-boot" role="status" aria-live="polite">
       <img class="hh-boot-logo" src="/hostelhive-wordmark.svg" alt="HostelHive" width="224" height="28" />
       <div class="hh-boot-bee" aria-hidden="true"></div>
@@ -163,6 +200,12 @@
       // Picks the bee for this browser. Mirrors hh-mascot (shared/mascot/mascot.ts):
       // reduced motion gets the still pose; WebKit (which drops VP9's alpha) gets WebP.
       (function () {
+        // A skipped splash is removed outright, so its bee never downloads.
+        if (document.documentElement.classList.contains('hh-boot-skip')) {
+          var boot = document.getElementById('hh-boot');
+          if (boot) boot.remove();
+          return;
+        }
         var box = document.querySelector('#hh-boot .hh-boot-bee');
         if (!box) return;
         var ua = navigator.userAgent;

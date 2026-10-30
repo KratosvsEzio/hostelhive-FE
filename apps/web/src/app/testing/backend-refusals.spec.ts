@@ -10,7 +10,6 @@ import { CRM_REQUIRED_MESSAGE } from '@core/host-access/host-access';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { errorInterceptor } from '@core/interceptors/error-interceptor';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { HostPropertyStore } from '@services';
 import {
   CANCAN_MESSAGE,
@@ -110,11 +109,10 @@ type Shown = LoadSurface | 'content' | 'panelAndError';
 
 @Component({
   selector: 'hh-surface-host',
-  imports: [PermissionRefused, SubscriptionGate, ErrorState],
+  imports: [PermissionRefused, ErrorState],
   template: `
     @switch (shown()) {
       @case ('permission') { <hh-permission-refused /> }
-      @case ('paywall') { <hh-subscription-gate /> }
       @case ('error') { <hh-error-state /> }
       @case ('network') { <hh-error-state [networkError]="true" [message]="'page.ownMessage'" /> }
       @case ('panelAndError') { <hh-permission-refused /><hh-error-state /> }
@@ -149,10 +147,6 @@ describe('loadSurface', () => {
       body: 'hostAccess.pageNotAllowed',
       retry: false,
     });
-  });
-
-  it('reads the paywall', () => {
-    expect(loadSurface(render('paywall'))).toMatchObject({ surfaces: ['paywall'], retry: false });
   });
 
   it('reads the generic error state and its Retry', () => {
@@ -194,7 +188,7 @@ describe('loadSurface', () => {
 
   it('groups the kinds by the surface a list page must show', () => {
     expect(kindsShowing('permission')).toEqual(['permissionCanCan', 'permissionRender403']);
-    expect(kindsShowing('paywall')).toEqual(['inactive', 'paymentRequired']);
+    expect(kindsShowing('error')).toEqual(expect.arrayContaining(['crmRequired', 'inactive', 'paymentRequired']));
     expect(kindsShowing('network')).toEqual(['network']);
   });
 });

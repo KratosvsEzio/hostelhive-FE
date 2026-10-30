@@ -291,6 +291,40 @@ describe('errorInterceptor', () => {
     expect(err.serverMessages).toEqual(['Your plan does not include CRM']);
   });
 
+  // The rate limiter's 429; `Retry-After` is not CORS-exposed, so the body is the only source.
+  it('keeps the rate limiter\'s retry_after from the body', () => {
+    const err = fire((req) =>
+      req.flush(
+        {
+          errors: ['Too many requests. Please try again in 31 seconds.'],
+          code: 'rate_limited',
+          retry_after: 31,
+        },
+        { status: 429, statusText: 'Too Many Requests' },
+      ),
+    );
+
+    expect(err.code).toBe('rate_limited');
+    expect(err.retryAfter).toBe(31);
+  });
+
+  it.each([
+    ['missing', {}],
+    ['zero', { retry_after: 0 }],
+    ['negative', { retry_after: -5 }],
+    ['a string', { retry_after: '31' }],
+    ['not finite', { retry_after: Number.POSITIVE_INFINITY }],
+  ])('leaves retryAfter out when retry_after is %s', (_case, extra) => {
+    const err = fire((req) =>
+      req.flush(
+        { errors: ['Too many requests.'], code: 'rate_limited', ...extra },
+        { status: 429, statusText: 'Too Many Requests' },
+      ),
+    );
+
+    expect('retryAfter' in err).toBe(false);
+  });
+
   it('falls back to unknown_error when the envelope has no code', () => {
     const err = fire((req) =>
       req.flush({ success: false, errors: ['Nope'] }, { status: 422, statusText: 'Unprocessable' }),

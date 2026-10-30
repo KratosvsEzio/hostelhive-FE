@@ -8,7 +8,7 @@ import { HostOpsApi, HostPropertyStore, OverviewApi } from '@services';
 import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HOSTEL_ID, invoicesReply, sessionUser } from '@app/testing/host-builders';
-import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { HostOverview } from './overview';
 
 const API = `https://api.test/api/host/hostels/${HOSTEL_ID}`;
@@ -87,9 +87,9 @@ describe('Overview when the cards are refused for a missing permission', () => {
   });
 });
 
-describe('Overview when the cards are refused for a plan without CRM', () => {
-  it.each(['crmRequired', 'crmMessageOnly'] as const)(
-    'a %s refusal shows the generic error with Retry, not the panel or the paywall',
+describe('Overview when the cards are refused for a plan the console lock owns', () => {
+  it.each(PLAN_REFUSALS)(
+    'a %s refusal shows the generic error with Retry, not the panel',
     async (kind) => {
       const el = await openOverview({ cards: () => cardsRefusal(kind) });
 
@@ -102,18 +102,8 @@ describe('Overview when the cards are refused for a plan without CRM', () => {
   );
 });
 
-describe('Overview when the hostel has no live plan', () => {
-  it.each(kindsShowing('paywall'))('a %s refusal shows the paywall, not the panel', async (kind) => {
-    const el = await openOverview({ cards: () => cardsRefusal(kind) });
-
-    expect(loadSurface(el).surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
-    expect(el.querySelector('hh-permission-refused')).toBeNull();
-    expect(loadSurface(el).retry).toBe(false);
-  });
-});
-
 describe('Overview when the cards fail for any other reason the server answered', () => {
-  const kinds = kindsShowing('error').filter((kind) => kind !== 'crmRequired' && kind !== 'crmMessageOnly');
+  const kinds = kindsShowing('error').filter((kind) => !PLAN_REFUSALS.includes(kind));
 
   it.each(kinds)('a %s refusal shows the generic error with Retry', async (kind) => {
     const el = await openOverview({ cards: () => cardsRefusal(kind) });

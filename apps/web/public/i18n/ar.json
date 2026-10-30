@@ -739,7 +739,9 @@
     "leavingDate": "تاريخ المغادرة",
     "thisTenantHasNoRent": "لا توجد فواتير إيجار مسجّلة لهذا المستأجر بعد.",
     "noUtilityChargesHaveBeen": "لم تُسجَّل أي رسوم مرافق لغرفة هذا المستأجر.",
-    "checkInYourFirstTenant": "سجّل وصول أول مستأجر لبدء تتبّع الإيجار."
+    "checkInYourFirstTenant": "سجّل وصول أول مستأجر لبدء تتبّع الإيجار.",
+    "notFoundTitle": "لم نتمكن من العثور على هذا المستأجر",
+    "notFoundMessage": "ربما أُزيل، أو أن الرابط قديم. ارجع إلى المستأجرين لرؤية مستأجري هذا النزل."
   },
   "hostBilling": {
     "title": "الفوترة",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "تعذّر تحديث هذه الغرفة. يُرجى المحاولة مرة أخرى.",
     "couldNotCreateRoom": "تعذّر إنشاء هذه الغرفة. يُرجى المحاولة مرة أخرى.",
     "couldNotCreateRooms": "تعذّر إنشاء هذه الغرف. يُرجى المحاولة مرة أخرى.",
+    "notFoundTitle": "لم نتمكن من العثور على هذه الغرفة",
+    "notFoundMessage": "ربما حُذفت، أو أن الرابط قديم. ارجع إلى الغرف لرؤية غرف هذا النزل.",
     "nFree": "{{count}} شاغرة",
     "full": "ممتلئة",
     "guestsOnBookings": "نزلاء الحجوزات",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "لم يعد النُزل يعرضها، لذا لم تُنقل: {{rooms}}. اختر غرفة أخرى.",
     "stageConfirmed": "مؤكد",
     "noShow": "لم يحضر",
-    "noShowNote": "وضع النُزل علامة «لم يحضر» على هذا الحجز — لم يصل الضيف."
+    "noShowNote": "وضع النُزل علامة «لم يحضر» على هذا الحجز — لم يصل الضيف.",
+    "bookingNotFoundTitle": "لم نتمكن من العثور على هذا الحجز",
+    "bookingNotFoundMessage": "ربما أُزيل، أو أن الرابط قديم. ارجع إلى جميع حجوزاتك."
   },
   "userFavorites": {
     "removeFromFavorites": "إزالة من المفضلة؟",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "إرسال رابط إعادة التعيين",
     "backToLogin": "العودة إلى تسجيل الدخول",
     "didnTReceiveItResend": "لم يصلك؟ أعد الإرسال",
+    "resendIn": "إعادة الإرسال بعد {{time}}",
     "enterAValidEmail": "أدخل عنوان بريد إلكتروني صالحًا.",
     "sentIfAccountExists": "إذا كان هناك حساب مرتبط بـ {{email}}، فقد أرسلنا إليه رابطًا لإعادة تعيين كلمة المرور. تحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها.",
     "alreadySent": "سبق أن أرسلنا رابط إعادة التعيين إلى هذا البريد. تحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها؛ ويمكنك طلب رابط آخر بعد بضع دقائق.",
     "sentAnother": "أرسلنا رابطًا آخر.",
     "tooManyRequests": "محاولات كثيرة جدًا. يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى.",
+    "tooManyRequestsRetry": "محاولات كثيرة جدًا. حاول مرة أخرى بعد {{time}}.",
     "cannotReachTheServer": "تعذّر الوصول إلى الخادم. يرجى المحاولة مرة أخرى بعد قليل.",
     "couldNotSend": "تعذّر إرسال رابط إعادة التعيين. تحقق من عنوان البريد الإلكتروني وحاول مرة أخرى.",
     "useADifferentEmail": "استخدام بريد إلكتروني آخر"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "لا توجد أماكن مطابقة",
     "poweredByOpenstreetmap": "مدعوم بواسطة OpenStreetMap",
     "noCoordinatesSetFor": "لم تُحدَّد إحداثيات لهذه القائمة."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "افتح {{feature}}",
-    "thisFeature": "هذه الميزة",
-    "dashboardOverview": "نظرة عامة على لوحة التحكم",
-    "roomManagement": "إدارة الغرف",
-    "tenantManagement": "إدارة المستأجرين",
-    "utilityBilling": "فوترة المرافق",
-    "thisFeatureIsAvailable": "هذه الميزة متاحة في الخطط المدفوعة. اشترك للحصول على وصول كامل إلى لوحة تحكم النُزل.",
-    "completeHostelProfileFirst": "أكمل ملف النُزل أولًا",
-    "onceSubscribedAllFeatures": "بمجرد الاشتراك، تُفتح جميع الميزات تلقائيًا.",
-    "roomAmpOccupancyManagement": "إدارة الغرف والإشغال",
-    "tenantTrackingAmpPayment": "تتبّع المستأجرين وسجلات المدفوعات",
-    "rentAndUtilityInvoice": "إصدار فواتير الإيجار والمرافق",
-    "analyticsAndRevenueReports": "التحليلات وتقارير الإيرادات"
   },
   "notifications": {
     "nUnread": "{{count}} غير مقروءة",

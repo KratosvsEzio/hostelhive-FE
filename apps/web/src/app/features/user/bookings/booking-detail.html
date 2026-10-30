@@ -347,6 +347,14 @@
     <hh-skeleton class="block h-28 w-full rounded-2xl" />
     <hh-skeleton class="block h-40 w-full rounded-2xl" />
   </div>
+} @else if (notFound()) {
+  <hh-error-state
+    class="mt-6 block"
+    [title]="'userBookings.bookingNotFoundTitle' | transloco"
+    [message]="'userBookings.bookingNotFoundMessage' | transloco"
+    [showRetry]="false"
+    data-testid="booking-not-found"
+  />
 } @else if (error()) {
   <hh-error-state
     class="mt-6 block"

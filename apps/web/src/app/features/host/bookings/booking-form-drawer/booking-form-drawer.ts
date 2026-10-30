@@ -29,9 +29,6 @@ import { RoomType } from '@hostelhive/data-access';
 import { todayIn } from '@util/zoned-time';
 import { addDays, calendarDaysBetween } from '@util/plain-day';
 import { HostBookingsApi } from '../host-bookings-api';
-import { RouterLink } from '@angular/router';
-import { LocaleLink } from '@core/i18n/locale-link';
-import { isSubscriptionError } from '@util/subscription-error';
 import { errorStatus } from '@core/errors/api-error-text';
 import { bookingSaveFailureKey } from './booking-save-failure';
 
@@ -76,7 +73,7 @@ function roomsFailureKey(err: unknown): string {
 @Component({
   selector: 'hh-booking-form-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, RouterLink, LocaleLink, Button, DateRangePicker, Drawer, Dropdown, Input, PhoneInput, Skeleton, TranslocoPipe],
+  imports: [DecimalPipe, Button, DateRangePicker, Drawer, Dropdown, Input, PhoneInput, Skeleton, TranslocoPipe],
   templateUrl: './booking-form-drawer.html',
 })
 export class BookingFormDrawer {
@@ -146,13 +143,6 @@ export class BookingFormDrawer {
   protected readonly saving = signal(false);
   /** A translation key, or `''` while there is nothing to report. */
   protected readonly saveError = signal('');
-  /**
-   * The hostel's subscription has lapsed: the server refuses new bookings (400) while the ones
-   * already made still work (Trello #81). Said as a renewal, with the way to renew, not as the
-   * raw refusal.
-   */
-  protected readonly needsSubscription = signal(false);
-  protected readonly subscriptionLink = computed(() => `/host/${this.hostelId()}/subscription`);
 
   /**
    * The hostel's room types, from its detail.
@@ -357,7 +347,6 @@ export class BookingFormDrawer {
     const guests = this.lineGuests();
     this.saving.set(true);
     this.saveError.set('');
-    this.needsSubscription.set(false);
     this.bookings
       .create(this.hostelId(), {
         // Plain days: the server reads them in the hostel's zone (Trello #81).
@@ -380,10 +369,6 @@ export class BookingFormDrawer {
         },
         error: (err: unknown) => {
           this.saving.set(false);
-          if (isSubscriptionError(err)) {
-            this.needsSubscription.set(true);
-            return;
-          }
           // Read as the refusal lands, so the wording follows whoever is signed in by then.
           this.saveError.set(bookingSaveFailureKey(err, { owner: this.session.hasRole('host') }));
         },

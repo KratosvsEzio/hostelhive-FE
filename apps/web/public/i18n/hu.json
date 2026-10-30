@@ -739,7 +739,9 @@
     "leavingDate": "Távozás dátuma",
     "thisTenantHasNoRent": "Ehhez a bérlőhöz még nincs rögzített bérleti számla.",
     "noUtilityChargesHaveBeen": "Ennek a bérlőnek a szobájához nincs rögzített rezsiköltség.",
-    "checkInYourFirstTenant": "Jelentkeztesse be az első bérlőt a bérleti díj követéséhez."
+    "checkInYourFirstTenant": "Jelentkeztesse be az első bérlőt a bérleti díj követéséhez.",
+    "notFoundTitle": "Nem találjuk ezt a bérlőt",
+    "notFoundMessage": "Lehet, hogy eltávolították, vagy a link elavult. Térj vissza a bérlőkhöz a hostel bérlőinek megtekintéséhez."
   },
   "hostBilling": {
     "title": "Számlázás",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "Nem sikerült frissíteni ezt a szobát. Próbáld újra.",
     "couldNotCreateRoom": "Nem sikerült létrehozni ezt a szobát. Próbáld újra.",
     "couldNotCreateRooms": "Nem sikerült létrehozni ezeket a szobákat. Próbáld újra.",
+    "notFoundTitle": "Nem találjuk ezt a szobát",
+    "notFoundMessage": "Lehet, hogy törölték, vagy a link elavult. Térj vissza a szobákhoz a hostel szobáinak megtekintéséhez.",
     "nFree": "{{count}} szabad",
     "full": "Tele",
     "guestsOnBookings": "Foglalásból érkezett vendégek",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "A szállás már nem kínálja őket, ezért nem kerültek át: {{rooms}}. Válasszon másik szobát.",
     "stageConfirmed": "Megerősítve",
     "noShow": "Nem jelent meg",
-    "noShowNote": "A szállás ezt a foglalást meg nem jelenésként jelölte — a vendég nem érkezett meg."
+    "noShowNote": "A szállás ezt a foglalást meg nem jelenésként jelölte — a vendég nem érkezett meg.",
+    "bookingNotFoundTitle": "Nem találjuk ezt a foglalást",
+    "bookingNotFoundMessage": "Lehet, hogy eltávolították, vagy a link elavult. Térj vissza az összes foglalásodhoz."
   },
   "userFavorites": {
     "removeFromFavorites": "Eltávolítod a kedvencekből?",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "Visszaállító link küldése",
     "backToLogin": "Vissza a bejelentkezéshez",
     "didnTReceiveItResend": "Nem kaptad meg? Küldés újra",
+    "resendIn": "Újraküldés {{time}} múlva",
     "enterAValidEmail": "Adj meg egy érvényes e-mail címet.",
     "sentIfAccountExists": "Ha létezik fiók ehhez a címhez: {{email}}, küldtünk egy linket a jelszavad visszaállításához. Nézd meg a beérkező leveleidet és a spam mappát.",
     "alreadySent": "Erre az e-mail címre már küldtünk visszaállító linket. Nézd meg a beérkező leveleidet és a spam mappát; néhány perc múlva kérhetsz újat.",
     "sentAnother": "Küldtünk egy újabb linket.",
     "tooManyRequests": "Túl sok próbálkozás. Várj néhány percet, majd próbáld újra.",
+    "tooManyRequestsRetry": "Túl sok próbálkozás. Próbáld újra {{time}} múlva.",
     "cannotReachTheServer": "A szerver nem érhető el. Kérjük, próbáld újra egy pillanat múlva.",
     "couldNotSend": "Nem sikerült elküldeni a visszaállító linket. Ellenőrizd az e-mail címet, és próbáld újra.",
     "useADifferentEmail": "Másik e-mail cím használata"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "Nincs találat",
     "poweredByOpenstreetmap": "OpenStreetMap alapján",
     "noCoordinatesSetFor": "Ehhez a hirdetéshez nincs koordináta megadva."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} feloldása",
-    "thisFeature": "ezt a funkciót",
-    "dashboardOverview": "Irányítópult áttekintés",
-    "roomManagement": "Szobakezelés",
-    "tenantManagement": "Bérlőkezelés",
-    "utilityBilling": "Rezsiszámlázás",
-    "thisFeatureIsAvailable": "Ez a funkció a fizetős csomagokban érhető el. Fizessen elő a hostel irányítópult teljes eléréséhez.",
-    "completeHostelProfileFirst": "Előbb töltse ki a hostel profilját",
-    "onceSubscribedAllFeatures": "Előfizetés után minden funkció automatikusan feloldódik.",
-    "roomAmpOccupancyManagement": "Szoba- és kihasználtságkezelés",
-    "tenantTrackingAmpPayment": "Bérlőkövetés és fizetési nyilvántartás",
-    "rentAndUtilityInvoice": "Bérleti és rezsiszámlák készítése",
-    "analyticsAndRevenueReports": "Elemzések és bevételi jelentések"
   },
   "notifications": {
     "nUnread": "{{count}} olvasatlan",

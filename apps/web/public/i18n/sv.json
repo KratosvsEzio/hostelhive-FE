@@ -739,7 +739,9 @@
     "leavingDate": "Utflyttningsdatum",
     "thisTenantHasNoRent": "Den här hyresgästen har inga registrerade hyresfakturor ännu.",
     "noUtilityChargesHaveBeen": "Inga förbrukningsavgifter har registrerats för den här hyresgästens rum.",
-    "checkInYourFirstTenant": "Checka in din första hyresgäst för att börja följa hyran."
+    "checkInYourFirstTenant": "Checka in din första hyresgäst för att börja följa hyran.",
+    "notFoundTitle": "Vi kunde inte hitta den här hyresgästen",
+    "notFoundMessage": "Hyresgästen kan ha tagits bort, eller så är länken inaktuell. Gå tillbaka till hyresgäster för att se vandrarhemmets hyresgäster."
   },
   "hostBilling": {
     "title": "Fakturering",
@@ -1361,6 +1363,8 @@
     "couldNotUpdateRoom": "Det gick inte att uppdatera rummet. Försök igen.",
     "couldNotCreateRoom": "Det gick inte att skapa rummet. Försök igen.",
     "couldNotCreateRooms": "Det gick inte att skapa rummen. Försök igen.",
+    "notFoundTitle": "Vi kunde inte hitta det här rummet",
+    "notFoundMessage": "Det kan ha tagits bort, eller så är länken inaktuell. Gå tillbaka till rum för att se vandrarhemmets rum.",
     "nFree": "{{count}} lediga",
     "full": "Fullt",
     "guestsOnBookings": "Gäster från bokningar",
@@ -1912,7 +1916,9 @@
     "roomsNoLongerOffered": "Erbjuds inte längre av vandrarhemmet och fördes därför inte över: {{rooms}}. Välj ett annat rum.",
     "stageConfirmed": "Bekräftad",
     "noShow": "Uteblev",
-    "noShowNote": "Vandrarhemmet har markerat den här bokningen som utebliven — gästen kom inte."
+    "noShowNote": "Vandrarhemmet har markerat den här bokningen som utebliven — gästen kom inte.",
+    "bookingNotFoundTitle": "Vi kunde inte hitta den här bokningen",
+    "bookingNotFoundMessage": "Den kan ha tagits bort, eller så är länken inaktuell. Gå tillbaka till alla dina bokningar."
   },
   "userFavorites": {
     "removeFromFavorites": "Ta bort från favoriter?",
@@ -1973,11 +1979,13 @@
     "sendResetLink": "Skicka återställningslänk",
     "backToLogin": "Tillbaka till inloggning",
     "didnTReceiveItResend": "Fick du det inte? Skicka igen",
+    "resendIn": "Skicka igen om {{time}}",
     "enterAValidEmail": "Ange en giltig e-postadress.",
     "sentIfAccountExists": "Om det finns ett konto för {{email}} har vi skickat en länk för att återställa ditt lösenord. Kolla din inkorg och skräppostmapp.",
     "alreadySent": "En återställningslänk har redan skickats till den här e-postadressen. Kolla din inkorg och skräppostmapp; du kan be om en ny om några minuter.",
     "sentAnother": "Vi har skickat en ny länk.",
     "tooManyRequests": "För många försök. Vänta några minuter och försök igen.",
+    "tooManyRequestsRetry": "För många försök. Försök igen om {{time}}.",
     "cannotReachTheServer": "Kan inte nå servern. Försök igen om en stund.",
     "couldNotSend": "Vi kunde inte skicka någon återställningslänk. Kontrollera e-postadressen och försök igen.",
     "useADifferentEmail": "Använd en annan e-postadress"
@@ -2271,21 +2279,6 @@
     "noMatchingPlaces": "Inga matchande platser",
     "poweredByOpenstreetmap": "Drivs av OpenStreetMap",
     "noCoordinatesSetFor": "Inga koordinater angivna för den här annonsen."
-  },
-  "subscriptionGate": {
-    "unlockFeature": "Lås upp {{feature}}",
-    "thisFeature": "denna funktion",
-    "dashboardOverview": "Översikt i instrumentpanelen",
-    "roomManagement": "Rumshantering",
-    "tenantManagement": "Hyresgästhantering",
-    "utilityBilling": "Förbrukningsfakturering",
-    "thisFeatureIsAvailable": "Den här funktionen finns i betalplanerna. Teckna ett abonnemang för full tillgång till din instrumentpanel.",
-    "completeHostelProfileFirst": "Fyll i vandrarhemsprofilen först",
-    "onceSubscribedAllFeatures": "När du abonnerar låses alla funktioner upp automatiskt.",
-    "roomAmpOccupancyManagement": "Rums- och beläggningshantering",
-    "tenantTrackingAmpPayment": "Hyresgästuppföljning och betalningshistorik",
-    "rentAndUtilityInvoice": "Skapa hyres- och förbrukningsfakturor",
-    "analyticsAndRevenueReports": "Analyser och intäktsrapporter"
   },
   "notifications": {
     "nUnread": "{{count}} olästa",
