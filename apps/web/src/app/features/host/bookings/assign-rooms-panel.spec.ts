@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { HostOpsApi } from '@services';
 import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { provideKeysWithParams } from './booking-copy-testing';
 import { HostRoom } from '@util/models/host-ops';
 import { AssignGroup, AssignRoomsPanel, AssignRow, AssignSelection } from './assign-rooms-panel';
 import { HostBooking } from './host-bookings-api';
@@ -86,7 +87,7 @@ describe('AssignRoomsPanel — checking in', () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [Host],
-      providers: [provideI18nTesting(), { provide: HostOpsApi, useValue: api }],
+      providers: [provideI18nTesting(), provideKeysWithParams(), { provide: HostOpsApi, useValue: api }],
     }).compileComponents();
     fixture = TestBed.createComponent(Host);
     fixture.componentInstance.booking.set(b);
@@ -177,8 +178,8 @@ describe('AssignRoomsPanel — checking in', () => {
   it('shows a full room without a stepper, rather than hiding it', async () => {
     await render(ROOMS);
     const el = fixture.nativeElement as HTMLElement;
-    const full = [...el.querySelectorAll('li')].find((li) => li.textContent?.includes('Room 103'));
-    expect(full?.textContent).toContain('Full');
+    const full = [...el.querySelectorAll('li')].find((li) => li.textContent?.includes('common.roomNumber(number=103)'));
+    expect(full?.textContent).toContain('hostBookings.fullNOfNBedsTaken(taken=4, count=4)');
     expect(full?.querySelector('button')).toBeNull();
   });
 
@@ -211,8 +212,8 @@ describe('AssignRoomsPanel — checking in', () => {
     step('102', 1);
     expect(p()['partial']()).toBe(true);
     const footer = (fixture.nativeElement as HTMLElement).querySelector('footer')?.textContent ?? '';
-    expect(footer).toContain('records');
-    expect(footer).toContain('2 guests');
+    expect(footer).toContain('hostBookings.partialPlacement(rooms=102 × 2, remaining=');
+    expect(footer).toContain('count=2)');
 
     p()['submit']();
     expect(fixture.componentInstance.last?.rooms).toEqual([{ roomId: 'k1', roomNumber: '102', guests: 2 }]);

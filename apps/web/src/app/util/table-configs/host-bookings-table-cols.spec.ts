@@ -1,5 +1,8 @@
 import { HostBooking } from '@features/host/bookings/host-bookings-api';
-import { HOST_BOOKINGS_TABLE_COLS } from './host-bookings-table-cols';
+import { englishCopy } from '@features/host/bookings/booking-copy-testing';
+import { hostBookingsTableCols } from './host-bookings-table-cols';
+
+const COLS = hostBookingsTableCols(englishCopy());
 
 /** A booking with only the money fields that matter here filled in. */
 function booking(over: Partial<HostBooking> = {}): HostBooking {
@@ -33,7 +36,7 @@ function booking(over: Partial<HostBooking> = {}): HostBooking {
 }
 
 function roomCell(over: Partial<HostBooking> = {}): string {
-  const col = HOST_BOOKINGS_TABLE_COLS.find((c) => c.key === 'room');
+  const col = COLS.find((c) => c.key === 'room');
   if (!col) throw new Error('room column missing');
   return (col.cell(booking(over)) as { value: string }).value;
 }
@@ -77,12 +80,12 @@ describe('host-bookings-table-cols — room', () => {
   });
 
   it('falls back to the one room type on an older record', () => {
-    expect(roomCell()).toBe('Dormitory · shared');
+    expect(roomCell()).toBe('Dormitory · Shared room');
   });
 });
 
 function totalCell(over: Partial<HostBooking> = {}) {
-  const col = HOST_BOOKINGS_TABLE_COLS.find((c) => c.key === 'total');
+  const col = COLS.find((c) => c.key === 'total');
   if (!col) throw new Error('total column missing');
   return col.cell(booking(over)) as {
     kind: string;
@@ -173,3 +176,44 @@ describe('host-bookings-table-cols — outstanding line', () => {
   });
 });
 
+/**
+ * Every word in the table comes from the host's language (Trello #170): the headers, and the
+ * status badge, which names the lane rather than printing the server's English disposition.
+ */
+describe('host-bookings-table-cols — wording', () => {
+  function statusText(over: Partial<HostBooking> = {}): string {
+    const col = COLS.find((c) => c.key === 'status');
+    if (!col) throw new Error('status column missing');
+    return (col.cell(booking(over)) as { text: string }).text;
+  }
+
+  it('heads each column from the translations', () => {
+    const t = (key: string) => `<${key}>`;
+    expect(hostBookingsTableCols(t).map((c) => c.label)).toEqual([
+      '<common.guest>',
+      '<hostBookings.stay>',
+      '<common.room>',
+      '<common.guests>',
+      '<hostBookings.filterStatus>',
+      '<common.total>',
+    ]);
+  });
+
+  it("names the stage by its lane, not the server's English name", () => {
+    expect(statusText({ disposition: { name: 'Pending Allotment', slug: 'pending-allotment' } })).toBe('Pending');
+    expect(statusText({ disposition: { name: 'Checked In', slug: 'checked-in' } })).toBe('Checked in');
+  });
+
+  it("falls back to the server's name for a stage the app does not know", () => {
+    expect(statusText({ disposition: { name: 'Mystery', slug: 'mystery' } })).toBe('Mystery');
+  });
+
+  it('counts nights and guests with the singular when there is one', () => {
+    const stay = COLS.find((c) => c.key === 'stay');
+    const guests = COLS.find((c) => c.key === 'guests');
+    expect((stay?.cell(booking({ nights: 1 })) as { secondary: string }).secondary).toBe('1 night');
+    expect((stay?.cell(booking({ nights: 7 })) as { secondary: string }).secondary).toBe('7 nights');
+    expect((guests?.cell(booking({ guests: 1 })) as { value: string }).value).toBe('1 guest');
+    expect((guests?.cell(booking({ guests: 4 })) as { value: string }).value).toBe('4 guests');
+  });
+});

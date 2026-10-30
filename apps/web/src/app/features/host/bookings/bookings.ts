@@ -41,7 +41,8 @@ import {
 } from '@hostelhive/ui';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { BookingFormDrawer } from './booking-form-drawer/booking-form-drawer';
-import { HOST_BOOKINGS_TABLE_COLS } from '@util/table-configs/host-bookings-table-cols';
+import { hostBookingsTableCols } from '@util/table-configs/host-bookings-table-cols';
+import { BookingCopy, guestsPhrase, nightsPhrase, unitsPhrase } from './booking-copy';
 import { BookingCalendar } from './booking-calendar';
 import { INVOICEABLE_LANES, LaneKey, PAYABLE_LANES, laneFor, laneKeyFor } from './booking-month';
 import {
@@ -67,7 +68,7 @@ import { SessionStore } from '@core/auth/session-store';
 import { errorStatus } from '@core/errors/api-error-text';
 import { isUnauthorized } from '@core/errors/is-unauthorized';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Translation, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
 import { MoneyPipe } from '@app/shared/currency/money.pipe';
 import { currencySymbol } from '@util/currencies';
@@ -169,14 +170,33 @@ export class HostBookings {
         !id
           ? of([] as FilterOption[])
           : this.hostOps.rooms(id, 1, ALL_ROOMS_LIMIT).pipe(
-              map((r) => r.rooms.map((room) => ({ value: room.id, label: `Room ${room.number}` }))),
+              // The number alone: `filterGroups` words it, in the host's language.
+              map((r) => r.rooms.map((room) => ({ value: room.id, label: room.number }))),
               catchError(() => of([] as FilterOption[])),
             ),
       ),
     ),
     { initialValue: [] as FilterOption[] },
   );
-  protected readonly filterGroups = computed(() => bookingFilterGroups(this.roomOptions()));
+
+  /**
+   * Translates for copy built in code (the filters, the table), rebuilt when the language's
+   * strings arrive — so a label built before the file loads fills in when it does.
+   */
+  private readonly translate = (() => {
+    const i18n = inject(TranslocoService);
+    const strings = toSignal(i18n.selectTranslation(), { initialValue: {} as Translation });
+    return computed<BookingCopy>(() => {
+      strings();
+      return (key, params) => i18n.translate<string>(key, params);
+    });
+  })();
+
+  protected readonly filterGroups = computed(() => {
+    const t = this.translate();
+    const rooms = this.roomOptions().map((o) => ({ ...o, label: t('common.roomNumber', { number: o.label }) }));
+    return bookingFilterGroups(t, rooms);
+  });
 
   /**
    * One request per hostel, page and filter — the server does the narrowing now.
@@ -517,8 +537,8 @@ export class HostBookings {
         this.send(
           e.booking,
           (id) => this.bookingsApi.confirm(this.hostelId(), id, { suppressErrorToast: true }),
-          'Booking confirmed',
-          'The guest has been emailed their confirmation.',
+          this.t('hostBookings.bookingConfirmed'),
+          this.t('hostBookings.guestEmailedConfirmation'),
         );
         return;
       case 'checkIn':
@@ -781,13 +801,13 @@ export class HostBookings {
     const quiet = { suppressErrorToast: true };
     switch (d.action) {
       case 'cancel':
-        this.send(d.booking, (id) => this.bookingsApi.cancel(hostelId, id, reason, quiet), 'Booking cancelled', 'The guest, host and manager have been told.', fail);
+        this.send(d.booking, (id) => this.bookingsApi.cancel(hostelId, id, reason, quiet), this.t('hostBookings.bookingCancelled'), this.t('hostBookings.everyoneHasBeenTold'), fail);
         return;
       case 'noShow':
-        this.send(d.booking, (id) => this.bookingsApi.markNoShow(hostelId, id, reason, quiet), 'Marked as a no show', '', fail);
+        this.send(d.booking, (id) => this.bookingsApi.markNoShow(hostelId, id, reason, quiet), this.t('hostBookings.markedAsNoShow'), '', fail);
         return;
       case 'checkOut':
-        this.send(d.booking, (id) => this.bookingsApi.checkOut(hostelId, id, quiet), 'Checked out', 'Every bed this booking held is free again.', fail);
+        this.send(d.booking, (id) => this.bookingsApi.checkOut(hostelId, id, quiet), this.t('hostBookings.checkedOut'), this.t('hostBookings.everyBedFreeAgain'), fail);
         return;
       case 'markPaid':
         this.markPaid(d.booking, fail);
@@ -883,7 +903,7 @@ export class HostBookings {
       fail,
       () => {
         if (!inv) {
-          this.notifications.success('Marked as paid', 'Nothing is left due on this booking.');
+          this.notifications.success(this.t('hostBookings.markedAsPaid'), this.t('hostBookings.nothingLeftDue'));
         } else if (settled) {
           this.recordInvoice(booking.id, settled);
           this.notifications.success(
@@ -909,7 +929,7 @@ export class HostBookings {
     const inv = this.invoices().get(booking.id);
     if (!inv) return;
     this.notifications.success(
-      'Invoice generated',
+      this.t('hostBookings.invoiceGenerated'),
       `${buildInvoiceId(inv)} · ${currencySymbol(booking.currency)} ${this.money.transform(inv.amount)}`,
     );
   }
@@ -962,8 +982,8 @@ export class HostBookings {
     this.send(
       booking,
       (id) => this.bookingsApi.checkIn(this.hostelId(), id, allocations, { suppressErrorToast: true }),
-      'Checked in',
-      sel.rooms.map((r) => `Room ${r.roomNumber} × ${r.guests}`).join(', '),
+      this.t('hostBookings.checkedIn'),
+      sel.rooms.map((r) => this.t('hostBookings.roomTimesGuests', { room: r.roomNumber, guests: r.guests })).join(', '),
       (err) => this.assignError.set(this.failureKey(err)),
       () => {
         this.assigning.set(null);
@@ -979,6 +999,7 @@ export class HostBookings {
     return actionsFor(b, this.invoices().get(b.id) ?? null);
   }
 
+  /** The menu item's translation key. */
   protected actionLabel(action: BookingAction): string {
     return ACTION_MENU_LABEL[action];
   }
@@ -986,6 +1007,20 @@ export class HostBookings {
   /** The status badge the list uses, so the dialog names the stage the same way. */
   protected laneBadge(b: HostBooking): string {
     return laneFor(b.disposition.slug)?.badge ?? 'bg-ink-100 text-ink-600';
+  }
+
+  /** The stage's name as a translation key; `''` for a stage the app does not know, which shows the server's name. */
+  protected laneLabelKey(b: HostBooking): string {
+    return laneFor(b.disposition.slug)?.labelKey ?? '';
+  }
+
+  protected readonly nights = nightsPhrase;
+  protected readonly guestsOf = guestsPhrase;
+  protected readonly units = unitsPhrase;
+
+  /** Copy for a toast, which is shown once and so read straight from the loaded translation. */
+  private t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.translate<string>(key, params);
   }
 
   /** "101 × 2 · 102 × 1" — who is in which room now, or `''` before check-in. */
@@ -1046,7 +1081,7 @@ export class HostBookings {
 
   /* ------------------------------------------------------------------- the table */
 
-  protected readonly tableCols = HOST_BOOKINGS_TABLE_COLS;
+  protected readonly tableCols = computed(() => hostBookingsTableCols(this.translate()));
   protected readonly bookingRowId = (row: unknown) => (row as HostBooking).id;
 
   protected readonly menuOpenId = signal<string | null>(null);
@@ -1108,16 +1143,19 @@ export class HostBookings {
   });
 }
 
-/** The row menu's wording — a verb phrase, since a menu item stands without the panel's context. */
+/**
+ * The row menu's wording, as translation keys — a verb phrase, since a menu item stands
+ * without the panel's context.
+ */
 const ACTION_MENU_LABEL: Record<BookingAction, string> = {
-  confirm: 'Confirm booking',
-  checkIn: 'Check in',
-  checkOut: 'Check out',
-  invoice: 'Generate invoice',
-  viewInvoice: 'View invoice',
-  cancel: 'Cancel booking',
-  noShow: 'Mark no show',
-  markPaid: 'Mark as paid',
+  confirm: 'hostBookings.actionConfirmBooking',
+  checkIn: 'hostBookings.actionCheckIn',
+  checkOut: 'hostBookings.actionCheckOut',
+  invoice: 'hostBookings.actionGenerateInvoice',
+  viewInvoice: 'hostBookings.viewInvoice',
+  cancel: 'common.cancelBooking',
+  noShow: 'hostBookings.actionMarkNoShow',
+  markPaid: 'hostBookings.actionMarkPaid',
 };
 
 const ACTION_ICON: Record<BookingAction, string> = {

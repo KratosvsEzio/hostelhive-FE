@@ -7,6 +7,12 @@ import { at, loadLocale, localeFiles, params } from './locale-files-testing';
 const PAIRS = [
   'common.nBeds',
   'common.nGuests',
+  'hostBookings.checkInNGuests',
+  'hostBookings.forNNights',
+  'hostBookings.nPrivateRooms',
+  'hostBookings.nRooms',
+  'hostBookings.nSharedBeds',
+  'hostBookings.placeNGuests',
   'hostMess.maxNHoursWindow',
   'hostOverview.nTenantsUnpaid',
   'hostRooms.createNRooms',

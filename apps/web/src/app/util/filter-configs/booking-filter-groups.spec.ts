@@ -1,4 +1,7 @@
+import { englishCopy } from '@features/host/bookings/booking-copy-testing';
 import { bookingFilterGroups, bookingFilterParams } from './booking-filter-groups';
+
+const t = englishCopy();
 
 /**
  * The half of the filter contract that turns panel state into query params.
@@ -80,8 +83,32 @@ describe('bookingFilterParams', () => {
   });
 
   it('offers the room filter only once the rooms are known', () => {
-    expect(bookingFilterGroups().map((g) => g.key)).not.toContain('room');
-    const withRooms = bookingFilterGroups([{ value: 'aVXGyz', label: 'Room 101' }]);
+    expect(bookingFilterGroups(t).map((g) => g.key)).not.toContain('room');
+    const withRooms = bookingFilterGroups(t, [{ value: 'aVXGyz', label: 'Room 101' }]);
     expect(withRooms.find((g) => g.key === 'room')?.fields[0].options).toEqual([{ value: 'aVXGyz', label: 'Room 101' }]);
+  });
+});
+
+/** Every label the panel shows comes from the host's language (Trello #170). */
+describe('bookingFilterGroups wording', () => {
+  it('words the groups, fields and help from the translations', () => {
+    const groups = bookingFilterGroups(t, [{ value: 'r', label: 'Room 101' }]);
+    expect(groups.map((g) => g.label)).toEqual(['Status', 'Arrival', 'Room']);
+    expect(groups.flatMap((g) => (g.fields ?? []).map((f) => [f.label, f.description]))).toEqual([
+      ['Booking status', 'Where each stay is in its life. Leave empty for all.'],
+      ['Arriving between', 'Matches the check-in day, inclusive of both ends.'],
+      ['Guests in room', 'Bookings with guests checked into this room now.'],
+    ]);
+  });
+
+  it('names the status options by the lanes', () => {
+    expect(bookingFilterGroups(t)[0].fields?.[0].options?.map((o) => o.label)).toEqual([
+      'Pending',
+      'Confirmed',
+      'Checked in',
+      'Checked out',
+      'Cancelled',
+      'No show',
+    ]);
   });
 });

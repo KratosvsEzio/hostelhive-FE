@@ -15,6 +15,7 @@ import { Button, Skeleton } from '@hostelhive/ui';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { HostRoom } from '@util/models/host-ops';
 import { HostBooking } from './host-bookings-api';
+import { nightsPhrase, unitsPhrase } from './booking-copy';
 
 export interface AssignRow {
   room: HostRoom;
@@ -148,6 +149,9 @@ export class AssignRoomsPanel {
       .map((r) => `${r.room.number} × ${r.placed}`)
       .join(' · '),
   );
+
+  protected readonly nights = nightsPhrase;
+  protected readonly units = unitsPhrase;
 
   protected step(row: AssignRow, by: number): void {
     this.placed.update((p) => {

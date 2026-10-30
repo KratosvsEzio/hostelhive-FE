@@ -1,5 +1,6 @@
 import { FilterGroup, FilterOption, FilterValues } from '@hostelhive/ui';
 import { LANES, slugsFor } from '@features/host/bookings/booking-month';
+import type { BookingCopy } from '@features/host/bookings/booking-copy';
 
 /**
  * The only filter on the bookings list — the table half of the page.
@@ -12,33 +13,36 @@ import { LANES, slugsFor } from '@features/host/bookings/booking-month';
  * The disposition options are {@link LANES}, in the order a stay moves through them, so the
  * list reads as a life cycle rather than an alphabet. They are the same five the calendar
  * counts and the status column badges, which is the point: one vocabulary for the page.
+ *
+ * `t` translates; the page supplies it because the translations live in its injection context.
+ * `rooms` arrive already worded.
  */
-export function bookingFilterGroups(rooms: readonly FilterOption[] = []): FilterGroup[] {
+export function bookingFilterGroups(t: BookingCopy, rooms: readonly FilterOption[] = []): FilterGroup[] {
   return [
     {
       key: 'disposition',
-      label: 'Status',
+      label: t('hostBookings.filterStatus'),
       icon: 'ti-filter',
       fields: [
         {
           key: 'disposition',
           type: 'checkbox',
-          label: 'Booking status',
-          description: 'Where each stay is in its life. Leave empty for all.',
-          options: LANES.map((l) => ({ value: l.key, label: l.label })),
+          label: t('hostBookings.filterBookingStatus'),
+          description: t('hostBookings.filterBookingStatusHelp'),
+          options: LANES.map((l) => ({ value: l.key, label: t(l.labelKey) })),
         },
       ],
     },
     {
       key: 'checkIn',
-      label: 'Arrival',
+      label: t('hostBookings.filterArrival'),
       icon: 'ti-calendar',
       fields: [
         {
           key: 'checkIn',
           type: 'date-range',
-          label: 'Arriving between',
-          description: 'Matches the check-in day, inclusive of both ends.',
+          label: t('hostBookings.filterArrivingBetween'),
+          description: t('hostBookings.filterArrivingBetweenHelp'),
         },
       ],
     },
@@ -47,14 +51,14 @@ export function bookingFilterGroups(rooms: readonly FilterOption[] = []): Filter
       ? [
           {
             key: 'room',
-            label: 'Room',
+            label: t('common.room'),
             icon: 'ti-door',
             fields: [
               {
                 key: 'room',
                 type: 'select' as const,
-                label: 'Guests in room',
-                description: 'Bookings with guests checked into this room now.',
+                label: t('hostBookings.filterGuestsInRoom'),
+                description: t('hostBookings.filterGuestsInRoomHelp'),
                 options: [...rooms],
               },
             ],

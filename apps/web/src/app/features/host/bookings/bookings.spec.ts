@@ -28,6 +28,7 @@ import { AssignRoomsPanel, AssignSelection } from './assign-rooms-panel';
 import { BookingCalendar } from './booking-calendar';
 import { BookingAction } from './booking-details-panel';
 import { HostBookings } from './bookings';
+import { provideKeysWithParams } from './booking-copy-testing';
 import { HostBooking } from './host-bookings-api';
 
 /** The page's protected surface, reached the way the template reaches it. */
@@ -111,7 +112,11 @@ async function open(o: OpenOptions = {}): Promise<Page> {
   const deps = o.deps ?? hostPageDeps();
   if (o.items) deps.bookings.list.mockReturnValue(of(bookingPage(o.items)));
   if (o.invoices) deps.ops.bookingInvoices.mockReturnValue(of(new Map(o.invoices)));
-  const page = await openHostPage(o.url ?? LIST_URL, HostBookings, { bookings: HostBookings }, { deps });
+  const page = await openHostPage(o.url ?? LIST_URL, HostBookings, { bookings: HostBookings }, {
+    deps,
+    // Counts and room numbers go into the copy, so keys render with their params.
+    providers: [provideKeysWithParams()],
+  });
   await settle(page);
   return page;
 }
@@ -185,12 +190,12 @@ const dialogAlert = (page: Page) => textOf(modal(page)?.querySelector('[role="al
 
 /** The row menu's entry for each move that has one. */
 const MENU_LABEL: Readonly<Partial<Record<BookingAction, string>>> = {
-  checkIn: 'Check in',
-  checkOut: 'Check out',
-  cancel: 'Cancel booking',
-  noShow: 'Mark no show',
-  markPaid: 'Mark as paid',
-  invoice: 'Generate invoice',
+  checkIn: 'hostBookings.actionCheckIn',
+  checkOut: 'hostBookings.actionCheckOut',
+  cancel: 'common.cancelBooking',
+  noShow: 'hostBookings.actionMarkNoShow',
+  markPaid: 'hostBookings.actionMarkPaid',
+  invoice: 'hostBookings.actionGenerateInvoice',
 };
 
 const ROOM_PICK = [{ roomId: 'r-101', roomNumber: '101', guests: 2 }];
@@ -257,7 +262,7 @@ const eachPanelless = <T extends object>(cases: readonly T[]) =>
 /** Presses Confirm from `entry`: the row menu is the first row's, and the panel is opened on `booking` first. */
 async function confirmFrom(page: Page, entry: ConfirmEntry, booking: HostBooking): Promise<void> {
   if (entry === 'row menu') {
-    await startFromMenu(page, 'Confirm booking');
+    await startFromMenu(page, 'hostBookings.actionConfirmBooking');
     return;
   }
   if (entry === 'calendar card') {
@@ -265,7 +270,7 @@ async function confirmFrom(page: Page, entry: ConfirmEntry, booking: HostBooking
   } else {
     await openPanel(page, booking);
     const footer = Array.from(page.el.querySelectorAll<HTMLButtonElement>('hh-booking-details-panel footer button'));
-    footer.find((b) => textOf(b) === 'Confirm')!.click();
+    footer.find((b) => textOf(b) === 'common.confirm')!.click();
   }
   await settle(page);
 }
@@ -318,7 +323,7 @@ const MOVED_ON: readonly MovedOnPair[] = [
     key: 'hostBookings.bookingHasMovedOn',
     shown: checkedIn(),
     fresh: hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' }),
-    footer: ['Close'],
+    footer: ['common.close'],
   },
   {
     name: 'a no-show of a booking that has checked in',
@@ -328,7 +333,7 @@ const MOVED_ON: readonly MovedOnPair[] = [
     key: 'hostBookings.bookingHasMovedOn',
     shown: arriving(),
     fresh: hostBooking('checked-in', { id: 'bk-c' }),
-    footer: ['Cancel booking', 'Generate invoice', 'Mark as paid', 'Check out'],
+    footer: ['common.cancelBooking', 'hostBookings.actionGenerateInvoice', 'hostBookings.actionMarkPaid', 'hostBookings.actionCheckOut'],
   },
   {
     name: 'a check-out of a booking that has checked out',
@@ -338,7 +343,7 @@ const MOVED_ON: readonly MovedOnPair[] = [
     key: 'hostBookings.bookingHasMovedOn',
     shown: checkedIn(),
     fresh: hostBooking('checked-out', { id: 'bk-i', ref: 'BK-I' }),
-    footer: ['Mark as paid', 'Generate invoice'],
+    footer: ['hostBookings.actionMarkPaid', 'hostBookings.actionGenerateInvoice'],
   },
   {
     name: 'a payment on a booking that was cancelled',
@@ -348,7 +353,7 @@ const MOVED_ON: readonly MovedOnPair[] = [
     key: 'hostBookings.bookingHasMovedOn',
     shown: checkedIn(),
     fresh: hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' }),
-    footer: ['Close'],
+    footer: ['common.close'],
   },
   {
     name: 'an invoice for a booking that was cancelled',
@@ -358,7 +363,7 @@ const MOVED_ON: readonly MovedOnPair[] = [
     key: 'hostBookings.bookingHasMovedOn',
     shown: settledOf(checkedIn()),
     fresh: hostBooking('cancelled', { id: 'bk-i', ref: 'BK-I' }),
-    footer: ['Close'],
+    footer: ['common.close'],
   },
   {
     name: 'a payment on a booking already paid',
@@ -418,8 +423,8 @@ describe('HostBookings', () => {
       await openMenu(page);
 
       const labels = menuLabels(page);
-      expect(labels).toContain('View invoice');
-      expect(labels).not.toContain('Generate invoice');
+      expect(labels).toContain('hostBookings.viewInvoice');
+      expect(labels).not.toContain('hostBookings.actionGenerateInvoice');
     });
 
     it('offers Generate invoice when none was found', async () => {
@@ -428,8 +433,8 @@ describe('HostBookings', () => {
       await openMenu(page);
 
       const labels = menuLabels(page);
-      expect(labels).toContain('Generate invoice');
-      expect(labels).not.toContain('View invoice');
+      expect(labels).toContain('hostBookings.actionGenerateInvoice');
+      expect(labels).not.toContain('hostBookings.viewInvoice');
     });
   });
 
@@ -573,7 +578,7 @@ describe('HostBookings', () => {
       deps.bookings.generateInvoice.mockReturnValue(of(generated));
       const page = await open({ deps, items: [settledOf(checkedIn())] });
 
-      await startFromMenu(page, 'Generate invoice');
+      await startFromMenu(page, 'hostBookings.actionGenerateInvoice');
       expect(modal(page)).not.toBeNull();
       await confirmViaButton(page);
 
@@ -585,15 +590,15 @@ describe('HostBookings', () => {
       expect(deps.notifications.raised).toHaveLength(1);
       const [toast] = deps.notifications.raised;
       expect(toast.kind).toBe('success');
-      expect(toast.title).toBe('Invoice generated');
+      expect(toast.title).toBe('hostBookings.invoiceGenerated');
       const booking = api(page).rows()[0];
       expect(booking.total).not.toBe(generated.amount);
       const shown = TestBed.runInInjectionContext(() => new MoneyPipe().transform(generated.amount));
       expect(toast.message).toBe(`${buildInvoiceId(generated)} · ${currencySymbol(booking.currency)} ${shown}`);
 
       await openMenu(page);
-      expect(menuLabels(page)).toContain('View invoice');
-      expect(menuLabels(page)).not.toContain('Generate invoice');
+      expect(menuLabels(page)).toContain('hostBookings.viewInvoice');
+      expect(menuLabels(page)).not.toContain('hostBookings.actionGenerateInvoice');
     });
 
     it('closes the dialog, says so, and looks again when the server says one already exists', async () => {
@@ -602,7 +607,7 @@ describe('HostBookings', () => {
       deps.bookings.generateInvoice.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [settledOf(checkedIn())] });
 
-      await startFromMenu(page, 'Generate invoice');
+      await startFromMenu(page, 'hostBookings.actionGenerateInvoice');
       deps.ops.bookingInvoices.mockReturnValue(of(new Map([['bk-i', inv()]])));
       await confirmViaButton(page);
 
@@ -644,7 +649,7 @@ describe('HostBookings', () => {
       deps.bookings.generateInvoice.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [settledOf(checkedIn())] });
 
-      await startFromMenu(page, 'Generate invoice');
+      await startFromMenu(page, 'hostBookings.actionGenerateInvoice');
       await confirmViaButton(page);
 
       expect(modal(page)).not.toBeNull();
@@ -662,7 +667,7 @@ describe('HostBookings', () => {
     it('shows only in the mark-as-paid dialog, ticked, while the invoice is unpaid', async () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
 
       expect(checkbox(page)).not.toBeNull();
       expect(checkbox(page)!.checked).toBe(true);
@@ -672,7 +677,7 @@ describe('HostBookings', () => {
     it('is ticked again on reopen after the host unticked it', async () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       checkbox(page)!.click();
       await settle(page);
       expect(checkbox(page)!.checked).toBe(false);
@@ -683,7 +688,7 @@ describe('HostBookings', () => {
       expect(modal(page)).toBeNull();
 
       await openMenu(page);
-      await pick(page, 'Mark as paid');
+      await pick(page, 'hostBookings.actionMarkPaid');
       expect(checkbox(page)!.checked).toBe(true);
       expect(api(page).payInvoiceToo()).toBe(true);
     });
@@ -692,7 +697,7 @@ describe('HostBookings', () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv()]] });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
 
       const calls = translations(translate, 'hostBookings.alsoMarkInvoicePaid');
       expect(calls.length).toBeGreaterThan(0);
@@ -702,7 +707,7 @@ describe('HostBookings', () => {
     it('is absent from the other dialogs even when the invoice is unpaid', async () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Check out');
+      await startFromMenu(page, 'hostBookings.actionCheckOut');
 
       expect(modal(page)).not.toBeNull();
       expect(checkbox(page)).toBeNull();
@@ -711,7 +716,7 @@ describe('HostBookings', () => {
     it('is absent when the invoice is already paid', async () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv({ status: 'paid' })]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
 
       expect(modal(page)).not.toBeNull();
       expect(checkbox(page)).toBeNull();
@@ -720,7 +725,7 @@ describe('HostBookings', () => {
     it('is absent when the booking has no invoice', async () => {
       const page = await open({ items: [checkedIn()] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
 
       expect(modal(page)).not.toBeNull();
       expect(checkbox(page)).toBeNull();
@@ -735,7 +740,7 @@ describe('HostBookings', () => {
       deps.ops.markInvoicePaid.mockReturnValue(of(inv({ status: 'paid' })));
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       expect(deps.bookings.markPaid).toHaveBeenCalledWith(HOSTEL_ID, 'bk-i', QUIET);
@@ -767,14 +772,14 @@ describe('HostBookings', () => {
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       expect(api(page).rows()[0].balanceDue).toBe(0);
       expect(modal(page)).toBeNull();
       expect(api(page).invoices().get('bk-i')?.status).toBe('due');
       expect(deps.notifications.raised).toEqual([
-        { kind: 'error', title: 'hostBookings.invoiceNotPaid', message: undefined },
+        { kind: 'error', title: 'hostBookings.invoiceNotPaid(reason=hostBookings.payTheInvoiceOnItsOwn)', message: undefined },
       ]);
       // The reason is translated copy (keys resolve to themselves here), never the server's text.
       expect(translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1])).toContainEqual({
@@ -790,7 +795,7 @@ describe('HostBookings', () => {
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       const [params] = translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]);
@@ -805,7 +810,7 @@ describe('HostBookings', () => {
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       const [params] = translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]);
@@ -823,7 +828,7 @@ describe('HostBookings', () => {
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       expect(deps.notifications.raised).toHaveLength(1);
@@ -839,7 +844,7 @@ describe('HostBookings', () => {
       deps.bookings.markPaid.mockReturnValue(throwError(() => refusal(text)));
       const page = await open({ deps, items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
@@ -858,7 +863,7 @@ describe('HostBookings', () => {
       deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
       const page = await open({ deps, items: [booking], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       checkbox(page)!.click();
       await settle(page);
       await confirmViaButton(page);
@@ -866,7 +871,7 @@ describe('HostBookings', () => {
       expect(deps.bookings.markPaid).toHaveBeenCalledTimes(1);
       expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
       expect(deps.notifications.raised).toEqual([
-        { kind: 'success', title: 'Marked as paid', message: 'Nothing is left due on this booking.' },
+        { kind: 'success', title: 'hostBookings.markedAsPaid', message: 'hostBookings.nothingLeftDue' },
       ]);
       expect(api(page).invoices().get('bk-i')?.status).toBe('due');
     });
@@ -877,12 +882,12 @@ describe('HostBookings', () => {
       deps.bookings.markPaid.mockReturnValue(of(settledOf(booking)));
       const page = await open({ deps, items: [booking] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
 
       expect(deps.ops.markInvoicePaid).not.toHaveBeenCalled();
       expect(deps.notifications.raised).toHaveLength(1);
-      expect(deps.notifications.raised[0].title).toBe('Marked as paid');
+      expect(deps.notifications.raised[0].title).toBe('hostBookings.markedAsPaid');
     });
 
     it('holds busy across both requests, so a second confirm or another move does nothing', async () => {
@@ -895,7 +900,7 @@ describe('HostBookings', () => {
       deps.ops.markInvoicePaid.mockReturnValue(second);
       const page = await open({ deps, items: [booking, pendingBooking], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
       await confirmViaButton(page);
       expect(api(page).busy()).toBe(true);
       expect(confirmButton(page).disabled).toBe(true);
@@ -931,7 +936,7 @@ describe('HostBookings', () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv()]] });
       const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-      await startFromMenu(page, 'Cancel booking');
+      await startFromMenu(page, 'common.cancelBooking');
 
       const note = modal(page)!.querySelector('[role="note"]');
       expect(textOf(note)).toContain('hostBookings.cancelOpenInvoiceWarning');
@@ -942,7 +947,7 @@ describe('HostBookings', () => {
     it('does not warn when the invoice is paid', async () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv({ status: 'paid' })]] });
 
-      await startFromMenu(page, 'Cancel booking');
+      await startFromMenu(page, 'common.cancelBooking');
 
       expect(modal(page)).not.toBeNull();
       expect(modal(page)!.querySelector('[role="note"]')).toBeNull();
@@ -951,7 +956,7 @@ describe('HostBookings', () => {
     it('does not warn when the booking has no invoice', async () => {
       const page = await open({ items: [checkedIn()] });
 
-      await startFromMenu(page, 'Cancel booking');
+      await startFromMenu(page, 'common.cancelBooking');
 
       expect(modal(page)).not.toBeNull();
       expect(modal(page)!.querySelector('[role="note"]')).toBeNull();
@@ -960,7 +965,7 @@ describe('HostBookings', () => {
     it('does not warn in the other dialogs', async () => {
       const page = await open({ items: [checkedIn()], invoices: [['bk-i', inv()]] });
 
-      await startFromMenu(page, 'Check out');
+      await startFromMenu(page, 'hostBookings.actionCheckOut');
 
       expect(modal(page)).not.toBeNull();
       expect(modal(page)!.querySelector('[role="note"]')).toBeNull();
@@ -1127,7 +1132,7 @@ describe('HostBookings', () => {
       expect(page.url()).toBe(LIST_URL);
       expect(api(page).rows()[0].disposition.slug).toBe('checked-in');
       expect(deps.notifications.raised).toEqual([
-        { kind: 'success', title: 'Checked in', message: 'Room 101 × 2' },
+        { kind: 'success', title: 'hostBookings.checkedIn', message: 'hostBookings.roomTimesGuests(room=101, guests=2)' },
       ]);
     });
   });
@@ -1146,7 +1151,7 @@ describe('HostBookings', () => {
 
     async function clickRelease(page: Page): Promise<void> {
       const buttons = page.el.querySelectorAll<HTMLButtonElement>('hh-booking-details-panel button');
-      const button = Array.from(buttons).find((b) => textOf(b) === 'Release');
+      const button = Array.from(buttons).find((b) => textOf(b) === 'hostBookings.release');
       button!.click();
       await settle(page);
     }
@@ -1179,9 +1184,9 @@ describe('HostBookings', () => {
 
       await clickRelease(page);
 
-      expect(panelText(page)).toContain('Room 101 · 2 guests hostBookings.released');
+      expect(panelText(page)).toContain('common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.released');
       const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
-      expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
+      expect(buttons.some((b) => textOf(b) === 'hostBookings.release')).toBe(false);
       expect(api(page).rows()[0].occupancies.every((o) => !o.active)).toBe(true);
     });
 
@@ -1197,12 +1202,12 @@ describe('HostBookings', () => {
       const page = await open({ deps, items: [checkedIn()] });
       await page.navigate(bookingPath(HOSTEL_ID, 'zz-9'));
       await settle(page);
-      expect(panelText(page)).toContain('Room 102 · 1 guest Release');
+      expect(panelText(page)).toContain('common.roomNumber(number=102) · common.nGuestsOne(count=1) hostBookings.release');
 
       await clickRelease(page);
 
       expect(deps.bookings.releaseOccupancy).toHaveBeenCalledWith(HOSTEL_ID, 'zz-9', 'oc-7', QUIET);
-      expect(panelText(page)).toContain('Room 102 · 1 guest hostBookings.released');
+      expect(panelText(page)).toContain('common.roomNumber(number=102) · common.nGuestsOne(count=1) hostBookings.released');
       expect(api(page).viewing()?.occupancies[0].active).toBe(false);
     });
 
@@ -1235,9 +1240,9 @@ describe('HostBookings', () => {
         [HOSTEL_ID, 'bk-i'],
       ]);
       expect(api(page).rows()[0].occupancies.every((o) => !o.active)).toBe(true);
-      expect(panelText(page)).toContain('Room 101 · 2 guests hostBookings.released');
+      expect(panelText(page)).toContain('common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.released');
       const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
-      expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
+      expect(buttons.some((b) => textOf(b) === 'hostBookings.release')).toBe(false);
       expect(panelText(page)).toContain('hostBookings.roomAlreadyReleased');
     });
 
@@ -1251,9 +1256,9 @@ describe('HostBookings', () => {
       await clickRelease(page);
 
       expect(deps.bookings.list.mock.calls.length).toBe(before + 1);
-      expect(panelText(page)).toContain('Room 101 · 2 guests hostBookings.released');
+      expect(panelText(page)).toContain('common.roomNumber(number=101) · common.nGuests(count=2) hostBookings.released');
       const buttons = Array.from(page.el.querySelectorAll('hh-booking-details-panel button'));
-      expect(buttons.some((b) => textOf(b) === 'Release')).toBe(false);
+      expect(buttons.some((b) => textOf(b) === 'hostBookings.release')).toBe(false);
     });
   });
 
@@ -1499,12 +1504,12 @@ describe('HostBookings', () => {
       expect(deps.bookings.get).toHaveBeenCalledTimes(1);
       expect(deps.bookings.get).toHaveBeenCalledWith(HOSTEL_ID, 'bk-s', QUIET);
       expect(api(page).viewing()?.disposition.slug).toBe('checked-in');
-      expect(footerButtons(page)).toContain('Check out');
-      expect(footerButtons(page)).not.toContain('Check in');
-      expect(footerButtons(page)).not.toContain('Mark no show');
+      expect(footerButtons(page)).toContain('hostBookings.actionCheckOut');
+      expect(footerButtons(page)).not.toContain('hostBookings.actionCheckIn');
+      expect(footerButtons(page)).not.toContain('hostBookings.actionMarkNoShow');
       // The rooms endpoint reads the lagging index too and answers none; the database copy's stand.
-      expect(panelText(page)).toContain('Room 101 · 2 guests');
-      expect(panelText(page)).toContain('Room 102 · 1 guest');
+      expect(panelText(page)).toContain('common.roomNumber(number=101) · common.nGuests(count=2)');
+      expect(panelText(page)).toContain('common.roomNumber(number=102) · common.nGuestsOne(count=1)');
       expect(api(page).rows()[0].disposition.slug).toBe('checked-in');
       expect(api(page).rowActions(api(page).rows()[0])).toContain('checkOut');
     });
@@ -1578,7 +1583,7 @@ describe('HostBookings', () => {
       expect(api(page).viewError()).toBe('');
       expect(deps.notifications.raised).toEqual([]);
       expect(deps.bookings.list.mock.calls.length).toBe(lists);
-      expect(footerButtons(page)).toContain('Check in');
+      expect(footerButtons(page)).toContain('hostBookings.actionCheckIn');
     });
 
     it('drops an answer for a booking the panel has moved on from', async () => {
@@ -1720,7 +1725,7 @@ describe('HostBookings', () => {
     it('does not mention an invoice in the no-show dialog', async () => {
       const page = await open({ items: [hostBooking('confirmed', { id: 'bk-c' })] });
 
-      await startFromMenu(page, 'Mark no show');
+      await startFromMenu(page, 'hostBookings.actionMarkNoShow');
 
       expect(modal(page)).not.toBeNull();
       expect(textOf(modal(page))).not.toMatch(/invoice/i);
@@ -1729,7 +1734,7 @@ describe('HostBookings', () => {
     it('does not mention an invoice in the mark-as-paid dialog when the booking has none', async () => {
       const page = await open({ items: [hostBooking('confirmed', { id: 'bk-c' })] });
 
-      await startFromMenu(page, 'Mark as paid');
+      await startFromMenu(page, 'hostBookings.actionMarkPaid');
 
       expect(modal(page)).not.toBeNull();
       expect(textOf(modal(page))).not.toMatch(/invoice/i);
@@ -1741,7 +1746,7 @@ describe('HostBookings', () => {
       const deps = hostPageDeps();
       const page = await open({ deps, items: [checkedIn()] });
 
-      await startFromMenu(page, 'Cancel booking');
+      await startFromMenu(page, 'common.cancelBooking');
       api(page).confirmDialog();
       await settle(page);
 
@@ -1755,7 +1760,7 @@ describe('HostBookings', () => {
       deps.bookings.checkOut.mockReturnValue(throwError(() => urlRefusal(text)));
       const page = await open({ deps, items: [checkedIn()] });
 
-      await startFromMenu(page, 'Check out');
+      await startFromMenu(page, 'hostBookings.actionCheckOut');
       await confirmViaButton(page);
 
       expect(modal(page)).not.toBeNull();
@@ -1999,7 +2004,7 @@ describe('HostBookings', () => {
         await confirmFrom(page, entry, pending);
 
         expect(deps.notifications.raised).toEqual([
-          { kind: 'success', title: 'Booking confirmed', message: 'The guest has been emailed their confirmation.' },
+          { kind: 'success', title: 'hostBookings.bookingConfirmed', message: 'hostBookings.guestEmailedConfirmation' },
         ]);
         expect(api(page).rows()[0]).toBe(confirmedCopy);
         expect(api(page).viewError()).toBe('');
@@ -2030,8 +2035,8 @@ describe('HostBookings', () => {
         await confirmFrom(page, 'panel', pending);
 
         expect(api(page).viewing()).toBe(confirmedCopy);
-        expect(panelFooterButtons(page)).toContain('Check in');
-        expect(panelFooterButtons(page)).not.toContain('Confirm');
+        expect(panelFooterButtons(page)).toContain('hostBookings.actionCheckIn');
+        expect(panelFooterButtons(page)).not.toContain('common.confirm');
         expect(panelFooterAlert(page)).toBe('');
         expect(api(page).viewError()).toBe('');
       });
@@ -2214,13 +2219,13 @@ describe('HostBookings', () => {
 
       const checkInButton = (page: Page) =>
         Array.from(page.el.querySelectorAll<HTMLButtonElement>('hh-assign-rooms-panel footer button')).find((b) =>
-          textOf(b).startsWith('Check in'),
+          textOf(b).startsWith('hostBookings.checkInNGuests'),
         )!;
 
       async function addGuestTo(page: Page, roomNumber: string): Promise<void> {
         page.el
           .querySelector<HTMLButtonElement>(
-            `hh-assign-rooms-panel button[aria-label="One more guest in room ${roomNumber}"]`,
+            `hh-assign-rooms-panel button[aria-label="hostBookings.oneMoreGuestInRoom(room=${roomNumber})"]`,
           )!
           .click();
         await settle(page);
@@ -2299,7 +2304,7 @@ describe('HostBookings', () => {
         signIn(role);
         const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
 
-        await startFromMenu(page, 'Mark as paid');
+        await startFromMenu(page, 'hostBookings.actionMarkPaid');
         await confirmViaButton(page);
         return { page, deps, reasons: translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1]) };
       }
@@ -2307,7 +2312,7 @@ describe('HostBookings', () => {
       it.each(ROLES)('pays the booking and gives $who the permission reason for the invoice', async ({ role, key }) => {
         const { page, deps, reasons } = await payWithInvoiceRefused(cancan(), role);
 
-        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.invoiceNotPaid')]);
+        expect(deps.notifications.raised).toEqual([errorToast(`hostBookings.invoiceNotPaid(reason=${key})`)]);
         expect(reasons).toContainEqual({ reason: key });
         expect(reasons).not.toContainEqual({ reason: 'hostBookings.payTheInvoiceOnItsOwn' });
         expect(api(page).rows()[0].balanceDue).toBe(0);
@@ -2319,7 +2324,7 @@ describe('HostBookings', () => {
       it('gives the plan as the reason when the invoice is refused for a plan without CRM', async () => {
         const { page, deps, reasons } = await payWithInvoiceRefused(noCrm(), 'manager');
 
-        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.invoiceNotPaid')]);
+        expect(deps.notifications.raised).toEqual([errorToast('hostBookings.invoiceNotPaid(reason=hostBookings.planHasNoCrm)')]);
         expect(reasons).toContainEqual({ reason: 'hostBookings.planHasNoCrm' });
         expect(reasons).not.toContainEqual({ reason: 'hostBookings.payTheInvoiceOnItsOwn' });
         expect(api(page).rows()[0].balanceDue).toBe(0);
@@ -2445,8 +2450,8 @@ describe('HostBookings', () => {
         expect(api(page).assigning()).toBeNull();
         expect(api(page).assignError()).toBe('');
         expect(api(page).viewing()).toBe(alreadyIn);
-        expect(panelText(page)).toContain('Room 101 · 2 guests');
-        expect(panelText(page)).toContain('Room 102 · 1 guest');
+        expect(panelText(page)).toContain('common.roomNumber(number=101) · common.nGuests(count=2)');
+        expect(panelText(page)).toContain('common.roomNumber(number=102) · common.nGuestsOne(count=1)');
         expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-c'));
         expect(deps.notifications.raised).toEqual([info('hostBookings.alreadyCheckedIn')]);
         expect(api(page).viewError()).toBe('');
@@ -2474,7 +2479,7 @@ describe('HostBookings', () => {
         ]);
         expect(api(page).assigning()).toBeNull();
         expect(api(page).viewing()).toBe(alreadyIn);
-        expect(panelText(page)).toContain('Room 101 · 2 guests');
+        expect(panelText(page)).toContain('common.roomNumber(number=101) · common.nGuests(count=2)');
         expect(navigate).not.toHaveBeenCalled();
         expect(page.url()).toBe(bookingPath(HOSTEL_ID, 'bk-c'));
         expect(deps.notifications.raised).toEqual([info('hostBookings.alreadyCheckedIn')]);
@@ -2620,7 +2625,7 @@ describe('HostBookings', () => {
         expect(api(page).viewing()).toBe(paid);
         expect(api(page).viewError()).toBe('');
         expect(page.el.querySelector('hh-booking-details-panel footer [role="alert"]')).toBeNull();
-        expect(panelText(page)).toContain('Nothing outstanding');
+        expect(panelText(page)).toContain('hostBookings.nothingOutstanding');
         expect(deps.notifications.raised).toEqual([info('hostBookings.bookingAlreadyPaid')]);
       });
 
@@ -2736,7 +2741,7 @@ describe('HostBookings', () => {
         expect(deps.ops.bookingInvoices).toHaveBeenCalledTimes(1);
         expect(deps.ops.bookingInvoices).toHaveBeenCalledWith(HOSTEL_ID, ['bk-c'], QUIET);
         await openMenu(page);
-        expect(menuLabels(page)).toContain('Generate invoice');
+        expect(menuLabels(page)).toContain('hostBookings.actionGenerateInvoice');
       });
     });
 
@@ -2750,13 +2755,13 @@ describe('HostBookings', () => {
         const page = await open({ deps, items: [shown] });
 
         await startMove(page, 'invoice');
-        expect(textOf(modal(page))).toContain('3 nights · 2 guests');
+        expect(textOf(modal(page))).toContain('common.nNights(count=3) · common.nGuests(count=2)');
         submitMove(page, 'invoice', shown);
         await settle(page);
 
         expect(modal(page)).not.toBeNull();
         expect(dialogAlert(page)).toBe('hostBookings.moveNotAccepted');
-        expect(textOf(modal(page))).toContain('3 nights · 3 guests');
+        expect(textOf(modal(page))).toContain('common.nNights(count=3) · common.nGuests(count=3)');
         expect(api(page).rows()[0]).toBe(fresh);
         expect(deps.notifications.raised).toEqual([]);
       });
@@ -2851,7 +2856,7 @@ describe('HostBookings', () => {
 
         expect(modal(page)).toBeNull();
         expect(api(page).viewing()).toBe(fresh);
-        expect(panelText(page)).toContain('3 guests · Dormitory');
+        expect(panelText(page)).toContain('common.nGuests(count=3) · Dormitory');
         expect(api(page).rows()[0]).toBe(fresh);
       });
     });
@@ -3099,7 +3104,7 @@ describe('HostBookings', () => {
       const paid = () => settledOf(checkedIn());
       const callOrder = (fn: { mock: { invocationCallOrder: number[] } }) => fn.mock.invocationCallOrder[0];
       const paidToast = { kind: 'info', title: 'hostBookings.bookingAlreadyPaid', message: undefined };
-      const crossPaidToast = { kind: 'success', title: 'hostBookings.alreadyPaidInvoicePaid', message: undefined };
+      const crossPaidToast = { kind: 'success', title: `hostBookings.alreadyPaidInvoicePaid(invoice=${buildInvoiceId(inv())})`, message: undefined };
 
       /** The open panel's status pill for the booking's invoice. */
       const invoicePill = (page: Page) =>
@@ -3161,7 +3166,7 @@ describe('HostBookings', () => {
         expect(callOrder(deps.bookings.markPaid)).toBeLessThan(callOrder(deps.bookings.get));
         expect(callOrder(deps.bookings.get)).toBeLessThan(callOrder(deps.ops.invoice));
         expect(deps.notifications.raised).toEqual([
-          { kind: 'success', title: 'hostBookings.alreadyPaidInvoicePaid', message: undefined },
+          { kind: 'success', title: `hostBookings.alreadyPaidInvoicePaid(invoice=${buildInvoiceId(inv())})`, message: undefined },
         ]);
         expect(translations(translate, 'hostBookings.alreadyPaidInvoicePaid').map((c) => c[1])).toContainEqual({
           invoice: buildInvoiceId(inv()),
@@ -3182,7 +3187,7 @@ describe('HostBookings', () => {
         await confirmViaButton(page);
 
         expect(deps.notifications.raised).toEqual([
-          { kind: 'error', title: 'hostBookings.invoiceNotPaid', message: undefined },
+          { kind: 'error', title: 'hostBookings.invoiceNotPaid(reason=hostBookings.payTheInvoiceOnItsOwn)', message: undefined },
         ]);
         expect(translations(translate, 'hostBookings.invoiceNotPaid').map((c) => c[1])).toContainEqual({
           reason: 'hostBookings.payTheInvoiceOnItsOwn',
@@ -3273,11 +3278,11 @@ describe('HostBookings', () => {
         expect(deps.ops.invoice.mock.calls).toEqual([[HOSTEL_ID, 'rb-1', QUIET]]);
         expect(sent).toEqual([PAID_AFTER_CHECK]);
         expect(api(page).viewing()).toBe(settledCopy);
-        expect(panelText(page)).toContain('Nothing outstanding');
+        expect(panelText(page)).toContain('hostBookings.nothingOutstanding');
         expect(invoicePill(page)).toBeDefined();
         expect(textOf(invoicePill(page))).toBe(invoiceStatusLabel('paid'));
         expect(deps.notifications.raised).toEqual([
-          { kind: 'success', title: 'hostBookings.alreadyPaidInvoicePaid', message: undefined },
+          { kind: 'success', title: `hostBookings.alreadyPaidInvoicePaid(invoice=${buildInvoiceId(inv())})`, message: undefined },
         ]);
       });
 
@@ -3555,8 +3560,8 @@ describe('HostBookings', () => {
         expect(api(page).viewing()).toBe(moved);
         expect(api(page).viewError()).toBe('hostBookings.bookingHasMovedOn');
         expect(panelFooterAlert(page)).toBe('hostBookings.bookingHasMovedOn');
-        expect(panelFooterButtons(page)).toContain('Check in');
-        expect(panelFooterButtons(page)).not.toContain('Confirm');
+        expect(panelFooterButtons(page)).toContain('hostBookings.actionCheckIn');
+        expect(panelFooterButtons(page)).not.toContain('common.confirm');
         expect(deps.notifications.raised).toEqual([]);
         expect(api(page).busy()).toBe(false);
       });
@@ -3595,7 +3600,7 @@ describe('HostBookings', () => {
         expect(api(page).viewing()).toBe(same);
         expect(api(page).viewError()).toBe('hostBookings.moveNotAccepted');
         expect(panelFooterAlert(page)).toBe('hostBookings.moveNotAccepted');
-        expect(panelFooterButtons(page)).toContain('Confirm');
+        expect(panelFooterButtons(page)).toContain('common.confirm');
         expect(api(page).busy()).toBe(false);
       });
 

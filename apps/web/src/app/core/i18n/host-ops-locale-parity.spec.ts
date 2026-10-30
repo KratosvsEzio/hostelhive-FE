@@ -6,8 +6,122 @@ import {
   params,
 } from './locale-files-testing';
 
-/** Every key English holds in the host bookings and invoices screens, so a new English-only key fails here. */
-const GROUPS = ['hostBookings', 'hostInvoices'];
+/** Every key English holds in the host bookings, invoices and rooms screens, so a new English-only key fails here. */
+const GROUPS = ['hostBookings', 'hostInvoices', 'hostRooms'];
+
+/**
+ * The booking lifecycle copy that was hard-coded English until Trello #170. `filterStatus` and
+ * `viaSource` are left out: "Status" and "via" are the native words in several languages.
+ */
+const LIFECYCLE_KEYS = [
+  'lanePending',
+  'laneConfirmed',
+  'laneCheckedIn',
+  'laneCheckedOut',
+  'laneCancelled',
+  'laneNoShow',
+  'actionConfirmBooking',
+  'actionCheckIn',
+  'actionCheckOut',
+  'actionGenerateInvoice',
+  'actionMarkNoShow',
+  'actionMarkPaid',
+  'hintPending',
+  'hintConfirmed',
+  'hintCheckedIn',
+  'hintInvoiced',
+  'hintInvoiceOnce',
+  'hintNoShow',
+  'hintCancelled',
+  'requestedAgo',
+  'requestedJustNow',
+  'bookingFallback',
+  'stay',
+  'quoted',
+  'due',
+  'booked',
+  'inRooms',
+  'reason',
+  'reference',
+  'forNNights',
+  'forNNightsOne',
+  'atTheProperty',
+  'nPrivateRooms',
+  'nPrivateRoomsOne',
+  'nSharedBeds',
+  'nSharedBedsOne',
+  'nRooms',
+  'nRoomsOne',
+  'nRoomTypes',
+  'loadingRooms',
+  'couldNotLoadBookingRooms',
+  'noRoomsRecordedYet',
+  'release',
+  'releasing',
+  'amountPaid',
+  'amountStillDue',
+  'amountDue',
+  'nothingOutstanding',
+  'partial',
+  'unpaid',
+  'bookingConfirmed',
+  'guestEmailedConfirmation',
+  'bookingCancelled',
+  'everyoneHasBeenTold',
+  'markedAsNoShow',
+  'everyBedFreeAgain',
+  'markedAsPaid',
+  'nothingLeftDue',
+  'invoiceGenerated',
+  'checkedIn',
+  'roomTimesGuests',
+  'noShowTitle',
+  'checkOutTitle',
+  'markPaidTitle',
+  'generateInvoiceTitle',
+  'working',
+  'keepBooking',
+  'notNow',
+  'inRoomsList',
+  'cancelDialogBody',
+  'noShowDialogBody',
+  'checkOutDialogBody',
+  'markPaidDialogBody',
+  'invoiceDialogBody',
+  'reasonRequired',
+  'reasonOptional',
+  'cancelReasonPlaceholder',
+  'noShowReasonPlaceholder',
+  'noBookingMatchesFilters',
+  'bookingsWillAppearHere',
+  'filterBookingStatus',
+  'filterBookingStatusHelp',
+  'filterArrival',
+  'filterArrivingBetween',
+  'filterArrivingBetweenHelp',
+  'filterGuestsInRoom',
+  'filterGuestsInRoomHelp',
+  'nToConfirm',
+  'nothingPending',
+  'awaitingConfirmation',
+  'nAwaitingConfirmation',
+  'details',
+  'checkInGuest',
+  'guestsPlaced',
+  'noRoomsToCheckInto',
+  'nOfNBedsFree',
+  'nOfNBedsFreeOne',
+  'fullNOfNBedsTaken',
+  'oneFewerGuestInRoom',
+  'oneMoreGuestInRoom',
+  'partialPlacement',
+  'partialPlacementOne',
+  'placeNGuests',
+  'placeNGuestsOne',
+  'checkingIn',
+  'checkInNGuests',
+  'checkInNGuestsOne',
+];
 
 /** The stay-flow and booking-invoice copy, which must be translated rather than copied from English. */
 const TRANSLATED_KEYS = [
@@ -43,7 +157,18 @@ const TRANSLATED_KEYS = [
     'couldNotReleaseRoom',
     'invoiceNoLongerExists',
     'payTheInvoiceOnItsOwn',
+    ...LIFECYCLE_KEYS,
   ].map((key) => `hostBookings.${key}`),
+  // The rooms screens' booking-guest copy, English-only until Trello #170.
+  ...[
+    'nFree',
+    'full',
+    'guestsOnBookings',
+    'noBookingGuests',
+    'guestCount',
+    'untilDate',
+    'couldNotLoadBookingGuests',
+  ].map((key) => `hostRooms.${key}`),
   ...[
     'invoicesAppearHereNightly',
     'bookingInvoices',
@@ -61,8 +186,11 @@ const TRANSLATED_KEYS = [
 
 /** Translations that genuinely read the same as English, per file. */
 const SAME_AS_ENGLISH: Record<string, string[]> = {
-  // Danish uses the loanword "booking" throughout, so "Booking {{ref}}" is the native label.
-  'da.json': ['hostInvoices.bookingRef'],
+  // Danish uses the loanword "booking" throughout, so "Booking {{ref}}" is the native label;
+  // "Reference" is the word it already uses for the billing column.
+  'da.json': ['hostInvoices.bookingRef', 'hostBookings.bookingFallback', 'hostBookings.reference'],
+  // Dutch "Details", as its own rooms detail tab already reads.
+  'nl.json': ['hostBookings.details'],
   // French spells the booking-confirmation document the same way English does.
   'fr.json': ['hostBookings.confirmation'],
 };
@@ -86,7 +214,7 @@ function texts(file: string): Record<string, string | undefined> {
   );
 }
 
-describe('the host bookings and invoices copy in every language', () => {
+describe('the host bookings, invoices and rooms copy in every language', () => {
   it('covers all 18 languages', () => {
     expect(files).toHaveLength(18);
   });

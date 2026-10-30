@@ -75,16 +75,12 @@
         class="mt-5 block"
         icon="ti-calendar"
         [title]="'hostBookings.nothingHereYet' | transloco"
-        [message]="
-          filtered()
-            ? 'No booking matches these filters.'
-            : 'Bookings for your rooms will appear here, soonest arrival first.'
-        "
+        [message]="(filtered() ? 'hostBookings.noBookingMatchesFilters' : 'hostBookings.bookingsWillAppearHere') | transloco"
       />
     } @else {
       <div class="mt-5">
         <hh-data-table
-          [columns]="tableCols"
+          [columns]="tableCols()"
           [rows]="rows()"
           [rowId]="bookingRowId"
           [showActions]="true"
@@ -126,7 +122,7 @@
               [disabled]="busy()"
               (click)="onAct({ action: action, booking: menuBooking })"
             >
-              <i class="ti text-sm" [class]="actionIcon(action)" aria-hidden="true"></i>{{ actionLabel(action) }}
+              <i class="ti text-sm" [class]="actionIcon(action)" aria-hidden="true"></i>{{ actionLabel(action) | transloco }}
             </button>
           }
         </hh-context-menu>
@@ -140,34 +136,34 @@
     <hh-confirm-modal
       size="md"
       [title]="
-        d.action === 'cancel'
-          ? 'Cancel this booking?'
+        (d.action === 'cancel'
+          ? 'common.cancelThisBooking'
           : d.action === 'noShow'
-            ? 'Mark as a no show?'
+            ? 'hostBookings.noShowTitle'
             : d.action === 'checkOut'
-              ? 'Check out ' + d.booking.guest.name + '?'
+              ? 'hostBookings.checkOutTitle'
               : d.action === 'markPaid'
-                ? 'Mark as paid?'
-                : 'Generate the invoice?'
+                ? 'hostBookings.markPaidTitle'
+                : 'hostBookings.generateInvoiceTitle') | transloco: { name: d.booking.guest.name }
       "
       [icon]="
         d.action === 'cancel' ? 'ti-calendar-x' : d.action === 'noShow' ? 'ti-user-x' : d.action === 'checkOut' ? 'ti-door-exit' : d.action === 'markPaid' ? 'ti-cash' : 'ti-file-invoice'
       "
       [tone]="d.action === 'cancel' || d.action === 'noShow' ? 'danger' : 'info'"
       [confirmLabel]="
-        busy()
-          ? 'Working…'
+        (busy()
+          ? 'hostBookings.working'
           : d.action === 'cancel'
-            ? 'Cancel booking'
+            ? 'common.cancelBooking'
             : d.action === 'noShow'
-              ? 'Mark no show'
+              ? 'hostBookings.actionMarkNoShow'
               : d.action === 'checkOut'
-                ? 'Check out'
+                ? 'hostBookings.actionCheckOut'
                 : d.action === 'markPaid'
-                  ? 'Mark as paid'
-                  : 'Generate invoice'
+                  ? 'hostBookings.actionMarkPaid'
+                  : 'hostBookings.actionGenerateInvoice') | transloco
       "
-      [cancelLabel]="d.action === 'cancel' ? 'Keep booking' : 'Not now'"
+      [cancelLabel]="(d.action === 'cancel' ? 'hostBookings.keepBooking' : 'hostBookings.notNow') | transloco"
       [confirmColor]="d.action === 'cancel' || d.action === 'noShow' ? 'danger' : 'primary'"
       [confirmDisabled]="busy()"
       (confirm)="confirmDialog()"
@@ -188,28 +184,32 @@
             }
           </div>
           <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" [class]="laneBadge(bk)">
-            {{ bk.disposition.name || 'Booking' }}
+            {{ laneLabelKey(bk) ? (laneLabelKey(bk) | transloco) : bk.disposition.name || ('hostBookings.bookingFallback' | transloco) }}
           </span>
         </div>
         <dl class="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
           <div>
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Stay</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.stay' | transloco }}</dt>
             <dd class="text-ink-900">{{ bk.checkIn | date: 'EEE d MMM' }} → {{ bk.checkOut | date: 'EEE d MMM yyyy' }}</dd>
+            @let bkNights = nights(bk.nights);
+            @let bkGuests = guestsOf(bk.guests);
             <dd class="text-xs text-ink-500">
-              {{ bk.nights }} night{{ bk.nights === 1 ? '' : 's' }} · {{ bk.guests }} guest{{ bk.guests === 1 ? '' : 's' }}
+              {{ bkNights.key | transloco: bkNights.params }} · {{ bkGuests.key | transloco: bkGuests.params }}
             </dd>
           </div>
           <div>
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Reference</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.reference' | transloco }}</dt>
             <dd class="tabular-nums text-ink-900">{{ bk.ref || '—' }}</dd>
           </div>
           <div class="col-span-2">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Booked</dt>
+            <dt class="text-[10px] font-semibold uppercase tracking-wide text-ink-400">{{ 'hostBookings.booked' | transloco }}</dt>
             @for (line of bk.lines; track $index) {
+              @let u = units(line);
+              @let g = guestsOf(line.guests);
               <dd class="flex items-baseline justify-between gap-3">
                 <span class="min-w-0 text-ink-800">
-                  {{ line.units }} {{ line.shared ? 'bed' : 'room' }}{{ line.units === 1 ? '' : 's' }} · {{ line.name }}
-                  <span class="text-ink-400">· {{ line.guests }} guest{{ line.guests === 1 ? '' : 's' }}</span>
+                  {{ u.key | transloco: u.params }} · {{ line.name }}
+                  <span class="text-ink-400">· {{ g.key | transloco: g.params }}</span>
                 </span>
                 <span class="shrink-0 tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ line.subtotal | number: '1.0-0' }}</span>
               </dd>
@@ -218,38 +218,38 @@
             }
             @let inRooms = activeRooms(bk);
             @if (inRooms) {
-              <dd class="mt-1 text-xs text-ink-500">In rooms: {{ inRooms }}</dd>
+              <dd class="mt-1 text-xs text-ink-500">{{ 'hostBookings.inRoomsList' | transloco: { rooms: inRooms } }}</dd>
             }
           </div>
         </dl>
         <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-ink-100 bg-surface px-3 py-2.5">
           <span class="text-ink-600">
-            Total <strong class="tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ bk.total | number: '1.0-0' }}</strong>
+            {{ 'common.total' | transloco }} <strong class="tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ bk.total | number: '1.0-0' }}</strong>
           </span>
           <span class="text-ink-600">
-            Paid <strong class="tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ bk.paid | number: '1.0-0' }}</strong>
+            {{ 'common.paid' | transloco }} <strong class="tabular-nums text-ink-900">{{ bk.currency | currencySym }} {{ bk.paid | number: '1.0-0' }}</strong>
           </span>
           <span [class]="bk.balanceDue > 0 ? 'text-warn' : 'text-ink-500'">
-            Due <strong class="tabular-nums">{{ bk.currency | currencySym }} {{ bk.balanceDue | number: '1.0-0' }}</strong>
+            {{ 'hostBookings.due' | transloco }} <strong class="tabular-nums">{{ bk.currency | currencySym }} {{ bk.balanceDue | number: '1.0-0' }}</strong>
           </span>
         </div>
       </div>
       <p class="mt-3 text-sm text-ink-500">
         @switch (d.action) {
           @case ('cancel') {
-            The guest, you and the manager are told. Any beds it holds are released.
+            {{ 'hostBookings.cancelDialogBody' | transloco }}
           }
           @case ('noShow') {
-            For a guest who never arrived. They, you and the manager are told, and the booking is closed.
+            {{ 'hostBookings.noShowDialogBody' | transloco }}
           }
           @case ('checkOut') {
-            Every bed this booking holds is released.
+            {{ 'hostBookings.checkOutDialogBody' | transloco }}
           }
           @case ('markPaid') {
-            Records {{ d.booking.currency | currencySym }} {{ (d.booking.total - d.booking.paid) | number: '1.0-0' }} as settled at the property, so nothing is left due.
+            {{ 'hostBookings.markPaidDialogBody' | transloco: { amount: (d.booking.currency | currencySym) + ' ' + ((d.booking.total - d.booking.paid) | number: '1.0-0') } }}
           }
           @case ('invoice') {
-            Raised once per booking, for {{ d.booking.currency | currencySym }} {{ d.booking.total | number: '1.0-0' }}. It appears under Invoices.
+            {{ 'hostBookings.invoiceDialogBody' | transloco: { amount: (d.booking.currency | currencySym) + ' ' + (d.booking.total | number: '1.0-0') } }}
           }
         }
       </p>
@@ -284,7 +284,7 @@
       }
       @if (asksReason()) {
         <label for="hh-booking-reason" class="mb-1 mt-4 block text-xs font-medium text-ink-600">
-          Reason{{ reasonRequired() ? ' *' : ' (optional)' }}
+          {{ (reasonRequired() ? 'hostBookings.reasonRequired' : 'hostBookings.reasonOptional') | transloco }}
         </label>
         <textarea
           #reasonField
@@ -292,7 +292,7 @@
           rows="3"
           maxlength="500"
           class="block w-full resize-none rounded-xl border border-ink-200 bg-transparent px-3 py-2.5 text-sm text-ink-900 outline-none transition placeholder:text-ink-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-          [placeholder]="d.action === 'cancel' ? 'Write the reason for cancellation' : 'Write the reason for marking a no show'"
+          [placeholder]="(d.action === 'cancel' ? 'hostBookings.cancelReasonPlaceholder' : 'hostBookings.noShowReasonPlaceholder') | transloco"
           [value]="dialogReason()"
           (input)="dialogReason.set(reasonField.value)"
         ></textarea>

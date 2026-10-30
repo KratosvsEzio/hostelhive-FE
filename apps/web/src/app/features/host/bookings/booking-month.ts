@@ -74,8 +74,10 @@ export interface Lane {
    * the expansion could not be reached at all. Both strips wrap now instead of dividing:
    * a chip is as wide as its own text and the row reflows when it runs out, so the full
    * name always fits and no layout depends on how long the English happens to be.
+   *
+   * A translation key: the name is in the host's language, not English.
    */
-  label: string;
+  labelKey: string;
   /** Static classes, never interpolated: Tailwind only ships what it can find in the source. */
   dot: string;
   value: string;
@@ -87,7 +89,7 @@ export interface Lane {
 export const LANES: readonly Lane[] = [
   {
     key: 'pending',
-    label: 'Pending',
+    labelKey: 'hostBookings.lanePending',
     dot: 'bg-warn',
     value: 'text-warn',
     tile: 'bg-warn/10',
@@ -95,7 +97,7 @@ export const LANES: readonly Lane[] = [
   },
   {
     key: 'confirmed',
-    label: 'Confirmed',
+    labelKey: 'hostBookings.laneConfirmed',
     // Violet, not the brand orange this used to be. Orange and the cancelled red are
     // neighbouring hues, and at the 8px dot these lanes are drawn as they were near enough
     // indistinguishable — which put "confirmed" and "cancelled", two states a host reacts to
@@ -108,7 +110,7 @@ export const LANES: readonly Lane[] = [
   },
   {
     key: 'checked-in',
-    label: 'Checked in',
+    labelKey: 'hostBookings.laneCheckedIn',
     dot: 'bg-ok',
     value: 'text-ok',
     tile: 'bg-ok/10',
@@ -116,7 +118,7 @@ export const LANES: readonly Lane[] = [
   },
   {
     key: 'checked-out',
-    label: 'Checked out',
+    labelKey: 'hostBookings.laneCheckedOut',
     dot: 'bg-ink-400',
     value: 'text-ink-600',
     tile: 'bg-ink-100',
@@ -124,7 +126,7 @@ export const LANES: readonly Lane[] = [
   },
   {
     key: 'cancelled',
-    label: 'Cancelled',
+    labelKey: 'hostBookings.laneCancelled',
     dot: 'bg-danger',
     value: 'text-danger',
     tile: 'bg-danger/10',
@@ -132,7 +134,7 @@ export const LANES: readonly Lane[] = [
   },
   {
     key: 'no-show',
-    label: 'No show',
+    labelKey: 'hostBookings.laneNoShow',
     // Not the cancelled red: a no-show is the guest's doing, not a decision, and the host
     // reads the two differently. Amber-brown sits apart from both the pending amber and red.
     dot: 'bg-amber-700',

@@ -1,4 +1,5 @@
 import { CalendarDayCounts } from './host-bookings-api';
+import { englishCopy } from './booking-copy-testing';
 import {
   INVOICEABLE_LANES,
   LANES,
@@ -220,9 +221,12 @@ describe('payable and invoiceable lanes', () => {
  * read, the tooltip comes back and the phone loses again.
  */
 describe('lane names', () => {
+  // The names are translation keys (Trello #170); English is the source every language follows.
+  const t = englishCopy();
+  const englishNames = () => LANES.map((l) => t(l.labelKey));
+
   it('names every lane in words rather than a code', () => {
-    for (const lane of LANES) {
-      const name = lane.label.trim();
+    for (const name of englishNames().map((n) => n.trim())) {
       expect(name.length).toBeGreaterThan(0);
       // What a code looks like: short and shouted. Nothing this compressed survives being
       // read by someone who did not write it.
@@ -233,12 +237,12 @@ describe('lane names', () => {
   // Two lanes reading the same is the failure the abbreviations were introduced to avoid and
   // then reintroduced themselves, "IN" and "OUT" being one glance apart.
   it('keeps every name distinct', () => {
-    const names = LANES.map((l) => l.label);
+    const names = englishNames();
     expect(new Set(names).size).toBe(names.length);
   });
 
   it('says what each disposition actually is', () => {
-    expect(LANES.map((l) => l.label)).toEqual([
+    expect(englishNames()).toEqual([
       'Pending',
       'Confirmed',
       'Checked in',
