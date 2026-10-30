@@ -14,7 +14,7 @@ The host console is paywalled. The shell sends any hostel without an active cont
 - `profile` holds the hostel details a plan is bought against.
 - `bookings` stays open because the server keeps listing, confirming, checking in and out, cancelling and settling existing bookings. A guest arriving tomorrow still has to be let in.
 
-The Bookings page shows a "lapsed" banner. The new-booking drawer turns the server's subscription refusal into a renew notice.
+The Bookings page shows a "lapsed" banner. The new-booking drawer turned the server's subscription refusal into a renew notice; that notice was retired in Trello #199, since the plan lock now replaces the page on that refusal.
 
 ## Alternatives rejected
 - **Bounce everything except the subscription page.** This is the circling described above.

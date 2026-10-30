@@ -22,7 +22,7 @@ host console, admin, moderator) are split and guarded at the route level. Auth i
 - `apps/web/src/app/layout/area.ts`: `areaOf(url)` and `isConsoleArea`.
 - `apps/web/src/app/layout/components/`: `site-header`, `site-footer`, `account-menu`,
   `notification-bell`, `search-bar`, `toast-host`, `console-drawer`, `apps/web/src/app/layout/components/mobile-tab-bar/` (seeker, host,
-  staff), `subscription-gate`.
+  staff).
 - `apps/web/src/app/layout/host-shell/`: `HostLayout` (`apps/web/src/app/layout/host-shell/host-shell.ts`), `hostNav` (`apps/web/src/app/layout/host-shell/host-nav.ts`),
   `hostPagePath` (`apps/web/src/app/layout/host-shell/host-route.ts`).
 - `apps/web/src/app/layout/staff-shell/staff-shell.ts`: `StaffLayout`, shared by `/admin` and `/moderator`.
