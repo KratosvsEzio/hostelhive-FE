@@ -193,12 +193,11 @@ describe('BookingFormDrawer', () => {
       expect(alerts(el)).toEqual(['common.cannotReachTheServer']);
     });
 
-    it('shows the renewal prompt, not an error message, when the subscription has lapsed', () => {
+    it('shows the generic message, with no renewal prompt, when the subscription has lapsed', () => {
       const text = 'You need to subscribe to avail the services';
       const el = saveWith(apiError(400, [text]));
-      expect(el.querySelectorAll('[role="alert"]')).toHaveLength(1);
-      expect(alerts(el)[0]).not.toContain('hostBookings.couldNotSaveBooking');
-      expect(el.querySelector('a[href$="/host/h1/subscription"]')).not.toBeNull();
+      expect(alerts(el)).toEqual(['hostBookings.couldNotSaveBooking']);
+      expect(renewalLink(el)).toBeNull();
       expectNoLeak(el, text);
     });
 
@@ -250,16 +249,15 @@ describe('BookingFormDrawer', () => {
         expect(alerts(el)).toEqual([key]);
       });
 
-      it('replaces a renewal prompt from the save before it', () => {
+      it('replaces the message a lapsed-plan save left, rather than adding to it', () => {
         const el = saveWith(interceptedError(400, SUBSCRIBE_400_BODY, POST_BOOKINGS), 'manager');
-        expect(renewalLink(el)).not.toBeNull();
+        expect(alerts(el)).toEqual(['hostBookings.couldNotSaveBooking']);
 
         bookings.failure = interceptedError(403, CANCAN_403_BODY, POST_BOOKINGS);
         internals().save();
         fixture.detectChanges();
 
         expect(alerts(el)).toEqual(['hostBookings.notAllowed']);
-        expect(renewalLink(el)).toBeNull();
       });
     });
 
@@ -287,10 +285,15 @@ describe('BookingFormDrawer', () => {
           case: 'the 400 the host API sends, through the interceptor',
           rejection: interceptedError(400, SUBSCRIBE_400_BODY, POST_BOOKINGS),
         },
-      ])('shows the renewal prompt with its link and no error message on $case', ({ rejection }) => {
+      ])('shows the generic message once, keeps the form and offers no renewal on $case', ({ rejection }) => {
+        // The console's plan lock replaces the page, drawer included, on the 400; this is what
+        // shows only if it does not engage.
         const el = saveWith(rejection, 'host');
-        expect(el.querySelector(`div[role="alert"] ${RENEWAL_LINK}`)).not.toBeNull();
-        expect(el.querySelector('p[role="alert"]')).toBeNull();
+        expect(alerts(el)).toEqual(['hostBookings.couldNotSaveBooking']);
+        expect(renewalLink(el)).toBeNull();
+        expect(internals().guestName()).toBe('Ali Raza');
+        expect(internals().guestPhone()).toBe('923001234567');
+        expect(saveButton(el)?.disabled).toBe(false);
         expectNoLeak(el, SUBSCRIBE_MESSAGE);
       });
     });

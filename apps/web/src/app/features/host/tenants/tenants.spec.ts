@@ -11,7 +11,7 @@ import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HOSTEL_ID, sessionUser } from '@app/testing/host-builders';
-import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { Tenants } from './tenants';
 
 const ROLE_BODY = {
@@ -75,9 +75,9 @@ describe('Tenants when the list load is refused', () => {
     });
   });
 
-  describe('for a plan without CRM', () => {
-    it.each(['crmRequired', 'crmMessageOnly'] as const)(
-      'a %s refusal shows the generic error with Retry, not the panel or the paywall',
+  describe('for a plan refusal, which the console lock owns', () => {
+    it.each(PLAN_REFUSALS)(
+      'a %s refusal shows the generic error with Retry, not the panel',
       async (kind) => {
         const el = await openTenants(kind);
 
@@ -89,19 +89,8 @@ describe('Tenants when the list load is refused', () => {
     );
   });
 
-  describe('for a hostel with no live plan', () => {
-    it.each(kindsShowing('paywall'))('a %s refusal shows the paywall, not the panel', async (kind) => {
-      const el = await openTenants(kind);
-
-      const reading = loadSurface(el);
-      expect(reading.surfaces).toEqual([LIST_LOAD_REFUSALS[kind]]);
-      expect(reading.retry).toBe(false);
-      expect(el.querySelector('hh-permission-refused')).toBeNull();
-    });
-  });
-
   describe('for any other reason the server answered', () => {
-    const kinds = kindsShowing('error').filter((kind) => kind !== 'crmRequired' && kind !== 'crmMessageOnly');
+    const kinds = kindsShowing('error').filter((kind) => !PLAN_REFUSALS.includes(kind));
 
     it.each(kinds)('a %s refusal shows the generic error with Retry', async (kind) => {
       const el = await openTenants(kind);
@@ -144,12 +133,12 @@ describe('Tenants when the list load is refused', () => {
       expect(buttons[0].disabled).toBe(false);
     });
 
-    it('is disabled on the paywall, which shows the probe can see a disabled button', async () => {
+    it('stays enabled after a no-live-plan refusal, which the console lock answers, not the page', async () => {
       const el = await openTenants('inactive', 'manager');
 
       const buttons = registerButtons(el);
       expect(buttons).toHaveLength(1);
-      expect(buttons[0].disabled).toBe(true);
+      expect(buttons[0].disabled).toBe(false);
     });
   });
 });

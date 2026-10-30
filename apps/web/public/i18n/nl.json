@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "Mogelijk gemaakt door OpenStreetMap",
     "noCoordinatesSetFor": "Voor deze advertentie zijn geen coördinaten ingesteld."
   },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} ontgrendelen",
-    "thisFeature": "deze functie",
-    "dashboardOverview": "Dashboardoverzicht",
-    "roomManagement": "Kamerbeheer",
-    "tenantManagement": "Huurdersbeheer",
-    "utilityBilling": "Nutsfacturatie",
-    "thisFeatureIsAvailable": "Deze functie is beschikbaar in de betaalde abonnementen. Neem een abonnement voor volledige toegang tot uw hosteldashboard.",
-    "completeHostelProfileFirst": "Vul eerst het hostelprofiel in",
-    "onceSubscribedAllFeatures": "Zodra u een abonnement hebt, worden alle functies automatisch ontgrendeld.",
-    "roomAmpOccupancyManagement": "Kamer- en bezettingsbeheer",
-    "tenantTrackingAmpPayment": "Huurdersopvolging en betalingsgegevens",
-    "rentAndUtilityInvoice": "Huur- en nutsfacturen aanmaken",
-    "analyticsAndRevenueReports": "Statistieken en omzetrapporten"
-  },
   "notifications": {
     "nUnread": "{{count}} ongelezen",
     "types": {

@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "OpenStreetMap alapján",
     "noCoordinatesSetFor": "Ehhez a hirdetéshez nincs koordináta megadva."
   },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} feloldása",
-    "thisFeature": "ezt a funkciót",
-    "dashboardOverview": "Irányítópult áttekintés",
-    "roomManagement": "Szobakezelés",
-    "tenantManagement": "Bérlőkezelés",
-    "utilityBilling": "Rezsiszámlázás",
-    "thisFeatureIsAvailable": "Ez a funkció a fizetős csomagokban érhető el. Fizessen elő a hostel irányítópult teljes eléréséhez.",
-    "completeHostelProfileFirst": "Előbb töltse ki a hostel profilját",
-    "onceSubscribedAllFeatures": "Előfizetés után minden funkció automatikusan feloldódik.",
-    "roomAmpOccupancyManagement": "Szoba- és kihasználtságkezelés",
-    "tenantTrackingAmpPayment": "Bérlőkövetés és fizetési nyilvántartás",
-    "rentAndUtilityInvoice": "Bérleti és rezsiszámlák készítése",
-    "analyticsAndRevenueReports": "Elemzések és bevételi jelentések"
-  },
   "notifications": {
     "nUnread": "{{count}} olvasatlan",
     "types": {

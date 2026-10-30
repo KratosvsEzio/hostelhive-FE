@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "Ermöglicht durch OpenStreetMap",
     "noCoordinatesSetFor": "Für dieses Inserat sind keine Koordinaten hinterlegt."
   },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} freischalten",
-    "thisFeature": "diese Funktion",
-    "dashboardOverview": "Dashboard-Übersicht",
-    "roomManagement": "Zimmerverwaltung",
-    "tenantManagement": "Mieterverwaltung",
-    "utilityBilling": "Nebenkostenabrechnung",
-    "thisFeatureIsAvailable": "Diese Funktion ist in den kostenpflichtigen Tarifen enthalten. Abonnieren Sie für vollen Zugriff auf Ihr Hostel-Dashboard.",
-    "completeHostelProfileFirst": "Zuerst das Hostel-Profil vervollständigen",
-    "onceSubscribedAllFeatures": "Nach dem Abonnieren werden alle Funktionen automatisch freigeschaltet.",
-    "roomAmpOccupancyManagement": "Zimmer- und Belegungsverwaltung",
-    "tenantTrackingAmpPayment": "Mieterverfolgung und Zahlungsnachweise",
-    "rentAndUtilityInvoice": "Erstellung von Miet- und Nebenkostenrechnungen",
-    "analyticsAndRevenueReports": "Auswertungen und Umsatzberichte"
-  },
   "notifications": {
     "nUnread": "{{count}} ungelesen",
     "types": {

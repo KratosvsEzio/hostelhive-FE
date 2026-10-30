@@ -11,7 +11,6 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - `invoice-poll.ts` — `pollUntil()` / `pollInvoice()`: fetch now, then every 2.5 s for up to 60 s, never overlapping.
 - `apps/web/src/app/services/billing-api.ts`, `host-billing-store.ts` (the console's billing for the shown hostel), `apps/web/src/app/shared/billing/billing-banner.ts` (banner and access logic) and `layout/components/billing-banner/billing-banner.ts`.
 - `apps/web/src/app/core/interceptors/host-access-interceptor.ts` and `apps/web/src/app/core/host-access/host-access.ts` (`classifyHostAccess`) — record the plan refusals the server sends; `apps/web/src/app/layout/components/access-lock/access-lock.ts` — `<hh-access-lock>`, which the host shell shows instead of a locked section.
-- `apps/web/src/app/layout/components/subscription-gate/subscription-gate.ts` and `apps/web/src/app/util/subscription-error.ts` — the inline paywall for a refused request. `isSubscriptionError(err)` means "this hostel needs a plan" (a 402, or the 400 "You need to subscribe…"); it is never true for a 403.
 - `apps/web/src/app/shared/notifications/notification-types.ts` — icon, colours and translated name (`labelKey`, `notifications.types.*`) per notification type, shared by the notifications page and the bell. An unknown type gets a bell and its name title-cased (`fallbackLabel`). `notification-types-locale-parity.spec.ts` reads `KNOWN_NOTIFICATION_TYPES`, so a new type fails until all 18 languages name it. Every billing type in `BILLING_NOTIFICATION_TYPES` must have a name too; `notification-types.spec.ts` checks it (Trello #219). Icons must come from the subset font (`npm run icons:check`).
 
 ## How it works
@@ -33,22 +32,20 @@ How a host pays HostelHive for a hostel, and how an unpaid hostel is fenced off.
 - The hostel comes from the notification's `hostel_id`, sent on every notification since be-hostelhive PR #74; `associated_id` is the invoice, payment or subscription.
 - Opening `/host/<id>/…` selects that hostel, whichever is selected now (`knownHostelGate`).
 - A notice with no `hostel_id` (about the user alone, or its record deleted) gets no link.
-- **Inline paywall, a backstop.** Overview, rooms, tenants, invoices, utilities and add-bill catch a refused load with `isSubscriptionError` and render `<hh-subscription-gate>`; the booking form drawer shows a renew notice (`apps/web/src/app/features/host/bookings/booking-form-drawer/booking-form-drawer.ts`). Since the lock replaces these pages first on the same refusals, both surfaces rarely show; retiring or translating them is Trello #199.
+- **A plan refusal is explained once, by the lock.** There is no in-page paywall: the `<hh-subscription-gate>` card and the booking drawer's renew notice were retired (Trello #199) because the lock replaces the page, drawer included, on the same render as the backend's only plan refusals (the 400 "You need to subscribe…" and the `crm_required` 403). The backend never sends either to an admin (`is_hostel_active?` and `require_crm!` skip `current_user.admin?` in `app/controllers/api/host/host_controller.rb`), which is why `deriveAccess` never locks for admins. Anything the lock does not recognise, such as a 402, falls to the page's generic `<hh-error-state>` with Retry, or `hostBookings.couldNotSaveBooking` in the drawer.
 
 ## Reuse, don't rebuild
 - `SafepayCheckout` for any start that leaves for Safepay; `pollUntil` for any wait on a webhook; `payErrorOutcome` for a refused start.
-- `isSubscriptionError` with `<hh-subscription-gate [feature]>` for a page that can be paywalled. Check `isPermissionRefusal` alongside it (`apps/web/src/app/core/host-access/host-access.ts`).
 - `isCrmRequired` (same file) for "this plan has no CRM"; never match its message yourself.
 
 ## Traps
 - **The router does no anchor scrolling** (`core/scroll-reset.ts`), so `billing-page.ts` scrolls to `#saved-card` itself.
 - **`hh-toggle` flips itself on click** before the server answers; mirror the flip and write the server value back on error.
-- **Two classifiers answer "is this a plan refusal".** `classifyHostAccess` (the lock) and `isSubscriptionError` (the page) drifted once: the page read a CanCan permission 403 as a lapsed plan and showed owners a "subscribe" paywall for a hostel that was paid up (Trello #193). A new plan refusal must be taught to both, and a spec must feed the backend's real body through the real interceptors.
-- **`isSubscriptionError` still matches any non-403 failure whose text matches `subscri`, `upgrade.*plan` or `plan.?required`** (`apps/web/src/app/util/subscription-error.ts`). So a 422 saying "plan required" would open the paywall or the drawer's renew notice. Nothing sends one today.
-- **The billing page has no `permissionGuard`, on purpose.** The paywall card links every host there (comment in `subscription.routes.ts`).
+- **Only `classifyHostAccess` answers "is this a plan refusal".** A page-side twin, `isSubscriptionError`, drifted from it once and showed owners a "subscribe" paywall for a hostel that was paid up (Trello #193); it was deleted with the paywall (Trello #199). Teach a new plan refusal to `classifyHostAccess` only, and feed the backend's real body through the real interceptors in its spec.
+- **The billing page has no `permissionGuard`, on purpose** (comment in `subscription.routes.ts`). That comment still cites the paywall card, retired in Trello #199; the lock's link and the billing banners lead there now. Billing pages are frozen while payments are paused, so the comment was left.
 - **Never test `billed_by` alone.** It stays `safepay_subscription` after the plan expires, until an invoice is paid; use `isSafepayBilled()`, so an expired Safepay plan gets the invoice flows back.
 - **A past-due Safepay-billed plan is a dead end on the page.** Every plan is unavailable and cancel needs `active`, so the host can only wait for Safepay's retry (code-proven, not seen live).
-- **Hard-coded English:** the paywall card's benefits list (`BENEFITS` in `subscription-gate.ts`) and the drawer's renew notice (`booking-form-drawer.html`), both Trello #199. Notification type names are translated (`notifications.types.*`, Trello #214).
+- **Notification type names are translated** (`notifications.types.*`, Trello #214).
 
 ## Decisions
 - [Billing rewrite built against backend PR #26, host billing core first](../decisions/host-billing-and-subscription/billing-rewrite-against-unmerged-backend.md) (done: every part has shipped)

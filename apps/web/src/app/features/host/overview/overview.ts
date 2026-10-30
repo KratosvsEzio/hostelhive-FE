@@ -35,9 +35,7 @@ import {
 } from '@features/host/overview/charts/upcoming-strip';
 import { CalendarDayCounts, HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isSubscriptionError } from '@util/subscription-error';
 import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { ApiDate } from '@util/api-date';
@@ -73,7 +71,6 @@ const OUT_TINTS: Record<StripLevel, string> = {
 interface ViewState {
   loading: boolean;
   error: boolean;
-  subscriptionError: boolean;
   permissionError?: boolean;
   networkError: boolean;
   data: OverviewData | null;
@@ -105,7 +102,6 @@ const NO_STRIP: UpcomingStrip = { days: [], totalIn: 0, totalOut: 0, busiest: 0,
   imports: [
     DashboardLayout,
     RouterLink, LocaleLink,
-    SubscriptionGate,
     PermissionRefused,
     ApiDate,
     DecimalPipe,
@@ -333,15 +329,13 @@ export class HostOverview {
     toObservable(this.hostelReload).pipe(
       switchMap(({ hostelId }) =>
         this.api.overviewCards(hostelId).pipe(
-          map((data): ViewState => ({ loading: false, error: false, subscriptionError: false, networkError: false, data })),
-          startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, data: null }),
+          map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
+          startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
           catchError((err) => {
-            const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({
               loading: false,
-              error: !sub,
-              subscriptionError: sub,
+              error: true,
               permissionError: isPermissionRefusal(err),
               networkError: net,
               data: null,
@@ -350,7 +344,7 @@ export class HostOverview {
         ),
       ),
     ),
-    { initialValue: { loading: true, error: false, subscriptionError: false, networkError: false, data: null } as ViewState },
+    { initialValue: { loading: true, error: false, networkError: false, data: null } as ViewState },
   );
 
   private readonly monthlyRevenueResp = toSignal(

@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "مدعوم بواسطة OpenStreetMap",
     "noCoordinatesSetFor": "لم تُحدَّد إحداثيات لهذه القائمة."
   },
-  "subscriptionGate": {
-    "unlockFeature": "افتح {{feature}}",
-    "thisFeature": "هذه الميزة",
-    "dashboardOverview": "نظرة عامة على لوحة التحكم",
-    "roomManagement": "إدارة الغرف",
-    "tenantManagement": "إدارة المستأجرين",
-    "utilityBilling": "فوترة المرافق",
-    "thisFeatureIsAvailable": "هذه الميزة متاحة في الخطط المدفوعة. اشترك للحصول على وصول كامل إلى لوحة تحكم النُزل.",
-    "completeHostelProfileFirst": "أكمل ملف النُزل أولًا",
-    "onceSubscribedAllFeatures": "بمجرد الاشتراك، تُفتح جميع الميزات تلقائيًا.",
-    "roomAmpOccupancyManagement": "إدارة الغرف والإشغال",
-    "tenantTrackingAmpPayment": "تتبّع المستأجرين وسجلات المدفوعات",
-    "rentAndUtilityInvoice": "إصدار فواتير الإيجار والمرافق",
-    "analyticsAndRevenueReports": "التحليلات وتقارير الإيرادات"
-  },
   "notifications": {
     "nUnread": "{{count}} غير مقروءة",
     "types": {

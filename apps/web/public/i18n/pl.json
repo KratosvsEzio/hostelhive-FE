@@ -2163,21 +2163,6 @@
     "poweredByOpenstreetmap": "Obsługiwane przez OpenStreetMap",
     "noCoordinatesSetFor": "Brak współrzędnych dla tego ogłoszenia."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Odblokuj {{feature}}",
-    "thisFeature": "tę funkcję",
-    "dashboardOverview": "Przegląd pulpitu",
-    "roomManagement": "Zarządzanie pokojami",
-    "tenantManagement": "Zarządzanie najemcami",
-    "utilityBilling": "Rozliczanie mediów",
-    "thisFeatureIsAvailable": "Ta funkcja jest dostępna w planach płatnych. Wykup subskrypcję, aby uzyskać pełny dostęp do pulpitu hostelu.",
-    "completeHostelProfileFirst": "Najpierw uzupełnij profil hostelu",
-    "onceSubscribedAllFeatures": "Po wykupieniu subskrypcji wszystkie funkcje odblokowują się automatycznie.",
-    "roomAmpOccupancyManagement": "Zarządzanie pokojami i obłożeniem",
-    "tenantTrackingAmpPayment": "Śledzenie najemców i historia płatności",
-    "rentAndUtilityInvoice": "Tworzenie faktur za czynsz i media",
-    "analyticsAndRevenueReports": "Analizy i raporty przychodów"
-  },
   "notifications": {
     "nUnread": "{{count}} nieprzeczytanych",
     "types": {

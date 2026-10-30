@@ -1,6 +1,6 @@
 <app-dashboard-layout [label]="'common.tenants' | transloco">
   <div hhActions class="flex items-center gap-2">
-    <button *hhHasPermission="'host:Renter:create'" hh-button color="primary" size="sm" [disabled]="state().subscriptionError" (click)="openCheckIn()">
+    <button *hhHasPermission="'host:Renter:create'" hh-button color="primary" size="sm" (click)="openCheckIn()">
       <i class="ti ti-user-plus"></i>{{ 'hostTenants.registerTenant' | transloco }}
     </button>
   </div>
@@ -42,8 +42,6 @@
   @let s = state();
   @if (s.loading) {
     <hh-skeleton class="h-80 w-full" radius="lg" />
-  } @else if (s.subscriptionError) {
-    <hh-subscription-gate [feature]="'subscriptionGate.tenantManagement' | transloco" />
   } @else if (s.permissionError) {
     <hh-permission-refused />
   } @else if (s.error) {

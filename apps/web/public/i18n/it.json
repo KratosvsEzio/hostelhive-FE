@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "Basato su OpenStreetMap",
     "noCoordinatesSetFor": "Nessuna coordinata impostata per questo annuncio."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Sblocca {{feature}}",
-    "thisFeature": "questa funzione",
-    "dashboardOverview": "Panoramica della dashboard",
-    "roomManagement": "Gestione delle camere",
-    "tenantManagement": "Gestione degli inquilini",
-    "utilityBilling": "Fatturazione delle utenze",
-    "thisFeatureIsAvailable": "Questa funzione è disponibile nei piani a pagamento. Abbonati per accedere completamente alla dashboard del tuo ostello.",
-    "completeHostelProfileFirst": "Completa prima il profilo dell'ostello",
-    "onceSubscribedAllFeatures": "Una volta abbonato, tutte le funzioni si sbloccano automaticamente.",
-    "roomAmpOccupancyManagement": "Gestione di camere e occupazione",
-    "tenantTrackingAmpPayment": "Monitoraggio degli inquilini e storico pagamenti",
-    "rentAndUtilityInvoice": "Generazione di fatture per affitto e utenze",
-    "analyticsAndRevenueReports": "Statistiche e report sui ricavi"
-  },
   "notifications": {
     "nUnread": "{{count}} non letti",
     "types": {

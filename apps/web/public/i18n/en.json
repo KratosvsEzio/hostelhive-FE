@@ -2005,21 +2005,6 @@
     "noResultsFound": "No results found",
     "tryAdjustingSearch": "Try adjusting your search or filter criteria."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Unlock {{feature}}",
-    "thisFeature": "This feature",
-    "dashboardOverview": "Dashboard overview",
-    "roomManagement": "Room management",
-    "tenantManagement": "Tenant management",
-    "utilityBilling": "Utility billing",
-    "thisFeatureIsAvailable": "This feature is available on paid plans. Subscribe to get full access to your hostel dashboard.",
-    "completeHostelProfileFirst": "Complete hostel profile first",
-    "onceSubscribedAllFeatures": "Once subscribed, all features unlock automatically.",
-    "roomAmpOccupancyManagement": "Room & occupancy management",
-    "tenantTrackingAmpPayment": "Tenant tracking & payment records",
-    "rentAndUtilityInvoice": "Rent and utility invoice generation",
-    "analyticsAndRevenueReports": "Analytics and revenue reports"
-  },
   "userAccountShell": {
     "manageYourProfileSavedHostels": "Manage your profile, saved hostels and preferences."
   },

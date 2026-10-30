@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "Drevet af OpenStreetMap",
     "noCoordinatesSetFor": "Der er ikke angivet koordinater for denne annonce."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Lås {{feature}} op",
-    "thisFeature": "denne funktion",
-    "dashboardOverview": "Oversigt over dashboard",
-    "roomManagement": "Værelsesadministration",
-    "tenantManagement": "Lejeradministration",
-    "utilityBilling": "Forbrugsafregning",
-    "thisFeatureIsAvailable": "Denne funktion findes i betalte planer. Abonnér for at få fuld adgang til dit hosteldashboard.",
-    "completeHostelProfileFirst": "Udfyld hostelprofilen først",
-    "onceSubscribedAllFeatures": "Når du abonnerer, låses alle funktioner op automatisk.",
-    "roomAmpOccupancyManagement": "Værelses- og belægningsstyring",
-    "tenantTrackingAmpPayment": "Lejeroversigt og betalingshistorik",
-    "rentAndUtilityInvoice": "Oprettelse af husleje- og forbrugsfakturaer",
-    "analyticsAndRevenueReports": "Analyser og omsætningsrapporter"
-  },
   "notifications": {
     "nUnread": "{{count}} ulæste",
     "types": {

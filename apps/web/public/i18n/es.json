@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "Con tecnología de OpenStreetMap",
     "noCoordinatesSetFor": "Este anuncio no tiene coordenadas definidas."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Desbloquear {{feature}}",
-    "thisFeature": "esta función",
-    "dashboardOverview": "Resumen del panel",
-    "roomManagement": "Gestión de habitaciones",
-    "tenantManagement": "Gestión de inquilinos",
-    "utilityBilling": "Facturación de servicios",
-    "thisFeatureIsAvailable": "Esta función está disponible en los planes de pago. Suscríbete para acceder por completo al panel de tu hostal.",
-    "completeHostelProfileFirst": "Completa primero el perfil del hostal",
-    "onceSubscribedAllFeatures": "Al suscribirte, todas las funciones se desbloquean automáticamente.",
-    "roomAmpOccupancyManagement": "Gestión de habitaciones y ocupación",
-    "tenantTrackingAmpPayment": "Seguimiento de inquilinos y registros de pago",
-    "rentAndUtilityInvoice": "Generación de facturas de alquiler y servicios",
-    "analyticsAndRevenueReports": "Analíticas e informes de ingresos"
-  },
   "notifications": {
     "nUnread": "{{count}} sin leer",
     "types": {

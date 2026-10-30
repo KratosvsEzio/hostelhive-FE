@@ -36,9 +36,7 @@ import { API_CONFIG } from '@core/api-config';
 import { NotificationService } from '@core/notification.service';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isSubscriptionError } from '@util/subscription-error';
 import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-groups';
@@ -62,7 +60,6 @@ import {
 interface ViewState {
   loading: boolean;
   error: boolean;
-  subscriptionError: boolean;
   permissionError?: boolean;
   networkError: boolean;
   data: Invoice[] | null;
@@ -74,8 +71,8 @@ interface ViewState {
 
 type Filter = 'all' | InvoiceStatus;
 
-const EMPTY_STATE: ViewState = { loading: false, error: false, subscriptionError: false, networkError: false, data: [], total: 0, totalPages: 1, statuses: [], aggs: null };
-const LOADING: ViewState = { loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0, totalPages: 1, statuses: [], aggs: null };
+const EMPTY_STATE: ViewState = { loading: false, error: false, networkError: false, data: [], total: 0, totalPages: 1, statuses: [], aggs: null };
+const LOADING: ViewState = { loading: true, error: false, networkError: false, data: null, total: 0, totalPages: 1, statuses: [], aggs: null };
 
 /**
  * Pixels rendered per printed millimetre when rasterising the logo for the PDF. 12 px/mm
@@ -170,7 +167,6 @@ interface PayPrompt {
     HasPermission,
     DecimalPipe,
     DashboardLayout,
-    SubscriptionGate,
     PermissionRefused,
     Button,
     ConfirmModal,
@@ -349,7 +345,6 @@ export class Invoices {
           map((res): ViewState => ({
             loading: false,
             error: false,
-            subscriptionError: false,
             networkError: false,
             data: res.bills,
             total: res.total,
@@ -359,12 +354,10 @@ export class Invoices {
           })),
           catchError((err) => {
             this.fetching.set(false);
-            const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({
               loading: false,
-              error: !sub,
-              subscriptionError: sub,
+              error: true,
               permissionError: isPermissionRefusal(err),
               networkError: net,
               data: null,

@@ -61,7 +61,7 @@ docs/knowledge-base/
 - [Host console](area/host-console.md): the host workspace at `/host/:hostelId`, shell and nav,
   multi-property switching, per-page permissions, host data services, hostel time zones.
 - [Host billing and subscription](area/host-billing-and-subscription.md): the billing screen,
-  payment step and Safepay return pages, saved card and auto-renew, banners, and the inline paywall card
+  payment step and Safepay return pages, saved card and auto-renew, banners, and the access lock
   (part 1 of 8 on main).
 - [Admin and moderation](area/admin-and-moderation.md): the staff shell, the moderator review and
   media queues, and the admin roles matrix and read-only payments and listings, with what is

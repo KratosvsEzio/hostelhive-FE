@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "Drivs av OpenStreetMap",
     "noCoordinatesSetFor": "Inga koordinater angivna för den här annonsen."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Lås upp {{feature}}",
-    "thisFeature": "denna funktion",
-    "dashboardOverview": "Översikt i instrumentpanelen",
-    "roomManagement": "Rumshantering",
-    "tenantManagement": "Hyresgästhantering",
-    "utilityBilling": "Förbrukningsfakturering",
-    "thisFeatureIsAvailable": "Den här funktionen finns i betalplanerna. Teckna ett abonnemang för full tillgång till din instrumentpanel.",
-    "completeHostelProfileFirst": "Fyll i vandrarhemsprofilen först",
-    "onceSubscribedAllFeatures": "När du abonnerar låses alla funktioner upp automatiskt.",
-    "roomAmpOccupancyManagement": "Rums- och beläggningshantering",
-    "tenantTrackingAmpPayment": "Hyresgästuppföljning och betalningshistorik",
-    "rentAndUtilityInvoice": "Skapa hyres- och förbrukningsfakturor",
-    "analyticsAndRevenueReports": "Analyser och intäktsrapporter"
-  },
   "notifications": {
     "nUnread": "{{count}} olästa",
     "types": {

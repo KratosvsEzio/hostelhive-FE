@@ -2163,21 +2163,6 @@
     "poweredByOpenstreetmap": "Cung cấp bởi OpenStreetMap",
     "noCoordinatesSetFor": "Tin đăng này chưa có tọa độ."
   },
-  "subscriptionGate": {
-    "unlockFeature": "Mở khóa {{feature}}",
-    "thisFeature": "tính năng này",
-    "dashboardOverview": "Tổng quan bảng điều khiển",
-    "roomManagement": "Quản lý phòng",
-    "tenantManagement": "Quản lý khách thuê",
-    "utilityBilling": "Lập hóa đơn tiện ích",
-    "thisFeatureIsAvailable": "Tính năng này có trong các gói trả phí. Hãy đăng ký để dùng đầy đủ bảng điều khiển nhà nghỉ của bạn.",
-    "completeHostelProfileFirst": "Hoàn tất hồ sơ nhà nghỉ trước",
-    "onceSubscribedAllFeatures": "Sau khi đăng ký, mọi tính năng sẽ mở khóa tự động.",
-    "roomAmpOccupancyManagement": "Quản lý phòng và tỷ lệ lấp đầy",
-    "tenantTrackingAmpPayment": "Theo dõi khách thuê và lịch sử thanh toán",
-    "rentAndUtilityInvoice": "Tạo hóa đơn tiền thuê và tiện ích",
-    "analyticsAndRevenueReports": "Phân tích và báo cáo doanh thu"
-  },
   "notifications": {
     "nUnread": "{{count}} chưa đọc",
     "types": {

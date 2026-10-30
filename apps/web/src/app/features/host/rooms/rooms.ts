@@ -34,9 +34,7 @@ import { ApiError, HostRoom as Room, RoomStatus } from '@hostelhive/data-access'
 import { NotificationService } from '@core/notification.service';
 import { toToastCopy } from '@core/errors/api-error-message';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isSubscriptionError } from '@util/subscription-error';
 import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
@@ -53,7 +51,6 @@ const QUIET = { suppressErrorToast: true } as const;
 interface ViewState {
   loading: boolean;
   error: boolean;
-  subscriptionError: boolean;
   permissionError?: boolean;
   networkError: boolean;
   data: Room[] | null;
@@ -180,7 +177,6 @@ function floorOrder(floor: string): number {
     HasPermission,
     DecimalPipe,
     DashboardLayout,
-    SubscriptionGate,
     PermissionRefused,
     Button,
     ConfirmModal,
@@ -459,20 +455,18 @@ export class Rooms {
   private readonly fetched = toSignal(
     toObservable(this.fetchKey).pipe(
       switchMap(({ hostelId, search, statusFilter, page }) => {
-        if (!hostelId) return of<ViewState>({ loading: false, error: false, subscriptionError: false, networkError: false, data: [], total: 0, aggs: null, statuses: [] });
+        if (!hostelId) return of<ViewState>({ loading: false, error: false, networkError: false, data: [], total: 0, aggs: null, statuses: [] });
         const filters: Record<string, string> = {};
         if (search.trim()) filters['f[room_number]'] = search.trim();
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
         return this.api.rooms(hostelId, page, ROOMS_LIMIT, filters).pipe(
-          map((res): ViewState => ({ loading: false, error: false, subscriptionError: false, networkError: false, data: res.rooms, total: res.total, aggs: res.aggs, statuses: res.statuses })),
-          startWith<ViewState>({ loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0, aggs: null, statuses: [] }),
+          map((res): ViewState => ({ loading: false, error: false, networkError: false, data: res.rooms, total: res.total, aggs: res.aggs, statuses: res.statuses })),
+          startWith<ViewState>({ loading: true, error: false, networkError: false, data: null, total: 0, aggs: null, statuses: [] }),
           catchError((err) => {
-            const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({
               loading: false,
-              error: !sub,
-              subscriptionError: sub,
+              error: true,
               permissionError: isPermissionRefusal(err),
               networkError: net,
               data: null,
@@ -484,7 +478,7 @@ export class Rooms {
         );
       }),
     ),
-    { initialValue: { loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0, aggs: null, statuses: [] } as ViewState },
+    { initialValue: { loading: true, error: false, networkError: false, data: null, total: 0, aggs: null, statuses: [] } as ViewState },
   );
 
   protected readonly state = computed<ViewState>(() => {

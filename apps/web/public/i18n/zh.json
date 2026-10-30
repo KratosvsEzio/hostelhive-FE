@@ -2158,21 +2158,6 @@
     "poweredByOpenstreetmap": "由 OpenStreetMap 提供",
     "noCoordinatesSetFor": "此房源未设置坐标。"
   },
-  "subscriptionGate": {
-    "unlockFeature": "解锁{{feature}}",
-    "thisFeature": "此功能",
-    "dashboardOverview": "仪表板概览",
-    "roomManagement": "房间管理",
-    "tenantManagement": "租客管理",
-    "utilityBilling": "水电账单",
-    "thisFeatureIsAvailable": "此功能需付费方案。订阅后即可完整使用您的旅舍管理后台。",
-    "completeHostelProfileFirst": "请先完善旅舍资料",
-    "onceSubscribedAllFeatures": "订阅后，所有功能将自动解锁。",
-    "roomAmpOccupancyManagement": "房间与入住率管理",
-    "tenantTrackingAmpPayment": "租客追踪与付款记录",
-    "rentAndUtilityInvoice": "生成租金与水电发票",
-    "analyticsAndRevenueReports": "分析与收入报表"
-  },
   "notifications": {
     "nUnread": "{{count}} 条未读",
     "types": {

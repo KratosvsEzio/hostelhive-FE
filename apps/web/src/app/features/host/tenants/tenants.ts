@@ -38,9 +38,7 @@ import {
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { Tenant } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
-import { SubscriptionGate } from '@layout/components/subscription-gate/subscription-gate';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isSubscriptionError } from '@util/subscription-error';
 import { isPermissionRefusal } from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
@@ -52,7 +50,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
 interface ViewState {
   loading: boolean;
   error: boolean;
-  subscriptionError: boolean;
   permissionError?: boolean;
   networkError: boolean;
   data: Tenant[] | null;
@@ -75,7 +72,6 @@ const TONES = ['sky', 'cream', 'mint'] as const;
   imports: [
     HasPermission,
     DashboardLayout,
-    SubscriptionGate,
     PermissionRefused,
     Button,
     Card,
@@ -138,7 +134,7 @@ export class Tenants {
       switchMap(({ hostelId, page, search, statusFilter }) => {
         if (!hostelId) {
           this.fetching.set(false);
-          return of<ViewState>({ loading: false, error: false, subscriptionError: false, networkError: false, data: null, total: 0 });
+          return of<ViewState>({ loading: false, error: false, networkError: false, data: null, total: 0 });
         }
         this.fetching.set(true);
         const filters: Record<string, string> = {};
@@ -147,18 +143,16 @@ export class Tenants {
         return this.api.renters(hostelId, page, PAGE_SIZE, filters).pipe(
           tap(() => this.fetching.set(false)),
           map((res): ViewState => ({
-            loading: false, error: false, subscriptionError: false, networkError: false,
+            loading: false, error: false, networkError: false,
             data: res.renters, total: res.total,
             statuses: res.statuses,
           })),
           catchError((err) => {
             this.fetching.set(false);
-            const sub = isSubscriptionError(err);
             const net = isNetworkError(err);
             return of<ViewState>({
               loading: false,
-              error: !sub,
-              subscriptionError: sub,
+              error: true,
               permissionError: isPermissionRefusal(err),
               networkError: net,
               data: null,
@@ -168,7 +162,7 @@ export class Tenants {
         );
       }),
     ),
-    { initialValue: { loading: true, error: false, subscriptionError: false, networkError: false, data: null, total: 0 } as ViewState },
+    { initialValue: { loading: true, error: false, networkError: false, data: null, total: 0 } as ViewState },
   );
 
   private readonly _persistStatuses = effect(() => {

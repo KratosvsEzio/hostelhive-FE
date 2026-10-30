@@ -2163,21 +2163,6 @@
     "poweredByOpenstreetmap": "OpenStreetMap کے ذریعے",
     "noCoordinatesSetFor": "اس فہرست کے لیے کوئی کوآرڈینیٹس مقرر نہیں ہیں۔"
   },
-  "subscriptionGate": {
-    "unlockFeature": "{{feature}} کھولیں",
-    "thisFeature": "یہ خصوصیت",
-    "dashboardOverview": "ڈیش بورڈ کا جائزہ",
-    "roomManagement": "کمروں کا انتظام",
-    "tenantManagement": "کرایہ داروں کا انتظام",
-    "utilityBilling": "یوٹیلیٹی بلنگ",
-    "thisFeatureIsAvailable": "یہ سہولت ادائیگی والے پلانز میں دستیاب ہے۔ اپنے ہاسٹل ڈیش بورڈ تک مکمل رسائی کے لیے سبسکرائب کریں۔",
-    "completeHostelProfileFirst": "پہلے ہاسٹل پروفائل مکمل کریں",
-    "onceSubscribedAllFeatures": "سبسکرائب کرتے ہی تمام سہولتیں خود بخود کھل جاتی ہیں۔",
-    "roomAmpOccupancyManagement": "کمروں اور آکوپنسی کا انتظام",
-    "tenantTrackingAmpPayment": "کرایہ داروں کی ٹریکنگ اور ادائیگی کا ریکارڈ",
-    "rentAndUtilityInvoice": "کرایہ اور یوٹیلیٹی انوائس بنانا",
-    "analyticsAndRevenueReports": "تجزیات اور آمدنی کی رپورٹس"
-  },
   "notifications": {
     "nUnread": "{{count}} غیر پڑھے",
     "types": {
