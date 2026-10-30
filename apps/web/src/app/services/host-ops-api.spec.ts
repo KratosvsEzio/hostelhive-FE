@@ -376,6 +376,30 @@ describe('HostOpsApi.invoices — bill statuses', () => {
   });
 });
 
+describe('HostOpsApi.invoices — booking bucket', () => {
+  function withAggs(aggs: unknown): HostOpsApi {
+    const http = new ApiClientStub();
+    http.get = <T>() => of({ renter_bills: [], pagination: { total_count: 0, total_pages: 1 }, aggs } as T);
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: http }] });
+    return TestBed.inject(HostOpsApi);
+  }
+
+  it('maps aggs.booking to the booking total, paid and balance', () => {
+    const api = withAggs({ booking: { total: 12000, paid: 5000, balance: 7000 }, rent: { total: 1, paid: 0, balance: 1 } });
+    let aggs: Record<string, number> = {};
+    api.invoices('h1').subscribe((r) => (aggs = r.aggs));
+    expect(aggs).toMatchObject({ bookingTotal: 12000, bookingPaid: 5000, bookingBalance: 7000, rentTotal: 1 });
+  });
+
+  it('reads a reply without a booking bucket as zeros', () => {
+    const api = withAggs({ statuses: [{ name: 'Paid', slug: 'paid', count: 1, total_amount: 5000 }] });
+    let aggs: Record<string, number> = {};
+    api.invoices('h1').subscribe((r) => (aggs = r.aggs));
+    expect(aggs).toMatchObject({ bookingTotal: 0, bookingPaid: 0, bookingBalance: 0 });
+  });
+});
+
 /**
  * The booking bill, from both wire shapes.
  *

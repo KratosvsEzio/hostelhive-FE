@@ -23,11 +23,12 @@ The user's product rule: backpackers are not charged rental or utility bills.
 - **Nightly view for an unknown mode.** It would hide Add invoice and the rent and utility cards from a hostel that may need them. This is the same fail-open rule as [the billing-cycle gates](./billing-cycle-gates-fail-open.md).
 
 ## Consequences
-- A nightly hostel sends no `f[bill_type]`, so a stray rental bill left on one would count in its booking card.
-- The aggregates have no booking bucket; the card is derived on the frontend until the backend adds one (run notes, Summary).
+- A nightly hostel sends no `f[bill_type]`, so a stray rental bill left on one still shows in its list and status counts. It no longer reaches the booking card, which reads only booking bills.
+- The booking card reads the API's booking bucket, `aggs.booking {total, paid, balance}`, from BE azeem-hamza/hostelhive#67 (Trello #164). Until then the card was derived on the frontend from the per-status totals; that derivation is gone.
 
 ## Evidence
-- `apps/web/src/app/features/host/invoices/invoices.ts` — `nightly`, `withBookingTotals`, `bookingSummary`, `activeKind`, `addOpen`, `editingInvoice`; `invoices.html`.
+- `apps/web/src/app/features/host/invoices/invoices.ts` — `nightly`, `bookingSummary`, `activeKind`, `addOpen`, `editingInvoice`; `invoices.html`.
+- `apps/web/src/app/services/host-ops-api.ts` — `invoices()` maps `aggs.booking`.
 - `apps/web/src/app/util/filter-configs/invoice-filter-groups.ts` — the `renterBills` parameter.
 - `apps/web/src/app/util/table-configs/invoice-table-cols.ts` — the Booking badge and "Billed to" cell; `toInvoice` in `apps/web/src/app/services/host-ops-api.ts`.
 - `docs/implement/TRELLO-83.md` — decisions D2, D3 and D6; 5e round 1 (nightly and monthly Invoices).
