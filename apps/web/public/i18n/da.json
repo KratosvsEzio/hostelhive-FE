@@ -1857,11 +1857,13 @@
     "sendResetLink": "Send nulstillingslink",
     "backToLogin": "Tilbage til log ind",
     "didnTReceiveItResend": "Ikke modtaget? Send igen",
+    "resendIn": "Send igen om {{time}}",
     "enterAValidEmail": "Indtast en gyldig e-mailadresse.",
     "sentIfAccountExists": "Hvis der findes en konto for {{email}}, har vi sendt et link til at nulstille din adgangskode. Tjek din indbakke og spammappe.",
     "alreadySent": "Der er allerede sendt et nulstillingslink til denne e-mail. Tjek din indbakke og spammappe; du kan bede om et nyt om et par minutter.",
     "sentAnother": "Vi har sendt endnu et link.",
     "tooManyRequests": "For mange forsøg. Vent et par minutter, og prøv igen.",
+    "tooManyRequestsRetry": "For mange forsøg. Prøv igen om {{time}}.",
     "cannotReachTheServer": "Kan ikke nå serveren. Prøv igen om et øjeblik.",
     "couldNotSend": "Vi kunne ikke sende et nulstillingslink. Tjek e-mailadressen, og prøv igen.",
     "useADifferentEmail": "Brug en anden e-mail"

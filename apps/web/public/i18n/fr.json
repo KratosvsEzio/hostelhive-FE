@@ -1857,11 +1857,13 @@
     "sendResetLink": "Envoyer le lien",
     "backToLogin": "Retour à la connexion",
     "didnTReceiveItResend": "Pas reçu ? Renvoyer",
+    "resendIn": "Renvoyer dans {{time}}",
     "enterAValidEmail": "Saisissez une adresse e-mail valide.",
     "sentIfAccountExists": "Si un compte existe pour {{email}}, nous vous avons envoyé un lien pour réinitialiser votre mot de passe. Consultez votre boîte de réception et vos courriers indésirables.",
     "alreadySent": "Un lien de réinitialisation a déjà été envoyé à cette adresse. Consultez votre boîte de réception et vos courriers indésirables. Vous pourrez en demander un autre dans quelques minutes.",
     "sentAnother": "Nous vous avons envoyé un autre lien.",
     "tooManyRequests": "Trop de tentatives. Veuillez patienter quelques minutes, puis réessayer.",
+    "tooManyRequestsRetry": "Trop de tentatives. Réessayez dans {{time}}.",
     "cannotReachTheServer": "Impossible de joindre le serveur. Veuillez réessayer dans un instant.",
     "couldNotSend": "Nous n’avons pas pu envoyer de lien de réinitialisation. Vérifiez l’adresse e-mail et réessayez.",
     "useADifferentEmail": "Utiliser une autre adresse e-mail"

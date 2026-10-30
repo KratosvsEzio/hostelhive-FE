@@ -26,6 +26,15 @@ export function serverText(err: unknown): string {
   return normalise(serverMessagesOf(err));
 }
 
+/** The rate limiter's wait in seconds (`ApiError.retryAfter`), or `null` when it gave none. */
+export function retryAfterSeconds(err: unknown): number | null {
+  if (typeof err !== 'object' || err === null) return null;
+  const { retryAfter } = err as { retryAfter?: unknown };
+  return typeof retryAfter === 'number' && Number.isFinite(retryAfter) && retryAfter > 0
+    ? retryAfter
+    : null;
+}
+
 /** True when the text is the bare "Not Found" Rails sends, which says nothing about the request. */
 export function isBareNotFound(text: string): boolean {
   return text === BARE_NOT_FOUND_TEXT;
