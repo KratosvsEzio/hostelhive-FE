@@ -82,6 +82,7 @@ Backend conventions the mappers rely on:
 - [Server-side requests time out at 5 s; browser requests never do](../decisions/api-and-data/ssr-only-request-timeout.md)
 - [Index-backed reads lag: trust the database read and our own writes, never a re-fetched list](../decisions/api-and-data/index-backed-reads-lag-trust-db-and-local-writes.md)
 - [Exact-match filters on a dynamically mapped hashid go to its `.keyword` field](../decisions/api-and-data/search-backed-filters-use-keyword-for-hashids.md)
+- [The API preconnect is static, credentialed, and checked against `API_URL` at build time](../decisions/api-and-data/api-preconnect-uses-credentials.md)
 
 ## See also
 - [auth-and-session](./auth-and-session.md) — token, 401 handling
