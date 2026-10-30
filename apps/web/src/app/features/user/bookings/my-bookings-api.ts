@@ -1,7 +1,7 @@
 import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiClient } from '@core/api-resource';
+import { ApiClient, ApiRequestOptions, requestContextArgs } from '@core/api-resource';
 import { SUPPRESS_ERROR_TOAST } from '@core/tokens';
 import { ApiPagination, PageInfo, pageParams, toPageInfo } from '@util/pagination';
 import { toBookingRequest } from '@features/public/listing/booking/booking-request';
@@ -379,9 +379,9 @@ export class MyBookingsApi {
   /**
    * `GET /api/bookings/:id` — one of the caller's bookings. Someone else's answers 404.
    */
-  get(id: string): Observable<GuestBooking> {
+  get(id: string, opts?: ApiRequestOptions): Observable<GuestBooking> {
     return this.api
-      .get<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`)
+      .get<ApiMyBookingResponse>(`/api/bookings/${encodeURIComponent(id)}`, undefined, ...requestContextArgs(opts))
       .pipe(map((res) => readBooking(res, id)));
   }
 

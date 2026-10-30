@@ -739,7 +739,9 @@
     "leavingDate": "Utflyttningsdatum",
     "thisTenantHasNoRent": "Den här hyresgästen har inga registrerade hyresfakturor ännu.",
     "noUtilityChargesHaveBeen": "Inga förbrukningsavgifter har registrerats för den här hyresgästens rum.",
-    "checkInYourFirstTenant": "Checka in din första hyresgäst för att börja följa hyran."
+    "checkInYourFirstTenant": "Checka in din första hyresgäst för att börja följa hyran.",
+    "notFoundTitle": "Vi kunde inte hitta den här hyresgästen",
+    "notFoundMessage": "Hyresgästen kan ha tagits bort, eller så är länken inaktuell. Gå tillbaka till hyresgäster för att se vandrarhemmets hyresgäster."
   },
   "hostBilling": {
     "title": "Fakturering",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "Sängnummer är ännu inte tilldelade – kalendern visar hur många sängar som är upptagna, inte vilken varje gäst har.",
     "couldNotUpdateRoom": "Det gick inte att uppdatera rummet. Försök igen.",
     "couldNotCreateRoom": "Det gick inte att skapa rummet. Försök igen.",
-    "couldNotCreateRooms": "Det gick inte att skapa rummen. Försök igen."
+    "couldNotCreateRooms": "Det gick inte att skapa rummen. Försök igen.",
+    "notFoundTitle": "Vi kunde inte hitta det här rummet",
+    "notFoundMessage": "Det kan ha tagits bort, eller så är länken inaktuell. Gå tillbaka till rum för att se vandrarhemmets rum."
   },
   "hostUtilities": {
     "ratePerUnit": "Pris per enhet",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "Erbjuds inte längre av vandrarhemmet och fördes därför inte över: {{rooms}}. Välj ett annat rum.",
     "stageConfirmed": "Bekräftad",
     "noShow": "Uteblev",
-    "noShowNote": "Vandrarhemmet har markerat den här bokningen som utebliven — gästen kom inte."
+    "noShowNote": "Vandrarhemmet har markerat den här bokningen som utebliven — gästen kom inte.",
+    "bookingNotFoundTitle": "Vi kunde inte hitta den här bokningen",
+    "bookingNotFoundMessage": "Den kan ha tagits bort, eller så är länken inaktuell. Gå tillbaka till alla dina bokningar."
   },
   "userFavorites": {
     "removeFromFavorites": "Ta bort från favoriter?",

@@ -63,6 +63,7 @@ Backend conventions the mappers rely on:
   - Each screen maps the kind to its own key; the host stay moves do it in `apps/web/src/app/features/host/bookings/booking-move-failure.ts`.
 - An image upload that never reached storage rejects with `UploadNetworkError` (`apps/web/src/app/services/image-upload.service.ts`); test with `instanceof`, not its text.
 - To keep the toast off one call whose screen shows the error inline, give the service method a trailing `opts?: ApiRequestOptions` and spread `...requestContextArgs(opts)` into the `ApiClient` call; callers pass `{ suppressErrorToast: true }` (`host-ops-api.ts`, `host-bookings-api.ts`, `hostels-api.ts`). Without the flag the call is unchanged. All five `ApiClient` verbs accept the context; `auth-api.ts` builds its own with a private `inlineErrors()`.
+- A detail page whose record answers 404 shows a "We couldn't find this …" `hh-error-state` with `[showRetry]="false"`, and its read suppresses the toast. A 404 there means an old link, a deleted record or a raw numeric id (rejected since ids were obfuscated), so a retry can never work. Other statuses keep the retryable error. Done in the public hostel page (`listing-detail-api.ts`), room detail, tenant profile and the guest booking page (Trello #89). Branch on `errorStatus(err) === 404`.
 - Decide "did the server reject the session?" with `isUnauthorized` (`apps/web/src/app/core/errors/is-unauthorized.ts`: a structural `.status === 401`, so status 0 is not a rejection), never a local check — two copies already had to be merged.
 
 ## Traps

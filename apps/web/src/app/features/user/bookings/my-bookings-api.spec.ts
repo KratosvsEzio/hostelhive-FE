@@ -359,8 +359,18 @@ describe('MyBookingsApi', () => {
       .get('RbNKwO')
       .subscribe((r) => (result = r));
 
-    expect(get).toHaveBeenCalledWith('/api/bookings/RbNKwO');
+    expect(get).toHaveBeenCalledWith('/api/bookings/RbNKwO', undefined);
     expect(result).toMatchObject({ id: 'RbNKwO', hostel: { name: 'Backpacker' } });
+  });
+
+  it('reads one booking with the toast suppressed when asked', () => {
+    const get = vi.fn().mockReturnValue(of({ booking: raw() }));
+    TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: { get } }] });
+
+    TestBed.inject(MyBookingsApi).get('RbNKwO', { suppressErrorToast: true }).subscribe();
+
+    const context = get.mock.calls[0][2] as HttpContext;
+    expect(context.get(SUPPRESS_ERROR_TOAST)).toBe(true);
   });
 
   it('errors on an envelope with no booking, rather than emitting blanks', () => {
@@ -381,7 +391,7 @@ describe('MyBookingsApi', () => {
 
     TestBed.inject(MyBookingsApi).get('a/b').subscribe();
 
-    expect(get).toHaveBeenCalledWith('/api/bookings/a%2Fb');
+    expect(get).toHaveBeenCalledWith('/api/bookings/a%2Fb', undefined);
   });
 });
 

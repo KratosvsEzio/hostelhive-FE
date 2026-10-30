@@ -12,6 +12,14 @@
     <hh-skeleton class="mb-4 h-44" radius="lg" />
     <hh-skeleton class="h-64" radius="lg" />
 
+  } @else if (s.notFound) {
+    <hh-error-state
+      [title]="'hostRooms.notFoundTitle' | transloco"
+      [message]="'hostRooms.notFoundMessage' | transloco"
+      [showRetry]="false"
+      data-testid="room-not-found"
+    />
+
   } @else if (s.error) {
     <hh-error-state [networkError]="s.networkError" />
 
