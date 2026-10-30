@@ -76,11 +76,18 @@
       crossorigin
     />
 
-    <!-- TODO: add `<link rel="preconnect" href="https://<api-host>" crossorigin>` once the
-         production API hostname is known. It saves a DNS + TLS round trip on the first
-         data request, which is on the critical path to Largest Contentful Paint — but
-         only if the host is right. Pointing it at a host the app never contacts spends a
-         connection for nothing, so it is left out rather than guessed. -->
+    <!-- The API: `API_URL` in the deploy's `.env`, compiled into `api.env.ts`. The first data
+         request is on the critical path to Largest Contentful Paint on every page, and on the
+         client-only console routes nothing server-rendered has warmed the connection.
+
+         `use-credentials`, not a bare `crossorigin`: `authInterceptor` sends every API call
+         with `withCredentials`, and browsers keep credentialed and anonymous sockets apart. An
+         anonymous preconnect here would warm a socket no API request ever uses.
+
+         Static because `index.html` is not templated. `tools/generate-api-env.mjs` warns at
+         build time when a deployed (https) `API_URL` names a different origin, so a move to
+         another API host cannot leave this pointing at one the app never calls. -->
+    <link rel="preconnect" href="https://api.hostelhive.com" crossorigin="use-credentials" />
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />

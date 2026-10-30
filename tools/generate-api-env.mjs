@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const envPath = join(root, '.env');
 const outPath = join(root, 'apps', 'web', 'src', 'app', 'api.env.ts');
+const indexPath = join(root, 'apps', 'web', 'src', 'index.html');
 
 function generate() {
   const env = {};
@@ -33,6 +34,26 @@ export const apiEnv = {
 
   writeFileSync(outPath, out);
   console.log(`api.env.ts written — apiUrl ${apiUrl}.`);
+  checkPreconnect(apiUrl);
+}
+
+// index.html preconnects to the API host by hand (it is not templated). Warn when a deployed
+// API_URL names another origin: the tag would then warm a socket the app never uses. Plain
+// http is a local or LAN backend, which the production tag is not meant to match.
+function checkPreconnect(apiUrl) {
+  if (!apiUrl.startsWith('https://') || !existsSync(indexPath)) return;
+  const m = readFileSync(indexPath, 'utf8').match(
+    /<link\s+rel="preconnect"\s+href="([^"]+)"\s+crossorigin="use-credentials"/,
+  );
+  const apiOrigin = new URL(apiUrl).origin;
+  if (!m) {
+    console.warn(`WARNING: index.html has no use-credentials preconnect for the API (${apiOrigin}).`);
+  } else if (new URL(m[1]).origin !== apiOrigin) {
+    console.warn(
+      `WARNING: index.html preconnects to ${m[1]} but API_URL is ${apiOrigin}. ` +
+        'Update the API <link rel="preconnect"> in apps/web/src/index.html.',
+    );
+  }
 }
 
 // Run once immediately.
