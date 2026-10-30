@@ -29,4 +29,9 @@ export interface ApiError {
    * which is wrong for a GET.
    */
   method?: string;
+  /**
+   * Seconds the rate limiter asks the client to wait, from a 429 body's `retry_after`. Present
+   * only when that is a positive number; read from the body because CORS hides `Retry-After`.
+   */
+  retryAfter?: number;
 }

@@ -1863,11 +1863,13 @@
     "sendResetLink": "Skicka återställningslänk",
     "backToLogin": "Tillbaka till inloggning",
     "didnTReceiveItResend": "Fick du det inte? Skicka igen",
+    "resendIn": "Skicka igen om {{time}}",
     "enterAValidEmail": "Ange en giltig e-postadress.",
     "sentIfAccountExists": "Om det finns ett konto för {{email}} har vi skickat en länk för att återställa ditt lösenord. Kolla din inkorg och skräppostmapp.",
     "alreadySent": "En återställningslänk har redan skickats till den här e-postadressen. Kolla din inkorg och skräppostmapp; du kan be om en ny om några minuter.",
     "sentAnother": "Vi har skickat en ny länk.",
     "tooManyRequests": "För många försök. Vänta några minuter och försök igen.",
+    "tooManyRequestsRetry": "För många försök. Försök igen om {{time}}.",
     "cannotReachTheServer": "Kan inte nå servern. Försök igen om en stund.",
     "couldNotSend": "Vi kunde inte skicka någon återställningslänk. Kontrollera e-postadressen och försök igen.",
     "useADifferentEmail": "Använd en annan e-postadress"

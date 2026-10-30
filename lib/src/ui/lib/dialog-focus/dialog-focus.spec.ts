@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { DialogFocus } from './dialog-focus';
 
 @Component({
@@ -9,13 +10,34 @@ import { DialogFocus } from './dialog-focus';
     <button type="button" id="behind">Behind the overlay</button>
 
     @if (open()) {
-      <div hhDialogFocus role="dialog" aria-modal="true" aria-label="Test dialog">
+      <div
+        hhDialogFocus
+        role="dialog"
+        aria-modal="true"
+        aria-label="Test dialog"
+        id="outer"
+        (escape)="escapes.set([...escapes(), 'outer'])"
+      >
         <button type="button" id="close" (click)="open.set(false)">Close</button>
+        <button type="button" id="open-inner" (click)="innerOpen.set(true)">More</button>
         <input id="field" />
         <button type="button" id="last">Last</button>
         <!-- Appears *after* the last control, so turning it on moves where Tab wraps. -->
         @if (showExtra()) {
           <button type="button" id="extra">Extra</button>
+        }
+        <!-- Rendered inside the first, as a confirm opened from a drawer is. -->
+        @if (innerOpen()) {
+          <div
+            hhDialogFocus
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Inner dialog"
+            id="inner"
+            (escape)="escapes.set([...escapes(), 'inner'])"
+          >
+            <button type="button" id="inner-ok">OK</button>
+          </div>
         }
       </div>
     }
@@ -23,7 +45,10 @@ import { DialogFocus } from './dialog-focus';
 })
 class Host {
   readonly open = signal(false);
+  readonly innerOpen = signal(false);
   readonly showExtra = signal(false);
+  /** Which dialog was offered each Escape, in order. */
+  readonly escapes = signal<string[]>([]);
 }
 
 /**
@@ -188,5 +213,78 @@ describe('DialogFocus', () => {
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
 
     expect(document.activeElement?.id).toBe('field');
+  });
+
+  describe('Escape', () => {
+    function escape(from: string): KeyboardEvent {
+      const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+      $(from).dispatchEvent(event);
+      return event;
+    }
+
+    async function openInner(): Promise<void> {
+      $('open-inner').focus();
+      $('open-inner').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    it('is offered to the open dialog, and closes nothing by itself', async () => {
+      await openDialog();
+      escape('field');
+
+      expect(host.escapes()).toEqual(['outer']);
+      // The directive does not own the `@if`; closing is the dialog's decision.
+      expect($('outer')).not.toBeNull();
+    });
+
+    // A confirm inside a drawer: the key press bubbles through both, and only the confirm
+    // may answer it.
+    it('goes to the top-most dialog only, even though it bubbles through the one below', async () => {
+      await openDialog();
+      await openInner();
+
+      escape('inner-ok');
+
+      expect(host.escapes()).toEqual(['inner']);
+    });
+
+    // Focus should never be in the lower dialog while one is open over it, but if it is, the
+    // lower one still does not get to close underneath the upper.
+    it('is not offered to a dialog with another open over it', async () => {
+      await openDialog();
+      await openInner();
+
+      escape('field');
+
+      expect(host.escapes()).toEqual([]);
+    });
+
+    it('returns to the dialog below once the top one closes', async () => {
+      await openDialog();
+      await openInner();
+      host.innerOpen.set(false);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      escape('field');
+
+      expect(host.escapes()).toEqual(['outer']);
+    });
+
+    // The handler gets the real event, so it can stop it reaching a drawer or page listener.
+    it('hands over the key event itself', async () => {
+      await openDialog();
+      const seen: KeyboardEvent[] = [];
+      const sub = fixture.debugElement
+        .query(By.css('#outer'))
+        .injector.get(DialogFocus)
+        .escape.subscribe((e) => seen.push(e));
+
+      const event = escape('field');
+
+      expect(seen).toEqual([event]);
+      sub.unsubscribe();
+    });
   });
 });

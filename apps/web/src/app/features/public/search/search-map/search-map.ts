@@ -10,7 +10,9 @@ import {
   inject,
   input,
   linkedSignal,
+  makeStateKey,
   signal,
+  TransferState,
   untracked,
   PLATFORM_ID,
   viewChild,
@@ -122,6 +124,16 @@ const roundCoord = (n: number): number => +n.toFixed(6);
  * we capture; letting a degenerate box through either way produces "0 hostels in this area".
  */
 const hasArea = (b: Bounds): boolean => b.north > b.south && b.east > b.west;
+
+/**
+ * The first page of results the server rendered, and the query it answered (minus the page).
+ * The browser starts from it, so hydration finds the list the server sent, not skeletons.
+ */
+interface ServerFirstPage {
+  key: string;
+  res: Paginated<Listing>;
+}
+const SERVER_FIRST_PAGE = makeStateKey<ServerFirstPage>('search-map:first-page');
 
 /**
  * The keys Leaflet's keyboard handler moves the camera for: the arrows pan, and the plus
@@ -583,17 +595,29 @@ export class SearchMap {
   // the URL does exactly that, so compare by value: a structurally identical query is a no-op.
   { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) });
 
+  private readonly transferState = inject(TransferState);
+  /**
+   * The page the server rendered, shown until the browser's own first search answers. Taken
+   * once: a later visit to this route in the same session starts empty, as before.
+   */
+  private readonly serverFirstPage = this.isBrowser ? this.takeServerFirstPage() : null;
+  /**
+   * Set while that page is on screen. The search that replaces it (the map framing the place
+   * changes the query) keeps it up until it answers, rather than flashing skeletons over a
+   * list the visitor is already reading.
+   */
+  private showingServerPage = !!this.serverFirstPage;
   /** True while a search request is in flight — drives the skeleton cards. */
-  protected readonly loading = signal(true);
+  protected readonly loading = signal(!this.serverFirstPage);
   /** True while an append fetch (page > 1) is in flight — drives the bottom spinner row. */
   protected readonly loadingMore = signal(false);
   /** Results accumulated across pages — the infinite-scroll list. */
-  private readonly accumulated = signal<Listing[]>([]);
+  private readonly accumulated = signal<Listing[]>(this.serverFirstPage?.res.items ?? []);
   /** Guards against double page-increments while an append is queued/in flight. */
   private pendingMore = false;
   /** Query identity (minus page) of the in-flight request / last applied result. */
   private inFlightKey = '';
-  private lastQueryKey = '';
+  private lastQueryKey = this.serverFirstPage?.key ?? '';
   /** Set when a search fails for a non-transient reason (5xx / network) — drives the inline
    *  error panel + "Try again", as distinct from an empty result set (0 hostels found). */
   protected readonly loadError = signal(false);
@@ -641,7 +665,10 @@ export class SearchMap {
       // `toObservable` completes on destroy, and `debounceTime` flushes its pending value on
       // completion — so leaving the page within the window after a pan fired one last search
       // for the box being left, on the way out. The timer here is cancelled instead.
-      switchMap((v) => timer(600).pipe(map(() => v))),
+      //
+      // Not on the server, which has no camera to settle, and whose render does not wait on
+      // a timer: debounced there, the page went out before its listings were asked for.
+      switchMap((v) => (this.isBrowser ? timer(600).pipe(map(() => v)) : of(v))),
       // While rate-limited, ignore query changes (map pans, filter edits) so we don't keep
       // hammering the throttled endpoint — only the post-cooldown retry re-fires the call.
       filter(() => this.cooldown() === 0),
@@ -649,11 +676,12 @@ export class SearchMap {
         // Page 1 = fresh search (skeletons); page > 1 = append (keep the list, show the spinner row).
         if (q.page && q.page > 1) this.loadingMore.set(true);
         else {
-          this.loading.set(true);
+          if (!this.showingServerPage) this.loading.set(true);
           // Nothing pending is a refetch of the same search with the same inputs.
           this.inFlightTrigger = this.pendingTrigger ?? 'retry';
           this.pendingTrigger = null;
         }
+        this.showingServerPage = false;
         this.loadError.set(false); // a fresh attempt clears any prior error
       }),
       switchMap(({ q }) => {
@@ -687,25 +715,33 @@ export class SearchMap {
         this.pendingMore = false;
         this.cooldown.set(0); // a successful response clears any lingering throttle state
         this.applyResult(res);
+        if (!this.isBrowser && (res.page ?? 1) <= 1 && !this.loadError()) {
+          this.transferState.set(SERVER_FIRST_PAGE, { key: this.inFlightKey, res });
+        }
         // Page 1 only — an infinite-scroll append is the same search, not a new one.
         // Not on the error path either: catchError returns an empty page, and reporting
         // that as a zero-result search would poison the one metric worth having here.
         if ((res.page ?? 1) <= 1 && !this.loadError()) this.trackSearch(res.total);
       }),
-      startWith({
-        items: [],
-        total: 0,
-        page: 1,
-        pageSize: 20,
-      } as Paginated<Listing>),
+      startWith(
+        this.serverFirstPage?.res ??
+          ({
+            items: [],
+            total: 0,
+            page: 1,
+            pageSize: 20,
+          } as Paginated<Listing>),
+      ),
     ),
     {
-      initialValue: {
-        items: [],
-        total: 0,
-        page: 1,
-        pageSize: 20,
-      } as Paginated<Listing>,
+      initialValue:
+        this.serverFirstPage?.res ??
+        ({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 20,
+        } as Paginated<Listing>),
     },
   );
 
@@ -792,6 +828,13 @@ export class SearchMap {
     if (prev) {
       this.pendingTrigger = strongerTrigger(this.pendingTrigger, triggerForChange(prev, inputs));
     }
+  }
+
+  /** The server's first page, removed from the transfer state so nothing else reuses it. */
+  private takeServerFirstPage(): ServerFirstPage | null {
+    const page = this.transferState.get(SERVER_FIRST_PAGE, null);
+    this.transferState.remove(SERVER_FIRST_PAGE);
+    return page;
   }
 
   private applyResult(res: Paginated<Listing>): void {

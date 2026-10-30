@@ -1868,11 +1868,13 @@
     "sendResetLink": "Gửi liên kết đặt lại",
     "backToLogin": "Quay lại đăng nhập",
     "didnTReceiveItResend": "Chưa nhận được? Gửi lại",
+    "resendIn": "Gửi lại sau {{time}}",
     "enterAValidEmail": "Nhập địa chỉ email hợp lệ.",
     "sentIfAccountExists": "Nếu có tài khoản cho {{email}}, chúng tôi đã gửi liên kết để đặt lại mật khẩu của bạn. Hãy kiểm tra hộp thư đến và thư mục thư rác.",
     "alreadySent": "Liên kết đặt lại đã được gửi tới email này. Hãy kiểm tra hộp thư đến và thư mục thư rác; bạn có thể yêu cầu liên kết khác sau vài phút.",
     "sentAnother": "Chúng tôi đã gửi thêm một liên kết.",
     "tooManyRequests": "Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.",
+    "tooManyRequestsRetry": "Quá nhiều lần thử. Vui lòng thử lại sau {{time}}.",
     "cannotReachTheServer": "Không thể kết nối đến máy chủ. Vui lòng thử lại sau giây lát.",
     "couldNotSend": "Chúng tôi không thể gửi liên kết đặt lại. Hãy kiểm tra địa chỉ email và thử lại.",
     "useADifferentEmail": "Dùng email khác"

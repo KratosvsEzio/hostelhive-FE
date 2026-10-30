@@ -1,9 +1,12 @@
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  OnDestroy,
   afterNextRender,
   computed,
+  inject,
   input,
   output,
   signal,
@@ -17,6 +20,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
  * Rendered by the parent via `@if` — this component has no internal open state.
  * Position is driven by `top` and `right` (pixel values from the trigger's bounding rect).
  * The panel self-adjusts after render to stay within the viewport in all directions.
+ * Focus goes back to the trigger (whatever was focused when the menu opened, usually the ⋮
+ * button) when an item is chosen and when the menu closes with focus inside it.
  * Menu items are projected via `<ng-content>` — use `hh-button variant="text" role="menuitem"
  * class="w-full !justify-start"` for each item.
  *
@@ -59,7 +64,32 @@ import { TranslocoPipe } from '@jsverse/transloco';
     </div>
   `,
 })
-export class ContextMenu {
+export class ContextMenu implements OnDestroy {
+  private readonly doc = inject(DOCUMENT);
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+
+  /**
+   * The element that opened the menu, read in the constructor — the only moment it is still
+   * `activeElement`. `<body>` when the click did not focus its target (Safari), in which
+   * case focus is left alone.
+   */
+  private readonly trigger = this.doc.activeElement as HTMLElement | null;
+
+  /**
+   * Hands focus back to the trigger *before* the item's own click handler runs — a capture
+   * listener on the host fires ahead of the item's listener.
+   *
+   * Items close the menu, which removes the item from the DOM. An item that opens a dialog
+   * opens it first, and `DialogFocus` records `activeElement` as the place to return to on
+   * close: without this that is the item, detached by then, and closing the dialog drops
+   * focus to `<body>`. With it the dialog records the ⋮ and the keyboard user lands back on
+   * their row.
+   */
+  private readonly onItemClick = (event: Event): void => {
+    const item = (event.target as Element | null)?.closest('[role="menuitem"]');
+    if (item && this.hostEl.contains(item)) this.restoreFocus();
+  };
+
   readonly top = input.required<number>();
   readonly right = input.required<number>();
   /** Panel width in pixels. Defaults to 160 (w-40). */
@@ -74,6 +104,7 @@ export class ContextMenu {
   protected readonly adjustedRight = computed(() => this.right() + this.adj().dx);
 
   constructor() {
+    this.hostEl.addEventListener('click', this.onItemClick, true);
     afterNextRender(() => {
       const el = this.panelEl()?.nativeElement;
       if (!el || typeof window === 'undefined') return;
@@ -96,6 +127,19 @@ export class ContextMenu {
       const curr = this.adj();
       if (dy !== curr.dy || dx !== curr.dx) this.adj.set({ dy, dx });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.hostEl.removeEventListener('click', this.onItemClick, true);
+    // Closing with focus still on the menu (the backdrop, an item that only closes it) would
+    // otherwise leave focus on a removed node, i.e. `<body>`. Focus that has already moved on
+    // — into a dialog an item opened — is left where it is.
+    const active = this.doc.activeElement;
+    if (!active || active === this.doc.body || this.hostEl.contains(active)) this.restoreFocus();
+  }
+
+  private restoreFocus(): void {
+    if (this.trigger?.isConnected && this.trigger !== this.doc.body) this.trigger.focus();
   }
 }
 
