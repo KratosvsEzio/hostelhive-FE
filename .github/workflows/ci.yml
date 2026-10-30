@@ -10,6 +10,12 @@ permissions:
   actions: read
   contents: read
 
+# A new push to a pull request cancels that branch's older, now-stale run instead of queueing
+# behind it. Pushes to main are never cancelled: every merge keeps its own result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   main:
     runs-on: ubuntu-latest
