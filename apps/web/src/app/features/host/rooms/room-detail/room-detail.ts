@@ -24,6 +24,7 @@ import { HostOpsApi, HostPropertyStore, RoomRenter, RoomShowData } from '@servic
 import { HostRoom as Room } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { isNetworkError } from '@util/network-error';
+import { errorStatus } from '@core/errors/api-error-text';
 import { ApiDate } from '@util/api-date';
 import { RoomCalendar } from '../room-calendar/room-calendar';
 import { tenantStatusLabel, tenantStatusTone } from '@util/tenant-status';
@@ -80,11 +81,13 @@ interface DetailState {
   loading: boolean;
   error: boolean;
   networkError: boolean;
+  /** The API answered 404: an old link, a deleted room or a raw numeric id. A retry can't help. */
+  notFound: boolean;
   room: Room | null;
   renters: RoomRenter[];
 }
 
-const LOADING: DetailState = { loading: true, error: false, networkError: false, room: null, renters: [] };
+const LOADING: DetailState = { loading: true, error: false, networkError: false, notFound: false, room: null, renters: [] };
 
 @Component({
   selector: 'hh-room-detail',
@@ -180,17 +183,19 @@ export class RoomDetail {
       ),
       switchMap(({ hostelId, roomId }) =>
         hostelId && roomId
-          ? this.api.roomShow(hostelId, roomId).pipe(
+          // Every failure is drawn on the page, so the global toast stays quiet.
+          ? this.api.roomShow(hostelId, roomId, { suppressErrorToast: true }).pipe(
               map((d: RoomShowData): DetailState => ({
-                loading: false, error: false, networkError: false,
+                loading: false, error: false, networkError: false, notFound: false,
                 room: d.room, renters: d.renters,
               })),
               catchError((err) => of<DetailState>({
                 loading: false, error: true, networkError: isNetworkError(err),
+                notFound: errorStatus(err) === 404,
                 room: null, renters: [],
               })),
             )
-          : of<DetailState>({ loading: false, error: true, networkError: false, room: null, renters: [] }),
+          : of<DetailState>({ loading: false, error: true, networkError: false, notFound: false, room: null, renters: [] }),
       ),
     ),
     { initialValue: LOADING },

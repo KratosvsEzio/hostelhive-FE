@@ -744,7 +744,9 @@
     "leavingDate": "Ngày rời đi",
     "thisTenantHasNoRent": "Khách thuê này chưa có hóa đơn tiền thuê nào được ghi nhận.",
     "noUtilityChargesHaveBeen": "Chưa ghi nhận khoản tiện ích nào cho phòng của khách thuê này.",
-    "checkInYourFirstTenant": "Nhận phòng cho khách thuê đầu tiên để bắt đầu theo dõi tiền thuê."
+    "checkInYourFirstTenant": "Nhận phòng cho khách thuê đầu tiên để bắt đầu theo dõi tiền thuê.",
+    "notFoundTitle": "Chúng tôi không tìm thấy người thuê này",
+    "notFoundMessage": "Người thuê có thể đã bị xóa, hoặc liên kết đã cũ. Quay lại danh sách người thuê để xem người thuê của nhà trọ này."
   },
   "hostBilling": {
     "title": "Thanh toán",
@@ -1365,7 +1367,9 @@
     "bedNumbersAreNotAssigned": "Số giường chưa được gán — lịch cho biết có bao nhiêu giường đã kín, không phải ai nằm giường nào.",
     "couldNotUpdateRoom": "Không thể cập nhật phòng này. Vui lòng thử lại.",
     "couldNotCreateRoom": "Không thể tạo phòng này. Vui lòng thử lại.",
-    "couldNotCreateRooms": "Không thể tạo các phòng này. Vui lòng thử lại."
+    "couldNotCreateRooms": "Không thể tạo các phòng này. Vui lòng thử lại.",
+    "notFoundTitle": "Chúng tôi không tìm thấy phòng này",
+    "notFoundMessage": "Phòng có thể đã bị xóa, hoặc liên kết đã cũ. Quay lại danh sách phòng để xem các phòng của nhà trọ này."
   },
   "hostUtilities": {
     "ratePerUnit": "Đơn giá",
@@ -1801,7 +1805,9 @@
     "roomsNoLongerOffered": "Nhà nghỉ không còn cung cấp nên không được giữ lại: {{rooms}}. Hãy chọn phòng khác.",
     "stageConfirmed": "Đã xác nhận",
     "noShow": "Vắng mặt",
-    "noShowNote": "Nhà nghỉ đã đánh dấu đặt phòng này là vắng mặt — khách đã không đến."
+    "noShowNote": "Nhà nghỉ đã đánh dấu đặt phòng này là vắng mặt — khách đã không đến.",
+    "bookingNotFoundTitle": "Chúng tôi không tìm thấy đặt phòng này",
+    "bookingNotFoundMessage": "Đặt phòng có thể đã bị xóa, hoặc liên kết đã cũ. Quay lại tất cả đặt phòng của bạn."
   },
   "userFavorites": {
     "removeFromFavorites": "Xóa khỏi yêu thích?",

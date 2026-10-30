@@ -246,9 +246,12 @@ export class ListingDetailApi {
    * So the status is the thing to branch on, and only 404 becomes `undefined`. A 500, a
    * timeout and an offline device are all failures, because all three might work on a second
    * attempt — and a deleted hostel will not.
+   *
+   * The global toast stays quiet: both outcomes are drawn on the page, so a toast only said
+   * "Couldn't load" over a not-found screen that had already said it better.
    */
   getBySlug(slug: string): Observable<ListingDetail | undefined> {
-    return this.hostels.getById(slug).pipe(
+    return this.hostels.getById(slug, { suppressErrorToast: true }).pipe(
       map((d) => toListingDetail(d)),
       catchError((e: unknown) =>
         isNotFound(e) ? of(undefined) : throwError(() => e),

@@ -739,7 +739,9 @@
     "leavingDate": "Date de départ",
     "thisTenantHasNoRent": "Ce locataire n'a encore aucune facture de loyer enregistrée.",
     "noUtilityChargesHaveBeen": "Aucune charge n'a été enregistrée pour la chambre de ce locataire.",
-    "checkInYourFirstTenant": "Enregistrez l'arrivée de votre premier locataire pour suivre les loyers."
+    "checkInYourFirstTenant": "Enregistrez l'arrivée de votre premier locataire pour suivre les loyers.",
+    "notFoundTitle": "Nous n'avons pas trouvé ce locataire",
+    "notFoundMessage": "Il a peut-être été retiré, ou le lien n'est plus à jour. Revenez aux locataires pour voir les locataires de cette auberge."
   },
   "hostBilling": {
     "title": "Facturation",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "Les numéros de lit ne sont pas encore attribués — le calendrier indique combien de lits sont occupés, pas lequel revient à chaque client.",
     "couldNotUpdateRoom": "Impossible de mettre à jour cette chambre. Veuillez réessayer.",
     "couldNotCreateRoom": "Impossible de créer cette chambre. Veuillez réessayer.",
-    "couldNotCreateRooms": "Impossible de créer ces chambres. Veuillez réessayer."
+    "couldNotCreateRooms": "Impossible de créer ces chambres. Veuillez réessayer.",
+    "notFoundTitle": "Nous n'avons pas trouvé cette chambre",
+    "notFoundMessage": "Elle a peut-être été supprimée, ou le lien n'est plus à jour. Revenez aux chambres pour voir les chambres de cette auberge."
   },
   "hostUtilities": {
     "ratePerUnit": "Tarif par unité",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "Plus proposées par l'auberge, donc non reprises : {{rooms}}. Choisissez une autre chambre.",
     "stageConfirmed": "Confirmée",
     "noShow": "Non présenté",
-    "noShowNote": "L'auberge a marqué cette réservation comme non présentée — le client n'est pas venu."
+    "noShowNote": "L'auberge a marqué cette réservation comme non présentée — le client n'est pas venu.",
+    "bookingNotFoundTitle": "Nous n'avons pas trouvé cette réservation",
+    "bookingNotFoundMessage": "Elle a peut-être été supprimée, ou le lien n'est plus à jour. Revenez à toutes vos réservations."
   },
   "userFavorites": {
     "removeFromFavorites": "Retirer des favoris ?",

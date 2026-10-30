@@ -83,7 +83,7 @@ describe('AccountBookingDetail', () => {
   it('fetches the booking by the id in the route and shows it', () => {
     const { el } = render(() => of(booking()));
 
-    expect(TestBed.inject(MyBookingsApi).get).toHaveBeenCalledWith('RbNKwO');
+    expect(TestBed.inject(MyBookingsApi).get).toHaveBeenCalledWith('RbNKwO', { suppressErrorToast: true });
     expect(el.querySelector('h1')?.textContent).toContain('Backpacker');
     expect(el.textContent).toContain('HH-2026-LI9V1AQC');
     expect(el.textContent).toContain('King size room');
@@ -119,6 +119,23 @@ describe('AccountBookingDetail', () => {
 
     expect(el.querySelector('hh-error-state')).not.toBeNull();
     expect(el.textContent).not.toContain('HH-2026-LI9V1AQC');
+  });
+
+  // An old numeric link, or a booking that is not the guest's: the API answers 404 to both.
+  it('says the booking was not found, with no retry, when the API answers 404', () => {
+    const { el } = render(() => throwError(() => ({ status: 404, code: 'not_found', message: 'x' })));
+
+    const state = el.querySelector('[data-testid="booking-not-found"]');
+    expect(state).not.toBeNull();
+    expect(state?.querySelector('button')).toBeNull();
+    expect(el.textContent).not.toContain('userBookings.couldNotLoadBooking');
+  });
+
+  it('keeps the retryable error for any other status', () => {
+    const { el } = render(() => throwError(() => ({ status: 500, code: 'x', message: 'x' })));
+
+    expect(el.querySelector('[data-testid="booking-not-found"]')).toBeNull();
+    expect(el.querySelector('hh-error-state button')).not.toBeNull();
   });
 
   it('marks the current step of the track', () => {

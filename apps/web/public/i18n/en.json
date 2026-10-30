@@ -887,7 +887,9 @@
     "couldNotLoadBookingGuests": "Couldn't load booking guests.",
     "couldNotUpdateRoom": "Couldn't update this room. Please try again.",
     "couldNotCreateRoom": "Couldn't create this room. Please try again.",
-    "couldNotCreateRooms": "Couldn't create these rooms. Please try again."
+    "couldNotCreateRooms": "Couldn't create these rooms. Please try again.",
+    "notFoundTitle": "We couldn't find this room",
+    "notFoundMessage": "It may have been deleted, or the link is out of date. Go back to rooms to see this hostel's rooms."
   },
   "hostBilling": {
     "title": "Billing",
@@ -1487,7 +1489,9 @@
     "leavingDate": "Leaving date",
     "thisTenantHasNoRent": "This tenant has no rent invoices on record yet.",
     "noUtilityChargesHaveBeen": "No utility charges have been recorded for this tenant's room.",
-    "checkInYourFirstTenant": "Check in your first tenant to start tracking rent."
+    "checkInYourFirstTenant": "Check in your first tenant to start tracking rent.",
+    "notFoundTitle": "We couldn't find this tenant",
+    "notFoundMessage": "They may have been removed, or the link is out of date. Go back to tenants to see this hostel's tenants."
   },
   "hostUtilities": {
     "ratePerUnit": "Rate per unit",
@@ -2100,7 +2104,9 @@
     "noLongerCancellable": "This booking can no longer be cancelled here. Call the hostel and quote your booking reference.",
     "roomNoLongerBookable": "One of the rooms you picked can no longer be booked. Choose another room.",
     "checkOutAfterCheckIn": "Check-out must be after check-in.",
-    "bookingNotFound": "We couldn't find this booking. It may have been removed."
+    "bookingNotFound": "We couldn't find this booking. It may have been removed.",
+    "bookingNotFoundTitle": "We couldn't find this booking",
+    "bookingNotFoundMessage": "It may have been removed, or the link is out of date. Go back to all your bookings."
   },
   "userFavorites": {
     "removeFromFavorites": "Remove from favorites?",

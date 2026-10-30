@@ -739,7 +739,9 @@
     "leavingDate": "Távozás dátuma",
     "thisTenantHasNoRent": "Ehhez a bérlőhöz még nincs rögzített bérleti számla.",
     "noUtilityChargesHaveBeen": "Ennek a bérlőnek a szobájához nincs rögzített rezsiköltség.",
-    "checkInYourFirstTenant": "Jelentkeztesse be az első bérlőt a bérleti díj követéséhez."
+    "checkInYourFirstTenant": "Jelentkeztesse be az első bérlőt a bérleti díj követéséhez.",
+    "notFoundTitle": "Nem találjuk ezt a bérlőt",
+    "notFoundMessage": "Lehet, hogy eltávolították, vagy a link elavult. Térj vissza a bérlőkhöz a hostel bérlőinek megtekintéséhez."
   },
   "hostBilling": {
     "title": "Számlázás",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "Az ágyszámok még nincsenek kiosztva – a naptár azt mutatja, hány ágy foglalt, nem azt, ki melyikben alszik.",
     "couldNotUpdateRoom": "Nem sikerült frissíteni ezt a szobát. Próbáld újra.",
     "couldNotCreateRoom": "Nem sikerült létrehozni ezt a szobát. Próbáld újra.",
-    "couldNotCreateRooms": "Nem sikerült létrehozni ezeket a szobákat. Próbáld újra."
+    "couldNotCreateRooms": "Nem sikerült létrehozni ezeket a szobákat. Próbáld újra.",
+    "notFoundTitle": "Nem találjuk ezt a szobát",
+    "notFoundMessage": "Lehet, hogy törölték, vagy a link elavult. Térj vissza a szobákhoz a hostel szobáinak megtekintéséhez."
   },
   "hostUtilities": {
     "ratePerUnit": "Egységár",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "A szállás már nem kínálja őket, ezért nem kerültek át: {{rooms}}. Válasszon másik szobát.",
     "stageConfirmed": "Megerősítve",
     "noShow": "Nem jelent meg",
-    "noShowNote": "A szállás ezt a foglalást meg nem jelenésként jelölte — a vendég nem érkezett meg."
+    "noShowNote": "A szállás ezt a foglalást meg nem jelenésként jelölte — a vendég nem érkezett meg.",
+    "bookingNotFoundTitle": "Nem találjuk ezt a foglalást",
+    "bookingNotFoundMessage": "Lehet, hogy eltávolították, vagy a link elavult. Térj vissza az összes foglalásodhoz."
   },
   "userFavorites": {
     "removeFromFavorites": "Eltávolítod a kedvencekből?",

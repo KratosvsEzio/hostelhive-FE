@@ -739,7 +739,9 @@
     "leavingDate": "退去日",
     "thisTenantHasNoRent": "この入居者の家賃請求はまだ記録されていません。",
     "noUtilityChargesHaveBeen": "この入居者の部屋の光熱費は記録されていません。",
-    "checkInYourFirstTenant": "最初の入居者をチェックインして、家賃の記録を始めましょう。"
+    "checkInYourFirstTenant": "最初の入居者をチェックインして、家賃の記録を始めましょう。",
+    "notFoundTitle": "この入居者が見つかりませんでした",
+    "notFoundMessage": "削除されたか、リンクが古くなっている可能性があります。入居者一覧に戻って、このホステルの入居者をご確認ください。"
   },
   "hostBilling": {
     "title": "請求",
@@ -1360,7 +1362,9 @@
     "bedNumbersAreNotAssigned": "ベッド番号はまだ割り当てられていません — カレンダーは使用中のベッド数を示すもので、誰がどのベッドかは示しません。",
     "couldNotUpdateRoom": "この部屋を更新できませんでした。もう一度お試しください。",
     "couldNotCreateRoom": "この部屋を作成できませんでした。もう一度お試しください。",
-    "couldNotCreateRooms": "これらの部屋を作成できませんでした。もう一度お試しください。"
+    "couldNotCreateRooms": "これらの部屋を作成できませんでした。もう一度お試しください。",
+    "notFoundTitle": "この部屋が見つかりませんでした",
+    "notFoundMessage": "削除されたか、リンクが古くなっている可能性があります。部屋一覧に戻って、このホステルの部屋をご確認ください。"
   },
   "hostUtilities": {
     "ratePerUnit": "単価",
@@ -1796,7 +1800,9 @@
     "roomsNoLongerOffered": "ホステルで提供が終了したため引き継がれませんでした：{{rooms}}。別の部屋を選んでください。",
     "stageConfirmed": "確定済み",
     "noShow": "ノーショー",
-    "noShowNote": "ホステルはこの予約をノーショーとして記録しました — ゲストは来館しませんでした。"
+    "noShowNote": "ホステルはこの予約をノーショーとして記録しました — ゲストは来館しませんでした。",
+    "bookingNotFoundTitle": "この予約が見つかりませんでした",
+    "bookingNotFoundMessage": "削除されたか、リンクが古くなっている可能性があります。予約一覧に戻ってください。"
   },
   "userFavorites": {
     "removeFromFavorites": "お気に入りから削除しますか？",

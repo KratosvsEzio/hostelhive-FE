@@ -633,9 +633,9 @@ export class HostOpsApi {
     return this.roomShow(hostelId, roomId).pipe(map((d) => d.renters));
   }
 
-  roomShow(hostelId: string, roomId: string): Observable<RoomShowData> {
+  roomShow(hostelId: string, roomId: string, opts?: ApiRequestOptions): Observable<RoomShowData> {
     return this.api
-      .get<ApiRoomDetailResponse>(`/api/host/hostels/${hostelId}/rooms/${roomId}`)
+      .get<ApiRoomDetailResponse>(`/api/host/hostels/${hostelId}/rooms/${roomId}`, undefined, ...requestContextArgs(opts))
       .pipe(
         map((res) => {
           const renters = (res.room?.renters ?? res.room?.room_renters ?? res.renters ?? res.room_renters ?? []).map((r) => {
@@ -732,9 +732,9 @@ export class HostOpsApi {
       );
   }
 
-  getRenter(hostelId: string, renterId: string): Observable<Tenant> {
+  getRenter(hostelId: string, renterId: string, opts?: ApiRequestOptions): Observable<Tenant> {
     return this.api
-      .get<ApiCreateRenterResponse>(`/api/host/hostels/${hostelId}/renters/${renterId}`)
+      .get<ApiCreateRenterResponse>(`/api/host/hostels/${hostelId}/renters/${renterId}`, undefined, ...requestContextArgs(opts))
       .pipe(map((res) => toTenant(res.renter ?? {})));
   }
 
